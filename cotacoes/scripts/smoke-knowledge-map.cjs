@@ -15,7 +15,7 @@ const fixtures = {
   'temas.json': { generatedAt: now, temas: {} },
   'recado.json': { ativo: false },
 }
-const report = { schemaVersion: 1, passed: false, scope: 'UI com dados fictícios; não comprova coleta ou fontes externas.', results: [], errors: [] }
+const report = { schemaVersion: 1, passed: false, scope: 'UI com dados fictícios; não comprova coleta ou fontes externas.', results: [], errors: [], captureDiagnostics: [] }
 const frames = page => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
 
 ;(async () => {
@@ -31,7 +31,9 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       page.setDefaultTimeout(10000)
       await page.clock.setFixedTime(now)
       page.on('pageerror', error => report.errors.push(`${scenario}: ${error.message}`))
-      await page.route('**/*', route => {
+      // Context routing also blocks the popup's first request; page routing
+      // alone does not intercept that initial navigation.
+      await context.route('**/*', route => {
         const url = new URL(route.request().url())
         if (url.origin !== new URL(base).origin) return route.abort()
         const name = url.pathname.split('/').at(-1)
@@ -97,7 +99,15 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       await map.getByRole('button', { name: 'Voltar à matriz', exact: true }).click()
       await map.getByRole('button', { name: 'Pausar movimento', exact: true }).click()
       await frames(page)
-      await motionNode.focus(); await page.keyboard.press('Enter')
+      await motionNode.focus(); await page.keyboard.press('Shift+F10')
+      let actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
+      await actions.waitFor()
+      assert.equal(await actions.getByRole('menuitem', { name: 'Ir para a página ↗', exact: true }).count(), 1)
+      assert.equal(await actions.getByRole('menuitem', { name: 'Ver conexões', exact: true }).count(), 1)
+      await page.keyboard.press('Escape')
+      await actions.waitFor({ state: 'hidden' })
+      assert.equal(await motionNode.evaluate(node => node === document.activeElement), true, 'Escape devolve o foco ao ponto')
+      await page.keyboard.press('Enter')
       await map.locator('.km-focus-label').getByText('Conexões diretas', { exact: true }).waitFor()
       assert.equal(await map.locator('.km-node.is-selected').getAttribute('data-node-id'), 'concept:inflacao')
       const focusedCount = await map.locator('.km-node').count()
@@ -129,21 +139,76 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       const article = map.locator('.km-list-item.km-news').filter({ hasText: `${title} recente` })
       assert.match(await article.innerText(), /Fonte fictícia — ensaio CI · 06\/11\/2026/)
       assert.equal(await map.locator('.km-list-item.km-news').count(), 2)
+      const expectedHref = 'https://example.org/fixture-ci/recente'
+      const popupPromise = context.waitForEvent('page')
+      const requestPromise = context.waitForEvent('request', request => request.url() === expectedHref)
       await article.click()
+      const [popup, attemptedRequest] = await Promise.all([popupPromise, requestPromise])
+      assert.equal(attemptedRequest.url(), expectedHref, 'clique na notícia abre a matéria original')
+      await popup.close()
+      assert.equal(await map.locator('.km-list-item.is-selected').count(), 0, 'abrir notícia não troca a seleção da matriz')
+      assert.equal(await map.locator('.km-publication').count(), 0, 'clique abre a matéria, sem selecionar o resumo')
+      await article.click({ button: 'right' })
+      actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
+      await actions.waitFor()
+      const menuSourceLink = actions.getByRole('menuitem', { name: 'Ir para a página ↗', exact: true })
+      assert.equal(await menuSourceLink.getAttribute('href'), expectedHref)
+      assert.equal(await menuSourceLink.getAttribute('rel'), 'noopener noreferrer')
+      await actions.getByRole('menuitem', { name: 'Ver conexões', exact: true }).click()
       assert.match(await map.locator('.km-publication').innerText(), /Fonte fictícia — ensaio CI[\s\S]*06\/11\/2026/)
       const sourceLink = map.getByRole('link', { name: 'Ler na fonte ↗', exact: true })
-      assert.equal(await sourceLink.getAttribute('href'), 'https://example.org/fixture-ci/recente')
+      assert.equal(await sourceLink.getAttribute('href'), expectedHref)
       assert.equal(await sourceLink.getAttribute('rel'), 'noopener noreferrer')
       await sourceLink.click({ trial: true })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1), false, 'sem transbordamento horizontal')
       await page.screenshot({ path: path.join(out, `${scenario}-news.png`), fullPage: true })
-      report.results.push({ width, theme, status: 'pass', motion: true, pauseZoom: true, pan: true, drag: true, localStar: true, matrix: true, emptySearch: true, filters: true, publication: true, overflow: false })
+      // Functional actions are checked above. Screenshot persistence is not a
+      // product requirement; record any dismissing events instead of guessing
+      // their cause or altering the application's scroll/resize behaviour.
+      await article.click({ button: 'right' })
+      actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
+      await actions.waitFor()
+      assert.equal(await actions.isVisible(), true, 'menu visível antes da captura de viewport')
+      const beforeCapture = await page.evaluate(() => {
+        const events = []
+        const state = () => {
+          const menu = document.querySelector('.km-context-menu'), rect = menu?.getBoundingClientRect()
+          return { menuVisible: !!rect && rect.width > 0 && rect.height > 0, menu: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null, scrollX, scrollY, innerWidth, innerHeight, clientWidth: document.documentElement.clientWidth, clientHeight: document.documentElement.clientHeight }
+        }
+        const record = event => {
+          if (events.length < 40) events.push({ type: event.type, target: event.target === window ? 'window' : event.target === document ? 'document' : `${event.target?.tagName || 'unknown'}${event.target?.id ? '#' + event.target.id : ''}`, time: performance.now(), ...state() })
+        }
+        for (const type of ['scroll', 'resize', 'pointerdown', 'wheel']) window.addEventListener(type, record, true)
+        window.__knowledgeMenuCapture = { state, events, stop: () => { for (const type of ['scroll', 'resize', 'pointerdown', 'wheel']) window.removeEventListener(type, record, true) } }
+        return state()
+      })
+      await page.screenshot({ path: path.join(out, `${scenario}-context-menu.png`), caret: 'initial' })
+      await frames(page)
+      const afterCapture = await page.evaluate(() => {
+        const probe = window.__knowledgeMenuCapture, result = { state: probe.state(), events: probe.events }
+        probe.stop(); delete window.__knowledgeMenuCapture
+        return result
+      })
+      const captureDiagnostic = { scenario, method: 'Playwright viewport screenshot, caret initial', before: beforeCapture, after: afterCapture.state, events: afterCapture.events }
+      report.captureDiagnostics.push(captureDiagnostic)
+      fs.writeFileSync(path.join(out, `${scenario}-menu-capture.json`), JSON.stringify(captureDiagnostic, null, 2))
+      if (await actions.isVisible()) await page.keyboard.press('Escape')
+      await actions.waitFor({ state: 'hidden' })
+      await map.getByRole('button', { name: 'Voltar à matriz', exact: true }).click()
+      await map.getByRole('button', { name: 'Grafo', exact: true }).click()
+      await map.getByRole('button', { name: 'Pausar movimento', exact: true }).click()
+      await motionNode.focus(); await page.keyboard.press('Shift+F10')
+      actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
+      await actions.getByRole('menuitem', { name: 'Ir para a página ↗', exact: true }).click()
+      await page.waitForURL(/#aprender\/inflacao$/)
+      await page.locator('.learn-card.is-focus').waitFor()
+      report.results.push({ width, theme, status: 'pass', motion: true, pauseZoom: true, pan: true, drag: true, localStar: true, matrix: true, emptySearch: true, filters: true, publication: true, contextMenu: true, keyboardMenu: true, menuFocusReturn: true, newsPopup: true, internalDestination: true, externalRequestsBlocked: true, overflow: false })
       await context.close()
     }
     assert.equal(report.results.length, 4)
     assert.deepEqual(report.errors, [])
     report.passed = true
-    console.log('PASS mapa: 4 cenários, movimento, zoom, pan/drag, conexões diretas, matriz, busca, notícias e responsividade')
+    console.log('PASS mapa: 4 cenários, movimento, zoom, pan/drag, conexões diretas, matriz, busca, notícias, popup bloqueado, menu de contexto, teclado e responsividade')
   } catch (error) {
     report.failure = `${activeScenario}: ${error.message}`
     if (activePage) await activePage.screenshot({ path: path.join(out, `${activeScenario}-failure.png`), fullPage: true }).catch(() => {})
