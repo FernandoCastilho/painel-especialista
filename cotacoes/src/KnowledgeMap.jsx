@@ -79,7 +79,7 @@ function NodeContextMenu({ node, point, onClose, onSelect, onOpen }) {
     if (!el) return
     const rect = el.getBoundingClientRect()
     setPosition(contextPosition(point, rect.width, rect.height))
-    el.querySelector('[role="menuitem"]:not([aria-disabled="true"])')?.focus()
+    el.querySelector('[role="menuitem"]:not([aria-disabled="true"])')?.focus({ preventScroll: true })
     const outside = e => { if (!el.contains(e.target)) onClose() }
     const dismiss = () => onClose()
     document.addEventListener('pointerdown', outside, true)
@@ -101,7 +101,7 @@ function NodeContextMenu({ node, point, onClose, onSelect, onOpen }) {
       e.preventDefault()
       const at = items.indexOf(document.activeElement)
       const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : (at + (e.key === 'ArrowUp' ? -1 : 1) + items.length) % items.length
-      items[next]?.focus()
+      items[next]?.focus({ preventScroll: true })
     }
   }}>
     <p className="km-context-title">{node.label}</p>
