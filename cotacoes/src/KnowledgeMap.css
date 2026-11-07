@@ -97,3 +97,11 @@
 .km-label-layer{pointer-events:none}.km-label.is-selected{fill:var(--km-sector);font-weight:700}.km-label.is-dim{opacity:.2}
 
 .km-focus-label{font-size:.64rem;color:var(--mut);text-align:right}
+.km-context-menu{position:fixed;z-index:1000;width:min(280px,calc(100vw - 16px));box-sizing:border-box;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--fg);box-shadow:0 12px 40px #0005;font:inherit}
+.km-context-title{margin:3px 8px 8px;font-size:.75rem;font-weight:600;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;color:var(--mut)}
+.km-context-menu [role="menuitem"]{box-sizing:border-box;display:flex;align-items:center;width:100%;min-height:44px;padding:10px;border:0;border-radius:5px;background:transparent;color:var(--fg);text-align:left;text-decoration:none;font:inherit;font-size:.83rem;cursor:pointer;touch-action:manipulation}
+.km-context-menu [role="menuitem"]:hover,.km-context-menu [role="menuitem"]:focus-visible{background:var(--surface-3);outline:2px solid var(--km-sector,#6aa9ff);outline-offset:-2px}
+.km-context-menu [aria-disabled="true"]{color:var(--mut);opacity:.6;cursor:default}.km-context-unavailable{margin:0 10px 8px;font-size:.7rem;color:var(--mut)}
+.km-more-options{background:transparent;border:1px solid var(--line);border-radius:5px;color:var(--mut);padding:7px 12px}
+.km-node,.km-list-item,.km-relations button{-webkit-touch-callout:none}
+@media(max-width:600px){.km-hint{font-size:.59rem;line-height:1.4;right:65px}}
