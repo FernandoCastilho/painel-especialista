@@ -82,7 +82,8 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
         const r = element.getBoundingClientRect()
         return [...element.querySelectorAll('[data-node-id]')].find(node => {
           const n = node.getBoundingClientRect(), x = (n.left + n.right) / 2, y = (n.top + n.bottom) / 2
-          return x > r.left + 60 && x < r.right - 90 && y > r.top + 60 && y < r.bottom - 80
+          const hit = document.elementFromPoint(x, y)?.closest('[data-node-id]')
+          return x > r.left + 60 && x < r.right - 90 && y > r.top + 60 && y < r.bottom - 80 && hit === node
         })?.getAttribute('data-node-id')
       })
       assert.ok(draggableId, 'há nó no campo visual para arrastar')

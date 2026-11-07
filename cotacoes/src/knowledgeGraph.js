@@ -158,7 +158,18 @@ export function buildKnowledgeGraph({ sectorNews, news, temas, curadoria, archiv
   if (curadoria?.schemaVersion === 1) for (const topic of CURADORIA_TOPICS) {
     const data = normalizeCuradoria(curadoria, topic.id, now)
     if (data?.stale) coverageNotes.add('Curadoria com atualização parcial ou atrasada; a data de cada publicação continua sendo respeitada.')
-    for (const item of data?.items || []) admit(item, 'curadoria', [topic.id])
+    if (!data) continue
+    // Curadoria's shared projection exposes t only. Keep the original publication
+    // fields here, deriving t before that projection so a newer t cannot revive
+    // an old/invalid publication or erase conservative day precision.
+    for (const raw of list(curadoria.topics?.[topic.id]?.items)) {
+      const explicitPublication = raw?.publishedAt !== undefined
+      const bounds = explicitPublication ? publicationBounds(raw) : null
+      if (explicitPublication && (!bounds || !within(bounds.min, now) || !within(bounds.max, now))) continue
+      for (const item of curateItems(topic.id, [{ ...raw, t: bounds?.t ?? raw?.t }], [], now)) {
+        admit({ ...item, ...(explicitPublication ? { publishedAt: raw.publishedAt, datePrecision: raw.datePrecision } : {}) }, 'curadoria', [topic.id])
+      }
+    }
   }
   if (Array.isArray(archive) || (archive?.schemaVersion === 1 && archive.windowDays === KNOWLEDGE_WINDOW_DAYS)) {
     for (const item of list(Array.isArray(archive) ? archive : archive.items)) if (['sector', 'curadoria', 'news', 'temas'].includes(item?.origin)) admit(item, item.origin, list(item.topicIds))

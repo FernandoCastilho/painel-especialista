@@ -119,6 +119,27 @@ test('curadoria7d preserva fonte original e revalida classificação no archive'
   assert.equal(newsNodes(buildKnowledgeGraph({ archive: archive([{ ...graph.archiveItems[0], sourceUrl: 'https://fonte-inventada.org' }]), now: NOW })).length, 0)
 })
 
+test('curadoria usa publicação original antes da curadoria, sem perder precisão ou nome canônico da fonte', () => {
+  const curatedGraph = patch => buildKnowledgeGraph({ now: NOW, curadoria: { schemaVersion: 1, windowDays: 7, generatedAt: NOW, topics: { reforma: { items: [generic({ title: 'Reforma tributária: IBS e CBS em debate', source: 'Nome bruto não canônico', t: NOW - 3600000, ...patch })], status: 'ok', checkedAt: NOW, lastSuccessAt: NOW } } } })
+  for (const publishedAt of ['2026-01-01T12:00:00Z', new Date(NOW + 1).toISOString(), 'inválida', '2026-02-30T12:00:00Z']) {
+    const graph = curatedGraph({ publishedAt })
+    assert.equal(newsNodes(graph).length, 0, `t recente não substitui publicação ${publishedAt}`)
+    assert.equal(graph.archiveItems.length, 0)
+  }
+  for (const publishedAt of ['2026-10-31', '2026-11-07']) assert.equal(newsNodes(curatedGraph({ publishedAt, datePrecision: 'day' })).length, 0, `limites conservadores para ${publishedAt}`)
+  const graph = curatedGraph({ publishedAt: '2026-11-03', datePrecision: 'day', t: NOW - 20 * 86400000 })
+  assert.equal(newsNodes(graph).length, 1, 'publicação válida prevalece também sobre t antigo')
+  const node = newsNodes(graph)[0]
+  assert.equal(node.publishedAt, '2026-11-03')
+  assert.equal(node.datePrecision, 'day')
+  assert.equal(node.source, 'Agência Brasil')
+  assert.equal(graph.archiveItems[0].publishedAt, '2026-11-03')
+  assert.equal(graph.archiveItems[0].datePrecision, 'day')
+  const exact = curatedGraph({ publishedAt: new Date(NOW - KNOWLEDGE_WINDOW_MS).toISOString() })
+  assert.equal(newsNodes(exact).length, 1, 'extremo exato de168h aceito')
+  assert.equal(newsNodes(exact)[0].t, NOW - KNOWLEDGE_WINDOW_MS)
+})
+
 test('montagem do histórico não simula nova coleta e preserva lacunas de cobertura', () => {
   const graph = buildKnowledgeGraph({ now: NOW, archive: { ...archive([]), sourceUpdatedAt: NOW - 86400000, status: 'partial', coverageNotes: ['Fonte original sem atualização confirmada.'] } })
   assert.equal(graph.meta.lastUpdatedAt, NOW - 86400000)
