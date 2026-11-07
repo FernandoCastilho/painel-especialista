@@ -15,7 +15,7 @@ const fixtures = {
   'temas.json': { generatedAt: now, temas: {} },
   'recado.json': { ativo: false },
 }
-const report = { schemaVersion: 1, passed: false, scope: 'UI com dados fictícios; não comprova coleta ou fontes externas.', results: [], errors: [] }
+const report = { schemaVersion: 1, passed: false, scope: 'UI com dados fictícios; não comprova coleta ou fontes externas.', results: [], errors: [], captureDiagnostics: [] }
 const frames = page => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
 
 ;(async () => {
@@ -162,15 +162,37 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       await sourceLink.click({ trial: true })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1), false, 'sem transbordamento horizontal')
       await page.screenshot({ path: path.join(out, `${scenario}-news.png`), fullPage: true })
-      // Exercise the action before taking evidence. A full-page screenshot may
-      // resize/scroll the page, which legitimately dismisses this fixed menu.
+      // Functional actions are checked above. Screenshot persistence is not a
+      // product requirement; record any dismissing events instead of guessing
+      // their cause or altering the application's scroll/resize behaviour.
       await article.click({ button: 'right' })
       actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
       await actions.waitFor()
       assert.equal(await actions.isVisible(), true, 'menu visível antes da captura de viewport')
-      await page.screenshot({ path: path.join(out, `${scenario}-context-menu.png`) })
-      assert.equal(await actions.isVisible(), true, 'captura de viewport preserva o menu')
-      await page.keyboard.press('Escape')
+      const beforeCapture = await page.evaluate(() => {
+        const events = []
+        const state = () => {
+          const menu = document.querySelector('.km-context-menu'), rect = menu?.getBoundingClientRect()
+          return { menuVisible: !!rect && rect.width > 0 && rect.height > 0, menu: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null, scrollX, scrollY, innerWidth, innerHeight, clientWidth: document.documentElement.clientWidth, clientHeight: document.documentElement.clientHeight }
+        }
+        const record = event => {
+          if (events.length < 40) events.push({ type: event.type, target: event.target === window ? 'window' : event.target === document ? 'document' : `${event.target?.tagName || 'unknown'}${event.target?.id ? '#' + event.target.id : ''}`, time: performance.now(), ...state() })
+        }
+        for (const type of ['scroll', 'resize', 'pointerdown', 'wheel']) window.addEventListener(type, record, true)
+        window.__knowledgeMenuCapture = { state, events, stop: () => { for (const type of ['scroll', 'resize', 'pointerdown', 'wheel']) window.removeEventListener(type, record, true) } }
+        return state()
+      })
+      await page.screenshot({ path: path.join(out, `${scenario}-context-menu.png`), caret: 'initial' })
+      await frames(page)
+      const afterCapture = await page.evaluate(() => {
+        const probe = window.__knowledgeMenuCapture, result = { state: probe.state(), events: probe.events }
+        probe.stop(); delete window.__knowledgeMenuCapture
+        return result
+      })
+      const captureDiagnostic = { scenario, method: 'Playwright viewport screenshot, caret initial', before: beforeCapture, after: afterCapture.state, events: afterCapture.events }
+      report.captureDiagnostics.push(captureDiagnostic)
+      fs.writeFileSync(path.join(out, `${scenario}-menu-capture.json`), JSON.stringify(captureDiagnostic, null, 2))
+      if (await actions.isVisible()) await page.keyboard.press('Escape')
       await actions.waitFor({ state: 'hidden' })
       await map.getByRole('button', { name: 'Voltar à matriz', exact: true }).click()
       await map.getByRole('button', { name: 'Grafo', exact: true }).click()
