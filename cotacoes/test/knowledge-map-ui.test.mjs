@@ -15,6 +15,11 @@ import { canonicalNewsUrl } from '../src/sectorNews.js'
 const require = createRequire(import.meta.url)
 const NOW = Date.parse('2026-11-07T15:00:00Z')
 const allNodes = el => Array.isArray(el) ? el.flatMap(allNodes) : el && typeof el === 'object' ? [el, ...allNodes(el.props?.children)] : []
+const memo = (fn, deps) => {
+  const cache = React.useRef()
+  if (!cache.current || deps.some((dep, i) => !Object.is(dep, cache.current.deps[i]))) cache.current = { deps, value: fn() }
+  return cache.current.value
+}
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 const concept = { id: 'concept:teste', type: 'concept', label: 'Conceito sintético', summary: 'Uma explicação de teste.', route: { tab: 'aprender', view: 'teste' } }
 const article = { id: 'news:teste', type: 'news', label: 'Manchete sintética de teste', summary: 'Publicação relacionada por tema.', source: 'Fonte sintética', href: 'https://www.gov.br/noticia-de-teste', publishedAt: '2026-11-06', datePrecision: 'day', t: Date.parse('2026-11-06T15:00:00Z'), licenseUrl: 'https://creativecommons.org/licenses/by-nd/3.0/' }
@@ -24,12 +29,12 @@ const fixture = (nodes = [concept, article], links = [edge]) => ({ nodes, links,
 async function setupMap(t, { resource = { status: 'ok', data: {} }, graph = fixture(), persisted, reduced = false } = {}) {
   const source = await readFile(new URL('../src/KnowledgeMap.jsx', import.meta.url), 'utf8')
   const { code } = await transform(`${source}\nexport { NodeContextMenu }`, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
-  const module = { exports: {} }, calls = [], destinations = [], opened = [], timers = new Map(), listeners = new Map()
+  const module = { exports: {} }, calls = [], destinations = [], opened = [], portals = [], timers = new Map(), listeners = new Map()
   let clock = NOW, timerId = 0, elapsed = 0
   const matchMedia = () => ({ matches: reduced, addEventListener() {}, removeEventListener() {} })
   const dependencies = {
-    react: { ...React, useMemo: fn => fn() },
-    'react-dom': { createPortal: element => element },
+    react: { ...React, useMemo: memo },
+    'react-dom': { createPortal: (element, target) => { portals.push(target); return element } },
     './sectorNews.js': { canonicalNewsUrl },
     './useDataFile.js': { useDataFile: () => resource },
     './useNewsClock.js': { useNewsClock: () => clock },
@@ -38,7 +43,7 @@ async function setupMap(t, { resource = { status: 'ok', data: {} }, graph = fixt
     './KnowledgeMap.css': {},
     './Help.jsx': { __esModule: true, default: ({ label, children }) => React.createElement('details', {}, React.createElement('summary', {}, label), children) },
   }
-  const document = { body: {}, activeElement: null, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) }
+  const document = { body: { style: {} }, documentElement: { clientWidth: 1280, clientHeight: 900 }, activeElement: null, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) }
   runInNewContext(code, {
     module, exports: module.exports,
     window: { matchMedia, innerWidth: 1280, innerHeight: 900, open: (...args) => { opened.push(args); return null }, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) },
@@ -53,7 +58,7 @@ async function setupMap(t, { resource = { status: 'ok', data: {} }, graph = fixt
   t.after(() => render.close())
   await render.settle()
   return {
-    render, calls, destinations, opened, listeners,
+    render, calls, destinations, opened, portals, listeners, document,
     html: () => renderToStaticMarkup(render.value),
     find: predicate => allNodes(render.value).find(predicate),
     button(label) { return this.find(node => node.type === 'button' && (node.props['aria-label'] || textOf(node)) === label) },
@@ -154,7 +159,7 @@ test('list, search, type filters and reset retain understandable results and nav
   assert.ok(item)
   item.props.onClick()
   await h.render.settle()
-  assert.equal(h.button('Retomar movimento').props['aria-pressed'], true)
+  assert.equal(h.button('Pausar movimento').props['aria-pressed'], false, 'seleção reorganiza sem impor uma pausa ao usuário')
   await h.click('Abrir conceito ↗')
   assert.deepEqual(h.destinations, [['aprender', 'teste']])
   assert.match(h.html(), /Conexões diretas/)
@@ -334,7 +339,7 @@ test('Aprender starts in map mode and keeps concept routes and the original list
   const module = { exports: {} }, destinations = []
   const passthrough = ({ children }) => React.createElement('div', {}, children)
   const dependencies = {
-    react: { ...React, useMemo: fn => fn() },
+    react: { ...React, useMemo: memo },
     './educacao.js': educacao,
     './Aprender.css': {},
     './Avisos.jsx': { Aviso: passthrough },
@@ -371,7 +376,7 @@ test('surface handlers support pinch, remaining-finger panning, cancellation and
   const { code } = await transform(`${source}\nexport { GraphSurface }`, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }, selected = []
   const dependencies = {
-    react: { ...React, useMemo: fn => fn(), useEffect() {} },
+    react: { ...React, useMemo: memo, useEffect() {} },
     'react-dom': { createPortal: element => element }, './sectorNews.js': { canonicalNewsUrl },
     './useDataFile.js': {}, './useNewsClock.js': {}, './knowledgeGraph.js': {},
     './knowledgeLayout.js': layout, './KnowledgeMap.css': {}, './Help.jsx': {},
@@ -405,44 +410,21 @@ test('surface handlers support pinch, remaining-finger panning, cancellation and
   assert.doesNotMatch(transformOf(), /NaN|Infinity/)
 })
 
-test('resuming the simulation preserves the camera while the explicit camera reset returns to the matrix', async t => {
-  const source = await readFile(new URL('../src/KnowledgeMap.jsx', import.meta.url), 'utf8')
-  const { code } = await transform(`${source}\nexport { GraphSurface }`, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
-  const module = { exports: {} }
-  const stage = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 900, height: 540 }), addEventListener() {}, removeEventListener() {} }
-  let refIndex = 0
-  const dependencies = {
-    react: { ...React, useMemo: fn => fn(), useRef: initial => { const ref = React.useRef(initial); if (refIndex++ === 0) ref.current = stage; return ref } },
-    'react-dom': { createPortal: element => element }, './sectorNews.js': { canonicalNewsUrl },
-    './useDataFile.js': {}, './useNewsClock.js': {}, './knowledgeGraph.js': {},
-    './knowledgeLayout.js': layout, './KnowledgeMap.css': {}, './Help.jsx': {},
-  }
-  runInNewContext(code, {
-    module, exports: module.exports,
-    ResizeObserver: class { observe() {} disconnect() {} },
-    requestAnimationFrame: () => 1, cancelAnimationFrame() {}, document: { hidden: false },
-    require: name => dependencies[name] ?? require(name),
-  })
-  const graph = fixture()
-  const props = { graph, selectedId: '', onSelect() {}, paused: true, reduced: false, restart: 0, cameraReset: 0, labels: false }
-  const render = hookRenderer(() => { refIndex = 0; return module.exports.GraphSurface(props) })
-  t.after(() => render.close())
-  await render.settle()
-  const camera = () => allNodes(render.value).find(node => node.type === 'g' && node.props.transform?.includes('scale(')).props.transform
-  const zoom = allNodes(render.value).find(node => node.type === 'button' && node.props['aria-label'] === 'Aproximar mapa')
-  zoom.props.onClick()
-  await render.settle()
-  const zoomed = camera()
-  assert.match(zoomed, /scale\(1\.25\)/)
-  props.paused = false; props.restart++
-  render.render(); await render.settle()
-  assert.equal(camera(), zoomed)
-  props.paused = true; props.restart++
-  render.render(); await render.settle()
-  assert.equal(camera(), zoomed)
-  props.cameraReset++
-  render.render(); await render.settle()
-  assert.equal(camera(), 'translate(0 0) scale(1)')
+test('resuming the simulation preserves the camera while the explicit camera reset reframes the matrix', async t => {
+  const h = await setupSurface(t)
+  await h.frames()
+  await h.click('Aproximar mapa')
+  const zoomed = h.camera().transform
+  h.props.paused = false; h.props.restart++
+  h.render.render(); await h.render.settle(); await h.frames(90)
+  assert.equal(h.camera().transform, zoomed)
+  h.props.paused = true; h.props.restart++
+  h.render.render(); await h.render.settle(); await h.frames(90)
+  assert.equal(h.camera().transform, zoomed)
+  h.props.cameraReset++
+  h.render.render(); await h.render.settle(); await h.frames()
+  assert.notEqual(h.camera().transform, zoomed, 'reset explícito abandona o zoom manual')
+  h.assertVisible(900, 540)
 })
 
 test('graph news activation is suppressed after drag, pinch, cancellation and long press; keyboard actions are distinct', async t => {
@@ -451,7 +433,7 @@ test('graph news activation is suppressed after drag, pinch, cancellation and lo
   const module = { exports: {} }, activated = [], contexts = [], focused = [], timers = new Map()
   let elapsed = 0, timerId = 0
   const dependencies = {
-    react: { ...React, useMemo: fn => fn(), useEffect() {} },
+    react: { ...React, useMemo: memo, useEffect() {} },
     'react-dom': { createPortal: element => element }, './sectorNews.js': { canonicalNewsUrl },
     './useDataFile.js': {}, './useNewsClock.js': {}, './knowledgeGraph.js': {},
     './knowledgeLayout.js': layout, './KnowledgeMap.css': {}, './Help.jsx': {},
@@ -515,4 +497,276 @@ test('graph news activation is suppressed after drag, pinch, cancellation and lo
   newsNode().props.onKeyDown(key('ArrowRight'))
   assert.deepEqual(focused, [concept.id])
   assert.equal(timers.size, 0)
+})
+
+async function setupFullscreen(t, mode = 'native') {
+  const source = await readFile(new URL('../src/KnowledgeMap.jsx', import.meta.url), 'utf8')
+  const { code } = await transform(`${source}\nexport { useMapFullscreen }`, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+  const module = { exports: {} }, listeners = new Map(), calls = { request: 0, exit: 0, focus: 0 }
+  const emit = async (type, event = {}) => {
+    for (const listener of listeners.get(type) || []) listener({ type, preventDefault() {}, stopPropagation() {}, ...event })
+    await render.settle()
+  }
+  const document = {
+    body: { style: { overflow: 'auto' } }, fullscreenElement: null, activeElement: null,
+    addEventListener(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn) },
+    removeEventListener(type, fn) { listeners.get(type)?.delete(fn) },
+    async exitFullscreen() { calls.exit++; document.fullscreenElement = null; for (const listener of listeners.get('fullscreenchange') || []) listener() },
+  }
+  const button = { isConnected: true, focus() { calls.focus++; document.activeElement = button }, getAttribute: () => null }
+  const container = { contains: node => node === button, querySelectorAll: () => [button], querySelector: () => button }
+  if (mode !== 'unsupported') container.requestFullscreen = async () => {
+    calls.request++
+    if (mode === 'rejected') throw new Error('Fullscreen negado no ensaio')
+    document.fullscreenElement = container
+    for (const listener of listeners.get('fullscreenchange') || []) listener()
+  }
+  const dependencies = {
+    react: { ...React, useMemo: memo }, 'react-dom': { createPortal: element => element },
+    './sectorNews.js': { canonicalNewsUrl }, './useDataFile.js': {}, './useNewsClock.js': {},
+    './knowledgeGraph.js': {}, './knowledgeLayout.js': layout, './KnowledgeMap.css': {}, './Help.jsx': {},
+  }
+  runInNewContext(code, { module, exports: module.exports, document, window: {}, setTimeout, clearTimeout,
+    requestAnimationFrame: fn => { queueMicrotask(() => fn(0)); return 1 }, cancelAnimationFrame() {},
+    require: name => dependencies[name] ?? require(name) })
+  const ref = { current: container }
+  const render = hookRenderer(() => module.exports.useMapFullscreen(ref))
+  t.after(() => render.close())
+  await render.settle()
+  if (render.value.buttonRef) render.value.buttonRef.current = button
+  return {
+    render, document, container, calls, listeners, emit,
+    async toggle() { await render.value.toggleFullscreen({ currentTarget: button }); await render.settle() },
+  }
+}
+
+test('native fullscreen enters the map, tracks browser Escape and restores scrolling/focus without re-entering', async t => {
+  const h = await setupFullscreen(t)
+  assert.equal(h.render.value.expanded, false)
+  await h.toggle()
+  assert.equal(h.calls.request, 1)
+  assert.equal(h.document.fullscreenElement, h.container)
+  assert.equal(h.render.value.expanded, true)
+  assert.equal(h.document.body.style.overflow, 'hidden')
+  h.document.fullscreenElement = null
+  await h.emit('fullscreenchange')
+  assert.equal(h.render.value.expanded, false, 'fullscreenchange reflects a native Escape/back action')
+  assert.equal(h.document.body.style.overflow, 'auto')
+  assert.ok(h.calls.focus > 0, 'focus returns to the fullscreen button')
+  assert.equal(h.calls.request, 1, 'native exit never loops back into fullscreen')
+  await h.toggle()
+  await h.toggle()
+  assert.equal(h.calls.exit, 1, 'the explicit exit uses the browser API')
+  assert.equal(h.render.value.expanded, false)
+  assert.equal(h.document.body.style.overflow, 'auto')
+})
+
+test('unavailable or rejected fullscreen falls back to an expanded map and Escape exits it', async t => {
+  for (const mode of ['unsupported', 'rejected']) {
+    const h = await setupFullscreen(t, mode)
+    await h.toggle()
+    assert.equal(h.render.value.expanded, true, mode)
+    assert.equal(h.document.fullscreenElement, null)
+    assert.equal(h.document.body.style.overflow, 'hidden')
+    await h.emit('keydown', { key: 'Escape', defaultPrevented: true })
+    assert.equal(h.render.value.expanded, true, 'a menu-handled Escape must not also close the map')
+    await h.emit('keydown', { key: 'Escape', defaultPrevented: false })
+    assert.equal(h.render.value.expanded, false, mode)
+    assert.equal(h.document.body.style.overflow, 'auto')
+    assert.equal(h.calls.exit, 0)
+    assert.equal(h.calls.request, mode === 'rejected' ? 1 : 0)
+    assert.ok(h.calls.focus > 0)
+    await h.toggle()
+    h.render.close()
+    assert.equal(h.document.body.style.overflow, 'auto', 'unmount restores the previous scroll behaviour')
+    assert.equal([...h.listeners.values()].reduce((sum, set) => sum + set.size, 0), 0, 'unmount removes fullscreen and keyboard listeners')
+  }
+})
+
+test('a fullscreen context menu is portalled inside the active fullscreen surface', async t => {
+  const h = await setupMap(t)
+  await h.click('Lista')
+  const item = h.find(node => node.type === 'button' && node.props.className?.includes('km-list-item km-concept'))
+  h.document.fullscreenElement = { id: 'fullscreen-map-test' }
+  await h.contextFor(item)
+  const menu = await h.menu()
+  assert.ok(menu.find(node => node.props?.role === 'menuitem' && textOf(node) === 'Ver conexões'))
+  assert.equal(h.portals.at(-1), h.document.fullscreenElement, 'body portals are hidden behind native fullscreen')
+})
+
+test('selection preserves an explicitly chosen pause while leaving automatic layout enabled otherwise', async t => {
+  const h = await setupMap(t)
+  await h.click('Lista')
+  const selectConcept = async () => {
+    const item = h.find(node => node.type === 'button' && node.props.className?.includes('km-list-item km-concept'))
+    item.props.onClick(); await h.render.settle()
+  }
+  await selectConcept()
+  assert.equal(h.button('Pausar movimento').props['aria-pressed'], false)
+  await h.click('Pausar movimento')
+  await selectConcept()
+  assert.equal(h.button('Retomar movimento').props['aria-pressed'], true)
+})
+
+async function setupSurface(t, { graph = fixture(), selectedId = '', reduced = false } = {}) {
+  const source = await readFile(new URL('../src/KnowledgeMap.jsx', import.meta.url), 'utf8')
+  const { code } = await transform(`${source}\nexport { GraphSurface }`, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+  const module = { exports: {} }, callbacks = new Map()
+  let size = { width: 900, height: 540 }, resize, refIndex = 0, time = 0, frameId = 0
+  const stage = { getBoundingClientRect: () => ({ left: 0, top: 0, ...size }), setPointerCapture() {}, addEventListener() {}, removeEventListener() {} }
+  const dependencies = {
+    react: { ...React, useMemo: memo, useRef: initial => { const ref = React.useRef(initial); if (refIndex++ === 0) ref.current = stage; return ref } },
+    'react-dom': { createPortal: element => element }, './sectorNews.js': { canonicalNewsUrl }, './useDataFile.js': {},
+    './useNewsClock.js': {}, './knowledgeGraph.js': {}, './knowledgeLayout.js': layout, './KnowledgeMap.css': {}, './Help.jsx': {},
+  }
+  runInNewContext(code, {
+    module, exports: module.exports, performance: { now: () => time }, document: { hidden: false }, setTimeout, clearTimeout,
+    requestAnimationFrame: fn => { const id = ++frameId; callbacks.set(id, fn); return id }, cancelAnimationFrame: id => callbacks.delete(id),
+    ResizeObserver: class { constructor(fn) { resize = fn } observe() {} disconnect() {} },
+    require: name => dependencies[name] ?? require(name),
+  })
+  const props = { graph, selectedId, reduced, onSelect() {}, paused: true, restart: 0, cameraReset: 0, labels: false }
+  const render = hookRenderer(() => { refIndex = 0; return module.exports.GraphSurface(props) })
+  t.after(() => render.close())
+  await render.settle()
+  const camera = () => {
+    const transform = allNodes(render.value).find(node => node.type === 'g' && node.props.transform?.includes('scale(')).props.transform
+    const [, x, y, k] = transform.match(/translate\(([-\d.e+]+)[ ,]+([-\d.e+]+)\) scale\(([-\d.e+]+)\)/)
+    return { x: Number(x), y: Number(y), k: Number(k), transform }
+  }
+  return {
+    render, props, camera,
+    async frames(duration = 500) {
+      for (const end = time + duration; time <= end; time += 16) {
+        const batch = [...callbacks]; callbacks.clear()
+        for (const [, fn] of batch) fn(time)
+        await render.settle()
+      }
+    },
+    async resize(width, height) { size = { width, height }; resize(); await render.settle() },
+    async click(label) {
+      const button = allNodes(render.value).find(node => node.type === 'button' && node.props['aria-label'] === label)
+      assert.ok(button, label); button.props.onClick(); await render.settle()
+    },
+    async send(name, x, y) {
+      render.value.props[name]({ pointerId: 1, clientX: x, clientY: y, pointerType: 'mouse', button: 0, type: 'pointerup', target: { closest: () => null } })
+      await render.settle()
+    },
+    assertVisible(width, height) {
+      const c = camera()
+      for (const node of allNodes(render.value).filter(node => node.props?.['data-node-id'])) {
+        const [, x, y] = node.props.transform.match(/translate\(([-\d.e+]+)[ ,]+([-\d.e+]+)\)/)
+        const screenX = Number(x) * c.k + c.x, screenY = Number(y) * c.k + c.y
+        assert.ok(screenX >= 10 && screenX <= width - 10 && screenY >= 10 && screenY <= height - 10, `${node.props['data-node-id']} fica dentro de ${width}x${height}: ${screenX},${screenY}`)
+      }
+    },
+  }
+}
+
+test('local selection and viewport resize reframe every point immediately with reduced motion', async t => {
+  const h = await setupSurface(t, { reduced: true })
+  const initial = h.camera().transform
+  const nodes = [concept, ...Array.from({ length: 8 }, (_, index) => ({ ...article, id: `news:neighbour-${index}`, label: `Vizinho sintético ${index}` }))]
+  h.props.graph = fixture(nodes, nodes.slice(1).map(node => ({ ...edge, id: `link:${node.id}`, target: node.id })))
+  h.props.selectedId = concept.id
+  h.render.render(); await h.render.settle()
+  assert.notEqual(h.camera().transform, initial, 'selecionar recalcula o enquadramento')
+  h.assertVisible(900, 540)
+  assert.notEqual(h.render.value.props['data-camera-fitting'], true, 'movimento reduzido não agenda uma viagem da câmera')
+  const desktopCamera = h.camera().transform
+  await h.resize(360, 420)
+  assert.notEqual(h.camera().transform, desktopCamera)
+  h.assertVisible(360, 420)
+})
+
+test('manual zoom and pan interrupt automatic framing instead of fighting the user', async t => {
+  const h = await setupSurface(t)
+  await h.frames()
+  const neighbour = { ...article, id: 'news:second', label: 'Segundo vizinho' }
+  h.props.graph = fixture([concept, article, neighbour], [edge, { ...edge, id: 'link:second', target: neighbour.id }])
+  h.props.selectedId = concept.id
+  h.render.render(); await h.render.settle()
+  await h.frames(16)
+  await h.click('Aproximar mapa')
+  const zoomed = h.camera().transform
+  await h.frames(600)
+  assert.equal(h.camera().transform, zoomed, 'automatic camera is cancelled by zoom')
+  h.props.cameraReset++
+  h.render.render(); await h.render.settle()
+  await h.frames(16)
+  await h.send('onPointerDown', 10, 10)
+  await h.send('onPointerMove', 40, 30)
+  await h.send('onPointerUp', 40, 30)
+  const panned = h.camera().transform
+  await h.frames(600)
+  assert.equal(h.camera().transform, panned, 'automatic camera is cancelled by pan')
+  h.props.restart++; h.props.paused = false
+  h.render.render(); await h.render.settle()
+  await h.frames(120)
+  assert.equal(h.camera().transform, panned, 'simulation ticks do not continually steal camera control')
+})
+
+test('refreshing equivalent graph data preserves manual framing and the current local arrangement', async t => {
+  const h = await setupSurface(t, { selectedId: concept.id })
+  await h.frames()
+  await h.click('Aproximar mapa')
+  await h.send('onPointerDown', 10, 10)
+  await h.send('onPointerMove', 45, 35)
+  await h.send('onPointerUp', 45, 35)
+  const manual = h.camera().transform
+  const positions = () => allNodes(h.render.value).filter(node => node.props?.['data-node-id']).map(node => node.props.transform)
+  const beforeRefresh = positions()
+  h.props.graph = fixture(h.props.graph.nodes.map(node => ({ ...node })), h.props.graph.links.map(link => ({ ...link })))
+  h.render.render(); await h.render.settle(); await h.frames(500)
+  assert.equal(h.camera().transform, manual, 'a source/clock refresh with equivalent points does not reset the camera')
+  assert.deepEqual(positions(), beforeRefresh, 'paused local positions survive an equivalent graph rebuild')
+})
+
+test('an equivalent source refresh during framing does not strand the camera halfway', async t => {
+  const h = await setupSurface(t, { selectedId: concept.id })
+  await h.frames(48)
+  const halfway = h.camera().transform
+  assert.equal(h.render.value.props['data-camera-fitting'], true, 'the regression starts with framing still in progress')
+  h.props.graph = fixture(h.props.graph.nodes.map(node => ({ ...node })), h.props.graph.links.map(link => ({ ...link })))
+  h.render.render(); await h.render.settle()
+  await h.frames(500)
+  assert.notEqual(h.camera().transform, halfway, 'the original camera journey continues through equivalent source updates')
+  assert.notEqual(h.render.value.props['data-camera-fitting'], true)
+  h.assertVisible(900, 540)
+})
+
+test('enabling reduced motion during framing immediately finishes the camera journey', async t => {
+  const h = await setupSurface(t, { selectedId: concept.id })
+  await h.frames(48)
+  const halfway = h.camera().transform
+  assert.equal(h.render.value.props['data-camera-fitting'], true)
+  h.props.reduced = true
+  h.render.render(); await h.render.settle()
+  const completed = h.camera().transform
+  assert.notEqual(completed, halfway, 'the preference change goes straight to the framing target')
+  assert.notEqual(h.render.value.props['data-camera-fitting'], true)
+  h.assertVisible(900, 540)
+  await h.frames(500)
+  assert.equal(h.camera().transform, completed, 'no remaining animation overrides reduced motion')
+})
+
+test('mobile detail drawer exposes its state and collapses when another point is selected', async t => {
+  const h = await setupMap(t)
+  await h.click('Lista')
+  const conceptRow = h.find(node => node.type === 'button' && node.props.className?.includes('km-list-item km-concept'))
+  conceptRow.props.onClick(); await h.render.settle()
+  const toggle = () => h.find(node => node.props?.className === 'km-detail-toggle')
+  assert.equal(toggle().props['aria-expanded'], false)
+  assert.equal(toggle().props['aria-controls'], 'km-detail-content')
+  assert.ok(h.find(node => node.props?.id === 'km-detail-content'), 'toggle references actual detail content')
+  toggle().props.onClick(); await h.render.settle()
+  assert.equal(toggle().props['aria-expanded'], true)
+  assert.match(h.find(node => node.type === 'aside').props.className, /\bis-open\b/)
+  const related = h.button(`${article.label} ›`)
+  await h.contextFor(related)
+  const menu = await h.menu()
+  await menu.click('Ver conexões')
+  assert.equal(toggle().props['aria-expanded'], false, 'another selected point leaves more space for the mobile graph')
+  assert.doesNotMatch(h.find(node => node.type === 'aside').props.className, /\bis-open\b/)
+  assert.match(textOf(h.find(node => node.props?.id === 'km-detail-content')), /Fonte sintética/)
 })

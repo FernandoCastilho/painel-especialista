@@ -17,6 +17,19 @@ const fixtures = {
 }
 const report = { schemaVersion: 1, passed: false, scope: 'UI com dados fictícios; não comprova coleta ou fontes externas.', results: [], errors: [], captureDiagnostics: [] }
 const frames = page => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+const cameraReady = page => page.waitForFunction(() => document.querySelector('.km-stage')?.dataset.cameraFitting !== 'true')
+const scaleOf = transform => Number(transform.match(/scale\(([^)]+)\)/)[1])
+const localFits = stage => stage.evaluate(element => {
+  const r = element.getBoundingClientRect(), selected = element.querySelector('.km-node.is-selected')?.getBoundingClientRect()
+  const nodes = [...element.querySelectorAll('.km-node')].map(node => node.getBoundingClientRect())
+  const labels = [...element.querySelectorAll('.km-label')].map(label => label.getBoundingClientRect())
+  return {
+    allInside: nodes.every(n => n.left >= r.left + 4 && n.right <= r.right - 4 && n.top >= r.top + 4 && n.bottom <= r.bottom - 4),
+    labelsInside: labels.every(n => n.left >= r.left + 2 && n.right <= r.right - 2 && n.top >= r.top + 2 && n.bottom <= r.bottom - 2),
+    selectedVisible: !!selected && selected.left >= r.left && selected.right <= r.right && selected.top >= r.top && selected.bottom <= r.bottom,
+    stage: { width: r.width, height: r.height }, nodes: nodes.length,
+  }
+})
 
 ;(async () => {
   fs.mkdirSync(out, { recursive: true })
@@ -25,7 +38,7 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
   try {
     for (const width of [390, 1280]) for (const theme of ['light', 'dark']) {
       const scenario = `${width}-${theme}`
-      const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: 'no-preference', serviceWorkers: 'block' })
+      const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 1000 }, colorScheme: theme, reducedMotion: 'no-preference', serviceWorkers: 'block' })
       const page = await context.newPage()
       activePage = page; activeScenario = scenario
       page.setDefaultTimeout(10000)
@@ -57,9 +70,11 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       await map.getByRole('button', { name: 'Pausar movimento', exact: true }).click()
       await frames(page)
       const camera = map.locator('.km-svg > g').first()
+      await cameraReady(page)
+      const initialScale = scaleOf(await camera.getAttribute('transform'))
       await map.getByRole('button', { name: 'Aproximar mapa', exact: true }).click()
       const zoomed = await camera.getAttribute('transform')
-      assert.match(zoomed, /scale\(1\.25\)/)
+      assert.equal(scaleOf(zoomed), Math.min(4, initialScale * 1.25), 'zoom parte do enquadramento calculado')
       await map.getByRole('button', { name: 'Retomar movimento', exact: true }).click()
       await frames(page)
       await map.getByRole('button', { name: 'Pausar movimento', exact: true }).click()
@@ -79,7 +94,7 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       await page.mouse.move(blank.x + 36, blank.y + 24, { steps: 6 }); await page.mouse.up()
       const panned = await camera.getAttribute('transform')
       assert.notEqual(panned, zoomed, 'arrastar o fundo move a câmera')
-      assert.match(panned, /scale\(1\.25\)/)
+      assert.equal(scaleOf(panned), scaleOf(zoomed))
       const draggableId = await stage.evaluate(element => {
         const r = element.getBoundingClientRect()
         return [...element.querySelectorAll('[data-node-id]')].find(node => {
@@ -99,6 +114,7 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       await map.getByRole('button', { name: 'Voltar à matriz', exact: true }).click()
       await map.getByRole('button', { name: 'Pausar movimento', exact: true }).click()
       await frames(page)
+      await cameraReady(page)
       await motionNode.focus(); await page.keyboard.press('Shift+F10')
       let actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
       await actions.waitFor()
@@ -122,6 +138,62 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       })
       assert.equal(star.direct, true, 'nenhuma linha entre vizinhos no foco local')
       assert.equal(star.lines, star.nodes - 1, 'estrela contém somente conexões do selecionado')
+      await cameraReady(page)
+      const fitted = await localFits(stage)
+      assert.equal(fitted.allInside, true, 'seleção enquadra todos os pontos locais sem exigir ajuste manual')
+      assert.equal(fitted.selectedVisible, true)
+      assert.equal(fitted.labelsInside, true, 'rótulos locais cabem na área visível')
+      const selectedBeforeFullscreen = await map.locator('.km-node.is-selected').getAttribute('data-node-id')
+      await map.getByRole('button', { name: 'Tela cheia', exact: true }).click()
+      await map.getByRole('button', { name: 'Sair da tela cheia', exact: true }).waitFor()
+      await cameraReady(page)
+      const fullscreen = await map.evaluate(element => {
+        const r = element.getBoundingClientRect()
+        return { native: document.fullscreenElement === element, expanded: element.classList.contains('is-fullscreen'), modal: element.getAttribute('aria-modal'), x: r.x, y: r.y, width: r.width, height: r.height, viewportWidth: innerWidth, viewportHeight: innerHeight }
+      })
+      assert.equal(fullscreen.expanded, true)
+      assert.equal(fullscreen.modal, 'true')
+      assert.ok(Math.abs(fullscreen.x) <= 1 && Math.abs(fullscreen.y) <= 1, 'tela cheia começa no canto do viewport')
+      assert.ok(Math.abs(fullscreen.width - fullscreen.viewportWidth) <= 2 && Math.abs(fullscreen.height - fullscreen.viewportHeight) <= 2, 'tela cheia ocupa a área disponível')
+      assert.equal((await localFits(stage)).allInside, true, 'fullscreen refaz o enquadramento da seleção')
+      assert.equal((await localFits(stage)).labelsInside, true, 'fullscreen mantém os rótulos locais no campo visual')
+      assert.ok((await localFits(stage)).stage.height >= 180, 'canvas continua utilizável no celular')
+      if (width === 390) {
+        const drawer = map.locator('.km-detail-toggle')
+        await drawer.waitFor()
+        assert.equal(await drawer.getAttribute('aria-expanded'), 'false')
+        assert.equal(await map.locator('#km-detail-content').isVisible(), false, 'detalhes começam recolhidos no fullscreen do celular')
+        const closedHeight = (await localFits(stage)).stage.height
+        await drawer.click()
+        assert.equal(await drawer.getAttribute('aria-expanded'), 'true')
+        await map.locator('.km-detail h3').waitFor()
+        await cameraReady(page)
+        assert.equal((await localFits(stage)).allInside, true, 'abrir detalhes reenquadra o grafo no espaço restante')
+        assert.ok((await localFits(stage)).stage.height < closedHeight, 'o painel de detalhes usa somente sua área necessária')
+        await drawer.click()
+        assert.equal(await drawer.getAttribute('aria-expanded'), 'false')
+        await cameraReady(page)
+        assert.equal((await localFits(stage)).allInside, true)
+      }
+      await motionNode.click({ button: 'right' })
+      actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
+      await actions.waitFor()
+      assert.equal(await actions.evaluate(menu => !!menu.closest('.knowledge-map.is-fullscreen')), true, 'menu continua dentro da superfície fullscreen')
+      await actions.getByRole('menuitem', { name: 'Ver conexões', exact: true }).click()
+      await actions.waitFor({ state: 'hidden' })
+      await cameraReady(page)
+      assert.equal(await map.locator('.km-node.is-selected').getAttribute('data-node-id'), selectedBeforeFullscreen)
+      await page.screenshot({ path: path.join(out, `${scenario}-fullscreen.png`) })
+      await page.keyboard.press('Escape')
+      await map.getByRole('button', { name: 'Tela cheia', exact: true }).waitFor()
+      await cameraReady(page)
+      assert.equal(await map.locator('.km-node.is-selected').getAttribute('data-node-id'), selectedBeforeFullscreen, 'sair da tela cheia preserva o foco local')
+      assert.equal(await map.locator('.km-node').count(), focusedCount)
+      await map.getByRole('button', { name: 'Tela cheia', exact: true }).click()
+      await map.getByRole('button', { name: 'Sair da tela cheia', exact: true }).click()
+      await map.getByRole('button', { name: 'Tela cheia', exact: true }).waitFor()
+      await cameraReady(page)
+      assert.equal((await localFits(stage)).allInside, true, 'saída explícita reenquadra sem perder a seleção')
       await page.screenshot({ path: path.join(out, `${scenario}-focused.png`), fullPage: true })
       await map.getByRole('button', { name: 'Voltar à matriz', exact: true }).click()
       assert.equal(await map.locator('.km-node').count(), total, 'retorno restaura a matriz completa')
@@ -202,13 +274,13 @@ const frames = page => page.evaluate(() => new Promise(resolve => requestAnimati
       await actions.getByRole('menuitem', { name: 'Ir para a página ↗', exact: true }).click()
       await page.waitForURL(/#aprender\/inflacao$/)
       await page.locator('.learn-card.is-focus').waitFor()
-      report.results.push({ width, theme, status: 'pass', motion: true, pauseZoom: true, pan: true, drag: true, localStar: true, matrix: true, emptySearch: true, filters: true, publication: true, contextMenu: true, keyboardMenu: true, menuFocusReturn: true, newsPopup: true, internalDestination: true, externalRequestsBlocked: true, overflow: false })
+      report.results.push({ width, theme, status: 'pass', motion: true, pauseZoom: true, pan: true, drag: true, localStar: true, autoFit: true, fullscreen: true, nativeFullscreen: fullscreen.native, fullscreenMenu: true, fullscreenExit: true, mobileDetailDrawer: width === 390, matrix: true, emptySearch: true, filters: true, publication: true, contextMenu: true, keyboardMenu: true, menuFocusReturn: true, newsPopup: true, internalDestination: true, externalRequestsBlocked: true, overflow: false })
       await context.close()
     }
     assert.equal(report.results.length, 4)
     assert.deepEqual(report.errors, [])
     report.passed = true
-    console.log('PASS mapa: 4 cenários, movimento, zoom, pan/drag, conexões diretas, matriz, busca, notícias, popup bloqueado, menu de contexto, teclado e responsividade')
+    console.log('PASS mapa: 4 cenários, movimento, zoom, pan/drag, conexões diretas, enquadramento automático, tela cheia/saída/menu, matriz, busca, notícias, popup bloqueado, menu de contexto, teclado e responsividade')
   } catch (error) {
     report.failure = `${activeScenario}: ${error.message}`
     if (activePage) await activePage.screenshot({ path: path.join(out, `${activeScenario}-failure.png`), fullPage: true }).catch(() => {})
