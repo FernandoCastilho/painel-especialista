@@ -168,7 +168,7 @@ export function canonicalNewsUrl(value) {
   } catch { return null }
 }
 
-export function validateSectorNewsItem(raw, now = Date.now()) {
+export function validateSectorNewsItem(raw, now = Date.now(), { windowMs = SECTOR_NEWS_WINDOW_MS } = {}) {
   const source = SECTOR_NEWS_SOURCES.find(s => s.id === raw?.sourceId)
   if (!source?.enabled) return { reason: 'source_not_approved' }
   if (typeof raw.title !== 'string' || !raw.title.trim() || raw.title.length > 600 || /<[^>]*>/.test(raw.title)) return { reason: 'invalid_title' }
@@ -177,7 +177,10 @@ export function validateSectorNewsItem(raw, now = Date.now()) {
   const bounds = publicationBounds(raw)
   if (!bounds) return { reason: 'invalid_publication_date' }
   if (bounds.max > now) return { reason: 'future_or_uncertain_publication' }
-  if (bounds.min < now - SECTOR_NEWS_WINDOW_MS) return { reason: 'outside_120h_or_uncertain_boundary' }
+  // The knowledge map may retain already approved headlines for seven days.
+  // Existing readers keep their five-day default; callers cannot extend past 168h.
+  const publicationWindow = Number.isFinite(windowMs) && windowMs > 0 ? Math.min(windowMs, 7 * 86400000) : SECTOR_NEWS_WINDOW_MS
+  if (bounds.min < now - publicationWindow) return { reason: 'outside_120h_or_uncertain_boundary' }
   const collected = validIsoTimestamp(raw.collectedAt)
   if (collected === null || collected > now || collected < bounds.min) return { reason: 'invalid_collection_date' }
   if (!source.allowedTypes.includes(raw.type)) return { reason: 'wrong_source_type' }
