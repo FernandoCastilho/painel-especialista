@@ -72,6 +72,7 @@ test('Aprender renderiza casos acessíveis, links primários e o aviso históric
     if (name === './Avisos.jsx') return { Aviso: passthrough }
     if (name === './TerminalDesk.jsx') return { Panel: passthrough }
     if (name === './Help.jsx') return { __esModule: true, default: passthrough }
+    if (name === './KnowledgeMap.jsx') return { __esModule: true, default: () => null }
     return require(name)
   } })
   const html = renderToStaticMarkup(React.createElement(module.exports.default, { view: 'juros-forcados', goto: () => {} }))

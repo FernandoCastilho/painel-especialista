@@ -142,6 +142,11 @@ jobs:
         run: node scripts/fetch-temas.mjs
         timeout-minutes: 4
         continue-on-error: true
+      - name: Reter matérias do mapa por sete dias sem nova coleta
+        # Também roda nos pacotes de Trends/Focus sem alterar dados preservados.
+        # Antecede a poda setorial de cinco dias para guardar itens ainda válidos.
+        run: node scripts/refresh-knowledge-news.mjs
+        timeout-minutes: 2
       - name: Revalidar janela setorial sem coleta externa
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
         run: node scripts/fetch-sector-news.mjs --offline

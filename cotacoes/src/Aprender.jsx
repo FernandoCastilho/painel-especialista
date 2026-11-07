@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CONCEITOS, CONEXAO, LIGACOES, buscarConceitos, conexoesDe, porTopico } from './educacao.js'
 import Help from './Help.jsx'
 import './Aprender.css'
+import KnowledgeMap from './KnowledgeMap.jsx'
 
 const nomeCurto = (id) => CONCEITOS.find((c) => c.id === id)?.nome.replace(/ \(.*\)/, '') ?? id
 import { Panel } from './TerminalDesk.jsx'
@@ -123,8 +124,11 @@ export default function Aprender({ view = '', goto }) {
       detail.current.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
     }
   }, [chosen])
+  const mapMode = !view || view === 'mapa'
   return (
     <div className="learn">
+      <nav className="learn-mode" aria-label="Explorar Aprender"><button type="button" aria-pressed={mapMode} onClick={() => goto('aprender', 'mapa')}>Mapa do conhecimento</button><button type="button" aria-pressed={!mapMode} onClick={() => goto('aprender', chosen?.id || 'conceitos')}>Conceitos</button></nav>
+      {mapMode ? <KnowledgeMap goto={goto} /> : <>
       <Aviso title="Aprender · exemplos didáticos"><p>Os exemplos usam números redondos para facilitar a conta; não são cotações de mercado.</p></Aviso>
       <div className="learn-split">
         <nav className="learn-list" aria-label="Conceitos">
@@ -173,6 +177,7 @@ export default function Aprender({ view = '', goto }) {
           )}
         </section>
       </div>
+      </>}
     </div>
   )
 }
