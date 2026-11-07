@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useIntraday, fromInput } from './useHistory.js'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { marketDate } from './marketReturns.js'
-import { LIMITE_PCT, alertasDoDia, baseDoDia, textoAlerta } from './alertaVariacao.js'
+import { LIMITE_PCT, alertasDoDia, textoAlerta } from './alertaVariacao.js'
 import { notificarAlerta, permissaoNotificacao } from './alertaNotificacao.js'
 
 // Um alerta por moeda/sentido/dia. A faixa não depende da permissão do sistema.
@@ -13,16 +12,14 @@ const ler = () => {
   } catch { return {} }
 }
 const gravar = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)) } catch { /* deduplicação apenas nesta sessão */ } }
-const firstOf = (s) => (s.status === 'ok' ? baseDoDia(s.data?.points) : null)
 const entregue = (entry) => Number.isFinite(entry?.sistemaEnviadoEm) && entry.sistemaEnviadoEm > 0
 
 export default function AlertaVariacao({ quotes }) {
   const testing = typeof navigator !== 'undefined' && navigator.webdriver // o smoke próprio desliga isso
-  const today = fromInput(marketDate(Date.now()))
-  const usd = useIntraday('USD', today, testing)
-  const eur = useIntraday('EUR', today, testing)
   const [estado, setEstado] = useState(ler)
   const estadoRef = useRef(estado)
+  const quotesRef = useRef(quotes)
+  quotesRef.current = quotes
   const ativo = useRef(true)
   const pendentes = useRef(new Set())
   const pedindo = useRef(false)
@@ -31,7 +28,6 @@ export default function AlertaVariacao({ quotes }) {
   const [pedidoErro, setPedidoErro] = useState('')
   const [falhas, setFalhas] = useState({})
   const [tentativa, setTentativa] = useState(0)
-  const alertas = useMemo(() => (testing ? [] : alertasDoDia({ quotes, firsts: { USD: firstOf(usd), EUR: firstOf(eur) } })), [quotes, usd, eur, testing])
   const salvar = useCallback((change) => {
     const hoje = marketDate(Date.now())
     const next = change(Object.fromEntries(Object.entries(estadoRef.current).filter(([k]) => k.startsWith(hoje + ':'))))
@@ -53,12 +49,19 @@ export default function AlertaVariacao({ quotes }) {
   }, [])
 
   useEffect(() => {
-    if (perm !== 'granted') return
-    for (const a of alertas) {
+    if (testing || perm !== 'granted') return
+    // Permissão e retry podem ocorrer muito depois do último render com cotações.
+    for (const a of alertasDoDia({ quotes })) {
       const entry = estadoRef.current[a.id]
       if (entry?.dispensado || entregue(entry) || pendentes.current.has(a.id)) continue
       pendentes.current.add(a.id)
-      notificarAlerta(a).then((enviado) => {
+      notificarAlerta(() => {
+        // getRegistration é assíncrono: revalida imediatamente antes de despachar,
+        // usando os dados mais recentes e sem enviar um alerta já dispensado/desmontado.
+        const entry = estadoRef.current[a.id]
+        if (!ativo.current || entry?.dispensado || entregue(entry)) return null
+        return alertasDoDia({ quotes: quotesRef.current }).find((atual) => atual.id === a.id) ?? null
+      }).then((enviado) => {
         // O antigo `notificado` era gravado mesmo sem envio e não comprova entrega.
         // Persistir só depois que o navegador aceitar a notificação, sem presumir que a pessoa a viu.
         if (enviado) salvar((s) => ({ ...s, [a.id]: { ...s[a.id], sistemaEnviadoEm: Date.now() } }))
@@ -68,9 +71,9 @@ export default function AlertaVariacao({ quotes }) {
         }
       }).finally(() => pendentes.current.delete(a.id))
     }
-  }, [alertas, perm, tentativa, salvar])
+  }, [quotes, testing, perm, tentativa, salvar])
 
-  const visiveis = alertas.filter((a) => !estado[a.id]?.dispensado)
+  const visiveis = (testing ? [] : alertasDoDia({ quotes })).filter((a) => !estado[a.id]?.dispensado)
   const falhou = visiveis.some((a) => falhas[a.id] && !entregue(estado[a.id]))
   const dispensar = (id) => salvar((s) => ({ ...s, [id]: { ...s[id], dispensado: true } }))
   const pedir = async () => {
@@ -104,7 +107,7 @@ export default function AlertaVariacao({ quotes }) {
         {pedidoErro && <p>{pedidoErro}</p>}
       </div>}
       {falhou && perm === 'granted' && <p>Não foi possível enviar a notificação do sistema. O alerta permanece no painel. <button type="button" className="linklike alerta-var-perm" onClick={() => setTentativa((n) => n + 1)}>Tentar enviar novamente</button></p>}
-      <p className="muted alerta-var-metodo">Dólar e euro: mais de ±0,30% desde a primeira cotação disponível a partir das 9h de Brasília. Esta referência difere do Δ dia da tabela. Verificação enquanto o app está aberto e visível; não há monitoramento contínuo em segundo plano nem com o app fechado.</p>
+      <p className="muted alerta-var-metodo">Dólar e euro: mais de ±0,30% em relação ao fechamento anterior da fonte, usando o mesmo Δ dia da tabela. Sem fechamento no dia anterior, vale o último fechamento disponível na fonte. Alertas a partir das 9h de Brasília. Verificação enquanto o app está aberto e visível; não há monitoramento contínuo em segundo plano nem com o app fechado.</p>
     </section>
   )
 }

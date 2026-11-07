@@ -10,16 +10,17 @@ import * as regras from '../src/alertaVariacao.js'
 import * as datas from '../src/marketReturns.js'
 
 const require = createRequire(import.meta.url)
-const NOW = Date.parse('2026-11-05T15:00:00Z'), BASE = Date.parse('2026-11-05T12:05:00Z')
+const NOW = Date.parse('2026-11-05T15:00:00Z')
 const ID = '2026-11-05:USD:alta', KEY = 'alerta-variacao'
-const quote = (bid) => ({ bid, timestamp: NOW - 60000 })
+const quote = (bid) => { const base = bid < 5.6 ? 5.5 : 6; return { bid, delta: bid - base, pct: (bid / base - 1) * 100, timestamp: NOW - 60000 } }
 const quotesAlerta = () => ({ USD: quote(5.52), EUR: quote(6) })
 const nodes = (el) => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const textOf = (el) => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 
-async function setup(t, { permission = 'default', quotes = quotesAlerta(), saved = {}, unsupported = false, noStorage = false } = {}) {
+async function setup(t, { permission = 'default', quotes = quotesAlerta(), saved = {}, unsupported = false, noStorage = false, now = NOW } = {}) {
+  const clock = { now }
   const store = new Map([[KEY, JSON.stringify(saved)]]), events = new Map(), deliveries = [], requests = []
-  const behavior = { fail: false, registration: true, waiting: null, requestResult: 'granted', requestError: false, permitWaiting: null }
+  const behavior = { fail: false, registration: true, registrationWaiting: null, waiting: null, requestResult: 'granted', requestError: false, permitWaiting: null }
   const add = (type, fn) => { if (!events.has(type)) events.set(type, new Set()); events.get(type).add(fn) }
   const remove = (type, fn) => events.get(type)?.delete(fn)
   function Notification(title, options) {
@@ -34,16 +35,17 @@ async function setup(t, { permission = 'default', quotes = quotesAlerta(), saved
     Notification.permission = behavior.requestResult
     return behavior.requestResult
   }
-  const navegador = { webdriver: false, serviceWorker: { getRegistration: async () => behavior.registration ? {
+  const navegador = { webdriver: false, serviceWorker: { getRegistration: async () => {
+    if (behavior.registrationWaiting) await behavior.registrationWaiting.promise
+    return behavior.registration ? {
     showNotification: async (title, options) => {
       if (behavior.waiting) await behavior.waiting.promise
       if (behavior.fail) throw new Error('Sistema indisponível')
       deliveries.push({ title, options, via: 'service-worker' })
     },
-  } : null } }
-  const intraday = { USD: { status: 'ok', data: { points: [{ t: BASE, bid: 5.5 }] } }, EUR: { status: 'ok', data: { points: [{ t: BASE, bid: 6 }] } } }
+  } : null } } }
   const sandbox = {
-    Date: class extends Date { static now() { return NOW } },
+    Date: class extends Date { static now() { return clock.now } },
     navigator: navegador,
     document: { hidden: false, addEventListener: add, removeEventListener: remove },
     window: { addEventListener: add, removeEventListener: remove },
@@ -52,9 +54,9 @@ async function setup(t, { permission = 'default', quotes = quotesAlerta(), saved
   }
   const deps = {
     react: { ...React, useMemo: (fn, deps) => React.useCallback(fn(), deps) },
-    './alertaVariacao.js': { ...regras, alertasDoDia: (args) => regras.alertasDoDia({ ...args, now: NOW }) },
+    './alertaVariacao.js': { ...regras, alertasDoDia: (args) => regras.alertasDoDia({ ...args, now: clock.now }) },
     './marketReturns.js': datas,
-    './useHistory.js': { fromInput: (s) => new Date(s + 'T12:00:00Z'), useIntraday: (code) => intraday[code] },
+    './useHistory.js': { useIntraday: () => { throw new Error('Alerta não depende mais de intraday') } },
   }
   for (const file of ['alertaNotificacao.js', 'AlertaVariacao.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
@@ -68,7 +70,7 @@ async function setup(t, { permission = 'default', quotes = quotesAlerta(), saved
   t.after(() => render.close())
   await render.settle()
   return {
-    render, deliveries, requests, store, behavior, Notification,
+    render, deliveries, requests, store, behavior, Notification, clock,
     state: () => JSON.parse(store.get(KEY)),
     text: () => textOf(render.value),
     button: (name) => nodes(render.value).find((n) => n.type === 'button' && (n.props['aria-label'] ?? textOf(n)).includes(name)),
@@ -80,7 +82,7 @@ async function setup(t, { permission = 'default', quotes = quotesAlerta(), saved
 test('sem alerta nem permissão, oferece ativação sem abrir prompt automaticamente', async t => {
   const h = await setup(t, { quotes: { USD: quote(5.5), EUR: quote(6) } })
   assert.ok(h.button('Permitir notificações de câmbio'))
-  assert.match(h.text(), /mais de ±0,30%.*9h de Brasília.*difere do Δ dia.*aberto e visível.*monitoramento contínuo em segundo plano nem com o app fechado/)
+  assert.match(h.text(), /mais de ±0,30%.*fechamento anterior.*mesmo Δ dia.*último fechamento disponível.*9h de Brasília.*aberto e visível.*monitoramento contínuo em segundo plano nem com o app fechado/)
   assert.equal(h.requests.length, 0)
   assert.equal(h.deliveries.length, 0)
   assert.deepEqual(h.state(), {})
@@ -200,4 +202,99 @@ test('dólar/euro e sentidos opostos são independentes e estados simultâneos n
   assert.equal(h.state()['2026-11-05:USD:queda'].sistemaEnviadoEm, NOW)
   await h.refresh({ USD: quote(5.52), EUR: quote(5.97) })
   assert.equal(h.deliveries.length, 3)
+})
+
+
+test('permissão tardia não envia cotação que passou de 9m59s para 10m01s', async t => {
+  const quotes = quotesAlerta(); quotes.USD.timestamp = NOW - 599000
+  const h = await setup(t, { quotes })
+  h.clock.now += 2000
+  await h.button('Permitir notificações').props.onClick(); await h.render.settle()
+  assert.equal(h.deliveries.length, 0)
+  assert.deepEqual(h.state(), {})
+  assert.doesNotMatch(h.text(), /Dólar em alta/)
+  await h.refresh({ ...quotes, USD: { ...quotes.USD, timestamp: h.clock.now } })
+  assert.equal(h.deliveries.length, 1, 'nova cotação válida ainda pode enviar o alerta não consumido')
+})
+
+test('cotação pode expirar com o diálogo de permissão ainda aberto', async t => {
+  const quotes = quotesAlerta(); quotes.USD.timestamp = NOW - 599000
+  const h = await setup(t, { quotes })
+  h.behavior.permitWaiting = deferred()
+  const permission = h.button('Permitir notificações').props.onClick()
+  await h.render.settle(); h.clock.now += 2000
+  h.behavior.permitWaiting.resolve(); await permission; await h.render.settle()
+  assert.equal(h.deliveries.length, 0)
+  assert.deepEqual(h.state(), {})
+})
+
+test('retry revalida idade e não consome um alerta vencido', async t => {
+  const quotes = quotesAlerta(); quotes.USD.timestamp = NOW - 599000
+  const h = await setup(t, { quotes })
+  h.behavior.fail = true
+  await h.button('Permitir notificações').props.onClick(); await h.render.settle()
+  const retry = h.button('Tentar enviar novamente')
+  assert.ok(retry)
+  h.behavior.fail = false; h.clock.now += 2000
+  retry.props.onClick(); await h.render.settle()
+  assert.equal(h.deliveries.length, 0)
+  assert.deepEqual(h.state(), {})
+  assert.ok(!h.button('Tentar enviar novamente'))
+})
+
+test('liberação externa também descarta a cotação expirada', async t => {
+  const quotes = quotesAlerta(); quotes.USD.timestamp = NOW - 599000
+  const h = await setup(t, { quotes, permission: 'denied' })
+  h.clock.now += 2000; h.Notification.permission = 'granted'
+  await h.event('focus')
+  assert.equal(h.deliveries.length, 0)
+  assert.deepEqual(h.state(), {})
+})
+
+test('espera pelo service worker revalida idade antes de showNotification ou Notification', async t => {
+  for (const registration of [true, false]) {
+    const quotes = quotesAlerta(); quotes.USD.timestamp = NOW - 599000
+    const h = await setup(t, { quotes })
+    h.behavior.registration = registration
+    h.behavior.registrationWaiting = deferred()
+    await h.button('Permitir notificações').props.onClick(); await h.render.settle()
+    h.clock.now += 2000
+    h.behavior.registrationWaiting.resolve(); await h.render.settle()
+    assert.equal(h.deliveries.length, 0)
+    assert.deepEqual(h.state(), {})
+  }
+})
+
+test('cotação nova substitui texto pendente; reversão e dispensa cancelam o envio aguardando registro', async t => {
+  for (const change of ['new', 'reverse', 'dismiss', 'unmount']) {
+    const h = await setup(t)
+    h.behavior.registrationWaiting = deferred()
+    await h.button('Permitir notificações').props.onClick(); await h.render.settle()
+    if (change === 'new') await h.refresh({ USD: quote(5.53), EUR: quote(6) })
+    if (change === 'reverse') await h.refresh({ USD: quote(5.5), EUR: quote(6) })
+    if (change === 'dismiss') { h.button('Dispensar alerta do dólar').props.onClick(); await h.render.settle() }
+    if (change === 'unmount') h.render.close()
+    h.behavior.registrationWaiting.resolve(); await h.render.settle()
+    assert.equal(h.deliveries.length, change === 'new' ? 1 : 0)
+    if (change === 'new') assert.match(h.deliveries[0].options.body, /5,5300/)
+    else assert.equal(h.state()[ID]?.sistemaEnviadoEm, undefined)
+  }
+})
+
+test('permissão e retry após meia-noite de Brasília não enviam o alerta de ontem', async t => {
+  for (const retry of [false, true]) {
+    const now = Date.parse('2026-11-06T02:59:59Z')
+    const quotes = { USD: { ...quote(5.52), timestamp: now }, EUR: { ...quote(6), timestamp: now } }
+    const h = await setup(t, { quotes, now })
+    if (retry) {
+      h.behavior.fail = true
+      await h.button('Permitir notificações').props.onClick(); await h.render.settle()
+      h.behavior.fail = false
+    }
+    const button = h.button(retry ? 'Tentar enviar novamente' : 'Permitir notificações')
+    h.clock.now += 2000
+    await button.props.onClick(); await h.render.settle()
+    assert.equal(h.deliveries.length, 0)
+    assert.deepEqual(h.state(), {})
+  }
 })

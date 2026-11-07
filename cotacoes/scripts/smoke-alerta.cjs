@@ -4,11 +4,11 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
 const { mkdir } = require('node:fs/promises')
 const path = require('node:path')
 const now = Date.parse('2026-11-05T18:00:00Z'), first = Date.parse('2026-11-05T12:00:00Z') // 15h e 9h em Brasília
-const raw = (bid) => ({ bid: String(bid), ask: String(bid * 1.0003), high: String(bid * 1.01), low: String(bid * .99), pctChange: '0.2', varBid: '0.01', timestamp: String((now - 60000) / 1000) })
-const quotes = { generatedAt: now - 60000, source: 'AwesomeAPI', rejected: {}, quotes: { USDBRL: raw(5.5), EURBRL: raw(6.15), JPYBRL: raw(.0347), USDCNH: raw(6.67) } }
-// A amostra anterior às 9h deve ser ignorada, embora tenha preço muito diferente.
+const raw = (bid, previous = bid) => ({ bid: String(bid), ask: String(bid * 1.0003), high: String(bid * 1.01), low: String(bid * .99), pctChange: String((bid / previous - 1) * 100), varBid: String(bid - previous), timestamp: String((now - 60000) / 1000) })
+const quotes = { generatedAt: now - 60000, source: 'AwesomeAPI', rejected: {}, quotes: { USDBRL: raw(5.5, 5.48), EURBRL: raw(6.15, 6.14), JPYBRL: raw(.0347), USDCNH: raw(6.67) } }
+// A primeira amostra de hoje tem o preço atual: só o fechamento anterior pode disparar USD.
 const points = (base, last) => [[first - 300000, 4], [first, base], [now - 60000, last]]
-const intraday = { generatedAt: now - 60000, resolution: '5 min', series: { USD: { points: points(5.48, 5.5) }, EUR: { points: points(6.14, 6.15) }, JPY: { points: [] }, CNH: { points: [] } } }
+const intraday = { generatedAt: now - 60000, resolution: '5 min', series: { USD: { points: points(5.5, 5.5) }, EUR: { points: points(6.15, 6.15) }, JPY: { points: [] }, CNH: { points: [] } } }
 const id = '2026-11-05:USD:alta'
 ;(async () => {
   const b = await chromium.launch(require('./smoke-launch.cjs')()), base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5216'
@@ -67,7 +67,7 @@ const id = '2026-11-05:USD:alta'
     const checkBanner = async () => {
       const items = p.locator('.alerta-var-item'); await items.waitFor()
       assert.equal(await items.count(), 1, 'euro dentro do limite não deve disparar')
-      assert.match(await items.innerText(), /Dólar em alta de 0,36% desde a primeira cotação do dia \(5,4800 às 09:00/)
+      assert.match(await items.innerText(), /Dólar em alta de 0,36% em relação ao fechamento anterior da fonte \(5,4800 → 5,5000/)
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'faixa sem rolagem lateral')
     }
     const finish = async () => { assert.deepEqual(errors, []); await ctx.close() }
@@ -135,7 +135,23 @@ const id = '2026-11-05:USD:alta'
       assert.equal((await s.ledger()).attempts, 2)
       await capture(s.p, `alerta-${width}-envio-recuperado.png`)
       await s.finish()
-      console.log(`${width} PASS alerta após9h, base09h, permissão tardia/externa, dispensa/reload, falha/retry e deduplicação`)
+      // A cotação envelhece sem nova leitura: permissão/retry não podem enviar o alerta vencido.
+      for (const retryExpired of [false, true]) {
+        s = await start(width, retryExpired ? 'granted' : 'default', retryExpired)
+        await s.checkBanner()
+        const action = s.p.getByRole('button', { name: retryExpired ? 'Tentar enviar novamente' : 'Permitir notificações de câmbio' })
+        await action.waitFor()
+        await s.p.clock.setFixedTime(now + 540001) // timestamp original now-60000: idade 10min + 1ms
+        await s.p.evaluate(() => window.qaNotification.patch({ fail: false }))
+        await action.click()
+        await s.p.locator('.alerta-var-item').waitFor({ state: 'detached' })
+        assert.equal((await s.ledger()).sent.length, 0, 'cotação vencida não é despachada')
+        assert.equal((await s.ledger()).attempts, retryExpired ? 1 : 0, 'não inicia uma nova tentativa com dado vencido')
+        assert.equal(await s.saved(), undefined, 'cotação vencida não consome a deduplicação')
+        await s.finish()
+      }
+      console.log(`${width} PASS alerta após9h, fechamento-anterior, permissão tardia/externa, dispensa/reload, falha/retry, deduplicação e expiração no envio`)
+
     }
   } finally { await b.close() }
 })().catch((e) => { console.error(e); process.exit(1) })
