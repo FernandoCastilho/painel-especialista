@@ -502,7 +502,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await p.locator('.feriados').innerText(), /Não há datas cadastradas nesta seleção\. Consulte a fonte oficial: a cobertura incompleta não indica ausência de feriados\./)
       assert.doesNotMatch(await p.locator('.feriados').innerText(), /Emancipação Política do Paraná/, '19 de dezembro não volta a ser apresentado como feriado civil estadual')
       // aprender: lista de conceitos de um lado, explicação do outro, sem texto sobre o método
-      await p.goto(base + '/#aprender')
+      await p.goto(base + '/#aprender/conceitos')
       await p.locator('.learn-list').waitFor()
       const expandir = async () => {
         const button = p.getByRole('button', { name: 'Expandir todas', exact: true })
@@ -549,7 +549,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
         assert.match(await p.locator('.learn-detail').innerText(), rx, nome)
       }
       await p.locator('.learn-detail .learn-go').click(); await p.waitForURL('**/#cenarios/inflacao')
-      await p.goto(base + '/#aprender')
+      await p.goto(base + '/#aprender/conceitos')
       await p.locator('.learn-list').waitFor()
       const geral = p.locator('.learn-detail')
       await geral.getByRole('heading', { name: 'Como as peças se encaixam' }).waitFor()

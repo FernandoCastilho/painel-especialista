@@ -47,7 +47,17 @@ const links = {
       assert.equal(await page.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
       await contained('Conta Garantida')
 
-      await visit('aprender', '.learn-group')
+      await visit('aprender', '.knowledge-map')
+      await page.locator('.km-node').first().waitFor()
+      assert.equal(await page.getByRole('button', { name: 'Mapa do conhecimento', exact: true }).getAttribute('aria-pressed'), 'true')
+      assert.equal(await page.getByRole('navigation', { name: 'Explorar Aprender', exact: true }).getByRole('button', { name: 'Conceitos', exact: true }).getAttribute('aria-pressed'), 'false')
+      assert.equal(await page.locator('.learn-list').count(), 0)
+      assert.equal(await page.getByRole('group', { name: 'Mostrar no mapa', exact: true }).getByRole('button').count(), 3)
+      assert.equal(await page.getByRole('button', { name: 'Voltar à matriz', exact: true }).count(), 1)
+      await contained('Mapa do conhecimento')
+      await page.screenshot({ path: path.join(out, width + '-mapa-conhecimento.png') })
+
+      await visit('aprender/conceitos', '.learn-group')
       assert.equal(await page.locator('.learn-group').count(), 7)
       assert.equal(await page.locator('.learn-group[open]').count(), 0)
       await page.getByRole('button', { name: 'Expandir todas', exact: true }).click()
@@ -97,7 +107,7 @@ const links = {
       assert.ok(box && box.width >= 44 && box.height >= 44 && box.x >= 0 && box.x + box.width <= width + 1, 'Governança: botão inteiro dentro da tela')
       await page.screenshot({ path: path.join(out, width + '-config.png') })
       assert.deepEqual(errors, [])
-      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender 27/7, CET, história dos juros e categorias', 'dois links BNDES', 'Google Trends', 'tema automático', 'Governança sem overflow'], errors })
+      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender abre mapa com pontos, filtros e retorno à matriz', 'Aprender 27/7, CET, história dos juros e categorias', 'dois links BNDES', 'Google Trends', 'tema automático', 'Governança sem overflow'], errors })
       await context.close()
       page = null
     }
