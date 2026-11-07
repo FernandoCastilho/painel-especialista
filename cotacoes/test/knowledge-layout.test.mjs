@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createKnowledgeLayout, stepKnowledgeLayout } from '../src/knowledgeLayout.js'
+import { createKnowledgeLayout, stepKnowledgeLayout, focusKnowledgeLayout, fitKnowledgeCamera } from '../src/knowledgeLayout.js'
 
 const nodes = [
   { id: 'sector/industry', type: 'sector', group: 'industry' },
@@ -91,4 +91,110 @@ test('a sparse network forms a cloud instead of rows against the stage borders',
     assert.ok(layout.nodes.some(node => Math.abs(node.x - width / 2) > width * 0.15), 'network still has horizontal spread')
     assert.ok(layout.nodes.some(node => Math.abs(node.y - height / 2) > height * 0.15), 'network still has vertical spread')
   }
+})
+
+test('a local neighborhood gets its own centered, deterministic composition', () => {
+  const localNodes = Array.from({ length: 13 }, (_, index) => ({ id: `local-${index}`, type: index ? 'concept' : 'sector' }))
+  const localLinks = localNodes.slice(1).map(node => ({ source: localNodes[0].id, target: node.id }))
+  const original = structuredClone(localNodes)
+  const layout = createKnowledgeLayout(localNodes, localLinks, 320, 420)
+  const otherOrder = createKnowledgeLayout([...localNodes].reverse(), localLinks, 320, 420)
+  focusKnowledgeLayout(layout, 'local-0')
+  focusKnowledgeLayout(otherOrder, 'local-0')
+  assert.equal(layout.focusId, 'local-0')
+  const central = layout.nodes.find(node => node.id === 'local-0')
+  assert.equal(central.x, 160)
+  assert.equal(central.y, 210)
+  const positions = value => value.nodes.map(({ id, x, y }) => ({ id, x, y })).sort((a, b) => a.id.localeCompare(b.id))
+  assert.deepEqual(positions(layout), positions(otherOrder))
+  for (let left = 0; left < layout.nodes.length; left++) for (let right = left + 1; right < layout.nodes.length; right++) {
+    const a = layout.nodes[left], b = layout.nodes[right]
+    assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 40, 'local points have usable starting separation')
+  }
+  assert.deepEqual(localNodes, original, 'source graph remains untouched')
+  const before = structuredClone(layout)
+  assert.equal(focusKnowledgeLayout(layout, 'absent'), layout)
+  assert.deepEqual(layout, before)
+  assert.equal(focusKnowledgeLayout(null, 'absent'), null)
+})
+
+test('the focused network still reacts to dragging and settles near its selected point', () => {
+  const layout = focusKnowledgeLayout(createKnowledgeLayout(nodes, links, 320, 420), nodes[1].id)
+  const central = layout.nodes.find(node => node.id === nodes[1].id)
+  const original = { x: layout.nodes[0].x, y: layout.nodes[0].y }
+  for (let frame = 0; frame < 80; frame++) stepKnowledgeLayout(layout, { pinnedId: central.id, pinnedPosition: { x: 80, y: 120 } })
+  assert.equal(central.x, 80)
+  assert.equal(central.y, 120)
+  assert.ok(Math.hypot(layout.nodes[0].x - original.x, layout.nodes[0].y - original.y) > 1)
+  for (let frame = 0; frame < 180; frame++) stepKnowledgeLayout(layout)
+  assert.ok(Math.hypot(central.x - 160, central.y - 210) < 15, 'selected point returns gently to the middle')
+  assert.ok(layout.nodes.every(node => node.x >= 28 && node.x <= 292 && node.y >= 28 && node.y <= 392))
+})
+
+function renderedNodeBounds(node, camera, selectedId, labelMaxLength, minLabelFontSize = 0) {
+  const selected = node.id === selectedId
+  const radius = selected ? 11 : node.type === 'sector' && node.subtype !== 'subsector' ? 8 : node.type === 'news' ? 5 : 6
+  const font = selected ? 12 : node.type === 'sector' && node.subtype !== 'subsector' ? 10.5 : 9.5
+  const screenFont = Math.max(font * Math.sqrt(camera.k), minLabelFontSize)
+  const labelLength = Math.min(labelMaxLength, node.label?.length || 0)
+  const halfWidth = Math.max(radius * camera.k, labelLength * screenFont * 0.58 / 2)
+  const x = node.x * camera.k + camera.x, y = node.y * camera.k + camera.y
+  return { left: x - halfWidth, right: x + halfWidth, top: Math.min(y - radius * camera.k, labelLength ? y + radius * camera.k + 15 * Math.sqrt(camera.k) - screenFont * 0.85 : Infinity), bottom: y + radius * camera.k + (labelLength ? 15 * Math.sqrt(camera.k) + screenFont * 0.4 : 0), screenFont }
+}
+
+test('automatic framing includes long labels and respects asymmetric phone/fullscreen insets', () => {
+  const localNodes = Array.from({ length: 31 }, (_, index) => ({ id: `point-${index}`, type: ['sector', 'concept', 'news'][index % 3], label: `Título extenso para a relação ${index} com a página de conhecimento completo` }))
+  const localLinks = localNodes.slice(1).map(node => ({ source: 'point-0', target: node.id }))
+  for (const [width, height] of [[320, 420], [740, 560], [1440, 850]]) {
+    const layout = focusKnowledgeLayout(createKnowledgeLayout(localNodes, localLinks, width, height), 'point-0')
+    for (let frame = 0; frame < 65; frame++) stepKnowledgeLayout(layout, { energy: 0.7 })
+    const options = { selectedId: 'point-0', labelMaxLength: 52, padding: { left: 24, right: 64, top: 24, bottom: 72 } }
+    const before = structuredClone(layout.nodes)
+    const camera = fitKnowledgeCamera(layout.nodes, width, height, options)
+    assert.ok(camera.k >= 0.15 && camera.k <= 2.2)
+    for (const node of layout.nodes) {
+      const box = renderedNodeBounds(node, camera, options.selectedId, 52)
+      assert.ok(box.left >= 24 - 0.001 && box.right <= width - 64 + 0.001, `${width}px: label fits horizontally`)
+      assert.ok(box.top >= 24 - 0.001 && box.bottom <= height - 72 + 0.001, `${width}px: label fits vertically`)
+    }
+    assert.deepEqual(layout.nodes, before, 'framing does not move the simulation')
+    assert.deepEqual(camera, fitKnowledgeCamera(layout.nodes, width, height, options), 'camera is deterministic')
+  }
+})
+
+test('framing handles empty, singleton, malformed points and invalid dimensions without NaN', () => {
+  assert.deepEqual(fitKnowledgeCamera([], 320, 420), { x: 0, y: 0, k: 1 })
+  assert.deepEqual(fitKnowledgeCamera(null), { x: 0, y: 0, k: 1 })
+  const valid = { id: 'only', x: 130, y: 42, type: 'concept', label: 'Uma página' }
+  const camera = fitKnowledgeCamera([valid, null, { x: Infinity, y: 80 }, { x: 22, y: NaN }], 320, 420)
+  assert.deepEqual(camera, fitKnowledgeCamera([valid], 320, 420))
+  assert.ok(camera.k > 1, 'a singleton can use the available space')
+  const broken = fitKnowledgeCamera([valid], NaN, -20, { padding: { left: Infinity, right: 90000, top: -1, bottom: 90000 }, minZoom: NaN, maxZoom: -8 })
+  assert.ok(Object.values(broken).every(Number.isFinite))
+})
+
+test('phone framing reserves readable 11px labels in both compact and tall local stages', () => {
+  const localNodes = Array.from({ length: 7 }, (_, index) => ({ id: `phone-${index}`, type: ['sector', 'concept', 'news'][index % 3], label: `Título extenso do ponto ${index} que será abreviado no celular` }))
+  const localLinks = localNodes.slice(1).map(node => ({ source: 'phone-0', target: node.id }))
+  const padding = { top: 12, right: 54, bottom: 48, left: 20 }
+  for (const height of [260, 440]) {
+    const layout = focusKnowledgeLayout(createKnowledgeLayout(localNodes, localLinks, 320, height), 'phone-0')
+    for (let frame = 0; frame < 65; frame++) stepKnowledgeLayout(layout, { energy: 0.7 })
+    const options = { padding, selectedId: 'phone-0', labelMaxLength: 26, minLabelFontSize: 11 }
+    const camera = fitKnowledgeCamera(layout.nodes, 320, height, options)
+    for (const node of layout.nodes) {
+      const box = renderedNodeBounds(node, camera, 'phone-0', 26, 11)
+      assert.ok(box.screenFont >= 11)
+      assert.ok(box.left >= padding.left - 0.001 && box.right <= 320 - padding.right + 0.001, `${height}px stage: readable label fits width`)
+      assert.ok(box.top >= padding.top - 0.001 && box.bottom <= height - padding.bottom + 0.001, `${height}px stage: readable label fits height`)
+    }
+    const smallerLabels = fitKnowledgeCamera(layout.nodes, 320, height, { ...options, minLabelFontSize: 0 })
+    assert.ok(camera.k < smallerLabels.k, 'framing makes extra room for the readable text floor')
+  }
+})
+
+test('the readable-font option is opt-in and invalid minima preserve standard framing', () => {
+  const layout = createKnowledgeLayout(nodes.map(node => ({ ...node, label: 'Título do ponto' })), links, 320, 420)
+  const baseline = fitKnowledgeCamera(layout.nodes, 320, 420)
+  for (const minimum of [0, -11, NaN, Infinity]) assert.deepEqual(fitKnowledgeCamera(layout.nodes, 320, 420, { minLabelFontSize: minimum }), baseline)
 })

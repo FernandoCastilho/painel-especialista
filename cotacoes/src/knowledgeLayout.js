@@ -62,6 +62,95 @@ export function createKnowledgeLayout(nodes = [], links = [], width = 1000, heig
   return layout
 }
 
+// A local view has already been reduced to the chosen point and its immediate
+// connections. Give it its own composition instead of retaining scattered
+// coordinates from the global matrix. The force simulation remains in charge
+// after this deterministic starting arrangement.
+export function focusKnowledgeLayout(layout, selectedId) {
+  if (!layout || !Array.isArray(layout.nodes)) return layout
+  const selected = layout.nodes.find(node => node.id === selectedId)
+  if (!selected) return layout
+  layout.width = dimension(layout.width, 1000)
+  layout.height = dimension(layout.height, 650)
+  layout.focusId = selectedId
+  const center = { x: layout.width / 2, y: layout.height / 2 }
+  const radiusX = Math.max(24, layout.width / 2 - 60)
+  const radiusY = Math.max(24, layout.height / 2 - 60)
+  const others = layout.nodes.filter(node => node !== selected).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  const box = bounds(layout)
+  for (const [index, node] of others.entries()) {
+    const angle = others.length <= 12 ? -Math.PI / 2 + index * Math.PI * 2 / others.length : -Math.PI / 2 + index * GOLDEN_ANGLE
+    const radius = others.length <= 12 ? 0.84 : 0.46 + 0.5 * Math.sqrt((index + 0.5) / others.length)
+    node.x = clamp(center.x + Math.cos(angle) * radiusX * radius, box.left, box.right)
+    node.y = clamp(center.y + Math.sin(angle) * radiusY * radius, box.top, box.bottom)
+    node.anchorX = node.x
+    node.anchorY = node.y
+    node.vx = 0
+    node.vy = 0
+  }
+  selected.x = selected.anchorX = center.x
+  selected.y = selected.anchorY = center.y
+  selected.vx = selected.vy = 0
+  layout.motion = 0
+  return layout
+}
+
+// Label dimensions follow the SVG's existing sqrt(zoom) typography. Including
+// labels and node radii matters on a narrow phone: fitting only point centres
+// can leave the article or concept title outside the stage.
+function cameraBounds(nodes, zoom, selectedId, labelMaxLength, minLabelFontSize) {
+  let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity
+  const labelScale = Math.sqrt(zoom)
+  for (const node of nodes) {
+    const selected = node.id === selectedId
+    const radius = selected ? 11 : node.type === 'sector' && node.subtype !== 'subsector' ? 8 : node.type === 'news' ? 5 : 6
+    const font = selected ? 12 : node.type === 'sector' && node.subtype !== 'subsector' ? 10.5 : 9.5
+    const screenFont = Math.max(font * labelScale, minLabelFontSize)
+    const labelLength = Math.min(labelMaxLength, typeof node.label === 'string' ? node.label.length : 0)
+    const halfLabel = labelLength * screenFont * 0.58 / 2
+    const halfWidth = Math.max(radius * zoom, halfLabel)
+    left = Math.min(left, node.x * zoom - halfWidth)
+    right = Math.max(right, node.x * zoom + halfWidth)
+    top = Math.min(top, (node.y - radius) * zoom, labelLength ? (node.y + radius) * zoom + 15 * labelScale - screenFont * 0.85 : Infinity)
+    bottom = Math.max(bottom, (node.y + radius) * zoom + (labelLength ? 15 * labelScale + screenFont * 0.4 : 0))
+  }
+  return { left, right, top, bottom }
+}
+
+export function fitKnowledgeCamera(nodes = [], width = 1000, height = 650, { padding = 48, minZoom = 0.15, maxZoom = 2.2, selectedId = '', labelMaxLength = 26, minLabelFontSize = 0 } = {}) {
+  width = dimension(width, 1000)
+  height = dimension(height, 650)
+  const points = (Array.isArray(nodes) ? nodes : []).filter(node => Number.isFinite(node?.x) && Number.isFinite(node?.y))
+  if (!points.length) return { x: 0, y: 0, k: 1 }
+  const side = name => {
+    const value = typeof padding === 'number' ? padding : padding?.[name]
+    return Number.isFinite(value) ? Math.max(0, value) : 48
+  }
+  const inset = { left: side('left'), right: side('right'), top: side('top'), bottom: side('bottom') }
+  // Even malformed/excessive insets leave a finite, positive usable viewport.
+  for (const [a, b, size] of [['left', 'right', width], ['top', 'bottom', height]]) {
+    const total = inset[a] + inset[b]
+    if (total >= size) { inset[a] *= (size - 1) / total; inset[b] *= (size - 1) / total }
+  }
+  const usableWidth = width - inset.left - inset.right, usableHeight = height - inset.top - inset.bottom
+  const minimum = Number.isFinite(minZoom) && minZoom > 0 ? minZoom : 0.15
+  const maximum = Number.isFinite(maxZoom) && maxZoom >= minimum ? maxZoom : Math.max(minimum, 2.2)
+  const length = Number.isFinite(labelMaxLength) ? Math.max(0, labelMaxLength) : 26
+  const minimumFont = Number.isFinite(minLabelFontSize) ? Math.max(0, minLabelFontSize) : 0
+  let low = minimum, high = maximum
+  for (let iteration = 0; iteration < 40; iteration++) {
+    const zoom = (low + high) / 2, box = cameraBounds(points, zoom, selectedId, length, minimumFont)
+    if (box.right - box.left <= usableWidth && box.bottom - box.top <= usableHeight) low = zoom
+    else high = zoom
+  }
+  const box = cameraBounds(points, low, selectedId, length, minimumFont)
+  return {
+    x: inset.left + usableWidth / 2 - (box.left + box.right) / 2,
+    y: inset.top + usableHeight / 2 - (box.top + box.bottom) / 2,
+    k: low,
+  }
+}
+
 export function stepKnowledgeLayout(layout, { pinnedId, pinnedPosition, energy = 1 } = {}) {
   if (!layout || !Array.isArray(layout.nodes)) return layout
   layout.width = dimension(layout.width, 1000)
@@ -139,8 +228,9 @@ export function stepKnowledgeLayout(layout, { pinnedId, pinnedPosition, energy =
     const radius = Math.max(1, Math.hypot(dx, dy))
     const ellipse = Math.hypot(dx / (layout.width * 0.45), dy / (layout.height * 0.45))
     const containment = Math.max(0, ellipse - 0.8) * 12
-    fx[index] += -dx * 0.0025 + (anchorX - node.x) * 0.001 - dx / radius * containment
-    fy[index] += -dy * 0.0025 + (anchorY - node.y) * 0.001 - dy / radius * containment
+    const anchorStrength = layout.focusId ? node.id === layout.focusId ? 0.065 : 0.006 : 0.001
+    fx[index] += -dx * 0.0025 + (anchorX - node.x) * anchorStrength - dx / radius * containment
+    fy[index] += -dy * 0.0025 + (anchorY - node.y) * anchorStrength - dy / radius * containment
     node.vx = clamp((node.vx + fx[index] * intensity) * 0.78, -7, 7)
     node.vy = clamp((node.vy + fy[index] * intensity) * 0.78, -7, 7)
     const nextX = clamp(node.x + node.vx, box.left, box.right)
