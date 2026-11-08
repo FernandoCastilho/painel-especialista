@@ -34,6 +34,29 @@ const links = {
         assert.ok(geometry.document <= geometry.width + 1, label + ': ' + JSON.stringify(geometry))
       }
 
+      await visit('calculadora/cbs-caixa', '.cbs-annual-chart')
+      const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      assert.equal(await page.locator('.cbs-annual-chart').isVisible(), true)
+      assert.deepEqual(await page.locator('.cbs-annual-chart text').allTextContents(), months)
+      assert.equal(await page.locator('.cbs-chart-dot').count(), 12)
+      const initialReading = await page.locator('.cbs-month-reading').innerText()
+      await page.locator('.cbs-month-editor > summary').click()
+      await page.locator('#cbs-month-1').fill('2.000.000,00')
+      await page.getByRole('button', { name: 'Fev', exact: true }).click()
+      assert.match(await page.locator('.cbs-month-reading').innerText(), /2\.000\.000,00/)
+      await page.getByRole('button', { name: 'Jan', exact: true }).click()
+      assert.equal(await page.locator('.cbs-month-reading').innerText(), initialReading)
+      await page.locator('#cbs-month-1').fill('0')
+      assert.equal(await page.locator('.cbs-chart-dot').count(), 11)
+      await page.getByRole('button', { name: 'Fev', exact: true }).click()
+      assert.match(await page.locator('.cbs-month-reading').innerText(), /Faturamento inv/)
+      await page.locator('.cbs-month-editor button').click()
+      assert.equal(await page.locator('.cbs-chart-dot').count(), 12)
+      await page.locator('.cbs-month-editor > summary').click()
+      await contained('CBS Jan-Dez')
+      await page.screenshot({ path: path.join(out, width + '-cbs-jan-dez.png'), fullPage: true })
+      report.push({ width, feature: 'CBS Jan-Dez', passed: true, checks: ['12 meses abertos', 'editar fevereiro preserva janeiro', 'mes invalido deixa lacuna', 'restaurar 12 pontos', 'sem overflow'] })
+
       await visit('calculadora/finimp', '#fi-currency')
       assert.deepEqual(await page.locator('#fi-currency option').allTextContents(), ['USD', 'EUR', 'JPY', 'CNH', 'BRL'])
       for (const code of ['JPY', 'CNH']) {

@@ -13,7 +13,8 @@ async function run() {
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', route => route.request().url().startsWith(base + '/') ? route.continue() : route.abort())
     await page.goto(base + '/#calculadora/cbs-caixa')
-    await page.getByRole('heading', { name: '3. Necessidade adicional de giro' }).waitFor()
+    await page.getByRole('heading', { name: 'Reserva adicional para cobrir os prazos' }).waitFor()
+    await page.locator('.cbs-calculation > summary').click()
     const { simulateCbsCash } = await import('../src/cbsCash.js')
     const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/ibgeCbsSnapshot.json'), 'utf8'))
     const expected = change => simulateCbsCash({ revenue: 1000000, spendingRatio: snapshot.datasets.find(d => d.kind === 'comercio').groups.find(g => g.id === 'comercio-83319').spendingRatio, eligibleShare: 70, cbsRate: 11.2, currentNetRate: 3.65, splitShare: 50, receiveDays: 30, payDays: 30, stockDays: 30, currentDueDays: 40, futureDueDays: 40, creditDelayDays: 30, ...change })
@@ -23,12 +24,30 @@ async function run() {
       assert.deepEqual(values.map(value => value.replace(/\s/g, '')), [format(result.reserveImmediate), format(result.reserveDelayed)])
     }
     await checkReserves(expected({}))
+    assert.equal((await page.locator('.cbs-primary-value').innerText()).replace(/\s/g, ''), format(expected({}).reserveDelayed))
+    await page.locator('.cbs-month-editor > summary').click()
+    await page.locator('#cbs-month-1').fill('2.000.000,00')
+    await page.getByRole('button', { name: 'Fev', exact: true }).click()
+    assert.ok((await page.locator('.cbs-month-reading').innerText()).replace(/\s/g, '').includes(format(expected({ revenue: 2000000 }).reserveDelayed)))
+    await page.locator('#cbs-month-1').fill('0')
+    assert.equal(await page.locator('.cbs-chart-dot').count(), 11, 'invalid month must create a gap')
+    assert.match(await page.locator('.cbs-month-reading').innerText(), /inválido/)
+    await page.getByRole('button', { name: 'Usar faturamento principal em todos', exact: true }).click()
+    await page.locator('.cbs-month-editor > summary').click()
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: theme })
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
         await page.evaluate(() => document.fonts.ready)
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `overflow ${theme}/${width}`)
+        assert.equal(await page.locator('.cbs-annual-chart').evaluate(element => {
+          const points = [...element.querySelectorAll('circle')]
+          const labels = [...element.querySelectorAll('text')]
+          return points.length === 12 && points.every((point, index) => {
+            const p = point.getBoundingClientRect(), label = labels[index].getBoundingClientRect()
+            return Math.abs(p.x + p.width / 2 - label.x - label.width / 2) < 1
+          })
+        }), true, `month labels must align with points ${theme}/${width}`)
         await page.screenshot({ path: path.join(out, `${theme}-${width}.png`), fullPage: true })
         await page.locator('#cbs-group').fill('alimen')
         assert.equal(await page.getByRole('option').count() > 0, true)
@@ -47,7 +66,7 @@ async function run() {
         await page.locator('#cbs-group').press('Escape')
       }
     }
-    await page.getByText('Ajustar impostos, créditos e prazos', { exact: true }).click()
+    await page.getByText('Ajustar hipóteses de impostos e prazos', { exact: true }).click()
     await page.getByText('Como isso aparece no recebimento e nos prazos?', { exact: true }).click()
     await page.getByText('Uma reserva de prazo significa pagar esse valor a mais todo mês?', { exact: true }).click()
     assert.match(await page.locator('.cbs-check').innerText(), /diferença mensal do imposto/)
@@ -97,7 +116,7 @@ async function run() {
     assert.equal(await help.evaluate(element => document.activeElement === element), true)
     await page.goto(base + '/#aprender/reforma-tributaria')
     await page.locator('.learn-app .learn-go').click()
-    await page.getByRole('heading', { name: '3. Necessidade adicional de giro' }).waitFor()
+    await page.getByRole('heading', { name: 'Reserva adicional para cobrir os prazos' }).waitFor()
     assert.ok(page.url().endsWith('#calculadora/cbs-caixa'))
     assert.deepEqual(errors, [])
     const result = { passed: true, views: ['light-390', 'light-1440', 'dark-390', 'dark-1440'], activitySearch: { noMatchPreservesCalculation: true, keyboardSelection: true, touchSelection: true, blurAndEscape: true, crossSector: true, resetsSpendingReference: true, restoreExample: true }, sectorSwitch: true, simplesGuard: true, invalidInputGuard: true, helpEscapeFocus: true, pageErrors: errors }
