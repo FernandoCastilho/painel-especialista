@@ -35,6 +35,7 @@ const out = process.env.BNDES_WORKSPACE_QA_OUTPUT || 'workspace-qa/bndes-workspa
         const settings = page.getByRole('dialog', { name: 'Configurar apresentação BNDES', exact: true })
         await settings.waitFor()
         await settings.locator('#bnp-title').fill('Simulação ilustrativa BNDES')
+        await settings.getByText('Ajustes de apresentação', { exact: true }).click()
         await page.screenshot({ path: path.join(out, `${width}-${theme}-settings.png`), fullPage: true })
         await settings.getByRole('button', { name: 'Iniciar apresentação', exact: true }).click()
         const presentation = page.getByRole('dialog', { name: 'Apresentação BNDES', exact: true })
