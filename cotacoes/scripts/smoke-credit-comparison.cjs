@@ -8,11 +8,12 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
   fs.mkdirSync(out, { recursive: true })
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, headless: true, args: ['--no-sandbox'] })
   const errors = []
+  let page
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+    page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
     page.on('pageerror', e => errors.push(e.message))
     await page.route('**/*', route => {
-      if (route.request().url().endsWith('/macro.json')) return route.fulfill({ json: { generatedAt: Date.now(), cdi: [[Date.now() - 86400000, 12]] } })
+      if (new URL(route.request().url()).pathname.endsWith('/macro.json')) return route.fulfill({ json: { generatedAt: Date.now(), cdi: [[Date.now() - 86400000, 12]] } })
       return route.request().url().startsWith(base + '/') ? route.continue() : route.abort()
     })
     await page.goto(`${base}/#calculadora/comparador-credito`)
@@ -66,5 +67,8 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     assert.deepEqual(errors, [])
     fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['dual proposals', 'invalid outputs hidden', 'guarantee coverage', 'net equivalence', 'CDI scenarios/manual empty', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
     console.log('Credit comparator browser checks passed')
+  } catch (error) {
+    if (page) { await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true }).catch(() => {}); fs.writeFileSync(path.join(out, 'failure.txt'), String(error)) }
+    throw error
   } finally { await browser.close() }
 })().catch(e => { console.error(e); process.exit(1) })
