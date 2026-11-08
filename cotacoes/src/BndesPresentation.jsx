@@ -1,0 +1,99 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { BNDES_SLIDES, buildBndesSlides, captureBndesPresentation, presentationStep } from './bndesPresentation.js'
+import './Apresentacao.css'
+import './BndesPresentation.css'
+
+const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const percent = value => `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
+const day = value => value ? value.split('-').reverse().join('/') : 'Não informada'
+const stamp = value => new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+
+function PresentationIcon() {
+  return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 4h18v12H3zM12 16v5m-5 0 5-5 5 5M7 12l3-3 3 2 4-4" /></svg>
+}
+
+export default function BndesPresentation({ result, comparison, conditions }) {
+  const [snapshot, setSnapshot] = useState(null)
+  const close = useCallback(() => setSnapshot(null), [])
+  return <>
+    <button type="button" className="bnp-launch" disabled={!result} onClick={() => setSnapshot(captureBndesPresentation({ result, comparison, conditions }))}><PresentationIcon />Apresentar simulação</button>
+    {snapshot && <PresentationDialog snapshot={snapshot} onClose={close} />}
+  </>
+}
+
+function PresentationDialog({ snapshot, onClose }) {
+  const dialog = useRef(null), player = useRef(null), fullscreenHost = useRef(null), slide = useRef(null), titleInput = useRef(null)
+  const [title, setTitle] = useState('BNDES · Finame Materiais')
+  const [mode, setMode] = useState(snapshot.alternatives.length === 2 ? 'compare' : 'simple')
+  const [sections, setSections] = useState(BNDES_SLIDES.map(item => item.id))
+  const [textSize, setTextSize] = useState('normal')
+  const [deck, setDeck] = useState(null), [index, setIndex] = useState(0), [fullscreenError, setFullscreenError] = useState('')
+  const count = deck?.slides.length ?? 0
+  useEffect(() => {
+    const element = dialog.current, trigger = document.activeElement
+    const overflow = document.body.style.overflow
+    element.showModal(); document.body.style.overflow = 'hidden'
+    window.addEventListener('hashchange', onClose)
+    return () => {
+      window.removeEventListener('hashchange', onClose)
+      if (document.fullscreenElement && document.fullscreenElement === fullscreenHost.current) document.exitFullscreen?.().catch(() => {})
+      element.close(); document.body.style.overflow = overflow
+      if (trigger?.isConnected) trigger.focus()
+    }
+  }, [onClose])
+  useEffect(() => { if (deck) player.current?.focus(); else titleInput.current?.focus() }, [deck])
+  useEffect(() => { if (slide.current) { slide.current.scrollTop = 0; slide.current.scrollLeft = 0 } }, [index, deck])
+  const fullscreen = async () => {
+    setFullscreenError('')
+    try {
+      if (document.fullscreenElement === player.current) await document.exitFullscreen()
+      else if (player.current?.requestFullscreen) { fullscreenHost.current = player.current; await player.current.requestFullscreen() }
+      else setFullscreenError('Tela cheia não está disponível neste navegador. A apresentação continua nesta janela.')
+    } catch { setFullscreenError('O navegador não permitiu tela cheia. A apresentação continua nesta janela.') }
+  }
+  const configure = async () => {
+    if (document.fullscreenElement === player.current) await document.exitFullscreen?.().catch(() => {})
+    setDeck(null); setIndex(0); setFullscreenError('')
+  }
+  const keyDown = event => {
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(); return }
+    if (!deck || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input, select, textarea, [contenteditable=true]')) return
+    if (event.key === ' ' && event.target.closest('button')) return
+    const next = presentationStep(index, event.key, count)
+    if (next !== index || ['Home', 'End', 'ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp', ' '].includes(event.key)) { event.preventDefault(); setIndex(next) }
+  }
+  const choices = deck?.mode === 'compare' ? snapshot.alternatives : [{ custo: snapshot.conditions.custo, quote: snapshot.conditions.quote, result: snapshot.result }]
+  return <dialog ref={dialog} className={`bnp-dialog${deck ? ' bnp-presenting' : ''}`} aria-label={deck ? 'Apresentação BNDES' : 'Configurar apresentação BNDES'} onCancel={event => { event.preventDefault(); onClose() }} onKeyDown={keyDown}>
+    {!deck ? <div className="bnp-settings">
+      <header><h2>Apresentar simulação</h2><button type="button" onClick={onClose} aria-label="Fechar configuração">×</button></header>
+      <p>Dados congelados em {stamp(snapshot.capturedAt)} (Brasília). Alterações no painel não modificam esta apresentação.</p>
+      <label htmlFor="bnp-title">Título<input id="bnp-title" ref={titleInput} value={title} maxLength={100} onChange={event => setTitle(event.target.value)} /></label>
+      <fieldset><legend>Slides incluídos</legend>{BNDES_SLIDES.map(item => <label key={item.id}><input type="checkbox" checked={sections.includes(item.id)} disabled={item.required} onChange={event => setSections(previous => event.target.checked ? [...previous, item.id] : previous.filter(id => id !== item.id))} />{item.label}{item.required && ' · obrigatório'}</label>)}</fieldset>
+      <details><summary>Ajustes de apresentação</summary><label htmlFor="bnp-mode">Conteúdo<select id="bnp-mode" value={mode} onChange={event => setMode(event.target.value)}><option value="simple">Somente a alternativa selecionada</option><option value="compare" disabled={snapshot.alternatives.length !== 2}>Comparar TFC e TFB</option></select></label>{snapshot.alternatives.length !== 2 && <p>Para apresentar as duas alternativas, primeiro gere uma comparação válida na calculadora.</p>}<label htmlFor="bnp-size">Tamanho dos textos<select id="bnp-size" value={textSize} onChange={event => setTextSize(event.target.value)}><option value="normal">Normal</option><option value="large">Grande</option><option value="xl">Extra grande</option></select></label></details>
+      <p className="bnp-limit">{snapshot.notice}</p>
+      <button type="button" className="bnp-primary" onClick={() => setDeck(buildBndesSlides(snapshot, { title, mode, sections, textSize }))}>Iniciar apresentação</button>
+    </div> : <div ref={player} tabIndex={-1} className={`apr-player bnp-player bnp-text-${deck.textSize}`} data-laser-host>
+      <div ref={slide} className="apr-slide bnp-slide" aria-live="polite" aria-atomic="true">
+        <div className="bnp-slide-top"><span>{deck.title}</span><span>{index + 1} / {count}</span></div>
+        <BndesSlide kind={deck.slides[index]} snapshot={snapshot} choices={choices} mode={deck.mode} />
+        <footer className="bnp-slide-footer"><span>{snapshot.notice}</span>{snapshot.conditions.retained && <strong>Referência retida ou atualização indisponível. Confira as datas antes de cotar.</strong>}<small>Dados congelados em {stamp(snapshot.capturedAt)} (Brasília) · Finame Materiais Industrializados</small></footer>
+      </div>
+      {fullscreenError && <p className="bnp-fullscreen-status" role="status">{fullscreenError}</p>}
+      <div className="apr-barra bnp-controls"><button type="button" disabled={index === 0} onClick={() => setIndex(value => Math.max(0, value - 1))} aria-label="Slide anterior">‹</button><span aria-label={`Slide ${index + 1} de ${count}`}>{index + 1} / {count}</span><button type="button" disabled={index === count - 1} onClick={() => setIndex(value => Math.min(count - 1, value + 1))} aria-label="Próximo slide">›</button><button type="button" onClick={fullscreen}>Tela cheia</button><button type="button" onClick={configure}>Configurar</button><span className="laser-slot" /><button type="button" onClick={onClose}>Sair da apresentação</button><small>← → navegar · Esc sair</small></div>
+    </div>}
+  </dialog>
+}
+
+function BndesSlide({ kind, snapshot, choices, mode }) {
+  const c = snapshot.conditions
+  if (kind === 'operation') return <><h2>Condições da operação</h2><dl className="bnp-facts">{[['Valor financiado', money(snapshot.result.financiado)], ['Prazo total', `${c.prazo} meses`], ['Carência incluída no prazo', `${c.carencia} meses`], ['Amortização', c.sistema.toUpperCase()], ['Enquadramento', c.porte], ['Juros na carência', c.periodicidade]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p>Há cobranças de juros durante a carência, conforme a periodicidade informada.</p></>
+  if (kind === 'rates') return <><h2>Condições e referências</h2><div className="bnp-alternatives">{choices.map(item => <article key={item.custo}><h3>{item.custo.toUpperCase()}</h3><dl><div><dt>Custo financeiro</dt><dd>{percent(item.quote.valor)}</dd></div><div><dt>Remuneração BNDES</dt><dd>{percent(c.taxaBndes)}</dd></div><div><dt>Remuneração do agente</dt><dd>{percent(c.taxaAgente)}</dd></div><div><dt>Taxa final</dt><dd>{percent(item.result.taxa)}</dd></div></dl><p>Série {item.quote.codigo} · referência {day(item.quote.data)} · liberação em até {item.custo === 'tfc' ? 90 : c.liberacao} dias.</p></article>)}</div><p>Composição {c.composicao === 'capitalizada' ? 'capitalizada: os fatores das três taxas são multiplicados.' : 'somada: as três taxas são somadas.'} Referências do painel, sujeitas à confirmação na contratação.</p></>
+  if (kind === 'results') return <><h2>{mode === 'compare' ? 'TFC e TFB lado a lado' : `Resultado estimado · ${c.custo.toUpperCase()}`}</h2><p>{money(snapshot.result.financiado)} financiados · {c.prazo} meses, incluindo {c.carencia} de carência · {c.sistema.toUpperCase()}.</p><div className="bnp-table-wrap"><table><thead><tr><th scope="col">Indicador</th>{choices.map(item => <th scope="col" key={item.custo}>{item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[['Taxa final', 'taxa'], ['Primeira parcela após a carência', 'primeiraParcela'], ['Juros totais', 'juros'], ['IOF', 'iof'], ['Total projetado sem despesas', 'total']].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{choices.map(item => <td key={item.custo}>{key === 'taxa' ? percent(item.result[key]) : money(item.result[key])}</td>)}</tr>)}</tbody></table></div>{mode === 'compare' && <p className="bnp-difference">{Math.abs(snapshot.difference) < .005 ? 'Os totais projetados são iguais.' : <>O total em TFB é <strong>{money(Math.abs(snapshot.difference))}</strong> {snapshot.difference > 0 ? 'maior' : 'menor'} que em TFC.</>} Mesmas condições da operação; diferença estimada.</p>}<p>A primeira parcela após a carência não inclui as cobranças anteriores de juros.</p></>
+  if (kind === 'flow') return <><h2>Fluxo ilustrativo</h2><BalanceChart choices={choices} prazo={c.prazo} /><div className="bnp-alternatives">{choices.map(item => <article key={item.custo}><h3>{item.custo.toUpperCase()}</h3><p>Juros na carência: <strong>{money(item.result.jurosCarencia)}</strong></p><p>{item.result.parcelasAmortizacao} parcelas de amortização · primeira {money(item.result.primeiraParcela)} · última {money(item.result.ultimaParcela)}</p></article>)}</div><p>Projeção em meses iguais. O gráfico mostra o saldo após as cobranças, sem calendário bancário ou ajuste de feriados.</p></>
+  return <><h2>Premissas e limites</h2><ul className="bnp-premises"><li>Produto: Finame Materiais Industrializados. As condições não se aplicam automaticamente a outras linhas BNDES.</li><li>IOF zero somente após confirmação de recursos FINAME elegíveis, conforme o enquadramento informado na calculadora.</li><li>Referências: {choices.map(item => `${item.custo.toUpperCase()} · ${item.quote.codigo} · ${day(item.quote.data)}`).join('; ')}.</li><li>Taxas mantidas constantes nesta projeção. Prazos em meses iguais e cronograma ilustrativo, sem convenções contratuais de dias ou calendário bancário.</li><li>A contratação depende da confirmação das condições, da elegibilidade e da proposta da instituição financeira.</li>{snapshot.result.avisos.map(warning => <li key={warning}>{warning}</li>)}</ul><section className="bnp-references"><p>Fontes: referências BNDES já carregadas no painel. Regras conferidas em {day(c.rulesDate)}. A apresentação não atualiza taxas nem substitui a proposta contratual.</p><div className="bnp-sources">{snapshot.sources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>)}</div></section></>
+}
+
+function BalanceChart({ choices, prazo }) {
+  const max = Math.max(...choices.map(item => item.result.financiado))
+  return <figure className="bnp-chart"><figcaption>Saldo devedor projetado · {choices.map(item => item.custo.toUpperCase()).join(' / ')}</figcaption><svg viewBox="0 0 960 260" role="img" aria-label="Saldo projetado durante a carência e a amortização. Valores das primeiras e últimas parcelas apresentados abaixo."><path d="M70 20V220H920" fill="none" stroke="#949bad" /><text x="70" y="15">{money(max)}</text><text x="70" y="245">Liberação</text><text x="920" y="245" textAnchor="end">{prazo} meses · saldo zero</text>{choices.map((item, i) => <polyline key={item.custo} points={[{ mes: 0, saldo: item.result.financiado }, ...item.result.parcelas].map(row => `${70 + row.mes / prazo * 850},${220 - row.saldo / max * 190}`).join(' ')} fill="none" stroke={i === 0 ? '#0131ff' : '#b44500'} strokeWidth="4" strokeDasharray={i === 0 ? undefined : '10 6'}><title>{item.custo.toUpperCase()}</title></polyline>)}</svg><div className="bnp-chart-legend">{choices.map((item, i) => <span key={item.custo}>{i === 0 ? 'Linha contínua' : 'Linha tracejada'}: {item.custo.toUpperCase()}</span>)}</div></figure>
+}
