@@ -43,7 +43,9 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - name: Conferir referências setoriais do IBGE para CBS (preserva base em falha)
+      # HTTP 403 confirmado: não repetir a coleta recusada a cada publicação.
+      # O comando sem --refresh só valida a base versionada, sem acesso à rede.
+      - name: Validar base preservada da CBS (coleta IBGE suspensa)
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: python3 scripts/fetch-ibge-cbs.py
         timeout-minutes: 2

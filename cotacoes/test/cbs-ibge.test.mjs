@@ -39,8 +39,41 @@ with tempfile.TemporaryDirectory() as tmp:
  except SystemExit:pass
  assert not m.DEST.exists()
  old={'schemaVersion':1,'datasets':[{'kind':s['kind'],'retrievedAt':'2026-11-01','groups':[{'value':123}]} for s in m.SPECS]}
- m.DEST.write_text(json.dumps(old));m.main()
- assert json.loads(m.DEST.read_text())==old
+ m.DEST.write_text(json.dumps(old));before=m.DEST.read_bytes();m.main()
+ assert m.DEST.read_bytes()==before
 `], { encoding: 'utf8', env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } })
   assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /::warning title=IBGE CBS/)
+})
+
+test('routine publication validates preserved CBS data without network requests or writes', () => {
+  const script = new URL('../scripts/fetch-ibge-cbs.py', import.meta.url).pathname
+  const result = spawnSync('python3', ['-c', `
+import pathlib,runpy,sys,urllib.request
+script=${JSON.stringify(script)}
+dest=pathlib.Path(script).resolve().parents[1]/'src'/'ibgeCbsSnapshot.json'
+before=dest.read_bytes()
+def forbidden(*args,**kwargs):raise AssertionError('A suspended collector must never access the network')
+urllib.request.urlopen=forbidden
+sys.argv=[script]
+runpy.run_path(script,run_name='__main__')
+assert dest.read_bytes()==before
+`], { encoding: 'utf8', env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } })
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /Nenhuma consulta externa realizada/)
+  assert.match(result.stdout, /::notice title=IBGE CBS/)
+  for (const kind of ['comercio', 'industria', 'servicos']) assert.match(result.stdout, new RegExp(`IBGE ${kind}: base`))
+  const workflow = readFileSync(new URL('../../.github/workflows/pages.yml', import.meta.url), 'utf8')
+  assert.match(workflow, /name: Validar base preservada da CBS \(coleta IBGE suspensa\)/)
+  assert.match(workflow, /run: python3 scripts\/fetch-ibge-cbs\.py\s*\n/)
+  assert.doesNotMatch(workflow, /run:.*fetch-ibge-cbs\.py.*--refresh/)
+})
+
+test('CBS discloses preserved year and valid collection date independently from editable spending', () => {
+  const source = readFileSync(new URL('../src/CbsCaixa.jsx', import.meta.url), 'utf8')
+  assert.match(source, /role="note" aria-label="Atualização da referência IBGE"/)
+  assert.match(source, /Base preservada · IBGE \{dataset.year\}/)
+  assert.match(source, /Atualização automática suspensa após falha de acesso ao IBGE \(HTTP 403\)/)
+  assert.match(source, /Última coleta válida: \{new Date\(dataset.retrievedAt\)/)
+  assert.match(source, /Não é uma consulta em tempo real/)
 })

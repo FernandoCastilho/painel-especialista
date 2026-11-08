@@ -5,6 +5,8 @@
 .cbs-source, .cbs-premise-summary, .cbs-result-note { padding:16px var(--cx-space, 20px); line-height:1.6; font-size:.85rem; }
 .cbs-source { border-top:1px solid var(--line); }
 .cbs-source p { margin:6px 0; color:var(--mut); }
+.cbs-update-status { margin:12px 0; padding:12px; border:1px solid var(--line); border-radius:8px; }
+.cbs-update-status p { margin-bottom:0; }
 .cbs a { color:var(--accent); overflow-wrap:anywhere; }
 .cbs-details summary, .cbs-method summary { padding:12px 20px; cursor:pointer; min-height:48px; font-weight:600; line-height:1.5; }
 .cbs-details { border-top:1px solid var(--line); }

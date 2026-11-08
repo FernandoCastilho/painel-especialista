@@ -1,8 +1,10 @@
 """Refresh public IBGE spending benchmarks. Failures preserve the last valid snapshot.
-Run from cotacoes: python3 scripts/fetch-ibge-cbs.py
+Default: validate the preserved snapshot without network access.
+Use --refresh only after source access has been restored and a refresh is authorized.
 No tax entitlement is inferred from an economic expense.
 """
 import concurrent.futures
+import argparse
 import datetime
 import json
 import math
@@ -89,11 +91,36 @@ def main():
                 print(f"IBGE {kind}: {data['year']}, {len(data['groups'])} atividades verificadas")
             else:
                 print(f'IBGE {kind}: preservada base anterior; {error}')
+                print(f'::warning title=IBGE CBS — atualização não concluída::{kind}: base anterior preservada; nenhuma atualização válida obtida.')
     if len(datasets) != len(SPECS):
         raise SystemExit('Base inicial incompleta; nenhum arquivo foi gravado')
+    result = {'schemaVersion': 1, 'datasets': list(datasets.values())}
+    if result == old:
+        return  # Preserva inclusive os bytes e as datas quando nenhuma base mudou.
     temp = DEST.with_suffix('.tmp')
-    temp.write_text(json.dumps({'schemaVersion': 1, 'datasets': list(datasets.values())}, ensure_ascii=False, indent=2) + '\n')
+    temp.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     temp.replace(DEST)
 
+
+def validate_preserved():
+    """An access denial is not retried by a routine publication."""
+    snapshot = json.loads(DEST.read_text())
+    datasets = snapshot['datasets']
+    if sorted(d['kind'] for d in datasets) != sorted(s['kind'] for s in SPECS):
+        raise ValueError('Base preservada incompleta')
+    for dataset in datasets:
+        if len(dataset['groups']) < 5 or not dataset.get('retrievedAt'):
+            raise ValueError('Base preservada sem cobertura ou data de coleta')
+        print(f"IBGE {dataset['kind']}: base {dataset['year']} preservada; coleta válida em {dataset['retrievedAt']}")
+    message = 'CBS: coleta automática suspensa após falha de acesso ao IBGE (HTTP 403). Nenhuma consulta externa realizada; base e datas preservadas.'
+    print(message)
+    print(f'::notice title=IBGE CBS — base preservada::{message}')
+
+
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--refresh', action='store_true', help='Consultar o IBGE somente após restauração do acesso e autorização; revisar e versionar os dados antes de publicar.')
+    if parser.parse_args().refresh:
+        main()
+    else:
+        validate_preserved()

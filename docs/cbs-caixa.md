@@ -14,7 +14,17 @@ Rota: `#calculadora/cbs-caixa`. Reutiliza React, MoneyInput, CalculatorHelp e o 
 
 Os numeradores são proxies econômicas de compras/consumo, explicitadas no snapshot. Não são uma estatística oficial de crédito fiscal. Não usar total de despesas menos folha como crédito. Depreciação, tributos, despesas financeiras e rubricas genéricas não viram automaticamente crédito. Não extrapolar PAS a saúde e educação regular. Há diferenças entre compras, custo das mercadorias e consumo, explicitadas na interface.
 
-Coleta em paralelo para três pesquisas, timeout por requisição e limite de tamanho. Respostas incompletas não substituem a última pesquisa válida. Falha não atualiza a data de consulta. Uma primeira base incompleta não é gravada. Sem fallback com números inventados. A atualização roda na publicação por push ou disparo manual do workflow existente; as execuções periódicas preservam o snapshot versionado. Não há monitoramento novo. Fontes registradas na Base de dados.
+Coletor com timeout por requisição e limite de tamanho. Respostas incompletas não substituem a última pesquisa válida. Falha não atualiza a data de consulta. Uma primeira base incompleta não é gravada. Sem fallback com números inventados. Fontes registradas na Base de dados.
+
+### Estado da atualização em 08/11/2026
+
+O deploy [42440114846](https://github.com/FernandoCastilho/painel-especialista/actions/runs/42440114846), job 128607326901, registrou HTTP 403 nas três pesquisas às 02:49:17 UTC, no acesso aos metadados do SIDRA. O deploy mais recente [42474439295](https://github.com/FernandoCastilho/painel-especialista/actions/runs/42474439295), job 128712487293, repetiu os três HTTP 403 às 11:09:00 UTC. Os logs não identificam qual camada gerou a recusa. A falha não comprova ausência de dados mais recentes nem que 2024 seja o último ano disponível. O acesso não foi contornado.
+
+A coleta automática está suspensa para não repetir a requisição recusada a cada publicação. `python3 scripts/fetch-ibge-cbs.py` agora valida a presença da base versionada sem acessar a rede nem escrever no snapshot. A suíte confere a reconciliação de todos os percentuais. A tela apresenta ano-base, data da última coleta válida e suspensão da atualização; fonte e aviso permanecem visíveis mesmo quando o usuário ajusta o percentual de gastos.
+
+O coletor é mantido para uso explícito com `--refresh`, somente depois de restabelecido o acesso permitido e autorizada a nova consulta. A atualização obtida deve ser revisada, testada e versionada antes de publicar. Não se deve coletar apenas no diretório temporário de um deploy: um deploy posterior reconstruiria a base antiga do repositório. A rotina de publicação não usa esse argumento. Nenhum proxy, troca de identidade, credencial ou nova rota de acesso foi incluído. Não há novo monitoramento.
+
+Este ajuste trata transparência e preservação, não restabelece a conexão ao IBGE. As referências, datas de coleta, variáveis, razões, alíquotas e fórmulas da calculadora permanecem inalteradas. A revisão independente e a validação de navegador deste ajuste devem ser vinculadas ao commit candidato, sem reaproveitar aprovação da primeira versão.
 
 ## Método e limites
 
