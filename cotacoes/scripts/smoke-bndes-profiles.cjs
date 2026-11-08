@@ -30,7 +30,8 @@ const out = process.env.BNDES_PROFILES_QA_OUTPUT || 'workspace-qa/bndes-profiles
         await page.getByRole('dialog', { name: title, exact: true }).waitFor({ state: 'hidden' })
       }
       await page.goto(base + '/#calculadora')
-      await page.getByRole('button', { name: 'BNDES Crédito · TFB: abrir calculadora', exact: true }).click()
+      await page.getByRole('button', { name: 'BNDES: abrir calculadora', exact: true }).click()
+      await page.getByRole('button', { name: 'Exemplo conferido · histórico', exact: true }).click()
       await page.waitForURL('**/#calculadora/bndes-credito-tfb')
       const tfb = page.locator('section[aria-labelledby="tfb-heading"]')
       await tfb.locator('tbody tr').last().waitFor()
@@ -48,8 +49,8 @@ const out = process.env.BNDES_PROFILES_QA_OUTPUT || 'workspace-qa/bndes-profiles
       assert.match(await tfb.locator('tbody tr').nth(1).innerText(), /2\.200,00/)
       await noOverflow(); await screenshot('tfb-caixa')
       cases[0].status = 'pass'
-      await tfb.getByRole('button', { name: /Calculadoras/ }).click()
-      await page.getByRole('button', { name: 'BNDES TLP exigível: abrir calculadora', exact: true }).click()
+      await page.getByRole('button', { name: 'Simular financiamento', exact: true }).click()
+      await page.locator('#bw-profile').selectOption('bndes-tlp-exigivel')
       const tlp = page.locator('section[aria-labelledby="tlp-heading"]')
       await tlp.getByRole('button', { name: 'Calcular projeção exigível' }).click()
       await tlp.getByRole('alert').waitFor()
