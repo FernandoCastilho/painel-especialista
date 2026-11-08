@@ -20,18 +20,19 @@ const path = require('node:path')
    for (const mode of ['Com ST · antecipação', 'Sem ST · exemplo no RPA']) {
     await lesson.getByRole('button', { name: mode, exact: true }).click()
     assert.equal(await lesson.locator('.icms-node').count(), 4)
+    assert.match(await lesson.locator('.icms-diagram-legend').innerText(), /fluxo da mercadoria/)
     for (let step = 0; step < 4; step++) {
      assert.equal(await stage.getAttribute('data-step'), String(step))
      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false)
      if (step < 3) await lesson.getByRole('button', { name: 'Próxima etapa', exact: true }).click()
     }
-    await stage.screenshot({ style: '.nav-top nav.tabs { visibility: hidden; }', path: path.join(out, `${width}-${theme}-${mode.startsWith('Com') ? 'st' : 'normal'}.png`) })
+    await stage.screenshot({ style: '.term-head, .nav-top nav.tabs { visibility: hidden; }', path: path.join(out, `${width}-${theme}-${mode.startsWith('Com') ? 'st' : 'normal'}.png`) })
     const reset = lesson.getByRole('button', { name: 'Reiniciar', exact: true }); await reset.scrollIntoViewIfNeeded(); assert.ok(await reset.evaluate(el => { const b = el.getBoundingClientRect(); return el.contains(document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2)) })); await reset.focus(); await reset.press('Enter')
     assert.equal(await stage.getAttribute('data-step'), '0')
    }
    await lesson.locator('.icms-transcript summary').click(); assert.equal(await lesson.locator('.icms-transcript li').count(), 8)
    await lesson.locator('.icms-transcript summary').press('Enter')
-   await lesson.locator('.icms-sp').screenshot({ style: '.nav-top nav.tabs { visibility: hidden; }', path: path.join(out, `${width}-${theme}-sp.png`) })
+   await lesson.locator('.icms-sp').screenshot({ style: '.term-head, .nav-top nav.tabs { visibility: hidden; }', path: path.join(out, `${width}-${theme}-sp.png`) })
    await page.getByRole('searchbox', { name: 'Buscar conceito', exact: true }).fill('substituição tributária')
    assert.match(await page.locator('.learn-count').innerText(), /1 conceito encontrado/)
    await page.getByRole('button', { name: 'Limpar busca', exact: true }).click()

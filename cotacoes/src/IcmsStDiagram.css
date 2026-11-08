@@ -9,15 +9,15 @@
 .icms-stage { padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: hidden; }
 .icms-stage-top { display: flex; justify-content: space-between; align-items: start; gap: 18px; margin-bottom: 24px; font-size: .85rem; }
 .icms-stage-top > span { white-space: nowrap; color: var(--mut); font-size: .75rem; }
-.icms-chain { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; padding: 0; list-style: none; margin: 0; }
+.icms-diagram-legend { font-size: .75rem; color: var(--mut); margin: -8px 0 20px; }
+.icms-chain { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px; padding: 0; list-style: none; margin: 0; }
 .icms-node { min-width: 0; position: relative; display: flex; flex-direction: column; }
 .icms-company { display: flex; flex-direction: column; min-height: 130px; padding: 12px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); transition: border-color .3s, box-shadow .3s; }
 .icms-node.is-active .icms-company { border-color: var(--icms-accent); box-shadow: inset 0 3px var(--icms-accent); }
 .icms-node-number { font-size: 1.5rem; color: var(--mut); font-weight: 300; margin-bottom: 14px; }
 .icms-company strong { font-size: .82rem; overflow-wrap: anywhere; }
 .icms-company small { color: var(--mut); font-size: .68rem; line-height: 1.5; margin-top: 5px; }
-.icms-goods { position: absolute; width: 22px; right: -22px; top: 55px; color: var(--fg); }
-.icms-goods > span { position: absolute; font-size: .6rem; top: -16px; left: 50%; transform: translateX(-50%); background: var(--card); padding: 0 2px; }
+.icms-goods { position: absolute; width: 30px; right: -30px; top: 55px; color: var(--fg); }
 .icms-goods svg { width: 100%; overflow: visible; display: block; }
 .icms-goods path { fill: none; stroke: currentColor; stroke-width: 3; }
 .icms-goods circle { fill: var(--icms-accent); opacity: 0; }
@@ -64,7 +64,6 @@
  .icms-node-number { font-size: 1.25rem; margin-bottom: 8px; }
  .icms-company small { font-size: .72rem; }
  .icms-goods { right: auto; left: calc(25% - 12px); top: calc(100% + 14px); width: 26px; transform: rotate(90deg); }
- .icms-goods > span { transform: rotate(-90deg); left: 4px; top: -28px; font-size: .64rem; }
  .icms-tax { font-size: .76rem; border: 0; }
  .icms-tax.is-taxpayer { border-bottom: 0; border-right: 2px solid var(--icms-accent); }
  .icms-tax-arrow { height: 26px; }

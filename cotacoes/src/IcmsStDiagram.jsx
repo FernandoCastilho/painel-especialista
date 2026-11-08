@@ -40,10 +40,11 @@ export default function IcmsStDiagram() {
     </div>
     <div className="icms-stage" data-mode={modo} data-step={etapa} data-playing={tocando} data-reduced={reduzido}>
       <div className="icms-stage-top"><strong>{modo === 'st' ? 'Um responsável antecipa as próximas etapas' : 'Cada contribuinte apura débitos e créditos'}</strong><span>Etapa {etapa + 1} de 4</span></div>
+      <p className="icms-diagram-legend">Entre empresas: fluxo da mercadoria. Para o Fisco: recolhimento do ICMS.</p>
       <ol className="icms-chain" aria-label="Fluxo da mercadoria e responsabilidade tributária">
         {EMPRESAS.map((nome, i) => <li className={`icms-node ${atual.ativos.includes(i) ? 'is-active' : ''}`} key={nome}>
           <div className="icms-company"><span className="icms-node-number" aria-hidden="true">0{i + 1}</span><strong>{nome}</strong><small>{i === 3 ? 'Compra para consumo' : modo === 'st' ? i === 0 ? 'Substituto tributário' : 'Substituído' : 'Contribuinte · RPA'}</small></div>
-          {i < 3 && <div className={`icms-goods ${atual.fluxo === 'mercadoria' ? 'is-moving' : ''}`} aria-hidden="true"><span>mercadoria</span><svg viewBox="0 0 100 16"><path d="M2 8H96M89 2L96 8 89 14" /><circle cx="5" cy="8" r="4" /></svg></div>}
+          {i < 3 && <div className={`icms-goods ${atual.fluxo === 'mercadoria' ? 'is-moving' : ''}`} aria-hidden="true"><svg viewBox="0 0 100 16"><path d="M2 8H96M89 2L96 8 89 14" /><circle cx="5" cy="8" r="4" /></svg></div>}
           {i < 3 && <div className={`icms-tax ${(modo === 'st' ? i === 0 : true) ? 'is-taxpayer' : ''} ${atual.fluxo === 'tributo' ? 'is-moving' : ''}`}>
             <span className="icms-tax-arrow" aria-hidden="true">↓</span>
             <span>{modo === 'st' ? i === 0 ? 'ICMS próprio + ICMS-ST → Fisco' : 'Revenda com ICMS já retido*' : 'Débito − crédito admitido → Fisco'}</span>
