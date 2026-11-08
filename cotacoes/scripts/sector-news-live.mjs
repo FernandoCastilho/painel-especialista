@@ -13,7 +13,7 @@ export function confirmedSnapshot(state, savedFeed, now = Date.now()) {
   if (!confirmation || savedFeed.token !== confirmation.receipt || digest(savedFeed.payload) !== confirmation.digest) throw new Error('last_publication_not_confirmed')
   const feed = structuredClone(savedFeed.payload)
   feed.delivery = { ...feed.delivery, publishedAt: confirmation.publishedAt, receipt: confirmation.receipt, digest: confirmation.digest }
-  normalizeSectorNews(feed, now)
+  feed.collection = normalizeSectorNews(feed, now).collection
   return feed
 }
 
