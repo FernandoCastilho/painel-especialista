@@ -1,0 +1,74 @@
+{
+  "sourceId": "aneel",
+  "url": "https://www.gov.br/aneel/pt-br/assuntos/noticias",
+  "httpStatus": 200,
+  "captureDate": "2026-11-08",
+  "htmlSha256": "0abf3bd61317c279289d9e1d3f32f66c327989a862c3367498005c2281145413",
+  "licenseMarkerPresent": true,
+  "blocks": {
+    "9dec99b5-ffef-4272-b677-8588856d2459": {
+      "@type": "customSearch",
+      "context": true,
+      "facets": [
+        {
+          "@id": "124ee2a4-6d84-44ad-b9eb-1912fd414352",
+          "advanced": false,
+          "field": {
+            "label": "Data de Publicação",
+            "value": "effective"
+          },
+          "hidden": false,
+          "multiple": false,
+          "title": "Data de Publicação",
+          "type": "daterangeFacet"
+        },
+        {
+          "@id": "d76bb430-7f29-4bb0-9554-1de013a2fd99",
+          "advanced": false,
+          "field": {
+            "label": "Categoria",
+            "value": "category_id"
+          },
+          "hidden": false,
+          "multiple": false,
+          "title": "Categoria",
+          "type": "selectFacet"
+        }
+      ],
+      "filters": "news",
+      "itemsPerPage": 30,
+      "query": {
+        "b_size": 30,
+        "limit": 10000000000,
+        "query": [
+          {
+            "i": "portal_type",
+            "o": "plone.app.querystring.operation.selection.any",
+            "v": [
+              "News Item"
+            ]
+          },
+          {
+            "i": "path",
+            "o": "plone.app.querystring.operation.string.relativePath",
+            "v": ""
+          }
+        ],
+        "sort_on": "effective",
+        "sort_order": "descending",
+        "sort_order_boolean": true
+      },
+      "showSearchInput": true,
+      "showTotalResults": true
+    }
+  },
+  "querystringsearch": {
+    "error": null,
+    "items": [],
+    "total": 0,
+    "loaded": false,
+    "loading": false,
+    "batching": {},
+    "subrequests": {}
+  }
+}

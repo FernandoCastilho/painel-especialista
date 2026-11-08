@@ -6,6 +6,7 @@ import { createLiveTransport } from './sector-news-safe/live-transport.mjs'
 import { runSectorNewsProduction } from './sector-news-safe/runner.mjs'
 import { digest } from './sector-news-safe/state.mjs'
 import { PRODUCTION_SOURCE_IDS } from './sector-news-safe/production-state.mjs'
+import { parserMaintenanceEnabled } from './sector-news-safe/maintenance.mjs'
 import { normalizeSectorNews } from '../src/sectorNews.js'
 
 export function confirmedSnapshot(state, savedFeed, now = Date.now()) {
@@ -24,20 +25,27 @@ export async function main(args = process.argv.slice(2)) {
   try {
   await service.verifyProtection()
   let state = (await service.store.read()).state
+  let collectionResult = null
   if (args[0] === '--collect') {
     const previous = await service.readFeed()
     const result = await runSectorNewsProduction({ store: service.store, publisher: service.publisher, previousFeed: previous.payload,
       sourceIds: PRODUCTION_SOURCE_IDS, verifiedSince: config.verifiedSince, runId: `github-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || '1'}`,
       transport: createLiveTransport({ sourceIds: PRODUCTION_SOURCE_IDS }) })
+    collectionResult = result
     state = result.state || (await service.store.read()).state
   }
   const savedFeed = await service.readFeed()
   const feed = confirmedSnapshot(state, savedFeed)
+  const maintenance = parserMaintenanceEnabled()
+  if (maintenance) {
+    feed.collectionPolicy = { ...feed.collectionPolicy, maintenanceActive: true }
+    feed.collection = normalizeSectorNews(feed).collection
+  }
   const output = fileURLToPath(new URL('../public/sector-news.json', import.meta.url))
   const temp = `${output}.${process.pid}.tmp`
   await writeFile(temp, JSON.stringify(feed, null, 2) + '\n')
   await rename(temp, output)
-  const summary = { checkedAt: new Date().toISOString(), mode: args[0].slice(2), publication: state.feed.lastPublication,
+  const summary = { checkedAt: new Date().toISOString(), mode: args[0].slice(2), maintenance, collectionAttempted: args[0] === '--collect' && collectionResult?.status !== 'maintenance', publication: state.feed.lastPublication,
     sources: Object.fromEntries(Object.entries(state.sources).map(([id, value]) => [id, { status: value.status, checkedAt: value.checkedAt, lastSuccessAt: value.lastSuccessAt, reason: value.reason }])),
     uniqueItems: new Set(Object.values(feed.topics).flatMap(topic => topic.items.map(item => item.link))).size }
   if (process.env.INSTITUTIONAL_NEWS_REPORT) {

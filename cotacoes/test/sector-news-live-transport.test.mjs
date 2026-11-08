@@ -1,15 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createLiveTransport, isLiveTransport, LIVE_RESPONSE_BYTES } from '../scripts/sector-news-safe/live-transport.mjs'
+import { ploneDiscoveryUrl } from '../scripts/sector-news-safe/plone-discovery.mjs'
 import { SECTOR_NEWS_SOURCES } from '../src/sectorNews.js'
 const source = SECTOR_NEWS_SOURCES.find(source => source.id === 'mapa')
 const make = () => createLiveTransport({ sourceIds: ['mapa'] })
 function mockFetch(t, fetch) { const saved = globalThis.fetch; globalThis.fetch = fetch; t.after(() => { globalThis.fetch = saved }) }
 const response = (body, options = {}) => new Response(body, { status: 200, ...options })
 
-test('closed transport only accepts the nine approved candidates and no injected callbacks', () => {
-  for (const id of ['mapa', 'antt', 'mdic', 'anp', 'anm', 'ana', 'cvm', 'ans', 'ipen']) assert.ok(isLiveTransport(createLiveTransport({ sourceIds: [id] })))
-  for (const ids of [[], ['aneel'], ['anvisa'], ['susep'], ['mapa', 'mapa'], ['unknown']]) assert.throws(() => createLiveTransport({ sourceIds: ids }))
+test('closed transport only accepts reviewed transport candidates and no injected callbacks', () => {
+  for (const id of ['mapa', 'antt', 'mdic', 'anp', 'anm', 'ana', 'cvm', 'ans', 'ipen', 'aneel', 'susep']) assert.ok(isLiveTransport(createLiveTransport({ sourceIds: [id] })))
+  for (const ids of [[], ['anvisa'], ['mapa', 'mapa'], ['unknown']]) assert.throws(() => createLiveTransport({ sourceIds: ids }))
   assert.throws(() => createLiveTransport({ sourceIds: ['mapa'], fetch: () => {} }))
   assert.equal(isLiveTransport({ request() {} }), false)
   assert.equal(Object.isFrozen(make()), true)
@@ -89,4 +90,28 @@ test('network failure makes one attempt and the deadline also covers pending res
   await assert.rejects(pending, /request_timeout/)
   assert.equal(calls, 2)
   assert.equal(signal.aborted, true)
+})
+
+for (const id of ['aneel', 'susep']) test(`${id}: exact discovery URL uses bounded existing transport without broader API access`, async t => {
+  const calls = []
+  mockFetch(t, async (url, options) => { calls.push([url, options]); return response('{"items":[]}') })
+  const transport = createLiveTransport({ sourceIds: [id] })
+  const url = ploneDiscoveryUrl(id)
+  assert.equal((await transport.request(url)).status, 200)
+  assert.equal(calls[0][1].headers.accept, 'application/json')
+  assert.equal(calls[0][1].redirect, 'manual')
+  assert.equal(calls[0][1].credentials, 'omit')
+  for (const invalid of [url + '&b_start=5', url + '#x', url.replace('b_size%22%3A5', 'b_size%22%3A30'), ploneDiscoveryUrl(id === 'aneel' ? 'susep' : 'aneel')]) await assert.rejects(transport.request(invalid), /url_outside/)
+  assert.equal(calls.length, 1)
+})
+
+for (const id of ['aneel', 'susep']) test(`${id}: discovery preserves denial and redirect outcomes without following or retry`, async t => {
+  let status = 403, calls = 0
+  mockFetch(t, async () => { calls++; return response('', { status }) })
+  const transport = createLiveTransport({ sourceIds: [id] })
+  for (const code of [301, 403, 429]) {
+    status = code
+    assert.deepEqual(await transport.request(ploneDiscoveryUrl(id)), { status: code, body: '' })
+  }
+  assert.equal(calls, 3)
 })

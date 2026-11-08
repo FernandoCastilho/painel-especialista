@@ -1,13 +1,16 @@
 import { SECTOR_NEWS_SOURCES } from '../../src/sectorNews.js'
 import { MAX_RESPONSE_BYTES } from '../sector-news-lib.mjs'
+import { isPloneDiscoveryUrl } from './plone-discovery.mjs'
 
 const transports = new WeakSet()
-const candidates = new Set(['mapa', 'antt', 'mdic', 'anp', 'anm', 'ana', 'cvm', 'ans', 'ipen'])
+const candidates = new Set(['mapa', 'antt', 'mdic', 'anp', 'anm', 'ana', 'cvm', 'ans', 'ipen', 'aneel', 'susep'])
 export const LIVE_RESPONSE_BYTES = Math.min(MAX_RESPONSE_BYTES, 2_000_000)
 const TIMEOUT_MS = 15_000
 const USER_AGENT = 'PainelEspecialistaSectorNews/1.0 (+https://github.com/FernandoCastilho/painel-especialista)'
 
 function allowedUrl(raw, sources) {
+  // Only the exact reviewed query is accepted, never arbitrary API parameters.
+  if (sources.some(source => isPloneDiscoveryUrl(source.id, raw))) return true
   if (typeof raw !== 'string' || !raw.startsWith('https://www.gov.br/') || /[%@\\\s?#]/u.test(raw)) return false
   let url
   try { url = new URL(raw) } catch { return false }
@@ -41,7 +44,7 @@ export function createLiveTransport(options) {
       })
       const read = async () => {
         const response = await nativeFetch(url, { redirect: 'manual', credentials: 'omit', cache: 'no-store', signal: controller.signal,
-          headers: { 'user-agent': USER_AGENT, accept: 'text/html,text/plain;q=0.8' } })
+          headers: { 'user-agent': USER_AGENT, accept: sources.some(source => isPloneDiscoveryUrl(source.id, url)) ? 'application/json' : 'text/html,text/plain;q=0.8' } })
         if (response.redirected || (response.url && response.url !== url)) throw new Error('redirect_requires_review')
         if (!Number.isInteger(response.status)) throw new Error('invalid_http_response')
         // Return denial/redirect unchanged so the runner durably suspends access.
