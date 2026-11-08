@@ -11,7 +11,7 @@ import { Panel } from './TerminalDesk.jsx'
 
 function AprenderAudio() {
   const [failed, setFailed] = useState(false)
-  const audioUrl = './audio/cupom-cambial-notebooklm-2026-11-08.m4a'
+  const audioUrl = './audio/cupom-cambial-explicacao-notebooklm-v2-2026-11-08.m4a'
   return <section aria-label="Cupom cambial em áudio" className="learn-audio">
     <h3>Ouça a explicação</h3>
     <p>Resumo em Audio 🎧</p>
