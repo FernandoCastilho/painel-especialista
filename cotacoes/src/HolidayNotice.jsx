@@ -11,17 +11,18 @@ const when = (d, t) => {
 }
 
 // Aviso de feriados nas praças escolhidas (próximos dias) e de calendário chinês ainda não publicado.
-export default function HolidayNotice({ hol, days = 30, list = false }) {
+export default function HolidayNotice({ hol, days = 30, list = false, pracas = hol.pracas, expanded = false }) {
   const t = today()
-  const up = upcomingHolidays(t, days, hol.pracas, hol.ctx)
+  const up = upcomingHolidays(t, days, pracas, hol.ctx, { includeWeekends: expanded })
   const y = Number(t.slice(0, 4))
-  const missing = hol.pracas.includes('CN') && hol.loaded ? cnMissingYears([y, y + 1], hol.ctx) : []
-  if (!up.length && !missing.length) return list ? <p className="status">Nenhum feriado nas praças escolhidas nos próximos {days} dias.</p> : null
+  const lastYear = Number(new Date(Date.parse(`${t}T12:00:00Z`) + days * 864e5).getUTCFullYear())
+  const missing = pracas.includes('CN') && hol.loaded ? cnMissingYears([...new Set([y, lastYear])], hol.ctx) : []
+  if (!expanded && !up.length && !missing.length) return list ? <p className="status">Nenhum feriado nas praças escolhidas nos próximos {days} dias.</p> : null
   const items = (
     <ul>
       {up.map((u) => (
         <li key={u.date + u.cal}>
-          <b>{when(u.date, t)}</b> · feriado em <Flag code={calFlag(u.cal)} width={16} height={11} /> <b>{calLabel(u.cal)}</b>: {u.name}
+          <b>{when(u.date, t)}</b> · feriado em <Flag code={calFlag(u.cal)} width={16} height={11} /> <b>{{ NY: 'EUA (Federal Reserve)', JP: 'Japão' }[u.cal] ?? calLabel(u.cal)}</b>: {u.name}
           {u.cal === 'NY' && ' (sem liquidação em USD)'}
         </li>
       ))}
@@ -29,7 +30,7 @@ export default function HolidayNotice({ hol, days = 30, list = false }) {
   )
   const note = missing.length > 0 && (
     <p className="status stale">
-      China: o calendário oficial de {missing.join(' e ')} ainda não foi publicado pelo governo (costuma sair em novembro). Esses anos aparecem só com fins de semana; confira antes de fechar datas.
+      China: calendário oficial de {missing.join(' e ')} indisponível nesta consulta. Confira a publicação oficial antes de fechar datas.
     </p>
   )
   if (list) return <div className="holiday-notice" role="status">{up.length > 0 && items}{note}</div>
@@ -37,11 +38,15 @@ export default function HolidayNotice({ hol, days = 30, list = false }) {
   const first = up[0]
   const dates = new Set(up.map((u) => u.date)).size
   return (
-    <details className="holiday-notice compact">
+    <details className="holiday-notice compact" open={expanded}>
       <summary>
-        {first ? <><b>Feriados nos próximos {days} dias</b> · {dates} {dates === 1 ? 'data' : 'datas'} · primeiro: <b>{when(first.date, t)}</b> em {[...new Set(up.filter((u) => u.date === first.date).map((u) => u.cal))].map((c) => <span key={c}><Flag code={calFlag(c)} width={16} height={11} /> {calLabel(c)} </span>)}</> : 'Calendário da China: ano ainda não publicado'}
+        {first ? <><b>Feriados nos próximos {days} dias</b> · {dates} {dates === 1 ? 'data' : 'datas'} · primeiro: <b>{when(first.date, t)}</b> em {[...new Set(up.filter((u) => u.date === first.date).map((u) => u.cal))].map((c) => <span key={c}><Flag code={calFlag(c)} width={16} height={11} /> {calLabel(c)} </span>)}</> : <b>Feriados nos próximos {days} dias</b>}
         {first && missing.length > 0 && ' · aviso China'}
       </summary>
+      {expanded && <p className="status">Brasil, EUA (Federal Reserve), China continental e Japão · referência financeira, incluindo feriados em fins de semana.</p>}
+      {expanded && !up.length && <p className="status">Nenhum feriado encontrado no período nos calendários disponíveis.</p>}
+      {expanded && pracas.includes('CN') && !hol.loaded && <p className="status stale">China: aguardando os dados oficiais; os feriados chineses ainda não estão incluídos na lista.</p>}
+      {expanded && pracas.includes('CN') && hol.loaded && !missing.length && !up.some(u => u.cal === 'CN') && <p className="status">China: nenhum feriado nos próximos {days} dias.</p>}
       {up.length > 0 && items}
       {note}
     </details>
