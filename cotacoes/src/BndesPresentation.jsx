@@ -64,6 +64,7 @@ function PresentationDialog({ snapshot, onClose }) {
       return
     }
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(); return }
+    if (['ArrowLeft', 'ArrowRight'].includes(event.key) && event.target.closest('.bnp-table-wrap')) return
     if (!deck || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input, select, textarea, [contenteditable=true]')) return
     if (event.key === ' ' && event.target.closest('button')) return
     const next = presentationStep(index, event.key, count)
