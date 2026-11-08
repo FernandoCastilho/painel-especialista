@@ -43,6 +43,10 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
+      - name: Conferir referências setoriais do IBGE para CBS (preserva base em falha)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: python3 scripts/fetch-ibge-cbs.py
+        timeout-minutes: 2
       - name: Google Trends (08h e 15h; preserva nas demais execuções)
         run: node scripts/fetch-trends.mjs
         timeout-minutes: 2
