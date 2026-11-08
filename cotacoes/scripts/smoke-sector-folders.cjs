@@ -168,6 +168,9 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
         await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
         await page.locator('.central-subsector').first().scrollIntoViewIfNeeded()
         await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536))
+        await page.keyboard.press('Tab')
+        await page.locator('.central-subsector').first().focus()
+        assert.equal(await page.locator('.central-subsector').first().evaluate(element => element.matches(':focus-visible') && getComputedStyle(element).outlineStyle !== 'none' && parseFloat(getComputedStyle(element).outlineWidth) >= 2), true, 'subsetor tem foco de teclado visível')
         await overflow()
         await page.screenshot({ path: path.join(out, `${width}-${theme}-tic.png`), fullPage: true })
       }
