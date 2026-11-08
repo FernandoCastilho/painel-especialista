@@ -53,11 +53,12 @@ const path = require('node:path')
    for (const [name, selector] of [['opening', '.icms-hero'], ['numbers', '.icms-example'], ['sp', '.icms-sp'], ['closing', '.icms-takeaway']]) await lesson.locator(selector).screenshot({ style: '.term-head, .nav-top { visibility: hidden; }', path: path.join(out, `${width}-${theme}-${name}.png`) })
    const stock = lesson.locator('.icms-legal-row').nth(1)
    for (const paragraph of await stock.locator('p, dt, dd').all()) {
-    await paragraph.scrollIntoViewIfNeeded()
+    // Center the reading target: viewport visibility alone includes the app's fixed navigation.
+    await paragraph.evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
     const visible = await paragraph.evaluate(el => { const b = el.getBoundingClientRect(), hit = document.elementFromPoint(b.x + Math.min(16, b.width / 2), b.y + Math.min(12, b.height / 2)); return { clear: el.contains(hit), hit: hit?.className || hit?.tagName, box: { x: b.x, y: b.y, width: b.width, height: b.height } } })
     assert.ok(visible.clear, 'stock text covered: ' + JSON.stringify(visible))
    }
-   await stock.locator('p').first().scrollIntoViewIfNeeded(); await page.screenshot({ path: path.join(out, `${width}-${theme}-stock-viewport.png`) })
+   await stock.locator('p').first().evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' })); await page.screenshot({ path: path.join(out, `${width}-${theme}-stock-viewport.png`) })
    const clipped = await lesson.evaluate(root => [...root.querySelectorAll('p, h2, h3, h4, .icms-equations, .icms-regimes')].filter(el => el.getClientRects().length && el.scrollWidth > el.clientWidth + 1).map(el => ({ tag: el.tagName, class: el.className, text: el.textContent.slice(0, 70), width: el.clientWidth, content: el.scrollWidth })))
    assert.deepEqual(clipped, [], 'no internally clipped text or sums')
    if (width < 620) assert.equal(await lesson.locator('.icms-regimes').evaluate(el => getComputedStyle(el).display), 'block')
