@@ -38,9 +38,15 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
         await page.waitForFunction(s => document.querySelector(s)?.innerText.includes('2T2026'), rows)
         const detail = panel.getByText('Detalhes e fontes — Itaú', { exact: true })
         await detail.press('Enter')
-        await panel.locator('.bank-details[open]').waitFor()
+        const detailsPanel = width < 700 ? panel : page.getByRole('dialog', {name:'Detalhes e fontes — Itaú',exact:true})
+        await detailsPanel.locator('.bank-details[open]').waitFor()
         await page.screenshot({ path: path.join(out, `${width}-${theme}-details.png`), fullPage: true })
-        assert.ok(await panel.locator('.bank-details[open] a').count() > 0)
+        assert.ok(await detailsPanel.locator('.bank-details[open] a').count() > 0)
+        if (width >= 700) {
+          await page.keyboard.press('Escape')
+          await detailsPanel.waitFor({state:'hidden'})
+          assert.ok(await detail.evaluate(el => el === document.activeElement), 'fecha e restaura o foco no banco')
+        }
         await page.getByLabel('Buscar banco', { exact: true }).fill('nenhum-banco')
         await page.getByText('Nenhum banco encontrado.', { exact: true }).waitFor()
         assert.deepEqual(errors, [])

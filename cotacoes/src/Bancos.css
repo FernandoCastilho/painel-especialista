@@ -30,6 +30,9 @@
 .bank-detail-table table { min-width:650px; width:100%; }
 .bank-detail-table td,.bank-detail-table th { text-align:left; position:static!important; min-width:0!important; }
 .bank-detail-table td:last-child { min-width:260px!important; overflow-wrap:anywhere; }
+.bank-detail-table .bank-change { display:block; margin-top:4px; font-size:.75rem; color:var(--mut); }
+.bank-detail-table .bank-change--melhora { color:var(--up,#199e70); }
+.bank-detail-table .bank-change--piora { color:var(--down,#d55181); }
 .bank-details a,.banks-method a { color:var(--accent,var(--fg)); text-decoration:underline; }
 .bank-details p,.bank-details li,.banks-method { line-height:1.6; }
 .banks-method { margin-top:20px; padding:0 16px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:.85rem; }
@@ -49,3 +52,7 @@
   .bank-details[open]{width:auto;max-width:100%;font-size:.85rem;}
   .bank-detail-table{max-width:100%;} .bank-detail-table th,.bank-detail-table td{padding:10px;border-bottom:1px solid var(--line);}
 }
+
+.bank-details-button { display:block; min-height:44px; margin-top:12px; padding:8px 12px; border:1px solid var(--line); border-radius:5px; background:var(--surface-2); color:var(--fg); text-align:left; font:inherit; cursor:pointer; }
+.banks-panel .expandable-body .bank-details[open] { width:100%; max-width:100%; }
+.banks-panel .expandable-body .bank-detail-table td,.banks-panel .expandable-body .bank-detail-table th { padding:12px; border-bottom:1px solid var(--line); }
