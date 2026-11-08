@@ -82,7 +82,7 @@ const out = process.env.BNDES_WORKSPACE_QA_OUTPUT || 'workspace-qa/bndes-workspa
         await page.locator('#fm-valor').fill('600.000,00')
         const before = await page.locator('.fm-hero').innerText()
         await page.getByRole('button', { name: 'Taxas e históricos', exact: true }).click()
-        await page.locator('.bw-quotes .bn-main .bn-table').waitFor()
+        await page.locator('.bw-quotes .bn-table.bn-main').waitFor()
         for (const family of ['TFC', 'TFB', 'TLP', 'Moedas']) await page.locator('.bw-quotes .bn-fam').getByRole('button', { name: family, exact: true }).click()
         await page.getByRole('button', { name: 'Simular financiamento', exact: true }).click()
         assert.equal(await page.locator('#fm-valor').inputValue(), '600.000,00')
