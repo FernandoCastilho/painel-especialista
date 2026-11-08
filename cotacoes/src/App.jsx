@@ -36,6 +36,7 @@ const Config = lazy(() => import('./Config.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
+const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
 const Apresentacao = lazy(() => import('./Apresentacao.jsx'))
 import { useDataFile } from './useDataFile.js'
@@ -325,6 +326,7 @@ export default function App() {
 
       {tab === 'bndes' && <Bndes view={sub} onView={(v, replace) => goto('bndes', v, replace)} />}
 
+      {tab === 'bancos' && <Bancos />}
       {tab === 'setores' && <Setores view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
       {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} />}

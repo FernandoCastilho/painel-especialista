@@ -12,6 +12,10 @@ const PINK = 'https://www.worldbank.org/en/research/commodity-markets'
 const AWESOME = 'https://economia.awesomeapi.com.br/json'
 
 export const BASE_DADOS = [
+  { grupo: 'Bancos', itens: [
+    { nome: 'Balanços bancários, capital e carteiras PJ/PF', orgao: 'Banco Central do Brasil · IF.data', api: 'https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/', pagina: 'https://www3.bcb.gov.br/ifdata/', arquivo: 'bancos.json', serie: 'Conglomerados prudenciais; relatórios Resumo, Ativo, crédito PF, PJ, porte e instrumentos financeiros. Lucro isolado por trimestre; perda esperada e inadimplência têm denominadores próprios.', freq: 'Trimestral; relido no fluxo existente do Pages. Falha preserva a última base, com aviso.' },
+    { nome: 'Últimos resultados publicados pelos bancos', orgao: 'Relatórios dos emissores; links, páginas e critérios em cada indicador. Bradesco: cópia pública do relatório do emissor em FinancialReports.', api: 'Transcrição conferida dos relatórios; não é uma API de resultados em tempo real.', pagina: 'https://www.itau.com.br/relacoes-com-investidores/resultados-e-relatorios/central-de-resultados/', arquivo: 'bancos-ri.json', serie: 'Último trimestre e comparativos republicados no mesmo documento. Perímetros gerenciais, BRGAAP e índices recorrentes identificados; sem preencher ausências com trimestres antigos.', freq: 'Revisão documental em 07/11/2026; novas publicações exigem nova conferência do relatório. Coletor BC não renova essa revisão.' },
+  ] },
   { grupo: 'Interesse de busca', itens: [
     { nome: 'Google Trends: Em alta no Brasil', orgao: 'Google Trends', api: 'https://trends.google.com/trending/rss?geo=BR', pagina: 'https://trends.google.com/trending?geo=BR', arquivo: 'trends.json', serie: 'RSS Em alta; termos históricos são snapshots estáticos separados no app', freq: '08h e 15h de Brasília; horários sujeitos à fila do GitHub Actions' },
   ] },

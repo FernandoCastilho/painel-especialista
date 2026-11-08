@@ -20,7 +20,7 @@ test('weekly Focus cron at 08:30 Brazil on Monday and Tuesday (Monday holiday); 
  const y=await readFile(new URL('../../.github/workflows/pages.yml',import.meta.url),'utf8')
  const crons=[...y.matchAll(/- cron: '([^']+)'/g)].map(m=>m[1]);assert.equal(crons.length,4);assert.equal(new Set(crons).size,4);assert.ok(crons.includes('0 11,18 * * *'))
  assert.match(y,/if: github.event.schedule == '30 11 \* \* 1,2'/)
- const regular=y.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,33);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
+ const regular=y.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,34);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
  assert.match(y,/Revalidar janela setorial sem coleta externa\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\)\n\s+run: node scripts\/fetch-sector-news\.mjs --offline/)
 })
 test('Focus failure/skip preserves actual publication date, values and quote timestamps',()=>{

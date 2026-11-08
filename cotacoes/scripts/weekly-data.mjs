@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { CSV_FILES, HEADER } from './csv-lib.mjs'
 
 export const RETAIN_JSON_FILES = [
+  'bancos.json',
   'trends.json',
   'macro.json', 'focus-history.json', 'curves.json', 'curves-history.json', 'news.json',
   'feriados.json', 'oil.json', 'commodities.json', 'freight.json', 'policy-rates.json',

@@ -10,6 +10,7 @@ export const SEARCH_PAGES = {
   'GoogleTrends.jsx':['resumo','Google Trends: interesse de busca, crédito, BNDES, Selic, custos e reforma tributária'],
   'ContaGarantida.jsx':['calculadora/conta-garantida','Conta Garantida: utilização, amortização, juros e IOF'],
   'AnaliseDesconto.jsx':['calculadora/analise-desconto','Análise de desconto: títulos e capital de giro Price'],
+  'Bancos.jsx':['bancos','Bancos — Basileia, carteiras PJ e PF, provisões e inadimplência'],
   'SetoresB3.jsx':['setores/b3','Classificação setorial B3: fonte e cobertura'],
   'finimpHelpContent.js':['calculadora/finimp','FINIMP: fórmulas e explicações'],
   'FinimpComparacao.jsx':['calculadora/finimp','FINIMP: comparação de propostas e atingir meta'],
