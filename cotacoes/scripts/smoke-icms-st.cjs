@@ -51,6 +51,9 @@ const path = require('node:path')
    }
    await lesson.locator('.icms-hero').scrollIntoViewIfNeeded(); await page.screenshot({ path: path.join(out, `${width}-${theme}-context.png`) })
    for (const [name, selector] of [['opening', '.icms-hero'], ['numbers', '.icms-example'], ['sp', '.icms-sp'], ['closing', '.icms-takeaway']]) await lesson.locator(selector).screenshot({ style: '.term-head, .nav-top nav.tabs { visibility: hidden; }', path: path.join(out, `${width}-${theme}-${name}.png`) })
+   const clipped = await lesson.evaluate(root => [...root.querySelectorAll('p, h2, h3, h4, .icms-equations, .icms-regimes')].filter(el => el.getClientRects().length && el.scrollWidth > el.clientWidth + 1).map(el => ({ tag: el.tagName, class: el.className, text: el.textContent.slice(0, 70), width: el.clientWidth, content: el.scrollWidth })))
+   assert.deepEqual(clipped, [], 'no internally clipped text or sums')
+   if (width < 620) assert.equal(await lesson.locator('.icms-regimes').evaluate(el => getComputedStyle(el).display), 'block')
    const sourceToggle = lesson.getByText('Fontes e base legal', { exact: true }); await sourceToggle.focus(); await sourceToggle.press('Enter')
    assert.equal(await lesson.locator('details[open] a').count(), 4)
    await sourceToggle.press('Enter')
@@ -66,10 +69,10 @@ const path = require('node:path')
    await page.waitForFunction(() => document.querySelector('.icms-flow').getAnimations({ subtree: true }).every(a => a.playState === 'finished'))
    await lesson.locator('.icms-takeaway').scrollIntoViewIfNeeded(); await scenes.nth(0).scrollIntoViewIfNeeded()
    assert.equal(await scenes.nth(0).evaluate(el => el.getAnimations({ subtree: true }).filter(a => a.playState === 'running').length), 0)
-   await page.emulateMedia({ reducedMotion: 'reduce' }); assert.equal(await lesson.evaluate(el => el.getAnimations({ subtree: true }).length), 0)
+   await page.emulateMedia({ reducedMotion: 'reduce' }); await page.waitForFunction(() => [...document.querySelectorAll('.icms-flow')].every(el => el.dataset.motion === 'false' && el.getAnimations({ subtree: true }).length === 0)); assert.equal(await lesson.evaluate(el => el.getAnimations({ subtree: true }).length), 0)
    assert.equal(await scenes.nth(0).getAttribute('data-motion'), 'false')
    assert.deepEqual(errors, []); results.push({ width, theme, status: 'pass', completeScenes: 2, taxConnections: true, contrast, keyboard: true, history: true, noPlayer: true, onePassUnder3Seconds: true, reducedMotion: true, overflow: false, errors })
    console.log(`PASS ICMS editorial ${width} ${theme}`); await context.close()
   }
- } finally { fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify({ results }, null, 2)); await browser.close() }
+ } catch (error) { fs.writeFileSync(path.join(out, 'failure.json'), JSON.stringify({ message: error.message, stack: error.stack }, null, 2)); throw error } finally { fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify({ results }, null, 2)); await browser.close() }
 })().catch(e => { console.error(e); process.exit(1) })
