@@ -342,6 +342,7 @@ test('Aprender starts in map mode and keeps concept routes and the original list
     react: { ...React, useMemo: memo },
     './educacao.js': educacao,
     './Aprender.css': {},
+    './IcmsStDiagram.jsx': { __esModule: true, default: () => null },
     './Avisos.jsx': { Aviso: passthrough },
     './TerminalDesk.jsx': { Panel: passthrough },
     './Help.jsx': { __esModule: true, default: passthrough },

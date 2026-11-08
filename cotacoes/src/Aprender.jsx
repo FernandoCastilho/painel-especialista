@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CONCEITOS, CONEXAO, LIGACOES, buscarConceitos, conexoesDe, porTopico } from './educacao.js'
 import Help from './Help.jsx'
 import './Aprender.css'
+import IcmsStDiagram from './IcmsStDiagram.jsx'
 import KnowledgeMap from './KnowledgeMap.jsx'
 
 const nomeCurto = (id) => CONCEITOS.find((c) => c.id === id)?.nome.replace(/ \(.*\)/, '') ?? id
@@ -19,6 +20,8 @@ function Concept({ c, goto }) {
           <h3>Explicação simples</h3>
           {c.crianca.map((t) => <p key={t}>{t}</p>)}
           <p className="learn-analogy"><span className="learn-tag">Analogia</span>{c.analogia}</p>
+
+          {c.diagramaIcms && <IcmsStDiagram />}
 
           {c.estudoHistorico && <section className="learn-history" aria-label={c.estudoHistorico.titulo}>
             <h3>{c.estudoHistorico.titulo}</h3>

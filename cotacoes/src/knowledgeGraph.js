@@ -33,6 +33,7 @@ const SECTOR_ROUTES = {
   'software-ti': 'tic', telecom: 'tic',
 }
 const CONCEPT_ALIASES = {
+  'substituicao-tributaria': ['substituição tributária', 'ICMS-ST'],
   'juros-forcados': ['juros forçados', 'repressão financeira', 'controle da curva de juros'],
   cet: ['custo efetivo total', 'CET'], 'escala-6x1': ['escala 6x1', 'escala 6 por 1', 'fim da 6x1'],
   'reforma-tributaria': ['reforma tributária', 'IBS e CBS', 'imposto seletivo'],

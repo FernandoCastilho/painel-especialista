@@ -1,6 +1,7 @@
 import { nf } from './format.js'
 import { CONCEITO_MAQUILA } from './maquila.js'
 import { CONCEITO_JUROS_FORCADOS } from './jurosForcados.js'
+import { CONCEITO_ICMS_ST } from './icmsSt.js'
 // Aba "Aprender": conceitos explicados em linguagem simples. Os números dos exemplos saem das funções abaixo (testadas),
 // nunca digitados no texto, para a tela não mostrar uma conta errada. Exemplos são didáticos, não cotações de mercado.
 
@@ -943,6 +944,7 @@ export const CONCEITOS = [
     noApp: { texto: 'Em Cenários, compare o ambiente de custos da empresa. O painel não calcula folha nem define o enquadramento trabalhista.', tab: 'cenarios' },
     teste: { pergunta: 'Em 05/11/2026, a publicação da EC 141 já obriga toda empresa a adotar imediatamente 40 horas?', resposta: 'Não. A emenda prevê etapas, prazos e situações específicas. É preciso conferir a vigência, a categoria e os contratos antes de aplicar a mudança.' },
   },
+  CONCEITO_ICMS_ST,
   {
     id: 'reforma-tributaria',
     topico: 'Tributos e trabalho',
@@ -1061,6 +1063,8 @@ export const porTopico = (lista) => TOPICOS.map((topico) => ({ topico, itens: li
 // outros conceitos (LIGACOES). Os testes recusam conceito sem papel, sem ligação ou com ligação para conceito que não existe.
 // LIGACOES é a fonte única: cada par vale nos dois sentidos e aparece em "Conecta com" de ambos os conceitos e no quadro geral.
 export const LIGACOES = [
+  ['substituicao-tributaria', 'reforma-tributaria', 'A exclusão de ICMS-ST muda o recolhimento do ICMS vigente; não se confunde com a transição da reforma para IBS e CBS.'],
+  ['substituicao-tributaria', 'custo-de-funding', 'A antecipação do imposto e o prazo de utilização do crédito de estoque podem alterar a necessidade de financiar o capital de giro.'],
   ['juros-forcados', 'inflacao', 'A taxa real depende da inflação; manter juros baixos pode ser coerente com desinflação ou entrar em conflito com inflação elevada.'],
   ['juros-forcados', 'diferencial-de-juros', 'O diferencial de rendimento é um dos canais de pressão cambial, mas não explica sozinho a movimentação das moedas.'],
   ['juros-forcados', 'custo-de-funding', 'Taxa básica menor não garante captação mais barata se o risco, o juro longo ou o spread subirem.'],
@@ -1119,6 +1123,7 @@ export const LIGACOES = [
 export const CONEXAO = {
   titulo: 'Como as peças se encaixam',
   itens: [
+    { id: 'substituicao-tributaria', texto: 'antecipa o ICMS das revendas em um ponto da cadeia; a mudança paulista exige conferir mercadoria, estoque, créditos e caixa.' },
     { id: 'juros-forcados', texto: 'compara seis histórias de juros baixos, controle da curva e repressão financeira, com benefícios, custos e limites de causalidade.' },
     { id: 'cet', texto: 'reúne o custo do crédito para o tomador, com o líquido recebido, os encargos aplicáveis e as datas dos pagamentos.' },
     { id: 'escala-6x1', texto: 'liga organização dos turnos, produtividade e planejamento do caixa, com transição e enquadramento trabalhista a conferir.' },
