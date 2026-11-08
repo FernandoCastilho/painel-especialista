@@ -29,6 +29,8 @@ const commoditiesBrl = { schemaVersion: 1, generatedAt: new Date().toISOString()
 const fuels = { schemaVersion: 1, generatedAt: new Date().toISOString(), commodities: [fuel('anp-gasolina', 'Gasolina comum · bomba', 'R$/litro', 6.51), fuel('anp-etanol', 'Etanol hidratado · bomba', 'R$/litro', 4.4), fuel('anp-diesel', 'Diesel S10 · bomba', 'R$/litro', 6.31), fuel('anp-glp', 'Gás de cozinha (botijão 13 kg)', 'R$/botijão 13 kg', 105.9)] }
 const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), commodities: [commodity('gold', 'Ouro', 'USD/onça troy', 4319, monthly(4000)), commodity('iron-ore', 'Minério de ferro', 'USD/tonelada seca', 97.7, monthly(90)), commodity('soybeans', 'Soja', 'USD/tonelada', 524, []), commodity('corn', 'Milho', 'USD/tonelada', 239.6, monthly(230))] }
 ;(async () => {
+  const { CONCEITOS, porTopico } = await import('../src/educacao.js')
+  const topicCount = porTopico(CONCEITOS).length
   const b = await chromium.launch(require('./smoke-launch.cjs')()), base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5216'
   const out = process.env.SMOKE_OUT
   if (out) await mkdir(out, { recursive: true })
@@ -507,9 +509,10 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const expandir = async () => {
         const button = p.getByRole('button', { name: 'Expandir todas', exact: true })
         if (!(await button.isDisabled())) await button.click()
-        assert.equal(await p.locator('.learn-group[open]').count(), 7)
+        assert.equal(await p.locator('.learn-group[open]').count(), topicCount)
       }
-      assert.equal(await p.locator('.learn-list li').count(), 29)
+      assert.equal(await p.locator('.learn-list li').count(), CONCEITOS.length)
+      assert.deepEqual((await p.locator('.learn-list li button b').allTextContents()).sort(), CONCEITOS.map(concept => concept.nome.replace(/ \(.*\)/, '')).sort())
       assert.equal(await p.locator('.learn-list button', { hasText: 'Regime FÁCIL' }).count(), 1, 'o conceito existente de Regime FÁCIL está preservado')
       assert.equal(await p.locator('.learn-group[open]').count(), 0, 'categorias começam recolhidas')
       if (out) await p.screenshot({ path: path.join(out, `aprender-${width}-recolhido.png`), fullPage: true })
@@ -532,8 +535,8 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await p.locator('.learn-count').innerText(), /2 conceitos encontrados/)
       await busca.fill('debenture'); assert.equal(await p.locator('.learn-list li', { hasText: 'Debênture' }).count(), 1, 'busca sem acento')
       await busca.fill('zzzxyz'); assert.match(await p.locator('.learn-count').innerText(), /Nenhum conceito encontrado/); assert.equal(await p.locator('.learn-list li').count(), 0)
-      await p.getByRole('button', { name: 'Limpar busca' }).click(); assert.equal(await busca.inputValue(), ''); assert.equal(await p.locator('.learn-list li').count(), 29)
-      assert.equal(await p.locator('.learn-group[open]').count(), 7, 'limpar busca restaura categorias abertas manualmente')
+      await p.getByRole('button', { name: 'Limpar busca' }).click(); assert.equal(await busca.inputValue(), ''); assert.equal(await p.locator('.learn-list li').count(), CONCEITOS.length)
+      assert.equal(await p.locator('.learn-group[open]').count(), topicCount, 'limpar busca restaura categorias abertas manualmente')
       await busca.fill('recebiveis'); await p.locator('.learn-list button', { hasText: 'FIDC' }).click()
       await p.locator('.learn-detail h2', { hasText: 'FIDC' }).waitFor()
       assert.match(await p.locator('.learn-detail').innerText(), /subordinação[\s\S]*30%[\s\S]*R\$ 1\.000\.000[\s\S]*R\$ 1\.000\.000/)
@@ -553,7 +556,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.locator('.learn-list').waitFor()
       const geral = p.locator('.learn-detail')
       await geral.getByRole('heading', { name: 'Como as peças se encaixam' }).waitFor()
-      assert.equal(await geral.locator('.learn-links').first().locator('li').count(), 29, 'um papel para cada conceito')
+      assert.equal(await geral.locator('.learn-links').first().locator('li').count(), CONCEITOS.length, 'um papel para cada conceito')
       assert.match(await geral.innerText(), /O caminho de ponta a ponta[\s\S]*Inflação →[\s\S]*Quem se liga a quem[\s\S]*Liquidação antecipada ↔ FIDC/i)
       const buscaFinal = p.getByRole('searchbox', { name: 'Buscar conceito' })
       for (const [buscaTema, titulo, slug] of [['Escala 6x1', /Escala 6x1/, 'escala-6x1'], ['Reforma Tributária', /Reforma Tributária/, 'reforma-tributaria'], ['Split Payment', /Split Payment/, 'split-payment'], ['Dividendos', /Dividendos/, 'dividendos'], ['CET', /CET \(Custo Efetivo Total\)/, 'cet']]) {

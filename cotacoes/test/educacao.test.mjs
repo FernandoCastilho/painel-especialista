@@ -85,7 +85,8 @@ test('cada conceito traz frase, explicação simples, lacunas, versão precisa, 
     assert.ok(c.lacunas.length >= 2, c.id)
     assert.ok(c.preciso.texto.length > 40 && c.preciso.formula.length > 5, c.id)
     assert.ok(c.exemplo.passos.length >= 2 && c.exemplo.resultado.length > 10, c.id)
-    assert.ok(c.noApp.texto.length > 10 && ['juros', 'cenarios', 'aprender'].includes(c.noApp.tab), c.id)
+    assert.ok(c.noApp.texto.length > 10 && ['juros', 'cenarios', 'calculadora', 'aprender'].includes(c.noApp.tab), c.id)
+    if (c.noApp.tab === 'calculadora') assert.equal(c.noApp.view, 'cbs-caixa', c.id)
     assert.ok(c.teste.pergunta.endsWith('?') && c.teste.resposta.length > 20, c.id)
   }
   assert.equal(CONEXAO.itens.length, CONCEITOS.length)
