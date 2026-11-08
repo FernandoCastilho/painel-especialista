@@ -42,7 +42,10 @@ function PresentationDialog({ snapshot, onClose }) {
     }
   }, [onClose])
   useEffect(() => { if (deck) player.current?.focus(); else titleInput.current?.focus() }, [deck])
-  useEffect(() => { if (slide.current) { slide.current.scrollTop = 0; slide.current.scrollLeft = 0 } }, [index, deck])
+  useEffect(() => {
+    if (slide.current) { slide.current.scrollTop = 0; slide.current.scrollLeft = 0 }
+    if (deck && !dialog.current?.contains(document.activeElement)) player.current?.focus()
+  }, [index, deck])
   const fullscreen = async () => {
     setFullscreenError('')
     try {
