@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
 
-// Production grants are deliberately empty until the exact transition is audited.
+// Exact production grant reviewed against the stable journal during maintenance.
 // A grant pins the old journal token, state digest and review timestamp. No wildcard.
-export const APPROVED_PARSER_RELEASES = Object.freeze([])
+export const APPROVED_PARSER_RELEASES = Object.freeze([{"beforeDigest":"ad93d21f94d95114b0267216a3785f7d9303dda7e2ea19b558f28603a55e8e80","parentToken":"d276718ab15085415a6e0a1d9b81c680200e2ffa","reviewId":"aneel-susep-parser-20261108-r485","reviewedAt":"2026-11-08T19:46:38.030Z","sources":["aneel","susep"]}])
 const ids = ['aneel', 'susep']
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
