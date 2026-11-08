@@ -5,10 +5,21 @@ import Help from './Help.jsx'
 import './Aprender.css'
 import IcmsStDiagram from './IcmsStDiagram.jsx'
 import KnowledgeMap from './KnowledgeMap.jsx'
-import AprenderAudio from './AprenderAudio.jsx'
 
 const nomeCurto = (id) => CONCEITOS.find((c) => c.id === id)?.nome.replace(/ \(.*\)/, '') ?? id
 import { Panel } from './TerminalDesk.jsx'
+
+function AprenderAudio() {
+  const [failed, setFailed] = useState(false)
+  const audioUrl = './audio/cupom-cambial-notebooklm-2026-11-08.m4a'
+  return <section aria-label="Cupom cambial em áudio" className="learn-audio">
+    <h3>Ouça a explicação</h3>
+    <p>Resumo em português · piloto gerado com IA no NotebookLM. Os números são exemplos didáticos.</p>
+    <audio controls preload="metadata" aria-label="Ouvir explicação sobre cupom cambial" src={audioUrl} onError={() => setFailed(true)} />
+    {failed && <p role="alert">Não foi possível carregar o áudio. Você pode baixar o arquivo ou continuar lendo a explicação abaixo.</p>}
+    <a href={audioUrl} download>Baixar áudio (M4A)</a>
+  </section>
+}
 
 // Aba Aprender: lista de conceitos à esquerda; o conceito escolhido abre à direita (frase, explicação simples, lacunas, versão precisa, exemplo, teste).
 function Concept({ c, goto }) {
