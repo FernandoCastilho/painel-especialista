@@ -75,21 +75,21 @@
             "basis": "itau-pce-contabil",
             "note": "Perda de crédito esperada contábil consolidada, nota 8(c); inclui provisões para garantias e compromissos conforme nota.",
             "source": "https://filemanager-cdn.mziq.com/published/42787847-4cf6-4461-94a5-40ed237dca33/204f63e4-ab81-4618-9707-de0a1be27314",
-            "page": 92
+            "page": 91
           },
           "provisionPF": {
             "value": 32590000000.0,
             "basis": "itau-pce-pf-contabil",
             "note": "Saldo consolidado dos três estágios, PF, nota 8(c). Base contábil distinta da carteira gerencial.",
             "source": "https://filemanager-cdn.mziq.com/published/42787847-4cf6-4461-94a5-40ed237dca33/204f63e4-ab81-4618-9707-de0a1be27314",
-            "page": 92
+            "page": 91
           },
           "provisionPJ": {
             "value": 16187000000.0,
             "basis": "itau-pce-pj-contabil",
             "note": "Saldo consolidado dos três estágios, PJ, nota 8(c). Base contábil distinta da carteira gerencial.",
             "source": "https://filemanager-cdn.mziq.com/published/42787847-4cf6-4461-94a5-40ed237dca33/204f63e4-ab81-4618-9707-de0a1be27314",
-            "page": 92
+            "page": 91
           },
           "nplPF": {
             "value": 3.7,

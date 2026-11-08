@@ -1,4 +1,7 @@
 .banks-panel { min-width:0; }
+.banks-mobile { display:none; }
+.banks-cautions { margin:12px 0; font-size:.85rem; }
+.banks-cautions summary { cursor:pointer; min-height:44px; padding:12px 0; color:var(--mut); }
 .banks-heading { display:flex; align-items:start; justify-content:space-between; gap:16px; }
 .banks-heading h2 { margin:0 0 8px; font-size:1.15rem; }
 .banks-heading p { margin:0 0 16px; }
@@ -29,4 +32,18 @@
 .bank-details p,.bank-details li,.banks-method { line-height:1.6; }
 .banks-method { margin-top:20px; padding:0 16px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:.85rem; }
 .banks-panel :focus-visible { outline:2px solid var(--accent,var(--fg)); outline-offset:3px; }
-@media(max-width:699px) { .banks-heading{flex-direction:column;} .banks-controls{padding:12px;gap:12px;} .banks-controls label{flex-basis:100%;} .banks-table tbody th,.banks-table thead th:first-child{min-width:108px;max-width:120px;} .bank-details[open]{width:280px;} .banks-table th,.banks-table td{padding:12px 9px;} }
+@media(max-width:699px) {
+  .banks-heading{flex-direction:column;} .banks-controls{padding:12px;gap:12px;} .banks-controls label{flex-basis:100%;}
+  .banks-table-scroll{display:none;} .banks-mobile{display:grid;gap:16px;}
+  .bank-mobile-card{min-width:0;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--card);}
+  .bank-mobile-card h3{margin:0 0 6px;font-size:1rem;} .bank-mobile-card header>span{font-size:.8rem;color:var(--mut);}
+  .bank-mobile-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin:20px 0;}
+  .bank-mobile-card dt{font-size:.78rem;color:var(--mut);line-height:1.4;}
+  .bank-mobile-card dd{margin:4px 0 0;font-size:.95rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+  .bank-mobile-card dd small{display:block;margin-top:4px;color:var(--mut);font-size:.75rem;}
+  .bank-mobile-card .bank-change--melhora{color:var(--up,#199e70);} .bank-mobile-card .bank-change--piora{color:var(--down,#d55181);}
+  .bank-mobile-reading{border-top:1px solid var(--line);padding-top:12px;font-size:.85rem;line-height:1.5;}
+  .bank-mobile-reading p{margin:0 0 8px;} .bank-mobile-reading>small{color:var(--mut);}
+  .bank-details[open]{width:auto;max-width:100%;font-size:.85rem;}
+  .bank-detail-table{max-width:100%;} .bank-detail-table th,.bank-detail-table td{padding:10px;border-bottom:1px solid var(--line);}
+}
