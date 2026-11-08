@@ -4,7 +4,7 @@ const path = require('node:path')
 const widths = [320, 390, 768, 1440]
 const themes = ['light', 'dark']
 const matrix = widths.flatMap(width => themes.map(theme => ({ width, theme })))
-const requiredChecks = ['navigation', 'search', 'history', 'reload', 'focus', 'repeatSelection', 'clearFocus', 'reducedMotion', 'inputs', 'invalidRoute']
+const requiredChecks = ['images', 'navigation', 'search', 'history', 'reload', 'focus', 'repeatSelection', 'clearFocus', 'reducedMotion', 'inputs', 'invalidRoute']
 
 function verifySectorFolders(root) {
   const errors = []

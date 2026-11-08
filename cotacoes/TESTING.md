@@ -60,10 +60,12 @@ Os testes de interface cobrem troca de modos, repetição de edição/adição/r
 
 No preview de desenvolvimento, `test/fixtures/theme-responsive.html` renderiza o app real em um iframe com larguras selecionáveis de 320, 390, 768, 1024 e 1440 px. É um ensaio de layout, não emulação de toque ou dispositivo. Verifique o botão em Mercado e nas demais seções, troca de tema com entrada de calculadora preservada, reabertura/reload, opção Automático, teclado e ausência de corte no menu e nas abas. O arquivo não faz parte do build publicado.
 
-## Pastas e navegação setorial
+## Cartões e navegação setorial
 
-`node --test test/central-history.test.mjs test/central-ui.test.mjs test/sector-folders-ci.test.mjs` confere a estrutura das pastas, o contexto independente de cada entrada do histórico e o verificador de evidências. Os testes do verificador usam arquivos sintéticos e não certificam navegação real.
+`node --test test/central-history.test.mjs test/central-ui.test.mjs test/sector-folders-ci.test.mjs` confere os cartões, as imagens locais dos onze setores e 68 subsetores, o limite de 6 MiB dos atlas, o contexto independente de cada entrada do histórico e o verificador de evidências. Origem e ordem das fotos: `public/sector-images/README.md`. Os testes do verificador usam arquivos sintéticos e não certificam navegação real.
 
 No CI, `FOLDERS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/folders" node scripts/smoke-sector-folders.cjs` testa 320/390/768/1440 px nos temas claro/escuro. Cobre pasta, estudo, seletor, busca sem acentos, estado vazio, limpeza, caminho, Voltar/Avançar, recarga do estudo e da busca restaurada, foco, transbordamento, redução de movimento, insumos e rota inválida. As chamadas para outras origens são bloqueadas; não há publicação ou alteração de fontes.
+
+O mesmo ensaio verifica carregamento e dimensões das imagens. Em 1440 px escuro, percorre e captura os 68 subsetores; em 390 px, captura também TIC nos dois temas. A busca mantém a lista compacta, sem fotografias.
 
 `node scripts/verify-sector-folders.cjs "$RUNNER_TEMP/qa-universal/folders"` exige oito resultados completos, ausência de erros de página e 24 capturas não vazias. Ausência de relatório, combinação duplicada, recarga não comprovada ou captura ausente bloqueia o job. Os smokes de estudos e navegação continuam ativos. A matriz existente de 40 cenários de calculadoras e dois cabeçalhos Setores320 não foi substituída. O CI e a revisão independente das capturas do candidato integrado precisam concluir antes da publicação; testes unitários e build locais não substituem esses gates.
