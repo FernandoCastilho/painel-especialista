@@ -3,6 +3,8 @@
 .banks-cautions { margin:12px 0; font-size:.85rem; }
 .banks-cautions summary { cursor:pointer; min-height:44px; padding:12px 0; color:var(--mut); }
 .banks-heading { display:flex; align-items:start; justify-content:space-between; gap:16px; }
+.banks-heading > div { min-width:0; flex:1; }
+.banks-heading .refresh-wrap { flex:none; }
 .banks-heading h2 { margin:0 0 8px; font-size:1.15rem; }
 .banks-heading p { margin:0 0 16px; }
 .banks-controls { display:flex; flex-wrap:wrap; gap:14px; padding:16px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
