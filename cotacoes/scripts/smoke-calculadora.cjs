@@ -191,6 +191,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').nth(5).innerText(), /^R\$\s*0,00$/, 'sem IOF na liberação')
       assert.match(await fm.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/, 'saldo zera')
       const totalPago = await fm.locator('.fm-tabela tfoot td').nth(6).innerText()
+      if (!(await fm.locator('.fm-grade').isVisible())) await fm.locator('.fm-details > summary').click()
       assert.equal(totalPago, await kpi('Pagamento final'), 'total do fluxo = pagamento final')
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Finame sem rolagem lateral a ${width}px`)
       await p.screenshot({ path: `${out}/finame-${width}.png`, fullPage: width > 700 })
