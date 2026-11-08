@@ -231,3 +231,49 @@ jobs:
             ${{ runner.temp }}/qa-universal
           if-no-files-found: ignore
           retention-days: 7
+  bndes-workspace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: cotacoes
+    env:
+      SMOKE_BASE_URL: http://127.0.0.1:8768
+      SMOKE_CHANNEL: chrome
+      CHROMIUM_PATH: /usr/bin/google-chrome
+      BNDES_WORKSPACE_QA_OUTPUT: /tmp/bndes-workspace
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - run: npm install --no-save playwright@1.63.0
+      - name: Servir e conferir a central BNDES
+        run: |
+          python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/bndes-server.log" 2>&1 &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
+          node scripts/smoke-bndes-workspace.cjs
+      - name: Conferir regressões das calculadoras e do BNDES
+        env:
+          CALCULATOR_QA_OUTPUT: /tmp/bndes-workspace/calculators
+          BNDES_QA_OUTPUT: /tmp/bndes-workspace/bndes
+          BNDES_PROFILES_QA_OUTPUT: /tmp/bndes-workspace/bndes-profiles
+        run: |
+          failures=()
+          for s in smoke-calculator-layout smoke-calculadora smoke-bndes smoke-bndes-profiles; do
+            if ! node scripts/$s.cjs; then failures+=("$s"); fi
+          done
+          if (( ${#failures[@]} )); then printf 'Falhas: %s\n' "${failures[*]}"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bndes-workspace-design
+          path: /tmp/bndes-workspace
+          if-no-files-found: error
+          retention-days: 7

@@ -29,7 +29,7 @@ const CARDS = [['tfb', 'TFB_60_90', 'TFB 60 meses · 90 dias', 'day'], ['tlp', '
 // Aba BNDES: uma só área de trabalho. Abas por família (TFB, TLP, TFC, Moedas) escolhem a tabela; clicar numa linha ou num cartão troca a série
 // do gráfico; o período (atalhos e datas) é único e vale para todas as séries; as observações ficam recolhidas. Tudo mora no endereço
 // (#bndes/<família>/<série>?p=<período>), então dá para copiar o link e abrir igual em outro lugar.
-export default function Bndes({ view = '', onView = () => {} }) {
+export default function Bndes({ view = '', onView = () => {}, embedded = false }) {
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
   const moedasData = useMemo(() => withOfficialLcdSnapshot(moedas.data), [moedas.data])
@@ -192,7 +192,7 @@ export default function Bndes({ view = '', onView = () => {} }) {
           <p className="bn-def">{fam.definition}</p>
           <p className="bn-def">Variações em pontos percentuais (dólar e Selic acumulada, em %) contra o dia útil anterior e as datas de um mês e um ano antes, ou a mais próxima anterior; sem histórico suficiente, a coluna fica vazia. LD1 não usa essas colunas: sua última mudança é informada entre datas de vigência.</p>
         </details>
-        <Aviso title="BNDES · taxas e moedas"><p className="bn-def">O BNDES não detalha a sigla TFC na consulta de Moedas Contratuais; os nomes e códigos seguem a tabela do banco. A TFB (taxa fixa) e a TFC são séries diferentes. O período escolhido vale para todas as séries; séries que começam depois do início do período mostram só o que existe. O endereço da página guarda a série e o período: copie-o para compartilhar{sel ? ` (${sel.name})` : ''}.</p></Aviso>
+        <Aviso title="BNDES · taxas e moedas"><p className="bn-def">O BNDES não detalha a sigla TFC na consulta de Moedas Contratuais; os nomes e códigos seguem a tabela do banco. A TFB (taxa fixa) e a TFC são séries diferentes. O período escolhido vale para todas as séries; séries que começam depois do início do período mostram só o que existe. {embedded ? <>Use <a href={`#bndes/${buildRoute(route)}`}>Abrir este histórico com endereço próprio</a> para compartilhar a seleção de série e período.</> : <>O endereço da página guarda a série e o período: copie-o para compartilhar{sel ? ` (${sel.name})` : ''}.</>}</p></Aviso>
       </Panel>
     </div>
   )
