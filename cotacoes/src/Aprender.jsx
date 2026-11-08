@@ -5,6 +5,7 @@ import Help from './Help.jsx'
 import './Aprender.css'
 import IcmsStDiagram from './IcmsStDiagram.jsx'
 import KnowledgeMap from './KnowledgeMap.jsx'
+import AprenderAudio from './AprenderAudio.jsx'
 
 const nomeCurto = (id) => CONCEITOS.find((c) => c.id === id)?.nome.replace(/ \(.*\)/, '') ?? id
 import { Panel } from './TerminalDesk.jsx'
@@ -17,6 +18,8 @@ function Concept({ c, goto }) {
       <Panel title={c.nome} note={c.ajuda && <Help label={`Sobre ${c.nome}`} wide>{c.ajuda.map((t) => <p key={t}>{t}</p>)}</Help>}>
         <div className="learn-body">
           <p className="learn-sentence"><span className="learn-tag">Em uma frase</span>{c.frase}</p>
+
+          {c.id === 'cupom-cambial' && <AprenderAudio />}
 
           <h3>Explicação simples</h3>
           {c.crianca.map((t) => <p key={t}>{t}</p>)}
