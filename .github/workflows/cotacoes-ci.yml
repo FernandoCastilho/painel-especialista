@@ -231,7 +231,7 @@ jobs:
       SMOKE_BASE_URL: http://127.0.0.1:8768
       SMOKE_CHANNEL: chrome
       CHROMIUM_PATH: /usr/bin/google-chrome
-      BNDES_WORKSPACE_QA_OUTPUT: ${{ runner.temp }}/bndes-workspace
+      BNDES_WORKSPACE_QA_OUTPUT: /tmp/bndes-workspace
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -253,6 +253,6 @@ jobs:
         if: always()
         with:
           name: bndes-workspace-design
-          path: ${{ runner.temp }}/bndes-workspace
+          path: /tmp/bndes-workspace
           if-no-files-found: error
           retention-days: 7
