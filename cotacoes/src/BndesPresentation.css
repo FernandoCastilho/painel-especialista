@@ -65,3 +65,4 @@
 .bnp-sources a { color:#0131ff; }
 @media (max-width:699px) { .bnp-chart { overflow-x:auto; } .bnp-chart svg { min-width:560px; max-height:none; } }
 @media (max-width:399px) { .bnp-table-hint { display:block; color:#505a70; } }
+@media (max-width:899px) and (orientation:portrait) { .bnp-player .bnp-slide { width:100%; max-height:none; aspect-ratio:auto; flex:1; } }
