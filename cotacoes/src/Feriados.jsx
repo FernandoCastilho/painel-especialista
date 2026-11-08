@@ -3,6 +3,7 @@ import './Feriados.css'
 import { groupHolidayRows } from './holidayView.js'
 import { calFlag, calendarYearCovered, holidayMap, HOLIDAY_SOURCES } from './holidays.js'
 import Flag from './Flag.jsx'
+import { marketDate } from './marketReturns.js'
 
 // Aba Feriados: próximos 12 meses, em ordem de data, com o local e quantos dias faltam.
 const LIST = [
@@ -25,19 +26,18 @@ const LIST = [
   { id: 'JP', where: 'Tóquio' },
   { id: 'CN', where: 'China (continental)' },
 ]
-const ms = (d) => new Date(`${d}T12:00:00`).getTime()
+const ms = (d) => new Date(`${d}T12:00:00Z`).getTime()
 const fmt = (d) => {
-  const dt = new Date(`${d}T12:00:00`)
-  const wd = dt.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
-  return { date: dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }), wd }
+  const dt = new Date(`${d}T12:00:00Z`)
+  const wd = dt.toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '')
+  return { date: dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'UTC' }), wd }
 }
 const left = (n) => (n === 0 ? 'hoje' : n === 1 ? 'amanhã' : `${n} dias`)
 
 export default function Feriados({ hol }) {
   const [place, setPlace] = useState('all')
-  const now = new Date()
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const y = now.getFullYear()
+  const today = marketDate(Date.now())
+  const y = Number(today.slice(0, 4))
   const map = new Map()
   for (const c of LIST) {
     for (const yr of [y, y + 1]) {
@@ -76,7 +76,7 @@ export default function Feriados({ hol }) {
       </div>
       {groups.length ? <div className="fer-months">{groups.map((group) => (
         <section className="fer-month" key={group.month} aria-labelledby={`month-${group.month}`}>
-          <h2 id={`month-${group.month}`}>{new Date(`${group.month}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })} <span className="fer-month-count">· {group.rows.length} {group.rows.length === 1 ? 'data' : 'datas'}</span></h2>
+          <h2 id={`month-${group.month}`}>{new Date(`${group.month}-01T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })} <span className="fer-month-count">· {group.rows.length} {group.rows.length === 1 ? 'data' : 'datas'}</span></h2>
           <ul className="fer-list">
           {group.rows.map((r) => {
             const f = fmt(r.d)

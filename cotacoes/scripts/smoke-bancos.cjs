@@ -30,6 +30,20 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
         assert.match(await panel.innerText(), /Carteira PF/)
         const geometry = await page.evaluate(() => ({ width: innerWidth, document: document.documentElement.scrollWidth }))
         assert.ok(geometry.document <= geometry.width + 1, JSON.stringify(geometry))
+        await panel.scrollIntoViewIfNeeded()
+        const sticky = await panel.evaluate(element => {
+          element.scrollTop = element.scrollHeight
+          element.scrollLeft = element.scrollWidth
+          const box = element.getBoundingClientRect()
+          return { scrollable: element.scrollHeight > element.clientHeight,
+            headers: [...element.querySelectorAll('thead th')].map(cell => ({ top: cell.getBoundingClientRect().top, sticky: getComputedStyle(cell).position })),
+            top: box.top, firstLeft: element.querySelector('thead th').getBoundingClientRect().left, left: box.left }
+        })
+        assert.ok(sticky.headers.every(cell => cell.sticky === 'sticky'), 'todos os cabeçalhos ficam fixos')
+        if (sticky.scrollable) assert.ok(sticky.headers.every(cell => Math.abs(cell.top - sticky.top) <= 2), 'nomes e períodos continuam visíveis após rolagem vertical')
+        assert.ok(Math.abs(sticky.firstLeft - sticky.left) <= 2, 'Indicador continua visível após rolagem horizontal')
+        await page.screenshot({ path: path.join(out, `${width}-${theme}-scrolled.png`), fullPage: true })
+        await panel.evaluate(element => { element.scrollTop = 0; element.scrollLeft = 0 })
         await page.screenshot({ path: path.join(out, `${width}-${theme}.png`), fullPage: true })
         await page.getByLabel('Buscar banco', { exact: true }).fill('Itaú')
         await page.waitForFunction(s => document.querySelectorAll(s).length === 1, rows)
@@ -53,7 +67,7 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
         await page.getByLabel('Buscar banco', { exact: true }).fill('nenhum-banco')
         await page.getByText('Nenhum banco encontrado.', { exact: true }).waitFor()
         assert.deepEqual(errors, [])
-        report.push({ width, theme, passed: true, checks: ['10 bancos nas colunas', '10 indicadores nas linhas', 'PJ/PF', 'sem overflow da página', 'busca', 'segmento', 'anual', 'BC', 'detalhes por teclado', 'vazio', 'sem erro JS'] })
+        report.push({ width, theme, passed: true, checks: ['10 bancos nas colunas', '10 indicadores nas linhas', 'PJ/PF', 'cabeçalhos e primeira coluna fixos na rolagem', 'sem overflow da página', 'busca', 'segmento', 'anual', 'BC', 'detalhes por teclado', 'vazio', 'sem erro JS'] })
       } catch (error) {
         fs.writeFileSync(path.join(out, 'failure.json'), JSON.stringify({width,theme,message:error.message,stack:error.stack},null,2))
         await page.screenshot({path:path.join(out,`${width}-${theme}-failure.png`),fullPage:true})

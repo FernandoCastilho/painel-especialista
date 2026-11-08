@@ -25,8 +25,7 @@ test('catálogo, detalhes, rota antiga B3 e insumos aparecem sem classificação
   assert.match(topic,/>Compensados</)
   const studies = JSON.parse(readFileSync('src/sectorStudies/studies.json', 'utf8'))
   if (studies.some(study => study.group === 'base-florestal' && study.topicIndex === 3)) {
-    assert.match(topic,/Resumo executivo/)
-    assert.match(topic,/perguntas-chave para conhecer o negócio/)
+    assert.match(topic,/Carregando estudo/, 'static render keeps the catalog usable while the selected study loads separately')
   } else assert.match(topic,/Estudo setorial não incluído/)
   const b3=html('b3')
   assert.match(b3,/antiga classificação B3 foi substituída/)

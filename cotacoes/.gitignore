@@ -1,6 +1,7 @@
 node_modules
 public/trends.json
 dist
+public/sector-studies/
 public/news.json
 public/macro.json
 public/intraday.json

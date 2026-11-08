@@ -1,5 +1,6 @@
 name: Cotações CI
 on:
+  workflow_call:
   push:
     branches: ['feat/estudos-setoriais-completos']
     paths: ['cotacoes/**', 'docs/sector-research/**', '.github/workflows/cotacoes-ci.yml']

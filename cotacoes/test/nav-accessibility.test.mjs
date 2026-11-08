@@ -1,3 +1,4 @@
+import * as appSections from '../src/appSections.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
@@ -26,6 +27,7 @@ async function setup(t) {
       return ref
     } },
     './Nav.css': {},
+    './appSections.js': appSections,
   }
   const source = await readFile(process.env.NAV_SOURCE || new URL('../src/Nav.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })

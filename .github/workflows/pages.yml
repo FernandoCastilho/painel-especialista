@@ -3,7 +3,7 @@ name: Deploy do Painel Especialista (GitHub Pages)
 on:
   push:
     branches: [main, claude/obsidian-plugin-analysis-bagjz3]
-    paths: ['cotacoes/**', '.github/workflows/pages.yml']
+    paths: ['cotacoes/**', '.github/workflows/pages.yml', '.github/workflows/cotacoes-ci.yml']
   schedule:
     - cron: '0 11,18 * * *' # Trends: 08h e 15h de Brasília; demais fontes preservadas
     # Só de segunda a sexta no horário de Brasília (UTC-3): segunda 00h a sexta 23h. Sem coleta no sábado e no domingo.
@@ -13,6 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -23,7 +24,15 @@ concurrency:
   cancel-in-progress: false # A consulta semanal aguarda o deploy ativo; não o cancela.
 
 jobs:
+  verify-source:
+    # The complete browser suite gates code releases, not hourly data refreshes.
+    if: github.event_name != 'schedule'
+    uses: ./.github/workflows/cotacoes-ci.yml
+    permissions:
+      contents: read
   deploy:
+    needs: verify-source
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -36,6 +45,31 @@ jobs:
       run:
         working-directory: cotacoes
     steps:
+      - name: Exigir verificações antes de publicar código
+        if: github.event_name != 'schedule' && needs.verify-source.result != 'success'
+        uses: actions/github-script@v7
+        with:
+          script: core.setFailed('Verificações de código ou interface não passaram. Publicação bloqueada.')
+      - name: Exigir código já aprovado nas agendas de dados
+        if: github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              ...context.repo, workflow_id: 'pages.yml', head_sha: context.sha,
+              status: 'completed', per_page: 100,
+            })
+            const required = ['test-build', 'smoke', 'bndes-workspace']
+            for (const run of runs) {
+              if (run.id === context.runId || run.head_sha !== context.sha || run.conclusion !== 'success' || !['push', 'workflow_dispatch'].includes(run.event)) continue
+              const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+                ...context.repo, run_id: run.id, filter: 'latest', per_page: 100,
+              })
+              if (!required.every(id => jobs.some(job => job.name === `verify-source / ${id}` && job.conclusion === 'success'))) continue
+              core.info(`Código ${context.sha} aprovado e publicado na execução ${run.id}.`)
+              return
+            }
+            core.setFailed(`Agenda bloqueada: o código ${context.sha} ainda não possui publicação aprovada com todos os testes de código e interface. Execute a publicação manual ou corrija a falha do push; nenhum código será publicado por esta agenda.`)
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -270,11 +304,18 @@ jobs:
         uses: actions/github-script@v7
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          DEPLOYMENT_OUTCOME: ${{ steps.deployment.outcome }}
         with:
           script: |
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
             const title = 'Deploy da página de cotações falhou'
-            const body = `A atualização automática falhou e a página continua com os dados anteriores.\n\nExecução: ${run}\nGatilho: ${context.eventName}`
+            const outcome = process.env.DEPLOYMENT_OUTCOME
+            const status = outcome === 'success'
+              ? 'A publicação foi concluída, mas uma verificação posterior falhou. A nova versão pode estar no ar; confira o endereço publicado e o relatório antes de decidir restaurar uma versão.'
+              : outcome === 'failure'
+                ? 'O serviço de publicação retornou falha. O estado no ar precisa ser conferido; não é possível garantir que a versão anterior foi preservada.'
+                : 'A atualização falhou antes da publicação. Esta execução não enviou uma nova versão ao serviço de publicação.'
+            const body = `${status}\n\nExecução: ${run}\nGatilho: ${context.eventName}`
             const open = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', per_page: 50 })
             const prev = open.data.find((i) => i.title === title && !i.pull_request)
             if (prev) await github.rest.issues.createComment({ ...context.repo, issue_number: prev.number, body })

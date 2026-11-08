@@ -1,7 +1,8 @@
 import { calFlag, calLabel, cnMissingYears, upcomingHolidays } from './holidays.js'
 import Flag from './Flag.jsx'
+import { marketDate } from './marketReturns.js'
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => marketDate(Date.now())
 const dm = (s) => s.split('-').reverse().join('/')
 // "02/11/2026 (em 5 dias)", "(hoje)" ou "(amanhã)": a data e quanto falta.
 const when = (d, t) => {

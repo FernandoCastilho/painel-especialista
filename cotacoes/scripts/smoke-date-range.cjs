@@ -51,6 +51,13 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       assert.equal(await p.evaluate(() => document.activeElement?.className.includes('drp-trigger')), true, 'foco volta ao botão')
       // teclado: setas e Enter
       await trigger.focus(); await p.keyboard.press('Enter'); await cal.waitFor()
+      const previous = cal.getByRole('button', { name: 'Mês anterior', exact: true })
+      await previous.focus(); await p.keyboard.press('Enter')
+      assert.equal(await previous.evaluate(node => node === document.activeElement), true, 'trocar mês mantém foco na navegação')
+      assert.equal(await cal.locator('.drp-cell[tabindex="0"]:not(:disabled)').count(), 1, 'novo mês conserva uma entrada de teclado')
+      await cal.getByRole('button', { name: 'Próximo mês', exact: true }).focus()
+      await p.keyboard.press('Tab')
+      assert.equal(await p.evaluate(() => document.activeElement?.classList.contains('drp-cell')), true, 'Tab entra no novo mês')
       await p.keyboard.press('ArrowRight'); await p.keyboard.press('Enter')
       await p.keyboard.press('ArrowRight'); await p.keyboard.press('Enter')
       await cal.waitFor({ state: 'hidden' })

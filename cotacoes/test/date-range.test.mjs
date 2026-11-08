@@ -68,3 +68,12 @@ test('datas digitadas: aceita dd/mm/aaaa, dd/mm/aa, separadores e só dígitos; 
   assert.equal(typedText('2026-01-05', 'day'), '05/01/2026')
   assert.equal(typedText('2026-01', 'month'), '01/2026')
 })
+
+test('troca de página mantém foco no mês/ano exibido e respeita limites', async () => {
+  const { navigateCalendarView } = await import('../src/dateRange.js')
+  assert.deepEqual(navigateCalendarView('2026-01-31', '2026-01-31', 'day', 1), { view: '2026-02-28', focus: '2026-02-28' })
+  assert.deepEqual(navigateCalendarView('2028-03-31', '2028-03-31', 'day', -1), { view: '2028-02-29', focus: '2028-02-29' })
+  assert.deepEqual(navigateCalendarView('2026-10', '2026-12', 'month', 1), { view: '2027-10', focus: '2027-12' })
+  assert.deepEqual(navigateCalendarView('2026-10', '2026-12', 'month', 1, '2025-01', '2027-03'), { view: '2027-03', focus: '2027-03' })
+  assert.deepEqual(navigateCalendarView('2026-03-15', null, 'day', -1, '2026-03-01'), { view: '2026-03-01', focus: '2026-03-01' })
+})

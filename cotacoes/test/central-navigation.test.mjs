@@ -28,7 +28,7 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
     cancelAnimationFrame(id) { frames.delete(id) },
     scrollTo(options) { calls.push({ scroll: options.top }); window.scrollY = options.top },
   }
-  const deps = { react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './ResearchedSectorStudy.jsx': () => null, './sectorStudies/index.js': { findSectorStudy: () => null }, './CentralSetorial.css': {} }
+  const deps = { react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, window, document, require: name => deps[name] ?? require(name) })
   const render = () => {
