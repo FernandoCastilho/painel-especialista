@@ -7,6 +7,7 @@ import { createLiveTransport } from '../scripts/sector-news-safe/live-transport.
 import { runSectorNewsProduction } from '../scripts/sector-news-safe/runner.mjs'
 import { confirmedSnapshot } from '../scripts/sector-news-live.mjs'
 import { digest } from '../scripts/sector-news-safe/state.mjs'
+import { parserMaintenanceEnabled } from '../scripts/sector-news-safe/maintenance.mjs'
 import { normalizeSectorNews } from '../src/sectorNews.js'
 
 const previous = JSON.parse(await readFile(new URL('../public/sector-news.json', import.meta.url), 'utf8'))
@@ -32,8 +33,10 @@ test('production wrapper recognizes the actual Git and live transport contracts 
     // Stop before I/O: this tests the real branded production publisher/transport,
     // while the actual Git behavior is tested separately using real bare repos.
     const store = { ...service.store, read: async () => { throw Error('state_read_reached') } }
-    await assert.rejects(runSectorNewsProduction({ store, publisher: service.publisher, transport: createLiveTransport({ sourceIds: ['mapa'] }), previousFeed: previous,
-      sourceIds: ['mapa'], runId: 'contract-check', verifiedSince: '2026-11-08T13:00:00Z', clock: () => now }), /state_read_reached/)
+    const operation = () => runSectorNewsProduction({ store, publisher: service.publisher, transport: createLiveTransport({ sourceIds: ['mapa'] }), previousFeed: previous,
+      sourceIds: ['mapa'], runId: 'contract-check', verifiedSince: '2026-11-08T13:00:00Z', clock: () => now })
+    if (parserMaintenanceEnabled()) assert.deepEqual(await operation(), { status: 'maintenance', networkEnabled: false, collectionAttempted: false })
+    else await assert.rejects(operation(), /state_read_reached/)
   } finally {
     await service.close()
     if (old === undefined) delete process.env.GITHUB_TOKEN

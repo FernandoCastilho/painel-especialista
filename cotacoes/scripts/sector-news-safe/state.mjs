@@ -1,5 +1,6 @@
 // Offline-only safety model. No production bootstrap, unblock, network or credential API.
 import { createHash } from 'node:crypto'
+import { APPROVED_PARSER_RELEASES, validParserRelease, isExactParserRelease } from './parser-release.mjs'
 import { SECTOR_NEWS_SOURCES, validIsoTimestamp } from '../../src/sectorNews.js'
 
 export const STATE_REF = 'refs/heads/sector-news-state'
@@ -41,10 +42,14 @@ export function createSimulationState({ approvedIds = [], now, storeId = 'offlin
     run: null, sharedBlocks: Object.fromEntries(SHARED_ACCESS_SCOPES.map(scope => [scope, null])), feed: { status: 'never_published', generatedAt: null, publishedAt: null, digest: null, receipt: null, lastPublication: null }, sources })
 }
 
-export function validateState(state, { allowProduction = false } = {}) {
+export function validateState(state, { allowProduction = false, parserReleaseGrants = APPROVED_PARSER_RELEASES } = {}) {
   assert(object(state) && state.schemaVersion === SCHEMA_VERSION, 'schema')
   assert((state.environment === 'simulation-only' || (allowProduction && state.environment === 'production')) && id(state.storeId), 'environment')
   assert(state.registryDigest === registryDigest, 'source_registry_changed_requires_review')
+  if (state.parserRelease !== undefined) {
+    assert(validParserRelease(state.parserRelease, parserReleaseGrants), 'parser_release_not_approved')
+    assert(validIsoTimestamp(state.parserRelease.reviewedAt) !== null && Date.parse(state.parserRelease.reviewedAt) <= Date.parse(state.updatedAt), 'parser_release_time')
+  }
   assert(Number.isSafeInteger(state.revision) && state.revision >= 0 && validIsoTimestamp(state.updatedAt) !== null, 'revision_or_time')
   assert(object(state.sources), 'sources')
   assert(object(state.sharedBlocks) && Object.keys(state.sharedBlocks).sort().join('|') === SHARED_ACCESS_SCOPES.slice().sort().join('|'), 'shared_access_scopes')
@@ -63,7 +68,8 @@ export function validateState(state, { allowProduction = false } = {}) {
     assert(s.activeRun === null || (state.run && s.activeRun === state.run.id), 'source_run')
     assert((s.status === 'collecting') === Boolean(s.activeRun), 'collecting_without_run')
     assert(s.request === null || (s.activeRun && object(s.request) && id(s.request.id) && ['robots', 'listing', 'article'].includes(s.request.kind) && typeof s.request.url === 'string' && validIsoTimestamp(s.request.startedAt) !== null && Date.parse(s.request.startedAt) <= Date.parse(state.updatedAt) && Date.parse(s.request.startedAt) >= Date.parse(state.run.startedAt)), 'request')
-    if (HISTORICAL_HOLDS[source.id] || !source.enabled || !source.automaticCollection) assert(s.status === 'suspended', `historical_hold:${source.id}`)
+    const reviewedParser = state.parserRelease && ['aneel', 'susep'].includes(source.id)
+    if ((HISTORICAL_HOLDS[source.id] && !reviewedParser) || !source.enabled || !source.automaticCollection) assert(s.status === 'suspended', `historical_hold:${source.id}`)
   }
   assert(object(state.feed) && ['never_published', 'prepared', 'in_flight', 'published'].includes(state.feed.status), 'feed')
   assert(timestamp(state.feed.generatedAt) && timestamp(state.feed.publishedAt), 'feed_dates')
@@ -83,13 +89,15 @@ export function validateState(state, { allowProduction = false } = {}) {
 // Recovery is intentionally absent: it needs a separately reviewed, authorized procedure.
 export function validateTransition(before, after, options) {
   validateState(before, options); validateState(after, options)
+  const parserRelease = isExactParserRelease(before, after, options?.parserReleaseGrants)
+  if (before.parserRelease) assert(JSON.stringify(after.parserRelease) === JSON.stringify(before.parserRelease), 'parser_release_immutable')
   assert(after.environment === before.environment, 'environment_transition')
   assert(after.revision === before.revision + 1 && after.storeId === before.storeId, 'non_monotonic_revision')
   assert(Date.parse(after.updatedAt) >= Date.parse(before.updatedAt), 'clock_regression')
   for (const scope of SHARED_ACCESS_SCOPES) if (before.sharedBlocks[scope]) assert(JSON.stringify(before.sharedBlocks[scope]) === JSON.stringify(after.sharedBlocks[scope]), 'shared_block_cannot_be_cleared')
   for (const key of Object.keys(before.sources)) {
     const old = before.sources[key], next = after.sources[key]
-    if (old.block) assert(JSON.stringify(next.block) === JSON.stringify(old.block) && next.status === 'suspended', `block_cannot_be_cleared:${key}`)
+    if (old.block && !(parserRelease && ['aneel', 'susep'].includes(key))) assert(JSON.stringify(next.block) === JSON.stringify(old.block) && next.status === 'suspended', `block_cannot_be_cleared:${key}`)
     for (const field of ['checkedAt', 'lastCollectedAt', 'lastSuccessAt']) if (old[field]) assert(next[field] && Date.parse(next[field]) >= Date.parse(old[field]), `date_regression:${key}:${field}`)
   }
   return after

@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { APPROVED_PARSER_RELEASES, planParserRelease } from './parser-release.mjs'
 import { digest, validateState, validateTransition, STATE_REF, FEED_REF } from './state.mjs'
 import { createGitHubStore as createRestStore } from './github-store.mjs'
 const branded = new WeakSet()
@@ -17,14 +18,15 @@ export function createGitHubStore(options = {}) {
   const token = process.env.GITHUB_TOKEN
   if (!token) throw Error('github_configuration_required')
   const protection = createRestStore({ ...options, owner, repo, token })
-  return build({ ...options, remote: `https://github.com/${owner}/${repo}.git`, token, verifyProtection: protection.verifyProtection, production: true })
+  if (Object.hasOwn(options, 'parserReleaseGrants')) throw Error('production_release_grants_must_be_code_reviewed')
+  return build({ ...options, parserReleaseGrants: APPROVED_PARSER_RELEASES, remote: `https://github.com/${owner}/${repo}.git`, token, verifyProtection: protection.verifyProtection, production: true })
 }
 // Explicit local-only harness; rejects network remotes and has no production brand.
 export function createLocalGitStoreForTests(options) {
   if (!options?.remote?.startsWith('/') || options.remote.includes('\0')) throw Error('local_test_remote_required')
   return build({ ...options, token: null, production: false })
 }
-function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtection, production }) {
+function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtection, production, parserReleaseGrants = APPROVED_PARSER_RELEASES }) {
   sha(rootToken); sha(feedRootToken)
   if (!storeId || typeof verifyProtection !== 'function') throw Error('git_configuration_required')
   let closed = false, directory, busy = false
@@ -82,9 +84,14 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
       const entry = known || await inspect(cursor, stateJournal ? 'state' : 'feed')
       if (!payload) payload = entry.record.payload
       if (stateJournal) {
-        validateState(entry.record.payload, { allowProduction: true })
+        validateState(entry.record.payload, { allowProduction: true, parserReleaseGrants })
         if (entry.record.payload.environment !== 'production' || entry.record.payload.storeId !== storeId) throw Error('git_state_identity_invalid')
-        if (newer) validateTransition(entry.record.payload, newer, { allowProduction: true })
+        if (newer) {
+          // cursor is the actual Git parent of the newer payload, including when
+          // this predecessor is cached. Never trust the review's self-declared parent.
+          if (!entry.record.payload.parserRelease && newer.parserRelease && newer.parserRelease.parentToken !== cursor) throw Error('parser_release_git_parent_mismatch')
+          validateTransition(entry.record.payload, newer, { allowProduction: true, parserReleaseGrants })
+        }
       }
       if (known) break
       if (cursor === root) {
@@ -138,12 +145,24 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     sha(token)
     const before = await readUnlocked()
     if (before.token !== token) throw Error('git_cas_conflict')
-    validateTransition(before.state, next, { allowProduction: true })
+    if (JSON.stringify(before.state.parserRelease) !== JSON.stringify(next.parserRelease)) throw Error('parser_release_dedicated_operation_required')
+    validateTransition(before.state, next, { allowProduction: true, parserReleaseGrants })
     const committed = await append(STATE_REF, token, next, 'state')
     const observed = await readUnlocked()
     if (observed.token !== committed || !same(observed.state, next)) throw Error('git_write_not_confirmed')
     return observed
   }) })
+  const applyParserRelease = (expectedToken, review) => exclusive(async () => {
+    sha(expectedToken)
+    const before = await readUnlocked()
+    if (before.token !== expectedToken) throw Error('git_cas_conflict')
+    const next = planParserRelease(before.state, expectedToken, review, parserReleaseGrants)
+    validateTransition(before.state, next, { allowProduction: true, parserReleaseGrants })
+    const committed = await append(STATE_REF, expectedToken, next, 'state')
+    const observed = await readUnlocked()
+    if (observed.token !== committed || !same(observed.state, next)) throw Error('parser_release_not_confirmed')
+    return observed
+  })
   const publisher = Object.freeze({ ref: FEED_REF, publish: (feed, expectedDigest) => exclusive(async () => {
     if (digest(feed) !== expectedDigest) throw Error('git_feed_digest_mismatch')
     const before = await feedUnlocked()
@@ -153,5 +172,5 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     return { confirmed: true, receipt, digest: expectedDigest }
   }) })
   if (production) branded.add(publisher)
-  return Object.freeze({ store, publisher, verifyProtection, readFeed: () => exclusive(feedUnlocked), bootstrap: async () => { throw Error('git_explicit_external_bootstrap_required') }, close: async () => { await ready.catch(() => {}); if (busy) throw Error('git_operation_in_progress'); closed = true; if (directory) await rm(directory, { recursive: true, force: true }); for (const key of Object.keys(env)) delete env[key] } })
+  return Object.freeze({ store, publisher, applyParserRelease, verifyProtection, readFeed: () => exclusive(feedUnlocked), bootstrap: async () => { throw Error('git_explicit_external_bootstrap_required') }, close: async () => { await ready.catch(() => {}); if (busy) throw Error('git_operation_in_progress'); closed = true; if (directory) await rm(directory, { recursive: true, force: true }); for (const key of Object.keys(env)) delete env[key] } })
 }

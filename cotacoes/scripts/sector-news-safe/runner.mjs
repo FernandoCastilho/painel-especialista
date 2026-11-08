@@ -4,6 +4,8 @@ import { validateState, validateTransition, digest, iso, STATE_REF, FEED_REF } f
 import { isFixtureTransport, isFixturePublisher } from './fixtures.mjs'
 import { isLiveTransport } from './live-transport.mjs'
 import { isGitHubPublisher } from './git-store.mjs'
+import { parserMaintenanceEnabled } from './maintenance.mjs'
+import { ploneDiscoveryUrl, isPloneDiscoveryUrl, parsePloneDiscovery } from './plone-discovery.mjs'
 
 export const DEFAULT_MODE = 'off'
 const MAX_RUN_MS = 10 * 60_000
@@ -34,6 +36,8 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
 }
 
 export async function runSectorNewsProduction({ store, transport, publisher, previousFeed, sourceIds = [], runId, verifiedSince, clock = Date.now } = {}) {
+  // Applies to direct calls as well as --collect and scheduled workflows.
+  if (parserMaintenanceEnabled()) return { status: 'maintenance', networkEnabled: false, collectionAttempted: false }
   if (store?.kind !== 'git-append-only-journal' || !isLiveTransport(transport) || !isGitHubPublisher(publisher)) throw new Error('production_adapters_required')
   if (!Number.isFinite(Date.parse(verifiedSince)) || Date.parse(verifiedSince) > clock()) throw new Error('production_verification_boundary_required')
   return runCollector({ store, transport, publisher, previousFeed, sourceIds, runId, verifiedSince, clock, sleep: ms => new Promise(resolve => setTimeout(resolve, ms)), environment: 'production' })
@@ -82,7 +86,8 @@ async function runCollector({ store, transport, publisher, previousFeed, sourceI
   const request = async (source, kind, url, robots = null) => {
     if (time() - start >= MAX_RUN_MS || requestNumber >= MAX_REQUESTS) throw new Error('run_budget_exhausted')
     const parsed = new URL(url)
-    const allowed = kind === 'robots' ? url === source.robotsUrl : kind === 'listing' ? url === source.url : url.startsWith(source.articlePrefix) && !parsed.search
+    const discovery = kind === 'listing' && isPloneDiscoveryUrl(source.id, url)
+    const allowed = kind === 'robots' ? url === source.robotsUrl : kind === 'listing' ? url === source.url || discovery : url.startsWith(source.articlePrefix) && !parsed.search
     if (/%(?:2f|5c|2e)/i.test(url) || /\/(?:RSS|@@|search|login)(?:[/?]|$)/i.test(url) || parsed.protocol !== 'https:' || parsed.hostname !== 'www.gov.br' || parsed.username || parsed.password || parsed.port || parsed.hash || !allowed) throw new Error('url_outside_approved_source')
     if (robots !== null && !robotsAllows(robots, url)) throw new Error('robots_disallow')
     if (lastRequestAt !== null && time() - lastRequestAt < MIN_INTERVAL_MS) await sleep(MIN_INTERVAL_MS - (time() - lastRequestAt))
@@ -126,7 +131,15 @@ async function runCollector({ store, transport, publisher, previousFeed, sourceI
       const listing = await request(source, 'listing', source.url, robots)
       if (!listing.includes('creativecommons.org/licenses/by-nd/3.0')) throw new Error('license_not_confirmed')
       // Gradual operation reads at most five articles per source per round.
-      const links = extractGovArticleLinks(listing, source).slice(0, environment === 'production' ? 5 : MAX_ARTICLES_PER_SOURCE)
+      let links
+      if (['aneel', 'susep'].includes(source.id)) {
+        // The index's licence is checked first. Discovery is a second, bounded,
+        // journalled request subject to the same robots, budgets and failure holds.
+        await finishRequest(source)
+        const discovery = await request(source, 'listing', ploneDiscoveryUrl(source.id), robots)
+        links = parsePloneDiscovery(discovery, source.id)
+      } else links = extractGovArticleLinks(listing, source)
+      links = links.slice(0, environment === 'production' ? 5 : MAX_ARTICLES_PER_SOURCE)
       if (!links.length) throw new Error('listing_unparsed_or_no_candidates')
       await finishRequest(source)
       for (const { link } of links) {

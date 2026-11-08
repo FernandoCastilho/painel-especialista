@@ -231,6 +231,7 @@ function sourceState(source, raw, now) {
 
 function collectionStatus(data, states, now) {
   const policy = data.collectionPolicy, delivery = data.delivery
+  if (policy?.maintenanceActive === true) return { ...SECTOR_NEWS_COLLECTION, mode: 'maintenance', maintenanceActive: true, notice: 'Coleta institucional em manutenção. Último conteúdo confirmado preservado; consulte as datas das fontes.' }
   const generated = validIsoTimestamp(delivery?.generatedAt), published = validIsoTimestamp(delivery?.publishedAt)
   const sources = Object.values(states).filter(source => source.enabled && source.automaticCollection)
   const successful = sources.filter(source => ['ok', 'empty', 'partial'].includes(source.status) && !source.accessSuspended

@@ -1,0 +1,74 @@
+{
+  "sourceId": "susep",
+  "url": "https://www.gov.br/susep/pt-br/central-de-conteudos/noticias",
+  "httpStatus": 200,
+  "captureDate": "2026-11-08",
+  "htmlSha256": "d969eb657b98512b0f2f965ef4afe4d3d5cd4002c8cda89ccdbd7d8c606fed01",
+  "licenseMarkerPresent": true,
+  "blocks": {
+    "36a3a905-ee9b-42a4-8645-5c6cb706005d": {
+      "@type": "customSearch",
+      "context": true,
+      "facets": [
+        {
+          "@id": "be845540-6237-4911-aeb9-285475157d3f",
+          "advanced": false,
+          "field": {
+            "label": "Data de Publicação",
+            "value": "effective"
+          },
+          "hidden": false,
+          "multiple": false,
+          "title": "Data de Publicação",
+          "type": "daterangeFacet"
+        },
+        {
+          "@id": "1e24b737-7192-472d-bda8-51739b6bea27",
+          "advanced": false,
+          "field": {
+            "label": "Categoria",
+            "value": "category_id"
+          },
+          "hidden": false,
+          "multiple": false,
+          "title": "Categoria",
+          "type": "selectFacet"
+        }
+      ],
+      "filters": "news",
+      "itemsPerPage": 30,
+      "query": {
+        "b_size": 30,
+        "limit": 10000000000,
+        "query": [
+          {
+            "i": "portal_type",
+            "o": "plone.app.querystring.operation.selection.any",
+            "v": [
+              "News Item"
+            ]
+          },
+          {
+            "i": "path",
+            "o": "plone.app.querystring.operation.string.relativePath",
+            "v": ""
+          }
+        ],
+        "sort_on": "effective",
+        "sort_order": "descending",
+        "sort_order_boolean": true
+      },
+      "showSearchInput": true,
+      "showTotalResults": true
+    }
+  },
+  "querystringsearch": {
+    "error": null,
+    "items": [],
+    "total": 0,
+    "loaded": false,
+    "loading": false,
+    "batching": {},
+    "subrequests": {}
+  }
+}
