@@ -17,7 +17,9 @@ const candidate={beforeDigest:digest(state),parentToken:token,reviewId:'isolated
 // Grant exists exclusively in this temporary module tree, never the checkout.
 const releasePath=join(root,'scripts/sector-news-safe/parser-release.mjs')
 const original=await readFile(releasePath,'utf8')
-await writeFile(releasePath,original.replace('Object.freeze([])',`Object.freeze([${JSON.stringify(candidate)}])`))
+const grantDeclaration = /^export const APPROVED_PARSER_RELEASES = Object\.freeze\(.+\)$/m
+assert.match(original, grantDeclaration)
+await writeFile(releasePath,original.replace(grantDeclaration,`export const APPROVED_PARSER_RELEASES = Object.freeze([${JSON.stringify(candidate)}])`))
 // Load wrapper through a distinct copied module graph so it sees the isolated grant.
 const second=join(root,'apply');await cp(join(root,'scripts'),join(second,'scripts'),{recursive:true});await cp(join(root,'src'),join(second,'src'),{recursive:true});await writeFile(join(second,'package.json'),'{"type":"module"}')
 const {runParserMaintenance}=await import(pathToFileURL(join(second,'scripts/sector-news-parser-release.mjs')))
