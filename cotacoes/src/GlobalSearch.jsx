@@ -1,3 +1,4 @@
+import { runSearchQueue } from './searchQueue.js'
 import { newsCollectionStale } from './newsWindow.js'
 import { useNewsClock } from './useNewsClock.js'
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
@@ -30,23 +31,28 @@ export default function GlobalSearch({ onNavigate }) {
   },[open])
   useEffect(()=>{
     if(!open)return
-    let active=true, cursor=0
+    let active=true
+    const controller=new AbortController()
     setDocs([]);setNewsSnapshots([]);setSources([]);setStaticError(false);setPending(true)
     const loadStatic=import('./searchCatalog.js').then(m=>{if(active)setDocs(d=>[...d,...m.staticSearchDocuments()])}).catch(()=>{if(active)setStaticError(true)})
-    const work=async()=>{
-      while(cursor<SEARCH_SOURCES.length){
-        const [file,route,label]=SEARCH_SOURCES[cursor++]
-        try{
-          const external = ['quotes.json','history.json','intraday.json'].includes(file) && DATA_BASE
-          const result = external ? await fetch(`${DATA_BASE}/${file}`, {signal:AbortSignal.timeout(20000)}).then(async response=>{if(!response.ok)throw new Error('Indisponível');return {data:await response.json()}}) : await loadDataFile(file,Date.now(),attempt>0)
-          if(!result.data)throw new Error('Dados indisponíveis')
-          const indexed=indexSearchData(file,result.data,route,label)
-          if(active){if(isNewsSearchFile(file))setNewsSnapshots(s=>[...s,{file,data:result.data,route,label}]);else setDocs(d=>[...d,...indexed.docs]);setSources(s=>[...s,{file,label,limited:indexed.limited,stale:!!result.stale,ok:true,stamp:result.data.generatedAt || result.data.updatedAt}])}
-        }catch{if(active)setSources(s=>[...s,{label,ok:false}])}
-      }
-    }
-    Promise.allSettled([loadStatic,...Array.from({length:4},work)]).then(()=>{if(active)setPending(false)})
-    return()=>{active=false}
+    const queue=runSearchQueue(SEARCH_SOURCES, {
+      signal:controller.signal,
+      load:async ([file], signal)=>{
+        const external = ['quotes.json','history.json','intraday.json'].includes(file) && DATA_BASE
+        const result = external ? await fetch(`${DATA_BASE}/${file}`, {signal:AbortSignal.any([signal, AbortSignal.timeout(20000)])}).then(async response=>{if(!response.ok)throw new Error('Indisponível');return {data:await response.json()}}) : await loadDataFile(file,Date.now(),attempt>0)
+        if(!result.data)throw new Error('Dados indisponíveis')
+        return result
+      },
+      accept:([file,route,label],result)=>{
+        const indexed=indexSearchData(file,result.data,route,label)
+        if(isNewsSearchFile(file))setNewsSnapshots(s=>[...s,{file,data:result.data,route,label}]);else setDocs(d=>[...d,...indexed.docs])
+        setSources(s=>[...s,{file,label,limited:indexed.limited,stale:!!result.stale,ok:true,stamp:result.data.generatedAt || result.data.updatedAt}])
+      },
+      fail:([,,label])=>setSources(s=>[...s,{label,ok:false}]),
+    })
+    Promise.allSettled([loadStatic,queue]).then(()=>{if(active)setPending(false)})
+    return()=>{active=false;controller.abort()}
+
   },[open,attempt])
   // Reindex cached news on the clock tick without refetching any source.
   const currentDocs = useMemo(() => [...docs, ...newsSnapshots.flatMap(({ file, data, route, label }) => indexSearchData(file, data, route, label, now).docs)], [docs, newsSnapshots, now])

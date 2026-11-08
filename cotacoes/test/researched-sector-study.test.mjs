@@ -44,7 +44,7 @@ test('áudio exige arquivo explícito e oferece velocidade e transcrição', asy
   assert.match(html,/Duração disponível após carregar o áudio/)
 })
 test('apresentação conserva saída, foco, pausa e movimento reduzido', async () => {
-  const code=await readFile('src/SectorValueChain.jsx','utf8')
+  const code=(await readFile('src/SectorValueChain.jsx','utf8')) + (await readFile('src/useDiagramPresentation.js','utf8'))
   const css=await readFile('src/ResearchedSectorStudy.css','utf8')
   for (const token of ["event.key === 'Escape'","'popstate'","event.key === 'Tab'","event.key.toLowerCase() === 'p'",'appRoot.inert = previousInert','maximizeRef.current?.focus()','diagram.edges.map','createPortal']) assert.ok(code.includes(token),token)
   assert.match(css,/prefers-reduced-motion:reduce/)

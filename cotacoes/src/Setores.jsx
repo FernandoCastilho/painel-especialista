@@ -2,9 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { INSUMOS } from './insumos.js'
 import SetoresLegado from './SetoresLegado.jsx'
 import SectorStudy from './SectorStudy.jsx'
-import ResearchedSectorStudy from './ResearchedSectorStudy.jsx'
-import { findSectorStudy } from './sectorStudies/index.js'
-import { CATALOGO_SETORIAL, TOPICOS_ESTUDO, normalizeSector } from './centralSetorial.js'
+import SectorStudyLoader from './SectorStudyLoader.jsx'
+import { CATALOGO_SETORIAL, normalizeSector } from './centralSetorial.js'
 import { readCentralHistory, withCentralHistory } from './centralHistory.js'
 import './CentralSetorial.css'
 
@@ -20,7 +19,6 @@ export default function Setores({ view = '', onView = () => {}, quotes }) {
   const topicIndex = parts[0] === 'topico' && /^\d+$/.test(parts[2] || '') ? Number(parts[2]) : -1
   const routeTopic = routeGroup?.topics[topicIndex]
   const folder = parts[0] === 'pasta' ? routeGroup : null
-  const researchedStudy = routeTopic ? findSectorStudy(routeGroup.id, topicIndex) : null
   const showContent = Boolean(view && view !== 'central' && !['pasta', 'topico', 'b3'].includes(parts[0]))
   const hasDetail = Boolean(routeTopic || showContent)
   const invalidRoute = ['pasta', 'topico'].includes(parts[0]) && (!routeGroup || (parts[0] === 'topico' && !routeTopic))
@@ -103,7 +101,7 @@ export default function Setores({ view = '', onView = () => {}, quotes }) {
         : <section aria-labelledby="central-sectors-title"><div className="central-section-heading"><h3 id="central-sectors-title">Setores e subsetores</h3><p>Abra uma pasta para explorar</p></div><ul className="central-folders">{CATALOGO_SETORIAL.map((group, index) => <li key={group.id}><button type="button" id={`central-folder-${group.id}`} className={`central-folder central-folder-tone-${index % 3}`} onClick={() => navigate(`pasta/${group.id}`)} aria-label={`Abrir pasta ${group.label}, ${group.topics.length} subsetores`}><span className="central-folder-back" aria-hidden="true"/><span className="central-folder-sheet" aria-hidden="true"/><span className="central-folder-front" aria-hidden="true"/><span className="central-folder-content"><span className="central-folder-arrow" aria-hidden="true">→</span><strong>{group.label}</strong><span className="central-folder-count">{group.topics.length} subsetores</span></span></button></li>)}</ul></section>}
         {!term && !folder && <section className="central-inputs" aria-labelledby="central-inputs-title"><div><h3 id="central-inputs-title">Insumos e Indicadores</h3><p className="central-note">Referências para complementar sua análise</p></div><ul>{INSUMOS.map(item => <li key={item.id}><button type="button" onClick={() => navigate(item.id)}>{item.label}<span aria-hidden="true">→</span></button></li>)}</ul></section>}
       </div>}
-      {hasDetail && !term && <div className={`central-detail central-detail-selected${showContent ? ' central-detail-content' : ''}`}>{showContent ? <SetoresLegado key={view} view={view} quotes={quotes}/> : routeGroup.id === 'tic' && routeTopic === 'Integração de TI e infraestrutura digital' ? <SectorStudy /> : researchedStudy ? <ResearchedSectorStudy key={`${researchedStudy.group}-${researchedStudy.topicIndex}`} study={researchedStudy} /> : <><p className="central-kicker">{routeGroup.label}</p><h3>{routeTopic}</h3><p className="central-note">Tópico disponível no catálogo. Estudo setorial não incluído ainda. A pesquisa deste recorte está pendente de revisão; não há indicadores ou conclusões publicados aqui.</p><h4>Estrutura para estudo</h4><ol>{TOPICOS_ESTUDO.map(topic => <li key={topic}>{topic}</li>)}</ol></>}</div>}
+      {hasDetail && !term && <div className={`central-detail central-detail-selected${showContent ? ' central-detail-content' : ''}`}>{showContent ? <SetoresLegado key={view} view={view} quotes={quotes}/> : routeGroup.id === 'tic' && routeTopic === 'Integração de TI e infraestrutura digital' ? <SectorStudy /> : <SectorStudyLoader key={`${routeGroup.id}-${topicIndex}`} group={routeGroup} topicIndex={topicIndex} />}</div>}
     </div>
   </div>
 }

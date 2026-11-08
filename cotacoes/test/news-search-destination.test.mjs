@@ -1,3 +1,4 @@
+import * as searchQueue from '../src/searchQueue.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
@@ -20,6 +21,7 @@ async function setup(t, doc) {
   const module = { exports: {} }
   let setClock, selection = { doc, query: 'termoausente' }, closes = 0
   runInNewContext(code, { module, exports: module.exports, requestAnimationFrame: () => 1, cancelAnimationFrame: () => {}, require: name => {
+    if (name === './searchQueue.js') return searchQueue
     if (name === './GlobalSearch.css') return {}
     if (name === './useNewsClock.js') return { useNewsClock: () => { const [clock, set] = useState(now); setClock = set; return clock } }
     if (name === './globalSearch.js') return search
