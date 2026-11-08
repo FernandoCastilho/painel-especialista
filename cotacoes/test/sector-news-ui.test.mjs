@@ -19,6 +19,7 @@ async function setup(t, resource, normalize = data => data) {
   let clock = now
   class Clock extends Date { static now() { return clock } }
   runInNewContext(code, { module, exports: module.exports, Date: Clock, require: name => {
+    if (name === './SectorNews.css') return {}
     if (name === 'react') return { ...require(name), useMemo: fn => fn() }
     if (name === './useDataFile.js') return { useDataFile: () => resource }
     if (name === './visiblePolling.js') return { DATA_POLL_MS: 60000, startVisiblePolling: fn => { polls.push(fn); return () => {} } }

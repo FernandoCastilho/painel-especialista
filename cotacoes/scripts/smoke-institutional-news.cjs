@@ -80,6 +80,14 @@ const localTime = value => new Date(value).toLocaleString('pt-BR', { timeZone: '
               assert.ok(original, 'item precisa existir no snapshot real')
               const link = row.getByRole('link', { name: original.title, exact: true })
               assert.equal(await link.getAttribute('href'), original.link)
+              const layout = await row.evaluate(element => {
+                const headline = element.querySelector(':scope > a').getBoundingClientRect()
+                const metadata = [...element.querySelectorAll(':scope > small')].map(small => ({ display: getComputedStyle(small).display, top: small.getBoundingClientRect().top }))
+                return { headlineBottom: headline.bottom, metadata, overflow: element.scrollWidth > element.clientWidth + 1 }
+              })
+              assert.ok(layout.metadata.length > 0 && layout.metadata.every(meta => meta.display === 'block'), 'fonte/data/licença ocupam linhas próprias')
+              assert.ok(layout.metadata.every(meta => meta.top >= layout.headlineBottom - 1), 'metadados ficam abaixo do título')
+              assert.equal(layout.overflow, false, 'título e metadados não excedem a linha')
               const stamp = item.datePrecision === 'day' ? original.publishedAt : new Date(item.t).toISOString()
               assert.equal(await row.locator('time').getAttribute('datetime'), stamp)
               assert.equal(await row.locator('time').innerText(), item.datePrecision === 'day' ? original.publishedAt.split('-').reverse().join('/') : new Date(item.t).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }))

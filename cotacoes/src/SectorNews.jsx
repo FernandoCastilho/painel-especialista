@@ -1,3 +1,4 @@
+import './SectorNews.css'
 import { NEWS_WINDOW_MS } from './newsWindow.js'
 import { useEffect, useMemo, useState } from 'react'
 import { useDataFile } from './useDataFile.js'
