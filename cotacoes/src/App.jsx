@@ -298,7 +298,7 @@ export default function App() {
 
       {tab === 'resumo' && (
         <>
-          <HolidayNotice hol={hol} />
+          <HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />
           <Resumo searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} />
 
         </>
