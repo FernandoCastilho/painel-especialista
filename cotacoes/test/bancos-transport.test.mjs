@@ -24,3 +24,8 @@ test('bank transport caps temporary server errors and respects long cooldowns', 
   await assert.rejects(fetchBankText('https://olinda.bcb.gov.br/', { sleep, fetchImpl: async () => { calls++; return { ok: false, status: 429, headers: new Map([['retry-after', '60']]) } } }), /HTTP 429/)
   assert.equal(calls, 1)
 })
+test('bank transport stops at collection deadline without starting another request', async () => {
+  let calls = 0
+  await assert.rejects(fetchBankText('https://olinda.bcb.gov.br/', { deadline: Date.now() - 1, sleep, fetchImpl: async () => { calls++; return ok } }), /Tempo limite/)
+  assert.equal(calls, 0)
+})

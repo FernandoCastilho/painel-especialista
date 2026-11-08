@@ -7,16 +7,19 @@ const output = new URL('../public/bancos.json', import.meta.url)
 const releaseFile = new URL('../public/' + 'bancos-ri.json', import.meta.url)
 const previous = await readFile(output, 'utf8').then(JSON.parse).catch(() => null)
 const releases = await readFile(releaseFile, 'utf8').then(JSON.parse)
+// Leave two minutes for snapshot preservation before the workflow's eight-minute cap.
+const deadline = Date.now() + 6 * 60 * 1000
 const cache = new Map(), errors = []
 async function report(period, id) {
   const key = `${period}-${id}`
   if (cache.has(key)) return cache.get(key)
   const task = (async () => {
+    if (Date.now() >= deadline) throw new Error('Tempo limite da coleta IF.data atingido')
     let data
     if (process.env.BANKS_CACHE_DIR) data = await readFile(`${process.env.BANKS_CACHE_DIR}/${key}.json`, 'utf8').then(JSON.parse).catch(() => null)
     if (!data) {
       const url = bankDataUrl(period, id)
-      const text = process.env.BANKS_CURL === '1' ? execFileSync('curl', ['-fsSL', '--max-time', '45', url], { encoding: 'utf8', maxBuffer: 30e6 }) : await fetchBankText(url)
+      const text = process.env.BANKS_CURL === '1' ? execFileSync('curl', ['-fsSL', '--max-time', '45', url], { encoding: 'utf8', maxBuffer: 30e6 }) : await fetchBankText(url, { deadline })
       data = JSON.parse(text)
       if (process.env.BANKS_CACHE_DIR) { await mkdir(process.env.BANKS_CACHE_DIR, { recursive: true }); await writeFile(`${process.env.BANKS_CACHE_DIR}/${key}.json`, text) }
     }
@@ -27,7 +30,7 @@ async function report(period, id) {
     while (next) {
       const url = new URL(next, bankDataUrl(period, id))
       if (url.origin !== 'https://olinda.bcb.gov.br') throw new Error('Paginação fora da origem oficial')
-      data = JSON.parse(await fetchBankText(url))
+      data = JSON.parse(await fetchBankText(url, { deadline }))
       if (!Array.isArray(data.value)) throw new Error(`Paginação inválida: ${key}`)
       rows.push(...data.value); next = data['@odata.nextLink']
     }
