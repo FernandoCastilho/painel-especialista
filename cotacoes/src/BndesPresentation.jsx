@@ -46,7 +46,7 @@ function PresentationDialog({ snapshot, onClose }) {
   const fullscreen = async () => {
     setFullscreenError('')
     try {
-      if (document.fullscreenElement === player.current) await document.exitFullscreen()
+      if (document.fullscreenElement === player.current) { await document.exitFullscreen(); player.current?.focus() }
       else if (player.current?.requestFullscreen) { fullscreenHost.current = player.current; await player.current.requestFullscreen() }
       else setFullscreenError('Tela cheia não está disponível neste navegador. A apresentação continua nesta janela.')
     } catch { setFullscreenError('O navegador não permitiu tela cheia. A apresentação continua nesta janela.') }
@@ -56,6 +56,13 @@ function PresentationDialog({ snapshot, onClose }) {
     setDeck(null); setIndex(0); setFullscreenError('')
   }
   const keyDown = event => {
+    if (event.key === 'Tab') {
+      const focusable = [...dialog.current.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], summary, [tabindex="0"]')].filter(element => element.getClientRects().length)
+      const first = focusable[0], last = focusable.at(-1)
+      if (first && event.shiftKey && (event.target === first || event.target === player.current)) { event.preventDefault(); last.focus() }
+      else if (last && !event.shiftKey && event.target === last) { event.preventDefault(); first.focus() }
+      return
+    }
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(); return }
     if (!deck || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input, select, textarea, [contenteditable=true]')) return
     if (event.key === ' ' && event.target.closest('button')) return
