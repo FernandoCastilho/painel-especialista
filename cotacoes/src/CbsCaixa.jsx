@@ -2,6 +2,7 @@ import { useState } from 'react'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import Help from './CalculatorHelp.jsx'
+import IbgeActivitySearch from './IbgeActivitySearch.jsx'
 import snapshot from './ibgeCbsSnapshot.json'
 import { simulateCbsCash } from './cbsCash.js'
 import { CBS_SOURCES } from './baseDados.js'
@@ -14,13 +15,26 @@ const initial = { kind: 'comercio', group: 'comercio-83319', regime: 'presumido'
   receiveDays: '30', payDays: '30', stockDays: '30', spendingPct: '', eligibleShare: '70',
   cbsRate: '11,2', currentNetRate: '3,65', splitShare: '50', currentDueDays: '40',
   futureDueDays: '40', creditDelayDays: '30' }
-const kinds = { comercio: 'Comércio', industria: 'Indústria', servicos: 'Serviços' }
+const hints = {
+  receiveDays: 'Em quantos dias a venda vira dinheiro? Receber depois pode exigir mais caixa.',
+  payDays: 'Em quantos dias você paga a compra? Este prazo também ajuda a situar quando o crédito poderá ser usado.',
+  stockDays: 'Quantos dias a compra espera até virar venda? Sem estoque, use zero.',
+  spendingPct: 'De cada R$ 100 vendidos, quanto é gasto em compras e consumo? O setor sugere apenas uma referência.',
+  eligibleShare: 'Qual parte dos gastos pode gerar abatimento de CBS? 70% significa R$ 70 de cada R$ 100 de gastos, não R$ 70 de crédito.',
+  cbsRate: 'Percentual hipotético sobre o preço sem CBS. O total cobrado do cliente é mantido nesta simulação.',
+  currentNetRate: 'Parte do faturamento paga em PIS/Cofins, depois de descontar os créditos atuais.',
+  splitShare: 'Parte das vendas com imposto separado no pagamento. 50% das vendas não significa reter 50% do dinheiro.',
+  currentDueDays: 'Quantos dias depois da venda o imposto atual sai do caixa? É uma média do cenário.',
+  futureDueDays: 'Quantos dias depois da venda venceria a CBS? O split pode antecipar a saída, mas não adia o vencimento.',
+  creditDelayDays: 'Depois de pagar a compra, quantos dias até poder usar o abatimento? Não é prazo de depósito na conta.',
+}
 export function CbsIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 5h18v14H3zM3 10h18M8 5v14M13 14h5M16 12l2 2-2 2" /></svg>
 }
 
 export default function CbsCaixa({ onBack }) {
   const [form, setForm] = useState(initial)
+  const [searchReset, setSearchReset] = useState(0)
   const set = (key, value) => setForm(f => ({ ...f, [key]: value }))
   const dataset = snapshot.datasets.find(d => d.kind === form.kind)
   const group = dataset.groups.find(g => g.id === form.group)
@@ -37,29 +51,30 @@ export default function CbsCaixa({ onBack }) {
     return <div className="cx-field" key={key}>
       <div className="cx-field-label"><label htmlFor={`cbs-${key}`}>{label} ({suffix})</label><Help title={label}><p>{hint}</p></Help></div>
       <input id={`cbs-${key}`} inputMode={suffix === '%' ? 'decimal' : 'numeric'} value={val}
-        aria-invalid={invalid} aria-describedby={invalid ? `cbs-${key}-error` : undefined}
+        aria-invalid={invalid} aria-describedby={`cbs-${key}-hint${invalid ? ` cbs-${key}-error` : ''}`}
         onFocus={e => e.target.select()} onChange={e => set(key, e.target.value)} />
+      <p className="cbs-field-hint" id={`cbs-${key}-hint`}>{hints[key]}</p>
       {invalid && <p id={`cbs-${key}-error`} className="cx-error">Informe {suffix === 'dias' ? 'dias inteiros de 0 a 365' : `um percentual de 0 a ${key === 'spendingPct' ? 500 : 100}`}.</p>}
     </div>
   }
-  const chooseKind = kind => {
-    const next = snapshot.datasets.find(d => d.kind === kind)
-    setForm(f => ({ ...f, kind, group: next.groups[0].id, spendingPct: '' }))
-  }
   return <section className="cx cbs" aria-labelledby="cbs-title">
     <div className="cx-toolbar"><button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-      <button type="button" className="cx-action" onClick={() => setForm(initial)}>Restaurar exemplo</button></div>
+      <button type="button" className="cx-action" onClick={() => { setForm(initial); setSearchReset(value => value + 1) }}>Restaurar exemplo</button></div>
     <h2 id="cbs-title" className="cx-title"><CbsIcon /> Reforma tributária · impacto no caixa</h2>
-    <p className="cbs-intro">Quanto pode faltar de giro quando o imposto sai antes e os créditos chegam depois?</p>
+    <p className="cbs-intro">Caixa é o dinheiro disponível para pagar as contas. Veja como a CBS e os prazos podem mudar esse dinheiro.</p>
     <p className="cbs-assumptions">Exemplo editável, sem identificação de cliente. Estimativa de CBS em preços brutos mantidos; IBS, ICMS, ISS, IPI e demais tributos não são calculados aqui.</p>
+    <div className="cbs-concepts" aria-label="Entenda antes de simular">
+      <p><b>Imposto:</b> parte das vendas que precisa ser recolhida ao governo. Aqui simulamos apenas a CBS, que substitui PIS/Cofins.</p>
+      <p><b>Crédito tributário:</b> abatimento permitido no imposto. Poder usá-lo reduz o pagamento; não coloca dinheiro automaticamente na conta.</p>
+      <p><b>Split payment:</b> separação do imposto no pagamento. Essa parte vai para o governo e o restante segue para a empresa.</p>
+    </div>
     <div className="cbs-workspace">
       <article className="desk-panel cx-panel">
         <header><h3>1. A empresa e seu ciclo</h3></header>
         <div className="cx-form">
-          <div className="cx-field"><label htmlFor="cbs-kind">Setor</label><select id="cbs-kind" value={form.kind} onChange={e => chooseKind(e.target.value)}>{Object.entries(kinds).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
-          <div className="cx-field"><label htmlFor="cbs-group">Atividade de referência do IBGE</label><select id="cbs-group" value={form.group} onChange={e => setForm(f => ({ ...f, group: e.target.value, spendingPct: '' }))}>{dataset.groups.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}</select></div>
-          <div className="cx-field"><label htmlFor="cbs-regime">Regime atual</label><select id="cbs-regime" value={form.regime} onChange={e => setForm(f => ({ ...f, regime: e.target.value, currentNetRate: e.target.value === 'real' ? '9,25' : '3,65' }))}><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option><option value="simples">Simples Nacional — IBS/CBS dentro do DAS</option></select></div>
-          <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-revenue">Faturamento mensal bruto</label><Help title="Faturamento mensal"><p>Valor médio bruto das vendas, incluindo tributos. O modelo mantém o preço total cobrado do cliente e estima a parcela de CBS por dentro desse total: valor × alíquota ÷ (100 + alíquota). Não aplica a alíquota por fora diretamente ao faturamento bruto. Os demais tributos não são segregados; a base tributável real pode ser diferente.</p></Help></div><MoneyInput id="cbs-revenue" value={form.revenue} onChange={value => set('revenue', value)} aria-invalid={!parsedMoney.ok || parsedMoney.value <= 0} /></div>
+          <IbgeActivitySearch key={searchReset} datasets={snapshot.datasets} selected={{ ...group, kind: form.kind }} onSelect={option => setForm(f => ({ ...f, kind: option.kind, group: option.id, spendingPct: '' }))} />
+          <div className="cx-field"><label htmlFor="cbs-regime">Regime atual</label><select id="cbs-regime" value={form.regime} onChange={e => setForm(f => ({ ...f, regime: e.target.value, currentNetRate: e.target.value === 'real' ? '9,25' : '3,65' }))}><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option><option value="simples">Simples Nacional — IBS/CBS dentro do DAS</option></select><p className="cbs-field-hint">Forma de tributação usada como ponto de partida. Confira o percentual realmente pago; o regime sozinho não define esse valor.</p></div>
+          <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-revenue">Faturamento mensal bruto</label><Help title="Faturamento mensal"><p>Valor médio bruto das vendas, incluindo tributos. O modelo mantém o preço total cobrado do cliente e estima a parcela de CBS por dentro desse total: valor × alíquota ÷ (100 + alíquota). Não aplica a alíquota por fora diretamente ao faturamento bruto. Os demais tributos não são segregados; a base tributável real pode ser diferente.</p></Help></div><MoneyInput id="cbs-revenue" value={form.revenue} onChange={value => set('revenue', value)} aria-invalid={!parsedMoney.ok || parsedMoney.value <= 0} aria-describedby="cbs-revenue-hint" /><p id="cbs-revenue-hint" className="cbs-field-hint">Total vendido no mês, com tributos. Vender não significa receber no mesmo dia.</p></div>
           {field('receiveDays', 'Recebimento médio', 'Dias entre a venda e o recebimento. Use a média ponderada dos valores, incluindo vendas à vista.')}
           {field('payDays', 'Pagamento a fornecedores', 'Dias entre a compra e o pagamento ao fornecedor. Ajuda a situar o crédito: o imposto pode ser quitado em outra data, por isso o prazo de liberação é uma hipótese separada.')}
           {field('stockDays', 'Estoque médio', 'Dias entre a compra e a venda. Serviços sem estoque podem informar zero. Matérias-primas e produtos em elaboração exigem aproximação do ciclo completo.')}
@@ -69,7 +84,7 @@ export default function CbsCaixa({ onBack }) {
       <div className="cbs-right">
         <article className="desk-panel cx-panel">
           <header><h3>2. Premissas do cenário</h3><Help title="Hipóteses, não enquadramento fiscal"><p>O setor estima gastos. Não define sozinho a alíquota, elegibilidade fiscal, regularidade do fornecedor ou adoção do split payment. Esses percentuais e prazos são hipóteses editáveis, não estatísticas do IBGE.</p><p>O exemplo usa CBS de 11,2% por fora: referência técnica de 11,3% calculada pelo TCU menos 0,1 ponto percentual na transição 2027/2028 (LC 214, art. 347). Não é alíquota definitiva para sua empresa. Benefícios, alíquota zero e regimes específicos exigem ajuste.</p></Help></header>
-          <div className="cbs-premise-summary">CBS: {form.cbsRate}% · gastos elegíveis: {form.eligibleShare}% · vendas com split: {form.splitShare}%<br />Carga atual líquida: {form.currentNetRate}% do faturamento — hipótese{form.regime === 'real' ? ' de 9,25% sem créditos atuais; ajuste para não superestimar a carga atual' : ', sujeita a exceções por operação'}.</div>
+          <div className="cbs-premise-summary">Hipóteses editáveis — CBS: {form.cbsRate}% · gastos que podem gerar crédito: {form.eligibleShare}% · vendas com split: {form.splitShare}%<br />PIS/Cofins atuais, após créditos: {form.currentNetRate}% do faturamento{form.regime === 'real' ? ' — o exemplo de 9,25% ainda não desconta créditos; ajuste para representar o valor realmente pago' : ' — confira o percentual realmente pago'}.</div>
           <details className="cbs-details"><summary>Ajustar impostos, créditos e prazos</summary><div className="cx-form">
             {field('spendingPct', 'Gastos sobre o faturamento', 'Referência econômica do IBGE. Comércio usa compras para revenda; indústria e serviços combinam itens identificados de compras/consumo. São bases diferentes e aproximadas. Ajustar substitui apenas a hipótese desta simulação.', '%')}
             {field('eligibleShare', 'Parcela dos gastos que gera crédito', 'Hipótese inicial de 70%, não estimativa do IBGE. Mercadorias, materiais, energia, fretes e serviços podem gerar crédito conforme operação e fornecedor. Salários não geram CBS. Isenções, alíquota zero, Simples e regimes especiais alteram o crédito. Modelo usa a mesma alíquota nas aquisições elegíveis; ajuste esta parcela para representar um aproveitamento menor.', '%')}
@@ -85,18 +100,48 @@ export default function CbsCaixa({ onBack }) {
         {result && !result.ok && <p className="cx-error" role="alert">{result.error}</p>}
         {result?.ok && <article className="desk-panel cx-panel cbs-result" aria-labelledby="cbs-result-title">
           <header><h3 id="cbs-result-title">3. Necessidade adicional de giro</h3><Help title="Como a reserva é estimada"><p>Fluxo mensal uniforme, divisor 30 e prazos médios constantes. A reserva compara a disponibilidade temporária do imposto atual com a da CBS líquida futura, ponderando a parcela de split e o vencimento. Não é o imposto mensal multiplicado pelo ano.</p><p>Primeiro cenário: créditos utilizáveis já disponíveis. Segundo: indisponibilidade temporária desses créditos conforme compra, estoque, pagamento e prazo adicional informado. A espera positiva é calculada separadamente na parcela com split e na parcela recolhida no vencimento, antes de ponderar os resultados; um recolhimento posterior não anula a espera da parcela antecipada. São cenários de sensibilidade, não intervalo estatístico nem déficit máximo comprovado. Não somar novamente esses valores à retenção bruta ou à NCG integral.</p><p>O ciclo financeiro é apresentado em dias; não calculamos a NCG total da empresa, saldo de caixa, sazonalidade, margem, renegociação de preços, CAPEX, ressarcimento ou capacidade de pagamento. O resultado não é limite de crédito nem recomendação de contratação.</p></Help></header>
-          <div className="cbs-reserve"><small>Reserva indicativa nos dois cenários</small><strong>{money(result.reserveImmediate)} a {money(result.reserveDelayed)}</strong><p>Crédito disponível × crédito com espera · efeito pontual de prazo, sem acumular mensalmente.</p></div>
-          <div className="cbs-metrics">
-            <div><span>CBS líquida mensal estimada</span><b>{money(result.netTax)}</b></div>
-            <div><span>Créditos utilizáveis estimados</span><b>{money(result.creditsUsable)}</b></div>
-            <div><span>Separação líquida no recebimento*</span><b>{money(result.splitNet)}</b></div>
-            <div><span>Ciclo financeiro operacional</span><b>{result.cycleDays} dias</b></div>
+          <div className="cbs-reserve">
+            <p>Quanto dinheiro pode ser necessário para cobrir a mudança de datas entre receber, pagar o imposto e usar os créditos?</p>
+            <div className="cbs-scenarios">
+              <div><small>1. Créditos já disponíveis</small><strong>{money(result.reserveImmediate)}</strong><p>Abatimentos prontos quando o imposto é pago.</p></div>
+              <div><small>2. Créditos disponíveis após a espera</small><strong>{money(result.reserveDelayed)}</strong><p>Abatimentos liberados conforme os prazos informados.</p></div>
+            </div>
+            <p>São duas hipóteses de reserva adicional para cobrir prazos. Não é uma nova despesa mensal e não se multiplica por 12. Zero não significa que a empresa tenha caixa suficiente.</p>
           </div>
-          <div className="cbs-result-note"><p>*Com créditos disponíveis e descontando imposto já recolhido. Antes desses ajustes, a parcela bruta potencial de CBS nas vendas sujeitas ao split é {money(result.splitGross)}.</p>
-            <p>{result.timingDelta < 0 ? `Com créditos disponíveis, o modelo indica alívio de prazo de ${money(-result.timingDelta)}; isso não comprova sobra de caixa.` : `O efeito de antecipação, com créditos disponíveis, é de ${money(result.timingDelta)}.`} A espera adicional dos créditos gera exposição de {money(result.creditExposure)} ({decimal(result.creditGapDays)} dias no modelo).</p>
-            <p>Diferença recorrente de imposto: {result.monthlyTaxDelta >= 0 ? '+' : '−'}{money(Math.abs(result.monthlyTaxDelta))}/mês. Esse efeito de carga deve ser tratado em preço/margem; não está acumulado na reserva de prazo.</p>
-            {result.excessCredits > 0 && <p>Créditos excedentes: {money(result.excessCredits)}. Não foram tratados como dinheiro disponível nem ressarcimento imediato. O modelo pode subestimar o giro necessário para esse saldo.</p>}
+          <div className="cbs-explanation">
+            <h4>Imposto por mês: entenda a conta</h4>
+            <dl className="cbs-breakdown">
+              <div><dt>CBS estimada nas vendas</dt><dd>{money(result.outputTax)}</dd></div>
+              <div><dt>Menos créditos usados para abater</dt><dd>− {money(result.creditsUsable)}</dd></div>
+              <div className="cbs-total"><dt>CBS restante a pagar</dt><dd>{money(result.netTax)}/mês</dd></div>
+              <div><dt>PIS/Cofins atual, pela hipótese informada</dt><dd>{money(result.currentTax)}/mês</dd></div>
+            </dl>
+            <p className="cbs-monthly-change"><b>{result.monthlyTaxDelta > 0 ? 'Aumento' : result.monthlyTaxDelta < 0 ? 'Redução' : 'Sem mudança'} de imposto: {money(Math.abs(result.monthlyTaxDelta))}/mês.</b> Com o mesmo total vendido, essa diferença muda o dinheiro que sobra após pagar o tributo. Avalie preço e margem separadamente da reserva de prazo acima.</p>
+            {result.excessCredits > 0 && <p>Há ainda {money(result.excessCredits)} de créditos acima da CBS das vendas. Esse saldo não virou dinheiro nesta conta. A espera para aproveitá-lo pode exigir mais giro do que o estimado.</p>}
           </div>
+          <details className="cbs-details cbs-cash-details"><summary>Como isso aparece no recebimento e nos prazos?</summary>
+            <div className="cbs-explanation">
+              <h4>Do total vendido ao dinheiro recebido</h4>
+              <p>Quando as vendas deste mês forem recebidas, o modelo considera:</p>
+              <dl className="cbs-breakdown">
+                <div><dt>Total bruto das vendas</dt><dd>{money(parsedMoney.value)}</dd></div>
+                <div><dt>Menos CBS separada no recebimento</dt><dd>− {money(result.splitNet)}</dd></div>
+                <div className="cbs-total"><dt>Entrada após essa separação</dt><dd>{money(result.receiptsAfterNetSplit)}</dd></div>
+              </dl>
+              <p>Esse valor ainda precisa pagar fornecedores, folha, outros tributos e despesas. Não é lucro nem saldo livre em conta.</p>
+              <p>{inputs.receiveDays > inputs.futureDueDays ? 'O recebimento acontece depois do vencimento: a CBS já foi paga antes e não é descontada novamente.' : 'A CBS é separada na parcela das vendas indicada no cenário, considerando os créditos já disponíveis. A parte restante do imposto segue o vencimento informado.'}</p>
+              <p>Antes dos créditos e do ajuste de imposto já pago, a CBS bruta das vendas com split seria {money(result.splitGross)}. Não some esse valor à reserva.</p>
+              <h4>Por que os prazos mudam a reserva?</h4>
+              <div className="cbs-result-note">
+                <p>{result.timingDelta < 0 ? 'Com os créditos disponíveis, a mudança de prazos libera temporariamente ' + money(-result.timingDelta) + ' no modelo. Isso não comprova sobra de caixa.' : 'Com os créditos disponíveis, a mudança de prazos exige ' + money(result.timingDelta) + ' a mais de reserva no modelo.'}</p>
+                <p>A espera para usar os créditos representa {money(result.creditExposure)} de necessidade temporária ({decimal(result.creditGapDays)} dias no modelo, ponderados entre as vendas com e sem split). A calculadora combina esse efeito com o anterior para chegar ao segundo cenário; não some novamente.</p>
+                <p>Ciclo financeiro: {inputs.receiveDays} dias para receber + {inputs.stockDays} dias em estoque − {inputs.payDays} dias para pagar = <b>{result.cycleDays} dias</b>. {result.cycleDays > 0 ? 'Em média, a empresa paga a compra antes de receber a venda.' : result.cycleDays < 0 ? 'Em média, a empresa recebe a venda antes de pagar a compra.' : 'Em média, pagamento da compra e recebimento da venda coincidem.'} Isso mostra o intervalo em dias, não a necessidade total de giro em reais.</p>
+              </div>
+              <h4>Exemplo simples para conferir o entendimento</h4>
+              <p>Imagine R$ 100 de imposto por mês, com vendas e recolhimentos distribuídos uniformemente. Se o pagamento passar a acontecer 10 dias antes, a reserva de prazo será aproximadamente R$ 100 ÷ 30 × 10 = R$ 33,33. O imposto mensal continua sendo R$ 100; a reserva cobre a mudança de data. Exemplo hipotético, isolado dos valores acima.</p>
+              <details className="cbs-check"><summary>Uma reserva de prazo significa pagar esse valor a mais todo mês?</summary><p>Não. Ela cobre um intervalo entre saídas e entradas. A diferença mensal do imposto é outra informação e aparece no bloco “Imposto por mês”.</p></details>
+            </div>
+          </details>
         </article>}
       </div>
     </div>

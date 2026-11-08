@@ -50,3 +50,28 @@ Direção visual: reutilizar identidade do painel; laranja somente na reserva pr
 ## Implantação e reversão
 
 Mudança isolada de rota e fontes, sem migração de dados. Reverter o commit da funcionalidade restaura a base anterior. Preservar alterações simultâneas de outras conversas. Publicação somente pelo workflow existente após validações aplicáveis; link ou build local não comprovam publicação.
+
+## Revisão didática de 2026-11-08
+
+Pedido de Fernando: explicações muito simples, seguindo Aprender e a metodologia Feynman quando adequada. Implementação localizada: definição de caixa, imposto, crédito e split; dicas junto a todas as entradas; dois cenários de reserva nomeados; decomposição vertical do imposto; recebimento, ciclo, exemplo mensal e pergunta de entendimento em seção complementar. As ligações dos conceitos Reforma Tributária e Split Payment no Aprender agora levam à simulação. Crédito como abatimento, reserva em reais e diferença de imposto em reais/mês permanecem distintos. Fórmulas, hipóteses iniciais e base IBGE preservadas.
+
+Ideação realizou triagem; Engenheiro de APP implementou; Simplificador revisou os textos; Diretor de Arte orientou a hierarquia e inspecionou capturas reais, recomendando decomposição vertical e maior largura da atividade IBGE, aplicadas. O Diretor reinspecionou as quatro capturas finais e aprovou o visual no escopo visto; contraste instrumental, leitor de tela e desempenho não foram medidos. Cobertura: calculadora CBS inteira, sua função de cálculo, dados setoriais, ajuda/entrada monetária, Aprender e rotas pertinentes. Não é auditoria integral do código do painel.
+
+| Critério da revisão | Verificação local |
+| --- | --- |
+| Fórmulas preservadas e cenários coerentes | 9 testes de `cbs-cash.test.mjs` passaram |
+| Aprender e navegação existentes | 4 testes de navegação/insight passaram |
+| Integridade das razões setoriais | teste de reconciliação do snapshot passou |
+| Coleta IBGE em indisponibilidade | bloqueado localmente: teste exige `python3` e caminho POSIX em ambiente Windows; coletor não foi alterado |
+| Build e lint | build passou; lint sem erros, com 5 avisos preexistentes em outros componentes |
+| Interface e interação Chrome | smoke em temas claro/escuro, larguras 390/1440; capturas e resultado em `cotacoes/workspace-qa/cbs-didatico/` |
+
+O navegador local não acessou localhost por restrição do ambiente. O smoke foi executado com o build real servido por interceptação de arquivos no Playwright, sem alterar o produto. Isso valida a interface local, sem comprovar publicação ou conectividade em produção. Nenhuma publicação feita nesta revisão.
+
+### Busca de atividades do IBGE
+
+Pedido adicional de Fernando em 2026-11-08: buscar atividades à medida que digita e simplificar o design. O seletor de atividade foi substituído por uma busca única nas 225 atividades disponíveis do snapshot (Comércio, Indústria e Serviços). Nome, código, partes de palavras e termos combinados são pesquisados sem distinção de acentos/maiúsculas. Não é busca em todas as CNAEs nem busca semântica. Todas as correspondências aparecem na lista com rolagem; nenhuma é truncada silenciosamente.
+
+O setor passou a acompanhar a atividade selecionada, evitando um filtro concorrente. A atividade vigente fica visível durante nova busca. Digitar, sair do campo ou pressionar Escape não troca a atividade nem os cálculos. Somente escolha por clique, toque ou Enter aplica a atividade, atualiza setor e referência de gastos e elimina o ajuste manual de gastos anterior. Restaurar exemplo limpa a busca e recupera a seleção inicial. Setas, Enter, Escape, rótulo persistente, lista de opções e anúncio de quantidade foram implementados; leitor de tela real não foi testado.
+
+Diretor de Arte e Simplificador participaram da concepção e revisão. O Diretor aprovou o visual final após inspecionar desktop, mobile e as duas capturas de viewport móvel; teclado virtual de aparelho físico não foi testado. Testes `cbs-activity-search.test.mjs` cobrem normalização, busca parcial/código, cruzamento de setores, ausência, base completa e imutabilidade. Com os testes CBS/Aprender, 16 testes passaram; reconciliação IBGE continua válida e o limite do teste Python permanece. Build e lint dos arquivos envolvidos passaram. Smoke Chrome validou troca por teclado e toque, cálculo preservado sem seleção, reset da referência de gastos e do exemplo, Escape/blur e temas claro/escuro em 390/1440 px. Evidências em `cotacoes/workspace-qa/cbs-busca-ibge/`; capturas de viewport móvel conferem o campo fora da barra fixa. Sem publicação neste lote.
