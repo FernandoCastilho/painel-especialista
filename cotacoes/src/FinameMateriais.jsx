@@ -164,7 +164,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
           <div className="cx-iof">
             <label htmlFor="fm-finame-eligible"><input id="fm-finame-eligible" type="checkbox" checked={finameEligible} onChange={e => setFinameEligible(e.target.checked)} />Confirmo com a instituição que esta operação utiliza recursos da FINAME elegíveis à alíquota zero do art. 8º, IX, do Decreto 6.306/2007.</label>
             <p className="cx-hint">IOF automático: zero somente com esse enquadramento confirmado. O nome BNDES ou o indexador, isoladamente, não comprovam a origem dos recursos. Para outras origens ou dúvida, a simulação fica bloqueada até confirmar o tratamento tributário.</p>
-            <p className="cx-error" id="fm-iof-err" role={erros.iof ? 'alert' : undefined}>{erros.iof}</p>
+            <p className="cx-hint" id="fm-iof-err">{erros.iof}</p>
           </div>
           <button type="button" className="fm-show-result" disabled={!res} onClick={() => { const element = document.getElementById('fm-result'); element?.focus(); element?.scrollIntoView({ block: 'start' }) }}>Ver resultado da simulação</button>
         </div>
