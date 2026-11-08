@@ -10,6 +10,8 @@ const links = {
   'Máquinas e Equipamentos': 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-finame-bk-aquisicao-comercializacao',
 }
 ;(async () => {
+  const { CONCEITOS, porTopico } = await import('../src/educacao.js')
+  const topicCount = porTopico(CONCEITOS).length
   fs.mkdirSync(out, { recursive: true })
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
   const report = []
@@ -58,14 +60,15 @@ const links = {
       await page.screenshot({ path: path.join(out, width + '-mapa-conhecimento.png') })
 
       await visit('aprender/conceitos', '.learn-group')
-      assert.equal(await page.locator('.learn-group').count(), 7)
+      assert.equal(await page.locator('.learn-group').count(), topicCount)
       assert.equal(await page.locator('.learn-group[open]').count(), 0)
       await page.getByRole('button', { name: 'Expandir todas', exact: true }).click()
-      await page.waitForFunction(() => document.querySelectorAll('.learn-group[open]').length === 7)
+      await page.waitForFunction(count => document.querySelectorAll('.learn-group[open]').length === count, topicCount)
       for (const term of ['Escala 6x1', 'Reforma tributária', 'Split payment', 'Dividendos', 'CET', 'Controle forçado de juros']) {
         assert.equal(await page.locator('.learn-list li button').filter({ hasText: new RegExp(term, 'i') }).count(), 1, term)
       }
-      assert.equal(await page.locator('.learn-list li').count(), 27)
+      assert.equal(await page.locator('.learn-list li').count(), CONCEITOS.length)
+      assert.deepEqual((await page.locator('.learn-list li button b').allTextContents()).sort(), CONCEITOS.map(concept => concept.nome.replace(/ \(.*\)/, '')).sort())
       assert.equal(await page.locator('.learn-list li button').filter({ hasText: 'Regime FÁCIL' }).count(), 1)
       await page.locator('.learn-list li button').filter({ has: page.getByText('CET', { exact: true }) }).click()
       await page.locator('.learn-detail h2', { hasText: 'CET (Custo Efetivo Total)' }).waitFor()
@@ -107,7 +110,7 @@ const links = {
       assert.ok(box && box.width >= 44 && box.height >= 44 && box.x >= 0 && box.x + box.width <= width + 1, 'Governança: botão inteiro dentro da tela')
       await page.screenshot({ path: path.join(out, width + '-config.png') })
       assert.deepEqual(errors, [])
-      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender abre mapa com pontos, filtros e retorno à matriz', 'Aprender 27/7, CET, história dos juros e categorias', 'dois links BNDES', 'Google Trends', 'tema automático', 'Governança sem overflow'], errors })
+      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender abre mapa com pontos, filtros e retorno à matriz', `Aprender ${CONCEITOS.length}/${topicCount}, CET, história dos juros e categorias`, 'dois links BNDES', 'Google Trends', 'tema automático', 'Governança sem overflow'], errors })
       await context.close()
       page = null
     }
