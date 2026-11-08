@@ -1,9 +1,6 @@
 name: Verificar e coletar notícias institucionais
 on:
   workflow_call:
-  push:
-    branches: [codex/institutional-news-live-20261108]
-    paths: ['cotacoes/**', '.github/workflows/institutional-news.yml']
   workflow_dispatch:
 permissions:
   contents: read

@@ -101,12 +101,12 @@ test('falha da fonte mantém aviso mesmo quando o arquivo foi lido', async () =>
 })
 
 test('coleta confirmada mostra datas e contagens públicas; leitura retida mantém aviso offline', async t => {
-  const data = { collection: { automaticCollectionEnabled: true, notice: 'Coleta automática institucional ativa · cobertura parcial.', checkedAt: '2026-11-05T11:00:00Z', lastSuccessAt: '2026-11-05T10:00:00Z', sourceStats: { successful: 2, failed: 1, suspended: 1, pending: 5 } }, topics: { teste: { status: 'partial', items: [], sources: [{ reason: 'private operational detail' }] } } }
+  const data = { collection: { automaticCollectionEnabled: true, notice: 'Coleta automática institucional ativa · cobertura parcial.', checkedAt: '2026-11-05T11:00:00Z', lastSuccessAt: '2026-11-05T10:00:00Z', sourceStats: { successful: 2, notActive: 16, failed: 1, suspended: 1, pending: 5 } }, topics: { teste: { status: 'partial', items: [], sources: [{ reason: 'private operational detail' }] } } }
   const active = await setup(t, { status: 'ok', data })
   assert.match(active.html(), /Coleta automática institucional ativa/)
   assert.match(active.html(), /Verificação geral do painel/)
   assert.match(active.html(), /último sucesso geral/)
-  assert.match(active.html(), /2 com consulta válida · 1 com falha · 1 suspensas · 5 pendentes/)
+  assert.match(active.html(), /2 com consulta válida · 16 não ativadas/)
   assert.match(active.html(), /Brasília/)
   assert.match(active.html(), /Fontes do painel/)
   assert.doesNotMatch(active.html(), /private operational/)

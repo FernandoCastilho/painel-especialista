@@ -29,7 +29,7 @@ export default function SectorNews({ id, label, insumo = false }) {
     <p className="sector-news-status">{collectionNotice}</p>
     {collection.automaticCollectionEnabled && <>
       <p className="sector-news-meta">Verificação geral do painel: <time dateTime={collection.checkedAt}>{dateTime(collection.checkedAt)}</time> · último sucesso geral: <time dateTime={collection.lastSuccessAt}>{dateTime(collection.lastSuccessAt)}</time> (Brasília).</p>
-      <p className="sector-news-meta">Fontes do painel: {collection.sourceStats.successful} com consulta válida · {collection.sourceStats.failed} com falha · {collection.sourceStats.suspended} suspensas · {collection.sourceStats.pending} pendentes de homologação.</p>
+      <p className="sector-news-meta">Fontes do painel: {collection.sourceStats.successful} com consulta válida · {collection.sourceStats.notActive} não ativadas.</p>
     </>}
     {insumo && <p className="setores-note">Oferta, demanda e decisões que ajudam a acompanhar o mercado do insumo. As notícias são contexto; não demonstram, por si só, a causa de uma variação de preço.</p>}
     {resource.status === 'loading' && !topic ? <Estado>Carregando notícias…</Estado> : <>

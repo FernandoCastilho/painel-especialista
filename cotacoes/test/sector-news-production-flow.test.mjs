@@ -21,7 +21,7 @@ test('production bootstrap preserves real historical success and suspensions wit
   assert.equal(state.sources.ibge.status, 'suspended')
   assert.equal(state.feed.lastPublication, null)
   assert.throws(() => confirmedSnapshot(state, { payload: previous, token: 'a'.repeat(40) }, now), /not_confirmed/)
-  assert.equal(normalizeSectorNews(previous, now).collection.automaticCollectionEnabled, false)
+  assert.equal(normalizeSectorNews({ ...previous, delivery: undefined }, now).collection.automaticCollectionEnabled, false)
 })
 
 test('production wrapper recognizes the actual Git and live transport contracts before reading state', async () => {

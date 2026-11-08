@@ -248,7 +248,7 @@ function collectionStatus(data, states, now) {
     notice: 'Coleta automática institucional ativa · cobertura parcial. Consulte os links das fontes.',
     checkedAt: newest(sources.map(source => source.checkedAt)), lastSuccessAt: newest(sources.map(source => source.lastSuccessAt)),
     publishedAt: delivery.publishedAt,
-    sourceStats: { successful: successful.length, failed: sources.filter(source => source.status === 'failed').length, pending: Object.values(states).filter(source => !source.enabled).length, suspended: Object.values(states).filter(source => source.accessSuspended || (source.enabled && !source.automaticCollection)).length },
+    sourceStats: { successful: successful.length, notActive: Object.keys(states).length - successful.length, failed: sources.filter(source => source.status === 'failed').length, pending: Object.values(states).filter(source => !source.enabled).length, suspended: Object.values(states).filter(source => source.accessSuspended || (source.enabled && !source.automaticCollection)).length },
   }
 }
 
