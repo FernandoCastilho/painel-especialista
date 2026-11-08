@@ -1,0 +1,77 @@
+.icms-lesson { margin: 28px 0; --icms-accent: var(--amber); }
+.icms-eyebrow { color: var(--mut); text-transform: uppercase; letter-spacing: .09em; font-size: .7rem; font-weight: 700; }
+.icms-intro h3 { font-size: 1.4rem; line-height: 1.25; margin: 8px 0 12px; max-width: 32ch; }
+.icms-modes { display: flex; gap: 8px; margin: 20px 0 12px; flex-wrap: wrap; }
+.icms-lesson button { min-height: 44px; padding: 10px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; color: var(--fg); font: inherit; font-size: .8rem; cursor: pointer; }
+.icms-lesson button[aria-pressed="true"] { border-color: var(--icms-accent); box-shadow: inset 0 -3px var(--icms-accent); font-weight: 700; }
+.icms-lesson button:focus-visible, .icms-transcript summary:focus-visible { outline: 2px solid var(--icms-accent); outline-offset: 3px; }
+.icms-lesson button:disabled { opacity: .45; cursor: default; }
+.icms-stage { padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: hidden; }
+.icms-stage-top { display: flex; justify-content: space-between; align-items: start; gap: 18px; margin-bottom: 24px; font-size: .85rem; }
+.icms-stage-top > span { white-space: nowrap; color: var(--mut); font-size: .75rem; }
+.icms-diagram-legend { font-size: .75rem; color: var(--mut); margin: -8px 0 20px; }
+.icms-chain { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px; padding: 0; list-style: none; margin: 0; }
+.icms-node { min-width: 0; position: relative; display: flex; flex-direction: column; }
+.icms-company { display: flex; flex-direction: column; min-height: 130px; padding: 12px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); transition: border-color .3s, box-shadow .3s; }
+.icms-node.is-active .icms-company { border-color: var(--icms-accent); box-shadow: inset 0 3px var(--icms-accent); }
+.icms-node-number { font-size: 1.5rem; color: var(--mut); font-weight: 300; margin-bottom: 14px; }
+.icms-company strong { font-size: .82rem; overflow-wrap: anywhere; }
+.icms-company small { color: var(--mut); font-size: .68rem; line-height: 1.5; margin-top: 5px; }
+.icms-goods { position: absolute; width: 30px; right: -30px; top: 55px; color: var(--fg); }
+.icms-goods svg { width: 100%; overflow: visible; display: block; }
+.icms-goods path { fill: none; stroke: currentColor; stroke-width: 3; }
+.icms-goods circle { fill: var(--icms-accent); opacity: 0; }
+.icms-tax { padding: 12px 4px; text-align: center; color: var(--mut); font-size: .7rem; line-height: 1.5; }
+.icms-tax-arrow { display: block; font-size: 1.3rem; height: 30px; }
+.icms-tax:not(.is-taxpayer) .icms-tax-arrow { visibility: hidden; }
+.icms-tax.is-taxpayer { color: var(--fg); border-bottom: 2px solid var(--icms-accent); }
+.icms-fisco { padding: 14px; display: flex; gap: 20px; align-items: center; border: 1px solid var(--line); border-radius: 6px; font-size: .8rem; margin-top: 10px; }
+.icms-fisco strong { color: var(--icms-accent); white-space: nowrap; }
+.icms-fisco span { color: var(--mut); }
+.icms-diagram-note, .icms-play-note { font-size: .72rem; color: var(--mut); line-height: 1.6; }
+.icms-caption { margin: 24px 0 16px; border-top: 1px solid var(--line); padding-top: 18px; min-height: 160px; }
+.icms-caption h4 { font-size: 1rem; margin: 8px 0; }
+.icms-caption p { font-size: .85rem; line-height: 1.7; }
+.icms-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.icms-controls .icms-play { font-weight: 700; border-color: var(--icms-accent); }
+.icms-stage[data-playing="true"][data-reduced="false"] .icms-goods.is-moving circle { animation: icms-travel 1.6s ease-in-out 3; }
+.icms-stage[data-playing="true"][data-reduced="false"] .icms-tax.is-taxpayer.is-moving .icms-tax-arrow { animation: icms-tax-drop 1.6s ease-in-out 3; }
+.icms-stage[data-playing="true"][data-reduced="false"] .icms-caption { animation: icms-enter .4s ease-out; }
+@keyframes icms-travel { 0% { transform: translateX(0); opacity: 0; } 20% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateX(90px); opacity: 0; } }
+@keyframes icms-tax-drop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+@keyframes icms-enter { from { opacity: .3; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.icms-transcript { margin: 16px 0 28px; }
+.icms-transcript summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+.icms-transcript li { margin-bottom: 14px; font-size: .85rem; }
+.icms-numbers { margin: 28px 0; padding: 20px; border-left: 3px solid var(--icms-accent); background: var(--card); }
+.icms-number-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 24px 0; }
+.icms-number-grid > div { display: flex; flex-direction: column; gap: 8px; }
+.icms-number-grid b { font-size: 1.5rem; letter-spacing: -.04em; }
+.icms-number-grid span { color: var(--mut); font-size: .75rem; }
+.icms-sp { border-top: 1px solid var(--line); padding-top: 24px; }
+.icms-sp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.icms-sp-grid > section { padding: 18px; border: 1px solid var(--line); border-radius: 8px; }
+.icms-sp-grid h4 { margin: 0 0 14px; color: var(--icms-accent); font-size: .95rem; }
+.icms-sp-grid p, .icms-numbers p { font-size: .83rem; line-height: 1.75; }
+.icms-caution { font-size: .8rem; color: var(--mut); }
+@media (max-width: 760px) {
+ .icms-stage { padding: 16px; }
+ .icms-stage-top { flex-direction: column; gap: 8px; }
+ .icms-chain { grid-template-columns: 1fr; gap: 36px; }
+ .icms-node { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 10px; }
+ .icms-company { min-height: 110px; padding: 12px; }
+ .icms-company strong { font-size: .9rem; }
+ .icms-node-number { font-size: 1.25rem; margin-bottom: 8px; }
+ .icms-company small { font-size: .72rem; }
+ .icms-goods { right: auto; left: calc(25% - 12px); top: calc(100% + 14px); width: 26px; transform: rotate(90deg); }
+ .icms-tax { font-size: .76rem; border: 0; }
+ .icms-tax.is-taxpayer { border-bottom: 0; border-right: 2px solid var(--icms-accent); }
+ .icms-tax-arrow { height: 26px; }
+ .icms-fisco { flex-direction: column; gap: 6px; align-items: start; margin-top: 18px; }
+ .icms-caption { min-height: 0; }
+ .icms-sp-grid, .icms-number-grid { grid-template-columns: 1fr; }
+ .icms-controls > button { flex: 1 1 40%; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .icms-lesson *, .icms-lesson *::before, .icms-lesson *::after { animation: none !important; transition: none !important; }
+}

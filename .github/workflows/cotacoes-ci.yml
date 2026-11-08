@@ -106,6 +106,16 @@ jobs:
           retention-days: 7
       - name: Conferir panorama horário em celular, tablet e desktop nos dois temas
         run: POPUP_QA_OUTPUT="$RUNNER_TEMP/qa-universal/market-popup" node scripts/smoke-market-popup.cjs
+      - name: Conferir ICMS-ST, motion e movimento reduzido
+        run: ICMS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/icms-st" node scripts/smoke-icms-st.cjs
+      - name: Capturas e relatório do diagrama ICMS-ST
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: icms-st-design
+          path: ${{ runner.temp }}/qa-universal/icms-st
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir estudo histórico de controle de juros em três larguras
         run: JUROS_QA_OUTPUT="$RUNNER_TEMP/qa-juros" node scripts/smoke-aprender-juros.cjs
       - name: Capturas e relatório do estudo de juros

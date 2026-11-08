@@ -68,6 +68,7 @@ test('Aprender renderiza casos acessíveis, links primários e o aviso históric
   runInNewContext(code, { module, exports: module.exports, require: name => {
     if (name === 'react') return React
     if (name === './educacao.js') return educacao
+    if (name === './IcmsStDiagram.jsx') return { __esModule: true, default: () => null }
     if (name === './Aprender.css') return {}
     if (name === './Avisos.jsx') return { Aviso: passthrough }
     if (name === './TerminalDesk.jsx') return { Panel: passthrough }
