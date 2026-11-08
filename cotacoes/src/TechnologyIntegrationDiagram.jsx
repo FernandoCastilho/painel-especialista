@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useDiagramPresentation } from './useDiagramPresentation.js'
 import { createPortal } from 'react-dom'
 import './TechnologyIntegrationDiagram.css'
 
@@ -19,62 +19,7 @@ function FlowIcon({ name }) { return <svg aria-hidden="true" focusable="false" v
 
 // Texto nativo e listas ordenadas: a leitura não depende da imagem ou das setas.
 export default function TechnologyIntegrationDiagram() {
-  const [paused, setPaused] = useState(false)
-  const [expanded, setExpanded] = useState(false)
-  const [scale, setScale] = useState(1)
-  const figureRef = useRef(null)
-  const maximizeRef = useRef(null)
-  const dialogRef = useRef(null)
-  const wasExpanded = useRef(false)
-  useLayoutEffect(() => {
-    if (!expanded) return
-    const fit = () => {
-      const figure = figureRef.current
-      if (figure) setScale(Math.min((window.innerWidth - 24) / figure.offsetWidth, (window.innerHeight - 72) / figure.offsetHeight, 1.5))
-    }
-    fit()
-    const observer = new ResizeObserver(fit)
-    observer.observe(figureRef.current)
-    window.addEventListener('resize', fit)
-    return () => { observer.disconnect(); window.removeEventListener('resize', fit) }
-  }, [expanded])
-  useEffect(() => {
-    if (!expanded) {
-      if (wasExpanded.current) maximizeRef.current?.focus()
-      wasExpanded.current = false
-      return
-    }
-    wasExpanded.current = true
-    window.history.pushState({ ...window.history.state, ticDiagramFullscreen: true }, '')
-    const onBack = () => setExpanded(false)
-    window.addEventListener('popstate', onBack)
-    const appRoot = document.getElementById('root')
-    const previousInert = appRoot?.inert
-    if (appRoot) appRoot.inert = true
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const focusLaser = () => dialogRef.current?.querySelector('.laser-btn')?.focus()
-    dialogRef.current?.focus()
-    const focusObserver = new MutationObserver(() => {
-      if (dialogRef.current?.querySelector('.laser-btn')) { focusLaser(); focusObserver.disconnect() }
-    })
-    focusObserver.observe(dialogRef.current, { childList: true, subtree: true })
-    focusLaser()
-    const onKey = event => {
-      if (event.key === 'Escape' && !event.defaultPrevented) { event.preventDefault(); setExpanded(false) }
-      if (event.key === 'Tab') { event.preventDefault(); focusLaser() }
-      if (event.key.toLowerCase() === 'p' && !event.ctrlKey && !event.altKey && !event.metaKey) { event.preventDefault(); setPaused(value => !value) }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => {
-      focusObserver.disconnect()
-      document.body.style.overflow = previousOverflow
-      document.removeEventListener('keydown', onKey)
-      if (appRoot) appRoot.inert = previousInert
-      window.removeEventListener('popstate', onBack)
-      if (window.history.state?.ticDiagramFullscreen) window.history.back()
-    }
-  }, [expanded])
+  const { paused, setPaused, expanded, setExpanded, scale, figureRef, maximizeRef, dialogRef } = useDiagramPresentation('ticDiagramFullscreen')
   const figure = <figure ref={figureRef} className="tic-flow"  data-paused={paused} style={expanded ? { transform: `translate(-50%, -50%) scale(${scale})` } : undefined} aria-labelledby="tic-flow-title" aria-describedby="tic-flow-note tic-flow-motion-help" tabIndex={0} aria-keyshortcuts="P" onKeyDown={event => {
     if (!expanded && event.key.toLowerCase() === 'p' && !event.ctrlKey && !event.altKey && !event.metaKey) { event.preventDefault(); setPaused(value => !value) }
   }}>

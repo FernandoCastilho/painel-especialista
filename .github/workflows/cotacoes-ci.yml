@@ -1,5 +1,6 @@
 name: Cotações CI
 on:
+  workflow_call:
   push:
     branches: ['feat/estudos-setoriais-completos']
     paths: ['cotacoes/**', 'docs/sector-research/**', '.github/workflows/cotacoes-ci.yml']
@@ -59,6 +60,72 @@ jobs:
         run: |
           nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
+      - name: Conferir Comparador de Crédito, cenários e apresentação
+        run: CREDIT_QA_OUTPUT="$RUNNER_TEMP/qa-universal/credit" node scripts/smoke-credit-comparison.cjs
+      - name: Capturas e resultado do Comparador de Crédito
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: credit-comparison-design
+          path: ${{ runner.temp }}/qa-universal/credit
+          if-no-files-found: error
+          retention-days: 7
+      - name: Conferir Bancos em celular, tablet e desktop nos dois temas
+        run: BANKS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/bancos" node scripts/smoke-bancos.cjs
+      - name: Capturas e relatório da seção Bancos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bancos-design
+          path: ${{ runner.temp }}/qa-universal/bancos
+          if-no-files-found: error
+          retention-days: 7
+      - name: Conferir curadorias de tributos e escala 6x1
+        run: CURADORIA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/curadoria" node scripts/smoke-curadoria.cjs
+      - name: Conferir coleta institucional publicada e falhas de confirmação
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: INSTITUTIONAL_NEWS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/institutional-news" node scripts/smoke-institutional-news.cjs
+      - name: Capturas e relatório da coleta institucional
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-news-design
+          path: ${{ runner.temp }}/qa-universal/institutional-news
+          if-no-files-found: error
+          retention-days: 7
+      - name: Conferir CBS, dados setoriais e necessidade adicional de giro
+        run: CBS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cbs" node scripts/smoke-cbs.cjs
+      - name: Capturas e resultado do simulador CBS
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbs-caixa-design
+          path: ${{ runner.temp }}/qa-universal/cbs
+          if-no-files-found: error
+          retention-days: 7
+      - name: Conferir mapa do conhecimento em quatro cenários
+        timeout-minutes: 3
+        run: KNOWLEDGE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/knowledge-map" node scripts/smoke-knowledge-map.cjs
+      - name: Capturas e relatório imediatos do mapa do conhecimento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-conhecimento-design
+          path: ${{ runner.temp }}/qa-universal/knowledge-map
+          if-no-files-found: error
+          retention-days: 7
+      - name: Conferir panorama horário em celular, tablet e desktop nos dois temas
+        run: POPUP_QA_OUTPUT="$RUNNER_TEMP/qa-universal/market-popup" node scripts/smoke-market-popup.cjs
+      - name: Conferir ICMS-ST, motion e movimento reduzido
+        run: ICMS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/icms-st" node scripts/smoke-icms-st.cjs
+      - name: Capturas e relatório do diagrama ICMS-ST
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: icms-st-design
+          path: ${{ runner.temp }}/qa-universal/icms-st
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir estudo histórico de controle de juros em três larguras
         run: JUROS_QA_OUTPUT="$RUNNER_TEMP/qa-juros" node scripts/smoke-aprender-juros.cjs
       - name: Capturas e relatório do estudo de juros
@@ -195,4 +262,50 @@ jobs:
             ${{ runner.temp }}/qa-c
             ${{ runner.temp }}/qa-universal
           if-no-files-found: ignore
+          retention-days: 7
+  bndes-workspace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: cotacoes
+    env:
+      SMOKE_BASE_URL: http://127.0.0.1:8768
+      SMOKE_CHANNEL: chrome
+      CHROMIUM_PATH: /usr/bin/google-chrome
+      BNDES_WORKSPACE_QA_OUTPUT: /tmp/bndes-workspace
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - run: npm install --no-save playwright@1.63.0
+      - name: Servir e conferir a central BNDES
+        run: |
+          python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/bndes-server.log" 2>&1 &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
+          node scripts/smoke-bndes-workspace.cjs
+      - name: Conferir regressões das calculadoras e do BNDES
+        env:
+          CALCULATOR_QA_OUTPUT: /tmp/bndes-workspace/calculators
+          BNDES_QA_OUTPUT: /tmp/bndes-workspace/bndes
+          BNDES_PROFILES_QA_OUTPUT: /tmp/bndes-workspace/bndes-profiles
+        run: |
+          failures=()
+          for s in smoke-calculator-layout smoke-calculadora smoke-bndes smoke-bndes-profiles; do
+            if ! node scripts/$s.cjs; then failures+=("$s"); fi
+          done
+          if (( ${#failures[@]} )); then printf 'Falhas: %s\n' "${failures[*]}"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bndes-workspace-design
+          path: /tmp/bndes-workspace
+          if-no-files-found: error
           retention-days: 7

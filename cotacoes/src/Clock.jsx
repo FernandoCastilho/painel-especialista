@@ -22,7 +22,7 @@ function useNow() {
 
 const part = (now, tz, opts) => new Intl.DateTimeFormat('pt-BR', { timeZone: tz, ...opts }).format(now)
 
-function isOpen(now, zone) {
+export function isUsualTradingTime(now, zone) {
   const wd = new Intl.DateTimeFormat('en-US', { timeZone: zone.tz, weekday: 'short' }).format(now)
   if (wd === 'Sat' || wd === 'Sun') return false
   const h = Number(part(now, zone.tz, { hour: '2-digit', hourCycle: 'h23' }))
@@ -30,16 +30,19 @@ function isOpen(now, zone) {
 }
 
 function One({ zone, now }) {
-  const open = isOpen(now, zone)
+  const withinHours = isUsualTradingTime(now, zone)
+  const status = `${zone.city} — ${withinHours ? 'dentro' : 'fora'} do horário habitual de negociação. Feriados e horários especiais não verificados.`
   return (
     <span
       className="clock-one"
-      title={`${zone.city} — mercado ${open ? 'aberto' : 'fechado'}`}
+      role="group"
+      title={status}
+      aria-label={`${part(now, zone.tz, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}. ${status}`}
       style={{ display: 'inline-flex', alignItems: 'center', gap: 3, whiteSpace: 'nowrap' }}
     >
       <span
         aria-hidden="true"
-        style={{ width: 7, height: 7, borderRadius: '50%', background: open ? 'var(--up)' : 'var(--mut)', display: 'inline-block' }}
+        style={{ width: 7, height: 7, borderRadius: '50%', background: withinHours ? 'var(--up)' : 'var(--mut)', display: 'inline-block' }}
       />
       <span className="clock-flag" aria-hidden="true" style={{ display: 'inline-flex' }} dangerouslySetInnerHTML={{ __html: flagSvg(zone.flag, 'width="18" height="12"') }} />
       <b>{part(now, zone.tz, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}</b>
@@ -55,7 +58,7 @@ export default function Clock({ codes: all }) {
     <div
       className="clock"
       role="timer"
-      aria-label={codes.map((c) => ZONES[c].city).join(', ')}
+      aria-label={`Horários locais: ${codes.map((c) => ZONES[c].city).join(', ')}`}
       style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'space-between', gap: 4, overflow: 'hidden', fontSize: '0.78rem' }}
     >
       {codes.map((c) => (

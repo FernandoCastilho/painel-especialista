@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import './DateRangePicker.css'
-import { clamp, long, monthCells, monthName, monthShort, outside, pair, parts, preview, shift, shiftMonth, short, valid, monthKey, parseTyped, maskTyped, typedText } from './dateRange.js'
+import { clamp, long, monthCells, monthName, monthShort, outside, pair, parts, preview, shift, shiftMonth, short, valid, monthKey, parseTyped, maskTyped, typedText, navigateCalendarView } from './dateRange.js'
 
 const WEEK = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
@@ -18,11 +18,13 @@ export default function DateRangePicker({ start, end, min, max, mode = 'day', la
   const [panels, setPanels] = useState(1)
   const [typed, setTyped] = useState({ a: '', b: '', erro: '' })
   const trigger = useRef(null), pop = useRef(null)
+  const focusGrid = useRef(false)
   const ok = valid(start, mode) && valid(end, mode)
 
   const close = (focus = true) => { setOpen(false); setAnchor(null); setHover(null); setFocusKey(null); if (focus) trigger.current?.focus() }
   const show = () => {
     const base = ok ? start : max ?? min
+    focusGrid.current = true
     setView(base); setAnchor(null); setHover(null); setFocusKey(base); setTyped({ a: ok ? typedText(start, mode) : '', b: ok ? typedText(end, mode) : '', erro: '' }); setPanels(!month && window.innerWidth >= 640 ? 2 : 1); setOpen(true)
   }
 
@@ -48,7 +50,10 @@ export default function DateRangePicker({ start, end, min, max, mode = 'day', la
 
   // Foco no dia/mês atual do teclado.
   useEffect(() => {
-    if (open && focusKey) pop.current?.querySelector(`[data-k="${focusKey}"]`)?.focus({ preventScroll: true })
+    if (open && focusKey && focusGrid.current) {
+      pop.current?.querySelector(`[data-k="${focusKey}"]`)?.focus({ preventScroll: true })
+      focusGrid.current = false
+    }
   }, [open, focusKey, view])
 
   const pick = (v) => {
@@ -74,6 +79,7 @@ export default function DateRangePicker({ start, end, min, max, mode = 'day', la
 
   const move = (v) => {
     const c = clamp(v, min, max)
+    focusGrid.current = true
     setFocusKey(c)
     if (anchor) setHover(c)
     const f = parts(c), left = parts(view)
@@ -98,12 +104,18 @@ export default function DateRangePicker({ start, end, min, max, mode = 'day', la
       <button key={v} type="button" data-k={v} disabled={dis} aria-label={label} aria-pressed={edge}
         tabIndex={v === focusKey ? 0 : -1}
         className={`drp-cell${edge ? ' is-edge' : ''}${inside ? ' is-in' : ''}${v === lo ? ' is-lo' : ''}${v === hi ? ' is-hi' : ''}`}
-        onClick={() => pick(v)} onMouseEnter={() => anchor && !dis && setHover(v)} onFocus={() => anchor && !dis && setHover(v)}>{text}</button>
+        onClick={() => pick(v)} onMouseEnter={() => anchor && !dis && setHover(v)} onFocus={() => { setFocusKey(v); if (anchor && !dis) setHover(v) }}>{text}</button>
     )
   }
 
   const viewParts = parts(view)
-  const stepView = (n) => setView(shiftMonth(view, mode, n * (month ? 1 : 1)))
+  const stepView = (n) => {
+    const next = navigateCalendarView(view, focusKey, mode, n, min, max)
+    focusGrid.current = false
+    setView(next.view)
+    setFocusKey(next.focus)
+    if (anchor) setHover(next.focus)
+  }
   const years = month ? [viewParts.y] : null
   const monthsShown = month ? [] : Array.from({ length: panels }, (_, i) => { const t = viewParts.y * 12 + viewParts.m + i; return { y: Math.floor(t / 12), m: t % 12 } })
   const hint = anchor ? `Início ${short(anchor, mode)}. Escolha a data final.` : 'Escolha a data inicial (ou digite as datas acima).'

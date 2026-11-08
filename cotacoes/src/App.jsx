@@ -26,6 +26,7 @@ const CdiFuturo = lazy(() => import('./CdiFuturo.jsx'))
 import HolidayNotice from './HolidayNotice.jsx'
 import AvisoInicial from './AvisoInicial.jsx'
 import ConceitoDiario from './ConceitoDiario.jsx'
+import MarketPopup from './MarketPopup.jsx'
 import Recado from './Recado.jsx'
 import AlertaVariacao from './AlertaVariacao.jsx'
 import { OnlineBadge } from './Acessos.jsx'
@@ -36,6 +37,7 @@ const Config = lazy(() => import('./Config.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
+const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
 const Apresentacao = lazy(() => import('./Apresentacao.jsx'))
 import { useDataFile } from './useDataFile.js'
@@ -262,6 +264,7 @@ export default function App() {
       </>}>
     <AvisoInicial onDismiss={() => setAvisoFechado(true)} />
     <ConceitoDiario ready={avisoFechado} goto={goto} />
+    <MarketPopup ready={avisoFechado} quotes={quotes} curves={curves.data} oil={oil.data} paused={tab === 'apresentar'} />
     <Recado />
     <Laser />
     <GlobalSearch onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
@@ -296,7 +299,7 @@ export default function App() {
 
       {tab === 'resumo' && (
         <>
-          <HolidayNotice hol={hol} />
+          <HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />
           <Resumo searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} />
 
         </>
@@ -324,6 +327,7 @@ export default function App() {
 
       {tab === 'bndes' && <Bndes view={sub} onView={(v, replace) => goto('bndes', v, replace)} />}
 
+      {tab === 'bancos' && <Bancos />}
       {tab === 'setores' && <Setores view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
       {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} />}

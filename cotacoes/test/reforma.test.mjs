@@ -44,7 +44,7 @@ test('busca por palavras no título e no veículo, sem acento', () => {
 })
 test('a aba aparece ao lado de Manchetes e a coleta está no deploy', () => {
   const resumo = readFileSync(new URL('../src/Resumo.jsx', import.meta.url), 'utf8')
-  assert.ok(resumo.includes("label: 'Manchetes'") && resumo.includes("label: 'Reforma tributária'") && resumo.includes('<ReformaTributaria simples />'))
+  assert.ok(resumo.includes("label: 'Manchetes'") && resumo.includes("label: 'Reforma tributária'") && resumo.includes('<CuradoriaNoticias id={newsTab} />'))
   assert.match(readFileSync(new URL('../../.github/workflows/pages.yml', import.meta.url), 'utf8'), /node scripts\/fetch-reforma\.mjs/)
 })
 

@@ -11,6 +11,17 @@ export function exploreUrl(terms, period = 'today 3-m') {
   return `https://trends.google.com/trends/explore?${new URLSearchParams({ geo: 'BR', date: period, q: terms.join(','), hl: 'pt-BR' })}`
 }
 
+export const TREND_PERIODS = ['today 3-m', 'today 12-m']
+// URL do iframe exibido pelo recurso oficial Incorporar > Manter os dados atualizados.
+// Conferido na interface do Google Trends em 07/11/2026. Não é API de extração.
+export function trendEmbedUrl(groupId, period = 'today 3-m') {
+  const group = TREND_GROUPS.find(item => item.id === groupId)
+  if (!group || !TREND_PERIODS.includes(period)) throw new Error('Recorte do Google Trends inválido')
+  const request = { comparisonItem: group.terms.map(keyword => ({ keyword, geo: 'BR', time: period })), category: 0, property: '' }
+  const query = new URL(exploreUrl(group.terms, period)).search.slice(1)
+  return `https://trends.google.com/trends/embed/explore/TIMESERIES?${new URLSearchParams({ req: JSON.stringify(request), tz: '180', eq: query, hl: 'pt-BR' })}`
+}
+
 export const TREND_MAX_AGE_MS = 25 * 3600000
 export const trendStamp = value => typeof value === 'string' ? Date.parse(value) : typeof value === 'number' ? value : NaN
 export function validTrendData(data) {

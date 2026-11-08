@@ -2,6 +2,10 @@ import { SECTOR_NEWS_SOURCES, normalizeSectorNews, validateSectorNewsItem } from
 import { extractGovArticleLinks, parseGovArticle, robotsAllows, makeSectorNewsFile, MAX_ARTICLES_PER_SOURCE, MAX_RESPONSE_BYTES } from '../sector-news-lib.mjs'
 import { validateState, validateTransition, digest, iso, STATE_REF, FEED_REF } from './state.mjs'
 import { isFixtureTransport, isFixturePublisher } from './fixtures.mjs'
+import { isLiveTransport } from './live-transport.mjs'
+import { isGitHubPublisher } from './git-store.mjs'
+import { parserMaintenanceEnabled } from './maintenance.mjs'
+import { ploneDiscoveryUrl, isPloneDiscoveryUrl, parsePloneDiscovery } from './plone-discovery.mjs'
 
 export const DEFAULT_MODE = 'off'
 const MAX_RUN_MS = 10 * 60_000
@@ -28,6 +32,18 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
   sourceIds = [], runId, clock = Date.now, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
   if (mode === 'off') return { status: 'disabled', networkEnabled: false }
   if (mode !== 'simulation' || !isFixtureTransport(transport) || !isFixturePublisher(publisher)) throw new Error('live_collection_disabled: only closed offline fixtures are accepted')
+  return runCollector({ store, transport, publisher, previousFeed, sourceIds, runId, clock, sleep, environment: 'simulation-only' })
+}
+
+export async function runSectorNewsProduction({ store, transport, publisher, previousFeed, sourceIds = [], runId, verifiedSince, clock = Date.now } = {}) {
+  // Applies to direct calls as well as --collect and scheduled workflows.
+  if (parserMaintenanceEnabled()) return { status: 'maintenance', networkEnabled: false, collectionAttempted: false }
+  if (store?.kind !== 'git-append-only-journal' || !isLiveTransport(transport) || !isGitHubPublisher(publisher)) throw new Error('production_adapters_required')
+  if (!Number.isFinite(Date.parse(verifiedSince)) || Date.parse(verifiedSince) > clock()) throw new Error('production_verification_boundary_required')
+  return runCollector({ store, transport, publisher, previousFeed, sourceIds, runId, verifiedSince, clock, sleep: ms => new Promise(resolve => setTimeout(resolve, ms)), environment: 'production' })
+}
+
+async function runCollector({ store, transport, publisher, previousFeed, sourceIds, runId, verifiedSince, clock, sleep, environment }) {
   if (!store || store.ref !== STATE_REF || typeof store.read !== 'function' || typeof store.compareAndSwap !== 'function') throw new Error('durable_state_store_required')
   if (!id(runId) || !Array.isArray(sourceIds) || !sourceIds.length || new Set(sourceIds).size !== sourceIds.length || sourceIds.some(key => !SECTOR_NEWS_SOURCES.some(s => s.id === key))) throw new Error('explicit_valid_run_and_sources_required')
   let monotonicNow = clock()
@@ -36,7 +52,8 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
   let saved = await store.read()
   const checkRead = snapshot => {
     if (!snapshot || snapshot.confirmed !== true || snapshot.ref !== STATE_REF || typeof snapshot.token !== 'string' || !snapshot.token) throw new Error('state_read_not_confirmed')
-    validateState(snapshot.state)
+    validateState(snapshot.state, { allowProduction: environment === 'production' })
+    if (snapshot.state.environment !== environment) throw new Error('state_environment_mismatch')
     if (Date.parse(snapshot.state.updatedAt) > time()) throw new Error('state_clock_in_future')
     return snapshot
   }
@@ -51,7 +68,7 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
     try {
       const next = structuredClone(saved.state)
       next.revision++; mutate(next); next.updatedAt = iso(time())
-      validateTransition(saved.state, next)
+      validateTransition(saved.state, next, { allowProduction: environment === 'production' })
       const result = await store.compareAndSwap(saved.token, next)
       checkRead(result)
       if (result.token === saved.token || digest(result.state) !== digest(next)) throw new Error('state_commit_not_confirmed')
@@ -69,7 +86,8 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
   const request = async (source, kind, url, robots = null) => {
     if (time() - start >= MAX_RUN_MS || requestNumber >= MAX_REQUESTS) throw new Error('run_budget_exhausted')
     const parsed = new URL(url)
-    const allowed = kind === 'robots' ? url === source.robotsUrl : kind === 'listing' ? url === source.url : url.startsWith(source.articlePrefix) && !parsed.search
+    const discovery = kind === 'listing' && isPloneDiscoveryUrl(source.id, url)
+    const allowed = kind === 'robots' ? url === source.robotsUrl : kind === 'listing' ? url === source.url || discovery : url.startsWith(source.articlePrefix) && !parsed.search
     if (/%(?:2f|5c|2e)/i.test(url) || /\/(?:RSS|@@|search|login)(?:[/?]|$)/i.test(url) || parsed.protocol !== 'https:' || parsed.hostname !== 'www.gov.br' || parsed.username || parsed.password || parsed.port || parsed.hash || !allowed) throw new Error('url_outside_approved_source')
     if (robots !== null && !robotsAllows(robots, url)) throw new Error('robots_disallow')
     if (lastRequestAt !== null && time() - lastRequestAt < MIN_INTERVAL_MS) await sleep(MIN_INTERVAL_MS - (time() - lastRequestAt))
@@ -112,7 +130,16 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
       }
       const listing = await request(source, 'listing', source.url, robots)
       if (!listing.includes('creativecommons.org/licenses/by-nd/3.0')) throw new Error('license_not_confirmed')
-      const links = extractGovArticleLinks(listing, source).slice(0, MAX_ARTICLES_PER_SOURCE)
+      // Gradual operation reads at most five articles per source per round.
+      let links
+      if (['aneel', 'susep'].includes(source.id)) {
+        // The index's licence is checked first. Discovery is a second, bounded,
+        // journalled request subject to the same robots, budgets and failure holds.
+        await finishRequest(source)
+        const discovery = await request(source, 'listing', ploneDiscoveryUrl(source.id), robots)
+        links = parsePloneDiscovery(discovery, source.id)
+      } else links = extractGovArticleLinks(listing, source)
+      links = links.slice(0, environment === 'production' ? 5 : MAX_ARTICLES_PER_SOURCE)
       if (!links.length) throw new Error('listing_unparsed_or_no_candidates')
       await finishRequest(source)
       for (const { link } of links) {
@@ -151,12 +178,12 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
   const projected = Object.fromEntries(Object.entries(saved.state.sources).map(([key, entry]) => {
     const shared = sharedBlock(SECTOR_NEWS_SOURCES.find(source => source.id === key))
     return [key, { checkedAt: entry.checkedAt, lastSuccessAt: entry.lastSuccessAt,
-      status: entry.block || shared ? 'failed' : entry.lastSuccessAt ? 'partial' : 'unavailable',
+      status: entry.block || shared ? 'failed' : entry.lastSuccessAt && (environment !== 'production' || Date.parse(entry.lastSuccessAt) >= Date.parse(verifiedSince)) ? 'partial' : 'unavailable',
       accessSuspended: Boolean(entry.block || shared), reason: shared?.code || entry.reason }]
   }))
   const generatedAt = iso(time())
   const feed = makeSectorNewsFile({ previous: previousFeed, items, sourceStates: projected, now: time() })
-  feed.collectionPolicy = { ...feed.collectionPolicy, mode: 'offline-simulation-only', automaticScheduleEnabled: false, persistentStateStatus: 'simulation-only; not production approved' }
+  feed.collectionPolicy = { ...feed.collectionPolicy, mode: environment === 'production' ? 'institutional-headlines-live' : 'offline-simulation-only', automaticScheduleEnabled: environment === 'production', persistentStateStatus: environment === 'production' ? 'github-protected-history' : 'simulation-only; not production approved' }
   // Feed contains only a public projection; it is NEVER the authority for access.
   feed.delivery = { generatedAt, publishedAt: null, stateRevision: saved.state.revision, stateRef: STATE_REF, feedRef: FEED_REF }
   const payloadDigest = digest(feed)
@@ -166,5 +193,5 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
   if (!receipt || receipt.confirmed !== true || receipt.digest !== payloadDigest || !id(receipt.receipt)) throw new Error('publication_not_confirmed')
   const publishedAt = iso(time())
   await commit(state => { state.feed = { ...state.feed, status: 'published', publishedAt, receipt: receipt.receipt, lastPublication: { publishedAt, digest: payloadDigest, receipt: receipt.receipt } }; state.run = null })
-  return { status: failureCodes.length ? 'partial' : 'simulated', networkEnabled: false, state: saved.state, token: saved.token, feed, publication: { publishedAt, receipt: receipt.receipt }, skipped, failures: failureCodes }
+  return { status: failureCodes.length ? 'partial' : environment === 'production' ? 'collected' : 'simulated', networkEnabled: environment === 'production', state: saved.state, token: saved.token, feed, publication: { publishedAt, receipt: receipt.receipt }, skipped, failures: failureCodes }
 }

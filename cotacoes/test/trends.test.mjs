@@ -5,7 +5,7 @@ import { collectTrends, parseTrends, TRENDS_RSS } from '../scripts/trends-lib.mj
 import { preserveForTrends } from '../scripts/preserve-for-trends.mjs'
 import { RETAIN_FILES, createWeeklySnapshot } from '../scripts/weekly-data.mjs'
 import { weeklyFixture } from './helpers/weekly-package.mjs'
-import { groupsForTrend, exploreUrl, validTrendData, trendsOld, TREND_MAX_AGE_MS } from '../src/trends.js'
+import { groupsForTrend, exploreUrl, trendEmbedUrl, TREND_GROUPS, TREND_PERIODS, validTrendData, trendsOld, TREND_MAX_AGE_MS } from '../src/trends.js'
 import { TREND_SNAPSHOT, SNAPSHOT_START, SNAPSHOT_AT } from '../src/trendsSnapshot.js'
 
 const rss = '<rss><channel><item><title><![CDATA[Dólar &amp; Selic]]></title><pubDate>Tue, 03 Nov 2026 12:00:00 GMT</pubDate><ht:approx_traffic>20K+</ht:approx_traffic></item></channel></rss>'
@@ -89,8 +89,27 @@ test('subaba Trends mantém Moedas e Veículos pesados e documenta os limites do
   for (const id of ['moedas', 'reforma', 'eleicoes', 'trends', 'veiculos-pesados']) assert.ok(resumo.includes(`id: '${id}'`))
   const ui = await readFile(new URL('../src/GoogleTrends.jsx', import.meta.url), 'utf8')
   assert.match(ui, /Não atualiza automaticamente/)
-  assert.match(ui, /sem snapshot local/)
+  assert.match(ui, /não é coletado nem armazenado pelo painel/)
+  assert.match(ui, /O painel não consegue confirmar o conteúdo carregado pelo Google/)
   assert.match(ui, /Hipótese para a conversa/)
+})
+test('incorporação oficial cobre cinco grupos, três termos e dois períodos sem API privada', () => {
+  assert.equal(TREND_GROUPS.length, 5)
+  for (const group of TREND_GROUPS) for (const period of TREND_PERIODS) {
+    const url = new URL(trendEmbedUrl(group.id, period))
+    assert.equal(url.origin, 'https://trends.google.com')
+    assert.equal(url.pathname, '/trends/embed/explore/TIMESERIES')
+    assert.equal(url.searchParams.get('tz'), '180')
+    assert.equal(url.searchParams.get('hl'), 'pt-BR')
+    const req = JSON.parse(url.searchParams.get('req'))
+    assert.deepEqual(req, { comparisonItem: group.terms.map(keyword => ({ keyword, geo: 'BR', time: period })), category: 0, property: '' })
+    const explore = new URLSearchParams(url.searchParams.get('eq'))
+    assert.equal(explore.get('q'), group.terms.join(','))
+    assert.equal(explore.get('date'), period)
+    assert.equal(explore.get('geo'), 'BR')
+  }
+  assert.throws(() => trendEmbedUrl('desconhecido'), /inválido/)
+  assert.throws(() => trendEmbedUrl('credito', 'today 5-y'), /inválido/)
 })
 test('cron exclusivo de Trends não consulta outras fontes e confere a retenção depois do build', async () => {
   const workflow = await readFile(new URL('../../.github/workflows/pages.yml', import.meta.url), 'utf8')

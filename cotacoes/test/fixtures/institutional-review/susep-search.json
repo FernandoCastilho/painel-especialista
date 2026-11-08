@@ -1,0 +1,36 @@
+{
+  "@id": "https://www.gov.br/susep/pt-br/central-de-conteudos/noticias/@querystring-search?query=%7B%22b_size%22%3A5%2C%22limit%22%3A5%2C%22query%22%3A%5B%7B%22i%22%3A%22portal_type%22%2C%22o%22%3A%22plone.app.querystring.operation.selection.any%22%2C%22v%22%3A%5B%22News+Item%22%5D%7D%2C%7B%22i%22%3A%22path%22%2C%22o%22%3A%22plone.app.querystring.operation.string.relativePath%22%2C%22v%22%3A%22%22%7D%5D%2C%22sort_on%22%3A%22effective%22%2C%22sort_order%22%3A%22descending%22%2C%22sort_order_boolean%22%3Atrue%2C%22b_start%22%3A0%7D",
+  "items_total": 5,
+  "items": [
+    {
+      "@id": "https://www.gov.br/susep/pt-br/central-de-conteudos/noticias/2026/novembro/susep-divulga-estrategia-nacional-de-educacao-securitaria-e-previdenciaria",
+      "@type": "News Item",
+      "review_state": "published",
+      "title": "Susep divulga Estratégia Nacional de Educação Securitária e Previdenciária"
+    },
+    {
+      "@id": "https://www.gov.br/susep/pt-br/central-de-conteudos/noticias/2026/novembro/confira-como-foi-o-1o-encontro-de-educacao-financeira-e-securitaria-do-norte-e-nordeste",
+      "@type": "News Item",
+      "review_state": "published",
+      "title": "Confira como foi o 1º Encontro de Educação Financeira e Securitária do Norte e Nordeste"
+    },
+    {
+      "@id": "https://www.gov.br/susep/pt-br/central-de-conteudos/noticias/2026/novembro/setor-supervisionado-pela-susep-registra-r-315-21-bilhoes-em-receitas-ate-setembro",
+      "@type": "News Item",
+      "review_state": "published",
+      "title": "Setor supervisionado pela Susep registra R$ 315,21 bilhões em receitas até setembro"
+    },
+    {
+      "@id": "https://www.gov.br/susep/pt-br/central-de-conteudos/noticias/2026/novembro/susep-participa-do-cqcs-inovacao-2026-em-sao-paulo",
+      "@type": "News Item",
+      "review_state": "published",
+      "title": "Susep participa do CQCS Inovação 2026, em São Paulo"
+    },
+    {
+      "@id": "https://www.gov.br/susep/pt-br/central-de-conteudos/noticias/2026/novembro/susep-apresenta-boas-praticas-de-auditoria-interna-e-governanca-em-forum-nacional",
+      "@type": "News Item",
+      "review_state": "published",
+      "title": "Susep apresenta boas práticas de Auditoria Interna e Governança em fórum nacional"
+    }
+  ]
+}

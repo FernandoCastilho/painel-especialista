@@ -1,4 +1,17 @@
-# Protótipo de coleta setorial segura, desligado
+# Coleta institucional — operação real e protótipo isolado
+
+## Operação implementada em 08/11/2026
+
+O protótipo descrito abaixo continua isolado e não foi transformado em um atalho de rede. A operação real usa `sector-news-live.mjs`, transporte fechado e o journal Git de `sector-news-safe/git-store.mjs`. O antigo CLI `fetch-sector-news.mjs` continua recusando `--live`.
+
+- Nove fontes foram verificadas no Actions: MAPA, ANTT, MDIC, ANP, ANM, ANA, CVM, ANS e IPEN. A rodada `42486036968` confirmou 24 notícias elegíveis em 120 horas: 21 lidas na rodada e três anteriores da ANTT preservadas integralmente. IPEN teve leitura confirmada, sem item elegível na seleção. As outras nove fontes mantêm os bloqueios ou a revisão pendente.
+- Estado e feed ficam nas referências próprias `sector-news-state` e `sector-news-feed`; suas raízes estão fixadas em `production-config.json`. A regra GitHub `26798792` impede exclusão e atualização sem avanço do histórico, sem exceções de atores. O token temporário não recebe administração. Como a API omite a lista de exceções para esse token, a versão `updated_at` verificada por administração também está fixada; qualquer mudança bloqueia até revisão.
+- `--collect` grava e relê a intenção antes de cada acesso, respeita as suspensões e publica somente com confirmação. Lê no máximo cinco artigos por fonte por rodada, sem seguir redirecionamentos ou repetir requisições. O histórico é verificado localmente após sincronização Git, evitando uma chamada REST por registro histórico.
+- `--snapshot` não consulta os sites: confere o último recibo e o digest do payload original, acrescenta a confirmação pública e substitui o arquivo local atomicamente. O digest identifica o payload original do journal, anterior aos campos públicos de confirmação. Falha não renova a data de matéria nem substitui um arquivo por um candidato não confirmado.
+- Pages aprova o código antes da coleta; somente o job institucional recebe escrita. A frequência existente foi mantida. Os pacotes exclusivos de Trends/Focus preservam o snapshot. Não foi criada agenda adicional nem serviço pago.
+- Uma operação interrompida ou publicação incerta permanece bloqueada para revisão. Não existe desbloqueio nem recuperação automáticos. O procedimento deve conferir a execução, a referência e o recibo antes de autorizar qualquer retomada; não apagar o journal ou recriar as raízes.
+
+A confirmação de implantação do painel deve ser conferida no fluxo Pages; a evidência acima comprova a coleta e o feed separado. O material abaixo registra o protótipo anterior e seus controles, preservados para auditoria.
 
 Revisão: 05/11/2026. Base: candidato setorial `2e5e8b3`.
 
@@ -84,3 +97,10 @@ O lock/CAS locais foram testados em filesystem local. Não foram certificados co
 - Auditoria final e validação ponta a ponta do exato candidato antes de publicar ou ativar.
 
 A aprovação dos testes desta entrega valida o protótipo **desligado**, não autoriza acesso a fontes ou publicação real.
+
+
+## Revisão operacional de 08/11/2026
+
+O painel agora informa expressamente que a atualização institucional automática está desativada. A revalidação local não é uma nova consulta: não renova `checkedAt`, `lastSuccessAt` nem a data de publicação. A elegibilidade no cadastro de fontes também não significa operação em produção.
+
+A ativação continua bloqueada pelos requisitos desta nota: armazenamento remoto durável com controle de versão e proteção contra retorno a estado antigo, transporte/publicador reais homologados e revisão explícita dos bloqueios históricos de acesso. Não houve novas tentativas a fontes suspensas nem alteração de suas permissões. Os demais coletores de notícias são independentes desta seleção institucional.

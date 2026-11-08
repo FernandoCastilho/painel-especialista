@@ -587,6 +587,12 @@ main.app .idx-table .idx-rel small { display: block; color: var(--muted, #8a8a8a
 /* Notícias do Mercado: bandeiras antes do título na linha do tempo */
 .reforma-list .news-flags { display: inline-flex; gap: 3px; margin-right: 6px; vertical-align: -1px; }
 
+/* Curadorias: as abas continuam visíveis sem estourar o primeiro quadro. */
+.terminal-news .desk-tabs { flex-wrap: wrap; }
+.terminal-news .desk-tabs button { min-height: 44px; }
+.curadoria-noticias > h3 { margin: 0 0 8px; }
+.curadoria-noticias > .muted { margin: 0 0 10px; line-height: 1.5; }
+
 /* Miniatures have their own row: prices and daily changes never squeeze the plot. */
 .kpi { min-width: 0; }
 .kpi-change { grid-column: 1 / -1; min-width: 0; }

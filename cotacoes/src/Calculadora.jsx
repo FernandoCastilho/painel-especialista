@@ -6,14 +6,14 @@ import { SYSTEMS, compareSystems, parseDecimal } from './emprestimo.js'
 import { cgToday, cgAddDays } from './contaGarantida.js'
 import { resolveCreditIof } from './iofRules.js'
 import FinimpComparacao, { FinimpIcon } from './FinimpComparacao.jsx'
-import FinameMateriais, { FinameIcon } from './FinameMateriais.jsx'
+import { FinameIcon } from './FinameMateriais.jsx'
+import BndesWorkspace from './BndesWorkspace.jsx'
 import ContaGarantida, { ContaGarantidaIcon } from './ContaGarantida.jsx'
 import AnaliseDesconto, { DescontoIcon } from './AnaliseDesconto.jsx'
-import BndesTlpExigivel, { TlpIcon } from './BndesTlpExigivel.jsx'
-import BndesCreditoTfb, { TfbIcon } from './BndesCreditoTfb.jsx'
-import BndesLcdCap, { LcdIcon } from './BndesLcdCap.jsx'
 import Help from './CalculatorHelp.jsx'
 import './CalculatorLayout.css'
+import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
+import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -31,14 +31,13 @@ function GiroIcon() {
 }
 
 const CALCS = [
-  { id: 'bndes-tlp-exigivel', title: 'BNDES TLP exigível', sub: 'IPCA e juros exigíveis, sem capitalização do principal', Icon: TlpIcon },
-  { id: 'bndes-credito-tfb', title: 'BNDES Crédito · TFB', sub: 'Conferência do exemplo histórico de 34 parcelas', Icon: TfbIcon },
+  { id: 'comparador-credito', title: 'Comparador de Crédito', sub: 'Duas propostas, custos, fluxo e garantias', Icon: CreditIcon },
+  { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
+  { id: 'finame-materiais', title: 'BNDES', sub: 'Simular, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
-  { id: 'bndes-selic-lcd', title: 'BNDES Selic + LCD', sub: 'Selic, LCD e fluxo projetado', Icon: LcdIcon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
-  { id: 'finame-materiais', title: 'BNDES Finame Materiais', sub: 'Taxas, carência e parcelas', Icon: FinameIcon },
 ]
 
 function CapitalDeGiro({ onBack }) {
@@ -167,14 +166,16 @@ function CapitalDeGiro({ onBack }) {
 
 // Aba Calculadoras: lista de calculadoras (ícones) e a calculadora aberta, com endereço próprio (#calculadora/giro).
 export default function Calculadora({ view, onView }) {
-  if (view === 'bndes-tlp-exigivel') return <BndesTlpExigivel onBack={() => onView('')} />
-  if (view === 'bndes-credito-tfb') return <BndesCreditoTfb onBack={() => onView('')} />
-  if (view === 'bndes-selic-lcd') return <BndesLcdCap onBack={() => onView('')} />
+  if (view === 'cbs-caixa') return <CbsCaixa onBack={() => onView('')} />
+  if (view === 'bndes-tlp-exigivel') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
+  if (view === 'bndes-credito-tfb') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
+  if (view === 'bndes-selic-lcd') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'finimp') return <FinimpComparacao onBack={() => onView('')} />
   if (view === 'conta-garantida') return <ContaGarantida onBack={() => onView('')} />
+  if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
-  if (view === 'finame-materiais') return <FinameMateriais onBack={() => onView('')} onFundingView={onView} />
+  if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   return (
     <section className="cx" aria-labelledby="calc-title">
       <h2 id="calc-title" className="cx-title cx-heading"><span>Calculadoras</span></h2>

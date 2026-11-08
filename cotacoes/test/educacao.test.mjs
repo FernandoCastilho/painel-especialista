@@ -73,7 +73,7 @@ test('novos temas têm fontes oficiais, data de revisão e exemplos que não se 
 })
 
 test('os conceitos pedidos existem, com ids únicos', () => {
-  assert.deepEqual(CONCEITOS.map((c) => c.id), ['juros-forcados', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'liquidacao-antecipada', 'cds', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'lei-de-maquila', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'reforma-tributaria', 'split-payment', 'dividendos'])
+  assert.deepEqual(CONCEITOS.map((c) => c.id), ['juros-forcados', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'liquidacao-antecipada', 'cds', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'lei-de-maquila', 'imposto-seletivo', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'substituicao-tributaria', 'reforma-tributaria', 'split-payment', 'dividendos'])
   assert.equal(new Set(CONCEITOS.map((c) => c.id)).size, CONCEITOS.length)
 })
 
@@ -85,7 +85,8 @@ test('cada conceito traz frase, explicação simples, lacunas, versão precisa, 
     assert.ok(c.lacunas.length >= 2, c.id)
     assert.ok(c.preciso.texto.length > 40 && c.preciso.formula.length > 5, c.id)
     assert.ok(c.exemplo.passos.length >= 2 && c.exemplo.resultado.length > 10, c.id)
-    assert.ok(c.noApp.texto.length > 10 && ['juros', 'cenarios'].includes(c.noApp.tab), c.id)
+    assert.ok(c.noApp.texto.length > 10 && ['juros', 'cenarios', 'calculadora', 'aprender'].includes(c.noApp.tab), c.id)
+    if (c.noApp.tab === 'calculadora') assert.equal(c.noApp.view, 'cbs-caixa', c.id)
     assert.ok(c.teste.pergunta.endsWith('?') && c.teste.resposta.length > 20, c.id)
   }
   assert.equal(CONEXAO.itens.length, CONCEITOS.length)
@@ -146,7 +147,7 @@ test('o app não afirma ter dados que não tem (Euribor e CDS)', () => {
 })
 
 test('aba Aprender: comandos levam ao conceito certo e há 11 abas no terminal', () => {
-  assert.deepEqual(DESK_TABS.map((t) => t.id), ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'calculadora', 'feriados', 'aprender', 'apresentar', 'config'])
+  assert.deepEqual(DESK_TABS.map((t) => t.id), ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'calculadora', 'feriados', 'aprender', 'apresentar', 'config'])
   assert.deepEqual(parseCommand('cds'), { kind: 'tab', id: 'aprender', sub: 'cds' })
   assert.deepEqual(parseCommand('Cupom Cambial'), { kind: 'tab', id: 'aprender', sub: 'cupom-cambial' })
   assert.deepEqual(parseCommand('euribor'), { kind: 'tab', id: 'aprender', sub: 'euribor' })

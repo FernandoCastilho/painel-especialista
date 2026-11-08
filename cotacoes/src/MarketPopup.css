@@ -1,0 +1,45 @@
+/* Identidade fixa do pop-up aprovada, independente do tema do painel. */
+dialog.market-popup{color-scheme:light;--text:#080d35;--mut:#4d5874;--up:#087223;--down:#c31830;background:#fff;color:#080d35;width:min(1120px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 40px);padding:0;border:1px solid #c9cfdd;border-radius:22px;box-shadow:0 24px 90px #0007;font-family:Inter,Arial,sans-serif;overflow:auto}
+.market-popup::backdrop{background:rgba(5,12,37,.72)}
+.market-popup *{box-sizing:border-box}
+.market-popup h2,.market-popup h3,.market-popup p{margin:0;color:inherit}
+.market-popup .mp-ribbon{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:66px;padding:10px 22px 10px 32px;background:linear-gradient(145deg,#02092f 0%,#00113f 72%,#ff6900 72%,#ff7900 79%,#072eae 79%,#06134a 100%);color:#fff;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.market-popup .mp-ribbon button{flex-shrink:0;width:46px;height:46px;min-width:46px;min-height:46px;border:1px solid #a2b2d4;border-radius:10px;background:#04113f;color:#fff;font-size:34px;font-weight:400;line-height:1;cursor:pointer;padding:0}
+.market-popup button:focus-visible{outline:3px solid #ff9700;outline-offset:3px}
+.market-popup .mp-content{padding:26px 28px 20px}
+.market-popup .mp-title-row{display:flex;align-items:center;gap:20px;margin-bottom:26px}
+.market-popup h2{font-size:clamp(26px,3.4vw,43px);font-weight:800;line-height:1.15;letter-spacing:-.04em}
+.market-popup .mp-title-row>div>p{font-size:17px;line-height:1.4;margin-top:4px;color:#34405f}
+.market-popup .mp-chart-icon{height:44px;display:flex;gap:5px;align-items:flex-end;flex-shrink:0}
+.market-popup .mp-chart-icon i{width:11px;border-radius:3px;background:#ff6a00;height:16px}.market-popup .mp-chart-icon i:nth-child(2){height:29px}.market-popup .mp-chart-icon i:nth-child(3){height:43px}
+.market-popup .mp-edition{margin-left:auto;font-size:13px;white-space:nowrap;color:#3a4768;line-height:1.7}
+.market-popup .mp-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px}
+.market-popup .mp-card{position:relative;grid-column:span 2;border:1px solid #cbd1df;border-radius:15px;overflow:hidden;background:linear-gradient(#fff,#fdfdff);padding:16px 18px 12px;box-shadow:0 1px 1px #09154b0a;min-width:0}
+.market-popup .mp-card::before{content:'';position:absolute;left:0;top:0;height:58px;width:7px;background:#ff6900}
+.market-popup .mp-di::before,.market-popup .mp-brent::before{background:#174cff}
+.market-popup .mp-brent,.market-popup .mp-cnh{grid-column:span 3}
+.market-popup .mp-card-head{display:flex;align-items:center;gap:10px;min-height:34px}
+.market-popup h3{font-weight:800;font-size:16px;letter-spacing:-.02em}
+.market-popup .mp-symbol{display:grid;place-items:center;width:37px;height:37px;border-radius:10px;background:#edf0fa;font-size:26px;flex-shrink:0}
+.market-popup .mp-data-stamp{font-size:11px;color:#54617c;line-height:1.5;margin:9px 0 12px;min-height:32px}
+.market-popup .mp-values{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.market-popup .mp-values strong{font-size:clamp(26px,3vw,35px);font-weight:800;letter-spacing:-.04em;white-space:nowrap}
+.market-popup .mp-change{display:inline-block;white-space:nowrap;border-radius:24px;padding:5px 9px;font-size:14px;font-weight:700;line-height:1.2;background:#eef0f5;color:#4e5870}
+.market-popup .mp-change.up{color:#087223;background:#e1f5e3}.market-popup .mp-change.down{color:#c31830;background:#ffe6ea}
+.market-popup .mp-rate-change.up{color:#c31830;background:#ffe6ea}.market-popup .mp-rate-change.down{color:#087223;background:#e1f5e3}
+.market-popup .mp-detail,.market-popup .mp-hour{font-size:12px;line-height:1.5;margin-top:7px;color:#34405f}
+.market-popup .mp-hour{font-size:13px;color:#111c43}
+.market-popup .mp-card svg{display:block;width:100%;height:64px;margin-top:7px}
+.market-popup .mp-no-chart{height:64px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#69758f}
+.market-popup .mp-di-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:8px 0;flex-wrap:wrap}
+.market-popup .mp-di-row>span:first-child{font-size:12px;font-weight:700}.market-popup .mp-di-row strong{font-size:23px;font-weight:800;letter-spacing:-.03em}.market-popup .mp-di-row .mp-change{font-size:12px}
+.market-popup .mp-summary{margin-top:20px;display:flex;align-items:center;gap:24px;padding:18px 20px;border:1px solid #e0e3ed;border-radius:15px}
+.market-popup .mp-summary h3{font-size:23px;flex-shrink:0;padding-right:24px;border-right:1px solid #cad1e1;display:flex;align-items:center;gap:15px}
+.market-popup .mp-summary h3 span{font-size:31px;color:#ff6900}.market-popup .mp-summary p{font-size:14px;line-height:1.55;color:#172341}
+.market-popup .mp-footnote{font-size:11px;line-height:1.5;margin-top:14px;color:#5d6780}
+@media(max-width:760px){dialog.market-popup{width:calc(100vw - 20px);max-height:calc(100dvh - 20px);border-radius:16px}.market-popup .mp-content{padding:20px 16px}.market-popup .mp-ribbon{padding:9px 14px;min-height:62px;font-size:10px;letter-spacing:.03em}.market-popup .mp-title-row{gap:12px;flex-wrap:wrap;margin-bottom:18px}.market-popup .mp-title-row>div>p{font-size:13px}.market-popup .mp-edition{width:100%;margin-left:0;font-size:12px}.market-popup .mp-edition br{display:none}.market-popup .mp-chart-icon{display:none}.market-popup .mp-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.market-popup .mp-card{grid-column:span 1;padding:13px 12px}.market-popup .mp-cnh{grid-column:span 2}.market-popup h3{font-size:13px}.market-popup .mp-values strong{font-size:25px}.market-popup .mp-summary{align-items:flex-start;flex-direction:column;gap:12px;padding:16px}.market-popup .mp-summary h3{border:0;padding:0;font-size:21px}}
+@media(max-width:460px){.market-popup .mp-grid{display:flex;flex-direction:column}.market-popup .mp-card{width:100%}.market-popup .mp-data-stamp{min-height:0}.market-popup .mp-values strong{font-size:31px}.market-popup h3{font-size:16px}.market-popup .mp-summary p{font-size:13px}}
+
+@media(max-width:760px){.market-popup .mp-edition br{display:initial}.market-popup .mp-edition br::after{content:" · "}}
+
+dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}

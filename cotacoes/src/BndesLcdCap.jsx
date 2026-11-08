@@ -78,7 +78,7 @@ export default function BndesLcdCap({ onBack }) {
     </article>
     <article className="desk-panel cx-panel" aria-live="polite">
       <header><h3 className="cx-heading">Projeção do fluxo<Help title="Memória de cálculo e limites">{methodology}</Help></h3><small>Projeção · não é CET</small></header>
-      {!result.ok ? <p className="status cx-pad" role="status">Resultado indisponível: {scheduleText && !schedule.ok ? schedule.error.message : result.error.message} Dados ausentes não são tratados como zero.</p> : <>
+      {!result.ok ? <p className="status cx-pad" role="status">{!principalText.trim() ? 'Preencha o valor liberado e as condições da operação para projetar o fluxo.' : <>Resultado indisponível: {scheduleText && !schedule.ok ? schedule.error.message : result.error.message} Dados ausentes não são tratados como zero.</>}</p> : <>
         <div className="fm-grade">
           <div className="fm-kpi"><span className="cx-field-label">Remunerações + LD1<Help title="Remunerações + LD1">Componente exigível, convertido pela base de 252 dias úteis.</Help></span><b>{number(result.fixedAnnualPct)}% a.a.</b></div>
           <div className="fm-kpi"><span className="cx-field-label">Selic capitalizada<Help title="Selic capitalizada">Valor incorporado ao saldo projetado.</Help></span><b>{brl(result.totals.capitalizedSelicCents)}</b></div>

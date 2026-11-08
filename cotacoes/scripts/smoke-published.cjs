@@ -10,6 +10,8 @@ const links = {
   'Máquinas e Equipamentos': 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-finame-bk-aquisicao-comercializacao',
 }
 ;(async () => {
+  const { CONCEITOS, porTopico } = await import('../src/educacao.js')
+  const topicCount = porTopico(CONCEITOS).length
   fs.mkdirSync(out, { recursive: true })
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
   const report = []
@@ -32,6 +34,29 @@ const links = {
         assert.ok(geometry.document <= geometry.width + 1, label + ': ' + JSON.stringify(geometry))
       }
 
+      await visit('calculadora/cbs-caixa', '.cbs-annual-chart')
+      const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      assert.equal(await page.locator('.cbs-annual-chart').isVisible(), true)
+      assert.deepEqual(await page.locator('.cbs-annual-chart text').allTextContents(), months)
+      assert.equal(await page.locator('.cbs-chart-dot').count(), 12)
+      const initialReading = await page.locator('.cbs-month-reading').innerText()
+      await page.locator('.cbs-month-editor > summary').click()
+      await page.locator('#cbs-month-1').fill('2.000.000,00')
+      await page.getByRole('button', { name: 'Fev', exact: true }).click()
+      assert.match(await page.locator('.cbs-month-reading').innerText(), /2\.000\.000,00/)
+      await page.getByRole('button', { name: 'Jan', exact: true }).click()
+      assert.equal(await page.locator('.cbs-month-reading').innerText(), initialReading)
+      await page.locator('#cbs-month-1').fill('0')
+      assert.equal(await page.locator('.cbs-chart-dot').count(), 11)
+      await page.getByRole('button', { name: 'Fev', exact: true }).click()
+      assert.match(await page.locator('.cbs-month-reading').innerText(), /Faturamento inv/)
+      await page.locator('.cbs-month-editor button').click()
+      assert.equal(await page.locator('.cbs-chart-dot').count(), 12)
+      await page.locator('.cbs-month-editor > summary').click()
+      await contained('CBS Jan-Dez')
+      await page.screenshot({ path: path.join(out, width + '-cbs-jan-dez.png'), fullPage: true })
+      report.push({ width, feature: 'CBS Jan-Dez', passed: true, checks: ['12 meses abertos', 'editar fevereiro preserva janeiro', 'mes invalido deixa lacuna', 'restaurar 12 pontos', 'sem overflow'] })
+
       await visit('calculadora/finimp', '#fi-currency')
       assert.deepEqual(await page.locator('#fi-currency option').allTextContents(), ['USD', 'EUR', 'JPY', 'CNH', 'BRL'])
       for (const code of ['JPY', 'CNH']) {
@@ -47,15 +72,26 @@ const links = {
       assert.equal(await page.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
       await contained('Conta Garantida')
 
-      await visit('aprender', '.learn-group')
-      assert.equal(await page.locator('.learn-group').count(), 7)
+      await visit('aprender', '.knowledge-map')
+      await page.locator('.km-node').first().waitFor()
+      assert.equal(await page.getByRole('button', { name: 'Mapa do conhecimento', exact: true }).getAttribute('aria-pressed'), 'true')
+      assert.equal(await page.getByRole('navigation', { name: 'Explorar Aprender', exact: true }).getByRole('button', { name: 'Conceitos', exact: true }).getAttribute('aria-pressed'), 'false')
+      assert.equal(await page.locator('.learn-list').count(), 0)
+      assert.equal(await page.getByRole('group', { name: 'Mostrar no mapa', exact: true }).getByRole('button').count(), 3)
+      assert.equal(await page.getByRole('button', { name: 'Voltar à matriz', exact: true }).count(), 1)
+      await contained('Mapa do conhecimento')
+      await page.screenshot({ path: path.join(out, width + '-mapa-conhecimento.png') })
+
+      await visit('aprender/conceitos', '.learn-group')
+      assert.equal(await page.locator('.learn-group').count(), topicCount)
       assert.equal(await page.locator('.learn-group[open]').count(), 0)
       await page.getByRole('button', { name: 'Expandir todas', exact: true }).click()
-      await page.waitForFunction(() => document.querySelectorAll('.learn-group[open]').length === 7)
+      await page.waitForFunction(count => document.querySelectorAll('.learn-group[open]').length === count, topicCount)
       for (const term of ['Escala 6x1', 'Reforma tributária', 'Split payment', 'Dividendos', 'CET', 'Controle forçado de juros']) {
         assert.equal(await page.locator('.learn-list li button').filter({ hasText: new RegExp(term, 'i') }).count(), 1, term)
       }
-      assert.equal(await page.locator('.learn-list li').count(), 27)
+      assert.equal(await page.locator('.learn-list li').count(), CONCEITOS.length)
+      assert.deepEqual((await page.locator('.learn-list li button b').allTextContents()).sort(), CONCEITOS.map(concept => concept.nome.replace(/ \(.*\)/, '')).sort())
       assert.equal(await page.locator('.learn-list li button').filter({ hasText: 'Regime FÁCIL' }).count(), 1)
       await page.locator('.learn-list li button').filter({ has: page.getByText('CET', { exact: true }) }).click()
       await page.locator('.learn-detail h2', { hasText: 'CET (Custo Efetivo Total)' }).waitFor()
@@ -97,7 +133,7 @@ const links = {
       assert.ok(box && box.width >= 44 && box.height >= 44 && box.x >= 0 && box.x + box.width <= width + 1, 'Governança: botão inteiro dentro da tela')
       await page.screenshot({ path: path.join(out, width + '-config.png') })
       assert.deepEqual(errors, [])
-      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender 27/7, CET, história dos juros e categorias', 'dois links BNDES', 'Google Trends', 'tema automático', 'Governança sem overflow'], errors })
+      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender abre mapa com pontos, filtros e retorno à matriz', `Aprender ${CONCEITOS.length}/${topicCount}, CET, história dos juros e categorias`, 'dois links BNDES', 'Google Trends', 'tema automático', 'Governança sem overflow'], errors })
       await context.close()
       page = null
     }

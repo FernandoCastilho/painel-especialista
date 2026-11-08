@@ -49,6 +49,16 @@ async function colors(page) {
       const style = getComputedStyle(button)
       return { text: button.textContent.trim(), color: style.color, background: style.backgroundColor, ratio: contrast(style.color, style.backgroundColor) }
     })
+    const sectionTabs = [...document.querySelectorAll('.cen-nav button, .seg.bn-fam button')].filter(button => button.getClientRects().length).map(button => {
+      let node = button, background
+      while (node) {
+        background = getComputedStyle(node).backgroundColor
+        if (background !== 'transparent' && background !== 'rgba(0, 0, 0, 0)') break
+        node = node.parentElement
+      }
+      const color = getComputedStyle(button).color
+      return { text: button.textContent.trim(), color, background, ratio: contrast(color, background) }
+    })
     const renderedSeries = [...document.querySelectorAll('.plot .line')].map(line => ({ color:getComputedStyle(line).stroke, ratio:contrast(getComputedStyle(line).stroke, card) }))
     const refreshLayout = [...document.querySelectorAll('.refresh-wrap')].filter(wrap => wrap.getClientRects().length).map(wrap => {
       const stamp = wrap.querySelector('.refresh-stamp'), button = wrap.querySelector('.refresh-btn')
@@ -65,7 +75,7 @@ async function colors(page) {
         textOverButton:textRects.some(text => Math.min(text.right, action.right) - Math.max(text.left, action.left) > 1 && Math.min(text.bottom, action.bottom) - Math.max(text.top, action.top) > 1),
       }
     }).filter(Boolean)
-    return { theme:document.documentElement.dataset.theme, scheme:root.colorScheme, bg, tokens, selected, renderedSeries, refreshLayout,
+    return { theme:document.documentElement.dataset.theme, scheme:root.colorScheme, bg, tokens, selected, sectionTabs, renderedSeries, refreshLayout,
       horizontal:document.documentElement.scrollWidth > document.documentElement.clientWidth + 1 }
   })
 }
@@ -78,6 +88,7 @@ async function assertTheme(page, theme, label) {
   for (const key of ['--fg', '--mut', '--amber']) assert.ok(result.tokens[key].ratio >= 4.5, `${label}: ${key} text contrast ${result.tokens[key].ratio}`)
   for (const key of ['--up', '--down', '--currency-usd', '--currency-eur', '--currency-jpy', '--currency-cnh', '--currency-par']) assert.ok(result.tokens[key].ratio >= 3, `${label}: ${key} data contrast ${result.tokens[key].ratio}`)
   for (const selected of result.selected) assert.ok(selected.ratio >= 4.5, `${label}: selection ${selected.text} contrast ${selected.ratio}`)
+  for (const tab of result.sectionTabs) assert.ok(tab.ratio >= 4.5, `${label}: tab ${tab.text} contrast ${tab.ratio}`)
   for (const series of result.renderedSeries) assert.ok(series.ratio >= 3, `${label}: graph line contrast ${series.ratio}`)
   for (const refresh of result.refreshLayout) {
     assert.equal(refresh.textOutside, false, `${label}: timestamp stays inside its cell (${refresh.label})`)
@@ -157,6 +168,8 @@ async function assertSectorHeader(page, initial) {
         if (fixtures[name]) return route.fulfill({json:fixtures[name]})
         if (url.hostname === 'economia.awesomeapi.com.br') return route.fulfill({json:quotes})
         if (url.hostname === 'widgets.tradingview-widget.com') return route.fulfill({contentType:'text/javascript',body:''})
+        // Conteúdo externo simulado; o teste de tema cobre o painel e seu arquivo local.
+        if (url.origin === 'https://trends.google.com' && url.pathname === '/trends/embed/explore/TIMESERIES') return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><html lang="pt-BR"><body><p>Gráfico simulado somente para teste de integração.</p></body></html>'})
         return url.origin === new URL(base).origin ? route.continue() : route.abort()
       })
       const page = await context.newPage(), errors = []
@@ -171,7 +184,7 @@ async function assertSectorHeader(page, initial) {
         diagnostics.push({kind:'console',width,initial,message:message.text()})
         console.error(`Widget ${initial} ${width}: ${message.text()}`)
       })
-      for (const [route, selector] of [['resumo','.terminal-desk'],['calculadora/giro','.cx #cx-value'],['aprender','.learn'],['juros','.macro .plot svg[role=img]'], ...(width === 320 ? [['setores','main.app .top h1']] : [])]) {
+      for (const [route, selector] of [['resumo','.terminal-desk'],['calculadora/giro','.cx #cx-value'],['aprender','.learn'],['juros','.macro .plot svg[role=img]'],['cenarios/commodities','.cen-nav button'], ...(width === 320 ? [['setores','main.app .top h1']] : [])]) {
         await page.goto(`${base}/#${route}`); await page.locator(selector).first().waitFor()
         const label = `${initial}-${width}-${route.replace('/', '-')}`
         report.push({ label, ...await assertTheme(page, initial, label) })
@@ -198,6 +211,8 @@ async function assertSectorHeader(page, initial) {
         if (route === 'resumo') {
           await page.getByRole('tab', {name:'Google Trends',exact:true}).click()
           await page.locator('.google-trends').waitFor()
+          await page.locator('.google-trends iframe.trends-live-chart').waitFor()
+          await page.locator('.google-trends .trends-archive > summary').click()
           await page.getByRole('img', {name:/Interesse em capital de giro/}).waitFor()
           await assertTheme(page, initial, `${label} trends`)
           await page.screenshot({path:path.join(out, `${initial}-${width}-trends.png`),fullPage:true})

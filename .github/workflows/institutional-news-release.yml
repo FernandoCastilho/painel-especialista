@@ -1,0 +1,73 @@
+name: Revisar liberação ANEEL e Susep
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Aplicar somente a concessão exata previamente auditada no código
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+# Same repository-wide group used by institutional-news.yml's collect job.
+concurrency:
+  group: institutional-news-collector
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+  plan:
+    if: ${{ !inputs.apply }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node cotacoes/scripts/sector-news-parser-release.mjs --plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  apply:
+    if: ${{ inputs.apply }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node cotacoes/scripts/sector-news-parser-release.mjs --apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INSTITUTIONAL_RELEASE_REPORT: ${{ runner.temp }}/parser-release-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parser-release-report
+          path: ${{ runner.temp }}/parser-release-report.json
+          if-no-files-found: warn

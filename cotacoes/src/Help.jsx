@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 
 // Ícone "?" com explicação: abre ao passar o mouse, ao focar pelo teclado ou ao tocar/clicar (fixa).
 // `fixed`: o balão sai do contêiner (portal no corpo da página) e se posiciona pela janela, para não ser cortado nem ficar atrás de células de uma tabela com rolagem.
-export default function Help({ label, align = 'left', wide = false, fixed = false, children }) {
+export default function Help({ label, align = 'left', wide = false, fixed = false, portalTarget, children }) {
   const [pinned, setPinned] = useState(false)
   const [hover, setHover] = useState(false)
   const ref = useRef(null)
@@ -131,8 +131,8 @@ export default function Help({ label, align = 'left', wide = false, fixed = fals
       </button>
       {/* no celular o balão vira uma folha fixa na base da tela: vai para o corpo da página, senão a coluna fixa (sticky) das
           linhas de baixo de uma tabela fica por cima dele */}
-      {show && pinned && mobile && createPortal(<span className="pop-backdrop" onClick={() => setPinned(false)} aria-hidden="true" />, document.body)}
-      {show && (floating || mobile ? createPortal(pop, document.body) : pop)}
+      {show && pinned && mobile && createPortal(<span className="pop-backdrop" onClick={() => setPinned(false)} aria-hidden="true" />, portalTarget || document.body)}
+      {show && (floating || mobile ? createPortal(pop, portalTarget || document.body) : pop)}
     </span>
   )
 }

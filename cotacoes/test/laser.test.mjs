@@ -58,7 +58,7 @@ test('diagramas usam a instância global, com portal, foco estável e Escape pri
     const jsx = source(file)
     assert.match(jsx, /data-laser-host="true"/)
     assert.match(jsx, /laser-slot tic-flow-laser-slot/)
-    assert.match(jsx, /!event.defaultPrevented/)
+    assert.match(source('useDiagramPresentation.js'), /!event.defaultPrevented/)
     assert.doesNotMatch(jsx, /setLaser|pointerRef|tic-flow-laser-toggle/)
     assert.doesNotMatch(jsx, /Pausar animação do diagrama|Retomar animação do diagrama/)
   }

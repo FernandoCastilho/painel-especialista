@@ -1,4 +1,5 @@
 // Utilitários da coleta de dados macro do Banco Central (sem dependências).
+import { sourceNumber } from './source-number.mjs'
 
 // "dd/MM/yyyy" -> ms (meio-dia UTC, para não trocar de dia por fuso)
 export const brDate = (s) => {
@@ -13,7 +14,7 @@ export const toBr = (ms) => {
 // SGS: [{data:"dd/MM/yyyy", valor:"13.65"}] -> [[ms, valor]]
 export const parseSgs = (rows) =>
   (Array.isArray(rows) ? rows : [])
-    .map((r) => [brDate(r.data), Number(r.valor)])
+    .map((r) => [brDate(r.data), sourceNumber(r.valor)])
     .filter(([t, v]) => Number.isFinite(t) && Number.isFinite(v))
     .sort((a, b) => a[0] - b[0])
 

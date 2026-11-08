@@ -1,3 +1,4 @@
+import { APP_SECTIONS } from '../src/appSections.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -14,8 +15,8 @@ test('tablet navigation reuses More without changing phone or desktop breakpoint
   assert.match(css, /min-height: 48px/)
 })
 test('More destinations and dismissal remain available', () => {
-  for (const id of ['cenarios', 'noticias', 'config']) assert.ok(source.includes(`id: '${id}'`))
+  for (const id of ['cenarios', 'noticias', 'config']) assert.ok(APP_SECTIONS.some(section => section.id === id))
   assert.match(source, /aria-expanded=\{more\}/)
   assert.match(source, /e\.key === 'Escape'/)
-  assert.match(source, /setMore\(false\), onTab\(t\.id\)/)
+  assert.match(source, /setMore\(false\), trigger\.current\?\.focus\(\), onTab\(t\.id\)/)
 })

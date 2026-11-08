@@ -289,13 +289,13 @@ export function busDaysIn(from, to, cals, ctx = {}) {
 }
 
 // Feriados (em dia de semana) nas praças escolhidas, nos próximos `days` dias a partir de `from` (inclusive)
-export function upcomingHolidays(from, days, cals, ctx = {}) {
+export function upcomingHolidays(from, days, cals, ctx = {}, { includeWeekends = false } = {}) {
   const out = []
   for (let i = 0; i <= days; i++) {
     const d = addDays(from, i)
     for (const c of cals) {
       const name = nameOf(c, d, ctx)
-      if (name && !isWeekend(d)) out.push({ date: d, cal: c, name })
+      if (name && (includeWeekends || !isWeekend(d))) out.push({ date: d, cal: c, name })
     }
   }
   return out

@@ -18,6 +18,13 @@ const studies = require('../src/sectorStudies/studies.json')
       await page.clock.setFixedTime(now)
       const sectorFixture = { schemaVersion: 1, generatedAt: new Date(now).toISOString(), topics: { agricultura: { items: [] } }, sourceStates: {} }
       await page.route('**/sector-news.json*', route => route.fulfill({ json: sectorFixture }))
+      // Exercise the real per-study load after reload with deterministic latency.
+      // A placeholder has the same heading; only the loaded article proves readiness.
+      await page.route('**/sector-studies/base-florestal-3.json*', async route => {
+        const response = await route.fetch()
+        await new Promise(resolve => setTimeout(resolve, 250))
+        await route.fulfill({ response })
+      })
       try {
         await page.goto(base + '/#setores')
         await page.locator('.central-setorial').getByRole('heading', { name: 'Explore por setor', exact: true }).waitFor()
@@ -34,6 +41,7 @@ const studies = require('../src/sectorStudies/studies.json')
         assert.match(page.url(), /#setores\/topico\/base-florestal\/3$/)
         const compensados = studies.find(study => study.group === 'base-florestal' && study.topicIndex === 3)
         if (compensados) {
+          await detail.locator('.sector-study').waitFor()
           assert.equal(await detail.locator('.sector-study').count(), 1)
           assert.equal(await detail.locator('.study-canvas-questions > li').count(), compensados.canvasQuestions.length)
         } else {

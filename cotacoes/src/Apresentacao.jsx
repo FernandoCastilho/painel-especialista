@@ -1,3 +1,4 @@
+import { createLatestRequest } from './latestRequest.js'
 import { recentNews, newsCollectionStale } from './newsWindow.js'
 import { useNewsClock } from './useNewsClock.js'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -45,6 +46,9 @@ function useEcbLongo(codes) {
 // Nada é guardado: fechar a apresentação descarta a montagem.
 export default function Apresentacao({ quotes, macro }) {
   const [site, setSite] = useState('')
+  const coverRequests = useRef(null)
+  if (!coverRequests.current) coverRequests.current = createLatestRequest()
+  useEffect(() => () => coverRequests.current.cancel(), [])
   const [nome, setNome] = useState('')
   const [capa, setCapa] = useState(null) // { titulo, descricao, logo, imagem, dominio }
   const [capaEstado, setCapaEstado] = useState('') // '', 'lendo', 'ok', 'erro'
@@ -71,9 +75,15 @@ export default function Apresentacao({ quotes, macro }) {
   const alternar = (id) => setItens((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
   const lerSite = async () => {
     if (!site.trim()) return
+    const request = coverRequests.current.start()
     setCapaEstado('lendo')
-    try { setCapa(await buscarCapa(site.trim())); setCapaEstado('ok'); setCapaErro(null) }
+    try {
+      const result = await buscarCapa(site.trim(), request.signal)
+      if (!request.isCurrent()) return
+      setCapa(result); setCapaEstado('ok'); setCapaErro(null)
+    }
     catch (e) {
+      if (!request.isCurrent()) return
       // Sem metadados: a capa ainda leva o domínio e o ícone do site (se existir), com o nome digitado.
       const tentativas = e.tentativas ?? candidatosSite(site.trim()).map(DOMINIO)
       const dominio = tentativas[0] ?? ''
@@ -93,7 +103,7 @@ export default function Apresentacao({ quotes, macro }) {
             <h3 id="apr-cliente">1. Cliente</h3>
             <div className="apr-site">
               <label>Site da empresa
-                <input type="url" inputMode="url" value={site} onChange={(e) => { setSite(e.target.value); setCapaEstado(''); setCapa(null) }} placeholder="empresa.com.br" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), lerSite())} />
+                <input type="url" inputMode="url" value={site} onChange={(e) => { coverRequests.current.cancel(); setSite(e.target.value); setCapaEstado(''); setCapa(null); setCapaErro(null) }} placeholder="empresa.com.br" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), lerSite())} />
               </label>
               <button type="button" className="apr-btn" onClick={lerSite} disabled={!site.trim() || capaEstado === 'lendo'}>{capaEstado === 'lendo' ? 'Lendo…' : 'Ler site'}</button>
             </div>

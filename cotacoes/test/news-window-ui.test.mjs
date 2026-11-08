@@ -100,3 +100,10 @@ test('News: currency filter remains selected when its last headline expires', as
   assert.match(ui.html(), /Nenhuma publicação válida/)
   assert.equal(ui.buttons().find(b => b.props.children === 'USD').props['aria-pressed'], true)
 })
+test('NoticiasPorDia: explicit seven-day curation retains sixth day and expires at 168 hours', async t => {
+  const ui = await setup(t, 'NoticiasPorDia', { windowDays: 7, data: { generatedAt: now, items: [article('sextodiavalido', now - 6 * 86400000), article('limitesetedias', now - 7 * 86400000), article('fora7dias', now - 7 * 86400000 - 1)] } })
+  assert.match(ui.html(), /sextodiavalido/); assert.match(ui.html(), /limitesetedias/)
+  assert.doesNotMatch(ui.html(), /fora7dias/); assert.match(ui.html(), /168 horas/)
+  await ui.advance(60000)
+  assert.doesNotMatch(ui.html(), /limitesetedias/); assert.match(ui.html(), /sextodiavalido/)
+})

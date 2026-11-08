@@ -52,6 +52,14 @@ export function shiftMonth(v, mode, n) {
   return dayKey(Math.floor(t / 12), ((t % 12) + 12) % 12, Math.min(d, last))
 }
 
+// A troca de mês/ano mantém uma célula válida como entrada do teclado.
+export function navigateCalendarView(view, focus, mode, n, min, max) {
+  return {
+    view: clamp(shiftMonth(view, mode, n), min, max),
+    focus: clamp(shiftMonth(valid(focus, mode) ? focus : view, mode, n), min, max),
+  }
+}
+
 // Segundo clique: ordena o par (clicar numa data anterior ao início inverte) e devolve [início, fim].
 export const pair = (anchor, v) => (v < anchor ? [v, anchor] : [anchor, v])
 

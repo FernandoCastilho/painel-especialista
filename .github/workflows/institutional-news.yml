@@ -1,0 +1,58 @@
+name: Verificar e coletar notícias institucionais
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+  collect:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    concurrency:
+      group: institutional-news-collector
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Consultar somente fontes elegíveis com estado durável
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INSTITUTIONAL_NEWS_REPORT: ${{ runner.temp }}/institutional-news-report.json
+        run: node scripts/sector-news-live.mjs --collect
+      - name: Evidência da consulta institucional real
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-news-real
+          path: |
+            ${{ runner.temp }}/institutional-news-report.json
+            cotacoes/public/sector-news.json
+          if-no-files-found: error
+          retention-days: 7

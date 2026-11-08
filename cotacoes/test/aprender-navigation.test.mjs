@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 
-async function setup(t, initialView = '') {
+async function setup(t, initialView = 'conceitos') {
   const source = await readFile(new URL('../src/Aprender.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
@@ -20,10 +20,12 @@ async function setup(t, initialView = '') {
   runInNewContext(code, { module, exports: module.exports, require: name => {
     if (name === 'react') return { ...React, useMemo: fn => fn() }
     if (name === './educacao.js') return educacao
+    if (name === './IcmsStDiagram.jsx') return { __esModule: true, default: () => null }
     if (name === './Aprender.css') return {}
     if (name === './Avisos.jsx') return { Aviso: passthrough }
     if (name === './TerminalDesk.jsx') return { Panel: passthrough }
     if (name === './Help.jsx') return { default: passthrough }
+    if (name === './KnowledgeMap.jsx') return { __esModule: true, default: () => React.createElement('div', { 'data-test': 'knowledge-map' }) }
     return require(name)
   } })
   let view = initialView

@@ -1,4 +1,4 @@
-import { CUSTOS } from './finameMateriais.js'
+import { CUSTOS, faixaTfb, faixaTfc, simular } from './finameMateriais.js'
 
 // O catálogo do produto não transforma uma moeda contratual em taxa anual.
 // Cada perfil conserva sua unidade e seu modelo de apuração.
@@ -36,4 +36,21 @@ export function finameFundingAnnualRate(id, quotes) {
   if (finameFundingOption(id)?.mode !== 'inline') return null
   const value = quotes?.[id]
   return Number.isFinite(value) && value >= 0 && value <= 100 ? value : null
+}
+
+// Compara só os custos suportados, mantendo entradas e motor financeiro iguais.
+// Datas ou faixas diferentes não produzem uma diferença comercial equivalente.
+export function compareFinameFunding(params, quotes) {
+  if (!['tfc', 'tfb'].includes(params.custo)) return { ok: false, error: 'A comparação de parcelas está disponível somente para TFC e TFB.' }
+  if (params.liberacao !== 90) return { ok: false, error: 'Para comparar com a TFC, use a TFB com liberação em 90 dias.' }
+  if (faixaTfb(params.prazo) !== faixaTfc(params.prazo)) return { ok: false, error: 'Não há par de séries com a mesma faixa de prazo para esta operação. Consulte as referências em Taxas e históricos.' }
+  if (!quotes.tfc?.data || !quotes.tfb?.data || quotes.tfc.data !== quotes.tfb.data) return { ok: false, error: 'As referências TFC e TFB precisam ter a mesma data para calcular a diferença. Consulte as datas de cada série em Taxas e históricos.' }
+  const alternatives = ['tfc', 'tfb'].map(custo => {
+    const custoFinanceiro = finameFundingAnnualRate(custo, { [custo]: quotes[custo]?.valor })
+    if (custoFinanceiro === null) return null
+    const result = simular({ ...params, custo, custoFinanceiro })
+    return result.ok ? { custo, quote: quotes[custo], result } : null
+  })
+  if (alternatives.some(item => !item)) return { ok: false, error: 'Uma das referências está indisponível ou as condições estão incompletas. Ausência de taxa não significa zero.' }
+  return { ok: true, alternatives, totalDifference: alternatives[1].result.total - alternatives[0].result.total }
 }

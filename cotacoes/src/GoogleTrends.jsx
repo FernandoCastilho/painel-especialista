@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useDataFile } from './useDataFile.js'
-import { TREND_GROUPS, exploreUrl, validTrendData, trendsOld, trendStamp } from './trends.js'
+import { TREND_GROUPS, exploreUrl, trendEmbedUrl, validTrendData, trendsOld, trendStamp } from './trends.js'
 import { TREND_SNAPSHOT, SNAPSHOT_AT, SNAPSHOT_START } from './trendsSnapshot.js'
 import './GoogleTrends.css'
 const stamp = value => Number.isFinite(trendStamp(value)) ? new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' }) : 'Ainda sem coleta válida'
@@ -39,13 +39,16 @@ export default function GoogleTrends() {
     <h4>Temas acompanhados</h4>
     <div className="trends-groups" role="group" aria-label="Tema acompanhado">{TREND_GROUPS.map(g => <button key={g.id} type="button" aria-pressed={group === g.id} onClick={() => setGroup(g.id)}>{g.label}</button>)}</div>
     <article className="trends-theme"><h4>{active.label}</h4><p>{active.terms.join(' · ')}</p>
-      <label>Período na fonte <select value={period} onChange={e => setPeriod(e.target.value)}><option value="today 3-m">3 meses</option><option value="today 12-m">12 meses</option></select></label>
+      <label>Período do gráfico <select value={period} onChange={e => setPeriod(e.target.value)}><option value="today 3-m">3 meses</option><option value="today 12-m">12 meses</option></select></label>
       <p>Brasil · Pesquisa na Web · Fonte: Google Trends Explore</p>
-      {period === 'today 3-m' ? <HistoricalSnapshot group={group} /> : <p>Série de 12 meses disponível na fonte; sem snapshot local deste período.</p>}
+      <p className="trends-status">Histórico incorporado do Google Trends, consultado ao abrir ou trocar o tema/período. Os três termos são comparados no mesmo recorte. A disponibilidade e a atualização do gráfico dependem do Google.</p>
+      <iframe key={`${group}:${period}`} className="trends-live-chart" src={trendEmbedUrl(group, period)} title={`Google Trends: ${active.label}, ${period === 'today 3-m' ? '3' : '12'} meses`} sandbox="allow-scripts allow-same-origin allow-popups" referrerPolicy="strict-origin-when-cross-origin" />
+      <p className="trends-status">Se o gráfico estiver vazio, demorar ou solicitar verificação, use o link abaixo. O painel não consegue confirmar o conteúdo carregado pelo Google.</p>
       <a className="trends-chart-link" href={exploreUrl(active.terms, period)} target="_blank" rel="noopener noreferrer">Abrir gráfico no Google Trends ↗</a>
-      <p className="trends-status">Série histórica consultada na fonte ao abrir o gráfico. A atualização das 8h e 15h abrange o feed Em alta; séries dos termos escolhidos ainda não têm coleta automática disponível neste painel.</p>
+      <p className="trends-status">As consultas das 8h e 15h abrangem somente o feed Em alta. O gráfico acima não é coletado nem armazenado pelo painel. A coleta automática das séries ainda depende de acesso à API oficial em alpha.</p>
+      {TREND_SNAPSHOT[group] && <details key={group} className="trends-archive"><summary>Arquivo local: 03/08 a 02/11/2026, um termo</summary><p>Referência estática independente do período selecionado acima.</p><HistoricalSnapshot group={group} /></details>}
       <aside><strong>Hipótese para a conversa</strong><p>{active.question}</p><small>Interesse de busca não comprova demanda de crédito nem intenção de compra.</small></aside>
     </article>
-    <details><summary>Como interpretar</summary><p>Explore mostra interesse relativo de 0 a 100 dentro do recorte. O feed Em alta traz buscas com aumento recente e volume aproximado, sem fornecer a série histórica dos temas escolhidos. O feed pode não conter nenhum dos temas acompanhados.</p></details>
+    <details><summary>Como interpretar</summary><p>Explore mostra interesse relativo de 0 a 100 dentro do recorte. Não é volume absoluto e não deve ser comparado entre gráficos com recortes diferentes. Zero pode significar volume insuficiente e o período mais recente pode estar incompleto. O feed Em alta traz buscas com aumento recente e volume aproximado, sem fornecer a série histórica dos temas escolhidos. O feed pode não conter nenhum dos temas acompanhados.</p></details>
   </section>
 }

@@ -2,11 +2,17 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { INSUMOS } from './insumos.js'
 import SetoresLegado from './SetoresLegado.jsx'
 import SectorStudy from './SectorStudy.jsx'
-import ResearchedSectorStudy from './ResearchedSectorStudy.jsx'
-import { findSectorStudy } from './sectorStudies/index.js'
-import { CATALOGO_SETORIAL, TOPICOS_ESTUDO, normalizeSector } from './centralSetorial.js'
+import SectorStudyLoader from './SectorStudyLoader.jsx'
+import { CATALOGO_SETORIAL, normalizeSector } from './centralSetorial.js'
 import { readCentralHistory, withCentralHistory } from './centralHistory.js'
 import './CentralSetorial.css'
+
+// Each local atlas has a 3 x 3 grid: group cover, then topics in catalog order.
+function SectorImage({ groupId, index = 0 }) {
+  const column = index % 3
+  const row = Math.floor(index / 3)
+  return <span className="central-card-photo" aria-hidden="true"><img src={`./sector-images/${groupId}.jpg`} alt="" width="1536" height="1024" loading="lazy" decoding="async" style={{ left: `-${column * 100}%`, transform: `translateY(-${(row + .5) / 3 * 100}%)` }} onError={event => { event.currentTarget.hidden = true }} /></span>
+}
 
 export default function Setores({ view = '', onView = () => {}, quotes }) {
   const [query, setQuery] = useState(() => typeof window === 'undefined' ? '' : readCentralHistory(window.history.state, view)?.query || '')
@@ -20,7 +26,6 @@ export default function Setores({ view = '', onView = () => {}, quotes }) {
   const topicIndex = parts[0] === 'topico' && /^\d+$/.test(parts[2] || '') ? Number(parts[2]) : -1
   const routeTopic = routeGroup?.topics[topicIndex]
   const folder = parts[0] === 'pasta' ? routeGroup : null
-  const researchedStudy = routeTopic ? findSectorStudy(routeGroup.id, topicIndex) : null
   const showContent = Boolean(view && view !== 'central' && !['pasta', 'topico', 'b3'].includes(parts[0]))
   const hasDetail = Boolean(routeTopic || showContent)
   const invalidRoute = ['pasta', 'topico'].includes(parts[0]) && (!routeGroup || (parts[0] === 'topico' && !routeTopic))
@@ -85,7 +90,7 @@ export default function Setores({ view = '', onView = () => {}, quotes }) {
     return () => window.cancelAnimationFrame(frame)
   }, [view, query, hasDetail, folder])
   const openTopic = (group, index) => navigate(`topico/${group.id}/${index}`)
-  const topicButton = (group, topic) => <button type="button" id={`central-topic-${group.id}-${group.topics.indexOf(topic)}`} className="central-topic" aria-current={routeTopic === topic && routeGroup?.id === group.id ? 'page' : undefined} onClick={() => openTopic(group, group.topics.indexOf(topic))}><span className="central-document-icon" aria-hidden="true"/><span>{topic}</span><span className="central-topic-arrow" aria-hidden="true">→</span></button>
+  const topicButton = (group, topic, withImage = false) => <button type="button" id={`central-topic-${group.id}-${group.topics.indexOf(topic)}`} className={`central-topic${withImage ? ' central-subsector' : ''}`} aria-current={routeTopic === topic && routeGroup?.id === group.id ? 'page' : undefined} onClick={() => openTopic(group, group.topics.indexOf(topic))}>{withImage ? <><SectorImage groupId={group.id} index={group.topics.indexOf(topic) + 1} /><span className="central-card-caption"><strong>{topic}</strong><span className="central-topic-arrow" aria-hidden="true">→</span></span></> : <><span className="central-document-icon" aria-hidden="true"/><span>{topic}</span><span className="central-topic-arrow" aria-hidden="true">→</span></>}</button>
 
   return <div className={`central-setorial${hasDetail ? ' central-reading' : ''}`}>
     <header className="central-intro"><div><p className="central-kicker">CONHECIMENTO SETORIAL</p><h2>Explore por setor</h2><p>Explore setores, entenda negócios e encontre oportunidades.</p></div><span className="central-library-count">{CATALOGO_SETORIAL.length} setores <span aria-hidden="true">·</span> {CATALOGO_SETORIAL.reduce((count, group) => count + group.topics.length, 0)} subsetores</span></header>
@@ -94,16 +99,16 @@ export default function Setores({ view = '', onView = () => {}, quotes }) {
       {hasDetail && <label className="central-switcher">Trocar subsetor<select aria-label="Trocar subsetor" value={routeTopic ? view : ''} onChange={event => navigate(event.target.value)}><option value="" disabled>Escolha um subsetor</option>{CATALOGO_SETORIAL.map(group => <optgroup key={group.id} label={group.label}>{group.topics.map((topic, index) => <option key={topic} value={`topico/${group.id}/${index}`}>{topic}</option>)}</optgroup>)}</select></label>}
     </div>
     {(view === 'b3' || view.startsWith('b3/')) && <p role="status" className="central-note">A antiga classificação B3 foi substituída pelo catálogo unificado. Escolha o setor correspondente abaixo; não há conversão automática entre classificações.</p>}
-    {invalidRoute && <p role="status" className="central-note">Este setor ou subsetor não foi encontrado. Escolha uma pasta ou use a busca.</p>}
+    {invalidRoute && <p role="status" className="central-note">Este setor ou subsetor não foi encontrado. Escolha um setor ou use a busca.</p>}
     <div ref={surfaceRef} tabIndex={-1} className="central-surface" aria-label={routeTopic || folder?.label || 'Catálogo de setores'}>
       {(folder || hasDetail) && <nav className="central-breadcrumb" aria-label="Caminho do setor"><button type="button" onClick={() => navigate('central', true)}>Todos os setores</button><span aria-hidden="true">/</span>{routeTopic ? <><button type="button" onClick={() => navigate(`pasta/${routeGroup.id}`, true)}>{routeGroup.label}</button><span aria-hidden="true">/</span><span aria-current="page">{routeTopic}</span></> : <span aria-current="page">{folder?.label || INSUMOS.find(item => item.id === view)?.label || 'Insumos e indicadores'}</span>}</nav>}
       {showCatalog && <div className="central-catalog">
         {term ? <section className="central-results" aria-labelledby="central-results-title"><div className="central-section-heading"><h3 id="central-results-title">Resultados da busca</h3><p role="status">{resultCount} {resultCount === 1 ? 'subsetor encontrado' : 'subsetores encontrados'}</p></div>{groups.length ? groups.map(group => <section key={group.id} className="central-result-group"><h4>{group.label}</h4><ul className="central-topics">{group.matches.map(topic => <li key={topic}>{topicButton(group, topic)}</li>)}</ul></section>) : <div className="central-empty"><p>Nenhum tópico encontrado. Tente outro termo.</p><button type="button" className="central-action" onClick={clearQuery}>Limpar busca</button></div>}</section>
-        : folder ? <section className="central-open-folder" aria-labelledby="central-folder-title"><div className="central-section-heading"><div><p className="central-kicker">PASTA SETORIAL</p><h3 id="central-folder-title">{folder.label}</h3></div><p>{folder.topics.length} subsetores</p></div><p className="central-note">Escolha um subsetor para abrir o estudo e seu mapa de negócios.</p><ul className="central-topics">{folder.topics.map(topic => <li key={topic}>{topicButton(folder, topic)}</li>)}</ul></section>
-        : <section aria-labelledby="central-sectors-title"><div className="central-section-heading"><h3 id="central-sectors-title">Setores e subsetores</h3><p>Abra uma pasta para explorar</p></div><ul className="central-folders">{CATALOGO_SETORIAL.map((group, index) => <li key={group.id}><button type="button" id={`central-folder-${group.id}`} className={`central-folder central-folder-tone-${index % 3}`} onClick={() => navigate(`pasta/${group.id}`)} aria-label={`Abrir pasta ${group.label}, ${group.topics.length} subsetores`}><span className="central-folder-back" aria-hidden="true"/><span className="central-folder-sheet" aria-hidden="true"/><span className="central-folder-front" aria-hidden="true"/><span className="central-folder-content"><span className="central-folder-arrow" aria-hidden="true">→</span><strong>{group.label}</strong><span className="central-folder-count">{group.topics.length} subsetores</span></span></button></li>)}</ul></section>}
+        : folder ? <section className="central-open-folder" aria-labelledby="central-folder-title"><div className="central-section-heading"><div><p className="central-kicker">SETOR</p><h3 id="central-folder-title">{folder.label}</h3></div><p>{folder.topics.length} subsetores</p></div><p className="central-note">Escolha um subsetor para abrir o estudo e seu mapa de negócios.</p><ul className="central-topics central-subsectors">{folder.topics.map(topic => <li key={topic}>{topicButton(folder, topic, true)}</li>)}</ul></section>
+        : <section aria-labelledby="central-sectors-title"><div className="central-section-heading"><h3 id="central-sectors-title">Setores e subsetores</h3><p>Escolha um setor para explorar</p></div><ul className="central-folders">{CATALOGO_SETORIAL.map(group => <li key={group.id}><button type="button" id={`central-folder-${group.id}`} className="central-folder" onClick={() => navigate(`pasta/${group.id}`)} aria-label={`Explorar ${group.label}, ${group.topics.length} subsetores`}><SectorImage groupId={group.id} /><span className="central-folder-content"><span className="central-folder-arrow" aria-hidden="true">→</span><strong>{group.label}</strong><span className="central-folder-count">{group.topics.length} subsetores</span></span></button></li>)}</ul></section>}
         {!term && !folder && <section className="central-inputs" aria-labelledby="central-inputs-title"><div><h3 id="central-inputs-title">Insumos e Indicadores</h3><p className="central-note">Referências para complementar sua análise</p></div><ul>{INSUMOS.map(item => <li key={item.id}><button type="button" onClick={() => navigate(item.id)}>{item.label}<span aria-hidden="true">→</span></button></li>)}</ul></section>}
       </div>}
-      {hasDetail && !term && <div className={`central-detail central-detail-selected${showContent ? ' central-detail-content' : ''}`}>{showContent ? <SetoresLegado key={view} view={view} quotes={quotes}/> : routeGroup.id === 'tic' && routeTopic === 'Integração de TI e infraestrutura digital' ? <SectorStudy /> : researchedStudy ? <ResearchedSectorStudy key={`${researchedStudy.group}-${researchedStudy.topicIndex}`} study={researchedStudy} /> : <><p className="central-kicker">{routeGroup.label}</p><h3>{routeTopic}</h3><p className="central-note">Tópico disponível no catálogo. Estudo setorial não incluído ainda. A pesquisa deste recorte está pendente de revisão; não há indicadores ou conclusões publicados aqui.</p><h4>Estrutura para estudo</h4><ol>{TOPICOS_ESTUDO.map(topic => <li key={topic}>{topic}</li>)}</ol></>}</div>}
+      {hasDetail && !term && <div className={`central-detail central-detail-selected${showContent ? ' central-detail-content' : ''}`}>{showContent ? <SetoresLegado key={view} view={view} quotes={quotes}/> : routeGroup.id === 'tic' && routeTopic === 'Integração de TI e infraestrutura digital' ? <SectorStudy /> : <SectorStudyLoader key={`${routeGroup.id}-${topicIndex}`} group={routeGroup} topicIndex={topicIndex} />}</div>}
     </div>
   </div>
 }

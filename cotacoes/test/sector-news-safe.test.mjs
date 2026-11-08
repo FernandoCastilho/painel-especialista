@@ -394,3 +394,15 @@ test('publicação entre cinco e sete dias é descartada sem suspender fonte por
   assert.ok(result.state.sources.mapa.lastSuccessAt)
   assert.equal(result.feed.collectionPolicy.windowHours, 120)
 })
+
+test('ANEEL e Susep continuam sem requests ou publicação após instalar adaptador de descoberta', async () => {
+  const x = setup({ sourceIds: ['aneel', 'susep'] })
+  const before = x.store.state
+  const result = await x.run()
+  assert.equal(result.status, 'suspended')
+  assert.deepEqual(result.skipped, ['aneel', 'susep'])
+  assert.equal(x.transport.calls.length, 0)
+  assert.equal(x.publisher.calls, 0)
+  assert.equal(x.store.writes, 0)
+  assert.deepEqual(x.store.state, before)
+})

@@ -33,3 +33,15 @@ Mascote vetorial discreto, aberto somente por clique. O formulário contém tipo
 Em 7/11/2026, a suíte local completa passou (1.258 testes), o build passou e o lint não apresentou erros (cinco avisos existentes em outros componentes). A prévia não foi alcançável pelo navegador de revisão deste executor; a validação visual não foi concluída. A entrega real também não foi testada porque o cadastro permanece pendente.
 
 No CI inicial, o botão flutuante cobria a ação final do CET em 390 px. Em telas estreitas, ele agora ocupa espaço próprio ao fim do conteúdo, alinhado à direita, em vez de se sobrepor às calculadoras. O mascote permanece no canto fixo no desktop. A correção deve passar novamente pelo CI.
+
+## Reconciliação de 8/11/2026
+
+Integrado à base `43d5ed32fd97dabef4d58df6b49987db92ded8f9`, preservando os recursos publicados em paralelo. O conflito em `base-dados.test.mjs` foi resolvido mantendo as exceções específicas da apresentação BNDES e da política do processador. O índice de busca foi regenerado pelo build, incluindo o áudio já presente em Aprender.
+
+Verificação do candidato integrado: 1.558 testes passaram; build passou; lint sem erros e com cinco avisos preexistentes. Revisão visual no navegador interno, CI do novo commit e entrega real continuam pendentes. O envio permanece desativado e este registro não autoriza publicar o formulário como funcional.
+
+## Retomada de 8/11/2026
+
+Candidato reconciliado também com a base `5ac2b122d9ffccaf1f738474f98a4079cc79c5b5`, em checkout isolado, preservando a reconciliação anterior. Suíte completa: 1.559 testes aprovados; build aprovado. O formulário público continua sem ID e com `verified: false`.
+
+O formulário `xaeegypp` existe no Formspree e o destino autorizado foi conferido sem alteração. A tela de submissões informa que nenhum formulário foi enviado; spam zero. A consulta da caixa de destino não encontrou mensagem de teste. Nenhum POST foi realizado nesta retomada. A prévia Vite iniciada em loopback não foi alcançada pelo navegador de revisão (`ERR_CONNECTION_REFUSED`), portanto a aparência e o recebimento real permanecem pendentes. Não publicar como funcional nem ativar o envio antes de concluir essas verificações. Nenhum acesso público de prévia foi criado.

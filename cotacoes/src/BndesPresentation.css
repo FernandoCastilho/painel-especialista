@@ -1,0 +1,68 @@
+.bnp-launch { display:inline-flex; gap:8px; align-items:center; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; color:var(--fg); background:var(--card); font:600 .8125rem/1.4 system-ui,sans-serif; cursor:pointer; }
+.bnp-launch:disabled { color:var(--mut); cursor:default; }
+.bnp-dialog { background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:14px; padding:0; width:min(600px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; }
+.bnp-dialog::backdrop { background:#0009; }
+.bnp-settings { padding:24px; display:grid; gap:16px; font:400 14px/1.5 system-ui,sans-serif; }
+.bnp-settings header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.bnp-dialog .bnp-settings h2 { margin:0; font:600 1.25rem/1.3 system-ui,sans-serif; letter-spacing:normal; text-transform:none; color:var(--fg); }
+.bnp-settings p { margin:0; color:var(--mut); }
+.bnp-settings button, .bnp-settings summary { min-height:44px; cursor:pointer; }
+.bnp-settings header button { min-width:44px; background:transparent; color:var(--fg); border:1px solid var(--line); border-radius:8px; font-size:1.25rem; }
+.bnp-settings label { display:flex; flex-direction:column; gap:6px; }
+.bnp-settings input:not([type=checkbox]), .bnp-settings select { box-sizing:border-box; min-height:44px; max-width:100%; width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--fg); font:inherit; }
+.bnp-settings fieldset { margin:0; border:1px solid var(--line); border-radius:8px; padding:12px; }
+.bnp-settings fieldset label { flex-direction:row; align-items:center; min-height:44px; }
+.bnp-settings input[type=checkbox] { width:20px; height:20px; margin:0 8px 0 0; flex:none; }
+.bnp-settings details label { margin:10px 0; }
+.bnp-primary { border:0; border-radius:8px; background:#ff6200; color:#000d3c; font:600 1rem/1.5 system-ui,sans-serif; padding:12px; }
+.bnp-dialog :focus-visible, .bnp-launch:focus-visible { outline:3px solid #0131ff; outline-offset:3px; }
+.bnp-dialog.bnp-presenting { width:100vw; max-width:100vw; height:100dvh; max-height:100dvh; margin:0; border:0; border-radius:0; overflow:hidden; }
+.bnp-player.apr-player { --navy:#000d3c; --blue:#0131ff; --orange:#ff6200; --mut:#505a70; position:fixed; inset:0; font-size:clamp(16px,1.5vw,24px); }
+.bnp-player.bnp-text-large { font-size:clamp(18px,1.8vw,29px); }
+.bnp-player.bnp-text-xl { font-size:clamp(20px,2.1vw,34px); }
+.bnp-player .bnp-slide { box-sizing:border-box; width:min(100%,calc((100dvh - 100px)*16/9)); max-height:calc(100dvh - 100px); aspect-ratio:16/9; margin:auto; flex:none; padding:clamp(16px,2.2vw,40px); gap:clamp(8px,1vw,16px); }
+.bnp-player .bnp-slide h2 { font:600 1.6em/1.2 system-ui,sans-serif; letter-spacing:normal; text-transform:none; color:#000d3c; margin:0 0 .3em; }
+.bnp-slide h3 { font-size:1.1em; margin:0 0 .5em; }
+.bnp-slide p, .bnp-slide ul { margin:0; font-size:.85em; line-height:1.5; }
+.bnp-slide-top { display:flex; justify-content:space-between; gap:16px; color:#505a70; font-size:max(12px,.65em); }
+.bnp-slide-top span:first-child { overflow-wrap:anywhere; }
+.bnp-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin:0; }
+.bnp-facts dt, .bnp-alternatives dt { font-size:.75em; color:#505a70; }
+.bnp-facts dd { margin:6px 0 0; font-weight:600; font-size:1.1em; }
+.bnp-facts > div { min-width:0; overflow-wrap:anywhere; }
+.bnp-alternatives { display:flex; gap:20px; }
+.bnp-alternatives article { flex:1; min-width:0; border:1px solid #d9dde3; border-radius:10px; padding:16px; }
+.bnp-alternatives dl { margin:0 0 12px; }
+.bnp-alternatives dl > div { display:flex; justify-content:space-between; gap:12px; padding:6px 0; }
+.bnp-alternatives dd { margin:0; font-size:.9em; font-weight:600; white-space:nowrap; }
+.bnp-table-wrap { overflow-x:auto; flex-shrink:0; }
+.bnp-table-wrap:focus-visible { outline:3px solid #0131ff; outline-offset:3px; }
+.bnp-table-hint { display:none; }
+.bnp-slide table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; font-size:.9em; }
+.bnp-slide th, .bnp-slide td { text-align:right; padding:12px; border-bottom:1px solid #d9dde3; }
+.bnp-slide th:first-child { text-align:left; font-weight:400; }
+.bnp-slide thead { color:white; background:#000d3c; }
+.bnp-slide tbody tr:last-child { font-weight:700; }
+.bnp-difference { border-left:4px solid #ff6200; padding:12px; background:#edf1ff; }
+.bnp-slide-footer { margin-top:auto; padding-top:12px; border-top:1px solid #d9dde3; display:grid; gap:6px; color:#505a70; font-size:max(12px,.65em); }
+.bnp-slide-footer strong { color:#8a3100; font-weight:600; }
+.bnp-slide-footer small { font-size:1em; }
+.bnp-controls { flex-wrap:wrap; min-height:64px; }
+.bnp-controls button { min-height:44px; }
+.bnp-controls small { font-size:12px; color:#505a70; }
+.bnp-controls .laser-slot { display:inline-flex; width:44px; min-height:44px; flex:none; }
+.bnp-controls .laser-slot .laser-btn { position:static; }
+.bnp-fullscreen-status { margin:0; background:#fff4e6; padding:8px; color:#000d3c; font-size:14px; }
+.bnp-chart { margin:0; }
+.bnp-chart figcaption { font-size:.8em; margin-bottom:8px; }
+.bnp-chart svg { width:100%; max-height:25vh; display:block; }
+.bnp-chart text { font:18px system-ui,sans-serif; fill:#505a70; }
+.bnp-chart-legend { display:flex; gap:20px; flex-wrap:wrap; font-size:.7em; }
+.bnp-premises { padding-left:1.2em; display:grid; gap:10px; }
+@media (max-width:699px) { .bnp-player .bnp-slide { width:100%; max-height:none; aspect-ratio:auto; flex:1; } .bnp-facts { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } .bnp-alternatives { flex-direction:column; } .bnp-slide th, .bnp-slide td { padding:8px; } .bnp-controls { gap:8px; } .bnp-controls small { display:none; } }
+
+.bnp-sources { display:flex; gap:12px; flex-wrap:wrap; font-size:.75em; }
+.bnp-sources a { color:#0131ff; }
+@media (max-width:699px) { .bnp-chart { overflow-x:auto; } .bnp-chart svg { min-width:560px; max-height:none; } }
+@media (max-width:399px) { .bnp-table-hint { display:block; color:#505a70; } }
+@media (max-width:899px) and (orientation:portrait) { .bnp-player .bnp-slide { width:100%; max-height:none; aspect-ratio:auto; flex:1; } }

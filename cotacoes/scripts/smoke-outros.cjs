@@ -29,6 +29,8 @@ const commoditiesBrl = { schemaVersion: 1, generatedAt: new Date().toISOString()
 const fuels = { schemaVersion: 1, generatedAt: new Date().toISOString(), commodities: [fuel('anp-gasolina', 'Gasolina comum · bomba', 'R$/litro', 6.51), fuel('anp-etanol', 'Etanol hidratado · bomba', 'R$/litro', 4.4), fuel('anp-diesel', 'Diesel S10 · bomba', 'R$/litro', 6.31), fuel('anp-glp', 'Gás de cozinha (botijão 13 kg)', 'R$/botijão 13 kg', 105.9)] }
 const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), commodities: [commodity('gold', 'Ouro', 'USD/onça troy', 4319, monthly(4000)), commodity('iron-ore', 'Minério de ferro', 'USD/tonelada seca', 97.7, monthly(90)), commodity('soybeans', 'Soja', 'USD/tonelada', 524, []), commodity('corn', 'Milho', 'USD/tonelada', 239.6, monthly(230))] }
 ;(async () => {
+  const { CONCEITOS, porTopico } = await import('../src/educacao.js')
+  const topicCount = porTopico(CONCEITOS).length
   const b = await chromium.launch(require('./smoke-launch.cjs')()), base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5216'
   const out = process.env.SMOKE_OUT
   if (out) await mkdir(out, { recursive: true })
@@ -181,11 +183,11 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       // Navegador e fixture compartilham o mesmo instante; timers/RAF continuam funcionando.
       const agora = Date.parse(clockCase.iso), min = 60e3
       await p.clock.setFixedTime(agora)
-      const mat = (title, atras, source) => ({ title, link: `https://exemplo.com/${encodeURIComponent(title)}`, source, t: agora - atras * min })
+      const mat = (title, atras, source) => ({ title, link: `https://exemplo.com/${encodeURIComponent(title)}`, source, sourceUrl: 'https://www.gov.br', t: agora - atras * min })
       const reforma = { schemaVersion: 1, generatedAt: agora, topic: 'reforma-tributaria', windowDays: 7, stale: false, error: null, items: [
         mat('Reforma tributária: Senado vota regulamentação', 1, 'Valor Econômico'), mat('IBS e CBS: o que muda para o varejo', 2, 'Folha'), mat('Comitê Gestor do IBS é instalado', 3, 'Valor Econômico'),
         mat('Imposto seletivo entra em debate na Câmara', 30 * 60, 'Estadão'), mat('Reforma tributária e o cashback para famílias', 55 * 60, 'Valor Econômico')] }
-      await p.route('**/reforma-tributaria.json*', (r) => r.fulfill({ json: reforma }))
+      await p.route('**/curadoria-noticias.json*', (r) => r.fulfill({ json: { schemaVersion: 1, generatedAt: agora, windowDays: 7, topics: { reforma: { label: 'Reforma tributária', checkedAt: agora, lastSuccessAt: agora, status: 'ok', items: reforma.items } } } }))
       // Um minuto antes pode ser o dia anterior em Brasília: o rótulo esperado muda no caso após meia-noite.
       const nota = (title, source = 'Valor Econômico') => ({ title, link: `https://exemplo.com/n/${encodeURIComponent(title)}`, source, t: agora - 60e3 })
       await p.route('**/news.json*', (r) => r.fulfill({ json: { generatedAt: agora, stale: {}, errors: [], news: { USD: [nota('Dólar sobe com fala do Fed')], EUR: [nota('BCE mantém juros na zona do euro')], JPY: [], CNH: [], MERCADO: [nota('Ibovespa e juros futuros recuam; iene dispara'), nota('Safra de soja avança no Mato Grosso')] } } }))
@@ -207,11 +209,11 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.equal(await lista.locator('li').count(), 5, 'todas as matérias da semana')
       assert.ok(await lista.locator('.reforma-day').count() >= 2, 'agrupadas por dia')
       // linha do tempo enxuta: só a semana, de hoje para trás, quebrada por dia; sem filtro de dia, busca nem legenda
-      assert.match(await painel.innerText(), /Atualizado em\s+\d{2}\/\d{2}\/\d{4}/)
-      assert.equal(await painel.locator('.refresh-btn').count(), 0, 'Reforma: só a data, sem botão de atualizar')
+      assert.doesNotMatch(await painel.innerText(), /Curadoria automática|Última consulta|Última coleta completa/)
+      assert.equal(await painel.locator('.refresh-btn').count(), 0, 'Reforma: atualização automática, sem botão de atualizar')
       assert.equal(await lista.getByLabel('Buscar nas matérias').count(), 0, 'sem busca')
       assert.equal(await lista.locator('.reforma-days').count(), 0, 'sem filtro de dia')
-      assert.doesNotMatch(await lista.innerText(), /últimos 7 dias/)
+      assert.match(await lista.innerText(), /últimos 7 dias \(168 horas\)/)
       assert.match(await lista.locator('.reforma-day').first().innerText(), clockCase.day, `reforma: ${clockCase.name} de Brasília`)
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `sem rolagem lateral a ${width}px`)
       await painel.getByRole('tab', { name: 'Manchetes' }).click(); await painel.locator('.market-news').waitFor()
@@ -502,14 +504,15 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await p.locator('.feriados').innerText(), /Não há datas cadastradas nesta seleção\. Consulte a fonte oficial: a cobertura incompleta não indica ausência de feriados\./)
       assert.doesNotMatch(await p.locator('.feriados').innerText(), /Emancipação Política do Paraná/, '19 de dezembro não volta a ser apresentado como feriado civil estadual')
       // aprender: lista de conceitos de um lado, explicação do outro, sem texto sobre o método
-      await p.goto(base + '/#aprender')
+      await p.goto(base + '/#aprender/conceitos')
       await p.locator('.learn-list').waitFor()
       const expandir = async () => {
         const button = p.getByRole('button', { name: 'Expandir todas', exact: true })
         if (!(await button.isDisabled())) await button.click()
-        assert.equal(await p.locator('.learn-group[open]').count(), 7)
+        assert.equal(await p.locator('.learn-group[open]').count(), topicCount)
       }
-      assert.equal(await p.locator('.learn-list li').count(), 27)
+      assert.equal(await p.locator('.learn-list li').count(), CONCEITOS.length)
+      assert.deepEqual((await p.locator('.learn-list li button b').allTextContents()).sort(), CONCEITOS.map(concept => concept.nome.replace(/ \(.*\)/, '')).sort())
       assert.equal(await p.locator('.learn-list button', { hasText: 'Regime FÁCIL' }).count(), 1, 'o conceito existente de Regime FÁCIL está preservado')
       assert.equal(await p.locator('.learn-group[open]').count(), 0, 'categorias começam recolhidas')
       if (out) await p.screenshot({ path: path.join(out, `aprender-${width}-recolhido.png`), fullPage: true })
@@ -532,8 +535,8 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await p.locator('.learn-count').innerText(), /2 conceitos encontrados/)
       await busca.fill('debenture'); assert.equal(await p.locator('.learn-list li', { hasText: 'Debênture' }).count(), 1, 'busca sem acento')
       await busca.fill('zzzxyz'); assert.match(await p.locator('.learn-count').innerText(), /Nenhum conceito encontrado/); assert.equal(await p.locator('.learn-list li').count(), 0)
-      await p.getByRole('button', { name: 'Limpar busca' }).click(); assert.equal(await busca.inputValue(), ''); assert.equal(await p.locator('.learn-list li').count(), 27)
-      assert.equal(await p.locator('.learn-group[open]').count(), 7, 'limpar busca restaura categorias abertas manualmente')
+      await p.getByRole('button', { name: 'Limpar busca' }).click(); assert.equal(await busca.inputValue(), ''); assert.equal(await p.locator('.learn-list li').count(), CONCEITOS.length)
+      assert.equal(await p.locator('.learn-group[open]').count(), topicCount, 'limpar busca restaura categorias abertas manualmente')
       await busca.fill('recebiveis'); await p.locator('.learn-list button', { hasText: 'FIDC' }).click()
       await p.locator('.learn-detail h2', { hasText: 'FIDC' }).waitFor()
       assert.match(await p.locator('.learn-detail').innerText(), /subordinação[\s\S]*30%[\s\S]*R\$ 1\.000\.000[\s\S]*R\$ 1\.000\.000/)
@@ -549,11 +552,11 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
         assert.match(await p.locator('.learn-detail').innerText(), rx, nome)
       }
       await p.locator('.learn-detail .learn-go').click(); await p.waitForURL('**/#cenarios/inflacao')
-      await p.goto(base + '/#aprender')
+      await p.goto(base + '/#aprender/conceitos')
       await p.locator('.learn-list').waitFor()
       const geral = p.locator('.learn-detail')
       await geral.getByRole('heading', { name: 'Como as peças se encaixam' }).waitFor()
-      assert.equal(await geral.locator('.learn-links').first().locator('li').count(), 27, 'um papel para cada conceito')
+      assert.equal(await geral.locator('.learn-links').first().locator('li').count(), CONCEITOS.length, 'um papel para cada conceito')
       assert.match(await geral.innerText(), /O caminho de ponta a ponta[\s\S]*Inflação →[\s\S]*Quem se liga a quem[\s\S]*Liquidação antecipada ↔ FIDC/i)
       const buscaFinal = p.getByRole('searchbox', { name: 'Buscar conceito' })
       for (const [buscaTema, titulo, slug] of [['Escala 6x1', /Escala 6x1/, 'escala-6x1'], ['Reforma Tributária', /Reforma Tributária/, 'reforma-tributaria'], ['Split Payment', /Split Payment/, 'split-payment'], ['Dividendos', /Dividendos/, 'dividendos'], ['CET', /CET \(Custo Efetivo Total\)/, 'cet']]) {

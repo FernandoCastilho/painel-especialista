@@ -4,6 +4,12 @@ import { INSUMOS } from './insumos.js'
 
 // This registry is deliberately independent of the legacy Google News collector.
 // A government domain alone is not a reuse licence or an approval to crawl it.
+// Registry eligibility does not mean that the live collector is operational.
+export const SECTOR_NEWS_COLLECTION = Object.freeze({
+  mode: 'offline-revalidation',
+  automaticCollectionEnabled: false,
+  notice: 'Atualização automática institucional desativada. Esta seleção usa publicações já verificadas; consulte os links das fontes.',
+})
 export const SECTOR_NEWS_WINDOW_MS = NEWS_WINDOW_MS
 export const SECTOR_NEWS_TOPICS = [...BANKING_TOPICS, ...INSUMOS].map(({ id, label }) => ({ id, label }))
 export const CC_BY_ND_3 = 'https://creativecommons.org/licenses/by-nd/3.0/'
@@ -168,7 +174,7 @@ export function canonicalNewsUrl(value) {
   } catch { return null }
 }
 
-export function validateSectorNewsItem(raw, now = Date.now()) {
+export function validateSectorNewsItem(raw, now = Date.now(), { windowMs = SECTOR_NEWS_WINDOW_MS } = {}) {
   const source = SECTOR_NEWS_SOURCES.find(s => s.id === raw?.sourceId)
   if (!source?.enabled) return { reason: 'source_not_approved' }
   if (typeof raw.title !== 'string' || !raw.title.trim() || raw.title.length > 600 || /<[^>]*>/.test(raw.title)) return { reason: 'invalid_title' }
@@ -177,7 +183,10 @@ export function validateSectorNewsItem(raw, now = Date.now()) {
   const bounds = publicationBounds(raw)
   if (!bounds) return { reason: 'invalid_publication_date' }
   if (bounds.max > now) return { reason: 'future_or_uncertain_publication' }
-  if (bounds.min < now - SECTOR_NEWS_WINDOW_MS) return { reason: 'outside_120h_or_uncertain_boundary' }
+  // The knowledge map may retain already approved headlines for seven days.
+  // Existing readers keep their five-day default; callers cannot extend past 168h.
+  const publicationWindow = Number.isFinite(windowMs) && windowMs > 0 ? Math.min(windowMs, 7 * 86400000) : SECTOR_NEWS_WINDOW_MS
+  if (bounds.min < now - publicationWindow) return { reason: 'outside_120h_or_uncertain_boundary' }
   const collected = validIsoTimestamp(raw.collectedAt)
   if (collected === null || collected > now || collected < bounds.min) return { reason: 'invalid_collection_date' }
   if (!source.allowedTypes.includes(raw.type)) return { reason: 'wrong_source_type' }
@@ -220,6 +229,30 @@ function sourceState(source, raw, now) {
   return { id: source.id, label: source.label, url: source.url, enabled: source.enabled, automaticCollection: Boolean(source.automaticCollection), accessSuspended: Boolean(raw?.accessSuspended), status, reason, checkedAt, lastSuccessAt, stale, licenseUrl: source.licenseUrl || null }
 }
 
+function collectionStatus(data, states, now) {
+  const policy = data.collectionPolicy, delivery = data.delivery
+  if (policy?.maintenanceActive === true) return { ...SECTOR_NEWS_COLLECTION, mode: 'maintenance', maintenanceActive: true, notice: 'Coleta institucional em manutenção. Último conteúdo confirmado preservado; consulte as datas das fontes.' }
+  const generated = validIsoTimestamp(delivery?.generatedAt), published = validIsoTimestamp(delivery?.publishedAt)
+  const sources = Object.values(states).filter(source => source.enabled && source.automaticCollection)
+  const successful = sources.filter(source => ['ok', 'empty', 'partial'].includes(source.status) && !source.accessSuspended
+    && Date.parse(source.checkedAt) <= Date.parse(source.lastSuccessAt) && Date.parse(source.lastSuccessAt) <= generated)
+  const confirmed = policy?.mode === 'institutional-headlines-live' && policy.automaticScheduleEnabled === true
+    && policy.persistentStateStatus === 'github-protected-history'
+    && generated !== null && published !== null && generated <= published && published <= now && generated >= now - SECTOR_NEWS_WINDOW_MS
+    && /^[a-f0-9]{40}$/i.test(delivery?.receipt || '') && /^[a-f0-9]{64}$/i.test(delivery?.digest || '')
+    && Number.isInteger(delivery?.stateRevision) && delivery.stateRevision >= 1
+    && delivery.stateRef === 'refs/heads/sector-news-state' && delivery.feedRef === 'refs/heads/sector-news-feed'
+    && successful.length > 0
+  if (!confirmed) return SECTOR_NEWS_COLLECTION
+  return {
+    mode: policy.mode, automaticCollectionEnabled: true,
+    notice: 'Coleta automática institucional ativa · cobertura parcial. Consulte os links das fontes.',
+    checkedAt: newest(sources.map(source => source.checkedAt)), lastSuccessAt: newest(sources.map(source => source.lastSuccessAt)),
+    publishedAt: delivery.publishedAt,
+    sourceStats: { successful: successful.length, notActive: Object.keys(states).length - successful.length, failed: sources.filter(source => source.status === 'failed').length, pending: Object.values(states).filter(source => !source.enabled).length, suspended: Object.values(states).filter(source => source.accessSuspended || (source.enabled && !source.automaticCollection)).length },
+  }
+}
+
 export function normalizeSectorNews(data, now = Date.now()) {
   const record = value => value !== null && typeof value === 'object' && !Array.isArray(value)
   if (!record(data) || data.schemaVersion !== 1 || !record(data.topics) || !record(data.sourceStates)) throw new Error('Arquivo de notícias setoriais inválido ou versão não suportada.')
@@ -248,5 +281,5 @@ export function normalizeSectorNews(data, now = Date.now()) {
     }
     return [topic.id, { ...topic, items, status, checkedAt, lastSuccessAt, coverageNote: notes[status], sources }]
   }))
-  return { schemaVersion: 1, generatedAt: beforeNow(data?.generatedAt, now), windowDays: NEWS_WINDOW_DAYS, windowStart: new Date(now - SECTOR_NEWS_WINDOW_MS).toISOString(), windowEnd: new Date(now).toISOString(), topics, sourceStates: states }
+  return { schemaVersion: 1, collection: collectionStatus(data, states, now), generatedAt: beforeNow(data?.generatedAt, now), windowDays: NEWS_WINDOW_DAYS, windowStart: new Date(now - SECTOR_NEWS_WINDOW_MS).toISOString(), windowEnd: new Date(now).toISOString(), topics, sourceStates: states }
 }

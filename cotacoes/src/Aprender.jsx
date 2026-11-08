@@ -3,17 +3,34 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CONCEITOS, CONEXAO, LIGACOES, buscarConceitos, conexoesDe, porTopico } from './educacao.js'
 import Help from './Help.jsx'
 import './Aprender.css'
+import IcmsStDiagram from './IcmsStDiagram.jsx'
+import KnowledgeMap from './KnowledgeMap.jsx'
 
 const nomeCurto = (id) => CONCEITOS.find((c) => c.id === id)?.nome.replace(/ \(.*\)/, '') ?? id
 import { Panel } from './TerminalDesk.jsx'
 
+function AprenderAudio() {
+  const [failed, setFailed] = useState(false)
+  const audioUrl = './audio/cupom-cambial-explicacao-notebooklm-v2-2026-11-08.m4a'
+  return <section aria-label="Cupom cambial em áudio" className="learn-audio">
+    <h3>Ouça a explicação</h3>
+    <p>Resumo em Audio 🎧</p>
+    <audio controls preload="metadata" aria-label="Ouvir explicação sobre cupom cambial" src={audioUrl} onError={() => setFailed(true)} />
+    {failed && <p role="alert">Não foi possível carregar o áudio. Você pode baixar o arquivo ou continuar lendo a explicação abaixo.</p>}
+    <a href={audioUrl} download>Baixar áudio (M4A)</a>
+  </section>
+}
+
 // Aba Aprender: lista de conceitos à esquerda; o conceito escolhido abre à direita (frase, explicação simples, lacunas, versão precisa, exemplo, teste).
 function Concept({ c, goto }) {
+  if (c.diagramaIcms) return <IcmsStDiagram goto={goto} />
   return (
     <div className="learn-card is-focus">
       <Panel title={c.nome} note={c.ajuda && <Help label={`Sobre ${c.nome}`} wide>{c.ajuda.map((t) => <p key={t}>{t}</p>)}</Help>}>
         <div className="learn-body">
           <p className="learn-sentence"><span className="learn-tag">Em uma frase</span>{c.frase}</p>
+
+          {c.id === 'cupom-cambial' && <AprenderAudio />}
 
           <h3>Explicação simples</h3>
           {c.crianca.map((t) => <p key={t}>{t}</p>)}
@@ -123,8 +140,11 @@ export default function Aprender({ view = '', goto }) {
       detail.current.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
     }
   }, [chosen])
+  const mapMode = !view || view === 'mapa'
   return (
     <div className="learn">
+      <nav className="learn-mode" aria-label="Explorar Aprender"><button type="button" aria-pressed={mapMode} onClick={() => goto('aprender', 'mapa')}>Mapa do conhecimento</button><button type="button" aria-pressed={!mapMode} onClick={() => goto('aprender', chosen?.id || 'conceitos')}>Conceitos</button></nav>
+      {mapMode ? <KnowledgeMap goto={goto} /> : <>
       <Aviso title="Aprender · exemplos didáticos"><p>Os exemplos usam números redondos para facilitar a conta; não são cotações de mercado.</p></Aviso>
       <div className="learn-split">
         <nav className="learn-list" aria-label="Conceitos">
@@ -173,6 +193,7 @@ export default function Aprender({ view = '', goto }) {
           )}
         </section>
       </div>
+      </>}
     </div>
   )
 }

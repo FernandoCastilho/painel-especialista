@@ -48,6 +48,9 @@ test('fontes detalhadas ficam na Base de dados, com exceções contextuais de At
     if (['BndesCreditoTfb.jsx', 'BndesTlpExigivel.jsx'].includes(f)) t = t.replace(/<details className="bndes-limits">[\s\S]*?<\/details>/, '')
     // Política do processador de sugestões precisa estar junto do ato de envio.
     if (f === 'FeedbackMascot.jsx') t = t.replace(/<p className="feedback-provider">[\s\S]*?<\/p>/, '')
+    // A apresentação para cliente preserva as referências do cálculo apenas
+    // no slide obrigatório de premissas, sem liberar catálogo no restante da UI.
+    if (f === 'BndesPresentation.jsx') t = t.replace(/<section className="bnp-references">[\s\S]*?<\/section>/, '')
     assert.doesNotMatch(t, /Fontes?: /, `${f}: texto "Fonte:" em painel`)
     assert.doesNotMatch(t, /href="https?:\/\/(?!wa\.me)/, `${f}: link externo fixo em painel`)
     assert.doesNotMatch(t, /\{[^}]*sourceName[^}]*\}\s*[·<]/, `${f}: nome da fonte exibido`)

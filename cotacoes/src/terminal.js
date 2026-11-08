@@ -5,20 +5,9 @@ import { brentReturns } from './oilReference.js'
 import { nf } from './format.js'
 import { sourceHealth } from './dataHealth.js'
 
-// Ordem do terminal (diferente da barra inferior do celular). Os ids são os mesmos de Nav.jsx.
-export const DESK_TABS = [
-  { id: 'resumo', label: 'Mercado' },
-  { id: 'juros', label: 'Juros' },
-  { id: 'cenarios', label: 'Cenários' },
-  { id: 'noticias', label: 'Notícias' },
-  { id: 'bndes', label: 'BNDES' },
-  { id: 'setores', label: 'Setores' },
-  { id: 'calculadora', label: 'Calculadoras' },
-  { id: 'feriados', label: 'Feriados' },
-  { id: 'aprender', label: 'Aprender' },
-  { id: 'apresentar', label: 'Apresentar', oculto: true }, // protótipo: #apresentar e comando APRESENTAR
-  { id: 'config', label: 'Config', oculto: true }, // fora da barra; abre por #config e pelo comando CONFIG
-]
+import { APP_SECTIONS } from './appSections.js'
+
+export const DESK_TABS = APP_SECTIONS.map(({ id, label, terminalLabel, oculto }) => ({ id, label: terminalLabel || label, ...(oculto ? { oculto } : {}) }))
 
 const norm = (s) =>
   String(s ?? '')
@@ -37,8 +26,10 @@ const TAB = {
   COMMODITIES: ['cenarios', 'commodities'], PETROLEO: ['cenarios', 'commodities'], BRENT: ['cenarios', 'commodities'], OURO: ['cenarios', 'commodities'],
   FRETE: ['cenarios', 'frete'],
   BNDES: ['bndes'], TFB: ['bndes'],
+  BANCOS: ['bancos'], BASILEIA: ['bancos'],
   SETORES: ['setores'], COBRE: ['setores', 'cobre'], ALUMINIO: ['setores', 'aluminio'], ACO: ['setores', 'aco'], TELECOM: ['setores', 'telecom'], INDUSTRIA: ['setores', 'industria'], VAREJO: ['setores', 'comercio'],
   TLPEXIGIVEL: ['calculadora', 'bndes-tlp-exigivel'], CREDITOTFB: ['calculadora', 'bndes-credito-tfb'],
+  COMPARADORDECREDITO: ['calculadora', 'comparador-credito'],
   CALC: ['calculadora'], CALCULADORA: ['calculadora'], CALCULADORAS: ['calculadora'], GIRO: ['calculadora', 'giro'], DESCONTO: ['calculadora', 'analise-desconto'], ANALISEDEDESCONTO: ['calculadora', 'analise-desconto'], FINIMP: ['calculadora', 'finimp'], FINAME: ['calculadora', 'finame-materiais'], FINAMEMATERIAIS: ['calculadora', 'finame-materiais'],
   NEWS: ['noticias'], NOTICIAS: ['noticias'], AGENDA: ['noticias'],
   FERIADOS: ['feriados'], APRESENTAR: ['apresentar'], APRESENTACAO: ['apresentar'], CONFIG: ['config'], AJUDA: ['config'], HELP: ['config'],
