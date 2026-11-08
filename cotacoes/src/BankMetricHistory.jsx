@@ -15,7 +15,7 @@ function HistoryPlot({ points, metric, name }) {
       {[0, 1, 2, 3].map(i => { const value = minimum + (maximum - minimum) * i / 3; return <g key={i}><line x1="100" x2="600" y1={y(value)} y2={y(value)} className="bank-history-grid" /><text x="90" y={y(value) + 4} textAnchor="end">{bankNumber(value, unit)}</text></g> })}
       <path d={line} className="bank-history-line" />
       {points.map((point, i) => <g key={point.period}><text x={x(i)} y="239" textAnchor="middle">{quarterLabel(point.period)}</text>{point.item ? <circle cx={x(i)} cy={y(point.item.value)} r="5" className="bank-history-point"><title>{quarterLabel(point.period)}: {bankNumber(point.item.value, unit)}</title></circle> : <text x={x(i)} y="260" textAnchor="middle">sem dado</text>}</g>)}
-    </svg></div><p className="muted">Eixo vertical ajustado à série. Lacunas indicam trimestres sem dado equivalente; não foram estimados.</p>
+    </svg></div><p className="muted">Deslize o gráfico para ver todos os trimestres. Eixo vertical ajustado à série. Lacunas indicam trimestres sem dado equivalente; não foram estimados.</p>
   </figure>
 }
 

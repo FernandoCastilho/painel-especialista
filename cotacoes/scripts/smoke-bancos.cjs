@@ -66,6 +66,8 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
         const historyPanel = page.getByRole('dialog', { name: 'Histórico de Basileia', exact: true })
         await historyPanel.getByRole('img', {name:'Basileia de Itaú',exact:false}).waitFor()
         assert.match(await historyPanel.innerText(), /sem dado/)
+        await historyPanel.evaluate(element => { element.scrollTop = 0 })
+        await page.screenshot({ path: path.join(out, `${width}-${theme}-history-top.png`), fullPage: false })
         await historyPanel.getByText('Valores históricos e fontes', {exact:true}).click()
         assert.ok(await historyPanel.locator('a').count() > 0)
         await page.screenshot({ path: path.join(out, `${width}-${theme}-history.png`), fullPage: true })
