@@ -59,6 +59,16 @@ jobs:
         run: |
           nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
+      - name: Conferir Bancos em celular, tablet e desktop nos dois temas
+        run: BANKS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/bancos" node scripts/smoke-bancos.cjs
+      - name: Capturas e relatório da seção Bancos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bancos-design
+          path: ${{ runner.temp }}/qa-universal/bancos
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir curadorias de tributos e escala 6x1
         run: CURADORIA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/curadoria" node scripts/smoke-curadoria.cjs
       - name: Conferir mapa do conhecimento em quatro cenários

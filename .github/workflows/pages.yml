@@ -213,6 +213,10 @@ jobs:
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
         run: node scripts/fetch-inadimplencia.mjs
         timeout-minutes: 10
+      - name: Coletar balanços e carteiras dos bancos (IF.data)
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        run: node scripts/fetch-bancos.mjs
+        timeout-minutes: 8
       - name: Conferir referências de recuperação judicial (semanal, sem contagens)
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
         run: node scripts/fetch-recuperacao.mjs
