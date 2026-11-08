@@ -229,6 +229,7 @@ async function fillScenario(page, section, route) {
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /Para outras origens ou dúvida, a simulação fica bloqueada/)
     await section.locator('#fm-finame-eligible').check()
+    await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
     assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 60)
     assert.match(await section.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
@@ -248,7 +249,7 @@ async function fillScenario(page, section, route) {
         try {
           await fixtures(page)
           await page.goto(`${base}/#calculadora/${route}`)
-          const section = page.locator('main.app section.cx'); await section.waitFor()
+          const section = page.locator('main.app section.cx').first(); await section.waitFor()
           if (route === 'finame-materiais') await section.locator('#fm-finame-eligible').waitFor()
           await settleLayout(page)
           await assertWorkspace(page, section, `${route} ${width}`)
