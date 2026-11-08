@@ -14,6 +14,7 @@ import BndesCreditoTfb, { TfbIcon } from './BndesCreditoTfb.jsx'
 import BndesLcdCap, { LcdIcon } from './BndesLcdCap.jsx'
 import Help from './CalculatorHelp.jsx'
 import './CalculatorLayout.css'
+import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -31,6 +32,7 @@ function GiroIcon() {
 }
 
 const CALCS = [
+  { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'bndes-tlp-exigivel', title: 'BNDES TLP exigível', sub: 'IPCA e juros exigíveis, sem capitalização do principal', Icon: TlpIcon },
   { id: 'bndes-credito-tfb', title: 'BNDES Crédito · TFB', sub: 'Conferência do exemplo histórico de 34 parcelas', Icon: TfbIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
@@ -167,6 +169,7 @@ function CapitalDeGiro({ onBack }) {
 
 // Aba Calculadoras: lista de calculadoras (ícones) e a calculadora aberta, com endereço próprio (#calculadora/giro).
 export default function Calculadora({ view, onView }) {
+  if (view === 'cbs-caixa') return <CbsCaixa onBack={() => onView('')} />
   if (view === 'bndes-tlp-exigivel') return <BndesTlpExigivel onBack={() => onView('')} />
   if (view === 'bndes-credito-tfb') return <BndesCreditoTfb onBack={() => onView('')} />
   if (view === 'bndes-selic-lcd') return <BndesLcdCap onBack={() => onView('')} />
