@@ -52,9 +52,9 @@
 .bank-metric-row { cursor:pointer; }
 .bank-metric-row:hover td,.bank-metric-row:hover th { background:var(--surface-2); }
 .bank-history-button { display:block; width:100%; min-height:44px; padding:0; background:none; border:0; color:inherit; text-align:left; font:inherit; font-weight:600; cursor:pointer; }
-.bank-open-icon { color:var(--mut); white-space:nowrap; }
 .bank-identity { display:flex; align-items:center; gap:4px; min-height:44px; }
 .bank-identity img { flex:none; display:block; object-fit:contain; width:24px; height:24px; border-radius:4px; }
+.banks-table th[data-bank="safra"] .bank-identity img { background:#fff; padding:1px; }
 .bank-identity strong { flex:1; min-width:0; line-height:1.2; }
 .bank-source-button { display:inline-flex; align-items:center; justify-content:center; flex:none; width:44px; min-height:44px; padding:0; border:0; color:var(--mut); background:none; font:inherit; cursor:pointer; }
 .bank-info-icon { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border:1px solid currentColor; border-radius:50%; font-size:12px; font-style:normal; line-height:1; }
