@@ -225,7 +225,7 @@ async function fillScenario(page, section, route) {
   } else if (route === 'finame-materiais') {
     assert.equal(await section.locator('.fm-grade, .fm-fluxo-panel').count(), 0)
     assert.match(await section.locator('#fm-iof-err').innerText(), /Confirme os recursos FINAME/)
-    const eligibilityWarning = section.locator('.cx-iof > .cx-hint')
+    const eligibilityWarning = section.locator('.cx-iof > .cx-hint:not(#fm-iof-err)')
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /Para outras origens ou dúvida, a simulação fica bloqueada/)
     await section.locator('#fm-finame-eligible').check()
