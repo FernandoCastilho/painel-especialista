@@ -1,6 +1,6 @@
 {
-  "generatedAt": 1794098496574,
-  "lastAttemptAt": 1794098496574,
+  "generatedAt": 1794098934754,
+  "lastAttemptAt": 1794098934754,
   "latestBcPeriod": 202606,
   "riReviewedAt": "2026-11-07",
   "stale": false,
@@ -1471,6 +1471,13 @@
               "page": 7,
               "basis": "bradesco-brgaap-roe",
               "note": "ROAE trimestral anualizado recorrente, incluindo efeito do aumento de capital; distinto do acumulado e do índice pro forma sem aumento."
+            },
+            "nplPF": {
+              "value": 4.9,
+              "basis": "bradesco-nplPF-90d",
+              "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
+              "page": 13,
+              "note": "Pessoas físicas: carteira em atraso acima de 90 dias."
             }
           },
           "porte": []
@@ -1557,6 +1564,13 @@
               "page": 7,
               "basis": "bradesco-brgaap-roe",
               "note": "ROAE trimestral anualizado recorrente, incluindo efeito do aumento de capital; distinto do acumulado e do índice pro forma sem aumento."
+            },
+            "nplPF": {
+              "value": 4.4,
+              "basis": "bradesco-nplPF-90d",
+              "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
+              "page": 13,
+              "note": "Pessoas físicas: carteira em atraso acima de 90 dias."
             }
           },
           "porte": []
@@ -1643,6 +1657,13 @@
               "page": 7,
               "basis": "bradesco-brgaap-roe",
               "note": "ROAE trimestral anualizado recorrente, incluindo efeito do aumento de capital; distinto do acumulado e do índice pro forma sem aumento."
+            },
+            "nplPF": {
+              "value": 3.7,
+              "basis": "bradesco-nplPF-90d",
+              "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
+              "page": 13,
+              "note": "Pessoas físicas: carteira em atraso acima de 90 dias."
             }
           },
           "porte": []
@@ -2080,6 +2101,20 @@
               "note": "Lucro líquido contábil do trimestre, reconciliação contábil e gerencial.",
               "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
               "page": 6
+            },
+            "nplPF": {
+              "value": 5.5,
+              "basis": "santander-nplPF-90d-reclassificado",
+              "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
+              "page": 12,
+              "note": "Inadimplência acima de 90 dias; série reclassificada no informe 3T26. PF e PJ da apresentação gerencial."
+            },
+            "nplPJ": {
+              "value": 1.5,
+              "basis": "santander-nplPJ-90d-reclassificado",
+              "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
+              "page": 12,
+              "note": "Inadimplência acima de 90 dias; série reclassificada no informe 3T26. PF e PJ da apresentação gerencial."
             }
           },
           "porte": [
@@ -2162,6 +2197,20 @@
               "note": "Lucro líquido contábil do trimestre, reconciliação contábil e gerencial.",
               "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
               "page": 6
+            },
+            "nplPF": {
+              "value": 5.1,
+              "basis": "santander-nplPF-90d-reclassificado",
+              "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
+              "page": 12,
+              "note": "Inadimplência acima de 90 dias; série reclassificada no informe 3T26. PF e PJ da apresentação gerencial."
+            },
+            "nplPJ": {
+              "value": 1.6,
+              "basis": "santander-nplPJ-90d-reclassificado",
+              "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
+              "page": 12,
+              "note": "Inadimplência acima de 90 dias; série reclassificada no informe 3T26. PF e PJ da apresentação gerencial."
             }
           },
           "porte": [
@@ -2244,6 +2293,20 @@
               "note": "Lucro líquido contábil do trimestre, reconciliação contábil e gerencial.",
               "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
               "page": 6
+            },
+            "nplPF": {
+              "value": 4.2,
+              "basis": "santander-nplPF-90d-reclassificado",
+              "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
+              "page": 12,
+              "note": "Inadimplência acima de 90 dias; série reclassificada no informe 3T26. PF e PJ da apresentação gerencial."
+            },
+            "nplPJ": {
+              "value": 1.4,
+              "basis": "santander-nplPJ-90d-reclassificado",
+              "source": "https://filemanager-cdn.mziq.com/published/a2595886-9fbb-4339-8a38-71d6ce7c7d36/aded46c5-a172-483a-99ed-203137939fac",
+              "page": 12,
+              "note": "Inadimplência acima de 90 dias; série reclassificada no informe 3T26. PF e PJ da apresentação gerencial."
             }
           },
           "porte": [

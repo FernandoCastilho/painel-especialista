@@ -40,7 +40,7 @@ let candidate = now.getUTCFullYear() * 100 + q * 3
 if (!q) candidate = (now.getUTCFullYear() - 1) * 100 + 12
 let latest
 for (let i = 0; i < 5; i++) {
-  try { const rows = await report(candidate, '1'); if (BANKS.every(b => rows.some(r => r.CodInst === b.code && r.Conta === '140220' && Number.isFinite(r.Saldo)))) { latest = candidate; break } }
+  try { const rows = await report(candidate, '1'); if (BANKS.some(b => rows.some(r => r.CodInst === b.code && r.Conta === '140220' && Number.isFinite(r.Saldo)))) { latest = candidate; break } }
   catch (e) { errors.push(`${candidate}: ${e.message}`) }
   candidate = candidate % 100 === 3 ? (Math.floor(candidate / 100) - 1) * 100 + 12 : candidate - 3
 }

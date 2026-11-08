@@ -53,9 +53,9 @@ export function bankComparison(bank, current, delta) {
   // Jamais comparar RI com BC ou trocar silenciosamente o perímetro da série.
   return [...(bank?.releases || []), ...(bank?.observations || [])].find(p => p.period === target && p.origin === current?.origin) || null
 }
-export function bankSummary(bank, current, delta = -1) {
+export function bankSummary(bank, current, delta = -1, segment = 'Total') {
   const previous = bankComparison(bank, current, delta)
-  const parts = ['creditPJ', 'nplTotal', 'basel', 'roe'].flatMap(key => {
+  const parts = [`credit${segment}`, `npl${segment}`, 'basel', 'roe'].flatMap(key => {
     const change = metricChange(current, previous, key)
     if (!change) return []
     const label = BANK_METRICS[key][0]

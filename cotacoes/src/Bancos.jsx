@@ -5,7 +5,7 @@ import { BANK_SOURCE_PAGE, BANK_METRICS, bankNumber, quarterLabel, latestBankPoi
 import './Bancos.css'
 
 function Value({ point, previous, metric }) {
-  const item = point?.metrics?.[metric], change = metricChange(point, previous, metric)
+  const raw = point?.metrics?.[metric], item = Number.isFinite(raw?.value) ? raw : null, change = metricChange(point, previous, metric)
   return <><span title={item?.note || item?.basis}>{item ? bankNumber(item.value, BANK_METRICS[metric][1]) : 'Não disponível'}</span>{change && <small className={`bank-change bank-change--${change.assessment}`}>{change.direction}{change.direction !== 'estável' && ` ${bankNumber(Math.abs(change.value), '%').replace('%', '')} ${change.unit}`}</small>}</>
 }
 function BankDetails({ bank, point, previous }) {
@@ -44,7 +44,7 @@ export default function Bancos() {
         <thead><tr><th scope="col">Banco / trimestre</th>{columns.map(key => <th scope="col" key={key}>{BANK_METRICS[key][0]}<small>{BANK_METRICS[key][1] === 'BRL' ? 'R$ bi' : '%'}</small></th>)}<th scope="col">Evolução dos indicadores</th></tr></thead>
         <tbody>{banks.map(bank => {
           const point = latestBankPoint(bank, mode), previous = bankComparison(bank, point, comparison)
-          return <tr key={bank.id}><th scope="row"><strong>{bank.name}</strong><span>{quarterLabel(point?.period)}</span><small>{point?.origin === 'ri' ? 'Resultado do banco' : 'Banco Central'}</small></th>{columns.map(key => <td key={key}><Value point={point} previous={previous} metric={key} /></td>)}<td className="banks-summary"><p>{bankSummary(bank, point, comparison)}</p><small>{previous ? `Referência: ${quarterLabel(previous.period)}.` : 'Sem comparação equivalente.'} {point?.scope}</small><BankDetails bank={bank} point={point} previous={previous} /></td></tr>
+          return <tr key={bank.id}><th scope="row"><strong>{bank.name}</strong><span>{quarterLabel(point?.period)}</span><small>{point?.origin === 'ri' ? 'Resultado do banco' : 'Banco Central'}</small></th>{columns.map(key => <td key={key}><Value point={point} previous={previous} metric={key} /></td>)}<td className="banks-summary"><p>{bankSummary(bank, point, comparison, segment)}</p><small>{previous ? `Referência: ${quarterLabel(previous.period)}.` : 'Sem comparação equivalente.'} {point?.scope}</small><BankDetails bank={bank} point={point} previous={previous} /></td></tr>
         })}</tbody></table></div></>}
     <details className="banks-method"><summary>Como interpretar e comparar os dados</summary>
       <ul><li>Basileia mede capital em relação aos ativos ponderados pelo risco. CET1 fica nos detalhes, quando divulgado.</li><li>Provisão é saldo para perdas esperadas; despesa de PDD é fluxo do período. Não são intercambiáveis. Uma provisão maior pode refletir risco maior ou reforço de cobertura.</li><li>Inadimplência gerencial acima de 90 dias e carteira inadimplida arrastada do SCR têm critérios próprios, identificados nas fontes.</li><li>O lucro exibido é trimestral e contábil. ROE/ROAE pode ser recorrente ou excluir ágio: consulte o critério, sem tratar metodologias diferentes como equivalentes.</li><li>As variações só aparecem entre períodos exatos da mesma fonte e critério. Valores indisponíveis não viram zero e dados antigos não preenchem lacunas de um trimestre novo.</li><li>PJ e PF podem não somar a carteira total quando há exterior, financeira, garantias ou outros perímetros. Aberturas por porte preservam a classificação original.</li></ul>
