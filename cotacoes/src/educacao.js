@@ -1,6 +1,7 @@
 import { nf } from './format.js'
 import { CONCEITO_MAQUILA } from './maquila.js'
 import { CONCEITO_JUROS_FORCADOS } from './jurosForcados.js'
+import { CONCEITO_IMPOSTO_SELETIVO } from './impostoSeletivo.js'
 // Aba "Aprender": conceitos explicados em linguagem simples. Os números dos exemplos saem das funções abaixo (testadas),
 // nunca digitados no texto, para a tela não mostrar uma conta errada. Exemplos são didáticos, não cotações de mercado.
 
@@ -710,6 +711,7 @@ export const CONCEITOS = [
     },
   },
   CONCEITO_MAQUILA,
+  CONCEITO_IMPOSTO_SELETIVO,
   {
     id: 'inflacao',
     topico: 'Inflação',
@@ -1061,6 +1063,8 @@ export const porTopico = (lista) => TOPICOS.map((topico) => ({ topico, itens: li
 // outros conceitos (LIGACOES). Os testes recusam conceito sem papel, sem ligação ou com ligação para conceito que não existe.
 // LIGACOES é a fonte única: cada par vale nos dois sentidos e aparece em "Conecta com" de ambos os conceitos e no quadro geral.
 export const LIGACOES = [
+  ['imposto-seletivo', 'reforma-tributaria', 'O IS integra a reforma do consumo, com incidência e cálculo próprios, ao lado do IBS e da CBS.'],
+  ['imposto-seletivo', 'inflacao', 'Mudanças no tributo podem afetar preços, mas o efeito na inflação depende do repasse e do peso de cada produto.'],
   ['juros-forcados', 'inflacao', 'A taxa real depende da inflação; manter juros baixos pode ser coerente com desinflação ou entrar em conflito com inflação elevada.'],
   ['juros-forcados', 'diferencial-de-juros', 'O diferencial de rendimento é um dos canais de pressão cambial, mas não explica sozinho a movimentação das moedas.'],
   ['juros-forcados', 'custo-de-funding', 'Taxa básica menor não garante captação mais barata se o risco, o juro longo ou o spread subirem.'],
@@ -1119,6 +1123,7 @@ export const LIGACOES = [
 export const CONEXAO = {
   titulo: 'Como as peças se encaixam',
   itens: [
+    { id: 'imposto-seletivo', texto: 'explica o imposto do pecado no Brasil, seu objetivo de saúde e ambiente, as regras de transição e possíveis efeitos sobre preços e margens.' },
     { id: 'juros-forcados', texto: 'compara seis histórias de juros baixos, controle da curva e repressão financeira, com benefícios, custos e limites de causalidade.' },
     { id: 'cet', texto: 'reúne o custo do crédito para o tomador, com o líquido recebido, os encargos aplicáveis e as datas dos pagamentos.' },
     { id: 'escala-6x1', texto: 'liga organização dos turnos, produtividade e planejamento do caixa, com transição e enquadramento trabalhista a conferir.' },
