@@ -975,7 +975,7 @@ export const CONCEITOS = [
       passos: ['Admita R$ 100 de débito nas vendas e R$ 40 de crédito válido nas compras.', 'Compensação ilustrativa: R$ 100 − R$ 40 = R$ 60.'],
       resultado: 'O saldo seria R$ 60, se todos os créditos fossem admitidos. Os valores não representam uma alíquota oficial nem o cálculo de 2026.',
     },
-    noApp: { texto: 'Em Cenários, acompanhe referências para discutir preços e capital de giro. O painel não apura CBS ou IBS.', tab: 'cenarios' },
+    noApp: { texto: 'Na calculadora Reforma tributária · caixa, simule a CBS e o dinheiro necessário para cobrir mudanças de prazo. É uma estimativa educativa, sem apuração fiscal de CBS ou IBS.', tab: 'calculadora', view: 'cbs-caixa' },
     teste: { pergunta: 'Somar 0,9% de CBS e 0,1% de IBS em 2026 revela a alíquota definitiva de toda empresa?', resposta: 'Não. São alíquotas de teste, com regras de dispensa. A carga final depende do regime, da operação, das alíquotas aplicáveis e dos créditos admitidos.' },
   },
   {
@@ -1008,7 +1008,7 @@ export const CONCEITOS = [
       passos: ['Separe R$ 100 do pagamento bruto de R$ 1.000.', 'Restam R$ 900 para a empresa, antes de tarifas e outros ajustes. Em duas parcelas iguais, a hipótese seria R$ 50 separados de cada R$ 500.'],
       resultado: 'O caixa disponível seria R$ 900. Os R$ 100 são uma hipótese didática, não uma alíquota oficial nem uma cobrança já aplicada ao usuário.',
     },
-    noApp: { texto: 'Em Juros, consulte referências para avaliar o custo de financiar o giro. O painel não executa split payment.', tab: 'juros' },
+    noApp: { texto: 'Na calculadora Reforma tributária · caixa, teste como a separação do imposto pode mudar o recebimento e a reserva de giro. O painel simula hipóteses; não executa split payment.', tab: 'calculadora', view: 'cbs-caixa' },
     teste: { pergunta: 'O split payment cria um imposto adicional e já é descontado de toda venda em novembro de 2026?', resposta: 'Não. Ele recolhe IBS e CBS, sem criar outro tributo. Na data desta revisão, os testes oficiais são controlados e não processam operações reais em caráter definitivo.' },
   },
   {

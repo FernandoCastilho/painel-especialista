@@ -10,6 +10,7 @@ const report = { scope: 'Interface, navegação, busca e links da história dos 
 const normalized = text => text.replace(/\s+/g, ' ').trim()
 
 ;(async () => {
+  const { CONCEITOS, porTopico } = await import(pathToFileURL(path.join(__dirname, '../src/educacao.js')).href)
   const { CASOS_JUROS, FONTES_JUROS, CONCEITO_JUROS_FORCADOS: concept } = await import(pathToFileURL(path.join(__dirname, '../src/jurosForcados.js')).href)
   assert.deepEqual(CASOS_JUROS.map(item => item.pais), ['Estados Unidos', 'Reino Unido e outras economias', 'Brasil', 'Japão', 'Austrália', 'Turquia'])
   fs.mkdirSync(output, { recursive: true })
@@ -43,7 +44,8 @@ const normalized = text => text.replace(/\s+/g, ' ').trim()
       assert.match(page.url(), /#aprender\/juros-forcados$/)
       assert.equal(await page.locator('.learn-detail').evaluate(element => element === document.activeElement), true, 'foco na explicação após seleção')
       await page.getByRole('button', { name: 'Limpar busca', exact: true }).click()
-      assert.match(await page.locator('.learn-count').innerText(), /28 conceitos em 7 tópicos/)
+      assert.equal(await page.locator('.learn-count').innerText(), `${CONCEITOS.length} conceitos em ${porTopico(CONCEITOS).length} tópicos`)
+      assert.deepEqual((await page.locator('.learn-list li button b').allTextContents()).sort(), CONCEITOS.map(item => item.nome.replace(/ \(.*\)/, '')).sort())
       assert.equal(await history.locator('.learn-history-case').count(), 6)
       assert.equal(await history.locator('.learn-history-case[open]').count(), 0)
       assert.equal(normalized(await history.locator('.learn-history-scope').innerText()), normalized(concept.estudoHistorico.escopo))
