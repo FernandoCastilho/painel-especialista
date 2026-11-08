@@ -41,9 +41,9 @@ export function createSimulationState({ approvedIds = [], now, storeId = 'offlin
     run: null, sharedBlocks: Object.fromEntries(SHARED_ACCESS_SCOPES.map(scope => [scope, null])), feed: { status: 'never_published', generatedAt: null, publishedAt: null, digest: null, receipt: null, lastPublication: null }, sources })
 }
 
-export function validateState(state) {
+export function validateState(state, { allowProduction = false } = {}) {
   assert(object(state) && state.schemaVersion === SCHEMA_VERSION, 'schema')
-  assert(state.environment === 'simulation-only' && id(state.storeId), 'environment')
+  assert((state.environment === 'simulation-only' || (allowProduction && state.environment === 'production')) && id(state.storeId), 'environment')
   assert(state.registryDigest === registryDigest, 'source_registry_changed_requires_review')
   assert(Number.isSafeInteger(state.revision) && state.revision >= 0 && validIsoTimestamp(state.updatedAt) !== null, 'revision_or_time')
   assert(object(state.sources), 'sources')
@@ -81,8 +81,9 @@ export function validateState(state) {
 
 // A runtime transition may add blocks but cannot clear or change an existing hold.
 // Recovery is intentionally absent: it needs a separately reviewed, authorized procedure.
-export function validateTransition(before, after) {
-  validateState(before); validateState(after)
+export function validateTransition(before, after, options) {
+  validateState(before, options); validateState(after, options)
+  assert(after.environment === before.environment, 'environment_transition')
   assert(after.revision === before.revision + 1 && after.storeId === before.storeId, 'non_monotonic_revision')
   assert(Date.parse(after.updatedAt) >= Date.parse(before.updatedAt), 'clock_regression')
   for (const scope of SHARED_ACCESS_SCOPES) if (before.sharedBlocks[scope]) assert(JSON.stringify(before.sharedBlocks[scope]) === JSON.stringify(after.sharedBlocks[scope]), 'shared_block_cannot_be_cleared')

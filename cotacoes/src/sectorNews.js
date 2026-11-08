@@ -229,6 +229,28 @@ function sourceState(source, raw, now) {
   return { id: source.id, label: source.label, url: source.url, enabled: source.enabled, automaticCollection: Boolean(source.automaticCollection), accessSuspended: Boolean(raw?.accessSuspended), status, reason, checkedAt, lastSuccessAt, stale, licenseUrl: source.licenseUrl || null }
 }
 
+function collectionStatus(data, states, now) {
+  const policy = data.collectionPolicy, delivery = data.delivery
+  const generated = validIsoTimestamp(delivery?.generatedAt), published = validIsoTimestamp(delivery?.publishedAt)
+  const sources = Object.values(states).filter(source => source.enabled && source.automaticCollection)
+  const successful = sources.filter(source => ['ok', 'empty', 'partial'].includes(source.status) && !source.accessSuspended)
+  const confirmed = policy?.mode === 'institutional-headlines-live' && policy.automaticScheduleEnabled === true
+    && policy.persistentStateStatus === 'github-protected-history'
+    && generated !== null && published !== null && generated <= published && published <= now && generated >= now - SECTOR_NEWS_WINDOW_MS
+    && /^[a-f0-9]{40}$/i.test(delivery?.receipt || '') && /^[a-f0-9]{64}$/i.test(delivery?.digest || '')
+    && Number.isInteger(delivery?.stateRevision) && delivery.stateRevision >= 1
+    && delivery.stateRef === 'refs/heads/sector-news-state' && delivery.feedRef === 'refs/heads/sector-news-feed'
+    && successful.some(source => Date.parse(source.checkedAt) <= generated && Date.parse(source.lastSuccessAt) <= Date.parse(source.checkedAt))
+  if (!confirmed) return SECTOR_NEWS_COLLECTION
+  return {
+    mode: policy.mode, automaticCollectionEnabled: true,
+    notice: 'Coleta automática institucional ativa · cobertura parcial. Consulte os links das fontes.',
+    checkedAt: newest(sources.map(source => source.checkedAt)), lastSuccessAt: newest(sources.map(source => source.lastSuccessAt)),
+    publishedAt: delivery.publishedAt,
+    sourceStats: { successful: successful.length, failed: sources.filter(source => source.status === 'failed').length, pending: Object.values(states).filter(source => !source.enabled).length, suspended: Object.values(states).filter(source => source.accessSuspended || (source.enabled && !source.automaticCollection)).length },
+  }
+}
+
 export function normalizeSectorNews(data, now = Date.now()) {
   const record = value => value !== null && typeof value === 'object' && !Array.isArray(value)
   if (!record(data) || data.schemaVersion !== 1 || !record(data.topics) || !record(data.sourceStates)) throw new Error('Arquivo de notícias setoriais inválido ou versão não suportada.')
@@ -257,5 +279,5 @@ export function normalizeSectorNews(data, now = Date.now()) {
     }
     return [topic.id, { ...topic, items, status, checkedAt, lastSuccessAt, coverageNote: notes[status], sources }]
   }))
-  return { schemaVersion: 1, collection: SECTOR_NEWS_COLLECTION, generatedAt: beforeNow(data?.generatedAt, now), windowDays: NEWS_WINDOW_DAYS, windowStart: new Date(now - SECTOR_NEWS_WINDOW_MS).toISOString(), windowEnd: new Date(now).toISOString(), topics, sourceStates: states }
+  return { schemaVersion: 1, collection: collectionStatus(data, states, now), generatedAt: beforeNow(data?.generatedAt, now), windowDays: NEWS_WINDOW_DAYS, windowStart: new Date(now - SECTOR_NEWS_WINDOW_MS).toISOString(), windowEnd: new Date(now).toISOString(), topics, sourceStates: states }
 }

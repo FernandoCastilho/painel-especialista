@@ -99,3 +99,19 @@ test('falha da fonte mantém aviso mesmo quando o arquivo foi lido', async () =>
   const source = await readFile(new URL('../src/SectorNews.jsx', import.meta.url), 'utf8')
   assert.match(source, /const readError = topic\?\.status === 'failed' \|\| resource.status === 'error'/)
 })
+
+test('coleta confirmada mostra datas e contagens públicas; leitura retida mantém aviso offline', async t => {
+  const data = { collection: { automaticCollectionEnabled: true, notice: 'Coleta automática institucional ativa · cobertura parcial.', checkedAt: '2026-11-05T11:00:00Z', lastSuccessAt: '2026-11-05T10:00:00Z', sourceStats: { successful: 2, failed: 1, suspended: 1, pending: 5 } }, topics: { teste: { status: 'partial', items: [], sources: [{ reason: 'private operational detail' }] } } }
+  const active = await setup(t, { status: 'ok', data })
+  assert.match(active.html(), /Coleta automática institucional ativa/)
+  assert.match(active.html(), /Última verificação/)
+  assert.match(active.html(), /último sucesso/)
+  assert.match(active.html(), /2 com consulta válida · 1 com falha · 1 suspensas · 5 pendentes/)
+  assert.match(active.html(), /Brasília/)
+  assert.doesNotMatch(active.html(), /private operational/)
+  for (const resource of [{ status: 'error', data }, { status: 'ok', stale: true, data }]) {
+    const stale = await setup(t, resource)
+    assert.ok(stale.html().includes(sectorNews.SECTOR_NEWS_COLLECTION.notice))
+    assert.doesNotMatch(stale.html(), /Coleta automática institucional ativa|Última verificação/)
+  }
+})
