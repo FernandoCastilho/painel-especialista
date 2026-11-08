@@ -30,20 +30,13 @@ jobs:
     uses: ./.github/workflows/cotacoes-ci.yml
     permissions:
       contents: read
-  deploy:
+  approve-source:
     needs: verify-source
     if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    env:
-      # Declaração de uso dos dados do Banco do Japão (decisão do responsável pelo projeto, 27/10/2026): uso não comercial.
-      # Hoje só habilita o leitor opcional de comunicados em PDF; a taxa do BoJ vem do BIS e não depende desta variável.
-      POLICY_BOJ_USE: noncommercial
-    defaults:
-      run:
-        working-directory: cotacoes
+    permissions:
+      actions: read
+      contents: read
     steps:
       - name: Exigir verificações antes de publicar código
         if: github.event_name != 'schedule' && needs.verify-source.result != 'success'
@@ -70,6 +63,32 @@ jobs:
               return
             }
             core.setFailed(`Agenda bloqueada: o código ${context.sha} ainda não possui publicação aprovada com todos os testes de código e interface. Execute a publicação manual ou corrija a falha do push; nenhum código será publicado por esta agenda.`)
+  institutional-news:
+    needs: approve-source
+    if: ${{ !cancelled() && needs.approve-source.result == 'success' && github.event.schedule != '0 11,18 * * *' && github.event.schedule != '30 11 * * 1,2' }}
+    uses: ./.github/workflows/institutional-news.yml
+    permissions:
+      contents: write
+  deploy:
+    needs: [approve-source, institutional-news]
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      # Declaração de uso dos dados do Banco do Japão (decisão do responsável pelo projeto, 27/10/2026): uso não comercial.
+      # Hoje só habilita o leitor opcional de comunicados em PDF; a taxa do BoJ vem do BIS e não depende desta variável.
+      POLICY_BOJ_USE: noncommercial
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - name: Bloquear publicação sem aprovação do código
+        if: needs.approve-source.result != 'success'
+        uses: actions/github-script@v7
+        with:
+          script: core.setFailed('Aprovação do código ausente ou falhou. Publicação bloqueada.')
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -185,11 +204,13 @@ jobs:
         # Antecede a poda setorial de cinco dias para guardar itens ainda válidos.
         run: node scripts/refresh-knowledge-news.mjs
         timeout-minutes: 2
-      - name: Revalidar janela setorial sem coleta externa
+      - name: Consumir snapshot institucional confirmado (preserva anterior em falha)
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
-        run: node scripts/fetch-sector-news.mjs --offline
-        timeout-minutes: 12
+        run: node scripts/sector-news-live.mjs --snapshot
+        timeout-minutes: 2
         continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Coletar acessos ao app (Umami, link de compartilhamento)
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
         run: node scripts/fetch-acessos.mjs

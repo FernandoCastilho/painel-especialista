@@ -19,6 +19,7 @@ async function setup(t, resource, normalize = data => data) {
   let clock = now
   class Clock extends Date { static now() { return clock } }
   runInNewContext(code, { module, exports: module.exports, Date: Clock, require: name => {
+    if (name === './SectorNews.css') return {}
     if (name === 'react') return { ...require(name), useMemo: fn => fn() }
     if (name === './useDataFile.js') return { useDataFile: () => resource }
     if (name === './visiblePolling.js') return { DATA_POLL_MS: 60000, startVisiblePolling: fn => { polls.push(fn); return () => {} } }
@@ -40,7 +41,7 @@ test('UI distingue carregamento e falha sem expor mensagens operacionais', async
   assert.ok(loading.html().includes(sectorNews.SECTOR_NEWS_COLLECTION.notice))
   const error = await setup(t, { status: 'error' })
   assert.match(error.html(), /Atualização de notícias indisponível/)
-  assert.ok(error.html().includes(sectorNews.SECTOR_NEWS_COLLECTION.notice))
+  assert.match(error.html(), /Atualização automática não confirmada nesta leitura/)
   for (const status of ['empty', 'failed', 'unavailable', 'partial']) {
     const component = await setup(t, { status: 'ok', data: { topics: { teste: { status, items: [], sources: [] } } } })
     assert.match(component.html(), status === 'failed' ? /Atualização de notícias indisponível/ : /Publicações ainda não disponíveis nesta seleção/)
@@ -98,4 +99,21 @@ test('leitura falha com snapshot retido preserva aviso, fonte e data das publica
 test('falha da fonte mantém aviso mesmo quando o arquivo foi lido', async () => {
   const source = await readFile(new URL('../src/SectorNews.jsx', import.meta.url), 'utf8')
   assert.match(source, /const readError = topic\?\.status === 'failed' \|\| resource.status === 'error'/)
+})
+
+test('coleta confirmada mostra datas e contagens públicas; leitura retida mantém aviso offline', async t => {
+  const data = { collection: { automaticCollectionEnabled: true, notice: 'Coleta automática institucional ativa · cobertura parcial.', checkedAt: '2026-11-05T11:00:00Z', lastSuccessAt: '2026-11-05T10:00:00Z', sourceStats: { successful: 2, notActive: 16, failed: 1, suspended: 1, pending: 5 } }, topics: { teste: { status: 'partial', items: [], sources: [{ reason: 'private operational detail' }] } } }
+  const active = await setup(t, { status: 'ok', data })
+  assert.match(active.html(), /Coleta automática institucional ativa/)
+  assert.match(active.html(), /Verificação geral do painel/)
+  assert.match(active.html(), /último sucesso geral/)
+  assert.match(active.html(), /2 com consulta válida · 16 não ativadas/)
+  assert.match(active.html(), /Brasília/)
+  assert.match(active.html(), /Fontes do painel/)
+  assert.doesNotMatch(active.html(), /private operational/)
+  for (const resource of [{ status: 'error', data }, { status: 'ok', stale: true, data }]) {
+    const stale = await setup(t, resource)
+    assert.match(stale.html(), /Atualização automática não confirmada nesta leitura/)
+    assert.doesNotMatch(stale.html(), /Coleta automática institucional ativa|Verificação geral do painel|automática institucional desativada/)
+  }
 })

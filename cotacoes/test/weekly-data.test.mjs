@@ -119,7 +119,9 @@ test('weekly final guard blocks missing or modified files and incomplete snapsho
 
 test('weekly inventory covers all collector outputs skipped by the special Pages schedule', async () => {
   const workflow = await readFile(new URL('../../.github/workflows/pages.yml', import.meta.url), 'utf8')
-  const collectors = [...workflow.matchAll(/run: node scripts\/(fetch-[\w-]+\.mjs)/g)].map(match => match[1])
+  const collectors = [...workflow.matchAll(/run: node scripts\/((?:fetch-[\w-]+|sector-news-live)\.mjs)/g)].map(match => match[1])
+  assert.ok(collectors.includes('sector-news-live.mjs'), 'o consumidor institucional integra o inventário real')
+  assert.match(workflow, /run: node scripts\/sector-news-live\.mjs --snapshot/)
   const outputs = new Set()
   for (const collector of collectors) {
     const source = await readFile(new URL('../scripts/' + collector, import.meta.url), 'utf8')

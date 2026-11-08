@@ -72,6 +72,17 @@ jobs:
           retention-days: 7
       - name: Conferir curadorias de tributos e escala 6x1
         run: CURADORIA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/curadoria" node scripts/smoke-curadoria.cjs
+      - name: Conferir coleta institucional publicada e falhas de confirmação
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: INSTITUTIONAL_NEWS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/institutional-news" node scripts/smoke-institutional-news.cjs
+      - name: Capturas e relatório da coleta institucional
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-news-design
+          path: ${{ runner.temp }}/qa-universal/institutional-news
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir CBS, dados setoriais e necessidade adicional de giro
         run: CBS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cbs" node scripts/smoke-cbs.cjs
       - name: Capturas e resultado do simulador CBS
