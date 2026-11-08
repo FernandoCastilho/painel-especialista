@@ -12,8 +12,8 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
     for (const width of [390, 820, 1440]) for (const theme of ['light', 'dark']) {
       const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
       const page = await context.newPage(), errors = []
-      const rows = width < 700 ? '.banks-mobile > article' : '.banks-table > tbody > tr'
-      const selector = width < 700 ? '.banks-mobile' : '.banks-table-scroll'
+      const rows = '.banks-table > thead th[data-bank]'
+      const selector = '.banks-table-scroll'
       try {
         page.on('pageerror', e => errors.push(e.message))
         await page.goto(base + '/?qa=bancos#bancos', { waitUntil: 'domcontentloaded' })
@@ -23,6 +23,9 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
         if (await notice.isVisible()) await notice.getByRole('button', { name: 'Entendi', exact: true }).click()
         await page.waitForFunction(s => document.querySelectorAll(s).length === 10, rows)
         assert.equal(await page.locator(rows).count(), 10)
+        assert.equal(await panel.locator('tbody tr[data-metric]').count(), 10)
+        assert.equal(await panel.locator('tbody tr[data-metric=basel] td').count(), 10)
+        assert.equal(await panel.locator('thead th').first().innerText(), 'Indicador')
         assert.match(await panel.innerText(), /Carteira PJ/)
         assert.match(await panel.innerText(), /Carteira PF/)
         const geometry = await page.evaluate(() => ({ width: innerWidth, document: document.documentElement.scrollWidth }))
@@ -38,11 +41,11 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
         await page.waitForFunction(s => document.querySelector(s)?.innerText.includes('2T2026'), rows)
         const detail = panel.getByText('Detalhes e fontes — Itaú', { exact: true })
         await detail.press('Enter')
-        const detailsPanel = width < 700 ? panel : page.getByRole('dialog', {name:'Detalhes e fontes — Itaú',exact:true})
+        const detailsPanel = page.getByRole('dialog', {name:'Detalhes e fontes — Itaú',exact:true})
         await detailsPanel.locator('.bank-details[open]').waitFor()
         await page.screenshot({ path: path.join(out, `${width}-${theme}-details.png`), fullPage: true })
         assert.ok(await detailsPanel.locator('.bank-details[open] a').count() > 0)
-        if (width >= 700) {
+        {
           await page.keyboard.press('Escape')
           await detailsPanel.waitFor({state:'hidden'})
           assert.ok(await detail.evaluate(el => el === document.activeElement), 'fecha e restaura o foco no banco')
@@ -50,7 +53,7 @@ const out = process.env.BANKS_QA_OUTPUT || 'workspace-qa/bancos'
         await page.getByLabel('Buscar banco', { exact: true }).fill('nenhum-banco')
         await page.getByText('Nenhum banco encontrado.', { exact: true }).waitFor()
         assert.deepEqual(errors, [])
-        report.push({ width, theme, passed: true, checks: ['10 bancos', 'PJ/PF', 'sem overflow da página', 'busca', 'segmento', 'anual', 'BC', 'detalhes por teclado', 'vazio', 'sem erro JS'] })
+        report.push({ width, theme, passed: true, checks: ['10 bancos nas colunas', '10 indicadores nas linhas', 'PJ/PF', 'sem overflow da página', 'busca', 'segmento', 'anual', 'BC', 'detalhes por teclado', 'vazio', 'sem erro JS'] })
       } catch (error) {
         fs.writeFileSync(path.join(out, 'failure.json'), JSON.stringify({width,theme,message:error.message,stack:error.stack},null,2))
         await page.screenshot({path:path.join(out,`${width}-${theme}-failure.png`),fullPage:true})
