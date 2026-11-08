@@ -38,6 +38,14 @@ test('delayed credits are an additional stress scenario, never immediate cash', 
   assert.equal(b.creditExposure, b.creditsUsable)
   assert.equal(b.reserveDelayed, b.reserveImmediate + b.creditExposure)
 })
+test('partial split preserves credit wait on the early portion before weighting', () => {
+  const r = simulateCbsCash({ ...base, splitShare: 50, receiveDays: 10,
+    payDays: 20, stockDays: 0, currentDueDays: 40, futureDueDays: 40, creditDelayDays: 0 })
+  assert.equal(r.creditGapDays, 5)
+  assert.ok(Math.abs(r.creditExposure - 250000 / 33) < 1e-8)
+  assert.ok(Math.abs(r.reserveImmediate - 80000 / 11) < 1e-8)
+  assert.ok(Math.abs(r.reserveDelayed - 490000 / 33) < 1e-8)
+})
 test('excess credits do not make tax remittance negative or become a refund', () => {
   const r = simulateCbsCash({ ...base, spendingRatio: 1.5 })
   assert.equal(r.netTax, 0)

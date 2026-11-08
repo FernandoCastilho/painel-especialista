@@ -30,7 +30,10 @@ export function simulateCbsCash(input) {
   // Alternative stress scenario: usable credits take extra days to become available.
   // This is not added again to gross withholding or to a full operating NCG.
   const creditAvailableDays = payDays - stockDays + creditDelayDays
-  const creditGapDays = Math.max(0, creditAvailableDays - settlementDays)
+  // Evaluate each positive wait before weighting: the later due date must not
+  // cancel unavailable credits on the portion collected early by split.
+  const creditGapDays = splitShare / 100 * Math.max(0, creditAvailableDays - Math.min(receiveDays, futureDueDays)) +
+    (1 - splitShare / 100) * Math.max(0, creditAvailableDays - futureDueDays)
   const creditExposure = creditsUsable * creditGapDays / 30
   return { ok: true, spending, outputTax, credits, creditsUsable, excessCredits, netTax,
     currentTax, splitGross, splitNet, receiptsAfterNetSplit: revenue - splitNet,
