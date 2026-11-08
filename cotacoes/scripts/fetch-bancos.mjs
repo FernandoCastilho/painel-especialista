@@ -1,5 +1,6 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
+import { fetchBankText } from './bancos-transport.mjs'
 import { BANKS } from '../src/bancos.js'
 import { bankDataUrl, comparisonPeriods, normalizeBankQuarter } from './bancos-lib.mjs'
 const output = new URL('../public/bancos.json', import.meta.url)
@@ -15,7 +16,7 @@ async function report(period, id) {
     if (process.env.BANKS_CACHE_DIR) data = await readFile(`${process.env.BANKS_CACHE_DIR}/${key}.json`, 'utf8').then(JSON.parse).catch(() => null)
     if (!data) {
       const url = bankDataUrl(period, id)
-      const text = process.env.BANKS_CURL === '1' ? execFileSync('curl', ['-fsSL', '--max-time', '45', url], { encoding: 'utf8', maxBuffer: 30e6 }) : await fetch(url, { signal: AbortSignal.timeout(45000) }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text() })
+      const text = process.env.BANKS_CURL === '1' ? execFileSync('curl', ['-fsSL', '--max-time', '45', url], { encoding: 'utf8', maxBuffer: 30e6 }) : await fetchBankText(url)
       data = JSON.parse(text)
       if (process.env.BANKS_CACHE_DIR) { await mkdir(process.env.BANKS_CACHE_DIR, { recursive: true }); await writeFile(`${process.env.BANKS_CACHE_DIR}/${key}.json`, text) }
     }
@@ -26,9 +27,9 @@ async function report(period, id) {
     while (next) {
       const url = new URL(next, bankDataUrl(period, id))
       if (url.origin !== 'https://olinda.bcb.gov.br') throw new Error('Paginação fora da origem oficial')
-      const response = await fetch(url, { signal: AbortSignal.timeout(45000) })
-      if (!response.ok) throw new Error(`Paginação HTTP ${response.status}`)
-      data = await response.json(); rows.push(...data.value); next = data['@odata.nextLink']
+      data = JSON.parse(await fetchBankText(url))
+      if (!Array.isArray(data.value)) throw new Error(`Paginação inválida: ${key}`)
+      rows.push(...data.value); next = data['@odata.nextLink']
     }
     return rows
   })()
@@ -53,8 +54,11 @@ if (!latest) {
 const periods = comparisonPeriods(latest), allReports = {}
 for (const period of periods) {
   allReports[period] = {}
-  const results = await Promise.allSettled(['1', '2', '11', '13', '14', '16'].map(async id => { allReports[period][id] = await report(period, id) }))
-  for (const result of results) if (result.status === 'rejected') errors.push(`${period}: ${result.reason.message}`)
+  // Sequential requests avoid bursts of six large historical reports at the source.
+  for (const id of ['1', '2', '11', '13', '14', '16']) {
+    try { allReports[period][id] = await report(period, id) }
+    catch (error) { errors.push(`${period} · relatório ${id}: ${error.message}`) }
+  }
 }
 const points = periods.flatMap(period => normalizeBankQuarter(period, allReports[period], allReports[period % 100 === 6 || period % 100 === 12 ? period - 3 : 0]))
 const banks = BANKS.map(b => {
