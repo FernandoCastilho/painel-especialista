@@ -69,7 +69,9 @@ const banks = BANKS.map(b => {
     const retained = old?.observations?.find(x => x.period === p.period)
     const roe = releases.supplements?.[b.id]?.find(x => x.period === p.period)?.roe
     const extra = Number.isFinite(roe?.value) && roe.source && roe.basis ? { roe } : {}
-    return { ...p, ...(extra.roe ? { sourceLabel: 'Banco Central + RI', scope: p.scope + ' · ROE do banco (critério próprio)' } : {}), metrics: { ...(retained?.metrics || {}), ...p.metrics, ...extra } }
+    // Missing report means transport/payload failure; an empty array is a valid response.
+    const porte = Array.isArray(allReports[p.period]?.['14']) ? p.porte : (retained?.porte || p.porte)
+    return { ...p, porte, ...(extra.roe ? { sourceLabel: 'Banco Central + RI', scope: p.scope + ' · ROE do banco (critério próprio)' } : {}), metrics: { ...(retained?.metrics || {}), ...p.metrics, ...extra } }
   })
   for (const p of old?.observations || []) if (!observations.some(x => x.period === p.period)) observations.push(p)
   return { ...b, observations, releases: releases.banks[b.id] || [] }
