@@ -38,3 +38,11 @@ Testes locais iniciais: 1.368 passaram; lint sem erros e com cinco avisos anteri
 
 ## Publicação e recuperação
 Destino existente: GitHub Pages do próprio repositório, pelo fluxo Pages. Não criar Site paralelo. Publicar após verificações relevantes e revisão visual. Snapshot de fonte recuperável pelo histórico Git; em falha de coleta, manter valores/datas anteriores e mostrar aviso. Reverter a alteração por commit de reversão, preservando mudanças posteriores de outras tarefas. Não excluir bases nem recriar o painel.
+
+
+## Histórico por indicador e destaques (2026-11-08)
+A tabela usa ↑ verde para alta, ↓ vermelha para queda e traço neutro para estabilidade. As cores significam direção, não melhora/piora. O bloco final de evolução e botões foi removido; fontes gerais ficam no cabeçalho de cada banco. Clique na linha, célula ou botão acessível do indicador abre histórico, gráfico trimestral, análise e fontes por banco. A série segue a origem e o critério do ponto atual, sem completar lacunas nem unir trimestres ausentes. O seletor troca o banco sem misturar séries. A análise usa o trimestre/ano de referência escolhido e não infere causalidade.
+
+Troféus seguem a opção aprovada por Fernando: menor inadimplência, maior Basileia/retorno/resultado; volumes identificam porte, sem nota geral. Só concorrem valores efetivamente exibidos na maior coorte com ao menos dois bancos de mesmo trimestre, origem e `basis`. O destaque mostra BC/RI, trimestre e X/Y bancos ao lado do troféu; o histórico lista participantes e exclusões. Empates na precisão exibida recebem o mesmo destaque. Sem equivalência documental (inclusive ROE de janelas diferentes), não há troféu; provisão não recebe avaliação artificial. A base BC permite comparar as instituições de mesma metodologia no mesmo período. Buscar um único banco não cria vencedor automático.
+
+Verificações adicionadas: `test/bancos-history.test.mjs` cobre lacunas, origem, critério, período, ausência, empates, provisões, porte, ROE e interpretação de risco. O smoke Bancos verifica setas, retirada do bloco final, troféus com universo explícito, histórico por teclado/célula, fontes, retorno de foco e seis cenários de tela.
