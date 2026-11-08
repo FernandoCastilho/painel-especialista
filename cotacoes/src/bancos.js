@@ -20,7 +20,7 @@ export const BANK_METRICS = {
   provisionTotal: ['Provisão total', 'BRL'], provisionPJ: ['Provisão PJ', 'BRL'], provisionPF: ['Provisão PF', 'BRL'],
   provisionRatioTotal: ['Provisão / carteira total', '%'], provisionRatioPJ: ['Provisão / carteira PJ', '%'], provisionRatioPF: ['Provisão / carteira PF', '%'],
   nplTotal: ['Inadimplência total', '%', 'risk'], nplPJ: ['Inadimplência PJ', '%', 'risk'], nplPF: ['Inadimplência PF', '%', 'risk'],
-  profit: ['Lucro líquido trimestral', 'BRL', 'profit'], roe: ['ROE anualizado', '%', 'profit'],
+  profit: ['Lucro líquido trimestral', 'BRL', 'profit'], roe: ['ROE / ROAE', '%', 'profit'],
 }
 export const quarterLabel = period => /^\d{6}$/.test(String(period)) ? `${Number(String(period).slice(4)) / 3}T${String(period).slice(0, 4)}` : 'Sem período'
 export function shiftQuarter(period, delta) {

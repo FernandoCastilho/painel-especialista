@@ -1316,5 +1316,94 @@
         "porte": []
       }
     ]
+  },
+  "supplements": {
+    "bb": [
+      {
+        "period": 202606,
+        "roe": {
+          "value": 8.3,
+          "source": "https://imprensa.bb.com.br/bb-registra-lucro-liquido-ajustado-de-r-39-bilhoes-no-segundo-trimestre-de-2026/",
+          "basis": "bb-rspl-ajustado-divulgado",
+          "note": "RSPL de 8,3% divulgado pelo Banco do Brasil para o 2T26. Indicador do banco, complementar à base prudencial BC; não calculado a partir do lucro contábil desta linha."
+        }
+      }
+    ],
+    "caixa": [
+      {
+        "period": 202606,
+        "roe": {
+          "value": 9.16,
+          "source": "https://ri.caixa.gov.br/informacoes-financeiras/destaques-financeiros/",
+          "basis": "caixa-roe-destaques-2t26",
+          "note": "ROE divulgado nos Destaques Financeiros do 2T26. A janela de apuração não é detalhada neste extrato: consulte a metodologia do RI antes de equiparar a um ROE trimestral anualizado."
+        }
+      }
+    ],
+    "safra": [
+      {
+        "period": 202606,
+        "roe": {
+          "value": 21.4,
+          "source": "https://www.safra.com.br/data/files/C4/61/B5/5B/73110A103FAE9CF9423EF9C2/Promocional%20proforma%20-%2006-2026%20-%20Ingles_relat.pdf",
+          "basis": "safra-ifrs-roae-semestral-anualizado",
+          "note": "ROAE IFRS anualizado do semestre encerrado em junho, não do trimestre isolado. Perímetro IFRS do banco diferente do conglomerado prudencial BC.",
+          "page": 1
+        }
+      },
+      {
+        "period": 202506,
+        "roe": {
+          "value": 22.3,
+          "source": "https://www.safra.com.br/data/files/C4/61/B5/5B/73110A103FAE9CF9423EF9C2/Promocional%20proforma%20-%2006-2026%20-%20Ingles_relat.pdf",
+          "basis": "safra-ifrs-roae-semestral-anualizado",
+          "note": "ROAE IFRS anualizado do semestre encerrado em junho, não do trimestre isolado. Perímetro IFRS do banco diferente do conglomerado prudencial BC.",
+          "page": 1
+        }
+      }
+    ],
+    "btg": [
+      {
+        "period": 202606,
+        "roe": {
+          "value": 26.7,
+          "source": "https://cdn.financialreports.eu/financialreports/media/filings/52847/2026/RNS/52847_rns_2026-08-11_59a858f9-273e-411f-a2cd-5f2ad6f70eff.pdf",
+          "basis": "btg-roae-ajustado-anualizado-consumer-reclassificado",
+          "note": "ROAE ajustado anualizado trimestral. Comparativos reclassificados no próprio documento pela inclusão de Consumer Finance & Banking após aquisição do Pan. Relatório do emissor hospedado em repositório público.",
+          "page": 3
+        }
+      },
+      {
+        "period": 202603,
+        "roe": {
+          "value": 26.6,
+          "source": "https://cdn.financialreports.eu/financialreports/media/filings/52847/2026/RNS/52847_rns_2026-08-11_59a858f9-273e-411f-a2cd-5f2ad6f70eff.pdf",
+          "basis": "btg-roae-ajustado-anualizado-consumer-reclassificado",
+          "note": "ROAE ajustado anualizado trimestral. Comparativos reclassificados no próprio documento pela inclusão de Consumer Finance & Banking após aquisição do Pan. Relatório do emissor hospedado em repositório público.",
+          "page": 3
+        }
+      },
+      {
+        "period": 202506,
+        "roe": {
+          "value": 27.2,
+          "source": "https://cdn.financialreports.eu/financialreports/media/filings/52847/2026/RNS/52847_rns_2026-08-11_59a858f9-273e-411f-a2cd-5f2ad6f70eff.pdf",
+          "basis": "btg-roae-ajustado-anualizado-consumer-reclassificado",
+          "note": "ROAE ajustado anualizado trimestral. Comparativos reclassificados no próprio documento pela inclusão de Consumer Finance & Banking após aquisição do Pan. Relatório do emissor hospedado em repositório público.",
+          "page": 3
+        }
+      }
+    ],
+    "bv": [
+      {
+        "period": 202606,
+        "roe": {
+          "value": 15.6,
+          "source": "https://www.bv.com.br/institucional/imprensa",
+          "basis": "bv-roe-recorrente-divulgado",
+          "note": "ROE recorrente divulgado no comunicado do banco BV de 11/08/2026, relativo ao 2T26. O catálogo oficial de imprensa registra o indicador; consulte o comunicado para sua janela de apuração."
+        }
+      }
+    ]
   }
 }

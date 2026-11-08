@@ -1,6 +1,6 @@
 {
-  "generatedAt": 1794099204723,
-  "lastAttemptAt": 1794099204723,
+  "generatedAt": 1794100146221,
+  "lastAttemptAt": 1794100146221,
   "latestBcPeriod": 202606,
   "riReviewedAt": "2026-11-07",
   "stale": false,
@@ -670,7 +670,7 @@
           "id": "bb",
           "period": 202606,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 13.9146075963478,
@@ -725,6 +725,12 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 8.3,
+              "source": "https://imprensa.bb.com.br/bb-registra-lucro-liquido-ajustado-de-r-39-bilhoes-no-segundo-trimestre-de-2026/",
+              "basis": "bb-rspl-ajustado-divulgado",
+              "note": "RSPL de 8,3% divulgado pelo Banco do Brasil para o 2T26. Indicador do banco, complementar à base prudencial BC; não calculado a partir do lucro contábil desta linha."
             }
           },
           "porte": [
@@ -753,7 +759,8 @@
               "value": 219845617578.5,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "bb",
@@ -2334,7 +2341,7 @@
           "id": "caixa",
           "period": 202606,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 15.454301468961601,
@@ -2389,6 +2396,12 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 9.16,
+              "source": "https://ri.caixa.gov.br/informacoes-financeiras/destaques-financeiros/",
+              "basis": "caixa-roe-destaques-2t26",
+              "note": "ROE divulgado nos Destaques Financeiros do 2T26. A janela de apuração não é detalhada neste extrato: consulte a metodologia do RI antes de equiparar a um ROE trimestral anualizado."
             }
           },
           "porte": [
@@ -2417,7 +2430,8 @@
               "value": 129969091008.43,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "caixa",
@@ -2699,7 +2713,7 @@
           "id": "safra",
           "period": 202606,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 18.1411026251013,
@@ -2754,6 +2768,13 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 21.4,
+              "source": "https://www.safra.com.br/data/files/C4/61/B5/5B/73110A103FAE9CF9423EF9C2/Promocional%20proforma%20-%2006-2026%20-%20Ingles_relat.pdf",
+              "basis": "safra-ifrs-roae-semestral-anualizado",
+              "note": "ROAE IFRS anualizado do semestre encerrado em junho, não do trimestre isolado. Perímetro IFRS do banco diferente do conglomerado prudencial BC.",
+              "page": 1
             }
           },
           "porte": [
@@ -2782,7 +2803,8 @@
               "value": 30343568113.47,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "safra",
@@ -2877,7 +2899,7 @@
           "id": "safra",
           "period": 202506,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 17.949622011048,
@@ -2932,6 +2954,13 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202506&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 22.3,
+              "source": "https://www.safra.com.br/data/files/C4/61/B5/5B/73110A103FAE9CF9423EF9C2/Promocional%20proforma%20-%2006-2026%20-%20Ingles_relat.pdf",
+              "basis": "safra-ifrs-roae-semestral-anualizado",
+              "note": "ROAE IFRS anualizado do semestre encerrado em junho, não do trimestre isolado. Perímetro IFRS do banco diferente do conglomerado prudencial BC.",
+              "page": 1
             }
           },
           "porte": [
@@ -2960,7 +2989,8 @@
               "value": 30841323082.31,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202506&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "safra",
@@ -3064,7 +3094,7 @@
           "id": "btg",
           "period": 202606,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 16.0421550832961,
@@ -3119,6 +3149,13 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 26.7,
+              "source": "https://cdn.financialreports.eu/financialreports/media/filings/52847/2026/RNS/52847_rns_2026-08-11_59a858f9-273e-411f-a2cd-5f2ad6f70eff.pdf",
+              "basis": "btg-roae-ajustado-anualizado-consumer-reclassificado",
+              "note": "ROAE ajustado anualizado trimestral. Comparativos reclassificados no próprio documento pela inclusão de Consumer Finance & Banking após aquisição do Pan. Relatório do emissor hospedado em repositório público.",
+              "page": 3
             }
           },
           "porte": [
@@ -3147,13 +3184,14 @@
               "value": 29875152797.69,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "btg",
           "period": 202603,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 15.912944886280101,
@@ -3208,6 +3246,13 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202603&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 26.6,
+              "source": "https://cdn.financialreports.eu/financialreports/media/filings/52847/2026/RNS/52847_rns_2026-08-11_59a858f9-273e-411f-a2cd-5f2ad6f70eff.pdf",
+              "basis": "btg-roae-ajustado-anualizado-consumer-reclassificado",
+              "note": "ROAE ajustado anualizado trimestral. Comparativos reclassificados no próprio documento pela inclusão de Consumer Finance & Banking após aquisição do Pan. Relatório do emissor hospedado em repositório público.",
+              "page": 3
             }
           },
           "porte": [
@@ -3236,13 +3281,14 @@
               "value": 34024160648.56,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202603&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "btg",
           "period": 202506,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 16.1503551081828,
@@ -3297,6 +3343,13 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202506&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 27.2,
+              "source": "https://cdn.financialreports.eu/financialreports/media/filings/52847/2026/RNS/52847_rns_2026-08-11_59a858f9-273e-411f-a2cd-5f2ad6f70eff.pdf",
+              "basis": "btg-roae-ajustado-anualizado-consumer-reclassificado",
+              "note": "ROAE ajustado anualizado trimestral. Comparativos reclassificados no próprio documento pela inclusão de Consumer Finance & Banking após aquisição do Pan. Relatório do emissor hospedado em repositório público.",
+              "page": 3
             }
           },
           "porte": [
@@ -3325,7 +3378,8 @@
               "value": 24332182018.4,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202506&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "btg",
@@ -4611,7 +4665,7 @@
           "id": "bv",
           "period": 202606,
           "origin": "bc",
-          "scope": "Conglomerado prudencial · crédito SCR",
+          "scope": "Conglomerado prudencial · crédito SCR · ROE do banco (critério próprio)",
           "metrics": {
             "basel": {
               "value": 15.8767934332953,
@@ -4666,6 +4720,12 @@
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
               "basis": "bc-scr-inadimplencia-arrastada",
               "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "roe": {
+              "value": 15.6,
+              "source": "https://www.bv.com.br/institucional/imprensa",
+              "basis": "bv-roe-recorrente-divulgado",
+              "note": "ROE recorrente divulgado no comunicado do banco BV de 11/08/2026, relativo ao 2T26. O catálogo oficial de imprensa registra o indicador; consulte o comunicado para sua janela de apuração."
             }
           },
           "porte": [
@@ -4694,7 +4754,8 @@
               "value": 6736841032.8,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202606&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
-          ]
+          ],
+          "sourceLabel": "Banco Central + RI"
         },
         {
           "id": "bv",

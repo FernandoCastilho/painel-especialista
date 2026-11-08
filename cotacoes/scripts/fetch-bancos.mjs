@@ -63,7 +63,9 @@ const banks = BANKS.map(b => {
   // Retém métricas individuais em falha parcial, sem renovar a data da observação.
   const observations = fresh.map(p => {
     const retained = old?.observations?.find(x => x.period === p.period)
-    return { ...p, metrics: { ...(retained?.metrics || {}), ...p.metrics } }
+    const roe = releases.supplements?.[b.id]?.find(x => x.period === p.period)?.roe
+    const extra = Number.isFinite(roe?.value) && roe.source && roe.basis ? { roe } : {}
+    return { ...p, ...(extra.roe ? { sourceLabel: 'Banco Central + RI', scope: p.scope + ' · ROE do banco (critério próprio)' } : {}), metrics: { ...(retained?.metrics || {}), ...p.metrics, ...extra } }
   })
   for (const p of old?.observations || []) if (!observations.some(x => x.period === p.period)) observations.push(p)
   return { ...b, observations, releases: releases.banks[b.id] || [] }

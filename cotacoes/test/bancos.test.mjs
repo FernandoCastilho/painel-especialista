@@ -49,6 +49,7 @@ test('published snapshot covers ten unique banks with finite, source-backed valu
   assert.equal(new Set(data.banks.map(b => b.id)).size, 10)
   for (const bank of data.banks) {
     assert.ok(latestBankPoint(bank)?.metrics.basel)
+    assert.ok(latestBankPoint(bank)?.metrics.roe, bank.name + ': ROE deve ter fonte e critério explícitos')
     for (const p of [...bank.observations, ...bank.releases]) {
       assert.ok([3, 6, 9, 12].includes(p.period % 100))
       for (const m of Object.values(p.metrics)) {
