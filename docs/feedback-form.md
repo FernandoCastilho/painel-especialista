@@ -4,14 +4,11 @@ Mascote vetorial discreto, aberto somente por clique. O formulário contém tipo
 
 ## Estado da ativação
 
-**Envio desativado.** `cotacoes/src/feedbackConfig.json` contém `verified: false` e nenhum ID. Não há senha, credencial ou endereço privado no código. O Formspree ainda depende de concluir a etapa segura de cadastro. Não apresentar essa versão como envio de e-mail funcionando.
+**Envio verificado.** ID público do formulário: `xaeegypp`. Um único teste técnico com conteúdo fictício foi aceito pelo serviço e teve recebimento confirmado na caixa autorizada em `2026-11-08T23:38:29Z`. Nenhum reenvio foi realizado. Identificadores da caixa, destinatário privado e texto do teste não são publicados neste documento.
 
-## Para ativar
+O componente real foi conferido em prévia privada autenticada, sem ampliar acesso. Revisão em larguras simuladas de 320, 390, 768 e 1100 px, nos temas claro/escuro; ausência de overflow horizontal nas medições de 390 e 1100 px. Escape fecha e restaura foco; rascunho preservado ao reabrir. Não equivale a teste em dispositivos físicos nem auditoria integral com leitor de tela.
 
-1. Concluir o cadastro seguro, criar o formulário no plano gratuito e confirmar o destino autorizado. Manter as proteções contra spam do serviço. Conferir se a configuração de CAPTCHA aceita o POST JSON; não desativar proteções para contornar falhas.
-2. Enviar um único teste claramente identificado e sem dados confidenciais. Verificar aceitação pelo serviço e recebimento na caixa de destino. Registrar data, ID público do formulário e confirmação da entrega, sem publicar endereço privado, mensagens ou dados de caixa postal.
-3. Só depois preencher `formId` e marcar `verified: true`. Atualizar a asserção de desativação em `test/feedback.test.mjs` para exigir a evidência de ativação e repetir a verificação completa.
-4. Testar erro, quota, fechamento, cliques repetidos, teclado e mobile antes de mesclar/publicar.
+A configuração de produção só foi habilitada após essa confirmação. Publicação final continua sujeita ao CI do commit de ativação. As proteções de spam do serviço não foram desativadas. Não repetir o teste real durante verificações automatizadas ou validação pública.
 
 ## Comportamento e limites
 
@@ -26,7 +23,7 @@ Mascote vetorial discreto, aberto somente por clique. O formulário contém tipo
 
 ## Testes
 
-`node --test test/feedback*.test.mjs`: 12 cenários sintéticos de validação, configuração desativada, privacidade, quota/erro, aborto, honeypot, cliques repetidos, foco, fechamento, reabertura e navegação. Nenhum envia e-mail real.
+`node --test test/feedback*.test.mjs`: 12 cenários sintéticos de validação, bloqueio de configuração não verificada e evidência de ativação, privacidade, quota/erro, aborto, honeypot, cliques repetidos, foco, fechamento, reabertura e navegação. Nenhum envia e-mail real.
 
 `test/fixtures/feedback-responsive.html`: prévia de desenvolvimento do componente real em 320/390/768/1100 px com temas claro/escuro. Não é emulação de dispositivo físico e não entra no build.
 
@@ -34,13 +31,13 @@ Em 7/11/2026, a suíte local completa passou (1.258 testes), o build passou e o 
 
 No CI inicial, o botão flutuante cobria a ação final do CET em 390 px. Em telas estreitas, ele agora ocupa espaço próprio ao fim do conteúdo, alinhado à direita, em vez de se sobrepor às calculadoras. O mascote permanece no canto fixo no desktop. A correção deve passar novamente pelo CI.
 
-## Reconciliação de 8/11/2026
+## Histórico: reconciliação de 8/11/2026
 
 Integrado à base `43d5ed32fd97dabef4d58df6b49987db92ded8f9`, preservando os recursos publicados em paralelo. O conflito em `base-dados.test.mjs` foi resolvido mantendo as exceções específicas da apresentação BNDES e da política do processador. O índice de busca foi regenerado pelo build, incluindo o áudio já presente em Aprender.
 
 Verificação do candidato integrado: 1.558 testes passaram; build passou; lint sem erros e com cinco avisos preexistentes. Revisão visual no navegador interno, CI do novo commit e entrega real continuam pendentes. O envio permanece desativado e este registro não autoriza publicar o formulário como funcional.
 
-## Retomada de 8/11/2026
+## Histórico: retomada antes da entrega de 8/11/2026
 
 Candidato reconciliado também com a base `5ac2b122d9ffccaf1f738474f98a4079cc79c5b5`, em checkout isolado, preservando a reconciliação anterior. Suíte completa: 1.559 testes aprovados; build aprovado. O formulário público continua sem ID e com `verified: false`.
 

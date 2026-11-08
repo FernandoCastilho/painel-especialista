@@ -9,7 +9,12 @@ test('feedback: configuration is off until a valid form is verified', async () =
   for (const c of [null, {}, { formId: 'testabcd' }, { ...config, verified: false }, { ...config, formId: 'https://evil.test' }, { ...config, formId: 'test/abc' }]) assert.equal(feedbackEndpoint(c), null)
   assert.equal(feedbackEndpoint(config), 'https://formspree.io/f/testabcd')
   const production = JSON.parse(await readFile(new URL('../src/feedbackConfig.json', import.meta.url), 'utf8'))
-  assert.equal(production.verified, false, 'Do not enable before the real delivery check is documented')
+  assert.equal(production.verified, true)
+  assert.equal(feedbackEndpoint(production), 'https://formspree.io/f/xaeegypp')
+  assert.equal(production.verifiedAt, '2026-11-08T23:38:29Z')
+  const evidence = await readFile(new URL('../../docs/feedback-form.md', import.meta.url), 'utf8')
+  assert.match(evidence, /2026-11-08T23:38:29Z/)
+  assert.match(evidence, /recebimento confirmado/)
 })
 test('feedback: message required, optional contact, lengths and supported categories', () => {
   assert.equal(validateFeedback(values), '')
