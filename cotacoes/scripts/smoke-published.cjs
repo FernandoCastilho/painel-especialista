@@ -65,7 +65,7 @@ const links = {
       for (const term of ['Escala 6x1', 'Reforma tributária', 'Split payment', 'Dividendos', 'CET', 'Controle forçado de juros']) {
         assert.equal(await page.locator('.learn-list li button').filter({ hasText: new RegExp(term, 'i') }).count(), 1, term)
       }
-      assert.equal(await page.locator('.learn-list li').count(), 27)
+      assert.equal(await page.locator('.learn-list li').count(), 28)
       assert.equal(await page.locator('.learn-list li button').filter({ hasText: 'Regime FÁCIL' }).count(), 1)
       await page.locator('.learn-list li button').filter({ has: page.getByText('CET', { exact: true }) }).click()
       await page.locator('.learn-detail h2', { hasText: 'CET (Custo Efetivo Total)' }).waitFor()
