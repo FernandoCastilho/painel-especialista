@@ -6,6 +6,7 @@ import { runInNewContext } from 'node:vm'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createElement } from 'react'
 import { readFileSync } from 'node:fs'
+import { CATALOGO_SETORIAL } from '../src/centralSetorial.js'
 const require = createRequire(import.meta.url)
 async function getComponent() {
   const result = await build({ entryPoints:['src/Setores.jsx'], bundle:true, write:false, jsx:'automatic', format:'cjs', platform:'node', external:['react','react-dom'], loader:{'.css':'empty'} })
@@ -37,17 +38,29 @@ test('pastas, seletor compacto e rotas antigas preservam a hierarquia', async ()
   const Component = await getComponent()
   const html = view => renderToStaticMarkup(createElement(Component, { view }))
   const catalog = html('central')
-  assert.equal((catalog.match(/class="central-folder central-folder-tone-/g) || []).length, 11)
-  assert.match(catalog, /Abrir pasta Base florestal e madeira, 6 subsetores/)
-  assert.match(catalog, /central-folder-back/)
-  assert.match(catalog, /central-folder-sheet/)
-  assert.match(catalog, /central-folder-front/)
+  assert.equal((catalog.match(/class="central-folder"/g) || []).length, 11)
+  assert.match(catalog, /Explorar Base florestal e madeira, 6 subsetores/)
+  assert.equal((catalog.match(/class="central-card-photo"/g) || []).length, 11)
+  assert.doesNotMatch(catalog, /central-folder-back|central-folder-sheet|central-folder-front/)
   assert.doesNotMatch(catalog, /Escolha um subsetor<\/h3>/)
   const folder = html('pasta/base-florestal')
-  assert.match(folder, /PASTA SETORIAL/)
+  assert.match(folder, />SETOR</)
+  assert.equal((folder.match(/class="central-card-photo"/g) || []).length, 6)
   assert.match(folder, />Compensados</)
   assert.match(folder, /Caminho do setor/)
   assert.doesNotMatch(folder, /central-folder-tone-/)
+  let imageBytes = 0
+  for (const group of CATALOGO_SETORIAL) {
+    const sector = html(`pasta/${group.id}`)
+    assert.equal((sector.match(/class="central-card-photo"/g) || []).length, group.topics.length, `${group.id}: cada subsetor tem uma foto`)
+    assert.ok(sector.includes(`./sector-images/${group.id}.jpg`))
+    const asset = readFileSync(`public/sector-images/${group.id}.jpg`)
+    assert.equal(asset[0], 0xff)
+    assert.equal(asset[1], 0xd8, `${group.id}: ativo JPEG local válido`)
+    assert.ok(asset.length < 768 * 1024, `${group.id}: imagem dentro do orçamento`)
+    imageBytes += asset.length
+  }
+  assert.ok(imageBytes < 6 * 1024 * 1024, 'onze atlas somam menos de 6 MiB')
   const study = html('topico/base-florestal/3')
   assert.match(study, /Trocar subsetor/)
   assert.match(study, /<select aria-label="Trocar subsetor"/, 'seletor tem nome explícito sem concatenar as opções do label implícito')

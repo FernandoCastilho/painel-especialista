@@ -28,6 +28,9 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       await folders.first().waitFor()
       await page.waitForFunction(expected => document.documentElement.dataset.theme === expected, theme)
       assert.equal(await folders.count(), 11)
+      await folders.last().scrollIntoViewIfNeeded()
+      await folders.first().scrollIntoViewIfNeeded()
+      await page.waitForFunction(() => [...document.querySelectorAll('.central-folder img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
       if (width < 1000) {
         const more = page.getByRole('button', { name: 'Mais', exact: true })
         const menu = page.getByRole('menu', { name: 'Mais', exact: true })
@@ -57,11 +60,14 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       const clipped = await folders.evaluateAll(elements => elements.filter(element => element.scrollHeight > element.clientHeight + 1 || element.scrollWidth > element.clientWidth + 1).map(element => element.textContent))
       assert.deepEqual(clipped, [], 'nomes completos cabem nas pastas')
       await page.screenshot({ path: path.join(out, `${width}-${theme}-pastas.png`), fullPage: true })
-      const firstFolder = page.getByRole('button', { name: 'Abrir pasta Base florestal e madeira, 6 subsetores' })
+      const firstFolder = page.getByRole('button', { name: 'Explorar Base florestal e madeira, 6 subsetores' })
       await firstFolder.focus()
       await page.keyboard.press('Enter')
       await page.waitForURL('**/#setores/pasta/base-florestal')
       assert.equal(await page.locator('.central-topics .central-topic').count(), 6)
+      await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
+      await page.locator('.central-subsector').first().scrollIntoViewIfNeeded()
+      await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
       await page.screenshot({ path: path.join(out, `${width}-${theme}-subsetores.png`), fullPage: true })
       await page.getByRole('button', { name: 'Compensados', exact: true }).click()
       await page.waitForURL('**/#setores/topico/base-florestal/3')
@@ -139,9 +145,33 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       await page.locator('.central-detail-content .desk-panel').waitFor()
       await overflow()
       await page.goto(`${base}/#setores/pasta/inexistente`)
-      await page.getByText('Este setor ou subsetor não foi encontrado. Escolha uma pasta ou use a busca.').waitFor()
+      await page.getByText('Este setor ou subsetor não foi encontrado. Escolha um setor ou use a busca.').waitFor()
       assert.equal(await folders.count(), 11)
-      report.results.push({ width, theme, status: 'pass', folders: 11, navigation: true, search: true, history: true, reload: true, focus: true, repeatSelection: true, clearFocus: true, overflow: false, reducedMotion: true, inputs: true, invalidRoute: true, moreKeyboard: width < 1000 ? true : 'not-applicable' })
+      if (width === 1440 && theme === 'dark') {
+        const ids = await folders.evaluateAll(elements => elements.map(element => element.id))
+        let topicImages = 0
+        for (const id of ids) {
+          await page.locator(`#${id}`).click()
+          const topics = page.locator('.central-subsector')
+          topicImages += await topics.count()
+          await topics.last().scrollIntoViewIfNeeded()
+          await topics.first().scrollIntoViewIfNeeded()
+          await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
+          await overflow()
+          await page.screenshot({ path: path.join(out, `${id}-subsetores.png`), fullPage: true })
+          await page.getByRole('button', { name: 'Todos os setores', exact: true }).click()
+        }
+        assert.equal(topicImages, 68, 'todos os subsetores recebem imagem local')
+      }
+      if (width === 390) {
+        await page.locator('#central-folder-tic').click()
+        await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
+        await page.locator('.central-subsector').first().scrollIntoViewIfNeeded()
+        await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536))
+        await overflow()
+        await page.screenshot({ path: path.join(out, `${width}-${theme}-tic.png`), fullPage: true })
+      }
+      report.results.push({ width, theme, status: 'pass', folders: 11, images: true, navigation: true, search: true, history: true, reload: true, focus: true, repeatSelection: true, clearFocus: true, overflow: false, reducedMotion: true, inputs: true, invalidRoute: true, moreKeyboard: width < 1000 ? true : 'not-applicable' })
       await context.close()
     }
     assert.deepEqual(report.errors, [])

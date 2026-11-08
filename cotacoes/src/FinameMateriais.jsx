@@ -177,9 +177,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
         {!res && <p className="cx-hint cx-pad" role="status">{funding?.mode !== 'inline' ? funding?.notice : r?.erros?.length ? r.erros.join(' ') : 'Complete os campos indicados e confirme o enquadramento do IOF para calcular.'}</p>}
         {res && (
           <>
-            <div className="fm-hero"><span>Primeira parcela após a carência · {custo.toUpperCase()}</span><b>{brl(res.primeiraParcela)}</b><small>{res.parcelasAmortizacao} parcelas mensais · taxa final {pct(res.taxa)} a.a.</small></div>
-            <dl className="fm-summary"><div><dt>Juros totais</dt><dd>{brl(res.juros)}</dd></div><div><dt>IOF</dt><dd>{brl(res.iof)}</dd></div><div><dt>Total projetado sem despesas</dt><dd>{brl(res.total)}</dd></div></dl>
-            <p className="cx-hint cx-pad">Atualização automática ao editar. Sem tarifas, seguros ou garantias · não é CET.</p>
+            <div className="fm-hero"><h4>Cotação comparativa</h4></div>
             {referenceRetained && <p className="status stale cx-pad" role="status">Referência retida ou atualização indisponível. Confira as datas em Taxas e históricos antes de cotar.</p>}
             {comparar && <div className="fm-comparison" aria-label="Comparação TFC e TFB">
               {comparison?.ok ? <>
