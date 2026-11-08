@@ -19,4 +19,18 @@
 .recovery-panel > p { max-width:75ch; }
 .recovery-panel details { margin:24px 0; }
 .recovery-review { font-size:.78rem; }
+.movement-edition { border:1px solid var(--line); padding:20px; margin:24px 0; overflow-wrap:anywhere; }
+.movement-edition h3 { margin-top:0; }
+.movement-counts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin:24px 0; }
+.movement-counts dt { font-weight:600; }
+.movement-counts dd { margin:8px 0 0; }
+.movement-counts strong { font-size:1.8rem; }
+.movement-counts span,.movement-edition .muted { color:var(--mut); }
+.movement-limits { border-left:3px solid var(--accent); padding-left:12px; }
+.movement-companies { padding-left:20px; }
+.movement-companies li { margin:20px 0; }
+.movement-companies span { display:block; }
+.movement-edition summary { min-height:44px; cursor:pointer; }
+.movement-national-heading { border-top:1px solid var(--line); padding-top:32px; margin-top:32px; }
+@media(max-width:700px){.movement-counts{grid-template-columns:1fr;gap:16px}.movement-edition{padding:16px}}
 @media(max-width:700px){.recovery-stages{grid-template-columns:1fr;gap:16px}.recovery-week{align-items:stretch}.recovery-week label{order:-1;width:100%}}
