@@ -12,6 +12,7 @@ import ContaGarantida, { ContaGarantidaIcon } from './ContaGarantida.jsx'
 import AnaliseDesconto, { DescontoIcon } from './AnaliseDesconto.jsx'
 import Help from './CalculatorHelp.jsx'
 import './CalculatorLayout.css'
+import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -29,6 +30,7 @@ function GiroIcon() {
 }
 
 const CALCS = [
+  { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'finame-materiais', title: 'BNDES', sub: 'Simular, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
@@ -162,6 +164,7 @@ function CapitalDeGiro({ onBack }) {
 
 // Aba Calculadoras: lista de calculadoras (ícones) e a calculadora aberta, com endereço próprio (#calculadora/giro).
 export default function Calculadora({ view, onView }) {
+  if (view === 'cbs-caixa') return <CbsCaixa onBack={() => onView('')} />
   if (view === 'bndes-tlp-exigivel') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'bndes-credito-tfb') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'bndes-selic-lcd') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />

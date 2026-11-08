@@ -71,6 +71,16 @@ jobs:
           retention-days: 7
       - name: Conferir curadorias de tributos e escala 6x1
         run: CURADORIA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/curadoria" node scripts/smoke-curadoria.cjs
+      - name: Conferir CBS, dados setoriais e necessidade adicional de giro
+        run: CBS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cbs" node scripts/smoke-cbs.cjs
+      - name: Capturas e resultado do simulador CBS
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbs-caixa-design
+          path: ${{ runner.temp }}/qa-universal/cbs
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir mapa do conhecimento em quatro cenários
         timeout-minutes: 3
         run: KNOWLEDGE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/knowledge-map" node scripts/smoke-knowledge-map.cjs

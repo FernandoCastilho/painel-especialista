@@ -10,11 +10,20 @@ const SGS = (c) => `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${c}/dados?for
 const EIA = 'https://www.eia.gov/dnav/pet/hist/'
 const PINK = 'https://www.worldbank.org/en/research/commodity-markets'
 const AWESOME = 'https://economia.awesomeapi.com.br/json'
+export const CBS_SOURCES = {
+  law: 'https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.html',
+  tcu: 'https://sites.tcu.gov.br/reforma-tributaria/visao-cbs-2027.html',
+}
 
 export const BASE_DADOS = [
   { grupo: 'Bancos', itens: [
     { nome: 'Balanços bancários, capital e carteiras PJ/PF', orgao: 'Banco Central do Brasil · IF.data', api: 'https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/', pagina: 'https://www3.bcb.gov.br/ifdata/', arquivo: 'bancos.json', serie: 'Conglomerados prudenciais; relatórios Resumo, Ativo, crédito PF, PJ, porte e instrumentos financeiros. Lucro isolado por trimestre; perda esperada e inadimplência têm denominadores próprios.', freq: 'Trimestral; relido no fluxo existente do Pages. Falha preserva a última base, com aviso.' },
     { nome: 'Últimos resultados publicados pelos bancos', orgao: 'Relatórios dos emissores; links, páginas e critérios em cada indicador. Bradesco: cópia pública do relatório do emissor em FinancialReports.', api: 'Transcrição conferida dos relatórios; não é uma API de resultados em tempo real.', pagina: 'https://www.itau.com.br/relacoes-com-investidores/resultados-e-relatorios/central-de-resultados/', arquivo: 'bancos-ri.json', serie: 'Último trimestre e comparativos republicados no mesmo documento. Perímetros gerenciais, BRGAAP e índices recorrentes identificados; sem preencher ausências com trimestres antigos.', freq: 'Revisão documental em 07/11/2026; novas publicações exigem nova conferência do relatório. Coletor BC não renova essa revisão.' },
+  ] },
+  { grupo: 'CBS e capital de giro — referências indicativas', itens: [
+    ...[[10655, 'PAC — gastos e faturamento do comércio', 'Empresas com 20 ou mais pessoas ocupadas'], [10474, 'PIA — gastos e faturamento da indústria', 'Empresas com 5 ou mais pessoas ocupadas'], [10758, 'PAS — gastos e faturamento dos serviços', 'Empresas não financeiras cobertas pela pesquisa']].map(([table, nome, population]) => ({ nome, orgao: 'IBGE', api: `https://apisidra.ibge.gov.br/values/t/${table}/n1/all/v/{variaveis}/p/{ano}/c{classificacao}/all`, pagina: `https://sidra.ibge.gov.br/tabela/${table}`, arquivo: 'ibgeCbsSnapshot.json', serie: `${population}. Ano e variáveis constam no snapshot. Razão econômica de gastos, não crédito tributário.`, freq: 'Conferência em publicação manual ou alteração de código; em falha, preserva última base válida. Sem consulta em tempo real no navegador.' })),
+    { nome: 'CBS — regras de créditos e transição', orgao: 'Presidência da República / Câmara dos Deputados', api: 'Consulta documental, sem API fiscal', pagina: CBS_SOURCES.law, arquivo: 'cbsCash.js', serie: 'LC 214/2025 atualizada; arts. 27, 31–35, 47–48 e 347. Simulação de prazos, sem apuração fiscal.', freq: 'Revisão documental na manutenção do simulador; hipóteses editáveis não são norma.' },
+    { nome: 'CBS — referência técnica para 2027', orgao: 'Tribunal de Contas da União', api: 'Consulta documental do TC 006.529/2026-7', pagina: CBS_SOURCES.tcu, arquivo: 'CbsCaixa.jsx', serie: '11,3% como referência técnica de outubro/2026, não alíquota definitiva de cada operação.', freq: 'Revisão documental na manutenção do simulador.' },
   ] },
   { grupo: 'Interesse de busca', itens: [
     { nome: 'Google Trends: Em alta no Brasil', orgao: 'Google Trends', api: 'https://trends.google.com/trending/rss?geo=BR', pagina: 'https://trends.google.com/trending?geo=BR', arquivo: 'trends.json', serie: 'RSS Em alta; termos históricos são snapshots estáticos separados no app', freq: '08h e 15h de Brasília; horários sujeitos à fila do GitHub Actions' },

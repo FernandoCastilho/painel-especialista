@@ -12,25 +12,29 @@ Uma entrada BNDES no catálogo de calculadoras. A central reúne Simular financi
 - Rotas antigas preservadas. O formulário Finame permanece montado ao consultar taxas ou trocar de perfil na central.
 - IOF continua automático e condicionado ao enquadramento de recursos FINAME. Estimativa sem tarifas, seguros ou garantias; não representa CET.
 
-## Verificação local
+## Validação e aceitação
 
-| Critério | Evidência | Estado |
+A publicação no repositório público e no GitHub Pages foi autorizada por Fernando. A implementação está no PR 325, na branch `codex/bndes-unificado-20261107`; integração e verificação em produção continuam pendentes até concluir a validação e a revisão independente.
+
+| Requisito | Critério e evidência | Estado |
 |---|---|---|
-| Regressão geral | `npm test`: 1.371 testes, 0 falhas | Passou |
-| Regressão da comparação | `test/finame-comparison.test.mjs`: resultados, invariantes, ausência/zero, datas, faixas e liberações | Passou |
-| Preservação de estado e IOF | `test/finame-iof-ui.test.mjs`, incluindo 30 → 90 → 30 | Passou |
-| Verificação estática | `npm run lint`: 0 erros; 5 avisos preexistentes fora do escopo | Passou com avisos |
-| Compilação | `npm run build` | Passou; aviso preexistente de tamanho de pacote |
-| Revisões de design e simplificação | Revisão documental do código; achados corrigidos e reconferidos | Concluída somente no código |
-| Interface real | `smoke-bndes-workspace.cjs`, matriz preparada em 320/390/768/1440 px, claro/escuro | Não executada: Chromium local abortou por bloqueio de socket; navegador remoto recusou localhost |
-| Envio externo | Tentativa de push da branch de trabalho | Bloqueado pela revisão automática; exige autorização explícita para envio ao repositório público |
-| Publicação | GitHub Pages existente | Não realizada |
+| Entrada BNDES única e preservação dos perfis | `scripts/smoke-bndes-workspace.cjs`: catálogo, alternância de áreas e perfis, preenchimento preservado | Rodada final em execução |
+| Comparação coerente TFC × TFB | `test/finame-comparison.test.mjs`: mesmos parâmetros, data/faixa/liberação, ausência e zero; `test/finame-iof-ui.test.mjs`: 30 → 90 → 30 e enquadramento | Passou na suíte local |
+| Regressão geral | `npm test`: 1.377 testes, 0 falhas | Passou localmente; CI final em execução |
+| Verificação estática | `npm run lint`: 0 erros; 5 avisos preexistentes em Calendario, Curves e SeriesHistory | Passou com avisos |
+| Compilação | `npm run build`: concluída; aviso preexistente de tamanho de pacote | Passou localmente; CI final em execução |
+| Responsividade das calculadoras | `scripts/smoke-calculator-layout.cjs`: 320/390/768/1024/1440 px, sem rolagem global, contraste, controles e exemplos calculados | 30 cenários passaram na rodada 42438318833; reconferência final em execução |
+| Apresentação e acessibilidade | `scripts/smoke-bndes-workspace.cjs`: 320/390/768/1440 px, claro/escuro; configuração, cinco slides, comparação, apontador, fullscreen ou fallback, teclado/foco e erros | Rodada final em execução |
+| Regressões BNDES e demais calculadoras | `smoke-calculadora.cjs`, `smoke-bndes.cjs`, `smoke-bndes-profiles.cjs`, CI geral | Rodada final em execução |
+| Revisão especializada | Diretor de Arte e Simplificador revisaram o código; Diretor de Arte examinou capturas reais e solicitou correções de títulos, tabelas e instruções iniciais | Reconferência visual final pendente |
+| Auditoria independente | Revisão separada sobre versão congelada e evidências vinculadas por hashes | Pendente |
+| Produção | Integração do PR, workflow Pages e teste no endereço publicado | Não realizada nesta etapa |
 
-## Próxima atividade
+As primeiras rodadas revelaram problemas reais de contraste, herança de títulos, corte de tabela e foco de teclado; as correções mantêm as verificações de regressão. Ajustes de seletores acompanham a nova estrutura sem retirar verificações financeiras ou tributárias. O navegador local não iniciou neste ambiente; a conferência real ocorre em Chrome no GitHub Actions, com dados sintéticos identificados nos testes e capturas publicadas como artefatos de CI.
 
-Após autorização explícita para o destino público: enviar a branch ao repositório FernandoCastilho/painel-especialista, abrir PR para a branch vigente, executar os testes de navegador, corrigir falhas, inspecionar as capturas finais e só então integrar/publicar. Não ampliar público ou permissões.
+### Operação e reversão
 
-O workflow `BNDES workspace QA` foi preparado para essa verificação em PR. Preparação não equivale a execução ou aprovação visual.
+Esta alteração reutiliza o React/Vite, os coletores e o GitHub Pages existentes. Não cria banco, conta, autenticação, cobrança, serviço externo ou persistência de dados de cliente. A apresentação não envia os valores simulados. O histórico de commits e o PR preservam a base anterior; eventual reversão deve ocorrer por commit de reversão no mesmo repositório e pelo workflow Pages existente. A publicação só será declarada após confirmação do workflow e verificação do endereço de produção.
 
 ## Apresentação dentro do painel
 
@@ -42,8 +46,8 @@ Os dados são copiados e congelados ao abrir a configuração, incluindo resulta
 
 Navegação preparada: botões, setas, PageUp/PageDown, Home/End, espaço, Escape; tela cheia solicitada pelo usuário, com mensagem de indisponibilidade; retorno à configuração e restauração do foco. Apontador reaproveita a instância global, em encaixe dentro do host da apresentação. Primeiro Escape pode desligar o apontador conforme o comportamento global existente.
 
-Testes adicionais em `test/bndes-presentation.test.mjs`: congelamento/cópia independente, bloqueios de resultado/IOF/referência, comparação elegível, slides obrigatórios e limites da navegação. O smoke de navegador preparado cobre abertura, navegação, comparação, fechamento e retorno do foco, com capturas em cada largura/tema. Ainda não foi executado neste ambiente.
+Testes adicionais em `test/bndes-presentation.test.mjs`: congelamento/cópia independente, bloqueios de resultado/IOF/referência, comparação elegível, slides obrigatórios e limites da navegação. O smoke de navegador preparado cobre abertura, navegação, comparação, fechamento e retorno do foco, com capturas em cada largura/tema. A execução final de navegador é feita no GitHub Actions; consulte a matriz acima para seu estado.
 
-Revisões documentais do Diretor de Arte e do Simplificador executadas, com correções reconferidas. Continuam pendentes inspeção visual e interação real, inclusive fullscreen, apontador e teclado. Nenhum envio externo foi feito nesta etapa; a autorização anterior de envio continua pendente.
+Revisões documentais do Diretor de Arte e do Simplificador executadas, com correções reconferidas. A implementação já foi enviada ao PR autorizado. As capturas reais estão sendo reconferidas após as correções; aprovação final e publicação ainda dependem das evidências da versão final.
 
-Verificação final desta etapa: 1.371 testes passaram, sem falhas; lint sem erros e build concluído. A regra de fontes da interface recebeu exceção restrita ao bloco de referências do slide de premissas; as demais telas continuam com o catálogo centralizado.
+Verificação local desta etapa: 1.377 testes passaram, sem falhas; lint sem erros e build concluído. A regra de fontes da interface recebeu exceção restrita ao bloco de referências do slide de premissas; as demais telas continuam com o catálogo centralizado.

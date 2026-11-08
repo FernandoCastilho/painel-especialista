@@ -1,0 +1,4058 @@
+{
+  "schemaVersion": 1,
+  "datasets": [
+    {
+      "kind": "comercio",
+      "table": 10655,
+      "classification": 11070,
+      "revenue": [
+        866,
+        1398
+      ],
+      "costs": [
+        504
+      ],
+      "population": "Empresas comerciais com 20 ou mais pessoas ocupadas",
+      "description": "Compras de mercadorias para revenda / receita bruta de revenda e outras atividades. Não inclui todos os serviços adquiridos.",
+      "year": 2024,
+      "source": "https://sidra.ibge.gov.br/tabela/10655",
+      "query": "https://apisidra.ibge.gov.br/values/t/10655/n1/all/v/866,1398,504/p/2024/c11070/all",
+      "metadataUrl": "https://sidra.ibge.gov.br/Ajax/JSon/Tabela/1/10655?versao=-1",
+      "variables": {
+        "866": "Receita bruta de revenda de mercadorias",
+        "1398": "Receita bruta de outras atividades (indústria, serviços, transportes, etc.)",
+        "504": "Compras de mercadoria para revenda em empresas comerciais"
+      },
+      "retrievedAt": "2026-11-08T00:34:41.747461+00:00",
+      "groups": [
+        {
+          "id": "comercio-83311",
+          "label": "Total",
+          "depth": 0,
+          "spendingRatio": 0.7086634474621121,
+          "revenueThousands": 6466846177.0,
+          "spendingThousands": 4582817506.0,
+          "values": {
+            "866": 6267889442.0,
+            "1398": 198956735.0,
+            "504": 4582817506.0
+          }
+        },
+        {
+          "id": "comercio-83312",
+          "label": "45 Comércio de veículos automotores e motocicletas",
+          "depth": 1,
+          "spendingRatio": 0.7633235171565561,
+          "revenueThousands": 675976688.0,
+          "spendingThousands": 515988903.0,
+          "values": {
+            "866": 659664730.0,
+            "1398": 16311958.0,
+            "504": 515988903.0
+          }
+        },
+        {
+          "id": "comercio-83313",
+          "label": "45.1 Comércio de veículos automotores",
+          "depth": 2,
+          "spendingRatio": 0.8083727367036109,
+          "revenueThousands": 469874993.0,
+          "spendingThousands": 379834134.0,
+          "values": {
+            "866": 457413466.0,
+            "1398": 12461527.0,
+            "504": 379834134.0
+          }
+        },
+        {
+          "id": "comercio-83314",
+          "label": "45.3 Comércio de peças e acessórios para veículos",
+          "depth": 2,
+          "spendingRatio": 0.6516383101186177,
+          "revenueThousands": 157404326.0,
+          "spendingThousands": 102570689.0,
+          "values": {
+            "866": 154357228.0,
+            "1398": 3047098.0,
+            "504": 102570689.0
+          }
+        },
+        {
+          "id": "comercio-83315",
+          "label": "45.4 Comércio de motocicletas, peças e acessórios",
+          "depth": 2,
+          "spendingRatio": 0.6896487569995825,
+          "revenueThousands": 48697369.0,
+          "spendingThousands": 33584080.0,
+          "values": {
+            "866": 47894036.0,
+            "1398": 803333.0,
+            "504": 33584080.0
+          }
+        },
+        {
+          "id": "comercio-83316",
+          "label": "46 Comércio por atacado",
+          "depth": 1,
+          "spendingRatio": 0.7241428375972015,
+          "revenueThousands": 3525123874.0,
+          "spendingThousands": 2552693205.0,
+          "values": {
+            "866": 3380575157.0,
+            "1398": 144548717.0,
+            "504": 2552693205.0
+          }
+        },
+        {
+          "id": "comercio-83317",
+          "label": "46.1 Representantes e agentes do comércio (exceto de veículos e motocicletas)",
+          "depth": 2,
+          "spendingRatio": 2.38119860012736e-06,
+          "revenueThousands": 5879392.0,
+          "spendingThousands": 14.0,
+          "values": {
+            "866": 5577695.0,
+            "1398": 301697.0,
+            "504": 14.0
+          }
+        },
+        {
+          "id": "comercio-83318",
+          "label": "46.2 Comércio de matérias-primas agrícolas e animais vivos",
+          "depth": 2,
+          "spendingRatio": 0.8286272976064002,
+          "revenueThousands": 411064913.0,
+          "spendingThousands": 340619608.0,
+          "values": {
+            "866": 381528997.0,
+            "1398": 29535916.0,
+            "504": 340619608.0
+          }
+        },
+        {
+          "id": "comercio-83319",
+          "label": "46.3 Comércio especializado em produtos alimentícios, bebidas e fumo",
+          "depth": 2,
+          "spendingRatio": 0.6800800042970566,
+          "revenueThousands": 560197410.0,
+          "spendingThousands": 380979057.0,
+          "values": {
+            "866": 535088377.0,
+            "1398": 25109033.0,
+            "504": 380979057.0
+          }
+        },
+        {
+          "id": "comercio-83320",
+          "label": "46.4 Comércio de produtos de consumo não alimentar",
+          "depth": 2,
+          "spendingRatio": 0.5436225268053712,
+          "revenueThousands": 570868891.0,
+          "spendingThousands": 310337189.0,
+          "values": {
+            "866": 552853720.0,
+            "1398": 18015171.0,
+            "504": 310337189.0
+          }
+        },
+        {
+          "id": "comercio-83321",
+          "label": "4641 Comércio de tecidos, artefatos de tecidos e de armarinho",
+          "depth": 3,
+          "spendingRatio": 0.6740407975356956,
+          "revenueThousands": 21378203.0,
+          "spendingThousands": 14409781.0,
+          "values": {
+            "866": 20873470.0,
+            "1398": 504733.0,
+            "504": 14409781.0
+          }
+        },
+        {
+          "id": "comercio-83322",
+          "label": "4642 Comércio de artigos do vestuário e acessórios",
+          "depth": 3,
+          "spendingRatio": 0.49400637952374515,
+          "revenueThousands": 16316265.0,
+          "spendingThousands": 8060339.0,
+          "values": {
+            "866": 15693029.0,
+            "1398": 623236.0,
+            "504": 8060339.0
+          }
+        },
+        {
+          "id": "comercio-83323",
+          "label": "4643 Comércio de calçados e artigos de viagem",
+          "depth": 3,
+          "spendingRatio": 0.455536685566608,
+          "revenueThousands": 22702716.0,
+          "spendingThousands": 10341920.0,
+          "values": {
+            "866": 21924527.0,
+            "1398": 778189.0,
+            "504": 10341920.0
+          }
+        },
+        {
+          "id": "comercio-83324",
+          "label": "4644 + 4645 + 4646 Comércio de produtos farmacêuticos, perfumaria, cosméticos, médicos, ortopédicos, odontológicos e veterinários",
+          "depth": 3,
+          "spendingRatio": 0.5519011438144648,
+          "revenueThousands": 420551772.0,
+          "spendingThousands": 232103004.0,
+          "values": {
+            "866": 407578066.0,
+            "1398": 12973706.0,
+            "504": 232103004.0
+          }
+        },
+        {
+          "id": "comercio-83325",
+          "label": "4647 Comércio de artigos de escritório e de papelaria; papel, papelão e seus artefatos; livros, jornais e outras publicações",
+          "depth": 3,
+          "spendingRatio": 0.5400295258012054,
+          "revenueThousands": 13197271.0,
+          "spendingThousands": 7126916.0,
+          "values": {
+            "866": 12651089.0,
+            "1398": 546182.0,
+            "504": 7126916.0
+          }
+        },
+        {
+          "id": "comercio-83326",
+          "label": "4649 Comércio de outros equipamentos e artigos de uso pessoal e doméstico",
+          "depth": 3,
+          "spendingRatio": 0.49913841625728744,
+          "revenueThousands": 76722664.0,
+          "spendingThousands": 38295229.0,
+          "values": {
+            "866": 74133539.0,
+            "1398": 2589125.0,
+            "504": 38295229.0
+          }
+        },
+        {
+          "id": "comercio-83327",
+          "label": "46.5 Comércio de equipamentos e produtos de tecnologia de informação e comunicação",
+          "depth": 2,
+          "spendingRatio": 0.6227812675874227,
+          "revenueThousands": 99598874.0,
+          "spendingThousands": 62028313.0,
+          "values": {
+            "866": 92908643.0,
+            "1398": 6690231.0,
+            "504": 62028313.0
+          }
+        },
+        {
+          "id": "comercio-83328",
+          "label": "46.6 Comércio de máquinas, aparelhos e equipamentos",
+          "depth": 2,
+          "spendingRatio": 0.5598851794102738,
+          "revenueThousands": 232885409.0,
+          "spendingThousands": 130389089.0,
+          "values": {
+            "866": 208474046.0,
+            "1398": 24411363.0,
+            "504": 130389089.0
+          }
+        },
+        {
+          "id": "comercio-83329",
+          "label": "46.7 Comércio de madeira, ferragens, ferramentas, material elétrico e material de construção",
+          "depth": 2,
+          "spendingRatio": 0.5987507045515827,
+          "revenueThousands": 103482487.0,
+          "spendingThousands": 61960212.0,
+          "values": {
+            "866": 98926393.0,
+            "1398": 4556094.0,
+            "504": 61960212.0
+          }
+        },
+        {
+          "id": "comercio-83330",
+          "label": "46.8 Comércio especializado em outros produtos",
+          "depth": 2,
+          "spendingRatio": 0.8515897987715191,
+          "revenueThousands": 1162193438.0,
+          "spendingThousands": 989712076.0,
+          "values": {
+            "866": 1144144244.0,
+            "1398": 18049194.0,
+            "504": 989712076.0
+          }
+        },
+        {
+          "id": "comercio-83331",
+          "label": "4681 + 4682 Comércio de combustíveis e lubrificantes",
+          "depth": 3,
+          "spendingRatio": 0.9100990732185927,
+          "revenueThousands": 850691753.0,
+          "spendingThousands": 774213776.0,
+          "values": {
+            "866": 848121458.0,
+            "1398": 2570295.0,
+            "504": 774213776.0
+          }
+        },
+        {
+          "id": "comercio-83332",
+          "label": "4683 + 4684 Comércio de produtos químicos, adubos e fertilizantes",
+          "depth": 3,
+          "spendingRatio": 0.7157546717720105,
+          "revenueThousands": 194682285.0,
+          "spendingThousands": 139344755.0,
+          "values": {
+            "866": 184283368.0,
+            "1398": 10398917.0,
+            "504": 139344755.0
+          }
+        },
+        {
+          "id": "comercio-83333",
+          "label": "4685 Comércio de produtos siderúrgicos e metalúrgicos",
+          "depth": 3,
+          "spendingRatio": 0.6190034173293516,
+          "revenueThousands": 35732289.0,
+          "spendingThousands": 22118409.0,
+          "values": {
+            "866": 34175109.0,
+            "1398": 1557180.0,
+            "504": 22118409.0
+          }
+        },
+        {
+          "id": "comercio-83334",
+          "label": "4686 + 4687 Comércio de papel e papelão em bruto e de embalagens e de resíduos e sucatas",
+          "depth": 3,
+          "spendingRatio": 0.6219133745935731,
+          "revenueThousands": 39815894.0,
+          "spendingThousands": 24762037.0,
+          "values": {
+            "866": 37387425.0,
+            "1398": 2428469.0,
+            "504": 24762037.0
+          }
+        },
+        {
+          "id": "comercio-83335",
+          "label": "4689 Comércio de outros produtos",
+          "depth": 3,
+          "spendingRatio": 0.7092860624875685,
+          "revenueThousands": 41271217.0,
+          "spendingThousands": 29273099.0,
+          "values": {
+            "866": 40176884.0,
+            "1398": 1094333.0,
+            "504": 29273099.0
+          }
+        },
+        {
+          "id": "comercio-83336",
+          "label": "46.9 Comércio atacadista não especializado",
+          "depth": 2,
+          "spendingRatio": 0.7300842141240396,
+          "revenueThousands": 378953060.0,
+          "spendingThousands": 276667647.0,
+          "values": {
+            "866": 361073042.0,
+            "1398": 17880018.0,
+            "504": 276667647.0
+          }
+        },
+        {
+          "id": "comercio-83337",
+          "label": "47 Comércio varejista",
+          "depth": 1,
+          "spendingRatio": 0.6682724609399718,
+          "revenueThousands": 2265745615.0,
+          "spendingThousands": 1514135398.0,
+          "values": {
+            "866": 2227649555.0,
+            "1398": 38096060.0,
+            "504": 1514135398.0
+          }
+        },
+        {
+          "id": "comercio-83338",
+          "label": "47.1 Comércio varejista não especializado",
+          "depth": 2,
+          "spendingRatio": 0.7147096850176127,
+          "revenueThousands": 1170590912.0,
+          "spendingThousands": 836632662.0,
+          "values": {
+            "866": 1160398530.0,
+            "1398": 10192382.0,
+            "504": 836632662.0
+          }
+        },
+        {
+          "id": "comercio-83339",
+          "label": "4711 Comércio em hipermercados e supermercados",
+          "depth": 3,
+          "spendingRatio": 0.746572362317066,
+          "revenueThousands": 952770334.0,
+          "spendingThousands": 711311999.0,
+          "values": {
+            "866": 949289943.0,
+            "1398": 3480391.0,
+            "504": 711311999.0
+          }
+        },
+        {
+          "id": "comercio-83340",
+          "label": "4712 Comércio em minimercados, mercearias e armazéns",
+          "depth": 3,
+          "spendingRatio": 0.7318240172105103,
+          "revenueThousands": 49757502.0,
+          "spendingThousands": 36413735.0,
+          "values": {
+            "866": 49562898.0,
+            "1398": 194604.0,
+            "504": 36413735.0
+          }
+        },
+        {
+          "id": "comercio-83341",
+          "label": "4713 Comércio em lojas de departamento e não especializado via Internet",
+          "depth": 3,
+          "spendingRatio": 0.5290092869655676,
+          "revenueThousands": 168063076.0,
+          "spendingThousands": 88906928.0,
+          "values": {
+            "866": 161545689.0,
+            "1398": 6517387.0,
+            "504": 88906928.0
+          }
+        },
+        {
+          "id": "comercio-83342",
+          "label": "47.2 Comércio de produtos alimentícios, bebidas e fumo",
+          "depth": 2,
+          "spendingRatio": 0.6184053604257744,
+          "revenueThousands": 66020875.0,
+          "spendingThousands": 40827663.0,
+          "values": {
+            "866": 64038035.0,
+            "1398": 1982840.0,
+            "504": 40827663.0
+          }
+        },
+        {
+          "id": "comercio-83343",
+          "label": "47.3 Comércio de combustíveis e lubrificantes",
+          "depth": 2,
+          "spendingRatio": 0.8567983698084617,
+          "revenueThousands": 252633381.0,
+          "spendingThousands": 216455869.0,
+          "values": {
+            "866": 251753076.0,
+            "1398": 880305.0,
+            "504": 216455869.0
+          }
+        },
+        {
+          "id": "comercio-83344",
+          "label": "47.4 Comércio de material de construção",
+          "depth": 2,
+          "spendingRatio": 0.5557285017324377,
+          "revenueThousands": 146675691.0,
+          "spendingThousands": 81511862.0,
+          "values": {
+            "866": 137330144.0,
+            "1398": 9345547.0,
+            "504": 81511862.0
+          }
+        },
+        {
+          "id": "comercio-83345",
+          "label": "47.5 Comércio de equipamentos de informática e comunicação e equipamentos e artigos de uso doméstico",
+          "depth": 2,
+          "spendingRatio": 0.5743420366051132,
+          "revenueThousands": 178861242.0,
+          "spendingThousands": 102727530.0,
+          "values": {
+            "866": 170411405.0,
+            "1398": 8449837.0,
+            "504": 102727530.0
+          }
+        },
+        {
+          "id": "comercio-83346",
+          "label": "4751 + 4752 Comércio de equipamentos de informática e comunicação",
+          "depth": 3,
+          "spendingRatio": 0.5339713284628667,
+          "revenueThousands": 25991212.0,
+          "spendingThousands": 13878562.0,
+          "values": {
+            "866": 22932566.0,
+            "1398": 3058646.0,
+            "504": 13878562.0
+          }
+        },
+        {
+          "id": "comercio-83347",
+          "label": "4753 + 4756 Comércio de eletrodomésticos, equipamentos de áudio e vídeo, instrumentos musicais e acessórios",
+          "depth": 3,
+          "spendingRatio": 0.5560649948048972,
+          "revenueThousands": 94716124.0,
+          "spendingThousands": 52668321.0,
+          "values": {
+            "866": 90789281.0,
+            "1398": 3926843.0,
+            "504": 52668321.0
+          }
+        },
+        {
+          "id": "comercio-83348",
+          "label": "4754 + 4757 + 4759 Comércio de móveis, artigos de iluminação, peças e acessórios e outros artigos de uso doméstico",
+          "depth": 3,
+          "spendingRatio": 0.6447275257478844,
+          "revenueThousands": 45437908.0,
+          "spendingThousands": 29295070.0,
+          "values": {
+            "866": 44258798.0,
+            "1398": 1179110.0,
+            "504": 29295070.0
+          }
+        },
+        {
+          "id": "comercio-83349",
+          "label": "4755 Comércio de tecidos e artigos de armarinho",
+          "depth": 3,
+          "spendingRatio": 0.5414893113383629,
+          "revenueThousands": 12715998.0,
+          "spendingThousands": 6885577.0,
+          "values": {
+            "866": 12430760.0,
+            "1398": 285238.0,
+            "504": 6885577.0
+          }
+        },
+        {
+          "id": "comercio-83350",
+          "label": "47.6 Comércio de artigos culturais, recreativos e esportivos",
+          "depth": 2,
+          "spendingRatio": 0.5001680132759246,
+          "revenueThousands": 31295146.0,
+          "spendingThousands": 15652831.0,
+          "values": {
+            "866": 30808479.0,
+            "1398": 486667.0,
+            "504": 15652831.0
+          }
+        },
+        {
+          "id": "comercio-83351",
+          "label": "47.7 Comércio de produtos farmacêuticos, perfumaria e cosméticos e artigos médicos, ortopédicos e de óptica",
+          "depth": 2,
+          "spendingRatio": 0.567994297438895,
+          "revenueThousands": 230988143.0,
+          "spendingThousands": 131199948.0,
+          "values": {
+            "866": 228505613.0,
+            "1398": 2482530.0,
+            "504": 131199948.0
+          }
+        },
+        {
+          "id": "comercio-83352",
+          "label": "47.8 Comércio de produtos novos não especificados anteriormente e de produtos usados",
+          "depth": 2,
+          "spendingRatio": 0.47237082211450615,
+          "revenueThousands": 188680225.0,
+          "spendingThousands": 89127033.0,
+          "values": {
+            "866": 184404273.0,
+            "1398": 4275952.0,
+            "504": 89127033.0
+          }
+        },
+        {
+          "id": "comercio-83353",
+          "label": "4781 Comércio de artigos do vestuário e complementos",
+          "depth": 3,
+          "spendingRatio": 0.3837826704451566,
+          "revenueThousands": 93801140.0,
+          "spendingThousands": 35999252.0,
+          "values": {
+            "866": 91804835.0,
+            "1398": 1996305.0,
+            "504": 35999252.0
+          }
+        },
+        {
+          "id": "comercio-83354",
+          "label": "4782 Comércio de calçados, artigos de couro e viagem",
+          "depth": 3,
+          "spendingRatio": 0.42961706284123635,
+          "revenueThousands": 23071984.0,
+          "spendingThousands": 9912118.0,
+          "values": {
+            "866": 22915054.0,
+            "1398": 156930.0,
+            "504": 9912118.0
+          }
+        },
+        {
+          "id": "comercio-83355",
+          "label": "4784 Comércio de gás liquefeito de petróleo (GLP)",
+          "depth": 3,
+          "spendingRatio": 0.6881804565793471,
+          "revenueThousands": 15380941.0,
+          "spendingThousands": 10584863.0,
+          "values": {
+            "866": 15336952.0,
+            "1398": 43989.0,
+            "504": 10584863.0
+          }
+        },
+        {
+          "id": "comercio-83356",
+          "label": "4783 + 4785 + 4789 Comércio de outros produtos novos e usados",
+          "depth": 3,
+          "spendingRatio": 0.5782920546072956,
+          "revenueThousands": 56426160.0,
+          "spendingThousands": 32630800.0,
+          "values": {
+            "866": 54347432.0,
+            "1398": 2078728.0,
+            "504": 32630800.0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "industria",
+      "table": 10474,
+      "classification": 12762,
+      "revenue": [
+        865,
+        866
+      ],
+      "costs": [
+        828,
+        869,
+        831,
+        832,
+        833,
+        451
+      ],
+      "population": "Empresas industriais com 5 ou mais pessoas ocupadas",
+      "description": "Matérias-primas compradas, mercadorias para revenda (custo), energia/combustíveis, peças, serviços industriais e água / receita bruta de produtos e revenda. Mistura compras e consumo; aproximação estrutural, sem CAPEX e sem folha.",
+      "year": 2024,
+      "source": "https://sidra.ibge.gov.br/tabela/10474",
+      "query": "https://apisidra.ibge.gov.br/values/t/10474/n1/all/v/865,866,828,869,831,832,833,451/p/2024/c12762/all",
+      "metadataUrl": "https://sidra.ibge.gov.br/Ajax/JSon/Tabela/1/10474?versao=-1",
+      "variables": {
+        "865": "Receita bruta de vendas de produtos industriais",
+        "866": "Receita bruta de revenda de mercadorias",
+        "828": "Compras de matérias-primas, materiais auxiliares e componentes",
+        "869": "Custo das mercadorias adquiridas para revenda",
+        "831": "Compras de energia elétrica e consumo de combustíveis",
+        "832": "Consumo de peças, acessórios pequenas ferramentas",
+        "833": "Serviços industriais prestados por terceiros e de manutenção",
+        "451": "Água e esgoto"
+      },
+      "retrievedAt": "2026-11-08T00:34:42.157981+00:00",
+      "groups": [
+        {
+          "id": "industria-117897",
+          "label": "Total",
+          "depth": 0,
+          "spendingRatio": 0.5072435439527964,
+          "revenueThousands": 7996976187.0,
+          "spendingThousands": 4056414542.0,
+          "values": {
+            "865": 7304635209.0,
+            "866": 692340978.0,
+            "828": 3179385120.0,
+            "869": 399091534.0,
+            "831": 149856791.0,
+            "832": 93311009.0,
+            "833": 229913395.0,
+            "451": 4856693.0
+          }
+        },
+        {
+          "id": "industria-116880",
+          "label": "B Indústrias extrativas",
+          "depth": 1,
+          "spendingRatio": 0.3858843532955704,
+          "revenueThousands": 501898124.0,
+          "spendingThousands": 193674633.0,
+          "values": {
+            "865": 496060369.0,
+            "866": 5837755.0,
+            "828": 96001152.0,
+            "869": 757861.0,
+            "831": 18898509.0,
+            "832": 15305333.0,
+            "833": 62592136.0,
+            "451": 119642.0
+          }
+        },
+        {
+          "id": "industria-116881",
+          "label": "05 Extração de carvão mineral",
+          "depth": 2,
+          "spendingRatio": 0.4824362835111848,
+          "revenueThousands": 2091727.0,
+          "spendingThousands": 1009125.0,
+          "values": {
+            "865": 2021858.0,
+            "866": 69869.0,
+            "828": 307648.0,
+            "869": 46435.0,
+            "831": 133529.0,
+            "832": 126272.0,
+            "833": 394711.0,
+            "451": 530.0
+          }
+        },
+        {
+          "id": "industria-116882",
+          "label": "05.0 Extração de carvão mineral",
+          "depth": 3,
+          "spendingRatio": 0.4824362835111848,
+          "revenueThousands": 2091727.0,
+          "spendingThousands": 1009125.0,
+          "values": {
+            "865": 2021858.0,
+            "866": 69869.0,
+            "828": 307648.0,
+            "869": 46435.0,
+            "831": 133529.0,
+            "832": 126272.0,
+            "833": 394711.0,
+            "451": 530.0
+          }
+        },
+        {
+          "id": "industria-116884",
+          "label": "06 Extração de petróleo e gás natural",
+          "depth": 2,
+          "spendingRatio": 0.2641101897977382,
+          "revenueThousands": 181529982.0,
+          "spendingThousands": 47943918.0,
+          "values": {
+            "865": 180165160.0,
+            "866": 1364822.0,
+            "828": 7927272.0,
+            "869": 53780.0,
+            "831": 1180168.0,
+            "832": 1035396.0,
+            "833": 37745841.0,
+            "451": 1461.0
+          }
+        },
+        {
+          "id": "industria-116885",
+          "label": "06.0 Extração de petróleo e gás natural",
+          "depth": 3,
+          "spendingRatio": 0.2641101897977382,
+          "revenueThousands": 181529982.0,
+          "spendingThousands": 47943918.0,
+          "values": {
+            "865": 180165160.0,
+            "866": 1364822.0,
+            "828": 7927272.0,
+            "869": 53780.0,
+            "831": 1180168.0,
+            "832": 1035396.0,
+            "833": 37745841.0,
+            "451": 1461.0
+          }
+        },
+        {
+          "id": "industria-116887",
+          "label": "07 Extração de minerais metálicos",
+          "depth": 2,
+          "spendingRatio": 0.49175328661607853,
+          "revenueThousands": 232159760.0,
+          "spendingThousands": 114165325.0,
+          "values": {
+            "865": 229468105.0,
+            "866": 2691655.0,
+            "828": 76391134.0,
+            "869": 204959.0,
+            "831": 13728864.0,
+            "832": 8643580.0,
+            "833": 15139410.0,
+            "451": 57378.0
+          }
+        },
+        {
+          "id": "industria-116888",
+          "label": "07.1 Extração de minério de ferro",
+          "depth": 3,
+          "spendingRatio": 0.504254773319812,
+          "revenueThousands": 198916590.0,
+          "spendingThousands": 100304640.0,
+          "values": {
+            "865": 196359510.0,
+            "866": 2557080.0,
+            "828": 71510320.0,
+            "869": 160381.0,
+            "831": 11088953.0,
+            "832": 7243831.0,
+            "833": 10253179.0,
+            "451": 47976.0
+          }
+        },
+        {
+          "id": "industria-116890",
+          "label": "07.2 Extração de minerais metálicos não-ferrosos",
+          "depth": 3,
+          "spendingRatio": 0.4169483536016571,
+          "revenueThousands": 33243170.0,
+          "spendingThousands": 13860685.0,
+          "values": {
+            "865": 33108595.0,
+            "866": 134575.0,
+            "828": 4880814.0,
+            "869": 44578.0,
+            "831": 2639911.0,
+            "832": 1399749.0,
+            "833": 4886231.0,
+            "451": 9402.0
+          }
+        },
+        {
+          "id": "industria-116897",
+          "label": "08 Extração de minerais não-metálicos",
+          "depth": 2,
+          "spendingRatio": 0.3626436277710714,
+          "revenueThousands": 41287280.0,
+          "spendingThousands": 14972569.0,
+          "values": {
+            "865": 40027817.0,
+            "866": 1259463.0,
+            "828": 6682679.0,
+            "869": 298249.0,
+            "831": 3649954.0,
+            "832": 2029605.0,
+            "833": 2272029.0,
+            "451": 40053.0
+          }
+        },
+        {
+          "id": "industria-116898",
+          "label": "08.1 Extração de pedra, areia e argila",
+          "depth": 3,
+          "spendingRatio": 0.3531723358515088,
+          "revenueThousands": 32040791.0,
+          "spendingThousands": 11315921.0,
+          "values": {
+            "865": 30970539.0,
+            "866": 1070252.0,
+            "828": 4662166.0,
+            "869": 222641.0,
+            "831": 2790027.0,
+            "832": 1705281.0,
+            "833": 1902308.0,
+            "451": 33498.0
+          }
+        },
+        {
+          "id": "industria-116900",
+          "label": "08.9 Extração de outros minerais não-metálicos",
+          "depth": 3,
+          "spendingRatio": 0.3954634023790003,
+          "revenueThousands": 9246489.0,
+          "spendingThousands": 3656648.0,
+          "values": {
+            "865": 9057278.0,
+            "866": 189211.0,
+            "828": 2020513.0,
+            "869": 75608.0,
+            "831": 859927.0,
+            "832": 324324.0,
+            "833": 369721.0,
+            "451": 6555.0
+          }
+        },
+        {
+          "id": "industria-116905",
+          "label": "09 Atividades de apoio à extração de minerais",
+          "depth": 2,
+          "spendingRatio": 0.34762242391289194,
+          "revenueThousands": 44829375.0,
+          "spendingThousands": 15583696.0,
+          "values": {
+            "865": 44377429.0,
+            "866": 451946.0,
+            "828": 4692419.0,
+            "869": 154438.0,
+            "831": 205994.0,
+            "832": 3470480.0,
+            "833": 7040145.0,
+            "451": 20220.0
+          }
+        },
+        {
+          "id": "industria-116906",
+          "label": "09.1 Atividades de apoio à extração de petróleo e gás natural",
+          "depth": 3,
+          "spendingRatio": 0.352735827852549,
+          "revenueThousands": 43730511.0,
+          "spendingThousands": 15425318.0,
+          "values": {
+            "865": 43405131.0,
+            "866": 325380.0,
+            "828": 4629947.0,
+            "869": 153797.0,
+            "831": 178524.0,
+            "832": 3433438.0,
+            "833": 7009590.0,
+            "451": 20022.0
+          }
+        },
+        {
+          "id": "industria-116908",
+          "label": "09.9 Atividades de apoio à extração de minerais, exceto petróleo e gás natural",
+          "depth": 3,
+          "spendingRatio": 0.14412884578983387,
+          "revenueThousands": 1098864.0,
+          "spendingThousands": 158378.0,
+          "values": {
+            "865": 972298.0,
+            "866": 126566.0,
+            "828": 62472.0,
+            "869": 641.0,
+            "831": 27470.0,
+            "832": 37042.0,
+            "833": 30555.0,
+            "451": 198.0
+          }
+        },
+        {
+          "id": "industria-116910",
+          "label": "C Indústrias de transformação",
+          "depth": 1,
+          "spendingRatio": 0.5153702038233194,
+          "revenueThousands": 7495078063.0,
+          "spendingThousands": 3862739909.0,
+          "values": {
+            "865": 6808574840.0,
+            "866": 686503223.0,
+            "828": 3083383968.0,
+            "869": 398333673.0,
+            "831": 130958282.0,
+            "832": 78005676.0,
+            "833": 167321259.0,
+            "451": 4737051.0
+          }
+        },
+        {
+          "id": "industria-116911",
+          "label": "10 Fabricação de produtos alimentícios",
+          "depth": 2,
+          "spendingRatio": 0.623144308541511,
+          "revenueThousands": 1709889182.0,
+          "spendingThousands": 1065507712.0,
+          "values": {
+            "865": 1496508343.0,
+            "866": 213380839.0,
+            "828": 831313906.0,
+            "869": 160309087.0,
+            "831": 26639730.0,
+            "832": 18145503.0,
+            "833": 27909065.0,
+            "451": 1190421.0
+          }
+        },
+        {
+          "id": "industria-116912",
+          "label": "10.1 Abate e fabricação de produtos de carne",
+          "depth": 3,
+          "spendingRatio": 0.6644559389238088,
+          "revenueThousands": 523293142.0,
+          "spendingThousands": 347705236.0,
+          "values": {
+            "865": 493576129.0,
+            "866": 29717013.0,
+            "828": 306928199.0,
+            "869": 18934556.0,
+            "831": 8293453.0,
+            "832": 3471321.0,
+            "833": 9729268.0,
+            "451": 348439.0
+          }
+        },
+        {
+          "id": "industria-116916",
+          "label": "10.2 Preservação do pescado e fabricação de produtos do pescado",
+          "depth": 3,
+          "spendingRatio": 0.5998895546285941,
+          "revenueThousands": 12337321.0,
+          "spendingThousands": 7401030.0,
+          "values": {
+            "865": 11683962.0,
+            "866": 653359.0,
+            "828": 6371130.0,
+            "869": 544592.0,
+            "831": 208395.0,
+            "832": 86210.0,
+            "833": 165298.0,
+            "451": 25405.0
+          }
+        },
+        {
+          "id": "industria-116918",
+          "label": "10.3 Fabricação de conservas de frutas, legumes e outros vegetais",
+          "depth": 3,
+          "spendingRatio": 0.5505097384084787,
+          "revenueThousands": 67030460.0,
+          "spendingThousands": 36900921.0,
+          "values": {
+            "865": 65315190.0,
+            "866": 1715270.0,
+            "828": 32900617.0,
+            "869": 655443.0,
+            "831": 1549833.0,
+            "832": 915951.0,
+            "833": 825726.0,
+            "451": 53351.0
+          }
+        },
+        {
+          "id": "industria-116922",
+          "label": "10.4 Fabricação de óleos e gorduras vegetais e animais",
+          "depth": 3,
+          "spendingRatio": 0.8074607534543887,
+          "revenueThousands": 290034889.0,
+          "spendingThousands": 234191790.0,
+          "values": {
+            "865": 164019289.0,
+            "866": 126015600.0,
+            "828": 118291260.0,
+            "869": 109215617.0,
+            "831": 2512825.0,
+            "832": 1813622.0,
+            "833": 2295461.0,
+            "451": 63005.0
+          }
+        },
+        {
+          "id": "industria-116926",
+          "label": "10.5 Laticínios",
+          "depth": 3,
+          "spendingRatio": 0.6209237221316206,
+          "revenueThousands": 203926910.0,
+          "spendingThousands": 126623056.0,
+          "values": {
+            "865": 190372335.0,
+            "866": 13554575.0,
+            "828": 111818991.0,
+            "869": 8421538.0,
+            "831": 2579113.0,
+            "832": 1230213.0,
+            "833": 2387146.0,
+            "451": 186055.0
+          }
+        },
+        {
+          "id": "industria-116930",
+          "label": "10.6 Moagem, fabricação de produtos amiláceos e de alimentos para animais",
+          "depth": 3,
+          "spendingRatio": 0.5951463679806687,
+          "revenueThousands": 185570846.0,
+          "spendingThousands": 110441815.0,
+          "values": {
+            "865": 171018057.0,
+            "866": 14552789.0,
+            "828": 95805420.0,
+            "869": 8027361.0,
+            "831": 2920286.0,
+            "832": 1220306.0,
+            "833": 2343901.0,
+            "451": 124541.0
+          }
+        },
+        {
+          "id": "industria-116938",
+          "label": "10.7 Fabricação e refino de açúcar",
+          "depth": 3,
+          "spendingRatio": 0.4410474493729071,
+          "revenueThousands": 170925378.0,
+          "spendingThousands": 75386202.0,
+          "values": {
+            "865": 166622321.0,
+            "866": 4303057.0,
+            "828": 54712005.0,
+            "869": 2225381.0,
+            "831": 4459724.0,
+            "832": 6487238.0,
+            "833": 7454265.0,
+            "451": 47589.0
+          }
+        },
+        {
+          "id": "industria-116941",
+          "label": "10.8 Torrefação e moagem de café",
+          "depth": 3,
+          "spendingRatio": 0.6583869137516783,
+          "revenueThousands": 37596291.0,
+          "spendingThousands": 24752906.0,
+          "values": {
+            "865": 30471374.0,
+            "866": 7124917.0,
+            "828": 19269644.0,
+            "869": 4672448.0,
+            "831": 339459.0,
+            "832": 51961.0,
+            "833": 412656.0,
+            "451": 6738.0
+          }
+        },
+        {
+          "id": "industria-116944",
+          "label": "10.9 Fabricação de outros produtos alimentícios",
+          "depth": 3,
+          "spendingRatio": 0.46586174282714127,
+          "revenueThousands": 219173945.0,
+          "spendingThousands": 102104756.0,
+          "values": {
+            "865": 203429686.0,
+            "866": 15744259.0,
+            "828": 85216640.0,
+            "869": 7612151.0,
+            "831": 3776642.0,
+            "832": 2868681.0,
+            "833": 2295344.0,
+            "451": 335298.0
+          }
+        },
+        {
+          "id": "industria-116952",
+          "label": "11 Fabricação de bebidas",
+          "depth": 2,
+          "spendingRatio": 0.4019061623266016,
+          "revenueThousands": 264709355.0,
+          "spendingThousands": 106388321.0,
+          "values": {
+            "865": 226003987.0,
+            "866": 38705368.0,
+            "828": 82152706.0,
+            "869": 18137575.0,
+            "831": 2765969.0,
+            "832": 939313.0,
+            "833": 2238951.0,
+            "451": 153807.0
+          }
+        },
+        {
+          "id": "industria-116953",
+          "label": "11.1 Fabricação de bebidas alcoólicas",
+          "depth": 3,
+          "spendingRatio": 0.40637025596127263,
+          "revenueThousands": 162545996.0,
+          "spendingThousands": 66053858.0,
+          "values": {
+            "865": 142407613.0,
+            "866": 20138383.0,
+            "828": 54135135.0,
+            "869": 8044664.0,
+            "831": 2062220.0,
+            "832": 463961.0,
+            "833": 1321595.0,
+            "451": 26283.0
+          }
+        },
+        {
+          "id": "industria-116957",
+          "label": "11.2 Fabricação de bebidas não-alcoólicas",
+          "depth": 3,
+          "spendingRatio": 0.39480361055865437,
+          "revenueThousands": 102163359.0,
+          "spendingThousands": 40334463.0,
+          "values": {
+            "865": 83596374.0,
+            "866": 18566985.0,
+            "828": 28017571.0,
+            "869": 10092911.0,
+            "831": 703749.0,
+            "832": 475352.0,
+            "833": 917356.0,
+            "451": 127524.0
+          }
+        },
+        {
+          "id": "industria-116960",
+          "label": "12 Fabricação de produtos do fumo",
+          "depth": 2,
+          "spendingRatio": 0.4016893779812652,
+          "revenueThousands": 45814022.0,
+          "spendingThousands": 18403006.0,
+          "values": {
+            "865": 44076272.0,
+            "866": 1737750.0,
+            "828": 16689542.0,
+            "869": 1180641.0,
+            "831": 133881.0,
+            "832": 139588.0,
+            "833": 255478.0,
+            "451": 3876.0
+          }
+        },
+        {
+          "id": "industria-116965",
+          "label": "13 Fabricação de produtos têxteis",
+          "depth": 2,
+          "spendingRatio": 0.5152269636659247,
+          "revenueThousands": 95681945.0,
+          "spendingThousands": 49297918.0,
+          "values": {
+            "865": 91954899.0,
+            "866": 3727046.0,
+            "828": 39793118.0,
+            "869": 1937321.0,
+            "831": 3512916.0,
+            "832": 1352816.0,
+            "833": 2582760.0,
+            "451": 118987.0
+          }
+        },
+        {
+          "id": "industria-116966",
+          "label": "13.1 Preparação e fiação de fibras têxteis",
+          "depth": 3,
+          "spendingRatio": 0.5401097457141003,
+          "revenueThousands": 13641535.0,
+          "spendingThousands": 7367926.0,
+          "values": {
+            "865": 12948576.0,
+            "866": 692959.0,
+            "828": 5767590.0,
+            "869": 366836.0,
+            "831": 653318.0,
+            "832": 308777.0,
+            "833": 260735.0,
+            "451": 10670.0
+          }
+        },
+        {
+          "id": "industria-116971",
+          "label": "13.2 Tecelagem, exceto malha",
+          "depth": 3,
+          "spendingRatio": 0.531056148847313,
+          "revenueThousands": 29763977.0,
+          "spendingThousands": 15806343.0,
+          "values": {
+            "865": 29206149.0,
+            "866": 557828.0,
+            "828": 12942436.0,
+            "869": 230674.0,
+            "831": 1310100.0,
+            "832": 525397.0,
+            "833": 742062.0,
+            "451": 55674.0
+          }
+        },
+        {
+          "id": "industria-116975",
+          "label": "13.3 Fabricação de tecidos de malha",
+          "depth": 3,
+          "spendingRatio": 0.5974621507980945,
+          "revenueThousands": 13709404.0,
+          "spendingThousands": 8190850.0,
+          "values": {
+            "865": 13088056.0,
+            "866": 621348.0,
+            "828": 6627734.0,
+            "869": 413779.0,
+            "831": 404780.0,
+            "832": 110101.0,
+            "833": 623252.0,
+            "451": 11204.0
+          }
+        },
+        {
+          "id": "industria-116977",
+          "label": "13.4 Acabamentos em fios, tecidos e artefatos têxteis",
+          "depth": 3,
+          "spendingRatio": 0.4224662710514924,
+          "revenueThousands": 6539857.0,
+          "spendingThousands": 2762869.0,
+          "values": {
+            "865": 6501617.0,
+            "866": 38240.0,
+            "828": 1891036.0,
+            "869": 14806.0,
+            "831": 502537.0,
+            "832": 121966.0,
+            "833": 218515.0,
+            "451": 14009.0
+          }
+        },
+        {
+          "id": "industria-116979",
+          "label": "13.5 Fabricação de artefatos têxteis, exceto vestuário",
+          "depth": 3,
+          "spendingRatio": 0.47365811755093457,
+          "revenueThousands": 32027172.0,
+          "spendingThousands": 15169930.0,
+          "values": {
+            "865": 30210501.0,
+            "866": 1816671.0,
+            "828": 12564322.0,
+            "869": 911226.0,
+            "831": 642181.0,
+            "832": 286575.0,
+            "833": 738196.0,
+            "451": 27430.0
+          }
+        },
+        {
+          "id": "industria-116985",
+          "label": "14 Confecção de artigos do vestuário e acessórios",
+          "depth": 2,
+          "spendingRatio": 0.40649499774237413,
+          "revenueThousands": 98926932.0,
+          "spendingThousands": 40213303.0,
+          "values": {
+            "865": 89985990.0,
+            "866": 8940942.0,
+            "828": 29490679.0,
+            "869": 3834354.0,
+            "831": 709584.0,
+            "832": 458568.0,
+            "833": 5624599.0,
+            "451": 95519.0
+          }
+        },
+        {
+          "id": "industria-116986",
+          "label": "14.1 Confecção de artigos do vestuário e acessórios",
+          "depth": 3,
+          "spendingRatio": 0.40749487699621384,
+          "revenueThousands": 96720600.0,
+          "spendingThousands": 39413149.0,
+          "values": {
+            "865": 87810120.0,
+            "866": 8910480.0,
+            "828": 28802629.0,
+            "869": 3821205.0,
+            "831": 673591.0,
+            "832": 447436.0,
+            "833": 5574757.0,
+            "451": 93531.0
+          }
+        },
+        {
+          "id": "industria-116991",
+          "label": "14.2 Fabricação de artigos de malharia e tricotagem",
+          "depth": 3,
+          "spendingRatio": 0.36266255486481636,
+          "revenueThousands": 2206332.0,
+          "spendingThousands": 800154.0,
+          "values": {
+            "865": 2175870.0,
+            "866": 30462.0,
+            "828": 688050.0,
+            "869": 13149.0,
+            "831": 35993.0,
+            "832": 11132.0,
+            "833": 49842.0,
+            "451": 1988.0
+          }
+        },
+        {
+          "id": "industria-116994",
+          "label": "15 Preparação de couros e fabricação de artefatos de couro, artigos para viagem e calçados",
+          "depth": 2,
+          "spendingRatio": 0.41296619658109174,
+          "revenueThousands": 64820751.0,
+          "spendingThousands": 26768779.0,
+          "values": {
+            "865": 63481995.0,
+            "866": 1338756.0,
+            "828": 21774211.0,
+            "869": 528391.0,
+            "831": 809757.0,
+            "832": 552057.0,
+            "833": 3052810.0,
+            "451": 51553.0
+          }
+        },
+        {
+          "id": "industria-116995",
+          "label": "15.1 Curtimento e outras preparações de couro",
+          "depth": 3,
+          "spendingRatio": 0.5810196886361652,
+          "revenueThousands": 9723223.0,
+          "spendingThousands": 5649384.0,
+          "values": {
+            "865": 9487724.0,
+            "866": 235499.0,
+            "828": 4753084.0,
+            "869": 135487.0,
+            "831": 249829.0,
+            "832": 157344.0,
+            "833": 340419.0,
+            "451": 13221.0
+          }
+        },
+        {
+          "id": "industria-116997",
+          "label": "15.2 Fabricação de artigos para viagem e de artefatos diversos de couro",
+          "depth": 3,
+          "spendingRatio": 0.40730336646044996,
+          "revenueThousands": 3246585.0,
+          "spendingThousands": 1322345.0,
+          "values": {
+            "865": 3050176.0,
+            "866": 196409.0,
+            "828": 1085742.0,
+            "869": 110002.0,
+            "831": 30965.0,
+            "832": 17406.0,
+            "833": 73347.0,
+            "451": 4883.0
+          }
+        },
+        {
+          "id": "industria-117000",
+          "label": "15.3 Fabricação de calçados",
+          "depth": 3,
+          "spendingRatio": 0.3772941470804271,
+          "revenueThousands": 47409177.0,
+          "spendingThousands": 17887205.0,
+          "values": {
+            "865": 46558252.0,
+            "866": 850925.0,
+            "828": 14316274.0,
+            "869": 272567.0,
+            "831": 426070.0,
+            "832": 340992.0,
+            "833": 2501347.0,
+            "451": 29955.0
+          }
+        },
+        {
+          "id": "industria-117005",
+          "label": "15.4 Fabricação de partes para calçados, de qualquer material",
+          "depth": 3,
+          "spendingRatio": 0.4299742489811485,
+          "revenueThousands": 4441766.0,
+          "spendingThousands": 1909845.0,
+          "values": {
+            "865": 4385843.0,
+            "866": 55923.0,
+            "828": 1619111.0,
+            "869": 10335.0,
+            "831": 102893.0,
+            "832": 36315.0,
+            "833": 137697.0,
+            "451": 3494.0
+          }
+        },
+        {
+          "id": "industria-117007",
+          "label": "16 Fabricação de produtos de madeira",
+          "depth": 2,
+          "spendingRatio": 0.4813845131840196,
+          "revenueThousands": 67363750.0,
+          "spendingThousands": 32427866.0,
+          "values": {
+            "865": 65840443.0,
+            "866": 1523307.0,
+            "828": 24938050.0,
+            "869": 770748.0,
+            "831": 3088539.0,
+            "832": 1493083.0,
+            "833": 2096525.0,
+            "451": 40921.0
+          }
+        },
+        {
+          "id": "industria-117008",
+          "label": "16.1 Desdobramento de madeira",
+          "depth": 3,
+          "spendingRatio": 0.4804515377975315,
+          "revenueThousands": 18343182.0,
+          "spendingThousands": 8813010.0,
+          "values": {
+            "865": 17821545.0,
+            "866": 521637.0,
+            "828": 6315993.0,
+            "869": 198871.0,
+            "831": 1040262.0,
+            "832": 437183.0,
+            "833": 809884.0,
+            "451": 10817.0
+          }
+        },
+        {
+          "id": "industria-117010",
+          "label": "16.2 Fabricação de produtos de madeira, cortiça e material trançado, exceto móveis",
+          "depth": 3,
+          "spendingRatio": 0.48173362658710933,
+          "revenueThousands": 49020568.0,
+          "spendingThousands": 23614856.0,
+          "values": {
+            "865": 48018898.0,
+            "866": 1001670.0,
+            "828": 18622057.0,
+            "869": 571877.0,
+            "831": 2048277.0,
+            "832": 1055900.0,
+            "833": 1286641.0,
+            "451": 30104.0
+          }
+        },
+        {
+          "id": "industria-117015",
+          "label": "17 Fabricação de celulose, papel e produtos de papel",
+          "depth": 2,
+          "spendingRatio": 0.49760472652595716,
+          "revenueThousands": 241036569.0,
+          "spendingThousands": 119940936.0,
+          "values": {
+            "865": 236050496.0,
+            "866": 4986073.0,
+            "828": 97519038.0,
+            "869": 2008964.0,
+            "831": 9574744.0,
+            "832": 3565579.0,
+            "833": 6956905.0,
+            "451": 315706.0
+          }
+        },
+        {
+          "id": "industria-117016",
+          "label": "17.1 Fabricação de celulose e outras pastas para a fabricação de papel",
+          "depth": 3,
+          "spendingRatio": 0.5148537745690941,
+          "revenueThousands": 100072880.0,
+          "spendingThousands": 51522900.0,
+          "values": {
+            "865": 99978695.0,
+            "866": 94185.0,
+            "828": 42414791.0,
+            "869": 366.0,
+            "831": 4920218.0,
+            "832": 1667121.0,
+            "833": 2381311.0,
+            "451": 139093.0
+          }
+        },
+        {
+          "id": "industria-117018",
+          "label": "17.2 Fabricação de papel, cartolina e papel-cartão",
+          "depth": 3,
+          "spendingRatio": 0.5321372845094801,
+          "revenueThousands": 33204999.0,
+          "spendingThousands": 17669618.0,
+          "values": {
+            "865": 32949107.0,
+            "866": 255892.0,
+            "828": 12510358.0,
+            "869": 84111.0,
+            "831": 1942288.0,
+            "832": 501360.0,
+            "833": 2520613.0,
+            "451": 110888.0
+          }
+        },
+        {
+          "id": "industria-117021",
+          "label": "17.3 Fabricação de embalagens de papel, cartolina, papel-cartão e papelão ondulado",
+          "depth": 3,
+          "spendingRatio": 0.47660776737253785,
+          "revenueThousands": 59926751.0,
+          "spendingThousands": 28561555.0,
+          "values": {
+            "865": 57339671.0,
+            "866": 2587080.0,
+            "828": 23645316.0,
+            "869": 1132467.0,
+            "831": 1318292.0,
+            "832": 896411.0,
+            "833": 1539415.0,
+            "451": 29654.0
+          }
+        },
+        {
+          "id": "industria-117025",
+          "label": "17.4 Fabricação de produtos diversos de papel, cartolina, papel-cartão e papelão ondulado",
+          "depth": 3,
+          "spendingRatio": 0.46385037830057446,
+          "revenueThousands": 47831939.0,
+          "spendingThousands": 22186863.0,
+          "values": {
+            "865": 45783023.0,
+            "866": 2048916.0,
+            "828": 18948573.0,
+            "869": 792020.0,
+            "831": 1393946.0,
+            "832": 500687.0,
+            "833": 515566.0,
+            "451": 36071.0
+          }
+        },
+        {
+          "id": "industria-117029",
+          "label": "18 Impressão e reprodução de gravações",
+          "depth": 2,
+          "spendingRatio": 0.41198728616809455,
+          "revenueThousands": 27835825.0,
+          "spendingThousands": 11468006.0,
+          "values": {
+            "865": 26340212.0,
+            "866": 1495613.0,
+            "828": 9081936.0,
+            "869": 587504.0,
+            "831": 379543.0,
+            "832": 314113.0,
+            "833": 1030079.0,
+            "451": 74831.0
+          }
+        },
+        {
+          "id": "industria-117030",
+          "label": "18.1 Atividade de impressão",
+          "depth": 3,
+          "spendingRatio": 0.4138993257666199,
+          "revenueThousands": 23618973.0,
+          "spendingThousands": 9775877.0,
+          "values": {
+            "865": 22656118.0,
+            "866": 962855.0,
+            "828": 8035967.0,
+            "869": 207491.0,
+            "831": 336737.0,
+            "832": 264345.0,
+            "833": 860805.0,
+            "451": 70532.0
+          }
+        },
+        {
+          "id": "industria-117034",
+          "label": "18.2 Serviços de pré-impressão e acabamentos gráficos",
+          "depth": 3,
+          "spendingRatio": 0.37473283946083696,
+          "revenueThousands": 3376715.0,
+          "spendingThousands": 1265366.0,
+          "values": {
+            "865": 3252420.0,
+            "866": 124295.0,
+            "828": 1007292.0,
+            "869": 38570.0,
+            "831": 41214.0,
+            "832": 48721.0,
+            "833": 125330.0,
+            "451": 4239.0
+          }
+        },
+        {
+          "id": "industria-117037",
+          "label": "18.3 Reprodução de materiais gravados em qualquer suporte",
+          "depth": 3,
+          "spendingRatio": 0.5079683432583019,
+          "revenueThousands": 840137.0,
+          "spendingThousands": 426763.0,
+          "values": {
+            "865": 431674.0,
+            "866": 408463.0,
+            "828": 38677.0,
+            "869": 341443.0,
+            "831": 1592.0,
+            "832": 1047.0,
+            "833": 43944.0,
+            "451": 60.0
+          }
+        },
+        {
+          "id": "industria-117039",
+          "label": "19 Fabricação de coque, de produtos derivados do petróleo e de biocombustíveis",
+          "depth": 2,
+          "spendingRatio": 0.3189431497688737,
+          "revenueThousands": 867883578.0,
+          "spendingThousands": 276805522.0,
+          "values": {
+            "865": 784782933.0,
+            "866": 83100645.0,
+            "828": 184926717.0,
+            "869": 54413345.0,
+            "831": 6248271.0,
+            "832": 2345057.0,
+            "833": 28484973.0,
+            "451": 387159.0
+          }
+        },
+        {
+          "id": "industria-117045",
+          "label": "19.3 Fabricação de biocombustíveis",
+          "depth": 3,
+          "spendingRatio": 0.6371776908568872,
+          "revenueThousands": 124875491.0,
+          "spendingThousands": 79567877.0,
+          "values": {
+            "865": 112359994.0,
+            "866": 12515497.0,
+            "828": 60488894.0,
+            "869": 10039413.0,
+            "831": 3292459.0,
+            "832": 2152793.0,
+            "833": 3574340.0,
+            "451": 19978.0
+          }
+        },
+        {
+          "id": "industria-117048",
+          "label": "20 Fabricação de produtos químicos",
+          "depth": 2,
+          "spendingRatio": 0.5936438030239475,
+          "revenueThousands": 742549392.0,
+          "spendingThousands": 440809845.0,
+          "values": {
+            "865": 678366491.0,
+            "866": 64182901.0,
+            "828": 367710319.0,
+            "869": 34294927.0,
+            "831": 14325553.0,
+            "832": 10319393.0,
+            "833": 13587391.0,
+            "451": 572262.0
+          }
+        },
+        {
+          "id": "industria-117049",
+          "label": "20.1 Fabricação de produtos químicos inorgânicos",
+          "depth": 3,
+          "spendingRatio": 0.6714774408056234,
+          "revenueThousands": 205782681.0,
+          "spendingThousands": 138178428.0,
+          "values": {
+            "865": 191474066.0,
+            "866": 14308615.0,
+            "828": 118558321.0,
+            "869": 8785978.0,
+            "831": 5042573.0,
+            "832": 1636879.0,
+            "833": 4095541.0,
+            "451": 59136.0
+          }
+        },
+        {
+          "id": "industria-117055",
+          "label": "20.2 Fabricação de produtos químicos orgânicos",
+          "depth": 3,
+          "spendingRatio": 0.6039706084471077,
+          "revenueThousands": 69928527.0,
+          "spendingThousands": 42234775.0,
+          "values": {
+            "865": 61680855.0,
+            "866": 8247672.0,
+            "828": 34468353.0,
+            "869": 4260844.0,
+            "831": 1827472.0,
+            "832": 405289.0,
+            "833": 1189415.0,
+            "451": 83402.0
+          }
+        },
+        {
+          "id": "industria-117059",
+          "label": "20.3 Fabricação de resinas e elastômeros",
+          "depth": 3,
+          "spendingRatio": 0.6434610811212718,
+          "revenueThousands": 119443973.0,
+          "spendingThousands": 76857548.0,
+          "values": {
+            "865": 113138533.0,
+            "866": 6305440.0,
+            "828": 63427421.0,
+            "869": 4056457.0,
+            "831": 4441274.0,
+            "832": 953566.0,
+            "833": 3925022.0,
+            "451": 53808.0
+          }
+        },
+        {
+          "id": "industria-117063",
+          "label": "20.4 Fabricação de fibras artificiais e sintéticas",
+          "depth": 3,
+          "spendingRatio": 0.62389370414167,
+          "revenueThousands": 4986008.0,
+          "spendingThousands": 3110739.0,
+          "values": {
+            "865": 4630302.0,
+            "866": 355706.0,
+            "828": 2555972.0,
+            "869": 257858.0,
+            "831": 201833.0,
+            "832": 47354.0,
+            "833": 43707.0,
+            "451": 4015.0
+          }
+        },
+        {
+          "id": "industria-117065",
+          "label": "20.5 Fabricação de defensivos agrícolas e desinfestantes domissanitários",
+          "depth": 3,
+          "spendingRatio": 0.5678187098626327,
+          "revenueThousands": 113403676.0,
+          "spendingThousands": 64392729.0,
+          "values": {
+            "865": 93716236.0,
+            "866": 19687440.0,
+            "828": 47507181.0,
+            "869": 9114380.0,
+            "831": 463962.0,
+            "832": 6039746.0,
+            "833": 1231288.0,
+            "451": 36172.0
+          }
+        },
+        {
+          "id": "industria-117068",
+          "label": "20.6 Fabricação de sabões, detergentes, produtos de limpeza, cosméticos, produtos de perfumaria e de higiene pessoal",
+          "depth": 3,
+          "spendingRatio": 0.5140101488741734,
+          "revenueThousands": 118906588.0,
+          "spendingThousands": 61119193.0,
+          "values": {
+            "865": 111019747.0,
+            "866": 7886841.0,
+            "828": 53356216.0,
+            "869": 4651562.0,
+            "831": 880562.0,
+            "832": 626023.0,
+            "833": 1355974.0,
+            "451": 248856.0
+          }
+        },
+        {
+          "id": "industria-117072",
+          "label": "20.7 Fabricação de tintas, vernizes, esmaltes, lacas e produtos afins",
+          "depth": 3,
+          "spendingRatio": 0.5049860794587632,
+          "revenueThousands": 47923424.0,
+          "spendingThousands": 24200662.0,
+          "values": {
+            "865": 45711758.0,
+            "866": 2211666.0,
+            "828": 22494439.0,
+            "869": 580111.0,
+            "831": 356035.0,
+            "832": 176354.0,
+            "833": 572943.0,
+            "451": 20780.0
+          }
+        },
+        {
+          "id": "industria-117076",
+          "label": "20.9 Fabricação de produtos e preparados químicos diversos",
+          "depth": 3,
+          "spendingRatio": 0.49402510015558626,
+          "revenueThousands": 62174515.0,
+          "spendingThousands": 30715771.0,
+          "values": {
+            "865": 56994994.0,
+            "866": 5179521.0,
+            "828": 25342416.0,
+            "869": 2587737.0,
+            "831": 1111842.0,
+            "832": 434182.0,
+            "833": 1173501.0,
+            "451": 66093.0
+          }
+        },
+        {
+          "id": "industria-117082",
+          "label": "21 Fabricação de produtos farmoquímicos e farmacêuticos",
+          "depth": 2,
+          "spendingRatio": 0.34723111576194554,
+          "revenueThousands": 161382749.0,
+          "spendingThousands": 56037112.0,
+          "values": {
+            "865": 134902777.0,
+            "866": 26479972.0,
+            "828": 42265083.0,
+            "869": 10162580.0,
+            "831": 964493.0,
+            "832": 559785.0,
+            "833": 1957481.0,
+            "451": 127690.0
+          }
+        },
+        {
+          "id": "industria-117083",
+          "label": "21.1 Fabricação de produtos farmoquímicos",
+          "depth": 3,
+          "spendingRatio": 0.5359021672704022,
+          "revenueThousands": 2865217.0,
+          "spendingThousands": 1535476.0,
+          "values": {
+            "865": 2795303.0,
+            "866": 69914.0,
+            "828": 1392292.0,
+            "869": 30055.0,
+            "831": 48445.0,
+            "832": 14934.0,
+            "833": 48266.0,
+            "451": 1484.0
+          }
+        },
+        {
+          "id": "industria-117085",
+          "label": "21.2 Fabricação de produtos farmacêuticos",
+          "depth": 3,
+          "spendingRatio": 0.34382087149830215,
+          "revenueThousands": 158517532.0,
+          "spendingThousands": 54501636.0,
+          "values": {
+            "865": 132107474.0,
+            "866": 26410058.0,
+            "828": 40872791.0,
+            "869": 10132525.0,
+            "831": 916048.0,
+            "832": 544851.0,
+            "833": 1909215.0,
+            "451": 126206.0
+          }
+        },
+        {
+          "id": "industria-117089",
+          "label": "22 Fabricação de produtos de borracha e de material plástico",
+          "depth": 2,
+          "spendingRatio": 0.4837631908321578,
+          "revenueThousands": 273143969.0,
+          "spendingThousands": 132136998.0,
+          "values": {
+            "865": 259933543.0,
+            "866": 13210426.0,
+            "828": 113933147.0,
+            "869": 5811235.0,
+            "831": 5653416.0,
+            "832": 2379607.0,
+            "833": 4127776.0,
+            "451": 231817.0
+          }
+        },
+        {
+          "id": "industria-117090",
+          "label": "22.1 Fabricação de produtos de borracha",
+          "depth": 3,
+          "spendingRatio": 0.4727795999715258,
+          "revenueThousands": 70182804.0,
+          "spendingThousands": 33180998.0,
+          "values": {
+            "865": 64462620.0,
+            "866": 5720184.0,
+            "828": 27229083.0,
+            "869": 2441862.0,
+            "831": 1402519.0,
+            "832": 712703.0,
+            "833": 1319730.0,
+            "451": 75101.0
+          }
+        },
+        {
+          "id": "industria-117094",
+          "label": "22.2 Fabricação de produtos de material plástico",
+          "depth": 3,
+          "spendingRatio": 0.4875612534053005,
+          "revenueThousands": 202961165.0,
+          "spendingThousands": 98956000.0,
+          "values": {
+            "865": 195470923.0,
+            "866": 7490242.0,
+            "828": 86704064.0,
+            "869": 3369373.0,
+            "831": 4250897.0,
+            "832": 1666904.0,
+            "833": 2808046.0,
+            "451": 156716.0
+          }
+        },
+        {
+          "id": "industria-117099",
+          "label": "23 Fabricação de produtos de minerais não-metálicos",
+          "depth": 2,
+          "spendingRatio": 0.43645434527096844,
+          "revenueThousands": 222483513.0,
+          "spendingThousands": 97103896.0,
+          "values": {
+            "865": 207685076.0,
+            "866": 14798437.0,
+            "828": 63789053.0,
+            "869": 6132330.0,
+            "831": 15244106.0,
+            "832": 4226057.0,
+            "833": 7537129.0,
+            "451": 175221.0
+          }
+        },
+        {
+          "id": "industria-117100",
+          "label": "23.1 Fabricação de vidro e de produtos do vidro",
+          "depth": 3,
+          "spendingRatio": 0.4507772139132909,
+          "revenueThousands": 31506191.0,
+          "spendingThousands": 14202273.0,
+          "values": {
+            "865": 30169641.0,
+            "866": 1336550.0,
+            "828": 9186606.0,
+            "869": 765131.0,
+            "831": 2888823.0,
+            "832": 639559.0,
+            "833": 689661.0,
+            "451": 32493.0
+          }
+        },
+        {
+          "id": "industria-117104",
+          "label": "23.2 Fabricação de cimento",
+          "depth": 3,
+          "spendingRatio": 0.3394715033773724,
+          "revenueThousands": 41795953.0,
+          "spendingThousands": 14188535.0,
+          "values": {
+            "865": 38677261.0,
+            "866": 3118692.0,
+            "828": 7070781.0,
+            "869": 48312.0,
+            "831": 3305266.0,
+            "832": 1250255.0,
+            "833": 2474176.0,
+            "451": 39745.0
+          }
+        },
+        {
+          "id": "industria-117106",
+          "label": "23.3 Fabricação de artefatos de concreto, cimento, fibrocimento, gesso e materiais semelhantes",
+          "depth": 3,
+          "spendingRatio": 0.4820781752614549,
+          "revenueThousands": 60554604.0,
+          "spendingThousands": 29192053.0,
+          "values": {
+            "865": 58491773.0,
+            "866": 2062831.0,
+            "828": 23052683.0,
+            "869": 962948.0,
+            "831": 1751736.0,
+            "832": 1011056.0,
+            "833": 2373701.0,
+            "451": 39929.0
+          }
+        },
+        {
+          "id": "industria-117108",
+          "label": "23.4 Fabricação de produtos cerâmicos",
+          "depth": 3,
+          "spendingRatio": 0.4109922375406065,
+          "revenueThousands": 39298241.0,
+          "spendingThousands": 16151272.0,
+          "values": {
+            "865": 38164359.0,
+            "866": 1133882.0,
+            "828": 9146130.0,
+            "869": 567478.0,
+            "831": 4968938.0,
+            "832": 634370.0,
+            "833": 811573.0,
+            "451": 22783.0
+          }
+        },
+        {
+          "id": "industria-117112",
+          "label": "23.9 Aparelhamento de pedras e fabricação de outros produtos de minerais não-metálicos",
+          "depth": 3,
+          "spendingRatio": 0.4737575971257522,
+          "revenueThousands": 49328524.0,
+          "spendingThousands": 23369763.0,
+          "values": {
+            "865": 42182042.0,
+            "866": 7146482.0,
+            "828": 15332853.0,
+            "869": 3788461.0,
+            "831": 2329343.0,
+            "832": 690817.0,
+            "833": 1188018.0,
+            "451": 40271.0
+          }
+        },
+        {
+          "id": "industria-117116",
+          "label": "24 Metalurgia",
+          "depth": 2,
+          "spendingRatio": 0.6042151195873622,
+          "revenueThousands": 503535607.0,
+          "spendingThousands": 304243827.0,
+          "values": {
+            "865": 484324342.0,
+            "866": 19211265.0,
+            "828": 232749743.0,
+            "869": 13564893.0,
+            "831": 26201119.0,
+            "832": 10298180.0,
+            "833": 21226748.0,
+            "451": 203144.0
+          }
+        },
+        {
+          "id": "industria-117117",
+          "label": "24.1 Produção de ferro-gusa e de ferroligas",
+          "depth": 3,
+          "spendingRatio": 0.48366989682838646,
+          "revenueThousands": 38702603.0,
+          "spendingThousands": 18719284.0,
+          "values": {
+            "865": 38506404.0,
+            "866": 196199.0,
+            "828": 14261466.0,
+            "869": 45287.0,
+            "831": 2922968.0,
+            "832": 469183.0,
+            "833": 1012945.0,
+            "451": 7435.0
+          }
+        },
+        {
+          "id": "industria-117120",
+          "label": "24.2 Siderurgia",
+          "depth": 3,
+          "spendingRatio": 0.6250469843365752,
+          "revenueThousands": 253972938.0,
+          "spendingThousands": 158745019.0,
+          "values": {
+            "865": 247413952.0,
+            "866": 6558986.0,
+            "828": 124136460.0,
+            "869": 4470731.0,
+            "831": 11461215.0,
+            "832": 5696559.0,
+            "833": 12839195.0,
+            "451": 140859.0
+          }
+        },
+        {
+          "id": "industria-117125",
+          "label": "24.3 Produção de tubos de aço, exceto tubos sem costura",
+          "depth": 3,
+          "spendingRatio": 0.5994158120578758,
+          "revenueThousands": 28032417.0,
+          "spendingThousands": 16803074.0,
+          "values": {
+            "865": 27162385.0,
+            "866": 870032.0,
+            "828": 15436066.0,
+            "869": 468597.0,
+            "831": 220594.0,
+            "832": 170093.0,
+            "833": 495901.0,
+            "451": 11823.0
+          }
+        },
+        {
+          "id": "industria-117128",
+          "label": "24.4 Metalurgia dos metais não-ferrosos",
+          "depth": 3,
+          "spendingRatio": 0.6105513817781129,
+          "revenueThousands": 168623962.0,
+          "spendingThousands": 102953593.0,
+          "values": {
+            "865": 157406779.0,
+            "866": 11217183.0,
+            "828": 73177120.0,
+            "869": 8420112.0,
+            "831": 11069316.0,
+            "832": 3780654.0,
+            "833": 6478344.0,
+            "451": 28047.0
+          }
+        },
+        {
+          "id": "industria-117133",
+          "label": "24.5 Fundição",
+          "depth": 3,
+          "spendingRatio": 0.4944390143207183,
+          "revenueThousands": 14203687.0,
+          "spendingThousands": 7022857.0,
+          "values": {
+            "865": 13834822.0,
+            "866": 368865.0,
+            "828": 5738631.0,
+            "869": 160166.0,
+            "831": 527026.0,
+            "832": 181691.0,
+            "833": 400363.0,
+            "451": 14980.0
+          }
+        },
+        {
+          "id": "industria-117136",
+          "label": "25 Fabricação de produtos de metal, exceto máquinas e equipamentos",
+          "depth": 2,
+          "spendingRatio": 0.48458691513686963,
+          "revenueThousands": 223866736.0,
+          "spendingThousands": 108482891.0,
+          "values": {
+            "865": 214683798.0,
+            "866": 9182938.0,
+            "828": 93146625.0,
+            "869": 3585818.0,
+            "831": 3078596.0,
+            "832": 3155555.0,
+            "833": 5292037.0,
+            "451": 224260.0
+          }
+        },
+        {
+          "id": "industria-117137",
+          "label": "25.1 Fabricação de estruturas metálicas e obras de caldeiraria pesada",
+          "depth": 3,
+          "spendingRatio": 0.47038124160036804,
+          "revenueThousands": 43772007.0,
+          "spendingThousands": 20589531.0,
+          "values": {
+            "865": 41581391.0,
+            "866": 2190616.0,
+            "828": 17358520.0,
+            "869": 454310.0,
+            "831": 462748.0,
+            "832": 745606.0,
+            "833": 1535782.0,
+            "451": 32565.0
+          }
+        },
+        {
+          "id": "industria-117141",
+          "label": "25.2 Fabricação de tanques, reservatórios metálicos e caldeiras",
+          "depth": 3,
+          "spendingRatio": 0.4855590700013245,
+          "revenueThousands": 6681945.0,
+          "spendingThousands": 3244479.0,
+          "values": {
+            "865": 6417066.0,
+            "866": 264879.0,
+            "828": 2678786.0,
+            "869": 49893.0,
+            "831": 43117.0,
+            "832": 99346.0,
+            "833": 367928.0,
+            "451": 5409.0
+          }
+        },
+        {
+          "id": "industria-117144",
+          "label": "25.3 Forjaria, estamparia, metalurgia do pó e serviços de tratamento de metais",
+          "depth": 3,
+          "spendingRatio": 0.41611071787716547,
+          "revenueThousands": 36133424.0,
+          "spendingThousands": 15035505.0,
+          "values": {
+            "865": 35098059.0,
+            "866": 1035365.0,
+            "828": 12009061.0,
+            "869": 408674.0,
+            "831": 715891.0,
+            "832": 667964.0,
+            "833": 1163920.0,
+            "451": 69995.0
+          }
+        },
+        {
+          "id": "industria-117148",
+          "label": "25.4 Fabricação de artigos de cutelaria, de serralheria e ferramentas",
+          "depth": 3,
+          "spendingRatio": 0.41241634573191727,
+          "revenueThousands": 24562106.0,
+          "spendingThousands": 10129814.0,
+          "values": {
+            "865": 22579160.0,
+            "866": 1982946.0,
+            "828": 7999454.0,
+            "869": 965640.0,
+            "831": 332744.0,
+            "832": 305332.0,
+            "833": 506918.0,
+            "451": 19726.0
+          }
+        },
+        {
+          "id": "industria-117152",
+          "label": "25.5 Fabricação de equipamento bélico pesado, armas de fogo e munições",
+          "depth": 3,
+          "spendingRatio": 0.4751128230303263,
+          "revenueThousands": 4477366.0,
+          "spendingThousands": 2127254.0,
+          "values": {
+            "865": 4432902.0,
+            "866": 44464.0,
+            "828": 1865248.0,
+            "869": 549.0,
+            "831": 62886.0,
+            "832": 114740.0,
+            "833": 75873.0,
+            "451": 7958.0
+          }
+        },
+        {
+          "id": "industria-117154",
+          "label": "25.9 Fabricação de produtos de metal não especificados anteriormente",
+          "depth": 3,
+          "spendingRatio": 0.5298999200738271,
+          "revenueThousands": 108239888.0,
+          "spendingThousands": 57356308.0,
+          "values": {
+            "865": 104575220.0,
+            "866": 3664668.0,
+            "828": 51235556.0,
+            "869": 1706752.0,
+            "831": 1461210.0,
+            "832": 1222567.0,
+            "833": 1641616.0,
+            "451": 88607.0
+          }
+        },
+        {
+          "id": "industria-117159",
+          "label": "26 Fabricação de equipamentos de informática, produtos eletrônicos e ópticos",
+          "depth": 2,
+          "spendingRatio": 0.5468674663205784,
+          "revenueThousands": 199091379.0,
+          "spendingThousands": 108876598.0,
+          "values": {
+            "865": 177810807.0,
+            "866": 21280572.0,
+            "828": 95926948.0,
+            "869": 10126858.0,
+            "831": 414382.0,
+            "832": 604699.0,
+            "833": 1767911.0,
+            "451": 35800.0
+          }
+        },
+        {
+          "id": "industria-117160",
+          "label": "26.1 Fabricação de componentes eletrônicos",
+          "depth": 3,
+          "spendingRatio": 0.6564001487452761,
+          "revenueThousands": 16699690.0,
+          "spendingThousands": 10961679.0,
+          "values": {
+            "865": 15407299.0,
+            "866": 1292391.0,
+            "828": 9732382.0,
+            "869": 748030.0,
+            "831": 99842.0,
+            "832": 156061.0,
+            "833": 217129.0,
+            "451": 8235.0
+          }
+        },
+        {
+          "id": "industria-117162",
+          "label": "26.2 Fabricação de equipamentos de informática e periféricos",
+          "depth": 3,
+          "spendingRatio": 0.6010453861512182,
+          "revenueThousands": 47646891.0,
+          "spendingThousands": 28637944.0,
+          "values": {
+            "865": 38962391.0,
+            "866": 8684500.0,
+            "828": 23389563.0,
+            "869": 4368444.0,
+            "831": 94993.0,
+            "832": 43538.0,
+            "833": 733882.0,
+            "451": 7524.0
+          }
+        },
+        {
+          "id": "industria-117165",
+          "label": "26.3 Fabricação de equipamentos de comunicação",
+          "depth": 3,
+          "spendingRatio": 0.5593352785892878,
+          "revenueThousands": 83333678.0,
+          "spendingThousands": 46611466.0,
+          "values": {
+            "865": 77193761.0,
+            "866": 6139917.0,
+            "828": 43170833.0,
+            "869": 2821985.0,
+            "831": 93742.0,
+            "832": 214724.0,
+            "833": 303275.0,
+            "451": 6907.0
+          }
+        },
+        {
+          "id": "industria-117168",
+          "label": "26.4 Fabricação de aparelhos de recepção, reprodução, gravação e amplificação de áudio e vídeo",
+          "depth": 3,
+          "spendingRatio": 0.47660537910129797,
+          "revenueThousands": 32004045.0,
+          "spendingThousands": 15253300.0,
+          "values": {
+            "865": 28647405.0,
+            "866": 3356640.0,
+            "828": 13431506.0,
+            "869": 1605112.0,
+            "831": 57274.0,
+            "832": 42191.0,
+            "833": 114819.0,
+            "451": 2398.0
+          }
+        },
+        {
+          "id": "industria-117170",
+          "label": "26.5 Fabricação de aparelhos e instrumentos de medida, teste e controle; cronômetros e relógios",
+          "depth": 3,
+          "spendingRatio": 0.3838845583093114,
+          "revenueThousands": 16650068.0,
+          "spendingThousands": 6391704.0,
+          "values": {
+            "865": 14983836.0,
+            "866": 1666232.0,
+            "828": 5332368.0,
+            "869": 549119.0,
+            "831": 62447.0,
+            "832": 106585.0,
+            "833": 332031.0,
+            "451": 9154.0
+          }
+        },
+        {
+          "id": "industria-117173",
+          "label": "26.6 Fabricação de aparelhos eletromédicos e eletroterapêuticos e equipamentos de irradiação",
+          "depth": 3,
+          "spendingRatio": 0.376881275165364,
+          "revenueThousands": 2550132.0,
+          "spendingThousands": 961097.0,
+          "values": {
+            "865": 2447011.0,
+            "866": 103121.0,
+            "828": 835575.0,
+            "869": 19049.0,
+            "831": 4402.0,
+            "832": 40798.0,
+            "833": 59803.0,
+            "451": 1470.0
+          }
+        },
+        {
+          "id": "industria-117175",
+          "label": "26.7 Fabricação de equipamentos e instrumentos ópticos, fotográficos e cinematográficos",
+          "depth": 3,
+          "spendingRatio": 0.28716858006042295,
+          "revenueThousands": 206875.0,
+          "spendingThousands": 59408.0,
+          "values": {
+            "865": 169104.0,
+            "866": 37771.0,
+            "828": 34721.0,
+            "869": 15119.0,
+            "831": 1682.0,
+            "832": 802.0,
+            "833": 6972.0,
+            "451": 112.0
+          }
+        },
+        {
+          "id": "industria-117179",
+          "label": "27 Fabricação de máquinas, aparelhos e materiais elétricos",
+          "depth": 2,
+          "spendingRatio": 0.5260003810992218,
+          "revenueThousands": 223737009.0,
+          "spendingThousands": 117685752.0,
+          "values": {
+            "865": 207893227.0,
+            "866": 15843782.0,
+            "828": 103885589.0,
+            "869": 6679800.0,
+            "831": 1563374.0,
+            "832": 2087595.0,
+            "833": 3382714.0,
+            "451": 86680.0
+          }
+        },
+        {
+          "id": "industria-117180",
+          "label": "27.1 Fabricação de geradores, transformadores e motores elétricos",
+          "depth": 3,
+          "spendingRatio": 0.5502930447950727,
+          "revenueThousands": 66636570.0,
+          "spendingThousands": 36669641.0,
+          "values": {
+            "865": 63181830.0,
+            "866": 3454740.0,
+            "828": 32911213.0,
+            "869": 1361651.0,
+            "831": 488555.0,
+            "832": 666532.0,
+            "833": 1214680.0,
+            "451": 27010.0
+          }
+        },
+        {
+          "id": "industria-117182",
+          "label": "27.2 Fabricação de pilhas, baterias e acumuladores elétricos",
+          "depth": 3,
+          "spendingRatio": 0.49647669195803223,
+          "revenueThousands": 9264163.0,
+          "spendingThousands": 4599441.0,
+          "values": {
+            "865": 8816812.0,
+            "866": 447351.0,
+            "828": 3905238.0,
+            "869": 175079.0,
+            "831": 161380.0,
+            "832": 192502.0,
+            "833": 161046.0,
+            "451": 4196.0
+          }
+        },
+        {
+          "id": "industria-117185",
+          "label": "27.3 Fabricação de equipamentos para distribuição e controle de energia elétrica",
+          "depth": 3,
+          "spendingRatio": 0.5490465393944574,
+          "revenueThousands": 74470565.0,
+          "spendingThousands": 40887806.0,
+          "values": {
+            "865": 68879353.0,
+            "866": 5591212.0,
+            "828": 36004418.0,
+            "869": 2290228.0,
+            "831": 453073.0,
+            "832": 749166.0,
+            "833": 1364601.0,
+            "451": 26320.0
+          }
+        },
+        {
+          "id": "industria-117189",
+          "label": "27.4 Fabricação de lâmpadas e outros equipamentos de iluminação",
+          "depth": 3,
+          "spendingRatio": 0.42144670524279426,
+          "revenueThousands": 5574432.0,
+          "spendingThousands": 2349326.0,
+          "values": {
+            "865": 5098396.0,
+            "866": 476036.0,
+            "828": 2038671.0,
+            "869": 173612.0,
+            "831": 30775.0,
+            "832": 23812.0,
+            "833": 78112.0,
+            "451": 4344.0
+          }
+        },
+        {
+          "id": "industria-117191",
+          "label": "27.5 Fabricação de eletrodomésticos",
+          "depth": 3,
+          "spendingRatio": 0.500017264365982,
+          "revenueThousands": 58386158.0,
+          "spendingThousands": 29194087.0,
+          "values": {
+            "865": 53244724.0,
+            "866": 5141434.0,
+            "828": 25654207.0,
+            "869": 2490928.0,
+            "831": 360124.0,
+            "832": 353366.0,
+            "833": 316532.0,
+            "451": 18930.0
+          }
+        },
+        {
+          "id": "industria-117194",
+          "label": "27.9 Fabricação de equipamentos e aparelhos elétricos não especificados anteriormente",
+          "depth": 3,
+          "spendingRatio": 0.4237532935514599,
+          "revenueThousands": 9405121.0,
+          "spendingThousands": 3985451.0,
+          "values": {
+            "865": 8672112.0,
+            "866": 733009.0,
+            "828": 3371842.0,
+            "869": 188302.0,
+            "831": 69467.0,
+            "832": 102217.0,
+            "833": 247743.0,
+            "451": 5880.0
+          }
+        },
+        {
+          "id": "industria-117196",
+          "label": "28 Fabricação de máquinas e equipamentos",
+          "depth": 2,
+          "spendingRatio": 0.49004660467179967,
+          "revenueThousands": 367438485.0,
+          "spendingThousands": 180061982.0,
+          "values": {
+            "865": 330882256.0,
+            "866": 36556229.0,
+            "828": 149314782.0,
+            "869": 16561908.0,
+            "831": 2243864.0,
+            "832": 3261110.0,
+            "833": 8524252.0,
+            "451": 156066.0
+          }
+        },
+        {
+          "id": "industria-117197",
+          "label": "28.1 Fabricação de motores, bombas, compressores e equipamentos de transmissão",
+          "depth": 3,
+          "spendingRatio": 0.4647467799706079,
+          "revenueThousands": 52621647.0,
+          "spendingThousands": 24455741.0,
+          "values": {
+            "865": 46089827.0,
+            "866": 6531820.0,
+            "828": 19649678.0,
+            "869": 2391456.0,
+            "831": 480289.0,
+            "832": 594151.0,
+            "833": 1304254.0,
+            "451": 35913.0
+          }
+        },
+        {
+          "id": "industria-117203",
+          "label": "28.2 Fabricação de máquinas e equipamentos de uso geral",
+          "depth": 3,
+          "spendingRatio": 0.47806703926919314,
+          "revenueThousands": 97171286.0,
+          "spendingThousands": 46454389.0,
+          "values": {
+            "865": 84038337.0,
+            "866": 13132949.0,
+            "828": 36705611.0,
+            "869": 5351389.0,
+            "831": 463543.0,
+            "832": 995172.0,
+            "833": 2896580.0,
+            "451": 42094.0
+          }
+        },
+        {
+          "id": "industria-117210",
+          "label": "28.3 Fabricação de tratores e de máquinas e equipamentos para a agricultura e pecuária",
+          "depth": 3,
+          "spendingRatio": 0.48902378944202873,
+          "revenueThousands": 99020103.0,
+          "spendingThousands": 48423186.0,
+          "values": {
+            "865": 91580328.0,
+            "866": 7439775.0,
+            "828": 41283614.0,
+            "869": 4497523.0,
+            "831": 484980.0,
+            "832": 747463.0,
+            "833": 1379037.0,
+            "451": 30569.0
+          }
+        },
+        {
+          "id": "industria-117214",
+          "label": "28.4 Fabricação de máquinas-ferramenta",
+          "depth": 3,
+          "spendingRatio": 0.47656106943533094,
+          "revenueThousands": 16099412.0,
+          "spendingThousands": 7672353.0,
+          "values": {
+            "865": 13535709.0,
+            "866": 2563703.0,
+            "828": 5543884.0,
+            "869": 1420251.0,
+            "831": 115498.0,
+            "832": 115605.0,
+            "833": 465025.0,
+            "451": 12090.0
+          }
+        },
+        {
+          "id": "industria-117216",
+          "label": "28.5 Fabricação de máquinas e equipamentos de uso na extração mineral e na construção",
+          "depth": 3,
+          "spendingRatio": 0.5672652340201245,
+          "revenueThousands": 59458583.0,
+          "spendingThousands": 33728787.0,
+          "values": {
+            "865": 56023891.0,
+            "866": 3434692.0,
+            "828": 30268383.0,
+            "869": 1950957.0,
+            "831": 362117.0,
+            "832": 351451.0,
+            "833": 783465.0,
+            "451": 12414.0
+          }
+        },
+        {
+          "id": "industria-117221",
+          "label": "28.6 Fabricação de máquinas e equipamentos de uso industrial específico",
+          "depth": 3,
+          "spendingRatio": 0.4487733591124286,
+          "revenueThousands": 43067454.0,
+          "spendingThousands": 19327526.0,
+          "values": {
+            "865": 39614164.0,
+            "866": 3453290.0,
+            "828": 15863612.0,
+            "869": 950332.0,
+            "831": 337437.0,
+            "832": 457268.0,
+            "833": 1695891.0,
+            "451": 22986.0
+          }
+        },
+        {
+          "id": "industria-117229",
+          "label": "29 Fabricação de veículos automotores, reboques e carrocerias",
+          "depth": 2,
+          "spendingRatio": 0.544650920311838,
+          "revenueThousands": 787388709.0,
+          "spendingThousands": 428851985.0,
+          "values": {
+            "865": 697012398.0,
+            "866": 90376311.0,
+            "828": 371077138.0,
+            "869": 40659243.0,
+            "831": 4779485.0,
+            "832": 3505893.0,
+            "833": 8534233.0,
+            "451": 295993.0
+          }
+        },
+        {
+          "id": "industria-117230",
+          "label": "29.1 Fabricação de automóveis, camionetas e utilitários",
+          "depth": 3,
+          "spendingRatio": 0.564731848661123,
+          "revenueThousands": 371032382.0,
+          "spendingThousands": 209533803.0,
+          "values": {
+            "865": 305247480.0,
+            "866": 65784902.0,
+            "828": 175918766.0,
+            "869": 31178021.0,
+            "831": 851170.0,
+            "832": 301355.0,
+            "833": 1206693.0,
+            "451": 77798.0
+          }
+        },
+        {
+          "id": "industria-117232",
+          "label": "29.2 Fabricação de caminhões e ônibus",
+          "depth": 3,
+          "spendingRatio": 0.5241727825369152,
+          "revenueThousands": 135295409.0,
+          "spendingThousands": 70918171.0,
+          "values": {
+            "865": 127425566.0,
+            "866": 7869843.0,
+            "828": 66536599.0,
+            "869": 2212711.0,
+            "831": 220753.0,
+            "832": 218705.0,
+            "833": 1709730.0,
+            "451": 19673.0
+          }
+        },
+        {
+          "id": "industria-117234",
+          "label": "29.3 Fabricação de cabines, carrocerias e reboques para veículos automotores",
+          "depth": 3,
+          "spendingRatio": 0.5512959191069224,
+          "revenueThousands": 41198482.0,
+          "spendingThousands": 22712555.0,
+          "values": {
+            "865": 40553742.0,
+            "866": 644740.0,
+            "828": 21413408.0,
+            "869": 265569.0,
+            "831": 257428.0,
+            "832": 183457.0,
+            "833": 575245.0,
+            "451": 17448.0
+          }
+        },
+        {
+          "id": "industria-117236",
+          "label": "29.4 Fabricação de peças e acessórios para veículos automotores",
+          "depth": 3,
+          "spendingRatio": 0.5253593798273989,
+          "revenueThousands": 238424206.0,
+          "spendingThousands": 125258393.0,
+          "values": {
+            "865": 222712881.0,
+            "866": 15711325.0,
+            "828": 107021198.0,
+            "869": 6840480.0,
+            "831": 3431250.0,
+            "832": 2776750.0,
+            "833": 5011863.0,
+            "451": 176852.0
+          }
+        },
+        {
+          "id": "industria-117243",
+          "label": "29.5 Recondicionamento e recuperação de motores para veículos automotores",
+          "depth": 3,
+          "spendingRatio": 0.29832711040654136,
+          "revenueThousands": 1438230.0,
+          "spendingThousands": 429063.0,
+          "values": {
+            "865": 1072729.0,
+            "866": 365501.0,
+            "828": 187167.0,
+            "869": 162462.0,
+            "831": 18884.0,
+            "832": 25626.0,
+            "833": 30702.0,
+            "451": 4222.0
+          }
+        },
+        {
+          "id": "industria-117245",
+          "label": "30 Fabricação de outros equipamentos de transporte, exceto veículos automotores",
+          "depth": 2,
+          "spendingRatio": 0.60235838009209,
+          "revenueThousands": 95907526.0,
+          "spendingThousands": 57770702.0,
+          "values": {
+            "865": 92625920.0,
+            "866": 3281606.0,
+            "828": 51017520.0,
+            "869": 1413712.0,
+            "831": 508225.0,
+            "832": 1525211.0,
+            "833": 3285389.0,
+            "451": 20645.0
+          }
+        },
+        {
+          "id": "industria-117246",
+          "label": "30.1 Construção de embarcações",
+          "depth": 3,
+          "spendingRatio": 0.6401351112201858,
+          "revenueThousands": 11278708.0,
+          "spendingThousands": 7219897.0,
+          "values": {
+            "865": 10966776.0,
+            "866": 311932.0,
+            "828": 5644174.0,
+            "869": 110870.0,
+            "831": 62824.0,
+            "832": 511285.0,
+            "833": 883992.0,
+            "451": 6752.0
+          }
+        },
+        {
+          "id": "industria-117249",
+          "label": "30.3 Fabricação de veículos ferroviários",
+          "depth": 3,
+          "spendingRatio": 0.5545169770087146,
+          "revenueThousands": 8038872.0,
+          "spendingThousands": 4457691.0,
+          "values": {
+            "865": 7428862.0,
+            "866": 610010.0,
+            "828": 3835418.0,
+            "869": 225784.0,
+            "831": 82221.0,
+            "832": 82994.0,
+            "833": 227182.0,
+            "451": 4092.0
+          }
+        },
+        {
+          "id": "industria-117257",
+          "label": "30.9 Fabricação de equipamentos de transporte não especificados anteriormente",
+          "depth": 3,
+          "spendingRatio": 0.5993702512830694,
+          "revenueThousands": 46462024.0,
+          "spendingThousands": 27847955.0,
+          "values": {
+            "865": 44543869.0,
+            "866": 1918155.0,
+            "828": 25919348.0,
+            "869": 835519.0,
+            "831": 248917.0,
+            "832": 128818.0,
+            "833": 710542.0,
+            "451": 4811.0
+          }
+        },
+        {
+          "id": "industria-117261",
+          "label": "31 Fabricação de móveis",
+          "depth": 2,
+          "spendingRatio": 0.4451853830548465,
+          "revenueThousands": 71786874.0,
+          "spendingThousands": 31958467.0,
+          "values": {
+            "865": 69540161.0,
+            "866": 2246713.0,
+            "828": 28563889.0,
+            "869": 866361.0,
+            "831": 805114.0,
+            "832": 486943.0,
+            "833": 1192579.0,
+            "451": 43581.0
+          }
+        },
+        {
+          "id": "industria-117262",
+          "label": "31.0 Fabricação de móveis",
+          "depth": 3,
+          "spendingRatio": 0.4451853830548465,
+          "revenueThousands": 71786874.0,
+          "spendingThousands": 31958467.0,
+          "values": {
+            "865": 69540161.0,
+            "866": 2246713.0,
+            "828": 28563889.0,
+            "869": 866361.0,
+            "831": 805114.0,
+            "832": 486943.0,
+            "833": 1192579.0,
+            "451": 43581.0
+          }
+        },
+        {
+          "id": "industria-117267",
+          "label": "32 Fabricação de produtos diversos",
+          "depth": 2,
+          "spendingRatio": 0.3713309835905636,
+          "revenueThousands": 66214340.0,
+          "spendingThousands": 24587436.0,
+          "values": {
+            "865": 60225179.0,
+            "866": 5989161.0,
+            "828": 19343725.0,
+            "869": 2292785.0,
+            "831": 925148.0,
+            "832": 453375.0,
+            "833": 1502040.0,
+            "451": 70363.0
+          }
+        },
+        {
+          "id": "industria-117268",
+          "label": "32.1 Fabricação de artigos de joalheria, bijuteria e semelhantes",
+          "depth": 3,
+          "spendingRatio": 0.3729274630662426,
+          "revenueThousands": 6119131.0,
+          "spendingThousands": 2281992.0,
+          "values": {
+            "865": 5870014.0,
+            "866": 249117.0,
+            "828": 2058418.0,
+            "869": 126571.0,
+            "831": 24918.0,
+            "832": 9447.0,
+            "833": 55686.0,
+            "451": 6952.0
+          }
+        },
+        {
+          "id": "industria-117271",
+          "label": "32.2 Fabricação de instrumentos musicais",
+          "depth": 3,
+          "spendingRatio": 0.4715495479905046,
+          "revenueThousands": 265813.0,
+          "spendingThousands": 125344.0,
+          "values": {
+            "865": 243654.0,
+            "866": 22159.0,
+            "828": 98029.0,
+            "869": 12779.0,
+            "831": 2535.0,
+            "832": 1601.0,
+            "833": 9998.0,
+            "451": 402.0
+          }
+        },
+        {
+          "id": "industria-117273",
+          "label": "32.3 Fabricação de artefatos para pesca e esporte",
+          "depth": 3,
+          "spendingRatio": 0.3949852203310771,
+          "revenueThousands": 1920882.0,
+          "spendingThousands": 758720.0,
+          "values": {
+            "865": 1734673.0,
+            "866": 186209.0,
+            "828": 610785.0,
+            "869": 78319.0,
+            "831": 16904.0,
+            "832": 12766.0,
+            "833": 38796.0,
+            "451": 1150.0
+          }
+        },
+        {
+          "id": "industria-117275",
+          "label": "32.4 Fabricação de brinquedos e jogos recreativos",
+          "depth": 3,
+          "spendingRatio": 0.3437249724710941,
+          "revenueThousands": 4542498.0,
+          "spendingThousands": 1561370.0,
+          "values": {
+            "865": 4389980.0,
+            "866": 152518.0,
+            "828": 1276200.0,
+            "869": 72861.0,
+            "831": 79993.0,
+            "832": 38426.0,
+            "833": 89749.0,
+            "451": 4141.0
+          }
+        },
+        {
+          "id": "industria-117277",
+          "label": "32.5 Fabricação de instrumentos e materiais para uso médico e odontológico e de artigos ópticos",
+          "depth": 3,
+          "spendingRatio": 0.3393355276326339,
+          "revenueThousands": 30320689.0,
+          "spendingThousands": 10288887.0,
+          "values": {
+            "865": 26868876.0,
+            "866": 3451813.0,
+            "828": 7485061.0,
+            "869": 1339538.0,
+            "831": 519581.0,
+            "832": 229680.0,
+            "833": 683654.0,
+            "451": 31373.0
+          }
+        },
+        {
+          "id": "industria-117279",
+          "label": "32.9 Fabricação de produtos diversos",
+          "depth": 3,
+          "spendingRatio": 0.4153173005529494,
+          "revenueThousands": 23045327.0,
+          "spendingThousands": 9571123.0,
+          "values": {
+            "865": 21117982.0,
+            "866": 1927345.0,
+            "828": 7815232.0,
+            "869": 662717.0,
+            "831": 281217.0,
+            "832": 161455.0,
+            "833": 624157.0,
+            "451": 26345.0
+          }
+        },
+        {
+          "id": "industria-117283",
+          "label": "33 Manutenção, reparação e instalação de máquinas e equipamentos",
+          "depth": 2,
+          "spendingRatio": 0.3707273546971419,
+          "revenueThousands": 72589866.0,
+          "spendingThousands": 26911049.0,
+          "values": {
+            "865": 67663295.0,
+            "866": 4926571.0,
+            "828": 12980504.0,
+            "869": 2473293.0,
+            "831": 388473.0,
+            "832": 5836596.0,
+            "833": 5171434.0,
+            "451": 60749.0
+          }
+        },
+        {
+          "id": "industria-117284",
+          "label": "33.1 Manutenção e reparação de máquinas e equipamentos",
+          "depth": 3,
+          "spendingRatio": 0.38489912202758325,
+          "revenueThousands": 63490719.0,
+          "spendingThousands": 24437522.0,
+          "values": {
+            "865": 59145154.0,
+            "866": 4345565.0,
+            "828": 11455653.0,
+            "869": 2221713.0,
+            "831": 337727.0,
+            "832": 5704618.0,
+            "833": 4667890.0,
+            "451": 49921.0
+          }
+        },
+        {
+          "id": "industria-117293",
+          "label": "33.2 Instalação de máquinas e equipamentos",
+          "depth": 3,
+          "spendingRatio": 0.2718416352653716,
+          "revenueThousands": 9099147.0,
+          "spendingThousands": 2473527.0,
+          "values": {
+            "865": 8518141.0,
+            "866": 581006.0,
+            "828": 1524851.0,
+            "869": 251580.0,
+            "831": 50746.0,
+            "832": 131978.0,
+            "833": 503544.0,
+            "451": 10828.0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "servicos",
+      "table": 10758,
+      "classification": 12355,
+      "revenue": [
+        639,
+        640,
+        641
+      ],
+      "costs": [
+        657,
+        1553,
+        1554,
+        1555,
+        1556,
+        1557,
+        1558,
+        1559
+      ],
+      "population": "Empresas de serviços não financeiros cobertas pela PAS",
+      "description": "Mercadorias revendidas e componentes identificados do consumo intermediário / receita bruta de serviços, revenda e outras atividades. Custos não são compras de caixa; folha, depreciação e despesas genéricas não integram o numerador. Saúde e educação regular não são cobertas.",
+      "year": 2024,
+      "source": "https://sidra.ibge.gov.br/tabela/10758",
+      "query": "https://apisidra.ibge.gov.br/values/t/10758/n1/all/v/639,640,641,657,1553,1554,1555,1556,1557,1558,1559/p/2024/c12355/all",
+      "metadataUrl": "https://sidra.ibge.gov.br/Ajax/JSon/Tabela/1/10758?versao=-1",
+      "variables": {
+        "639": "Receita bruta - prestação de serviços",
+        "640": "Receita bruta - revenda de mercadorias",
+        "641": "Receita bruta - outras atividades",
+        "657": "Custo das mercadorias revendidas",
+        "1553": "Consumo intermediário - mercadorias, materiais de consumo e de reposição",
+        "1554": "Consumo intermediário - combustíveis e lubrificantes",
+        "1555": "Consumo intermediário - serviços prestados por terceiros",
+        "1556": "Consumo intermediário - aluguéis de imóveis, veículos, máquinas e equipamentos",
+        "1557": "Consumo intermediário - prêmios de seguros",
+        "1558": "Consumo intermediário - serviços de comunicação",
+        "1559": "Consumo intermediário - energia elétrica, gás, água e esgoto"
+      },
+      "retrievedAt": "2026-11-08T00:34:41.934002+00:00",
+      "groups": [
+        {
+          "id": "servicos-106829",
+          "label": "1. Total",
+          "depth": 0,
+          "spendingRatio": 0.290050398510884,
+          "revenueThousands": 3868765100.0,
+          "spendingThousands": 1122136859.0,
+          "values": {
+            "639": 3745336701.0,
+            "640": 93205088.0,
+            "641": 30223311.0,
+            "657": 71318304.0,
+            "1553": 290931691.0,
+            "1554": 142302243.0,
+            "1555": 447464508.0,
+            "1556": 117372618.0,
+            "1557": 9862587.0,
+            "1558": 12954582.0,
+            "1559": 29930326.0
+          }
+        },
+        {
+          "id": "servicos-57946",
+          "label": "2. Serviços prestados principalmente às famílias",
+          "depth": 1,
+          "spendingRatio": 0.34787831791112134,
+          "revenueThousands": 445624467.0,
+          "spendingThousands": 155023090.0,
+          "values": {
+            "639": 433361583.0,
+            "640": 8575206.0,
+            "641": 3687678.0,
+            "657": 13656383.0,
+            "1553": 82058169.0,
+            "1554": 2039058.0,
+            "1555": 27163366.0,
+            "1556": 17821740.0,
+            "1557": 375765.0,
+            "1558": 1321912.0,
+            "1559": 10586697.0
+          }
+        },
+        {
+          "id": "servicos-106831",
+          "label": "2.1 Serviços de alojamento",
+          "depth": 2,
+          "spendingRatio": 0.28592473206894037,
+          "revenueThousands": 63413514.0,
+          "spendingThousands": 18131492.0,
+          "values": {
+            "639": 62154246.0,
+            "640": 1089304.0,
+            "641": 169964.0,
+            "657": 563427.0,
+            "1553": 6835529.0,
+            "1554": 219395.0,
+            "1555": 5303515.0,
+            "1556": 2262586.0,
+            "1557": 70423.0,
+            "1558": 214611.0,
+            "1559": 2662006.0
+          }
+        },
+        {
+          "id": "servicos-106832",
+          "label": "2.2 Serviços de alimentação",
+          "depth": 2,
+          "spendingRatio": 0.3952818464444596,
+          "revenueThousands": 278149065.0,
+          "spendingThousands": 109947276.0,
+          "values": {
+            "639": 270865189.0,
+            "640": 4840753.0,
+            "641": 2443123.0,
+            "657": 11715528.0,
+            "1553": 69074154.0,
+            "1554": 977343.0,
+            "1555": 11055944.0,
+            "1556": 10525106.0,
+            "1557": 178697.0,
+            "1558": 703107.0,
+            "1559": 5717397.0
+          }
+        },
+        {
+          "id": "servicos-9277",
+          "label": "2.3 Atividades culturais, recreativas e esportivas",
+          "depth": 2,
+          "spendingRatio": 0.2841262831526251,
+          "revenueThousands": 36724392.0,
+          "spendingThousands": 10434365.0,
+          "values": {
+            "639": 35733057.0,
+            "640": 852862.0,
+            "641": 138473.0,
+            "657": 420235.0,
+            "1553": 1906005.0,
+            "1554": 176739.0,
+            "1555": 4290539.0,
+            "1556": 2295233.0,
+            "1557": 63110.0,
+            "1558": 123672.0,
+            "1559": 1158832.0
+          }
+        },
+        {
+          "id": "servicos-106834",
+          "label": "2.4 Serviços pessoais",
+          "depth": 2,
+          "spendingRatio": 0.25614508354770565,
+          "revenueThousands": 31521093.0,
+          "spendingThousands": 8073973.0,
+          "values": {
+            "639": 30720139.0,
+            "640": 661332.0,
+            "641": 139622.0,
+            "657": 511790.0,
+            "1553": 2216223.0,
+            "1554": 276969.0,
+            "1555": 2899535.0,
+            "1556": 1273603.0,
+            "1557": 38593.0,
+            "1558": 133521.0,
+            "1559": 723739.0
+          }
+        },
+        {
+          "id": "servicos-106835",
+          "label": "2.5 Atividades de ensino continuado",
+          "depth": 2,
+          "spendingRatio": 0.2355340931360416,
+          "revenueThousands": 35816403.0,
+          "spendingThousands": 8435984.0,
+          "values": {
+            "639": 33888952.0,
+            "640": 1130955.0,
+            "641": 796496.0,
+            "657": 445403.0,
+            "1553": 2026258.0,
+            "1554": 388612.0,
+            "1555": 3613833.0,
+            "1556": 1465212.0,
+            "1557": 24942.0,
+            "1558": 147001.0,
+            "1559": 324723.0
+          }
+        },
+        {
+          "id": "servicos-9278",
+          "label": "3. Serviços de informação e comunicação",
+          "depth": 1,
+          "spendingRatio": 0.22325926908320623,
+          "revenueThousands": 774162702.0,
+          "spendingThousands": 172838999.0,
+          "values": {
+            "639": 748563740.0,
+            "640": 24019070.0,
+            "641": 1579892.0,
+            "657": 14081576.0,
+            "1553": 41929094.0,
+            "1554": 968444.0,
+            "1555": 87330557.0,
+            "1556": 17907361.0,
+            "1557": 616353.0,
+            "1558": 3409782.0,
+            "1559": 6595832.0
+          }
+        },
+        {
+          "id": "servicos-106837",
+          "label": "3.1 Telecomunicações",
+          "depth": 2,
+          "spendingRatio": 0.2860028510784332,
+          "revenueThousands": 248501757.0,
+          "spendingThousands": 71072211.0,
+          "values": {
+            "639": 233983350.0,
+            "640": 14266154.0,
+            "641": 252253.0,
+            "657": 8994840.0,
+            "1553": 8566158.0,
+            "1554": 506256.0,
+            "1555": 36407402.0,
+            "1556": 10632383.0,
+            "1557": 258020.0,
+            "1558": 1462893.0,
+            "1559": 4244259.0
+          }
+        },
+        {
+          "id": "servicos-9279",
+          "label": "3.2 Tecnologia da informação",
+          "depth": 2,
+          "spendingRatio": 0.19367947420337153,
+          "revenueThousands": 441255473.0,
+          "spendingThousands": 85462128.0,
+          "values": {
+            "639": 432175674.0,
+            "640": 8300235.0,
+            "641": 779564.0,
+            "657": 3983306.0,
+            "1553": 29576352.0,
+            "1554": 288099.0,
+            "1555": 42747206.0,
+            "1556": 5492364.0,
+            "1557": 263726.0,
+            "1558": 1602838.0,
+            "1559": 1508237.0
+          }
+        },
+        {
+          "id": "servicos-106839",
+          "label": "3.3 Serviços audiovisuais",
+          "depth": 2,
+          "spendingRatio": 0.19775413316469106,
+          "revenueThousands": 57798084.0,
+          "spendingThousands": 11429810.0,
+          "values": {
+            "639": 57459836.0,
+            "640": 328146.0,
+            "641": 10102.0,
+            "657": 154273.0,
+            "1553": 3166667.0,
+            "1554": 103139.0,
+            "1555": 5615559.0,
+            "1556": 1433986.0,
+            "1557": 68508.0,
+            "1558": 239444.0,
+            "1559": 648234.0
+          }
+        },
+        {
+          "id": "servicos-9280",
+          "label": "3.4 Edição e edição integrada à impressão",
+          "depth": 2,
+          "spendingRatio": 0.18185460906408704,
+          "revenueThousands": 22408302.0,
+          "spendingThousands": 4075053.0,
+          "values": {
+            "639": 20845635.0,
+            "640": 1026921.0,
+            "641": 535746.0,
+            "657": 886838.0,
+            "1553": 510562.0,
+            "1554": 54370.0,
+            "1555": 2042872.0,
+            "1556": 289675.0,
+            "1557": 21280.0,
+            "1558": 87069.0,
+            "1559": 182387.0
+          }
+        },
+        {
+          "id": "servicos-58184",
+          "label": "3.5 Agências de notícias e outros serviços de informação",
+          "depth": 2,
+          "spendingRatio": 0.19046930689202365,
+          "revenueThousands": 4199086.0,
+          "spendingThousands": 799797.0,
+          "values": {
+            "639": 4099245.0,
+            "640": 97614.0,
+            "641": 2227.0,
+            "657": 62319.0,
+            "1553": 109355.0,
+            "1554": 16580.0,
+            "1555": 517518.0,
+            "1556": 58953.0,
+            "1557": 4819.0,
+            "1558": 17538.0,
+            "1559": 12715.0
+          }
+        },
+        {
+          "id": "servicos-9282",
+          "label": "4. Serviços profissionais, administrativos e complementares",
+          "depth": 1,
+          "spendingRatio": 0.18852722725016355,
+          "revenueThousands": 1148905281.0,
+          "spendingThousands": 216599927.0,
+          "values": {
+            "639": 1113567419.0,
+            "640": 23507438.0,
+            "641": 11830424.0,
+            "657": 14664606.0,
+            "1553": 54404173.0,
+            "1554": 9638774.0,
+            "1555": 103428754.0,
+            "1556": 24379859.0,
+            "1557": 1885744.0,
+            "1558": 3996181.0,
+            "1559": 4201836.0
+          }
+        },
+        {
+          "id": "servicos-106842",
+          "label": "4.1 Serviços técnico-profissionais",
+          "depth": 2,
+          "spendingRatio": 0.19761484075522934,
+          "revenueThousands": 491926232.0,
+          "spendingThousands": 97211924.0,
+          "values": {
+            "639": 479640545.0,
+            "640": 6671687.0,
+            "641": 5614000.0,
+            "657": 5148210.0,
+            "1553": 20348922.0,
+            "1554": 2007876.0,
+            "1555": 55056826.0,
+            "1556": 10944009.0,
+            "1557": 695563.0,
+            "1558": 1476839.0,
+            "1559": 1533679.0
+          }
+        },
+        {
+          "id": "servicos-9283",
+          "label": "4.2 Aluguéis não imobiliários e gestão de ativos intangíveis não financeiros",
+          "depth": 2,
+          "spendingRatio": 0.28482116127069507,
+          "revenueThousands": 156725560.0,
+          "spendingThousands": 44638756.0,
+          "values": {
+            "639": 143746666.0,
+            "640": 9819206.0,
+            "641": 3159688.0,
+            "657": 5829341.0,
+            "1553": 13368430.0,
+            "1554": 4404850.0,
+            "1555": 14400889.0,
+            "1556": 4621119.0,
+            "1557": 639370.0,
+            "1558": 312315.0,
+            "1559": 1062442.0
+          }
+        },
+        {
+          "id": "servicos-9284",
+          "label": "4.3 Seleção, agenciamento e locação de mão-de-obra",
+          "depth": 2,
+          "spendingRatio": 0.11439534850313567,
+          "revenueThousands": 64183038.0,
+          "spendingThousands": 7342241.0,
+          "values": {
+            "639": 63650857.0,
+            "640": 178873.0,
+            "641": 353308.0,
+            "657": 149948.0,
+            "1553": 2567626.0,
+            "1554": 203911.0,
+            "1555": 3387118.0,
+            "1556": 811736.0,
+            "1557": 54837.0,
+            "1558": 95793.0,
+            "1559": 71272.0
+          }
+        },
+        {
+          "id": "servicos-9285",
+          "label": "4.4 Agências de viagens, operadores turísticos e outros serviços de turismo",
+          "depth": 2,
+          "spendingRatio": 0.22054560190256753,
+          "revenueThousands": 21698678.0,
+          "spendingThousands": 4785548.0,
+          "values": {
+            "639": 21669256.0,
+            "640": 8666.0,
+            "641": 20756.0,
+            "657": 20549.0,
+            "1553": 1252847.0,
+            "1554": 231945.0,
+            "1555": 2500050.0,
+            "1556": 455814.0,
+            "1557": 51648.0,
+            "1558": 159063.0,
+            "1559": 113632.0
+          }
+        },
+        {
+          "id": "servicos-9286",
+          "label": "4.5 Serviços de investigação, vigilância, segurança e transporte de valores",
+          "depth": 2,
+          "spendingRatio": 0.13200322653151764,
+          "revenueThousands": 73835324.0,
+          "spendingThousands": 9746501.0,
+          "values": {
+            "639": 71661834.0,
+            "640": 2113380.0,
+            "641": 60110.0,
+            "657": 1058356.0,
+            "1553": 1964398.0,
+            "1554": 961608.0,
+            "1555": 3959738.0,
+            "1556": 1074282.0,
+            "1557": 202489.0,
+            "1558": 359816.0,
+            "1559": 165814.0
+          }
+        },
+        {
+          "id": "servicos-9287",
+          "label": "4.6 Serviços para edifícios e atividades paisagisticas",
+          "depth": 2,
+          "spendingRatio": 0.11935862268406512,
+          "revenueThousands": 97392905.0,
+          "spendingThousands": 11624683.0,
+          "values": {
+            "639": 96130578.0,
+            "640": 788151.0,
+            "641": 474176.0,
+            "657": 508797.0,
+            "1553": 4538851.0,
+            "1554": 813334.0,
+            "1555": 4256247.0,
+            "1556": 1054569.0,
+            "1557": 79477.0,
+            "1558": 178320.0,
+            "1559": 195088.0
+          }
+        },
+        {
+          "id": "servicos-9288",
+          "label": "4.7 Serviços de escritório e apoio administrativo",
+          "depth": 2,
+          "spendingRatio": 0.13636363880564692,
+          "revenueThousands": 148908596.0,
+          "spendingThousands": 20305718.0,
+          "values": {
+            "639": 145312556.0,
+            "640": 2615987.0,
+            "641": 980053.0,
+            "657": 1640376.0,
+            "1553": 4126663.0,
+            "1554": 757433.0,
+            "1555": 9420654.0,
+            "1556": 2922832.0,
+            "1557": 92362.0,
+            "1558": 583605.0,
+            "1559": 761793.0
+          }
+        },
+        {
+          "id": "servicos-9289",
+          "label": "4.8 Outros serviços prestados principalmente às empresas",
+          "depth": 2,
+          "spendingRatio": 0.22225890123057107,
+          "revenueThousands": 94234948.0,
+          "spendingThousands": 20944556.0,
+          "values": {
+            "639": 91755127.0,
+            "640": 1311488.0,
+            "641": 1168333.0,
+            "657": 309029.0,
+            "1553": 6236436.0,
+            "1554": 257817.0,
+            "1555": 10447232.0,
+            "1556": 2495498.0,
+            "1557": 69998.0,
+            "1558": 830430.0,
+            "1559": 298116.0
+          }
+        },
+        {
+          "id": "servicos-106846",
+          "label": "5. Transportes, serviços auxiliares aos transportes e correio",
+          "depth": 1,
+          "spendingRatio": 0.42488997664238076,
+          "revenueThousands": 1103834246.0,
+          "spendingThousands": 469008107.0,
+          "values": {
+            "639": 1081545648.0,
+            "640": 16656741.0,
+            "641": 5631857.0,
+            "657": 12520395.0,
+            "1553": 87601835.0,
+            "1554": 124241537.0,
+            "1555": 184683418.0,
+            "1556": 46035832.0,
+            "1557": 5727721.0,
+            "1558": 2441538.0,
+            "1559": 5755831.0
+          }
+        },
+        {
+          "id": "servicos-9290",
+          "label": "5.1 Transporte e serviços auxiliares aos transportes",
+          "depth": 2,
+          "spendingRatio": 0.4310113888212236,
+          "revenueThousands": 1062081998.0,
+          "spendingThousands": 457769437.0,
+          "values": {
+            "639": 1039799900.0,
+            "640": 16650622.0,
+            "641": 5631476.0,
+            "657": 12461124.0,
+            "1553": 87147432.0,
+            "1554": 123823896.0,
+            "1555": 176178265.0,
+            "1556": 45336978.0,
+            "1557": 5648751.0,
+            "1558": 1702350.0,
+            "1559": 5470641.0
+          }
+        },
+        {
+          "id": "servicos-9291",
+          "label": "5.1.1 Transporte ferroviário e metroferroviário",
+          "depth": 3,
+          "spendingRatio": 0.31743188710957704,
+          "revenueThousands": 48172306.0,
+          "spendingThousands": 15291426.0,
+          "values": {
+            "639": 48100637.0,
+            "640": 37252.0,
+            "641": 34417.0,
+            "657": 15.0,
+            "1553": 1097810.0,
+            "1554": 4101115.0,
+            "1555": 8136279.0,
+            "1556": 674036.0,
+            "1557": 202699.0,
+            "1558": 38226.0,
+            "1559": 1041246.0
+          }
+        },
+        {
+          "id": "servicos-9292",
+          "label": "5.1.2 Transporte rodoviário",
+          "depth": 3,
+          "spendingRatio": 0.4885827558221105,
+          "revenueThousands": 594034199.0,
+          "spendingThousands": 290234866.0,
+          "values": {
+            "639": 584179758.0,
+            "640": 6938782.0,
+            "641": 2915659.0,
+            "657": 4322814.0,
+            "1553": 63352930.0,
+            "1554": 90920938.0,
+            "1555": 112339303.0,
+            "1556": 13264879.0,
+            "1557": 3309224.0,
+            "1558": 861818.0,
+            "1559": 1862960.0
+          }
+        },
+        {
+          "id": "servicos-58185",
+          "label": "5.1.2.1 Transporte rodoviário de passageiros",
+          "depth": 4,
+          "spendingRatio": 0.38679356539630794,
+          "revenueThousands": 107672210.0,
+          "spendingThousands": 41646918.0,
+          "values": {
+            "639": 107445904.0,
+            "640": 72878.0,
+            "641": 153428.0,
+            "657": 99464.0,
+            "1553": 9290952.0,
+            "1554": 21332567.0,
+            "1555": 6816443.0,
+            "1556": 3191101.0,
+            "1557": 313530.0,
+            "1558": 155341.0,
+            "1559": 447520.0
+          }
+        },
+        {
+          "id": "servicos-58294",
+          "label": "5.1.2.2 Transporte rodoviário de cargas",
+          "depth": 4,
+          "spendingRatio": 0.511117138309096,
+          "revenueThousands": 486361989.0,
+          "spendingThousands": 248587948.0,
+          "values": {
+            "639": 476733854.0,
+            "640": 6865904.0,
+            "641": 2762231.0,
+            "657": 4223350.0,
+            "1553": 54061978.0,
+            "1554": 69588371.0,
+            "1555": 105522860.0,
+            "1556": 10073778.0,
+            "1557": 2995694.0,
+            "1558": 706477.0,
+            "1559": 1415440.0
+          }
+        },
+        {
+          "id": "servicos-9296",
+          "label": "5.1.4 Transporte aquaviário",
+          "depth": 3,
+          "spendingRatio": 0.46107267908762367,
+          "revenueThousands": 59323502.0,
+          "spendingThousands": 27352446.0,
+          "values": {
+            "639": 59190711.0,
+            "640": 105231.0,
+            "641": 27560.0,
+            "657": 657734.0,
+            "1553": 4348131.0,
+            "1554": 2933865.0,
+            "1555": 10132420.0,
+            "1556": 8802579.0,
+            "1557": 290544.0,
+            "1558": 108351.0,
+            "1559": 78822.0
+          }
+        },
+        {
+          "id": "servicos-9297",
+          "label": "5.1.5 Transporte aéreo",
+          "depth": 3,
+          "spendingRatio": 0.6378613510076169,
+          "revenueThousands": 77643204.0,
+          "spendingThousands": 49525599.0,
+          "values": {
+            "639": 77110089.0,
+            "640": 441098.0,
+            "641": 92017.0,
+            "657": 237463.0,
+            "1553": 3920626.0,
+            "1554": 21978165.0,
+            "1555": 10356351.0,
+            "1556": 12515404.0,
+            "1557": 345091.0,
+            "1558": 113609.0,
+            "1559": 58890.0
+          }
+        },
+        {
+          "id": "servicos-9298",
+          "label": "5.1.6 Armazenamento e atividades auxiliares aos transportes",
+          "depth": 3,
+          "spendingRatio": 0.28079192773606343,
+          "revenueThousands": 247608653.0,
+          "spendingThousands": 69526511.0,
+          "values": {
+            "639": 236399766.0,
+            "640": 8647064.0,
+            "641": 2561823.0,
+            "657": 7192339.0,
+            "1553": 13700121.0,
+            "1554": 3396439.0,
+            "1555": 33138253.0,
+            "1556": 8256539.0,
+            "1557": 1365421.0,
+            "1558": 500589.0,
+            "1559": 1976810.0
+          }
+        },
+        {
+          "id": "servicos-9299",
+          "label": "5.2 Correio e outras atividades de entrega",
+          "depth": 2,
+          "spendingRatio": 0.2691752070451392,
+          "revenueThousands": 41752248.0,
+          "spendingThousands": 11238670.0,
+          "values": {
+            "639": 41745748.0,
+            "640": 6119.0,
+            "641": 381.0,
+            "657": 59271.0,
+            "1553": 454403.0,
+            "1554": 417641.0,
+            "1555": 8505153.0,
+            "1556": 698854.0,
+            "1557": 78970.0,
+            "1558": 739188.0,
+            "1559": 285190.0
+          }
+        },
+        {
+          "id": "servicos-9300",
+          "label": "6. Atividades imobiliárias",
+          "depth": 1,
+          "spendingRatio": 0.43978020412630847,
+          "revenueThousands": 38581798.0,
+          "spendingThousands": 16967511.0,
+          "values": {
+            "639": 37769513.0,
+            "640": 100890.0,
+            "641": 711395.0,
+            "657": 3614127.0,
+            "1553": 1254093.0,
+            "1554": 192253.0,
+            "1555": 7996150.0,
+            "1556": 2375888.0,
+            "1557": 275162.0,
+            "1558": 278595.0,
+            "1559": 981243.0
+          }
+        },
+        {
+          "id": "servicos-9301",
+          "label": "6.1 Compra, venda e aluguel de imóveis próprios",
+          "depth": 2,
+          "spendingRatio": 1.1981449077953121,
+          "revenueThousands": 9737737.0,
+          "spendingThousands": 11667220.0,
+          "values": {
+            "639": 9145381.0,
+            "640": 84821.0,
+            "641": 507535.0,
+            "657": 3428182.0,
+            "1553": 817900.0,
+            "1554": 100787.0,
+            "1555": 5264879.0,
+            "1556": 1164164.0,
+            "1557": 210016.0,
+            "1558": 88518.0,
+            "1559": 592774.0
+          }
+        },
+        {
+          "id": "servicos-9302",
+          "label": "6.2 Intermediação na compra, venda e aluguel de imoveis",
+          "depth": 2,
+          "spendingRatio": 0.18375675325329538,
+          "revenueThousands": 28844061.0,
+          "spendingThousands": 5300291.0,
+          "values": {
+            "639": 28624132.0,
+            "640": 16069.0,
+            "641": 203860.0,
+            "657": 185945.0,
+            "1553": 436193.0,
+            "1554": 91466.0,
+            "1555": 2731271.0,
+            "1556": 1211724.0,
+            "1557": 65146.0,
+            "1558": 190077.0,
+            "1559": 388469.0
+          }
+        },
+        {
+          "id": "servicos-106860",
+          "label": "7. Serviços de manutenção e reparação",
+          "depth": 1,
+          "spendingRatio": 0.347668467848572,
+          "revenueThousands": 56202356.0,
+          "spendingThousands": 19539787.0,
+          "values": {
+            "639": 40241790.0,
+            "640": 15568661.0,
+            "641": 391905.0,
+            "657": 8439948.0,
+            "1553": 4921804.0,
+            "1554": 534740.0,
+            "1555": 3572309.0,
+            "1556": 1024675.0,
+            "1557": 83895.0,
+            "1558": 352104.0,
+            "1559": 610312.0
+          }
+        },
+        {
+          "id": "servicos-58295",
+          "label": "7.1 Manutenção e reparação de veículos automotores",
+          "depth": 2,
+          "spendingRatio": 0.37564552190035316,
+          "revenueThousands": 38429951.0,
+          "spendingThousands": 14436039.0,
+          "values": {
+            "639": 25248215.0,
+            "640": 12923361.0,
+            "641": 258375.0,
+            "657": 7158383.0,
+            "1553": 3524559.0,
+            "1554": 454097.0,
+            "1555": 1950435.0,
+            "1556": 642654.0,
+            "1557": 47407.0,
+            "1558": 164175.0,
+            "1559": 494329.0
+          }
+        },
+        {
+          "id": "servicos-9303",
+          "label": "7.2 Manutenção e reparação de equipamentos de informática e comunicação",
+          "depth": 2,
+          "spendingRatio": 0.2703764464124408,
+          "revenueThousands": 11920528.0,
+          "spendingThousands": 3223030.0,
+          "values": {
+            "639": 10862729.0,
+            "640": 992043.0,
+            "641": 65756.0,
+            "657": 499147.0,
+            "1553": 1028430.0,
+            "1554": 38759.0,
+            "1555": 1239195.0,
+            "1556": 194540.0,
+            "1557": 10679.0,
+            "1558": 151425.0,
+            "1559": 60855.0
+          }
+        },
+        {
+          "id": "servicos-9304",
+          "label": "7.3 Manutenção e reparação de objetos pessoais e domésticos",
+          "depth": 2,
+          "spendingRatio": 0.3213871378362874,
+          "revenueThousands": 5851877.0,
+          "spendingThousands": 1880718.0,
+          "values": {
+            "639": 4130846.0,
+            "640": 1653257.0,
+            "641": 67774.0,
+            "657": 782418.0,
+            "1553": 368815.0,
+            "1554": 41884.0,
+            "1555": 382679.0,
+            "1556": 187481.0,
+            "1557": 25809.0,
+            "1558": 36504.0,
+            "1559": 55128.0
+          }
+        },
+        {
+          "id": "servicos-106864",
+          "label": "8. Outras atividades de serviços",
+          "depth": 1,
+          "spendingRatio": 0.2393711085512976,
+          "revenueThousands": 301454250.0,
+          "spendingThousands": 72159438.0,
+          "values": {
+            "639": 290287008.0,
+            "640": 4777082.0,
+            "641": 6390160.0,
+            "657": 4341269.0,
+            "1553": 18762523.0,
+            "1554": 4687437.0,
+            "1555": 33289954.0,
+            "1556": 7827263.0,
+            "1557": 897947.0,
+            "1558": 1154470.0,
+            "1559": 1198575.0
+          }
+        },
+        {
+          "id": "servicos-9305",
+          "label": "8.1 Serviços auxiliares da agricultura, pecuária e produção florestal",
+          "depth": 2,
+          "spendingRatio": 0.32449617119230767,
+          "revenueThousands": 25957428.0,
+          "spendingThousands": 8423086.0,
+          "values": {
+            "639": 21349622.0,
+            "640": 1868611.0,
+            "641": 2739195.0,
+            "657": 1744620.0,
+            "1553": 2243959.0,
+            "1554": 1691054.0,
+            "1555": 1764247.0,
+            "1556": 751382.0,
+            "1557": 83377.0,
+            "1558": 32053.0,
+            "1559": 112394.0
+          }
+        },
+        {
+          "id": "servicos-9306",
+          "label": "8.2 Serviços auxiliares financeiros, dos seguros e da previdência complementar",
+          "depth": 2,
+          "spendingRatio": 0.1933383753971657,
+          "revenueThousands": 208873463.0,
+          "spendingThousands": 40383256.0,
+          "values": {
+            "639": 207919009.0,
+            "640": 940455.0,
+            "641": 13999.0,
+            "657": 886400.0,
+            "1553": 10380522.0,
+            "1554": 90731.0,
+            "1555": 24187711.0,
+            "1556": 2810741.0,
+            "1557": 685406.0,
+            "1558": 1035758.0,
+            "1559": 305987.0
+          }
+        },
+        {
+          "id": "servicos-9307",
+          "label": "8.3 Esgoto, coleta, tratamento e disposição de resíduos e recuperação de materiais",
+          "depth": 2,
+          "spendingRatio": 0.3505241457429368,
+          "revenueThousands": 66623359.0,
+          "spendingThousands": 23353096.0,
+          "values": {
+            "639": 61018377.0,
+            "640": 1968016.0,
+            "641": 3636966.0,
+            "657": 1710249.0,
+            "1553": 6138042.0,
+            "1554": 2905652.0,
+            "1555": 7337996.0,
+            "1556": 4265140.0,
+            "1557": 129164.0,
+            "1558": 86659.0,
+            "1559": 780194.0
+          }
+        }
+      ]
+    }
+  ]
+}
