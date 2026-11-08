@@ -35,7 +35,7 @@ export default function IbgeActivitySearch({ datasets, selected, onSelect }) {
   }
   return <div className="cx-field cbs-activity-search">
     <label htmlFor="cbs-group">Atividade de referência do IBGE</label>
-    <p id="cbs-activity-hint" className="cbs-field-hint">Busque por nome ou código nas atividades disponíveis de Comércio, Indústria e Serviços.</p>
+    <p id="cbs-activity-hint" className="cbs-field-hint">Busque por nome ou código e escolha uma atividade.</p>
     <input ref={input} id="cbs-group" role="combobox" autoComplete="off" placeholder="Digite uma atividade ou código"
       value={query} aria-autocomplete="list" aria-expanded={open} aria-controls="cbs-activity-options"
       aria-activedescendant={open && active >= 0 ? `cbs-activity-option-${active}` : undefined}
@@ -53,6 +53,6 @@ export default function IbgeActivitySearch({ datasets, selected, onSelect }) {
         </li>)}
       </ul>
     </div>}
-    <p id="cbs-activity-selected" className="cbs-activity-selected"><b>Em uso: {selected.label}</b><span>{activityKinds[selected.kind]} · A busca não altera a simulação. Escolha uma atividade para aplicá-la.</span></p>
+    <p id="cbs-activity-selected" className="cbs-activity-selected"><b>Em uso: {selected.label}</b><span>{activityKinds[selected.kind]}</span></p>
   </div>
 }
