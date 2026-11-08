@@ -4,7 +4,7 @@ Revisão: 08/11/2026.
 
 ## Verificações da publicação
 
-Em push de código e execução manual, Pages aguarda o workflow reutilizável `cotacoes-ci.yml`: lint, testes, build e os testes reais de interface existentes. Se qualquer trabalho falha, a publicação é bloqueada e a issue registra a falha. O build de produção e a validação do pacote semanal continuam no próprio job de publicação. Agendas que só atualizam dados mantêm seus testes e validações, sem repetir toda a suíte de navegador a cada hora.
+Em push de código e execução manual, Pages aguarda o workflow reutilizável `cotacoes-ci.yml`: lint, testes, build e os testes reais de interface existentes. Se qualquer trabalho falha, a publicação é bloqueada e a issue registra a falha. O build de produção e a validação do pacote semanal continuam no próprio job de publicação. Agendas que só atualizam dados mantêm seus testes e validações, sem repetir toda a suíte de navegador a cada hora. Antes do checkout, exigem uma execução anterior de Pages com o mesmo SHA exato, originada de push ou execução manual, concluída com sucesso e com os três trabalhos de `verify-source` aprovados. Código novo ou reprovado não pode passar pela agenda; ausência de comprovação ou falha na consulta bloqueia a publicação.
 
 A conferência no endereço publicado permanece após o deploy. Uma falha nessa etapa **não restaura automaticamente** a versão anterior. A issue distingue falha anterior, falha retornada pelo serviço de publicação e falha posterior ao deploy. Esta última pode deixar a nova versão no ar.
 

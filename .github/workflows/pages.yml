@@ -13,6 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -49,6 +50,26 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: core.setFailed('Verificações de código ou interface não passaram. Publicação bloqueada.')
+      - name: Exigir código já aprovado nas agendas de dados
+        if: github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              ...context.repo, workflow_id: 'pages.yml', head_sha: context.sha,
+              status: 'completed', per_page: 100,
+            })
+            const required = ['test-build', 'smoke', 'bndes-workspace']
+            for (const run of runs) {
+              if (run.id === context.runId || run.head_sha !== context.sha || run.conclusion !== 'success' || !['push', 'workflow_dispatch'].includes(run.event)) continue
+              const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+                ...context.repo, run_id: run.id, filter: 'latest', per_page: 100,
+              })
+              if (!required.every(id => jobs.some(job => job.name === `verify-source / ${id}` && job.conclusion === 'success'))) continue
+              core.info(`Código ${context.sha} aprovado e publicado na execução ${run.id}.`)
+              return
+            }
+            core.setFailed(`Agenda bloqueada: o código ${context.sha} ainda não possui publicação aprovada com todos os testes de código e interface. Execute a publicação manual ou corrija a falha do push; nenhum código será publicado por esta agenda.`)
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

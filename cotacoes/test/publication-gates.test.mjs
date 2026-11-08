@@ -44,3 +44,41 @@ test('institutional snapshot cannot claim that automatic live collection is enab
   assert.equal(snapshot.collection.mode, 'offline-revalidation')
   assert.match(snapshot.collection.notice, /desativada/)
 })
+
+test('scheduled deployment executes exact-SHA approval guard before checkout and refuses unapproved code', async () => {
+  const marker = 'name: Exigir código já aprovado nas agendas de dados'
+  assert.ok(pages.indexOf(marker) < pages.indexOf('uses: actions/checkout@v4'))
+  const section = pages.split(marker)[1].split('      - uses: actions/checkout@v4')[0]
+  assert.match(section, /if: github.event_name == 'schedule'/)
+  const script = section.split('          script: |\n')[1].split('\n').map(line => line.replace(/^ {12}/, '')).join('\n')
+  const approved = { id: 20, head_sha: 'approved-sha', conclusion: 'success', event: 'push' }
+  const complete = ['test-build', 'smoke', 'bndes-workspace'].map(id => ({ name: `verify-source / ${id}`, conclusion: 'success' }))
+  const scenarios = [
+    { runs: [], jobs: [], allowed: false },
+    { runs: [{ ...approved, conclusion: 'failure' }], jobs: complete, allowed: false },
+    { runs: [{ ...approved, head_sha: 'older-sha' }], jobs: complete, allowed: false },
+    { runs: [{ ...approved, event: 'schedule' }], jobs: complete, allowed: false },
+    { runs: [approved], jobs: complete.slice(0, 2), allowed: false },
+    { runs: [approved], jobs: complete.map(job => ({ ...job, conclusion: 'skipped' })), allowed: false },
+    { runs: [approved], jobs: complete, allowed: true },
+  ]
+  for (const scenario of scenarios) {
+    let failed = false, confirmed = false
+    const listWorkflowRuns = Symbol('runs'), listJobsForWorkflowRun = Symbol('jobs')
+    const github = { rest: { actions: { listWorkflowRuns, listJobsForWorkflowRun } }, paginate: async (method, params) => {
+      if (method === listWorkflowRuns) {
+        assert.equal(params.head_sha, 'approved-sha')
+        assert.equal(params.workflow_id, 'pages.yml')
+        return scenario.runs
+      }
+      assert.equal(method, listJobsForWorkflowRun)
+      assert.equal(params.filter, 'latest')
+      return scenario.jobs
+    } }
+    const core = { setFailed: () => { failed = true }, info: () => { confirmed = true } }
+    await new AsyncFunction('github', 'context', 'core', script)(github, { repo: { owner: 'fixture', repo: 'fixture' }, sha: 'approved-sha', runId: 30 }, core)
+    assert.equal(confirmed, scenario.allowed, JSON.stringify(scenario))
+    assert.equal(failed, !scenario.allowed, JSON.stringify(scenario))
+  }
+  await assert.rejects(new AsyncFunction('github', 'context', 'core', script)({ rest: { actions: {} }, paginate: async () => { throw Error('API unavailable') } }, { repo: {}, sha: 'approved-sha' }, {}), /API unavailable/)
+})
