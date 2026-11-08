@@ -6,5 +6,5 @@ import '/src/styles.css'
 import '/src/Terminal.css'
 import '/src/Theme.css'
 document.documentElement.dataset.theme = new URLSearchParams(location.search).get('theme') === 'light' ? 'light' : 'dark'
-createRoot(document.getElementById('root')).render(React.createElement(React.StrictMode,null,React.createElement('main',{style:{padding:24}},React.createElement('h1',null,'Ensaio de sugestões'),React.createElement('p',null,'Interface real. Envio desativado. Nenhum dado é enviado.'),React.createElement('a',{href:'#outra-secao'},'Navegar para outra seção')),React.createElement(FeedbackMascot)))
+createRoot(document.getElementById('root')).render(React.createElement(React.StrictMode,null,React.createElement('main',{style:{padding:24}},React.createElement('h1',null,'Ensaio de sugestões'),React.createElement('p',null,'Interface real. Envio desativado. Nenhum dado é enviado.'),React.createElement('a',{href:'#outra-secao'},'Navegar para outra seção')),React.createElement(FeedbackMascot,{configuration:{formId:'',verified:false}})))
 </script></body></html>
