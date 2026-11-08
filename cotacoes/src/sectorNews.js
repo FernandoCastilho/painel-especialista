@@ -233,14 +233,15 @@ function collectionStatus(data, states, now) {
   const policy = data.collectionPolicy, delivery = data.delivery
   const generated = validIsoTimestamp(delivery?.generatedAt), published = validIsoTimestamp(delivery?.publishedAt)
   const sources = Object.values(states).filter(source => source.enabled && source.automaticCollection)
-  const successful = sources.filter(source => ['ok', 'empty', 'partial'].includes(source.status) && !source.accessSuspended)
+  const successful = sources.filter(source => ['ok', 'empty', 'partial'].includes(source.status) && !source.accessSuspended
+    && Date.parse(source.checkedAt) <= Date.parse(source.lastSuccessAt) && Date.parse(source.lastSuccessAt) <= generated)
   const confirmed = policy?.mode === 'institutional-headlines-live' && policy.automaticScheduleEnabled === true
     && policy.persistentStateStatus === 'github-protected-history'
     && generated !== null && published !== null && generated <= published && published <= now && generated >= now - SECTOR_NEWS_WINDOW_MS
     && /^[a-f0-9]{40}$/i.test(delivery?.receipt || '') && /^[a-f0-9]{64}$/i.test(delivery?.digest || '')
     && Number.isInteger(delivery?.stateRevision) && delivery.stateRevision >= 1
     && delivery.stateRef === 'refs/heads/sector-news-state' && delivery.feedRef === 'refs/heads/sector-news-feed'
-    && successful.some(source => Date.parse(source.checkedAt) <= generated && Date.parse(source.lastSuccessAt) <= Date.parse(source.checkedAt))
+    && successful.length > 0
   if (!confirmed) return SECTOR_NEWS_COLLECTION
   return {
     mode: policy.mode, automaticCollectionEnabled: true,

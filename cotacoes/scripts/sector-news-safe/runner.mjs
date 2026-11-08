@@ -34,7 +34,7 @@ export async function runSectorNewsSimulation({ mode = DEFAULT_MODE, store, tran
 }
 
 export async function runSectorNewsProduction({ store, transport, publisher, previousFeed, sourceIds = [], runId, verifiedSince, clock = Date.now } = {}) {
-  if (store?.kind !== 'github-append-only-journal' || !isLiveTransport(transport) || !isGitHubPublisher(publisher)) throw new Error('production_adapters_required')
+  if (store?.kind !== 'git-append-only-journal' || !isLiveTransport(transport) || !isGitHubPublisher(publisher)) throw new Error('production_adapters_required')
   if (!Number.isFinite(Date.parse(verifiedSince)) || Date.parse(verifiedSince) > clock()) throw new Error('production_verification_boundary_required')
   return runCollector({ store, transport, publisher, previousFeed, sourceIds, runId, verifiedSince, clock, sleep: ms => new Promise(resolve => setTimeout(resolve, ms)), environment: 'production' })
 }

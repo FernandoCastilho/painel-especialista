@@ -29,7 +29,7 @@ export async function main(args = process.argv.slice(2)) {
     const result = await runSectorNewsProduction({ store: service.store, publisher: service.publisher, previousFeed: previous.payload,
       sourceIds: PRODUCTION_SOURCE_IDS, verifiedSince: config.verifiedSince, runId: `github-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT || '1'}`,
       transport: createLiveTransport({ sourceIds: PRODUCTION_SOURCE_IDS }) })
-    state = result.state
+    state = result.state || (await service.store.read()).state
   }
   const savedFeed = await service.readFeed()
   const feed = confirmedSnapshot(state, savedFeed)

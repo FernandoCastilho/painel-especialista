@@ -10,7 +10,7 @@ const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
 test('code releases require reusable actual CI; hourly schedules avoid the browser suite', () => {
   assert.match(ci, /on:\n {2}workflow_call:/)
   assert.match(pages, /verify-source:\n[\s\S]*?if: github.event_name != 'schedule'\n {4}uses: \.\/\.github\/workflows\/cotacoes-ci.yml/)
-  assert.match(pages, /deploy:\n {4}needs: verify-source\n {4}if: \$\{\{ always\(\) && !cancelled\(\) \}\}/)
+  assert.match(pages, /deploy:\n {4}needs: \[approve-source, institutional-news\]\n {4}if: \$\{\{ always\(\) && !cancelled\(\) \}\}/)
   const gate = pages.indexOf('name: Exigir verificações antes de publicar código')
   assert.ok(gate > 0 && gate < pages.indexOf('uses: actions/checkout@v4'))
   assert.match(pages, /if: github.event_name != 'schedule' && needs.verify-source.result != 'success'/)
@@ -48,7 +48,7 @@ test('institutional snapshot cannot claim that automatic live collection is enab
 test('scheduled deployment executes exact-SHA approval guard before checkout and refuses unapproved code', async () => {
   const marker = 'name: Exigir código já aprovado nas agendas de dados'
   assert.ok(pages.indexOf(marker) < pages.indexOf('uses: actions/checkout@v4'))
-  const section = pages.split(marker)[1].split('      - uses: actions/checkout@v4')[0]
+  const section = pages.split(marker)[1].split('\n  institutional-news:')[0]
   assert.match(section, /if: github.event_name == 'schedule'/)
   const script = section.split('          script: |\n')[1].split('\n').map(line => line.replace(/^ {12}/, '')).join('\n')
   const approved = { id: 20, head_sha: 'approved-sha', conclusion: 'success', event: 'push' }
@@ -81,4 +81,26 @@ test('scheduled deployment executes exact-SHA approval guard before checkout and
     assert.equal(failed, !scenario.allowed, JSON.stringify(scenario))
   }
   await assert.rejects(new AsyncFunction('github', 'context', 'core', script)({ rest: { actions: {} }, paginate: async () => { throw Error('API unavailable') } }, { repo: {}, sha: 'approved-sha' }, {}), /API unavailable/)
+})
+
+
+test('institutional live collection waits for exact source approval and cannot grant write to Pages', () => {
+  const approve = pages.split('  approve-source:\n')[1].split('\n  institutional-news:')[0]
+  const collect = pages.split('  institutional-news:\n')[1].split('\n  deploy:')[0]
+  const deploy = pages.split('  deploy:\n')[1]
+  const global = pages.split('permissions:\n')[1].split('\nconcurrency:')[0]
+  assert.match(approve, /needs: verify-source/)
+  assert.match(approve, /if: \$\{\{ always\(\) && !cancelled\(\) \}\}/)
+  assert.match(collect, /needs: approve-source/)
+  assert.match(collect, /needs.approve-source.result == 'success'/)
+  for (const agenda of ["github.event.schedule != '0 11,18 * * *'", "github.event.schedule != '30 11 * * 1,2'"]) assert.ok(collect.includes(agenda))
+  assert.match(collect, /uses: \.\/\.github\/workflows\/institutional-news.yml/)
+  assert.match(collect, /contents: write/)
+  assert.match(global, /contents: read/)
+  assert.doesNotMatch(deploy, /contents: write/)
+  assert.match(deploy, /if: needs.approve-source.result != 'success'/)
+  assert.ok(deploy.indexOf('name: Bloquear publicação sem aprovação do código') < deploy.indexOf('uses: actions/checkout@v4'))
+  assert.match(deploy, /run: node scripts\/sector-news-live.mjs --snapshot/)
+  assert.doesNotMatch(deploy, /fetch-sector-news.mjs --offline/)
+  assert.match(deploy, /GITHUB_TOKEN: \$\{\{ secrets.GITHUB_TOKEN \}\}/)
 })

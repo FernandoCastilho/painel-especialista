@@ -9,7 +9,7 @@ const fail = message => { throw new Error(message) }
 const sha = value => SHA.test(value) ? value : fail('github_invalid_sha')
 const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 
-export function createGitHubStore({ owner = 'FernandoCastilho', repo = 'painel-especialista', token = process.env.GITHUB_TOKEN, rootToken, feedRootToken, storeId, fetchImpl = globalThis.fetch, timeoutMs = 15000 } = {}) {
+export function createGitHubStore({ owner = 'FernandoCastilho', repo = 'painel-especialista', token = process.env.GITHUB_TOKEN, rootToken, feedRootToken, storeId, protectionReviewedAt, fetchImpl = globalThis.fetch, timeoutMs = 15000 } = {}) {
   if (!/^[\w.-]+$/.test(owner) || !/^[\w.-]+$/.test(repo) || !token || typeof fetchImpl !== 'function' || !storeId || !Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60000) fail('github_configuration_required')
   if (rootToken) sha(rootToken)
   if (feedRootToken) sha(feedRootToken)
@@ -41,7 +41,16 @@ export function createGitHubStore({ owner = 'FernandoCastilho', repo = 'painel-e
   async function verifyProtection() {
     const rule = await api('GET', `/rulesets/${PROTECTION_ID}`)
     const refs = rule.conditions?.ref_name
-    if (rule.id !== PROTECTION_ID || rule.target !== 'branch' || rule.enforcement !== 'active' || !Array.isArray(rule.bypass_actors) || rule.bypass_actors.length || !equal([...(refs?.include || [])].sort(), [STATE_REF, FEED_REF].sort()) || !Array.isArray(refs?.exclude) || refs.exclude.length || !['deletion', 'non_fast_forward'].every(type => rule.rules?.some(item => item.type === type))) fail('github_protection_mismatch')
+    // GitHub hides bypass actors from non-admin readers. An omission is only
+    // acceptable for the exact ruleset version reviewed through an admin token.
+    // Any version change requires a new privileged review, even if actors are visible.
+    const reviewedVersion = typeof protectionReviewedAt === 'string' && Number.isFinite(Date.parse(protectionReviewedAt))
+    const sameVersion = reviewedVersion && typeof rule.updated_at === 'string' && Date.parse(rule.updated_at) === Date.parse(protectionReviewedAt)
+    if (protectionReviewedAt !== undefined && !sameVersion) fail('github_protection_review_version_mismatch')
+    const bypassVerified = Object.hasOwn(rule, 'bypass_actors')
+      ? Array.isArray(rule.bypass_actors) && rule.bypass_actors.length === 0
+      : sameVersion
+    if (rule.id !== PROTECTION_ID || rule.target !== 'branch' || rule.enforcement !== 'active' || !bypassVerified || !equal([...(refs?.include || [])].sort(), [STATE_REF, FEED_REF].sort()) || !Array.isArray(refs?.exclude) || refs.exclude.length || !['deletion', 'non_fast_forward'].every(type => rule.rules?.some(item => item.type === type))) fail('github_protection_mismatch')
     return true
   }
   async function head(ref, missingAllowed = false) {

@@ -155,3 +155,23 @@ test('production store refuses simulation bootstrap and bounded API rejects over
   api.intercept = () => api.response({ oversized: 'x'.repeat(4 * 1024 * 1024) })
   await assert.rejects(api.connect().verifyProtection(), /response_too_large/)
 })
+
+test('hidden bypass actors require the exact administratively reviewed ruleset version', async () => {
+  const api = server(), reviewed = '2026-11-08T10:16:49.237-03:00'
+  const rule = structuredClone(api.rules)
+  delete rule.bypass_actors
+  rule.updated_at = reviewed
+  api.rules = rule
+  assert.equal(await api.connect({ protectionReviewedAt: reviewed }).verifyProtection(), true)
+  await assert.rejects(api.connect().verifyProtection(), /protection_mismatch/)
+  await assert.rejects(api.connect({ protectionReviewedAt: '2026-11-08T13:16:49.238Z' }).verifyProtection(), /review_version_mismatch/)
+  assert.ok(api.calls.every(call => call.method === 'GET'))
+})
+
+test('reviewed version cannot hide an explicit bypass or permit changed ruleset version', async () => {
+  const api = server(), reviewed = '2026-11-08T10:16:49.237-03:00'
+  api.rules = { ...api.rules, updated_at: reviewed, bypass_actors: [{ actor_id: 123, actor_type: 'User', bypass_mode: 'always' }] }
+  await assert.rejects(api.connect({ protectionReviewedAt: reviewed }).verifyProtection(), /protection_mismatch/)
+  api.rules = { ...api.rules, updated_at: '2026-11-08T13:16:50.237Z', bypass_actors: [] }
+  await assert.rejects(api.connect({ protectionReviewedAt: reviewed }).verifyProtection(), /review_version_mismatch/)
+})
