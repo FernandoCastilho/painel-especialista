@@ -11,6 +11,7 @@ import { Panel } from './TerminalDesk.jsx'
 
 // Aba Aprender: lista de conceitos à esquerda; o conceito escolhido abre à direita (frase, explicação simples, lacunas, versão precisa, exemplo, teste).
 function Concept({ c, goto }) {
+  if (c.diagramaIcms) return <IcmsStDiagram goto={goto} />
   return (
     <div className="learn-card is-focus">
       <Panel title={c.nome} note={c.ajuda && <Help label={`Sobre ${c.nome}`} wide>{c.ajuda.map((t) => <p key={t}>{t}</p>)}</Help>}>
@@ -20,8 +21,6 @@ function Concept({ c, goto }) {
           <h3>Explicação simples</h3>
           {c.crianca.map((t) => <p key={t}>{t}</p>)}
           <p className="learn-analogy"><span className="learn-tag">Analogia</span>{c.analogia}</p>
-
-          {c.diagramaIcms && <IcmsStDiagram />}
 
           {c.estudoHistorico && <section className="learn-history" aria-label={c.estudoHistorico.titulo}>
             <h3>{c.estudoHistorico.titulo}</h3>
