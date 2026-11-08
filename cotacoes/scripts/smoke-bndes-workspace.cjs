@@ -72,7 +72,7 @@ const out = process.env.BNDES_WORKSPACE_QA_OUTPUT || 'workspace-qa/bndes-workspa
           assert.equal(await presentation.evaluate(element => element.contains(document.activeElement)), true, 'foco permanece na apresentação')
         }
 
-        await page.keyboard.press('ArrowRight')
+        await presentation.locator('.bnp-player').press('ArrowRight')
         await presentation.getByRole('heading', { name: 'Fluxo ilustrativo', exact: true }).waitFor()
         await page.screenshot({ path: path.join(out, `${width}-${theme}-flow.png`), fullPage: true })
         await page.keyboard.press('End')
