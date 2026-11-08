@@ -4,6 +4,12 @@ import { INSUMOS } from './insumos.js'
 
 // This registry is deliberately independent of the legacy Google News collector.
 // A government domain alone is not a reuse licence or an approval to crawl it.
+// Registry eligibility does not mean that the live collector is operational.
+export const SECTOR_NEWS_COLLECTION = Object.freeze({
+  mode: 'offline-revalidation',
+  automaticCollectionEnabled: false,
+  notice: 'Atualização automática institucional desativada. Esta seleção usa publicações já verificadas; consulte os links das fontes.',
+})
 export const SECTOR_NEWS_WINDOW_MS = NEWS_WINDOW_MS
 export const SECTOR_NEWS_TOPICS = [...BANKING_TOPICS, ...INSUMOS].map(({ id, label }) => ({ id, label }))
 export const CC_BY_ND_3 = 'https://creativecommons.org/licenses/by-nd/3.0/'
@@ -251,5 +257,5 @@ export function normalizeSectorNews(data, now = Date.now()) {
     }
     return [topic.id, { ...topic, items, status, checkedAt, lastSuccessAt, coverageNote: notes[status], sources }]
   }))
-  return { schemaVersion: 1, generatedAt: beforeNow(data?.generatedAt, now), windowDays: NEWS_WINDOW_DAYS, windowStart: new Date(now - SECTOR_NEWS_WINDOW_MS).toISOString(), windowEnd: new Date(now).toISOString(), topics, sourceStates: states }
+  return { schemaVersion: 1, collection: SECTOR_NEWS_COLLECTION, generatedAt: beforeNow(data?.generatedAt, now), windowDays: NEWS_WINDOW_DAYS, windowStart: new Date(now - SECTOR_NEWS_WINDOW_MS).toISOString(), windowEnd: new Date(now).toISOString(), topics, sourceStates: states }
 }

@@ -3,7 +3,7 @@ name: Deploy do Painel Especialista (GitHub Pages)
 on:
   push:
     branches: [main, claude/obsidian-plugin-analysis-bagjz3]
-    paths: ['cotacoes/**', '.github/workflows/pages.yml']
+    paths: ['cotacoes/**', '.github/workflows/pages.yml', '.github/workflows/cotacoes-ci.yml']
   schedule:
     - cron: '0 11,18 * * *' # Trends: 08h e 15h de Brasília; demais fontes preservadas
     # Só de segunda a sexta no horário de Brasília (UTC-3): segunda 00h a sexta 23h. Sem coleta no sábado e no domingo.
@@ -23,7 +23,15 @@ concurrency:
   cancel-in-progress: false # A consulta semanal aguarda o deploy ativo; não o cancela.
 
 jobs:
+  verify-source:
+    # The complete browser suite gates code releases, not hourly data refreshes.
+    if: github.event_name != 'schedule'
+    uses: ./.github/workflows/cotacoes-ci.yml
+    permissions:
+      contents: read
   deploy:
+    needs: verify-source
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -36,6 +44,11 @@ jobs:
       run:
         working-directory: cotacoes
     steps:
+      - name: Exigir verificações antes de publicar código
+        if: github.event_name != 'schedule' && needs.verify-source.result != 'success'
+        uses: actions/github-script@v7
+        with:
+          script: core.setFailed('Verificações de código ou interface não passaram. Publicação bloqueada.')
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -270,11 +283,18 @@ jobs:
         uses: actions/github-script@v7
         env:
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          DEPLOYMENT_OUTCOME: ${{ steps.deployment.outcome }}
         with:
           script: |
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
             const title = 'Deploy da página de cotações falhou'
-            const body = `A atualização automática falhou e a página continua com os dados anteriores.\n\nExecução: ${run}\nGatilho: ${context.eventName}`
+            const outcome = process.env.DEPLOYMENT_OUTCOME
+            const status = outcome === 'success'
+              ? 'A publicação foi concluída, mas uma verificação posterior falhou. A nova versão pode estar no ar; confira o endereço publicado e o relatório antes de decidir restaurar uma versão.'
+              : outcome === 'failure'
+                ? 'O serviço de publicação retornou falha. O estado no ar precisa ser conferido; não é possível garantir que a versão anterior foi preservada.'
+                : 'A atualização falhou antes da publicação. Esta execução não enviou uma nova versão ao serviço de publicação.'
+            const body = `${status}\n\nExecução: ${run}\nGatilho: ${context.eventName}`
             const open = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', per_page: 50 })
             const prev = open.data.find((i) => i.title === title && !i.pull_request)
             if (prev) await github.rest.issues.createComment({ ...context.repo, issue_number: prev.number, body })

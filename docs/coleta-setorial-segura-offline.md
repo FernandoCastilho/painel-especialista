@@ -84,3 +84,10 @@ O lock/CAS locais foram testados em filesystem local. Não foram certificados co
 - Auditoria final e validação ponta a ponta do exato candidato antes de publicar ou ativar.
 
 A aprovação dos testes desta entrega valida o protótipo **desligado**, não autoriza acesso a fontes ou publicação real.
+
+
+## Revisão operacional de 08/11/2026
+
+O painel agora informa expressamente que a atualização institucional automática está desativada. A revalidação local não é uma nova consulta: não renova `checkedAt`, `lastSuccessAt` nem a data de publicação. A elegibilidade no cadastro de fontes também não significa operação em produção.
+
+A ativação continua bloqueada pelos requisitos desta nota: armazenamento remoto durável com controle de versão e proteção contra retorno a estado antigo, transporte/publicador reais homologados e revisão explícita dos bloqueios históricos de acesso. Não houve novas tentativas a fontes suspensas nem alteração de suas permissões. Os demais coletores de notícias são independentes desta seleção institucional.

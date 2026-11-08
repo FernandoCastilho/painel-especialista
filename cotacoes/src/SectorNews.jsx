@@ -2,7 +2,7 @@ import { NEWS_WINDOW_MS } from './newsWindow.js'
 import { useEffect, useMemo, useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import { startVisiblePolling, DATA_POLL_MS } from './visiblePolling.js'
-import { normalizeSectorNews } from './sectorNews.js'
+import { normalizeSectorNews, SECTOR_NEWS_COLLECTION } from './sectorNews.js'
 import { publicReference } from './insumoPresentation.js'
 import Estado from './Estado.jsx'
 
@@ -23,6 +23,7 @@ export default function SectorNews({ id, label, insumo = false }) {
   return <section className="sector-news" aria-labelledby={`sector-news-${id}`}>
     <h3 id={`sector-news-${id}`} className="sector-news-heading">Notícias da semana · {label}</h3>
     <p className="sector-news-meta">Publicações de {date(now - NEWS_WINDOW_MS)} a {date(now)}.</p>
+    <p className="sector-news-status">{SECTOR_NEWS_COLLECTION.notice}</p>
     {insumo && <p className="setores-note">Oferta, demanda e decisões que ajudam a acompanhar o mercado do insumo. As notícias são contexto; não demonstram, por si só, a causa de uma variação de preço.</p>}
     {resource.status === 'loading' && !topic ? <Estado>Carregando notícias…</Estado> : <>
       {readError && <p className="sector-news-status" role="status">Atualização de notícias indisponível nesta leitura.</p>}
