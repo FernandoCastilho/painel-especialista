@@ -3,6 +3,7 @@
 import { brDate, toBr } from './macro-lib.mjs'
 import { parseMoeda } from './moedas-lib.mjs'
 import { TLP_LABEL } from '../src/tlp.js'
+import { sourceNumber } from './source-number.mjs'
 
 // TR e TBF: séries diárias em % a.m., cada ponto vale para o período que começa em `data` e termina em `dataFim`.
 // TLP: série mensal em % a.a., um ponto por mês de vigência.
@@ -27,7 +28,7 @@ export function parseIndexador(rows, keep = 30, now = Date.now()) {
       const iso = typeof r?.data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.data) ? Date.parse(`${r.data}T12:00:00Z`) : NaN
       const start = typeof r?.data === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(r.data) ? brDate(r.data) : iso
       const end = typeof r?.dataFim === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(r.dataFim) ? brDate(r.dataFim) : null
-      return { start, end, value: Number(r?.valor) }
+      return { start, end, value: sourceNumber(r?.valor) }
     })
     .filter((p) => Number.isFinite(p.start) && Number.isFinite(p.value) && p.start <= now + 864e5)
     .sort((a, b) => a.start - b.start)

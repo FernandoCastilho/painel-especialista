@@ -4,7 +4,7 @@ import vm from 'node:vm'
 import { readFileSync } from 'node:fs'
 import { readStorage } from '../src/storage.js'
 
-for (const [app, current, old, foreign] of [['cotacoes', 'cotacoes-v3', 'cotacoes-v2', 'caixa-v1']]) {
+for (const [app, current, old, foreign] of [['cotacoes', 'cotacoes-v4', 'cotacoes-v3', 'caixa-v1']]) {
   test(`${app}: ativação preserva caches dos outros aplicativos`, async () => {
     const handlers = {}, deleted = []
     vm.runInNewContext(readFileSync(new URL(`../../${app}/public/sw.js`, import.meta.url), 'utf8'), {
