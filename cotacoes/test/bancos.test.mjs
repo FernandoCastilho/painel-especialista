@@ -58,3 +58,12 @@ test('published snapshot covers ten unique banks with finite, source-backed valu
     }
   }
 })
+
+// Conferência independente nas imagens do relatório Bradesco: páginas 7 e 13.
+test('Bradesco uses PF dashed red NPL and quarterly solid gray ROAE, excluding MPME and pro forma lines', async () => {
+  const data = JSON.parse(await readFile(new URL('../public/bancos-ri.json', import.meta.url)))
+  const points = data.banks.bradesco
+  assert.deepEqual(points.map(p => p.metrics.nplPF.value), [5.8, 5.5, 5.4])
+  assert.deepEqual(points.map(p => p.metrics.roe.value), [15.6, 16.2, 14.7])
+  assert.ok(points.every(p => p.metrics.nplPF.page === 13 && p.metrics.roe.page === 7))
+})

@@ -1113,14 +1113,14 @@
             "note": "Lucro líquido contábil trimestral BRGAAP; não confundir com lucro contábil IFRS."
           },
           "roe": {
-            "value": 16,
+            "value": 15.6,
             "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
             "page": 7,
             "basis": "bradesco-brgaap-roe",
-            "note": "ROAE trimestral anualizado recorrente, incluindo efeito do aumento de capital; distinto do acumulado e do índice pro forma sem aumento."
+            "note": "ROAE trimestral anualizado recorrente, com efeito do aumento de capital: linha cinza contínua do gráfico da página 7. Não usar linhas tracejadas pro forma nem linha vermelha acumulada."
           },
           "nplPF": {
-            "value": 4.9,
+            "value": 5.8,
             "basis": "bradesco-nplPF-90d",
             "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
             "page": 13,
@@ -1210,10 +1210,10 @@
             "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
             "page": 7,
             "basis": "bradesco-brgaap-roe",
-            "note": "ROAE trimestral anualizado recorrente, incluindo efeito do aumento de capital; distinto do acumulado e do índice pro forma sem aumento."
+            "note": "ROAE trimestral anualizado recorrente, com efeito do aumento de capital: linha cinza contínua do gráfico da página 7. Não usar linhas tracejadas pro forma nem linha vermelha acumulada."
           },
           "nplPF": {
-            "value": 4.4,
+            "value": 5.5,
             "basis": "bradesco-nplPF-90d",
             "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
             "page": 13,
@@ -1303,10 +1303,10 @@
             "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
             "page": 7,
             "basis": "bradesco-brgaap-roe",
-            "note": "ROAE trimestral anualizado recorrente, incluindo efeito do aumento de capital; distinto do acumulado e do índice pro forma sem aumento."
+            "note": "ROAE trimestral anualizado recorrente, com efeito do aumento de capital: linha cinza contínua do gráfico da página 7. Não usar linhas tracejadas pro forma nem linha vermelha acumulada."
           },
           "nplPF": {
-            "value": 3.7,
+            "value": 5.4,
             "basis": "bradesco-nplPF-90d",
             "source": "https://cdn.financialreports.eu/financialreports/media/filings/30126/2026/RNS/30126_rns_2026-10-22_98d8f9fe-f32f-4406-8d7e-99b1a261c87b.pdf",
             "page": 13,
