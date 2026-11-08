@@ -298,8 +298,8 @@ jobs:
             const prev = open.data.find((i) => i.title === title && !i.pull_request)
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
             if (items.length) {
-              const list = items.map((i) => `- ${i.label}: ${i.hours == null ? 'data da coleta desconhecida' : `${i.hours} h sem atualizar`}`).join('\n')
-              const body = `A fonte destes dados está fora do ar e a página mostra o último dado publicado:\n\n${list}\n\nExecução: ${run}`
+              const list = items.map((i) => `- ${i.detail ?? `${i.label}: ${i.hours == null ? 'data da coleta desconhecida' : `${i.hours} h sem atualizar`}`}`).join('\n')
+              const body = `A página conserva dados anteriores. Consulte o motivo de cada item; a idade do dado, isoladamente, não comprova indisponibilidade da fonte:\n\n${list}\n\nExecução: ${run}`
               if (prev) await github.rest.issues.createComment({ ...context.repo, issue_number: prev.number, body })
               else {
                 await github.rest.issues.create({ ...context.repo, title, body })

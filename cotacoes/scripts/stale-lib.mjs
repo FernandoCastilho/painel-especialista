@@ -1,6 +1,7 @@
-// Quais blocos de dados estão sendo servidos com o último dado publicado (fonte fora do ar) há mais de `hours` horas.
+// Quais blocos conservam dados anteriores há mais de `hours` horas.
+// Retenção não comprova indisponibilidade da fonte: algumas coletas estão desativadas.
 import { BNDES_SERIES } from './bndes-lib.mjs'
-import { MOEDAS_CATALOG } from './moedas-lib.mjs'
+import { MOEDAS_CATALOG, SOURCE_STATUS } from './moedas-lib.mjs'
 const LABELS = {
   macro: { cdi: 'CDI', selic: 'Selic', sofr: 'SOFR', sofrAvg: 'médias da SOFR', focus: 'Boletim Focus', ptax: 'PTAX' },
   curves: { br: 'DI x pré', cc: 'cupom cambial', us: 'Treasuries' },
@@ -10,13 +11,29 @@ const LABELS = {
   news: { USD: 'notícias do USD', EUR: 'notícias do EUR', JPY: 'notícias do JPY', CNH: 'notícias do CNH' },
 }
 
-// files = { macro, curves, news } (conteúdo dos JSON gerados). Devolve [{ file, key, label, since, hours }].
+export function describeStaleItem(item) {
+  const age = item.hours == null ? 'data da coleta desconhecida' : `${item.hours} h sem atualizar`
+  if (item.collectionDisabled) return `${item.label}: ${item.reason}; ${age}. O dado anterior foi preservado; este alerta não comprova falha da fonte.`
+  return `${item.label}: ${age}`
+}
+
+// files = conteúdo dos JSON gerados. O alerta inclui o motivo quando a coleta
+// está deliberadamente desativada. A idade e o limiar não são suprimidos.
 export function staleReport(files, now = Date.now(), hours = 6) {
   const items = []
   for (const [file, labels] of Object.entries(LABELS)) {
     for (const [key, since] of Object.entries(files?.[file]?.stale ?? {})) {
       const h = since ? (now - since) / 36e5 : Infinity
-      if (h > hours) items.push({ file, key, label: labels[key] ?? key, since: since ?? null, hours: Number.isFinite(h) ? Math.round(h * 10) / 10 : null })
+      if (h > hours) {
+        const policy = file === 'moedas' ? SOURCE_STATUS[key] : null
+        const item = { file, key, label: labels[key] ?? key, since: since ?? null, hours: Number.isFinite(h) ? Math.round(h * 10) / 10 : null }
+        if (policy?.automaticCollectionEnabled === false) {
+          item.collectionDisabled = true
+          item.reason = policy.reason
+        }
+        item.detail = describeStaleItem(item)
+        items.push(item)
+      }
     }
   }
   return items

@@ -13,4 +13,4 @@ const hours = Number(process.env.STALE_HOURS ?? 6)
 const items = staleReport({ macro: await read('macro'), curves: await read('curves'), news: await read('news'), indexadores: await read('indexadores'), bndes: await read('bndes'), moedas: await read('moedas') }, Date.now(), hours)
 const out = `${process.env.RUNNER_TEMP ?? '/tmp'}/stale.json`
 await writeFile(out, JSON.stringify({ hours, items }))
-console.log(items.length ? `Desatualizados há mais de ${hours} h: ${items.map((i) => `${i.label} (${i.hours ?? '?'} h)`).join(', ')}` : `Nenhum bloco desatualizado há mais de ${hours} h`)
+console.log(items.length ? `Dados anteriores há mais de ${hours} h: ${items.map((i) => i.detail).join('; ')}` : `Nenhum bloco desatualizado há mais de ${hours} h`)
