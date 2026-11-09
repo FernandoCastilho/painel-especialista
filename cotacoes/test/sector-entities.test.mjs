@@ -74,3 +74,24 @@ test('o recorte do estudo liga entidades ao subsetor e preserva o restante do gr
   assert.equal(invalid.nodes.length, 0)
   assert.equal(invalid.meta.hasEntities, undefined)
 })
+
+test('a busca geral acha entidades e players e abre o primeiro subsetor em que aparecem', async () => {
+  const { sectorEntitySearchEntries } = await import('../src/sectorEntities.js')
+  const entries = sectorEntitySearchEntries()
+  assert.equal(entries.length, Object.keys(ENTITY_REGISTRY.associations).length + Object.keys(ENTITY_REGISTRY.players).length)
+  const abimaq = entries.find(item => item.id === 'entity:abimaq:search')
+  assert.equal(abimaq.route, 'setores/topico/metalmecanico/0')
+  assert.match(abimaq.body, /Máquinas industriais/)
+  assert.equal(new Set(entries.map(item => item.id)).size, entries.length)
+})
+
+test('verificador de links separa falha, aviso e ok', async () => {
+  const { classifyLink } = await import('../scripts/check-entity-links.mjs')
+  const url = 'https://www.abimaq.org.br'
+  assert.equal(classifyLink(url, { status: 200, finalUrl: 'https://abimaq.org.br/' }).level, 'ok')
+  assert.equal(classifyLink(url, { status: 404 }).level, 'falha')
+  assert.equal(classifyLink(url, { status: 503 }).level, 'falha')
+  assert.equal(classifyLink(url, { error: 'ENOTFOUND' }).level, 'falha')
+  assert.equal(classifyLink(url, { status: 403 }).level, 'aviso')
+  assert.equal(classifyLink(url, { status: 200, finalUrl: 'https://outro.com.br/' }).level, 'aviso')
+})

@@ -90,5 +90,5 @@ export function buildSectorKnowledgeGraph(graph, { group, topicIndex, study } = 
   nodes.push(...entities.nodes)
   links.push(...entities.links)
   const newsUrls = new Set(nodes.filter(node => node.type === 'news').map(node => node.href))
-  return { nodes, links, archiveItems: list(graph?.archiveItems).filter(item => newsUrls.has(item.link)), meta: { ...meta, newsCount: newsUrls.size, hasEntities: entities.nodes.length > 0, entityPlayers: entities.players } }
+  return { nodes, links, archiveItems: list(graph?.archiveItems).filter(item => newsUrls.has(item.link)), meta: { ...meta, newsCount: newsUrls.size, hasEntities: entities.nodes.length > 0, entitiesReviewedAt: entities.nodes[0]?.reviewedAt, entityPlayers: entities.players } }
 }

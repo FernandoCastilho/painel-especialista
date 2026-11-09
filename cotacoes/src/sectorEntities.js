@@ -1,3 +1,5 @@
+import { CATALOGO_SETORIAL } from './centralSetorial.js'
+
 // Associações, órgãos e players nacionais de referência por subsetor.
 // Lista editorial de partida para pesquisa. Não é ranking, não mede participação de mercado
 // e não indica relação de crédito ou comercial com qualquer empresa.
@@ -443,7 +445,7 @@ export function sectorEntityGraph(group, topicIndex) {
     const [acronym, name, kind, url, scope] = item
     const isAgency = kind === 'agency'
     const id = `entity:${key}`
-    nodes.push({ id, label: acronym, title: `${acronym} · ${name}`, type: 'entity', subtype: kind, group: 'Associações e órgãos', kindLabel: isAgency ? 'Órgão público' : 'Associação', summary: `${name}. ${KIND_DESCRIPTION[kind]}. ${scope} Costuma divulgar: ${PUBLISHES[key]}`, href: secure(url) })
+    nodes.push({ id, label: acronym, title: `${acronym} · ${name}`, type: 'entity', subtype: kind, group: 'Associações e órgãos', kindLabel: isAgency ? 'Órgão público' : 'Associação', summary: `${name}. ${KIND_DESCRIPTION[kind]}. ${scope} Costuma divulgar: ${PUBLISHES[key]}`, href: secure(url), reviewedAt: ENTITIES_REVIEWED_AT })
     links.push({ id: `entity:${focusId}:${key}`, source: focusId, target: id, label: isAgency ? 'Órgão relacionado' : 'Associação relacionada', reason: 'Referência editorial para consultar dados e normas do subsetor. Não indica que toda empresa do subsetor é associada ou regulada por esta entidade.' })
   }
   let players = 0
@@ -454,11 +456,32 @@ export function sectorEntityGraph(group, topicIndex) {
     const id = `entity:player:${key}`
     const role = ROLES[topicKey]?.[key] || 'concorrente'
     const roleText = ROLE_LABEL[role].toLowerCase()
-    nodes.push({ id, label: name, title: name, type: 'entity', subtype: 'player', role, kindLabel: `Player · ${roleText}`, group: 'Players de referência', summary: `${name}. ${scope} Papel provável para uma empresa média deste subsetor: ${roleText}. Referência nacional de partida para pesquisa; não é ranking nem mede participação de mercado.` })
+    nodes.push({ id, label: name, title: name, type: 'entity', subtype: 'player', role, reviewedAt: ENTITIES_REVIEWED_AT, kindLabel: `Player · ${roleText}`, group: 'Players de referência', summary: `${name}. ${scope} Papel provável para uma empresa média deste subsetor: ${roleText} (a confirmar com a empresa). Referência nacional de partida para pesquisa; não é ranking nem mede participação de mercado.` })
     links.push({ id: `entity:${focusId}:player:${key}`, source: focusId, target: id, label: ROLE_LABEL[role], reason: 'Nome conhecido do subsetor, para iniciar a pesquisa. O papel é uma leitura editorial e pode mudar conforme o produto e o contrato da empresa visitada.' })
     players += 1
   }
   return { nodes, links, players }
+}
+
+// Documentos para a busca geral do painel: uma entrada por associação, órgão ou player,
+// abrindo o primeiro subsetor em que aparece e listando todos os demais.
+export function sectorEntitySearchEntries() {
+  const where = new Map()
+  for (const [topicKey, [associationKeys, playerKeys]] of Object.entries(TOPICS)) {
+    const [group, index] = topicKey.split(':')
+    const catalog = CATALOGO_SETORIAL.find(item => item.id === group)
+    const topic = { route: `setores/topico/${group}/${index}`, label: catalog.topics[Number(index)] }
+    for (const key of associationKeys) where.set(`entity:${key}`, [...(where.get(`entity:${key}`) || []), topic])
+    for (const key of playerKeys) where.set(`entity:player:${key}`, [...(where.get(`entity:player:${key}`) || []), topic])
+  }
+  const entry = (id, title, text, kind) => {
+    const topics = where.get(id)
+    return { id: `${id}:search`, title, body: `${text} Aparece em: ${topics.map(topic => topic.label).join(', ')}.`, route: topics[0].route, kind }
+  }
+  return [
+    ...Object.entries(ASSOCIATIONS).map(([key, [acronym, name, kind, , scope]]) => entry(`entity:${key}`, `${acronym} · ${name}`, `${KIND_DESCRIPTION[kind]}. ${scope} Costuma divulgar: ${PUBLISHES[key]}`, kind === 'agency' ? 'Órgão do setor' : 'Associação do setor')),
+    ...Object.entries(PLAYERS).map(([key, [name, scope]]) => entry(`entity:player:${key}`, name, `${scope} Player de referência.`, 'Player de referência')),
+  ]
 }
 
 export const ENTITY_TOPIC_KEYS = Object.keys(TOPICS)
