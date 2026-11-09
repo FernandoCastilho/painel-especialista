@@ -54,3 +54,10 @@ O mapa de cada subsetor mostra também pontos quadrados: associações e entidad
 - Cada player traz o papel provável para uma empresa média do subsetor: concorrente (padrão), fornecedor, cliente ou outro elo da cadeia. É leitura editorial (tabela `ROLES`).
 - Cada associação ou órgão traz o que costuma divulgar (tabela `PUBLISHES`), para saber onde buscar dados. Os títulos exatos variam: conferir no site.
 - Quem compra, canais e ciclo financeiro continuam nas seções "Funcionamento" e "Economia da empresa média e financiamento" de cada estudo, sem duplicar aqui.
+
+## Página de estudo mais enxuta (09/11/2026)
+
+- O resumo executivo é um quadro em destaque no topo (primeiro parágrafo maior); o aviso "NÃO CONFERIDO" aparece como linha própria quando o estudo não está aprovado.
+- "Perguntas para conversar com a empresa" ficam numa seção recolhida; o campo `canvasQuestions` continua nos dados.
+- Os atalhos de capítulos foram removidos: os capítulos abrem e fecham pelos próprios títulos.
+- No estudo, o mapa de conexões mostra só o grafo; busca, Grafo/Lista, filtros, Nomes, Pausar e Tela cheia ficam em "Opções do mapa" (recolhido). No Aprender o mapa segue completo (`compact` só é usado nos estudos).

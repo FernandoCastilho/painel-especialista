@@ -153,3 +153,5 @@
  .is-contextual:not(.is-fullscreen) .km-switch{flex:1 0 100%}
  .is-contextual .km-switch button{white-space:nowrap}
 }
+
+.is-compact .km-heading>div>p:not(.km-eyebrow),.is-compact .km-count,.is-compact .km-news-state{display:none}.is-compact .km-heading{padding-bottom:6px}.km-controls{border-top:1px solid var(--line)}.km-controls>summary{cursor:pointer;padding:10px 24px;font-size:.8rem;color:var(--mut)}@media(max-width:600px){.km-controls>summary{padding:10px 14px}}

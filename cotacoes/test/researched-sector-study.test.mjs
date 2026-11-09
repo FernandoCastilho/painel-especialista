@@ -66,7 +66,9 @@ test('todos os estudos integrados renderizam sem erros e mantêm sua identidade'
   for (const study of studies) {
     const html=renderToStaticMarkup(createElement(Component,{study}))
     assert.ok(html.includes(study.title),study.title)
-    assert.match(html,/perguntas-chave para conhecer o negócio/)
+    assert.match(html,/Perguntas para conversar com a empresa \(6\)/)
+    assert.doesNotMatch(html,/study-callout|study-nav|Capítulos do estudo/)
+    assert.match(html,/class="study-summary"/)
     assert.match(html,/Relações da cadeia/)
     assert.doesNotMatch(html,/speechSynthesis/)
   }

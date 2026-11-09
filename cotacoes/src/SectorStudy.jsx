@@ -1,4 +1,4 @@
-import { StudyChapterNav, StudyTable, StudyMethod } from './StudyParts.jsx'
+import { StudyTable, StudyMethod } from './StudyParts.jsx'
 import { useState } from 'react'
 import { TIC_STUDY } from './ticStudy.js'
 import { TIC_CANVAS_QUESTIONS } from './ticCanvasQuestions.js'
@@ -29,16 +29,14 @@ export default function SectorStudy({ goto }) {
   return <article className="sector-study" aria-labelledby="tic-study-title">
     <p className="central-kicker">ESTUDO SETORIAL · TIC</p><h3 id="tic-study-title">{study.title}</h3>
     <p className="central-note">Pesquisa pública revisada em <time dateTime="2026-11-06">06/11/2026</time>. Dados têm períodos próprios; atualização não é automática.</p>
-    <div className="study-callout"><h4>Resumo executivo</h4>{study.summary.map(text => <p key={text}>{text}</p>)}</div>
-    <aside className="study-callout study-canvas-callout" aria-labelledby="tic-canvas-title">
-      <p className="central-kicker">CONVERSA COM A EMPRESA · INTEGRAÇÃO DE TI</p>
-      <h4 id="tic-canvas-title">6 perguntas-chave para conhecer o negócio</h4>
+    <section className="study-summary" aria-labelledby="tic-summary"><p className="central-kicker">RESUMO EXECUTIVO</p><h4 id="tic-summary" className="sr-only">Resumo executivo</h4>{study.summary.map((text, index) => <p key={text} className={index === 0 ? 'study-summary-lead' : undefined}>{text}</p>)}</section>
+    <details className="study-section study-canvas-details">
+      <summary>Perguntas para conversar com a empresa ({TIC_CANVAS_QUESTIONS.length})</summary>
       <p className="study-canvas-intro">Roteiro inspirado no Business Model Canvas. Peça números e um contrato real para sustentar as respostas.</p>
       <ol className="study-canvas-questions">{TIC_CANVAS_QUESTIONS.map(item => <li key={item.dimension}><strong>{item.dimension}</strong><p>{item.question}</p></li>)}</ol>
-    </aside>
-    <KnowledgeMap goto={goto} sectorContext={{ group: 'tic', topicIndex: 0, study }} />
+    </details>
+    <KnowledgeMap compact goto={goto} sectorContext={{ group: 'tic', topicIndex: 0, study }} />
     <SectorPodcast />
-    <StudyChapterNav sections={study.sections} prefix="tic" />
     {study.sections.map(section => <details className="study-section" id={`tic-${section.id}`} key={section.id} open={section.id === 'negocio' || section.id === 'indicadores' || undefined}><summary>{section.title}</summary>{section.id === 'negocio' && <TechnologyIntegrationDiagram />}{section.paragraphs?.map(text => <p key={text}>{text}</p>)}<StudyTable section={section} />{section.bullets && <ul>{section.bullets.map(text => <li key={text}>{text}</li>)}</ul>}{section.id === 'indicadores' && study.charts.map(chart => <StudyChart key={chart.id} chart={chart} />)}{publicAgencySources(section.sources).length > 0 && <p className="central-note">Fontes: {publicAgencySources(section.sources).map((source, index) => <span key={source.url}>{index > 0 ? ' · ' : ''}{link(source)}</span>)}</p>}</details>)}
     <StudyMethod study={study} />
   </article>
