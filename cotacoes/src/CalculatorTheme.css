@@ -1,0 +1,117 @@
+/* Calculadoras: um único contrato de cores e estilo. Carregado por último para valer em todas.
+   Papéis das cores:
+   - amarelo  = opção marcada (chips, caixas de seleção)
+   - laranja  = a única ação principal da tela
+   - azul-marinho = destaque do resultado
+   - azul     = só navegação (aba selecionada)
+   - bordas de campos e chips com contraste de 3:1 ou mais */
+main.app.app-calculators {
+  --cx-field-bg: var(--bg);
+  --cx-line-strong: #77725f;
+  --cx-select-bg: #ffb000;
+  --cx-select-fg: #000;
+  --cx-primary-bg: #ff6200;
+  --cx-primary-fg: #000d3c;
+  --cx-result-bg: #000d3c;
+  --cx-result-fg: #fff;
+  --cx-result-line: #5b78e8;
+  --cx-notice-bar: var(--amber, #ffb000);
+}
+:root[data-theme="light"] main.app.app-calculators {
+  --cx-field-bg: var(--card);
+  --cx-line-strong: #8a8577;
+  --cx-result-line: #000d3c;
+}
+
+/* Campos: mesmo fundo, borda forte e cantos em todas as calculadoras. */
+main.app.app-calculators .cx :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select, textarea) {
+  background: var(--cx-field-bg);
+  color: var(--fg);
+  border: 1px solid var(--cx-line-strong);
+  border-radius: 8px;
+}
+main.app.app-calculators .cx :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select, textarea)[aria-invalid=true] {
+  border-color: var(--down);
+}
+main.app.app-calculators .cx :is(input[type=checkbox], input[type=radio]) { accent-color: var(--cx-select-bg); }
+
+/* Chips e modos: borda forte; marcado = amarelo com texto preto. */
+main.app.app-calculators .cx .seg { border-color: var(--cx-line-strong); }
+main.app.app-calculators .cx .seg button { border-color: var(--cx-line-strong); }
+main.app.app-calculators .cx .seg button + button { border-left-color: var(--cx-line-strong); }
+main.app.app-calculators .cx :is(.seg button, .cg-modes button, .cbs-month-buttons button)[aria-pressed=true],
+:root[data-theme] body main.app.app-calculators .bw .seg.bn-fam button[aria-pressed=true] {
+  background: var(--cx-select-bg);
+  color: var(--cx-select-fg);
+  border: 1px solid var(--cx-select-bg);
+  font-weight: 700;
+}
+main.app.app-calculators .cx :is(.cg-modes button, .cbs-month-buttons button) { border-color: var(--cx-line-strong); }
+
+/* Botões secundários: iguais em todas. A ação principal (laranja) é só uma por tela. */
+main.app.app-calculators .cx :is(.cx-action, .cg-button, .desconto-titles button, .fi-goal button, .cx-lcd .cx-field button:not(.fi-help > button), .credit-comparison > button:not(.cx-back), .credit-controls button, .fi-help-close) {
+  background: var(--surface-2);
+  color: var(--fg);
+  border: 1px solid var(--cx-line-strong);
+  border-radius: 8px;
+}
+main.app.app-calculators .cx .fm-show-result {
+  background: var(--cx-primary-bg);
+  color: var(--cx-primary-fg);
+  border: 0;
+}
+/* Antes de liberar, o botão continua com cara de botão e explica o motivo no texto ao lado. */
+main.app.app-calculators .cx .fm-show-result:disabled {
+  background: color-mix(in srgb, var(--cx-primary-bg) 28%, var(--surface-2));
+  color: var(--fg);
+  border: 1px solid var(--cx-line-strong);
+}
+
+/* Destaque do resultado: azul-marinho no claro; no escuro ganha contorno para não sumir. */
+main.app.app-calculators .cx .fm-hero {
+  background: var(--cx-result-bg);
+  color: var(--cx-result-fg);
+  border: 1px solid var(--cx-result-line);
+}
+
+/* Avisos: mesma caixa, mesma barra, em todas. */
+main.app.app-calculators .cx :is(.cg-notice, .desconto-notice, .credit-notice, .cbs-message) {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--cx-notice-bar);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font-size: .8125rem;
+  line-height: 1.5;
+}
+
+/* Comparador de Crédito: mesmo painel com cabeçalho cinza das outras calculadoras. */
+main.app.app-calculators .credit-comparison { max-width: none; margin: 0; display: flex; flex-direction: column; gap: 24px; }
+main.app.app-calculators .credit-comparison > p { margin: 0; color: var(--mut); font-size: .8125rem; line-height: 1.5; }
+main.app.app-calculators .credit-comparison .credit-pair { margin: 0; }
+main.app.app-calculators .credit-comparison :is(.credit-proposal, .credit-controls) {
+  padding: 0 0 var(--cx-space, 20px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  overflow: hidden;
+}
+main.app.app-calculators .credit-comparison :is(.credit-proposal, .credit-controls) > h3 {
+  margin: 0 0 var(--cx-space, 20px);
+  min-height: 64px;
+  padding: 10px var(--cx-space, 20px);
+  display: flex;
+  align-items: center;
+  background: var(--surface-2);
+  color: var(--fg);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+main.app.app-calculators .credit-comparison :is(.credit-proposal, .credit-controls) > :not(h3) {
+  margin-inline: var(--cx-space, 20px);
+}
+main.app.app-calculators .credit-comparison .credit-controls > :first-child:not(h3) { margin-top: var(--cx-space, 20px); }
+main.app.app-calculators .credit-comparison .credit-field > span { color: var(--mut); font-size: .8125rem; line-height: 1.4; }

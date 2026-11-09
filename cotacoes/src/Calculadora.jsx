@@ -14,6 +14,7 @@ import Help from './CalculatorHelp.jsx'
 import './CalculatorLayout.css'
 import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
 import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
+import './CalculatorTheme.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
