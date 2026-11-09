@@ -136,11 +136,16 @@
 
 /* Keep study exploration compact on narrow screens; details remain one tap away. */
 @media(max-width:1100px){
-  .is-contextual .km-detail{max-height:44px;padding:0;overflow:hidden}
-  .is-contextual .km-detail.is-open{max-height:50dvh;overflow:auto}
-  .is-contextual .km-detail-toggle{display:block;box-sizing:border-box;width:100%;border:0;background:var(--card);color:var(--fg);padding:10px 16px;text-align:left;font-size:.75rem}
-  .is-contextual .km-detail-toggle span{float:right}
-  .is-contextual .km-detail-content{padding:12px 16px}
-  .is-contextual .km-detail:not(.is-open):has(.km-detail-toggle) .km-detail-content{display:none}
-  .is-contextual .km-detail:not(:has(.km-detail-toggle)){max-height:none}
+  .is-contextual:not(.is-fullscreen) .km-detail{max-height:44px;padding:0;overflow:hidden}
+  .is-contextual:not(.is-fullscreen) .km-detail.is-open{max-height:50dvh;overflow:auto}
+  .is-contextual:not(.is-fullscreen) .km-detail-toggle{display:block;box-sizing:border-box;width:100%;border:0;background:var(--card);color:var(--fg);padding:10px 16px;text-align:left;font-size:.75rem}
+  .is-contextual:not(.is-fullscreen) .km-detail-toggle span{float:right}
+  .is-contextual:not(.is-fullscreen) .km-detail-content{padding:12px 16px}
+  .is-contextual:not(.is-fullscreen) .km-detail:not(.is-open):has(.km-detail-toggle) .km-detail-content{display:none}
+  .is-contextual:not(.is-fullscreen) .km-detail:not(:has(.km-detail-toggle)){max-height:none}
+}
+
+@media(max-width:600px){
+ .is-contextual:not(.is-fullscreen) .km-switch{flex:1 0 100%}
+ .is-contextual .km-switch button{white-space:nowrap}
 }
