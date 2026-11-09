@@ -25,12 +25,12 @@ export default function MascotDock({ children, onSearch }) {
   useEffect(() => {
     const resize = () => {
       setMobile(window.innerWidth < 1000)
-      setPosition(p => desktopPosition(p))
+      setPosition(desktopPosition(preferences.desktop))
       setMobilePosition(p => clampMascot(p, tray.current?.clientWidth || window.innerWidth - 24, 250))
     }
     window.addEventListener('resize', resize)
     return () => window.removeEventListener('resize', resize)
-  }, [])
+  }, [preferences.desktop])
   const move = point => {
     if (mobile) setMobilePosition(clampMascot(point, tray.current?.clientWidth || window.innerWidth - 24, 250))
     else {

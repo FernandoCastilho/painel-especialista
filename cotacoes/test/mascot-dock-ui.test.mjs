@@ -53,3 +53,11 @@ test('mascot controls: pointer clamps and resize recovers; search passes actual 
   s.find(node => node.props?.className === 'mascot-search').props.onClick({ currentTarget: opener })
   assert.equal(s.searches[0].opener, opener); assert.equal(s.searches[0].anchor.id, 'actual-owl')
 })
+
+test('default desktop position returns after a temporary narrow viewport', async t => {
+  const s = await setup(t)
+  const initial = s.dock().props.style.left
+  s.window.innerWidth = 390; s.listeners.get('resize')(); await s.renderer.settle()
+  s.window.innerWidth = 1280; s.listeners.get('resize')(); await s.renderer.settle()
+  assert.equal(s.dock().props.style.left, initial)
+})

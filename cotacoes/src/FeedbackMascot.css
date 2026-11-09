@@ -25,3 +25,6 @@
 .mascot-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media(max-width:999px){.mascot-tray{height:250px;isolation:isolate;z-index:0;overflow:clip;margin:12px 12px calc(78px + env(safe-area-inset-bottom));border:1px dashed var(--line);border-radius:18px}.mascot-tray.mascot-is-moving{height:430px}.mascot-dock{position:absolute}.mascot-tray-hidden{height:auto;border:0}.mascot-restore{position:static;display:block;margin-left:auto}.mascot-position-controls{position:absolute;top:244px;bottom:auto;left:0;transform:none;width:min(270px,calc(100vw - 58px))}}
 @media print{.mascot-tray{display:none!important}}
+
+/* Reserve the default desktop parking area so the assistant cannot cover tools. */
+@media(min-width:1000px){body:has(.mascot-tray:not(.mascot-tray-hidden)) main.app{box-sizing:border-box;width:calc(100% - 168px);margin-left:0;margin-right:168px}}
