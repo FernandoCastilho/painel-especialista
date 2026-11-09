@@ -246,6 +246,114 @@ const PLAYERS = {
   algar: ['Algar Telecom', 'Operadora de telecomunicações regional.'],
 }
 
+// O que a entidade costuma divulgar, para saber onde buscar dados. Os títulos exatos variam: conferir no site.
+const PUBLISHES = {
+  cni: 'Sondagem Industrial, indicadores industriais e estudos econômicos.',
+  iba: 'Relatório anual com área plantada, produção e exportação do setor.',
+  abimci: 'Estudos setoriais de madeira processada (produção e exportação).',
+  abimovel: 'Panorama do setor moveleiro: produção, consumo e exportação.',
+  cnt: 'Pesquisa CNT de Rodovias e boletins estatísticos do transporte.',
+  ntc: 'Índices de custo do transporte de cargas e orientações de reajuste do frete.',
+  abol: 'Estudos do mercado de operadores logísticos.',
+  abralog: 'Estudos e eventos sobre logística.',
+  abtlp: 'Orientações e eventos sobre transporte de produtos perigosos.',
+  abtp: 'Informações sobre movimentação e investimentos em terminais portuários.',
+  anec: 'Estimativas de exportação de grãos.',
+  conab: 'Acompanhamento de safra, estoques e capacidade de armazenagem.',
+  antt: 'Piso mínimo de frete, resoluções e estatísticas do transporte rodoviário de cargas.',
+  antaq: 'Estatístico aquaviário: movimentação de cargas nos portos.',
+  anfir: 'Dados de produção e emplacamento de implementos rodoviários.',
+  anap: 'Informações sobre recuperação de papel para reciclagem.',
+  empapel: 'Dados mensais de expedição de papelão ondulado.',
+  abtcp: 'Conteúdo técnico e eventos de celulose e papel.',
+  abre: 'Estudos de mercado e valor da produção de embalagens.',
+  abia: 'Relatório anual com faturamento, emprego e exportação da indústria de alimentos.',
+  abpa: 'Relatório anual de produção, consumo e exportação de aves, suínos e ovos.',
+  abiec: 'Estatísticas de exportação de carne bovina.',
+  abrafrigo: 'Posicionamentos e informações do setor de frigoríficos.',
+  vivalacteos: 'Dados de produção e consumo de laticínios.',
+  abitrigo: 'Dados de moagem e consumo de trigo.',
+  abiove: 'Estatísticas do complexo soja: esmagamento, produção e exportação.',
+  abir: 'Dados e estudos do setor de bebidas não alcoólicas.',
+  cervbrasil: 'Anuário da cerveja e dados do setor.',
+  mapa: 'Normas sanitárias, registro de estabelecimentos (SIF) e estatísticas agropecuárias.',
+  abimaq: 'Desempenho setorial: produção, vendas, importação e exportação de máquinas.',
+  abifa: 'Estatísticas de produção de fundidos.',
+  abm: 'Conhecimento técnico e congressos de metalurgia e materiais.',
+  acobrasil: 'Estatísticas de produção, vendas e importação de aço.',
+  abcem: 'Dados da construção metálica e orientações técnicas.',
+  cbca: 'Manuais e publicações técnicas de construção em aço.',
+  abinee: 'Desempenho setorial: faturamento, importação e exportação de elétricos e eletrônicos.',
+  anfavea: 'Relatório mensal de produção, licenciamento e exportação de veículos e máquinas agrícolas.',
+  sindipecas: 'Relatório de desempenho do setor de autopeças.',
+  abipecas: 'Dados de comércio exterior e desempenho de autopeças.',
+  fenabrave: 'Emplacamentos mensais de veículos.',
+  cbic: 'Indicadores da construção: emprego, custos e atividade.',
+  abramat: 'Indicadores de desempenho da indústria de materiais de construção.',
+  snic: 'Números mensais de vendas e consumo de cimento.',
+  abcp: 'Normas, estudos técnicos e informações sobre cimento e concreto.',
+  anicer: 'Dados e estudos da cerâmica vermelha.',
+  abceram: 'Informações técnicas e eventos da cerâmica.',
+  abividro: 'Dados de produção e consumo de vidro.',
+  abal: 'Estatísticas de produção, consumo e reciclagem de alumínio.',
+  anamaco: 'Pesquisas do comércio de material de construção.',
+  abrainc: 'Indicadores de lançamentos e vendas de imóveis residenciais.',
+  abdib: 'Panorama de investimentos em infraestrutura.',
+  dnit: 'Editais, obras e normas de rodovias e ferrovias federais.',
+  abit: 'Perfil do setor têxtil e de confecção.',
+  abrafas: 'Dados de produção de fibras artificiais e sintéticas.',
+  abvtex: 'Programa de qualificação de fornecedores do varejo de moda.',
+  abint: 'Dados e informações de nãotecidos e tecidos técnicos.',
+  abiquim: 'Anuário da indústria química e balança comercial do setor.',
+  abiplast: 'Perfil da indústria de transformação de plástico.',
+  abief: 'Dados de embalagens plásticas flexíveis.',
+  abrafati: 'Dados de mercado de tintas.',
+  abipla: 'Orientações sobre regularização de produtos de limpeza.',
+  anip: 'Dados de produção e vendas de pneus.',
+  anvisa: 'Registro de produtos, resoluções (RDC) e alertas sanitários.',
+  interfarma: 'Estudos do mercado farmacêutico de pesquisa.',
+  abad: 'Ranking e pesquisas do atacado distribuidor.',
+  abras: 'Ranking e pesquisas do varejo alimentar.',
+  inda: 'Dados mensais de vendas, estoques e importações de aço nos distribuidores.',
+  ibp: 'Informações e posições sobre petróleo, gás e fornecedores.',
+  anp: 'Boletins de produção, preços de combustíveis e resoluções.',
+  brasscom: 'Estudos de mercado e de talentos de TIC.',
+  softex: 'Estudos do setor de software e serviços.',
+  abes: 'Estudo anual do mercado brasileiro de software.',
+  anatel: 'Dados de acessos, outorgas e resoluções de telecomunicações.',
+  anpd: 'Orientações e regulamentos da Lei Geral de Proteção de Dados (LGPD).',
+  telebrasil: 'Posicionamentos e estudos de telecomunicações.',
+  conexis: 'Dados de investimentos e de telecomunicações.',
+  abrint: 'Dados e estudos de provedores regionais de internet.',
+}
+
+// Papel provável do player para uma empresa média do subsetor. Padrão: concorrente.
+// É leitura editorial; o papel real depende do produto e do contrato da empresa visitada.
+const ROLE_LABEL = { concorrente: 'Concorrente', fornecedor: 'Fornecedor', cliente: 'Cliente', elo: 'Outro elo da cadeia' }
+const ROLES = {
+  'base-florestal:0': { suzano: 'cliente', klabin: 'cliente', eldorado: 'cliente', cmpc: 'cliente', bracell: 'cliente' },
+  'base-florestal:5': { dexco: 'fornecedor', tokstok: 'cliente' },
+  'transporte-logistica:2': { rumo: 'elo', hbsa: 'elo' },
+  'transporte-logistica:3': { localfrio: 'elo' },
+  'transporte-logistica:4': { ultracargo: 'elo', transpetro: 'cliente' },
+  'papel-celulose:2': { klabin: 'fornecedor' },
+  'papel-celulose:3': { klabin: 'fornecedor' },
+  'alimentos-agroindustria:2': { mdias: 'cliente' },
+  'metalmecanico:1': { romi: 'fornecedor', tupy: 'cliente' },
+  'metalmecanico:2': { gerdau: 'fornecedor', arcelormittal: 'fornecedor', usiminas: 'fornecedor', csn: 'fornecedor' },
+  'metalmecanico:3': { weg: 'elo' },
+  'automotivo:2': { bosch: 'fornecedor', mahle: 'fornecedor', frasle: 'fornecedor', nakata: 'fornecedor', marelli: 'fornecedor' },
+  'construcao:1': { glp: 'cliente', logcp: 'cliente', prologis: 'cliente' },
+  'construcao:6': { hydro: 'fornecedor' },
+  'textil:3': { coteminas: 'cliente', vicunha: 'cliente' },
+  'textil:4': { renner: 'cliente', guararapes: 'cliente', cea: 'cliente' },
+  'quimicos:1': { braskem: 'fornecedor' },
+  'quimicos:2': { braskem: 'fornecedor' },
+  'atacado:5': { petrobras: 'cliente' },
+  'tic:0': { ascenty: 'fornecedor' },
+  'tic:6': { tivit: 'elo' },
+}
+
 // Sempre por subsetor: [entidades, players]. Sem player confiável, a lista fica vazia e a tela diz isso.
 const TOPICS = {
   'base-florestal:0': [['iba', 'cni'], ['suzano', 'klabin', 'eldorado', 'cmpc', 'bracell']],
@@ -297,8 +405,8 @@ const TOPICS = {
   'textil:4': [['abit', 'abvtex'], ['renner', 'guararapes', 'cea', 'hering', 'malwee']],
   'textil:5': [['abint', 'abit', 'abrafas'], ['fitesa']],
   'quimicos:0': [['abiquim', 'abiplast'], ['braskem', 'dow', 'unipar']],
-  'quimicos:1': [['abiplast', 'abief', 'abiquim'], ['tigre', 'amcor']],
-  'quimicos:2': [['abief', 'abre', 'abiplast'], ['amcor', 'dixietoga']],
+  'quimicos:1': [['abiplast', 'abief', 'abiquim'], ['braskem', 'tigre', 'amcor']],
+  'quimicos:2': [['abief', 'abre', 'abiplast'], ['braskem', 'amcor', 'dixietoga']],
   'quimicos:3': [['abrafati', 'abiquim'], ['sherwin', 'suvinil', 'coral']],
   'quimicos:4': [['abipla', 'anvisa', 'abiquim'], ['ype', 'bombril', 'unilever']],
   'quimicos:5': [['anip', 'abiquim'], ['pirelli', 'goodyear', 'bridgestone', 'michelin']],
@@ -318,35 +426,40 @@ const TOPICS = {
   'tic:7': [['anatel', 'conexis', 'telebrasil', 'abrint'], ['vivo', 'claro', 'tim', 'oi', 'algar']],
 }
 
-const kindLabel = { association: 'Associação ou entidade de classe', agency: 'Órgão público ou regulador' }
+const KIND_DESCRIPTION = { association: 'Associação ou entidade de classe', agency: 'Órgão público ou regulador' }
 const secure = value => { try { return new URL(value).protocol === 'https:' ? value : '' } catch { return '' } }
 
-/** Pure projection: nodes and links for the contextual knowledge map of one subsector. */
+/** Projeção pura: pontos e conexões do mapa contextual de um subsetor. */
 export function sectorEntityGraph(group, topicIndex) {
-  const entry = TOPICS[`${group}:${topicIndex}`]
+  const topicKey = `${group}:${topicIndex}`
+  const entry = TOPICS[topicKey]
   if (!entry) return { nodes: [], links: [], players: 0 }
-  const focusId = `subsector:${group}:${topicIndex}`
+  const [associationKeys, playerKeys] = entry
+  const focusId = `subsector:${topicKey}`
   const nodes = [], links = []
-  for (const key of entry[0]) {
+  for (const key of associationKeys) {
     const item = ASSOCIATIONS[key]
     if (!item) continue
     const [acronym, name, kind, url, scope] = item
+    const isAgency = kind === 'agency'
     const id = `entity:${key}`
-    nodes.push({ id, label: acronym, title: `${acronym} · ${name}`, type: 'entity', subtype: kind, group: 'Associações e órgãos', summary: `${name}. ${kindLabel[kind]}. ${scope}`, href: secure(url) })
-    links.push({ id: `entity:${focusId}:${key}`, source: focusId, target: id, label: kind === 'agency' ? 'Órgão relacionado' : 'Associação relacionada', reason: `Referência editorial para consultar dados e normas do subsetor. Não indica que toda empresa do subsetor é associada ou regulada por esta entidade.` })
+    nodes.push({ id, label: acronym, title: `${acronym} · ${name}`, type: 'entity', subtype: kind, group: 'Associações e órgãos', kindLabel: isAgency ? 'Órgão público' : 'Associação', summary: `${name}. ${KIND_DESCRIPTION[kind]}. ${scope} Costuma divulgar: ${PUBLISHES[key]}`, href: secure(url) })
+    links.push({ id: `entity:${focusId}:${key}`, source: focusId, target: id, label: isAgency ? 'Órgão relacionado' : 'Associação relacionada', reason: 'Referência editorial para consultar dados e normas do subsetor. Não indica que toda empresa do subsetor é associada ou regulada por esta entidade.' })
   }
   let players = 0
-  for (const key of entry[1]) {
+  for (const key of playerKeys) {
     const item = PLAYERS[key]
     if (!item) continue
     const [name, scope] = item
     const id = `entity:player:${key}`
-    nodes.push({ id, label: name, title: name, type: 'entity', subtype: 'player', group: 'Players de referência', summary: `${name}. ${scope} Referência nacional de partida para pesquisa; não é ranking nem mede participação de mercado.` })
-    links.push({ id: `entity:${focusId}:player:${key}`, source: focusId, target: id, label: 'Player de referência', reason: `Nome conhecido do subsetor, para iniciar a pesquisa. Atua em parte da cadeia e pode ter perfil diferente de uma empresa média.` })
+    const role = ROLES[topicKey]?.[key] || 'concorrente'
+    const roleText = ROLE_LABEL[role].toLowerCase()
+    nodes.push({ id, label: name, title: name, type: 'entity', subtype: 'player', role, kindLabel: `Player · ${roleText}`, group: 'Players de referência', summary: `${name}. ${scope} Papel provável para uma empresa média deste subsetor: ${roleText}. Referência nacional de partida para pesquisa; não é ranking nem mede participação de mercado.` })
+    links.push({ id: `entity:${focusId}:player:${key}`, source: focusId, target: id, label: ROLE_LABEL[role], reason: 'Nome conhecido do subsetor, para iniciar a pesquisa. O papel é uma leitura editorial e pode mudar conforme o produto e o contrato da empresa visitada.' })
     players += 1
   }
   return { nodes, links, players }
 }
 
 export const ENTITY_TOPIC_KEYS = Object.keys(TOPICS)
-export const ENTITY_REGISTRY = { associations: ASSOCIATIONS, players: PLAYERS, topics: TOPICS }
+export const ENTITY_REGISTRY = { associations: ASSOCIATIONS, players: PLAYERS, topics: TOPICS, publishes: PUBLISHES, roles: ROLES, roleLabels: ROLE_LABEL }

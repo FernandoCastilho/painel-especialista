@@ -10,7 +10,7 @@ import Help from './Help.jsx'
 import './KnowledgeMap.css'
 
 const TYPES = [{ id: 'sector', label: 'Setores' }, { id: 'concept', label: 'Conceitos' }, { id: 'news', label: 'Notícias · 7 dias' }, { id: 'entity', label: 'Associações e players' }]
-const nodeKind = node => node.subtype === 'classification' ? 'Classificação' : node.subtype === 'category' ? 'Grupo editorial' : node.type === 'news' ? 'Notícia' : node.type === 'entity' ? (node.subtype === 'player' ? 'Player de referência' : node.subtype === 'agency' ? 'Órgão público' : 'Associação') : node.type === 'concept' ? 'Conceito' : node.subtype === 'subsector' ? 'Subsetor' : 'Setor'
+const nodeKind = node => node.subtype === 'classification' ? 'Classificação' : node.subtype === 'category' ? 'Grupo editorial' : node.type === 'news' ? 'Notícia' : node.type === 'entity' ? node.kindLabel : node.type === 'concept' ? 'Conceito' : node.subtype === 'subsector' ? 'Subsetor' : 'Setor'
 const canOpenRoute = route => Boolean(route && ['aprender', 'setores', 'resumo', 'juros', 'cenarios', 'noticias'].includes(route.tab) && typeof route.view === 'string')
 const MEMORY = 'painel-knowledge-map-v1'
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
@@ -138,8 +138,12 @@ function contextPosition(point, width = 280, height = 160) {
 function NodeContextMenu({ node, point, onClose, onSelect, onOpen, portalTarget }) {
   const menu = useRef(null)
   const [position, setPosition] = useState(() => contextPosition(point))
-  const href = node.type === 'news' ? canonicalNewsUrl(node.href) : node.type === 'entity' && /^https:\/\//.test(node.href || '') ? node.href : null
-  const canOpen = node.type === 'news' || node.type === 'entity' ? Boolean(href) : canOpenRoute(node.route)
+  const isEntity = node.type === 'entity'
+  // Notícias e entidades abrem um site externo; os demais pontos abrem uma página do painel.
+  let href = null
+  if (node.type === 'news') href = canonicalNewsUrl(node.href)
+  else if (isEntity && /^https:\/\//.test(node.href || '')) href = node.href
+  const canOpen = node.type === 'news' || isEntity ? Boolean(href) : canOpenRoute(node.route)
   useEffect(() => {
     const el = menu.current
     if (!el) return
@@ -171,8 +175,8 @@ function NodeContextMenu({ node, point, onClose, onSelect, onOpen, portalTarget 
     }
   }}>
     <p className="km-context-title">{node.label}</p>
-    {href ? <a role="menuitem" href={href} target="_blank" rel="noopener noreferrer" onClick={() => onClose()}>{node.type === 'entity' ? 'Abrir site oficial ↗' : 'Ir para a página ↗'}</a> : <button type="button" role="menuitem" aria-disabled={!canOpen || undefined} disabled={!canOpen} onClick={() => onOpen(node)}>Ir para a página ↗</button>}
-    {!canOpen && <p className="km-context-unavailable">{['category', 'classification'].includes(node.subtype) ? 'Este ponto organiza o mapa e não tem página própria.' : node.type === 'entity' ? 'Sem site indicado. Pesquise pelo nome.' : 'Página ainda não disponível.'}</p>}
+    {href ? <a role="menuitem" href={href} target="_blank" rel="noopener noreferrer" onClick={() => onClose()}>{isEntity ? 'Abrir site oficial ↗' : 'Ir para a página ↗'}</a> : <button type="button" role="menuitem" aria-disabled={!canOpen || undefined} disabled={!canOpen} onClick={() => onOpen(node)}>Ir para a página ↗</button>}
+    {!canOpen && <p className="km-context-unavailable">{['category', 'classification'].includes(node.subtype) ? 'Este ponto organiza o mapa e não tem página própria.' : isEntity ? 'Sem site indicado. Pesquise pelo nome.' : 'Página ainda não disponível.'}</p>}
     <button type="button" role="menuitem" onClick={() => { onSelect(node.id); onClose(true) }}>Ver conexões</button>
   </div>, portalTarget || document.fullscreenElement || document.body)
 }
@@ -531,7 +535,8 @@ export default function KnowledgeMap({ goto, sectorContext }) {
           {canOpenRoute(selected.route) && <button type="button" className="km-open" onClick={() => openPage(selected)}>Abrir {selected.subtype === 'glossary' ? 'área relacionada' : selected.type === 'concept' ? 'conceito' : 'setor'} ↗</button>}
           {(selected.body || selected.glossaryBody) && <details><summary>Ler explicação completa</summary>{(selected.body || selected.glossaryBody).split('\n\n').map((paragraph, index) => <p key={index}>{paragraph}</p>)}</details>}
           {selected.subtype === 'glossary' && <p className="km-relation-note">{selected.route ? 'O botão abre a área do painel; a explicação completa está disponível aqui.' : 'A explicação está disponível aqui; não há atalho confirmado para uma página específica.'}</p>}
-          {selected.href && <a className="km-open" href={selected.href} target="_blank" rel="noopener noreferrer">{selected.type === 'entity' ? 'Abrir site oficial ↗' : 'Ler na fonte ↗'}</a>}{selected.type === 'entity' && !selected.href && <p className="km-relation-note">Sem site indicado nesta lista. Pesquise pelo nome para encontrar dados oficiais.</p>}
+          {selected.href && <a className="km-open" href={selected.href} target="_blank" rel="noopener noreferrer">{selected.type === 'entity' ? 'Abrir site oficial ↗' : 'Ler na fonte ↗'}</a>}
+          {selected.type === 'entity' && !selected.href && <p className="km-relation-note">Sem site indicado nesta lista. Pesquise pelo nome para encontrar dados oficiais.</p>}
           {selected.licenseUrl && <a className="km-license" href={selected.licenseUrl} target="_blank" rel="noopener noreferrer">Licença de uso</a>}
           <div className="km-detail-divider"><h4>Conexões <span>{relations.length}</span></h4><span className="km-focus-label">Conexões diretas</span></div>
           {relations.length ? <ul className="km-relations">{relations.map(l => <li key={l.id}><span>{l.label}</span><button type="button" {...nodeActions(l.node)}>{l.node.label} ›</button><p>{l.reason}</p></li>)}</ul> : <p>Ainda não há conexões verificadas para este ponto.</p>}

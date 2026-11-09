@@ -30,6 +30,19 @@ test('referências existem no cadastro, sem repetição por subsetor, e endereç
   for (const id of Object.keys(players)) assert.ok(used.has(`p:${id}`), `player sem uso: ${id}`)
 })
 
+test('toda entidade diz o que divulga e os papéis dos players são válidos e do próprio subsetor', () => {
+  const { associations, publishes, roles, roleLabels, topics } = ENTITY_REGISTRY
+  for (const id of Object.keys(associations)) assert.ok(publishes[id], `${id} sem descrição do que divulga`)
+  assert.deepEqual(Object.keys(publishes).sort(), Object.keys(associations).sort())
+  for (const [key, byPlayer] of Object.entries(roles)) {
+    assert.ok(topics[key], key)
+    for (const [player, role] of Object.entries(byPlayer)) {
+      assert.ok(topics[key][1].includes(player), `${key}: ${player} não está na lista do subsetor`)
+      assert.ok(role in roleLabels && role !== 'concorrente', `${key}: papel ${role} inválido ou redundante`)
+    }
+  }
+})
+
 test('Abimaq aparece em Máquinas industriais, com site oficial e sem inventar player onde não há', () => {
   const machines = sectorEntityGraph('metalmecanico', 3)
   const abimaq = machines.nodes.find(node => node.id === 'entity:abimaq')
@@ -37,6 +50,9 @@ test('Abimaq aparece em Máquinas industriais, com site oficial e sem inventar p
   assert.equal(abimaq.href, 'https://www.abimaq.org.br')
   assert.match(abimaq.title, /Máquinas e Equipamentos/)
   assert.ok(machines.nodes.some(node => node.subtype === 'player'))
+  assert.match(machines.nodes.find(node => node.id === 'entity:player:weg').kindLabel, /outro elo/)
+  assert.match(abimaq.summary, /Costuma divulgar/)
+  assert.equal(sectorEntityGraph('metalmecanico', 2).links.find(link => link.target === 'entity:player:gerdau').label, 'Fornecedor')
   const wood = sectorEntityGraph('transporte-logistica', 1)
   assert.equal(wood.players, 0)
   assert.deepEqual(sectorEntityGraph('inexistente', 0), { nodes: [], links: [], players: 0 })

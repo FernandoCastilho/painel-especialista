@@ -51,3 +51,6 @@ O mapa de cada subsetor mostra também pontos quadrados: associações e entidad
 - É lista editorial de partida: não é ranking, não mede participação de mercado e não indica relação com qualquer empresa. Subsetor sem player confiável fica sem player (ex.: Transporte de madeira, Tubetes).
 - Endereços não foram abertos na redação (sem rede). Conferir no site oficial antes de citar.
 - Para incluir ou corrigir: editar `ASSOCIATIONS`, `PLAYERS` e `TOPICS` no mesmo arquivo e rodar `npm test`.
+- Cada player traz o papel provável para uma empresa média do subsetor: concorrente (padrão), fornecedor, cliente ou outro elo da cadeia. É leitura editorial (tabela `ROLES`).
+- Cada associação ou órgão traz o que costuma divulgar (tabela `PUBLISHES`), para saber onde buscar dados. Os títulos exatos variam: conferir no site.
+- Quem compra, canais e ciclo financeiro continuam nas seções "Funcionamento" e "Economia da empresa média e financiamento" de cada estudo, sem duplicar aqui.
