@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 const src = readFileSync(new URL('../src/Nav.jsx', import.meta.url), 'utf8')
 test('menu: Mercado hoje, Juros, Cenários e depois as demais; barra do celular com as 4 primeiras', () => {
   const ids = APP_SECTIONS.map(section => section.id)
-  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'calculadora', 'balancos', 'feriados', 'aprender', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
+  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'calculadora', 'feriados', 'aprender', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
   assert.match(src, /const PRIMARY = \['resumo', 'juros', 'cenarios', 'noticias'\]/)
 })
 
