@@ -59,7 +59,7 @@ function Concept({ c, goto }) {
             <p className="learn-history-conclusion">{c.estudoHistorico.conclusao}</p>
           </section>}
 
-          <details open>
+          <details>
             <summary>Onde você pode travar</summary>
             <ul>{c.lacunas.map((t) => <li key={t}>{t}</li>)}</ul>
           </details>
@@ -70,7 +70,7 @@ function Concept({ c, goto }) {
             <p className="learn-formula" role="math" aria-label={c.preciso.formula}>{c.preciso.formula}</p>
           </details>
 
-          <details open>
+          <details>
             <summary>Exemplo numérico · {c.exemplo.titulo}</summary>
             <ol>{c.exemplo.passos.map((t) => <li key={t}>{t}</li>)}</ol>
             <p className="learn-result"><strong>Resultado:</strong> {c.exemplo.resultado}</p>
@@ -85,7 +85,7 @@ function Concept({ c, goto }) {
             </details>
           </details>
 
-          <details open>
+          <details>
             <summary>Conecta com</summary>
             <ul className="learn-conecta">
               {conexoesDe(c.id).map((x) => (
