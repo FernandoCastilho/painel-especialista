@@ -1,3 +1,4 @@
+const openCallouts = require('./smoke-aprender-disclosures.cjs')
 // Cenários › Inflação (IPCA) e › Fiscal (dívida bruta) e Frete marítimo: tabela no formato do Mercado; clicar abre o gráfico em tela cheia com filtros no topo.
 const { chromium } = require('playwright'), assert = require('node:assert/strict')
 const { mkdir } = require('node:fs/promises'), path = require('node:path')
@@ -524,6 +525,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.doesNotMatch(await p.locator('main').innerText(), /feynman/i)
       await p.locator('.learn-list button', { hasText: 'Diferencial de juros' }).click()
       await p.locator('.learn-detail h2', { hasText: 'Diferencial de juros' }).waitFor()
+      await openCallouts(p)
       assert.match(await p.locator('.learn-detail').innerText(), /9,62%[\s\S]*R\$ 5,48/)
       // tópicos e busca
       assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho'])
@@ -539,6 +541,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.equal(await p.locator('.learn-group[open]').count(), topicCount, 'limpar busca restaura categorias abertas manualmente')
       await busca.fill('recebiveis'); await p.locator('.learn-list button', { hasText: 'FIDC' }).click()
       await p.locator('.learn-detail h2', { hasText: 'FIDC' }).waitFor()
+      await openCallouts(p, [/^Exemplo numérico/, /^Conecta com$/])
       assert.match(await p.locator('.learn-detail').innerText(), /subordinação[\s\S]*30%[\s\S]*R\$ 1\.000\.000[\s\S]*R\$ 1\.000\.000/)
       // conexões: em cada conceito, "Conecta com" leva ao conceito ligado; o quadro geral cobre todos
       assert.match(await p.locator('.learn-detail').innerText(), /Conecta com[\s\S]*Liquidação antecipada ›[\s\S]*Debênture ›[\s\S]*Nota comercial ›/i)
@@ -549,6 +552,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       for (const [nome, rx] of [['Debênture', /16,28%[\s\S]*162\.800/], ['Nota comercial', /17,42%[\s\S]*0,50 ano/], ['Inflação', /4,91%[\s\S]*9,1\d%/]]) {
         await p.locator('.learn-list button', { hasText: nome }).first().click()
         await p.locator('.learn-detail h2', { hasText: nome }).waitFor()
+        await openCallouts(p)
         assert.match(await p.locator('.learn-detail').innerText(), rx, nome)
       }
       await p.locator('.learn-detail .learn-go').click(); await p.waitForURL('**/#cenarios/inflacao')
@@ -565,6 +569,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
         await p.locator('.learn-detail h2', { hasText: titulo }).waitFor()
         assert.equal(await p.locator('.learn-detail details').filter({ has: p.locator('summary', { hasText: /^Fontes$/ }) }).count(), 1, 'novo tema informa fontes')
         if (slug === 'cet') {
+          await openCallouts(p)
           assert.match(await p.locator('.learn-detail').innerText(), /13,40% ao ano/)
           await p.locator('.learn-detail summary', { hasText: /^Versão precisa$/ }).click()
           assert.match(await p.locator('.learn-detail [role="math"]').innerText(), /dj − d0.*365/)
@@ -577,6 +582,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await expandir()
       await p.locator('.learn-list button', { hasText: 'Liquidação antecipada' }).click()
       await p.locator('.learn-detail h2', { hasText: 'Liquidação antecipada' }).waitFor()
+      await openCallouts(p)
       assert.match(await p.locator('.learn-detail').innerText(), /Na curva[\s\S]*1\.150\.000[\s\S]*1\.180\.804[\s\S]*Break funding[\s\S]*10\.089/)
       await p.locator('.learn-list button', { hasText: 'SOFR' }).click()
       await p.locator('.learn-detail h2', { hasText: 'SOFR' }).waitFor()

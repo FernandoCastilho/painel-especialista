@@ -1,3 +1,4 @@
+const openCallouts = require('./smoke-aprender-disclosures.cjs')
 // Read-only browser verification of the delivered UI. No source fixtures or notification grants.
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
@@ -95,6 +96,7 @@ const links = {
       assert.equal(await page.locator('.learn-list li button').filter({ hasText: 'Regime FÁCIL' }).count(), 1)
       await page.locator('.learn-list li button').filter({ has: page.getByText('CET', { exact: true }) }).click()
       await page.locator('.learn-detail h2', { hasText: 'CET (Custo Efetivo Total)' }).waitFor()
+      await openCallouts(page)
       assert.match(await page.locator('.learn-detail').innerText(), /13,40% ao ano/)
       await page.locator('.learn-detail summary', { hasText: /^Versão precisa$/ }).click()
       assert.match(await page.locator('.learn-detail [role="math"]').innerText(), /dj − d0.*365/)
@@ -149,6 +151,7 @@ const links = {
       const card = page.locator('.learn-card.is-focus')
       await card.getByRole('heading', { name: 'CET (Custo Efetivo Total)', exact: true }).waitFor()
       await page.waitForFunction(theme => document.documentElement.dataset.theme === theme, colorScheme)
+      await openCallouts(page)
       await card.getByText('Versão precisa', { exact: true }).click()
       await card.getByText('Fontes', { exact: true }).click()
       const formula = card.locator('.learn-formula')
