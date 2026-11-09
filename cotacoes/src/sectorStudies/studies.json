@@ -403,41 +403,82 @@
         {
           "id": "n0",
           "label": "Animal e fornecedor rural",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Origem do animal; em aves e suínos integrados, também da ração",
+          "emoji": "🐄",
+          "bank": "Custeio da integração, quando houver"
         },
         {
           "id": "n1",
           "label": "Abate e inspeção",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Converte o animal em carcaça, cortes e coprodutos",
+          "emoji": "🏭",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
           "label": "Desossa, processamento e frio",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Rendimento, perdas e estoque refrigerado ou congelado",
+          "emoji": "❄️",
+          "bank": "Investimento em frio e eficiência energética"
         },
         {
           "id": "n3",
           "label": "Varejo, alimentação e exportação",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Redes, distribuidores, restaurantes e compradores externos",
+          "emoji": "🛒",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra do animal",
+          "product": {
+            "emoji": "🐂",
+            "label": "animal para abate"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do animal, que antecede a venda"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Processamento",
+          "product": {
+            "emoji": "🥩",
+            "label": "carcaças e cortes"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, água, embalagem e frio pagos pela empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e aceite",
-          "from": "n2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "📦",
+            "label": "cortes entregues, com habilitação sanitária"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento no prazo negociado; na exportação, soma embarque e moeda estrangeira"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o animal",
+          "Estoque e frio: o ciclo se alonga",
+          "Recebe do cliente"
+        ],
+        "text": "A compra do animal antecede a venda e o recebimento. Estoque congelado prolonga o ciclo. É esse intervalo que giro bancário ou cessão de recebíveis podem atender, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Frigoríficos. Converter animal em cortes e coprodutos com rendimento, segurança sanitária e acesso comercial. Separar bovinos de aves e suínos: compra de gado, integração de criação, ração e ciclos biológicos mudam radicalmente a formação da margem. Nos bovinos, o spread entre compra do animal e realização dos cortes precisa incorporar rendimento, perdas, subprodutos e despesas de abate. Em aves e suínos integrados, ração e desempenho zootécnico entram antes do abate. Preço exportado maior pode coexistir com custo maior do animal. Na extração SIDRA de 06/11/2026, o abate bovino sob inspeção soma 30.651.802 cabeças em 2015 e 42.952.312 em 2025. O primeiro trimestre de 2026 registra 10.311.847 e o segundo 10.721.343 cabeças. São observações da mesma extração, que substituem os arredondamentos de divulgações antigas. Não demonstram melhora de margem: preço do gado, mix de cortes, rendimento e destino das vendas precisam ser examinados separadamente. A decisão do Cade sobre compra de ativos da Marfrig pela Minerva documenta presença de unidades em estados do Centro-Oeste, Norte, Sudeste e Sul. JBS, Minerva e Marfrig são referências de empresas em fontes oficiais, não pares automáticos de uma empresa média. A estrutura societária e habilitações atuais precisam de conferência individual. Oferta de animais tem ciclo biológico; qualidade sanitária e rastreabilidade condicionam acesso. A Pesquisa Trimestral do Abate do IBGE cobre estabelecimentos sob inspeção, não toda produção informal. Números de cabeças e peso de carcaças são conceitos complementares, não substitutos. Compra de animais ou custeio da integração antecede venda e recebimento. Estoque congelado prolonga o ciclo e expõe preço, energia e validade. Exportação acrescenta prazo de embarque, documentos e recebimento em moeda estrangeira; hedge só faz sentido sobre exposição líquida comprovada. Linhas de abate, tratamento de efluentes, frio, rastreabilidade e eficiência energética exigem capital. Expansão deve ser testada contra disponibilidade local de animais e canais habilitados; capacidade industrial sem suprimento não gera caixa. Encaixes financeiros propostos: giro bancário ou cessão de recebíveis podem atender descasamento operacional documentado. Cessão exige entrega, exigibilidade, ausência de disputa e avaliação de concentração; FIDC ou securitização acrescentam custo de estrutura e não são automaticamente acessíveis à empresa média. Investimento requer prazo coerente com vida útil e geração de caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade. As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte fontes e limitações.",
     "reviewStatus": "approved",

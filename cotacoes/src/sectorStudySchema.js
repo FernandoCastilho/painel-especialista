@@ -12,9 +12,13 @@ const chart = value => object(value) && text(value.id) && text(value.title) && t
   && source(value.source) && Array.isArray(value.years) && value.years.every(year => text(year) || Number.isFinite(year))
   && Array.isArray(value.series) && value.series.length > 0 && value.series.every(series => object(series) && text(series.label)
     && Array.isArray(series.values) && series.values.length === value.years.length && series.values.every(Number.isFinite))
-const diagram = value => object(value) && list(value.nodes, node => object(node) && text(node.id) && text(node.label) && text(node.detail))
+const flow = value => object(value) && text(value.emoji) && text(value.label)
+const diagram = value => object(value) && list(value.nodes, node => object(node) && text(node.id) && text(node.label) && text(node.detail)
+    && optional(node.emoji, text) && optional(node.bank, text))
   && list(value.edges, edge => object(edge) && text(edge.from) && text(edge.to) && text(edge.label)
-    && value.nodes.some(node => node.id === edge.from) && value.nodes.some(node => node.id === edge.to))
+    && value.nodes.some(node => node.id === edge.from) && value.nodes.some(node => node.id === edge.to)
+    && optional(edge.product, flow) && optional(edge.cash, flow))
+  && optional(value.cycle, cycle => object(cycle) && text(cycle.title) && texts(cycle.steps) && cycle.steps.length === 3 && optional(cycle.text, text))
 
 // Valida os campos consumidos pelo renderer; não certifica o conteúdo editorial.
 export function validSectorStudy(value, group, topicIndex) {

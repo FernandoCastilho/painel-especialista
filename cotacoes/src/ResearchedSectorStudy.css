@@ -10,3 +10,36 @@
   .researched-flow-fullscreen > .researched-flow { position:relative; left:auto; top:auto; width:100%; max-width:100%; transform:none; }
   .researched-flow-fullscreen > .tic-flow-laser-slot { position:fixed; }
 }
+
+/* Cadeia em desenhos: produto (azul) vai, dinheiro (laranja) volta. Tudo legível sem animação. */
+.researched-flow{container-name:rflow}
+.rich-chain-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);align-items:stretch}
+.rich-stage{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;border:1px solid #b3c9e7;border-radius:12px;padding:14px 10px 12px;background:#fff;animation:rich-glow 6.6s linear infinite;animation-delay:var(--stage-delay)}
+.rich-emoji{font-size:2.5rem;line-height:1.1}.rich-stage strong{font-size:.98rem;line-height:1.25}.rich-stage p{margin:0;font-size:.85rem;line-height:1.4;color:#41506b}
+.rich-stage .rich-bank{margin-top:auto;padding:6px 8px;border-radius:6px;background:#fff4d6;color:#5c4100;text-align:left;font-size:.8rem}.rich-stage p+.rich-bank{margin-top:8px}
+.rich-link{display:grid;align-content:center;gap:6px;padding:0 6px}.rich-lane{display:grid;gap:2px}
+.rich-track{position:relative;height:30px;container:rtrack/size;--dx:calc(100cqw - 24px);--dy:0px}
+.rich-line{position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;border-radius:2px;background:#0131ff}.rich-lane.cash .rich-line{background:#c24400}
+.rich-line::after{content:"";position:absolute;top:50%;width:11px;height:14px;margin-top:-7px;background:inherit;clip-path:polygon(0 0,100% 50%,0 100%)}
+.rich-lane.prod .rich-line::after{right:-1px}.rich-lane.cash .rich-line::after{left:-1px;transform:scaleX(-1)}
+.rich-packet{position:absolute;left:0;top:50%;margin-top:-12px;width:24px;height:24px;font-size:20px;line-height:24px;text-align:center;opacity:0;animation:rich-go 6.6s ease-in-out infinite;animation-delay:var(--packet-delay)}
+.rich-lane.cash .rich-packet{animation-name:rich-back}
+.rich-lane small{font-size:.8rem;line-height:1.35;color:#41506b;text-align:center}.rich-lane.prod small b{color:#0131ff}.rich-lane.cash small b{color:#c24400}
+.rich-cycle{margin-top:20px;padding-top:16px;border-top:1px solid #b3c9e7;display:grid;gap:8px}.rich-cycle h5{margin:0;text-align:left;font-size:.95rem}.rich-cycle>p{margin:0;font-size:.9rem;line-height:1.5}
+.rich-cycle-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0;padding:0;list-style:none}
+.rich-cycle-steps p{padding:8px;border-radius:6px;background:#ffe9dc;color:#7a2d00;text-align:center;font-size:.8rem;line-height:1.25;font-weight:600}.rich-cycle-steps p[data-gap]{background:#fff4d6;color:#5c4100}.rich-cycle-steps p:last-child{background:#d6e8ff;color:#0a2a9a}
+.researched-flow[data-paused="true"] .rich-stage,.researched-flow[data-paused="true"] .rich-packet{animation-play-state:paused}
+@keyframes rich-go{0%{opacity:1;transform:translate(0,0)}15%{opacity:1;transform:translate(var(--dx),var(--dy))}16.5%,100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+@keyframes rich-back{0%{opacity:1;transform:translate(var(--dx),var(--dy))}15%{opacity:1;transform:translate(0,0)}16.5%,100%{opacity:0;transform:translate(0,0)}}
+@keyframes rich-glow{0%,16%{box-shadow:0 0 0 3px #ff8a3d}18%,100%{box-shadow:0 0 0 0 transparent}}
+@container rflow (max-width:760px){
+  .rich-chain-row{grid-template-columns:minmax(0,1fr)}.rich-link{grid-template-columns:1fr 1fr;gap:10px;padding:8px 0}
+  .rich-lane{grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:center}.rich-track{height:64px;width:30px;--dx:0px;--dy:calc(100cqh - 24px)}
+  .rich-line{left:50%;right:auto;top:0;bottom:0;width:3px;height:auto;margin:0 0 0 -1.5px}
+  .rich-line::after{top:auto;left:50%;margin:0 0 0 -7px;width:14px;height:11px}
+  .rich-lane.prod .rich-line::after{right:auto;bottom:-1px;clip-path:polygon(0 0,100% 0,50% 100%)}
+  .rich-lane.cash .rich-line::after{left:50%;bottom:auto;top:-1px;transform:none;clip-path:polygon(50% 0,0 100%,100% 100%)}
+  .rich-packet{left:3px;top:0;margin:0}.rich-lane small{text-align:left}.rich-cycle-steps{grid-template-columns:1fr}
+}
+@container rflow (max-width:480px){.rich-link{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.rich-stage{animation:none}.rich-packet{animation:none;opacity:1;transform:translate(calc(var(--dx)/2),calc(var(--dy)/2))}}
