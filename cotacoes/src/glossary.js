@@ -166,7 +166,7 @@ export const GLOSSARY = {
     a: 'O FGI (Fundo Garantidor para Investimentos), do BNDES, cobre parte da perda do banco se a empresa não paga. O PEAC é a versão criada na pandemia (Lei 14.042/2020), com recursos da União, para micro, pequenas e médias empresas.',
     b: 'A empresa pede R$ 1 milhão e não tem imóvel para dar em garantia. O fundo cobre parte do valor se houver calote, e o banco tende a aprovar.',
     c: 'No Finame Materiais, o FGI (Tradicional ou PEAC) é garantia admitida. Peça ao agente a disponibilidade, o percentual coberto e a comissão.',
-    d: 'O Tradicional é o fundo de sempre, mantido pelas comissões das operações. O PEAC nasceu como medida temporária, com regras próprias. O fundo garante só uma parte da operação, e a comissão paga pela empresa depende do produto e do porte. Não substitui a análise de crédito do agente.'
+    d: 'O Tradicional é o fundo de sempre, mantido pelas comissões das operações. O PEAC nasceu em 2020 como medida temporária, foi reaberto em 2022 e tem regras próprias. O fundo garante só uma parte da operação, e a comissão paga pela empresa depende do produto e do porte. Não substitui a análise de crédito do agente. Fonte: bndes.gov.br/peac.'
   },
   curvaEuro: {
     t: 'Curva de juros da área do euro',
