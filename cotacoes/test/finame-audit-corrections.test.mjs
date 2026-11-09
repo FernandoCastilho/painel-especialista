@@ -83,7 +83,7 @@ test('F2: TLPCAP com IPCA tem carência retroativa e capitalização verificada 
 test('F3: calendário hipotético visível, sem garantia de compensação anual nem memória contratual', () => {
   const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   assert.match(source, /id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais/)
-  assert.match(source, /<th scope="col">Vencimento<\/th><th scope="col">Indexador \(% a\.a\.\)<\/th>/)
+  assert.match(source, /<th scope="col">Vencimento<\/th><th scope="col">Saldo inicial<\/th>/)
   assert.match(source, /0 · liberação hipotética/)
   assert.match(source, /Não use como memória contratual/)
   assert.match(source, /diferenças de dias podem alterar os juros totais mesmo que a soma anual de dias úteis coincida/)

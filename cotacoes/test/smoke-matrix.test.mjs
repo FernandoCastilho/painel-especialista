@@ -83,7 +83,7 @@ test('browser assertions wait for shared portals and select the intended help pr
   assert.match(theme, /\[role="tooltip"\]\[id="\$\{previewId\}"\]/)
   assert.doesNotMatch(theme, /page\.getByRole\('tooltip'\)\.waitFor/)
   const calculator = source('../scripts/smoke-calculadora.cjs')
-  assert.match(calculator, /\['Nº', 'Vencimento', 'Indexador \(% a\.a\.\)', 'Saldo inicial'/)
+  assert.match(calculator, /\['Nº', 'Vencimento', 'Saldo inicial'/)
 })
 
 test('CI measures compact desktop branding and both amortization choices instead of hiding text', () => {

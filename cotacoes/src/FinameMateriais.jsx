@@ -6,7 +6,7 @@ import { parseDecimal } from './emprestimo.js'
 import { useDataFile } from './useDataFile.js'
 import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
-import { COMPOSICOES, CUSTOS_FIXOS, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
+import { COMPOSICOES, CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingAnnualRate, finameFundingOption, compareFinameFunding } from './finameFunding.js'
 import { nf } from './format.js'
 import Estado from './Estado.jsx'
@@ -51,8 +51,10 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const [periodicidade, setPeriodicidade] = useState(3)
   const [composicao, setComposicao] = useState('capitalizada')
   const [finameEligible, setFinameEligible] = useState(false)
-  // Indexador editado por parcela: vale só para a cotação em uso (muda a cotação, volta ao valor publicado).
-  const [indexEdits, setIndexEdits] = useState({ chave: '', valores: {} })
+  const [tacText, setTacText] = useState('2.600,00') // TAC: tarifa de contratação, paga à vista; pré-preenchida e editável
+  const [fgiOn, setFgiOn] = useState(false)
+  const [fgiText, setFgiText] = useState(String(FGI.padraoPercentual))
+  const [fgiIncorporar, setFgiIncorporar] = useState(true)
   const [hoje] = useState(() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d })
 
   const money = parseMoneyInput(valorText)
@@ -61,6 +63,10 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const carencia = /^\d+$/.test(carText.trim()) ? Number(carText) : null
   const taxaBndes = parseDecimal(bndesText)
   const taxaAgente = parseDecimal(agenteText)
+  const tac = tacText.trim() === '' ? { ok: true, value: 0 } : parseMoneyInput(tacText)
+  const fgiPct = parseDecimal(fgiText)
+  // P do ECG: períodos de 30 dias completos entre a liberação ilustrativa e o último vencimento (dia 15, próximo dia útil).
+  const fgiPeriodos = prazo ? periodos30Datas(hoje, vencimentoDia15(hoje, prazo, holidayCtx)) : undefined
 
   // Custo financeiro do painel
   const faixa = prazo ? faixaTfb(prazo) : 60
@@ -75,15 +81,6 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const funding = finameFundingOption(custo)
   const custoFinanceiro = finameFundingAnnualRate(custo, { tfb: tfb?.valor, tfc: tfc?.valor })
 
-  const indexChave = `${custo}|${custo === 'tfc' ? tfcCodigo : keyOf(faixa, liberacao)}|${custoFinanceiro}`
-  const edits = indexEdits.chave === indexChave ? indexEdits.valores : {}
-  const editIndexador = (mes, text) => setIndexEdits(previous => ({ chave: indexChave, valores: { ...(previous.chave === indexChave ? previous.valores : {}), [mes]: text } }))
-  const indexadorMes = mes => { const text = edits[mes]; if (text == null || text.trim() === '') return custoFinanceiro; const v = parseDecimal(text); return v !== null && v <= 100 ? v : NaN }
-  const indexadorInvalido = prazo !== null && Number.isFinite(custoFinanceiro) && Object.keys(edits).some(m => Number(m) <= prazo && !Number.isFinite(indexadorMes(Number(m))))
-  const temEdicao = prazo !== null && Number.isFinite(custoFinanceiro) && Object.keys(edits).some(m => Number(m) <= prazo && edits[m].trim() !== '')
-  // Valor inválido não derruba a tabela: a linha usa a cotação até o texto ficar válido, e o aviso aparece abaixo da tabela.
-  const custoPorMes = temEdicao ? Array.from({ length: prazo }, (_, k) => { const v = indexadorMes(k + 1); return Number.isFinite(v) ? v : custoFinanceiro }) : undefined
-
   const erros = {
     valor: money.ok && money.value > 0 ? null : money.error || 'Informe um valor maior que zero.',
     part: participacao !== null && participacao >= REGRAS.participacaoMinPct && participacao <= 100 ? null : 'Participação de 1 a 100%.',
@@ -91,12 +88,16 @@ export default function FinameMateriais({ onBack, onFundingView }) {
     car: carencia !== null && carencia >= 0 && carencia <= (fixa ? REGRAS.carenciaMaxTfbMeses : REGRAS.carenciaMaxMeses) && (prazo === null || carencia < prazo) ? null : `Carência de 0 a ${fixa ? REGRAS.carenciaMaxTfbMeses : REGRAS.carenciaMaxMeses} meses${fixa ? ` com ${custo.toUpperCase()}` : ''}, menor que o prazo.`,
     bndes: taxaBndes !== null && taxaBndes <= 100 ? null : 'Informe a taxa do BNDES em % a.a.',
     agente: taxaAgente !== null && taxaAgente <= 100 ? null : 'Informe o spread da instituição em % a.a.',
+    tac: tac.ok ? null : tac.error || 'Informe a TAC em R$ (zero se não houver).',
+    fgi: !fgiOn ? null : PORTES.find((p) => p.id === porte)?.mpme === false ? 'O FGI atende micro, pequenas e médias empresas. Para grande empresa, desmarque a garantia.' : fgiPct !== null && fgiPct >= FGI.percentualMin && fgiPct <= FGI.percentualMax ? null : `Percentual garantido de ${FGI.percentualMin} a ${FGI.percentualMax}%.`,
     iof: finameEligible ? null : 'Confirme os recursos FINAME elegíveis ao art. 8º, IX. Outras origens exigem análise tributária antes da simulação.',
   }
+  const garantiaFgi = fgiOn && !erros.fgi ? { percentual: fgiPct, incorporar: fgiIncorporar, periodos: fgiPeriodos } : null
+  const custosExtras = { tac: tac.ok ? tac.value : 0, fgi: garantiaFgi }
   const pronto = funding?.mode === 'inline' && !Object.values(erros).some(Boolean) && Number.isFinite(custoFinanceiro)
-  const r = pronto ? simular({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, custoPorMes, ipca: 0, taxaBndes, taxaAgente, sistema, periodicidade, composicao, iof: { fixed: 0, daily: 0 } }) : null
+  const r = pronto ? simular({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, sistema, periodicidade, composicao, iof: { fixed: 0, daily: 0 }, ...custosExtras }) : null
   const res = r?.ok ? r : null
-  const comparison = comparar && pronto ? compareFinameFunding({ valor: money.value, participacao, prazo, carencia, custo, liberacao, ipca: 0, taxaBndes, taxaAgente, sistema, periodicidade, composicao, iof: { fixed: 0, daily: 0 } }, { tfc, tfb }) : null
+  const comparison = comparar && pronto ? compareFinameFunding({ valor: money.value, participacao, prazo, carencia, custo, liberacao, ipca: 0, taxaBndes, taxaAgente, sistema, periodicidade, composicao, iof: { fixed: 0, daily: 0 }, ...custosExtras }, { tfc, tfb }) : null
   const spread = res ? spreadSobreCdi(res.taxaNominal, cdi) : null
   const referenceRetained = !!(((custo === 'tfc' || comparar) && (moedas.stale || moedas.status === 'error' || moedas.data?.stale?.[tfcCodigo])) || ((custo === 'tfb' || comparar) && (bndes.stale || bndes.status === 'error' || bndes.data?.stale?.[keyOf(faixa, liberacao)])))
 
@@ -158,6 +159,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
           {field('car', 'Carência (meses)', input('car', carText, setCarText, { inputMode: 'numeric' }), fixa ? `Até 12 meses com ${custo.toUpperCase()}; juros exigíveis durante a carência.` : 'Até 24 meses; juros exigíveis durante a carência.')}
           {field('custo', 'Custo financeiro', <select id="fm-custo" value={custo} onChange={event => { const next = finameFundingOption(event.target.value); if (next) { setCusto(next.id); setFinameEligible(false); if (next.mode !== 'inline') { setComparar(false); if (comparar) setLiberacao(liberacaoAntesComparar) } } }}>{FINAME_FUNDING_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}{option.mode === 'dedicated' ? ' · projeção própria' : option.mode === 'unavailable' ? ' · indisponível' : ''}</option>)}</select>,
             <><p>{funding?.hint} Selic pura suspensa como custo financeiro ({REGRAS.selicSuspensa}).</p><p>As moedas contratuais já exibidas pelo painel têm unidades diferentes: US$ (604) é nível cambial; 143 é índice Selic; LD1 é a sobretaxa LCD; 024 é sobretaxa Selic; 236 é o componente mensal TLP-IPCA; TR1 e TR2 são referências ligadas à TR. Esses valores não podem substituir indistintamente uma taxa anual do Finame.</p><ul>{FINAME_FUNDING_SOURCES.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a></li>)}</ul></>)}
+          {field('tac', 'TAC · tarifa de contratação (R$)', <MoneyInput id="fm-tac" aria-invalid={!!erros.tac} aria-describedby="fm-tac-err" value={tacText} onChange={setTacText} />, 'Tarifa de abertura de crédito cobrada pelo agente financeiro na contratação. Pré-preenchida com R$ 2.600,00 e editável; use zero se não houver. É somada ao pagamento final como despesa à vista, na liberação, e não entra no cronograma de juros. Confirme o valor na proposta do agente.')}
           {custo === 'tfc' ? (
             <div className="cx-field">
               <span className="fm-rotulo"><span className="cx-label">TFC · série do BNDES</span>{ajuda('TFC · série do BNDES', 'Série das Moedas Contratuais do BNDES escolhida pelo porte (MPME tem série própria) e pela faixa de prazo: TFC_60.90 ou TFC_MPME_60.90 até 60 meses; TFC_120.90 ou TFC_MPME_120.90 de 61 a 120 meses. Valor do último dia publicado, coletado pelo painel (aba BNDES).')}</span>
@@ -187,6 +189,16 @@ export default function FinameMateriais({ onBack, onFundingView }) {
             <p className="cx-hint">IOF automático: zero somente com esse enquadramento confirmado. O nome BNDES ou o indexador, isoladamente, não comprovam a origem dos recursos. Para outras origens ou dúvida, a simulação fica bloqueada até confirmar o tratamento tributário.</p>
             <p className="cx-hint" id="fm-iof-err">{erros.iof}</p>
           </div>
+          <div className="fm-fgi">
+            <label htmlFor="fm-fgi"><input id="fm-fgi" type="checkbox" checked={fgiOn} onChange={e => setFgiOn(e.target.checked)} />Esta operação tem garantia do FGI (Tradicional)</label>
+            <p className="cx-hint">{fgiOn ? 'O FGI cobre parte da perda do banco. O agente pode repassar o ECG (Encargo por Concessão de Garantia) ao cliente, e aqui ele entra no resultado.' : 'Marque se o agente usar o FGI como garantia. O custo (ECG) entra no pagamento final.'}</p>
+            {fgiOn && <>
+              {field('fgipct', 'Percentual garantido pelo FGI (%)', input('fgipct', fgiText, setFgiText), `De ${FGI.percentualMin} a ${FGI.percentualMax}% do financiamento. O agente define o percentual dentro do regulamento.`, fgiPct !== null && prazo ? `Fator K da faixa de ${prazo} meses: ${nf(fatorKFgi(prazo), 2)}% por período de 30 dias. P = ${fgiPeriodos} períodos de 30 dias entre a liberação ilustrativa (${data(hoje)}) e o último vencimento (${data(vencimentoDia15(hoje, prazo, holidayCtx))}); o ECG muda com a data da liberação.${fgiPeriodos === 0 ? ' Com P zero o ECG é zero: o prazo é menor que 30 dias.' : ''}` : null)}
+              {erros.fgi && <p className="cx-error" role="alert">{erros.fgi}</p>}
+              <label htmlFor="fm-fgi-inc"><input id="fm-fgi-inc" type="checkbox" checked={fgiIncorporar} onChange={e => setFgiIncorporar(e.target.checked)} />Financiar o ECG (incorporar ao saldo devedor)</label>
+              <p className="cx-hint">Marcado: o ECG entra no saldo devedor e rende juros, pela fórmula do item 2.1.2 do Anexo V. Desmarcado: o ECG é pago à vista, na liberação (item 2.1.3). Só vale o FGI Tradicional; o FGI PEAC tem regras próprias e não é calculado aqui. A garantia não é seguro de crédito e não isenta o cliente de pagar. A regra e a fonte estão na ajuda das regras do produto, em "Dados da operação".</p>
+            </>}
+          </div>
           <button type="button" className="fm-show-result" disabled={!res} onClick={() => { const element = document.getElementById('fm-result'); element?.focus(); element?.scrollIntoView({ block: 'start' }) }}>Ver resultado da simulação</button>
         </div>
       </article>
@@ -194,7 +206,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
       <div className="fm-results">
 
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header><h3 className="cx-heading">Resultado estimado{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Sem tarifas, seguros ou garantias; não representa o CET. A proposta do agente financeiro prevalece.')}</h3><BndesPresentation result={res} comparison={comparison} conditions={{ valor: money.value, participacao, prazo, carencia, custo, quote: custo === 'tfc' ? tfc : tfb, liberacao, porte: PORTES.find(item => item.id === porte).label, taxaBndes, taxaAgente, sistema, periodicidade: PERIODICIDADES.find(item => item.id === periodicidade).label, composicao, iofConfirmed: finameEligible, rulesDate: REGRAS.conferidoEm, retained: referenceRetained }} /><small>Projeção · não é CET</small></header>
+        <header><h3 className="cx-heading">Resultado estimado{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros; não representa o CET. A proposta do agente financeiro prevalece.')}</h3><BndesPresentation result={res} comparison={comparison} conditions={{ valor: money.value, participacao, prazo, carencia, custo, quote: custo === 'tfc' ? tfc : tfb, liberacao, porte: PORTES.find(item => item.id === porte).label, taxaBndes, taxaAgente, sistema, periodicidade: PERIODICIDADES.find(item => item.id === periodicidade).label, composicao, iofConfirmed: finameEligible, rulesDate: REGRAS.conferidoEm, retained: referenceRetained }} /><small>Projeção · não é CET</small></header>
         {!res && <p className="cx-hint cx-pad" role="status">{funding?.mode !== 'inline' ? funding?.notice : r?.erros?.length ? r.erros.join(' ') : 'Complete os campos indicados e confirme o enquadramento do IOF para calcular.'}</p>}
         {res && (
           <>
@@ -203,21 +215,23 @@ export default function FinameMateriais({ onBack, onFundingView }) {
             {comparar && <div className="fm-comparison" aria-label="Comparação TFC e TFB">
               {comparison?.ok ? <>
                 <div className="cx-wrap" role="region" tabIndex={0} aria-label="Resultados TFC e TFB"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th>{comparison.alternatives.map(item => <th key={item.custo} scope="col">{item.custo.toUpperCase()}<small>{pct(item.quote.valor, 4)} a.a. · {dmy(item.quote.data)}<br />{item.custo === 'tfc' ? tfcCodigo : keyOf(faixa, 90)} · liberação 90 dias</small></th>)}</tr></thead><tbody>
-                  {[['Primeira parcela após carência', item => brl(item.result.primeiraParcela)], ['Taxa final', item => `${pct(item.result.taxa)} a.a.`], ['Juros totais', item => brl(item.result.juros)], ['IOF', item => brl(item.result.iof)], ['Total projetado sem despesas', item => brl(item.result.total)]].map(([label, value]) => <tr key={label}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo}>{value(item)}</td>)}</tr>)}
+                  {[['Primeira parcela após carência', item => brl(item.result.primeiraParcela)], ['Taxa final', item => `${pct(item.result.taxa)} a.a.`], ['Juros totais', item => brl(item.result.juros)], ['IOF', item => brl(item.result.iof)], ['Total projetado', item => brl(item.result.total)]].map(([label, value]) => <tr key={label}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo}>{value(item)}</td>)}</tr>)}
                 </tbody></table></div>
-                <p className="fm-difference">{Math.abs(comparison.totalDifference) < .005 ? 'Os totais projetados são iguais.' : <>O total projetado em TFB é <b>{brl(Math.abs(comparison.totalDifference))}</b> {comparison.totalDifference > 0 ? 'maior' : 'menor'} que em TFC.</>} Mesmos valor, prazo, carência, amortização e remunerações. Diferença estimada, sem tarifas, seguros ou garantias.</p>
+                <p className="fm-difference">{Math.abs(comparison.totalDifference) < .005 ? 'Os totais projetados são iguais.' : <>O total projetado em TFB é <b>{brl(Math.abs(comparison.totalDifference))}</b> {comparison.totalDifference > 0 ? 'maior' : 'menor'} que em TFC.</>} Mesmos valor, prazo, carência, amortização e remunerações. Diferença estimada; os totais incluem a TAC e o ECG do FGI quando informados, sem outras tarifas ou seguros.</p>
               </> : <p className="status stale" role="status">{comparison?.error || 'Complete os dados para comparar as alternativas.'}</p>}
             </div>}
             <details className="fm-details"><summary>Composição do resultado · {custo.toUpperCase()}</summary>
             <div className="fm-grade">
               <div className="fm-kpi"><span className="fm-rotulo">Taxa final{ajuda('Taxa final', <><p>{`Taxa final composta: (1 + custo financeiro) × (1 + taxa do BNDES) × (1 + spread da instituição) − 1${composicao === 'somada' ? ', ou a soma das três quando a composição é somada' : ''}. A taxa mensal é a equivalente em meses de 1/12 do ano.`}</p><p>{pct(res.taxaMensal, 3)} a.m. · {pct(custoFinanceiro, 2)} {custo.toUpperCase()} + {pct(taxaBndes, 2)} BNDES + {pct(taxaAgente, 2)} spread da instituição, {composicao === 'somada' ? 'somadas' : 'capitalizadas'}</p></>)}</span><b>{pct(res.taxa, 2)} a.a.</b><small>{pct(res.taxaMensal, 3)} a.m.</small></div>
-              <div className="fm-kpi"><span className="fm-rotulo">Valor financiado{ajuda('Valor financiado', 'Valor dos materiais × participação do BNDES; o restante é recursos próprios do cliente.')}</span><b>{brl(res.financiado)}</b><small>{res.recursosProprios > 0 ? `${brl(res.recursosProprios)} de recursos próprios` : '100% dos itens financiáveis'}</small></div>
+              <div className="fm-kpi"><span className="fm-rotulo">Valor financiado{ajuda('Valor financiado', 'Valor dos materiais × participação do BNDES; o restante é recursos próprios do cliente.')}</span><b>{brl(res.liberado)}</b><small>{res.recursosProprios > 0 ? `${brl(res.recursosProprios)} de recursos próprios` : '100% dos itens financiáveis'}{res.fgi?.incorporado ? ` · mais ${brl(res.fgi.ecg)} de ECG financiado` : ''}</small></div>
               <div className="fm-kpi"><span className="fm-rotulo">Juros na carência{ajuda('Juros na carência', 'Juros do período de carência, pagos na periodicidade escolhida (dentro do período, capitalizados mês a mês); sem amortização nesse período.')}</span><b>{brl(res.jurosCarencia)}</b><small>{carencia} {carencia === 1 ? 'mês' : 'meses'} · {PERIODICIDADES.find((p) => p.id === periodicidade).label.toLowerCase()}</small></div>
               <div className="fm-kpi"><span className="fm-rotulo">Parcelas{ajuda('Parcelas', 'Primeira parcela após a carência (juros + amortização). No SAC as parcelas caem; na Price são iguais em TFC e TFB, dentro da aproximação de períodos mensais iguais.')}</span><b>{brl(res.primeiraParcela)}</b><small>{res.parcelasAmortizacao}x mensais{sistema === 'sac' ? ` · última ${brl(res.ultimaParcela)}` : ' · iguais'}</small></div>
               <div className="fm-kpi"><span className="fm-rotulo">Spread da instituição{ajuda('Spread da instituição', <><p>{'Remuneração do banco (a "taxa do agente financeiro" do BNDES). Em R$: juros com a taxa completa menos juros com custo financeiro + taxa do BNDES, no mesmo cronograma; a parte do BNDES é juros com custo + BNDES menos juros só com o custo, e o custo financeiro é o restante. Em pontos: quanto o spread acrescenta à taxa final, que na composição capitalizada é o spread multiplicado por (1 + custo) × (1 + BNDES).'}</p><p>{brl(res.atribuicao.agente)} dos juros ({pct(res.juros > 0 ? (res.atribuicao.agente / res.juros) * 100 : 0, 1)}) · +{nf(res.spreadAgentePp, 2)} p.p. sobre custo + BNDES · BNDES {brl(res.atribuicao.bndes)} · custo financeiro {brl(res.atribuicao.custoFinanceiro)}</p></>)}</span><b>{pct(taxaAgente, 2)} a.a.</b><small>+{nf(res.spreadAgentePp, 2)} p.p. na taxa final</small></div>
-              <div className="fm-kpi"><span className="fm-rotulo">Juros totais{ajuda('Juros totais', 'Soma dos juros da carência e das parcelas da projeção TFC/TFB.')}</span><b>{brl(res.juros)}</b><small>{pct((res.juros / res.financiado) * 100, 1)} do financiado</small></div>
+              <div className="fm-kpi"><span className="fm-rotulo">Juros totais{ajuda('Juros totais', 'Soma dos juros da carência e das parcelas da projeção TFC/TFB.')}</span><b>{brl(res.juros)}</b><small>{pct((res.juros / res.financiado) * 100, 1)} do saldo financiado</small></div>
               <div className="fm-kpi"><span className="fm-rotulo">IOF{ajuda('IOF', 'Alíquota zero condicionada à confirmação de recursos FINAME elegíveis (Decreto 6.306/2007, art. 8º, IX).')}</span><b>{brl(res.iof)}</b><small>{res.iof > 0 ? `${brl(res.iofFixo)} adicional + ${brl(res.iofDiario)} diário` : 'Alíquota zero'}</small></div>
-              <div className="fm-kpi"><span className="fm-rotulo">Pagamento final{ajuda('Pagamento final', 'Valor financiado + juros totais + IOF: tudo o que o cliente paga nesta projeção TFC/TFB, sem tarifas, seguros ou garantias.')}</span><b>{brl(res.total)}</b></div>
+              <div className="fm-kpi"><span className="fm-rotulo">TAC{ajuda('TAC', 'Tarifa de contratação paga à vista na liberação, pelo valor informado. Não entra no cronograma de juros.')}</span><b>{brl(res.tac)}</b><small>{res.tac > 0 ? 'paga à vista' : 'sem TAC'}</small></div>
+              {res.fgi && <div className="fm-kpi"><span className="fm-rotulo">FGI · ECG{ajuda('FGI · ECG', <><p>{`Encargo por Concessão de Garantia do FGI Tradicional: %G × K × VL × P${res.fgi.incorporado ? ' ÷ (1 − %G × K × P)' : ''}, com %G = ${nf(res.fgi.percentual, 0)}%, K = ${nf(res.fgi.k, 2)}% por período de 30 dias, VL = ${brl(res.liberado)} e P = ${res.fgi.periodos} períodos de 30 dias até o último vencimento.`}</p><p>{res.fgi.incorporado ? 'Incorporado ao saldo devedor: rende juros com a operação (item 2.1.2 do Anexo V).' : 'Pago à vista na liberação (item 2.1.3 do Anexo V).'} O cliente só paga se o agente repassar o custo. Garantia não é seguro de crédito.</p></>)}</span><b>{brl(res.fgi.ecg)}</b><small>{nf(res.fgi.percentual, 0)}% garantido · {res.fgi.incorporado ? 'financiado' : 'à vista'}</small></div>}
+              <div className="fm-kpi"><span className="fm-rotulo">Pagamento final{ajuda('Pagamento final', 'Valor financiado + juros totais + IOF + TAC + ECG do FGI (quando marcado): tudo o que o cliente paga nesta projeção TFC/TFB, sem outras tarifas ou seguros.')}</span><b>{brl(res.total)}</b></div>
             </div>
             </details>
             {spread != null && <p className="cx-hint cx-pad fm-rotulo">Equivale a <b>CDI + {pct(spread, 2)} a.a.</b>{ajuda('Equivale a CDI +', `Spread capitalizado sobre o CDI de hoje (${pct(cdi, 2)}) que dá a mesma taxa nominal: serve para comparar com o capital de giro.`)}</p>}
@@ -229,16 +243,16 @@ export default function FinameMateriais({ onBack, onFundingView }) {
       {res && (
         <details className="desk-panel cx-panel fm-fluxo-panel" open>
           <summary>Cronograma ilustrativo · {custo.toUpperCase()}</summary>
-          <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Liberação ilustrativa hoje (${data(hoje)}). Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros ainda são calculados em meses iguais; não é memória contratual. A coluna Indexador mostra a cotação atual (TFC ou TFB) e pode ser editada em cada parcela para testar outro valor; ao trocar de cotação, volta ao publicado. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero no enquadramento FINAME confirmado.`)}</h3></header>
-          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais. Vencimento todo dia 15, ou no próximo dia útil (feriados nacionais). Não use como memória contratual.</p>{indexadorInvalido && <p className="cx-error" role="alert">Indexador da parcela: informe um valor em % a.a., de 0 a 100. Enquanto estiver inválido, a linha usa a cotação atual.</p>}
+          <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Liberação ilustrativa hoje (${data(hoje)}). Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros ainda são calculados em meses iguais; não é memória contratual. O indexador (TFC ou TFB) é o da cotação em uso. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero no enquadramento FINAME confirmado. Na linha de liberação, "Total pago" soma as despesas à vista: IOF, TAC e ECG do FGI quando pago à vista.`)}</h3></header>
+          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais. Vencimento todo dia 15, ou no próximo dia útil (feriados nacionais). Não use como memória contratual.</p>
           <div className="cx-wrap fm-fluxo" role="region" aria-label="Fluxo parcela a parcela" aria-describedby="fm-calendario-hipotetico" tabIndex={0}>
             <table className="cx-matrix fm-tabela">
-              <thead><tr><th scope="col">Nº</th><th scope="col">Vencimento</th><th scope="col">Indexador (% a.a.)</th><th scope="col">Saldo inicial</th><th scope="col">Juros pagos</th><th scope="col">Amortização</th><th scope="col">Parcela</th><th scope="col">IOF</th><th scope="col">Total pago</th><th scope="col">Saldo final</th></tr></thead>
+              <thead><tr><th scope="col">Nº</th><th scope="col">Vencimento</th><th scope="col">Saldo inicial</th><th scope="col">Juros pagos</th><th scope="col">Amortização</th><th scope="col">Parcela</th><th scope="col">Total pago</th><th scope="col">Saldo final</th></tr></thead>
               <tbody>
-                <tr className="fm-liberacao"><th scope="row">0 · liberação hipotética</th><td>{data(hoje)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{brl(res.iofFixo)}</td><td>{brl(res.iofFixo)}</td><td>{brl(res.financiado)}</td></tr>
-                {res.parcelas.map((p) => <tr key={p.mes} className={p.carencia ? 'fm-carencia' : undefined}><th scope="row">{p.mes}{p.carencia ? ' · carência' : ''}</th><td>{data(vencimentoDia15(hoje, p.mes, holidayCtx))}</td><td><input className="fm-indexador" inputMode="decimal" autoComplete="off" aria-label={`Indexador da parcela ${p.mes} (% a.a.)`} aria-invalid={!Number.isFinite(indexadorMes(p.mes))} value={edits[p.mes] ?? nf(custoFinanceiro, 4)} onFocus={e => e.target.select()} onChange={e => editIndexador(p.mes, e.target.value)} /></td><td>{brl(p.saldoInicial)}</td><td>{brl(p.juros)}</td><td>{brl(p.amortizacao)}</td><td>{brl(p.parcela)}</td><td>{brl(p.iof)}</td><td>{brl(p.pago)}</td><td>{brl(p.saldo)}</td></tr>)}
+                <tr className="fm-liberacao"><th scope="row">0 · liberação hipotética</th><td>{data(hoje)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{brl(res.iofFixo + res.tac + (res.fgi && !res.fgi.incorporado ? res.fgi.ecg : 0))}</td><td>{brl(res.financiado)}</td></tr>
+                {res.parcelas.map((p) => <tr key={p.mes} className={p.carencia ? 'fm-carencia' : undefined}><th scope="row">{p.mes}{p.carencia ? ' · carência' : ''}</th><td>{data(vencimentoDia15(hoje, p.mes, holidayCtx))}</td><td>{brl(p.saldoInicial)}</td><td>{brl(p.juros)}</td><td>{brl(p.amortizacao)}</td><td>{brl(p.parcela)}</td><td>{brl(p.pago)}</td><td>{brl(p.saldo)}</td></tr>)}
               </tbody>
-              <tfoot><tr><th scope="row">Total</th><td>{res.parcelas.length} meses</td><td>—</td><td>—</td><td>{brl(res.juros)}</td><td>{brl(res.financiado)}</td><td>{brl(res.juros + res.financiado)}</td><td>{brl(res.iof)}</td><td>{brl(res.total)}</td><td>—</td></tr></tfoot>
+              <tfoot><tr><th scope="row">Total</th><td>{res.parcelas.length} meses</td><td>—</td><td>{brl(res.juros)}</td><td>{brl(res.financiado)}</td><td>{brl(res.juros + res.financiado)}</td><td>{brl(res.total)}</td><td>—</td></tr></tfoot>
             </table>
           </div>
         </details>
