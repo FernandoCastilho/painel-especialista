@@ -126,8 +126,14 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
           const article = page.locator('.central-detail .sector-study')
           await article.getByRole('heading', { name: study.title, exact: true }).waitFor()
           assert.equal(await article.locator('.study-canvas-questions > li').count(), study.canvasQuestions.length, key)
-          assert.equal(await article.locator('.sector-chain-node').count(), study.diagram.nodes.length, key)
-          assert.equal(await article.locator('.sector-chain-edges > li').count(), study.diagram.edges.length, key)
+          if (study.diagram.cycle) {
+            assert.equal(await article.locator('.rich-stage').count(), study.diagram.nodes.length, key)
+            assert.equal(await article.locator('.rich-link').count(), study.diagram.edges.length, key)
+            assert.equal(await article.locator('.sector-chain-node').count(), 0, key)
+          } else {
+            assert.equal(await article.locator('.sector-chain-node').count(), study.diagram.nodes.length, key)
+            assert.equal(await article.locator('.sector-chain-edges > li').count(), study.diagram.edges.length, key)
+          }
           assert.equal(await article.locator('.study-nav, .study-callout').count(), 0, key)
           assert.equal(await article.locator('.study-summary').count(), 1, key)
           assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `overflow ${width} ${key}`)
@@ -201,8 +207,29 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       await page.locator('#tic-study-title').waitFor()
       assert.equal(await page.locator('.tic-flow-stage').count(), 13, 'piloto TIC preservado')
       if (!studies.length) { await context.close(); continue }
-      const selected = studies.find(study => study.group === 'atacado' && study.topicIndex === 5) || studies.find(study => study.group === 'base-florestal' && study.topicIndex === 3) || studies[0]
+      // Fullscreen e laser são testados na cadeia em texto; a cadeia em desenhos tem bloco próprio mais abaixo.
+      const selected = studies.find(study => study.group === 'atacado' && study.topicIndex === 5 && !study.diagram.cycle) || studies.find(study => !study.diagram.cycle) || studies[0]
       const alternate = studies.find(study => study.title !== selected.title) || null
+      const rich = studies.find(study => study.diagram.cycle)
+      if (rich && width > 600) {
+        await page.goto(`${base}/#setores/topico/${rich.group}/${rich.topicIndex}`)
+        const richDiagram = page.locator('.researched-flow')
+        await richDiagram.waitFor()
+        const richStage = richDiagram.locator('.rich-stage').first()
+        const richPacket = richDiagram.locator('.rich-packet').first()
+        assert.equal(await richStage.evaluate(element => getComputedStyle(element).animationName), 'rich-glow')
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationName), 'rich-go')
+        assert.equal(await richDiagram.locator('.rich-cycle').count(), 1)
+        await richDiagram.focus()
+        await page.keyboard.press('p')
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationPlayState), 'paused')
+        await page.keyboard.press('p')
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationPlayState), 'running')
+        await page.emulateMedia({ reducedMotion: 'reduce' })
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationName), 'none')
+        await page.emulateMedia({ reducedMotion: 'no-preference' })
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'cadeia em desenhos sem rolagem horizontal')
+      }
       await page.goto(`${base}/#setores/topico/${selected.group}/${selected.topicIndex}`)
       const diagram = page.locator('.researched-flow')
       await diagram.waitFor()
