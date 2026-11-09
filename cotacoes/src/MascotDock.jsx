@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { clampMascot, MASCOT_PREFERENCE_KEY, readMascotPreferences } from './mascotPosition.js'
 
+// Keep the grab/hide controls below the sticky header, including saved positions.
+const desktopPosition = point => clampMascot(point, window.innerWidth, window.innerHeight, (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
+
 export default function MascotDock({ children, onSearch }) {
   const [preferences, setPreferences] = useState(() => readMascotPreferences({ getItem: key => window.localStorage.getItem(key) }))
   const [mobile, setMobile] = useState(() => window.innerWidth < 1000)
-  const [position, setPosition] = useState(() => clampMascot(preferences.desktop, window.innerWidth, window.innerHeight))
+  const [position, setPosition] = useState(() => desktopPosition(preferences.desktop))
   const [mobilePosition, setMobilePosition] = useState({ x: 8, y: 8 })
   const [moving, setMoving] = useState(false)
   const [announcement, setAnnouncement] = useState('')
@@ -22,7 +25,7 @@ export default function MascotDock({ children, onSearch }) {
   useEffect(() => {
     const resize = () => {
       setMobile(window.innerWidth < 1000)
-      setPosition(p => clampMascot(p, window.innerWidth, window.innerHeight))
+      setPosition(p => desktopPosition(p))
       setMobilePosition(p => clampMascot(p, tray.current?.clientWidth || window.innerWidth - 24, 250))
     }
     window.addEventListener('resize', resize)
@@ -31,7 +34,7 @@ export default function MascotDock({ children, onSearch }) {
   const move = point => {
     if (mobile) setMobilePosition(clampMascot(point, tray.current?.clientWidth || window.innerWidth - 24, 250))
     else {
-      const next = clampMascot(point, window.innerWidth, window.innerHeight)
+      const next = desktopPosition(point)
       setPosition(next)
       setPreferences(p => ({ ...p, desktop: next }))
     }
@@ -39,7 +42,7 @@ export default function MascotDock({ children, onSearch }) {
   const current = mobile ? mobilePosition : position
   const step = (x, y) => move({ x: current.x + x, y: current.y + y })
   const reset = () => {
-    setPosition(clampMascot(null, window.innerWidth, window.innerHeight))
+    setPosition(desktopPosition(null))
     setMobilePosition({ x: 8, y: 8 })
     setPreferences(p => ({ ...p, desktop: null }))
     setAnnouncement('Mascote na posição inicial.')

@@ -41,7 +41,7 @@ test('mascot controls: pointer clamps and resize recovers; search passes actual 
   const s = await setup(t), capture = { setPointerCapture() {}, hasPointerCapture: () => true, releasePointerCapture() {} }
   s.button('Mover mascote').props.onPointerDown({ button: 0, clientX: 100, clientY: 100, pointerId: 1, currentTarget: capture })
   s.button('Mover mascote').props.onPointerMove({ clientX: -9999, clientY: -9999, pointerId: 1, currentTarget: capture }); await s.renderer.settle()
-  assert.equal(s.dock().props.style.left, 8); assert.equal(s.dock().props.style.top, 8)
+  assert.equal(s.dock().props.style.left, 8); assert.equal(s.dock().props.style.top, 96)
   // A keyboard activation must still open controls after a completed drag.
   s.button('Mover mascote').props.onClick({ detail: 0 }); await s.renderer.settle()
   assert.ok(s.button('Mover para direita'))

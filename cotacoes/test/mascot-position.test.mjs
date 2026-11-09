@@ -19,3 +19,7 @@ test('mobile mascot is isolated below fixed navigation', async () => {
   const css = await readFile(new URL('../src/FeedbackMascot.css', import.meta.url), 'utf8')
   assert.match(css, /@media\(max-width:999px\)\{\.mascot-tray\{height:250px;isolation:isolate;z-index:0;/)
 })
+
+test('desktop movement respects the sticky header exclusion', () => {
+  assert.deepEqual(clampMascot({x:8,y:8},1280,900,96), {x:8,y:96})
+})

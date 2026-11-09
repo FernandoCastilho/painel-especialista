@@ -35,6 +35,10 @@ fs.mkdirSync(output, { recursive: true })
       await page.mouse.move(handle.x + 20, handle.y + 20); await page.mouse.down(); await page.mouse.move(10, 10, { steps: 8 }); await page.mouse.up()
       const bounds = await dock.boundingBox()
       assert.ok(bounds.x >= 0)
+      if (width >= 1000) {
+        const header = await page.locator('.term-head').boundingBox()
+        assert.ok(bounds.y >= header.y + header.height, 'desktop controls must stay below header')
+      }
       await page.getByRole('button', { name: 'Ocultar mascote' }).click()
       const restore = page.getByRole('button', { name: 'Mostrar mascote' })
       await restore.waitFor(); assert.equal(await restore.evaluate(el => el === document.activeElement), true)
