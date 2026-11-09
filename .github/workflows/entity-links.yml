@@ -1,0 +1,21 @@
+name: Conferir sites das associações
+# Confere se os endereços oficiais de src/sectorEntities.js ainda abrem. Não roda em pull request.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 12 5 * *'
+permissions:
+  contents: read
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Conferir endereços
+        run: node scripts/check-entity-links.mjs

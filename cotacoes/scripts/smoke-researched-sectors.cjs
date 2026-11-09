@@ -128,7 +128,8 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
           assert.equal(await article.locator('.study-canvas-questions > li').count(), study.canvasQuestions.length, key)
           assert.equal(await article.locator('.sector-chain-node').count(), study.diagram.nodes.length, key)
           assert.equal(await article.locator('.sector-chain-edges > li').count(), study.diagram.edges.length, key)
-          assert.equal(await article.locator('.study-nav button').count(), study.sections.length, key)
+          assert.equal(await article.locator('.study-nav, .study-callout').count(), 0, key)
+          assert.equal(await article.locator('.study-summary').count(), 1, key)
           assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `overflow ${width} ${key}`)
           for (const chart of study.charts) {
             const panel = article.locator('section.study-chart').filter({ has: page.locator(`[id="chart-${chart.id}"]`) })
@@ -172,7 +173,8 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
           }
           if (!capturedGroups.has(study.group) || (study.group === 'atacado' && study.topicIndex === 5)) {
             capturedGroups.add(study.group)
-            await captureComponent(article.locator('.study-canvas-callout'), `${key}-${width}-canvas.png`)
+            await article.locator('.study-canvas-details').evaluate(el => { el.open = true })
+            await captureComponent(article.locator('.study-canvas-details'), `${key}-${width}-canvas.png`)
             await captureComponent(article.locator('.researched-flow'), `${key}-${width}-cadeia.png`)
           }
           if (study.group === 'atacado' && study.topicIndex === 5) await captureComponent(article.locator('section.study-chart').last(), `${key}-${width}-historico.png`)

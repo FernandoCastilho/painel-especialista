@@ -1,4 +1,4 @@
-import { StudyChapterNav, StudyTable, StudyMethod } from './StudyParts.jsx'
+import { StudyTable, StudyMethod } from './StudyParts.jsx'
 import { useRef, useState } from 'react'
 import './SectorStudy.css'
 import KnowledgeMap from './KnowledgeMap.jsx'
@@ -17,7 +17,7 @@ export function ResearchChart({ chart }) {
     <h4 id={`chart-${chart.id}`}>{chart.title}</h4>
     {chart.series.length > 1 && <label>Série<select value={seriesIndex} onChange={event => setSeriesIndex(Number(event.target.value))}>{chart.series.map((item, index) => <option key={item.label} value={index}>{item.label}</option>)}</select></label>}
     <p>{series.label} · {chart.unit}. {chart.scope}</p>
-    <p className="central-note">{scale.negative ? 'Eixo bipolar: valores negativos à esquerda do zero; positivos à direita.' : 'Escala iniciada em zero.'}</p>
+    {scale.negative && <p className="central-note">Eixo bipolar: valores negativos à esquerda do zero; positivos à direita.</p>}
     <div className="research-bar-axis" aria-hidden="true"><span>{scale.negative ? (-scale.maximum).toLocaleString('pt-BR') : '0'}</span>{scale.negative && <span>0</span>}<span>{scale.maximum.toLocaleString('pt-BR', { signDisplay: scale.negative ? 'always' : 'auto' })}</span></div>
     <div className="study-bars" role="img" aria-label={`${chart.title}. ${series.label}. Valores com sinal na tabela abaixo.`}>{chart.years.map((year, index) => <div className="study-bar-row research-bar-row" key={year}><span>{year}</span><span className="study-bar-track research-bar-track"><span className="research-bar-zero" style={{ left: `${scale.zero}%` }} aria-hidden="true" /><span className={`study-bar research-bar${series.values[index] < 0 ? ' research-bar-negative' : ''}`} style={barPosition(series.values[index], scale)} /></span><strong>{series.values[index].toLocaleString('pt-BR', { signDisplay: scale.negative ? 'exceptZero' : 'auto' })}</strong></div>)}</div>
     <details><summary>Ver todos os dados e método</summary><div className="study-table-wrap"><table><caption>{chart.title} · {chart.unit}</caption><thead><tr><th scope="col">{chart.categoryLabel || 'Ano'}</th>{chart.series.map(item => <th scope="col" key={item.label}>{item.label}</th>)}</tr></thead><tbody>{chart.years.map((year, index) => <tr key={year}><th scope="row">{year}</th>{chart.series.map(item => <td key={item.label}>{item.values[index].toLocaleString('pt-BR')}</td>)}</tr>)}</tbody></table></div><p>{chart.method}</p></details>
@@ -30,17 +30,16 @@ export default function ResearchedSectorStudy({ study, goto }) {
   return <article className="sector-study" aria-labelledby={`${prefix}-title`}>
     <p className="central-kicker">ESTUDO SETORIAL · PESQUISA DE MERCADO</p><h3 id={`${prefix}-title`}>{study.title}</h3>
     <p className="central-note">Pesquisa pública realizada em <time dateTime="2026-11-06">06/11/2026</time>. Dados têm períodos próprios; atualização não é automática.</p>
-    <div className="study-callout">{study.reviewStatus !== 'approved' && <p role="status"><strong>NÃO CONFERIDO · revisão independente pendente. Versão de trabalho, não usar como estudo final.</strong></p>}<h4>Resumo executivo</h4>{study.summary.map(text => <p key={text}>{text}</p>)}</div>
-    <aside className="study-callout study-canvas-callout" aria-labelledby={`${prefix}-canvas`}>
-      <p className="central-kicker">CONVERSA COM A EMPRESA</p>
-      <h4 id={`${prefix}-canvas`}>{study.canvasQuestions.length} perguntas-chave para conhecer o negócio</h4>
+    {study.reviewStatus !== 'approved' && <p role="status" className="study-warning"><strong>NÃO CONFERIDO · revisão independente pendente. Versão de trabalho, não usar como estudo final.</strong></p>}
+    <section className="study-summary" aria-labelledby={`${prefix}-summary`}><p className="central-kicker">RESUMO EXECUTIVO</p><h4 id={`${prefix}-summary`} className="sr-only">Resumo executivo</h4>{study.summary.map((text, index) => <p key={text} className={index === 0 ? 'study-summary-lead' : undefined}>{text}</p>)}</section>
+    <details className="study-section study-canvas-details">
+      <summary>Perguntas para conversar com a empresa ({study.canvasQuestions.length})</summary>
       <p className="study-canvas-intro">Roteiro inspirado no Business Model Canvas. Peça números e um contrato real para sustentar as respostas.</p>
       <ol className="study-canvas-questions">{study.canvasQuestions.map(item => <li key={item.dimension}><strong>{item.dimension}</strong><p>{item.question}</p></li>)}</ol>
-    </aside>
-    <KnowledgeMap key={`${study.group}-${study.topicIndex}`} goto={goto} sectorContext={{ group: study.group, topicIndex: study.topicIndex, study }} />
+    </details>
+    <KnowledgeMap compact key={`${study.group}-${study.topicIndex}`} goto={goto} sectorContext={{ group: study.group, topicIndex: study.topicIndex, study }} />
     <ResearchAudio study={study} />
     {study.diagram?.nodes?.length > 0 && <SectorValueChain diagram={study.diagram} title={study.title} />}
-    <StudyChapterNav sections={study.sections} prefix={prefix} />
     {study.sections.map(section => <details className="study-section" id={`${prefix}-${section.id}`} key={section.id} open={section.id === 'negocio' || section.id === 'indicadores' || undefined}><summary>{section.title}</summary>{section.paragraphs?.map(text => <p key={text}>{text}</p>)}<StudyTable section={section} />{section.bullets && <ul>{section.bullets.map(text => <li key={text}>{text}</li>)}</ul>}{publicAgencySources(section.sources).length > 0 && <p className="central-note">Fontes: {publicAgencySources(section.sources).map((source, index) => <span key={source.url}>{index > 0 ? ' · ' : ''}{link(source)}</span>)}</p>}</details>)}
     {study.charts.length > 0 && <section aria-label="Indicadores e séries históricas">{study.charts.map(chart => <ResearchChart key={chart.id} chart={chart} />)}</section>}
     <StudyMethod study={study} />
