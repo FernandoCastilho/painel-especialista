@@ -48,7 +48,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const p = await offline(await ctx.newPage())
       await p.goto(base + '/#resumo')
       const aviso = p.getByRole('dialog', { name: 'Aviso' }); await aviso.waitFor()
-      assert.match(await aviso.innerText(), /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não representa compromisso nem informações atualizadas on-line/)
+      assert.match(await aviso.innerText(), /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não é recomendação de crédito[\s\S]*Quase ao vivo[\s\S]*Diário[\s\S]*Manual/i)
       // linha das novidades da semana logo abaixo do aviso, antes do botão (o conteúdo depende da data; só confere a estrutura)
       const nov = aviso.locator('.aviso-novidades'); if (await nov.count()) { assert.match(await nov.innerText(), /NOVIDADES DA SEMANA|Novidades da semana/i); assert.ok((await nov.locator('li').count()) <= 4) }
       const box = await aviso.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800, 'aviso cabe na tela')
