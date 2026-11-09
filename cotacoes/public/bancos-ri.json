@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-11-07",
+  "reviewedAt": "2026-11-09",
   "banks": {
     "itau": [
       {
@@ -860,6 +860,376 @@
           }
         },
         "porte": []
+      }
+    ],
+    "bb": [
+      {
+        "period": 202606,
+        "origin": "ri",
+        "scope": "Relatório do banco · critérios próprios por indicador",
+        "metrics": {
+          "basel": {
+            "value": 13.91,
+            "basis": "bb-basel",
+            "note": "Índice de Basileia (PR/RWA) prudencial, Tabela 1 Destaques.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 13
+          },
+          "cet1": {
+            "value": 11.27,
+            "basis": "bb-cet1",
+            "note": "Índice de Capital Principal (CP/RWA).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 13
+          },
+          "roe": {
+            "value": 8.3,
+            "basis": "bb-roe-rspl",
+            "note": "RSPL do trimestre anualizado divulgado pelo BB (base lucro ajustado/gerencial); mesmo critério do supplements.bb 202606. Não é ROE contábil.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 13
+          },
+          "nplTotal": {
+            "value": 5.61,
+            "basis": "bb-nplTotal",
+            "note": "INAD+90d da Carteira de Crédito (critério do banco).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 13
+          },
+          "assets": {
+            "value": 2584770000000.0,
+            "basis": "bb-ativos",
+            "note": "Total de Ativos consolidado (Balanço Patrimonial, Tabela 1).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 13
+          },
+          "profit": {
+            "value": 3175000000.0,
+            "basis": "bb-lucro-contabil",
+            "note": "Lucro Líquido Contábil do trimestre isolado (Tabela 1; lucro ajustado/gerencial do trimestre: R$ 3.908 milhões).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 13
+          },
+          "creditTotal": {
+            "value": 1313157000000.0,
+            "basis": "bb-carteira-expandida",
+            "note": "Carteira de Crédito Expandida (crédito + TVM privados e garantias), critério comparável entre trimestres; a Carteira de Crédito restrita foi reprocessada no 2T26 e não é comparável com o 3T25 divulgado.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 54
+          },
+          "creditPF": {
+            "value": 357640000000.0,
+            "basis": "bb-carteira-pf",
+            "note": "Carteira PF na Carteira de Crédito Expandida (interna); agronegócio é segmento separado.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 54
+          },
+          "creditPJ": {
+            "value": 456150000000.0,
+            "basis": "bb-carteira-pj",
+            "note": "Carteira PJ na Carteira de Crédito Expandida (interna); agronegócio é segmento separado.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/baf82bc7-3aa3-a91d-72c4-fdbde495644c?origin=2",
+            "page": 54
+          }
+        }
+      },
+      {
+        "period": 202509,
+        "origin": "ri",
+        "scope": "Relatório do banco · critérios próprios por indicador",
+        "metrics": {
+          "basel": {
+            "value": 14.81,
+            "basis": "bb-basel",
+            "note": "Índice de Basileia (PR/RWA) prudencial, Tabela 1 Destaques.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 13
+          },
+          "cet1": {
+            "value": 11.16,
+            "basis": "bb-cet1",
+            "note": "Índice de Capital Principal (CP/RWA).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 13
+          },
+          "roe": {
+            "value": 8.4,
+            "basis": "bb-roe-rspl",
+            "note": "RSPL do trimestre anualizado divulgado pelo BB (base lucro ajustado/gerencial); mesmo critério do supplements.bb 202606. Não é ROE contábil.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 13
+          },
+          "nplTotal": {
+            "value": 4.93,
+            "basis": "bb-nplTotal",
+            "note": "INAD+90d da Carteira de Crédito (critério do banco).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 13
+          },
+          "assets": {
+            "value": 2538718000000.0,
+            "basis": "bb-ativos",
+            "note": "Total de Ativos consolidado (Balanço Patrimonial, Tabela 1).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 13
+          },
+          "profit": {
+            "value": 3028000000.0,
+            "basis": "bb-lucro-contabil",
+            "note": "Lucro Líquido Contábil do trimestre isolado (Tabela 1; lucro ajustado/gerencial do trimestre: R$ 3.785 milhões).",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 13
+          },
+          "creditTotal": {
+            "value": 1278644000000.0,
+            "basis": "bb-carteira-expandida",
+            "note": "Carteira de Crédito Expandida (crédito + TVM privados e garantias), critério comparável entre trimestres; a Carteira de Crédito restrita foi reprocessada no 2T26 e não é comparável com o 3T25 divulgado.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 54
+          },
+          "creditPF": {
+            "value": 350511000000.0,
+            "basis": "bb-carteira-pf",
+            "note": "Carteira PF na Carteira de Crédito Expandida (interna); agronegócio é segmento separado.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 54
+          },
+          "creditPJ": {
+            "value": 452967000000.0,
+            "basis": "bb-carteira-pj",
+            "note": "Carteira PJ na Carteira de Crédito Expandida (interna); agronegócio é segmento separado.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/5760dff3-15e1-4962-9e81-322a0b3d0bbd/7c06930c-8e91-5a9f-8534-8b1e13e11ead?origin=2",
+            "page": 54
+          }
+        }
+      }
+    ],
+    "caixa": [
+      {
+        "period": 202606,
+        "origin": "ri",
+        "scope": "Relatório de Análise de Desempenho 2T26 e Demonstrações Contábeis BRGAAP 2T26 (Caixa, divulgados em 26/08/2026)",
+        "metrics": {
+          "basel": {
+            "value": 15.45,
+            "basis": "caixa-basel",
+            "note": "Índice de Basileia (PR/RWA) em jun/26. RAD 2T26.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/bb24031e-d71e-1660-7cf8-e66703ab1361?origin=2",
+            "page": 7
+          },
+          "cet1": {
+            "value": 13.42,
+            "basis": "caixa-cet1",
+            "note": "Índice de capital principal em jun/26. RAD 2T26.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/bb24031e-d71e-1660-7cf8-e66703ab1361?origin=2",
+            "page": 7
+          },
+          "roe": {
+            "value": 8.99,
+            "basis": "caixa-roe",
+            "note": "ROE contábil (lucro líquido contábil acumulado 12 meses / PL médio) em jun/26; o recorrente é 9,16%. RAD 2T26.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/bb24031e-d71e-1660-7cf8-e66703ab1361?origin=2",
+            "page": 8
+          },
+          "nplTotal": {
+            "value": 3.64,
+            "basis": "caixa-nplTotal",
+            "note": "Inadimplência total, atrasos > 90 dias, sobre a carteira de crédito classificada (critérios BCB), jun/26. RAD 2T26.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/bb24031e-d71e-1660-7cf8-e66703ab1361?origin=2",
+            "page": 7
+          },
+          "assets": {
+            "value": 2388976125000.0,
+            "basis": "caixa-ativos",
+            "note": "Ativo total consolidado em 30/06/2026 (R$ 2.388.976.125 mil), balanço das Demonstrações Contábeis BRGAAP 2T26. Coincide com 'Ativos CAIXA' do RAD (R$ 2.388.976 milhões); exclui ativos de terceiros administrados.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/642e7b13-4cfc-9878-b712-e61e7a4120ea?origin=2",
+            "page": 4
+          },
+          "profit": {
+            "value": 3899000000.0,
+            "basis": "caixa-lucro-contabil",
+            "note": "Lucro líquido contábil do 2T26 isolado (R$ 3.899 milhões), igual ao recorrente. RAD 2T26.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/bb24031e-d71e-1660-7cf8-e66703ab1361?origin=2",
+            "page": 7
+          },
+          "creditTotal": {
+            "value": 1448200000000.0,
+            "basis": "caixa-carteira-credito",
+            "note": "Carteira de crédito classificada pelos critérios do BCB (R$ 1.448.200 milhões, bruta de PCLD de R$ 68.977 mi) em jun/26: comercial PF e PJ, imobiliário, infraestrutura e agronegócio. RAD 2T26.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/bb24031e-d71e-1660-7cf8-e66703ab1361?origin=2",
+            "page": 7
+          }
+        }
+      },
+      {
+        "period": 202509,
+        "origin": "ri",
+        "scope": "Relatório de Análise de Desempenho 3T25 (Caixa, divulgado em 27/11/2025)",
+        "metrics": {
+          "basel": {
+            "value": 16.44,
+            "basis": "caixa-basel",
+            "note": "Índice de Basileia (PR/RWA) em set/25. Relatório de Análise de Desempenho (RAD) 3T25.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/2d31c2de-5b7f-5d0d-577a-13d13670b001?origin=2",
+            "page": 5
+          },
+          "cet1": {
+            "value": 14.87,
+            "basis": "caixa-cet1",
+            "note": "Índice de capital principal em set/25. RAD 3T25.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/2d31c2de-5b7f-5d0d-577a-13d13670b001?origin=2",
+            "page": 5
+          },
+          "roe": {
+            "value": 12.47,
+            "basis": "caixa-roe",
+            "note": "ROE contábil (lucro líquido contábil acumulado 12 meses / PL médio) em set/25; o recorrente é 11,93%. RAD 3T25.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/2d31c2de-5b7f-5d0d-577a-13d13670b001?origin=2",
+            "page": 6
+          },
+          "nplTotal": {
+            "value": 3.01,
+            "basis": "caixa-nplTotal",
+            "note": "Inadimplência total, atrasos > 90 dias, sobre a carteira de crédito classificada (critérios BCB), set/25. RAD 3T25.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/2d31c2de-5b7f-5d0d-577a-13d13670b001?origin=2",
+            "page": 5
+          },
+          "assets": {
+            "value": 2212635000000.0,
+            "basis": "caixa-ativos",
+            "note": "Ativo total gerencial consolidado (Ativos CAIXA, R$ 2.212.635 milhões) em set/25, tabela de balanço patrimonial do RAD 3T25; exclui ativos de terceiros administrados.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/2d31c2de-5b7f-5d0d-577a-13d13670b001?origin=2",
+            "page": 7
+          },
+          "profit": {
+            "value": 3764000000.0,
+            "basis": "caixa-lucro-contabil",
+            "note": "Lucro líquido contábil do 3T25 isolado (R$ 3.764 milhões), igual ao recorrente. RAD 3T25.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/2d31c2de-5b7f-5d0d-577a-13d13670b001?origin=2",
+            "page": 5
+          },
+          "creditTotal": {
+            "value": 1334083000000.0,
+            "basis": "caixa-carteira-credito",
+            "note": "Carteira de crédito classificada pelos critérios do BCB (R$ 1.334.083 milhões, bruta de PCLD de R$ 59.298 mi) em set/25: comercial PF e PJ, imobiliário, infraestrutura e agronegócio. RAD 3T25.",
+            "source": "https://api.mziq.com/mzfilemanager/v2/d/fb86b0b8-b4e9-407b-a575-ba3668a566a9/2d31c2de-5b7f-5d0d-577a-13d13670b001?origin=2",
+            "page": 5
+          }
+        }
+      }
+    ],
+    "safra": [
+      {
+        "period": 202606,
+        "origin": "ri",
+        "scope": "Relatório do banco · Principais Indicadores IFRS (Resumo Consolidado)",
+        "metrics": {
+          "basel": {
+            "value": 18.1,
+            "basis": "safra-basel",
+            "note": "Índice de Basileia divulgado nos Principais Indicadores IFRS.",
+            "source": "https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "page": 1
+          },
+          "roe": {
+            "value": 21.4,
+            "basis": "safra-ifrs-roae-acumulado-anualizado",
+            "note": "ROAE IFRS anualizado do semestre encerrado em junho (6M), não do trimestre isolado; mesmo critério do suplemento existente.",
+            "source": "https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "page": 1
+          },
+          "nplTotal": {
+            "value": 1.5,
+            "basis": "safra-nplTotal",
+            "note": "Índice de inadimplência acima de 90 dias (Principais Indicadores IFRS).",
+            "source": "https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "page": 1
+          },
+          "assets": {
+            "value": 309568000000.0,
+            "basis": "safra-ativos",
+            "note": "Ativos totais consolidados IFRS.",
+            "source": "https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "page": 1
+          },
+          "profit": {
+            "value": 905000000.0,
+            "basis": "safra-lucro-trimestre",
+            "note": "Lucro líquido atribuível aos controladores: 6M/26 R$1.883 mi (doc 2T26, p.1) menos 1T26 R$978 mi (doc mar/26, p.1) = R$905 mi. Fonte do 1T26: https://www.safra.com.br/data/files/D2/E4/8D/BC/1582E910BB0B22D901B9F9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20mar%202026.pdf",
+            "source": "https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "page": 1
+          },
+          "creditTotal": {
+            "value": 167324000000.0,
+            "basis": "safra-carteira-expandida",
+            "note": "Carteira de Crédito Expandida (bruta), inclui avais e fianças; carteira de crédito do balanço é menor.",
+            "source": "https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "page": 1
+          },
+          "creditPJ": {
+            "value": 109668000000.0,
+            "basis": "safra-carteira-empresas",
+            "note": "'Operações com Empresas' da carteira de crédito (exclui empréstimos/financiamento ao consumo e avais e fianças); não é PJ completo do SCR.",
+            "source": "https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "page": 1
+          }
+        }
+      },
+      {
+        "period": 202509,
+        "origin": "ri",
+        "scope": "Relatório do banco · Principais Indicadores IFRS (Resumo Consolidado)",
+        "metrics": {
+          "basel": {
+            "value": 17.7,
+            "basis": "safra-basel",
+            "note": "Índice de Basileia divulgado nos Principais Indicadores IFRS.",
+            "source": "https://www.safra.com.br/data/files/62/10/E3/62/1F97A910854BB5A9B51AF9C2/BalPromoSet2025_PT.pdf",
+            "page": 1
+          },
+          "roe": {
+            "value": 22.9,
+            "basis": "safra-ifrs-roae-acumulado-anualizado",
+            "note": "ROAE IFRS anualizado acumulado em 9 meses (jan-set/25), não do trimestre isolado.",
+            "source": "https://www.safra.com.br/data/files/62/10/E3/62/1F97A910854BB5A9B51AF9C2/BalPromoSet2025_PT.pdf",
+            "page": 1
+          },
+          "nplTotal": {
+            "value": 1.1,
+            "basis": "safra-nplTotal",
+            "note": "Índice de inadimplência acima de 90 dias (Principais Indicadores IFRS).",
+            "source": "https://www.safra.com.br/data/files/62/10/E3/62/1F97A910854BB5A9B51AF9C2/BalPromoSet2025_PT.pdf",
+            "page": 1
+          },
+          "assets": {
+            "value": 297737000000.0,
+            "basis": "safra-ativos",
+            "note": "Ativos totais consolidados IFRS.",
+            "source": "https://www.safra.com.br/data/files/62/10/E3/62/1F97A910854BB5A9B51AF9C2/BalPromoSet2025_PT.pdf",
+            "page": 1
+          },
+          "profit": {
+            "value": 1104000000.0,
+            "basis": "safra-lucro-trimestre",
+            "note": "Lucro líquido atribuível aos controladores: 9M/25 R$3.239 mi (doc 3T25, p.1) menos 6M/25 R$2.135 mi (coluna Jun.25 do doc 2T26, p.1) = R$1.104 mi. Fontes: 9M no doc do source; 6M em https://www.safra.com.br/data/files/A4/C4/22/AB/D3000A10BDC4DFF97D2EF9C2/Resumo%20Consolidado%20e%20Principais%20Indicadores%20-%20Jun%202026.pdf",
+            "source": "https://www.safra.com.br/data/files/62/10/E3/62/1F97A910854BB5A9B51AF9C2/BalPromoSet2025_PT.pdf",
+            "page": 1
+          },
+          "creditTotal": {
+            "value": 159509000000.0,
+            "basis": "safra-carteira-expandida",
+            "note": "Carteira de Crédito Expandida (bruta), inclui avais e fianças; carteira de crédito do balanço é menor.",
+            "source": "https://www.safra.com.br/data/files/62/10/E3/62/1F97A910854BB5A9B51AF9C2/BalPromoSet2025_PT.pdf",
+            "page": 1
+          },
+          "creditPJ": {
+            "value": 104808000000.0,
+            "basis": "safra-carteira-empresas",
+            "note": "'Operações com Empresas' da carteira de crédito (exclui empréstimos/financiamento ao consumo e avais e fianças); não é PJ completo do SCR.",
+            "source": "https://www.safra.com.br/data/files/62/10/E3/62/1F97A910854BB5A9B51AF9C2/BalPromoSet2025_PT.pdf",
+            "page": 1
+          }
+        }
       }
     ]
   },
