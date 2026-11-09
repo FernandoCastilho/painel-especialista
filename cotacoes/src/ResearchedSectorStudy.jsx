@@ -1,6 +1,7 @@
 import { StudyChapterNav, StudyTable, StudyMethod } from './StudyParts.jsx'
 import { useRef, useState } from 'react'
 import './SectorStudy.css'
+import KnowledgeMap from './KnowledgeMap.jsx'
 import SectorValueChain from './SectorValueChain.jsx'
 import { publicAgencySources } from './sectorSourceVisibility.js'
 import './ResearchedSectorStudy.css'
@@ -24,7 +25,7 @@ export function ResearchChart({ chart }) {
   </section>
 }
 
-export default function ResearchedSectorStudy({ study }) {
+export default function ResearchedSectorStudy({ study, goto }) {
   const prefix = `sector-${study.group}-${study.topicIndex}`
   return <article className="sector-study" aria-labelledby={`${prefix}-title`}>
     <p className="central-kicker">ESTUDO SETORIAL · PESQUISA DE MERCADO</p><h3 id={`${prefix}-title`}>{study.title}</h3>
@@ -36,6 +37,7 @@ export default function ResearchedSectorStudy({ study }) {
       <p className="study-canvas-intro">Roteiro inspirado no Business Model Canvas. Peça números e um contrato real para sustentar as respostas.</p>
       <ol className="study-canvas-questions">{study.canvasQuestions.map(item => <li key={item.dimension}><strong>{item.dimension}</strong><p>{item.question}</p></li>)}</ol>
     </aside>
+    <KnowledgeMap key={`${study.group}-${study.topicIndex}`} goto={goto} sectorContext={{ group: study.group, topicIndex: study.topicIndex, study }} />
     <ResearchAudio study={study} />
     {study.diagram?.nodes?.length > 0 && <SectorValueChain diagram={study.diagram} title={study.title} />}
     <StudyChapterNav sections={study.sections} prefix={prefix} />
