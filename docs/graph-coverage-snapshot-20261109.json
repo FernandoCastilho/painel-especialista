@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-11-09T00:13:54.439Z",
+  "scope": "Snapshot supplied to this audit, not a guarantee about later news or unavailable sources.",
+  "sources": {
+    "sector-news.json": {
+      "status": "read",
+      "sha256": "b362177257d57cbf0bff473820145088127cb9114eb4530fda64ea18efb6d010",
+      "generatedAt": "2026-11-08T17:59:47.898Z"
+    },
+    "news.json": {
+      "status": "read",
+      "sha256": "de9943469a97f4275ad3d9b41065e529e11e93e4430c3e8bac068d250345e833",
+      "generatedAt": 1794180858862
+    },
+    "temas.json": {
+      "status": "read",
+      "sha256": "d7157e656750bfd8e1728f1478d0a050bd60c6a4571cc2e76faf293b814b2d70",
+      "generatedAt": 1794180893891
+    },
+    "curadoria-noticias.json": {
+      "status": "read",
+      "sha256": "df481714daa6dc446bd7530102ee89eedbcb7ae4026a119e2ff7073548cf61d9",
+      "generatedAt": 1794180888407
+    },
+    "knowledge-news.json": {
+      "status": "read",
+      "sha256": "64d047c21dff50c488bc8f4a542398eb9e8fe60669c8971f109a71413d871b31",
+      "generatedAt": 1794180952095
+    }
+  },
+  "nodes": 1084,
+  "links": 1502,
+  "meta": {
+    "windowDays": 7,
+    "windowStart": 1793578434439,
+    "windowEnd": 1794183234439,
+    "newsCount": 886,
+    "omittedNewsCount": 0,
+    "pendingNewsCount": 450,
+    "classifiedNewsCount": 436,
+    "rejectedRecordCount": 1,
+    "duplicateRecordCount": 657,
+    "coverageNotes": [
+      "Cobertura institucional parcial; algumas fontes estão suspensas ou sem atualização confirmada."
+    ],
+    "lastUpdatedAt": 1794180893891
+  },
+  "unlinked": [],
+  "allSourcesRead": true,
+  "allIncludedNewsConnected": true
+}

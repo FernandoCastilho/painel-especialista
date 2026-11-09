@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { hookRenderer } from './helpers/hooks.mjs'
 import * as layout from '../src/knowledgeLayout.js'
 import * as educacao from '../src/educacao.js'
+import * as sectorKnowledgeGraph from '../src/sectorKnowledgeGraph.js'
 import { getKnowledgeView } from '../src/knowledgeGraph.js'
 import { canonicalNewsUrl } from '../src/sectorNews.js'
 
@@ -26,9 +27,10 @@ const article = { id: 'news:teste', type: 'news', label: 'Manchete sintética de
 const edge = { id: 'theme:teste', source: concept.id, target: article.id, label: 'Conexão temática', reason: 'Termo explícito no título: conceito sintético.' }
 const fixture = (nodes = [concept, article], links = [edge]) => ({ nodes, links, meta: { newsCount: nodes.filter(node => node.type === 'news').length, lastUpdatedAt: NOW, coverageNotes: ['Seleção sintética; não representa uma coleta real.'] } })
 
-async function setupMap(t, { resource = { status: 'ok', data: {} }, graph = fixture(), persisted, reduced = false } = {}) {
+async function setupMap(t, { resource = { status: 'ok', data: {} }, graph = fixture(), persisted, reduced = false, sectorContext } = {}) {
   const source = await readFile(new URL('../src/KnowledgeMap.jsx', import.meta.url), 'utf8')
   const { code } = await transform(`${source}\nexport { NodeContextMenu }`, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+  const storageKeys = []
   const module = { exports: {} }, calls = [], destinations = [], opened = [], portals = [], timers = new Map(), listeners = new Map()
   let clock = NOW, timerId = 0, elapsed = 0
   const matchMedia = () => ({ matches: reduced, addEventListener() {}, removeEventListener() {} })
@@ -49,16 +51,16 @@ async function setupMap(t, { resource = { status: 'ok', data: {} }, graph = fixt
     window: { matchMedia, innerWidth: 1280, innerHeight: 900, open: (...args) => { opened.push(args); return null }, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) },
     document,
     requestAnimationFrame: callback => { callback(); return 1 }, cancelAnimationFrame() {},
-    sessionStorage: { getItem: () => persisted ? JSON.stringify(persisted) : null, setItem() {} },
+    sessionStorage: { getItem: key => { storageKeys.push(key); return persisted ? JSON.stringify(persisted) : null }, setItem(key) { storageKeys.push(key) } },
     setTimeout: (callback, delay) => { const id = ++timerId; timers.set(id, { callback, at: elapsed + delay }); return id },
     clearTimeout: id => timers.delete(id),
-    require: name => dependencies[name] ?? require(name),
+    require: name => name === './sectorKnowledgeGraph.js' ? sectorKnowledgeGraph : dependencies[name] ?? require(name),
   })
-  const render = hookRenderer(() => module.exports.default({ goto: (...args) => destinations.push(args) }))
+  const render = hookRenderer(() => module.exports.default({ goto: (...args) => destinations.push(args), sectorContext }))
   t.after(() => render.close())
   await render.settle()
   return {
-    render, calls, destinations, opened, portals, listeners, document,
+    render, calls, destinations, opened, portals, listeners, document, storageKeys,
     html: () => renderToStaticMarkup(render.value),
     find: predicate => allNodes(render.value).find(predicate),
     button(label) { return this.find(node => node.type === 'button' && (node.props['aria-label'] || textOf(node)) === label) },
@@ -281,7 +283,7 @@ test('context menu positioning uses the document viewport excluding the scrollba
     './useDataFile.js': {}, './useNewsClock.js': {}, './knowledgeGraph.js': {},
     './knowledgeLayout.js': {}, './KnowledgeMap.css': {}, './Help.jsx': {},
   }
-  runInNewContext(code, { module, exports: module.exports, document, window: { innerWidth: 320, innerHeight: 700 }, require: name => dependencies[name] ?? require(name) })
+  runInNewContext(code, { module, exports: module.exports, document, window: { innerWidth: 320, innerHeight: 700 }, require: name => name === './sectorKnowledgeGraph.js' ? sectorKnowledgeGraph : dependencies[name] ?? require(name) })
   const position = module.exports.contextPosition
   const rightBottom = position({ clientX: 319, clientY: 699 })
   assert.equal(rightBottom.x, 17)
@@ -348,7 +350,7 @@ test('Aprender starts in map mode and keeps concept routes and the original list
     './Help.jsx': { __esModule: true, default: passthrough },
     './KnowledgeMap.jsx': { __esModule: true, default: () => React.createElement('section', { 'data-test': 'map-screen' }, 'Mapa sintético') },
   }
-  runInNewContext(code, { module, exports: module.exports, window: { matchMedia: () => ({ matches: false }) }, require: name => dependencies[name] ?? require(name) })
+  runInNewContext(code, { module, exports: module.exports, window: { matchMedia: () => ({ matches: false }) }, require: name => name === './sectorKnowledgeGraph.js' ? sectorKnowledgeGraph : dependencies[name] ?? require(name) })
   let view = ''
   const render = hookRenderer(() => module.exports.default({ view, goto: (...args) => destinations.push(args) }))
   t.after(() => render.close())
@@ -382,7 +384,7 @@ test('surface handlers support pinch, remaining-finger panning, cancellation and
     './useDataFile.js': {}, './useNewsClock.js': {}, './knowledgeGraph.js': {},
     './knowledgeLayout.js': layout, './KnowledgeMap.css': {}, './Help.jsx': {},
   }
-  runInNewContext(code, { module, exports: module.exports, setTimeout, clearTimeout, require: name => dependencies[name] ?? require(name) })
+  runInNewContext(code, { module, exports: module.exports, setTimeout, clearTimeout, require: name => name === './sectorKnowledgeGraph.js' ? sectorKnowledgeGraph : dependencies[name] ?? require(name) })
   const graph = fixture()
   const render = hookRenderer(() => module.exports.GraphSurface({ graph, selectedId: '', onSelect: id => selected.push(id), paused: true, reduced: false, restart: 0, cameraReset: 0, labels: false }))
   t.after(() => render.close())
@@ -443,7 +445,7 @@ test('graph news activation is suppressed after drag, pinch, cancellation and lo
     module, exports: module.exports,
     setTimeout: (callback, delay) => { const id = ++timerId; timers.set(id, { callback, at: elapsed + delay }); return id },
     clearTimeout: id => timers.delete(id),
-    require: name => dependencies[name] ?? require(name),
+    require: name => name === './sectorKnowledgeGraph.js' ? sectorKnowledgeGraph : dependencies[name] ?? require(name),
   })
   const graph = fixture()
   const render = hookRenderer(() => module.exports.GraphSurface({ graph, selectedId: '', onSelect() {}, onActivate: id => activated.push(id), onContextMenu: (id, point) => contexts.push({ id, point }), paused: true, reduced: false, restart: 0, cameraReset: 0, labels: false }))
@@ -529,7 +531,7 @@ async function setupFullscreen(t, mode = 'native') {
   }
   runInNewContext(code, { module, exports: module.exports, document, window: {}, setTimeout, clearTimeout,
     requestAnimationFrame: fn => { queueMicrotask(() => fn(0)); return 1 }, cancelAnimationFrame() {},
-    require: name => dependencies[name] ?? require(name) })
+    require: name => name === './sectorKnowledgeGraph.js' ? sectorKnowledgeGraph : dependencies[name] ?? require(name) })
   const ref = { current: container }
   const render = hookRenderer(() => module.exports.useMapFullscreen(ref))
   t.after(() => render.close())
@@ -624,7 +626,7 @@ async function setupSurface(t, { graph = fixture(), selectedId = '', reduced = f
     module, exports: module.exports, performance: { now: () => time }, document: { hidden: false }, setTimeout, clearTimeout,
     requestAnimationFrame: fn => { const id = ++frameId; callbacks.set(id, fn); return id }, cancelAnimationFrame: id => callbacks.delete(id),
     ResizeObserver: class { constructor(fn) { resize = fn } observe() {} disconnect() {} },
-    require: name => dependencies[name] ?? require(name),
+    require: name => name === './sectorKnowledgeGraph.js' ? sectorKnowledgeGraph : dependencies[name] ?? require(name),
   })
   const props = { graph, selectedId, reduced, onSelect() {}, paused: true, restart: 0, cameraReset: 0, labels: false }
   const render = hookRenderer(() => { refIndex = 0; return module.exports.GraphSurface(props) })
@@ -770,4 +772,23 @@ test('mobile detail drawer exposes its state and collapses when another point is
   assert.equal(toggle().props['aria-expanded'], false, 'another selected point leaves more space for the mobile graph')
   assert.doesNotMatch(h.find(node => node.type === 'aside').props.className, /\bis-open\b/)
   assert.match(textOf(h.find(node => node.props?.id === 'km-detail-content')), /Fonte sintética/)
+})
+
+
+test('contextual map scopes nodes, heading, reset and session memory without changing Aprender', async t => {
+  const { buildKnowledgeGraph } = await import('../src/knowledgeGraph.js')
+  const studies = JSON.parse(await readFile(new URL('../src/sectorStudies/studies.json', import.meta.url), 'utf8'))
+  const study = studies.find(item => item.group === 'transporte-logistica' && item.topicIndex === 1)
+  const graph = buildKnowledgeGraph({ now: NOW })
+  const contextual = await setupMap(t, { graph, sectorContext: {group:study.group, topicIndex:1, study} })
+  assert.match(contextual.html(), /Conexões · Transporte de madeira/)
+  assert.match(contextual.html(), /Voltar ao setor/)
+  assert.ok(contextual.storageKeys.every(key => key.endsWith(':subsector:transporte-logistica:1')))
+  await contextual.click('Lista')
+  assert.match(contextual.html(), /Base florestal e madeira/)
+  await contextual.click('Voltar ao setor')
+  assert.match(contextual.html(), /Transporte de madeira/)
+  const general = await setupMap(t, {graph})
+  assert.match(general.html(), /Mapa do conhecimento/)
+  assert.ok(general.storageKeys.every(key => key === 'painel-knowledge-map-v1'))
 })

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { buildKnowledgeGraph, getKnowledgeView, KNOWLEDGE_WINDOW_MS } from '../src/knowledgeGraph.js'
+import { buildKnowledgeGraph, getKnowledgeView, KNOWLEDGE_PENDING_ID, KNOWLEDGE_WINDOW_MS } from '../src/knowledgeGraph.js'
 import { CONCEITOS, LIGACOES } from '../src/educacao.js'
 import { CATALOGO_SETORIAL } from '../src/centralSetorial.js'
 import { validateSectorNewsItem, SECTOR_NEWS_SOURCES, CC_BY_ND_3 } from '../src/sectorNews.js'
@@ -25,7 +25,7 @@ test('catálogo completo, rotas exatas e relações editoriais reais são preser
       assert.ok(graph.links.some(link => link.source === node.id && link.target === `sector:${sector.id}` && link.label === 'Pertence a'))
     })
   }
-  assert.equal(graph.nodes.filter(node => node.type === 'concept').length, CONCEITOS.length)
+  assert.equal(graph.nodes.filter(node => node.type === 'concept' && node.subtype !== 'glossary').length, CONCEITOS.length)
   for (const [a, b, reason] of LIGACOES) assert.ok(graph.links.some(link => link.source === `concept:${a}` && link.target === `concept:${b}` && link.reason === reason))
   assert.ok(graph.links.every(link => graph.nodes.some(node => node.id === link.source) && graph.nodes.some(node => node.id === link.target)))
 })
@@ -96,15 +96,20 @@ test('links inseguros e texto com marcação não entram no mapa', () => {
 test('título explícito, palavra inteira e sigla em contexto financeiro; metadado genérico não inventa ligação', () => {
   const graph = feedGraph([generic({ title: 'Dólar e inflação alteram debate no mercado' })])
   assert.ok(graph.links.some(link => link.source === newsNodes(graph)[0].id && link.target === 'concept:inflacao' && /título menciona/.test(link.reason)))
-  assert.equal(newsNodes(feedGraph([generic({ title: 'A imobiliária falou sobre criativo desenho', topics: ['cri', 'inflacao'] })])).length, 0)
-  assert.equal(newsNodes(feedGraph([generic({ title: 'CET interdita rua para corrida de domingo' })])).length, 0)
+  assert.equal(feedGraph([generic({ title: 'A imobiliária falou sobre criativo desenho', topics: ['cri', 'inflacao'] })]).meta.pendingNewsCount, 1)
+  assert.equal(feedGraph([generic({ title: 'CET interdita rua para corrida de domingo' })]).meta.pendingNewsCount, 1)
   assert.equal(newsNodes(feedGraph([generic({ title: 'Banco divulga CET do financiamento' })])).length, 1)
 })
 
-test('matérias sem conexão objetiva são contabilizadas e não ganham arestas artificiais', () => {
+test('matérias sem conexão objetiva entram como classificação pendente sem inventar setor', () => {
   const graph = feedGraph([generic({ title: 'Prefeitura publica horário do museu municipal' })])
-  assert.equal(newsNodes(graph).length, 0)
-  assert.equal(graph.meta.omittedNewsCount, 1)
+  assert.equal(newsNodes(graph).length, 1)
+  assert.equal(graph.meta.omittedNewsCount, 0)
+  assert.equal(graph.meta.pendingNewsCount, 1)
+  const edges = graph.links.filter(link => link.source === newsNodes(graph)[0].id)
+  assert.equal(edges.length, 1)
+  assert.equal(edges[0].target, KNOWLEDGE_PENDING_ID)
+  assert.equal(graph.nodes.find(node => node.id === KNOWLEDGE_PENDING_ID).route, undefined)
   assert.equal(graph.archiveItems.length, 1)
 })
 
@@ -190,3 +195,67 @@ test('snapshot real gera relações sem fabricar matérias e expira com relógio
   assert.equal(expired.meta.newsCount, 0)
 })
 function withinWindow(t) { return t >= NOW - KNOWLEDGE_WINDOW_MS && t <= NOW }
+
+test('every eligible item from each live source has a connection and honest counters', () => {
+  const unknown = generic({ title: 'Prefeitura anuncia programação local', link: 'https://example.org/museu' })
+  const graph = buildKnowledgeGraph({ now: NOW,
+    news: { news: { ALL: [unknown, generic({ link: 'javascript:bad' })] } },
+    temas: { temas: { cobre: { items: [generic({ title: 'Oferta global tem novas condições', link: 'https://example.org/cobre' })] } } },
+    sectorNews: { schemaVersion: 1, topics: { 'produtos-saude': { items: [institutional()] } } },
+    curadoria: { schemaVersion: 1, windowDays: 7, topics: { reforma: { items: [generic({ title: 'Reforma tributária: IBS e CBS em debate', link: 'https://agenciabrasil.ebc.com.br/economia/reforma' })] } } },
+    archive: archive([{ ...generic({ title: 'Cobre tem novos preços', link: 'https://example.org/archive' }), origin: 'news' }]),
+  })
+  assert.equal(graph.meta.newsCount, 5)
+  assert.equal(graph.meta.pendingNewsCount, 1)
+  assert.equal(graph.meta.classifiedNewsCount, 4)
+  assert.equal(graph.meta.rejectedRecordCount, 1)
+  assert.ok(newsNodes(graph).every(node => graph.links.some(link => link.source === node.id || link.target === node.id)))
+  const copper = newsNodes(graph).find(node => node.href === 'https://example.org/cobre')
+  assert.ok(graph.links.some(link => link.source === copper.id && link.target === 'sector-topic:cobre' && link.label === 'Publicado no tema'))
+  const replay = buildKnowledgeGraph({ archive: archive(graph.archiveItems), now: NOW })
+  assert.equal(replay.meta.newsCount, 5)
+  assert.equal(replay.meta.pendingNewsCount, 1)
+})
+
+test('editorial groups connect all existing sector/input routes without collapsing distinct pages', async () => {
+  const { BANKING_TOPICS } = await import('../src/bankingSectors.js')
+  const { INSUMOS } = await import('../src/insumos.js')
+  const graph = buildKnowledgeGraph({ now: NOW })
+  for (const topic of [...BANKING_TOPICS, ...INSUMOS]) {
+    const node = graph.nodes.find(node => node.id === `sector-topic:${topic.id}`)
+    assert.deepEqual(node.route, { tab: 'setores', view: topic.id })
+    assert.ok(graph.links.some(link => (link.source === node.id || link.target === node.id) && link.label === 'Pertence ao grupo'))
+  }
+  assert.ok(graph.nodes.every(node => graph.links.some(link => link.source === node.id || link.target === node.id)))
+})
+
+test('global graph includes generated links from actual studies including wood transport', async () => {
+  const { SECTOR_STUDY_CONNECTIONS } = await import('../src/generated.sectorKnowledge.js')
+  const graph = buildKnowledgeGraph({ now: NOW })
+  assert.ok(SECTOR_STUDY_CONNECTIONS.length > 68)
+  const focus = 'subsector:transporte-logistica:1'
+  for (const target of ['sector:base-florestal', 'concept:combustiveis', 'concept:fidc']) {
+    const link = graph.links.find(link => link.source === focus && link.target === target)
+    assert.ok(link, target)
+    assert.match(link.reason, /estudo.*menciona/)
+  }
+  assert.ok(SECTOR_STUDY_CONNECTIONS.some(([source]) => source === 'subsector:tic:0'))
+  assert.ok(graph.links.every(link => graph.nodes.some(node => node.id === link.source) && graph.nodes.some(node => node.id === link.target)))
+})
+
+test('generated study connections are deterministic and current', async () => {
+  const { sectorKnowledgeSource } = await import('../scripts/build-sector-knowledge.mjs')
+  assert.equal(await sectorKnowledgeSource(), await readFile(new URL('../src/generated.sectorKnowledge.js', import.meta.url), 'utf8'))
+})
+
+test('all glossary explanations remain readable including aliases without duplicate concepts', async () => {
+  const { KNOWLEDGE_GLOSSARY } = await import('../src/knowledgeGlossary.js')
+  const graph = buildKnowledgeGraph({ now: NOW })
+  for (const entry of KNOWLEDGE_GLOSSARY) {
+    const nodes = graph.nodes.filter(node => node.id === entry.nodeId)
+    assert.equal(nodes.length, 1)
+    assert.ok(nodes[0].summary.includes(entry.body))
+    assert.ok(graph.links.some(link => link.source === entry.nodeId && link.target === 'category:panel-explanations'))
+    if (!entry.conceptId) assert.equal(nodes[0].routeEvidence, entry.routeEvidence)
+  }
+})

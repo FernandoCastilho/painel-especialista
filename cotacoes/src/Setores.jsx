@@ -14,7 +14,7 @@ function SectorImage({ groupId, index = 0 }) {
   return <span className="central-card-photo" aria-hidden="true"><img src={`./sector-images/${groupId}.jpg`} alt="" width="1536" height="1024" loading="lazy" decoding="async" style={{ left: `-${column * 100}%`, transform: `translateY(-${(row + .5) / 3 * 100}%)` }} onError={event => { event.currentTarget.hidden = true }} /></span>
 }
 
-export default function Setores({ view = '', onView = () => {}, quotes }) {
+export default function Setores({ view = '', onView = () => {}, quotes, goto }) {
   const [query, setQuery] = useState(() => typeof window === 'undefined' ? '' : readCentralHistory(window.history.state, view)?.query || '')
   const searchId = useId()
   const surfaceRef = useRef(null)
@@ -108,7 +108,7 @@ export default function Setores({ view = '', onView = () => {}, quotes }) {
         : <section aria-labelledby="central-sectors-title"><div className="central-section-heading"><h3 id="central-sectors-title">Setores e subsetores</h3><p>Escolha um setor para explorar</p></div><ul className="central-folders">{CATALOGO_SETORIAL.map(group => <li key={group.id}><button type="button" id={`central-folder-${group.id}`} className="central-folder" onClick={() => navigate(`pasta/${group.id}`)} aria-label={`Explorar ${group.label}, ${group.topics.length} subsetores`}><SectorImage groupId={group.id} /><span className="central-folder-content"><span className="central-folder-arrow" aria-hidden="true">→</span><strong>{group.label}</strong><span className="central-folder-count">{group.topics.length} subsetores</span></span></button></li>)}</ul></section>}
         {!term && !folder && <section className="central-inputs" aria-labelledby="central-inputs-title"><div><h3 id="central-inputs-title">Insumos e Indicadores</h3><p className="central-note">Referências para complementar sua análise</p></div><ul>{INSUMOS.map(item => <li key={item.id}><button type="button" onClick={() => navigate(item.id)}>{item.label}<span aria-hidden="true">→</span></button></li>)}</ul></section>}
       </div>}
-      {hasDetail && !term && <div className={`central-detail central-detail-selected${showContent ? ' central-detail-content' : ''}`}>{showContent ? <SetoresLegado key={view} view={view} quotes={quotes}/> : routeGroup.id === 'tic' && routeTopic === 'Integração de TI e infraestrutura digital' ? <SectorStudy /> : <SectorStudyLoader key={`${routeGroup.id}-${topicIndex}`} group={routeGroup} topicIndex={topicIndex} />}</div>}
+      {hasDetail && !term && <div className={`central-detail central-detail-selected${showContent ? ' central-detail-content' : ''}`}>{showContent ? <SetoresLegado key={view} view={view} quotes={quotes}/> : routeGroup.id === 'tic' && routeTopic === 'Integração de TI e infraestrutura digital' ? <SectorStudy goto={goto} /> : <SectorStudyLoader goto={goto} key={`${routeGroup.id}-${topicIndex}`} group={routeGroup} topicIndex={topicIndex} />}</div>}
     </div>
   </div>
 }
