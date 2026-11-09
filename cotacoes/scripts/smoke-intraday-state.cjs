@@ -11,7 +11,7 @@ const assert = require('node:assert/strict')
   const results = []
   try {
     for (const width of [390, 1280]) {
-      const context = await b.newContext({ viewport: { width, height: 1000 }, timezoneId: width === 390 ? 'Asia/Tokyo' : 'UTC', serviceWorkers: 'block' })
+      const context = await b.newContext({ viewport: { width, height: 1000 }, timezoneId: width === 390 ? 'Asia/Tokyo' : 'UTC', serviceWorkers: 'block', reducedMotion: 'reduce' })
       const page = await context.newPage(), errors = []
       page.on('pageerror', e => errors.push(e.message))
       await page.clock.install({ time: now })
@@ -43,7 +43,7 @@ const assert = require('node:assert/strict')
       assert.match(await detail.locator('table').innerText(), /07:00:16/)
       assert.equal(await detail.evaluate(el => el.scrollWidth > el.clientWidth + 1), false)
       await detail.evaluate(el => { const note = document.createElement('p'); note.textContent = 'QA · DADOS SINTÉTICOS'; el.prepend(note) })
-      await detail.screenshot({ path: `${out}/${width}-single-sample.png` })
+      await detail.screenshot({ animations: 'disabled', path: `${out}/${width}-single-sample.png` })
       await page.keyboard.press('Escape')
       await detail.waitFor({ state: 'hidden' })
       await page.getByRole('button', { name: 'Comparar moedas', exact: true }).click()
@@ -57,22 +57,25 @@ const assert = require('node:assert/strict')
       assert.match(await staleCompare.innerText(), /coleta está atrasada/)
       assert.equal(await staleCompare.locator('.sec-head h3 .pct').count(), 0)
       assert.match(await staleCompare.locator('.terminal-chart-source').innerText(), /última amostra em.*arquivo gerado em/)
-      await staleCompare.screenshot({ path: `${out}/${width}-comparison-stale.png` })
+      await staleCompare.screenshot({ animations: 'disabled', path: `${out}/${width}-comparison-stale.png` })
       await page.keyboard.press('Escape')
       await staleCompare.waitFor({ state: 'hidden' })
       await table.locator('tbody').first().locator('.market-price').click()
       await detail.waitFor()
       fresh = true
-      await page.clock.runFor(61000)
+      // A shared response may fill the cache after a poll. Cross two polling boundaries.
+      await page.clock.runFor(121000)
       await detail.getByText('Ver tabela (2 amostras)', { exact: true }).waitFor()
       assert.match(await detail.locator('article.chart header .pct').innerText(), /-0,18%/)
       assert.equal(await detail.getByText(/mais de 10 minutos/).count(), 0)
       failed = true
-      await page.clock.runFor(61000)
+      // A shared response may fill the cache after a poll. Cross two polling boundaries.
+      await page.clock.runFor(121000)
       await detail.getByText(/Não foi possível atualizar. Mantida a última série/).waitFor()
       assert.equal(await detail.getByText('Ver tabela (2 amostras)', { exact: true }).count(), 1)
       failed = false
-      await page.clock.runFor(61000)
+      // A shared response may fill the cache after a poll. Cross two polling boundaries.
+      await page.clock.runFor(121000)
       await detail.getByText(/Não foi possível atualizar. Mantida a última série/).waitFor({ state: 'detached' })
       await page.keyboard.press('Escape')
       await detail.waitFor({ state: 'hidden' })
@@ -92,4 +95,10 @@ const assert = require('node:assert/strict')
     fs.writeFileSync(`${out}/results.json`, JSON.stringify(results, null, 2))
     console.log(JSON.stringify(results, null, 2))
   } finally { await b.close() }
-})().catch(e => { console.error(e); process.exit(1) })
+})().catch(e => {
+  const out = process.env.INTRADAY_QA_OUTPUT || 'intraday-qa'
+  fs.mkdirSync(out, { recursive: true })
+  fs.writeFileSync(`${out}/failure.txt`, e.stack || String(e))
+  console.error(e)
+  process.exit(1)
+})
