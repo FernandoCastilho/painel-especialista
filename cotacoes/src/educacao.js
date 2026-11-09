@@ -350,6 +350,39 @@ export const CONCEITOS = [
     fontes: [{ nome: 'Banco Central — Resolução CMN 4.881, arts. 1º a 9º', url: 'https://www.bcb.gov.br/content/estabilidadefinanceira/especialnor/Resolu%C3%A7%C3%A3o4881.pdf' }],
   },
   {
+    id: 'fgi-peac', topico: 'Operações de crédito', nome: 'FGI e FGI PEAC (garantia para o crédito)', revisadoEm: '2026-11-09',
+    frase: 'É um fundo do BNDES que cobre parte da perda do banco quando uma empresa de menor porte não paga um empréstimo e não tem garantia suficiente.',
+    crianca: [
+      'Muitas empresas pequenas e médias não têm imóvel ou aval suficiente para dar ao banco. O FGI (Fundo Garantidor para Investimentos), administrado pelo BNDES, funciona como uma garantia complementar: se a empresa não pagar, o fundo cobre uma parte da perda do banco.',
+      'O FGI PEAC é a versão criada na pandemia (Programa Emergencial de Acesso a Crédito, Lei 14.042/2020), com recursos da União, para micro, pequenas e médias empresas. O FGI Tradicional é o fundo de sempre, mantido pelas comissões pagas nas operações.',
+      'A garantia não perdoa a dívida: a empresa continua devendo ao banco e paga uma comissão pela cobertura. O que muda é o risco do banco, que tende a aprovar com mais facilidade ou a oferecer melhores condições.',
+    ],
+    analogia: 'É como um fiador profissional: o banco aceita emprestar porque, se houver calote, parte da perda é coberta pelo fundo. Quem deve continua sendo a empresa.',
+    lacunas: [
+      'O fundo garante só uma parte da operação, não toda. O percentual coberto, o limite por operação e a comissão dependem do produto, do porte da empresa e do prazo; confirme com o agente financeiro.',
+      'O PEAC nasceu como medida temporária e foi reaberto em 2022. Não verifiquei se ele aceita novas operações hoje: pergunte ao agente financeiro antes de contar com ele.',
+      'A garantia do FGI não substitui a análise de crédito do banco nem garante a aprovação. O banco ainda decide se concede o crédito e em que condições.',
+    ],
+    preciso: {
+      texto: 'O agente financeiro credenciado pede a garantia ao BNDES para uma operação própria. Em caso de inadimplência, o fundo honra a parte garantida, dentro do limite de cobertura e das regras do produto. A comissão de garantia é cobrada da empresa e repassada ao fundo.',
+      formula: 'perda coberta = perda do banco × % de cobertura, até o limite da garantia',
+    },
+    exemplo: {
+      titulo: 'Hipotético: financiamento de R$ 1.000.000 com cobertura de 80%',
+      passos: [
+        'Uma empresa financia R$ 1.000.000 e não tem garantia suficiente. O percentual de 80% é só um exemplo, não a cobertura de um produto específico.',
+        'Se a empresa não pagar e o banco perder R$ 500.000, o fundo cobre 80% desse valor: R$ 400.000.',
+      ],
+      resultado: 'O banco fica com R$ 100.000 de perda, em vez de R$ 500.000. Por isso a garantia pode facilitar a aprovação; a empresa continua devedora de todo o valor.',
+    },
+    noApp: { texto: 'Na calculadora BNDES Finame Materiais, a ajuda "Regras do produto e fontes" cita o FGI (Tradicional ou PEAC) entre as garantias admitidas.', tab: 'calculadora', view: 'finame-materiais' },
+    teste: { pergunta: 'Se a empresa tem a garantia do FGI e não paga o banco, a dívida deixa de existir?', resposta: 'Não. O fundo cobre parte da perda do banco, mas a empresa continua devedora. A garantia reduz o risco do banco, não perdoa a dívida.' },
+    fontes: [
+      { nome: 'BNDES — Programa Emergencial de Acesso a Crédito (FGI PEAC)', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/peac' },
+      { nome: 'Planalto — Lei 14.042/2020', url: 'https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2020/lei/l14042.htm' },
+    ],
+  },
+  {
     id: 'liquidacao-antecipada',
     topico: 'Operações de crédito',
     nome: 'Liquidação antecipada (na curva, a mercado e break funding)',
@@ -1079,6 +1112,8 @@ export const LIGACOES = [
   ['reforma-tributaria', 'custo-de-funding', 'A transição dos tributos e o aproveitamento de créditos podem alterar o caixa da empresa e o valor de capital de giro a financiar.'],
   ['split-payment', 'custo-de-funding', 'A parcela tributária separada no pagamento reduz o caixa bruto disponível; planejar o giro exige considerar esse fluxo e o custo de financiá-lo.'],
   ['dividendos', 'custo-de-funding', 'Distribuir lucros retira recursos da empresa; reter parte do resultado pode reduzir a necessidade de captar, conforme o caixa e o plano de investimento.'],
+  ['fgi-peac', 'cet', 'A comissão da garantia é um encargo ligado ao crédito; entra no CET quando aplicável, conforme o contrato.'],
+  ['fgi-peac', 'custo-de-funding', 'Com parte do risco coberta pelo fundo, o banco pode aceitar emprestar a empresas sem garantia própria, o que muda o acesso e o custo do crédito.'],
   ['fee-de-estruturacao', 'custo-de-funding', 'O custo de captar e o spread ajudam a explicar os juros; a remuneração da estruturação deve ser conferida separadamente no custo completo.'],
   ['fee-de-estruturacao', 'debenture', 'Uma emissão pode envolver comissões de estruturação, coordenação e colocação, com condições próprias descritas nos documentos da oferta.'],
   ['diferencial-de-juros', 'cupom-cambial', 'O cupom cambial é o diferencial de juros depois de passar pelo dólar futuro: a parte do juro em reais que sobra em dólar.'],
@@ -1142,6 +1177,7 @@ export const CONEXAO = {
     { id: 'euribor', texto: 'é uma referência de funding bancário não garantido em euros, a prazo; não é uma taxa sem risco equivalente à SOFR. Para uma referência overnight em euros, consulte também €STR, cuja metodologia é diferente da SOFR.' },
     { id: 'custo-de-funding', texto: 'é o resultado: benchmark + spread de risco, convertido na moeda em que a instituição empresta.' },
     { id: 'cds', texto: 'é o prêmio pelo risco de crédito: quanto mais alto, mais caro captar.' },
+    { id: 'fgi-peac', texto: 'é a garantia do BNDES que cobre parte da perda do banco em crédito a empresas de menor porte; a dívida continua da empresa.' },
     { id: 'liquidacao-antecipada', texto: 'mostra quanto vale pagar antes do vencimento: o saldo do contrato (na curva), o preço de hoje (a mercado) e a indenização pelo funding quebrado (break funding).' },
     { id: 'debenture', texto: 'é a dívida longa e formal da empresa com investidores: CDI ou IPCA mais um spread.' },
     { id: 'nota-comercial', texto: 'é um título de dívida escritural; pode financiar giro ou ponte, com prazo definido na emissão.' },
