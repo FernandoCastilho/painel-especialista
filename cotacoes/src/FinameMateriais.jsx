@@ -81,10 +81,10 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const indexadorMes = mes => { const text = edits[mes]; if (text == null || text.trim() === '') return custoFinanceiro; const v = parseDecimal(text); return v !== null && v <= 100 ? v : NaN }
   const indexadorInvalido = prazo !== null && Number.isFinite(custoFinanceiro) && Object.keys(edits).some(m => Number(m) <= prazo && !Number.isFinite(indexadorMes(Number(m))))
   const temEdicao = prazo !== null && Number.isFinite(custoFinanceiro) && Object.keys(edits).some(m => Number(m) <= prazo && edits[m].trim() !== '')
-  const custoPorMes = temEdicao && !indexadorInvalido ? Array.from({ length: prazo }, (_, k) => indexadorMes(k + 1)) : undefined
+  // Valor inválido não derruba a tabela: a linha usa a cotação até o texto ficar válido, e o aviso aparece abaixo da tabela.
+  const custoPorMes = temEdicao ? Array.from({ length: prazo }, (_, k) => { const v = indexadorMes(k + 1); return Number.isFinite(v) ? v : custoFinanceiro }) : undefined
 
   const erros = {
-    indexador: indexadorInvalido ? 'Indexador da parcela: informe um valor em % a.a., de 0 a 100.' : null,
     valor: money.ok && money.value > 0 ? null : money.error || 'Informe um valor maior que zero.',
     part: participacao !== null && participacao >= REGRAS.participacaoMinPct && participacao <= 100 ? null : 'Participação de 1 a 100%.',
     prazo: prazo !== null && prazo >= 1 && prazo <= REGRAS.prazoMaxMeses ? null : `Prazo de 1 a ${REGRAS.prazoMaxMeses} meses (7 anos).`,
@@ -230,7 +230,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
         <details className="desk-panel cx-panel fm-fluxo-panel" open>
           <summary>Cronograma ilustrativo · {custo.toUpperCase()}</summary>
           <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Liberação ilustrativa hoje (${data(hoje)}). Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros ainda são calculados em meses iguais; não é memória contratual. A coluna Indexador mostra a cotação atual (TFC ou TFB) e pode ser editada em cada parcela para testar outro valor; ao trocar de cotação, volta ao publicado. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero no enquadramento FINAME confirmado.`)}</h3></header>
-          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais. Vencimento todo dia 15, ou no próximo dia útil (feriados nacionais). Não use como memória contratual.</p>{erros.indexador && <p className="cx-error" role="alert">{erros.indexador}</p>}
+          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais. Vencimento todo dia 15, ou no próximo dia útil (feriados nacionais). Não use como memória contratual.</p>{indexadorInvalido && <p className="cx-error" role="alert">Indexador da parcela: informe um valor em % a.a., de 0 a 100. Enquanto estiver inválido, a linha usa a cotação atual.</p>}
           <div className="cx-wrap fm-fluxo" role="region" aria-label="Fluxo parcela a parcela" aria-describedby="fm-calendario-hipotetico" tabIndex={0}>
             <table className="cx-matrix fm-tabela">
               <thead><tr><th scope="col">Nº</th><th scope="col">Vencimento</th><th scope="col">Indexador (% a.a.)</th><th scope="col">Saldo inicial</th><th scope="col">Juros pagos</th><th scope="col">Amortização</th><th scope="col">Parcela</th><th scope="col">IOF</th><th scope="col">Total pago</th><th scope="col">Saldo final</th></tr></thead>
