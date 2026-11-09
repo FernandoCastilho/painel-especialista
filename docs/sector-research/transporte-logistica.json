@@ -408,41 +408,82 @@
         {
           "id": "n0",
           "label": "Embarcador industrial ou comercial",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Origem da demanda: indústria, distribuidor ou varejista",
+          "emoji": "🏢",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n1",
           "label": "Coleta e consolidação",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "pedidos pequenos são recolhidos em vários clientes e reunidos para seguir na mesma viagem",
+          "emoji": "📥",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
           "label": "Transferência entre bases",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Capacidade, controle e execução entre as bases",
+          "emoji": "🚛",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n3",
           "label": "Distribuição e comprovante de entrega",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Entrega, aceite e comprovante",
+          "emoji": "📦",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
           "label": "Fluxo contratado",
-          "from": "n0"
+          "product": {
+            "emoji": "📋",
+            "label": "carga contratada pelo embarcador"
+          },
+          "cash": {
+            "emoji": "⛽",
+            "label": "combustível, folha e pedágios pagos antes de receber"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
           "label": "Execução e controle",
-          "from": "n1"
+          "product": {
+            "emoji": "🚚",
+            "label": "carga transferida entre bases"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "custo de terceiros e da rota pago pela transportadora"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "📦",
+            "label": "entrega com comprovante"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "embarcador paga após comprovante; glosas atrasam a cobrança"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga combustível, folha, pedágio e terceiros",
+          "Divergência de comprovante, falta e glosa atrasam a cobrança",
+          "Recebe do embarcador após a entrega comprovada"
+        ],
+        "text": "Combustível, folha, pedágios e terceiros antecedem o recebimento do embarcador. Divergências de comprovante, faltas e glosas atrasam a cobrança. É esse intervalo que giro bancário ou cessão de recebíveis podem atender, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de carga geral. Cumprimento de prazo, integridade e visibilidade da entrega. Separar carga lotação, em que um embarcador ocupa a viagem, da fracionada, que exige coleta, consolidação e distribuição. Uma mesma receita por tonelada não representa a mesma produtividade nos dois modelos. A margem nasce do uso da capacidade ao longo de toda a rota, não apenas do frete de ida. Retorno vazio, redespacho, avaria, espera e reentrega podem tornar deficitário um contrato com faturamento crescente. Segregar custos da transferência e da última etapa evita subsidiar clientes complexos. A PMS do IBGE registra crescimento de 0,5% no volume de serviços rodoviários de cargas no acumulado de janeiro a agosto de 2026 contra igual período anterior. É agregado amplo, não taxa exclusiva de carga geral. A série anual recuperada mostra movimentos em direções distintas; comparar o ano parcial com anos completos exige manter os períodos explícitos. Combustível, folha, pedágios e contratação de terceiros antecedem o recebimento do embarcador. Divergências de comprovante, faltas e glosas atrasam cobrança. Um limite de giro deve acompanhar viagens efetivamente executadas e valores incontroversos, não somente contratos assinados. Renovação de caminhões, telemetria e mecanização de bases precisam ser avaliadas por ganho de disponibilidade e custo total. Alongar dívida de veículos não resolve rotas estruturalmente deficitárias. Encaixes financeiros propostos: giro bancário ou cessão de recebíveis podem atender descasamento operacional documentado. Cessão exige entrega, exigibilidade, ausência de disputa e avaliação de concentração; FIDC ou securitização acrescentam custo de estrutura e não são automaticamente acessíveis à empresa média. Investimento requer prazo coerente com vida útil e geração de caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade.",
     "reviewStatus": "approved",
@@ -804,41 +845,82 @@
         {
           "id": "n0",
           "label": "Floresta e talhão",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "a madeira plantada é colhida no ritmo que a fábrica ou a serraria consome",
+          "emoji": "🌲",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n1",
           "label": "Carregamento de toras",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "as toras são colocadas nos conjuntos florestais, e fila no pátio reduz as viagens possíveis",
+          "emoji": "🪵",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n2",
           "label": "Estrada florestal e rodovia",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Ciclo: carga, deslocamento, fila, descarga e retorno",
+          "emoji": "🛣️",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n3",
           "label": "Pátio de fábrica ou serraria",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Entrega e medição no pátio da fábrica ou serraria",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
           "label": "Fluxo contratado",
-          "from": "n0"
+          "product": {
+            "emoji": "🌲",
+            "label": "toras prontas para carregar"
+          },
+          "cash": {
+            "emoji": "👷",
+            "label": "frota e pessoal comprometidos antes do pagamento"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
           "label": "Execução e controle",
-          "from": "n1"
+          "product": {
+            "emoji": "🚛",
+            "label": "toras em viagem por estrada florestal e rodovia"
+          },
+          "cash": {
+            "emoji": "⛽",
+            "label": "diesel, pneus e manutenção pagos pelo transportador"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "🪵",
+            "label": "madeira entregue e medida no pátio"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "contratante paga após a medição"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga frota, pessoal, diesel e manutenção",
+          "Fila, chuva e estrada ruim reduzem ciclos; espera pela medição",
+          "Recebe do contratante após a medição"
+        ],
+        "text": "Frota e pessoal ficam comprometidos antes de a medição do contratante liberar pagamento. Pode haver diferença entre a disponibilidade contratada e o que é efetivamente faturável. Giro bancário ou cessão de recebíveis podem atender esse descasamento, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Transporte de madeira. Disponibilidade sincronizada com colheita e consumo industrial, com transporte seguro de toras. Separar madeira plantada destinada à indústria de produtos de espécies nativas sujeitos à comprovação de origem; uma regra documental não deve ser generalizada a toda madeira. A economia é de ciclo completo: carga, deslocamento, fila, descarga e retorno. Peso, volume e umidade não são intercambiáveis. Aumento do raio de abastecimento deve ser refletido em custo e remuneração; preço por tonelada sem distância e tempo esconde erosão de margem. O Serviço Florestal Brasileiro mantém base pública de produtos madeireiros e não madeireiros com origem na PEVS, atualizada em outubro de 2026 e granularidade estadual. Ela permite mapear a origem da demanda florestal, mas não mede contratos de frete. O DOF+ trata da rastreabilidade de produtos florestais nativos; verificar a aplicação ao produto e à operação. Como funciona. Celulose, painéis, serrarias e produtores florestais contratam fluxo físico contínuo. Um contrato dedicado pode dar previsibilidade, mas atrela utilização a uma fábrica, talhão e distância de abastecimento. Conjuntos florestais, carregadores, manutenção severa, pneus, diesel e motoristas habilitados. Estradas internas, chuva e fila no pátio afetam o número de ciclos realizável mesmo sem mudar a quilometragem contratada. Caixa e financiamento. Frota e pessoal ficam comprometidos antes de a medição do contratante liberar pagamento. Apurar diferença entre disponibilidade contratada e efetivamente faturável. Mudança do talhão pode exigir capital adicional sem aumentar a receita na mesma proporção. Implementos especializados e manutenção preventiva são investimentos vinculados ao contrato. O prazo do ativo e o saldo de dívida devem sobreviver à possibilidade de encerramento ou remanejamento; verificar mercado secundário e custo de adaptação. Cenários. Abastecimento industrial mantém operação, com remuneração ajustada às frentes de corte. Menor fila e melhor planejamento elevam viagens úteis sem nova frota. Parada de fábrica ou chuva prolongada deixa ativos sem receita e mantém serviço da dívida. Na visita, pergunte: Quem absorve o aumento da distância quando muda a frente de corte? O contrato paga disponibilidade quando a fábrica ou a colheita paralisa? Como a empresa valida a origem e as condições de amarração antes de carregar? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",
@@ -1214,41 +1296,82 @@
         {
           "id": "n0",
           "label": "Produtor e armazém de origem",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "a carga sai da fazenda ou do armazém no ritmo da colheita e do embarque",
+          "emoji": "🌾",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n1",
           "label": "Carga rodoviária a granel",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "caminhões graneleiros levam a mercadoria, com risco de perda por umidade e pesagem",
+          "emoji": "🚛",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
-          "label": "Transbordo ferroviário ou hidroviário",
-          "detail": "Capacidade, controle e execução"
+          "label": "Destino e modal",
+          "detail": "Origem, destino, modal e janela definem a demanda do transportador",
+          "emoji": "🧭",
+          "bank": "Investimento só com prazo coerente com a vida útil e a geração de caixa"
         },
         {
           "id": "n3",
           "label": "Indústria ou porto",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Entrega na indústria ou no porto",
+          "emoji": "🚢",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
           "label": "Fluxo contratado",
-          "from": "n0"
+          "product": {
+            "emoji": "🌽",
+            "label": "grãos a escoar na safra"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "desembolso da viagem e adiantamento ao motorista"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
           "label": "Execução e controle",
-          "from": "n1"
+          "product": {
+            "emoji": "🚚",
+            "label": "grãos transportados a granel até o destino"
+          },
+          "cash": {
+            "emoji": "🛢️",
+            "label": "diesel, pneus e manutenção como custo da empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "📦",
+            "label": "grãos entregues, sujeitos a ajuste de peso"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento depende de comprovantes e ajustes de peso"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga cada viagem antes de receber",
+          "Demora na descarga e ajustes de peso alongam o giro",
+          "Recebe após comprovantes, conforme o calendário de escoamento"
+        ],
+        "text": "O desembolso por viagem antecede o recebimento. Antecipação ao motorista e demora de descarga aumentam o giro, e os recebíveis dependem de comprovantes e ajustes de peso. O giro sazonal deve ter liquidação compatível com o calendário real de escoamento. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Transporte de grãos. Escoamento no calendário de colheita e embarque. Soja, milho e trigo têm fluxos distintos, e a rota de insumos no retorno pode alterar a rentabilidade. Separar transportador, agenciador de frete e trading que comercializa a mercadoria. Preço por tonelada deve ser comparado com distância, fila, pedágio, retorno e perdas. A sazonalidade cria disputa por frota no pico e ociosidade depois; renovar frota com base na melhor tarifa da safra superestima capacidade de pagamento. Em setembro de 2026, a Conab relatou fretes pressionados por diesel e movimentação de insumos, com diferenças entre Mato Grosso, Mato Grosso do Sul, Goiás e outras praças. A leitura analítica é que a exposição deve ser medida por corredor, não por crescimento agregado da safra. Comparação completa de tarifas históricas ainda não foi extraída. Como funciona. Produtores, cooperativas, cerealistas, tradings e esmagadoras. O volume comercializado só vira demanda do transportador quando se conhece origem, destino, modal e janela; safra recorde não assegura frete alto em todas as praças. Graneleiros, diesel, pneus, manutenção, motoristas e pontos de apoio. Umidade, contaminação, limpeza e diferenças de pesagem influenciam perdas, rejeição e responsabilidade. Caixa e financiamento. O desembolso por viagem antecede recebimento. Antecipação ao motorista e demora de descarga aumentam giro. Recebíveis dependem de comprovantes e ajustes de peso; giro sazonal deve ter liquidação compatível com o calendário real de escoamento. Graneleiros e sistemas de agendamento podem ampliar produtividade. Antes de aumentar frota, testar ociosidade de entressafra e possibilidade de transportar insumos compatíveis no retorno, incluindo limpeza e segregação. Cenários. Fluxos agrícolas permanecem, com diferenças entre culturas e corredores. Programação reduz filas e contrata retorno, elevando utilização anual. Clima, restrição de porto ou queda de embarques desloca frota e deprime frete local. Na visita, pergunte: Quanto do resultado anual depende da janela mais cara da colheita? Qual retorno é contratado e qual é apenas expectativa? Quem remunera espera e quem responde por diferença de peso? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",
@@ -1604,41 +1727,82 @@
         {
           "id": "n0",
           "label": "Indústria de perecíveis",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "frigoríficos, laticínios e processadores produzem o alimento que será transportado sob frio",
+          "emoji": "🥩",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n1",
           "label": "Pré-resfriamento e expedição",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "a carga já deve sair resfriada da indústria, pois o veículo não substitui o resfriamento",
+          "emoji": "❄️",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
           "label": "Transporte com monitoramento",
-          "detail": "Capacidade, controle e execução"
+          "detail": "o baú com unidade frigorífica mantém a condição do produto, com sensores que comprovam a temperatura",
+          "emoji": "🌡️",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n3",
           "label": "Recebimento e conferência",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "o cliente confere temperatura, embalagem e janela, e pode recusar a entrega mesmo com a viagem feita",
+          "emoji": "✅",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
           "label": "Fluxo contratado",
-          "from": "n0"
+          "product": {
+            "emoji": "🥫",
+            "label": "carga já resfriada, pronta para expedir"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, limpeza e monitoramento pagos pela transportadora"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
           "label": "Execução e controle",
-          "from": "n1"
+          "product": {
+            "emoji": "🚚",
+            "label": "carga transportada com temperatura comprovada"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "refrigeração ligada, inclusive na espera, é custo do transportador"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "📦",
+            "label": "entrega aceita, sem recusa de temperatura ou embalagem"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento do frete após o aceite; perda de carga pode gerar disputa"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga refrigeração, energia, limpeza e monitoramento",
+          "O custo aparece antes do aceite sanitário e comercial",
+          "Recebe após o aceite, se não houver disputa de perda de carga"
+        ],
+        "text": "O custo aparece antes do aceite sanitário e comercial. Uma ocorrência pode bloquear o recebimento e gerar indenização maior que o frete. O capital de giro não deve antecipar como líquido um valor sujeito a discussão de perda de carga. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Transporte refrigerado. Preservar condição do produto durante todo o trajeto, com prova de temperatura e rastreio. Alimento refrigerado, congelado e medicamento termolábil são mercados distintos; este estudo foca alimentos e não transfere exigências farmacêuticas automaticamente. A tarifa precisa remunerar refrigeração ligada durante espera, limpeza, monitoramento e risco contratual. Misturar produtos incompatíveis para ocupar veículo pode aumentar perdas. Aberturas de porta e entregas sucessivas exigem desenho de rota diferente da lotação. Os dados oficiais de abate e leite são sinais de atividade dos embarcadores, não volume contratado de transporte refrigerado. Não foi localizada série nacional autônoma de receita ou volume do frete refrigerado nem preço recente comparável; a conjuntura quantitativa permanece aberta. Como funciona. Frigoríficos, laticínios, processadores, distribuidores e redes de alimentação. A entrega só cria valor se for aceita, e pode ser recusada por temperatura, embalagem ou janela mesmo com viagem concluída. Baú isotérmico, unidade frigorífica, energia, manutenção, higienização e sensores. A carga deve chegar à expedição nas condições corretas: o veículo não deve ser tratado como substituto do processo industrial de resfriamento. Caixa e financiamento. O custo aparece antes do aceite sanitário e comercial; uma ocorrência pode bloquear recebimento e gerar indenização maior que o frete. Capital de giro não deve antecipar como líquido um valor sujeito a discussão de perda de carga. Manutenção preventiva, sensores e redundância operacional sustentam serviço. O investimento em baú e unidade frigorífica deve considerar vida útil, disponibilidade de assistência e custo energético ao longo do contrato. Cenários. Volume dos clientes sustenta rotas com prioridade ao controle de perdas. Melhor roteirização e registros reduzem recusas e sustentam renovação contratual. Falha de equipamento ou crise sanitária provoca perda, suspensão e tensão de caixa. Na visita, pergunte: Como o registro distingue temperatura do ar e condição do produto? Quem responde se a carga já chega inadequada à expedição? A cobertura de seguro inclui os riscos térmicos efetivamente assumidos? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",
@@ -2006,41 +2170,82 @@
         {
           "id": "n0",
           "label": "Expedidor e classificação",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "quem despacha define a classe do produto, o que determina as exigências da viagem",
+          "emoji": "🧪",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n1",
           "label": "Embalagem ou tanque compatível",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "o produto vai em embalagem ou tanque compatível com a sua natureza química",
+          "emoji": "🛢️",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n2",
           "label": "Transporte sinalizado e controlado",
-          "detail": "Capacidade, controle e execução"
+          "detail": "motorista treinado leva a carga com sinalização e documentação, e a limpeza do retorno também conta",
+          "emoji": "⚠️",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n3",
           "label": "Destinatário e descontaminação",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Entrega ao destinatário e descontaminação",
+          "emoji": "🧼",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
           "label": "Fluxo contratado",
-          "from": "n0"
+          "product": {
+            "emoji": "📋",
+            "label": "carga perigosa classificada e embalada"
+          },
+          "cash": {
+            "emoji": "🔧",
+            "label": "inspeções e manutenção pagas antes de receber"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
           "label": "Execução e controle",
-          "from": "n1"
+          "product": {
+            "emoji": "🚛",
+            "label": "carga transportada com sinalização e documentação"
+          },
+          "cash": {
+            "emoji": "🛡️",
+            "label": "emergência, seguro e motoristas treinados são custo do transportador"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "🧼",
+            "label": "entrega, limpeza e comprovação da descontaminação"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "frete deve cobrir limpeza, retorno e disponibilidade de emergência"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga inspeções, manutenção e disponibilidade de emergência",
+          "Limpeza, descontaminação e retorno com resíduo fazem parte da operação",
+          "Recebe o frete, que deve cobrir esses custos"
+        ],
+        "text": "Pagamentos operacionais e manutenção precedem o recebimento, e um evento ambiental pode gerar despesas e interrupção. O giro normal deve ser separado de contingências e franquias. Giro bancário ou cessão de recebíveis podem atender o descasamento documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Transporte de produtos perigosos. Transportar substâncias classificadas como perigosas com segurança e documentação apropriada. O recorte inclui carga embalada e granel, mas os requisitos dependem da classe, produto, equipamento e operação, e não de uma temperatura ou licença única. O frete deve pagar inspeções, limpeza, descontaminação, retorno com resíduo e disponibilidade de emergência. Receita por quilômetro sem esses componentes pode parecer competitiva enquanto transfere risco não precificado para o transportador. A fonte oficial da ANTT recuperada em 2026 mantém o regulamento e perguntas frequentes. A ANP anunciou aprovação da retomada de restrição à comercialização de biodiesel entre distribuidores, ilustrando mudança na cadeia de combustível, mas esse ato não altera automaticamente contratos de transporte de todos os perigosos. Como funciona. Indústrias químicas, distribuidores de combustíveis e outros expedidores. Continuidade, qualificação e resposta a incidentes são parte da compra; contrato comercial não elimina responsabilidade legal. Tanques, embalagens, válvulas, equipamentos de emergência, motoristas treinados, seguros e locais de limpeza. Compatibilidade química determina possibilidade de reaproveitar capacidade entre produtos. Caixa e financiamento. Pagamentos operacionais e manutenção precedem recebimento; evento ambiental pode gerar despesas e interrupção. Separar giro normal de contingências, franquias e obrigações não cobertas, sem presumir que uma apólice elimina todo passivo. Equipamento compatível e certificações devem ser conferidos antes de financiar expansão. Dívida longa requer contratos e possibilidade real de realocação; tanque especializado não tem liquidez equivalente a veículo genérico. Cenários. Operação segue com contratos aderentes aos custos de segurança e limpeza. Melhor utilização de equipamento compatível reduz ociosidade sem comprometer prevenção. Incidente ou paralisação de cliente reduz receita e cria necessidade extraordinária de caixa. Na visita, pergunte: Qual substância exige equipamento que não pode ser realocado? Como se valida compatibilidade antes de aceitar nova carga? Existe obrigação ambiental ou indenização assumida acima da cobertura contratada? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",
@@ -2459,41 +2664,82 @@
         {
           "id": "n0",
           "label": "Recepção e classificação",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "a mercadoria de terceiros chega, é pesada e conferida antes de ser guardada",
+          "emoji": "📥",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n1",
           "label": "Secagem ou preparação",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "o produto passa por secagem ou ajuste antes de ser guardado, e esse ponto pode virar gargalo",
+          "emoji": "☀️",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n2",
           "label": "Conservação e controle de estoque",
-          "detail": "Capacidade, controle e execução"
+          "detail": "silos e galpões guardam o produto com aeração e controle de pragas, e o estoque é acompanhado",
+          "emoji": "🏬",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n3",
           "label": "Expedição e conciliação",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "a mercadoria sai conforme o contrato e o que foi retirado é conferido com o estoque guardado",
+          "emoji": "📤",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
           "label": "Fluxo contratado",
-          "from": "n0"
+          "product": {
+            "emoji": "🌾",
+            "label": "mercadoria recebida para guarda"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, mão de obra e controles pagos pelo armazenador"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
           "label": "Execução e controle",
-          "from": "n1"
+          "product": {
+            "emoji": "🔧",
+            "label": "mercadoria seca e preparada"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "aeração, controle de pragas e seguro seguem como custo"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "🚚",
+            "label": "mercadoria expedida e conciliada"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga guarda, movimentação e serviços; o prazo de cobrança é financiado"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga energia, secagem, controles e seguro",
+          "Mercadoria guardada ocupa a capacidade e alonga o prazo de cobrança",
+          "Recebe pela guarda e pelos serviços"
+        ],
+        "text": "O armazenador de terceiros financia a operação e o prazo de cobrança. O comerciante dono do grão financia também o estoque e o risco de preço. Os contratos devem identificar titularidade, ônus e disponibilidade física antes de qualquer garantia. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Armazenagem. Guardar, preservar e disponibilizar mercadoria conforme contrato. Distinguir armazenagem agrícola a granel, depósito geral de bens embalados e cadeia fria. A evidência quantitativa recuperada refere-se a capacidade agrícola, não a todo o mercado de galpões e serviços. Margem depende de ocupação e giros, mix de serviços, consumo de energia e perdas. Manter mercadoria por mais tempo pode gerar receita de guarda e bloquear capacidade para nova safra. Capacidade estática e fluxo anual não podem ser comparados como se fossem a mesma unidade econômica. A Pesquisa de Estoques registra expansão de capacidade útil nos pontos comparáveis recuperados. O aumento nacional não elimina gargalos locais e tampouco mede o segmento refrigerado. A comparação entre extremos não é uma série anual contínua e não foi usada para calcular déficit por subtração simples da safra. Como funciona. Produtores, cooperativas, indústrias e comerciantes. A receita pode vir de ocupação, movimentação, secagem e serviços; guardar estoque próprio é economicamente diferente de cobrar pela guarda de terceiros. Silos ou galpões, balanças, secagem, energia, aeração, controle de pragas, sistemas e seguro. Capacidade nominal não prova capacidade efetiva se a recepção, secagem ou expedição é gargalo. Caixa e financiamento. Armazenador de terceiros financia operação e prazo de cobrança; comerciante proprietário do grão financia também estoque e risco de preço. Contratos e controles devem identificar titularidade, ônus e disponibilidade física antes de qualquer garantia. Ampliação de silo, secador, balança e expedição deve corrigir o gargalo demonstrado. Não assumir elegibilidade a programa direcionado nem anunciar recursos sem verificar abertura e condições atuais. Avaliação de investimento deve testar sazonalidade e capacidade licenciada. Cenários. Expansão acompanha demanda local, preservando ocupação e controles. Melhor coordenação de expedição aumenta giros e receita sem expansão equivalente. Safra local menor ou concorrente novo reduz ocupação, enquanto dívida e manutenção persistem. Na visita, pergunte: Qual gargalo impede usar a capacidade declarada? O estoque dado em garantia pertence a quem e está conciliado fisicamente? Quanto da margem depende de secagem, guarda e movimentação? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",
@@ -2876,41 +3122,82 @@
         {
           "id": "n0",
           "label": "Originação ou importação",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "exportadores e importadores trazem a carga que vai embarcar ou desembarcar no porto",
+          "emoji": "🚢",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n1",
           "label": "Acesso rodoviário, ferroviário ou hidroviário",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "a carga chega ao porto por estrada, ferrovia ou rio, e o elo mais lento pode ficar fora do terminal",
+          "emoji": "🚛",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
           "label": "Terminal e armazenagem",
-          "detail": "Capacidade, controle e execução"
+          "detail": "a carga é movimentada e guardada no terminal, que pode cobrar pela permanência",
+          "emoji": "🏗️",
+          "bank": "Investimento, com prazo coerente com a vida útil"
         },
         {
           "id": "n3",
           "label": "Navio e destino comercial",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Embarque no navio e destino comercial",
+          "emoji": "⚓",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
           "label": "Fluxo contratado",
-          "from": "n0"
+          "product": {
+            "emoji": "📋",
+            "label": "carga em direção ao porto"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "pagamentos a terceiros antes do aceite do serviço"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
           "label": "Execução e controle",
-          "from": "n1"
+          "product": {
+            "emoji": "🚛",
+            "label": "carga entregue ao terminal pelos acessos"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, mão de obra e sistemas pagos pelo operador"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "🚢",
+            "label": "carga movimentada e embarcada"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cobrança de movimentação, guarda e serviços; avaria ou demora podem gerar contestação"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga terceiros e serviços antes do aceite",
+          "Permanência e acessos lentos alongam o ciclo",
+          "Recebe a movimentação, a guarda e os serviços"
+        ],
+        "text": "Operadores médios podem financiar serviços antes do aceite e pagamentos a terceiros. Recebíveis contestados por avaria, demora ou cobrança adicional exigem validação antes de antecipação. O giro bancário pode atender o descasamento, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Logística portuária. Coordenar acesso, movimentação, armazenagem e embarque ou desembarque. Separar autoridade portuária, terminal arrendado ou autorizado, operador, agente marítimo e prestador logístico; não são receitas intercambiáveis. Receita varia entre movimentação, guarda e serviços acessórios. Volume em toneladas, contêineres em TEU e quantidade de escalas respondem a questões distintas. Maior permanência pode elevar cobrança e simultaneamente reduzir capacidade e satisfação do cliente. O balanço da ANTAQ mostra maior movimentação em 2025 frente a 2024. Isso favorece demanda potencial por serviços, mas a conclusão de margem é inferência condicionada a tarifas, produtividade e custos. O último mês de 2026 não foi recuperado; o balanço anual não deve ser chamado de dado em tempo real. Como funciona. Armadores, importadores, exportadores e donos de carga. Ganho de volume não é suficiente quando o contrato remunera mal a movimentação ou a infraestrutura exige expansão antes da receita. Berços, calado, guindastes, correias, pátio, mão de obra, energia e sistemas de agendamento. O elo mais lento pode estar fora do terminal, na ferrovia, acesso rodoviário ou liberação documental. Caixa e financiamento. Operadores médios podem financiar serviços antes do aceite e pagamentos a terceiros. Um terminal com infraestrutura própria tem outra estrutura de capital. Recebíveis contestados por avaria, demora ou cobrança adicional exigem validação antes de antecipação. Investimentos em equipamento precisam de demanda contratada e compatibilidade com prazo e condições da outorga. Prestador de serviço pode investir em sistemas e ativos móveis; não presumir acesso a estrutura financeira de concessionária de grande porte. Cenários. Demanda acompanha comércio e produção, com crescimento limitado pelo acesso. Melhor produtividade libera capacidade e preserva margem sem mesma expansão física. Desvio de rota, atraso de obra ou queda do cliente âncora deixa ativos ociosos. Na visita, pergunte: Qual parte da fila é controlável pelo operador? O contrato cobre investimento antes de vencer a outorga ou o acordo comercial? Quanto da receita depende de armazenagem causada por atraso do cliente? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",

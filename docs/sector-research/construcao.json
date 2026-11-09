@@ -390,41 +390,82 @@
         {
           "id": "0",
           "label": "terreno projeto e licenças",
-          "detail": "Fluxo físico e financeiro: terreno projeto e licenças"
+          "detail": "Terreno e incorporação vêm antes de tudo; a obra só começa depois do projeto",
+          "emoji": "🏞️",
+          "bank": "Sem encaixe confirmado nesta fase; financiamento à produção, recebíveis e capital próprio têm usos e garantias distintos"
         },
         {
           "id": "1",
           "label": "vendas e financiamento",
-          "detail": "Terreno e incorporação antecedem projeto, licenciamento, comercialização, obra e entrega. Incorporador assume risco comercial; construtora contratada assume execução conforme contrato. Separar habitação subsidiada, mercado de renda intermediária e alto padrão, sem aplicar média única."
+          "detail": "Comercialização do imóvel; o incorporador assume o risco comercial",
+          "emoji": "🏷️",
+          "bank": "Giro bancário ou financiamento à produção, com recursos separados por empreendimento; linha não confirmada"
         },
         {
           "id": "2",
-          "label": "obra e medições",
-          "detail": "Fluxo físico e financeiro: obra e medições"
+          "label": "obra e entrega",
+          "detail": "A construtora executa a obra conforme o contrato",
+          "emoji": "🏗️",
+          "bank": "Giro bancário para a diferença entre compra e recebimento"
         },
         {
           "id": "3",
           "label": "entrega e repasse",
-          "detail": "Fluxo físico e financeiro: entrega e repasse"
+          "detail": "Entrega da unidade, aceite e repasse ao comprador",
+          "emoji": "🔑",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Projeto e licença",
+          "product": {
+            "emoji": "📐",
+            "label": "projeto aprovado e licenciado"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "terreno, projeto e licenças antecedem a comercialização"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Venda",
+          "product": {
+            "emoji": "📋",
+            "label": "unidades colocadas à venda"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento do comprador, que depende da capacidade de pagamento e do repasse"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Obra e entrega",
+          "product": {
+            "emoji": "🧱",
+            "label": "obra executada e unidades entregues"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "custos da obra seguem correndo; recebimento final depende de aceite e repasse"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga terreno, projeto e obra",
+          "Obra corre e a venda ou o repasse ainda não fechou",
+          "Recebe na entrega, com aceite e repasse"
+        ],
+        "text": "Terreno, projeto e obra são pagos antes de o dinheiro da venda entrar por completo. Aumento de custo ou atraso pode consumir resultado mesmo com boa velocidade de venda, e obra vendida pode ter o recebimento final adiado se documentação ou repasse não estiverem concluídos. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Construção residencial. Construção residencial: Terreno e incorporação antecedem projeto, licenciamento, comercialização, obra e entrega. Tese operacional: Localização, produto adequado, execução e confiança influenciam vendas; concorrência se dá em micromercados e faixas de renda, não só em volume nacional. Principal vulnerabilidade: Venda depende de capacidade de pagamento e eventual repasse ao comprador; aumento de custo ou atraso pode consumir resultado mesmo com boa velocidade de venda. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Financiamento à produção, recebíveis e capital próprio têm usos e garantias distintos. Examinar segregação por empreendimento, recursos vinculados e custo a completar antes de tratar caixa consolidado como livre. Terreno e incorporação antecedem projeto, licenciamento, comercialização, obra e entrega. Incorporador assume risco comercial; construtora contratada assume execução conforme contrato. Separar habitação subsidiada, mercado de renda intermediária e alto padrão, sem aplicar média única. Vendas líquidas de distratos, recebimentos, obra realizada versus orçamento, custo a incorrer e unidades prontas não vendidas. Valor geral de vendas não é caixa disponível nem receita integral no lançamento. Não há ranking nacional único adequado a construtoras médias: a competição é local. A PAIC permite análise regional, mas seus resultados não foram extraídos em série para esse recorte. O SINAPI oferece referência de custo e a PAIC estrutura de produção; nenhum deles mede diretamente lançamento, preço do imóvel ou aprovação de crédito do comprador. Industrialização de etapas, compatibilização de projetos e redução de retrabalho podem proteger margem quando não comprimem qualidade e prazo. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Na análise de concorrência: Aluguel, compra de imóvel usado ou reforma podem substituir a aquisição de imóvel novo. Localização, crédito, preferência por posse e adequação da unidade condicionam a escolha. Para novos entrantes: Terreno adequado, aprovações, equipe de execução e confiança do comprador demandam capital antes das vendas. Histórico de entrega e capacidade de administrar garantias reduzem entrada confiável. No ambiente externo, Juros e restrição de crédito podem reduzir compradores elegíveis; queda de renda ou excesso de oferta no micromercado alongam vendas enquanto custos da obra continuam. Evidência comercial complementar. Caso observado: publicação estadual de janeiro de 2026 registra a entrega da etapa final do Residencial Cores de Outono, na Cidade Industrial de Curitiba, com projeto e execução da MRV Engenharia, parceria com o Estado e financiamento da Caixa. O caso associa localização, produto e apoio à entrada do comprador; não comprova liderança nacional nem condições disponíveis hoje a qualquer empreendimento. O caso de Curitiba documenta entrega, não somente lançamento. Os subsídios de entrada e o financiamento integram o acesso ao produto, mas dependem do enquadramento dos compradores. Em Manaus, a entrega do Morar Melhor em maio de 2026 ocorreu com Habite-se municipal emitido. Inferência: capacidade de pagar e regularização da obra são condições distintas; uma obra vendida pode ter o recebimento final postergado se documentação ou repasse não estiverem concluídos.",
     "reviewStatus": "approved",
@@ -810,41 +851,82 @@
         {
           "id": "0",
           "label": "terreno acessos e demanda",
-          "detail": "Fluxo físico e financeiro: terreno acessos e demanda"
+          "detail": "Terreno bem localizado e com acessos sustenta o projeto",
+          "emoji": "📍",
+          "bank": "Giro bancário, se houver diferença entre pagar projeto e licença e receber; a documentar"
         },
         {
           "id": "1",
           "label": "licenças e construção",
-          "detail": "Terreno e acessos suportam projeto, licenciamento, obra e adequação ao ocupante. Distinguir construtora por empreitada, desenvolvedor que vende ativo e proprietário que recebe aluguel; contratos sob medida diferem de construção especulativa."
+          "detail": "Projeto, licenciamento e obra; pode ser empreitada, venda do ativo ou aluguel",
+          "emoji": "🏗️",
+          "bank": "Financiamento da obra, conforme avanço físico"
         },
         {
           "id": "2",
           "label": "adequação ao ocupante",
-          "detail": "Fluxo físico e financeiro: adequação ao ocupante"
+          "detail": "Adequação do galpão às necessidades do ocupante",
+          "emoji": "🔧",
+          "bank": "Giro bancário para a diferença entre compra e recebimento"
         },
         {
           "id": "3",
           "label": "locação operação ou venda",
-          "detail": "Fluxo físico e financeiro: locação operação ou venda"
+          "detail": "Locação, operação ou venda do galpão pronto",
+          "emoji": "🏢",
+          "bank": "Financiamento de longo prazo apoiado em locação"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Projeto e obra",
+          "product": {
+            "emoji": "📐",
+            "label": "projeto licenciado e obra em andamento"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "terreno, licenças e obra pagos antes de haver receita"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Adequação",
+          "product": {
+            "emoji": "🛠️",
+            "label": "galpão ajustado ao ocupante"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "custo da adequação sai antes; o caixa depende da entrega aceita pelo ocupante"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Locação ou venda",
+          "product": {
+            "emoji": "📦",
+            "label": "galpão pronto, locado ou vendido"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "aluguel ou preço de venda pagos pelo ocupante ou comprador"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga terreno e obra",
+          "Obra pronta sem locação: despesa sem receita",
+          "Recebe aluguel ou venda"
+        ],
+        "text": "O financiamento da obra depende do avanço físico e de como a dívida será liquidada. Obra pronta sem locação gera despesa e serviço da dívida sem receita, e projeto muito específico aumenta o custo de reocupar o galpão quando o inquilino sai. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Galpões. Galpões: Terreno e acessos suportam projeto, licenciamento, obra e adequação ao ocupante. Tese operacional: Acesso rodoviário, raio de entrega, docas, piso, energia e prevenção de incêndio definem aderência ao usuário. Terreno barato pode elevar custo logístico do ocupante. Principal vulnerabilidade: Obra pronta sem locação gera despesa e serviço da dívida sem receita; projeto muito específico aumenta custo de reocupação após saída do inquilino. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Financiamento da construção depende de avanço físico e fontes de liquidação; dívida de longo prazo apoiada em locação requer contrato, qualidade do locatário e análise de vacância. CRI ou fundo não é alternativa automática para empresa média. Terreno e acessos suportam projeto, licenciamento, obra e adequação ao ocupante. Distinguir construtora por empreitada, desenvolvedor que vende ativo e proprietário que recebe aluguel; contratos sob medida diferem de construção especulativa. Área útil locável, pré-locação, cronograma, custo a completar, vacância por imóvel e renda efetivamente recebida. Aluguel pedido não é aluguel contratado; absorção bruta não é líquida. O estudo de impacto publicado em Joinville é exemplo concreto de exigências urbanísticas de empreendimento logístico. Não prova condição de polo dominante, aprovação da obra ou retorno do investimento. Relatórios privados localizados usam universos diferentes de classes e regiões; suas vacâncias não foram combinadas nem convertidas em estatística oficial. Não há série pública própria recuperada neste dossiê. Requalificação de imóvel bem localizado e adaptação a ocupante contratado podem reduzir risco frente à expansão especulativa, desde que custo e licenças sejam conhecidos. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Na análise de concorrência: Locação de imóvel existente, retrofit e terceirização da armazenagem podem substituir a construção de galpão novo. Pé-direito, piso, localização e exigências do ocupante limitam a adaptação. Para novos entrantes: Terreno logístico adequado, licenciamento, drenagem, acesso e execução compatível com o ocupante exigem coordenação. Garantias de entrega e capital até o aceite restringem novos fornecedores. No ambiente externo, Vacância ou adiamento de expansão do ocupante podem postergar contratos; restrições de acesso e mudança de uso do solo afetam atratividade logística. Evidência comercial complementar. Notícia empresarial de novembro de 2026 registra a inauguração do hub da Unilever em Itupeva (SP), com abastecimento de sua rede e operação logística pela Kuehne + Nagel. O caso, divulgado em notícia empresarial, identifica usuário, operador e localização. Não informa o proprietário do imóvel nem o construtor; não permite presumir locação, contrato sob medida ou preço do aluguel. No caso de Itupeva, a estrutura foi desenhada para integrar fábricas paulistas e centros de distribuição, com automação de movimentação e armazenagem. Inferência: demanda por galpão é especificação operacional, não apenas área coberta. Energia, piso, acesso e compatibilidade com equipamentos precisam ser acertados antes da entrega; uma instalação altamente customizada pode custar mais para adaptar a outro ocupante. O caso não mede vacância ou absorção líquida nacional.",
     "reviewStatus": "approved",
@@ -1250,41 +1332,82 @@
         {
           "id": "0",
           "label": "projeto licença e contratação",
-          "detail": "Fluxo físico e financeiro: projeto licença e contratação"
+          "detail": "Planejamento, licenças e contratação do projeto",
+          "emoji": "📑",
+          "bank": "Giro bancário para a fase antes da execução"
         },
         {
           "id": "1",
           "label": "mobilização e execução",
-          "detail": "Projetos de transporte, saneamento e energia passam por planejamento, licenças, contratação, mobilização, execução, medição e operação. Empreiteira, concessionária e fornecedora de equipamentos têm riscos e ciclos diferentes."
+          "detail": "Mobilização de equipe e equipamentos e início da execução",
+          "emoji": "🚜",
+          "bank": "Financiamento de equipamentos, se o retorno se provar"
         },
         {
           "id": "2",
           "label": "medição e pagamento",
-          "detail": "Fluxo físico e financeiro: medição e pagamento"
+          "detail": "Medição do que foi executado e pagamento",
+          "emoji": "📏",
+          "bank": "Giro bancário para a diferença entre compra e recebimento"
         },
         {
           "id": "3",
           "label": "operação e manutenção",
-          "detail": "Fluxo físico e financeiro: operação e manutenção"
+          "detail": "Fase posterior à entrega, em que a obra é mantida ou operada, com riscos diferentes da empreiteira",
+          "emoji": "🛣️",
+          "bank": "Financiamento de projeto é do concessionário, não da empreiteira média"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Contratação",
+          "product": {
+            "emoji": "📝",
+            "label": "contrato assinado e licenças obtidas"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "custo de mobilização pago pela empreiteira antes de receber"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Execução",
+          "product": {
+            "emoji": "🏗️",
+            "label": "trabalho executado e equipamentos em campo"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "custos da obra seguem correndo até a medição"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Entrega e operação",
+          "product": {
+            "emoji": "🚦",
+            "label": "obra medida e posta em operação"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento depois da medição e do aceite"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga mobilização e execução",
+          "Espera medição e aceite",
+          "Recebe após medição aprovada"
+        ],
+        "text": "A empreiteira paga mobilização e obra antes da medição. Interferências, geologia, desapropriação e mudança de escopo podem aumentar custo e atrasar o aceite, e pleito de reequilíbrio não equivale a dinheiro certo ou já recebível. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Infraestrutura. Infraestrutura: Projetos de transporte, saneamento e energia passam por planejamento, licenças, contratação, mobilização, execução, medição e operação. Tese operacional: Qualificação técnica, engenharia, mobilização e gestão de subcontratados são barreiras; contratação pública e grandes compradores impõem regras e capacidade de garantia. Principal vulnerabilidade: Interferências, geologia, desapropriação e mudança de escopo podem aumentar custo e atrasar aceite. Pleito de reequilíbrio não equivale a dinheiro certo ou já recebível. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro de mobilização e medição, investimento em equipamentos e garantias contratuais devem ser separados. Financiamento de projeto da concessionária não corresponde ao crédito de giro de uma empreiteira média. Projetos de transporte, saneamento e energia passam por planejamento, licenças, contratação, mobilização, execução, medição e operação. Empreiteira, concessionária e fornecedora de equipamentos têm riscos e ciclos diferentes. Carteira contratada e mobilizável, licenças, desapropriações, medições aceitas, recebíveis vencidos, reajustes e pleitos. Carteira anunciada não deve ser tratada como receita garantida. A PAIC distingue obras de infraestrutura de edifícios e serviços; não foi obtido ranking comparável de empresas por especialidade. Organismos contratantes são clientes, não produtores concorrentes. Novo PAC informa agenda pública de investimento, mas anúncio, seleção, licitação, empenho e pagamento são etapas diferentes. A análise deve localizar a obra efetivamente contratada e sua fonte pagadora. Planejamento de execução, manutenção de ativos e soluções para saneamento e resiliência geram oportunidades condicionadas à contratação e capacidade técnica. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Na análise de concorrência: Manutenção ou ampliação de infraestrutura existente e soluções alternativas de mobilidade, saneamento ou energia podem substituir obra nova, conforme o problema. Não são intercambiáveis sem projeto e avaliação de capacidade. Para novos entrantes: Qualificação técnica, equipamentos, garantias, licenças e capital para suportar medições contestadas limitam entrada. Cada especialidade exige acervo e gestão de riscos próprios. No ambiente externo, Atraso de orçamento, licenças ou desapropriações pode interromper frentes; inflação de insumos e disputa de medições pressionam contratos sem reajuste adequado. Evidência comercial complementar. A ANTT disponibiliza edital, programa de exploração e modelo econômico-financeiro do processo competitivo da Via Brasil no corredor BR-163/230 entre Pará e Mato Grosso, com atualizações em 2026. É evidência de canal de contratação regulado e de participante identificado, não garantia de contratação de uma empreiteira. Concessionária, investidor e executora de obra ocupam papéis distintos. Aviso do Ministério dos Transportes de setembro de 2026 informa obras de duplicação em execução entre Ravena e Caeté, na BR-381/MG, e agenda envolvendo a EPR Via Mineira na BR-040. O documento distingue execução em curso, entrega prevista e assinatura de contrato prevista; não se tratam todos os anúncios como obra entregue. Inferência: o fornecedor deve qualificar a oportunidade por projeto, contratante, fase, medição e autorização, e não usar montante global de concessão como carteira firme.",
     "reviewStatus": "approved",
@@ -1706,41 +1829,82 @@
         {
           "id": "0",
           "label": "jazida e matérias-primas",
-          "detail": "Fluxo físico e financeiro: jazida e matérias-primas"
+          "detail": "Calcário e outras matérias-primas são extraídos e preparados",
+          "emoji": "⛏️",
+          "bank": "Giro bancário para combustível e matéria-prima"
         },
         {
           "id": "1",
           "label": "clínquer e moagem",
-          "detail": "Calcário e outras matérias-primas são extraídos e preparados; fabricação de clínquer utiliza processo térmico, seguida de moagem com adições, armazenagem e expedição. Diferenciar planta integrada de unidade de moagem e cimento ensacado de granel."
+          "detail": "Forno térmico faz o clínquer; depois vêm moagem com adições e armazenagem",
+          "emoji": "🏭",
+          "bank": "Investimento em manutenção pesada e descarbonização, que exigem prazo longo; pagar pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "expedição granel ou ensacado",
-          "detail": "Fluxo físico e financeiro: expedição granel ou ensacado"
+          "detail": "Expedição do cimento, a granel ou ensacado",
+          "emoji": "🚚",
+          "bank": "Giro bancário para embalagem e expedição"
         },
         {
           "id": "3",
-          "label": "concreteira revenda e obra",
-          "detail": "Fluxo físico e financeiro: concreteira revenda e obra"
+          "label": "Revendedores e compradores de cimento",
+          "detail": "Compradores de cimento, a granel ou ensacado",
+          "emoji": "🏪",
+          "bank": "Cessão de recebíveis de revendedores, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Preparo",
+          "product": {
+            "emoji": "🪨",
+            "label": "matéria-prima preparada"
+          },
+          "cash": {
+            "emoji": "⛽",
+            "label": "combustível e custos pagos antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Moagem e expedição",
+          "product": {
+            "emoji": "⚙️",
+            "label": "cimento moído e armazenado"
+          },
+          "cash": {
+            "emoji": "📦",
+            "label": "embalagem e estoque como custo da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "🧱",
+            "label": "cimento entregue a granel ou ensacado"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento dos revendedores, quando recebe"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga matéria-prima e combustível",
+          "Produção e estoque prendem o caixa",
+          "Recebe dos revendedores"
+        ],
+        "text": "O giro deve separar combustível, embalagem e recebíveis de revendedores. Parada de forno, combustível caro e demanda regional fraca pressionam o custo unitário, e produzir mais pode gerar estoque sem capacidade de escoamento. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Cimento. Cimento: Calcário e outras matérias-primas são extraídos e preparados; fabricação de clínquer utiliza processo térmico, seguida de moagem com adições, armazenagem e expedição. Tese operacional: Escala, jazida, eficiência térmica e distribuição criam barreiras. O mercado relevante depende do custo de transporte e da localização da demanda. Principal vulnerabilidade: Parada de forno, combustível caro e demanda regional fraca pressionam custo unitário; aumento da produção pode gerar estoque sem capacidade de escoamento. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Manutenção pesada e descarbonização exigem prazo longo; giro deve separar combustível, embalagem e recebíveis de revendedores. Capex de grande grupo não demonstra acesso financeiro equivalente para moagem média. Diferenciar planta integrada de unidade de moagem e cimento ensacado de granel. Utilização do forno, consumo térmico, fator clínquer, custo por tonelada entregue e mix granel/ensacado. Tonelada produzida não equivale a venda regional lucrativa após frete. Votorantim Cimentos é exemplo público citado pelo BNDES. O estudo histórico da indústria destaca mercados regionais; sua concentração antiga não foi apresentada como concentração atual. A nota do BNDES sobre tecnologias da Votorantim Cimentos oferece exemplo de investimento empresarial localizado na pesquisa atual, não tendência quantitativa de todo o setor. Eficiência térmica, adições e combustível alternativo podem reduzir consumo e emissões, sujeitos a qualidade, suprimento e licenciamento. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Na análise de concorrência: Sistemas estruturais em aço ou madeira podem reduzir uso de concreto em certas aplicações; materiais cimentícios suplementares reduzem clínquer, mas não substituem indistintamente todo cimento. Normas, desempenho e projeto limitam a troca. Para novos entrantes: Acesso a matéria-prima, licenciamento, forno ou moagem, energia e distribuição requerem capital e escala. O raio econômico do frete e o abastecimento contínuo dificultam nova oferta. No ambiente externo, Contração das obras reduz demanda; energia e frete mais caros comprimem competitividade, enquanto exigências ambientais podem demandar investimento adicional.",
     "reviewStatus": "approved",
@@ -2155,41 +2319,82 @@
         {
           "id": "0",
           "label": "argila e formulação",
-          "detail": "Fluxo físico e financeiro: argila e formulação"
+          "detail": "Argila e demais matérias-primas são preparadas e formuladas",
+          "emoji": "🪨",
+          "bank": "Giro bancário para matéria-prima preparada"
         },
         {
           "id": "1",
           "label": "conformação secagem e queima",
-          "detail": "Separar cerâmica vermelha de tijolos e telhas, revestimentos e louças. Matérias-primas são preparadas e conformadas, secas e queimadas; esmaltação e polimento dependem do produto. Frete, energia e padrão de qualidade mudam por família."
+          "detail": "Conformação, secagem e queima; esmaltação e polimento dependem do produto",
+          "emoji": "🔥",
+          "bank": "Financiamento de forno eficiente, se houver demanda"
         },
         {
           "id": "2",
           "label": "seleção e estoque por lote",
-          "detail": "Fluxo físico e financeiro: seleção e estoque por lote"
+          "detail": "Peças são separadas por padrão de qualidade e guardadas em lotes até a venda",
+          "emoji": "📦",
+          "bank": "Giro bancário para o estoque de lotes"
         },
         {
           "id": "3",
           "label": "revenda e construção",
-          "detail": "Fluxo físico e financeiro: revenda e construção"
+          "detail": "Canais que compram a cerâmica pronta para revender ou aplicar na obra",
+          "emoji": "🏪",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Fabricação",
+          "product": {
+            "emoji": "🏺",
+            "label": "peças conformadas, secas e queimadas"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "matéria-prima, energia e combustível pagos antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Seleção",
+          "product": {
+            "emoji": "🔎",
+            "label": "peças classificadas por lote"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "custo do estoque de lotes parado até a venda"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda",
+          "product": {
+            "emoji": "🚚",
+            "label": "produto entregue à revenda ou à obra"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento do cliente, quando recebe"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga matéria-prima, energia e queima",
+          "Estoque de lotes prende o caixa",
+          "Recebe da revenda ou da obra"
+        ],
+        "text": "A empresa paga matéria-prima e energia antes de vender, e o estoque de lotes alonga o intervalo. Quebra, variação dimensional e parada de forno reduzem o rendimento, e lote de tonalidade diferente dificulta completar pedidos sem sobra. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Cerâmica. Cerâmica: Separar cerâmica vermelha de tijolos e telhas, revestimentos e louças. Tese operacional: Acesso a argila, formulação, curva de queima e qualidade são capacidades específicas; design e marca pesam mais em revestimento do que em bloco básico. Principal vulnerabilidade: Quebra e variação dimensional reduzem rendimento; energia e parada de forno afetam custos. Lote de tonalidade diferente dificulta completar pedidos sem sobra. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro para matéria-prima preparada e estoque de lotes; investimento em forno eficiente exige aferir demanda e combustível. Extrair argila e operar forno demandam atenção ambiental, sem presumir licença válida. Separar cerâmica vermelha de tijolos e telhas, revestimentos e louças. Matérias-primas são preparadas e conformadas, secas e queimadas; esmaltação e polimento dependem do produto. Frete, energia e padrão de qualidade mudam por família. Peças ou área conformes, quebra, absorção e resistência, consumo térmico, mix e estoque por lote. Área produzida de revestimento não compara produção de telha ou louça. Não foi recuperado ranking comparável de polos que reúna cerâmica vermelha, revestimento e louças. Esses mercados precisam permanecer separados; a geografia dos polos requer confirmação adicional. A pesquisa técnica do IFRN não comprova demanda comercial ou adoção industrial. A conjuntura deve ser tratada pelos mecanismos de energia, demanda de obras e produtividade, sem atribuir crescimento ou ação pública não verificada. Melhor controle de queima, redução de perdas e aproveitamento de resíduos tecnicamente aprovados podem melhorar custo e impacto ambiental. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Evidência técnica regional verificável: o IFRN registra projeto iniciado em julho de 2025, em execução na página consultada, que investiga resíduos de pegmatito em massas de cerâmica vermelha utilizando argila de Parelhas, no Rio Grande do Norte. É pesquisa de viabilidade, não comprovação de adoção comercial, produtividade realizada ou desempenho de toda a cerâmica brasileira. Para discutir eficiência com uma cerâmica média, pedir ensaios, taxa de perda e aceitação do produto antes de tratar matéria-prima alternativa como economia realizada. O estudo do IFRN ilustra a necessidade de validação técnica; não estabelece mistura recomendada ou receita universal de fabricação. Na análise de concorrência: Blocos de concreto, painéis e sistemas leves podem substituir cerâmica vermelha; pisos vinílicos, pedra ou madeira competem com revestimentos. Resistência, umidade, fogo, estética e instalação variam por aplicação. Para novos entrantes: Controle da argila, secagem e queima, licenciamento e estabilidade de qualidade são barreiras na cerâmica vermelha. Revestimentos acrescentam formulação, acabamento, desenho e canais próprios. No ambiente externo, Recuo de obras e reformas reduz pedidos; combustíveis e energia caros pressionam queima, e substituição por outros sistemas varia conforme aplicação.\n\nNo mercado de revestimentos, o catálogo público da Portobello apresenta coleções e aplicações e canais PortobelloShop, multimarcas, construtoras e internacional. O exemplo mostra segmentação comercial e distribuição declaradas, sem comprovar volumes vendidos ou liderança. Revestimentos não devem ser confundidos com a cerâmica vermelha estudada no projeto do IFRN: são famílias com aplicações e canais distintos. Não foi recuperado caso comercial específico suficiente para cobrir louças sanitárias nesta pesquisa.",
     "reviewStatus": "approved",
@@ -2632,42 +2837,83 @@
       "nodes": [
         {
           "id": "0",
-          "label": "vidro plano primário",
-          "detail": "Fluxo físico e financeiro: vidro plano primário"
+          "label": "vidro bruto (compra)",
+          "detail": "Chapa de vidro bruto comprada para corte, têmpera e laminação",
+          "emoji": "🧊",
+          "bank": "Giro bancário para o vidro bruto"
         },
         {
           "id": "1",
           "label": "corte têmpera ou laminação",
-          "detail": "Delimitação: vidro plano e beneficiamento para construção. Produção primária em forno contínuo difere de corte, lapidação, têmpera, laminação e montagem de unidades especiais; embalagens e vidro automotivo não entram como receita desse recorte."
+          "detail": "Corte, têmpera ou laminação do vidro",
+          "emoji": "✂️",
+          "bank": "Financiamento de têmpera e laminação, se houver volume"
         },
         {
           "id": "2",
           "label": "sistema e montagem",
-          "detail": "Fluxo físico e financeiro: sistema e montagem"
+          "detail": "Montagem do sistema e das unidades",
+          "emoji": "🔧",
+          "bank": "Giro bancário para a diferença entre compra e recebimento"
         },
         {
           "id": "3",
           "label": "obra e usuário",
-          "detail": "Fluxo físico e financeiro: obra e usuário"
+          "detail": "Vidro instalado na obra e entregue ao usuário",
+          "emoji": "🏢",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Beneficiamento",
+          "product": {
+            "emoji": "🧊",
+            "label": "chapas de vidro cortadas e tratadas"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "compra do vidro bruto e processamento pagos antes da medição"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Montagem",
+          "product": {
+            "emoji": "🪟",
+            "label": "vidro montado em sistema"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "custo de montagem pago até a medição"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Obra",
+          "product": {
+            "emoji": "🚚",
+            "label": "vidro entregue e instalado na obra"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento depois da medição"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga vidro bruto e processamento",
+          "Segue pagando até a medição",
+          "Recebe após a medição"
+        ],
+        "text": "O giro cobre o vidro bruto e o processamento até a medição. Chapas compradas antes de confirmar medidas e alteração de projeto geram sobra, e erro de dimensionamento ou instalação traz risco de segurança e substituição. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Vidros. Vidros: Delimitação: vidro plano e beneficiamento para construção. Tese operacional: Fabricante primário depende de escala e processo contínuo; beneficiador compete por especificação, prazo, qualidade e proximidade da obra. Principal vulnerabilidade: Chapas compradas antes de confirmar medidas e alteração de projeto geram sobra; erro de dimensionamento ou instalação traz risco de segurança e substituição. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro cobre vidro bruto e processamento até medição; investimento em têmpera e laminação exige volume e manutenção. Não comparar estrutura de dívida de vidraria média com produtor primário de grande porte. Delimitação: vidro plano e beneficiamento para construção. Produção primária em forno contínuo difere de corte, lapidação, têmpera, laminação e montagem de unidades especiais; embalagens e vidro automotivo não entram como receita desse recorte. Rendimento no corte, quebra, defeitos, capacidade de forno de têmpera e prazo de montagem. Área de vidro bruto não equivale a área vendável instalada. O estudo BNDES documenta historicamente indústria primária concentrada; não é prova da concentração atual dos beneficiadores. Não há ranking ou participação atual recuperados. A demanda acompanha etapa de fechamento e acabamento das obras, podendo chegar depois de cimento e estruturas; a produção agregada de minerais não metálicos não identifica essa defasagem. Controle solar, desempenho acústico e segurança ampliam valor se especificação e instalação forem adequadas; atributo comercial precisa de ensaio e aplicação correta. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Na análise de concorrência: Policarbonato, acrílico e fechamentos opacos podem substituir vidro em usos específicos. Transparência, risco de impacto, fogo, envelhecimento e desempenho térmico/acústico limitam a troca. Para novos entrantes: Vidro primário exige forno contínuo, energia e escala; beneficiamento exige corte, tratamento e controle dimensional com menos capital, mas instalação e segurança continuam barreiras relevantes. No ambiente externo, Desaceleração de obras e restrição de oferta primária podem pressionar beneficiadores; energia, quebra no transporte e substituição por outros materiais alteram custo e demanda. Evidência comercial complementar. O mapeamento industrial publicado pela Prefeitura de Jacareí identifica a Cebrace na fabricação de vidro plano e de segurança. Já a ata do pregão da Defensoria Pública do RS em 2025 registra fornecedores oferecendo vidro liso com marcas Cebrace e Guardian. A indústria primária e o revendedor que apresenta proposta são elos diferentes; a presença de marca na proposta não significa participação direta do fabricante no certame. Em entrevista setorial sobre as perspectivas para 2026, dirigentes da Cebrace relataram pressão de juros e importações no ano anterior e destacaram produtos de controle solar e desempenho acústico. São avaliações empresariais atribuídas, não crescimento estatístico ou decisão antidumping aqui validada. O pregão gaúcho comprova um canal concreto de aquisição de vidro especificado; a ata não comprova entrega física ou pagamento. Inferência: diferenciar vidro-base, processamento e instalação evita comparar margens de elos distintos.",
     "reviewStatus": "approved",
@@ -3081,41 +3327,82 @@
         {
           "id": "0",
           "label": "perfis ferragens vidro e vedação",
-          "detail": "Fluxo físico e financeiro: perfis ferragens vidro e vedação"
+          "detail": "Perfis, ferragens, vidro e vedação são comprados",
+          "emoji": "🧰",
+          "bank": "Giro bancário para compra de perfil e vidro"
         },
         {
           "id": "1",
           "label": "projeto corte e montagem",
-          "detail": "Perfis de alumínio, aço, PVC ou madeira, ferragens, vedações e vidro são combinados em portas e janelas. Produtos seriados de revenda diferem de fabricação sob medida com instalação; o material muda insumos e concorrentes."
+          "detail": "Projeto, corte e montagem das portas e janelas",
+          "emoji": "📐",
+          "bank": "Financiamento de equipamento de corte e montagem, se o retorno por produtividade e menos refugo for comprovado"
         },
         {
           "id": "2",
-          "label": "transporte e instalação",
-          "detail": "Fluxo físico e financeiro: transporte e instalação"
+          "label": "instalação",
+          "detail": "Montagem das esquadrias na obra, até a medição",
+          "emoji": "🚚",
+          "bank": "Giro bancário para a diferença entre compra e recebimento"
         },
         {
           "id": "3",
           "label": "obra e assistência",
-          "detail": "Fluxo físico e financeiro: obra e assistência"
+          "detail": "Fase final da entrega, com retenções e atendimento de problemas que exigem provisão de caixa",
+          "emoji": "🏠",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Fabricação",
+          "product": {
+            "emoji": "🔩",
+            "label": "perfis, vidro e ferragens para fabricar"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "compra de perfil e vidro paga antes da entrega; pode haver sinal do cliente"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Entrega",
+          "product": {
+            "emoji": "🚪",
+            "label": "esquadrias fabricadas e transportadas"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "custo de fabricação e instalação até a medição"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Instalação",
+          "product": {
+            "emoji": "🔧",
+            "label": "esquadrias instaladas, com assistência"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "medição e pagamento; retenções e assistência precisam de provisão"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga perfil, vidro e fabricação",
+          "Atraso da obra deixa o produto parado",
+          "Recebe com medição, após instalação"
+        ],
+        "text": "O giro por encomenda liga o sinal, a compra de perfil e vidro, a fabricação e a instalação. Medida incorreta e obra fora de prumo geram refabricação, e atraso da obra deixa produto customizado parado e posterga a medição. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Esquadrias. Esquadrias: Perfis de alumínio, aço, PVC ou madeira, ferragens, vedações e vidro são combinados em portas e janelas. Tese operacional: Projeto, precisão e qualidade de instalação diferenciam o fornecedor; preço baixo não demonstra desempenho de vedação, vento, ruído ou durabilidade. Principal vulnerabilidade: Medida incorreta e obra fora de prumo geram refabricação; atraso da obra deixa produto customizado parado e posterga medição. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro por encomenda deve ligar sinal, compra de perfil/vidro, fabricação e instalação; retenções e assistência precisam de provisão. Equipamento de corte e montagem requer retorno comprovado por produtividade e menos refugo. Perfis de alumínio, aço, PVC ou madeira, ferragens, vedações e vidro são combinados em portas e janelas. Produtos seriados de revenda diferem de fabricação sob medida com instalação; o material muda insumos e concorrentes. Pedido por vão e sistema, aproveitamento de perfil, retrabalho de medida, estanqueidade, prazo e chamadas de assistência. Área nominal não compara desempenho ou complexidade. Não foi recuperado ranking atual comparável entre esquadrias de alumínio, aço, PVC e madeira. Referências de qualidade do Ministério das Cidades não definem participação de mercado. A página pública do Ministério das Cidades distingue o SiAC, ligado à gestão da qualidade das construtoras, do SiMaC e seus programas setoriais para materiais. A conformidade deve ser verificada por produto e fornecedor; participação institucional não é certificação automática. Padronização de sistemas, conferência digital de medidas e soluções de desempenho podem reduzir falhas e melhorar ticket quando remuneradas pelo cliente. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Na análise de concorrência: Alumínio, aço, PVC e madeira competem entre si como sistemas de esquadrias; fechamentos fixos podem substituir aberturas em certos projetos. Vedação, manutenção, dimensões, fogo e arquitetura condicionam a troca. Para novos entrantes: Projeto, ferramental, controle dimensional, ensaios e instalação correta sustentam barreiras. Uma oficina de corte não equivale a fornecedor de sistema ensaiado e com assistência em obra. No ambiente externo, Adiamento de obras posterga medições e entrega; matéria-prima mais cara, novos requisitos de desempenho e inadimplência de construtoras pressionam fornecedores. Evidência comercial complementar. O pregão do Batalhão de Engenharia de Construção em Cuiabá, divulgado em junho de 2026, demanda fabricação e instalação de esquadrias de madeira, incluindo transporte, ajustes, vedação e acabamento. É exemplo de comprador e pacote contratado pretendido, não venda concluída. Na oferta industrial, certificado disponibilizado pela Prado Alumínio identifica a empresa em Iperó (SP) e uma linha específica de janela externa; não certifica automaticamente todo seu catálogo ou qualquer instalação. O documento da Prado condiciona a validade à manutenção da avaliação e delimita modelo, dimensões e aplicação. Sua situação atual deve ser confirmada no organismo certificador antes de contratar. Inferência: vender apenas pelo material do perfil esconde diferenças de desempenho e serviço. O comprador institucional observado exige produto mais instalação; separar o que será fabricado, medido em obra e aceito reduz risco de refabricação. Edital divulgado não é contrato assinado nem recebível.",
     "reviewStatus": "approved",

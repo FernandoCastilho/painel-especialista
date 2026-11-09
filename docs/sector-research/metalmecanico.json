@@ -401,41 +401,82 @@
         {
           "id": "0",
           "label": "sucata e ligas",
-          "detail": "Fluxo físico e financeiro: sucata e ligas"
+          "detail": "Sucata, ferro-gusa e ligas são a matéria-prima da fusão",
+          "emoji": "♻️",
+          "bank": "Giro bancário para estoque de liga"
         },
         {
           "id": "1",
           "label": "fusão e moldagem",
-          "detail": "Sucata, ferro-gusa e ligas seguem para fusão; a areia, quando utilizada, compõe o sistema de moldagem. O metal líquido é vazado no molde; após solidificação e resfriamento, a peça é desmoldada, rebarbada e inspecionada. A peça pode seguir para tratamento e usinagem externos ou integrados. Separar ferro e aço dos não ferrosos e venda de peça bruta da peça acabada."
+          "detail": "Metal fundido, vazado no molde, solidificado e desmoldado",
+          "emoji": "🏭",
+          "bank": "Investimento em fornos, moldes e exaustão"
         },
         {
           "id": "2",
           "label": "acabamento e inspeção",
-          "detail": "Fluxo físico e financeiro: acabamento e inspeção"
+          "detail": "Peça rebarbada, inspecionada e, se preciso, tratada ou usinada",
+          "emoji": "🔍",
+          "bank": "Giro bancário para peças em aprovação"
         },
         {
           "id": "3",
-          "label": "montadoras e máquinas",
-          "detail": "Fluxo físico e financeiro: montadoras e máquinas"
+          "label": "clientes industriais",
+          "detail": "Peça entregue conforme especificação do cliente",
+          "emoji": "🚛",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra de material",
+          "product": {
+            "emoji": "🔩",
+            "label": "sucata, ferro-gusa e ligas"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a fundição paga o material antes de vender a peça"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Fusão e moldagem",
+          "product": {
+            "emoji": "⚙️",
+            "label": "peça bruta desmoldada"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "custos de fusão, perdas e qualidade ficam por conta da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Entrega da peça",
+          "product": {
+            "emoji": "📦",
+            "label": "peça acabada e inspecionada"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "o cliente paga pelo contrato; disputas de qualidade atrasam o recebimento"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga liga e sucata",
+          "Estoque de liga e peças em aprovação prendem caixa",
+          "Recebe do cliente após entrega"
+        ],
+        "text": "O material é pago antes de a peça ser entregue e recebida. Estoque de liga e peças em aprovação exigem giro. O giro bancário pode cobrir essa diferença temporal; a cessão de recebíveis exige obrigação constituída e ausência de disputas. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Fundição. Fundição: Sucata, ferro-gusa e ligas seguem para fusão; a areia, quando utilizada, compõe o sistema de moldagem. O metal líquido é vazado no molde; após solidificação e resfriamento, a peça é desmoldada, rebarbada e inspecionada. Tese operacional: Ferramental específico, qualificação metalúrgica e consistência entre lotes sustentam relacionamento; perda de cliente deixa moldes e capacidade pouco reaproveitáveis. Principal vulnerabilidade: O preço do metal pode subir antes da revisão do contrato. Sucata retorna ao processo, mas a reciclagem interna consome energia e não elimina a perda de produtividade. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Moldes, fornos, exaustão e recuperação de areia exigem investimento; estoque de liga e peças em aprovação demanda giro. Separar manutenção de capacidade de ampliação e melhorias ambientais. Sucata, ferro-gusa e ligas seguem para fusão; a areia, quando utilizada, compõe o sistema de moldagem. A peça pode seguir para tratamento e usinagem externos ou integrados. Separar ferro e aço dos não ferrosos e venda de peça bruta da peça acabada. Rendimento metálico, energia por peça boa, refugo interno e devolução do cliente. Peso fundido não equivale a peso faturável: canais, massalotes e retrabalho distorcem a leitura de capacidade. Tupy e Joinville são referência histórica documentada de inserção industrial. O registro municipal comprova localização, não liderança atual nem a situação de fundições médias. Mudança de mix de motores e componentes; clientes podem reduzir uma família de peças mesmo quando a produção agregada de veículos aumenta. Reaproveitamento de material, eficiência térmica e peças complexas com engenharia conjunta. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Exemplo empresarial datado: o BNDES descreveu em sua notícia de dezembro de 2024 a Tupy como fabricante de componentes estruturais de ferro fundido e anunciou aprovação de apoio à digitalização em Betim e Joinville. O caso ilustra investimento em processo e rastreabilidade; não demonstra produtividade já realizada nem média de fundições. Na análise de concorrência: Forjamento, peças soldadas e materiais poliméricos podem substituir fundidos em aplicações específicas. Geometria, fadiga, temperatura e custo de redesenhar/homologar limitam a troca. Para novos entrantes: Forno, laboratório metalúrgico, moldes e controle de defeitos exigem investimento e experiência; homologação de peça crítica e histórico de lotes confiáveis retardam entrada.",
     "reviewStatus": "approved",
@@ -839,41 +880,82 @@
         {
           "id": "0",
           "label": "material próprio ou do cliente",
-          "detail": "Fluxo físico e financeiro: material próprio ou do cliente"
+          "detail": "Barras, forjados e fundidos, próprios ou enviados pelo cliente",
+          "emoji": "🧱",
+          "bank": "Giro bancário para material próprio"
         },
         {
           "id": "1",
           "label": "programação e preparação",
-          "detail": "Barras, forjados e fundidos são transformados por torneamento, fresamento e retificação. A operação pode ser por encomenda, com material próprio, ou prestação de serviço sobre material do cliente; essa diferença muda faturamento, estoque e responsabilidade."
+          "detail": "Definir o roteiro de corte e ajustar máquinas e ferramentas antes de produzir a peça",
+          "emoji": "💻",
+          "bank": "Investimento em centros de usinagem e software"
         },
         {
           "id": "2",
           "label": "usinagem e metrologia",
-          "detail": "Fluxo físico e financeiro: usinagem e metrologia"
+          "detail": "Torneamento, fresamento e retificação, com conferência das medidas",
+          "emoji": "🔧",
+          "bank": "Giro bancário para folha e ferramentas"
         },
         {
           "id": "3",
           "label": "cliente industrial",
-          "detail": "Fluxo físico e financeiro: cliente industrial"
+          "detail": "Peça usinada entregue à indústria cliente",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Entrada do material",
+          "product": {
+            "emoji": "🔩",
+            "label": "barra, forjado ou fundido"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "material próprio é pago pela oficina; o do cliente muda o faturamento"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Preparação",
+          "product": {
+            "emoji": "📐",
+            "label": "programa e máquina prontos"
+          },
+          "cash": {
+            "emoji": "👷",
+            "label": "folha e ferramentas são pagas antes de entregar a peça"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Entrega após inspeção",
+          "product": {
+            "emoji": "📦",
+            "label": "peças conformes"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "o pagamento vem após a inspeção do cliente"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga material, folha e ferramentas",
+          "Material próprio e peças em inspeção prendem caixa",
+          "Recebe após inspeção"
+        ],
+        "text": "A operação por encomenda com material próprio muda faturamento, estoque e responsabilidade em relação à prestação de serviço sobre material do cliente. O giro suporta folha, ferramentas e o recebimento após inspeção. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Usinagem. Usinagem: Barras, forjados e fundidos são transformados por torneamento, fresamento e retificação. Tese operacional: Programação, metrologia, tolerância e prazo de entrega criam barreiras; lotes padronizados enfrentam pressão de preço e concorrência de fornecedores integrados. Principal vulnerabilidade: Pequenos lotes elevam preparação; material do cliente reduz compra de metal mas não elimina risco de perda, atraso e indenização. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Centros de usinagem, software e metrologia devem ser financiados com vida útil e carteira compatíveis; giro suporta folha, ferramentas e recebimento após inspeção. Barras, forjados e fundidos são transformados por torneamento, fresamento e retificação. A operação pode ser por encomenda, com material próprio, ou prestação de serviço sobre material do cliente; essa diferença muda faturamento, estoque e responsabilidade. Horas vendidas por máquina disponível, tempo de preparação, vida de ferramenta e peças conformes. Uma máquina ocupada produzindo refugo não é capacidade rentável. Não foi recuperado ranking público específico de prestadores de usinagem. Joinville é apenas referência de ecossistema industrial, não prova de concentração desse recorte. Automação dos compradores pode internalizar peças repetitivas; exigências de rastreabilidade podem deslocar encomendas para prestadores qualificados. Reduzir troca de ferramenta e organizar células para famílias de peças, medindo prazo e custo por lote. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Referência da cadeia, não concorrente equivalente: a notícia do BNDES identifica a Romi, sediada em Santa Bárbara d’Oeste, como fabricante de máquinas industriais e peças fundidas e usinadas. Para um prestador médio, ela pode ser fornecedor de equipamento ou referência de integração, não base automática para comparação de margem. Na análise de concorrência: Peça próxima da forma final por fundição, forjamento ou manufatura aditiva pode reduzir etapas de usinagem. Tolerância, acabamento e volume determinam se a alternativa é viável; internalização no cliente substitui o serviço contratado. Para novos entrantes: Máquinas adequadas à tolerância, programação, dispositivos e metrologia precisam operar como sistema. Acesso a técnicos e histórico de entrega de lotes homologados limitam competir em peças críticas.",
     "reviewStatus": "approved",
@@ -1267,41 +1349,82 @@
         {
           "id": "0",
           "label": "aço e projeto",
-          "detail": "Fluxo físico e financeiro: aço e projeto"
+          "detail": "Compra do aço e detalhamento do projeto em listas de materiais para a fabricação",
+          "emoji": "📐",
+          "bank": "Giro bancário por obra, para compra do aço"
         },
         {
           "id": "1",
           "label": "detalhamento e fabricação",
-          "detail": "Engenharia de detalhamento converte projeto em listas de aço; corte, furação e soldagem precedem proteção anticorrosiva, transporte e montagem. Distinguir fabricação em oficina, montagem em campo e contrato integrado de obra."
+          "detail": "Detalhamento, corte, furação e soldagem do aço",
+          "emoji": "🏗️",
+          "bank": "Investimento em equipamentos de corte e solda"
         },
         {
           "id": "2",
           "label": "proteção e transporte",
-          "detail": "Fluxo físico e financeiro: proteção e transporte"
+          "detail": "Proteção anticorrosiva e transporte até a obra",
+          "emoji": "🚚",
+          "bank": "Giro bancário para o trecho até o aceite"
         },
         {
           "id": "3",
           "label": "montagem e aceite",
-          "detail": "Fluxo físico e financeiro: montagem e aceite"
+          "detail": "Montagem em campo e aceite do cliente",
+          "emoji": "✅",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra do aço",
+          "product": {
+            "emoji": "🔩",
+            "label": "aço e lista de materiais"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "o aço é comprado antes de a obra ser aceita"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Fabricação",
+          "product": {
+            "emoji": "🛠️",
+            "label": "peças cortadas, soldadas e protegidas"
+          },
+          "cash": {
+            "emoji": "👷",
+            "label": "horas de solda e retrabalho ficam por conta da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Montagem e aceite",
+          "product": {
+            "emoji": "🏢",
+            "label": "estrutura montada"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento por marco de aceite, com adiantamento e retenções separados"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Compra aço e paga fabricação",
+          "Material já comprado e obra sem aceite prendem caixa",
+          "Recebe por marco de aceite"
+        ],
+        "text": "O giro é por obra e por marco de aceite, com adiantamento e retenções separados. O aço e a fabricação são pagos antes do aceite físico da obra. Garantia contratual não substitui caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estruturas metálicas. Estruturas metálicas: Engenharia de detalhamento converte projeto em listas de aço; corte, furação e soldagem precedem proteção anticorrosiva, transporte e montagem. Tese operacional: Capacidade de engenharia, rastreabilidade de solda, logística e montagem segura diferenciam o fornecedor; concorrência local cresce em estruturas simples. Principal vulnerabilidade: Aço comprado antes da aprovação final e alteração de projeto após fabricação geram sobra específica. Atraso de fundações impede montagem e posterga medição. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro por obra e por marco de aceite, com adiantamento e retenções separados. Equipamentos de corte e solda requerem prazo de investimento; garantia contratual não substitui caixa. Engenharia de detalhamento converte projeto em listas de aço; corte, furação e soldagem precedem proteção anticorrosiva, transporte e montagem. Distinguir fabricação em oficina, montagem em campo e contrato integrado de obra. Tonelada entregue por projeto, horas de solda/retrabalho, avanço físico aceito e material já comprado. A margem por tonelada não compara projetos com complexidades distintas. Não se demonstrou ranking atual de fabricantes ou polos exclusivos. O mercado relevante é delimitado por raio logístico, projeto e capacidade de montagem, não apenas endereço da fábrica. Carteira ligada a galpões e investimentos industriais pode ter adiamentos mesmo com contratos assinados. Pré-fabricação e coordenação digital podem reduzir perdas; oportunidade exige evitar que economia do cliente seja absorvida por preço fixo mal orçado. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Na análise de concorrência: Concreto moldado, pré-moldados e madeira engenheirada podem cumprir funções estruturais semelhantes. Vão, peso, fogo, cronograma e disponibilidade de montagem condicionam a escolha; mudar sistema após projeto gera custo. Para novos entrantes: Engenharia de detalhamento, soldadores qualificados, rastreabilidade e capacidade de içamento/montagem segura dificultam executar grandes contratos; fabricar estrutura simples não comprova essa capacidade. Como exemplo de oferta, a Medabil descreve sistemas para construções horizontais que combinam estrutura metálica, cobertura, fechamentos e ventilação. É portfólio do fornecedor, não comprovação de contrato, participação ou desempenho realizado. A integração de engenharia e componentes mostra por que comparar só o preço do aço não compara propostas equivalentes.",
     "reviewStatus": "approved",
@@ -1700,41 +1823,82 @@
         {
           "id": "0",
           "label": "componentes e engenharia",
-          "detail": "Fluxo físico e financeiro: componentes e engenharia"
+          "detail": "Componentes mecânicos, elétricos e automação",
+          "emoji": "⚙️",
+          "bank": "Giro bancário para compra de componentes"
         },
         {
           "id": "1",
           "label": "montagem e automação",
-          "detail": "Componentes mecânicos, elétricos e automação convergem para montagem, testes e instalação. Fabricantes seriados diferem dos integradores sob encomenda; assistência, peças e modernização podem formar receitas separadas da venda inicial."
+          "detail": "Montagem das peças e automação da máquina",
+          "emoji": "🏭",
+          "bank": "Investimento em capacidade produtiva"
         },
         {
           "id": "2",
           "label": "teste e instalação",
-          "detail": "Fluxo físico e financeiro: teste e instalação"
+          "detail": "Testes em fábrica, embarque e instalação no cliente",
+          "emoji": "🧪",
+          "bank": "Giro bancário até o aceite final"
         },
         {
           "id": "3",
           "label": "produção e manutenção do cliente",
-          "detail": "Fluxo físico e financeiro: produção e manutenção do cliente"
+          "detail": "Máquina em uso; assistência, peças e modernização",
+          "emoji": "🔧",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra de componentes",
+          "product": {
+            "emoji": "🔌",
+            "label": "componentes e engenharia"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a empresa desembolsa componentes; sinal e saldo entram conforme o contrato"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Montagem e testes",
+          "product": {
+            "emoji": "🛠️",
+            "label": "máquina montada e testada"
+          },
+          "cash": {
+            "emoji": "📝",
+            "label": "testes e embarque são pagos até o recebimento final"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Instalação e aceite",
+          "product": {
+            "emoji": "🚛",
+            "label": "máquina instalada"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento final no aceite do cliente"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga componentes e engenharia",
+          "Montagem, testes e embarque até o aceite prendem caixa",
+          "Recebe sinal, marcos e saldo final"
+        ],
+        "text": "O fabricante desembolsa componentes, testes e embarque antes do recebimento final. Financiamento da compra pelo cliente não resolve automaticamente o giro do fabricante. É preciso planejar desembolso, sinal, testes, embarque e recebimento final. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Máquinas industriais. Máquinas industriais: Componentes mecânicos, elétricos e automação convergem para montagem, testes e instalação. Tese operacional: Engenharia aplicada e assistência local competem com fabricantes globais e importação. O comprador compara produtividade, disponibilidade e custo total, não só preço da máquina. Principal vulnerabilidade: Componentes importados e modificações de escopo podem elevar custo antes do reajuste. Garantia e comissionamento mal provisionados consomem resultado após faturar. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Financiamento da compra pelo cliente não resolve automaticamente o giro do fabricante. Planejar desembolso de componentes, sinal, testes, embarque e recebimento final. Componentes mecânicos, elétricos e automação convergem para montagem, testes e instalação. Fabricantes seriados diferem dos integradores sob encomenda; assistência, peças e modernização podem formar receitas separadas da venda inicial. Pedidos firmes, cancelamentos, carteira por marco, horas de engenharia, aprovação em fábrica e no cliente; separar entrega física de aceite final. A pesquisa do BNDES diferencia investimento em máquinas por atividade compradora; não foi obtido ranking atual que separasse fabricantes industriais e integradores. Decisão de investimento do comprador responde a utilização de capacidade e retorno esperado; manutenção pode ser mais resiliente que ampliação de planta. Retrofit, eficiência energética e automação de gargalos oferecem projetos menores e verificáveis. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Caso observado: o BNDES anunciou em novembro de 2022 financiamento à produção exportável de máquinas de usinagem da Romi. O exemplo separa crédito de pré-embarque ao fabricante do financiamento da máquina comprada pelo cliente. Não confirma oferta, custo ou elegibilidade atuais. Na análise de concorrência: Retrofit e reparo prolongam a vida da máquina; locação ou contratação externa da operação podem substituir comprar equipamento novo. Disponibilidade, sigilo do processo e custo por peça limitam essas opções. Para novos entrantes: Projeto confiável, segurança, integração de controles, testes de desempenho e assistência exigem engenharia e base técnica; aceitar responsabilidade por disponibilidade requer capacidade financeira.",
     "reviewStatus": "approved",
@@ -2107,41 +2271,82 @@
         {
           "id": "0",
           "label": "componentes e tecnologia",
-          "detail": "Fluxo físico e financeiro: componentes e tecnologia"
+          "detail": "Motores, transmissão, hidráulica e eletrônica",
+          "emoji": "⚙️",
+          "bank": "Giro bancário para componentes"
         },
         {
           "id": "1",
           "label": "fabricação e montagem",
-          "detail": "Fabricantes integram motores, transmissão, hidráulica e eletrônica; concessionários fazem venda, preparação, peças e assistência. Separar tratores e colheitadeiras de implementos não autopropelidos e da renda de revenda."
+          "detail": "Fabricantes integram os componentes em tratores e colheitadeiras",
+          "emoji": "🚜",
+          "bank": "Investimento em capacidade industrial"
         },
         {
           "id": "2",
           "label": "concessionário e assistência",
-          "detail": "Fluxo físico e financeiro: concessionário e assistência"
+          "detail": "Concessionário faz venda, preparação, peças e assistência",
+          "emoji": "🏪",
+          "bank": "Giro bancário para estoque do concessionário"
         },
         {
           "id": "3",
           "label": "produtor e prestador rural",
-          "detail": "Fluxo físico e financeiro: produtor e prestador rural"
+          "detail": "Produtor ou prestador rural usa a máquina",
+          "emoji": "🌾",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra de componentes",
+          "product": {
+            "emoji": "🔩",
+            "label": "motores, transmissão e eletrônica"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a fabricante paga os componentes antes de vender a máquina"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Venda ao canal",
+          "product": {
+            "emoji": "🚜",
+            "label": "máquinas para o concessionário"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "o caixa depende de o concessionário pagar; estoque no canal prende caixa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda ao produtor",
+          "product": {
+            "emoji": "🌱",
+            "label": "máquina preparada e assistência"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento de pedidos com crédito aprovado"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga componentes",
+          "Estoque no concessionário e entrega antes da janela agronômica",
+          "Recebe do concessionário; venda ao produtor não é automática"
+        ],
+        "text": "É preciso separar o crédito do produtor da necessidade industrial de financiar componentes e revendedores. Venda ao canal não é necessariamente venda ao produtor, e estoque de concessionário prende caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Máquinas agrícolas. Máquinas agrícolas: Fabricantes integram motores, transmissão, hidráulica e eletrônica; concessionários fazem venda, preparação, peças e assistência. Tese operacional: Rede de assistência e disponibilidade na safra criam diferenciação. O equipamento compete também com máquina usada, terceirização e manutenção da frota existente. Principal vulnerabilidade: Atraso de entrega pode perder a janela de plantio ou colheita. Estoque do canal e financiamento do produtor deslocam o risco ao fabricante mesmo com demanda agronômica. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Separar crédito do produtor da necessidade industrial de financiar componentes e revendedores. O estudo de efetividade do BNDES documenta apoio à aquisição, sem confirmar condições abertas hoje. Fabricantes integram motores, transmissão, hidráulica e eletrônica; concessionários fazem venda, preparação, peças e assistência. Separar tratores e colheitadeiras de implementos não autopropelidos e da renda de revenda. Pedidos com crédito aprovado, estoque de concessionário, entrega antes da janela agronômica, horas de máquina e disponibilidade de peças. Venda ao canal não é necessariamente venda ao produtor. A Jacto apresenta catálogo de plantadeiras, pulverizadores, adubadoras e colhedoras e identifica sua matriz em Pompeia, São Paulo. É evidência de portfólio declarado pelo fabricante, não ranking, venda realizada ou elegibilidade de financiamento. Renda agrícola, clima e investimento rural podem divergir: boa safra não garante caixa livre quando preços ou custos se deterioram. Precisão, redução de consumo e adaptação a culturas específicas devem ter retorno medido no campo. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Na análise de concorrência: Máquina usada, prolongamento da vida da frota e contratação de serviços mecanizados podem substituir compra nova. Janela de safra, disponibilidade local, área e qualidade da operação definem o custo de troca. Para novos entrantes: Testes em campo, adaptação à cultura, estoque de peças e rede de assistência na safra exigem conhecimento e capital; falha no período crítico cria barreira reputacional.",
     "reviewStatus": "approved",
@@ -2540,41 +2745,82 @@
         {
           "id": "0",
           "label": "componentes e especificação",
-          "detail": "Fluxo físico e financeiro: componentes e especificação"
+          "detail": "Compra de peças e definição do que o equipamento precisa fazer, antes de fabricar",
+          "emoji": "🔌",
+          "bank": "Giro bancário para componentes e estoque crítico"
         },
         {
           "id": "1",
           "label": "fabricação e ensaio",
-          "detail": "Recorte operacional delimitado a equipamentos mecânicos de uso industrial, como bombeamento, movimentação e utilidades. Equipamentos médicos, telecomunicações e eletroeletrônicos especializados ficam fora até definição própria; não somar mercados incompatíveis."
+          "detail": "Montagem das máquinas e testes de funcionamento, que exigem investimento em capacidade",
+          "emoji": "🏭",
+          "bank": "Investimento em teste e capacidade produtiva"
         },
         {
           "id": "2",
           "label": "instalação e integração",
-          "detail": "Fluxo físico e financeiro: instalação e integração"
+          "detail": "Colocar o equipamento para funcionar junto aos sistemas do comprador, com assistência depois",
+          "emoji": "🛠️",
+          "bank": "Giro bancário até a entrega"
         },
         {
           "id": "3",
           "label": "operação e reposição",
-          "detail": "Fluxo físico e financeiro: operação e reposição"
+          "detail": "Operação do cliente e reposição de peças e serviço",
+          "emoji": "🔧",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra de componentes",
+          "product": {
+            "emoji": "🔩",
+            "label": "componentes especificados"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a empresa paga componentes e estoque crítico antes de entregar"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Fabricação e instalação",
+          "product": {
+            "emoji": "📦",
+            "label": "equipamento ensaiado e instalado"
+          },
+          "cash": {
+            "emoji": "👷",
+            "label": "ensaios e instalação são custeados pela empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Operação e reposição",
+          "product": {
+            "emoji": "🔁",
+            "label": "peças e assistência"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "contrato e reposição geram receitas separadas"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga componentes e estoque crítico",
+          "Ensaio, instalação e estoque de reposição prendem caixa",
+          "Recebe pelo contrato e pela reposição"
+        ],
+        "text": "O giro depende de componentes, assistência e estoque crítico, enquanto o investimento vai para teste e capacidade produtiva. Receita de contrato e receita de reposição devem ser segregadas. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Equipamentos. Equipamentos: Recorte operacional delimitado a equipamentos mecânicos de uso industrial, como bombeamento, movimentação e utilidades. Tese operacional: Confiabilidade e compatibilidade com a instalação do cliente favorecem fornecedores homologados; produtos padronizados enfrentam importados e marcas de baixo preço. Principal vulnerabilidade: Projeto mal especificado pode atender vazão ou carga nominal, mas falhar em operação; devolução e parada do cliente aumentam custo de garantia. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Investimento em teste e capacidade produtiva; giro por componentes, assistência e estoque crítico. Leasing ou locação são alternativas analíticas apenas quando houver mercado e contrato adequados. Recorte operacional delimitado a equipamentos mecânicos de uso industrial, como bombeamento, movimentação e utilidades. Equipamentos médicos, telecomunicações e eletroeletrônicos especializados ficam fora até definição própria; não somar mercados incompatíveis. Unidades por família, eficiência, falhas em campo, prazo de assistência e margem de peça/serviço. Receita de contrato e receita de reposição devem ser segregadas. Categoria ampla não comporta ranking único nem um polo exclusivo. O estudo BNDES sobre investimento industrial ajuda a separar máquinas por mercado comprador. Reposição de utilidades depende de horas operadas e idade da base instalada, diferente da demanda de equipamentos para novas plantas. Eficiência, manutenção preditiva e serviço de ciclo de vida permitem ampliar receita se o contrato remunerar disponibilidade e risco. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Referência de equipamento: a mesma notícia do BNDES descreve a MWM, subsidiária da Tupy, com motores, geradores e motobombas. É exemplo de portfólio do grupo na data da publicação, não de toda a categoria nem de condição atual de cada produto. Na análise de concorrência: Reparo, recondicionamento, locação e redesenho do processo podem substituir aquisição nova conforme a aplicação. Equipamento de segurança ou processo crítico limita substituição sem ensaio e aprovação. Para novos entrantes: Barreiras variam pelo equipamento: certificação aplicável, projeto de aplicação, peças de reposição e suporte. Exigir especificação antes de atribuir barreira homogênea ao recorte.",
     "reviewStatus": "approved",

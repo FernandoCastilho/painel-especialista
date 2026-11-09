@@ -436,41 +436,82 @@
         {
           "id": "n0",
           "label": "Plataformas de proteção",
-          "detail": "Licenças, atualização e inteligência de ameaças"
+          "detail": "Licenças e plataformas de proteção, com dependência das plataformas",
+          "emoji": "🛡️",
+          "bank": "Giro para licenças, se documentado"
         },
         {
           "id": "n1",
           "label": "Especialista de segurança",
-          "detail": "Configura, integra, monitora e testa controles"
+          "detail": "Configura, integra, monitora e testa os controles",
+          "emoji": "🧑‍💻",
+          "bank": "Giro bancário para o descasamento entre equipe e recebimento, se documentado"
         },
         {
           "id": "n2",
           "label": "Operação do cliente",
-          "detail": "Autoriza mudanças, controla acessos e prioriza ativos"
+          "detail": "Integração com os processos do cliente",
+          "emoji": "🏢",
+          "bank": "Cessão de recebíveis, só de crédito exigível"
         },
         {
           "id": "n3",
           "label": "Resposta e continuidade",
-          "detail": "Contenção, recuperação e comunicação conforme o caso"
+          "detail": "Contenção, recuperação e comunicação, conforme o caso",
+          "emoji": "🚨",
+          "bank": "Resposta emergencial é imprevisível; separar do giro normal, sem encaixe bancário confirmado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Entrega e dependência",
-          "from": "n0"
+          "label": "Compra de licenças",
+          "product": {
+            "emoji": "🔑",
+            "label": "licenças e plataformas de proteção"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "compromisso com a plataforma antes de receber do cliente"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Entrega e dependência",
-          "from": "n1"
+          "label": "Implantação",
+          "product": {
+            "emoji": "🧩",
+            "label": "controles configurados e integrados"
+          },
+          "cash": {
+            "emoji": "💳",
+            "label": "recebimento conforme o contrato de proteção (forma e prazo a confirmar)"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e dependência",
-          "from": "n2"
+          "label": "Operação e resposta",
+          "product": {
+            "emoji": "📡",
+            "label": "monitoramento recorrente e resposta a incidentes"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cobrança recorrente pela proteção e monitoramento; a resposta emergencial é imprevisível"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga licenças e equipe",
+          "Monitoramento e resposta têm economias diferentes",
+          "Recebe conforme o contrato, a reconciliar"
+        ],
+        "text": "A ordem entre pagamentos e recebimentos precisa ser reconciliada na empresa, e a resposta a incidentes é imprevisível. Giro bancário ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Cibersegurança. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nA demanda combina prevenção contínua e resposta emergencial. Licenças, equipe de analistas e responsabilidade contratual têm economias diferentes; vender proteção não equivale a garantir ausência de incidente.\n\nA ANPD registrou 362 comunicações de incidentes em 2025. É um indicador administrativo de ocorrências reportadas envolvendo dados pessoais, não tamanho do mercado nem contagem total de ataques.\n\nInferência: especialização e integração com processos do cliente podem sustentar diferenciação, mas escala de atendimento, custo de pessoal e dependência de plataformas limitam a margem.\n\nPrestadores empresariais de proteção, monitoramento, resposta a incidentes e segurança industrial. Separar revenda de licenças, consultoria e operação recorrente; não somar seus faturamentos aos gastos totais de TIC.\n\nO negócio funciona assim. Plataformas de proteção: Licenças, atualização e inteligência de ameaças. Especialista de segurança: Configura, integra, monitora e testa controles. Operação do cliente: Autoriza mudanças, controla acessos e prioriza ativos. Resposta e continuidade: Contenção, recuperação e comunicação conforme o caso.\n\nA dinâmica de mercado. A regulamentação e a digitalização ampliam requisitos de governança, mas não comprovam aumento imediato de contratos. Uma ocorrência pode acelerar compras de emergência; passado o evento, o orçamento pode voltar a ser disputado com outras prioridades.\n\nNa empresa média, observe os modelos de receita. Licenças e appliances: Compra ou compromisso com fabricante antes do recebimento. Separar receita de revenda da remuneração do serviço. Monitoramento recorrente: Cobertura e capacidade de análise exigem equipe e ferramentas mesmo com poucos alertas. Custo por ambiente, qualidade dos alertas e obrigações de atendimento. Resposta a incidente: Mobilização imprevisível e risco de escopo crescente. Critérios de aceite, evidência preservada e limite de responsabilidade. Segurança industrial: Parada de produção pode custar mais que o equipamento protegido. Janelas de intervenção e compatibilidade com sistemas legados.\n\nOs pontos de atenção são: Dependência tecnológica: Uma plataforma proprietária limita migração e pode reajustar custos. Verificar Alternativas homologadas e cláusulas de renovação. Capacidade técnica: Vendas acima da capacidade de atendimento elevam backlog e falhas. Verificar Carga por analista, alertas sem tratamento e escalonamento. Responsabilidade: Promessas comerciais podem exceder cobertura técnica. Verificar SLA, exclusões, seguro aplicável e obrigação de reparar.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Implantação e licenças: Giro compatível com marcos de recebimento. Validar adiantamento e aceite; não financiar expectativa como recebível exigível. Expansão de operação: Investimento em plataforma e equipe associado a contratos. Separar gasto de capacidade de receita já contratada. Resposta emergencial: Reserva de liquidez e mobilização. Não pressupor recorrência da demanda extraordinária.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Renovações seletivas e exigência de demonstrar redução de exposição. Favorável: Novos ambientes protegidos com equipe e preços dimensionados antes da expansão. Adverso: Concorrência reduz preço enquanto salários e licenças sobem; incidentes geram custo e retrabalho.\n\nNa visita, comece por estas perguntas. Quais ativos críticos ficam protegidos, e o que está expressamente fora do contrato? Quem decide a contratação e qual problema justifica terceirizar em vez de manter equipe interna? Que parte da receita vem de licenças, implantação, monitoramento e emergência? Quais fabricantes e especialistas não podem ser substituídos rapidamente? Como a empresa prova capacidade de atendimento e acompanha margem por contrato? Qual desembolso acontece antes do recebimento e como cancelamentos afetam esse fluxo?\n\nLimites da pesquisa. O histórico estimado de gastos cobre três anos, mas não mede margem ou participação dos prestadores. Os comunicados à ANPD não cobrem todos os ataques e podem refletir maior notificação ou mudanças de classificação.\n\nO mercado estimado de hardware, software e serviços de segurança passou de treze vírgula quatro bilhões de reais em dois mil e vinte e três para vinte e dois vírgula dois bilhões em dois mil e vinte e cinco. São estimativas nominais de estudo setorial, não estatística oficial nem faturamento apenas das empresas médias.",
     "audit": {
@@ -897,41 +938,82 @@
         {
           "id": "n0",
           "label": "Fabricantes e distribuidores",
-          "detail": "Switches, roteadores, cabos e equipamentos sem fio"
+          "detail": "Equipamentos de rede (hardware)",
+          "emoji": "🔌",
+          "bank": "Giro para o intervalo até o aceite do cliente, se documentado"
         },
         {
           "id": "n1",
           "label": "Projeto e instalação",
-          "detail": "Dimensionamento, cabeamento e configuração"
+          "detail": "Projeto, instalação e implantação",
+          "emoji": "🛠️",
+          "bank": "Giro para o intervalo até o aceite do cliente, se documentado"
         },
         {
           "id": "n2",
           "label": "Operadoras e enlaces",
-          "detail": "Acesso externo, redundância e transporte"
+          "detail": "Acesso externo, redundância e transporte de prestadores distintos",
+          "emoji": "🌐",
+          "bank": "Giro bancário para o intervalo operacional"
         },
         {
           "id": "n3",
           "label": "Rede do cliente",
-          "detail": "Aplicações, usuários e monitoramento"
+          "detail": "Aplicações, usuários e monitoramento da rede",
+          "emoji": "💻",
+          "bank": "Giro ou cessão ligados ao contrato de manutenção, se documentado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Entrega e dependência",
-          "from": "n0"
+          "label": "Compra de equipamentos",
+          "product": {
+            "emoji": "📦",
+            "label": "equipamentos de rede"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do equipamento ao fornecedor, antes do aceite"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Entrega e dependência",
-          "from": "n1"
+          "label": "Projeto e execução",
+          "product": {
+            "emoji": "🏗️",
+            "label": "rede projetada e instalada"
+          },
+          "cash": {
+            "emoji": "⏳",
+            "label": "materiais e implantação pagos antes do aceite do cliente"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e dependência",
-          "from": "n2"
+          "label": "Links e manutenção",
+          "product": {
+            "emoji": "🔧",
+            "label": "enlaces integrados e manutenção da rede"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "faturamento conforme o aceite do projeto e o contrato de manutenção"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga equipamento, materiais e equipe",
+          "Execução: materiais e mão de obra antes do aceite",
+          "Recebe conforme o aceite e a manutenção"
+        ],
+        "text": "Materiais e mão de obra precedem o aceite, e aceite tardio pressiona o caixa. Projeto, instalação e manutenção têm ciclos de caixa diferentes. Giro ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Redes e conectividade. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nO valor da integradora está em transformar equipamento e link em uma rede confiável para o processo do cliente. Projeto, instalação e manutenção têm ciclos de caixa diferentes.\n\nO crescimento da base de banda larga é contexto de conectividade, não receita de redes corporativas. A expansão não elimina competição por preço ou custos de manutenção.\n\nInferência: disponibilidade, documentação e capacidade de diagnóstico podem diferenciar a empresa média; estoque sem demanda e projetos com aceite tardio pressionam caixa.\n\nEmpresas que projetam, instalam e mantêm redes locais, enlaces e conectividade empresarial. Separar integradora de redes de operadora de acesso regulada e de fabricante de equipamentos.\n\nO negócio funciona assim. Fabricantes e distribuidores: Switches, roteadores, cabos e equipamentos sem fio. Projeto e instalação: Dimensionamento, cabeamento e configuração. Operadoras e enlaces: Acesso externo, redundância e transporte. Rede do cliente: Aplicações, usuários e monitoramento.\n\nA dinâmica de mercado. A renovação de redes acompanha mudança de aplicações, unidades e equipamentos. Em fase de restrição de investimento, clientes podem adiar substituição e comprar manutenção; o prestador precisa distinguir receita temporária de contrato sustentável.\n\nNa empresa média, observe os modelos de receita. Projeto e implantação: Materiais e mão de obra precedem aceite. Faturamento por marcos e documentação do escopo. Equipamento com serviço: Preço do hardware pode mascarar margem de instalação. Margem por item e horas efetivamente consumidas. Manutenção: Receita contratada exige disponibilidade técnica e peças. Chamados, deslocamentos e compromisso de reposição. Gestão de links: Integração depende de prestadores distintos. Responsabilidades e limites do SLA de cada parte.\n\nOs pontos de atenção são: Obsolescência: Estoque de equipamentos envelhece antes da venda. Verificar Pedidos firmes, ciclo do produto e política de troca. Aceite: Desempenho depende da rede do cliente e de terceiros. Verificar Testes, documentação e critérios de responsabilidade. Custo de campo: Chamados dispersos encarecem deslocamentos. Verificar Densidade geográfica e custo por atendimento.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Compra de equipamentos: Giro vinculado ao pedido e ao prazo do fornecedor. Estoque especulativo e preço em moeda estrangeira. Execução: Cronograma físico-financeiro por marco. Atraso de obra ou aceite muda o prazo do caixa. Frota e instrumentos: Investimento compatível com uso contratado. Não usar prazo curto para ativo de retorno longo.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Renovação gradual com projetos menores e manutenção. Favorável: Expansão de unidades e aplicações críticas aumenta demanda por redundância. Adverso: Investimento adiado, estoque parado e contratos de suporte sem reajuste suficiente.\n\nNa visita, comece por estas perguntas. Que problema de disponibilidade a rede resolve para o cliente? O comprador é empresa final, operadora ou outra integradora, e quem define a especificação? Quanto do contrato é equipamento, implantação e manutenção? Quais componentes e enlaces não têm alternativa homologada? Quais testes liberam o aceite e quem responde por falhas de terceiros? Como se financiam materiais e equipe entre o pedido e o recebimento?\n\nLimites da pesquisa. Não foi recuperada série específica do mercado brasileiro de integração de redes corporativas. Dados de acesso ao serviço público não substituem faturamento nem margem de projetos empresariais.",
     "audit": {
@@ -1361,41 +1443,82 @@
         {
           "id": "n0",
           "label": "Plataformas e pessoas",
-          "detail": "Ferramentas de monitoramento, nuvem e especialistas"
+          "detail": "Ferramentas de monitoramento, nuvem e especialistas",
+          "emoji": "🧰",
+          "bank": "Giro para licenças e nuvem, ligado à renovação"
         },
         {
           "id": "n1",
           "label": "Transição inicial",
-          "detail": "Inventário, migração e documentação do ambiente"
+          "detail": "Inventário, migração e documentação do ambiente",
+          "emoji": "🔄",
+          "bank": "Giro para a transição, ligado ao pagamento de implantação"
         },
         {
           "id": "n2",
           "label": "Operação recorrente",
-          "detail": "Suporte, manutenção e resposta a falhas"
+          "detail": "Suporte, manutenção e resposta a falhas",
+          "emoji": "🖥️",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         },
         {
           "id": "n3",
           "label": "Gestão do cliente",
-          "detail": "Priorização, aceite e revisão dos níveis de serviço"
+          "detail": "Priorização, aceite e revisão dos níveis de serviço",
+          "emoji": "📋",
+          "bank": "Sem encaixe de investimento confirmado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Entrega e dependência",
-          "from": "n0"
+          "label": "Início do contrato",
+          "product": {
+            "emoji": "📥",
+            "label": "ambiente inventariado e migrado"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "esforço inicial e licenças podem consumir caixa antes da mensalidade estabilizar"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Entrega e dependência",
-          "from": "n1"
+          "label": "Entrada em operação",
+          "product": {
+            "emoji": "⚙️",
+            "label": "serviço de suporte e manutenção contínuo"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "mensalidade fixa, com demanda variável"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e dependência",
-          "from": "n2"
+          "label": "Gestão e revisão",
+          "product": {
+            "emoji": "📊",
+            "label": "níveis de serviço revisados e aceitos"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do contrato recorrente; chamados fora do contrato podem ficar sem remuneração"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga plataformas, nuvem e equipe",
+          "Transição inicial: esforço antes da receita recorrente",
+          "Recebe o contrato recorrente"
+        ],
+        "text": "Implantação, licenças e escala de suporte podem consumir caixa antes da estabilização. Contratos mal delimitados fazem o volume de chamados virar custo não remunerado. Giro ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Serviços gerenciados de TI. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nRecorrência de faturamento não significa receita sem risco: implantação, licenças e escala de suporte podem consumir caixa antes da estabilização.\n\nO modelo de contratação multinuvem do MGI distingue projeto, migração, configuração, manutenção e gestão. É evidência de desenho contratual público, não medida de demanda privada.\n\nInferência: a empresa ganha eficiência quando padroniza atendimento sem ignorar criticidade; contratos mal delimitados transformam volume de chamados em custo não remunerado.\n\nOperação continuada de infraestrutura e suporte de TI, incluindo monitoramento, ambiente em nuvem e atendimento. Separar contrato recorrente, implantação, revenda de licenças e cessão de profissionais.\n\nO negócio funciona assim. Plataformas e pessoas: Ferramentas de monitoramento, nuvem e especialistas. Transição inicial: Inventário, migração e documentação do ambiente. Operação recorrente: Suporte, manutenção e resposta a falhas. Gestão do cliente: Priorização, aceite e revisão dos níveis de serviço.\n\nA dinâmica de mercado. Terceirização pode substituir capex próprio por serviço, mas o fornecedor passa a suportar investimento e capacidade. Redução do orçamento do cliente pode elevar cobrança por eficiência e revisão de escopo, mesmo quando o contrato é recorrente.\n\nNa empresa média, observe os modelos de receita. Entrada do contrato: Inventário e correção de passivos técnicos exigem esforço inicial. Cobrança da transição e registro das exclusões. Mensalidade fixa: Receita previsível com volume de demanda variável. Limites de usuários, ativos, horas e escopo. Consumo em nuvem: Fatura depende de uso e de compromisso com provedor. Conciliação do consumo e regras de repasse. Serviço extraordinário: Mudanças e novos projetos fora do contrato. Autorização prévia e faturamento separado.\n\nOs pontos de atenção são: Transição deficitária: Passivo técnico descoberto depois da assinatura. Verificar Inventário, baseline e termo de transição. Escopo aberto: Mais ativos e chamados sem reajuste. Verificar Métricas contratadas e regra de mudança. Dependência de pessoas: Ausência de especialista interrompe atendimento. Verificar Documentação, escala e substituição.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Implantação: Giro para transição vinculado a pagamentos de implantação. Subestimar passivos técnicos prolonga retorno. Licenças e nuvem: Compatibilizar obrigações com renovação dos clientes. Compromisso anual pode superar prazo do cliente. Expansão: Investimento em automação e capacidade comprovada. Crescimento de folha antes de contratos firmes.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Renovação com renegociação de escopo e produtividade. Favorável: Automação reduz esforço e libera capacidade para novos contratos com margem. Adverso: Chamados e custos sobem sem repasse, com cancelamento de clientes concentrados.\n\nNa visita, comece por estas perguntas. Que atividade o cliente deixa de executar ao contratar a empresa? Qual segmento é atendido e quem decide renovar ou cancelar? Quais receitas cobrem transição, mensalidade, licenças e demandas extras? Quais ferramentas e pessoas são essenciais para continuar operando? Como a margem e a qualidade são medidas por contrato? Quanto caixa a transição consome antes de o contrato se pagar?\n\nLimites da pesquisa. Não foi localizada série oficial que separe serviços gerenciados de todos os serviços de TI. Contratação pública é exemplo de estrutura; não foi usada como média de preços, margens ou prazos do setor.",
     "audit": {
@@ -1805,41 +1928,82 @@
         {
           "id": "n0",
           "label": "Plataformas e operadoras",
-          "detail": "Licenças, numeração e conectividade"
+          "detail": "Licenças, numeração e conectividade",
+          "emoji": "📞",
+          "bank": "Giro compatível com a compra e o faturamento de licenças"
         },
         {
           "id": "n1",
           "label": "Integração",
-          "detail": "Configuração, migração e ligação com sistemas"
+          "detail": "Configuração, migração e ligação com sistemas",
+          "emoji": "🔗",
+          "bank": "Giro para a implantação, se documentado"
         },
         {
           "id": "n2",
           "label": "Usuários e atendimento",
-          "detail": "Reuniões, mensagens e comunicação com clientes"
+          "detail": "Reuniões, mensagens e comunicação com clientes",
+          "emoji": "💬",
+          "bank": "Cessão de recebíveis, só de crédito exigível"
         },
         {
           "id": "n3",
           "label": "Suporte e renovação",
-          "detail": "Adoção, disponibilidade e ajuste de capacidade"
+          "detail": "Adoção, disponibilidade e ajuste de capacidade",
+          "emoji": "🤝",
+          "bank": "Investimento em equipamentos entregues em comodato, se documentado e com recuperação demonstrada"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Entrega e dependência",
-          "from": "n0"
+          "label": "Compra de licenças",
+          "product": {
+            "emoji": "🎟️",
+            "label": "licenças, numeração e conectividade"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "compra de licenças e conectividade antes de faturar ao cliente"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Entrega e dependência",
-          "from": "n1"
+          "label": "Migração",
+          "product": {
+            "emoji": "🚚",
+            "label": "sistemas migrados e integrados"
+          },
+          "cash": {
+            "emoji": "⏳",
+            "label": "trabalho inicial antes de estabilizar a operação"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e dependência",
-          "from": "n2"
+          "label": "Uso e suporte",
+          "product": {
+            "emoji": "🎧",
+            "label": "serviço em uso, com suporte e ajuste de capacidade"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cobrança recorrente pelo serviço contratado"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga licenças e conectividade",
+          "Migração e comodato: investimento antes da estabilização",
+          "Recebe a cobrança recorrente"
+        ],
+        "text": "Licenças são compradas e o trabalho inicial de migração vem antes de estabilizar a operação. Equipamentos em comodato e migração são pagos antecipadamente, o que exige disciplina de prazo e de recuperação do investimento. Giro ou investimento ligado ao contrato podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Comunicação e colaboração. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nA proposta de valor está na comunicação utilizável e integrada ao trabalho, não apenas em licenças ou aparelhos. Implantação, adoção e suporte condicionam a renovação.\n\nO Iphan publicou em setembro de 2026 um objeto de contratação de telefonia VoIP e PABX em nuvem com equipamentos em comodato. É um exemplo concreto de demanda, sem extrapolar volume ou preço para o mercado.\n\nInferência: cobrança recorrente pode coexistir com equipamentos e migração pagos antecipadamente, exigindo disciplina de prazo e de recuperação do investimento.\n\nSoluções empresariais de voz, reuniões, mensagens, contact center e colaboração, integradas ou em nuvem. Não confundir com mídia/publicidade nem com a operação de telecomunicações regulada.\n\nO negócio funciona assim. Plataformas e operadoras: Licenças, numeração e conectividade. Integração: Configuração, migração e ligação com sistemas. Usuários e atendimento: Reuniões, mensagens e comunicação com clientes. Suporte e renovação: Adoção, disponibilidade e ajuste de capacidade.\n\nA dinâmica de mercado. A substituição de telefonia tradicional por soluções digitais é mecanismo estrutural. No ciclo, clientes podem reduzir assentos, consolidar ferramentas ou adiar equipamentos; expansão do trabalho digital não implica aumento de margem do canal.\n\nNa empresa média, observe os modelos de receita. Licença por usuário: Custo e receita variam com assentos contratados. Licenças compradas, ativas e efetivamente usadas. Comunicação em nuvem: Serviço depende de conectividade e plataforma. Qualidade, gravação, armazenamento e responsabilidade. Equipamento em comodato: Investimento permanece no fornecedor. Prazo de recuperação e devolução em cancelamento. Integração e migração: Trabalho inicial antes de estabilizar a operação. Portabilidade, treinamento e aceite.\n\nOs pontos de atenção são: Licenças ociosas: Compromissos mínimos excedem uso do cliente. Verificar Assentos ativos e prazo de redução. Migração: Portabilidade e integração atrasam entrada em operação. Verificar Plano de contingência e aceites parciais. Qualidade: Falha de rede pode parecer falha da plataforma. Verificar Monitoramento ponta a ponta e divisão de responsabilidades.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Comodato: Investimento com prazo aderente ao contrato. Cancelamento pode deixar ativo sem reutilização. Migração: Giro por marcos de implantação. Aceite e dependência de operadora. Licenças: Compatibilizar compra e faturamento. Renovação e moeda do fornecedor.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Consolidação de ferramentas com foco em uso e suporte. Favorável: Migrações e novas integrações ampliam receita com implantação remunerada. Adverso: Redução de assentos e renovação mais cara comprimem margem do integrador.\n\nNa visita, comece por estas perguntas. Qual falha de comunicação ou atendimento a solução resolve? Quem usa, quem compra e quem decide renovar? A receita vem de usuário, consumo, projeto, equipamento ou suporte? Quais plataformas e operadoras determinam custo e continuidade? Como são medidos adoção, qualidade e entrega da implantação? O contrato recupera o investimento em aparelhos e migração mesmo se houver cancelamento?\n\nLimites da pesquisa. Não foi recuperada série oficial específica de comunicação unificada empresarial. Telefonia fixa agrega usos residenciais e empresariais; sua evolução não mede diretamente receitas de colaboração.",
     "audit": {
@@ -2319,41 +2483,82 @@
         {
           "id": "n0",
           "label": "Conhecimento e infraestrutura",
-          "detail": "Equipe, ferramentas, nuvem e componentes"
+          "detail": "Equipe, ferramentas, nuvem e componentes",
+          "emoji": "👩‍💻",
+          "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n1",
           "label": "Desenvolvimento",
-          "detail": "Produto, código, testes e propriedade intelectual"
+          "detail": "Produto, código, testes e propriedade intelectual",
+          "emoji": "⌨️",
+          "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n2",
           "label": "Implantação e venda",
-          "detail": "Integração, migração, treinamento e aceite"
+          "detail": "Integração, migração, treinamento e aceite",
+          "emoji": "🚀",
+          "bank": "Giro para a implantação, se documentado"
         },
         {
           "id": "n3",
           "label": "Uso e evolução",
-          "detail": "Assinatura, suporte, manutenção e novas versões"
+          "detail": "Assinatura, suporte, manutenção e novas versões",
+          "emoji": "🔁",
+          "bank": "Cessão de recebíveis, só de crédito documentado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Entrega e dependência",
-          "from": "n0"
+          "label": "Construção",
+          "product": {
+            "emoji": "🧱",
+            "label": "produto ou projeto em desenvolvimento"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "folha e ferramentas pagas antes da receita"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Entrega e dependência",
-          "from": "n1"
+          "label": "Implantação e venda",
+          "product": {
+            "emoji": "📦",
+            "label": "software integrado, migrado e treinado"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "recebimento conforme o contrato (produto, projeto sob encomenda ou implantação)"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e dependência",
-          "from": "n2"
+          "label": "Assinatura e evolução",
+          "product": {
+            "emoji": "🆕",
+            "label": "suporte, manutenção e novas versões"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "assinatura recorrente ou contrato de manutenção"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga a equipe e as ferramentas",
+          "Desenvolvimento antes da receita",
+          "Recebe conforme o contrato ou a assinatura"
+        ],
+        "text": "O desenvolvimento antecede a receita, e escopo, aceite e retrabalho influenciam quando o caixa entra. Em produto próprio, o retorno pode ser incerto. Giro por entrega ou cessão de créditos documentados podem atender esse intervalo. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Software e serviços de TI. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nUma mesma empresa pode combinar receita recorrente de produto com projetos intensivos em horas. A composição define margem, crescimento e capital de giro.\n\nAs pesquisas do IBGE cobrem atividades mais amplas que SaaS ou fábricas de software isoladamente. Não se usou crescimento agregado dos serviços como crescimento deste mercado.\n\nInferência: produto reutilizável permite escala, mas exige desenvolvimento, suporte e aquisição de clientes antes do retorno; personalização excessiva pode transformar produto em projeto.\n\nDesenvolvimento, licenciamento, implantação e manutenção de software, com recorte no Brasil e foco na economia da empresa média. Separar produto próprio, software sob encomenda, consultoria e alocação de equipe.\n\nO negócio funciona assim. Conhecimento e infraestrutura: Equipe, ferramentas, nuvem e componentes. Desenvolvimento: Produto, código, testes e propriedade intelectual. Implantação e venda: Integração, migração, treinamento e aceite. Uso e evolução: Assinatura, suporte, manutenção e novas versões.\n\nA dinâmica de mercado. Mudanças tecnológicas e integração de inteligência artificial podem alterar produtividade e produto. A oportunidade comercial depende de disposição de pagar e segurança de uso; não foi projetada receita apenas com base no interesse por tecnologia.\n\nNa empresa média, observe os modelos de receita. Produto próprio: Desenvolvimento antecede receita e pode ser reutilizado. Receita recorrente, retenção e custo de atender. Sob encomenda: Escopo e horas determinam custo de entrega. Mudanças, aceite e retrabalho. Implantação: Integração e migração condicionam o uso. Marcos faturáveis e dependências do cliente. Equipe dedicada: Receita ligada à capacidade de profissionais. Ociosidade, reajuste e concentração contratual.\n\nOs pontos de atenção são: Personalização: Produto acumula versões específicas sem remuneração. Verificar Horas por cliente e custo de manutenção. Concentração: Um projeto financia equipe permanente. Verificar Diversificação e calendário de renovação. Propriedade intelectual: Licenças e contratos podem limitar uso e cessão do código. Verificar Titularidade, componentes e obrigações contratuais.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Projetos: Giro alinhado a entregas contratadas. Aceite, disputa de escopo e concentração. Produto: Capital compatível com desenvolvimento e retorno incerto. Crédito curto pode não combinar com produto ainda sem venda validada. Recebíveis: Cessão apenas de créditos documentados e compatíveis com contrato. Prestação futura e cláusulas de rescisão.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Compradores priorizam retorno e integração; vendas seletivas. Favorável: Produto repetível e implantação disciplinada elevam receita sem custo proporcional. Adverso: Projetos cancelados, inadimplência e manutenção crescente reduzem caixa.\n\nNa visita, comece por estas perguntas. Qual processo do cliente melhora e qual resultado justifica pagar? Qual nicho compra e quem é o decisor econômico? Quanto da receita é produto, implantação, projeto e equipe dedicada? A empresa controla o código e quais plataformas ou pessoas são indispensáveis? Como diferencia produto repetível de customização deficitária? Quanto tempo separa desenvolver, vender, entregar e receber?\n\nLimites da pesquisa. O histórico do IBGE foi recuperado para dez anos completos, de dois mil e dezesseis a dois mil e vinte e cinco. É o agregado de serviços de TI, não apenas software como serviço. Não há base verificada para publicar margem, custo de aquisição ou taxa de cancelamento típicos de empresas médias.\n\nNo dado mais recente recuperado, agosto de dois mil e vinte e seis, o volume de serviços de TI cresceu oito vírgula quatro por cento no acumulado do ano. Isso não comprova melhora de margens ou do caixa de uma empresa específica.",
     "audit": {
@@ -2839,41 +3044,82 @@
         {
           "id": "n0",
           "label": "Terreno, energia e rede",
-          "detail": "Licenças, alimentação elétrica e conectividade"
+          "detail": "Licenças, alimentação elétrica e conectividade",
+          "emoji": "⚡",
+          "bank": "Investimento de longo prazo, ligado a contratos e cronograma"
         },
         {
           "id": "n1",
           "label": "Infraestrutura física",
-          "detail": "Edificação, refrigeração, redundância e segurança"
+          "detail": "Edificação, refrigeração, redundância e segurança",
+          "emoji": "🏗️",
+          "bank": "Investimento em estrutura, ligado ao cronograma"
         },
         {
           "id": "n2",
           "label": "Capacidade computacional",
-          "detail": "Servidores, armazenamento e plataformas"
+          "detail": "Servidores, armazenamento e plataformas",
+          "emoji": "🗄️",
+          "bank": "Investimento em equipamento, com prazo aderente à geração de caixa"
         },
         {
           "id": "n3",
           "label": "Clientes e aplicações",
-          "detail": "Colocation, nuvem, consumo e integração"
+          "detail": "Colocation, nuvem, consumo e integração",
+          "emoji": "☁️",
+          "bank": "Giro para energia, pessoal e rampa de ocupação"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Entrega e dependência",
-          "from": "n0"
+          "label": "Obra e energização",
+          "product": {
+            "emoji": "🧱",
+            "label": "terreno e conexão elétrica e de rede"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "investimento físico antes da ocupação; contratos e energia antes de expandir"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Entrega e dependência",
-          "from": "n1"
+          "label": "Montagem",
+          "product": {
+            "emoji": "🖧",
+            "label": "infraestrutura pronta para receber equipamento"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "gasto de obra e equipamento antes da ocupação"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e dependência",
-          "from": "n2"
+          "label": "Ocupação e consumo",
+          "product": {
+            "emoji": "📶",
+            "label": "espaço, capacidade e nuvem para o cliente"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento por capacidade contratada ou por consumo"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga obra, energia e equipamento",
+          "Investimento e rampa de ocupação antes da receita",
+          "Recebe por capacidade contratada ou consumo"
+        ],
+        "text": "O investimento físico vem antes da ocupação, e o estudo recomenda que contratos e acesso à energia precedam uma expansão disciplinada. Capacidade instalada não equivale a receita ou capacidade contratada. Investimento de longo prazo e giro podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Data centers e nuvem. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nData center combina investimento físico, energia, conectividade e continuidade. Nuvem acrescenta plataforma e cobrança por consumo; os elos não devem ser somados como se fossem um único mercado.\n\nO MDIC informou a sanção do Redata em setembro de 2026 com contrapartidas e critérios de sustentabilidade. Não se confirmou habilitação de uma empresa ou benefício automaticamente disponível.\n\nInferência: contratos e acesso à energia precisam preceder expansão disciplinada. Anúncio de projeto não é capacidade operacional nem receita.\n\nInfraestrutura de centros de dados e serviços de computação em nuvem. Separar colocation, operação de infraestrutura, provedores de nuvem e integradores; capacidade instalada não equivale a receita ou capacidade contratada.\n\nO negócio funciona assim. Terreno, energia e rede: Licenças, alimentação elétrica e conectividade. Infraestrutura física: Edificação, refrigeração, redundância e segurança. Capacidade computacional: Servidores, armazenamento e plataformas. Clientes e aplicações: Colocation, nuvem, consumo e integração.\n\nA dinâmica de mercado. A política industrial pode melhorar condições de investimento, mas demanda, energização e regras de habilitação continuam determinantes. Demanda por IA pode exigir densidade e refrigeração diferentes, com risco de tecnologia e ociosidade.\n\nNa empresa média, observe os modelos de receita. Colocation: Cliente ocupa espaço e capacidade elétrica. Capacidade contratada, ocupação e repasse de energia. Nuvem: Receita depende de consumo e serviços agregados. Custo de infraestrutura e utilização efetiva. Infraestrutura própria: Capex antecede contratos e operação. Obras, energização e rampa de ocupação. Integração multinuvem: Serviço combina plataformas de terceiros. Margem de gestão separada do consumo repassado.\n\nOs pontos de atenção são: Energia: Potência contratada e entrega efetiva podem divergir do cronograma. Verificar Conexão, redundância, custo e prazo documentados. Ocupação: Construir antes de contratar prolonga retorno. Verificar Clientes âncora, rescisão e compromissos mínimos. Tecnologia: Equipamento muda mais rápido que a edificação. Verificar Vida útil, modularidade e necessidade de atualização.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Implantação física: Estrutura de longo prazo associada a contratos e cronograma. Licenças, conexão e contingência de obra. Equipamento: Prazo compatível com vida tecnológica e geração de caixa. Obsolescência e exposição cambial. Operação: Giro para energia, pessoal e rampa de ocupação. Receita começa depois de despesas relevantes.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Expansão modular apoiada em contratos e energização confirmada. Favorável: Contratação cresce junto com capacidade elétrica e ocupação sustentável. Adverso: Projetos atrasam, equipamentos encarecem e capacidade fica ociosa.\n\nNa visita, comece por estas perguntas. A empresa vende espaço, potência, computação, plataforma ou gestão? Quais clientes contratam capacidade e por quanto tempo? A cobrança é fixa, por consumo ou inclui repasse de energia? Quais conexões, fornecedores e licenças são condição para operar? Como distingue capacidade anunciada, disponível, contratada e utilizada? O prazo do financiamento suporta obra, energização e rampa de ocupação?\n\nLimites da pesquisa. Há dimensionamento pontual estimado em artigo público de dois mil e vinte e cinco, mas não série nacional homogênea de capacidade e ocupação. Não foram confirmadas condições de acesso a incentivo ou financiamento para uma empresa específica.\n\nUm indicador de investimento potencial: o Ministério de Minas e Energia informou cinquenta e dois pedidos de conexão à Rede Básica até junho de dois mil e vinte e cinco. Dezoito tinham alternativa técnica reconhecida e trinta e quatro estavam em análise. Isso não significa capacidade instalada nem autorização final de acesso.",
     "audit": {
@@ -3368,41 +3614,82 @@
         {
           "id": "n0",
           "label": "Infraestrutura e direitos",
-          "detail": "Rede, espectro quando aplicável, postes e equipamentos"
+          "detail": "Rede e equipamentos",
+          "emoji": "🗼",
+          "bank": "Financiamento de investimento em rede, ligado ao retorno"
         },
         {
           "id": "n1",
           "label": "Transporte e acesso",
-          "detail": "Backbone, última milha e interconexão"
+          "detail": "Capacidade de rede, inclusive vendida a outras prestadoras",
+          "emoji": "🔗",
+          "bank": "Financiamento de investimento em rede, ligado ao retorno, se documentado"
         },
         {
           "id": "n2",
           "label": "Operação e atendimento",
-          "detail": "Instalação, manutenção e cobrança"
+          "detail": "Instalação, manutenção e cobrança",
+          "emoji": "🧰",
+          "bank": "Giro para instalação e cobrança"
         },
         {
           "id": "n3",
           "label": "Assinantes",
-          "detail": "Uso, pagamento, suporte e renovação"
+          "detail": "Uso, pagamento, suporte e renovação",
+          "emoji": "📱",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Entrega e dependência",
-          "from": "n0"
+          "label": "Rede construída",
+          "product": {
+            "emoji": "📡",
+            "label": "rede e equipamentos disponíveis"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "investimento pago antes de a rede ter ocupação e retorno"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Entrega e dependência",
-          "from": "n1"
+          "label": "Capacidade e acesso",
+          "product": {
+            "emoji": "🌐",
+            "label": "capacidade de rede e conexão"
+          },
+          "cash": {
+            "emoji": "🏗️",
+            "label": "custo de rede e manutenção como custo da empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e dependência",
-          "from": "n2"
+          "label": "Ativação e atendimento",
+          "product": {
+            "emoji": "🔧",
+            "label": "instalação, suporte e conexão ativa"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "pagamento do assinante pelo serviço"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Investe em rede e equipamentos primeiro",
+          "Rede pronta antes de ocupação e retorno",
+          "Recebe do assinante conforme a base ativa"
+        ],
+        "text": "A expansão física exige investimento antes de ocupação e retorno, e o crescimento da rede não garante caixa. Desconto comercial, churn e custo de rede podem reduzir o retorno. Reconciliar contratos e recebimentos antes de propor dívida. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Operadoras de telecomunicações. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nReceita depende de base ativa, preço, qualidade e permanência do cliente. Expansão física exige investimento antes de atingir ocupação e retorno.\n\nO MCom registra aumento dos acessos fixos e móveis entre dezembro de 2024 e 2025. Acesso é contrato/conexão, não pessoa, e os números não demonstram margem ou rentabilidade.\n\nInferência: competir com qualidade e densidade de rede pode ser mais sustentável que crescer apenas por aquisição ou desconto; o resultado precisa ser medido por praça.\n\nPrestadoras de conectividade fixa e móvel no Brasil. Separar serviços, área de atuação e porte; o mercado relevante de um provedor regional não é necessariamente o nacional.\n\nO negócio funciona assim. Infraestrutura e direitos: Rede, espectro quando aplicável, postes e equipamentos. Transporte e acesso: Backbone, última milha e interconexão. Operação e atendimento: Instalação, manutenção e cobrança. Assinantes: Uso, pagamento, suporte e renovação.\n\nA dinâmica de mercado. A expansão de fibra e uso de dados muda a composição do setor. Mesmo com base crescente, desconto comercial, churn e custo de rede podem reduzir retorno. Mudança tecnológica é estrutural; promoções, inadimplência e ritmo de investimento têm componente cíclico.\n\nNa empresa média, observe os modelos de receita. Banda larga fixa: Rede antecede ativação de assinantes. Casas passadas, clientes ativos e ocupação por área. Móvel: Rede e capacidade precisam acompanhar tráfego. Base, utilização e custos por serviço. Atacado: Capacidade vendida a outras prestadoras. Concentração e contratos de longo prazo. Serviços empresariais: Disponibilidade e atendimento diferenciados. SLA, redundância e custo real de operação.\n\nOs pontos de atenção são: Rede subutilizada: Construção não se converte em assinantes suficientes. Verificar Ocupação e retorno por projeto. Preço e churn: Promoções captam clientes que saem rapidamente. Verificar Custo de ativação, permanência e receita líquida. Regulação e infraestrutura: Operação depende de obrigações e direitos de uso. Verificar Outorgas aplicáveis, documentação e contratos.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Expansão: Investimento aderente ao retorno por área. Projeto, ocupação e contingência. Equipamentos importados: Financiamento e proteção cambial ligados ao fluxo. Moeda e prazo de recebimento não necessariamente coincidem. Giro: Cobrança e instalação com disciplina de capital de giro. Não financiar expansão permanente só com dívida curta.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Crescimento seletivo com ocupação da rede existente. Favorável: Melhor utilização e carteira empresarial elevam receita sem expansão desproporcional. Adverso: Guerra de preços, inadimplência e custo de manutenção consomem caixa.\n\nNa visita, comece por estas perguntas. Qual serviço e qual território definem o negócio da operadora? Quem é o cliente e por que permanece em vez de trocar? Como preço, base ativa e cancelamentos se transformam em receita? Quais redes, contratos e autorizações são indispensáveis? Qual é o retorno por expansão depois de instalação e manutenção? A geração de caixa cobre dívida e renovação tecnológica sem depender de novas vendas?\n\nLimites da pesquisa. Relatórios trimestrais de 2026 da Anatel foram localizados, mas a leitura integral foi bloqueada por desafio de acesso. Não se usaram seus trechos como série confirmada. Séries anteriores recuperadas de publicações diferentes apresentam revisões; não foram encadeadas sem conciliação.\n\nO histórico oficial do IBGE cobre dez anos completos. No acumulado de janeiro a agosto de dois mil e vinte e seis, o volume de telecomunicações cresceu dois vírgula oito por cento. Volume deflacionado e número de acessos são conceitos distintos; nenhum deles prova margem de uma operadora.",
     "audit": {

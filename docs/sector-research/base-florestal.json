@@ -347,41 +347,82 @@
         {
           "id": "0",
           "label": "Mudas, terra e manejo",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Origem da muda e da terra; confirmar o que é da empresa",
+          "emoji": "🌱",
+          "bank": "Investimento em ativos duráveis, como estradas e manejo"
         },
         {
           "id": "1",
           "label": "Floresta em crescimento",
-          "detail": "A empresa imobiliza recursos no plantio, tratos e proteção antes de colher. Genética, adequação ao sítio e distribuição etária influenciam produtividade e continuidade. Madeira em pé transfere responsabilidades diferentes de madeira entregue na fábrica."
+          "detail": "Recursos parados no plantio e nos tratos até a colheita",
+          "emoji": "🌳",
+          "bank": "Evitar giro curto para financiar a formação florestal"
         },
         {
           "id": "2",
           "label": "Colheita e transporte",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Colheita contratada e custo de transporte até o comprador",
+          "emoji": "🚜",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
-          "label": "Celulose, painéis e energia",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Comprador da madeira",
+          "detail": "Madeira vendida em pé ou entregue na fábrica",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de entrega aceita"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Plantio e tratos",
+          "product": {
+            "emoji": "🌿",
+            "label": "mudas e manejo no talhão"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a empresa paga plantio, tratos e proteção antes de colher"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Crescimento até a colheita",
+          "product": {
+            "emoji": "🪵",
+            "label": "madeira que cresce no talhão"
+          },
+          "cash": {
+            "emoji": "⏳",
+            "label": "nenhuma entrada de caixa; valorização contábil não é dinheiro"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda da madeira",
+          "product": {
+            "emoji": "🚚",
+            "label": "madeira em pé ou entregue na fábrica"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "comprador paga conforme o contrato; entregue na fábrica muda a responsabilidade"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga plantio, tratos e proteção",
+          "Espera o talhão crescer",
+          "Recebe na venda da madeira"
+        ],
+        "text": "A empresa gasta no plantio muito antes de colher. Giro curto renovado para financiar a formação florestal cria descasamento com a geração futura do talhão. Antecipar a venda em pé reduz a flexibilidade. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Florestas plantadas. Cultivo comercial de árvores e venda de madeira em pé ou entregue; separar silvicultura de extrativismo nativo e de transformação industrial. A empresa imobiliza recursos no plantio, tratos e proteção antes de colher. Genética, adequação ao sítio e distribuição etária influenciam produtividade e continuidade. Madeira em pé transfere responsabilidades diferentes de madeira entregue na fábrica. O ponto econômico central é: A unidade econômica é o talhão e sua destinação, não apenas hectares. Diâmetro, espécie, distância ao comprador e custo de colheita podem tornar florestas com volumes semelhantes economicamente distintas. Valorização contábil do ativo biológico não é entrada de caixa. Para uma empresa média: Financiamento do estabelecimento e manutenção precisa respeitar a geração futura do talhão. Giro curto renovado continuamente para financiar formação florestal cria descasamento. Antecipação da venda em pé reduz flexibilidade e exige comparar o valor presente líquido das alternativas. No cenário favorável: Demanda industrial contratada absorve colheitas com custo logístico estável; observar contratos firmes e preço líquido na fazenda. No adverso: Choque climático reduz volume e comprador posterga recebimento; observar inventário afetado, incêndios, corte antecipado e obrigações de manutenção. Na visita: Solicitar mapa de talhões, inventário, documentos fundiários e ambientais, contratos de venda e calendário de desembolsos. Comparar uma área pronta para corte com uma em formação para testar descasamento. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -755,42 +796,83 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Toras documentadas",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Toras",
+          "detail": "Compra das toras antes de cortar",
+          "emoji": "🪵",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Desdobro e seleção",
-          "detail": "O corte transforma toras de geometrias variáveis em peças comercializáveis. A secagem é uma etapa econômica própria: reduz umidade, ocupa espaço e pode gerar empenamento e perdas. Vender verde e vender seco não são negócios equivalentes."
+          "detail": "Corte das toras em peças comercializáveis",
+          "emoji": "🪚",
+          "bank": "Investimento em serras e ativos duráveis, após ver o gargalo"
         },
         {
           "id": "2",
           "label": "Secagem e beneficiamento",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Secagem tira umidade, ocupa espaço e pode gerar perdas",
+          "emoji": "♨️",
+          "bank": "Giro bancário para o estoque em secagem"
         },
         {
           "id": "3",
-          "label": "Construção, pallets e móveis",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Compradores de madeira serrada",
+          "detail": "Madeira serrada, verde ou seca, vendida aos compradores",
+          "emoji": "🏗️",
+          "bank": "Cessão de recebíveis, só de entrega aceita"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Corte",
+          "product": {
+            "emoji": "🔪",
+            "label": "toras viram peças serradas"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a empresa já pagou a tora antes de vender"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Secagem e beneficiamento",
+          "product": {
+            "emoji": "📏",
+            "label": "madeira seca e classificada"
+          },
+          "cash": {
+            "emoji": "📦",
+            "label": "o estoque cresce; o caixa fica preso até a venda"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "🚛",
+            "label": "madeira serrada entregue"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga após entrega e aceite; devoluções por umidade ou medida podem voltar"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga a tora",
+          "Estoque cresce entre compra, secagem e venda",
+          "Recebe após entrega e aceite"
+        ],
+        "text": "O estoque cresce entre a compra da tora, a secagem e a venda. Antecipar faturamento não elimina devoluções por umidade ou medidas. Recebível só deve ser avaliado depois da entrega e do aceite. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Serrarias. Desdobramento de toras em madeira serrada, com secagem e classificação quando contratadas. Não inclui fabricação de painéis reconstituídos. O corte transforma toras de geometrias variáveis em peças comercializáveis. A secagem é uma etapa econômica própria: reduz umidade, ocupa espaço e pode gerar empenamento e perdas. Vender verde e vender seco não são negócios equivalentes. O ponto econômico central é: A margem depende do aproveitamento efetivo e da composição das classes. Somar receita de serrados, cavacos e serragem evita ignorar coprodutos, mas pressupor comprador para todo resíduo infla a rentabilidade. Para uma empresa média: O estoque cresce entre compra da tora, secagem e venda. Recebíveis só devem ser avaliados após entrega e aceite; antecipar faturamento não elimina devoluções por umidade ou medidas. No cenário favorável: Clientes valorizam madeira seca e especificada; monitorar prêmio líquido depois de energia, refugo e prazo adicional. No adverso: Tora encarece e demanda de construção recua; observar estoques verdes, preço por classe e tempo de secagem. Na visita: Acompanhar uma tora até a expedição, reconciliando volume de entrada, produtos e resíduos. Conferir origem e destino de resíduos, amostrar umidade e revisar reclamações. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -1145,41 +1227,82 @@
         {
           "id": "0",
           "label": "Toras selecionadas",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Toras escolhidas por espécie, diâmetro e defeitos",
+          "emoji": "🪵",
+          "bank": "Giro bancário para o estoque de toras"
         },
         {
           "id": "1",
           "label": "Preparação e laminação",
-          "detail": "No torneamento a tora fornece folhas para uso industrial; no faqueamento a aparência pode ser central ao valor. Espécie, diâmetro, defeitos e padrão visual alteram rendimento e mercado."
+          "detail": "Torneamento ou faqueamento transforma a tora em folhas",
+          "emoji": "⚙️",
+          "bank": "Investimento em torno ou faqueadeira, se couber na linha"
         },
         {
           "id": "2",
           "label": "Secagem e classificação",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Folhas secas e classificadas por área útil",
+          "emoji": "🗂️",
+          "bank": "Giro bancário para o estoque classificado"
         },
         {
           "id": "3",
           "label": "Compensados e revestimentos",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Compradores de compensados e revestimentos",
+          "emoji": "🛠️",
+          "bank": "Cessão de recebíveis, só do produto aceito"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Laminação",
+          "product": {
+            "emoji": "🔪",
+            "label": "toras para laminar"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a empresa paga e estoca as toras antes da classificação definitiva"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Secagem e classificação",
+          "product": {
+            "emoji": "📄",
+            "label": "lâminas secas e classificadas"
+          },
+          "cash": {
+            "emoji": "📦",
+            "label": "estoque e controles consomem caixa; estocagem ruim destrói valor"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda das lâminas",
+          "product": {
+            "emoji": "🚚",
+            "label": "lâminas de face ou de miolo entregues"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga após aceite; glosa por tonalidade, espessura ou umidade reduz o valor"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga e estoca as toras",
+          "Segura estoque até a classificação",
+          "Recebe pelo produto aceito"
+        ],
+        "text": "Toras selecionadas exigem estoque e capital antes da classificação definitiva. O recebível tem risco de glosa por tonalidade, espessura ou umidade. O financiamento precisa se apoiar no produto aceito. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Lâminas. Lâminas torneadas ou faqueadas vendidas para compensados e revestimentos; não confundir a folha de madeira com painel pronto. No torneamento a tora fornece folhas para uso industrial; no faqueamento a aparência pode ser central ao valor. Espécie, diâmetro, defeitos e padrão visual alteram rendimento e mercado. O ponto econômico central é: A lâmina de face não tem o mesmo preço ou taxa de aproveitamento da lâmina de miolo. Medir área útil após secagem e classificação é mais informativo que apenas volume processado. Estocagem ruim pode destruir valor depois de concluída a etapa mais cara. Para uma empresa média: Toras selecionadas exigem estoque e capital antes da classificação definitiva. Recebível tem risco de glosa por tonalidade, espessura ou umidade; financiamento precisa se apoiar no produto aceito. No cenário favorável: Homologação e estabilidade dimensional aumentam pedidos repetidos e reduzem rejeição; acompanhar mix e rendimento. No adverso: Perda de comprador especializado deixa lotes sem destino equivalente; monitorar estoque por espécie, acabamento e idade. Na visita: Pedir ficha técnica por comprador, classificação de lotes e histórico de rejeição. Reconciliar rendimento bruto com a área que efetivamente foi faturada e recebida. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -1534,41 +1657,82 @@
         {
           "id": "0",
           "label": "Lâminas e adesivos",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Lâminas e resina; confirmar integração e responsabilidade da empresa",
+          "emoji": "🪵",
+          "bank": "Giro: as compras antecedem a fabricação"
         },
         {
           "id": "1",
           "label": "Montagem e prensagem",
-          "detail": "A orientação das lâminas, adesivo e cura determinam desempenho. Espessura uniforme, colagem e resistência precisam corresponder à aplicação contratada; aparência de superfície não substitui ensaio estrutural."
+          "detail": "Orientação das lâminas, adesivo e cura definem o desempenho",
+          "emoji": "🏭",
+          "bank": "Investimento em prensas e secadores, se houver lâmina e mercado"
         },
         {
           "id": "2",
           "label": "Acabamento e ensaio",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Espessura, colagem e resistência conferidas para a aplicação contratada",
+          "emoji": "🔬",
+          "bank": "Giro para estoque e ensaios"
         },
         {
           "id": "3",
           "label": "Distribuição e uso industrial",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Uso interior, construção e embalagens; exportação possível",
+          "emoji": "🏗️",
+          "bank": "Trade finance, só com exportação comprovada"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "📄",
+            "label": "lâminas e adesivo"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "compra de lâminas e resina, que antecede a fabricação"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Fabricação",
+          "product": {
+            "emoji": "🧱",
+            "label": "painéis colados e prensados"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, tempo de prensa e adesivo"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "📦",
+            "label": "painéis ensaiados e entregues"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após a entrega aceita; exportação soma ensaios e prazo de embarque"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga lâminas e resina",
+          "Fabricação, estoque e embarque",
+          "Recebe do cliente"
+        ],
+        "text": "Compras de lâminas e resina antecedem a fabricação e o embarque. Um contrato exportador pode ampliar receita e ainda reduzir caixa se exigir estoque, ensaios e prazo de embarque maiores. Não foram confirmadas taxas ou elegibilidade atual em programas."
+      }
     },
     "transcript": "Estudo de Compensados. Painéis construídos por colagem e prensagem de lâminas, com aplicações e requisitos diferentes para uso interior, construção e embalagens. A orientação das lâminas, adesivo e cura determinam desempenho. Espessura uniforme, colagem e resistência precisam corresponder à aplicação contratada; aparência de superfície não substitui ensaio estrutural. O ponto econômico central é: O painel depende de rendimento das lâminas, tempo de prensa, consumo de adesivo e perdas na classificação. Um contrato exportador pode ampliar receita e ainda reduzir caixa se exigir estoque, ensaios e prazo de embarque maiores. Para uma empresa média: Compras de lâminas e resina antecedem fabricação e embarque. Trade finance é encaixe possível quando existe exportação comprovada; não presumir hedge natural se dívida e recebimentos tiverem datas distintas. No cenário favorável: Carteira diversificada aceita reajuste e maior participação de painéis especificados; acompanhar margem líquida por destino. No adverso: Comprador externo corta pedido com estoque pronto e adesivo já comprado; monitorar pedidos firmes versus projeções e prazo no porto. Na visita: Revisar contrato de maior comprador, ensaios de colagem e processo de reclamação. Conferir se cada certificação cobre produto, unidade e validade exigidos. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -1923,41 +2087,82 @@
         {
           "id": "0",
           "label": "Madeira, resina e energia",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Madeira uniforme, resina e energia para a fábrica",
+          "emoji": "🪵",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Preparação de fibras ou partículas",
-          "detail": "A fábrica combina matéria-prima uniforme, resina, energia e processo contínuo. A escolha do painel depende do uso, acabamento e resistência requerida; não se presume que MDF seja superior em todas as aplicações."
+          "detail": "Fibras (MDF) ou partículas (MDP) preparadas em processo contínuo",
+          "emoji": "⚙️",
+          "bank": "Investimento no parque industrial, separado do giro"
         },
         {
           "id": "2",
           "label": "Prensagem e revestimento",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Aplica acabamentos e padrões sobre o painel, o que agrega valor mas exige controlar perdas",
+          "emoji": "🏭",
+          "bank": "Giro bancário para o estoque pesado"
         },
         {
           "id": "3",
-          "label": "Móveis, marcenaria e construção",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Revestidores e revendedores",
+          "detail": "Painéis seguem para revestidores, revendedores e demais compradores, conforme o uso e o acabamento",
+          "emoji": "🪑",
+          "bank": "Cessão de recebíveis, só de entrega aceita"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Preparo",
+          "product": {
+            "emoji": "🌲",
+            "label": "madeira, resina e energia na linha"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a empresa paga madeira, resina e energia antes de vender"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Prensagem e revestimento",
+          "product": {
+            "emoji": "📐",
+            "label": "painéis brutos ou revestidos"
+          },
+          "cash": {
+            "emoji": "📦",
+            "label": "produção sem demanda vira estoque pesado"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda dos painéis",
+          "product": {
+            "emoji": "🚚",
+            "label": "painéis entregues"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga após a entrega; descontos por padrão e perdas reduzem a margem"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga madeira, resina e energia",
+          "Estoque pesado se não há demanda",
+          "Recebe na venda dos painéis"
+        ],
+        "text": "Madeira, resina e energia são pagas antes da venda, e produção sem demanda gera estoque pesado. A cessão de recebíveis não financia de forma estável a expansão de linha sem geração operacional compatível. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de MDF e MDP. Painéis reconstituídos: MDF utiliza fibras e MDP partículas; diferenciar fabricantes de painéis, revestidores e revendedores. A fábrica combina matéria-prima uniforme, resina, energia e processo contínuo. A escolha do painel depende do uso, acabamento e resistência requerida; não se presume que MDF seja superior em todas as aplicações. O ponto econômico central é: A escala e a utilização da linha diluem custos fixos, mas produção sem demanda gera estoque pesado. Revestimentos e padrões ampliam valor e complexidade; medir margem após perdas e descontos por padrão. Para uma empresa média: Separar dívida do parque industrial, formação florestal e giro. Cessão de recebíveis não financia de maneira estável a expansão de linha sem geração operacional compatível. No cenário favorável: Pedidos de móveis e reforma absorvem capacidade com mix rentável; acompanhar expedição real e estoque do canal. No adverso: Ociosidade e descontos crescem junto com resina e frete; monitorar contribuição por padrão e caixa após manutenção. Na visita: Identificar se a empresa fabrica, reveste ou distribui. Pedir utilização por linha, custo específico, mapa de paradas e estoque por padrão antes de comparar com fabricantes integrados. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -2300,42 +2505,83 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Painéis, ferragens e tecidos",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Madeira, painéis e estofados",
+          "detail": "Compra de madeira, painéis, estofados e outros materiais que a fábrica transforma em móvel",
+          "emoji": "📦",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Projeto e corte",
-          "detail": "O fabricante combina design, materiais e processos com diferentes canais. No seriado, padronização e escala importam; no planejado, medição, projeto e instalação tornam o aceite parte da entrega."
+          "detail": "Design, medição e corte do seriado ou do planejado",
+          "emoji": "📐",
+          "bank": "Investimento em corte e usinagem que reduzam perdas"
         },
         {
           "id": "2",
           "label": "Montagem e acabamento",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Montagem, acabamento e instalação nos planejados",
+          "emoji": "🔧",
+          "bank": "Giro bancário para o estoque e a assistência"
         },
         {
           "id": "3",
           "label": "Varejo, projetos e consumidor",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Venda do móvel pronto ou planejado, com prazo ao varejo e instalação como parte da entrega",
+          "emoji": "🛋️",
+          "bank": "Cessão de recebíveis, só de entrega aceita"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Corte",
+          "product": {
+            "emoji": "🪚",
+            "label": "materiais prontos para cortar"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "a empresa paga os materiais antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Montagem",
+          "product": {
+            "emoji": "🔩",
+            "label": "móveis montados e acabados"
+          },
+          "cash": {
+            "emoji": "📦",
+            "label": "estoque, assistência e retrabalho consomem caixa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "🚚",
+            "label": "móveis entregues, instalados se planejados"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "varejo ou cliente paga no prazo dado; sinal recebido pode ser absorvido por ajustes"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga materiais e produção",
+          "Estoque, assistência e prazo ao varejo",
+          "Recebe do varejo ou do cliente, no prazo dado"
+        ],
+        "text": "Uma coleção pode vender bem e ainda consumir caixa por estoque, assistência e prazo dado ao varejo. Antecipar cartão ou duplicata transfere prazo financeiro, mas não elimina a obrigação de montar e reparar. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Móveis. Fabricação de móveis seriados ou sob encomenda, distinguindo madeira, painéis, estofados e outros materiais. Varejo não é fabricação. O fabricante combina design, materiais e processos com diferentes canais. No seriado, padronização e escala importam; no planejado, medição, projeto e instalação tornam o aceite parte da entrega. O ponto econômico central é: Uma coleção pode vender bem e consumir caixa por estoque, assistência e prazo ao varejo. Em planejados, alterações de projeto, instalação e retrabalho podem absorver o sinal recebido. Para uma empresa média: Sinais de encomendas precisam estar vinculados ao custo restante da entrega. Antecipar cartão ou duplicata transfere prazo financeiro, não elimina obrigação de montar e reparar. No cenário favorável: Renovação da casa e novos pedidos se convertem em entrega com baixa assistência; acompanhar conversão e margem depois de montagem. No adverso: Varejo alonga pagamentos e devolve coleções enquanto painéis já foram comprados; observar concentração e estoque envelhecido. Na visita: Escolher uma venda seriada e uma encomenda e acompanhar orçamento, compra, fabricação, entrega, montagem e recebimento. Verificar quem suporta avarias e trocas. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",

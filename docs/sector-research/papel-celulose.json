@@ -353,41 +353,82 @@
         {
           "id": "0",
           "label": "Madeira e químicos",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Madeira entregue e químicos são insumos centrais do custo",
+          "emoji": "🌲",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Cozimento e recuperação",
-          "detail": "A rota industrial separa as fibras da madeira e recupera reagentes e energia conforme o processo. A fábrica integrada pode consumir a pasta internamente, enquanto a de mercado vende ao transformador; essa diferença muda exposição a preço e logística."
+          "detail": "Separa as fibras da madeira e recupera reagentes e energia",
+          "emoji": "🏭",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Secagem e logística",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Produção, estoque e trânsito antes de a pasta ser vendida",
+          "emoji": "🚢",
+          "bank": "Trade finance, se houver exportação"
         },
         {
           "id": "3",
           "label": "Papeleiras e outros transformadores",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "A pasta vai ao transformador ou é consumida na fábrica integrada",
+          "emoji": "📄",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "🪵",
+            "label": "madeira e químicos para a fábrica"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "empresa paga a madeira, os químicos e o frete"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Produção da pasta",
+          "product": {
+            "emoji": "🧪",
+            "label": "pasta em produção"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia e manutenção pagas pela empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda da pasta",
+          "product": {
+            "emoji": "📦",
+            "label": "pasta de celulose entregue"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após o trânsito; na exportação, em moeda estrangeira"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga madeira, químicos e frete",
+          "Produção, estoque e trânsito prendem caixa",
+          "Recebe da venda, inclusive externa"
+        ],
+        "text": "Produção, estoque, trânsito e recebimento externo formam o ciclo de giro. Dívida de expansão tem horizonte distinto do financiamento de exportação, e o hedge deve acompanhar moeda e vencimento. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Celulose. Produção de pasta celulósica para mercado ou consumo integrado. Separar fibra curta, longa, fluff e celulose solúvel; madeira não é celulose e celulose não é papel. A rota industrial separa as fibras da madeira e recupera reagentes e energia conforme o processo. A fábrica integrada pode consumir a pasta internamente, enquanto a de mercado vende ao transformador; essa diferença muda exposição a preço e logística. O ponto econômico central é: Preço realizado, custo da madeira entregue, energia, químicos, manutenção e frete explicam a contribuição. Uma valorização cambial pode reduzir receita em reais de exportação enquanto parte dos custos permanece local; dívida em moeda estrangeira exige olhar fluxo, não somente efeito contábil. Para uma empresa média: Produção, estoque, trânsito e recebimento externo formam o ciclo de giro. Dívida de expansão tem horizonte distinto do financiamento de exportação; hedge deve acompanhar moeda, montante e vencimento da exposição líquida. No cenário favorável: Reposição de estoques e demanda final absorvem oferta com estabilidade operacional; monitorar pedidos e preço líquido efetivo, não preço anunciado. No adverso: Novas capacidades e menor consumo de papel pressionam preço e alongam estoque; observar caixa depois da manutenção e cronograma de dívida. Na visita: Confirmar produto e integração, contratos de madeira, parada programada, manutenção e exposição cambial líquida. Se for fornecedora, analisar dependência do complexo industrial e prazo de aceite. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -755,41 +796,82 @@
         {
           "id": "0",
           "label": "Celulose ou aparas",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Matérias-primas fibrosas, produtos químicos e energia, pagos antes de o papel ser vendido",
+          "emoji": "♻️",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Preparação de massa",
-          "detail": "Fibras virgens ou recuperadas são preparadas, formadas e secas. Gramatura, resistência, absorção e uniformidade determinam aptidão ao uso. Papel sanitário e papel para embalagem podem ter demanda e insumos distintos."
+          "detail": "Fibras são preparadas, formadas e secas",
+          "emoji": "🏭",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Máquina e acabamento",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Bobinas ou folhas com qualidade e uniformidade exigidas",
+          "emoji": "🧻",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Conversores e canais finais",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Empresas que transformam o papel em outros produtos e dependem de sua qualidade",
+          "emoji": "📦",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de fibra",
+          "product": {
+            "emoji": "🪵",
+            "label": "celulose ou aparas"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento de aparas, químicos e energia antes do giro"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Fabricação",
+          "product": {
+            "emoji": "⚙️",
+            "label": "papel em formação e secagem"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "vapor e energia como custo da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega ao conversor",
+          "product": {
+            "emoji": "🧻",
+            "label": "bobinas e folhas de papel"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do conversor, que pode ser concentrado em poucos"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga aparas, químicos e energia",
+          "Bobinas em estoque até o giro",
+          "Recebe de poucos conversores"
+        ],
+        "text": "Aparas, químicos e energia são pagos antes do giro das bobinas. Recebíveis concentrados em poucos conversores pedem análise de devoluções e dependência comercial. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Papel. Fabricação de papel em bobinas ou folhas, separando papéis gráficos, sanitários, embalagem e técnicos. Não agrega automaticamente conversão em caixas e sacos. Fibras virgens ou recuperadas são preparadas, formadas e secas. Gramatura, resistência, absorção e uniformidade determinam aptidão ao uso. Papel sanitário e papel para embalagem podem ter demanda e insumos distintos. O ponto econômico central é: Qualidade da fibra, vapor, energia, quebra da folha e eficiência da máquina moldam o custo. Reduzir gramatura sem manter desempenho pode aumentar reclamações do conversor e não representar economia real. Para uma empresa média: Aparas, químicos e energia são pagos antes do giro das bobinas. Recebíveis concentrados em poucos conversores requerem análise de exigibilidade, devoluções e dependência comercial. No cenário favorável: Clientes homologam papel de maior desempenho e eficiência reduz perdas; acompanhar contribuição por tonelada efetivamente vendida. No adverso: Insumo encarece, máquina perde disponibilidade e clientes adiam pedidos; observar estoque de bobinas e inadimplência de conversores. Na visita: Observar preparação de massa, máquina e rejeitos. Comparar fatura de energia, laudo de qualidade e preço por gramatura com a margem gerencial. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -1116,42 +1198,83 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Kraftliner, testliner e miolo",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Papéis de capa e miolo",
+          "detail": "Papéis de capa e miolo são a matéria-prima da chapa",
+          "emoji": "📜",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Onduladeira",
-          "detail": "A união de papéis planos e ondulados cria resistência com baixo peso. Perfil de onda, composição, colagem e umidade precisam atender a empilhamento e transporte; a chapa não é escolhida somente pela gramatura."
+          "detail": "Une papéis planos e ondulados, com amido e vapor",
+          "emoji": "🏭",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Chapas e ensaios",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Chapas conferidas em resistência, umidade e colagem",
+          "emoji": "📏",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Conversores de caixas",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Conversores transformam as chapas em caixas",
+          "emoji": "📦",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de papel",
+          "product": {
+            "emoji": "📜",
+            "label": "bobinas de papel"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do papel, amido e vapor antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Produção da chapa",
+          "product": {
+            "emoji": "🧱",
+            "label": "chapas onduladas"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "vapor e movimentação como custo da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda ao conversor",
+          "product": {
+            "emoji": "🚚",
+            "label": "chapas entregues"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do conversor depois do estoque de chapas"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o papel e os insumos",
+          "Bobinas e estoque de chapas prendem caixa",
+          "Recebe do conversor"
+        ],
+        "text": "Bobinas e estoque de chapas precedem o recebimento do conversor. Contratos de repasse de papel precisam definir índice, defasagem e produto. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Papelão ondulado. Produção de chapas onduladas a partir de capas e miolos. Separar chapas vendidas a terceiros da conversão própria em caixas para não contar receita duas vezes. A união de papéis planos e ondulados cria resistência com baixo peso. Perfil de onda, composição, colagem e umidade precisam atender a empilhamento e transporte; a chapa não é escolhida somente pela gramatura. O ponto econômico central é: Papel, amido, vapor e perdas de ajuste dominam a operação física. Planejamento de largura e pedidos reduz aparas; velocidade nominal não equivale à produção vendável. Para uma empresa média: Bobinas e estoque de chapas precedem recebimento do conversor. Contratos de repasse de papel precisam definir índice, defasagem e produto; preço agregado de celulose não substitui o insumo comprado. No cenário favorável: Melhor programação e demanda recorrente aumentam área vendável sem excesso de estoque; acompanhar refugo, prazo e contribuição por pedido. No adverso: Compra de papel é reajustada antes de chapas e há perda de clientes; acompanhar defasagem de repasse e capital por pedido. Na visita: Reconciliar bobinas consumidas, aparas e área de chapas expedida. Verificar resistência contratada e responsabilidade por armazenamento úmido. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência.",
     "reviewStatus": "approved",
@@ -1459,41 +1582,82 @@
         {
           "id": "0",
           "label": "Chapas ou papel-cartão",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Compra do substrato antes de produzir",
+          "emoji": "📦",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Impressão e corte",
-          "detail": "O conversor transforma substrato em embalagem dimensionada ao produto. Arte gráfica, faca, impressão, fechamento e resistência exigem compatibilidade com a linha do cliente. A embalagem precisa chegar utilizável e no ritmo do envase."
+          "detail": "Arte, faca e impressão adequadas à linha do cliente",
+          "emoji": "🖨️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Colagem e acabamento",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Fechamento e resistência conferidos para o envase",
+          "emoji": "✂️",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
-          "label": "Indústria, varejo e logística",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Clientes que envasam",
+          "detail": "O cliente recebe a caixa no ritmo do envase",
+          "emoji": "🛒",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra do substrato",
+          "product": {
+            "emoji": "📜",
+            "label": "chapas ou papel-cartão"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do substrato e preparação antes da produção"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Impressão e corte",
+          "product": {
+            "emoji": "🎨",
+            "label": "caixas impressas e cortadas"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "ferramental ou sinal, se contratado"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega ao cliente",
+          "product": {
+            "emoji": "🚚",
+            "label": "caixas prontas para uso"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebível nasce com a entrega e o aceite"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o substrato e a preparação",
+          "Preparação e capital em processo prendem caixa",
+          "Recebe após entrega e aceite"
+        ],
+        "text": "Compra do substrato e preparação antecedem a produção. O recebível nasce conforme entrega e aceite, não apenas com a impressão. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Caixas. Conversão de papelão ou papel-cartão em caixas. Diferenciar caixas onduladas de cartonagens dobráveis, impressas e especiais; a estrutura de custos não é intercambiável. O conversor transforma substrato em embalagem dimensionada ao produto. Arte gráfica, faca, impressão, fechamento e resistência exigem compatibilidade com a linha do cliente. A embalagem precisa chegar utilizável e no ritmo do envase. O ponto econômico central é: Pedidos pequenos e muitas trocas de impressão elevam preparação e refugos. Uma caixa barata que gera dano ao produto pode custar mais ao cliente; uma especificação exagerada também consome material sem benefício. Para uma empresa média: Compra do substrato e preparação antecedem produção. Cobrança de ferramental ou sinal para encomendas personalizadas deve estar contratada; recebível nasce conforme entrega e aceite, não apenas impressão. No cenário favorável: Pedidos recorrentes e padronização reduzem preparação, avaria e estoque; acompanhar margem por arte ativa. No adverso: Cliente troca marca ou reduz produção com estoque exclusivo pronto; revisar contratos de obsolescência e concentração. Na visita: Escolher uma caixa real e verificar desenho, aprovação de arte, ensaio, ferramental, lote mínimo e obrigação de retirada do estoque personalizado. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência.",
     "reviewStatus": "approved",
@@ -1801,41 +1965,82 @@
         {
           "id": "0",
           "label": "Papel e barreiras",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Papel kraft e barreiras, comprados para estoque",
+          "emoji": "📜",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
-          "label": "Impressão e tubulação",
-          "detail": "Resistência, porosidade, fundo e válvula precisam funcionar na envasadora. O produto embalado impõe exigências diferentes de umidade, higiene e barreira; cimento e alimento não podem receber a mesma especificação por conveniência."
+          "label": "Impressão e estrutura do saco",
+          "detail": "Resistência, porosidade e impressão do saco",
+          "emoji": "🖨️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Fundo, válvula e ensaios",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Fundo e válvula testados em ensaios",
+          "emoji": "🧪",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Ensaque de produtos industriais",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "O comprador enche os sacos na própria linha, e o saco precisa funcionar na envasadora",
+          "emoji": "🏗️",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra do kraft",
+          "product": {
+            "emoji": "📜",
+            "label": "papel kraft e barreiras"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do estoque antes da fabricação"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Fabricação do saco",
+          "product": {
+            "emoji": "🛍️",
+            "label": "sacos com fundo e válvula"
+          },
+          "cash": {
+            "emoji": "🔬",
+            "label": "laboratório e suporte técnico como custo da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega ao ensaque",
+          "product": {
+            "emoji": "🚚",
+            "label": "sacos prontos para a envasadora"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento exposto a devolução de lote por falha no ensaque"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga kraft e barreiras",
+          "Estoque e campanhas sazonais prendem caixa",
+          "Recebe, com risco de devolução do lote por falha no ensaque"
+        ],
+        "text": "Estoque de kraft e barreiras antecede a fabricação. Encomendas sazonais exigem planejamento de caixa, e financiar o ciclo não resolve devolução de lote por falha no ensaque. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Sacos industriais. Conversão de papel kraft e, quando especificado, barreiras em sacos para ensaque industrial. Não inclui sacolas de varejo nem presume que todo saco industrial seja de papel. Resistência, porosidade, fundo e válvula precisam funcionar na envasadora. O produto embalado impõe exigências diferentes de umidade, higiene e barreira; cimento e alimento não podem receber a mesma especificação por conveniência. O ponto econômico central é: A economia depende da relação entre material, velocidade de ensaque e quebra no transporte. Reduzir papel sem ensaiar pode elevar perdas e reclamações de valor superior ao custo da embalagem. Para uma empresa média: Estoque de kraft e barreiras antecede fabricação. Encomendas sazonais ou campanhas de cliente exigem planejamento de caixa; financiar o ciclo não resolve retorno de lote por falha no ensaque. No cenário favorável: Clientes ampliam ensaque e reconhecem menor quebra; acompanhar reclamações e produtividade da linha do comprador. No adverso: Menor atividade do comprador deixa estoque personalizado e reduz utilização; acompanhar carteira firme e consumo real de embalagens. Na visita: Observar ensaio de queda, porosidade e aplicação na máquina do cliente. Conferir exigências sanitárias quando houver contato com alimentos e cláusula de mudança de arte. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência.",
     "reviewStatus": "approved",
@@ -2159,41 +2364,82 @@
         {
           "id": "0",
           "label": "Papéis técnicos e cola",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Matérias-primas do tubete, pagas antes de o produto ser curado e vendido",
+          "emoji": "📜",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Corte e enrolamento",
-          "detail": "Tiras de papel são enroladas com adesivo e cortadas nas medidas requeridas. Umidade, espessura, alinhamento e cura afetam resistência e geometria; o suporte precisa operar na velocidade e no peso da bobina do cliente."
+          "detail": "Tiras de papel enroladas com adesivo e cortadas na medida",
+          "emoji": "🌀",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Cura e acabamento",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Cura e controle dimensional antes de vender",
+          "emoji": "🔧",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
-          "label": "Papel, filmes e têxteis",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "label": "Clientes que bobinam",
+          "detail": "Clientes que usam o tubete como suporte para enrolar suas bobinas, em carga e velocidade",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra do papel",
+          "product": {
+            "emoji": "📜",
+            "label": "papel técnico e cola"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do papel e da cola antes da entrega"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Enrolar e curar",
+          "product": {
+            "emoji": "🌀",
+            "label": "tubetes curados e cortados"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "ferramental e lote de teste, se combinados"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega ao cliente",
+          "product": {
+            "emoji": "🚚",
+            "label": "tubetes na medida pedida"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento depende de homologação e reclamações"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga papel e cola",
+          "Cura e estoque sob medida prendem caixa",
+          "Recebe após homologação"
+        ],
+        "text": "Cura e estoque sob medida antecedem a entrega. Recebíveis dependem de homologação e reclamações, e itens especiais exigem discutir retirada mínima e obsolescência. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Tubetes. Tubos de papel usados como suporte para bobinamento, núcleos e outras aplicações industriais. Separar produto leve descartável de tubete técnico submetido a carga e velocidade. Tiras de papel são enroladas com adesivo e cortadas nas medidas requeridas. Umidade, espessura, alinhamento e cura afetam resistência e geometria; o suporte precisa operar na velocidade e no peso da bobina do cliente. O ponto econômico central é: O papel comprado só vira produto vendável depois de cura e controle dimensional. Peso maior pode elevar receita aparente e aumentar custo sem melhorar desempenho; medir por especificação aceita. Para uma empresa média: Cura e estoque sob medida antecedem entrega. Recebíveis dependem de homologação e reclamações; itens especiais exigem discutir retirada mínima e responsabilidade por obsolescência. No cenário favorável: Novas homologações geram recorrência e reduzem perdas do cliente; acompanhar proporção de especificações técnicas e devoluções. No adverso: Cliente substitui fornecedor ou reduz bobinamento, deixando itens sem outra aplicação; acompanhar exposição por medida e contrato. Na visita: Pedir desenho homologado, laudos de resistência e registros de quebra em uso. Comparar condição de armazenagem com a aplicada no teste e verificar tratamento das reclamações. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Pesquisa comercial complementar. Pesquisa comercial: a Incape Tubos divulga fabricação sob especificação em Rio dos Cedros (SC), com canal direto de orçamento e atendimento técnico. A Incape descreve aplicações em filmes, papel e têxteis. O guia da ABRE identifica a Sonoco em Araras (SP), com tubos de papelão e plástico para esses mercados. São exemplos de oferta declarada, não auditoria de capacidade ou ranking. Os catálogos não demonstram vendas realizadas nem participação. A comparação pertinente é por especificação de bobinamento, regularidade de entrega e atendimento da planta consumidora, e não apenas pela presença nacional de uma marca. A localização desses fornecedores não estabelece concentração geográfica do subsetor.",
     "reviewStatus": "approved",

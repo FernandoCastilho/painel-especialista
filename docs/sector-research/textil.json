@@ -450,41 +450,82 @@
         {
           "id": "0",
           "label": "algodão e fibras químicas",
-          "detail": "Fluxo físico e financeiro: algodão e fibras químicas"
+          "detail": "Fibra natural e química comprada antes de vender o fio",
+          "emoji": "🌱",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "1",
           "label": "preparação e fiação",
-          "detail": "Fibras naturais e químicas são preparadas, misturadas, estiradas e transformadas em fios. Separar fio de algodão, misturas e filamentos e distinguir venda de fio da transferência interna de indústria integrada."
+          "detail": "Fibras são preparadas, misturadas, estiradas e viram fio",
+          "emoji": "🧵",
+          "bank": "Financiamento de investimento, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "fio e controle de qualidade",
-          "detail": "Fluxo físico e financeiro: fio e controle de qualidade"
+          "detail": "Regularidade e resistência do fio são conferidas",
+          "emoji": "🔍",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "3",
           "label": "tecelagem e malharia",
-          "detail": "Fluxo físico e financeiro: tecelagem e malharia"
+          "detail": "Fio vendido ao tecelão ou usado na própria indústria",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra da fibra",
+          "product": {
+            "emoji": "🌿",
+            "label": "fibra natural e química"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento da fibra, antes de vender o fio"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Fiação",
+          "product": {
+            "emoji": "🧶",
+            "label": "fio preparado e estirado"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia e perdas de fibra pagas pela empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda do fio",
+          "product": {
+            "emoji": "📦",
+            "label": "fio entregue conforme a especificação"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do cliente, conforme o contrato"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga a fibra",
+          "Estoque de fibra e fio prende caixa",
+          "Recebe pela venda do fio"
+        ],
+        "text": "Giro acompanha o estoque de fibra e fio. A fibra é comprada antes de vender o fio, o que cria exposição de preço e câmbio. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Fiação. Fiação: Fibras naturais e químicas são preparadas, misturadas, estiradas e transformadas em fios. Tese operacional: Consistência do fio reduz parada e defeito no cliente; escala, automação e compra de fibra influenciam competitividade, enquanto fios diferenciados exigem validação. Principal vulnerabilidade: Fibra comprada antes de vender o fio cria exposição de preço e câmbio; mistura inadequada ou contaminação pode comprometer lote e devolução. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro acompanha estoque de fibra e fio, com teste de preço realizável. Modernização de filatórios deve demonstrar produtividade e economia de energia sem ignorar manutenção e treinamento. Fibras naturais e químicas são preparadas, misturadas, estiradas e transformadas em fios. Separar fio de algodão, misturas e filamentos e distinguir venda de fio da transferência interna de indústria integrada. Regularidade e resistência do fio, perdas de fibra, energia por massa vendável, paradas e estoque por título. Não comparar apenas toneladas de fios de especificações diferentes. Vicunha e Coteminas são exemplos históricos de operações integradas citados pelo Banco do Nordeste; não se confirmou situação atual de plantas. Estudo Seade documenta a cadeia paulista, sem ranking de fiações. Preço internacional do algodão e disponibilidade de fibras químicas afetam o custo, mas o repasse depende do pedido de tecelagens e malharias. Não há cotação corrente recuperada neste estudo. Fios com rastreabilidade, misturas funcionais e melhor regularidade, desde que a demanda pague o desenvolvimento. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Referência institucional verificável: Americana, Nova Odessa, Santa Bárbara d’Oeste, Sumaré e Hortolândia integram o polo tecnológico têxtil identificado em lei estadual. Para este elo, a utilidade é procurar fornecedores, compradores e serviços próximos; a lei não mede participação atual nem prova presença de cada processo em todo município. Na análise de concorrência: Filamentos contínuos e combinações diferentes de fibras podem substituir certos fios fiados; não tecidos podem eliminar o fio em algumas aplicações finais. Resistência, toque, maquinário do cliente e custo de reformular limitam a troca. Para novos entrantes: Escala de preparação e fiação, regularidade do fio e controle de contaminação exigem equipamento e conhecimento. Homologação por título, resistência e composição limita entrada em contratos técnicos. No ambiente externo, Alta do algodão ou restrição de fibras químicas pode elevar custo antes do repasse; redução de encomendas de tecelagens e malharias aumenta ociosidade.\n\nComo exemplo de oferta declarada, a Fiação São Bento, em Santa Catarina, apresenta fios de algodão, misturas e poliéster, processos Vortex e Open End e atendimento por representantes. As aplicações anunciadas incluem malharias e tecidos técnicos. O catálogo demonstra segmentação por matéria-prima e processo; não mede vendas, capacidade utilizada ou participação de mercado.",
     "reviewStatus": "approved",
@@ -950,41 +991,82 @@
         {
           "id": "0",
           "label": "fios e preparação",
-          "detail": "Fluxo físico e financeiro: fios e preparação"
+          "detail": "Fios de urdume e trama chegam e são preparados",
+          "emoji": "🧵",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "1",
           "label": "teares de tecido plano",
-          "detail": "Fios de urdume e trama são entrelaçados em tecidos planos; preparação do fio e do tear antecede tecimento, inspeção e acabamento interno ou contratado. Denim, tecido de decoração e tecido técnico não são mercados equivalentes."
+          "detail": "Fios são entrelaçados em tecido plano nos teares",
+          "emoji": "🏭",
+          "bank": "Financiamento de investimento, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "inspeção e acabamento",
-          "detail": "Fluxo físico e financeiro: inspeção e acabamento"
+          "detail": "Tecido pronto é revisado e recebe acabamento, na própria fábrica ou em terceiro",
+          "emoji": "🔍",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "3",
           "label": "confecção e indústria",
-          "detail": "Fluxo físico e financeiro: confecção e indústria"
+          "detail": "Tecido segue para a confecção e outras indústrias",
+          "emoji": "👕",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra do fio",
+          "product": {
+            "emoji": "🧶",
+            "label": "fio de urdume e trama"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do fio, antes do tecido pronto"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Tecimento",
+          "product": {
+            "emoji": "🧵",
+            "label": "tecido cru saindo do tear"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "preparação e custos de produção como custo da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda do tecido",
+          "product": {
+            "emoji": "📦",
+            "label": "tecido acabado entregue"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento conforme o prazo dado à confecção"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o fio",
+          "Fio, tecido em processo e prazo à confecção prendem caixa",
+          "Recebe da confecção"
+        ],
+        "text": "O giro financia fios, tecido em processo e o prazo dado à confecção. Tecido cru feito sem pedido pode exigir desconto. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Tecelagem. Tecelagem: Fios de urdume e trama são entrelaçados em tecidos planos; preparação do fio e do tear antecede tecimento, inspeção e acabamento interno ou contratado. Tese operacional: Desenvolvimento de tecido e consistência de lote diferenciam do tecido padronizado; flexibilidade precisa compensar custo de preparação e menor escala. Principal vulnerabilidade: Mudanças frequentes de coleção e lote pequeno aumentam preparação; tecido cru produzido sem pedido pode exigir desconto ou não ter acabamento comercial viável. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro financia fios, tecido em processo e prazo da confecção. Crédito para tear deve considerar ocupação real por mix e velocidade efetiva, não apenas capacidade nominal. Denim, tecido de decoração e tecido técnico não são mercados equivalentes. Metros conformes por tear, paradas, defeitos por lote, tempo de mudança e rendimento do acabamento. Largura, gramatura e composição mudam consumo e valor. BNDES descreve a cadeia e Seade a inserção paulista. Referências históricas de empresas integradas não sustentam ranking atual específico de tecelagem. Concorrência com tecidos importados e mudança do consumo final pressionam preço; câmbio pode proteger a venda e ao mesmo tempo encarecer fibra, insumos e máquina. Tecidos diferenciados e lotes com reposição rápida podem reduzir exposição à competição exclusivamente por volume. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Referência institucional verificável: Americana, Nova Odessa, Santa Bárbara d’Oeste, Sumaré e Hortolândia integram o polo tecnológico têxtil identificado em lei estadual. Para este elo, a utilidade é procurar fornecedores, compradores e serviços próximos; a lei não mede participação atual nem prova presença de cada processo em todo município. Na análise de concorrência: Malhas, não tecidos, filmes e laminados podem substituir tecido plano conforme a aplicação. Estabilidade dimensional, resistência, toque e comportamento na confecção delimitam a substituição. Para novos entrantes: Preparação de urdume, regulagem de teares, qualidade do tecido e desenvolvimento de desenho exigem conhecimento. Pequenos lotes sofrem custo de troca e dificultam atingir produtividade de operadores estabelecidos.\n\nO portfólio público Cedro Jeanswear oferece denim e linhas Colours diferenciados por elasticidade e uso, com canal de representantes. É um exemplo concreto de venda de tecido para transformação por confeccionistas e escolha por desempenho e acabamento. A declaração comercial não comprova liderança, volume vendido ou demanda realizada.",
     "reviewStatus": "approved",
@@ -1430,41 +1512,82 @@
         {
           "id": "0",
           "label": "fios e desenho",
-          "detail": "Fluxo físico e financeiro: fios e desenho"
+          "detail": "Escolha dos fios e do modelo da coleção decide o que será produzido",
+          "emoji": "🧵",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "1",
           "label": "malharia circular ou retilínea",
-          "detail": "Fios formam laçadas para produzir malha, em máquinas circulares ou retilíneas. O produto pode ser tecido em rolo, peça parcialmente conformada ou artigo final; tingimento, estamparia e confecção são etapas distintas."
+          "detail": "Fios formam laçadas na máquina circular ou retilínea",
+          "emoji": "🏭",
+          "bank": "Financiamento de investimento, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "beneficiamento e estabilidade",
-          "detail": "Fluxo físico e financeiro: beneficiamento e estabilidade"
+          "detail": "Tingimento e acabamento mostram a estabilidade da malha",
+          "emoji": "🎨",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "3",
           "label": "confecção ou artigo final",
-          "detail": "Fluxo físico e financeiro: confecção ou artigo final"
+          "detail": "Malha em rolo, peça ou artigo final segue ao cliente",
+          "emoji": "👕",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra do fio",
+          "product": {
+            "emoji": "🧶",
+            "label": "fio para malha"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do fio, antes da aprovação do cliente"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Tricotagem",
+          "product": {
+            "emoji": "🧵",
+            "label": "malha em rolo ou peça conformada"
+          },
+          "cash": {
+            "emoji": "🛠️",
+            "label": "custos de máquina e perdas como custo da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda da malha",
+          "product": {
+            "emoji": "📦",
+            "label": "malha ou artigo aprovado"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do cliente após a entrega"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o fio",
+          "Fio e malha em estoque, até a aprovação de amostra",
+          "Recebe do cliente"
+        ],
+        "text": "O giro de fio e malha deve acompanhar pedido e aprovação de amostra. Defeitos aparecem após tingimento ou lavagem, e antecipar cor e coleção aumenta o risco de estoque. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Malharia. Malharia: Fios formam laçadas para produzir malha, em máquinas circulares ou retilíneas. Tese operacional: Flexibilidade de desenho, elasticidade e reposição podem diferenciar a malharia; estrutura simples também permite concorrência de produtores menores. Principal vulnerabilidade: Problemas de tensão do fio e acabamento aparecem após tingimento ou lavagem, gerando perdas tardias; antecipar cor e coleção aumenta risco de estoque. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro de fio e malha deve acompanhar pedido e aprovação de amostra. Máquina retilínea especializada pode ter baixa liquidez em revenda, exigindo caixa operacional para pagar o investimento. Fios formam laçadas para produzir malha, em máquinas circulares ou retilíneas. O produto pode ser tecido em rolo, peça parcialmente conformada ou artigo final; tingimento, estamparia e confecção são etapas distintas. Produtividade por máquina, consumo de fio, estabilidade dimensional, encolhimento e defeitos após lavagem. Medir peça aprovada além do peso produzido. A cadeia têxtil documentada pelo IBGE distingue malharia de tecido plano. Não se extraiu ranking público atual de malharias nem participação de polos por técnica. Demanda de vestuário básico, esportivo e moda tem calendários distintos; a produção agregada têxtil não mostra qual aplicação cresce. Produtos sem costura, conforto e desenho técnico são possibilidades condicionadas a demanda, qualidade e custo. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Referência regional: a Assembleia catarinense identifica Brusque, Gaspar, Jaraguá do Sul e Blumenau como polos da cadeia têxtil. É contexto de fornecedores e mão de obra, não comprovação da liderança específica em malharia. Verificar competência técnica e aplicação de cada empresa antes de estabelecer parceria. Na análise de concorrência: Tecido plano com elasticidade, não tecidos e outras construções podem substituir malha em certos artigos. Caimento, conforto, deformação e custo de costura limitam equivalência. Para novos entrantes: Programação e regulagem, domínio de fios/elastano, estabilidade dimensional e acabamento determinam a qualidade. Equipamento é insuficiente sem equipe capaz de repetir desenho e medidas. No ambiente externo, Mudança de moda, clima ou redução de renda pode cancelar pedidos e deixar fios específicos em estoque; tecidos concorrentes pressionam aplicações em que elasticidade não é essencial.\n\nA Dalila apresenta malharia circular, incluindo meia-malha, piquet e moletom, com aplicações casual e fitness. Seu canal eletrônico organiza a compra por cor e quantidade e disponibiliza dados técnicos. O exemplo mostra como variedade de coleção e especificação entram no canal comercial, sem comprovar giro, margem ou preferência do consumidor.",
     "reviewStatus": "approved",
@@ -1890,41 +2013,82 @@
         {
           "id": "0",
           "label": "tecido fio ou peça",
-          "detail": "Fluxo físico e financeiro: tecido fio ou peça"
+          "detail": "Tecido, fio ou peça chega ao tingimento",
+          "emoji": "🧺",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "1",
           "label": "preparo tingimento e acabamento",
-          "detail": "Tecidos, fios ou peças recebem preparação, tingimento, lavagem e acabamento. Prestação de serviço sobre material do cliente difere de beneficiamento integrado; água, energia térmica, químicos e tratamento de efluentes são recursos centrais."
+          "detail": "Preparação, tingimento, lavagem e acabamento",
+          "emoji": "🎨",
+          "bank": "Financiamento de investimento, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "controle e tratamento de efluentes",
-          "detail": "Fluxo físico e financeiro: controle e tratamento de efluentes"
+          "detail": "Controle da água e tratamento de efluentes",
+          "emoji": "💧",
+          "bank": "Financiamento de investimento, pago pelo caixa gerado"
         },
         {
           "id": "3",
           "label": "cliente e aceite de cor",
-          "detail": "Fluxo físico e financeiro: cliente e aceite de cor"
+          "detail": "Cliente confere e aceita a cor do lote",
+          "emoji": "✅",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Entrada do material",
+          "product": {
+            "emoji": "🧺",
+            "label": "tecido, fio ou peça para beneficiar"
+          },
+          "cash": {
+            "emoji": "🧪",
+            "label": "químicos, energia e folha como custo da empresa"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Beneficiamento",
+          "product": {
+            "emoji": "🎨",
+            "label": "material tingido e lavado"
+          },
+          "cash": {
+            "emoji": "💧",
+            "label": "água, energia térmica e tratamento de efluentes"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Aceite e entrega",
+          "product": {
+            "emoji": "📦",
+            "label": "lote entregue na cor pedida"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após o aceite do lote"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga químicos, energia e folha",
+          "Reprocesso e espera pelo aceite prendem caixa",
+          "Recebe após o aceite do lote"
+        ],
+        "text": "O giro suporta químicos, energia e folha até o aceite do lote. Lote fora da cor pode exigir reprocessamento e indenização de tecido alheio. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Tinturaria. Tinturaria: Tecidos, fios ou peças recebem preparação, tingimento, lavagem e acabamento. Tese operacional: Reprodutibilidade de cor, prazo e controle ambiental criam diferenciação; aprovação depende de luz, substrato e tolerância acordadas. Principal vulnerabilidade: Lote fora da cor ou danificado pode exigir reprocessamento e indenização de tecido alheio; restrição hídrica ou tratamento inadequado pode interromper a operação. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro suporta químicos, energia e folha até aceite do lote. Investimento em recuperação térmica, automação de dosagem e efluentes deve ser separado de expansão de capacidade. Tecidos, fios ou peças recebem preparação, tingimento, lavagem e acabamento. Prestação de serviço sobre material do cliente difere de beneficiamento integrado; água, energia térmica, químicos e tratamento de efluentes são recursos centrais. Acerto de cor na primeira execução, consumo de água e energia por lote conforme, reprocessamento, prazo e conformidade do efluente. Receita por massa não captura complexidade da receita química. A CONCLA enquadra atividades de acabamento na cadeia têxtil. Não há ranking público atual recuperado de tinturarias independentes; não usar faturamento de grupo integrado como receita desse serviço. Custos de utilidades e química podem divergir do preço do serviço; aumento de pedidos sem capacidade de tratamento não é crescimento sustentável. Reduzir reprocessamento, recuperar calor e controlar receitas oferece ganho de custo e qualidade com comprovação física. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Referência institucional verificável: Americana, Nova Odessa, Santa Bárbara d’Oeste, Sumaré e Hortolândia integram o polo tecnológico têxtil identificado em lei estadual. Para este elo, a utilidade é procurar fornecedores, compradores e serviços próximos; a lei não mede participação atual nem prova presença de cada processo em todo município. Na análise de concorrência: Fios ou fibras já coloridos e uso de material sem tingimento podem eliminar etapas de tinturaria; estamparia digital substitui certos efeitos, não todo tingimento. Solidez, toque, escala e substrato condicionam a escolha. Para novos entrantes: Tratamento de efluentes, licenciamento, água, energia e laboratório de cor requerem investimento. Reproduzir tonalidade e solidez entre lotes cria barreira de conhecimento e confiança.\n\nA HJ Tinturaria, de Brusque, anuncia serviço para malhas naturais e sintéticas em rolo e solicita orçamento, com testes funcionais. A empresa exclui explicitamente tecidos planos e peças prontas desse atendimento. O caso delimita o mercado de serviço por substrato e processo, sem generalizar a capacidade anunciada para todo beneficiamento têxtil.",
     "reviewStatus": "approved",
@@ -2369,41 +2533,82 @@
         {
           "id": "0",
           "label": "tecido e aviamentos",
-          "detail": "Fluxo físico e financeiro: tecido e aviamentos"
+          "detail": "Tecido e aviamentos são comprados e pagos antes de cortar e costurar",
+          "emoji": "🧵",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "1",
           "label": "modelagem corte e costura",
-          "detail": "Modelagem, corte, costura e acabamento convertem tecido em roupa. Marca própria, private label, facção e produção integrada têm receitas, estoques e responsabilidades diferentes; varejo final não integra automaticamente o recorte fabril."
+          "detail": "Modelagem, corte, costura e acabamento",
+          "emoji": "✂️",
+          "bank": "Financiamento de investimento, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "acabamento e expedição",
-          "detail": "Fluxo físico e financeiro: acabamento e expedição"
+          "detail": "Acabamento final e expedição das peças",
+          "emoji": "📦",
+          "bank": "Giro bancário para o descasamento de caixa"
         },
         {
           "id": "3",
           "label": "marca varejo e consumidor",
-          "detail": "Fluxo físico e financeiro: marca varejo e consumidor"
+          "detail": "Marca, varejo e consumidor compram a roupa",
+          "emoji": "🛍️",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "🧵",
+            "label": "tecido e aviamentos"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento de tecido e aviamentos, antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Produção",
+          "product": {
+            "emoji": "👗",
+            "label": "peças cortadas e costuradas"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "produção e facção pagas pela empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda ao varejo",
+          "product": {
+            "emoji": "🚚",
+            "label": "roupas entregues ao canal"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento pelo prazo ao varejo, sem contar desconto e devolução"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga tecido, aviamentos e produção",
+          "Coleção em estoque e prazo ao varejo prendem caixa",
+          "Recebe do varejo, descontados devoluções e descontos"
+        ],
+        "text": "O giro financia tecido, aviamentos, produção e o prazo dado ao varejo. Desconto, devolução e consignação saem da expectativa de caixa. Coleção não vendida perde valor rapidamente. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Confecção. Confecção: Modelagem, corte, costura e acabamento convertem tecido em roupa. Tese operacional: Modelagem, qualidade, velocidade e coordenação de fornecedores diferenciam a operação; facção sem design enfrenta pressão maior sobre preço da mão de obra. Principal vulnerabilidade: Coleção não vendida perde valor rapidamente; erro na grade cria sobra mesmo quando o modelo vende. Terceirização exige controle de qualidade e condições de trabalho da cadeia. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro financia tecido, aviamentos, produção e prazo ao varejo. Desconto comercial, devolução e consignação precisam ser retirados da expectativa de caixa, em vez de tratar todo faturamento como recebível definitivo. Modelagem, corte, costura e acabamento convertem tecido em roupa. Marca própria, private label, facção e produção integrada têm receitas, estoques e responsabilidades diferentes; varejo final não integra automaticamente o recorte fabril. Peças aprovadas por hora, eficiência por operação, retrabalho, cumprimento da coleção, devolução e estoque por tamanho/cor. Preço médio pode mudar só por mix. Seade e BNDES descrevem a descontinuidade da cadeia e diferentes modelos produtivos. Não foi recuperado ranking público comparável entre marcas, facções e fabricantes, que não devem ser somados como se fossem iguais. Renda e consumo, clima e calendário comercial alteram pedidos; canais digitais reduzem barreira comercial e aumentam exigência de reposição e devolução. Produção sob demanda e reposição de itens vencedores podem reduzir risco de coleção se o prazo industrial acompanhar o canal. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Referência comercial verificável: a Sefaz de Pernambuco identifica Santa Cruz do Capibaribe, Toritama e Caruaru no Polo Têxtil atendido pela Nota da Moda. A concentração de canais de compra é pertinente à confecção; não se confunde circulação no polo com faturamento fabril formal ou com número de empregos. Na análise de concorrência: Roupa de segunda mão, aluguel, conserto e prolongamento do uso substituem parte da compra nova. Ocasião, higiene, ajuste, imagem e preço determinam aceitação; importado é rival, não categoria substituta. Para novos entrantes: Abrir facção requer menos capital que construir marca e canal. Modelagem, coordenação de fornecedores, cumprimento de prazos e acesso a clientes elevam barreiras conforme o modelo comercial.",
     "reviewStatus": "approved",
@@ -2829,41 +3034,82 @@
         {
           "id": "0",
           "label": "fibra e formulação",
-          "detail": "Fluxo físico e financeiro: fibra e formulação"
+          "detail": "Escolhe-se a matéria-prima e a receita do material para a função desejada",
+          "emoji": "🧪",
+          "bank": "Desenvolvimento financiado em etapas, não confirmado"
         },
         {
           "id": "1",
           "label": "formação do material",
-          "detail": "Recorte por função: materiais têxteis destinados a filtragem, proteção, reforço, construção ou outras aplicações de desempenho. Pode incluir tecido plano, malha e não tecido; não tecido é tecnologia distinta e deve ser identificado, não confundido com tecelagem."
+          "detail": "O material nasce como tecido plano, malha ou não tecido, conforme a aplicação",
+          "emoji": "🏭",
+          "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "acabamento e ensaio funcional",
-          "detail": "Fluxo físico e financeiro: acabamento e ensaio funcional"
+          "detail": "Material recebe tratamento final e testes que provam que cumpre a função",
+          "emoji": "🔬",
+          "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "3",
           "label": "aplicação industrial homologada",
-          "detail": "Fluxo físico e financeiro: aplicação industrial homologada"
+          "detail": "Aplicação industrial, após homologação",
+          "emoji": "🏗️",
+          "bank": "Giro após a validação; cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Desenvolvimento",
+          "product": {
+            "emoji": "🧪",
+            "label": "amostras e material em teste"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "desenvolvimento e ensaios pagos antes da receita"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Ensaio e validação",
+          "product": {
+            "emoji": "🔬",
+            "label": "material testado para a função"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "custo de ensaio e acabamento pago pela empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Venda homologada",
+          "product": {
+            "emoji": "📦",
+            "label": "lote entregue conforme a especificação"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após a homologação e a entrega"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o desenvolvimento e os ensaios",
+          "Homologação longa consome caixa antes da receita",
+          "Recebe após a homologação e a venda"
+        ],
+        "text": "O desenvolvimento deve ser financiado em etapas e o giro vem após a validação. A longa homologação consome caixa antes da receita. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Tecidos técnicos. Tecidos técnicos: Recorte por função: materiais têxteis destinados a filtragem, proteção, reforço, construção ou outras aplicações de desempenho. Tese operacional: Conhecimento da aplicação e validação junto ao cliente criam barreiras; o produto compete com materiais e soluções não têxteis, além de outros fabricantes. Principal vulnerabilidade: Longa homologação consome desenvolvimento antes da receita; mudança de especificação ou falha em uso pode inviabilizar lote e gerar responsabilidade elevada. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Financiar desenvolvimento em etapas e giro após validação; investimento em ensaios e equipamento especializado precisa de mercado comprovado. Não apresentar crédito de inovação como disponível sem verificar chamada e enquadramento. Recorte por função: materiais têxteis destinados a filtragem, proteção, reforço, construção ou outras aplicações de desempenho. Pode incluir tecido plano, malha e não tecido; não tecido é tecnologia distinta e deve ser identificado, não confundido com tecelagem. Desempenho especificado, aprovação em ensaio, estabilidade por lote, vida útil em serviço e tempo de homologação. Volume em massa não compara aplicações e exigências distintas. Não foi recuperado ranking público que harmonize tecidos, não tecidos e aplicações técnicas. A classificação do IBGE ajuda a evitar somas indevidas; empresas de moda não são automaticamente concorrentes técnicos. Demanda industrial, infraestrutura e proteção não acompanha necessariamente a moda; agregado têxtil é apenas contexto e pode ocultar crescimento de aplicações técnicas. Substituição de materiais, maior durabilidade e eficiência de filtragem são hipóteses que exigem ensaios, não apenas discurso comercial. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado. A revisão documental foi concluída. O áudio gerado ainda requer conferência. Referência regional: a Assembleia catarinense identifica Brusque, Gaspar, Jaraguá do Sul e Blumenau como polos da cadeia têxtil. É contexto de fornecedores e mão de obra, não comprovação da liderança específica em tecidos técnicos. Verificar competência técnica e aplicação de cada empresa antes de estabelecer parceria. Na análise de concorrência: Filtros metálicos ou cerâmicos, membranas e soluções não têxteis podem substituir materiais têxteis técnicos em funções específicas. Temperatura, abrasão, permeabilidade, esterilidade e homologação restringem a troca. Para novos entrantes: Engenharia de aplicação, laboratório, rastreabilidade e validação prolongada junto ao cliente dificultam entrada. Cada uso tem requisitos próprios; reputação em vestuário não comprova capacidade em produto técnico. No ambiente externo, Mudança de especificação ou adoção de solução não têxtil pode invalidar produto homologado; concentração em poucos clientes industriais amplia o impacto de adiamentos de investimento.\n\nComo aplicação específica, a Ober, de Nova Odessa, oferece geotêxtil não tecido GeoFort em poliéster e polipropileno para drenagem, separação de solos e proteção de geomembranas, além de confeccionar geoformas segundo especificações. Trata-se de oferta declarada pelo fabricante, não comprovação independente de desempenho, vendas ou participação. A análise de tecidos técnicos não deve somar automaticamente geomembranas de polietileno, que pertencem a outra família de produtos.",
     "reviewStatus": "approved",

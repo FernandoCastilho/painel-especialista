@@ -126,8 +126,14 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
           const article = page.locator('.central-detail .sector-study')
           await article.getByRole('heading', { name: study.title, exact: true }).waitFor()
           assert.equal(await article.locator('.study-canvas-questions > li').count(), study.canvasQuestions.length, key)
-          assert.equal(await article.locator('.sector-chain-node').count(), study.diagram.nodes.length, key)
-          assert.equal(await article.locator('.sector-chain-edges > li').count(), study.diagram.edges.length, key)
+          if (study.diagram.cycle) {
+            assert.equal(await article.locator('.rich-stage').count(), study.diagram.nodes.length, key)
+            assert.equal(await article.locator('.rich-link').count(), study.diagram.edges.length, key)
+            assert.equal(await article.locator('.sector-chain-node').count(), 0, key)
+          } else {
+            assert.equal(await article.locator('.sector-chain-node').count(), study.diagram.nodes.length, key)
+            assert.equal(await article.locator('.sector-chain-edges > li').count(), study.diagram.edges.length, key)
+          }
           assert.equal(await article.locator('.study-nav, .study-callout').count(), 0, key)
           assert.equal(await article.locator('.study-summary').count(), 1, key)
           assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `overflow ${width} ${key}`)
@@ -201,13 +207,36 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       await page.locator('#tic-study-title').waitFor()
       assert.equal(await page.locator('.tic-flow-stage').count(), 13, 'piloto TIC preservado')
       if (!studies.length) { await context.close(); continue }
-      const selected = studies.find(study => study.group === 'atacado' && study.topicIndex === 5) || studies.find(study => study.group === 'base-florestal' && study.topicIndex === 3) || studies[0]
+      // Tela cheia e laser valem para os dois formatos: cadeia em texto (estudos sem desenhos) e cadeia em desenhos.
+      const selected = studies.find(study => study.group === 'atacado' && study.topicIndex === 5) || studies.find(study => !study.diagram.cycle) || studies[0]
+      const nodeSel = selected.diagram.cycle ? '.rich-stage' : '.sector-chain-node'
+      const nodeAnimation = selected.diagram.cycle ? 'rich-glow' : 'sector-chain-step'
       const alternate = studies.find(study => study.title !== selected.title) || null
+      const rich = studies.find(study => study.diagram.cycle)
+      if (rich && width > 600) {
+        await page.goto(`${base}/#setores/topico/${rich.group}/${rich.topicIndex}`)
+        const richDiagram = page.locator('.researched-flow')
+        await richDiagram.waitFor()
+        const richStage = richDiagram.locator('.rich-stage').first()
+        const richPacket = richDiagram.locator('.rich-packet').first()
+        assert.equal(await richStage.evaluate(element => getComputedStyle(element).animationName), 'rich-glow')
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationName), 'rich-go')
+        assert.equal(await richDiagram.locator('.rich-cycle').count(), 1)
+        await richDiagram.focus()
+        await page.keyboard.press('p')
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationPlayState), 'paused')
+        await page.keyboard.press('p')
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationPlayState), 'running')
+        await page.emulateMedia({ reducedMotion: 'reduce' })
+        assert.equal(await richPacket.evaluate(element => getComputedStyle(element).animationName), 'none')
+        await page.emulateMedia({ reducedMotion: 'no-preference' })
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'cadeia em desenhos sem rolagem horizontal')
+      }
       await page.goto(`${base}/#setores/topico/${selected.group}/${selected.topicIndex}`)
       const diagram = page.locator('.researched-flow')
       await diagram.waitFor()
-      const stage = diagram.locator('.sector-chain-node').first()
-      assert.equal(await stage.evaluate(element => getComputedStyle(element).animationName), 'sector-chain-step')
+      const stage = diagram.locator(nodeSel).first()
+      assert.equal(await stage.evaluate(element => getComputedStyle(element).animationName), nodeAnimation)
       assert.equal(await diagram.getByRole('button', { name: /Pausar|Retomar/ }).count(), 0)
       await diagram.focus()
       await page.keyboard.press('p')
@@ -230,7 +259,7 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       if (width <= 600) {
         assert.ok(bounds.width >= width - 26, 'diagrama ocupa a largura disponível no celular')
         assert.equal(await expandedDiagram.evaluate(element => getComputedStyle(element).transform), 'none', 'texto não pode ser reduzido por escala')
-        assert.ok(await modal.locator('.sector-chain-node strong').first().evaluate(element => parseFloat(getComputedStyle(element).fontSize) >= 16), 'texto legível no celular')
+        assert.ok(await modal.locator(`${nodeSel} strong`).first().evaluate(element => parseFloat(getComputedStyle(element).fontSize) >= 16), 'texto legível no celular')
         assert.equal(await modal.evaluate(element => element.scrollWidth <= element.clientWidth + 1), true, 'sem rolagem horizontal')
         assert.equal(await modal.evaluate(element => element.scrollHeight > element.clientHeight), true, 'diagrama completo usa rolagem vertical')
         await modal.evaluate(element => { element.scrollTop = element.scrollHeight })
@@ -254,7 +283,7 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       }
       await require('./helpers/verify-diagram-laser.cjs')(page, modal, width)
       await page.keyboard.press('p')
-      assert.equal(await modal.locator('.sector-chain-node').first().evaluate(element => getComputedStyle(element).animationPlayState), 'paused')
+      assert.equal(await modal.locator(nodeSel).first().evaluate(element => getComputedStyle(element).animationPlayState), 'paused')
       await modal.screenshot({ path: path.join(out, `fullscreen-${width}.png`) })
       await page.keyboard.press('Escape')
       await modal.waitFor({ state: 'hidden' })
@@ -264,7 +293,7 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       await diagram.getByRole('button', { name: 'Maximizar diagrama' }).click()
       await modal.waitFor()
       await page.emulateMedia({ reducedMotion: 'reduce' })
-      assert.equal(await modal.locator('.sector-chain-node').first().evaluate(element => getComputedStyle(element).animationName), 'none')
+      assert.equal(await modal.locator(nodeSel).first().evaluate(element => getComputedStyle(element).animationName), 'none')
       await page.goBack()
       await modal.waitFor({ state: 'hidden' })
       const destination = alternate || { group: 'tic', topicIndex: 0, title: 'Integração de TI e infraestrutura digital' }

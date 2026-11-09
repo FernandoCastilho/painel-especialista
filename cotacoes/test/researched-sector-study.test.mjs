@@ -69,7 +69,7 @@ test('todos os estudos integrados renderizam sem erros e mantêm sua identidade'
     assert.match(html,/Perguntas para conversar com a empresa \(6\)/)
     assert.doesNotMatch(html,/study-callout|study-nav|Capítulos do estudo/)
     assert.match(html,/class="study-summary"/)
-    assert.match(html,/Relações da cadeia/)
+    assert.match(html,/Relações da cadeia|rich-chain/)
     assert.doesNotMatch(html,/speechSynthesis/)
   }
 })
@@ -100,4 +100,21 @@ test('geração de áudio é opt-in, somente revisados, valida hashes e decodifi
   const sync=await readFile('scripts/sync-sector-studies.mjs','utf8')
   assert.ok(sync.includes('audio.textSha256 === digest(transcriptText(study.transcript))'))
   assert.ok(sync.includes('=== audio.fileSha256'))
+})
+
+test('cadeia em desenhos mostra produto, dinheiro, banco e ciclo; sem emoji cai na versão em texto', async () => {
+  const Component = await component('src/ResearchedSectorStudy.jsx')
+  const rich = { nodes: [
+    { id: 'a', label: 'Pecuarista', detail: 'Origem', emoji: '🐄', bank: 'Giro' },
+    { id: 'b', label: 'Frigorífico', detail: 'Abate', emoji: '🏭' }],
+  edges: [{ from: 'a', to: 'b', label: 'Compra', product: { emoji: '🐂', label: 'animal para abate' }, cash: { emoji: '💵', label: 'pagamento do animal' } }],
+  cycle: { title: 'Ciclo de caixa', steps: ['Paga', 'Estoque', 'Recebe'], text: 'Texto do ciclo' } }
+  const html = renderToStaticMarkup(createElement(Component, { study: { ...fixture, diagram: rich } }))
+  for (const text of ['🐄', 'animal para abate', 'pagamento do animal', 'Onde o banco entra', 'Ciclo de caixa', 'Texto do ciclo']) assert.ok(html.includes(text), text)
+  assert.match(html, /rich-chain/)
+  const plain = renderToStaticMarkup(createElement(Component, { study: fixture }))
+  assert.doesNotMatch(plain, /rich-chain/)
+  assert.match(plain, /sector-chain-nodes/)
+  const missingCash = { ...rich, edges: [{ ...rich.edges[0], cash: undefined }] }
+  assert.doesNotMatch(renderToStaticMarkup(createElement(Component, { study: { ...fixture, diagram: missingCash } })), /rich-chain/)
 })
