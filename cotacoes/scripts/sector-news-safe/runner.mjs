@@ -43,6 +43,25 @@ export async function runSectorNewsProduction({ store, transport, publisher, pre
   return runCollector({ store, transport, publisher, previousFeed, sourceIds, runId, verifiedSince, clock, sleep: ms => new Promise(resolve => setTimeout(resolve, ms)), environment: 'production' })
 }
 
+// Clear only an obsolete public parser flag after the durable, reviewed release
+// and a confirmed newer collection. This never changes journal access controls.
+export function previousFeedAfterParserCollection(previousFeed, state) {
+  validateState(state, { allowProduction: true })
+  const previous = structuredClone(previousFeed)
+  if (state.environment !== 'production' || !state.parserRelease) return previous
+  for (const key of ['aneel', 'susep']) {
+    const entry = state.sources[key]
+    const source = SECTOR_NEWS_SOURCES.find(source => source.id === key)
+    const old = previous.sourceStates?.[key]
+    if (!old || entry.status !== 'ready' || entry.block || entry.request || entry.activeRun
+      || state.sharedBlocks[new URL(source.url).origin] || state.sharedBlocks[source.robotsUrl]
+      || !entry.lastSuccessAt || Date.parse(entry.lastSuccessAt) < Date.parse(state.parserRelease.reviewedAt)
+      || !entry.checkedAt || (old.checkedAt && Date.parse(entry.checkedAt) < Date.parse(old.checkedAt))) continue
+    old.accessSuspended = false
+  }
+  return previous
+}
+
 async function runCollector({ store, transport, publisher, previousFeed, sourceIds, runId, verifiedSince, clock, sleep, environment }) {
   if (!store || store.ref !== STATE_REF || typeof store.read !== 'function' || typeof store.compareAndSwap !== 'function') throw new Error('durable_state_store_required')
   if (!id(runId) || !Array.isArray(sourceIds) || !sourceIds.length || new Set(sourceIds).size !== sourceIds.length || sourceIds.some(key => !SECTOR_NEWS_SOURCES.some(s => s.id === key))) throw new Error('explicit_valid_run_and_sources_required')
@@ -182,7 +201,7 @@ async function runCollector({ store, transport, publisher, previousFeed, sourceI
       accessSuspended: Boolean(entry.block || shared), reason: shared?.code || entry.reason }]
   }))
   const generatedAt = iso(time())
-  const feed = makeSectorNewsFile({ previous: previousFeed, items, sourceStates: projected, now: time() })
+  const feed = makeSectorNewsFile({ previous: previousFeedAfterParserCollection(previousFeed, saved.state), items, sourceStates: projected, now: time() })
   feed.collectionPolicy = { ...feed.collectionPolicy, mode: environment === 'production' ? 'institutional-headlines-live' : 'offline-simulation-only', automaticScheduleEnabled: environment === 'production', persistentStateStatus: environment === 'production' ? 'github-protected-history' : 'simulation-only; not production approved' }
   // Feed contains only a public projection; it is NEVER the authority for access.
   feed.delivery = { generatedAt, publishedAt: null, stateRevision: saved.state.revision, stateRef: STATE_REF, feedRef: FEED_REF }
