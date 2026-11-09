@@ -4,6 +4,7 @@ import { OnlineBadge } from './Acessos.jsx'
 import { DESK_TABS } from './terminal.js'
 import ThemeControl from './ThemeControl.jsx'
 import { AvisosButton } from './Avisos.jsx'
+import './TopBar.css'
 
 const CLOCKS = [
   ['BRL', 'BRT'],
