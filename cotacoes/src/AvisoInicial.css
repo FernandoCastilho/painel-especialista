@@ -1,7 +1,10 @@
 .aviso-inicial { max-width: min(440px, calc(100vw - 32px)); padding: 20px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-top: 3px solid var(--warn); border-radius: 12px; }
 .aviso-inicial::backdrop { background: rgba(0, 0, 0, .65); }
 .aviso-inicial h2 { margin: 0 0 8px; font-size: 1.05rem; }
+.aviso-inicial { max-height: calc(100dvh - 32px); overflow: auto; }
 .aviso-inicial p { margin: 0 0 16px; line-height: 1.5; }
+.aviso-fontes { margin: -6px 0 16px; padding-left: 18px; font-size: .875rem; line-height: 1.45; }
+.aviso-fontes li + li { margin-top: 4px; }
 .aviso-novidades { margin: 0 0 16px; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; background: rgba(255, 255, 255, .02); }
 .aviso-novidades h3 { margin: 0 0 6px; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--mut); }
 .aviso-novidades ul { margin: 0; padding-left: 18px; font-size: .88rem; line-height: 1.45; }

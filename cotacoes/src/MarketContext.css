@@ -13,7 +13,7 @@
 .context-card dl div { display:flex; flex-wrap:wrap; gap:6px; justify-content:space-between }
 .context-card dt { color:var(--mut,#a5acb8) }
 .context-card dd { margin:0; text-align:right }
-.context-card footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; font-size:.72rem; margin-top:auto; padding-top:10px; color:var(--mut,#a5acb8) }
+.context-card footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; font-size:.75rem; margin-top:auto; padding-top:10px; color:var(--mut,#a5acb8) }
 .context-card footer a { color:inherit; text-decoration:underline; text-underline-offset:3px }
 .context-warning { font-size:.78rem; color:#edbd71 }
 @media(max-width:950px) { .context-grid { grid-template-columns:repeat(2,minmax(0,1fr)) } }

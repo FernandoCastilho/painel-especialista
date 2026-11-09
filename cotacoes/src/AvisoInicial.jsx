@@ -22,7 +22,15 @@ export default function AvisoInicial({ onDismiss }) {
   return (
     <dialog ref={ref} className="aviso-inicial" aria-labelledby="aviso-inicial-title" aria-describedby="aviso-inicial-text" onCancel={(e) => { e.preventDefault(); fechar() }}>
       <h2 id="aviso-inicial-title">Aviso</h2>
-      <p id="aviso-inicial-text">Este é um aplicativo educacional, com o intuito exclusivo de trazer informação ilustrativa. Não representa compromisso nem informações atualizadas on-line.</p>
+      <div id="aviso-inicial-text">
+        <p>Aplicativo educacional, com informação ilustrativa. Não é recomendação de crédito.</p>
+        <ul className="aviso-fontes">
+          <li><b>Quase ao vivo:</b> câmbio, a cada poucos minutos em dias úteis (9h30 às 18h), sem garantia de tempo real.</li>
+          <li><b>Diário:</b> curvas de juros da B3, uma referência por dia útil.</li>
+          <li><b>Semanal:</b> Focus, às segundas.</li>
+          <li><b>Manual:</b> projeções dos bancos, conferidas à mão; cada uma mostra a sua data.</li>
+        </ul>
+      </div>
       {semana.length > 0 && (
         <div className="aviso-novidades">
           <h3>Novidades da semana</h3>

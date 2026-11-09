@@ -2,8 +2,8 @@
 .refresh-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; background: transparent; border: 0; color: var(--mut); cursor: pointer; opacity: .8; }
 .refresh-btn:hover:not(:disabled), .refresh-btn:focus-visible { color: var(--amber, #ffb000); opacity: 1; }
 .refresh-btn:disabled { cursor: progress; opacity: .6; }
-.refresh-msg { font-size: .68rem; color: var(--mut); white-space: nowrap; }
-.refresh-stamp { font-size: .68rem; color: var(--mut); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.refresh-msg { font-size: .75rem; color: var(--mut); white-space: nowrap; }
+.refresh-stamp { font-size: .75rem; color: var(--mut); white-space: nowrap; font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) { .refresh-stamp__lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .refresh-stamp { white-space: normal; text-align: right; line-height: 1.2; max-width: 9ch; } }
 .refresh-btn .spin { animation: refresh-spin 1s linear infinite; }
 @keyframes refresh-spin { to { transform: rotate(360deg); } }
@@ -37,4 +37,6 @@
 @media (min-width: 561px) and (max-width: 999px) {
   .config-desk > .config-wide > header { flex-wrap: wrap; }
   .config-desk > .config-wide > header .refresh-wrap { flex: 0 0 auto; max-width: 100%; }
+  .chart > header { flex-wrap: wrap; }
+  .chart > header .parity-actions { max-width: 100%; margin-left: auto; }
 }

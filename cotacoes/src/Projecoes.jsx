@@ -3,7 +3,7 @@ import RefreshButton from './RefreshButton.jsx'
 import { onRefresh } from './refreshBus.js'
 import { Aviso } from './Avisos.jsx'
 import { useEffect, useState } from 'react'
-import { FOCUS_MARK, INDICATORS, INSTITUTIONS, compareToFocus, scenarioValue } from './scenarios.js'
+import { FOCUS_MARK, INDICATORS, INSTITUTIONS, compareToFocus, idadeProjecao, scenarioValue, textoIdadeProjecao } from './scenarios.js'
 import FocusHistorico from './FocusHistorico.jsx'
 
 const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '') ? value.split('-').reverse().join('/') : 'data não informada'
@@ -51,6 +51,12 @@ export default function Projecoes({ macro, searchTarget }) {
             </tr>)}</tbody>
           </table>
         </div>
+        {banks && <ul className="scenario-ages" aria-label="Idade das projeções dos bancos">
+          {INSTITUTIONS.slice(1).map((name) => {
+            const idade = idadeProjecao(banks.institutions?.find((item) => item.name === name)?.date)
+            return <li key={name} className={idade?.antiga ? 'old' : undefined}>{idade?.antiga && <span aria-hidden="true">⚠ </span>}<b>{name}</b>: {textoIdadeProjecao(idade)}{idade?.antiga ? ' · pode estar desatualizada' : ''}</li>
+          })}
+        </ul>}
         <Aviso title="Cenário econômico · método">
         <p className="status">USD: Focus = média de dezembro; Itaú BBA = dezembro; demais bancos = fim do período. Selic: Itaú = dezembro; demais fontes = fim do ano. As medidas não são idênticas. — = projeção não verificada ou indisponível, nunca zero.</p>
         <div className="scenario-sources">

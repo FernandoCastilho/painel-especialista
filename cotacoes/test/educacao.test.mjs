@@ -237,13 +237,14 @@ test('commodities: soja em R$/saca e galão em litro', () => {
 })
 
 import { mensagemErro } from '../src/erro.js'
+const U = '; mostrando o último valor conhecido, se houver'
 test('erro para o usuário: sem texto técnico (JSON inválido, HTTP, rede)', () => {
-  assert.equal(mensagemErro(new Error('Unexpected token \'<\', "<!doctype "... is not valid JSON')), 'Arquivo ainda não publicado ou em formato inesperado')
-  assert.equal(mensagemErro('HTTP 404'), 'Arquivo ainda não publicado')
-  assert.equal(mensagemErro('HTTP 503'), 'Fonte fora do ar')
-  assert.equal(mensagemErro(new TypeError('Failed to fetch')), 'Sem conexão com a fonte')
-  assert.equal(mensagemErro(''), 'Sem resposta da fonte'); assert.equal(mensagemErro(null), 'Sem resposta da fonte')
-  assert.equal(mensagemErro('algo estranho'), 'Fonte indisponível')
+  assert.equal(mensagemErro(new Error('Unexpected token \'<\', "<!doctype "... is not valid JSON')), 'Esses dados ainda não foram publicados ou vieram num formato inesperado' + U)
+  assert.equal(mensagemErro('HTTP 404'), 'Esses dados ainda não foram publicados' + U)
+  assert.equal(mensagemErro('HTTP 503'), 'A fonte das cotações está fora do ar agora' + U)
+  assert.equal(mensagemErro(new TypeError('Failed to fetch')), 'Sem conexão com as cotações agora' + U)
+  assert.equal(mensagemErro(''), 'Sem resposta agora' + U); assert.equal(mensagemErro(null), 'Sem resposta agora' + U)
+  assert.equal(mensagemErro('algo estranho'), 'Não consegui atualizar agora' + U)
   for (const t of ['Unexpected token', 'HTTP 404', 'Failed to fetch', 'x']) assert.doesNotMatch(mensagemErro(t), /Unexpected|doctype|JSON|HTTP|fetch/i)
 })
 

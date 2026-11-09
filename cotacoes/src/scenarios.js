@@ -20,3 +20,16 @@ export function scenarioValue(institution, indicator, year, focus, banks) {
     : banks?.institutions?.find((bank) => bank.name === institution)?.years?.[year]?.[indicator.id]
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
+
+// Idade da projeção de um banco: dias corridos entre a data da projeção (AAAA-MM-DD) e hoje em Brasília.
+// `antiga` passa de 14 dias. Data ausente ou inválida devolve null (a tela mostra "fonte pendente").
+export const PROJECAO_ANTIGA_DIAS = 14
+export function idadeProjecao(iso, agora = Date.now()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? '')
+  if (!m) return null
+  const hoje = new Date(agora).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+  const dias = Math.round((Date.parse(hoje) - Date.parse(iso)) / 864e5)
+  if (!Number.isFinite(dias)) return null
+  return { dias, data: `${m[3]}/${m[2]}`, antiga: dias > PROJECAO_ANTIGA_DIAS }
+}
+export const textoIdadeProjecao = (idade) => !idade ? 'fonte pendente' : `projeção de ${idade.data} (${idade.dias < 0 ? 'data futura' : idade.dias === 0 ? 'de hoje' : `há ${idade.dias} ${idade.dias === 1 ? 'dia' : 'dias'}`})`

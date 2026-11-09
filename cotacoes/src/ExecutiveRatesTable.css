@@ -71,15 +71,15 @@
 .executive-rates__table thead .executive-rates__indicator span {
   display: block;
   color: var(--mut);
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 400;
 }
 .executive-rates__name { display: block; font-size: .88rem; font-weight: 600; line-height: 1.4; }
-.executive-rates__unit { display: block; margin-top: 3px; color: var(--mut); font-size: .72rem; font-weight: 400; line-height: 1.4; }
+.executive-rates__unit { display: block; margin-top: 3px; color: var(--mut); font-size: .75rem; font-weight: 400; line-height: 1.4; }
 .executive-rates__value { display: block; font-size: .95rem; font-weight: 700; line-height: 1.4; white-space: nowrap; }
 .executive-rates__date,
 .executive-rates__status,
-.executive-rates__source { display: block; margin-top: 3px; color: var(--mut); font-size: .72rem; line-height: 1.4; }
+.executive-rates__source { display: block; margin-top: 3px; color: var(--mut); font-size: .75rem; line-height: 1.4; }
 .executive-rates__source a { color: inherit; text-underline-offset: 2px; }
 .executive-rates__source a:hover { color: var(--fg); }
 .executive-rates__source a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }

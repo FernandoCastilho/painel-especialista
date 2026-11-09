@@ -1,0 +1,51 @@
+name: Alerta de coleta com falhas seguidas
+
+# Quando uma coleta termina, olha as últimas execuções dela. Se as 3 mais recentes (que terminaram em sucesso ou falha)
+# falharam, abre uma issue ou comenta na que já existe. Quando uma execução volta a dar certo, comenta e fecha a issue.
+# Não altera os workflows de coleta: só observa o resultado deles. Mesmo padrão de issue da validação de cotações em pages.yml.
+on:
+  workflow_run:
+    workflows:
+      - Cotações (coleta central)
+      - Deploy do Painel Especialista (GitHub Pages)
+      - Verificar e coletar notícias institucionais
+    types: [completed]
+
+permissions:
+  actions: read
+  issues: write
+
+jobs:
+  alerta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Abrir, atualizar ou fechar a issue de falhas seguidas
+        uses: actions/github-script@v7
+        env:
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        with:
+          script: |
+            const LIMITE = 3
+            const atual = context.payload.workflow_run
+            // execuções canceladas ou puladas não contam como sucesso nem como falha
+            if (!['success', 'failure', 'timed_out'].includes(atual.conclusion)) return
+            const lista = await github.rest.actions.listWorkflowRuns({ ...context.repo, workflow_id: atual.workflow_id, status: 'completed', per_page: 20 })
+            const outras = lista.data.workflow_runs.filter((r) => r.id !== atual.id && ['success', 'failure', 'timed_out'].includes(r.conclusion))
+            const recentes = [atual, ...outras].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, LIMITE)
+            const falhou = (r) => r.conclusion !== 'success'
+            const title = `Coleta falhou ${LIMITE} vezes seguidas: ${atual.name}`
+            const open = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', per_page: 50 })
+            const prev = open.data.find((i) => i.title === title && !i.pull_request)
+            const run = atual.html_url
+            if (recentes.length === LIMITE && recentes.every(falhou)) {
+              const list = recentes.map((r) => `- ${r.created_at}: ${r.html_url}`).join('\n')
+              const body = `As ${LIMITE} últimas execuções de "${atual.name}" falharam. A página continua mostrando os últimos dados válidos, que podem estar ficando velhos.\n\n${list}`
+              if (prev) await github.rest.issues.createComment({ ...context.repo, issue_number: prev.number, body })
+              else {
+                await github.rest.issues.create({ ...context.repo, title, body })
+                if (process.env.TEAMS_WEBHOOK_URL) await fetch(process.env.TEAMS_WEBHOOK_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: `${title}. ${run}` }) }).catch(() => {})
+              }
+            } else if (prev && atual.conclusion === 'success') {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: prev.number, body: `Normalizado: a última execução deu certo.\n\nExecução: ${run}` })
+              await github.rest.issues.update({ ...context.repo, issue_number: prev.number, state: 'closed', state_reason: 'completed' })
+            }

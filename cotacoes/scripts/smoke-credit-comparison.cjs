@@ -75,7 +75,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await trigger.click(); await page.evaluate(() => { location.hash = '#calculadora' })
     await dialog.waitFor({ state: 'hidden' })
     await page.goBack(); await page.locator('#credit-title').waitFor()
-    await page.goForward(); await page.getByRole('heading', { name: 'Calculadoras', exact: true }).waitFor()
+    await page.goForward(); await page.locator('#calc-title').waitFor()
     assert.deepEqual(errors, [])
     fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['dual proposals', 'invalid outputs hidden', 'guarantee coverage', 'net equivalence', 'CDI scenarios/manual empty', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
     console.log('Credit comparator browser checks passed')

@@ -32,11 +32,11 @@
   .market-meta td { font-size:.78rem; }
 }
 @media (max-width:450px) {
-  .market-table thead th { padding:9px 4px; font-size:.73rem; }
+  .market-table thead th { padding:9px 4px; font-size:.75rem; }
   .market-table td { padding-right:4px; padding-left:4px; font-size:.78rem; }
   .market-table .market-price { font-size:.85rem; }
   .market-open { padding:8px 4px; }
   .market-open b { font-size:.8rem; }
-  .market-open small { font-size:.72rem; }
-  .market-meta td { font-size:.74rem; padding-bottom:10px; }
+  .market-open small { font-size:.75rem; }
+  .market-meta td { font-size:.75rem; padding-bottom:10px; }
 }

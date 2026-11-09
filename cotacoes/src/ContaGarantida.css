@@ -31,7 +31,7 @@
 .cg-results { min-width:900px; }
 .cg-results td, .cg-results thead th { font-size:.8rem; }
 .cg-results th:first-child { position:sticky; left:0; z-index:1; background:var(--card); min-width:100px; font-size:.8rem; text-transform:none; letter-spacing:0; }
-.cg-results th small { display:block; font-size:.65rem; white-space:normal; }
+.cg-results th small { display:block; font-size:.75rem; white-space:normal; }
 .cg-pagination { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px; color:var(--mut); font-size:.8rem; }
 .cg-method { font-size:.85rem; color:var(--mut); line-height:1.5; }
 .cg-method summary { min-height:44px; padding:10px 0; color:var(--fg); cursor:pointer; }

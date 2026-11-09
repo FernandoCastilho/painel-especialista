@@ -1,5 +1,5 @@
 .focus-legend { display:block; margin-top:4px; }
-.fm { display:inline-block; min-width:1.1em; text-align:center; margin-left:6px; font-size:.8em; font-weight:700; }
+.fm { display:inline-block; min-width:1.1em; text-align:center; margin-left:6px; font-size:12px; font-weight:700; }
 .fm.up { color:var(--accent); } .fm.down { color:var(--warn); } .fm.same { color:var(--mut); }
 .vs-focus.vs-up { background:color-mix(in srgb, var(--accent) 8%, transparent); }
 .vs-focus.vs-down { background:color-mix(in srgb, var(--warn) 8%, transparent); }

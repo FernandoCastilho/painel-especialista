@@ -2,13 +2,13 @@
 .bn-scroll { overflow-x:auto; }
 .bn-table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
 .bn-table th, .bn-table td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--line, #2a2a2a); vertical-align:top; white-space:nowrap; font-weight:400; }
-.bn-table thead th { color:var(--mut, #8a8a8a); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+.bn-table thead th { color:var(--mut, #8a8a8a); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
 .bn-table caption { text-align:left; color:var(--mut, #8a8a8a); font-size:12px; padding:6px 0; }
 .bn-table .num { font-family:var(--mono, ui-monospace, monospace); color:var(--amber, #ffb000); }
 .bn-table .old { color:var(--amber, #ffb000); font-style:normal; }
 .bn-table tr.bn-on { background:var(--surface-2, #14110a); }
 .bn-pick { background:none; border:0; color:var(--fg); font:inherit; text-align:left; cursor:pointer; padding:0; min-height:36px; }
-.bn-pick small { display:block; color:var(--mut, #8a8a8a); font-size:11px; }
+.bn-pick small { display:block; color:var(--mut, #8a8a8a); font-size:12px; }
 .bn-pick:hover, .bn-pick:focus-visible { color:var(--amber, #ffb000); }
 .bn-delta { font-family:var(--mono, ui-monospace, monospace); }
 .bn-def { margin:8px 0 0; font-size:12px; color:var(--mut, #8a8a8a); line-height:1.5; }
@@ -28,15 +28,15 @@
 .bn-obs-d > summary:hover, .bn-obs-d > summary:focus-visible, .bn-src > summary:hover, .bn-src > summary:focus-visible { color:var(--amber, #ffb000); }
 .bn-src { margin-top:6px; border-top:1px solid var(--line, #2a2a2a); }
 .bn-obs { max-height:320px; margin-top:0; }
-.bn-jump { display:inline-block; margin-left:6px; padding:0 5px; border:1px solid var(--amber, #ffb000); color:var(--amber, #ffb000); font-size:10px; line-height:16px; letter-spacing:.06em; text-transform:uppercase; vertical-align:middle; }
+.bn-jump { display:inline-block; margin-left:6px; padding:0 5px; border:1px solid var(--amber, #ffb000); color:var(--amber, #ffb000); font-size:12px; line-height:16px; letter-spacing:.06em; text-transform:uppercase; vertical-align:middle; }
 .bn-cards { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; }
 .bn-card { display:flex; flex-direction:column; gap:2px; text-align:left; padding:10px 12px; min-height:92px; background:var(--card); color:var(--fg); border:1px solid var(--line); font:inherit; cursor:pointer; }
 .bn-card:hover, .bn-card:focus-visible { border-color:var(--amber, #ffb000); }
 .bn-card.bn-on { border-color:var(--amber, #ffb000); background:var(--surface-2); }
-.bn-card-l { font-size:11px; color:var(--mut); letter-spacing:.06em; text-transform:uppercase; }
+.bn-card-l { font-size:12px; color:var(--mut); letter-spacing:.06em; text-transform:uppercase; }
 .bn-card-v { font-size:1.25rem; font-variant-numeric:tabular-nums; color:var(--amber, #ffb000); }
 .bn-card-d { font-size:12px; }
-.bn-card-t { color:var(--mut); font-size:11px; }
+.bn-card-t { color:var(--mut); font-size:12px; }
 .bn-extra { display:none; }
 @media (max-width:899px) { .bn-cards { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 @media (max-width:639px) {
@@ -46,7 +46,7 @@
   .bn-extra td span { margin-right:14px; white-space:nowrap; }
 }
 @media (max-width:639px) {
-  .bn-table { font-size:11px; }
+  .bn-table { font-size:12px; }
   .bn-table th, .bn-table td { padding:8px 4px; }
   .bn-table tbody th { white-space:normal; max-width:112px; }
   .bn-pick { white-space:normal; line-height:1.25; }
@@ -57,7 +57,7 @@
 .bn-csv code { color:var(--mut, #8a8a8a); word-break:break-all; }
 @media (max-width:639px) { .bn-table .bn-extra td { white-space:normal; line-height:1.7; } }
 @media (max-width:639px) {
-  .bn-table th, .bn-table td, .bn-table .num, .bn-delta { font-size:11px; }
+  .bn-table th, .bn-table td, .bn-table .num, .bn-delta { font-size:12px; }
   .bn-pick { max-width:96px; }
   .bn-pick small { display:none; }
 }
@@ -74,7 +74,7 @@
 
 /* Comparar séries no mesmo gráfico */
 .bn-cmp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 12px; color: var(--mut); font-size: .76rem; }
-.bn-cmp-bar button { min-height: 32px; padding: 0 10px; background: transparent; color: var(--fg); border: 1px solid var(--line); font: 600 .74rem system-ui, sans-serif; cursor: pointer; }
+.bn-cmp-bar button { min-height: 32px; padding: 0 10px; background: transparent; color: var(--fg); border: 1px solid var(--line); font: 600 .75rem system-ui, sans-serif; cursor: pointer; }
 .bn-cmp-bar button:hover:not(:disabled), .bn-cmp-bar button:focus-visible { border-color: var(--amber); color: var(--amber); }
 .bn-cmp-bar button:disabled { opacity: .45; cursor: default; }
 .bn-cmp { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -8px 2px -8px -8px; cursor: pointer; }

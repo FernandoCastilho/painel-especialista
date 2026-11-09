@@ -26,7 +26,7 @@
 .along-ncg-result strong { font-size:1.5rem; font-variant-numeric:tabular-nums; }
 .along-ncg-result small,.along-ncg-result span { color:var(--mut); font-size:.8rem; line-height:1.5; }
 .along-schedule { min-width:1100px; }
-.along-schedule th small { display:block; color:var(--mut); font-size:.7rem; }
+.along-schedule th small { display:block; color:var(--mut); font-size:.75rem; }
 .along-method { color:var(--mut); font-size:.85rem; }
 @media(max-width:1100px) { .along-entry-grid { grid-template-columns:1fr; } }
 @media(max-width:639px) { .cx .along-entry-grid .cx-form,.alongamento .cx-form,.along-kpis { grid-template-columns:1fr; } .along-kpis { padding:12px; gap:8px; } .along-kpis strong { font-size:1.35rem; } .along-cash-summary { display:grid; gap:16px; } }

@@ -7,7 +7,7 @@
 .theme-options button { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:9px 10px; border:0; border-radius:4px; background:transparent; color:var(--fg); text-align:left; font:500 .82rem/1.4 system-ui,sans-serif; cursor:pointer; }
 .theme-options button:hover, .theme-options button[aria-pressed=true] { background:var(--surface-2); }
 .theme-options svg { flex:none; }
-.theme-options small { display:block; font-size:.72rem; font-weight:400; color:var(--mut); }
+.theme-options small { display:block; font-size:.75rem; font-weight:400; color:var(--mut); }
 .theme-check { margin-left:auto; color:var(--amber); }
 @media (min-width:1000px) {
   .theme-mobile { display:none; }

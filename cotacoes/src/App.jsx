@@ -264,6 +264,7 @@ export default function App() {
         <p>Yuan: CNH (offshore), por cruzamento USD/BRL ÷ USD/CNH. Origem, API e frequência de cada dado: Configurações › Base de dados.</p>
         <p><i>{DISCLAIMER}</i></p>
       </>}>
+    <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conteúdo</a>
     <AvisoInicial onDismiss={() => setAvisoFechado(true)} />
     <ConceitoDiario ready={avisoFechado} goto={goto} />
     <MarketPopup ready={avisoFechado} quotes={quotes} curves={curves.data} oil={oil.data} paused={tab === 'apresentar'} />
@@ -281,7 +282,8 @@ export default function App() {
         <OnlineBadge /><AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" />
       </div>
     )}
-    <main className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
+    <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
+      {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
       <Suspense fallback={<p className="status" role="status">Carregando seção…</p>}>
       {update && (
