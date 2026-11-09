@@ -62,6 +62,17 @@ jobs:
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
       - name: Conferir Comparador de Crédito, cenários e apresentação
         run: CREDIT_QA_OUTPUT="$RUNNER_TEMP/qa-universal/credit" node scripts/smoke-credit-comparison.cjs
+      - name: Conferir amostras e atraso do intraday
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: INTRADAY_QA_OUTPUT="$RUNNER_TEMP/qa-universal/intraday" node scripts/smoke-intraday-state.cjs
+      - name: Capturas e relatório do intraday
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intraday-state-design
+          path: ${{ runner.temp }}/qa-universal/intraday
+          if-no-files-found: error
+          retention-days: 7
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4

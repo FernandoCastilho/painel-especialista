@@ -69,3 +69,9 @@ No CI, `FOLDERS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/folders" node scripts/smoke
 O mesmo ensaio verifica carregamento e dimensões das imagens. Em 1440 px escuro, percorre e captura os 68 subsetores; em 390 px, captura também TIC nos dois temas. A busca mantém a lista compacta, sem fotografias.
 
 `node scripts/verify-sector-folders.cjs "$RUNNER_TEMP/qa-universal/folders"` exige oito resultados completos, ausência de erros de página e 24 capturas não vazias. Ausência de relatório, combinação duplicada, recarga não comprovada ou captura ausente bloqueia o job. Os smokes de estudos e navegação continuam ativos. A matriz existente de 40 cenários de calculadoras e dois cabeçalhos Setores320 não foi substituída. O CI e a revisão independente das capturas do candidato integrado precisam concluir antes da publicação; testes unitários e build locais não substituem esses gates.
+
+## Intraday: amostras, não barras garantidas
+
+`node --test test/intraday-presentation.test.mjs test/quote-freshness.test.mjs test/refresh.test.mjs` verifica uma amostra sem percentual inventado, duas amostras com variação desde a primeira, zero verdadeiro, ausência de dados, horário original separado da geração do arquivo, envelhecimento e recuperação. O aviso de amostra antiga aplica-se apenas ao dia atual em Brasília; consultar uma data histórica não significa atraso do preço atual.
+
+`node scripts/smoke-intraday-state.cjs` usa fixtures sintéticas e `SMOKE_BASE_URL` para verificar detalhe e comparador em 390/1280 px, navegador em Tokyo/UTC, avisos, horários, retenção após erro, recuperação e Escape. `INTRADAY_QA_OUTPUT` seleciona a pasta de capturas. O lançamento local de Chromium em 09/11/2026 foi bloqueado por `socket() failed: Operation not permitted`, antes de abrir página, inclusive na tentativa com elevação. Isso não equivale a smoke aprovado; exigir CI e revisão das capturas antes de publicar.

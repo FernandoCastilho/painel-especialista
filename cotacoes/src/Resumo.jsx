@@ -307,6 +307,8 @@ function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPre
   const staleCodes = rows.filter((r) => r.st.stale).map((r) => r.code)
   const incompleteNote = incomplete.length > 0 && <Estado tipo="aviso">{incomplete.map((r) => `${r.code}: ${r.points.length === 1 ? `uma cotação no período (${brl(r.points[0].bid)}); aguardando outra para calcular variação` : r.st.status === 'empty' ? 'sem amostras na data selecionada' : r.st.error ? `histórico indisponível · ${mensagemErro(r.st.error)}` : 'aguardando cotações'}`).join(' · ')}</Estado>
   const staleNote = staleCodes.length > 0 && <Estado tipo="aviso">Não foi possível atualizar {staleCodes.join(', ')}. Mantida a última série disponível.</Estado>
+  const qualityRows = rows.filter(r => r.st.warning)
+  const qualityNote = qualityRows.length > 0 && <Estado tipo="aviso">{qualityRows.map(r => `${r.code}: ${r.st.warning}`).join(' · ')}</Estado>
   const failed = rows.every((r) => r.st.status === 'error')
   const one = rows.length === 1
   const r0 = rows[0]
@@ -351,12 +353,13 @@ function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPre
       )}
       <p className="chart-basis">{one && r0.points.length ? `Desde a 1ª amostra: ${dataTimestamp(r0.points[0].t)} até ${dataTimestamp(r0.points.at(-1).t)}. ` : 'Comparação normalizada desde a primeira amostra disponível de cada série. '}A variação deste gráfico não é o Δ dia da fonte contra a referência anterior. Horários em Brasília; amostras podem ter lacunas.</p>
       {staleNote}
+      {qualityNote}
       {incompleteNote}
       {dia && rows.some(r => r.st.previousDay) && <button type="button" className="btn" onClick={() => onPrevious(rows.map(r => r.st.previousDay).filter(Boolean).sort().at(-1))}>Ver último dia anterior com amostras disponíveis</button>}
       <div ref={ref}>
         {chart(width)}
       </div>
-      <footer className="terminal-chart-source muted">{rows.filter(r => r.st.data).map(r => r.code + ': ' + (r.st.data.generatedAt ? 'atualizado em ' + dataTimestamp(r.st.data.generatedAt) : 'data da atualização não disponível')).join(' | ')}</footer>
+      <footer className="terminal-chart-source muted">{rows.filter(r => r.st.data).map(r => r.code + ': ' + (dia ? `${r.points.length} amostra${r.points.length === 1 ? '' : 's'} · última amostra em ${dataTimestamp(r.points.at(-1).t)} · ` : '') + (r.st.data.generatedAt ? 'arquivo gerado em ' + dataTimestamp(r.st.data.generatedAt) : 'data da geração não disponível')).join(' | ')}</footer>
     </div>
     {big && (
       <Overlay onClose={() => setBig(false)}>
@@ -382,6 +385,7 @@ function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPre
         </p>
       )}
           {staleNote}
+      {qualityNote}
       {incompleteNote}
           <p className="chart-basis">Variação desde a primeira amostra disponível na janela selecionada; não é o Δ dia da fonte. Horários em Brasília.</p>
           <Wide render={chart} />

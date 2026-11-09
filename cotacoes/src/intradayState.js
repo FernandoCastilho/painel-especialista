@@ -1,4 +1,5 @@
 import { marketDate as localDate } from './marketReturns.js'
+import { QUOTE_AGE_LIMIT_MS } from './quoteFreshness.js'
 
 // Availability follows the actual retained samples, never a weekday assumption.
 export function intradaySelection(points, selectedDate) {
@@ -6,4 +7,15 @@ export function intradaySelection(points, selectedDate) {
   const selected = valid.filter(p => localDate(p.t) === selectedDate)
   const previous = valid.filter(p => localDate(p.t) < selectedDate).at(-1)
   return { points: selected, previousDay: previous ? localDate(previous.t) : null }
+}
+
+// The file can be regenerated without a new quote. Judge the actual observation,
+// and do not mark an intentionally selected historical day as a live quote.
+export function intradayObservationWarning(points, selectedDate, now = Date.now()) {
+  const last = points?.at(-1)
+  if (!last || selectedDate !== localDate(now)) return ''
+  if (last.t > now + 60000) return 'Horário da última amostra está no futuro; confira o relógio e a fonte.'
+  return now - last.t > QUOTE_AGE_LIMIT_MS
+    ? 'Última amostra com mais de 10 minutos. O gráfico não representa a cotação atual.'
+    : ''
 }
