@@ -28,7 +28,7 @@ const out = process.env.SECTOR_GRAPH_QA_OUTPUT || 'workspace-qa/sector-graph'
       await map.getByRole('heading',{name:'Conexões · Transporte de madeira',exact:true}).waitFor()
       assert.equal(await page.evaluate(()=>document.querySelector('.study-canvas-callout').nextElementSibling.classList.contains('knowledge-map')),true)
       assert.ok(await map.locator('.km-node').count()>=3)
-      await map.scrollIntoViewIfNeeded()
+      await map.evaluate(el => el.scrollIntoView({block:'start'}))
       await page.screenshot({path:`${out}/${width}-${theme}.png`})
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1),false)
       await map.getByRole('button',{name:'Lista',exact:true}).click()
