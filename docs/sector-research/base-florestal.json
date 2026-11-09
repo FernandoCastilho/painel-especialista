@@ -346,8 +346,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Mudas, terra e manejo",
-          "detail": "Origem da muda e da terra; confirmar o que é da empresa",
+          "label": "Plantio, terra e manejo",
+          "detail": "Plantio, terra e manejo",
           "emoji": "🌱",
           "bank": "Investimento em ativos duráveis, como estradas e manejo"
         },
@@ -380,7 +380,7 @@
           "label": "Plantio e tratos",
           "product": {
             "emoji": "🌿",
-            "label": "mudas e manejo no talhão"
+            "label": "plantio e manejo no talhão"
           },
           "cash": {
             "emoji": "💵",
@@ -810,7 +810,7 @@
         },
         {
           "id": "2",
-          "label": "Secagem e beneficiamento",
+          "label": "Secagem e classificação, quando contratadas",
           "detail": "Secagem tira umidade, ocupa espaço e pode gerar perdas",
           "emoji": "♨️",
           "bank": "Giro bancário para o estoque em secagem"
@@ -843,7 +843,7 @@
           "label": "Secagem e beneficiamento",
           "product": {
             "emoji": "📏",
-            "label": "madeira seca e classificada"
+            "label": "madeira seca e classificada, quando contratadas"
           },
           "cash": {
             "emoji": "📦",
@@ -2100,7 +2100,7 @@
         },
         {
           "id": "2",
-          "label": "Prensagem e revestimento",
+          "label": "Formação do painel e revestimento",
           "detail": "Aplica acabamentos e padrões sobre o painel, o que agrega valor mas exige controlar perdas",
           "emoji": "🏭",
           "bank": "Giro bancário para o estoque pesado"

@@ -98,7 +98,7 @@
       "title": "Distribuição de válvulas para óleo e gás",
       "status": "approved",
       "sourceFile": "atacado.json",
-      "sourceSha256": "1892dbce8c4bd4402fb3fc68ae095ab613c27021485623966d7d9dd964775325"
+      "sourceSha256": "4ee43b3f95f4e231493d80829f77bd536e8f61c46cca4a6cb64950d92c5479bb"
     },
     {
       "group": "automotivo",
@@ -114,7 +114,7 @@
       "title": "Implementos rodoviários",
       "status": "approved",
       "sourceFile": "automotivo.json",
-      "sourceSha256": "0f7b30aa9882003d0c0ba88d6e5faf8782c7cf26b6ada22952ab047702953d23"
+      "sourceSha256": "2892859ee930a156db0256f28f63df0bdc7ef8ccff52a8f29bbe84c33617df70"
     },
     {
       "group": "automotivo",
@@ -138,7 +138,7 @@
       "title": "Florestas plantadas",
       "status": "approved",
       "sourceFile": "base-florestal.json",
-      "sourceSha256": "90ff68b80e6d4ed977f22dc38d92c8120c5046f19c2820913fde69a15dec0069"
+      "sourceSha256": "df4b510356682db73f18fb5be2573c70cfaa7dd133a06a60d17e15a377f0c258"
     },
     {
       "group": "base-florestal",
@@ -146,7 +146,7 @@
       "title": "Serrarias",
       "status": "approved",
       "sourceFile": "base-florestal.json",
-      "sourceSha256": "94de5f0a87409089740453a7abab2f8ba52a04ded51b8550853eb3e67a16c636"
+      "sourceSha256": "6bf3dc26802b20103011a51cde29db146e336f23c630cb1dda434f67c247d67b"
     },
     {
       "group": "base-florestal",
@@ -170,7 +170,7 @@
       "title": "MDF e MDP",
       "status": "approved",
       "sourceFile": "base-florestal.json",
-      "sourceSha256": "40d2ce168b6783f929f1d65fe5ef343b6e5dfd5ff2cf8af551fb1403cc02cd07"
+      "sourceSha256": "84362486f2d5a7007de7030db4617473d9e920d41bd4602976977817a8d9e444"
     },
     {
       "group": "base-florestal",
@@ -194,7 +194,7 @@
       "title": "Galpões",
       "status": "approved",
       "sourceFile": "construcao.json",
-      "sourceSha256": "1b985711140f3c3fdd86872892f216758c351658846322aaef6ab148100c0222"
+      "sourceSha256": "0f6db17b326e24fe3fc043ff286d5e180f7a5da5cd682c92fc971048a933e57d"
     },
     {
       "group": "construcao",
@@ -234,7 +234,7 @@
       "title": "Esquadrias",
       "status": "approved",
       "sourceFile": "construcao.json",
-      "sourceSha256": "55a8d2bfca2f2477113111396135a09699d955c0bc6a3da35b9fe4efb25a1e10"
+      "sourceSha256": "b43b8feae970262cf88adb7c34d8a1a0923adc42b47085b624dfeaf00c094e6a"
     },
     {
       "group": "metalmecanico",
@@ -338,7 +338,7 @@
       "title": "Resinas",
       "status": "approved",
       "sourceFile": "quimicos.json",
-      "sourceSha256": "8b9426f25b766e43499a05af78fe4b81a1d465124cff72ec6a88fed9581a9604"
+      "sourceSha256": "7461a2803ba2b632e4cb085982632df2f1da5e903061e5fe31d1bdf3a6c78c8d"
     },
     {
       "group": "quimicos",
@@ -346,7 +346,7 @@
       "title": "Transformação plástica",
       "status": "approved",
       "sourceFile": "quimicos.json",
-      "sourceSha256": "c6a9f31b65f40109b589346080e4dfa38786ca2d2f657e31f0714d7f835731c5"
+      "sourceSha256": "0441706ed4676f67b4173c16290fad7f2b9b07216c588fb8efa093f2661ed935"
     },
     {
       "group": "quimicos",
@@ -386,7 +386,7 @@
       "title": "Fiação",
       "status": "approved",
       "sourceFile": "textil.json",
-      "sourceSha256": "7b92d60db9b49906daaf54e8cf490f47dc3d8d25746500b06b9e4e092c48db5e"
+      "sourceSha256": "d61cd39c4e5927f343ea670379557aa3b3e4a0b85bcd3a897ee38f0c2c894da0"
     },
     {
       "group": "textil",
@@ -426,7 +426,7 @@
       "title": "Tecidos técnicos",
       "status": "approved",
       "sourceFile": "textil.json",
-      "sourceSha256": "e490c641bd093c15cf06af895c257ef21bb2f3e7b55da77ac128e85f10684e1d"
+      "sourceSha256": "9039f6736ec04d0c27fb9327587203c97b270b15faecf00a0e5c62a6a03158ed"
     },
     {
       "group": "tic",
@@ -434,7 +434,7 @@
       "title": "Cibersegurança",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "0d7e0d75ed7827a779e51215c757f0b4d304cb24610a749125b9ec57e2a19f4f"
+      "sourceSha256": "d9a65a968de18004daa23e8868738a90b76279e5967934e90520e77c28a008c8"
     },
     {
       "group": "tic",
@@ -458,7 +458,7 @@
       "title": "Comunicação e colaboração",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "ac7815b163349c07cc846760b262028daed325c406d44d4906dd1e64a338632c"
+      "sourceSha256": "cfcfac751a4eeefdb4fda553cde4c02fad3f5f6aab1997fe1f50f61cc97fb830"
     },
     {
       "group": "tic",
@@ -466,7 +466,7 @@
       "title": "Software e serviços de TI",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "b977b5c33587306816931d44318167d34f97c968bc29603e1ac9d37b948872dc"
+      "sourceSha256": "fd9ca288ef2459db430383ec2381c9cf489c6d2845d1faab2edaec3182572ebd"
     },
     {
       "group": "tic",
@@ -474,7 +474,7 @@
       "title": "Data centers e nuvem",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "421058f420d9c778b87332cf2d7f27f684ee740d62473007c3b95ca35b88ec95"
+      "sourceSha256": "8e904de35a577688993bf0c0eb25b2e46973c41f846d90d00b2ce5c00d17281b"
     },
     {
       "group": "tic",

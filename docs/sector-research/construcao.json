@@ -874,7 +874,7 @@
           "label": "locação operação ou venda",
           "detail": "Locação, operação ou venda do galpão pronto",
           "emoji": "🏢",
-          "bank": "Financiamento de longo prazo apoiado em locação"
+          "bank": "Financiamento de longo prazo apoiado em locação, se houver contrato e locatário comprovados"
         }
       ],
       "edges": [
@@ -3373,7 +3373,7 @@
           "label": "Entrega",
           "product": {
             "emoji": "🚪",
-            "label": "esquadrias fabricadas e transportadas"
+            "label": "esquadrias fabricadas"
           },
           "cash": {
             "emoji": "🧾",

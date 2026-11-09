@@ -905,8 +905,8 @@
         },
         {
           "id": "2",
-          "label": "montagem e validação",
-          "detail": "Montagem do implemento e validação antes da entrega",
+          "label": "Montagem e entrega aceita",
+          "detail": "Montagem do implemento e entrega aceita",
           "emoji": "🔧",
           "bank": "Giro bancário casado à entrada e à liquidação da venda"
         },
@@ -951,7 +951,7 @@
           "label": "Entrega ao cliente",
           "product": {
             "emoji": "📦",
-            "label": "implemento validado e entregue"
+            "label": "implemento entregue"
           },
           "cash": {
             "emoji": "💰",
