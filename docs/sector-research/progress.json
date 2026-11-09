@@ -18,7 +18,7 @@
       "title": "Laticínios",
       "status": "approved",
       "sourceFile": "alimentos-agroindustria.json",
-      "sourceSha256": "3b96c0e722435fb788d472b7a26d13cf9323307b75f6c42d83e2e8edd17071aa"
+      "sourceSha256": "a5f876ffddb11a1789f8d28e1ef2777227241d5b46199db3f92f97f5a648d4bd"
     },
     {
       "group": "alimentos-agroindustria",
@@ -162,7 +162,7 @@
       "title": "Compensados",
       "status": "approved",
       "sourceFile": "base-florestal.json",
-      "sourceSha256": "d520763269f05193ed0320b591efcda7f539a5ab20023ca04e468a7c89e521b4"
+      "sourceSha256": "7d0f744e744597b598cb290c6eb243860a1e175ab32e9046b5909b76e7b1607c"
     },
     {
       "group": "base-florestal",

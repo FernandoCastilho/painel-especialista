@@ -869,41 +869,82 @@
         {
           "id": "n0",
           "label": "Produtor e coleta refrigerada",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Leite cru, coletado com cadeia fria",
+          "emoji": "🥛",
+          "bank": "Giro para financiar coleta e pagamento ao produtor"
         },
         {
           "id": "n1",
           "label": "Recepção e controle do leite",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Composição e qualidade definem rendimento e custo",
+          "emoji": "🧪",
+          "bank": "Investimento em laboratório, frio e efluentes"
         },
         {
           "id": "n2",
           "label": "Processamento e transformação",
-          "detail": "Capacidade, controle e execução"
+          "detail": "UHT, queijo, leite em pó e refrigerados, com vidas úteis diferentes",
+          "emoji": "🧀",
+          "bank": "Giro para estoque em maturação"
         },
         {
           "id": "n3",
           "label": "Distribuição e consumidor",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Varejo, distribuidores, indústrias e alimentação fora do lar",
+          "emoji": "🛒",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Coleta",
+          "product": {
+            "emoji": "🚚",
+            "label": "leite cru refrigerado"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento ao produtor, financiado até a venda"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Processamento",
+          "product": {
+            "emoji": "🥛",
+            "label": "leite aprovado para processar"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, embalagens, ingredientes e frio"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e aceite",
-          "from": "n2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "📦",
+            "label": "UHT, queijos, leite em pó e refrigerados"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do cliente; o queijo prende caixa na maturação"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o produtor",
+          "Maturação e estoque: o caixa fica preso",
+          "Recebe do cliente"
+        ],
+        "text": "Coleta recorrente e pagamento ao produtor precisam ser financiados até a venda. Queijo imobiliza caixa na maturação; refrigerado exige giro e controle de validade. Descontar recebíveis sem controlar devoluções e bonificações superestima o valor disponível. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Laticínios. Transformar leite cru em produtos de vidas úteis e margens distintas. UHT, queijo, leite em pó e refrigerados têm calendários de fabricação, maturação, estocagem e canais diferentes. Volume captado não é lucro nem receita de derivados. Margem é a realização líquida do mix menos custo do leite, transformação e distribuição. Leite mais barato pode aliviar custo, mas também acompanhar maior oferta e queda do preço do produto final. Queijo imobiliza caixa na maturação, enquanto refrigerado exige giro e execução de validade. A tabela SIDRA 1086 registra 6.786.539 mil litros adquiridos no primeiro trimestre de 2026 e 6.613.992 mil litros no segundo, conforme extração de 06/11/2026. O dado é aquisição pelos estabelecimentos sob inspeção, não produção total nas fazendas nem volume de queijo. A série anual foi somada dos trimestres na mesma extração; diferenças frente a notícias antigas podem refletir revisão e arredondamento, sem misturar taxas entre versões. A aprovação da aquisição da DPA pela Lactalis é evidência histórica de consolidação em refrigerados, não demonstra concentração atual de todos os lácteos. A originação e a distribuição devem ser comparadas por região e produto; não foi construída tabela estadual homogênea para atribuir ranking nesta revisão. A aquisição de leite em estabelecimentos sob inspeção medida pelo IBGE difere da produção total de leite nas propriedades. Sazonalidade do campo e elasticidade do consumo afetam simultaneamente originação e venda. Marca e capilaridade comercial são vantagens que uma planta eficiente sozinha não substitui. Coleta recorrente e pagamento ao produtor precisam ser financiados até venda. Estoque em maturação é diferente de estoque de produto vencendo; descontar recebíveis sem controlar devoluções e bonificações superestima o valor disponível. Processamento, envase, frio, tratamento de efluentes e laboratório sustentam qualidade. Expandir captação exige rota economicamente viável; comprar equipamento sem suprimento e canal adiciona custo fixo. Encaixes financeiros propostos: giro bancário ou cessão de recebíveis podem atender descasamento operacional documentado. Cessão exige entrega, exigibilidade, ausência de disputa e avaliação de concentração; FIDC ou securitização acrescentam custo de estrutura e não são automaticamente acessíveis à empresa média. Investimento requer prazo coerente com vida útil e geração de caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade. As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte fontes e limitações.",
     "reviewStatus": "approved",
