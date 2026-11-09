@@ -706,7 +706,7 @@
         },
         {
           "id": "2",
-          "label": "Acabamento e controle",
+          "label": "Controle de qualidade",
           "detail": "Confere refugo, tempo de ciclo e qualidade das peças antes de entregar",
           "emoji": "🔍",
           "bank": "Giro bancário para o ciclo operacional"
@@ -752,7 +752,7 @@
           "label": "Entrega ao cliente",
           "product": {
             "emoji": "📦",
-            "label": "peças acabadas e aprovadas"
+            "label": "peças aprovadas"
           },
           "cash": {
             "emoji": "💰",

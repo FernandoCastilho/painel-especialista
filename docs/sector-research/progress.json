@@ -346,7 +346,7 @@
       "title": "Transformação plástica",
       "status": "approved",
       "sourceFile": "quimicos.json",
-      "sourceSha256": "0441706ed4676f67b4173c16290fad7f2b9b07216c588fb8efa093f2661ed935"
+      "sourceSha256": "9b46da7cf7a54756d45d50b2f532a2973bbf75ae7aad58af8259634ef3892af1"
     },
     {
       "group": "quimicos",
@@ -426,7 +426,7 @@
       "title": "Tecidos técnicos",
       "status": "approved",
       "sourceFile": "textil.json",
-      "sourceSha256": "9039f6736ec04d0c27fb9327587203c97b270b15faecf00a0e5c62a6a03158ed"
+      "sourceSha256": "1af7ba9136adbec3e389c4d3cbf33ee72d00140e3f0b19c1a018d842616f77dd"
     },
     {
       "group": "tic",
@@ -442,7 +442,7 @@
       "title": "Redes e conectividade",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "e29b36aa617228031eefd8d68c2fe7b15a1895599593398f47b81584a3c79f32"
+      "sourceSha256": "a2b4a91f8e7c599d165f8d414f99ed2e340e8ac2a394339e722adadee1b613ee"
     },
     {
       "group": "tic",
@@ -450,7 +450,7 @@
       "title": "Serviços gerenciados de TI",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "86b531b656cd622c7a758b78e2eca627ca05417701262faebc21c5f5d36275d3"
+      "sourceSha256": "cd6ecf784147970526e31c7be9838fa94f93ff7de41d08f799455195460f219a"
     },
     {
       "group": "tic",
@@ -458,7 +458,7 @@
       "title": "Comunicação e colaboração",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "cfcfac751a4eeefdb4fda553cde4c02fad3f5f6aab1997fe1f50f61cc97fb830"
+      "sourceSha256": "45f3f432432b14a373e7c756b39cb690235f8c7e488b4123b14a72763adec011"
     },
     {
       "group": "tic",
@@ -466,7 +466,7 @@
       "title": "Software e serviços de TI",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "fd9ca288ef2459db430383ec2381c9cf489c6d2845d1faab2edaec3182572ebd"
+      "sourceSha256": "5f8e20335cab3ec9d3c79b28ec0eec856553c73bc6873b318b0535bf26732212"
     },
     {
       "group": "tic",
@@ -474,7 +474,7 @@
       "title": "Data centers e nuvem",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "8e904de35a577688993bf0c0eb25b2e46973c41f846d90d00b2ce5c00d17281b"
+      "sourceSha256": "903fc58b6fecbc5bb4bff17ec9ccdf84ed7da422f9d511e5e741a6ab1dc99393"
     },
     {
       "group": "tic",
@@ -482,7 +482,7 @@
       "title": "Operadoras de telecomunicações",
       "status": "approved",
       "sourceFile": "tic.json",
-      "sourceSha256": "4bc547b5ba471407e03f9d59cb4a90842ff7b4d0ecb654a1ec7ebfa0c0c14492"
+      "sourceSha256": "0fa194f210768a2ad960fc0752b4d7ae657b4f98d5d94b4f45420fb8bb015a7d"
     },
     {
       "group": "transporte-logistica",
