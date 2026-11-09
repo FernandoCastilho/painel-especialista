@@ -2,6 +2,7 @@ import GlobalSearch, { SearchDestination } from './GlobalSearch.jsx'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { dataTimestamp } from './dataTimestamp.js'
 import ThemeControl from './ThemeControl.jsx'
+import FeedbackMascot from './FeedbackMascot.jsx'
 import { connectSystemTheme } from './systemTheme.js'
 import { AvisosButton, AvisosProvider } from './Avisos.jsx'
 import { marketDate } from './marketReturns.js'
@@ -361,6 +362,7 @@ export default function App() {
       )}
       </Suspense>
     </main>
+    <FeedbackMascot />
     </AvisosProvider>
   )
 }
