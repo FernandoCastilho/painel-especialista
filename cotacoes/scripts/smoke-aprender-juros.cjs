@@ -1,3 +1,4 @@
+const openCallouts = require('./smoke-aprender-disclosures.cjs')
 // Regression test for the built application, using the repository's CI browser harness.
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
@@ -52,6 +53,7 @@ const path = require('node:path')
       await page.getByRole('searchbox', { name: 'Buscar conceito', exact: true }).fill('palavraimpossivelxyz')
       assert.match(await page.locator('.learn-count').innerText(), /Nenhum conceito encontrado/)
       await page.getByRole('button', { name: 'Limpar busca', exact: true }).click()
+      await openCallouts(page, [/^Conecta com$/])
       await page.locator('.learn-conecta').getByRole('button').filter({ hasText: 'Inflação' }).click()
       await page.waitForURL(/#aprender\/inflacao$/)
       await page.goBack()
