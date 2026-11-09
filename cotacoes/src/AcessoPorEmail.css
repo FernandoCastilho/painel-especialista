@@ -1,0 +1,13 @@
+.acesso-email { min-height: 100dvh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--fg); }
+.acesso-card { box-sizing: border-box; width: min(420px, 100%); padding: 24px; background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 12px; }
+.acesso-card h1 { margin: 0 0 12px; font-size: 1.2rem; }
+.acesso-card p { margin: 0 0 16px; line-height: 1.5; }
+.acesso-card label { display: block; margin-bottom: 6px; font-size: .85rem; color: var(--mut); }
+.acesso-card input { box-sizing: border-box; width: 100%; min-height: 44px; margin-bottom: 14px; padding: 8px 12px; font-size: 1rem; color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 8px; }
+.acesso-card input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.acesso-card .btn { width: 100%; min-height: 44px; border-color: var(--accent); }
+.acesso-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.acesso-link { min-height: 44px; padding: 0 4px; font: inherit; font-size: .88rem; color: var(--accent); background: none; border: 0; cursor: pointer; text-decoration: underline; }
+.acesso-link:disabled { color: var(--mut); cursor: default; text-decoration: none; }
+.acesso-card .acesso-erro { min-height: 1.5em; margin: 12px 0 0; font-size: .9rem; color: var(--down); }
+.acesso-card .acesso-aviso { margin: 8px 0 0; font-size: .78rem; color: var(--mut); }

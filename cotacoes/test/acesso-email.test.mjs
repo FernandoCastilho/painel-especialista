@@ -1,0 +1,117 @@
+// Tela de entrada por e-mail: regras do navegador e o script do Google (simulado, sem rede).
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import vm from 'node:vm'
+import { readFileSync } from 'node:fs'
+import { createHmac } from 'node:crypto'
+import { chamar, codigoValido, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail } from '../src/acessoEmail.js'
+
+test('e-mail válido: aceita endereços comuns e recusa os malformados', () => {
+  for (const ok of ['a@b.co', 'nome.sobrenome@empresa.com.br', ' Fulano+x@Itau.COM.br ']) assert.equal(emailValido(ok), true, ok)
+  for (const ruim of ['', 'semarroba', 'a@b', 'a@@b.com', 'a b@c.com', '@b.com', 'a@.com', 'a@b.c', 'a@b.com,c@d.com', `${'a'.repeat(250)}@b.com`, null, undefined]) assert.equal(emailValido(ruim), false, String(ruim))
+  assert.equal(normalizarEmail('  Ana@X.COM '), 'ana@x.com')
+})
+
+test('código: exatamente 6 números', () => {
+  assert.equal(codigoValido('012345'), true)
+  for (const ruim of ['12345', '1234567', 'abcdef', '12 345', '']) assert.equal(codigoValido(ruim), false)
+})
+
+test('tela só liga com o endereço do script e fora de navegador automatizado', () => {
+  assert.equal(exigirAcesso({ url: '', webdriver: false }), false)
+  assert.equal(exigirAcesso({ url: 'https://script.google.com/x/exec', webdriver: true }), false)
+  assert.equal(exigirAcesso({ url: 'https://script.google.com/x/exec', webdriver: false }), true)
+})
+
+test('acesso guardado: lê, grava, limpa e ignora lixo', () => {
+  const mem = new Map()
+  const st = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) }
+  assert.equal(lerAcesso(st), null)
+  guardarAcesso({ email: 'A@b.com', token: 't' }, st)
+  assert.deepEqual(lerAcesso(st), { email: 'a@b.com', token: 't' })
+  mem.set('painel-acesso', '{"email":"nao-e-email","token":"t"}')
+  assert.equal(lerAcesso(st), null)
+  mem.set('painel-acesso', 'não é json')
+  assert.equal(lerAcesso(st), null)
+  guardarAcesso({ email: 'a@b.com', token: 't' }, st); limparAcesso(st)
+  assert.equal(lerAcesso(st), null)
+})
+
+test('chamada ao script: monta o endereço e trata falha de rede sem liberar o acesso', async () => {
+  let pedido
+  const ok = await chamar('pedir', { email: 'a@b.com' }, { url: 'https://s/exec', fetchFn: async (u) => { pedido = u; return { json: async () => ({ ok: true }) } } })
+  assert.equal(ok.ok, true)
+  assert.equal(pedido, 'https://s/exec?acao=pedir&email=a%40b.com')
+  const falha = await chamar('pedir', {}, { url: 'https://s/exec', fetchFn: async () => { throw new Error('rede') } })
+  assert.equal(falha.ok, false)
+  assert.equal(falha.rede, true)
+})
+
+// ---- Script do Google, rodado com peças simuladas ----
+function criarScript() {
+  const cache = new Map()
+  const props = new Map()
+  const linhas = []
+  const emails = []
+  let cota = 100
+  const ambiente = {
+    ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType: () => ({ texto: t }) }) },
+    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+    CacheService: { getScriptCache: () => ({ get: (k) => cache.get(k) ?? null, put: (k, v) => cache.set(k, v), remove: (k) => cache.delete(k) }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props.get(k) ?? null, setProperty: (k, v) => props.set(k, v) }) },
+    MailApp: { getRemainingDailyQuota: () => cota, sendEmail: (m) => { emails.push(m) } },
+    SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheetByName: () => ({ appendRow: (r) => linhas.push(r) }), insertSheet: () => ({ appendRow: (r) => linhas.push(r) }) }) },
+    Utilities: {
+      getUuid: () => Math.random().toString(16).slice(2),
+      computeHmacSha256Signature: (msg, chave) => [...createHmac('sha256', chave).update(msg).digest()],
+      base64EncodeWebSafe: (bytes) => Buffer.from(bytes).toString('base64url'),
+    },
+    JSON, Math, String, Number, Date, Error,
+  }
+  vm.createContext(ambiente)
+  vm.runInContext(readFileSync(new URL('../../docs/cadastro-email/cadastro.gs', import.meta.url), 'utf8'), ambiente)
+  const chamarScript = (parameter) => JSON.parse(ambiente.doGet({ parameter }).texto)
+  return { chamarScript, emails, linhas, setCota: (n) => { cota = n } }
+}
+const codigoDoEmail = (emails) => emails.at(-1).body.match(/é (\d{6})\./)[1]
+
+test('script: fluxo completo — pede, erra, confirma, recebe assinatura e registra', () => {
+  const s = criarScript()
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'Ana@Empresa.com' }).ok, true)
+  assert.equal(s.emails.length, 1)
+  assert.equal(s.emails[0].to, 'ana@empresa.com')
+  const cod = codigoDoEmail(s.emails)
+  const errado = cod === '000000' ? '111111' : '000000'
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: errado }).ok, false)
+  assert.equal(s.linhas.length, 0, 'código errado não registra')
+  const r = s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: cod })
+  assert.equal(r.ok, true)
+  assert.ok(r.token)
+  assert.equal(s.linhas.length, 1)
+  assert.equal(s.linhas[0][1], 'ana@empresa.com')
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: cod }).ok, false, 'código só vale uma vez')
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: r.token }).ok, true)
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'outro@empresa.com', token: r.token }).ok, false, 'assinatura de outro e-mail não vale')
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: 'falso' }).ok, false)
+})
+
+test('script: recusa e-mail inválido, trava tentativas e limita pedidos', () => {
+  const s = criarScript()
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'invalido' }).ok, false)
+  assert.equal(s.emails.length, 0)
+  s.chamarScript({ acao: 'pedir', email: 'b@c.com' })
+  const cod = codigoDoEmail(s.emails)
+  const errado = cod === '000000' ? '111111' : '000000'
+  for (let i = 0; i < 5; i++) s.chamarScript({ acao: 'confirmar', email: 'b@c.com', codigo: errado })
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'b@c.com', codigo: cod }).ok, false, 'após 5 erros o código acerta mas já foi travado')
+  for (let i = 0; i < 4; i++) s.chamarScript({ acao: 'pedir', email: 'b@c.com' })
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'b@c.com' }).ok, false, 'sexto pedido na hora é barrado')
+})
+
+test('script: sem cota diária de e-mails avisa e não envia', () => {
+  const s = criarScript()
+  s.setCota(0)
+  const r = s.chamarScript({ acao: 'pedir', email: 'd@e.com' })
+  assert.equal(r.ok, false)
+  assert.equal(s.emails.length, 0)
+})
