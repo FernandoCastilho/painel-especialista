@@ -11,8 +11,18 @@
 .heavy-vehicles--compact .heavy-cards { grid-template-columns:1fr; }.heavy-vehicles--compact .heavy-cards article { padding:12px; }.heavy-vehicles--compact dl { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
 @media(max-width:700px){.heavy-cards {grid-template-columns:1fr;}.heavy-cards dl {display:grid;grid-template-columns:1fr 1fr;gap:8px;}}
 
-.terminal-news .desk-tabs { flex-wrap:wrap; }
-.terminal-news .desk-tabs button { min-height:44px; }
+/* Notícias: uma única faixa, com rolagem própria em vez de quebrar as abas. */
+.terminal-news .desk-panel > header .desk-tabs {
+  flex: 1 1 100%;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mut) var(--bg);
+}
+.terminal-news .desk-tabs button { flex: 0 0 auto; min-height:44px; }
+.terminal-news .desk-tabs button:focus-visible { outline: 2px solid var(--amber); outline-offset: -3px; }
 .heavy-vehicles--compact { max-height:560px;overflow-y:auto;padding:12px;box-sizing:border-box;overscroll-behavior:contain; }
 .heavy-vehicles--compact:focus-visible { outline:2px solid var(--accent);outline-offset:-2px; }
 
