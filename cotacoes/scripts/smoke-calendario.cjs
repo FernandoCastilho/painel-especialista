@@ -14,9 +14,11 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       await p.route('**/calendar.json*', (r) => r.fulfill({ json: file }))
       await p.goto(base + '/#cenarios/calendario')
       const sec = p.locator('.calendario'); await sec.waitFor()
-      const table = sec.locator('.cal-table'); await table.waitFor()
+      // On Sunday night every future fixture may be in the next week.
+      // Select the tested range before waiting for a table in that range.
       const f = sec.getByRole('group', { name: 'Período do calendário' })
       await f.getByRole('button', { name: '7 dias' }).click()
+      const table = sec.locator('.cal-table'); await table.waitFor()
       let txt = await table.innerText()
       assert.match(txt, /CPI Flash Estimate y\/y/); assert.match(txt, /Tokyo Core CPI/); assert.match(txt, /CPI: inflação ao consumidor/)
       assert.doesNotMatch(txt, /Retail Sales/, 'impacto baixo oculto por padrão')
