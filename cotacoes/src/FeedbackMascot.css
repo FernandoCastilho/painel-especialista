@@ -27,4 +27,4 @@
 @media print{.mascot-tray{display:none!important}}
 
 /* Reserve the default desktop parking area so the assistant cannot cover tools. */
-@media(min-width:1000px){body:has(.mascot-tray:not(.mascot-tray-hidden)) main.app{box-sizing:border-box;width:calc(100% - 168px);margin-left:0;margin-right:168px}}
+@media(min-width:1000px){body:has(.mascot-tray:not(.mascot-tray-hidden)) main.app{box-sizing:border-box;padding-right:174px}}
