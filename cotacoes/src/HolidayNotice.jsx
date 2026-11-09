@@ -34,11 +34,11 @@ export default function HolidayNotice({ hol, days = 30, list = false, pracas = h
     </p>
   )
   if (list) return <div className="holiday-notice" role="status">{up.length > 0 && items}{note}</div>
-  // Resumo: uma linha com o primeiro dia de feriado e as praças; o resto fica recolhido
+  // O conteúdo fica recolhido inicialmente; o summary nativo permite abrir por clique ou teclado.
   const first = up[0]
   const dates = new Set(up.map((u) => u.date)).size
   return (
-    <details className="holiday-notice compact" open={expanded}>
+    <details className="holiday-notice compact">
       <summary>
         {expanded ? <b>Feriados nos próximos {days} dias</b> : first ? <><b>Feriados nos próximos {days} dias</b> · {dates} {dates === 1 ? 'data' : 'datas'} · primeiro: <b>{when(first.date, t)}</b> em {[...new Set(up.filter((u) => u.date === first.date).map((u) => u.cal))].map((c) => <span key={c}><Flag code={calFlag(c)} width={16} height={11} /> {calLabel(c)} </span>)}</> : <b>Feriados nos próximos {days} dias</b>}
         {!expanded && first && missing.length > 0 && ' · aviso China'}

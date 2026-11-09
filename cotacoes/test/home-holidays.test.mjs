@@ -18,7 +18,7 @@ test('home includes international holidays despite saved Brazil-only preference'
   Date.now = () => Date.parse('2026-11-08T15:00:00Z')
   try {
     const html = renderToStaticMarkup(createElement(Notice, { ...props, hol: { pracas: ['BR'], loaded: true, ctx: { cn: { 2026: { off: new Map(), work: new Set() } } } } }))
-    assert.match(html, /open=""/)
+    assert.doesNotMatch(html, /open=""/)
     assert.match(html, /Veterans Day/)
     assert.match(html, /Thanksgiving/)
     assert.match(html, /Ação de Graças Trabalhista/)
