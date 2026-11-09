@@ -1,4 +1,4 @@
-import { intradaySelection } from './intradayState.js'
+import { intradaySelection, intradayObservationWarning } from './intradayState.js'
 import { useEffect, useState } from 'react'
 import { validHistoryPoints, historyQuality } from './historyQuality.js'
 import { DATA_BASE, friendlyError } from './useQuotes.js'
@@ -224,7 +224,7 @@ export function useHistory(code, start, end, skip = false) {
   return state.key === key ? state : { key, status: 'loading' }
 }
 
-// ---- Intraday: barras de 5 minutos coletadas no GitHub (intraday.json), últimos 5 dias úteis ----
+// ---- Intraday: amostras observadas pelo coletor (intraday.json), últimos 5 dias corridos ----
 // Re-read the existing public snapshot each minute; no provider call or extra collector.
 const INTRADAY_REFRESH_MS = DATA_POLL_MS
 let intradayPromise = null
@@ -279,7 +279,7 @@ export function useIntraday(code, day, skip = false) {
           setState({ key, status: 'empty', previousDay, retainedPoints: valid, generatedAt: file.generatedAt, refreshing: false })
           return
         }
-        const warning = historyQuality({ points, generatedAt: file.generatedAt, intraday: true })
+        const warning = [historyQuality({ points, generatedAt: file.generatedAt, intraday: true }), intradayObservationWarning(points, dayYmd)].filter(Boolean).join(' ')
         setState({ key, status: 'ok', previousDay, retainedPoints: valid, refreshing: false, warning, data: { source: code, points, generatedAt: file.generatedAt, feed: file.source, resolution: file.resolution } })
       } catch (e) {
         if (!alive) return

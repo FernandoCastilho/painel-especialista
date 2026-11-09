@@ -353,3 +353,38 @@ jobs:
           path: ${{ runner.temp }}/sector-graph
           if-no-files-found: error
           retention-days: 7
+
+  intraday-state:
+    runs-on: ubuntu-24.04
+    needs: test-build
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: cotacoes
+    env:
+      SMOKE_BASE_URL: http://127.0.0.1:8768
+      CHROMIUM_PATH: /usr/bin/google-chrome
+      SMOKE_CHANNEL: chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - run: npm install --no-save playwright@1.63.0
+      - name: Servir e conferir amostras e atraso do intraday
+        run: |
+          python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/intraday-server.log" 2>&1 &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
+          INTRADAY_QA_OUTPUT="$RUNNER_TEMP/qa-intraday" node scripts/smoke-intraday-state.cjs
+      - name: Capturas, resultado e eventual erro do intraday
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intraday-state-design
+          path: ${{ runner.temp }}/qa-intraday
+          if-no-files-found: error
+          retention-days: 7
