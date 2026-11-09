@@ -1231,6 +1231,106 @@
           }
         }
       }
+    ],
+    "btg": [
+      {
+        "period": 202606,
+        "origin": "ri",
+        "scope": "Release de resultados do banco · critérios próprios por indicador",
+        "metrics": {
+          "basel": {
+            "value": 16.0,
+            "basis": "btg-basel",
+            "note": "Índice de Basileia do BTG Pactual (prudencial, regras do Banco Central).",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2026/3b140a94-9099-43e5-ad8d-bfc1724b8ddb.pdf",
+            "page": 25
+          },
+          "cet1": {
+            "value": 11.6,
+            "basis": "btg-cet1",
+            "note": "Capital Principal (CP) do gráfico 'Nível 1: CET1 & AT1'; o gráfico rotula a camada restante como ACP. Valor lido no gráfico.",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2026/3b140a94-9099-43e5-ad8d-bfc1724b8ddb.pdf",
+            "page": 25
+          },
+          "roe": {
+            "value": 26.7,
+            "basis": "btg-roae-ajustado-anualizado",
+            "note": "ROAE ajustado anualizado do trimestre (26,7%); o ROAE contábil foi 25,4%. Mesmo critério do suplemento existente.",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2026/3b140a94-9099-43e5-ad8d-bfc1724b8ddb.pdf",
+            "page": 6
+          },
+          "assets": {
+            "value": 925219000000,
+            "basis": "btg-ativos",
+            "note": "Ativos totais consolidados (balanço, R$ milhões convertidos para reais).",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2026/3b140a94-9099-43e5-ad8d-bfc1724b8ddb.pdf",
+            "page": 28
+          },
+          "profit": {
+            "value": 4901100000,
+            "basis": "btg-lucro-contabil",
+            "note": "Lucro líquido contábil do trimestre isolado (R$ 4.901,1 mi). O lucro líquido ajustado (exclui ágio e itens não recorrentes) foi R$ 5.142,4 mi.",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2026/3b140a94-9099-43e5-ad8d-bfc1724b8ddb.pdf",
+            "page": 6
+          },
+          "creditTotal": {
+            "value": 406815000000,
+            "basis": "btg-carteira-expandida",
+            "note": "Portfólio de crédito expandido (empréstimos, recebíveis, adiantamentos de câmbio, cartas de crédito e títulos de crédito: debêntures, NP, CRI, FIDC); inclui Consumer Finance & Banking após a aquisição do Pan. Não é divulgado apenas empréstimos (carteira de crédito R$ 366,6 bi no texto, p.4).",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2026/3b140a94-9099-43e5-ad8d-bfc1724b8ddb.pdf",
+            "page": 24
+          }
+        }
+      },
+      {
+        "period": 202509,
+        "origin": "ri",
+        "scope": "Release de resultados do banco · critérios próprios por indicador",
+        "metrics": {
+          "basel": {
+            "value": 15.5,
+            "basis": "btg-basel",
+            "note": "Índice de Basileia do BTG Pactual (prudencial, regras do Banco Central).",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2025/d5e22e67-254d-4ecc-8a16-b192df507f03.pdf",
+            "page": 24
+          },
+          "cet1": {
+            "value": 11.5,
+            "basis": "btg-cet1",
+            "note": "Capital Principal (CP) do gráfico 'Nível 1: CET1 & AT1'; o gráfico rotula a camada restante como ACP. Valor lido no gráfico.",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2025/d5e22e67-254d-4ecc-8a16-b192df507f03.pdf",
+            "page": 24
+          },
+          "roe": {
+            "value": 28.1,
+            "basis": "btg-roae-ajustado-anualizado",
+            "note": "ROAE ajustado anualizado do trimestre (28,1%); o ROAE contábil foi 26,8%. Valor do release original do 3T25, sem a reclassificação por Consumer Finance & Banking/Pan aplicada nos comparativos de 2026.",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2025/d5e22e67-254d-4ecc-8a16-b192df507f03.pdf",
+            "page": 6
+          },
+          "assets": {
+            "value": 684960000000,
+            "basis": "btg-ativos",
+            "note": "Ativos totais consolidados (balanço, R$ milhões convertidos para reais).",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2025/d5e22e67-254d-4ecc-8a16-b192df507f03.pdf",
+            "page": 27
+          },
+          "profit": {
+            "value": 4337400000,
+            "basis": "btg-lucro-contabil",
+            "note": "Lucro líquido contábil do trimestre isolado (R$ 4.337,4 mi). O lucro líquido ajustado (exclui ágio e itens não recorrentes) foi R$ 4.538,6 mi.",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2025/d5e22e67-254d-4ecc-8a16-b192df507f03.pdf",
+            "page": 6
+          },
+          "creditTotal": {
+            "value": 275751000000,
+            "basis": "btg-carteira-expandida",
+            "note": "Portfólio de crédito expandido (empréstimos, recebíveis, adiantamentos de câmbio, cartas de crédito e títulos de crédito: debêntures, NP, CRI, FIDC); base anterior à aquisição do Pan, não comparável diretamente com 2026.",
+            "source": "https://d169uzu5o4xu1k.cloudfront.net/78a5a309-f13a-41ed-a7d1-814e37b63259/2025/d5e22e67-254d-4ecc-8a16-b192df507f03.pdf",
+            "page": 23
+          }
+        }
+      }
     ]
   },
   "supplements": {
