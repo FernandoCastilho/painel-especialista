@@ -397,41 +397,82 @@
         {
           "id": "0",
           "label": "materiais e componentes",
-          "detail": "Fluxo físico e financeiro: materiais e componentes"
+          "detail": "Metal, polímeros, eletrônica e materiais de fricção são a matéria-prima",
+          "emoji": "🔩",
+          "bank": "Giro bancário para a compra de materiais"
         },
         {
           "id": "1",
           "label": "engenharia e ferramental",
-          "detail": "Metal, polímeros, eletrônica e materiais de fricção são transformados em componentes e sistemas. Fornecedores podem vender diretamente à montadora ou a outro fabricante; desenvolvimento, ferramental, validação e produção seriada têm ciclos de caixa distintos."
+          "detail": "Desenvolvimento, ferramental e validação do componente, antes da produção",
+          "emoji": "📐",
+          "bank": "Investimento em ferramental, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "produção e homologação",
-          "detail": "Fluxo físico e financeiro: produção e homologação"
+          "detail": "Produção seriada e homologação, com perdas e qualidade a controlar",
+          "emoji": "🏭",
+          "bank": "Giro bancário para a produção de itens já aprovados"
         },
         {
           "id": "3",
           "label": "sistemista e montadora",
-          "detail": "Fluxo físico e financeiro: sistemista e montadora"
+          "detail": "Venda à montadora ou a outro fabricante, com aceite e entrega",
+          "emoji": "🚗",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra de materiais",
+          "product": {
+            "emoji": "🧱",
+            "label": "metal, polímeros e eletrônica"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "empresa paga os materiais antes de vender"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Do projeto à produção",
+          "product": {
+            "emoji": "🛠️",
+            "label": "ferramental e componente validado"
+          },
+          "cash": {
+            "emoji": "📉",
+            "label": "desenvolvimento e ferramental saem do caixa antes da receita"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Entrega do componente",
+          "product": {
+            "emoji": "📦",
+            "label": "componentes entregues com rastreabilidade"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga conforme contrato, entrega e aceite"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga materiais, desenvolvimento e ferramental",
+          "Ferramental e desenvolvimento ficam expostos ao volume da plataforma",
+          "Recebe da montadora ou do sistemista"
+        ],
+        "text": "Desenvolvimento, ferramental, validação e produção seriada têm ciclos de caixa distintos. Giro bancário pode cobrir a diferença entre compra e recebimento, e a cessão exige obrigação constituída e sem disputa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Componentes automotivos. Componentes automotivos: Metal, polímeros, eletrônica e materiais de fricção são transformados em componentes e sistemas. Tese operacional: Homologação, rastreabilidade e engenharia conjunta criam barreiras, mas montadoras negociam preço e produtividade ao longo da vida do projeto. Principal vulnerabilidade: Ferramental dedicado e desenvolvimento antecipado ficam expostos ao volume real da plataforma; mudança tecnológica pode encurtar a recuperação do investimento. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Separar investimento no ferramental, despesas de desenvolvimento, giro de produção e recebíveis aceitos. Validar propriedade do molde, indenização por cancelamento e contratos de fornecimento antes de usá-los como suporte financeiro. Metal, polímeros, eletrônica e materiais de fricção são transformados em componentes e sistemas. Fornecedores podem vender diretamente à montadora ou a outro fabricante; desenvolvimento, ferramental, validação e produção seriada têm ciclos de caixa distintos. Volume por plataforma, horas de parada imputáveis ao fornecedor, peças rejeitadas, custo de garantia e recuperação do ferramental. Produção total de veículos não informa conteúdo local por peça. Bruning e CR Bluecast aparecem em habilitações públicas do MDIC como fabricantes de autopeças. São exemplos de atuação, não ranking, medida de porte ou confirmação de benefício disponível hoje. Eletrificação e novas arquiteturas mudam conteúdo por veículo; o efeito difere entre peças de motor, estrutura, freio, vedação e eletrônica. Mover é contexto institucional, não garantia de pedidos ou benefício. Engenharia local, redução de peso e adaptação a novas plataformas, com desembolso condicionado a marcos de validação. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Exemplo recente verificável: em outubro de 2026, o BNDES anunciou aprovação de financiamento ao plano de inovação da ZEN, de Brusque, para componentes ligados a veículos híbridos e elétricos e processos industriais. A publicação descreve pesquisa e desenvolvimento, não produtos já vendidos ou retorno já obtido. O caso mostra que a transição tecnológica também passa por fornecedores especializados; não prova crescimento de todo o mercado de autopeças. Na visita, separar o custo de desenvolver e homologar uma nova família de componentes do giro necessário à produção de itens já aprovados. Uma aprovação de financiamento a outra empresa não comprova acesso, taxa ou garantia para o cliente analisado. Na análise de concorrência: Remanufatura e arquitetura veicular que elimina ou redesenha componentes podem reduzir a demanda por peças novas. Segurança, garantia e homologação restringem substituição de materiais e soluções. Para novos entrantes: Homologação por plataforma, rastreabilidade, ferramental e entrega consistente exigem investimento anterior à receita. Dependência de programa de veículo dificulta reaproveitar o ativo.",
     "reviewStatus": "approved",
@@ -851,41 +892,82 @@
         {
           "id": "0",
           "label": "aço e sistemas",
-          "detail": "Fluxo físico e financeiro: aço e sistemas"
+          "detail": "Chapas e perfis de aço, eixos, suspensão, pneus e sistemas de freio",
+          "emoji": "🔩",
+          "bank": "Giro bancário para a compra de aço e sistemas"
         },
         {
           "id": "1",
           "label": "fabricação de estrutura",
-          "detail": "Chapas e perfis de aço, eixos, suspensão, pneus e sistemas de freio formam reboques, semirreboques e carrocerias. Configuração depende de carga, estrada e operação; fabricante, distribuidor e frotista têm estoques e recebimentos diferentes."
+          "detail": "Reboques, semirreboques e carrocerias conforme carga, estrada e operação",
+          "emoji": "🏗️",
+          "bank": "Investimento em equipamento produtivo"
         },
         {
           "id": "2",
           "label": "montagem e validação",
-          "detail": "Fluxo físico e financeiro: montagem e validação"
+          "detail": "Montagem do implemento e validação antes da entrega",
+          "emoji": "🔧",
+          "bank": "Giro bancário casado à entrada e à liquidação da venda"
         },
         {
           "id": "3",
           "label": "distribuidor e transportador",
-          "detail": "Fluxo físico e financeiro: distribuidor e transportador"
+          "detail": "Distribuidor ou transportador compra; estoques e recebimentos diferem",
+          "emoji": "🚛",
+          "bank": "Cessão de recebíveis, só de crédito comprovado; trade finance se houver exportação"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra de aço e sistemas",
+          "product": {
+            "emoji": "⚙️",
+            "label": "aço, eixos, suspensão e freios"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "empresa paga os insumos antes de entregar o implemento"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Da estrutura à montagem",
+          "product": {
+            "emoji": "🧰",
+            "label": "estrutura soldada do implemento"
+          },
+          "cash": {
+            "emoji": "🏦",
+            "label": "giro cobre materiais e montagem até a venda"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Entrega ao cliente",
+          "product": {
+            "emoji": "📦",
+            "label": "implemento validado e entregue"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga conforme pedido, prazo de crédito e aceite"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga aço, chassi e montagem",
+          "Aço e chassi em produção ficam presos se o transportador adia a compra",
+          "Recebe do distribuidor ou transportador"
+        ],
+        "text": "O aço comprado e o chassi em produção podem ficar presos quando o transportador adia a compra, e a customização dificulta redirecionar o estoque. O giro deve ser casado à entrada e à liquidação da venda. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Implementos rodoviários. Implementos rodoviários: Chapas e perfis de aço, eixos, suspensão, pneus e sistemas de freio formam reboques, semirreboques e carrocerias. Tese operacional: Projeto adequado à carga, robustez, disponibilidade de peças e rede de assistência sustentam diferenciação; frete e prazo limitam a competição regional. Principal vulnerabilidade: Aço adquirido e chassi em produção podem ficar presos quando transportador adia compra; customização dificulta redirecionar estoque. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro para materiais e montagem deve ser casado a entrada e liquidação da venda; financiar equipamento produtivo é distinto de financiar o implemento comprado pelo frotista. Não presumir enquadramento Finame para qualquer modelo. Chapas e perfis de aço, eixos, suspensão, pneus e sistemas de freio formam reboques, semirreboques e carrocerias. Configuração depende de carga, estrada e operação; fabricante, distribuidor e frotista têm estoques e recebimentos diferentes. Pedidos firmes por aplicação, estoque de produto acabado, prazo de crédito do comprador, peso transportável e devoluções. Contar unidades sem distinguir implemento leve, pesado e especial prejudica comparação. Randon e Caxias do Sul têm vínculo histórico documentado pelo município. A referência não representa participação atual nem desempenho dos fabricantes médios. Safra, frete e capacidade ociosa do transporte afetam renovação; aumento de carga pode ser absorvido pela frota existente antes de gerar nova compra. Produtos especializados, menor tara e manutenção simplificada podem produzir vantagem verificável no custo por viagem. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Referência empresarial histórica: o BNDES descreveu a Randon, sediada em Caxias do Sul, como fabricante de implementos rodoviários, semirreboques, carrocerias e vagões, ao anunciar apoio à produção destinada à exportação em setembro de 2023. Reboques rodoviários e vagões ferroviários pertencem a mercados diferentes; o exemplo não permite somar suas vendas nem inferir participação da empresa no recorte. O caso de produção para exportação ajuda a distinguir financiamento antes do embarque de antecipação de recebível já constituído. Na análise de uma empresa média, conferir pedido externo, cronograma de produção, moeda e risco de cancelamento; as condições daquele caso histórico não são oferta atual. Na análise de concorrência: Transporte ferroviário ou outras configurações logísticas podem substituir parte do uso de implementos rodoviários; usados e reforma substituem compra nova. Infraestrutura, flexibilidade da rota e prazo limitam migração. Para novos entrantes: Engenharia estrutural, conformidade veicular, rede de manutenção e capital para produzir antes de entregar dificultam entrada. Nichos de carroceria simples têm barreiras distintas de aplicações especiais.",
     "reviewStatus": "approved",
@@ -1251,41 +1333,82 @@
         {
           "id": "0",
           "label": "fabricante e importador",
-          "detail": "Fluxo físico e financeiro: fabricante e importador"
+          "detail": "Peças novas, remanufaturadas ou usadas, de mercado original ou independente",
+          "emoji": "🏭",
+          "bank": "Giro bancário para a compra de estoque"
         },
         {
           "id": "1",
           "label": "catálogo e aplicação",
-          "detail": "Recorte de mercado: fabricação e comercialização de peças destinadas à manutenção da frota em uso. Separar peça nova, remanufaturada e usada, mercado original e independente; a atividade pode atravessar várias classes industriais e comerciais."
+          "detail": "Informação de aplicação correta para cada veículo da frota em uso",
+          "emoji": "📖",
+          "bank": "Giro bancário"
         },
         {
           "id": "2",
           "label": "loja e reparador",
-          "detail": "Fluxo físico e financeiro: loja e reparador"
+          "detail": "Oficinas e varejistas compram peças para a manutenção da frota",
+          "emoji": "🏪",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         },
         {
           "id": "3",
           "label": "frota em manutenção",
-          "detail": "Fluxo físico e financeiro: frota em manutenção"
+          "detail": "Peça aplicada na manutenção; devolução e garantia reduzem a base financiável",
+          "emoji": "🚗",
+          "bank": "Giro bancário para o descasamento de caixa"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra para revenda",
+          "product": {
+            "emoji": "📦",
+            "label": "peças para reposição"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "empresa paga o estoque antes de vender"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Venda pelo catálogo",
+          "product": {
+            "emoji": "🔎",
+            "label": "peça certa para cada aplicação"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "venda a prazo para oficinas e varejistas"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Peça na manutenção",
+          "product": {
+            "emoji": "🔧",
+            "label": "peça instalada no veículo"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga; devolução e garantia reduzem o que entra"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o estoque de peças",
+          "Estoque de baixo giro e recebíveis de oficinas prendem caixa",
+          "Recebe de oficinas e varejistas"
+        ],
+        "text": "Grande variedade de modelos imobiliza estoque de baixo giro, e erro de aplicação gera devolução e frete reverso. O giro deve refletir idade e liquidez do estoque, não só o valor contábil. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Reposição de autopeças. Reposição de autopeças: Recorte de mercado: fabricação e comercialização de peças destinadas à manutenção da frota em uso. Tese operacional: Catálogo correto e confiança do reparador reduzem erro de aplicação; segurança e procedência não podem ser substituídas por preço baixo. Principal vulnerabilidade: Grande variedade de modelos imobiliza estoque de baixo giro; erro de aplicação gera devolução, frete reverso e risco de dano ao veículo. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Giro deve refletir idade e liquidez do estoque, não só valor contábil. Recebíveis de oficinas e varejistas exigem dispersão e documentação; reserva para devolução e garantia reduz base financiável. Recorte de mercado: fabricação e comercialização de peças destinadas à manutenção da frota em uso. Separar peça nova, remanufaturada e usada, mercado original e independente; a atividade pode atravessar várias classes industriais e comerciais. Frota efetivamente em circulação por aplicação, frequência de manutenção, disponibilidade, taxa de devolução por incompatibilidade e margem por família. Cadastro de veículo não é automaticamente frota ativa. A lista industrial do MDIC identifica fabricantes, mas não comprova sua participação específica em reposição. Não foi recuperado ranking público atual de marcas no mercado independente. A reposição depende de uso e envelhecimento da frota e pode divergir de emplacamentos novos. Novas tecnologias alteram o catálogo gradualmente e não eliminam de imediato a demanda da frota antiga. Informação de aplicação, kits completos, disponibilidade local e remanufatura com rastreabilidade podem gerar valor sem ampliar indiscriminadamente estoque. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  Como referência histórica de portfólio, o estudo do Departamento de Estudos Econômicos do Cade sobre a operação Fras-Le/Nakata descreve famílias como freios, cubos de roda e componentes para veículos pesados. O documento registra aprovação sem restrições em 2020. Esse caso não estima o tamanho atual da reposição, mas mostra por que separar aplicação e família de peça antes de comparar concorrentes. Na análise de concorrência: Recondicionamento ou remanufatura tecnicamente admissível podem substituir peça nova; troca do veículo pode eliminar a manutenção. Peça usada ou solução alternativa exige legalidade, segurança e aplicação correta. Para novos entrantes: Catálogo confiável, procedência, disponibilidade e confiança das oficinas exigem tempo. Para fabricar ou importar componentes regulados, acrescentam-se requisitos de conformidade e rastreabilidade.",
     "reviewStatus": "approved",
@@ -1651,41 +1774,82 @@
         {
           "id": "0",
           "label": "fabricantes e importação",
-          "detail": "Fluxo físico e financeiro: fabricantes e importação"
+          "detail": "Compra de fabricantes ou importação; exposição cambial e desembaraço contam",
+          "emoji": "🏭",
+          "bank": "Trade finance, nas compras importadas"
         },
         {
           "id": "1",
           "label": "centro de distribuição",
-          "detail": "O distribuidor compra de fabricantes ou importa, mantém centros de distribuição e abastece lojas, oficinas e frotas. O produto é disponibilidade logística e crédito comercial; não confundir sua receita de revenda com produção das autopeças."
+          "detail": "Mantém centros de distribuição; o produto é disponibilidade e crédito comercial",
+          "emoji": "🏬",
+          "bank": "Giro bancário para financiar o estoque elegível"
         },
         {
           "id": "2",
           "label": "lojas oficinas e frotas",
-          "detail": "Fluxo físico e financeiro: lojas oficinas e frotas"
+          "detail": "Abastece lojas, oficinas e frotas compradoras",
+          "emoji": "🏪",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         },
         {
           "id": "3",
           "label": "aplicação e pós-venda",
-          "detail": "Fluxo físico e financeiro: aplicação e pós-venda"
+          "detail": "Peça aplicada; devolução e atraso por canal afetam o caixa",
+          "emoji": "🔧",
+          "bank": "Giro bancário para o descasamento de caixa"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Entrega, especificação e pagamento",
-          "from": "0"
+          "label": "Compra e importação",
+          "product": {
+            "emoji": "📦",
+            "label": "peças de fabricantes e importadas"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "empresa paga o fornecedor antes de revender"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Entrega, especificação e pagamento",
-          "from": "1"
+          "label": "Abastecimento",
+          "product": {
+            "emoji": "🚚",
+            "label": "peças entregues com rapidez"
+          },
+          "cash": {
+            "emoji": "🧾",
+            "label": "crédito comercial dado a lojistas e oficinas"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Entrega, especificação e pagamento",
-          "from": "2"
+          "label": "Aplicação e pós-venda",
+          "product": {
+            "emoji": "🔧",
+            "label": "peça aplicada e atendimento"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga; devoluções e descontos reduzem a margem"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga fabricante ou importação",
+          "Estoque nos centros e crédito dado a lojas e oficinas prendem caixa",
+          "Recebe de lojas, oficinas e frotas"
+        ],
+        "text": "O distribuidor vende disponibilidade logística e crédito comercial, e a ampliação de catálogo consome caixa antes de consolidar demanda. Financiar estoque elegível e recebíveis exige análise de concentração. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Distribuidores de peças. Distribuidores de peças: O distribuidor compra de fabricantes ou importa, mantém centros de distribuição e abastece lojas, oficinas e frotas. Tese operacional: Amplitude de catálogo, acurácia e entrega rápida criam valor, mas venda direta e plataformas digitais comprimem a remuneração da intermediação. Principal vulnerabilidade: Ampliação de catálogo e abertura de filiais consomem caixa antes de consolidar demanda; itens antigos e descontos comerciais podem mascarar perda de margem. A prioridade financeira é demonstrar a conversão da carteira em entrega aceita e caixa. Financiar estoque elegível e recebíveis com análise de concentração; distinguir bonificações condicionais, consignação e mercadoria própria. Compras importadas demandam exposição cambial e prazo de desembaraço documentados. O distribuidor compra de fabricantes ou importa, mantém centros de distribuição e abastece lojas, oficinas e frotas. O produto é disponibilidade logística e crédito comercial; não confundir sua receita de revenda com produção das autopeças. Giro por item e aplicação, nível de atendimento, linhas por pedido, custo de entrega, devolução e atraso por canal. Receita pode subir por preço sem avanço de unidades. Fabricantes habilitados ao Mover não formam ranking de distribuidores. Não foi recuperada base pública de participação de mercado no atacado de peças; referências industriais não substituem essa lacuna. E-commerce amplia comparação de preços, mas frete urgente e acerto de aplicação continuam relevantes; integração de catálogo muda a produtividade comercial. Previsão de demanda por frota local, gestão de estoques compartilhados e integração com oficinas podem reduzir ruptura e obsolescência. As hipóteses precisam ser testadas na visita. O histórico agregado não representa o subsetor isolado.  O estudo do Departamento de Estudos Econômicos do Cade que sintetiza o caso Fras-Le/Nakata registra que clientes consultados recorriam a mais de um fornecedor para ampliar a diversidade de produtos. A análise histórica não confirmou destaque excepcional do portfólio combinado frente ao mercado. É evidência sobre compras e canais, não prova de exclusividade ou prática ilícita atual. Para o distribuidor médio, diversidade de fornecedores e estoque adequado devem ser analisados junto da demanda atendida. Na análise de concorrência: Compra direta do fabricante, canais digitais diretos e centrais de compra podem substituir a intermediação. Lote mínimo, prazo, crédito e necessidade de consolidar marcas sustentam o distribuidor. Para novos entrantes: Cobertura de catálogo, estoque bem selecionado, logística de entregas e crédito a lojistas requerem capital e dados. Abrir depósito não reproduz uma rede capaz de entregar a peça correta rapidamente.",
     "reviewStatus": "approved",

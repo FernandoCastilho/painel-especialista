@@ -286,41 +286,82 @@
         {
           "id": "0",
           "label": "Matérias-primas petroquímicas",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Insumo da cadeia; exposição cambial surge quando há importação",
+          "emoji": "🛢️",
+          "bank": "Giro e trade finance, se houver importação"
         },
         {
           "id": "1",
           "label": "Polimerização",
-          "detail": "A rota química e a especificação determinam propriedades e aplicações. Grades não são plenamente substituíveis sem testes; fornecedor de composto especializado não tem a escala ou economia de uma central petroquímica."
+          "detail": "A rota química e a especificação definem propriedades e aplicações",
+          "emoji": "⚗️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Grades e distribuição",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Distribuição técnica fraciona e entrega pronta entrega aos clientes",
+          "emoji": "🚚",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Transformadores e formuladores",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Clientes transformadores e formuladores recebem as resinas",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de matéria-prima",
+          "product": {
+            "emoji": "🧪",
+            "label": "matéria-prima petroquímica"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do insumo; se importado, com exposição cambial antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Venda do produto",
+          "product": {
+            "emoji": "🧴",
+            "label": "resina de grade qualificado"
+          },
+          "cash": {
+            "emoji": "🏦",
+            "label": "recebimento depois, conforme contrato comercial"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega ao cliente",
+          "product": {
+            "emoji": "📦",
+            "label": "resina entregue, com estoque mínimo"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do cliente após a entrega aceita"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga matéria-prima e estoque",
+          "Estoque e insumo importado prendem caixa",
+          "Recebe do cliente após a entrega"
+        ],
+        "text": "Estoques e contratos de matéria-prima exigem giro, e as importações criam exposição cambial antes da venda. O caixa sai primeiro e volta só depois da entrega aceita. É esse intervalo que giro ou cessão de recebíveis podem atender, como encaixe proposto e não prática comprovada. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Resinas. Produção de resinas petroquímicas e especialidades; distinguir commodities termoplásticas, termofixas e compostos. Transformação de plástico é elo cliente, não sinônimo. A rota química e a especificação determinam propriedades e aplicações. Grades não são plenamente substituíveis sem testes; fornecedor de composto especializado não tem a escala ou economia de uma central petroquímica. O ponto econômico central é: O diferencial entre preço de resina e matéria-prima precisa cobrir energia, logística e operação. Comparar preço de venda em dólar com custo em reais sem casar períodos pode produzir leitura enganosa da margem. Para uma empresa média: Estoques e contratos de matéria-prima exigem giro; importações criam exposição cambial antes da venda. Derivativos ou dívida em moeda estrangeira devem corresponder a exposição real, não aposta sobre câmbio. No cenário favorável: Demanda homologada melhora utilização e diferencial frente à matéria-prima; acompanhar preço realizado e custo de reposição. No adverso: Oferta importada reduz preço enquanto estoque foi comprado caro; observar perda a valor realizável, prazo de repasse e limites de exposição. Na visita: Mapear grades, aplicações e homologações, confrontar compras e vendas por moeda e data, e verificar estoque sem cliente alternativo. Validar tratamento aduaneiro de cada produto antes de simular margem. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Pesquisa comercial complementar. Braskem e Unipar são identificadas em processo público do MDIC relativo a PVC-S. Essa evidência confirma atuação naquele produto, não participação atual em todas as resinas. Competição com importado depende do grade, origem, frete e regime comercial. Não há ranking de empresas médias comprovado neste recorte. Fabricantes integrados, independentes e distribuidores não devem ser comparados sem separar atividades. Nos catálogos empresariais consultados, a Unipar apresenta PVC para perfis, pisos, forros e cabos; a Braskem relaciona resinas a filmes, frascos e outras embalagens, além de aplicações industriais. A Unipar oferece portal comercial; a Braskem disponibiliza caminhos para distribuidores e suporte técnico. Isso evidencia segmentação e canais de venda, não tamanho ou crescimento da demanda.",
     "reviewStatus": "approved",
@@ -652,41 +693,82 @@
         {
           "id": "0",
           "label": "Resinas, aditivos e moldes",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Resina, aditivos e moldes comprados antes da produção",
+          "emoji": "🧪",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Conversão industrial",
-          "detail": "Máquina, molde e matéria-prima precisam ser compatíveis. A troca de grade ou uso de reciclado muda janela operacional e qualidade; uma prensa disponível não significa capacidade livre para qualquer produto."
+          "detail": "Máquina, molde e matéria-prima precisam ser compatíveis",
+          "emoji": "⚙️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Acabamento e controle",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Confere refugo, tempo de ciclo e qualidade das peças antes de entregar",
+          "emoji": "🔍",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Indústrias e consumo final",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Compradores finais recebem as peças, e a demanda varia por embalagem, construção ou bens duráveis",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de resina",
+          "product": {
+            "emoji": "🧫",
+            "label": "resina e aditivos"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento da resina e do trabalho antes do recebimento"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Produção da peça",
+          "product": {
+            "emoji": "🧩",
+            "label": "peças moldadas"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "custos de produção seguem por conta da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega ao cliente",
+          "product": {
+            "emoji": "📦",
+            "label": "peças acabadas e aprovadas"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento da peça depois da entrega aceita"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga resina e trabalho",
+          "Produção e entrega ainda sem receber",
+          "Recebe a peça entregue"
+        ],
+        "text": "A empresa paga resina e trabalho antes de receber pela peça. Molde do cliente não é garantia livre, e o adiantamento de ferramental deve ser separado da receita de fabricação. Giro e recebíveis são encaixes propostos para esse intervalo. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Transformação plástica. Injeção, extrusão, sopro e outras rotas que convertem resina em peças e produtos. Separar embalagem, construção e bens duráveis para interpretar demanda. Máquina, molde e matéria-prima precisam ser compatíveis. A troca de grade ou uso de reciclado muda janela operacional e qualidade; uma prensa disponível não significa capacidade livre para qualquer produto. O ponto econômico central é: Medir contribuição por hora e por molde, não só por quilo. Refugo, ciclo, troca de cor e cavidades não utilizadas podem ocultar perda; crédito pela venda de sucata não deve compensar defeito sem avaliar custo total. Para uma empresa média: A empresa paga resina e trabalho antes do recebimento da peça. Molde pertencente ao cliente não é garantia livre; separar adiantamento de ferramental de receita de fabricação. No cenário favorável: Pedidos recorrentes ocupam moldes homologados e ganhos de processo reduzem perdas; acompanhar margem por hora útil. No adverso: Cliente reduz produção e o molde fica ocioso enquanto a resina perde valor; monitorar carteira firme e estoque por grade. Na visita: Cronometrar lote representativo, medir refugo e comparar custo orçado com efetivo. Identificar proprietário do molde, manutenção contratada e direito de retirada. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Para o contexto quantitativo, consulte o gráfico com período, unidade e cobertura explícitos. Ele não deve ser usado como receita de uma empresa média.",
     "reviewStatus": "approved",
@@ -983,41 +1065,82 @@
         {
           "id": "0",
           "label": "Resinas, filmes, tintas e adesivos",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Filmes, tinta, cilindros e adesivos antecedem produção e cura",
+          "emoji": "🎞️",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Extrusão e impressão",
-          "detail": "A estrutura combina barreira, resistência, selagem e impressão. Camadas podem atender funções diferentes; migrar para monomaterial exige manter proteção, velocidade de envase e vida útil do produto."
+          "detail": "Estrutura combina barreira, resistência, selagem e impressão",
+          "emoji": "🖨️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Laminação e corte",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Camadas são unidas e cortadas, com inspeção e controle de migração do material",
+          "emoji": "✂️",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Envasadores e marcas",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Clientes recebem o material impresso, que é feito sob medida e não serve a outro",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "🧪",
+            "label": "filmes, tintas e adesivos"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento dos insumos antes da produção e da cura"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Laminação e corte",
+          "product": {
+            "emoji": "🧻",
+            "label": "filme impresso e laminado"
+          },
+          "cash": {
+            "emoji": "⚙️",
+            "label": "cilindros e ferramental pagos antes, a cobrar depois"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega do lote",
+          "product": {
+            "emoji": "📦",
+            "label": "embalagens impressas do cliente"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após a entrega; reclamação pode atrasar"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga filme, tinta e cilindros",
+          "Estoque impresso é específico do cliente",
+          "Recebe após a entrega do lote"
+        ],
+        "text": "Filmes, tinta, cilindros e adesivos são pagos antes da produção e da cura. Negociar a retirada dos lotes impressos e a cobrança do ferramental reduz o risco, e antecipar o recebível não elimina reclamações. Giro e recebíveis são encaixes propostos. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Embalagens flexíveis. Filmes, laminados, sacos e estruturas flexíveis para proteção e acondicionamento. Não usar toda embalagem plástica, que também inclui rígidos, como mercado exclusivo. A estrutura combina barreira, resistência, selagem e impressão. Camadas podem atender funções diferentes; migrar para monomaterial exige manter proteção, velocidade de envase e vida útil do produto. O ponto econômico central é: Rendimento de filme, perdas de impressão, cura e aparas influenciam custo. Material mais fino só cria valor se não elevar ruptura ou perdas do alimento; estoque impresso é específico do cliente. Para uma empresa média: Filmes, tinta, cilindros e adesivos antecedem produção e cura. Negociar obrigação de retirada dos lotes impressos e cobrança do ferramental reduz risco; antecipação do recebível não elimina reclamações. No cenário favorável: Cliente paga por menor perda no envase e solução validada para recuperação; acompanhar homologação e recorrência das estruturas. No adverso: Reformulação obrigatória ou cancelamento de arte inutiliza estoque, enquanto insumo sobe; monitorar pedidos aprovados e material ainda não consumido. Na visita: Selecionar uma embalagem alimentar e rastrear matérias-primas, ensaios, arte, cura e aprovação. Perguntar como a alegação ambiental foi demonstrada e quem assume lotes obsoletos. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência.",
     "reviewStatus": "approved",
@@ -1301,41 +1424,82 @@
         {
           "id": "0",
           "label": "Resinas, pigmentos e aditivos",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Compra de resinas, pigmentos e aditivos para as fórmulas",
+          "emoji": "🎨",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Dispersão e formulação",
-          "detail": "A formulação combina ligante, pigmentos, cargas, veículo e aditivos para desempenho específico. Cor é apenas uma dimensão; cobertura, aderência e durabilidade precisam corresponder ao substrato e à aplicação."
+          "detail": "Ligante, pigmentos, cargas e aditivos formam o desempenho",
+          "emoji": "⚗️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Envase e controle",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Tinta pronta é embalada e os lotes são conferidos antes de seguir ao canal",
+          "emoji": "🪣",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Revendas e aplicação industrial",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Tinta chega ao cliente pela revenda ou pela obra industrial, com estoque parado no canal",
+          "emoji": "🏪",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "🧪",
+            "label": "resinas, pigmentos e aditivos"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento das compras de insumos antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Envase",
+          "product": {
+            "emoji": "🥫",
+            "label": "tinta pronta e embalada"
+          },
+          "cash": {
+            "emoji": "📋",
+            "label": "embalagem e variedade de fórmulas consomem giro"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda ao canal",
+          "product": {
+            "emoji": "🛒",
+            "label": "latas entregues à revenda ou à indústria"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do canal; estoque na revenda alonga a espera"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga insumos e fórmulas",
+          "Estoque no canal consome giro",
+          "Recebe da revenda ou da indústria"
+        ],
+        "text": "Compras de insumos, variedade de fórmulas e estoque no canal consomem giro. Equipamento cedido à revenda precisa de contrato de propriedade e retorno, e não é recebível comum. Giro e recebíveis são encaixes propostos. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Tintas. Formulação de tintas, vernizes e revestimentos; separar imobiliária, industrial, repintura e impressão, pois homologação e canal de venda diferem. A formulação combina ligante, pigmentos, cargas, veículo e aditivos para desempenho específico. Cor é apenas uma dimensão; cobertura, aderência e durabilidade precisam corresponder ao substrato e à aplicação. O ponto econômico central é: Matéria-prima, embalagem, mix e canais determinam margem. Vender tinta por volume sem controlar cobertura e rendimento confunde comparação; sistema tintométrico pode reduzir variedade pronta, mas traz investimento e obrigações no canal. Para uma empresa média: Compras de insumos, variedade de fórmulas e estoque no canal consomem giro. Equipamento cedido à revenda precisa de contrato de propriedade e retorno; não é recebível comum. No cenário favorável: Reforma e nichos técnicos valorizam desempenho e assistência; acompanhar recompra e margem líquida do canal. No adverso: Insumos sobem, revendas alongam prazo e descontos crescem; observar estoque de cores lentas e custo da assistência. Na visita: Escolher uma fórmula e reconciliar custo com compras recentes, rendimento prometido e reclamações. Identificar cessões de máquinas e obrigações de exclusividade ou recompra no canal. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Pesquisa comercial complementar. O relatório municipal de Jundiaí, emitido em 20/02/2026 e contendo processos históricos, relaciona marcas como Coral, Sherwin-Williams, Lukscolor, Eucatex e Suvinil para tintas de piso. É evidência de um canal institucional e de especificações de produto, não de compras realizadas, participação nacional ou independência societária das marcas. Em comunicado empresarial de 01/10/2025, a BASF informou a conclusão da venda do negócio brasileiro de tintas decorativas à Sherwin-Williams, incluindo Suvinil e Glasu e instalações em Demarchi e Jaboatão. A conclusão foi conferida no comunicado posterior ao anúncio inicial. Não se somam essas marcas como concorrentes societariamente independentes, nem se extrapola a operação para todo o mercado de revestimentos.",
     "reviewStatus": "approved",
@@ -1656,41 +1820,82 @@
         {
           "id": "0",
           "label": "Tensoativos e ativos",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Matérias-primas da fórmula são pagas e compradas antes de fabricar e vender",
+          "emoji": "🧴",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Formulação controlada",
-          "detail": "A formulação deve manter concentração, estabilidade, compatibilidade de embalagem e finalidade autorizada. Produto concentrado pode reduzir frete por uso, mas precisa de dosagem e treinamento adequados."
+          "detail": "Formulação mantém concentração, estabilidade e finalidade autorizada",
+          "emoji": "⚗️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Envase e regularização",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Produto é envasado e validado antes de ampliar as vendas",
+          "emoji": "🧼",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Varejo e uso profissional",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Produto chega ao cliente, e no uso profissional vem com dosagem, treinamento e assistência",
+          "emoji": "🏪",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "🧪",
+            "label": "tensoativos, ativos e embalagem"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento de matérias-primas e embalagem antes da venda"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Envase",
+          "product": {
+            "emoji": "🫧",
+            "label": "produto envasado e regularizado"
+          },
+          "cash": {
+            "emoji": "📋",
+            "label": "custos de mistura e envase por conta da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "🚚",
+            "label": "produto para varejo ou cliente profissional"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento do varejo ou do cliente profissional"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga matéria-prima e embalagem",
+          "Estoque até chegar ao varejo ou cliente",
+          "Recebe do varejo ou cliente profissional"
+        ],
+        "text": "Matérias-primas e embalagem são pagas antes de receber do varejo ou do cliente profissional. Contrato recorrente não garante margem se incluir dosadores, manutenção e consumo mínimo não respeitado. Giro e recebíveis são encaixes propostos. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Limpeza. Fabricação de produtos saneantes para limpeza e aplicações profissionais. Não inclui serviços terceirizados de limpeza nem confunde detergente com produto de ação desinfetante. A formulação deve manter concentração, estabilidade, compatibilidade de embalagem e finalidade autorizada. Produto concentrado pode reduzir frete por uso, mas precisa de dosagem e treinamento adequados. O ponto econômico central é: A margem por embalagem difere da margem por aplicação. Frete de produtos diluídos, bonificações do varejo e frascos podem ser relevantes; no profissional, assistência e dosadores alteram o contrato. Para uma empresa média: Matérias-primas e embalagem são pagas antes do varejo ou cliente profissional. Contrato recorrente não garante margem se inclui dosadores, manutenção e consumo mínimo não respeitado. No cenário favorável: Carteira profissional renovada e dosagem eficiente aumentam recorrência com menos assistência; acompanhar custo por aplicação e retenção. No adverso: Lote irregular ou produto instável gera retirada e perda de contratos; acompanhar rastreabilidade, reclamações e validade. Na visita: Conferir situação da empresa e de uma amostra de produtos, rótulo versus finalidade, laudos de lote e rastreabilidade. Revisar dosadores e custo real do contrato profissional. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência. Pesquisa comercial complementar. O relatório municipal de Jundiaí emitido em 20/02/2026 lista, entre as marcas cadastradas de detergentes, Audax e Spartan em apresentações profissionais e Ypê, Minuano e Limpol em outra apresentação. São exemplos concretos de alternativas em um comprador institucional; processos históricos e cadastro não comprovam compra recente ou participação nacional. Em comunicação de 2026, a Unilever PRO dirige seu portfólio a alimentação fora do lar, hospedagem, lavanderias e prestadores de serviços, com marcas como OMO e Cif e soluções de diluição. Trata-se de posicionamento comercial declarado. Não foram adotadas promessas promocionais de economia como resultado independente.",
     "reviewStatus": "approved",
@@ -1988,41 +2193,82 @@
         {
           "id": "0",
           "label": "Borracha e cargas",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Compra de borracha e cargas precede mistura, cura e recebimento",
+          "emoji": "🌳",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "1",
           "label": "Mistura de compostos",
-          "detail": "Formulação e vulcanização definem elasticidade, resistência e estabilidade. Troca entre borracha natural e sintética não é automática: depende de aplicação, ensaio e homologação."
+          "detail": "Formulação e vulcanização definem elasticidade e resistência",
+          "emoji": "⚗️",
+          "bank": "Financiamento de investimento em ativos duráveis"
         },
         {
           "id": "2",
           "label": "Moldagem e vulcanização",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Moldes dedicados, ciclo de cura e peças rejeitadas pesam no custo",
+          "emoji": "🛞",
+          "bank": "Giro bancário para o ciclo operacional"
         },
         {
           "id": "3",
           "label": "Autopeças e usos industriais",
-          "detail": "Etapa da cadeia; confirmar integração e responsabilidade da empresa."
+          "detail": "Peças só são aceitas depois de ensaio e aprovação conforme a especificação do cliente",
+          "emoji": "🏭",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "0",
           "to": "1",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "0"
+          "label": "Compra de matéria-prima",
+          "product": {
+            "emoji": "🧪",
+            "label": "borracha e cargas"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento da borracha e das cargas antes da cura"
+          }
         },
         {
+          "from": "1",
           "to": "2",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "1"
+          "label": "Moldagem e cura",
+          "product": {
+            "emoji": "🔥",
+            "label": "peças moldadas e curadas"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, moldes e ciclo de cura por conta da empresa"
+          }
         },
         {
+          "from": "2",
           "to": "3",
-          "label": "Fluxo físico e contrato comercial",
-          "from": "2"
+          "label": "Entrega ao cliente",
+          "product": {
+            "emoji": "📦",
+            "label": "peças dentro da especificação"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após a entrega; avaliar histórico de glosa"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga borracha e cargas",
+          "Mistura e cura antes de receber",
+          "Recebe a peça entregue"
+        ],
+        "text": "A compra de borracha e cargas precede mistura, cura e recebimento. Produtos homologados e moldes dedicados elevam a concentração, e o recebível deve ser avaliado com histórico de glosa e garantia. Giro e recebíveis são encaixes propostos. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Borracha. Compostos e artefatos de borracha natural ou sintética; separar beneficiamento do látex, pneumáticos, peças técnicas e reforma de pneus. Formulação e vulcanização definem elasticidade, resistência e estabilidade. Troca entre borracha natural e sintética não é automática: depende de aplicação, ensaio e homologação. O ponto econômico central é: O custo inclui composto, energia, moldes, ciclo de cura e peças rejeitadas. Uma peça barata pode ter responsabilidade elevada em equipamento crítico; o lote só é econômico se cumpre especificação. Para uma empresa média: Compra de borracha e cargas precede mistura, cura e recebimento. Produtos homologados e moldes dedicados elevam concentração; recebível deve ser avaliado com histórico de glosa e garantia. No cenário favorável: Demanda industrial recorrente e qualidade consistente sustentam margem após manutenção; acompanhar devolução e custo do composto. No adverso: Insumos e frete sobem antes do repasse, ou cliente interrompe produção; monitorar estoque por composto e homologação, além de reclamações em uso. Na visita: Rastrear um lote desde o composto até ensaio e entrega. Examinar homologação, condições de aplicação, garantia e alternativa de fornecimento de insumos. Os cenários são hipóteses, e não projeções numéricas. Há lacunas de dados declaradas. A revisão documental foi concluída; a qualidade do áudio gerado ainda requer conferência.",
     "reviewStatus": "approved",

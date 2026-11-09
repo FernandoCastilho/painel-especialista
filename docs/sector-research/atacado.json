@@ -345,41 +345,82 @@
         {
           "id": "n0",
           "label": "Fabricante ou produtor",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Fornecedores vendem em escala; bonificações podem ligar a margem a metas de volume",
+          "emoji": "🌾",
+          "bank": "Giro bancário para a compra em escala"
         },
         {
           "id": "n1",
           "label": "Compra e estoque do distribuidor",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Estoque seco ou refrigerado, com risco de vencimento",
+          "emoji": "📦",
+          "bank": "Giro bancário para o estoque"
         },
         {
           "id": "n2",
           "label": "Separação e rota de entrega",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Fracionamento, separação e rota de entrega",
+          "emoji": "🚚",
+          "bank": "Investimento em separação, roteirização e frio"
         },
         {
           "id": "n3",
           "label": "Varejo e alimentação fora do lar",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Varejo e restaurantes compram a prazo; devolução e abatimento são riscos",
+          "emoji": "🛒",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra em escala",
+          "product": {
+            "emoji": "🥫",
+            "label": "alimentos em lotes maiores"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "distribuidor paga o fornecedor pela compra em escala"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Separação do pedido",
+          "product": {
+            "emoji": "🧺",
+            "label": "mix fracionado para cada pedido"
+          },
+          "cash": {
+            "emoji": "👷",
+            "label": "armazenagem, separação e comissão pagas pela empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "🚛",
+            "label": "pedido entregue ao cliente"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga a prazo; devolução e abatimento reduzem o recebimento"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o fornecedor e mantém estoque",
+          "Vende fracionado a prazo e financia o cliente",
+          "Recebe do varejo ou do restaurante"
+        ],
+        "text": "Compra em escala e venda fracionada a prazo fazem o distribuidor financiar estoques e clientes. O giro cresce quando fornecedores encurtam prazo ou o varejo demora a pagar. É esse descasamento que giro bancário ou cessão de recebíveis podem atender, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Distribuição de alimentos. Fracionar lotes, manter disponibilidade e entregar um mix que o pequeno varejista ou restaurante não consegue comprar diretamente em condições equivalentes. Separar atacado distribuidor, atacarejo com retirada pelo cliente e operador logístico sem propriedade do estoque. A margem de revenda precisa cobrir armazenagem, separação, entrega, comissão, perdas e crédito. Desconto de compra por lote maior só gera valor se custo financeiro e vencimento forem menores que o ganho. Avaliar margem por cliente e rota, não apenas por categoria. A nota metodológica recente da PAC não foi confirmada em texto integral nesta revisão; não se presume comparabilidade automática entre edições. Não foi recuperada nesta pesquisa a série mensal exclusiva de distribuição alimentar de 2026, nem foram encadeadas automaticamente séries antigas. Conjuntura da empresa deve separar volume físico, inflação de alimentos, mudança de mix e inadimplência. Como funciona. Varejo independente, redes regionais, restaurantes e cozinhas. Cada canal tem tamanho de pedido, frequência e crédito diferentes. Crescer em clientes distantes ou pedidos menores pode aumentar receita e reduzir contribuição por rota. Fornecedores de alimentos, estoques secos ou refrigerados, centros de distribuição, frota e equipe comercial. Bonificações e verbas de fabricantes podem condicionar margem a metas de volume que aumentam estoque e risco de vencimento. Caixa e financiamento. Compra em escala e venda fracionada a prazo fazem o distribuidor financiar estoques e clientes. O giro cresce quando fornecedores encurtam prazo ou varejo demora a pagar. Duplicata não elimina risco de devolução, abatimento e concentração do pequeno comércio regional. Automação de separação, sistema de estoque, roteirização e frio devem ser justificadas por produtividade e perdas evitadas. Um novo centro exige densidade de vendas antes de diluir aluguel, equipe e estrutura. Cenários. Reposição segue clientes ativos com estoques e limites ajustados. Densidade da rota e acerto do mix elevam serviço sem igual aumento de capital. Cliente compra menos ou atrasa; estoque perecível e conta a receber pressionam caixa simultaneamente. Na visita, pergunte: Qual cliente dá margem antes do custo de entregar e depois deixa prejuízo? O desconto do fornecedor compensa capital parado e risco de validade? Qual centro de distribuição tem densidade comprovada para pagar custo fixo? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito. Complemento da pesquisa. A InvestSP registrou em junho de 2021 a inauguração do centro da Delly’s na Grande São Paulo, descrevendo atendimento a restaurantes, hotéis, bares e pequeno varejo. A Prefeitura de Ivoti confirmou outro centro inaugurado em julho de 2026 no município gaúcho. Os casos demonstram rede de distribuição alimentar e expansão física em locais identificados; não são ranking nem medição de demanda nacional.",
     "reviewStatus": "approved",
@@ -835,41 +876,82 @@
         {
           "id": "n0",
           "label": "Indústria e importador autorizado",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Fabricantes e importadores autorizados fornecem produtos regularizados",
+          "emoji": "💊",
+          "bank": "Giro bancário para a compra"
         },
         {
           "id": "n1",
           "label": "Recepção, lote e controle",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Controle por lote e rastreabilidade na entrada do produto",
+          "emoji": "🔍",
+          "bank": "Giro bancário para o estoque"
         },
         {
           "id": "n2",
           "label": "Armazenagem e transporte qualificado",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Guarda e entrega dos medicamentos com controle de temperatura e lote, por transportador qualificado",
+          "emoji": "🧊",
+          "bank": "Investimento em armazenagem e qualificação térmica"
         },
         {
           "id": "n3",
           "label": "Farmácia, hospital ou serviço de saúde",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Farmácias, hospitais e clínicas recebem; venda a governo exige mais documentos",
+          "emoji": "🏥",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra e recebimento",
+          "product": {
+            "emoji": "📦",
+            "label": "medicamentos regularizados, por lote"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "distribuidor paga o fabricante; o prazo pode ser menor que o de recebimento"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Guarda e liberação",
+          "product": {
+            "emoji": "🌡️",
+            "label": "lotes liberados para armazenagem e transporte"
+          },
+          "cash": {
+            "emoji": "🔌",
+            "label": "sistemas de lote, frio e energia alternativa como custo da empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "🚚",
+            "label": "entrega com registro de lote e condição térmica"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "cliente paga após a entrega comprovada; hospital ou ente público pede análise própria"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o fabricante e mantém estoque",
+          "Estoque e prazo ao cliente podem exceder o prazo do fabricante",
+          "Recebe de farmácia, hospital ou governo"
+        ],
+        "text": "Estoques e prazo a farmácias ou hospitais podem exceder o prazo do fabricante. O recebível exige entrega comprovada e ausência de disputa, e a qualidade e a documentação condicionam a realização do estoque. Giro bancário ou cessão de recebíveis podem atender esse descasamento, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Distribuição de medicamentos. Garantir abastecimento com rastreabilidade, integridade e cumprimento das condições de armazenamento e transporte. Distribuição farmacêutica é distinta de fabricação, varejo de farmácia e materiais médicos; o estudo não mistura faturamentos desses elos. A margem líquida depende de desconto comercial, condição de compra, devoluções, perdas por validade e custo de serviço. Medicamento especial pode ter alto valor e baixo giro; item de grande circulação exige disponibilidade sem excesso. Não aplicar margem da indústria à distribuidora. O Anuário CMED mais recente recuperado tem referência em 2025 e foi divulgado em setembro de 2026. A receita industrial nominal avançou frente a 2024, mas não permite concluir aumento equivalente de volume ou margem da distribuição. O recorte por canal de 2024 evidencia vendas da indústria a distribuidores; não é tamanho da revenda atacadista. Como funciona. Farmácias, hospitais, clínicas e compradores institucionais. Canal hospitalar e varejo possuem mix, negociação e prazo diferentes; venda a governo acrescenta exigências documentais e exposição ao recebimento do ente contratante. Fabricantes, produtos regularizados, instalações, farmacêutico responsável quando aplicável, sistemas por lote, equipamentos de temperatura e transportadores qualificados. Produto caro não significa alta margem, especialmente sob acordo comercial e restrição de preço. Caixa e financiamento. Estoques e prazo a farmácias ou hospitais podem exceder prazo do fabricante. Recebível exige entrega comprovada e ausência de disputa; prazo de fornecedor ou bonificação não deve ser presumido recorrente. Concentração em hospital ou ente público precisa de análise própria. Sistemas de lote, segregação, qualificação térmica e redundância são parte da capacidade comercial. Ampliação de armazenagem deve manter qualidade e autorização adequadas, sem assumir que registro de uma unidade cobre toda filial ou atividade. Cenários. Demanda dos clientes permanece com margem dependente de mix e giro. Melhor estoque e menor perda elevam retorno sem exigir crescimento proporcional de venda. Fabricante encurta prazo e comprador atrasa, enquanto validade ou bloqueio reduz valor do estoque. Na visita, pergunte: Qual parte do estoque está bloqueada, próxima do vencimento ou vinculada a devolução? Recebíveis hospitalares têm aceite e documentação completos? A expansão mantém qualificação de temperatura e rastreabilidade por unidade? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito. Complemento da pesquisa. A Anvisa mantém regras de boas práticas de distribuição, armazenagem e transporte e procedimentos de certificação. Cumprimento sanitário é fundamento, não diferencial opcional. Dados CMED descrevem vendas industriais por canal e não equivalem à receita posterior dos distribuidores.",
     "reviewStatus": "approved",
@@ -1213,41 +1295,82 @@
         {
           "id": "n0",
           "label": "Fabricante nacional ou importador",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Cimento, aço, cerâmica, hidráulica e elétrica; o distribuidor reúne marcas",
+          "emoji": "🧱",
+          "bank": "Giro bancário para a compra"
         },
         {
           "id": "n1",
           "label": "Estoque e consolidação",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Pátio e estoque de itens pesados e de acabamentos de giro lento",
+          "emoji": "🏬",
+          "bank": "Giro bancário para o estoque"
         },
         {
           "id": "n2",
           "label": "Entrega ao revendedor ou obra",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Frete limita o raio de entrega; pedido consolidado dilui o custo",
+          "emoji": "🚛",
+          "bank": "Investimento em frota, pátio e sistema"
         },
         {
           "id": "n3",
           "label": "Aplicação na construção",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Lojista ou obra paga depois; cronograma e medição alteram a cobrança",
+          "emoji": "👷",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra e formação de estoque",
+          "product": {
+            "emoji": "🏗️",
+            "label": "materiais em lotes maiores"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "distribuidor paga o fabricante e financia o estoque"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Separação e consolidação",
+          "product": {
+            "emoji": "🧾",
+            "label": "pedido separado e consolidado"
+          },
+          "cash": {
+            "emoji": "⛽",
+            "label": "frete, movimentação e quebra como custo da empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "📬",
+            "label": "material entregue ao lojista ou à obra"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "lojista ou obra paga depois; orçamento aprovado não é pedido firme"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o fabricante e forma estoque",
+          "Financia estoque lento e crédito até o lojista ou a obra pagar",
+          "Recebe do lojista ou da obra"
+        ],
+        "text": "O distribuidor financia estoque e crédito comercial até o pagamento do lojista ou da obra. Orçamento aprovado não é pedido irrevogável, e a entrega programada pode ser adiada. Giro bancário ou cessão de recebíveis podem atender esse descasamento, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Distribuição de materiais de construção. Reunir marcas, fracionar lotes e entregar materiais no momento de uso. Separar materiais básicos de alto peso e baixo valor por volume de acabamentos de maior variedade; vender para obra contratada é diferente de repor loja. O frete limita o raio econômico de materiais pesados. Acabamentos exigem mix e capital em itens lentos. Ganho de estoque na alta de preço não é margem operacional recorrente; queda de preço pode exigir desconto para realizar estoque antigo. A comparação de longo prazo da PAC exige conferir cobertura e metodologia de cada edição. Não foi extraída taxa recente exclusiva deste recorte. Os mecanismos a monitorar são avanço físico das obras, reposição do varejo, custo do material e disponibilidade de crédito do comprador; não se presume expansão só porque preço nominal subiu. Como funciona. Lojas de material, construtoras, instaladores e clientes industriais. Reforma e obra nova têm ritmos diferentes. Vendas para construtora podem concentrar volume, mas cronograma, medição e risco de obra alteram cobrança. Cimento, aço, cerâmica, hidráulica, elétrica e outros materiais conforme portfólio. Quebra no manuseio, frete, armazenagem, lote e tonalidade importam em acabamentos; um item sem reposição pode impedir fechar o pedido completo. Caixa e financiamento. Distribuidor financia estoque e crédito comercial até pagamento do lojista ou obra. Orçamento aprovado não é pedido irrevogável, e entrega programada pode ser postergada. Separar carteira de construção nova, reforma e varejo evita atribuir o mesmo risco a todas. Pátio, cobertura, movimentação, frota e sistema de lote devem refletir perfil do material. Expandir área para acomodar estoque lento não corrige erro de mix; automação deve reduzir ruptura, quebra e tempo de separação. Cenários. Reposição e obras em andamento sustentam pedidos com crédito seletivo. Melhor mix e consolidação de entrega elevam margem sem excesso de estoque. Obra atrasa, cliente posterga compra e estoque antigo precisa de desconto. Na visita, pergunte: Qual família perde a margem quando se inclui frete e quebra? Pedidos de obra podem ser cancelados ou adiados sem ressarcimento? O estoque por lote tem venda provável ou depende de desconto? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito. Complemento da pesquisa. A Tambasa, sediada em Contagem (MG), apresenta no canal empresarial linhas elétrica, hidráulica, ferragens, pintura e acabamento, com compra on-line e atendimento comercial. Sua página logística descreve recebimento por código de barras, separação de pedidos e roteirização. Trata-se de portfólio e operação declarados pelo fornecedor, não prova de volume vendido, liderança ou crescimento recente.",
     "reviewStatus": "approved",
@@ -1626,41 +1749,82 @@
         {
           "id": "n0",
           "label": "Fabricante nacional ou importador",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Fabricantes homologados ou importação fornecem o insumo",
+          "emoji": "🏭",
+          "bank": "Giro bancário para a compra"
         },
         {
           "id": "n1",
           "label": "Estoque técnico e homologação",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Estoque por especificação; reposição pode demorar mais que o prazo do fornecedor",
+          "emoji": "🧪",
+          "bank": "Giro bancário para o estoque"
         },
         {
           "id": "n2",
           "label": "Fracionamento e assistência",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Fracionamento, documentação técnica e assistência",
+          "emoji": "🔧",
+          "bank": "Investimento em armazenagem e rastreio"
         },
         {
           "id": "n3",
           "label": "Fábrica consumidora e manutenção",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Fábrica compra para processo e manutenção; uma falta pode parar o processo",
+          "emoji": "⚙️",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra do insumo",
+          "product": {
+            "emoji": "🚢",
+            "label": "insumo de fabricante ou importado"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "distribuidor paga a compra; câmbio, frete e demora podem corroer o desconto"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Preparação técnica",
+          "product": {
+            "emoji": "🧴",
+            "label": "itens fracionados com documentação técnica"
+          },
+          "cash": {
+            "emoji": "🏷️",
+            "label": "fracionamento e assistência só rendem se o cliente pagar por eles"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "📦",
+            "label": "insumo entregue à fábrica"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "fábrica paga depois da entrega; o crédito depende da fábrica e do setor"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o fabricante ou a importação",
+          "Estoque de segurança e reposição longa prendem caixa",
+          "Recebe da fábrica compradora"
+        ],
+        "text": "Lead time de reposição e estoque de segurança podem ser longos frente ao prazo do fornecedor. O crédito deve considerar a fábrica compradora e a concentração por setor econômico. Giro bancário ou cessão de recebíveis podem atender esse descasamento, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Distribuição de insumos industriais. Fornecer material de processo ou manutenção com disponibilidade, especificação e rastreabilidade. Químicos, abrasivos, fixadores e consumíveis têm exigências diferentes; o recorte exclui máquinas de investimento e não converte toda importação industrial em mercado de distribuição. Margem depende de serviço técnico, fracionamento e disponibilidade efetivamente pagos pelo cliente. Muitos itens de baixa demanda podem elevar custo de estoque e perda por validade ou obsolescência. Desconto em compra importada pode desaparecer com câmbio, frete e demora. Não foi recuperado índice mensal exclusivo de distribuição de insumos industriais. O painel de comércio exterior do MDIC e a PIM-PF permitem acompanhar produtos e compradores quando o mix for definido. Sem CNAE e famílias de produtos específicos, uma taxa nacional única criaria precisão falsa. Como funciona. Fábricas, prestadores de manutenção e integradores. A demanda recorrente de consumo e reposição é distinta de projeto de expansão. Uma falta barata pode parar processo caro; a proposta de valor pode ser disponibilidade e assistência, não menor preço unitário. Fabricantes homologados, importação, estoque por especificação, documentação técnica e transporte adequado. Para químicos perigosos, embalagem, segregação e armazenamento precisam ser compatíveis; nem todo insumo industrial é produto perigoso. Caixa e financiamento. Lead time de reposição e estoque de segurança podem ser longos frente ao prazo do fornecedor. Consignação e estoque dentro do cliente exigem regra clara de titularidade, consumo e faturamento. Crédito deve considerar a fábrica compradora e concentração por setor econômico. Sistemas de rastreio, gestão de especificação, laboratórios quando pertinentes e estruturas de armazenamento sustentam qualidade. Capital em estoque deve ser tratado separadamente do investimento físico; não é financiável com mesma lógica e prazo sem testar renovação do mix. Cenários. Consumo de manutenção e processo acompanha clientes, com estoque seletivo. Contratos de reposição e gestão reduzem ruptura e melhoram previsibilidade. Cliente industrial reduz atividade e deixa estoque técnico sem saída alternativa. Na visita, pergunte: O item parado é crítico para contrato ou apenas compra mal planejada? Estoque consignado está conciliado e pode ser recuperado? Se o fabricante retirar a distribuição, quanto da carteira e do estoque é substituível? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito. Complemento da pesquisa. Um caso concreto de distribuição técnica é a parceria anunciada pela Brenntag com a Symrise em 28/09/2026 para ingredientes cosméticos no Brasil. O comunicado empresarial associa acesso ao portfólio a apoio técnico. É evidência de relação fornecedor-distribuidor e segmento comprador, não prova de exclusividade, receita incremental ou abrangência de todo o atacado industrial.",
     "reviewStatus": "approved",
@@ -2019,41 +2183,82 @@
         {
           "id": "n0",
           "label": "Fabricante ou importador",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Fabricantes, peças e importação; o prazo do fabricante afeta a entrega",
+          "emoji": "🏗️",
+          "bank": "Giro bancário para a compra"
         },
         {
           "id": "n1",
           "label": "Estoque, projeto e demonstração",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Adiantamento ao fornecedor e estoque de demonstração antecedem o aceite",
+          "emoji": "📐",
+          "bank": "Giro bancário para o estoque"
         },
         {
           "id": "n2",
           "label": "Venda, instalação e aceite",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Venda com instalação; projeto atrasado posterga o recebimento",
+          "emoji": "🔧",
+          "bank": "Investimento em centro técnico, peças e demonstração"
         },
         {
           "id": "n3",
           "label": "Usuário, assistência e reposição",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Usuário opera o equipamento e depende de assistência e reposição",
+          "emoji": "🛠️",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra do fabricante",
+          "product": {
+            "emoji": "⚙️",
+            "label": "equipamentos e peças"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "adiantamento ao fornecedor antes do aceite do comprador"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Proposta e instalação",
+          "product": {
+            "emoji": "📋",
+            "label": "proposta com equipamento, instalação e serviço"
+          },
+          "cash": {
+            "emoji": "🎓",
+            "label": "instalação, treinamento, garantia e suporte custam à empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
           "label": "Entrega e aceite",
-          "from": "n2"
+          "product": {
+            "emoji": "🚚",
+            "label": "equipamento instalado e aceito"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "comprador paga após o aceite; retenção comercial não é pagamento realizado"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Adianta o pagamento ao fornecedor",
+          "Estoque de demonstração e projeto atrasado prendem caixa",
+          "Recebe do comprador após o aceite"
+        ],
+        "text": "Adiantamento ao fornecedor, importação e estoque de demonstração antecedem o aceite do comprador. Projeto atrasado posterga o recebível, e o equipamento pode ser específico e difícil de revender. Giro bancário ou cessão de recebíveis podem atender esse descasamento, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Distribuição de equipamentos. Revender equipamento com seleção técnica, disponibilidade, instalação e suporte quando contratado. Separar revenda pura de integração, locação e fabricação; equipamento hospitalar, agrícola e industrial exige recorte próprio antes de aplicar norma ou indicador. Margem aparente da máquina precisa descontar instalação, treinamento, comissão, garantia e suporte. Venda com preço fechado e compra futura em moeda estrangeira cria risco. Receita de manutenção pode estabilizar fluxo, mas só após formação e retenção da base instalada. A PIM-PF e as grandes categorias econômicas do IBGE são sinais de oferta de equipamentos, não uma previsão de vendas do distribuidor. A PAC disponibiliza estrutura do comércio; a comparabilidade entre edições deve ser conferida antes de encadear dados. Não foi recuperada medida recente exclusiva deste recorte heterogêneo, e a análise não atribui crescimento agregado da indústria à carteira. Como funciona. Indústrias, serviços, hospitais e revendedores, conforme portfólio. Compra de investimento é sensível a orçamento, retorno e capacidade do comprador de financiar aquisição. Reposição urgente e expansão planejada não devem ser tratadas como mesma demanda. Fabricantes, peças, importação, técnicos, garantia e logística. A dependência de marca pode ser comercial e tecnológica; prazo de entrega do fabricante e disponibilidade de peça afetam reputação mesmo quando falha ocorre fora do distribuidor. Caixa e financiamento. Adiantamento ao fornecedor, importação e estoque de demonstração antecedem aceite do comprador. Projeto atrasado posterga recebível, enquanto equipamento pode ser específico e difícil de revender. Garantia de execução e retenção comercial são diferentes de pagamento realizado. Centro técnico, peças e demonstração apoiam vendas, mas consomem capital. Financiamento ao comprador e financiamento do distribuidor são necessidades distintas: não presumir que linha de máquinas financia estoque de revenda ou qualquer equipamento importado. Cenários. Reposição e projetos selecionados sustentam vendas com disciplina de antecipação. Conversão de carteira e serviços pós-venda melhoram geração de caixa. Projetos são cancelados após compra do equipamento, criando estoque específico e dívida. Na visita, pergunte: Qual pedido pode ser cancelado depois de você pagar o fabricante? A margem inclui toda instalação, treinamento e garantia assumida? Se perder a representação, quem mantém a base e quais peças ainda podem ser vendidas? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito. Complemento da pesquisa. A página da filial Sotreq de Macaé (RJ) identifica venda de máquinas e peças, aluguel e manutenção de motores e componentes. É exemplo verificável de oferta combinada de equipamento e pós-venda, não ranking, carteira realizada ou evidência de crescimento. A localização da filial não demonstra concentração nacional do mercado.",
     "reviewStatus": "approved",
@@ -2609,56 +2814,82 @@
         {
           "id": "n0",
           "label": "Aplicação e especificação",
-          "detail": "Cliente e responsável técnico definem uso e requisitos"
+          "detail": "Projeto, parada planejada ou manutenção geram a necessidade; o comprador aprova a especificação",
+          "emoji": "📋",
+          "bank": "Giro bancário só com pedido firme e ciclo comprovado"
         },
         {
           "id": "n1",
           "label": "Fabricante ou origem homologada",
-          "detail": "Capacidade, prazo e documentos do produto"
+          "detail": "Capacidade, prazo e documentos do produto; a origem pode ser importada",
+          "emoji": "🏭",
+          "bank": "Giro bancário para a compra"
         },
         {
           "id": "n2",
           "label": "Distribuidor e estoque",
-          "detail": "Compra, importação quando houver e rastreabilidade"
+          "detail": "Compra ou separa o item; estoque segmentado por especificação",
+          "emoji": "🏬",
+          "bank": "Giro bancário para o estoque"
         },
         {
           "id": "n3",
           "label": "Entrega e aceite",
-          "detail": "Conferência técnica e documental; condição de pagamento"
-        },
-        {
-          "id": "n4",
-          "label": "Operação e reposição",
-          "detail": "Manutenção do cliente e serviços somente se contratados"
+          "detail": "Entrega, aceite e pagamento são eventos diferentes",
+          "emoji": "✅",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
           "from": "n0",
           "to": "n1",
-          "label": "Requisitos aprovados"
+          "label": "Requisitos aprovados",
+          "product": {
+            "emoji": "📐",
+            "label": "especificação aprovada e pedido"
+          },
+          "cash": {
+            "emoji": "🕒",
+            "label": "o cliente só paga depois da entrega e do aceite"
+          }
         },
         {
           "from": "n1",
           "to": "n2",
-          "label": "Produto e documentos"
+          "label": "Produto e documentos",
+          "product": {
+            "emoji": "🔩",
+            "label": "válvulas e documentos do produto"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "distribuidor paga a compra; em importação, assume o câmbio"
+          }
         },
         {
           "from": "n2",
           "to": "n3",
-          "label": "Entrega contratada"
-        },
-        {
-          "from": "n3",
-          "to": "n4",
-          "label": "Aceite e uso"
-        },
-        {
-          "from": "n4",
-          "to": "n0",
-          "label": "Necessidade de reposição"
+          "label": "Entrega contratada",
+          "product": {
+            "emoji": "🚚",
+            "label": "entrega com conferência técnica e documental"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "comprador paga após o aceite; pode reter por divergência técnica"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga a compra, às vezes importada",
+          "Estoque e espera do aceite prendem caixa",
+          "Recebe após o aceite"
+        ],
+        "text": "Pedido, faturamento, aceite e dinheiro em conta são eventos diferentes. Compra, estoque e importação antecedem o recebimento, e pedido futuro não é duplicata já exigível. Capital de giro e cessão de recebíveis podem cobrir esse intervalo quando o ciclo é comprovado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "reviewStatus": "approved",
     "transcript": [

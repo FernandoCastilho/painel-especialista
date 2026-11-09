@@ -207,8 +207,10 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       await page.locator('#tic-study-title').waitFor()
       assert.equal(await page.locator('.tic-flow-stage').count(), 13, 'piloto TIC preservado')
       if (!studies.length) { await context.close(); continue }
-      // Fullscreen e laser são testados na cadeia em texto; a cadeia em desenhos tem bloco próprio mais abaixo.
-      const selected = studies.find(study => study.group === 'atacado' && study.topicIndex === 5 && !study.diagram.cycle) || studies.find(study => !study.diagram.cycle) || studies[0]
+      // Tela cheia e laser valem para os dois formatos: cadeia em texto (estudos sem desenhos) e cadeia em desenhos.
+      const selected = studies.find(study => study.group === 'atacado' && study.topicIndex === 5) || studies.find(study => !study.diagram.cycle) || studies[0]
+      const nodeSel = selected.diagram.cycle ? '.rich-stage' : '.sector-chain-node'
+      const nodeAnimation = selected.diagram.cycle ? 'rich-glow' : 'sector-chain-step'
       const alternate = studies.find(study => study.title !== selected.title) || null
       const rich = studies.find(study => study.diagram.cycle)
       if (rich && width > 600) {
@@ -233,8 +235,8 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       await page.goto(`${base}/#setores/topico/${selected.group}/${selected.topicIndex}`)
       const diagram = page.locator('.researched-flow')
       await diagram.waitFor()
-      const stage = diagram.locator('.sector-chain-node').first()
-      assert.equal(await stage.evaluate(element => getComputedStyle(element).animationName), 'sector-chain-step')
+      const stage = diagram.locator(nodeSel).first()
+      assert.equal(await stage.evaluate(element => getComputedStyle(element).animationName), nodeAnimation)
       assert.equal(await diagram.getByRole('button', { name: /Pausar|Retomar/ }).count(), 0)
       await diagram.focus()
       await page.keyboard.press('p')
@@ -257,7 +259,7 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       if (width <= 600) {
         assert.ok(bounds.width >= width - 26, 'diagrama ocupa a largura disponível no celular')
         assert.equal(await expandedDiagram.evaluate(element => getComputedStyle(element).transform), 'none', 'texto não pode ser reduzido por escala')
-        assert.ok(await modal.locator('.sector-chain-node strong').first().evaluate(element => parseFloat(getComputedStyle(element).fontSize) >= 16), 'texto legível no celular')
+        assert.ok(await modal.locator(`${nodeSel} strong`).first().evaluate(element => parseFloat(getComputedStyle(element).fontSize) >= 16), 'texto legível no celular')
         assert.equal(await modal.evaluate(element => element.scrollWidth <= element.clientWidth + 1), true, 'sem rolagem horizontal')
         assert.equal(await modal.evaluate(element => element.scrollHeight > element.clientHeight), true, 'diagrama completo usa rolagem vertical')
         await modal.evaluate(element => { element.scrollTop = element.scrollHeight })
@@ -281,7 +283,7 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       }
       await require('./helpers/verify-diagram-laser.cjs')(page, modal, width)
       await page.keyboard.press('p')
-      assert.equal(await modal.locator('.sector-chain-node').first().evaluate(element => getComputedStyle(element).animationPlayState), 'paused')
+      assert.equal(await modal.locator(nodeSel).first().evaluate(element => getComputedStyle(element).animationPlayState), 'paused')
       await modal.screenshot({ path: path.join(out, `fullscreen-${width}.png`) })
       await page.keyboard.press('Escape')
       await modal.waitFor({ state: 'hidden' })
@@ -291,7 +293,7 @@ async function verifyAudioPlayback(page, article, audio, study, key) {
       await diagram.getByRole('button', { name: 'Maximizar diagrama' }).click()
       await modal.waitFor()
       await page.emulateMedia({ reducedMotion: 'reduce' })
-      assert.equal(await modal.locator('.sector-chain-node').first().evaluate(element => getComputedStyle(element).animationName), 'none')
+      assert.equal(await modal.locator(nodeSel).first().evaluate(element => getComputedStyle(element).animationName), 'none')
       await page.goBack()
       await modal.waitFor({ state: 'hidden' })
       const destination = alternate || { group: 'tic', topicIndex: 0, title: 'Integração de TI e infraestrutura digital' }

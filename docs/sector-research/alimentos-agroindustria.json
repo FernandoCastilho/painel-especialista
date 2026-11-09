@@ -1293,41 +1293,82 @@
         {
           "id": "n0",
           "label": "Originação doméstica ou importação",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Trigo de qualidades distintas, nacional ou importado",
+          "emoji": "🌾",
+          "bank": "Giro bancário para a compra sazonal do grão"
         },
         {
           "id": "n1",
           "label": "Armazenagem e mistura de grãos",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Silo e mistura de grãos para manter a especificação da farinha",
+          "emoji": "🏗️",
+          "bank": "Investimento em silos e laboratório"
         },
         {
           "id": "n2",
           "label": "Limpeza e moagem",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Moinho transforma o grão em farinha e coprodutos",
+          "emoji": "⚙️",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n3",
           "label": "Farinha, farelo e clientes",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Farinha para panificação, massas, biscoitos e indústria",
+          "emoji": "🍞",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra do grão",
+          "product": {
+            "emoji": "🚢",
+            "label": "trigo nacional ou importado"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do grão e dos custos de porto, antes da venda"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Mistura e moagem",
+          "product": {
+            "emoji": "🌾",
+            "label": "grão misturado, dentro da especificação"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, sacaria e laboratório como custo da empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e aceite",
-          "from": "n2"
+          "label": "Entrega ao cliente industrial",
+          "product": {
+            "emoji": "📦",
+            "label": "farinha e farelo entregues"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento conforme o prazo industrial combinado"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o trigo, às vezes importado",
+          "Estoque de grão e prazo industrial prendem caixa",
+          "Recebe do cliente industrial"
+        ],
+        "text": "A compra sazonal de grão e a importação podem anteceder a venda por longo intervalo. A empresa financia estoque físico, custos portuários e prazo industrial. Giro bancário ou cessão de recebíveis podem atender esse descasamento, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Moinhos. Transformar grão em farinha e coprodutos com especificação para uso industrial. O foco é moagem de trigo; milho e outros cereais precisam de balanço próprio. Tonelada de trigo, farinha e farelo não são volumes somáveis de mercados separados. A margem resulta da venda de farinha e farelo menos custo do trigo, moagem e logística. Mistura adequada preserva especificação com custo menor; porém substituição excessiva pode causar devolução. Spread de farinha e trigo deve usar períodos e moedas compatíveis. O monitoramento agrícola da Conab de setembro de 2026 relata efeitos de umidade sobre trigo e início do plantio das culturas de verão. Inferência: risco de qualidade pode alterar mistura, origem e custo dos moinhos, mesmo quando o volume total não cai. Não foi publicada estimativa própria de produção ou preço. A lista integral do MAPA, atualizada em 07/06/2023, identifica Bunge em Ipojuca (PE), Moinhos Cruzeiro do Sul em Olinda (PE) e São Luís (MA), e J. Macedo em Salvador (BA). O cadastro refere-se à recepção e processamento de trigo russo. Confirma exemplos e localização naquele documento, sem demonstrar autorização atual, capacidade ou liderança. Oferta nacional, importação e preferência por características tecnológicas formam a originação. A Conab dispõe de série histórica do trigo, mas safra doméstica não mede moagem: importações e estoques mudam o balanço. Ausência de série de moagem exclusiva impede dimensionar este mercado nesta versão. Compra sazonal de grão e importação podem anteceder a venda por longo intervalo. A empresa financia estoque físico, custos portuários e prazo industrial. Proteção cambial deve estar vinculada à obrigação de importação e às receitas, não a aposta independente. Moinhos, peneiras, silos e laboratório aumentam controle e produtividade. A decisão deve separar gargalo de moagem, recebimento, mistura e expedição. Instalação próxima do porto reduz uma perna do custo e pode aumentar distância do cliente. Encaixes financeiros propostos: giro bancário ou cessão de recebíveis podem atender descasamento operacional documentado. Cessão exige entrega, exigibilidade, ausência de disputa e avaliação de concentração; FIDC ou securitização acrescentam custo de estrutura e não são automaticamente acessíveis à empresa média. Investimento requer prazo coerente com vida útil e geração de caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade. Inferência comercial: comparar margem e capital de giro da farinha padronizada com formulações por aplicação. Testes, segregação de trigo e assistência ao cliente custam antes da recompra; pedido experimental não deve ser tratado como contrato recorrente. Manter rastreabilidade da mistura reduz risco de devolver um lote que não atende ao desempenho combinado. As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte fontes e limitações.",
     "reviewStatus": "approved",
@@ -1723,41 +1764,82 @@
         {
           "id": "n0",
           "label": "Grão ou oleaginosa",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Soja ou outra oleaginosa, com preço de referência e prêmio local",
+          "emoji": "🌱",
+          "bank": "Giro bancário para a compra na safra"
         },
         {
           "id": "n1",
           "label": "Originação e esmagamento",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Compra do grão e esmagamento em óleo e farelo",
+          "emoji": "🏭",
+          "bank": "Investimento em esmagamento e tratamento ambiental"
         },
         {
           "id": "n2",
           "label": "Óleo, farelo e refino",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Óleo e farelo vendidos juntos; refino e envase são elos à parte",
+          "emoji": "🛢️",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n3",
           "label": "Alimentação, ração e biocombustível",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Indústria de alimentos, varejo, ração e biodiesel",
+          "emoji": "🛒",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra do grão",
+          "product": {
+            "emoji": "🌾",
+            "label": "soja ou outra oleaginosa"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento do grão, concentrado na safra"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Esmagamento e refino",
+          "product": {
+            "emoji": "🛢️",
+            "label": "óleo e farelo"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, vapor, químicos e embalagem como custo da empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e aceite",
-          "from": "n2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "🚚",
+            "label": "óleo e farelo para cada destino"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento conforme o destino; exportação e venda doméstica têm ciclos distintos"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga o grão, concentrado na safra",
+          "Estoque e recebíveis em calendários distintos",
+          "Recebe do cliente, conforme o destino"
+        ],
+        "text": "A compra de grão concentra o desembolso na safra e gera estoque e recebíveis em calendários distintos. Exportação e venda doméstica não têm o mesmo ciclo documental. Giro bancário ou cessão de recebíveis podem atender o descasamento operacional documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Óleos vegetais. Processar oleaginosas e vender produtos conjuntos. O foco econômico é soja, sem tratar palma, girassol, canola e outros óleos como equivalentes. Esmagamento, refino, envase e biodiesel são elos distintos; uma empresa pode atuar apenas em parte deles. Margem de esmagamento é receita conjunta de óleo e farelo menos custo do grão e conversão. Preço elevado do óleo não comprova margem se a soja e energia sobem ou o farelo enfraquece. Refino e envase adicionam custo, marca e canal diferentes da commodity bruta. A ANP informa a elevação da mistura obrigatória de biodiesel para 15% a partir de agosto de 2025. Em comunicação de 2026, anunciou aprovação da retomada de restrição a vendas entre distribuidores, com foco em rastreabilidade. Inferência: demanda regulada e controle de cadeia são relevantes para clientes de óleo, mas não justificam projetar produção de esmagadoras médias sem contratos. Como funciona. Indústria de alimentos, varejo de óleo envasado, fabricantes de ração e produtores de biodiesel. O preço realizável depende do mix de óleo e farelo e do destino; a venda de um coproduto influencia a viabilidade do outro. Soja ou outra oleaginosa, energia, vapor, químicos de processo, embalagens, armazenagem e logística. Matéria-prima tem referência internacional e prêmio local; custo de originação varia com frete, safra e competição regional. Caixa e financiamento. Compra de grão concentra desembolso na safra e produz estoque e recebíveis em calendários distintos. Exposição cambial é líquida de compras, vendas e dívidas; derivativos devem acompanhar volumes efetivamente expostos. Exportação e venda doméstica não têm o mesmo ciclo documental. Esmagamento, extração, refino, segurança de processo e tratamento ambiental exigem ativos específicos. Ampliação baseada apenas em política de biocombustíveis é vulnerável a mudança de mistura, preço e competição; testar demanda de farelo e disponibilidade do grão. Cenários. Receita conjunta sustenta utilização com gestão prudente de posição. Originação eficiente e demanda por coprodutos permitem melhorar spread realizado. Grão encarece ou um coproduto perde demanda; giro e estoque crescem apesar de venda nominal maior. Na visita, pergunte: A margem comercial foi calculada com os dois produtos conjuntos? Quanto da posição está exposta após casar contratos físicos e proteção financeira? A ampliação tem destino para o farelo além do comprador de óleo? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",
@@ -2126,41 +2208,82 @@
         {
           "id": "n0",
           "label": "Ingredientes e embalagens",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Ingredientes agrícolas, aditivos permitidos, embalagens e energia",
+          "emoji": "🥫",
+          "bank": "Giro bancário para compra de insumos"
         },
         {
           "id": "n1",
           "label": "Formulação e preparo",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Formulação define custo, rendimento e rotulagem",
+          "emoji": "🧑‍🍳",
+          "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
           "label": "Processamento e controle",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Fabricação em lote, com troca de linha e controle de qualidade",
+          "emoji": "🏭",
+          "bank": "Investimento em automação, rastreio e eficiência"
         },
         {
           "id": "n3",
           "label": "Marca, distribuição e consumo",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Varejo, distribuidores e alimentação fora do lar",
+          "emoji": "🛒",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "🌾",
+            "label": "ingredientes e embalagens"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento dos insumos, antes da venda"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Fabricação",
+          "product": {
+            "emoji": "🍝",
+            "label": "produto formulado em lote"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, água e mão de obra pagas pela empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e aceite",
-          "from": "n2"
+          "label": "Venda e distribuição",
+          "product": {
+            "emoji": "🚚",
+            "label": "alimentos entregues ao varejo e distribuidores"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após descontos, verbas e devoluções"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga insumos e fabricação",
+          "Produção promocional pode deixar sobras em estoque",
+          "Recebe do varejo, após verbas e devoluções"
+        ],
+        "text": "Compra de insumos, fabricação e distribuição antecedem o prazo dos varejistas. Produção promocional concentra capital e pode deixar sobras. O recebível deve refletir verbas comerciais, devoluções esperadas e aceite, sem tratar o faturamento bruto como caixa certo. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Alimentos processados. Converter ingredientes em alimentos com padronização, conveniência e vida útil. O recorte é heterogêneo: massas, biscoitos, conservas, refeições e outras formulações não compartilham a mesma margem. Carne processada e lácteos devem ser conciliados com seus estudos para evitar dupla contagem. A margem efetiva depende de preço líquido após descontos, bonificações, promoções e devoluções, menos formulação, embalagem e transformação. Muitos itens com baixo giro podem elevar receita bruta e destruir produtividade por troca de linha e estoque. Não foi extraído um agregado recente exclusivo de processados que elimine frigoríficos, óleos e laticínios; a taxa de alimentos da PIM não será atribuída a este recorte residual. A análise de conjuntura é, portanto, de mecanismos: custo de ingredientes, poder do varejo e composição do consumo, sem taxa inventada para o recorte. A análise oficial da operação Seara/Bunge em margarinas e maioneses mostra que concentração precisa ser definida por produto. Usar grandes grupos como referência de todos os processados apagaria diferenças. Polos dependem de ingredientes, plantas e acesso a consumidores; não foi fechado ranking de empresas médias nem mapa homogêneo. Escala comercial e marca podem pesar tanto quanto eficiência fabril. A PIM-PF de alimentos é indicador agregado com ramos heterogêneos; não deve ser apresentada como crescimento deste recorte residual. Preços ao produtor e custo de ingredientes ajudam a testar repasse, mas exigem seleção da atividade correta. As informações trimestrais da M. Dias Branco referentes a março de 2026 identificam plantas de biscoitos e massas em Eusébio (CE), Jaboatão dos Guararapes (PE) e Queimados (RJ). São localizações documentadas pela companhia, não mapa completo do mercado. O projeto de tortilhas da Castrolanda em Castro (PR), anunciado pelo governo estadual em agosto de 2026, ilustra fabricação orientada principalmente a outro comprador empresarial, distinta de construir marca própria no varejo. Compra de insumos, fabricação e distribuição antecedem prazo de varejistas. Produção promocional concentra capital e pode deixar sobras. Recebível deve refletir verbas comerciais contratadas, devoluções esperadas e aceite, sem tratar faturamento bruto como caixa futuro certo. Automação, rastreio por lote, eficiência energética e controle de qualidade podem reduzir custo e perdas. Nova linha deve ser testada contra volume economicamente viável por formulação e canal, não apenas contra capacidade técnica. Encaixes financeiros propostos: giro bancário ou cessão de recebíveis podem atender descasamento operacional documentado. Cessão exige entrega, exigibilidade, ausência de disputa e avaliação de concentração; FIDC ou securitização acrescentam custo de estrutura e não são automaticamente acessíveis à empresa média. Investimento requer prazo coerente com vida útil e geração de caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade. Inferência comercial: em produção B2B, o risco está no contrato, na concentração do comprador e na capacidade de redirecionar a linha; em marca de varejo, envolve verba comercial, distribuição e recompra. A existência de plantas integradas em biscoitos e massas não permite aplicar a margem de um grande grupo a fabricante médio de conservas ou snacks. As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte fontes e limitações.",
     "reviewStatus": "approved",
@@ -2542,41 +2665,82 @@
         {
           "id": "n0",
           "label": "Água, ingredientes e embalagem",
-          "detail": "Origem da demanda ou do insumo"
+          "detail": "Água, malte ou outros ingredientes, energia, frio e embalagem",
+          "emoji": "💧",
+          "bank": "Giro bancário para compra de insumos"
         },
         {
           "id": "n1",
           "label": "Preparo, fermentação ou mistura",
-          "detail": "Transformação ou preparação do serviço"
+          "detail": "Na cerveja, fermentação e maturação ocupam tanque antes do envase",
+          "emoji": "🍺",
+          "bank": "Investimento em tanques, frio e tratamento de água"
         },
         {
           "id": "n2",
           "label": "Envase e controle",
-          "detail": "Capacidade, controle e execução"
+          "detail": "Envase em garrafa, lata ou barril, com controle de qualidade",
+          "emoji": "🏭",
+          "bank": "Investimento em envase e eficiência energética"
         },
         {
           "id": "n3",
           "label": "Distribuição e ocasiões de consumo",
-          "detail": "Entrega, aceite e recebimento"
+          "detail": "Varejo, bares, restaurantes e distribuidores",
+          "emoji": "🛒",
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
         {
+          "from": "n0",
           "to": "n1",
-          "label": "Fluxo contratado",
-          "from": "n0"
+          "label": "Compra de insumos",
+          "product": {
+            "emoji": "🌾",
+            "label": "água, ingredientes e embalagem"
+          },
+          "cash": {
+            "emoji": "💵",
+            "label": "pagamento dos insumos, antes da venda"
+          }
         },
         {
+          "from": "n1",
           "to": "n2",
-          "label": "Execução e controle",
-          "from": "n1"
+          "label": "Maturação e envase",
+          "product": {
+            "emoji": "🍾",
+            "label": "bebida pronta para envase"
+          },
+          "cash": {
+            "emoji": "⚡",
+            "label": "energia, frio e tanque ocupados como custo da empresa"
+          }
         },
         {
+          "from": "n2",
           "to": "n3",
-          "label": "Entrega e aceite",
-          "from": "n2"
+          "label": "Venda e entrega",
+          "product": {
+            "emoji": "🚚",
+            "label": "bebida entregue em garrafa, lata ou barril"
+          },
+          "cash": {
+            "emoji": "💰",
+            "label": "recebimento após descontos e retornos; barris e retornáveis ficam no cliente"
+          }
         }
-      ]
+      ],
+      "cycle": {
+        "title": "Ciclo de caixa",
+        "steps": [
+          "Paga insumos e produção",
+          "Tanque, estoque e ativos em clientes prendem caixa",
+          "Recebe do canal de venda"
+        ],
+        "text": "A produção antecede o pico de consumo e o recebimento. Garrafas retornáveis, barris e equipamentos cedidos a pontos de venda podem consumir caixa mesmo fora do estoque contábil. Antecipar vendas sem deduzir bonificação e devolução superestima a liquidez. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+      }
     },
     "transcript": "Estudo de Bebidas. Produzir e distribuir bebidas com qualidade, marca e disponibilidade. Cerveja, refrigerante, água, destilado e suco têm tecnologias, regras e sazonalidades distintas. A evidência específica de cerveja não é estimativa de todo o mercado de bebidas. Preço de prateleira não é realização do fabricante. Descontos, distribuição, marketing, impostos aplicáveis e perdas devem ser separados. Portfólio amplo ocupa tanques e estoques; capacidade de envase pode sobrar enquanto maturação ou canal é gargalo. A publicação do MAPA em maio de 2026, com referência em 2025, registra expansão da base de cervejarias e aumento do valor exportado, embora o volume exportado tenha recuado. São indicadores diferentes de venda doméstica ou rentabilidade. O Sudeste concentra os estabelecimentos registrados, mas essa contagem não mede capacidade. Não extrapolar cerveja para outras bebidas. Como funciona. Varejo, bares, restaurantes, distribuidores e clientes industriais. Ocasião de consumo e canal afetam embalagem, frequência de entrega e preço líquido; venda em barril ou embalagem retornável exige controle do ativo circulante. Água com qualidade adequada, malte ou outros ingredientes, energia, frio e embalagens. Na cerveja, fermentação e maturação ocupam tanque antes do envase; insumo importado e lata ou vidro podem dominar riscos diferentes em cada porte. Caixa e financiamento. Produção antecede pico de consumo e recebimento. Garrafas retornáveis, barris e equipamentos cedidos a pontos de venda podem consumir caixa mesmo fora do estoque contábil de bebida. Antecipar vendas sem deduzir bonificação e devolução superestima liquidez. Tratamento de água, tanques, frio, envase e eficiência energética devem ser dimensionados ao mix e à comercialização. Uma cervejaria média não deve copiar estrutura financeira ou rede de distribuição de grandes marcas. Cenários. Mix e produção acompanham canal com disciplina de estoque. Melhor distribuição e giro de retornáveis elevam receita por capital empregado. Consumo fraco ou clima desfavorável deixa estoque e capacidade ociosa, com promoções comprimindo margem. Na visita, pergunte: O gargalo real é tanque, envase ou venda no canal? Quem paga por retornáveis e barris que não voltam? Qual é a margem líquida por embalagem depois da distribuição e promoção? As conclusões são setoriais, não avaliação de crédito de uma empresa. Consulte as fontes e limitações do estudo escrito.",
     "reviewStatus": "approved",
