@@ -37,4 +37,6 @@
 @media (min-width: 561px) and (max-width: 999px) {
   .config-desk > .config-wide > header { flex-wrap: wrap; }
   .config-desk > .config-wide > header .refresh-wrap { flex: 0 0 auto; max-width: 100%; }
+  .chart > header { flex-wrap: wrap; }
+  .chart > header .parity-actions { max-width: 100%; margin-left: auto; }
 }
