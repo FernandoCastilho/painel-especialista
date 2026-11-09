@@ -40,13 +40,11 @@ export default function HolidayNotice({ hol, days = 30, list = false, pracas = h
   return (
     <details className="holiday-notice compact" open={expanded}>
       <summary>
-        {first ? <><b>Feriados nos próximos {days} dias</b> · {dates} {dates === 1 ? 'data' : 'datas'} · primeiro: <b>{when(first.date, t)}</b> em {[...new Set(up.filter((u) => u.date === first.date).map((u) => u.cal))].map((c) => <span key={c}><Flag code={calFlag(c)} width={16} height={11} /> {calLabel(c)} </span>)}</> : <b>Feriados nos próximos {days} dias</b>}
-        {first && missing.length > 0 && ' · aviso China'}
+        {expanded ? <b>Feriados nos próximos {days} dias</b> : first ? <><b>Feriados nos próximos {days} dias</b> · {dates} {dates === 1 ? 'data' : 'datas'} · primeiro: <b>{when(first.date, t)}</b> em {[...new Set(up.filter((u) => u.date === first.date).map((u) => u.cal))].map((c) => <span key={c}><Flag code={calFlag(c)} width={16} height={11} /> {calLabel(c)} </span>)}</> : <b>Feriados nos próximos {days} dias</b>}
+        {!expanded && first && missing.length > 0 && ' · aviso China'}
       </summary>
-      {expanded && <p className="status">Brasil, EUA (Federal Reserve), China continental e Japão · referência financeira, incluindo feriados em fins de semana.</p>}
       {expanded && !up.length && <p className="status">Nenhum feriado encontrado no período nos calendários disponíveis.</p>}
       {expanded && pracas.includes('CN') && !hol.loaded && <p className="status stale">China: aguardando os dados oficiais; os feriados chineses ainda não estão incluídos na lista.</p>}
-      {expanded && pracas.includes('CN') && hol.loaded && !missing.length && !up.some(u => u.cal === 'CN') && <p className="status">China: nenhum feriado nos próximos {days} dias.</p>}
       {up.length > 0 && items}
       {note}
     </details>
