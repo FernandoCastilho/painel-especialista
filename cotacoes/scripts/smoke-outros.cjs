@@ -541,7 +541,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.equal(await p.locator('.learn-group[open]').count(), topicCount, 'limpar busca restaura categorias abertas manualmente')
       await busca.fill('recebiveis'); await p.locator('.learn-list button', { hasText: 'FIDC' }).click()
       await p.locator('.learn-detail h2', { hasText: 'FIDC' }).waitFor()
-      await openCallouts(p, [/^Exemplo numérico/, /^Conecta com$/])
+      await openCallouts(p, [/^Onde você pode travar$/, /^Exemplo numérico/, /^Conecta com$/])
       assert.match(await p.locator('.learn-detail').innerText(), /subordinação[\s\S]*30%[\s\S]*R\$ 1\.000\.000[\s\S]*R\$ 1\.000\.000/)
       // conexões: em cada conceito, "Conecta com" leva ao conceito ligado; o quadro geral cobre todos
       assert.match(await p.locator('.learn-detail').innerText(), /Conecta com[\s\S]*Liquidação antecipada ›[\s\S]*Debênture ›[\s\S]*Nota comercial ›/i)
