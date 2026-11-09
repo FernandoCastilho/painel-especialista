@@ -74,6 +74,8 @@
 .bank-history-grid { stroke:var(--line); stroke-width:1; }
 .bank-history-line { fill:none; stroke:var(--accent,var(--fg)); stroke-width:2.5; }
 .bank-history-point { fill:var(--accent,var(--fg)); stroke:var(--card); stroke-width:2; }
+.bank-history-line--ri { stroke-dasharray:6 4; opacity:.75; }
+.bank-history-point--ri { rx:2; }
 .bank-history-analysis,.bank-history-ranking { margin:16px 0; padding:16px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
 .bank-history-sources summary { min-height:44px; cursor:pointer; padding:12px 0; }
 .bank-history-sources a { color:var(--accent,var(--fg)); text-decoration:underline; }

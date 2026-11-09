@@ -15,6 +15,18 @@ export function bankMetricHistory(bank, mode, metric) {
   return result
 }
 
+// Série complementar da outra origem (RI quando a principal é BC, e vice-versa), com um único critério.
+// Fica separada da principal: BC e RI não são somados nem ligados na mesma linha.
+export function bankMetricComplement(bank, mode, metric) {
+  const current = latestBankPoint(bank, mode)
+  if (!current) return []
+  const origin = current.origin === 'ri' ? 'bc' : 'ri', source = origin === 'ri' ? bank.releases : bank.observations
+  const list = (source || []).filter(point => Number.isFinite(point.metrics?.[metric]?.value) && point.metrics[metric].basis).sort((a, b) => b.period - a.period)
+  const basis = list[0]?.metrics[metric].basis
+  const seen = new Set()
+  return list.filter(point => point.metrics[metric].basis === basis && !seen.has(point.period) && seen.add(point.period)).map(point => ({ ...point, item: point.metrics[metric] })).sort((a, b) => a.period - b.period)
+}
+
 export const bankMetricRule = metric => metric.startsWith('provision') ? null : metric.startsWith('npl') ? { direction: 'min', label: 'Menor inadimplência' } : ({
   basel: { direction: 'max', label: 'Maior Basileia' }, cet1: { direction: 'max', label: 'Maior capital principal' },
   assets: { direction: 'max', label: 'Maior volume de ativos · porte' },

@@ -31,4 +31,6 @@ export function normalizeBankQuarter(period, reports, previousReports = {}) {
     return { id: bank.id, period, origin: 'bc', scope: 'Conglomerado prudencial · crédito SCR', metrics, porte }
   }).filter(b => Object.keys(b.metrics).length)
 }
-export const comparisonPeriods = period => [...new Set([period, shiftQuarter(period, -1), shiftQuarter(period, -4), ...[period, shiftQuarter(period, -4)].filter(p => [6, 12].includes(p % 100)).map(p => shiftQuarter(p, -1))])]
+// Série trimestral contínua (últimos 7 trimestres + 1 de apoio para o lucro de jun/dez, que acumula no semestre).
+// Os três primeiros são os usados nas comparações e vão na frente, para sobreviverem ao limite de tempo da coleta.
+export const comparisonPeriods = period => [...new Set([period, shiftQuarter(period, -1), shiftQuarter(period, -4), ...Array.from({ length: 8 }, (_, i) => shiftQuarter(period, -i))])]

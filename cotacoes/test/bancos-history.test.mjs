@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { bankMetricHistory, bankMetricLeaders, bankMetricAnalysis } from '../src/bancosHistory.js'
+import { bankMetricHistory, bankMetricComplement, bankMetricLeaders, bankMetricAnalysis } from '../src/bancosHistory.js'
 
 const point = (period, value, basis = 'same', origin = 'bc', metric = 'basel') => ({ period, origin, metrics: { [metric]: { value, basis, source: 'https://example.com/source' } } })
 const column = (id, period, value, basis = 'same', origin = 'bc', metric = 'basel') => ({ bank: { id, name: id }, point: point(period, value, basis, origin, metric) })
@@ -50,4 +50,9 @@ test('segundo troféu: maior crescimento em R$, podendo coincidir com o maior va
   assert.deepEqual(both.winners, ['b']); assert.deepEqual(both.growthWinners, ['b'])
   assert.deepEqual(bankMetricLeaders([withPrev('a', 1e9, 2e9), withPrev('b', 5e9, 6e9)], 'creditPJ').growthWinners, [])
   assert.deepEqual(bankMetricLeaders([column('a', 202606, 15), column('b', 202606, 16)], 'basel').growthWinners, [])
+})
+test('RI complementa a série do BC sem misturar critérios', () => {
+  const bank = { observations: [point(202606, 15), point(202603, 14)], releases: [point(202509, 12, 'own', 'ri'), point(202606, 16, 'own', 'ri'), point(202603, 13, 'outro', 'ri')] }
+  assert.deepEqual(bankMetricComplement(bank, 'bc', 'basel').map(p => [p.period, p.item.value]), [[202509, 12], [202606, 16]])
+  assert.deepEqual(bankMetricComplement({ observations: [point(202606, 15)] }, 'bc', 'basel'), [])
 })
