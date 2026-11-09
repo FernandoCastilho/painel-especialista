@@ -30,9 +30,14 @@ const out = process.env.BALANCE_QA_OUTPUT || 'workspace-qa/balancos'
   assert.match(await app.locator('.ba-report').innerText(),/não confirma mudança na capacidade de pagamento/)
   for(const theme of ['light','dark']){
    await page.emulateMedia({colorScheme:theme})
-   for(const width of [390,820,1440]){
+   for(const width of [390,820,1000,1440]){
     await page.setViewportSize({width,height:1000})
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${theme}/${width} overflow`)
+    if(width>=1000) {
+     assert.equal(await page.locator('.topbar-tabs').evaluate(nav=>nav.scrollWidth>nav.clientWidth+1),false,'all desktop tabs fit')
+     const tabs=await page.locator('.topbar-tabs').evaluate(nav=>{const bounds=nav.getBoundingClientRect();return [...nav.querySelectorAll('button')].every(button=>{const box=button.getBoundingClientRect();return box.left>=bounds.left-1&&box.right<=bounds.right+1&&box.bottom<=bounds.bottom+1})})
+     assert.equal(tabs,true,'desktop destinations remain fully visible, including the last tab')
+    }
     await page.screenshot({path:path.join(out,`${theme}-${width}.png`),fullPage:true})
    }
   }
@@ -44,14 +49,19 @@ const out = process.env.BALANCE_QA_OUTPUT || 'workspace-qa/balancos'
   await app.locator('input[type=file]').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{bad')})
   assert.match(await app.getByRole('alert').innerText(),/Importação não aplicada/)
   assert.equal(await app.getByRole('heading',{name:marker,exact:true}).count(),1,'invalid import preserves data')
+  const badMetadata=sampleAnalysis();badMetadata.activity={invalid:true}
+  await app.locator('input[type=file]').setInputFiles({name:'bad-metadata.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(badMetadata))})
+  assert.match(await app.getByRole('alert').innerText(),/Importação não aplicada/)
+  assert.equal(await app.getByRole('heading',{name:marker,exact:true}).count(),1,'invalid metadata preserves report and data')
   const imported=sampleAnalysis();imported.company=marker;imported.years[0].values.revenue={value:100,status:'Divergente',source:'Documento sintético A/B'}
   await app.locator('input[type=file]').setInputFiles({name:'data.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(imported))})
   await app.getByLabel('Empresa ou identificação interna',{exact:true}).waitFor()
-  await app.getByLabel('Receita líquida '+imported.years[0].year,{exact:true}).fill('100')
+  await app.getByLabel('Receita líquida '+imported.years[0].year,{exact:true}).fill('101')
   const exportEvent=page.waitForEvent('download');await app.getByRole('button',{name:'Exportar dados',exact:true}).click()
   const exported=JSON.parse(fs.readFileSync(await(await exportEvent).path(),'utf8'))
   assert.equal(exported.years[0].values.revenue.source,'Documento sintético A/B')
   assert.equal(exported.years[0].values.revenue.status,'Informado')
+  assert.equal(exported.years[0].values.revenue.value,'101')
   await app.locator('input[type=file]').setInputFiles({name:'annual.csv',mimeType:'text/csv',buffer:Buffer.from(annualCsv(sampleAnalysis()))})
   assert.equal(await app.getByLabel('Receita líquida '+imported.years[0].year,{exact:true}).inputValue(),'100')
   await app.getByRole('button',{name:'Gerar análise',exact:true}).first().click()

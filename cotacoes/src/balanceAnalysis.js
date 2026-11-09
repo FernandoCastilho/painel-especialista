@@ -63,39 +63,76 @@ export function validDate(date) {
  if(typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false
  const parsed=new Date(date+'T00:00:00Z');return Number.isFinite(parsed.getTime())&&parsed.toISOString().slice(0,10)===date
 }
+function record(value) { return value!==null&&typeof value==='object'&&!Array.isArray(value) }
+function textFields(recordValue,fields,required=[]) {
+ for(const key of fields) if((recordValue[key]!==undefined||required.includes(key))&&typeof recordValue[key]!=='string') throw new Error(`O campo ${key} deve ser texto.`)
+}
+function booleanFields(recordValue,fields) {
+ for(const key of fields) if(recordValue[key]!==undefined&&typeof recordValue[key]!=='boolean') throw new Error(`O campo ${key} deve ser verdadeiro ou falso.`)
+}
+function validateCell(raw) {
+ if(raw!==null&&typeof raw==='object') {
+  if(!record(raw)||!STATUSES.includes(raw.status)) throw new Error('Célula com estado inválido. Use os estados indicados no modelo.')
+  textFields(raw,['source','note'])
+ }
+ const content=record(raw)?raw.value:raw
+ if(content!==null&&content!==undefined&&content!==''&&content!=='-'&&numberValue(content)===null) throw new Error('Valor inválido. No JSON, use números ou texto brasileiro como 1.234,56; não use fórmulas.')
+}
 export function validateInput(input) {
- if (!input || typeof input!=='object'||Array.isArray(input)||input.version!==1) throw new Error('Use o modelo JSON versão 1 disponibilizado nesta tela.')
+ if (!record(input)||input.version!==1) throw new Error('Use o modelo JSON versão 1 disponibilizado nesta tela.')
+ textFields(input,['company','activity','sector','debtScope'],['company','activity','sector','debtScope'])
+ booleanFields(input,['inference','debtsComparable'])
+ if(!Object.hasOwn(SECTORS,input.sector)) throw new Error('Setor desconhecido. Selecione um módulo disponível ou Geral.')
  if (!Array.isArray(input.years)||input.years.length!==3) throw new Error('Informe exatamente três exercícios.')
  if (!['BRL','USD','EUR'].includes(input.currency)||!['1','1000','1000000'].includes(String(input.unit))) throw new Error('Moeda ou unidade não reconhecida.')
  if (!['individual','consolidado'].includes(input.perimeter)) throw new Error('Identifique a base individual ou consolidada.')
  if (!['grossRevenue','revenue'].includes(input.monthlyBasis)) throw new Error('Identifique a base bruta ou líquida do faturamento mensal.')
- if (typeof input.company!=='string'||typeof input.debtScope!=='string') throw new Error('Identificação e escopo da dívida devem ser textos.')
  const years=input.years.map(y=>y?.year)
  if (years.some(y=>!Number.isInteger(y)||y<1900||y>2200)||new Set(years).size!==3||years.some((y,i)=>i>0&&y!==years[i-1]+1)) throw new Error('Os exercícios devem ser três anos consecutivos, em ordem crescente.')
  for (const y of input.years) {
-  if (!y.values||typeof y.values!=='object'||Array.isArray(y.values)||!Array.isArray(y.monthly)||y.monthly.length!==12) throw new Error(`Confira os valores e os 12 meses de ${y.year}.`)
+  if (!record(y)||!record(y.values)||!Array.isArray(y.monthly)||y.monthly.length!==12) throw new Error(`Confira os valores e os 12 meses de ${y.year}.`)
   if (!Number.isInteger(y.days)||y.days<1||y.days>366||typeof y.fullYear!=='boolean'||typeof y.compatible!=='boolean'||typeof y.source!=='string') throw new Error(`Confira período, fonte e compatibilidade de ${y.year}.`)
   const known = new Set(FIELDS.map(f=>f[0]))
   if (Object.keys(y.values).some(key=>!known.has(key))) throw new Error('Conta desconhecida: use os códigos do modelo. Mantenha contas adicionais no documento de origem para conferência.')
-  for (const raw of [...Object.values(y.values),...y.monthly]) {
-   if (raw !== null && typeof raw === 'object' && (Array.isArray(raw)||!STATUSES.includes(raw.status))) throw new Error('Célula com estado inválido. Use os estados indicados no modelo.')
-   const content = raw && typeof raw==='object' ? raw.value : raw
-   if (content!==null&&content!==undefined&&content!==''&&content!=='-'&&numberValue(content)===null) throw new Error('Valor inválido. No JSON, use números ou texto brasileiro como 1.234,56; não use fórmulas.')
-  }
+  for (const raw of [...Object.values(y.values),...y.monthly]) validateCell(raw)
+ }
+ if(input.opening!==undefined) {
+  if(!record(input.opening)||Object.keys(input.opening).some(key=>!['receivables','inventory','suppliers'].includes(key))) throw new Error('Saldos de abertura devem conter somente recebíveis, estoques e fornecedores.')
+  Object.values(input.opening).forEach(validateCell)
+ }
+ if(input.answers!==undefined) {
+  if(!record(input.answers)||Object.values(input.answers).some(value=>typeof value!=='string')) throw new Error('Respostas devem ser um mapa de textos.')
  }
  if (!Array.isArray(input.debts)||input.debts.length>200||!Array.isArray(input.benchmarks)||input.benchmarks.length>100) throw new Error('Limite de 200 contratos e 100 referências por análise.')
- for (const d of input.debts) if (!d||typeof d!=='object'||typeof d.id!=='string'||typeof d.currency!=='string'||!validDate(d.date)||!Array.isArray(d.schedule)) throw new Error('Contrato inválido: informe ID, moeda, data-base e cronograma (lista vazia quando ausente).')
- for (const b of input.benchmarks) if (!b||typeof b!=='object'||!METRICS.some(m=>m[0]===b.metric)||!Number.isInteger(b.year)||typeof b.name!=='string'||typeof b.source!=='string'||typeof b.method!=='string') throw new Error('Referência inválida. Confira indicador, exercício, nome, método e fonte.')
+ for (const d of input.debts) {
+  if (!record(d)||typeof d.id!=='string'||typeof d.currency!=='string'||!validDate(d.date)||!Array.isArray(d.schedule)||d.schedule.length>1200) throw new Error('Contrato inválido: informe ID, moeda, data-base e cronograma (lista vazia quando ausente; até 1.200 parcelas).')
+  textFields(d,['creditor','modality','maturity','indexer','rate','guarantee','source','purpose','covenants'])
+  validateCell(d.amount)
+  for(const p of d.schedule) {
+   if(!record(p)||typeof p.date!=='string') throw new Error('Parcela inválida: informe um objeto com data e valor de principal.')
+   textFields(p,['source','note']);validateCell(p.amount)
+  }
+ }
+ for (const b of input.benchmarks) {
+  if (!record(b)||!METRICS.some(m=>m[0]===b.metric)||!Number.isInteger(b.year)||typeof b.name!=='string'||typeof b.source!=='string'||typeof b.method!=='string') throw new Error('Referência inválida. Confira indicador, exercício, nome, método e fonte.')
+  textFields(b,['consultedAt','limitations','currency','perimeter']);booleanFields(b,['comparable']);validateCell(b.value)
+  if(b.unit!==undefined&&!['1','1000','1000000'].includes(String(b.unit))) throw new Error('Unidade da referência inválida.')
+  if(b.consultedAt&&!validDate(b.consultedAt)) throw new Error('Data de consulta da referência inválida.')
+ }
  return input
+}
+const SIGNED_FIELDS=new Set(['netProfit','grossProfit','equity','tax','operatingCashFlow'])
+function accountCell(key,raw,source='') {
+ const c=cell(raw,source)
+ if(finite(c.value)&&c.value<0&&!SIGNED_FIELDS.has(key)) {c.value=null;c.status='Divergente';c.note='Valor negativo em conta de natureza não negativa; confirme sinal e classificação.'}
+ return c
 }
 export function formatValue(value,unit='money') {
  if (!finite(value)) return 'Não calculável'
  return `${value.toLocaleString('pt-BR',{minimumFractionDigits:unit==='money'?2:unit==='x'?2:1,maximumFractionDigits:unit==='money'?2:unit==='x'?2:1})}${unit==='%'?'%':unit==='x'?'×':unit==='dias'?' dias':''}`
 }
 function computeYear(y, previous, data) {
- const entries=Object.fromEntries(FIELDS.map(([key])=>[key,cell(y.values[key],y.source)]))
- const signed=new Set(['netProfit','grossProfit','equity','tax','operatingCashFlow'])
- for(const [key,c] of Object.entries(entries)) if(finite(c.value)&&c.value<0&&!signed.has(key)) {c.value=null;c.status='Divergente';c.note='Valor negativo em conta de natureza não negativa; confirme sinal e classificação.'}
+ const entries=Object.fromEntries(FIELDS.map(([key])=>[key,accountCell(key,y.values[key],y.source)]))
  const v=Object.fromEntries(Object.entries(entries).map(([key,c])=>[key,c.value]))
  const m={}
  m.liquidity=ratio(v.currentAssets,v.currentLiabilities)
@@ -114,7 +151,7 @@ function computeYear(y, previous, data) {
  m.interestCover=ratio(m.ebit,v.interest)
  m.partialOperating=subtract(sum(v.inventory,v.receivables),v.suppliers)
  m.ncg=subtract(v.operatingAssets,v.operatingLiabilities)
- const p=key=>cell(previous ? previous.values?.[key] : data.opening?.[key]).value
+ const p=key=>accountCell(key,previous ? previous.values?.[key] : data.opening?.[key]).value
  for (const [metric,key,denominator] of [['pmr','receivables','creditSales'],['pme','inventory','cost'],['pmp','suppliers','creditPurchases']]) m[metric]=y.compatible&&y.fullYear?ratio(finite(p(key))&&finite(v[key])?(p(key)+v[key])/2:null,v[denominator],y.days):null
  m.cycle=subtract(sum(m.pmr,m.pme),m.pmp)
  const monthly=y.monthly.map(c=>cell(c,y.source)), complete=monthly.every(c=>finite(c.value))
@@ -138,7 +175,7 @@ function analyseDebt(debts) {
   const g=groups[key];g.amount+=amount;g.count++
   for (const [field,target] of [['creditor','byCreditor'],['modality','byModality'],['indexer','byIndexer']]) {const label=typeof d[field]==='string'&&d[field].trim()?d[field]:'Não informado';g[target][label]=(g[target][label]||0)+amount}
   if (!d.schedule.length) {g.unscheduled+=amount;warnings.push(`Contrato ${d.id}: falta cronograma de amortização. Vencimento final ${d.maturity||'não informado'} não distribui o saldo por parcelas.`)}
-  else if (d.schedule.some(p=>!finite(cell(p.amount).value)||!validDate(p.date)||cell(p.amount).value<0)) warnings.push(`Contrato ${d.id}: cronograma incompleto; não consolidado.`)
+  else if (d.schedule.some(p=>!finite(cell(p.amount).value)||!validDate(p.date)||cell(p.amount).value<0)) {g.unscheduled+=amount;warnings.push(`Contrato ${d.id}: cronograma incompleto; não consolidado. Saldo inteiro mantido sem cronograma válido.`)}
   else {
    const scheduled=d.schedule.reduce((s,p)=>s+cell(p.amount).value,0);g.scheduled+=scheduled
    for(const p of d.schedule) {

@@ -72,3 +72,27 @@ test('mensal cruza dezembro janeiro e agregados incompletos ficam indisponíveis
  const d=sampleAnalysis();d.years[0].monthly[11]=100;d.years[1].monthly[0]=120;d.years[1].monthly[2]=''
  const r=analyseBalance(d);near(r.years[1].monthlyChanges[0].percent,20);assert.equal(r.years[1].quarters[0],null);assert.equal(r.years[1].semesters[0],null);assert.ok(r.years[1].quarters[1]>0)
 })
+test('saldos negativos anteriores e de abertura não geram prazos médios falsos',()=>{
+ const d=model();d.years.forEach(y=>{y.compatible=true;y.values={inventory:10,cost:100,receivables:10,creditSales:100,suppliers:10,creditPurchases:100}})
+ for(const [field,metric] of [['inventory','pme'],['receivables','pmr'],['suppliers','pmp']]) {
+  d.years[0].values[field]=-10;assert.equal(analyseBalance(d).years[1].m[metric],null)
+  d.years[0].values[field]=10;d.opening[field]=-10;assert.equal(analyseBalance(d).years[0].m[metric],null)
+ }
+})
+test('cronograma inválido mantém saldo inteiro sem alocação temporal',()=>{
+ const d=model();d.debts=[{id:'A',date:'2025-12-31',currency:'BRL',amount:100,schedule:[{date:'2026-12-31',amount:''}]}]
+ const g=Object.values(analyseBalance(d).debt.groups)[0];assert.equal(g.unscheduled,100);assert.equal(g.scheduled,0);assert.equal(Object.values(g.buckets).reduce((a,b)=>a+b,0),0)
+})
+test('esquema rejeita metadados e parcelas não renderizáveis antes de aplicar importação',()=>{
+ const malformed=[
+  d=>d.activity={},d=>d.sector={},d=>d.inference={},d=>d.opening=[],
+  d=>d.opening.inventory={value:10,status:'Informado',source:{}},
+  d=>d.years[0].values.inventory={value:10,status:'Informado',note:{}},
+  d=>d.debts=[{id:'A',date:'2025-12-31',currency:'BRL',amount:100,source:{},schedule:[]}],
+  d=>d.debts=[{id:'A',date:'2025-12-31',currency:'BRL',amount:100,schedule:[null]}],
+  d=>d.debts=[{id:'A',date:'2025-12-31',currency:'BRL',amount:100,maturity:{},schedule:[]}],
+  d=>d.benchmarks=[{metric:'liquidity',year:2025,name:'Referência',source:'https://example.org',method:'x',limitations:{}}],
+  d=>d.benchmarks=[{metric:'liquidity',year:2025,name:'Referência',source:'https://example.org',method:'x',consultedAt:'2026-02-30'}],
+ ]
+ for(const mutate of malformed) {const d=model();mutate(d);assert.throws(()=>validateInput(d))}
+})
