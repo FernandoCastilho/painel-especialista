@@ -1,7 +1,7 @@
 import { createSimulationState, validateState } from './state.mjs'
 import { normalizeSectorNews, validIsoTimestamp } from '../../src/sectorNews.js'
 
-export const PRODUCTION_SOURCE_IDS = Object.freeze(['mapa', 'antt', 'mdic', 'anp', 'anm', 'ana', 'cvm', 'ans', 'ipen'])
+export const PRODUCTION_SOURCE_IDS = Object.freeze(['mapa', 'antt', 'mdic', 'anp', 'anm', 'ana', 'cvm', 'ans', 'ipen', 'aneel', 'susep'])
 export const PRODUCTION_STORE_ID = 'institutional-news-production'
 
 // Explicit operational bootstrap, never called automatically by the collector.
