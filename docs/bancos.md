@@ -1,7 +1,7 @@
 # Bancos — escopo e operação
 
 ## Produto e fluxo
-Fernando mantém nove bancos (Itaú, BB, Bradesco, Santander, Caixa, Safra, BTG, ABC e Daycoval); Votorantim/BV foi removido em 2026-11-08, em seção imediatamente após Setores. Objetivo: comparar capital, porte, carteiras PJ/PF e qualidade do crédito. Último período disponível por banco, sem misturar um saldo antigo em trimestre novo. Acrescentam-se ativos, lucro líquido trimestral e ROE. Provisão e inadimplência com total/PJ/PF quando disponíveis, e PJ por porte nos detalhes. Evolução trimestral ou contra o mesmo trimestre do ano anterior, no histórico de cada indicador; sem nota geral de saúde.
+Fernando mantém sete bancos (Itaú, BB, Bradesco, Santander, Caixa, Safra e BTG); Votorantim/BV foi removido em 2026-11-08, e ABC e Daycoval em 2026-11-09, em seção imediatamente após Setores. Objetivo: comparar capital, porte, carteiras PJ/PF e qualidade do crédito. Último período disponível por banco, sem misturar um saldo antigo em trimestre novo. Acrescentam-se ativos, lucro líquido trimestral e ROE. Provisão e inadimplência com total/PJ/PF quando disponíveis, e PJ por porte nos detalhes. Evolução trimestral ou contra o mesmo trimestre do ano anterior, no histórico de cada indicador; sem nota geral de saúde.
 
 Fluxo: Bancos → escolher base (última divulgação/BC), segmento e referência da evolução → comparar → Detalhes e fontes (painel próprio com fechar/Escape no computador, mantendo a tabela compacta). Bancos nas colunas e indicadores nas linhas, no celular e no computador, com rolagem própria e indicadores fixos à esquerda. Busca limita a lista. Carregamento, erro de rede, falha parcial, dado ausente e busca sem resultados têm mensagens distintas. Nenhum cadastro ou dado pessoal.
 

@@ -43,10 +43,10 @@ test('Cosif quarter profit subtracts the first quarter; expected loss uses match
   reports['2'].pop()
   assert.equal(normalizeBankQuarter(202606, reports)[0].metrics.provisionRatioTotal, undefined)
 })
-test('published snapshot covers nine unique banks with finite, source-backed values and exact quarters', async () => {
+test('published snapshot covers seven unique banks with finite, source-backed values and exact quarters', async () => {
   const data = JSON.parse(await readFile(new URL('../public/bancos.json', import.meta.url)))
-  assert.equal(data.banks.length, 9)
-  assert.equal(new Set(data.banks.map(b => b.id)).size, 9)
+  assert.equal(data.banks.length, 7)
+  assert.equal(new Set(data.banks.map(b => b.id)).size, 7)
   for (const bank of data.banks) {
     assert.ok(latestBankPoint(bank)?.metrics.basel)
     assert.ok(latestBankPoint(bank)?.metrics.roe, bank.name + ': ROE deve ter fonte e critério explícitos')

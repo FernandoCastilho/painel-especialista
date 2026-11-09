@@ -8,9 +8,7 @@ export const BANKS = [
   ['caixa', 'Caixa', 'C0080738', 'https://ri.caixa.gov.br/'],
   ['safra', 'Safra', 'C0080109', 'https://www.safra.com.br/sobre/relacoes-com-investidores/informacoes-financeiras.htm'],
   ['btg', 'BTG Pactual', 'C0080336', 'https://ri.btgpactual.com/'],
-  ['abc', 'ABC Brasil', 'C0080312', 'https://ri.abcbrasil.com.br/'],
-  ['daycoval', 'Daycoval', 'C0081744', 'https://ri.daycoval.com.br/'],
-].map(([id, name, code, ri]) => ({ id, name, code, ri, logo: `bank-logos/${id}.${id === 'abc' ? 'svg' : id === 'daycoval' ? 'ico' : 'png'}` }))
+].map(([id, name, code, ri]) => ({ id, name, code, ri, logo: `bank-logos/${id}.png` }))
 
 export const BANK_METRICS = {
   basel: ['Basileia', '%', 'capital'], cet1: ['Capital principal (CET1)', '%', 'capital'],
