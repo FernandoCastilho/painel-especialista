@@ -11,8 +11,8 @@ function worker() {
     async match(key) { return entries.get(String(key))?.clone() },
   }
   vm.runInNewContext(readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8'), {
-    self: { location: { origin: 'https://panel.example' }, addEventListener(type, handler) { handlers[type] = handler } },
-    URL, caches: { async open() { return cache } },
+    self: { registration: { scope: 'https://panel.example/' }, location: { origin: 'https://panel.example' }, addEventListener(type, handler) { handlers[type] = handler } },
+    URL, Response, caches: { async open() { return cache } },
     fetch: async () => {
       if (mode === 'offline') throw Error('offline')
       if (mode === 'http-error') return new Response('unavailable', { status: 503 })
@@ -56,4 +56,12 @@ test('cache quota failure does not hide successful network data or replace the p
   assert.equal((await (await sw.request('macro.json?t=2')).json()).version, 2)
   sw.mode('offline')
   assert.equal((await (await sw.request('macro.json?t=3')).json()).version, 1)
+})
+
+test('retired data is unavailable online and offline even when cached', async () => {
+  const sw = worker()
+  sw.entries.set('https://panel.example/movimento-falimentar.json', new Response('old data'))
+  assert.equal((await sw.request('movimento-falimentar.json?t=1')).status, 410)
+  sw.mode('offline')
+  assert.equal((await sw.request('movimento-falimentar.json')).status, 410)
 })

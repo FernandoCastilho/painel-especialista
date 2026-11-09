@@ -1,19 +1,17 @@
 import {useMemo,useState} from 'react'
 import {useDataFile} from './useDataFile.js'
 import RefreshButton from './RefreshButton.jsx'
+import RecoveryHistoryPanel from './RecoveryHistoryPanel.jsx'
 import {RECOVERY_STAGES,normalizeRecoveryStatus,recoveryWeek,shiftRecoveryWeek} from './recuperacao.js'
 import './RecuperacaoJudicial.css'
-import MovimentoFalimentar from './MovimentoFalimentar.jsx'
 const date=d=>d?.split('-').reverse().join('/') || 'não informada'
-export default function RecuperacaoJudicial({onSources}){
+function RecoveryWeeklyCoverage({onSources}){
   const resource=useDataFile('recuperacao.json'),[week,setWeek]=useState(()=>recoveryWeek())
   const data=useMemo(()=>{try{return normalizeRecoveryStatus(resource.data)}catch{return null}},[resource.data])
   const today=recoveryWeek()
   return <section className="recovery-panel" aria-labelledby="recovery-heading">
-    <div className="history-head"><h2 id="recovery-heading">Recuperação judicial</h2><RefreshButton files={['recuperacao.json','movimento-falimentar.json']}/></div>
+    <div className="history-head"><h2 id="recovery-heading">Recuperação judicial</h2><RefreshButton files={['recuperacao.json']}/></div>
     <p className="recovery-intro">Acompanhamento de eventos por semana e de empresas por setor, com cobertura explícita.</p>
-    <MovimentoFalimentar/>
-    <h3 className="movement-national-heading">Acompanhamento semanal nacional</h3>
     <div className="recovery-coverage" role="status"><strong>Dados semanais por setor ainda indisponíveis</strong><p>Não há fonte nacional semanal por setor validada neste painel. Pedidos, deferimentos e concessões não foram contados. Ausência de dado não significa zero.</p></div>
     <div className="recovery-week" role="group" aria-label="Semana de acompanhamento"><button type="button" className="btn" onClick={()=>setWeek(w=>shiftRecoveryWeek(w,-7))}>Semana anterior</button><label>Semana de <input type="date" aria-label="Escolher semana de recuperação judicial" value={week.start} max={today.end} onChange={e=>{const w=recoveryWeek(e.target.value);if(w && w.start<=today.start)setWeek(w)}}/></label><button type="button" className="btn" disabled={week.start>=today.start} onClick={()=>setWeek(w=>shiftRecoveryWeek(w,7))}>Próxima semana</button></div>
     <p className="muted">{date(week.start)} a {date(week.end)} · segunda a domingo · datas civis de Brasília.</p>
@@ -27,4 +25,14 @@ export default function RecuperacaoJudicial({onSources}){
     {data && <p className="recovery-review">Revisão dos endereços de referência: {new Date(data.reviewedAt).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'})}. Próxima revisão prevista: {new Date(data.nextReviewAt).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'})}. A rotina confere endereços semanalmente; não coleta nem valida contagens de processos.{data.sourceChecks.some(s=>!s.available) && ' A conferência automática não confirmou alguma referência.'}</p>}
     <button type="button" className="btn" onClick={onSources}>Ver referências em Base de dados</button>
   </section>
+}
+
+export default function RecuperacaoJudicial({onSources}) {
+  return <>
+    <RecoveryHistoryPanel />
+    <details className="rj-weekly-detail">
+      <summary>Conferência semanal e cadastro de referência</summary>
+      <RecoveryWeeklyCoverage onSources={onSources} />
+    </details>
+  </>
 }

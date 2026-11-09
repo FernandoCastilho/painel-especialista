@@ -4,17 +4,17 @@ import vm from 'node:vm'
 import { readFileSync } from 'node:fs'
 import { readStorage } from '../src/storage.js'
 
-for (const [app, current, old, foreign] of [['cotacoes', 'cotacoes-v4', 'cotacoes-v3', 'caixa-v1']]) {
+for (const [app, current, old, foreign] of [['cotacoes', 'cotacoes-v6', 'cotacoes-v5', 'caixa-v1']]) {
   test(`${app}: ativação preserva caches dos outros aplicativos`, async () => {
     const handlers = {}, deleted = []
     vm.runInNewContext(readFileSync(new URL(`../../${app}/public/sw.js`, import.meta.url), 'utf8'), {
       self: { addEventListener: (type, handler) => { handlers[type] = handler }, clients: { claim() {} } },
-      caches: { keys: async () => [current, old, foreign, 'outro-site-v1'], delete: async key => { deleted.push(key) } },
+      caches: { keys: async () => [current, old, 'cotacoes-v4', foreign, 'outro-site-v1'], delete: async key => { deleted.push(key) } },
     })
     let pending
     handlers.activate({ waitUntil(p) { pending = p } })
     await pending
-    assert.deepEqual(deleted, [old])
+    assert.deepEqual(deleted, [old, 'cotacoes-v4'])
   })
 }
 
