@@ -19,7 +19,7 @@ async function report(period, id) {
     if (process.env.BANKS_CACHE_DIR) data = await readFile(`${process.env.BANKS_CACHE_DIR}/${key}.json`, 'utf8').then(JSON.parse).catch(() => null)
     if (!data) {
       const url = bankDataUrl(period, id)
-      const text = process.env.BANKS_CURL === '1' ? execFileSync('curl', ['-fsSL', '--max-time', '45', url], { encoding: 'utf8', maxBuffer: 30e6 }) : await fetchBankText(url, { deadline })
+      const text = process.env.BANKS_CURL === '1' ? execFileSync('curl', ['-fsSL', '--max-time', '45', url], { encoding: 'utf8', maxBuffer: 300e6 }) : await fetchBankText(url, { deadline })
       data = JSON.parse(text)
       if (process.env.BANKS_CACHE_DIR) { await mkdir(process.env.BANKS_CACHE_DIR, { recursive: true }); await writeFile(`${process.env.BANKS_CACHE_DIR}/${key}.json`, text) }
     }

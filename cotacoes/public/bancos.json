@@ -1,6 +1,6 @@
 {
-  "generatedAt": 1794100405254,
-  "lastAttemptAt": 1794100405254,
+  "generatedAt": 1794235897901,
+  "lastAttemptAt": 1794235897901,
   "latestBcPeriod": 202606,
   "riReviewedAt": "2026-11-07",
   "stale": false,
@@ -11,6 +11,7 @@
       "name": "Itaú",
       "code": "C0080099",
       "ri": "https://www.itau.com.br/relacoes-com-investidores/resultados-e-relatorios/central-de-resultados/",
+      "logo": "bank-logos/itau.png",
       "observations": [
         {
           "id": "itau",
@@ -276,6 +277,234 @@
               "name": "Grande",
               "value": 120801377760.08,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202506&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "itau",
+          "period": 202512,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.18384433194,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 2739215108933.35,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditPF": {
+              "value": 586563942600.85,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 1199970950378.96,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 12316412949.260202,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 51571448702.92,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 4.018155412280825,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 2.1803461243172064,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPJ": {
+              "value": 613407007778.11,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 4463439537.44,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 4476560764.63,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 48317066452.7,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 103985801139.29,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 136751203723.61,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "itau",
+          "period": 202509,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 16.3954791411448,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 2652283636155.31,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 1131308055305.44,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 11772304852.6701,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 52953301791.32,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 4.362226683477585,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 2.1837344351075094,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPF": {
+              "value": 555992777191.97,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditPJ": {
+              "value": 575315278113.47,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 3378223733.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 3378223733.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 3378223733.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 4992536858.27,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 4992536858.27,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 4992536858.27,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 45953860177.5,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 45953860177.5,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 45953860177.5,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 97325882100.49,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 97325882100.49,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 97325882100.49,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 129839289877.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 129839289877.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 129839289877.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
           ]
         },
@@ -658,14 +887,14 @@
             }
           ]
         }
-      ],
-      "logo": "bank-logos/itau.png"
+      ]
     },
     {
       "id": "bb",
       "name": "Banco do Brasil",
       "code": "C0080329",
       "ri": "https://ri.bb.com.br/informacoes-financeiras/central-de-resultados/",
+      "logo": "bank-logos/bb.png",
       "observations": [
         {
           "id": "bb",
@@ -943,6 +1172,234 @@
         },
         {
           "id": "bb",
+          "period": 202512,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.1297835513664,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 2453521042455.96,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditPF": {
+              "value": 711571684771.42,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 1096239850487.49,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 5083160767.38992,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 98670062248.03,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 8.12131731300876,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 5.269892896971388,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPJ": {
+              "value": 384668165716.07,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 6518657433.84,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 2386781567.79,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 46550586898.77,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 89171289569.36,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 204427186581.78,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "bb",
+          "period": 202509,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 14.8063888146171,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 2538286317706.65,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 1102637029523.05,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 3107072069.32001,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 95422700627.28,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 7.959221830638835,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 4.765338705305252,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPF": {
+              "value": 714252581383.99,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditPJ": {
+              "value": 388384448139.06,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 6255068076.75,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 6255068076.75,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 6255068076.75,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 2558019970.73,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 2558019970.73,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 2558019970.73,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 49015678055.58,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 49015678055.58,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 49015678055.58,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 88325974334.82,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 88325974334.82,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 88325974334.82,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 199549413532.6,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 199549413532.6,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 199549413532.6,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "bb",
           "period": 202503,
           "origin": "bc",
           "scope": "Conglomerado prudencial · crédito SCR",
@@ -1031,14 +1488,14 @@
           ]
         }
       ],
-      "releases": [],
-      "logo": "bank-logos/bb.png"
+      "releases": []
     },
     {
       "id": "bradesco",
       "name": "Bradesco",
       "code": "C0080075",
       "ri": "https://www.bradescori.com.br/informacoes-ao-mercado/central-de-resultados/",
+      "logo": "bank-logos/bradesco.png",
       "observations": [
         {
           "id": "bradesco",
@@ -1304,6 +1761,234 @@
               "name": "Grande",
               "value": 87131275399.79,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202506&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "bradesco",
+          "period": 202512,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.777707276212999,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 1911249346329.81,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditPF": {
+              "value": 450894853723.58,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 836629829750.64,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 6528625514.419991,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 53254915494.79,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 5.655989016715076,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 3.8260093808955555,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPJ": {
+              "value": 385734976027.06,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 2649386799.67,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 9124874518.81,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 92578441717.82,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 105892271408.62,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 86075364534.46,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "bradesco",
+          "period": 202509,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.8545378466762,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 1794848789306.04,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 800084356646.81,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 6181041846.78001,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 55967760271.25,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 6.220987860295267,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 3.847736967929473,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPF": {
+              "value": 437555492138.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditPJ": {
+              "value": 362528864507.87,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 2529335923.07,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 2529335923.07,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 2529335923.07,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 8549097117.29,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 8549097117.29,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 8549097117.29,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 86099330658.12,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 86099330658.12,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 86099330658.12,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 105633751509.22,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 105633751509.22,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 105633751509.22,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 76557194661.2,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 76557194661.2,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 76557194661.2,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
           ]
         },
@@ -1677,14 +2362,14 @@
           },
           "porte": []
         }
-      ],
-      "logo": "bank-logos/bradesco.png"
+      ]
     },
     {
       "id": "santander",
       "name": "Santander",
       "code": "C0080185",
       "ri": "https://www.santander.com.br/ri/",
+      "logo": "bank-logos/santander.png",
       "observations": [
         {
           "id": "santander",
@@ -1950,6 +2635,234 @@
               "name": "Grande",
               "value": 51534733009.6,
               "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202506&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "santander",
+          "period": 202512,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.3637627761873,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 1290865553019.51,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditPF": {
+              "value": 331555939915.61,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 557954423668.85,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 4252232001.0800295,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 41851678380.72,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 7.025974119331273,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 3.731718768226415,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPJ": {
+              "value": 226398483753.24,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 3882694795.04,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 6626952056.93,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 32172972505.25,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 46526739365.08,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 54760147962.3,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "santander",
+          "period": 202509,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.2101627831382,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 1286241579623.45,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 543941433687.03,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 4327270407.04998,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 40587293255.88,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 7.033452341081202,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 3.3893303230026763,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPF": {
+              "value": 324340141202.85,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditPJ": {
+              "value": 219601292484.18,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 3009109047.79,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 3009109047.79,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 3009109047.79,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 6815351106.4,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 6815351106.4,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 6815351106.4,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 31733456982.3,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 31733456982.3,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 31733456982.3,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 43790285089.21,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 43790285089.21,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 43790285089.21,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 54206056033.57,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 54206056033.57,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 54206056033.57,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
             }
           ]
         },
@@ -2332,14 +3245,14 @@
             }
           ]
         }
-      ],
-      "logo": "bank-logos/santander.png"
+      ]
     },
     {
       "id": "caixa",
       "name": "Caixa",
       "code": "C0080738",
       "ri": "https://ri.caixa.gov.br/",
+      "logo": "bank-logos/caixa.png",
       "observations": [
         {
           "id": "caixa",
@@ -2617,6 +3530,234 @@
         },
         {
           "id": "caixa",
+          "period": 202512,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 16.3935260808538,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 2219854559426.4,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditPF": {
+              "value": 1122540746719.1,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 1382189827851.04,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 2446495423.7499905,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 62708596703.21999,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 4.550281261340102,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 3.0409732770577036,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPJ": {
+              "value": 259649081131.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": null,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 56014301675.29,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 47031812403.68,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 80835833263.11,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 75766929890.03,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "caixa",
+          "period": 202509,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 16.4409282113596,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 2209688594345.01,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 1317318514562.17,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 3415564113.09999,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 59297253763.89,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 4.4436251512124825,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 3.048303293501222,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPF": {
+              "value": 1066482312275.29,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditPJ": {
+              "value": 250836202286.88,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 33919084134.46,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 33919084134.46,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 33919084134.46,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 7135113234.07,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 7135113234.07,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 7135113234.07,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 34297998709.2,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 34297998709.2,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 34297998709.2,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 54596768371.89,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 54596768371.89,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 54596768371.89,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 120886210353.68,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 120886210353.68,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 120886210353.68,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "caixa",
           "period": 202503,
           "origin": "bc",
           "scope": "Conglomerado prudencial · crédito SCR",
@@ -2705,14 +3846,14 @@
           ]
         }
       ],
-      "releases": [],
-      "logo": "bank-logos/caixa.png"
+      "releases": []
     },
     {
       "id": "safra",
       "name": "Safra",
       "code": "C0080109",
       "ri": "https://www.safra.com.br/sobre/relacoes-com-investidores/informacoes-financeiras.htm",
+      "logo": "bank-logos/safra.png",
       "observations": [
         {
           "id": "safra",
@@ -2999,6 +4140,234 @@
         },
         {
           "id": "safra",
+          "period": 202512,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 16.5527038260358,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 284476673416.04,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditPF": {
+              "value": 40750241262.25,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 117321260296.45,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 1072474489.25,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 7512630370.48,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 5.037967764171106,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 1.4675676889929374,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPJ": {
+              "value": 76571019034.2,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 1921079063.74,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1135939373.58,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 3473998827.67,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 22264734118.66,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 33168182473.23,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "safra",
+          "period": 202509,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 17.6614687858055,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 265448063418.15,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 109446967314.61,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 1128994989.21,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 6951339740.05,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 4.959274558902261,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 1.267626994443728,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPF": {
+              "value": 39311627238.61,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditPJ": {
+              "value": 70135340076,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 1480985276.18,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 1480985276.18,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 1480985276.18,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1107830846.21,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1107830846.21,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1107830846.21,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 3481049234.09,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 3481049234.09,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 3481049234.09,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 20601231934.39,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 20601231934.39,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 20601231934.39,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 30824147922.95,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 30824147922.95,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 30824147922.95,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "safra",
           "period": 202503,
           "origin": "bc",
           "scope": "Conglomerado prudencial · crédito SCR",
@@ -3087,14 +4456,14 @@
           ]
         }
       ],
-      "releases": [],
-      "logo": "bank-logos/safra.png"
+      "releases": []
     },
     {
       "id": "btg",
       "name": "BTG Pactual",
       "code": "C0080336",
       "ri": "https://ri.btgpactual.com/",
+      "logo": "bank-logos/btg.png",
       "observations": [
         {
           "id": "btg",
@@ -3389,6 +4758,234 @@
         },
         {
           "id": "btg",
+          "period": 202512,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.503258072211601,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 746102634351.73,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditPF": {
+              "value": 72612534806.44,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 165294151385.06,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 4390528109.91,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 13225041208.94,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 5.955802672641628,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 5.3333475993796124,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPJ": {
+              "value": 92681616578.62,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 6741379412.78,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1203898267.49,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 1316645512.31,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 4236130053.91,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 34653479862.12,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202512&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "btg",
+          "period": 202509,
+          "origin": "bc",
+          "scope": "Conglomerado prudencial · crédito SCR",
+          "metrics": {
+            "basel": {
+              "value": 15.5452486440917,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-basileia",
+              "note": ""
+            },
+            "assets": {
+              "value": 631011425680.98,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-ativos",
+              "note": ""
+            },
+            "creditTotal": {
+              "value": 149894098549.04,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-total",
+              "note": "Crédito ativo SCR; difere da carteira contábil líquida e das carteiras ampliadas dos bancos."
+            },
+            "profit": {
+              "value": 4337376528.09,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%271%27&%24format=json",
+              "basis": "bc-prudencial-lucro-trimestral",
+              "note": "Lucro contábil do trimestre. Junho/dezembro: saldo semestral menos saldo de março/setembro."
+            },
+            "provisionTotal": {
+              "value": 12269616337.240002,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-creditos",
+              "note": "Saldo de perda esperada das operações de crédito, arrendamento, outras operações com característica de crédito e recebíveis pós-pagos. Não é despesa de PDD nem inclui toda a carteira de títulos."
+            },
+            "provisionRatioTotal": {
+              "value": 5.972602509355642,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%272%27&%24format=json",
+              "basis": "bc-perda-esperada-sobre-bruto",
+              "note": "Cálculo: perda esperada / valor contábil bruto das mesmas quatro categorias. Denominador diferente do SCR."
+            },
+            "nplTotal": {
+              "value": 5.8354476711958725,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2716%27&%24format=json",
+              "basis": "bc-scr-inadimplencia-arrastada",
+              "note": "Cálculo: carteira ativa inadimplida arrastada / total geral, conforme relatório SCR. Não substitui automaticamente a métrica gerencial de atraso >90 dias."
+            },
+            "creditPF": {
+              "value": 68765252126.35,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2711%27&%24format=json",
+              "basis": "bc-scr-pf",
+              "note": ""
+            },
+            "creditPJ": {
+              "value": 81128846422.69,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2713%27&%24format=json",
+              "basis": "bc-scr-pj",
+              "note": ""
+            }
+          },
+          "porte": [
+            {
+              "name": "Indisponível",
+              "value": 5811095283.39,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 5811095283.39,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Indisponível",
+              "value": 5811095283.39,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1341137645.69,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1341137645.69,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Micro",
+              "value": 1341137645.69,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 1390949621.81,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 1390949621.81,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Pequena",
+              "value": 1390949621.81,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 3773664480.93,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 3773664480.93,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Média",
+              "value": 3773664480.93,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 32483645968.73,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 32483645968.73,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            },
+            {
+              "name": "Grande",
+              "value": 32483645968.73,
+              "source": "https://olinda.bcb.gov.br/olinda/servico/IFDATA/versao/v1/odata/IfDataValores(AnoMes=@AnoMes,TipoInstituicao=@TipoInstituicao,Relatorio=@Relatorio)?%40AnoMes=202509&%40TipoInstituicao=1&%40Relatorio=%2714%27&%24format=json"
+            }
+          ]
+        },
+        {
+          "id": "btg",
           "period": 202503,
           "origin": "bc",
           "scope": "Conglomerado prudencial · crédito SCR",
@@ -3477,8 +5074,7 @@
           ]
         }
       ],
-      "releases": [],
-      "logo": "bank-logos/btg.png"
+      "releases": []
     }
   ]
 }
