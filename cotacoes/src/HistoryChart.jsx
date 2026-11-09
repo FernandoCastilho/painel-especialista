@@ -1,4 +1,5 @@
 import { dataTimestamp } from './dataTimestamp.js'
+import { periodChange } from './stats.js'
 import { chartLinePath } from './chartLinePath.js'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -321,9 +322,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
   const macroH = useMacro()
   const ptaxH = macroH.data?.ptaxHist?.[currency.code]
   const td = currency.code === 'JPY' ? 4 : 2 // iene vale centavos: precisa de mais casas
-  const first = pts?.[0]
-  const last = pts?.[pts.length - 1]
-  const pct = first && last ? ((last.bid - first.bid) / first.bid) * 100 : null
+  const pct = periodChange(pts)
   const trend = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat'
 
   return (
@@ -337,7 +336,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
         {pct != null && (
           <div className={`pct ${trend}`}>
             {trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■'} {pct.toFixed(2).replace('.', ',')}%
-            <small>{intraday ? 'no dia' : 'no período'}</small>
+            <small>{intraday ? 'desde a 1ª amostra' : 'no período'}</small>
           </div>
         )}
       </header>
@@ -356,11 +355,12 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
         {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} />}
       </div>
       {pts && h.warning && <p className="status stale" role="status">{h.warning}</p>}
-      {pts && <p className="status">Cobertura exibida: {fmtDate(pts[0].t, true)} a {fmtDate(pts.at(-1).t, true)}.</p>}
+      {pts?.length === 1 && <p className="status stale" role="status">Uma única amostra disponível; aguardando outra para calcular a variação.</p>}
+      {pts && <p className="status">{intraday ? `Da primeira amostra: ${dataTimestamp(pts[0].t)} até ${dataTimestamp(pts.at(-1).t)}. Horários em Brasília. Esta variação não é o Δ dia da fonte contra a referência anterior.` : `Cobertura exibida: ${fmtDate(pts[0].t, true)} a ${fmtDate(pts.at(-1).t, true)}.`}</p>}
       {pts && h.stale && <p className="status stale" role="status">Não foi possível atualizar. Mantida a última série disponível. {h.error}</p>}
       {pts && intraday && (
         <p className="status">
-          {h.data.resolution === '1 h' ? 'Uma amostra por hora' : 'Pontos a cada 5 min no horário comercial'} · atualizado em {dataTimestamp(h.data.generatedAt)}
+          Amostras observadas da fonte, com possíveis lacunas. Arquivo gerado em {dataTimestamp(h.data.generatedAt)}; esse horário não é o da última cotação.
         </p>
       )}
       {pts && !intraday && h.data?.feed && (
@@ -368,7 +368,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
       )}
       {pts && (
         <details className="table" open={tableOpen} onToggle={(e) => setTableOpen(e.currentTarget.open)}>
-          <summary>Ver tabela ({pts.length} {intraday ? 'barras de 5 min' : 'dias'})</summary>
+          <summary>Ver tabela ({pts.length} {intraday ? (pts.length === 1 ? 'amostra' : 'amostras') : 'dias'})</summary>
           <div className="scroll">
             <table>
               <thead>
