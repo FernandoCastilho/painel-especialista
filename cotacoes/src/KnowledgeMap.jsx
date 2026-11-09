@@ -4,21 +4,24 @@ import { canonicalNewsUrl } from './sectorNews.js'
 import { useDataFile } from './useDataFile.js'
 import { useNewsClock } from './useNewsClock.js'
 import { buildKnowledgeGraph, getKnowledgeView } from './knowledgeGraph.js'
+import { buildSectorKnowledgeGraph } from './sectorKnowledgeGraph.js'
 import { createKnowledgeLayout, stepKnowledgeLayout, focusKnowledgeLayout, fitKnowledgeCamera } from './knowledgeLayout.js'
 import Help from './Help.jsx'
 import './KnowledgeMap.css'
 
 const TYPES = [{ id: 'sector', label: 'Setores' }, { id: 'concept', label: 'Conceitos' }, { id: 'news', label: 'Notícias · 7 dias' }]
+const nodeKind = node => node.subtype === 'classification' ? 'Classificação' : node.subtype === 'category' ? 'Grupo editorial' : node.type === 'news' ? 'Notícia' : node.type === 'concept' ? 'Conceito' : node.subtype === 'subsector' ? 'Subsetor' : 'Setor'
+const canOpenRoute = route => Boolean(route && ['aprender', 'setores', 'resumo', 'juros', 'cenarios', 'noticias'].includes(route.tab) && typeof route.view === 'string')
 const MEMORY = 'painel-knowledge-map-v1'
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 const short = (s, n = 28) => s.length > n ? `${s.slice(0, n - 1).trim()}…` : s
 const date = t => new Date(t).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 export const knowledgePublicationLabel = node => node.datePrecision === 'day' ? node.publishedAt.split('-').reverse().join('/') : date(node.t)
-function savedView() {
+function savedView(memory = MEMORY, initialId = '') {
   try {
-    const v = JSON.parse(sessionStorage.getItem(MEMORY))
-    return { query: typeof v?.query === 'string' ? v.query.slice(0, 160) : '', types: Array.isArray(v?.types) ? v.types.filter(t => TYPES.some(x => x.id === t)) : TYPES.map(t => t.id), selectedId: typeof v?.selectedId === 'string' ? v.selectedId : '', local: v?.local === true }
-  } catch { return { query: '', types: TYPES.map(t => t.id), selectedId: '', local: false } }
+    const v = JSON.parse(sessionStorage.getItem(memory))
+    return { query: typeof v?.query === 'string' ? v.query.slice(0, 160) : '', types: Array.isArray(v?.types) ? v.types.filter(t => TYPES.some(x => x.id === t)) : TYPES.map(t => t.id), selectedId: typeof v?.selectedId === 'string' ? v.selectedId : initialId, local: v?.local === true }
+  } catch { return { query: '', types: TYPES.map(t => t.id), selectedId: initialId, local: false } }
 }
 function useReducedMotion() {
   const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
@@ -136,7 +139,7 @@ function NodeContextMenu({ node, point, onClose, onSelect, onOpen, portalTarget 
   const menu = useRef(null)
   const [position, setPosition] = useState(() => contextPosition(point))
   const href = node.type === 'news' ? canonicalNewsUrl(node.href) : null
-  const canOpen = node.type === 'news' ? Boolean(href) : Boolean(node.route && ['aprender', 'setores'].includes(node.route.tab) && typeof node.route.view === 'string')
+  const canOpen = node.type === 'news' ? Boolean(href) : canOpenRoute(node.route)
   useEffect(() => {
     const el = menu.current
     if (!el) return
@@ -169,7 +172,7 @@ function NodeContextMenu({ node, point, onClose, onSelect, onOpen, portalTarget 
   }}>
     <p className="km-context-title">{node.label}</p>
     {href ? <a role="menuitem" href={href} target="_blank" rel="noopener noreferrer" onClick={() => onClose()}>Ir para a página ↗</a> : <button type="button" role="menuitem" aria-disabled={!canOpen || undefined} disabled={!canOpen} onClick={() => onOpen(node)}>Ir para a página ↗</button>}
-    {!canOpen && <p className="km-context-unavailable">Página ainda não disponível.</p>}
+    {!canOpen && <p className="km-context-unavailable">{['category', 'classification'].includes(node.subtype) ? 'Este ponto organiza o mapa e não tem página própria.' : 'Página ainda não disponível.'}</p>}
     <button type="button" role="menuitem" onClick={() => { onSelect(node.id); onClose(true) }}>Ver conexões</button>
   </div>, portalTarget || document.fullscreenElement || document.body)
 }
@@ -241,7 +244,8 @@ function GraphSurface({ graph, selectedId, onSelect, onActivate = onSelect, onCo
   }, [graph.links, selectedId, hover])
   const fitKey = `${selectedId}|${size.width}|${size.height}|${cameraReset}|${graph.nodes.map(n => n.id).join(',')}`
   const compactFocus = Boolean(selectedId) && size.width <= 600
-  const framing = useMemo(() => ({ padding: { top: 36, right: 64, bottom: 60, left: 24 }, selectedId, labelMaxLength: selectedId && !compactFocus ? 52 : 26, minLabelFontSize: compactFocus ? 11 : 0 }), [selectedId, compactFocus])
+  const narrowFocus = compactFocus && size.width < 300
+  const framing = useMemo(() => ({ padding: { top: 36, right: narrowFocus ? 48 : 64, bottom: 60, left: narrowFocus ? 16 : 24 }, selectedId, labelMaxLength: narrowFocus ? 16 : selectedId && !compactFocus ? 52 : 26, minLabelFontSize: compactFocus ? 11 : 0 }), [selectedId, compactFocus, narrowFocus])
   useEffect(() => () => { stopCamera(false); fitted.current = '' }, [])
   useEffect(() => {
     if (fitted.current === fitKey && !(reduced && cameraMotion.current !== null)) return
@@ -370,7 +374,7 @@ function GraphSurface({ graph, selectedId, onSelect, onActivate = onSelect, onCo
     const r = selected ? 11 : n.type === 'sector' && n.subtype !== 'subsector' ? 8 : n.type === 'news' ? 5 : 6
     const font = selected ? 12 : n.type === 'sector' && n.subtype !== 'subsector' ? 10.5 : 9.5
     const fontSize = Math.max(font * Math.sqrt(camera.k), compactFocus ? 11 : 0) / camera.k
-    const text = short(n.label, compactFocus ? 26 : neighbors.has(n.id) ? 52 : 26)
+    const text = short(n.label, narrowFocus ? 16 : compactFocus ? 26 : neighbors.has(n.id) ? 52 : 26)
     const width = text.length * fontSize * 0.58, y = n.y + r + 15 / Math.sqrt(camera.k)
     return { fontSize, text, y, box: { x: n.x - width / 2, y: y - fontSize, w: width, h: fontSize * 1.2 } }
   }
@@ -431,10 +435,12 @@ function GraphSurface({ graph, selectedId, onSelect, onActivate = onSelect, onCo
   </div>
 }
 
-export default function KnowledgeMap({ goto }) {
+export default function KnowledgeMap({ goto, sectorContext }) {
+  const anchorId = sectorContext ? `subsector:${sectorContext.group}:${sectorContext.topicIndex}` : ''
+  const memory = sectorContext ? `${MEMORY}:${anchorId}` : MEMORY
   const sectorNews = useDataFile('sector-news.json'), news = useDataFile('news.json'), temas = useDataFile('temas.json'), curadoria = useDataFile('curadoria-noticias.json'), archive = useDataFile('knowledge-news.json')
   const now = useNewsClock(), reduced = useReducedMotion()
-  const [view, setView] = useState(savedView)
+  const [view, setView] = useState(() => savedView(memory, anchorId))
   const [paused, setPaused] = useState(false)
   const [restart, setRestart] = useState(0)
   const [cameraReset, setCameraReset] = useState(0)
@@ -445,7 +451,8 @@ export default function KnowledgeMap({ goto }) {
   const { expanded, toggleFullscreen, buttonRef } = useMapFullscreen(container)
   const detail = useRef(null)
   const [context, setContext] = useState(null)
-  const graph = useMemo(() => buildKnowledgeGraph({ sectorNews: sectorNews.data, news: news.data, temas: temas.data, curadoria: curadoria.data, archive: archive.data, now }), [sectorNews.data, news.data, temas.data, curadoria.data, archive.data, now])
+  const fullGraph = useMemo(() => buildKnowledgeGraph({ sectorNews: sectorNews.data, news: news.data, temas: temas.data, curadoria: curadoria.data, archive: archive.data, now }), [sectorNews.data, news.data, temas.data, curadoria.data, archive.data, now])
+  const graph = useMemo(() => sectorContext ? buildSectorKnowledgeGraph(fullGraph, sectorContext) : fullGraph, [fullGraph, sectorContext])
   const filtered = useMemo(() => getKnowledgeView(graph, { ...view, maxNews: list ? Number.MAX_SAFE_INTEGER : 36 }), [graph, view, list])
   const selected = filtered.nodes.find(n => n.id === view.selectedId)
   const relations = selected ? graph.links.filter(l => l.source === selected.id || l.target === selected.id).map(l => ({ ...l, node: graph.nodes.find(n => n.id === (l.source === selected.id ? l.target : l.source)) })).filter(l => l.node) : []
@@ -453,9 +460,9 @@ export default function KnowledgeMap({ goto }) {
   const loading = sources.every(s => s.status === 'loading')
   const unavailable = sources.some(s => s.status === 'error' || s.stale)
   useEffect(() => {
-    const timer = setTimeout(() => { try { sessionStorage.setItem(MEMORY, JSON.stringify(view)) } catch { /* this visit still works */ } }, 100)
+    const timer = setTimeout(() => { try { sessionStorage.setItem(memory, JSON.stringify(view)) } catch { /* this visit still works */ } }, 100)
     return () => clearTimeout(timer)
-  }, [view])
+  }, [view, memory])
   const contextNode = context && graph.nodes.find(node => node.id === context.id)
   function closeContext(restoreFocus = false) {
     const trigger = context?.trigger
@@ -469,12 +476,12 @@ export default function KnowledgeMap({ goto }) {
   function openPage(node) {
     if (!node) return
     // Save the map before an internal route can unmount it.
-    try { sessionStorage.setItem(MEMORY, JSON.stringify(view)) } catch { /* current visit remains usable */ }
+    try { sessionStorage.setItem(memory, JSON.stringify(view)) } catch { /* current visit remains usable */ }
     closeContext()
     if (node.type === 'news') {
       const href = canonicalNewsUrl(node.href)
       if (href) window.open(href, '_blank', 'noopener,noreferrer')
-    } else if (node.route && ['aprender', 'setores'].includes(node.route.tab) && typeof node.route.view === 'string') goto(node.route.tab, node.route.view)
+    } else if (canOpenRoute(node.route)) goto(node.route.tab, node.route.view)
   }
   function activate(id) {
     const node = graph.nodes.find(item => item.id === id)
@@ -500,7 +507,7 @@ export default function KnowledgeMap({ goto }) {
   }
   function reset() {
     setContext(null)
-    setView({ query: '', types: TYPES.map(t => t.id), selectedId: '', local: false })
+    setView({ query: '', types: TYPES.map(t => t.id), selectedId: anchorId, local: false })
     setRestart(v => v + 1)
     setCameraReset(v => v + 1)
     setPaused(false)
@@ -509,29 +516,31 @@ export default function KnowledgeMap({ goto }) {
     setContext(null)
     setView(v => ({ ...v, types: v.types.includes(id) ? v.types.filter(t => t !== id) : [...v.types, id], selectedId: '', local: false }))
   }
-  return <section ref={container} className={`knowledge-map${expanded ? ' is-fullscreen' : ''}`} aria-labelledby="km-title" role={expanded ? 'dialog' : undefined} aria-modal={expanded || undefined}>
-    <header className="km-heading"><div><p className="km-eyebrow">APRENDER · EXPLORAR CONEXÕES</p><h2 id="km-title">Mapa do conhecimento</h2><p>Setores, conceitos e as notícias que os conectam.</p></div><Help label="Como explorar o mapa" wide portalTarget={expanded ? container.current : undefined}><p>Arraste um ponto para reorganizar a rede. Arraste o fundo para mover o mapa. Use a roda do mouse, a pinça com dois dedos ou os botões de zoom.</p><p>Ao selecionar um ponto, suas conexões se organizam e o enquadramento se ajusta à área disponível. Use Tela cheia para ampliar o mapa e Sair da tela cheia ou Escape para voltar. Centralizar mapa recupera o enquadramento após arrastar ou dar zoom.</p><p>Clique em uma notícia para ler a matéria em outra aba. Nos demais pontos, o clique abre as conexões diretas. Use o botão direito, segure no celular ou pressione Shift+F10 para acessar Ir para a página e Ver conexões. Use Voltar à matriz para retornar à rede completa. As linhas indicam relações editoriais ou correspondências temáticas, não comprovam causalidade ou impacto financeiro.</p><p>Notícias: publicação original nas últimas 168 horas. Sem horário confirmado, a inclusão é conservadora. A atualização da coleta não renova a publicação. A cobertura é parcial; a ausência de matéria não significa ausência de fatos.</p><p>Use Lista para navegar pelos nomes; no grafo, as setas percorrem os pontos e Enter realiza a mesma ação do clique. O movimento respeita a preferência do dispositivo.</p></Help></header>
-    <div className="km-toolbar"><label className="km-search"><span className="sr-only">Buscar no mapa</span><input aria-label="Buscar no mapa" type="search" placeholder="Buscar setor, conceito ou notícia…" value={view.query} onChange={e => { setContext(null); setView(v => ({ ...v, query: e.target.value, local: false })) }} /></label><div className="km-switch" aria-label="Visualização"><button type="button" aria-pressed={!list} onClick={() => { setContext(null); setList(false) }}>Grafo</button><button type="button" aria-pressed={list} onClick={() => { setContext(null); setList(true) }}>Lista</button></div><button type="button" className="km-reset" onClick={reset}>Voltar à matriz</button><button ref={buttonRef} type="button" className="km-reset km-fullscreen" aria-label={expanded ? 'Sair da tela cheia' : 'Tela cheia'} aria-pressed={expanded} onClick={() => { setContext(null); toggleFullscreen() }}><span className="km-fullscreen-label">{expanded ? 'Sair da tela cheia' : 'Tela cheia'}</span><span className="km-fullscreen-short" aria-hidden="true">Sair</span></button></div>
+  return <section ref={container} className={`knowledge-map${sectorContext ? ' is-contextual' : ''}${expanded ? ' is-fullscreen' : ''}`} aria-labelledby="km-title" role={expanded ? 'dialog' : undefined} aria-modal={expanded || undefined}>
+    <header className="km-heading"><div><p className="km-eyebrow">{sectorContext ? 'ESTUDO SETORIAL · EXPLORAR CONEXÕES' : 'APRENDER · EXPLORAR CONEXÕES'}</p><h2 id="km-title">{sectorContext ? `Conexões · ${sectorContext.study.title}` : 'Mapa do conhecimento'}</h2><p>{sectorContext ? 'Conexões do estudo com conteúdos do painel. Selecione um ponto para ver o vínculo e abrir a página.' : 'Setores, conceitos e as notícias que os conectam.'}</p></div><Help label="Como explorar o mapa" wide portalTarget={expanded ? container.current : undefined}><p>Arraste um ponto para reorganizar a rede. Arraste o fundo para mover o mapa. Use a roda do mouse, a pinça com dois dedos ou os botões de zoom.</p><p>Ao selecionar um ponto, suas conexões se organizam e o enquadramento se ajusta à área disponível. Use Tela cheia para ampliar o mapa e Sair da tela cheia ou Escape para voltar. Centralizar mapa recupera o enquadramento após arrastar ou dar zoom.</p><p>Clique em uma notícia para ler a matéria em outra aba. Nos demais pontos, o clique abre as conexões diretas. Use o botão direito, segure no celular ou pressione Shift+F10 para acessar Ir para a página e Ver conexões. Use {sectorContext ? 'Voltar ao setor para retornar ao recorte deste estudo' : 'Voltar à matriz para retornar à rede completa'}. As linhas indicam relações editoriais ou correspondências temáticas, não comprovam causalidade ou impacto financeiro.</p><p>Notícias válidas sem correspondência temática ficam ligadas a Classificação pendente, sem associação setorial presumida. Notícias: publicação original nas últimas 168 horas. Sem horário confirmado, a inclusão é conservadora. A atualização da coleta não renova a publicação. A cobertura é parcial; a ausência de matéria não significa ausência de fatos.</p><p>Use Lista para navegar pelos nomes; no grafo, as setas percorrem os pontos e Enter realiza a mesma ação do clique. O movimento respeita a preferência do dispositivo.</p></Help></header>
+    <div className="km-toolbar"><label className="km-search"><span className="sr-only">Buscar no mapa</span><input aria-label="Buscar no mapa" type="search" placeholder="Buscar setor, conceito ou notícia…" value={view.query} onChange={e => { setContext(null); setView(v => ({ ...v, query: e.target.value, local: false })) }} /></label><div className="km-switch" aria-label="Visualização"><button type="button" aria-pressed={!list} onClick={() => { setContext(null); setList(false) }}>Grafo</button><button type="button" aria-pressed={list} onClick={() => { setContext(null); setList(true) }}>Lista</button></div><button type="button" className="km-reset" onClick={reset}>{sectorContext ? 'Voltar ao setor' : 'Voltar à matriz'}</button><button ref={buttonRef} type="button" className="km-reset km-fullscreen" aria-label={expanded ? 'Sair da tela cheia' : 'Tela cheia'} aria-pressed={expanded} onClick={() => { setContext(null); toggleFullscreen() }}><span className="km-fullscreen-label">{expanded ? 'Sair da tela cheia' : 'Tela cheia'}</span><span className="km-fullscreen-short" aria-hidden="true">Sair</span></button></div>
     <div className="km-options"><div className="km-types" role="group" aria-label="Mostrar no mapa">{TYPES.map(type => <button key={type.id} type="button" className={`km-filter km-${type.id}`} aria-pressed={view.types.includes(type.id)} onClick={() => toggleType(type.id)}><i aria-hidden="true" />{type.label}</button>)}</div><div className="km-actions"><button type="button" aria-pressed={labels} onClick={() => setLabels(v => !v)}>Nomes</button><button type="button" aria-pressed={paused || reduced} disabled={reduced} onClick={() => { setPaused(v => !v); setRestart(v => v + 1) }}>{reduced ? 'Movimento reduzido' : paused ? 'Retomar movimento' : 'Pausar movimento'}</button></div></div>
     <div className="km-workspace">
-      <div className="km-visual">{list ? <div className="km-list" aria-label="Pontos do mapa">{filtered.nodes.length ? filtered.nodes.map(n => <button type="button" key={n.id} className={`km-list-item km-${n.type}${selected?.id === n.id ? ' is-selected' : ''}`} aria-pressed={selected?.id === n.id} {...nodeActions(n)}><span className="km-list-type">{n.type === 'news' ? 'Notícia' : n.type === 'concept' ? 'Conceito' : n.subtype === 'subsector' ? 'Subsetor' : 'Setor'}</span><strong>{n.label}</strong>{n.type === 'news' && <small>{n.source} · {knowledgePublicationLabel(n)}</small>}</button>) : <p className="km-empty-list">Nenhum ponto encontrado. Ajuste a busca ou os filtros.</p>}</div> : <GraphSurface graph={filtered} selectedId={selected?.id || ''} onSelect={select} onActivate={activate} onContextMenu={openContext} paused={paused || Boolean(contextNode)} reduced={reduced} restart={restart} cameraReset={cameraReset} labels={labels} />}
+      <div className="km-visual">{list ? <div className="km-list" aria-label="Pontos do mapa">{filtered.nodes.length ? filtered.nodes.map(n => <button type="button" key={n.id} className={`km-list-item km-${n.type}${selected?.id === n.id ? ' is-selected' : ''}`} aria-pressed={selected?.id === n.id} {...nodeActions(n)}><span className="km-list-type">{nodeKind(n)}</span><strong>{n.label}</strong>{n.type === 'news' && <small>{n.source} · {knowledgePublicationLabel(n)}</small>}</button>) : <p className="km-empty-list">Nenhum ponto encontrado. Ajuste a busca ou os filtros.</p>}</div> : <GraphSurface graph={filtered} selectedId={selected?.id || ''} onSelect={select} onActivate={activate} onContextMenu={openContext} paused={paused || Boolean(contextNode)} reduced={reduced} restart={restart} cameraReset={cameraReset} labels={labels} />}
         <p className="km-count" role="status">{filtered.nodes.length} {filtered.nodes.length === 1 ? 'ponto' : 'pontos'} · {filtered.links.length} {filtered.links.length === 1 ? 'conexão' : 'conexões'} · {filtered.meta.visibleNews} de {graph.meta.newsCount} notícias · 7 dias{filtered.meta.hiddenNews > 0 && ' · use a busca ou Lista para explorar as demais'}</p>
       </div>
       <aside className={`km-detail${detailOpen ? ' is-open' : ''}`} ref={detail} aria-label="Detalhes do ponto selecionado" aria-live="polite">
         {selected && <button type="button" className="km-detail-toggle" aria-expanded={detailOpen} aria-controls="km-detail-content" onClick={() => setDetailOpen(v => !v)}>Detalhes · {short(selected.label, 28)} <span aria-hidden="true">{detailOpen ? '▾' : '▴'}</span></button>}
         <div className="km-detail-content" id="km-detail-content">
-        {selected ? <><div className={`km-detail-type km-${selected.type}`}>{selected.type === 'news' ? 'NOTÍCIA · 7 DIAS' : selected.type === 'concept' ? 'CONCEITO' : selected.subtype === 'subsector' ? 'SUBSETOR' : 'SETOR'}<button type="button" onClick={() => select('')} aria-label="Fechar detalhes">×</button></div><h3>{selected.label}</h3><button type="button" className="km-more-options" aria-haspopup="menu" onClick={e => openContext(selected.id, contextPoint(e))}>Mais opções</button>{selected.type === 'news' && <p className="km-publication">{selected.source}<br /><time dateTime={selected.publishedAt}>{knowledgePublicationLabel(selected)}</time>{selected.datePrecision === 'day' && ' · horário não informado'}</p>}<p>{selected.summary}</p>
-          {selected.route && <button type="button" className="km-open" onClick={() => goto(selected.route.tab, selected.route.view)}>Abrir {selected.type === 'concept' ? 'conceito' : 'setor'} ↗</button>}
+        {selected ? <><div className={`km-detail-type km-${selected.type}`}>{selected.type === 'news' ? 'NOTÍCIA · 7 DIAS' : nodeKind(selected).toUpperCase()}<button type="button" onClick={() => select('')} aria-label="Fechar detalhes">×</button></div><h3 aria-label={sectorContext ? `Detalhes: ${selected.label}` : undefined}>{selected.label}</h3><button type="button" className="km-more-options" aria-haspopup="menu" onClick={e => openContext(selected.id, contextPoint(e))}>Mais opções</button>{selected.type === 'news' && <p className="km-publication">{selected.source}<br /><time dateTime={selected.publishedAt}>{knowledgePublicationLabel(selected)}</time>{selected.datePrecision === 'day' && ' · horário não informado'}</p>}<p>{(selected.body || selected.glossaryBody) ? selected.summary.split('\n\n')[0] : selected.summary}</p>
+          {canOpenRoute(selected.route) && <button type="button" className="km-open" onClick={() => openPage(selected)}>Abrir {selected.subtype === 'glossary' ? 'área relacionada' : selected.type === 'concept' ? 'conceito' : 'setor'} ↗</button>}
+          {(selected.body || selected.glossaryBody) && <details><summary>Ler explicação completa</summary>{(selected.body || selected.glossaryBody).split('\n\n').map((paragraph, index) => <p key={index}>{paragraph}</p>)}</details>}
+          {selected.subtype === 'glossary' && <p className="km-relation-note">{selected.route ? 'O botão abre a área do painel; a explicação completa está disponível aqui.' : 'A explicação está disponível aqui; não há atalho confirmado para uma página específica.'}</p>}
           {selected.href && <a className="km-open" href={selected.href} target="_blank" rel="noopener noreferrer">Ler na fonte ↗</a>}
           {selected.licenseUrl && <a className="km-license" href={selected.licenseUrl} target="_blank" rel="noopener noreferrer">Licença de uso</a>}
           <div className="km-detail-divider"><h4>Conexões <span>{relations.length}</span></h4><span className="km-focus-label">Conexões diretas</span></div>
           {relations.length ? <ul className="km-relations">{relations.map(l => <li key={l.id}><span>{l.label}</span><button type="button" {...nodeActions(l.node)}>{l.node.label} ›</button><p>{l.reason}</p></li>)}</ul> : <p>Ainda não há conexões verificadas para este ponto.</p>}
           <p className="km-relation-note">As conexões indicam relações de conteúdo. Não comprovam causa ou impacto.</p>
-        </> : <div className="km-welcome"><svg className="km-welcome-symbol" aria-hidden="true" viewBox="0 0 80 60" width="68" height="52"><path d="M14 38L38 12L66 32L42 50Z M38 12L42 50 M14 38L66 32" fill="none" stroke="currentColor" strokeWidth="1"/>{[[14,38],[38,12],[66,32],[42,50]].map(([x,y])=><circle key={x} cx={x} cy={y} r="4" fill="currentColor"/>)}</svg><h3>Uma rede para entender melhor</h3><p>Clique em uma notícia para ler. Nos demais pontos, explore as conexões. Botão direito ou toque prolongado abre as opções de cada ponto.</p><div className="km-welcome-legend"><span><i className="km-sector" />Setores e subsetores</span><span><i className="km-concept" />Conceitos de Aprender</span><span><i className="km-news" />Notícias dos últimos 7 dias</span></div><p className="km-relation-note">Pontos redondos: conhecimento.<br />Losangos e linhas tracejadas: notícias.</p></div>}
+        </> : <div className="km-welcome"><svg className="km-welcome-symbol" aria-hidden="true" viewBox="0 0 80 60" width="68" height="52"><path d="M14 38L38 12L66 32L42 50Z M38 12L42 50 M14 38L66 32" fill="none" stroke="currentColor" strokeWidth="1"/>{[[14,38],[38,12],[66,32],[42,50]].map(([x,y])=><circle key={x} cx={x} cy={y} r="4" fill="currentColor"/>)}</svg><h3>Uma rede para entender melhor</h3><p>Clique em uma notícia para ler. Nos demais pontos, explore as conexões. Botão direito ou toque prolongado abre as opções de cada ponto.</p><div className="km-welcome-legend"><span><i className="km-sector" />Setores e subsetores</span><span><i className="km-concept" />Conceitos e explicações</span><span><i className="km-news" />Notícias dos últimos 7 dias</span></div><p className="km-relation-note">Pontos redondos: conhecimento.<br />Losangos e linhas tracejadas: notícias.</p></div>}
         </div>
       </aside>
     </div>
-    <div className="km-news-state" role="status">{loading ? 'Carregando notícias…' : <>{unavailable ? 'Algumas fontes estão indisponíveis ou atrasadas. ' : 'Cobertura parcial das fontes disponíveis. '}{graph.meta.newsCount ? 'Só entram matérias com publicação válida nos últimos 7 dias.' : 'Nenhuma notícia dos últimos 7 dias disponível nesta seleção.'}</>}</div>
+    <div className="km-news-state" role="status">{!sectorContext && graph.meta.pendingNewsCount > 0 && <span>{graph.meta.pendingNewsCount} {graph.meta.pendingNewsCount === 1 ? 'notícia com classificação pendente' : 'notícias com classificação pendente'}. Todas permanecem acessíveis no mapa. </span>}{loading ? 'Carregando notícias…' : <>{unavailable ? 'Algumas fontes estão indisponíveis ou atrasadas. ' : 'Cobertura parcial das fontes disponíveis. '}{graph.meta.newsCount ? 'Só entram matérias com publicação válida nos últimos 7 dias.' : 'Nenhuma notícia dos últimos 7 dias disponível nesta seleção.'}</>}</div>
     {contextNode && <NodeContextMenu key={contextNode.id} node={contextNode} point={context} onClose={closeContext} onSelect={select} onOpen={openPage} portalTarget={expanded ? container.current : undefined} />}
     <details className="km-coverage"><summary>Fontes e atualização</summary><p>Janela de publicação: {date(now - 168 * 3600000)} a {date(now)} (168 horas corridas). O mapa reaproveita as bases de notícias do painel; não representa toda a imprensa.</p>{graph.meta.lastUpdatedAt && <p>Última geração de base disponível: {date(graph.meta.lastUpdatedAt)}. Essa data não confirma uma nova consulta a cada fonte.</p>}<ul>{graph.meta.coverageNotes?.map(note => <li key={note}>{note}</li>)}</ul><p>A retenção do mapa guarda matérias elegíveis por até sete dias. Na primeira execução, dias anteriores ausentes nas bases não são recuperados retroativamente.</p></details>
   </section>

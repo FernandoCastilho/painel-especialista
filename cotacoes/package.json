@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "test": "node --test test/*.test.mjs",
     "lint": "eslint .",
-    "predev": "node scripts/build-movimento-falimentar.mjs && node scripts/build-sector-content.mjs && node scripts/build-search-index.mjs",
-    "prebuild": "node scripts/build-movimento-falimentar.mjs && node scripts/build-sector-content.mjs && node scripts/build-search-index.mjs"
+    "predev": "node scripts/build-movimento-falimentar.mjs && node scripts/build-sector-content.mjs && node scripts/build-sector-knowledge.mjs && node scripts/build-search-index.mjs",
+    "prebuild": "node scripts/build-movimento-falimentar.mjs && node scripts/build-sector-content.mjs && node scripts/build-sector-knowledge.mjs && node scripts/build-search-index.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

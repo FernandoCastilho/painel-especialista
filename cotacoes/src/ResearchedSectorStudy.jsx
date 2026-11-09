@@ -1,6 +1,7 @@
 import { StudyChapterNav, StudyTable, StudyMethod } from './StudyParts.jsx'
 import { useRef, useState } from 'react'
 import './SectorStudy.css'
+import KnowledgeMap from './KnowledgeMap.jsx'
 import SectorValueChain from './SectorValueChain.jsx'
 import { publicAgencySources } from './sectorSourceVisibility.js'
 import './ResearchedSectorStudy.css'
@@ -24,7 +25,7 @@ export function ResearchChart({ chart }) {
   </section>
 }
 
-export default function ResearchedSectorStudy({ study }) {
+export default function ResearchedSectorStudy({ study, goto }) {
   const prefix = `sector-${study.group}-${study.topicIndex}`
   return <article className="sector-study" aria-labelledby={`${prefix}-title`}>
     <p className="central-kicker">ESTUDO SETORIAL · PESQUISA DE MERCADO</p><h3 id={`${prefix}-title`}>{study.title}</h3>
@@ -36,6 +37,7 @@ export default function ResearchedSectorStudy({ study }) {
       <p className="study-canvas-intro">Roteiro inspirado no Business Model Canvas. Peça números e um contrato real para sustentar as respostas.</p>
       <ol className="study-canvas-questions">{study.canvasQuestions.map(item => <li key={item.dimension}><strong>{item.dimension}</strong><p>{item.question}</p></li>)}</ol>
     </aside>
+    <KnowledgeMap key={`${study.group}-${study.topicIndex}`} goto={goto} sectorContext={{ group: study.group, topicIndex: study.topicIndex, study }} />
     <ResearchAudio study={study} />
     {study.diagram?.nodes?.length > 0 && <SectorValueChain diagram={study.diagram} title={study.title} />}
     <StudyChapterNav sections={study.sections} prefix={prefix} />
@@ -60,7 +62,7 @@ function ResearchAudio({ study }) {
     <h4>Síntese do estudo</h4>
     {study.audio?.src && !failed ? <>
       <p className="central-note">Voz sintética em português brasileiro. Pode haver variações de pronúncia e entonação.</p>
-      <audio ref={audioRef} controls preload="metadata" src={study.audio.src} aria-label={`Síntese em áudio: ${study.title}`} onError={() => setFailed(true)} onLoadedMetadata={() => { applyRate(); if (Number.isFinite(audioRef.current.duration)) setDuration(audioRef.current.duration) }} onPlay={() => applyRate()} onRateChange={() => { if ([0.75, 1, 1.25, 1.5, 2].includes(audioRef.current.playbackRate)) setRate(audioRef.current.playbackRate) }} />
+      <audio ref={audioRef} controls preload="metadata" src={study.audio.src} aria-label={`Síntese em áudio: ${study.title}`} onError={() => setFailed(true)} onLoadedMetadata={() => { applyRate(); if (Number.isFinite(audioRef.current?.duration)) setDuration(audioRef.current.duration) }} onPlay={() => applyRate()} onRateChange={() => { if ([0.75, 1, 1.25, 1.5, 2].includes(audioRef.current?.playbackRate)) setRate(audioRef.current.playbackRate) }} />
       <label>Velocidade<select value={rate} onChange={event => { const next = Number(event.target.value); setRate(next); applyRate(next) }}>{[0.75, 1, 1.25, 1.5, 2].map(value => <option key={value} value={value}>{String(value).replace('.', ',')}×{value === 1.25 ? ' · padrão' : ''}</option>)}</select></label>
       <p aria-live="polite">Tempo total nesta velocidade: {durationLabel(duration, rate)}.</p>
     </> : <p className="central-note">{failed ? 'Não foi possível carregar o arquivo de áudio.' : 'Áudio ainda não disponível para este estudo.'} A síntese em texto está disponível abaixo.</p>}

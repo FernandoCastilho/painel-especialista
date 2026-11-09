@@ -1,3 +1,5 @@
+import { KNOWLEDGE_GLOSSARY } from './knowledgeGlossary.js'
+import { SECTOR_STUDY_CONNECTIONS } from './generated.sectorKnowledge.js'
 import { CONCEITOS, LIGACOES } from './educacao.js'
 import { CATALOGO_SETORIAL } from './centralSetorial.js'
 import { BANKING_TOPICS } from './bankingSectors.js'
@@ -7,6 +9,7 @@ import { CURADORIA_TOPICS, normalizeCuradoria, curateItems } from './curadoria.j
 
 export const KNOWLEDGE_WINDOW_DAYS = 7
 export const KNOWLEDGE_WINDOW_MS = KNOWLEDGE_WINDOW_DAYS * 86400000
+export const KNOWLEDGE_PENDING_ID = 'classification:pending'
 export const KNOWLEDGE_TYPES = ['sector', 'concept', 'news']
 const list = value => Array.isArray(value) ? value : []
 const record = value => value && typeof value === 'object' && !Array.isArray(value)
@@ -84,7 +87,8 @@ export function buildKnowledgeGraph({ sectorNews, news, temas, curadoria, archiv
   if (!Number.isFinite(now)) throw new Error('Data de referência inválida para o mapa.')
   const nodes = [], links = [], byId = new Map(), edgeIds = new Set(), topicNodes = new Map()
   const coverageNotes = new Set(), accepted = new Map()
-  let omittedNewsCount = 0
+  let pendingNewsCount = 0, classifiedNewsCount = 0, rejectedRecordCount = 0, duplicateRecordCount = 0
+  const reject = () => { rejectedRecordCount++; return undefined }
   const addNode = node => { if (!byId.has(node.id)) { nodes.push(node); byId.set(node.id, node) } return byId.get(node.id) }
   const addLink = (source, target, label, reason) => {
     if (!byId.has(source) || !byId.has(target) || source === target) return
@@ -104,43 +108,66 @@ export function buildKnowledgeGraph({ sectorNews, news, temas, curadoria, archiv
   }
   for (const topic of [...BANKING_TOPICS, ...INSUMOS]) {
     const catalogId = SECTOR_ROUTES[topic.id]
-    if (catalogId) { topicNodes.set(topic.id, `sector:${catalogId}`); continue }
     const same = CATALOGO_SETORIAL.find(group => plain(group.label) === plain(topic.label))
-    if (same) { topicNodes.set(topic.id, `sector:${same.id}`); continue }
     const id = `sector-topic:${topic.id}`
     addNode({ id, label: topic.label, title: topic.label, type: 'sector', subtype: INSUMOS.some(item => item.id === topic.id) ? 'input' : 'sector', group: topic.grupo, summary: 'Conteúdo setorial e referências disponíveis no painel.', route: { tab: 'setores', view: topic.id } })
     topicNodes.set(topic.id, id)
+    const catalogueTarget = catalogId || same?.id
+    if (catalogueTarget) addLink(id, `sector:${catalogueTarget}`, 'Catálogo relacionado', `O painel associa a página “${topic.label}” ao catálogo “${byId.get(`sector:${catalogueTarget}`).label}” para navegação. Os recortes não são necessariamente equivalentes.`)
+  }
+  // Membership comes from the panel's own editorial catalogue, not inference.
+  for (const topic of [...BANKING_TOPICS, ...INSUMOS]) {
+    const target = topicNodes.get(topic.id)
+    const id = `sector-group:${shortId(topic.grupo)}`
+    addNode({ id, label: topic.grupo, title: topic.grupo, type: 'sector', subtype: 'category', group: 'Grupos editoriais', summary: 'Agrupamento editorial existente na aba Setores; não representa correlação econômica.' })
+    addLink(target, id, 'Pertence ao grupo', `O painel cadastra “${topic.label}” no grupo editorial “${topic.grupo}”.`)
   }
   for (const concept of CONCEITOS) addNode({ id: `concept:${concept.id}`, label: concept.nome.replace(/ \(.*\)/, ''), title: concept.nome, type: 'concept', group: concept.topico, summary: concept.frase, route: { tab: 'aprender', view: concept.id } })
+  const glossaryHub = 'category:panel-explanations'
+  addNode({ id: glossaryHub, label: 'Explicações do painel', title: 'Explicações do painel', type: 'sector', subtype: 'category', group: 'Conteúdo do aplicativo', summary: 'Glossário usado nas explicações do painel. Cada ligação indica presença no glossário, não causalidade econômica.' })
+  for (const entry of KNOWLEDGE_GLOSSARY) {
+    const existing = byId.get(entry.nodeId)
+    if (existing) {
+      existing.glossaryBody = entry.body
+      existing.summary = `${existing.summary}\n\n${entry.body}`
+    } else addNode({ id: entry.nodeId, label: entry.label, title: entry.label, type: 'concept', subtype: 'glossary', group: 'Explicações do painel', summary: entry.body, body: entry.body, route: entry.route, routeStatus: entry.routeStatus, routeEvidence: entry.routeEvidence })
+    addLink(entry.nodeId, glossaryHub, 'Explicação do painel', `“${entry.label}” consta no glossário de explicações do aplicativo. ${entry.routeStatus === 'unavailable' ? 'O texto está disponível nos detalhes; não há destino específico confirmado.' : 'O destino abre a área existente que contém esta explicação.'}`)
+  }
   for (const [a, b, reason] of LIGACOES) addLink(`concept:${a}`, `concept:${b}`, 'Relaciona', reason)
   for (const [sector, concept, reason] of COMPLEMENTARY_READINGS) addLink(`sector:${sector}`, `concept:${concept}`, 'Conexão temática', reason)
 
+  for (const [source, target, term, section, excerpt] of SECTOR_STUDY_CONNECTIONS) {
+    addLink(source, target, 'Mencionado no estudo', `O estudo de ${byId.get(source)?.label || source} menciona “${term}” em “${section}”: “${excerpt}” Assunto em comum, não impacto comprovado.`)
+  }
+
   function admit(raw, origin, topicIds = []) {
-    if (!record(raw) || !safeText(raw.title) || !safeText(raw.source)) return
+    if (!record(raw) || !safeText(raw.title) || !safeText(raw.source)) return reject()
     const link = canonicalNewsUrl(raw.link || raw.href)
-    if (!link) return
+    if (!link) return reject()
     let item
     if (origin === 'sector' || raw.sourceId) {
       const result = validateSectorNewsItem({ ...raw, link }, now, { windowMs: KNOWLEDGE_WINDOW_MS })
-      if (!result.item) return
+      if (!result.item) return reject()
       const source = SECTOR_NEWS_SOURCES.find(value => value.id === result.item.sourceId)
       topicIds = topicIds.filter(id => source?.topics.includes(id) && sectorNewsItemMatchesTopic(id, result.item))
-      if (!topicIds.length) return
+      if (!topicIds.length) return reject()
       item = { ...result.item, origin: 'sector', topicIds }
     } else {
       // If a publication field is present, it must be valid and prevails over t.
       const bounds = raw.publishedAt !== undefined ? publicationBounds(raw) : null
-      if (raw.publishedAt !== undefined && !bounds) return
+      if (raw.publishedAt !== undefined && !bounds) return reject()
       const t = bounds?.t ?? raw.t
-      if (bounds ? !within(bounds.min, now) || !within(bounds.max, now) : !within(t, now)) return
+      if (bounds ? !within(bounds.min, now) || !within(bounds.max, now) : !within(t, now)) return reject()
       if (origin === 'curadoria') {
         topicIds = topicIds.filter(id => CURADORIA_TOPICS.some(topic => topic.id === id) && curateItems(id, [{ ...raw, link, t }], [], now).length)
-        if (!topicIds.length) return
-      } else topicIds = [] // Untrusted generic topic tags never create an edge.
+        if (!topicIds.length) return reject()
+      } else if (origin === 'temas') topicIds = topicIds.filter(id => topicNodes.has(id))
+      else topicIds = [] // Untrusted generic topic tags never create an edge.
       item = { title: raw.title.trim(), link, source: raw.source.trim(), t, publishedAt: raw.publishedAt || new Date(t).toISOString(), datePrecision: bounds?.precision || 'instant', origin, topicIds, ...(typeof raw.sourceUrl === 'string' && canonicalNewsUrl(raw.sourceUrl) ? { sourceUrl: canonicalNewsUrl(raw.sourceUrl) } : {}) }
     }
     const prior = accepted.get(link)
     if (prior) {
+      duplicateRecordCount++
       // Keep the earliest original publication; later collection cannot renew it.
       if (prior.t !== item.t) { if (item.t < prior.t) accepted.set(link, item); return }
       if (prior.origin === item.origin) prior.topicIds = [...new Set([...prior.topicIds, ...item.topicIds])]
@@ -155,7 +182,7 @@ export function buildKnowledgeGraph({ sectorNews, news, temas, curadoria, archiv
   } else coverageNotes.add('Notícias setoriais indisponíveis nesta leitura.')
   const feed = record(news?.news) ? news.news : news
   if (record(feed)) for (const items of Object.values(feed)) for (const item of list(items)) admit(item, 'news')
-  if (record(temas?.temas)) for (const topic of Object.values(temas.temas)) for (const item of list(topic?.items)) admit(item, 'temas')
+  if (record(temas?.temas)) for (const [topicId, topic] of Object.entries(temas.temas)) for (const item of list(topic?.items)) admit(item, 'temas', [topicId])
   if (curadoria?.schemaVersion === 1) for (const topic of CURADORIA_TOPICS) {
     const data = normalizeCuradoria(curadoria, topic.id, now)
     if (data?.stale) coverageNotes.add('Curadoria com atualização parcial ou atrasada; a data de cada publicação continua sendo respeitada.')
@@ -181,16 +208,26 @@ export function buildKnowledgeGraph({ sectorNews, news, temas, curadoria, archiv
   const titleSeen = new Map()
   for (const item of archiveItems) {
     const key = `${plain(item.title)}|${plain(item.source)}`
-    if (titleSeen.has(key)) continue
+    if (titleSeen.has(key)) { duplicateRecordCount++; continue }
     titleSeen.set(key, true)
     const id = `news:${shortId(item.link)}`, matches = []
     if (item.origin === 'sector') for (const topic of item.topicIds) {
       const target = topicNodes.get(topic)
       if (target) matches.push([target, 'Conexão temática', `Publicação classificada no tema “${BANKING_TOPICS.find(value => value.id === topic)?.label || INSUMOS.find(value => value.id === topic)?.label || topic}” pelas regras setoriais do painel; a ligação não comprova impacto econômico.`])
     }
+    if (item.origin === 'temas') for (const topic of item.topicIds) {
+      const target = topicNodes.get(topic)
+      if (target) matches.push([target, 'Publicado no tema', `A publicação está no tema “${byId.get(target).label}” do painel. Esta ligação registra a organização da fonte, não comprova impacto econômico.`])
+    }
+    for (const topic of [...BANKING_TOPICS, ...INSUMOS]) {
+      if (phraseIn(item.title, topic.label)) matches.push([topicNodes.get(topic.id), 'Menciona', `O título menciona “${topic.label}”, conteúdo existente na aba Setores.`])
+    }
     for (const concept of CONCEITOS) {
       const alias = (CONCEPT_ALIASES[concept.id] || [concept.nome]).find(value => conceptMention(item.title, value))
       if (alias) matches.push([`concept:${concept.id}`, 'Menciona', `O título menciona “${alias}”. Esta é uma conexão temática, não uma conclusão sobre impacto ou causalidade.`])
+    }
+    for (const entry of KNOWLEDGE_GLOSSARY) {
+      if (!entry.conceptId && conceptMention(item.title, entry.label)) matches.push([entry.nodeId, 'Menciona', `O título menciona “${entry.label}”, explicação existente no painel.`])
     }
     for (const group of CATALOGO_SETORIAL) {
       const alias = (SECTOR_ALIASES[group.id] || [group.label]).find(value => phraseIn(item.title, value))
@@ -199,13 +236,17 @@ export function buildKnowledgeGraph({ sectorNews, news, temas, curadoria, archiv
         if (plain(label).length >= 5 && phraseIn(item.title, label)) matches.push([`subsector:${group.id}:${index}`, 'Menciona', `O título menciona o subsetor “${label}”.`])
       })
     }
-    if (!matches.length) { omittedNewsCount++; continue }
-    addNode({ id, label: item.title, title: item.title, type: 'news', group: 'Notícias · 7 dias', summary: 'Publicação conectada por assunto. Consulte a fonte para avaliar o contexto.', href: item.link, source: item.source, sourceUrl: item.sourceUrl, publishedAt: item.publishedAt, datePrecision: item.datePrecision, t: item.t, licenseUrl: item.licenseUrl })
+    if (!matches.length) {
+      pendingNewsCount++
+      addNode({ id: KNOWLEDGE_PENDING_ID, label: 'Classificação pendente', title: 'Notícias com classificação pendente', type: 'sector', subtype: 'classification', group: 'Organização das notícias', summary: 'Notícias válidas na janela de sete dias cujo assunto ainda não tem correspondência objetiva com os setores ou conceitos cadastrados. Não é um setor econômico.' })
+      matches.push([KNOWLEDGE_PENDING_ID, 'A classificar', 'Publicação válida e recente, mas sem correspondência temática objetiva nas regras atuais. Esta ligação indica classificação pendente, não relação com um setor ou conceito.'])
+    } else classifiedNewsCount++
+    addNode({ id, label: item.title, title: item.title, type: 'news', group: 'Notícias · 7 dias', classification: matches[0][0] === KNOWLEDGE_PENDING_ID ? 'pending' : 'classified', summary: matches[0][0] === KNOWLEDGE_PENDING_ID ? 'Classificação temática pendente. Consulte a fonte para avaliar o assunto.' : 'Publicação conectada por assunto. Consulte a fonte para avaliar o contexto.', href: item.link, source: item.source, sourceUrl: item.sourceUrl, publishedAt: item.publishedAt, datePrecision: item.datePrecision, t: item.t, licenseUrl: item.licenseUrl })
     for (const [target, label, reason] of matches) addLink(id, target, label, reason)
   }
   // Archive generation is only an assembly time, never a new source collection.
   const updates = [...[sectorNews, news, temas, curadoria].map(value => stamp(value?.generatedAt)), stamp(archive?.sourceUpdatedAt)].filter(value => Number.isFinite(value) && value <= now && value > 0)
-  return { nodes, links, archiveItems, meta: { windowDays: KNOWLEDGE_WINDOW_DAYS, windowStart: now - KNOWLEDGE_WINDOW_MS, windowEnd: now, newsCount: nodes.filter(node => node.type === 'news').length, omittedNewsCount, coverageNotes: [...coverageNotes], lastUpdatedAt: updates.length ? Math.max(...updates) : null } }
+  return { nodes, links, archiveItems, meta: { windowDays: KNOWLEDGE_WINDOW_DAYS, windowStart: now - KNOWLEDGE_WINDOW_MS, windowEnd: now, newsCount: nodes.filter(node => node.type === 'news').length, omittedNewsCount: 0, pendingNewsCount, classifiedNewsCount, rejectedRecordCount, duplicateRecordCount, coverageNotes: [...coverageNotes], lastUpdatedAt: updates.length ? Math.max(...updates) : null } }
 }
 
 /** Filter without mutating model. Selected news is retained even beyond maxNews. */
