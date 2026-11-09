@@ -2,7 +2,7 @@
 .learn-audio { margin: 20px 0; padding: 16px; border: 1px solid var(--line); border-radius: 6px; }
 .learn-audio audio { display: block; width: 100%; margin: 12px 0; }
 .learn-audio a { display: inline-flex; align-items: center; min-height: 44px; }
-.learn-list .learn-group-actions button { display: block; width: auto; flex: 1; min-height: 44px; padding: 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--fg); text-align: center; font-size: .74rem; }
+.learn-list .learn-group-actions button { display: block; width: auto; flex: 1; min-height: 44px; padding: 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--fg); text-align: center; font-size: .75rem; }
 .learn-list .learn-group-actions button:disabled { opacity: .45; cursor: default; }
 .learn-group > .learn-topic { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 12px; color: var(--amber); background: var(--card); cursor: pointer; list-style: none; }
 .learn-group > .learn-topic::-webkit-details-marker { display: none; }

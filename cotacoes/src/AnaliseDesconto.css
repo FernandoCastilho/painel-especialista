@@ -17,7 +17,7 @@
 .desconto-comparison-panel .desconto-table { min-width:1000px; }
 .desconto-table tbody th { min-width:190px; font-size:.78rem; letter-spacing:0; text-transform:none; }
 .desconto-table td { font-size:.95rem; }
-.desconto-table thead th small { font-size:.65rem; text-transform:none; letter-spacing:0; color:var(--mut); }
+.desconto-table thead th small { font-size:.75rem; text-transform:none; letter-spacing:0; color:var(--mut); }
 .desconto-table th:first-child { text-align:left; }
 .desconto-table tbody th, .desconto-table thead th:first-child { position:sticky; left:0; z-index:1; background:var(--card); }
 .desconto-savings td, .desconto-savings th { background:var(--surface-2); }
@@ -30,7 +30,7 @@
   .desconto-kpis { gap:8px; padding:8px; }
   .desconto-kpis > div { padding:10px 8px; }
   .desconto-kpis b { font-size:1rem; }
-  .desconto-table tbody th { min-width:140px; max-width:160px; font-size:.72rem; }
+  .desconto-table tbody th { min-width:140px; max-width:160px; font-size:.75rem; }
   .desconto-table td { font-size:.85rem; }
 }
 

@@ -28,7 +28,7 @@
 .infl-chart { border: 1px solid var(--line); background: var(--card, #0c0c0c); padding: 6px 10px 8px; }
 .infl-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .infl-chart-head h4 { margin: 0; font-size: .9rem; color: var(--amber, #ffb000); }
-.infl-close { min-height: 32px; padding: 0 10px; background: transparent; color: var(--mut); border: 1px solid var(--line); cursor: pointer; font: 600 .74rem system-ui, sans-serif; }
+.infl-close { min-height: 32px; padding: 0 10px; background: transparent; color: var(--mut); border: 1px solid var(--line); cursor: pointer; font: 600 .75rem system-ui, sans-serif; }
 .infl-close:hover, .infl-close:focus-visible { color: var(--fg); border-color: var(--amber, #ffb000); }
 .infl-chart-sum { margin: 4px 0; font-size: .76rem; }
 .infl-pick { margin: 2px 0 6px; min-height: 1.2em; font-size: .78rem; font-variant-numeric: tabular-nums; }

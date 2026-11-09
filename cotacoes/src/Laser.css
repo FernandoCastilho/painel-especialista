@@ -9,7 +9,7 @@
 /* durante o arrasto: sem seleção de texto; com o laser ligado, o toque não rola a página (o arrasto é o traço) */
 html.laser-drag, html.laser-drag * { user-select: none !important; cursor: crosshair !important; }
 html:has(.laser-canvas) { touch-action: none; }
-.laser-hint { position: fixed; left: 50%; top: 10px; z-index: 2147483000; margin: 0; padding: 4px 12px; transform: translateX(-50%); background: rgba(0, 0, 0, .72); color: #fff; font: 600 .72rem system-ui, sans-serif; border-radius: 999px; pointer-events: none; animation: laser-hint 2.8s forwards; }
+.laser-hint { position: fixed; left: 50%; top: 10px; z-index: 2147483000; margin: 0; padding: 4px 12px; transform: translateX(-50%); background: rgba(0, 0, 0, .72); color: #fff; font: 600 .75rem system-ui, sans-serif; border-radius: 999px; pointer-events: none; animation: laser-hint 2.8s forwards; }
 @keyframes laser-hint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .laser-dot { transition: none; } }
 @media print { .laser-btn, .laser-canvas, .laser-hint { display: none; } }

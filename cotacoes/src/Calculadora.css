@@ -36,10 +36,10 @@
 .cx-matrix { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
 .cx-matrix th, .cx-matrix td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:right; vertical-align:top; font-weight:400; white-space:nowrap; }
 .cx-matrix thead th { font-size:.95rem; font-weight:700; color:var(--fg); }
-.cx-matrix thead th small { display:block; font-size:.68rem; font-weight:400; color:var(--amber, #ffb000); letter-spacing:.04em; text-transform:uppercase; }
+.cx-matrix thead th small { display:block; font-size:.75rem; font-weight:400; color:var(--amber, #ffb000); letter-spacing:.04em; text-transform:uppercase; }
 .cx-matrix tbody th { text-align:left; padding-left:0; font-size:.75rem; font-weight:400; color:var(--mut); letter-spacing:.06em; text-transform:uppercase; }
 .cx-matrix td { font-size:1.05rem; font-weight:700; }
-.cx-matrix td small { display:block; font-size:.72rem; font-weight:400; color:var(--mut); }
+.cx-matrix td small { display:block; font-size:.75rem; font-weight:400; color:var(--mut); }
 .cx-matrix tbody tr:last-child th, .cx-matrix tbody tr:last-child td { border-bottom:0; }
 .cx-matrix .cx-selected { background:var(--surface-2); }
 .cx-matrix thead th.cx-selected { box-shadow:inset 0 3px 0 var(--amber, #ffb000); }
@@ -50,9 +50,9 @@
   .cx-wrap { padding:0 8px; }
   .cx-matrix th, .cx-matrix td { padding:10px 4px; }
   .cx-matrix td { font-size:.88rem; }
-  .cx-matrix td small { font-size:.66rem; }
-  .cx-matrix thead th small { font-size:.58rem; letter-spacing:0; }
-  .cx-matrix tbody th { font-size:.66rem; letter-spacing:.02em; }
+  .cx-matrix td small { font-size:.75rem; }
+  .cx-matrix thead th small { font-size:.75rem; letter-spacing:0; }
+  .cx-matrix tbody th { font-size:.75rem; letter-spacing:.02em; }
 }
 
 /* BNDES Finame Materiais */
@@ -60,9 +60,9 @@
 .fm-custo-valor b { color:var(--fg); }
 .fm-grade { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; padding:12px; }
 .fm-kpi { display:grid; gap:2px; padding:10px 12px; border:1px solid var(--line); background:var(--surface-2); min-width:0; }
-.fm-kpi span { font-size:.72rem; color:var(--mut); letter-spacing:.04em; text-transform:uppercase; }
+.fm-kpi span { font-size:.75rem; color:var(--mut); letter-spacing:.04em; text-transform:uppercase; }
 .fm-kpi b { font-size:1.1rem; font-variant-numeric:tabular-nums; }
-.fm-kpi small { font-size:.72rem; color:var(--mut); line-height:1.3; }
+.fm-kpi small { font-size:.75rem; color:var(--mut); line-height:1.3; }
 .fm-regras { margin:0 12px 12px; }
 .fm-rotulo { display:inline-flex; align-items:center; gap:2px; }
 .fm-kpi > .fm-rotulo { display:flex; }

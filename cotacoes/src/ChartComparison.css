@@ -4,7 +4,7 @@
 .comparison-row b { min-width:100%; }
 .comparison-readout button { font:inherit; background:var(--surface-2); color:var(--fg); border:1px solid var(--line); padding:8px 12px; cursor:pointer; }
 .chart-comparison-compact { display:contents; }
-.chart-comparison-compact .comparison-readout { font-size:.72rem; white-space:normal; max-width:100%; }
+.chart-comparison-compact .comparison-readout { font-size:.75rem; white-space:normal; max-width:100%; }
 .chart-comparison svg:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
 
 .chart-comparison svg,[data-comparison-plot] { user-select:none; -webkit-user-select:none; }

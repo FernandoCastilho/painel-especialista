@@ -14,7 +14,7 @@
 .terminal-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-bottom:1px solid #343a43; }
 .terminal-summary button { display:flex; flex-direction:column; gap:3px; align-items:flex-start; justify-content:center; min-height:56px; min-width:0; padding:8px 12px; border:0; border-right:1px solid #343a43; border-radius:0; background:transparent; color:var(--fg); font:inherit; font-variant-numeric:tabular-nums; cursor:pointer; }
 .terminal-summary button:last-child { border-right:0; }
-.terminal-summary button span { color:var(--terminal-amber); font-size:.72rem; }
+.terminal-summary button span { color:var(--terminal-amber); font-size:.75rem; }
 .terminal-summary button b { font-size:.88rem; white-space:nowrap; }
 .market-terminal > .summary-period-note, .market-terminal > .market-instruction { display:block; margin:0; padding:6px 12px; font-size:.76rem; line-height:1.5; }
 .terminal-main { display:grid; grid-template-columns:minmax(0,1fr); border-top:1px solid #343a43; }
@@ -23,19 +23,19 @@
 .market-terminal .market-caption { font-size:.76rem; padding:8px 0; }
 .market-terminal .market-table thead { background:#191c23; }
 .market-terminal .market-table thead th { color:#e5b453; }
-.market-terminal .market-meta td { font-size:.74rem; }
+.market-terminal .market-meta td { font-size:.75rem; }
 .market-terminal .market-meta td > span { display:block; }
 .market-terminal .market-meta td > span + span::before { content:none; }
 .market-terminal .market-record.is-selected { background:#142236; }
 .market-terminal .market-record.is-selected .market-open b { color:#ffe0a1; }
 .market-terminal .market-record:hover { background:#19202a; }
-.terminal-quotes > .market-instruction { padding:6px 0 0; font-size:.74rem; line-height:1.5; }
+.terminal-quotes > .market-instruction { padding:6px 0 0; font-size:.75rem; line-height:1.5; }
 .terminal-chart { border-top:1px solid #343a43; }
 .terminal-chart > .resumo-chart { margin:0; padding:12px; height:100%; box-sizing:border-box; border:0; border-radius:0; background:transparent; }
 .terminal-chart .sec-head { align-items:flex-start; flex-wrap:wrap; }
 .terminal-chart .chips { gap:4px; }
 .terminal-chart .chips button { min-height:44px; min-width:44px; border-radius:0; color:#e5b453; }
-.terminal-chart .terminal-chart-source { font-size:.74rem; line-height:1.5; overflow-wrap:anywhere; }
+.terminal-chart .terminal-chart-source { font-size:.75rem; line-height:1.5; overflow-wrap:anywhere; }
 .market-terminal > .market-secondary { margin:0; padding:10px; border-top:1px solid #343a43; }
 @media (min-width:1000px) {
   .terminal-main { grid-template-columns:minmax(0,54fr) minmax(0,46fr); }
@@ -49,9 +49,9 @@
   .market-terminal .terminal-toolbar { padding:8px; }
   .terminal-summary button { padding:8px 4px; }
   .terminal-summary button b { font-size:.77rem; }
-  .terminal-summary button span { font-size:.67rem; }
+  .terminal-summary button span { font-size:.75rem; }
   .terminal-quotes { padding:0 6px 8px; }
-  .market-terminal .market-table thead th { font-size:.7rem; }
+  .market-terminal .market-table thead th { font-size:.75rem; }
 }
 /* Keep existing parity controls reachable without crowding their header. */
 .market-terminal > .market-secondary { grid-template-columns:minmax(0,1fr); }
@@ -65,14 +65,14 @@
 .market-terminal .market-table-wrap { overflow-x:auto; overscroll-behavior-inline:contain; }
 .market-terminal .market-table-wrap:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
 .market-terminal .market-table { min-width:600px; }
-.market-terminal .market-table thead th { width:auto; padding:10px 6px; font-size:.74rem; }
+.market-terminal .market-table thead th { width:auto; padding:10px 6px; font-size:.75rem; }
 .market-terminal .market-table thead th:first-child { width:21%; }
 .market-terminal .market-table thead th:nth-child(2) { width:14%; }
 .market-terminal .market-table thead th:nth-child(3) { width:15%; }
 .market-terminal .market-table thead th:nth-child(n+4) { width:12.5%; }
 .market-terminal .market-table td { font-size:.78rem; padding:4px 6px; }
 .market-terminal .market-table .market-price { font-size:.85rem; }
-.market-terminal .market-open small { font-size:.7rem; }
+.market-terminal .market-open small { font-size:.75rem; }
 .market-terminal .market-footnotes { padding:10px 12px; border-top:1px solid #343a43; font-size:.75rem; line-height:1.55; overflow-wrap:anywhere; }
 .market-footnotes p { margin:4px 0 8px; }
 .market-footnotes ul { padding-left:18px; margin:8px 0; }
@@ -148,4 +148,4 @@
 .other-market .oil-eia-table .market-values { cursor:pointer; }
 .other-market .oil-eia-table .oil-spot-value { background:transparent; border:0; color:var(--fg); width:100%; text-align:right; padding:6px 0; }
 .market-open:disabled { cursor:default; }
-.market-ptax small.ptax-kind { display:block; color:var(--mut); font-size:.7rem; font-weight:400; }
+.market-ptax small.ptax-kind { display:block; color:var(--mut); font-size:.75rem; font-weight:400; }

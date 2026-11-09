@@ -12,7 +12,7 @@
 .drp-mname { text-align:center; font-size:.8rem; color:var(--mut); margin-bottom:4px; }
 .drp-grid { display:grid; grid-template-columns:repeat(7, 40px); gap:2px 0; }
 .drp-grid-months { grid-template-columns:repeat(3, 72px); gap:4px; }
-.drp-wd { text-align:center; font-size:.7rem; color:var(--mut); padding:4px 0; }
+.drp-wd { text-align:center; font-size:.75rem; color:var(--mut); padding:4px 0; }
 .drp-cell { height:40px; padding:0; border:0; background:transparent; color:var(--fg); font:inherit; font-size:.85rem; cursor:pointer; border-radius:0; font-variant-numeric:tabular-nums; }
 .drp-grid-months .drp-cell { height:44px; border-radius:6px; }
 .drp-cell:hover:not(:disabled) { background:var(--surface-2); }
@@ -25,7 +25,7 @@
 @media (max-width:639px) { .drp-grid { grid-template-columns:repeat(7, minmax(36px, 1fr)); } .drp-pop { width:calc(100vw - 16px); } }
 .chart-filters .drp-trigger, .market-terminal .drp-trigger { border-radius:0; }
 .drp-type { display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--line); }
-.drp-type label { display:flex; flex-direction:column; gap:2px; font-size:.72rem; color:var(--mut); }
+.drp-type label { display:flex; flex-direction:column; gap:2px; font-size:.75rem; color:var(--mut); }
 .drp-type input { width:11ch; min-height:44px; padding:6px 8px; background:var(--surface-2); color:var(--fg); border:1px solid var(--line); border-radius:6px; font:inherit; font-size:.9rem; font-variant-numeric:tabular-nums; }
 .drp-type input:focus-visible, .drp-apply:focus-visible { outline:2px solid var(--warn); outline-offset:1px; }
 .drp-apply { min-height:44px; padding:0 14px; background:var(--surface-2); color:var(--fg); border:1px solid var(--accent); border-radius:6px; font:inherit; font-size:.85rem; cursor:pointer; }
