@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useHolidays } from './useHolidays.js'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
 import { useDataFile } from './useDataFile.js'
 import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
-import { COMPOSICOES, CUSTOS_FIXOS, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, simular, spreadSobreCdi, vencimento } from './finameMateriais.js'
+import { COMPOSICOES, CUSTOS_FIXOS, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingAnnualRate, finameFundingOption, compareFinameFunding } from './finameFunding.js'
 import { nf } from './format.js'
 import Estado from './Estado.jsx'
@@ -34,6 +35,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
   const macro = useMacro()
+  const { ctx: holidayCtx } = useHolidays()
   const [valorText, setValorText] = useState('500.000,00')
   const [partText, setPartText] = useState('100')
   const [prazoText, setPrazoText] = useState('60')
@@ -49,6 +51,8 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const [periodicidade, setPeriodicidade] = useState(3)
   const [composicao, setComposicao] = useState('capitalizada')
   const [finameEligible, setFinameEligible] = useState(false)
+  // Indexador editado por parcela: vale só para a cotação em uso (muda a cotação, volta ao valor publicado).
+  const [indexEdits, setIndexEdits] = useState({ chave: '', valores: {} })
   const [hoje] = useState(() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d })
 
   const money = parseMoneyInput(valorText)
@@ -71,6 +75,15 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const funding = finameFundingOption(custo)
   const custoFinanceiro = finameFundingAnnualRate(custo, { tfb: tfb?.valor, tfc: tfc?.valor })
 
+  const indexChave = `${custo}|${custo === 'tfc' ? tfcCodigo : keyOf(faixa, liberacao)}|${custoFinanceiro}`
+  const edits = indexEdits.chave === indexChave ? indexEdits.valores : {}
+  const editIndexador = (mes, text) => setIndexEdits(previous => ({ chave: indexChave, valores: { ...(previous.chave === indexChave ? previous.valores : {}), [mes]: text } }))
+  const indexadorMes = mes => { const text = edits[mes]; if (text == null || text.trim() === '') return custoFinanceiro; const v = parseDecimal(text); return v !== null && v <= 100 ? v : NaN }
+  const indexadorInvalido = prazo !== null && Number.isFinite(custoFinanceiro) && Object.keys(edits).some(m => Number(m) <= prazo && !Number.isFinite(indexadorMes(Number(m))))
+  const temEdicao = prazo !== null && Number.isFinite(custoFinanceiro) && Object.keys(edits).some(m => Number(m) <= prazo && edits[m].trim() !== '')
+  // Valor inválido não derruba a tabela: a linha usa a cotação até o texto ficar válido, e o aviso aparece abaixo da tabela.
+  const custoPorMes = temEdicao ? Array.from({ length: prazo }, (_, k) => { const v = indexadorMes(k + 1); return Number.isFinite(v) ? v : custoFinanceiro }) : undefined
+
   const erros = {
     valor: money.ok && money.value > 0 ? null : money.error || 'Informe um valor maior que zero.',
     part: participacao !== null && participacao >= REGRAS.participacaoMinPct && participacao <= 100 ? null : 'Participação de 1 a 100%.',
@@ -81,7 +94,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
     iof: finameEligible ? null : 'Confirme os recursos FINAME elegíveis ao art. 8º, IX. Outras origens exigem análise tributária antes da simulação.',
   }
   const pronto = funding?.mode === 'inline' && !Object.values(erros).some(Boolean) && Number.isFinite(custoFinanceiro)
-  const r = pronto ? simular({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, sistema, periodicidade, composicao, iof: { fixed: 0, daily: 0 } }) : null
+  const r = pronto ? simular({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, custoPorMes, ipca: 0, taxaBndes, taxaAgente, sistema, periodicidade, composicao, iof: { fixed: 0, daily: 0 } }) : null
   const res = r?.ok ? r : null
   const comparison = comparar && pronto ? compareFinameFunding({ valor: money.value, participacao, prazo, carencia, custo, liberacao, ipca: 0, taxaBndes, taxaAgente, sistema, periodicidade, composicao, iof: { fixed: 0, daily: 0 } }, { tfc, tfb }) : null
   const spread = res ? spreadSobreCdi(res.taxaNominal, cdi) : null
@@ -216,16 +229,16 @@ export default function FinameMateriais({ onBack, onFundingView }) {
       {res && (
         <details className="desk-panel cx-panel fm-fluxo-panel" open>
           <summary>Cronograma ilustrativo · {custo.toUpperCase()}</summary>
-          <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Calendário hipotético: liberação ilustrativa hoje (${data(hoje)}) e datas no mesmo dia de cada mês, recuando para o último dia em meses mais curtos. Não aplica data-base, dia 15, feriados ou ajuste bancário de vencimentos; não é memória contratual. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero no enquadramento FINAME confirmado.`)}</h3></header>
-          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais. Datas apenas ilustrativas, sem ajuste bancário ou feriados. Não use como memória contratual.</p>
+          <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Liberação ilustrativa hoje (${data(hoje)}). Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros ainda são calculados em meses iguais; não é memória contratual. A coluna Indexador mostra a cotação atual (TFC ou TFB) e pode ser editada em cada parcela para testar outro valor; ao trocar de cotação, volta ao publicado. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero no enquadramento FINAME confirmado.`)}</h3></header>
+          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais. Vencimento todo dia 15, ou no próximo dia útil (feriados nacionais). Não use como memória contratual.</p>{indexadorInvalido && <p className="cx-error" role="alert">Indexador da parcela: informe um valor em % a.a., de 0 a 100. Enquanto estiver inválido, a linha usa a cotação atual.</p>}
           <div className="cx-wrap fm-fluxo" role="region" aria-label="Fluxo parcela a parcela" aria-describedby="fm-calendario-hipotetico" tabIndex={0}>
             <table className="cx-matrix fm-tabela">
-              <thead><tr><th scope="col">Nº</th><th scope="col">Data ilustrativa</th><th scope="col">Saldo inicial</th><th scope="col">Juros pagos</th><th scope="col">Amortização</th><th scope="col">Parcela</th><th scope="col">IOF</th><th scope="col">Total pago</th><th scope="col">Saldo final</th></tr></thead>
+              <thead><tr><th scope="col">Nº</th><th scope="col">Vencimento</th><th scope="col">Indexador (% a.a.)</th><th scope="col">Saldo inicial</th><th scope="col">Juros pagos</th><th scope="col">Amortização</th><th scope="col">Parcela</th><th scope="col">IOF</th><th scope="col">Total pago</th><th scope="col">Saldo final</th></tr></thead>
               <tbody>
-                <tr className="fm-liberacao"><th scope="row">0 · liberação hipotética</th><td>{data(hoje)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{brl(res.iofFixo)}</td><td>{brl(res.iofFixo)}</td><td>{brl(res.financiado)}</td></tr>
-                {res.parcelas.map((p) => <tr key={p.mes} className={p.carencia ? 'fm-carencia' : undefined}><th scope="row">{p.mes}{p.carencia ? ' · carência' : ''}</th><td>{data(vencimento(hoje, p.mes))}</td><td>{brl(p.saldoInicial)}</td><td>{brl(p.juros)}</td><td>{brl(p.amortizacao)}</td><td>{brl(p.parcela)}</td><td>{brl(p.iof)}</td><td>{brl(p.pago)}</td><td>{brl(p.saldo)}</td></tr>)}
+                <tr className="fm-liberacao"><th scope="row">0 · liberação hipotética</th><td>{data(hoje)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{brl(res.iofFixo)}</td><td>{brl(res.iofFixo)}</td><td>{brl(res.financiado)}</td></tr>
+                {res.parcelas.map((p) => <tr key={p.mes} className={p.carencia ? 'fm-carencia' : undefined}><th scope="row">{p.mes}{p.carencia ? ' · carência' : ''}</th><td>{data(vencimentoDia15(hoje, p.mes, holidayCtx))}</td><td><input className="fm-indexador" inputMode="decimal" autoComplete="off" aria-label={`Indexador da parcela ${p.mes} (% a.a.)`} aria-invalid={!Number.isFinite(indexadorMes(p.mes))} value={edits[p.mes] ?? nf(custoFinanceiro, 4)} onFocus={e => e.target.select()} onChange={e => editIndexador(p.mes, e.target.value)} /></td><td>{brl(p.saldoInicial)}</td><td>{brl(p.juros)}</td><td>{brl(p.amortizacao)}</td><td>{brl(p.parcela)}</td><td>{brl(p.iof)}</td><td>{brl(p.pago)}</td><td>{brl(p.saldo)}</td></tr>)}
               </tbody>
-              <tfoot><tr><th scope="row">Total</th><td>{res.parcelas.length} meses</td><td>—</td><td>{brl(res.juros)}</td><td>{brl(res.financiado)}</td><td>{brl(res.juros + res.financiado)}</td><td>{brl(res.iof)}</td><td>{brl(res.total)}</td><td>—</td></tr></tfoot>
+              <tfoot><tr><th scope="row">Total</th><td>{res.parcelas.length} meses</td><td>—</td><td>—</td><td>{brl(res.juros)}</td><td>{brl(res.financiado)}</td><td>{brl(res.juros + res.financiado)}</td><td>{brl(res.iof)}</td><td>{brl(res.total)}</td><td>—</td></tr></tfoot>
             </table>
           </div>
         </details>
