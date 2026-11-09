@@ -51,3 +51,20 @@ test('sinalizador contra o Focus: acima, abaixo, igual (2 casas) e ausente', () 
   assert.equal(compareToFocus(undefined, undefined), null)
   assert.deepEqual(Object.keys(FOCUS_MARK), ['up', 'down', 'same'])
 })
+
+import { idadeProjecao, textoIdadeProjecao } from '../src/scenarios.js'
+test('idade da projeção: dias corridos em Brasília e alerta acima de 14 dias', () => {
+  const agora = Date.parse('2026-11-09T15:00:00Z')
+  assert.deepEqual(idadeProjecao('2026-09-25', agora), { dias: 45, data: '25/09', antiga: true })
+  assert.equal(idadeProjecao('2026-10-26', agora).antiga, false)
+  assert.equal(idadeProjecao('2026-10-26', agora).dias, 14)
+  assert.equal(idadeProjecao('2026-10-25', agora).antiga, true)
+  assert.equal(idadeProjecao('2026-11-09', agora).dias, 0)
+  // 01:00 UTC de 10/11 ainda é 09/11 em Brasília
+  assert.equal(idadeProjecao('2026-11-09', Date.parse('2026-11-10T01:00:00Z')).dias, 0)
+  assert.equal(idadeProjecao(undefined, agora), null)
+  assert.equal(idadeProjecao('2026-9-5', agora), null)
+  assert.equal(textoIdadeProjecao(idadeProjecao('2026-09-25', agora)), 'projeção de 25/09 (há 45 dias)')
+  assert.equal(textoIdadeProjecao(idadeProjecao('2026-11-08', agora)), 'projeção de 08/11 (há 1 dia)')
+  assert.equal(textoIdadeProjecao(null), 'fonte pendente')
+})
