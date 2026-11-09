@@ -185,7 +185,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       await fm.locator('.fm-fluxo').waitFor()
       assert.equal(await fm.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 60)
       assert.equal(await fm.locator('.fm-tabela tbody tr.fm-carencia').count(), 12)
-      assert.deepEqual(await fm.locator('.fm-tabela thead th').allInnerTexts(), ['Nº', 'Data ilustrativa', 'Saldo inicial', 'Juros pagos', 'Amortização', 'Parcela', 'IOF', 'Total pago', 'Saldo final'])
+      assert.deepEqual(await fm.locator('.fm-tabela thead th').allInnerTexts(), ['Nº', 'Vencimento', 'Indexador (% a.a.)', 'Saldo inicial', 'Juros pagos', 'Amortização', 'Parcela', 'IOF', 'Total pago', 'Saldo final'])
       assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').first().innerText(), /^\d{2}\/\d{2}\/\d{4}$/, 'data da liberação')
       assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').last().innerText(), /^R\$\s*500\.000,00$/, 'saldo após a liberação')
       assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').nth(5).innerText(), /^R\$\s*0,00$/, 'sem IOF na liberação')

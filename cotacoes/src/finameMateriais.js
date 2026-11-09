@@ -2,6 +2,7 @@
 // Regras conforme a página do produto e as circulares do BNDES vigentes em novembro de 2026 (ver FONTES); o agente financeiro
 // confirma as condições de cada operação. A tela mostra a data da regra e avisa o que precisa de conferência.
 import { IOF_PJ, monthlyRate, parseDecimal } from './emprestimo.js'
+import { iso, nextBusinessDay } from './holidays.js'
 
 // Limite técnico para conservar precisão em centavos. Não é um limite de crédito ou enquadramento.
 export const LIMITE_MONETARIO = 1_000_000_000_000
@@ -124,14 +125,16 @@ export function conferir({ valor, participacao, prazo, carencia, custo }) {
 // Devolve parcelas [{ mes, correcao, juros, amortizacao, principal, parcela, saldo, carencia }]; `principal` é a parte da
 // amortização que corresponde ao valor entregue (amortização sem a correção acumulada): a soma dos principais é o financiado, e é
 // sobre ele que incide o IOF diário (Decreto 6.306/2007, art. 7º, I, b: "valor do principal de cada uma das parcelas").
+const taxaValida = t => Number.isFinite(t) && t >= 0 && t <= 700
 export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, periodicidade = 1, ipcaAnual = 0 }) {
   if (!dentroDoLimite(financiado) || financiado <= 0 || !Number.isInteger(prazo) || prazo < 1 || prazo > REGRAS.prazoMaxMeses
     || !Number.isInteger(carencia) || carencia < 0 || carencia >= prazo || carencia > REGRAS.carenciaMaxMeses
-    || !Number.isFinite(taxaAnual) || taxaAnual < 0 || taxaAnual > 700 || !validIpcaProjection(ipcaAnual)
+    || !(Array.isArray(taxaAnual) ? taxaAnual.length === prazo && taxaAnual.every(taxaValida) : taxaValida(taxaAnual)) || !validIpcaProjection(ipcaAnual)
     || !SISTEMAS.some(option => option.id === sistema) || !PERIODICIDADES.some(option => option.id === periodicidade)) {
     throw new RangeError('Parâmetros inválidos para o cronograma Finame.')
   }
-  const i = monthlyRate(taxaAnual, 'aa'), c = monthlyRate(ipcaAnual, 'aa')
+  // taxaAnual pode ser um número (taxa única) ou uma lista com uma taxa por mês (indexador editado parcela a parcela).
+  const taxaDoMes = m => monthlyRate(Array.isArray(taxaAnual) ? taxaAnual[m - 1] : taxaAnual, 'aa'), c = monthlyRate(ipcaAnual, 'aa')
   const parcelas = []
   let saldo = financiado
   let fator = 1 // correção acumulada desde a liberação
@@ -139,6 +142,7 @@ export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, pe
   for (let m = 1; m <= carencia; m++) {
     const correcao = saldo * c
     saldo += correcao; fator *= 1 + c
+    const i = taxaDoMes(m)
     acumulado = (saldo + acumulado) * i + acumulado // juros do mês sobre o saldo corrigido + juros ainda não pagos (capitalização dentro do período)
     // Anexo I, item 5.3: contar retroativamente a partir do fim da carência.
     const paga = (carencia - m) % periodicidade === 0
@@ -149,6 +153,7 @@ export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, pe
   for (let k = 1; k <= n; k++) {
     const correcao = saldo * c
     saldo += correcao; fator *= 1 + c
+    const i = taxaDoMes(carencia + k)
     const juros = saldo * i
     const restantes = n - k + 1
     // Amortização Price equivalente à PMT menos juros, sem cancelamento nas taxas ínfimas.
@@ -174,6 +179,15 @@ export function iofCronograma(financiado, parcelas, iof = IOF_PJ) {
   return { fixo, diario, total: fixo + diario, porParcela }
 }
 
+// Vencimento contratual da parcela `mes`: todo dia 15 do mês (a contar do mês da liberação). Se o dia 15 não for dia útil
+// (fim de semana ou feriado nacional), vence no próximo dia útil. Devolve Date ao meio-dia, como o restante da tela.
+export function vencimentoDia15(liberacao, mes, ctx = {}) {
+  const ref = new Date(liberacao.getFullYear(), liberacao.getMonth() + mes, 15, 12)
+  const util = nextBusinessDay(iso(ref.getFullYear(), ref.getMonth() + 1, 15), ['BR'], ctx)
+  const [y, m, d] = util.split('-').map(Number)
+  return new Date(y, m - 1, d, 12)
+}
+
 // Vencimento da parcela `mes` contado da liberação: mesmo dia do mês, recuando para o último dia quando o mês é mais curto.
 export function vencimento(liberacao, mes) {
   const d = new Date(liberacao)
@@ -191,12 +205,14 @@ export function parseIpcaProjection(text) {
   const parsed = parseDecimal(negative ? value.slice(1) : value)
   return parsed === null ? null : negative ? -parsed : parsed
 }
-export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO }) {
+export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO }) {
   const check = conferir({ valor, participacao, prazo, carencia, custo })
   const iofOk = iof && [iof.fixed, iof.daily].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
     && (iof.maxDays == null || (Number.isInteger(iof.maxDays) && iof.maxDays >= 0 && iof.maxDays <= IOF_PJ.maxDays))
   const ipcaOk = custo !== 'tlp' || validIpcaProjection(ipca)
   const taxasOk = [custoFinanceiro, taxaBndes, taxaAgente].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
+  const porMesOk = custoPorMes == null || (Array.isArray(custoPorMes) && custoPorMes.length === prazo && custoPorMes.every(v => Number.isFinite(v) && v >= 0 && v <= 100))
+  if (!porMesOk) check.erros.push('Informe o indexador de cada parcela em % a.a., de 0 a 100.')
   if (!taxasOk) check.erros.push('Informe o custo financeiro, a taxa do BNDES e o spread da instituição em % a.a.')
   if (!ipcaOk) check.erros.push('Informe o IPCA esperado de -50 a 100% a.a., limite deste modelo.')
   if (!iofOk) check.erros.push('Informe as alíquotas do IOF em % (0 e 0 se o agente confirmar alíquota zero).')
@@ -208,8 +224,12 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const financiado = check.financiado
   const taxa = taxaFinal(custoFinanceiro, taxaBndes, taxaAgente, composicao)
   const ipcaAnual = custo === 'tlp' ? ipca : 0
+  // Indexador editado por parcela: cada mês usa a própria taxa final; sem edição, uma taxa única (resultado idêntico ao anterior).
+  const serie = (bndes, agente) => (custoPorMes ? custoPorMes.map(c => taxaFinal(c, bndes, agente, composicao)) : taxaFinal(custoFinanceiro, bndes, agente, composicao))
+  const editados = custoPorMes ? custoPorMes.filter(c => c !== custoFinanceiro).length : 0
+  if (editados) check.avisos.push(`Indexador alterado em ${editados} ${editados === 1 ? 'parcela' : 'parcelas'}: a taxa final em destaque usa o valor da cotação; o cronograma usa o indexador informado em cada linha.`)
   let parcelas
-  try { parcelas = cronograma({ financiado, prazo, carencia, taxaAnual: taxa, sistema, periodicidade, ipcaAnual }) }
+  try { parcelas = cronograma({ financiado, prazo, carencia, taxaAnual: serie(taxaBndes, taxaAgente), sistema, periodicidade, ipcaAnual }) }
   catch (error) {
     if (!(error instanceof RangeError)) throw error
     return { ok: false, ...check, erros: [erroNumerico] }
@@ -223,8 +243,8 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const jurosDe = (t) => somar(cronograma({ financiado, prazo, carencia, taxaAnual: t, sistema, periodicidade, ipcaAnual }).map(p => p.juros))
   let jSoCusto, jSemAgente
   try {
-    jSoCusto = jurosDe(taxaFinal(custoFinanceiro, 0, 0, composicao))
-    jSemAgente = jurosDe(taxaFinal(custoFinanceiro, taxaBndes, 0, composicao))
+    jSoCusto = jurosDe(serie(0, 0))
+    jSemAgente = jurosDe(serie(taxaBndes, 0))
   } catch (error) {
     if (!(error instanceof RangeError)) throw error
     return { ok: false, ...check, erros: [erroNumerico] }

@@ -2,7 +2,7 @@
 // corrigido pelo IPCA, IOF e invariantes. Cada cenário é conferido por fórmula fechada, independente do código da calculadora.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { COMPOSICOES, CUSTOS, FONTES, IOF_ZERO, PORTES, REGRAS, TFC_NOMES, codigoTfc, conferir, cronograma, faixaTfb, faixaTfc, iofCronograma, ipcaEsperado, simular, spreadSobreCdi, taxaFinal, tlpNominal, vencimento } from '../src/finameMateriais.js'
+import { COMPOSICOES, CUSTOS, FONTES, IOF_ZERO, PORTES, REGRAS, TFC_NOMES, codigoTfc, conferir, cronograma, faixaTfb, faixaTfc, iofCronograma, ipcaEsperado, simular, spreadSobreCdi, vencimentoDia15, taxaFinal, tlpNominal, vencimento } from '../src/finameMateriais.js'
 import { IOF_PJ } from '../src/emprestimo.js'
 import { parseCommand } from '../src/terminal.js'
 
@@ -223,4 +223,28 @@ test('invariantes em 108 combinações: saldo zera, amortizações devolvem o pr
   assert.equal(vencimento(new Date(2026, 0, 31, 12), 2).toLocaleDateString('pt-BR'), d(2026, 3, 31))
   assert.equal(vencimento(new Date(2026, 10, 4, 12), 14).toLocaleDateString('pt-BR'), d(2028, 1, 4))
   assert.equal(iofCronograma(1000, [{ mes: 24, amortizacao: 1000, principal: 1000 }], { fixed: 0, daily: 0.01, maxDays: 100 }).diario, 10, 'maxDays do parâmetro é respeitado: 1.000 × 100 dias × 0,01%')
+})
+
+test('vencimento todo dia 15; sem dia útil, vai para o próximo dia útil', () => {
+  const d = (y, m, dd) => new Date(y, m - 1, dd).toLocaleDateString('pt-BR')
+  const v = (lib, mes) => vencimentoDia15(lib, mes).toLocaleDateString('pt-BR')
+  assert.equal(v(new Date(2026, 6, 1, 12), 1), d(2026, 8, 17), '15/08/2026 é sábado')
+  assert.equal(v(new Date(2026, 9, 1, 12), 1), d(2026, 11, 16), '15/11/2026 é domingo (e feriado)')
+  assert.equal(v(new Date(2026, 10, 9, 12), 1), d(2026, 12, 15), '15/12/2026 é terça-feira')
+  assert.equal(v(new Date(2026, 10, 9, 12), 14), d(2028, 1, 17), '15/01/2028 é sábado')
+})
+
+test('indexador por parcela: lista igual à taxa única não muda nada; edição muda só a parcela escolhida', () => {
+  const base = { valor: 500_000, participacao: 100, prazo: 12, carencia: 0, custo: 'tfb', custoFinanceiro: 10, taxaBndes: 1.25, taxaAgente: 3, sistema: 'sac' }
+  const unica = simular(base)
+  const igual = simular({ ...base, custoPorMes: Array(12).fill(10) })
+  assert.equal(igual.total, unica.total)
+  assert.deepEqual(igual.parcelas.map(p => p.parcela), unica.parcelas.map(p => p.parcela))
+  const editado = simular({ ...base, custoPorMes: [...Array(5).fill(10), 14, ...Array(6).fill(10)] })
+  assert.ok(editado.ok)
+  assert.ok(editado.parcelas[5].juros > unica.parcelas[5].juros, 'o mês editado cobra mais juros')
+  assert.equal(editado.parcelas[0].juros, unica.parcelas[0].juros, 'meses anteriores não mudam')
+  assert.ok(editado.avisos.some(a => /Indexador alterado em 1 parcela/.test(a)))
+  assert.ok(Math.abs(editado.atribuicao.custoFinanceiro + editado.atribuicao.bndes + editado.atribuicao.agente - editado.juros) < 0.01)
+  assert.equal(simular({ ...base, custoPorMes: [10] }).ok, false, 'lista com tamanho errado é recusada')
 })
