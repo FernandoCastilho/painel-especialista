@@ -1,6 +1,6 @@
 // Service worker: abre o app sem rede (último conteúdo) e mantém os dados no cache.
 // Versão do cache: troque ao mudar a estratégia; os arquivos com hash do Vite se renovam sozinhos.
-const CACHE = 'cotacoes-v4'
+const CACHE = 'cotacoes-v6'
 const SHELL = ['./', './manifest.webmanifest', './favicon.svg', './icon-192.png', './icon-512.png']
 
 self.addEventListener('install', (event) => {
@@ -50,6 +50,10 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url)
   // APIs de cotação e outros domínios: sempre direto da rede, nunca do cache.
   if (url.origin !== self.location.origin) return
+  if (url.pathname === new URL('movimento-falimentar.json', self.registration.scope).pathname) {
+    event.respondWith(new Response(null, { status: 410 }))
+    return
+  }
   if (req.mode === 'navigate') {
     event.respondWith(networkFirst(req).then((r) => r ?? caches.match('./')))
   } else if (/\.json$/.test(url.pathname)) {
@@ -64,3 +68,4 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => (list[0] ? list[0].focus() : self.clients.openWindow('./'))))
 })
+

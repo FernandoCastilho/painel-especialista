@@ -37,6 +37,7 @@ const Config = lazy(() => import('./Config.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
+const BalanceAnalysis = lazy(() => import('./BalanceAnalysis.jsx'))
 const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
 const Apresentacao = lazy(() => import('./Apresentacao.jsx'))
@@ -185,6 +186,7 @@ export default function App() {
     const h = i < 0 ? raw : raw.slice(0, i), sub = i < 0 ? '' : raw.slice(i + 1) // o BNDES guarda série e período depois da primeira barra
     return { tab: TABS.some((t) => t.id === h) ? h : 'resumo', sub }
   }
+  const [mascotSearch, setMascotSearch] = useState(null)
   const [searchSelection, setSearchSelection] = useState(null)
   const [tab, setTab] = useState(() => readHash().tab)
   const [sub, setSub] = useState(() => readHash().sub)
@@ -268,7 +270,7 @@ export default function App() {
     <MarketPopup ready={avisoFechado} quotes={quotes} curves={curves.data} oil={oil.data} paused={tab === 'apresentar'} />
     <Recado />
     <Laser />
-    <GlobalSearch onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
+    <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
     <header className="term-head">
       <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
       <Tape quotes={quotes} rates={rates} oil={oil.data} />
@@ -330,6 +332,7 @@ export default function App() {
       {tab === 'bndes' && <Bndes view={sub} onView={(v, replace) => goto('bndes', v, replace)} />}
 
       {tab === 'bancos' && <Bancos />}
+      {tab === 'balancos' && <BalanceAnalysis />}
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
       {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} />}
@@ -364,7 +367,7 @@ export default function App() {
       )}
       </Suspense>
     </main>
-    <FeedbackMascot />
+    <FeedbackMascot onSearch={setMascotSearch} />
     </AvisosProvider>
   )
 }

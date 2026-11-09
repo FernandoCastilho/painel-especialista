@@ -3,20 +3,14 @@ import { createPortal } from 'react-dom'
 import config from './feedbackConfig.json'
 import { EMPTY_FEEDBACK, FEEDBACK_LIMITS, FEEDBACK_TYPES, feedbackEndpoint, sendFeedback, validateFeedback } from './feedback.js'
 import './FeedbackMascot.css'
+import MascotDock from './MascotDock.jsx'
+import owl from './assets/mascot-owl.webp'
 
 export function MascotIcon() {
-  return <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" className="feedback-mascot-icon">
-    <path d="M32 6v7" stroke="currentColor" strokeWidth="3" /><circle cx="32" cy="6" r="4" fill="var(--amber, #ffb000)" />
-    <rect x="8" y="15" width="48" height="37" rx="16" fill="currentColor" />
-    <rect x="14" y="22" width="36" height="22" rx="10" fill="var(--feedback-face)" />
-    <path d="M24 52v6l8-6" fill="currentColor" />
-    <path d="M22 31v3m20-3v3" stroke="var(--brand-fill, #ffb000)" strokeWidth="4" strokeLinecap="round" />
-    <path d="M28 37q4 4 8 0" fill="none" stroke="var(--brand-fill, #ffb000)" strokeWidth="2" strokeLinecap="round" />
-    <path d="M5 29v9m54-9v9" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-  </svg>
+  return <img src={owl} alt="" className="feedback-mascot-icon" width="384" height="408" draggable="false" />
 }
 
-export default function FeedbackMascot({ configuration = config }) {
+export default function FeedbackMascot({ configuration = config, onSearch }) {
   const [open, setOpen] = useState(false)
   const [values, setValues] = useState({ ...EMPTY_FEEDBACK })
   const [status, setStatus] = useState('idle')
@@ -71,9 +65,9 @@ export default function FeedbackMascot({ configuration = config }) {
     } finally { clearTimeout(timeout); inFlight.current = false; controller.current = null }
   }
   return <>
-    <button className="feedback-trigger" type="button" ref={trigger} aria-label="Abrir caixa de sugestões" aria-haspopup="dialog" aria-expanded={open} aria-controls="feedback-dialog" onClick={() => { restoreFocus.current = true; setOpen(true) }}>
+    <MascotDock onSearch={onSearch}><button className="feedback-trigger" type="button" ref={trigger} aria-label="Abrir caixa de sugestões" aria-haspopup="dialog" aria-expanded={open} aria-controls="feedback-dialog" onClick={() => { restoreFocus.current = true; setOpen(true) }}>
       <MascotIcon /><span>Sugestões</span>
-    </button>
+    </button></MascotDock>
     {createPortal(<dialog id="feedback-dialog" className="feedback-dialog" ref={dialog} aria-labelledby="feedback-title" aria-describedby="feedback-privacy" onCancel={event => { event.preventDefault(); setOpen(false) }} onClose={() => { if (!dialog.current?.open) setOpen(false) }}>
       <header className="feedback-heading"><MascotIcon /><div><span>PAINEL DO ESPECIALISTA</span><h2 id="feedback-title">Sua ideia faz diferença</h2></div><button type="button" className="feedback-close" aria-label="Fechar caixa de sugestões" onClick={() => setOpen(false)}>×</button></header>
       <p id="feedback-privacy" className="feedback-privacy">Envie uma sugestão, dica ou problema para Fernando. Não inclua dados de clientes, senhas ou informações confidenciais.</p>
