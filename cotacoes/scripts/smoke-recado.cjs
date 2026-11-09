@@ -19,6 +19,8 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       }, { day: slot.day, key: MARKET_POPUP_KEY, edition: slot.key })
       await p.clock.install({ time: instant })
       await ctx.route('**/*', (r) => r.request().url().startsWith(base) ? r.continue() : r.abort())
+      // O Panorama do dia abre sozinho em dia útil, das 9h às 18h, e o recado espera ele fechar; marca a hora atual como já vista (também após localStorage.clear()).
+      await ctx.addInitScript(() => { const f = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map((v) => [v.type, v.value])); localStorage.setItem('painel-panorama-hora', `${f.year}-${f.month}-${f.day}T${f.hour}`) })
       let file = { ativo: true, nivel: 'urgente', titulo: 'Manutenção hoje', texto: 'O painel fica fora do ar das 18h às 19h.\nObrigado.' }
       await ctx.route('**/recado.json*', (r) => r.fulfill({ json: file }))
       await p.goto(base + '/#resumo')
