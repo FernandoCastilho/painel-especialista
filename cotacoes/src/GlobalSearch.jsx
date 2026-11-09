@@ -11,15 +11,44 @@ export function SearchHighlight({ text, query }) {
   return highlightParts(String(text || ''),query).map((p,i)=>p.match ? <mark key={i}>{p.text}</mark> : <span key={i}>{p.text}</span>)
 }
 const stamp = t => t ? new Date(t).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}) : 'referência não informada'
-export default function GlobalSearch({ onNavigate }) {
+export default function GlobalSearch({ onNavigate, request }) {
   const [open,setOpen]=useState(false), [query,setQuery]=useState(''), [docs,setDocs]=useState([]), [sources,setSources]=useState([]), [pending,setPending]=useState(false), [attempt,setAttempt]=useState(0), [limit,setLimit]=useState(60), [staticError,setStaticError]=useState(false)
   const now = useNewsClock()
   const [newsSnapshots, setNewsSnapshots] = useState([])
   const dialog=useRef(null), input=useRef(null), previousFocus=useRef(null)
   const deferred=useDeferredValue(query)
+  const [anchor, setAnchor] = useState(null)
+  const [bubbleStyle, setBubbleStyle] = useState({})
   const close=()=>setOpen(false)
+  useEffect(() => {
+    if (!request) return
+    if (document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]:not(dialog)')) return
+    previousFocus.current = request.opener
+    setAnchor(request.anchor)
+    setOpen(true)
+  }, [request])
+  useEffect(() => {
+    if (!open || !anchor) return
+    const place = () => {
+      const rect = anchor.getBoundingClientRect()
+      const width = Math.min(640, window.innerWidth - 24)
+      const above = Math.max(0, rect.top - 24)
+      const below = Math.max(0, window.innerHeight - rect.bottom - 24)
+      const useAbove = above >= 240 || above >= below
+      const available = useAbove ? above : below
+      const height = Math.min(600, Math.max(240, available), window.innerHeight - 32)
+      const left = Math.max(12, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 12))
+      const top = Math.max(16, Math.min(useAbove ? rect.top - height - 12 : rect.bottom + 12, window.innerHeight - height - 16))
+      const visibleAnchor = rect.bottom > 0 && rect.top < window.innerHeight
+      setBubbleStyle({ left, top, width, height, '--search-tail-x': `${Math.max(24, Math.min(width - 24, rect.left + rect.width / 2 - left))}px`, '--search-tail-top': useAbove ? '100%' : '-10px', '--search-tail-visibility': visibleAnchor && available >= 240 ? 'visible' : 'hidden' })
+    }
+    place()
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', place, true)
+    return () => { window.removeEventListener('resize', place); window.removeEventListener('scroll', place, true) }
+  }, [open, anchor])
   useEffect(()=>{
-    const key=e=>{if(isSearchShortcut(e) && (!document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]:not(dialog)') || dialog.current?.open)){e.preventDefault();if(dialog.current?.open)input.current?.focus();else{previousFocus.current=document.activeElement;setOpen(true)}}}
+    const key=e=>{if(isSearchShortcut(e) && (!document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]:not(dialog)') || dialog.current?.open)){e.preventDefault();if(dialog.current?.open)input.current?.focus();else{previousFocus.current=document.activeElement;setAnchor(null);setOpen(true)}}}
     document.addEventListener('keydown',key)
     return()=>document.removeEventListener('keydown',key)
   },[])
@@ -54,6 +83,13 @@ export default function GlobalSearch({ onNavigate }) {
     return()=>{active=false;controller.abort()}
 
   },[open,attempt])
+  useEffect(() => {
+    if (!open) return
+    const navigate = () => { previousFocus.current = null; setOpen(false) }
+    window.addEventListener('hashchange', navigate)
+    window.addEventListener('popstate', navigate)
+    return () => { window.removeEventListener('hashchange', navigate); window.removeEventListener('popstate', navigate) }
+  }, [open])
   // Reindex cached news on the clock tick without refetching any source.
   const currentDocs = useMemo(() => [...docs, ...newsSnapshots.flatMap(({ file, data, route, label }) => indexSearchData(file, data, route, label, now).docs)], [docs, newsSnapshots, now])
   const results=useMemo(()=>searchDocuments(currentDocs,deferred),[currentDocs,deferred])
@@ -64,11 +100,11 @@ export default function GlobalSearch({ onNavigate }) {
     return snapshot ? { ...source, stale: source.stale || newsCollectionStale(snapshot.data, now) } : source
   })
   const failed=currentSources.filter(s=>!s.ok), stale=currentSources.filter(s=>s.stale), limited=currentSources.filter(s=>s.limited)
-  const choose=d=>{setOpen(false);onNavigate(d,query)}
+  const choose=d=>{previousFocus.current=null;setOpen(false);onNavigate(d,query)}
   return <>
 
-    {createPortal(<dialog ref={dialog} className="global-search-dialog" aria-labelledby="global-search-heading" onKeyDown={e=>{if(e.key==='Escape' && !e.isComposing){e.preventDefault();e.stopPropagation();close()}}} onCancel={e=>{e.preventDefault();close()}} onClose={()=>{if(!dialog.current?.open)setOpen(false)}} onClick={e=>{if(e.target===dialog.current && (e.clientX<e.currentTarget.getBoundingClientRect().left || e.clientX>e.currentTarget.getBoundingClientRect().right || e.clientY<e.currentTarget.getBoundingClientRect().top || e.clientY>e.currentTarget.getBoundingClientRect().bottom))close()}}>
-      <div className="global-search-head"><h2 id="global-search-heading">Buscar no painel</h2><button type="button" className="btn" onClick={close} aria-label="Fechar busca">Fechar</button></div>
+    {createPortal(<dialog ref={dialog} className={`global-search-dialog${anchor ? ' global-search-bubble' : ''}`} style={anchor ? bubbleStyle : undefined} aria-labelledby="global-search-heading" onKeyDown={e=>{if(e.key==='Escape' && !e.isComposing){e.preventDefault();e.stopPropagation();close()}}} onCancel={e=>{e.preventDefault();close()}} onClose={()=>{if(!dialog.current?.open)setOpen(false)}} onClick={e=>{if(e.target===dialog.current && (e.clientX<e.currentTarget.getBoundingClientRect().left || e.clientX>e.currentTarget.getBoundingClientRect().right || e.clientY<e.currentTarget.getBoundingClientRect().top || e.clientY>e.currentTarget.getBoundingClientRect().bottom))close()}}>
+      <div className="global-search-content"><div className="global-search-head"><h2 id="global-search-heading">Buscar no painel</h2><button type="button" className="btn" onClick={close} aria-label="Fechar busca">Fechar</button></div>
       <label className="global-search-field">Palavra ou expressão<input ref={input} type="search" value={query} onChange={e=>{setQuery(e.target.value);setLimit(60)}} autoComplete="off" spellCheck={false} placeholder="Ex.: inadimplência, FIDC, inflação" aria-describedby="global-search-scope" /></label>
       <details className="global-search-scope"><summary>Sobre a cobertura</summary><p id="global-search-scope">Pesquisa no conteúdo e nos dados disponíveis do painel. Não inclui textos integrais de sites externos nem conteúdo pessoal não salvo.</p></details>
       <div className="global-search-status" role="status" aria-live="polite">{query.trim().length<2 ? 'Digite pelo menos 2 caracteres.' : `${results.length} resultado${results.length===1?'':'s'}${shown.length<results.length ? ` · mostrando ${shown.length}` : ''}.`}{pending && ` Carregando dados das áreas (${sources.length}/${SEARCH_SOURCES.length}); resultados parciais.`}</div>
@@ -76,6 +112,7 @@ export default function GlobalSearch({ onNavigate }) {
       {!pending && query.trim().length>=2 && !results.length && <p>Nenhum resultado no conteúdo disponível. Tente outra palavra ou confira a cobertura acima.</p>}
       <div className="global-search-results" aria-busy={pending || deferred!==query}>{groups.map(g=><section key={g.section} aria-label={`Resultados em ${g.section}`}><h3>{g.section} <small>{results.filter(d=>d.section===g.section).length}</small></h3><ul>{g.items.map(d=><li key={d.id}><button type="button" className="global-search-result" onClick={()=>choose(d)}><strong><SearchHighlight text={d.title} query={query}/></strong><small>{d.kind}{d.stamp ? ` · referência do arquivo: ${stamp(d.stamp)}` : ''}</small><span><SearchHighlight text={searchSnippet(d.body,query)} query={query}/></span><span className="search-open">Abrir em {g.section}</span></button></li>)}</ul></section>)}</div>
       {shown.length<results.length && <button type="button" className="btn search-more" onClick={()=>setLimit(l=>l+60)}>Mostrar mais resultados</button>}
+      </div>
     </dialog>,document.body)}
   </>
 }

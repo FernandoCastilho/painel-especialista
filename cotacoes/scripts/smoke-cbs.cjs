@@ -39,7 +39,8 @@ async function run() {
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
         await page.evaluate(() => document.fonts.ready)
-        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `overflow ${theme}/${width}`)
+        const overflow = await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > innerWidth, offenders: [...document.querySelectorAll('body *')].filter(el => el.getBoundingClientRect().right > innerWidth + 1).slice(0, 12).map(el => ({tag:el.tagName, className:String(el.className), right:el.getBoundingClientRect().right})) }))
+        assert.equal(overflow.overflow, false, `overflow ${theme}/${width}: ${JSON.stringify(overflow.offenders)}`)
         assert.equal(await page.locator('.cbs-annual-chart').evaluate(element => {
           const points = [...element.querySelectorAll('circle')]
           const labels = [...element.querySelectorAll('text')]
