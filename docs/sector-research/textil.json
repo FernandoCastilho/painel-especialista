@@ -3047,15 +3047,15 @@
         },
         {
           "id": "2",
-          "label": "acabamento e ensaio funcional",
-          "detail": "Material recebe tratamento final e testes que provam que cumpre a função",
+          "label": "Ensaio e validação do material",
+          "detail": "Material recebe testes que provam que cumpre a função",
           "emoji": "🔬",
           "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "3",
           "label": "aplicação industrial homologada",
-          "detail": "Aplicação industrial, após homologação",
+          "detail": "Aplicação, após homologação",
           "emoji": "🏗️",
           "bank": "Giro após a validação; cessão de recebíveis, só de crédito comprovado"
         }
@@ -3067,7 +3067,7 @@
           "label": "Desenvolvimento",
           "product": {
             "emoji": "🧪",
-            "label": "amostras e material em teste"
+            "label": "material em teste"
           },
           "cash": {
             "emoji": "💵",
@@ -3084,7 +3084,7 @@
           },
           "cash": {
             "emoji": "⚡",
-            "label": "custo de ensaio e acabamento pago pela empresa"
+            "label": "custo de ensaio pago pela empresa"
           }
         },
         {

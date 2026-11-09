@@ -19514,7 +19514,7 @@
         },
         {
           "id": "2",
-          "label": "Acabamento e controle",
+          "label": "Controle de qualidade",
           "detail": "Confere refugo, tempo de ciclo e qualidade das peças antes de entregar",
           "emoji": "🔍",
           "bank": "Giro bancário para o ciclo operacional"
@@ -19560,7 +19560,7 @@
           "label": "Entrega ao cliente",
           "product": {
             "emoji": "📦",
-            "label": "peças acabadas e aprovadas"
+            "label": "peças aprovadas"
           },
           "cash": {
             "emoji": "💰",
@@ -24138,15 +24138,15 @@
         },
         {
           "id": "2",
-          "label": "acabamento e ensaio funcional",
-          "detail": "Material recebe tratamento final e testes que provam que cumpre a função",
+          "label": "Ensaio e validação do material",
+          "detail": "Material recebe testes que provam que cumpre a função",
           "emoji": "🔬",
           "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "3",
           "label": "aplicação industrial homologada",
-          "detail": "Aplicação industrial, após homologação",
+          "detail": "Aplicação, após homologação",
           "emoji": "🏗️",
           "bank": "Giro após a validação; cessão de recebíveis, só de crédito comprovado"
         }
@@ -24158,7 +24158,7 @@
           "label": "Desenvolvimento",
           "product": {
             "emoji": "🧪",
-            "label": "amostras e material em teste"
+            "label": "material em teste"
           },
           "cash": {
             "emoji": "💵",
@@ -24175,7 +24175,7 @@
           },
           "cash": {
             "emoji": "⚡",
-            "label": "custo de ensaio e acabamento pago pela empresa"
+            "label": "custo de ensaio pago pela empresa"
           }
         },
         {
@@ -25168,7 +25168,7 @@
         {
           "id": "n2",
           "label": "Operadoras e enlaces",
-          "detail": "Acesso externo, redundância e transporte de prestadores distintos",
+          "detail": "Enlaces e links de prestadores distintos",
           "emoji": "🌐",
           "bank": "Giro bancário para o intervalo operacional"
         },
@@ -25666,21 +25666,21 @@
         {
           "id": "n1",
           "label": "Transição inicial",
-          "detail": "Inventário, migração e documentação do ambiente",
+          "detail": "Inventário e migração do ambiente",
           "emoji": "🔄",
           "bank": "Giro para a transição, ligado ao pagamento de implantação"
         },
         {
           "id": "n2",
           "label": "Operação recorrente",
-          "detail": "Suporte, manutenção e resposta a falhas",
+          "detail": "Suporte e manutenção",
           "emoji": "🖥️",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         },
         {
           "id": "n3",
           "label": "Gestão do cliente",
-          "detail": "Priorização, aceite e revisão dos níveis de serviço",
+          "detail": "Atendimento conforme criticidade e níveis de serviço",
           "emoji": "📋",
           "bank": "Sem encaixe de investimento confirmado"
         }
@@ -26151,7 +26151,7 @@
         {
           "id": "n1",
           "label": "Integração",
-          "detail": "Configuração, migração e ligação com sistemas",
+          "detail": "Integração e migração",
           "emoji": "🔗",
           "bank": "Giro para a implantação, se documentado"
         },
@@ -26165,7 +26165,7 @@
         {
           "id": "n3",
           "label": "Suporte e renovação",
-          "detail": "Adoção, disponibilidade e ajuste de capacidade",
+          "detail": "Adoção, disponibilidade e suporte",
           "emoji": "🤝",
           "bank": "Investimento em equipamentos entregues em comodato, se documentado e com recuperação demonstrada"
         }
@@ -26203,7 +26203,7 @@
           "label": "Uso e suporte",
           "product": {
             "emoji": "🎧",
-            "label": "serviço em uso, com suporte e ajuste de capacidade"
+            "label": "serviço em uso, com suporte"
           },
           "cash": {
             "emoji": "💰",
@@ -26698,7 +26698,7 @@
       "nodes": [
         {
           "id": "n0",
-          "label": "Conhecimento e infraestrutura",
+          "label": "Produto próprio ou sob encomenda",
           "detail": "Produto próprio ou desenvolvimento sob encomenda",
           "emoji": "👩‍💻",
           "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
@@ -26720,7 +26720,7 @@
         {
           "id": "n3",
           "label": "Uso e evolução",
-          "detail": "Assinatura, suporte, manutenção e novas versões",
+          "detail": "Assinatura, suporte e manutenção",
           "emoji": "🔁",
           "bank": "Cessão de recebíveis, só de crédito documentado"
         }
@@ -26758,7 +26758,7 @@
           "label": "Assinatura e evolução",
           "product": {
             "emoji": "🆕",
-            "label": "suporte, manutenção e novas versões"
+            "label": "suporte e manutenção"
           },
           "cash": {
             "emoji": "💰",
@@ -27259,7 +27259,7 @@
       "nodes": [
         {
           "id": "n0",
-          "label": "Terreno, energia e rede",
+          "label": "Licenças, energia e conectividade",
           "detail": "Licenças, alimentação elétrica e conectividade",
           "emoji": "⚡",
           "bank": "Investimento de longo prazo, ligado a contratos e cronograma"
@@ -27293,7 +27293,7 @@
           "label": "Obra e energização",
           "product": {
             "emoji": "🧱",
-            "label": "terreno e conexão elétrica e de rede"
+            "label": "licenças e conexão elétrica e de rede"
           },
           "cash": {
             "emoji": "💵",
@@ -27829,14 +27829,14 @@
       "nodes": [
         {
           "id": "n0",
-          "label": "Infraestrutura e direitos",
+          "label": "Rede e equipamentos",
           "detail": "Rede e equipamentos",
           "emoji": "🗼",
           "bank": "Financiamento de investimento em rede, ligado ao retorno"
         },
         {
           "id": "n1",
-          "label": "Transporte e acesso",
+          "label": "Rede e acesso",
           "detail": "Capacidade de rede, inclusive vendida a outras prestadoras",
           "emoji": "🔗",
           "bank": "Financiamento de investimento em rede, ligado ao retorno, se documentado"
