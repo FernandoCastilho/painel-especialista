@@ -13,3 +13,9 @@ test('preferences tolerate unavailable storage and reject malformed coordinates'
   assert.deepEqual(readMascotPreferences({getItem:()=>JSON.stringify({hidden:'true',desktop:{x:'42',y:10},query:'private'})}), {hidden:false,desktop:null})
   assert.deepEqual(readMascotPreferences({getItem:()=>JSON.stringify({hidden:true,desktop:{x:42,y:10},query:'private'})}), {hidden:true,desktop:{x:42,y:10}})
 })
+
+test('mobile mascot is isolated below fixed navigation', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const css = await readFile(new URL('../src/FeedbackMascot.css', import.meta.url), 'utf8')
+  assert.match(css, /@media\(max-width:999px\)\{\.mascot-tray\{height:250px;isolation:isolate;z-index:0;/)
+})
