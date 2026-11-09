@@ -57,3 +57,20 @@
   .rj-table th:first-child { width: 75px; }
   .rj-table th:nth-child(3) { width: 42px; }
 }
+
+.rj-treemap { height: 350px; }
+.rj-map-wrap { position: relative; }
+.rj-map-instructions { margin: 8px 0 0; color: var(--mut); font-size: .8rem; }
+.rj-map-tooltip-space { min-height: 86px; padding-bottom: 12px; box-sizing: border-box; color: var(--mut); font-size: .82rem; }
+.rj-map-tooltip { display: grid; gap: 2px; max-width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid var(--fg); border-radius: 8px; color: var(--fg); background: var(--card); box-shadow: 0 3px 12px #0003; font-size: .85rem; overflow-wrap: anywhere; pointer-events: auto; }
+.rj-map-tooltip span { font-variant-numeric: tabular-nums; }
+.rj-pin { pointer-events: none; }
+.rj-state:focus-visible { outline: none; fill: #ffd0ad; stroke: #a04608; stroke-width: 3; }
+.rj-sector-cell:focus-visible { outline: none; }
+.rj-sector-cell:focus-visible rect { stroke: #ffae73; stroke-width: 4; }
+.rj-cell-number { text-anchor: middle; }
+.rj-sector-legend { margin: 0 0 12px; }
+.rj-sector-legend summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--fg); font-weight: 600; }
+.rj-sector-legend .rj-sector-top { max-height: 280px; overflow: auto; }
+
+@media (max-width: 480px) { .rj-treemap { height: 400px; } }

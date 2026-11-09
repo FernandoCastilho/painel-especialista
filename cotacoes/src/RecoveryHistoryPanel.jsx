@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import RefreshButton from './RefreshButton.jsx'
 import { UF_NAMES, UNKNOWN_UF, UNKNOWN_SECTOR, validateRecoveryHistory, recoveryPeriod, filterRecovery, groupRecovery, recoveryTreemap } from './recoveryHistory.js'
 import geography from './recovery-geography.json'
+import RecoveryMapTooltip, { useRecoveryMapTooltip } from './RecoveryMapTooltip.jsx'
+import { recoveryCellLabel } from './recoveryMapLabels.js'
 import './RecoveryHistoryPanel.css'
 
 const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
@@ -15,30 +17,37 @@ const stateLabel = uf => uf === UNKNOWN_UF ? 'Sem UF empresarial' : `${UF_NAMES[
 const geographyUrl = 'https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais.html'
 
 function StateMap({ records, selected, onSelect }) {
+  const tip = useRecoveryMapTooltip()
   const counts = new Map(groupRecovery(records, 'uf', UNKNOWN_UF).map(({label, count}) => [label, count]))
   const max = Math.max(1, ...Object.keys(UF_NAMES).map(uf => counts.get(uf) ?? 0))
   const state = geography.states.find(item => item.uf === selected)
   const viewBox = state?.viewBox ?? geography.viewBox
+  const shownStates = state ? [state] : geography.states
+  const tipState = shownStates.find(item => item.uf === tip.active)
+  const tipCount = counts.get(tip.active) ?? 0
   return <article className="rj-card" aria-labelledby="rj-map-title">
     <div className="rj-card-head">
       <div><h3 id="rj-map-title">Distribuição por UF</h3><p>{state ? stateLabel(selected) : 'Brasil · área da bolha proporcional às menções'}</p></div>
       {state && <button type="button" className="btn" onClick={() => onSelect('')}>Ver Brasil</button>}
     </div>
-    <svg className="rj-map" viewBox={viewBox} role="img" aria-label={state ? `Mapa ampliado de ${stateLabel(selected)}` : 'Mapa do Brasil por unidade da federação'}>
-      {geography.states.map(item => <path key={item.uf} d={item.path} className={selected === item.uf ? 'rj-state active' : 'rj-state'}
-        fillRule="evenodd" onClick={() => onSelect(selected === item.uf ? '' : item.uf)}>
-        <title>{stateLabel(item.uf)}: {integer.format(counts.get(item.uf) ?? 0)} menções</title>
-      </path>)}
-      {geography.states.filter(item => counts.get(item.uf)).map(item => {
-        const count = counts.get(item.uf)
-        const radius = Math.sqrt(count / max) * 25
-        return <g key={item.uf} className={selected === item.uf ? 'rj-pin active' : 'rj-pin'} onClick={() => onSelect(selected === item.uf ? '' : item.uf)}>
-          <title>{stateLabel(item.uf)}: {integer.format(count)} menções</title>
-          <circle cx={item.x} cy={item.y} r={radius} />
-          {radius >= 13 && <text x={item.x} y={item.y} dy=".34em">{item.uf}</text>}
-        </g>
-      })}
-    </svg>
+    <p className="rj-map-instructions" id="rj-map-help">Passe o cursor, use Tab ou toque para ver os detalhes. Clique ou use Enter para filtrar. Esc fecha a dica.</p>
+    <div className="rj-map-wrap" ref={tip.root}>
+      <svg className="rj-map" viewBox={viewBox} role="group" aria-describedby="rj-map-help" aria-label={state ? `Mapa ampliado de ${stateLabel(selected)}` : 'Mapa do Brasil por unidade da federação'}>
+        {shownStates.map(item => <path key={item.uf} d={item.path} className={selected === item.uf ? 'rj-state active' : 'rj-state'}
+          {...tip.trigger(item.uf, () => onSelect(selected === item.uf ? '' : item.uf))}
+          aria-label={`${stateLabel(item.uf)}: ${integer.format(counts.get(item.uf) ?? 0)} menções`}
+          aria-pressed={selected === item.uf} fillRule="evenodd" />)}
+        {shownStates.filter(item => counts.get(item.uf)).map(item => {
+          const count = counts.get(item.uf)
+          const radius = Math.sqrt(count / max) * 25
+          return <g key={item.uf} aria-hidden="true" className={selected === item.uf ? 'rj-pin active' : 'rj-pin'}>
+            <circle cx={item.x} cy={item.y} r={radius} />
+            {radius >= 13 && <text x={item.x} y={item.y} dy=".34em">{item.uf}</text>}
+          </g>
+        })}
+      </svg>
+      <RecoveryMapTooltip tip={tip} label={tipState && stateLabel(tipState.uf)} count={tipCount} share={percentage.format(records.length ? tipCount / records.length : 0)} />
+    </div>
     <label className="rj-control">Selecionar UF
       <select value={selected} onChange={event => onSelect(event.target.value)}>
         <option value="">Todas as UFs</option>
@@ -51,33 +60,69 @@ function StateMap({ records, selected, onSelect }) {
 }
 
 function SectorMap({ records, selected, onSelect }) {
+  const tip = useRecoveryMapTooltip()
+  const svg = useRef(null)
+  const [size, setSize] = useState({width:500, height:320})
   const groups = groupRecovery(records, 'sector', UNKNOWN_SECTOR)
-  const cells = recoveryTreemap(groups)
+  const cells = recoveryTreemap(groups, size.width, size.height)
+  const hasGroups = groups.length > 0
+  const tipGroup = groups.find(group => group.label === tip.active)
+  const measure = useMemo(() => {
+    const context = document.createElement('canvas').getContext('2d')
+    context.font = '700 13px system-ui, sans-serif'
+    return text => context.measureText(text).width
+  }, [])
+  useEffect(() => {
+    const element = svg.current
+    if (!element) return
+    const observer = new ResizeObserver(() => {
+      const { width, height } = element.getBoundingClientRect()
+      if (width > 0 && height > 0) setSize(previous => previous.width === width && previous.height === height ? previous : {width, height})
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [hasGroups])
   return <article className="rj-card" aria-labelledby="rj-sector-title">
     <div className="rj-card-head"><div><h3 id="rj-sector-title">Distribuição por setor</h3><p>Área proporcional às menções no recorte de UF</p></div></div>
-    {groups.length ? <svg className="rj-treemap" viewBox="0 0 500 320" role="img" aria-label="Treemap de setores por quantidade de menções">
-      {cells.map(({ label,count,x,y,w,h }, index) => {
-        const active = label === selected
-        const visible = w >= 86 && h >= 48
-        const limit = Math.floor((w - 16) / 7)
-        return <g key={label} className="rj-sector-cell" onClick={() => onSelect(active ? '' : label)}>
-          <title>{label}: {integer.format(count)} menções ({percentage.format(count / records.length)})</title>
-          <rect x={x} y={y} width={w} height={h} fill={active ? '#9c3b00' : sectorPalette[index % sectorPalette.length]} />
-          {visible && <text x={x + 8} y={y + 19}>
-            <tspan>{label.length > limit ? label.slice(0, limit - 1) + '…' : label}</tspan>
-            <tspan x={x + 8} dy="19">{integer.format(count)}</tspan>
-          </text>}
-        </g>
-      })}
-    </svg> : <p className="rj-empty">Nenhum setor com menções neste recorte.</p>}
-    {groups.length > 0 && <ol className="rj-sector-top" aria-label="Setores com mais menções">
-      {groups.slice(0, 3).map(group => <li key={group.label}>
-        <button type="button" aria-pressed={selected === group.label}
-          onClick={() => onSelect(selected === group.label ? '' : group.label)}>
-          <span>{group.label}</span><strong>{integer.format(group.count)}</strong>
-        </button>
-      </li>)}
-    </ol>}
+    <p className="rj-map-instructions" id="rj-sector-help">Números nos blocos = quantidade de menções. Passe o cursor, use Tab ou toque para identificar o setor. Clique ou use Enter para filtrar. Esc fecha a dica.</p>
+    {groups.length ? <div className="rj-map-wrap" ref={tip.root}>
+      <svg ref={svg} className="rj-treemap" viewBox={`0 0 ${size.width} ${size.height}`} role="group" aria-describedby="rj-sector-help" aria-label="Treemap de setores por quantidade de menções">
+        {cells.map(({ label,count,x,y,w,h }, index) => {
+          const active = label === selected
+          const display = recoveryCellLabel(label, count, w, h, measure)
+          const fontSize = 13
+          return <g key={label} className="rj-sector-cell" data-label-mode={display.mode}
+            {...tip.trigger(label, () => onSelect(active ? '' : label))}
+            aria-label={`${label}: ${integer.format(count)} menções (${percentage.format(count / records.length)})`}
+            aria-pressed={active}>
+            <rect x={x} y={y} width={w} height={h} fill={active ? '#9c3b00' : sectorPalette[index % sectorPalette.length]} />
+            {display.mode === 'full' && <text aria-hidden="true" x={x + 6} y={y + 18} style={{fontSize}}>
+              <tspan>{label}</tspan><tspan x={x + 6} dy={19}>{display.number}</tspan>
+            </text>}
+            {display.mode === 'number' && <text aria-hidden="true" className="rj-cell-number" x={x + w / 2} y={y + h / 2} dy=".34em" style={{fontSize}}>{display.number}</text>}
+          </g>
+        })}
+      </svg>
+      <RecoveryMapTooltip tip={tip} label={tipGroup?.label} count={tipGroup?.count} share={percentage.format(tipGroup ? tipGroup.count / records.length : 0)} />
+    </div> : <p className="rj-empty">Nenhum setor com menções neste recorte.</p>}
+    {groups.length > 0 && <>
+      <ol className="rj-sector-top" aria-label="Setores com mais menções">
+        {groups.slice(0, 3).map(group => <li key={group.label}>
+          <button type="button" aria-pressed={selected === group.label}
+            onClick={() => onSelect(selected === group.label ? '' : group.label)}>
+            <span>{group.label}</span><strong>{integer.format(group.count)}</strong>
+          </button>
+        </li>)}
+      </ol>
+      <details className="rj-sector-legend"><summary>Ver todos os setores e quantidades ({groups.length})</summary>
+        <ol className="rj-sector-top" aria-label="Legenda completa de setores">
+          {groups.map(group => <li key={group.label}><button type="button" aria-pressed={selected === group.label}
+            onClick={() => onSelect(selected === group.label ? '' : group.label)}>
+            <span>{group.label}</span><strong>{integer.format(group.count)}</strong>
+          </button></li>)}
+        </ol>
+      </details>
+    </>}
     <label className="rj-control">Selecionar setor
       <select value={selected} onChange={event => onSelect(event.target.value)}>
         <option value="">Todos os setores</option>
@@ -85,7 +130,7 @@ function SectorMap({ records, selected, onSelect }) {
         {groups.map(group => <option value={group.label} key={group.label}>{group.label} ({integer.format(group.count)})</option>)}
       </select>
     </label>
-    <p className="rj-card-note">O grupo Sem setor reúne menções sem atividade identificada.</p>
+    <p className="rj-card-note">O grupo Sem setor reúne menções sem atividade identificada. Blocos muito pequenos podem ser consultados pela legenda ou pelo seletor.</p>
   </article>
 }
 
