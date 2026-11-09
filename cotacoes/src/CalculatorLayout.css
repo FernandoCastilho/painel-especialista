@@ -1,4 +1,14 @@
 /* Shared workspace for every calculator. Product formulas and tables stay local. */
+/* Paleta única das calculadoras (padrão da calculadora de reforma tributária).
+   --amber, usado por foco, links e destaques, passa a ser o laranja da marca. */
+.cx {
+  --bg:#071122; --card:#101b2e; --fg:#f3f6ff; --mut:#bbc5d6; --line:#33435b;
+  --accent:#8eb5ff; --down:#ff9b9b; --surface-2:#18263c; --amber:#ff6200;
+}
+:root[data-theme=light] .cx {
+  --bg:#f5f7fb; --card:#fff; --fg:#000d3c; --mut:#42526b; --line:#b9c5d6;
+  --accent:#0131ff; --down:#b82030; --surface-2:#edf2fa; --amber:#b94700;
+}
 main.app.app-calculators {
   --cx-space:clamp(16px, 1.6vw, 24px);
   width:100%;
@@ -232,3 +242,11 @@ main.app.app-calculators {
 @media (max-width:399px) {
   .cx .fm-grade, .cx .cg-kpis, .cx .desconto-kpis { grid-template-columns:1fr; }
 }
+
+/* Leitura confortável nos campos, como na calculadora de reforma tributária. */
+.cx .cx-field label, .cx .cx-label { font-size:.95rem; }
+.cx .cx-field input:not([type=checkbox]), .cx .cx-field select, .cx .cx-field textarea, .cx .cx-iof > select {
+  min-height:48px; font-size:1rem; border-radius:6px;
+}
+.cx .cx-error, .cx .cx-hint, .cx > .status { font-size:.95rem; }
+.cx :focus-visible { outline-color:var(--amber); }
