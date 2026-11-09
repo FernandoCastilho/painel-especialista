@@ -20,10 +20,14 @@ for (const id of ['aneel', 'susep']) {
     assert.deepEqual(evidence.querystringsearch.items, [])
     const shell = `<script>window.__data=${JSON.stringify({ content: { data: { blocks: evidence.blocks } }, querystringsearch: evidence.querystringsearch })};</script>`
     assert.deepEqual(extractGovArticleLinks(shell, source), [])
-    assert.equal(PRODUCTION_SOURCE_IDS.includes(id), false)
+    assert.equal(PRODUCTION_SOURCE_IDS.includes(id), true)
     const previousFeed = JSON.parse(await readFile(new URL('../public/sector-news.json', import.meta.url)))
     const state = createProductionState({ previousFeed })
     assert.equal(state.sources[id].status, 'suspended')
     assert.equal(state.sources[id].block.code, 'parser_review_required')
   })
 }
+
+test('production selection includes only nine original and two reviewed parser sources', () => {
+  assert.deepEqual(PRODUCTION_SOURCE_IDS, ['mapa', 'antt', 'mdic', 'anp', 'anm', 'ana', 'cvm', 'ans', 'ipen', 'aneel', 'susep'])
+})
