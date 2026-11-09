@@ -185,6 +185,7 @@ export default function App() {
     const h = i < 0 ? raw : raw.slice(0, i), sub = i < 0 ? '' : raw.slice(i + 1) // o BNDES guarda série e período depois da primeira barra
     return { tab: TABS.some((t) => t.id === h) ? h : 'resumo', sub }
   }
+  const [mascotSearch, setMascotSearch] = useState(null)
   const [searchSelection, setSearchSelection] = useState(null)
   const [tab, setTab] = useState(() => readHash().tab)
   const [sub, setSub] = useState(() => readHash().sub)
@@ -267,7 +268,7 @@ export default function App() {
     <MarketPopup ready={avisoFechado} quotes={quotes} curves={curves.data} oil={oil.data} paused={tab === 'apresentar'} />
     <Recado />
     <Laser />
-    <GlobalSearch onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
+    <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
     <header className="term-head">
       <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
       <Tape quotes={quotes} rates={rates} oil={oil.data} />
@@ -362,7 +363,7 @@ export default function App() {
       )}
       </Suspense>
     </main>
-    <FeedbackMascot />
+    <FeedbackMascot onSearch={setMascotSearch} />
     </AvisosProvider>
   )
 }

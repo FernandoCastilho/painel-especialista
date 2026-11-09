@@ -46,6 +46,6 @@ test('feedback: optional fields omitted and abort is forwarded', async () => {
 
 test('feedback: mobile mascot takes its own space instead of covering content', async () => {
   const css = await readFile(new URL('../src/FeedbackMascot.css', import.meta.url), 'utf8')
-  assert.match(css, /@media\(max-width:999px\)\{\.feedback-trigger\{position:static;/)
+  assert.match(css, /@media\(max-width:999px\)\{\.mascot-tray\{height:250px/); assert.match(css, /\.mascot-dock\{position:absolute\}/)
   assert.match(css, /env\(safe-area-inset-bottom\)/)
 })
