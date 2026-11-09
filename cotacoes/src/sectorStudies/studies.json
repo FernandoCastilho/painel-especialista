@@ -5562,7 +5562,7 @@
         {
           "id": "n0",
           "label": "Aplicação e especificação",
-          "detail": "Projeto, parada planejada ou manutenção geram a necessidade; o comprador aprova a especificação",
+          "detail": "Parada programada, reposição ou expansão geram a necessidade; o comprador aprova a especificação",
           "emoji": "📋",
           "bank": "Giro bancário só com pedido firme e ciclo comprovado"
         },
@@ -6560,8 +6560,8 @@
         },
         {
           "id": "2",
-          "label": "montagem e validação",
-          "detail": "Montagem do implemento e validação antes da entrega",
+          "label": "Montagem e entrega aceita",
+          "detail": "Montagem do implemento e entrega aceita",
           "emoji": "🔧",
           "bank": "Giro bancário casado à entrada e à liquidação da venda"
         },
@@ -6606,7 +6606,7 @@
           "label": "Entrega ao cliente",
           "product": {
             "emoji": "📦",
-            "label": "implemento validado e entregue"
+            "label": "implemento entregue"
           },
           "cash": {
             "emoji": "💰",
@@ -7858,8 +7858,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Mudas, terra e manejo",
-          "detail": "Origem da muda e da terra; confirmar o que é da empresa",
+          "label": "Plantio, terra e manejo",
+          "detail": "Plantio, terra e manejo",
           "emoji": "🌱",
           "bank": "Investimento em ativos duráveis, como estradas e manejo"
         },
@@ -7892,7 +7892,7 @@
           "label": "Plantio e tratos",
           "product": {
             "emoji": "🌿",
-            "label": "mudas e manejo no talhão"
+            "label": "plantio e manejo no talhão"
           },
           "cash": {
             "emoji": "💵",
@@ -8322,7 +8322,7 @@
         },
         {
           "id": "2",
-          "label": "Secagem e beneficiamento",
+          "label": "Secagem e classificação, quando contratadas",
           "detail": "Secagem tira umidade, ocupa espaço e pode gerar perdas",
           "emoji": "♨️",
           "bank": "Giro bancário para o estoque em secagem"
@@ -8355,7 +8355,7 @@
           "label": "Secagem e beneficiamento",
           "product": {
             "emoji": "📏",
-            "label": "madeira seca e classificada"
+            "label": "madeira seca e classificada, quando contratadas"
           },
           "cash": {
             "emoji": "📦",
@@ -9612,7 +9612,7 @@
         },
         {
           "id": "2",
-          "label": "Prensagem e revestimento",
+          "label": "Formação do painel e revestimento",
           "detail": "Aplica acabamentos e padrões sobre o painel, o que agrega valor mas exige controlar perdas",
           "emoji": "🏭",
           "bank": "Giro bancário para o estoque pesado"
@@ -10982,7 +10982,7 @@
           "label": "locação operação ou venda",
           "detail": "Locação, operação ou venda do galpão pronto",
           "emoji": "🏢",
-          "bank": "Financiamento de longo prazo apoiado em locação"
+          "bank": "Financiamento de longo prazo apoiado em locação, se houver contrato e locatário comprovados"
         }
       ],
       "edges": [
@@ -13481,7 +13481,7 @@
           "label": "Entrega",
           "product": {
             "emoji": "🚪",
-            "label": "esquadrias fabricadas e transportadas"
+            "label": "esquadrias fabricadas"
           },
           "cash": {
             "emoji": "🧾",
@@ -19108,7 +19108,7 @@
         {
           "id": "2",
           "label": "Grades e distribuição",
-          "detail": "Distribuição técnica fraciona e entrega pronta entrega aos clientes",
+          "detail": "Distribuição técnica pode competir por fracionamento e pronta entrega",
           "emoji": "🚚",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -19521,8 +19521,8 @@
         },
         {
           "id": "3",
-          "label": "Indústrias e consumo final",
-          "detail": "Compradores finais recebem as peças, e a demanda varia por embalagem, construção ou bens duráveis",
+          "label": "Compradores das peças",
+          "detail": "Compradores nos setores de embalagem, construção e bens duráveis",
           "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
@@ -21561,8 +21561,8 @@
         },
         {
           "id": "3",
-          "label": "tecelagem e malharia",
-          "detail": "Fio vendido ao tecelão ou usado na própria indústria",
+          "label": "Clientes do fio ou uso na própria indústria",
+          "detail": "Clientes do fio, ou uso na própria indústria integrada",
           "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
@@ -24124,8 +24124,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "fibra e formulação",
-          "detail": "Escolhe-se a matéria-prima e a receita do material para a função desejada",
+          "label": "Desenvolvimento do material",
+          "detail": "Desenvolvimento do material para a função",
           "emoji": "🧪",
           "bank": "Desenvolvimento financiado em etapas, não confirmado"
         },
@@ -24659,7 +24659,7 @@
         {
           "id": "n1",
           "label": "Especialista de segurança",
-          "detail": "Configura, integra, monitora e testa os controles",
+          "detail": "Monitora e integra com os processos do cliente",
           "emoji": "🧑‍💻",
           "bank": "Giro bancário para o descasamento entre equipe e recebimento, se documentado"
         },
@@ -24673,7 +24673,7 @@
         {
           "id": "n3",
           "label": "Resposta e continuidade",
-          "detail": "Contenção, recuperação e comunicação, conforme o caso",
+          "detail": "Mobilização para resposta a incidente, imprevisível e de escopo crescente",
           "emoji": "🚨",
           "bank": "Resposta emergencial é imprevisível; separar do giro normal, sem encaixe bancário confirmado"
         }
@@ -24698,7 +24698,7 @@
           "label": "Implantação",
           "product": {
             "emoji": "🧩",
-            "label": "controles configurados e integrados"
+            "label": "controles integrados aos processos do cliente"
           },
           "cash": {
             "emoji": "💳",
@@ -26144,7 +26144,7 @@
         {
           "id": "n0",
           "label": "Plataformas e operadoras",
-          "detail": "Licenças, numeração e conectividade",
+          "detail": "Licenças, plataforma e conectividade",
           "emoji": "📞",
           "bank": "Giro compatível com a compra e o faturamento de licenças"
         },
@@ -26177,7 +26177,7 @@
           "label": "Compra de licenças",
           "product": {
             "emoji": "🎟️",
-            "label": "licenças, numeração e conectividade"
+            "label": "licenças, plataforma e conectividade"
           },
           "cash": {
             "emoji": "💵",
@@ -26699,21 +26699,21 @@
         {
           "id": "n0",
           "label": "Conhecimento e infraestrutura",
-          "detail": "Equipe, ferramentas, nuvem e componentes",
+          "detail": "Produto próprio ou desenvolvimento sob encomenda",
           "emoji": "👩‍💻",
           "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n1",
           "label": "Desenvolvimento",
-          "detail": "Produto, código, testes e propriedade intelectual",
+          "detail": "Desenvolvimento e implantação",
           "emoji": "⌨️",
           "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n2",
           "label": "Implantação e venda",
-          "detail": "Integração, migração, treinamento e aceite",
+          "detail": "Implantação e suporte",
           "emoji": "🚀",
           "bank": "Giro para a implantação, se documentado"
         },
@@ -26745,7 +26745,7 @@
           "label": "Implantação e venda",
           "product": {
             "emoji": "📦",
-            "label": "software integrado, migrado e treinado"
+            "label": "software implantado no cliente"
           },
           "cash": {
             "emoji": "🧾",
@@ -27267,14 +27267,14 @@
         {
           "id": "n1",
           "label": "Infraestrutura física",
-          "detail": "Edificação, refrigeração, redundância e segurança",
+          "detail": "Obra e infraestrutura física, energia e continuidade",
           "emoji": "🏗️",
           "bank": "Investimento em estrutura, ligado ao cronograma"
         },
         {
           "id": "n2",
           "label": "Capacidade computacional",
-          "detail": "Servidores, armazenamento e plataformas",
+          "detail": "Equipamentos e plataformas",
           "emoji": "🗄️",
           "bank": "Investimento em equipamento, com prazo aderente à geração de caixa"
         },

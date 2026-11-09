@@ -443,7 +443,7 @@
         {
           "id": "n1",
           "label": "Especialista de segurança",
-          "detail": "Configura, integra, monitora e testa os controles",
+          "detail": "Monitora e integra com os processos do cliente",
           "emoji": "🧑‍💻",
           "bank": "Giro bancário para o descasamento entre equipe e recebimento, se documentado"
         },
@@ -457,7 +457,7 @@
         {
           "id": "n3",
           "label": "Resposta e continuidade",
-          "detail": "Contenção, recuperação e comunicação, conforme o caso",
+          "detail": "Mobilização para resposta a incidente, imprevisível e de escopo crescente",
           "emoji": "🚨",
           "bank": "Resposta emergencial é imprevisível; separar do giro normal, sem encaixe bancário confirmado"
         }
@@ -482,7 +482,7 @@
           "label": "Implantação",
           "product": {
             "emoji": "🧩",
-            "label": "controles configurados e integrados"
+            "label": "controles integrados aos processos do cliente"
           },
           "cash": {
             "emoji": "💳",
@@ -1928,7 +1928,7 @@
         {
           "id": "n0",
           "label": "Plataformas e operadoras",
-          "detail": "Licenças, numeração e conectividade",
+          "detail": "Licenças, plataforma e conectividade",
           "emoji": "📞",
           "bank": "Giro compatível com a compra e o faturamento de licenças"
         },
@@ -1961,7 +1961,7 @@
           "label": "Compra de licenças",
           "product": {
             "emoji": "🎟️",
-            "label": "licenças, numeração e conectividade"
+            "label": "licenças, plataforma e conectividade"
           },
           "cash": {
             "emoji": "💵",
@@ -2483,21 +2483,21 @@
         {
           "id": "n0",
           "label": "Conhecimento e infraestrutura",
-          "detail": "Equipe, ferramentas, nuvem e componentes",
+          "detail": "Produto próprio ou desenvolvimento sob encomenda",
           "emoji": "👩‍💻",
           "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n1",
           "label": "Desenvolvimento",
-          "detail": "Produto, código, testes e propriedade intelectual",
+          "detail": "Desenvolvimento e implantação",
           "emoji": "⌨️",
           "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n2",
           "label": "Implantação e venda",
-          "detail": "Integração, migração, treinamento e aceite",
+          "detail": "Implantação e suporte",
           "emoji": "🚀",
           "bank": "Giro para a implantação, se documentado"
         },
@@ -2529,7 +2529,7 @@
           "label": "Implantação e venda",
           "product": {
             "emoji": "📦",
-            "label": "software integrado, migrado e treinado"
+            "label": "software implantado no cliente"
           },
           "cash": {
             "emoji": "🧾",
@@ -3051,14 +3051,14 @@
         {
           "id": "n1",
           "label": "Infraestrutura física",
-          "detail": "Edificação, refrigeração, redundância e segurança",
+          "detail": "Obra e infraestrutura física, energia e continuidade",
           "emoji": "🏗️",
           "bank": "Investimento em estrutura, ligado ao cronograma"
         },
         {
           "id": "n2",
           "label": "Capacidade computacional",
-          "detail": "Servidores, armazenamento e plataformas",
+          "detail": "Equipamentos e plataformas",
           "emoji": "🗄️",
           "bank": "Investimento em equipamento, com prazo aderente à geração de caixa"
         },

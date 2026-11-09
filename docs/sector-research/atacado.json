@@ -2814,7 +2814,7 @@
         {
           "id": "n0",
           "label": "Aplicação e especificação",
-          "detail": "Projeto, parada planejada ou manutenção geram a necessidade; o comprador aprova a especificação",
+          "detail": "Parada programada, reposição ou expansão geram a necessidade; o comprador aprova a especificação",
           "emoji": "📋",
           "bank": "Giro bancário só com pedido firme e ciclo comprovado"
         },

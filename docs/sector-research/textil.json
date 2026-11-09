@@ -470,8 +470,8 @@
         },
         {
           "id": "3",
-          "label": "tecelagem e malharia",
-          "detail": "Fio vendido ao tecelão ou usado na própria indústria",
+          "label": "Clientes do fio ou uso na própria indústria",
+          "detail": "Clientes do fio, ou uso na própria indústria integrada",
           "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
@@ -3033,8 +3033,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "fibra e formulação",
-          "detail": "Escolhe-se a matéria-prima e a receita do material para a função desejada",
+          "label": "Desenvolvimento do material",
+          "detail": "Desenvolvimento do material para a função",
           "emoji": "🧪",
           "bank": "Desenvolvimento financiado em etapas, não confirmado"
         },

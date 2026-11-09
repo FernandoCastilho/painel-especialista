@@ -300,7 +300,7 @@
         {
           "id": "2",
           "label": "Grades e distribuição",
-          "detail": "Distribuição técnica fraciona e entrega pronta entrega aos clientes",
+          "detail": "Distribuição técnica pode competir por fracionamento e pronta entrega",
           "emoji": "🚚",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -713,8 +713,8 @@
         },
         {
           "id": "3",
-          "label": "Indústrias e consumo final",
-          "detail": "Compradores finais recebem as peças, e a demanda varia por embalagem, construção ou bens duráveis",
+          "label": "Compradores das peças",
+          "detail": "Compradores nos setores de embalagem, construção e bens duráveis",
           "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
