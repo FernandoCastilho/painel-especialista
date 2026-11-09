@@ -22,7 +22,7 @@ test('referências existem no cadastro, sem repetição por subsetor, e endereç
   for (const [id, [acronym, name, kind, url, scope]] of Object.entries(associations)) {
     assert.ok(acronym && name && scope, id)
     assert.ok(['association', 'agency'].includes(kind), id)
-    assert.equal(new URL(url).protocol, 'https:', id)
+    if (url) assert.equal(new URL(url).protocol, 'https:', id)
     assert.doesNotMatch(`${name}${scope}`, /[<>]/, id)
   }
   const used = new Set(Object.values(topics).flatMap(([assoc, refs]) => [...assoc, ...refs.map(ref => `p:${ref}`)]))
@@ -93,5 +93,15 @@ test('verificador de links separa falha, aviso e ok', async () => {
   assert.equal(classifyLink(url, { status: 503 }).level, 'falha')
   assert.equal(classifyLink(url, { error: 'ENOTFOUND' }).level, 'falha')
   assert.equal(classifyLink(url, { status: 403 }).level, 'aviso')
+  assert.equal(classifyLink(url, { status: 406 }).level, 'aviso')
+  assert.equal(classifyLink(url, { error: 'ETIMEDOUT' }).level, 'aviso')
+  assert.equal(classifyLink(url, { error: 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' }).level, 'aviso')
+  assert.equal(classifyLink('https://www.portaldaindustria.com.br', { status: 200, finalUrl: 'https://www.sistemaindustria.portaldaindustria.com.br/' }).level, 'ok')
   assert.equal(classifyLink(url, { status: 200, finalUrl: 'https://outro.com.br/' }).level, 'aviso')
+})
+
+test('entidade sem site confirmado não ganha link e a tela segue funcionando', () => {
+  const node = sectorEntityGraph('automotivo', 0).nodes.find(item => item.id === 'entity:abipecas')
+  assert.equal(node.href, '')
+  assert.match(node.summary, /Costuma divulgar/)
 })
