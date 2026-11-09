@@ -44,6 +44,7 @@ export const REGRAS = {
 }
 // Base legal e fontes de cada regra (o que foi confirmado e como). "indexada": trecho da página oficial lido pelo buscador; a página em si não abriu nesta rede.
 export const FONTES = [
+  { regra: 'FGI Tradicional: custo da garantia (ECG = %G × K × VL × P, com fator K pelo prazo total); o índice de garantia contratada varia de 10% a 80% e o produto atende micro, pequenas e médias empresas', fonte: 'BNDES, Anexo V ao Regulamento do FGI Tradicional (Circular SUP/ADIG nº 65/2026) e páginas do BNDES FGI (ECG, informações a empresas e a instituições financeiras), lidas em 09/11/2026', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/bndes-fgi/informacoes-a-instituicoes-financeiras/encargo-concessao-garantia-ecg' },
   { regra: 'Custo financeiro: TFB, TFBD, TLP, Taxa LCD, Taxa Fixa Composta ou Taxa Fixa Composta MPME; taxa do BNDES de 0,95% a.a. (MPME N/NE) ou 1,25% a.a. (MPME nas demais regiões e grandes); taxa do agente negociada; Selic suspensa (Circular SUP/ADIG nº 09/2026, de 22/01/2026)', fonte: 'Página do produto BNDES Finame Materiais Industrializados, lida em 04/11/2026', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-materiais-industrializados' },
   { regra: 'Prazo total de até 7 anos, com até 2 anos de carência (1 ano com TFB, Taxa Fixa Composta ou Taxa Fixa Composta MPME); participação de até 100% dos itens financiáveis; limite de R$ 150 milhões por cliente a cada 12 meses da homologação; notas emitidas até 12 meses antes do protocolo; garantia livre, FGI admitido', fonte: 'Página do produto, lida em 04/11/2026', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-materiais-industrializados' },
   { regra: 'Teto de R$ 20 milhões por operação; itens, exclusões e nacionalização (conteúdo importado até 40% ou PPB)', fonte: 'Itens e nacionalização na página do produto; o teto por operação vem de Observatório da Indústria RS, Fomento Paraná e e-book CNI 2025 (secundárias; não consta na página oficial lida em 04/11/2026)', url: 'https://observatoriodaindustriars.org.br/solucao/bndes-finame-materiais/' },
@@ -179,6 +180,26 @@ export function iofCronograma(financiado, parcelas, iof = IOF_PJ) {
   return { fixo, diario, total: fixo + diario, porParcela }
 }
 
+// FGI Tradicional: Encargo por Concessão de Garantia (ECG). Fonte: Anexo V ao Regulamento de Operações do FGI Tradicional
+// (Circular SUP/ADIG nº 65/2026, em vigor desde 09/06/2026), itens 2.1.2, 2.1.3 e 2.1.6.
+// A tabela de custo mensal do site do BNDES é só ilustrativa e não substitui esta fórmula.
+export const FGI = Object.freeze({
+  percentualMin: 10, percentualMax: 80, padraoPercentual: 80,
+  fonte: 'BNDES, Anexo V ao Regulamento do FGI Tradicional (Circular SUP/ADIG nº 65/2026) e páginas do BNDES FGI; o índice de garantia contratada de 10% a 80% está nas páginas de informações a empresas e a instituições financeiras',
+  url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/bndes-fgi/informacoes-a-instituicoes-financeiras/encargo-concessao-garantia-ecg',
+})
+// [prazo total máximo em meses, fator K em % por período de 30 dias]
+const FATOR_K = [[3, 1.42], [6, 0.62], [9, 0.42], [12, 0.31], [15, 0.27], [18, 0.24], [21, 0.22], [24, 0.20], [27, 0.18], [30, 0.17], [33, 0.16], [36, 0.15], [39, 0.14], [45, 0.13], [48, 0.12], [54, 0.11], [60, 0.10], [69, 0.09], [78, 0.08], [90, 0.07], [102, 0.06]]
+export const fatorKFgi = (prazoMeses) => (FATOR_K.find(([max]) => prazoMeses <= max)?.[1] ?? 0.05)
+// Períodos de 30 dias completos entre a liberação e o vencimento ordinário (P). Sem datas, usa meses de 365/12 dias.
+export const periodos30 = (prazoMeses) => Math.floor((prazoMeses * 365) / 12 / 30)
+// ECG = %G × K × VL × P (pago à vista); incorporado ao saldo devedor: %G × K × VL × P ÷ (1 − %G × K × P).
+export function ecgFgi({ valor, percentual, prazo, periodos, incorporar }) {
+  const g = percentual / 100, k = fatorKFgi(prazo) / 100, p = periodos ?? periodos30(prazo)
+  const denominador = incorporar ? 1 - g * k * p : 1
+  return { k: k * 100, p, ecg: (g * k * valor * p) / denominador }
+}
+
 // Vencimento contratual da parcela `mes`: todo dia 15 do mês (a contar do mês da liberação). Se o dia 15 não for dia útil
 // (fim de semana ou feriado nacional), vence no próximo dia útil. Devolve Date ao meio-dia, como o restante da tela.
 export function vencimentoDia15(liberacao, mes, ctx = {}) {
@@ -205,7 +226,7 @@ export function parseIpcaProjection(text) {
   const parsed = parseDecimal(negative ? value.slice(1) : value)
   return parsed === null ? null : negative ? -parsed : parsed
 }
-export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO }) {
+export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null }) {
   const check = conferir({ valor, participacao, prazo, carencia, custo })
   const iofOk = iof && [iof.fixed, iof.daily].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
     && (iof.maxDays == null || (Number.isInteger(iof.maxDays) && iof.maxDays >= 0 && iof.maxDays <= IOF_PJ.maxDays))
@@ -213,6 +234,8 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const taxasOk = [custoFinanceiro, taxaBndes, taxaAgente].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
   const porMesOk = custoPorMes == null || (Array.isArray(custoPorMes) && custoPorMes.length === prazo && custoPorMes.every(v => Number.isFinite(v) && v >= 0 && v <= 100))
   if (!porMesOk) check.erros.push('Informe o indexador de cada parcela em % a.a., de 0 a 100.')
+  if (!(Number.isFinite(tac) && tac >= 0 && tac <= 1_000_000_000)) check.erros.push('Informe a TAC em R$, de zero em diante.')
+  if (fgi && !(Number.isFinite(fgi.percentual) && fgi.percentual >= FGI.percentualMin && fgi.percentual <= FGI.percentualMax)) check.erros.push(`Informe o percentual garantido pelo FGI de ${FGI.percentualMin} a ${FGI.percentualMax}%.`)
   if (!taxasOk) check.erros.push('Informe o custo financeiro, a taxa do BNDES e o spread da instituição em % a.a.')
   if (!ipcaOk) check.erros.push('Informe o IPCA esperado de -50 a 100% a.a., limite deste modelo.')
   if (!iofOk) check.erros.push('Informe as alíquotas do IOF em % (0 e 0 se o agente confirmar alíquota zero).')
@@ -221,7 +244,11 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   if (!COMPOSICOES.some(option => option.id === composicao)) check.erros.push('Escolha composição capitalizada ou somada.')
   if (custo === 'tlp' && perfilTlp !== 'tlpcap') check.erros.push('TLP exigível requer a projeção própria. Este motor só aceita o perfil TLPCAP capitalizado explicitamente.')
   if (check.erros.length) return { ok: false, ...check }
-  const financiado = check.financiado
+  const liberado = check.financiado
+  const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos, incorporar: !!fgi.incorporar }) : null
+  const ecg = ecgCalc?.ecg ?? 0
+  const ecgIncorporado = !!(fgi && fgi.incorporar)
+  const financiado = liberado + (ecgIncorporado ? ecg : 0) // principal do cronograma: valor liberado mais o ECG financiado
   const taxa = taxaFinal(custoFinanceiro, taxaBndes, taxaAgente, composicao)
   const ipcaAnual = custo === 'tlp' ? ipca : 0
   // Indexador editado por parcela: cada mês usa a própria taxa final; sem edição, uma taxa única (resultado idêntico ao anterior).
@@ -254,21 +281,22 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const spreadAgentePp = taxa - taxaFinal(custoFinanceiro, taxaBndes, 0, composicao) // quanto o spread do agente acrescenta à taxa final, em pontos
   // Fluxo parcela a parcela: saldo inicial (antes da correção do mês), IOF diário da parcela e total pago no vencimento.
   const fluxo = parcelas.map((p, k) => ({ ...p, saldoInicial: k ? parcelas[k - 1].saldo : financiado, iof: iofCalc.porParcela[k], pago: p.parcela + iofCalc.porParcela[k] }))
-  const total = somar(fluxo.map(p => p.pago)) + iofCalc.fixo
+  const ecgAVista = fgi && !ecgIncorporado ? ecg : 0
+  const total = somar(fluxo.map(p => p.pago)) + iofCalc.fixo + tac + ecgAVista
   const somaAmortizacao = somar(parcelas.map(p => p.amortizacao)), somaPrincipal = somar(parcelas.map(p => p.principal))
   const fecha = (a, b) => Math.abs(a - b) < 0.005
   if (![total, juros, correcao, jurosCarencia, ...Object.values(atribuicao), iofCalc.total, iofCalc.fixo, iofCalc.diario].every(dentroDoLimite)
     || !fluxo.every(p => dentroDoLimite(p.pago) && dentroDoLimite(p.iof))
     || !fecha(somaAmortizacao, financiado + correcao) || !fecha(somaPrincipal, financiado)
-    || !fecha(total, financiado + correcao + juros + iofCalc.total)) {
+    || !fecha(total, financiado + correcao + juros + iofCalc.total + tac + ecgAVista)) {
     return { ok: false, ...check, erros: [erroNumerico] }
   }
   return {
-    ok: true, financiado, taxa, taxaMensal: monthlyRate(taxa, 'aa') * 100, taxaNominal: custo === 'tlp' ? tlpNominal(taxa, ipca) : taxa, composicao, parcelas: fluxo,
+    ok: true, financiado, liberado, tac, fgi: fgi ? { percentual: fgi.percentual, incorporado: ecgIncorporado, ecg, k: ecgCalc.k, periodos: ecgCalc.p } : null, taxa, taxaMensal: monthlyRate(taxa, 'aa') * 100, taxaNominal: custo === 'tlp' ? tlpNominal(taxa, ipca) : taxa, composicao, parcelas: fluxo,
     perfil: custo === 'tlp' ? 'tlpcap' : custo, calendario: 'meses-iguais-hipoteticos',
     jurosCarencia, juros, correcao, atribuicao, spreadAgentePp, iof: iofCalc.total, iofFixo: iofCalc.fixo, iofDiario: iofCalc.diario,
     primeiraParcela: amort[0]?.parcela ?? 0, ultimaParcela: amort.at(-1)?.parcela ?? 0, parcelasAmortizacao: amort.length,
-    total, recursosProprios: valor - financiado, avisos: check.avisos,
+    total, recursosProprios: valor - liberado, avisos: check.avisos,
   }
 }
 

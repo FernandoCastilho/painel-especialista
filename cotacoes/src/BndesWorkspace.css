@@ -17,7 +17,7 @@
 .bw .fm-workspace { display:grid; grid-template-columns:minmax(320px, .8fr) minmax(0, 1.2fr); align-items:start; gap:24px; }
 .bw .fm-results { min-width:0; display:grid; gap:20px; position:static; }
 .bw .cx-finame .cx-form { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px; }
-.bw .cx-finame .cx-form > .cx-field:has(#fm-custo), .bw .cx-finame .cx-form > .cx-field:has(#fm-porte-l), .bw .cx-finame .cx-form > .cx-field:has(#fm-lib-l), .bw .cx-finame .cx-form > .cx-field:has(.fm-custo-valor), .bw .cx-finame .cx-form > .fm-compare-control { grid-column:1/-1; }
+.bw .cx-finame .cx-form > .cx-field:has(#fm-porte-l), .bw .cx-finame .cx-form > .cx-field:has(#fm-lib-l), .bw .cx-finame .cx-form > .cx-field:has(.fm-custo-valor), .bw .cx-finame .cx-form > .fm-compare-control { grid-column:1/-1; }
 .bw .cx-finame .cx-field > .fm-rotulo { min-height:0; }
 .bw .cx-finame .cx-field .fm-rotulo label { color:var(--fg); }
 .bw .cx-finame .seg { flex-wrap:wrap; }
@@ -43,3 +43,9 @@
 @media (max-width:1199px) { .bw .fm-workspace { grid-template-columns:1fr; } .bw .fm-results { position:static; } .bw-profile { grid-template-columns:auto minmax(0,1fr); } .bw-profile p { grid-column:1/-1; } }
 @media (max-width:699px) { .bw-profile { grid-template-columns:1fr; } .bw .cx-finame .cx-form { grid-template-columns:1fr; } .bw .fm-hero { margin:16px; padding:16px; } .bw .fm-comparison { padding:0 12px 16px; } .bw .fm-comparison .cx-matrix th, .bw .fm-comparison .cx-matrix td { padding:10px 5px; font-size:.75rem; } .bw-nav button { flex:1 1 auto; } }
 @media (max-width:399px) { .bw .cx-finame .fm-grade { grid-template-columns:1fr; } }
+
+/* Garantia FGI: bloco no fim dos dados da operação, no mesmo ritmo do bloco do IOF. */
+.bw .cx-finame .fm-fgi { grid-column:1/-1; border-top:1px solid var(--line); padding-top:14px; display:grid; gap:12px; }
+.bw .cx-finame .fm-fgi > label { display:flex; align-items:center; gap:8px; min-height:44px; font-size:.875rem; color:var(--fg); cursor:pointer; }
+.bw .cx-finame .fm-fgi > label > input[type=checkbox] { flex:none; width:20px; height:20px; }
+.bw .cx-finame .fm-fgi .cx-hint { margin:0; }
