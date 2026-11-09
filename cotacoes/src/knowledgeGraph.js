@@ -10,7 +10,7 @@ import { CURADORIA_TOPICS, normalizeCuradoria, curateItems } from './curadoria.j
 export const KNOWLEDGE_WINDOW_DAYS = 7
 export const KNOWLEDGE_WINDOW_MS = KNOWLEDGE_WINDOW_DAYS * 86400000
 export const KNOWLEDGE_PENDING_ID = 'classification:pending'
-export const KNOWLEDGE_TYPES = ['sector', 'concept', 'news']
+export const KNOWLEDGE_TYPES = ['sector', 'concept', 'news', 'entity']
 const list = value => Array.isArray(value) ? value : []
 const record = value => value && typeof value === 'object' && !Array.isArray(value)
 const text = value => typeof value === 'string' ? value.trim() : ''

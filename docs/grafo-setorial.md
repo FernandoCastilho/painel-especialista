@@ -41,3 +41,13 @@ Somente correspondências editoriais explícitas ou pertencimento ao catálogo; 
 20. Gradiente de meta: não aplicável, exploração sem meta fechada; contagens são reais.
 
 Não certifica conformidade integral WCAG ou teste em aparelho físico.
+
+## Associações, órgãos e players de referência (09/11/2026)
+
+O mapa de cada subsetor mostra também pontos quadrados: associações e entidades de classe (por exemplo, Abimaq em Máquinas industriais), órgãos públicos e reguladores, e nomes nacionais de referência. Fonte única: `src/sectorEntities.js`; os 68 subsetores do catálogo têm entrada (teste `sector-entities.test.mjs`).
+
+- A busca do mapa encontra sigla, nome completo e descrição. O filtro "Associações e players" liga e desliga o grupo.
+- Associações e órgãos abrem o site oficial. Players não têm link, para não manter endereço desatualizado.
+- É lista editorial de partida: não é ranking, não mede participação de mercado e não indica relação com qualquer empresa. Subsetor sem player confiável fica sem player (ex.: Transporte de madeira, Tubetes).
+- Endereços não foram abertos na redação (sem rede). Conferir no site oficial antes de citar.
+- Para incluir ou corrigir: editar `ASSOCIATIONS`, `PLAYERS` e `TOPICS` no mesmo arquivo e rodar `npm test`.

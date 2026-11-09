@@ -1,4 +1,5 @@
 import { CATALOGO_SETORIAL } from './centralSetorial.js'
+import { sectorEntityGraph } from './sectorEntities.js'
 
 const list = value => Array.isArray(value) ? value : []
 const plain = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
@@ -83,6 +84,10 @@ export function buildSectorKnowledgeGraph(graph, { group, topicIndex, study } = 
     addLink({ ...link, reason: broader ? `Contexto do setor mais amplo “${anchor.label}”; não significa que o conteúdo trate especificamente de ${catalog.topics[topicIndex]}. ${link.reason}` : link.reason })
   }
   const nodes = allNodes.filter(node => selected.has(node.id)).map(node => ({ ...node }))
+  // Associations, agencies and reference players come from the editorial list, never from news matching.
+  const entities = sectorEntityGraph(groupId, topicIndex)
+  nodes.push(...entities.nodes.map(node => ({ ...node })))
+  links.push(...entities.links)
   const newsUrls = new Set(nodes.filter(node => node.type === 'news').map(node => node.href))
-  return { nodes, links, archiveItems: list(graph?.archiveItems).filter(item => newsUrls.has(item.link)), meta: { ...meta, newsCount: newsUrls.size } }
+  return { nodes, links, archiveItems: list(graph?.archiveItems).filter(item => newsUrls.has(item.link)), meta: { ...meta, newsCount: newsUrls.size, hasEntities: entities.nodes.length > 0, entityPlayers: entities.players } }
 }
