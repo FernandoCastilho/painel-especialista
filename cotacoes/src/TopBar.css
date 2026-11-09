@@ -1,0 +1,8 @@
+/* Let every destination remain visible as the catalogue grows. The sticky
+   header stays in normal flow, so a second row does not cover the content. */
+@media (min-width: 1000px) {
+  .term-head .topbar,
+  .term-head .topbar:has(.theme-control) { height: auto; min-height: 44px; }
+  .term-head .topbar-tabs { flex-wrap: wrap; align-content: flex-start; overflow: visible; }
+  .term-head .topbar-tabs > button { min-height: 44px; }
+}

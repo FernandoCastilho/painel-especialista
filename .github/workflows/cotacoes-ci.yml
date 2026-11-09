@@ -70,6 +70,16 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/recovery
           if-no-files-found: error
           retention-days: 7
+      - name: Conferir análise local de balanços e privacidade
+        run: BALANCE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/balancos" node scripts/smoke-balance-analysis.cjs
+      - name: Capturas e resultado da análise de balanços
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balance-analysis-design
+          path: ${{ runner.temp }}/qa-universal/balancos
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir Comparador de Crédito, cenários e apresentação
         run: CREDIT_QA_OUTPUT="$RUNNER_TEMP/qa-universal/credit" node scripts/smoke-credit-comparison.cjs
       - name: Capturas e resultado do Comparador de Crédito
