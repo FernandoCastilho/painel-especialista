@@ -161,6 +161,13 @@ export const GLOSSARY = {
     c: 'Use este valor para consultar a parcela fixa. Considere também o IPCA e os spreads ao avaliar o custo do financiamento.',
     d: 'Divulgada uma vez por mês, com vigência mensal para novas contratações. A parcela prefixada é fixada na contratação; o IPCA varia ao longo do contrato. A TFB é outro custo financeiro e fica na aba BNDES.',
   },
+  fgi: {
+    t: 'FGI e FGI PEAC (garantia para o crédito)',
+    a: 'O FGI (Fundo Garantidor para Investimentos), do BNDES, cobre parte da perda do banco se a empresa não paga. O PEAC é a versão criada na pandemia (Lei 14.042/2020), com recursos da União, para micro, pequenas e médias empresas.',
+    b: 'A empresa pede R$ 1 milhão e não tem imóvel para dar em garantia. O fundo cobre parte do valor se houver calote, e o banco tende a aprovar.',
+    c: 'No Finame Materiais, o FGI (Tradicional ou PEAC) é garantia admitida. Peça ao agente a disponibilidade, o percentual coberto e a comissão.',
+    d: 'O Tradicional é o fundo de sempre, mantido pelas comissões das operações. O PEAC nasceu em 2020 como medida temporária, foi reaberto em 2022 e tem regras próprias. O fundo garante só uma parte da operação, e a comissão paga pela empresa depende do produto e do porte. Não substitui a análise de crédito do agente. Fonte: bndes.gov.br/peac.'
+  },
   curvaEuro: {
     t: 'Curva de juros da área do euro',
     a: 'Os juros dos títulos de governo AAA da zona do euro para cada prazo, de 3 meses a 30 anos. O BCE estima a curva por um modelo (Svensson) a partir dos preços desses títulos.',
