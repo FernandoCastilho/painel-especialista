@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { FGI, ecgFgi, fatorKFgi, periodos30, simular } from '../src/finameMateriais.js'
+import { FGI, ecgFgi, fatorKFgi, periodos30, periodos30Datas, simular } from '../src/finameMateriais.js'
 
 const base = { valor: 500000, participacao: 100, prazo: 60, carencia: 12, custo: 'tfc', custoFinanceiro: 12, taxaBndes: 1.25, taxaAgente: 3, sistema: 'sac', periodicidade: 3, composicao: 'capitalizada' }
 const perto = (a, b, d = 0.005) => assert.ok(Math.abs(a - b) < d, `${a} ≠ ${b}`)
@@ -81,4 +81,13 @@ test('P do ECG com data fixa: liberação em 09/11/2026, 60 meses, último venci
   perto(r.fgi.ecg, 0.8 * 0.001 * 500000 * 61)
   // P zero (prazo menor que 30 dias) dá ECG zero, sem erro.
   assert.equal(ecgFgi({ valor: 500000, percentual: 80, prazo: 1, periodos: 0, incorporar: true }).ecg, 0)
+})
+
+test('periodos30Datas conta períodos completos de 30 dias entre as datas (como o P da tela)', () => {
+  const d = (y, m, dia) => new Date(y, m - 1, dia, 12)
+  assert.equal(periodos30Datas(d(2026, 11, 9), d(2031, 11, 15)), 61) // sábado: o vencimento real é o próximo dia útil (17/11/2031), mesmo P
+  assert.equal(periodos30Datas(d(2026, 11, 9), d(2031, 11, 17)), 61)
+  assert.equal(periodos30Datas(d(2026, 11, 9), d(2026, 12, 15)), 1)
+  assert.equal(periodos30Datas(d(2026, 11, 9), d(2026, 11, 20)), 0)
+  assert.equal(periodos30Datas(d(2026, 11, 20), d(2026, 11, 9)), 0) // nunca negativo
 })

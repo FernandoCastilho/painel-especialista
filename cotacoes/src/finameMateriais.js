@@ -193,6 +193,8 @@ const FATOR_K = [[3, 1.42], [6, 0.62], [9, 0.42], [12, 0.31], [15, 0.27], [18, 0
 export const fatorKFgi = (prazoMeses) => (FATOR_K.find(([max]) => prazoMeses <= max)?.[1] ?? 0.05)
 // Períodos de 30 dias completos entre a liberação e o vencimento ordinário (P). Sem datas, usa meses de 365/12 dias.
 export const periodos30 = (prazoMeses) => Math.floor((prazoMeses * 365) / 12 / 30)
+// P pelas datas: períodos de 30 dias completos entre a liberação e o último vencimento (Date ou número em ms).
+export const periodos30Datas = (liberacao, ultimoVencimento) => Math.max(0, Math.floor((+ultimoVencimento - +liberacao) / (30 * 86400000)))
 // ECG = %G × K × VL × P (pago à vista); incorporado ao saldo devedor: %G × K × VL × P ÷ (1 − %G × K × P).
 export function ecgFgi({ valor, percentual, prazo, periodos, incorporar }) {
   const g = percentual / 100, k = fatorKFgi(prazo) / 100, p = periodos ?? periodos30(prazo)

@@ -6,7 +6,7 @@ import { parseDecimal } from './emprestimo.js'
 import { useDataFile } from './useDataFile.js'
 import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
-import { COMPOSICOES, CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
+import { COMPOSICOES, CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingAnnualRate, finameFundingOption, compareFinameFunding } from './finameFunding.js'
 import { nf } from './format.js'
 import Estado from './Estado.jsx'
@@ -66,7 +66,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
   const tac = tacText.trim() === '' ? { ok: true, value: 0 } : parseMoneyInput(tacText)
   const fgiPct = parseDecimal(fgiText)
   // P do ECG: períodos de 30 dias completos entre a liberação ilustrativa e o último vencimento (dia 15, próximo dia útil).
-  const fgiPeriodos = prazo ? Math.floor((vencimentoDia15(hoje, prazo, holidayCtx) - hoje) / (30 * 86400000)) : undefined
+  const fgiPeriodos = prazo ? periodos30Datas(hoje, vencimentoDia15(hoje, prazo, holidayCtx)) : undefined
 
   // Custo financeiro do painel
   const faixa = prazo ? faixaTfb(prazo) : 60
