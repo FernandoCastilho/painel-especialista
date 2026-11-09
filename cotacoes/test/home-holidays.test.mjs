@@ -18,12 +18,17 @@ test('home includes international holidays despite saved Brazil-only preference'
   Date.now = () => Date.parse('2026-11-08T15:00:00Z')
   try {
     const html = renderToStaticMarkup(createElement(Notice, { ...props, hol: { pracas: ['BR'], loaded: true, ctx: { cn: { 2026: { off: new Map(), work: new Set() } } } } }))
-    assert.match(html, /open=""/)
+    assert.doesNotMatch(html, /open=""/)
     assert.match(html, /Veterans Day/)
     assert.match(html, /Thanksgiving/)
     assert.match(html, /Ação de Graças Trabalhista/)
     assert.match(html, /Proclamação da República/)
-    assert.match(html, /China: nenhum feriado nos próximos 30 dias/)
+    assert.doesNotMatch(html, /China: nenhum feriado|referência financeira|primeiro:/)
+    assert.match(html, /<summary><b>Feriados nos próximos 30 dias<\/b><\/summary>/)
+    assert.doesNotMatch(html, /<p class="status">/)
+    assert.match(html, /EUA \(Federal Reserve\)/)
+    assert.match(html, /Japão/)
+    assert.match(html, /Brasil/)
     assert.doesNotMatch(html, /Finados|Dia da Cultura/)
     assert.ok(html.indexOf('Veterans Day') < html.indexOf('Proclamação da República'))
     assert.match(readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8'), /HolidayNotice hol=\{hol\} pracas=\{\['BR', 'NY', 'CN', 'JP'\]\} expanded/)
@@ -40,5 +45,32 @@ test('China distinguishes unavailable data from a period without holidays', () =
     assert.match(missing, /2026 indisponível nesta consulta/)
     assert.doesNotMatch(missing, /China: nenhum feriado/)
     assert.doesNotMatch(missing, /2027/)
+  } finally { Date.now = original }
+})
+
+test('compact and list modes preserve their existing content', () => {
+  const original = Date.now
+  Date.now = () => Date.parse('2026-11-08T15:00:00Z')
+  try {
+    const hol = { pracas: ['NY'], loaded: true }
+    const compact = renderToStaticMarkup(createElement(Notice, { hol }))
+    assert.match(compact, /primeiro:/)
+    assert.match(compact, /Veterans Day/)
+    assert.doesNotMatch(compact, /open=""/)
+    const list = renderToStaticMarkup(createElement(Notice, { hol, list: true }))
+    assert.match(list, /Veterans Day/)
+    assert.doesNotMatch(list, /<summary|<details/)
+  } finally { Date.now = original }
+})
+
+test('expanded home preserves Chinese holiday rows when available', () => {
+  const original = Date.now
+  Date.now = () => Date.parse('2026-10-01T15:00:00Z')
+  try {
+    const hol = { pracas: ['BR'], loaded: true, ctx: { cn: { 2026: { off: new Map([['2026-10-01', 'Dia Nacional (fixture)']]), work: new Set() } } } }
+    const html = renderToStaticMarkup(createElement(Notice, { ...props, hol }))
+    assert.match(html, /Dia Nacional \(fixture\)/)
+    assert.match(html, /China/)
+    assert.doesNotMatch(html, /referência financeira|primeiro:/)
   } finally { Date.now = original }
 })
