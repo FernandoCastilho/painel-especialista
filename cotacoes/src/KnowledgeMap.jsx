@@ -244,7 +244,8 @@ function GraphSurface({ graph, selectedId, onSelect, onActivate = onSelect, onCo
   }, [graph.links, selectedId, hover])
   const fitKey = `${selectedId}|${size.width}|${size.height}|${cameraReset}|${graph.nodes.map(n => n.id).join(',')}`
   const compactFocus = Boolean(selectedId) && size.width <= 600
-  const framing = useMemo(() => ({ padding: { top: 36, right: 64, bottom: 60, left: 24 }, selectedId, labelMaxLength: selectedId && !compactFocus ? 52 : 26, minLabelFontSize: compactFocus ? 11 : 0 }), [selectedId, compactFocus])
+  const narrowFocus = compactFocus && size.width < 300
+  const framing = useMemo(() => ({ padding: { top: 36, right: narrowFocus ? 48 : 64, bottom: 60, left: narrowFocus ? 16 : 24 }, selectedId, labelMaxLength: narrowFocus ? 16 : selectedId && !compactFocus ? 52 : 26, minLabelFontSize: compactFocus ? 11 : 0 }), [selectedId, compactFocus, narrowFocus])
   useEffect(() => () => { stopCamera(false); fitted.current = '' }, [])
   useEffect(() => {
     if (fitted.current === fitKey && !(reduced && cameraMotion.current !== null)) return
@@ -373,7 +374,7 @@ function GraphSurface({ graph, selectedId, onSelect, onActivate = onSelect, onCo
     const r = selected ? 11 : n.type === 'sector' && n.subtype !== 'subsector' ? 8 : n.type === 'news' ? 5 : 6
     const font = selected ? 12 : n.type === 'sector' && n.subtype !== 'subsector' ? 10.5 : 9.5
     const fontSize = Math.max(font * Math.sqrt(camera.k), compactFocus ? 11 : 0) / camera.k
-    const text = short(n.label, compactFocus ? 26 : neighbors.has(n.id) ? 52 : 26)
+    const text = short(n.label, narrowFocus ? 16 : compactFocus ? 26 : neighbors.has(n.id) ? 52 : 26)
     const width = text.length * fontSize * 0.58, y = n.y + r + 15 / Math.sqrt(camera.k)
     return { fontSize, text, y, box: { x: n.x - width / 2, y: y - fontSize, w: width, h: fontSize * 1.2 } }
   }
