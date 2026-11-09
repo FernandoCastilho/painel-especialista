@@ -9,7 +9,7 @@ import { COMPOSICOES, CUSTOS_FIXOS, FONTES, PERIODICIDADES, PORTES, REGRAS, SIST
 import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingAnnualRate, finameFundingOption, compareFinameFunding } from './finameFunding.js'
 import { nf } from './format.js'
 import Estado from './Estado.jsx'
-import Explain from './Explain.jsx'
+import { GLOSSARY } from './glossary.js'
 import Help from './CalculatorHelp.jsx'
 import BndesPresentation from './BndesPresentation.jsx'
 
@@ -114,9 +114,16 @@ export default function FinameMateriais({ onBack, onFundingView }) {
           <li><b>Prazo:</b> até {REGRAS.prazoMaxMeses} meses, com até {REGRAS.carenciaMaxMeses} de carência ({REGRAS.carenciaMaxTfbMeses} com TFB, TFC ou TFC MPME). Juros exigíveis na carência; depois, SAC ou Price mensal com juros junto do principal.</li>
           <li><b>Taxa:</b> custo financeiro (TFB, TFBD, TLP, Taxa LCD, Taxa Fixa Composta ou Taxa Fixa Composta MPME; Selic suspensa pela {REGRAS.selicSuspensa}) + taxa do BNDES ({pct(REGRAS.taxaBndes['mpme-nne'])} MPME N/NE; {pct(REGRAS.taxaBndes.mpme)} MPME nas demais regiões e grandes) + spread da instituição financeira (a "taxa do agente financeiro" do BNDES), negociado. TFC e TFB usam este cronograma aproximado; TLP exigível e Taxa LCD abrem projeções próprias, e TFBD identifica os dados e o modelo ainda necessários.</li>
           <li><b>IOF:</b> Alíquota zero apenas para recursos FINAME elegíveis, mediante confirmação (art. 8º, IX).</li>
-          <li><b>Garantias:</b> livre negociação entre o agente e o cliente, observadas as normas do Banco Central; admitida a garantia do FGI (Tradicional ou PEAC)<Explain id="fgi" /> ou do FG BNDES-SEBRAE. Seguro conforme a política do agente.</li>
+          <li><b>Garantias:</b> livre negociação entre o agente e o cliente, observadas as normas do Banco Central; admitida a garantia do FGI (Tradicional ou PEAC) ou do FG BNDES-SEBRAE. Seguro conforme a política do agente.</li>
           <li><b>Conta:</b> taxa composta das três parcelas (capitalizada, padrão do BNDES: o exemplo oficial da página "Taxa de juros" é 1,07 × 1,015 × 1,03 − 1 = 11,86%; ou somada); taxa mensal por juros compostos em meses iguais de 1/12 do ano apenas nesta aproximação. A base de dias, o calendário e os ajustes do contrato precisam ser confirmados com o agente; diferenças de dias podem alterar os juros totais mesmo que a soma anual de dias úteis coincida, pois o saldo muda; juros da carência capitalizados dentro do período e pagos no fim dele; a parte dos juros que remunera cada um é apurada em camadas, no mesmo cronograma: custo financeiro = juros só com o custo; BNDES = juros com custo + BNDES menos juros só com o custo; spread da instituição = juros com a taxa completa menos juros com custo + BNDES; SAC ou Price mensal apenas em TFC/TFB nesta tela. TLP exigível tem perfil próprio, sem capitalizar IPCA positivo no principal. Esta tela calcula IOF zero apenas após confirmação de recursos FINAME elegíveis.</li>
           <li>O que ainda depende de conferência com o agente: valor mínimo, aceitação de Price no produto, periodicidade padrão dos juros na carência e a origem elegível dos recursos FINAME para o IOF zero. A conta aqui é estimativa; a proposta do agente prevalece.</li>
+        </ul>
+        <p className="fm-fontes-titulo">{GLOSSARY.fgi.t}</p>
+        <ul>
+          <li><b>O que é:</b> {GLOSSARY.fgi.a}</li>
+          <li><b>Exemplo:</b> {GLOSSARY.fgi.b}</li>
+          <li><b>Na prática:</b> {GLOSSARY.fgi.c}</li>
+          <li><b>Para dominar:</b> {GLOSSARY.fgi.d}</li>
         </ul>
         <p className="fm-fontes-titulo">Base legal e onde cada regra foi conferida</p>
         <ul>{FONTES.map((f) => <li key={f.regra}><b>{f.regra}.</b> <a href={f.url} target="_blank" rel="noopener noreferrer">{f.fonte}</a>.</li>)}</ul>
