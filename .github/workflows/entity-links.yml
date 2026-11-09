@@ -2,6 +2,11 @@ name: Conferir sites das associações
 # Confere se os endereços oficiais de src/sectorEntities.js ainda abrem. Não roda em pull request.
 on:
   workflow_dispatch:
+    inputs:
+      extra_urls:
+        description: 'Endereços candidatos para testar (separados por vírgula)'
+        required: false
+        default: ''
   schedule:
     - cron: '17 12 5 * *'
 permissions:
@@ -18,4 +23,6 @@ jobs:
         with:
           node-version: 22
       - name: Conferir endereços
+        env:
+          CHECK_EXTRA_URLS: ${{ inputs.extra_urls }}
         run: node scripts/check-entity-links.mjs

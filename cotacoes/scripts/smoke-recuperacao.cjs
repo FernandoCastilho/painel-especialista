@@ -1,3 +1,83 @@
-const {chromium}=require('playwright'),assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
-const base=process.env.SMOKE_BASE_URL||'http://127.0.0.1:5220',out=process.env.SEARCH_QA_OUTPUT||path.join(__dirname,'../../qa-universal');fs.mkdirSync(out,{recursive:true});
-(async()=>{const b=await chromium.launch(require('./smoke-launch.cjs')());try{for(const width of [390,1280]){const p=await b.newPage({viewport:{width,height:1000},serviceWorkers:'block'}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.route('**/*',r=>{const u=new URL(r.request().url()),f=path.basename(u.pathname);if(u.origin!==new URL(base).origin)return r.fulfill({status:503,body:'offline'});if(!u.pathname.startsWith('/src/') && f.endsWith('.json'))return ['recuperacao.json','movimento-falimentar.json'].includes(f)?r.fulfill({path:path.join(__dirname,'../public',f)}):r.fulfill({json:{generatedAt:Date.now()}});return r.continue()});await p.goto(base+'/#cenarios/recuperacao');const s=p.locator('.recovery-panel');await s.waitFor();const nav=(await p.locator('.cen-nav button').allInnerTexts()).map(t=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());assert.equal(nav.indexOf('recuperacao judicial'),nav.indexOf('inadimplencia')+1);assert.match(await s.innerText(),/Dados semanais por setor ainda indisponíveis/);assert.equal(await s.locator('.recovery-stages strong').count(),3);assert.equal(await s.locator('svg[role="img"]').count(),0);assert.doesNotMatch(await s.innerText(),/0 pedidos|0 empresas/);const editorial=s.locator('.movement-edition');await editorial.getByRole('heading',{name:'Movimento Falimentar · Valor'}).waitFor();assert.deepEqual(await editorial.locator('.movement-counts strong').allTextContents(),['4','1','3']);await editorial.locator('summary').click();assert.equal(await editorial.locator('.movement-companies li').count(),4);assert.match(await editorial.innerText(),/75%/);assert.match(await editorial.innerText(),/25%/);assert.match(await editorial.innerText(),/não informa o número de processos/);const input=s.getByLabel('Escolher semana de recuperação judicial');const original=await input.inputValue();await s.getByRole('button',{name:'Semana anterior',exact:true}).click();assert.notEqual(await input.inputValue(),original);await s.getByRole('button',{name:'Próxima semana',exact:true}).click();assert.equal(await input.inputValue(),original);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await p.screenshot({path:path.join(out,`recovery-${width}.png`),fullPage:true});await s.getByRole('button',{name:'Ver referências em Base de dados'}).click();assert.match(p.url(),/#config$/);assert.deepEqual(errors,[]);await p.close();console.log('PASS recuperação judicial sem contagens fictícias '+width)} }finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});
+const { chromium } = require('playwright')
+const assert = require('node:assert/strict')
+const path = require('node:path')
+const fs = require('node:fs')
+const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5220'
+const out = process.env.SEARCH_QA_OUTPUT || path.join(__dirname, '../../qa-universal')
+const dist = process.env.SMOKE_LOCAL_DIST ? path.resolve(__dirname, '../dist') : null
+const fixtures = ['recuperacao.json', 'recuperacao-historico.json']
+const published = JSON.parse(fs.readFileSync(path.join(__dirname,'../public/recuperacao-historico.json'), 'utf8'))
+const referenceDate = '2026-11-09'
+const historicalFixture = { ...published, editions: published.editions.filter(date => date <= referenceDate),
+  records: published.records.filter(row => row.date <= referenceDate) }
+fs.mkdirSync(out, { recursive: true })
+
+async function smoke(browser, width) {
+  const page = await browser.newPage({ viewport: { width, height: 1000 }, serviceWorkers: 'block' })
+  const errors = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.route('**/*', route => {
+    const url = new URL(route.request().url())
+    const file = path.basename(url.pathname)
+    if (url.origin !== new URL(base).origin) return route.fulfill({status:503, body:'offline'})
+    if (!url.pathname.startsWith('/src/') && file.endsWith('.json')) {
+      if (file === 'recuperacao-historico.json') return route.fulfill({json:historicalFixture})
+      return fixtures.includes(file) ? route.fulfill({path:path.join(__dirname,'../public',file)}) : route.fulfill({json:{generatedAt:Date.now()}})
+    }
+    if (dist) {
+      const artifact = path.resolve(dist, '.' + (url.pathname === '/' ? '/index.html' : url.pathname))
+      if (!artifact.startsWith(dist + path.sep) || !fs.existsSync(artifact)) return route.fulfill({status:404})
+      return route.fulfill({path:artifact})
+    }
+    return route.continue()
+  })
+  await page.goto(base + '/#cenarios/recuperacao')
+  const panel = page.locator('.rj-history')
+  await panel.getByRole('img', {name:'Mapa do Brasil por unidade da federação'}).waitFor()
+  assert.equal(await panel.locator('.rj-state').count(), 27)
+  assert.match(await panel.locator('.rj-kpis').innerText(), /160/)
+  assert.match(await panel.locator('.rj-kpis').innerText(), /552/)
+  assert.equal(await panel.locator('tbody tr').count(), 10)
+  await panel.getByRole('button', {name:'Próxima', exact:true}).click()
+  assert.match(await panel.locator('.rj-pagination').innerText(), /Página 2 de 16/)
+  await panel.locator('.rj-pin circle').first().click({ force:true })
+  await panel.getByRole('button', {name:'Ver Brasil', exact:true}).waitFor()
+  await panel.getByRole('button', {name:'Ver Brasil', exact:true}).click()
+  await panel.getByLabel('Selecionar UF').selectOption('Sem UF')
+  assert.match(await panel.locator('.rj-kpis').innerText(), /67/)
+  await panel.getByRole('button', {name:'Limpar seleção', exact:true}).click()
+  await panel.locator('.rj-sector-cell rect').first().click({ force:true })
+  assert.equal(await panel.locator('.rj-chips button').count(), 1)
+  await panel.getByRole('button', {name:'Limpar seleção', exact:true}).click()
+  await panel.getByLabel('Mês final', {exact:true}).selectOption('11')
+  assert.match(await panel.locator('.rj-filters').innerText(), /09\/11\/2026/)
+  assert.match(await panel.locator('.rj-kpis').innerText(), /09\/11\/2025/)
+  await panel.getByLabel('Mês final', {exact:true}).selectOption('10')
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+  await page.screenshot({path:path.join(out, `recovery-history-${width}.png`), fullPage:true})
+
+  const details = page.locator('.rj-weekly-detail')
+  await details.locator(':scope > summary').click()
+  const weekly = details.locator('.recovery-panel')
+  assert.match(await weekly.innerText(), /Dados semanais por setor ainda indisponíveis/)
+  const input = weekly.getByLabel('Escolher semana de recuperação judicial')
+  const original = await input.inputValue()
+  await weekly.getByRole('button', {name:'Semana anterior',exact:true}).click()
+  assert.notEqual(await input.inputValue(), original)
+  await weekly.getByRole('button', {name:'Próxima semana',exact:true}).click()
+  assert.equal(await input.inputValue(), original)
+  await weekly.getByRole('button', {name:'Ver referências em Base de dados'}).click()
+  assert.match(page.url(), /#config$/)
+  assert.deepEqual(errors, [])
+  await page.close()
+  console.log(`PASS recuperação judicial · mapa, setores, filtros e referências · ${width}px`)
+}
+
+;(async () => {
+  const browser = await chromium.launch(require('./smoke-launch.cjs')())
+  try {
+    for (const width of [390, 1280]) await smoke(browser, width)
+  } finally {
+    await browser.close()
+  }
+})().catch(error => { console.error(error); process.exit(1) })

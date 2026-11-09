@@ -56,6 +56,7 @@ export async function buildSearchIndex() {
       for(const [target,body] of Object.entries(byRoute))if(target)documents.push({id:'page:'+file+':'+target,title:({'cenarios/atividade':'Atividade e emprego','cenarios/commodities':'Commodities','cenarios/frete':'Frete marítimo','cenarios/fiscal':'Fiscal','cenarios/inflacao':'Inflação'})[target],body,route:target,kind:'Área do painel'})
     } else documents.push({id:'page:'+file,title,body:text,route,kind:'Área do painel',...(file==='GoogleTrends.jsx'?{context:{newsTab:'trends'}}:{})})
     for(const id of explain)glossaryRoutes[id]??=explainRoutes[id] || route
+    if(file==='FinameMateriais.jsx')glossaryRoutes.fgi??=route // texto do glossário exibido dentro da ajuda modal, sem "?" aninhado
   }
   // Subsections with conditional JSX need their own navigable entries.
   for(const [route,title,body] of [
