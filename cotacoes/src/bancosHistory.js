@@ -25,7 +25,7 @@ export const bankMetricRule = metric => metric.startsWith('provision') ? null : 
 // Só concorre o que está efetivamente na tela, com mesmo trimestre, origem e critério.
 // Critérios próprios de ROE não são declarados equivalentes por terem o mesmo nome.
 export function bankMetricLeaders(columns, metric) {
-  const rule = bankMetricRule(metric), empty = { winners: [], eligible: [], rule, total: columns.length }
+  const rule = bankMetricRule(metric), empty = { winners: [], growthWinners: [], eligible: [], rule, total: columns.length }
   if (!rule) return { ...empty, reason: 'Provisão maior ou menor, isoladamente, não define o melhor banco.' }
   const groups = new Map()
   for (const column of columns) {
@@ -42,7 +42,16 @@ export function bankMetricLeaders(columns, metric) {
   const best = (rule.direction === 'min' ? Math.min : Math.max)(...eligible.map(score))
   const winners = eligible.filter(column => score(column) === best).map(column => column.bank.id)
   const point = eligible[0].point
-  return { winners, eligible, rule, total: columns.length, period: point.period, basis: point.metrics[metric].basis, origin: point.origin,
+  // Segundo troféu: maior crescimento (variação % contra a referência escolhida), só em indicadores em R$.
+  // Concorre quem está na mesma coorte e tem base equivalente; crescimento zero ou negativo não premia.
+  let growthWinners = []
+  if (rule.direction === 'max' && BANK_METRICS[metric][1] === 'BRL') {
+    const growth = eligible.map(column => ({ id: column.bank.id, change: metricChange(column.point, column.previous, metric) })).filter(item => item.change && item.change.value > 0)
+      .map(item => ({ ...item, score: Math.round(item.change.value * 100) }))
+    const top = Math.max(...growth.map(item => item.score))
+    if (growth.length >= 2) growthWinners = growth.filter(item => item.score === top).map(item => item.id)
+  }
+  return { winners, growthWinners, eligible, rule, total: columns.length, period: point.period, basis: point.metrics[metric].basis, origin: point.origin,
     scope: `${point.origin === 'bc' ? 'BC' : 'RI'} · ${quarterLabel(point.period)} · ${eligible.length}/${columns.length} bancos`,
     reason: `${rule.label}; ${eligible.length} de ${columns.length} bancos exibidos têm o mesmo trimestre, origem e critério. ${columns.length - eligible.length} fora desta comparação. Não é uma nota geral do banco.` }
 }

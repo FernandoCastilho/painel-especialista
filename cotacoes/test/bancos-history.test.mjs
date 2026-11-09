@@ -42,3 +42,12 @@ test('analysis separates direction from quality, and requires the exact comparis
   bank.observations.splice(1, 1)
   assert.match(bankMetricAnalysis(bank, 'bc', 'nplTotal', -1), /Sem base equivalente/)
 })
+test('segundo troféu: maior crescimento em R$, podendo coincidir com o maior valor', () => {
+  const withPrev = (id, value, prev) => ({ ...column(id, 202606, value, 'credit', 'bc', 'creditPJ'), previous: point(202603, prev, 'credit', 'bc', 'creditPJ') })
+  const split = bankMetricLeaders([withPrev('a', 1e9, 0.5e9), withPrev('b', 5e9, 4e9)], 'creditPJ')
+  assert.deepEqual(split.winners, ['b']); assert.deepEqual(split.growthWinners, ['a'])
+  const both = bankMetricLeaders([withPrev('a', 1e9, 0.9e9), withPrev('b', 5e9, 4e9)], 'creditPJ')
+  assert.deepEqual(both.winners, ['b']); assert.deepEqual(both.growthWinners, ['b'])
+  assert.deepEqual(bankMetricLeaders([withPrev('a', 1e9, 2e9), withPrev('b', 5e9, 6e9)], 'creditPJ').growthWinners, [])
+  assert.deepEqual(bankMetricLeaders([column('a', 202606, 15), column('b', 202606, 16)], 'basel').growthWinners, [])
+})
