@@ -34,7 +34,7 @@ async function check(url) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const entries = Object.entries(ENTITY_REGISTRY.associations).map(([key, [acronym, , , url]]) => ({ key, acronym, url }))
+  const entries = Object.entries(ENTITY_REGISTRY.associations).map(([key, [acronym, , , url]]) => ({ key, acronym, url })).filter(entry => entry.url)
   // Endereços candidatos para testar uma correção antes de gravar na lista (entrada "extra_urls" do workflow).
   const extras = (process.env.CHECK_EXTRA_URLS || '').split(',').map(value => value.trim()).filter(Boolean).map(url => ({ key: url, acronym: 'candidato', url }))
   const results = []

@@ -7,6 +7,7 @@ import { CATALOGO_SETORIAL } from './centralSetorial.js'
 export const ENTITIES_REVIEWED_AT = '2026-11-09'
 
 // [sigla, nome completo, tipo, endereço oficial, o que acompanha]
+// Endereço vazio = sem site confirmado pelo verificador de links; a tela diz "Sem site indicado".
 // tipo: 'association' = associação ou entidade de classe; 'agency' = órgão público ou regulador.
 const ASSOCIATIONS = {
   cni: ['CNI', 'Confederação Nacional da Indústria', 'association', 'https://www.portaldaindustria.com.br', 'Representa a indústria em geral; estudos e estatísticas industriais.'],
@@ -47,8 +48,8 @@ const ASSOCIATIONS = {
   abinee: ['Abinee', 'Associação Brasileira da Indústria Elétrica e Eletrônica', 'association', 'https://www.abinee.org.br', 'Equipamentos elétricos e eletrônicos.'],
   anfavea: ['Anfavea', 'Associação Nacional dos Fabricantes de Veículos Automotores', 'association', 'https://anfavea.com.br', 'Veículos, caminhões, ônibus e máquinas agrícolas autopropelidas.'],
   sindipecas: ['Sindipeças', 'Sindicato Nacional da Indústria de Componentes para Veículos Automotores', 'association', 'https://www.sindipecas.org.br', 'Fabricantes de autopeças.'],
-  abipecas: ['Abipeças', 'Associação Brasileira da Indústria de Autopeças', 'association', 'https://www.abipecas.org.br', 'Autopeças e seu comércio exterior.'],
-  fenabrave: ['Fenabrave', 'Federação Nacional da Distribuição de Veículos Automotores', 'association', 'https://www.fenabrave.org.br', 'Emplacamentos e distribuição de veículos.'],
+  abipecas: ['Abipeças', 'Associação Brasileira da Indústria de Autopeças', 'association', '', 'Autopeças e seu comércio exterior.'],
+  fenabrave: ['Fenabrave', 'Federação Nacional da Distribuição de Veículos Automotores', 'association', '', 'Emplacamentos e distribuição de veículos.'],
   cbic: ['CBIC', 'Câmara Brasileira da Indústria da Construção', 'association', 'https://cbic.org.br', 'Construção civil: indicadores, custos e emprego.'],
   abramat: ['Abramat', 'Associação Brasileira da Indústria de Materiais de Construção', 'association', 'https://www.abramat.org.br', 'Indústria de materiais de construção.'],
   snic: ['SNIC', 'Sindicato Nacional da Indústria do Cimento', 'association', 'https://snic.org.br', 'Cimento: produção e consumo.'],
