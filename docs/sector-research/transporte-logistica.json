@@ -1303,16 +1303,16 @@
         {
           "id": "n1",
           "label": "Carga rodoviária a granel",
-          "detail": "caminhões graneleiros levam a mercadoria até o destino, com risco de perda por umidade e pesagem",
+          "detail": "caminhões graneleiros levam a mercadoria, com risco de perda por umidade e pesagem",
           "emoji": "🚛",
           "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
-          "label": "Transbordo ferroviário ou hidroviário",
-          "detail": "Transbordo para ferrovia ou hidrovia",
-          "emoji": "🚆",
-          "bank": "Investimento, com prazo coerente com a vida útil"
+          "label": "Destino e modal",
+          "detail": "Origem, destino, modal e janela definem a demanda do transportador",
+          "emoji": "🧭",
+          "bank": "Investimento só com prazo coerente com a vida útil e a geração de caixa"
         },
         {
           "id": "n3",
@@ -1342,7 +1342,7 @@
           "label": "Execução e controle",
           "product": {
             "emoji": "🚚",
-            "label": "grãos transportados a granel até o transbordo"
+            "label": "grãos transportados a granel até o destino"
           },
           "cash": {
             "emoji": "🛢️",

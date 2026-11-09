@@ -1198,7 +1198,7 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Kraftliner, testliner e miolo",
+          "label": "Papéis de capa e miolo",
           "detail": "Papéis de capa e miolo são a matéria-prima da chapa",
           "emoji": "📜",
           "bank": "Giro bancário para o ciclo operacional"
@@ -1602,8 +1602,8 @@
         },
         {
           "id": "3",
-          "label": "Indústria, varejo e logística",
-          "detail": "Indústria e varejo recebem a caixa no ritmo do envase",
+          "label": "Clientes que envasam",
+          "detail": "O cliente recebe a caixa no ritmo do envase",
           "emoji": "🛒",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
@@ -1971,7 +1971,7 @@
         },
         {
           "id": "1",
-          "label": "Impressão e tubulação",
+          "label": "Impressão e estrutura do saco",
           "detail": "Resistência, porosidade e impressão do saco",
           "emoji": "🖨️",
           "bank": "Financiamento de investimento em ativos duráveis"
@@ -2028,7 +2028,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "recebimento depende de o lote funcionar no ensaque"
+            "label": "recebimento exposto a devolução de lote por falha no ensaque"
           }
         }
       ],
@@ -2037,7 +2037,7 @@
         "steps": [
           "Paga kraft e barreiras",
           "Estoque e campanhas sazonais prendem caixa",
-          "Recebe se o lote passar no ensaque"
+          "Recebe, com risco de devolução do lote por falha no ensaque"
         ],
         "text": "Estoque de kraft e barreiras antecede a fabricação. Encomendas sazonais exigem planejamento de caixa, e financiar o ciclo não resolve devolução de lote por falha no ensaque. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -2384,9 +2384,9 @@
         },
         {
           "id": "3",
-          "label": "Papel, filmes e têxteis",
+          "label": "Clientes que bobinam",
           "detail": "Clientes que usam o tubete como suporte para enrolar suas bobinas, em carga e velocidade",
-          "emoji": "🧵",
+          "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],

@@ -915,7 +915,7 @@
           "label": "distribuidor e transportador",
           "detail": "Distribuidor ou transportador compra; estoques e recebimentos diferem",
           "emoji": "🚛",
-          "bank": "Cessão de recebíveis, só de crédito comprovado; trade finance se houver exportação"
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
@@ -938,11 +938,11 @@
           "label": "Da estrutura à montagem",
           "product": {
             "emoji": "🧰",
-            "label": "estrutura soldada do implemento"
+            "label": "estrutura do implemento"
           },
           "cash": {
             "emoji": "🏦",
-            "label": "giro cobre materiais e montagem até a venda"
+            "label": "materiais e montagem pagos antes da venda; giro casado à entrada e à liquidação da venda"
           }
         },
         {
@@ -1332,7 +1332,7 @@
       "nodes": [
         {
           "id": "0",
-          "label": "fabricante e importador",
+          "label": "fabricante",
           "detail": "Peças novas, remanufaturadas ou usadas, de mercado original ou independente",
           "emoji": "🏭",
           "bank": "Giro bancário para a compra de estoque"
@@ -1776,7 +1776,7 @@
           "label": "fabricantes e importação",
           "detail": "Compra de fabricantes ou importação; exposição cambial e desembaraço contam",
           "emoji": "🏭",
-          "bank": "Trade finance, nas compras importadas"
+          "bank": "Compras importadas: documentar exposição cambial e prazo de desembaraço; encaixe não confirmado"
         },
         {
           "id": "1",

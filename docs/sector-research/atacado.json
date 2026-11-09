@@ -875,8 +875,8 @@
       "nodes": [
         {
           "id": "n0",
-          "label": "Indústria e importador autorizado",
-          "detail": "Fabricantes e importadores autorizados fornecem produtos regularizados",
+          "label": "Indústria",
+          "detail": "Fabricantes fornecem produtos regularizados",
           "emoji": "💊",
           "bank": "Giro bancário para a compra"
         },
@@ -939,7 +939,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "cliente paga após a entrega comprovada; hospital ou ente público pede análise própria"
+            "label": "recebível exige entrega comprovada e sem disputa; ente público pede análise própria"
           }
         }
       ],
@@ -2851,7 +2851,7 @@
           },
           "cash": {
             "emoji": "🕒",
-            "label": "o cliente só paga depois da entrega e do aceite"
+            "label": "pedido aprovado ainda não é dinheiro em conta; pedido futuro não é recebível exigível"
           }
         },
         {
@@ -2864,7 +2864,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "distribuidor paga a compra; em importação, assume o câmbio"
+            "label": "distribuidor paga a compra; em importação, há exposição cambial, sem presumir repasse"
           }
         },
         {
@@ -2877,7 +2877,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "comprador paga após o aceite; pode reter por divergência técnica"
+            "label": "recebimento depende de entrega e aceite; comprador pode reter por divergência técnica"
           }
         }
       ],
@@ -2886,7 +2886,7 @@
         "steps": [
           "Paga a compra, às vezes importada",
           "Estoque e espera do aceite prendem caixa",
-          "Recebe após o aceite"
+          "Recebe após entrega e aceite"
         ],
         "text": "Pedido, faturamento, aceite e dinheiro em conta são eventos diferentes. Compra, estoque e importação antecedem o recebimento, e pedido futuro não é duplicata já exigível. Capital de giro e cessão de recebíveis podem cobrir esse intervalo quando o ciclo é comprovado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }

@@ -421,7 +421,7 @@
         },
         {
           "id": "3",
-          "label": "montadoras e máquinas",
+          "label": "clientes industriais",
           "detail": "Peça entregue conforme especificação do cliente",
           "emoji": "🚛",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
@@ -1860,7 +1860,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "a empresa paga os componentes antes de receber o sinal e o saldo"
+            "label": "a empresa desembolsa componentes; sinal e saldo entram conforme o contrato"
           }
         },
         {
@@ -1873,7 +1873,7 @@
           },
           "cash": {
             "emoji": "📝",
-            "label": "o sinal e os marcos do contrato ajudam a cobrir o desembolso"
+            "label": "testes e embarque são pagos até o recebimento final"
           }
         },
         {
@@ -2321,7 +2321,7 @@
           },
           "cash": {
             "emoji": "🧾",
-            "label": "o concessionário paga; venda ao canal não é venda ao produtor"
+            "label": "o caixa depende de o concessionário pagar; estoque no canal prende caixa"
           }
         },
         {
@@ -2343,7 +2343,7 @@
         "steps": [
           "Paga componentes",
           "Estoque no concessionário e entrega antes da janela agronômica",
-          "Recebe quando a máquina chega ao produtor"
+          "Recebe do concessionário; venda ao produtor não é automática"
         ],
         "text": "É preciso separar o crédito do produtor da necessidade industrial de financiar componentes e revendedores. Venda ao canal não é necessariamente venda ao produtor, e estoque de concessionário prende caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }

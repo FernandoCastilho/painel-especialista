@@ -500,7 +500,7 @@
           },
           "cash": {
             "emoji": "⚡",
-            "label": "energia, perdas e mão de obra pagas pela empresa"
+            "label": "energia e perdas de fibra pagas pela empresa"
           }
         },
         {
@@ -3036,28 +3036,28 @@
           "label": "fibra e formulação",
           "detail": "Escolhe-se a matéria-prima e a receita do material para a função desejada",
           "emoji": "🧪",
-          "bank": "Giro bancário para o descasamento de caixa"
+          "bank": "Desenvolvimento financiado em etapas, não confirmado"
         },
         {
           "id": "1",
           "label": "formação do material",
           "detail": "O material nasce como tecido plano, malha ou não tecido, conforme a aplicação",
           "emoji": "🏭",
-          "bank": "Financiamento de investimento, pago pelo caixa gerado"
+          "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "acabamento e ensaio funcional",
           "detail": "Material recebe tratamento final e testes que provam que cumpre a função",
           "emoji": "🔬",
-          "bank": "Financiamento de investimento, pago pelo caixa gerado"
+          "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "3",
           "label": "aplicação industrial homologada",
           "detail": "Aplicação industrial, após homologação",
           "emoji": "🏗️",
-          "bank": "Cessão de recebíveis, só de crédito comprovado"
+          "bank": "Giro após a validação; cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [

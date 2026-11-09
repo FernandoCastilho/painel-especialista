@@ -367,7 +367,7 @@
         },
         {
           "id": "3",
-          "label": "Celulose, painéis e energia",
+          "label": "Comprador da madeira",
           "detail": "Madeira vendida em pé ou entregue na fábrica",
           "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de entrega aceita"
@@ -796,8 +796,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Toras documentadas",
-          "detail": "Compra e documentação das toras antes de cortar",
+          "label": "Toras",
+          "detail": "Compra das toras antes de cortar",
           "emoji": "🪵",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -817,8 +817,8 @@
         },
         {
           "id": "3",
-          "label": "Construção, pallets e móveis",
-          "detail": "Madeira serrada para construção, pallets e móveis",
+          "label": "Compradores de madeira serrada",
+          "detail": "Madeira serrada, verde ou seca, vendida aos compradores",
           "emoji": "🏗️",
           "bank": "Cessão de recebíveis, só de entrega aceita"
         }
@@ -2107,8 +2107,8 @@
         },
         {
           "id": "3",
-          "label": "Móveis, marcenaria e construção",
-          "detail": "Painéis seguem para quem os transforma em produto final conforme o uso e o acabamento",
+          "label": "Revestidores e revendedores",
+          "detail": "Painéis seguem para revestidores, revendedores e demais compradores, conforme o uso e o acabamento",
           "emoji": "🪑",
           "bank": "Cessão de recebíveis, só de entrega aceita"
         }
@@ -2505,8 +2505,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Painéis, ferragens e tecidos",
-          "detail": "Compra dos insumos que a fábrica transforma em móvel seriado ou sob encomenda",
+          "label": "Madeira, painéis e estofados",
+          "detail": "Compra de madeira, painéis, estofados e outros materiais que a fábrica transforma em móvel",
           "emoji": "📦",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -2578,7 +2578,7 @@
         "steps": [
           "Paga materiais e produção",
           "Estoque, assistência e prazo ao varejo",
-          "Recebe na entrega e no aceite"
+          "Recebe do varejo ou do cliente, no prazo dado"
         ],
         "text": "Uma coleção pode vender bem e ainda consumir caixa por estoque, assistência e prazo dado ao varejo. Antecipar cartão ou duplicata transfere prazo financeiro, mas não elimina a obrigação de montar e reparar. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }

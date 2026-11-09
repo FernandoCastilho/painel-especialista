@@ -288,7 +288,7 @@
           "label": "Matérias-primas petroquímicas",
           "detail": "Insumo da cadeia; exposição cambial surge quando há importação",
           "emoji": "🛢️",
-          "bank": "Giro e trade finance, se houver importação"
+          "bank": "Giro para estoques e contratos de matéria-prima; se importar, a exposição cambial precisa de proteção ligada à exposição real"
         },
         {
           "id": "1",
@@ -692,8 +692,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Resinas, aditivos e moldes",
-          "detail": "Resina, aditivos e moldes comprados antes da produção",
+          "label": "Resina e molde",
+          "detail": "Resina comprada antes da produção; o molde pode ser do cliente",
           "emoji": "🧪",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -726,7 +726,7 @@
           "label": "Compra de resina",
           "product": {
             "emoji": "🧫",
-            "label": "resina e aditivos"
+            "label": "resina"
           },
           "cash": {
             "emoji": "💵",

@@ -3623,8 +3623,8 @@
       "nodes": [
         {
           "id": "n0",
-          "label": "Indústria e importador autorizado",
-          "detail": "Fabricantes e importadores autorizados fornecem produtos regularizados",
+          "label": "Indústria",
+          "detail": "Fabricantes fornecem produtos regularizados",
           "emoji": "💊",
           "bank": "Giro bancário para a compra"
         },
@@ -3687,7 +3687,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "cliente paga após a entrega comprovada; hospital ou ente público pede análise própria"
+            "label": "recebível exige entrega comprovada e sem disputa; ente público pede análise própria"
           }
         }
       ],
@@ -5599,7 +5599,7 @@
           },
           "cash": {
             "emoji": "🕒",
-            "label": "o cliente só paga depois da entrega e do aceite"
+            "label": "pedido aprovado ainda não é dinheiro em conta; pedido futuro não é recebível exigível"
           }
         },
         {
@@ -5612,7 +5612,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "distribuidor paga a compra; em importação, assume o câmbio"
+            "label": "distribuidor paga a compra; em importação, há exposição cambial, sem presumir repasse"
           }
         },
         {
@@ -5625,7 +5625,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "comprador paga após o aceite; pode reter por divergência técnica"
+            "label": "recebimento depende de entrega e aceite; comprador pode reter por divergência técnica"
           }
         }
       ],
@@ -5634,7 +5634,7 @@
         "steps": [
           "Paga a compra, às vezes importada",
           "Estoque e espera do aceite prendem caixa",
-          "Recebe após o aceite"
+          "Recebe após entrega e aceite"
         ],
         "text": "Pedido, faturamento, aceite e dinheiro em conta são eventos diferentes. Compra, estoque e importação antecedem o recebimento, e pedido futuro não é duplicata já exigível. Capital de giro e cessão de recebíveis podem cobrir esse intervalo quando o ciclo é comprovado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -6570,7 +6570,7 @@
           "label": "distribuidor e transportador",
           "detail": "Distribuidor ou transportador compra; estoques e recebimentos diferem",
           "emoji": "🚛",
-          "bank": "Cessão de recebíveis, só de crédito comprovado; trade finance se houver exportação"
+          "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
@@ -6593,11 +6593,11 @@
           "label": "Da estrutura à montagem",
           "product": {
             "emoji": "🧰",
-            "label": "estrutura soldada do implemento"
+            "label": "estrutura do implemento"
           },
           "cash": {
             "emoji": "🏦",
-            "label": "giro cobre materiais e montagem até a venda"
+            "label": "materiais e montagem pagos antes da venda; giro casado à entrada e à liquidação da venda"
           }
         },
         {
@@ -6987,7 +6987,7 @@
       "nodes": [
         {
           "id": "0",
-          "label": "fabricante e importador",
+          "label": "fabricante",
           "detail": "Peças novas, remanufaturadas ou usadas, de mercado original ou independente",
           "emoji": "🏭",
           "bank": "Giro bancário para a compra de estoque"
@@ -7431,7 +7431,7 @@
           "label": "fabricantes e importação",
           "detail": "Compra de fabricantes ou importação; exposição cambial e desembaraço contam",
           "emoji": "🏭",
-          "bank": "Trade finance, nas compras importadas"
+          "bank": "Compras importadas: documentar exposição cambial e prazo de desembaraço; encaixe não confirmado"
         },
         {
           "id": "1",
@@ -7879,7 +7879,7 @@
         },
         {
           "id": "3",
-          "label": "Celulose, painéis e energia",
+          "label": "Comprador da madeira",
           "detail": "Madeira vendida em pé ou entregue na fábrica",
           "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de entrega aceita"
@@ -8308,8 +8308,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Toras documentadas",
-          "detail": "Compra e documentação das toras antes de cortar",
+          "label": "Toras",
+          "detail": "Compra das toras antes de cortar",
           "emoji": "🪵",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -8329,8 +8329,8 @@
         },
         {
           "id": "3",
-          "label": "Construção, pallets e móveis",
-          "detail": "Madeira serrada para construção, pallets e móveis",
+          "label": "Compradores de madeira serrada",
+          "detail": "Madeira serrada, verde ou seca, vendida aos compradores",
           "emoji": "🏗️",
           "bank": "Cessão de recebíveis, só de entrega aceita"
         }
@@ -9619,8 +9619,8 @@
         },
         {
           "id": "3",
-          "label": "Móveis, marcenaria e construção",
-          "detail": "Painéis seguem para quem os transforma em produto final conforme o uso e o acabamento",
+          "label": "Revestidores e revendedores",
+          "detail": "Painéis seguem para revestidores, revendedores e demais compradores, conforme o uso e o acabamento",
           "emoji": "🪑",
           "bank": "Cessão de recebíveis, só de entrega aceita"
         }
@@ -10017,8 +10017,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Painéis, ferragens e tecidos",
-          "detail": "Compra dos insumos que a fábrica transforma em móvel seriado ou sob encomenda",
+          "label": "Madeira, painéis e estofados",
+          "detail": "Compra de madeira, painéis, estofados e outros materiais que a fábrica transforma em móvel",
           "emoji": "📦",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -10090,7 +10090,7 @@
         "steps": [
           "Paga materiais e produção",
           "Estoque, assistência e prazo ao varejo",
-          "Recebe na entrega e no aceite"
+          "Recebe do varejo ou do cliente, no prazo dado"
         ],
         "text": "Uma coleção pode vender bem e ainda consumir caixa por estoque, assistência e prazo dado ao varejo. Antecipar cartão ou duplicata transfere prazo financeiro, mas não elimina a obrigação de montar e reparar. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -10500,18 +10500,18 @@
           "label": "terreno projeto e licenças",
           "detail": "Terreno e incorporação vêm antes de tudo; a obra só começa depois do projeto",
           "emoji": "🏞️",
-          "bank": "Giro bancário para a fase antes das vendas"
+          "bank": "Sem encaixe confirmado nesta fase; financiamento à produção, recebíveis e capital próprio têm usos e garantias distintos"
         },
         {
           "id": "1",
           "label": "vendas e financiamento",
           "detail": "Comercialização do imóvel; o incorporador assume o risco comercial",
           "emoji": "🏷️",
-          "bank": "Financiamento do comprador, que condiciona a venda"
+          "bank": "Giro bancário ou financiamento à produção, com recursos separados por empreendimento; linha não confirmada"
         },
         {
           "id": "2",
-          "label": "obra e medições",
+          "label": "obra e entrega",
           "detail": "A construtora executa a obra conforme o contrato",
           "emoji": "🏗️",
           "bank": "Giro bancário para a diferença entre compra e recebimento"
@@ -10535,7 +10535,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "terreno, projeto e licenças pagos antes de qualquer venda"
+            "label": "terreno, projeto e licenças antecedem a comercialização"
           }
         },
         {
@@ -10548,7 +10548,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "pagamento do comprador, que depende do financiamento dele"
+            "label": "pagamento do comprador, que depende da capacidade de pagamento e do repasse"
           }
         },
         {
@@ -10961,7 +10961,7 @@
           "label": "terreno acessos e demanda",
           "detail": "Terreno bem localizado e com acessos sustenta o projeto",
           "emoji": "📍",
-          "bank": "Giro bancário para a fase de projeto e licença"
+          "bank": "Giro bancário, se houver diferença entre pagar projeto e licença e receber; a documentar"
         },
         {
           "id": "1",
@@ -11009,7 +11009,7 @@
           },
           "cash": {
             "emoji": "🧾",
-            "label": "custo de adequação pago pela empresa; medição ou aceite libera o recebimento"
+            "label": "custo da adequação sai antes; o caixa depende da entrega aceita pelo ocupante"
           }
         },
         {
@@ -11946,7 +11946,7 @@
           "label": "clínquer e moagem",
           "detail": "Forno térmico faz o clínquer; depois vêm moagem com adições e armazenagem",
           "emoji": "🏭",
-          "bank": "Financiamento de manutenção pesada e descarbonização"
+          "bank": "Investimento em manutenção pesada e descarbonização, que exigem prazo longo; pagar pelo caixa gerado"
         },
         {
           "id": "2",
@@ -11957,8 +11957,8 @@
         },
         {
           "id": "3",
-          "label": "concreteira revenda e obra",
-          "detail": "Concreteira, revenda e obra compram o cimento",
+          "label": "Revendedores e compradores de cimento",
+          "detail": "Compradores de cimento, a granel ou ensacado",
           "emoji": "🏪",
           "bank": "Cessão de recebíveis de revendedores, só de crédito comprovado"
         }
@@ -12000,7 +12000,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "pagamento de concreteiras e revendedores, quando recebe"
+            "label": "pagamento dos revendedores, quando recebe"
           }
         }
       ],
@@ -12009,7 +12009,7 @@
         "steps": [
           "Paga matéria-prima e combustível",
           "Produção e estoque prendem o caixa",
-          "Recebe de concreteiras e revendas"
+          "Recebe dos revendedores"
         ],
         "text": "O giro deve separar combustível, embalagem e recebíveis de revendedores. Parada de forno, combustível caro e demanda regional fraca pressionam o custo unitário, e produzir mais pode gerar estoque sem capacidade de escoamento. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -12945,9 +12945,9 @@
       "nodes": [
         {
           "id": "0",
-          "label": "vidro plano primário",
-          "detail": "Produção do vidro plano em forno contínuo",
-          "emoji": "🏭",
+          "label": "vidro bruto (compra)",
+          "detail": "Chapa de vidro bruto comprada para corte, têmpera e laminação",
+          "emoji": "🧊",
           "bank": "Giro bancário para o vidro bruto"
         },
         {
@@ -13444,12 +13444,12 @@
           "label": "projeto corte e montagem",
           "detail": "Projeto, corte e montagem das portas e janelas",
           "emoji": "📐",
-          "bank": "Financiamento de equipamento de corte e montagem"
+          "bank": "Financiamento de equipamento de corte e montagem, se o retorno por produtividade e menos refugo for comprovado"
         },
         {
           "id": "2",
-          "label": "transporte e instalação",
-          "detail": "Levar as peças prontas até a obra e montá-las no local, com custo de frete e mão de obra",
+          "label": "instalação",
+          "detail": "Montagem das esquadrias na obra, até a medição",
           "emoji": "🚚",
           "bank": "Giro bancário para a diferença entre compra e recebimento"
         },
@@ -13947,7 +13947,7 @@
         },
         {
           "id": "3",
-          "label": "montadoras e máquinas",
+          "label": "clientes industriais",
           "detail": "Peça entregue conforme especificação do cliente",
           "emoji": "🚛",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
@@ -15386,7 +15386,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "a empresa paga os componentes antes de receber o sinal e o saldo"
+            "label": "a empresa desembolsa componentes; sinal e saldo entram conforme o contrato"
           }
         },
         {
@@ -15399,7 +15399,7 @@
           },
           "cash": {
             "emoji": "📝",
-            "label": "o sinal e os marcos do contrato ajudam a cobrir o desembolso"
+            "label": "testes e embarque são pagos até o recebimento final"
           }
         },
         {
@@ -15847,7 +15847,7 @@
           },
           "cash": {
             "emoji": "🧾",
-            "label": "o concessionário paga; venda ao canal não é venda ao produtor"
+            "label": "o caixa depende de o concessionário pagar; estoque no canal prende caixa"
           }
         },
         {
@@ -15869,7 +15869,7 @@
         "steps": [
           "Paga componentes",
           "Estoque no concessionário e entrega antes da janela agronômica",
-          "Recebe quando a máquina chega ao produtor"
+          "Recebe do concessionário; venda ao produtor não é automática"
         ],
         "text": "É preciso separar o crédito do produtor da necessidade industrial de financiar componentes e revendedores. Venda ao canal não é necessariamente venda ao produtor, e estoque de concessionário prende caixa. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -17552,7 +17552,7 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Kraftliner, testliner e miolo",
+          "label": "Papéis de capa e miolo",
           "detail": "Papéis de capa e miolo são a matéria-prima da chapa",
           "emoji": "📜",
           "bank": "Giro bancário para o ciclo operacional"
@@ -17956,8 +17956,8 @@
         },
         {
           "id": "3",
-          "label": "Indústria, varejo e logística",
-          "detail": "Indústria e varejo recebem a caixa no ritmo do envase",
+          "label": "Clientes que envasam",
+          "detail": "O cliente recebe a caixa no ritmo do envase",
           "emoji": "🛒",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
@@ -18325,7 +18325,7 @@
         },
         {
           "id": "1",
-          "label": "Impressão e tubulação",
+          "label": "Impressão e estrutura do saco",
           "detail": "Resistência, porosidade e impressão do saco",
           "emoji": "🖨️",
           "bank": "Financiamento de investimento em ativos duráveis"
@@ -18382,7 +18382,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "recebimento depende de o lote funcionar no ensaque"
+            "label": "recebimento exposto a devolução de lote por falha no ensaque"
           }
         }
       ],
@@ -18391,7 +18391,7 @@
         "steps": [
           "Paga kraft e barreiras",
           "Estoque e campanhas sazonais prendem caixa",
-          "Recebe se o lote passar no ensaque"
+          "Recebe, com risco de devolução do lote por falha no ensaque"
         ],
         "text": "Estoque de kraft e barreiras antecede a fabricação. Encomendas sazonais exigem planejamento de caixa, e financiar o ciclo não resolve devolução de lote por falha no ensaque. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -18738,9 +18738,9 @@
         },
         {
           "id": "3",
-          "label": "Papel, filmes e têxteis",
+          "label": "Clientes que bobinam",
           "detail": "Clientes que usam o tubete como suporte para enrolar suas bobinas, em carga e velocidade",
-          "emoji": "🧵",
+          "emoji": "🏭",
           "bank": "Cessão de recebíveis, só de crédito comprovado"
         }
       ],
@@ -19096,7 +19096,7 @@
           "label": "Matérias-primas petroquímicas",
           "detail": "Insumo da cadeia; exposição cambial surge quando há importação",
           "emoji": "🛢️",
-          "bank": "Giro e trade finance, se houver importação"
+          "bank": "Giro para estoques e contratos de matéria-prima; se importar, a exposição cambial precisa de proteção ligada à exposição real"
         },
         {
           "id": "1",
@@ -19500,8 +19500,8 @@
       "nodes": [
         {
           "id": "0",
-          "label": "Resinas, aditivos e moldes",
-          "detail": "Resina, aditivos e moldes comprados antes da produção",
+          "label": "Resina e molde",
+          "detail": "Resina comprada antes da produção; o molde pode ser do cliente",
           "emoji": "🧪",
           "bank": "Giro bancário para o ciclo operacional"
         },
@@ -19534,7 +19534,7 @@
           "label": "Compra de resina",
           "product": {
             "emoji": "🧫",
-            "label": "resina e aditivos"
+            "label": "resina"
           },
           "cash": {
             "emoji": "💵",
@@ -21591,7 +21591,7 @@
           },
           "cash": {
             "emoji": "⚡",
-            "label": "energia, perdas e mão de obra pagas pela empresa"
+            "label": "energia e perdas de fibra pagas pela empresa"
           }
         },
         {
@@ -24127,28 +24127,28 @@
           "label": "fibra e formulação",
           "detail": "Escolhe-se a matéria-prima e a receita do material para a função desejada",
           "emoji": "🧪",
-          "bank": "Giro bancário para o descasamento de caixa"
+          "bank": "Desenvolvimento financiado em etapas, não confirmado"
         },
         {
           "id": "1",
           "label": "formação do material",
           "detail": "O material nasce como tecido plano, malha ou não tecido, conforme a aplicação",
           "emoji": "🏭",
-          "bank": "Financiamento de investimento, pago pelo caixa gerado"
+          "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "2",
           "label": "acabamento e ensaio funcional",
           "detail": "Material recebe tratamento final e testes que provam que cumpre a função",
           "emoji": "🔬",
-          "bank": "Financiamento de investimento, pago pelo caixa gerado"
+          "bank": "Financiamento de investimento, só com mercado comprovado, pago pelo caixa gerado"
         },
         {
           "id": "3",
           "label": "aplicação industrial homologada",
           "detail": "Aplicação industrial, após homologação",
           "emoji": "🏗️",
-          "bank": "Cessão de recebíveis, só de crédito comprovado"
+          "bank": "Giro após a validação; cessão de recebíveis, só de crédito comprovado"
         }
       ],
       "edges": [
@@ -24652,21 +24652,21 @@
         {
           "id": "n0",
           "label": "Plataformas de proteção",
-          "detail": "Licenças, atualização e inteligência de ameaças vêm do fabricante",
+          "detail": "Licenças e plataformas de proteção, com dependência das plataformas",
           "emoji": "🛡️",
-          "bank": "Giro para licenças, ligado aos marcos de recebimento"
+          "bank": "Giro para licenças, se documentado"
         },
         {
           "id": "n1",
           "label": "Especialista de segurança",
           "detail": "Configura, integra, monitora e testa os controles",
           "emoji": "🧑‍💻",
-          "bank": "Giro bancário na implantação, com aceite validado"
+          "bank": "Giro bancário para o descasamento entre equipe e recebimento, se documentado"
         },
         {
           "id": "n2",
           "label": "Operação do cliente",
-          "detail": "O cliente autoriza mudanças, controla acessos e prioriza ativos",
+          "detail": "Integração com os processos do cliente",
           "emoji": "🏢",
           "bank": "Cessão de recebíveis, só de crédito exigível"
         },
@@ -24675,7 +24675,7 @@
           "label": "Resposta e continuidade",
           "detail": "Contenção, recuperação e comunicação, conforme o caso",
           "emoji": "🚨",
-          "bank": "Reserva de liquidez para mobilização emergencial"
+          "bank": "Resposta emergencial é imprevisível; separar do giro normal, sem encaixe bancário confirmado"
         }
       ],
       "edges": [
@@ -24689,7 +24689,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "compromisso com o fabricante antes de receber do cliente"
+            "label": "compromisso com a plataforma antes de receber do cliente"
           }
         },
         {
@@ -24702,7 +24702,7 @@
           },
           "cash": {
             "emoji": "💳",
-            "label": "pagamento do cliente por marcos de implantação e aceite"
+            "label": "recebimento conforme o contrato de proteção (forma e prazo a confirmar)"
           }
         },
         {
@@ -24715,7 +24715,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "mensalidade recorrente; a resposta emergencial é imprevisível"
+            "label": "cobrança recorrente pela proteção e monitoramento; a resposta emergencial é imprevisível"
           }
         }
       ],
@@ -24723,10 +24723,10 @@
         "title": "Ciclo de caixa",
         "steps": [
           "Paga licenças e equipe",
-          "Monitoramento exige equipe mesmo com poucos alertas",
-          "Recebe por marcos e contrato recorrente"
+          "Monitoramento e resposta têm economias diferentes",
+          "Recebe conforme o contrato, a reconciliar"
         ],
-        "text": "O pagamento a fornecedores e à equipe costuma vir antes do recebimento. Cobertura e equipe têm custo mesmo com poucos alertas, e a resposta a incidentes é imprevisível. Giro bancário ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+        "text": "A ordem entre pagamentos e recebimentos precisa ser reconciliada na empresa, e a resposta a incidentes é imprevisível. Giro bancário ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
     },
     "transcript": "Cibersegurança. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nA demanda combina prevenção contínua e resposta emergencial. Licenças, equipe de analistas e responsabilidade contratual têm economias diferentes; vender proteção não equivale a garantir ausência de incidente.\n\nA ANPD registrou 362 comunicações de incidentes em 2025. É um indicador administrativo de ocorrências reportadas envolvendo dados pessoais, não tamanho do mercado nem contagem total de ataques.\n\nInferência: especialização e integração com processos do cliente podem sustentar diferenciação, mas escala de atendimento, custo de pessoal e dependência de plataformas limitam a margem.\n\nPrestadores empresariais de proteção, monitoramento, resposta a incidentes e segurança industrial. Separar revenda de licenças, consultoria e operação recorrente; não somar seus faturamentos aos gastos totais de TIC.\n\nO negócio funciona assim. Plataformas de proteção: Licenças, atualização e inteligência de ameaças. Especialista de segurança: Configura, integra, monitora e testa controles. Operação do cliente: Autoriza mudanças, controla acessos e prioriza ativos. Resposta e continuidade: Contenção, recuperação e comunicação conforme o caso.\n\nA dinâmica de mercado. A regulamentação e a digitalização ampliam requisitos de governança, mas não comprovam aumento imediato de contratos. Uma ocorrência pode acelerar compras de emergência; passado o evento, o orçamento pode voltar a ser disputado com outras prioridades.\n\nNa empresa média, observe os modelos de receita. Licenças e appliances: Compra ou compromisso com fabricante antes do recebimento. Separar receita de revenda da remuneração do serviço. Monitoramento recorrente: Cobertura e capacidade de análise exigem equipe e ferramentas mesmo com poucos alertas. Custo por ambiente, qualidade dos alertas e obrigações de atendimento. Resposta a incidente: Mobilização imprevisível e risco de escopo crescente. Critérios de aceite, evidência preservada e limite de responsabilidade. Segurança industrial: Parada de produção pode custar mais que o equipamento protegido. Janelas de intervenção e compatibilidade com sistemas legados.\n\nOs pontos de atenção são: Dependência tecnológica: Uma plataforma proprietária limita migração e pode reajustar custos. Verificar Alternativas homologadas e cláusulas de renovação. Capacidade técnica: Vendas acima da capacidade de atendimento elevam backlog e falhas. Verificar Carga por analista, alertas sem tratamento e escalonamento. Responsabilidade: Promessas comerciais podem exceder cobertura técnica. Verificar SLA, exclusões, seguro aplicável e obrigação de reparar.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Implantação e licenças: Giro compatível com marcos de recebimento. Validar adiantamento e aceite; não financiar expectativa como recebível exigível. Expansão de operação: Investimento em plataforma e equipe associado a contratos. Separar gasto de capacidade de receita já contratada. Resposta emergencial: Reserva de liquidez e mobilização. Não pressupor recorrência da demanda extraordinária.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Renovações seletivas e exigência de demonstrar redução de exposição. Favorável: Novos ambientes protegidos com equipe e preços dimensionados antes da expansão. Adverso: Concorrência reduz preço enquanto salários e licenças sobem; incidentes geram custo e retrabalho.\n\nNa visita, comece por estas perguntas. Quais ativos críticos ficam protegidos, e o que está expressamente fora do contrato? Quem decide a contratação e qual problema justifica terceirizar em vez de manter equipe interna? Que parte da receita vem de licenças, implantação, monitoramento e emergência? Quais fabricantes e especialistas não podem ser substituídos rapidamente? Como a empresa prova capacidade de atendimento e acompanha margem por contrato? Qual desembolso acontece antes do recebimento e como cancelamentos afetam esse fluxo?\n\nLimites da pesquisa. O histórico estimado de gastos cobre três anos, mas não mede margem ou participação dos prestadores. Os comunicados à ANPD não cobrem todos os ataques e podem refletir maior notificação ou mudanças de classificação.\n\nO mercado estimado de hardware, software e serviços de segurança passou de treze vírgula quatro bilhões de reais em dois mil e vinte e três para vinte e dois vírgula dois bilhões em dois mil e vinte e cinco. São estimativas nominais de estudo setorial, não estatística oficial nem faturamento apenas das empresas médias.",
@@ -25154,16 +25154,16 @@
         {
           "id": "n0",
           "label": "Fabricantes e distribuidores",
-          "detail": "Switches, roteadores, cabos e equipamentos sem fio",
+          "detail": "Equipamentos de rede (hardware)",
           "emoji": "🔌",
-          "bank": "Giro vinculado ao pedido e ao prazo do fornecedor"
+          "bank": "Giro para o intervalo até o aceite do cliente, se documentado"
         },
         {
           "id": "n1",
           "label": "Projeto e instalação",
-          "detail": "Dimensionamento, cabeamento e configuração",
+          "detail": "Projeto, instalação e implantação",
           "emoji": "🛠️",
-          "bank": "Giro por marco do cronograma de execução"
+          "bank": "Giro para o intervalo até o aceite do cliente, se documentado"
         },
         {
           "id": "n2",
@@ -25177,7 +25177,7 @@
           "label": "Rede do cliente",
           "detail": "Aplicações, usuários e monitoramento da rede",
           "emoji": "💻",
-          "bank": "Investimento em frota e instrumentos, ligado ao contrato"
+          "bank": "Giro ou cessão ligados ao contrato de manutenção, se documentado"
         }
       ],
       "edges": [
@@ -25187,7 +25187,7 @@
           "label": "Compra de equipamentos",
           "product": {
             "emoji": "📦",
-            "label": "switches, roteadores e cabos"
+            "label": "equipamentos de rede"
           },
           "cash": {
             "emoji": "💵",
@@ -25204,7 +25204,7 @@
           },
           "cash": {
             "emoji": "⏳",
-            "label": "materiais e mão de obra pagos antes do aceite do cliente"
+            "label": "materiais e implantação pagos antes do aceite do cliente"
           }
         },
         {
@@ -25217,7 +25217,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "faturamento por marcos e contrato de manutenção"
+            "label": "faturamento conforme o aceite do projeto e o contrato de manutenção"
           }
         }
       ],
@@ -25226,9 +25226,9 @@
         "steps": [
           "Paga equipamento, materiais e equipe",
           "Execução: materiais e mão de obra antes do aceite",
-          "Recebe por marco e manutenção"
+          "Recebe conforme o aceite e a manutenção"
         ],
-        "text": "Materiais e mão de obra precedem o aceite, e atraso de obra ou aceite muda o prazo do caixa. Esse é o intervalo que giro por marco ou cessão de recebíveis podem atender, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+        "text": "Materiais e mão de obra precedem o aceite, e aceite tardio pressiona o caixa. Projeto, instalação e manutenção têm ciclos de caixa diferentes. Giro ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
     },
     "transcript": "Redes e conectividade. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nO valor da integradora está em transformar equipamento e link em uma rede confiável para o processo do cliente. Projeto, instalação e manutenção têm ciclos de caixa diferentes.\n\nO crescimento da base de banda larga é contexto de conectividade, não receita de redes corporativas. A expansão não elimina competição por preço ou custos de manutenção.\n\nInferência: disponibilidade, documentação e capacidade de diagnóstico podem diferenciar a empresa média; estoque sem demanda e projetos com aceite tardio pressionam caixa.\n\nEmpresas que projetam, instalam e mantêm redes locais, enlaces e conectividade empresarial. Separar integradora de redes de operadora de acesso regulada e de fabricante de equipamentos.\n\nO negócio funciona assim. Fabricantes e distribuidores: Switches, roteadores, cabos e equipamentos sem fio. Projeto e instalação: Dimensionamento, cabeamento e configuração. Operadoras e enlaces: Acesso externo, redundância e transporte. Rede do cliente: Aplicações, usuários e monitoramento.\n\nA dinâmica de mercado. A renovação de redes acompanha mudança de aplicações, unidades e equipamentos. Em fase de restrição de investimento, clientes podem adiar substituição e comprar manutenção; o prestador precisa distinguir receita temporária de contrato sustentável.\n\nNa empresa média, observe os modelos de receita. Projeto e implantação: Materiais e mão de obra precedem aceite. Faturamento por marcos e documentação do escopo. Equipamento com serviço: Preço do hardware pode mascarar margem de instalação. Margem por item e horas efetivamente consumidas. Manutenção: Receita contratada exige disponibilidade técnica e peças. Chamados, deslocamentos e compromisso de reposição. Gestão de links: Integração depende de prestadores distintos. Responsabilidades e limites do SLA de cada parte.\n\nOs pontos de atenção são: Obsolescência: Estoque de equipamentos envelhece antes da venda. Verificar Pedidos firmes, ciclo do produto e política de troca. Aceite: Desempenho depende da rede do cliente e de terceiros. Verificar Testes, documentação e critérios de responsabilidade. Custo de campo: Chamados dispersos encarecem deslocamentos. Verificar Densidade geográfica e custo por atendimento.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Compra de equipamentos: Giro vinculado ao pedido e ao prazo do fornecedor. Estoque especulativo e preço em moeda estrangeira. Execução: Cronograma físico-financeiro por marco. Atraso de obra ou aceite muda o prazo do caixa. Frota e instrumentos: Investimento compatível com uso contratado. Não usar prazo curto para ativo de retorno longo.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Renovação gradual com projetos menores e manutenção. Favorável: Expansão de unidades e aplicações críticas aumenta demanda por redundância. Adverso: Investimento adiado, estoque parado e contratos de suporte sem reajuste suficiente.\n\nNa visita, comece por estas perguntas. Que problema de disponibilidade a rede resolve para o cliente? O comprador é empresa final, operadora ou outra integradora, e quem define a especificação? Quanto do contrato é equipamento, implantação e manutenção? Quais componentes e enlaces não têm alternativa homologada? Quais testes liberam o aceite e quem responde por falhas de terceiros? Como se financiam materiais e equipe entre o pedido e o recebimento?\n\nLimites da pesquisa. Não foi recuperada série específica do mercado brasileiro de integração de redes corporativas. Dados de acesso ao serviço público não substituem faturamento nem margem de projetos empresariais.",
@@ -25682,7 +25682,7 @@
           "label": "Gestão do cliente",
           "detail": "Priorização, aceite e revisão dos níveis de serviço",
           "emoji": "📋",
-          "bank": "Investimento em automação, com capacidade comprovada"
+          "bank": "Sem encaixe de investimento confirmado"
         }
       ],
       "edges": [
@@ -25696,7 +25696,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "esforço inicial e licenças pagos antes da mensalidade estabilizar"
+            "label": "esforço inicial e licenças podem consumir caixa antes da mensalidade estabilizar"
           }
         },
         {
@@ -25722,7 +25722,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "mensalidade, consumo em nuvem repassado e serviços extras"
+            "label": "recebimento do contrato recorrente; chamados fora do contrato podem ficar sem remuneração"
           }
         }
       ],
@@ -25731,9 +25731,9 @@
         "steps": [
           "Paga plataformas, nuvem e equipe",
           "Transição inicial: esforço antes da receita recorrente",
-          "Recebe mensalidade e consumo"
+          "Recebe o contrato recorrente"
         ],
-        "text": "A transição exige esforço inicial, e subestimar passivos técnicos prolonga o retorno. Compromisso anual com licenças e nuvem pode superar o prazo do cliente. Giro ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+        "text": "Implantação, licenças e escala de suporte podem consumir caixa antes da estabilização. Contratos mal delimitados fazem o volume de chamados virar custo não remunerado. Giro ou cessão de recebíveis podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
     },
     "transcript": "Serviços gerenciados de TI. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nRecorrência de faturamento não significa receita sem risco: implantação, licenças e escala de suporte podem consumir caixa antes da estabilização.\n\nO modelo de contratação multinuvem do MGI distingue projeto, migração, configuração, manutenção e gestão. É evidência de desenho contratual público, não medida de demanda privada.\n\nInferência: a empresa ganha eficiência quando padroniza atendimento sem ignorar criticidade; contratos mal delimitados transformam volume de chamados em custo não remunerado.\n\nOperação continuada de infraestrutura e suporte de TI, incluindo monitoramento, ambiente em nuvem e atendimento. Separar contrato recorrente, implantação, revenda de licenças e cessão de profissionais.\n\nO negócio funciona assim. Plataformas e pessoas: Ferramentas de monitoramento, nuvem e especialistas. Transição inicial: Inventário, migração e documentação do ambiente. Operação recorrente: Suporte, manutenção e resposta a falhas. Gestão do cliente: Priorização, aceite e revisão dos níveis de serviço.\n\nA dinâmica de mercado. Terceirização pode substituir capex próprio por serviço, mas o fornecedor passa a suportar investimento e capacidade. Redução do orçamento do cliente pode elevar cobrança por eficiência e revisão de escopo, mesmo quando o contrato é recorrente.\n\nNa empresa média, observe os modelos de receita. Entrada do contrato: Inventário e correção de passivos técnicos exigem esforço inicial. Cobrança da transição e registro das exclusões. Mensalidade fixa: Receita previsível com volume de demanda variável. Limites de usuários, ativos, horas e escopo. Consumo em nuvem: Fatura depende de uso e de compromisso com provedor. Conciliação do consumo e regras de repasse. Serviço extraordinário: Mudanças e novos projetos fora do contrato. Autorização prévia e faturamento separado.\n\nOs pontos de atenção são: Transição deficitária: Passivo técnico descoberto depois da assinatura. Verificar Inventário, baseline e termo de transição. Escopo aberto: Mais ativos e chamados sem reajuste. Verificar Métricas contratadas e regra de mudança. Dependência de pessoas: Ausência de especialista interrompe atendimento. Verificar Documentação, escala e substituição.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Implantação: Giro para transição vinculado a pagamentos de implantação. Subestimar passivos técnicos prolonga retorno. Licenças e nuvem: Compatibilizar obrigações com renovação dos clientes. Compromisso anual pode superar prazo do cliente. Expansão: Investimento em automação e capacidade comprovada. Crescimento de folha antes de contratos firmes.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Renovação com renegociação de escopo e produtividade. Favorável: Automação reduz esforço e libera capacidade para novos contratos com margem. Adverso: Chamados e custos sobem sem repasse, com cancelamento de clientes concentrados.\n\nNa visita, comece por estas perguntas. Que atividade o cliente deixa de executar ao contratar a empresa? Qual segmento é atendido e quem decide renovar ou cancelar? Quais receitas cobrem transição, mensalidade, licenças e demandas extras? Quais ferramentas e pessoas são essenciais para continuar operando? Como a margem e a qualidade são medidas por contrato? Quanto caixa a transição consome antes de o contrato se pagar?\n\nLimites da pesquisa. Não foi localizada série oficial que separe serviços gerenciados de todos os serviços de TI. Contratação pública é exemplo de estrutura; não foi usada como média de preços, margens ou prazos do setor.",
@@ -26153,7 +26153,7 @@
           "label": "Integração",
           "detail": "Configuração, migração e ligação com sistemas",
           "emoji": "🔗",
-          "bank": "Giro por marcos de implantação"
+          "bank": "Giro para a implantação, se documentado"
         },
         {
           "id": "n2",
@@ -26167,7 +26167,7 @@
           "label": "Suporte e renovação",
           "detail": "Adoção, disponibilidade e ajuste de capacidade",
           "emoji": "🤝",
-          "bank": "Investimento em comodato, com prazo aderente ao contrato"
+          "bank": "Investimento em equipamentos entregues em comodato, se documentado e com recuperação demonstrada"
         }
       ],
       "edges": [
@@ -26207,7 +26207,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "cobrança por licença ou usuário contratado"
+            "label": "cobrança recorrente pelo serviço contratado"
           }
         }
       ],
@@ -26216,9 +26216,9 @@
         "steps": [
           "Paga licenças e conectividade",
           "Migração e comodato: investimento antes da estabilização",
-          "Recebe por usuário ou contrato"
+          "Recebe a cobrança recorrente"
         ],
-        "text": "Licenças são compradas e o trabalho inicial de migração vem antes de estabilizar a operação. No comodato, o investimento fica com o fornecedor e cancelamento pode deixá-lo sem reutilização. Giro ou investimento ligado ao contrato podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+        "text": "Licenças são compradas e o trabalho inicial de migração vem antes de estabilizar a operação. Equipamentos em comodato e migração são pagos antecipadamente, o que exige disciplina de prazo e de recuperação do investimento. Giro ou investimento ligado ao contrato podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
     },
     "transcript": "Comunicação e colaboração. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nA proposta de valor está na comunicação utilizável e integrada ao trabalho, não apenas em licenças ou aparelhos. Implantação, adoção e suporte condicionam a renovação.\n\nO Iphan publicou em setembro de 2026 um objeto de contratação de telefonia VoIP e PABX em nuvem com equipamentos em comodato. É um exemplo concreto de demanda, sem extrapolar volume ou preço para o mercado.\n\nInferência: cobrança recorrente pode coexistir com equipamentos e migração pagos antecipadamente, exigindo disciplina de prazo e de recuperação do investimento.\n\nSoluções empresariais de voz, reuniões, mensagens, contact center e colaboração, integradas ou em nuvem. Não confundir com mídia/publicidade nem com a operação de telecomunicações regulada.\n\nO negócio funciona assim. Plataformas e operadoras: Licenças, numeração e conectividade. Integração: Configuração, migração e ligação com sistemas. Usuários e atendimento: Reuniões, mensagens e comunicação com clientes. Suporte e renovação: Adoção, disponibilidade e ajuste de capacidade.\n\nA dinâmica de mercado. A substituição de telefonia tradicional por soluções digitais é mecanismo estrutural. No ciclo, clientes podem reduzir assentos, consolidar ferramentas ou adiar equipamentos; expansão do trabalho digital não implica aumento de margem do canal.\n\nNa empresa média, observe os modelos de receita. Licença por usuário: Custo e receita variam com assentos contratados. Licenças compradas, ativas e efetivamente usadas. Comunicação em nuvem: Serviço depende de conectividade e plataforma. Qualidade, gravação, armazenamento e responsabilidade. Equipamento em comodato: Investimento permanece no fornecedor. Prazo de recuperação e devolução em cancelamento. Integração e migração: Trabalho inicial antes de estabilizar a operação. Portabilidade, treinamento e aceite.\n\nOs pontos de atenção são: Licenças ociosas: Compromissos mínimos excedem uso do cliente. Verificar Assentos ativos e prazo de redução. Migração: Portabilidade e integração atrasam entrada em operação. Verificar Plano de contingência e aceites parciais. Qualidade: Falha de rede pode parecer falha da plataforma. Verificar Monitoramento ponta a ponta e divisão de responsabilidades.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Comodato: Investimento com prazo aderente ao contrato. Cancelamento pode deixar ativo sem reutilização. Migração: Giro por marcos de implantação. Aceite e dependência de operadora. Licenças: Compatibilizar compra e faturamento. Renovação e moeda do fornecedor.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Consolidação de ferramentas com foco em uso e suporte. Favorável: Migrações e novas integrações ampliam receita com implantação remunerada. Adverso: Redução de assentos e renovação mais cara comprimem margem do integrador.\n\nNa visita, comece por estas perguntas. Qual falha de comunicação ou atendimento a solução resolve? Quem usa, quem compra e quem decide renovar? A receita vem de usuário, consumo, projeto, equipamento ou suporte? Quais plataformas e operadoras determinam custo e continuidade? Como são medidos adoção, qualidade e entrega da implantação? O contrato recupera o investimento em aparelhos e migração mesmo se houver cancelamento?\n\nLimites da pesquisa. Não foi recuperada série oficial específica de comunicação unificada empresarial. Telefonia fixa agrega usos residenciais e empresariais; sua evolução não mede diretamente receitas de colaboração.",
@@ -26701,21 +26701,21 @@
           "label": "Conhecimento e infraestrutura",
           "detail": "Equipe, ferramentas, nuvem e componentes",
           "emoji": "👩‍💻",
-          "bank": "Capital compatível com desenvolvimento de produto"
+          "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n1",
           "label": "Desenvolvimento",
           "detail": "Produto, código, testes e propriedade intelectual",
           "emoji": "⌨️",
-          "bank": "Giro alinhado a entregas contratadas"
+          "bank": "Desenvolvimento pago antes do retorno; encaixe bancário não confirmado"
         },
         {
           "id": "n2",
           "label": "Implantação e venda",
           "detail": "Integração, migração, treinamento e aceite",
           "emoji": "🚀",
-          "bank": "Giro por marcos de implantação"
+          "bank": "Giro para a implantação, se documentado"
         },
         {
           "id": "n3",
@@ -26749,7 +26749,7 @@
           },
           "cash": {
             "emoji": "🧾",
-            "label": "faturamento por marcos e aceite do cliente"
+            "label": "recebimento conforme o contrato (produto, projeto sob encomenda ou implantação)"
           }
         },
         {
@@ -26770,8 +26770,8 @@
         "title": "Ciclo de caixa",
         "steps": [
           "Paga a equipe e as ferramentas",
-          "Desenvolvimento antes da receita, com aceite pendente",
-          "Recebe por marco, assinatura ou contrato"
+          "Desenvolvimento antes da receita",
+          "Recebe conforme o contrato ou a assinatura"
         ],
         "text": "O desenvolvimento antecede a receita, e escopo, aceite e retrabalho influenciam quando o caixa entra. Em produto próprio, o retorno pode ser incerto. Giro por entrega ou cessão de créditos documentados podem atender esse intervalo. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -27297,7 +27297,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "capex antes de contratos e de operação"
+            "label": "investimento físico antes da ocupação; contratos e energia antes de expandir"
           }
         },
         {
@@ -27331,10 +27331,10 @@
         "title": "Ciclo de caixa",
         "steps": [
           "Paga obra, energia e equipamento",
-          "Capex e rampa de ocupação antes da receita",
+          "Investimento e rampa de ocupação antes da receita",
           "Recebe por capacidade contratada ou consumo"
         ],
-        "text": "O capex antecede contratos e operação, e a receita começa depois de despesas relevantes. Capacidade instalada não equivale a receita ou capacidade contratada. Investimento de longo prazo e giro podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+        "text": "O investimento físico vem antes da ocupação, e o estudo recomenda que contratos e acesso à energia precedam uma expansão disciplinada. Capacidade instalada não equivale a receita ou capacidade contratada. Investimento de longo prazo e giro podem atender esse intervalo, se documentado. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
     },
     "transcript": "Data centers e nuvem. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nData center combina investimento físico, energia, conectividade e continuidade. Nuvem acrescenta plataforma e cobrança por consumo; os elos não devem ser somados como se fossem um único mercado.\n\nO MDIC informou a sanção do Redata em setembro de 2026 com contrapartidas e critérios de sustentabilidade. Não se confirmou habilitação de uma empresa ou benefício automaticamente disponível.\n\nInferência: contratos e acesso à energia precisam preceder expansão disciplinada. Anúncio de projeto não é capacidade operacional nem receita.\n\nInfraestrutura de centros de dados e serviços de computação em nuvem. Separar colocation, operação de infraestrutura, provedores de nuvem e integradores; capacidade instalada não equivale a receita ou capacidade contratada.\n\nO negócio funciona assim. Terreno, energia e rede: Licenças, alimentação elétrica e conectividade. Infraestrutura física: Edificação, refrigeração, redundância e segurança. Capacidade computacional: Servidores, armazenamento e plataformas. Clientes e aplicações: Colocation, nuvem, consumo e integração.\n\nA dinâmica de mercado. A política industrial pode melhorar condições de investimento, mas demanda, energização e regras de habilitação continuam determinantes. Demanda por IA pode exigir densidade e refrigeração diferentes, com risco de tecnologia e ociosidade.\n\nNa empresa média, observe os modelos de receita. Colocation: Cliente ocupa espaço e capacidade elétrica. Capacidade contratada, ocupação e repasse de energia. Nuvem: Receita depende de consumo e serviços agregados. Custo de infraestrutura e utilização efetiva. Infraestrutura própria: Capex antecede contratos e operação. Obras, energização e rampa de ocupação. Integração multinuvem: Serviço combina plataformas de terceiros. Margem de gestão separada do consumo repassado.\n\nOs pontos de atenção são: Energia: Potência contratada e entrega efetiva podem divergir do cronograma. Verificar Conexão, redundância, custo e prazo documentados. Ocupação: Construir antes de contratar prolonga retorno. Verificar Clientes âncora, rescisão e compromissos mínimos. Tecnologia: Equipamento muda mais rápido que a edificação. Verificar Vida útil, modularidade e necessidade de atualização.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Implantação física: Estrutura de longo prazo associada a contratos e cronograma. Licenças, conexão e contingência de obra. Equipamento: Prazo compatível com vida tecnológica e geração de caixa. Obsolescência e exposição cambial. Operação: Giro para energia, pessoal e rampa de ocupação. Receita começa depois de despesas relevantes.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Expansão modular apoiada em contratos e energização confirmada. Favorável: Contratação cresce junto com capacidade elétrica e ocupação sustentável. Adverso: Projetos atrasam, equipamentos encarecem e capacidade fica ociosa.\n\nNa visita, comece por estas perguntas. A empresa vende espaço, potência, computação, plataforma ou gestão? Quais clientes contratam capacidade e por quanto tempo? A cobrança é fixa, por consumo ou inclui repasse de energia? Quais conexões, fornecedores e licenças são condição para operar? Como distingue capacidade anunciada, disponível, contratada e utilizada? O prazo do financiamento suporta obra, energização e rampa de ocupação?\n\nLimites da pesquisa. Há dimensionamento pontual estimado em artigo público de dois mil e vinte e cinco, mas não série nacional homogênea de capacidade e ocupação. Não foram confirmadas condições de acesso a incentivo ou financiamento para uma empresa específica.\n\nUm indicador de investimento potencial: o Ministério de Minas e Energia informou cinquenta e dois pedidos de conexão à Rede Básica até junho de dois mil e vinte e cinco. Dezoito tinham alternativa técnica reconhecida e trinta e quatro estavam em análise. Isso não significa capacidade instalada nem autorização final de acesso.",
@@ -27830,16 +27830,16 @@
         {
           "id": "n0",
           "label": "Infraestrutura e direitos",
-          "detail": "Rede, espectro quando aplicável, postes e equipamentos",
+          "detail": "Rede e equipamentos",
           "emoji": "🗼",
           "bank": "Financiamento de investimento em rede, ligado ao retorno"
         },
         {
           "id": "n1",
           "label": "Transporte e acesso",
-          "detail": "Backbone, última milha e interconexão",
+          "detail": "Capacidade de rede, inclusive vendida a outras prestadoras",
           "emoji": "🔗",
-          "bank": "Financiamento de expansão e de equipamentos importados"
+          "bank": "Financiamento de investimento em rede, ligado ao retorno, se documentado"
         },
         {
           "id": "n2",
@@ -27863,7 +27863,7 @@
           "label": "Rede construída",
           "product": {
             "emoji": "📡",
-            "label": "rede, postes e equipamentos disponíveis"
+            "label": "rede e equipamentos disponíveis"
           },
           "cash": {
             "emoji": "💵",
@@ -27876,7 +27876,7 @@
           "label": "Capacidade e acesso",
           "product": {
             "emoji": "🌐",
-            "label": "backbone, última milha e interconexão"
+            "label": "capacidade de rede e conexão"
           },
           "cash": {
             "emoji": "🏗️",
@@ -27904,7 +27904,7 @@
           "Rede pronta antes de ocupação e retorno",
           "Recebe do assinante conforme a base ativa"
         ],
-        "text": "A expansão física exige investimento antes de atingir ocupação e retorno, e o crescimento da rede não garante caixa. Desconto comercial, churn e custo de rede podem reduzir o retorno. Não financiar expansão permanente só com dívida curta. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
+        "text": "A expansão física exige investimento antes de ocupação e retorno, e o crescimento da rede não garante caixa. Desconto comercial, churn e custo de rede podem reduzir o retorno. Reconciliar contratos e recebimentos antes de propor dívida. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
     },
     "transcript": "Operadoras de telecomunicações. Estudo pesquisado em seis de novembro de dois mil e vinte e seis. Narração sintética de uma análise setorial, sem recomendação de crédito.\n\nReceita depende de base ativa, preço, qualidade e permanência do cliente. Expansão física exige investimento antes de atingir ocupação e retorno.\n\nO MCom registra aumento dos acessos fixos e móveis entre dezembro de 2024 e 2025. Acesso é contrato/conexão, não pessoa, e os números não demonstram margem ou rentabilidade.\n\nInferência: competir com qualidade e densidade de rede pode ser mais sustentável que crescer apenas por aquisição ou desconto; o resultado precisa ser medido por praça.\n\nPrestadoras de conectividade fixa e móvel no Brasil. Separar serviços, área de atuação e porte; o mercado relevante de um provedor regional não é necessariamente o nacional.\n\nO negócio funciona assim. Infraestrutura e direitos: Rede, espectro quando aplicável, postes e equipamentos. Transporte e acesso: Backbone, última milha e interconexão. Operação e atendimento: Instalação, manutenção e cobrança. Assinantes: Uso, pagamento, suporte e renovação.\n\nA dinâmica de mercado. A expansão de fibra e uso de dados muda a composição do setor. Mesmo com base crescente, desconto comercial, churn e custo de rede podem reduzir retorno. Mudança tecnológica é estrutural; promoções, inadimplência e ritmo de investimento têm componente cíclico.\n\nNa empresa média, observe os modelos de receita. Banda larga fixa: Rede antecede ativação de assinantes. Casas passadas, clientes ativos e ocupação por área. Móvel: Rede e capacidade precisam acompanhar tráfego. Base, utilização e custos por serviço. Atacado: Capacidade vendida a outras prestadoras. Concentração e contratos de longo prazo. Serviços empresariais: Disponibilidade e atendimento diferenciados. SLA, redundância e custo real de operação.\n\nOs pontos de atenção são: Rede subutilizada: Construção não se converte em assinantes suficientes. Verificar Ocupação e retorno por projeto. Preço e churn: Promoções captam clientes que saem rapidamente. Verificar Custo de ativação, permanência e receita líquida. Regulação e infraestrutura: Operação depende de obrigações e direitos de uso. Verificar Outorgas aplicáveis, documentação e contratos.\n\nNo financiamento, as seguintes estruturas são hipóteses, não oferta ou aprovação. Expansão: Investimento aderente ao retorno por área. Projeto, ocupação e contingência. Equipamentos importados: Financiamento e proteção cambial ligados ao fluxo. Moeda e prazo de recebimento não necessariamente coincidem. Giro: Cobrança e instalação com disciplina de capital de giro. Não financiar expansão permanente só com dívida curta.\n\nPara os próximos doze a vinte e quatro meses, os cenários são qualitativos. Base: Crescimento seletivo com ocupação da rede existente. Favorável: Melhor utilização e carteira empresarial elevam receita sem expansão desproporcional. Adverso: Guerra de preços, inadimplência e custo de manutenção consomem caixa.\n\nNa visita, comece por estas perguntas. Qual serviço e qual território definem o negócio da operadora? Quem é o cliente e por que permanece em vez de trocar? Como preço, base ativa e cancelamentos se transformam em receita? Quais redes, contratos e autorizações são indispensáveis? Qual é o retorno por expansão depois de instalação e manutenção? A geração de caixa cobre dívida e renovação tecnológica sem depender de novas vendas?\n\nLimites da pesquisa. Relatórios trimestrais de 2026 da Anatel foram localizados, mas a leitura integral foi bloqueada por desafio de acesso. Não se usaram seus trechos como série confirmada. Séries anteriores recuperadas de publicações diferentes apresentam revisões; não foram encadeadas sem conciliação.\n\nO histórico oficial do IBGE cobre dez anos completos. No acumulado de janeiro a agosto de dois mil e vinte e seis, o volume de telecomunicações cresceu dois vírgula oito por cento. Volume deflacionado e número de acessos são conceitos distintos; nenhum deles prova margem de uma operadora.",
@@ -29222,16 +29222,16 @@
         {
           "id": "n1",
           "label": "Carga rodoviária a granel",
-          "detail": "caminhões graneleiros levam a mercadoria até o destino, com risco de perda por umidade e pesagem",
+          "detail": "caminhões graneleiros levam a mercadoria, com risco de perda por umidade e pesagem",
           "emoji": "🚛",
           "bank": "Giro bancário para o descasamento operacional"
         },
         {
           "id": "n2",
-          "label": "Transbordo ferroviário ou hidroviário",
-          "detail": "Transbordo para ferrovia ou hidrovia",
-          "emoji": "🚆",
-          "bank": "Investimento, com prazo coerente com a vida útil"
+          "label": "Destino e modal",
+          "detail": "Origem, destino, modal e janela definem a demanda do transportador",
+          "emoji": "🧭",
+          "bank": "Investimento só com prazo coerente com a vida útil e a geração de caixa"
         },
         {
           "id": "n3",
@@ -29261,7 +29261,7 @@
           "label": "Execução e controle",
           "product": {
             "emoji": "🚚",
-            "label": "grãos transportados a granel até o transbordo"
+            "label": "grãos transportados a granel até o destino"
           },
           "cash": {
             "emoji": "🛢️",

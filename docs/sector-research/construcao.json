@@ -392,18 +392,18 @@
           "label": "terreno projeto e licenças",
           "detail": "Terreno e incorporação vêm antes de tudo; a obra só começa depois do projeto",
           "emoji": "🏞️",
-          "bank": "Giro bancário para a fase antes das vendas"
+          "bank": "Sem encaixe confirmado nesta fase; financiamento à produção, recebíveis e capital próprio têm usos e garantias distintos"
         },
         {
           "id": "1",
           "label": "vendas e financiamento",
           "detail": "Comercialização do imóvel; o incorporador assume o risco comercial",
           "emoji": "🏷️",
-          "bank": "Financiamento do comprador, que condiciona a venda"
+          "bank": "Giro bancário ou financiamento à produção, com recursos separados por empreendimento; linha não confirmada"
         },
         {
           "id": "2",
-          "label": "obra e medições",
+          "label": "obra e entrega",
           "detail": "A construtora executa a obra conforme o contrato",
           "emoji": "🏗️",
           "bank": "Giro bancário para a diferença entre compra e recebimento"
@@ -427,7 +427,7 @@
           },
           "cash": {
             "emoji": "💵",
-            "label": "terreno, projeto e licenças pagos antes de qualquer venda"
+            "label": "terreno, projeto e licenças antecedem a comercialização"
           }
         },
         {
@@ -440,7 +440,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "pagamento do comprador, que depende do financiamento dele"
+            "label": "pagamento do comprador, que depende da capacidade de pagamento e do repasse"
           }
         },
         {
@@ -853,7 +853,7 @@
           "label": "terreno acessos e demanda",
           "detail": "Terreno bem localizado e com acessos sustenta o projeto",
           "emoji": "📍",
-          "bank": "Giro bancário para a fase de projeto e licença"
+          "bank": "Giro bancário, se houver diferença entre pagar projeto e licença e receber; a documentar"
         },
         {
           "id": "1",
@@ -901,7 +901,7 @@
           },
           "cash": {
             "emoji": "🧾",
-            "label": "custo de adequação pago pela empresa; medição ou aceite libera o recebimento"
+            "label": "custo da adequação sai antes; o caixa depende da entrega aceita pelo ocupante"
           }
         },
         {
@@ -1838,7 +1838,7 @@
           "label": "clínquer e moagem",
           "detail": "Forno térmico faz o clínquer; depois vêm moagem com adições e armazenagem",
           "emoji": "🏭",
-          "bank": "Financiamento de manutenção pesada e descarbonização"
+          "bank": "Investimento em manutenção pesada e descarbonização, que exigem prazo longo; pagar pelo caixa gerado"
         },
         {
           "id": "2",
@@ -1849,8 +1849,8 @@
         },
         {
           "id": "3",
-          "label": "concreteira revenda e obra",
-          "detail": "Concreteira, revenda e obra compram o cimento",
+          "label": "Revendedores e compradores de cimento",
+          "detail": "Compradores de cimento, a granel ou ensacado",
           "emoji": "🏪",
           "bank": "Cessão de recebíveis de revendedores, só de crédito comprovado"
         }
@@ -1892,7 +1892,7 @@
           },
           "cash": {
             "emoji": "💰",
-            "label": "pagamento de concreteiras e revendedores, quando recebe"
+            "label": "pagamento dos revendedores, quando recebe"
           }
         }
       ],
@@ -1901,7 +1901,7 @@
         "steps": [
           "Paga matéria-prima e combustível",
           "Produção e estoque prendem o caixa",
-          "Recebe de concreteiras e revendas"
+          "Recebe dos revendedores"
         ],
         "text": "O giro deve separar combustível, embalagem e recebíveis de revendedores. Parada de forno, combustível caro e demanda regional fraca pressionam o custo unitário, e produzir mais pode gerar estoque sem capacidade de escoamento. Não foram confirmadas linhas abertas, taxas, garantias ou elegibilidade."
       }
@@ -2837,9 +2837,9 @@
       "nodes": [
         {
           "id": "0",
-          "label": "vidro plano primário",
-          "detail": "Produção do vidro plano em forno contínuo",
-          "emoji": "🏭",
+          "label": "vidro bruto (compra)",
+          "detail": "Chapa de vidro bruto comprada para corte, têmpera e laminação",
+          "emoji": "🧊",
           "bank": "Giro bancário para o vidro bruto"
         },
         {
@@ -3336,12 +3336,12 @@
           "label": "projeto corte e montagem",
           "detail": "Projeto, corte e montagem das portas e janelas",
           "emoji": "📐",
-          "bank": "Financiamento de equipamento de corte e montagem"
+          "bank": "Financiamento de equipamento de corte e montagem, se o retorno por produtividade e menos refugo for comprovado"
         },
         {
           "id": "2",
-          "label": "transporte e instalação",
-          "detail": "Levar as peças prontas até a obra e montá-las no local, com custo de frete e mão de obra",
+          "label": "instalação",
+          "detail": "Montagem das esquadrias na obra, até a medição",
           "emoji": "🚚",
           "bank": "Giro bancário para a diferença entre compra e recebimento"
         },
