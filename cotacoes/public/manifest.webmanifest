@@ -1,6 +1,6 @@
 {
-  "name": "Painel Especialista",
-  "short_name": "Painel Especialista",
+  "name": "PEME · Painel Especializado no Mercado",
+  "short_name": "PEME",
   "description": "Câmbio (USD, EUR, JPY, CNH), juros, curvas, SOFR, Focus e agenda de mercado.",
   "lang": "pt-BR",
   "start_url": "./",
