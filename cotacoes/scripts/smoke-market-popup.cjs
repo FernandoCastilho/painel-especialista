@@ -60,6 +60,25 @@ const intraday={generatedAt:instant.getTime(),series:Object.fromEntries(['USD','
   assert.equal(await modal.evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'sem overflow horizontal no modal')
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
   await modal.screenshot({path:out+'/'+width+'-'+theme+'.png'})
+  if(width===1280){
+   for(const viewport of [{width:1366,height:650},{width:1170,height:635},{width:1024,height:600}]){
+    await p.setViewportSize(viewport)
+    const layout=await modal.evaluate(e=>{
+     const bounds=e.getBoundingClientRect()
+     const visible=[...e.querySelectorAll('.mp-card,.mp-summary,.mp-footnote')].every(item=>{
+      const rect=item.getBoundingClientRect()
+      return rect.top>=bounds.top&&rect.bottom<=bounds.bottom&&rect.left>=bounds.left&&rect.right<=bounds.right
+        &&item.scrollHeight<=item.clientHeight+1&&item.scrollWidth<=item.clientWidth+1
+     })
+     return {visible,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight,top:bounds.top,bottom:bounds.bottom}
+    })
+    const size=viewport.width+'x'+viewport.height
+    assert.ok(layout.visible&&layout.scrollHeight<=layout.clientHeight+1&&layout.top>=0&&layout.bottom<=viewport.height,
+     size+' exibe cartões, resumo e rodapé sem rolagem: '+JSON.stringify(layout))
+    await modal.screenshot({path:out+'/'+size+'-'+theme+'.png'})
+   }
+   await p.setViewportSize({width,height:900})
+  }
   // O botão permanece alcançável após rolar, com alvo de pelo menos 44px.
   await modal.evaluate(e=>e.scrollTop=e.scrollHeight)
   const box=await modal.getByRole('button',{name:'Fechar panorama'}).boundingBox()
