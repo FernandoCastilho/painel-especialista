@@ -229,7 +229,7 @@ async function fillScenario(page, section, route) {
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /Para outras origens ou dúvida, a simulação fica bloqueada/)
     await section.locator('#fm-finame-eligible').check()
-    assert.equal(await section.locator('.fm-destaques .fm-kpi').count(), 4, 'números principais à vista, sem abrir a composição')
+    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 6, 'números principais à vista, sem abrir a composição')
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()

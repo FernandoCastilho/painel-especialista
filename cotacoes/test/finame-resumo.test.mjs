@@ -26,7 +26,11 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   // Todo destaque existe na lista de quadros da tela.
   for (const id of FINAME_DESTAQUES) assert.match(source, new RegExp(`\\{ id: '${id}', rotulo: '`))
   // A mesma função desenha o topo e a composição: rótulo, valor e nota não podem divergir.
-  assert.match(source, /className="fm-destaques-grade">\{destaquesFiname\(quadros\)\.map\(quadro\)\}/)
+  assert.match(source, /className="fm-summary-row"/)
+  assert.match(source, /quadros.find\(item => item.id === id\)/)
+  assert.match(source, /Taxa de referência/)
+  assert.match(source, /Primeira parcela após carência/)
+  assert.match(source, /brl\(res.total\)/)
   assert.match(source, /<details className="fm-details"><summary>Composição do resultado · \{custo\.toUpperCase\(\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
   assert.doesNotMatch(source, /<details className="fm-details" open/)
   // A faixa azul não aparece sozinha: só junto da comparação.
