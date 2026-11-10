@@ -241,6 +241,6 @@ export function ageText(ageMs) {
 
 export const SHORTCUTS = [
   ['Ctrl + Shift + F', 'Buscar em todo o painel; o botão Buscar também está disponível no celular'],
-  ['Alt + 1 … 9, 0', 'Mercado, Juros, Cenários, Notícias, BNDES, Setores, Calculadoras, Feriados, Aprender, Config'],
+  ['Alt + 1 … 9', DESK_TABS.filter(tab => !tab.oculto).map(tab => tab.label).join(', ')],
   ['Ctrl + ~  ou  Ctrl + "', 'Laser pointer (Alt + L também vale): liga e desliga (Esc também para). Ligado, o mouse segue normal: clique clica; arrastar risca; Ctrl + arrastar faz um retângulo; Shift + arrastar, uma seta. Tudo se apaga sozinho'],
 ]
