@@ -15,6 +15,17 @@ export function marketSlot(now = Date.now()) {
   if (hour < 9 || hour > 18 || (hour === 18 && minute > 0) || !isBusinessDay(day, 'CIVBR')) return null
   return { key: `${day}T${p.hour}`, day, hour }
 }
+// O Panorama não abre mais sozinho: a edição da hora só acende um ponto no botão "Panorama do dia" do Mercado.
+// Momento de uma abertura manual: a edição da hora, quando houver; fora do horário das edições, só o dia de Brasília,
+// e o Panorama abre do mesmo jeito, com os últimos dados de cada fonte.
+export function marketMoment(now = Date.now()) {
+  const slot = marketSlot(now)
+  if (slot) return slot
+  const date = new Date(now)
+  return Number.isFinite(date.getTime()) ? { key: null, day: dayFormatter.format(date), hour: null } : null
+}
+// Há edição da hora ainda não aberta? Fora do horário das edições, nunca.
+export const marketEditionPending = (now, storage, memory) => !seenMarketSlot(marketSlot(now), storage, memory)
 export function seenMarketSlot(slot, storage, memory = new Set()) {
   if (!slot) return true
   if (memory.has(slot.key)) return true

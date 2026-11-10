@@ -42,21 +42,45 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
     assert.equal(new Set(FONTES.map((fonte) => fonte.id)).size, FONTES.length, 'catálogo não duplica fonte por id')
     const expectedSources = FONTES.map((fonte) => fonte.nome)
     assert.equal(new Set(expectedSources).size, expectedSources.length, 'catálogo não duplica nome de fonte')
-    // aviso de entrada: aparece a cada abertura do app, fecha com o botão e não volta ao trocar de aba
+    // aviso de entrada: aparece na primeira visita, não volta nas seguintes, volta se o texto mudar e continua acessível pelo "i"
     for (const width of [390, 1280]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
       await ctx.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }))
       const p = await offline(await ctx.newPage())
       await p.goto(base + '/#resumo')
-      const aviso = p.getByRole('dialog', { name: 'Aviso' }); await aviso.waitFor()
-      assert.match(await aviso.innerText(), /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não é recomendação de crédito[\s\S]*Quase ao vivo[\s\S]*Diário[\s\S]*Manual/i)
+      const aviso = p.getByRole('dialog', { name: 'Aviso', exact: true }); await aviso.waitFor()
+      const texto = /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não é recomendação de crédito[\s\S]*Quase ao vivo[\s\S]*Diário[\s\S]*Manual/i
+      assert.match(await aviso.innerText(), texto)
       // linha das novidades da semana logo abaixo do aviso, antes do botão (o conteúdo depende da data; só confere a estrutura)
       const nov = aviso.locator('.aviso-novidades'); if (await nov.count()) { assert.match(await nov.innerText(), /NOVIDADES DA SEMANA|Novidades da semana/i); assert.ok((await nov.locator('li').count()) <= 4) }
       const box = await aviso.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800, 'aviso cabe na tela')
+      assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), null, 'só marca como lido ao fechar')
       await aviso.getByRole('button', { name: 'Entendi' }).click(); await aviso.waitFor({ state: 'hidden' })
-      await p.goto(base + '/#juros'); assert.equal(await p.getByRole('dialog', { name: 'Aviso' }).count(), 0, 'não reaparece ao trocar de aba')
-      await p.reload(); await p.getByRole('dialog', { name: 'Aviso' }).waitFor()
-      await p.keyboard.press('Escape'); await p.getByRole('dialog', { name: 'Aviso' }).waitFor({ state: 'hidden' })
+      const marca = await p.evaluate(() => localStorage.getItem('aviso-inicial-visto'))
+      assert.match(marca, /^v1-[0-9a-f]{8}$/, 'marca tirada do texto do aviso')
+      await p.goto(base + '/#juros'); assert.equal(await aviso.count(), 0, 'não reaparece ao trocar de aba')
+      // segunda visita: nenhum pop-up
+      await p.reload(); await p.locator('main#conteudo').waitFor(); await p.waitForTimeout(1500)
+      assert.equal(await p.locator('dialog:modal').count(), 0, 'segunda visita sem aviso')
+      // o conteúdo continua a um clique, pela janela do "i" (presente em todas as telas)
+      await p.getByRole('button', { name: 'Informações e avisos gerais' }).filter({ visible: true }).first().click()
+      const info = p.getByRole('dialog', { name: 'Informações e avisos gerais' }); await info.waitFor()
+      const rever = info.getByRole('button', { name: 'Ver o aviso de entrada' })
+      await rever.scrollIntoViewIfNeeded()
+      assert.ok((await rever.boundingBox()).height >= 44, 'link do aviso com alvo de 44px')
+      await rever.click(); await aviso.waitFor()
+      assert.match(await aviso.innerText(), texto)
+      const again = await aviso.boundingBox(); assert.ok(again.x >= 0 && again.x + again.width <= width && again.y >= 0 && again.y + again.height <= 800, 'aviso reaberto cabe na tela')
+      await p.keyboard.press('Escape'); await aviso.waitFor({ state: 'hidden' })
+      assert.equal(await info.isVisible(), true, 'volta para a janela de avisos')
+      await info.getByRole('button', { name: 'Fechar' }).click(); await info.waitFor({ state: 'hidden' })
+      // marca de outro texto (o aviso mudou desde a última visita): volta uma vez e regrava a marca atual
+      await p.evaluate(() => localStorage.setItem('aviso-inicial-visto', 'v1-00000000'))
+      await p.reload(); await aviso.waitFor()
+      await p.keyboard.press('Escape'); await aviso.waitFor({ state: 'hidden' })
+      assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), marca)
+      await p.reload(); await p.locator('main#conteudo').waitFor(); await p.waitForTimeout(1500)
+      assert.equal(await p.locator('dialog:modal').count(), 0, 'lido de novo, não volta')
       await ctx.close()
     }
     // Juros: sem Reino Unido e com a bandeira de cada país nas linhas e nos títulos dos gráficos

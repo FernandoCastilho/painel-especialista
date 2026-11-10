@@ -33,8 +33,8 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       await tile.click()
       await p.waitForURL('**/#calculadora/giro')
       const sec = p.locator('section.cx[aria-labelledby="calc-h"]'); await sec.waitFor()
-      const help = async (title, content) => {
-        await p.getByRole('button', { name: `Ajuda: ${title}`, exact: true }).click()
+      const help = async (title, content, scope = p) => {
+        await scope.getByRole('button', { name: `Ajuda: ${title}`, exact: true }).click()
         const dialog = p.getByRole('dialog', { name: title, exact: true }); await dialog.waitFor()
         if (content) assert.match(await dialog.innerText(), content)
         await p.keyboard.press('Escape'); await dialog.waitFor({ state: 'hidden' })
@@ -122,9 +122,15 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       await fm.locator('#fm-finame-eligible').check()
       if (!(await fm.locator('.fm-grade').isVisible())) await fm.locator('.fm-details > summary').click()
       await fm.locator('.fm-grade').waitFor()
-      const kpiBox = (nome) => fm.locator('.fm-kpi', { has: p.locator('span.fm-rotulo', { hasText: new RegExp(`^${nome}\\s*\\??$`) }) })
+      // Os quadros completos ficam em "Composição do resultado"; os principais se repetem, idênticos, no topo do resultado.
+      const composicao = fm.locator('.fm-details'), destaques = fm.locator('.fm-destaques')
+      const kpiBox = (nome, area = composicao) => area.locator('.fm-kpi', { has: p.locator('span.fm-rotulo', { hasText: new RegExp(`^${nome}\\s*\\??$`) }) })
       const kpi = async (nome) => (await kpiBox(nome).locator('b').innerText())
-      await help('Taxa final', /14,17% TFC \+ 1,25% BNDES \+ 3,00% spread da instituição/)
+      assert.equal(await fm.locator('.fm-hero').count(), 0, 'sem comparação não há faixa "Cotação comparativa" vazia')
+      for (const nome of ['Taxa final', 'Parcelas', 'Juros totais', 'Pagamento final']) assert.equal(await kpiBox(nome, destaques).innerText(), await kpiBox(nome).innerText(), `destaque "${nome}" idêntico à composição`)
+      assert.equal(await destaques.locator('.fm-kpi').count(), 4)
+      await help('Taxa final', /14,17% TFC \+ 1,25% BNDES \+ 3,00% spread da instituição/, destaques)
+      await help('Taxa final', /14,17% TFC \+ 1,25% BNDES \+ 3,00% spread da instituição/, composicao)
       assert.match(await kpiBox('Spread da instituição').innerText(), /3,00% a\.a\.\s+\+3,4\d p\.p\./)
       // explicações no "?" ao lado do rótulo: abrem e fecham
       await help('Custo financeiro', /Taxa Fixa Composta/)
@@ -155,7 +161,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       const taxaCap = await kpi('Taxa final')
       await fm.getByRole('button', { name: 'Somada' }).click()
       assert.notEqual(await kpi('Taxa final'), taxaCap, 'composição somada muda a taxa')
-      await help('Taxa final', /somadas/)
+      await help('Taxa final', /somadas/, composicao)
       await fm.getByRole('button', { name: 'Capitalizada' }).click(); assert.equal(await kpi('Taxa final'), taxaCap)
       assert.equal(await fm.getByLabel('Diária (% ao dia)', { exact: true }).count(), 0, 'não permite inventar alíquota')
       await fm.locator('#fm-finame-eligible').uncheck()
