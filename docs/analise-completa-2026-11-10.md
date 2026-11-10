@@ -77,7 +77,7 @@ Saúde conferida hoje: o painel monta, 1.654 testes passam, conferência de esti
 - **Termos de uso das fontes, a confirmar com jurídico**: Banco do Japão (declarado "uso não comercial"), Yahoo Finance, Google Tradutor, manchetes via Google Notícias, Forex Factory, taxas da B3 pelo site, quadro da TradingView, redistribuição da AwesomeAPI.
 - **Dados que saem para terceiros**: nenhum dado de cliente sai sozinho, mas o endereço de rede de cada usuário vai a cerca de 8 serviços; link colado em "Apresentar" vai ao microlink.io; o contador de audiência é público.
 - **Custo**: as rotinas são gratuitas enquanto o repositório for público. Se virar privado, a estimativa é de mais de 15 mil minutos por mês, o que passa a custar.
-- **Ramo antigo publica em produção**: `pages.yml:5` aceita também `claude/obsidian-plugin-analysis-bagjz3`.
+- **Nome do ramo principal**: o ramo principal do repositório chama-se `claude/obsidian-plugin-analysis-bagjz3` (não existe `main`), embora `pages.yml:5` cite os dois. Funciona, mas o nome confunde; renomear é decisão do Fernando.
 - **Dado a conferir na fonte**: histórico do dólar com pontos em domingos (18/10 e 08/11) e salto de 4,96 para 5,37 entre 23/10 e 26/10.
 
 ## O que foi conferido
