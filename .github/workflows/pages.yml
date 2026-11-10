@@ -126,6 +126,9 @@ jobs:
         timeout-minutes: 5
         env:
           FOCUS_WEEKLY: ${{ github.event.schedule == '30 11 * * 1,2' }}
+      - name: Registrar o histórico do Focus renovado na conferência semanal
+        if: github.event.schedule == '30 11 * * 1,2'
+        run: node scripts/accept-focus-history.mjs "$RUNNER_TEMP/weekly-data-snapshot.json"
       - name: Coletar notícias
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
         run: node scripts/fetch-news.mjs
