@@ -3,6 +3,7 @@
 // Aviso honesto: o painel é uma página pública; isto registra e filtra quem usa o site normalmente,
 // mas não é uma trava de segurança contra quem sabe mexer no navegador.
 import { ACESSO_URL } from './acessoConfig.js'
+import { SITE_HOST } from './acessos.js'
 
 export const CHAVE = 'painel-acesso'
 const FORMATO = /^[^\s@<>()[\],;:"\\]+@[^\s@<>()[\],;:"\\]+\.[^\s@<>()[\],;:"\\]{2,}$/
@@ -11,8 +12,9 @@ export const normalizarEmail = (v) => String(v ?? '').trim().toLowerCase()
 export const emailValido = (v) => { const e = normalizarEmail(v); return e.length <= 254 && FORMATO.test(e) }
 export const codigoValido = (v) => /^\d{6}$/.test(String(v ?? '').trim())
 
-// A tela só vale com o script configurado, fora de navegador automatizado (testes) e do ambiente de desenvolvimento.
-export const exigirAcesso = ({ url = ACESSO_URL, webdriver = typeof navigator !== 'undefined' && navigator.webdriver } = {}) => !!url && !webdriver
+// A tela só vale no endereço publicado do painel, com o script configurado e fora de navegador automatizado.
+// No computador do desenvolvedor, nas prévias e nos testes automáticos o painel abre direto.
+export const exigirAcesso = ({ url = ACESSO_URL, hostname = typeof location !== 'undefined' ? location.hostname : '', webdriver = typeof navigator !== 'undefined' && navigator.webdriver } = {}) => !!url && hostname === SITE_HOST && !webdriver
 
 export function lerAcesso(storage = typeof localStorage !== 'undefined' ? localStorage : null) {
   try {

@@ -17,10 +17,13 @@ test('código: exatamente 6 números', () => {
   for (const ruim of ['12345', '1234567', 'abcdef', '12 345', '']) assert.equal(codigoValido(ruim), false)
 })
 
-test('tela só liga com o endereço do script e fora de navegador automatizado', () => {
-  assert.equal(exigirAcesso({ url: '', webdriver: false }), false)
-  assert.equal(exigirAcesso({ url: 'https://script.google.com/x/exec', webdriver: true }), false)
-  assert.equal(exigirAcesso({ url: 'https://script.google.com/x/exec', webdriver: false }), true)
+test('tela só liga no endereço publicado, com o endereço do script e fora de navegador automatizado', () => {
+  const u = 'https://script.google.com/x/exec'
+  const h = 'fernandocastilho.github.io'
+  assert.equal(exigirAcesso({ url: '', hostname: h, webdriver: false }), false)
+  assert.equal(exigirAcesso({ url: u, hostname: h, webdriver: true }), false)
+  assert.equal(exigirAcesso({ url: u, hostname: '127.0.0.1', webdriver: false }), false, 'testes e prévia locais abrem direto')
+  assert.equal(exigirAcesso({ url: u, hostname: h, webdriver: false }), true)
 })
 
 test('acesso guardado: lê, grava, limpa e ignora lixo', () => {
