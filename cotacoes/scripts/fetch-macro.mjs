@@ -1,7 +1,7 @@
 import { preserveFocus } from './focus-collector.mjs'
 // Coleta CDI, Selic, PTAX e Boletim Focus (Banco Central) e grava public/macro.json. Rodado a cada hora pelo GitHub Actions.
 import { mkdir, writeFile } from 'node:fs/promises'
-import { fillFromPrevious, loadPrevious } from './prev-lib.mjs'
+import { fillFromPrevious, loadPreviousOrFail } from './prev-lib.mjs'
 import { changePoints, focusFor, focusRelease, parseSgs, parseSofr, parseSofrAvg, ptaxFrom, toBr, windows } from './macro-lib.mjs'
 
 const SGS = (code, a, b) => `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${code}/dados?formato=json&dataInicial=${a}&dataFinal=${b}`
@@ -57,7 +57,8 @@ const out = { generatedAt: Date.now(), cdi: [], selic: [], sofr: [], sofrAvg: []
 }
 
 // Focus: coleta semanal (segunda/terça 08:30, com o vigia de 30 em 30 min em focus.yml) e manual/push; as coletas de hora em hora não tocam no Focus.
-const previous = await loadPrevious('macro.json')
+// Se o macro.json publicado existe mas não pôde ser lido, a coleta para aqui: publicar sem ele apagaria o Focus do painel.
+const previous = await loadPreviousOrFail('macro.json')
 const scheduled = process.env.GITHUB_EVENT_NAME === 'schedule'
 if (!scheduled) {
   const since = new Date(now.getTime() - 21 * 864e5).toISOString().slice(0, 10)

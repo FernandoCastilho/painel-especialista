@@ -80,6 +80,9 @@ jobs:
       # Declaração de uso dos dados do Banco do Japão (decisão do responsável pelo projeto, 27/10/2026): uso não comercial.
       # Hoje só habilita o leitor opcional de comunicados em PDF; a taxa do BoJ vem do BIS e não depende desta variável.
       POLICY_BOJ_USE: noncommercial
+      # Saída de emergência (variável do repositório, normalmente ausente): com "true", um arquivo publicado ilegível volta a ser
+      # tratado como inexistente em macro, curvas e histórico do Focus. Ver docs/publicacao-e-calendario.md.
+      PREV_IGNORAR_ILEGIVEL: ${{ vars.PREV_IGNORAR_ILEGIVEL }}
     defaults:
       run:
         working-directory: cotacoes
@@ -118,9 +121,9 @@ jobs:
         timeout-minutes: 5
       - name: Histórico do Focus (52 semanas; de hora em hora só preserva o publicado)
         if: github.event.schedule != '0 11,18 * * *'
+        # Sem "continuar em caso de erro": o arquivo não está no git. Se o passo falhasse e a publicação seguisse, o histórico sumiria do site.
         run: node scripts/fetch-focus-history.mjs
-        continue-on-error: true
-        timeout-minutes: 3
+        timeout-minutes: 5
         env:
           FOCUS_WEEKLY: ${{ github.event.schedule == '30 11 * * 1,2' }}
       - name: Coletar notícias
