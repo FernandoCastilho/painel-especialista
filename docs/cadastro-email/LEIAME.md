@@ -8,6 +8,7 @@
 - `Liberados`: preenchida sozinha. Cada e-mail que confirmou o código aparece uma vez, com a data do primeiro cadastro.
 - `Acessos`: o histórico completo (cadastros e visitas).
 - `Bloqueados`: para barrar alguém, escreva o e-mail na coluna A (a linha 1 é o título). A pessoa deixa de receber código e é barrada na próxima vez que abrir o painel. Para desbloquear, apague a linha. Apagar alguém de `Liberados` não barra: a pessoa volta a aparecer quando confirmar de novo.
+- `Entrada direta`: quem estiver aqui (um e-mail por linha na coluna A) entra sem código: digita o e-mail e o painel abre. A entrada continua registrada em `Acessos`. Atenção: qualquer pessoa que digitar um desses e-mails entra, então use só para quem você confia e lembre que não há conferência de identidade. `Bloqueados` vale mais que esta aba.
 - As abas que faltarem são criadas na primeira vez.
 
 ## O que ligar (uma vez, uns 5 minutos)

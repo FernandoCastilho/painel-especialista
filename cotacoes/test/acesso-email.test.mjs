@@ -51,7 +51,7 @@ test('chamada ao script: monta o endereço e trata falha de rede sem liberar o a
 })
 
 // ---- Script do Google, rodado com peças simuladas ----
-function criarScript({ bloqueados = [] } = {}) {
+function criarScript({ bloqueados = [], diretos = [] } = {}) {
   const cache = new Map()
   const props = new Map()
   const emails = []
@@ -64,6 +64,7 @@ function criarScript({ bloqueados = [] } = {}) {
     abas.set(nome, aba)
     return aba
   }
+  const dir = novaAba('Entrada direta'); dir.appendRow(['E-mail sem código']); diretos.forEach((e) => dir.appendRow([e]))
   const bloq = novaAba('Bloqueados'); bloq.appendRow(['E-mail bloqueado']); bloqueados.forEach((e) => bloq.appendRow([e]))
   const ambiente = {
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType: () => ({ texto: t }) }) },
@@ -157,4 +158,19 @@ test('script: e-mail bloqueado não recebe código; quem é bloqueado depois per
   const antes = s.linhas.length
   assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: t.token }).ok, false)
   assert.equal(s.linhas.length, antes)
+})
+
+test('script: e-mail da aba Entrada direta entra sem código, fica registrado e pode ser bloqueado', () => {
+  const s = criarScript({ diretos: ['Colega@Banco.com.br'] })
+  const r = s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' })
+  assert.equal(r.ok, true)
+  assert.ok(r.token, 'devolve a assinatura na hora')
+  assert.equal(s.emails.length, 0, 'nenhum código enviado')
+  assert.equal(s.linhasDe('Liberados')[0][0], 'colega@banco.com.br')
+  assert.equal(s.linhas.at(-1)[2], 'entrada direta')
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'colega@banco.com.br', token: r.token }).ok, true)
+  const outro = s.chamarScript({ acao: 'pedir', email: 'outro@banco.com.br' })
+  assert.equal(outro.token, undefined, 'quem não está na aba recebe código')
+  s.bloq.appendRow(['colega@banco.com.br'])
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' }).ok, false, 'bloqueio vale mais que entrada direta')
 })

@@ -44,6 +44,7 @@ export default function AcessoPorEmail({ children }) {
     const r = await pedirCodigo(email)
     setOcupado(false)
     if (!r.ok) { setErro(r.erro || 'Não foi possível enviar o código.'); return }
+    if (r.token) { entrar({ email: normalizarEmail(email), token: r.token }); return } // e-mail com entrada direta: sem código
     setEmail(normalizarEmail(email)); setCodigo(''); setEtapa('codigo'); setEspera(ESPERA_REENVIO)
   }
 
@@ -55,7 +56,10 @@ export default function AcessoPorEmail({ children }) {
     const r = await confirmarCodigo(email, codigo)
     setOcupado(false)
     if (!r.ok || !r.token) { setErro(r.erro || 'Código incorreto.'); return }
-    const novo = { email, token: r.token }
+    entrar({ email, token: r.token })
+  }
+
+  function entrar(novo) {
     guardarAcesso(novo)
     setAcesso(novo)
   }

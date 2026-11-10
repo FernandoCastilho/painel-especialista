@@ -2,7 +2,7 @@
 // Cola-se dentro da planilha: Extensões > Apps Script. Passo a passo em LEIAME.md.
 // Faz quatro coisas: envia o código de 6 números para qualquer e-mail, confere o código,
 // anota quem confirmou na aba "Liberados" (sem precisar de aprovação) e registra cada entrada na aba "Acessos".
-// Para barrar alguém, ponha o e-mail na aba "Bloqueados".
+// Para barrar alguém, ponha o e-mail na aba "Bloqueados". Quem está na aba "Entrada direta" entra sem código.
 
 // Deixe vazio se o script foi colado dentro da planilha (Extensões > Apps Script).
 // Preencha com o código da planilha (o trecho entre /d/ e /edit no endereço dela) se o script for um projeto separado.
@@ -38,6 +38,11 @@ function pedir_(emailBruto) {
   var email = normalizar_(emailBruto)
   if (!emailValido_(email)) return { ok: false, erro: 'E-mail inválido.' }
   if (bloqueado_(email)) return { ok: false, erro: MSG_BLOQUEADO }
+  if (entradaDireta_(email)) {
+    liberar_(email)
+    registrar_('entrada direta', email)
+    return { ok: true, token: token_(email) }
+  }
   var lock = LockService.getScriptLock()
   lock.waitLock(10000)
   try {
@@ -111,6 +116,12 @@ function liberar_(email) {
 // não recebe código e é barrado na próxima abertura do painel. Para desbloquear, apague a linha.
 function bloqueado_(email) {
   return contem_(aba_('Bloqueados', ['E-mail bloqueado']), email)
+}
+
+// Aba "Entrada direta": um e-mail por linha na coluna A. Quem estiver aqui entra sem código:
+// digita o e-mail e o painel abre. Cada entrada continua registrada em "Acessos".
+function entradaDireta_(email) {
+  return contem_(aba_('Entrada direta', ['E-mail sem código']), email)
 }
 
 function contem_(aba, email) {
