@@ -92,7 +92,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
     bndes: taxaBndes !== null && taxaBndes <= 100 ? null : 'Informe a taxa do BNDES em % a.a.',
     agente: taxaAgente !== null && taxaAgente <= 100 ? null : 'Informe o spread da instituição em % a.a.',
     tac: tac.ok ? null : tac.error || 'Informe a TAC em R$ (zero se não houver).',
-    fgi: !fgiOn ? null : PORTES.find((p) => p.id === porte)?.mpme === false ? 'O FGI atende micro, pequenas e médias empresas. Para grande empresa, desmarque a garantia.' : erroPercentualFgi(fgiPct ?? Number.NaN),
+    fgi: !fgiOn ? null : PORTES.find((p) => p.id === porte)?.mpme === false ? 'O FGI atende micro, pequenas e médias empresas (receita bruta de até R$ 300 milhões no ano anterior). Para grande empresa, desmarque a garantia.' : erroPercentualFgi(fgiPct ?? Number.NaN),
     iof: finameEligible ? null : 'Confirme os recursos FINAME elegíveis ao art. 8º, IX. Outras origens exigem análise tributária antes da simulação.',
   }
   const garantiaFgi = fgiOn && !erros.fgi ? { percentual: fgiPct, incorporar: fgiIncorporar, periodos: fgiPeriodos } : null

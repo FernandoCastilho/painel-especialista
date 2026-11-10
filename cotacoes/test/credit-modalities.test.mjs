@@ -60,6 +60,10 @@ test('BNDES repete o motor BNDES, com os limites de prazo e carência', () => {
   assert.match(run(col('bndes', { bLine: 'tlp', bFgi: '80' })).error, /Retire a garantia do FGI: esta linha usa TLP capitalizada/)
   assert.match(run(col('bndes', { bFgi: '80' }), { ...shared, value: '25.000.000,00' }).error, /limitado a R\$\s*20\.000\.000,00 por cliente/)
   assert.equal(run(col('bndes'), { ...shared, value: '25.000.000,00' }).ok, true)
+  // Art. 7º, I: FGI só para MEI, micro, pequena e média empresa
+  assert.match(run(col('bndes', { bPorte: 'grande', bFgi: '80' })).error, /Retire a garantia do FGI: ela atende micro, pequenas e médias empresas/)
+  assert.equal(run(col('bndes', { bPorte: 'grande' })).ok, true)
+  assert.equal(run(col('bndes', { bPorte: 'mpme-nne', bFgi: '80' })).ok, true)
   assert.equal(run(col('bndes', { bLine: 'tlp' })).ok, true)
 })
 test('BNDES com carência paga juros e mantém o fluxo datado', () => {
