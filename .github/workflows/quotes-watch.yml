@@ -21,6 +21,10 @@ permissions:
 jobs:
   vigia:
     runs-on: ubuntu-latest
+    # Uma rodada por vez: duas agendas e o gatilho de fim de coleta podem coincidir, e duas rodadas juntas abririam duas pendências iguais.
+    concurrency:
+      group: quotes-watch
+      cancel-in-progress: false
     defaults:
       run:
         working-directory: cotacoes
@@ -73,8 +77,10 @@ jobs:
             }
             const title = 'Cotações paradas no pregão'
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
-            const open = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', per_page: 100 })
-            const prev = open.data.find((i) => i.title === title && !i.pull_request)
+            // Lê todas as páginas: com muitas pendências e pedidos abertos, a pendência antiga não pode sumir da busca.
+            const abertas = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'open', per_page: 100 })
+            const iguais = abertas.filter((i) => i.title === title && !i.pull_request)
+            const prev = iguais[0]
             if (process.env.ALERTA === 'true') {
               // Uma pendência só: enquanto ela estiver aberta, as rodadas seguintes do vigia não abrem outra nem comentam.
               if (prev) return core.info(`Pendência #${prev.number} já aberta; nada a fazer.`)
@@ -87,6 +93,9 @@ jobs:
               await github.rest.issues.create({ ...context.repo, title, body })
               await avisarTeams(`${title}. ${process.env.MOTIVO} ${run}`)
             } else if (process.env.ALERTA === 'false' && prev) {
-              await github.rest.issues.createComment({ ...context.repo, issue_number: prev.number, body: `Normalizado: as cotações voltaram a atualizar.\n\nExecução do vigia: ${run}` })
-              await github.rest.issues.update({ ...context.repo, issue_number: prev.number, state: 'closed', state_reason: 'completed' })
+              // Fecha todas as pendências com esse título, caso alguma duplicada tenha sido aberta.
+              for (const i of iguais) {
+                await github.rest.issues.createComment({ ...context.repo, issue_number: i.number, body: `Normalizado: as cotações voltaram a atualizar.\n\nExecução do vigia: ${run}` })
+                await github.rest.issues.update({ ...context.repo, issue_number: i.number, state: 'closed', state_reason: 'completed' })
+              }
             }

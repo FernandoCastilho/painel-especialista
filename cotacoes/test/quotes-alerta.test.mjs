@@ -75,7 +75,10 @@ async function rodarAviso(env, abertas = []) {
   const passo = yml('quotes-watch.yml').split('      - name: Avisar cotação parada no pregão')[1]
   const script = passo.split('          script: |\n')[1].split('\n').map((l) => l.replace(/^ {12}/, '')).join('\n')
   const feito = { criadas: [], comentarios: [], fechadas: [], avisos: [], info: [] }
-  const github = { rest: { issues: { listForRepo: async () => ({ data: abertas }), create: async (i) => feito.criadas.push(i), createComment: async (c) => feito.comentarios.push(c), update: async (u) => feito.fechadas.push(u) } } }
+  // A busca vem em páginas de 2 para provar que o passo lê todas (github.paginate), e não só a primeira.
+  const listForRepo = async ({ page = 1 }) => ({ data: abertas.slice((page - 1) * 2, page * 2) })
+  const paginate = async (fn, args) => { const tudo = []; for (let page = 1; ; page++) { const { data } = await fn({ ...args, page }); if (!data.length) return tudo; tudo.push(...data) } }
+  const github = { paginate, rest: { issues: { listForRepo, create: async (i) => feito.criadas.push(i), createComment: async (c) => feito.comentarios.push(c), update: async (u) => feito.fechadas.push(u) } } }
   const core = { warning: (m) => feito.avisos.push(m), info: (m) => feito.info.push(m) }
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
   await new AsyncFunction('process', 'github', 'context', 'fetch', 'core', script)({ env }, github, { repo: { owner: 'fixture', repo: 'painel' }, serverUrl: 'https://github.com', runId: 11 }, () => { throw new Error('rede proibida no teste') }, core)
@@ -103,6 +106,14 @@ test('vigia: abre uma pendência só, não repete a cada rodada e fecha quando n
   const normal = await rodarAviso({ ALERTA: 'false', MOTIVO: 'cotações em dia' }, [{ number: 4, title: 'Cotações paradas no pregão' }, { number: 5, title: 'Outra' }])
   assert.deepEqual(normal.fechadas.map((f) => [f.issue_number, f.state]), [[4, 'closed']])
   assert.equal(normal.criadas.length, 0)
+  // Pendência antiga na terceira página da busca: continua sendo achada, então não abre outra.
+  const longe = [{ number: 1, title: 'A' }, { number: 2, title: 'B' }, { number: 3, title: 'C' }, { number: 6, title: 'PR', pull_request: {} }, { number: 4, title: 'Cotações paradas no pregão' }]
+  assert.equal((await rodarAviso({ ALERTA: 'true', MOTIVO }, longe)).criadas.length, 0)
+  // Se duas pendências iguais existirem, as duas fecham quando normaliza.
+  const duplicadas = await rodarAviso({ ALERTA: 'false', MOTIVO: 'cotações em dia' }, [{ number: 4, title: 'Cotações paradas no pregão' }, { number: 7, title: 'Cotações paradas no pregão' }])
+  assert.deepEqual(duplicadas.fechadas.map((f) => f.issue_number), [4, 7])
+  // Uma rodada do vigia por vez, sem cancelar a que está em andamento.
+  assert.match(w, /concurrency:\n {6}group: quotes-watch\n {6}cancel-in-progress: false/)
   const nada = await rodarAviso({ ALERTA: 'false', MOTIVO: 'cotações em dia' })
   assert.deepEqual([nada.criadas.length, nada.fechadas.length, nada.comentarios.length], [0, 0, 0])
 })
