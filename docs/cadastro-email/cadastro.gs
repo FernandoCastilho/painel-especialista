@@ -3,6 +3,10 @@
 // Faz quatro coisas: confere se o e-mail está na aba "Liberados", envia o código de 6 números por e-mail,
 // confere o código e registra quem entrou na aba "Acessos". E-mail fora da lista não recebe código.
 
+// Deixe vazio se o script foi colado dentro da planilha (Extensões > Apps Script).
+// Preencha com o código da planilha (o trecho entre /d/ e /edit no endereço dela) se o script for um projeto separado.
+var ID_PLANILHA = ''
+
 var LIMITE_PEDIDOS_POR_HORA = 5   // por e-mail
 var LIMITE_TENTATIVAS = 5         // por código
 var VALIDADE_CODIGO_S = 600       // 10 minutos
@@ -96,7 +100,7 @@ function visita_(emailBruto, token) {
 // Para tirar o acesso de alguém, apague a linha: a pessoa é barrada na próxima abertura do painel.
 // Se a aba não existir, ela é criada vazia e ninguém entra até você preencher.
 function liberado_(email) {
-  var planilha = SpreadsheetApp.getActiveSpreadsheet()
+  var planilha = planilha_()
   var aba = planilha.getSheetByName('Liberados')
   if (!aba) { aba = planilha.insertSheet('Liberados'); aba.appendRow(['E-mail liberado']); return false }
   var n = aba.getLastRow()
@@ -116,8 +120,12 @@ function token_(email) {
 }
 
 function registrar_(tipo, email) {
-  var planilha = SpreadsheetApp.getActiveSpreadsheet()
+  var planilha = planilha_()
   var aba = planilha.getSheetByName('Acessos')
   if (!aba) { aba = planilha.insertSheet('Acessos'); aba.appendRow(['Data e hora', 'E-mail', 'Tipo']) }
   aba.appendRow([new Date(), email, tipo])
+}
+
+function planilha_() {
+  return ID_PLANILHA ? SpreadsheetApp.openById(ID_PLANILHA) : SpreadsheetApp.getActiveSpreadsheet()
 }
