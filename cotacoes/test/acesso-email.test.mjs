@@ -51,22 +51,28 @@ test('chamada ao script: monta o endereço e trata falha de rede sem liberar o a
 })
 
 // ---- Script do Google, rodado com peças simuladas ----
-function criarScript({ liberados = ['ana@empresa.com', 'b@c.com', 'd@e.com'] } = {}) {
+function criarScript({ bloqueados = [], diretos = [] } = {}) {
   const cache = new Map()
   const props = new Map()
-  const linhas = []
   const emails = []
   let cota = 100
-  const lista = [...liberados]
-  const abaLiberados = { getLastRow: () => lista.length + 1, getRange: () => ({ getValues: () => lista.map((e) => [e]) }), appendRow() {} }
-  const abaAcessos = { appendRow: (r) => linhas.push(r) }
+  // Abas simuladas: cada uma guarda as linhas (a primeira é o título).
+  const abas = new Map()
+  const novaAba = (nome) => {
+    const rows = []
+    const aba = { rows, getLastRow: () => rows.length, appendRow: (r) => rows.push(r), getRange: (l, c, n) => ({ getValues: () => rows.slice(l - 1, l - 1 + n).map((r) => [r[c - 1]]) }) }
+    abas.set(nome, aba)
+    return aba
+  }
+  const dir = novaAba('Entrada direta'); dir.appendRow(['E-mail sem código']); diretos.forEach((e) => dir.appendRow([e]))
+  const bloq = novaAba('Bloqueados'); bloq.appendRow(['E-mail bloqueado']); bloqueados.forEach((e) => bloq.appendRow([e]))
   const ambiente = {
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType: () => ({ texto: t }) }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     CacheService: { getScriptCache: () => ({ get: (k) => cache.get(k) ?? null, put: (k, v) => cache.set(k, v), remove: (k) => cache.delete(k) }) },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props.get(k) ?? null, setProperty: (k, v) => props.set(k, v) }) },
     MailApp: { getRemainingDailyQuota: () => cota, sendEmail: (m) => { emails.push(m) } },
-    SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheetByName: (n) => (n === 'Liberados' ? abaLiberados : abaAcessos), insertSheet: () => abaAcessos }) },
+    SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheetByName: (n) => abas.get(n) ?? null, insertSheet: (n) => novaAba(n) }) },
     Utilities: {
       getUuid: () => Math.random().toString(16).slice(2),
       computeHmacSha256Signature: (msg, chave) => [...createHmac('sha256', chave).update(msg).digest()],
@@ -77,7 +83,8 @@ function criarScript({ liberados = ['ana@empresa.com', 'b@c.com', 'd@e.com'] } =
   vm.createContext(ambiente)
   vm.runInContext(readFileSync(new URL('../../docs/cadastro-email/cadastro.gs', import.meta.url), 'utf8'), ambiente)
   const chamarScript = (parameter) => JSON.parse(ambiente.doGet({ parameter }).texto)
-  return { chamarScript, emails, linhas, lista, setCota: (n) => { cota = n } }
+  const linhasDe = (nome) => (abas.get(nome)?.rows ?? []).slice(1)
+  return { chamarScript, emails, bloq, linhasDe, get linhas() { return linhasDe('Acessos') }, setCota: (n) => { cota = n } }
 }
 const codigoDoEmail = (emails) => emails.at(-1).body.match(/é (\d{6})\./)[1]
 
@@ -122,25 +129,48 @@ test('script: sem cota diária de e-mails avisa e não envia', () => {
   assert.equal(s.emails.length, 0)
 })
 
-test('script: e-mail fora da lista não recebe código; quem sai da lista perde o acesso', () => {
+test('script: qualquer e-mail recebe código e, ao confirmar, entra sozinho na aba Liberados (sem repetir)', () => {
   const s = criarScript()
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'Novo@X.com' }).ok, true)
+  assert.equal(s.emails.length, 1)
+  assert.equal(s.linhasDe('Liberados').length, 0, 'só pedir o código não libera')
+  const t = s.chamarScript({ acao: 'confirmar', email: 'novo@x.com', codigo: codigoDoEmail(s.emails) })
+  assert.equal(t.ok, true)
+  assert.equal(s.linhasDe('Liberados').length, 1)
+  assert.equal(s.linhasDe('Liberados')[0][0], 'novo@x.com')
+  assert.ok(s.linhasDe('Liberados')[0][1] instanceof Date)
+  s.chamarScript({ acao: 'pedir', email: 'novo@x.com' })
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'novo@x.com', codigo: codigoDoEmail(s.emails) }).ok, true)
+  assert.equal(s.linhasDe('Liberados').length, 1, 'segunda confirmação não duplica')
+  assert.equal(s.linhas.filter((l) => l[2] === 'cadastro').length, 2, 'cada confirmação fica registrada em Acessos')
+})
+
+test('script: e-mail bloqueado não recebe código; quem é bloqueado depois perde o acesso', () => {
+  const s = criarScript({ bloqueados: ['Estranho@x.com'] })
   const r = s.chamarScript({ acao: 'pedir', email: 'estranho@x.com' })
   assert.equal(r.ok, false)
-  assert.match(r.erro, /não está liberado/)
+  assert.match(r.erro, /bloqueado/)
   assert.equal(s.emails.length, 0, 'nenhum código enviado')
-  // liberado entra
-  s.chamarScript({ acao: 'pedir', email: 'ANA@empresa.com' })
+  s.chamarScript({ acao: 'pedir', email: 'ana@empresa.com' })
   const t = s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: codigoDoEmail(s.emails) })
   assert.equal(t.ok, true)
-  // sai da lista: a visita seguinte é recusada e não registra
-  s.lista.splice(s.lista.indexOf('ana@empresa.com'), 1)
+  s.bloq.appendRow(['ana@empresa.com'])
   const antes = s.linhas.length
   assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: t.token }).ok, false)
   assert.equal(s.linhas.length, antes)
 })
 
-test('script: lista vazia não libera ninguém', () => {
-  const s = criarScript({ liberados: [] })
-  assert.equal(s.chamarScript({ acao: 'pedir', email: 'ana@empresa.com' }).ok, false)
-  assert.equal(s.emails.length, 0)
+test('script: e-mail da aba Entrada direta entra sem código, fica registrado e pode ser bloqueado', () => {
+  const s = criarScript({ diretos: ['Colega@Banco.com.br'] })
+  const r = s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' })
+  assert.equal(r.ok, true)
+  assert.ok(r.token, 'devolve a assinatura na hora')
+  assert.equal(s.emails.length, 0, 'nenhum código enviado')
+  assert.equal(s.linhasDe('Liberados')[0][0], 'colega@banco.com.br')
+  assert.equal(s.linhas.at(-1)[2], 'entrada direta')
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'colega@banco.com.br', token: r.token }).ok, true)
+  const outro = s.chamarScript({ acao: 'pedir', email: 'outro@banco.com.br' })
+  assert.equal(outro.token, undefined, 'quem não está na aba recebe código')
+  s.bloq.appendRow(['colega@banco.com.br'])
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' }).ok, false, 'bloqueio vale mais que entrada direta')
 })
