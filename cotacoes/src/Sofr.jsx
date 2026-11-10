@@ -1,4 +1,5 @@
 import { nextChartIndex } from './chartNavigation.js'
+import { focoPorTeclado, limitarBalao, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import ChartComparison from './ChartComparison.jsx'
 import Flag from './Flag.jsx'
 import RefreshButton from './RefreshButton.jsx'
@@ -25,6 +26,7 @@ export default function SofrChart({ macro, range }) {
   const [ref, width] = useWidth()
   const [on, setOn] = useState(() => Object.fromEntries(SERIES.map((s) => [s.id, s.on])))
   const [hover, setHover] = useState(null)
+  const plotRef = useTocarFora(hover != null, setHover)
   const from = range.start.getTime()
   const to = range.end.getTime() + DAY
 
@@ -97,6 +99,7 @@ export default function SofrChart({ macro, range }) {
   }
   const onKey = e => { const next=nextChartIndex(e.key,hover,rows.length); if(next!=null){e.preventDefault();setHover(next)} }
   const hp = g && hover != null ? rows[hover] : null
+  const [tipRef, tipW] = useLarguraBalao(hp)
   const last = macro.sofr[macro.sofr.length - 1]
   const first = macro.sofr[0]
 
@@ -119,8 +122,8 @@ export default function SofrChart({ macro, range }) {
       </div>
       <div ref={ref}>
         {g ? (
-          <div className="plot" onPointerLeave={() => setHover(null)}>
-            <ChartComparison margin={M} rate frequency="day" series={SERIES.filter(s=>s.id!=='band' && on[s.id]).map(s=>({key:s.id,name:s.label,points:rows.filter(r=>r[s.id]!=null).map(r=>({t:r.t,v:r[s.id]}))}))} history={SERIES.filter(s=>s.id!=='band').map(s=>({key:s.id,points:(s.id==='raw' ? macro.sofr.map(r=>({t:r[0],v:r[1]})) : (macro.sofrAvg || []).map(r=>({t:r[0],v:r[{m30:1,m90:2,m180:3}[s.id]]}))).filter(p=>Number.isFinite(p.v))}))}><svg onFocus={() => setHover(0)} onKeyDown={onKey} viewBox={`0 0 ${width} ${H}`} width="100%" height={H} role="img" aria-label={`SOFR de ${fmtDate(g.t0, true)} a ${fmtDate(g.t1, true)}`} onPointerMove={onMove} onPointerDown={onMove}>
+          <div ref={plotRef} className="plot" onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
+            <ChartComparison margin={M} rate frequency="day" series={SERIES.filter(s=>s.id!=='band' && on[s.id]).map(s=>({key:s.id,name:s.label,points:rows.filter(r=>r[s.id]!=null).map(r=>({t:r.t,v:r[s.id]}))}))} history={SERIES.filter(s=>s.id!=='band').map(s=>({key:s.id,points:(s.id==='raw' ? macro.sofr.map(r=>({t:r[0],v:r[1]})) : (macro.sofrAvg || []).map(r=>({t:r[0],v:r[{m30:1,m90:2,m180:3}[s.id]]}))).filter(p=>Number.isFinite(p.v))}))}><svg onFocus={(e) => { if (focoPorTeclado(e)) setHover(0) }} onKeyDown={onKey} viewBox={`0 0 ${width} ${H}`} width="100%" height={H} role="img" aria-label={`SOFR de ${fmtDate(g.t0, true)} a ${fmtDate(g.t1, true)}`} onPointerMove={onMove} onPointerDown={onMove}>
               {g.yTicks.map((v) => (
                 <g key={v}>
                   <line x1={M.l} x2={width - M.r} y1={g.Y(v)} y2={g.Y(v)} className="gridline" />
@@ -136,7 +139,7 @@ export default function SofrChart({ macro, range }) {
               {hp && <line x1={g.X(hp.t)} x2={g.X(hp.t)} y1={M.t} y2={H - M.b} className="cross" pointerEvents="none" />}
             </svg></ChartComparison>
             {hp && (
-              <div className="tip" style={{ left: `${Math.min(Math.max((g.X(hp.t) / width) * 100, 20), 80)}%` }}>
+              <div ref={tipRef} className="tip" style={{ left: limitarBalao(g.X(hp.t), tipW, width) }}>
                 <strong>{fmtDate(hp.t, true)}</strong>
                 <span>SOFR {pct(hp.raw)}</span>
                 {on.m30 && hp.m30 != null && <span>Média 30 d {pct(hp.m30)}</span>}

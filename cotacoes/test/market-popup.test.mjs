@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { marketSlot, seenMarketSlot, rememberMarketSlot, marketFx, hourMarketChange, marketDi, marketBrent, marketSummary, marketTone, validMarketPoints } from '../src/marketPopup.js'
+import { readFileSync } from 'node:fs'
+import { marketSlot, marketMoment, marketEditionPending, seenMarketSlot, rememberMarketSlot, marketFx, hourMarketChange, marketDi, marketBrent, marketSummary, marketTone, validMarketPoints } from '../src/marketPopup.js'
 const time=s=>Date.parse(s)
 test('agenda em São Paulo: 9h a 18h e nenhuma edição fora da janela',()=>{
  assert.equal(marketSlot(time('2026-11-06T11:59:59Z')),null)
@@ -32,6 +33,37 @@ test('deduplicação por hora sobrevive ao recarregamento e ao armazenamento blo
  rememberMarketSlot(slot,blocked,memory)
  assert.equal(seenMarketSlot(slot,blocked,memory),true)
  assert.equal(seenMarketSlot(null,storage,memory),true)
+})
+test('abertura manual: usa a edição da hora ou, fora do horário, só o dia de Brasília',()=>{
+ assert.deepEqual(marketMoment(time('2026-11-06T13:35:00Z')),{key:'2026-11-06T10',day:'2026-11-06',hour:10})
+ assert.deepEqual(marketMoment(time('2026-11-06T23:30:00Z')),{key:null,day:'2026-11-06',hour:null})
+ assert.deepEqual(marketMoment(time('2026-11-07T15:00:00Z')),{key:null,day:'2026-11-07',hour:null})
+ assert.deepEqual(marketMoment(time('2026-11-07T01:00:00Z')),{key:null,day:'2026-11-06',hour:null},'dia de Brasília, não do navegador')
+ assert.equal(marketMoment(NaN),null)
+})
+test('ponto de edição nova: só em horário de edição, apaga ao abrir e reacende na hora seguinte',()=>{
+ const memory=new Set(), map=new Map(), storage={getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)}
+ const dez=time('2026-11-06T13:15:00Z'), onze=time('2026-11-06T14:05:00Z')
+ assert.equal(marketEditionPending(dez,storage,memory),true)
+ rememberMarketSlot(marketMoment(dez),storage,memory)
+ assert.equal(marketEditionPending(dez,storage,memory),false)
+ assert.equal(marketEditionPending(dez,storage,new Set()),false,'vale para a próxima visita')
+ assert.equal(marketEditionPending(onze,storage,memory),true)
+ assert.equal(marketEditionPending(time('2026-11-06T23:30:00Z'),storage,memory),false,'fora do horário não há edição')
+ assert.equal(marketEditionPending(time('2026-11-07T15:00:00Z'),storage,memory),false,'sábado')
+ assert.equal(marketEditionPending(time('2026-11-20T15:00:00Z'),storage,memory),false,'feriado nacional')
+})
+test('o Panorama nunca abre sozinho: só o botão do Mercado chama a abertura',()=>{
+ const read=name=>readFileSync(new URL('../src/'+name,import.meta.url),'utf8')
+ const popup=read('MarketPopup.jsx'), hook=read('usePanorama.js'), resumo=read('Resumo.jsx')
+ assert.doesNotMatch(popup,/setInterval|setTimeout|navigator\.locks|addEventListener|marketSlot/)
+ assert.match(popup,/if\(!open\|\|!el\)return undefined/)
+ // O relógio do gancho só atualiza o ponto; setAberto(true) existe apenas dentro de abrir().
+ assert.equal(hook.match(/setAberto\(true\)/g).length,1)
+ assert.match(hook,/const conferir = \(\) => setNova\(pendente\(\)\)/)
+ assert.doesNotMatch(hook,/conferir = [^\n]*setAberto/)
+ assert.match(resumo,/className="compare-trigger panorama-trigger sinal-novo-host"[^>]*onClick=\{panorama\.abrir\}/)
+ assert.match(resumo,/<span>Panorama do dia<\/span>/)
 })
 const now=time('2026-11-06T15:00:00Z')
 const q={bid:5.1,pct:1,timestamp:now,source:'USD'}

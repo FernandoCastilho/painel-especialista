@@ -11,6 +11,7 @@ import './MarketTerminal.css'
 import { accumulatedReturns, cnhPtaxCross, compatiblePtax, marketDate, ptaxLabel } from './marketReturns.js'
 import { quoteAgeState } from './quoteFreshness.js'
 import { nextChartIndex } from './chartNavigation.js'
+import { focoPorTeclado, saidaDeToque, useTocarFora } from './chartToque.js'
 import { dataTimestamp } from './dataTimestamp.js'
 import { comparisonSeries } from './comparisonSeries.js'
 import Expandable from './Expandable.jsx'
@@ -181,6 +182,7 @@ function MultiPlot({ series, width, intraday, history = series }) {
   const H = 240
   const M = { t: 12, r: 64, b: 28, l: 52 }
   const [hover, setHover] = useState(null)
+  const svgRef = useTocarFora(hover != null, setHover)
   const norm = series.map((s) => ({ ...s, pts: s.points.map((p) => ({ t: p.t, v: (p.bid / s.points[0].bid - 1) * 100, bid: p.bid })) }))
   const all = norm.flatMap((s) => s.pts)
   const t0 = Math.min(...all.map((p) => p.t))
@@ -211,7 +213,7 @@ function MultiPlot({ series, width, intraday, history = series }) {
     if (next != null) { e.preventDefault(); setHover(times[next]) }
   }
   return (
-    <><ChartComparison margin={M} series={series.map(s=>({key:s.code,name:s.code,points:s.points}))} history={history.map(s=>({key:s.code,points:s.points}))} unavailable={intraday ? 'A visão intradiária não contém histórico anual comparável.' : ''}><svg className="hist-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} onKeyDown={onKey} onFocus={() => setHover(t0)} aria-label="Variação percentual das moedas selecionadas no período; use setas, Home e End para consultar amostras" onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={() => setHover(null)} style={{ touchAction: 'pan-y' }}>
+    <><ChartComparison margin={M} series={series.map(s=>({key:s.code,name:s.code,points:s.points}))} history={history.map(s=>({key:s.code,points:s.points}))} unavailable={intraday ? 'A visão intradiária não contém histórico anual comparável.' : ''}><svg ref={svgRef} className="hist-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} onKeyDown={onKey} onFocus={(e) => { if (focoPorTeclado(e)) setHover(t0) }} aria-label="Variação percentual das moedas selecionadas no período; use setas, Home e End para consultar amostras" onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }} style={{ touchAction: 'pan-y' }}>
       {yTicks.map((v) => (
         <g key={v}>
           <line x1={M.l} x2={width - M.r} y1={y(v)} y2={y(v)} stroke="var(--line)" />
@@ -397,7 +399,7 @@ function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPre
 }
 
 // Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
-function MoedasPanel({ quotes, ptax, onOpen, colors, quoteRefresh, searchTarget }) {
+function MoedasPanel({ quotes, ptax, onOpen, colors, quoteRefresh, searchTarget, panorama }) {
   const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
   useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
   const daily = useCentralDaily()
@@ -423,6 +425,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, quoteRefresh, searchTarget 
         <div className="sec-head terminal-titlebar">
           <h2 id="r-moedas">Mercado hoje <Explain id="mercadoHoje" /> <button type="button" className="img-share" aria-label="Enviar imagem das últimas cotações de câmbio" title="Compartilha as últimas cotações de câmbio, sem gráficos ou petróleo" onClick={() => shareQuotesImage(quotes)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></button></h2>
           {quoteRefresh && <RefreshButton custom={quoteRefresh} label="cotações do câmbio" />}
+          {panorama && <button type="button" className="compare-trigger panorama-trigger sinal-novo-host" aria-label={panorama.nova ? 'Panorama do dia (edição nova)' : 'Panorama do dia'} aria-haspopup="dialog" title={panorama.nova ? 'Há uma edição nova do Panorama do dia. Abre só quando você pede.' : 'Abrir o Panorama do dia: câmbio, juros futuros e Brent em uma tela'} onClick={panorama.abrir}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-9" /></svg><span>Panorama do dia</span>{panorama.nova && <i className="sinal-novo" aria-hidden="true" />}</button>}
           <button type="button" ref={compareTrigger} className="compare-trigger" aria-label="Comparar moedas" aria-haspopup="dialog" aria-expanded={compareOpen} title="Montar comparação de moedas" onClick={() => setCompareOpen(true)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 3v18h18M5 16l5-7 4 4 6-9M5 10l5 4 5-7 5 9" /></svg><span>Comparar</span></button>
         </div>
         <div className="terminal-main">
@@ -529,7 +532,7 @@ function MarketNews({ bare = false }) {
   </aside>
 }
 // Mercado: cards de câmbio e juros, tabela de pares com manchetes e referência do Brent. Juros, curvas e agenda ficam nas próprias abas.
-export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, goto, status, quoteRefresh, searchTarget }) {
+export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, goto, status, quoteRefresh, searchTarget, panorama }) {
   const rates = rateTiles(macro?.data, curves?.data)
   const [rateOpen, setRateOpen] = useState(null)
   useDataFile('oil.json')
@@ -540,7 +543,7 @@ export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, go
     <div className="terminal-desk">
       <KpiRow quotes={quotes} rates={rates} ipca={ipcaSeries} ibov={indices.data} macro={macro?.data} colors={colors} onOpen={onOpen} onRate={setRateOpen} goto={goto} status={status} />
       {rateOpen && <Suspense fallback={null}><RateModal kind={rateOpen} macro={macro} curves={curves} onClose={() => setRateOpen(null)} /></Suspense>}
-      <div className="resumo desk-markets"><MoedasPanel searchTarget={searchTarget} quotes={quotes} ptax={ptax} onOpen={onOpen} colors={colors} quoteRefresh={quoteRefresh} /></div>
+      <div className="resumo desk-markets"><MoedasPanel searchTarget={searchTarget} quotes={quotes} ptax={ptax} onOpen={onOpen} colors={colors} quoteRefresh={quoteRefresh} panorama={panorama} /></div>
     </div>
   )
 }

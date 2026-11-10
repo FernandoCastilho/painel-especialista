@@ -2,6 +2,12 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '10/11/2026', resumo: 'Menos pop-ups: Panorama e Conceito do dia abrem só por clique, no Mercado; Finame mostra os números principais no topo do resultado', items: [
+    'Aviso de entrada: aparece na primeira vez neste aparelho e só volta quando o texto mudar. Para reler, abra o "i" (Informações e avisos gerais) e toque em "Ver o aviso de entrada".',
+    'Panorama do dia: não abre mais sozinho. Fica no botão "Panorama do dia", no topo do quadro Mercado hoje; um ponto no botão indica edição nova (dias úteis, das 9h às 18h).',
+    'Conceito do dia: não abre mais sozinho. Fica no botão "Conceito do dia" da faixa Aprender, no Mercado.',
+    'BNDES Finame Materiais: Taxa final, Parcelas, Juros totais e Pagamento final abrem o Resultado estimado, sem precisar abrir a Composição do resultado. A faixa "Cotação comparativa" só aparece ao comparar TFC e TFB. Nenhuma conta mudou.',
+  ] },
   { date: '09/11/2026', resumo: 'Calculadora BNDES Finame: TAC e garantia FGI no resultado; cronograma sem indexador e sem coluna de IOF', items: [
     'BNDES Finame Materiais: a TAC aparece ao lado do custo financeiro, editável e pré-preenchida com R$ 2.600,00; ela entra no pagamento final como despesa à vista.',
     'Nova opção no fim dos dados: garantia do FGI (Tradicional). O custo é o ECG, pela fórmula do Anexo V do Regulamento do FGI (Circular SUP/ADIG 65/2026): percentual garantido de 10% a 80%, fator K pelo prazo total e períodos de 30 dias. Pode ser financiado (incorporado ao saldo devedor) ou pago à vista. O FGI PEAC tem regras próprias e não é calculado.',

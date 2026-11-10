@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 test('FINAME bloqueia sem confirmação, libera zero e revoga ao trocar funding', async t => {
   const deps = { './BndesPresentation.jsx': { __esModule: true, default: () => null }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series: { C03: { points: [['2026-11-06', 10]] }, TFB_60_30: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] } } } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
-  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finameFunding', 'format']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
+  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finameFunding', 'finameResumo', 'format']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
