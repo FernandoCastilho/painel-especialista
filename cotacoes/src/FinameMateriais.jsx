@@ -9,7 +9,6 @@ import { keyOf, pointsOf } from './bndes.js'
 import { COMPOSICOES, CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, ecgFgi, erroPercentualFgi, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingAnnualRate, finameFundingOption, compareFinameFunding } from './finameFunding.js'
 import { nf } from './format.js'
-import { destaquesFiname } from './finameResumo.js'
 import Estado from './Estado.jsx'
 import { GLOSSARY } from './glossary.js'
 import Help from './CalculatorHelp.jsx'
@@ -34,7 +33,7 @@ export function FinameIcon() {
 // Calculadoras › BNDES Finame Materiais: condições do produto (prazo, carência, custo financeiro, taxas), resultado e fluxo
 // parcela a parcela. O custo financeiro vem do painel: TFC ou TFB da faixa de prazo (aba BNDES). TLP exigível tem projeção própria.
 // As explicações ficam no "?" ao lado de cada rótulo; na tela só os valores.
-export default function FinameMateriais({ onBack, onFundingView }) {
+export default function FinameMateriais({ onBack, onFundingView, profileControl }) {
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
   const macro = useMacro()
@@ -106,7 +105,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
 
   const ajuda = (label, texto) => (texto ? <Help label={`Ajuda: ${label}`}>{texto}</Help> : null)
   const field = (key, label, control, hint, valor) => (
-    <div className="cx-field">
+    <div className={`cx-field fm-field-${key}`}>
       <span className="fm-rotulo"><label htmlFor={`fm-${key}`}>{label}</label>{ajuda(label, hint)}</span>
       {control}
       {valor && <p className="cx-hint fm-custo-valor">{valor}</p>}
@@ -114,9 +113,9 @@ export default function FinameMateriais({ onBack, onFundingView }) {
     </div>
   )
   const seg = (id, label, hint, botoes, extra = null) => (
-    <div className="cx-field">
+    <div className={`cx-field fm-field-${id}`}>
       <span className="fm-rotulo"><span className="cx-label" id={`fm-${id}-l`}>{label}</span>{ajuda(label, hint)}</span>
-      <div className="seg" role="group" aria-labelledby={`fm-${id}-l`}>{botoes}</div>
+      {id === 'lib' ? <div className="seg" role="group" aria-labelledby={`fm-${id}-l`}>{botoes}</div> : <select id={`fm-${id}`} aria-labelledby={`fm-${id}-l`} value={botoes.findIndex(button => button.props['aria-pressed'])} onChange={event => botoes[Number(event.target.value)].props.onClick()}>{botoes.map((button, index) => <option key={button.key} value={index}>{button.props.children}</option>)}</select>}
       {extra}
     </div>
   )
@@ -168,15 +167,23 @@ export default function FinameMateriais({ onBack, onFundingView }) {
       <h2 id="calc-h" className="cx-title"><span className="cx-icon" aria-hidden="true"><FinameIcon /></span>BNDES Finame Materiais</h2>
 
       <div className="fm-workspace">
-      <article className="desk-panel cx-panel">
+      <article className="desk-panel cx-panel fm-input-panel">
+        <div className="fm-toolbar">{profileControl}<BndesPresentation result={res} comparison={comparison} conditions={{ valor: money.value, participacao, prazo, carencia, custo, quote: custo === 'tfc' ? tfc : tfb, liberacao, porte: PORTES.find(item => item.id === porte).label, taxaBndes, taxaAgente, sistema, periodicidade: PERIODICIDADES.find(item => item.id === periodicidade).label, composicao, iofConfirmed: finameEligible, rulesDate: REGRAS.conferidoEm, retained: referenceRetained }} /></div>
         <header><h3 className="cx-heading">Dados da operação{ajuda('Regras do produto e fontes', regrasAjuda)}</h3><small>Regras: {dmy(REGRAS.conferidoEm)}</small></header>
         <div className="cx-form">
+          <section className="fm-group fm-operation" aria-labelledby="fm-operation-h"><h3 id="fm-operation-h">▤ Operação</h3><div className="fm-group-fields">
           {field('valor', 'Valor dos materiais', <MoneyInput id="fm-valor" aria-invalid={!!erros.valor} aria-describedby="fm-valor-err" value={valorText} onChange={setValorText} />, 'Bens industrializados novos, nacionais, enquadrados na lista NCM e nos critérios CST/CSOSN do Finame Materiais; não se trata do credenciamento CFI do Finame tradicional. Notas de até 12 meses antes do protocolo.')}
           {field('part', 'Participação do BNDES (%)', input('part', partText, setPartText), 'Até 100% dos itens financiáveis.')}
           {field('prazo', 'Prazo total (meses)', input('prazo', prazoText, setPrazoText, { inputMode: 'numeric' }), 'Até 84 meses (7 anos).')}
           {field('car', 'Carência (meses)', input('car', carText, setCarText, { inputMode: 'numeric' }), fixa ? `Até 12 meses com ${custo.toUpperCase()}; juros exigíveis durante a carência.` : 'Até 24 meses; juros exigíveis durante a carência.')}
+          </div></section>
+          <section className="fm-group fm-costs" aria-labelledby="fm-costs-h"><h3 id="fm-costs-h">▱ Custos</h3><div className="fm-group-fields">
           {field('custo', 'Custo financeiro', <select id="fm-custo" value={custo} onChange={event => { const next = finameFundingOption(event.target.value); if (next) { setCusto(next.id); setFinameEligible(false); if (next.mode !== 'inline') { setComparar(false); if (comparar) setLiberacao(liberacaoAntesComparar) } } }}>{FINAME_FUNDING_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}{option.mode === 'dedicated' ? ' · projeção própria' : option.mode === 'unavailable' ? ' · indisponível' : ''}</option>)}</select>,
             <><p>{funding?.hint} Selic pura suspensa como custo financeiro ({REGRAS.selicSuspensa}).</p><p>As moedas contratuais já exibidas pelo painel têm unidades diferentes: US$ (604) é nível cambial; 143 é índice Selic; LD1 é a sobretaxa LCD; 024 é sobretaxa Selic; 236 é o componente mensal TLP-IPCA; TR1 e TR2 são referências ligadas à TR; TD1, TD2 e TD3 são a taxa TFBD em % ao ano, sem a variação do dólar. Esses valores não podem substituir indistintamente uma taxa anual do Finame.</p><ul>{FINAME_FUNDING_SOURCES.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a></li>)}</ul></>)}
+          {seg('porte' , 'Porte/região', '0,95% a.a. para MPMEs no Norte e Nordeste; 1,25% a.a. para MPMEs nas demais regiões e para grandes empresas (página do produto em 04/11/2026; a mudança de 1,15% para 1,25% em 22/01/2026 é informada pela Abimaq). O porte também escolhe a série da TFC. Editável.',
+            PORTES.map((p) => <button key={p.id} type="button" aria-pressed={porte === p.id} onClick={() => { setPorte(p.id); setBndesText(String(p.taxa).replace('.', ',')) }}>{p.label}</button>))}
+          {field('bndes', 'Taxa BNDES (% a.a.)', <div className="cx-rate">{input('bndes', bndesText, setBndesText, { 'aria-label': 'Taxa do BNDES (% a.a.)' })}<span className="fm-unidade">% a.a.</span></div>, 'Taxa do BNDES conforme porte e região; editável para refletir a proposta da instituição.')}
+          {field('agente', 'Remuneração do agente (% a.a.)', <div className="cx-rate">{input('agente', agenteText, setAgenteText)}<span className="fm-unidade">% a.a.</span></div>, 'É a "taxa do agente financeiro" na nomenclatura do BNDES: a remuneração do banco, negociada com o cliente conforme risco, garantias e relacionamento; não há teto público. Compõe a taxa final junto com o custo financeiro e a taxa do BNDES.')}
           {field('tac', 'TAC · tarifa de contratação (R$)', <MoneyInput id="fm-tac" aria-invalid={!!erros.tac} aria-describedby="fm-tac-err" value={tacText} onChange={setTacText} />, 'Tarifa de abertura de crédito cobrada pelo agente financeiro na contratação. Pré-preenchida com R$ 2.600,00 e editável; use zero se não houver. É somada ao pagamento final como despesa à vista, na liberação, e não entra no cronograma de juros. Confirme o valor na proposta do agente.')}
           {custo === 'tfc' ? (
             <div className="cx-field">
@@ -192,16 +199,15 @@ export default function FinameMateriais({ onBack, onFundingView }) {
             <label htmlFor="fm-compare"><input id="fm-compare" type="checkbox" checked={comparar} disabled={funding?.mode !== 'inline'} onChange={event => { setComparar(event.target.checked); if (event.target.checked) { setLiberacaoAntesComparar(liberacao); setLiberacao(90) } else setLiberacao(liberacaoAntesComparar) }} />Comparar outro custo financeiro</label>
             <p className="cx-hint">{comparar ? 'Comparação exige a mesma faixa e data de referência. Durante a comparação, a TFB usa liberação em 90 dias, como a série TFC.' : 'Abra a comparação TFC × TFB sem preencher novamente a operação.'}</p>
           </div>
-          {seg('porte' , 'Taxa do BNDES · porte e região', '0,95% a.a. para MPMEs no Norte e Nordeste; 1,25% a.a. para MPMEs nas demais regiões e para grandes empresas (página do produto em 04/11/2026; a mudança de 1,15% para 1,25% em 22/01/2026 é informada pela Abimaq). O porte também escolhe a série da TFC. Editável.',
-            PORTES.map((p) => <button key={p.id} type="button" aria-pressed={porte === p.id} onClick={() => { setPorte(p.id); setBndesText(String(p.taxa).replace('.', ',')) }}>{p.label}</button>),
-            <><div className="cx-rate">{input('bndes', bndesText, setBndesText, { 'aria-label': 'Taxa do BNDES (% a.a.)' })}<span className="fm-unidade">% a.a.</span></div><p className="cx-error" id="fm-bndes-err" role={erros.bndes ? 'alert' : undefined}>{erros.bndes ?? ''}</p></>)}
-          {field('agente', 'Remuneração do agente (% a.a.)', <div className="cx-rate">{input('agente', agenteText, setAgenteText)}<span className="fm-unidade">% a.a.</span></div>, 'É a "taxa do agente financeiro" na nomenclatura do BNDES: a remuneração do banco, negociada com o cliente conforme risco, garantias e relacionamento; não há teto público. Compõe a taxa final junto com o custo financeiro e a taxa do BNDES.')}
+          </div></section>
+          <section className="fm-group fm-payment" aria-labelledby="fm-payment-h"><h3 id="fm-payment-h">▣ Pagamento</h3><div className="fm-group-fields">
           {seg('sis', 'Sistema de amortização', `TFC/TFB nesta tela: SAC: ${SISTEMAS[0].hint}. Price: ${SISTEMAS[1].hint}. Parcelas mensais após a carência. Outras modalidades usam condições próprias.`,
             SISTEMAS.map((s) => <button key={s.id} type="button" aria-pressed={sistema === s.id} onClick={() => setSistema(s.id)}>{s.label}</button>))}
           {seg('per', 'Juros na carência', 'Juros exigíveis durante a carência, pagos em vencimentos contados retroativamente desde o fim da carência (Anexo I, item 5.3). Exemplo: 5 meses com periodicidade trimestral paga nos meses 2 e 5. Dentro de cada período, capitalizados mês a mês.',
             PERIODICIDADES.map((p) => <button key={p.id} type="button" aria-pressed={periodicidade === p.id} onClick={() => setPeriodicidade(p.id)}>{p.label}</button>))}
           {seg('comp', 'Composição da taxa', `Capitalizada: ${COMPOSICOES[0].hint}. Somada: ${COMPOSICOES[1].hint}.`,
             COMPOSICOES.map((c) => <button key={c.id} type="button" aria-pressed={composicao === c.id} onClick={() => setComposicao(c.id)}>{c.label}</button>))}
+          </div></section>
           <div className="cx-iof">
             <label htmlFor="fm-finame-eligible"><input id="fm-finame-eligible" type="checkbox" checked={finameEligible} onChange={e => setFinameEligible(e.target.checked)} />Confirmo com a instituição que esta operação utiliza recursos da FINAME elegíveis à alíquota zero do art. 8º, IX, do Decreto 6.306/2007.</label>
             <p className="cx-hint">IOF automático: zero somente com esse enquadramento confirmado. O nome BNDES ou o indexador, isoladamente, não comprovam a origem dos recursos. Para outras origens ou dúvida, a simulação fica bloqueada até confirmar o tratamento tributário.</p>
@@ -224,23 +230,29 @@ export default function FinameMateriais({ onBack, onFundingView }) {
       <div className="fm-results">
 
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header><h3 className="cx-heading">Resultado estimado{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros; não representa o CET. A proposta do agente financeiro prevalece.')}</h3><BndesPresentation result={res} comparison={comparison} conditions={{ valor: money.value, participacao, prazo, carencia, custo, quote: custo === 'tfc' ? tfc : tfb, liberacao, porte: PORTES.find(item => item.id === porte).label, taxaBndes, taxaAgente, sistema, periodicidade: PERIODICIDADES.find(item => item.id === periodicidade).label, composicao, iofConfirmed: finameEligible, rulesDate: REGRAS.conferidoEm, retained: referenceRetained }} /><small>Projeção · não é CET</small></header>
+        <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros; não representa o CET. A proposta do agente financeiro prevalece.')}</h3><small>Projeção · não é CET</small></header>
+        {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'Primeira parcela', 'Juros totais', 'IOF', 'Total projetado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
         {!res && <p className="cx-hint cx-pad" role="status">{funding?.mode !== 'inline' ? funding?.notice : r?.erros?.length ? r.erros.join(' ') : 'Complete os campos indicados e confirme o enquadramento do IOF para calcular.'}</p>}
         {res && (
           <>
             {referenceRetained && <p className="status stale cx-pad" role="status">Referência retida ou atualização indisponível. Confira as datas em Taxas e históricos antes de cotar.</p>}
-            <section className="fm-destaques" aria-labelledby="fm-destaques-h">
+            {!comparar && <section className="fm-destaques" aria-labelledby="fm-destaques-h">
               <h4 id="fm-destaques-h">Principais números · {custo.toUpperCase()}</h4>
-              <div className="fm-destaques-grade">{destaquesFiname(quadros).map(quadro)}</div>
-            </section>
-            {comparar && <><div className="fm-hero"><h4>Cotação comparativa</h4></div><div className="fm-comparison" aria-label="Comparação TFC e TFB">
+              <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">{custo.toUpperCase()}</th></tr></thead><tbody>
+                <tr><th scope="row">Taxa de referência</th><td>{pct(custoFinanceiro, 4)} a.a.<small>{dmy((custo === 'tfc' ? tfc : tfb)?.data)}</small></td></tr>
+                {['taxa', 'parcelas', 'juros'].map(id => quadros.find(item => item.id === id)).filter(Boolean).map(item => <tr key={item.id} className="fm-summary-row"><th scope="row">{item.id === 'parcelas' ? 'Primeira parcela após carência' : item.id === 'total' ? 'Total projetado' : item.rotulo}{ajuda(item.rotulo, item.ajuda)}</th><td>{item.valor}<small>{item.nota}</small></td></tr>)}
+                <tr className="fm-iof-row"><th scope="row">IOF</th><td>{brl(res.iof)}</td></tr>
+                <tr><th scope="row">Total projetado{ajuda('Total projetado', quadros.find(item => item.id === 'total')?.ajuda)}</th><td>{brl(res.total)}</td></tr>
+              </tbody></table></div>
+            </section>}
+            {comparar && <div className="fm-comparison" aria-label="Comparação TFC e TFB">
               {comparison?.ok ? <>
                 <div className="cx-wrap" role="region" tabIndex={0} aria-label="Resultados TFC e TFB"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th>{comparison.alternatives.map(item => <th key={item.custo} scope="col">{item.custo.toUpperCase()}<small>{pct(item.quote.valor, 4)} a.a. · {dmy(item.quote.data)}<br />{item.custo === 'tfc' ? tfcCodigo : keyOf(faixa, 90)} · liberação 90 dias</small></th>)}</tr></thead><tbody>
-                  {[['Primeira parcela após carência', item => brl(item.result.primeiraParcela)], ['Taxa final', item => `${pct(item.result.taxa)} a.a.`], ['Juros totais', item => brl(item.result.juros)], ['IOF', item => brl(item.result.iof)], ['Total projetado', item => brl(item.result.total)]].map(([label, value]) => <tr key={label}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo}>{value(item)}</td>)}</tr>)}
+                  {[['Taxa de referência', item => `${pct(item.quote.valor, 4)} a.a.`], ['Primeira parcela após carência', item => brl(item.result.primeiraParcela)], ['Taxa final', item => `${pct(item.result.taxa)} a.a.`], ['Juros totais', item => brl(item.result.juros)], ['IOF', item => brl(item.result.iof)], ['Total projetado', item => brl(item.result.total)]].map(([label, value]) => <tr key={label}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo}>{value(item)}</td>)}</tr>)}
                 </tbody></table></div>
                 <p className="fm-difference">{Math.abs(comparison.totalDifference) < .005 ? 'Os totais projetados são iguais.' : <>O total projetado em TFB é <b>{brl(Math.abs(comparison.totalDifference))}</b> {comparison.totalDifference > 0 ? 'maior' : 'menor'} que em TFC.</>} Mesmos valor, prazo, carência, amortização e remunerações. Diferença estimada; os totais incluem a TAC e o ECG do FGI quando informados, sem outras tarifas ou seguros.</p>
               </> : <p className="status stale" role="status">{comparison?.error || 'Complete os dados para comparar as alternativas.'}</p>}
-            </div></>}
+            </div>}
             <details className="fm-details"><summary>Composição do resultado · {custo.toUpperCase()}</summary>
             <div className="fm-grade">{quadros.map(quadro)}</div>
             </details>
@@ -251,7 +263,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
       </article>
 
       {res && (
-        <details className="desk-panel cx-panel fm-fluxo-panel" open>
+        <details className="desk-panel cx-panel fm-fluxo-panel">
           <summary>Cronograma ilustrativo · {custo.toUpperCase()}</summary>
           <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Liberação ilustrativa hoje (${data(hoje)}). Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros ainda são calculados em meses iguais; não é memória contratual. O indexador (TFC ou TFB) é o da cotação em uso. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero no enquadramento FINAME confirmado. Na linha de liberação, "Total pago" soma as despesas à vista: IOF, TAC e ECG do FGI quando pago à vista.`)}</h3></header>
           <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais. Vencimento todo dia 15, ou no próximo dia útil (feriados nacionais). Não use como memória contratual.</p>
