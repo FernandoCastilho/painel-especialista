@@ -36,6 +36,12 @@ const links = {
       }
 
       await visit('calculadora/cbs-caixa', '.cbs-annual-chart')
+      // Nome do painel no ar: aba do navegador em toda largura; marca do topo onde a barra aparece.
+      assert.equal(await page.title(), 'PEME · Painel Especializado no Mercado', 'nome na aba do navegador')
+      if (width >= 1000) {
+        assert.equal((await page.locator('.topbar-brand').innerText()).trim(), 'PEME', 'marca do topo')
+        assert.equal(await page.locator('.topbar-brand').getAttribute('title'), 'Painel Especializado no Mercado', 'nome completo ao passar o mouse')
+      }
       const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
       assert.equal(await page.locator('.cbs-annual-chart').isVisible(), true)
       assert.deepEqual(await page.locator('.cbs-annual-chart text').allTextContents(), months)

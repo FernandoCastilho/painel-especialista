@@ -1,4 +1,4 @@
-name: Deploy do Painel Especialista (GitHub Pages)
+name: Deploy do PEME (GitHub Pages)
 
 on:
   push:

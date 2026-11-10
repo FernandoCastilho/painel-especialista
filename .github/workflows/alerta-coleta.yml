@@ -10,7 +10,7 @@ on:
   workflow_run:
     workflows:
       - Cotações (coleta central)
-      - Deploy do Painel Especialista (GitHub Pages)
+      - Deploy do PEME (GitHub Pages)
       - Verificar e coletar notícias institucionais
     types: [completed]
   workflow_dispatch:
@@ -97,7 +97,7 @@ jobs:
               }
             }
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
-            const r = await avisarTeams(`TESTE de alerta do Painel do Especialista. É só um teste: nenhuma ação é necessária. Disparado à mão por ${context.actor}. ${run}`)
+            const r = await avisarTeams(`TESTE de alerta do PEME. É só um teste: nenhuma ação é necessária. Disparado à mão por ${context.actor}. ${run}`)
             const resumo = r.ok
               ? 'CHEGOU: o Teams aceitou a mensagem de TESTE. Confira no canal se ela aparece. Os alertas de verdade usam o mesmo caminho.'
               : `NÃO CHEGOU: ${r.motivo} Enquanto isso não for resolvido, os alertas só aparecem como issue no GitHub.`

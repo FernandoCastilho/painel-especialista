@@ -57,9 +57,9 @@ function pedir_(emailBruto) {
     try {
       MailApp.sendEmail({
         to: email,
-        subject: 'Seu código de acesso ao Painel Especialista: ' + codigo,
+        subject: 'Seu código de acesso ao PEME: ' + codigo,
         body: 'Seu código de acesso é ' + codigo + '.\n\nEle vale por 10 minutos. Se você não pediu, ignore esta mensagem.',
-        name: 'Painel Especialista',
+        name: 'PEME',
       })
     } catch (errEnvio) {
       return { ok: false, erro: 'Não foi possível enviar para este e-mail. Confira o endereço.' }
