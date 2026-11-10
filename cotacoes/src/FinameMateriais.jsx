@@ -6,7 +6,7 @@ import { parseDecimal } from './emprestimo.js'
 import { useDataFile } from './useDataFile.js'
 import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
-import { COMPOSICOES, CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
+import { COMPOSICOES, CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, SISTEMAS, ecgFgi, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingAnnualRate, finameFundingOption, compareFinameFunding } from './finameFunding.js'
 import { nf } from './format.js'
 import { destaquesFiname } from './finameResumo.js'
@@ -19,6 +19,8 @@ const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL
 const pct = (v, d = 2) => `${nf(v, d)}%`
 const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 const data = (d) => d.toLocaleDateString('pt-BR')
+// Exemplos da ajuda do ECG: [valor liberado em R$, % garantido, prazo total em meses], calculados pela fórmula do Anexo V.
+const ECG_EXEMPLOS = [[500000, 80, 60], [1000000, 80, 84], [300000, 50, 36]]
 
 // Ícone: caixa de materiais com a marca do BNDES (barras) ao lado.
 export function FinameIcon() {
@@ -130,7 +132,7 @@ export default function FinameMateriais({ onBack, onFundingView }) {
     { id: 'juros', rotulo: 'Juros totais', ajuda: 'Soma dos juros da carência e das parcelas da projeção TFC/TFB.', valor: brl(res.juros), nota: <>{pct((res.juros / res.financiado) * 100, 1)} do saldo financiado</> },
     { id: 'iof', rotulo: 'IOF', ajuda: 'Alíquota zero condicionada à confirmação de recursos FINAME elegíveis (Decreto 6.306/2007, art. 8º, IX).', valor: brl(res.iof), nota: res.iof > 0 ? `${brl(res.iofFixo)} adicional + ${brl(res.iofDiario)} diário` : 'Alíquota zero' },
     { id: 'tac', rotulo: 'TAC', ajuda: 'Tarifa de contratação paga à vista na liberação, pelo valor informado. Não entra no cronograma de juros.', valor: brl(res.tac), nota: res.tac > 0 ? 'paga à vista' : 'sem TAC' },
-    res.fgi && { id: 'fgi', rotulo: 'FGI · ECG', ajuda: <><p>{`Encargo por Concessão de Garantia do FGI Tradicional: %G × K × VL × P${res.fgi.incorporado ? ' ÷ (1 − %G × K × P)' : ''}, com %G = ${nf(res.fgi.percentual, 0)}%, K = ${nf(res.fgi.k, 2)}% por período de 30 dias, VL = ${brl(res.liberado)} e P = ${res.fgi.periodos} períodos de 30 dias até o último vencimento.`}</p><p>{res.fgi.incorporado ? 'Incorporado ao saldo devedor: rende juros com a operação (item 2.1.2 do Anexo V).' : 'Pago à vista na liberação (item 2.1.3 do Anexo V).'} O cliente só paga se o agente repassar o custo. Garantia não é seguro de crédito.</p></>, valor: brl(res.fgi.ecg), nota: <>{nf(res.fgi.percentual, 0)}% garantido · {res.fgi.incorporado ? 'financiado' : 'à vista'}</> },
+    res.fgi && { id: 'fgi', rotulo: 'FGI · ECG', ajuda: <><p>{`Encargo por Concessão de Garantia do FGI Tradicional: %G × K × VL × P${res.fgi.incorporado ? ' ÷ (1 − %G × K × P)' : ''}, com %G = ${nf(res.fgi.percentual, 0)}%, K = ${nf(res.fgi.k, 2)}% por período de 30 dias, VL = ${brl(res.liberado)} e P = ${res.fgi.periodos} períodos de 30 dias até o último vencimento.`}</p><p>{res.fgi.incorporado ? 'Incorporado ao saldo devedor: rende juros com a operação (item 2.1.2 do Anexo V).' : 'Pago à vista na liberação (item 2.1.3 do Anexo V).'} O cliente só paga se o agente repassar o custo. Garantia não é seguro de crédito.</p><p>{`Por que parece alto: o ECG é cobrado de uma vez, na liberação, pelo prazo inteiro da operação. Nesta simulação ele equivale a ${pct((res.fgi.ecg / res.liberado) * 100, 2)} do valor liberado. Com 80% de garantia, fica perto de 5% do valor liberado em quase qualquer prazo acima de 24 meses, porque o fator K cai quando o prazo aumenta.`}</p><p>Exemplos pela mesma fórmula (à vista · financiado):</p><ul>{ECG_EXEMPLOS.map(([v, g, n]) => { const a = ecgFgi({ valor: v, percentual: g, prazo: n, incorporar: false }), f = ecgFgi({ valor: v, percentual: g, prazo: n, incorporar: true }); return <li key={`${v}-${g}-${n}`}>{`${brl(v)}, ${n} meses, ${g}% garantido: ${brl(a.ecg)} (${pct((a.ecg / v) * 100, 2)}) · ${brl(f.ecg)} (${pct((f.ecg / v) * 100, 2)})`}</li> })}</ul><p>Os exemplos contam o prazo em períodos de 30 dias a partir do número de meses; na simulação, o P usa as datas, e o valor muda com o dia da liberação. Só FGI Tradicional: o FGI PEAC e a tabela comercial de cada banco têm regras próprias. A tabela de custo mensal do site do BNDES é ilustrativa e pode não coincidir com esta conta.</p></>, valor: brl(res.fgi.ecg), nota: <>{nf(res.fgi.percentual, 0)}% garantido · {res.fgi.incorporado ? 'financiado' : 'à vista'}</> },
     { id: 'total', rotulo: 'Pagamento final', ajuda: 'Valor financiado + juros totais + IOF + TAC + ECG do FGI (quando marcado): tudo o que o cliente paga nesta projeção TFC/TFB, sem outras tarifas ou seguros.', valor: brl(res.total), nota: null },
   ].filter(Boolean) : []
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
