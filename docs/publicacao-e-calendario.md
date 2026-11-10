@@ -30,3 +30,16 @@ Por que a rodada inteira e não só o arquivo: o site é montado do zero a cada 
 Efeitos esperados: uma rodada com falha abre (ou comenta) a pendência "Deploy da página de cotações falhou"; três seguidas abrem a de falhas seguidas. Os demais coletores continuam como antes (seguem sem o dado anterior), só que agora com 3 tentativas.
 
 Saída de emergência: se um arquivo publicado ficar inválido de forma permanente (a leitura falharia para sempre), crie a variável do repositório `PREV_IGNORAR_ILEGIVEL` com valor `true`, rode a publicação e apague a variável em seguida. Com ela, a leitura falha volta a ser tratada como "não existe".
+
+## Avisos ao dono (revisão de 10/11/2026)
+
+Todo aviso tem duas pontas: uma pendência (issue) no GitHub e uma mensagem no Teams. A mensagem no Teams depende do segredo `TEAMS_WEBHOOK_URL`.
+
+**O envio ao Teams não falha mais em silêncio.** Se o segredo não estiver configurado, se o Teams responder com erro ou se a rede falhar, a execução registra um aviso amarelo ("Aviso ao Teams NÃO enviado: ...") com o motivo. A rotina não cai por isso e o endereço do segredo nunca aparece no registro. A pendência no GitHub continua sendo aberta normalmente.
+
+**Teste de alerta.** Em Actions, abra "Alerta de coleta com falhas seguidas" e clique em "Run workflow". A rotina envia ao Teams uma mensagem que começa com "TESTE de alerta do Painel do Especialista" e escreve no resumo da execução:
+
+- "CHEGOU": o Teams aceitou a mensagem. Confira no canal se ela aparece (a rotina só enxerga o aceite, não a tela do Teams).
+- "NÃO CHEGOU": com o motivo. Nesse caso a execução termina em vermelho.
+
+O teste não abre pendência e não mexe em nenhuma coleta. Vale repetir sempre que o segredo ou o canal mudar.
