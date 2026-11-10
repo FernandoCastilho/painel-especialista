@@ -5,7 +5,7 @@
 - No topo, à esquerda de "Mercado", aparece "PEME"; ao passar o mouse, o nome completo. No celular a barra do topo não mostra a marca (já era assim).
 - O nome também entrou na aba do navegador, na tela de acesso, no aplicativo instalado, nos alertas de preço, no panorama de mercado, na caixa de sugestões, na lista de fontes, no aviso de teste do Teams e no nome da rotina de publicação ("Deploy do PEME (GitHub Pages)").
 - O assunto do e-mail de sugestões começa com `[PEME]`. Filtro de e-mail pelo assunto antigo deixa de pegar as novas mensagens.
-- A cada publicação, a conferência do site no ar confere o nome na aba e a marca do topo.
+- A cada publicação, a conferência do site no ar confere o nome na aba e a marca do topo. O teste `cotacoes/test/nome-peme.test.mjs` impede que uma tela nova traga o nome antigo de volta (aconteceu no selo da tela do BNDES, já corrigido).
 - Ficam como estavam: o endereço do site, o nome do repositório e os títulos das notas antigas em `docs/`.
 
 ### Pendência manual: e-mail do código de acesso

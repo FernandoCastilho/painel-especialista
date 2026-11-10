@@ -22,7 +22,7 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
   const profileControl = <div className="bw-profile"><label htmlFor="bw-profile">Perfil de financiamento</label><select id="bw-profile" value={profile} onChange={event => navigate(event.target.value)}>{PROFILES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
   return <section className="cx bw" aria-labelledby="bw-title">
     <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-    <div className="bw-heading"><div><h2 id="bw-title"><strong>BNDES</strong><span>{profile === 'finame-materiais' ? 'Finame Materiais' : 'Financiamentos'}</span></h2></div><span className="bw-badge">Painel do Especialista</span></div>
+    <div className="bw-heading"><div><h2 id="bw-title"><strong>BNDES</strong><span>{profile === 'finame-materiais' ? 'Finame Materiais' : 'Financiamentos'}</span></h2></div><span className="bw-badge">PEME</span></div>
     <nav className="bw-nav" aria-label="Área BNDES">
       <button type="button" aria-pressed={area === 'simulate' && !historical} onClick={() => { setArea('simulate'); if (historical) onView('finame-materiais') }}>Simular financiamento</button>
       <button type="button" aria-pressed={area === 'quotes'} onClick={() => setArea('quotes')}>Taxas e históricos</button>
