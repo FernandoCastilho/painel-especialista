@@ -215,7 +215,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
       </article>
 
       <div className="fm-results">
-      <aside className="fm-premises" aria-label="Premissas da simulação"><b>Premissas</b><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p></aside>
 
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
         <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros; não representa o CET. A proposta do agente financeiro prevalece.')}</h3><small>Projeção · não é CET</small></header>
@@ -250,6 +249,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
           </>
         )}
       </article>
+
+      <aside className="fm-premises" aria-label="Premissas da simulação"><b>Premissas</b><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p></aside>
 
       {res && (
         <details className="desk-panel cx-panel fm-fluxo-panel">

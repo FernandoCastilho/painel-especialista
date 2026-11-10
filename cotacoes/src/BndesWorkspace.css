@@ -92,7 +92,7 @@
 .bw .fm-costs .fm-field-tac { grid-column:5/7; grid-row:2; }
 .bw .fm-costs .fm-field-agente { grid-column:3/5; grid-row:2; }
 .bw .fm-costs .fm-field-porte .cx-rate { margin-top:6px; }
-.bw .fm-payment .fm-group-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.bw .fm-payment .fm-group-fields { grid-template-columns:1fr; }
 .bw .cx-finame .cx-field { gap:3px; }
 .bw .cx-finame .fm-rotulo { min-width:0; gap:2px; }
 .bw .cx-finame .cx-field label,.bw .cx-finame .cx-label { color:#10284c; font-size:.85rem; font-weight:700; line-height:1.35; }
