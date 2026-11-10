@@ -9,7 +9,7 @@ on:
     - cron: '7,22,37,52 12-21 * * 1-5'
   # Reforço que não depende de agenda: quando uma coleta ou uma publicação termina (inclusive com falha), a vigia confere na hora.
   workflow_run:
-    workflows: ['Cotações (coleta central)', 'Deploy do Painel Especialista (GitHub Pages)']
+    workflows: ['Cotações (coleta central)', 'Deploy do PEME (GitHub Pages)']
     types: [completed]
   workflow_dispatch:
 

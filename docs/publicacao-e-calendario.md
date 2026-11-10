@@ -39,7 +39,7 @@ Todo aviso tem duas pontas: uma pendência (issue) no GitHub e uma mensagem no T
 
 **O envio ao Teams não falha mais em silêncio.** Se o segredo não estiver configurado, se o Teams responder com erro ou se a rede falhar, a execução registra um aviso amarelo ("Aviso ao Teams NÃO enviado: ...") com o motivo. A rotina não cai por isso e o endereço do segredo nunca aparece no registro. A pendência no GitHub continua sendo aberta normalmente.
 
-**Teste de alerta.** Em Actions, abra "Alerta de coleta com falhas seguidas" e clique em "Run workflow". A rotina envia ao Teams uma mensagem que começa com "TESTE de alerta do Painel do Especialista" e escreve no resumo da execução:
+**Teste de alerta.** Em Actions, abra "Alerta de coleta com falhas seguidas" e clique em "Run workflow". A rotina envia ao Teams uma mensagem que começa com "TESTE de alerta do PEME" e escreve no resumo da execução:
 
 - "CHEGOU": o Teams aceitou a mensagem. Confira no canal se ela aparece (a rotina só enxerga o aceite, não a tela do Teams).
 - "NÃO CHEGOU": com o motivo. Nesse caso a execução termina em vermelho.

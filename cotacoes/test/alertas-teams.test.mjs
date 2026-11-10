@@ -94,7 +94,7 @@ test('teste de alerta manual: mensagem marcada como TESTE, resumo diz se chegou 
 
   let enviado
   const ok = await rodarTeste({ env: { TEAMS_WEBHOOK_URL: SEGREDO }, fetch: async (_url, init) => { enviado = JSON.parse(init.body).text; return { ok: true, status: 202, text: async () => '' } } })
-  assert.match(enviado, /^TESTE de alerta do Painel do Especialista\. É só um teste: nenhuma ação é necessária\./)
+  assert.match(enviado, /^TESTE de alerta do PEME\. É só um teste: nenhuma ação é necessária\./)
   assert.match(enviado, /actions\/runs\/7$/)
   assert.equal(ok.falhou, null)
   assert.ok(ok.gravou)
