@@ -39,3 +39,5 @@ Leitura real Focus27/10/2026 00:59:52UTC: quatro indicadores(Selic,IPCA,PIB,Câm
 - **history/intraday:** mínimo de pontos, último ponto recente, valores plausíveis por moeda, ordem cronológica e saltos (12% entre diários; 6% entre amostras a até 30 min; 12% após pausas maiores).
 
 Qualquer achado abre (ou comenta) a issue "Dados da página de cotações com problema de validação" e avisa o Teams, se configurado; ao normalizar, a issue é fechada.
+
+Revisão de 10/11/2026: o limite de 6 h acima continua valendo na validação de hora em hora, mas a cotação parada no pregão agora gera aviso próprio em cerca de 30 minutos (vigia das cotações). O envio ao Teams registra aviso quando não chega, há um teste manual de alerta e um lembrete do fim do calendário da B3. Detalhes em `docs/publicacao-e-calendario.md`.

@@ -11,6 +11,7 @@ import './MarketTerminal.css'
 import { accumulatedReturns, cnhPtaxCross, compatiblePtax, marketDate, ptaxLabel } from './marketReturns.js'
 import { quoteAgeState } from './quoteFreshness.js'
 import { nextChartIndex } from './chartNavigation.js'
+import { focoPorTeclado, saidaDeToque, useTocarFora } from './chartToque.js'
 import { dataTimestamp } from './dataTimestamp.js'
 import { comparisonSeries } from './comparisonSeries.js'
 import Expandable from './Expandable.jsx'
@@ -181,6 +182,7 @@ function MultiPlot({ series, width, intraday, history = series }) {
   const H = 240
   const M = { t: 12, r: 64, b: 28, l: 52 }
   const [hover, setHover] = useState(null)
+  const svgRef = useTocarFora(hover != null, setHover)
   const norm = series.map((s) => ({ ...s, pts: s.points.map((p) => ({ t: p.t, v: (p.bid / s.points[0].bid - 1) * 100, bid: p.bid })) }))
   const all = norm.flatMap((s) => s.pts)
   const t0 = Math.min(...all.map((p) => p.t))
@@ -211,7 +213,7 @@ function MultiPlot({ series, width, intraday, history = series }) {
     if (next != null) { e.preventDefault(); setHover(times[next]) }
   }
   return (
-    <><ChartComparison margin={M} series={series.map(s=>({key:s.code,name:s.code,points:s.points}))} history={history.map(s=>({key:s.code,points:s.points}))} unavailable={intraday ? 'A visão intradiária não contém histórico anual comparável.' : ''}><svg className="hist-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} onKeyDown={onKey} onFocus={() => setHover(t0)} aria-label="Variação percentual das moedas selecionadas no período; use setas, Home e End para consultar amostras" onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={() => setHover(null)} style={{ touchAction: 'pan-y' }}>
+    <><ChartComparison margin={M} series={series.map(s=>({key:s.code,name:s.code,points:s.points}))} history={history.map(s=>({key:s.code,points:s.points}))} unavailable={intraday ? 'A visão intradiária não contém histórico anual comparável.' : ''}><svg ref={svgRef} className="hist-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} onKeyDown={onKey} onFocus={(e) => { if (focoPorTeclado(e)) setHover(t0) }} aria-label="Variação percentual das moedas selecionadas no período; use setas, Home e End para consultar amostras" onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }} style={{ touchAction: 'pan-y' }}>
       {yTicks.map((v) => (
         <g key={v}>
           <line x1={M.l} x2={width - M.r} y1={y(v)} y2={y(v)} stroke="var(--line)" />
