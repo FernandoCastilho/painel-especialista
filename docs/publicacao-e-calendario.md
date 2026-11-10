@@ -16,6 +16,8 @@ Fonte primária de 2026: [calendário oficial da B3](https://www.b3.com.br/pt_br
 
 Na revisão de 08/11/2026, não foi localizado calendário oficial de 2027 nas buscas e páginas oficiais consultadas. Filtros de ano do portal não comprovam um calendário publicado. Portanto, 2027 permanece **não verificado**: a coleta recusa esse ano e informa o motivo, em vez de inventar feriados. `b3CalendarStatus` expõe a cobertura e a fonte. A atualização de 2027 depende de localizar a publicação oficial, revisar datas e horários especiais e incluir regressões antes de liberar o ano.
 
+**Lembrete automático (10/11/2026).** Quando faltam 60 dias ou menos para o fim do calendário conferido (hoje, 31/12/2026), a publicação de hora em hora abre uma única pendência, "Calendário da B3 no painel termina em 31/12/2026: incluir o de 2027", e avisa o Teams. O texto diz o que acontece (em 01/01/2027 as curvas DI x pré e cupom cambial param de atualizar) e o que fazer: incluir o calendário de 2027, quando a B3 publicar, em `cotacoes/scripts/data-schedules.mjs` (coleta das curvas) e em `cotacoes/src/holidays.js` (dias úteis das calculadoras). A pendência não é repetida nem comentada a cada rodada, fecha sozinha quando o calendário novo entrar e, se for fechada à mão antes disso, não volta. A conta dos dias é a função `b3CalendarReminder`, em `data-schedules.mjs`; ela só conta, não libera ano nenhum.
+
 ## Leitura do dado já publicado (revisão de 10/11/2026)
 
 Vários coletores leem o arquivo que já está no ar para completar o que a fonte não entregou. Essa leitura (`cotacoes/scripts/prev-lib.mjs`) agora:
