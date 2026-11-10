@@ -1,0 +1,119 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import * as m from '../src/creditModalities.js'
+import { creditOperation } from '../src/creditComparison.js'
+import { finimpCost } from '../src/finimpComparison.js'
+import { discountOperation } from '../src/analiseDesconto.js'
+import { simular, IOF_ZERO } from '../src/finameMateriais.js'
+import { simulateContaGarantida } from '../src/contaGarantida.js'
+
+const shared = m.initialShared('2026-11-10')
+const col = (modality, extra = {}) => ({ ...m.newColumn(modality), ...extra })
+const run = (c, s = shared, ctx = { cdi: 12 }) => m.evaluateColumn(c, s, ctx)
+
+test('toda modalidade devolve o formato comum com CET, líquido e fluxo', () => {
+  for (const { id } of m.MODALITIES) {
+    const r = run(col(id))
+    assert.equal(r.ok, true, `${id}: ${r.error}`)
+    assert.ok(r.net > 0 && r.rows.length > 0 && r.cet > 0, id)
+    assert.ok(Math.abs(r.cost - (r.paid - r.net)) < 1e-6, id)
+    // Desconto já paga o nominal (juros e IOF saem dele na liberação); nas demais o que sai da liberação soma ao total.
+    assert.ok(Math.abs(r.total - (id === 'desconto' ? r.paid : r.paid + r.value - r.net)) < 1e-6, id)
+    assert.equal(r.rows.at(-1).date, r.lastDate)
+  }
+})
+test('Giro prefixado repete o motor do Capital de Giro', () => {
+  const r = run(col('giro-pre'))
+  const base = creditOperation({ value: 500000, n: 24, rate: 1.45, unit: 'am', system: 'price', start: '2026-11-10', firstDue: '2026-12-10', profile: 'pj', eligible: false, rateType: 'fixed', cdi: 0, cdiPercent: 100, fees: 0, monthlyFees: 0, holidays: [], guaranteeValue: null })
+  assert.equal(r.net, base.net); assert.equal(r.cet, base.cet); assert.equal(r.cost, base.cost)
+})
+test('Giro pós-CDI exige CDI e reage ao cenário', () => {
+  const c = col('giro-cdi')
+  assert.equal(run(c, shared, { cdi: NaN }).ok, false)
+  assert.ok(run(c, shared, { cdi: 14 }).cost > run(c, shared, { cdi: 12 }).cost)
+})
+test('carência e prazo comuns chegam a cada coluna; Bullet usa vencimento único', () => {
+  const grace = run(col('giro-pre'), { ...shared, grace: '6' })
+  assert.equal(grace.rows.length, 18); assert.ok(grace.graceNote.includes('capitalizada'))
+  const bullet = run(col('giro-pre'), { ...shared, system: 'bullet' })
+  assert.equal(bullet.rows.length, 1); assert.equal(bullet.rows[0].date, '2028-11-10')
+  assert.equal(run(col('giro-pre'), { ...shared, grace: '24' }).ok, false)
+})
+test('campo próprio da coluna prevalece sobre o comum', () => {
+  const r = run(col('giro-pre', { value: '100.000,00', term: '12' }))
+  assert.equal(r.value, 100000); assert.equal(r.rows.length, 12)
+})
+test('BNDES repete o motor BNDES, com os limites de prazo e carência', () => {
+  const c = col('bndes'), r = run(c)
+  const sim = simular({ valor: 500000, participacao: 100, prazo: 24, carencia: 0, custo: 'tfb', custoFinanceiro: 10, taxaBndes: 1.25, taxaAgente: 3, sistema: 'price', periodicidade: 1, composicao: 'capitalizada', iof: IOF_ZERO, tac: 0 })
+  assert.ok(Math.abs(r.paid - sim.parcelas.reduce((s, p) => s + p.pago, 0)) < 1e-6)
+  assert.equal(r.interest, sim.juros + sim.correcao)
+  assert.equal(run(c, { ...shared, system: 'bullet' }).ok, false)
+  assert.match(run(c, { ...shared, grace: '18' }).error, /Carência acima/)
+  assert.match(run(c, { ...shared, term: '96' }).error, /máximo/)
+  const tac = run(col('bndes', { bTac: '1.000,00' }))
+  assert.equal(tac.net, 499000)
+  assert.ok(run(col('bndes', { bIof: 'pj' })).iof > 0)
+  assert.equal(run(col('bndes', { bFgi: '80' })).ok, true)
+  assert.equal(run(col('bndes', { bLine: 'tlp' })).ok, true)
+})
+test('BNDES com carência paga juros e mantém o fluxo datado', () => {
+  const r = run(col('bndes', { bPeriod: '6' }), { ...shared, grace: '6' })
+  assert.equal(r.ok, true); assert.ok(r.graceNote.includes('juros pagos'))
+  assert.equal(r.rows[0].date, '2027-05-10'); assert.equal(r.rows[0].days, 181)
+})
+test('FINIMP repete a conta da calculadora e exige moeda, câmbio e prazo válidos', () => {
+  const r = run(col('finimp')), base = finimpCost({ principal: 500000, annualRate: 6, flatRate: 0.5, tac: 0, days: 180 })
+  assert.ok(Math.abs(r.cost - base.cost) < 1e-6)
+  assert.equal(r.net, 500000 - base.flat); assert.equal(r.interest, base.interest)
+  assert.equal(r.iof, 0)
+  assert.equal(run(col('finimp', { fFx: '' })).ok, false)
+  assert.equal(run(col('finimp', { fCurrency: 'BRL', fFx: '' })).ok, true)
+  assert.equal(run(col('finimp', { fDays: 'auto' })).ok, false)
+  assert.equal(run(col('finimp', { fDays: 'auto' }), { ...shared, term: '6' }).rows[0].days, 180)
+})
+test('Conta Garantida repete juros e IOF do simulador de saldo', () => {
+  const r = run(col('conta-garantida', { cDays: '30' }))
+  const base = simulateContaGarantida({ start: '2026-11-10', end: '2026-12-10', rate: 2, rateBase: 30, conversion: 'proportional', dayCount: 'calendar', events: [{ date: '2026-11-10', draw: 500000, payment: 0 }], settleAllAtEnd: true, taxProfile: 'pj', eligible: false, operationValue: 500000 })
+  assert.ok(Math.abs(r.interest - base.totals.interest) < 1e-6); assert.ok(Math.abs(r.iof - base.totals.iof) < 1e-6)
+  assert.equal(r.net, 500000)
+  assert.equal(run(col('conta-garantida', { cDays: '0' })).ok, false)
+})
+test('Desconto de duplicata repete a conta do desconto', () => {
+  const r = run(col('desconto', { dDays: '60', dTac: '260,00', dFee: '564' }))
+  const base = discountOperation({ titleRows: [{ value: 500000, count: 1, dueDate: '2027-01-09' }], date: '2026-11-10', rate: 1.83, convention: 'commercial30', taxProfile: 'pj', eligible: false, feeMode: 'total', fee: 564, tac: 260 })
+  assert.equal(r.net, base.net); assert.ok(Math.abs(r.cost - base.cost) < 1e-6)
+  assert.ok(Math.abs(r.fees - (base.tac + base.titleFee)) < 1e-9)
+})
+test('mesmo valor líquido: todas as colunas fecham no líquido comum', () => {
+  for (const { id } of m.MODALITIES) {
+    const r = run(col(id), shared, { cdi: 12, targetNet: 300000 })
+    assert.equal(r.ok, true, `${id}: ${r.error}`)
+    assert.ok(Math.abs(r.net - 300000) < 0.011, id)
+  }
+  assert.equal(run(col('giro-pre'), shared, { cdi: 12, targetNet: -1 }).ok, false)
+})
+test('destaques só apontam menores valores, sem vencedor absoluto', () => {
+  const results = m.evaluateAll([col('giro-pre'), col('bndes'), col('finimp')], shared, { cdi: 12 })
+  const h = m.highlights(results)
+  assert.equal(results[h.lowestCet].cet, Math.min(...results.map(r => r.cet)))
+  assert.equal(results[h.lowestCost].cost, Math.min(...results.map(r => r.cost)))
+  assert.equal(m.highlights([results[0]]).lowestCet, null)
+})
+test('Outra modalidade aceita nome, indexador livre e CET informado', () => {
+  const r = run(col('outra', { name: 'Cédula', declaredCet: '20' }))
+  assert.equal(r.label, 'Cédula'); assert.equal(r.declaredCet, 20)
+  assert.equal(run(col('outra', { rateType: 'cdi' }), shared, { cdi: NaN }).ok, false)
+})
+test('valores inválidos viram erro em vez de número', () => {
+  assert.equal(run(col('giro-pre'), { ...shared, value: '' }).ok, false)
+  assert.equal(run(col('giro-pre', { guaranteeValue: 'abc' })).ok, false)
+  assert.equal(run(col('giro-pre'), { ...shared, start: '2024-01-01' }).ok, false)
+})
+test('Desconto: total desembolsado é o nominal pago, sem repetir juros e IOF', () => {
+  const r = run(col('desconto', { dDays: '60' }), { ...shared, value: '100.000,00' })
+  assert.equal(r.total, 100000); assert.ok(Math.abs(r.cost - (r.total - r.net)) < 1e-6)
+})
+test('modalidades de pagamento único avisam que carência e amortização comuns não se aplicam', () => {
+  for (const id of ['finimp', 'conta-garantida', 'desconto']) assert.ok(run(col(id), { ...shared, grace: '6' }).notes.some(n => n.includes('não se aplicam')), id)
+})
