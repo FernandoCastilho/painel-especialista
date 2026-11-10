@@ -132,8 +132,8 @@ const daily = (start, n, base, step, dec = 4) => Array.from({ length: n }, (_, i
       assert.match(await p.locator('.bn-sub').nth(1).innerText(), /TFC_120\.90 \(C02\)/i)
       // Moedas: dólar em %, TFBTR vigente ignora data futura, sobretaxa ausente marcada
       await fam.getByRole('button', { name: 'Moedas', exact: true }).click()
-      assert.equal(await tbl().count(), 7)
-      assert.deepEqual(await tbl().locator('.bn-pick small').allTextContents().then((a) => a.map((s) => s.split(' · ')[0])), ['604', '143', 'LD1', '024', '236', 'TR1', 'TR2'])
+      assert.equal(await tbl().count(), 10)
+      assert.deepEqual(await tbl().locator('.bn-pick small').allTextContents().then((a) => a.map((s) => s.split(' · ')[0])), ['604', '143', 'LD1', '024', '236', 'TR1', 'TR2', 'TD1', 'TD2', 'TD3'])
       assert.match(await tbl().nth(0).innerText(), /US\$[\s\S]*R\$ 5,\d{4}[\s\S]*▲ \+0,\d\d%/)
       assert.match(await tbl().nth(5).innerText(), /TFBTR60\.90[\s\S]*3,60% a\.a\./, 'valor vigente da TR1: o do mês corrente, não o de 2099')
       assert.match(await tbl().nth(2).innerText(), /SOBRETAXA LCD[\s\S]*-0,110000% a\.a\.\s+·\s+dado anterior/, 'LD1 preserva a referência oficial datada, mesmo quando a coleta não inclui essa série')

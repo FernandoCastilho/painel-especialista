@@ -19,13 +19,16 @@ export const MOEDAS_SERIES = [
   { id: '236', name: 'TLP-IPCA', kind: 'pct', unit: '% no mês', note: 'Componente IPCA da TLP' },
   { id: 'TR1', name: 'TFBTR60.90', kind: 'rate', unit: '% a.a.', note: 'TFB baseada em TR, 60 meses, liberação em 90 dias' },
   { id: 'TR2', name: 'TFBTR120.90', kind: 'rate', unit: '% a.a.', note: 'TFB baseada em TR, 120 meses, liberação em 90 dias' },
+  { id: 'TD1', name: 'TFBD24.120', kind: 'rate', unit: '% a.a.', note: 'Taxa Fixa BNDES em Dólar (TFBD), operações indiretas, prazo total até 24 meses, liberação em até 120 dias. O saldo ainda varia com o dólar (moeda 604).' },
+  { id: 'TD2', name: 'TFBD72.120', kind: 'rate', unit: '% a.a.', note: 'Taxa Fixa BNDES em Dólar (TFBD), operações indiretas, prazo total acima de 24 e até 72 meses, liberação em até 120 dias. O saldo ainda varia com o dólar (moeda 604).' },
+  { id: 'TD3', name: 'TFBD120.120', kind: 'rate', unit: '% a.a.', note: 'Taxa Fixa BNDES em Dólar (TFBD), operações indiretas, prazo total acima de 72 e até 120 meses, liberação em até 120 dias. O saldo ainda varia com o dólar (moeda 604).' },
 ]
 export const GROUPS = {
   tfc: TFC_SERIES.map(([id, name]) => ({ id, name, kind: 'rate', unit: '% a.a.', note: `Série ${name} (código ${id})` })),
   moedas: MOEDAS_SERIES,
 }
 export const TFC_DEFINICAO = 'Séries TFC publicadas pelo BNDES em Moedas Contratuais, uma por produto, porte e prazo (siglas e códigos C01 a C26 como na tabela do BNDES; o banco não detalha a sigla na consulta). Em % ao ano; valor diário em dia útil.'
-export const MOEDAS_DEFINICAO = 'Moedas e indicadores contratuais usados em contratos do BNDES, com o código da tabela de Moedas Contratuais: dólar (604), índice Selic acumulada D-2 úteis (143), sobretaxa LCD para operações indiretas (LD1), sobretaxa fixa Selic (024), TLP-IPCA (236) e as TFB baseadas em TR (TR1 e TR2). LD1 é uma taxa anual fixa na contratação, não o custo total; a série acompanha as referências trimestrais para novas contratações. A sobretaxa pode ser negativa.'
+export const MOEDAS_DEFINICAO = 'Moedas e indicadores contratuais usados em contratos do BNDES, com o código da tabela de Moedas Contratuais: dólar (604), índice Selic acumulada D-2 úteis (143), sobretaxa LCD para operações indiretas (LD1), sobretaxa fixa Selic (024), TLP-IPCA (236), as TFB baseadas em TR (TR1 e TR2) e a Taxa Fixa BNDES em Dólar das operações indiretas (TFBD: TD1 até 24 meses, TD2 até 72 e TD3 até 120). A TFBD é só a taxa em % ao ano; o saldo do contrato também acompanha o dólar (604). LD1 é uma taxa anual fixa na contratação, não o custo total; a série acompanha as referências trimestrais para novas contratações. A sobretaxa pode ser negativa.'
 
 // Variação percentual com seta (níveis: dólar, índice da Selic); null quando falta a referência.
 // id: código da série quando a variação é a de um dia (só ela leva o selo de salto).
