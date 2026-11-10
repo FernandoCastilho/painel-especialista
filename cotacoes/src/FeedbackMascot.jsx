@@ -5,9 +5,13 @@ import { EMPTY_FEEDBACK, FEEDBACK_LIMITS, FEEDBACK_TYPES, feedbackEndpoint, send
 import './FeedbackMascot.css'
 import MascotDock from './MascotDock.jsx'
 import owl from './assets/mascot-owl.webp'
+import owlWing from './assets/mascot-owl-wing.webp'
 
 export function MascotIcon() {
-  return <img src={owl} alt="" className="feedback-mascot-icon" width="384" height="408" draggable="false" />
+  return <span className="feedback-mascot-icon" aria-hidden="true">
+    <img src={owl} alt="" className="mascot-body" width="384" height="408" draggable="false" />
+    <img src={owlWing} alt="" className="mascot-wing" width="384" height="408" draggable="false" />
+  </span>
 }
 
 export default function FeedbackMascot({ configuration = config, onSearch }) {
