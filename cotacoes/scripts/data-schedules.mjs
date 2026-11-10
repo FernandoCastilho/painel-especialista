@@ -19,6 +19,13 @@ export function b3CollectionDecision(now,previousCheckedAt) {
  if(previousCheckedAt){const prev=saoPauloParts(previousCheckedAt);if(prev.date===p.date&&prev.hour===p.hour)return {run:false,reason:'consulta desta hora já concluída',...p}}
  return {run:true,reason:'consulta horária; referência diária de ajuste',...p}
 }
+// Dia sem pregão? true = fim de semana ou feriado do calendário B3 conferido; false = dia de pregão; null = ano sem calendário conferido (não dá para saber).
+export function b3ClosedDay(now=Date.now()) {
+ const p=saoPauloParts(now)
+ if(['Sat','Sun'].includes(p.weekday))return true
+ if(!b3CalendarStatus(p.date.slice(0,4)).verified)return null
+ return closed2026.has(p.date.slice(5))
+}
 // Lembrete ao dono: quantos dias faltam para o fim do calendário B3 conferido. Não inclui nem inventa ano novo; só conta.
 // A cobertura vai até 31/12 do último ano conferido em sequência (hoje, 2026). Depois dessa data as curvas da B3 param de atualizar.
 export const B3_CALENDAR_REMINDER_DAYS=60

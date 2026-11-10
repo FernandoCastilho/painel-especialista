@@ -36,13 +36,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Baixar os dados anteriores (branch data)
-        run: |
-          mkdir -p /tmp/data
-          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
-            git fetch --depth=1 origin data
-            for f in quotes.json intraday.json history.json; do git show FETCH_HEAD:$f > /tmp/data/$f 2>/dev/null || true; done
-          fi
       - name: Coletar e publicar (laço de 5 min no pregão, uma vez fora dele)
         env:
           DATA_DIR: /tmp/data
@@ -55,7 +48,34 @@ jobs:
             dow=$(date -u +%u); hm=$((10#$(date -u +%H%M)))
             [ "$dow" -le 5 ] && [ "$hm" -ge 1215 ] && [ "$hm" -le 2100 ]
           }
+          # Dados anteriores (branch data). Devolve 0 quando o estado é conhecido: arquivos baixados, ou a branch ainda não existe
+          # (primeira publicação). Falha de rede NÃO é "branch não existe": devolve 1 e a rodada não coleta nem publica, porque a
+          # publicação substitui a branch inteira e o intradiário de 5 dias recomeçaria do zero.
+          baixar_anteriores() {
+            local rc f n
+            mkdir -p "$DATA_DIR"
+            for n in 1 2 3; do
+              rc=0
+              git ls-remote --exit-code --heads origin data >/dev/null 2>&1 || rc=$?
+              if [ "$rc" -eq 2 ]; then echo "branch data ainda não existe: primeira publicação"; return 0; fi
+              if [ "$rc" -eq 0 ] && git fetch -q --depth=1 origin data; then
+                rc=0
+                for f in quotes.json intraday.json history.json; do
+                  # arquivo que não existe na branch é normal (ex.: history na primeira vez); arquivo que existe precisa ser lido
+                  if git cat-file -e "FETCH_HEAD:$f" 2>/dev/null; then git show "FETCH_HEAD:$f" > "$DATA_DIR/$f" || rc=1; fi
+                done
+                [ "$rc" -eq 0 ] && return 0
+              fi
+              [ "$n" -lt 3 ] && sleep $((n * 5))
+            done
+            return 1
+          }
+          base_ok=false
           collect_and_publish() {
+            if [ "$base_ok" != true ]; then
+              if baixar_anteriores; then base_ok=true
+              else echo "::warning::Não foi possível ler os dados anteriores (branch data). Rodada sem coleta e sem publicação, para não apagar o histórico; tenta de novo na próxima."; return 0; fi
+            fi
             node cotacoes/scripts/fetch-quotes.mjs || echo "coleta com erro; mantidos os arquivos anteriores"
             [ -f "$DATA_DIR/quotes.json" ] || { echo "nada a publicar"; return 0; }
             (
