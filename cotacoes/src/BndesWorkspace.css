@@ -51,8 +51,10 @@
 .bw .cx-finame .fm-fgi .cx-hint { margin:0; }
 
 /* Approved BNDES quotation identity, deliberately independent of the terminal theme. */
+:root[data-theme] body .bw, :root[data-theme] body .bw .cx {
+  --cx-field-bg:#fff; --cx-line-strong:#7a8fac; --cx-select-bg:#006bdc; --cx-select-fg:#fff; --cx-primary-bg:#ff7900; --cx-primary-fg:#10284c; --cx-result-bg:#062a5c; --cx-result-line:#ff7900; --bg:#fff; --card:#fff; --surface-2:#f1f6fd; --fg:#10284c; --mut:#455c7a; --line:#c9d7e9; --amber:#ff7900; --down:#a92727;
+}
 :root[data-theme] body .bw {
-  --bg:#fff; --card:#fff; --surface-2:#f1f6fd; --fg:#10284c; --mut:#455c7a; --line:#c9d7e9; --amber:#ff7900; --down:#a92727;
   color:var(--fg); background:#f7faff; border:1px solid #cedbeb; border-radius:12px; gap:0; overflow:clip; font-family:Arial,Helvetica,sans-serif;
 }
 .bw > .cx-back { margin:0 16px; }
@@ -94,7 +96,7 @@
 .bw .cx-finame .cx-field { gap:3px; }
 .bw .cx-finame .fm-rotulo { min-width:0; gap:2px; }
 .bw .cx-finame .cx-field label,.bw .cx-finame .cx-label { color:#10284c; font-size:.85rem; font-weight:700; line-height:1.35; }
-.bw .cx-finame input:not([type=checkbox]),.bw .cx-finame select,.bw .bw-profile select { border:1px solid #9eafc8; border-radius:6px; background:#fff; color:#15253d; min-height:44px; padding:8px; font:inherit; font-size:.9rem; width:100%; min-width:0; }
+.bw .cx-finame input:not([type=checkbox]),.bw .cx-finame select,.bw .bw-profile select { border:1px solid #7a8fac; border-radius:6px; background:#fff; color:#15253d; min-height:44px; padding:8px; font:inherit; font-size:.9rem; width:100%; min-width:0; }
 .bw .cx-finame .money-wrap input { padding-left:32px; }
 .bw .cx-finame .money-wrap > i { left:8px; color:#314e72; }
 .bw .cx-finame .cx-hint { color:#455c7a; font-size:.78rem; line-height:1.5; }
@@ -149,3 +151,14 @@
 .bw #fm-fgi:focus-visible { outline:2px solid #062a5c; outline-offset:3px; }
 .bw .fm-destaques .fm-quote-empty { padding:0; }
 .bw .fm-destaques .fm-quote-empty th:first-child { width:55%; }
+.bw .cx-finame .cx-form { align-items:stretch; }
+.bw #fm-result > header .fi-help > button { color:white; }
+.bw .cx-finame .cx-rate { flex-wrap:nowrap; }
+.bw .cx-finame .cx-rate > input { flex:1 1 0; min-width:0; }
+.bw .fm-comparison th small { color:#455c7a; text-transform:none; letter-spacing:0; }
+/* Amounts are indivisible; narrow screens scroll the comparison locally. */
+.bw .fm-comparison .cx-matrix { min-width:440px; }
+.bw .fm-comparison .cx-matrix td,.bw .fm-quote-empty .cx-matrix td { white-space:nowrap; overflow-wrap:normal; }
+@media(max-width:399px) { .bw .fm-payment .fm-group-fields { grid-template-columns:1fr; } }
+.bw .fm-operation .fm-group-fields { align-items:end; }
+.bw .cx-finame .fm-input-panel > header { min-height:40px; padding:4px 16px; }

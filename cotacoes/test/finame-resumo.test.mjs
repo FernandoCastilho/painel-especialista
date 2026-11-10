@@ -34,8 +34,9 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   assert.match(source, /<details className="fm-details"><summary>Composição do resultado · \{custo\.toUpperCase\(\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
   assert.doesNotMatch(source, /<details className="fm-details" open/)
   // A faixa azul não aparece sozinha: só junto da comparação.
-  assert.equal(source.match(/className="fm-hero"/g).length, 1)
-  assert.match(source, /\{comparar && <><div className="fm-hero"><h4>Cotação comparativa<\/h4><\/div><div className="fm-comparison"/)
+  assert.match(source, /className=\{comparar \? 'fm-hero' : undefined\}/)
+  assert.match(source, /\{comparar && <div className="fm-comparison"/)
+  assert.match(source, /comparar \? 'Cotação comparativa' : 'Cotação da operação'/)
   // Ressalvas do resultado continuam no cabeçalho do painel.
   assert.match(source, /<small>Projeção · não é CET<\/small>/)
   // A tela não faz conta nova com o resultado para os destaques: o arquivo de seleção não importa o cálculo.

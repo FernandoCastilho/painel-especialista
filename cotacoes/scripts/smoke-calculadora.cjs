@@ -127,8 +127,11 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       const kpiBox = (nome, area = composicao) => area.locator('.fm-kpi', { has: p.locator('span.fm-rotulo', { hasText: new RegExp(`^${nome}\\s*\\??$`) }) })
       const kpi = async (nome) => (await kpiBox(nome).locator('b').innerText())
       assert.equal(await fm.locator('.fm-hero').count(), 0, 'sem comparação não há faixa "Cotação comparativa" vazia')
-      for (const nome of ['Taxa final', 'Parcelas', 'Juros totais', 'Pagamento final']) assert.equal(await kpiBox(nome, destaques).innerText(), await kpiBox(nome).innerText(), `destaque "${nome}" idêntico à composição`)
-      assert.equal(await destaques.locator('.fm-kpi').count(), 4)
+      for (const [label, detail] of [['Taxa final', 'Taxa final'], ['Primeira parcela após carência', 'Parcelas'], ['Juros totais', 'Juros totais'], ['Total projetado', 'Pagamento final']]) {
+        const row = destaques.getByRole('row').filter({ has: p.getByRole('rowheader', { name: new RegExp('^' + label) }) })
+        assert.ok((await row.locator('td').innerText()).includes(await kpi(detail)), `tabela e composição: ${label}`)
+      }
+      assert.equal(await destaques.locator('tbody tr').count(), 6)
       await help('Taxa final', /14,17% TFC \+ 1,25% BNDES \+ 3,00% spread da instituição/, destaques)
       await help('Taxa final', /14,17% TFC \+ 1,25% BNDES \+ 3,00% spread da instituição/, composicao)
       assert.match(await kpiBox('Spread da instituição').innerText(), /3,00% a\.a\.\s+\+3,4\d p\.p\./)
@@ -136,7 +139,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       await help('Custo financeiro', /Taxa Fixa Composta/)
       assert.equal(await fm.locator('.fm-rotulo .fi-help').count() >= 18, true, 'um "?" por rótulo e por KPI')
       await help('Spread da instituição', /juros com a taxa completa menos/)
-      await fm.getByRole('button', { name: 'Grande empresa' }).click()
+      await fm.locator('#fm-porte').selectOption({ label: 'Grande empresa' })
       assert.match(await fm.locator('.fm-custo-valor').innerText(), /TFC_60\.90 \(C01\), grande empresa, faixa até 60 meses: 14,4173%/)
       await fm.getByLabel('Prazo total (meses)', { exact: true }).fill('72')
       assert.match(await fm.locator('.fm-custo-valor').innerText(), /TFC_120\.90 \(C02\), grande empresa, faixa 61 a 120 meses: 14,5416%/)

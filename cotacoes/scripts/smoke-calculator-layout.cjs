@@ -233,6 +233,7 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
+    await section.locator('.fm-fluxo-panel > summary').click()
     assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 60)
     assert.match(await section.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
   }
