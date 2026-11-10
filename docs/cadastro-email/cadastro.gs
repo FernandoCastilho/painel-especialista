@@ -1,7 +1,8 @@
 // Script do Google (Apps Script) que recebe os pedidos da tela de entrada do painel.
 // Cola-se dentro da planilha: Extensões > Apps Script. Passo a passo em LEIAME.md.
-// Faz quatro coisas: confere se o e-mail está na aba "Liberados", envia o código de 6 números por e-mail,
-// confere o código e registra quem entrou na aba "Acessos". E-mail fora da lista não recebe código.
+// Faz quatro coisas: envia o código de 6 números para qualquer e-mail, confere o código,
+// anota quem confirmou na aba "Liberados" (sem precisar de aprovação) e registra cada entrada na aba "Acessos".
+// Para barrar alguém, ponha o e-mail na aba "Bloqueados".
 
 // Deixe vazio se o script foi colado dentro da planilha (Extensões > Apps Script).
 // Preencha com o código da planilha (o trecho entre /d/ e /edit no endereço dela) se o script for um projeto separado.
@@ -10,6 +11,7 @@ var ID_PLANILHA = ''
 var LIMITE_PEDIDOS_POR_HORA = 5   // por e-mail
 var LIMITE_TENTATIVAS = 5         // por código
 var VALIDADE_CODIGO_S = 600       // 10 minutos
+var MSG_BLOQUEADO = 'Este e-mail está bloqueado. Fale com o administrador.'
 
 function doGet(e) {
   var p = (e && e.parameter) || {}
@@ -35,7 +37,7 @@ function emailValido_(e) {
 function pedir_(emailBruto) {
   var email = normalizar_(emailBruto)
   if (!emailValido_(email)) return { ok: false, erro: 'E-mail inválido.' }
-  if (!liberado_(email)) return { ok: false, erro: 'Este e-mail não está liberado. Fale com o administrador.' }
+  if (bloqueado_(email)) return { ok: false, erro: MSG_BLOQUEADO }
   var lock = LockService.getScriptLock()
   lock.waitLock(10000)
   try {
@@ -67,7 +69,7 @@ function confirmar_(emailBruto, codigoBruto) {
   var email = normalizar_(emailBruto)
   var codigo = String(codigoBruto || '').trim()
   if (!emailValido_(email) || !/^\d{6}$/.test(codigo)) return { ok: false, erro: 'Código incorreto.' }
-  if (!liberado_(email)) return { ok: false, erro: 'Este e-mail não está liberado. Fale com o administrador.' }
+  if (bloqueado_(email)) return { ok: false, erro: MSG_BLOQUEADO }
   var lock = LockService.getScriptLock()
   lock.waitLock(10000)
   try {
@@ -82,6 +84,7 @@ function confirmar_(emailBruto, codigoBruto) {
       return { ok: false, erro: 'Código incorreto.' }
     }
     cache.remove('cod:' + email)
+    liberar_(email)
     registrar_('cadastro', email)
     return { ok: true, token: token_(email) }
   } finally {
@@ -91,23 +94,38 @@ function confirmar_(emailBruto, codigoBruto) {
 
 function visita_(emailBruto, token) {
   var email = normalizar_(emailBruto)
-  if (!emailValido_(email) || String(token || '') !== token_(email) || !liberado_(email)) return { ok: false, erro: 'Acesso não reconhecido.' }
+  if (!emailValido_(email) || String(token || '') !== token_(email) || bloqueado_(email)) return { ok: false, erro: 'Acesso não reconhecido.' }
   registrar_('visita', email)
   return { ok: true }
 }
 
-// Lista de e-mails autorizados: aba "Liberados", um e-mail por linha na coluna A (a linha 1 é o título).
-// Para tirar o acesso de alguém, apague a linha: a pessoa é barrada na próxima abertura do painel.
-// Se a aba não existir, ela é criada vazia e ninguém entra até você preencher.
-function liberado_(email) {
-  var planilha = planilha_()
-  var aba = planilha.getSheetByName('Liberados')
-  if (!aba) { aba = planilha.insertSheet('Liberados'); aba.appendRow(['E-mail liberado']); return false }
+// Aba "Liberados": quem já confirmou o código entra aqui sozinho (e-mail na coluna A, data na coluna B).
+// Serve de cadastro de quem acessa; não é preciso aprovar ninguém.
+function liberar_(email) {
+  var aba = aba_('Liberados', ['E-mail liberado', 'Liberado em'])
+  if (contem_(aba, email)) return
+  aba.appendRow([email, new Date()])
+}
+
+// Aba "Bloqueados": um e-mail por linha na coluna A (a linha 1 é o título). Quem estiver aqui
+// não recebe código e é barrado na próxima abertura do painel. Para desbloquear, apague a linha.
+function bloqueado_(email) {
+  return contem_(aba_('Bloqueados', ['E-mail bloqueado']), email)
+}
+
+function contem_(aba, email) {
   var n = aba.getLastRow()
   if (n < 2) return false
   var valores = aba.getRange(2, 1, n - 1, 1).getValues()
   for (var i = 0; i < valores.length; i++) if (normalizar_(valores[i][0]) === email) return true
   return false
+}
+
+function aba_(nome, titulo) {
+  var planilha = planilha_()
+  var aba = planilha.getSheetByName(nome)
+  if (!aba) { aba = planilha.insertSheet(nome); aba.appendRow(titulo) }
+  return aba
 }
 
 // Prova de que o e-mail foi confirmado: assinatura com uma chave secreta guardada só neste script.
@@ -120,10 +138,7 @@ function token_(email) {
 }
 
 function registrar_(tipo, email) {
-  var planilha = planilha_()
-  var aba = planilha.getSheetByName('Acessos')
-  if (!aba) { aba = planilha.insertSheet('Acessos'); aba.appendRow(['Data e hora', 'E-mail', 'Tipo']) }
-  aba.appendRow([new Date(), email, tipo])
+  aba_('Acessos', ['Data e hora', 'E-mail', 'Tipo']).appendRow([new Date(), email, tipo])
 }
 
 function planilha_() {
