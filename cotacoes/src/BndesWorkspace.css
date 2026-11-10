@@ -139,6 +139,7 @@
   .bw .bw-nav button { padding:8px 5px; font-size:.75rem; flex:1; min-width:0; }
   .bw .fm-toolbar,.bw .bw-profile { flex-direction:column; align-items:stretch; width:100%; }
   .bw .fm-toolbar { padding:12px; } .bw .fm-operation .fm-group-fields,.bw .fm-payment .fm-group-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .bw .fm-operation .cx-field:has(#fm-valor) { grid-column:1/-1; }
   .bw .fm-costs .fm-group-fields { display:flex; flex-direction:column; }
   .bw .fm-group-fields { padding:8px 2px 2px; gap:8px; } .bw .fm-group { padding:5px; }
   .bw .fm-quote-empty .cx-matrix th,.bw .fm-quote-empty .cx-matrix td,.bw .fm-comparison .cx-matrix th,.bw .fm-comparison .cx-matrix td { font-size:.75rem; padding:10px 5px; }

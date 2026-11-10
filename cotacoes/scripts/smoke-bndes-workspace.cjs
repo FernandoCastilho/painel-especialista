@@ -21,6 +21,25 @@ const out = process.env.BNDES_WORKSPACE_QA_OUTPUT || 'workspace-qa/bndes-workspa
         assert.equal(await page.getByRole('button', { name: /^BNDES.*abrir calculadora$/ }).count(), 1, 'entrada única BNDES')
         await page.getByRole('button', { name: 'BNDES: abrir calculadora', exact: true }).click()
         await page.locator('#fm-compare').waitFor()
+        if (width <= 390) {
+          const amount = page.locator('#fm-valor')
+          for (const value of ['500.000,00', '1.234.567,89']) {
+            await amount.fill(value)
+            await amount.blur()
+            const geometry = await amount.evaluate(element => {
+              const style = getComputedStyle(element)
+              const context = document.createElement('canvas').getContext('2d')
+              context.font = style.font
+              return { value: element.value, focused: document.activeElement === element, textWidth: context.measureText(element.value).width, available: element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) }
+            })
+            assert.equal(geometry.value, value)
+            assert.equal(geometry.focused, false)
+            assert.ok(geometry.textWidth <= geometry.available, `valor completo e centavos visíveis: ${JSON.stringify(geometry)}`)
+            await page.screenshot({ path: path.join(out, `${width}-${theme}-amount-${value.includes('89') ? 'cents' : 'default'}.png`), fullPage: true })
+          }
+          await amount.fill('500.000,00')
+          await amount.blur()
+        }
         await page.screenshot({ path: path.join(out, `${width}-${theme}-initial.png`), fullPage: true })
         assert.equal(await page.locator('#fm-custo').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)', 'campos claros também no tema escuro')
         await page.locator('#fm-finame-eligible').check()
