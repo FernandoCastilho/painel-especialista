@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { refreshScenarios } from '../scripts/refresh-scenarios.mjs'
-import { RETAIN_FILES, RETAIN_JSON_FILES, loadPublishedFile, createWeeklySnapshot, verifyWeeklyData } from '../scripts/weekly-data.mjs'
+import { RETAIN_FILES, RETAIN_JSON_FILES, loadPublishedFile, createWeeklySnapshot, verifyWeeklyData, acceptRefreshedFile } from '../scripts/weekly-data.mjs'
 import { weeklyFixture, previousMacro, nextFocus } from './helpers/weekly-package.mjs'
 
 const refresh = options => refreshScenarios({ load: async file => weeklyFixture()[file], collect: async () => nextFocus, now: 20, ...options })
@@ -144,4 +144,27 @@ test('weekly guard is blocking and checks the final package after the build and 
   assert.match(guard, /if: github.event.schedule == '30 11 \* \* 1,2'/)
   assert.match(guard, /weekly-data\.mjs dist "\$RUNNER_TEMP\/weekly-data-snapshot\.json"/)
   assert.doesNotMatch(guard, /continue-on-error/)
+})
+
+test('weekly Focus history refreshed after the inventory passes the final check; any other changed base still aborts', async t => {
+  const directory = await packageDirectory(t)
+  const retained = await refresh({ save: diskSave(directory) })
+  const snapshot = createWeeklySnapshot(retained)
+  const renovado = JSON.stringify({ ...JSON.parse(retained['focus-history.json']), generatedAt: '2026-11-10T11:30:00.000Z', series: { Selic: { 2027: [{ d: '2026-11-06', v: 12 }] } } })
+  await writeFile(join(directory, 'focus-history.json'), renovado, 'utf8')
+  await assert.rejects(verifyWeeklyData(directory, snapshot), /preservar focus-history\.json \(conteúdo alterado no pacote final\)/)
+  await verifyWeeklyData(directory, acceptRefreshedFile(snapshot, 'focus-history.json', renovado))
+  assert.throws(() => acceptRefreshedFile(snapshot, 'curves.json', retained['curves.json']), /não pode ser renovado/)
+  assert.throws(() => acceptRefreshedFile(snapshot, 'focus-history.json', JSON.stringify({ generatedAt: 'x', series: {} })), /sem séries/)
+  assert.throws(() => acceptRefreshedFile(snapshot, 'focus-history.json', '{'), /JSON inválido/)
+  await writeFile(join(directory, 'curves.json'), JSON.stringify({ generatedAt: 1, outro: true }), 'utf8')
+  await assert.rejects(verifyWeeklyData(directory, acceptRefreshedFile(snapshot, 'focus-history.json', renovado)), /preservar curves\.json/)
+})
+
+test('weekly workflow registers the refreshed Focus history after collecting it and before the build', async () => {
+  const workflow = await readFile(new URL('../../.github/workflows/pages.yml', import.meta.url), 'utf8')
+  const accept = workflow.indexOf('run: node scripts/accept-focus-history.mjs "$RUNNER_TEMP/weekly-data-snapshot.json"')
+  assert.ok(accept > workflow.indexOf('run: node scripts/fetch-focus-history.mjs'))
+  assert.ok(accept < workflow.indexOf('      - name: Build'))
+  assert.ok(workflow.slice(workflow.lastIndexOf('\n      - ', accept), accept).includes("if: github.event.schedule == '30 11 * * 1,2'"))
 })

@@ -146,6 +146,9 @@ function bndes(col, p, ctx) {
   const part = percent(col.bPart), cost = percent(col.bCost), agent = percent(col.bAgent), tac = money(col.bTac, true), ipca = col.bLine === 'tlp' ? parseSigned(col.bIpca) : 0
   const fgiPct = col.bFgi.trim() ? percent(col.bFgi) : null
   if (!porte || part === null || cost === null || agent === null || tac === null || (col.bLine === 'tlp' && ipca === null) || (col.bFgi.trim() && fgiPct === null)) return fail('Confira os campos do BNDES: porte, participação, custo financeiro, spread do agente, TAC e IPCA.')
+  // Regulamento do FGI Tradicional (Circular SUP/ADIG 62/2026), art. 7º, I: MEI e empresas de micro, pequeno e médio porte,
+  // com receita bruta de até R$ 300 milhões. A exceção do inciso II (setores definidos pelo Poder Executivo) não é modelada.
+  if (fgiPct !== null && porte.mpme === false) return fail('Retire a garantia do FGI: ela atende micro, pequenas e médias empresas (receita bruta de até R$ 300 milhões no ano anterior).')
   let iof = IOF_ZERO
   if (col.bIof !== 'zero') {
     const tax = resolveCreditIof({ date: p.start, profile: col.bIof, operationValue: p.value * part / 100, eligible: col.bIof === 'pj' ? false : col.eligible })

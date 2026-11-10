@@ -3,6 +3,8 @@
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
   { date: '10/11/2026', resumo: 'Menos pop-ups: Panorama e Conceito do dia abrem só por clique, no Mercado; Finame mostra os números principais no topo do resultado', items: [
+    'BNDES > Moedas: cotação diária da TFBD (Taxa Fixa BNDES em Dólar, operações indiretas), nas três faixas de prazo: TFBD24.120 (TD1), TFBD72.120 (TD2) e TFBD120.120 (TD3). É só a taxa em % ao ano; o saldo do contrato também acompanha o dólar (604).',
+    'Garantia FGI na calculadora BNDES Finame e no comparador de crédito: percentual garantido só em múltiplos de 10 (10% a 80%), crédito garantido limitado a R$ 20 milhões por cliente em cada agente e recusa em linha com TLP capitalizada ou para grande empresa, conforme o Regulamento do FGI Tradicional (Circular SUP/ADIG 62/2026). A ajuda do ECG explica por que o valor parece alto e traz exemplos.',
     'Aviso de entrada: aparece na primeira vez neste aparelho e só volta quando o texto mudar. Para reler, abra o "i" (Informações e avisos gerais) e toque em "Ver o aviso de entrada".',
     'Panorama do dia: não abre mais sozinho. Fica no botão "Panorama do dia", no topo do quadro Mercado hoje; um ponto no botão indica edição nova (dias úteis, das 9h às 18h).',
     'Conceito do dia: não abre mais sozinho. Fica no botão "Conceito do dia" da faixa Aprender, no Mercado.',
