@@ -26,7 +26,7 @@ test('feedback: only user-entered fields are transmitted, never URL, cookies or 
   const sent = {...values, name:' Ana ', email:'ana@example.test'}
   assert.equal(await sendFeedback(config,sent,{fetcher:async (url,options)=>{request={url,...options}; return {ok:true,json:async()=>({ok:true})}}}),true)
   assert.equal(request.url,feedbackEndpoint(config));assert.equal(request.credentials,'omit');assert.equal(request.referrerPolicy,'no-referrer');assert.equal(request.redirect,'error')
-  assert.deepEqual(JSON.parse(request.body),{assunto:'[Painel do Especialista] Sugestão',tipo:'Sugestão',message:'Uma sugestão de teste.',name:'Ana',email:'ana@example.test',_gotcha:''})
+  assert.deepEqual(JSON.parse(request.body),{assunto:'[PEME] Sugestão',tipo:'Sugestão',message:'Uma sugestão de teste.',name:'Ana',email:'ana@example.test',_gotcha:''})
   assert.equal(sent.message,values.message)
 })
 test('feedback: no success from an HTTP-only acceptance, error, quota or invalid JSON', async () => {

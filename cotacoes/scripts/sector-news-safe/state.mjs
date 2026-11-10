@@ -86,7 +86,8 @@ export function validateState(state, { allowProduction = false, parserReleaseGra
 }
 
 // A runtime transition may add blocks but cannot clear or change an existing hold.
-// Recovery is intentionally absent: it needs a separately reviewed, authorized procedure.
+// Recovery is never automatic: only an exact, code-reviewed grant (run-recovery.mjs) may close an
+// interrupted run, and it can only suspend the uncertain source, never clear a hold.
 export function validateTransition(before, after, options) {
   validateState(before, options); validateState(after, options)
   const parserRelease = isExactParserRelease(before, after, options?.parserReleaseGrants)
