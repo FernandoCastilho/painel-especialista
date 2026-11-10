@@ -16,3 +16,9 @@ Opção 1: encerrar a rodada com concessão exata no código, suspender só o MA
 
 ## Pendente
 - MAPA fica suspenso até revisão própria (a matéria interrompida era leitura pública; o risco é baixo, mas a liberação exige decisão separada).
+
+## Liberação de ANTT e MAPA (10/11/2026)
+- ANTT parou em 09/11 às 19:26 UTC: o índice trouxe uma matéria com espaços no endereço (`...rodovirias%20-do%20-pais...`). O transporte recusa endereços com `%` **antes** de qualquer acesso, mas o runner classificou o erro como `operation_outcome_uncertain`. Correção: `extractGovArticleLinks` ignora esses links, com a mesma regra do transporte.
+- `source-release.mjs`: concessão revisada que só libera bloqueios `operation_outcome_uncertain` e fica presa ao bloqueio exato de cada fonte (código e instante). Diferente da liberação de parser, não fixa o token do journal: o journal muda a cada coleta, e o que se revisa é o bloqueio em si. Se a fonte voltar a ser suspensa, o bloqueio novo tem outro instante e a concessão não vale. O registro (`sourceReleases`) fica no estado e não pode ser alterado nem reaplicado.
+- `compareAndSwap` comum recusa qualquer mudança em `sourceReleases`; só a operação dedicada `applySourceRelease` grava, uma vez, com releitura.
+- Workflow manual `institutional-news-source-release.yml`, padrão só leitura, na mesma fila da coleta.

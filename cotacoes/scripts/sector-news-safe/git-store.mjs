@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { APPROVED_PARSER_RELEASES, planParserRelease } from './parser-release.mjs'
 import { digest, validateState, validateTransition, STATE_REF, FEED_REF } from './state.mjs'
 import { createGitHubStore as createRestStore } from './github-store.mjs'
+import { planSourceRelease } from './source-release.mjs'
 const branded = new WeakSet()
 export const isGitHubPublisher = value => branded.has(value)
 const sha = value => { if (!/^[a-f0-9]{40}$/.test(value)) throw Error('git_invalid_sha'); return value }
@@ -146,6 +147,7 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     const before = await readUnlocked()
     if (before.token !== token) throw Error('git_cas_conflict')
     if (JSON.stringify(before.state.parserRelease) !== JSON.stringify(next.parserRelease)) throw Error('parser_release_dedicated_operation_required')
+    if (JSON.stringify(before.state.sourceReleases) !== JSON.stringify(next.sourceReleases)) throw Error('source_release_dedicated_operation_required')
     validateTransition(before.state, next, { allowProduction: true, parserReleaseGrants })
     const committed = await append(STATE_REF, token, next, 'state')
     const observed = await readUnlocked()
@@ -163,6 +165,18 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     if (observed.token !== committed || !same(observed.state, next)) throw Error('parser_release_not_confirmed')
     return observed
   })
+  // Liberação revisada de fontes: só a concessão exata do código, uma gravação, releitura obrigatória.
+  const applySourceRelease = (expectedToken, review, now) => exclusive(async () => {
+    sha(expectedToken)
+    const before = await readUnlocked()
+    if (before.token !== expectedToken) throw Error('git_cas_conflict')
+    const next = planSourceRelease(before.state, review, now)
+    validateTransition(before.state, next, { allowProduction: true, parserReleaseGrants })
+    const committed = await append(STATE_REF, expectedToken, next, 'state')
+    const observed = await readUnlocked()
+    if (observed.token !== committed || !same(observed.state, next)) throw Error('source_release_not_confirmed')
+    return observed
+  })
   const publisher = Object.freeze({ ref: FEED_REF, publish: (feed, expectedDigest) => exclusive(async () => {
     if (digest(feed) !== expectedDigest) throw Error('git_feed_digest_mismatch')
     const before = await feedUnlocked()
@@ -172,5 +186,5 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     return { confirmed: true, receipt, digest: expectedDigest }
   }) })
   if (production) branded.add(publisher)
-  return Object.freeze({ store, publisher, applyParserRelease, verifyProtection, readFeed: () => exclusive(feedUnlocked), bootstrap: async () => { throw Error('git_explicit_external_bootstrap_required') }, close: async () => { await ready.catch(() => {}); if (busy) throw Error('git_operation_in_progress'); closed = true; if (directory) await rm(directory, { recursive: true, force: true }); for (const key of Object.keys(env)) delete env[key] } })
+  return Object.freeze({ store, publisher, applyParserRelease, applySourceRelease, verifyProtection, readFeed: () => exclusive(feedUnlocked), bootstrap: async () => { throw Error('git_explicit_external_bootstrap_required') }, close: async () => { await ready.catch(() => {}); if (busy) throw Error('git_operation_in_progress'); closed = true; if (directory) await rm(directory, { recursive: true, force: true }); for (const key of Object.keys(env)) delete env[key] } })
 }
