@@ -163,3 +163,11 @@
 @media(max-width:399px) { .bw .fm-payment .fm-group-fields { grid-template-columns:1fr; } }
 .bw .fm-operation .fm-group-fields { align-items:end; }
 .bw .cx-finame .fm-input-panel > header { min-height:40px; padding:4px 16px; }
+
+/* Premissas fixas e taxa adotada, sem repetir a cotação no cabeçalho. */
+.bw .fm-reference-field { min-width:0; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); }
+.bw .fm-reference-field .cx-hint { display:block; margin:8px 0 0; font-size:.8125rem; line-height:1.5; overflow-wrap:anywhere; }
+.bw .fm-rate-reset { min-height:44px; margin-top:8px; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:white; color:var(--fg); font:inherit; font-size:.8125rem; cursor:pointer; }
+.bw .fm-premises { padding:14px 18px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); font-size:.8125rem; line-height:1.5; }
+.bw .fm-premises p { margin:5px 0 0; }
+.bw .fm-comparison td small { display:block; white-space:normal; margin-top:4px; font-size:.75rem; color:var(--mut); }

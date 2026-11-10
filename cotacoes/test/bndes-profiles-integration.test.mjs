@@ -46,7 +46,7 @@ test('Finame nunca executa TLP pelo motor mensal capitalizado', () => {
   assert.equal(finameFundingAnnualRate('tlp', { tlp: 8.12 }), null)
   assert.match(source('FinameMateriais.jsx'), /const pronto = funding\?\.mode === 'inline'/)
   assert.doesNotMatch(source('FinameMateriais.jsx'), /na TLP, iguais em termos reais|a diferença se compensa|correção pelo IPCA \(TLP\) \+ IOF/)
-  assert.match(source('FinameMateriais.jsx'), /fm-finame-eligible/)
+  assert.doesNotMatch(source('FinameMateriais.jsx'), /id="fm-finame-eligible"/)
 })
 test('rotas de calculadoras e atalhos não confundem produtos', async () => {
   const { documents } = await buildSearchIndex()

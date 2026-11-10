@@ -42,3 +42,16 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   // A tela não faz conta nova com o resultado para os destaques: o arquivo de seleção não importa o cálculo.
   assert.doesNotMatch(readFileSync(new URL('../src/finameResumo.js', import.meta.url), 'utf8'), /import /)
 })
+
+
+test('comparação mantém cabeçalho limpo e resultados usam a taxa adotada com origem visível', () => {
+  const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
+  assert.match(source, /scope="col">\{item\.custo\.toUpperCase\(\)\}<\/th>/)
+  assert.doesNotMatch(source, /scope="col">\{item\.custo\.toUpperCase\(\)\}<small>/)
+  assert.match(source, /pct\(item\.rate\.value, 4\)/)
+  assert.match(source, /item\.rate\.manual \? 'Taxa manual' : 'Cotação do painel'/)
+  assert.match(source, /className="fm-reference-sources"/)
+  assert.match(source, /item\.quote\.codigo/)
+  assert.match(source, /dmy\(item\.quote\.data\)/)
+  assert.match(source, /aria-label="Premissas da simulação"/)
+})
