@@ -29,9 +29,9 @@ test('Configurações fica fora do menu (oculta), mas a rota continua', async ()
   assert.match(src, /TABS\.filter\(\(t\) => !t\.oculto\)/)
 })
 
-test('Calculadoras fica oculta como Apresentar e mantém o acesso direto', () => {
+test('Calculadoras fica oculta no menu e mantém busca e acesso direto', () => {
   assert.equal(APP_SECTIONS.find(section => section.id === 'calculadora').oculto, true)
   assert.equal(DESK_TABS.find(section => section.id === 'calculadora').oculto, true)
-  assert.equal(SEARCH_SECTIONS.calculadora, undefined)
+  assert.equal(SEARCH_SECTIONS.calculadora, 'Calculadoras')
   assert.deepEqual(parseCommand('CALCULADORAS'), { kind: 'tab', id: 'calculadora', sub: '' })
 })
