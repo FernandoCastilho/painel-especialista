@@ -12,6 +12,7 @@ import { dataTimestamp } from '../src/dataTimestamp.js'
 import { chartLinePath } from '../src/chartLinePath.js'
 import { browserClock, hookRenderer, json } from './helpers/hooks.mjs'
 import { marketDate } from '../src/marketReturns.js'
+import * as chartToque from '../src/chartToque.js'
 
 const now = Date.parse('2026-11-09T14:40:00Z'), day = '2026-11-09'
 const first = { t: Date.parse('2026-11-09T10:00:16Z'), bid: 5.5031 }
@@ -26,7 +27,7 @@ function render(points, overrides = {}) {
     './dataTimestamp.js': { dataTimestamp }, './stats.js': { periodChange }, './chartLinePath.js': { chartLinePath },
     './storage.js': { readStorage: () => null }, './flags.js': { flagSvg: () => '' },
     './resample.js': { scaleOptions: () => [] }, './ChartFilters.jsx': { useFilterSlot: () => null },
-    './rangeCompare.js': {}, './chartNavigation.js': {}, './Explain.jsx': () => null, './ChartAccess.css': {},
+    './rangeCompare.js': {}, './chartNavigation.js': {}, './chartToque.js': chartToque, './Explain.jsx': () => null, './ChartAccess.css': {},
   }
   runInNewContext(code, { module, exports: module.exports, require: path => path in stubs ? stubs[path] : require(path) })
   return renderToStaticMarkup(createElement(module.exports.default, { currency: { code: 'USD' }, day: new Date(now), color: '#123456' }))

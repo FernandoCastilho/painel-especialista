@@ -3,6 +3,7 @@ import { chartLinePath } from './chartLinePath.js'
 import ChartComparison from './ChartComparison.jsx'
 import { useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
+import { focoPorTeclado } from './chartToque.js'
 import { niceTicks, valueAt } from './multiSeries.js'
 
 const H = 260
@@ -50,7 +51,7 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
   const bx = hx + 12 + bw > width - 4 ? hx - 12 - bw : hx + 12
   return (
     <ChartComparison resetKey={resetKey} onRangeChange={setSelection} series={comparisonView} history={comparisonHistory} frequency={frequency} rate={rate} unavailable={compareUnavailable}><div className="ml">
-      <svg className="hist-svg ml-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} aria-label={ariaLabel} onKeyDown={onKey} onFocus={() => setHover(t0)} onBlur={() => setHover(null)}
+      <svg className="hist-svg ml-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} aria-label={ariaLabel} onKeyDown={onKey} onFocus={(e) => { if (focoPorTeclado(e)) setHover(t0) }} onBlur={() => setHover(null)}
         onMouseMove={onMove} onMouseLeave={() => setHover(null)} onTouchMove={(e) => onMove(e.touches[0] && { currentTarget: e.currentTarget, clientX: e.touches[0].clientX })}>
         {ticks.map((v) => (
           <g key={v}>
