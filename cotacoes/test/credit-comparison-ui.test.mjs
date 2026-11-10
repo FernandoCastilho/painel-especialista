@@ -55,7 +55,7 @@ test('cada coluna aceita qualquer modalidade e mostra os campos dela', async t =
   }
   await ui.change(1, modalities.newColumn('bndes'))
   const html = renderToStaticMarkup(ui.card(1))
-  for (const label of ['TFB', 'Custo financeiro', 'TAC', 'Porte da empresa', 'Spread do agente', 'Participação do BNDES', 'Garantia FGI']) assert.ok(html.includes(label), label)
+  for (const label of ['TFB', 'Custo financeiro', 'TAC', 'Porte da empresa', 'Spread do agente', 'Participação do BNDES', 'Garantia FGI', 'exemplos']) assert.ok(html.includes(label), label)
   await ui.change(1, modalities.newColumn('finimp'))
   const f = renderToStaticMarkup(ui.card(1))
   for (const label of ['Moeda', 'Flat', 'Câmbio', 'Prazo (dias)']) assert.ok(f.includes(label), label)
@@ -66,7 +66,7 @@ test('o cartão mostra parcela estimada e CET, ou o erro da coluna', async t => 
   assert.match(renderToStaticMarkup(ui.card(1)), /CET/)
   await ui.change(1, { rate: '' })
   assert.equal(ui.card(1).props.result.ok, false)
-  assert.match(renderToStaticMarkup(ui.card(1)), /role="alert"/)
+  assert.match(renderToStaticMarkup(ui.card(1)), /credit-card-error/)
   assert.equal(ui.card(2).props.result.ok, true)
 })
 test('o resultado só aparece ao comparar e some quando uma condição muda', async t => {

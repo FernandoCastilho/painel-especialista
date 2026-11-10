@@ -69,6 +69,8 @@ function ColumnCard({ index, col, set, result, shared }) {
     {select('bLine', 'Indexador / linha', [['tfb', 'TFB (prefixada)'], ['tfc', 'TFC (prefixada)'], ['tlp', 'TLPCAP (IPCA capitalizado)']])}
     {text('bCost', 'Custo financeiro (% a.a.)')}
     {amount('bTac', 'TAC (R$)')}
+    {select('bPorte', 'Porte da empresa', PORTES.map(p => [p.id, `${p.label} · BNDES ${p.taxa.toLocaleString('pt-BR')}% a.a.`]))}
+    {text('bAgent', 'Spread do agente (% a.a.)')}{text('bPart', 'Participação do BNDES (%)')}
   </> : m === 'finimp' ? <>
     {select('fCurrency', 'Moeda', FINIMP_CURRENCY_LIST.map(c => [c, c]))}
     {text('fRate', 'Taxa anual simples (%)')}{text('fFlat', 'Flat (% do principal)')}{amount('fTac', 'TAC (R$)')}
@@ -85,8 +87,6 @@ function ColumnCard({ index, col, set, result, shared }) {
     {giro && <>{amount('monthlyFees', 'Tarifas em cada pagamento')}{iofProfile}{eligible}</>}
     {cdi && <label className="credit-field" htmlFor={`${prefix}-holidays`}><span>Feriados do calendário contratado (AAAA-MM-DD)</span><textarea id={`${prefix}-holidays`} value={col.holidays} onChange={e => update('holidays', e.target.value)} /></label>}
     {m === 'bndes' && <>
-      {select('bPorte', 'Porte da empresa', PORTES.map(p => [p.id, `${p.label} · BNDES ${p.taxa.toLocaleString('pt-BR')}% a.a.`]))}
-      {text('bPart', 'Participação do BNDES (%)')}{text('bAgent', 'Spread do agente (% a.a.)')}
       {select('bComp', 'Composição da taxa', COMPOSICOES.map(c => [c.id, c.label]))}
       {select('bPeriod', 'Periodicidade', PERIODICIDADES.map(p => [String(p.id), p.label]))}
       {col.bLine === 'tlp' && text('bIpca', 'IPCA projetado (% a.a.)')}
@@ -95,7 +95,7 @@ function ColumnCard({ index, col, set, result, shared }) {
       {text('bFgi', `Garantia FGI (${FGI.percentualMin}% a ${FGI.percentualMax}%, opcional)`)}
       {col.bFgi.trim() && <label className="credit-check"><input type="checkbox" checked={col.bFgiInc} onChange={e => update('bFgiInc', e.target.checked)} /> Incorporar o ECG ao financiamento</label>}
     </>}
-    {m === 'finimp' && <>{text('fFx', 'Câmbio (R$ por unidade da moeda)')}{select('fDays', 'Prazo (dias)', [['auto', 'Igual ao prazo comum'], ...FINIMP_TERMS.map(d => [String(d), `${d} dias`])])}</>}
+    {m === 'finimp' && <>{col.fCurrency !== 'BRL' && text('fFx', 'Câmbio (R$ por unidade da moeda)')}{select('fDays', 'Prazo (dias)', [['auto', 'Igual ao prazo comum'], ...FINIMP_TERMS.map(d => [String(d), `${d} dias`])])}</>}
     {m === 'conta-garantida' && <>
       {text('cDays', 'Dias de utilização')}{select('cBase', 'Base da taxa (dias)', [['30', '30'], ['360', '360'], ['365', '365'], ['252', '252']])}
       {select('cConv', 'Conversão diária', [['proportional', 'Proporcional'], ['equivalent', 'Equivalente']])}{select('cCount', 'Contagem de dias', [['calendar', 'Corridos'], ['business', 'Úteis']])}
@@ -118,16 +118,17 @@ function ColumnCard({ index, col, set, result, shared }) {
     </header>
     <div className="credit-card-body">
       <p className="credit-hint">{MODALITIES.find(x => x.id === m)?.hint}</p>
+      <p className="credit-hint"><b>Valores iniciais são exemplos.</b> Troque pelos dados da proposta antes de comparar.</p>
       <div className="credit-fields">{rateCard}</div>
       <div className="credit-fields">{select('guarantee', 'Garantia', GUARANTEES.map(g => [g, g || 'Não informada']))}{amount('guaranteeValue', 'Valor da garantia (opcional)')}</div>
       <details><summary>Mais condições desta modalidade</summary><div className="credit-fields">{more}</div></details>
       <details><summary>Condições próprias desta coluna</summary><p className="credit-hint">Campo vazio segue as condições comuns do topo.</p><div className="credit-fields">{own}</div></details>
     </div>
-    <footer className="credit-card-result" aria-live="polite">
+    <footer className="credit-card-result">
       {result?.ok ? <>
         <div><span>Parcela estimada</span><b>{brl(result.firstPayment)}</b><small>{single ? 'pagamento único' : `1ª de ${result.rows.length}`}</small></div>
         <div><span>CET</span><b>{result.cet === null ? 'Não mensurável' : `${pct(result.cet * 100)} a.a.`}</b></div>
-      </> : <p className="credit-card-error" role="alert">{result?.error ?? '—'}</p>}
+      </> : <p className="credit-card-error">{result?.error ?? '—'}</p>}
     </footer>
   </article>
 }
@@ -208,7 +209,7 @@ export default function CreditComparison({ onBack }) {
   const content = <Results results={results} columns={visible} scenario={scenario} cdi={cdi} source={source} equivalent={equivalent} />
   const allOk = results.every(r => r.ok)
   return <section className="cx credit-comparison" aria-labelledby="credit-title"><button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button><h2 id="credit-title" className="cx-title cx-heading"><span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><CreditIcon /></span><span>Simulador de empréstimo · Compare modalidades</span></span></h2>
-    <p>Escolha quantas comparações quer fazer e a modalidade de cada uma. Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora.</p>
+    <p>Escolha quantas comparações quer fazer e a modalidade de cada uma. Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado e voltam se você aumentar de novo.</p>
     <SharedFields shared={shared} set={invalidate(setShared)} />
     <div className="credit-count" role="group" aria-label="Quantidade de comparações"><span id="credit-count-label">Quantas comparações?</span>
       <div className="seg">{Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, k) => k + MIN_COLUMNS).map(n => <button type="button" key={n} aria-pressed={n === count} onClick={() => invalidate(setCount)(n)}>{n}</button>)}</div></div>

@@ -95,7 +95,7 @@ function finish(base) {
   const coverage = guaranteeInfo.guaranteeValue === null ? null : guaranteeInfo.guaranteeValue / value * 100
   return {
     ok: true, modality: base.modality, label, rateLabel, systemLabel, start, value, net, rows: flow, interest, iof, fees,
-    paid, total: paid + (value - net), cost: paid - net, cet,
+    paid, total: base.total ?? paid + (value - net), cost: paid - net, cet,
     firstPayment: flow[0].payment, maxPayment: Math.max(...flow.map(r => r.payment)), lastDate: flow.at(-1).date,
     guarantee: guaranteeInfo.guarantee, guaranteeValue: guaranteeInfo.guaranteeValue, coverage, notes,
     graceNote: base.graceNote ?? '', declaredCet: base.declaredCet ?? null,
@@ -202,7 +202,7 @@ function finimp(col, p) {
     interest: cost.interest, iof: 0, fees: cost.flat + cost.tac, guaranteeInfo: info,
     rateLabel: `${col.fCurrency} · ${col.fRate}% a.a. simples (base 360) + flat ${col.fFlat}%`, systemLabel: `Pagamento único · ${days} dias`,
     notes: [`Principal de ${(p.value / fx).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ${col.fCurrency} ao câmbio de R$ ${fx.toLocaleString('pt-BR')}, constante até o vencimento.`,
-      'Sem variação cambial e sem IOF de câmbio, como na calculadora FINIMP. Premissa do CET: flat e TAC pagos na liberação; juros e principal no vencimento.'],
+      'Sem variação cambial e sem IOF de câmbio, como na calculadora FINIMP. Premissa do CET: flat e TAC pagos na liberação; juros e principal no vencimento.', 'Carência e amortização comuns do topo não se aplicam a esta modalidade: pagamento único.'],
   })
 }
 
@@ -222,7 +222,7 @@ function contaGarantida(col, p) {
     rows: [{ date: end, days, payment: p.value + totals.interest + totals.iof, amortization: p.value, interest: totals.interest, balance: 0 }],
     interest: totals.interest, iof: totals.iof, fees: 0, guaranteeInfo: info,
     rateLabel: `${col.cRate}% a.m. · base ${col.cBase} · ${col.cConv === 'proportional' ? 'proporcional' : 'equivalente'}`, systemLabel: `Uso único · ${days} dias`,
-    notes: ['Saldo utilizado integralmente do início ao fim; juros e IOF pagos no encerramento, sem tarifas (não modeladas nesta modalidade).'],
+    notes: ['Saldo utilizado integralmente do início ao fim; juros e IOF pagos no encerramento, sem tarifas (não modeladas nesta modalidade).', 'Carência e amortização comuns do topo não se aplicam a esta modalidade: pagamento único.'],
   })
 }
 
@@ -239,10 +239,10 @@ function desconto(col, p) {
   if (!r.ok) return fail(r.error)
   return finish({
     modality: 'desconto', label: 'Desconto de duplicata', start: p.start, value: r.value, net: r.net,
-    rows: [{ date: dueDate, days, payment: r.value, amortization: r.value, interest: 0, balance: 0 }],
+    rows: [{ date: dueDate, days, payment: r.value, amortization: r.value, interest: 0, balance: 0 }], total: r.value,
     interest: r.interest, iof: r.iof, fees: r.titleFee + r.tac, guaranteeInfo: info,
     rateLabel: `${col.dRate}% a.m. · ${col.dConv === 'commercial30' ? 'por fora (comercial)' : 'por dentro (racional)'}`, systemLabel: `Vencimento único · ${days} dias · ${titles} título(s)`,
-    notes: ['O valor é o nominal dos títulos; os juros são descontados na liberação. No fluxo do CET, o líquido entra na data da operação e o nominal sai no vencimento.'],
+    notes: ['O valor é o nominal dos títulos; os juros são descontados na liberação. No fluxo do CET, o líquido entra na data da operação e o nominal sai no vencimento.', 'Carência e amortização comuns do topo não se aplicam a esta modalidade: pagamento único.'],
   })
 }
 

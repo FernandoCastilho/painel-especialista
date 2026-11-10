@@ -17,7 +17,8 @@ test('toda modalidade devolve o formato comum com CET, líquido e fluxo', () => 
     assert.equal(r.ok, true, `${id}: ${r.error}`)
     assert.ok(r.net > 0 && r.rows.length > 0 && r.cet > 0, id)
     assert.ok(Math.abs(r.cost - (r.paid - r.net)) < 1e-6, id)
-    assert.ok(Math.abs(r.total - (r.paid + r.value - r.net)) < 1e-6, id)
+    // Desconto já paga o nominal (juros e IOF saem dele na liberação); nas demais o que sai da liberação soma ao total.
+    assert.ok(Math.abs(r.total - (id === 'desconto' ? r.paid : r.paid + r.value - r.net)) < 1e-6, id)
     assert.equal(r.rows.at(-1).date, r.lastDate)
   }
 })
@@ -108,4 +109,11 @@ test('valores inválidos viram erro em vez de número', () => {
   assert.equal(run(col('giro-pre'), { ...shared, value: '' }).ok, false)
   assert.equal(run(col('giro-pre', { guaranteeValue: 'abc' })).ok, false)
   assert.equal(run(col('giro-pre'), { ...shared, start: '2024-01-01' }).ok, false)
+})
+test('Desconto: total desembolsado é o nominal pago, sem repetir juros e IOF', () => {
+  const r = run(col('desconto', { dDays: '60' }), { ...shared, value: '100.000,00' })
+  assert.equal(r.total, 100000); assert.ok(Math.abs(r.cost - (r.total - r.net)) < 1e-6)
+})
+test('modalidades de pagamento único avisam que carência e amortização comuns não se aplicam', () => {
+  for (const id of ['finimp', 'conta-garantida', 'desconto']) assert.ok(run(col(id), { ...shared, grace: '6' }).notes.some(n => n.includes('não se aplicam')), id)
 })

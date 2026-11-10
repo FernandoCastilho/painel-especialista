@@ -22,7 +22,11 @@ A tela passou a seguir o modelo "Simulador de empréstimo · Compare modalidades
 
 ### Verificações
 
-`node --test test/credit-modalities.test.mjs test/credit-comparison-ui.test.mjs` (contas de cada modalidade conferidas contra o motor próprio, equivalência de líquido, tela) e `node scripts/smoke-credit-comparison.cjs` (navegador, 390/820/1440 em claro e escuro, apresentação). A parte abaixo descreve o motor do Giro, que não mudou.
+`node --test test/credit-modalities.test.mjs test/credit-comparison-ui.test.mjs` (contas de cada modalidade conferidas contra o motor próprio, equivalência de líquido, tela) e `node scripts/smoke-credit-comparison.cjs` (navegador, 390/820/1440 em claro e escuro, apresentação). A parte abaixo descreve o motor do Giro (histórico: a primeira versão tratava só Capital de Giro com duas propostas; as demais modalidades, hoje na mesma tela, seguem usando os módulos próprios). Colunas escondidas ao reduzir a quantidade guardam o que foi digitado.
+
+### Auditoria independente (10/11/2026)
+
+Parecer 1: Requer correção (84,0). Corrigidos: total desembolsado do Desconto (era somado em duplicidade), aviso de que carência e amortização comuns não valem para pagamento único, porte/spread/participação do BNDES visíveis no cartão, aviso de valores de exemplo, aviso sonoro a cada tecla, câmbio escondido em BRL.
 
 Primeira versão tecnicamente delimitada a Capital de Giro PJ em reais. Acesso: Calculadoras → Comparador de Crédito, rota `#calculadora/comparador-credito`. BNDES, FINIMP, Conta Garantida e desconto continuam em módulos próprios, sem reinterpretar suas regras.
 
