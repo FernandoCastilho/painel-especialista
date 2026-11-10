@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import ErrorBoundary from './ErrorBoundary.jsx'
 import App from './App.jsx'
 import DynamicNotifications from './DynamicNotifications.jsx'
+import AcessoPorEmail from './AcessoPorEmail.jsx'
 import './styles.css'
 import './Terminal.css'
 import './Abas.css'
@@ -11,7 +12,7 @@ import { iniciarContagem } from './acessos.js'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ErrorBoundary><DynamicNotifications><App /></DynamicNotifications></ErrorBoundary>
+    <ErrorBoundary><AcessoPorEmail><DynamicNotifications><App /></DynamicNotifications></AcessoPorEmail></ErrorBoundary>
   </StrictMode>,
 )
 
