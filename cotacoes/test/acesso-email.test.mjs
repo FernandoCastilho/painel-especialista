@@ -48,19 +48,22 @@ test('chamada ao script: monta o endereço e trata falha de rede sem liberar o a
 })
 
 // ---- Script do Google, rodado com peças simuladas ----
-function criarScript() {
+function criarScript({ liberados = ['ana@empresa.com', 'b@c.com', 'd@e.com'] } = {}) {
   const cache = new Map()
   const props = new Map()
   const linhas = []
   const emails = []
   let cota = 100
+  const lista = [...liberados]
+  const abaLiberados = { getLastRow: () => lista.length + 1, getRange: () => ({ getValues: () => lista.map((e) => [e]) }), appendRow() {} }
+  const abaAcessos = { appendRow: (r) => linhas.push(r) }
   const ambiente = {
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType: () => ({ texto: t }) }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     CacheService: { getScriptCache: () => ({ get: (k) => cache.get(k) ?? null, put: (k, v) => cache.set(k, v), remove: (k) => cache.delete(k) }) },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props.get(k) ?? null, setProperty: (k, v) => props.set(k, v) }) },
     MailApp: { getRemainingDailyQuota: () => cota, sendEmail: (m) => { emails.push(m) } },
-    SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheetByName: () => ({ appendRow: (r) => linhas.push(r) }), insertSheet: () => ({ appendRow: (r) => linhas.push(r) }) }) },
+    SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheetByName: (n) => (n === 'Liberados' ? abaLiberados : abaAcessos), insertSheet: () => abaAcessos }) },
     Utilities: {
       getUuid: () => Math.random().toString(16).slice(2),
       computeHmacSha256Signature: (msg, chave) => [...createHmac('sha256', chave).update(msg).digest()],
@@ -71,7 +74,7 @@ function criarScript() {
   vm.createContext(ambiente)
   vm.runInContext(readFileSync(new URL('../../docs/cadastro-email/cadastro.gs', import.meta.url), 'utf8'), ambiente)
   const chamarScript = (parameter) => JSON.parse(ambiente.doGet({ parameter }).texto)
-  return { chamarScript, emails, linhas, setCota: (n) => { cota = n } }
+  return { chamarScript, emails, linhas, lista, setCota: (n) => { cota = n } }
 }
 const codigoDoEmail = (emails) => emails.at(-1).body.match(/é (\d{6})\./)[1]
 
@@ -113,5 +116,28 @@ test('script: sem cota diária de e-mails avisa e não envia', () => {
   s.setCota(0)
   const r = s.chamarScript({ acao: 'pedir', email: 'd@e.com' })
   assert.equal(r.ok, false)
+  assert.equal(s.emails.length, 0)
+})
+
+test('script: e-mail fora da lista não recebe código; quem sai da lista perde o acesso', () => {
+  const s = criarScript()
+  const r = s.chamarScript({ acao: 'pedir', email: 'estranho@x.com' })
+  assert.equal(r.ok, false)
+  assert.match(r.erro, /não está liberado/)
+  assert.equal(s.emails.length, 0, 'nenhum código enviado')
+  // liberado entra
+  s.chamarScript({ acao: 'pedir', email: 'ANA@empresa.com' })
+  const t = s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: codigoDoEmail(s.emails) })
+  assert.equal(t.ok, true)
+  // sai da lista: a visita seguinte é recusada e não registra
+  s.lista.splice(s.lista.indexOf('ana@empresa.com'), 1)
+  const antes = s.linhas.length
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: t.token }).ok, false)
+  assert.equal(s.linhas.length, antes)
+})
+
+test('script: lista vazia não libera ninguém', () => {
+  const s = criarScript({ liberados: [] })
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'ana@empresa.com' }).ok, false)
   assert.equal(s.emails.length, 0)
 })

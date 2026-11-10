@@ -1,6 +1,7 @@
 // Script do Google (Apps Script) que recebe os pedidos da tela de entrada do painel.
 // Cola-se dentro da planilha: Extensões > Apps Script. Passo a passo em LEIAME.md.
-// Faz três coisas: envia o código de 6 números por e-mail, confere o código e registra quem entrou.
+// Faz quatro coisas: confere se o e-mail está na aba "Liberados", envia o código de 6 números por e-mail,
+// confere o código e registra quem entrou na aba "Acessos". E-mail fora da lista não recebe código.
 
 var LIMITE_PEDIDOS_POR_HORA = 5   // por e-mail
 var LIMITE_TENTATIVAS = 5         // por código
@@ -30,6 +31,7 @@ function emailValido_(e) {
 function pedir_(emailBruto) {
   var email = normalizar_(emailBruto)
   if (!emailValido_(email)) return { ok: false, erro: 'E-mail inválido.' }
+  if (!liberado_(email)) return { ok: false, erro: 'Este e-mail não está liberado. Fale com o administrador.' }
   var lock = LockService.getScriptLock()
   lock.waitLock(10000)
   try {
@@ -61,6 +63,7 @@ function confirmar_(emailBruto, codigoBruto) {
   var email = normalizar_(emailBruto)
   var codigo = String(codigoBruto || '').trim()
   if (!emailValido_(email) || !/^\d{6}$/.test(codigo)) return { ok: false, erro: 'Código incorreto.' }
+  if (!liberado_(email)) return { ok: false, erro: 'Este e-mail não está liberado. Fale com o administrador.' }
   var lock = LockService.getScriptLock()
   lock.waitLock(10000)
   try {
@@ -84,9 +87,23 @@ function confirmar_(emailBruto, codigoBruto) {
 
 function visita_(emailBruto, token) {
   var email = normalizar_(emailBruto)
-  if (!emailValido_(email) || String(token || '') !== token_(email)) return { ok: false, erro: 'Acesso não reconhecido.' }
+  if (!emailValido_(email) || String(token || '') !== token_(email) || !liberado_(email)) return { ok: false, erro: 'Acesso não reconhecido.' }
   registrar_('visita', email)
   return { ok: true }
+}
+
+// Lista de e-mails autorizados: aba "Liberados", um e-mail por linha na coluna A (a linha 1 é o título).
+// Para tirar o acesso de alguém, apague a linha: a pessoa é barrada na próxima abertura do painel.
+// Se a aba não existir, ela é criada vazia e ninguém entra até você preencher.
+function liberado_(email) {
+  var planilha = SpreadsheetApp.getActiveSpreadsheet()
+  var aba = planilha.getSheetByName('Liberados')
+  if (!aba) { aba = planilha.insertSheet('Liberados'); aba.appendRow(['E-mail liberado']); return false }
+  var n = aba.getLastRow()
+  if (n < 2) return false
+  var valores = aba.getRange(2, 1, n - 1, 1).getValues()
+  for (var i = 0; i < valores.length; i++) if (normalizar_(valores[i][0]) === email) return true
+  return false
 }
 
 // Prova de que o e-mail foi confirmado: assinatura com uma chave secreta guardada só neste script.

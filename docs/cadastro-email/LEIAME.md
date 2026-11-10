@@ -1,8 +1,14 @@
 # Tela de entrada por e-mail
 
-**O que faz:** quem abre o painel digita o e-mail, recebe um código de 6 números nesse e-mail e só entra com o código certo. Cada entrada vira uma linha numa planilha sua (aba `Acessos`: data e hora, e-mail, tipo). Quem já confirmou entra direto nas próximas vezes; a visita do dia também é anotada.
+**O que faz:** só entra quem está na sua lista. Quem abre o painel digita o e-mail; se ele estiver na aba `Liberados` da planilha, recebe um código de 6 números e só entra com o código certo. E-mail fora da lista não recebe código. Cada entrada vira uma linha na aba `Acessos` (data e hora, e-mail, tipo). Quem já confirmou entra direto nas próximas vezes; a visita do dia também é anotada.
 
 **Custo:** zero. Usa o Google (planilha + envio de e-mail pela sua conta Gmail).
+
+## A lista de liberados
+- Aba `Liberados` da planilha: um e-mail por linha, na coluna A (a linha 1 é o título). Maiúsculas e minúsculas tanto faz.
+- A aba é criada vazia na primeira vez. **Enquanto estiver vazia, ninguém entra.**
+- Para tirar alguém, apague a linha: a pessoa é barrada na próxima vez que abrir o painel.
+- Quem digita e-mail fora da lista vê "Este e-mail não está liberado". Isso permite descobrir se um e-mail está na lista; para um grupo pequeno é aceitável.
 
 ## O que ligar (uma vez, uns 5 minutos)
 1. Crie uma planilha nova no Google Drive (nome sugerido: "Acessos do Painel").
