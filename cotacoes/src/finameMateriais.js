@@ -183,13 +183,21 @@ export function iofCronograma(financiado, parcelas, iof = IOF_PJ) {
 // FGI Tradicional: Encargo por Concessão de Garantia (ECG). Fonte: Anexo V ao Regulamento de Operações do FGI Tradicional
 // (Circular SUP/ADIG nº 65/2026, em vigor desde 09/06/2026), itens 2.1.2, 2.1.3 e 2.1.6.
 // A tabela de custo mensal do site do BNDES é só ilustrativa e não substitui esta fórmula.
+// Limites: Regulamento de Operações do FGI Tradicional (Circular SUP/ADIG nº 62/2026), art. 15: cobertura de 10% a 80% do crédito,
+// em múltiplos de 10, e até R$ 20 milhões de crédito garantido por tomador em cada agente financeiro.
+// Vedações: Anexo I (Circular nº 51/2026), item 1: operações com recursos do BNDES indexadas à TLP, Selic ou TR capitalizadas,
+// à TFBD, ou com capitalização de juros na carência não podem ter garantia do FGI Tradicional.
 export const FGI = Object.freeze({
-  percentualMin: 10, percentualMax: 80, padraoPercentual: 80,
-  fonte: 'BNDES, Anexo V ao Regulamento do FGI Tradicional (Circular SUP/ADIG nº 65/2026) e páginas do BNDES FGI; o índice de garantia contratada de 10% a 80% está nas páginas de informações a empresas e a instituições financeiras',
+  percentualMin: 10, percentualMax: 80, percentualMultiplo: 10, padraoPercentual: 80, limiteCredito: 20_000_000,
+  vedacoes: 'O FGI Tradicional não garante operação com recursos do BNDES indexada à TLP capitalizada, à Selic capitalizada, à TR capitalizada ou à TFBD, nem operação com capitalização de juros na carência.',
+  fonte: 'BNDES, Regulamento de Operações do FGI Tradicional (Circular SUP/ADIG nº 62/2026): art. 15 para a cobertura de 10% a 80% em múltiplos de 10 e o limite de R$ 20 milhões por cliente em cada agente; Anexo I (Circular nº 51/2026) para as linhas aceitas e as vedações; Anexo V (Circular SUP/ADIG nº 65/2026) para a fórmula do ECG e o fator K',
   url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/bndes-fgi/informacoes-a-instituicoes-financeiras/encargo-concessao-garantia-ecg',
 })
 // [prazo total máximo em meses, fator K em % por período de 30 dias]
 const FATOR_K = [[3, 1.42], [6, 0.62], [9, 0.42], [12, 0.31], [15, 0.27], [18, 0.24], [21, 0.22], [24, 0.20], [27, 0.18], [30, 0.17], [33, 0.16], [36, 0.15], [39, 0.14], [45, 0.13], [48, 0.12], [54, 0.11], [60, 0.10], [69, 0.09], [78, 0.08], [90, 0.07], [102, 0.06]]
+// Mensagem de erro do percentual garantido (null quando válido): 10% a 80%, só em múltiplos de 10.
+export const erroPercentualFgi = (percentual) => (Number.isFinite(percentual) && percentual >= FGI.percentualMin && percentual <= FGI.percentualMax && percentual % FGI.percentualMultiplo === 0
+  ? null : `Informe o percentual garantido pelo FGI de ${FGI.percentualMin} a ${FGI.percentualMax}%, em múltiplos de ${FGI.percentualMultiplo}.`)
 export const fatorKFgi = (prazoMeses) => (FATOR_K.find(([max]) => prazoMeses <= max)?.[1] ?? 0.05)
 // Períodos de 30 dias completos entre a liberação e o vencimento ordinário (P). Sem datas, usa meses de 365/12 dias.
 export const periodos30 = (prazoMeses) => Math.floor((prazoMeses * 365) / 12 / 30)
@@ -237,7 +245,8 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const porMesOk = custoPorMes == null || (Array.isArray(custoPorMes) && custoPorMes.length === prazo && custoPorMes.every(v => Number.isFinite(v) && v >= 0 && v <= 100))
   if (!porMesOk) check.erros.push('Informe o indexador de cada parcela em % a.a., de 0 a 100.')
   if (!(Number.isFinite(tac) && tac >= 0 && tac <= 1_000_000_000)) check.erros.push('Informe a TAC em R$, de zero em diante.')
-  if (fgi && !(Number.isFinite(fgi.percentual) && fgi.percentual >= FGI.percentualMin && fgi.percentual <= FGI.percentualMax)) check.erros.push(`Informe o percentual garantido pelo FGI de ${FGI.percentualMin} a ${FGI.percentualMax}%.`)
+  if (fgi && erroPercentualFgi(fgi.percentual)) check.erros.push(erroPercentualFgi(fgi.percentual))
+  if (fgi && custo === 'tlp') check.erros.push(`Retire a garantia do FGI: esta linha usa TLP capitalizada. ${FGI.vedacoes}`)
   if (!taxasOk) check.erros.push('Informe o custo financeiro, a taxa do BNDES e o spread da instituição em % a.a.')
   if (!ipcaOk) check.erros.push('Informe o IPCA esperado de -50 a 100% a.a., limite deste modelo.')
   if (!iofOk) check.erros.push('Informe as alíquotas do IOF em % (0 e 0 se o agente confirmar alíquota zero).')
@@ -251,6 +260,7 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const ecg = ecgCalc?.ecg ?? 0
   const ecgIncorporado = !!(fgi && fgi.incorporar)
   const financiado = liberado + (ecgIncorporado ? ecg : 0) // principal do cronograma: valor liberado mais o ECG financiado
+  if (fgi && financiado > FGI.limiteCredito) return { ok: false, ...check, erros: [`Com garantia do FGI, o crédito é limitado a ${FGI.limiteCredito.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por cliente em cada agente financeiro, somadas as outras operações garantidas. Reduza o valor ou retire a garantia.`] }
   const taxa = taxaFinal(custoFinanceiro, taxaBndes, taxaAgente, composicao)
   const ipcaAnual = custo === 'tlp' ? ipca : 0
   // Indexador editado por parcela: cada mês usa a própria taxa final; sem edição, uma taxa única (resultado idêntico ao anterior).

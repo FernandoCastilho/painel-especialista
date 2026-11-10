@@ -22,7 +22,7 @@ export const FINAME_FUNDING_OPTIONS = Object.freeze([
   }),
   Object.freeze({
     id: 'tfbd', label: 'TFBD · dólar', mode: 'unavailable',
-    hint: 'Modalidade prevista no Finame Materiais. O saldo em reais é atualizado pela variação da unidade monetária 604 do BNDES, além da taxa TFBD fixada e das remunerações aplicáveis. As referências são TD1 até 24 meses, TD2 acima de 24 até 72 e TD3 acima de 72 até 120; no Finame Materiais continua valendo o limite próprio de 84 meses. O cálculo contratual usa juros proporcionais por dias corridos, base 360. A cotação do dólar sozinha não fornece esse custo; este modelo ainda não reúne as taxas e a trajetória cambial contratual necessárias.',
+    hint: 'Modalidade prevista no Finame Materiais. O saldo em reais é atualizado pela variação da unidade monetária 604 do BNDES, além da taxa TFBD fixada e das remunerações aplicáveis. As referências são TD1 até 24 meses, TD2 acima de 24 até 72 e TD3 acima de 72 até 120; no Finame Materiais continua valendo o limite próprio de 84 meses. O cálculo contratual usa juros proporcionais por dias corridos, base 360. A cotação do dólar sozinha não fornece esse custo; a taxa TFBD do dia está em BNDES > Moedas (TD1, TD2 e TD3), mas este modelo ainda não projeta a trajetória cambial contratual.',
     notice: 'TFBD indisponível: faltam a taxa fixada e a trajetória cambial contratual.',
     referenceCodes: Object.freeze(['TD1', 'TD2', 'TD3', '604']),
   }),

@@ -92,7 +92,7 @@ function ColumnCard({ index, col, set, result, shared }) {
       {col.bLine === 'tlp' && text('bIpca', 'IPCA projetado (% a.a.)')}
       {select('bIof', 'IOF', [['zero', 'Alíquota zero (recursos Finame)'], ['pj', 'Pessoa jurídica geral'], ['simples', 'Simples/MEI']])}
       {col.bIof === 'simples' && <label className="credit-check"><input type="checkbox" checked={col.eligible} onChange={e => update('eligible', e.target.checked)} /> Confirmo a opção pelo Simples/MEI</label>}
-      {text('bFgi', `Garantia FGI (${FGI.percentualMin}% a ${FGI.percentualMax}%, opcional)`)}
+      {text('bFgi', `Garantia FGI (${FGI.percentualMin}% a ${FGI.percentualMax}%, múltiplos de ${FGI.percentualMultiplo}, opcional)`)}
       {col.bFgi.trim() && <label className="credit-check"><input type="checkbox" checked={col.bFgiInc} onChange={e => update('bFgiInc', e.target.checked)} /> Incorporar o ECG ao financiamento</label>}
     </>}
     {m === 'finimp' && <>{col.fCurrency !== 'BRL' && text('fFx', 'Câmbio (R$ por unidade da moeda)')}{select('fDays', 'Prazo (dias)', [['auto', 'Igual ao prazo comum'], ...FINIMP_TERMS.map(d => [String(d), `${d} dias`])])}</>}
