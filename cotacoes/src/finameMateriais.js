@@ -190,7 +190,7 @@ export function iofCronograma(financiado, parcelas, iof = IOF_PJ) {
 export const FGI = Object.freeze({
   percentualMin: 10, percentualMax: 80, percentualMultiplo: 10, padraoPercentual: 80, limiteCredito: 20_000_000,
   vedacoes: 'O FGI Tradicional não garante operação com recursos do BNDES indexada à TLP capitalizada, à Selic capitalizada, à TR capitalizada ou à TFBD, nem operação com capitalização de juros na carência.',
-  fonte: 'BNDES, Anexo V ao Regulamento do FGI Tradicional (Circular SUP/ADIG nº 65/2026) e páginas do BNDES FGI; o índice de garantia contratada de 10% a 80% está nas páginas de informações a empresas e a instituições financeiras',
+  fonte: 'BNDES, Regulamento de Operações do FGI Tradicional (Circular SUP/ADIG nº 62/2026): art. 15 para a cobertura de 10% a 80% em múltiplos de 10 e o limite de R$ 20 milhões por cliente em cada agente; Anexo I (Circular nº 51/2026) para as linhas aceitas e as vedações; Anexo V (Circular SUP/ADIG nº 65/2026) para a fórmula do ECG e o fator K',
   url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/bndes-fgi/informacoes-a-instituicoes-financeiras/encargo-concessao-garantia-ecg',
 })
 // [prazo total máximo em meses, fator K em % por período de 30 dias]

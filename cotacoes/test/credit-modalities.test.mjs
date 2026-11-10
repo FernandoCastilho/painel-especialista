@@ -55,6 +55,11 @@ test('BNDES repete o motor BNDES, com os limites de prazo e carência', () => {
   assert.equal(tac.net, 499000)
   assert.ok(run(col('bndes', { bIof: 'pj' })).iof > 0)
   assert.equal(run(col('bndes', { bFgi: '80' })).ok, true)
+  // FGI Tradicional (Circular SUP/ADIG 62/2026): múltiplos de 10, limite de R$ 20 milhões e vedação à TLP capitalizada
+  assert.match(run(col('bndes', { bFgi: '75' })).error, /múltiplos de 10/)
+  assert.match(run(col('bndes', { bLine: 'tlp', bFgi: '80' })).error, /Retire a garantia do FGI: esta linha usa TLP capitalizada/)
+  assert.match(run(col('bndes', { bFgi: '80' }), { ...shared, value: '25.000.000,00' }).error, /limitado a R\$\s*20\.000\.000,00 por cliente/)
+  assert.equal(run(col('bndes'), { ...shared, value: '25.000.000,00' }).ok, true)
   assert.equal(run(col('bndes', { bLine: 'tlp' })).ok, true)
 })
 test('BNDES com carência paga juros e mantém o fluxo datado', () => {
