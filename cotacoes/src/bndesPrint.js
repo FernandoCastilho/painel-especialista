@@ -18,6 +18,6 @@ export function captureBndesPrint({ result, comparison, conditions, compareReque
     ...snapshot,
     notice: BNDES_PRINT_NOTICE,
     releaseDate: isoDay(releaseDate),
-    choices: choices.map(item => ({ ...item, upfront: item.result.iofFixo + item.result.tac + (item.result.fgi && !item.result.fgi.incorporado ? item.result.fgi.ecg : 0), schedule: item.result.parcelas.map(row => ({ ...row, date: isoDay(vencimentoDia15(releaseDate, row.mes, holidayCtx)) })) })),
+    choices: choices.map(item => ({ ...item, upfront: item.result.iof + item.result.tac + (item.result.fgi && !item.result.fgi.incorporado ? item.result.fgi.ecg : 0), schedule: item.result.parcelas.map(row => ({ ...row, pago: row.parcela, date: isoDay(vencimentoDia15(releaseDate, row.mes, holidayCtx)) })) })),
   }))
 }

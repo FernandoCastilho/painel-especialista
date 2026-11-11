@@ -72,9 +72,10 @@ export function compareFinameFunding(params, quotes, manualRates = {}) {
 }
 
 // CET estimado (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido recebido na liberação
-// (valor liberado menos IOF adicional, TAC e ECG do FGI pago à vista) ao valor presente dos pagamentos do cronograma,
+// (valor liberado menos IOF, TAC e ECG do FGI pago à vista, tudo cobrado na liberação) ao valor presente dos pagamentos do cronograma,
 // descontados em dias corridos/365 a partir da liberação. Mesmo método do Comparador de Crédito (creditCet).
-// Os pagamentos são os da projeção (meses iguais) nas datas hipotéticas do fluxo: dia 15 ou próximo dia útil.
+// Com data de liberação, o motor já traz o CET do calendário real (juros por dias corridos, dia 15 ou próximo dia útil).
+// Sem data (uso programático legado), recalcula sobre a projeção em meses iguais nas mesmas datas.
 // Sem seguros nem outras tarifas: não é o CET do contrato. Devolve null quando o fluxo não fecha.
 export function finameCet(result, releaseDate, holidayCtx = {}) {
   // Resultado com calendário real já traz o CET apurado pelo motor (mesmos vencimentos e dias): usa esse valor.
