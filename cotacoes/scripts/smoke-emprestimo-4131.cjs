@@ -35,6 +35,11 @@ const SPREAD = (1 + PRE) / (1 + DI) - 1
 const RUN_SPREAD = (TOTAL_NDF / (P * SPOT)) ** (252 / DU) / (1 + DI) - 1
 // Com flat de 1% e fiança de 1% a.a. pagos ao exterior: IR com gross-up sobre as comissões.
 const FLAT = P * 0.01, FIANCA = P * 0.01 * DC / 360
+// Curvas do Painel sintéticas, com data-base no desembolso: DI plano em 14% e cupom limpo plano em 5%. No pagamento único,
+// o resultado tem de ser igual ao de digitar 14% e 5%. O cupom sujo (`cc`) vai com outra taxa para provar que não é usado.
+const hoje = [{ id: 'hoje', label: 'Último dia', days: 0, date: START }]
+const flat = (rate) => ({ compare: hoje, curves: { [START]: [21, 63, 126, 252, 504].map((du) => [du, rate]) }, checkedAt: Date.now(), sourceDate: START, warnings: [] })
+const CURVES = { generatedAt: Date.now(), br: flat(14), cc: flat(-9), cl: flat(5), us: null, errors: [], stale: {} }
 const NET_FEES = P - FLAT - P * IOF - FLAT * IR / (1 - IR)
 const IR_FEES = (JUROS + FIANCA) * IR / (1 - IR)
 
@@ -46,6 +51,7 @@ const IR_FEES = (JUROS + FIANCA) * IR / (1 - IR)
     for (const width of [390, 1440]) {
       const page = await browser.newPage({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', serviceWorkers: 'block' })
       page.on('pageerror', e => errors.push(`${width}: ${e.message}`))
+      await page.route('**/curves.json*', r => r.fulfill({ json: CURVES }))
       await page.goto(`${base}/#calculadora/emprestimo-4131`)
       const section = page.locator('main.app section.bw.e4')
       await section.waitFor()
@@ -60,6 +66,16 @@ const IR_FEES = (JUROS + FIANCA) * IR / (1 - IR)
       await section.locator('#e4-freq').selectOption('0')
       await fill('flat', '0,00')
       await fill('guarantee', '0,00')
+      // Curvas do Painel (padrão): mesma leitura do modo manual, porque as curvas sintéticas são planas.
+      await section.locator('.e4-curve').waitFor()
+      assert.match(normalize(await section.locator('.e4-curve').innerText()), /DI 14,00% · cupom 5,00%/)
+      const pelaCurva = normalize(await section.locator('.fm-headline').innerText())
+      assert.ok(pelaCurva.includes(`CDI + ${pct(SPREAD)}`) && pelaCurva.includes(`Spread do swap: CDI + ${pct(RUN_SPREAD)}`) && pelaCurva.includes(`Total ${brl(TOTAL_NDF)}`), pelaCurva)
+      // Desembolso antes da data-base das curvas: volta para as taxas digitadas, com aviso.
+      await fill('start', '2026-11-10')
+      assert.match(normalize(await section.locator('.e4-curve-note').innerText()), /As curvas começam em/)
+      await fill('start', START)
+      await section.locator('#e4-curve').selectOption('manual')
       await fill('di', '14,00')
       await fill('cupom', '5,00')
 

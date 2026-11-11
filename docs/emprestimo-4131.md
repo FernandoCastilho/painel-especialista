@@ -37,7 +37,7 @@ Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara 
 - Ponto de equilíbrio: (1 + custo do NDF em 365) ÷ (1 + all-in em dólar) − 1.
 
 ## Premissas e limites
-- Um DI e um cupom para todos os vencimentos (curvas planas). A mesa do banco usa uma taxa por prazo, o spread do derivativo e o risco de crédito da contraparte.
+- No modo digitado, um DI e um cupom para todos os vencimentos (curvas planas). No modo curvas, uma taxa por prazo, de fechamento. A mesa do banco soma o spread do derivativo e o risco de crédito da contraparte.
 - Só principal no vencimento. Amortização ao longo do prazo não é coberta.
 - Fora da conta: IR na fonte sobre ganho de swap ou NDF, PIS/Cofins, custo de garantias do derivativo.
 - A leitura "CDI + spread" do swap usa o DI informado; o custo real segue o CDI de cada período. É o custo total equivalente: inclui flat, IOF, IR e fiança diluídos no prazo, por isso fica acima do spread que a mesa cota para o swap (em 6 meses com IOF de 3,5%, a diferença passa de 8 pontos percentuais).
@@ -46,8 +46,20 @@ Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara 
 - Spread do swap composto com o custo, não somado. Acréscimo do NDF é percentual fixo sobre o termo: pesa mais ao ano em prazo curto.
 - Custo acima de 1.000% a.a. não é calculado. Prazos muito longos com juros trimestrais recalculam devagar.
 
-## Curvas do Painel: prontas no motor, desligadas na tela
-`curveFactors` monta os fatores de DI e de cupom por prazo a partir das curvas da B3 que o Painel já coleta, e `hedge4131` aceita esses fatores (testes em `test/emprestimo-4131-curvas.test.mjs`). A opção está desligada na tela (`CURVAS_DO_PAINEL = false`) porque a curva de cupom coletada é a DI x dólar das taxas referenciais da B3, que é o cupom sujo: referido à PTAX do dia anterior, com o trecho curto distorcido (em 10/11/2026, −9,32% a.a. em 21 dias úteis e 0,81% em 63). Usá-la com o câmbio do dia desloca todo o câmbio a termo na proporção câmbio do dia ÷ PTAX anterior, cerca de 1% naquela data. Com câmbio 1,2% acima da PTAX anterior, o erro no spread do swap seria de cerca de +0,65 p.p. em 24 meses e +2,6 p.p. em 6 meses. Para religar: coletar o cupom limpo (a B3 publica nas mesmas taxas referenciais; código a confirmar) ou limpar o sujo com a PTAX de referência, rever a regra "antes do primeiro vértice vale a taxa dele", conferir se as duas curvas têm a mesma data-base e validar contra uma cotação de mesa.
+## Curvas do Painel (ligadas em 11/11/2026)
+Padrão da tela: cada pagamento usa o DI e o cupom cambial do seu prazo, das Taxas Referenciais da B3 (`curveFactors` e `hedge4131`; testes em `test/emprestimo-4131-curvas.test.mjs`). "Digitar DI e cupom" continua disponível.
+
+- **DI x pré:** série `br` de `curves.json` (B3, código PRE).
+- **Cupom cambial:** série `cl` (B3, código DOC, "Cupom limpo"), coletada em `scripts/fetch-curves.mjs` só para esta calculadora. A série `cc` (código DOL), mostrada na aba Juros, é o cupom sujo, referido à PTAX da véspera, e não entra na conta.
+- **Por que o limpo:** conferido com os dados de 11/11/2026. De 21 dias úteis em diante, PTAX do dia × fator DI ÷ fator do cupom limpo dá o mesmo câmbio a termo que PTAX da véspera × fator DI ÷ fator do cupom sujo (razão constante de 0,99568 entre os dois fatores, igual a 5,5600 ÷ 5,5840). Ou seja, o limpo está ancorado na PTAX do próprio dia e pode multiplicar o câmbio à vista. Com o sujo, o spread do swap sairia em CDI + 0,20% em vez de CDI + 1,06% num pagamento único de 6 meses a 6% a.a.
+- **Corte de 21 dias úteis:** abaixo disso a própria B3 publica taxas sem sentido econômico (em 11/11/2026, −137% a.a. em 1 dia útil). Antes do primeiro vértice vale a taxa dele.
+- **Travas da tela:** a curva só é usada se DI e cupom limpo têm a mesma data; desembolso anterior à data-base, prazo além do último vértice ou curva ausente voltam para as taxas digitadas, com aviso.
+- **Travas da coleta:** o cupom limpo é coletado à parte. Se falhar, fica o último publicado, sem marcar erro nem atraso nas demais curvas; como a data fica diferente da do DI, a tela cai nas taxas digitadas.
+
+Limites:
+- As curvas são do fechamento da data-base. Se o mercado andou desde então, o resultado fica defasado: digite as taxas.
+- A âncora do cupom limpo é a PTAX (média do dia) e os futuros são de fechamento. A variação do dólar entre os dois momentos entra como erro de nível no câmbio a termo de todos os prazos. Cada 0,1% de desvio pesa cerca de 0,2 ponto percentual ao ano em 6 meses e 0,05 em 24 meses. O vértice de 21 dias úteis absorve esse ruído (6,22% contra 5,71% em 63 dias úteis, em 11/11/2026).
+- Não validado contra cotação de mesa.
 
 ## Pontos não confirmados em fonte oficial
 - IR na fonte sobre flat e fiança pagos ao exterior: o art. 760 do RIR/2018 cita comissões, mas a aplicação a cada tipo de comissão deve ser confirmada com o tributário.

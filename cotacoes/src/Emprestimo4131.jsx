@@ -30,9 +30,9 @@ const IR_PAYERS = [{ id: 'sim', label: 'Tomador (gross-up)' }, { id: 'nao', labe
 const FEE_PLACES = [{ id: 'nao', label: 'Banco no Brasil · sem IR' }, { id: 'sim', label: 'Exterior · IR sobre a comissão' }]
 const CURVE_MODES = [{ id: 'painel', label: 'Curvas do Painel (B3)' }, { id: 'manual', label: 'Digitar DI e cupom' }]
 const DAY = 864e5
-// Desligado em 11/11/2026: a curva de cupom do Painel é o cupom sujo da B3 (DI x dólar, referido à PTAX do dia anterior).
-// Usá-la com o câmbio do dia distorce o câmbio a termo. Religar só depois de limpar o cupom (ver docs/emprestimo-4131.md).
-const CURVAS_DO_PAINEL = false
+// Curvas do Painel: DI x pré (`br`) e cupom limpo (`cl`, B3 DOC, referido à PTAX do próprio dia). O cupom cambial da aba Juros
+// (`cc`, B3 DOL) é o cupom sujo, referido à PTAX do dia anterior, e não serve aqui (ver docs/emprestimo-4131.md).
+const CURVAS_DO_PAINEL = true
 // Curva mais recente de um conjunto do Painel: { date, pts } ou null.
 const hojeOf = (set) => { const today = set?.compare?.find((c) => c.id === 'hoje'); const pts = today ? set.curves?.[today.date] : null; return pts?.length ? { date: today.date, pts } : null }
 // Regras levantadas nas fontes oficiais; detalhes e pontos não confirmados em docs/emprestimo-4131.md.
@@ -119,9 +119,9 @@ export default function Emprestimo4131({ onBack }) {
   }
   // Curvas DI x pré e cupom cambial da B3 já coletadas pelo Painel. Sem elas, ou com desembolso antes da data-base, vale o modo manual.
   const diCurve = hojeOf(curves.data?.br)
-  const ccCurve = hojeOf(curves.data?.cc)
-  const curveBase = diCurve && ccCurve ? diCurve.date : null
-  const curveBlocked = !curveBase ? (curves.status === 'loading' ? 'Carregando as curvas do Painel…' : 'Curvas do Painel indisponíveis: usando DI e cupom digitados.') : start && start < curveBase ? `As curvas começam em ${dm(curveBase)}: para desembolso anterior, usando DI e cupom digitados.` : null
+  const ccCurve = hojeOf(curves.data?.cl)
+  const curveBase = diCurve && ccCurve && diCurve.date === ccCurve.date ? diCurve.date : null
+  const curveBlocked = !curveBase ? (curves.status === 'loading' ? 'Carregando as curvas do Painel…' : diCurve && ccCurve ? `Curvas do Painel com datas diferentes (DI de ${dm(diCurve.date)}, cupom limpo de ${dm(ccCurve.date)}): usando DI e cupom digitados.` : 'Curvas do Painel indisponíveis: usando DI e cupom digitados.') : start && start < curveBase ? `As curvas começam em ${dm(curveBase)}: para desembolso anterior, usando DI e cupom digitados.` : null
   const usingCurve = curveMode === 'painel' && !curveBlocked && !!start
   if (usingCurve) { errors.di = null; errors.cupom = null }
   const loanErrors = ['principal', 'rate', 'spot', 'start', 'months', 'flat', 'guarantee'].some((k) => errors[k])
@@ -134,7 +134,7 @@ export default function Emprestimo4131({ onBack }) {
   const hedge = hedgeResult?.ok ? hedgeResult : null
   const scenarios = loan ? E4_FX_SCENARIOS.map((s) => unhedged4131(loan, s)).filter((s) => s.ok) : []
   const parado = scenarios.find((s) => s.fxChange === 0) ?? null
-  const curveLabel = usingCurve ? `Curvas do Painel (B3) de ${dm(curveBase)}` : 'DI e cupom digitados, iguais para todos os prazos'
+  const curveLabel = usingCurve ? `Curvas da B3 (DI x pré e cupom limpo) de ${dm(curveBase)}` : 'DI e cupom digitados, iguais para todos os prazos'
   const labels = { freq: FREQS.find((f) => f.id === freq)?.label, irPayer: IR_PAYERS.find((p) => p.id === grossUp)?.label, curve: curveLabel, fees: FEE_PLACES.find((p) => p.id === feesAbroad)?.label }
   const pendencia = loanResult?.error || hedgeResult?.error || (Object.values(errors).some(Boolean) ? 'Complete os campos indicados para calcular.' : null)
 
@@ -194,7 +194,7 @@ export default function Emprestimo4131({ onBack }) {
                   <ul className="fm-pills" aria-label="Condições fixas"><li>Principal <b>no vencimento</b></li><li>Juros <b>linear 360</b></li><li>IOF na entrada <b>{loan ? pct(loan.iofRate) : 'automático'}</b></li></ul>
                 </div></section>
                 <section className="fm-group fm-payment e4-hedge" aria-labelledby="e4-hedge-h"><h3 id="e4-hedge-h"><BndesIcon kind="chart" />Proteção cambial</h3><div className="fm-group-fields">
-                  {CURVAS_DO_PAINEL && field('curve', 'curve', 'DI e cupom cambial', select('curve', curveMode, setCurveMode, CURVE_MODES), 'Curvas do Painel: cada pagamento usa o DI e o cupom cambial do seu prazo, das curvas da B3 já coletadas. Digitar: um DI e um cupom para todos os prazos; em prazo longo, o cupom linear único tende a encarecer a leitura.')}
+                  {CURVAS_DO_PAINEL && field('curve', 'curve', 'DI e cupom cambial', select('curve', curveMode, setCurveMode, CURVE_MODES), 'Curvas do Painel: cada pagamento usa o DI e o cupom cambial limpo do seu prazo, das taxas referenciais da B3 no fechamento da data indicada. São de fechamento: se o mercado andou desde então, digite as taxas. Digitar: um DI e um cupom para todos os prazos; em prazo longo, o cupom linear único tende a encarecer a leitura.')}
                   {usingCurve ? <p className="fm-financed e4-curve" aria-live="polite"><span>Até o vencimento · {dm(curveBase)}</span><b>{hedge ? `DI ${pct(hedge.di)} · cupom ${pct(hedge.cupom)}` : '—'}</b></p> : <>
                     {field('di', 'di', 'DI pré do prazo', rateInput('di', diText, setDiText), 'Taxa DI prefixada do prazo médio da operação, ao ano, base 252 dias úteis, na data da cotação.')}
                     {field('cupom', 'cupom', 'Cupom cambial', rateInput('cupom', cupomText, setCupomText), 'Juro em dólar no Brasil para o prazo médio, ao ano, linear, base 360 dias corridos. Com o DI, define o câmbio a termo de cada pagamento.')}
@@ -212,7 +212,7 @@ export default function Emprestimo4131({ onBack }) {
 
               {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
               <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? 'Cotação comparativa ampliada' : undefined}>
-                <header className="fm-hero"><h3 className="cx-heading">Cotação comparativa</h3><small>Projeção · custo estimado</small>{ajuda('Limites da projeção', 'Estimativa para comparar propostas. Câmbio a termo teórico com um DI e um cupom cambial digitados, iguais para todos os prazos; a mesa do banco usa uma taxa por prazo e acrescenta o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ganho do swap ou do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
+                <header className="fm-hero"><h3 className="cx-heading">Cotação comparativa</h3><small>Projeção · custo estimado</small>{ajuda('Limites da projeção', (usingCurve ? 'Estimativa para comparar propostas. Câmbio a termo teórico pelas curvas de fechamento da B3 (DI x pré e cupom limpo), uma taxa por prazo; a mesa do banco cota no momento e acrescenta o spread do derivativo e o risco de crédito.' : 'Estimativa para comparar propostas. Câmbio a termo teórico com um DI e um cupom cambial digitados, iguais para todos os prazos; a mesa do banco usa uma taxa por prazo e acrescenta o spread do derivativo e o risco de crédito.') + ' Não inclui IR nem PIS/Cofins sobre ganho do swap ou do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
                 {hedge && <div className="fm-headline" aria-label="Custo com swap e com NDF">
                   <div><span>Com swap · custo total em CDI</span><b>CDI {signed(hedge.swap.spread, pct)}</b><small>Spread do swap: CDI {signed(hedge.swap.runSpread, pct)}</small></div>
                   <div><span>Com NDF · prefixado</span><b>{pct(hedge.ndf.pre)} a.a.</b><small>Total {brl(hedge.ndf.totalBrl)}</small></div>
@@ -264,7 +264,7 @@ export default function Emprestimo4131({ onBack }) {
                 </details>
               )}
 
-              <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>Principal no vencimento · juros lineares por dias corridos/360 · IR na fonte e IOF-câmbio pelas regras vigentes em {CONFERIDO_EM}.</p><p>Swap e NDF teóricos, com um DI e um cupom cambial digitados, iguais para todos os prazos; o cupom linear único tende a encarecer a leitura acima de 5 anos. Não inclui IR nem PIS/Cofins sobre ganho do derivativo, nem custo de garantias.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
+              <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>Principal no vencimento · juros lineares por dias corridos/360 · IR na fonte e IOF-câmbio pelas regras vigentes em {CONFERIDO_EM}.</p><p>{usingCurve ? `Swap e NDF teóricos, pelas curvas de fechamento da B3 de ${dm(curveBase)} (DI x pré e cupom limpo, uma taxa por prazo). Se o mercado andou desde então, digite as taxas.` : 'Swap e NDF teóricos, com um DI e um cupom cambial digitados, iguais para todos os prazos; o cupom linear único tende a encarecer a leitura acima de 5 anos.'} Não inclui IR nem PIS/Cofins sobre ganho do derivativo, nem custo de garantias.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
             </div>
           </div>
           <p className="status">Regras conferidas em {CONFERIDO_EM} · {curveLabel} · A cotação da mesa do banco e o contrato prevalecem.</p>
