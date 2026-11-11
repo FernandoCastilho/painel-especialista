@@ -14,10 +14,14 @@ test('preferences tolerate unavailable storage and reject malformed coordinates'
   assert.deepEqual(readMascotPreferences({getItem:()=>JSON.stringify({hidden:true,desktop:{x:42,y:10},query:'private'})}), {hidden:true,desktop:{x:42,y:10}})
 })
 
-test('mobile mascot is isolated below fixed navigation', async () => {
+test('mascot floats without a box and parks as a small badge at the top', async () => {
   const { readFile } = await import('node:fs/promises')
   const css = await readFile(new URL('../src/FeedbackMascot.css', import.meta.url), 'utf8')
-  assert.match(css, /@media\(max-width:999px\)\{\.mascot-tray\{height:250px;isolation:isolate;z-index:0;/)
+  assert.match(css, /\.mascot-dock\{[^}]*position:fixed[^}]*background:transparent;border:0;/)
+  assert.doesNotMatch(css, /\.mascot-tray\{height:250px/)
+  assert.match(css, /\.mascot-restore\{position:fixed;[^}]*z-index:70/)
+  assert.match(css, /\.mascot-restore-face\{[^}]*mascot-owl\.webp/)
+  assert.match(css, /@media\(max-width:999px\)\{body:has\(\.mascot-tray:not\(\.mascot-tray-hidden\)\)::after\{content:'';display:block;height:210px\}\}/)
 })
 
 test('desktop movement respects the sticky header exclusion', () => {
