@@ -10,6 +10,7 @@ export const SEARCH_PAGES = {
   'GoogleTrends.jsx':['resumo','Google Trends: interesse de busca, crédito, BNDES, Selic, custos e reforma tributária'],
   'ContaGarantida.jsx':['calculadora/conta-garantida','Conta Garantida: utilização, amortização, juros e IOF'],
   'OperacaoDi.jsx':['calculadora/operacao-di','Operação x DI: pré, % do CDI ou CDI + spread contra a curva DI'],
+  'Emprestimo4131.jsx':['calculadora/emprestimo-4131','Empréstimo externo (4131): custo em dólar, swap para CDI e NDF'],
   'CreditComparison.jsx':['calculadora/comparador-credito','Comparador de Crédito: propostas, CET e garantias'],
   'AnaliseDesconto.jsx':['calculadora/analise-desconto','Análise de desconto: títulos e capital de giro Price'],
   'Bancos.jsx':['bancos','Bancos — Basileia, carteiras PJ e PF, provisões e inadimplência'],

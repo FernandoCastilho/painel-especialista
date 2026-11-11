@@ -17,6 +17,7 @@ import './CalculatorLayout.css'
 import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
 import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
+import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
 import './CalculatorTheme.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -40,6 +41,7 @@ const CALCS = [
   { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'finame-materiais', title: 'BNDES', sub: 'Simular, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
+  { id: 'emprestimo-4131', title: 'Empréstimo externo (4131)', sub: 'Custo em dólar, sem proteção, com swap e com NDF', Icon: Emprestimo4131Icon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
@@ -197,6 +199,7 @@ export default function Calculadora({ view, onView }) {
   if (view === 'conta-garantida') return <ContaGarantida onBack={() => onView('')} />
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
+  if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
