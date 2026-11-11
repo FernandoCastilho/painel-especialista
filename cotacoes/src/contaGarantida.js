@@ -2,7 +2,7 @@ import { resolveCreditIof } from './iofRules.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
 import { creditCet } from './creditComparison.js'
-import { isBusinessDay } from './holidays.js'
+import { isBusinessDayAll } from './holidays.js'
 
 export const CG_LEGAL_CHECKED_AT = '2026-11-05'
 export const CG_PRESET_FROM = '2025-07-17'
@@ -50,7 +50,8 @@ export function cgInitialForm(today = cgToday()) {
 // The explicit daily close convention is a simulation, not a reconstruction of a bank ledger.
 // All movements on one date are netted. No positive account balance or intraday overdraft is modeled.
 export function simulateContaGarantida(input) {
-  const { start, end, rate, rateBase, conversion, dayCount, events = [], holidays = [], settleAllAtEnd = false } = input
+  // calendars: praças do contrato (padrão só feriados nacionais); entram na contagem em dias úteis.
+  const { start, end, rate, rateBase, conversion, dayCount, events = [], holidays = [], settleAllAtEnd = false, calendars = ['BR'] } = input
   const from = cgDate(start), to = cgDate(end)
   if (!from || !to || to < from || (to - from) / DAY > CG_MAX_DAYS) return fail('Informe datas válidas, em ordem, em um intervalo de até 3.660 dias.')
   if (!validPercent(rate) || ![1, 30, 360, 365, 252].includes(rateBase) || !['proportional', 'equivalent'].includes(conversion)) return fail('Confira a taxa e sua conversão diária.')
@@ -84,7 +85,7 @@ export function simulateContaGarantida(input) {
     balance = Math.max(0, balance + draw - payment)
     const dow = new Date(t).getUTCDay()
     // Dias úteis: segunda a sexta, fora os feriados nacionais do calendário do painel e os feriados extras informados.
-    const countsInterest = dayCount === 'calendar' || (dow !== 0 && dow !== 6 && !nonworking.has(date) && isBusinessDay(date, 'BR'))
+    const countsInterest = dayCount === 'calendar' || (dow !== 0 && dow !== 6 && !nonworking.has(date) && isBusinessDayAll(date, calendars))
     const interest = countsInterest ? balance * dailyRate : 0
     // User scope: interest and IOF are paid separately, never added to utilized principal.
     const additionalBase = Math.max(0, balance - previousClose)
@@ -112,11 +113,11 @@ export function simulateContaGarantida(input) {
 // devolvido em 30 dias corridos. Juros e IOF saem do próprio simulador de saldo (mesma taxa, base, contagem de dias e
 // enquadramento da tela). O IOF adicional (0,38%) é cobrado na utilização: sai do valor líquido na liberação. Juros e IOF
 // diário, apurados dia a dia, entram no pagamento do 30º dia. Não há tarifas no motor.
-export function contaGarantidaCet({ limit, start, rate, rateBase = 30, conversion = 'proportional', dayCount = 'calendar', holidays = [], taxProfile = 'pj', eligible = false, operationValue }) {
+export function contaGarantidaCet({ limit, start, rate, rateBase = 30, conversion = 'proportional', dayCount = 'calendar', holidays = [], taxProfile = 'pj', eligible = false, operationValue, calendars = ['BR'] }) {
   if (!(Number.isFinite(limit) && limit > 0 && limit <= MAX_MONEY)) return fail('Informe o limite contratado, maior que zero.')
   const end = cgAddDays(start, CG_CET_DAYS)
   if (!end) return fail('Informe uma data inicial válida para o CET.')
-  const sim = simulateContaGarantida({ start, end, rate, rateBase, conversion, dayCount, holidays, taxProfile, eligible,
+  const sim = simulateContaGarantida({ start, end, rate, rateBase, conversion, dayCount, holidays, calendars, taxProfile, eligible,
     operationValue: taxProfile === 'simples' ? operationValue : limit, events: [{ date: start, draw: limit, payment: 0 }], settleAllAtEnd: true })
   if (!sim.ok) return fail(taxProfile === 'simples' && /valor contratual/.test(sim.error) ? 'O limite contratado supera o valor contratual declarado para o Simples/MEI.' : sim.error)
   const { interest, dailyIof, additionalIof, iof } = sim.totals
@@ -152,6 +153,7 @@ export function parseContaGarantidaForm(form) {
   params.rateBase = Number(form.rateBase)
   params.conversion = form.conversion
   params.dayCount = form.dayCount
+  params.calendars = Array.isArray(form.calendars) && form.calendars.length ? form.calendars : ['BR']
   params.holidays = form.dayCount === 'business' && form.holidays.trim() ? form.holidays.trim().split(/[\s,;]+/) : []
   if (params.holidays.some(d => !cgDate(d))) errors.holidays = 'Use datas reais no formato AAAA-MM-DD, separadas por vírgula ou linha.'
   if (form.dayCount === 'business') warnings.push('Dias úteis = segunda a sexta, menos os feriados nacionais do calendário do painel e os feriados extras que você informou. Feriados locais do contrato precisam ser informados.')

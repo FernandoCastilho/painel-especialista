@@ -177,3 +177,13 @@ test('Comparador: a praça comum do topo adia giro, BNDES e desconto; FINIMP e C
   for (const modality of ['finimp', 'conta-garantida']) assert.deepEqual(evaluateColumn(newColumn(modality), { ...shared, praca: 'SP' }), evaluateColumn(newColumn(modality), shared), modality)
   assert.equal(evaluateColumn(newColumn('giro-pre'), { ...shared, praca: 'XX' }).ok, false)
 })
+
+test('Conta Garantida em dias úteis desconta o feriado da praça (25/01/2027 em São Paulo), também no Comparador', async () => {
+  const { simulateContaGarantida } = await import('../src/contaGarantida.js')
+  const base = { start: '2027-01-20', end: '2027-01-29', rate: 3, rateBase: 30, conversion: 'proportional', dayCount: 'business', events: [{ date: '2027-01-20', draw: 100000, payment: 0 }], settleAllAtEnd: true, taxProfile: 'pj', eligible: false, operationValue: 100000 }
+  const br = simulateContaGarantida(base), sp = simulateContaGarantida({ ...base, calendars: ['BR', 'SP'] })
+  assert.equal(br.ok && sp.ok, true)
+  // 20/01 a 29/01/2027: 7 dias úteis nacionais com juros; em São Paulo, 25/01 (segunda) é feriado municipal: 6.
+  assert.ok(Math.abs(br.totals.interest - 100000 * 0.03 / 30 * 7) < 1e-6)
+  assert.ok(Math.abs(sp.totals.interest - 100000 * 0.03 / 30 * 6) < 1e-6)
+})

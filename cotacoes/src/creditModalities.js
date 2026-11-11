@@ -233,13 +233,14 @@ function contaGarantida(col, p) {
   const days = col.cDays.trim() ? integerText(col.cDays) : p.term === null ? null : p.term * 30
   if (days === null || days < 1 || days > 3660) return fail('Informe de 1 a 3.660 dias de utilização.')
   const form = { ...cgInitialForm(p.start), mode: 'single', dateMode: 'duration', duration: String(days), amount: p.valueText, rate: col.cRate, rateBase: col.cBase, conversion: col.cConv, dayCount: col.cCount, holidays: col.holidays, taxProfile: col.profile, eligible: col.eligible, operationValue: p.valueText }
-  const parsed = parseContaGarantidaForm(form)
+  // Praça do contrato: feriados locais também saem da contagem em dias úteis, como nas demais colunas.
+  const parsed = parseContaGarantidaForm({ ...form, calendars: p.calendars })
   if (!parsed.result?.ok) return fail(parsed.result?.error ?? Object.values(parsed.errors)[0] ?? 'Confira as condições da Conta Garantida.')
   const { totals } = parsed.result
   const end = cgAddDays(p.start, days)
   // CET regulatório da conta garantida (art. 6º): 30 dias sobre o limite, igual à calculadora própria (limite = valor da coluna).
   // O fluxo pelo prazo de uso informado vira o "custo pelo prazo de uso".
-  const cg = contaGarantidaCet({ limit: p.value, start: p.start, rate: parsed.params.rate, rateBase: parsed.params.rateBase, conversion: parsed.params.conversion, dayCount: parsed.params.dayCount, holidays: parsed.params.holidays, taxProfile: col.profile, eligible: col.eligible, operationValue: p.value })
+  const cg = contaGarantidaCet({ limit: p.value, start: p.start, rate: parsed.params.rate, rateBase: parsed.params.rateBase, conversion: parsed.params.conversion, dayCount: parsed.params.dayCount, holidays: parsed.params.holidays, calendars: p.calendars, taxProfile: col.profile, eligible: col.eligible, operationValue: p.value })
   return finish({
     cetRegulatory: cg.ok ? cg.annual : null, projectedLabel: 'Custo pelo prazo de uso', cetLabel: 'CET (art. 6º · 30 dias sobre o limite)',
     // Mesma convenção do CET: IOF adicional na liberação; juros e IOF diário no encerramento.

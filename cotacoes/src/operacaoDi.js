@@ -12,7 +12,7 @@ import { creditCet, creditOperation } from './creditComparison.js'
 import { busDaysIn, nextBusinessDay } from './holidays.js'
 
 export const RATE_KINDS = [
-  { id: 'pre', label: 'Pré', hint: 'Taxa fixa. Ao ano em base 252 dias úteis, ao mês (convertida por (1 + taxa)^12) ou já para o período inteiro.' },
+  { id: 'pre', label: 'Pré', hint: 'Taxa fixa: ao ano, ao mês ou para o período inteiro. Na aplicação, a taxa ao ano corre em base 252 dias úteis; no crédito, vira taxa ao mês composta e corre por dias corridos ((1 + taxa)^(dias/30)).' },
   { id: 'pct', label: '% do CDI', hint: 'Percentual aplicado ao DI de cada dia útil, como na metodologia da B3. Ex.: 105% do CDI.' },
   { id: 'spread', label: 'CDI + spread', hint: 'DI do período mais uma taxa fixa ao ano em base 252, compostos. Ex.: CDI + 2,00% a.a.' },
 ]
