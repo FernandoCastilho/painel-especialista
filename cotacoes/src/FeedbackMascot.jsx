@@ -69,8 +69,8 @@ export default function FeedbackMascot({ configuration = config, onSearch }) {
     } finally { clearTimeout(timeout); inFlight.current = false; controller.current = null }
   }
   return <>
-    <MascotDock onSearch={onSearch}><button className="feedback-trigger" type="button" ref={trigger} aria-label="Abrir caixa de sugestões" aria-haspopup="dialog" aria-expanded={open} aria-controls="feedback-dialog" onClick={() => { restoreFocus.current = true; setOpen(true) }}>
-      <MascotIcon /><span>Sugestões</span>
+    <MascotDock onSearch={onSearch}><button className="feedback-trigger" type="button" ref={trigger} aria-label="Abrir caixa de sugestões" title="Fredix — abrir caixa de sugestões" aria-haspopup="dialog" aria-expanded={open} aria-controls="feedback-dialog" onClick={() => { restoreFocus.current = true; setOpen(true) }}>
+      <MascotIcon /><span className="mascot-greeting">Prazer, sou Fredix</span>
     </button></MascotDock>
     {createPortal(<dialog id="feedback-dialog" className="feedback-dialog" ref={dialog} aria-labelledby="feedback-title" aria-describedby="feedback-privacy" onCancel={event => { event.preventDefault(); setOpen(false) }} onClose={() => { if (!dialog.current?.open) setOpen(false) }}>
       <header className="feedback-heading"><MascotIcon /><div><span>PEME</span><h2 id="feedback-title">Sua ideia faz diferença</h2></div><button type="button" className="feedback-close" aria-label="Fechar caixa de sugestões" onClick={() => setOpen(false)}>×</button></header>

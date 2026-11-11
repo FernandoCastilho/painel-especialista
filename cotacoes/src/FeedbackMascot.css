@@ -16,7 +16,7 @@
 
 .mascot-tray{font-family:inherit;color:var(--fg)}
 /* Coruja solta na tela: sem caixa, só o desenho. Os botões pequenos aparecem com o mouse ou o foco. */
-.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:216px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 8px 0;background:transparent;border:0;pointer-events:none}
+.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:228px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 8px 0;background:transparent;border:0;pointer-events:none}
 .mascot-dock>*{pointer-events:auto}
 .mascot-dock .feedback-mascot-icon{width:112px;height:119px;filter:drop-shadow(0 10px 8px #0005)}
 .mascot-dock .feedback-trigger{width:auto;background:transparent}
@@ -49,3 +49,7 @@
 @media(max-width:999px){body:has(.mascot-tray:not(.mascot-tray-hidden))::after{content:'';display:block;height:210px}}
 /* Reserve the default desktop parking area so the assistant cannot cover tools. */
 @media(min-width:1000px){body:has(.mascot-tray:not(.mascot-tray-hidden)) main.app{box-sizing:border-box;padding-right:174px}}
+
+/* Apresentação de Fredix abaixo do desenho, sem cobrir o rosto ou o escudo. */
+.mascot-dock .feedback-trigger>.mascot-greeting{position:relative;max-width:128px;box-sizing:border-box;margin-top:5px;padding:4px 7px;border-radius:10px;font-size:10px;line-height:14px;white-space:nowrap}
+.mascot-greeting::before{content:'';position:absolute;top:-5px;left:calc(50% - 4px);width:7px;height:7px;background:var(--bg);border-top:1px solid var(--line);border-left:1px solid var(--line);transform:rotate(45deg)}
