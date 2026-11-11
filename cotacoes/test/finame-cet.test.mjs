@@ -99,3 +99,11 @@ test('mudar a data da liberação muda os juros, mas não cria CET abaixo da tax
     assert.ok(finameCet(result, date).anual >= result.taxa - 1e-6)
   }
 })
+
+test('PDF e apresentação não repetem a unidade do CET ("a.a. a.a.")', async () => {
+  const { readFileSync } = await import('node:fs')
+  for (const file of ['BndesPresentation.jsx', 'BndesPrint.jsx']) {
+    const source = readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8')
+    assert.doesNotMatch(source, /percent\(item\.result\.cet\.anual\)\} a\.a\./, file)
+  }
+})
