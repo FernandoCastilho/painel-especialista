@@ -90,6 +90,7 @@ export function simulateInvestment(p) {
   let P = p.deposit // principal remanescente
   let CCP = 0 // come-cotas já pago sobre o saldo remanescente (Simples, fundo)
   let GC = 0 // rendimento bruto do saldo remanescente que já passou pelo come-cotas
+  let GG = 0 // Lucro Real: rendimento bruto do saldo remanescente (o imposto mensal sai do saldo, não da base do IOF/IR retido)
   let accruedMonth = 0
   let accruedMonthPis = 0
   const totals = { gross: 0, tax: 0, pisCofins: 0, iof: 0, withheld: 0, shield: 0, withdrawn: 0, shortfall: 0 }
@@ -107,14 +108,17 @@ export function simulateInvestment(p) {
       const iof = iofRate(days)
       iofUnit = gainRatio * iof
       const reg = irRate(days, product)
-      withheldUnit = gainRatio * (1 - iof) * reg
+      withheldUnit = gainRatio * (1 - iof) * reg - (useCc ? CCP / B : 0)
       const final = regime === 'simples' ? reg : t
       unit = iofUnit + gainRatio * (1 - iof) * final - (useCc ? CCP / B : 0)
     } else {
       // Lucro Real: o imposto já foi pago por competência; o IR retido é antecipação compensada.
-      iofUnit = gainRatio * iofRate(days)
-      unit = iofUnit
-      withheldUnit = gainRatio * irRate(days, product)
+      // O IOF incide sobre o rendimento bruto e é despesa dedutível: devolve IRPJ/CSLL.
+      const realGain = Math.min(1, GG / B)
+      const iof = iofRate(days)
+      iofUnit = realGain * iof
+      unit = iofUnit * (1 - t)
+      withheldUnit = realGain * (1 - iof) * irRate(days, product)
     }
     unit = Math.min(Math.max(unit, 0), 0.999)
     let W = all ? B : net / (1 - unit)
@@ -125,8 +129,8 @@ export function simulateInvestment(p) {
     totals.iof += W * iofUnit
     totals.withheld += W * withheldUnit
     totals.withdrawn += W - tax
-    B -= W; P -= f * P; CCP -= f * CCP; GC -= f * GC
-    if (B < 1e-9) { B = 0; P = 0; CCP = 0; GC = 0 }
+    B -= W; P -= f * P; CCP -= f * CCP; GC -= f * GC; GG -= f * GG
+    if (B < 1e-9) { B = 0; P = 0; CCP = 0; GC = 0; GG = 0 }
     return W - tax
   }
 
@@ -137,7 +141,10 @@ export function simulateInvestment(p) {
     const irc = (accruedMonth - pis) * t
     totals.pisCofins += pis
     totals.tax += irc
-    B -= pis + irc
+    // sem saldo para pagar o imposto do mês: a diferença vira falta de caixa
+    if (pis + irc > Math.max(B, 0)) totals.shortfall += pis + irc - Math.max(B, 0)
+    B = Math.max(0, B - pis - irc)
+    if (B === 0) GG = 0
     accruedMonth = 0; accruedMonthPis = 0
   }
   for (let d = addDay(start); d <= end; d = addDay(d)) {
@@ -151,6 +158,7 @@ export function simulateInvestment(p) {
       if (B > 0) B = (B * (1 + r)) / fee
       const gain = B - before
       totals.gross += gain
+      GG += gain
       accruedMonth += gain
       if (d <= PIS_COFINS_END) accruedMonthPis += gain
       if (useCc && (d.slice(5, 7) === '05' || d.slice(5, 7) === '11') && d === lastBusinessOfMonth(d, ctx) && B > 0) {
@@ -196,6 +204,12 @@ export function investmentAlone(p) {
 // cada parcela. Sobra positiva no fim = tomar o crédito e manter o caixa aplicado rendeu mais do que usar o caixa próprio.
 export function creditVsCash(credit, p) {
   if (!credit?.ok) return { ok: false, error: credit?.error ?? 'Operação inválida.' }
-  const moves = credit.rows.map((row) => ({ date: row.date, payment: row.payment, expense: Math.max(0, row.payment - (row.amortization ?? 0)) }))
+  // Despesa dedutível de cada parcela: juros e tarifas pagos; os juros capitalizados (carência) entram junto com a
+  // amortização, então a diferença para o custo total é distribuída na proporção dos pagamentos.
+  const direct = credit.rows.map((row) => Math.max(0, row.payment - (row.amortization ?? 0)))
+  const periodic = Math.max(0, credit.rows.reduce((a, r) => a + r.payment, 0) - credit.value)
+  const paidTotal = credit.rows.reduce((a, r) => a + r.payment, 0)
+  const rest = Math.max(0, periodic - direct.reduce((a, b) => a + b, 0))
+  const moves = credit.rows.map((row, i) => ({ date: row.date, payment: row.payment, expense: direct[i] + (paidTotal > 0 ? (rest * row.payment) / paidTotal : 0) }))
   return simulateInvestment({ ...p, start: credit.start, end: credit.lastDate, deposit: credit.net, moves, upfrontExpense: Math.max(0, credit.value - credit.net) })
 }

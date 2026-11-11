@@ -79,3 +79,32 @@ test('entradas inválidas', () => {
   assert.equal(simulateInvestment({ ...base, regime: 'real', start: '2026-01-04', end: '2028-01-04' }).ok, false)
   assert.equal(simulateInvestment({ ...base, regime: 'real', start: '2027-01-04', end: '2040-01-04' }).ok, false)
 })
+
+test('revisão: Lucro Real com IOF antes de 30 dias deduz o IOF do IRPJ/CSLL', () => {
+  const r = investmentAlone({ ...base, regime: 'real', start: '2027-02-01', end: '2027-02-17' })
+  near(r.iof, r.gross * iofRate(16), 1e-6)
+  near(r.tax, (r.gross - r.iof) * 0.34, 1e-6)
+  near(r.net, (r.gross - r.iof) * 0.66, 1e-6)
+})
+
+test('revisão: Lucro Real informa o IR retido sobre o rendimento bruto', () => {
+  const r = investmentAlone({ ...base, regime: 'real', start: '2027-01-04', end: '2029-01-04' })
+  near(r.withheld, r.gross * 0.15, 1e-4)
+})
+
+test('revisão: juros capitalizados na carência também são despesa dedutível no Lucro Real', () => {
+  const credit = { ok: true, start: '2027-01-04', lastDate: '2027-03-04', value: 1000, net: 990, rows: [{ date: '2027-02-04', payment: 600, amortization: 600 }, { date: '2027-03-04', payment: 600, amortization: 500 }] }
+  const r = creditVsCash(credit, { ...base, rate: 0.0001, regime: 'real' })
+  // custo total = 1.200 − 990 = 210; economia = 34% de 210
+  near(r.shield, 0.34 * 210, 1e-6)
+})
+
+test('revisão: Lucro Real sem saldo para o imposto do mês vira falta de caixa', () => {
+  const credit = { ok: true, start: '2027-01-04', lastDate: '2027-02-15', value: 1e6, net: 1e6, rows: [{ date: '2027-02-15', payment: 1.5e6, amortization: 1e6 }] }
+  const r = creditVsCash(credit, { ...base, regime: 'real', adicional: true })
+  const alone = investmentAlone({ ...base, regime: 'real', start: '2027-01-04', end: '2027-02-15' })
+  assert.ok(r.shortfall > 0)
+  // tudo o que foi cobrado em imposto precisa aparecer: falta = pagamento − (aplicado + rendimento − imposto + economia)
+  near(r.leftover, -(1.5e6 - (1e6 + r.gross - r.tax - r.pisCofins - r.iof + r.shield)), 1e-3)
+  assert.ok(alone.ok)
+})

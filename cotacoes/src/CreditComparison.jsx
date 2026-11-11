@@ -169,7 +169,7 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
       <p>Cobertura nominal = valor da garantia ÷ crédito contratado. Não representa avaliação, liquidez ou aceitação pelo banco e não indica condição melhor ou pior.</p></section>
     {investment && <InvestmentBlock alone={investment.alone} regime={shared.regime} adicional={shared.adicional} product={investment.product} />}
     {investment && <section className="credit-analysis"><h3>Crédito ou caixa próprio?</h3>
-      <p>Conta: a empresa recebe o líquido do crédito, mantém essa quantia na aplicação e resgata para pagar cada parcela, com o imposto do regime. {shared.regime === 'real' ? `No Lucro Real, juros, IOF e tarifas do crédito reduzem o IRPJ/CSLL (${shared.adicional ? '34%' : '24%'}).` : 'Neste regime, as despesas do crédito não reduzem o imposto.'} Sobra positiva no fim: compensa tomar o crédito; negativa: usar o caixa próprio sai mais barato.</p>
+      <p>Conta: a empresa recebe o líquido do crédito, mantém essa quantia na aplicação e resgata para pagar cada parcela, com o imposto do regime. {shared.regime === 'real' ? `No Lucro Real, juros, IOF e tarifas do crédito reduzem o IRPJ/CSLL (${shared.adicional ? '34%' : '24%'}).` : 'Neste regime, as despesas do crédito não reduzem o imposto.'}{investment.product.startsWith('fundo') && shared.regime !== 'simples' ? ' Fora do Simples, o come-cotas é antecipação e não muda o imposto final; não é simulado.' : ''} Sobra positiva no fim: compensa tomar o crédito; negativa: usar o caixa próprio sai mais barato.</p>
       <ul>{results.map((r, i) => { const v = investment.vsCash[i]; return <li key={i}><b>{head(i)}:</b> {!v?.ok ? v?.error : v.leftover >= 0 ? <>manter o caixa aplicado deixa <b>{brl(v.leftover)}</b> a mais no fim ({day(r.lastDate)}).</> : <>usar o caixa próprio economiza <b>{brl(-v.leftover)}</b>{v.shortfall > 0 ? ' (a aplicação não cobre todas as parcelas)' : ''}.</>}</li> })}</ul>
       <p>Projeção pela curva DI do dia, não garantia. Prejuízo fiscal, compensações e o momento exato do recolhimento não são simulados.</p></section>}
     <CreditChart results={results} />
@@ -218,13 +218,13 @@ function InvestmentBlock({ alone, regime, adicional, product }) {
     ...(alone.iof > 0 ? [['IOF (resgate antes de 30 dias)', brl(-alone.iof)]] : []),
     ...(real ? [['PIS/Cofins (4,65% até 31/12/2026)', brl(-alone.pisCofins)]] : []),
     [simples ? 'IR retido na fonte (imposto final)' : `IRPJ + CSLL (${adicional ? '34%' : '24%'})`, brl(-alone.tax)],
-    ...(!simples ? [['IR retido na fonte e come-cotas (antecipação, abatido do IRPJ)', brl(alone.withheld)]] : []),
+    ...(!simples ? [['IR retido na fonte (antecipação, abatido do IRPJ)', brl(alone.withheld)]] : []),
     ['Rendimento líquido', brl(alone.net)],
     ['Taxa líquida ao ano', alone.netRate == null ? '—' : pctRate(alone.netRate)],
   ]
   return <section className="credit-invest-block"><h3>Aplicação financeira · {PRODUCTS.find(x => x.id === product)?.label} · {regimeLabel(regime)}</h3>
     <div className="credit-scroll"><table><tbody>{rows.map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{v}</td></tr>)}</tbody></table></div>
-    <p className="credit-hint">{simples ? 'No Simples, o IR retido pelo banco é o imposto final: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima.' : real ? 'No Lucro Real, o rendimento entra no lucro pelo regime de competência; o IR retido pelo banco só antecipa o imposto. A partir de 2027, sem PIS/Cofins sobre o rendimento (a CBS não incide).' : 'No Lucro Presumido, o rendimento entra inteiro na base do IRPJ e da CSLL no resgate; o IR retido pelo banco só antecipa o imposto. Não há PIS/Cofins sobre o rendimento.'} LCI e LCA não são isentas para empresa. CDB tem garantia do FGC até R$ 250 mil por CNPJ em cada banco.</p>
+    <p className="credit-hint">{simples ? `No Simples, o IR retido pelo banco é o imposto final: ${product === 'fundo-cp' ? '22,5% até 180 dias e 20% acima' : '22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima'}${product.startsWith('fundo') ? ', com come-cotas em maio e novembro' : ''}.` : real ? 'No Lucro Real, o rendimento entra no lucro pelo regime de competência; o IR retido pelo banco só antecipa o imposto. A partir de 2027, sem PIS/Cofins sobre o rendimento (a CBS não incide).' : 'No Lucro Presumido, o rendimento entra inteiro na base do IRPJ e da CSLL no resgate; o IR retido pelo banco só antecipa o imposto. Não há PIS/Cofins sobre o rendimento.'} LCI e LCA não são isentas para empresa. CDB tem garantia do FGC até R$ 250 mil por CNPJ em cada banco.</p>
   </section>
 }
 
@@ -257,7 +257,7 @@ export default function CreditComparison({ onBack }) {
   const source = manual ? 'Premissa manual' : reference ? `${reference.source} · observação ${day(reference.date)}${reference.stale || macro.stale ? ' · referência atrasada/atualização pendente' : ''}` : 'Referência indisponível'
   const targetValue = equivalent ? parseMoneyInput(target).value ?? NaN : null
   const results = evaluateAll(visible, shared, { cdi, targetNet: equivalent ? targetValue : null })
-  const shift = scenario === 'Base' || !Number.isFinite(cdi) || !Number.isFinite(baseCdi) ? 0 : cdi - baseCdi
+  const shift = !usesCdiIn(visible) || scenario === 'Base' || !Number.isFinite(cdi) || !Number.isFinite(baseCdi) ? 0 : cdi - baseCdi
   const investParams = { regime: shared.regime, adicional: shared.adicional, product: invest.product, rate: parseDecimal(invest.rate), adminFee: parseDecimal(invest.adminFee), pts: curvePts, curveBase: curveToday?.date, ctx: hol.ctx, shift }
   const horizon = results.filter(r => r.ok).map(r => r.lastDate).sort().at(-1)
   const sharedValue = parseMoneyInput(shared.value).value
