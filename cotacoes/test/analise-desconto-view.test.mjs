@@ -10,6 +10,7 @@ import { hookRenderer } from './helpers/hooks.mjs'
 import * as engine from '../src/analiseDesconto.js'
 import * as iof from '../src/iofRules.js'
 import * as money from '../src/moneyInput.js'
+import * as praca from '../src/pracaContrato.js'
 
 const require = createRequire(import.meta.url)
 const CalculatorHelp = ({ title, label }) => createElement('button', { type: 'button', 'aria-label': `Ajuda: ${title || label}`, 'aria-expanded': false }, '?')
@@ -21,7 +22,7 @@ async function compile(file, imports = {}) {
   return module.exports
 }
 const MoneyInput = await compile('MoneyInput.jsx', { './moneyInput.js': money })
-const component = await compile('AnaliseDesconto.jsx', { './iofRules.js': iof, './MoneyInput.jsx': MoneyInput, './analiseDesconto.js': engine, './CalculatorHelp.jsx': CalculatorHelp })
+const component = await compile('AnaliseDesconto.jsx', { './iofRules.js': iof, './MoneyInput.jsx': MoneyInput, './analiseDesconto.js': engine, './CalculatorHelp.jsx': CalculatorHelp, './pracaContrato.js': praca })
 function nodes(node) {
   if (!node || typeof node !== 'object') return []
   if (Array.isArray(node)) return node.flatMap(nodes)

@@ -3,6 +3,7 @@
 // confirma as condições de cada operação. A tela mostra a data da regra e avisa o que precisa de conferência.
 import { IOF_PJ, monthlyRate, parseDecimal } from './emprestimo.js'
 import { iso, nextBusinessDay } from './holidays.js'
+import { contractCalendars } from './pracaContrato.js'
 import { actualActualCalendarYears } from './bndesCreditoPequenasEmpresas.js'
 import { creditCet } from './creditComparison.js'
 
@@ -220,22 +221,25 @@ export function ecgFgi({ valor, percentual, prazo, periodos, incorporar }) {
 }
 
 // Vencimento contratual da parcela `mes`: todo dia 15 do mês (a contar do mês da liberação). Se o dia 15 não for dia útil
-// (fim de semana ou feriado nacional), vence no próximo dia útil. Devolve Date ao meio-dia, como o restante da tela.
-export function vencimentoDia15(liberacao, mes, ctx = {}) {
+// (fim de semana, feriado nacional ou feriado da praça do contrato), vence no próximo dia útil. Devolve Date ao meio-dia,
+// como o restante da tela. `calendarios`: calendários da praça (padrão só 'BR', feriados nacionais).
+export function vencimentoDia15(liberacao, mes, ctx = {}, calendarios = ['BR']) {
+  const cals = contractCalendars(calendarios)
+  if (!cals) throw new Error('Praça do contrato inválida.')
   const ref = new Date(liberacao.getFullYear(), liberacao.getMonth() + mes, 15, 12)
-  const util = nextBusinessDay(iso(ref.getFullYear(), ref.getMonth() + 1, 15), ['BR'], ctx)
+  const util = nextBusinessDay(iso(ref.getFullYear(), ref.getMonth() + 1, 15), cals, ctx)
   const [y, m, d] = util.split('-').map(Number)
   return new Date(y, m - 1, d, 12)
 }
 
-// Calendário real da operação: vencimentos no dia 15 (ou no próximo dia útil, feriados nacionais) contados da liberação.
+// Calendário real da operação: vencimentos no dia 15 (ou no próximo dia útil, feriados nacionais e da praça) contados da liberação.
 // Devolve as datas (AAAA-MM-DD), os dias corridos desde a liberação e a fração de ano ACT/ACT de cada período
 // (dias corridos sobre 365 ou 366, separados por ano civil), base dos juros de cada parcela.
 const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-export function calendarioFiname(liberacao, prazo, ctx = {}) {
-  if (Object.prototype.toString.call(liberacao) !== '[object Date]' || Number.isNaN(+liberacao) || !Number.isInteger(prazo) || prazo < 1 || prazo > REGRAS.prazoMaxMeses) return null
+export function calendarioFiname(liberacao, prazo, ctx = {}, calendarios = ['BR']) {
+  if (Object.prototype.toString.call(liberacao) !== '[object Date]' || Number.isNaN(+liberacao) || !Number.isInteger(prazo) || prazo < 1 || prazo > REGRAS.prazoMaxMeses || !contractCalendars(calendarios)) return null
   const inicio = isoLocal(liberacao)
-  const datas = Array.from({ length: prazo }, (_, k) => isoLocal(vencimentoDia15(liberacao, k + 1, ctx)))
+  const datas = Array.from({ length: prazo }, (_, k) => isoLocal(vencimentoDia15(liberacao, k + 1, ctx, calendarios)))
   const civil = t => Date.parse(`${t}T00:00:00Z`) / 86400000
   const dias = datas.map(d => civil(d) - civil(inicio))
   if (dias[0] <= 0 || dias.some((d, k) => k && d <= dias[k - 1])) return null
@@ -260,7 +264,7 @@ export function parseIpcaProjection(text) {
   const parsed = parseDecimal(negative ? value.slice(1) : value)
   return parsed === null ? null : negative ? -parsed : parsed
 }
-export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, feriados = {} }) {
+export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, feriados = {}, calendarios = ['BR'] }) {
   const check = conferir({ valor, participacao, prazo, carencia, custo })
   const iofOk = iof && [iof.fixed, iof.daily].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
     && (iof.maxDays == null || (Number.isInteger(iof.maxDays) && iof.maxDays >= 0 && iof.maxDays <= IOF_PJ.maxDays))
@@ -279,8 +283,11 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   if (!COMPOSICOES.some(option => option.id === composicao)) check.erros.push('Escolha composição capitalizada ou somada.')
   if (custo === 'tlp' && perfilTlp !== 'tlpcap') check.erros.push('TLP exigível requer a projeção própria. Este motor só aceita o perfil TLPCAP capitalizado explicitamente.')
   // Com a data da liberação, juros pelos dias reais entre vencimentos (dia 15 ou próximo dia útil); sem ela, modelo legado de meses iguais.
-  const calendario = dataLiberacao !== null && Number.isInteger(prazo) ? calendarioFiname(dataLiberacao, prazo, feriados) : null
-  if (dataLiberacao !== null && !calendario) check.erros.push('Informe uma data de liberação válida.')
+  // `calendarios`: feriados da praça do contrato que também adiam o vencimento (padrão só os nacionais, 'BR').
+  const pracaOk = !!contractCalendars(calendarios)
+  if (!pracaOk) check.erros.push('Escolha a praça do contrato entre as praças disponíveis.')
+  const calendario = pracaOk && dataLiberacao !== null && Number.isInteger(prazo) ? calendarioFiname(dataLiberacao, prazo, feriados, calendarios) : null
+  if (pracaOk && dataLiberacao !== null && !calendario) check.erros.push('Informe uma data de liberação válida.')
   if (check.erros.length) return { ok: false, ...check }
   const anos = calendario?.anos ?? null
   const liberado = check.financiado

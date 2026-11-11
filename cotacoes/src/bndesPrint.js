@@ -5,7 +5,8 @@ export const BNDES_PRINT_NOTICE = 'Simulação indicativa, sujeita à análise e
 const freeze = value => { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) } return value }
 const isoDay = value => [value.getFullYear(), String(value.getMonth() + 1).padStart(2, '0'), String(value.getDate()).padStart(2, '0')].join('-')
 
-// Copia o motor já calculado. Apenas associa o calendário ilustrativo usado na tela.
+// Copia o motor já calculado. Usa o vencimento do próprio cronograma (que já considera a praça do contrato);
+// sem ele, associa o calendário ilustrativo da tela.
 // A impressão nunca busca uma taxa nova, recalcula ou completa valores ausentes com zero.
 export function captureBndesPrint({ result, comparison, conditions, compareRequested = false, releaseDate, holidayCtx }, capturedAt = Date.now()) {
   const snapshot = captureBndesPresentation({ result, comparison, conditions }, capturedAt)
@@ -18,6 +19,6 @@ export function captureBndesPrint({ result, comparison, conditions, compareReque
     ...snapshot,
     notice: BNDES_PRINT_NOTICE,
     releaseDate: isoDay(releaseDate),
-    choices: choices.map(item => ({ ...item, upfront: item.result.iof + item.result.tac + (item.result.fgi && !item.result.fgi.incorporado ? item.result.fgi.ecg : 0), schedule: item.result.parcelas.map(row => ({ ...row, pago: row.parcela, date: isoDay(vencimentoDia15(releaseDate, row.mes, holidayCtx)) })) })),
+    choices: choices.map(item => ({ ...item, upfront: item.result.iof + item.result.tac + (item.result.fgi && !item.result.fgi.incorporado ? item.result.fgi.ecg : 0), schedule: item.result.parcelas.map(row => ({ ...row, pago: row.parcela, date: row.vencimento ?? isoDay(vencimentoDia15(releaseDate, row.mes, holidayCtx)) })) })),
   }))
 }
