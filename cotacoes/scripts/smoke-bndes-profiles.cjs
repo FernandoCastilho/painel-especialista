@@ -31,7 +31,8 @@ const out = process.env.BNDES_PROFILES_QA_OUTPUT || 'workspace-qa/bndes-profiles
       }
       await page.goto(base + '/#calculadora')
       await page.getByRole('button', { name: 'BNDES: abrir calculadora', exact: true }).click()
-      await page.getByRole('button', { name: 'Exemplo conferido · histórico', exact: true }).click()
+      assert.equal(await page.getByRole('button', { name: /Exemplo conferido/ }).count(), 0, 'Exemplo conferido fora do topo da calculadora (11/11/2026)')
+      await page.evaluate(() => { location.hash = '#calculadora/bndes-credito-tfb' }) // registro interno: segue pelo endereço direto e pela busca
       await page.waitForURL('**/#calculadora/bndes-credito-tfb')
       const tfb = page.locator('section[aria-labelledby="tfb-heading"]')
       await tfb.locator('tbody tr').last().waitFor()

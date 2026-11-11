@@ -96,6 +96,9 @@ test('documento renderizado leva operação, avisos e 120 linhas sem elipses ou 
   assert.equal((html.match(/scope="row">1 \*</g) || []).length, 2)
   for (const label of ['Dados da operação', 'Comparação de resultados', 'Premissas e limites', 'Cronograma completo', 'Simulador independente', 'Não constitui proposta', 'Não é documento emitido pelo BNDES', 'Referência retida', 'ECG do FGI à vista', 'Liberação hipotética']) assert.ok(html.includes(label), label)
   assert.doesNotMatch(html, /NaN|undefined|Infinity|<img|\.\.\./)
+  // Premissas e limites fecham o documento, depois de todos os cronogramas (pedido de 11/11/2026).
+  assert.ok(html.indexOf('class="bnprint-premises"') > html.lastIndexOf('class="bnprint-schedule"'), 'premissas depois do último cronograma')
+  assert.ok(html.indexOf('</article>') - html.indexOf('class="bnprint-premises"') < html.slice(html.indexOf('class="bnprint-premises"')).length + 1 && !/bnprint-(schedule|comparison|facts)/.test(html.slice(html.indexOf('class="bnprint-premises"') + 10)), 'nada além das premissas até o fim')
   const source = input(false); source.conditions.quote = null; source.conditions.rate.manual = true
   const manual = renderToStaticMarkup(React.createElement(Document, { snapshot: captureBndesPrint(source) }))
   assert.match(manual, /TAXA MANUAL/)

@@ -55,4 +55,7 @@ test('comparação mantém cabeçalho limpo e resultados usam a taxa adotada com
   assert.match(source, /item\.quote\.codigo/)
   assert.match(source, /dmy\(item\.quote\.data\)/)
   assert.match(source, /<details className="fm-premises"><summary>Premissas e limites da simulação/)
+  // Premissas sempre ao final: depois da cotação e do cronograma (pedido de 11/11/2026).
+  assert.ok(source.indexOf('className="fm-premises"') > source.indexOf('fm-fluxo-panel'), 'premissas depois do cronograma')
+  assert.ok(source.indexOf('className="fm-premises"') > source.indexOf('id="fm-result"'), 'premissas depois da cotação')
 })

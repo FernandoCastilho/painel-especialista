@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useHolidays } from './useHolidays.js'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
@@ -47,6 +47,16 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const [carText, setCarText] = useState('12')
   const [custo, setCusto] = useState('tfc')
   const [comparar, setComparar] = useState(false)
+  // Cotação ampliada: o mesmo quadro do resultado vira uma janela sobre a tela (sem duplicar conteúdo). Esc ou o fundo fecham.
+  const [ampliada, setAmpliada] = useState(false)
+  const ampliarRef = useRef(null)
+  useEffect(() => {
+    if (!ampliada) return
+    const onKey = event => { if (event.key === 'Escape' && !event.defaultPrevented && !document.querySelector('dialog[open]')) setAmpliada(false) } // com uma ajuda aberta, o Esc fecha só a ajuda
+    const previous = document.body.style.overflow, trigger = ampliarRef.current
+    document.body.style.overflow = 'hidden'; window.addEventListener('keydown', onKey); trigger?.focus()
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = previous; trigger?.focus() }
+  }, [ampliada])
   const { sistema, composicao, liberacao } = FINAME_PREMISES
   const [manualRates, setManualRates] = useState({})
   const [porte, setPorte] = useState('mpme')
@@ -233,11 +243,12 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
         </div>
       </article>
 
-      <div className="fm-results">
+      <div className={ampliada ? 'fm-results fm-zoomed' : 'fm-results'}>
       <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
 
-      <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small>{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}</header>
+      {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
+      <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? (comparar ? 'Cotação comparativa ampliada' : 'Cotação da operação ampliada') : undefined}>
+        <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small>{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!res} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada(value => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
         {res && <div className="fm-headline" aria-label="CET estimado e total">{(comparar ? (comparison?.ok ? comparison.alternatives.map((item, index) => ({ id: item.custo, cet: cets[index], total: item.result.total })) : []) : [{ id: custo, cet, total: res.total }]).map((item, index, all) => <div key={item.id} className={all.length > 1 && item.cet && all.every(other => other.cet) && item.cet.anual === Math.min(...all.map(other => other.cet.anual)) && all.some(other => other.cet.anual !== item.cet.anual) ? 'fm-best' : undefined}><span>{item.id.toUpperCase()} · CET estimado</span><b>{cetTexto(item.cet)}</b><small>Total {brl(item.total)}</small></div>)}</div>}
         <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
@@ -280,8 +291,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
         )}
       </article>
 
-      <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
-
       {res && (
         <details className="desk-panel cx-panel fm-fluxo-panel">
           <summary>Cronograma ilustrativo · {custo.toUpperCase()}</summary>
@@ -299,6 +308,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
           </div>
         </details>
       )}
+
+      <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
       </div>
       </div>
 
