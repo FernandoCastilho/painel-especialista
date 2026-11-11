@@ -55,3 +55,13 @@ test('TLP UI: IPCA negativo conserva desconto e entrada inválida não conserva 
   await h.set('schedule', '2026-02-31;21;A'); await h.set('scheduleConfirmed', true); await h.submit()
   assert.equal(h.rows().length, 0); assert.match(h.text(), /Data civil inválida/)
 })
+test('TLP UI: mostra CET da parte fixa e custo com IPCA; tarifa opcional só muda o líquido', async t => {
+  const h = await setup(t); await h.ready()
+  assert.match(h.text(), /CET · parte fixa \(regra do BC\)[\s\S]*?10,28% a\.a\.J \+ spreads, sem IPCA · líquido R\$\s*10\.000,00/)
+  assert.match(h.text(), /Custo com IPCA projetado[\s\S]*?14,69% a\.a\.IPCA de 4% a\.a\. no cenário/)
+  await h.set('fee', '200,00'); await h.submit()
+  assert.equal(h.rows().length, 2); assert.match(h.text(), /12\.945,10/)
+  assert.match(h.text(), /líquido R\$\s*9\.800,00/)
+  assert.doesNotMatch(h.text(), /10,28% a\.a\./)
+  await h.set('fee', '1,2,3'); await h.submit(); assert.equal(h.rows().length, 0); assert.match(h.text(), /Tarifa na liberação: Use o formato brasileiro/)
+})

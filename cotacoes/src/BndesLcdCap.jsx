@@ -11,6 +11,7 @@ import './BndesLcdCap.css'
 const brl = cents => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const decimal = text => text.trim().replace(',', '.')
 const number = value => value.toLocaleString('pt-BR', { maximumFractionDigits: 6 })
+const percent = rate => `${(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 export function LcdIcon() { return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 20h18M5 17V9h4v8m2 0V5h4v12m2 0v-5h4v5M3 4l4 1 4-3 4 1 6-2" /></svg> }
 
 function BalanceChart({ result }) {
@@ -23,31 +24,32 @@ function BalanceChart({ result }) {
 export default function BndesLcdCap({ onBack }) {
   const moedas = useDataFile('moedas.json')
   const moedasData = useMemo(() => withOfficialLcdSnapshot(moedas.data), [moedas.data])
-  const [principalText, setPrincipal] = useState('')
+  const [principalText, setPrincipal] = useState(''), [feeText, setFee] = useState('')
   const [contractDate, setContractDate] = useState(''), [releaseDate, setReleaseDate] = useState('')
   const [ld1Text, setLd1] = useState(''), [fixingDate, setFixingDate] = useState(''), [ld1Source, setLd1Source] = useState('')
   const [bndes, setBndes] = useState(''), [intermediation, setIntermediation] = useState(''), [agent, setAgent] = useState('')
   const [selic, setSelic] = useState(''), [scenarioAccepted, setScenarioAccepted] = useState(false), [ld1Confirmed, setLd1Confirmed] = useState(false)
   const [scheduleText, setScheduleText] = useState(''), [scheduleSource, setScheduleSource] = useState(''), [scheduleConfirmed, setScheduleConfirmed] = useState(false)
-  const principal = parseMoneyInput(principalText), schedule = parseLcdSchedule(scheduleText)
+  const principal = parseMoneyInput(principalText), fee = parseMoneyInput(feeText, { optional: true }), schedule = parseLcdSchedule(scheduleText)
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
   const quote = lcdQuoteAt(moedasData, contractDate, today)
-  const result = simulateLcdCap({ mode: 'projection', principalCents: principal.ok ? Math.round(principal.value * 100) : null, contractDate, releaseDate,
+  const result = simulateLcdCap({ mode: 'projection', principalCents: principal.ok ? Math.round(principal.value * 100) : null, releaseFeeCents: fee.ok ? Math.round(fee.value * 100) : null, contractDate, releaseDate,
     ld1: { annualPct: decimal(ld1Text), fixingDate, source: ld1Source, confirmed: ld1Confirmed },
     spreads: { bndes: decimal(bndes), intermediation: decimal(intermediation), agent: decimal(agent) },
     selicScenario: { annualPct: decimal(selic), acknowledged: scenarioAccepted }, schedule: { events: schedule.events, source: scheduleSource, confirmed: scheduleConfirmed } })
   const field = (id, label, value, setValue, type = 'text', hint) => <div className="cx-field"><div className="cx-field-label"><label htmlFor={`lcd-${id}`}>{label}</label>{hint && <Help title={label}>{hint}</Help>}</div><input id={`lcd-${id}`} type={type} inputMode={type === 'text' && !['source', 'schedule-source'].includes(id) ? 'decimal' : undefined} value={value} onChange={event => setValue(event.target.value)} autoComplete="off" /></div>
   const selicPoints = moedasData?.series?.['143']?.points?.filter(point => point[0] <= today) ?? []
   const lastSelic = selicPoints.at(-1)
-  const methodology = <><p>Fator Selic do cenário = (1 + Selic anual / 100) elevado a (DU / 252). Saldo corrigido = saldo inicial × fator Selic. Fator de juros = (1 + (BNDES + intermediação + agente + LD1) / 100) elevado a (DU / 252). Juros exigíveis = saldo corrigido × (fator de juros − 1). A amortização reduz o saldo corrigido.</p><p>O cálculo contratual exige a trajetória diária da Selic com a defasagem D-2. O histórico 143 de seis casas não é convertido em taxa anual nem usado como fator contratual exato. Esta versão calcula apenas o cenário informado, com arredondamentos de projeção, e não certifica elegibilidade, condições comerciais ou CET.</p><p><a href={LCDCAP_SOURCE} target="_blank" rel="noreferrer">BNDES · Anexo IV, seção 5 (LCDCAP)</a>. Perfil separado do Finame/TFC e da TLP exigível.</p></>
+  const methodology = <><p>Fator Selic do cenário = (1 + Selic anual / 100) elevado a (DU / 252). Saldo corrigido = saldo inicial × fator Selic. Fator de juros = (1 + (BNDES + intermediação + agente + LD1) / 100) elevado a (DU / 252). Juros exigíveis = saldo corrigido × (fator de juros − 1). A amortização reduz o saldo corrigido.</p><p>O cálculo contratual exige a trajetória diária da Selic com a defasagem D-2. O histórico 143 de seis casas não é convertido em taxa anual nem usado como fator contratual exato. Esta versão calcula apenas o cenário informado, com arredondamentos de projeção, e não certifica elegibilidade nem condições comerciais.</p><p>CET (Res. CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido liberado ao valor presente das parcelas, em dias corridos/365 desde a liberação. Pelo art. 5º, a Selic fica fora: as parcelas são recalculadas com Selic zero, só com LD1 e remunerações, fixadas no contrato. Mesmas datas e mesma base de juros (dias úteis/252). Valor líquido = valor liberado menos a tarifa informada; não há IOF nesta calculadora.</p><p><a href={LCDCAP_SOURCE} target="_blank" rel="noreferrer">BNDES · Anexo IV, seção 5 (LCDCAP)</a>. Perfil separado do Finame/TFC e da TLP exigível.</p></>
   return <section className="cx cx-lcd" aria-labelledby="lcd-title">
     <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
     <h2 id="lcd-title" className="cx-title"><span className="cx-icon"><LcdIcon /></span>BNDES · Selic capitalizada + LCD</h2>
-    <p className="status">Projeção · não é CET</p>
+    <p className="status">Projeção · CET pela regra do BC, sem Selic</p>
     <article className="desk-panel cx-panel">
       <header><h3 className="cx-heading">Condições da operação<Help title="Modalidade LCDCAP">Projeção da modalidade LCDCAP para operações indiretas. A Selic aumenta o saldo; LD1 e remunerações são cobradas nos vencimentos. TLP exigível é uma modalidade diferente e não usa este motor.</Help></h3></header>
       <div className="cx-form">
         <div className="cx-field"><div className="cx-field-label"><label htmlFor="lcd-principal">Valor liberado</label><Help title="Valor liberado">Informe o valor liberado, sem encargos financiados.</Help></div><MoneyInput id="lcd-principal" value={principalText} onChange={setPrincipal} /></div>
+        <div className="cx-field"><div className="cx-field-label"><label htmlFor="lcd-fee">Tarifa na liberação (opcional)</label><Help title="Tarifa na liberação">Tarifas e encargos pagos pelo cliente na liberação. Só entram no CET: o valor líquido é o valor liberado menos esta tarifa. Não mudam juros nem parcelas. Não há IOF nesta calculadora; em branco, o valor líquido é o próprio valor liberado.</Help></div><MoneyInput id="lcd-fee" value={feeText} onChange={setFee} /></div>
         {field('contract', 'Data da contratação', contractDate, value => { setContractDate(value); setLd1Confirmed(false) }, 'date')}
         {field('release', 'Data da liberação', releaseDate, value => { setReleaseDate(value); setScheduleConfirmed(false) }, 'date')}
         {field('selic', 'Selic do cenário (% a.a.)', selic, value => { setSelic(value); setScenarioAccepted(false) }, 'text', 'Hipótese constante de Selic fornecida por você para os dias úteis de toda a projeção. Não há taxa futura oficial preenchida automaticamente.')}
@@ -77,13 +79,17 @@ export default function BndesLcdCap({ onBack }) {
       </div>
     </article>
     <article className="desk-panel cx-panel" aria-live="polite">
-      <header><h3 className="cx-heading">Projeção do fluxo<Help title="Memória de cálculo e limites">{methodology}</Help></h3><small>Projeção · não é CET</small></header>
-      {!result.ok ? <p className="status cx-pad" role="status">{!principalText.trim() ? 'Preencha o valor liberado e as condições da operação para projetar o fluxo.' : <>Resultado indisponível: {scheduleText && !schedule.ok ? schedule.error.message : result.error.message} Dados ausentes não são tratados como zero.</>}</p> : <>
+      <header><h3 className="cx-heading">Projeção do fluxo<Help title="Memória de cálculo e limites">{methodology}</Help></h3><small>Projeção · CET sem Selic</small></header>
+      {!result.ok ? <p className="status cx-pad" role="status">{!principalText.trim() ? 'Preencha o valor liberado e as condições da operação para projetar o fluxo.' : <>Resultado indisponível: {scheduleText && !schedule.ok ? schedule.error.message : !fee.ok ? `Tarifa na liberação: ${fee.error}` : result.error.message} Dados ausentes não são tratados como zero.</>}</p> : <>
         <div className="fm-grade">
           <div className="fm-kpi"><span className="cx-field-label">Remunerações + LD1<Help title="Remunerações + LD1">Componente exigível, convertido pela base de 252 dias úteis.</Help></span><b>{number(result.fixedAnnualPct)}% a.a.</b></div>
           <div className="fm-kpi"><span className="cx-field-label">Selic capitalizada<Help title="Selic capitalizada">Valor incorporado ao saldo projetado.</Help></span><b>{brl(result.totals.capitalizedSelicCents)}</b></div>
           <div className="fm-kpi"><span className="cx-field-label">Juros exigíveis<Help title="Juros exigíveis">Juros sem duplicar a Selic no pagamento, pois ela já foi incorporada ao saldo.</Help></span><b>{brl(result.totals.interestCents)}</b></div>
           <div className="fm-kpi"><span className="cx-field-label">Pagamentos projetados<Help title="Pagamentos projetados">Total sem tributos e demais despesas.</Help></span><b>{brl(result.totals.paymentCents)}</b></div>
+        </div>
+        <div className="fm-grade lcd-cet">
+          <div className="fm-kpi"><span className="cx-field-label">CET · parte fixa (regra do BC)<Help title="CET · parte fixa">Taxa anual que iguala o valor líquido liberado ao valor presente das parcelas, em dias corridos/365 desde a liberação (Res. CMN 4.881/2020, art. 4º). Pelo art. 5º, a Selic fica fora: parcelas recalculadas só com LD1 e remunerações, mesmas datas e base de juros. Sem IOF; tarifa só se informada.</Help></span><b>{result.cet.fixedAnnualRate == null ? 'Indisponível' : percent(result.cet.fixedAnnualRate)}</b><small>{result.cet.fixedAnnualRate == null ? (result.cet.fixedUnavailable || 'Taxa negativa ou sem solução: o painel não mostra CET abaixo de zero.') : `LD1 + remunerações, sem Selic · líquido ${brl(result.cet.netReleaseCents)}`}</small></div>
+          <div className="fm-kpi"><span className="cx-field-label">Custo com Selic projetada<Help title="Custo com Selic projetada">Mesmo método do CET, aplicado às parcelas projetadas completas, com a Selic do cenário. Não é o CET regulatório: depende da hipótese de Selic.</Help></span><b>{result.cet.projectedAnnualRate == null ? 'Indisponível' : percent(result.cet.projectedAnnualRate)}</b><small>{result.cet.projectedAnnualRate == null ? 'Sem solução para este fluxo.' : `Selic de ${number(result.annualSelicScenarioPct)}% a.a. no cenário`}</small></div>
         </div>
         <BalanceChart result={result} />
         <div className="cx-wrap" role="region" tabIndex="0" aria-label="Cronograma da projeção LCDCAP"><table className="cx-matrix lcd-table"><caption>Projeção · Selic constante de {number(result.annualSelicScenarioPct)}% a.a.</caption><thead><tr><th>Data</th><th>DU</th><th>Saldo inicial</th><th>Selic no saldo</th><th>Saldo corrigido</th><th>Juros exigíveis</th><th>Amortização</th><th>Pagamento</th><th>Saldo final</th></tr></thead><tbody>{result.rows.map(row => <tr key={row.date}><th scope="row">{dmy(row.date)}{row.phase === 'grace' && ' · carência'}</th><td>{row.businessDays}</td>{['openingCents', 'capitalizedSelicCents', 'correctedCents', 'interestCents', 'amortizationCents', 'paymentCents', 'closingCents'].map(key => <td key={key}>{brl(row[key])}</td>)}</tr>)}</tbody></table></div>

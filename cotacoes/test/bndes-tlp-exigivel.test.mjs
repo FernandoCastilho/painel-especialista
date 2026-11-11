@@ -10,7 +10,9 @@ test('oracle independente anual: composição multiplicativa e IPCA não incorpo
   assert.deepEqual(r.rows.map(x => [x.openingCents, x.interestCents, x.amortizationCents, x.paymentCents, x.closingCents]), [[1000000, 147255, 500000, 647255, 500000], [500000, 73628, 500000, 573628, 0]])
   assert.equal(r.totals.paymentCents, 1220883)
   assert.equal(r.totals.amortizationCents, 1000000)
-  assert.equal(r.status, 'projection-not-contract-validated'); assert.equal(r.cet, null)
+  assert.equal(r.status, 'projection-not-contract-validated')
+  // CET existe só como taxa calculada; não altera juros, parcelas nem o cronograma travado acima.
+  assert.equal(typeof r.cet.fixedAnnualRate, 'number'); assert.equal(typeof r.cet.projectedAnnualRate, 'number'); assert.equal(r.cet.netReleaseCents, 1000000)
   assert.match(r.warnings.join(' '), /16 casas/)
 })
 test('carência cobra IPCA e juros sem capitalizá-los; depois amortiza principal original', () => {
@@ -54,7 +56,7 @@ test('meio centavo racional é arredondado para fora de zero; última parcela el
   d.ipcaScenario.annualPct = '-50'; assert.equal(simulateTlpExigivel(d).rows[0].interestCents, -51)
 })
 test('esquema fechado impede ignorar capitalização, Price, custos ou eventos extras', () => {
-  for (const key of ['price', 'fees', 'capitalize', 'contractDate']) { const d = input(); d[key] = true; blocked(d, 'UNSUPPORTED_FIELD') }
+  for (const key of ['price', 'fees', 'iof', 'capitalize', 'contractDate']) { const d = input(); d[key] = true; blocked(d, 'UNSUPPORTED_FIELD') }
   const d = input(); d.schedule.events[0].extraRelease = 1; blocked(d, 'UNSUPPORTED_FIELD')
   d.schedule.events[0] = { date: '2027-10-15', businessDays: 252, amortize: true }; d.mode = 'historical'; blocked(d, 'UNSUPPORTED_MODE')
 })
