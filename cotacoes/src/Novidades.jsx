@@ -2,6 +2,10 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '11/11/2026', resumo: 'Comparador de Crédito: regime tributário da empresa e comparação com aplicação financeira (CDB e fundos)', items: [
+    'Comparador de Crédito: a linha mestra ganha o regime tributário da empresa (Lucro Real, Presumido ou Simples) e o adicional de IRPJ. Nova linha "Custo após IRPJ/CSLL": no Lucro Real, juros, IOF e tarifas do crédito reduzem o imposto.',
+    'Opção "Comparar com aplicação financeira": CDB pós ou pré e fundo de renda fixa, com o DI da curva B3 e a tributação da empresa (IR retido, come-cotas, PIS/Cofins até 2026, IOF antes de 30 dias). Mostra bruto, imposto e líquido, e em cada operação se compensa tomar o crédito e manter o caixa aplicado ou usar o caixa próprio.',
+  ] },
   { date: '11/11/2026', resumo: 'Nova calculadora Operação x DI: compara pré, % do CDI ou CDI + spread com o DI projetado pela curva B3', items: [
     'Calculadoras > Operação x DI: informe valor, tipo de taxa (pré ao ano, ao mês ou no período; % do CDI; CDI + spread), início e vencimento. A tela mostra, lado a lado com o DI projetado pela curva DI x pré da B3, a taxa no período, a taxa ao ano (252 dias úteis), juros ou rendimento e valor no vencimento; a diferença em R$ e em bps; e os equivalentes em % do CDI e CDI + spread. Escolha se a operação é crédito (custo) ou aplicação (rendimento). Pagamento único no vencimento, sem IOF, IR e tarifas: não é CET.',
   ] },

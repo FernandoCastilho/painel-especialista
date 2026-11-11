@@ -1,5 +1,14 @@
 .credit-comparison{max-width:1500px;margin:auto}
-.credit-shared{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:20px;margin:20px 0}
+.credit-shared{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;padding:20px;margin:20px 0}
+.credit-shared-title{grid-column:1/-1;margin:-20px -20px 0;padding:10px 20px;background:#0b1f4d;color:#fff;font-size:1rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;border-bottom:3px solid #f26a0f}
+.credit-shared-title small{font-weight:400;opacity:.85}
+.credit-shared{border:2px solid #0b1f4d;overflow:hidden}
+.credit-shared-wide{grid-column:1/-1}
+.credit-invest{border-left:4px solid #1d8a5a}
+.credit-invest h3 label{display:flex;gap:8px;align-items:center;font-weight:700}
+.credit-invest>.credit-field{flex:1 1 220px}
+.credit-invest-block{padding:16px;border:2px solid #1d8a5a;border-radius:8px;margin:16px 0}
+.credit-invest-block h3{margin:0 0 4px}
 .credit-field{display:flex;flex-direction:column;gap:7px;min-width:0}
 .credit-field input,.credit-field select,.credit-field textarea{box-sizing:border-box;width:100%;min-height:44px;padding:9px;border:1px solid var(--line,#888);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
 .credit-field .money-wrap input{padding-left:42px}
@@ -45,5 +54,5 @@
 .credit-analysis,.credit-notes{padding:16px;border:1px solid var(--line,#888);margin:16px 0}
 .credit-comparison :focus-visible,.credit-presentation :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media(max-width:1100px){.credit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.credit-shared{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:760px){.credit-grid{grid-template-columns:1fr}.credit-shared{grid-template-columns:1fr;padding:14px}.credit-presentation{padding:12px}.credit-chart{padding:8px}.credit-controls{padding:14px}.credit-controls>.credit-field{width:100%}.credit-compare{width:100%;min-width:0}}
+@media(max-width:760px){.credit-grid{grid-template-columns:1fr}.credit-shared{grid-template-columns:1fr;padding:14px}.credit-shared-title{margin:-14px -14px 0;padding:10px 14px}.credit-presentation{padding:12px}.credit-chart{padding:8px}.credit-controls{padding:14px}.credit-controls>.credit-field{width:100%}.credit-compare{width:100%;min-width:0}}
 @media print{.credit-presentation>header button{display:none}}
