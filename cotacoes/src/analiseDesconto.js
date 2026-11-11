@@ -1,6 +1,8 @@
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
 import { resolveCreditIof } from './iofRules.js'
+import { creditCet, giroOperation } from './creditComparison.js'
+import { nextBusinessDay } from './holidays.js'
 
 export const DISCOUNT_TERMS = Object.freeze([12, 24, 36, 48])
 export const TITLE_FEE_MODES = Object.freeze([
@@ -51,6 +53,9 @@ export function titleFee({ value, titles, feeMode, fee }) {
   return money(total) ? { ok: true, total } : invalid('A tarifa de títulos excede o limite de cálculo.')
 }
 
+// Regras de 11/11/2026: título que vence em fim de semana ou feriado nacional é pago no próximo dia útil; juros e IOF
+// contam até essa data. CET (Res. CMN 4.881/2020, art. 4º): taxa anual que iguala o líquido liberado (nominal menos
+// juros, IOF, TAC e tarifa de títulos) aos nominais recebidos em cada data de pagamento, em dias corridos/365.
 export function discountOperation({ titleRows, date, rate, convention = 'commercial30', taxProfile = 'pj', eligible = false, feeMode, fee, tac }) {
   const release = parseDiscountDate(date)
   if (!release || !Array.isArray(titleRows) || !titleRows.length || titleRows.length > 500 || !percent(rate, 1000) || !['commercial30', 'rational30'].includes(convention)) return invalid('Confira a data, taxa, convenção e os títulos.')
@@ -60,14 +65,15 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
   const tax = resolveCreditIof({ date, profile: taxProfile, eligible, operationValue: value })
   if (!tax.ok) return tax
   const rows = titleRows.map(row => {
-    const days = (parseDiscountDate(row.dueDate) - release) / 86400000
+    const paymentDate = nextBusinessDay(row.dueDate, ['BR'])
+    const days = (parseDiscountDate(paymentDate) - release) / 86400000
     const interest = convention === 'commercial30' ? row.value * rate / 100 * days / 30 : row.value - row.value / (1 + rate / 100 * days / 30)
     const base = row.value - interest
     const dailyIof = base * tax.daily / 100 * Math.min(days, 365)
     const additionalIof = base * tax.additional / 100
-    return { ...row, days, interest, base, dailyIof, additionalIof, iof: dailyIof + additionalIof }
+    return { ...row, paymentDate, adjusted: paymentDate !== row.dueDate, days, interest, base, dailyIof, additionalIof, iof: dailyIof + additionalIof }
   })
-  if (rows.some(row => row.base <= 0 || !money(row.interest))) return invalid('A taxa e o prazo consomem o valor nominal de um título. Confira as condições.')
+  if (rows.some(row => !parseDiscountDate(row.paymentDate) || row.base <= 0 || !money(row.interest))) return invalid('A taxa e o prazo consomem o valor nominal de um título. Confira as condições.')
   const interest = rows.reduce((sum, row) => sum + row.interest, 0)
   const iofPaid = rows.reduce((sum, row) => sum + row.iof, 0)
   const base = rows.reduce((sum, row) => sum + row.base, 0)
@@ -77,41 +83,26 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
   const costWithoutTitles = tac + interest + iofPaid
   const cost = costWithoutTitles + tariff.total
   if (!money(cost) || cost >= value) return invalid('O custo total deve ser menor que o valor bruto da operação.')
-  return { ok: true, value, titles, titleFee: tariff.total, tac, interest, iof: iofPaid, base, rows, tax, costWithoutTitles, cost, net: value - cost }
+  const net = value - cost
+  const cet = creditCet(net, rows.map(row => ({ days: row.days, payment: row.value })))
+  // CET não mensurável (ex.: tarifas quase iguais ao líquido, acima de 1.000% a.a.) não invalida a operação: a tela mostra "Não mensurável".
+  return { ok: true, value, titles, titleFee: tariff.total, tac, interest, iof: iofPaid, base, rows, tax, costWithoutTitles, cost, net, cet }
 }
 
-// Giro Price, sem carência. TAC e IOF pagos à parte: não entram no saldo financiado.
-// IOF diário = Σ amortização × min(dias corridos até a parcela, 365) × alíquota.
+// Giro Price no motor do Capital de Giro (giroOperation): juros por dias corridos entre vencimentos, (1 + i)^(dias/30);
+// vencimentos mensais a partir do mês seguinte, no próximo dia útil; TAC e IOF descontados na liberação (o principal
+// é financiado inteiro, o líquido recebido é menor) e CET da Res. CMN 4.881. Mantém os nomes usados pela tela.
 export function discountGiro({ principal, months, rate, tac, date, taxProfile = 'pj', eligible = false }) {
   const tax = resolveCreditIof({ date, profile: taxProfile, eligible, operationValue: principal })
   if (!tax.ok) return tax
-  const { daily: iofDaily, additional: iofAdditional } = tax
-  const release = parseDiscountDate(date)
-  if (!money(principal, true) || !DISCOUNT_TERMS.includes(months) || !percent(rate, 1000) || !money(tac) || !release || !percent(iofDaily) || !percent(iofAdditional)) return invalid('Confira principal, prazo, data, taxa, TAC e as duas alíquotas do IOF do giro.')
-  const r = rate / 100
-  const installment = r === 0 ? principal / months : principal * r / -Math.expm1(-months * Math.log1p(r))
-  // Acumular juros sobre o saldo evita cancelamento em PMT × n − P quando i → 0.
-  let interest = 0, amortized = 0, dailyBase = 0
-  const schedule = []
-  for (let k = 1; k <= months; k++) {
-    const dueDate = discountDueDate(date, k)
-    const days = (Date.parse(dueDate + 'T00:00:00Z') - release.getTime()) / 86400000
-    const periodInterest = Math.max(0, principal - amortized) * r
-    interest += periodInterest
-    // A forma fechada evita a perda de precisão em PMT − juros com taxas altas.
-    const amortization = k === months ? principal - amortized : r === 0 ? principal / months : installment * Math.exp(-(months - k + 1) * Math.log1p(r))
-    amortized += amortization
-    dailyBase += amortization * Math.min(days, 365)
-    schedule.push({ month: k, dueDate, days, iofDays: Math.min(days, 365), amortization, interest: periodInterest, installment, balance: Math.max(0, principal - amortized) })
-  }
-  const dailyIof = dailyBase * iofDaily / 100
-  const additionalIof = principal * iofAdditional / 100
-  const iof = dailyIof + additionalIof
-  const cost = interest + tac + iof
-  const total = principal + cost
-  const averageMonthlyOutflow = total / months
-  if (![installment, interest, dailyIof, additionalIof, cost, total, averageMonthlyOutflow].every((n) => money(n)) || schedule.some((row) => !money(row.amortization))) return invalid('Valores excedem o limite ou a precisão do cálculo.')
-  return { ok: true, principal, months, rate, installment, interest, tac, dailyIof, additionalIof, iof, cost, total, averageMonthlyOutflow, schedule }
+  const firstDue = discountDueDate(date, 1)
+  if (!money(principal, true) || !DISCOUNT_TERMS.includes(months) || !percent(rate, 1000) || !money(tac) || !firstDue) return invalid('Confira principal, prazo, data, taxa e TAC do giro.')
+  const loan = giroOperation({ value: principal, n: months, rate, unit: 'am', system: 'price', start: date, firstDue, profile: taxProfile, eligible, fees: tac })
+  if (!loan.ok) return loan
+  const schedule = loan.rows.map(row => ({ month: row.number, dueDate: row.date, days: row.days, iofDays: Math.min(row.days, loan.tax.maxDays), amortization: row.originalAmortization, interest: row.interest, installment: row.payment, balance: row.balance }))
+  const averageMonthlyOutflow = loan.total / months
+  if (![loan.interest, loan.iof, loan.cost, loan.total, averageMonthlyOutflow].every((n) => money(n))) return invalid('Valores excedem o limite ou a precisão do cálculo.')
+  return { ok: true, principal, months, rate, installment: loan.installment, interest: loan.interest, tac, dailyIof: loan.iofDaily, additionalIof: loan.iofFixed, iof: loan.iof, cost: loan.cost, total: loan.total, net: loan.net, cet: loan.cet, averageMonthlyOutflow, graceDays: loan.graceDays, schedule }
 }
 
 export function compareDiscount({ operation, averageValue, projectionRate, operations, giro }) {

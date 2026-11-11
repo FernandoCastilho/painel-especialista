@@ -1,7 +1,7 @@
 import { captureBndesPresentation } from './bndesPresentation.js'
 import { vencimentoDia15 } from './finameMateriais.js'
 
-export const BNDES_PRINT_NOTICE = 'Simulação indicativa, sujeita à análise e aprovação da instituição financeira. Não constitui proposta, oferta, garantia de aprovação ou compromisso de crédito. Não é documento emitido pelo BNDES e não representa o CET.'
+export const BNDES_PRINT_NOTICE = 'Simulação indicativa, sujeita à análise e aprovação da instituição financeira. Não constitui proposta, oferta, garantia de aprovação ou compromisso de crédito. Não é documento emitido pelo BNDES. O CET indicado é estimado com os encargos informados; o CET do contrato prevalece.'
 const freeze = value => { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) } return value }
 const isoDay = value => [value.getFullYear(), String(value.getMonth() + 1).padStart(2, '0'), String(value.getDate()).padStart(2, '0')].join('-')
 
@@ -18,6 +18,6 @@ export function captureBndesPrint({ result, comparison, conditions, compareReque
     ...snapshot,
     notice: BNDES_PRINT_NOTICE,
     releaseDate: isoDay(releaseDate),
-    choices: choices.map(item => ({ ...item, upfront: item.result.iofFixo + item.result.tac + (item.result.fgi && !item.result.fgi.incorporado ? item.result.fgi.ecg : 0), schedule: item.result.parcelas.map(row => ({ ...row, date: isoDay(vencimentoDia15(releaseDate, row.mes, holidayCtx)) })) })),
+    choices: choices.map(item => ({ ...item, upfront: item.result.iof + item.result.tac + (item.result.fgi && !item.result.fgi.incorporado ? item.result.fgi.ecg : 0), schedule: item.result.parcelas.map(row => ({ ...row, pago: row.parcela, date: isoDay(vencimentoDia15(releaseDate, row.mes, holidayCtx)) })) })),
   }))
 }

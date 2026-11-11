@@ -28,7 +28,7 @@ async function setup(t, overrides = {}) {
   const change = async (id, value) => { field(id).props.onChange({ target: { value, checked: value } }); await render.settle() }
   const presentation = () => nodes(render.value).find(node => node.type === Presentation).props
   const reset = async cost => { nodes(render.value).find(node => node.type === 'button' && text(node).replace(/\s+/g, ' ').trim() === `Usar cotação ${cost}`).props.onClick(); await render.settle() }
-  return { render, field, hasResult, change, presentation, reset, navigation, print: () => nodes(render.value).find(node => node.type === Print).props }
+  return { render, field, hasResult, change, presentation, reset, navigation, print: () => nodes(render.value).find(node => node.type === Print).props, Presentation, Print }
 }
 
 test('FINAME abre com premissas fixas, IOF zero e ECG sempre à vista', async t => {
@@ -146,6 +146,7 @@ test('perfis próprios bloqueiam resultado mensal e retorno preserva condições
 
 test('novo visual preserva campos e envia exatamente os resultados exibidos para o PDF', async t => {
   const h = await setup(t)
+  const { Presentation, Print } = h
   for (const id of ['fm-valor', 'fm-part', 'fm-prazo', 'fm-car', 'fm-porte', 'fm-custo', 'fm-bndes', 'fm-agente', 'fm-tac', 'fm-rate-tfc', 'fm-per', 'fm-fgi']) assert.ok(h.field(id), id)
   assert.equal(h.print().result, h.presentation().result)
   assert.equal(h.print().conditions, h.presentation().conditions)
@@ -163,5 +164,6 @@ test('novo visual preserva campos e envia exatamente os resultados exibidos para
   await h.change('fm-rate-tfc', '')
   assert.equal(h.print().result, null)
   const actions = nodes(h.render.value).find(node => node.props?.className === 'fm-print-actions')
-  assert.equal(nodes(actions).length, 2, 'rodapé de impressão contém apenas o botão, sem premissas duplicadas')
+  // Rodapé do resultado: só os botões Apresentar e Imprimir, sem premissas duplicadas.
+  assert.deepEqual(nodes(actions).slice(1).map(node => node.type), [Presentation, Print], 'rodapé contém apenas os botões, sem premissas duplicadas')
 })

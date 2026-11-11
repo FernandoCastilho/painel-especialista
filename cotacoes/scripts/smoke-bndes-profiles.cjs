@@ -62,6 +62,8 @@ const out = process.env.BNDES_PROFILES_QA_OUTPUT || 'workspace-qa/bndes-profiles
       assert.equal(await tlp.locator('tbody tr').count(), 2)
       assert.match(await tlp.locator('tbody tr').first().locator('td').last().innerText(), /10\.000,00/)
       assert.match(await tlp.innerText(), /12\.945,10/)
+      // CET da Res. CMN 4.881 (J + spreads, sem IPCA) e custo com o IPCA do cenário.
+      assert.match(await tlp.locator('.tlp-cet').innerText(), /CET · parte fixa \(regra do BC\)[\s\S]*10,28% a\.a\.[\s\S]*Custo com IPCA projetado[\s\S]*14,69% a\.a\./i)
       await help('TLP exigível: regra e limite da projeção')
       await help('Como informar o cronograma')
       await noOverflow(); await screenshot('tlp-projecao')

@@ -1,10 +1,13 @@
 import { resolveCreditIof } from './iofRules.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
+import { creditCet } from './creditComparison.js'
 
 export const CG_LEGAL_CHECKED_AT = '2026-11-05'
 export const CG_PRESET_FROM = '2025-07-17'
 export const CG_MAX_DAYS = 3660
+// Res. CMN 4.881/2020, art. 6º (resumo do painel em educacao.js): rotativo calcula o CET com prazo de 30 dias e o limite pactuado.
+export const CG_CET_DAYS = 30
 export const CG_TAX_PROFILES = [
   { id: 'pj', label: 'Pessoa jurídica: referência geral', daily: 0.0082, additional: 0.38 },
   { id: 'simples', label: 'Simples/MEI: redução somente até R$ 30 mil', daily: 0.00274, additional: 0.38 },
@@ -38,7 +41,7 @@ export function cgInitialForm(today = cgToday()) {
   return {
     mode: 'single', start: today, end: cgAddDays(today, 10), duration: '10', dateMode: 'duration', amount: '',
     rate: '', rateBase: '30', conversion: 'proportional', dayCount: 'calendar', holidays: '',
-    taxProfile: 'pj', eligible: false, operationValue: '',
+    taxProfile: 'pj', eligible: false, operationValue: '', limit: '',
     status: 'performing', rows: [{ id: 'first', date: today, draw: '', payment: '' }],
   }
 }
@@ -103,6 +106,24 @@ export function simulateContaGarantida(input) {
   return { ok: true, rows, months: [...months.values()], totals, dailyRate, calendarDays: (to - from) / DAY, balance }
 }
 
+// CET regulatório da conta garantida (Res. CMN 4.881/2020, arts. 4º e 6º): o limite pactuado é liberado na data inicial e
+// devolvido em 30 dias corridos. Juros e IOF saem do próprio simulador de saldo (mesma taxa, base, contagem de dias e
+// enquadramento da tela). O IOF adicional (0,38%) é cobrado na utilização: sai do valor líquido na liberação. Juros e IOF
+// diário, apurados dia a dia, entram no pagamento do 30º dia. Não há tarifas no motor.
+export function contaGarantidaCet({ limit, start, rate, rateBase = 30, conversion = 'proportional', dayCount = 'calendar', holidays = [], taxProfile = 'pj', eligible = false, operationValue }) {
+  if (!(Number.isFinite(limit) && limit > 0 && limit <= MAX_MONEY)) return fail('Informe o limite contratado, maior que zero.')
+  const end = cgAddDays(start, CG_CET_DAYS)
+  if (!end) return fail('Informe uma data inicial válida para o CET.')
+  const sim = simulateContaGarantida({ start, end, rate, rateBase, conversion, dayCount, holidays, taxProfile, eligible,
+    operationValue: taxProfile === 'simples' ? operationValue : limit, events: [{ date: start, draw: limit, payment: 0 }], settleAllAtEnd: true })
+  if (!sim.ok) return fail(taxProfile === 'simples' && /valor contratual/.test(sim.error) ? 'O limite contratado supera o valor contratual declarado para o Simples/MEI.' : sim.error)
+  const { interest, dailyIof, additionalIof, iof } = sim.totals
+  const net = limit - additionalIof, payment = limit + interest + dailyIof
+  const annual = creditCet(net, [{ days: CG_CET_DAYS, payment }])
+  if (annual === null) return fail('Não foi possível calcular o CET deste fluxo.')
+  return { ok: true, limit, net, start, end, days: CG_CET_DAYS, payment, interest, dailyIof, additionalIof, iof, annual, monthly: Math.expm1(Math.log1p(annual) / 12) }
+}
+
 export function parseContaGarantidaForm(form) {
   const errors = {}, warnings = [], params = {}
   const money = (key, value = form[key], optional = false) => {
@@ -159,8 +180,15 @@ export function parseContaGarantidaForm(form) {
     if (!cgDate(row.date) || row.date < form.start || row.date > params.end) errors[`${key}-date`] = 'Data real, dentro do período da simulação.'
     params.events.push({ date: row.date, draw: money(`${key}-draw`, row.draw, true), payment: money(`${key}-payment`, row.payment, true) })
   })
-  if (Object.keys(errors).length) return { errors, warnings, params, result: null }
+  // Limite contratado: opcional. Vazio = sem CET; preenchido precisa ser maior que zero.
+  const limitText = String(form.limit ?? '').trim()
+  params.limit = limitText ? money('limit', limitText) : null
+  if (limitText && params.limit !== null && !(params.limit > 0)) errors.limit = 'Informe um limite maior que zero ou deixe o campo vazio.'
+  if (Object.keys(errors).length) return { errors, warnings, params, result: null, cet: null }
   const result = simulateContaGarantida(params)
   if (result.ok && profile?.id === 'simples' && result.rows.some(row => row.balance > money('operationValue'))) errors.operationValue = 'O principal utilizado supera o valor contratual declarado. Reveja a operação e o enquadramento.'
-  return { errors, warnings, params, result: Object.keys(errors).length ? null : result }
+  if (result.ok && params.limit > 0 && result.rows.some(row => row.balance > params.limit + 0.0000001)) warnings.push('O saldo utilizado passa do limite contratado informado. Excesso de limite não é simulado.')
+  const ok = !Object.keys(errors).length && result.ok
+  const cet = ok && params.limit > 0 ? contaGarantidaCet({ ...params, limit: params.limit }) : null
+  return { errors, warnings, params, result: Object.keys(errors).length ? null : result, cet }
 }

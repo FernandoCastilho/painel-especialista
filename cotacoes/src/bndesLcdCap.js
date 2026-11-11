@@ -1,5 +1,6 @@
 // Modalidade LCDCAP isolada. Não reutiliza nem altera regras de Finame, TFC ou TLP.
 // Projeção explícita: cenário de Selic informado, nunca o índice 143 como taxa anual.
+import { creditCet } from './creditComparison.js'
 export const LCDCAP_SOURCE = 'https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/04-22Cir13-Anexo-IV-Condicoes-a-Serem-Observadas-na-Contratacao.pdf'
 export const LCDCAP_PROFILE = Object.freeze({ id: 'lcdcap', version: '2026-06-24', section: '5', basis: 252, selicCode: '143', lcdCode: 'LD1', status: 'projection-not-contract-validated' })
 const DAY = 86400000
@@ -77,11 +78,47 @@ export function parseLcdSchedule(value) {
   } catch (e) { if (!(e instanceof InputError)) throw e; return { ok: false, events: [], error: { code: e.code, message: e.message } } }
 }
 
+// Fluxo projetado para um cenário de Selic (texto % a.a.) e o componente fixo já validado.
+// Usado no fluxo do cenário e no recálculo com Selic zero para o CET regulatório.
+function projectRows(principal, events, releaseDate, selicText, fixedAnnualPct, fixedRateScaled) {
+  const annualSelic = Number(selicText)
+  let remaining = events.filter(event => event.amortize).length
+  let balance = principal, totalInterest = 0, totalSelic = 0, totalAmortization = 0, totalPayments = 0
+  let previousDate = releaseDate
+  const rows = events.map((event, index) => {
+    const openingCents = balance
+    const selicFactor = (1 + annualSelic / 100) ** (event.businessDays / 252)
+    const fixedGrowth = Math.expm1(Math.log1p(fixedAnnualPct / 100) * (event.businessDays / 252))
+    const fixedFactor = 1 + fixedGrowth
+    const correctedCents = event.businessDays === 252 ? rationalCents(openingCents, 100000000000000n + scaledPct(selicText), 100000000000000n) : roundCents(openingCents * selicFactor)
+    const capitalizedSelicCents = correctedCents - openingCents
+    const interestCents = event.businessDays === 252 ? rationalCents(correctedCents, fixedRateScaled, 100000000000000n) : roundCents(correctedCents * fixedGrowth, correctedCents * Math.max(1, fixedFactor))
+    const amortizationCents = event.amortize ? (remaining === 1 ? correctedCents : Math.floor((2 * correctedCents + remaining) / (2 * remaining))) : 0
+    if (event.amortize) remaining--
+    balance = correctedCents - amortizationCents
+    const paymentCents = money(amortizationCents + interestCents, 'Pagamento')
+    totalInterest += interestCents; totalSelic += capitalizedSelicCents; totalAmortization += amortizationCents; totalPayments += paymentCents
+    const row = { number: index + 1, from: previousDate, date: event.date, businessDays: event.businessDays, phase: event.amortize ? 'amortization' : 'grace', openingCents, selicFactor, capitalizedSelicCents, correctedCents, fixedFactor, interestCents, amortizationCents, paymentCents, closingCents: balance }
+    previousDate = event.date
+    return row
+  })
+  return { rows, balance, totalInterest, totalSelic, totalAmortization, totalPayments }
+}
+
+// CET (Res. CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido liberado ao valor presente
+// dos pagamentos, em dias corridos/365 desde a liberação. Devolve decimal ou null.
+function flowCet(netCents, releaseDate, rows) {
+  return creditCet(netCents / 100, rows.map(row => ({ days: (date(row.date) - date(releaseDate)) / DAY, payment: row.paymentCents / 100 })))
+}
+
 export function simulateLcdCap(input) {
   try {
-    fields(input, ['mode', 'principalCents', 'contractDate', 'releaseDate', 'ld1', 'spreads', 'selicScenario', 'schedule'], 'Operação')
+    fields(input, ['mode', 'principalCents', 'releaseFeeCents', 'contractDate', 'releaseDate', 'ld1', 'spreads', 'selicScenario', 'schedule'], 'Operação')
     need(input.mode === 'projection', 'UNSUPPORTED_MODE', 'Somente projeção com Selic informada está habilitada; o índice 143 não substitui a série diária exigida no cálculo contratual.')
     const principal = money(input.principalCents, 'Principal', 1)
+    // Tarifa opcional paga na liberação: só reduz o valor líquido do CET; não altera juros nem parcelas.
+    const releaseFee = input.releaseFeeCents === undefined ? 0 : money(input.releaseFeeCents, 'Tarifa na liberação')
+    need(releaseFee < principal, 'INVALID_FEE', 'A tarifa na liberação precisa ser menor que o valor liberado.')
     date(input.contractDate); date(input.releaseDate)
     need(input.contractDate <= input.releaseDate, 'DATE_ORDER', 'A contratação não pode ser posterior à liberação.')
     need(weekday(input.releaseDate), 'NON_BUSINESS_DATE', 'Informe a data útil da liberação; sábado e domingo não são aceitos.')
@@ -116,33 +153,23 @@ export function simulateLcdCap(input) {
       amortizing ||= event.amortize
       previousDate = event.date
     }
-    let remaining = events.filter(event => event.amortize).length
-    need(remaining > 0 && principal >= remaining, 'INCOMPLETE_SCHEDULE', 'O cronograma precisa terminar com amortização integral, com principal suficiente para cada amortização.')
-    let balance = principal, totalInterest = 0, totalSelic = 0, totalAmortization = 0, totalPayments = 0
-    previousDate = input.releaseDate
-    const rows = events.map((event, index) => {
-      const openingCents = balance
-      const selicFactor = (1 + annualSelic / 100) ** (event.businessDays / 252)
-      const fixedGrowth = Math.expm1(Math.log1p(fixedAnnualPct / 100) * (event.businessDays / 252))
-      const fixedFactor = 1 + fixedGrowth
-      const correctedCents = event.businessDays === 252 ? rationalCents(openingCents, 100000000000000n + scaledPct(input.selicScenario.annualPct), 100000000000000n) : roundCents(openingCents * selicFactor)
-      const capitalizedSelicCents = correctedCents - openingCents
-      const interestCents = event.businessDays === 252 ? rationalCents(correctedCents, fixedRateScaled, 100000000000000n) : roundCents(correctedCents * fixedGrowth, correctedCents * Math.max(1, fixedFactor))
-      const amortizationCents = event.amortize ? (remaining === 1 ? correctedCents : Math.floor((2 * correctedCents + remaining) / (2 * remaining))) : 0
-      if (event.amortize) remaining--
-      balance = correctedCents - amortizationCents
-      const paymentCents = money(amortizationCents + interestCents, 'Pagamento')
-      totalInterest += interestCents; totalSelic += capitalizedSelicCents; totalAmortization += amortizationCents; totalPayments += paymentCents
-      const row = { number: index + 1, from: previousDate, date: event.date, businessDays: event.businessDays, phase: event.amortize ? 'amortization' : 'grace', openingCents, selicFactor, capitalizedSelicCents, correctedCents, fixedFactor, interestCents, amortizationCents, paymentCents, closingCents: balance }
-      previousDate = event.date
-      return row
-    })
+    const amortizations = events.filter(event => event.amortize).length
+    need(amortizations > 0 && principal >= amortizations, 'INCOMPLETE_SCHEDULE', 'O cronograma precisa terminar com amortização integral, com principal suficiente para cada amortização.')
+    const { rows, balance, totalInterest, totalSelic, totalAmortization, totalPayments } = projectRows(principal, events, input.releaseDate, input.selicScenario.annualPct, fixedAnnualPct, fixedRateScaled)
+    // CET regulatório (art. 5º): Selic fica fora; LD1 e remunerações são fixadas no contrato e entram.
+    // Mesmas datas, mesmos DU e mesma base 252 dos juros; só a Selic vai a zero.
+    let fixedRows = null, fixedUnavailable = null
+    try { fixedRows = projectRows(principal, events, input.releaseDate, '0', fixedAnnualPct, fixedRateScaled).rows } catch (e) { if (!(e instanceof InputError)) throw e; fixedUnavailable = e.message }
+    const netReleaseCents = principal - releaseFee
+    const fixedAnnualRate = fixedRows ? flowCet(netReleaseCents, input.releaseDate, fixedRows) : null
+    const projectedAnnualRate = flowCet(netReleaseCents, input.releaseDate, rows)
+    const cet = { method: 'CMN 4.881/2020, art. 4º · dias corridos/365 desde a liberação', netReleaseCents, releaseFeeCents: releaseFee, fixedComponents: ['LD1', 'remuneração BNDES', 'intermediação', 'remuneração do agente'], excludedIndex: 'Selic', fixedAnnualRate, projectedAnnualRate, fixedUnavailable }
     need([totalInterest, totalSelic, totalAmortization, totalPayments].every(value => Number.isSafeInteger(value) && value <= MAX_CENTS), 'MONEY_OVERFLOW', 'Totais fora do limite técnico.')
-    return { ok: true, status: LCDCAP_PROFILE.status, profile: LCDCAP_PROFILE, source: LCDCAP_SOURCE, fixedAnnualPct, annualSelicScenarioPct: annualSelic, rows, totals: { principalCents: principal, capitalizedSelicCents: totalSelic, interestCents: totalInterest, amortizationCents: totalAmortization, paymentCents: totalPayments, closingCents: balance }, cet: null, error: null, warnings: [
+    return { ok: true, status: LCDCAP_PROFILE.status, profile: LCDCAP_PROFILE, source: LCDCAP_SOURCE, fixedAnnualPct, annualSelicScenarioPct: annualSelic, rows, totals: { principalCents: principal, capitalizedSelicCents: totalSelic, interestCents: totalInterest, amortizationCents: totalAmortization, paymentCents: totalPayments, closingCents: balance }, cet, error: null, warnings: [
       'Projeção de Selic constante informada pelo usuário. Não representa taxas futuras oficiais nem conferência contratual.',
       'A Selic é capitalizada no saldo; remunerações e LD1 são exigíveis nas cobranças. A soma das remunerações com LD1 é fixada para toda a simulação, em base 252.',
       'Datas, dias úteis, carência e amortizações são entradas do cronograma informado; não há calendário bancário certificado nem ajuste automático de vencimentos.',
-      'Sem IOF, tarifas, seguros, outras despesas ou CET. Arredondamentos de projeção em centavos não certificam a memória contratual.',
+      'CET pela Res. CMN 4.881/2020: sem Selic (art. 5º), em dias corridos/365. Sem IOF, seguros ou outras despesas; tarifa só se informada. Arredondamentos de projeção em centavos não certificam a memória contratual.',
       'A série 143 é exibida como índice histórico, não como percentual anual nem como substituto exato do produto diário da Selic.'
     ] }
   } catch (e) { if (!(e instanceof InputError)) throw e; return { ok: false, status: 'blocked', rows: [], totals: null, cet: null, error: { code: e.code, message: e.message } } }

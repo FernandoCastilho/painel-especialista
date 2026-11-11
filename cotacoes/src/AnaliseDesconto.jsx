@@ -7,6 +7,12 @@ import { IOF_SOURCE } from './iofRules.js'
 
 const brl = (value) => value == null ? '—' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const number = (value) => value == null ? '—' : value.toLocaleString('pt-BR')
+const pct = (value) => `${(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+// CET anual (decimal) com o equivalente mensal composto.
+const cetText = (cet) => cet == null ? 'Não mensurável' : `${pct(cet)} a.a.`
+const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(cet) / 12))} a.m.`
+const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
+const CET_HELP = 'CET (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido liberado aos pagamentos, em dias corridos/365. No desconto, líquido = nominal − juros − IOF − TAC − tarifa de títulos; o pagamento é o nominal de cada título na data de pagamento.'
 
 export function DescontoIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 11h8M8 15h5M8 18h3" /><path d="m14 17 2 2 4-4" /></svg>
@@ -44,6 +50,8 @@ export default function AnaliseDesconto({ onBack }) {
   ]
   const first = result?.comparisons[0]
   const comparisonRows = [
+    { label: 'CET do desconto', month: result?.projected.cet, value: () => result.projected.cet, format: cetText },
+    { label: 'CET do giro', month: first?.giro.cet, value: (row) => row.giro.cet, format: cetText },
     { label: 'Desconto: juros + TAC + títulos + IOF', month: result?.monthly.cost, value: (row) => row.discountCost },
     { label: 'Giro: juros + TAC + IOF', month: first ? first.giro.cost / 12 : null, value: (row) => row.giro.cost },
     { label: 'Economia estimada com giro', month: first ? first.savings / 12 : null, value: (row) => row.savings, savings: true },
@@ -52,16 +60,16 @@ export default function AnaliseDesconto({ onBack }) {
   ]
   return <section className="cx cx-desconto" aria-labelledby="ad-heading">
     <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
-    <div className="cx-heading"><h2 id="ad-heading" className="cx-title"><span className="cx-icon"><DescontoIcon /></span>Análise de desconto</h2><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros e IOF são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p></CalculatorHelp></div>
-    <p className="desconto-notice">Simulação estimada. Não é CET nem recomendação de contratação.</p>
+    <div className="cx-heading"><h2 id="ad-heading" className="cx-title"><span className="cx-icon"><DescontoIcon /></span>Análise de desconto</h2><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p></CalculatorHelp></div>
+    <p className="desconto-notice">Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p>
 
     <article className="desk-panel cx-panel desconto-input-panel">
       <header className="cx-heading"><h3>1. Operação simulada de desconto</h3><CalculatorHelp title="Operação simulada de desconto"><p>Os valores iniciais são um exemplo ilustrativo. Substitua pelos títulos e condições do contrato. O custo completo inclui juros, IOF, TAC e tarifa dos títulos.</p></CalculatorHelp></header>
       <div className="cx-form">
-        {field('date', 'Data da operação e liberação do giro', <input {...props('date')} type="date" min="1900-01-01" max="9995-12-31" value={form.date} onChange={(event) => set('date', event.target.value)} />, 'A primeira parcela do giro vence no mês seguinte, no mesmo dia, limitado ao último dia do mês.')}
+        {field('date', 'Data da operação e liberação do giro', <input {...props('date')} type="date" min="1900-01-01" max="9995-12-31" value={form.date} onChange={(event) => set('date', event.target.value)} />, 'A primeira parcela do giro vence no mês seguinte, no mesmo dia (limitado ao último dia do mês) ou no próximo dia útil.')}
         <div><span>Valor bruto dos títulos</span><b>{brl(operation?.value)}</b></div>
         {textField('operationRate', 'Taxa da operação (% a.m.)', 'Aplicada a cada grupo de títulos pelos dias corridos até o vencimento informado, conforme a convenção selecionada.')}
-        {field('convention', 'Convenção contratual de desconto', <select {...props('convention')} value={form.convention} onChange={event => set('convention', event.target.value)}><option value="commercial30">Comercial simples (por fora), mês de 30 dias</option><option value="rational30">Racional simples (por dentro), mês de 30 dias</option></select>, 'Selecione a convenção efetiva do contrato. Vencimentos devem refletir prorrogações contratuais e feriados, quando aplicáveis; não ajustamos essas datas automaticamente.')}
+        {field('convention', 'Convenção contratual de desconto', <select {...props('convention')} value={form.convention} onChange={event => set('convention', event.target.value)}><option value="commercial30">Comercial simples (por fora), mês de 30 dias</option><option value="rational30">Racional simples (por dentro), mês de 30 dias</option></select>, 'Selecione a convenção efetiva do contrato. Vencimento em fim de semana ou feriado nacional passa para o próximo dia útil; juros e IOF contam até essa data.')}
         {taxFields('taxProfile', 'eligible')}
         {field('titleFeeMode', 'Como calcular a tarifa dos títulos?', <select {...props('titleFeeMode')} value={form.titleFeeMode} onChange={(event) => set('titleFeeMode', event.target.value)}><option value="">Selecione a forma de cobrança</option>{TITLE_FEE_MODES.map((mode) => <option key={mode.id} value={mode.id}>{mode.label}</option>)}</select>, 'A referência mostra R$ 564,00 como “unitário”, mas os totais o tratam como tarifa da operação. Escolha a interpretação correta.')}
         {feeField}
@@ -76,6 +84,7 @@ export default function AnaliseDesconto({ onBack }) {
           <label>Valor nominal total do grupo<MoneyInput value={row.value} onChange={value => setRow(index, 'value', value)} /></label>
           <label>Quantidade de títulos<input inputMode="numeric" value={row.count} onChange={event => setRow(index, 'count', event.target.value)} /></label>
           <label>Vencimento contratual<input type="date" value={row.dueDate} onChange={event => setRow(index, 'dueDate', event.target.value)} /></label>
+          {operation?.rows[index]?.adjusted && <p className="desconto-paydate">Pago em {dateBr(operation.rows[index].paymentDate)}, próximo dia útil.</p>}
           <button type="button" disabled={form.titleRows.length === 1} onClick={() => set('titleRows', form.titleRows.filter((_, i) => i !== index))}>Remover grupo {index + 1}</button>
           {errors['titleRow' + index] && <p role="alert">{errors['titleRow' + index]}</p>}
         </fieldset>)}
@@ -88,6 +97,7 @@ export default function AnaliseDesconto({ onBack }) {
         <div><div className="cx-field-label"><span>Subtotal sem tarifa de títulos</span><CalculatorHelp title="Subtotal sem tarifa de títulos"><p>TAC + juros + IOF.</p></CalculatorHelp></div><b>{brl(operation?.costWithoutTitles)}</b></div>
         <div><div className="cx-field-label"><span>Custo total completo</span><CalculatorHelp title="Custo total completo"><p>Inclui a tarifa de títulos.</p></CalculatorHelp></div><b>{brl(operation?.cost)}</b></div>
         <div><div className="cx-field-label"><span>Valor líquido da operação</span><CalculatorHelp title="Valor líquido da operação"><p>Bruto menos todos os custos.</p></CalculatorHelp></div><b>{brl(operation?.net)}</b></div>
+        <div><div className="cx-field-label"><span>CET do desconto</span><CalculatorHelp title="CET do desconto"><p>{CET_HELP}</p></CalculatorHelp></div><b>{cetText(operation?.cet)}</b><small>{operation ? cetMonthly(operation.cet) : ''}</small></div>
       </div>
     </article>
 
@@ -101,11 +111,11 @@ export default function AnaliseDesconto({ onBack }) {
     </article>
 
     <article className="desk-panel cx-panel desconto-input-panel">
-      <header className="cx-heading"><h3>3. Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>TAC e IOF são pagos à parte e não financiados. Dias corridos reais entre a liberação e cada vencimento, sem ajuste de feriados ou dias úteis. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>3. Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana ou feriado nacional passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
       <div className="cx-form">
         {field('giroPrincipalMode', 'Principal usado no giro', <select {...props('giroPrincipalMode')} value={form.giroPrincipalMode} onChange={(event) => set('giroPrincipalMode', event.target.value)}><option value="monthly">Igual ao volume bruto mensal do desconto</option><option value="manual">Informar outro valor</option></select>, 'Usar o volume mensal é uma hipótese de comparação, não uma necessidade de capital de giro (NCG) apurada.')}
         {form.giroPrincipalMode === 'manual' && moneyField('giroPrincipal', 'Valor financiado no giro', 'Ao informar outro principal, os montantes comparados também ficam diferentes.')}
-        {textField('giroRate', 'Taxa do giro Price (% a.m.)', 'Taxa mensal efetiva, sem carência e com parcelas mensais.')}
+        {textField('giroRate', 'Taxa do giro Price (% a.m.)', 'Taxa mensal efetiva, com parcelas mensais. Se o primeiro vencimento passar de 30 dias, os dias extras de juros entram no saldo.')}
         {moneyField('giroTac', 'TAC do giro, uma única vez', 'R$ 3.150,00 é o valor inferido para reconciliar a referência. Confirme a proposta; não é uma tarifa padrão.')}
         {taxFields('giroTaxProfile', 'giroEligible')}
       </div>
@@ -125,11 +135,11 @@ export default function AnaliseDesconto({ onBack }) {
     </article>
 
     <article className="desk-panel cx-panel desconto-comparison-panel">
-      <header className="cx-heading"><h3>Desconto × giro: custo financeiro</h3><CalculatorHelp title="Como comparar desconto e giro"><p>Economia = custo do desconto − custo do giro. Positivo: giro tem menor custo no cenário; negativo: maior custo. Na coluna Mês, os custos são a média do cenário de 12 meses; as duas linhas de parcela/desembolso já são mensais.</p><p>A média mensal all-in não é a parcela contratual. Ela distribui principal, juros, TAC e IOF pelo prazo. A parcela Price aparece separadamente, sem TAC e IOF.</p><p>Os fluxos não são equivalentes: o desconto é repetido todo mês e o giro é amortizado. A diferença de custos não comprova economia efetiva nem substitui a análise do ciclo de caixa. Esta simulação não é CET nem recomendação de contratação.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>Desconto × giro: CET e custo financeiro</h3><CalculatorHelp title="Como comparar desconto e giro"><p>{CET_HELP} O CET do desconto usa a projeção mensal e vale para qualquer prazo, pois a operação se repete. No giro, o líquido é o principal menos TAC e IOF.</p><p>Economia = custo do desconto − custo do giro. Positivo: giro tem menor custo no cenário; negativo: maior custo. Na coluna Mês, os custos são a média do cenário de 12 meses; as duas linhas de parcela/desembolso já são mensais.</p><p>A média mensal all-in não é a parcela contratual. Ela distribui principal, juros, TAC e IOF pelo prazo. A parcela Price aparece separadamente, sem TAC e IOF.</p><p>Os fluxos não são equivalentes: o desconto é repetido todo mês e o giro é amortizado. A diferença de custos não comprova economia efetiva nem substitui a análise do ciclo de caixa. Esta simulação não é proposta nem recomendação de contratação.</p></CalculatorHelp></header>
       <div className="cx-wrap" role="region" aria-label="Comparação de desconto e giro em 12, 24, 36 e 48 meses; role para ver todas as colunas" tabIndex={0}>
-        <table className="cx-matrix desconto-table"><caption className="sr-only">Custo acumulado por prazo, economia estimada e desembolso mensal</caption><thead><tr><th scope="col">Item</th><th scope="col">Mês<small>base: giro de 12 meses</small></th>{DISCOUNT_TERMS.map((months) => <th scope="col" key={months}>{months} meses</th>)}</tr></thead><tbody>{comparisonRows.map((row) => <tr key={row.label} className={row.savings ? 'desconto-savings' : undefined}><th scope="row">{row.label}</th><td data-negative={row.savings && row.month < 0 ? 'true' : undefined}>{brl(row.month)}</td>{DISCOUNT_TERMS.map((months, index) => { const value = result ? row.value(result.comparisons[index]) : null; return <td key={months} data-negative={row.savings && value < 0 ? 'true' : undefined}>{brl(value)}</td> })}</tr>)}</tbody></table>
+        <table className="cx-matrix desconto-table"><caption className="sr-only">CET, custo acumulado por prazo, economia estimada e desembolso mensal</caption><thead><tr><th scope="col">Item</th><th scope="col">Mês<small>base: giro de 12 meses</small></th>{DISCOUNT_TERMS.map((months) => <th scope="col" key={months}>{months} meses</th>)}</tr></thead><tbody>{comparisonRows.map((row) => <tr key={row.label} className={row.savings ? 'desconto-savings' : undefined}><th scope="row">{row.label}</th><td data-negative={row.savings && row.month < 0 ? 'true' : undefined}>{(row.format || brl)(row.month)}</td>{DISCOUNT_TERMS.map((months, index) => { const value = result ? row.value(result.comparisons[index]) : null; return <td key={months} data-negative={row.savings && value < 0 ? 'true' : undefined}>{(row.format || brl)(value)}</td> })}</tr>)}</tbody></table>
       </div>
-      <p className="desconto-notice desconto-inset"><b>A média mensal all-in não é a parcela contratual.</b> Os fluxos não são equivalentes; a diferença de custos não comprova economia efetiva.</p>
+      <p className="desconto-notice desconto-inset"><b>A média mensal all-in não é a parcela contratual.</b> Os fluxos não são equivalentes; compare também o CET. A diferença de custos não comprova economia efetiva.</p>
     </article>
 
     <article className="desk-panel cx-panel desconto-comparison-panel">
@@ -143,11 +153,13 @@ export default function AnaliseDesconto({ onBack }) {
       <ul>
         <li>Tarifa por operação: total informado, custo unitário × títulos ou valor bruto × percentual. Sem arredondamento intermediário; os valores exibidos são arredondados para centavos.</li>
         <li>Desconto mensal = operações × (tarifa de títulos + TAC + juros pagos + IOF pago). Custo do prazo = custo mensal × meses.</li>
-        <li>Price: PMT = principal × i / (1 − (1 + i) elevado a −n). Se a taxa for zero, PMT = principal / n.</li>
+        <li>Desconto: juros e IOF de cada título contam da operação até a data de pagamento (vencimento ou próximo dia útil, se cair em fim de semana ou feriado nacional).</li>
+        <li>Giro Price: juros de cada parcela = saldo × ((1 + i) elevado a dias/30 − 1), pelos dias corridos entre vencimentos; parcela fixa que quita o saldo nessas datas. Vencimentos no próximo dia útil.</li>
         <li>IOF do giro = adicional × principal + diária × soma de cada amortização multiplicada por seus dias corridos, limitados a 365. Percentuais são divididos por 100.</li>
+        <li>CET (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o líquido liberado aos pagamentos, em dias corridos/365. Desconto: nominal − juros − IOF − TAC − tarifa de títulos, contra o nominal de cada título. Giro: principal − TAC − IOF, contra as parcelas.</li>
         <li>Custo do giro = soma das parcelas − principal + TAC + IOF. Média mensal all-in = (principal + custo do giro) / meses.</li>
         <li>Não inclui juros de mora por títulos vencidos, despesas de baixa de duplicatas, seguros, outros encargos, renegociações nem reinvestimento dos fluxos.</li>
-        <li>Confirme convenção de juros, tarifas, enquadramento e calendário na proposta. IOF segue o regime suportado a partir de 17/07/2025; datas anteriores são bloqueadas. Os dados iniciais são um exemplo, não condições comerciais vigentes.</li>
+        <li>Feriados considerados: nacionais. Feriados locais não entram. Confirme convenção de juros, tarifas, enquadramento e calendário na proposta. IOF segue o regime suportado a partir de 17/07/2025; datas anteriores são bloqueadas. Os dados iniciais são um exemplo, não condições comerciais vigentes.</li>
         <li><a href={IOF_SOURCE} target="_blank" rel="noreferrer">Decreto 6.306/2007: art. 7º, II, VI e §§ 1º, 4º e 15</a>. PJ: 0,0082% ao dia + 0,38%; Simples/MEI confirmado até R$ 30 mil: 0,00274% ao dia + 0,38%. IOF diário limitado a 365 dias por título.</li>
       </ul>
     </CalculatorHelp></div>
