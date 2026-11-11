@@ -3,13 +3,14 @@ import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import Help from './CalculatorHelp.jsx'
 import { simulateTlpExigivel, parseTlpSchedule, TLP_EXIGIVEL_SOURCE } from './bndesTlpExigivel.js'
+import { BNDES_PROFILE_IOF_OPTIONS } from './bndesProfileIof.js'
 import './BndesProfiles.css'
 
 const brl = cents => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const date = iso => iso.split('-').reverse().join('/')
 const rateText = value => value.trim().replace(',', '.')
 const percent = rate => `${(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
-const EMPTY = { amount: '', fee: '', release: '', j: '', jSource: '', jConfirmed: false, bndes: '', agent: '', ipca: '', scenarioConfirmed: false, schedule: '', scheduleSource: '', scheduleConfirmed: false }
+const EMPTY = { amount: '', fee: '', release: '', j: '', jSource: '', jConfirmed: false, bndes: '', agent: '', ipca: '', scenarioConfirmed: false, schedule: '', scheduleSource: '', scheduleConfirmed: false, iof: 'zero', iofEligible: false }
 
 export function TlpIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 20V4M4 20h16M7 15l4-4 4 2 5-7M16 6h4v4" /></svg>
@@ -23,6 +24,7 @@ export default function BndesTlpExigivel({ onBack }) {
       ...previous, [key]: value,
       ...(['j', 'jSource'].includes(key) ? { jConfirmed: false } : {}),
       ...(key === 'ipca' ? { scenarioConfirmed: false } : {}),
+      ...(key === 'iof' ? { iofEligible: false } : {}),
       ...(['release', 'schedule', 'scheduleSource'].includes(key) ? { scheduleConfirmed: false } : {}),
     }))
     setSubmitted(false)
@@ -36,6 +38,7 @@ export default function BndesTlpExigivel({ onBack }) {
     spreads: { bndes: rateText(form.bndes), agent: rateText(form.agent) },
     ipcaScenario: { annualPct: rateText(form.ipca), acknowledged: form.scenarioConfirmed },
     schedule: { events: schedule.events, source: form.scheduleSource, confirmed: form.scheduleConfirmed },
+    iof: { profile: form.iof, eligible: form.iof === 'simples' && form.iofEligible },
   })
   const field = (key, label, hint, type = 'text') => <div className="cx-field"><div className="cx-field-label"><label htmlFor={`tlp-${key}`}>{label}</label><Help title={label}><p>{hint}</p></Help></div><input id={`tlp-${key}`} type={type} value={form[key]} onChange={event => update(key, event.target.value)} inputMode={['j', 'bndes', 'agent', 'ipca'].includes(key) ? 'decimal' : undefined} autoComplete="off" /></div>
   const check = (key, label) => <label className="bndes-check" htmlFor={`tlp-${key}`}><input id={`tlp-${key}`} type="checkbox" checked={form[key]} onChange={event => update(key, event.target.checked)} />{label}</label>
@@ -49,7 +52,8 @@ export default function BndesTlpExigivel({ onBack }) {
         <header><h3 className="cx-heading">Condições da projeção<Help title="TLP exigível: regra e limite da projeção"><p>Regra da seção 1 do Anexo IV: juros = saldo × (fator TLP × fator spread − 1). O fator TLP contratual combina IPCA mensal defasado, aniversários no dia 15 e J em dias úteis/252. Os spreads BNDES e agente se multiplicam em dias úteis/252.</p><p>Esta projeção substitui os índices mensais por uma hipótese explícita de IPCA anual constante em DU/252. Não calcula uma memória histórica nem reproduz truncagem contratual de 16 casas. Não capitaliza IPCA no saldo.</p></Help></h3></header>
         <div className="cx-form">
           <div className="cx-field"><label htmlFor="tlp-amount">Principal financiado</label><MoneyInput id="tlp-amount" value={form.amount} onChange={value => update('amount', value)} /></div>
-          <div className="cx-field"><div className="cx-field-label"><label htmlFor="tlp-fee">Tarifa na liberação (opcional)</label><Help title="Tarifa na liberação"><p>Tarifas e encargos pagos pelo cliente na liberação. Só entram no CET: o valor líquido é o principal menos esta tarifa. Não mudam juros nem parcelas.</p><p>Esta calculadora não tem IOF. Em branco, o valor líquido é o próprio principal.</p></Help></div><MoneyInput id="tlp-fee" value={form.fee} onChange={value => update('fee', value)} /></div>
+          <div className="cx-field"><div className="cx-field-label"><label htmlFor="tlp-fee">Tarifa na liberação (opcional)</label><Help title="Tarifa na liberação"><p>Tarifas e encargos pagos pelo cliente na liberação. Só entram no CET: o valor líquido é o principal menos esta tarifa. Não mudam juros nem parcelas.</p><p>O IOF é escolhido no campo ao lado e também sai do valor líquido. Em branco, não há tarifa.</p></Help></div><MoneyInput id="tlp-fee" value={form.fee} onChange={value => update('fee', value)} /></div>
+          <div className="cx-field"><div className="cx-field-label"><label htmlFor="tlp-iof">IOF</label><Help title="IOF da operação"><p>Zero é a premissa de recursos BNDES/FINAME elegíveis. O painel cita o Decreto 6.306/2007, art. 8º, IX, que trata de recursos FINAME. A alíquota zero depende do enquadramento dos recursos desta operação, e o painel não verifica isso. Também não foi conferido aqui se essa regra alcança a TLP fora do FINAME: confirme com a instituição.</p><p>Sem enquadramento, escolha PJ geral (0,0082% ao dia) ou Simples/MEI (0,00274% ao dia em operação de até R$ 30 mil), mais 0,38% de adicional sobre o valor. O IOF diário incide sobre o principal de cada amortização, pelos dias corridos da liberação ao vencimento, com teto de 365 dias. Tudo é cobrado na liberação: entra no valor líquido do CET e não muda juros nem parcelas.</p></Help></div><select id="tlp-iof" value={form.iof} onChange={event => update('iof', event.target.value)}>{BNDES_PROFILE_IOF_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>{form.iof === 'zero' ? <p className="cx-hint">Alíquota zero depende do enquadramento dos recursos; o painel não verifica.</p> : form.iof === 'simples' ? <label className="bndes-check" htmlFor="tlp-iofEligible"><input id="tlp-iofEligible" type="checkbox" checked={form.iofEligible} onChange={event => update('iofEligible', event.target.checked)} />Confirmo a opção pelo Simples/MEI e o enquadramento com a instituição.</label> : null}</div>
           {field('release', 'Data da liberação', 'Data útil efetiva. Não é a data de assinatura.', 'date')}
           {field('j', 'J da TLP aplicável (% a.a.)', 'Parcela real fixada para a contratação, já ajustada pelo fator aplicável. Não use o último J publicado como substituto automático do contratado. Zero deve ser informado explicitamente.')}
           {field('jSource', 'Fonte do J informado', 'Identifique o contrato ou a referência e sua data. Não inclua CPF, números de conta ou outros dados pessoais.')}
@@ -65,7 +69,7 @@ export default function BndesTlpExigivel({ onBack }) {
       </article>
     </form>
     <article className="desk-panel cx-panel" aria-live="polite">
-      <header><h3 className="cx-heading">Resultado</h3><small>Sem IOF ou seguros · CET sem IPCA</small></header>
+      <header><h3 className="cx-heading">Resultado</h3><small>Sem seguros · CET sem IPCA</small></header>
       {!result?.ok ? <p className="cx-hint cx-pad" role={result ? 'alert' : 'status'}>{result?.error?.message || 'Preencha e confirme as condições para calcular. Não há taxas ou datas presumidas.'}</p> : <>
         <div className="fm-grade">
           <div className="fm-kpi"><span>Principal inicial</span><b>{brl(result.totals.principalCents)}</b></div>
@@ -74,13 +78,14 @@ export default function BndesTlpExigivel({ onBack }) {
           <div className="fm-kpi"><span>Saldo final</span><b>{brl(result.totals.closingCents)}</b><small>Sem capitalização de IPCA positivo</small></div>
         </div>
         <div className="fm-grade tlp-cet">
-          <div className="fm-kpi"><span className="cx-field-label">CET · parte fixa (regra do BC)<Help title="CET · parte fixa"><p>Taxa anual que iguala o valor líquido liberado ao valor presente das parcelas, em dias corridos/365 desde a liberação (Res. CMN 4.881/2020, art. 4º).</p><p>Pelo art. 5º, o IPCA fica fora. As parcelas são recalculadas só com J da TLP e spreads, que ficam fixos no contrato. Mesmas datas e mesma base de juros (dias úteis/252).</p><p>Valor líquido = principal menos a tarifa informada. Não há IOF nesta calculadora.</p></Help></span><b>{result.cet.fixedAnnualRate == null ? 'Indisponível' : percent(result.cet.fixedAnnualRate)}</b><small>{result.cet.fixedAnnualRate == null ? (result.cet.fixedUnavailable || 'Taxa negativa ou sem solução: o painel não mostra CET abaixo de zero.') : `J + spreads, sem IPCA · líquido ${brl(result.cet.netReleaseCents)}`}</small></div>
+          <div className="fm-kpi"><span className="cx-field-label">CET · parte fixa (regra do BC)<Help title="CET · parte fixa"><p>Taxa anual que iguala o valor líquido liberado ao valor presente das parcelas, em dias corridos/365 desde a liberação (Res. CMN 4.881/2020, art. 4º).</p><p>Pelo art. 5º, o IPCA fica fora. As parcelas são recalculadas só com J da TLP e spreads, que ficam fixos no contrato. Mesmas datas e mesma base de juros (dias úteis/252).</p><p>Valor líquido = principal menos a tarifa informada e o IOF escolhido, ambos cobrados na liberação.</p></Help></span><b>{result.cet.fixedAnnualRate == null ? 'Indisponível' : percent(result.cet.fixedAnnualRate)}</b><small>{result.cet.fixedAnnualRate == null ? (result.cet.fixedUnavailable || 'Taxa negativa ou sem solução: o painel não mostra CET abaixo de zero.') : `J + spreads, sem IPCA · líquido ${brl(result.cet.netReleaseCents)}`}</small></div>
           <div className="fm-kpi"><span className="cx-field-label">Custo com IPCA projetado<Help title="Custo com IPCA projetado"><p>Mesmo método do CET, aplicado às parcelas projetadas completas, com o IPCA do cenário.</p><p>Não é o CET regulatório: depende da hipótese de IPCA.</p></Help></span><b>{result.cet.projectedAnnualRate == null ? 'Indisponível' : percent(result.cet.projectedAnnualRate)}</b><small>{result.cet.projectedAnnualRate == null ? 'Taxa negativa ou sem solução: o painel não mostra custo abaixo de zero.' : `IPCA de ${result.annualIpcaScenarioPct.toLocaleString('pt-BR')}% a.a. no cenário`}</small></div>
+          <div className="fm-kpi"><span className="cx-field-label">IOF na liberação<Help title="IOF na liberação"><p>Adicional sobre o valor mais o diário sobre o principal de cada amortização, em dias corridos até o vencimento, com teto de 365 dias. Cobrado na liberação e descontado do valor líquido nas duas linhas de custo.</p><p>Alíquota zero só vale se os recursos forem enquadrados; o painel não verifica.</p></Help></span><b>{brl(result.iof.totalCents)}</b><small>{result.iof.profile === 'zero' ? 'Alíquota zero · enquadramento não verificado' : `${brl(result.iof.additionalCents)} adicional + ${brl(result.iof.dailyCents)} diário`}</small></div>
         </div>
         <div className="cx-wrap" role="region" aria-label="Cronograma TLP exigível" tabIndex={0}><table className="cx-matrix"><caption>Valores em reais. Juros negativos reduzem a prestação e, quando excedentes, o principal.</caption><thead><tr><th>Nº</th><th>Vencimento</th><th>DU</th><th>Saldo inicial</th><th>Juros exigíveis</th><th>Amortização</th><th>Redução por juros negativos</th><th>Pagamento</th><th>Saldo final</th></tr></thead><tbody>{result.rows.map(row => <tr key={row.number}><th scope="row">{row.number}{row.phase === 'grace' ? ' · carência' : ''}</th><td>{date(row.date)}</td><td>{row.businessDays}</td>{['openingCents', 'interestCents', 'amortizationCents', 'negativeInterestPrincipalReductionCents', 'paymentCents', 'closingCents'].map(key => <td key={key}>{brl(row[key])}</td>)}</tr>)}</tbody></table></div>
         <ul className="cx-hint cx-pad">{result.warnings.map(warning => <li key={warning}>{warning}</li>)}</ul>
       </>}
     </article>
-    <details className="bndes-limits"><summary>Fonte e limites desta calculadora</summary><p><a href={TLP_EXIGIVEL_SOURCE} target="_blank" rel="noreferrer">BNDES · Circular 13/2022, Anexo IV, seção 1 · TLP exigível</a>. A seção 2 trata de TLPCAP e não é usada aqui.</p><p>SAC com amortização do saldo remanescente. Sem Price, IOF, seguros, antecipações, liberação múltipla ou cálculo histórico de índices. Taxas e cronograma precisam ser confirmados separadamente; a aprovação do formulário não certifica o contrato.</p></details>
+    <details className="bndes-limits"><summary>Fonte e limites desta calculadora</summary><p><a href={TLP_EXIGIVEL_SOURCE} target="_blank" rel="noreferrer">BNDES · Circular 13/2022, Anexo IV, seção 1 · TLP exigível</a>. A seção 2 trata de TLPCAP e não é usada aqui.</p><p>SAC com amortização do saldo remanescente. Sem Price, seguros, antecipações, liberação múltipla ou cálculo histórico de índices. IOF zero é premissa de recursos elegíveis, não verificada pelo painel. Taxas e cronograma precisam ser confirmados separadamente; a aprovação do formulário não certifica o contrato.</p></details>
   </section>
 }

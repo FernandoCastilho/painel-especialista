@@ -9,6 +9,7 @@ import { finimpCost, FINIMP_TERMS } from './finimpComparison.js'
 import { discountOperation } from './analiseDesconto.js'
 import { simular, periodos30Datas, vencimentoDia15, PORTES, CUSTOS, COMPOSICOES, PERIODICIDADES, FGI, taxaFinal, IOF_ZERO } from './finameMateriais.js'
 import { resolveCreditIof } from './iofRules.js'
+import { PRACA_PADRAO, pracaContrato } from './pracaContrato.js'
 
 export const MAX_COLUMNS = 5
 export const MIN_COLUMNS = 2
@@ -70,12 +71,14 @@ function baseColumn() {
   }
 }
 export const initialColumns = () => DEFAULT_MODALITIES.map(newColumn)
-export const initialShared = (today, defaultValue = '500.000,00') => ({ value: defaultValue, term: '24', grace: '0', system: 'price', start: today, regime: 'presumido', adicional: true })
+export const initialShared = (today, defaultValue = '500.000,00') => ({ value: defaultValue, term: '24', grace: '0', system: 'price', start: today, regime: 'presumido', adicional: true, praca: PRACA_PADRAO })
 
 function resolve(col, shared, valueOverride) {
   const valueText = valueOverride != null ? toMoneyText(valueOverride) : (col.value.trim() || shared.value)
   const system = col.system || shared.system
-  return { valueText, value: money(valueText), term: integerText(col.term.trim() || shared.term), grace: integerText(col.grace.trim() || shared.grace), system, start: shared.start }
+  // Praça do contrato (campo comum): feriados locais que adiam vencimentos. Ausente = só feriados nacionais.
+  const praca = pracaContrato(shared.praca ?? PRACA_PADRAO)
+  return { valueText, value: money(valueText), term: integerText(col.term.trim() || shared.term), grace: integerText(col.grace.trim() || shared.grace), system, start: shared.start, calendars: praca ? praca.calendars : null }
 }
 
 function conditions(col) {
@@ -121,7 +124,7 @@ function giroLike(col, p, ctx, kind) {
     value: p.value, n, rate: percent(col.rate) ?? NaN, unit: col.unit, system: p.system, start: p.start, firstDue, profile: col.profile,
     eligible: col.eligible, rateType: cdiMode ? 'cdi' : 'fixed', cdi: cdiMode ? ctx.cdi : 0, cdiPercent: percent(col.cdiPercent) ?? NaN,
     fees: money(col.fees) ?? NaN, monthlyFees: money(col.monthlyFees) ?? NaN, holidays: col.holidays.trim() ? col.holidays.trim().split(/[\s,;]+/) : [],
-    guaranteeValue: conditions(col).guaranteeValue,
+    guaranteeValue: conditions(col).guaranteeValue, calendars: p.calendars,
   }
   const info = conditions(col)
   if (info.guaranteeInvalid) return fail('Confira o valor da garantia ou deixe-o vazio quando não mensurável.')
@@ -160,7 +163,7 @@ function bndes(col, p, ctx) {
     iof = { fixed: tax.additional, daily: tax.daily, maxDays: tax.maxDays }
   }
   const periods = Number(col.bPeriod)
-  const simParams = { valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc, periodos: periodos30Datas(new Date(`${p.start}T12:00:00`), vencimentoDia15(new Date(`${p.start}T12:00:00`), p.term)) } , dataLiberacao: new Date(`${p.start}T12:00:00`), feriados: {} }
+  const simParams = { valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc, periodos: periodos30Datas(new Date(`${p.start}T12:00:00`), vencimentoDia15(new Date(`${p.start}T12:00:00`), p.term, {}, p.calendars)) } , dataLiberacao: new Date(`${p.start}T12:00:00`), feriados: {}, calendarios: p.calendars }
   const sim = simular(simParams)
   if (!sim.ok) return fail(sim.erros?.[0] ?? 'Confira as condições do BNDES.')
   const rows = []
@@ -230,13 +233,14 @@ function contaGarantida(col, p) {
   const days = col.cDays.trim() ? integerText(col.cDays) : p.term === null ? null : p.term * 30
   if (days === null || days < 1 || days > 3660) return fail('Informe de 1 a 3.660 dias de utilização.')
   const form = { ...cgInitialForm(p.start), mode: 'single', dateMode: 'duration', duration: String(days), amount: p.valueText, rate: col.cRate, rateBase: col.cBase, conversion: col.cConv, dayCount: col.cCount, holidays: col.holidays, taxProfile: col.profile, eligible: col.eligible, operationValue: p.valueText }
-  const parsed = parseContaGarantidaForm(form)
+  // Praça do contrato: feriados locais também saem da contagem em dias úteis, como nas demais colunas.
+  const parsed = parseContaGarantidaForm({ ...form, calendars: p.calendars })
   if (!parsed.result?.ok) return fail(parsed.result?.error ?? Object.values(parsed.errors)[0] ?? 'Confira as condições da Conta Garantida.')
   const { totals } = parsed.result
   const end = cgAddDays(p.start, days)
   // CET regulatório da conta garantida (art. 6º): 30 dias sobre o limite, igual à calculadora própria (limite = valor da coluna).
   // O fluxo pelo prazo de uso informado vira o "custo pelo prazo de uso".
-  const cg = contaGarantidaCet({ limit: p.value, start: p.start, rate: parsed.params.rate, rateBase: parsed.params.rateBase, conversion: parsed.params.conversion, dayCount: parsed.params.dayCount, holidays: parsed.params.holidays, taxProfile: col.profile, eligible: col.eligible, operationValue: p.value })
+  const cg = contaGarantidaCet({ limit: p.value, start: p.start, rate: parsed.params.rate, rateBase: parsed.params.rateBase, conversion: parsed.params.conversion, dayCount: parsed.params.dayCount, holidays: parsed.params.holidays, calendars: p.calendars, taxProfile: col.profile, eligible: col.eligible, operationValue: p.value })
   return finish({
     cetRegulatory: cg.ok ? cg.annual : null, projectedLabel: 'Custo pelo prazo de uso', cetLabel: 'CET (art. 6º · 30 dias sobre o limite)',
     // Mesma convenção do CET: IOF adicional na liberação; juros e IOF diário no encerramento.
@@ -257,9 +261,11 @@ function desconto(col, p) {
   if (days === null || days < 1 || days > 3660 || titles === null || titles < 1 || rate === null || fee === null || tac === null) return fail('Confira prazo médio, quantidade de títulos, taxa, tarifa e TAC.')
   const dueDate = cgAddDays(p.start, days)
   if (!dueDate) return fail('Informe uma data de liberação válida.')
-  const r = discountOperation({ titleRows: [{ value: p.value, count: titles, dueDate }], date: p.start, rate, convention: col.dConv, taxProfile: col.profile, eligible: col.eligible, feeMode: col.dFeeMode, fee, tac })
+  const r = discountOperation({ titleRows: [{ value: p.value, count: titles, dueDate }], date: p.start, rate, convention: col.dConv, taxProfile: col.profile, eligible: col.eligible, feeMode: col.dFeeMode, fee, tac, calendars: p.calendars })
   if (!r.ok) return fail(r.error)
+  // CET do desconto pelo art. 6º (30 dias sobre o limite = nominal), igual à Análise de desconto; o fluxo pelo prazo real fica à parte.
   return finish({
+    cetRegulatory: r.cet, projectedLabel: 'Custo pelo prazo real', cetLabel: 'CET (art. 6º · 30 dias)',
     modality: 'desconto', label: 'Desconto de duplicata', start: p.start, value: r.value, net: r.net,
     rows: [{ date: r.rows[0].paymentDate, days: r.rows[0].days, payment: r.value, amortization: r.value, interest: 0, balance: 0 }], total: r.value, // vencimento ajustado ao dia útil, como na Análise de desconto
     interest: r.interest, iof: r.iof, fees: r.titleFee + r.tac, guaranteeInfo: info,
@@ -287,6 +293,7 @@ function solveNet(run, target) {
 
 export function evaluateColumn(col, shared, ctx = {}) {
   const base = resolve(col, shared)
+  if (!base.calendars) return fail('Escolha a praça do contrato entre as praças disponíveis.')
   const run = override => {
     const p = override == null ? base : resolve(col, shared, override)
     switch (col.modality) {
@@ -311,8 +318,8 @@ export function evaluateAll(columns, shared, ctx) {
 // Tipo de taxa para comparar CET (decisão de Fernando em 11/11/2026): prefixado só com prefixado, pós-fixado (CDI, IPCA) só com
 // pós-fixado e conta garantida (art. 6º, 30 dias sobre o limite) só com conta garantida. O CET regulatório do pós-fixado deixa o
 // índice de fora (art. 5º), por isso não é comparável com o de um prefixado; entre tipos diferentes, vale o menor custo em reais.
-export const CET_GROUPS = Object.freeze({ pre: 'prefixados', pos: 'pós-fixados', rotativo: 'contas garantidas' })
-export const cetGroup = r => r.modality === 'conta-garantida' ? 'rotativo' : r.floating ? 'pos' : 'pre'
+export const CET_GROUPS = Object.freeze({ pre: 'prefixados', pos: 'pós-fixados', rotativo: 'operações de 30 dias (conta garantida e desconto)' })
+export const cetGroup = r => ['conta-garantida', 'desconto'].includes(r.modality) ? 'rotativo' : r.floating ? 'pos' : 'pre'
 
 // Destaques objetivos, sem declarar vencedor absoluto: só os menores valores entre as colunas válidas.
 export function highlights(results) {

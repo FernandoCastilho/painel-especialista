@@ -56,7 +56,10 @@ test('meio centavo racional é arredondado para fora de zero; última parcela el
   d.ipcaScenario.annualPct = '-50'; assert.equal(simulateTlpExigivel(d).rows[0].interestCents, -51)
 })
 test('esquema fechado impede ignorar capitalização, Price, custos ou eventos extras', () => {
-  for (const key of ['price', 'fees', 'iof', 'capitalize', 'contractDate']) { const d = input(); d[key] = true; blocked(d, 'UNSUPPORTED_FIELD') }
+  for (const key of ['price', 'fees', 'capitalize', 'contractDate']) { const d = input(); d[key] = true; blocked(d, 'UNSUPPORTED_FIELD') }
+  // IOF agora é campo próprio, mas só com escolha fechada: valor solto ou campo extra não passa.
+  for (const iof of [true, 0, { profile: 'manual' }, { profile: 'pj', daily: 0.001 }]) { const d = input(); d.iof = iof; blocked(d, 'INVALID_IOF') }
+  { const d = input(); d.schedule.events[0].iof = 0; blocked(d, 'UNSUPPORTED_FIELD') }
   const d = input(); d.schedule.events[0].extraRelease = 1; blocked(d, 'UNSUPPORTED_FIELD')
   d.schedule.events[0] = { date: '2027-10-15', businessDays: 252, amortize: true }; d.mode = 'historical'; blocked(d, 'UNSUPPORTED_MODE')
 })

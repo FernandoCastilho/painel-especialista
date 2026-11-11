@@ -1,18 +1,20 @@
 import { loanDates, monthlyRate, MAX_LOAN_MONEY } from './emprestimo.js'
 import { resolveCreditIof } from './iofRules.js'
 import { cgDate, cgAddDays } from './contaGarantida.js'
-import { isBusinessDay, nextBusinessDay } from './holidays.js'
+import { isBusinessDayAll, nextBusinessDay } from './holidays.js'
+import { contractCalendars } from './pracaContrato.js'
 
 const fail = error => ({ ok: false, error })
 const money = v => Number.isFinite(v) && v >= 0 && v <= MAX_LOAN_MONEY
 const days = (a, b) => (cgDate(b) - cgDate(a)) / 86400000
-// Dias úteis: segunda a sexta, menos os feriados nacionais (calendário do painel) e os feriados extras informados.
-export function creditBusinessDays(from, to, holidays = [], national = true) {
+// Dias úteis: segunda a sexta, menos os feriados nacionais (calendário do painel), os da praça do contrato (`calendars`,
+// padrão só 'BR') e os feriados extras informados.
+export function creditBusinessDays(from, to, holidays = [], national = true, calendars = ['BR']) {
   const excluded = new Set(holidays)
   let count = 0
   for (let d = cgDate(from); d < cgDate(to); d = new Date(+d + 86400000)) {
     const day = d.toISOString().slice(0, 10)
-    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6 && !excluded.has(day) && (!national || isBusinessDay(day, 'BR'))) count++
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6 && !excluded.has(day) && (!national || isBusinessDayAll(day, calendars))) count++
   }
   return count
 }
@@ -31,15 +33,17 @@ export function creditCet(net, rows) {
 }
 export function creditOperation(p) {
   const { value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false,
-    rateType = 'fixed', cdi = 0, cdiPercent = 100, fees = 0, monthlyFees = 0, holidays = [], guaranteeValue = null } = p
+    rateType = 'fixed', cdi = 0, cdiPercent = 100, fees = 0, monthlyFees = 0, holidays = [], guaranteeValue = null, calendars = ['BR'] } = p
   if (!money(value) || value <= 0 || !Number.isInteger(n) || n < 1 || n > 600) return fail('Informe valor positivo e de 1 a 600 parcelas.')
   if (!['price', 'sac', 'bullet'].includes(system) || !['fixed', 'cdi'].includes(rateType) || !['am', 'aa'].includes(unit)) return fail('Confira sistema e tipo de taxa.')
   if (![rate, cdi, cdiPercent].every(v => Number.isFinite(v) && v >= 0 && v <= 1000) || !money(fees) || !money(monthlyFees)) return fail('Confira taxas e encargos: valores vazios, negativos ou acima do limite não são aceitos.')
   if (guaranteeValue !== null && !money(guaranteeValue)) return fail('Confira o valor da garantia ou deixe-o vazio quando não mensurável.')
   if (!Array.isArray(holidays) || holidays.some(d => !cgDate(d))) return fail('Informe feriados como datas AAAA-MM-DD.')
-  // Vencimento em dia não útil passa para o próximo dia útil (fins de semana, feriados nacionais e os extras informados).
+  const cals = contractCalendars(calendars)
+  if (!cals) return fail('Escolha a praça do contrato entre as praças disponíveis.')
+  // Vencimento em dia não útil passa para o próximo dia útil (fins de semana, feriados nacionais, da praça e os extras informados).
   const extra = new Set(holidays)
-  const nextUseful = day => { let d = nextBusinessDay(day, ['BR']); for (let k = 0; k < 40 && extra.has(d); k++) d = nextBusinessDay(cgAddDays(d, 1), ['BR']); return d }
+  const nextUseful = day => { let d = nextBusinessDay(day, cals); for (let k = 0; k < 40 && extra.has(d); k++) d = nextBusinessDay(cgAddDays(d, 1), cals); return d }
   const raw = loanDates(start, firstDue, system === 'bullet' ? 1 : n)
   const dates = raw && raw.map(d => { const date = nextUseful(d.date); return { date, days: days(start, date) } })
   if (!dates || dates.at(-1).days > 22000) return fail('Informe datas reais, primeiro pagamento posterior à liberação e horizonte de até 60 anos.')
@@ -47,7 +51,7 @@ export function creditOperation(p) {
   if (!tax.ok) return fail(tax.error)
   const monthly = monthlyRate(rate, unit)
   const logFactor = (from, to) => rateType === 'fixed' ? Math.log1p(monthly) * days(from, to) / 30
-    : (Math.log1p(Math.expm1(Math.log1p(cdi / 100) / 252) * cdiPercent / 100) + Math.log1p(monthly) * 12 / 252) * creditBusinessDays(from, to, holidays)
+    : (Math.log1p(Math.expm1(Math.log1p(cdi / 100) / 252) * cdiPercent / 100) + Math.log1p(monthly) * 12 / 252) * creditBusinessDays(from, to, holidays, true, cals)
   // First due beyond 30 civil days is a capitalized grace period. Bullet uses its sole maturity instead.
   // Carência capitalizada só quando o 1º vencimento contratado passa de 30 dias. Dias a mais vindos do ajuste para dia útil
   // são cobrados na própria 1ª parcela (juros pelos dias reais do período), sem capitalizar no saldo.
@@ -91,13 +95,13 @@ export function creditOperation(p) {
     maxPayment: Math.max(...rows.map(r => r.payment)), lastDate: rows.at(-1).date }
 }
 // Capital de Giro (calculadora própria): mesmo motor do Comparador. Juros prefixados por dias corridos entre vencimentos
-// ((1 + taxa a.m.)^(dias/30)), vencimentos no próximo dia útil (feriados nacionais), IOF e TAC descontados na liberação e
+// ((1 + taxa a.m.)^(dias/30)), vencimentos no próximo dia útil (feriados nacionais e da praça escolhida), IOF e TAC descontados na liberação e
 // CET da Resolução CMN 4.881 (dias corridos/365). No Bullet, o pagamento único cai no último vencimento do calendário mensal.
-export function giroOperation({ value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false, fees = 0 }) {
+export function giroOperation({ value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false, fees = 0, calendars = ['BR'] }) {
   if (!['price', 'sac', 'bullet'].includes(system)) return fail('Escolha o sistema de amortização.')
   const due = system === 'bullet' ? loanDates(start, firstDue, n)?.at(-1)?.date : firstDue
   if (!due) return fail('Informe a liberação e o primeiro vencimento mensal posterior à liberação.')
-  const r = creditOperation({ value, n, rate, unit, system, start, firstDue: due, profile, eligible, rateType: 'fixed', fees, monthlyFees: 0, holidays: [] })
+  const r = creditOperation({ value, n, rate, unit, system, start, firstDue: due, profile, eligible, rateType: 'fixed', fees, monthlyFees: 0, holidays: [], calendars })
   if (!r.ok) return r
   return { ...r, system, n, installment: system === 'bullet' ? null : r.rows[0].payment, last: system === 'sac' ? r.rows.at(-1).payment : null }
 }

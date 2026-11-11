@@ -45,6 +45,13 @@
 .cx-matrix thead th.cx-selected { box-shadow:inset 0 3px 0 var(--amber, #ffb000); }
 .cx-diff { margin:0; padding:6px 12px 0 30px; font-size:.85rem; display:flex; flex-direction:column; gap:4px; }
 .cx-pad { padding:8px 12px 12px; }
+/* Operação x DI: CET da operação de crédito (Res. CMN 4.881/2020) */
+.od-cet { display:flex; flex-wrap:wrap; gap:10px 28px; margin:10px 12px 12px; padding-top:10px; border-top:1px solid var(--line); }
+.od-cet > div { min-width:0; }
+.od-cet dt { font-size:.75rem; color:var(--mut); letter-spacing:.04em; text-transform:uppercase; }
+.od-cet dd { margin:2px 0 0; font-variant-numeric:tabular-nums; }
+.od-cet b { font-size:1.05rem; }
+.od-cet small { display:block; font-size:.75rem; color:var(--mut); }
 .cx-matrix tbody th { white-space:normal; width:1%; min-width:62px; line-height:1.25; }
 @media (max-width:639px) {
   .cx-wrap { padding:0 8px; }

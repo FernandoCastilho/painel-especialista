@@ -194,7 +194,7 @@ async function fillScenario(page, section, route) {
     const pct2 = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
-    assert.ok(await section.getByText('Confira no texto da Resolução CMN 4.881/2020', { exact: false }).count())
+    assert.ok(await section.getByText('texto oficial conferido em 11/11/2026', { exact: false }).count())
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
@@ -219,9 +219,11 @@ async function fillScenario(page, section, route) {
     const kpis = section.locator('.desconto-kpis')
     assert.ok(normalize(await kpis.innerText()).includes(brl(cost)))
     assert.ok(normalize(await kpis.innerText()).includes(brl(gross - cost)))
-    // CET de um único pagamento: (nominal / líquido)^(365/dias) − 1, em % a.a. com duas casas.
+    // CET pelo art. 6º da Res. CMN 4.881 (texto oficial): 30 dias sobre o nominal; o prazo real (32 dias) aparece à parte.
     const pct = value => `${(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
-    assert.ok(normalize(await kpis.innerText()).includes(pct((gross / (gross - cost)) ** (365 / days) - 1)), 'CET do desconto')
+    const cet30 = (rate, fees) => { const i = gross * rate; const net = gross - i - (gross - i) * (0.0038 + 30 * 0.000082) - fees; return (gross / net) ** (365 / 30) - 1 }
+    assert.ok(normalize(await kpis.innerText()).includes(pct(cet30(0.0183, 824))), 'CET do desconto (art. 6º)')
+    assert.ok(normalize(await kpis.innerText()).includes(`prazo real: ${pct((gross / (gross - cost)) ** (365 / days) - 1)}`), 'custo pelo prazo real')
     assert.match(await section.locator('.desconto-paydate').innerText(), /07\/12\/2026/)
     const monthlyInterest = gross * 0.0175 * days / 30
     const monthlyNet = gross - monthlyInterest - (gross - monthlyInterest) * (0.0038 + days * 0.000082) - 564 - 260
@@ -230,7 +232,7 @@ async function fillScenario(page, section, route) {
     assert.equal(normalize(await row.locator('td').first().innerText()), brl(monthlyCost))
     assert.equal(normalize(await row.locator('td').nth(1).innerText()), brl(monthlyCost * 12))
     const cetRow = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'CET do desconto', exact: true }) })
-    assert.equal(normalize(await cetRow.locator('td').first().innerText()), pct((gross / monthlyNet) ** (365 / days) - 1))
+    assert.equal(normalize(await cetRow.locator('td').first().innerText()), pct(cet30(0.0175, 824))) // art. 6º: 30 dias; monthlyNet é do prazo real
     const giroCet = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'CET do giro', exact: true }) })
     assert.equal(await giroCet.locator('td').count(), 5)
     for (const cell of await giroCet.locator('td').allInnerTexts()) assert.match(normalize(cell), /^\d+,\d{2}% a\.a\.$/)

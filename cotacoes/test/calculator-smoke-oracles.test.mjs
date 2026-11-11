@@ -44,7 +44,7 @@ test('discount smoke independently reconciles operation, CET, monthly and annual
   assert.ok(Math.abs(operation.cost - operationCost) < 1e-7)
   assert.ok(Math.abs(operation.net - (gross - operationCost)) < 1e-7)
   // CET de um único pagamento: (nominal / líquido)^(365/dias) − 1.
-  assert.ok(Math.abs(operation.cet - ((gross / (gross - operationCost)) ** (365 / days) - 1)) < 1e-9)
+  assert.ok(Math.abs(operation.termCost - ((gross / (gross - operationCost)) ** (365 / days) - 1)) < 1e-9)
   // Os valores antigos (30 dias, sem ajuste de dia útil) não podem voltar sem aviso.
   assert.notEqual(operation.cost.toFixed(2), '6338.90')
   assert.ok(Math.abs(result.monthly.cost - monthlyCost) < 1e-7)

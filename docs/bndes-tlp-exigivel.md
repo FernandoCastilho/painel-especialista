@@ -42,7 +42,11 @@ Juros negativos descontam a prestação. Se excedem a amortização, a diferenç
 
 A fonte exige intermediários com 16 casas sem arredondamento. Este motor usa Number para expoentes fracionários e **não certifica essa precisão**. Bloqueia arredondamento fracionário numericamente incerto próximo a meio centavo. Períodos de 252 DU usam aritmética racional para cálculo final dos juros, com arredondamento de meio centavo para fora de zero. A aritmética racional não transforma a projeção em memória contratual.
 
-Não suporta Price, liberação adicional, pagamento extraordinário, atraso, evento financeiro fora de vencimento (que possui regra própria na fonte), IOF, tarifas, seguros ou CET. Campos desconhecidos são bloqueados, nunca silenciosamente ignorados. Não modifica o motor Finame anterior.
+IOF (11/11/2026, lacuna apontada pela revisão independente): escolha na tela entre **Zero (recursos BNDES/FINAME elegíveis)**, padrão; **PJ geral** (0,0082% ao dia); e **Simples/MEI** (0,00274% ao dia até R$ 30 mil, com confirmação do enquadramento), mais 0,38% de adicional sobre o valor, pelas regras compartilhadas de `iofRules.js`. O IOF diário incide sobre o principal de cada amortização, pelos dias corridos da liberação até o vencimento, com teto de 365 dias. Tudo é cobrado na liberação e sai do valor líquido do CET, nas duas linhas (parte fixa e custo projetado). Juros e parcelas não mudam e seguem em dias úteis/252. Cálculo em `src/bndesProfileIof.js`, arredondado uma vez em centavos.
+
+A alíquota zero cita o Decreto 6.306/2007, art. 8º, IX, que o painel usa para recursos FINAME. **Não foi conferido se esse inciso alcança a TLP fora do FINAME**; o enquadramento depende da origem dos recursos e o painel não o verifica. A tela avisa isso no campo, na ajuda e nos avisos do resultado.
+
+Não suporta Price, liberação adicional, pagamento extraordinário, atraso, evento financeiro fora de vencimento (que possui regra própria na fonte) ou seguros. Tarifa na liberação e CET (Res. CMN 4.881/2020) foram acrescentados depois; IOF conforme acima. Campos desconhecidos são bloqueados, nunca silenciosamente ignorados. Não modifica o motor Finame anterior.
 
 ## Verificação
 

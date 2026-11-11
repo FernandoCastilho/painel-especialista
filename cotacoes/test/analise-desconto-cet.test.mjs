@@ -24,9 +24,9 @@ test('exemplo padrão: 05/12/2026 é sábado, paga em 07/12 e juros, IOF e CET c
   const net = gross - interest - iof - 564 - 260
   near(r.interest, interest); near(r.iof, iof); near(r.net, net)
   // Um único pagamento: forma fechada (nominal / líquido)^(365/dias) − 1.
-  near(r.cet, (gross / net) ** (365 / days) - 1, 1e-9)
-  near(r.cet, cetOracle(net, [[days, gross]]), 1e-9)
-  assert.equal((r.cet * 100).toFixed(2), '40.66')
+  near(r.termCost, (gross / net) ** (365 / days) - 1, 1e-9)
+  near(r.termCost, cetOracle(net, [[days, gross]]), 1e-9)
+  assert.equal((r.termCost * 100).toFixed(2), '40.66')
 })
 
 test('feriado nacional também adia o pagamento: 25/12/2026 (Natal, sex) → 28/12 (seg)', () => {
@@ -40,7 +40,7 @@ test('vencimento em dia útil não muda: 04/12/2026 (sex) fica com 30 dias', () 
   const r = discountOperation({ date: '2026-11-04', titleRows: [{ value: 10000, count: 1, dueDate: '2026-12-04' }], rate: 2, feeMode: 'total', fee: 10, tac: 20 })
   assert.equal(r.rows[0].paymentDate, '2026-12-04')
   assert.equal(r.rows[0].adjusted, false)
-  near(r.cet, (10000 / r.net) ** (365 / 30) - 1, 1e-9)
+  near(r.termCost, (10000 / r.net) ** (365 / 30) - 1, 1e-9)
 })
 
 test('vários títulos: cada nominal é um pagamento na sua data ajustada; racional também', () => {
@@ -62,9 +62,9 @@ test('vários títulos: cada nominal é um pagamento na sua data ajustada; racio
       return [d, row.value]
     })
     near(r.net, net)
-    near(r.cet, cetOracle(net, flows), 1e-9)
+    near(r.termCost, cetOracle(net, flows), 1e-9)
     // O CET devolve exatamente o líquido quando desconta os nominais.
-    near(flows.reduce((s, [d, v]) => s + v / (1 + r.cet) ** (d / 365), 0), r.net, 1e-6)
+    near(flows.reduce((s, [d, v]) => s + v / (1 + r.termCost) ** (d / 365), 0), r.net, 1e-6)
   }
 })
 
@@ -101,11 +101,28 @@ test('comparação mostra CET dos dois lados e mantém a economia em reais', () 
   // CET do desconto vem da projeção (taxa 1,75%), que é a base dos custos comparados.
   const gross = 225600.43, days = 32, interest = gross * 0.0175 * days / 30
   const net = gross - interest - (gross - interest) * (0.0038 + 0.000082 * days) - 564 - 260
-  near(result.projected.cet, (gross / net) ** (365 / days) - 1, 1e-9)
+  near(result.projected.termCost, (gross / net) ** (365 / days) - 1, 1e-9)
   near(result.monthly.cost, 6 * (gross - net), 1e-6)
   for (const row of result.comparisons) {
     assert.ok(row.giro.cet > 0)
     near(row.discountCost, result.monthly.cost * row.months, 1e-6)
     near(row.savings, row.discountCost - row.giro.cost, 1e-6)
   }
+})
+
+// Texto oficial da Res. CMN 4.881/2020, art. 6º (conferido em 11/11/2026): no desconto, o CET usa 30 dias e o limite pactuado
+// (aqui, o nominal da operação). Recálculo independente: juros e IOF de 30 dias, tarifas, nominal devolvido em 30 dias corridos.
+test('CET do desconto pelo art. 6º: 30 dias sobre o nominal, independente do prazo real dos títulos', () => {
+  for (const due of ['2026-12-05', '2027-02-05']) {
+    const r = discountOperation({ titleRows: [{ value: 100000, count: 2, dueDate: due }], date: '2026-11-05', rate: 2, convention: 'commercial30', taxProfile: 'pj', eligible: false, feeMode: 'total', fee: 50, tac: 300 })
+    assert.equal(r.ok, true, r.error)
+    const interest = 100000 * 0.02, base = 100000 - interest, iof = base * (0.000082 * 30 + 0.0038)
+    const net = 100000 - interest - iof - 50 - 300
+    near(r.cet, (100000 / net) ** (365 / 30) - 1, 1e-9)
+    assert.ok(r.termCost > 0 && Math.abs(r.termCost - r.cet) > 1e-6, 'custo pelo prazo real fica à parte')
+  }
+  // Racional (por dentro): juros de 30 dias = nominal − nominal ÷ (1 + taxa).
+  const rr = discountOperation({ titleRows: [{ value: 100000, count: 1, dueDate: '2026-12-05' }], date: '2026-11-05', rate: 2, convention: 'rational30', taxProfile: 'pj', eligible: false, feeMode: 'total', fee: 0, tac: 0 })
+  const i2 = 100000 - 100000 / 1.02, net2 = 100000 - i2 - (100000 - i2) * (0.000082 * 30 + 0.0038)
+  near(rr.cet, (100000 / net2) ** (365 / 30) - 1, 1e-9)
 })

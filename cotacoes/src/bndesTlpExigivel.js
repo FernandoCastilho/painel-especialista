@@ -1,5 +1,6 @@
 // TLP exigível, seção 1. NÃO é TLPCAP (seção 2).
 import { creditCet } from './creditComparison.js'
+import { bndesProfileIof } from './bndesProfileIof.js'
 export const TLP_EXIGIVEL_SOURCE = 'https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/04-22Cir13-Anexo-IV-Condicoes-a-Serem-Observadas-na-Contratacao.pdf'
 export const TLP_EXIGIVEL_PROFILE = Object.freeze({ id: 'tlp-exigivel', section: '1', basis: 252, status: 'projection-not-contract-validated' })
 const DAY = 86400000
@@ -114,7 +115,7 @@ function flowCet(netCents, releaseDate, rows) {
 
 export function simulateTlpExigivel(input) {
   try {
-    fields(input, ['mode', 'principalCents', 'releaseFeeCents', 'releaseDate', 'j', 'spreads', 'ipcaScenario', 'schedule'], 'Operação')
+    fields(input, ['mode', 'principalCents', 'releaseFeeCents', 'releaseDate', 'j', 'spreads', 'ipcaScenario', 'schedule', 'iof'], 'Operação')
     need(input.mode === 'projection', 'UNSUPPORTED_MODE', 'Somente projeção de IPCA constante. Cálculo histórico exige índices mensais defasados, aniversário no dia 15, calendário e precisão contratual não disponíveis neste motor.')
     const principal = money(input.principalCents, 'Principal', 1)
     // Tarifa opcional paga na liberação: só reduz o valor líquido do CET; não altera juros nem parcelas.
@@ -155,18 +156,24 @@ export function simulateTlpExigivel(input) {
     // Mesmas datas, mesmos DU e mesma base 252 dos juros; só o IPCA vai a zero.
     let fixedRows = null, fixedUnavailable = null
     try { fixedRows = projectRows(principal, events, input.releaseDate, ['0', ...rateTexts.slice(1)]).rows } catch (e) { if (!(e instanceof InputError)) throw e; fixedUnavailable = e.message }
-    const netReleaseCents = principal - releaseFee
+    // IOF (Decreto 6.306/2007, art. 7º): cobrado todo na liberação; só reduz o valor líquido do CET, nas duas linhas.
+    const tax = bndesProfileIof({ iof: input.iof, principalCents: principal, releaseDate: input.releaseDate, events })
+    need(tax.ok, tax.code, tax.message)
+    const iof = tax.iof
+    need(releaseFee + iof.totalCents < principal, 'INVALID_FEE', 'Tarifa e IOF na liberação precisam ser menores que o principal.')
+    const netReleaseCents = principal - releaseFee - iof.totalCents
     const fixedAnnualRate = fixedRows ? flowCet(netReleaseCents, input.releaseDate, fixedRows) : null
     const projectedAnnualRate = flowCet(netReleaseCents, input.releaseDate, rows)
-    const cet = { method: 'CMN 4.881/2020, art. 4º · dias corridos/365 desde a liberação', netReleaseCents, releaseFeeCents: releaseFee, fixedComponents: ['J da TLP', 'spread BNDES', 'spread do agente'], excludedIndex: 'IPCA', fixedAnnualRate, projectedAnnualRate, fixedUnavailable }
+    const cet = { method: 'CMN 4.881/2020, art. 4º · dias corridos/365 desde a liberação', netReleaseCents, releaseFeeCents: releaseFee, iofCents: iof.totalCents, fixedComponents: ['J da TLP', 'spread BNDES', 'spread do agente'], excludedIndex: 'IPCA', fixedAnnualRate, projectedAnnualRate, fixedUnavailable }
     need([totalInterest, totalAmortization, totalPayments, totalReduction].every(value => Number.isSafeInteger(value) && Math.abs(value) <= MAX_CENTS), 'MONEY_OVERFLOW', 'Totais fora do limite técnico.')
-    return { ok: true, status: TLP_EXIGIVEL_PROFILE.status, profile: TLP_EXIGIVEL_PROFILE, source: TLP_EXIGIVEL_SOURCE, annualIpcaScenarioPct: ipca, rows, totals: { principalCents: principal, interestCents: totalInterest, amortizationCents: totalAmortization, negativeInterestPrincipalReductionCents: totalReduction, paymentCents: totalPayments, closingCents: balance }, cet, error: null, warnings: [
+    return { ok: true, status: TLP_EXIGIVEL_PROFILE.status, profile: TLP_EXIGIVEL_PROFILE, source: TLP_EXIGIVEL_SOURCE, annualIpcaScenarioPct: ipca, rows, iof, totals: { principalCents: principal, interestCents: totalInterest, amortizationCents: totalAmortization, negativeInterestPrincipalReductionCents: totalReduction, paymentCents: totalPayments, closingCents: balance }, cet, error: null, warnings: [
       'Estimativa: IPCA anual constante em base DU/252. Não reproduz índices mensais defasados e aniversário no dia 15 do cálculo contratual.',
       'TLP exigível: IPCA, J, spread BNDES e spread do agente compõem juros cobrados nos vencimentos; IPCA positivo não aumenta o principal.',
       'SAC sobre saldo remanescente, com juros exigíveis em cada evento informado. Juros negativos reduzem prestação e, se excedentes, o principal.',
       'Calendário, feriados e periodicidades devem ser conferidos no contrato. Não há ajuste automático de datas, eventos extraordinários ou Price.',
-      'CET pela Res. CMN 4.881/2020: sem IPCA (art. 5º), em dias corridos/365. Sem IOF; tarifa só se informada. Juros seguem DU/252.',
+      'CET pela Res. CMN 4.881/2020: sem IPCA (art. 5º), em dias corridos/365. IOF e tarifa saem do valor líquido na liberação. Juros seguem DU/252.',
+      iof.profile === 'zero' ? 'IOF zero: premissa de recursos BNDES/FINAME elegíveis (Decreto 6.306/2007, art. 8º, IX). O painel não verifica o enquadramento nem se a alíquota zero alcança esta linha TLP; confirme com a instituição.' : 'IOF: diário sobre o principal de cada amortização, em dias corridos desde a liberação, com teto de 365 dias, mais o adicional sobre o valor. Tudo cobrado na liberação.',
       'Precisão de projeção em centavos; não implementa a truncagem contratual de todos os intermediários em 16 casas. Não usar como memória contratual.'
     ] }
-  } catch (e) { if (!(e instanceof InputError)) throw e; return { ok: false, status: 'blocked', rows: [], totals: null, cet: null, error: { code: e.code, message: e.message } } }
+  } catch (e) { if (!(e instanceof InputError)) throw e; return { ok: false, status: 'blocked', rows: [], iof: null, totals: null, cet: null, error: { code: e.code, message: e.message } } }
 }

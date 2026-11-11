@@ -196,7 +196,7 @@ test('CET do art. 6º: sem limite pede o limite; com limite mostra 30 dias ao an
   assert.ok(h.text().includes(`${pct(expected)}% a.a.`), pct(expected))
   assert.ok(h.text().includes(`${pct(Math.pow(1 + expected, 1 / 12) - 1)}% a.m.`))
   assert.equal(pct(expected), '54,49')
-  assert.match(h.text(), /Confira no texto da Resolução CMN 4\.881\/2020/)
+  assert.match(h.text(), /texto oficial conferido em 11\/11\/2026/)
   // O limite não muda o resultado do período.
   assert.match(h.text(), /1\.462,00/)
   await h.change('limit', '0')

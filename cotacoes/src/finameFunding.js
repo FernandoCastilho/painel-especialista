@@ -77,13 +77,13 @@ export function compareFinameFunding(params, quotes, manualRates = {}) {
 // Com data de liberação, o motor já traz o CET do calendário real (juros por dias corridos, dia 15 ou próximo dia útil).
 // Sem data (uso programático legado), recalcula sobre a projeção em meses iguais nas mesmas datas.
 // Sem seguros nem outras tarifas: não é o CET do contrato. Devolve null quando o fluxo não fecha.
-export function finameCet(result, releaseDate, holidayCtx = {}) {
+export function finameCet(result, releaseDate, holidayCtx = {}, calendarios = ['BR']) {
   // Resultado com calendário real já traz o CET apurado pelo motor (mesmos vencimentos e dias): usa esse valor.
   if (result?.ok && result.calendario === 'datas-reais-act-act') return result.cet ?? null
   if (!result?.ok || Object.prototype.toString.call(releaseDate) !== '[object Date]' || Number.isNaN(+releaseDate) || !Array.isArray(result.parcelas)) return null
   const ecgAVista = result.fgi && !result.fgi.incorporado ? result.fgi.ecg : 0
   const liquido = result.liberado - result.iof - result.tac - ecgAVista // IOF todo na liberação
-  const rows = result.parcelas.filter(p => p.parcela > 0).map(p => ({ days: Math.round((vencimentoDia15(releaseDate, p.mes, holidayCtx) - releaseDate) / 86400000), payment: p.parcela }))
+  const rows = result.parcelas.filter(p => p.parcela > 0).map(p => ({ days: Math.round((vencimentoDia15(releaseDate, p.mes, holidayCtx, calendarios) - releaseDate) / 86400000), payment: p.parcela }))
   const anual = creditCet(liquido, rows)
   if (anual === null) return null
   return { anual: anual * 100, mensal: Math.expm1(Math.log1p(anual) / 12) * 100, liquido }
