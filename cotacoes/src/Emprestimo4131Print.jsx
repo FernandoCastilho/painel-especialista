@@ -6,7 +6,7 @@ import './BndesPrint.css'
 
 const brl = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const amount = (value, digits = 2) => value.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits })
-const pct = (value, digits = 2) => `${amount(value, digits)}%`
+const pct = (value, digits = 2) => `${amount(Math.abs(value) < 0.5 / 10 ** digits ? 0 : value, digits)}%`
 const signed = (value, format) => `${value >= 0 ? '+' : '−'} ${format(Math.abs(value))}`
 const day = (value) => (value ? value.split('-').reverse().join('/') : 'Indisponível')
 
@@ -71,7 +71,8 @@ export function Emprestimo4131PrintDocument({ snapshot }) {
       <li>IOF-câmbio na entrada: 3,5% com prazo médio até 364 dias e zero acima (Decreto 6.306/2007, art. 15-B, XI e XII). Liquidar antes do prazo pode gerar o IOF com multa e juros.</li>
       <li>Custo all-in em dólar: taxa ao ano que iguala o valor líquido recebido aos pagamentos, em dias corridos/365.</li>
       <li>Câmbio a termo teórico: câmbio de entrada × fator do DI (dias úteis/252) ÷ fator do cupom cambial (linear, dias corridos/360), com um DI e um cupom para todos os prazos.</li>
-      <li>Fora da conta: IR na fonte e PIS/Cofins sobre ganho do swap ou do NDF, e custo de garantias do derivativo.</li>
+      <li>A leitura em CDI é o custo total, com flat e IOF da entrada diluídos no prazo; fica acima do spread que a mesa cota para o swap. Sem proteção em dias corridos/365; swap e NDF em base 252.</li>
+      <li>Fora da conta: IR na fonte e PIS/Cofins sobre ganho do swap ou do NDF, custo de garantias do derivativo e IR sobre flat ou fiança pagos ao exterior.</li>
       <li>Operação a partir de US$ 1 milhão é declarada pelo devedor ao Banco Central (SCE-Crédito).</li>
     </ul><p className="bnprint-sources">{snapshot.sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>)}</p></section>
   </article>

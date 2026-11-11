@@ -38,7 +38,12 @@ Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara 
 - Um DI e um cupom para todos os vencimentos (curvas planas). A mesa do banco usa uma taxa por prazo, o spread do derivativo e o risco de crédito da contraparte.
 - Só principal no vencimento. Amortização ao longo do prazo não é coberta.
 - Fora da conta: IR na fonte sobre ganho de swap ou NDF, PIS/Cofins, custo de garantias do derivativo.
-- A leitura "CDI + spread" do swap usa o DI informado; o custo real segue o CDI de cada período.
+- A leitura "CDI + spread" do swap usa o DI informado; o custo real segue o CDI de cada período. É o custo total equivalente: inclui flat, IOF, IR e fiança diluídos no prazo, por isso fica acima do spread que a mesa cota para o swap (em 6 meses com IOF de 3,5%, a diferença passa de 8 pontos percentuais).
+- Sem proteção em dias corridos/365; swap e NDF em base 252. O ponto de equilíbrio usa 365 dos dois lados.
+- Um cupom linear igual em todos os prazos não é curva plana: encarece a leitura em prazo longo (taxa igual ao cupom, sem custos: CDI + 0,19% em 24 meses, + 0,51% em 60, + 0,90% em 120).
+- O gross-up do IR considera só os juros. IR sobre flat ou fiança pagos a não residente não está na conta.
+- Spread do swap composto com o custo, não somado. Acréscimo do NDF é percentual fixo sobre o termo: pesa mais ao ano em prazo curto.
+- Custo acima de 1.000% a.a. não é calculado. Prazos muito longos com juros trimestrais recalculam devagar.
 
 ## Pontos não confirmados em fonte oficial
 - IOF de 3,5%: vigente por liminar do STF de 16/07/2025 (ADC 96, ADIs 7.827 e 7.839). Sem notícia de julgamento do Plenário até 01/11/2026, segundo fonte de terceiros.
@@ -56,4 +61,5 @@ Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara 
 ## Verificações
 `node --test test/emprestimo-4131.test.mjs test/emprestimo-4131-presentation.test.mjs`: 14 testes. Conta com resultado em fórmula fechada (juros, gross-up, IOF por prazo, custo all-in, relação com a variação do dólar, câmbio a termo, leitura em CDI, ponto de equilíbrio, entradas inválidas) e cópia congelada da apresentação e do PDF.
 Conferência no navegador em 1440 px e 375 px: simulação, aba de regras, apresentação (6 slides), prévia do PDF e ausência de rolagem lateral da página.
-Não há ainda conferência de navegador automática (`smoke`) nem revisão independente da conta.
+Revisão independente da conta em 11/11/2026: reimplementação em Python, 12 casos, diferença máxima de 2×10⁻¹⁴ contra o motor. Achados de rótulo e de validação de data corrigidos; os de premissa estão em "Premissas e limites".
+Não há ainda conferência de navegador automática (`smoke`).

@@ -58,13 +58,15 @@ export function irr(flows) {
 }
 
 const fail = (error) => ({ ok: false, error })
+// Data real do calendário (30/02 não passa), entre 2000 e 2100.
+const validDate = (iso) => /^\d{4}-\d{2}-\d{2}$/.test(iso ?? '') && !Number.isNaN(ms(iso)) && new Date(ms(iso)).toISOString().slice(0, 10) === iso && iso >= '2000-01-01' && iso <= '2100-12-31'
 
 // Fluxo do empréstimo em dólar. Taxas em % (5,8 = 5,80%). `spot` em R$ por dólar.
 export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf = 15, grossUp = true, flat = 0, guarantee = 0 }) {
   if (!(principal > 0) || principal > MAX_PRINCIPAL) return fail('Informe o principal em dólar, maior que zero.')
   if (!(rate >= 0) || rate > 100) return fail('Informe a taxa em % ao ano, de 0 a 100.')
   if (!(spot > 0)) return fail('Informe o câmbio de entrada, maior que zero.')
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(start ?? '') || Number.isNaN(ms(start))) return fail('Informe a data do desembolso.')
+  if (!validDate(start)) return fail('Informe uma data de desembolso válida, entre 2000 e 2100.')
   if (!Number.isInteger(months) || months < 1 || months > MAX_MONTHS) return fail(`Informe o prazo em meses, número inteiro de 1 a ${MAX_MONTHS}.`)
   if (![0, 3, 6, 12].includes(freq)) return fail('Escolha a frequência dos juros.')
   if (!(irrf >= 0) || irrf >= 100) return fail('Alíquota de IRRF inválida.')
