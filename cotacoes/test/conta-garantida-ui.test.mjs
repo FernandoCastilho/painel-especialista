@@ -14,7 +14,7 @@ const CalculatorHelp = ({ title, label }) => React.createElement('button', { typ
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
+  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
   for (const file of ['MoneyInput.jsx', 'ContaGarantida.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })

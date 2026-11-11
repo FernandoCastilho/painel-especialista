@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA } from './pracaContrato.js'
 import { parseMoneyInput } from './moneyInput.js'
@@ -15,7 +16,7 @@ import { REGIMES, PRODUCTS, investmentAlone, creditVsCash, expenseShield } from 
 import './CreditComparison.css'
 
 const brl = v => Number.isFinite(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
-const pct = v => Number.isFinite(v) ? `${v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%` : 'Não mensurável'
+const pct = v => Number.isFinite(v) ? `${nbr5891(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%` : 'Não mensurável'
 const day = d => d.split('-').reverse().join('/')
 const TERMS = [6, 12, 18, 24, 36, 48, 60, 72, 84]
 const GRACES = [0, 3, 6, 12, 18, 24]

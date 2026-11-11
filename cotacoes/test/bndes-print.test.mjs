@@ -84,7 +84,7 @@ const require = createRequire(import.meta.url)
 async function documentComponent() {
   const { code } = await transform(await readFile(new URL('../src/BndesPrint.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
-  const deps = { './bndesPrint.js': { captureBndesPrint }, './BndesPrint.css': {}, './BndesIcon.jsx': { __esModule: true, default: () => null } }
+  const deps = { './format.js': await import('../src/format.js'), './bndesPrint.js': { captureBndesPrint }, './BndesPrint.css': {}, './BndesIcon.jsx': { __esModule: true, default: () => null } }
   runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
   return module.exports.BndesPrintDocument
 }

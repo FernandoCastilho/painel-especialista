@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { nbr5891 } from './format.js'
 import './Calculadora.css'
 import './CalculatorLayout.css'
 import './CalculatorTheme.css'
@@ -13,7 +14,7 @@ import { resolveCreditIof } from './iofRules.js'
 import { PRE_UNITS, RATE_KINDS, compareWithDi, creditVsDi } from './operacaoDi.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const pct = (v, d = 2) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}%`
+const pct = (v, d = 2) => `${nbr5891(v, d).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}%`
 const signed = (v, f) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${f(Math.abs(v))}`
 const dm = (iso) => (iso ? iso.split('-').reverse().join('/') : '')
 const isoPlus = (iso, days) => new Date(Date.parse(`${iso}T12:00:00Z`) + days * 864e5).toISOString().slice(0, 10)

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import Help from './CalculatorHelp.jsx'
@@ -9,7 +10,7 @@ import './BndesProfiles.css'
 const brl = cents => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const date = iso => iso.split('-').reverse().join('/')
 const rateText = value => value.trim().replace(',', '.')
-const percent = rate => `${(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
+const percent = rate => `${nbr5891(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 const EMPTY = { amount: '', fee: '', release: '', j: '', jSource: '', jConfirmed: false, bndes: '', agent: '', ipca: '', scenarioConfirmed: false, schedule: '', scheduleSource: '', scheduleConfirmed: false, iof: 'zero', iofEligible: false }
 
 export function TlpIcon() {

@@ -3,7 +3,7 @@ import MoneyInput from './MoneyInput.jsx'
 import Help from './CalculatorHelp.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import { useDataFile } from './useDataFile.js'
-import { dmy } from './format.js'
+import { dmy, nbr5891 } from './format.js'
 import { LCDCAP_SOURCE, lcdQuoteAt, parseLcdSchedule, simulateLcdCap } from './bndesLcdCap.js'
 import { BNDES_PROFILE_IOF_OPTIONS } from './bndesProfileIof.js'
 import { LCD_SNAPSHOT_AS_OF, withOfficialLcdSnapshot } from './lcdOfficialSnapshot.js'
@@ -12,7 +12,7 @@ import './BndesLcdCap.css'
 const brl = cents => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const decimal = text => text.trim().replace(',', '.')
 const number = value => value.toLocaleString('pt-BR', { maximumFractionDigits: 6 })
-const percent = rate => `${(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
+const percent = rate => `${nbr5891(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 export function LcdIcon() { return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 20h18M5 17V9h4v8m2 0V5h4v12m2 0v-5h4v5M3 4l4 1 4-3 4 1 6-2" /></svg> }
 
 function BalanceChart({ result }) {

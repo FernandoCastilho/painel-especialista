@@ -8,7 +8,7 @@ import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
 import { CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, ecgFgi, erroPercentualFgi, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingOption, compareFinameFunding, FINAME_PREMISES, resolveFinameRate, finameSimulationParams, validFinameQuote, finameCet } from './finameFunding.js'
-import { nf } from './format.js'
+import { nf, nbr5891 } from './format.js'
 import Estado from './Estado.jsx'
 import { GLOSSARY } from './glossary.js'
 import Help from './CalculatorHelp.jsx'
@@ -18,7 +18,7 @@ import BndesIcon from './BndesIcon.jsx'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const pct = (v, d = 2) => `${nf(v, d)}%`
+const pct = (v, d = 2) => `${nf(nbr5891(v, d), d)}%` // NBR 5891 (Res. CMN 4.881, art. 4º, par. único)
 const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 const data = (d) => d.toLocaleDateString('pt-BR')
 // Exemplos da ajuda do ECG: [valor liberado em R$, % garantido, prazo total em meses], calculados pela fórmula do Anexo V.
