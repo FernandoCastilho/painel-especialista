@@ -31,17 +31,22 @@ for (const script of ['smoke-calculadora.cjs', 'smoke-calculator-layout.cjs']) {
   })
 }
 
-test('discount smoke independently reconciles operation, monthly and annual totals', () => {
+test('discount smoke independently reconciles operation, CET, monthly and annual totals', () => {
   const { operation, result, errors } = parseDiscountForm({ ...DISCOUNT_INITIAL_FORM, titleFeeMode: 'total' })
   assert.deepEqual(errors, {})
   assert.equal(result.ok, true)
-  const gross = 225600.43
-  const operationInterest = gross * 0.0183
-  const operationCost = operationInterest + (gross - operationInterest) * (0.0038 + 30 * 0.000082) + 564 + 260
-  const monthlyInterest = gross * 0.0175
-  const monthlyCost = 6 * (monthlyInterest + (gross - monthlyInterest) * (0.0038 + 30 * 0.000082) + 564 + 260)
+  // Regra de 11/11/2026: 05/12/2026 é sábado, o título é pago em 07/12 e juros e IOF contam 32 dias.
+  const gross = 225600.43, days = 32
+  const operationInterest = gross * 0.0183 * days / 30
+  const operationCost = operationInterest + (gross - operationInterest) * (0.0038 + days * 0.000082) + 564 + 260
+  const monthlyInterest = gross * 0.0175 * days / 30
+  const monthlyCost = 6 * (monthlyInterest + (gross - monthlyInterest) * (0.0038 + days * 0.000082) + 564 + 260)
   assert.ok(Math.abs(operation.cost - operationCost) < 1e-7)
   assert.ok(Math.abs(operation.net - (gross - operationCost)) < 1e-7)
+  // CET de um único pagamento: (nominal / líquido)^(365/dias) − 1.
+  assert.ok(Math.abs(operation.cet - ((gross / (gross - operationCost)) ** (365 / days) - 1)) < 1e-9)
+  // Os valores antigos (30 dias, sem ajuste de dia útil) não podem voltar sem aviso.
+  assert.notEqual(operation.cost.toFixed(2), '6338.90')
   assert.ok(Math.abs(result.monthly.cost - monthlyCost) < 1e-7)
   assert.ok(Math.abs(result.annual.cost - monthlyCost * 12) < 1e-7)
 })

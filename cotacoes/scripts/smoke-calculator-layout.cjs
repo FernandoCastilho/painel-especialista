@@ -203,17 +203,28 @@ async function fillScenario(page, section, route) {
     await page.locator('#ad-averageValue').fill('225.600,43')
     await page.locator('#ad-discountRate').fill('1,75')
     await page.locator('#ad-operations').fill('6')
-    // Independent 30-calendar-day commercial discount: IOF on nominal minus interest.
-    const gross = 225600.43, interest = gross * 0.0183
-    const cost = interest + (gross - interest) * (0.0038 + 30 * 0.000082) + 564 + 260
+    // Regra de 11/11/2026: 05/12/2026 é sábado, pago em 07/12 (32 dias corridos). Desconto comercial; IOF sobre nominal menos juros.
+    const gross = 225600.43, days = 32, interest = gross * 0.0183 * days / 30
+    const cost = interest + (gross - interest) * (0.0038 + days * 0.000082) + 564 + 260
     const kpis = section.locator('.desconto-kpis')
     assert.ok(normalize(await kpis.innerText()).includes(brl(cost)))
     assert.ok(normalize(await kpis.innerText()).includes(brl(gross - cost)))
-    const monthlyInterest = gross * 0.0175
-    const monthlyCost = 6 * (monthlyInterest + (gross - monthlyInterest) * (0.0038 + 30 * 0.000082) + 564 + 260)
+    // CET de um único pagamento: (nominal / líquido)^(365/dias) − 1, em % a.a. com duas casas.
+    const pct = value => `${(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
+    assert.ok(normalize(await kpis.innerText()).includes(pct((gross / (gross - cost)) ** (365 / days) - 1)), 'CET do desconto')
+    assert.match(await section.locator('.desconto-paydate').innerText(), /07\/12\/2026/)
+    const monthlyInterest = gross * 0.0175 * days / 30
+    const monthlyNet = gross - monthlyInterest - (gross - monthlyInterest) * (0.0038 + days * 0.000082) - 564 - 260
+    const monthlyCost = 6 * (gross - monthlyNet)
     const row = section.locator('.desconto-summary-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Custo total do desconto', exact: true }) })
     assert.equal(normalize(await row.locator('td').first().innerText()), brl(monthlyCost))
     assert.equal(normalize(await row.locator('td').nth(1).innerText()), brl(monthlyCost * 12))
+    const cetRow = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'CET do desconto', exact: true }) })
+    assert.equal(normalize(await cetRow.locator('td').first().innerText()), pct((gross / monthlyNet) ** (365 / days) - 1))
+    const giroCet = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'CET do giro', exact: true }) })
+    assert.equal(await giroCet.locator('td').count(), 5)
+    for (const cell of await giroCet.locator('td').allInnerTexts()) assert.match(normalize(cell), /^\d+,\d{2}% a\.a\.$/)
+    assert.doesNotMatch(await section.innerText(), /[Nn]ão é CET/)
   } else if (route === 'finimp') {
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)
