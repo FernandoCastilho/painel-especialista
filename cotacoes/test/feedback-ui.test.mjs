@@ -12,7 +12,7 @@ const nodes=node=>Array.isArray(node)?node.flatMap(nodes):node&&typeof node==='o
 async function setup(t,{enabled=true,send=async()=>true}={}){
   const listeners=new Map();let focus=0, messageFocus=0
   const window={addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:type=>listeners.delete(type)}
-  const deps={react:React,'react-dom':{createPortal:el=>el},'./feedbackConfig.json':{},'./feedback.js':{...feedback,sendFeedback:send},'./FeedbackMascot.css':{},'./MascotDock.jsx':()=>null,'./assets/mascot-owl.webp':'owl.webp'}
+  const deps={react:React,'react-dom':{createPortal:el=>el},'./feedbackConfig.json':{},'./feedback.js':{...feedback,sendFeedback:send},'./FeedbackMascot.css':{},'./MascotDock.jsx':()=>null,'./assets/mascot-owl.webp':'owl.webp','./assets/mascot-owl-wing.webp':'owl-wing.webp'}
   const {code}=await transform(await readFile(new URL('../src/FeedbackMascot.jsx',import.meta.url),'utf8'),{loader:'jsx',format:'cjs',jsx:'automatic'})
   const module={exports:{}}
   runInNewContext(code,{module,exports:module.exports,window,document:{body:{}},require:name=>deps[name]??require(name),AbortController,setTimeout,clearTimeout,TypeError})

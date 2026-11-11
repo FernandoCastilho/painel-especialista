@@ -243,7 +243,8 @@ async function proveLastColumn(region, file) {
         assert.equal(await page.locator('#lcd-principal').inputValue(), '', 'LCD não herda condições Finame')
         await page.locator('#bw-profile').selectOption('finame-materiais')
         assert.equal(await page.locator('#fm-valor').inputValue(), '600.000,00')
-        await page.getByRole('button', { name: 'Exemplo conferido · histórico', exact: true }).click()
+        assert.equal(await page.getByRole('button', { name: /Exemplo conferido/ }).count(), 0, 'Exemplo conferido fora do topo da calculadora (11/11/2026)')
+        await page.evaluate(() => { location.hash = '#calculadora/bndes-credito-tfb' }) // registro interno: segue pelo endereço direto e pela busca
         await page.getByText(/Não é cotação atual/).waitFor()
         assert.deepEqual(errors, [])
         report.push({ width, theme, status: 'pass' })
