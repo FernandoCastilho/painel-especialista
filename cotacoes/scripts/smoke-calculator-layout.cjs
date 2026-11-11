@@ -9,20 +9,29 @@ const out = process.env.CALCULATOR_QA_OUTPUT || 'workspace-qa/calculator-layout'
 const { widths, layoutRoutes: routes } = require('./smoke-calculator-matrix.cjs')
 const normalize = text => text.replace(/\s+/g, ' ').trim()
 
-// Fixed release 06/11/2026 and first due 06/12/2026. Civil-calendar offsets,
-// with iterative outstanding-principal accounting independent of emprestimo.js.
+// Liberação em 06/11/2026 e primeiro vencimento em 06/12/2026. Regra de 11/11/2026: juros por dias corridos, vencimento no
+// próximo dia útil, IOF e TAC na liberação. Recálculo independente do motor.
+// Vencimentos dia 6 a partir de 06/12/2026, ajustados à mão: 06/12 dom → 07/12; 06/02/2027 sáb → 08/02 e 09/02 Carnaval → 10/02;
+// 06/03 sáb → 08/03; 06/06 dom → 07/06; 06/11/2027 sáb → 08/11. Dias corridos desde 06/11/2026.
 const giroOracle = (system, principal = 100000, daily = 0.0082) => {
-  const days = [30, 61, 92, 120, 151, 181, 212, 242, 273, 304, 334, 365]
-  const payment = principal * 0.02 / (1 - 1.02 ** -12)
-  let balance = principal, interest = 0, iof = principal * 0.0038
-  for (const day of days) {
-    const charge = balance * 0.02
-    const amortization = system === 'sac' ? principal / 12 : payment - charge
-    interest += charge; iof += amortization * Math.min(day, 365) * daily / 100
-    balance -= amortization
+  const days = [31, 61, 96, 122, 151, 181, 213, 242, 273, 304, 334, 367]
+  const r = d => Math.pow(1.02, d / 30) - 1
+  const periods = days.map((d, k) => d - (k ? days[k - 1] : 0))
+  let paid = 0, interest = 0, iof = principal * 0.0038, payments = []
+  if (system === 'price') {
+    // 1º vencimento a 31 dias: 1 dia de juros capitalizado no saldo de abertura; IOF sobre a parte do principal original.
+    const opening = principal * Math.pow(1.02, 1 / 30), eff = periods.map((p, k) => (k ? p : p - 1))
+    let disc = 0, acc = 1; for (const p of eff) { acc /= 1 + r(p); disc += acc }
+    const pmt = opening / disc; let bal = opening; interest = opening - principal
+    eff.forEach((p, k) => { const j = bal * r(p); const a = pmt - j; interest += j; bal -= a; iof += a * principal / opening * Math.min(days[k], 365) * daily / 100; payments.push(pmt) })
+  } else {
+    const opening = principal * Math.pow(1.02, 1 / 30); let bal = opening; interest = opening - principal
+    periods.forEach((p, k) => { const j = bal * r(k ? p : p - 1); const a = opening / 12; interest += j; bal -= a; iof += principal / 12 * Math.min(days[k], 365) * daily / 100; payments.push(a + j) })
   }
-  return { iof, total: principal + interest + iof }
+  paid = payments.reduce((s, v) => s + v, 0)
+  return { first: payments[0], last: payments.at(-1), interest, iof, total: paid + iof }
 }
+
 const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\s+/g, ' ')
 
 
@@ -160,10 +169,10 @@ async function fillScenario(page, section, route) {
     await section.locator('#cx-start').fill('2026-11-06')
     await section.locator('#cx-firstDue').fill('2026-12-06')
     const table = section.locator('.cx-matrix')
-    assert.match(normalize(await table.locator('tbody tr').nth(0).locator('td').first().innerText()), /^R\$\s*9\.455,96/)
-    assert.equal(normalize(await table.locator('tbody tr').nth(3).locator('td').first().innerText()), brl(giroOracle('price').total))
+    assert.ok(normalize(await table.locator('tbody tr').nth(0).locator('td').first().innerText()).startsWith(brl(giroOracle('price').first)))
+    assert.equal(normalize(await table.locator('tbody tr').nth(4).locator('td').first().innerText()), brl(giroOracle('price').total))
     await section.getByRole('button', { name: 'SAC', exact: true }).click()
-    assert.equal(normalize(await table.locator('tbody tr').nth(3).locator('td').nth(1).innerText()), brl(giroOracle('sac').total))
+    assert.equal(normalize(await table.locator('tbody tr').nth(4).locator('td').nth(1).innerText()), brl(giroOracle('sac').total))
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
     assert.equal(await section.getByText('Situação da operação', { exact: true }).count(), 0)

@@ -45,8 +45,10 @@ test('campo próprio da coluna prevalece sobre o comum', () => {
 })
 test('BNDES repete o motor BNDES, com os limites de prazo e carência', () => {
   const c = col('bndes'), r = run(c)
-  const sim = simular({ valor: 500000, participacao: 100, prazo: 24, carencia: 0, custo: 'tfb', custoFinanceiro: 10, taxaBndes: 1.25, taxaAgente: 3, sistema: 'price', periodicidade: 1, composicao: 'capitalizada', iof: IOF_ZERO, tac: 0 })
-  assert.ok(Math.abs(r.paid - sim.parcelas.reduce((s, p) => s + p.pago, 0)) < 1e-6)
+  const sim = simular({ valor: 500000, participacao: 100, prazo: 24, carencia: 0, custo: 'tfb', custoFinanceiro: 10, taxaBndes: 1.25, taxaAgente: 3, sistema: 'price', periodicidade: 1, composicao: 'capitalizada', iof: IOF_ZERO, tac: 0, dataLiberacao: new Date('2026-11-10T12:00:00'), feriados: {} })
+  // Mesmo calendário real do BNDES: vencimentos dia 15 ou próximo dia útil e juros por dias corridos.
+  assert.equal(sim.calendario, 'datas-reais-act-act')
+  assert.ok(Math.abs(r.paid - sim.parcelas.reduce((s, p) => s + p.parcela, 0)) < 1e-6)
   assert.equal(r.interest, sim.juros + sim.correcao)
   assert.equal(run(c, { ...shared, system: 'bullet' }).ok, false)
   assert.match(run(c, { ...shared, grace: '18' }).error, /Carência acima/)
@@ -69,7 +71,8 @@ test('BNDES repete o motor BNDES, com os limites de prazo e carência', () => {
 test('BNDES com carência paga juros e mantém o fluxo datado', () => {
   const r = run(col('bndes', { bPeriod: '6' }), { ...shared, grace: '6' })
   assert.equal(r.ok, true); assert.ok(r.graceNote.includes('juros pagos'))
-  assert.equal(r.rows[0].date, '2027-05-10'); assert.equal(r.rows[0].days, 181)
+  // Juros da carência pagos no 6º mês: 15/05/2027 é sábado, vence na segunda, 17/05/2027 (188 dias da liberação).
+  assert.equal(r.rows[0].date, '2027-05-17'); assert.equal(r.rows[0].days, 188)
 })
 test('FINIMP repete a conta da calculadora e exige moeda, câmbio e prazo válidos', () => {
   const r = run(col('finimp')), base = finimpCost({ principal: 500000, annualRate: 6, flatRate: 0.5, tac: 0, days: 180 })

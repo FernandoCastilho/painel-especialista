@@ -26,7 +26,6 @@ export const DEFAULT_MODALITIES = Object.freeze(['giro-pre', 'giro-cdi', 'bndes'
 export const SYSTEM_OPTIONS = Object.freeze([['price', 'Price'], ['sac', 'SAC'], ['bullet', 'Bullet capitalizado']])
 export const FINIMP_CURRENCY_LIST = Object.freeze(['USD', 'EUR', 'JPY', 'CNH', 'BRL'])
 
-const DAY = 86400000
 const fail = error => ({ ok: false, error })
 const sumOf = values => values.reduce((a, b) => a + b, 0)
 const toMoneyText = n => n.toFixed(2).replace('.', ',')
@@ -39,7 +38,6 @@ export function addMonths(start, months) {
   target.setUTCDate(Math.min(from.getUTCDate(), last))
   return target.toISOString().slice(0, 10)
 }
-const daysBetween = (a, b) => (cgDate(b) - cgDate(a)) / DAY
 const integerText = text => /^\d+$/.test(String(text ?? '').trim()) ? Number(text) : null
 const money = (text, optional = false) => { const p = parseMoneyInput(text, { optional }); return p.ok ? p.value : null }
 const percent = text => { const n = parseDecimal(text); return Number.isFinite(n) ? n : null }
@@ -156,16 +154,16 @@ function bndes(col, p, ctx) {
     iof = { fixed: tax.additional, daily: tax.daily, maxDays: tax.maxDays }
   }
   const periods = Number(col.bPeriod)
-  const sim = simular({ valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc } })
+  const sim = simular({ valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc } , dataLiberacao: new Date(`${p.start}T12:00:00`), feriados: {} })
   if (!sim.ok) return fail(sim.erros?.[0] ?? 'Confira as condições do BNDES.')
   const rows = []
+  // Calendário real do BNDES (dia 15 ou próximo dia útil, juros por dias corridos); IOF cobrado todo na liberação.
   for (const parcela of sim.parcelas) {
-    if (!(parcela.pago > 0)) continue
-    const date = addMonths(p.start, parcela.mes)
-    rows.push({ date, days: daysBetween(p.start, date), payment: parcela.pago, amortization: parcela.amortizacao, interest: parcela.juros, balance: parcela.saldo })
+    if (!(parcela.parcela > 0)) continue
+    rows.push({ date: parcela.vencimento, days: parcela.dias, payment: parcela.parcela, amortization: parcela.amortizacao, interest: parcela.juros, balance: parcela.saldo })
   }
   if (!rows.length) return fail('O cronograma do BNDES não gerou pagamentos.')
-  const upfront = sim.tac + sim.iofFixo + (sim.fgi && !sim.fgi.incorporado ? sim.fgi.ecg : 0)
+  const upfront = sim.tac + sim.iof + (sim.fgi && !sim.fgi.incorporado ? sim.fgi.ecg : 0)
   const net = sim.liberado - upfront
   if (!(net > 0)) return fail('Tarifas e IOF devem ser menores que o valor liberado.')
   const result = finish({

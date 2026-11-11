@@ -1,20 +1,29 @@
 // Calculadoras › Capital de Giro: ícone, condições gerais, linha em branco e resultado (Parcela, Juros Totais, Pagamento Final).
 const { chromium } = require('playwright'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path')
 
-// Fixed release 06/11/2026 and first due 06/12/2026. Civil-calendar offsets,
-// with iterative outstanding-principal accounting independent of emprestimo.js.
+// Liberação fixa em 06/11/2026 e primeiro vencimento em 06/12/2026. Regra de 11/11/2026: juros por dias corridos ((1,02)^(dias/30)),
+// vencimento no próximo dia útil, IOF e TAC na liberação. Recálculo independente do motor (datas ajustadas à mão).
+// Vencimentos dia 6 a partir de 06/12/2026, ajustados à mão: 06/12 dom → 07/12; 06/02/2027 sáb → 08/02 e 09/02 Carnaval → 10/02;
+// 06/03 sáb → 08/03; 06/06 dom → 07/06; 06/11/2027 sáb → 08/11. Dias corridos desde 06/11/2026.
 const giroOracle = (system, principal = 100000, daily = 0.0082) => {
-  const days = [30, 61, 92, 120, 151, 181, 212, 242, 273, 304, 334, 365]
-  const payment = principal * 0.02 / (1 - 1.02 ** -12)
-  let balance = principal, interest = 0, iof = principal * 0.0038
-  for (const day of days) {
-    const charge = balance * 0.02
-    const amortization = system === 'sac' ? principal / 12 : payment - charge
-    interest += charge; iof += amortization * Math.min(day, 365) * daily / 100
-    balance -= amortization
+  const days = [31, 61, 96, 122, 151, 181, 213, 242, 273, 304, 334, 367]
+  const r = d => Math.pow(1.02, d / 30) - 1
+  const periods = days.map((d, k) => d - (k ? days[k - 1] : 0))
+  let paid = 0, interest = 0, iof = principal * 0.0038, payments = []
+  if (system === 'price') {
+    // 1º vencimento a 31 dias: 1 dia de juros capitalizado no saldo de abertura; IOF sobre a parte do principal original.
+    const opening = principal * Math.pow(1.02, 1 / 30), eff = periods.map((p, k) => (k ? p : p - 1))
+    let disc = 0, acc = 1; for (const p of eff) { acc /= 1 + r(p); disc += acc }
+    const pmt = opening / disc; let bal = opening; interest = opening - principal
+    eff.forEach((p, k) => { const j = bal * r(p); const a = pmt - j; interest += j; bal -= a; iof += a * principal / opening * Math.min(days[k], 365) * daily / 100; payments.push(pmt) })
+  } else {
+    const opening = principal * Math.pow(1.02, 1 / 30); let bal = opening; interest = opening - principal
+    periods.forEach((p, k) => { const j = bal * r(k ? p : p - 1); const a = opening / 12; interest += j; bal -= a; iof += principal / 12 * Math.min(days[k], 365) * daily / 100; payments.push(a + j) })
   }
-  return { iof, total: principal + interest + iof }
+  paid = payments.reduce((s, v) => s + v, 0)
+  return { first: payments[0], last: payments.at(-1), interest, iof, total: paid + iof }
 }
+
 const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\s+/g, ' ')
 
 ;(async () => {
@@ -51,16 +60,16 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       const norm = (t) => t.replace(/\s+/g, ' ').trim()
       const heads = async () => (await mx.locator('thead th').allInnerTexts()).slice(1).map((t) => norm(t).replace(/ selecionado$/i, ''))
       const cell = async (row, col) => norm(await mx.locator('tbody tr').nth(row).locator('td').nth((await heads()).indexOf(col)).innerText())
-      assert.deepEqual(await mx.locator('tbody th').allInnerTexts().then((a) => a.map((t) => t.toLowerCase())), ['parcela', 'iof', 'juros totais', 'pagamento final'])
+      assert.deepEqual(await mx.locator('tbody th').allInnerTexts().then((a) => a.map((t) => t.toLowerCase())), ['parcela', 'iof', 'tac', 'juros totais', 'pagamento final', 'cet'])
       assert.deepEqual(await heads(), ['Price', 'SAC'])
       const cond = await sec.locator('.cx-panel').first().boundingBox(), res = await sec.locator('.cx-panel').nth(1).boundingBox()
       assert.ok(cond && res, 'painéis de condições e resultado visíveis')
       assert.ok(res.y - (cond.y + cond.height) >= 16, 'ao menos 16px de espaço real entre as duas seções')
       // padrão: R$ 100.000,00, 12 meses, 2% a.m., Price
-      assert.match(await cell(0, 'Price'), /^R\$\s*9\.455,96/); assert.match(await cell(0, 'SAC'), /^R\$\s*10\.333,33 até R\$\s*8\.500,00/)
+      assert.ok((await cell(0, 'Price')).startsWith(brl(expectedPrice.first))); assert.ok((await cell(0, 'SAC')).startsWith(`${brl(expectedSac.first)} até ${brl(expectedSac.last)}`))
       assert.equal(await cell(1, 'Price'), brl(expectedPrice.iof)); assert.equal(await cell(1, 'SAC'), brl(expectedSac.iof)) // IOF PJ por dias reais
-      assert.match(await cell(2, 'Price'), /^R\$\s*13\.471,52/); assert.match(await cell(2, 'SAC'), /^R\$\s*13\.000,00/)
-      assert.equal(await cell(3, 'Price'), brl(expectedPrice.total)); assert.equal(await cell(3, 'SAC'), brl(expectedSac.total)) // principal + juros + IOF
+      assert.ok((await cell(3, 'Price')).startsWith(brl(expectedPrice.interest))); assert.ok((await cell(3, 'SAC')).startsWith(brl(expectedSac.interest)))
+      assert.equal(await cell(4, 'Price'), brl(expectedPrice.total)); assert.equal(await cell(4, 'SAC'), brl(expectedSac.total)) // parcelas + IOF + TAC
       const ys = await mx.locator('tbody tr').evaluateAll((es) => es.map((e) => e.getBoundingClientRect().y))
       assert.ok(ys.every((y, i) => i === 0 || y > ys[i - 1]), 'IOF abaixo da Parcela')
       // sistema escolhido destacado na coluna; diferença em frase
@@ -72,7 +81,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.ok(norm(await sec.locator('.cx-diff').innerText()).includes(`Price, o Pagamento Final fica ${brl(expectedPrice.total - expectedSac.total)} maior que no SAC`))
       await sec.getByRole('button', { name: 'Bullet', exact: true }).click()
       assert.deepEqual(await heads(), ['Price', 'SAC', 'Bullet']); assert.equal(await selected(), 'Bullet')
-      assert.match(await cell(0, 'Bullet'), /^— pagamento único/); assert.match(await cell(1, 'Bullet'), /^R\$\s*3\.373,00/); assert.match(await cell(3, 'Bullet'), /^R\$\s*130\.197,18/)
+      assert.match(await cell(0, 'Bullet'), /^— pagamento único/); assert.match(await cell(1, 'Bullet'), /^R\$\s*3\.373,00/); assert.match(await cell(4, 'Bullet'), /^R\$\s*130\.784,54/)
       assert.equal(await sec.locator('.cx-diff li').count(), 2)
       // IOF automático: enquadramento exige confirmação, limite de R$ 30 mil e recuperação.
       await sec.getByRole('button', { name: 'Price', exact: true }).click()
@@ -90,8 +99,8 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       await sec.getByLabel('Valor', { exact: true }).fill('100.000,00')
       assert.equal(await cell(1, 'Price'), brl(expectedPrice.iof))
       // taxa anual convertida; entrada inválida mostra aviso e zera o resultado
-      await sec.getByRole('button', { name: 'a.a.', exact: true }).click(); await sec.getByLabel('Taxa (%)', { exact: true }).fill('12,6825') // 12,6825% a.a. = 1% a.m. (PMT de R$ 100.000 em 12 meses a 1% a.m.)
-      assert.match(await cell(0, 'Price'), /^R\$\s*8\.884,88/)
+      await sec.getByRole('button', { name: 'a.a.', exact: true }).click(); await sec.getByLabel('Taxa (%)', { exact: true }).fill('12,6825') // 12,6825% a.a. = 1% a.m.; PMT com juros por dias corridos e vencimentos em dia útil
+      assert.match(await cell(0, 'Price'), /^R\$\s*8\.893,37/)
       await sec.getByLabel('Prazo (meses)', { exact: true }).fill('0')
       assert.match(await sec.locator('#cx-n-err[role="alert"]').innerText(), /prazo em meses/)
       assert.equal(await cell(0, 'Price'), '—'); assert.equal(await sec.locator('.cx-diff').count(), 0, 'sem resultado, sem comparação')
@@ -103,7 +112,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.equal(await cell(0, 'Price'), '—'); assert.equal(await cell(1, 'Price'), '—')
       await sec.getByLabel('Valor', { exact: true }).fill('100.000,00')
       assert.equal(await sec.locator('[role="alert"]').count(), 0, 'entrada corrigida recupera os resultados sem avisos antigos')
-      assert.match(await cell(0, 'Price'), /^R\$\s*8\.884,88/)
+      assert.match(await cell(0, 'Price'), /^R\$\s*8\.893,37/)
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
       await sec.getByRole('button', { name: /Calculadoras/ }).click(); await p.waitForURL('**/#calculadora')
       // BNDES Finame Materiais: tile, condições com as regras (prazo 84, carência 12 com TFB), TFB do painel, resultado e cronograma

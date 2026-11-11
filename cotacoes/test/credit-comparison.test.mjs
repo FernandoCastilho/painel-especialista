@@ -25,9 +25,10 @@ test('Price cash-flow has equal payments across actual dates; SAC principal is e
   near(p.rows.reduce((sum, r) => sum + r.payment / (1 + p.cet) ** (r.days / 365), 0), p.net)
 })
 test('capitalized grace is explicitly computed before amortization and does not inflate IOF original principal', () => {
+  // 08/02/2027 é segunda de Carnaval (feriado bancário nacional): o vencimento passa para 10/02/2027, 64 dias.
   const r = creditOperation({ ...base, firstDue: '2027-02-08', system: 'sac' })
-  assert.ok(r.ok); assert.equal(r.graceDays, 62)
-  near(r.capitalizedGrace, base.value * ((1.02) ** (62 / 30) - 1))
+  assert.ok(r.ok); assert.equal(r.rows[0].date, '2027-02-10'); assert.equal(r.graceDays, 64)
+  near(r.capitalizedGrace, base.value * ((1.02) ** (64 / 30) - 1))
   near(r.rows.reduce((sum, row) => sum + row.originalAmortization, 0), base.value)
   near(r.rows.reduce((sum, row) => sum + row.amortization, 0), base.value + r.capitalizedGrace)
   assert.ok(r.iof <= base.value * (0.0038 + 365 * 0.000082) + 1e-6)
@@ -93,9 +94,10 @@ test('equivalence finds valid principal even when doubled upper probe exceeds mo
 })
 test('percentage of CDI scales the daily rate before compounding, not annual log return', () => {
   const p = { ...base, rateType: 'cdi', system: 'bullet', cdi: 15, cdiPercent: 200, rate: 0, start: '2026-11-08', firstDue: '2027-11-07' }
+  // Dias úteis descontam fins de semana e feriados nacionais: 260 dias de segunda a sexta, 249 dias úteis.
   const du = creditBusinessDays(p.start, p.firstDue), r = creditOperation(p)
-  assert.equal(du, 260); assert.ok(r.ok, r.error)
+  assert.equal(creditBusinessDays(p.start, p.firstDue, [], false), 260)
+  assert.equal(du, 249); assert.ok(r.ok, r.error)
   const daily = Math.pow(1.15, 1 / 252) - 1
-  near(r.interest, 100000 * (Math.pow(1 + daily * 2, 260) - 1), 1e-6)
-  near(r.interest, 33418.11, 0.01)
+  near(r.interest, 100000 * (Math.pow(1 + daily * 2, 249) - 1), 1e-6)
 })

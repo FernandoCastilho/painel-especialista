@@ -145,7 +145,7 @@ async function proveLastColumn(region, file) {
         assert.match(await presentation.innerText(), /manual/i, 'apresentação identifica a referência manual')
         await page.keyboard.press('ArrowRight')
         await presentation.getByRole('heading', { name: 'TFC e TFB lado a lado', exact: true }).waitFor()
-        assert.match(await presentation.innerText(), /não é CET/)
+        assert.match(await presentation.innerText(), /CET estimado/) // regra de 11/11/2026: a apresentação mostra o CET estimado (Res. CMN 4.881)
         const headingStyle = await presentation.locator('.bnp-slide h2').evaluate(element => ({ size: parseFloat(getComputedStyle(element).fontSize), color: getComputedStyle(element).color }))
         assert.ok(headingStyle.size >= 24, 'título de slide preserva tamanho de apresentação')
         assert.equal(headingStyle.color, 'rgb(0, 13, 60)')
