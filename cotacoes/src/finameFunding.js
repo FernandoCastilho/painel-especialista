@@ -1,4 +1,5 @@
-import { CUSTOS, faixaTfb, faixaTfc, simular } from './finameMateriais.js'
+import { CUSTOS, faixaTfb, faixaTfc, simular, vencimentoDia15 } from './finameMateriais.js'
+import { creditCet } from './creditComparison.js'
 import { parseDecimal } from './emprestimo.js'
 
 // Premissas desta tela do Finame, sem alterar os motores dos outros perfis BNDES.
@@ -68,4 +69,19 @@ export function compareFinameFunding(params, quotes, manualRates = {}) {
   })
   if (alternatives.some(item => !item)) return { ok: false, error: 'Uma das referências está indisponível ou as condições estão incompletas. Ausência de taxa não significa zero.' }
   return { ok: true, alternatives, totalDifference: alternatives[1].result.total - alternatives[0].result.total }
+}
+
+// CET estimado (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido recebido na liberação
+// (valor liberado menos IOF adicional, TAC e ECG do FGI pago à vista) ao valor presente dos pagamentos do cronograma,
+// descontados em dias corridos/365 a partir da liberação. Mesmo método do Comparador de Crédito (creditCet).
+// Os pagamentos são os da projeção (meses iguais) nas datas hipotéticas do fluxo: dia 15 ou próximo dia útil.
+// Sem seguros nem outras tarifas: não é o CET do contrato. Devolve null quando o fluxo não fecha.
+export function finameCet(result, releaseDate, holidayCtx = {}) {
+  if (!result?.ok || !(releaseDate instanceof Date) || Number.isNaN(+releaseDate) || !Array.isArray(result.parcelas)) return null
+  const ecgAVista = result.fgi && !result.fgi.incorporado ? result.fgi.ecg : 0
+  const liquido = result.liberado - result.iofFixo - result.tac - ecgAVista
+  const rows = result.parcelas.filter(p => p.pago > 0).map(p => ({ days: Math.round((vencimentoDia15(releaseDate, p.mes, holidayCtx) - releaseDate) / 86400000), payment: p.pago }))
+  const anual = creditCet(liquido, rows)
+  if (anual === null) return null
+  return { anual: anual * 100, mensal: Math.expm1(Math.log1p(anual) / 12) * 100, liquido }
 }
