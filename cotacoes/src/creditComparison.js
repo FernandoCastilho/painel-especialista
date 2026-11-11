@@ -73,8 +73,17 @@ export function creditOperation(p) {
   if (!(net > 0)) return fail('IOF e encargos iniciais devem ser menores que o valor contratado.')
   const cet = creditCet(net, rows)
   if (cet === null) return fail('Não foi possível reconciliar o CET deste fluxo dentro da precisão necessária.')
+  // Res. CMN 4.881/2020, art. 5º: taxa flutuante (CDI) não entra no CET regulatório. No pós-fixado, o CET regulatório é o
+  // do mesmo contrato com CDI zero: só o spread, na mesma base de dias úteis/252, feriados e datas. `cet` continua sendo o
+  // custo com o CDI projetado. No prefixado, os dois coincidem.
+  let cetRegulatory = cet, regulatoryNet = net
+  if (rateType === 'cdi' && cdi !== 0) {
+    const fixedPart = creditOperation({ ...p, cdi: 0 })
+    cetRegulatory = fixedPart.ok ? fixedPart.cet : null
+    regulatoryNet = fixedPart.ok ? fixedPart.net : null
+  }
   return { ok: true, value, net, rows, iof, iofFixed, iofDaily, fees, monthlyFees, tax, interest: interestTotal,
-    total: paid + fees + iof, cost: paid - net, paid, cet, graceDays, capitalizedGrace: opening - value,
+    total: paid + fees + iof, cost: paid - net, paid, cet, cetRegulatory, regulatoryNet, graceDays, capitalizedGrace: opening - value,
     coverage: guaranteeValue === null ? null : guaranteeValue / value * 100, guaranteeValue,
     maxPayment: Math.max(...rows.map(r => r.payment)), lastDate: rows.at(-1).date }
 }
