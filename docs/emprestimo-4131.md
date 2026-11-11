@@ -51,15 +51,18 @@ Padrão da tela: cada pagamento usa o DI e o cupom cambial do seu prazo, das Tax
 
 - **DI x pré:** série `br` de `curves.json` (B3, código PRE).
 - **Cupom cambial:** série `cl` (B3, código DOC, "Cupom limpo"), coletada em `scripts/fetch-curves.mjs` só para esta calculadora. A série `cc` (código DOL), mostrada na aba Juros, é o cupom sujo, referido à PTAX da véspera, e não entra na conta.
-- **Por que o limpo:** conferido com os dados de 11/11/2026. De 21 dias úteis em diante, PTAX do dia × fator DI ÷ fator do cupom limpo dá o mesmo câmbio a termo que PTAX da véspera × fator DI ÷ fator do cupom sujo (razão constante de 0,99568 entre os dois fatores, igual a 5,5600 ÷ 5,5840). Ou seja, o limpo está ancorado na PTAX do próprio dia e pode multiplicar o câmbio à vista. Com o sujo, o spread do swap sairia em CDI + 0,20% em vez de CDI + 1,06% num pagamento único de 6 meses a 6% a.a.
+- **Por que o limpo:** conferido com os dados de 11/11/2026. De 21 dias úteis em diante, PTAX do dia × fator DI ÷ fator do cupom limpo dá o mesmo câmbio a termo que PTAX da véspera × fator DI ÷ fator do cupom sujo (razão constante de 0,99568 entre os dois fatores; PTAX venda de 5,5606 ÷ 5,5840 = 0,99581, desvio de 0,012%). Ou seja, o limpo está ancorado no câmbio à vista do próprio dia, a 0,012% da PTAX, e pode multiplicar o câmbio digitado. Com o sujo, o spread do swap sairia em CDI + 0,20% em vez de CDI + 1,10% num pagamento único de 6 meses a 6% a.a.
 - **Corte de 21 dias úteis:** abaixo disso a própria B3 publica taxas sem sentido econômico (em 11/11/2026, −137% a.a. em 1 dia útil). Antes do primeiro vértice vale a taxa dele.
-- **Travas da tela:** a curva só é usada se DI e cupom limpo têm a mesma data; desembolso anterior à data-base, prazo além do último vértice ou curva ausente voltam para as taxas digitadas, com aviso.
+- **Travas da tela:** a curva só é usada se DI e cupom limpo têm a mesma data, se a data foi confirmada na B3 naquela coleta (sem `stale.br` nem `discoveryPending`, porque a B3 devolve sempre a última curva, qualquer que seja a data pedida) e se tem até 3 dias úteis de idade; desembolso anterior à data-base, prazo além do último vértice ou curva ausente voltam para as taxas digitadas, com aviso.
 - **Travas da coleta:** o cupom limpo é coletado à parte. Se falhar, fica o último publicado, sem marcar erro nem atraso nas demais curvas; como a data fica diferente da do DI, a tela cai nas taxas digitadas.
 
 Limites:
 - As curvas são do fechamento da data-base. Se o mercado andou desde então, o resultado fica defasado: digite as taxas.
-- A âncora do cupom limpo é a PTAX (média do dia) e os futuros são de fechamento. A variação do dólar entre os dois momentos entra como erro de nível no câmbio a termo de todos os prazos. Cada 0,1% de desvio pesa cerca de 0,2 ponto percentual ao ano em 6 meses e 0,05 em 24 meses. O vértice de 21 dias úteis absorve esse ruído (6,22% contra 5,71% em 63 dias úteis, em 11/11/2026).
+- Não ficou provado se a âncora do cupom limpo é a PTAX (por volta das 13h) ou um dólar à vista de fechamento; os futuros são de fechamento. Se for a PTAX, a variação do dólar entre os dois momentos entra como erro de nível no câmbio a termo de todos os prazos: 0,3% de desvio pesa cerca de 0,7 ponto percentual ao ano em 6 meses, 0,3 em 12 e 0,15 em 24. Falta testar num dia de dólar volátil à tarde. O vértice de 21 dias úteis absorve esse ruído (6,22% contra 5,71% em 63 dias úteis, em 11/11/2026).
+- Interpolação: taxa do cupom linear por dias úteis entre vértices. Contra outras regras, o desvio é de até 0,2 ponto percentual ao ano perto de 1 mês e de 0,02 ou menos acima de 6 meses. Desembolso futuro com prazo de poucos meses herda o ruído dos vértices curtos.
 - Não validado contra cotação de mesa.
+
+Terceira revisão independente (11/11/2026): reimplementação em Python do modo curvas, 12 casos com as curvas reais, diferença máxima de 4×10⁻¹⁴ ponto percentual contra o motor. Achados de mistura de datas, idade da curva e texto da âncora corrigidos; os demais estão nos limites acima.
 
 ## Pontos não confirmados em fonte oficial
 - IR na fonte sobre flat e fiança pagos ao exterior: o art. 760 do RIR/2018 cita comissões, mas a aplicação a cada tipo de comissão deve ser confirmada com o tributário.

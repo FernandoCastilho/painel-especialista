@@ -46,7 +46,7 @@ out.b3Schedule=decision
 if(decision.reason==='calendário B3 do ano não verificado')errors.push(decision.reason)
 if(decision.run) { out.br=await b3Curve('PRE',1,'br');out.cc=await b3Curve('DOL',21,'cc') }
 else {out.br=previous?.br ?? null;out.cc=previous?.cc ?? null;console.log('B3: '+decision.reason)}
-// Cupom limpo (B3 DOC, referido à PTAX do próprio dia), usado só pela calculadora Empréstimo externo (4131). Coleta isolada:
+// Cupom limpo (B3 DOC, referido ao câmbio à vista do próprio dia), usado só pela calculadora Empréstimo externo (4131). Coleta isolada:
 // falha aqui não entra em `errors` nem em `stale` e não afeta as demais curvas; fica o último publicado, e a calculadora só
 // usa a curva quando a data dela é a mesma do DI x pré. Mesmo corte de 21 dias úteis do cupom sujo: abaixo disso é ruído.
 out.cl=previous?.cl ?? null

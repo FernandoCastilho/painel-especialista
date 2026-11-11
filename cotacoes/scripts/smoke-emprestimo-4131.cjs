@@ -52,6 +52,8 @@ const IR_FEES = (JUROS + FIANCA) * IR / (1 - IR)
       const page = await browser.newPage({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', serviceWorkers: 'block' })
       page.on('pageerror', e => errors.push(`${width}: ${e.message}`))
       await page.route('**/curves.json*', r => r.fulfill({ json: CURVES }))
+      // Relógio fixo no dia do desembolso: as curvas sintéticas têm essa data e curva antiga não é usada.
+      await page.clock.setFixedTime(new Date(`${START}T15:00:00Z`))
       await page.goto(`${base}/#calculadora/emprestimo-4131`)
       const section = page.locator('main.app section.bw.e4')
       await section.waitFor()

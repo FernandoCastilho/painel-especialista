@@ -30,9 +30,11 @@ const IR_PAYERS = [{ id: 'sim', label: 'Tomador (gross-up)' }, { id: 'nao', labe
 const FEE_PLACES = [{ id: 'nao', label: 'Banco no Brasil · sem IR' }, { id: 'sim', label: 'Exterior · IR sobre a comissão' }]
 const CURVE_MODES = [{ id: 'painel', label: 'Curvas do Painel (B3)' }, { id: 'manual', label: 'Digitar DI e cupom' }]
 const DAY = 864e5
-// Curvas do Painel: DI x pré (`br`) e cupom limpo (`cl`, B3 DOC, referido à PTAX do próprio dia). O cupom cambial da aba Juros
+// Curvas do Painel: DI x pré (`br`) e cupom limpo (`cl`, B3 DOC, referido ao câmbio à vista do próprio dia). O cupom cambial da aba Juros
 // (`cc`, B3 DOL) é o cupom sujo, referido à PTAX do dia anterior, e não serve aqui (ver docs/emprestimo-4131.md).
 const CURVAS_DO_PAINEL = true
+// Curva com mais dias úteis de idade que isto não é usada: a tela volta para as taxas digitadas.
+const CURVA_MAX_DIAS_UTEIS = 3
 // Curva mais recente de um conjunto do Painel: { date, pts } ou null.
 const hojeOf = (set) => { const today = set?.compare?.find((c) => c.id === 'hoje'); const pts = today ? set.curves?.[today.date] : null; return pts?.length ? { date: today.date, pts } : null }
 // Regras levantadas nas fontes oficiais; detalhes e pontos não confirmados em docs/emprestimo-4131.md.
@@ -120,8 +122,12 @@ export default function Emprestimo4131({ onBack }) {
   // Curvas DI x pré e cupom cambial da B3 já coletadas pelo Painel. Sem elas, ou com desembolso antes da data-base, vale o modo manual.
   const diCurve = hojeOf(curves.data?.br)
   const ccCurve = hojeOf(curves.data?.cl)
-  const curveBase = diCurve && ccCurve && diCurve.date === ccCurve.date ? diCurve.date : null
-  const curveBlocked = !curveBase ? (curves.status === 'loading' ? 'Carregando as curvas do Painel…' : diCurve && ccCurve ? `Curvas do Painel com datas diferentes (DI de ${dm(diCurve.date)}, cupom limpo de ${dm(ccCurve.date)}): usando DI e cupom digitados.` : 'Curvas do Painel indisponíveis: usando DI e cupom digitados.') : start && start < curveBase ? `As curvas começam em ${dm(curveBase)}: para desembolso anterior, usando DI e cupom digitados.` : null
+  // Curva reaproveitada de coleta anterior ou com data não confirmada na B3 pode trazer conteúdo de outro dia: não é usada.
+  const curveUnconfirmed = !!(curves.data?.stale?.br || curves.data?.br?.discoveryPending || curves.data?.cl?.discoveryPending)
+  const sameDate = diCurve && ccCurve && diCurve.date === ccCurve.date
+  const curveAge = sameDate ? busDaysIn(diCurve.date, cgToday(), ['BR'], hol.ctx) : 0
+  const curveBase = sameDate && !curveUnconfirmed && curveAge <= CURVA_MAX_DIAS_UTEIS ? diCurve.date : null
+  const curveBlocked = !curveBase ? (curves.status === 'loading' ? 'Carregando as curvas do Painel…' : sameDate && curveUnconfirmed ? 'Curvas do Painel sem data confirmada na B3 nesta coleta: usando DI e cupom digitados.' : sameDate ? `Curvas do Painel desatualizadas (última de ${dm(diCurve.date)}): usando DI e cupom digitados.` : diCurve && ccCurve ? `Curvas do Painel com datas diferentes (DI de ${dm(diCurve.date)}, cupom limpo de ${dm(ccCurve.date)}): usando DI e cupom digitados.` : 'Curvas do Painel indisponíveis: usando DI e cupom digitados.') : start && start < curveBase ? `As curvas começam em ${dm(curveBase)}: para desembolso anterior, usando DI e cupom digitados.` : null
   const usingCurve = curveMode === 'painel' && !curveBlocked && !!start
   if (usingCurve) { errors.di = null; errors.cupom = null }
   const loanErrors = ['principal', 'rate', 'spot', 'start', 'months', 'flat', 'guarantee'].some((k) => errors[k])
