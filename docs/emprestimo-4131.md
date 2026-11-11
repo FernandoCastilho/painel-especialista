@@ -47,6 +47,13 @@ Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara 
 - NDF de balcão: alcance dos 0,005% e dos 15% sobre ganho líquido não está expresso nos textos lidos.
 - Fórmulas oficiais de swap da B3 e norma de registro obrigatório de derivativos: páginas não abriram.
 
+## Tela (padrão da calculadora BNDES)
+`src/Emprestimo4131.jsx` usa a mesma estrutura e o mesmo estilo do BNDES (`BndesWorkspace.css`): cartão claro, título com abas (Simular · Regras e fontes), grupos Operação, Custos e tributos e Proteção cambial à esquerda; à direita, botões Apresentar simulação e Imprimir PDF, cotação comparativa em destaque com ampliação na tela, composição do custo, cenários de câmbio, cronograma e premissas recolhidos.
+- Apresentação (`Emprestimo4131Presentation.jsx`) e PDF (`Emprestimo4131Print.jsx`) trabalham sobre uma cópia congelada (`emprestimo4131Presentation.js`): não recalculam nem buscam taxa nova.
+- Estilo próprio só em `Emprestimo4131.css` (grade da proteção cambial e lista de regras).
+- A aba Regras e fontes mostra as regras da tabela acima, com a fonte de cada uma.
+
 ## Verificações
-`node --test test/emprestimo-4131.test.mjs`: 11 testes com resultado em fórmula fechada (juros, gross-up, IOF por prazo, custo all-in, relação com a variação do dólar, câmbio a termo, leitura em CDI, ponto de equilíbrio, entradas inválidas).
-Conferência no navegador da tela aberta com o exemplo padrão. Não há ainda conferência de navegador automática (`smoke`) nem revisão independente da conta.
+`node --test test/emprestimo-4131.test.mjs test/emprestimo-4131-presentation.test.mjs`: 14 testes. Conta com resultado em fórmula fechada (juros, gross-up, IOF por prazo, custo all-in, relação com a variação do dólar, câmbio a termo, leitura em CDI, ponto de equilíbrio, entradas inválidas) e cópia congelada da apresentação e do PDF.
+Conferência no navegador em 1440 px e 375 px: simulação, aba de regras, apresentação (6 slides), prévia do PDF e ausência de rolagem lateral da página.
+Não há ainda conferência de navegador automática (`smoke`) nem revisão independente da conta.
