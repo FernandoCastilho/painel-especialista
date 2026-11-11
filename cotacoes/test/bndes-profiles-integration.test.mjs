@@ -39,7 +39,9 @@ test('UI executa motores corretos e separa seus limites em vez de expor números
   assert.match(source('BndesCreditoTfb.jsx'), /Não é cotação atual/)
   assert.match(source('BndesTlpExigivel.jsx'), /simulateTlpExigivel\(/)
   assert.match(source('BndesTlpExigivel.jsx'), /mode: 'projection'/)
-  assert.match(source('BndesTlpExigivel.jsx'), /Não é TLPCAP nem CET/)
+  assert.match(source('BndesTlpExigivel.jsx'), /CET pela regra do BC, sem IPCA · Não é TLPCAP/)
+  assert.match(source('BndesTlpExigivel.jsx'), /CET · parte fixa \(regra do BC\)/)
+  assert.match(source('BndesTlpExigivel.jsx'), /Custo com IPCA projetado/)
 })
 test('Finame nunca executa TLP pelo motor mensal capitalizado', () => {
   assert.equal(finameFundingOption('tlp').mode, 'dedicated')
