@@ -56,3 +56,46 @@ test('CET não é inventado sem resultado válido', () => {
   // TAC maior que o valor liberado: não há valor líquido positivo, CET não mensurável.
   assert.equal(finameCet(run({ valor: 1000, tac: 2000 }), release), null)
 })
+
+// Regra aprovada por Fernando em 11/11/2026: juros pelos dias reais entre vencimentos (dia 15 ou próximo dia útil) e CET da Res. CMN 4.881.
+const withDate = (date, over = {}) => run({ dataLiberacao: date, ...over })
+const civil = iso => Date.parse(`${iso}T00:00:00Z`) / 86400000
+
+test('com data de liberação, sem encargos e sem ano bissexto, o CET é igual à taxa final em qualquer dia', () => {
+  for (const day of [1, 11, 15, 16, 28, 30]) {
+    const date = new Date(2026, 10, day, 12)
+    const result = withDate(date, { prazo: 12, carencia: 0, periodicidade: 1 })
+    assert.equal(result.calendario, 'datas-reais-act-act')
+    const cet = finameCet(result, date)
+    assert.ok(Math.abs(cet.anual - result.taxa) < 1e-6, `${day}: ${cet.anual} × ${result.taxa}`)
+  }
+})
+
+test('juros de cada período pelos dias corridos sobre o ano civil, vencimento no dia 15 ou próximo dia útil', () => {
+  const date = new Date(2026, 10, 11, 12)
+  const result = withDate(date, { prazo: 24, carencia: 6, periodicidade: 1 })
+  const rate = result.taxa / 100
+  // Recalcula cada período por conta própria: dias corridos, separados por ano civil (365 ou 366).
+  const leap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
+  const fraction = (from, to) => { let f = 0; for (let d = civil(from) + 1; d <= civil(to); d++) f += 1 / (leap(new Date(d * 86400000).getUTCFullYear()) ? 366 : 365); return f }
+  let previous = '2026-11-11', balance = 500000, accrued = 0
+  for (const p of result.parcelas) {
+    const due = new Date(`${p.vencimento}T12:00:00Z`)
+    assert.ok(due.getUTCDay() !== 0 && due.getUTCDay() !== 6, `${p.vencimento} é dia útil`)
+    assert.ok(due.getUTCDate() >= 15 && due.getUTCDate() <= 18, `${p.vencimento} é o dia 15 ou o próximo dia útil`)
+    const factor = Math.pow(1 + rate, fraction(previous, p.vencimento)) - 1
+    if (p.carencia) { accrued = (balance + accrued) * factor + accrued; assert.ok(Math.abs(p.juros - accrued) < 1e-6); accrued = 0 }
+    else { assert.ok(Math.abs(p.juros - balance * factor) < 1e-6, `${p.mes}: ${p.juros} × ${balance * factor}`); balance -= p.amortizacao }
+    previous = p.vencimento
+  }
+  // 15/05/2027 é sábado: o vencimento vai para segunda-feira, 17/05/2027.
+  assert.equal(result.parcelas.find(p => p.vencimento.startsWith('2027-05')).vencimento, '2027-05-17')
+})
+
+test('mudar a data da liberação muda os juros, mas não cria CET abaixo da taxa sem encargos', () => {
+  for (const day of [1, 14, 16, 30]) {
+    const date = new Date(2026, 10, day, 12)
+    const result = withDate(date, { prazo: 6, carencia: 0, periodicidade: 1 })
+    assert.ok(finameCet(result, date).anual >= result.taxa - 1e-6)
+  }
+})
