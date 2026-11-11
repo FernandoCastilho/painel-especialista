@@ -39,14 +39,16 @@ test('UI executa motores corretos e separa seus limites em vez de expor números
   assert.match(source('BndesCreditoTfb.jsx'), /Não é cotação atual/)
   assert.match(source('BndesTlpExigivel.jsx'), /simulateTlpExigivel\(/)
   assert.match(source('BndesTlpExigivel.jsx'), /mode: 'projection'/)
-  assert.match(source('BndesTlpExigivel.jsx'), /Não é TLPCAP nem CET/)
+  assert.match(source('BndesTlpExigivel.jsx'), /CET pela regra do BC, sem IPCA · Não é TLPCAP/)
+  assert.match(source('BndesTlpExigivel.jsx'), /CET · parte fixa \(regra do BC\)/)
+  assert.match(source('BndesTlpExigivel.jsx'), /Custo com IPCA projetado/)
 })
 test('Finame nunca executa TLP pelo motor mensal capitalizado', () => {
   assert.equal(finameFundingOption('tlp').mode, 'dedicated')
   assert.equal(finameFundingAnnualRate('tlp', { tlp: 8.12 }), null)
   assert.match(source('FinameMateriais.jsx'), /const pronto = funding\?\.mode === 'inline'/)
   assert.doesNotMatch(source('FinameMateriais.jsx'), /na TLP, iguais em termos reais|a diferença se compensa|correção pelo IPCA \(TLP\) \+ IOF/)
-  assert.match(source('FinameMateriais.jsx'), /fm-finame-eligible/)
+  assert.doesNotMatch(source('FinameMateriais.jsx'), /id="fm-finame-eligible"/)
 })
 test('rotas de calculadoras e atalhos não confundem produtos', async () => {
   const { documents } = await buildSearchIndex()

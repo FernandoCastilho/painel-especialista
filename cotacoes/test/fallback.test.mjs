@@ -38,12 +38,9 @@ test('notícias: moeda sem manchetes novas mantém as anteriores', () => {
 
 test('arquivo publicado: sem repositório ou com falha de rede devolve null', async () => {
   assert.equal(await loadPrevious('macro.json', ''), null)
-  const real = globalThis.fetch
-  globalThis.fetch = async () => { throw new Error('rede') }
-  assert.equal(await loadPrevious('macro.json', 'a/b'), null)
-  globalThis.fetch = async () => ({ ok: true, text: async () => '' })
-  assert.equal(await loadPrevious('macro.json', 'a/b'), null)
-  globalThis.fetch = real
+  const wait = async () => {} // as 3 tentativas continuam valendo; só a espera entre elas é pulada no teste
+  assert.equal(await loadPrevious('macro.json', 'a/b', { wait, fetchImpl: async () => { throw new Error('rede') } }), null)
+  assert.equal(await loadPrevious('macro.json', 'a/b', { wait, fetchImpl: async () => ({ ok: true, status: 200, text: async () => '' }) }), null)
 })
 
 test('BCE: série diária vira pontos ordenados, ignorando valores inválidos', () => {

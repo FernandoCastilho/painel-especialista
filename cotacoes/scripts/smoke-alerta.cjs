@@ -51,16 +51,10 @@ const id = '2026-11-05:USD:alta'
     await p.clock.setFixedTime(now)
     const enter = async (reload = false) => {
       if (reload) await p.reload(); else await p.goto(base + '/#resumo')
-      await p.locator('dialog.aviso-inicial:not(.recado)').getByRole('button', { name: 'Entendi' }).click()
-      // A entrada em dia útil às 15h abre o panorama. Fechar pela UI antes de testar a faixa.
-      if (!reload) {
-        const panorama = p.getByRole('dialog', { name: 'Panorama do dia', exact: true })
-        await panorama.waitFor()
-        assert.equal(await p.locator('dialog:modal').count(), 1, 'panorama não empilha com o aviso')
-        await panorama.getByRole('button', { name: 'Fechar panorama' }).click()
-        await panorama.waitFor({ state: 'hidden' })
-      }
+      // O aviso de entrada só aparece na primeira visita; o panorama não abre mais sozinho, nem em dia útil às 15h.
+      if (!reload) await p.locator('dialog.aviso-inicial:not(.recado)').getByRole('button', { name: 'Entendi' }).click()
       await p.locator('.alerta-variacao').waitFor()
+      assert.equal(await p.locator('dialog:modal').count(), 0, 'nenhum pop-up cobre a faixa de alerta')
     }
     const ledger = () => p.evaluate(() => window.qaNotification.read())
     const saved = () => p.evaluate((id) => JSON.parse(localStorage.getItem('alerta-variacao') || '{}')[id], id)
@@ -93,7 +87,6 @@ const id = '2026-11-05:USD:alta'
       await s.p.locator('.alerta-var-item').waitFor({ state: 'detached' })
       // Depois da dispensa não resta faixa: a permissão já está concedida.
       await s.p.reload()
-      await s.p.locator('dialog.aviso-inicial:not(.recado)').getByRole('button', { name: 'Entendi' }).click()
       await s.p.locator('.market-table').waitFor()
       // Espera as fixtures de cotação/intraday terminarem antes de verificar ausência.
       await s.p.waitForLoadState('networkidle')

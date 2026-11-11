@@ -1,7 +1,7 @@
 // Histórico do Focus (52 semanas) para o gráfico abaixo da tabela de Cenário econômico. Roda na coleta semanal do Focus
 // (segunda/terça 08:30, FOCUS_WEEKLY=true) e nas publicações manuais; nas coletas de hora em hora só preserva o arquivo publicado.
 import { writeFile, readFile } from 'node:fs/promises'
-import { loadPrevious } from './prev-lib.mjs'
+import { readPrevious } from './prev-lib.mjs'
 import { INDICADORES, arquivoHistorico, mesclar, semanal, ultimaData } from './focus-history-lib.mjs'
 
 const OLINDA = 'https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais'
@@ -11,7 +11,14 @@ const scheduled = process.env.GITHUB_EVENT_NAME === 'schedule'
 const weekly = process.env.FOCUS_WEEKLY === 'true'
 let local = null
 try { local = JSON.parse(await readFile(output, 'utf8')) } catch { /* sem arquivo local */ }
-const previous = (await loadPrevious('focus-history.json')) ?? local
+const remote = await readPrevious('focus-history.json')
+// Publicado ilegível e sem cópia local (a coleta semanal baixa uma antes): para aqui, em vez de gravar um histórico vazio
+// ou menor por cima das 52 semanas que estão no ar. A rodada falha e a próxima tenta de novo.
+if (remote.status === 'unreadable' && !local && process.env.PREV_IGNORAR_ILEGIVEL !== 'true') {
+  console.error(`Focus histórico: não foi possível ler o arquivo publicado (${remote.error}). Coleta interrompida para preservar o histórico que está no ar.`)
+  process.exit(1)
+}
+const previous = remote.data ?? local
 
 if (scheduled && !weekly) {
   // coleta de hora em hora: o Focus não muda; mantém o que está publicado

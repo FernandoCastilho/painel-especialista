@@ -63,7 +63,7 @@ test('FGI incorporado entra no saldo devedor, rende juros e fecha com o total', 
 test('entradas inválidas de TAC e FGI são recusadas com mensagem', () => {
   assert.equal(simular({ ...base, tac: -1 }).ok, false)
   assert.equal(simular({ ...base, tac: Number.NaN }).ok, false)
-  for (const percentual of [0, 9.9, 80.1, 100, Number.NaN]) {
+  for (const percentual of [0, 9.9, 15, 75, 80.1, 100, Number.NaN]) {
     const r = simular({ ...base, fgi: { percentual, incorporar: true } })
     assert.equal(r.ok, false, `percentual ${percentual}`)
     assert.match(r.erros.join(' '), /percentual garantido pelo FGI/)
@@ -90,4 +90,31 @@ test('periodos30Datas conta períodos completos de 30 dias entre as datas (como 
   assert.equal(periodos30Datas(d(2026, 11, 9), d(2026, 12, 15)), 1)
   assert.equal(periodos30Datas(d(2026, 11, 9), d(2026, 11, 20)), 0)
   assert.equal(periodos30Datas(d(2026, 11, 20), d(2026, 11, 9)), 0) // nunca negativo
+})
+
+test('FGI só aceita percentual garantido em múltiplos de 10 (art. 15 do Regulamento do FGI Tradicional)', () => {
+  for (const percentual of [10, 20, 30, 40, 50, 60, 70, 80]) assert.equal(simular({ ...base, fgi: { percentual, incorporar: false } }).ok, true, `percentual ${percentual}`)
+  assert.equal(FGI.percentualMultiplo, 10)
+})
+
+test('FGI limita o crédito garantido a R$ 20 milhões por cliente em cada agente', () => {
+  assert.equal(FGI.limiteCredito, 20_000_000)
+  const noLimite = simular({ ...base, valor: 20_000_000, fgi: { percentual: 80, incorporar: false, periodos: 60 } })
+  assert.equal(noLimite.ok, true)
+  const acima = simular({ ...base, valor: 20_000_000.01, fgi: { percentual: 80, incorporar: false, periodos: 60 } })
+  assert.equal(acima.ok, false)
+  assert.match(acima.erros.join(' '), /limitado a R\$\s*20\.000\.000,00 por cliente/)
+  // ECG incorporado entra no crédito contratado: R$ 20 milhões liberados passam do limite quando o ECG é financiado.
+  assert.equal(simular({ ...base, valor: 20_000_000, fgi: { percentual: 80, incorporar: true, periodos: 60 } }).ok, false)
+  // Sem FGI não há esse limite.
+  assert.equal(simular({ ...base, valor: 25_000_000 }).ok, true)
+})
+
+test('FGI é recusado em linha com TLP capitalizada (vedação do Anexo I do Regulamento)', () => {
+  const tlp = { ...base, custo: 'tlp', perfilTlp: 'tlpcap', custoFinanceiro: 7, ipca: 4 }
+  assert.equal(simular(tlp).ok, true)
+  const r = simular({ ...tlp, fgi: { percentual: 80, incorporar: false } })
+  assert.equal(r.ok, false)
+  assert.match(r.erros.join(' '), /Retire a garantia do FGI: esta linha usa TLP capitalizada/)
+  assert.match(FGI.vedacoes, /TLP capitalizada.*Selic capitalizada.*TR capitalizada.*TFBD.*capitalização de juros na carência/)
 })

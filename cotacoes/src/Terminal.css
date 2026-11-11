@@ -581,7 +581,15 @@ main.app .idx-table .idx-rel small { display: block; color: var(--muted, #8a8a8a
 .insight-aprender i { font-style: normal; color: var(--mut); }
 .insight-aprender > span:nth-child(2) { flex: 1 1 260px; }
 .insight-aprender .linklike { min-height: 32px; white-space: nowrap; }
-@media (max-width: 560px) { .insight-aprender .linklike { min-height: 44px; } }
+@media (max-width: 999px) { .insight-aprender .linklike { min-height: 44px; } }
+
+/* Ponto discreto de "conteúdo novo" (Panorama do dia e Conceito do dia). Só sinaliza: nada abre sozinho. */
+.sinal-novo { display: inline-block; flex: none; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--amber); vertical-align: middle; }
+/* O Panorama mantém o nome escrito também no celular: o desenho sozinho não diz o que o botão abre. */
+.compare-trigger.panorama-trigger span { display: inline; white-space: nowrap; }
+.compare-trigger.panorama-trigger .sinal-novo { margin-left: 0; }
+/* Link para rever o aviso de entrada, dentro da janela do "i". */
+.aviso-rever { min-height: 44px; }
 
 
 /* Notícias do Mercado: bandeiras antes do título na linha do tempo */

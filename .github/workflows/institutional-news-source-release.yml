@@ -1,0 +1,72 @@
+name: Liberar fontes de notícias revisadas
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Aplicar somente a liberação exata revisada no código
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+# Mesmo grupo do job de coleta em institutional-news.yml: nunca roda junto com uma coleta.
+concurrency:
+  group: institutional-news-collector
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+  plan:
+    if: ${{ !inputs.apply }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node cotacoes/scripts/sector-news-source-release.mjs --plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  apply:
+    if: ${{ inputs.apply }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node cotacoes/scripts/sector-news-source-release.mjs --apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INSTITUTIONAL_RELEASE_REPORT: ${{ runner.temp }}/source-release-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-release-report
+          path: ${{ runner.temp }}/source-release-report.json
+          if-no-files-found: warn

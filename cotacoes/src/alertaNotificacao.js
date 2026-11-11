@@ -14,7 +14,7 @@ export async function notificarAlerta(obterAtual) {
     if (permissaoNotificacao() !== 'granted') return false
     const a = obterAtual() // relógio, dia e cotação revalidados após a espera pelo registro
     if (!a) return false
-    const title = `Painel Especialista · ${a.nome} ${a.dir === 'alta' ? '▲' : '▼'}`
+    const title = `PEME · ${a.nome} ${a.dir === 'alta' ? '▲' : '▼'}`
     const options = { body: textoAlerta(a), tag: a.id, icon: './favicon.svg' }
     if (reg?.showNotification) await reg.showNotification(title, options)
     else new Notification(title, options)

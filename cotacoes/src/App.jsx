@@ -25,8 +25,9 @@ const Curves = lazy(() => import('./Curves.jsx'))
 const CdiFuturo = lazy(() => import('./CdiFuturo.jsx'))
 import HolidayNotice from './HolidayNotice.jsx'
 import AvisoInicial from './AvisoInicial.jsx'
-import ConceitoDiario from './ConceitoDiario.jsx'
 import MarketPopup from './MarketPopup.jsx'
+import { usePanorama } from './usePanorama.js'
+import { avisoPendente, marcarAvisoVisto } from './avisoInicial.js'
 import Recado from './Recado.jsx'
 import AlertaVariacao from './AlertaVariacao.jsx'
 import { OnlineBadge } from './Acessos.jsx'
@@ -203,7 +204,10 @@ export default function App() {
     }
   }, [])
   const [open, setOpen] = useState(null) // código da moeda (ou 'PAR') com o detalhe aberto
-  const [avisoFechado, setAvisoFechado] = useState(() => !!navigator.webdriver)
+  // Aviso de entrada: sozinho, só na primeira vez neste aparelho ou quando o texto mudar; navegador automatizado (smokes) não o recebe.
+  const [avisoAberto, setAvisoAberto] = useState(() => !navigator.webdriver && avisoPendente())
+  const fecharAviso = () => { marcarAvisoVisto(); setAvisoAberto(false) }
+  const panorama = usePanorama()
   const cenView = sub === 'outros' ? 'inflacao' : CEN_VIEWS.some((v) => v.id === sub) ? sub : 'projecoes' // #cenarios/outros (endereço antigo) abre Inflação
   const goto = (id, to = '', replace = false) => {
     setTab(id)
@@ -262,11 +266,11 @@ export default function App() {
         <p><strong>Aviso:</strong> Conteúdo meramente informativo e ilustrativo, baseado em fontes públicas. As simulações são hipotéticas e não constituem recomendação, oferta ou garantia de resultado. Os dados podem apresentar defasagens ou imprecisões e devem ser conferidos nas fontes oficiais antes de qualquer decisão. O uso é de responsabilidade do usuário, observadas as responsabilidades previstas na legislação aplicável.</p>
         <p>Yuan: CNH (offshore), por cruzamento USD/BRL ÷ USD/CNH. Origem, API e frequência de cada dado: Configurações › Base de dados.</p>
         <p><i>{DISCLAIMER}</i></p>
+        <p><button type="button" className="linklike aviso-rever" aria-haspopup="dialog" onClick={() => setAvisoAberto(true)}>Ver o aviso de entrada</button></p>
       </>}>
     <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conteúdo</a>
-    <AvisoInicial onDismiss={() => setAvisoFechado(true)} />
-    <ConceitoDiario ready={avisoFechado} goto={goto} />
-    <MarketPopup ready={avisoFechado} quotes={quotes} curves={curves.data} oil={oil.data} paused={tab === 'apresentar'} />
+    <AvisoInicial open={avisoAberto} onClose={fecharAviso} />
+    <MarketPopup open={panorama.aberto} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
     <Recado />
     <Laser />
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
@@ -303,7 +307,7 @@ export default function App() {
       {tab === 'resumo' && (
         <>
           <HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />
-          <Resumo searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} />
+          <Resumo searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} panorama={panorama} />
 
         </>
       )}

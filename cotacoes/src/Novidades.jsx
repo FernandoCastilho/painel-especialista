@@ -2,6 +2,21 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '11/11/2026', resumo: 'Comparador de Crédito: regime tributário da empresa e comparação com aplicação financeira (CDB e fundos)', items: [
+    'Comparador de Crédito: a linha mestra ganha o regime tributário da empresa (Lucro Real, Presumido ou Simples) e o adicional de IRPJ. Nova linha "Custo após IRPJ/CSLL": no Lucro Real, juros, IOF e tarifas do crédito reduzem o imposto.',
+    'Opção "Comparar com aplicação financeira": CDB pós ou pré e fundo de renda fixa, com o DI da curva B3 e a tributação da empresa (IR retido, come-cotas, PIS/Cofins até 2026, IOF antes de 30 dias). Mostra bruto, imposto e líquido, e em cada operação se compensa tomar o crédito e manter o caixa aplicado ou usar o caixa próprio.',
+  ] },
+  { date: '11/11/2026', resumo: 'Nova calculadora Operação x DI: compara pré, % do CDI ou CDI + spread com o DI projetado pela curva B3', items: [
+    'Calculadoras > Operação x DI: informe valor, tipo de taxa (pré ao ano, ao mês ou no período; % do CDI; CDI + spread), início e vencimento. A tela mostra, lado a lado com o DI projetado pela curva DI x pré da B3, a taxa no período, a taxa ao ano (252 dias úteis), juros ou rendimento e valor no vencimento; a diferença em R$ e em bps; e os equivalentes em % do CDI e CDI + spread. Escolha se a operação é crédito (custo) ou aplicação (rendimento). Pagamento único no vencimento, sem IOF, IR e tarifas: não é CET.',
+  ] },
+  { date: '10/11/2026', resumo: 'Menos pop-ups: Panorama e Conceito do dia abrem só por clique, no Mercado; Finame mostra os números principais no topo do resultado', items: [
+    'BNDES > Moedas: cotação diária da TFBD (Taxa Fixa BNDES em Dólar, operações indiretas), nas três faixas de prazo: TFBD24.120 (TD1), TFBD72.120 (TD2) e TFBD120.120 (TD3). É só a taxa em % ao ano; o saldo do contrato também acompanha o dólar (604).',
+    'Garantia FGI na calculadora BNDES Finame e no comparador de crédito: percentual garantido só em múltiplos de 10 (10% a 80%), crédito garantido limitado a R$ 20 milhões por cliente em cada agente e recusa em linha com TLP capitalizada ou para grande empresa, conforme o Regulamento do FGI Tradicional (Circular SUP/ADIG 62/2026). A ajuda do ECG explica por que o valor parece alto e traz exemplos.',
+    'Aviso de entrada: aparece na primeira vez neste aparelho e só volta quando o texto mudar. Para reler, abra o "i" (Informações e avisos gerais) e toque em "Ver o aviso de entrada".',
+    'Panorama do dia: não abre mais sozinho. Fica no botão "Panorama do dia", no topo do quadro Mercado hoje; um ponto no botão indica edição nova (dias úteis, das 9h às 18h).',
+    'Conceito do dia: não abre mais sozinho. Fica no botão "Conceito do dia" da faixa Aprender, no Mercado.',
+    'BNDES Finame Materiais: Taxa final, Parcelas, Juros totais e Pagamento final abrem o Resultado estimado, sem precisar abrir a Composição do resultado. A faixa "Cotação comparativa" só aparece ao comparar TFC e TFB. Nenhuma conta mudou.',
+  ] },
   { date: '09/11/2026', resumo: 'Calculadora BNDES Finame: TAC e garantia FGI no resultado; cronograma sem indexador e sem coluna de IOF', items: [
     'BNDES Finame Materiais: a TAC aparece ao lado do custo financeiro, editável e pré-preenchida com R$ 2.600,00; ela entra no pagamento final como despesa à vista.',
     'Nova opção no fim dos dados: garantia do FGI (Tradicional). O custo é o ECG, pela fórmula do Anexo V do Regulamento do FGI (Circular SUP/ADIG 65/2026): percentual garantido de 10% a 80%, fator K pelo prazo total e períodos de 30 dias. Pode ser financiado (incorporado ao saldo devedor) ou pago à vista. O FGI PEAC tem regras próprias e não é calculado.',

@@ -132,8 +132,8 @@ const daily = (start, n, base, step, dec = 4) => Array.from({ length: n }, (_, i
       assert.match(await p.locator('.bn-sub').nth(1).innerText(), /TFC_120\.90 \(C02\)/i)
       // Moedas: dólar em %, TFBTR vigente ignora data futura, sobretaxa ausente marcada
       await fam.getByRole('button', { name: 'Moedas', exact: true }).click()
-      assert.equal(await tbl().count(), 7)
-      assert.deepEqual(await tbl().locator('.bn-pick small').allTextContents().then((a) => a.map((s) => s.split(' · ')[0])), ['604', '143', 'LD1', '024', '236', 'TR1', 'TR2'])
+      assert.equal(await tbl().count(), 10)
+      assert.deepEqual(await tbl().locator('.bn-pick small').allTextContents().then((a) => a.map((s) => s.split(' · ')[0])), ['604', '143', 'LD1', '024', '236', 'TR1', 'TR2', 'TD1', 'TD2', 'TD3'])
       assert.match(await tbl().nth(0).innerText(), /US\$[\s\S]*R\$ 5,\d{4}[\s\S]*▲ \+0,\d\d%/)
       assert.match(await tbl().nth(5).innerText(), /TFBTR60\.90[\s\S]*3,60% a\.a\./, 'valor vigente da TR1: o do mês corrente, não o de 2099')
       assert.match(await tbl().nth(2).innerText(), /SOBRETAXA LCD[\s\S]*-0,110000% a\.a\.\s+·\s+dado anterior/, 'LD1 preserva a referência oficial datada, mesmo quando a coleta não inclui essa série')
@@ -207,12 +207,13 @@ const daily = (start, n, base, step, dec = 4) => Array.from({ length: n }, (_, i
       if (outputDir) { await p.evaluate(() => window.scrollTo(0, 0)); await p.screenshot({ path: `${outputDir}/tlp-${width}-indexadores.png` }) }
       await p.getByRole('button', { name: 'Histórico na aba BNDES' }).click(); await p.waitForURL('**/#bndes/tlp/TLP')
       if (width >= 900) {
-        assert.match(await p.locator('.topbar-brand').innerText(), /^Painel\s*Especialista$/, 'marca da barra superior')
+        assert.match(await p.locator('.topbar-brand').innerText(), /^PEME$/, 'marca da barra superior')
+        assert.equal(await p.locator('.topbar-brand').getAttribute('title'), 'Painel Especializado no Mercado', 'nome completo ao passar o mouse na marca')
         const headerGeometry = []
         for (const w of [1000, 1024, 1100, 1199, 1299]) {
           await p.setViewportSize({ width: w, height: 800 })
-          const sp = await p.locator('.topbar-brand span').boundingBox()
-          assert.ok(sp && sp.width > 40, `"Especialista" visível (não só no texto) a ${w}px`)
+          const sp = await p.locator('.topbar-brand abbr').boundingBox()
+          assert.ok(sp && sp.width > 20, `"PEME" visível (não só no texto) a ${w}px`)
           assert.equal(await p.evaluate(() => { const t = document.querySelector('.topbar-tabs'); return t.scrollWidth > t.clientWidth + 1 }), false, `abas sem corte a ${w}px`)
           const geometry = await p.locator('.topbar').evaluate(header => {
             const box = selector => { const r = header.querySelector(selector).getBoundingClientRect(); return { left:r.left, top:r.top, right:r.right, bottom:r.bottom, width:r.width, height:r.height } }

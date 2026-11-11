@@ -56,6 +56,17 @@ export const createWeeklySnapshot = files => Object.fromEntries(RETAIN_FILES.map
   return [file, hash(files[file])]
 }))
 
+// Na coleta semanal, o histórico do Focus é renovado de propósito depois do inventário.
+// Só esse arquivo pode ter o registro trocado, e só depois de conferido de novo.
+export const WEEKLY_REFRESHED_FILES = ['focus-history.json']
+export function acceptRefreshedFile(snapshot, file, text) {
+  if (!WEEKLY_REFRESHED_FILES.includes(file)) throw aborted(file, 'arquivo não pode ser renovado na coleta semanal')
+  if (!snapshot || !/^[a-f0-9]{64}$/.test(snapshot[file] ?? '')) throw new Error('Publicação semanal abortada: inventário de preservação incompleto')
+  const data = validatePublishedFile(file, text)
+  if (!data.series || typeof data.series !== 'object' || !Object.keys(data.series).length) throw aborted(file, 'histórico renovado sem séries')
+  return { ...snapshot, [file]: hash(text) }
+}
+
 export async function verifyWeeklyData(directory, snapshot) {
   if (!snapshot || Object.keys(snapshot).length !== RETAIN_FILES.length ||
       RETAIN_FILES.some(file => !/^[a-f0-9]{64}$/.test(snapshot[file] ?? ''))) {

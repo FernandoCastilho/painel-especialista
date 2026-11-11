@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { fromInput, useIntraday } from './useHistory.js'
-import { MARKET_POPUP_KEY, marketSlot, seenMarketSlot, rememberMarketSlot, marketFx, marketDi, marketBrent, marketSummary, signedMarketChange, marketTone } from './marketPopup.js'
+import { marketFx, marketDi, marketBrent, marketSummary, signedMarketChange, marketTone } from './marketPopup.js'
 import './MarketPopup.css'
 
 function MiniLine({ points, color, label }) {
@@ -28,7 +28,7 @@ function QuoteCard({ item, daily=false }) {
   </article>
 }
 function MarketHeading({ slot }) {
-  return <div className="mp-title-row"><span className="mp-chart-icon" aria-hidden="true"><i/><i/><i/></span><div><h2 id="market-popup-title">Panorama do dia</h2><p>Leitura rápida para decisões de crédito e câmbio</p></div><p className="mp-edition">{slot && <>{new Date(slot.day+'T12:00:00Z').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'})}<br/>Edição das {slot.hour}h · Brasília</>}</p></div>
+  return <div className="mp-title-row"><span className="mp-chart-icon" aria-hidden="true"><i/><i/><i/></span><div><h2 id="market-popup-title">Panorama do dia</h2><p>Leitura rápida para decisões de crédito e câmbio</p></div><p className="mp-edition">{slot && <>{new Date(slot.day+'T12:00:00Z').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'})}<br/>{slot.hour!=null?<>Edição das {slot.hour}h · Brasília</>:'Fora do horário das edições · últimos dados'}</>}</p></div>
 }
 function Panorama({ slot, quotes, curves, oil }) {
   const day=fromInput(slot.day)
@@ -53,45 +53,25 @@ function Panorama({ slot, quotes, curves, oil }) {
 
   </>
 }
-export default function MarketPopup({ ready, quotes, curves, oil, paused=false }) {
-  const dialog=useRef(null), memory=useRef(new Set()), priorFocus=useRef(null), overflow=useRef(null)
-  const [slot,setSlot]=useState(null)
-  const close=()=>{ dialog.current?.close(); if(overflow.current!==null){document.body.style.overflow=overflow.current;overflow.current=null} }
+// O Panorama nunca abre sozinho: quem abre é o botão "Panorama do dia" do Mercado (usePanorama.js guarda o estado no App).
+export default function MarketPopup({ open, slot, onClose, quotes, curves, oil }) {
+  const dialog=useRef(null)
   useEffect(()=>{
-    if(!ready||paused||navigator.webdriver)return undefined
     const el=dialog.current
-    let active=true
-    const storage=()=>{try{return window.localStorage}catch{return null}}
-    const attempt=()=>{
-      const current=marketSlot()
-      if(!active||document.visibilityState==='hidden'||el.open||seenMarketSlot(current,storage(),memory.current)||document.querySelector('dialog:modal'))return
-      priorFocus.current=document.activeElement
-      setSlot(current)
-      el.showModal()
-      rememberMarketSlot(current,storage(),memory.current)
-      overflow.current=document.body.style.overflow
-      document.body.style.overflow='hidden'
-      el.querySelector('button')?.focus({preventScroll:true})
-    }
-    const tick=()=>{
-      if(navigator.locks?.request) navigator.locks.request(MARKET_POPUP_KEY,{ifAvailable:true},lock=>{if(lock)attempt()}).catch(()=>{})
-      else attempt()
-    }
-    tick()
-    const timer=setInterval(tick,1000)
-    window.addEventListener('focus',tick)
-    document.addEventListener('visibilitychange',tick)
+    if(!open||!el)return undefined
+    const origem=document.activeElement, overflow=document.body.style.overflow
+    el.showModal()
+    document.body.style.overflow='hidden'
+    el.querySelector('button')?.focus({preventScroll:true})
     return ()=>{
-      active=false;clearInterval(timer);window.removeEventListener('focus',tick);document.removeEventListener('visibilitychange',tick)
       if(el.open)el.close()
-      if(overflow.current!==null){document.body.style.overflow=overflow.current;overflow.current=null}
+      document.body.style.overflow=overflow
+      if(origem?.isConnected&&origem!==document.body&&origem.getClientRects().length)origem.focus({preventScroll:true})
     }
-  },[ready,paused])
-  return <dialog ref={dialog} className="market-popup" aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}} onClose={()=>{
-    if(priorFocus.current?.isConnected&&priorFocus.current!==document.body&&priorFocus.current.getClientRects().length)priorFocus.current.focus({preventScroll:true})
-    else [...document.querySelectorAll('nav button[aria-current="page"], nav button, main button')].find(el=>!el.disabled&&el.getClientRects().length)?.focus({preventScroll:true})
-  }} onKeyDown={e=>{if(e.key==='Tab'){e.preventDefault();dialog.current.querySelector('button')?.focus()}}}>
-    <div className="mp-ribbon"><span>Painel do Especialista · Panorama de mercado</span><button type="button" aria-label="Fechar panorama" autoFocus onClick={close}>×</button></div>
-    <div className="mp-content"><MarketHeading slot={slot}/>{slot&&<Panorama slot={slot} quotes={quotes} curves={curves} oil={oil}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Dias úteis nacionais, das 9h às 18h, com o Painel aberto.</p></div>
+  },[open])
+  const close=onClose
+  return <dialog ref={dialog} className="market-popup" aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}} onKeyDown={e=>{if(e.key==='Tab'){e.preventDefault();dialog.current.querySelector('button')?.focus()}}}>
+    <div className="mp-ribbon"><span>PEME · Panorama de mercado</span><button type="button" aria-label="Fechar panorama" autoFocus onClick={close}>×</button></div>
+    <div className="mp-content"><MarketHeading slot={slot}/>{open&&slot&&<Panorama slot={slot} quotes={quotes} curves={curves} oil={oil}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Edições de hora em hora em dias úteis nacionais, das 9h às 18h. O Panorama só abre quando você pede, pelo botão no Mercado.</p></div>
   </dialog>
 }

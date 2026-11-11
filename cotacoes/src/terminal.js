@@ -30,6 +30,7 @@ const TAB = {
   SETORES: ['setores'], COBRE: ['setores', 'cobre'], ALUMINIO: ['setores', 'aluminio'], ACO: ['setores', 'aco'], TELECOM: ['setores', 'telecom'], INDUSTRIA: ['setores', 'industria'], VAREJO: ['setores', 'comercio'],
   TLPEXIGIVEL: ['calculadora', 'bndes-tlp-exigivel'], CREDITOTFB: ['calculadora', 'bndes-credito-tfb'],
   COMPARADORDECREDITO: ['calculadora', 'comparador-credito'],
+  OPERACAODI: ['calculadora', 'operacao-di'], OPERACAOXDI: ['calculadora', 'operacao-di'], OPXDI: ['calculadora', 'operacao-di'],
   CALC: ['calculadora'], CALCULADORA: ['calculadora'], CALCULADORAS: ['calculadora'], GIRO: ['calculadora', 'giro'], DESCONTO: ['calculadora', 'analise-desconto'], ANALISEDEDESCONTO: ['calculadora', 'analise-desconto'], FINIMP: ['calculadora', 'finimp'], FINAME: ['calculadora', 'finame-materiais'], FINAMEMATERIAIS: ['calculadora', 'finame-materiais'],
   NEWS: ['noticias'], NOTICIAS: ['noticias'], AGENDA: ['noticias'],
   FERIADOS: ['feriados'], APRESENTAR: ['apresentar'], APRESENTACAO: ['apresentar'], CONFIG: ['config'], AJUDA: ['config'], HELP: ['config'],
@@ -241,6 +242,6 @@ export function ageText(ageMs) {
 
 export const SHORTCUTS = [
   ['Ctrl + Shift + F', 'Buscar em todo o painel; o botão Buscar também está disponível no celular'],
-  ['Alt + 1 … 9, 0', 'Mercado, Juros, Cenários, Notícias, BNDES, Setores, Calculadoras, Feriados, Aprender, Config'],
+  ['Alt + 1 … 9', DESK_TABS.filter(tab => !tab.oculto).map(tab => tab.label).join(', ')],
   ['Ctrl + ~  ou  Ctrl + "', 'Laser pointer (Alt + L também vale): liga e desliga (Esc também para). Ligado, o mouse segue normal: clique clica; arrastar risca; Ctrl + arrastar faz um retângulo; Shift + arrastar, uma seta. Tudo se apaga sozinho'],
 ]

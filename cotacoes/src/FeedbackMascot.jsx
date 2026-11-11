@@ -73,7 +73,7 @@ export default function FeedbackMascot({ configuration = config, onSearch }) {
       <MascotIcon /><span>Sugestões</span>
     </button></MascotDock>
     {createPortal(<dialog id="feedback-dialog" className="feedback-dialog" ref={dialog} aria-labelledby="feedback-title" aria-describedby="feedback-privacy" onCancel={event => { event.preventDefault(); setOpen(false) }} onClose={() => { if (!dialog.current?.open) setOpen(false) }}>
-      <header className="feedback-heading"><MascotIcon /><div><span>PAINEL DO ESPECIALISTA</span><h2 id="feedback-title">Sua ideia faz diferença</h2></div><button type="button" className="feedback-close" aria-label="Fechar caixa de sugestões" onClick={() => setOpen(false)}>×</button></header>
+      <header className="feedback-heading"><MascotIcon /><div><span>PEME</span><h2 id="feedback-title">Sua ideia faz diferença</h2></div><button type="button" className="feedback-close" aria-label="Fechar caixa de sugestões" onClick={() => setOpen(false)}>×</button></header>
       <p id="feedback-privacy" className="feedback-privacy">Envie uma sugestão, dica ou problema para Fernando. Não inclua dados de clientes, senhas ou informações confidenciais.</p>
       {!enabled && <p className="feedback-notice" role="status">O envio está em configuração. Nada será enviado por esta janela enquanto o serviço não estiver ativado.</p>}
       <form onSubmit={submit} aria-busy={status === 'sending'}>

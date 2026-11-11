@@ -25,7 +25,7 @@ test('actual failure notification distinguishes before, uncertain and after depl
     let issue
     const github = { rest: { issues: { listForRepo: async () => ({ data: [] }), create: async input => { issue = input } } } }
     const context = { serverUrl: 'https://github.com', repo: { owner: 'fixture', repo: 'fixture' }, runId: 123, eventName: 'push' }
-    await new AsyncFunction('github', 'context', 'process', script)(github, context, { env: { DEPLOYMENT_OUTCOME: outcome } })
+    await new AsyncFunction('github', 'context', 'process', 'core', script)(github, context, { env: { DEPLOYMENT_OUTCOME: outcome } }, { warning() {} }) // sem segredo do Teams: só registra o aviso
     assert.match(issue.body, expected)
     assert.doesNotMatch(issue.body, /continua com os dados anteriores/)
   }

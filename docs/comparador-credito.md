@@ -1,5 +1,34 @@
 # Comparador de Crédito
 
+## Versão por modalidade (10/11/2026)
+
+A tela passou a seguir o modelo "Simulador de empréstimo · Compare modalidades". Rota igual: `#calculadora/comparador-credito`.
+
+- O usuário escolhe de 2 a 5 comparações (começa com 2) e a modalidade de cada coluna: Giro prefixado, Giro pós-CDI, BNDES, FINIMP, Conta Garantida, Desconto de duplicata e Outra modalidade.
+- Topo comum: valor, prazo, carência, amortização e data da liberação. Cada coluna pode ter valor, prazo, carência e amortização próprios (campo vazio segue o comum).
+- Cada coluna pede os campos da sua modalidade. BNDES: linha (TFB, TFC, TLPCAP), custo financeiro, porte, spread do agente, participação, composição, periodicidade, IPCA, IOF, TAC e garantia FGI, com os limites de prazo e carência do BNDES. FINIMP: moeda, câmbio, prazo em dias, taxa simples, flat e TAC. Conta Garantida: taxa, base, conversão, contagem de dias, dias de uso. Desconto: convenção, taxa, tarifa dos títulos, TAC, títulos e prazo médio.
+- O cartão mostra parcela estimada e CET na hora. A tabela completa, o gráfico e a leitura só aparecem ao clicar em "Comparar modalidades" e somem se qualquer condição mudar.
+- Mantidos: cenários do CDI (só com coluna indexada), "mesmo valor líquido" (vale para todas as modalidades), declaração de conferência e apresentação em tela cheia.
+- Código: `src/creditModalities.js` (organiza cada coluna e leva o resultado a um formato comum), `src/CreditComparison.jsx` (tela). Nenhum motor de cálculo foi alterado: usa `creditComparison.js`, `finameMateriais.js`, `finimpComparison.js`, `contaGarantida.js` e `analiseDesconto.js` como estão.
+- CET de todas as modalidades: mesmo cálculo por fluxo de caixa (líquido na liberação, pagamentos datados, ACT/365), sempre "estimado".
+- Giro pós-CDI (11/11/2026, Res. CMN 4.881/2020, art. 5º: taxa flutuante não entra no CET regulatório): a coluna mostra dois números. "CET · parte fixa (regra do BC)" é o mesmo contrato com CDI zero (só o spread, mesma base de dias úteis/252, feriados nacionais e informados, mesmas datas e IOF desse fluxo). "Custo com CDI projetado" é o número antigo e não é CET. A marca "menor CET" usa o CET da parte fixa. Nas modalidades prefixadas os dois coincidem. Vale também para "Outra modalidade" com indexador CDI. Exemplo (R$ 500.000, 24 meses Price, 100% do CDI + 0,35% a.m., liberação 10/11/2026, CDI 14,9%): CET parte fixa 7,08% a.a.; custo com CDI projetado 23,12% a.a. Campos do motor: `cetRegulatory` em `creditOperation`; `cet`, `projectedCost` e `floating` no resultado da coluna.
+
+### Premissas que o usuário precisa saber
+
+- FINIMP em reais pelo câmbio informado, constante. Sem variação cambial e sem IOF de câmbio, como na calculadora FINIMP. Para o CET, flat e TAC são pagos na liberação; juros e principal, no vencimento.
+- BNDES: carência com juros pagos (convenção BNDES); no giro a carência é capitalizada. Cronograma em meses iguais a partir da liberação. BNDES aceita Price ou SAC (Bullet dá erro na coluna). Taxas do BNDES vêm do porte; custo financeiro e spread são digitados.
+- Conta Garantida: saldo usado inteiro por todo o período, juros e IOF pagos no fim; tarifas não modeladas.
+- Desconto: o valor é o nominal; juros descontados na liberação.
+- "BDRS" no pedido foi entendido como BNDES.
+
+### Verificações
+
+`node --test test/credit-modalities.test.mjs test/credit-comparison-ui.test.mjs` (contas de cada modalidade conferidas contra o motor próprio, equivalência de líquido, tela) e `node scripts/smoke-credit-comparison.cjs` (navegador, 390/820/1440 em claro e escuro, apresentação). A parte abaixo descreve o motor do Giro (histórico: a primeira versão tratava só Capital de Giro com duas propostas; as demais modalidades, hoje na mesma tela, seguem usando os módulos próprios). Colunas escondidas ao reduzir a quantidade guardam o que foi digitado.
+
+### Auditoria independente (10/11/2026)
+
+Parecer 1: Requer correção (84,0). Corrigidos: total desembolsado do Desconto (era somado em duplicidade), aviso de que carência e amortização comuns não valem para pagamento único, porte/spread/participação do BNDES visíveis no cartão, aviso de valores de exemplo, aviso sonoro a cada tecla, câmbio escondido em BRL.
+
 Primeira versão tecnicamente delimitada a Capital de Giro PJ em reais. Acesso: Calculadoras → Comparador de Crédito, rota `#calculadora/comparador-credito`. BNDES, FINIMP, Conta Garantida e desconto continuam em módulos próprios, sem reinterpretar suas regras.
 
 ## Entradas e convenções

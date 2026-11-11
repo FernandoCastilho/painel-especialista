@@ -45,7 +45,9 @@ test('inicia sem valores presumidos, taxa vazia impede resultado e não oferece 
   assert.equal(h.field('capitalization'), undefined)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
   assert.match(h.text(), /Estimativa para operação adimplente e rotativa/)
-  assert.match(h.text(), /Não é extrato, cotação bancária nem CET/)
+  assert.match(h.text(), /Não é extrato nem cotação bancária/)
+  assert.match(h.text(), /O CET aparece quando você informa o limite contratado/)
+  assert.equal(h.field('limit').props.value, '')
   const help = nodes(h.render.value).find(node => node.type === CalculatorHelp && node.props.title === 'Conta Garantida')
   assert.match(renderToStaticMarkup(help.props.children), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
   assert.doesNotMatch(h.text(), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
@@ -177,4 +179,29 @@ test('rota e documento de busca apontam à calculadora certa', async () => {
   const entry = index.documents.find(d => d.id === 'page:ContaGarantida.jsx')
   assert.equal(entry.route, 'calculadora/conta-garantida')
   assert.match(entry.body, /amortiza/i)
+})
+
+test('CET do art. 6º: sem limite pede o limite; com limite mostra 30 dias ao ano e ao mês, com aviso de conferir a norma', async t => {
+  const h = await setup(t)
+  await h.change('amount', '100.000')
+  await h.change('rate', '3')
+  assert.match(h.text(), /Sem CET: informe o limite contratado/)
+  assert.doesNotMatch(h.text(), /CET \(art\. 6º · 30 dias sobre o limite\)/)
+  await h.change('limit', '100.000')
+  // Recálculo independente: limite 100.000 menos IOF adicional de 0,38% na liberação; no 30º dia volta 100.000 + juros 3% × 30/30 + IOF 0,0082% × 30.
+  const payment = 100000 + 3000 + 100000 * 0.000082 * 30
+  const expected = Math.pow(payment / (100000 - 380), 365 / 30) - 1
+  const pct = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  assert.match(h.text(), /CET \(art\. 6º · 30 dias sobre o limite\)/)
+  assert.ok(h.text().includes(`${pct(expected)}% a.a.`), pct(expected))
+  assert.ok(h.text().includes(`${pct(Math.pow(1 + expected, 1 / 12) - 1)}% a.m.`))
+  assert.equal(pct(expected), '54,49')
+  assert.match(h.text(), /texto oficial conferido em 11\/11\/2026/)
+  // O limite não muda o resultado do período.
+  assert.match(h.text(), /1\.462,00/)
+  await h.change('limit', '0')
+  assert.equal(h.field('limit').props['aria-invalid'], true)
+  assert.doesNotMatch(h.text(), /Resultado estimado do período/)
+  await h.change('limit', '')
+  assert.match(h.text(), /Sem CET: informe o limite contratado/)
 })

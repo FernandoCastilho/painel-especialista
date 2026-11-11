@@ -1,3 +1,92 @@
-.credit-comparison{max-width:1400px;margin:auto}.credit-pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:20px 0}.credit-proposal,.credit-controls{padding:20px}.credit-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px}.credit-field{display:flex;flex-direction:column;gap:7px;min-width:0}.credit-field input,.credit-field select,.credit-field textarea{box-sizing:border-box;width:100%;min-height:44px;padding:9px;border:1px solid var(--line,#888);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}.credit-controls{margin:16px 0;display:flex;flex-wrap:wrap;align-items:center;gap:16px}.credit-controls p,.credit-controls h3{flex-basis:100%;margin:0}.credit-notice{border-left:3px solid #be8500;padding:12px;background:var(--surface-2)}.credit-scroll{overflow:auto;margin:20px 0}.credit-scroll table{width:100%;border-collapse:collapse;min-width:580px}.credit-scroll caption{text-align:left;font-weight:700;padding:10px 0}.credit-scroll td,.credit-scroll th{padding:12px;text-align:left;border-bottom:1px solid var(--line,#888);overflow-wrap:anywhere}.credit-scroll thead th{font-weight:700}.credit-scroll tbody th{font-weight:500}.credit-results p,.credit-method p,.credit-proposal p{line-height:1.6}.credit-chart{margin:24px 0;padding:20px;border:1px solid var(--line,#888);border-radius:8px}.credit-chart svg{width:100%;max-height:350px}.credit-chart text{fill:currentColor;font-size:14px}.credit-chart figcaption{font-weight:700}.credit-errors{border-left:3px solid #c33;padding:12px}.credit-confirm{display:block;margin:20px 0}.credit-comparison summary{padding:16px 0;cursor:pointer;font-weight:600}.credit-presentation{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;box-sizing:border-box;padding:24px;background:var(--bg,#fff);color:var(--fg);overflow:auto}.credit-presentation>header{display:flex;align-items:center;justify-content:space-between;gap:16px}.credit-presentation button,.credit-comparison button{min-height:44px}.credit-analysis{padding:16px;border:1px solid var(--line,#888)}@media(max-width:760px){.credit-pair{grid-template-columns:1fr}.credit-proposal{padding:14px}.credit-fields{grid-template-columns:1fr}.credit-presentation{padding:12px}.credit-chart{padding:8px}.credit-controls{padding:14px}.credit-controls>.credit-field{width:100%}}@media print{.credit-presentation>header button{display:none}}
+.credit-comparison{max-width:1500px;margin:auto}
+.credit-shared{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;padding:20px;margin:20px 0}
+.credit-shared-title{grid-column:1/-1;margin:-20px -20px 0;padding:10px 20px;background:#0b1f4d;color:#fff;font-size:1rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;border-bottom:3px solid #f26a0f}
+.credit-shared-title small{font-weight:400;opacity:.85}
+.credit-shared{border:2px solid #0b1f4d;overflow:hidden}
+.credit-shared-wide{grid-column:1/-1}
+.credit-invest{border-left:4px solid #1d8a5a}
+.credit-invest h3 label{display:flex;gap:8px;align-items:center;font-weight:700}
+.credit-invest>.credit-field{flex:1 1 220px}
+.credit-invest-block{padding:16px;border:2px solid #1d8a5a;border-radius:8px;margin:16px 0}
+.credit-invest-block h3{margin:0 0 4px}
+.credit-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.credit-field input,.credit-field select,.credit-field textarea{box-sizing:border-box;width:100%;min-height:44px;padding:9px;border:1px solid var(--line,#888);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+.credit-field .money-wrap input{padding-left:42px}
+.credit-count{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 16px}
+.credit-count>span{font-weight:700}
+.credit-grid{display:grid;grid-template-columns:repeat(var(--credit-cols,2),minmax(0,1fr));gap:16px;margin:0 0 20px;align-items:start}
+.credit-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line,#888);border-radius:12px;background:var(--surface-2,var(--bg));overflow:hidden}
+.credit-card-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0b1f4d;color:#fff;border-bottom:3px solid #f26a0f}
+.credit-card-head label{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.credit-card-number{font-size:.78rem;opacity:.85}
+.credit-card-head select{box-sizing:border-box;width:100%;min-height:40px;padding:6px 8px;border:1px solid rgba(255,255,255,.4);border-radius:6px;background:#12306b;color:#fff;font:inherit;font-weight:700}
+.credit-card-icon{display:flex}
+.credit-card-body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.credit-fields{display:grid;grid-template-columns:1fr;gap:12px}
+.credit-hint{margin:0;font-size:.85rem;opacity:.8;line-height:1.4}
+.credit-static{margin:0;line-height:1.4}
+.credit-check{display:flex;gap:8px;align-items:flex-start;line-height:1.4}
+.credit-card-result{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px;background:rgba(0,117,191,.1);border-top:1px solid var(--line,#888)}
+.credit-card-result div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.credit-card-result span{font-size:.8rem;opacity:.85}
+.credit-card-result b{font-size:1.1rem;overflow-wrap:anywhere}
+.credit-card-result small{opacity:.75}
+.credit-card-error{grid-column:1/-1;margin:0;color:#c33;line-height:1.4}
+.credit-controls{padding:20px;margin:16px 0;display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.credit-controls p,.credit-controls h3{flex-basis:100%;margin:0}
+.credit-actions{display:flex;justify-content:center;margin:20px 0}
+.credit-compare{min-width:280px;padding:14px 28px;border:0;border-radius:12px;background:#f26a0f;color:#fff;font:inherit;font-size:1.1rem;font-weight:700;cursor:pointer}
+.credit-notice{border-left:3px solid #be8500;padding:12px;background:var(--surface-2)}
+.credit-scroll{overflow:auto;margin:20px 0}
+.credit-scroll table{width:100%;border-collapse:collapse;min-width:580px}
+.credit-scroll caption{text-align:left;font-weight:700;padding:10px 0}
+.credit-scroll td,.credit-scroll th{padding:12px;text-align:left;border-bottom:1px solid var(--line,#888);overflow-wrap:anywhere}
+.credit-scroll thead th{font-weight:700}.credit-scroll tbody th{font-weight:500}
+.credit-results p,.credit-method p,.credit-notes li{line-height:1.6}
+.credit-chart{margin:24px 0;padding:20px;border:1px solid var(--line,#888);border-radius:8px}
+.credit-chart svg{width:100%;max-height:350px}.credit-chart text{fill:currentColor;font-size:14px}.credit-chart figcaption{font-weight:700}
+.credit-errors{border-left:3px solid #c33;padding:12px}
+.credit-confirm{display:block;margin:20px 0}
+.credit-comparison summary{padding:12px 0;cursor:pointer;font-weight:600}
+.credit-presentation{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;box-sizing:border-box;padding:24px;background:var(--bg,#fff);color:var(--fg);overflow:auto}
+.credit-presentation>header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.credit-presentation button,.credit-comparison button{min-height:44px}
+.credit-analysis,.credit-notes{padding:16px;border:1px solid var(--line,#888);margin:16px 0}
+.credit-comparison :focus-visible,.credit-presentation :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:1100px){.credit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.credit-shared{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.credit-grid{grid-template-columns:1fr}.credit-shared{grid-template-columns:1fr;padding:14px}.credit-shared-title{margin:-14px -14px 0;padding:10px 14px}.credit-presentation{padding:12px}.credit-chart{padding:8px}.credit-controls{padding:14px}.credit-controls>.credit-field{width:100%}.credit-compare{width:100%;min-width:0}}
+@media print{.credit-presentation>header button{display:none}}
 
-.credit-field .money-wrap input{padding-left:42px}.credit-comparison :focus-visible,.credit-presentation :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+/* Visual da calculadora BNDES (cabeçalho, abas e destaque vêm de BndesWorkspace.css pela classe .bw). */
+.credit-bw{color-scheme:light;color:#15253d;padding:0;border:1px solid #c6d5e9;border-radius:10px;overflow:hidden;background:#fafbfd}
+.credit-bw>.cx-back{margin:12px 16px}
+.credit-bw-body{padding:18px 12px}
+.credit-hero{display:flex;gap:18px;align-items:center;padding:18px 22px;border-radius:10px;background:#062a5c;border-left:6px solid #ff7900;color:#fff;margin-bottom:12px}
+.credit-hero h3{margin:0;font-size:clamp(1.2rem,2.2vw,1.75rem);color:#fff}
+.credit-hero p{margin:4px 0 0;opacity:.92;line-height:1.45}
+.credit-hero-icon{flex:none;display:grid;place-items:center;width:56px;height:56px;border-radius:8px;background:#ff7900;color:#fff}
+.credit-intro{margin:0 0 12px;color:#4a5a70;font-size:.875rem}
+.credit-bw .credit-shared{border:2px solid #0b2e63;border-radius:10px;background:#fff;color:#15253d}
+.credit-bw .credit-shared-title{background:linear-gradient(110deg,#052956,#07336b);border-bottom:4px solid #ff7900}
+.credit-bw .credit-card{border:1px solid #c6d5e9;border-radius:10px;background:#fff;color:#15253d}
+.credit-bw .credit-card-head{background:#e5f0fd;color:#0b2e63;border-bottom:3px solid #ff7900}
+.credit-bw .credit-card-head select{background:#fff;color:#0b2e63;border:1px solid #7a8fac}
+.credit-bw .credit-card-result{background:#f2f6fc;border-top:1px solid #c6d5e9}
+.credit-bw .credit-card-result b{color:#092e60}
+.credit-bw .credit-controls,.credit-bw .credit-analysis,.credit-bw .credit-notes,.credit-bw .credit-chart{border:1px solid #c6d5e9;border-radius:10px;background:#fff;color:#15253d}
+.credit-bw .credit-invest{border-left:6px solid #1d8a5a}
+.credit-bw .credit-invest-block{background:#f3faf6;color:#15253d}
+.credit-bw .credit-field input,.credit-bw .credit-field select,.credit-bw .credit-field textarea{border:1px solid #7a8fac;background:#fff;color:#15253d}
+.credit-bw .credit-compare{background:#ff7900;border-radius:8px}
+.credit-bw .credit-table{border:1px solid #c6d5e9}
+.credit-bw .credit-table caption{color:#092e60}
+.credit-bw .credit-table thead th{background:#d3e3f9;color:#10284c;border:1px solid #c6d5e9}
+.credit-bw .credit-table thead th:first-child{background:#0b2e63;color:#fff;font-size:1.05rem}
+.credit-bw .credit-table tbody th,.credit-bw .credit-table td{border:1px solid #c6d5e9;color:#10284c}
+.credit-bw .credit-table tbody th{font-weight:700}
+.credit-bw .credit-table tbody tr:nth-child(odd){background:#f2f6fc}
+.credit-bw .credit-table tbody tr:nth-child(even){background:#fff}
+.credit-bw .credit-method{margin:0 0 12px;border:1px solid #c6d5e9;border-radius:8px;background:#f5f8fd;padding:0 14px;color:#15253d}
+.credit-bw .credit-method>summary{font-weight:700;color:#092e60;padding:14px 0}
+.credit-bw .credit-notice{background:#fff7e8;color:#4a3300}
+@media(max-width:760px){.credit-bw-body{padding:12px 6px}.credit-hero{padding:14px;gap:12px}.credit-hero-icon{width:44px;height:44px}}

@@ -27,7 +27,7 @@ export async function sendFeedback(config, values, { fetcher = fetch, signal } =
     method: 'POST', credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error', signal,
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      assunto: `[Painel do Especialista] ${values.type}`, tipo: values.type,
+      assunto: `[PEME] ${values.type}`, tipo: values.type,
       message: values.message.trim(), ...(values.name.trim() && { name: values.name.trim() }),
       ...(values.email.trim() && { email: values.email.trim() }), _gotcha: '',
     }),

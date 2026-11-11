@@ -1,6 +1,7 @@
 name: Vigia das cotações (pregão, de 15 em 15 min)
 
 # Se a coleta central de cotações parar no pregão (o GitHub às vezes pula o agendamento), dispara quotes.yml de novo.
+# Também avisa o dono (issue + Teams) quando a cotação fica parada por 30 min ou mais dentro do pregão; fecha a issue quando normaliza.
 on:
   schedule:
     - cron: '*/15 12-21 * * 1-5' # 9h a 18h45 de Brasília; o script só age das 9h30 às 18h
@@ -8,17 +9,22 @@ on:
     - cron: '7,22,37,52 12-21 * * 1-5'
   # Reforço que não depende de agenda: quando uma coleta ou uma publicação termina (inclusive com falha), a vigia confere na hora.
   workflow_run:
-    workflows: ['Cotações (coleta central)', 'Deploy do Painel Especialista (GitHub Pages)']
+    workflows: ['Cotações (coleta central)', 'Deploy do PEME (GitHub Pages)']
     types: [completed]
   workflow_dispatch:
 
 permissions:
   contents: read
   actions: write
+  issues: write # só para abrir e fechar a issue "Cotações paradas no pregão"
 
 jobs:
   vigia:
     runs-on: ubuntu-latest
+    # Uma rodada por vez: duas agendas e o gatilho de fim de coleta podem coincidir, e duas rodadas juntas abririam duas pendências iguais.
+    concurrency:
+      group: quotes-watch
+      cancel-in-progress: false
     defaults:
       run:
         working-directory: cotacoes
@@ -31,13 +37,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gen=$(gh api "repos/$GITHUB_REPOSITORY/contents/quotes.json?ref=data" -H "Accept: application/vnd.github.raw" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).generatedAt??"")}catch{console.log("")}})')
+          # quotes.json da branch data; se a leitura falhar o arquivo fica vazio e o script trata como "data desconhecida"
+          gh api "repos/$GITHUB_REPOSITORY/contents/quotes.json?ref=data" -H "Accept: application/vnd.github.raw" > "$RUNNER_TEMP/cotacoes-publicadas.txt" || true
           running=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow quotes.yml --limit 10 --json status --jq '[.[] | select(.status=="in_progress" or .status=="queued" or .status=="waiting" or .status=="pending")] | length > 0')
-          echo "generated=$gen" >> "$GITHUB_OUTPUT"
           echo "running=$running" >> "$GITHUB_OUTPUT"
       - id: decide
         env:
-          GENERATED_AT: ${{ steps.estado.outputs.generated }}
+          QUOTES_FILE: ${{ runner.temp }}/cotacoes-publicadas.txt
           RUNNING: ${{ steps.estado.outputs.running }}
         run: node scripts/quotes-watch.mjs
       - name: Disparar a coleta de cotações
@@ -45,3 +51,51 @@ jobs:
         run: gh workflow run quotes.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: Avisar cotação parada no pregão (issue única + Teams, se configurado)
+        if: always() && steps.decide.outputs.alert != ''
+        uses: actions/github-script@v7
+        env:
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          ALERTA: ${{ steps.decide.outputs.alert }}
+          MOTIVO: ${{ steps.decide.outputs.alert_reason }}
+        with:
+          script: |
+            // Aviso ao Teams: nunca falha em silêncio, nunca derruba a rotina e nunca mostra o endereço do segredo.
+            const avisarTeams = async (text) => {
+              const naoEnviado = (motivo) => { core.warning(`Aviso ao Teams NÃO enviado: ${motivo}`); return { ok: false, motivo } }
+              const url = process.env.TEAMS_WEBHOOK_URL
+              if (!url) return naoEnviado('o segredo TEAMS_WEBHOOK_URL não está configurado neste repositório.')
+              try {
+                const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }), signal: AbortSignal.timeout(15000) })
+                if (!res.ok) return naoEnviado(`o Teams respondeu com erro (código ${res.status}).`)
+                const corpo = await res.text().catch(() => '')
+                if (/failed|error/i.test(corpo)) return naoEnviado('o Teams recebeu a mensagem, mas avisou que a entrega falhou.')
+                return { ok: true }
+              } catch (e) {
+                return naoEnviado(`falha de rede ou tempo esgotado (${e?.name ?? 'erro'}).`)
+              }
+            }
+            const title = 'Cotações paradas no pregão'
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            // Lê todas as páginas: com muitas pendências e pedidos abertos, a pendência antiga não pode sumir da busca.
+            const abertas = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'open', per_page: 100 })
+            const iguais = abertas.filter((i) => i.title === title && !i.pull_request)
+            const prev = iguais[0]
+            if (process.env.ALERTA === 'true') {
+              // Uma pendência só: enquanto ela estiver aberta, as rodadas seguintes do vigia não abrem outra nem comentam.
+              if (prev) return core.info(`Pendência #${prev.number} já aberta; nada a fazer.`)
+              const body = [
+                process.env.MOTIVO,
+                'A página continua mostrando a última cotação válida, com a idade indicada na tela. O vigia tenta religar a coleta sozinho a cada 15 minutos.',
+                `O que conferir: a última execução de "Cotações (coleta central)" em ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/quotes.yml e se a fonte (AwesomeAPI) está no ar.`,
+                `Esta pendência fecha sozinha quando a cotação voltar a atualizar.\n\nExecução do vigia: ${run}`,
+              ].join('\n\n')
+              await github.rest.issues.create({ ...context.repo, title, body })
+              await avisarTeams(`${title}. ${process.env.MOTIVO} ${run}`)
+            } else if (process.env.ALERTA === 'false' && prev) {
+              // Fecha todas as pendências com esse título, caso alguma duplicada tenha sido aberta.
+              for (const i of iguais) {
+                await github.rest.issues.createComment({ ...context.repo, issue_number: i.number, body: `Normalizado: as cotações voltaram a atualizar.\n\nExecução do vigia: ${run}` })
+                await github.rest.issues.update({ ...context.repo, issue_number: i.number, state: 'closed', state_reason: 'completed' })
+              }
+            }

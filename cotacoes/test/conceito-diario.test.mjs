@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { CONCEITOS } from '../src/educacao.js'
 import { conceitoDoDia, conceitoVisto, marcarConceito } from '../src/conceitoDiario.js'
 
@@ -31,4 +32,19 @@ test('persistência diária é separada e tolera armazenamento bloqueado', () =>
     if (original) Object.defineProperty(globalThis, 'localStorage', original)
     else delete globalThis.localStorage
   }
+})
+
+test('conceito do dia não abre sozinho: só pelo botão da faixa Aprender no Mercado', () => {
+  const read = (name) => readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8')
+  const dialogo = read('ConceitoDiario.jsx'), faixa = read('InsightAprender.jsx')
+  assert.doesNotMatch(dialogo, /setInterval|setTimeout|conceitoVisto|marcarConceito/)
+  assert.match(dialogo, /if \(!open \|\| !el\) return undefined/)
+  assert.match(dialogo, /Abrir conceito completo/)
+  // A faixa abre o conceito por clique e marca o dia como aberto (o ponto some); nada é aberto ao carregar.
+  assert.match(faixa, /const abrirConceito = \(\) => \{ marcarConceito\(conceitoDoDia\(\)\.dia\); setLido\(true\); setConceitoAberto\(true\) \}/)
+  assert.equal(faixa.match(/setConceitoAberto\(true\)/g).length, 1)
+  assert.match(faixa, /useState\(\(\) => conceitoVisto\(conceitoDoDia\(\)\.dia\)\)/)
+  assert.match(faixa, /onClick=\{abrirConceito\}>Conceito do dia/)
+  assert.match(faixa, /Ver em Aprender ›/)
+  assert.doesNotMatch(read('App.jsx'), /ConceitoDiario/)
 })

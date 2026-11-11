@@ -2,10 +2,11 @@ import { useRef, useState } from 'react'
 import MoneyInput from './MoneyInput.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import ComparativoAlongamento from './ComparativoAlongamento.jsx'
-import { CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, parseContaGarantidaForm } from './contaGarantida.js'
+import { CG_CET_DAYS, CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, parseContaGarantidaForm } from './contaGarantida.js'
 import './ContaGarantida.css'
 
 const brl = n => n == null ? '—' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const pct = n => `${(n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const dateLabel = d => d ? d.split('-').reverse().join('/') : '—'
 export function ContaGarantidaIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18v15H3zM3 10h18M7 3v4M17 3v4M7 14h4M9 12v4M14 15h4" /></svg>
@@ -15,7 +16,7 @@ export default function ContaGarantida({ onBack }) {
   const [comparing, setComparing] = useState(false)
   const [page, setPage] = useState(0)
   const nextId = useRef(0)
-  const { errors, warnings, params, result: calculation } = parseContaGarantidaForm({ ...form, rateBase: '30', conversion: 'proportional', status: 'performing' })
+  const { errors, warnings, params, result: calculation, cet } = parseContaGarantidaForm({ ...form, rateBase: '30', conversion: 'proportional', status: 'performing' })
   const result = calculation?.ok ? calculation : null
   const set = (key, value) => { setForm(old => ({ ...old, [key]: value })); setPage(0) }
   const control = key => ({ id: `cg-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `cg-${key}-hint cg-${key}-error` })
@@ -32,8 +33,8 @@ export default function ContaGarantida({ onBack }) {
   const safePage = Math.min(page, Math.max(0, pages - 1))
   return <section className="cx cx-cg" aria-labelledby="cg-heading">
     <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-    <div className="cx-heading"><h2 id="cg-heading" className="cx-title"><span className="cx-icon"><ContaGarantidaIcon /></span>Conta Garantida</h2><CalculatorHelp title="Conta Garantida"><p>Simule uma utilização por prazo ou registre utilizações e amortizações por data. Veja o saldo diário, os juros e as duas parcelas do IOF.</p><p>Estimativa para crédito rotativo adimplente, com reutilização contratualmente prevista. Juros e IOF são pagos à parte, nunca incorporados ao saldo. Informe a taxa mensal da proposta e confira as convenções. Não é extrato, cotação bancária nem CET.</p><p>Os modos Utilização única e Lançamentos por dia simulam o rotativo. Comparar com parcelado estima sua substituição por um novo giro de principal definido. Nenhum modo calcula inadimplência ou renegociação.</p></CalculatorHelp></div>
-    <p className="cg-notice">{comparing ? 'Compare encargos, parcelas e capacidade de pagamento. Estimativa, sem contratação ou CET.' : 'Estimativa para operação adimplente e rotativa. Não é extrato, cotação bancária nem CET.'}</p>
+    <div className="cx-heading"><h2 id="cg-heading" className="cx-title"><span className="cx-icon"><ContaGarantidaIcon /></span>Conta Garantida</h2><CalculatorHelp title="Conta Garantida"><p>Simule uma utilização por prazo ou registre utilizações e amortizações por data. Veja o saldo diário, os juros e as duas parcelas do IOF.</p><p>Estimativa para crédito rotativo adimplente, com reutilização contratualmente prevista. Juros e IOF são pagos à parte, nunca incorporados ao saldo. Informe a taxa mensal da proposta e confira as convenções. Não é extrato nem cotação bancária.</p><p>CET: informe o limite contratado. Pela Resolução CMN 4.881/2020, art. 6º, o crédito rotativo calcula o CET com prazo de 30 dias e o limite pactuado. Regra aplicada conforme o resumo do painel; confira no texto da norma.</p><p>Os modos Utilização única e Lançamentos por dia simulam o rotativo. Comparar com parcelado estima sua substituição por um novo giro de principal definido. Nenhum modo calcula inadimplência ou renegociação.</p></CalculatorHelp></div>
+    <p className="cg-notice">{comparing ? 'Compare encargos, parcelas e capacidade de pagamento. Estimativa, sem contratação ou CET.' : 'Estimativa para operação adimplente e rotativa. Não é extrato nem cotação bancária. O CET aparece quando você informa o limite contratado.'}</p>
     <div className="cg-modes" role="group" aria-label="Tipo de simulação">
       <button type="button" aria-pressed={!comparing && form.mode === 'single'} onClick={() => { setComparing(false); set('mode', 'single') }}>Utilização única</button>
       <button type="button" aria-pressed={!comparing && form.mode === 'ledger'} onClick={() => { setComparing(false); set('mode', 'ledger') }}>Lançamentos por dia</button>
@@ -72,8 +73,9 @@ export default function ContaGarantida({ onBack }) {
       <header className="cx-heading"><h3>2. Juros e convenções do contrato</h3><CalculatorHelp title="Juros e convenções do contrato"><p>Informe a taxa contratual em percentual ao mês. Para a apuração proporcional, os juros de cada dia correspondem ao saldo utilizado × taxa mensal ÷ 100 ÷ 30. O divisor 30 é fixo e não transforma o calendário real em meses de 30 dias. Juros não são capitalizados.</p></CalculatorHelp></header>
       <div className="cx-form">
         {input('rate', 'Taxa do contrato (% a.m.)', 'Taxa mensal em percentual, apurada proporcionalmente com base 30 e sem capitalização. Obrigatória. 0 significa sem juros; vazio não significa zero.')}
-        {select('dayCount', 'Dias que geram juros', [['calendar', 'Todos os dias corridos'], ['business', 'Segunda a sexta, menos feriados informados']], 'O IOF diário sempre considera dias corridos, inclusive fins de semana.')}
-        {form.dayCount === 'business' && field('holidays', 'Feriados contratuais (AAAA-MM-DD)', <textarea {...control('holidays')} rows={3} value={form.holidays} onChange={e => set('holidays', e.target.value)} placeholder="2026-11-20, 2026-12-25" />, 'Opcional. Sem datas, exclui apenas sábados e domingos. Não importa os feriados de outras áreas do painel.')}
+        {money('limit', 'Limite contratado (R$)', 'Opcional. Usado só para o CET: pela Resolução CMN 4.881/2020, art. 6º, o rotativo calcula o CET com prazo de 30 dias sobre o limite pactuado. Não muda o resultado do período.')}
+        {select('dayCount', 'Dias que geram juros', [['calendar', 'Todos os dias corridos'], ['business', 'Dias úteis: segunda a sexta, menos feriados nacionais e extras']], 'Dias úteis descontam sábados, domingos e os feriados nacionais do calendário do painel (inclusive Carnaval, Sexta-feira Santa e Corpus Christi), além dos feriados extras que você informar. O IOF diário sempre considera dias corridos, inclusive fins de semana.')}
+        {form.dayCount === 'business' && field('holidays', 'Feriados extras do contrato (AAAA-MM-DD)', <textarea {...control('holidays')} rows={3} value={form.holidays} onChange={e => set('holidays', e.target.value)} placeholder="2026-01-25, 2026-07-09" />, 'Opcional. Os feriados nacionais já são descontados pelo calendário do painel. Informe aqui só os feriados locais ou outros dias sem expediente previstos no contrato.')}
       </div>
     </article>
 
@@ -101,6 +103,16 @@ export default function ContaGarantida({ onBack }) {
         <div className="cg-kpis">
           {[['Juros apurados', result.totals.interest], ['IOF diário', result.totals.dailyIof], ['IOF adicional', result.totals.additionalIof], ['Custo total', result.totals.cost], ['Saldo devedor final', result.balance], ['Total de utilizações', result.totals.draw]].map(([label, value]) => <div key={label}><span>{label}</span><b>{brl(value)}</b></div>)}
         </div>
+        {cet?.ok ? <div className="cg-cet">
+          <div className="cg-kpis">
+            <div><span>CET (art. 6º · 30 dias sobre o limite)</span><b>{pct(cet.annual)} a.a.</b></div>
+            <div><span>CET ao mês</span><b>{pct(cet.monthly)} a.m.</b></div>
+            <div><span>Pagamento no {CG_CET_DAYS}º dia</span><b>{brl(cet.payment)}</b></div>
+          </div>
+          <div className="cx-heading cx-pad"><p className="cx-hint">Fluxo do CET: {brl(cet.net)} líquidos em {dateLabel(cet.start)}; {brl(cet.payment)} em {dateLabel(cet.end)}.</p><CalculatorHelp title="Como calculamos o CET"><p>Limite de {brl(cet.limit)} liberado em {dateLabel(cet.start)}, menos o IOF adicional ({brl(cet.additionalIof)}), cobrado na utilização: líquido de {brl(cet.net)}. Em {dateLabel(cet.end)}, devolução do limite + juros de {CG_CET_DAYS} dias ({brl(cet.interest)}) + IOF diário ({brl(cet.dailyIof)}), pela taxa, contagem de dias e IOF desta tela.</p><p>O CET é a taxa anual que iguala o valor liberado ao valor presente do pagamento, em dias corridos/365 (Resolução CMN 4.881/2020, arts. 4º e 6º). Ao mês: equivalente composta. Não há tarifas neste simulador.</p></CalculatorHelp></div>
+          <p className="cg-notice">Regra do art. 6º da Resolução CMN 4.881/2020 (texto oficial conferido em 11/11/2026): prazo de 30 dias e limite pactuado. Obrigatória para pessoa física, ME e EPP (art. 1º); para as demais empresas, estimativa. Taxa e IOF do contrato prevalecem.</p>
+        </div> : cet && !cet.ok ? <p className="cg-notice" role="alert">CET não calculado: {cet.error}</p>
+          : <p className="cx-hint cx-pad">Sem CET: informe o limite contratado para ver o CET de 30 dias (art. 6º).</p>}
         <p className="cx-hint cx-pad">{dateLabel(params.start)} a {dateLabel(params.end)} · {result.rows.length} fechamentos apurados · {result.totals.interestDays} dias com saldo e contagem de juros · taxa do contrato: {form.rate}% a.m.</p>
       </article>
       <article className="desk-panel cx-panel">
@@ -120,6 +132,7 @@ export default function ContaGarantida({ onBack }) {
       <li>IOF diário = saldo de fechamento × alíquota diária. IOF adicional = máximo entre zero e a diferença entre saldo final e saldo final anterior × alíquota adicional. Como os encargos são pagos à parte neste simulador, as bases incluem apenas o principal utilizado. Amortizações não devolvem IOF já apurado; nova elevação do saldo gera novo adicional.</li>
       <li>A premissa de encargos pagos à parte foi adotada para este simulador; não é uma regra universal de todos os contratos. O art. 7º, § 12, prevê encargos na base quando integrarem saldos devedores. Operações com encargos debitados na conta exigem outro tratamento e não são simuladas aqui.</li>
       <li>Sem arredondamento intermediário; a exibição é arredondada para centavos. A soma dos centavos exibidos pode diferir do total calculado com precisão completa.</li>
+      <li>CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): o limite contratado é liberado na data inicial e devolvido em 30 dias corridos, com juros de 30 dias pela taxa e contagem de dias desta tela e o IOF diário e adicional desse período. O IOF adicional é cobrado na utilização e sai do valor líquido; juros e IOF diário, apurados dia a dia, entram no pagamento do 30º dia. Não há tarifas neste simulador. O CET é a taxa anual que iguala o líquido ao valor presente do pagamento, em dias corridos/365; ao mês, a equivalente composta. Confira a regra no texto da norma.</li>
       <li>Não inclui indexadores variáveis como CDI, spread variável, mora, multa, excesso de limite, renegociação, isenções não confirmadas nem taxas que mudam no período. As regras de inadimplência dos §§ 18–19 não são simuladas. Contratos com principal definido têm base de IOF diferente.</li>
       <li>Os dados ficam somente nesta tela. Sair da calculadora ou recarregar apaga o rascunho. Nenhum valor informado é enviado a serviços ou incluído na busca.</li>
     </ul><p>Fontes consultadas em 05/11/2026: {CG_SOURCES.map((source, index) => <span key={source.url}>{index > 0 && ' · '}<a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></span>)}.</p></CalculatorHelp></div>

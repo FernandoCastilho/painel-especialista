@@ -127,6 +127,11 @@ main.app.app-calculators {
 .cx .fm-kpi small, .cx .desconto-kpis small { font-size:.75rem; line-height:1.5; }
 .cx .fm-kpi > .fm-rotulo { margin:0; }
 .cx .fm-kpi .fi-help { text-transform:none; letter-spacing:0; }
+/* Finame: os números principais abrem o resultado, sempre à vista; o detalhamento completo fica em "Composição do resultado". */
+.cx .fm-destaques { padding:var(--cx-space, 20px); }
+.cx .fm-destaques h4 { margin:0 0 12px; color:var(--fg); font-size:.875rem; font-weight:600; line-height:1.5; }
+.cx .fm-destaques-grade { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+@media (max-width:399px) { .cx .fm-destaques-grade { grid-template-columns:1fr; } }
 .cx .fm-fluxo .fm-tabela th, .cx .fm-fluxo .fm-tabela td,
 .cx .cg-results td, .cx .cg-results thead th { font-size:.8125rem; }
 .cx .cg-actions, .cx .cg-pagination { padding:var(--cx-space, 20px); }

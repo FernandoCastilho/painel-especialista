@@ -10,7 +10,8 @@ test('projeção anual independente: Selic no saldo, remunerações + LCD somada
   assert.equal(result.fixedAnnualPct, 5); assert.equal(result.status, 'projection-not-contract-validated')
   assert.deepEqual(result.rows.map(row => [row.openingCents, row.correctedCents, row.interestCents, row.amortizationCents, row.paymentCents, row.closingCents]), [[100000000, 110000000, 5500000, 55000000, 60500000, 55000000], [55000000, 60500000, 3025000, 60500000, 63525000, 0]])
   assert.deepEqual(result.totals, { principalCents: 100000000, capitalizedSelicCents: 15500000, interestCents: 8525000, amortizationCents: 115500000, paymentCents: 124025000, closingCents: 0 })
-  assert.equal(result.cet, null)
+  // CET é só taxa derivada do fluxo; o cronograma e os totais acima continuam idênticos.
+  assert.equal(typeof result.cet.fixedAnnualRate, 'number'); assert.equal(result.cet.netReleaseCents, 100000000)
 })
 
 test('carência capitaliza Selic, cobra apenas componente fixo, depois divide saldo atualizado', () => {
@@ -28,9 +29,10 @@ test('fatores fracionários usam252, não365 e não multiplicam spreads', () => 
   assert.equal(r.rows[0].interestCents, Math.round(Math.round(100000000 * Math.sqrt(1.1)) * (Math.sqrt(1.05) - 1)))
 })
 
-test('zero é entrada válida quando explícita; não há custos ou CET inventados', () => {
+test('zero é entrada válida quando explícita; não há custos inventados e CET zero', () => {
   const data = input(); data.selicScenario.annualPct = '0'; data.ld1.annualPct = '0'; data.spreads = { bndes: '0', intermediation: '0', agent: '0' }
-  const r = simulateLcdCap(data); assert.equal(r.ok, true); assert.equal(r.totals.paymentCents, data.principalCents); assert.equal(r.totals.capitalizedSelicCents, 0); assert.equal(r.cet, null)
+  const r = simulateLcdCap(data); assert.equal(r.ok, true); assert.equal(r.totals.paymentCents, data.principalCents); assert.equal(r.totals.capitalizedSelicCents, 0)
+  assert.ok(Math.abs(r.cet.fixedAnnualRate) < 1e-9); assert.ok(Math.abs(r.cet.projectedAnnualRate) < 1e-9); assert.equal(r.cet.releaseFeeCents, 0)
 })
 
 test('meio centavo conhecido na amortização tem arredondamento racional para cima', () => {
@@ -132,6 +134,8 @@ test('UI mantém modalidade separada, estado sem dados, distinção de143 e proj
   assert.match(ui, /TLP exigível é uma modalidade diferente/)
   assert.match(ui, /Ver gráfico 143/); assert.match(ui, /Ver gráfico LD1/)
   assert.match(ui, /constante de Selic/); assert.match(ui, /não reprecificam este contrato/)
+  assert.match(ui, /CET · parte fixa \(regra do BC\)/); assert.match(ui, /Custo com Selic projetada/)
+  assert.match(ui, /Pelo art\. 5º, a Selic fica fora/); assert.doesNotMatch(ui, /não é CET/)
 })
 
 test('LD1 oficial negativa é preservada: −0,110000% com vigência01/10/2026', () => {
@@ -167,4 +171,12 @@ test('snapshot oficial datado preserva9 pontos negativos e outras séries; não 
   assert.equal(lcdQuoteAt(data, '2026-11-05', '2026-12-01').annualPct, '-0.11')
   assert.equal(lcdQuoteAt(data, '2026-11-06', '2026-12-01'), null)
   assert.equal(lcdQuoteAt(data, '2025-01-31', '2026-11-05'), null)
+})
+
+test('UI LCD oferece IOF zero como padrão, PJ e Simples/MEI com confirmação, e avisa que não verifica o enquadramento', () => {
+  const ui = readFileSync(new URL('../src/BndesLcdCap.jsx', import.meta.url), 'utf8')
+  assert.match(ui, /useState\('zero'\)/); assert.match(ui, /BNDES_PROFILE_IOF_OPTIONS/)
+  assert.match(ui, /Confirmo a opção pelo Simples\/MEI/); assert.match(ui, /o painel não verifica/)
+  assert.match(ui, /art\. 8º, IX/); assert.match(ui, /IOF na liberação/)
+  assert.doesNotMatch(ui, /não há IOF nesta calculadora|Sem IOF/i)
 })

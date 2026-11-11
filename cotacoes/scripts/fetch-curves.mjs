@@ -2,7 +2,7 @@ import { b3CollectionDecision } from './data-schedules.mjs'
 import { collectB3Curve } from './b3-collector.mjs'
 // Coleta as curvas de juros (DI x pré da B3 e Treasuries dos EUA) e grava public/curves.json. Rodado a cada hora pelo GitHub Actions.
 import { mkdir, writeFile } from 'node:fs/promises'
-import { fillFromPrevious, loadPrevious } from './prev-lib.mjs'
+import { fillFromPrevious, loadPreviousOrFail } from './prev-lib.mjs'
 import { parseTreasury, pickDates } from './curves-lib.mjs'
 import { addToHistory, emptyHistory, withHistory } from './curves-history.mjs'
 
@@ -28,7 +28,8 @@ async function get(url, label, text = false, tries = 4) {
   return null
 }
 
-const previous = await loadPrevious('curves.json')
+// Publicado ilegível (diferente de inexistente) interrompe a coleta: sem ele, fora do horário da B3 as curvas DI x pré e cupom sairiam do painel.
+const previous = await loadPreviousOrFail('curves.json')
 const out = { generatedAt: Date.now(), br: null, cc: null, us: null, errors }
 
 // Brasil (B3, Taxas referenciais): PRE = DI x pré; DOL = DI x dólar (cupom cambial). minDays corta os vértices curtos, muito ruidosos no cupom.

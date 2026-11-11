@@ -4,6 +4,7 @@ import RefreshButton from './RefreshButton.jsx'
 import { Aviso } from './Avisos.jsx'
 import { useId, useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
+import { focoPorTeclado, limitarBalao, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { isWeekendBR } from './market.js'
 import { dataTimestamp } from './dataTimestamp.js'
@@ -25,6 +26,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
   const [ref, width] = useWidth()
   const [off, setOff] = useState(() => new Set())
   const [hover, setHover] = useState(null)
+  const plotRef = useTocarFora(hover != null, setHover)
   const [announcement, setAnnouncement] = useState('')
   const chartId = useId()
   const compare = data?.compare ?? []
@@ -71,6 +73,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
   }
 
   const hp = g && hover != null ? g.series[0].pts[hover] : null
+  const [tipRef, tipW] = useLarguraBalao(hp)
   const vertexLabel = (p) => (mode === 'us' ? p[2] : `${Math.round(p[0])} d.u. (~${(p[0] / 21).toFixed(1).replace('.', ',')} m)`)
   const at = (s, p) => (mode === 'us' ? s.pts.find((q) => q[0] === p[0]) : s.pts.reduce((b, q) => (Math.abs(q[0] - p[0]) < Math.abs(b[0] - p[0]) ? q : b)))
 
@@ -106,10 +109,10 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
       </div>
       <div ref={ref}>
         {g ? (
-          <div className="plot" onPointerLeave={() => setHover(null)}>
+          <div ref={plotRef} className="plot" onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
             <span id={`${chartId}-hint`} className="chart-access-text">Use as setas para percorrer os prazos; Home e End vão ao primeiro e ao último.</span>
             <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
-            <svg tabIndex={0} aria-describedby={`${chartId}-hint`} onFocus={() => setHover(0)} onBlur={() => setHover(null)} onKeyDown={onKey} viewBox={`0 0 ${width} ${H}`} width="100%" height={H} role="img" aria-label={`Curva de juros: ${title}`} onPointerMove={onMove} onPointerDown={onMove}>
+            <svg tabIndex={0} aria-describedby={`${chartId}-hint`} onFocus={(e) => { if (focoPorTeclado(e)) setHover(0) }} onBlur={() => setHover(null)} onKeyDown={onKey} viewBox={`0 0 ${width} ${H}`} width="100%" height={H} role="img" aria-label={`Curva de juros: ${title}`} onPointerMove={onMove} onPointerDown={onMove}>
               {g.yTicks.map((v) => (
                 <g key={v}>
                   <line x1={M.l} x2={width - M.r} y1={g.Y(v)} y2={g.Y(v)} className="gridline" />
@@ -136,7 +139,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
               {hp && <line x1={g.X(hp)} x2={g.X(hp)} y1={M.t} y2={H - M.b} className="cross" pointerEvents="none" />}
             </svg>
             {hp && (
-              <div className="tip" style={{ left: `${Math.min(Math.max((g.X(hp) / width) * 100, 20), 80)}%` }}>
+              <div ref={tipRef} className="tip" style={{ left: limitarBalao(g.X(hp), tipW, width) }}>
                 <strong>{vertexLabel(hp)}</strong>
                 {g.series.map((s) => {
                   const q = at(s, hp)
