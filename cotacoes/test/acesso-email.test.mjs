@@ -96,11 +96,11 @@ test('script: fluxo completo — pede, erra, confirma, recebe assinatura e regis
   const cod = codigoDoEmail(s.emails)
   const errado = cod === '000000' ? '111111' : '000000'
   assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: errado }).ok, false)
-  assert.equal(s.linhas.length, 0, 'código errado não registra')
+  assert.equal(s.linhas.length, 1, 'código errado não registra além da solicitação')
   const r = s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: cod })
   assert.equal(r.ok, true)
   assert.ok(r.token)
-  assert.equal(s.linhas.length, 1)
+  assert.equal(s.linhas.length, 2)
   assert.equal(s.linhas[0][1], 'ana@empresa.com')
   assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: cod }).ok, false, 'código só vale uma vez')
   assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: r.token }).ok, true)
@@ -173,4 +173,32 @@ test('script: e-mail da aba Entrada direta entra sem código, fica registrado e 
   assert.equal(outro.token, undefined, 'quem não está na aba recebe código')
   s.bloq.appendRow(['colega@banco.com.br'])
   assert.equal(s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' }).ok, false, 'bloqueio vale mais que entrada direta')
+})
+
+
+test('script: cada nova solicitação gera uma linha antes do OTP, inclusive cadastrado e direto', () => {
+  const s = criarScript({ diretos: ['direto@x.com'] })
+  for (const email of ['novo@x.com', 'direto@x.com']) {
+    for (let i = 0; i < 3; i++) {
+      const pedido = `pedido_valido_${email[0]}_${i}`
+      const r = s.chamarScript({ acao: 'pedir', email, pedido })
+      assert.equal(r.ok, true)
+      assert.deepEqual(s.chamarScript({ acao: 'pedir', email, pedido }), r)
+      if (email === 'novo@x.com' && i === 0) s.chamarScript({ acao: 'confirmar', email, codigo: codigoDoEmail(s.emails) })
+    }
+    assert.equal(s.linhas.filter(l => l[1] === email && l[2] === 'solicitacao').length, 3)
+  }
+  assert.equal(s.emails.length, 3, 'repetição do mesmo ID não reenvia código')
+  assert.equal(s.linhasDe('Liberados').length, 2)
+})
+
+test('script: inválido e bloqueado não contam; cota esgotada é tentativa, não sucesso', () => {
+  const s = criarScript({ bloqueados: ['bloqueado@x.com'] })
+  for (const email of ['invalido', 'bloqueado@x.com']) s.chamarScript({ acao: 'pedir', email })
+  assert.equal(s.linhas.length, 0)
+  s.setCota(0)
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'valido@x.com' }).ok, false)
+  assert.equal(s.linhas.length, 1)
+  assert.equal(s.linhas[0][2], 'solicitacao')
+  assert.equal(s.emails.length, 0)
 })

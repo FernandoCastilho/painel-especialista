@@ -70,7 +70,7 @@ function baseColumn() {
   }
 }
 export const initialColumns = () => DEFAULT_MODALITIES.map(newColumn)
-export const initialShared = (today, defaultValue = '500.000,00') => ({ value: defaultValue, term: '24', grace: '0', system: 'price', start: today })
+export const initialShared = (today, defaultValue = '500.000,00') => ({ value: defaultValue, term: '24', grace: '0', system: 'price', start: today, regime: 'presumido', adicional: true })
 
 function resolve(col, shared, valueOverride) {
   const valueText = valueOverride != null ? toMoneyText(valueOverride) : (col.value.trim() || shared.value)

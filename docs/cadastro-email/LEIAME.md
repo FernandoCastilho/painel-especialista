@@ -24,3 +24,25 @@
 - **Não é cofre.** O painel é um site público. A tela barra quem usa normalmente, mas quem sabe mexer no navegador consegue contornar. Serve para saber quem acessa, não para guardar segredo. Nunca ponha dado de cliente no painel.
 - **Privacidade (LGPD):** e-mail é dado pessoal. A tela traz o aviso de uso. A planilha fica só na sua conta; não ponha a lista no git.
 - Se mudar o código do script, é preciso **Implantar > Gerenciar implantações > editar > Nova versão**, mantendo o mesmo endereço.
+
+
+## Contagem de solicitações de entrada (11/11/2026)
+
+Cada submissão válida de e-mail (inclusive reenvio deliberado) grava `solicitacao`
+em Acessos antes do OTP. Novos, cadastrados e Entrada direta usam a mesma regra.
+Não comprova identidade nem entrada concluída. Inválidos e bloqueados não contam.
+Cota, limite horário e falha de envio podem resultar em tentativa sem sucesso.
+O envio do código e as regras anteriores de autenticação são preservados.
+
+No relatório, contar somente `solicitacao`; não somar cadastro/entrada direta/visita.
+Não é possível reconstruir essa métrica retroativamente. Abrir/recarregar/navegar
+com sessão lembrada não produz solicitação. Não forçamos novo login.
+
+O navegador bloqueia submissões simultâneas e envia um ID por solicitação.
+O servidor serializa e deduplica esse ID por até 10 minutos. Cache Apps Script
+pode expirar antecipadamente, portanto não é garantia absoluta contra repetição.
+Clientes anteriores sem ID continuam compatíveis sem essa deduplicação.
+
+O deploy frontend não atualiza Apps Script. Atualizar código preservando ID_PLANILHA,
+remetente e demais configurações existentes; salvar e atualizar a implantação
+EXISTENTE para nova versão, mantendo URL, executor e permissões. Não criar endpoint.

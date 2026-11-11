@@ -16,7 +16,7 @@ var MSG_BLOQUEADO = 'Este e-mail está bloqueado. Fale com o administrador.'
 function doGet(e) {
   var p = (e && e.parameter) || {}
   try {
-    if (p.acao === 'pedir') return resposta_(pedir_(p.email))
+    if (p.acao === 'pedir') return resposta_(pedir_(p.email, p.pedido))
     if (p.acao === 'confirmar') return resposta_(confirmar_(p.email, p.codigo))
     if (p.acao === 'visita') return resposta_(visita_(p.email, p.token))
     return resposta_({ ok: false, erro: 'Pedido desconhecido.' })
@@ -34,19 +34,39 @@ function emailValido_(e) {
   return e.length > 0 && e.length <= 254 && /^[^\s@<>()\[\],;:"\\]+@[^\s@<>()\[\],;:"\\]+\.[^\s@<>()\[\],;:"\\]{2,}$/.test(e)
 }
 
-function pedir_(emailBruto) {
+// Solicitação é uma tentativa declarada, não prova de identidade ou acesso autenticado.
+// O identificador evita repetir a mesma submissão; novas submissões têm novos IDs.
+function pedir_(emailBruto, pedidoBruto) {
   var email = normalizar_(emailBruto)
   if (!emailValido_(email)) return { ok: false, erro: 'E-mail inválido.' }
   if (bloqueado_(email)) return { ok: false, erro: MSG_BLOQUEADO }
+  var pedido = String(pedidoBruto || '')
+  if (pedido && !/^[a-zA-Z0-9_-]{16,80}$/.test(pedido)) return { ok: false, erro: 'Pedido inválido.' }
+  var lock = LockService.getScriptLock()
+  lock.waitLock(10000)
+  try {
+    var cache = CacheService.getScriptCache()
+    var chave = pedido ? 'pedido:' + token_(email) + ':' + pedido : ''
+    var anterior = chave && cache.get(chave)
+    if (anterior) return JSON.parse(anterior)
+    registrar_('solicitacao', email)
+    // Salva a deduplicação antes do envio: falha inesperada não duplica o registro.
+    if (chave) cache.put(chave, JSON.stringify({ ok: false, erro: 'Pedido já recebido. Aguarde ou faça uma nova solicitação.' }), 600)
+    var resposta = enviarPedido_(email)
+    if (chave) cache.put(chave, JSON.stringify(resposta), 600)
+    return resposta
+  } finally {
+    lock.releaseLock()
+  }
+}
+
+function enviarPedido_(email) {
   if (entradaDireta_(email)) {
     liberar_(email)
     registrar_('entrada direta', email)
     return { ok: true, token: token_(email) }
   }
-  var lock = LockService.getScriptLock()
-  lock.waitLock(10000)
-  try {
-    var cache = CacheService.getScriptCache()
+  var cache = CacheService.getScriptCache()
     var chaveQtd = 'qtd:' + email
     var qtd = Number(cache.get(chaveQtd) || 0)
     if (qtd >= LIMITE_PEDIDOS_POR_HORA) return { ok: false, erro: 'Muitos pedidos para este e-mail. Tente de novo em 1 hora.' }
@@ -65,9 +85,6 @@ function pedir_(emailBruto) {
       return { ok: false, erro: 'Não foi possível enviar para este e-mail. Confira o endereço.' }
     }
     return { ok: true }
-  } finally {
-    lock.releaseLock()
-  }
 }
 
 function confirmar_(emailBruto, codigoBruto) {

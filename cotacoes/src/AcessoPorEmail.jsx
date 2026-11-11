@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './AcessoPorEmail.css'
 import { codigoValido, confirmarCodigo, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail, pedirCodigo, registrarVisita } from './acessoEmail.js'
 
@@ -14,6 +14,7 @@ export default function AcessoPorEmail({ children }) {
   const [codigo, setCodigo] = useState('')
   const [erro, setErro] = useState('')
   const [ocupado, setOcupado] = useState(false)
+  const envioEmCurso = useRef(false)
   const [espera, setEspera] = useState(0)
 
   useEffect(() => {
@@ -38,10 +39,12 @@ export default function AcessoPorEmail({ children }) {
 
   const enviarCodigo = async (e) => {
     e?.preventDefault()
-    if (ocupado) return
+    if (ocupado || envioEmCurso.current) return
     if (!emailValido(email)) { setErro('Digite um e-mail válido, como nome@empresa.com.br.'); return }
     setOcupado(true); setErro('')
+    envioEmCurso.current = true
     const r = await pedirCodigo(email)
+    envioEmCurso.current = false
     setOcupado(false)
     if (!r.ok) { setErro(r.erro || 'Não foi possível enviar o código.'); return }
     if (r.token) { entrar({ email: normalizarEmail(email), token: r.token }); return } // e-mail com entrada direta: sem código
