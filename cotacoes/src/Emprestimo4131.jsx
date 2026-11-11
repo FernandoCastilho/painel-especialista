@@ -13,8 +13,9 @@ import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
 import { cgToday } from './contaGarantida.js'
 import { useHolidays } from './useHolidays.js'
+import { useCurves } from './useCurves.js'
 import { busDaysIn } from './holidays.js'
-import { FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, hedge4131, loan4131, unhedged4131 } from './emprestimo4131.js'
+import { FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, curveFactors, hedge4131, loan4131, unhedged4131 } from './emprestimo4131.js'
 import { E4_FX_SCENARIOS, E4_SOURCES } from './emprestimo4131Presentation.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -26,6 +27,14 @@ const signed = (v, f) => `${v >= 0 ? '+' : '−'} ${f(Math.abs(v))}`
 const dm = (iso) => (iso ? iso.split('-').reverse().join('/') : '')
 const CONFERIDO_EM = '11/11/2026'
 const IR_PAYERS = [{ id: 'sim', label: 'Tomador (gross-up)' }, { id: 'nao', label: 'Credor' }]
+const FEE_PLACES = [{ id: 'nao', label: 'Banco no Brasil · sem IR' }, { id: 'sim', label: 'Exterior · IR sobre a comissão' }]
+const CURVE_MODES = [{ id: 'painel', label: 'Curvas do Painel (B3)' }, { id: 'manual', label: 'Digitar DI e cupom' }]
+const DAY = 864e5
+// Desligado em 11/11/2026: a curva de cupom do Painel é o cupom sujo da B3 (DI x dólar, referido à PTAX do dia anterior).
+// Usá-la com o câmbio do dia distorce o câmbio a termo. Religar só depois de limpar o cupom (ver docs/emprestimo-4131.md).
+const CURVAS_DO_PAINEL = false
+// Curva mais recente de um conjunto do Painel: { date, pts } ou null.
+const hojeOf = (set) => { const today = set?.compare?.find((c) => c.id === 'hoje'); const pts = today ? set.curves?.[today.date] : null; return pts?.length ? { date: today.date, pts } : null }
 // Regras levantadas nas fontes oficiais; detalhes e pontos não confirmados em docs/emprestimo-4131.md.
 const REGRAS = [
   ['Contratação', 'Livre, em qualquer moeda, sem aprovação prévia do Banco Central. Custos compatíveis com o mercado internacional e claros no contrato.', 'Res. BCB 278/2022, arts. 5º e 6º'],
@@ -55,7 +64,10 @@ export function Emprestimo4131Icon() {
 // apresentação e PDF congelados, cronograma e premissas recolhidos.
 export default function Emprestimo4131({ onBack }) {
   const hol = useHolidays()
+  const curves = useCurves()
   const [area, setArea] = useState('simulate')
+  const [curveMode, setCurveMode] = useState(CURVAS_DO_PAINEL ? 'painel' : 'manual')
+  const [feesAbroad, setFeesAbroad] = useState('nao')
   const [ampliada, setAmpliada] = useState(false)
   const ampliarRef = useRef(null)
   const [principalText, setPrincipalText] = useState('10.000.000,00')
@@ -105,16 +117,25 @@ export default function Emprestimo4131({ onBack }) {
     swap: swapSpread !== null ? null : 'Informe o spread do banco em % ao ano (zero se não houver).',
     ndf: ndfMarkup !== null ? null : 'Informe o acréscimo do banco em % (zero se não houver).',
   }
+  // Curvas DI x pré e cupom cambial da B3 já coletadas pelo Painel. Sem elas, ou com desembolso antes da data-base, vale o modo manual.
+  const diCurve = hojeOf(curves.data?.br)
+  const ccCurve = hojeOf(curves.data?.cc)
+  const curveBase = diCurve && ccCurve ? diCurve.date : null
+  const curveBlocked = !curveBase ? (curves.status === 'loading' ? 'Carregando as curvas do Painel…' : 'Curvas do Painel indisponíveis: usando DI e cupom digitados.') : start && start < curveBase ? `As curvas começam em ${dm(curveBase)}: para desembolso anterior, usando DI e cupom digitados.` : null
+  const usingCurve = curveMode === 'painel' && !curveBlocked && !!start
+  if (usingCurve) { errors.di = null; errors.cupom = null }
   const loanErrors = ['principal', 'rate', 'spot', 'start', 'months', 'flat', 'guarantee'].some((k) => errors[k])
   const hedgeErrors = ['di', 'cupom', 'swap', 'ndf'].some((k) => errors[k])
-  const loanResult = loanErrors ? null : loan4131({ principal: money.value, rate, spot, start, months, freq: Number(freq), irrf: Number(irrf), grossUp: grossUp === 'sim', flat, guarantee })
+  const loanResult = loanErrors ? null : loan4131({ principal: money.value, rate, spot, start, months, freq: Number(freq), irrf: Number(irrf), grossUp: grossUp === 'sim', flat, guarantee, feesAbroad: feesAbroad === 'sim' })
   const loan = loanResult?.ok ? loanResult : null
   // Dias úteis de cada pagamento com os feriados nacionais.
-  const hedgeResult = loan && !hedgeErrors ? hedge4131(loan, { di, cupom, swapSpread, ndfMarkup, busDays: (a, b) => busDaysIn(a, b, ['BR'], hol.ctx) }) : null
+  const curve = usingCurve && loan ? curveFactors({ diPts: diCurve.pts, ccPts: ccCurve.pts, d0: busDaysIn(curveBase, start, ['BR'], hol.ctx), dc0: Math.round((Date.parse(`${start}T12:00:00Z`) - Date.parse(`${curveBase}T12:00:00Z`)) / DAY) }) : null
+  const hedgeResult = loan && !hedgeErrors ? hedge4131(loan, { di, cupom, swapSpread, ndfMarkup, curve, busDays: (a, b) => busDaysIn(a, b, ['BR'], hol.ctx) }) : null
   const hedge = hedgeResult?.ok ? hedgeResult : null
   const scenarios = loan ? E4_FX_SCENARIOS.map((s) => unhedged4131(loan, s)).filter((s) => s.ok) : []
   const parado = scenarios.find((s) => s.fxChange === 0) ?? null
-  const labels = { freq: FREQS.find((f) => f.id === freq)?.label, irPayer: IR_PAYERS.find((p) => p.id === grossUp)?.label }
+  const curveLabel = usingCurve ? `Curvas do Painel (B3) de ${dm(curveBase)}` : 'DI e cupom digitados, iguais para todos os prazos'
+  const labels = { freq: FREQS.find((f) => f.id === freq)?.label, irPayer: IR_PAYERS.find((p) => p.id === grossUp)?.label, curve: curveLabel, fees: FEE_PLACES.find((p) => p.id === feesAbroad)?.label }
   const pendencia = loanResult?.error || hedgeResult?.error || (Object.values(errors).some(Boolean) ? 'Complete os campos indicados para calcular.' : null)
 
   const ajuda = (label, texto) => (texto ? <Help label={`Ajuda: ${label}`}>{texto}</Help> : null)
@@ -131,10 +152,10 @@ export default function Emprestimo4131({ onBack }) {
   const quadros = loan ? [
     ['Custo all-in em dólar', `${pct(loan.allIn)} a.a.`, 'dias corridos/365', 'Taxa ao ano que iguala o valor líquido recebido aos pagamentos em dólar: juros, IR do tomador, fiança e principal.'],
     ['Taxa com o IR por cima', `${pct(loan.grossedRate)} a.a.`, `contratual ${pct(loan.rate)}`, 'Taxa contratual dividida por (1 − alíquota do IR), quando o tomador assume o imposto.'],
-    ['Valor líquido recebido', brl(loan.netBrl), usd(loan.netUsd), 'Principal menos flat e IOF, convertido pelo câmbio de entrada.'],
+    ['Valor líquido recebido', brl(loan.netBrl), usd(loan.netUsd), 'Principal menos flat, IOF e IR sobre o flat (quando pago ao exterior), convertido pelo câmbio de entrada.'],
     ['Flat na entrada', usd(loan.flatUsd), pct(loan.flat)],
     ['IOF-câmbio na entrada', usd(loan.iofUsd), pct(loan.iofRate), `Prazo médio de ${loan.avgTermDays} dias corridos: ${pct(IOF_SHORT_TERM.rate)} até ${IOF_SHORT_TERM.maxDays} dias e zero acima (Decreto 6.306/2007, art. 15-B).`],
-    ['IR pago pelo tomador', usd(loan.totals.irrf), loan.grossUp ? `${pct(loan.irrf, 0)} sobre a base reajustada` : 'imposto suportado pelo credor', 'Com gross-up, o IR é a alíquota sobre os juros reajustados: juros × alíquota ÷ (1 − alíquota). Só os juros entram; IR sobre flat ou fiança pagos ao exterior não está na conta.'],
+    ['IR pago pelo tomador', usd(loan.totals.irrf + loan.flatIrUsd), loan.grossUp ? `${pct(loan.irrf, 0)} sobre a base reajustada` : 'imposto suportado pelo credor', 'Com gross-up, o IR é a alíquota sobre o valor reajustado: valor × alíquota ÷ (1 − alíquota). Incide sobre os juros e, quando flat e fiança são pagos ao exterior, também sobre essas comissões.'],
     ['Juros totais', usd(loan.totals.interest), `${loan.avgTermDays} dias`],
     ['Total a pagar', usd(loan.totals.usd), 'em dólar'],
   ] : []
@@ -168,15 +189,20 @@ export default function Emprestimo4131({ onBack }) {
                   {field('gross', 'porte', 'Quem arca com o IR', select('gross', grossUp, setGrossUp, IR_PAYERS), 'Tomador: o credor recebe os juros cheios e o tomador paga o imposto por cima (gross-up), com a base reajustada (art. 786). Credor: o imposto sai dos juros e não aumenta o custo do tomador.')}
                   {field('flat', 'bndes', 'Flat · estruturação', rateInput('flat', flatText, setFlatText, '%'), 'Comissão cobrada na entrada, em % do principal. Sai do valor recebido. Use zero se não houver.')}
                   {field('guarantee', 'agente', 'Fiança ou SBLC', rateInput('guarantee', guaranteeText, setGuaranteeText), 'Custo da garantia bancária, em % ao ano sobre o principal, pago junto com os juros. Use zero se não houver.')}
+                  {field('fees', 'porte', 'Flat e fiança pagos a', select('fees', feesAbroad, setFeesAbroad, FEE_PLACES), 'Comissão paga a banco no exterior sofre o mesmo IR na fonte dos juros (RIR/2018, art. 760). Com gross-up, o tomador paga esse imposto por cima: o do flat na entrada e o da fiança junto com ela. Comissão paga a banco no Brasil não tem esse IR. Confirme com o tributário.')}
                   <ul className="fm-pills" aria-label="Condições fixas"><li>Principal <b>no vencimento</b></li><li>Juros <b>linear 360</b></li><li>IOF na entrada <b>{loan ? pct(loan.iofRate) : 'automático'}</b></li></ul>
                 </div></section>
                 <section className="fm-group fm-payment e4-hedge" aria-labelledby="e4-hedge-h"><h3 id="e4-hedge-h"><BndesIcon kind="chart" />Proteção cambial</h3><div className="fm-group-fields">
-                  {field('di', 'di', 'DI pré do prazo', rateInput('di', diText, setDiText), 'Taxa DI prefixada do prazo médio da operação, ao ano, base 252 dias úteis, na data da cotação.')}
-                  {field('cupom', 'cupom', 'Cupom cambial', rateInput('cupom', cupomText, setCupomText), 'Juro em dólar no Brasil para o prazo médio, ao ano, linear, base 360 dias corridos. Com o DI, define o câmbio a termo de cada pagamento.')}
+                  {CURVAS_DO_PAINEL && field('curve', 'curve', 'DI e cupom cambial', select('curve', curveMode, setCurveMode, CURVE_MODES), 'Curvas do Painel: cada pagamento usa o DI e o cupom cambial do seu prazo, das curvas da B3 já coletadas. Digitar: um DI e um cupom para todos os prazos; em prazo longo, o cupom linear único tende a encarecer a leitura.')}
+                  {usingCurve ? <p className="fm-financed e4-curve" aria-live="polite"><span>Até o vencimento · {dm(curveBase)}</span><b>{hedge ? `DI ${pct(hedge.di)} · cupom ${pct(hedge.cupom)}` : '—'}</b></p> : <>
+                    {field('di', 'di', 'DI pré do prazo', rateInput('di', diText, setDiText), 'Taxa DI prefixada do prazo médio da operação, ao ano, base 252 dias úteis, na data da cotação.')}
+                    {field('cupom', 'cupom', 'Cupom cambial', rateInput('cupom', cupomText, setCupomText), 'Juro em dólar no Brasil para o prazo médio, ao ano, linear, base 360 dias corridos. Com o DI, define o câmbio a termo de cada pagamento.')}
+                  </>}
                   {field('swap', 'swap', 'Spread do banco no swap', rateInput('swap', swapText, setSwapText), 'Taxa ao ano do banco no swap, composta com o custo: (1 + custo) × (1 + spread). Deixe zero para ver o custo teórico.')}
                   {field('ndf', 'ndf', 'Acréscimo do banco no NDF', rateInput('ndf', ndfText, setNdfText, '%'), 'Percentual que o banco soma à taxa a termo teórica de cada pagamento. O efeito ao ano é maior em prazo curto e menor em prazo longo. Deixe zero para ver o custo teórico.')}
+                  {curveMode === 'painel' && curveBlocked && <p className="cx-hint e4-curve-note" role="status">{curveBlocked}</p>}
                 </div></section>
-                <button type="button" className="fm-show-result" disabled={!hedge} onClick={() => { const element = document.getElementById('fm-result'); element?.focus(); element?.scrollIntoView({ block: 'start' }) }}>{hedge ? <><span>Com swap <b>CDI {signed(hedge.swap.spread, pct)}</b></span><span>Ver resultado ↓</span></> : 'Ver resultado da simulação'}</button>
+                <button type="button" className="fm-show-result" disabled={!hedge} onClick={() => { const element = document.getElementById('fm-result'); element?.focus(); element?.scrollIntoView({ block: 'start' }) }}>{hedge ? <><span>Swap · custo total <b>CDI {signed(hedge.swap.spread, pct)}</b></span><span>Ver resultado ↓</span></> : 'Ver resultado da simulação'}</button>
               </div>
             </article>
 
@@ -185,9 +211,9 @@ export default function Emprestimo4131({ onBack }) {
 
               {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
               <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? 'Cotação comparativa ampliada' : undefined}>
-                <header className="fm-hero"><h3 className="cx-heading">Cotação comparativa</h3><small>Projeção · custo estimado</small>{ajuda('Limites da projeção', 'Estimativa para comparar propostas. Usa um DI e um cupom cambial para todos os prazos; a mesa do banco usa uma taxa por prazo, o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ganho do swap ou do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
+                <header className="fm-hero"><h3 className="cx-heading">Cotação comparativa</h3><small>Projeção · custo estimado</small>{ajuda('Limites da projeção', 'Estimativa para comparar propostas. Câmbio a termo teórico com um DI e um cupom cambial digitados, iguais para todos os prazos; a mesa do banco usa uma taxa por prazo e acrescenta o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ganho do swap ou do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
                 {hedge && <div className="fm-headline" aria-label="Custo com swap e com NDF">
-                  <div><span>Com swap · custo total em CDI</span><b>CDI {signed(hedge.swap.spread, pct)}</b><small>{pct(hedge.swap.pctCdi, 1)} do CDI</small></div>
+                  <div><span>Com swap · custo total em CDI</span><b>CDI {signed(hedge.swap.spread, pct)}</b><small>Spread do swap: CDI {signed(hedge.swap.runSpread, pct)}</small></div>
                   <div><span>Com NDF · prefixado</span><b>{pct(hedge.ndf.pre)} a.a.</b><small>Total {brl(hedge.ndf.totalBrl)}</small></div>
                 </div>}
                 <p className="fm-iof-premise">{loan ? `IOF-câmbio de ${pct(loan.iofRate)} na entrada: prazo médio de ${loan.avgTermDays} dias corridos. Liquidar antes do prazo pode gerar o IOF com multa e juros.` : `IOF-câmbio na entrada: ${pct(IOF_SHORT_TERM.rate)} com prazo médio até ${IOF_SHORT_TERM.maxDays} dias; zero acima.`}</p>
@@ -195,13 +221,14 @@ export default function Emprestimo4131({ onBack }) {
                   <div className="cx-wrap" role="region" tabIndex={0} aria-label="Resultados dos três caminhos"><table className="cx-matrix"><thead><tr><th scope="col">% a.a. ou R$</th><th scope="col">Sem proteção</th><th scope="col">Com swap</th><th scope="col">Com NDF</th></tr></thead><tbody>
                     <tr><th scope="row">A dívida fica em</th><td>Dólar</td><td>CDI</td><td>Reais, pré</td></tr>
                     <tr className="fm-cet-row"><th scope="row">Custo em reais ao ano{ajuda('Custo em reais ao ano', 'Sem proteção: custo com o dólar parado, em dias corridos/365; muda com o câmbio de cada pagamento. Com swap: custo com o DI informado, base 252. Com NDF: custo fixo, base 252.')}</th><td>{parado ? pct(parado.cost) : '—'}</td><td>{hedge ? pct(hedge.swap.pre) : '—'}</td><td>{hedge ? pct(hedge.ndf.pre) : '—'}</td></tr>
-                    <tr><th scope="row">Leitura em CDI{ajuda('Leitura em CDI', 'Custo total equivalente em CDI: já inclui flat, IOF, IR e fiança diluídos no prazo. Por isso fica acima do spread que a mesa cota para o swap, que não traz os custos de entrada. Com NDF, o custo é fixo: a leitura em CDI vale só para comparar hoje e não acompanha o CDI.')}</th><td>—</td><td>{hedge ? `CDI ${signed(hedge.swap.spread, pct)}` : '—'}</td><td>{hedge ? `CDI ${signed(hedge.ndf.spread, pct)}` : '—'}</td></tr>
-                    <tr><th scope="row">% do CDI</th><td>—</td><td>{hedge ? pct(hedge.swap.pctCdi, 1) : '—'}</td><td>{hedge ? pct(hedge.ndf.pctCdi, 1) : '—'}</td></tr>
+                    <tr><th scope="row">Spread do swap{ajuda('Spread do swap', 'Spread sobre o CDI calculado sobre o principal, sem os custos da entrada (flat, IOF e IR sobre o flat). Inclui juros, IR do tomador, fiança e o spread do banco. Sem fiança, é o número mais próximo da cotação da mesa; confirme se a cotação do banco já traz o IR por cima.')}</th><td>—</td><td>{hedge ? `CDI ${signed(hedge.swap.runSpread, pct)}` : '—'}</td><td>—</td></tr>
+                    <tr><th scope="row">Custo total em CDI{ajuda('Custo total em CDI', 'Custo total equivalente em CDI: já inclui flat, IOF, IR e fiança diluídos no prazo. Por isso fica acima do spread que a mesa cota para o swap, que não traz os custos de entrada. Com NDF, o custo é fixo: a leitura em CDI vale só para comparar hoje e não acompanha o CDI.')}</th><td>—</td><td>{hedge ? `CDI ${signed(hedge.swap.spread, pct)}` : '—'}</td><td>{hedge ? `CDI ${signed(hedge.ndf.spread, pct)}` : '—'}</td></tr>
+                    <tr><th scope="row">Custo total em % do CDI</th><td>—</td><td>{hedge ? pct(hedge.swap.pctCdi, 1) : '—'}</td><td>{hedge ? pct(hedge.ndf.pctCdi, 1) : '—'}</td></tr>
                     <tr><th scope="row">Risco que sobra</th><td>Câmbio</td><td>Alta do CDI</td><td>Desfazer antes</td></tr>
                     <tr className="fm-total-row"><th scope="row">Total a pagar em reais</th><td>{parado ? brl(parado.totalBrl) : '—'}</td><td>Segue o CDI</td><td>{hedge ? brl(hedge.ndf.totalBrl) : '—'}</td></tr>
                   </tbody></table></div>
                   {hedge && <p className="fm-difference">O NDF compensa se o dólar subir mais de <b>{pct(hedge.ndf.breakeven)} ao ano</b>. Abaixo disso, ficar sem proteção sai mais barato, com o risco do câmbio.</p>}
-                  {loan && <p className="fm-reference-sources">Custo all-in em dólar: {pct(loan.allIn)} a.a. · DI {di !== null ? pct(di) : '—'} a.a. e cupom cambial {cupom !== null ? pct(cupom) : '—'} a.a., informados na tela. Sem proteção considera o dólar parado, em dias corridos/365; swap e NDF em base 252 dias úteis. A leitura em CDI é o custo total, com flat e IOF da entrada diluídos no prazo.</p>}
+                  {loan && <p className="fm-reference-sources">Custo all-in em dólar: {pct(loan.allIn)} a.a. · {hedge ? <>DI {pct(hedge.di)} a.a. e cupom cambial {pct(hedge.cupom)} a.a. até o vencimento · {curveLabel}. </> : null}Sem proteção considera o dólar parado, em dias corridos/365; swap e NDF em base 252 dias úteis. O custo total em CDI inclui flat e IOF da entrada diluídos no prazo; o spread do swap, não.</p>}
                 </div>
                 {pendencia && <p className="cx-hint cx-pad" role="status">{pendencia}</p>}
                 {loan && <details className="fm-details"><summary>Composição do custo em dólar</summary>
@@ -218,13 +245,13 @@ export default function Emprestimo4131({ onBack }) {
               {loan && (
                 <details className="desk-panel cx-panel fm-fluxo-panel">
                   <summary>Cronograma de pagamentos</summary>
-                  <header><h3 className="cx-heading">Fluxo pagamento a pagamento{ajuda('Fluxo pagamento a pagamento', `Desembolso em ${dm(loan.start)}. Juros de cada linha pelos dias corridos desde o pagamento anterior, sobre 360. IR do tomador só quando ele assume o imposto. O câmbio a termo e o total com NDF usam o DI e o cupom informados, com o acréscimo do banco. Na linha de entrada, o total soma flat e IOF descontados do valor recebido.`)}</h3></header>
-                  <p className="cx-hint cx-pad" id="e4-calendario">Datas pelo dia do desembolso, sem ajuste para dia útil. A linha de entrada mostra flat e IOF descontados do valor recebido; eles não entram no total. Não use como memória contratual.</p>
+                  <header><h3 className="cx-heading">Fluxo pagamento a pagamento{ajuda('Fluxo pagamento a pagamento', `Desembolso em ${dm(loan.start)}. Juros de cada linha pelos dias corridos desde o pagamento anterior, sobre 360. IR do tomador só quando ele assume o imposto. O câmbio a termo e o total com NDF usam o DI e o cupom informados, com o acréscimo do banco. Na linha de entrada, o total soma flat, IOF e IR sobre o flat, descontados do valor recebido.`)}</h3></header>
+                  <p className="cx-hint cx-pad" id="e4-calendario">Datas pelo dia do desembolso, sem ajuste para dia útil. A linha de entrada mostra flat, IOF e IR sobre o flat descontados do valor recebido; eles não entram no total. Não use como memória contratual.</p>
                   <div className="cx-wrap fm-fluxo" role="region" aria-label="Fluxo pagamento a pagamento" aria-describedby="e4-calendario" tabIndex={0}>
                     <table className="cx-matrix fm-tabela">
                       <thead><tr><th scope="col">Nº</th><th scope="col">Data</th><th scope="col">Dias</th><th scope="col">Juros</th><th scope="col">IR do tomador</th><th scope="col">Fiança</th><th scope="col">Principal</th><th scope="col">Total em dólar</th><th scope="col">Câmbio a termo</th><th scope="col">Total com NDF</th></tr></thead>
                       <tbody>
-                        <tr className="fm-liberacao"><th scope="row">0 · entrada</th><td>{dm(loan.start)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{usd(loan.flatUsd + loan.iofUsd)}</td><td>{fx(loan.spot)}</td><td>{brl((loan.flatUsd + loan.iofUsd) * loan.spot)}</td></tr>
+                        <tr className="fm-liberacao"><th scope="row">0 · entrada</th><td>{dm(loan.start)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{usd(loan.flatUsd + loan.iofUsd + loan.flatIrUsd)}</td><td>{fx(loan.spot)}</td><td>{brl((loan.flatUsd + loan.iofUsd + loan.flatIrUsd) * loan.spot)}</td></tr>
                         {loan.flows.map((f, i) => {
                           const h = hedge?.flows[i]
                           return <tr key={f.date}><th scope="row">{i + 1}</th><td>{dm(f.date)}</td><td>{f.days}</td><td>{usd(f.interest)}</td><td>{usd(f.irrf)}</td><td>{usd(f.guarantee)}</td><td>{usd(f.principal)}</td><td>{usd(f.usd)}</td><td>{h ? fx(h.ndfRate) : '—'}</td><td>{h ? brl(h.brl) : '—'}</td></tr>
@@ -236,10 +263,10 @@ export default function Emprestimo4131({ onBack }) {
                 </details>
               )}
 
-              <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>Principal no vencimento · juros lineares por dias corridos/360 · IR na fonte e IOF-câmbio pelas regras vigentes em {CONFERIDO_EM}.</p><p>Swap e NDF teóricos, com um DI e um cupom cambial para todos os prazos. Não inclui IR nem PIS/Cofins sobre ganho do derivativo, nem custo de garantias. O IR com gross-up considera só os juros, não flat nem fiança. O cupom linear único tende a encarecer a leitura em prazos acima de 5 anos.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
+              <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>Principal no vencimento · juros lineares por dias corridos/360 · IR na fonte e IOF-câmbio pelas regras vigentes em {CONFERIDO_EM}.</p><p>Swap e NDF teóricos, com um DI e um cupom cambial digitados, iguais para todos os prazos; o cupom linear único tende a encarecer a leitura acima de 5 anos. Não inclui IR nem PIS/Cofins sobre ganho do derivativo, nem custo de garantias.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
             </div>
           </div>
-          <p className="status">Regras conferidas em {CONFERIDO_EM} · Câmbio, DI e cupom informados na tela · A cotação da mesa do banco e o contrato prevalecem.</p>
+          <p className="status">Regras conferidas em {CONFERIDO_EM} · {curveLabel} · A cotação da mesa do banco e o contrato prevalecem.</p>
         </section>
       </div>
 

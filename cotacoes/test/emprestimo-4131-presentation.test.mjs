@@ -5,13 +5,16 @@ import { E4_FX_SCENARIOS, E4_SLIDES, E4_TITLE, buildE4Slides, captureE4 } from '
 
 const loan = loan4131({ principal: 1e7, rate: 5.8, spot: 5.4, start: '2026-11-11', months: 24, freq: 6, irrf: 15, grossUp: true, flat: 0.5, guarantee: 0 })
 const hedge = hedge4131(loan, { di: 12.75, cupom: 5.2 })
-const labels = { freq: 'Semestral', irPayer: 'Tomador (gross-up)' }
+const labels = { freq: 'Semestral', irPayer: 'Tomador (gross-up)', curve: 'DI e cupom digitados', fees: 'Banco no Brasil · sem IR' }
 
 test('cópia congelada · guarda os números da tela e os cenários de câmbio, sem recalcular depois', () => {
   const snapshot = captureE4({ loan, hedge, labels }, 1794400000000)
   assert.equal(snapshot.capturedAt, 1794400000000)
   assert.equal(snapshot.loan.allIn, loan.allIn)
   assert.equal(snapshot.hedge.swap.spread, hedge.swap.spread)
+  assert.equal(snapshot.hedge.swap.runSpread, hedge.swap.runSpread)
+  assert.equal(snapshot.hedge.source, 'manual')
+  assert.equal(snapshot.loan.flatIrUsd, 0)
   assert.equal(snapshot.hedge.ndf.totalBrl, hedge.ndf.totalBrl)
   assert.deepEqual(snapshot.scenarios.map((item) => item.fxChange), [...E4_FX_SCENARIOS])
   assert.equal(snapshot.hedge.flows.length, loan.flows.length)
