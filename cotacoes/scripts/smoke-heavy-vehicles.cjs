@@ -17,6 +17,8 @@ const sectorNewsFixture = now => {
     for (const width of [390, 820, 1280]) {
       const page = await browser.newPage({ viewport: { width, height: 1000 }, hasTouch: true, serviceWorkers: 'block' }), errors = []
       page.on('pageerror', error => errors.push(error.message))
+      // Este smoke testa as abas de notícias: o mascote flutuante começa fechado para não cobrir os cliques.
+      await page.addInitScript(() => localStorage.setItem('painel.mascot.ui.v1', JSON.stringify({ hidden: true, desktop: null })))
       await page.clock.setFixedTime(NEWS_CLOCK)
       let mode = 'ok'
       await page.route('**/heavy-vehicles.json*', route => mode === 'error' ? route.fulfill({ status: 503, body: 'unavailable' }) : route.fulfill({ path: path.join(__dirname, '../public/heavy-vehicles.json') }))
