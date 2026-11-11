@@ -239,11 +239,12 @@ function contaGarantida(col, p) {
   const cg = contaGarantidaCet({ limit: p.value, start: p.start, rate: parsed.params.rate, rateBase: parsed.params.rateBase, conversion: parsed.params.conversion, dayCount: parsed.params.dayCount, holidays: parsed.params.holidays, taxProfile: col.profile, eligible: col.eligible, operationValue: p.value })
   return finish({
     cetRegulatory: cg.ok ? cg.annual : null, projectedLabel: 'Custo pelo prazo de uso', cetLabel: 'CET (art. 6º · 30 dias sobre o limite)',
-    modality: 'conta-garantida', label: 'Conta Garantida', start: p.start, value: p.value, net: p.value,
-    rows: [{ date: end, days, payment: p.value + totals.interest + totals.iof, amortization: p.value, interest: totals.interest, balance: 0 }],
+    // Mesma convenção do CET: IOF adicional na liberação; juros e IOF diário no encerramento.
+    modality: 'conta-garantida', label: 'Conta Garantida', start: p.start, value: p.value, net: p.value - totals.additionalIof,
+    rows: [{ date: end, days, payment: p.value + totals.interest + totals.dailyIof, amortization: p.value, interest: totals.interest, balance: 0 }],
     interest: totals.interest, iof: totals.iof, fees: 0, guaranteeInfo: info,
     rateLabel: `${col.cRate}% a.m. · base ${col.cBase} · ${col.cConv === 'proportional' ? 'proporcional' : 'equivalente'}`, systemLabel: `Uso único · ${days} dias`,
-    notes: ['Saldo utilizado integralmente do início ao fim; juros e IOF pagos no encerramento, sem tarifas (não modeladas nesta modalidade).', 'Carência e amortização comuns do topo não se aplicam a esta modalidade: pagamento único.'],
+    notes: ['Saldo utilizado integralmente do início ao fim; IOF adicional na liberação, juros e IOF diário no encerramento, sem tarifas (não modeladas nesta modalidade).', 'Carência e amortização comuns do topo não se aplicam a esta modalidade: pagamento único.'],
   })
 }
 

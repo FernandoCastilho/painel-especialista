@@ -88,7 +88,9 @@ test('Conta Garantida repete juros e IOF do simulador de saldo', () => {
   const r = run(col('conta-garantida', { cDays: '30' }))
   const base = simulateContaGarantida({ start: '2026-11-10', end: '2026-12-10', rate: 2, rateBase: 30, conversion: 'proportional', dayCount: 'calendar', events: [{ date: '2026-11-10', draw: 500000, payment: 0 }], settleAllAtEnd: true, taxProfile: 'pj', eligible: false, operationValue: 500000 })
   assert.ok(Math.abs(r.interest - base.totals.interest) < 1e-6); assert.ok(Math.abs(r.iof - base.totals.iof) < 1e-6)
-  assert.equal(r.net, 500000)
+  // IOF adicional (0,38%) na liberação, como no CET do art. 6º: com 30 dias de uso, o custo pelo prazo é igual ao CET.
+  assert.ok(Math.abs(r.net - (500000 - base.totals.additionalIof)) < 1e-6)
+  assert.ok(Math.abs(r.projectedCost - r.cet) < 1e-12)
   assert.equal(run(col('conta-garantida', { cDays: '0' })).ok, false)
 })
 test('Desconto de duplicata repete a conta do desconto', () => {
