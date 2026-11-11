@@ -26,7 +26,6 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
     <nav className="bw-nav" aria-label="Área BNDES">
       <button type="button" aria-pressed={area === 'simulate' && !historical} onClick={() => { setArea('simulate'); if (historical) onView('finame-materiais') }} aria-label="Simular financiamento">Simular</button>
       <button type="button" aria-pressed={area === 'quotes'} onClick={() => setArea('quotes')}>Taxas e históricos</button>
-      <button type="button" aria-pressed={area === 'simulate' && historical} onClick={() => navigate('bndes-credito-tfb')} aria-label="Exemplo conferido · histórico">Exemplo conferido</button>
     </nav></div>
     <div hidden={area !== 'simulate'} className="bw-simulation">
       {!historical && profile !== 'finame-materiais' && profileControl}

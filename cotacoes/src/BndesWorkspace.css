@@ -439,3 +439,29 @@
   .bw .cx-finame .cx-field input:not([type=checkbox]),.bw .cx-finame select,.bw .cx-finame .fm-rate-row input:not([type=checkbox]) { height:36px; min-height:36px; padding-top:4px; padding-bottom:4px; }
   .bw .fm-financed { min-height:36px; }
 }
+/* 11/11/2026 · Cotação ampliada: o quadro do resultado vira uma janela sobre a tela, em tela de computador.
+   Camada 65: acima do topo fixo (60) e abaixo da ajuda "?" flutuante (70). */
+.bw .fm-zoom-toggle { display:none; }
+@media (min-width:1001px) {
+  .bw #fm-result > header .fm-zoom-toggle { display:inline-flex; align-items:center; justify-content:center; flex:none; width:44px; height:44px; margin:-10px -10px -10px 0; padding:0; border:0; border-radius:8px; background:none; color:#c9d8ee; cursor:pointer; }
+  .bw #fm-result > header .fm-zoom-toggle svg { width:18px; height:18px; }
+  .bw #fm-result > header .fm-zoom-toggle:hover:not(:disabled) { color:#fff; background:#ffffff1f; }
+  .bw #fm-result > header .fm-zoom-toggle:focus-visible { outline:2px solid #fff; outline-offset:-4px; }
+  .bw #fm-result > header .fm-zoom-toggle:disabled { opacity:.45; cursor:default; }
+  .bw .fm-results.fm-zoomed { position:static; }
+  .bw .fm-zoom-backdrop { position:fixed; inset:0; z-index:64; background:#06173299; }
+  .bw #fm-result.fm-zoom { position:fixed; z-index:65; top:50%; left:50%; transform:translate(-50%,-50%); width:min(1100px,94vw); max-height:92vh; overflow:auto; border:1px solid #c6d5e9; border-radius:14px; background:#fff; box-shadow:0 24px 70px #06173266; }
+  .bw #fm-result.fm-zoom > header,.bw #fm-result.fm-zoom > header.fm-hero { padding:18px 24px 0; }
+  .bw #fm-result.fm-zoom > header .cx-heading { font-size:1.05rem; }
+  .bw #fm-result.fm-zoom > header small { font-size:.85rem; }
+  .bw #fm-result.fm-zoom .fm-headline { padding:14px 24px 20px; }
+  .bw #fm-result.fm-zoom .fm-headline span { font-size:.95rem; }
+  .bw #fm-result.fm-zoom .fm-headline b { font-size:2.4rem; }
+  .bw #fm-result.fm-zoom .fm-headline small { font-size:1.05rem; }
+  .bw #fm-result.fm-zoom .fm-iof-premise { font-size:.9rem; padding-left:24px; padding-right:24px; }
+  .bw #fm-result.fm-zoom .cx-matrix th,.bw #fm-result.fm-zoom .cx-matrix td { font-size:1.1rem; padding:14px 24px; }
+  .bw #fm-result.fm-zoom .cx-matrix thead th { font-size:.95rem; }
+  .bw #fm-result.fm-zoom .fm-reference-sources,.bw #fm-result.fm-zoom .fm-difference { font-size:1rem; line-height:1.5; margin-left:24px; margin-right:24px; }
+  .bw #fm-result.fm-zoom .fm-details { margin-left:24px; margin-right:24px; }
+  .bw #fm-result.fm-zoom .fm-details > summary { font-size:.95rem; }
+}
