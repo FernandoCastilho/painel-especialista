@@ -4,6 +4,7 @@ import CalculatorHelp from './CalculatorHelp.jsx'
 import { DISCOUNT_INITIAL_FORM, DISCOUNT_TERMS, TITLE_FEE_MODES, parseDiscountForm } from './analiseDesconto.js'
 import './AnaliseDesconto.css'
 import { IOF_SOURCE } from './iofRules.js'
+import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_RESSALVA } from './pracaContrato.js'
 
 const brl = (value) => value == null ? '—' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const number = (value) => value == null ? '—' : value.toLocaleString('pt-BR')
@@ -69,7 +70,8 @@ export default function AnaliseDesconto({ onBack }) {
         {field('date', 'Data da operação e liberação do giro', <input {...props('date')} type="date" min="1900-01-01" max="9995-12-31" value={form.date} onChange={(event) => set('date', event.target.value)} />, 'A primeira parcela do giro vence no mês seguinte, no mesmo dia (limitado ao último dia do mês) ou no próximo dia útil.')}
         <div><span>Valor bruto dos títulos</span><b>{brl(operation?.value)}</b></div>
         {textField('operationRate', 'Taxa da operação (% a.m.)', 'Aplicada a cada grupo de títulos pelos dias corridos até o vencimento informado, conforme a convenção selecionada.')}
-        {field('convention', 'Convenção contratual de desconto', <select {...props('convention')} value={form.convention} onChange={event => set('convention', event.target.value)}><option value="commercial30">Comercial simples (por fora), mês de 30 dias</option><option value="rational30">Racional simples (por dentro), mês de 30 dias</option></select>, 'Selecione a convenção efetiva do contrato. Vencimento em fim de semana ou feriado nacional passa para o próximo dia útil; juros e IOF contam até essa data.')}
+        {field('convention', 'Convenção contratual de desconto', <select {...props('convention')} value={form.convention} onChange={event => set('convention', event.target.value)}><option value="commercial30">Comercial simples (por fora), mês de 30 dias</option><option value="rational30">Racional simples (por dentro), mês de 30 dias</option></select>, 'Selecione a convenção efetiva do contrato. Vencimento em fim de semana, feriado nacional ou feriado da praça do contrato passa para o próximo dia útil; juros e IOF contam até essa data.')}
+        {field('praca', 'Praça do contrato (feriados)', <select {...props('praca')} value={form.praca} onChange={event => set('praca', event.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>, `${PRACA_AJUDA} Vale para os títulos e para as parcelas do giro. ${PRACA_RESSALVA}`)}
         {taxFields('taxProfile', 'eligible')}
         {field('titleFeeMode', 'Como calcular a tarifa dos títulos?', <select {...props('titleFeeMode')} value={form.titleFeeMode} onChange={(event) => set('titleFeeMode', event.target.value)}><option value="">Selecione a forma de cobrança</option>{TITLE_FEE_MODES.map((mode) => <option key={mode.id} value={mode.id}>{mode.label}</option>)}</select>, 'A referência mostra R$ 564,00 como “unitário”, mas os totais o tratam como tarifa da operação. Escolha a interpretação correta.')}
         {feeField}
@@ -111,7 +113,7 @@ export default function AnaliseDesconto({ onBack }) {
     </article>
 
     <article className="desk-panel cx-panel desconto-input-panel">
-      <header className="cx-heading"><h3>3. Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana ou feriado nacional passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>3. Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana, feriado nacional ou feriado da praça do contrato passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
       <div className="cx-form">
         {field('giroPrincipalMode', 'Principal usado no giro', <select {...props('giroPrincipalMode')} value={form.giroPrincipalMode} onChange={(event) => set('giroPrincipalMode', event.target.value)}><option value="monthly">Igual ao volume bruto mensal do desconto</option><option value="manual">Informar outro valor</option></select>, 'Usar o volume mensal é uma hipótese de comparação, não uma necessidade de capital de giro (NCG) apurada.')}
         {form.giroPrincipalMode === 'manual' && moneyField('giroPrincipal', 'Valor financiado no giro', 'Ao informar outro principal, os montantes comparados também ficam diferentes.')}
@@ -153,7 +155,7 @@ export default function AnaliseDesconto({ onBack }) {
       <ul>
         <li>Tarifa por operação: total informado, custo unitário × títulos ou valor bruto × percentual. Sem arredondamento intermediário; os valores exibidos são arredondados para centavos.</li>
         <li>Desconto mensal = operações × (tarifa de títulos + TAC + juros pagos + IOF pago). Custo do prazo = custo mensal × meses.</li>
-        <li>Desconto: juros e IOF de cada título contam da operação até a data de pagamento (vencimento ou próximo dia útil, se cair em fim de semana ou feriado nacional).</li>
+        <li>Desconto: juros e IOF de cada título contam da operação até a data de pagamento (vencimento ou próximo dia útil, se cair em fim de semana, feriado nacional ou feriado da praça do contrato).</li>
         <li>Giro Price: juros de cada parcela = saldo × ((1 + i) elevado a dias/30 − 1), pelos dias corridos entre vencimentos; parcela fixa que quita o saldo nessas datas. Vencimentos no próximo dia útil.</li>
         <li>IOF do giro = adicional × principal + diária × soma de cada amortização multiplicada por seus dias corridos, limitados a 365. Percentuais são divididos por 100.</li>
         <li>CET (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o líquido liberado aos pagamentos, em dias corridos/365. Desconto: nominal − juros − IOF − TAC − tarifa de títulos, contra o nominal de cada título. Giro: principal − TAC − IOF, contra as parcelas.</li>

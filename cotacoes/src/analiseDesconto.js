@@ -3,6 +3,7 @@ import { parseDecimal } from './emprestimo.js'
 import { resolveCreditIof } from './iofRules.js'
 import { creditCet, giroOperation } from './creditComparison.js'
 import { nextBusinessDay } from './holidays.js'
+import { PRACA_PADRAO, contractCalendars, pracaContrato } from './pracaContrato.js'
 
 export const DISCOUNT_TERMS = Object.freeze([12, 24, 36, 48])
 export const TITLE_FEE_MODES = Object.freeze([
@@ -18,7 +19,7 @@ export const DISCOUNT_INITIAL_FORM = Object.freeze({
   operations: '6', averageValue: '225.600,43', discountRate: '1,75',
   giroPrincipalMode: 'monthly', giroPrincipal: '', giroRate: '1,83', giroTac: '3.150,00',
   taxProfile: 'pj', eligible: false, giroTaxProfile: 'pj', giroEligible: false,
-  convention: 'commercial30',
+  convention: 'commercial30', praca: PRACA_PADRAO,
   titleRows: [{ value: '225.600,43', count: '30', dueDate: '2026-12-05' }],
 })
 
@@ -53,11 +54,14 @@ export function titleFee({ value, titles, feeMode, fee }) {
   return money(total) ? { ok: true, total } : invalid('A tarifa de títulos excede o limite de cálculo.')
 }
 
-// Regras de 11/11/2026: título que vence em fim de semana ou feriado nacional é pago no próximo dia útil; juros e IOF
+// Regras de 11/11/2026: título que vence em fim de semana, feriado nacional ou feriado da praça do contrato (`calendars`,
+// padrão só 'BR') é pago no próximo dia útil; juros e IOF
 // contam até essa data. CET (Res. CMN 4.881/2020, art. 4º): taxa anual que iguala o líquido liberado (nominal menos
 // juros, IOF, TAC e tarifa de títulos) aos nominais recebidos em cada data de pagamento, em dias corridos/365.
-export function discountOperation({ titleRows, date, rate, convention = 'commercial30', taxProfile = 'pj', eligible = false, feeMode, fee, tac }) {
+export function discountOperation({ titleRows, date, rate, convention = 'commercial30', taxProfile = 'pj', eligible = false, feeMode, fee, tac, calendars = ['BR'] }) {
   const release = parseDiscountDate(date)
+  const cals = contractCalendars(calendars)
+  if (!cals) return invalid('Escolha a praça do contrato entre as praças disponíveis.')
   if (!release || !Array.isArray(titleRows) || !titleRows.length || titleRows.length > 500 || !percent(rate, 1000) || !['commercial30', 'rational30'].includes(convention)) return invalid('Confira a data, taxa, convenção e os títulos.')
   if (titleRows.some(row => !money(row.value, true) || !integer(row.count, 1000000) || !parseDiscountDate(row.dueDate) || row.dueDate <= date)) return invalid('Informe valor nominal total do grupo, quantidade e vencimento posterior à liberação para todos os títulos.')
   const value = titleRows.reduce((sum, row) => sum + row.value, 0)
@@ -65,7 +69,7 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
   const tax = resolveCreditIof({ date, profile: taxProfile, eligible, operationValue: value })
   if (!tax.ok) return tax
   const rows = titleRows.map(row => {
-    const paymentDate = nextBusinessDay(row.dueDate, ['BR'])
+    const paymentDate = nextBusinessDay(row.dueDate, cals)
     const days = (parseDiscountDate(paymentDate) - release) / 86400000
     const interest = convention === 'commercial30' ? row.value * rate / 100 * days / 30 : row.value - row.value / (1 + rate / 100 * days / 30)
     const base = row.value - interest
@@ -92,12 +96,12 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
 // Giro Price no motor do Capital de Giro (giroOperation): juros por dias corridos entre vencimentos, (1 + i)^(dias/30);
 // vencimentos mensais a partir do mês seguinte, no próximo dia útil; TAC e IOF descontados na liberação (o principal
 // é financiado inteiro, o líquido recebido é menor) e CET da Res. CMN 4.881. Mantém os nomes usados pela tela.
-export function discountGiro({ principal, months, rate, tac, date, taxProfile = 'pj', eligible = false }) {
+export function discountGiro({ principal, months, rate, tac, date, taxProfile = 'pj', eligible = false, calendars = ['BR'] }) {
   const tax = resolveCreditIof({ date, profile: taxProfile, eligible, operationValue: principal })
   if (!tax.ok) return tax
   const firstDue = discountDueDate(date, 1)
   if (!money(principal, true) || !DISCOUNT_TERMS.includes(months) || !percent(rate, 1000) || !money(tac) || !firstDue) return invalid('Confira principal, prazo, data, taxa e TAC do giro.')
-  const loan = giroOperation({ value: principal, n: months, rate, unit: 'am', system: 'price', start: date, firstDue, profile: taxProfile, eligible, fees: tac })
+  const loan = giroOperation({ value: principal, n: months, rate, unit: 'am', system: 'price', start: date, firstDue, profile: taxProfile, eligible, fees: tac, calendars })
   if (!loan.ok) return loan
   const schedule = loan.rows.map(row => ({ month: row.number, dueDate: row.date, days: row.days, iofDays: Math.min(row.days, loan.tax.maxDays), amortization: row.originalAmortization, interest: row.interest, installment: row.payment, balance: row.balance }))
   const averageMonthlyOutflow = loan.total / months
@@ -169,10 +173,14 @@ export function parseDiscountForm(form) {
     if (!value.ok || value.value <= 0 || !integer(count, 1000000) || !parseDiscountDate(row.dueDate) || row.dueDate <= form.date) errors['titleRow' + index] = 'Preencha valor nominal total, quantidade inteira e vencimento posterior à operação.'
     return { value: value.value, count, dueDate: row.dueDate }
   })
-  const operation = { titleRows, date: form.date, rate: parsed.operationRate, convention: form.convention, taxProfile: form.taxProfile, eligible: form.eligible, feeMode: form.titleFeeMode, fee: parsed.fee, tac: parsed.tac }
+  // Praça do contrato: feriados locais que adiam vencimentos dos títulos e das parcelas do giro. Ausente = só nacionais.
+  const praca = pracaContrato(form.praca ?? PRACA_PADRAO)
+  if (!praca) errors.praca = 'Escolha a praça do contrato entre as praças disponíveis.'
+  const calendars = praca ? praca.calendars : ['BR']
+  const operation = { titleRows, date: form.date, rate: parsed.operationRate, convention: form.convention, taxProfile: form.taxProfile, eligible: form.eligible, feeMode: form.titleFeeMode, fee: parsed.fee, tac: parsed.tac, calendars }
   const actual = discountOperation(operation)
   if (!actual.ok) errors.operation = actual.error
-  const params = { operation, averageValue: parsed.averageValue, projectionRate: parsed.discountRate, operations: parsed.operations, giro: { principalMode: form.giroPrincipalMode, principal: parsed.giroPrincipal, rate: parsed.giroRate, tac: parsed.giroTac, date: form.date, taxProfile: form.giroTaxProfile, eligible: form.giroEligible } }
+  const params = { operation, averageValue: parsed.averageValue, projectionRate: parsed.discountRate, operations: parsed.operations, giro: { principalMode: form.giroPrincipalMode, principal: parsed.giroPrincipal, rate: parsed.giroRate, tac: parsed.giroTac, date: form.date, taxProfile: form.giroTaxProfile, eligible: form.giroEligible, calendars } }
   const result = Object.keys(errors).length ? null : compareDiscount(params)
   return { errors, parsed, params, operation: actual.ok ? actual : null, result }
 }

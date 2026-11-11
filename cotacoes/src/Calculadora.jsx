@@ -12,6 +12,7 @@ import BndesWorkspace from './BndesWorkspace.jsx'
 import ContaGarantida, { ContaGarantidaIcon } from './ContaGarantida.jsx'
 import AnaliseDesconto, { DescontoIcon } from './AnaliseDesconto.jsx'
 import Help from './CalculatorHelp.jsx'
+import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 import './CalculatorLayout.css'
 import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
 import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
@@ -55,6 +56,7 @@ function CapitalDeGiro({ onBack }) {
   const [profile, setProfile] = useState('pj')
   const [eligible, setEligible] = useState(false)
   const [tacText, setTacText] = useState('0,00')
+  const [praca, setPraca] = useState(PRACA_PADRAO)
   const money = parseMoneyInput(valueText)
   const tac = tacText.trim() === '' ? { ok: true, value: 0 } : parseMoneyInput(tacText)
   const n = /^\d+$/.test(nText.trim()) ? Number(nText) : null
@@ -68,7 +70,7 @@ function CapitalDeGiro({ onBack }) {
     tac: tac.ok ? null : tac.error || 'Informe a TAC em R$ (zero se não houver).',
   }
   // Cada sistema roda no motor de juros por dias reais, com IOF e TAC na liberação e CET (Res. CMN 4.881).
-  const params = { value: money.value, n, rate, unit, start, firstDue, profile, eligible, fees: tac.value }
+  const params = { value: money.value, n, rate, unit, start, firstDue, profile, eligible, fees: tac.value, calendars: pracaCalendars(praca) }
   const runs = Object.values(errors).some(Boolean) ? {} : Object.fromEntries(SYSTEMS.filter(x => x.id !== 'bullet' || x.id === system).map(x => [x.id, giroOperation({ ...params, system: x.id })]))
   const result = runs[system]?.ok ? runs[system] : null
   const engineError = runs[system] && !runs[system].ok ? runs[system].error : null
@@ -122,6 +124,11 @@ function CapitalDeGiro({ onBack }) {
           </div>
           {field('start', 'Data da liberação', <input id="cx-start" type="date" max="9999-12-31" value={start} onChange={e => setStart(e.target.value)} />)}
           {field('firstDue', 'Primeiro vencimento mensal', <input id="cx-firstDue" type="date" max="9999-12-31" value={firstDue} onChange={e => setFirstDue(e.target.value)} />)}
+          <div className="cx-field">
+            <div className="cx-field-label"><label htmlFor="cx-praca">Praça do contrato (feriados)</label><Help title="Praça do contrato (feriados)"><p>{PRACA_AJUDA}</p><p>{PRACA_RESSALVA}</p></Help></div>
+            <select id="cx-praca" value={praca} onChange={e => setPraca(e.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
+            <p className="cx-hint">A praça define os feriados locais que adiam vencimentos.</p>
+          </div>
           <div className="cx-iof">
             <label htmlFor="cx-profile">Enquadramento do IOF</label>
             <select id="cx-profile" value={profile} onChange={e => { setProfile(e.target.value); setEligible(false) }}><option value="pj">Pessoa jurídica geral</option><option value="simples">Simples/MEI: operação elegível até R$ 30 mil</option></select>
@@ -129,7 +136,7 @@ function CapitalDeGiro({ onBack }) {
             <p className="cx-hint">{tax.ok ? `IOF automático: ${tax.additional.toLocaleString('pt-BR')}% adicional + ${tax.daily.toLocaleString('pt-BR', { maximumFractionDigits: 5 })}% ao dia, até 365 dias por parcela.` : 'Alíquotas calculadas conforme data e enquadramento.'}</p>
             <p className="cx-error" role={errors.iof ? 'alert' : undefined}>{errors.iof}</p>
             {tax.ok && <p className="cx-hint"><a href={tax.source} target="_blank" rel="noreferrer">Base legal: Decreto 6.306/2007, art. 7º</a> · Enquadramento automático; mudanças futuras não são antecipadas.</p>}
-            <p className="cx-hint">Juros por dias corridos; vencimento em dia não útil passa para o próximo dia útil. Para Bullet, o pagamento ocorre no último vencimento do calendário mensal.</p>
+            <p className="cx-hint">Juros por dias corridos; vencimento em dia não útil (fim de semana, feriado nacional ou da praça) passa para o próximo dia útil. No Bullet, paga-se no último vencimento mensal.</p>
           </div>
         </div>
       </article>

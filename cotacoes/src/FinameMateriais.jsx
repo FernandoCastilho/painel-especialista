@@ -15,6 +15,7 @@ import Help from './CalculatorHelp.jsx'
 import BndesPresentation from './BndesPresentation.jsx'
 import BndesPrint from './BndesPrint.jsx'
 import BndesIcon from './BndesIcon.jsx'
+import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const pct = (v, d = 2) => `${nf(v, d)}%`
@@ -54,6 +55,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const [periodicidade, setPeriodicidade] = useState(3)
   const [tacText, setTacText] = useState('2.600,00') // TAC: tarifa de contratação, paga à vista; pré-preenchida e editável
   const [fgiOn, setFgiOn] = useState(false)
+  const [praca, setPraca] = useState(PRACA_PADRAO) // praça do contrato: feriados locais que adiam vencimentos
+  const calendarios = pracaCalendars(praca)
   const [fgiText, setFgiText] = useState(String(FGI.padraoPercentual))
   const [liberacaoText, setLiberacaoText] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })
   // Data da liberação: base do calendário real (vencimentos dia 15 ou próximo dia útil), dos juros por dias corridos e do CET.
@@ -68,7 +71,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const tac = tacText.trim() === '' ? { ok: true, value: 0 } : parseMoneyInput(tacText)
   const fgiPct = parseDecimal(fgiText)
   // P do ECG: períodos de 30 dias completos entre a liberação ilustrativa e o último vencimento (dia 15, próximo dia útil).
-  const fgiPeriodos = prazo && hoje ? periodos30Datas(hoje, vencimentoDia15(hoje, prazo, holidayCtx)) : undefined
+  const fgiPeriodos = prazo && hoje ? periodos30Datas(hoje, vencimentoDia15(hoje, prazo, holidayCtx, calendarios)) : undefined
 
   // Custo financeiro do painel
   const faixa = prazo ? faixaTfb(prazo) : 60
@@ -103,15 +106,15 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const garantiaFgi = fgiOn && !erros.fgi ? { percentual: fgiPct, incorporar: false, periodos: fgiPeriodos } : null
   const custosExtras = { tac: tac.ok ? tac.value : 0, fgi: garantiaFgi }
   const pronto = funding?.mode === 'inline' && !Object.values(erros).some(Boolean) && Number.isFinite(custoFinanceiro)
-  const params = finameSimulationParams({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, periodicidade, dataLiberacao: hoje, feriados: holidayCtx, ...custosExtras })
+  const params = finameSimulationParams({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, periodicidade, dataLiberacao: hoje, feriados: holidayCtx, calendarios, ...custosExtras })
   const r = pronto ? simular(params) : null
   const res = r?.ok ? r : null
   const comparison = comparar && pronto ? compareFinameFunding(params, quotes, manualRates) : null
   const spread = res ? spreadSobreCdi(res.taxaNominal, cdi) : null
   const financiadoTela = res ? res.liberado : !erros.valor && !erros.part ? money.value * participacao / 100 : null
   // CET estimado do fluxo projetado (Res. CMN 4.881: dias corridos/365 desde a data da liberação informada).
-  const cet = res ? finameCet(res, hoje, holidayCtx) : null
-  const cets = comparison?.ok ? comparison.alternatives.map(item => finameCet(item.result, hoje, holidayCtx)) : []
+  const cet = res ? finameCet(res, hoje, holidayCtx, calendarios) : null
+  const cets = comparison?.ok ? comparison.alternatives.map(item => finameCet(item.result, hoje, holidayCtx, calendarios)) : []
   const cetTexto = (c, unidade = 'anual') => c ? `${pct(unidade === 'anual' ? c.anual : c.mensal, 2)} ${unidade === 'anual' ? 'a.a.' : 'a.m.'}` : 'Não mensurável'
   const cetAjuda = 'CET estimado (Resolução CMN 4.881/2020): taxa anual que iguala o valor líquido recebido na liberação (valor liberado menos TAC, ECG do FGI à vista e IOF) às parcelas do cronograma, em dias corridos/365. Usa as datas hipotéticas do fluxo (dia 15 ou próximo dia útil) e não inclui seguros nem outras tarifas: o CET do contrato, informado pelo agente, prevalece.'
   const referenceRetained = !!(((custo === 'tfc' || comparar) && (moedas.stale || moedas.status === 'error' || moedas.data?.stale?.[tfcCodigo])) || ((custo === 'tfb' || comparar) && (bndes.stale || bndes.status === 'error' || bndes.data?.stale?.[keyOf(faixa, liberacao)])))
@@ -193,7 +196,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
           <p className="fm-financed" aria-live="polite"><span>Valor financiado</span><b>{financiadoTela === null ? '—' : brl(financiadoTela)}</b></p>
           {field('prazo', 'Prazo total (meses)', input('prazo', prazoText, value => { setPrazoText(value); setManualRates({}) }, { inputMode: 'numeric' }), 'Até 84 meses (7 anos).')}
           {field('car', 'Carência (meses)', input('car', carText, setCarText, { inputMode: 'numeric' }), fixa ? `Até 12 meses com ${custo.toUpperCase()}; juros exigíveis durante a carência.` : 'Até 24 meses; juros exigíveis durante a carência.')}
-          {field('data-lib', 'Data da liberação', input('data-lib', liberacaoText, setLiberacaoText, { type: 'date', inputMode: undefined, min: '2000-01-01', max: '2100-12-31' }), 'Data em que o dinheiro é liberado. Os vencimentos caem todo dia 15 a partir do mês seguinte (ou no próximo dia útil, feriados nacionais); os juros de cada parcela contam os dias corridos desde o vencimento anterior, sobre os dias do ano civil (365 ou 366). Mudar a data muda os juros e o CET.')}
+          {field('data-lib', 'Data da liberação', input('data-lib', liberacaoText, setLiberacaoText, { type: 'date', inputMode: undefined, min: '2000-01-01', max: '2100-12-31' }), 'Data em que o dinheiro é liberado. Os vencimentos caem todo dia 15 a partir do mês seguinte (ou no próximo dia útil, considerando os feriados nacionais e os da praça do contrato); os juros de cada parcela contam os dias corridos desde o vencimento anterior, sobre os dias do ano civil (365 ou 366). Mudar a data muda os juros e o CET.')}
+          {field('praca', 'Praça do contrato (feriados)', <select id="fm-praca" value={praca} onChange={event => setPraca(event.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>, `${PRACA_AJUDA} ${PRACA_RESSALVA}`)}
           {seg('porte' , 'Porte e região', '0,95% a.a. para MPMEs no Norte e Nordeste; 1,25% a.a. para MPMEs nas demais regiões e para grandes empresas (página do produto em 04/11/2026; a mudança de 1,15% para 1,25% em 22/01/2026 é informada pela Abimaq). O porte também escolhe a série da TFC. Editável.',
             PORTES.map((p) => <button key={p.id} type="button" aria-pressed={porte === p.id} onClick={() => { setPorte(p.id); setManualRates({}); setBndesText(String(p.taxa).replace('.', ',')) }}>{p.label}</button>))}
           </div></section>
