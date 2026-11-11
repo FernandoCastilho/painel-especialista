@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import vm from 'node:vm'
 import { readFileSync } from 'node:fs'
 import { createHmac } from 'node:crypto'
-import { chamar, codigoValido, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail } from '../src/acessoEmail.js'
+import { criarRegistroDaAbertura, chamar, codigoValido, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail } from '../src/acessoEmail.js'
 
 test('e-mail válido: aceita endereços comuns e recusa os malformados', () => {
   for (const ok of ['a@b.co', 'nome.sobrenome@empresa.com.br', ' Fulano+x@Itau.COM.br ']) assert.equal(emailValido(ok), true, ok)
@@ -173,4 +173,38 @@ test('script: e-mail da aba Entrada direta entra sem código, fica registrado e 
   assert.equal(outro.token, undefined, 'quem não está na aba recebe código')
   s.bloq.appendRow(['colega@banco.com.br'])
   assert.equal(s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' }).ok, false, 'bloqueio vale mais que entrada direta')
+})
+
+
+test('visitas: três aberturas no mesmo dia geram três registros, sem duplicar efeitos', async () => {
+  const gravados = []
+  const acesso = { email: 'a@b.com', token: 'teste-local' }
+  const registrar = async (a) => { gravados.push(a.email); return { ok: true } }
+  for (let i = 0; i < 3; i++) {
+    const abertura = criarRegistroDaAbertura(registrar)
+    const primeira = abertura(acesso)
+    assert.equal(abertura({ ...acesso }), primeira, 'mesma promessa durante efeito duplicado')
+    await primeira
+    await abertura(acesso) // navegação interna/remontagem não conta novamente
+  }
+  assert.deepEqual(gravados, ['a@b.com', 'a@b.com', 'a@b.com'])
+})
+
+test('visitas: falha de rede incerta não repete automaticamente nem registra sucesso', async () => {
+  let chamadas = 0
+  const abertura = criarRegistroDaAbertura(async () => { chamadas++; return { ok: false, rede: true } })
+  const acesso = { email: 'a@b.com', token: 'teste-local' }
+  assert.equal((await abertura(acesso)).ok, false)
+  await abertura(acesso)
+  assert.equal(chamadas, 1)
+})
+
+test('visitas: credencial corrigida ou outro e-mail pode registrar na mesma abertura', async () => {
+  let chamadas = 0
+  const abertura = criarRegistroDaAbertura(async () => { chamadas++; return { ok: true } })
+  await abertura({ email: 'a@b.com', token: 'antigo' })
+  await abertura({ email: 'A@B.COM', token: 'antigo' })
+  await abertura({ email: 'a@b.com', token: 'novo' })
+  await abertura({ email: 'c@b.com', token: 'novo' })
+  assert.equal(chamadas, 3)
 })
