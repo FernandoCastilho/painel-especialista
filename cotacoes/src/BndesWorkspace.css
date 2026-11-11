@@ -191,6 +191,7 @@
 .bw .fm-group > h3 svg { color:#f47700; flex:none; width:30px; height:30px; }
 .bw .fm-group .fm-group-fields { display:flex; flex-direction:column; gap:6px; padding:12px; }
 .bw .fm-operation .cx-field,.bw .fm-costs .cx-field { display:grid; grid-template-columns:minmax(0,1fr) minmax(120px,1fr); align-items:center; column-gap:8px; }
+.bw .fm-operation .fm-field-porte { grid-template-columns:minmax(0,1fr); row-gap:4px; }
 .bw .fm-operation .cx-field > .cx-error,.bw .fm-costs .cx-field > .cx-error { grid-column:1/-1; min-height:0; margin:0; }.bw .cx-error:empty { display:none; }
 .bw .cx-finame .cx-field label,.bw .cx-finame .cx-label { font-size:.8rem; font-weight:400; }
 .bw .cx-finame .cx-field input:not([type=checkbox]),.bw .cx-finame select { font-size:.85rem; min-height:44px; padding:7px; }
