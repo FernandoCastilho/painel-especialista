@@ -41,22 +41,6 @@ export async function chamar(acao, params, { url = ACESSO_URL, fetchFn = globalT
     return { ok: false, erro: 'Não foi possível falar com o servidor agora. Tente de novo.', rede: true }
   }
 }
-export const pedirCodigo = (email, opts) => chamar('pedir', { email: normalizarEmail(email) }, opts)
+export const pedirCodigo = (email, opts) => chamar('pedir', { email: normalizarEmail(email), pedido: globalThis.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2)}` }, opts)
 export const confirmarCodigo = (email, codigo, opts) => chamar('confirmar', { email: normalizarEmail(email), codigo: String(codigo).trim() }, opts)
 export const registrarVisita = (acesso, opts) => chamar('visita', acesso, opts)
-
-// Uma tentativa por e-mail/credencial nesta abertura do documento. A promessa é
-// compartilhada para não duplicar por efeitos React, remontagem ou navegação interna.
-// Não repetir falhas de rede automaticamente: o servidor pode já ter gravado a linha.
-export function criarRegistroDaAbertura(registrar = registrarVisita) {
-  const registros = new Map()
-  return (acesso) => {
-    const email = normalizarEmail(acesso.email)
-    const anterior = registros.get(email)
-    if (anterior?.token === acesso.token) return anterior.pedido
-    const pedido = Promise.resolve().then(() => registrar(acesso))
-    registros.set(email, { token: acesso.token, pedido })
-    return pedido
-  }
-}
-export const registrarVisitaDaAbertura = criarRegistroDaAbertura()

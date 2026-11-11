@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './AcessoPorEmail.css'
-import { codigoValido, confirmarCodigo, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail, pedirCodigo, registrarVisitaDaAbertura } from './acessoEmail.js'
+import { codigoValido, confirmarCodigo, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail, pedirCodigo, registrarVisita } from './acessoEmail.js'
 
 const ESPERA_REENVIO = 60
 
 // Porta de entrada: pede o e-mail, envia um código de 6 dígitos para ele e só libera o painel com o código certo.
-// Quem já confirmou neste aparelho entra direto; cada abertura/recarregamento registra uma visita, sem somar a navegação interna.
+// Quem já confirmou neste aparelho entra direto; a visita é registrada em segundo plano (no máximo uma vez por dia).
 export default function AcessoPorEmail({ children }) {
   const [exigir] = useState(() => exigirAcesso())
   const [acesso, setAcesso] = useState(() => (exigir ? lerAcesso() : null))
@@ -14,12 +14,18 @@ export default function AcessoPorEmail({ children }) {
   const [codigo, setCodigo] = useState('')
   const [erro, setErro] = useState('')
   const [ocupado, setOcupado] = useState(false)
+  const envioEmCurso = useRef(false)
   const [espera, setEspera] = useState(0)
 
   useEffect(() => {
     if (!exigir || !acesso) return
-    registrarVisitaDaAbertura(acesso).then((r) => {
-      if (!r.ok && !r.rede) { limparAcesso(); setAcesso(null) } // o servidor não reconhece mais este acesso
+    const hoje = new Date().toISOString().slice(0, 10)
+    let ultima = null
+    try { ultima = localStorage.getItem('painel-acesso-visita') } catch { /* sem armazenamento */ }
+    if (ultima === hoje) return
+    registrarVisita(acesso).then((r) => {
+      if (r.ok) { try { localStorage.setItem('painel-acesso-visita', hoje) } catch { /* ok */ } }
+      else if (!r.rede) { limparAcesso(); setAcesso(null) } // o servidor não reconhece mais este acesso
     })
   }, [exigir, acesso])
 
@@ -33,10 +39,12 @@ export default function AcessoPorEmail({ children }) {
 
   const enviarCodigo = async (e) => {
     e?.preventDefault()
-    if (ocupado) return
+    if (ocupado || envioEmCurso.current) return
     if (!emailValido(email)) { setErro('Digite um e-mail válido, como nome@empresa.com.br.'); return }
     setOcupado(true); setErro('')
+    envioEmCurso.current = true
     const r = await pedirCodigo(email)
+    envioEmCurso.current = false
     setOcupado(false)
     if (!r.ok) { setErro(r.erro || 'Não foi possível enviar o código.'); return }
     if (r.token) { entrar({ email: normalizarEmail(email), token: r.token }); return } // e-mail com entrada direta: sem código

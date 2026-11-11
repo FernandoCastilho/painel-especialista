@@ -1,6 +1,6 @@
 # Tela de entrada por e-mail
 
-**O que faz:** registra quem acessa, sem você precisar aprovar ninguém. Quem abre o painel digita o e-mail, recebe um código de 6 números e entra com o código certo. Ao confirmar, o e-mail entra sozinho na aba `Liberados` (com a data). Cada entrada vira uma linha na aba `Acessos` (data e hora, e-mail, tipo). Quem já confirmou entra direto nas próximas vezes; cada nova abertura ou recarregamento também registra uma visita, mesmo no mesmo dia. Navegar entre telas do painel não gera outra visita.
+**O que faz:** registra quem acessa, sem você precisar aprovar ninguém. Quem abre o painel digita o e-mail, recebe um código de 6 números e entra com o código certo. Ao confirmar, o e-mail entra sozinho na aba `Liberados` (com a data). Cada entrada vira uma linha na aba `Acessos` (data e hora, e-mail, tipo). Quem já confirmou entra direto nas próximas vezes; a visita do dia também é anotada.
 
 **Custo:** zero. Usa o Google (planilha + envio de e-mail pela sua conta Gmail).
 
@@ -25,8 +25,24 @@
 - **Privacidade (LGPD):** e-mail é dado pessoal. A tela traz o aviso de uso. A planilha fica só na sua conta; não ponha a lista no git.
 - Se mudar o código do script, é preciso **Implantar > Gerenciar implantações > editar > Nova versão**, mantendo o mesmo endereço.
 
-## Contagem de entradas (11/11/2026)
-- Conte apenas linhas do tipo `visita` para a frequência de abertura/recarregamento. `cadastro` e `entrada direta` são etapas de autenticação e não devem ser somadas às visitas.
-- A mudança remove o antigo limite diário no navegador. Não reconstrói visitas anteriores que não foram registradas.
-- Cada documento aberto faz uma tentativa, compartilhada entre efeitos React e navegação interna. Falha de rede não é repetida automaticamente, para evitar duplicação quando a resposta se perde; portanto pode haver subcontagem em falhas.
-- A identificação é por e-mail. O acesso direto continua sem verificação de identidade por código. Nenhum token é gravado na planilha ou no relatório.
+
+## Contagem de solicitações de entrada (11/11/2026)
+
+Cada submissão válida de e-mail (inclusive reenvio deliberado) grava `solicitacao`
+em Acessos antes do OTP. Novos, cadastrados e Entrada direta usam a mesma regra.
+Não comprova identidade nem entrada concluída. Inválidos e bloqueados não contam.
+Cota, limite horário e falha de envio podem resultar em tentativa sem sucesso.
+O envio do código e as regras anteriores de autenticação são preservados.
+
+No relatório, contar somente `solicitacao`; não somar cadastro/entrada direta/visita.
+Não é possível reconstruir essa métrica retroativamente. Abrir/recarregar/navegar
+com sessão lembrada não produz solicitação. Não forçamos novo login.
+
+O navegador bloqueia submissões simultâneas e envia um ID por solicitação.
+O servidor serializa e deduplica esse ID por até 10 minutos. Cache Apps Script
+pode expirar antecipadamente, portanto não é garantia absoluta contra repetição.
+Clientes anteriores sem ID continuam compatíveis sem essa deduplicação.
+
+O deploy frontend não atualiza Apps Script. Atualizar código preservando ID_PLANILHA,
+remetente e demais configurações existentes; salvar e atualizar a implantação
+EXISTENTE para nova versão, mantendo URL, executor e permissões. Não criar endpoint.
