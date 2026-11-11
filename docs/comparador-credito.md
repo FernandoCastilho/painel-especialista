@@ -11,6 +11,7 @@ A tela passou a seguir o modelo "Simulador de empréstimo · Compare modalidades
 - Mantidos: cenários do CDI (só com coluna indexada), "mesmo valor líquido" (vale para todas as modalidades), declaração de conferência e apresentação em tela cheia.
 - Código: `src/creditModalities.js` (organiza cada coluna e leva o resultado a um formato comum), `src/CreditComparison.jsx` (tela). Nenhum motor de cálculo foi alterado: usa `creditComparison.js`, `finameMateriais.js`, `finimpComparison.js`, `contaGarantida.js` e `analiseDesconto.js` como estão.
 - CET de todas as modalidades: mesmo cálculo por fluxo de caixa (líquido na liberação, pagamentos datados, ACT/365), sempre "estimado".
+- Giro pós-CDI (11/11/2026, Res. CMN 4.881/2020, art. 5º: taxa flutuante não entra no CET regulatório): a coluna mostra dois números. "CET · parte fixa (regra do BC)" é o mesmo contrato com CDI zero (só o spread, mesma base de dias úteis/252, feriados nacionais e informados, mesmas datas e IOF desse fluxo). "Custo com CDI projetado" é o número antigo e não é CET. A marca "menor CET" usa o CET da parte fixa. Nas modalidades prefixadas os dois coincidem. Vale também para "Outra modalidade" com indexador CDI. Exemplo (R$ 500.000, 24 meses Price, 100% do CDI + 0,35% a.m., liberação 10/11/2026, CDI 14,9%): CET parte fixa 7,08% a.a.; custo com CDI projetado 23,12% a.a. Campos do motor: `cetRegulatory` em `creditOperation`; `cet`, `projectedCost` e `floating` no resultado da coluna.
 
 ### Premissas que o usuário precisa saber
 

@@ -84,16 +84,20 @@ function conditions(col) {
 }
 
 // Resultado comum. `rows` é o fluxo de pagamentos futuros; o líquido é o que a empresa recebe na liberação.
+// `cet` é o CET regulatório (Res. CMN 4.881/2020): no pós-fixado, só a parte fixa (CDI zero, art. 5º). `projectedCost` é a
+// taxa anual do fluxo com o CDI projetado. Nas modalidades prefixadas os dois coincidem.
 function finish(base) {
   const { value, net, rows, start, interest, iof, fees, guaranteeInfo, notes = [], label, rateLabel, systemLabel } = base
   const paid = sumOf(rows.map(r => r.payment))
   let cumulative = 0
   const flow = rows.map((r, k) => ({ ...r, number: k + 1, cumulative: (cumulative += r.payment) }))
-  const cet = creditCet(net, flow)
+  const projectedCost = creditCet(net, flow)
+  const floating = base.cetRegulatory !== undefined
+  const cet = floating ? base.cetRegulatory : projectedCost
   const coverage = guaranteeInfo.guaranteeValue === null ? null : guaranteeInfo.guaranteeValue / value * 100
   return {
     ok: true, modality: base.modality, label, rateLabel, systemLabel, start, value, net, rows: flow, interest, iof, fees,
-    paid, total: base.total ?? paid + (value - net), cost: paid - net, cet,
+    paid, total: base.total ?? paid + (value - net), cost: paid - net, cet, projectedCost, floating,
     firstPayment: flow[0].payment, maxPayment: Math.max(...flow.map(r => r.payment)), lastDate: flow.at(-1).date,
     guarantee: guaranteeInfo.guarantee, guaranteeValue: guaranteeInfo.guaranteeValue, coverage, notes,
     graceNote: base.graceNote ?? '', declaredCet: base.declaredCet ?? null,
@@ -130,7 +134,8 @@ function giroLike(col, p, ctx, kind) {
     rateLabel: cdiMode ? `${col.cdiPercent}% do CDI + ${col.rate}% ${col.unit === 'am' ? 'a.m.' : 'a.a.'}` : `Prefixada · ${col.rate}% ${col.unit === 'am' ? 'a.m.' : 'a.a.'}`,
     systemLabel: `${p.system.toUpperCase()} · ${r.rows.length} pagamento(s)`, declaredCet: declared,
     graceNote: r.graceDays > 0 ? `Carência capitalizada: ${r.graceDays} dias · R$ ${r.capitalizedGrace.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '',
-    notes: cdiMode ? ['CDI constante no cenário escolhido; projeção, não taxa futura garantida.'] : [],
+    ...(cdiMode ? { cetRegulatory: r.cetRegulatory } : {}),
+    notes: cdiMode ? ['CDI constante no cenário escolhido; projeção, não taxa futura garantida.', 'CET · parte fixa (regra do BC): mesmo contrato com CDI zero, só o spread, na mesma base de dias úteis/252, feriados e datas (Res. CMN 4.881/2020, art. 5º). O custo com CDI projetado aparece à parte e não é CET.'] : [],
   })
 }
 

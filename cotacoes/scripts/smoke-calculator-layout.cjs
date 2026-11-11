@@ -185,6 +185,16 @@ async function fillScenario(page, section, route) {
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/)
     const interest = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
     assert.match(await interest.locator('b').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
+    // CET do art. 6º (Res. CMN 4.881/2020): sem limite, só o pedido; com limite, 30 dias sobre o limite em dias corridos/365.
+    assert.equal(await section.getByText('Sem CET: informe o limite contratado', { exact: false }).count(), 1)
+    assert.equal(await page.locator('#cg-limit').inputValue(), '', 'limite começa vazio')
+    await page.locator('#cg-limit').fill('100000')
+    const cetKpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
+    const cetAnnual = Math.pow((100000 + 3000 + 100000 * 0.000082 * 30 + 380) / 100000, 365 / 30) - 1
+    const pct2 = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
+    assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
+    assert.ok(await section.getByText('Confira no texto da Resolução CMN 4.881/2020', { exact: false }).count())
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)

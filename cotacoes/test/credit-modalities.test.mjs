@@ -129,3 +129,25 @@ test('Desconto: total desembolsado é o nominal pago, sem repetir juros e IOF', 
 test('modalidades de pagamento único avisam que carência e amortização comuns não se aplicam', () => {
   for (const id of ['finimp', 'conta-garantida', 'desconto']) assert.ok(run(col(id), { ...shared, grace: '6' }).notes.some(n => n.includes('não se aplicam')), id)
 })
+test('Giro pós-CDI mostra CET da parte fixa (regra do BC) e custo com CDI projetado; prefixado coincide', () => {
+  const cdi = run(col('giro-cdi'), shared, { cdi: 14.9 }), pre = run(col('giro-pre'))
+  assert.equal(cdi.floating, true); assert.equal(pre.floating, false)
+  assert.equal(pre.cet, pre.projectedCost)
+  // CET regulatório = mesmo contrato com CDI zero (só o spread de 0,35% a.m.), pelo motor do Capital de Giro.
+  const fixed = creditOperation({ value: 500000, n: 24, rate: 0.35, unit: 'am', system: 'price', start: '2026-11-10', firstDue: '2026-12-10', profile: 'pj', eligible: false, rateType: 'cdi', cdi: 0, cdiPercent: 100, fees: 0, monthlyFees: 0, holidays: [], guaranteeValue: null })
+  assert.equal(cdi.cet, fixed.cet)
+  // Custo projetado: taxa que iguala o líquido ao fluxo com CDI de 14,9% (dias corridos/365), conferida à parte.
+  const pv = rate => cdi.rows.reduce((s, r) => s + r.payment / (1 + rate) ** (r.days / 365), 0)
+  assert.ok(Math.abs(pv(cdi.projectedCost) - cdi.net) < 1e-4)
+  assert.ok(cdi.projectedCost > cdi.cet)
+  // O cenário do CDI muda o custo projetado, não o CET regulatório.
+  const high = run(col('giro-cdi'), shared, { cdi: 16.9 })
+  assert.equal(high.cet, cdi.cet); assert.ok(high.projectedCost > cdi.projectedCost)
+  assert.ok(cdi.notes.some(n => n.includes('CDI zero')))
+})
+test('menor CET entre colunas usa o CET regulatório, não o custo com CDI projetado', () => {
+  // Prefixado a 1,10% a.m. fica entre o CET da parte fixa do pós-CDI e o custo com CDI projetado.
+  const results = m.evaluateAll([col('giro-pre', { rate: '1,10' }), col('giro-cdi')], shared, { cdi: 14.9 })
+  assert.ok(results[1].cet < results[0].cet && results[0].cet < results[1].projectedCost)
+  assert.equal(m.highlights(results).lowestCet, 1)
+})

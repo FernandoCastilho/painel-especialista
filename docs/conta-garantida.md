@@ -4,7 +4,9 @@ Descrição dos modos de apuração da conta garantida, revisada em 06/11/2026. 
 
 ## Escopo e modos
 
-Estimativa de crédito rotativo adimplente com reutilização contratualmente prevista. Não é extrato, cotação bancária nem CET.
+Estimativa de crédito rotativo adimplente com reutilização contratualmente prevista. Não é extrato nem cotação bancária.
+
+**CET (11/11/2026, aprovado por Fernando).** Campo opcional "Limite contratado (R$)", vazio no início. Preenchido, a tela mostra o "CET (art. 6º · 30 dias sobre o limite)", ao ano e ao mês (equivalente composto). Regra: Resolução CMN 4.881/2020, arts. 4º e 6º, pelo resumo do painel em `educacao.js` (rotativo: prazo de 30 dias e limite pactuado). Fluxo: o limite é liberado na data inicial, sem desconto; no 30º dia corrido sai limite + juros de 30 dias (taxa, divisor 30 e contagem de dias da tela) + IOF diário de 30 dias + IOF adicional sobre o limite. Escolha: o motor apura juros e IOF dia a dia e os trata como pagos à parte, sem descontá-los na liberação; por isso o IOF entra no pagamento final, e não no líquido. Não há tarifas no motor. Desconto em dias corridos/365 (`creditCet`). Exemplo: limite de R$ 100.000, 3% a.m., PJ, dias corridos → pagamento R$ 103.626,00 → CET 54,24% a.a. (3,68% a.m.). Sem limite, a tela mostra só um pedido curto do limite. O limite não muda o resultado do período. A regra do art. 6º deve ser conferida no texto oficial da norma; a tela avisa isso.
 
 1. **Utilização única:** valor, data inicial e prazo em dias corridos ou data de quitação. O principal é quitado no início da data final, antes da apuração desse dia.
 2. **Lançamentos por dia:** utilizações e amortizações de principal até a data final, inclusive. Não há quitação automática no último dia.

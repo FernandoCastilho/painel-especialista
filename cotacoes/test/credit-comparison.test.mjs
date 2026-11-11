@@ -101,3 +101,24 @@ test('percentage of CDI scales the daily rate before compounding, not annual log
   const daily = Math.pow(1.15, 1 / 252) - 1
   near(r.interest, 100000 * (Math.pow(1 + daily * 2, 249) - 1), 1e-6)
 })
+test('Res. CMN 4.881, art. 5º: no pós-CDI o CET regulatório é o do mesmo contrato com CDI zero, recálculo independente', () => {
+  const p = { ...base, system: 'bullet', rateType: 'cdi', rate: 0.35, cdi: 14.9, cdiPercent: 100, firstDue: '2027-11-08' }
+  const r = creditOperation(p)
+  assert.ok(r.ok, r.error)
+  // Só o spread, na mesma base de dias úteis/252 com feriados nacionais e nas mesmas datas.
+  const du = creditBusinessDays(p.start, r.rows[0].date), days = r.rows[0].days
+  const payment = p.value * Math.pow(1.0035, 12 * du / 252)
+  const net = p.value - p.value * 0.0038 - p.value * Math.min(days, 365) * 0.000082
+  const expected = Math.pow(payment / net, 365 / days) - 1
+  near(r.cetRegulatory, expected, 1e-9); near(r.regulatoryNet, net, 1e-6)
+  // O CET com CDI projetado continua disponível e é maior; o regulatório não depende do cenário do CDI.
+  assert.ok(r.cet > r.cetRegulatory)
+  near(creditOperation({ ...p, cdi: 10 }).cetRegulatory, r.cetRegulatory, 1e-12)
+  near(creditOperation({ ...p, cdi: 0 }).cet, r.cetRegulatory, 1e-12)
+})
+test('no prefixado o CET regulatório coincide com o CET do fluxo', () => {
+  for (const system of ['price', 'sac', 'bullet']) {
+    const r = creditOperation({ ...base, system })
+    assert.equal(r.cetRegulatory, r.cet); assert.equal(r.regulatoryNet, r.net)
+  }
+})
