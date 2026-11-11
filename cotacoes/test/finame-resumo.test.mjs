@@ -27,7 +27,7 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   for (const id of FINAME_DESTAQUES) assert.match(source, new RegExp(`\\{ id: '${id}', rotulo: '`))
   // A mesma função desenha o topo e a composição: rótulo, valor e nota não podem divergir.
   assert.match(source, /className="fm-summary-row"/)
-  assert.match(source, /quadros.find\(item => item.id === id\)/)
+  for (const key of ['total', 'primeiraParcela', 'ultimaParcela']) assert.match(source, new RegExp(`brl\\(res.${key}\\)`))
   assert.match(source, /Taxa de referência/)
   assert.match(source, /Primeira parcela após carência/)
   assert.match(source, /brl\(res.total\)/)
@@ -41,4 +41,17 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   assert.match(source, /<small>Projeção · não é CET<\/small>/)
   // A tela não faz conta nova com o resultado para os destaques: o arquivo de seleção não importa o cálculo.
   assert.doesNotMatch(readFileSync(new URL('../src/finameResumo.js', import.meta.url), 'utf8'), /import /)
+})
+
+
+test('comparação mantém cabeçalho limpo e resultados usam a taxa adotada com origem visível', () => {
+  const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
+  assert.match(source, /Com \{item\.custo\.toUpperCase\(\)\}<\/th>/)
+  assert.doesNotMatch(source, /scope="col">\{item\.custo\.toUpperCase\(\)\}<small>/)
+  assert.match(source, /pct\(item\.rate\.value, 4\)/)
+  assert.match(source, /item\.rate\.manual \? ' \(taxa manual\)' : ''/)
+  assert.match(source, /className="fm-reference-sources"/)
+  assert.match(source, /item\.quote\.codigo/)
+  assert.match(source, /dmy\(item\.quote\.data\)/)
+  assert.match(source, /<details className="fm-premises"><summary>Premissas e limites da simulação/)
 })

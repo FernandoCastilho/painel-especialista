@@ -106,7 +106,7 @@ async function assertWorkspace(page, section, label) {
 
   const explanations = await section.locator('p').evaluateAll(paragraphs => paragraphs.filter(element => {
     if (element.closest('dialog, [role=tooltip], .sr-only, [hidden], [role=alert], .cx-error, .cg-notice, .desconto-notice, .lcd-warnings, [role=status]')) return false
-    if (element.classList.contains('cx-hint') && element.parentElement.querySelector('#fm-finame-eligible')) return false // Required eligibility warning stays visible.
+    if (element.closest('.fm-premises')) return false // A ressalva tributária continua visível.
     const rect = element.getBoundingClientRect(), style = getComputedStyle(element)
     return rect.width > 2 && rect.height > 2 && style.visibility !== 'hidden' && style.display !== 'none' && element.textContent.replace(/\s+/g, ' ').trim().length > 180
   }).map(element => element.textContent.replace(/\s+/g, ' ').trim()))
@@ -223,13 +223,12 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.locator('.lcd-table tbody tr').count(), 3)
     assert.match(await section.locator('.lcd-table tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
   } else if (route === 'finame-materiais') {
-    assert.equal(await section.locator('.fm-grade, .fm-fluxo-panel').count(), 0)
-    assert.match(await section.locator('#fm-iof-err').innerText(), /Confirme os recursos FINAME/)
-    const eligibilityWarning = section.locator('.cx-iof > .cx-hint:not(#fm-iof-err)')
+    await section.locator('.fm-destaques').waitFor()
+    assert.equal(await section.locator('#fm-finame-eligible, #fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc').count(), 0)
+    const eligibilityWarning = section.locator('.fm-iof-premise')
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
-    assert.match(await eligibilityWarning.innerText(), /Para outras origens ou dúvida, a simulação fica bloqueada/)
-    await section.locator('#fm-finame-eligible').check()
-    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 6, 'números principais à vista, sem abrir a composição')
+    assert.match(await eligibilityWarning.innerText(), /FINAME|Finame/)
+    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 3, 'números principais à vista, sem abrir a composição')
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
@@ -253,7 +252,7 @@ async function fillScenario(page, section, route) {
           await fixtures(page)
           await page.goto(`${base}/#calculadora/${route}`)
           const section = page.locator('main.app section.cx').first(); await section.waitFor()
-          if (route === 'finame-materiais') await section.locator('#fm-finame-eligible').waitFor()
+          if (route === 'finame-materiais') await section.locator('.fm-destaques').waitFor()
           await settleLayout(page)
           await assertWorkspace(page, section, `${route} ${width}`)
           await page.screenshot({ path: path.join(directory, `${route}-initial.png`), fullPage: true })

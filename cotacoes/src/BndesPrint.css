@@ -1,0 +1,46 @@
+.bnprint-launch { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:48px; padding:12px 24px; border:1px solid #d96600; border-radius:8px; background:linear-gradient(#ff8909,#f36b00); color:#10284c; font:700 1rem/1.3 Arial,sans-serif; cursor:pointer; }
+.bnprint-launch:disabled { background:#e5eaf1; color:#53637a; border-color:#c6d5e9; cursor:default; }
+.bnprint-dialog { width:min(950px,96vw); max-width:96vw; max-height:94vh; padding:0; border:1px solid #c9d7e9; border-radius:10px; background:#eaf0f8; color:#10284c; }
+.bnprint-dialog::backdrop { background:#061c40b3; }
+.bnprint-controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid #c9d7e9; background:white; font:14px/1.4 Arial,sans-serif; }
+.bnprint-controls > div { flex:1 1 260px; }
+.bnprint-controls p { margin:4px 0 0; }
+.bnprint-controls button { min-height:44px; border:1px solid #52708f; padding:8px 12px; border-radius:6px; color:#10284c; background:#fff; font:700 14px Arial,sans-serif; cursor:pointer; }
+.bnprint-controls button:first-of-type { background:#ff8000; }
+.bnprint-controls button:focus-visible,.bnprint-launch:focus-visible { outline:3px solid #006bdc; outline-offset:2px; }
+.bnprint-document { box-sizing:border-box; margin:20px auto; padding:24px; width:210mm; max-width:100%; background:white; color:#14243b; font:11px/1.45 Arial,Helvetica,sans-serif; }
+.bnprint-heading { display:flex; justify-content:space-between; align-items:center; padding:18px; background:#062a5c; border-right:14px solid #ff7900; color:white; border-radius:6px; }
+.bnprint-heading strong { display:block; font-size:24px; }
+.bnprint-heading span { display:block; font-size:12px; }
+.bnprint-heading small { max-width:100px; text-align:right; }
+.bnprint-stamp { color:#455c7a; font-size:10px; }
+.bnprint-document h2 { margin:18px 0 8px; background:#dce6f3; color:#062a5c; padding:6px 10px; font-size:14px; break-after:avoid; }
+.bnprint-facts { display:grid; grid-template-columns:1fr 1fr; gap:5px 20px; margin:10px 0; }
+.bnprint-facts div { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.bnprint-facts dt { font-weight:700; }.bnprint-facts dd { margin:0; }
+.bnprint-document table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.bnprint-document th,.bnprint-document td { padding:6px; border:1px solid #bdccdf; text-align:right; }
+.bnprint-document th:first-child { text-align:left; }
+.bnprint-document thead th { background:#062a5c; color:white; }
+.bnprint-document tbody tr:nth-child(even) { background:#f3f6fa; }
+.bnprint-comparison thead th.bnprint-tfc { background:#d3e8fc; color:#062a5c; }.bnprint-comparison thead th.bnprint-tfb { background:#ffd3a3; color:#6f2e00; }
+.bnprint-comparison td.bnprint-tfb { background:#fff1e2; }.bnprint-comparison tbody tr:first-child { font-weight:700; }
+.bnprint-note { color:#455c7a; font-size:10px; }
+.bnprint-disclaimer,.bnprint-warning { padding:10px 12px; border:1px solid #edbf92; border-left:4px solid #ef7600; border-radius:5px; background:#fff1e2; color:#813600; font-weight:700; break-inside:avoid; }
+.bnprint-premises ul { padding-left:18px; }.bnprint-premises li { margin-bottom:4px; }
+.bnprint-sources { display:flex; flex-wrap:wrap; gap:6px 12px; }.bnprint-sources a { color:#174e87; }
+.bnprint-schedule { break-before:page; }.bnprint-schedule table { font-size:9px; }.bnprint-schedule th,.bnprint-schedule td { padding:5px 3px; white-space:nowrap; }
+.bnprint-schedule th:nth-child(2) { white-space:normal; }.bnprint-schedule thead th { white-space:normal; }
+.bnprint-schedule .bnprint-grace { background:#f2f6fc; }.bnprint-schedule .bnprint-total { font-weight:700; background:#dce6f3; }
+@media screen and (max-width:700px) { .bnprint-document { min-width:690px; margin:12px; }.bnprint-dialog { overflow:auto; }.bnprint-controls { position:sticky; left:0; width:100%; box-sizing:border-box; }.bnprint-heading strong { font-size:22px; } }
+@media print {
+  @page { size:A4 portrait; margin:12mm 10mm; }
+  body.bnprint-active { background:white !important; overflow:visible !important; }
+  body.bnprint-active > :not(.bnprint-dialog) { display:none !important; }
+  body.bnprint-active > .bnprint-dialog { display:block !important; position:static !important; inset:auto !important; width:auto !important; max-width:none !important; height:auto !important; max-height:none !important; overflow:visible !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:white !important; }
+  .bnprint-dialog::backdrop { display:none; }.bnprint-controls { display:none !important; }
+  .bnprint-document { width:auto; max-width:none; min-width:0; margin:0; padding:0; font-size:8.5pt; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .bnprint-document h2 { font-size:11pt; }.bnprint-document thead { display:table-header-group; }.bnprint-document tr { break-inside:avoid; }.bnprint-document a { color:#174e87; text-decoration:none; }
+  .bnprint-schedule table { font-size:6.6pt; }.bnprint-schedule td,.bnprint-schedule th { padding:4px 2px; }
+  .bnprint-heading,.bnprint-facts,.bnprint-comparison { break-inside:avoid; }
+}
