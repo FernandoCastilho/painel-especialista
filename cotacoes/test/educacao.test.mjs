@@ -73,7 +73,7 @@ test('novos temas têm fontes oficiais, data de revisão e exemplos que não se 
 })
 
 test('os conceitos pedidos existem, com ids únicos', () => {
-  assert.deepEqual(CONCEITOS.map((c) => c.id), ['juros-forcados', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'cds', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'lei-de-maquila', 'imposto-seletivo', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'substituicao-tributaria', 'reforma-tributaria', 'split-payment', 'dividendos'])
+  assert.deepEqual(CONCEITOS.map((c) => c.id), ['juros-forcados', 'marcacao-a-mercado', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'cds', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'lei-de-maquila', 'imposto-seletivo', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'substituicao-tributaria', 'reforma-tributaria', 'split-payment', 'dividendos'])
   assert.equal(new Set(CONCEITOS.map((c) => c.id)).size, CONCEITOS.length)
 })
 
@@ -275,4 +275,20 @@ test('fee flat: valor e caixa líquido do exemplo, com busca pelo conteúdo', as
  assert.ok(buscarConceitos('FEE ESTRUTURACAO').some(c=>c.id==='fee-de-estruturacao'))
  assert.ok(buscarConceitos('desistencia').some(c=>c.id==='fee-de-estruturacao'))
  assert.equal(byId('fee-de-estruturacao').fontes.length,2)
+})
+
+
+test('marcação a mercado: descoberta, conexões, fontes e limites didáticos', () => {
+  const c = byId('marcacao-a-mercado')
+  assert.equal(c.topico, 'Funding e risco')
+  assert.equal(c.revisadoEm, '2026-11-11')
+  for (const query of ['marcacao a mercado', 'MtM', 'duration']) assert.ok(buscarConceitos(query).includes(c))
+  assert.ok(conexoesDe(c.id).some(x => x.id === 'liquidacao-antecipada'))
+  assert.equal(c.fontes.length, 3)
+  assert.match(text(c), /não é oferta firme/)
+  assert.match(text(c), /hipotéticos/)
+  assert.match(text(c.exemplo), /982,14/)
+  assert.match(text(c.exemplo), /1.018,52/)
+  assert.match(text(c.exemplo), /1.100,00/)
+  assert.match(text(c.lacunas), /Marcação, ajuste e margem não são sinônimos/)
 })
