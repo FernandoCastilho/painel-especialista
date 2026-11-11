@@ -3,9 +3,9 @@ import assert from 'node:assert/strict'
 import { clampMascot, readMascotPreferences } from '../src/mascotPosition.js'
 test('mascot position stays recoverable after dragging or viewport resize', () => {
   assert.deepEqual(clampMascot({ x: -100, y: -400 }, 390, 844), { x: 8, y: 8 })
-  assert.deepEqual(clampMascot({ x: 5000, y: 5000 }, 390, 844), { x: 238, y: 620 })
-  assert.deepEqual(clampMascot(null, 390, 250), { x: 238, y: 26 })
-  assert.deepEqual(clampMascot({ x: NaN, y: Infinity }, 390, 844), { x: 238, y: 620 })
+  assert.deepEqual(clampMascot({ x: 5000, y: 5000 }, 390, 844), { x: 238, y: 608 })
+  assert.deepEqual(clampMascot(null, 390, 250), { x: 238, y: 14 })
+  assert.deepEqual(clampMascot({ x: NaN, y: Infinity }, 390, 844), { x: 238, y: 608 })
 })
 test('preferences tolerate unavailable storage and reject malformed coordinates', () => {
   assert.deepEqual(readMascotPreferences({getItem(){throw Error('blocked')}}), {hidden:false,desktop:null})

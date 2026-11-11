@@ -53,3 +53,10 @@ test('feedback UI: configured-off cannot submit and navigation dismisses without
 test('feedback UI: empty message is blocked before transport',async t=>{
   let calls=0;const s=await setup(t,{send:async()=>{calls++}});await s.open();await s.submit();await s.renderer.settle();assert.equal(calls,0);assert.match(s.find(n=>n.props?.role==='alert').props.children,/Escreva/)
 })
+
+test('Fredix se apresenta em balão sem mudar a ação de sugestões', async t => {
+  const s = await setup(t)
+  assert.equal(s.find(n => n.props?.className === 'mascot-greeting').props.children, 'Prazer, sou Fredix')
+  assert.equal(s.find(n => n.props?.className === 'feedback-trigger').props['aria-label'], 'Abrir caixa de sugestões')
+  await s.open(); assert.equal(s.dialog.open, true)
+})
