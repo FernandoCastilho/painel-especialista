@@ -7,7 +7,7 @@ import { isBusinessDay } from './holidays.js'
 export const CG_LEGAL_CHECKED_AT = '2026-11-05'
 export const CG_PRESET_FROM = '2025-07-17'
 export const CG_MAX_DAYS = 3660
-// Res. CMN 4.881/2020, art. 6º (resumo do painel em educacao.js): rotativo calcula o CET com prazo de 30 dias e o limite pactuado.
+// Res. CMN 4.881/2020, art. 6º (texto oficial conferido em 11/11/2026): rotativo calcula o CET com prazo de 30 dias e o limite pactuado.
 export const CG_CET_DAYS = 30
 export const CG_TAX_PROFILES = [
   { id: 'pj', label: 'Pessoa jurídica: referência geral', daily: 0.0082, additional: 0.38 },

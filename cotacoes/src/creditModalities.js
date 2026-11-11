@@ -262,7 +262,9 @@ function desconto(col, p) {
   if (!dueDate) return fail('Informe uma data de liberação válida.')
   const r = discountOperation({ titleRows: [{ value: p.value, count: titles, dueDate }], date: p.start, rate, convention: col.dConv, taxProfile: col.profile, eligible: col.eligible, feeMode: col.dFeeMode, fee, tac, calendars: p.calendars })
   if (!r.ok) return fail(r.error)
+  // CET do desconto pelo art. 6º (30 dias sobre o limite = nominal), igual à Análise de desconto; o fluxo pelo prazo real fica à parte.
   return finish({
+    cetRegulatory: r.cet, projectedLabel: 'Custo pelo prazo real', cetLabel: 'CET (art. 6º · 30 dias)',
     modality: 'desconto', label: 'Desconto de duplicata', start: p.start, value: r.value, net: r.net,
     rows: [{ date: r.rows[0].paymentDate, days: r.rows[0].days, payment: r.value, amortization: r.value, interest: 0, balance: 0 }], total: r.value, // vencimento ajustado ao dia útil, como na Análise de desconto
     interest: r.interest, iof: r.iof, fees: r.titleFee + r.tac, guaranteeInfo: info,
@@ -315,8 +317,8 @@ export function evaluateAll(columns, shared, ctx) {
 // Tipo de taxa para comparar CET (decisão de Fernando em 11/11/2026): prefixado só com prefixado, pós-fixado (CDI, IPCA) só com
 // pós-fixado e conta garantida (art. 6º, 30 dias sobre o limite) só com conta garantida. O CET regulatório do pós-fixado deixa o
 // índice de fora (art. 5º), por isso não é comparável com o de um prefixado; entre tipos diferentes, vale o menor custo em reais.
-export const CET_GROUPS = Object.freeze({ pre: 'prefixados', pos: 'pós-fixados', rotativo: 'contas garantidas' })
-export const cetGroup = r => r.modality === 'conta-garantida' ? 'rotativo' : r.floating ? 'pos' : 'pre'
+export const CET_GROUPS = Object.freeze({ pre: 'prefixados', pos: 'pós-fixados', rotativo: 'operações de 30 dias (conta garantida e desconto)' })
+export const cetGroup = r => ['conta-garantida', 'desconto'].includes(r.modality) ? 'rotativo' : r.floating ? 'pos' : 'pre'
 
 // Destaques objetivos, sem declarar vencedor absoluto: só os menores valores entre as colunas válidas.
 export function highlights(results) {

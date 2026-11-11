@@ -13,7 +13,7 @@ const pct = (value) => `${(value * 100).toLocaleString('pt-BR', { minimumFractio
 const cetText = (cet) => cet == null ? 'Não mensurável' : `${pct(cet)} a.a.`
 const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(cet) / 12))} a.m.`
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
-const CET_HELP = 'CET (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido liberado aos pagamentos, em dias corridos/365. No desconto, líquido = nominal − juros − IOF − TAC − tarifa de títulos; o pagamento é o nominal de cada título na data de pagamento.'
+const CET_HELP = 'CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): nas operações de desconto, o CET usa o prazo de 30 dias e o valor do limite pactuado — aqui, o valor nominal da operação. Líquido = nominal − juros de 30 dias − IOF de 30 dias − TAC − tarifa de títulos; o nominal volta em 30 dias corridos; taxa anual em dias corridos/365. O custo pelo prazo real usa a data de pagamento de cada título e não é o CET da norma.'
 
 export function DescontoIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 11h8M8 15h5M8 18h3" /><path d="m14 17 2 2 4-4" /></svg>
@@ -99,7 +99,7 @@ export default function AnaliseDesconto({ onBack }) {
         <div><div className="cx-field-label"><span>Subtotal sem tarifa de títulos</span><CalculatorHelp title="Subtotal sem tarifa de títulos"><p>TAC + juros + IOF.</p></CalculatorHelp></div><b>{brl(operation?.costWithoutTitles)}</b></div>
         <div><div className="cx-field-label"><span>Custo total completo</span><CalculatorHelp title="Custo total completo"><p>Inclui a tarifa de títulos.</p></CalculatorHelp></div><b>{brl(operation?.cost)}</b></div>
         <div><div className="cx-field-label"><span>Valor líquido da operação</span><CalculatorHelp title="Valor líquido da operação"><p>Bruto menos todos os custos.</p></CalculatorHelp></div><b>{brl(operation?.net)}</b></div>
-        <div><div className="cx-field-label"><span>CET do desconto</span><CalculatorHelp title="CET do desconto"><p>{CET_HELP}</p></CalculatorHelp></div><b>{cetText(operation?.cet)}</b><small>{operation ? cetMonthly(operation.cet) : ''}</small></div>
+        <div><div className="cx-field-label"><span>CET do desconto (art. 6º · 30 dias)</span><CalculatorHelp title="CET do desconto"><p>{CET_HELP}</p></CalculatorHelp></div><b>{cetText(operation?.cet)}</b><small>{operation ? `${cetMonthly(operation.cet)} · prazo real: ${cetText(operation.termCost)}` : ''}</small></div>
       </div>
     </article>
 

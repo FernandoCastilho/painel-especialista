@@ -23,7 +23,7 @@ Para cada grupo de nominal N, taxa mensal i em fração e d dias corridos da ope
 - IOF = base × (alíquota adicional + alíquota diária × min(d, 365)).
 - Custo completo = juros + IOF + TAC + tarifa de títulos.
 - Subtotal sem títulos = juros + IOF + TAC; líquido = nominal − custo completo.
-- CET (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o líquido, recebido na liberação, ao nominal de cada grupo na sua data de pagamento, em dias corridos/365. Com um só vencimento: (nominal/líquido)^(365/d) − 1.
+- CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial conferido em 11/11/2026): no desconto, o art. 6º manda usar o prazo de 30 dias e o limite pactuado (aqui, o nominal da operação): juros e IOF de 30 dias, tarifas e TAC na liberação, nominal devolvido em 30 dias corridos, dias corridos/365. O fluxo efetivo (nominal de cada grupo na data de pagamento) aparece à parte como "custo pelo prazo real", que não é CET.
 
 Cada grupo é calculado separadamente e os resultados são somados. Se taxa/prazo consomem o nominal ou custo total atinge o bruto, a simulação é bloqueada. Os percentuais da UI são divididos por 100. Não há arredondamento intermediário; a exibição usa centavos.
 
@@ -44,7 +44,7 @@ IOF diário do giro = soma de cada amortização × min(dias corridos desde a li
 - Custo do giro = juros + TAC única + IOF.
 - Média mensal all-in = (principal + custo) / prazo. **Não é a parcela contratual**; a PMT aparece separadamente.
 - Diferença estimada = custo do desconto repetido no prazo − custo do giro. A coluna Mês usa o cenário de 12 meses dividido por 12 para custos; PMT e média de desembolso já são mensais.
-- A tabela mostra o CET dos dois lados. O do desconto vem da projeção mensal (base dos custos comparados) e não depende do prazo, pois a operação se repete; o do giro muda com o prazo.
+- A tabela mostra o CET dos dois lados. O do desconto segue o art. 6º (30 dias) e não depende do prazo; o do giro (art. 4º, parcelado) muda com o prazo.
 - Desconto repetido e giro amortizado têm fluxos diferentes. A diferença nominal não comprova economia contratual ou igualdade de disponibilidade de caixa. Não é proposta nem recomendação de contratação.
 
 ## Exemplo vigente e testes
@@ -56,7 +56,7 @@ Exemplo sintético: operação em 05/11/2026; 30 títulos com nominal total de R
 - IOF: R$ 1.420,97.
 - Custo completo: R$ 6.648,69.
 - Líquido: R$ 218.951,74.
-- CET: 40,66% a.a. (2,88% a.m.).
+- CET (Res. CMN 4.881, art. 6º: 30 dias sobre o nominal): 41,45% a.a. (2,93% a.m.). Custo pelo prazo real (32 dias, não é CET): 40,66% a.a.
 
 Até 10/11/2026 o mesmo exemplo contava 30 dias, sem ajuste de dia útil: juros R$ 4.128,49, IOF R$ 1.386,41, custo R$ 6.338,90 e líquido R$ 219.261,53.
 

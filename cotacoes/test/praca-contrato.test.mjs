@@ -144,7 +144,7 @@ test('Análise de desconto: título de 25/01/2027 com praça SP é pago em 26/01
     close(r.interest, interest, 1e-9)
     const baseIof = 100000 - interest
     close(r.iof, baseIof * r.tax.daily / 100 * Math.min(days, 365) + baseIof * r.tax.additional / 100, 1e-9)
-    close(r.cet, (100000 / r.net) ** (365 / days) - 1, 1e-9)
+    close(r.termCost, (100000 / r.net) ** (365 / days) - 1, 1e-9)
   }
   // O giro da comparação usa a mesma praça: liberação 25/12/2026, parcela de 25/01/2027 vai para 26/01 em SP.
   const giro = { principal: 100000, months: 12, rate: 1.83, tac: 0, date: '2026-12-25' }

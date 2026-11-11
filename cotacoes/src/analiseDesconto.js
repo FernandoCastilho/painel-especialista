@@ -88,9 +88,17 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
   const cost = costWithoutTitles + tariff.total
   if (!money(cost) || cost >= value) return invalid('O custo total deve ser menor que o valor bruto da operação.')
   const net = value - cost
-  const cet = creditCet(net, rows.map(row => ({ days: row.days, payment: row.value })))
+  // Custo pelo prazo real: taxa anual do fluxo efetivo (nominal de cada título na data de pagamento). Não é o CET da norma.
+  const termCost = creditCet(net, rows.map(row => ({ days: row.days, payment: row.value })))
+  // CET (Res. CMN 4.881/2020, art. 6º, texto oficial conferido em 11/11/2026): operações de desconto usam o prazo de 30 dias e o
+  // valor do limite pactuado. Sem campo de limite, o limite é o valor nominal da operação. Mesmas taxa, convenção, IOF e tarifas.
+  const interest30 = convention === 'commercial30' ? value * rate / 100 : value - value / (1 + rate / 100)
+  const base30 = value - interest30
+  const iof30 = base30 * (tax.daily * 30 + tax.additional) / 100
+  const net30 = value - interest30 - iof30 - tariff.total - tac
+  const cet = net30 > 0 ? creditCet(net30, [{ days: 30, payment: value }]) : null
   // CET não mensurável (ex.: tarifas quase iguais ao líquido, acima de 1.000% a.a.) não invalida a operação: a tela mostra "Não mensurável".
-  return { ok: true, value, titles, titleFee: tariff.total, tac, interest, iof: iofPaid, base, rows, tax, costWithoutTitles, cost, net, cet }
+  return { ok: true, value, titles, titleFee: tariff.total, tac, interest, iof: iofPaid, base, rows, tax, costWithoutTitles, cost, net, cet, termCost, cet30: { days: 30, interest: interest30, iof: iof30, net: net30 } }
 }
 
 // Giro Price no motor do Capital de Giro (giroOperation): juros por dias corridos entre vencimentos, (1 + i)^(dias/30);
