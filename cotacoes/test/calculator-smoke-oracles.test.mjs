@@ -3,7 +3,6 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { runInNewContext } from 'node:vm'
-import { loan } from '../src/emprestimo.js'
 import { DISCOUNT_INITIAL_FORM, parseDiscountForm } from '../src/analiseDesconto.js'
 
 // Validate the exact smoke helpers rather than another copy of their implementation.
