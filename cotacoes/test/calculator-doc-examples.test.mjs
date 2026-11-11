@@ -26,8 +26,12 @@ test('F5: exemplos CG de dez e quarenta dias sem capitalizar encargos', () => {
 test('F5: exemplo atual do desconto usa juros e IOF automáticos', () => {
   const r = discountOperation({ date: '2026-11-05', titleRows: [{ value: 225600.43, count: 30, dueDate: '2026-12-05' }], rate: 1.83, convention: 'commercial30', taxProfile: 'pj', feeMode: 'total', fee: 564, tac: 260 })
   assert.equal(r.ok, true)
-  near(r.interest, 4128.49); near(r.base, 221471.94); near(r.iof, 1386.41)
-  near(r.cost, 6338.90); near(r.net, 219261.53)
+  // 05/12/2026 é sábado: pagamento em 07/12, 32 dias (regra de 11/11/2026).
+  assert.equal(r.rows[0].paymentDate, '2026-12-07')
+  near(r.interest, 4403.72); near(r.base, 221196.71); near(r.iof, 1420.97)
+  near(r.cost, 6648.69); near(r.net, 218951.74)
+  assert.equal((r.cet * 100).toFixed(2), '40.66')
+  assert.match(doc('analise-desconto'), /CET: 40,66% a\.a\./)
   assert.match(doc('analise-desconto'), /recalcula juros e IOF/)
   assert.match(doc('analise-desconto'), /não validam a versão atual automática/)
 })
