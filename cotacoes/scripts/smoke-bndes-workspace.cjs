@@ -41,14 +41,18 @@ async function proveLastColumn(region, file) {
         const originalBusinessSize = await businessSize.inputValue()
         for (const value of await businessSize.locator('option').evaluateAll(options => options.map(option => option.value))) {
           await businessSize.selectOption(value)
+          await businessSize.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
           const sizeGeometry = await businessSize.evaluate(element => {
             const style = getComputedStyle(element)
             const context = document.createElement('canvas').getContext('2d')
             context.font = style.font
             const label = element.selectedOptions[0].textContent
-            return { label, height: element.getBoundingClientRect().height, textWidth: context.measureText(label).width, available: element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 24 }
+            const box = element.getBoundingClientRect()
+            const unobscured = [-1, 1].every(direction => document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2 + direction * 8) === element)
+            return { label, unobscured, height: box.height, textWidth: context.measureText(label).width, available: element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 24 }
           })
           assert.ok(sizeGeometry.height >= 44, 'porte/região preserva alvo de 44px')
+          assert.ok(sizeGeometry.unobscured, 'porte/região visível sem sobreposição da navegação fixa')
           assert.ok(sizeGeometry.textWidth <= sizeGeometry.available, `porte/região completo, reservando espaço para a seta: ${JSON.stringify(sizeGeometry)}`)
           await page.locator('.fm-field-porte').screenshot({ path: path.join(out, `${width}-${theme}-porte-${value}.png`) })
         }
