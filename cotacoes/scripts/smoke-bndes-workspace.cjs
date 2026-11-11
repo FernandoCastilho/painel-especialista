@@ -42,6 +42,7 @@ async function proveLastColumn(region, file) {
         for (const value of await businessSize.locator('option').evaluateAll(options => options.map(option => option.value))) {
           await businessSize.selectOption(value)
           await businessSize.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+          await page.mouse.move(0, 0); await page.waitForTimeout(300) // o ponteiro parado sobre uma ajuda abre a prévia dela (fecha em 160 ms); a conferência é da navegação fixa
           const sizeGeometry = await businessSize.evaluate(element => {
             const style = getComputedStyle(element)
             const context = document.createElement('canvas').getContext('2d')
@@ -82,7 +83,7 @@ async function proveLastColumn(region, file) {
         // Os números principais abrem o resultado, sem precisar abrir a composição; a faixa "Cotação comparativa" só existe ao comparar.
         const highlights = page.locator('.fm-destaques tbody tr')
         await highlights.first().waitFor()
-        assert.deepEqual((await highlights.locator('th').allInnerTexts()).map(text => text.replace(/\s*\?\s*$/, '').trim()), ['Custo total estimado', 'Primeira parcela após carência', 'Última parcela'])
+        assert.deepEqual((await highlights.locator('th').allInnerTexts()).map(text => text.replace(/\s*\?\s*$/, '').trim()), ['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado'])
         for (const item of await highlights.all()) assert.equal(await item.isVisible(), true)
         assert.equal(await page.locator('.fm-details:not(.fm-comparison-details)').evaluate(element => element.open), false)
         assert.equal(await page.locator('.fm-hero').count(), 0)
@@ -209,7 +210,8 @@ async function proveLastColumn(region, file) {
         assert.ok(geometry.width <= geometry.viewport + 1, JSON.stringify(geometry))
         if (width === 1440) {
           const positions = await page.locator('.fm-group').evaluateAll(groups => groups.map(group => ({ x: group.getBoundingClientRect().x, y: group.getBoundingClientRect().y })))
-          assert.ok(positions[1].x > positions[0].x && positions[2].x > positions[1].x && positions.every(item => Math.abs(item.y - positions[0].y) < 1), 'três quadros na mesma linha no desktop')
+          // Layout aprovado em 11/11/2026: Operação e Custos lado a lado, Pagamento embaixo; resultado na coluna da direita.
+          assert.ok(positions[1].x > positions[0].x && Math.abs(positions[1].y - positions[0].y) < 1 && positions[2].y > positions[0].y && Math.abs(positions[2].x - positions[0].x) < 1 && geometry.right > geometry.left, 'Operação e Custos na mesma linha, Pagamento embaixo e resultado à direita no desktop')
         }
         await page.screenshot({ path: path.join(out, `${width}-${theme}-comparison.png`), fullPage: true })
         const comparisonRow = label => page.locator('.fm-comparison tbody tr, .fm-comparison-details tbody tr').filter({ has: page.getByRole('rowheader', { name: label, exact: true }) })
@@ -220,7 +222,7 @@ async function proveLastColumn(region, file) {
         await page.locator('.fm-details:not(.fm-comparison-details) > summary').click()
         const principal = await page.locator('.fm-details:not(.fm-comparison-details) .fm-kpi').filter({ hasText: 'Valor financiado' }).locator('b').innerText()
         await page.locator('#fm-fgi').check()
-        await page.locator('#fm-fgipct').fill('70')
+        await page.locator('#fm-fgipct').selectOption('70') // percentual garantido agora é lista de 10% a 80%
         assert.notEqual(await comparisonRow('Custo total estimado').innerText(), noFgiTotal, 'ECG à vista entra no total')
         assert.equal(await comparisonRow('Juros totais').innerText(), noFgiInterest, 'ECG à vista não aumenta juros')
         assert.equal(await comparisonRow('Primeira parcela após carência').innerText(), noFgiPayment, 'ECG à vista não altera parcelas')

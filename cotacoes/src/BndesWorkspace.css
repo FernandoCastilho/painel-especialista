@@ -294,7 +294,7 @@
 .bw .fm-results { position:sticky; top:12px; display:flex; flex-direction:column; gap:10px; min-width:0; }
 .bw .fm-print-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0; }
 .bw .fm-print-actions > * { min-width:0; }
-.bw .fm-print-actions button { width:100%; min-height:36px; border-radius:8px; font-size:.8rem; }
+.bw .fm-print-actions > button,.bw .fm-print-actions > .bnp-launch { width:100%; min-height:44px; border-radius:8px; font-size:.8rem; }
 .bw .fm-print-actions .bnp-launch { background:#fff; border:1px solid #c8d5e7; color:#062a5c; }
 .bw #fm-result { background:#fff; border:1px solid #dbe3ee; border-radius:12px; box-shadow:none; overflow:hidden; }
 .bw #fm-result > header,.bw #fm-result > header.fm-hero { display:flex; align-items:center; gap:6px; margin:0; padding:12px 16px 0; background:#062a5c; border:0; border-radius:0; color:#fff; }
@@ -358,7 +358,6 @@
   .bw .cx-finame .fi-help > button,.bw #fm-result .cx-matrix .fi-help > button { width:32px; min-width:32px; height:32px; min-height:32px; }
   .bw .fm-chip .fm-rate-reset { min-height:32px; }
   .bw .fm-compare-control label,.bw .cx-finame .fm-fgi > label { min-height:44px; }
-  .bw .fm-print-actions button { min-height:44px; }
   /* Atalho fixo para o resultado, com o total visível enquanto a pessoa preenche. */
   .bw .fm-show-result:not(:disabled) { display:flex; grid-column:1/-1; position:sticky; bottom:8px; z-index:5; justify-content:space-between; align-items:center; gap:8px; width:100%; min-height:48px; padding:8px 14px; border:0; background:#062a5c; color:#fff; border-radius:10px; font-size:.8rem; box-shadow:0 4px 14px #062a5c40; cursor:pointer; }
   .bw .fm-show-result b { color:#ffb36b; font-size:1rem; margin-left:4px; }
@@ -398,3 +397,25 @@
   :root[data-theme] body .bw .fm-show-result:not(:disabled) { background:#062a5c; color:#fff; border:0; }
 }
 .bw #fm-result .fm-destaques,.bw #fm-result .fm-destaques .cx-wrap,.bw #fm-result .fm-comparison .cx-wrap { padding:0; margin:0; }
+
+/* Padrão do painel (UX-VALIDATION): campos e ajudas com alvo real de 44 × 44 px em todas as larguras,
+   marca visual da ajuda pequena, e calculadora ocupando toda a área útil. A compactação vem do layout. */
+:root[data-theme] body .bw { max-width:none; }
+.bw .cx-finame .fm-group select,.bw .cx-finame .fm-group .cx-field select,.bw .fm-group .bw-profile select,
+.bw .cx-finame .cx-field input:not([type=checkbox]),.bw .cx-finame select,.bw .bw-profile select,.bw .fm-rate-row input { height:44px; min-height:44px; }
+.bw .fm-financed { min-height:44px; }
+.bw .cx-finame .fi-help > button,.bw #fm-result .cx-matrix .fi-help > button,.bw #fm-result > header > .fi-help > button,.bw .fm-input-panel > header .fi-help > button { width:44px; min-width:44px; height:44px; min-height:44px; margin:-10px -10px -10px -8px; }
+.bw .cx-finame .fi-help > button::before,.bw #fm-result .fi-help > button::before { width:14px; height:14px; }
+.bw .cx-finame .fm-rotulo { min-height:24px; }
+.bw .cx-finame .fm-rate-row { grid-template-columns:34px 88px minmax(0,1fr) 28px; }
+.bw .fm-rate-row > .fi-help { justify-self:center; }
+.bw .fm-rate-row > .fm-custo-valor { grid-column:2/-1; margin:0; font-size:.68rem; color:#5b6b82; line-height:1.35; }
+@media (max-width:640px) {
+  .bw .cx-finame .fm-rate-row { grid-template-columns:34px minmax(0,1fr) 32px; }
+  .bw .fm-rate-row > .fm-custo-valor { grid-column:2/-1; }
+}
+/* Títulos em versalete (sem text-transform, para o texto lido continuar "Cotação comparativa"). */
+.bw #fm-result > header .cx-heading,.bw .fm-group > h3 { text-transform:none; font-variant-caps:all-small-caps; font-size:.8rem; letter-spacing:.06em; }
+.bw .fm-compare-control label,.bw .cx-finame .fm-fgi > label { min-height:44px; }
+@media (min-width:1001px) and (max-width:1240px) { .bw .cx-finame .cx-form { grid-template-columns:1fr; } }
+.bw .fm-comparison .cx-matrix thead th,.bw .fm-quote-empty .cx-matrix thead th,.bw .fm-comparison .cx-matrix th.fm-result-tfc,.bw .fm-comparison .cx-matrix th.fm-result-tfb,.bw .fm-quote-empty .cx-matrix th.fm-result-tfc,.bw .fm-quote-empty .cx-matrix th.fm-result-tfb { text-transform:none; font-variant-caps:all-small-caps; font-size:.78rem; }

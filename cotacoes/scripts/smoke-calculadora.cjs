@@ -129,7 +129,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
         const row = destaques.getByRole('row').filter({ has: p.getByRole('rowheader', { name: new RegExp('^' + label) }) })
         assert.ok((await row.locator('td').innerText()).includes(await kpi(detail)), `tabela e composição: ${label}`)
       }
-      assert.equal(await destaques.locator('tbody tr').count(), 3)
+      assert.equal(await destaques.locator('tbody tr').count(), 6) // taxas, CET, parcelas e custo total
       const lastPayment = await destaques.getByRole('row').filter({ has: p.getByRole('rowheader', { name: 'Última parcela', exact: true }) }).locator('td').innerText()
       assert.ok((await kpiBox('Parcelas').innerText()).includes(lastPayment), 'última parcela idêntica à composição')
       await help('Custo total estimado', /Valor financiado \+ juros totais \+ IOF \+ TAC \+ ECG/, destaques)
