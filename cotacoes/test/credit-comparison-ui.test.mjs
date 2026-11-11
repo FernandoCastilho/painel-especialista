@@ -14,11 +14,12 @@ import * as money from '../src/moneyInput.js'
 import * as loan from '../src/emprestimo.js'
 import * as dates from '../src/contaGarantida.js'
 import * as iof from '../src/iofRules.js'
+import * as aplicacao from '../src/aplicacaoPj.js'
 const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './CreditComparison.css': {}, './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) } }
+  const deps = { react: React, './CreditComparison.css': {}, './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
   for (const file of ['MoneyInput.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
@@ -138,4 +139,13 @@ test('gráfico Bullet inclui ponto inicial zero e pagamento final', async t => {
   const lines = [...renderToStaticMarkup(ui.find('Results')).matchAll(/<polyline points="([^"]+)"/g)]
   assert.equal(lines.length, 2)
   for (const line of lines) assert.equal(line[1].split(' ').length, 2)
+})
+test('aplicação financeira: regime na linha mestra, bloco da aplicação e crédito x caixa por coluna', async t => {
+  const ui = await setup(t)
+  const fields = ui.find('InvestmentFields'); fields.props.set({ ...fields.props.invest, on: true }); await ui.render.settle()
+  const shared = ui.find('SharedFields'); shared.props.set({ ...shared.props.shared, regime: 'simples' }); await ui.render.settle()
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.render.value)
+  for (const label of ['Regime tributário da empresa', 'Comparar com aplicação financeira', 'Rendimento líquido', 'IR retido na fonte (imposto final)', 'Tomar o crédito e manter o caixa aplicado', 'Crédito ou caixa próprio?']) assert.ok(html.includes(label), label)
+  assert.ok(/compensa|melhor usar o caixa/.test(html))
 })
