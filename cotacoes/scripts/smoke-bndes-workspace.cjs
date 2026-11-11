@@ -52,7 +52,7 @@ async function proveLastColumn(region, file) {
             const unobscured = [-1, 1].every(direction => document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2 + direction * 8) === element)
             return { label, unobscured, height: box.height, textWidth: context.measureText(label).width, available: element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 24 }
           })
-          assert.ok(sizeGeometry.height >= 44, 'porte/região preserva alvo de 44px')
+          assert.ok(sizeGeometry.height >= (width > 1000 ? 36 : 44) - .1, 'porte/região preserva a altura combinada: 44px, ou 36px em computador')
           assert.ok(sizeGeometry.unobscured, 'porte/região visível sem sobreposição da navegação fixa')
           assert.ok(sizeGeometry.textWidth <= sizeGeometry.available, `porte/região completo, reservando espaço para a seta: ${JSON.stringify(sizeGeometry)}`)
           await page.locator('.fm-field-porte').screenshot({ path: path.join(out, `${width}-${theme}-porte-${value}.png`) })

@@ -431,3 +431,11 @@
 .bw .cx-finame .fm-costs .fm-fgi { border-top:1px solid #e0e7f1; padding-top:4px; }
 .bw .fm-costs .fm-pills { margin:2px 0 0; }
 @media (max-width:1000px) { .bw .fm-workspace { grid-template-columns:1fr; } }
+/* 11/11/2026 · Decisão do Fernando: em tela de computador (acima de 1000px) os campos do Finame têm 36px de altura.
+   Em celular e tablet seguem com 44px, e o "?" mantém a área de toque de 44px em todas as larguras. */
+@media (min-width:1001px) {
+  .bw .cx-finame .fm-group select,.bw .cx-finame .fm-group .cx-field select,.bw .fm-group .bw-profile select,
+  .bw .cx-finame .cx-field input:not([type=checkbox]),.bw .cx-finame select,.bw .bw-profile select,.bw .cx-finame .fm-rate-row input:not([type=checkbox]) { height:36px; min-height:36px; padding-top:4px; padding-bottom:4px; }
+  .bw .fm-financed { min-height:36px; }
+  .bw .fm-compare-control label,.bw .cx-finame .fm-fgi > label { min-height:36px; }
+}
