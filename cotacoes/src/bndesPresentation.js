@@ -8,7 +8,7 @@ export const BNDES_SLIDES = Object.freeze([
   { id: 'flow', label: 'Fluxo ilustrativo' },
   { id: 'premises', label: 'Premissas e limites', required: true },
 ])
-export const BNDES_PRESENTATION_NOTICE = 'Estimativa que inclui a TAC e o ECG do FGI quando informados, sem outras tarifas ou seguros · não é CET.'
+export const BNDES_PRESENTATION_NOTICE = 'Estimativa que inclui a TAC e o ECG do FGI quando informados, sem outras tarifas ou seguros · CET estimado (Res. CMN 4.881); o CET do contrato prevalece.'
 const SOURCES = [
   { label: 'Produto e condições BNDES', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-materiais-industrializados' },
   { label: 'Moedas contratuais · TFC', url: 'https://www.bndes.gov.br/moedas' },

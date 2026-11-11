@@ -9,20 +9,27 @@ const out = process.env.CALCULATOR_QA_OUTPUT || 'workspace-qa/calculator-layout'
 const { widths, layoutRoutes: routes } = require('./smoke-calculator-matrix.cjs')
 const normalize = text => text.replace(/\s+/g, ' ').trim()
 
-// Fixed release 06/11/2026 and first due 06/12/2026. Civil-calendar offsets,
-// with iterative outstanding-principal accounting independent of emprestimo.js.
+// Liberação em 06/11/2026 e primeiro vencimento em 06/12/2026. Regra de 11/11/2026: juros por dias corridos, vencimento no
+// próximo dia útil, IOF e TAC na liberação. Recálculo independente do motor.
+// Vencimentos dia 6 a partir de 06/12/2026, ajustados à mão: 06/12 dom → 07/12; 06/02/2027 sáb → 08/02 e 09/02 Carnaval → 10/02;
+// 06/03 sáb → 08/03; 06/06 dom → 07/06; 06/11/2027 sáb → 08/11. Dias corridos desde 06/11/2026.
 const giroOracle = (system, principal = 100000, daily = 0.0082) => {
-  const days = [30, 61, 92, 120, 151, 181, 212, 242, 273, 304, 334, 365]
-  const payment = principal * 0.02 / (1 - 1.02 ** -12)
-  let balance = principal, interest = 0, iof = principal * 0.0038
-  for (const day of days) {
-    const charge = balance * 0.02
-    const amortization = system === 'sac' ? principal / 12 : payment - charge
-    interest += charge; iof += amortization * Math.min(day, 365) * daily / 100
-    balance -= amortization
-  }
-  return { iof, total: principal + interest + iof }
+  const days = [31, 61, 96, 122, 151, 181, 213, 242, 273, 304, 334, 367]
+  // Sem carência: o dia a mais do 1º vencimento (06/12 domingo → 07/12) é cobrado na própria 1ª parcela.
+  const r = d => Math.pow(1.02, d / 30) - 1
+  const periods = days.map((d, k) => d - (k ? days[k - 1] : 0))
+  let interest = 0, iof = principal * 0.0038, bal = principal
+  const payments = []
+  let pmt = 0
+  if (system === 'price') { let disc = 0, acc = 1; for (const p of periods) { acc /= 1 + r(p); disc += acc } pmt = principal / disc }
+  periods.forEach((p, k) => {
+    const j = bal * r(p), a = system === 'price' ? pmt - j : principal / 12
+    interest += j; bal -= a; iof += a * Math.min(days[k], 365) * daily / 100; payments.push(a + j)
+  })
+  const paid = payments.reduce((s, v) => s + v, 0)
+  return { first: payments[0], last: payments.at(-1), interest, iof, total: paid + iof }
 }
+
 const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\s+/g, ' ')
 
 
@@ -66,10 +73,12 @@ async function assertWorkspace(page, section, label) {
 
   const controls = await section.locator('input:not([type=checkbox]):not([type=hidden]), select, textarea, .fi-help > button').evaluateAll(elements => elements.filter(element => element.getClientRects().length).map(element => {
     const rect = element.getBoundingClientRect()
-    return { id: element.id || element.getAttribute('aria-label'), width: rect.width, height: rect.height }
+    // Decisão de 11/11/2026: no Finame, em tela de computador (acima de 1000px), os campos têm 36px; o "?" e as telas menores seguem com 44px.
+    const compact = !!element.closest('.cx-finame') && innerWidth > 1000 && !element.closest('.fi-help')
+    return { id: element.id || element.getAttribute('aria-label'), width: rect.width, height: rect.height, min: compact ? 36 : 44 }
   }))
   assert.ok(controls.length > 0)
-  assert.deepEqual(controls.filter(control => control.height < 43.9 || control.width < 43.9), [], `${label}: campos e ? com pelo menos 44px`)
+  assert.deepEqual(controls.filter(control => control.height < control.min - .1 || control.width < control.min - .1), [], `${label}: campos e ? com a altura mínima combinada (44px; 36px nos campos do Finame em computador)`)
   const currencyOverlaps = await section.locator('.money-wrap').evaluateAll(elements => elements.filter(element => element.getClientRects().length).filter(element => {
     const input = element.querySelector('input'), prefix = element.querySelector('i')
     return input && prefix && prefix.getBoundingClientRect().right + 4 > input.getBoundingClientRect().left + parseFloat(getComputedStyle(input).paddingLeft)
@@ -160,10 +169,10 @@ async function fillScenario(page, section, route) {
     await section.locator('#cx-start').fill('2026-11-06')
     await section.locator('#cx-firstDue').fill('2026-12-06')
     const table = section.locator('.cx-matrix')
-    assert.match(normalize(await table.locator('tbody tr').nth(0).locator('td').first().innerText()), /^R\$\s*9\.455,96/)
-    assert.equal(normalize(await table.locator('tbody tr').nth(3).locator('td').first().innerText()), brl(giroOracle('price').total))
+    assert.ok(normalize(await table.locator('tbody tr').nth(0).locator('td').first().innerText()).startsWith(brl(giroOracle('price').first)))
+    assert.equal(normalize(await table.locator('tbody tr').nth(4).locator('td').first().innerText()), brl(giroOracle('price').total))
     await section.getByRole('button', { name: 'SAC', exact: true }).click()
-    assert.equal(normalize(await table.locator('tbody tr').nth(3).locator('td').nth(1).innerText()), brl(giroOracle('sac').total))
+    assert.equal(normalize(await table.locator('tbody tr').nth(4).locator('td').nth(1).innerText()), brl(giroOracle('sac').total))
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
     assert.equal(await section.getByText('Situação da operação', { exact: true }).count(), 0)
@@ -176,6 +185,16 @@ async function fillScenario(page, section, route) {
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/)
     const interest = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
     assert.match(await interest.locator('b').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
+    // CET do art. 6º (Res. CMN 4.881/2020): sem limite, só o pedido; com limite, 30 dias sobre o limite em dias corridos/365.
+    assert.equal(await section.getByText('Sem CET: informe o limite contratado', { exact: false }).count(), 1)
+    assert.equal(await page.locator('#cg-limit').inputValue(), '', 'limite começa vazio')
+    await page.locator('#cg-limit').fill('100000')
+    const cetKpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
+    const cetAnnual = Math.pow((100000 + 3000 + 100000 * 0.000082 * 30) / (100000 - 380), 365 / 30) - 1 // IOF adicional na liberação
+    const pct2 = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
+    assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
+    assert.ok(await section.getByText('texto oficial conferido em 11/11/2026', { exact: false }).count())
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
@@ -194,17 +213,30 @@ async function fillScenario(page, section, route) {
     await page.locator('#ad-averageValue').fill('225.600,43')
     await page.locator('#ad-discountRate').fill('1,75')
     await page.locator('#ad-operations').fill('6')
-    // Independent 30-calendar-day commercial discount: IOF on nominal minus interest.
-    const gross = 225600.43, interest = gross * 0.0183
-    const cost = interest + (gross - interest) * (0.0038 + 30 * 0.000082) + 564 + 260
+    // Regra de 11/11/2026: 05/12/2026 é sábado, pago em 07/12 (32 dias corridos). Desconto comercial; IOF sobre nominal menos juros.
+    const gross = 225600.43, days = 32, interest = gross * 0.0183 * days / 30
+    const cost = interest + (gross - interest) * (0.0038 + days * 0.000082) + 564 + 260
     const kpis = section.locator('.desconto-kpis')
     assert.ok(normalize(await kpis.innerText()).includes(brl(cost)))
     assert.ok(normalize(await kpis.innerText()).includes(brl(gross - cost)))
-    const monthlyInterest = gross * 0.0175
-    const monthlyCost = 6 * (monthlyInterest + (gross - monthlyInterest) * (0.0038 + 30 * 0.000082) + 564 + 260)
+    // CET pelo art. 6º da Res. CMN 4.881 (texto oficial): 30 dias sobre o nominal; o prazo real (32 dias) aparece à parte.
+    const pct = value => `${(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
+    const cet30 = (rate, fees) => { const i = gross * rate; const net = gross - i - (gross - i) * (0.0038 + 30 * 0.000082) - fees; return (gross / net) ** (365 / 30) - 1 }
+    assert.ok(normalize(await kpis.innerText()).includes(pct(cet30(0.0183, 824))), 'CET do desconto (art. 6º)')
+    assert.ok(normalize(await kpis.innerText()).includes(`prazo real: ${pct((gross / (gross - cost)) ** (365 / days) - 1)}`), 'custo pelo prazo real')
+    assert.match(await section.locator('.desconto-paydate').innerText(), /07\/12\/2026/)
+    const monthlyInterest = gross * 0.0175 * days / 30
+    const monthlyNet = gross - monthlyInterest - (gross - monthlyInterest) * (0.0038 + days * 0.000082) - 564 - 260
+    const monthlyCost = 6 * (gross - monthlyNet)
     const row = section.locator('.desconto-summary-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Custo total do desconto', exact: true }) })
     assert.equal(normalize(await row.locator('td').first().innerText()), brl(monthlyCost))
     assert.equal(normalize(await row.locator('td').nth(1).innerText()), brl(monthlyCost * 12))
+    const cetRow = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'CET do desconto', exact: true }) })
+    assert.equal(normalize(await cetRow.locator('td').first().innerText()), pct(cet30(0.0175, 824))) // art. 6º: 30 dias; monthlyNet é do prazo real
+    const giroCet = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'CET do giro', exact: true }) })
+    assert.equal(await giroCet.locator('td').count(), 5)
+    for (const cell of await giroCet.locator('td').allInnerTexts()) assert.match(normalize(cell), /^\d+,\d{2}% a\.a\.$/)
+    assert.doesNotMatch(await section.innerText(), /[Nn]ão é CET/)
   } else if (route === 'finimp') {
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)
@@ -222,13 +254,17 @@ async function fillScenario(page, section, route) {
     }
     assert.equal(await section.locator('.lcd-table tbody tr').count(), 3)
     assert.match(await section.locator('.lcd-table tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
+    // CET pela Res. CMN 4.881 (sem Selic) e custo com a Selic do cenário, ambos visíveis sem abrir ajuda.
+    const cet = normalize(await section.locator('.lcd-cet').innerText())
+    assert.match(cet, /CET · parte fixa \(regra do BC\)[\s?]*3,48% a\.a\. LD1 \+ remunerações, sem Selic/i)
+    assert.match(cet, /Custo com Selic projetada[\s?]*17,87% a\.a\./i)
   } else if (route === 'finame-materiais') {
     await section.locator('.fm-destaques').waitFor()
     assert.equal(await section.locator('#fm-finame-eligible, #fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc').count(), 0)
     const eligibilityWarning = section.locator('.fm-iof-premise')
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /FINAME|Finame/)
-    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 3, 'números principais à vista, sem abrir a composição')
+    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 6, 'números principais à vista, sem abrir a composição: taxas, CET, parcelas e custo total')
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()

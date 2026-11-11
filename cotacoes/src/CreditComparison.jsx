@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
+import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA } from './pracaContrato.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { IOF_SOURCE } from './iofRules.js'
 import { parseDecimal } from './emprestimo.js'
 import { cgToday } from './contaGarantida.js'
 import { useDataFile } from './useDataFile.js'
 import { creditMarketReference } from './creditComparison.js'
-import { MODALITIES, MIN_COLUMNS, MAX_COLUMNS, SYSTEM_OPTIONS, FINIMP_CURRENCY_LIST, PORTES, COMPOSICOES, PERIODICIDADES, FGI, initialColumns, initialShared, newColumn, evaluateAll, highlights, modalityLabel } from './creditModalities.js'
+import { MODALITIES, MIN_COLUMNS, MAX_COLUMNS, SYSTEM_OPTIONS, FINIMP_CURRENCY_LIST, PORTES, COMPOSICOES, PERIODICIDADES, FGI, initialColumns, initialShared, newColumn, evaluateAll, highlights, modalityLabel, cetGroup, CET_GROUPS } from './creditModalities.js'
 import { FINIMP_TERMS } from './finimpComparison.js'
 import { useCurves } from './useCurves.js'
 import { useHolidays } from './useHolidays.js'
@@ -14,7 +16,7 @@ import { REGIMES, PRODUCTS, investmentAlone, creditVsCash, expenseShield } from 
 import './CreditComparison.css'
 
 const brl = v => Number.isFinite(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
-const pct = v => Number.isFinite(v) ? `${v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%` : 'Não mensurável'
+const pct = v => Number.isFinite(v) ? `${nbr5891(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%` : 'Não mensurável'
 const day = d => d.split('-').reverse().join('/')
 const TERMS = [6, 12, 18, 24, 36, 48, 60, 72, 84]
 const GRACES = [0, 3, 6, 12, 18, 24]
@@ -49,6 +51,7 @@ function SharedFields({ shared, set }) {
     <label className="credit-field" htmlFor="credit-shared-system"><span>Amortização</span><select id="credit-shared-system" value={shared.system} onChange={e => update('system', e.target.value)}>{SYSTEM_OPTIONS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
     <label className="credit-field" htmlFor="credit-shared-start"><span>Data da liberação</span><input id="credit-shared-start" type="date" max="9999-12-31" value={shared.start} onChange={e => update('start', e.target.value)} /></label>
     <label className="credit-field" htmlFor="credit-shared-regime"><span>Regime tributário da empresa</span><select id="credit-shared-regime" value={shared.regime} onChange={e => update('regime', e.target.value)}>{REGIMES.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}</select></label>
+    <label className="credit-field" htmlFor="credit-shared-praca" title={`${PRACA_AJUDA} ${PRACA_RESSALVA}`}><span>Praça do contrato (feriados)</span><select id="credit-shared-praca" aria-describedby="credit-shared-praca-hint" value={shared.praca ?? PRACA_PADRAO} onChange={e => update('praca', e.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select><small id="credit-shared-praca-hint" className="credit-hint">Feriados locais que adiam vencimentos.</small></label>
     {shared.regime !== 'simples' && <label className="credit-check credit-shared-wide"><input type="checkbox" checked={shared.adicional} onChange={e => update('adicional', e.target.checked)} /> Paga o adicional de 10% do IRPJ (lucro acima de R$ 20 mil por mês): IRPJ + CSLL = {shared.adicional ? '34%' : '24%'}</label>}
   </section>
 }
@@ -133,7 +136,8 @@ function ColumnCard({ index, col, set, result, shared }) {
     <footer className="credit-card-result">
       {result?.ok ? <>
         <div><span>Parcela estimada</span><b>{brl(result.firstPayment)}</b><small>{single ? 'pagamento único' : `1ª de ${result.rows.length}`}</small></div>
-        <div><span>CET</span><b>{result.cet === null ? 'Não mensurável' : `${pct(result.cet * 100)} a.a.`}</b></div>
+        <div><span>{result.cetLabel ?? 'CET'}</span><b>{result.cet === null ? 'Não mensurável' : `${pct(result.cet * 100)} a.a.`}</b></div>
+        {result.floating && <div><span>{result.projectedLabel}</span><b>{result.projectedCost === null ? 'Não mensurável' : `${pct(result.projectedCost * 100)} a.a.`}</b><small>não é CET</small></div>}
       </> : <p className="credit-card-error">{result?.error ?? '—'}</p>}
     </footer>
   </article>
@@ -148,7 +152,8 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
     ['Taxa / indexador', r => r.rateLabel], ['Sistema e pagamentos', r => r.systemLabel],
     ['Liberação / último vencimento', r => `${day(r.start)} / ${day(r.lastDate)}`],
     ['Valor contratado', r => brl(r.value)], ['Valor líquido recebido', r => brl(r.net)],
-    ['CET estimado · a.a.', (r, i) => `${pct(r.cet === null ? NaN : r.cet * 100)}${best.lowestCet === i ? ' · menor CET' : ''}`],
+    ['CET estimado · parte fixa (regra do BC) · a.a.', (r, i) => `${pct(r.cet === null ? NaN : r.cet * 100)}${best.lowestCet === i ? ' · menor CET' : r.ok && best.lowestCetByGroup[cetGroup(r)] === i ? ` · menor CET entre ${CET_GROUPS[cetGroup(r)]}` : ''}`],
+    ...(results.some(r => r.floating) ? [[`${[...new Set(results.filter(r => r.floating).map(r => r.projectedLabel))].length === 1 ? results.find(r => r.floating).projectedLabel : 'Custo com índice ou prazo de uso'} · a.a. (não é CET)`, r => pct(r.projectedCost === null ? NaN : r.projectedCost * 100)]] : []),
     ...(results.some(r => r.declaredCet !== null) ? [['CET informado pelo banco', r => r.declaredCet === null ? '—' : pct(r.declaredCet)]] : []),
     ['Parcela estimada (1ª)', r => brl(r.firstPayment)], ['Maior pagamento', r => brl(r.maxPayment)],
     ['Juros totais', r => brl(r.interest)], ['IOF', r => brl(r.iof)], ['Tarifas e encargos totais (sem IOF)', r => brl(r.fees)],
@@ -163,8 +168,9 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
   return <div className="credit-results"><p className="credit-notice">Simulação · {scenario} · {equivalent ? 'Mesmo valor líquido' : 'Condições originais'}. {usesCdiIn(columns) && <>CDI constante de {pct(cdi)} a.a. · {source}. Projeção, não taxa futura garantida.</>}</p>
     <div className="credit-scroll"><table className="credit-table"><caption>Comparação financeira das operações</caption><thead><tr><th scope="col">Indicador</th>{results.map((r, i) => <th scope="col" key={i}>{head(i)}</th>)}</tr></thead><tbody>{rows.map(([label, get]) => <tr key={label}><th scope="row">{label}</th>{results.map((r, i) => <td key={i}>{get(r, i)}</td>)}</tr>)}</tbody></table></div>
     <section className="credit-analysis"><h3>Leitura consultiva</h3>
-      <p>{best.lowestCet !== null ? <>Menor CET estimado: <strong>{head(best.lowestCet)}</strong>. </> : 'O CET não pôde ser comparado entre as colunas. '}{best.lowestCost !== null && <>Menor custo em reais sobre o líquido: <strong>{head(best.lowestCost)}</strong>. </>}{best.unmeasurable.length > 0 && <>CET não mensurável em: {best.unmeasurable.map(i => head(i)).join(', ')}. </>}</p>
-      <p>CET estimado do fluxo informado, não certificado do contrato. Prefixado: juros compostos em dias corridos/30. CDI: dias úteis/252, segunda a sexta menos feriados informados. Cada modalidade segue as convenções da sua calculadora. Confira as condições contratuais.</p>
+      <p>{best.lowestCet !== null ? <>Menor CET estimado: <strong>{head(best.lowestCet)}</strong>. </> : best.mixed ? <>Há tipos diferentes de taxa: o CET compara só colunas do mesmo tipo (prefixado com prefixado, pós-fixado com pós-fixado), porque no pós-fixado o índice fica fora do CET. Entre tipos diferentes, compare o custo em reais. {Object.entries(best.lowestCetByGroup).map(([g, i]) => <span key={g}>Menor CET entre {CET_GROUPS[g]}: <strong>{head(i)}</strong>. </span>)}</> : 'O CET não pôde ser comparado entre as colunas. '}{best.lowestCost !== null && <>Menor custo em reais sobre o líquido: <strong>{head(best.lowestCost)}</strong>. </>}{best.unmeasurable.length > 0 && <>CET não mensurável em: {best.unmeasurable.map(i => head(i)).join(', ')}. </>}</p>
+      <p>CET estimado do fluxo informado, não certificado do contrato. Prefixado: juros compostos em dias corridos/30. CDI: dias úteis/252, segunda a sexta menos feriados nacionais, os da praça do contrato e os informados. Vencimento em dia não útil passa para o próximo dia útil, pelos mesmos feriados. Cada modalidade segue as convenções da sua calculadora. Confira as condições contratuais.</p>
+      <p>No pós-fixado, o CET segue a Resolução CMN 4.881/2020, art. 5º: a taxa flutuante (CDI) não entra. Mostramos o CET da parte fixa (mesmo contrato com CDI zero, só o spread) e, à parte, o custo com o CDI projetado, que não é CET. A ordem de menor CET usa o CET da parte fixa. Nas modalidades prefixadas os dois números coincidem. No BNDES com TLP capitalizada, o IPCA fica fora do CET da mesma forma. Na conta garantida, o CET segue o art. 6º (30 dias sobre o limite, igual à calculadora própria) e o custo pelo prazo de uso aparece à parte. O CET da parte fixa refaz o IOF no ritmo de amortização sem CDI, o que pode mudar o líquido em centavos.</p>
       <p>{new Set(results.map(r => r.net.toFixed(2))).size > 1 ? 'Os valores líquidos são diferentes. Use a comparação pelo mesmo valor líquido antes de comparar custos absolutos. ' : 'O líquido recebido é equivalente. '}Prazos, risco de juros e garantias também importam. Não há vencedor absoluto.</p>
       <p>Cobertura nominal = valor da garantia ÷ crédito contratado. Não representa avaliação, liquidez ou aceitação pelo banco e não indica condição melhor ou pior.</p></section>
     {investment && <InvestmentBlock alone={investment.alone} regime={shared.regime} adicional={shared.adicional} product={investment.product} />}
@@ -298,7 +304,7 @@ export default function CreditComparison({ onBack }) {
       {content}</>}
     </div>
     <div className="credit-bw-body" hidden={area !== 'rules'}>
-    <details className="credit-method" open><summary>Premissas, limites e fonte do IOF</summary><p>Giro e Outra modalidade: prefixado em juros compostos dias corridos/30; CDI em dias úteis/252 com feriados informados, taxa diária do CDI multiplicada pelo percentual e spread composto à parte. Price tem pagamento constante, SAC amortiza o mesmo valor; dias até o primeiro vencimento além de 30 são carência capitalizada. Bullet tem vencimento único. IOF incide sobre o principal original, com teto de 365 dias.</p><p>BNDES: custo financeiro, taxa do BNDES e spread do agente compostos ou somados; carência com juros pagos; cronograma em meses iguais; regras e limites de prazo e carência da calculadora BNDES; IOF zero nos recursos Finame ou alíquota PJ/Simples. FINIMP: juros simples ano de 360 dias, flat e TAC, em reais pelo câmbio informado, sem variação cambial e sem IOF de câmbio. Conta Garantida: saldo utilizado integralmente por todo o período, juros e IOF pagos no fim. Desconto de duplicata: juros descontados na liberação, nominal pago no vencimento.</p><p>O CET de todas as modalidades é estimado pelo mesmo fluxo de caixa: líquido recebido na liberação e pagamentos datados, desconto ACT/365. Carência com juros pagos em giro, múltiplas liberações, amortizações extraordinárias, renegociação e garantias compartilhadas não são simuladas. Confira os cronogramas contra o contrato. <a href={IOF_SOURCE} target="_blank" rel="noreferrer">Fonte legal do IOF</a>. Regras compartilhadas com as demais calculadoras, para PJ e Simples/MEI a partir de 17/07/2025.</p></details>
+    <details className="credit-method" open><summary>Premissas, limites e fonte do IOF</summary><p>Giro e Outra modalidade: prefixado em juros compostos dias corridos/30; CDI em dias úteis/252 com os feriados nacionais, os da praça do contrato e os informados, taxa diária do CDI multiplicada pelo percentual e spread composto à parte. Price tem pagamento constante, SAC amortiza o mesmo valor; dias até o primeiro vencimento além de 30 são carência capitalizada. Bullet tem vencimento único. IOF incide sobre o principal original, com teto de 365 dias.</p><p>BNDES: custo financeiro, taxa do BNDES e spread do agente compostos ou somados; carência com juros pagos; vencimentos no dia 15 ou próximo dia útil e juros por dias corridos; na TLP capitalizada, CET sem o IPCA (art. 5º) e custo com IPCA à parte; regras e limites de prazo e carência da calculadora BNDES; IOF zero nos recursos Finame ou alíquota PJ/Simples. FINIMP: juros simples ano de 360 dias, flat e TAC, em reais pelo câmbio informado, sem variação cambial e sem IOF de câmbio. Conta Garantida: saldo utilizado integralmente por todo o período, juros e IOF pagos no fim. Desconto de duplicata: juros descontados na liberação, nominal pago no vencimento.</p><p>{PRACA_AJUDA} Vale para Giro, Outra modalidade, BNDES e Desconto de duplicata; FINIMP e Conta Garantida seguem as próprias convenções (na Conta Garantida, só os feriados informados). {PRACA_RESSALVA}</p><p>O CET de todas as modalidades é estimado pelo mesmo fluxo de caixa: líquido recebido na liberação e pagamentos datados, desconto ACT/365. Carência com juros pagos em giro, múltiplas liberações, amortizações extraordinárias, renegociação e garantias compartilhadas não são simuladas. Confira os cronogramas contra o contrato. <a href={IOF_SOURCE} target="_blank" rel="noreferrer">Fonte legal do IOF</a>. Regras compartilhadas com as demais calculadoras, para PJ e Simples/MEI a partir de 17/07/2025.</p></details>
     <details className="credit-method" open><summary>Aplicação financeira e tributação da empresa</summary><p>Simples Nacional: o IR retido pelo banco é o imposto final (LC 123/2006, art. 13, § 1º, V). Lucro Presumido: o rendimento entra inteiro na base do IRPJ e da CSLL no resgate (Lei 9.430/1996, art. 25, II); o IR retido é antecipação; não há PIS/Cofins sobre o rendimento. Lucro Real: IRPJ e CSLL por competência; PIS/Cofins de 4,65% sobre o rendimento até 31/12/2026 (Decreto 8.426/2015), dedutível; a partir de 2027 a CBS não incide sobre rendimento financeiro (LC 214/2025, art. 6º, V); juros, IOF e tarifas do crédito reduzem o IRPJ/CSLL.</p><p>IOF regressivo sobre o rendimento no resgate com menos de 30 dias (Decreto 6.306/2007). Fundos: come-cotas em maio e novembro (15% longo prazo, 20% curto prazo), definitivo só no Simples. LCI e LCA não são isentas para empresa. Prejuízo fiscal e o momento exato do recolhimento não são simulados. Recomendada revisão de um tributarista antes do uso com cliente.</p></details>
     </div>
     {present && <Presentation onClose={close}>{present}</Presentation>}

@@ -38,7 +38,8 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   assert.match(source, /\{comparar && <div className="fm-comparison"/)
   assert.match(source, /comparar \? 'Cotação comparativa' : 'Cotação da operação'/)
   // Ressalvas do resultado continuam no cabeçalho do painel.
-  assert.match(source, /<small>Projeção · não é CET<\/small>/)
+  assert.match(source, /<small>Projeção · CET estimado<\/small>/)
+  assert.match(source, /não substitui o CET do contrato/)
   // A tela não faz conta nova com o resultado para os destaques: o arquivo de seleção não importa o cálculo.
   assert.doesNotMatch(readFileSync(new URL('../src/finameResumo.js', import.meta.url), 'utf8'), /import /)
 })
@@ -54,4 +55,7 @@ test('comparação mantém cabeçalho limpo e resultados usam a taxa adotada com
   assert.match(source, /item\.quote\.codigo/)
   assert.match(source, /dmy\(item\.quote\.data\)/)
   assert.match(source, /<details className="fm-premises"><summary>Premissas e limites da simulação/)
+  // Premissas sempre ao final: depois da cotação e do cronograma (pedido de 11/11/2026).
+  assert.ok(source.indexOf('className="fm-premises"') > source.indexOf('fm-fluxo-panel'), 'premissas depois do cronograma')
+  assert.ok(source.indexOf('className="fm-premises"') > source.indexOf('id="fm-result"'), 'premissas depois da cotação')
 })

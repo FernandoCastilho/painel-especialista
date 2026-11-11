@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { clampMascot, MASCOT_PREFERENCE_KEY, readMascotPreferences } from './mascotPosition.js'
 
+const NARROW = 1000
 // Keep the grab/hide controls below the sticky header, including saved positions.
-const desktopPosition = point => clampMascot(point, window.innerWidth, window.innerHeight, (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
+// On narrow screens the default spot sits above the bottom navigation.
+const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
+// The closed mascot parks as a small badge hanging just under the top header (or at the screen edge when there is none).
+const parkTop = () => Math.max(0, window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0) + 4
 
 export default function MascotDock({ children, onSearch }) {
   const [preferences, setPreferences] = useState(() => readMascotPreferences({ getItem: key => window.localStorage.getItem(key) }))
-  const [mobile, setMobile] = useState(() => window.innerWidth < 1000)
-  const [position, setPosition] = useState(() => desktopPosition(preferences.desktop))
-  const [mobilePosition, setMobilePosition] = useState({ x: 8, y: 8 })
+  const [position, setPosition] = useState(() => place(preferences.desktop))
+  const [top, setTop] = useState(parkTop)
   const [moving, setMoving] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const tray = useRef(null), dock = useRef(null), handle = useRef(null), restore = useRef(null), drag = useRef(null)
@@ -16,6 +19,7 @@ export default function MascotDock({ children, onSearch }) {
   useEffect(() => {
     try { localStorage.setItem(MASCOT_PREFERENCE_KEY, JSON.stringify(preferences)) } catch { /* Private browsing may disable storage. */ }
   }, [preferences])
+  useEffect(() => { setTop(parkTop()) }, [preferences.hidden])
   useEffect(() => {
     if (previousHidden.current !== preferences.hidden) {
       (preferences.hidden ? restore : handle).current?.focus({ preventScroll: true })
@@ -24,31 +28,26 @@ export default function MascotDock({ children, onSearch }) {
   }, [preferences.hidden])
   useEffect(() => {
     const resize = () => {
-      setMobile(window.innerWidth < 1000)
-      setPosition(desktopPosition(preferences.desktop))
-      setMobilePosition(p => clampMascot(p, tray.current?.clientWidth || window.innerWidth - 24, 250))
+      setPosition(place(preferences.desktop))
+      setTop(parkTop())
     }
     window.addEventListener('resize', resize)
     return () => window.removeEventListener('resize', resize)
   }, [preferences.desktop])
   const move = point => {
-    if (mobile) setMobilePosition(clampMascot(point, tray.current?.clientWidth || window.innerWidth - 24, 250))
-    else {
-      const next = desktopPosition(point)
-      setPosition(next)
-      setPreferences(p => ({ ...p, desktop: next }))
-    }
+    const next = place(point)
+    setPosition(next)
+    setPreferences(p => ({ ...p, desktop: next }))
   }
-  const current = mobile ? mobilePosition : position
+  const current = position
   const step = (x, y) => move({ x: current.x + x, y: current.y + y })
   const reset = () => {
-    setPosition(desktopPosition(null))
-    setMobilePosition({ x: 8, y: 8 })
+    setPosition(place(null))
     setPreferences(p => ({ ...p, desktop: null }))
     setAnnouncement('Mascote na posição inicial.')
   }
-  return <aside className={`mascot-tray${preferences.hidden ? ' mascot-tray-hidden' : moving ? ' mascot-is-moving' : ''}`} ref={tray} aria-label="Assistente do painel">
-    {preferences.hidden ? <button ref={restore} type="button" className="mascot-restore" onClick={() => setPreferences(p => ({ ...p, hidden: false }))}>Mostrar mascote</button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
+  return <aside className={`mascot-tray${preferences.hidden ? ' mascot-tray-hidden' : ''}`} ref={tray} aria-label="Assistente do painel">
+    {preferences.hidden ? <button ref={restore} type="button" className="mascot-restore" style={{ top }} onClick={() => { setTop(parkTop()); setPreferences(p => ({ ...p, hidden: false })) }}><span>Mostrar mascote</span><i className="mascot-restore-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
       <div className="mascot-tools">
         <button type="button" ref={handle} className="mascot-move" aria-label="Mover mascote" aria-describedby="mascot-move-help" aria-expanded={moving} aria-controls="mascot-position-controls" title="Arraste ou use as setas do teclado" onClick={event => { if (event.detail === 0 || !drag.current?.moved) setMoving(v => !v) }} onKeyDown={event => {
           const offsets = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] }
@@ -68,14 +67,14 @@ export default function MascotDock({ children, onSearch }) {
       </div>
       {children}
       <button type="button" className="mascot-search" aria-haspopup="dialog" onClick={event => onSearch({ anchor: dock.current, opener: event.currentTarget, id: Date.now() })}>⌕ Pesquisar</button>
-      {moving && <div id="mascot-position-controls" className="mascot-position-controls" style={mobile ? { left: -current.x + 8, top: 252 - current.y } : undefined}>
-        <p>{mobile ? 'Mova nesta área reservada.' : 'Arraste ou use as setas.'}</p>
+      {moving && <div id="mascot-position-controls" className="mascot-position-controls">
+        <p>Arraste ou use as setas.</p>
         <div>{[['←', -20, 0, 'esquerda'], ['↑', 0, -20, 'cima'], ['↓', 0, 20, 'baixo'], ['→', 20, 0, 'direita']].map(([symbol, x, y, label]) => <button type="button" key={label} aria-label={`Mover para ${label}`} onClick={() => step(x, y)}>{symbol}</button>)}</div>
         <button type="button" onClick={reset}>Posição inicial</button>
         <button type="button" onClick={() => { setMoving(false); handle.current?.focus() }}>Concluir</button>
       </div>}
     </div>}
-    <span id="mascot-move-help" className="mascot-sr-only">Use as setas do teclado para mover e Home para voltar à posição inicial. Ative este botão para mostrar controles de posição. Em telas pequenas, o movimento fica na área reservada ao mascote.</span>
+    <span id="mascot-move-help" className="mascot-sr-only">Use as setas do teclado para mover e Home para voltar à posição inicial. Ative este botão para mostrar controles de posição. Ao ocultar, o mascote vira um botão pequeno no topo da tela.</span>
     <span className="mascot-sr-only" role="status">{announcement}</span>
   </aside>
 }

@@ -12,7 +12,7 @@ const nodes=node=>Array.isArray(node)?node.flatMap(nodes):node&&typeof node==='o
 async function setup(t,{enabled=true,send=async()=>true}={}){
   const listeners=new Map();let focus=0, messageFocus=0
   const window={addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:type=>listeners.delete(type)}
-  const deps={react:React,'react-dom':{createPortal:el=>el},'./feedbackConfig.json':{},'./feedback.js':{...feedback,sendFeedback:send},'./FeedbackMascot.css':{},'./MascotDock.jsx':()=>null,'./assets/mascot-owl.webp':'owl.webp'}
+  const deps={react:React,'react-dom':{createPortal:el=>el},'./feedbackConfig.json':{},'./feedback.js':{...feedback,sendFeedback:send},'./FeedbackMascot.css':{},'./MascotDock.jsx':()=>null,'./assets/mascot-owl.webp':'owl.webp','./assets/mascot-owl-wing.webp':'owl-wing.webp'}
   const {code}=await transform(await readFile(new URL('../src/FeedbackMascot.jsx',import.meta.url),'utf8'),{loader:'jsx',format:'cjs',jsx:'automatic'})
   const module={exports:{}}
   runInNewContext(code,{module,exports:module.exports,window,document:{body:{}},require:name=>deps[name]??require(name),AbortController,setTimeout,clearTimeout,TypeError})
@@ -52,4 +52,11 @@ test('feedback UI: configured-off cannot submit and navigation dismisses without
 })
 test('feedback UI: empty message is blocked before transport',async t=>{
   let calls=0;const s=await setup(t,{send:async()=>{calls++}});await s.open();await s.submit();await s.renderer.settle();assert.equal(calls,0);assert.match(s.find(n=>n.props?.role==='alert').props.children,/Escreva/)
+})
+
+test('Fredix se apresenta em balão sem mudar a ação de sugestões', async t => {
+  const s = await setup(t)
+  assert.equal(s.find(n => n.props?.className === 'mascot-greeting').props.children, 'Prazer, sou Fredix')
+  assert.equal(s.find(n => n.props?.className === 'feedback-trigger').props['aria-label'], 'Abrir caixa de sugestões')
+  await s.open(); assert.equal(s.dialog.open, true)
 })

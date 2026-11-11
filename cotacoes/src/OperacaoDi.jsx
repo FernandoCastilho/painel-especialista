@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { nbr5891 } from './format.js'
 import './Calculadora.css'
 import './CalculatorLayout.css'
 import './CalculatorTheme.css'
@@ -9,10 +10,11 @@ import { parseDecimal } from './emprestimo.js'
 import { useCurves } from './useCurves.js'
 import { useHolidays } from './useHolidays.js'
 import { busDaysIn } from './holidays.js'
-import { PRE_UNITS, RATE_KINDS, compareWithDi } from './operacaoDi.js'
+import { resolveCreditIof } from './iofRules.js'
+import { PRE_UNITS, RATE_KINDS, compareWithDi, creditVsDi } from './operacaoDi.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const pct = (v, d = 2) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}%`
+const pct = (v, d = 2) => `${nbr5891(v, d).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}%`
 const signed = (v, f) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${f(Math.abs(v))}`
 const dm = (iso) => (iso ? iso.split('-').reverse().join('/') : '')
 const isoPlus = (iso, days) => new Date(Date.parse(`${iso}T12:00:00Z`) + days * 864e5).toISOString().slice(0, 10)
@@ -47,23 +49,36 @@ export default function OperacaoDi({ onBack }) {
   const [startPick, setStartPick] = useState('')
   const [endPick, setEndPick] = useState('')
   const [view, setView] = useState('credito')
+  const [feesText, setFeesText] = useState('0,00')
+  const [profile, setProfile] = useState('pj')
+  const [eligible, setEligible] = useState(false)
+  const credit = view === 'credito'
 
   const start = startPick || base || ''
   const end = endPick || (base ? (isoPlus(base, 365) < maxIso ? isoPlus(base, 365) : maxIso) : '')
   const money = parseMoneyInput(valueText)
   const rate = parseDecimal(rateText)
+  const fees = feesText.trim() === '' ? { ok: true, value: 0 } : parseMoneyInput(feesText)
+  const tax = credit && start ? resolveCreditIof({ date: start, profile, operationValue: money.value, eligible }) : { ok: true }
   const errors = {
     value: money.ok && money.value > 0 ? null : money.error || 'Informe um valor maior que zero.',
     rate: rate === null ? (kind === 'pct' ? 'Informe o percentual, por exemplo 105,00.' : 'Informe a taxa em %, por exemplo 15,00.') : null,
     start: !base ? null : !start ? 'Informe a data de início.' : base && start < base ? `A curva começa em ${dm(base)}: escolha o início a partir dessa data.` : null,
     end: !base ? null : !end ? 'Informe o vencimento.' : maxIso && end > maxIso ? `A curva vai até cerca de ${dm(maxIso)}: escolha um vencimento até essa data.` : start && end <= start ? 'O vencimento precisa ser depois do início.' : null,
+    fees: !credit || fees.ok ? null : fees.error || 'Informe as tarifas em R$ (zero se não houver).',
+    iof: tax.ok ? null : tax.error,
   }
   const d1 = base && start ? busDaysIn(base, start, ['BR'], hol.ctx) : 0
   const d2 = base && end ? busDaysIn(base, end, ['BR'], hol.ctx) : 0
-  const result = pts && !Object.values(errors).some(Boolean) ? compareWithDi({ value: money.value, kind, rate, unit, pts, d1, d2 }) : null
+  // Crédito: motor das calculadoras de crédito (vencimento em dia útil, juros por dias reais, IOF, tarifas e CET).
+  // Aplicação: convenção de renda fixa em dias úteis/252, sem tributos.
+  const ready = pts && !Object.values(errors).some(Boolean)
+  const result = !ready ? null : credit
+    ? creditVsDi({ value: money.value, kind, rate, unit, pts, base, start, end, fees: fees.value, profile, eligible, ctx: hol.ctx })
+    : compareWithDi({ value: money.value, kind, rate, unit, pts, d1, d2 })
   const r = result?.ok ? result : null
+  const c = credit && r ? r : null
   const k = RATE_KINDS.find((x) => x.id === kind)
-  const credit = view === 'credito'
 
   const field = (key, label, control) => (
     <div className="cx-field">
@@ -77,7 +92,13 @@ export default function OperacaoDi({ onBack }) {
     { label: 'Taxa equivalente ao ano (252 d.u.)', op: pct(r.opAa), di: pct(r.cdiAa) },
     { label: credit ? 'Juros' : 'Rendimento', op: brl(r.interestOp), di: brl(r.interestDi) },
     { label: 'Valor no vencimento', op: brl(r.finalOp), di: brl(r.finalDi) },
+    ...(c ? [
+      { label: 'IOF na liberação', op: brl(c.iof), di: '—' },
+      { label: 'Tarifas na liberação', op: brl(c.fees), di: '—' },
+      { label: 'Valor líquido liberado', op: brl(c.net), di: '—' },
+    ] : []),
   ]
+  const annual = (v) => (v == null ? 'Não mensurável' : `${pct(v * 100)} a.a.`)
   const same = r && Math.abs(r.diff) < 0.005
   const more = r && r.diff > 0
 
@@ -88,9 +109,10 @@ export default function OperacaoDi({ onBack }) {
         <span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><OperacaoDiIcon /></span><span>Operação x DI</span></span>
         <Help title="Operação x DI: cálculo e premissas">
           <p>Compara a operação com aplicar o mesmo valor no DI, do início ao vencimento. O DI de cada dia vem da curva DI x pré da B3 da data-base: é a expectativa do mercado naquele dia, não uma garantia.</p>
-          <p>Dias úteis contados com os feriados nacionais. Entre dois vértices da curva, a taxa a termo é constante (interpolação do logaritmo do fator).</p>
-          <p>Pré: ao ano em base 252 dias úteis; ao mês, convertida para o ano por (1 + taxa)^12; no período, usada como está. % do CDI: o percentual multiplica o DI de cada dia útil antes de acumular. CDI + spread: fator do DI vezes (1 + spread)^(dias úteis/252).</p>
-          <p>Pagamento único no vencimento, sem IOF, IR, tarifas ou garantias. Não é CET nem rentabilidade líquida.</p>
+          <p>Dias úteis contados com os feriados nacionais. Entre dois vértices da curva, a taxa a termo é constante (interpolação do logaritmo do fator). Pagamento único no vencimento.</p>
+          <p>Crédito: mesmas regras do Capital de Giro e do Comparador. Vencimento em fim de semana ou feriado nacional passa para o próximo dia útil. Pré ao mês: juros por dias corridos, (1 + taxa)^(dias/30); ao ano, convertida para ao mês por juros compostos; no período, usada como está. % do CDI e CDI + spread: DI da curva em dias úteis/252; o spread também em dias úteis/252. IOF de pessoa jurídica ou do Simples/MEI, conforme o enquadramento escolhido, e tarifas descontados na liberação.</p>
+          <p>CET pela Resolução CMN 4.881/2020: taxa anual que iguala o valor líquido liberado (valor menos IOF e tarifas) ao pagamento no vencimento, em dias corridos/365. Com % do CDI ou CDI + spread, o CDI fica fora do CET (art. 5º): mostramos o CET da parte fixa e, à parte, o custo com o CDI projetado pela curva, que não é CET. O CET do contrato prevalece.</p>
+          <p>Aplicação: convenção de renda fixa em dias úteis/252 (pré ao mês convertida para o ano por (1 + taxa)^12), sem IR, IOF ou tarifas: não é rentabilidade líquida.</p>
         </Help>
       </h2>
 
@@ -123,8 +145,17 @@ export default function OperacaoDi({ onBack }) {
           ))}
           {field('start', 'Início', <input id="od-start" type="date" min={base ?? undefined} max={maxIso || '9999-12-31'} aria-invalid={!!errors.start} aria-describedby="od-start-err" value={start} onChange={(e) => setStartPick(e.target.value)} />)}
           {field('end', 'Vencimento', <input id="od-end" type="date" min={start || undefined} max={maxIso || '9999-12-31'} aria-invalid={!!errors.end} aria-describedby="od-end-err" value={end} onChange={(e) => setEndPick(e.target.value)} />)}
+          {credit && field('fees', 'Tarifas na liberação (R$)', <MoneyInput id="od-fees" aria-invalid={!!errors.fees} aria-describedby="od-fees-err" value={feesText} onChange={setFeesText} />)}
+          {credit && (
+            <div className="cx-iof">
+              <label htmlFor="od-profile">Enquadramento do IOF</label>
+              <select id="od-profile" value={profile} onChange={(e) => { setProfile(e.target.value); setEligible(false) }}><option value="pj">Pessoa jurídica geral</option><option value="simples">Simples/MEI: operação elegível até R$ 30 mil</option></select>
+              {profile === 'simples' && <label><input type="checkbox" checked={eligible} onChange={(e) => setEligible(e.target.checked)} />Confirmo o enquadramento do tomador e a documentação da operação com a instituição.</label>}
+              <p className="cx-error" role={errors.iof ? 'alert' : undefined}>{errors.iof ?? ''}</p>
+            </div>
+          )}
           <p className="cx-hint">
-            {base ? <>Curva DI x pré da B3 de {dm(base)}, até cerca de {dm(maxIso)}.{r && <> Período: {r.du} dias úteis.</>}</> : curves.status === 'loading' ? 'Carregando a curva DI…' : 'Curva DI indisponível na última atualização: a comparação volta quando ela for coletada.'}
+            {base ? <>Curva DI x pré da B3 de {dm(base)}, até cerca de {dm(maxIso)}.{r && <> Período: {r.du} dias úteis{c ? `, ${c.days} dias corridos` : ''}.</>}{c?.dueShifted && <> Vencimento em dia não útil: passa para {dm(c.due)}.</>}</> : curves.status === 'loading' ? 'Carregando a curva DI…' : 'Curva DI indisponível na última atualização: a comparação volta quando ela for coletada.'}
           </p>
         </div>
       </article>
@@ -152,12 +183,18 @@ export default function OperacaoDi({ onBack }) {
               {kind !== 'pct' && <li>Equivale a <b>{r.pctEq == null ? '—' : pct(r.pctEq)} do CDI</b>.</li>}
               {kind !== 'spread' && <li>Equivale a <b>CDI {signed(r.spreadEq, (v) => `${pct(v)} a.a.`)}</b></li>}
             </ul>
+            {c && (
+              <dl className="od-cet">
+                <div><dt>{c.cetLabel}</dt><dd><b>{annual(c.cet)}</b>{c.cet != null && <small>{pct(Math.expm1(Math.log1p(c.cet) / 12) * 100)} a.m.</small>}</dd></div>
+                {c.floating && <div><dt>{c.projectedLabel}</dt><dd><b>{annual(c.projectedCost)}</b><small>não é CET</small></dd></div>}
+              </dl>
+            )}
           </>
         ) : (
           <p className="cx-hint cx-pad" role={result?.error ? 'alert' : undefined}>{result?.error || (base ? 'Preencha a operação.' : 'A comparação aparece quando a curva DI estiver disponível.')}</p>
         )}
       </article>
-      <p className="status">Projeção pela curva DI da data-base · Sem IOF, IR e tarifas · Não é CET</p>
+      <p className="status">{credit ? 'Projeção pela curva DI da data-base · IOF e tarifas na liberação · CET pela Res. CMN 4.881/2020' : 'Projeção pela curva DI da data-base · Sem IOF, IR e tarifas'}</p>
     </section>
   )
 }

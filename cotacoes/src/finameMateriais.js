@@ -3,6 +3,9 @@
 // confirma as condições de cada operação. A tela mostra a data da regra e avisa o que precisa de conferência.
 import { IOF_PJ, monthlyRate, parseDecimal } from './emprestimo.js'
 import { iso, nextBusinessDay } from './holidays.js'
+import { contractCalendars } from './pracaContrato.js'
+import { actualActualCalendarYears } from './bndesCreditoPequenasEmpresas.js'
+import { creditCet } from './creditComparison.js'
 
 // Limite técnico para conservar precisão em centavos. Não é um limite de crédito ou enquadramento.
 export const LIMITE_MONETARIO = 1_000_000_000_000
@@ -127,15 +130,20 @@ export function conferir({ valor, participacao, prazo, carencia, custo }) {
 // amortização que corresponde ao valor entregue (amortização sem a correção acumulada): a soma dos principais é o financiado, e é
 // sobre ele que incide o IOF diário (Decreto 6.306/2007, art. 7º, I, b: "valor do principal de cada uma das parcelas").
 const taxaValida = t => Number.isFinite(t) && t >= 0 && t <= 700
-export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, periodicidade = 1, ipcaAnual = 0 }) {
+// `anos` (opcional): fração de ano de cada mês do cronograma, em dias corridos sobre os dias do ano civil (ACT/ACT), entre a liberação
+// e cada vencimento real. Com ela, os juros de cada período são (1 + taxa anual)^(fração) − 1: juros pelos dias reais entre vencimentos.
+// Sem ela, vale o modelo legado de meses iguais (1/12 do ano), usado só em chamadas programáticas e testes antigos.
+export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, periodicidade = 1, ipcaAnual = 0, anos = null }) {
   if (!dentroDoLimite(financiado) || financiado <= 0 || !Number.isInteger(prazo) || prazo < 1 || prazo > REGRAS.prazoMaxMeses
     || !Number.isInteger(carencia) || carencia < 0 || carencia >= prazo || carencia > REGRAS.carenciaMaxMeses
     || !(Array.isArray(taxaAnual) ? taxaAnual.length === prazo && taxaAnual.every(taxaValida) : taxaValida(taxaAnual)) || !validIpcaProjection(ipcaAnual)
-    || !SISTEMAS.some(option => option.id === sistema) || !PERIODICIDADES.some(option => option.id === periodicidade)) {
+    || !SISTEMAS.some(option => option.id === sistema) || !PERIODICIDADES.some(option => option.id === periodicidade)
+    || (anos !== null && !(Array.isArray(anos) && anos.length === prazo && anos.every(a => Number.isFinite(a) && a > 0 && a < 1)))) {
     throw new RangeError('Parâmetros inválidos para o cronograma Finame.')
   }
   // taxaAnual pode ser um número (taxa única) ou uma lista com uma taxa por mês (indexador editado parcela a parcela).
-  const taxaDoMes = m => monthlyRate(Array.isArray(taxaAnual) ? taxaAnual[m - 1] : taxaAnual, 'aa'), c = monthlyRate(ipcaAnual, 'aa')
+  const anualDoMes = m => (Array.isArray(taxaAnual) ? taxaAnual[m - 1] : taxaAnual)
+  const taxaDoMes = m => (anos ? Math.expm1(Math.log1p(anualDoMes(m) / 100) * anos[m - 1]) : monthlyRate(anualDoMes(m), 'aa')), c = monthlyRate(ipcaAnual, 'aa')
   const parcelas = []
   let saldo = financiado
   let fator = 1 // correção acumulada desde a liberação
@@ -158,7 +166,9 @@ export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, pe
     const juros = saldo * i
     const restantes = n - k + 1
     // Amortização Price equivalente à PMT menos juros, sem cancelamento nas taxas ínfimas.
-    const amortizacao = restantes === 1 ? saldo : sistema === 'price' && i !== 0 ? saldo * (i / Math.expm1(restantes * Math.log1p(i))) : saldo / restantes
+    // Price com períodos de tamanhos diferentes (dias reais): prestação constante que zera o saldo descontando cada período pela sua taxa.
+    const descontos = () => { let log = 0, soma = 0; for (let j = carencia + k; j <= prazo; j++) { log += Math.log1p(taxaDoMes(j)); soma += Math.exp(-log) } return soma }
+    const amortizacao = restantes === 1 ? saldo : sistema === 'price' && i !== 0 ? (anos ? saldo / descontos() - juros : saldo * (i / Math.expm1(restantes * Math.log1p(i)))) : saldo / restantes
     saldo -= amortizacao
     parcelas.push({ mes: carencia + k, correcao, juros, amortizacao, principal: amortizacao / fator, parcela: juros + amortizacao, saldo, carencia: false })
   }
@@ -172,10 +182,10 @@ export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, pe
 // IOF de crédito PJ sobre o cronograma: adicional único sobre o financiado + alíquota diária sobre o principal de cada parcela (sem a
 // correção pelo IPCA) pelos dias até o vencimento (meses de 365/12 dias, contando a carência), limitados a 365 dias (Decreto 6.306/2007,
 // art. 7º, § 1º). Por construção, nunca passa de financiado × (fixed + maxDays × daily). iof = { fixed, daily, maxDays? } em % e dias.
-export function iofCronograma(financiado, parcelas, iof = IOF_PJ) {
+export function iofCronograma(financiado, parcelas, iof = IOF_PJ, dias = null) {
   const maxDias = iof.maxDays ?? IOF_PJ.maxDays
   const fixo = (financiado * (iof.fixed ?? 0)) / 100
-  const porParcela = parcelas.map((p) => ((p.principal ?? p.amortizacao) * Math.min(Math.round((p.mes * 365) / 12), maxDias) * (iof.daily ?? 0)) / 100)
+  const porParcela = parcelas.map((p, k) => ((p.principal ?? p.amortizacao) * Math.min(dias ? dias[k] : Math.round((p.mes * 365) / 12), maxDias) * (iof.daily ?? 0)) / 100)
   const diario = porParcela.reduce((a, v) => a + v, 0)
   return { fixo, diario, total: fixo + diario, porParcela }
 }
@@ -211,12 +221,30 @@ export function ecgFgi({ valor, percentual, prazo, periodos, incorporar }) {
 }
 
 // Vencimento contratual da parcela `mes`: todo dia 15 do mês (a contar do mês da liberação). Se o dia 15 não for dia útil
-// (fim de semana ou feriado nacional), vence no próximo dia útil. Devolve Date ao meio-dia, como o restante da tela.
-export function vencimentoDia15(liberacao, mes, ctx = {}) {
+// (fim de semana, feriado nacional ou feriado da praça do contrato), vence no próximo dia útil. Devolve Date ao meio-dia,
+// como o restante da tela. `calendarios`: calendários da praça (padrão só 'BR', feriados nacionais).
+export function vencimentoDia15(liberacao, mes, ctx = {}, calendarios = ['BR']) {
+  const cals = contractCalendars(calendarios)
+  if (!cals) throw new Error('Praça do contrato inválida.')
   const ref = new Date(liberacao.getFullYear(), liberacao.getMonth() + mes, 15, 12)
-  const util = nextBusinessDay(iso(ref.getFullYear(), ref.getMonth() + 1, 15), ['BR'], ctx)
+  const util = nextBusinessDay(iso(ref.getFullYear(), ref.getMonth() + 1, 15), cals, ctx)
   const [y, m, d] = util.split('-').map(Number)
   return new Date(y, m - 1, d, 12)
+}
+
+// Calendário real da operação: vencimentos no dia 15 (ou no próximo dia útil, feriados nacionais e da praça) contados da liberação.
+// Devolve as datas (AAAA-MM-DD), os dias corridos desde a liberação e a fração de ano ACT/ACT de cada período
+// (dias corridos sobre 365 ou 366, separados por ano civil), base dos juros de cada parcela.
+const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+export function calendarioFiname(liberacao, prazo, ctx = {}, calendarios = ['BR']) {
+  if (Object.prototype.toString.call(liberacao) !== '[object Date]' || Number.isNaN(+liberacao) || !Number.isInteger(prazo) || prazo < 1 || prazo > REGRAS.prazoMaxMeses || !contractCalendars(calendarios)) return null
+  const inicio = isoLocal(liberacao)
+  const datas = Array.from({ length: prazo }, (_, k) => isoLocal(vencimentoDia15(liberacao, k + 1, ctx, calendarios)))
+  const civil = t => Date.parse(`${t}T00:00:00Z`) / 86400000
+  const dias = datas.map(d => civil(d) - civil(inicio))
+  if (dias[0] <= 0 || dias.some((d, k) => k && d <= dias[k - 1])) return null
+  const anos = datas.map((d, k) => actualActualCalendarYears(k ? datas[k - 1] : inicio, d).fraction)
+  return { inicio, datas, dias, anos }
 }
 
 // Vencimento da parcela `mes` contado da liberação: mesmo dia do mês, recuando para o último dia quando o mês é mais curto.
@@ -236,7 +264,7 @@ export function parseIpcaProjection(text) {
   const parsed = parseDecimal(negative ? value.slice(1) : value)
   return parsed === null ? null : negative ? -parsed : parsed
 }
-export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null }) {
+export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, feriados = {}, calendarios = ['BR'] }) {
   const check = conferir({ valor, participacao, prazo, carencia, custo })
   const iofOk = iof && [iof.fixed, iof.daily].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
     && (iof.maxDays == null || (Number.isInteger(iof.maxDays) && iof.maxDays >= 0 && iof.maxDays <= IOF_PJ.maxDays))
@@ -254,7 +282,14 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   if (!PERIODICIDADES.some(option => option.id === periodicidade)) check.erros.push('Escolha periodicidade mensal, trimestral ou semestral.')
   if (!COMPOSICOES.some(option => option.id === composicao)) check.erros.push('Escolha composição capitalizada ou somada.')
   if (custo === 'tlp' && perfilTlp !== 'tlpcap') check.erros.push('TLP exigível requer a projeção própria. Este motor só aceita o perfil TLPCAP capitalizado explicitamente.')
+  // Com a data da liberação, juros pelos dias reais entre vencimentos (dia 15 ou próximo dia útil); sem ela, modelo legado de meses iguais.
+  // `calendarios`: feriados da praça do contrato que também adiam o vencimento (padrão só os nacionais, 'BR').
+  const pracaOk = !!contractCalendars(calendarios)
+  if (!pracaOk) check.erros.push('Escolha a praça do contrato entre as praças disponíveis.')
+  const calendario = pracaOk && dataLiberacao !== null && Number.isInteger(prazo) ? calendarioFiname(dataLiberacao, prazo, feriados, calendarios) : null
+  if (pracaOk && dataLiberacao !== null && !calendario) check.erros.push('Informe uma data de liberação válida.')
   if (check.erros.length) return { ok: false, ...check }
+  const anos = calendario?.anos ?? null
   const liberado = check.financiado
   const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos, incorporar: !!fgi.incorporar }) : null
   const ecg = ecgCalc?.ecg ?? 0
@@ -268,7 +303,7 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const editados = custoPorMes ? custoPorMes.filter(c => c !== custoFinanceiro).length : 0
   if (editados) check.avisos.push(`Indexador alterado em ${editados} ${editados === 1 ? 'parcela' : 'parcelas'}: a taxa final em destaque usa o valor da cotação; o cronograma usa o indexador informado em cada linha.`)
   let parcelas
-  try { parcelas = cronograma({ financiado, prazo, carencia, taxaAnual: serie(taxaBndes, taxaAgente), sistema, periodicidade, ipcaAnual }) }
+  try { parcelas = cronograma({ financiado, prazo, carencia, taxaAnual: serie(taxaBndes, taxaAgente), sistema, periodicidade, ipcaAnual, anos }) }
   catch (error) {
     if (!(error instanceof RangeError)) throw error
     return { ok: false, ...check, erros: [erroNumerico] }
@@ -276,10 +311,10 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const jurosCarencia = somar(parcelas.filter((p) => p.carencia).map(p => p.juros))
   const correcao = somar(parcelas.map(p => p.correcao))
   const amort = parcelas.filter((p) => !p.carencia)
-  const iofCalc = iofCronograma(financiado, parcelas, iof)
+  const iofCalc = iofCronograma(financiado, parcelas, iof, calendario?.dias ?? null)
   // Quanto dos juros remunera cada parte: custo financeiro (só o custo), BNDES (custo + BNDES menos só o custo) e spread do agente
   // (taxa completa menos custo + BNDES), sempre com o mesmo cronograma; a soma fecha nos juros totais.
-  const jurosDe = (t) => somar(cronograma({ financiado, prazo, carencia, taxaAnual: t, sistema, periodicidade, ipcaAnual }).map(p => p.juros))
+  const jurosDe = (t) => somar(cronograma({ financiado, prazo, carencia, taxaAnual: t, sistema, periodicidade, ipcaAnual, anos }).map(p => p.juros))
   let jSoCusto, jSemAgente
   try {
     jSoCusto = jurosDe(serie(0, 0))
@@ -292,7 +327,7 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const atribuicao = { custoFinanceiro: jSoCusto, bndes: jSemAgente - jSoCusto, agente: juros - jSemAgente }
   const spreadAgentePp = taxa - taxaFinal(custoFinanceiro, taxaBndes, 0, composicao) // quanto o spread do agente acrescenta à taxa final, em pontos
   // Fluxo parcela a parcela: saldo inicial (antes da correção do mês), IOF diário da parcela e total pago no vencimento.
-  const fluxo = parcelas.map((p, k) => ({ ...p, saldoInicial: k ? parcelas[k - 1].saldo : financiado, iof: iofCalc.porParcela[k], pago: p.parcela + iofCalc.porParcela[k] }))
+  const fluxo = parcelas.map((p, k) => ({ ...p, saldoInicial: k ? parcelas[k - 1].saldo : financiado, iof: iofCalc.porParcela[k], pago: p.parcela + iofCalc.porParcela[k], ...(calendario ? { vencimento: calendario.datas[k], dias: calendario.dias[k], anos: calendario.anos[k] } : {}) }))
   const ecgAVista = fgi && !ecgIncorporado ? ecg : 0
   const total = somar(fluxo.map(p => p.pago)) + iofCalc.fixo + tac + ecgAVista
   const somaAmortizacao = somar(parcelas.map(p => p.amortizacao)), somaPrincipal = somar(parcelas.map(p => p.principal))
@@ -303,9 +338,15 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
     || !fecha(total, financiado + correcao + juros + iofCalc.total + tac + ecgAVista)) {
     return { ok: false, ...check, erros: [erroNumerico] }
   }
+  // CET (Resolução CMN 4.881/2020, art. 4º): só com o calendário real. Valor líquido na liberação = liberado − IOF − TAC − ECG à vista;
+  // pagamentos de cada vencimento descontados em dias corridos/365. Devolve null quando o fluxo não fecha (ex.: encargos ≥ valor liberado).
+  // O IOF (adicional e diário) é cobrado na liberação (Decreto 6.306/2007): no CET sai todo do valor líquido, e as parcelas entram sem ele.
+  const liquido = liberado - iofCalc.total - tac - ecgAVista
+  const cetAnual = calendario ? creditCet(liquido, fluxo.filter(p => p.parcela > 0).map(p => ({ days: p.dias, payment: p.parcela }))) : null
+  const cet = cetAnual === null ? null : { anual: cetAnual * 100, mensal: Math.expm1(Math.log1p(cetAnual) / 12) * 100, liquido }
   return {
-    ok: true, financiado, liberado, tac, fgi: fgi ? { percentual: fgi.percentual, incorporado: ecgIncorporado, ecg, k: ecgCalc.k, periodos: ecgCalc.p } : null, taxa, taxaMensal: monthlyRate(taxa, 'aa') * 100, taxaNominal: custo === 'tlp' ? tlpNominal(taxa, ipca) : taxa, composicao, parcelas: fluxo,
-    perfil: custo === 'tlp' ? 'tlpcap' : custo, calendario: 'meses-iguais-hipoteticos',
+    ok: true, financiado, liberado, tac, cet, fgi: fgi ? { percentual: fgi.percentual, incorporado: ecgIncorporado, ecg, k: ecgCalc.k, periodos: ecgCalc.p } : null, taxa, taxaMensal: monthlyRate(taxa, 'aa') * 100, taxaNominal: custo === 'tlp' ? tlpNominal(taxa, ipca) : taxa, composicao, parcelas: fluxo,
+    perfil: custo === 'tlp' ? 'tlpcap' : custo, calendario: calendario ? 'datas-reais-act-act' : 'meses-iguais-hipoteticos', liberacao: calendario?.inicio ?? null,
     jurosCarencia, juros, correcao, atribuicao, spreadAgentePp, iof: iofCalc.total, iofFixo: iofCalc.fixo, iofDiario: iofCalc.diario,
     primeiraParcela: amort[0]?.parcela ?? 0, ultimaParcela: amort.at(-1)?.parcela ?? 0, parcelasAmortizacao: amort.length,
     total, recursosProprios: valor - liberado, avisos: check.avisos,

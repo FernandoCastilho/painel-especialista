@@ -42,6 +42,7 @@ async function proveLastColumn(region, file) {
         for (const value of await businessSize.locator('option').evaluateAll(options => options.map(option => option.value))) {
           await businessSize.selectOption(value)
           await businessSize.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+          await page.mouse.move(0, 0); await page.waitForTimeout(300) // o ponteiro parado sobre uma ajuda abre a prévia dela (fecha em 160 ms); a conferência é da navegação fixa
           const sizeGeometry = await businessSize.evaluate(element => {
             const style = getComputedStyle(element)
             const context = document.createElement('canvas').getContext('2d')
@@ -51,7 +52,7 @@ async function proveLastColumn(region, file) {
             const unobscured = [-1, 1].every(direction => document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2 + direction * 8) === element)
             return { label, unobscured, height: box.height, textWidth: context.measureText(label).width, available: element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 24 }
           })
-          assert.ok(sizeGeometry.height >= 44, 'porte/região preserva alvo de 44px')
+          assert.ok(sizeGeometry.height >= (width > 1000 ? 36 : 44) - .1, 'porte/região preserva a altura combinada: 44px, ou 36px em computador')
           assert.ok(sizeGeometry.unobscured, 'porte/região visível sem sobreposição da navegação fixa')
           assert.ok(sizeGeometry.textWidth <= sizeGeometry.available, `porte/região completo, reservando espaço para a seta: ${JSON.stringify(sizeGeometry)}`)
           await page.locator('.fm-field-porte').screenshot({ path: path.join(out, `${width}-${theme}-porte-${value}.png`) })
@@ -82,7 +83,7 @@ async function proveLastColumn(region, file) {
         // Os números principais abrem o resultado, sem precisar abrir a composição; a faixa "Cotação comparativa" só existe ao comparar.
         const highlights = page.locator('.fm-destaques tbody tr')
         await highlights.first().waitFor()
-        assert.deepEqual((await highlights.locator('th').allInnerTexts()).map(text => text.replace(/\s*\?\s*$/, '').trim()), ['Custo total estimado', 'Primeira parcela após carência', 'Última parcela'])
+        assert.deepEqual((await highlights.locator('th').allInnerTexts()).map(text => text.replace(/\s*\?\s*$/, '').trim()), ['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado'])
         for (const item of await highlights.all()) assert.equal(await item.isVisible(), true)
         assert.equal(await page.locator('.fm-details:not(.fm-comparison-details)').evaluate(element => element.open), false)
         assert.equal(await page.locator('.fm-hero').count(), 0)
@@ -144,7 +145,7 @@ async function proveLastColumn(region, file) {
         assert.match(await presentation.innerText(), /manual/i, 'apresentação identifica a referência manual')
         await page.keyboard.press('ArrowRight')
         await presentation.getByRole('heading', { name: 'TFC e TFB lado a lado', exact: true }).waitFor()
-        assert.match(await presentation.innerText(), /não é CET/)
+        assert.match(await presentation.innerText(), /CET estimado/) // regra de 11/11/2026: a apresentação mostra o CET estimado (Res. CMN 4.881)
         const headingStyle = await presentation.locator('.bnp-slide h2').evaluate(element => ({ size: parseFloat(getComputedStyle(element).fontSize), color: getComputedStyle(element).color }))
         assert.ok(headingStyle.size >= 24, 'título de slide preserva tamanho de apresentação')
         assert.equal(headingStyle.color, 'rgb(0, 13, 60)')
@@ -209,7 +210,12 @@ async function proveLastColumn(region, file) {
         assert.ok(geometry.width <= geometry.viewport + 1, JSON.stringify(geometry))
         if (width === 1440) {
           const positions = await page.locator('.fm-group').evaluateAll(groups => groups.map(group => ({ x: group.getBoundingClientRect().x, y: group.getBoundingClientRect().y })))
-          assert.ok(positions[1].x > positions[0].x && positions[2].x > positions[1].x && positions.every(item => Math.abs(item.y - positions[0].y) < 1), 'três quadros na mesma linha no desktop')
+          // Layout de 11/11/2026 (revisto a pedido do Fernando): Operação e Custos lado a lado; os itens de Pagamento e a chave
+          // de comparação ficam dentro de Custos; resultado na coluna da direita, com pelo menos 400px.
+          assert.equal(positions.length, 2, 'só Operação e Custos como blocos de entrada')
+          assert.ok(positions[1].x > positions[0].x && Math.abs(positions[1].y - positions[0].y) < 1 && geometry.right > geometry.left, 'Operação e Custos na mesma linha e resultado à direita no desktop')
+          assert.deepEqual(await page.locator('.fm-costs').evaluate(group => ['#fm-compare', '#fm-fgi', '#fm-per-l, .fm-field-per', '.fm-pills'].map(selector => !!group.querySelector(selector))), [true, true, true, true], 'comparação, FGI, juros na carência e condições fixas dentro de Custos')
+          assert.ok(await page.locator('.fm-results').evaluate(element => element.getBoundingClientRect().width) >= 400, 'coluna do resultado com pelo menos 400px no desktop')
         }
         await page.screenshot({ path: path.join(out, `${width}-${theme}-comparison.png`), fullPage: true })
         const comparisonRow = label => page.locator('.fm-comparison tbody tr, .fm-comparison-details tbody tr').filter({ has: page.getByRole('rowheader', { name: label, exact: true }) })
@@ -220,7 +226,7 @@ async function proveLastColumn(region, file) {
         await page.locator('.fm-details:not(.fm-comparison-details) > summary').click()
         const principal = await page.locator('.fm-details:not(.fm-comparison-details) .fm-kpi').filter({ hasText: 'Valor financiado' }).locator('b').innerText()
         await page.locator('#fm-fgi').check()
-        await page.locator('#fm-fgipct').fill('70')
+        await page.locator('#fm-fgipct').selectOption('70') // percentual garantido agora é lista de 10% a 80%
         assert.notEqual(await comparisonRow('Custo total estimado').innerText(), noFgiTotal, 'ECG à vista entra no total')
         assert.equal(await comparisonRow('Juros totais').innerText(), noFgiInterest, 'ECG à vista não aumenta juros')
         assert.equal(await comparisonRow('Primeira parcela após carência').innerText(), noFgiPayment, 'ECG à vista não altera parcelas')
@@ -237,7 +243,8 @@ async function proveLastColumn(region, file) {
         assert.equal(await page.locator('#lcd-principal').inputValue(), '', 'LCD não herda condições Finame')
         await page.locator('#bw-profile').selectOption('finame-materiais')
         assert.equal(await page.locator('#fm-valor').inputValue(), '600.000,00')
-        await page.getByRole('button', { name: 'Exemplo conferido · histórico', exact: true }).click()
+        assert.equal(await page.getByRole('button', { name: /Exemplo conferido/ }).count(), 0, 'Exemplo conferido fora do topo da calculadora (11/11/2026)')
+        await page.evaluate(() => { location.hash = '#calculadora/bndes-credito-tfb' }) // registro interno: segue pelo endereço direto e pela busca
         await page.getByText(/Não é cotação atual/).waitFor()
         assert.deepEqual(errors, [])
         report.push({ width, theme, status: 'pass' })

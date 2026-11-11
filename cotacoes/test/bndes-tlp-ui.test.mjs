@@ -7,12 +7,13 @@ import { transform } from 'esbuild'
 import { hookRenderer } from './helpers/hooks.mjs'
 import * as engine from '../src/bndesTlpExigivel.js'
 import * as money from '../src/moneyInput.js'
+import * as profileIof from '../src/bndesProfileIof.js'
 
 const require = createRequire(import.meta.url)
 const source = (await readFile(new URL('../src/BndesTlpExigivel.jsx', import.meta.url), 'utf8')).replace(/^import ['"].+\.css['"]\s*$/gm, '')
 const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
 const MoneyInput = () => null
-const deps = { './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './bndesTlpExigivel.js': engine }
+const deps = { './format.js': await import('../src/format.js'), './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './bndesTlpExigivel.js': engine, './bndesProfileIof.js': profileIof }
 const module = { exports: {} }
 runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
@@ -54,4 +55,33 @@ test('TLP UI: IPCA negativo conserva desconto e entrada inválida não conserva 
   await h.submit(); assert.equal(h.rows().length, 2); assert.match(h.text(), /8\.100,00/)
   await h.set('schedule', '2026-02-31;21;A'); await h.set('scheduleConfirmed', true); await h.submit()
   assert.equal(h.rows().length, 0); assert.match(h.text(), /Data civil inválida/)
+})
+test('TLP UI: mostra CET da parte fixa e custo com IPCA; tarifa opcional só muda o líquido', async t => {
+  const h = await setup(t); await h.ready()
+  assert.match(h.text(), /CET · parte fixa \(regra do BC\)[\s\S]*?10,28% a\.a\.J \+ spreads, sem IPCA · líquido R\$\s*10\.000,00/)
+  assert.match(h.text(), /Custo com IPCA projetado[\s\S]*?14,69% a\.a\.IPCA de 4% a\.a\. no cenário/)
+  await h.set('fee', '200,00'); await h.submit()
+  assert.equal(h.rows().length, 2); assert.match(h.text(), /12\.945,10/)
+  assert.match(h.text(), /líquido R\$\s*9\.800,00/)
+  assert.doesNotMatch(h.text(), /10,28% a\.a\./)
+  await h.set('fee', '1,2,3'); await h.submit(); assert.equal(h.rows().length, 0); assert.match(h.text(), /Tarifa na liberação: Use o formato brasileiro/)
+})
+test('TLP UI: IOF começa em zero e PJ/Simples entram no líquido das duas linhas de custo', async t => {
+  const h = await setup(t)
+  assert.equal(h.field('iof').props.value, 'zero')
+  assert.deepEqual(nodes(h.field('iof')).filter(node => node.type === 'option').map(node => text(node)), ['Zero (recursos BNDES/FINAME elegíveis)', 'PJ geral', 'Simples/MEI'])
+  assert.match(h.text(), /o painel não verifica/)
+  await h.ready()
+  assert.match(h.text(), /IOF na liberação[\s\S]*?R\$\s*0,00Alíquota zero · enquadramento não verificado/)
+  // PJ: R$ 10.000 com uma amortização a 732 dias (teto 365): 0,38% + 0,0082% × 365 = R$ 38,00 + R$ 299,30.
+  await h.set('iof', 'pj'); assert.equal(h.rows().length, 0); await h.submit()
+  assert.match(h.text(), /R\$\s*337,30R\$\s*38,00 adicional \+ R\$\s*299,30 diário/)
+  assert.match(h.text(), /12,28% a\.a\.J \+ spreads, sem IPCA · líquido R\$\s*9\.662,70/)
+  assert.match(h.text(), /16,80% a\.a\./)
+  assert.match(h.text(), /12\.945,10/, 'parcelas e juros não mudam')
+  // Simples/MEI: sem confirmação não calcula; confirmado, 0,00274% ao dia (até R$ 30 mil).
+  await h.set('iof', 'simples'); await h.submit(); assert.equal(h.rows().length, 0); assert.match(h.text(), /Confirme a opção pelo Simples/)
+  await h.set('iofEligible', true); await h.submit()
+  assert.match(h.text(), /R\$\s*138,01R\$\s*38,00 adicional \+ R\$\s*100,01 diário/)
+  await h.set('iof', 'pj'); await h.set('iof', 'simples'); assert.equal(h.field('iofEligible').props.checked, false, 'trocar o IOF revoga a confirmação')
 })
