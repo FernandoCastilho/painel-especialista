@@ -14,21 +14,35 @@
 @media(max-width:380px){.feedback-dialog{padding:14px}.feedback-contact{grid-template-columns:1fr}.feedback-heading h2{font-size:16px}.feedback-heading .feedback-mascot-icon{width:38px;height:41px}}
 @media print{.feedback-trigger,.feedback-dialog{display:none!important}}
 
-.mascot-tray{font-family:inherit;color:var(--fg);position:relative}
-.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:216px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 8px 8px;border:1px solid var(--line);border-radius:18px;background:var(--bg);box-shadow:0 4px 18px #0003}
-.mascot-tools{display:flex;justify-content:space-between;width:100%;height:44px;flex:none}
-.mascot-dock button,.mascot-restore{color:var(--fg);background:var(--bg);font-family:inherit;cursor:pointer}
-.mascot-tools button{width:44px;height:44px;border:0;border-radius:8px;font-size:22px}
+.mascot-tray{font-family:inherit;color:var(--fg)}
+/* Coruja solta na tela: sem caixa, só o desenho. Os botões pequenos aparecem com o mouse ou o foco. */
+.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:216px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 8px 0;background:transparent;border:0;pointer-events:none}
+.mascot-dock>*{pointer-events:auto}
+.mascot-dock .feedback-mascot-icon{width:112px;height:119px;filter:drop-shadow(0 10px 8px #0005)}
+.mascot-dock .feedback-trigger{width:auto;background:transparent}
+.mascot-dock .feedback-mascot-icon{animation:mascot-float 3.4s ease-in-out infinite}
+.mascot-dock .feedback-trigger>span:not(.feedback-mascot-icon){background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:11px}
+@keyframes mascot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.mascot-dock .feedback-mascot-icon{animation:none}}
+.mascot-tools{position:absolute;top:0;left:8px;right:8px;display:flex;justify-content:space-between;height:36px;opacity:0;transition:opacity .2s}
+.mascot-dock:hover .mascot-tools,.mascot-dock:focus-within .mascot-tools,.mascot-tools:focus-within{opacity:1}
+@media(hover:none){.mascot-tools{opacity:1}}
+.mascot-dock button,.mascot-restore{color:var(--fg);font-family:inherit;cursor:pointer}
+.mascot-tools button{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;font-size:17px;background:var(--bg);box-shadow:0 2px 8px #0004}
 .mascot-move{touch-action:none;cursor:grab!important}
 .mascot-move:active{cursor:grabbing!important}
-.mascot-search{width:100%;min-height:44px;border:1px solid var(--line);border-radius:9px;font-size:12px;font-weight:700}
-.mascot-restore{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:55;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;font-size:12px}
+.mascot-search{min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:700;background:var(--bg);box-shadow:0 2px 8px #0004}
+/* Mascote fechado: vira uma bolinha com o rosto da coruja, no topo da tela. */
+.mascot-restore{position:fixed;right:max(12px,env(safe-area-inset-right));z-index:70;display:flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:transparent;font-size:11px;font-weight:700}
+.mascot-restore span{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+.mascot-restore-face{display:block;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg) url('./assets/mascot-owl.webp') -2px 1px/44px auto no-repeat;box-shadow:0 2px 8px #0004}
+@media(prefers-reduced-motion:no-preference){.mascot-restore-face{animation:mascot-peek 2.6s ease-in-out infinite}@keyframes mascot-peek{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}}
+@media(max-width:699px){.mascot-restore{right:auto;left:max(12px,env(safe-area-inset-left));flex-direction:row-reverse}.mascot-dock .feedback-mascot-icon{width:88px;height:94px}}
 .mascot-dock :focus-visible,.mascot-restore:focus-visible{outline:3px solid var(--amber,#ffb000);outline-offset:2px}
 .mascot-position-controls{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(290px,calc(100vw - 32px));padding:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 18px #0004;z-index:56;text-align:center}
 .mascot-position-controls p{font-size:12px;margin:0 0 6px}
-.mascot-position-controls button{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:6px;margin:2px;padding:5px 8px}
+.mascot-position-controls button{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:6px;margin:2px;padding:5px 8px;color:var(--fg);background:var(--bg)}
 .mascot-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-@media(max-width:999px){.mascot-tray{height:250px;isolation:isolate;z-index:0;overflow:clip;margin:12px 12px calc(78px + env(safe-area-inset-bottom));border:1px dashed var(--line);border-radius:18px}.mascot-tray.mascot-is-moving{height:430px}.mascot-dock{position:absolute}.mascot-tray-hidden{height:auto;border:0}.mascot-restore{position:static;display:block;margin-left:auto}.mascot-position-controls{position:absolute;top:244px;bottom:auto;left:0;transform:none;width:min(270px,calc(100vw - 58px))}}
 @media print{.mascot-tray{display:none!important}}
 
 /* Reserve the default desktop parking area so the assistant cannot cover tools. */

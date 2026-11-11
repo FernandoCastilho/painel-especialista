@@ -44,8 +44,9 @@ test('feedback: optional fields omitted and abort is forwarded', async () => {
   await sendFeedback(config,values,{signal,fetcher:async (_url,options)=>{assert.equal(options.signal,signal);assert.equal('email' in JSON.parse(options.body),false);assert.equal('name' in JSON.parse(options.body),false);return {ok:true,json:async()=>({ok:true})}}})
 })
 
-test('feedback: mobile mascot takes its own space instead of covering content', async () => {
+test('feedback: mobile mascot floats above content and does not reserve page space', async () => {
   const css = await readFile(new URL('../src/FeedbackMascot.css', import.meta.url), 'utf8')
-  assert.match(css, /@media\(max-width:999px\)\{\.mascot-tray\{height:250px/); assert.match(css, /\.mascot-dock\{position:absolute\}/)
-  assert.match(css, /env\(safe-area-inset-bottom\)/)
+  assert.doesNotMatch(css, /@media\(max-width:999px\)\{\.mascot-tray\{height:250px/)
+  assert.match(css, /\.mascot-dock\{[^}]*position:fixed/)
+  assert.match(css, /env\(safe-area-inset-right\)/)
 })
