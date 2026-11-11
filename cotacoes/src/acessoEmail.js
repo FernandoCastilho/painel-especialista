@@ -41,6 +41,6 @@ export async function chamar(acao, params, { url = ACESSO_URL, fetchFn = globalT
     return { ok: false, erro: 'Não foi possível falar com o servidor agora. Tente de novo.', rede: true }
   }
 }
-export const pedirCodigo = (email, opts) => chamar('pedir', { email: normalizarEmail(email) }, opts)
+export const pedirCodigo = (email, opts) => chamar('pedir', { email: normalizarEmail(email), pedido: globalThis.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2)}` }, opts)
 export const confirmarCodigo = (email, codigo, opts) => chamar('confirmar', { email: normalizarEmail(email), codigo: String(codigo).trim() }, opts)
 export const registrarVisita = (acesso, opts) => chamar('visita', acesso, opts)
