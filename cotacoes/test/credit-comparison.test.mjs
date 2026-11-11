@@ -25,10 +25,12 @@ test('Price cash-flow has equal payments across actual dates; SAC principal is e
   near(p.rows.reduce((sum, r) => sum + r.payment / (1 + p.cet) ** (r.days / 365), 0), p.net)
 })
 test('capitalized grace is explicitly computed before amortization and does not inflate IOF original principal', () => {
-  // 08/02/2027 é segunda de Carnaval (feriado bancário nacional): o vencimento passa para 10/02/2027, 64 dias.
+  // 08/02/2027 é segunda de Carnaval: o vencimento passa para 10/02/2027. A carência capitalizada continua a contratada (62 dias);
+  // os 2 dias do ajuste a dia útil entram nos juros da própria 1ª parcela.
   const r = creditOperation({ ...base, firstDue: '2027-02-08', system: 'sac' })
-  assert.ok(r.ok); assert.equal(r.rows[0].date, '2027-02-10'); assert.equal(r.graceDays, 64)
-  near(r.capitalizedGrace, base.value * ((1.02) ** (64 / 30) - 1))
+  assert.ok(r.ok); assert.equal(r.rows[0].date, '2027-02-10'); assert.equal(r.graceDays, 62)
+  near(r.capitalizedGrace, base.value * ((1.02) ** (62 / 30) - 1))
+  near(r.rows[0].interest, (base.value + r.capitalizedGrace) * ((1.02) ** (32 / 30) - 1))
   near(r.rows.reduce((sum, row) => sum + row.originalAmortization, 0), base.value)
   near(r.rows.reduce((sum, row) => sum + row.amortization, 0), base.value + r.capitalizedGrace)
   assert.ok(r.iof <= base.value * (0.0038 + 365 * 0.000082) + 1e-6)

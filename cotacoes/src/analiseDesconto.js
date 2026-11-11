@@ -85,7 +85,7 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
   if (!money(cost) || cost >= value) return invalid('O custo total deve ser menor que o valor bruto da operação.')
   const net = value - cost
   const cet = creditCet(net, rows.map(row => ({ days: row.days, payment: row.value })))
-  if (cet === null) return invalid('Não foi possível calcular o CET deste desconto com a precisão necessária.')
+  // CET não mensurável (ex.: tarifas quase iguais ao líquido, acima de 1.000% a.a.) não invalida a operação: a tela mostra "Não mensurável".
   return { ok: true, value, titles, titleFee: tariff.total, tac, interest, iof: iofPaid, base, rows, tax, costWithoutTitles, cost, net, cet }
 }
 

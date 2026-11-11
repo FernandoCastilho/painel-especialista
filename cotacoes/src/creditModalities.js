@@ -7,7 +7,7 @@ import { creditOperation, equivalentCredit, creditCet } from './creditComparison
 import { cgDate, cgAddDays, cgInitialForm, parseContaGarantidaForm } from './contaGarantida.js'
 import { finimpCost, FINIMP_TERMS } from './finimpComparison.js'
 import { discountOperation } from './analiseDesconto.js'
-import { simular, PORTES, CUSTOS, COMPOSICOES, PERIODICIDADES, FGI, taxaFinal, IOF_ZERO } from './finameMateriais.js'
+import { simular, periodos30Datas, vencimentoDia15, PORTES, CUSTOS, COMPOSICOES, PERIODICIDADES, FGI, taxaFinal, IOF_ZERO } from './finameMateriais.js'
 import { resolveCreditIof } from './iofRules.js'
 
 export const MAX_COLUMNS = 5
@@ -159,7 +159,7 @@ function bndes(col, p, ctx) {
     iof = { fixed: tax.additional, daily: tax.daily, maxDays: tax.maxDays }
   }
   const periods = Number(col.bPeriod)
-  const sim = simular({ valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc } , dataLiberacao: new Date(`${p.start}T12:00:00`), feriados: {} })
+  const sim = simular({ valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc, periodos: periodos30Datas(new Date(`${p.start}T12:00:00`), vencimentoDia15(new Date(`${p.start}T12:00:00`), p.term)) } , dataLiberacao: new Date(`${p.start}T12:00:00`), feriados: {} })
   if (!sim.ok) return fail(sim.erros?.[0] ?? 'Confira as condições do BNDES.')
   const rows = []
   // Calendário real do BNDES (dia 15 ou próximo dia útil, juros por dias corridos); IOF cobrado todo na liberação.
@@ -177,7 +177,7 @@ function bndes(col, p, ctx) {
     rateLabel: `${CUSTOS.find(x => x.id === col.bLine)?.label ?? col.bLine} · taxa final ${sim.taxa.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% a.a.`,
     systemLabel: `${p.system.toUpperCase()} · ${rows.length} pagamento(s)`,
     graceNote: p.grace > 0 ? `Carência de ${p.grace} mes(es) com juros pagos (convenção BNDES)` : '',
-    notes: [...sim.avisos, 'Cronograma em meses iguais a partir da liberação; não reproduz o calendário contratual do agente.'],
+    notes: [...sim.avisos, 'Vencimentos no dia 15 ou próximo dia útil e juros por dias corridos, como na calculadora BNDES; o calendário contratual do agente prevalece.'],
   })
   return result
 }

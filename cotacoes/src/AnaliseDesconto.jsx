@@ -9,7 +9,7 @@ const brl = (value) => value == null ? '—' : value.toLocaleString('pt-BR', { s
 const number = (value) => value == null ? '—' : value.toLocaleString('pt-BR')
 const pct = (value) => `${(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 // CET anual (decimal) com o equivalente mensal composto.
-const cetText = (cet) => cet == null ? '—' : `${pct(cet)} a.a.`
+const cetText = (cet) => cet == null ? 'Não mensurável' : `${pct(cet)} a.a.`
 const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(cet) / 12))} a.m.`
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
 const CET_HELP = 'CET (Resolução CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido liberado aos pagamentos, em dias corridos/365. No desconto, líquido = nominal − juros − IOF − TAC − tarifa de títulos; o pagamento é o nominal de cada título na data de pagamento.'

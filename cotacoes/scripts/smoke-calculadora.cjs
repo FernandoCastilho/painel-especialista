@@ -7,20 +7,18 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
 // 06/03 sáb → 08/03; 06/06 dom → 07/06; 06/11/2027 sáb → 08/11. Dias corridos desde 06/11/2026.
 const giroOracle = (system, principal = 100000, daily = 0.0082) => {
   const days = [31, 61, 96, 122, 151, 181, 213, 242, 273, 304, 334, 367]
+  // Sem carência: o dia a mais do 1º vencimento (06/12 domingo → 07/12) é cobrado na própria 1ª parcela.
   const r = d => Math.pow(1.02, d / 30) - 1
   const periods = days.map((d, k) => d - (k ? days[k - 1] : 0))
-  let paid = 0, interest = 0, iof = principal * 0.0038, payments = []
-  if (system === 'price') {
-    // 1º vencimento a 31 dias: 1 dia de juros capitalizado no saldo de abertura; IOF sobre a parte do principal original.
-    const opening = principal * Math.pow(1.02, 1 / 30), eff = periods.map((p, k) => (k ? p : p - 1))
-    let disc = 0, acc = 1; for (const p of eff) { acc /= 1 + r(p); disc += acc }
-    const pmt = opening / disc; let bal = opening; interest = opening - principal
-    eff.forEach((p, k) => { const j = bal * r(p); const a = pmt - j; interest += j; bal -= a; iof += a * principal / opening * Math.min(days[k], 365) * daily / 100; payments.push(pmt) })
-  } else {
-    const opening = principal * Math.pow(1.02, 1 / 30); let bal = opening; interest = opening - principal
-    periods.forEach((p, k) => { const j = bal * r(k ? p : p - 1); const a = opening / 12; interest += j; bal -= a; iof += principal / 12 * Math.min(days[k], 365) * daily / 100; payments.push(a + j) })
-  }
-  paid = payments.reduce((s, v) => s + v, 0)
+  let interest = 0, iof = principal * 0.0038, bal = principal
+  const payments = []
+  let pmt = 0
+  if (system === 'price') { let disc = 0, acc = 1; for (const p of periods) { acc /= 1 + r(p); disc += acc } pmt = principal / disc }
+  periods.forEach((p, k) => {
+    const j = bal * r(p), a = system === 'price' ? pmt - j : principal / 12
+    interest += j; bal -= a; iof += a * Math.min(days[k], 365) * daily / 100; payments.push(a + j)
+  })
+  const paid = payments.reduce((s, v) => s + v, 0)
   return { first: payments[0], last: payments.at(-1), interest, iof, total: paid + iof }
 }
 

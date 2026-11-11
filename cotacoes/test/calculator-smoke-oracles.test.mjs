@@ -22,7 +22,7 @@ for (const script of ['smoke-calculadora.cjs', 'smoke-calculator-layout.cjs']) {
       assert.ok(Math.abs(result.total - expected.total) < 1e-7)
       assert.ok(Math.abs(result.interest - expected.interest) < 1e-7)
     }
-    assert.equal(oracle('price').iof.toFixed(2), '2060.41')
+    assert.equal(oracle('price').iof.toFixed(2), '2061.35') // dia extra do ajuste a dia útil cobrado na 1ª parcela, sem capitalizar
     assert.equal(oracle('sac').iof.toFixed(2), '2001.55')
     // Os recálculos antigos (meses iguais) não podem voltar sem aviso.
     assert.notEqual(oracle('price').iof.toFixed(2), '2054.86')

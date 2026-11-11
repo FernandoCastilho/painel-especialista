@@ -26,7 +26,8 @@ export function creditCet(net, rows) {
   if (pv(hi) > net) return null
   for (let i = 0; i < 180; i++) { const mid = (lo + hi) / 2; if (pv(mid) > net) lo = mid; else hi = mid }
   const rate = Math.expm1((lo + hi) / 2)
-  return Number.isFinite(rate) && Math.abs(pv(Math.log1p(rate)) - net) < 0.001 ? rate : null
+  // Acima de 1.000% a.a. o resultado deixa de ser informativo (ex.: tarifa quase igual ao valor): tratado como não mensurável.
+  return Number.isFinite(rate) && rate <= 10 && Math.abs(pv(Math.log1p(rate)) - net) < 0.001 ? rate : null
 }
 export function creditOperation(p) {
   const { value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false,
@@ -48,7 +49,9 @@ export function creditOperation(p) {
   const logFactor = (from, to) => rateType === 'fixed' ? Math.log1p(monthly) * days(from, to) / 30
     : (Math.log1p(Math.expm1(Math.log1p(cdi / 100) / 252) * cdiPercent / 100) + Math.log1p(monthly) * 12 / 252) * creditBusinessDays(from, to, holidays)
   // First due beyond 30 civil days is a capitalized grace period. Bullet uses its sole maturity instead.
-  const graceDays = system === 'bullet' ? 0 : Math.max(0, dates[0].days - 30)
+  // Carência capitalizada só quando o 1º vencimento contratado passa de 30 dias. Dias a mais vindos do ajuste para dia útil
+  // são cobrados na própria 1ª parcela (juros pelos dias reais do período), sem capitalizar no saldo.
+  const graceDays = system === 'bullet' ? 0 : Math.max(0, Math.min(raw[0].days, dates[0].days) - 30)
   const graceEnd = cgAddDays(start, graceDays)
   const opening = value * Math.exp(logFactor(start, graceEnd))
   let prior = graceEnd

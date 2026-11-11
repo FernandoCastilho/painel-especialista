@@ -151,3 +151,19 @@ test('menor CET entre colunas usa o CET regulatório, não o custo com CDI proje
   assert.ok(results[1].cet < results[0].cet && results[0].cet < results[1].projectedCost)
   assert.equal(m.highlights(results).lowestCet, 1)
 })
+
+test('coluna BNDES dá o mesmo CET da calculadora BNDES, com ECG contado pelas datas', async () => {
+  const { periodos30Datas, vencimentoDia15 } = await import('../src/finameMateriais.js')
+  const r = run(col('bndes', { bFgi: '80', bTac: '2.600,00' }))
+  assert.equal(r.ok, true, r.error)
+  const release = new Date('2026-11-10T12:00:00')
+  const periods = periodos30Datas(release, vencimentoDia15(release, 24))
+  const sim = simular({ valor: 500000, participacao: 100, prazo: 24, carencia: 0, custo: 'tfb', custoFinanceiro: 10, taxaBndes: 1.25, taxaAgente: 3, sistema: 'price', periodicidade: 1, composicao: 'capitalizada', iof: IOF_ZERO, tac: 2600, fgi: { percentual: 80, incorporar: false, periodos: periods }, dataLiberacao: release, feriados: {} })
+  assert.ok(Math.abs(r.cet * 100 - sim.cet.anual) < 1e-6, `${r.cet * 100} × ${sim.cet.anual}`)
+})
+
+test('CET acima de 1.000% a.a. é não mensurável, sem número absurdo', async () => {
+  const { creditCet } = await import('../src/creditComparison.js')
+  assert.equal(creditCet(1, [{ days: 30, payment: 100000 }]), null)
+  assert.ok(creditCet(90000, [{ days: 365, payment: 100000 }]) > 0.11)
+})
