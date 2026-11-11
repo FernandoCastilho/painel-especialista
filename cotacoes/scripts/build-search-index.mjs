@@ -9,6 +9,7 @@ export const SEARCH_PAGES = {
   'FinameMateriais.jsx':['calculadora/finame-materiais','BNDES Finame Materiais: taxas, carência e parcelas'],
   'GoogleTrends.jsx':['resumo','Google Trends: interesse de busca, crédito, BNDES, Selic, custos e reforma tributária'],
   'ContaGarantida.jsx':['calculadora/conta-garantida','Conta Garantida: utilização, amortização, juros e IOF'],
+  'OperacaoDi.jsx':['calculadora/operacao-di','Operação x DI: pré, % do CDI ou CDI + spread contra a curva DI'],
   'CreditComparison.jsx':['calculadora/comparador-credito','Comparador de Crédito: propostas, CET e garantias'],
   'AnaliseDesconto.jsx':['calculadora/analise-desconto','Análise de desconto: títulos e capital de giro Price'],
   'Bancos.jsx':['bancos','Bancos — Basileia, carteiras PJ e PF, provisões e inadimplência'],

@@ -2,6 +2,9 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '11/11/2026', resumo: 'Nova calculadora Operação x DI: compara pré, % do CDI ou CDI + spread com o DI projetado pela curva B3', items: [
+    'Calculadoras > Operação x DI: informe valor, tipo de taxa (pré ao ano, ao mês ou no período; % do CDI; CDI + spread), início e vencimento. A tela mostra, lado a lado com o DI projetado pela curva DI x pré da B3, a taxa no período, a taxa ao ano (252 dias úteis), juros ou rendimento e valor no vencimento; a diferença em R$ e em bps; e os equivalentes em % do CDI e CDI + spread. Escolha se a operação é crédito (custo) ou aplicação (rendimento). Pagamento único no vencimento, sem IOF, IR e tarifas: não é CET.',
+  ] },
   { date: '10/11/2026', resumo: 'Menos pop-ups: Panorama e Conceito do dia abrem só por clique, no Mercado; Finame mostra os números principais no topo do resultado', items: [
     'BNDES > Moedas: cotação diária da TFBD (Taxa Fixa BNDES em Dólar, operações indiretas), nas três faixas de prazo: TFBD24.120 (TD1), TFBD72.120 (TD2) e TFBD120.120 (TD3). É só a taxa em % ao ano; o saldo do contrato também acompanha o dólar (604).',
     'Garantia FGI na calculadora BNDES Finame e no comparador de crédito: percentual garantido só em múltiplos de 10 (10% a 80%), crédito garantido limitado a R$ 20 milhões por cliente em cada agente e recusa em linha com TLP capitalizada ou para grande empresa, conforme o Regulamento do FGI Tradicional (Circular SUP/ADIG 62/2026). A ajuda do ECG explica por que o valor parece alto e traz exemplos.',

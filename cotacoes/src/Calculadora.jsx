@@ -14,6 +14,7 @@ import Help from './CalculatorHelp.jsx'
 import './CalculatorLayout.css'
 import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
 import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
+import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
 import './CalculatorTheme.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -33,6 +34,7 @@ function GiroIcon() {
 
 const CALCS = [
   { id: 'comparador-credito', title: 'Comparador de Crédito', sub: 'De 2 a 5 modalidades lado a lado: custo, CET e fluxo', Icon: CreditIcon },
+  { id: 'operacao-di', title: 'Operação x DI', sub: 'Pré, % do CDI ou CDI + spread contra o DI da curva B3', Icon: OperacaoDiIcon },
   { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'finame-materiais', title: 'BNDES', sub: 'Simular, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
@@ -174,6 +176,7 @@ export default function Calculadora({ view, onView }) {
   if (view === 'finimp') return <FinimpComparacao onBack={() => onView('')} />
   if (view === 'conta-garantida') return <ContaGarantida onBack={() => onView('')} />
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
+  if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
