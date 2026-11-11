@@ -45,5 +45,7 @@
 .mascot-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media print{.mascot-tray{display:none!important}}
 
+/* Telas estreitas: espaço no fim da página para o último botão rolar para cima da coruja. */
+@media(max-width:999px){body:has(.mascot-tray:not(.mascot-tray-hidden))::after{content:'';display:block;height:210px}}
 /* Reserve the default desktop parking area so the assistant cannot cover tools. */
 @media(min-width:1000px){body:has(.mascot-tray:not(.mascot-tray-hidden)) main.app{box-sizing:border-box;padding-right:174px}}
