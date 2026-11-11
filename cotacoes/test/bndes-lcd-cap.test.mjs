@@ -172,3 +172,11 @@ test('snapshot oficial datado preserva9 pontos negativos e outras séries; não 
   assert.equal(lcdQuoteAt(data, '2026-11-06', '2026-12-01'), null)
   assert.equal(lcdQuoteAt(data, '2025-01-31', '2026-11-05'), null)
 })
+
+test('UI LCD oferece IOF zero como padrão, PJ e Simples/MEI com confirmação, e avisa que não verifica o enquadramento', () => {
+  const ui = readFileSync(new URL('../src/BndesLcdCap.jsx', import.meta.url), 'utf8')
+  assert.match(ui, /useState\('zero'\)/); assert.match(ui, /BNDES_PROFILE_IOF_OPTIONS/)
+  assert.match(ui, /Confirmo a opção pelo Simples\/MEI/); assert.match(ui, /o painel não verifica/)
+  assert.match(ui, /art\. 8º, IX/); assert.match(ui, /IOF na liberação/)
+  assert.doesNotMatch(ui, /não há IOF nesta calculadora|Sem IOF/i)
+})

@@ -22,7 +22,7 @@ A apuração da CG na UI fixa taxa **mensal, proporcional, divisor 30**. A taxa 
 - Lançamentos na mesma data são compensados antes do fechamento, sem ordem intradia. Amortização superior ao principal utilizado bloqueia o resultado.
 - Saldo[d] = saldo[d−1] + utilizações[d] − amortizações[d].
 - Juros diários na UI = saldo devedor no fechamento × taxa mensal/100/30.
-- Para juros, escolha dias corridos ou segunda a sexta, excluindo os feriados que informar. Não há calendário bancário certificado nem importação automática de feriados. **IOF continua em dias corridos.**
+- Para juros, escolha dias corridos ou dias úteis. Dias úteis (desde 11/11/2026) = segunda a sexta, menos os feriados nacionais do calendário do painel (`isBusinessDay(dia, 'BR')` de `holidays.js`, o mesmo do Comparador: inclui Carnaval, Sexta-feira Santa e Corpus Christi) e menos os feriados extras que você informar (locais ou do contrato). Antes, só os feriados digitados eram descontados. **IOF continua em dias corridos.**
 - IOF diário = saldo devedor de fechamento × alíquota diária.
 - IOF adicional = max(0, saldo[d] − saldo[d−1]) × alíquota adicional. Amortizar não estorna IOF; reutilizar o crédito pode gerar novo adicional.
 - Dez dias no modo único produzem dez saldos positivos e onze linhas, sendo a última de quitação com zero. Uso e quitação no mesmo dia resultam em fechamento zero nesta convenção.
@@ -54,6 +54,7 @@ Os dois exemplos principais estão vinculados a `test/calculator-doc-examples.te
 - R$ 100 mil utilizados em 06/11/2026 por dez dias, 3% a.m. proporcional/30, PJ: juros R$ 1.000; IOF diário R$ 82; adicional R$ 380; custo R$ 1.462; saldo final zero.
 - O mesmo principal por quarenta dias: juros R$ 4.000; IOF diário R$ 328; adicional ainda R$ 380; custo R$ 4.708. Saldo não cresce com encargos nem a extensão reaplica adicional.
 - Em quatrocentos dias adimplentes, R$ 100 mil geram IOF diário R$ 3.280, sem corte genérico em 365 dias.
+- Dias úteis: R$ 100 mil utilizados de 18/11/2026 a 23/11/2026, 3% a.m., PJ. Saldo em cinco dias (18 a 22); juros só em 18 e 19, porque 20/11 é feriado nacional e 21 e 22 são fim de semana: juros R$ 200 (antes, sem digitar o feriado, R$ 300); IOF diário R$ 41 (cinco dias corridos); adicional R$ 380.
 
 `node --test test/conta-garantida*.test.mjs test/calculator-doc-examples.test.mjs` verifica fórmulas, calendários, feriados, saques e amortizações, Simples, limites, não capitalização e interação React. Testes em memória não comprovam foco, layout ou uso por leitor de tela; ver o relatório da revisão correspondente para o que foi realmente executado.
 

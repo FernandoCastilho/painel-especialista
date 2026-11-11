@@ -34,6 +34,12 @@ test('CET da conta garantida (art. 6º): exemplo da documentação confere com o
   assert.match(text, /conferida no texto oficial da norma/)
 })
 
+test('Conta garantida em dias úteis: exemplo da documentação desconta o feriado nacional de 20/11', () => {
+  const r = parseContaGarantidaForm({ ...cgInitialForm('2026-11-18'), amount: '100.000,00', rate: '3', duration: '5', dayCount: 'business' }).result
+  near(r.totals.interest, 200); near(r.totals.dailyIof, 41); near(r.totals.additionalIof, 380)
+  assert.match(doc('conta-garantida'), /juros R\$ 200 \(antes, sem digitar o feriado, R\$ 300\); IOF diário R\$ 41/)
+})
+
 test('F5: exemplo atual do desconto usa juros e IOF automáticos', () => {
   const r = discountOperation({ date: '2026-11-05', titleRows: [{ value: 225600.43, count: 30, dueDate: '2026-12-05' }], rate: 1.83, convention: 'commercial30', taxProfile: 'pj', feeMode: 'total', fee: 564, tac: 260 })
   assert.equal(r.ok, true)

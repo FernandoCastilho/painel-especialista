@@ -2,6 +2,7 @@ import { resolveCreditIof } from './iofRules.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
 import { creditCet } from './creditComparison.js'
+import { isBusinessDay } from './holidays.js'
 
 export const CG_LEGAL_CHECKED_AT = '2026-11-05'
 export const CG_PRESET_FROM = '2025-07-17'
@@ -82,7 +83,8 @@ export function simulateContaGarantida(input) {
     if (payment > balance + draw + 0.0000001) return fail('Amortização em ' + date + ' supera o saldo utilizado. Não há saldo credor nesta simulação.')
     balance = Math.max(0, balance + draw - payment)
     const dow = new Date(t).getUTCDay()
-    const countsInterest = dayCount === 'calendar' || (dow !== 0 && dow !== 6 && !nonworking.has(date))
+    // Dias úteis: segunda a sexta, fora os feriados nacionais do calendário do painel e os feriados extras informados.
+    const countsInterest = dayCount === 'calendar' || (dow !== 0 && dow !== 6 && !nonworking.has(date) && isBusinessDay(date, 'BR'))
     const interest = countsInterest ? balance * dailyRate : 0
     // User scope: interest and IOF are paid separately, never added to utilized principal.
     const additionalBase = Math.max(0, balance - previousClose)
@@ -152,7 +154,7 @@ export function parseContaGarantidaForm(form) {
   params.dayCount = form.dayCount
   params.holidays = form.dayCount === 'business' && form.holidays.trim() ? form.holidays.trim().split(/[\s,;]+/) : []
   if (params.holidays.some(d => !cgDate(d))) errors.holidays = 'Use datas reais no formato AAAA-MM-DD, separadas por vírgula ou linha.'
-  if (form.dayCount === 'business') warnings.push('Dias úteis = segunda a sexta, menos os feriados que você informou. Não há calendário bancário automático.')
+  if (form.dayCount === 'business') warnings.push('Dias úteis = segunda a sexta, menos os feriados nacionais do calendário do painel e os feriados extras que você informou. Feriados locais do contrato precisam ser informados.')
   const profile = CG_TAX_PROFILES.find(p => p.id === form.taxProfile)
   if (!profile) errors.taxProfile = 'Escolha a referência de IOF.'
   params.taxProfile = form.taxProfile
