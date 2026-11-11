@@ -1,6 +1,7 @@
 // Modalidade LCDCAP isolada. Não reutiliza nem altera regras de Finame, TFC ou TLP.
 // Projeção explícita: cenário de Selic informado, nunca o índice 143 como taxa anual.
 import { creditCet } from './creditComparison.js'
+import { bndesProfileIof } from './bndesProfileIof.js'
 export const LCDCAP_SOURCE = 'https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/04-22Cir13-Anexo-IV-Condicoes-a-Serem-Observadas-na-Contratacao.pdf'
 export const LCDCAP_PROFILE = Object.freeze({ id: 'lcdcap', version: '2026-06-24', section: '5', basis: 252, selicCode: '143', lcdCode: 'LD1', status: 'projection-not-contract-validated' })
 const DAY = 86400000
@@ -113,7 +114,7 @@ function flowCet(netCents, releaseDate, rows) {
 
 export function simulateLcdCap(input) {
   try {
-    fields(input, ['mode', 'principalCents', 'releaseFeeCents', 'contractDate', 'releaseDate', 'ld1', 'spreads', 'selicScenario', 'schedule'], 'Operação')
+    fields(input, ['mode', 'principalCents', 'releaseFeeCents', 'contractDate', 'releaseDate', 'ld1', 'spreads', 'selicScenario', 'schedule', 'iof'], 'Operação')
     need(input.mode === 'projection', 'UNSUPPORTED_MODE', 'Somente projeção com Selic informada está habilitada; o índice 143 não substitui a série diária exigida no cálculo contratual.')
     const principal = money(input.principalCents, 'Principal', 1)
     // Tarifa opcional paga na liberação: só reduz o valor líquido do CET; não altera juros nem parcelas.
@@ -160,17 +161,24 @@ export function simulateLcdCap(input) {
     // Mesmas datas, mesmos DU e mesma base 252 dos juros; só a Selic vai a zero.
     let fixedRows = null, fixedUnavailable = null
     try { fixedRows = projectRows(principal, events, input.releaseDate, '0', fixedAnnualPct, fixedRateScaled).rows } catch (e) { if (!(e instanceof InputError)) throw e; fixedUnavailable = e.message }
-    const netReleaseCents = principal - releaseFee
+    // IOF (Decreto 6.306/2007, art. 7º): cobrado todo na liberação; só reduz o valor líquido do CET, nas duas linhas.
+    // Base diária = principal de cada amortização, sem a Selic capitalizada.
+    const tax = bndesProfileIof({ iof: input.iof, principalCents: principal, releaseDate: input.releaseDate, events })
+    need(tax.ok, tax.code, tax.message)
+    const iof = tax.iof
+    need(releaseFee + iof.totalCents < principal, 'INVALID_FEE', 'Tarifa e IOF na liberação precisam ser menores que o valor liberado.')
+    const netReleaseCents = principal - releaseFee - iof.totalCents
     const fixedAnnualRate = fixedRows ? flowCet(netReleaseCents, input.releaseDate, fixedRows) : null
     const projectedAnnualRate = flowCet(netReleaseCents, input.releaseDate, rows)
-    const cet = { method: 'CMN 4.881/2020, art. 4º · dias corridos/365 desde a liberação', netReleaseCents, releaseFeeCents: releaseFee, fixedComponents: ['LD1', 'remuneração BNDES', 'intermediação', 'remuneração do agente'], excludedIndex: 'Selic', fixedAnnualRate, projectedAnnualRate, fixedUnavailable }
+    const cet = { method: 'CMN 4.881/2020, art. 4º · dias corridos/365 desde a liberação', netReleaseCents, releaseFeeCents: releaseFee, iofCents: iof.totalCents, fixedComponents: ['LD1', 'remuneração BNDES', 'intermediação', 'remuneração do agente'], excludedIndex: 'Selic', fixedAnnualRate, projectedAnnualRate, fixedUnavailable }
     need([totalInterest, totalSelic, totalAmortization, totalPayments].every(value => Number.isSafeInteger(value) && value <= MAX_CENTS), 'MONEY_OVERFLOW', 'Totais fora do limite técnico.')
-    return { ok: true, status: LCDCAP_PROFILE.status, profile: LCDCAP_PROFILE, source: LCDCAP_SOURCE, fixedAnnualPct, annualSelicScenarioPct: annualSelic, rows, totals: { principalCents: principal, capitalizedSelicCents: totalSelic, interestCents: totalInterest, amortizationCents: totalAmortization, paymentCents: totalPayments, closingCents: balance }, cet, error: null, warnings: [
+    return { ok: true, status: LCDCAP_PROFILE.status, profile: LCDCAP_PROFILE, source: LCDCAP_SOURCE, fixedAnnualPct, annualSelicScenarioPct: annualSelic, rows, iof, totals: { principalCents: principal, capitalizedSelicCents: totalSelic, interestCents: totalInterest, amortizationCents: totalAmortization, paymentCents: totalPayments, closingCents: balance }, cet, error: null, warnings: [
       'Projeção de Selic constante informada pelo usuário. Não representa taxas futuras oficiais nem conferência contratual.',
       'A Selic é capitalizada no saldo; remunerações e LD1 são exigíveis nas cobranças. A soma das remunerações com LD1 é fixada para toda a simulação, em base 252.',
       'Datas, dias úteis, carência e amortizações são entradas do cronograma informado; não há calendário bancário certificado nem ajuste automático de vencimentos.',
-      'CET pela Res. CMN 4.881/2020: sem Selic (art. 5º), em dias corridos/365. Sem IOF, seguros ou outras despesas; tarifa só se informada. Arredondamentos de projeção em centavos não certificam a memória contratual.',
+      'CET pela Res. CMN 4.881/2020: sem Selic (art. 5º), em dias corridos/365. IOF e tarifa saem do valor líquido na liberação; sem seguros ou outras despesas. Arredondamentos de projeção em centavos não certificam a memória contratual.',
+      iof.profile === 'zero' ? 'IOF zero: premissa de recursos BNDES/FINAME elegíveis (Decreto 6.306/2007, art. 8º, IX). O painel não verifica o enquadramento nem se a alíquota zero alcança esta linha LCD; confirme com a instituição.' : 'IOF: diário sobre o principal de cada amortização (sem a Selic capitalizada), em dias corridos desde a liberação, com teto de 365 dias, mais o adicional sobre o valor. Tudo cobrado na liberação.',
       'A série 143 é exibida como índice histórico, não como percentual anual nem como substituto exato do produto diário da Selic.'
     ] }
-  } catch (e) { if (!(e instanceof InputError)) throw e; return { ok: false, status: 'blocked', rows: [], totals: null, cet: null, error: { code: e.code, message: e.message } } }
+  } catch (e) { if (!(e instanceof InputError)) throw e; return { ok: false, status: 'blocked', rows: [], iof: null, totals: null, cet: null, error: { code: e.code, message: e.message } } }
 }

@@ -211,10 +211,13 @@ test('CET do art. 6º: IOF adicional na liberação, limite + juros + IOF diári
 test('CET do art. 6º segue a contagem de dias úteis da tela e independe do valor utilizado', () => {
   const a = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business', holidays: '2026-11-20' })).cet
   const b = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business', holidays: '2026-11-20', amount: '1.000' })).cet
-  // De 05/11/2026 a 04/12/2026: 22 dias de segunda a sexta, menos o feriado informado = 21 dias com juros.
+  // De 05/11/2026 a 04/12/2026: 22 dias de segunda a sexta, menos 20/11 (nacional e também informado) = 21 dias com juros.
   const payment = 500000 + 500000 * 0.02 / 30 * 21 + 500000 * 0.000082 * 30
   close(a.payment, payment, 1e-6); close(a.annual, cetByHand(500000 - 500000 * 0.0038, payment, 30), 1e-9)
   assert.deepEqual(a, b)
+  // Sem digitar o feriado, o calendário nacional do painel já tira 20/11: mesmo CET.
+  const c = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business' })).cet
+  assert.deepEqual(c, a)
 })
 test('CET do art. 6º: limite inválido bloqueia, saldo acima do limite avisa, Simples respeita o valor contratual', () => {
   assert.match(parseContaGarantidaForm(form({ limit: '0' })).errors.limit, /maior que zero/)
