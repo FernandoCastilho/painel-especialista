@@ -308,12 +308,26 @@ export function evaluateAll(columns, shared, ctx) {
   return columns.map(col => evaluateColumn(col, shared, ctx))
 }
 
+// Tipo de taxa para comparar CET (decisão de Fernando em 11/11/2026): prefixado só com prefixado, pós-fixado (CDI, IPCA) só com
+// pós-fixado e conta garantida (art. 6º, 30 dias sobre o limite) só com conta garantida. O CET regulatório do pós-fixado deixa o
+// índice de fora (art. 5º), por isso não é comparável com o de um prefixado; entre tipos diferentes, vale o menor custo em reais.
+export const CET_GROUPS = Object.freeze({ pre: 'prefixados', pos: 'pós-fixados', rotativo: 'contas garantidas' })
+export const cetGroup = r => r.modality === 'conta-garantida' ? 'rotativo' : r.floating ? 'pos' : 'pre'
+
 // Destaques objetivos, sem declarar vencedor absoluto: só os menores valores entre as colunas válidas.
 export function highlights(results) {
   const ok = results.map((r, i) => ({ r, i })).filter(x => x.r.ok)
   const cet = ok.filter(x => x.r.cet !== null)
+  const groups = [...new Set(ok.map(x => cetGroup(x.r)))]
+  const mixed = groups.length > 1
+  const lowestCetByGroup = {}
+  for (const g of groups) {
+    const members = cet.filter(x => cetGroup(x.r) === g)
+    if (members.length > 1) lowestCetByGroup[g] = members.reduce((a, b) => b.r.cet < a.r.cet ? b : a).i
+  }
   return {
-    lowestCet: cet.length > 1 ? cet.reduce((a, b) => b.r.cet < a.r.cet ? b : a).i : null,
+    mixed, lowestCetByGroup,
+    lowestCet: !mixed && cet.length > 1 ? cet.reduce((a, b) => b.r.cet < a.r.cet ? b : a).i : null,
     lowestCost: ok.length > 1 ? ok.reduce((a, b) => b.r.cost < a.r.cost ? b : a).i : null,
     lowestMaxPayment: ok.length > 1 ? ok.reduce((a, b) => b.r.maxPayment < a.r.maxPayment ? b : a).i : null,
     unmeasurable: ok.filter(x => x.r.cet === null).map(x => x.i),

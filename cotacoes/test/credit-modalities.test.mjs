@@ -151,7 +151,13 @@ test('menor CET entre colunas usa o CET regulatório, não o custo com CDI proje
   // Prefixado a 1,10% a.m. fica entre o CET da parte fixa do pós-CDI e o custo com CDI projetado.
   const results = m.evaluateAll([col('giro-pre', { rate: '1,10' }), col('giro-cdi')], shared, { cdi: 14.9 })
   assert.ok(results[1].cet < results[0].cet && results[0].cet < results[1].projectedCost)
-  assert.equal(m.highlights(results).lowestCet, 1)
+  // Decisão de 11/11/2026: tipos diferentes não disputam o selo de menor CET; o destaque entre eles é o custo em reais.
+  const h = m.highlights(results)
+  assert.equal(h.mixed, true); assert.equal(h.lowestCet, null); assert.deepEqual(h.lowestCetByGroup, {})
+  // Dentro do mesmo tipo, o selo continua: dois pós-fixados disputam entre si pelo CET da parte fixa.
+  const pos = m.evaluateAll([col('giro-cdi'), col('giro-cdi', { rate: '0,20' }), col('giro-pre')], shared, { cdi: 14.9 })
+  const hp = m.highlights(pos)
+  assert.equal(hp.lowestCetByGroup.pos, 1); assert.equal(hp.lowestCetByGroup.pre, undefined)
 })
 
 test('coluna BNDES dá o mesmo CET da calculadora BNDES, com ECG contado pelas datas', async () => {
