@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { nbr5891 } from './format.js'
 import { createPortal } from 'react-dom'
 import { captureBndesPrint } from './bndesPrint.js'
 import BndesIcon from './BndesIcon.jsx'
 import './BndesPrint.css'
 const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const amount = value => value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const percent = (value, digits = 2) => `${value.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits })}% a.a.`
+const percent = (value, digits = 2) => `${nbr5891(value, digits).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits })}% a.a.`
 const day = value => value ? value.split('-').reverse().join('/') : 'Indisponível'
 
 export default function BndesPrint(props) {

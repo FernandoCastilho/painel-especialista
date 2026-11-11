@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { nbr5891 } from './format.js'
 import './Calculadora.css'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
@@ -88,7 +89,7 @@ function CapitalDeGiro({ onBack }) {
     { key: 'cet', label: 'CET', cell: (r) => ({ main: `${pct2(r.cet * 100)} a.a.`, sub: `${pct2(Math.expm1(Math.log1p(r.cet) / 12) * 100)} a.m.` }) },
   ]
   const sys = SYSTEMS.find((s) => s.id === system)
-  const pct2 = v => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+  const pct2 = v => `${nbr5891(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
   const field = (key, label, control) => (
     <div className="cx-field">
       <div className="cx-field-label"><label htmlFor={`cx-${key}`}>{label}</label></div>

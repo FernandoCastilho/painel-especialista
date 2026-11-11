@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url)
 const source = (await readFile(new URL('../src/BndesTlpExigivel.jsx', import.meta.url), 'utf8')).replace(/^import ['"].+\.css['"]\s*$/gm, '')
 const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
 const MoneyInput = () => null
-const deps = { './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './bndesTlpExigivel.js': engine, './bndesProfileIof.js': profileIof }
+const deps = { './format.js': await import('../src/format.js'), './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './bndesTlpExigivel.js': engine, './bndesProfileIof.js': profileIof }
 const module = { exports: {} }
 runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []

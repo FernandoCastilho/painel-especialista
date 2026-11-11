@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import { DISCOUNT_INITIAL_FORM, DISCOUNT_TERMS, TITLE_FEE_MODES, parseDiscountForm } from './analiseDesconto.js'
@@ -8,7 +9,7 @@ import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_RESSALVA } from './pracaContrato.js
 
 const brl = (value) => value == null ? '—' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const number = (value) => value == null ? '—' : value.toLocaleString('pt-BR')
-const pct = (value) => `${(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+const pct = (value) => `${nbr5891(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 // CET anual (decimal) com o equivalente mensal composto.
 const cetText = (cet) => cet == null ? 'Não mensurável' : `${pct(cet)} a.a.`
 const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(cet) / 12))} a.m.`

@@ -22,7 +22,7 @@ async function compile(file, imports = {}) {
   return module.exports
 }
 const MoneyInput = await compile('MoneyInput.jsx', { './moneyInput.js': money })
-const component = await compile('AnaliseDesconto.jsx', { './iofRules.js': iof, './MoneyInput.jsx': MoneyInput, './analiseDesconto.js': engine, './CalculatorHelp.jsx': CalculatorHelp, './pracaContrato.js': praca })
+const component = await compile('AnaliseDesconto.jsx', { './iofRules.js': iof, './MoneyInput.jsx': MoneyInput, './analiseDesconto.js': engine, './CalculatorHelp.jsx': CalculatorHelp, './pracaContrato.js': praca, './format.js': await import('../src/format.js') })
 function nodes(node) {
   if (!node || typeof node !== 'object') return []
   if (Array.isArray(node)) return node.flatMap(nodes)

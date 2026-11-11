@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { nbr5891 } from './format.js'
 import { BNDES_SLIDES, buildBndesSlides, captureBndesPresentation, presentationStep } from './bndesPresentation.js'
 import './Apresentacao.css'
 import './BndesPresentation.css'
 
 const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const percent = value => `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
+const percent = value => `${nbr5891(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 const day = value => value ? value.split('-').reverse().join('/') : 'Não informada'
 const stamp = value => new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 

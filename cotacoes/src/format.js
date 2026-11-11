@@ -16,3 +16,16 @@ export function atOrBefore(points, limit) {
   for (const p of points) { if (p[0] <= limit) found = p; else break }
   return found
 }
+
+// Arredondamento da ABNT NBR 5891, exigido para divulgar o CET com duas casas (Res. CMN 4.881/2020, art. 4º, parágrafo único, II):
+// descarta-se o excedente quando ele é menor que meia unidade da última casa e soma-se 1 quando é maior; quando é exatamente meia
+// unidade (5 seguido só de zeros), a última casa fica par. Tolerância relativa para o ruído de ponto flutuante.
+export function nbr5891(value, digits = 2) {
+  if (!Number.isFinite(value)) return value
+  const scale = 10 ** digits, scaled = value * scale, floor = Math.floor(scaled), rest = scaled - floor
+  const half = Math.abs(rest - 0.5) <= 1e-9 * Math.max(1, Math.abs(scaled))
+  const kept = half ? (floor % 2 === 0 ? floor : floor + 1) : Math.round(scaled)
+  return kept / scale
+}
+// CET em % com duas casas pela NBR 5891, no padrão brasileiro (ex.: 21,87).
+export const cetPct = (percent, digits = 2) => nbr5891(percent, digits).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits })
