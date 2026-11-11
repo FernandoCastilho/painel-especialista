@@ -2,6 +2,10 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '11/11/2026', resumo: 'Nova calculadora Empréstimo externo (4131): custo em dólar, sem proteção, com swap e com NDF', items: [
+    'Calculadoras > Empréstimo externo (4131): informe principal em dólar, taxa, câmbio, prazo e frequência dos juros. A tela calcula o custo all-in em dólar (IR na fonte com gross-up, IOF-câmbio automático pelo prazo médio, flat e fiança) e compara três caminhos em reais: sem proteção, por cenário de câmbio; com swap, em CDI + spread e % do CDI; e com NDF em cada pagamento, com custo prefixado e o ponto de equilíbrio do dólar.',
+    'No padrão da calculadora BNDES: apresentação em slides, PDF, cronograma e a aba Regras e fontes, com as regras do Banco Central, da Receita e da B3. Swap e NDF são teóricos, com DI e cupom cambial digitados: a cotação da mesa do banco prevalece.',
+  ] },
   { date: '11/11/2026', resumo: 'Comparador de Crédito: regime tributário da empresa e comparação com aplicação financeira (CDB e fundos)', items: [
     'Comparador de Crédito: a linha mestra ganha o regime tributário da empresa (Lucro Real, Presumido ou Simples) e o adicional de IRPJ. Nova linha "Custo após IRPJ/CSLL": no Lucro Real, juros, IOF e tarifas do crédito reduzem o imposto.',
     'Opção "Comparar com aplicação financeira": CDB pós ou pré e fundo de renda fixa, com o DI da curva B3 e a tributação da empresa (IR retido, come-cotas, PIS/Cofins até 2026, IOF antes de 30 dias). Mostra bruto, imposto e líquido, e em cada operação se compensa tomar o crédito e manter o caixa aplicado ou usar o caixa próprio.',

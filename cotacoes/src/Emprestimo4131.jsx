@@ -182,6 +182,7 @@ export default function Emprestimo4131({ onBack }) {
                   {field('spot', 'car', 'Câmbio (R$/US$)', input('spot', spotText, setSpotText), 'Câmbio do dia do desembolso. Converte o valor recebido e é a base do câmbio a termo.')}
                   {field('start', 'data-lib', 'Data do desembolso', input('start', start, setStart, { type: 'date', inputMode: undefined, min: '2000-01-01', max: '2100-12-31' }), 'Data em que o dinheiro entra. Os pagamentos caem no mesmo dia dos meses seguintes, sem ajuste para dia útil.')}
                   {field('freq', 'per', 'Pagamento de juros', select('freq', freq, setFreq, FREQS), 'Frequência dos juros. O principal é sempre pago no vencimento.')}
+                  {start > cgToday() && <p className="cx-hint e4-future" role="status">Desembolso em data futura: informe o câmbio esperado para esse dia, não o de hoje. O DI e o cupom também devem ser os do período a partir do desembolso.</p>}
                   <p className="fm-financed" aria-live="polite"><span>Valor líquido recebido</span><b>{loan ? brl(loan.netBrl) : '—'}</b></p>
                 </div></section>
                 <section className="fm-group fm-costs" aria-labelledby="e4-costs-h"><h3 id="e4-costs-h"><BndesIcon kind="costs" />Custos e tributos</h3><div className="fm-group-fields">
