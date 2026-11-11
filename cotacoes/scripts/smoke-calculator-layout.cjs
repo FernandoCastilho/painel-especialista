@@ -73,10 +73,12 @@ async function assertWorkspace(page, section, label) {
 
   const controls = await section.locator('input:not([type=checkbox]):not([type=hidden]), select, textarea, .fi-help > button').evaluateAll(elements => elements.filter(element => element.getClientRects().length).map(element => {
     const rect = element.getBoundingClientRect()
-    return { id: element.id || element.getAttribute('aria-label'), width: rect.width, height: rect.height }
+    // Decisão de 11/11/2026: no Finame, em tela de computador (acima de 1000px), os campos têm 36px; o "?" e as telas menores seguem com 44px.
+    const compact = !!element.closest('.cx-finame') && innerWidth > 1000 && !element.closest('.fi-help')
+    return { id: element.id || element.getAttribute('aria-label'), width: rect.width, height: rect.height, min: compact ? 36 : 44 }
   }))
   assert.ok(controls.length > 0)
-  assert.deepEqual(controls.filter(control => control.height < 43.9 || control.width < 43.9), [], `${label}: campos e ? com pelo menos 44px`)
+  assert.deepEqual(controls.filter(control => control.height < control.min - .1 || control.width < control.min - .1), [], `${label}: campos e ? com a altura mínima combinada (44px; 36px nos campos do Finame em computador)`)
   const currencyOverlaps = await section.locator('.money-wrap').evaluateAll(elements => elements.filter(element => element.getClientRects().length).filter(element => {
     const input = element.querySelector('input'), prefix = element.querySelector('i')
     return input && prefix && prefix.getBoundingClientRect().right + 4 > input.getBoundingClientRect().left + parseFloat(getComputedStyle(input).paddingLeft)
