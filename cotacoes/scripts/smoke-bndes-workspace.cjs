@@ -210,8 +210,12 @@ async function proveLastColumn(region, file) {
         assert.ok(geometry.width <= geometry.viewport + 1, JSON.stringify(geometry))
         if (width === 1440) {
           const positions = await page.locator('.fm-group').evaluateAll(groups => groups.map(group => ({ x: group.getBoundingClientRect().x, y: group.getBoundingClientRect().y })))
-          // Layout aprovado em 11/11/2026: Operação e Custos lado a lado, Pagamento embaixo; resultado na coluna da direita.
-          assert.ok(positions[1].x > positions[0].x && Math.abs(positions[1].y - positions[0].y) < 1 && positions[2].y > positions[0].y && Math.abs(positions[2].x - positions[0].x) < 1 && geometry.right > geometry.left, 'Operação e Custos na mesma linha, Pagamento embaixo e resultado à direita no desktop')
+          // Layout de 11/11/2026 (revisto a pedido do Fernando): Operação e Custos lado a lado; os itens de Pagamento e a chave
+          // de comparação ficam dentro de Custos; resultado na coluna da direita, com pelo menos 400px.
+          assert.equal(positions.length, 2, 'só Operação e Custos como blocos de entrada')
+          assert.ok(positions[1].x > positions[0].x && Math.abs(positions[1].y - positions[0].y) < 1 && geometry.right > geometry.left, 'Operação e Custos na mesma linha e resultado à direita no desktop')
+          assert.deepEqual(await page.locator('.fm-costs').evaluate(group => ['#fm-compare', '#fm-fgi', '#fm-per-l, .fm-field-per', '.fm-pills'].map(selector => !!group.querySelector(selector))), [true, true, true, true], 'comparação, FGI, juros na carência e condições fixas dentro de Custos')
+          assert.ok(await page.locator('.fm-results').evaluate(element => element.getBoundingClientRect().width) >= 400, 'coluna do resultado com pelo menos 400px no desktop')
         }
         await page.screenshot({ path: path.join(out, `${width}-${theme}-comparison.png`), fullPage: true })
         const comparisonRow = label => page.locator('.fm-comparison tbody tr, .fm-comparison-details tbody tr').filter({ has: page.getByRole('rowheader', { name: label, exact: true }) })

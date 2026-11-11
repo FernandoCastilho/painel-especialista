@@ -419,3 +419,15 @@
 .bw .fm-compare-control label,.bw .cx-finame .fm-fgi > label { min-height:44px; }
 @media (min-width:1001px) and (max-width:1240px) { .bw .cx-finame .cx-form { grid-template-columns:1fr; } }
 .bw .fm-comparison .cx-matrix thead th,.bw .fm-quote-empty .cx-matrix thead th,.bw .fm-comparison .cx-matrix th.fm-result-tfc,.bw .fm-comparison .cx-matrix th.fm-result-tfb,.bw .fm-quote-empty .cx-matrix th.fm-result-tfc,.bw .fm-quote-empty .cx-matrix th.fm-result-tfb { text-transform:none; font-variant-caps:all-small-caps; font-size:.78rem; }
+/* 11/11/2026 · Pagamento passa para dentro de Custos; a coluna do resultado ganha largura e os blocos ficam mais baixos.
+   Os campos seguem com 44px de altura (padrão de acessibilidade do painel); a altura cai nos espaços entre eles. */
+.bw .fm-workspace { grid-template-columns:minmax(0,1.35fr) minmax(360px,1fr); }
+.bw .fm-group { padding:10px 12px; }
+.bw .fm-group > h3 { padding:0 0 6px; }
+.bw .cx-finame .fm-group .fm-group-fields { gap:6px 10px; }
+.bw .cx-finame .fm-group .cx-field { gap:2px; }
+.bw .cx-finame .fm-costs .fm-field-tac,.bw .cx-finame .fm-costs .fm-field-per { grid-column:span 1; }
+.bw .fm-costs .fm-compare-control { justify-self:start; }
+.bw .cx-finame .fm-costs .fm-fgi { border-top:1px solid #e0e7f1; padding-top:4px; }
+.bw .fm-costs .fm-pills { margin:2px 0 0; }
+@media (max-width:1000px) { .bw .fm-workspace { grid-template-columns:1fr; } }
