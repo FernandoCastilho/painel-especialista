@@ -167,3 +167,22 @@ test('CET acima de 1.000% a.a. é não mensurável, sem número absurdo', async 
   assert.equal(creditCet(1, [{ days: 30, payment: 100000 }]), null)
   assert.ok(creditCet(90000, [{ days: 365, payment: 100000 }]) > 0.11)
 })
+
+test('revisão final: Comparador igual às telas próprias (TLP sem IPCA no CET, desconto em dia útil, conta garantida pelo art. 6º)', async () => {
+  // TLP capitalizada: o CET (art. 5º) não muda com o IPCA projetado; o custo com IPCA muda.
+  const tlp = ipca => run(col('bndes', { bLine: 'tlp', bIpca: ipca }))
+  const [a, b] = [tlp('0'), tlp('10')]
+  assert.equal(a.ok && b.ok, true, a.error || b.error)
+  assert.ok(Math.abs(a.cet - b.cet) < 1e-12); assert.ok(b.projectedCost > a.projectedCost)
+  assert.equal(b.projectedLabel, 'Custo com IPCA projetado')
+  // Desconto: o nominal sai na data ajustada ao dia útil, igual à Análise de desconto.
+  const d = run(col('desconto'))
+  const own = discountOperation({ titleRows: [{ value: 500000, count: 1, dueDate: d.rows[0].date }], date: '2026-11-10', rate: 1.75, convention: 'commercial30', taxProfile: 'pj', eligible: false, feeMode: 'percent', fee: 0, tac: 0 })
+  assert.equal(d.rows[0].date, own.rows[0].paymentDate)
+  // Conta garantida: CET de 30 dias sobre o limite, independente do prazo de uso.
+  const { contaGarantidaCet } = await import('../src/contaGarantida.js')
+  const short = run(col('conta-garantida', { cDays: '30' })), long = run(col('conta-garantida', { cDays: '360' }))
+  assert.ok(Math.abs(short.cet - long.cet) < 1e-12)
+  const ref = contaGarantidaCet({ limit: 500000, start: '2026-11-10', rate: 2, rateBase: 30, conversion: 'proportional', dayCount: 'calendar', holidays: [], taxProfile: 'pj', eligible: false, operationValue: 500000 })
+  assert.ok(Math.abs(long.cet - ref.annual) < 1e-12)
+})

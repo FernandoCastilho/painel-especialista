@@ -188,14 +188,14 @@ test('CET do art. 6º: sem limite pede o limite; com limite mostra 30 dias ao an
   assert.match(h.text(), /Sem CET: informe o limite contratado/)
   assert.doesNotMatch(h.text(), /CET \(art\. 6º · 30 dias sobre o limite\)/)
   await h.change('limit', '100.000')
-  // Recálculo independente: limite 100.000 liberado no dia 0; no 30º dia volta 100.000 + juros 3% × 30/30 + IOF 0,0082% × 30 + 0,38%.
-  const payment = 100000 + 3000 + 100000 * 0.000082 * 30 + 380
-  const expected = Math.pow(payment / 100000, 365 / 30) - 1
+  // Recálculo independente: limite 100.000 menos IOF adicional de 0,38% na liberação; no 30º dia volta 100.000 + juros 3% × 30/30 + IOF 0,0082% × 30.
+  const payment = 100000 + 3000 + 100000 * 0.000082 * 30
+  const expected = Math.pow(payment / (100000 - 380), 365 / 30) - 1
   const pct = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   assert.match(h.text(), /CET \(art\. 6º · 30 dias sobre o limite\)/)
   assert.ok(h.text().includes(`${pct(expected)}% a.a.`), pct(expected))
   assert.ok(h.text().includes(`${pct(Math.pow(1 + expected, 1 / 12) - 1)}% a.m.`))
-  assert.equal(pct(expected), '54,24')
+  assert.equal(pct(expected), '54,49')
   assert.match(h.text(), /Confira no texto da Resolução CMN 4\.881\/2020/)
   // O limite não muda o resultado do período.
   assert.match(h.text(), /1\.462,00/)

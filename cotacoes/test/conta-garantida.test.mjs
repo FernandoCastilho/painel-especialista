@@ -193,26 +193,27 @@ test('CET do art. 6º: limite vazio não gera CET e não muda o resultado do per
   assert.deepEqual(withLimit.result.totals, r.result.totals)
   assert.equal(withLimit.cet.ok, true)
 })
-test('CET do art. 6º: limite liberado no dia 0 e devolvido no 30º dia com juros e IOF, recálculo independente', () => {
+test('CET do art. 6º: IOF adicional na liberação, limite + juros + IOF diário no 30º dia, recálculo independente', () => {
   assert.equal(CG_CET_DAYS, 30)
   const { cet } = parseContaGarantidaForm(form({ limit: '100.000,00' }))
   // Juros proporcionais: 3% a.m. ÷ 30 × 30 dias corridos; IOF diário 0,0082% × 30 dias; adicional 0,38% sobre o limite.
   const interest = 100000 * 0.03, iof = 100000 * 0.000082 * 30 + 100000 * 0.0038
   close(cet.interest, interest, 1e-6); close(cet.iof, iof, 1e-6)
-  assert.equal(cet.net, 100000); assert.equal(cet.end, '2026-12-05')
-  close(cet.payment, 103626, 1e-6)
-  close(cet.annual, cetByHand(100000, 103626, 30), 1e-9)
-  close(cet.monthly, Math.pow(1 + cetByHand(100000, 103626, 30), 1 / 12) - 1, 1e-9)
-  assert.equal((cet.annual * 100).toFixed(2), '54.24'); assert.equal((cet.monthly * 100).toFixed(2), '3.68')
-  // Valor presente do pagamento ao CET devolve o limite liberado.
-  close(cet.payment / (1 + cet.annual) ** (30 / 365), 100000, 1e-6)
+  // O adicional de 0,38% é cobrado na utilização: sai do líquido (99.620); o pagamento do 30º dia é 100.000 + 3.000 + 246.
+  close(cet.net, 99620, 1e-6); assert.equal(cet.end, '2026-12-05')
+  close(cet.payment, 103246, 1e-6)
+  close(cet.annual, cetByHand(99620, 103246, 30), 1e-9)
+  close(cet.monthly, Math.pow(1 + cetByHand(99620, 103246, 30), 1 / 12) - 1, 1e-9)
+  assert.equal((cet.annual * 100).toFixed(2), '54.49'); assert.equal((cet.monthly * 100).toFixed(2), '3.69')
+  // Valor presente do pagamento ao CET devolve o líquido liberado.
+  close(cet.payment / (1 + cet.annual) ** (30 / 365), 99620, 1e-6)
 })
 test('CET do art. 6º segue a contagem de dias úteis da tela e independe do valor utilizado', () => {
   const a = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business', holidays: '2026-11-20' })).cet
   const b = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business', holidays: '2026-11-20', amount: '1.000' })).cet
   // De 05/11/2026 a 04/12/2026: 22 dias de segunda a sexta, menos o feriado informado = 21 dias com juros.
-  const payment = 500000 + 500000 * 0.02 / 30 * 21 + 500000 * 0.000082 * 30 + 500000 * 0.0038
-  close(a.payment, payment, 1e-6); close(a.annual, cetByHand(500000, payment, 30), 1e-9)
+  const payment = 500000 + 500000 * 0.02 / 30 * 21 + 500000 * 0.000082 * 30
+  close(a.payment, payment, 1e-6); close(a.annual, cetByHand(500000 - 500000 * 0.0038, payment, 30), 1e-9)
   assert.deepEqual(a, b)
 })
 test('CET do art. 6º: limite inválido bloqueia, saldo acima do limite avisa, Simples respeita o valor contratual', () => {

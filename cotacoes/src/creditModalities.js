@@ -4,7 +4,7 @@
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
 import { creditOperation, equivalentCredit, creditCet } from './creditComparison.js'
-import { cgDate, cgAddDays, cgInitialForm, parseContaGarantidaForm } from './contaGarantida.js'
+import { cgDate, cgAddDays, cgInitialForm, parseContaGarantidaForm, contaGarantidaCet } from './contaGarantida.js'
 import { finimpCost, FINIMP_TERMS } from './finimpComparison.js'
 import { discountOperation } from './analiseDesconto.js'
 import { simular, periodos30Datas, vencimentoDia15, PORTES, CUSTOS, COMPOSICOES, PERIODICIDADES, FGI, taxaFinal, IOF_ZERO } from './finameMateriais.js'
@@ -98,6 +98,7 @@ function finish(base) {
   return {
     ok: true, modality: base.modality, label, rateLabel, systemLabel, start, value, net, rows: flow, interest, iof, fees,
     paid, total: base.total ?? paid + (value - net), cost: paid - net, cet, projectedCost, floating,
+    projectedLabel: floating ? base.projectedLabel ?? 'Custo com CDI projetado' : null, cetLabel: floating ? base.cetLabel ?? 'CET · parte fixa (regra do BC)' : 'CET',
     firstPayment: flow[0].payment, maxPayment: Math.max(...flow.map(r => r.payment)), lastDate: flow.at(-1).date,
     guarantee: guaranteeInfo.guarantee, guaranteeValue: guaranteeInfo.guaranteeValue, coverage, notes,
     graceNote: base.graceNote ?? '', declaredCet: base.declaredCet ?? null,
@@ -159,7 +160,8 @@ function bndes(col, p, ctx) {
     iof = { fixed: tax.additional, daily: tax.daily, maxDays: tax.maxDays }
   }
   const periods = Number(col.bPeriod)
-  const sim = simular({ valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc, periodos: periodos30Datas(new Date(`${p.start}T12:00:00`), vencimentoDia15(new Date(`${p.start}T12:00:00`), p.term)) } , dataLiberacao: new Date(`${p.start}T12:00:00`), feriados: {} })
+  const simParams = { valor: p.value, participacao: part, prazo: p.term, carencia: p.grace, custo: col.bLine, custoFinanceiro: cost, taxaBndes: porte.taxa, taxaAgente: agent, ipca: ipca ?? 0, perfilTlp: col.bLine === 'tlp' ? 'tlpcap' : undefined, sistema: p.system, periodicidade: periods, composicao: col.bComp, iof, tac, fgi: fgiPct === null ? null : { percentual: fgiPct, incorporar: col.bFgiInc, periodos: periodos30Datas(new Date(`${p.start}T12:00:00`), vencimentoDia15(new Date(`${p.start}T12:00:00`), p.term)) } , dataLiberacao: new Date(`${p.start}T12:00:00`), feriados: {} }
+  const sim = simular(simParams)
   if (!sim.ok) return fail(sim.erros?.[0] ?? 'Confira as condições do BNDES.')
   const rows = []
   // Calendário real do BNDES (dia 15 ou próximo dia útil, juros por dias corridos); IOF cobrado todo na liberação.
@@ -171,8 +173,17 @@ function bndes(col, p, ctx) {
   const upfront = sim.tac + sim.iof + (sim.fgi && !sim.fgi.incorporado ? sim.fgi.ecg : 0)
   const net = sim.liberado - upfront
   if (!(net > 0)) return fail('Tarifas e IOF devem ser menores que o valor liberado.')
+  // TLP capitalizada: o IPCA é índice de preços e fica fora do CET regulatório (art. 5º). O CET é o do mesmo contrato com IPCA zero;
+  // o fluxo com o IPCA informado vira o "custo com IPCA projetado".
+  let indexed = {}
+  if (col.bLine === 'tlp') {
+    const flat = simular({ ...simParams, ipca: 0 })
+    if (!flat.ok) return fail(flat.erros?.[0] ?? 'Confira as condições do BNDES.')
+    const flatNet = flat.liberado - (flat.tac + flat.iof + (flat.fgi && !flat.fgi.incorporado ? flat.fgi.ecg : 0))
+    indexed = { cetRegulatory: creditCet(flatNet, flat.parcelas.filter(x => x.parcela > 0).map(x => ({ days: x.dias, payment: x.parcela }))), projectedLabel: 'Custo com IPCA projetado' }
+  }
   const result = finish({
-    modality: 'bndes', label: 'BNDES', start: p.start, value: sim.liberado, net, rows, interest: sim.juros + sim.correcao, iof: sim.iof,
+    ...indexed, modality: 'bndes', label: 'BNDES', start: p.start, value: sim.liberado, net, rows, interest: sim.juros + sim.correcao, iof: sim.iof,
     fees: sim.tac + (sim.fgi ? sim.fgi.ecg : 0), guaranteeInfo: info,
     rateLabel: `${CUSTOS.find(x => x.id === col.bLine)?.label ?? col.bLine} · taxa final ${sim.taxa.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% a.a.`,
     systemLabel: `${p.system.toUpperCase()} · ${rows.length} pagamento(s)`,
@@ -223,7 +234,11 @@ function contaGarantida(col, p) {
   if (!parsed.result?.ok) return fail(parsed.result?.error ?? Object.values(parsed.errors)[0] ?? 'Confira as condições da Conta Garantida.')
   const { totals } = parsed.result
   const end = cgAddDays(p.start, days)
+  // CET regulatório da conta garantida (art. 6º): 30 dias sobre o limite, igual à calculadora própria (limite = valor da coluna).
+  // O fluxo pelo prazo de uso informado vira o "custo pelo prazo de uso".
+  const cg = contaGarantidaCet({ limit: p.value, start: p.start, rate: parsed.params.rate, rateBase: parsed.params.rateBase, conversion: parsed.params.conversion, dayCount: parsed.params.dayCount, holidays: parsed.params.holidays, taxProfile: col.profile, eligible: col.eligible, operationValue: p.value })
   return finish({
+    cetRegulatory: cg.ok ? cg.annual : null, projectedLabel: 'Custo pelo prazo de uso', cetLabel: 'CET (art. 6º · 30 dias sobre o limite)',
     modality: 'conta-garantida', label: 'Conta Garantida', start: p.start, value: p.value, net: p.value,
     rows: [{ date: end, days, payment: p.value + totals.interest + totals.iof, amortization: p.value, interest: totals.interest, balance: 0 }],
     interest: totals.interest, iof: totals.iof, fees: 0, guaranteeInfo: info,
@@ -245,7 +260,7 @@ function desconto(col, p) {
   if (!r.ok) return fail(r.error)
   return finish({
     modality: 'desconto', label: 'Desconto de duplicata', start: p.start, value: r.value, net: r.net,
-    rows: [{ date: dueDate, days, payment: r.value, amortization: r.value, interest: 0, balance: 0 }], total: r.value,
+    rows: [{ date: r.rows[0].paymentDate, days: r.rows[0].days, payment: r.value, amortization: r.value, interest: 0, balance: 0 }], total: r.value, // vencimento ajustado ao dia útil, como na Análise de desconto
     interest: r.interest, iof: r.iof, fees: r.titleFee + r.tac, guaranteeInfo: info,
     rateLabel: `${col.dRate}% a.m. · ${col.dConv === 'commercial30' ? 'por fora (comercial)' : 'por dentro (racional)'}`, systemLabel: `Vencimento único · ${days} dias · ${titles} título(s)`,
     notes: ['O valor é o nominal dos títulos; os juros são descontados na liberação. No fluxo do CET, o líquido entra na data da operação e o nominal sai no vencimento.', 'Carência e amortização comuns do topo não se aplicam a esta modalidade: pagamento único.'],

@@ -26,11 +26,11 @@ test('F5: exemplos CG de dez e quarenta dias sem capitalizar encargos', () => {
 test('CET da conta garantida (art. 6º): exemplo da documentação confere com o motor', () => {
   const { cet } = parseContaGarantidaForm({ ...cgInitialForm('2026-11-06'), amount: '100.000,00', rate: '3', limit: '100.000,00' })
   assert.equal(cet.ok, true)
-  near(cet.payment, 103626)
-  near(cet.annual * 100, Math.pow(1.03626, 365 / 30) * 100 - 100)
-  assert.equal((cet.annual * 100).toFixed(2), '54.24'); assert.equal((cet.monthly * 100).toFixed(2), '3.68')
+  near(cet.payment, 103246); near(cet.net, 99620)
+  near(cet.annual * 100, Math.pow(103246 / 99620, 365 / 30) * 100 - 100)
+  assert.equal((cet.annual * 100).toFixed(2), '54.49'); assert.equal((cet.monthly * 100).toFixed(2), '3.69')
   const text = doc('conta-garantida')
-  assert.match(text, /R\$ 103\.626,00 → CET 54,24% a\.a\. \(3,68% a\.m\.\)/)
+  assert.match(text, /líquido R\$ 99\.620,00 e pagamento R\$ 103\.246,00 → CET 54,49% a\.a\. \(3,69% a\.m\.\)/)
   assert.match(text, /conferida no texto oficial da norma/)
 })
 

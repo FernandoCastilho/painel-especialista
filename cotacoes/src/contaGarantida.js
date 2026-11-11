@@ -108,8 +108,8 @@ export function simulateContaGarantida(input) {
 
 // CET regulatório da conta garantida (Res. CMN 4.881/2020, arts. 4º e 6º): o limite pactuado é liberado na data inicial e
 // devolvido em 30 dias corridos. Juros e IOF saem do próprio simulador de saldo (mesma taxa, base, contagem de dias e
-// enquadramento da tela). Como o simulador apura juros e IOF dia a dia e os trata como pagos à parte, sem descontá-los
-// do valor liberado, o líquido é o limite inteiro e juros + IOF entram no pagamento do 30º dia. Não há tarifas no motor.
+// enquadramento da tela). O IOF adicional (0,38%) é cobrado na utilização: sai do valor líquido na liberação. Juros e IOF
+// diário, apurados dia a dia, entram no pagamento do 30º dia. Não há tarifas no motor.
 export function contaGarantidaCet({ limit, start, rate, rateBase = 30, conversion = 'proportional', dayCount = 'calendar', holidays = [], taxProfile = 'pj', eligible = false, operationValue }) {
   if (!(Number.isFinite(limit) && limit > 0 && limit <= MAX_MONEY)) return fail('Informe o limite contratado, maior que zero.')
   const end = cgAddDays(start, CG_CET_DAYS)
@@ -118,10 +118,10 @@ export function contaGarantidaCet({ limit, start, rate, rateBase = 30, conversio
     operationValue: taxProfile === 'simples' ? operationValue : limit, events: [{ date: start, draw: limit, payment: 0 }], settleAllAtEnd: true })
   if (!sim.ok) return fail(taxProfile === 'simples' && /valor contratual/.test(sim.error) ? 'O limite contratado supera o valor contratual declarado para o Simples/MEI.' : sim.error)
   const { interest, dailyIof, additionalIof, iof } = sim.totals
-  const payment = limit + interest + iof
-  const annual = creditCet(limit, [{ days: CG_CET_DAYS, payment }])
+  const net = limit - additionalIof, payment = limit + interest + dailyIof
+  const annual = creditCet(net, [{ days: CG_CET_DAYS, payment }])
   if (annual === null) return fail('Não foi possível calcular o CET deste fluxo.')
-  return { ok: true, limit, net: limit, start, end, days: CG_CET_DAYS, payment, interest, dailyIof, additionalIof, iof, annual, monthly: Math.expm1(Math.log1p(annual) / 12) }
+  return { ok: true, limit, net, start, end, days: CG_CET_DAYS, payment, interest, dailyIof, additionalIof, iof, annual, monthly: Math.expm1(Math.log1p(annual) / 12) }
 }
 
 export function parseContaGarantidaForm(form) {
