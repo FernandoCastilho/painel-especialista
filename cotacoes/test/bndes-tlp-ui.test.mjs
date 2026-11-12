@@ -28,6 +28,8 @@ async function setup(t) {
   const ready = async () => {
     for (const [id, value] of Object.entries({ amount: '10.000,00', release: '2026-10-15', j: '5', jSource: 'Sintético', bndes: '2', agent: '3', ipca: '4', schedule: '2027-10-15;252;C\n2028-10-16;252;A', scheduleSource: 'Sintético' })) await set(id, value)
     for (const id of ['jConfirmed', 'scenarioConfirmed', 'scheduleConfirmed']) await set(id, true)
+    // Cenário com recursos FINAME (IOF zero, escolha explícita); o padrão da tela é PJ geral.
+    await set('iof', 'zero')
     await submit()
   }
   return { field, set, submit, ready, rows, text: () => text(render.value) }
@@ -66,13 +68,14 @@ test('TLP UI: mostra CET da parte fixa e custo com IPCA; tarifa opcional só mud
   assert.doesNotMatch(h.text(), /10,28% a\.a\./)
   await h.set('fee', '1,2,3'); await h.submit(); assert.equal(h.rows().length, 0); assert.match(h.text(), /Tarifa na liberação: Use o formato brasileiro/)
 })
-test('TLP UI: IOF começa em zero e PJ/Simples entram no líquido das duas linhas de custo', async t => {
+test('TLP UI: IOF começa em PJ geral (zero só com FINAME) e PJ/Simples entram no líquido das duas linhas de custo', async t => {
   const h = await setup(t)
-  assert.equal(h.field('iof').props.value, 'zero')
-  assert.deepEqual(nodes(h.field('iof')).filter(node => node.type === 'option').map(node => text(node)), ['Zero (recursos BNDES/FINAME elegíveis)', 'PJ geral', 'Simples/MEI'])
-  assert.match(h.text(), /o painel não verifica/)
+  assert.equal(h.field('iof').props.value, 'pj')
+  assert.deepEqual(nodes(h.field('iof')).filter(node => node.type === 'option').map(node => text(node)), ['Zero (só com recursos FINAME)', 'PJ geral (BNDES fora do FINAME)', 'Simples/MEI'])
+  assert.match(h.text(), /revogada pelo Decreto 8\.511\/2015/)
   await h.ready()
-  assert.match(h.text(), /IOF na liberação[\s\S]*?R\$\s*0,00Alíquota zero · enquadramento não verificado/)
+  assert.match(h.text(), /o painel não verifica/)
+  assert.match(h.text(), /IOF na liberação[\s\S]*?R\$\s*0,00Alíquota zero · recursos FINAME não verificados/)
   // PJ: R$ 10.000 com uma amortização a 732 dias (teto 365): 0,38% + 0,0082% × 365 = R$ 38,00 + R$ 299,30.
   await h.set('iof', 'pj'); assert.equal(h.rows().length, 0); await h.submit()
   assert.match(h.text(), /R\$\s*337,30R\$\s*38,00 adicional \+ R\$\s*299,30 diário/)
