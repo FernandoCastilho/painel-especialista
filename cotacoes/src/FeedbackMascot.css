@@ -16,40 +16,37 @@
 
 .mascot-tray{font-family:inherit;color:var(--fg)}
 /* Coruja solta na tela: sem caixa, só o desenho. Os botões pequenos aparecem com o mouse ou o foco. */
-.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:228px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 8px 0;background:transparent;border:0;pointer-events:none}
+.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:272px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 8px 0;background:transparent;border:0;pointer-events:none}
 .mascot-dock>*{pointer-events:auto}
 .mascot-dock .feedback-mascot-icon{width:112px;height:119px;filter:drop-shadow(0 10px 8px #0005)}
-.mascot-dock .feedback-trigger{width:auto;background:transparent}
+.mascot-dock .feedback-trigger{min-height:36px;width:112px;padding:0;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:700;background:var(--bg);box-shadow:0 2px 8px #0004}
 .mascot-dock .feedback-mascot-icon{animation:mascot-float 3.4s ease-in-out infinite}
-.mascot-dock .feedback-trigger>span:not(.feedback-mascot-icon){background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:11px}
 @keyframes mascot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @media(prefers-reduced-motion:reduce){.mascot-dock .feedback-mascot-icon{animation:none}}
 .mascot-tools{position:absolute;top:0;left:8px;right:8px;display:flex;justify-content:space-between;height:36px;opacity:0;transition:opacity .2s}
 .mascot-dock:hover .mascot-tools,.mascot-dock:focus-within .mascot-tools,.mascot-tools:focus-within{opacity:1}
 @media(hover:none){.mascot-tools{opacity:1}}
-.mascot-dock button,.mascot-restore{color:var(--fg);font-family:inherit;cursor:pointer}
+.mascot-dock button{color:var(--fg);font-family:inherit;cursor:pointer}
 .mascot-tools button{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;font-size:17px;background:var(--bg);box-shadow:0 2px 8px #0004}
 .mascot-move{touch-action:none;cursor:grab!important}
 .mascot-move:active{cursor:grabbing!important}
-.mascot-search{min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:700;background:var(--bg);box-shadow:0 2px 8px #0004}
-/* Mascote fechado: vira uma bolinha com o rosto da coruja, no topo da tela. */
-.mascot-restore{position:fixed;right:max(12px,env(safe-area-inset-right));z-index:70;display:flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:transparent;font-size:11px;font-weight:700}
-.mascot-restore span{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
-.mascot-restore-face{display:block;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg) url('./assets/mascot-owl.webp') -2px 1px/44px auto no-repeat;box-shadow:0 2px 8px #0004}
-@media(prefers-reduced-motion:no-preference){.mascot-restore-face{animation:mascot-peek 2.6s ease-in-out infinite}@keyframes mascot-peek{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}}
-@media(max-width:699px){.mascot-restore{right:auto;left:max(12px,env(safe-area-inset-left));flex-direction:row-reverse}.mascot-dock .feedback-mascot-icon{width:88px;height:94px}}
-.mascot-dock :focus-visible,.mascot-restore:focus-visible{outline:3px solid var(--amber,#ffb000);outline-offset:2px}
+.mascot-search{min-height:36px;width:112px;padding:0;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:700;background:var(--bg);box-shadow:0 2px 8px #0004}
+/* Mascote pequeno: bolinha com o rosto da coruja, por cima da tela, logo abaixo do topo. Passar o mouse amplia; clicar abre a coruja grande. */
+.mascot-mini{position:fixed;right:max(12px,env(safe-area-inset-right));z-index:70;display:block;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;transform-origin:top right;transition:transform .18s ease}
+.mascot-mini:hover,.mascot-mini:focus-visible{transform:scale(1.9)}
+.mascot-mini-face{display:block;width:100%;height:100%;border-radius:50%;border:1px solid var(--line);background:var(--bg) url('./assets/mascot-owl.webp') -2px 1px/44px auto no-repeat;box-shadow:0 2px 8px #0004}
+@media(prefers-reduced-motion:no-preference){.mascot-mini:not(:hover):not(:focus-visible) .mascot-mini-face{animation:mascot-peek 2.6s ease-in-out infinite}@keyframes mascot-peek{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}}
+@media(prefers-reduced-motion:reduce){.mascot-mini{transition:none}}
+@media(max-width:699px){.mascot-mini{right:auto;left:max(12px,env(safe-area-inset-left));transform-origin:top left}.mascot-dock .feedback-mascot-icon{width:88px;height:94px}}
+.mascot-figure{display:flex;justify-content:center;cursor:zoom-out}
+.mascot-dock :focus-visible,.mascot-mini:focus-visible{outline:3px solid var(--amber,#ffb000);outline-offset:2px}
 .mascot-position-controls{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(290px,calc(100vw - 32px));padding:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 18px #0004;z-index:56;text-align:center}
 .mascot-position-controls p{font-size:12px;margin:0 0 6px}
 .mascot-position-controls button{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:6px;margin:2px;padding:5px 8px;color:var(--fg);background:var(--bg)}
 .mascot-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media print{.mascot-tray{display:none!important}}
 
-/* Telas estreitas: espaço no fim da página para o último botão rolar para cima da coruja. */
-@media(max-width:999px){body:has(.mascot-tray:not(.mascot-tray-hidden))::after{content:'';display:block;height:210px}}
-/* Reserve the default desktop parking area so the assistant cannot cover tools. */
-@media(min-width:1000px){body:has(.mascot-tray:not(.mascot-tray-hidden)) main.app{box-sizing:border-box;padding-right:174px}}
-
+/* A coruja sempre flutua por cima da página: não reserva espaço nem empurra o conteúdo. */
 /* Apresentação de Fredix abaixo do desenho, sem cobrir o rosto ou o escudo. */
-.mascot-dock .feedback-trigger>.mascot-greeting{position:relative;max-width:128px;box-sizing:border-box;margin-top:5px;padding:4px 7px;border-radius:10px;font-size:10px;line-height:14px;white-space:nowrap}
+.mascot-dock .mascot-greeting{background:var(--bg);border:1px solid var(--line);position:relative;max-width:128px;box-sizing:border-box;margin-top:5px;padding:4px 7px;border-radius:10px;font-size:10px;line-height:14px;white-space:nowrap}
 .mascot-greeting::before{content:'';position:absolute;top:-5px;left:calc(50% - 4px);width:7px;height:7px;background:var(--bg);border-top:1px solid var(--line);border-left:1px solid var(--line);transform:rotate(45deg)}

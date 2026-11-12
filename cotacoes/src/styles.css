@@ -624,6 +624,8 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 /* Alerta de variação do dólar e do euro (AlertaVariacao.jsx) */
 .alerta-variacao { display: grid; gap: 6px; margin: 0 0 12px; }
 .alerta-var-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-left: 3px solid var(--warn); background: var(--surface-2); font-size: .88rem; }
+/* A coruja pequena fica no canto de cima por cima da página: deixa o botão Ok do alerta fora da área dela. */
+@media (min-width: 700px) { .alerta-var-item { padding-right: 68px; } }
 .alerta-var-item.alta { border-left-color: var(--up); } .alerta-var-item.queda { border-left-color: var(--down); }
 .alerta-var-item.alta > span { color: var(--up); } .alerta-var-item.queda > span { color: var(--down); }
 .alerta-var-item p { margin: 0; }
