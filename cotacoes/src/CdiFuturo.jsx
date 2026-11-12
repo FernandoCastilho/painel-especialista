@@ -110,20 +110,25 @@ export function CdiFuturoTable({ curves, onOpen }) {
   const pts = today ? br.curves[today.date] : null
   const rows = useMemo(() => horizonTable(pts), [pts])
   return (
-    <section className="macro cdif-table" aria-labelledby="cdif-table-h">
-      <h2 id="cdif-table-h">CDI futuro <Explain id="cdiFuturo" /></h2>
+    <section id="juros-cdif" className="macro executive-rates cdif-table juros-tabela" aria-labelledby="cdif-table-h">
+      <header className="executive-rates__heading">
+        <h2 id="cdif-table-h"><Flag code="BRL" width={18} height={12} />CDI futuro <small>taxa a termo implícita nos futuros de DI</small></h2>
+        <Explain id="cdiFuturo" />
+      </header>
       {curves.status === 'loading' && <div className="placeholder">Carregando curva DI…</div>}
       {curves.status !== 'loading' && !rows.length && <p className="status">CDI futuro indisponível: depende da curva DI x pré, que não veio na última atualização.</p>}
       {rows.length > 0 && (
         <>
+          <div className="executive-rates__scroll">
+            <IndicatorTable
+              first="Horizonte"
+              caption="CDI futuro por horizonte"
+              columns={[{ label: 'CDI médio até lá' }, { label: 'CDI a termo no trecho' }]}
+              rows={rows.map((r) => ({ id: 'cdif', key: r.d, name: r.label, sub: `${r.vertex} dias úteis`, openLabel: `CDI futuro, ${r.label}: abrir gráfico`, cells: [{ text: pct(r.avg) }, { text: r.fwd != null ? pct(r.fwd) : '—' }] }))}
+              onOpen={onOpen}
+            />
+          </div>
           <p className="ind-note">Taxa que o mercado precifica nos futuros de DI, em % a.a., com base em {dm(today.date)}. Toque em uma linha para abrir o gráfico e escolher as datas.</p>
-          <IndicatorTable
-            first="Horizonte"
-            caption="CDI futuro por horizonte"
-            columns={[{ label: 'CDI médio até lá' }, { label: 'CDI a termo no trecho' }]}
-            rows={rows.map((r) => ({ id: 'cdif', key: r.d, name: r.label, sub: `${r.vertex} dias úteis`, openLabel: `CDI futuro, ${r.label}: abrir gráfico`, cells: [{ text: pct(r.avg) }, { text: r.fwd != null ? pct(r.fwd) : '—' }] }))}
-            onOpen={onOpen}
-          />
         </>
       )}
     </section>

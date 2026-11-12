@@ -147,7 +147,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const bce = p.locator('dialog.is-modal'); await bce.locator('.chart h3', { hasText: 'Área do euro · BCE (depósito)' }).waitFor(); await fechar(bce)
       // curva do euro: números na tabela e gráfico em tela própria
       const tabEuro = p.locator('.curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
-      assert.equal(await tabEuro.locator('h3 .flag').count(), 1, 'bandeira da zona do euro na tabela da curva')
+      assert.equal(await tabEuro.locator('h2 .flag').count(), 1, 'bandeira da zona do euro na tabela da curva')
       assert.equal(await tabEuro.locator('thead th').count(), 1 + 3, 'uma coluna por data de comparação')
       await tabEuro.locator('tbody tr').first().click()
       const curvaEuro = p.locator('dialog.is-modal .chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })

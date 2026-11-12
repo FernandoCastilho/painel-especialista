@@ -105,7 +105,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
         {periodHelp && <span className="curve-legend-title">Curvas de comparação <Explain id={periodHelp} /></span>}
         {compare.map((c, i) => (
           <button key={c.date} type="button" className={off.has(c.date) ? 'series-hidden' : 'series-visible'} aria-pressed={!off.has(c.date)} style={{ '--series': SHADES[i % SHADES.length] }} onClick={() => setOff((o) => { const n = new Set(o); n.has(c.date) ? n.delete(c.date) : n.add(c.date); return n })}>
-            <i className="swatch" /> {c.label} <small>{day(c.date)} · {off.has(c.date) ? 'Oculta' : 'Visível'}</small>
+            <i className="swatch" /> {c.label} <small>{day(c.date)}<span className="curve-legend-state"> · {off.has(c.date) ? 'Oculta' : 'Visível'}</span></small>
           </button>
         ))}
       </div>
@@ -223,9 +223,8 @@ export default function Curves({ curves: c, onOpen }) {
   const euro = useEuroCurve()
   const dados = { br: d?.br, cc: d?.cc, us: d?.us, eu: euro.data }
   return (
-    <section className="macro curve-tables" aria-labelledby="curves-h">
-      <h2 id="curves-h">Curvas de juros</h2>
-      <p className="ind-note">Taxas em % a.a. por prazo, na última data e nas datas de comparação. Toque em uma linha para abrir o gráfico da curva.</p>
+    <section className="macro curve-tables" aria-label="Curvas de juros">
+      <p className="ind-note">Curvas de juros: taxas em % a.a. por prazo, na última data e nas datas de comparação. Toque em uma linha para abrir o gráfico da curva.</p>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível. {c.error}</p>}
       {c.status === 'loading' && <div className="placeholder">Carregando curvas…</div>}
       {c.status === 'ok' && c.data.generatedAt && (Date.now() - c.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (
@@ -241,20 +240,29 @@ export default function Curves({ curves: c, onOpen }) {
       {TABELAS.map((id) => {
         const def = CURVAS[id]
         const pronto = id === 'eu' ? !euro.loading : c.status === 'ok'
-        if (!pronto) return id === 'eu' ? <p key={id} className="status">Carregando curva do euro…</p> : null
-        const t = dados[id] ? curveTable(dados[id], def.mode) : { columns: [], rows: [] }
-        if (!t.rows.length) return <p key={id} className="status">{def.title}: curva indisponível nesta atualização.</p>
+        const t = pronto && dados[id] ? curveTable(dados[id], def.mode) : { columns: [], rows: [] }
         return (
-          <div key={id} className="curve-table">
-            <h3><Flag code={bandeiraDe(def.title)} width={18} height={12} />{def.title} <small>{def.subtitle}</small> <Explain id={def.help} /></h3>
-            <p className="table-swipe-hint">Deslize a tabela para ver as outras datas →</p>
-            <IndicatorTable
-              first="Prazo"
-              caption={`${def.title}: taxas por prazo`}
-              columns={t.columns.map((col) => ({ label: col.label, small: col.small, aria: `${col.label}, ${col.small}` }))}
-              rows={t.rows.map((r) => ({ id: `curva-${id}`, key: r.id, name: r.name, sub: r.sub, openLabel: `${def.title}, ${r.name}: abrir gráfico da curva`, cells: r.values.map((v) => ({ text: v == null ? '—' : pct(v) })) }))}
-              onOpen={onOpen}
-            />
+          <div key={id} id={`juros-curva-${id}`} className="executive-rates curve-table juros-tabela">
+            <header className="executive-rates__heading">
+              <h2><Flag code={bandeiraDe(def.title)} width={18} height={12} />{def.title} <small>{def.subtitle}</small></h2>
+              <Explain id={def.help} />
+            </header>
+            {!pronto && id === 'eu' && <p className="status">Carregando curva do euro…</p>}
+            {pronto && !t.rows.length && <p className="status">Curva indisponível nesta atualização.</p>}
+            {t.rows.length > 0 && (
+              <>
+                <p className="table-swipe-hint">Deslize a tabela para ver as outras datas →</p>
+                <div className="executive-rates__scroll">
+                  <IndicatorTable
+                    first="Prazo"
+                    caption={`${def.title}: taxas por prazo`}
+                    columns={t.columns.map((col) => ({ label: col.label, small: col.small, aria: `${col.label}, ${col.small}` }))}
+                    rows={t.rows.map((r) => ({ id: `curva-${id}`, key: r.id, name: r.name, sub: r.sub, openLabel: `${def.title}, ${r.name}: abrir gráfico da curva`, cells: r.values.map((v) => ({ text: v == null ? '—' : pct(v) })) }))}
+                    onOpen={onOpen}
+                  />
+                </div>
+              </>
+            )}
           </div>
         )
       })}

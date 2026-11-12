@@ -18,6 +18,11 @@ const curves = { generatedAt: Date.now(), br: set(14.3, -0.2), cc: set(5.2, -0.1
       await p.goto(base + '/#juros')
       // a página traz só tabelas: referência, CDI futuro e uma por curva (DI x pré, cupom, Treasuries); nenhum gráfico solto
       await p.locator('.curve-table').first().waitFor()
+      // atalhos no topo levam a cada tabela; todas com a mesma faixa de título e moldura da tabela de referência
+      assert.deepEqual(await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button').allInnerTexts().then((t) => t.map((x) => x.toLowerCase())), ['referência', 'cdi futuro', 'di x pré', 'cupom cambial', 'treasuries', 'euro'])
+      await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button', { name: 'Treasuries' }).click()
+      await p.waitForFunction(() => { const r = document.getElementById('juros-curva-us').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight })
+      assert.equal(await p.locator('.juros-tabela .executive-rates__heading').count(), 5, 'CDI futuro e quatro curvas com a faixa de título')
       assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página')
       assert.equal(await p.locator('.juros-period').count(), 0)
       const tabela = (t) => p.locator('.curve-table', { hasText: t })

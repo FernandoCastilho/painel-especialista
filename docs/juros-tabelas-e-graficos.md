@@ -22,8 +22,10 @@ Nenhuma regra mudou. As tabelas só organizam taxas já coletadas:
 ## Revisão visual (Diretor de Arte, 12/11/2026)
 Parecer: a estrutura faz sentido (número primeiro, gráfico sob demanda, mesmo padrão das outras abas). Ajustes aplicados: primeira coluna das tabelas chamada "Prazo" e "Horizonte" (era "Indicador"); CDI futuro cabendo inteiro no celular; aviso de deslizar nas tabelas das curvas no celular; data sempre abaixo do rótulo no cabeçalho; título repetido retirado da tela da curva.
 
+## Decisões de Fernando (12/11/2026)
+- Atalhos no topo da aba (Referência · CDI futuro · DI x pré · Cupom cambial · Treasuries · Euro) que levam a cada tabela.
+- CDI futuro e curvas com a mesma faixa de título e moldura da tabela de referência (só na aba Juros).
+- No celular, a legenda das curvas fica em botões menores, lado a lado, para o gráfico aparecer logo. Vale também para a curva DI aberta pelo Mercado.
+
 ## Pendências
-- Página longa (seis tabelas): avaliar um índice de atalhos no topo.
-- Duas aparências de tabela na mesma página (referência e as demais): avaliar unificar.
-- No celular, a tela da curva mostra a legenda inteira antes do gráfico (já era assim no componente).
 - O endereço não guarda qual gráfico está aberto (não dá para enviar o link de um gráfico específico).
