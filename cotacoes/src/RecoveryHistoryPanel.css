@@ -11,26 +11,33 @@
 .rj-kpis strong { font-size: clamp(1.45rem, 3vw, 2rem); line-height: 1.1; }
 .rj-kpis small { color: var(--mut); }
 .rj-kpis .rj-kpi-text { font-size: 1rem; }
-.rj-viz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rj-viz-grid { display: grid; align-items: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .rj-card { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .rj-card-head { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .rj-card-head h3 { margin: 0; font-size: 1.08rem; }
 .rj-card-head p { margin: 4px 0 0; color: var(--mut); font-size: .83rem; }
-.rj-map,.rj-treemap { display: block; width: 100%; height: clamp(215px, 32vw, 350px); margin: 12px 0; }
+.rj-map { display: block; width: 100%; height: clamp(215px, 32vw, 350px); margin: 12px 0; }
 .rj-state { fill: #dbe4f4; stroke: #8899b8; stroke-width: .75; vector-effect: non-scaling-stroke; cursor: pointer; }
 .rj-state:hover,.rj-state.active { fill: #ffd0ad; stroke: #a04608; stroke-width: 1.6; }
 .rj-pin { cursor: pointer; }
 .rj-pin circle { fill: #154ad0; stroke: #fff; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .rj-pin.active circle { fill: #9c3b00; stroke-width: 2; }
-.rj-pin text,.rj-sector-cell text { fill: #fff; font: 700 13px system-ui, sans-serif; pointer-events: none; }
+.rj-pin text { fill: #fff; font: 700 13px system-ui, sans-serif; pointer-events: none; }
 .rj-pin text { text-anchor: middle; }
-.rj-sector-cell { cursor: pointer; }
-.rj-sector-cell rect { stroke: #fff; stroke-width: 1; vector-effect: non-scaling-stroke; }
-.rj-sector-cell:hover rect { stroke: #ffae73; stroke-width: 3; }
-.rj-sector-top { display: grid; gap: 4px; list-style: none; margin: 0 0 12px; padding: 0; }
-.rj-sector-top button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 6px 9px; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 7px; font: inherit; text-align: left; cursor: pointer; }
-.rj-sector-top button[aria-pressed="true"] { border-color: #c35d13; box-shadow: inset 0 0 0 1px #c35d13; }
-.rj-sector-top button span { overflow-wrap: anywhere; }
+.rj-sector-select { margin-top: 12px; }
+.rj-sector-ranking { display: grid; gap: 4px; list-style: none; margin: 8px 0; padding: 0; }
+.rj-sector-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; width: 100%; min-height: 44px; padding: 6px 9px; color: var(--fg); background: var(--card); border: 1px solid transparent; border-radius: 7px; font: inherit; text-align: left; cursor: pointer; }
+.rj-sector-bar:hover { border-color: var(--line); }
+.rj-sector-bar[aria-pressed="true"] { border-color: #df741f; box-shadow: inset 0 0 0 1px #df741f; }
+.rj-sector-bar:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+.rj-sector-name { align-self: center; overflow-wrap: anywhere; }
+.rj-sector-metric { display: grid; align-content: center; justify-items: end; font-size: .8rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rj-sector-metric small { color: var(--mut); font-size: inherit; }
+.rj-sector-track { grid-column: 1 / -1; height: 6px; border-radius: 8px; background: var(--line); }
+.rj-sector-fill { display: block; height: 100%; border-radius: inherit; background: #4479dc; }
+.rj-sector-fill.unknown { background: #77869b; }
+.rj-sector-bar[aria-pressed="true"] .rj-sector-fill { background: #df741f; }
+.rj-sector-more { min-height: 44px; }
 .rj-records { margin-top: 12px; }
 .rj-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .rj-chips button { max-width: 100%; min-height: 44px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); color: var(--fg); font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
@@ -58,7 +65,6 @@
   .rj-table th:nth-child(3) { width: 42px; }
 }
 
-.rj-treemap { height: 350px; }
 .rj-map-wrap { position: relative; }
 .rj-map-instructions { margin: 8px 0 0; color: var(--mut); font-size: .8rem; }
 .rj-map-tooltip-space { min-height: 86px; padding-bottom: 12px; box-sizing: border-box; color: var(--mut); font-size: .82rem; }
@@ -66,11 +72,3 @@
 .rj-map-tooltip span { font-variant-numeric: tabular-nums; }
 .rj-pin { pointer-events: none; }
 .rj-state:focus-visible { outline: none; fill: #ffd0ad; stroke: #a04608; stroke-width: 3; }
-.rj-sector-cell:focus-visible { outline: none; }
-.rj-sector-cell:focus-visible rect { stroke: #ffae73; stroke-width: 4; }
-.rj-cell-number { text-anchor: middle; }
-.rj-sector-legend { margin: 0 0 12px; }
-.rj-sector-legend summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--fg); font-weight: 600; }
-.rj-sector-legend .rj-sector-top { max-height: 280px; overflow: auto; }
-
-@media (max-width: 480px) { .rj-treemap { height: 400px; } }
