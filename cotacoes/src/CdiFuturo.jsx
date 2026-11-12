@@ -118,6 +118,7 @@ export function CdiFuturoTable({ curves, onOpen }) {
         <>
           <p className="ind-note">Taxa que o mercado precifica nos futuros de DI, em % a.a., com base em {dm(today.date)}. Toque em uma linha para abrir o gráfico e escolher as datas.</p>
           <IndicatorTable
+            first="Horizonte"
             caption="CDI futuro por horizonte"
             columns={[{ label: 'CDI médio até lá' }, { label: 'CDI a termo no trecho' }]}
             rows={rows.map((r) => ({ id: 'cdif', key: r.d, name: r.label, sub: `${r.vertex} dias úteis`, openLabel: `CDI futuro, ${r.label}: abrir gráfico`, cells: [{ text: pct(r.avg) }, { text: r.fwd != null ? pct(r.fwd) : '—' }] }))}

@@ -247,7 +247,9 @@ export default function Curves({ curves: c, onOpen }) {
         return (
           <div key={id} className="curve-table">
             <h3><Flag code={bandeiraDe(def.title)} width={18} height={12} />{def.title} <small>{def.subtitle}</small> <Explain id={def.help} /></h3>
+            <p className="table-swipe-hint">Deslize a tabela para ver as outras datas →</p>
             <IndicatorTable
+              first="Prazo"
               caption={`${def.title}: taxas por prazo`}
               columns={t.columns.map((col) => ({ label: col.label, small: col.small, aria: `${col.label}, ${col.small}` }))}
               rows={t.rows.map((r) => ({ id: `curva-${id}`, key: r.id, name: r.name, sub: r.sub, openLabel: `${def.title}, ${r.name}: abrir gráfico da curva`, cells: r.values.map((v) => ({ text: v == null ? '—' : pct(v) })) }))}

@@ -19,6 +19,11 @@ Nenhuma regra mudou. As tabelas só organizam taxas já coletadas:
 - Testes de lógica (`npm test`), build e lint.
 - No navegador, em 390 e 1280 px, com dados sintéticos: `smoke-cupom` (tabelas, CDI futuro, curvas e cupom), `smoke-outros` (gráficos de cada linha de referência e curva do euro), `smoke-ui` (teclado e Escape), `smoke-motion`, `smoke-theme`.
 
+## Revisão visual (Diretor de Arte, 12/11/2026)
+Parecer: a estrutura faz sentido (número primeiro, gráfico sob demanda, mesmo padrão das outras abas). Ajustes aplicados: primeira coluna das tabelas chamada "Prazo" e "Horizonte" (era "Indicador"); CDI futuro cabendo inteiro no celular; aviso de deslizar nas tabelas das curvas no celular; data sempre abaixo do rótulo no cabeçalho; título repetido retirado da tela da curva.
+
 ## Pendências
-- Direção visual não revisada por especialista: foi reaproveitado o padrão de tabela e de gaveta que já existia.
+- Página longa (seis tabelas): avaliar um índice de atalhos no topo.
+- Duas aparências de tabela na mesma página (referência e as demais): avaliar unificar.
+- No celular, a tela da curva mostra a legenda inteira antes do gráfico (já era assim no componente).
 - O endereço não guarda qual gráfico está aberto (não dá para enviar o link de um gráfico específico).

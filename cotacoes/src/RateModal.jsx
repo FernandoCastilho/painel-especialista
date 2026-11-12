@@ -71,7 +71,7 @@ export default function RateModal({ kind, macro, curves, hol, onClose }) {
   return (
     <Expandable modal label={`detalhes: ${title}`} onClose={onClose}>
       <section className="macro rate-modal">
-        <h2>{title}</h2>
+        {!kind.startsWith('curva-') && <h2>{title}</h2>}{/* a curva já traz o mesmo título no gráfico */}
         {SERIES.includes(kind) && <ChartFilters><RatesPeriod range={range} preset={preset} onPreset={onPreset} onDates={onDates} /></ChartFilters>}
         {kind === 'cdi' && (data?.cdi?.length ? <CdiChart macro={data} range={range} /> : <p className="status">CDI indisponível no momento.</p>)}
         {kind === 'selic' && (data?.selic?.length ? <SelicChart macro={data} range={range} /> : <p className="status">Selic indisponível no momento.</p>)}
