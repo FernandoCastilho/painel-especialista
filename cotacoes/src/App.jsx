@@ -314,10 +314,19 @@ export default function App() {
 
       {tab === 'juros' && (
         <>
-          <RatesSnapshot macro={macro} />
-          <Macro macro={macro} />
-          <CdiFuturo curves={curves} macro={macro.data} hol={hol} />
-          <Curves curves={curves} />
+          <section aria-labelledby="juros-brasil">
+            <h2 id="juros-brasil">Brasil</h2>
+            <RatesSnapshot macro={macro} region="brasil" />
+            <Macro macro={macro} region="brasil" />
+            <CdiFuturo curves={curves} macro={macro.data} hol={hol} />
+            <Curves curves={curves} region="brasil" />
+          </section>
+          <section aria-labelledby="juros-exterior">
+            <h2 id="juros-exterior">Outros países</h2>
+            <RatesSnapshot macro={macro} region="exterior" />
+            <Macro macro={macro} region="exterior" />
+            <Curves curves={curves} region="exterior" />
+          </section>
         </>
       )}
 

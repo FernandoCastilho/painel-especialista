@@ -190,41 +190,42 @@ function EuroCurve() {
   )
 }
 
-export default function Curves({ curves: c }) {
+export default function Curves({ curves: c, region }) {
   const d = c.data
+  const stale = Object.entries(c.data?.stale ?? {}).filter(([key]) => region === 'brasil' ? key !== 'us' : key === 'us')
   return (
-    <section className="macro" aria-labelledby="curves-h">
-      <h2 id="curves-h">Curvas de juros</h2>
+    <section className="macro" aria-labelledby={`curves-${region}`}>
+      <h2 id={`curves-${region}`}>Curvas de juros</h2>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível. {c.error}</p>}
       {c.status === 'loading' && <div className="placeholder">Carregando curvas…</div>}
       {c.status === 'ok' && c.data.generatedAt && (Date.now() - c.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (
         <p className="status stale">Atenção: as curvas foram coletadas há mais de 3 horas; a atualização automática pode ter parado.</p>
       )}
-      {c.status === 'ok' && Object.keys(c.data.stale ?? {}).length > 0 && (
+      {c.status === 'ok' && stale.length > 0 && (
         <p className="status stale">
-          Atualização indisponível na última coleta; mantido o último dado publicado: {Object.entries(c.data.stale).map(([k, t]) => `${{ br: 'DI x pré', cc: 'cupom cambial', us: 'Treasuries' }[k] ?? k} (coletado em ${t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'data desconhecida'})`).join(', ')}.
+          Atualização indisponível na última coleta; mantido o último dado publicado: {stale.map(([k, t]) => `${{ br: 'DI x pré', cc: 'cupom cambial', us: 'Treasuries' }[k] ?? k} (coletado em ${t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'data desconhecida'})`).join(', ')}.
         </p>
       )}
       {c.status === 'error' && <Estado tipo="erro" erro={c.error}>Curvas de juros indisponíveis agora.</Estado>}
       <div className="charts">
-        {c.status === 'ok' && (d.br ? (
+        {region === 'brasil' && c.status === 'ok' && (d.br ? (
           <CurveChart help="curvaDi" title="Brasil · DI x pré" subtitle="taxa % a.a. por prazo em dias úteis" data={d.br} mode="br" source="Taxas referenciais calculadas a partir dos ajustes dos futuros de DI; publicadas após o fechamento do pregão." />
         ) : (
           <p className="status">Curva DI indisponível nesta atualização.</p>
         ))}
-        {c.status === 'ok' && (d.cc ? (
+        {region === 'brasil' && c.status === 'ok' && (d.cc ? (
           <CurveChart help="cupom" title="Brasil · Cupom cambial" subtitle="DI x dólar, % a.a. por prazo em dias úteis" data={d.cc} mode="br" source="Cupom cambial a partir dos ajustes dos futuros. Vértices curtos (menos de 1 mês) omitidos por serem muito ruidosos; publicado após o fechamento." />
         ) : (
           <p className="status">Curva do cupom cambial indisponível nesta atualização.</p>
         ))}
         {/* leitura do cupom logo abaixo da curva dele, ocupando a linha inteira */}
-        {c.status === 'ok' && d.cc && d.br && <div className="charts-full"><CupomLeitura curves={d} /></div>}
-        {c.status === 'ok' && (d.us ? (
+        {region === 'brasil' && c.status === 'ok' && d.cc && d.br && <div className="charts-full"><CupomLeitura curves={d} /></div>}
+        {region !== 'brasil' && c.status === 'ok' && (d.us ? (
           <CurveChart help="treasuries" title="EUA · Treasuries" subtitle="Par yield curve, % a.a. por vencimento" data={d.us} mode="us" source="Curva de títulos públicos (par yield), não de futuros; fechamento do dia anterior ou do dia, conforme a divulgação." />
         ) : (
           <p className="status">Curva dos EUA indisponível nesta atualização.</p>
         ))}
-        <EuroCurve />
+        {region !== 'brasil' && <EuroCurve />}
       </div>
     </section>
   )

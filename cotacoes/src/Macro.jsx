@@ -183,7 +183,8 @@ export function EstrChart({ series, range }) {
 const STALE_LABELS = { cdi: 'CDI', selic: 'Selic', sofr: 'SOFR', sofrAvg: 'médias da SOFR', focus: 'Boletim Focus', ptax: 'PTAX' }
 const stamp = (t) => (t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'data desconhecida')
 
-export default function Macro({ macro: m }) {
+export default function Macro({ macro: m, region }) {
+  const staleKeys = region === 'brasil' ? ['cdi'] : ['sofr', 'sofrAvg']
   const estrFile = useDataFile('estr.json')
   let estr = null
   try { estr = estrFile.data ? normalizeEstr(estrFile.data) : null } catch { /* arquivo inválido: o gráfico não aparece */ }
@@ -203,9 +204,9 @@ export default function Macro({ macro: m }) {
   return (
     <section className="macro">
       <h2>Histórico das taxas de juros</h2>
-      {/* dois níveis: o período (aqui) vale para os quatro gráficos; o "Agrupar" de cada gráfico só muda a granularidade dos pontos */}
+      {/* dois níveis: o período vale para os gráficos desta região; o "Agrupar" de cada gráfico só muda a granularidade dos pontos */}
       <div className="juros-period">
-        <p className="juros-period-label" id="juros-period-label">Período dos quatro gráficos abaixo</p>
+        <p className="juros-period-label" id={`juros-period-label-${region}`}>{region === 'brasil' ? 'Período do histórico do CDI' : 'Período dos históricos de SOFR e €STR'}</p>
         <RatesPeriod range={range} preset={preset} onPreset={onPreset} onDates={onDates} />
       </div>
       {m.status === 'loading' && <p className="status">Carregando dados…</p>}
@@ -214,17 +215,16 @@ export default function Macro({ macro: m }) {
       {m.status === 'ok' && m.data.generatedAt && (Date.now() - m.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (
         <p className="status stale">Atenção: os dados foram coletados há mais de 3 horas; a atualização automática pode ter parado.</p>
       )}
-      {m.status === 'ok' && Object.keys(m.data.stale ?? {}).some(k => ['cdi', 'selic', 'sofr', 'sofrAvg'].includes(k)) && (
+      {m.status === 'ok' && Object.keys(m.data.stale ?? {}).some(k => staleKeys.includes(k)) && (
         <p className="status stale">
-          Atualização indisponível na última coleta; mantido o último dado publicado: {Object.entries(m.data.stale).filter(([k]) => ['cdi', 'selic', 'sofr', 'sofrAvg'].includes(k)).map(([k, t]) => `${STALE_LABELS[k] ?? k} (coletado em ${stamp(t)})`).join(', ')}.
+          Atualização indisponível na última coleta; mantido o último dado publicado: {Object.entries(m.data.stale).filter(([k]) => staleKeys.includes(k)).map(([k, t]) => `${STALE_LABELS[k] ?? k} (coletado em ${stamp(t)})`).join(', ')}.
         </p>
       )}
       {m.status === 'ok' && (
         <div className="charts">
-          {m.data.cdi?.length ? <CdiChart macro={m.data} range={range} /> : <p className="status">CDI indisponível no momento.</p>}
-          {m.data.selic?.length ? <SelicChart macro={m.data} range={range} /> : <p className="status">Selic indisponível no momento.</p>}
-          {m.data.sofr?.length ? <SofrChart macro={m.data} range={range} /> : <p className="status">SOFR indisponível no momento.</p>}
-          {estr?.points.length ? <EstrChart series={estr} range={range} /> : <Estado tipo={estrFile.status === 'loading' ? 'info' : 'erro'}>{estrFile.status === 'loading' ? 'Carregando €STR…' : '€STR indisponível no momento.'}</Estado>}
+          {region === 'brasil' && (m.data.cdi?.length ? <CdiChart macro={m.data} range={range} /> : <p className="status">CDI indisponível no momento.</p>)}
+          {region !== 'brasil' && (m.data.sofr?.length ? <SofrChart macro={m.data} range={range} /> : <p className="status">SOFR indisponível no momento.</p>)}
+          {region !== 'brasil' && (estr?.points.length ? <EstrChart series={estr} range={range} /> : <Estado tipo={estrFile.status === 'loading' ? 'info' : 'erro'}>{estrFile.status === 'loading' ? 'Carregando €STR…' : '€STR indisponível no momento.'}</Estado>)}
         </div>
       )}
     </section>
