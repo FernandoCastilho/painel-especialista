@@ -9,7 +9,7 @@
 // d1 e d2 são dias úteis contados da data-base da curva até o início e o vencimento (feriados nacionais).
 import { growthAt } from './cdiFuturo.js'
 import { creditCet, creditOperation } from './creditComparison.js'
-import { busDaysIn, nextBusinessDay } from './holidays.js'
+import { busDaysIn, nextBusinessDay, paymentCalendars } from './holidays.js'
 
 export const RATE_KINDS = [
   { id: 'pre', label: 'Pré', hint: 'Taxa fixa: ao ano, ao mês ou para o período inteiro. Na aplicação, a taxa ao ano corre em base 252 dias úteis; no crédito, vira taxa ao mês composta e corre por dias corridos ((1 + taxa)^(dias/30)).' },
@@ -133,7 +133,7 @@ export function creditVsDi({ value, kind, rate, unit = 'aa', pts, base, start, e
   if (start < base) return fail('A liberação precisa ser a partir da data-base da curva.')
   if (end <= start) return fail('O vencimento precisa ser depois da liberação.')
   if (!(Number.isFinite(fees) && fees >= 0 && fees < value)) return fail('Informe as tarifas em R$ (zero se não houver), menores que o valor.')
-  const due = nextBusinessDay(end, ['BR'], ctx)
+  const due = nextBusinessDay(end, paymentCalendars(['BR']), ctx)
   // O DI e o CDI da operação começam a correr no primeiro dia útil a partir da liberação, como os dias úteis do motor de crédito.
   const path = diPath(pts, busDaysIn(base, nextBusinessDay(start, ['BR'], ctx), ['BR'], ctx), busDaysIn(base, due, ['BR'], ctx))
   if (!path.ok) return path

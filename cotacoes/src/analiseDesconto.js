@@ -2,7 +2,7 @@ import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
 import { resolveCreditIof } from './iofRules.js'
 import { creditCet, giroOperation } from './creditComparison.js'
-import { nextBusinessDay } from './holidays.js'
+import { nextBusinessDay, paymentCalendars } from './holidays.js'
 import { PRACA_PADRAO, contractCalendars, pracaContrato } from './pracaContrato.js'
 
 export const DISCOUNT_TERMS = Object.freeze([12, 24, 36, 48])
@@ -69,7 +69,7 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
   const tax = resolveCreditIof({ date, profile: taxProfile, eligible, operationValue: value })
   if (!tax.ok) return tax
   const rows = titleRows.map(row => {
-    const paymentDate = nextBusinessDay(row.dueDate, cals)
+    const paymentDate = nextBusinessDay(row.dueDate, paymentCalendars(cals))
     const days = (parseDiscountDate(paymentDate) - release) / 86400000
     const interest = convention === 'commercial30' ? row.value * rate / 100 * days / 30 : row.value - row.value / (1 + rate / 100 * days / 30)
     const base = row.value - interest

@@ -1,7 +1,7 @@
 import { loanDates, monthlyRate, MAX_LOAN_MONEY } from './emprestimo.js'
 import { resolveCreditIof } from './iofRules.js'
 import { cgDate, cgAddDays } from './contaGarantida.js'
-import { isBusinessDayAll, nextBusinessDay } from './holidays.js'
+import { isBusinessDayAll, nextBusinessDay, paymentCalendars } from './holidays.js'
 import { contractCalendars } from './pracaContrato.js'
 
 const fail = error => ({ ok: false, error })
@@ -43,7 +43,8 @@ export function creditOperation(p) {
   if (!cals) return fail('Escolha a praça do contrato entre as praças disponíveis.')
   // Vencimento em dia não útil passa para o próximo dia útil (fins de semana, feriados nacionais, da praça e os extras informados).
   const extra = new Set(holidays)
-  const nextUseful = day => { let d = nextBusinessDay(day, cals); for (let k = 0; k < 40 && extra.has(d); k++) d = nextBusinessDay(cgAddDays(d, 1), cals); return d }
+  const payCals = paymentCalendars(cals)
+  const nextUseful = day => { let d = nextBusinessDay(day, payCals); for (let k = 0; k < 40 && extra.has(d); k++) d = nextBusinessDay(cgAddDays(d, 1), payCals); return d }
   const raw = loanDates(start, firstDue, system === 'bullet' ? 1 : n)
   const dates = raw && raw.map(d => { const date = nextUseful(d.date); return { date, days: days(start, date) } })
   if (!dates || dates.at(-1).days > 22000) return fail('Informe datas reais, primeiro pagamento posterior à liberação e horizonte de até 60 anos.')

@@ -188,10 +188,17 @@ function japan(y) {
   return sortMap([...out])
 }
 
+// 31/12: sem expediente bancário ao público (Febraban); a conta que vence no dia é paga no dia útil seguinte, sem multa.
+// Vale só para mover datas de pagamento: não entra no calendário BR, que conta dias úteis (DU/252) de CDI, DI e TLP.
+const semExpedienteBancario = y => sortMap([[iso(y, 12, 31), 'Sem expediente bancário (31/12)']])
+// Praças do contrato + 31/12, para ajustar vencimentos ao próximo dia útil bancário.
+export const paymentCalendars = cals => [...new Set([...cals, 'BANCO'])]
+
 export const CALENDARS = [
   { id: 'BR', label: 'Brasil (referência de dias úteis financeiros)', short: 'Brasil financeiro', rule: brazil },
   { id: 'CIVBR', label: 'Brasil (feriados nacionais por lei)', short: 'Brasil · nacionais', rule: brazilCivil, hidden: true },
   { id: 'B3', label: 'B3 (sessões de negociação)', short: 'B3', rule: b3Trading, hidden: true },
+  { id: 'BANCO', label: 'Expediente bancário (31/12 sem atendimento)', short: 'Expediente bancário', rule: semExpedienteBancario, hidden: true },
   { id: 'SP', label: 'São Paulo (cidade e estado)', short: 'São Paulo', rule: saoPaulo },
   { id: 'MG', label: 'Minas Gerais (Belo Horizonte)', short: 'Minas Gerais', rule: minasGerais },
   { id: 'PR', label: 'Curitiba (cidade e estado)', short: 'Curitiba', rule: curitiba },
