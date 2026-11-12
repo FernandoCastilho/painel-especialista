@@ -125,16 +125,38 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const corpo = await p.locator('main').innerText()
       assert.doesNotMatch(corpo, /Reino Unido|Bank Rate|Bank of England|BoE/, 'sem Reino Unido em Juros')
       assert.match(await p.locator('.executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
-      await p.locator('.chart h3', { hasText: 'Área do euro · €STR' }).first().waitFor()
-      await p.locator('.chart h3', { hasText: 'Brasil · CDI' }).first().waitFor()
-      const curvaEuro = p.locator('.chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })
+      // os gráficos abrem pela linha da tabela, em tela própria (a página não traz gráfico solto)
+      assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página de Juros')
+      const abrir = async (botao, titulo) => {
+        await p.getByRole('button', { name: botao }).first().click()
+        const d = p.locator('dialog.is-modal'); await d.locator('.chart h3', { hasText: titulo }).first().waitFor()
+        return d
+      }
+      const fechar = async (d) => { await d.getByRole('button', { name: 'Fechar detalhes' }).click(); await d.waitFor({ state: 'detached' }) }
+      for (const [botao, titulo] of [['Área do euro · €STR overnight: abrir gráfico', 'Área do euro · €STR'], ['Brasil · CDI overnight: abrir gráfico', 'Brasil · CDI'], ['Brasil · Selic meta: abrir gráfico', 'Brasil · Selic meta'], ['EUA · SOFR overnight: abrir gráfico', 'SOFR']]) {
+        const d = await abrir(botao, titulo)
+        assert.equal(await d.locator('.chart h3 .flag').count(), 1, `bandeira no título do gráfico: ${titulo}`)
+        assert.ok(await d.locator('.chart-filters').count() === 1, `período dentro da tela: ${titulo}`)
+        await fechar(d)
+      }
+      // juros de política do exterior: linha em degraus a partir da série oficial; o Fed mostra o limite superior da faixa
+      const fed = await abrir('EUA · Fed (faixa-alvo): abrir gráfico', 'EUA · Fed (faixa-alvo)')
+      await fed.locator('.plot svg').first().waitFor(); await fechar(fed)
+      // o valor da linha também abre o gráfico; o "?" não
+      await p.locator('.executive-rates__table tbody tr', { hasText: 'BCE (depósito)' }).locator('td').first().click()
+      const bce = p.locator('dialog.is-modal'); await bce.locator('.chart h3', { hasText: 'Área do euro · BCE (depósito)' }).waitFor(); await fechar(bce)
+      // curva do euro: números na tabela e gráfico em tela própria
+      const tabEuro = p.locator('.curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
+      assert.equal(await tabEuro.locator('h3 .flag').count(), 1, 'bandeira da zona do euro na tabela da curva')
+      assert.equal(await tabEuro.locator('thead th').count(), 1 + 3, 'uma coluna por data de comparação')
+      await tabEuro.locator('tbody tr').first().click()
+      const curvaEuro = p.locator('dialog.is-modal .chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })
       await curvaEuro.waitFor()
       assert.ok(await curvaEuro.locator('h3 .flag').count() === 1, 'bandeira da zona do euro na curva')
       assert.equal(await curvaEuro.locator('.curve-legend > button').count(), 3, 'três datas de comparação')
       assert.ok(await curvaEuro.locator('svg path').count() >= 3, 'uma linha por data')
       const eixo = await curvaEuro.locator('svg text.tick').allTextContents()
       assert.ok(eixo.includes('3M') && eixo.includes('30A'), 'eixo do 3M ao 30A')
-      assert.ok(await p.locator('.chart h3 .flag').count() >= 4, 'bandeira nos títulos dos gráficos (CDI, Selic, SOFR e €STR)')
       await p.close()
     }
     // governança dos dados em Configurações: tabela por fonte, regras e nenhuma rolagem lateral da página

@@ -7,6 +7,7 @@ import Explain from './Explain.jsx'
 import { Plot, useWidth } from './HistoryChart.jsx'
 import { busDaysIn } from './holidays.js'
 import { forwardBetween, forwardSeries, horizonTable } from './cdiFuturo.js'
+import IndicatorTable from './IndicatorTable.jsx'
 
 const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const dm = (iso) => iso.split('-').reverse().join('/')
@@ -97,6 +98,32 @@ export default function CdiFuturo({ curves, macro, hol }) {
             DI x pré de {dm(today.date)}. É o CDI que o mercado precifica, com prêmio de risco embutido, não uma projeção oficial. "CDI médio até lá" é a taxa composta do DI até o vértice; "a termo no trecho" é a taxa implícita entre o horizonte anterior e este. Para a visão de analistas, veja o Boletim Focus (Selic).
           </p></Aviso>
         </article>
+      )}
+    </section>
+  )
+}
+
+// Aba Juros: os números do CDI futuro por horizonte; a linha abre o gráfico e a escolha de datas em tela própria.
+export function CdiFuturoTable({ curves, onOpen }) {
+  const br = curves.data?.br
+  const today = br?.compare?.find((c) => c.id === 'hoje')
+  const pts = today ? br.curves[today.date] : null
+  const rows = useMemo(() => horizonTable(pts), [pts])
+  return (
+    <section className="macro cdif-table" aria-labelledby="cdif-table-h">
+      <h2 id="cdif-table-h">CDI futuro <Explain id="cdiFuturo" /></h2>
+      {curves.status === 'loading' && <div className="placeholder">Carregando curva DI…</div>}
+      {curves.status !== 'loading' && !rows.length && <p className="status">CDI futuro indisponível: depende da curva DI x pré, que não veio na última atualização.</p>}
+      {rows.length > 0 && (
+        <>
+          <p className="ind-note">Taxa que o mercado precifica nos futuros de DI, em % a.a., com base em {dm(today.date)}. Toque em uma linha para abrir o gráfico e escolher as datas.</p>
+          <IndicatorTable
+            caption="CDI futuro por horizonte"
+            columns={[{ label: 'CDI médio até lá' }, { label: 'CDI a termo no trecho' }]}
+            rows={rows.map((r) => ({ id: 'cdif', key: r.d, name: r.label, sub: `${r.vertex} dias úteis`, openLabel: `CDI futuro, ${r.label}: abrir gráfico`, cells: [{ text: pct(r.avg) }, { text: r.fwd != null ? pct(r.fwd) : '—' }] }))}
+            onOpen={onOpen}
+          />
+        </>
       )}
     </section>
   )

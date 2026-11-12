@@ -14,6 +14,8 @@ import CupomLeitura from './CupomLeitura.jsx'
 import { useDataFile } from './useDataFile.js'
 import { normalizeEuroCurve } from './euroCurve.js'
 import Estado from './Estado.jsx'
+import IndicatorTable from './IndicatorTable.jsx'
+import { curveTable } from './curveTable.js'
 
 const H = 260
 const M = { t: 14, r: 16, b: 30, l: 52 }
@@ -160,41 +162,70 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
   )
 }
 
-// Curva DI x pré sozinha, para o painel do Mercado (a aba Juros continua com as três curvas).
+// As três curvas do arquivo central (a do euro vem de arquivo próprio): mesmo texto no gráfico e na tabela.
+export const CURVAS = {
+  br: { help: 'curvaDi', title: 'Brasil · DI x pré', subtitle: 'taxa % a.a. por prazo em dias úteis', mode: 'br', nome: 'DI x pré', source: 'Taxas referenciais calculadas a partir dos ajustes dos futuros de DI; publicadas após o fechamento do pregão.' },
+  cc: { help: 'cupom', title: 'Brasil · Cupom cambial', subtitle: 'DI x dólar, % a.a. por prazo em dias úteis', mode: 'br', nome: 'cupom cambial', source: 'Cupom cambial a partir dos ajustes dos futuros. Vértices curtos (menos de 1 mês) omitidos por serem muito ruidosos; publicado após o fechamento.' },
+  us: { help: 'treasuries', title: 'EUA · Treasuries', subtitle: 'Par yield curve, % a.a. por vencimento', mode: 'us', nome: 'Treasuries', source: 'Curva de títulos públicos (par yield), não de futuros; fechamento do dia anterior ou do dia, conforme a divulgação.' },
+  eu: { help: 'curvaEuro', title: 'Área do euro · Curva soberana AAA', subtitle: 'taxa spot % a.a. por vencimento', mode: 'us', nome: 'curva do euro', source: 'Títulos soberanos da área do euro com classificação AAA, taxa spot estimada pelo modelo de Svensson. Não é o rendimento de um título específico, como o Bund alemão, e a taxa spot difere da par yield usada nas Treasuries, então a comparação com a curva dos EUA é de formato e não de nível exato.' },
+}
+const grafico = (id, data, bare = false) => { const c = CURVAS[id]; return <CurveChart bare={bare} help={c.help} title={c.title} subtitle={c.subtitle} data={data} mode={c.mode} source={c.source} /> }
+
+// Curva DI x pré sozinha, para o painel do Mercado.
 export function CurvePanel({ curves: c }) {
   if (!c || c.status === 'loading') return <div className="placeholder">Carregando curvas…</div>
   if (c.status === 'error') return <Estado tipo="erro" erro={c.error}>Curvas de juros indisponíveis agora.</Estado>
   return (
     <>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
-      {c.data?.br ? (
-        <CurveChart bare help="curvaDi" title="Brasil · DI x pré" subtitle="taxa % a.a. por prazo em dias úteis" data={c.data.br} mode="br" source="Taxas referenciais calculadas a partir dos ajustes dos futuros de DI; publicadas após o fechamento do pregão." />
-      ) : (
-        <p className="status">Curva DI indisponível nesta atualização.</p>
-      )}
+      {c.data?.br ? grafico('br', c.data.br, true) : <p className="status">Curva DI indisponível nesta atualização.</p>}
     </>
   )
 }
 
 // Curva soberana da área do euro (BCE): arquivo próprio, então aparece mesmo se a coleta das curvas do Brasil e dos EUA estiver pendente.
-function EuroCurve() {
+export function useEuroCurve() {
   const f = useDataFile('euro-curve.json')
   let data = null
   try { data = f.data ? normalizeEuroCurve(f.data) : null } catch { /* arquivo inválido: mostra indisponível */ }
-  if (!data) return <p className="status">{f.status === 'loading' ? 'Carregando curva do euro…' : 'Curva do euro indisponível nesta atualização.'}</p>
+  return { data, loading: f.status === 'loading', stale: !!(data?.stale || f.stale) }
+}
+
+// Gráfico de uma curva na tela de detalhe (aberta pela tabela da aba Juros). O cupom leva junto a leitura de cenário.
+export function CurveDetail({ id, curves: c }) {
+  const euro = useEuroCurve()
+  if (id === 'eu') {
+    if (!euro.data) return <p className="status">{euro.loading ? 'Carregando curva do euro…' : 'Curva do euro indisponível nesta atualização.'}</p>
+    return (
+      <>
+        {euro.stale && <p className="status stale" role="status">Não foi possível atualizar a curva do euro. Mantida a última coleta disponível.</p>}
+        {grafico('eu', euro.data)}
+      </>
+    )
+  }
+  if (!c || c.status === 'loading') return <div className="placeholder">Carregando curvas…</div>
+  if (c.status === 'error') return <Estado tipo="erro" erro={c.error}>Curvas de juros indisponíveis agora.</Estado>
+  const d = c.data
   return (
     <>
-      {(data.stale || f.stale) && <p className="status stale" role="status">Não foi possível atualizar a curva do euro. Mantida a última coleta disponível.</p>}
-      <CurveChart help="curvaEuro" title="Área do euro · Curva soberana AAA" subtitle="taxa spot % a.a. por vencimento" data={data} mode="us" source="Títulos soberanos da área do euro com classificação AAA, taxa spot estimada pelo modelo de Svensson. Não é o rendimento de um título específico, como o Bund alemão, e a taxa spot difere da par yield usada nas Treasuries, então a comparação com a curva dos EUA é de formato e não de nível exato." />
+      {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
+      {d?.[id] ? grafico(id, d[id]) : <p className="status">Curva indisponível nesta atualização.</p>}
+      {id === 'cc' && d?.cc && d?.br && <CupomLeitura curves={d} />}
     </>
   )
 }
 
-export default function Curves({ curves: c }) {
+const TABELAS = ['br', 'cc', 'us', 'eu']
+
+// Aba Juros: cada curva vira uma tabela (prazo × data de comparação); a linha abre o gráfico em tela própria.
+export default function Curves({ curves: c, onOpen }) {
   const d = c.data
+  const euro = useEuroCurve()
+  const dados = { br: d?.br, cc: d?.cc, us: d?.us, eu: euro.data }
   return (
-    <section className="macro" aria-labelledby="curves-h">
+    <section className="macro curve-tables" aria-labelledby="curves-h">
       <h2 id="curves-h">Curvas de juros</h2>
+      <p className="ind-note">Taxas em % a.a. por prazo, na última data e nas datas de comparação. Toque em uma linha para abrir o gráfico da curva.</p>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível. {c.error}</p>}
       {c.status === 'loading' && <div className="placeholder">Carregando curvas…</div>}
       {c.status === 'ok' && c.data.generatedAt && (Date.now() - c.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (
@@ -206,26 +237,25 @@ export default function Curves({ curves: c }) {
         </p>
       )}
       {c.status === 'error' && <Estado tipo="erro" erro={c.error}>Curvas de juros indisponíveis agora.</Estado>}
-      <div className="charts">
-        {c.status === 'ok' && (d.br ? (
-          <CurveChart help="curvaDi" title="Brasil · DI x pré" subtitle="taxa % a.a. por prazo em dias úteis" data={d.br} mode="br" source="Taxas referenciais calculadas a partir dos ajustes dos futuros de DI; publicadas após o fechamento do pregão." />
-        ) : (
-          <p className="status">Curva DI indisponível nesta atualização.</p>
-        ))}
-        {c.status === 'ok' && (d.cc ? (
-          <CurveChart help="cupom" title="Brasil · Cupom cambial" subtitle="DI x dólar, % a.a. por prazo em dias úteis" data={d.cc} mode="br" source="Cupom cambial a partir dos ajustes dos futuros. Vértices curtos (menos de 1 mês) omitidos por serem muito ruidosos; publicado após o fechamento." />
-        ) : (
-          <p className="status">Curva do cupom cambial indisponível nesta atualização.</p>
-        ))}
-        {/* leitura do cupom logo abaixo da curva dele, ocupando a linha inteira */}
-        {c.status === 'ok' && d.cc && d.br && <div className="charts-full"><CupomLeitura curves={d} /></div>}
-        {c.status === 'ok' && (d.us ? (
-          <CurveChart help="treasuries" title="EUA · Treasuries" subtitle="Par yield curve, % a.a. por vencimento" data={d.us} mode="us" source="Curva de títulos públicos (par yield), não de futuros; fechamento do dia anterior ou do dia, conforme a divulgação." />
-        ) : (
-          <p className="status">Curva dos EUA indisponível nesta atualização.</p>
-        ))}
-        <EuroCurve />
-      </div>
+      {euro.stale && <p className="status stale" role="status">Não foi possível atualizar a curva do euro. Mantida a última coleta disponível.</p>}
+      {TABELAS.map((id) => {
+        const def = CURVAS[id]
+        const pronto = id === 'eu' ? !euro.loading : c.status === 'ok'
+        if (!pronto) return id === 'eu' ? <p key={id} className="status">Carregando curva do euro…</p> : null
+        const t = dados[id] ? curveTable(dados[id], def.mode) : { columns: [], rows: [] }
+        if (!t.rows.length) return <p key={id} className="status">{def.title}: curva indisponível nesta atualização.</p>
+        return (
+          <div key={id} className="curve-table">
+            <h3><Flag code={bandeiraDe(def.title)} width={18} height={12} />{def.title} <small>{def.subtitle}</small> <Explain id={def.help} /></h3>
+            <IndicatorTable
+              caption={`${def.title}: taxas por prazo`}
+              columns={t.columns.map((col) => ({ label: col.label, small: col.small, aria: `${col.label}, ${col.small}` }))}
+              rows={t.rows.map((r) => ({ id: `curva-${id}`, key: r.id, name: r.name, sub: r.sub, openLabel: `${def.title}, ${r.name}: abrir gráfico da curva`, cells: r.values.map((v) => ({ text: v == null ? '—' : pct(v) })) }))}
+              onOpen={onOpen}
+            />
+          </div>
+        )
+      })}
     </section>
   )
 }
