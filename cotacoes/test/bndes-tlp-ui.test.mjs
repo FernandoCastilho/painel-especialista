@@ -71,11 +71,11 @@ test('TLP UI: mostra CET da parte fixa e custo com IPCA; tarifa opcional só mud
 test('TLP UI: IOF começa em PJ geral (zero só com FINAME) e PJ/Simples entram no líquido das duas linhas de custo', async t => {
   const h = await setup(t)
   assert.equal(h.field('iof').props.value, 'pj')
-  assert.deepEqual(nodes(h.field('iof')).filter(node => node.type === 'option').map(node => text(node)), ['Zero (só com recursos FINAME)', 'PJ geral (BNDES fora do FINAME)', 'Simples/MEI'])
+  assert.deepEqual(nodes(h.field('iof')).filter(node => node.type === 'option').map(node => text(node)), ['Zero (FINAME ou outro enquadramento confirmado)', 'PJ geral', 'Simples/MEI'])
   assert.match(h.text(), /revogada pelo Decreto 8\.511\/2015/)
   await h.ready()
   assert.match(h.text(), /o painel não verifica/)
-  assert.match(h.text(), /IOF na liberação[\s\S]*?R\$\s*0,00Alíquota zero · recursos FINAME não verificados/)
+  assert.match(h.text(), /IOF na liberação[\s\S]*?R\$\s*0,00Alíquota zero · enquadramento não verificado/)
   // PJ: R$ 10.000 com uma amortização a 732 dias (teto 365): 0,38% + 0,0082% × 365 = R$ 38,00 + R$ 299,30.
   await h.set('iof', 'pj'); assert.equal(h.rows().length, 0); await h.submit()
   assert.match(h.text(), /R\$\s*337,30R\$\s*38,00 adicional \+ R\$\s*299,30 diário/)

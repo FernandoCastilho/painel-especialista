@@ -173,7 +173,7 @@ test('snapshot oficial datado preserva9 pontos negativos e outras séries; não 
   assert.equal(lcdQuoteAt(data, '2025-01-31', '2026-11-05'), null)
 })
 
-test('UI LCD começa em IOF PJ geral, oferece zero só com recursos FINAME e Simples/MEI com confirmação, e avisa que não verifica o enquadramento', () => {
+test('UI LCD começa em IOF PJ geral, oferece zero com enquadramento confirmado e Simples/MEI com confirmação, e avisa que não verifica o enquadramento', () => {
   const ui = readFileSync(new URL('../src/BndesLcdCap.jsx', import.meta.url), 'utf8')
   assert.match(ui, /useState\('pj'\)/); assert.match(ui, /Decreto 8\.511\/2015/); assert.match(ui, /BNDES_PROFILE_IOF_OPTIONS/)
   assert.match(ui, /Confirmo a opção pelo Simples\/MEI/); assert.match(ui, /o painel não verifica/)

@@ -1,16 +1,19 @@
 // IOF das telas BNDES TLP exigível e Selic + LCD (Decreto 6.306/2007, art. 7º).
 // Texto consolidado do Decreto 6.306/2007 (Câmara dos Deputados), conferido em 12/11/2026: a alíquota zero do art. 8º, IX
-// vale só para operação "efetuada com recursos da Agência Especial de Financiamento Industrial - FINAME"; a alíquota zero
-// geral do BNDES (art. 8º, XXX) foi revogada pelo Decreto 8.511/2015. Fora do FINAME vale o art. 7º (PJ geral ou Simples/MEI).
-// Por isso as telas começam em PJ geral; zero é escolha do usuário quando os recursos forem FINAME (o painel não verifica).
+// cita a operação "efetuada com recursos da Agência Especial de Financiamento Industrial - FINAME"; a alíquota zero
+// geral do BNDES (art. 8º, XXX) foi revogada pelo Decreto 8.511/2015. Outros incisos podem dar zero conforme o enquadramento
+// (ex.: XV, agente de fundo ou programa de governo instituído por lei; XXVIII, bens de capital e itens da Lei 12.096/2009,
+// pelos critérios do CMN). Sem enquadramento confirmado vale o art. 7º. Por isso as telas começam em PJ geral; zero é escolha
+// do usuário quando a instituição confirmar o enquadramento (o painel não verifica). Chamada direta sem `iof` segue como
+// zero só por compatibilidade dos exemplos de teste; as telas sempre enviam o perfil.
 // PJ geral e Simples/MEI usam as alíquotas compartilhadas de resolveCreditIof.
 // IOF diário: principal de cada amortização (sem correção por índice) × dias corridos da liberação ao vencimento, teto de 365 dias.
 // IOF adicional: sobre o valor liberado. Tudo cobrado na liberação; não muda juros nem parcelas.
 import { resolveCreditIof } from './iofRules.js'
 
 export const BNDES_PROFILE_IOF_OPTIONS = Object.freeze([
-  ['zero', 'Zero (só com recursos FINAME)'],
-  ['pj', 'PJ geral (BNDES fora do FINAME)'],
+  ['zero', 'Zero (FINAME ou outro enquadramento confirmado)'],
+  ['pj', 'PJ geral'],
   ['simples', 'Simples/MEI'],
 ])
 const DAY = 86400000
@@ -34,7 +37,7 @@ export function principalByAmortization(principalCents, events) {
 export function bndesProfileIof({ iof, principalCents, releaseDate, events }) {
   const choice = iof === undefined ? { profile: 'zero' } : iof
   if (!choice || typeof choice !== 'object' || Array.isArray(choice) || !Object.keys(choice).every(key => ['profile', 'eligible'].includes(key)) || !BNDES_PROFILE_IOF_OPTIONS.some(([id]) => id === choice.profile))
-    return { ok: false, code: 'INVALID_IOF', message: 'Escolha o IOF: zero (só com recursos FINAME), PJ geral ou Simples/MEI.' }
+    return { ok: false, code: 'INVALID_IOF', message: 'Escolha o IOF: zero (FINAME ou outro enquadramento confirmado), PJ geral ou Simples/MEI.' }
   if (choice.profile === 'zero') return { ok: true, iof: { profile: 'zero', dailyPct: 0, additionalPct: 0, maxDays: 365, additionalCents: 0, dailyCents: 0, totalCents: 0, bases: [] } }
   const tax = resolveCreditIof({ date: releaseDate, profile: choice.profile, operationValue: principalCents / 100, eligible: choice.eligible === true })
   if (!tax.ok) return { ok: false, code: 'IOF_NOT_RESOLVED', message: tax.error }

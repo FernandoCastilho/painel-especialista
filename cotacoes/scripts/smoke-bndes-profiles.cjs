@@ -64,7 +64,7 @@ const out = process.env.BNDES_PROFILES_QA_OUTPUT || 'workspace-qa/bndes-profiles
       assert.match(await tlp.locator('tbody tr').first().locator('td').last().innerText(), /10\.000,00/)
       assert.match(await tlp.innerText(), /12\.945,10/)
       // CET da Res. CMN 4.881 (J + spreads, sem IPCA) e custo com o IPCA do cenário. Padrão: IOF PJ geral
-      // (alíquota zero só com recursos FINAME, Decreto 6.306/2007, art. 8º, IX): R$ 337,30 na liberação.
+      // (alíquota zero só com enquadramento confirmado, Decreto 6.306/2007, art. 8º): R$ 337,30 na liberação.
       assert.equal(await tlp.locator('#tlp-iof').inputValue(), 'pj')
       assert.match(await tlp.locator('.tlp-cet').innerText(), /CET · parte fixa \(regra do BC\)[\s\S]*12,28% a\.a\.[\s\S]*Custo com IPCA projetado[\s\S]*16,80% a\.a\./i)
       await help('TLP exigível: regra e limite da projeção')

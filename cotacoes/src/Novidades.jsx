@@ -3,8 +3,8 @@
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
   { date: '12/11/2026', resumo: 'BNDES TLP exigível e Selic + LCD: IOF de pessoa jurídica por padrão', items: [
-    'O IOF dessas duas telas começa em PJ geral: 0,38% sobre o valor mais 0,0082% ao dia sobre o principal de cada amortização, até 365 dias, cobrados na liberação. A alíquota zero do Decreto 6.306/2007 (art. 8º, IX) vale só para operação com recursos da FINAME; a alíquota zero geral do BNDES (art. 8º, XXX) foi revogada pelo Decreto 8.511/2015. Texto consolidado conferido em 12/11/2026.',
-    'Zero continua como opção, para quando a instituição confirmar recursos FINAME. O Finame Materiais segue com IOF zero.',
+    'O IOF dessas duas telas começa em PJ geral: 0,38% sobre o valor mais 0,0082% ao dia sobre o principal de cada amortização, até 365 dias, cobrados na liberação. A alíquota zero geral do BNDES (Decreto 6.306/2007, art. 8º, XXX) foi revogada pelo Decreto 8.511/2015; o zero agora depende de enquadramento, como recursos da FINAME (art. 8º, IX), fundo ou programa de governo (XV) ou bens de capital pela Lei 12.096/2009 (XXVIII). Texto consolidado conferido em 12/11/2026.',
+    'Zero continua como opção, para quando a instituição confirmar o enquadramento. O Finame Materiais segue com IOF zero (art. 8º, IX).',
   ] },
   { date: '11/11/2026', resumo: 'Nova calculadora Empréstimo externo (4131): custo em dólar, sem proteção, com swap e com NDF', items: [
     'Calculadoras > Empréstimo externo (4131): informe principal em dólar, taxa, câmbio, prazo e frequência dos juros. A tela calcula o custo all-in em dólar (IR na fonte com gross-up, IOF-câmbio automático pelo prazo médio, flat e fiança) e compara três caminhos em reais: sem proteção, por cenário de câmbio; com swap, em CDI + spread e % do CDI; e com NDF em cada pagamento, com custo prefixado e o ponto de equilíbrio do dólar.',

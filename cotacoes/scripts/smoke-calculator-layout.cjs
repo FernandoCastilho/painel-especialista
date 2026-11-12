@@ -255,7 +255,7 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.locator('.lcd-table tbody tr').count(), 3)
     assert.match(await section.locator('.lcd-table tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
     // CET pela Res. CMN 4.881 (sem Selic) e custo com a Selic do cenário, ambos visíveis sem abrir ajuda.
-    // IOF padrão PJ geral (zero só com recursos FINAME, Decreto 6.306/2007, art. 8º, IX): 0,38% × R$ 100 mil = R$ 380,00
+    // IOF padrão PJ geral (zero só com enquadramento confirmado, Decreto 6.306/2007, art. 8º): 0,38% × R$ 100 mil = R$ 380,00
     // + 0,0082% ao dia × R$ 50 mil × (61 + 92) dias = R$ 627,30, cobrados na liberação.
     assert.equal(await section.locator('#lcd-iof').inputValue(), 'pj')
     const cet = normalize(await section.locator('.lcd-cet').innerText())
