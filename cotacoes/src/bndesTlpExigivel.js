@@ -172,7 +172,7 @@ export function simulateTlpExigivel(input) {
       'SAC sobre saldo remanescente, com juros exigíveis em cada evento informado. Juros negativos reduzem prestação e, se excedentes, o principal.',
       'Calendário, feriados e periodicidades devem ser conferidos no contrato. Não há ajuste automático de datas, eventos extraordinários ou Price.',
       'CET pela Res. CMN 4.881/2020: sem IPCA (art. 5º), em dias corridos/365. IOF e tarifa saem do valor líquido na liberação. Juros seguem DU/252.',
-      iof.profile === 'zero' ? 'IOF zero: premissa de recursos BNDES/FINAME elegíveis (Decreto 6.306/2007, art. 8º, IX). O painel não verifica o enquadramento nem se a alíquota zero alcança esta linha TLP; confirme com a instituição.' : 'IOF: diário sobre o principal de cada amortização, em dias corridos desde a liberação, com teto de 365 dias, mais o adicional sobre o valor. Tudo cobrado na liberação.',
+      iof.profile === 'zero' ? 'IOF zero: depende de enquadramento, por exemplo recursos da FINAME (Decreto 6.306/2007, art. 8º, IX); a alíquota zero geral do BNDES foi revogada em 2015 (Decreto 8.511). O painel não verifica o enquadramento: confirme com a instituição.' : 'IOF: diário sobre o principal de cada amortização, em dias corridos desde a liberação, com teto de 365 dias, mais o adicional sobre o valor. Tudo cobrado na liberação.',
       'Precisão de projeção em centavos; não implementa a truncagem contratual de todos os intermediários em 16 casas. Não usar como memória contratual.'
     ] }
   } catch (e) { if (!(e instanceof InputError)) throw e; return { ok: false, status: 'blocked', rows: [], iof: null, totals: null, cet: null, error: { code: e.code, message: e.message } } }

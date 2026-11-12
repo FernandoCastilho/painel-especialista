@@ -255,9 +255,13 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.locator('.lcd-table tbody tr').count(), 3)
     assert.match(await section.locator('.lcd-table tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
     // CET pela Res. CMN 4.881 (sem Selic) e custo com a Selic do cenário, ambos visíveis sem abrir ajuda.
+    // IOF padrão PJ geral (zero só com enquadramento confirmado, Decreto 6.306/2007, art. 8º): 0,38% × R$ 100 mil = R$ 380,00
+    // + 0,0082% ao dia × R$ 50 mil × (61 + 92) dias = R$ 627,30, cobrados na liberação.
+    assert.equal(await section.locator('#lcd-iof').inputValue(), 'pj')
     const cet = normalize(await section.locator('.lcd-cet').innerText())
-    assert.match(cet, /CET · parte fixa \(regra do BC\)[\s?]*3,48% a\.a\. LD1 \+ remunerações, sem Selic/i)
-    assert.match(cet, /Custo com Selic projetada[\s?]*17,87% a\.a\./i)
+    assert.match(cet, /IOF na liberação[\s?]*R\$\s*1\.007,30 R\$\s*380,00 adicional \+ R\$\s*627,30 diário/i)
+    assert.match(cet, /CET · parte fixa \(regra do BC\)[\s?]*8,61% a\.a\. LD1 \+ remunerações, sem Selic · líquido R\$\s*98\.992,70/i)
+    assert.match(cet, /Custo com Selic projetada[\s?]*23,72% a\.a\./i)
   } else if (route === 'finame-materiais') {
     await section.locator('.fm-destaques').waitFor()
     assert.equal(await section.locator('#fm-finame-eligible, #fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc').count(), 0)
