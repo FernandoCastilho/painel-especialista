@@ -124,7 +124,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       }
       const corpo = await p.locator('main').innerText()
       assert.doesNotMatch(corpo, /Reino Unido|Bank Rate|Bank of England|BoE/, 'sem Reino Unido em Juros')
-      assert.match(await p.locator('.executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
+      assert.match(await p.locator('section[aria-labelledby="juros-exterior"] .executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
       await p.locator('.chart h3', { hasText: 'Área do euro · €STR' }).first().waitFor()
       await p.locator('.chart h3', { hasText: 'Brasil · CDI' }).first().waitFor()
       const curvaEuro = p.locator('.chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })
@@ -134,7 +134,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.ok(await curvaEuro.locator('svg path').count() >= 3, 'uma linha por data')
       const eixo = await curvaEuro.locator('svg text.tick').allTextContents()
       assert.ok(eixo.includes('3M') && eixo.includes('30A'), 'eixo do 3M ao 30A')
-      assert.ok(await p.locator('.chart h3 .flag').count() >= 4, 'bandeira nos títulos dos gráficos (CDI, Selic, SOFR e €STR)')
+      assert.ok(await p.locator('.chart h3 .flag').count() >= 4, 'bandeira nos títulos dos gráficos e curvas por região')
       await p.close()
     }
     // governança dos dados em Configurações: tabela por fonte, regras e nenhuma rolagem lateral da página
