@@ -175,6 +175,11 @@ function HistoryDashboard({ data }) {
       </> : <p className="rj-empty">Nenhuma menção encontrada para os filtros selecionados.</p>}
     </article>
 
+    <details className="rj-method">
+      <summary>Como interpretar a base histórica</summary>
+      <p>Cada linha corresponde a uma menção empresarial em uma publicação de pedido de recuperação judicial. Um mesmo processo pode envolver várias empresas. Datas são de publicação, e a contagem de processos protocolados requer dados judiciais específicos.</p>
+      <p>A UF é a informada no endereço empresarial da época. O setor é o informado na base. Participações consideram todas as menções do período. A comparação anual usa os mesmos meses e, quando o último mês está incompleto, o mesmo dia de corte. O número de edições disponíveis pode variar.</p>
+    </details>
   </>
 }
 
