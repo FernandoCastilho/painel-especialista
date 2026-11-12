@@ -9,12 +9,12 @@ const RECOVERY_CODE = 'operation_outcome_uncertain'
 // Concessões revisadas no código. Uma por incidente; nenhuma curinga.
 export const APPROVED_RUN_RECOVERIES = Object.freeze([
   Object.freeze({
-    reviewId: 'run-github-42846100438-1-recovery-20261110',
-    reviewedAt: '2026-11-10T17:30:00.000Z',
-    parentToken: '603bd042bfcc0c9febbe5e0e82523a8ad7bb3ade',
-    beforeDigest: '7f8c14149248262c3508905594a42c664211399a59f4e0939c35cb943072a454',
-    runId: 'github-42846100438-1',
-    suspend: Object.freeze(['mapa']),
+    reviewId: 'run-github-43133997037-1-recovery-20261112',
+    reviewedAt: '2026-11-12T10:16:32.000Z',
+    parentToken: '63cf240707f80f530911bcabcaec517403e89815',
+    beforeDigest: '88551322b48c4c3ee4a72ba377b49284db52282457ccb4a72a1ddc732f8d6281',
+    runId: 'github-43133997037-1',
+    suspend: Object.freeze(['ana']),
   }),
 ])
 

@@ -86,12 +86,12 @@ test('falha na gravação não é repetida', async () => {
   assert.equal(writes, 1)
 })
 
-test('concessão de produção: uma só, presa à rodada github-42846100438-1 e ao MAPA', () => {
+test('concessão de produção: uma só, presa à rodada github-43133997037-1 e à ANA', () => {
   assert.equal(APPROVED_RUN_RECOVERIES.length, 1)
   const g = APPROVED_RUN_RECOVERIES[0]
   assert.equal(validRunRecovery(g), true)
-  assert.equal(g.runId, 'github-42846100438-1')
-  assert.deepEqual([...g.suspend], ['mapa'])
+  assert.equal(g.runId, 'github-43133997037-1')
+  assert.deepEqual([...g.suspend], ['ana'])
   assert.ok(Object.isFrozen(g) && Object.isFrozen(g.suspend))
 })
 
