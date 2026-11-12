@@ -174,6 +174,7 @@ function HistoryDashboard({ data }) {
         </div>}
       </> : <p className="rj-empty">Nenhuma menção encontrada para os filtros selecionados.</p>}
     </article>
+
   </>
 }
 

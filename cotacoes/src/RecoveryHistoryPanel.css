@@ -48,7 +48,9 @@
 .rj-table th:nth-child(3) { width: 64px; }
 .rj-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .rj-pagination button,.rj-card-head button { min-height: 44px; }
-.rj-empty { color: var(--mut); }
+.rj-method,.rj-weekly-detail { padding: 12px 0; border-top: 1px solid var(--line); margin-top: 16px; }
+.rj-method summary,.rj-weekly-detail summary { cursor: pointer; font-weight: 600; }
+.rj-method p,.rj-empty { color: var(--mut); }
 .rj-empty { padding: 12px 0; }
 @media (max-width: 760px) {
   .rj-viz-grid { grid-template-columns: minmax(0, 1fr); }
