@@ -1,10 +1,16 @@
 {
-  "extraKnownMarketplaces": {
-    "mods-fernando": {
-      "source": { "source": "github", "repo": "FernandoCastilho/equipe-em-acao" }
-    }
-  },
-  "enabledPlugins": {
-    "equipe-em-acao@mods-fernando": true
+  "hooks": {
+    "SubagentStart": [
+      { "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"", "timeout": 5 }] }
+    ],
+    "SubagentStop": [
+      { "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"", "timeout": 5 }] }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"", "timeout": 5 }]
+      }
+    ]
   }
 }
