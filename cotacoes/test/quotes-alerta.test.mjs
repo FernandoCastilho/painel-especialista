@@ -40,10 +40,10 @@ test('cotação parada: sem alarme falso fora do pregão, no fim de semana e em 
 })
 
 test('cotação parada: o tempo só conta a partir da abertura do pregão', () => {
-  // 9h45: a última coleta é de antes da abertura (53 min), mas o pregão só tem 15 min
-  assert.equal(em('2026-11-03T12:45:00Z', 53).alert, null)
-  assert.equal(em('2026-11-03T12:59:00Z', 300).alert, null) // 9h59
-  assert.equal(em('2026-11-03T13:00:00Z', 300).alert, true) // 10h00: 30 min de pregão sem coleta
+  // 9h20: a última coleta é de antes da abertura (53 min), mas o pregão só tem 15 min
+  assert.equal(em('2026-11-03T12:20:00Z', 53).alert, null)
+  assert.equal(em('2026-11-03T12:34:00Z', 300).alert, null) // 9h34
+  assert.equal(em('2026-11-03T12:35:00Z', 300).alert, true) // 9h35: 30 min de pregão sem coleta
 })
 
 test('cotação parada: arquivo ilegível não vira alarme (o vigia continua religando a coleta)', () => {

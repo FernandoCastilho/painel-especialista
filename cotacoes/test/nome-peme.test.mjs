@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 
 // O painel se chama PEME (Painel Especializado no Mercado). Telas novas não podem trazer o nome antigo de volta.
-test('nome do painel: nenhuma tela usa o nome antigo e a marca do topo é PEME', async () => {
+test('nome do painel: nenhuma tela usa o nome antigo e a marca do topo é PME', async () => {
   const src = new URL('../src/', import.meta.url)
   const arquivos = (await readdir(src, { recursive: true })).filter(nome => /\.(jsx?|css)$/.test(nome)).map(nome => new URL(nome, src))
   arquivos.push(new URL('../index.html', import.meta.url), new URL('../public/manifest.webmanifest', import.meta.url))
@@ -12,7 +12,12 @@ test('nome do painel: nenhuma tela usa o nome antigo e a marca do topo é PEME',
   assert.deepEqual(comNomeAntigo, [])
   const topo = await readFile(new URL('TopBar.jsx', src), 'utf8')
   assert.match(topo, /className="topbar-brand" title="Painel Especializado no Mercado"/)
-  assert.match(topo, />PEME<\/abbr>/)
-  assert.match(await readFile(new URL('../index.html', import.meta.url), 'utf8'), /<title>PEME · Painel Especializado no Mercado<\/title>/)
+  assert.match(topo, />PME<\/abbr>/)
+  assert.match(await readFile(new URL('../index.html', import.meta.url), 'utf8'), /<title>PME · Painel Especializado no Mercado<\/title>/)
   assert.equal(JSON.parse(await readFile(new URL('../public/manifest.webmanifest', import.meta.url), 'utf8')).short_name, 'PEME')
+})
+
+test('entrada exibe PME sem alterar a identidade interna do aplicativo', async () => {
+  const entrada = await readFile(new URL('../src/AcessoPorEmail.jsx', import.meta.url), 'utf8')
+  assert.match(entrada, />PME · Painel Especializado no Mercado<\/h1>/)
 })

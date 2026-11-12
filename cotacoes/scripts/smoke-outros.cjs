@@ -148,7 +148,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await gov.locator('.config-gov tbody tr', { has: p.getByRole('rowheader', { name: 'Google Trends: Em alta no Brasil', exact: true }) }).innerText(), /RSS oficial[\s\S]*08h e 15h[\s\S]*25 h/)
       assert.match(await gov.locator('.config-gov tbody tr',{hasText:'Veículos pesados'}).innerText(),/ANFAVEA[\s\S]*1080 h/i)
       const txt = await gov.innerText()
-      assert.match(txt, /A cada 5 min no pregão/i); assert.match(txt, /Em resumo[\s\S]*Só o câmbio é coletado de 5 em 5 minutos[\s\S]*Coletar não é o mesmo que o número mudar/i); assert.match(txt, /Relê os arquivos publicados a cada 1 min/); assert.match(txt, /30 por dia/); assert.match(txt, /Atrasado após/i)
+      assert.match(txt, /A cada 5 min na janela intensiva/i); assert.match(txt, /Em resumo[\s\S]*Só o câmbio é coletado de 5 em 5 minutos[\s\S]*Coletar não é o mesmo que o número mudar/i); assert.match(txt, /Relê os arquivos publicados a cada 1 min/); assert.match(txt, /30 por dia/); assert.match(txt, /Atrasado após/i)
       assert.match(await gov.locator('.config-gov tbody tr', { hasText: 'Dívida bruta' }).innerText(), /72 h/)
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `sem rolagem lateral a ${width}px`)
       if (width < 700) assert.equal(await p.evaluate(() => { const sc = document.querySelector('.config-gov').closest('.config-scroll'); return sc.scrollWidth > sc.clientWidth + 1 }), false, 'no celular a tabela vira cartões, sem rolagem interna')

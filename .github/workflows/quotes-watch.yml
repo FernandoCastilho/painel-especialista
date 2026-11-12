@@ -4,7 +4,7 @@ name: Vigia das cotações (pregão, de 15 em 15 min)
 # Também avisa o dono (issue + Teams) quando a cotação fica parada por 30 min ou mais dentro do pregão; fecha a issue quando normaliza.
 on:
   schedule:
-    - cron: '*/15 12-21 * * 1-5' # 9h a 18h45 de Brasília; o script só age das 9h30 às 18h
+    - cron: '*/15 12-21 * * 1-5' # 9h a 18h45 de Brasília; o script só age das 9h05 às 18h
     # Segunda agenda, em minutos diferentes: o GitHub às vezes pula uma agenda inteira (09/11/2026), então duas aumentam a chance de a vigia rodar.
     - cron: '7,22,37,52 12-21 * * 1-5'
   # Reforço que não depende de agenda: quando uma coleta ou uma publicação termina (inclusive com falha), a vigia confere na hora.

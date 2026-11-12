@@ -207,13 +207,13 @@ const daily = (start, n, base, step, dec = 4) => Array.from({ length: n }, (_, i
       if (outputDir) { await p.evaluate(() => window.scrollTo(0, 0)); await p.screenshot({ path: `${outputDir}/tlp-${width}-indexadores.png` }) }
       await p.getByRole('button', { name: 'Histórico na aba BNDES' }).click(); await p.waitForURL('**/#bndes/tlp/TLP')
       if (width >= 900) {
-        assert.match(await p.locator('.topbar-brand').innerText(), /^PEME$/, 'marca da barra superior')
+        assert.match(await p.locator('.topbar-brand').innerText(), /^PME$/, 'marca da barra superior')
         assert.equal(await p.locator('.topbar-brand').getAttribute('title'), 'Painel Especializado no Mercado', 'nome completo ao passar o mouse na marca')
         const headerGeometry = []
         for (const w of [1000, 1024, 1100, 1199, 1299]) {
           await p.setViewportSize({ width: w, height: 800 })
           const sp = await p.locator('.topbar-brand abbr').boundingBox()
-          assert.ok(sp && sp.width > 20, `"PEME" visível (não só no texto) a ${w}px`)
+          assert.ok(sp && sp.width > 20, `"PME" visível (não só no texto) a ${w}px`)
           assert.equal(await p.evaluate(() => { const t = document.querySelector('.topbar-tabs'); return t.scrollWidth > t.clientWidth + 1 }), false, `abas sem corte a ${w}px`)
           const geometry = await p.locator('.topbar').evaluate(header => {
             const box = selector => { const r = header.querySelector(selector).getBoundingClientRect(); return { left:r.left, top:r.top, right:r.right, bottom:r.bottom, width:r.width, height:r.height } }

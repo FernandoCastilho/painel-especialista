@@ -3,7 +3,7 @@
 export const AVISO_KEY = 'aviso-inicial-visto'
 export const AVISO_RESUMO = 'Aplicativo educacional, com informação ilustrativa. Não é recomendação de crédito.'
 export const AVISO_FONTES = [
-  ['Quase ao vivo', 'câmbio, a cada poucos minutos em dias úteis (9h30 às 18h), sem garantia de tempo real.'],
+  ['Quase ao vivo', 'câmbio, a cada poucos minutos em dias úteis (9h05 às 18h), sem garantia de tempo real.'],
   ['Diário', 'curvas de juros da B3, uma referência por dia útil.'],
   ['Semanal', 'Focus, às segundas.'],
   ['Manual', 'projeções dos bancos, conferidas à mão; cada uma mostra a sua data.'],

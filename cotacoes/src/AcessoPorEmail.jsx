@@ -70,7 +70,7 @@ export default function AcessoPorEmail({ children }) {
   return (
     <main className="acesso-email">
       <form className="acesso-card" onSubmit={etapa === 'email' ? enviarCodigo : confirmar} noValidate aria-labelledby="acesso-titulo">
-        <h1 id="acesso-titulo">PEME · Painel Especializado no Mercado</h1>
+        <h1 id="acesso-titulo">PME · Painel Especializado no Mercado</h1>
         {etapa === 'email' ? (
           <>
             <p>Para entrar, digite seu e-mail. Vamos enviar um código de confirmação para ele.</p>

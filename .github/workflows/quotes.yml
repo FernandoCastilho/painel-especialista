@@ -3,7 +3,7 @@ name: Cotações (coleta central)
 # Um único robô consulta a AwesomeAPI e publica quotes.json, intraday.json e history.json na branch `data`.
 # Todos os usuários leem esses arquivos: a cota da API não depende de quantas pessoas abrem a página.
 #
-# Pregão (9h30 às 18h de Brasília = 12h30 às 21h UTC, segunda a sexta): o agendamento do GitHub não garante
+# Coleta intensiva (9h05 às 18h de Brasília = 12h05 às 21h UTC, segunda a sexta): o agendamento do GitHub não garante
 # execuções a cada 5 min (na prática atrasa ou pula horas). Por isso cada execução do pregão fica ligada e coleta
 # a cada 5 min pelo relógio, até o fim do pregão ou até 5h40 de duração (limite de 6 h por job). Três partidas
 # escalonadas cobrem o dia: enquanto uma roda, a seguinte espera na fila (concurrency) e assume quando ela termina.
@@ -11,11 +11,11 @@ name: Cotações (coleta central)
 on:
   schedule:
     # Partidas do pregão (a 1ª cobre a manhã; as outras são reserva e continuação).
-    - cron: '20 12 * * 1-5'
+    - cron: '5 12 * * 1-5'
     - cron: '20 15 * * 1-5'
     - cron: '50 17 * * 1-5'
-    # Fora do pregão, 1 vez por hora, só de segunda a sexta: 0h07 às 9h07 e 18h07 às 23h07 de Brasília. Nada no sábado e no domingo.
-    - cron: '7 3-12 * * 1-5'
+    # Fora do pregão, 1 vez por hora, só de segunda a sexta: 0h07 às 8h07 e 18h07 às 23h07 de Brasília. Nada no sábado e no domingo.
+    - cron: '7 3-11 * * 1-5'
     - cron: '7 21-23 * * 1-5'
     - cron: '7 0-2 * * 2-6'
   workflow_dispatch:
@@ -42,11 +42,12 @@ jobs:
           AWESOMEAPI_KEY: ${{ secrets.AWESOMEAPI_KEY }}
           PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
         run: |
-          # janela do laço: 12h15 a 21h UTC (a partida das 12h20 já entra nela; 12h30 é a abertura)
+          # janela de coleta intensiva: 09h05 a 18h de Brasília (12h05 a 21h UTC).
+          # Não representa horário de bolsa: as fontes de câmbio permanecem as mesmas.
           in_session() {
             local dow hm
             dow=$(date -u +%u); hm=$((10#$(date -u +%H%M)))
-            [ "$dow" -le 5 ] && [ "$hm" -ge 1215 ] && [ "$hm" -le 2100 ]
+            [ "$dow" -le 5 ] && [ "$hm" -ge 1205 ] && [ "$hm" -le 2100 ]
           }
           # Dados anteriores (branch data). Devolve 0 quando o estado é conhecido: arquivos baixados, ou a branch ainda não existe
           # (primeira publicação). Falha de rede NÃO é "branch não existe": devolve 1 e a rodada não coleta nem publica, porque a

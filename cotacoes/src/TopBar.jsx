@@ -51,7 +51,7 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
   return (
     <div className="topbar">
       <div className="topbar-brand" title="Painel Especializado no Mercado">
-        <abbr title="Painel Especializado no Mercado" style={{ textDecoration: 'none', cursor: 'help' }}>PEME</abbr>
+        <abbr title="Painel Especializado no Mercado" style={{ textDecoration: 'none', cursor: 'help' }}>PME</abbr>
       </div>
       <nav className="topbar-tabs" aria-label="Navegação principal">
         {DESK_TABS.filter((t) => !t.oculto).map((t, i) => (
