@@ -1,0 +1,10 @@
+{
+  "extraKnownMarketplaces": {
+    "mods-fernando": {
+      "source": { "source": "github", "repo": "FernandoCastilho/equipe-em-acao" }
+    }
+  },
+  "enabledPlugins": {
+    "equipe-em-acao@mods-fernando": true
+  }
+}
