@@ -2,33 +2,36 @@ import { useEffect, useRef, useState } from 'react'
 import { clampMascot, MASCOT_PREFERENCE_KEY, readMascotPreferences } from './mascotPosition.js'
 
 const NARROW = 1000
-// Keep the grab/hide controls below the sticky header, including saved positions.
+// Keep the grab/shrink controls below the sticky header, including saved positions.
 // On narrow screens the default spot sits above the bottom navigation.
+// Sem posição salva, a coruja grande abre no canto de cima, perto de onde estava a pequena.
+const TOP = { y: 0 }
 const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
-// The closed mascot parks as a small badge hanging just under the top header (or at the screen edge when there is none).
+// The small mascot parks as a badge hanging just under the top header (or at the screen edge when there is none).
 const parkTop = () => Math.max(0, window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0) + 4
 
-export default function MascotDock({ children, onSearch }) {
+export default function MascotDock({ children, icon, onSearch }) {
   const [preferences, setPreferences] = useState(() => readMascotPreferences({ getItem: key => window.localStorage.getItem(key) }))
-  const [position, setPosition] = useState(() => place(preferences.desktop))
+  const [position, setPosition] = useState(() => place(preferences.desktop ?? TOP))
+  const [large, setLarge] = useState(false)
   const [top, setTop] = useState(parkTop)
   const [moving, setMoving] = useState(false)
   const [announcement, setAnnouncement] = useState('')
-  const tray = useRef(null), dock = useRef(null), handle = useRef(null), restore = useRef(null), drag = useRef(null)
-  const previousHidden = useRef(preferences.hidden)
+  const tray = useRef(null), dock = useRef(null), handle = useRef(null), mini = useRef(null), drag = useRef(null)
+  const previousLarge = useRef(large)
   useEffect(() => {
     try { localStorage.setItem(MASCOT_PREFERENCE_KEY, JSON.stringify(preferences)) } catch { /* Private browsing may disable storage. */ }
   }, [preferences])
-  useEffect(() => { setTop(parkTop()) }, [preferences.hidden])
+  useEffect(() => { setTop(parkTop()) }, [large])
   useEffect(() => {
-    if (previousHidden.current !== preferences.hidden) {
-      (preferences.hidden ? restore : handle).current?.focus({ preventScroll: true })
-      previousHidden.current = preferences.hidden
+    if (previousLarge.current !== large) {
+      (large ? handle : mini).current?.focus({ preventScroll: true })
+      previousLarge.current = large
     }
-  }, [preferences.hidden])
+  }, [large])
   useEffect(() => {
     const resize = () => {
-      setPosition(place(preferences.desktop))
+      setPosition(place(preferences.desktop ?? TOP))
       setTop(parkTop())
     }
     window.addEventListener('resize', resize)
@@ -42,12 +45,13 @@ export default function MascotDock({ children, onSearch }) {
   const current = position
   const step = (x, y) => move({ x: current.x + x, y: current.y + y })
   const reset = () => {
-    setPosition(place(null))
+    setPosition(place(TOP))
     setPreferences(p => ({ ...p, desktop: null }))
     setAnnouncement('Mascote na posição inicial.')
   }
-  return <aside className={`mascot-tray${preferences.hidden ? ' mascot-tray-hidden' : ''}`} ref={tray} aria-label="Assistente do painel">
-    {preferences.hidden ? <button ref={restore} type="button" className="mascot-restore" style={{ top }} onClick={() => { setTop(parkTop()); setPreferences(p => ({ ...p, hidden: false })) }}><span>Mostrar mascote</span><i className="mascot-restore-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
+  const shrink = () => { setMoving(false); setLarge(false) }
+  return <aside className={`mascot-tray${large ? ' mascot-tray-large' : ''}`} ref={tray} aria-label="Assistente do painel">
+    {!large ? <button ref={mini} type="button" className="mascot-mini" style={{ top }} aria-label="Ampliar mascote" title="Clique para ampliar" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
       <div className="mascot-tools">
         <button type="button" ref={handle} className="mascot-move" aria-label="Mover mascote" aria-describedby="mascot-move-help" aria-expanded={moving} aria-controls="mascot-position-controls" title="Arraste ou use as setas do teclado" onClick={event => { if (event.detail === 0 || !drag.current?.moved) setMoving(v => !v) }} onKeyDown={event => {
           const offsets = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] }
@@ -63,8 +67,9 @@ export default function MascotDock({ children, onSearch }) {
           if (Math.abs(dx) + Math.abs(dy) > 5) drag.current.moved = true
           if (drag.current.moved) move({ x: drag.current.origin.x + dx, y: drag.current.origin.y + dy })
         }} onPointerUp={event => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId) }} onPointerCancel={() => { drag.current = null }}>✥</button>
-        <button type="button" aria-label="Ocultar mascote" onClick={() => setPreferences(p => ({ ...p, hidden: true }))}>×</button>
+        <button type="button" aria-label="Reduzir mascote" title="Reduzir (ou clique duas vezes na coruja)" onClick={shrink}>−</button>
       </div>
+      <div className="mascot-figure" title="Clique duas vezes para reduzir" onDoubleClick={shrink}>{icon}</div>
       {children}
       <button type="button" className="mascot-search" aria-haspopup="dialog" onClick={event => onSearch({ anchor: dock.current, opener: event.currentTarget, id: Date.now() })}>⌕ Pesquisar</button>
       {moving && <div id="mascot-position-controls" className="mascot-position-controls">
@@ -74,7 +79,7 @@ export default function MascotDock({ children, onSearch }) {
         <button type="button" onClick={() => { setMoving(false); handle.current?.focus() }}>Concluir</button>
       </div>}
     </div>}
-    <span id="mascot-move-help" className="mascot-sr-only">Use as setas do teclado para mover e Home para voltar à posição inicial. Ative este botão para mostrar controles de posição. Ao ocultar, o mascote vira um botão pequeno no topo da tela.</span>
+    <span id="mascot-move-help" className="mascot-sr-only">Use as setas do teclado para mover e Home para voltar à posição inicial. Ative este botão para mostrar controles de posição. Ao reduzir, o mascote volta a ser um botão pequeno no topo da tela.</span>
     <span className="mascot-sr-only" role="status">{announcement}</span>
   </aside>
 }
