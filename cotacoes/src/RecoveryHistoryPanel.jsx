@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import RefreshButton from './RefreshButton.jsx'
-import { UF_NAMES, UNKNOWN_UF, UNKNOWN_SECTOR, validateRecoveryHistory, recoveryPeriod, filterRecovery, groupRecovery, recoveryTreemap } from './recoveryHistory.js'
+import { UF_NAMES, UNKNOWN_UF, UNKNOWN_SECTOR, validateRecoveryHistory, recoveryPeriod, filterRecovery, groupRecovery } from './recoveryHistory.js'
 import geography from './recovery-geography.json'
 import RecoveryMapTooltip, { useRecoveryMapTooltip } from './RecoveryMapTooltip.jsx'
-import { recoveryCellLabel } from './recoveryMapLabels.js'
 import './RecoveryHistoryPanel.css'
 
 const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
@@ -12,7 +11,7 @@ const integer = new Intl.NumberFormat('pt-BR')
 const percentage = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 1 })
 const dateLabel = date => date.split('-').reverse().join('/')
 const PAGE_SIZE = 10
-const sectorPalette = ['#163979','#204a91','#2b539b','#294273','#35578a','#244880']
+const SECTOR_PREVIEW_SIZE = 8
 const stateLabel = uf => uf === UNKNOWN_UF ? 'Sem UF empresarial' : `${UF_NAMES[uf]} · ${uf}`
 const geographyUrl = 'https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais.html'
 
@@ -59,78 +58,48 @@ function StateMap({ records, selected, onSelect }) {
   </article>
 }
 
-function SectorMap({ records, selected, onSelect }) {
-  const tip = useRecoveryMapTooltip()
-  const svg = useRef(null)
-  const [size, setSize] = useState({width:500, height:320})
+function SectorRanking({ records, selected, onSelect }) {
+  const [expanded, setExpanded] = useState(false)
   const groups = groupRecovery(records, 'sector', UNKNOWN_SECTOR)
-  const cells = recoveryTreemap(groups, size.width, size.height)
-  const hasGroups = groups.length > 0
-  const tipGroup = groups.find(group => group.label === tip.active)
-  const measure = useMemo(() => {
-    const context = document.createElement('canvas').getContext('2d')
-    context.font = '700 13px system-ui, sans-serif'
-    return text => context.measureText(text).width
-  }, [])
-  useEffect(() => {
-    const element = svg.current
-    if (!element) return
-    const observer = new ResizeObserver(() => {
-      const { width, height } = element.getBoundingClientRect()
-      if (width > 0 && height > 0) setSize(previous => previous.width === width && previous.height === height ? previous : {width, height})
-    })
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [hasGroups])
+  const visibleGroups = expanded ? groups : groups.slice(0, SECTOR_PREVIEW_SIZE)
+  const maxCount = groups[0]?.count
+
   return <article className="rj-card" aria-labelledby="rj-sector-title">
-    <div className="rj-card-head"><div><h3 id="rj-sector-title">Distribuição por setor</h3><p>Área proporcional às menções no recorte de UF</p></div></div>
-    <p className="rj-map-instructions" id="rj-sector-help">Números nos blocos = quantidade de menções. Passe o cursor, use Tab ou toque para identificar o setor. Clique ou use Enter para filtrar. Esc fecha a dica.</p>
-    {groups.length ? <div className="rj-map-wrap" ref={tip.root}>
-      <svg ref={svg} className="rj-treemap" viewBox={`0 0 ${size.width} ${size.height}`} role="group" aria-describedby="rj-sector-help" aria-label="Treemap de setores por quantidade de menções">
-        {cells.map(({ label,count,x,y,w,h }, index) => {
-          const active = label === selected
-          const display = recoveryCellLabel(label, count, w, h, measure)
-          const fontSize = 13
-          return <g key={label} className="rj-sector-cell" data-label-mode={display.mode}
-            {...tip.trigger(label, () => onSelect(active ? '' : label))}
-            aria-label={`${label}: ${integer.format(count)} menções (${percentage.format(count / records.length)})`}
-            aria-pressed={active}>
-            <rect x={x} y={y} width={w} height={h} fill={active ? '#9c3b00' : sectorPalette[index % sectorPalette.length]} />
-            {display.mode === 'full' && <text aria-hidden="true" x={x + 6} y={y + 18} style={{fontSize}}>
-              <tspan>{label}</tspan><tspan x={x + 6} dy={19}>{display.number}</tspan>
-            </text>}
-            {display.mode === 'number' && <text aria-hidden="true" className="rj-cell-number" x={x + w / 2} y={y + h / 2} dy=".34em" style={{fontSize}}>{display.number}</text>}
-          </g>
-        })}
-      </svg>
-      <RecoveryMapTooltip tip={tip} label={tipGroup?.label} count={tipGroup?.count} share={percentage.format(tipGroup ? tipGroup.count / records.length : 0)} />
-    </div> : <p className="rj-empty">Nenhum setor com menções neste recorte.</p>}
-    {groups.length > 0 && <>
-      <ol className="rj-sector-top" aria-label="Setores com mais menções">
-        {groups.slice(0, 3).map(group => <li key={group.label}>
-          <button type="button" aria-pressed={selected === group.label}
-            onClick={() => onSelect(selected === group.label ? '' : group.label)}>
-            <span>{group.label}</span><strong>{integer.format(group.count)}</strong>
-          </button>
-        </li>)}
-      </ol>
-      <details className="rj-sector-legend"><summary>Ver todos os setores e quantidades ({groups.length})</summary>
-        <ol className="rj-sector-top" aria-label="Legenda completa de setores">
-          {groups.map(group => <li key={group.label}><button type="button" aria-pressed={selected === group.label}
-            onClick={() => onSelect(selected === group.label ? '' : group.label)}>
-            <span>{group.label}</span><strong>{integer.format(group.count)}</strong>
-          </button></li>)}
-        </ol>
-      </details>
-    </>}
-    <label className="rj-control">Selecionar setor
+    <div className="rj-card-head">
+      <div><h3 id="rj-sector-title">Distribuição por setor</h3><p>Menções por setor no período e na UF selecionados.</p></div>
+    </div>
+    <label className="rj-control rj-sector-select">Selecionar setor
       <select value={selected} onChange={event => onSelect(event.target.value)}>
         <option value="">Todos os setores</option>
         {selected && !groups.some(group => group.label === selected) && <option value={selected}>{selected} (0)</option>}
         {groups.map(group => <option value={group.label} key={group.label}>{group.label} ({integer.format(group.count)})</option>)}
       </select>
     </label>
-    <p className="rj-card-note">O grupo Sem setor reúne menções sem atividade identificada. Blocos muito pequenos podem ser consultados pela legenda ou pelo seletor.</p>
+    {groups.length > 0 ? <>
+      <p className="rj-map-instructions">Do maior para o menor. Selecione uma barra para filtrar o mapa e a tabela.</p>
+      <ol className="rj-sector-ranking" id="rj-sector-ranking" aria-label="Ranking de setores por menções">
+        {visibleGroups.map(({ label, count }) => {
+          const active = label === selected
+          const mentions = count === 1 ? 'menção' : 'menções'
+          return <li key={label}>
+            <button type="button" className="rj-sector-bar" aria-pressed={active}
+              onClick={() => onSelect(active ? '' : label)}>
+              <span className="rj-sector-name">{label}</span>
+              <span className="rj-sector-metric"><strong>{integer.format(count)} {mentions}</strong>
+                <small>{percentage.format(count / records.length)}</small></span>
+              <span className="rj-sector-track" aria-hidden="true">
+                <span className={label === UNKNOWN_SECTOR ? 'rj-sector-fill unknown' : 'rj-sector-fill'} style={{width:`${count / maxCount * 100}%`}} />
+              </span>
+            </button>
+          </li>
+        })}
+      </ol>
+      {groups.length > SECTOR_PREVIEW_SIZE && <button type="button" className="btn rj-sector-more"
+        aria-expanded={expanded} aria-controls="rj-sector-ranking" onClick={() => setExpanded(!expanded)}>
+        {expanded ? 'Ver apenas os primeiros setores' : `Ver todos os ${integer.format(groups.length)} setores`}
+      </button>}
+      {groups.some(group => group.label === UNKNOWN_SECTOR) && <p className="rj-card-note">Sem setor reúne menções sem atividade identificada.</p>}
+    </> : <p className="rj-empty">Nenhum setor com menções neste recorte.</p>}
   </article>
 }
 
@@ -182,10 +151,10 @@ function HistoryDashboard({ data }) {
     </div>
     <div className="rj-viz-grid">
       <StateMap records={filterRecovery(result.current, '', sector)} selected={uf} onSelect={chooseUf}/>
-      <SectorMap records={filterRecovery(result.current, uf, '')} selected={sector} onSelect={chooseSector}/>
+      <SectorRanking records={filterRecovery(result.current, uf, '')} selected={sector} onSelect={chooseSector}/>
     </div>
     <article className="rj-card rj-records" aria-labelledby="rj-records-title">
-      <div className="rj-card-head"><div><h3 id="rj-records-title">Menções empresariais</h3><p>{integer.format(visible.length)} registros encontrados</p></div>
+      <div className="rj-card-head"><div><h3 id="rj-records-title">Menções empresariais</h3><p>{integer.format(visible.length)} registros encontrados. Uma menção corresponde a um registro de empresa em um pedido.</p></div>
         {(uf || sector) && <button type="button" className="btn" onClick={() => { chooseUf(''); chooseSector('') }}>Limpar seleção</button>}
       </div>
       {(uf || sector) && <div className="rj-chips">
@@ -205,11 +174,6 @@ function HistoryDashboard({ data }) {
         </div>}
       </> : <p className="rj-empty">Nenhuma menção encontrada para os filtros selecionados.</p>}
     </article>
-    <details className="rj-method">
-      <summary>Como interpretar a base histórica</summary>
-      <p>Cada linha corresponde a uma menção empresarial em uma publicação de pedido de recuperação judicial. Um mesmo processo pode envolver várias empresas. Datas são de publicação, e a contagem de processos protocolados requer dados judiciais específicos.</p>
-      <p>A UF é a informada no endereço empresarial da época. O setor é o informado na base. Participações consideram todas as menções do período. A comparação anual usa os mesmos meses e, quando o último mês está incompleto, o mesmo dia de corte. O número de edições disponíveis pode variar.</p>
-    </details>
   </>
 }
 
@@ -221,6 +185,7 @@ export default function RecoveryHistoryPanel() {
   return <section className="rj-history" aria-labelledby="rj-history-heading">
     <div className="history-head"><h2 id="rj-history-heading">Recuperação judicial</h2><RefreshButton files={['recuperacao-historico.json']}/></div>
     <p className="rj-intro">Menções empresariais em pedidos de recuperação judicial · Base histórica do painel</p>
+    <p className="rj-card-note">Cobertura parcial das edições analisadas, não um total nacional. Uma mesma ação pode envolver várias empresas; menções não equivalem a processos únicos. Datas indicam publicação, não protocolo.</p>
     {data && <p className="rj-card-note">Última edição na base: {dateLabel(data.editions.at(-1))} · {integer.format(data.editions.length)} edições no histórico.</p>}
     {resource.status === 'loading' && <p role="status">Carregando a base histórica.</p>}
     {resource.status !== 'loading' && !data && <p role="status">Base histórica indisponível. Use Atualizar para tentar novamente.</p>}
