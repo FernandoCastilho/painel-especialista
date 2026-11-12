@@ -1,15 +1,61 @@
 {
   "hooks": {
     "SubagentStart": [
-      { "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"", "timeout": 5 }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
     ],
     "SubagentStop": [
-      { "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"", "timeout": 5 }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
     ],
     "Notification": [
       {
         "matcher": "permission_prompt",
-        "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"", "timeout": 5 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/equipe.mjs\"",
+            "timeout": 5
+          }
+        ]
       }
     ]
   }

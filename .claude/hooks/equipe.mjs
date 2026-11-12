@@ -45,7 +45,8 @@ const save = (file, value) => {
 export const run = (input, now = Date.now(), dirs = {}) => {
   const stateFile = dirs.state ?? join(tmpdir(), 'equipe-em-acao-estado.json')
   const histFile = dirs.hist ?? join(homedir(), '.claude', 'equipe-em-acao-historico.json')
-  const state = load(stateFile, { running: {} })
+  const state = load(stateFile, { running: {}, tools: {} })
+  state.tools ??= {}
   const hist = load(histFile, {})
   const who = String(input.agent_type ?? 'agente')
   const id = String(input.agent_id ?? '')
@@ -61,6 +62,7 @@ export const run = (input, now = Date.now(), dirs = {}) => {
   }
 
   let message = ''
+  let kind = 'system'
   if (event === 'SubagentStart' && id) {
     state.running[id] = { who, start: now }
     message = `● ${who} começou · ${eta(who)}${active()}`
@@ -76,20 +78,56 @@ export const run = (input, now = Date.now(), dirs = {}) => {
       message = `✓ ${who} terminou em ${fmt(ms)}${med ? ` (mediana ${fmt(med)})` : ''}${slow}${active()}`
       save(histFile, hist)
     }
+  } else if (
+    (event === 'PreToolUse' || event === 'PostToolUse') &&
+    (input.tool_name === 'Agent' || input.tool_name === 'Task')
+  ) {
+    const call = String(input.tool_use_id ?? '')
+    const inp = input.tool_input ?? {}
+    const name = String(inp.subagent_type ?? 'agente')
+    const task = mask(inp.description ?? '').slice(0, 60)
+    const background = Boolean(inp.run_in_background)
+    if (event === 'PreToolUse') {
+      state.tools[call] = { who: name, start: now }
+      message = `● ${name} começou${task ? `: ${task}` : ''} · ${eta(name)}${background ? ' · em segundo plano' : ''}`
+    } else {
+      const t = state.tools[call]
+      delete state.tools[call]
+      if (t && !background) {
+        const h = hist[name]
+        const med = h && h.length ? ` (mediana ${fmt(median(h))})` : ''
+        message = `✓ ${name} terminou em ${fmt(now - t.start)}${med}`
+      }
+    }
+    kind = 'tool'
   } else if (event === 'Notification' && input.notification_type === 'permission_prompt') {
     message = `⚠ Aguardando sua autorização: ${mask(input.message).slice(0, 120)}`
   }
   save(stateFile, state)
 
-  return message
+  return { message, kind, event }
 }
 
 // Só roda como gancho (com dados na entrada padrão), nunca ao ser importado.
 if (process.argv[1]?.endsWith('equipe.mjs')) {
   try {
     const input = JSON.parse(readFileSync(0, 'utf8') || '{}')
-    const message = run(input)
-    if (message) process.stdout.write(JSON.stringify({ systemMessage: message }))
+    const { message, kind, event } = run(input)
+    if (message && kind === 'tool') {
+      // O chat da nuvem não mostra a mensagem do gancho; o texto que o Claude lê
+      // é repassado ao usuário, então pedimos que ele repita a linha.
+      process.stdout.write(
+        JSON.stringify({
+          systemMessage: message,
+          hookSpecificOutput: {
+            hookEventName: event,
+            additionalContext: `[Equipe em ação] ${message}. Repita esta linha ao usuário, exatamente assim, em uma linha curta.`,
+          },
+        }),
+      )
+    } else if (message) {
+      process.stdout.write(JSON.stringify({ systemMessage: message }))
+    }
   } catch {
     // silêncio
   }
