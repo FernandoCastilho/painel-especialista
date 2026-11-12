@@ -139,7 +139,7 @@ function CapitalDeGiro({ onBack }) {
             <p className="cx-hint">{tax.ok ? `IOF automático: ${tax.additional.toLocaleString('pt-BR')}% adicional + ${tax.daily.toLocaleString('pt-BR', { maximumFractionDigits: 5 })}% ao dia, até 365 dias por parcela.` : 'Alíquotas calculadas conforme data e enquadramento.'}</p>
             <p className="cx-error" role={errors.iof ? 'alert' : undefined}>{errors.iof}</p>
             {tax.ok && <p className="cx-hint"><a href={tax.source} target="_blank" rel="noreferrer">Base legal: Decreto 6.306/2007, art. 7º</a> · Enquadramento automático; mudanças futuras não são antecipadas.</p>}
-            <p className="cx-hint">Juros por dias corridos; vencimento em dia não útil (fim de semana, feriado nacional ou da praça) passa para o próximo dia útil. No Bullet, paga-se no último vencimento mensal.</p>
+            <p className="cx-hint">Juros por dias corridos; vencimento em dia não útil (fim de semana, feriado ou 31/12) passa para o próximo dia útil. No Bullet, paga-se no último vencimento mensal.</p>
           </div>
         </div>
       </article>

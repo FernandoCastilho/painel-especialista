@@ -18,7 +18,7 @@ export const PRACAS_CONTRATO = Object.freeze([
   { id: 'CVL', label: 'Cascavel (PR)', calendars: ['BR', 'CVL'] },
 ].map(Object.freeze))
 
-export const PRACA_AJUDA = 'A praça define os feriados locais que adiam vencimentos: o que cai em fim de semana, feriado nacional ou feriado da praça passa para o próximo dia útil. Nas taxas pós-fixadas, esses feriados também saem da contagem de dias úteis. Padrão: só feriados nacionais.'
+export const PRACA_AJUDA = 'A praça define os feriados locais que adiam vencimentos: o que cai em fim de semana, feriado nacional, feriado da praça ou 31/12 (sem expediente bancário) passa para o próximo dia útil. Nas taxas pós-fixadas, esses feriados também saem da contagem de dias úteis. Padrão: só feriados nacionais.'
 export const PRACA_RESSALVA = 'Feriados locais conforme o calendário do painel (aba Feriados). No Paraná, os feriados estaduais não estão completos na base; confira o calendário do contrato.'
 
 export const pracaContrato = id => PRACAS_CONTRATO.find(p => p.id === id) ?? null
@@ -26,7 +26,7 @@ export const pracaCalendars = id => (pracaContrato(id) ?? pracaContrato(PRACA_PA
 
 // Lista de calendários aceita pelos motores: ids brasileiros conhecidos, sem repetição, com o BR sempre presente.
 // Devolve null quando a lista é inválida (o motor recusa em vez de supor).
-const BRASILEIROS = new Set(CALENDARS.filter(c => !['NY', 'UK', 'JP', 'CN'].includes(c.id)).map(c => c.id))
+const BRASILEIROS = new Set(CALENDARS.filter(c => !['NY', 'UK', 'JP', 'CN', 'BANCO'].includes(c.id)).map(c => c.id))
 export function contractCalendars(calendars = ['BR']) {
   if (!Array.isArray(calendars) || calendars.some(c => !BRASILEIROS.has(c))) return null
   return ['BR', ...new Set(calendars.filter(c => c !== 'BR'))]
