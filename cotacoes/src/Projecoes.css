@@ -1,8 +1,15 @@
 .focus-legend { display:block; margin-top:4px; }
 .fm { display:inline-block; min-width:1.1em; text-align:center; margin-left:6px; font-size:12px; font-weight:700; }
 .fm.up { color:var(--accent); } .fm.down { color:var(--warn); } .fm.same { color:var(--mut); }
-.vs-focus.vs-up { background:color-mix(in srgb, var(--accent) 8%, transparent); }
-.vs-focus.vs-down { background:color-mix(in srgb, var(--warn) 8%, transparent); }
+/* Sem fundo nas células: o sinal ao lado do número já diz se está acima, abaixo ou igual ao Focus. */
+.scenario-table thead th .scenario-date { display:block; margin-top:2px; color:var(--mut); font-size:.72rem; font-weight:400; font-variant-numeric:tabular-nums; }
+.scenario-note { margin:10px 0 0; color:var(--mut); font-size:.8125rem; line-height:1.5; }
+/* O texto de introdução ocupa a largura visível do quadro: a linha inteira no computador e, no celular, só a parte
+   à vista (a tabela rola para o lado e o texto fica parado, sem cortar no fim da linha). */
+.scenarios .scenario-scroll { container-type:inline-size; }
+main.app .scenarios .scenario-table caption { width:100cqw; max-width:100%; box-sizing:border-box; }
+/* Título não encolhe: quando não cabe ao lado, a data e o ano descem para a linha de baixo. */
+.scenarios .history-head > h2 { flex:1 1 auto; min-width:max-content; }
 /* Histórico do Focus abaixo da tabela: um gráfico por indicador, duas colunas no computador */
 .focus-hist h3 { margin:0 0 4px; }
 .focus-hist > .muted { margin:0 0 12px; color:var(--mut); font-size:.85rem; }
