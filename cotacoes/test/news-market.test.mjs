@@ -36,3 +36,33 @@ test('mercado hoje: aparece no feed, nas manchetes de destaque e é preservado s
   const stale = fillNewsFromPrevious(fresh, { generatedAt: 123, news: { MERCADO: [{ title: 'antigo', link: 'x', t: 1 }] }, stale: {} }, 10)
   assert.equal(fresh.MERCADO[0].title, 'antigo'); assert.equal(stale.MERCADO, 123)
 })
+
+test('etiqueta de moeda só quando a manchete fala da moeda ou de câmbio', async () => {
+  const { mentionsCurrency } = await import('../scripts/news-lib.mjs')
+  // casos reais que apareciam com etiqueta errada
+  for (const [code, titulo] of [
+    ['JPY', 'Samsung negocia compra da Modine'], ['JPY', 'Diretor da Expensify adquire ações'], ['USD', 'Braskem registra prejuízo de R$ 1,07 bilhão no 3º trimestre'],
+    ['USD', 'Lucro da B3 cresce no trimestre'], ['EUR', 'Nasa anuncia mais de US$ 10 bi em contratos para base lunar'], ['JPY', 'WTI Trader Bias Not Far Off Shifting as Longs Unwind'],
+    ['EUR', 'Volume diário de transações com Pix bate novo recorde'], ['JPY', 'Multicampeão do judô Teddy Riner anuncia candidatura à Presidência da França'],
+  ]) assert.equal(mentionsCurrency(code, titulo), false, `${code}: ${titulo}`)
+  for (const [code, titulo] of [
+    ['USD', 'Dólar fecha em alta de 1,5%'], ['USD', 'Gold, EUR/USD Hit 2026 Lows as US Yields Erupt'], ['EUR', 'Euro cai face ao dólar pela terceira sessão'], ['EUR', 'BCE mantém juros'],
+    ['JPY', 'O iene japonês paira perto de 160,00'], ['JPY', 'Japanese Yen hovers near 160.00'], ['JPY', 'Bank of Japan signals hike'], ['CNH', 'PBOC fixa o yuan mais forte'],
+    ['EUR', 'Câmbio: moedas emergentes recuam'], ['USD', 'Dollar Retreats From 19-Month High'],
+  ]) assert.equal(mentionsCurrency(code, titulo), true, `${code}: ${titulo}`)
+  // basta a menção no título original ou no traduzido; código sem lista (Mercado hoje) não é filtrado
+  assert.equal(mentionsCurrency('JPY', 'Mercado sobe', 'Yen rises'), true)
+  assert.equal(mentionsCurrency('MERCADO', 'Lucro da Yduqs cresce 20%'), true)
+})
+test('a coleta por moeda aplica a regra antes de escolher as manchetes', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const src = await readFile(new URL('../scripts/fetch-news.mjs', import.meta.url), 'utf8')
+  assert.match(src, /freshOnly\(items\)\.filter\(\(it\) => mentionsCurrency\(code, it\.title\)\)/)
+})
+test('manchete em inglês é reconhecida para tradução, inclusive as que empatavam no "as"', async () => {
+  const { isEnglish } = await import('../scripts/news-lib.mjs')
+  for (const t of ['GBP/USD Tests 2026 Lows as Fed Hike Bets Overpower Strong UK GDP', 'Gold, EUR/USD Hit 2026 Lows as US Yields Erupt', 'WTI Trader Bias Not Far Off Shifting as Longs Unwind',
+    'EUR/USD Near 1.1060 Exposes the Cost of Europe’s Energy Shock', 'Japanese Yen hovers near 160.00 as intervention fears limit downside']) assert.equal(isEnglish(t), true, t)
+  for (const t of ['Euro cai face ao dólar pela terceira sessão consecutiva', 'Dólar a R$ 5,65 é o maior valor em 17 meses, e Ibovespa cai', 'Lucro da Yduqs cresce 20% no 3º trimestre',
+    'Taiwan - Ações fecharam o pregão em alta e o Índice Taiwan Weighted avançou 1,55%', 'BB desaba e pressiona Ibovespa; dólar sobe a R$ 5,652', 'Volume diário de transações com Pix bate novo recorde']) assert.equal(isEnglish(t), false, t)
+})

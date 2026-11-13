@@ -442,12 +442,15 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       for (const label of ['Câmbio', 'Petróleo', 'Soja', 'Milho', 'Expectativas', 'Juros']) await ft.getByRole('rowheader', { name: new RegExp(label) }).waitFor()
       assert.match(await ft.locator('tr', { hasText: 'Expectativas' }).innerText(), /4,50%.*meta 3,0%/)
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
-      // dívida bruta do governo geral: assunto próprio (Cenários › Fiscal), fora da tela de inflação; a linha abre o histórico
-      assert.equal(await p.locator('.ind-table').count(), 1, 'a tela de Inflação não traz a dívida')
-      await p.locator('.cen-nav button', { hasText: 'Fiscal' }).click(); await p.waitForURL('**/#cenarios/fiscal')
-      assert.equal((await p.locator('#outros-title').textContent()).trim(), 'Fiscal')
-      assert.equal(await p.locator('section.infl').count(), 0, 'o quadro da inflação fica em Inflação')
-      const dt = p.locator('.ind-table').first(); await dt.waitFor()
+      // dívida bruta do governo geral: seção "Fiscal · dívida pública" dentro da tela de Inflação, abaixo do IPCA; a linha abre o histórico
+      assert.equal(await p.locator('.cen-nav button', { hasText: 'Fiscal' }).count(), 0, 'Fiscal não é mais um assunto à parte')
+      assert.equal((await p.locator('#fiscal-heading').textContent()).trim(), 'Fiscal · dívida pública')
+      assert.ok(await p.evaluate(() => document.querySelector('section.infl').compareDocumentPosition(document.getElementById('cen-fiscal')) & Node.DOCUMENT_POSITION_FOLLOWING), 'Fiscal vem depois da inflação')
+      // endereço antigo #cenarios/fiscal abre Inflação já rolada até a seção Fiscal, e o endereço vira o novo
+      await p.goto(base + '/#cenarios/fiscal'); await p.waitForURL('**/#cenarios/inflacao/fiscal')
+      await p.locator('.cen-nav [aria-current="true"]', { hasText: /^Inflação$/ }).waitFor()
+      await p.waitForFunction(() => { const top = document.getElementById('cen-fiscal')?.getBoundingClientRect().top; const fim = scrollY + innerHeight >= document.documentElement.scrollHeight - 2; return top !== undefined && (Math.abs(top) < 60 || (fim && top < innerHeight)) })
+      const dt = p.locator('#cen-fiscal .ind-table').first(); await dt.waitFor()
       assert.equal(await dt.locator('tbody').count(), 2, 'duas leituras da dívida bruta')
       assert.match(await dt.innerText(), /Máxima da série[\s\S]*DBGG · % do PIB[\s\S]*DBGG · saldo em R\$ bilhões/)
       assert.match(await dt.locator('tbody').first().innerText(), /82,93%[\s\S]*82,87%[\s\S]*\+0,06 p\.p\./, '% do PIB com duas casas, como o BCB publica: variação de 0,06 p.p. visível')
@@ -477,8 +480,12 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await trig.innerText(), /^[a-zç]{3}\/\d{2} → [a-zç]{3}\/\d{2}$/)
       await p.keyboard.press('Escape'); await d.waitFor({ state: 'hidden' })
       // frete marítimo: mesma tabela; a linha abre o gráfico
-      await p.goto(base + '/#cenarios/frete')
-      const f = p.locator('.ind-table', { hasText: 'Transporte marítimo' })
+      // seção própria dentro de Commodities; o endereço antigo abre Commodities rolada até ela
+      await p.goto(base + '/#cenarios/frete'); await p.waitForURL('**/#cenarios/commodities/frete')
+      await p.locator('.cen-nav [aria-current="true"]', { hasText: /^Commodities$/ }).waitFor()
+      assert.equal(await p.locator('.cen-nav button', { hasText: 'Frete' }).count(), 0, 'Frete não é mais um assunto à parte')
+      await p.waitForFunction(() => { const top = document.getElementById('cen-frete')?.getBoundingClientRect().top; const fim = scrollY + innerHeight >= document.documentElement.scrollHeight - 2; return top !== undefined && (Math.abs(top) < 60 || (fim && top < innerHeight)) })
+      const f = p.locator('#cen-frete .ind-table', { hasText: 'Transporte marítimo' })
       await f.waitFor()
       assert.match(await f.innerText(), /Δ mês %[\s\S]*12 meses %[\s\S]*Ano %/)
       assert.equal(await f.locator('tbody').count(), 2, 'EUA e Japão')

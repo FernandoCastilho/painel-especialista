@@ -52,6 +52,23 @@ export function pick(items, limit) {
   return out
 }
 
+// Etiqueta de moeda só quando a manchete fala da moeda ou de câmbio. A busca do Google devolve também matérias sem relação
+// (balanço de empresa, política), que antes ganhavam a etiqueta da busca. Valor em dinheiro ("US$ 10 bi") não conta como
+// assunto de câmbio. Termos em português e inglês; acentos ignorados.
+const CURRENCY_TERMS = {
+  USD: /\b(dolar|dolares|dollar|dollars|usd|greenback|dxy)\b/,
+  EUR: /\b(euro|euros|eur|eurozone|bce|ecb)\b/,
+  JPY: /\b(iene|ienes|yen|jpy|boj|banco do japao|bank of japan)\b/,
+  CNH: /\b(yuan|iuane|renminbi|rmb|cnh|cny|pboc|banco do povo da china)\b/,
+}
+const FX_TERMS = /\b(cambio|cambial|cambiais|forex|fx|moeda|moedas|currency|currencies|exchange rate)\b/
+const plain = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+export function mentionsCurrency(code, ...texts) {
+  const terms = CURRENCY_TERMS[code]
+  if (!terms) return true
+  return texts.some((t) => { const x = plain(t); return terms.test(x) || FX_TERMS.test(x) })
+}
+
 // Search hints do not replace the exact publication filter.
 export const googleUrl = (q, lang, when = `${NEWS_WINDOW_DAYS}d`) => {
   const p = lang === 'en' ? 'hl=en-US&gl=US&ceid=US:en' : 'hl=pt-BR&gl=BR&ceid=BR:pt-419'
@@ -66,8 +83,11 @@ export const freshOnly = recentNews
 
 // ---- Tradução para português (Brasil) ----
 
-const EN = /\b(the|and|of|to|in|for|on|as|with|at|by|from|is|are|after|over|amid|rises|falls|says|ahead|rate|rates|bank|dollar|yen|euro|yuan)\b/gi
-const PT = /\b(de|do|da|dos|das|em|para|com|que|os|as|um|uma|no|na|nos|nas|ao|pelo|pela|mais|após|diante|sobre|alta|queda)\b/gi
+// "as" existe nas duas línguas e por isso não conta para nenhuma: antes ele empatava manchetes como
+// "GBP/USD Tests 2026 Lows as Fed Hike Bets Overpower Strong UK GDP", que ficavam sem tradução.
+// Palavras comuns de manchete de mercado em inglês também contam.
+const EN = /\b(the|and|of|to|in|for|on|with|at|by|from|is|are|was|be|its|it|this|that|after|over|amid|near|not|off|into|than|while|ahead|rises|rise|falls|fall|says|hit|hits|test|tests|lows|highs|bets|gains|slides|slips|jumps|edges|eyes|hovers|retreats|surges|drops|climbs|rate|rates|yields|bank|dollar|yen|euro|yuan|stocks|shares|strong|weak|higher|lower|hike|cut|cuts)\b/gi
+const PT = /\b(de|do|da|dos|das|em|para|com|que|os|um|uma|no|na|nos|nas|ao|aos|pelo|pela|mais|após|diante|sobre|alta|queda|é|e|se|sobe|cai|fecha|ações|juros|dólar|bolsa)\b/gi
 export const isEnglish = (t) => (t.match(EN) ?? []).length > (t.match(PT) ?? []).length
 
 // Google Tradutor (endpoint público, sem chave), vários títulos por chamada, um por linha.

@@ -1,3 +1,4 @@
+import './MarketContext.css'
 import { useMemo, useState } from 'react'
 import { Aviso } from './Avisos.jsx'
 import IndicatorHistory from './IndicatorHistory.jsx'
@@ -12,9 +13,9 @@ import { nf } from './format.js'
 const sgn = (v, d, unit = '') => (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), d) + unit
 const monthName = (period) => new Date(`${period}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric', timeZone: 'UTC' }).replace('.', '')
 
-// Cenários › Inflação (IPCA oficial e o quadro "o que pesa") e Cenários › Fiscal (dívida bruta). `part` escolhe o assunto.
-export default function Outros({ macro, part = 'inflacao' }) {
-  const fiscal = part === 'fiscal'
+// Cenários › Inflação: IPCA oficial, o quadro "o que pesa" e, abaixo, a seção Fiscal (dívida bruta), que antes era um assunto à parte.
+// #cenarios/inflacao/fiscal abre a tela já na seção Fiscal (id cen-fiscal).
+export default function Outros({ macro }) {
   const file = useDataFile('ipca.json')
   const parsed = useMemo(() => { try { return file.data ? normalizeIpca(file.data) : null } catch { return null } }, [file.data])
   const rows = useMemo(() => (parsed ? ipcaRows(parsed) : []), [parsed])
@@ -57,9 +58,9 @@ export default function Outros({ macro, part = 'inflacao' }) {
     }
   })
   return (
-    <div className="outros" aria-labelledby="outros-title" role="region">
-      <div className="ctx-head"><h2 id="outros-title">{fiscal ? 'Fiscal' : 'Inflação'}</h2><RefreshButton files={fiscal ? ['divida.json'] : ['ipca.json', 'ipca-groups.json', 'oil.json', 'commodities.json', 'macro.json']} label={fiscal ? 'Fiscal' : 'Inflação'} /></div>
-      {!fiscal && <>
+    <div className="outros">
+      <section aria-labelledby="outros-title">
+      <div className="ctx-head"><h2 id="outros-title">Inflação</h2><RefreshButton files={['ipca.json', 'ipca-groups.json', 'oil.json', 'commodities.json', 'macro.json']} label="Inflação" /></div>
       <h3>IPCA</h3>
       {!parsed && <p role="status">{failed ? 'Não foi possível carregar o IPCA. Tente novamente mais tarde.' : 'Carregando IPCA…'}</p>}
       {parsed && (
@@ -76,9 +77,10 @@ export default function Outros({ macro, part = 'inflacao' }) {
         </>
       )}
       <InflacaoPesos macro={macro} />
-      </>}
-      {fiscal && <>
-      <h3>Dívida pública · Dívida Bruta do Governo Geral (DBGG)</h3>
+      </section>
+      <section id="cen-fiscal" className="cen-section" aria-labelledby="fiscal-heading">
+      <div className="ctx-head"><h2 id="fiscal-heading">Fiscal · dívida pública</h2><RefreshButton files={['divida.json']} label="Fiscal" /></div>
+      <h3>Dívida Bruta do Governo Geral (DBGG)</h3>
       {!dParsed && <p role="status">{dFailed ? 'Não foi possível carregar a dívida bruta. Tente novamente mais tarde.' : 'Carregando dívida bruta…'}</p>}
       {dParsed && (
         <>
@@ -93,8 +95,8 @@ export default function Outros({ macro, part = 'inflacao' }) {
           <Aviso title="Dívida bruta · método"><p className="ind-note">Dívida Bruta do Governo Geral (DBGG): governo federal, INSS e governos estaduais e municipais, sem as empresas estatais e sem o Banco Central. Saldo ao fim do mês, divulgado nas Estatísticas Fiscais, em R$ e em % do PIB (PIB acumulado em 12 meses). Série mensal desde dez/2006, sem recálculo; meses anteriores são revisados quando muda a metodologia ou o PIB. Em Variação, a diferença da razão está em pontos percentuais do PIB e a do saldo, em R$ bilhões. Conferência: {new Date(dParsed.checkedAt).toLocaleDateString('pt-BR')}.</p></Aviso>
         </>
       )}
-      </>}
-      {fiscal && dRow && (
+      </section>
+      {dRow && (
         <IndicatorHistory
           item={{ id: dRow.metric.id, label: dRow.metric.label, unit: dRow.metric.unit, decimals: dRow.metric.decimals, sourceUrl: dParsed.sourceUrl, sourceName: dParsed.sourceName, checkedAt: dParsed.checkedAt }}
           series={{ id: dRow.metric.id, unit: dRow.metric.unit, frequency: 'monthly', points: dividaSeries(dParsed, dRow.metric), sourceName: dParsed.sourceName, sourceUrl: dParsed.sourceUrl, checkedAt: dParsed.checkedAt, revisionNote: 'O Banco Central pode revisar meses anteriores (metodologia, PIB e dados dos entes); o painel mostra o que está na série do SGS.' }}
@@ -102,7 +104,7 @@ export default function Outros({ macro, part = 'inflacao' }) {
           onClose={() => setDOpenId(null)}
         />
       )}
-      {!fiscal && row && (
+      {row && (
         <IndicatorHistory
           item={{ id: row.metric.id, label: `IPCA · ${row.metric.label}`, unit: row.metric.unit, decimals: row.metric.decimals, sourceUrl: parsed.sourceUrl, sourceName: parsed.sourceName, checkedAt: parsed.checkedAt }}
           series={{ id: row.metric.id, unit: row.metric.unit, frequency: 'monthly', points: ipcaSeries(parsed, row.metric), sourceName: parsed.sourceName, sourceUrl: parsed.sourceUrl, checkedAt: parsed.checkedAt, revisionNote: 'O IBGE pode revisar divulgações anteriores em casos excepcionais; o painel mostra o que está na tabela 1737 do SIDRA.' }}

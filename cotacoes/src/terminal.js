@@ -24,7 +24,7 @@ const TAB = {
   CENARIOS: ['cenarios'], FOCUS: ['cenarios', 'projecoes'], PROJECOES: ['cenarios', 'projecoes'],
   ATIVIDADE: ['cenarios', 'atividade'], PMI: ['cenarios', 'atividade'], PAYROLL: ['cenarios', 'atividade'], EMPREGO: ['cenarios', 'atividade'],
   COMMODITIES: ['cenarios', 'commodities'], PETROLEO: ['cenarios', 'commodities'], BRENT: ['cenarios', 'commodities'], OURO: ['cenarios', 'commodities'],
-  FRETE: ['cenarios', 'frete'],
+  FRETE: ['cenarios', 'commodities/frete'],
   BNDES: ['bndes'], TFB: ['bndes'],
   BANCOS: ['bancos'], BASILEIA: ['bancos'],
   SETORES: ['setores'], COBRE: ['setores', 'cobre'], ALUMINIO: ['setores', 'aluminio'], ACO: ['setores', 'aco'], TELECOM: ['setores', 'telecom'], INDUSTRIA: ['setores', 'industria'], VAREJO: ['setores', 'comercio'],
