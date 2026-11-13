@@ -36,6 +36,15 @@ async function proveLastColumn(region, file) {
         assert.equal(await page.getByRole('button', { name: /^BNDES.*abrir calculadora$/ }).count(), 1, 'entrada única BNDES')
         await page.getByRole('button', { name: 'BNDES: abrir calculadora', exact: true }).click()
         await page.locator('#fm-compare').waitFor()
+        // Regressão visual aprovada em 13/11: resumo de câmbio fora da calculadora.
+        assert.equal(await page.locator('.alerta-variacao').count(), 0)
+        const dateBox = await page.locator('#fm-data-lib').boundingBox()
+        const placeBox = await page.locator('#fm-praca').boundingBox()
+        if (width > 1000) assert.ok(Math.abs(dateBox.y - placeBox.y) <= 1, 'Data e Praça alinhadas no desktop')
+        else assert.ok(placeBox.y > dateBox.y, 'Data e Praça empilhadas no mobile/tablet')
+        const pdfStyle = await page.locator('.fm-print-actions .bnprint-launch').evaluate(el => ({ background: getComputedStyle(el).backgroundImage, minHeight: parseFloat(getComputedStyle(el).minHeight) }))
+        assert.equal(pdfStyle.background, 'none', 'PDF sem gradiente de ação principal')
+        assert.ok(pdfStyle.minHeight >= 44, 'PDF preserva alvo acessível')
         // O nome completo do porte/região deve caber sem depender de abrir o seletor.
         const businessSize = page.locator('#fm-porte')
         const originalBusinessSize = await businessSize.inputValue()
