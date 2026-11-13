@@ -163,6 +163,21 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
         }
         assert.equal(topicImages, 81, 'todos os subsetores recebem imagem local')
       }
+      if (width === 320 || width === 390 || width === 1440) {
+        for (const group of ['turismo', 'varejo', 'saude', 'pet']) {
+          await page.goto(`${base}/#setores/pasta/${group}`)
+          const highlight = page.locator('.central-highlight')
+          const cards = page.locator('.central-subsectors')
+          await highlight.waitFor()
+          assert.equal(await highlight.getByText('O que acompanhar', { exact: true }).count(), 1)
+          const bounds = await highlight.boundingBox(), cardBounds = await cards.boundingBox()
+          assert.ok(bounds && cardBounds && bounds.y + bounds.height <= cardBounds.y, `${group}: resumo vem antes dos cards`)
+          await overflow()
+          await page.screenshot({ path: path.join(out, `${width}-${theme}-${group}-executivo.png`), fullPage: true })
+        }
+        await page.goto(`${base}/#setores/central`)
+        await folders.first().waitFor()
+      }
       if (width === 390) {
         await page.locator('#central-folder-tic').click()
         await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
