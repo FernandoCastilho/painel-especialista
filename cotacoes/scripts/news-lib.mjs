@@ -83,8 +83,11 @@ export const freshOnly = recentNews
 
 // ---- Tradução para português (Brasil) ----
 
-const EN = /\b(the|and|of|to|in|for|on|as|with|at|by|from|is|are|after|over|amid|rises|falls|says|ahead|rate|rates|bank|dollar|yen|euro|yuan)\b/gi
-const PT = /\b(de|do|da|dos|das|em|para|com|que|os|as|um|uma|no|na|nos|nas|ao|pelo|pela|mais|após|diante|sobre|alta|queda)\b/gi
+// "as" existe nas duas línguas e por isso não conta para nenhuma: antes ele empatava manchetes como
+// "GBP/USD Tests 2026 Lows as Fed Hike Bets Overpower Strong UK GDP", que ficavam sem tradução.
+// Palavras comuns de manchete de mercado em inglês também contam.
+const EN = /\b(the|and|of|to|in|for|on|with|at|by|from|is|are|was|be|its|it|this|that|after|over|amid|near|not|off|into|than|while|ahead|rises|rise|falls|fall|says|hit|hits|test|tests|lows|highs|bets|gains|slides|slips|jumps|edges|eyes|hovers|retreats|surges|drops|climbs|rate|rates|yields|bank|dollar|yen|euro|yuan|stocks|shares|strong|weak|higher|lower|hike|cut|cuts)\b/gi
+const PT = /\b(de|do|da|dos|das|em|para|com|que|os|um|uma|no|na|nos|nas|ao|aos|pelo|pela|mais|após|diante|sobre|alta|queda|é|e|se|sobe|cai|fecha|ações|juros|dólar|bolsa)\b/gi
 export const isEnglish = (t) => (t.match(EN) ?? []).length > (t.match(PT) ?? []).length
 
 // Google Tradutor (endpoint público, sem chave), vários títulos por chamada, um por linha.

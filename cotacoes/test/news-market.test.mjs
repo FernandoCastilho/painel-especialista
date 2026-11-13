@@ -59,3 +59,10 @@ test('a coleta por moeda aplica a regra antes de escolher as manchetes', async (
   const src = await readFile(new URL('../scripts/fetch-news.mjs', import.meta.url), 'utf8')
   assert.match(src, /freshOnly\(items\)\.filter\(\(it\) => mentionsCurrency\(code, it\.title\)\)/)
 })
+test('manchete em inglês é reconhecida para tradução, inclusive as que empatavam no "as"', async () => {
+  const { isEnglish } = await import('../scripts/news-lib.mjs')
+  for (const t of ['GBP/USD Tests 2026 Lows as Fed Hike Bets Overpower Strong UK GDP', 'Gold, EUR/USD Hit 2026 Lows as US Yields Erupt', 'WTI Trader Bias Not Far Off Shifting as Longs Unwind',
+    'EUR/USD Near 1.1060 Exposes the Cost of Europe’s Energy Shock', 'Japanese Yen hovers near 160.00 as intervention fears limit downside']) assert.equal(isEnglish(t), true, t)
+  for (const t of ['Euro cai face ao dólar pela terceira sessão consecutiva', 'Dólar a R$ 5,65 é o maior valor em 17 meses, e Ibovespa cai', 'Lucro da Yduqs cresce 20% no 3º trimestre',
+    'Taiwan - Ações fecharam o pregão em alta e o Índice Taiwan Weighted avançou 1,55%', 'BB desaba e pressiona Ibovespa; dólar sobe a R$ 5,652', 'Volume diário de transações com Pix bate novo recorde']) assert.equal(isEnglish(t), false, t)
+})
