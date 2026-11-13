@@ -257,9 +257,9 @@
 .bw .cx-finame .cx-field .money-wrap input:not([type=checkbox]) { padding-left:30px; }
 .bw .cx-finame input:focus-visible,.bw .cx-finame select:focus-visible { outline:2px solid #006bdc; outline-offset:1px; border-color:#006bdc; }
 .bw .cx-finame input[aria-invalid=true] { border-color:#c0392b; background:#fff7f6; }
-.bw .cx-finame .fm-unidade { font-size:.7rem; color:#8a99ad; white-space:nowrap; }
+.bw .cx-finame .fm-unidade { font-size:.7rem; color:#5b6b82; white-space:nowrap; }
 .bw .cx-finame .cx-error { margin:0; font-size:.72rem; line-height:1.35; }
-.bw .cx-finame .fi-help > button,.bw #fm-result .cx-matrix .fi-help > button { width:24px; min-width:24px; height:24px; min-height:24px; font-size:9px; color:#7a8ba3; }
+.bw .cx-finame .fi-help > button,.bw #fm-result .cx-matrix .fi-help > button { width:24px; min-width:24px; height:24px; min-height:24px; font-size:9px; color:#455c7a; }
 .bw .cx-finame .fi-help > button::before { width:14px; height:14px; }
 .bw .fm-financed { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0; min-height:36px; padding:6px 10px; border-radius:8px; background:#f4f7fb; font-size:.8rem; color:#455c7a; }
 .bw .fm-financed b { color:#10284c; font-size:.875rem; }
@@ -322,7 +322,7 @@
 .bw .fm-comparison .cx-matrix tbody tr,.bw .fm-quote-empty .cx-matrix tbody tr,.bw .fm-quote-empty tbody tr:last-child,.bw .fm-comparison tbody tr:last-child,.bw .fm-quote-empty tbody tr:nth-child(odd),.bw .fm-comparison tbody tr:nth-child(odd) { background:none; }
 .bw .fm-comparison .cx-matrix th svg,.bw .fm-quote-empty .cx-matrix th svg { display:none; }
 .bw .cx-matrix tr.fm-cet-row { background:#fff6ee !important; }
-.bw .cx-matrix tr.fm-cet-row td,.bw .cx-matrix tr.fm-cet-row th[scope=row] { color:#c25000 !important; font-weight:700 !important; }
+.bw .cx-matrix tr.fm-cet-row td,.bw .cx-matrix tr.fm-cet-row th[scope=row] { color:#b34700 !important; font-weight:700 !important; }
 .bw .cx-matrix tr.fm-total-row td,.bw .cx-matrix tr.fm-total-row th[scope=row] { color:#10284c !important; font-weight:700 !important; }
 .bw .fm-reference-sources,.bw .fm-comparison p { margin:8px 16px 0; font-size:.7rem; color:#5b6b82; line-height:1.45; }
 .bw .fm-comparison > p.fm-difference { margin:10px 16px 0; padding:8px 10px; font-size:.75rem; border:0; background:#f4f7fb; border-radius:8px; color:#10284c; }
@@ -465,3 +465,7 @@
   .bw #fm-result.fm-zoom .fm-details { margin-left:24px; margin-right:24px; }
   .bw #fm-result.fm-zoom .fm-details > summary { font-size:.95rem; }
 }
+
+/* 13/11/2026 · Leitura: nenhum texto do resultado abaixo de 11 px (o título da primeira coluna e a nota do cabeçalho ficavam com 10 px). */
+.bw .fm-comparison .cx-matrix thead th:first-child,.bw .fm-quote-empty .cx-matrix thead th:first-child { text-transform:none; font-variant-caps:all-small-caps; font-size:.78rem; }
+.bw #fm-result > header small { font-size:.7rem; }

@@ -70,11 +70,14 @@
 .credit-bw .credit-card-head select{background:#fff;color:#0b2e63;border:1px solid #7a8fac}
 .credit-bw .credit-card-result{background:#f2f6fc;border-top:1px solid #c6d5e9}
 .credit-bw .credit-card-result b{color:#092e60}
+/* Rótulos do resumo: cor cheia (sem transparência) e nunca abaixo de 12 px. */
+.credit-bw .credit-card-result span,.credit-bw .credit-card-result small{opacity:1;color:#455c7a}
+.credit-bw .credit-card-result small{font-size:.75rem}
 .credit-bw .credit-controls,.credit-bw .credit-analysis,.credit-bw .credit-notes,.credit-bw .credit-chart{border:1px solid #c6d5e9;border-radius:10px;background:#fff;color:#15253d}
 .credit-bw .credit-invest{border-left:6px solid #1d8a5a}
 .credit-bw .credit-invest-block{background:#f3faf6;color:#15253d}
 .credit-bw .credit-field input,.credit-bw .credit-field select,.credit-bw .credit-field textarea{border:1px solid #7a8fac;background:#fff;color:#15253d}
-.credit-bw .credit-compare{background:#ff7900;border-radius:8px}
+.credit-bw .credit-compare{background:#ff7900;color:#10284c;border-radius:8px}
 .credit-bw .credit-table{border:1px solid #c6d5e9}
 .credit-bw .credit-table caption{color:#092e60}
 .credit-bw .credit-table thead th{background:#d3e3f9;color:#10284c;border:1px solid #c6d5e9}
