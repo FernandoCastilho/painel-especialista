@@ -22,7 +22,7 @@
    its touch target; long status messages wrap rather than painting over the date. */
 @media (max-width: 560px) {
   .refresh-wrap { display: inline-grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 2px 4px; }
-  .refresh-wrap .refresh-stamp { grid-column: 1; grid-row: 1; min-width: 0; max-width: none; white-space: normal; overflow-wrap: normal; word-break: keep-all; }
+  .refresh-wrap .refresh-stamp { grid-column: 1; grid-row: 1; min-width: 0; max-width: none; white-space: normal; overflow-wrap: break-word; }
   .refresh-wrap .refresh-btn { grid-column: 2; grid-row: 1; }
   .refresh-wrap .refresh-msg { grid-column: 1; grid-row: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: right; }
   .refresh-wrap:has(.refresh-stamp) .refresh-msg { grid-column: 1 / -1; grid-row: 2; }

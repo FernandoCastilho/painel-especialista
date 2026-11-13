@@ -21,6 +21,7 @@ export function hookRenderer(renderHook) {
     },
     useRef(initial) { const index = cursor++; return slots[index] ??= { current: initial } },
     useCallback(fn, deps) { return memo(() => fn, deps) },
+    useLayoutEffect(effect, deps) { return dispatcher.useEffect(effect, deps) }, // neste apoio de testes, mesmo momento do useEffect
     useEffect(effect, deps) {
       const index = cursor++, previous = slots[index]
       if (!previous || deps.some((dep, i) => !Object.is(dep, previous.deps[i]))) {

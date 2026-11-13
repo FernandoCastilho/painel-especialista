@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentMascotSlot, subscribeMascotSlot } from './mascotSlot.js'
 import { clampMascot, MASCOT_PREFERENCE_KEY, readMascotPreferences } from './mascotPosition.js'
@@ -8,7 +8,9 @@ const NARROW = 1000
 // On narrow screens the default spot sits above the bottom navigation.
 // Sem posição salva, a coruja grande abre no canto de cima, perto de onde estava a pequena.
 const TOP = { y: 0 }
-const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
+// A coruja grande abre abaixo do cabeçalho: nem da barra do topo (computador), nem da linha de ícones onde mora a pequena (celular).
+const headerBottom = () => Math.max(window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88, currentMascotSlot()?.getBoundingClientRect().bottom ?? 0)
+const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), headerBottom() + 8)
 // A coruja pequena mora no espaço reservado do cabeçalho. Sem esse espaço (tela cheia, apresentação), flutua logo abaixo do topo.
 const parkTop = () => Math.max(0, window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0) + 4
 
@@ -26,7 +28,7 @@ export default function MascotDock({ children, icon, onSearch }) {
     try { localStorage.setItem(MASCOT_PREFERENCE_KEY, JSON.stringify(preferences)) } catch { /* Private browsing may disable storage. */ }
   }, [preferences])
   useEffect(() => { setTop(parkTop()) }, [large])
-  useEffect(() => {
+  useLayoutEffect(() => {
     const find = () => setSlot(currentMascotSlot())
     find()
     const off = subscribeMascotSlot(find)
