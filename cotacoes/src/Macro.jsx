@@ -3,13 +3,11 @@ import { bandeiraDe } from './paises.js'
 import RefreshButton from './RefreshButton.jsx'
 import DateRangePicker from './DateRangePicker.jsx'
 import { Aviso } from './Avisos.jsx'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { isWeekendBR } from './market.js'
 import Explain from './Explain.jsx'
 import { Plot, fmtDate, useWidth } from './HistoryChart.jsx'
-import SofrChart from './Sofr.jsx'
-import { useDataFile } from './useDataFile.js'
-import { estrChartPoints, normalizeEstr } from './estr.js'
+import { estrChartPoints } from './estr.js'
 import Estado from './Estado.jsx'
 
 const n2 = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -122,22 +120,25 @@ export function CdiChart({ macro, range }) {
   )
 }
 
-// Meta Selic só registra os dias de mudança: recorta no período e desenha em degraus.
+// Série que só registra os dias de mudança (Selic, juros de política): recorta no período e desenha em degraus.
+export function stepWindow(all, from, to) {
+  const start = Math.max(0, all.findLastIndex(([t]) => t <= from))
+  const cut = all.slice(start).filter(([t], i) => i === 0 || t <= to)
+  if (!cut.length) return []
+  const pts = cut.map(([t, v], i) => ({ t: i === 0 ? Math.max(t, from) : t, bid: v }))
+  // estende o degrau vigente até o fim do período (ou até hoje)
+  const end = Math.min(to - DAY, Date.now())
+  if (pts[pts.length - 1].t < end) pts.push({ t: end, bid: pts[pts.length - 1].bid })
+  return stepify(pts)
+}
+export const stepHistory = (all) => stepify(all.map(([t, v]) => ({ t, bid: v })))
+
 export function SelicChart({ macro, range }) {
   const all = macro.selic
   const from = range.start.getTime()
   const to = range.end.getTime() + DAY
-  const points = useMemo(() => {
-    const start = Math.max(0, all.findLastIndex(([t]) => t <= from))
-    const cut = all.slice(start).filter(([t], i) => i === 0 || t <= to)
-    if (!cut.length) return []
-    const pts = cut.map(([t, v], i) => ({ t: i === 0 ? Math.max(t, from) : t, bid: v }))
-    // estende o degrau vigente até o fim do período (ou até hoje)
-    const end = Math.min(to - DAY, Date.now())
-    if (pts[pts.length - 1].t < end) pts.push({ t: end, bid: pts[pts.length - 1].bid })
-    return stepify(pts)
-  }, [all, from, to])
-  const history = useMemo(() => stepify(all.map(([t, v]) => ({ t, bid: v }))), [all])
+  const points = useMemo(() => stepWindow(all, from, to), [all, from, to])
+  const history = useMemo(() => stepHistory(all), [all])
   const last = all[all.length - 1]
   return (
     <RateChart
@@ -180,34 +181,51 @@ export function EstrChart({ series, range }) {
   )
 }
 
+// Juros de política do exterior (Fed, BCE, Banco do Japão): série em degraus, uma mudança por decisão.
+// O Fed publica uma faixa: a linha mostra o limite superior e a nota traz a faixa vigente.
+const POLICY = {
+  fed: { id: 'FED', title: 'EUA · Fed (faixa-alvo)', help: 'fedFaixa', subtitle: 'limite superior da faixa-alvo', label: 'Fed · limite superior', color: 'var(--chart-gold)' },
+  ecb: { id: 'ECB', title: 'Área do euro · BCE (depósito)', help: 'bceDeposito', subtitle: 'taxa de depósito', label: 'BCE · depósito', color: 'var(--chart-estr)' },
+  boj: { id: 'BOJ', title: 'Japão · Meta overnight', help: 'bojMeta', subtitle: 'alvo aproximado overnight', label: 'Japão · meta', color: 'var(--chart-pink)' },
+}
+export function PolicyChart({ kind, series, range }) {
+  const def = POLICY[kind]
+  const all = useMemo(() => (series?.usagePending ? [] : series?.points ?? [])
+    .filter((p) => /^\d{4}-\d{2}-\d{2}$/.test(p?.date || '') && Number.isFinite(p.upper ?? p.value))
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((p) => [Date.parse(`${p.date}T12:00:00Z`), p.upper ?? p.value]), [series])
+  const from = range.start.getTime()
+  const to = range.end.getTime() + DAY
+  const points = useMemo(() => stepWindow(all, from, to), [all, from, to])
+  const history = useMemo(() => stepHistory(all), [all])
+  const last = (series?.usagePending ? [] : series?.points ?? []).filter((p) => /^\d{4}-\d{2}-\d{2}$/.test(p?.date || '')).sort((a, b) => a.date.localeCompare(b.date)).at(-1)
+  const atual = !last ? '' : Number.isFinite(last.lower) && Number.isFinite(last.upper) ? `Faixa atual: ${n2(last.lower)}% a ${n2(last.upper)}%, desde ${last.date.split('-').reverse().join('/')}`
+    : Number.isFinite(last.value) ? `Atual: ${last.approximate ? '≈ ' : ''}${rate(last.value)}, desde ${last.date.split('-').reverse().join('/')}` : ''
+  return (
+    <RateChart
+      id={def.id}
+      title={def.title}
+      help={def.help}
+      subtitle={def.subtitle}
+      color={def.color}
+      points={points}
+      history={history}
+      step
+      fmt={rate}
+      label={def.label}
+      refresh={['policy-rates.json']}
+      note={[atual, kind === 'fed' ? 'A linha é o limite superior da faixa-alvo.' : kind === 'boj' ? 'Série do alvo aproximado; cada degrau é a primeira observação daquele nível.' : 'Cada degrau é uma decisão do BCE.'].filter(Boolean).join(' · ')}
+    />
+  )
+}
+
 const STALE_LABELS = { cdi: 'CDI', selic: 'Selic', sofr: 'SOFR', sofrAvg: 'médias da SOFR', focus: 'Boletim Focus', ptax: 'PTAX' }
 const stamp = (t) => (t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'data desconhecida')
 
-export default function Macro({ macro: m }) {
-  const estrFile = useDataFile('estr.json')
-  let estr = null
-  try { estr = estrFile.data ? normalizeEstr(estrFile.data) : null } catch { /* arquivo inválido: o gráfico não aparece */ }
-  const [preset, setPreset] = useState('365')
-  const [range, setRange] = useState(() => rangeFor(365))
-  const onPreset = (p) => {
-    setPreset(p.id)
-    setRange(rangeFor(p.days))
-  }
-  const onDates = (a, b) => {
-    let start = fromInput(a)
-    let end = fromInput(b)
-    if (start > end) [start, end] = [end, start]
-    setPreset('custom')
-    setRange({ start, end })
-  }
+// Avisos sobre a coleta das taxas (carregando, falha, dado antigo); os gráficos abrem pela tabela, em tela própria.
+export function MacroStatus({ macro: m }) {
   return (
-    <section className="macro">
-      <h2>Histórico das taxas de juros</h2>
-      {/* dois níveis: o período (aqui) vale para os quatro gráficos; o "Agrupar" de cada gráfico só muda a granularidade dos pontos */}
-      <div className="juros-period">
-        <p className="juros-period-label" id="juros-period-label">Período dos quatro gráficos abaixo</p>
-        <RatesPeriod range={range} preset={preset} onPreset={onPreset} onDates={onDates} />
-      </div>
+    <>
       {m.status === 'loading' && <p className="status">Carregando dados…</p>}
       {m.status === 'error' && <Estado tipo="erro" erro={m.error}>Dados indisponíveis no momento.</Estado>}
       {m.stale && <p className="status stale">Atualização pendente; mantidas as últimas taxas disponíveis.</p>}
@@ -219,14 +237,6 @@ export default function Macro({ macro: m }) {
           Atualização indisponível na última coleta; mantido o último dado publicado: {Object.entries(m.data.stale).filter(([k]) => ['cdi', 'selic', 'sofr', 'sofrAvg'].includes(k)).map(([k, t]) => `${STALE_LABELS[k] ?? k} (coletado em ${stamp(t)})`).join(', ')}.
         </p>
       )}
-      {m.status === 'ok' && (
-        <div className="charts">
-          {m.data.cdi?.length ? <CdiChart macro={m.data} range={range} /> : <p className="status">CDI indisponível no momento.</p>}
-          {m.data.selic?.length ? <SelicChart macro={m.data} range={range} /> : <p className="status">Selic indisponível no momento.</p>}
-          {m.data.sofr?.length ? <SofrChart macro={m.data} range={range} /> : <p className="status">SOFR indisponível no momento.</p>}
-          {estr?.points.length ? <EstrChart series={estr} range={range} /> : <Estado tipo={estrFile.status === 'loading' ? 'info' : 'erro'}>{estrFile.status === 'loading' ? 'Carregando €STR…' : '€STR indisponível no momento.'}</Estado>}
-        </div>
-      )}
-    </section>
+    </>
   )
 }

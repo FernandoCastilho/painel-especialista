@@ -21,6 +21,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         await p.route('**/curves.json*', (r) => r.fulfill({ json: curves }))
         await p.goto(base + '/#juros')
         // 1) barras da variação do cupom: crescem do zero em cascata curta, cada uma < 1 s, sem loop
+        await p.locator('.curve-table', { hasText: 'Brasil · Cupom cambial' }).getByRole('button', { name: /1 ano: abrir gráfico da curva/ }).click() // a leitura do cupom fica na tela da curva
         const s = p.locator('.cupom-leitura'); await s.waitFor(); await s.scrollIntoViewIfNeeded()
         await s.getByRole('button', { name: 'Variação por vértice' }).click()
         const bars = s.locator('.cl-bar-track i'); await bars.first().waitFor()
@@ -34,12 +35,13 @@ const out = process.env.SMOKE_OUT || '/tmp'
         // valores já no final, sem contagem
         assert.match(await s.locator('.cl-bar-val').first().innerText(), /bps$/)
         // balão do "?": surge curto (< 0,2 s); com reduzir movimento, aparece direto
-        await p.getByRole('button', { name: 'O que é: Curvas de comparação: Treasuries' }).click()
-        const tip = p.locator('[role=tooltip]').filter({ hasText: 'Curvas de comparação: Treasuries' }).first(); await tip.waitFor()
+        await p.getByRole('button', { name: /^O que é: Curvas de comparação/ }).click()
+        const tip = p.locator('[role=tooltip]').filter({ hasText: 'Curvas de comparação' }).first(); await tip.waitFor()
         const ta = (await anims(tip)).find((a) => a.name === 'pop-in')
         if (calm) assert.ok(!ta, 'reduzir movimento: balão sem animação')
         else assert.ok(ta && ta.dur <= 200 && ta.iter === 1, `balão < 0,2 s: ${JSON.stringify(ta)}`)
         await p.keyboard.press('Escape'); if (width < 700) await p.locator('.pop-close:visible').first().click().catch(() => {})
+        await p.getByRole('button', { name: 'Fechar detalhes' }).click(); await p.locator('dialog.is-modal').waitFor({ state: 'detached' })
         if (width < 700) {
           // celular: balão da tabela de juros fica na frente das colunas fixas das linhas de baixo (nada o cobre)
           const ajudas = p.locator('.executive-rates__name .help > button'); await ajudas.first().waitFor()

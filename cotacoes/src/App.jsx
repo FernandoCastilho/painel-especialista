@@ -19,10 +19,7 @@ import DateRangePicker from './DateRangePicker.jsx'
 import { fadeIn } from './motion.js'
 import { CURRENCIES, REFRESH_DAILY_MAX, useQuotes } from './useQuotes.js'
 import HistoryChart from './HistoryChart.jsx'
-const Macro = lazy(() => import('./Macro.jsx'))
-const RatesSnapshot = lazy(() => import('./RatesSnapshot.jsx'))
-const Curves = lazy(() => import('./Curves.jsx'))
-const CdiFuturo = lazy(() => import('./CdiFuturo.jsx'))
+const Juros = lazy(() => import('./Juros.jsx'))
 import HolidayNotice from './HolidayNotice.jsx'
 import AvisoInicial from './AvisoInicial.jsx'
 import MarketPopup from './MarketPopup.jsx'
@@ -313,12 +310,7 @@ export default function App() {
       )}
 
       {tab === 'juros' && (
-        <>
-          <RatesSnapshot macro={macro} />
-          <Macro macro={macro} />
-          <CdiFuturo curves={curves} macro={macro.data} hol={hol} />
-          <Curves curves={curves} />
-        </>
+        <Juros macro={macro} curves={curves} hol={hol} />
       )}
 
       {tab === 'cenarios' && (

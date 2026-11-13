@@ -129,3 +129,13 @@
   .executive-rates__name .help button:not(.pop-close) { height: 28px; }
   .executive-rates__name .help button:not(.pop-close)::after { inset: -4px -14px; }
 }
+
+/* Linha que abre o gráfico do indicador (aba Juros): o nome é o botão; a linha toda aceita o clique. */
+.executive-rates__row--open td { cursor: pointer; }
+.executive-rates__row--open:hover > * { background: var(--surface-2, var(--card)); }
+.executive-rates__open { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.executive-rates__open > span { color: var(--mut); }
+.executive-rates__open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+@media (min-width: 700px) and (pointer: fine) { .executive-rates__open { min-height: 28px; } }
+/* Celular: o nome quebra nas palavras, como antes de virar botão. */
+@media (max-width: 699px) { .executive-rates__open { display: inline; min-height: 0; padding: 6px 0; overflow-wrap: normal; word-break: normal; } .executive-rates__open .flag { margin-right: 6px; } }
