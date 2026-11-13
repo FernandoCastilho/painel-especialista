@@ -73,7 +73,7 @@ test('novos temas têm fontes oficiais, data de revisão e exemplos que não se 
 })
 
 test('os conceitos pedidos existem, com ids únicos', () => {
-  assert.deepEqual(CONCEITOS.map((c) => c.id), ['juros-forcados', 'marcacao-a-mercado', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'cds', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'lei-de-maquila', 'imposto-seletivo', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'substituicao-tributaria', 'reforma-tributaria', 'split-payment', 'dividendos'])
+  assert.deepEqual(CONCEITOS.map((c) => c.id), ['juros-forcados', 'marcacao-a-mercado', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'cds', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'lei-de-maquila', 'fascismo', 'imposto-seletivo', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'substituicao-tributaria', 'reforma-tributaria', 'split-payment', 'dividendos'])
   assert.equal(new Set(CONCEITOS.map((c) => c.id)).size, CONCEITOS.length)
 })
 
