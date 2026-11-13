@@ -4,7 +4,8 @@ import RefreshButton from './RefreshButton.jsx'
 import { Aviso } from './Avisos.jsx'
 import { useId, useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
-import { focoPorTeclado, limitarBalao, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
+import { marcasRedondas } from './chartEixo.js'
+import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { isWeekendBR } from './market.js'
 import { dataTimestamp } from './dataTimestamp.js'
@@ -46,18 +47,20 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
     let lo = Math.min(...vals)
     let hi = Math.max(...vals)
     const pad = (hi - lo || 1) * 0.12
-    lo -= pad
-    hi += pad
+    // eixo em números redondos, com o domínio estendido até a marca vizinha
+    const eixo = marcasRedondas(lo - pad, hi + pad)
+    lo = eixo.lo
+    hi = eixo.hi
     const iw = width - M.l - M.r
     const ih = H - M.t - M.b
     const X = (p) => M.l + (((labels ? xv(p[0]) : p[0] / 252) - x0) / (x1 - x0 || 1)) * iw
     const Y = (v) => M.t + (1 - (v - lo) / (hi - lo)) * ih
-    const yTicks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) * i) / 4)
+    const yTicks = eixo.ticks
     const xTicks = labels
       ? labels.filter((_, i) => i % (width < 520 ? 3 : 2) === 0 || i === labels.length - 1).map((l) => ({ x: X([l[0]]), t: l[1] }))
       : [0, 1, 2, 3, 5, 7, 10, 15, 20, 30].filter((y) => y <= x1 + 0.01).map((y) => ({ x: M.l + (y / (x1 || 1)) * iw, t: `${y}a` }))
           .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), []) // pelo menos 30 px entre rótulos: sem encavalar
-    return { series, X, Y, yTicks, xTicks }
+    return { series, X, Y, yTicks, xTicks, casas: eixo.casas }
   }, [shown.map((s) => s.date).join(), width, data, mode])
 
   const onMove = (e) => {
@@ -118,7 +121,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
               {g.yTicks.map((v) => (
                 <g key={v}>
                   <line x1={M.l} x2={width - M.r} y1={g.Y(v)} y2={g.Y(v)} className="gridline" />
-                  <text x={M.l - 8} y={g.Y(v)} dy="0.32em" textAnchor="end" className="tick">{v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</text>
+                  <text x={M.l - 8} y={g.Y(v)} dy="0.32em" textAnchor="end" className="tick">{rotuloEixo(v, g.casas)}</text>
                 </g>
               ))}
               {g.xTicks.map((t, i) => (

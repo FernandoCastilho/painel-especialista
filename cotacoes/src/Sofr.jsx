@@ -1,5 +1,6 @@
 import { nextChartIndex } from './chartNavigation.js'
-import { focoPorTeclado, limitarBalao, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
+import { marcasRedondas } from './chartEixo.js'
+import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import ChartComparison from './ChartComparison.jsx'
 import Flag from './Flag.jsx'
 import RefreshButton from './RefreshButton.jsx'
@@ -55,8 +56,10 @@ export default function SofrChart({ macro, range }) {
     let lo = Math.min(...vals)
     let hi = Math.max(...vals)
     const pad = (hi - lo || 0.5) * 0.12
-    lo -= pad
-    hi += pad
+    // eixo em números redondos, com o domínio estendido até a marca vizinha
+    const eixo = marcasRedondas(lo - pad, hi + pad)
+    lo = eixo.lo
+    hi = eixo.hi
     const t0 = rows[0].t
     const t1 = rows[rows.length - 1].t
     const iw = width - M.l - M.r
@@ -78,11 +81,11 @@ export default function SofrChart({ macro, range }) {
     }
     const bandRows = rows.filter((r) => r.p1 != null && r.p99 != null)
     const band = bandRows.length > 1 ? bandRows.map((r, i) => `${i ? 'L' : 'M'}${X(r.t).toFixed(1)},${Y(r.p99).toFixed(1)}`).join('') + bandRows.slice().reverse().map((r) => `L${X(r.t).toFixed(1)},${Y(r.p1).toFixed(1)}`).join('') + 'Z' : ''
-    const yTicks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) * i) / 4)
+    const yTicks = eixo.ticks
     const years = t1 - t0 > 3 * 365 * DAY
     const nx = width < 420 ? 3 : 5
     const xTicks = Array.from({ length: nx }, (_, i) => t0 + ((t1 - t0) * i) / (nx - 1))
-    return { X, Y, path, band, yTicks, xTicks, t0, t1, years }
+    return { X, Y, path, band, yTicks, xTicks, t0, t1, years, casas: eixo.casas }
   }, [rows, on, width])
 
   const onMove = (e) => {
@@ -127,7 +130,7 @@ export default function SofrChart({ macro, range }) {
               {g.yTicks.map((v) => (
                 <g key={v}>
                   <line x1={M.l} x2={width - M.r} y1={g.Y(v)} y2={g.Y(v)} className="gridline" />
-                  <text x={M.l - 8} y={g.Y(v)} dy="0.32em" textAnchor="end" className="tick">{v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</text>
+                  <text x={M.l - 8} y={g.Y(v)} dy="0.32em" textAnchor="end" className="tick">{rotuloEixo(v, g.casas)}</text>
                 </g>
               ))}
               {g.xTicks.map((t, i) => (
