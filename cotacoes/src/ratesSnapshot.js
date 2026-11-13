@@ -22,7 +22,7 @@ export function snapshotRows({macro, periods, errors={}}) {
   const add=(id,label,unit,points,source,fmt,status)=>{
     rows.push({id,label,unit,cells:Object.fromEntries(periods.map(period=>{
       const p=lastAt(points,period.date)
-      return [period.id,p ? {value:fmt(p.value),date:displayDate(p.date),source:p.source || source,status:status || p.status} : {value:'—',status:status || 'Sem observação disponível até esta data',source}]
+      return [period.id,p ? {comparisonValue:p.value,value:fmt(p.value),date:displayDate(p.date),source:p.source || source,status:status || p.status} : {value:'—',status:status || 'Sem observação disponível até esta data',source}]
     }))})
   }
   for(const [id,label,key,source] of [['SELIC','Brasil · Selic meta','selic','BCB · SGS 432'],['CDI','Brasil · CDI overnight','cdi','B3 / BCB · SGS 4389'],['SOFR','EUA · SOFR overnight','sofr','Federal Reserve de Nova York']]) {

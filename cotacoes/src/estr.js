@@ -23,7 +23,7 @@ export function estrRow(series, periods, { loading = false, error = false } = {}
     cells: Object.fromEntries(periods.map((period) => {
       const p = series ? lastAt(series.points, period.date) : null
       return [period.id, p
-        ? { value: `${nf(p.value, 3)}%`, date: displayDate(p.date), source, sourceUrl: series.sourceUrl, status: pending ? 'Atualização pendente; último dado disponível' : undefined }
+        ? { comparisonValue: p.value, value: `${nf(p.value, 3)}%`, date: displayDate(p.date), source, sourceUrl: series.sourceUrl, status: pending ? 'Atualização pendente; último dado disponível' : undefined }
         : { value: '—', source, sourceUrl: series?.sourceUrl, status: loading ? 'Carregando fonte oficial…' : pending ? 'Fonte pendente' : 'Sem observação disponível até esta data' }]
     })),
   }
