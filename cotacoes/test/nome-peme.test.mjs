@@ -24,7 +24,7 @@ test('entrada exibe PME sem alterar a identidade interna do aplicativo', async (
 })
 
 test('telas mostram a mesma marca PME (13/11/2026: Panorama, sugestões, alerta de preço e Base de dados)', async () => {
-  for (const nome of ['MarketPopup.jsx', 'FeedbackMascot.jsx', 'alertaNotificacao.js', 'baseDados.js']) {
+  for (const nome of ['MarketPopup.jsx', 'FeedbackMascot.jsx', 'alertaNotificacao.js', 'baseDados.js', 'CreditComparison.jsx']) {
     const texto = await readFile(new URL(`../src/${nome}`, import.meta.url), 'utf8')
     assert.doesNotMatch(texto, />PEME<|PEME ·|'PEME'|<strong>PEME<\/strong>/, nome)
   }
