@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { feedbackEndpoint, validateFeedback, sendFeedback, EMPTY_FEEDBACK } from '../src/feedback.js'
 const config = { formId: 'testabcd', verified: true }
-const values = { ...EMPTY_FEEDBACK, message: ' Uma sugestão de teste. ' }
+const values = { ...EMPTY_FEEDBACK, message: ' Uma sugestão de teste. ', email: 'teste@example.test' }
 
 test('feedback: configuration is off until a valid form is verified', async () => {
   for (const c of [null, {}, { formId: 'testabcd' }, { ...config, verified: false }, { ...config, formId: 'https://evil.test' }, { ...config, formId: 'test/abc' }]) assert.equal(feedbackEndpoint(c), null)
@@ -16,9 +16,9 @@ test('feedback: configuration is off until a valid form is verified', async () =
   assert.match(evidence, /2026-11-08T23:38:29Z/)
   assert.match(evidence, /recebimento confirmado/)
 })
-test('feedback: message required, optional contact, lengths and supported categories', () => {
+test('feedback: message and email required, optional name, lengths and supported categories', () => {
   assert.equal(validateFeedback(values), '')
-  for (const change of [{message:'  '},{message:'x'.repeat(4001)},{type:'Outra'},{name:'x'.repeat(101)},{email:'nao-e-email'},{email:'a'.repeat(250)+'@b.com'}]) assert.ok(validateFeedback({...values,...change}))
+  for (const change of [{email:''},{email:'   '},{email:null},{email:undefined},{message:'  '},{message:'x'.repeat(4001)},{type:'Outra'},{name:'x'.repeat(101)},{email:'nao-e-email'},{email:'a'.repeat(250)+'@b.com'}]) assert.ok(validateFeedback({...values,...change}))
   assert.equal(validateFeedback({...values,message:'x'.repeat(4000),name:'x'.repeat(100),email:'anon@example.test'}),'')
 })
 test('feedback: only user-entered fields are transmitted, never URL, cookies or history', async () => {
@@ -37,11 +37,12 @@ test('feedback: disabled form, invalid input and honeypot never call the service
   await assert.rejects(sendFeedback({},values,{fetcher}))
   await assert.rejects(sendFeedback(config,{...values,message:''},{fetcher}))
   await assert.rejects(sendFeedback(config,{...values,website:'spam'},{fetcher}))
+  for (const email of ['', '   ', 'invalido', null, undefined]) await assert.rejects(sendFeedback(config,{...values,email},{fetcher}))
   assert.equal(calls,0)
 })
-test('feedback: optional fields omitted and abort is forwarded', async () => {
+test('feedback: optional name omitted, email normalized and abort forwarded', async () => {
   const signal=new AbortController().signal
-  await sendFeedback(config,values,{signal,fetcher:async (_url,options)=>{assert.equal(options.signal,signal);assert.equal('email' in JSON.parse(options.body),false);assert.equal('name' in JSON.parse(options.body),false);return {ok:true,json:async()=>({ok:true})}}})
+  await sendFeedback(config,{...values,email:' teste@example.test '},{signal,fetcher:async (_url,options)=>{assert.equal(options.signal,signal);assert.equal(JSON.parse(options.body).email,'teste@example.test');assert.equal('name' in JSON.parse(options.body),false);return {ok:true,json:async()=>({ok:true})}}})
 })
 
 test('feedback: mobile mascot floats above content and does not reserve page space', async () => {
