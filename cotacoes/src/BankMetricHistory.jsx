@@ -1,18 +1,21 @@
 import { useId, useState } from 'react'
 import { BANK_METRICS, bankNumber, quarterLabel, latestBankPoint } from './bancos.js'
 import { bankMetricHistory, bankMetricAnalysis } from './bancosHistory.js'
+import { marcasRedondas } from './chartEixo.js'
 
 function HistoryPlot({ points, metric, name }) {
   const id = useId(), available = points.filter(point => point.item)
   if (!available.length) return <p role="status">Histórico não disponível para este indicador e critério.</p>
   const values = available.map(point => point.item.value), low = Math.min(...values), high = Math.max(...values)
-  const padding = Math.max((high - low) * .12, Math.abs(high) * .01, .01), minimum = low - padding, maximum = high + padding
+  // eixo em números redondos: em bilhões quando o indicador é em reais, para a marca cair redonda na unidade mostrada
+  const padding = Math.max((high - low) * .12, Math.abs(high) * .01, .01), divisor = BANK_METRICS[metric][1] === 'BRL' ? 1e9 : 1
+  const eixo = marcasRedondas((low - padding) / divisor, (high + padding) / divisor), minimum = eixo.lo * divisor, maximum = eixo.hi * divisor
   const x = i => 100 + (points.length === 1 ? 250 : i / (points.length - 1) * 500), y = value => 210 - (value - minimum) / (maximum - minimum) * 175
   const unit = BANK_METRICS[metric][1], line = points.map((point, i) => !point.item ? '' : `${i && points[i - 1].item ? 'L' : 'M'}${x(i)},${y(point.item.value)}`).join(' ')
   return <figure className="bank-history-chart"><figcaption>{name} · {BANK_METRICS[metric][0]} · {unit === 'BRL' ? 'R$ bilhões' : '%'}</figcaption>
     <div className="bank-history-plot" role="region" aria-label="Gráfico histórico trimestral" tabIndex={0}><svg viewBox="0 0 640 275" role="img" aria-labelledby={`${id}-title ${id}-desc`}>
       <title id={`${id}-title`}>{BANK_METRICS[metric][0]} de {name}</title><desc id={`${id}-desc`}>Trimestres sem dados aparecem como lacunas, sem ligação entre os pontos. Valores e fontes estão na tabela abaixo. Eixo vertical ajustado à série.</desc>
-      {[0, 1, 2, 3].map(i => { const value = minimum + (maximum - minimum) * i / 3; return <g key={i}><line x1="100" x2="600" y1={y(value)} y2={y(value)} className="bank-history-grid" /><text x="90" y={y(value) + 4} textAnchor="end">{bankNumber(value, unit)}</text></g> })}
+      {eixo.ticks.map((tick, i) => { const value = tick * divisor; return <g key={i}><line x1="100" x2="600" y1={y(value)} y2={y(value)} className="bank-history-grid" /><text x="90" y={y(value) + 4} textAnchor="end">{bankNumber(value, unit)}</text></g> })}
       <path d={line} className="bank-history-line" />
       {points.map((point, i) => <g key={point.period}><text x={x(i)} y="239" textAnchor="middle">{quarterLabel(point.period)}</text>{point.item ? <circle cx={x(i)} cy={y(point.item.value)} r="5" className="bank-history-point"><title>{quarterLabel(point.period)}: {bankNumber(point.item.value, unit)}</title></circle> : <text x={x(i)} y="260" textAnchor="middle">sem dado</text>}</g>)}
     </svg></div><p className="muted">Deslize o gráfico para ver todos os trimestres. Eixo vertical ajustado à série. Lacunas indicam trimestres sem dado equivalente; não foram estimados.</p>

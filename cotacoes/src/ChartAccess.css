@@ -8,3 +8,12 @@
   white-space: nowrap;
 }
 .plot svg:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+/* Selo de variação do cabeçalho ("▼ 1,25 p.p. no período"): nunca quebra por dentro; o título é que cede espaço */
+.chart > header h3 { min-width: 0; }
+.chart > header .pct { flex: none; white-space: nowrap; }
+/* "Agrupar": controle secundário, mais discreto que o período (letra menor, escolhido sem fundo cheio).
+   Seletor reforçado para valer também sobre a regra do tema claro.
+   No computador com mouse fica mais baixo; no toque mantém 44 px. */
+html:root body .seg.scale-seg button { font-size: .75rem; padding: 3px 10px; border-color: transparent; }
+html:root body .seg.scale-seg button[aria-pressed='true'] { background: transparent; border-color: var(--amber, #ffb000); color: var(--fg); font-weight: 700; }
+@media (pointer: fine) and (min-width: 700px) { html:root body .seg.scale-seg button { min-height: 32px; } }

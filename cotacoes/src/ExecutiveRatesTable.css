@@ -139,3 +139,21 @@
 @media (min-width: 700px) and (pointer: fine) { .executive-rates__open { min-height: 28px; } }
 /* Celular: o nome quebra nas palavras, como antes de virar botão. */
 @media (max-width: 699px) { .executive-rates__open { display: inline; min-height: 0; padding: 6px 0; overflow-wrap: normal; word-break: normal; } .executive-rates__open .flag { margin-right: 6px; } }
+
+/* Celular (Juros de referência): coluna do nome mais estreita, "?" na mesma linha do nome, letra um pouco menor
+   e colunas de período de ~108 px, para caberem duas datas sem deslizar. Continua sendo tabela. */
+@media (max-width: 699px) {
+  .executive-rates__table { min-width: 572px; }
+  .executive-rates__indicator-column { width: 140px; }
+  .executive-rates__table th,
+  .executive-rates__table td { padding: 8px 6px; }
+  .executive-rates__table .executive-rates__indicator { padding-left: 8px; padding-right: 8px; }
+  .executive-rates__name { display: flex; align-items: flex-start; gap: 0; font-size: .82rem; line-height: 1.35; }
+  .executive-rates__name .executive-rates__open { flex: 1 1 auto; min-width: 0; padding: 4px 0; }
+  /* o "?" mantém a área de toque de 44 px, mas avança sobre o respiro da célula em vez de empurrar o nome */
+  .executive-rates__name .help { flex: none; margin: -10px -10px -10px -6px; }
+  .executive-rates__value { font-size: .85rem; }
+  .executive-rates__date,
+  .executive-rates__status,
+  .executive-rates__source { font-size: .7rem; line-height: 1.3; }
+}

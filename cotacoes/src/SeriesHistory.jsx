@@ -5,6 +5,7 @@ import Expandable from './Expandable.jsx'
 import { Plot, useWidth } from './HistoryChart.jsx'
 import { contextDate } from './marketContext.js'
 import { nf } from './format.js'
+import './IndicatorHistory.css'
 
 const PRESETS = [[3, '3 meses'], [6, '6 meses'], [12, '12 meses'], [24, '2 anos'], [60, '5 anos'], [120, '10 anos'], ['all', 'Tudo']]
 const isDay = (p) => /^\d{4}-\d{2}-\d{2}$/.test(p)
@@ -28,7 +29,9 @@ export default function SeriesHistory({ item, points, onClose }) {
   return (
     <Expandable label={`histórico de ${item.label}`} modal onClose={onClose}>
       <h2>{item.label} · histórico</h2>
-      <p>{item.unit} · {item.nature}{item.benchmark ? ` · ${item.benchmark}` : ''}</p>
+      {/* mesmo acabamento do histórico de indicador (IndicatorHistory.css) */}
+      <div className="indicator-history">
+      <p className="indicator-history__lead">{item.unit} · {item.nature}{item.benchmark ? ` · ${item.benchmark}` : ''}</p>
       {!list.length ? <p role="status">Histórico indisponível para esta referência. Ausência não significa zero.</p> : (
         <>
           <ChartFilters>
@@ -48,6 +51,7 @@ export default function SeriesHistory({ item, points, onClose }) {
           </div>
         </>
       )}
+      </div>
     </Expandable>
   )
 }

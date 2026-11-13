@@ -5,6 +5,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFilterSlot } from './ChartFilters.jsx'
 import { nextChartIndex } from './chartNavigation.js'
+import { marcasRedondas, rotuloData } from './chartEixo.js'
 import { focoPorTeclado, limitarBalao, margemEixo, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { useMacro } from './useMacro.js'
@@ -22,7 +23,6 @@ const M = { t: 12, r: 16, b: 28, l: 58 }
 export const fmtDate = (t, long) =>
   new Date(t).toLocaleDateString('pt-BR', long ? { day: '2-digit', month: 'short', year: 'numeric' } : { day: '2-digit', month: '2-digit' })
 export const fmtTime = (t, sec) => new Date(t).toLocaleTimeString('pt-BR', { timeZone:'America/Sao_Paulo', hour:'2-digit', minute:'2-digit', ...(sec ? {second:'2-digit'} : {}) })
-const fmtMonth = (t) => new Date(t).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '')
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: d, maximumFractionDigits: d })
 
 // Largura do contêiner do gráfico. Usa "ref de função" para medir também quando o elemento aparece depois (dados que chegam tarde):
@@ -50,11 +50,13 @@ export function Plot({ points, scales = true, ...props }) {
   const slot = useFilterSlot()
   const active = options.find((o) => o.id === scale && o.enabled)
   const view = useMemo(() => (active ? resample(points, active.id) : points), [points, active])
-  const picker = options.some((o) => o.enabled) && (
+  // só as escalas possíveis para este dado; se nenhuma for possível além de "Auto", o controle some
+  const usable = options.filter((o) => o.enabled)
+  const picker = usable.length > 0 && (
         <div className="seg scale-seg" role="group" aria-label="Agrupar os pontos do gráfico">
           <span className="seg-label" aria-hidden="true">Agrupar:</span>
           <button type="button" aria-pressed={!active} aria-label="Auto: escala original dos dados" title="Escala original dos dados" onClick={() => setScale('auto')}>Auto</button>
-          {options.map((o) => <button type="button" key={o.id} aria-pressed={active?.id === o.id} disabled={!o.enabled} aria-label={`Escala por ${o.label.toLowerCase()}`} title={o.enabled ? o.title : o.reason} onClick={() => setScale(o.id)}>{o.label}</button>)}
+          {usable.map((o) => <button type="button" key={o.id} aria-pressed={active?.id === o.id} aria-label={`Escala por ${o.label.toLowerCase()}`} title={o.title} onClick={() => setScale(o.id)}>{o.label}</button>)}
         </div>
   )
   return (
@@ -103,22 +105,16 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
     const pad = (hi - lo || hi * 0.01) * 0.12
     lo -= pad
     hi += pad
-    let stepNice = 0
-    let decNice = 0
-    if (nice) {
-      // eixo com valores redondos (juros): passo 1, 2, 2,5 ou 5 × 10^k
-      const raw = (hi - lo) / 4
-      const mag = 10 ** Math.floor(Math.log10(raw))
-      stepNice = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((st) => st >= raw)
-      decNice = Math.max(0, -Math.floor(Math.log10(mag)) + (Math.abs(stepNice / mag - 2.5) < 1e-9 ? 1 : 0))
-      lo = Math.floor(lo / stepNice) * stepNice
-      hi = Math.ceil(hi / stepNice) * stepNice
-    }
-    // valores na casa dos milhares (commodities em US$/t) ficam sem centavos no eixo, para caber na margem
-    const dec = nice ? decNice : Math.min(5, Math.max(Math.abs(hi) >= 1000 ? 0 : 2, Math.ceil(-Math.log10((hi - lo) / 4)) + 1))
-    const yTicks = nice ? Array.from({ length: Math.round((hi - lo) / stepNice) + 1 }, (_, i) => lo + i * stepNice) : Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) * i) / 4)
+    // eixo sempre em números redondos (passos 1, 2, 2,5 ou 5 × 10^k), com o domínio estendido até a marca vizinha
+    const eixo = marcasRedondas(lo, hi)
+    lo = eixo.lo
+    hi = eixo.hi
+    const yTicks = eixo.ticks
+    const casas = eixo.casas
+    // casas da variação do trecho selecionado (não do eixo): valores na casa dos milhares ficam sem centavos
+    const dec = nice ? casas : Math.min(5, Math.max(Math.abs(hi) >= 1000 ? 0 : 2, Math.ceil(-Math.log10((hi - lo) / 4)) + 1))
     // margem esquerda pelo maior rótulo: números longos e negativos (−1.000.000) não saem cortados
-    const l = margemEixo(yTicks.map((v) => rotuloEixo(v, dec)), M.l)
+    const l = margemEixo(yTicks.map((v) => rotuloEixo(v, casas)), M.l)
     const iw = width - l - M.r
     const ih = H - M.t - M.b
     const x = (t) => l + (t1 === t0 ? iw / 2 : ((t - t0) / (t1 - t0)) * iw)
@@ -128,7 +124,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
     const line = chartLinePath(points, x, y, 'bid', steppedLine)
     const base = H - M.b
     const area = `${line}L${x(t1).toFixed(1)},${base}L${x(t0).toFixed(1)},${base}Z`
-    return { t0, t1, l, x, y, dec, yTicks, xTicks, line, area, base, long: t1 - t0 > 200 * 864e5, years: t1 - t0 > 3 * 365 * 864e5 }
+    return { t0, t1, l, x, y, dec, casas, yTicks, xTicks, line, area, base }
   }, [points, width, steppedLine, nice])
 
   const pointAt = (e) => {
@@ -231,7 +227,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           <g key={v}>
             <line x1={g.l} x2={width - M.r} y1={g.y(v)} y2={g.y(v)} className="gridline" />
             <text x={g.l - 8} y={g.y(v)} dy="0.32em" textAnchor="end" className="tick">
-              {rotuloEixo(v, g.dec)}
+              {rotuloEixo(v, g.casas)}
             </text>
           </g>
         ))}
@@ -243,7 +239,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             textAnchor={i === 0 ? 'start' : i === g.xTicks.length - 1 ? 'end' : 'middle'}
             className="tick"
           >
-            {dateLabel ? dateLabel(t) : intraday ? fmtTime(t) : g.years ? new Date(t).getFullYear() : g.long ? fmtMonth(t) : fmtDate(t)}
+            {dateLabel ? dateLabel(t) : rotuloData(t, { de: g.t0, ate: g.t1, intradiario: intraday })}
           </text>
         ))}
         <path d={g.area} fill={`url(#${gid})`} />

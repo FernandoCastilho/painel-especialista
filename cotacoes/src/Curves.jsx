@@ -4,7 +4,8 @@ import RefreshButton from './RefreshButton.jsx'
 import { Aviso } from './Avisos.jsx'
 import { useId, useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
-import { focoPorTeclado, limitarBalao, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
+import { marcasRedondas } from './chartEixo.js'
+import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { isWeekendBR } from './market.js'
 import { dataTimestamp } from './dataTimestamp.js'
@@ -24,13 +25,15 @@ const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maxi
 const day = (iso) => iso.split('-').reverse().join('/')
 
 // Eixo X: BR em anos úteis (day252 / 252), EUA em posições iguais por vencimento.
-function CurveChart({ title, subtitle, data, mode, source, help, bare = false }) {
+// `escalaDesde`: prazo mínimo (dias úteis) que entra na escala vertical; vértices mais curtos ficam fora do quadro (cortados), só no desenho.
+function CurveChart({ title, subtitle, data, mode, source, help, bare = false, escalaDesde = 0 }) {
   const [ref, width] = useWidth()
   const [off, setOff] = useState(() => new Set())
   const [hover, setHover] = useState(null)
   const plotRef = useTocarFora(hover != null, setHover)
   const [announcement, setAnnouncement] = useState('')
   const chartId = useId()
+  const clipId = `curva-${chartId.replace(/[^\w-]/g, '')}`
   const compare = data?.compare ?? []
   const periodHelp = { curvaDi: 'periodosDi', cupom: 'periodosCupom', treasuries: 'periodosUst', curvaEuro: 'periodosEuro' }[help]
   const shown = compare.filter((c) => !off.has(c.date))
@@ -42,23 +45,27 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
     const xv = (yrs) => (labels ? labels.findIndex((l) => l[0] === yrs) : yrs)
     const x0 = 0
     const x1 = labels ? labels.length - 1 : Math.max(...series.flatMap((s) => s.pts.map((p) => p[0] / 252)))
-    const vals = series.flatMap((s) => s.pts.map((p) => p[1]))
+    const todos = series.flatMap((s) => s.pts)
+    const naEscala = todos.filter((p) => p[0] >= escalaDesde)
+    const vals = (naEscala.length ? naEscala : todos).map((p) => p[1])
     let lo = Math.min(...vals)
     let hi = Math.max(...vals)
     const pad = (hi - lo || 1) * 0.12
-    lo -= pad
-    hi += pad
+    // eixo em números redondos, com o domínio estendido até a marca vizinha
+    const eixo = marcasRedondas(lo - pad, hi + pad)
+    lo = eixo.lo
+    hi = eixo.hi
     const iw = width - M.l - M.r
     const ih = H - M.t - M.b
     const X = (p) => M.l + (((labels ? xv(p[0]) : p[0] / 252) - x0) / (x1 - x0 || 1)) * iw
     const Y = (v) => M.t + (1 - (v - lo) / (hi - lo)) * ih
-    const yTicks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) * i) / 4)
+    const yTicks = eixo.ticks
     const xTicks = labels
       ? labels.filter((_, i) => i % (width < 520 ? 3 : 2) === 0 || i === labels.length - 1).map((l) => ({ x: X([l[0]]), t: l[1] }))
       : [0, 1, 2, 3, 5, 7, 10, 15, 20, 30].filter((y) => y <= x1 + 0.01).map((y) => ({ x: M.l + (y / (x1 || 1)) * iw, t: `${y}a` }))
           .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), []) // pelo menos 30 px entre rótulos: sem encavalar
-    return { series, X, Y, yTicks, xTicks }
-  }, [shown.map((s) => s.date).join(), width, data, mode])
+    return { series, X, Y, yTicks, xTicks, casas: eixo.casas, iw, ih }
+  }, [shown.map((s) => s.date).join(), width, data, mode, escalaDesde])
 
   const onMove = (e) => {
     if (!g) return
@@ -100,7 +107,8 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
           <RefreshButton files={['curves.json']} label={title} />
         </header>
       )}
-      <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data. A comparação é entre as datas disponíveis na legenda; a seleção de um período anual não se aplica a este eixo.</p>
+      {/* uma linha curta só; o detalhe das datas de comparação fica no "?" da legenda */}
+      <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data.{escalaDesde > 0 && ' Vencimentos com menos de 3 meses ficam fora da escala; seguem na tabela.'}</p>
       <div className="curve-legend">
         {periodHelp && <span className="curve-legend-title">Curvas de comparação <Explain id={periodHelp} /></span>}
         {compare.map((c, i) => (
@@ -118,20 +126,21 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
               {g.yTicks.map((v) => (
                 <g key={v}>
                   <line x1={M.l} x2={width - M.r} y1={g.Y(v)} y2={g.Y(v)} className="gridline" />
-                  <text x={M.l - 8} y={g.Y(v)} dy="0.32em" textAnchor="end" className="tick">{v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</text>
+                  <text x={M.l - 8} y={g.Y(v)} dy="0.32em" textAnchor="end" className="tick">{rotuloEixo(v, g.casas)}</text>
                 </g>
               ))}
               {g.xTicks.map((t, i) => (
                 <text key={t.t + i} x={t.x} y={H - 8} textAnchor="middle" className="tick">{t.t}</text>
               ))}
+              <clipPath id={clipId}><rect x={M.l} y={M.t} width={g.iw} height={g.ih} /></clipPath>
               {g.series.map((s) => {
                 const color = SHADES[compare.findIndex((c) => c.date === s.date) % SHADES.length]
                 const d = s.pts.map((p, i) => `${i ? 'L' : 'M'}${g.X(p).toFixed(1)},${g.Y(p[1]).toFixed(1)}`).join('')
                 const lastP = s.pts[s.pts.length - 1]
                 return (
                   <g key={s.date}>
-                    <path d={d} fill="none" stroke={color} strokeWidth={s.id === 'hoje' ? 2.5 : 1.6} strokeLinejoin="round" strokeLinecap="round" opacity={s.id === 'hoje' ? 1 : 0.85} />
-                    {s.id === 'hoje' && s.pts.map((p) => <circle key={p[0]} cx={g.X(p)} cy={g.Y(p[1])} r="2.6" fill={color} />)}
+                    <path clipPath={`url(#${clipId})`} d={d} fill="none" stroke={color} strokeWidth={s.id === 'hoje' ? 2.5 : 1.6} strokeLinejoin="round" strokeLinecap="round" opacity={s.id === 'hoje' ? 1 : 0.85} />
+                    {s.id === 'hoje' && s.pts.map((p) => <circle clipPath={`url(#${clipId})`} key={p[0]} cx={g.X(p)} cy={g.Y(p[1])} r="2.6" fill={color} />)}
                     {s.id === 'hoje' && lastP && (
                       <text x={g.X(lastP)} y={g.Y(lastP[1]) - 9} textAnchor="end" className="vlabel">{pct(lastP[1])}</text>
                     )}
@@ -165,11 +174,11 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false })
 // As três curvas do arquivo central (a do euro vem de arquivo próprio): mesmo texto no gráfico e na tabela.
 export const CURVAS = {
   br: { help: 'curvaDi', title: 'Brasil · DI x pré', subtitle: 'taxa % a.a. por prazo em dias úteis', mode: 'br', nome: 'DI x pré', source: 'Taxas referenciais calculadas a partir dos ajustes dos futuros de DI; publicadas após o fechamento do pregão.' },
-  cc: { help: 'cupom', title: 'Brasil · Cupom cambial', subtitle: 'DI x dólar, % a.a. por prazo em dias úteis', mode: 'br', nome: 'cupom cambial', source: 'Cupom cambial a partir dos ajustes dos futuros. Vértices curtos (menos de 1 mês) omitidos por serem muito ruidosos; publicado após o fechamento.' },
+  cc: { escalaDesde: 63, help: 'cupom', title: 'Brasil · Cupom cambial', subtitle: 'DI x dólar, % a.a. por prazo em dias úteis', mode: 'br', nome: 'cupom cambial', source: 'Cupom cambial a partir dos ajustes dos futuros. Vértices curtos (menos de 1 mês) omitidos por serem muito ruidosos; publicado após o fechamento.' },
   us: { help: 'treasuries', title: 'EUA · Treasuries', subtitle: 'Par yield curve, % a.a. por vencimento', mode: 'us', nome: 'Treasuries', source: 'Curva de títulos públicos (par yield), não de futuros; fechamento do dia anterior ou do dia, conforme a divulgação.' },
   eu: { help: 'curvaEuro', title: 'Área do euro · Curva soberana AAA', subtitle: 'taxa spot % a.a. por vencimento', mode: 'us', nome: 'curva do euro', source: 'Títulos soberanos da área do euro com classificação AAA, taxa spot estimada pelo modelo de Svensson. Não é o rendimento de um título específico, como o Bund alemão, e a taxa spot difere da par yield usada nas Treasuries, então a comparação com a curva dos EUA é de formato e não de nível exato.' },
 }
-const grafico = (id, data, bare = false) => { const c = CURVAS[id]; return <CurveChart bare={bare} help={c.help} title={c.title} subtitle={c.subtitle} data={data} mode={c.mode} source={c.source} /> }
+const grafico = (id, data, bare = false) => { const c = CURVAS[id]; return <CurveChart bare={bare} escalaDesde={c.escalaDesde} help={c.help} title={c.title} subtitle={c.subtitle} data={data} mode={c.mode} source={c.source} /> }
 
 // Curva DI x pré sozinha, para o painel do Mercado.
 export function CurvePanel({ curves: c }) {
