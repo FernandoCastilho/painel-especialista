@@ -581,6 +581,8 @@ main.app .idx-table .idx-rel small { display: block; color: var(--muted, #8a8a8a
 .acessos-dia i { width: 100%; background: var(--amber); opacity: .85; border-radius: 2px 2px 0 0; }
 .acessos-dia small { font-size: .75rem; color: var(--mut); }
 .acessos-nota { font-size: .75rem; margin: 8px 0 0; }
+/* Margem interna: o conteúdo destes painéis encostava na borda. */
+.acessos > .desk-panel-body { padding: 10px 12px 12px; }
 @media (max-width: 560px) { .acessos-kpis { grid-template-columns: 1fr; } .acessos-dia small { display: none; } .acessos-dia:nth-child(5n) small { display: block; } }
 
 

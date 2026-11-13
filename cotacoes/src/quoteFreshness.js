@@ -30,6 +30,6 @@ const shortStamp = (t) => new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/
 // Só apresentação: a regra de idade (quoteAgeState) não muda. Fora da janela de coleta, mostra o horário da referência em tom neutro.
 export function quoteAgeLabel(quote, now = Date.now()) {
   const state = quoteAgeState(quote, now)
-  if (state === 'Dado antigo' && offHoursReference(quote, now)) return { text: 'Referência de ' + shortStamp(quote.timestamp), tone: 'neutral', state }
+  if (state === 'Dado antigo' && offHoursReference(quote, now)) return { text: 'Referência de ' + shortStamp(quote.timestamp).replace(' ', '\u00a0'), tone: 'neutral', state }
   return { text: state, tone: state ? 'alert' : '', state }
 }

@@ -51,7 +51,7 @@ test('fora da janela de coleta, a referência do fim da janela aparece em tom ne
   assert.equal(lastCollectionEnd(at('2026-11-16T07:00:00-03:00')), at('2026-11-13T18:00:00-03:00')) // segunda cedo olha a sexta
   const fechamento = { timestamp: at('2026-11-12T19:41:00-03:00') }
   assert.equal(quoteAgeState(fechamento, quinta22h), 'Dado antigo') // a regra de idade não muda
-  assert.deepEqual(quoteAgeLabel(fechamento, quinta22h), { text: 'Referência de 12/11 19:41', tone: 'neutral', state: 'Dado antigo' })
+  assert.deepEqual(quoteAgeLabel(fechamento, quinta22h), { text: 'Referência de 12/11\u00a019:41', tone: 'neutral', state: 'Dado antigo' })
   // parou no meio da tarde: continua sendo atraso, mesmo à noite
   const parada = { timestamp: at('2026-11-12T15:00:00-03:00') }
   assert.equal(offHoursReference(parada, quinta22h), false)
