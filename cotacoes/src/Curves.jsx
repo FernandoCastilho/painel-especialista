@@ -107,8 +107,8 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
           <RefreshButton files={['curves.json']} label={title} />
         </header>
       )}
-      <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data. A comparação é entre as datas disponíveis na legenda; a seleção de um período anual não se aplica a este eixo.</p>
-      {escalaDesde > 0 && <p className="chart-comparison-note">Vencimentos com menos de 3 meses ficam fora da escala do gráfico; os valores seguem na tabela.</p>}
+      {/* uma linha curta só; o detalhe das datas de comparação fica no "?" da legenda */}
+      <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data.{escalaDesde > 0 && ' Vencimentos com menos de 3 meses ficam fora da escala; seguem na tabela.'}</p>
       <div className="curve-legend">
         {periodHelp && <span className="curve-legend-title">Curvas de comparação <Explain id={periodHelp} /></span>}
         {compare.map((c, i) => (
