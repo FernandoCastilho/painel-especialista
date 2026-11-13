@@ -6,6 +6,7 @@ import { startVisiblePolling, DATA_POLL_MS } from './visiblePolling.js'
 import { normalizeSectorNews, SECTOR_NEWS_COLLECTION } from './sectorNews.js'
 import { publicReference } from './insumoPresentation.js'
 import Estado from './Estado.jsx'
+import { limparManchete } from './newsTitle.js'
 
 const date = value => new Date(value).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 const dateTime = value => new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' })
@@ -38,7 +39,7 @@ export default function SectorNews({ id, label, insumo = false }) {
       {items.length > 0 ? <>
         {topic?.status !== 'ok' && <p className="sector-news-meta">Seleção parcial de publicações verificadas.</p>}
         <ol className="sector-news-list" aria-label={`${label}: notícias da semana`}>{items.map(item => <li key={item.link}>
-          <a href={item.link} target="_blank" rel="noopener noreferrer">{item.title}</a>
+          <a href={item.link} target="_blank" rel="noopener noreferrer">{limparManchete(item.title)}</a>
           <small>{item.source} · <time dateTime={item.datePrecision === 'day' ? item.publishedAt : new Date(item.t).toISOString()}>{publicationLabel(item)}</time></small>
           {item.author && <small>{item.author}</small>}
           {item.relevanceNote && <small>{item.relevanceNote}</small>}
