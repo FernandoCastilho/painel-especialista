@@ -1,3 +1,4 @@
+import * as highlights from '../src/sectorHighlights.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
@@ -28,7 +29,7 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
     cancelAnimationFrame(id) { frames.delete(id) },
     scrollTo(options) { calls.push({ scroll: options.top }); window.scrollY = options.top },
   }
-  const deps = { react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
+  const deps = { './sectorHighlights.js': highlights, react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, window, document, require: name => deps[name] ?? require(name) })
   const render = () => {
@@ -72,10 +73,10 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
   }
 }
 
-test('all 11 folders and 68 topic identities exist; folder breadcrumb restores focused opener', async t => {
+test('all 15 folders and 81 topic identities exist; folder breadcrumb restores focused opener', async t => {
   const h = await setup(t)
-  assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 11)
-  assert.equal(catalog.CATALOGO_SETORIAL.reduce((n, group) => n + group.topics.length, 0), 68)
+  assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 15)
+  assert.equal(catalog.CATALOGO_SETORIAL.reduce((n, group) => n + group.topics.length, 0), 81)
   await h.clickId('central-folder-base-florestal')
   assert.equal(h.view, 'pasta/base-florestal')
   assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-topic-')).length, 6)
@@ -113,7 +114,7 @@ test('invalid topic routes return the catalog, never a fake study', async t => {
   for (const view of ['topico/base-florestal/', 'topico/base-florestal/-1', 'topico/base-florestal/999', 'pasta/inexistente']) {
     const h = await setup(t, view)
     assert.match(text(h.tree), /não foi encontrado/)
-    assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 11)
+    assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 15)
     assert.equal(nodes(h.tree).filter(node => node.props?.className?.startsWith('central-detail')).length, 0)
   }
 })

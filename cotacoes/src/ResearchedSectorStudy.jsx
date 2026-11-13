@@ -29,7 +29,7 @@ export default function ResearchedSectorStudy({ study, goto }) {
   const prefix = `sector-${study.group}-${study.topicIndex}`
   return <article className="sector-study" aria-labelledby={`${prefix}-title`}>
     <p className="central-kicker">ESTUDO SETORIAL · PESQUISA DE MERCADO</p><h3 id={`${prefix}-title`}>{study.title}</h3>
-    <p className="central-note">Pesquisa pública realizada em <time dateTime="2026-11-06">06/11/2026</time>. Dados têm períodos próprios; atualização não é automática.</p>
+    <p className="central-note">Pesquisa pública realizada em {study.reviewedAt ? <time dateTime={study.reviewedAt}>{study.reviewedAt.split('-').reverse().join('/')}</time> : 'data não informada'}. Dados têm períodos próprios; atualização não é automática.</p>
     {study.reviewStatus !== 'approved' && <p role="status" className="study-warning"><strong>NÃO CONFERIDO · revisão independente pendente. Versão de trabalho, não usar como estudo final.</strong></p>}
     <section className="study-summary" aria-labelledby={`${prefix}-summary`}><p className="central-kicker">RESUMO EXECUTIVO</p><h4 id={`${prefix}-summary`} className="sr-only">Resumo executivo</h4>{study.summary.map((text, index) => <p key={text} className={index === 0 ? 'study-summary-lead' : undefined}>{text}</p>)}</section>
     <details className="study-section study-canvas-details">
