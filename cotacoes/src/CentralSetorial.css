@@ -18,3 +18,5 @@
 @media(forced-colors:active){.central-folder,.central-subsector{border:2px solid ButtonText;background:Canvas;color:ButtonText}.central-card-photo{display:none}.central-folder-content,.central-card-caption{background:Canvas}.central-folder-count,.central-folder-arrow{color:ButtonText}.central-document-icon{border-color:ButtonText}.central-setorial .central-folder:focus-visible,.central-setorial .central-subsector:focus-visible{outline-color:Highlight;box-shadow:none}}
 /* The accessible clear button is provided beside the search input. */
 .central-search input::-webkit-search-cancel-button{appearance:none;-webkit-appearance:none}
+
+.central-research{margin:24px 0;padding:clamp(16px,3vw,24px);border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
