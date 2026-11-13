@@ -78,7 +78,7 @@ function FreightTable({entries, onOpen}) {
 }
 // Commodities no mesmo formato da tabela do Mercado: último, anterior, variação, 12 meses e ano; a linha abre o histórico quando há série.
 // Brent e WTI: observações diárias; demais: médias mensais. Sem série, a linha mostra só o que a fonte divulgou e não abre gráfico.
-function CommodityTable({items, failed, onOpen, caption = 'Commodities · referências internacionais em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
+function CommodityTable({items, failed, onOpen, caption = 'Referências internacionais em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
   const pct = v => v == null ? {text:'—'} : {text:fsgn(v, 2, '%'), tone:ftone(v)}
   const rows = items.map(item => {
     const stats = seriesStats(item.history)
@@ -135,7 +135,7 @@ function ActivityTable({items, series, failed, historyFailed, historyLoading, on
   })
   return <>
     <IndicatorTable
-      caption="Atividade e emprego · últimas leituras cadastradas"
+      caption="Últimas leituras cadastradas"
       ariaLabel="Tabela de atividade e emprego; role para ver todas as colunas"
       columns={[{label:'Último'},{label:'Anterior'},{label:'Variação', small:'(vs anterior)'},{label:'Ano anterior', small:'(mesmo período)'},{label:'Referência'},{label:'Divulgação'}]}
       rows={rows}
