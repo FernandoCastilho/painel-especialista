@@ -1,3 +1,9 @@
 
 # cópias de trabalho dos ajudantes (não vão para o git)
 .claude/worktrees/
+# fotos e relatórios gerados pelos testes de tela (não vão para o git)
+oil-evidence/
+qa-universal/
+qa-curadoria/
+cotacoes/juros-qa/
+cotacoes/workspace-qa/
