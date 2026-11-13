@@ -139,3 +139,10 @@
 @media (min-width: 700px) and (pointer: fine) { .executive-rates__open { min-height: 28px; } }
 /* Celular: o nome quebra nas palavras, como antes de virar botão. */
 @media (max-width: 699px) { .executive-rates__open { display: inline; min-height: 0; padding: 6px 0; overflow-wrap: normal; word-break: normal; } .executive-rates__open .flag { margin-right: 6px; } }
+
+/* Juros: alta representa maior custo; cores inversas às cotações. */
+.executive-rates__direction { display: inline-block; margin-left: 6px; font-weight: 800; }
+.executive-rates__direction--up { color: #e04b59; }
+.executive-rates__direction--down { color: #16885b; }
+.executive-rates__direction--flat { color: var(--mut); }
+.executive-rates__comparison { color: var(--mut); font-size: .75rem; line-height: 1.5; margin: 8px 0; }

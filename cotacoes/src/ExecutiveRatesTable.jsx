@@ -1,3 +1,4 @@
+import { rateDirection } from './rateDirection.js'
 import RefreshButton from './RefreshButton.jsx'
 import { useId } from 'react'
 import { Aviso } from './Avisos.jsx'
@@ -23,14 +24,15 @@ export const EXECUTIVE_RATE_PERIODS = [
  * onOpen(id): opcional; com ele, o nome do indicador vira botão e a linha abre o gráfico daquele indicador.
  */
 // onOpen: o clique no valor abre o gráfico do indicador (o "?" da linha fica de fora: o clique fica só nas células e no nome).
-function RateCell({ cell, metaId, onOpen }) {
+function RateCell({ cell, current, compare, metaId, onOpen }) {
+  const direction = compare ? rateDirection(current?.comparisonValue, cell?.comparisonValue) : null
   const hasValue = cell?.value != null && cell.value !== ''
   const status = cell?.status || (!hasValue ? 'Não disponível' : '')
   const material = /pendente|erro|falha|carregando|sem |indispon|aguardando|defas|desatual/i.test(status)
 
   return (
     <td aria-describedby={metaId} onClick={onOpen} className={`executive-rates__cell${hasValue ? '' : ' executive-rates__cell--missing'}`}>
-      <span className="executive-rates__value">{hasValue ? cell.value : '—'}</span>
+      <span className="executive-rates__value">{hasValue ? cell.value : '—'}{direction && <span className={`executive-rates__direction executive-rates__direction--${direction}`} role="img" aria-label={direction === 'up' ? 'Alta até a última taxa disponível' : direction === 'down' ? 'Queda até a última taxa disponível' : 'Sem alteração até a última taxa disponível'}>{direction === 'up' ? '↑' : direction === 'down' ? '↓' : '→'}</span>}</span>
       {material && <span className="executive-rates__status">{status}</span>}
     </td>
   )
@@ -44,6 +46,7 @@ export default function ExecutiveRatesTable({
   footnote,
   refresh,
   onOpen,
+  compareRates = false,
   emptyMessage = 'Nenhum indicador disponível.',
 }) {
   const id = useId()
@@ -95,7 +98,7 @@ export default function ExecutiveRatesTable({
                     </>
                   })()}
                 </th>
-                {periods.map((period) => <RateCell key={period.id} cell={row.cells?.[period.id]} metaId={`${id}-${row.id}-${period.id}`} onOpen={onOpen ? () => onOpen(row.id) : undefined} />)}
+                {periods.map((period) => <RateCell key={period.id} cell={row.cells?.[period.id]} current={row.cells?.day} compare={compareRates && period.id !== 'day'} metaId={`${id}-${row.id}-${period.id}`} onOpen={onOpen ? () => onOpen(row.id) : undefined} />)}
               </tr>
             ))}
             {!rows.length && (
@@ -106,6 +109,7 @@ export default function ExecutiveRatesTable({
           </tbody>
         </table>
       </div>
+      {compareRates && <p className="executive-rates__comparison">Setas: movimento de cada período histórico até a última taxa disponível. ↑ alta (vermelho), ↓ queda (verde), → sem alteração.</p>}
       <div className="executive-rates__sr-only">
         <ul>{rows.map(row => <li key={row.id}><b>{row.label} · {row.unit}</b><ul>{periods.map(period => { const cell = row.cells?.[period.id]; return <li key={period.id} id={`${id}-${row.id}-${period.id}`}><b>{period.label}:</b> {cell?.date || 'Data indisponível'} · {cell?.status || 'Observação na data indicada'}</li> })}</ul></li>)}</ul>
       </div>

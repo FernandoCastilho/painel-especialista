@@ -20,6 +20,7 @@ export function policyRows(data,periods,{loading=false,error=false,now=Date.now(
       const p = points.filter(p=>/^\d{4}-\d{2}-\d{2}$/.test(p.date || '') && p.date <= period.date && pointValue(p)!=null)
         .reduce((a,b)=>!a || b.date>a.date ? b : a,null)
       return [period.id,{
+        comparisonValue:p ? (Number.isFinite(p.lower) && Number.isFinite(p.upper) ? [p.lower,p.upper] : p.value) : undefined,
         value:p ? pointValue(p) : '-', date:p ? displayDate(p.date) : undefined,
         status:p ? `${pending ? 'Atualização pendente · ' : ''}${series?.provider === 'BIS' ? 'Primeira observação deste nível na série' : 'Vigente desde a data indicada'}${p.approximate ? ' · alvo aproximado' : ''}`
           : series?.usagePending ? 'Uso da fonte aguardando validação' : loading ? 'Carregando fonte oficial…' : 'Sem vigência verificada até esta data',
