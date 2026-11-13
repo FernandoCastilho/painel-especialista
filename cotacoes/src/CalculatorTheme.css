@@ -75,7 +75,7 @@ main.app.app-calculators .cx .fm-hero {
 }
 
 /* Avisos: mesma caixa, mesma barra, em todas. */
-main.app.app-calculators .cx :is(.cg-notice, .desconto-notice, .credit-notice, .cbs-message) {
+main.app.app-calculators .cx :is(.cg-notice, .desconto-notice, .credit-notice, .cbs-message, .fi-guide) {
   margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--line);
@@ -88,7 +88,7 @@ main.app.app-calculators .cx :is(.cg-notice, .desconto-notice, .credit-notice, .
 }
 
 /* Orientação neutra (tela aberta, nada preenchido): mesma caixa, com barra cinza no lugar da barra de aviso. */
-main.app.app-calculators .cx :is(.cg-guide, .desconto-guide) { border-left-color: var(--mut); }
+main.app.app-calculators .cx :is(.cg-guide, .desconto-guide, .fi-guide) { border-left-color: var(--mut); }
 
 /* Comparador de Crédito: mesmo painel com cabeçalho cinza das outras calculadoras. */
 main.app.app-calculators .credit-comparison { max-width: none; margin: 0; display: flex; flex-direction: column; gap: 24px; }

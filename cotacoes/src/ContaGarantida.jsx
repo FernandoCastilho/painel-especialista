@@ -53,6 +53,8 @@ export default function ContaGarantida({ onBack }) {
       <button type="button" aria-pressed={!comparing && form.mode === 'ledger'} onClick={() => { setComparing(false); set('mode', 'ledger') }}>Lançamentos por dia</button>
       <button type="button" aria-pressed={comparing} onClick={() => setComparing(true)}>Comparar com parcelado</button>
     </div>
+    {/* Tela recém-aberta: dica curta no topo do que preencher, sem vermelho e sem valores de exemplo. Some quando a pessoa começa. */}
+    {!comparing && pending && !flagged && Object.keys(visited).length === 0 && <p className="cg-notice cg-guide cg-start">Para começar, preencha os quadros 1 e 2. O resultado aparece logo abaixo deles.</p>}
     <div hidden={!comparing}><ComparativoAlongamento /></div>
     {!comparing && <>
     <article className="desk-panel cx-panel">

@@ -42,6 +42,8 @@ export default function FinimpComparacao({ onBack }) {
       <button type="button" className="cx-back" onClick={() => { finimpDraftStore.reset(); setTouched({}); setSelectedDays(null); setFocusedField(null) }}>Nova simulação</button>
     </div>
     <h2 id="fi-heading" className="cx-title cx-heading"><span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><FinimpIcon /></span><span>FINIMP · comparação de propostas</span></span>{help('simulation')}</h2>
+    {/* Tela recém-aberta: dica curta do que preencher, sem valores de exemplo. Some quando as condições estão completas. */}
+    {!conditionsReady && <p className="fi-guide">Para começar, informe o principal e, em cada instituição, a taxa anual e o flat. A tabela e a meta de custo se completam sozinhas.</p>}
     <article className="desk-panel cx-panel"><header><h3 className="cx-heading"><span>Condições</span></h3></header><div className="cx-form">
       {field(`Principal (${currency})`, 'fi-principal', principalText, setPrincipal, true)}
       <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor="fi-currency">Moeda</label>{help('currency')}</div><select id="fi-currency" value={currency} onChange={e => setCurrency(e.target.value)}>{FINIMP_CURRENCIES.map(code => <option key={code}>{code}</option>)}</select></div>
