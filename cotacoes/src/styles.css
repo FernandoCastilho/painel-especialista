@@ -498,18 +498,10 @@ section[aria-labelledby="r-moedas"] .img-share { width:30px; height:30px; margin
 .expandable-panel.is-full { width:100%; height:100dvh; max-height:100dvh; border-radius:0; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); }
 .expandable-panel.is-dialog > .expandable-controls { position:sticky; top:-16px; background:var(--bg); z-index:5; padding:8px 0; }
 
-/* Compact scenario comparison; scroll without compressing source columns. */
-.scenario-year { display:flex; align-items:center; gap:8px; }
-.scenario-year select { color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:7px 12px; }
-.scenario-table { min-width:660px; }
-.scenario-table th, .scenario-table td { white-space:nowrap; }
-.scenario-table th:first-child { position:sticky; left:0; z-index:1; background:var(--card, var(--bg)); text-align:left; }
-.scenario-table tbody th small { display:block; color:var(--mut); font-size:.75rem; font-weight:400; margin-top:3px; }
+/* Cenário econômico: a tabela fica em Projecoes.css; aqui só as fontes do método. */
 .scenario-sources { color:var(--mut); font-size:.75rem; line-height:1.5; display:flex; flex-wrap:wrap; gap:4px 18px; }
 .scenario-sources p { margin:0; }
 .scenario-sources p:last-child { flex-basis:100%; }
-.scenario-scroll:focus-visible { outline:2px solid var(--blue, #557dff); outline-offset:3px; }
-.scenario-table caption { text-align:left; color:var(--mut); font-size:.75rem; padding:0 0 8px; }
 .scenarios .status { display:block; font-size:.8rem; line-height:1.5; margin:12px 0; }
 
 /* Brent é commodity em USD/barril, separado dos cinco quadros de câmbio. */
@@ -636,8 +628,6 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .alerta-var-permissao p { margin: 0 0 6px; }
 .alerta-var-metodo { margin: 0; font-size: .8rem; }
 
-.scenario-ages { list-style:none; margin:8px 0; padding:0; display:flex; flex-wrap:wrap; gap:4px 18px; color:var(--mut); font-size:.8125rem; line-height:1.5; }
-.scenario-ages li.old { color:var(--warn, #d29922); font-weight:600; }
 
 /* Aba Juros: atalhos no topo e tabelas do CDI futuro e das curvas com a mesma aparência da tabela de referência
    (faixa de título e moldura); cada linha abre o gráfico em tela própria. */

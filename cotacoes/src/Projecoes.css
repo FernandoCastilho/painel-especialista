@@ -1,8 +1,58 @@
-.focus-legend { display:block; margin-top:4px; }
-.fm { display:inline-block; min-width:1.1em; text-align:center; margin-left:6px; font-size:12px; font-weight:700; }
-.fm.up { color:var(--accent); } .fm.down { color:var(--warn); } .fm.same { color:var(--mut); }
-.vs-focus.vs-up { background:color-mix(in srgb, var(--accent) 8%, transparent); }
-.vs-focus.vs-down { background:color-mix(in srgb, var(--warn) 8%, transparent); }
+/* Cenários › Projeções: uma linha por instituição, uma coluna por indicador. O Focus abre a tabela como referência.
+   No computador os dois anos ficam lado a lado; em tela estreita aparece um ano por vez (botões 2026 | 2027). */
+.scenarios .scenario-year { display:inline-flex; }
+.scenarios .scenario-scroll:focus-visible { outline:2px solid var(--blue, #557dff); outline-offset:3px; }
+.scenarios .scenario-table { width:100%; }
+.scenarios .scenario-table caption { caption-side:bottom; text-align:left; color:var(--mut); font-size:.75rem; line-height:1.6; padding:12px 0 0; }
+.scenarios .scenario-table th, .scenarios .scenario-table td { white-space:nowrap; }
+.scenarios .scenario-table thead th { vertical-align:bottom; }
+.scenarios .scenario-table thead tr:first-child th:first-child, .scenarios .scenario-table tbody th { text-align:left; }
+.scenarios .scenario-table .sc-year { text-align:center; padding-bottom:6px; color:var(--fg); font-size:.75rem; font-weight:700; letter-spacing:.1em; }
+.scenarios .scenario-table thead tr:last-child th { padding-right:32px; color:var(--fg); font-size:.875rem; font-weight:600; }
+.scenarios .scenario-table small { display:block; margin-top:3px; color:var(--mut); font-size:.75rem; font-weight:400; letter-spacing:0; }
+.scenarios .sc-warn { color:var(--warn, #d29922); }
+.scenarios .scenario-table td { position:relative; padding-right:32px; font-size:1rem; }
+.scenarios .scenario-table td.sc-nil { color:var(--mut); }
+.scenarios .scenario-table tbody tr:hover > * { background:color-mix(in srgb, var(--fg) 4%, transparent); }
+.scenarios .scenario-table .sc-ref > * { background:var(--surface-2, transparent); border-bottom-color:color-mix(in srgb, var(--fg) 28%, transparent); }
+.scenarios .scenario-table .sc-ref th { box-shadow:inset 3px 0 0 var(--amber, var(--accent)); }
+.scenarios .scenario-table .sc-ref td { font-weight:700; }
+.scenarios .scenario-table tbody tr:last-child > * { border-bottom:0; }
+/* Sinal contra o Focus: fica num lugar fixo à direita do número, para os números continuarem alinhados. */
+.scenarios td .fm { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:14px; text-align:center; font-size:.6875rem; font-weight:700; line-height:1; }
+.scenarios .fm.up, .scenarios .fm.down { color:var(--amber, var(--accent)); }
+.scenarios .fm.same { color:var(--mut); opacity:.7; }
+.scenarios caption .fm { font-size:.6875rem; }
+.scenarios .sc-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.scenarios .scenario-note { margin:6px 0 0; color:var(--mut); font-size:.75rem; line-height:1.5; }
+@media (min-width:1100px) {
+  .scenarios .scenario-year { display:none; }
+  .scenarios .scenario-table [data-y="2027"].sc-first { border-left:1px solid var(--line); }
+}
+@media (max-width:1099px) {
+  .scenarios .scenario-table[data-year="2026"] [data-y="2027"], .scenarios .scenario-table[data-year="2027"] [data-y="2026"] { display:none; }
+}
+@media (max-width:699px) {
+  /* Celular: as quatro colunas cabem na tela, sem deslizar. A data e a idade da projeção ficam em duas linhas curtas. */
+  .scenarios .scenario-table th, .scenarios .scenario-table td { padding:9px 3px; }
+  .scenarios .scenario-table td { padding-right:17px; font-size:.875rem; }
+  .scenarios .scenario-table thead tr:last-child th { padding-right:3px; font-size:.8125rem; }
+  .scenarios .scenario-table small { font-size:.6875rem; }
+  .scenarios .scenario-table tbody th, .scenarios .scenario-table thead tr:first-child th:first-child { padding-left:10px; }
+  .scenarios .scenario-table tbody th { font-size:.9375rem; }
+  .scenarios .scenario-table .sc-wide, .scenarios .scenario-table .sc-sep { display:none; }
+  .scenarios .scenario-table .sc-age { display:block; }
+  .scenarios td .fm { right:2px; width:12px; }
+  /* O título ganha a linha inteira; hora da atualização e botões de ano descem para a linha de baixo, sem encavalar. */
+  .scenarios .history-head { gap:4px 12px; }
+  .scenarios .history-head > h2 { flex:1 1 100%; }
+}
+@media (max-width:379px) {
+  .scenarios .scenario-table th, .scenarios .scenario-table td { padding-left:2px; }
+  .scenarios .scenario-table td { padding-right:15px; font-size:.8125rem; }
+  .scenarios .scenario-table tbody th, .scenarios .scenario-table thead tr:first-child th:first-child { padding-left:6px; }
+  .scenarios .scenario-table tbody th { font-size:.875rem; }
+}
 /* Histórico do Focus abaixo da tabela: um gráfico por indicador, duas colunas no computador */
 .focus-hist h3 { margin:0 0 4px; }
 .focus-hist > .muted { margin:0 0 12px; color:var(--mut); font-size:.85rem; }
