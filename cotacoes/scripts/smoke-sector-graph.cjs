@@ -66,6 +66,8 @@ const progress=[]
       assert.notEqual(await map.getByRole('heading',{level:2}).textContent(),'Conexões · Transporte de madeira')
       await page.goto(`${base}/#aprender/mapa`)
       await map.getByRole('heading',{name:'Mapa do conhecimento',exact:true}).waitFor()
+      // no celular o mapa completo abre na Lista; o grafo continua a um toque
+      if(width<700){ assert.equal(await map.getByRole('button',{name:'Lista',exact:true}).getAttribute('aria-pressed'),'true'); await map.getByRole('button',{name:'Grafo',exact:true}).click() }
       assert.ok(await map.locator('.km-node').count()>130)
       assert.deepEqual(errors,[])
       console.log(`PASS ${width} ${theme}: order, context, list, reset, empty, fullscreen, routing/back, TIC, Aprender isolation`)
