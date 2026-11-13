@@ -52,6 +52,23 @@ export function pick(items, limit) {
   return out
 }
 
+// Etiqueta de moeda só quando a manchete fala da moeda ou de câmbio. A busca do Google devolve também matérias sem relação
+// (balanço de empresa, política), que antes ganhavam a etiqueta da busca. Valor em dinheiro ("US$ 10 bi") não conta como
+// assunto de câmbio. Termos em português e inglês; acentos ignorados.
+const CURRENCY_TERMS = {
+  USD: /\b(dolar|dolares|dollar|dollars|usd|greenback|dxy)\b/,
+  EUR: /\b(euro|euros|eur|eurozone|bce|ecb)\b/,
+  JPY: /\b(iene|ienes|yen|jpy|boj|banco do japao|bank of japan)\b/,
+  CNH: /\b(yuan|iuane|renminbi|rmb|cnh|cny|pboc|banco do povo da china)\b/,
+}
+const FX_TERMS = /\b(cambio|cambial|cambiais|forex|fx|moeda|moedas|currency|currencies|exchange rate)\b/
+const plain = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+export function mentionsCurrency(code, ...texts) {
+  const terms = CURRENCY_TERMS[code]
+  if (!terms) return true
+  return texts.some((t) => { const x = plain(t); return terms.test(x) || FX_TERMS.test(x) })
+}
+
 // Search hints do not replace the exact publication filter.
 export const googleUrl = (q, lang, when = `${NEWS_WINDOW_DAYS}d`) => {
   const p = lang === 'en' ? 'hl=en-US&gl=US&ceid=US:en' : 'hl=pt-BR&gl=BR&ceid=BR:pt-419'

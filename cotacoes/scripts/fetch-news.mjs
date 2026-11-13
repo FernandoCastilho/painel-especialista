@@ -1,7 +1,7 @@
 // Coleta manchetes por moeda e grava public/news.json. Rodado pelo GitHub Actions a cada hora.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fillNewsFromPrevious, loadPrevious } from './prev-lib.mjs'
-import { GTX, MARKET_QUERIES, balance, canonicalSource, freshOnly, fromLingva, fromMyMemory, googleUrl, gtxBody, isEnglish, lingvaUrl, myMemoryUrl, parseRss, pick, splitBatch } from './news-lib.mjs'
+import { GTX, MARKET_QUERIES, balance, canonicalSource, freshOnly, fromLingva, fromMyMemory, googleUrl, gtxBody, isEnglish, lingvaUrl, mentionsCurrency, myMemoryUrl, parseRss, pick, splitBatch } from './news-lib.mjs'
 
 const SITES = {
   valor: 'site:valor.globo.com',
@@ -109,7 +109,7 @@ for (const [code, [pt, en]] of Object.entries(TOPICS)) {
       }
       await sleep(400)
     }
-    for (const it of pick(freshOnly(items), g.limit)) all.push({ title: it.title, link: it.link, source: canonicalSource(it), t: it.t, via: g.id })
+    for (const it of pick(freshOnly(items).filter((it) => mentionsCurrency(code, it.title)), g.limit)) all.push({ title: it.title, link: it.link, source: canonicalSource(it), t: it.t, via: g.id })
   }
   news[code] = balance(all, 5).map((it) => ({ title: it.title, link: it.link, source: it.source, t: it.t }))
   console.log(code, news[code].length, 'manchetes')
