@@ -31,6 +31,7 @@ async function proveLastColumn(region, file) {
       try {
         await page.route('**/bndes.json*', route => route.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { TFB_60_90: { points: [['2026-11-06', 13]] }, TFB_60_30: { points: [['2026-11-06', 13.2]] } }, tlp: { points: [['2026-11-01', 7]] }, errors: [], stale: {} } }))
         await page.route('**/moedas.json*', route => route.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { C03: { points: [['2026-11-06', 12]] }, C01: { points: [['2026-11-06', 12.5]] } }, errors: [], stale: {} } }))
+        await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }))
         await page.goto(base + '/#calculadora')
         await page.getByRole('button', { name: 'BNDES: abrir calculadora', exact: true }).waitFor()
         assert.equal(await page.getByRole('button', { name: /^BNDES.*abrir calculadora$/ }).count(), 1, 'entrada única BNDES')
