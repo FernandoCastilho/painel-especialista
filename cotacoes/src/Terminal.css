@@ -54,6 +54,7 @@ body { background: var(--bg); }
   .topbar-feed b { font: 500 .75rem var(--mono); letter-spacing: 0; color: var(--fg); }
   .topbar-feed.ok { color: var(--up); } .topbar-feed.ok span { box-shadow: 0 0 8px var(--up); }
   .topbar-feed.delayed { color: var(--amber); } .topbar-feed.err { color: var(--down); }
+  .topbar-feed.idle { color: var(--mut); }
 }
 @media (min-width: 1000px) {
   .topbar-tabs { overflow: hidden; }
@@ -128,6 +129,7 @@ body { background: var(--bg); }
 .market-terminal .market-record.is-selected .market-open b, .market-open b { color: var(--amber); }
 .market-terminal .market-table thead th:first-child, .market-terminal .market-values th { background: transparent; }
 .market-terminal .market-open .market-state { color: var(--amber); }
+.market-terminal .market-open .market-state.is-neutral { color: var(--mut); font-weight: 500; }
 .market-terminal .market-footnotes { color: var(--mut); font-size: .75rem; }
 .other-market h3, .other-market thead th { color: var(--amber); }
 .market-terminal .market-table-wrap:focus-visible { outline-color: var(--amber); }
@@ -288,6 +290,9 @@ main.app .fer-month h2 { text-transform: uppercase; }
 .config-scroll:focus-visible { outline: 2px solid var(--amber); }
 @media (max-width: 699px) { .config-table th, .config-table td { padding: 8px; } .config-table { min-width: 460px; } }
 .config-wide .novidades > summary { display: none; }
+.config-wide .novidades .novidades-antigas > summary { display: list-item; min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 600; }
+/* Telas estreitas: os ajustes de uso (atalhos, aparência, instalar) vêm antes das tabelas longas de fontes. */
+@media (max-width: 999px) { .config-desk > .config-side { order: -1; } .config-desk > .desk-panel:first-child { order: -2; } }
 .config-hint { margin: 0; padding: 12px; color: var(--mut); font-size: .8rem; line-height: 1.5; }
 
 /* faixa rolante */
@@ -440,7 +445,7 @@ main.app .scenario-table caption { white-space: normal; text-align: left; positi
 .desk-tabs button { white-space: nowrap; min-height: 28px; padding: 0 10px; background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--mut); font: 700 .75rem/1.3 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
 .desk-tabs button[aria-selected="true"] { color: var(--amber); border-bottom-color: var(--amber); }
 .desk-tabs button:hover, .desk-tabs button:focus-visible { color: var(--fg); }
-@media (max-width: 560px) { .desk-tabs button { min-height: 44px; padding: 0 8px; letter-spacing: .06em; } .desk-panel > header { flex-wrap: wrap; } .desk-tabs { flex-wrap: wrap; } } /* abas quebram linha no celular em vez de sair da tela */
+@media (max-width: 560px) { .desk-tabs button { min-height: 44px; padding: 0 8px; letter-spacing: .06em; } .desk-panel > header { flex-wrap: wrap; row-gap: 2px; } .desk-panel > header:not(:has(.desk-tabs)) { padding-top: 7px; padding-bottom: 7px; } .desk-panel > header h2 { line-height: 1.3; } .desk-tabs { flex-wrap: wrap; } } /* abas quebram linha no celular em vez de sair da tela */
 .reforma { padding: 0 0 4px; }
 .reforma-controls { display: grid; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
 .reforma-days { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -469,6 +474,10 @@ main.app .scenario-table caption { white-space: normal; text-align: left; positi
 main.app .cen-nav { margin: 0 0 12px; }
 
 .kpi-name { display: inline-flex; align-items: center; gap: 6px; }
+/* Rótulo do quadro: quando o nome e a nota não cabem lado a lado, a nota desce para a linha de baixo em vez de ficar por cima do nome. */
+.kpi-label { flex-wrap: wrap; gap: 2px 8px; }
+.kpi-name { white-space: nowrap; }
+.kpi-label small { margin-left: auto; text-align: right; }
 .market-open b .flag { vertical-align: middle; margin-right: 4px; }
 .ind-table .market-open b .flag { margin-right: 4px; }
 main.app .idx-table .idx-rel { min-width: 220px; }

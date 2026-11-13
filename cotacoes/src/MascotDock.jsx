@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { currentMascotSlot, subscribeMascotSlot } from './mascotSlot.js'
 import { clampMascot, MASCOT_PREFERENCE_KEY, readMascotPreferences } from './mascotPosition.js'
 
 const NARROW = 1000
@@ -7,7 +9,7 @@ const NARROW = 1000
 // Sem posição salva, a coruja grande abre no canto de cima, perto de onde estava a pequena.
 const TOP = { y: 0 }
 const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
-// The small mascot parks as a badge hanging just under the top header (or at the screen edge when there is none).
+// A coruja pequena mora no espaço reservado do cabeçalho. Sem esse espaço (tela cheia, apresentação), flutua logo abaixo do topo.
 const parkTop = () => Math.max(0, window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0) + 4
 
 export default function MascotDock({ children, icon, onSearch }) {
@@ -15,6 +17,7 @@ export default function MascotDock({ children, icon, onSearch }) {
   const [position, setPosition] = useState(() => place(preferences.desktop ?? TOP))
   const [large, setLarge] = useState(false)
   const [top, setTop] = useState(parkTop)
+  const [slot, setSlot] = useState(null)
   const [moving, setMoving] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const tray = useRef(null), dock = useRef(null), handle = useRef(null), mini = useRef(null), drag = useRef(null)
@@ -23,6 +26,13 @@ export default function MascotDock({ children, icon, onSearch }) {
     try { localStorage.setItem(MASCOT_PREFERENCE_KEY, JSON.stringify(preferences)) } catch { /* Private browsing may disable storage. */ }
   }, [preferences])
   useEffect(() => { setTop(parkTop()) }, [large])
+  useEffect(() => {
+    const find = () => setSlot(currentMascotSlot())
+    find()
+    const off = subscribeMascotSlot(find)
+    window.addEventListener('resize', find)
+    return () => { off(); window.removeEventListener('resize', find) }
+  }, [])
   useEffect(() => {
     if (previousLarge.current !== large) {
       (large ? handle : mini).current?.focus({ preventScroll: true })
@@ -50,8 +60,10 @@ export default function MascotDock({ children, icon, onSearch }) {
     setAnnouncement('Mascote na posição inicial.')
   }
   const shrink = () => { setMoving(false); setLarge(false) }
+  const miniEl = <button ref={mini} type="button" className="mascot-mini" style={slot ? undefined : { top }} aria-label="Ampliar mascote" title="Clique para ampliar" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button>
+  const miniButton = slot ? createPortal(miniEl, slot) : miniEl
   return <aside className={`mascot-tray${large ? ' mascot-tray-large' : ''}`} ref={tray} aria-label="Assistente do painel">
-    {!large ? <button ref={mini} type="button" className="mascot-mini" style={{ top }} aria-label="Ampliar mascote" title="Clique para ampliar" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
+    {!large ? miniButton : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
       <div className="mascot-tools">
         <button type="button" ref={handle} className="mascot-move" aria-label="Mover mascote" aria-describedby="mascot-move-help" aria-expanded={moving} aria-controls="mascot-position-controls" title="Arraste ou use as setas do teclado" onClick={event => { if (event.detail === 0 || !drag.current?.moved) setMoving(v => !v) }} onKeyDown={event => {
           const offsets = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] }

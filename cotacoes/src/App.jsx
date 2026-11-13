@@ -29,6 +29,7 @@ import Recado from './Recado.jsx'
 import AlertaVariacao from './AlertaVariacao.jsx'
 import { OnlineBadge } from './Acessos.jsx'
 import Laser from './Laser.jsx'
+import MascotSlot from './MascotSlot.jsx'
 const Feriados = lazy(() => import('./Feriados.jsx'))
 import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
@@ -225,6 +226,14 @@ export default function App() {
   // Troca de tela preservada da atualização publicada em paralelo.
   const viewKey = ['cenarios', 'setores', 'calculadora', 'aprender'].includes(tab) ? `${tab}/${tab !== 'cenarios' ? sub.split('/')[0] : cenView}` : tab
   const mainRef = useRef(null)
+  // Celular: a faixa de assuntos de Cenários desliza para o lado; o assunto aberto fica sempre à vista.
+  const cenNav = useRef(null)
+  useEffect(() => {
+    const nav = cenNav.current, on = nav?.querySelector('[aria-current="true"]')
+    if (!nav || !on || nav.scrollWidth <= nav.clientWidth) return
+    const left = on.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft
+    nav.scrollLeft = Math.max(0, left - (nav.clientWidth - on.offsetWidth) / 2)
+  }, [tab, cenView])
   const viewAnim = useRef(null)
   useLayoutEffect(() => { viewAnim.current = fadeIn(mainRef.current, viewAnim.current) }, [viewKey])
   const openCurrency = CURRENCIES.find((c) => c.code === open)
@@ -279,7 +288,7 @@ export default function App() {
     {tab === 'resumo' && (
       <div className="clocks-top">
         <Clock codes={['BRL', 'USD', 'GBP', 'JPY', 'CNH']} />
-        <OnlineBadge /><AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" />
+        <OnlineBadge /><AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" /><MascotSlot className="mascot-slot-m" />
       </div>
     )}
     <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
@@ -297,7 +306,7 @@ export default function App() {
       {tab !== 'resumo' && (
         <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}`}>
           {!['calculadora', 'noticias', 'feriados'].includes(tab) && <h1>{tab === 'setores' ? 'Central de setores' : TABS.find((t) => t.id === tab).label}</h1>}
-          <AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" />
+          <AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" /><MascotSlot className="mascot-slot-m" />
         </header>
       )}
 
@@ -315,7 +324,7 @@ export default function App() {
 
       {tab === 'cenarios' && (
         <>
-          <nav className="learn-nav cen-nav" aria-label="Assuntos de Cenários">
+          <nav className="learn-nav cen-nav" aria-label="Assuntos de Cenários" ref={cenNav}>
             {CEN_VIEWS.map((v) => (
               <button key={v.id} type="button" className={cenView === v.id ? 'on' : ''} aria-current={cenView === v.id ? 'true' : undefined} onClick={() => goto('cenarios', v.id)}>{v.label}</button>
             ))}

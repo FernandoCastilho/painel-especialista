@@ -37,7 +37,14 @@
 .mascot-mini-face{display:block;width:100%;height:100%;border-radius:50%;border:1px solid var(--line);background:var(--bg) url('./assets/mascot-owl.webp') -2px 1px/44px auto no-repeat;box-shadow:0 2px 8px #0004}
 @media(prefers-reduced-motion:no-preference){.mascot-mini:not(:hover):not(:focus-visible) .mascot-mini-face{animation:mascot-peek 2.6s ease-in-out infinite}@keyframes mascot-peek{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}}
 @media(prefers-reduced-motion:reduce){.mascot-mini{transition:none}}
-@media(max-width:699px){.mascot-mini{right:auto;left:max(12px,env(safe-area-inset-left));transform-origin:top left}.mascot-dock .feedback-mascot-icon{width:88px;height:94px}}
+@media(max-width:699px){.mascot-dock .feedback-mascot-icon{width:88px;height:94px}}
+/* Lugar reservado no cabeçalho: a coruja pequena entra aqui e deixa de cobrir título, relógio e botões. */
+.mascot-slot{display:none;align-items:center;justify-content:center;flex:none;width:44px;min-height:44px}
+.mascot-slot .mascot-mini{position:static;width:36px;height:36px;transform-origin:center}
+.mascot-slot .mascot-mini:hover,.mascot-slot .mascot-mini:focus-visible{transform:scale(1.12)}
+.mascot-slot .mascot-mini-face{background-position:-2px 1px;background-size:40px auto}
+.mascot-slot-top{display:flex;align-self:stretch;border-left:1px solid var(--line,#1d1b15)}
+@media(max-width:999px){.mascot-slot-m{display:inline-flex;margin-block:-8px}}
 .mascot-figure{display:flex;justify-content:center;cursor:zoom-out}
 .mascot-dock :focus-visible,.mascot-mini:focus-visible{outline:3px solid var(--amber,#ffb000);outline-offset:2px}
 .mascot-position-controls{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(290px,calc(100vw - 32px));padding:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 18px #0004;z-index:56;text-align:center}

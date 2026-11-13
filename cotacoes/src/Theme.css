@@ -93,6 +93,9 @@ main.app .bn-official-links a {
 :root[data-theme="light"] body .market-terminal .market-table thead, :root[data-theme="light"] body .config-table thead th,
 :root[data-theme="light"] body .base-busca input, :root[data-theme="light"] body .learn-search input, :root[data-theme="light"] body .learn-formula,
 :root[data-theme="light"] body .reforma-busca input, :root[data-theme="light"] body .qb .tk { background:var(--surface-2); }
+/* Tema claro: as cores de moeda são escuras, então a etiqueta usa letra branca (antes era letra escura sobre fundo escuro, contraste 3,5). */
+:root[data-theme="light"] body .tk { color:#fff; }
+:root[data-theme="light"] body .qb .tk { color:var(--fg); }
 :root[data-theme="light"] body .compare-trigger, :root[data-theme="light"] body .calendar-trigger, :root[data-theme="light"] body .market-terminal .seg,
 :root[data-theme="light"] body .market-terminal .summary-dates input, :root[data-theme="light"] body .config-table kbd,
 :root[data-theme="light"] body .learn-tag, :root[data-theme="light"] body .learn-go, :root[data-theme="light"] body .learn-nav button.on,

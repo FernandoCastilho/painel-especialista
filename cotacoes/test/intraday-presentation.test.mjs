@@ -63,10 +63,13 @@ test('idade usa última amostra, não geração do arquivo nem fuso do navegador
   assert.match(intradayObservationWarning([{ ...first, t: now - 600001 }], day, now), /mais de 10 minutos/)
   assert.match(intradayObservationWarning([{ ...first, t: now + 60001 }], day, now), /futuro/)
   const midnight = Date.parse('2026-11-10T01:00:00Z')
-  assert.match(intradayObservationWarning([{ ...first, t: midnight - 660000 }], day, midnight), /mais de 10 minutos/)
+  // 22h de segunda em Brasília: fora da janela de coleta, a amostra das 21h49 é informada sem alerta; a das 15h continua sendo atraso.
+  assert.match(intradayObservationWarning([{ ...first, t: midnight - 660000 }], day, midnight), /Fora do horário de coleta/)
+  assert.match(intradayObservationWarning([{ ...first, t: Date.parse('2026-11-09T18:00:00Z') }], day, midnight), /mais de 10 minutos/)
 })
 test('série envelhece com arquivo recém-gerado e se recupera com observação nova', async t => {
-  const clock = browserClock(t), h = await import('../src/useHistory.js?intraday-age')
+  // Hora fixa dentro da janela de coleta (segunda, 11h40 de Brasília): o resultado não depende de quando o teste roda.
+  const clock = browserClock(t, now), h = await import('../src/useHistory.js?intraday-age')
   const selected = marketDate(clock.now), stamp = clock.now - 9 * 60000
   let observation = stamp
   globalThis.fetch = async () => json({ generatedAt: clock.now, series: { USD: { points: [[observation, 5.5]] } } })

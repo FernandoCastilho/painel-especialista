@@ -83,16 +83,26 @@ export const ENTRIES = [
   { date: '09/10/2026', items: ['SOFR com médias de 30/90/180 dias e faixa de percentis.', 'Relógio do país acima de cada cotação.', 'Cotação do CNH por cruzamento quando a direta está defasada.', 'Curvas de juros: DI x pré (B3) e Treasuries (EUA), com comparação entre datas.'] },
 ]
 
+// As mais recentes ficam à vista; as anteriores abrem por clique (a lista inteira passava de 10 telas no celular).
+const RECENTES = 6
+const entrada = (e, i) => (
+  <div key={`${e.date}-${i}`}>
+    <h3>{e.date}</h3>
+    <ul>{e.items.map((item) => <li key={item}>{item}</li>)}</ul>
+  </div>
+)
+
 export default function Novidades({ open = false }) {
   return (
     <details className="novidades" open={open}>
       <summary>O que há de novo</summary>
-      {ENTRIES.map((e, i) => (
-        <div key={`${e.date}-${i}`}>
-          <h3>{e.date}</h3>
-          <ul>{e.items.map((i) => <li key={i}>{i}</li>)}</ul>
-        </div>
-      ))}
+      {ENTRIES.slice(0, RECENTES).map(entrada)}
+      {ENTRIES.length > RECENTES && (
+        <details className="novidades-antigas">
+          <summary>Novidades anteriores ({ENTRIES.length - RECENTES})</summary>
+          {ENTRIES.slice(RECENTES).map((e, i) => entrada(e, i + RECENTES))}
+        </details>
+      )}
     </details>
   )
 }
