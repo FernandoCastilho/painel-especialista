@@ -75,3 +75,111 @@ export function explicarEvento(e) {
   const brasil = e.country === 'BR' ? LIGACAO_PAIS.BR : [cat.brasil, pais].filter(Boolean).join(' ')
   return { mapeado: true, nome: cat.nome, nivel: e.impact, nivelFonte: e.impact, oque: cat.oque, economia: cat.economia, brasil }
 }
+
+// ===== Nome em português dos eventos que chegam em inglês (Forex Factory) =====
+// Formato: "Nome em português (sigla original)". O título é desmontado em país, estágio (prévia, final), termo e
+// frequência (m/m, q/q, y/y); só é traduzido quando o termo está no dicionário. Evento sem tradução continua como veio.
+// A explicação do balão (CATEGORIAS) segue usando o título original.
+const FREQUENCIA = { 'm/m': 'variação mensal', 'q/q': 'variação trimestral', 'y/y': 'variação anual', 'q/y': 'trimestre contra o mesmo do ano anterior', '3m/3m': '3 meses contra os 3 anteriores', '3m/y': 'média de 3 meses, variação anual', 'ytd/y': 'acumulado no ano, variação anual' }
+const ESTAGIO = { prelim: 'prévia', flash: 'prévia', advance: '1ª estimativa', second: '2ª estimativa', final: 'final', revised: 'revisado' }
+const PAIS_DO_TITULO = { german: 'da Alemanha', french: 'da França', italian: 'da Itália', spanish: 'da Espanha' }
+// termo em inglês (minúsculas) -> [nome em português, sigla original (opcional)]
+const TERMOS = {
+  // PIB
+  'gdp': ['PIB', 'GDP'], 'gdp price index': ['Deflator do PIB', 'GDP'],
+  // inflação ao consumidor e ao produtor
+  'cpi': ['Inflação ao consumidor', 'CPI'], 'core cpi': ['Núcleo da inflação ao consumidor', 'Core CPI'], 'tokyo core cpi': ['Núcleo da inflação ao consumidor de Tóquio', 'Core CPI'],
+  'pce price index': ['Inflação pelo índice PCE', 'PCE'], 'core pce price index': ['Núcleo da inflação pelo índice PCE', 'Core PCE'],
+  'ppi': ['Inflação ao produtor', 'PPI'], 'core ppi': ['Núcleo da inflação ao produtor', 'Core PPI'], 'ppi input': ['Inflação ao produtor, insumos', 'PPI'], 'ppi output': ['Inflação ao produtor, produtos', 'PPI'],
+  'wpi': ['Inflação no atacado', 'WPI'], 'rpi': ['Inflação no varejo', 'RPI'], 'import prices': ['Preços de importação'],
+  // emprego
+  'unemployment rate': ['Taxa de desemprego'], 'unemployment claims': ['Pedidos de seguro-desemprego'], 'claimant count change': ['Variação dos pedidos de auxílio-desemprego'],
+  'non-farm employment change': ['Criação de empregos fora do setor agrícola, payroll', 'NFP'], 'adp non-farm employment change': ['Criação de empregos no setor privado', 'ADP'],
+  'employment change': ['Criação de empregos'], 'average hourly earnings': ['Ganho médio por hora'], 'average earnings index': ['Ganho salarial médio'], 'average cash earnings': ['Ganho salarial médio'],
+  'jolts job openings': ['Vagas de emprego abertas', 'JOLTS'], 'employment cost index': ['Índice de custo do emprego', 'ECI'], 'unit labor costs': ['Custo unitário do trabalho'], 'nonfarm productivity': ['Produtividade do trabalho'],
+  'challenger job cuts': ['Demissões anunciadas', 'Challenger'],
+  // consumo, varejo e indústria
+  'retail sales': ['Vendas no varejo'], 'core retail sales': ['Núcleo das vendas no varejo'], 'wholesale sales': ['Vendas no atacado'], 'manufacturing sales': ['Vendas da indústria'],
+  'industrial production': ['Produção industrial'], 'manufacturing production': ['Produção da indústria de transformação'], 'construction output': ['Produção da construção civil'],
+  'factory orders': ['Encomendas à indústria'], 'durable goods orders': ['Pedidos de bens duráveis'], 'core durable goods orders': ['Núcleo dos pedidos de bens duráveis'],
+  'capacity utilization rate': ['Uso da capacidade instalada'], 'business inventories': ['Estoques das empresas'], 'business investment': ['Investimento das empresas'], 'fixed asset investment': ['Investimento em ativos fixos'],
+  'personal income': ['Renda pessoal'], 'personal spending': ['Gastos pessoais'], 'household spending': ['Gastos das famílias'], 'consumer credit': ['Crédito ao consumidor'], 'index of services': ['Índice de serviços'],
+  // PMI e sondagens
+  'manufacturing pmi': ['PMI industrial'], 'services pmi': ['PMI de serviços'], 'composite pmi': ['PMI composto'], 'construction pmi': ['PMI da construção'],
+  'non-manufacturing pmi': ['PMI de serviços'], 'ism manufacturing pmi': ['PMI industrial do ISM'], 'ism services pmi': ['PMI de serviços do ISM'],
+  'caixin manufacturing pmi': ['PMI industrial Caixin'], 'caixin services pmi': ['PMI de serviços Caixin'], 'chicago pmi': ['PMI de Chicago'],
+  'empire state manufacturing index': ['Índice industrial Empire State'], 'philly fed manufacturing index': ['Índice industrial do Fed da Filadélfia'], 'richmond manufacturing index': ['Índice industrial do Fed de Richmond'],
+  'businessnz manufacturing index': ['Índice industrial BusinessNZ'], 'cb leading index': ['Indicadores antecedentes do Conference Board', 'CB'], 'nfib small business index': ['Otimismo das pequenas empresas', 'NFIB'],
+  'zew economic sentiment': ['Expectativas econômicas ZEW', 'ZEW'], 'ifo business climate': ['Clima de negócios Ifo', 'Ifo'], 'sentix investor confidence': ['Confiança do investidor Sentix', 'Sentix'],
+  // confiança do consumidor
+  'consumer confidence': ['Confiança do consumidor'], 'cb consumer confidence': ['Confiança do consumidor do Conference Board', 'CB'], 'uom consumer sentiment': ['Confiança do consumidor de Michigan', 'UoM'],
+  'uom inflation expectations': ['Expectativas de inflação de Michigan', 'UoM'], 'gfk consumer confidence': ['Confiança do consumidor GfK', 'GfK'], 'gfk consumer climate': ['Confiança do consumidor GfK', 'GfK'],
+  // comércio exterior e contas públicas
+  'trade balance': ['Balança comercial'], 'goods trade balance': ['Balança comercial de bens'], 'usd-denominated trade balance': ['Balança comercial em dólares'], 'current account': ['Conta corrente'],
+  'federal budget balance': ['Resultado do orçamento federal'], 'public sector net borrowing': ['Endividamento líquido do setor público'],
+  // petróleo e energia
+  'crude oil inventories': ['Estoques de petróleo'], 'natural gas storage': ['Estoques de gás natural'], 'api weekly statistical bulletin': ['Estoques de petróleo, boletim semanal', 'API'],
+  // imóveis, crédito e moeda
+  'building permits': ['Licenças de construção'], 'housing starts': ['Início de construção de moradias'], 'existing home sales': ['Vendas de imóveis usados'], 'new home sales': ['Vendas de imóveis novos'], 'pending home sales': ['Vendas pendentes de imóveis'],
+  'mortgage delinquencies': ['Inadimplência das hipotecas'], 'new loans': ['Novos empréstimos'], 'm2 money supply': ['Oferta de moeda', 'M2'],
+  // bancos centrais: decisões e comunicados
+  'federal funds rate': ['Decisão de juros do Fed', 'Federal Funds Rate'], 'fomc statement': ['Comunicado do Fed', 'FOMC'], 'fomc press conference': ['Entrevista coletiva do Fed', 'FOMC'],
+  'fomc meeting minutes': ['Ata da reunião do Fed', 'FOMC'], 'fomc economic projections': ['Projeções econômicas do Fed', 'FOMC'], 'beige book': ['Livro Bege do Fed', 'Beige Book'],
+  'main refinancing rate': ['Decisão de juros do Banco Central Europeu', 'ECB'], 'ecb press conference': ['Entrevista coletiva do Banco Central Europeu', 'ECB'], 'ecb economic bulletin': ['Boletim econômico do Banco Central Europeu', 'ECB'],
+  'monetary policy statement': ['Comunicado de política monetária'], 'monetary policy report': ['Relatório de política monetária'], 'monetary policy meeting minutes': ['Ata da reunião de política monetária'],
+  'official bank rate': ['Decisão de juros do Banco da Inglaterra', 'BoE'], 'monetary policy summary': ['Resumo de política monetária do Banco da Inglaterra', 'BoE'], 'mpc official bank rate votes': ['Votos na decisão de juros do Banco da Inglaterra', 'MPC'],
+  'boj policy rate': ['Decisão de juros do Banco do Japão', 'BoJ'], 'boj press conference': ['Entrevista coletiva do Banco do Japão', 'BoJ'], 'boj outlook report': ['Relatório de perspectivas do Banco do Japão', 'BoJ'],
+  'cash rate': ['Decisão de juros do banco central da Austrália', 'RBA'], 'rba rate statement': ['Comunicado de juros do banco central da Austrália', 'RBA'], 'official cash rate': ['Decisão de juros do banco central da Nova Zelândia', 'RBNZ'],
+  'overnight rate': ['Decisão de juros do Banco do Canadá', 'BoC'], 'boc rate statement': ['Comunicado de juros do Banco do Canadá', 'BoC'], 'snb policy rate': ['Decisão de juros do banco central da Suíça', 'SNB'],
+  'bank holiday': ['Feriado bancário'],
+}
+// quem fala: cargo em inglês (minúsculas) -> [cargo em português, sigla original (opcional)]
+const CARGOS = {
+  'fed chair': ['presidente do Fed'], 'fomc member': ['dirigente do Fed', 'FOMC'], 'ecb president': ['presidente do Banco Central Europeu', 'ECB'],
+  'boe gov': ['presidente do Banco da Inglaterra', 'BoE'], 'mpc member': ['dirigente do Banco da Inglaterra', 'MPC'], 'boj gov': ['presidente do Banco do Japão', 'BoJ'],
+  'buba president': ['presidente do Bundesbank'], 'rba gov': ['presidente do banco central da Austrália', 'RBA'], 'rbnz gov': ['presidente do banco central da Nova Zelândia', 'RBNZ'],
+  'boc gov': ['presidente do Banco do Canadá', 'BoC'], 'snb chairman': ['presidente do banco central da Suíça', 'SNB'], 'treasury sec': ['do Tesouro dos EUA'],
+}
+const comSigla = (nome, sigla) => (sigla ? `${nome} (${sigla})` : nome)
+export function traduzirEvento(title) {
+  const original = String(title ?? '').trim()
+  let resto = original
+  const pais = /^(German|French|Italian|Spanish)\s+/i.exec(resto)
+  if (pais) resto = resto.slice(pais[0].length)
+  const doPais = pais ? ` ${PAIS_DO_TITULO[pais[1].toLowerCase()]}` : ''
+  const fala = /^(.+?)\s+(\S+)\s+Speaks$/i.exec(resto)
+  if (fala) {
+    const cargo = CARGOS[fala[1].toLowerCase()]
+    return cargo ? comSigla(`Fala de ${fala[2]}, ${cargo[0]}`, cargo[1]) : original
+  }
+  const leilao = /^(\d+)-(y|m) Bond Auction$/i.exec(resto)
+  if (leilao) return `Leilão de títulos de ${leilao[1]} ${leilao[2].toLowerCase() === 'y' ? 'anos' : 'meses'}${doPais}`
+  const freq = /\s+(3m\/3m|3m\/y|ytd\/y|[mqy]\/[mqy])$/i.exec(resto)
+  if (freq) resto = resto.slice(0, freq.index)
+  const partes = []
+  const antes = /^(Prelim|Flash|Advance|Second|Final|Revised)\s+/i.exec(resto)
+  if (antes) { resto = resto.slice(antes[0].length); partes.push(ESTAGIO[antes[1].toLowerCase()]) }
+  const depois = /\s+Flash Estimate$/i.exec(resto)
+  if (depois) { resto = resto.slice(0, depois.index); partes.push(ESTAGIO.flash) }
+  const termo = Object.hasOwn(TERMOS, resto.toLowerCase()) ? TERMOS[resto.toLowerCase()] : null
+  if (!termo) return original
+  if (freq) {
+    const texto = FREQUENCIA[freq[1].toLowerCase()]
+    if (!texto) return original
+    partes.push(texto)
+  }
+  return comSigla([`${termo[0]}${doPais}`, ...partes].join(', '), termo[1])
+}
+
+// Previsto e anterior no padrão brasileiro: "0.0%" -> "0,0%", "194K" -> "194 mil", "1.2M" -> "1,2 mi", "-19.2B" -> "-19,2 bi".
+// Muda só a apresentação (vírgula decimal, ponto de milhar e sufixo): não arredonda nem altera o valor.
+// Formato desconhecido volta como veio.
+const SUFIXO = { K: ' mil', M: ' mi', B: ' bi', T: ' tri', '%': '%' }
+export function formatarValorCalendario(value) {
+  if (typeof value !== 'string') return value
+  const partes = value.split('|').map((parte) => {
+    const m = /^\s*([+-]?)(\d+)(?:\.(\d+))?\s*([KMBT%]?)\s*$/.exec(parte)
+    return m ? `${m[1]}${m[2].replace(/\B(?=(\d{3})+$)/g, '.')}${m[3] ? `,${m[3]}` : ''}${SUFIXO[m[4]] ?? ''}` : null
+  })
+  return partes.includes(null) ? value : partes.join(' | ')
+}
