@@ -48,6 +48,7 @@ async function proveLastColumn(region, file) {
         const pdfStyle = await page.locator('.fm-print-actions .bnprint-launch').evaluate(el => ({ background: getComputedStyle(el).backgroundImage, minHeight: parseFloat(getComputedStyle(el).minHeight) }))
         assert.equal(pdfStyle.background, 'none', 'PDF sem gradiente de ação principal')
         assert.ok(pdfStyle.minHeight >= 44, 'PDF preserva alvo acessível')
+        assert.ok(await page.locator('#fm-result').evaluate(el => !!(el.compareDocumentPosition(document.querySelector('.fm-print-actions')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'ações após o resultado')
         // O nome completo do porte/região deve caber sem depender de abrir o seletor.
         const businessSize = page.locator('#fm-porte')
         const originalBusinessSize = await businessSize.inputValue()
