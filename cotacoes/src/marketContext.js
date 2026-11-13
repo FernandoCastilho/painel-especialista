@@ -27,3 +27,10 @@ export function brentContext(data) {
 export function contextValue(item) {
   return Number.isFinite(item?.value) ? item.value.toLocaleString('pt-BR', { maximumFractionDigits:item.decimals ?? 2, minimumFractionDigits:item.decimals ?? 0 }) : '—'
 }
+
+// Unidade em dólar escrita sempre do mesmo jeito na tela: "USD/barril" -> "US$/barril", "USc/libra" -> "US¢/libra".
+// Só texto; o valor não muda. Outras unidades (R$, índice) ficam como vieram.
+export function unidadeEmDolar(unit) {
+  if (typeof unit !== 'string') return unit
+  return unit.replace(/^\s*(?:USc|US\s?cents?|US¢|¢)(?=\/|\s|$)/i, 'US¢').replace(/^\s*(?:USD|US\$|U\$S)(?=\/|\s|$)/i, 'US$')
+}

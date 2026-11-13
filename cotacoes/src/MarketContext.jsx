@@ -3,7 +3,7 @@ import { freightBase, freightContext } from './freight.js'
 import IndicatorHistory from './IndicatorHistory.jsx'
 import { normalizeIndicatorHistory } from './indicatorHistory.js'
 import { useEffect, useState } from 'react'
-import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, activityNeedsReview } from './marketContext.js'
+import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, activityNeedsReview, unidadeEmDolar } from './marketContext.js'
 import './MarketContext.css'
 import RefreshButton from './RefreshButton.jsx'
 import IndicatorTable from './IndicatorTable.jsx'
@@ -163,7 +163,8 @@ export default function MarketContext({ part = '' }) {
   const freight = useContextFile('freight.json', freightContext)
   const freightJp = useContextFile('freight-jp.json', freightContext)
   const freightStates = { 'freight-us-ppi': freight, 'freight-jp-sppi': freightJp }
-  const all = [brent.data, ...(commodities.data || [])].filter(Boolean)
+  // unidade mostrada sempre como US$ e US¢ (o arquivo de dados continua com USD)
+  const all = [brent.data, ...(commodities.data || [])].filter(Boolean).map(item => ({...item, unit:unidadeEmDolar(item.unit)}))
   return <div className="market-context">
     {openCommodity && <SeriesHistory item={openCommodity} points={openCommodity.history || []} onClose={()=>setOpenCommodity(null)} />}
     {open && <IndicatorHistory item={open} series={freightStates[open.id] ? freightStates[open.id].data?.series : history.data?.find(s=>s.id===open.id)} loading={freightStates[open.id] ? !freightStates[open.id].data&&!freightStates[open.id].failed : !history.data&&!history.failed} failed={freightStates[open.id] ? freightStates[open.id].failed || freightStates[open.id].data?.series.stale : history.failed} onClose={()=>setOpen(null)}/>}

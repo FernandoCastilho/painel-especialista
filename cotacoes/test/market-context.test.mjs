@@ -24,3 +24,10 @@ test('partial commodity coverage is signaled even when both files loaded', async
  const source=await readFile(new URL('../src/MarketContext.jsx',import.meta.url),'utf8')
  assert.ok(source.includes('commodities.data.length < COMMODITY_IDS.length'))
 })
+
+test('unidade em dólar aparece sempre como US$ e US¢; o resto fica como veio', async () => {
+  const { unidadeEmDolar } = await import('../src/marketContext.js')
+  const casos = [['USD/barril', 'US$/barril'], ['USD/onça troy', 'US$/onça troy'], ['USD/MMBtu', 'US$/MMBtu'], ['US$/barril', 'US$/barril'], ['US¢/libra-peso', 'US¢/libra-peso'], ['USc/lb', 'US¢/lb'], ['R$/litro', 'R$/litro'], ['índice', 'índice'], ['USDA', 'USDA']]
+  for (const [original, esperado] of casos) assert.equal(unidadeEmDolar(original), esperado, original)
+  assert.equal(unidadeEmDolar(undefined), undefined)
+})
