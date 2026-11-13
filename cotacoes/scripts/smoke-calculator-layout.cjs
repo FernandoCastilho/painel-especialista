@@ -125,6 +125,9 @@ async function assertWorkspace(page, section, label) {
 async function assertHelp(page, section, label, directory) {
   const help = section.getByRole('button', { name: /^Ajuda: / }).first()
   assert.ok(await help.count(), `${label}: ajuda disponível`)
+  // Tira o ponteiro de onde o último clique o deixou e espera a prévia anterior fechar (160 ms): se ele já estiver
+  // sobre a ajuda, o hover não dispara a prévia.
+  await page.mouse.move(0, 0); await page.waitForTimeout(300)
   await help.hover()
   const tooltip = page.getByRole('tooltip')
   await tooltip.waitFor()

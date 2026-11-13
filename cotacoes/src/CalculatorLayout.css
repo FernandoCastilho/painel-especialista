@@ -24,6 +24,8 @@ main.app.app-calculators {
 }
 .cx-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px 20px; }
 .cx .cx-back { margin:0; padding:0 12px 0 0; min-height:44px; font-size:.875rem; }
+/* O link de voltar tem 44 px de altura (alvo de toque); o título vem logo abaixo, sem o vão inteiro da grade. */
+.cx:not(.bw) > :is(.cx-back, .cx-toolbar) + :is(.cx-heading, h2) { margin-top:-14px; }
 .cx .cx-action {
   display:inline-flex; align-items:center; justify-content:center; align-self:flex-start;
   min-height:44px; padding:10px 16px; border:1px solid var(--line); border-radius:8px;
@@ -39,6 +41,9 @@ main.app.app-calculators {
 .cx-heading, .cx-heading-text { display:flex; align-items:center; gap:10px; min-width:0; }
 .cx-heading { flex-wrap:wrap; }
 .cx-heading-text { overflow-wrap:anywhere; }
+/* Título da tela: o "?" fica ao lado do texto mesmo quando o título quebra em duas linhas no celular. */
+.cx h2.cx-heading { flex-wrap:nowrap; }
+.cx h2.cx-heading > :not(.cx-heading-text) { flex:none; }
 .cx-title > svg, .cx-heading-text > svg { flex:none; }
 .cx .cx-icon { width:44px; height:44px; border-radius:10px; }
 .cx .cx-panel { width:100%; max-width:none; padding:0; border-radius:12px; background:var(--card); }

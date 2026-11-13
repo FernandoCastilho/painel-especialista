@@ -121,3 +121,8 @@ main.app.app-calculators .credit-comparison :is(.credit-proposal, .credit-contro
 }
 main.app.app-calculators .credit-comparison .credit-controls > :first-child:not(h3) { margin-top: var(--cx-space, 20px); }
 main.app.app-calculators .credit-comparison .credit-field > span { color: var(--mut); font-size: .8125rem; line-height: 1.4; }
+
+/* Comparador: os cenários do CDI (Queda, Base, Alta) ficam dentro de um painel cujos botões são secundários
+   (regra dos botões secundários acima); aqui eles voltam a ser escolha, com o mesmo desenho das outras. */
+main.app.app-calculators section.cx.credit-comparison .credit-controls .seg button { border-radius: 999px; background: transparent; color: var(--mut); border: 1px solid var(--cx-line-strong); }
+main.app.app-calculators section.cx.credit-comparison .credit-controls .seg button[aria-pressed=true] { background: var(--cx-select-bg); color: var(--cx-select-fg); border-color: var(--cx-select-bg); font-weight: 700; }

@@ -78,7 +78,8 @@ async function proveLastColumn(region, file) {
           await amount.blur()
         }
         await page.screenshot({ path: path.join(out, `${width}-${theme}-initial.png`), fullPage: true })
-        assert.equal(await page.locator('#fm-custo').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)', 'campos claros também no tema escuro')
+        // Decisão de 13/11/2026: a tela acompanha o tema (campo branco no claro, fundo escuro das calculadoras no escuro).
+        assert.equal(await page.locator('#fm-custo').evaluate(element => getComputedStyle(element).backgroundColor), theme === 'dark' ? 'rgb(7, 17, 34)' : 'rgb(255, 255, 255)', 'campos acompanham o tema')
         assert.equal(await page.locator('#fm-finame-eligible, #fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc').count(), 0)
         // Os números principais abrem o resultado, sem precisar abrir a composição; a faixa "Cotação comparativa" só existe ao comparar.
         const highlights = page.locator('.fm-destaques tbody tr')
