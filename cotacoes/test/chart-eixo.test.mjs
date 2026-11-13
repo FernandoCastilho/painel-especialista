@@ -79,3 +79,20 @@ test('eixo redondo: muitas faixas aleatórias mantêm 4 a 6 marcas redondas', ()
     if (hi - lo > Math.abs(hi) * 1e-9) confere(lo, hi)
   }
 })
+
+test('data do eixo: um formato só, conforme o tamanho do trecho', async () => {
+  const { rotuloData } = await import('../src/chartEixo.js')
+  const t = Date.parse('2026-11-12T12:00:00Z'), dia = 864e5, utc = { timeZone: 'UTC' }
+  // até ~3 meses: dia e mês
+  assert.equal(rotuloData(t, { de: t - 30 * dia, ate: t, ...utc }), '12/11')
+  assert.equal(rotuloData(t, { de: t - 90 * dia, ate: t, ...utc }), '12/11')
+  // mais de 3 meses: mês abreviado e ano com dois dígitos, nunca sem o ano
+  assert.equal(rotuloData(t, { de: t - 120 * dia, ate: t, ...utc }), 'nov/26')
+  assert.equal(rotuloData(Date.parse('2026-02-03T12:00:00Z'), { de: t - 365 * dia, ate: t, ...utc }), 'fev/26')
+  assert.equal(rotuloData(Date.parse('2025-12-01T12:00:00Z'), { de: t - 365 * dia, ate: t, ...utc }), 'dez/25')
+  // mais de 3 anos: só o ano
+  assert.equal(rotuloData(t, { de: t - 5 * 365 * dia, ate: t, ...utc }), '2026')
+  // intradiário: horas de Brasília
+  assert.equal(rotuloData(Date.parse('2026-11-12T17:30:00Z'), { intradiario: true }), '14:30')
+  assert.equal(rotuloData(NaN), '')
+})

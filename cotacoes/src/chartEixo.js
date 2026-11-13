@@ -54,3 +54,20 @@ export function marcasRedondas(lo, hi, { min = 4, max = 6 } = {}) {
   for (let i = de; i <= ate; i++) ticks.push(Number((i * m.passo).toFixed(Math.min(100, m.casas + 2))))
   return { ticks, lo: ticks[0], hi: ticks[ticks.length - 1], passo: m.passo, casas: m.casas }
 }
+
+const DIA = 864e5
+const partes = (t, timeZone) => Object.fromEntries(new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone }).formatToParts(new Date(t)).map((p) => [p.type, p.value]))
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+// Rótulo de data do eixo horizontal, num formato só para todos os gráficos de linha:
+// intradiário em horas ("14:30"); trecho de até ~3 meses em "dd/mm"; maior em "mmm/aa" ("nov/26");
+// acima de 3 anos, só o ano ("2024"). Assim nunca aparece data sem ano num trecho de mais de 3 meses.
+// `de` e `ate` são o início e o fim do trecho mostrado; `timeZone` segue o fuso que o gráfico já usa.
+export function rotuloData(t, { de = t, ate = t, intradiario = false, timeZone } = {}) {
+  if (!Number.isFinite(t)) return ''
+  if (intradiario) return new Date(t).toLocaleTimeString('pt-BR', { timeZone: timeZone ?? 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
+  const p = partes(t, timeZone), trecho = Math.abs(ate - de)
+  if (trecho > 3 * 365 * DIA) return p.year
+  if (trecho > 92 * DIA) return `${MESES[Number(p.month) - 1]}/${p.year.slice(-2)}`
+  return `${p.day}/${p.month}`
+}

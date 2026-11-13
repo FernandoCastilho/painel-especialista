@@ -5,7 +5,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFilterSlot } from './ChartFilters.jsx'
 import { nextChartIndex } from './chartNavigation.js'
-import { marcasRedondas } from './chartEixo.js'
+import { marcasRedondas, rotuloData } from './chartEixo.js'
 import { focoPorTeclado, limitarBalao, margemEixo, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { useMacro } from './useMacro.js'
@@ -23,7 +23,6 @@ const M = { t: 12, r: 16, b: 28, l: 58 }
 export const fmtDate = (t, long) =>
   new Date(t).toLocaleDateString('pt-BR', long ? { day: '2-digit', month: 'short', year: 'numeric' } : { day: '2-digit', month: '2-digit' })
 export const fmtTime = (t, sec) => new Date(t).toLocaleTimeString('pt-BR', { timeZone:'America/Sao_Paulo', hour:'2-digit', minute:'2-digit', ...(sec ? {second:'2-digit'} : {}) })
-const fmtMonth = (t) => new Date(t).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '')
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: d, maximumFractionDigits: d })
 
 // Largura do contêiner do gráfico. Usa "ref de função" para medir também quando o elemento aparece depois (dados que chegam tarde):
@@ -125,7 +124,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
     const line = chartLinePath(points, x, y, 'bid', steppedLine)
     const base = H - M.b
     const area = `${line}L${x(t1).toFixed(1)},${base}L${x(t0).toFixed(1)},${base}Z`
-    return { t0, t1, l, x, y, dec, casas, yTicks, xTicks, line, area, base, long: t1 - t0 > 200 * 864e5, years: t1 - t0 > 3 * 365 * 864e5 }
+    return { t0, t1, l, x, y, dec, casas, yTicks, xTicks, line, area, base }
   }, [points, width, steppedLine, nice])
 
   const pointAt = (e) => {
@@ -240,7 +239,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             textAnchor={i === 0 ? 'start' : i === g.xTicks.length - 1 ? 'end' : 'middle'}
             className="tick"
           >
-            {dateLabel ? dateLabel(t) : intraday ? fmtTime(t) : g.years ? new Date(t).getFullYear() : g.long ? fmtMonth(t) : fmtDate(t)}
+            {dateLabel ? dateLabel(t) : rotuloData(t, { de: g.t0, ate: g.t1, intradiario: intraday })}
           </text>
         ))}
         <path d={g.area} fill={`url(#${gid})`} />

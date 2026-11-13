@@ -1,5 +1,5 @@
 import { nextChartIndex } from './chartNavigation.js'
-import { marcasRedondas } from './chartEixo.js'
+import { marcasRedondas, rotuloData } from './chartEixo.js'
 import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import ChartComparison from './ChartComparison.jsx'
 import Flag from './Flag.jsx'
@@ -20,7 +20,6 @@ const SERIES = [
   { id: 'band', label: 'Faixa 1º–99º percentil', color: 'var(--chart-gold)', on: false },
 ]
 const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
-const yearOf = (t) => new Date(t).getUTCFullYear()
 
 // SOFR crua (overnight, taxa do dia) com médias de 30/90/180 dias e faixa de percentis, ligáveis pela legenda.
 export default function SofrChart({ macro, range }) {
@@ -82,10 +81,9 @@ export default function SofrChart({ macro, range }) {
     const bandRows = rows.filter((r) => r.p1 != null && r.p99 != null)
     const band = bandRows.length > 1 ? bandRows.map((r, i) => `${i ? 'L' : 'M'}${X(r.t).toFixed(1)},${Y(r.p99).toFixed(1)}`).join('') + bandRows.slice().reverse().map((r) => `L${X(r.t).toFixed(1)},${Y(r.p1).toFixed(1)}`).join('') + 'Z' : ''
     const yTicks = eixo.ticks
-    const years = t1 - t0 > 3 * 365 * DAY
     const nx = width < 420 ? 3 : 5
     const xTicks = Array.from({ length: nx }, (_, i) => t0 + ((t1 - t0) * i) / (nx - 1))
-    return { X, Y, path, band, yTicks, xTicks, t0, t1, years, casas: eixo.casas }
+    return { X, Y, path, band, yTicks, xTicks, t0, t1, casas: eixo.casas }
   }, [rows, on, width])
 
   const onMove = (e) => {
@@ -134,7 +132,7 @@ export default function SofrChart({ macro, range }) {
                 </g>
               ))}
               {g.xTicks.map((t, i) => (
-                <text key={t} x={g.X(t)} y={H - 8} textAnchor={i === 0 ? 'start' : i === g.xTicks.length - 1 ? 'end' : 'middle'} className="tick">{g.years ? yearOf(t) : fmtDate(t)}</text>
+                <text key={t} x={g.X(t)} y={H - 8} textAnchor={i === 0 ? 'start' : i === g.xTicks.length - 1 ? 'end' : 'middle'} className="tick">{rotuloData(t, { de: g.t0, ate: g.t1 })}</text>
               ))}
               {on.band && g.band && <path d={g.band} fill={SERIES[4].color} opacity="0.16" />}
               {['m180', 'm90', 'm30'].map((k) => on[k] && <path key={k} d={g.path(k)} fill="none" stroke={SERIES.find((s) => s.id === k).color} strokeWidth="1.6" strokeLinejoin="round" />)}
