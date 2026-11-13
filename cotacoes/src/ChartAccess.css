@@ -8,3 +8,6 @@
   white-space: nowrap;
 }
 .plot svg:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+/* Selo de variação do cabeçalho ("▼ 1,25 p.p. no período"): nunca quebra por dentro; o título é que cede espaço */
+.chart > header h3 { min-width: 0; }
+.chart > header .pct { flex: none; white-space: nowrap; }
