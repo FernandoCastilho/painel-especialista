@@ -90,12 +90,6 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
           <a href="https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-materiais-industrializados" target="_blank" rel="noopener noreferrer">Materiais Industrializados <span aria-hidden="true">↗</span><span className="sr-only"> (abre em nova aba)</span></a>
           <a href="https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-finame-bk-aquisicao-comercializacao" target="_blank" rel="noopener noreferrer">Máquinas e Equipamentos <span aria-hidden="true">↗</span><span className="sr-only"> (abre em nova aba)</span></a>
         </nav>
-        <div className="seg bn-quick" role="group" aria-label="Históricos Selic e LCD">
-          <span className="bn-quick-label">Selic / LCD:</span>
-          <button type="button" aria-pressed={family === 'moedas' && id === '143' && compare.length < 2} onClick={() => go({ family: 'moedas', id: '143', compare: [] })}>Selic D-2 · 143</button>
-          <button type="button" aria-pressed={family === 'moedas' && id === 'LD1' && compare.length < 2} onClick={() => go({ family: 'moedas', id: 'LD1', compare: [] })}>Sobretaxa LCD · LD1</button>
-          <button type="button" disabled={!lcdComparisonAvailable} onClick={() => go({ family: 'moedas', id: '143', compare: ['143', 'LD1'] })}>Comparar os históricos</button>
-        </div>
         <div className="seg bn-fam" role="group" aria-label="Família de séries">
           {FAMILIES.map((f) => <button key={f.id} type="button" aria-pressed={family === f.id} onClick={() => go({ family: f.id, id: undefined })}>{f.label}</button>)}
         </div>
@@ -141,9 +135,18 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
         {showLcdNote && <p className="bn-def">143 é o código do índice acumulado do BNDES, com Selic defasada em dois dias úteis, e não uma taxa anual nem série SGS do Banco Central. LD1 é a sobretaxa LCD para operações indiretas, em % a.a., fixada na contratação; seu histórico mostra as referências para novas contratações, atualizadas trimestralmente. A sobretaxa pode ser negativa; seu histórico é apresentado em degraus. LD1 usa snapshot oficial consultado em {dmy(LCD_SNAPSHOT_AS_OF)}, sem atualização automática; valores após essa cobertura não estão confirmados. A comparação tem unidades diferentes e não representa o custo total do financiamento. Não some o índice 143 à sobretaxa. Em comparação percentual, base negativa pode inverter o sinal da variação; isso não indica rentabilidade. Uma referência zero não permite normalização percentual. Dados ausentes não são substituídos por zero.</p>}
         {hasSpread && <p className="bn-def">{spreadDate ? `Spread DI: TFB de ${dmy(spreadDate)} menos a taxa DI x pré do mesmo dia, no vértice de mesmo prazo (36, 60, 84 e 120 meses ≈ 21 dias úteis por mês). Aproximação: o prazo médio do financiamento é menor que o prazo final.` : 'Spread DI indisponível: sem curva DI x pré ou sem TFB no dia da curva.'}</p>}
 
-        {!error && (
+        {/* Atalhos de comparação num lugar só, logo acima do gráfico (antes ficavam espalhados em três pontos da tela) */}
+        {(
+          <div className="bn-atalhos">
+            <div className="seg bn-quick" role="group" aria-label="Históricos Selic e LCD">
+              <span className="bn-quick-label">Selic × LCD:</span>
+              <button type="button" aria-pressed={family === 'moedas' && id === '143' && compare.length < 2} onClick={() => go({ family: 'moedas', id: '143', compare: [] })}>Selic D-2 · 143</button>
+              <button type="button" aria-pressed={family === 'moedas' && id === 'LD1' && compare.length < 2} onClick={() => go({ family: 'moedas', id: 'LD1', compare: [] })}>Sobretaxa LCD · LD1</button>
+              <button type="button" disabled={!lcdComparisonAvailable} onClick={() => go({ family: 'moedas', id: '143', compare: ['143', 'LD1'] })}>Comparar os históricos</button>
+            </div>
+          {!error && <>
           <div className="seg bn-quick" role="group" aria-label="Comparar no gráfico: TFB, TLP, TFC e dólar">
-            <span className="bn-quick-label">Comparar no gráfico:</span>
+            <span className="bn-quick-label">Somar ao gráfico:</span>
             {CARDS.map(([, cid, label]) => {
               const on = compare.includes(cid)
               // sem comparação aberta, o primeiro clique junta a série do gráfico com a escolhida
@@ -151,6 +154,18 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
               return <button key={cid} type="button" aria-pressed={on} onClick={() => go({ compare: next }, true)}>{label}</button>
             })}
             {compare.length > 0 && <button type="button" onClick={() => go({ compare: [] }, true)}>Limpar</button>}
+          </div>
+          <div className="bn-prazo">
+            <div className="seg bn-quick" role="group" aria-label="Comparar TFB e TFC de mesmo prazo">
+              <span className="bn-quick-label">Mesmo prazo:</span>
+              {MESMO_PRAZO.map(([label, ids]) => {
+                const on = compare.length === ids.length && ids.every((x) => compare.includes(x))
+                return <button key={label} type="button" aria-pressed={on} onClick={() => go({ compare: on ? [] : ids }, true)}>{label}</button>
+              })}
+            </div>
+            <p className="bn-def">Pares pela sigla do BNDES (prazo em meses e liberação em dias: TFC_60.90 ↔ TFB_60_90). TFB de 36 e 84 meses e de liberação em 30 dias não têm TFC correspondente; as TFC_TR são corrigidas pela TR, não prefixadas, e ficam fora.</p>
+          </div>
+          </>}
           </div>
         )}
         <FilterScope>
@@ -167,18 +182,6 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
           )}
         </FilterScope>
 
-        {!error && (
-          <div className="bn-prazo">
-            <div className="seg bn-quick" role="group" aria-label="Comparar TFB e TFC de mesmo prazo">
-              <span className="bn-quick-label">Mesmo prazo, TFB × TFC:</span>
-              {MESMO_PRAZO.map(([label, ids]) => {
-                const on = compare.length === ids.length && ids.every((x) => compare.includes(x))
-                return <button key={label} type="button" aria-pressed={on} onClick={() => go({ compare: on ? [] : ids }, true)}>{label}</button>
-              })}
-            </div>
-            <p className="bn-def">Pares pela sigla do BNDES (prazo em meses e liberação em dias: TFC_60.90 ↔ TFB_60_90). TFB de 36 e 84 meses e de liberação em 30 dias não têm TFC correspondente; as TFC_TR são corrigidas pela TR, não prefixadas, e ficam fora.</p>
-          </div>
-        )}
 
         <details className="bn-src">
           <summary>Dados para o Excel (CSV)</summary>

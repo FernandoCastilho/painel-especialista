@@ -319,6 +319,8 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.goto(base + '/#config')
       const bd = p.locator('.desk-panel', { has: p.getByRole('heading', { name: 'Base de dados' }) }); await bd.waitFor()
       assert.ok(await bd.locator('.config-base tbody tr').count() >= 40, 'uma linha por referência')
+      assert.equal(await bd.locator('details.base-grupo[open]').count(), 0, 'grupos começam recolhidos')
+      await bd.locator('details.base-grupo').evaluateAll(ds => ds.forEach(d => { d.open = true }))
       const t = await bd.innerText()
       assert.match(t, /economia\.awesomeapi\.com\.br\/json\/last/); assert.match(t, /SGS 432/); assert.match(t, /resumo_semanal_lpc/); assert.match(t, /BLS\.gov não pode atestar/)
       await bd.getByLabel('Buscar na base de dados').fill('SGS 4389')

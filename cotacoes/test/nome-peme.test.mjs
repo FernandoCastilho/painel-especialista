@@ -2,7 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 
-// O painel se chama PEME (Painel Especializado no Mercado). Telas novas não podem trazer o nome antigo de volta.
+// Marca visível nas telas: PME (Painel Especializado no Mercado), desde 12/11/2026. PEME fica só na identidade interna
+// (aplicativo instalado, assunto do e-mail de sugestões e alertas do Teams), para não quebrar instalação e filtros já feitos.
 test('nome do painel: nenhuma tela usa o nome antigo e a marca do topo é PME', async () => {
   const src = new URL('../src/', import.meta.url)
   const arquivos = (await readdir(src, { recursive: true })).filter(nome => /\.(jsx?|css)$/.test(nome)).map(nome => new URL(nome, src))
@@ -20,4 +21,11 @@ test('nome do painel: nenhuma tela usa o nome antigo e a marca do topo é PME', 
 test('entrada exibe PME sem alterar a identidade interna do aplicativo', async () => {
   const entrada = await readFile(new URL('../src/AcessoPorEmail.jsx', import.meta.url), 'utf8')
   assert.match(entrada, />PME · Painel Especializado no Mercado<\/h1>/)
+})
+
+test('telas mostram a mesma marca PME (13/11/2026: Panorama, sugestões, alerta de preço e Base de dados)', async () => {
+  for (const nome of ['MarketPopup.jsx', 'FeedbackMascot.jsx', 'alertaNotificacao.js', 'baseDados.js']) {
+    const texto = await readFile(new URL(`../src/${nome}`, import.meta.url), 'utf8')
+    assert.doesNotMatch(texto, />PEME<|PEME ·|'PEME'|<strong>PEME<\/strong>/, nome)
+  }
 })

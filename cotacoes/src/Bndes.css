@@ -104,3 +104,8 @@
   .bn-main thead th:nth-child(3) { width: 27%; }
   .bn-main th, .bn-main td { padding-left: 6px; padding-right: 6px; }
 }
+
+/* Atalhos de comparação reunidos logo acima do gráfico */
+.bn .desk-panel-body > .bn-atalhos { display: flex; flex-direction: column; gap: 0; margin: 6px 12px 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2, transparent); }
+.bn-atalhos .bn-quick { margin: 4px 0; }
+.bn-atalhos .bn-prazo .bn-def { margin-top: 2px; }

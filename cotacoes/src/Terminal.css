@@ -290,6 +290,10 @@ main.app .fer-month h2 { text-transform: uppercase; }
 .config-scroll:focus-visible { outline: 2px solid var(--amber); }
 @media (max-width: 699px) { .config-table th, .config-table td { padding: 8px; } .config-table { min-width: 460px; } }
 .config-wide .novidades > summary { display: none; }
+.base-grupo { border-bottom: 1px solid var(--line); }
+.base-grupo > summary { display: flex; align-items: baseline; gap: 10px; min-height: 44px; padding: 8px 0; cursor: pointer; list-style-position: inside; }
+.base-grupo > summary h3 { display: inline; margin: 0; }
+.base-grupo > summary small { color: var(--mut); font-size: .75rem; }
 .config-wide .novidades .novidades-antigas > summary { display: list-item; min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 600; }
 /* Telas estreitas: os ajustes de uso (atalhos, aparência, instalar) vêm antes das tabelas longas de fontes. */
 @media (max-width: 999px) { .config-desk > .config-side { order: -1; } .config-desk > .desk-panel:first-child { order: -2; } }
@@ -439,6 +443,8 @@ main.app .scenario-table caption { white-space: normal; text-align: left; positi
 
 /* Manchetes ao lado do par de moeda (no lugar do gráfico) */
 .terminal-news { display: flex; flex-direction: column; min-width: 0; }
+/* Computador: a altura da linha vem da tabela de câmbio; as notícias rolam dentro dela (antes sobrava um vazio sob a tabela). */
+@media (min-width: 1000px) { .terminal-main > .terminal-news { height: 0; min-height: 100%; overflow-y: auto; } .terminal-main > .terminal-news .market-news ul { max-height: none; } }
 .terminal-news > .desk-panel { flex: 1; border: 0; border-radius: 0; background: transparent; }
 .terminal-news .desk-panel-body { padding: 0; }
 .desk-tabs { display: flex; gap: 2px; flex: 1; min-width: 0; align-self: stretch; }
