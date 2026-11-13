@@ -280,17 +280,17 @@ export default function CreditComparison({ onBack }) {
   const content = <Results results={results} columns={visible} scenario={scenario} cdi={cdi} source={source} equivalent={equivalent} investment={investment} shared={shared} />
   const allOk = results.every(r => r.ok)
   return <section className="cx bw credit-comparison credit-bw" aria-labelledby="credit-title"><button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-    <div className="bw-heading"><h2 id="credit-title"><strong>PEME</strong><span>Comparação de operações</span></h2><span className="bw-badge">Crédito x caixa</span></div>
+    <div className="bw-heading"><h2 id="credit-title"><strong>PEME</strong><span>Comparador de Crédito</span></h2>
     <nav className="bw-nav" aria-label="Área do comparador">
       <button type="button" aria-pressed={area === 'compare'} onClick={() => setArea('compare')}>Comparar operações</button>
       <button type="button" aria-pressed={area === 'rules'} onClick={() => setArea('rules')}>Premissas e fontes</button>
-    </nav>
+    </nav></div>
     <div className="credit-bw-body" hidden={area !== 'compare'}>
-    <div className="credit-hero"><span className="credit-hero-icon" aria-hidden="true"><CreditIcon /></span><div><h3>Comparador de operações</h3><p>Escolha as modalidades, preencha a linha mestra uma vez e compare custo, CET e fluxo. Opcional: contra deixar o dinheiro aplicado, com a tributação da empresa.</p></div></div>
-    <p className="credit-intro">Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado.</p>
+    <p className="credit-intro">Escolha as modalidades, preencha a linha mestra uma vez e compare custo, CET e fluxo. Opcional: contra deixar o dinheiro aplicado, com a tributação da empresa.</p>
     <SharedFields shared={shared} set={invalidate(setShared)} />
     <div className="credit-count" role="group" aria-label="Quantidade de comparações"><span id="credit-count-label">Quantas comparações?</span>
-      <div className="seg">{Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, k) => k + MIN_COLUMNS).map(n => <button type="button" key={n} aria-pressed={n === count} onClick={() => invalidate(setCount)(n)}>{n}</button>)}</div></div>
+      <div className="seg">{Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, k) => k + MIN_COLUMNS).map(n => <button type="button" key={n} aria-pressed={n === count} onClick={() => invalidate(setCount)(n)}>{n}</button>)}</div>
+      <p className="credit-hint">Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado.</p></div>
     <div className="credit-grid" style={{ '--credit-cols': count }}>{visible.map((col, i) => <ColumnCard key={i} index={i} col={col} set={setColumn(i)} result={results[i]} shared={shared} />)}</div>
     {usesCdi && <section className="desk-panel credit-controls"><h3>Cenários do CDI</h3><p>{source}</p><label><input type="checkbox" checked={manual} onChange={e => invalidate(setManual)(e.target.checked)} /> Informar referência manual</label>{manual && <label className="credit-field">CDI base (% a.a.)<input inputMode="decimal" value={cdiText} onChange={e => invalidate(setCdi)(e.target.value)} /></label>}<label className="credit-field">Variação dos cenários (pontos percentuais a.a.)<input inputMode="decimal" value={shock} onChange={e => invalidate(setShock)(e.target.value)} /></label><div className="seg" aria-label="Cenário">{['Queda', 'Base', 'Alta'].map(s => <button type="button" key={s} aria-pressed={s === scenario} onClick={() => invalidate(setScenario)(s)}>{s}</button>)}</div><p>CDI constante em cada cenário; queda limitada a zero. Variação ilustrativa ajustável, não previsão de mercado. Referência de mercado não define o CDI futuro do contrato.</p></section>}
     <InvestmentFields invest={invest} set={invalidate(setInvest)} curveBase={curveToday?.date} />

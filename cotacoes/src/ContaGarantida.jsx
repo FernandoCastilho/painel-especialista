@@ -17,10 +17,22 @@ export default function ContaGarantida({ onBack }) {
   const [comparing, setComparing] = useState(false)
   const [page, setPage] = useState(0)
   const nextId = useRef(0)
-  const { errors, warnings, params, result: calculation, cet } = parseContaGarantidaForm({ ...form, rateBase: '30', conversion: 'proportional', status: 'performing' })
+  const [visited, setVisited] = useState({})
+  const { errors: found, warnings, params, result: calculation, cet } = parseContaGarantidaForm({ ...form, rateBase: '30', conversion: 'proportional', status: 'performing' })
   const result = calculation?.ok ? calculation : null
+  // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
+  // Erros que dependem de outros campos (IOF, data final, data do lançamento) aparecem quando um desses campos já foi visitado.
+  // A validação e o cálculo usam sempre a lista completa (found); só a exibição é adiada.
+  const visit = key => setVisited(old => old[key] ? old : { ...old, [key]: true })
+  const sources = key => key === 'taxProfile' ? ['start', 'amount', 'operationValue', 'eligible'] : key === 'end' ? ['start', 'duration'] : /^row-.+-date$/.test(key) ? ['start', 'end'] : []
+  const errors = Object.fromEntries(Object.entries(found).filter(([key]) => visited[key] || sources(key).some(source => visited[source])))
+  const pending = Object.keys(found).length > 0, flagged = Object.keys(errors).length > 0
+  const missing = Object.keys(found)
+  const guide = form.mode === 'single' && missing.every(key => ['amount', 'rate', 'duration', 'end', 'taxProfile'].includes(key)) ? 'Preencha valor, taxa e prazo para ver o resultado.'
+    : form.mode === 'ledger' && missing.every(key => key === 'rate' || key.startsWith('row-')) ? 'Preencha os lançamentos e a taxa do contrato para ver o resultado.'
+      : 'Preencha os campos que faltam para ver o resultado.'
   const set = (key, value) => { setForm(old => ({ ...old, [key]: value })); setPage(0) }
-  const control = key => ({ id: `cg-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `cg-${key}-hint cg-${key}-error` })
+  const control = key => ({ id: `cg-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `cg-${key}-hint cg-${key}-error`, onBlur: () => visit(key) })
   const field = (key, label, input, hint = '', status = '') => <div className="cx-field" key={key}><div className="cx-field-label"><label htmlFor={`cg-${key}`}>{label}</label>{hint && <CalculatorHelp title={label}><p>{hint}</p></CalculatorHelp>}</div>{input}<p id={`cg-${key}-hint`} className={status ? 'cx-hint' : 'sr-only'}>{status || hint}</p><p id={`cg-${key}-error`} className="cx-error" role={errors[key] ? 'alert' : undefined}>{errors[key] || ''}</p></div>
   const input = (key, label, hint, type = 'text', status = '') => field(key, label, <input {...control(key)} type={type} inputMode={type === 'text' ? 'decimal' : undefined} value={form[key]} onChange={e => set(key, e.target.value)} />, hint, status)
   const select = (key, label, choices, hint) => field(key, label, <select {...control(key)} value={form[key]} onChange={e => set(key, e.target.value)}>{choices.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select>, hint)
@@ -41,6 +53,8 @@ export default function ContaGarantida({ onBack }) {
       <button type="button" aria-pressed={!comparing && form.mode === 'ledger'} onClick={() => { setComparing(false); set('mode', 'ledger') }}>Lançamentos por dia</button>
       <button type="button" aria-pressed={comparing} onClick={() => setComparing(true)}>Comparar com parcelado</button>
     </div>
+    {/* Tela recém-aberta: dica curta no topo do que preencher, sem vermelho e sem valores de exemplo. Some quando a pessoa começa. */}
+    {!comparing && pending && !flagged && Object.keys(visited).length === 0 && <p className="cg-notice cg-guide cg-start">Para começar, preencha os quadros 1 e 2. O resultado aparece logo abaixo deles.</p>}
     <div hidden={!comparing}><ComparativoAlongamento /></div>
     {!comparing && <>
     <article className="desk-panel cx-panel">
@@ -48,7 +62,7 @@ export default function ContaGarantida({ onBack }) {
       {form.mode === 'single' ? <>
         <div className="cx-form">{select('dateMode', 'Como informar o prazo?', [['duration', 'Quantidade de dias corridos'], ['end', 'Data da quitação']], 'A quitação é simulada no início da data final, antes dos encargos desse dia.')}</div>
         <div className="cx-wrap cg-entry-wrap" role="region" aria-label="Tabela de utilização única" tabIndex={0}>
-          <table className="cx-matrix cg-entry"><caption className="sr-only">Valor utilizado, data inicial e prazo</caption><thead><tr><th scope="col">Utilização</th><th scope="col">Data inicial</th><th scope="col">{form.dateMode === 'duration' ? 'Prazo' : 'Quitação'}</th></tr></thead><tbody><tr>
+          <table className="cx-matrix cg-entry cg-entry-single"><caption className="sr-only">Valor utilizado, data inicial e prazo</caption><thead><tr><th scope="col">Utilização</th><th scope="col">Data inicial</th><th scope="col">{form.dateMode === 'duration' ? 'Prazo' : 'Quitação'}</th></tr></thead><tbody><tr>
             <td>{money('amount', 'Valor utilizado (R$)', 'Pode ser zero; não há valor presumido.')}</td>
             <td>{input('start', 'Data da utilização', 'Saldo inicial anterior a esta data: zero.', 'date')}</td>
             <td>{form.dateMode === 'duration' ? input('duration', 'Dias corridos de uso', 'Exemplo: 10 dias = data inicial + 10. A quitação ocorre antes da apuração do dia final.', 'text', `Quitação: ${dateLabel(params.end)}.`) : input('end', 'Data da quitação', 'O saldo é liquidado antes da apuração do dia.', 'date')}</td>
@@ -94,7 +108,9 @@ export default function ContaGarantida({ onBack }) {
     </article>
 
     <div aria-live="polite" className="cg-result-status">
-      {Object.keys(errors).length > 0 && <p className="cg-notice">Preencha ou corrija os campos sinalizados para calcular. Nenhum resultado anterior é mantido quando há erro.</p>}
+      {pending && (flagged
+        ? <p className="cg-notice">Preencha ou corrija os campos sinalizados para calcular. Nenhum resultado anterior é mantido quando há erro.</p>
+        : <p className="cg-notice cg-guide">{guide}</p>)}
       {calculation && !calculation.ok && <p role="alert" className="cg-notice">{calculation.error}</p>}
     </div>
     {warnings.map(warning => <p className="cg-notice" key={warning}>{warning}</p>)}
