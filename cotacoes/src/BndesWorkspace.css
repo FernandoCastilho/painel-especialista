@@ -57,7 +57,7 @@
    A impressão/PDF sai em outra camada (BndesPrint.css) e o bloco escuro só vale na tela (@media screen).
    Faixas azul-marinho, botões laranja e textos brancos sobre elas são iguais nos dois temas. */
 :root[data-theme] body .bw, :root[data-theme] body .bw .cx, :root[data-theme] body .bw :is(.bnp-dialog, .credit-presentation) {
-  --cx-field-bg:#fff; --cx-line-strong:#7a8fac; --cx-select-bg:#006bdc; --cx-select-fg:#fff; --cx-primary-bg:#ff7900; --cx-primary-fg:#10284c; --cx-result-bg:#062a5c; --cx-result-line:#ff7900; --bg:#fff; --card:#fff; --surface-2:#f1f6fd; --fg:#10284c; --mut:#455c7a; --line:#c9d7e9; --amber:#b94700; --down:#a92727;
+  --cx-field-bg:#fff; --cx-line-strong:#7a8fac; --cx-select-bg:#ffb000; --cx-select-fg:#000; --cx-primary-bg:#ff7900; --cx-primary-fg:#10284c; --cx-result-bg:#062a5c; --cx-result-line:#ff7900; --bg:#fff; --card:#fff; --surface-2:#f1f6fd; --fg:#10284c; --mut:#455c7a; --line:#c9d7e9; --amber:#b94700; --down:#a92727;
   --bw-scheme:light; --bw-page:#f7faff; --bw-card:#fff; --bw-soft:#f4f7fb; --bw-tint:#d3e3f9; --bw-good-soft:#f3faf6; --bw-warm-soft:#fff6ee; --bw-warm-tint:#ffe1c3; --bw-bad-soft:#fff7f6;
   --bw-ink:#10284c; --bw-mut:#455c7a; --bw-link:#006bdc; --bw-warm-ink:#8d3900; --bw-warn-ink:#4a3300; --bw-bad-ink:#9b2c20;
   --bw-line:#c6d5e9; --bw-field-line:#7a8fac; --bw-strong-line:#0b2e63;
