@@ -27,7 +27,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       const folders = page.locator('.central-folder')
       await folders.first().waitFor()
       await page.waitForFunction(expected => document.documentElement.dataset.theme === expected, theme)
-      assert.equal(await folders.count(), 11)
+      assert.equal(await folders.count(), 15)
       await folders.last().scrollIntoViewIfNeeded()
       await folders.first().scrollIntoViewIfNeeded()
       await page.waitForFunction(() => [...document.querySelectorAll('.central-folder img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
@@ -146,7 +146,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       await overflow()
       await page.goto(`${base}/#setores/pasta/inexistente`)
       await page.getByText('Este setor ou subsetor não foi encontrado. Escolha um setor ou use a busca.').waitFor()
-      assert.equal(await folders.count(), 11)
+      assert.equal(await folders.count(), 15)
       if (width === 1440 && theme === 'dark') {
         const ids = await folders.evaluateAll(elements => elements.map(element => element.id))
         let topicImages = 0
@@ -161,7 +161,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
           await page.screenshot({ path: path.join(out, `${id}-subsetores.png`), fullPage: true })
           await page.getByRole('button', { name: 'Todos os setores', exact: true }).click()
         }
-        assert.equal(topicImages, 68, 'todos os subsetores recebem imagem local')
+        assert.equal(topicImages, 81, 'todos os subsetores recebem imagem local')
       }
       if (width === 390) {
         await page.locator('#central-folder-tic').click()
@@ -174,7 +174,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
         await overflow()
         await page.screenshot({ path: path.join(out, `${width}-${theme}-tic.png`), fullPage: true })
       }
-      report.results.push({ width, theme, status: 'pass', folders: 11, images: true, navigation: true, search: true, history: true, reload: true, focus: true, repeatSelection: true, clearFocus: true, overflow: false, reducedMotion: true, inputs: true, invalidRoute: true, moreKeyboard: width < 1000 ? true : 'not-applicable' })
+      report.results.push({ width, theme, status: 'pass', folders: 15, images: true, navigation: true, search: true, history: true, reload: true, focus: true, repeatSelection: true, clearFocus: true, overflow: false, reducedMotion: true, inputs: true, invalidRoute: true, moreKeyboard: width < 1000 ? true : 'not-applicable' })
       await context.close()
     }
     assert.deepEqual(report.errors, [])

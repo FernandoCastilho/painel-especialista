@@ -2,7 +2,7 @@ import { readFile, readdir, realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 
-export const EXPECTED_STUDIES = 67
+export const EXPECTED_STUDIES = 80
 export const REQUIRED_RATES = [0.75, 1, 1.25, 1.5, 2]
 export const REVIEW_CATEGORIES = ['numbers', 'negations', 'acronyms', 'properNames', 'omissions', 'repetitions']
 export const CANDIDATE_FIELDS = ['unresolvedWrittenNumbers', 'longUnmatchedReferenceSpans', 'criticalMeaningReviewCandidates', 'unmatchedAcronyms', 'properNameReviewCandidates']
@@ -95,7 +95,7 @@ export async function validateSectorRelease({ appRoot, requireAudio = false, all
   check(record(evidence), 'audio release evidence must be an object')
   if (!record(manifest?.data) || !record(evidence)) return { studies: studies.length, issues }
   const entries = manifest.data?.studies
-  check(record(entries) && sameKeys(Object.keys(entries), keys), 'audio manifest coverage must be exactly 67/67 canonical keys')
+  check(record(entries) && sameKeys(Object.keys(entries), keys), 'audio manifest coverage must be exactly 80/80 canonical keys')
   check(sameKeys(audioFiles.filter(file => file.endsWith('.mp3')), studies.map(study => `${study.group}-${study.topicIndex}.mp3`)), 'MP3 coverage differs from canonical batch')
   for (const [key, row] of current) {
     const entry = entries?.[key]
@@ -130,17 +130,17 @@ export async function validateSectorRelease({ appRoot, requireAudio = false, all
   const { technical, fidelity, review, browser } = reports
   for (const [name, report] of Object.entries({ technical, fidelity, review })) {
     if (!report) continue
-    check(report.schemaVersion === 1 && record(report.files) && sameKeys(Object.keys(report.files), keys), `${name}: report coverage/schema must be exactly 67/67`)
+    check(report.schemaVersion === 1 && record(report.files) && sameKeys(Object.keys(report.files), keys), `${name}: report coverage/schema must be exactly 80/80`)
   }
   if (technical) {
     check(technical.status === 'complete_technical_audit', 'technical: audit is incomplete')
-    for (const name of ['canonicalStudies', 'approvedStudies', 'manifestEntries', 'presentMp3Files', 'auditedFiles', 'passedTechnicalChecks']) check(technical.summary?.[name] === EXPECTED_STUDIES, `technical: ${name} must be 67`)
+    for (const name of ['canonicalStudies', 'approvedStudies', 'manifestEntries', 'presentMp3Files', 'auditedFiles', 'passedTechnicalChecks']) check(technical.summary?.[name] === EXPECTED_STUDIES, `technical: ${name} must be 80`)
     for (const name of ['filesWithWarnings', 'filesFailed', 'approvedStudiesPendingAudio', 'filesAwaitingRegeneration']) check(technical.summary?.[name] === 0, `technical: ${name} must be zero`)
     for (const name of ['pendingStudyKeys', 'awaitingRegenerationStudyKeys', 'manifestKeysWithoutCanonicalStudy', 'unreferencedMp3Files']) check(empty(technical[name]), `technical: ${name} missing or nonempty`)
   }
   if (fidelity) {
     check(fidelity.status === 'automatic_screening_complete_review_pending', 'fidelity: full automated screening not complete')
-    for (const name of ['canonicalStudies', 'availableAudioFiles', 'filesFullyTranscribed', 'currentTranscriptAudioFiles']) check(fidelity.summary?.[name] === EXPECTED_STUDIES, `fidelity: ${name} must be 67`)
+    for (const name of ['canonicalStudies', 'availableAudioFiles', 'filesFullyTranscribed', 'currentTranscriptAudioFiles']) check(fidelity.summary?.[name] === EXPECTED_STUDIES, `fidelity: ${name} must be 80`)
     for (const name of ['pendingFullTranscription', 'availableAudioPendingTranscription', 'studiesPendingAudio', 'audioAwaitingRegeneration', 'humanListeningCompleted']) check(fidelity.summary?.[name] === 0, `fidelity: ${name} must be zero`)
     for (const name of ['pendingStudyKeys', 'pendingGeneratedStudyKeys', 'awaitingRegenerationStudyKeys', 'pendingGenerationStudyKeys']) check(empty(fidelity[name]), `fidelity: ${name} missing or nonempty`)
     check(fidelity.summary?.finalAudioApproval === false && Array.isArray(fidelity.limitations) && fidelity.limitations.length > 0, 'fidelity: automated screening must retain listening limitations, not final audio approval')
@@ -153,7 +153,7 @@ export async function validateSectorRelease({ appRoot, requireAudio = false, all
   const playback = browser?.audioPlayback
   if (browser) {
     check(!browser.failure && empty(browser.errors), 'browser: failed/incomplete browser run')
-    check(playback?.schemaVersion === 1 && playback?.expected === EXPECTED_STUDIES && Array.isArray(playback.results) && sameKeys(playback.results.map(row => row.studyKey), keys), 'browser: real playback coverage must be exactly 67/67')
+    check(playback?.schemaVersion === 1 && playback?.expected === EXPECTED_STUDIES && Array.isArray(playback.results) && sameKeys(playback.results.map(row => row.studyKey), keys), 'browser: real playback coverage must be exactly 80/80')
     check(playback?.humanOrNativeListeningPerformed === false && nonempty(playback?.scope), 'browser: short playback must not claim integral listening')
     for (const filename of PLAYER_FILES) {
       try { check(playback?.sources?.playerFiles?.[filename] === sha256(await readFile(path.join(root, filename))), `browser: stale player/test source ${filename}`) } catch { issues.push(`browser: player/test source missing ${filename}`) }

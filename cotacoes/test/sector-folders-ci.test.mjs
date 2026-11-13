@@ -16,7 +16,7 @@ function artifacts(t) {
     mkdirSync(join(target, '..'), { recursive: true })
     writeFileSync(target, body)
   }
-  const report = { schemaVersion: 1, passed: true, errors: [], results: matrix.map(row => ({ ...row, status: 'pass', folders: 11, overflow: false, ...Object.fromEntries(requiredChecks.map(check => [check, true])) })) }
+  const report = { schemaVersion: 1, passed: true, errors: [], results: matrix.map(row => ({ ...row, status: 'pass', folders: 15, overflow: false, ...Object.fromEntries(requiredChecks.map(check => [check, true])) })) }
   const save = () => file('report.json', JSON.stringify(report))
   save()
   for (const { width, theme } of matrix) for (const state of ['pastas', 'subsetores', 'estudo']) file(`${width}-${theme}-${state}.png`)

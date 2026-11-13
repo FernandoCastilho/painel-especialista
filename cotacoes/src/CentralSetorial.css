@@ -18,3 +18,7 @@
 @media(forced-colors:active){.central-folder,.central-subsector{border:2px solid ButtonText;background:Canvas;color:ButtonText}.central-card-photo{display:none}.central-folder-content,.central-card-caption{background:Canvas}.central-folder-count,.central-folder-arrow{color:ButtonText}.central-document-icon{border-color:ButtonText}.central-setorial .central-folder:focus-visible,.central-setorial .central-subsector:focus-visible{outline-color:Highlight;box-shadow:none}}
 /* The accessible clear button is provided beside the search input. */
 .central-search input::-webkit-search-cancel-button{appearance:none;-webkit-appearance:none}
+
+.central-highlight{margin:20px 0 24px;padding:20px;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:12px;background:var(--surface-2)}
+.central-highlight h4{font-size:1.12rem;margin:8px 0 12px}.central-highlight p{line-height:1.65;margin:8px 0}.central-highlight dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin:18px 0}.central-highlight dt{font-weight:700;margin-bottom:6px}.central-highlight dd{margin:0;line-height:1.6}.central-sector-symbol{display:grid;place-items:center;background:linear-gradient(130deg,var(--surface-2),var(--card));color:var(--amber)}.central-sector-symbol>svg{padding:20px;box-sizing:content-box}
+@media(max-width:600px){.central-highlight{padding:16px}.central-highlight dl{grid-template-columns:minmax(0,1fr);gap:16px}}
