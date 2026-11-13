@@ -21,8 +21,8 @@ test('avisos e lista usam o dia de Brasília após meia-noite UTC', () => {
   Date.now = () => Date.parse('2026-11-02T00:30:00Z')
   try {
     const notice = renderToStaticMarkup(createElement(Notice, { hol: { pracas: ['CIVBR'], loaded: true }, days: 2, list: true }))
-    assert.match(notice, /02\/11\/2026 \(amanhã\)/)
-    assert.doesNotMatch(notice, /02\/11\/2026 \(hoje\)/)
+    assert.match(notice, /02\/11\/2026 · segunda-feira \(amanhã\)/)
+    assert.doesNotMatch(notice, /02\/11\/2026 · segunda-feira \(hoje\)/)
     const list = renderToStaticMarkup(createElement(Holidays, { hol: {} }))
     assert.match(list, /02\/11\/26<\/b><small>seg<\/small>/)
     assert.match(list, /class="fer-left soon">amanhã/)
