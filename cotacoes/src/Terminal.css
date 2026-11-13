@@ -237,7 +237,7 @@ main.app .fer-month h2 { text-transform: uppercase; }
 
 /* cartões, listas e controles: cantos quase retos */
 .card, .chart, .tile, .context-card, .start-card, .list, .feed, .wire, .holiday-notice, .update-notice, .resumo-chart, .executive-rates__scroll, .opt, .rate, .agenda li, .tip, .pop, .more-sheet { border-radius: var(--r-card); }
-.seg, .btn, .chips button, .curve-legend > button, .pair-sel, .fer-filter select, .scenario-year select, .update-notice button, .fx-toggle, .img-share { border-radius: 2px; }
+.seg, .btn, .chips button, .curve-legend > button, .pair-sel, .fer-filter select, .update-notice button, .fx-toggle, .img-share { border-radius: 2px; }
 .context-card-trigger { border-radius: var(--r-card); }
 .sheet, .info-notice-dialog, .expandable-panel.is-dialog { border-radius: 4px; }
 .seg button[aria-pressed='true'], .chips button[aria-pressed='true'], .seg button.on { background: #1a1507; color: var(--amber); box-shadow: inset 0 -2px 0 var(--amber); }
@@ -383,14 +383,10 @@ main.app .idx-note { margin: 0; padding: 0 12px 12px; font-size: 12px; color: va
 
 
 /* ===== Ajustes de celular e tablet: alvos de toque, relógios e tabela de cenários ===== */
-main.app .scroll-hint { display: none; margin: 0 0 8px; font-size: 12px; color: var(--amber, #ffb000); }
-main.app .scenario-table caption { white-space: normal; text-align: left; position: sticky; left: 0; width: min(100%, 340px); padding: 0 0 8px; }
-@media (max-width: 700px) {
-  main.app .scroll-hint { display: block; }
-}
+main.app .scenario-table caption { white-space: normal; }
 @media (max-width: 1099px) {
   main.app details > summary { padding-top: 15px; padding-bottom: 15px; }
-  main.app button.more, main.app .chips button, main.app .fx-toggle, main.app .scenario-year select, main.app .expandable-controls .btn { min-height: 44px; }
+  main.app button.more, main.app .chips button, main.app .fx-toggle, main.app .expandable-controls .btn { min-height: 44px; }
 }
 @media (max-width: 440px) {
   .clocks-top { padding-left: 6px; padding-right: 6px; }

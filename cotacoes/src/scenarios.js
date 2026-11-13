@@ -33,3 +33,5 @@ export function idadeProjecao(iso, agora = Date.now()) {
   return { dias, data: `${m[3]}/${m[2]}`, antiga: dias > PROJECAO_ANTIGA_DIAS }
 }
 export const textoIdadeProjecao = (idade) => !idade ? 'fonte pendente' : `projeção de ${idade.data} (${idade.dias < 0 ? 'data futura' : idade.dias === 0 ? 'de hoje' : `há ${idade.dias} ${idade.dias === 1 ? 'dia' : 'dias'}`})`
+// Só a idade, para a linha do banco na tabela (a data vai ao lado): "há 49 dias", "hoje" ou "data futura".
+export const textoHaDias = (idade) => !idade ? '' : idade.dias < 0 ? 'data futura' : idade.dias === 0 ? 'hoje' : `há ${idade.dias} ${idade.dias === 1 ? 'dia' : 'dias'}`

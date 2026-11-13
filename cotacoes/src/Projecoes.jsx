@@ -3,15 +3,16 @@ import RefreshButton from './RefreshButton.jsx'
 import { onRefresh } from './refreshBus.js'
 import { Aviso } from './Avisos.jsx'
 import { useEffect, useState } from 'react'
-import { FOCUS_MARK, INDICATORS, INSTITUTIONS, compareToFocus, idadeProjecao, scenarioValue, textoIdadeProjecao } from './scenarios.js'
+import { FOCUS_MARK, INDICATORS, INSTITUTIONS, PROJECAO_ANTIGA_DIAS, compareToFocus, idadeProjecao, scenarioValue, textoHaDias } from './scenarios.js'
 import FocusHistorico from './FocusHistorico.jsx'
 
 const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '') ? value.split('-').reverse().join('/') : 'data não informada'
+const YEARS = ['2026', '2027']
 const format = (value) => value === null ? '—' : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export default function Projecoes({ macro, searchTarget }) {
   const [year, setYear] = useState('2026')
-  useEffect(()=>{const target=searchTarget?.context?.year;if(['2026','2027'].includes(target))setYear(target)},[searchTarget])
+  useEffect(()=>{const target=searchTarget?.context?.year;if(YEARS.includes(target))setYear(target)},[searchTarget])
   const [banks, setBanks] = useState(null)
   const [failed, setFailed] = useState(false)
   useEffect(() => {
@@ -25,38 +26,45 @@ export default function Projecoes({ macro, searchTarget }) {
     return () => { off(); ctrl.abort() }
   }, [])
   const focus = macro?.data?.focus
+  const idades = Object.fromEntries(INSTITUTIONS.slice(1).map((name) => [name, idadeProjecao(banks?.institutions?.find((item) => item.name === name)?.date)]))
+  const algumaAntiga = Object.values(idades).some((idade) => idade?.antiga)
   return (
     <section className="scenarios" aria-labelledby="scenarios-heading">
       <div className="history-head">
         <h2 id="scenarios-heading">Cenário econômico</h2>
         <RefreshButton files={['cenarios.json', 'macro.json', 'focus-history.json']} label="Cenário econômico" />
-        <label className="scenario-year">Ano <select value={year} onChange={(event) => setYear(event.target.value)} aria-label="Ano das projeções">
-          <option value="2026">2026</option><option value="2027">2027</option>
-        </select></label>
+        <div className="seg scenario-year" role="group" aria-label="Ano das projeções">
+          {YEARS.map((y) => <button key={y} type="button" aria-pressed={year === y} onClick={() => setYear(y)}>{y}</button>)}
+        </div>
       </div>
       <article className="chart">
-        <p className="scroll-hint">Deslize para ver os demais bancos →</p>
-        <div className="scroll scenario-scroll" tabIndex={0} role="region" aria-label={`Comparação das projeções para ${year}`}>
-          <table className="focus-table scenario-table">
-            <caption >Projeções para {year}, por instituição. Valores ausentes indicados por travessão. <span className="focus-legend">Sinais comparam cada banco com o FOCUS da mesma linha: <b className="fm up">▲</b> acima · <b className="fm down">▼</b> abaixo · <b className="fm same">=</b> igual (2 casas).</span></caption>
-            <thead><tr><th scope="col">Indicador</th>{INSTITUTIONS.map((name) => <th scope="col" key={name}>{name}</th>)}</tr></thead>
-            <tbody>{INDICATORS.map((indicator) => <tr key={indicator.id}>
-              <th scope="row">{indicator.label}<small>{indicator.unit}</small></th>
-              {INSTITUTIONS.map((name) => {
-                const value = scenarioValue(name, indicator, year, focus, banks)
-                const cmp = name === 'FOCUS' ? null : compareToFocus(value, scenarioValue('FOCUS', indicator, year, focus, banks))
-                const mark = cmp && FOCUS_MARK[cmp]
-                return <td key={name} className={cmp ? `vs-focus vs-${cmp}` : undefined}>{format(value)}{mark && <span className={`fm ${cmp}`} role="img" aria-label={mark.text} title={mark.text}>{mark.symbol}</span>}</td>
-              })}
-            </tr>)}</tbody>
+        <div className="scroll scenario-scroll" tabIndex={0} role="region" aria-label="Comparação das projeções por instituição">
+          <table className="focus-table scenario-table" data-year={year}>
+            <caption>Projeções por instituição, comparadas com o Focus da mesma coluna: <b className="fm up">▲</b> acima · <b className="fm down">▼</b> abaixo · <b className="fm same">=</b> igual (2 casas) · — sem projeção.</caption>
+            <thead>
+              <tr><th scope="col" rowSpan={2}>Instituição</th>{YEARS.map((y) => <th scope="colgroup" colSpan={INDICATORS.length} key={y} data-y={y} className="sc-year">{y}</th>)}</tr>
+              <tr>{YEARS.map((y) => INDICATORS.map((indicator, i) => <th scope="col" key={`${y}-${indicator.id}`} data-y={y} className={i === 0 ? 'sc-first' : undefined} title={indicator.unit}>{indicator.label}<small>{indicator.unit.split(' · ')[0]}</small></th>))}</tr>
+            </thead>
+            <tbody>{INSTITUTIONS.map((name) => {
+              const ref = name === 'FOCUS'
+              const idade = idades[name]
+              return <tr key={name} className={ref ? 'sc-ref' : undefined}>
+                <th scope="row">{ref ? 'Focus' : name}
+                  {ref
+                    ? <small>mediana<span className="sc-wide"> do mercado</span>{focus && <><span className="sc-sep"> · </span><span className="sc-age">até {date(focus.date).slice(0, 5)}</span></>}</small>
+                    : banks && <small>{idade?.antiga && <span className="sc-warn" aria-hidden="true">⚠ </span>}{idade ? <>{idade.data}<span className="sc-sep"> · </span><span className="sc-age">{textoHaDias(idade)}</span></> : 'fonte pendente'}{idade?.antiga && <span className="sc-sr"> · pode estar desatualizada</span>}</small>}
+                </th>
+                {YEARS.map((y) => INDICATORS.map((indicator, i) => {
+                  const value = scenarioValue(name, indicator, y, focus, banks)
+                  const cmp = ref ? null : compareToFocus(value, scenarioValue('FOCUS', indicator, y, focus, banks))
+                  const mark = cmp && FOCUS_MARK[cmp]
+                  return <td key={`${y}-${indicator.id}`} data-y={y} className={[i === 0 && 'sc-first', value === null && 'sc-nil'].filter(Boolean).join(' ') || undefined}>{format(value)}{mark && <span className={`fm ${cmp}`} role="img" aria-label={mark.text} title={mark.text}>{mark.symbol}</span>}</td>
+                }))}
+              </tr>
+            })}</tbody>
           </table>
         </div>
-        {banks && <ul className="scenario-ages" aria-label="Idade das projeções dos bancos">
-          {INSTITUTIONS.slice(1).map((name) => {
-            const idade = idadeProjecao(banks.institutions?.find((item) => item.name === name)?.date)
-            return <li key={name} className={idade?.antiga ? 'old' : undefined}>{idade?.antiga && <span aria-hidden="true">⚠ </span>}<b>{name}</b>: {textoIdadeProjecao(idade)}{idade?.antiga ? ' · pode estar desatualizada' : ''}</li>
-          })}
-        </ul>}
+        {algumaAntiga && <p className="scenario-note"><span className="sc-warn" aria-hidden="true">⚠ </span>Projeção com mais de {PROJECAO_ANTIGA_DIAS} dias: pode estar desatualizada.</p>}
         <Aviso title="Cenário econômico · método">
         <p className="status">USD: Focus = média de dezembro; Itaú BBA = dezembro; demais bancos = fim do período. Selic: Itaú = dezembro; demais fontes = fim do ano. As medidas não são idênticas. — = projeção não verificada ou indisponível, nunca zero.</p>
         <div className="scenario-sources">
