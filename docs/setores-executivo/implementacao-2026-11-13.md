@@ -23,3 +23,8 @@
 - Estudos aprovados documentalmente com ressalvas explícitas: indicadores agregados não medem cada subsetor, séries curtas não equivalem a histórico longo e pesquisa de notícias/M&A não é exaustiva. Não há áudio gerado.
 - Build e 1.892 testes passaram antes do último refinamento documental; nova verificação final e CI necessários.
 - Publicação autorizada pelo usuário após conclusão das verificações.
+
+## QA visual e correção de regressão do teste
+- CI do commit `4c4304e`, execução `43407352225`: estudos, pastas em oito cenários, grafo, build e testes passaram. Um smoke geral falhou porque sua expectativa ainda era 11 pastas; atualizado para conferir o catálogo vigente, que tem 15, mantendo a asserção de contagem.
+- Artefato `pastas-setoriais-design` (ID 14028376258), relatório `passed: true`. Inspecionadas capturas reais: Varejo 390 px claro, Turismo 320 px escuro, Saúde 1440 px claro, Pet 390 px escuro. Destaque precede os cards, texto legível sem corte horizontal. A barra fixa de navegação atravessa a captura de página inteira na posição da viewport; não foi interpretada como conteúdo duplicado.
+- A mudança de expectativa é do teste, não relaxa o número de setores nem remove verificação. Nova rodada integral de CI exigida antes da integração.
