@@ -121,7 +121,7 @@ function ActivityTable({items, series, failed, historyFailed, historyLoading, on
     const year = base ? points.find(p=>p.period===`${Number(base.period.slice(0,4))-1}${base.period.slice(4)}`) ?? null : null
     const val = v => `${contextValue({...item, value:v})}${item.unit === '%' ? '%' : ''}`
     return {
-      id:item.id, flag:/-br$|^caged$/.test(item.id) ? 'BRL' : 'USD', name:item.label, sub:`${item.nature}${base ? '' : series && !points.length ? ' · histórico indisponível' : ''}${activityNeedsReview(item) ? ' · conferência pendente' : ''}`,
+      id:item.id, flag:/-br$|^caged$/.test(item.id) ? 'BRL' : 'USD', name:item.label, sub:item.nature,
       openLabel:`${item.label}: abrir gráfico e histórico`,
       cells:[
         {text:val(item.value)},
@@ -142,7 +142,7 @@ function ActivityTable({items, series, failed, historyFailed, historyLoading, on
       onOpen={onOpen}
     />
     {(failed || historyFailed) && <Estado tipo="aviso">Último dado preservado; atualização não confirmada.</Estado>}
-    {items.some(item => activityNeedsReview(item)) && <Estado tipo="aviso">A conferência de uma ou mais fontes está vencida. Os valores cadastrados foram preservados; consulte a fonte para verificar se há nova divulgação. Atualizar a consulta do painel não comprova atualização da fonte.</Estado>}
+    {items.some(item => activityNeedsReview(item)) && <Estado tipo="aviso">Alguns indicadores podem estar atrás da última divulgação. Confira a data de cada linha e a fonte.</Estado>}
     {historyLoading && <Estado>Carregando histórico para as comparações…</Estado>}
     {items.some(i=>i.value===null) && <Estado tipo="aviso">Dado indisponível em algum indicador. Não representa zero.</Estado>}
     <details><summary>Fontes e conferência dos indicadores</summary><p>Dados observados, com competências diferentes. Prazo de conferência editorial: até sete dias ou a próxima divulgação conhecida, quando cadastrada, o que ocorrer primeiro. Conferência vencida é sinalizada; o horário da consulta não altera a competência.</p><ul>{items.map(item => <li key={item.id}><a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{item.label} · {item.sourceName}</a> — referência {contextDate(item.period)}; conferência {contextDate(item.checkedAt?.slice(0, 10))}{item.nextReviewAt && <>; próxima conferência até {contextDate(item.nextReviewAt.slice(0, 10))}</>}{item.nextReleaseSourceUrl && <> · <a href={item.nextReleaseSourceUrl} target="_blank" rel="noopener noreferrer">calendário da próxima divulgação</a></>}{activityNeedsReview(item) ? ' · pendente' : ''}.</li>)}</ul></details>
