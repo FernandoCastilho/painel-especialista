@@ -176,6 +176,13 @@ async function fillScenario(page, section, route) {
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
     assert.equal(await section.getByText('Situação da operação', { exact: true }).count(), 0)
+    // Abre sem vermelho; o erro de um campo só aparece depois de a pessoa passar por ele e sair.
+    assert.equal(await section.locator('[aria-invalid=true], [role=alert]').count(), 0, 'abre sem campo em erro')
+    assert.equal(await section.getByText('Preencha valor, taxa e prazo para ver o resultado.', { exact: true }).count(), 1)
+    await page.locator('#cg-rate').focus(); await page.locator('#cg-rate').blur()
+    assert.equal(await page.locator('#cg-rate').getAttribute('aria-invalid'), 'true', 'erro aparece ao sair do campo vazio')
+    assert.equal(await page.locator('#cg-amount').getAttribute('aria-invalid'), 'false', 'campo ainda não visitado segue sem erro')
+    assert.equal(await section.getByText('Preencha ou corrija os campos sinalizados', { exact: false }).count(), 1)
     await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).fill('3')
     await page.locator('#cg-start').fill('2026-11-05')
     await page.locator('#cg-duration').fill('10')
