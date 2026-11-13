@@ -193,7 +193,8 @@ export default function MarketContext({ part = '' }) {
       </>}
       {!fuels.data && fuels.failed && <Estado tipo="erro">Não foi possível carregar os preços de combustíveis.</Estado>}
     </section>}
-    {(!part || part === 'frete') && <section aria-labelledby="freight-heading"><div className="ctx-head"><h2 id="freight-heading">Transporte marítimo · referência de preços</h2><RefreshButton files={['freight.json', 'freight-jp.json']} label="Transporte marítimo" /></div>
+    {/* Frete marítimo fica dentro da tela de Commodities; #cenarios/commodities/frete abre já nesta seção */}
+    {(!part || part === 'commodities') && <section id="cen-frete" className="cen-section" aria-labelledby="freight-heading"><div className="ctx-head"><h2 id="freight-heading">Frete marítimo · referência de preços</h2><RefreshButton files={['freight.json', 'freight-jp.json']} label="Transporte marítimo" /></div>
       <Aviso title="Transporte marítimo"><p className="context-intro">Índices de preços do transporte marítimo dos EUA e do Japão, em bases diferentes: compare as variações, não os níveis. Não medem fretes por rota (China–Brasil, Europa–Brasil); não substituem orçamento de transportadora.</p></Aviso>
       <Cards state={freight.data || freightJp.data ? {data:true} : freight.failed && freightJp.failed ? {failed:true} : {}}><FreightTable entries={[{state:freight},{state:freightJp}]} onOpen={id => setOpen(freightStates[id].data.item)} /></Cards>
       <Aviso title="Transporte marítimo · método"><p className="context-method">Japão: índice de preços de serviços (SPPI, base 2020), item transporte marítimo de carga, mensal desde 1985. EUA: índice de preços ao produtor do transporte marítimo; mensal, não dessazonalizado, jun/1988=100. Meses não são transformados em cotações diárias.</p></Aviso>

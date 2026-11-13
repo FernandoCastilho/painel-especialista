@@ -65,11 +65,13 @@ const CEN_VIEWS = [
   { id: 'recuperacao', label: 'Recuperação judicial' },
   { id: 'atividade', label: 'Atividade e emprego' },
   { id: 'commodities', label: 'Commodities' },
-  { id: 'frete', label: 'Frete marítimo' },
   { id: 'indexadores', label: 'Indexadores' },
   { id: 'inflacao', label: 'Inflação' },
-  { id: 'fiscal', label: 'Fiscal' },
 ]
+// Seções dentro de um assunto (#cenarios/assunto/secao): a tela abre já rolada até a seção.
+const CEN_SECTIONS = { 'inflacao/fiscal': 'cen-fiscal', 'commodities/frete': 'cen-frete' }
+// Endereços antigos continuam valendo e viram o novo sem nova entrada no histórico.
+const CEN_OLD = { outros: 'inflacao', fiscal: 'inflacao/fiscal', frete: 'commodities/frete' }
 const PRESETS = [
   { id: 'day', label: 'Dia (intraday)', days: 0 },
   { id: '7', label: '7 dias', days: 7 },
@@ -206,7 +208,9 @@ export default function App() {
   const [avisoAberto, setAvisoAberto] = useState(() => !navigator.webdriver && avisoPendente())
   const fecharAviso = () => { marcarAvisoVisto(); setAvisoAberto(false) }
   const panorama = usePanorama()
-  const cenView = sub === 'outros' ? 'inflacao' : CEN_VIEWS.some((v) => v.id === sub) ? sub : 'projecoes' // #cenarios/outros (endereço antigo) abre Inflação
+  const cenSub = CEN_OLD[sub] ?? sub
+  const cenView = CEN_VIEWS.some((v) => v.id === cenSub.split('/')[0]) ? cenSub.split('/')[0] : 'projecoes'
+  const cenAnchor = tab === 'cenarios' ? CEN_SECTIONS[cenSub] : undefined
   const goto = (id, to = '', replace = false) => {
     setTab(id)
     setSub(to)
@@ -218,11 +222,19 @@ export default function App() {
     }
     if (!(id === 'bndes' && tab === 'bndes')) window.scrollTo({ top: 0 }) // escolher série e período na aba BNDES não leva ao topo
   }
-  useEffect(() => { // endereço antigo (#cenarios/outros) vira o novo, sem nova entrada no histórico
-    if (tab !== 'cenarios' || sub !== 'outros') return
-    setSub('inflacao')
-    try { window.history.replaceState(null, '', '#cenarios/inflacao') } catch { /* sem histórico */ }
+  useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
+    if (tab !== 'cenarios' || !CEN_OLD[sub]) return
+    setSub(CEN_OLD[sub])
+    try { window.history.replaceState(null, '', `#cenarios/${CEN_OLD[sub]}`) } catch { /* sem histórico */ }
   }, [tab, sub])
+  useEffect(() => { // seção dentro do assunto: rola até ela; repete uma vez se os quadros de cima terminarem de carregar e a empurrarem
+    if (!cenAnchor) return
+    let feito = null
+    const ir = () => { const el = document.getElementById(cenAnchor); if (!el) return false; el.scrollIntoView({ block: 'start' }); feito = window.scrollY; return true }
+    const t1 = setTimeout(() => { if (!ir()) setTimeout(ir, 300) }, 0)
+    const t2 = setTimeout(() => { if (feito !== null && Math.abs(window.scrollY - feito) < 2) ir() }, 1200) // só se a pessoa não rolou
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [cenAnchor])
   // Troca de tela preservada da atualização publicada em paralelo.
   const viewKey = ['cenarios', 'setores', 'calculadora', 'aprender'].includes(tab) ? `${tab}/${tab !== 'cenarios' ? sub.split('/')[0] : cenView}` : tab
   const mainRef = useRef(null)
@@ -329,7 +341,7 @@ export default function App() {
               <button key={v.id} type="button" className={cenView === v.id ? 'on' : ''} aria-current={cenView === v.id ? 'true' : undefined} onClick={() => goto('cenarios', v.id)}>{v.label}</button>
             ))}
           </nav>
-          {cenView === 'projecoes' ? <Projecoes macro={macro} searchTarget={searchSelection?.doc} /> : cenView === 'inflacao' || cenView === 'fiscal' ? <Outros macro={macro} part={cenView} /> : cenView === 'indexadores' ? <Indexadores onBndes={() => goto('bndes', 'tlp/TLP')} /> : cenView === 'calendario' ? <Calendario /> : cenView === 'inadimplencia' ? <Inadimplencia searchTarget={searchSelection?.doc} /> : cenView === 'recuperacao' ? <RecuperacaoJudicial onSources={() => goto('config')} /> : <MarketContext part={cenView} />}
+          {cenView === 'projecoes' ? <Projecoes macro={macro} searchTarget={searchSelection?.doc} /> : cenView === 'inflacao' ? <Outros macro={macro} /> : cenView === 'indexadores' ? <Indexadores onBndes={() => goto('bndes', 'tlp/TLP')} /> : cenView === 'calendario' ? <Calendario /> : cenView === 'inadimplencia' ? <Inadimplencia searchTarget={searchSelection?.doc} /> : cenView === 'recuperacao' ? <RecuperacaoJudicial onSources={() => goto('config')} /> : <MarketContext part={cenView} />}
         </>
       )}
 

@@ -181,7 +181,7 @@ test('variação que arredonda para zero fica neutra, sem seta de alta ou baixa'
 test('comandos levam ao assunto certo dentro de Cenários', () => {
   assert.deepEqual(parseCommand('commodities'), { kind: 'tab', id: 'cenarios', sub: 'commodities' })
   assert.deepEqual(parseCommand('PMI'), { kind: 'tab', id: 'cenarios', sub: 'atividade' })
-  assert.deepEqual(parseCommand('frete'), { kind: 'tab', id: 'cenarios', sub: 'frete' })
+  assert.deepEqual(parseCommand('frete'), { kind: 'tab', id: 'cenarios', sub: 'commodities/frete' })
   assert.deepEqual(parseCommand('focus'), { kind: 'tab', id: 'cenarios', sub: 'projecoes' })
   assert.deepEqual(parseCommand('cenários'), { kind: 'tab', id: 'cenarios', sub: '' })
 })
