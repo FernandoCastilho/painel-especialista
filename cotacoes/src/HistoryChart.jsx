@@ -51,11 +51,13 @@ export function Plot({ points, scales = true, ...props }) {
   const slot = useFilterSlot()
   const active = options.find((o) => o.id === scale && o.enabled)
   const view = useMemo(() => (active ? resample(points, active.id) : points), [points, active])
-  const picker = options.some((o) => o.enabled) && (
+  // só as escalas possíveis para este dado; se nenhuma for possível além de "Auto", o controle some
+  const usable = options.filter((o) => o.enabled)
+  const picker = usable.length > 0 && (
         <div className="seg scale-seg" role="group" aria-label="Agrupar os pontos do gráfico">
           <span className="seg-label" aria-hidden="true">Agrupar:</span>
           <button type="button" aria-pressed={!active} aria-label="Auto: escala original dos dados" title="Escala original dos dados" onClick={() => setScale('auto')}>Auto</button>
-          {options.map((o) => <button type="button" key={o.id} aria-pressed={active?.id === o.id} disabled={!o.enabled} aria-label={`Escala por ${o.label.toLowerCase()}`} title={o.enabled ? o.title : o.reason} onClick={() => setScale(o.id)}>{o.label}</button>)}
+          {usable.map((o) => <button type="button" key={o.id} aria-pressed={active?.id === o.id} aria-label={`Escala por ${o.label.toLowerCase()}`} title={o.title} onClick={() => setScale(o.id)}>{o.label}</button>)}
         </div>
   )
   return (
