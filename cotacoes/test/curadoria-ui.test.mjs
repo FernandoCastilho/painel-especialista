@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import * as curadoria from '../src/curadoria.js'
 import * as newsWindow from '../src/newsWindow.js'
 import * as reforma from '../src/reforma.js'
+import * as newsTitle from '../src/newsTitle.js'
 
 const require = createRequire(import.meta.url)
 const now = Date.parse('2026-11-07T12:00:00Z')
@@ -26,6 +27,7 @@ function render(id, resource) {
       if (path === './curadoria.js') return curadoria
       if (path === './newsWindow.js') return newsWindow
       if (path === './reforma.js') return reforma
+      if (path === './newsTitle.js') return newsTitle
       if (path === './NoticiasPorDia.jsx') return load('NoticiasPorDia')
       if (path === './Estado.jsx') return ({ children }) => createElement('p', {}, children)
       return require(path)
