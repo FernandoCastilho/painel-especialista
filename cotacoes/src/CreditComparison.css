@@ -2,7 +2,7 @@
 .credit-shared{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;padding:20px;margin:20px 0}
 .credit-shared-title{grid-column:1/-1;margin:-20px -20px 0;padding:10px 20px;background:#0b1f4d;color:#fff;font-size:1rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;border-bottom:3px solid #f26a0f}
 .credit-shared-title small{font-weight:400;opacity:.85}
-.credit-shared{border:2px solid #0b1f4d;overflow:hidden}
+.credit-shared{border:2px solid var(--bw-strong-line);overflow:hidden}
 .credit-shared-wide{grid-column:1/-1}
 .credit-invest{border-left:4px solid #1d8a5a}
 .credit-invest h3 label{display:flex;gap:8px;align-items:center;font-weight:700}
@@ -31,7 +31,7 @@
 .credit-card-result span{font-size:.8rem;opacity:.85}
 .credit-card-result b{font-size:1.1rem;overflow-wrap:anywhere}
 .credit-card-result small{opacity:.75}
-.credit-card-error{grid-column:1/-1;margin:0;color:#c33;line-height:1.4}
+.credit-card-error{grid-column:1/-1;margin:0;color:var(--bw-bad-ink);line-height:1.4}
 .credit-controls{padding:20px;margin:16px 0;display:flex;flex-wrap:wrap;align-items:center;gap:16px}
 .credit-controls p,.credit-controls h3{flex-basis:100%;margin:0}
 .credit-actions{display:flex;justify-content:center;margin:20px 0}
@@ -58,35 +58,35 @@
 @media print{.credit-presentation>header button{display:none}}
 
 /* Visual da calculadora BNDES (cabeçalho, abas e destaque vêm de BndesWorkspace.css pela classe .bw). */
-.credit-bw{color-scheme:light;color:#15253d;padding:0;border:1px solid #c6d5e9;border-radius:10px;overflow:hidden;background:#fafbfd}
+.credit-bw{color-scheme:var(--bw-scheme,light);color:var(--bw-ink);padding:0;border:1px solid var(--bw-line);border-radius:10px;overflow:hidden;background:var(--bw-page)}
 .credit-bw>.cx-back{margin:12px 16px}
 .credit-bw-body{padding:18px 12px}
-.credit-intro{margin:0 0 12px;color:#4a5a70;font-size:.875rem;line-height:1.5}
-.credit-count>.credit-hint{flex-basis:100%;opacity:1;color:#4a5a70}
-.credit-bw .credit-shared{border:2px solid #0b2e63;border-radius:10px;background:#fff;color:#15253d}
+.credit-intro{margin:0 0 12px;color:var(--bw-mut);font-size:.875rem;line-height:1.5}
+.credit-count>.credit-hint{flex-basis:100%;opacity:1;color:var(--bw-mut)}
+.credit-bw .credit-shared{border:2px solid var(--bw-strong-line);border-radius:10px;background:var(--bw-card);color:var(--bw-ink)}
 .credit-bw .credit-shared-title{background:linear-gradient(110deg,#052956,#07336b);border-bottom:4px solid #ff7900}
-.credit-bw .credit-card{border:1px solid #c6d5e9;border-radius:10px;background:#fff;color:#15253d}
-.credit-bw .credit-card-head{background:#e5f0fd;color:#0b2e63;border-bottom:3px solid #ff7900}
-.credit-bw .credit-card-head select{background:#fff;color:#0b2e63;border:1px solid #7a8fac}
-.credit-bw .credit-card-result{background:#f2f6fc;border-top:1px solid #c6d5e9}
-.credit-bw .credit-card-result b{color:#092e60}
+.credit-bw .credit-card{border:1px solid var(--bw-line);border-radius:10px;background:var(--bw-card);color:var(--bw-ink)}
+.credit-bw .credit-card-head{background:var(--bw-tint);color:var(--bw-ink);border-bottom:3px solid #ff7900}
+.credit-bw .credit-card-head select{background:var(--bw-card);color:var(--bw-ink);border:1px solid var(--bw-field-line)}
+.credit-bw .credit-card-result{background:var(--bw-soft);border-top:1px solid var(--bw-line)}
+.credit-bw .credit-card-result b{color:var(--bw-ink)}
 /* Rótulos do resumo: cor cheia (sem transparência) e nunca abaixo de 12 px. */
-.credit-bw .credit-card-result span,.credit-bw .credit-card-result small{opacity:1;color:#455c7a}
+.credit-bw .credit-card-result span,.credit-bw .credit-card-result small{opacity:1;color:var(--bw-mut)}
 .credit-bw .credit-card-result small{font-size:.75rem}
-.credit-bw .credit-controls,.credit-bw .credit-analysis,.credit-bw .credit-notes,.credit-bw .credit-chart{border:1px solid #c6d5e9;border-radius:10px;background:#fff;color:#15253d}
+.credit-bw .credit-controls,.credit-bw .credit-analysis,.credit-bw .credit-notes,.credit-bw .credit-chart{border:1px solid var(--bw-line);border-radius:10px;background:var(--bw-card);color:var(--bw-ink)}
 .credit-bw .credit-invest{border-left:6px solid #1d8a5a}
-.credit-bw .credit-invest-block{background:#f3faf6;color:#15253d}
-.credit-bw .credit-field input,.credit-bw .credit-field select,.credit-bw .credit-field textarea{border:1px solid #7a8fac;background:#fff;color:#15253d}
+.credit-bw .credit-invest-block{background:var(--bw-good-soft);color:var(--bw-ink)}
+.credit-bw .credit-field input,.credit-bw .credit-field select,.credit-bw .credit-field textarea{border:1px solid var(--bw-field-line);background:var(--bw-card);color:var(--bw-ink)}
 .credit-bw .credit-compare{background:#ff7900;color:#10284c;border-radius:8px}
-.credit-bw .credit-table{border:1px solid #c6d5e9}
-.credit-bw .credit-table caption{color:#092e60}
-.credit-bw .credit-table thead th{background:#d3e3f9;color:#10284c;border:1px solid #c6d5e9}
+.credit-bw .credit-table{border:1px solid var(--bw-line)}
+.credit-bw .credit-table caption{color:var(--bw-ink)}
+.credit-bw .credit-table thead th{background:var(--bw-tint);color:var(--bw-ink);border:1px solid var(--bw-line)}
 .credit-bw .credit-table thead th:first-child{background:#0b2e63;color:#fff;font-size:1.05rem}
-.credit-bw .credit-table tbody th,.credit-bw .credit-table td{border:1px solid #c6d5e9;color:#10284c}
+.credit-bw .credit-table tbody th,.credit-bw .credit-table td{border:1px solid var(--bw-line);color:var(--bw-ink)}
 .credit-bw .credit-table tbody th{font-weight:700}
-.credit-bw .credit-table tbody tr:nth-child(odd){background:#f2f6fc}
-.credit-bw .credit-table tbody tr:nth-child(even){background:#fff}
-.credit-bw .credit-method{margin:0 0 12px;border:1px solid #c6d5e9;border-radius:8px;background:#f5f8fd;padding:0 14px;color:#15253d}
-.credit-bw .credit-method>summary{font-weight:700;color:#092e60;padding:14px 0}
-.credit-bw .credit-notice{background:#fff7e8;color:#4a3300}
+.credit-bw .credit-table tbody tr:nth-child(odd){background:var(--bw-soft)}
+.credit-bw .credit-table tbody tr:nth-child(even){background:var(--bw-card)}
+.credit-bw .credit-method{margin:0 0 12px;border:1px solid var(--bw-line);border-radius:8px;background:var(--bw-soft);padding:0 14px;color:var(--bw-ink)}
+.credit-bw .credit-method>summary{font-weight:700;color:var(--bw-ink);padding:14px 0}
+.credit-bw .credit-notice{background:var(--bw-warm-soft);color:var(--bw-warn-ink)}
 @media(max-width:760px){.credit-bw-body{padding:12px 6px}}
