@@ -36,7 +36,8 @@ export function useRecoveryMapTooltip() {
 }
 
 export default function RecoveryMapTooltip({ tip, label, count, share }) {
-  if (!label) return <div className="rj-map-tooltip-space" aria-hidden="true">Explore o mapa para ver o nome e a quantidade.</div>
+  // Sem dica aberta, o mesmo quadro aparece vazio (tracejado): o espaço reservado não fica parecendo um buraco na tela.
+  if (!label) return <div className="rj-map-tooltip-space" aria-hidden="true"><div className="rj-map-tooltip rj-map-tooltip-empty">Explore o mapa para ver o nome e a quantidade.</div></div>
   return <div className="rj-map-tooltip-space"><div id={tip.id} className="rj-map-tooltip" role="tooltip"
     onPointerEnter={tip.keep} onPointerLeave={tip.leave}>
     <strong>{label}</strong>

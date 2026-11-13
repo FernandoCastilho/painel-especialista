@@ -1,22 +1,26 @@
 .rj-history { min-width: 0; font: .9rem/1.5 system-ui, sans-serif; }
 .rj-intro { margin: 0 0 4px; color: var(--mut); }
+.rj-read { margin: 4px 0 0; font-size: .82rem; }
+.rj-read summary { width: max-content; max-width: 100%; cursor: pointer; font-weight: 600; }
+.rj-read p { margin: 6px 0 0; max-width: 90ch; color: var(--mut); }
 .rj-card-note { color: var(--mut); margin: 6px 0 0; font-size: .82rem; }
 .rj-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin: 20px 0 12px; }
 .rj-filters .rj-card-note { margin: 0 0 11px; }
 .rj-control { display: grid; gap: 5px; min-width: 0; font-weight: 600; font-size: .85rem; }
 .rj-control select { width: 100%; min-width: 0; min-height: 44px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); font: inherit; }
-.rj-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 12px 0; }
+.rj-kpis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; margin: 12px 0; }
 .rj-kpis > div { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .rj-kpis > div > span { font-weight: 600; }
 .rj-kpis strong { font-size: clamp(1.45rem, 3vw, 2rem); line-height: 1.1; }
 .rj-kpis small { color: var(--mut); }
 .rj-kpis .rj-kpi-text { font-size: 1rem; }
+.rj-kpis .rj-kpi-note { color: var(--fg); }
 .rj-viz-grid { display: grid; align-items: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .rj-card { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .rj-card-head { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .rj-card-head h3 { margin: 0; font-size: 1.08rem; }
 .rj-card-head p { margin: 4px 0 0; color: var(--mut); font-size: .83rem; }
-.rj-map { display: block; width: 100%; height: clamp(215px, 32vw, 350px); margin: 12px 0; }
+.rj-map { display: block; width: 100%; height: clamp(215px, 32vw, 350px); margin: 12px 0 6px; }
 .rj-state { fill: #dbe4f4; stroke: #8899b8; stroke-width: .75; vector-effect: non-scaling-stroke; cursor: pointer; }
 .rj-state:hover,.rj-state.active { fill: #ffd0ad; stroke: #a04608; stroke-width: 1.6; }
 .rj-pin { cursor: pointer; }
@@ -54,21 +58,30 @@
 .rj-empty { padding: 12px 0; }
 @media (max-width: 760px) {
   .rj-viz-grid { grid-template-columns: minmax(0, 1fr); }
-  .rj-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rj-kpis { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rj-kpis > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 @media (max-width: 480px) {
   .rj-card { padding: 12px; }
   .rj-filters { gap: 8px; }
   .rj-table { font-size: .8rem; }
   .rj-table th,.rj-table td { padding-inline: 4px; }
-  .rj-table th:first-child { width: 75px; }
+  .rj-table th:first-child { width: 86px; }
   .rj-table th:nth-child(3) { width: 42px; }
 }
 
 .rj-map-wrap { position: relative; }
 .rj-map-instructions { margin: 8px 0 0; color: var(--mut); font-size: .8rem; }
-.rj-map-tooltip-space { min-height: 86px; padding-bottom: 12px; box-sizing: border-box; color: var(--mut); font-size: .82rem; }
+.rj-map-tooltip-space { min-height: 64px; padding-bottom: 8px; box-sizing: border-box; color: var(--mut); font-size: .82rem; }
 .rj-map-tooltip { display: grid; gap: 2px; max-width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid var(--fg); border-radius: 8px; color: var(--fg); background: var(--card); box-shadow: 0 3px 12px #0003; font-size: .85rem; overflow-wrap: anywhere; pointer-events: auto; }
 .rj-map-tooltip span { font-variant-numeric: tabular-nums; }
+.rj-map-tooltip-empty { min-height: 3.3em; align-content: center; border-style: dashed; border-color: var(--line); box-shadow: none; color: var(--mut); font-size: .82rem; pointer-events: none; }
 .rj-pin { pointer-events: none; }
 .rj-state:focus-visible { outline: none; fill: #ffd0ad; stroke: #a04608; stroke-width: 3; }
+
+/* Tema escuro: estados escuros com contorno claro e bolhas claras, para o mapa não virar uma mancha azul-clara no fundo preto. */
+:root:not([data-theme="light"]) .rj-state { fill: #1b2538; stroke: #8fa3c8; }
+:root:not([data-theme="light"]) .rj-state:hover, :root:not([data-theme="light"]) .rj-state.active, :root:not([data-theme="light"]) .rj-state:focus-visible { fill: #4a2a0c; stroke: #ffb066; }
+:root:not([data-theme="light"]) .rj-pin circle { fill: #6ea0ff; stroke: #0a0a0a; }
+:root:not([data-theme="light"]) .rj-pin.active circle { fill: #ffb066; }
+:root:not([data-theme="light"]) .rj-pin text { fill: #0a0f1a; }
