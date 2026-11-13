@@ -62,7 +62,7 @@ export default function ContaGarantida({ onBack }) {
       {form.mode === 'single' ? <>
         <div className="cx-form">{select('dateMode', 'Como informar o prazo?', [['duration', 'Quantidade de dias corridos'], ['end', 'Data da quitação']], 'A quitação é simulada no início da data final, antes dos encargos desse dia.')}</div>
         <div className="cx-wrap cg-entry-wrap" role="region" aria-label="Tabela de utilização única" tabIndex={0}>
-          <table className="cx-matrix cg-entry"><caption className="sr-only">Valor utilizado, data inicial e prazo</caption><thead><tr><th scope="col">Utilização</th><th scope="col">Data inicial</th><th scope="col">{form.dateMode === 'duration' ? 'Prazo' : 'Quitação'}</th></tr></thead><tbody><tr>
+          <table className="cx-matrix cg-entry cg-entry-single"><caption className="sr-only">Valor utilizado, data inicial e prazo</caption><thead><tr><th scope="col">Utilização</th><th scope="col">Data inicial</th><th scope="col">{form.dateMode === 'duration' ? 'Prazo' : 'Quitação'}</th></tr></thead><tbody><tr>
             <td>{money('amount', 'Valor utilizado (R$)', 'Pode ser zero; não há valor presumido.')}</td>
             <td>{input('start', 'Data da utilização', 'Saldo inicial anterior a esta data: zero.', 'date')}</td>
             <td>{form.dateMode === 'duration' ? input('duration', 'Dias corridos de uso', 'Exemplo: 10 dias = data inicial + 10. A quitação ocorre antes da apuração do dia final.', 'text', `Quitação: ${dateLabel(params.end)}.`) : input('end', 'Data da quitação', 'O saldo é liquidado antes da apuração do dia.', 'date')}</td>
