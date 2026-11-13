@@ -77,6 +77,7 @@
 .km-welcome-legend span{display:flex;align-items:center;gap:12px}
 .km-list{height:clamp(440px,64vh,680px);overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;padding:16px;gap:10px;box-sizing:border-box}
 .km-list-item{display:flex;flex-direction:column;text-align:left;gap:5px;background:var(--card);border:1px solid var(--line);border-left:2px solid var(--km-concept);border-radius:6px;color:var(--fg);padding:12px;min-width:0;overflow-wrap:anywhere}
+.km-list{grid-auto-rows:max-content;align-content:start}.km-list .km-list-item{height:auto;min-height:44px}/* o item cresce com o texto (no celular ficava preso em 44 px e o nome saía da caixa) */
 .km-list-item.km-sector{border-left-color:var(--km-sector)}
 .km-list-item.km-news{border-left-color:var(--km-news)}
 .km-list-item.km-entity{border-left-color:var(--km-entity)}
@@ -155,3 +156,6 @@
 }
 
 .is-compact .km-heading>div>p:not(.km-eyebrow),.is-compact .km-count,.is-compact .km-news-state{display:none}.is-compact .km-heading{padding-bottom:6px}.km-controls{border-top:1px solid var(--line)}.km-controls>summary{cursor:pointer;padding:10px 24px;font-size:.8rem;color:var(--mut)}@media(max-width:600px){.km-controls>summary{padding:10px 14px}}
+
+/* Telas bem estreitas: Grafo/Lista ocupa a linha toda, os outros botões vão para a linha de baixo (antes "Lista" saía da tela em 320 px). */
+@media(max-width:380px){.km-toolbar .km-switch{flex:1 0 100%}}

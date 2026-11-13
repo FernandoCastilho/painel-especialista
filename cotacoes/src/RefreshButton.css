@@ -15,6 +15,8 @@
 .chart > header .refresh-wrap, .macro > h2 + .refresh-wrap { flex: none; }
 .history-head .refresh-wrap { flex: none; }
 .executive-rates__heading { display: flex; align-items: center; justify-content: space-between; }
+/* Celular: título numa linha; data e botão inteiros na linha de baixo (antes a data quebrava no meio do ano). */
+@media (max-width: 560px) { .executive-rates__heading { flex-wrap: wrap; } .executive-rates__heading > .refresh-wrap { flex: 1 0 100%; justify-content: end; grid-template-columns: auto 44px; } .executive-rates__heading .refresh-stamp { white-space: nowrap; text-align: right; } }
 
 .refresh-btn[aria-disabled="true"] { opacity:.5; cursor:wait; }
 
