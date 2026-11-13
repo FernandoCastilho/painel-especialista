@@ -24,6 +24,8 @@ main.app.app-calculators {
 }
 .cx-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px 20px; }
 .cx .cx-back { margin:0; padding:0 12px 0 0; min-height:44px; font-size:.875rem; }
+/* O link de voltar tem 44 px de altura (alvo de toque); o título vem logo abaixo, sem o vão inteiro da grade. */
+.cx:not(.bw) > :is(.cx-back, .cx-toolbar) + :is(.cx-heading, h2) { margin-top:-14px; }
 .cx .cx-action {
   display:inline-flex; align-items:center; justify-content:center; align-self:flex-start;
   min-height:44px; padding:10px 16px; border:1px solid var(--line); border-radius:8px;
