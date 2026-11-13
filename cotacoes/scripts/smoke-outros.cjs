@@ -532,6 +532,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.clock.setFixedTime(Date.parse('2026-11-05T15:00:00Z'))
       await p.goto(base + '/#feriados')
       await p.locator('.fer-filter select').waitFor()
+      // abre em "Brasil e B3"; a escolha fica guardada ao recarregar
+      assert.equal(await p.locator('.fer-filter select').inputValue(), 'CIVBR+B3')
+      assert.doesNotMatch(await p.locator('.fer-months').innerText(), /Cascavel|Londrina/, 'padrão sem aniversários de cidades')
       const opts = await p.locator('.fer-filter option').allInnerTexts()
       for (const praca of ['Londres', 'Tóquio', 'China (continental)', 'Curitiba']) assert.ok(opts.includes(praca), praca)
       assert.ok(await p.locator('.fer-where .flag').count() > 0, 'bandeiras nas linhas de feriado')
@@ -545,9 +548,13 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.doesNotMatch(await p.locator('.fer-months').innerText(), /Aniversário de Curitiba/, 'aniversário não é feriado municipal')
       await p.locator('.fer-filter select').selectOption('PRE')
       assert.equal(await p.locator('.fer-filter select').inputValue(), 'PRE')
+      await p.reload(); await p.locator('.fer-filter select').waitFor()
+      assert.equal(await p.locator('.fer-filter select').inputValue(), 'PRE', 'escolha guardada')
       assert.equal(await p.locator('.fer-list li').count(), 0, 'sem datas estaduais inventadas ou herdadas dos calendários nacionais e municipais')
       assert.match(await p.locator('.fer-count').innerText(), /^0 datas cadastradas nesta seleção · cobertura parcial$/)
-      assert.match(await p.locator('.feriados [role="status"]').innerText(), /Cobertura parcial: Estado do Paraná \(2026, 2027\) sem calendário completo verificado nesta base\. A ausência de registros não permite afirmar que não haverá feriados ou suspensões\./)
+      // aviso de cobertura parcial: uma linha; o texto completo fica dentro de "detalhes"
+      assert.equal(await p.locator('.feriados details.fer-partial summary').innerText(), 'Cobertura parcial em 1 calendário')
+      assert.match(await p.locator('.feriados [role="status"]').textContent(), /Cobertura parcial: Estado do Paraná \(2026, 2027\) sem calendário completo verificado nesta base\. A ausência de registros não permite afirmar que não haverá feriados ou suspensões\./)
       assert.match(await p.locator('.feriados').innerText(), /Não há datas cadastradas nesta seleção\. Consulte a fonte oficial: a cobertura incompleta não indica ausência de feriados\./)
       assert.doesNotMatch(await p.locator('.feriados').innerText(), /Emancipação Política do Paraná/, '19 de dezembro não volta a ser apresentado como feriado civil estadual')
       // aprender: lista de conceitos de um lado, explicação do outro, sem texto sobre o método

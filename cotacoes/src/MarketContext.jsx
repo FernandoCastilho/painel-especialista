@@ -3,7 +3,7 @@ import { freightBase, freightContext } from './freight.js'
 import IndicatorHistory from './IndicatorHistory.jsx'
 import { normalizeIndicatorHistory } from './indicatorHistory.js'
 import { useEffect, useState } from 'react'
-import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, activityNeedsReview } from './marketContext.js'
+import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, activityNeedsReview, unidadeEmDolar } from './marketContext.js'
 import './MarketContext.css'
 import RefreshButton from './RefreshButton.jsx'
 import IndicatorTable from './IndicatorTable.jsx'
@@ -78,7 +78,7 @@ function FreightTable({entries, onOpen}) {
 }
 // Commodities no mesmo formato da tabela do Mercado: último, anterior, variação, 12 meses e ano; a linha abre o histórico quando há série.
 // Brent e WTI: observações diárias; demais: médias mensais. Sem série, a linha mostra só o que a fonte divulgou e não abre gráfico.
-function CommodityTable({items, failed, onOpen, caption = 'Commodities · referências internacionais em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
+function CommodityTable({items, failed, onOpen, caption = 'Referências internacionais em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
   const pct = v => v == null ? {text:'—'} : {text:fsgn(v, 2, '%'), tone:ftone(v)}
   const rows = items.map(item => {
     const stats = seriesStats(item.history)
@@ -121,7 +121,7 @@ function ActivityTable({items, series, failed, historyFailed, historyLoading, on
     const year = base ? points.find(p=>p.period===`${Number(base.period.slice(0,4))-1}${base.period.slice(4)}`) ?? null : null
     const val = v => `${contextValue({...item, value:v})}${item.unit === '%' ? '%' : ''}`
     return {
-      id:item.id, flag:/-br$|^caged$/.test(item.id) ? 'BRL' : 'USD', name:item.label, sub:`${item.nature}${base ? '' : series && !points.length ? ' · histórico indisponível' : ''}${activityNeedsReview(item) ? ' · conferência pendente' : ''}`,
+      id:item.id, flag:/-br$|^caged$/.test(item.id) ? 'BRL' : 'USD', name:item.label, sub:item.nature,
       openLabel:`${item.label}: abrir gráfico e histórico`,
       cells:[
         {text:val(item.value)},
@@ -135,14 +135,14 @@ function ActivityTable({items, series, failed, historyFailed, historyLoading, on
   })
   return <>
     <IndicatorTable
-      caption="Atividade e emprego · últimas leituras cadastradas"
+      caption="Últimas leituras cadastradas"
       ariaLabel="Tabela de atividade e emprego; role para ver todas as colunas"
       columns={[{label:'Último'},{label:'Anterior'},{label:'Variação', small:'(vs anterior)'},{label:'Ano anterior', small:'(mesmo período)'},{label:'Referência'},{label:'Divulgação'}]}
       rows={rows}
       onOpen={onOpen}
     />
     {(failed || historyFailed) && <Estado tipo="aviso">Último dado preservado; atualização não confirmada.</Estado>}
-    {items.some(item => activityNeedsReview(item)) && <Estado tipo="aviso">A conferência de uma ou mais fontes está vencida. Os valores cadastrados foram preservados; consulte a fonte para verificar se há nova divulgação. Atualizar a consulta do painel não comprova atualização da fonte.</Estado>}
+    {items.some(item => activityNeedsReview(item)) && <Estado tipo="aviso">Alguns indicadores podem estar atrás da última divulgação. Confira a data de cada linha e a fonte.</Estado>}
     {historyLoading && <Estado>Carregando histórico para as comparações…</Estado>}
     {items.some(i=>i.value===null) && <Estado tipo="aviso">Dado indisponível em algum indicador. Não representa zero.</Estado>}
     <details><summary>Fontes e conferência dos indicadores</summary><p>Dados observados, com competências diferentes. Prazo de conferência editorial: até sete dias ou a próxima divulgação conhecida, quando cadastrada, o que ocorrer primeiro. Conferência vencida é sinalizada; o horário da consulta não altera a competência.</p><ul>{items.map(item => <li key={item.id}><a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{item.label} · {item.sourceName}</a> — referência {contextDate(item.period)}; conferência {contextDate(item.checkedAt?.slice(0, 10))}{item.nextReviewAt && <>; próxima conferência até {contextDate(item.nextReviewAt.slice(0, 10))}</>}{item.nextReleaseSourceUrl && <> · <a href={item.nextReleaseSourceUrl} target="_blank" rel="noopener noreferrer">calendário da próxima divulgação</a></>}{activityNeedsReview(item) ? ' · pendente' : ''}.</li>)}</ul></details>
@@ -163,7 +163,8 @@ export default function MarketContext({ part = '' }) {
   const freight = useContextFile('freight.json', freightContext)
   const freightJp = useContextFile('freight-jp.json', freightContext)
   const freightStates = { 'freight-us-ppi': freight, 'freight-jp-sppi': freightJp }
-  const all = [brent.data, ...(commodities.data || [])].filter(Boolean)
+  // unidade mostrada sempre como US$ e US¢ (o arquivo de dados continua com USD)
+  const all = [brent.data, ...(commodities.data || [])].filter(Boolean).map(item => ({...item, unit:unidadeEmDolar(item.unit)}))
   return <div className="market-context">
     {openCommodity && <SeriesHistory item={openCommodity} points={openCommodity.history || []} onClose={()=>setOpenCommodity(null)} />}
     {open && <IndicatorHistory item={open} series={freightStates[open.id] ? freightStates[open.id].data?.series : history.data?.find(s=>s.id===open.id)} loading={freightStates[open.id] ? !freightStates[open.id].data&&!freightStates[open.id].failed : !history.data&&!history.failed} failed={freightStates[open.id] ? freightStates[open.id].failed || freightStates[open.id].data?.series.stale : history.failed} onClose={()=>setOpen(null)}/>}

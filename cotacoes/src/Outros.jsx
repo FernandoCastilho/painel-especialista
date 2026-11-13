@@ -60,7 +60,7 @@ export default function Outros({ macro, part = 'inflacao' }) {
     <div className="outros" aria-labelledby="outros-title" role="region">
       <div className="ctx-head"><h2 id="outros-title">{fiscal ? 'Fiscal' : 'Inflação'}</h2><RefreshButton files={fiscal ? ['divida.json'] : ['ipca.json', 'ipca-groups.json', 'oil.json', 'commodities.json', 'macro.json']} label={fiscal ? 'Fiscal' : 'Inflação'} /></div>
       {!fiscal && <>
-      <h3>Inflação · IPCA</h3>
+      <h3>IPCA</h3>
       {!parsed && <p role="status">{failed ? 'Não foi possível carregar o IPCA. Tente novamente mais tarde.' : 'Carregando IPCA…'}</p>}
       {parsed && (
         <>

@@ -5,7 +5,7 @@ import Help from './Help.jsx'
 import { hasFlag } from './flags.js'
 import RefreshButton from './RefreshButton.jsx'
 import { useDataFile } from './useDataFile.js'
-import { explicarEvento, NIVEL } from './calendarImpact.js'
+import { explicarEvento, formatarValorCalendario, NIVEL, traduzirEvento } from './calendarImpact.js'
 import { COUNTRIES, PERIODS, countryOf, dayKey, filterEvents, groupByDay, mergeEvents, TZ } from './calendar.js'
 
 const IMPACTS = [['high', 'Alto'], ['medium', 'Médio'], ['low', 'Baixo']]
@@ -18,9 +18,11 @@ const dayLabel = (key, today) => {
 // Balão "?" do evento: o que é, efeito na economia e ligação com o Brasil; sem categoria mapeada, diz que o impacto é baixo.
 function EventHelp({ e }) {
   const x = explicarEvento(e)
+  const titulo = traduzirEvento(e.title)
   return (
-    <Help label={`Impacto de ${e.title}`} wide fixed>
-      <b className="ex-t">{e.title}</b>
+    <Help label={`Impacto de ${titulo}`} wide fixed>
+      <b className="ex-t">{titulo}</b>
+      {titulo !== e.title && <span className="ex"><i>Nome na fonte:</i> <span lang="en">{e.title}</span></span>}
       {x.mapeado && <span className="ex"><i>{x.nome}:</i> {x.oque}</span>}
       <span className="ex"><i>Na economia:</i> {x.economia}</span>
       <span className="ex"><i>Brasil:</i> {x.brasil}</span>
@@ -81,10 +83,10 @@ export default function Calendario() {
                     <tr key={`${e.src}${e.t}${e.title}${e.country}`} className={`cal-row ${e.impact}${e.t < now ? ' past' : ''}`}>
                       <td className="cal-time">{hour(e.t)}</td>
                       <td className="cal-country-cell">{c.flag && hasFlag(c.flag) ? <Flag code={c.flag} width={18} height={12} /> : null} <span className="cal-cname">{c.name}</span></td>
-                      <th scope="row" className="cal-title">{e.title}{e.tentative && <em className="tent"> previsto</em>}<EventHelp e={e} /></th>
+                      <th scope="row" className="cal-title">{traduzirEvento(e.title)}{e.tentative && <em className="tent"> previsto</em>}<EventHelp e={e} /></th>
                       <td><ImpactMark impact={e.impact} /></td>
-                      <td>{e.forecast ?? '—'}</td>
-                      <td>{e.previous ?? '—'}</td>
+                      <td className="cal-num">{formatarValorCalendario(e.forecast) ?? '—'}</td>
+                      <td className="cal-num">{formatarValorCalendario(e.previous) ?? '—'}</td>
                     </tr>
                   )
                 })}

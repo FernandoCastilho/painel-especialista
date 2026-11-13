@@ -7,7 +7,7 @@ export const UF_NAMES = {
   SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins',
 }
 export const UNKNOWN_UF = 'Sem UF'
-export const UNKNOWN_SECTOR = 'Sem setor'
+export const UNKNOWN_SECTOR = 'Setor não identificado'
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const validDate = value => {
   if (typeof value !== 'string' || !ISO_DATE.test(value)) return false
@@ -96,5 +96,38 @@ export function recoveryTreemap(items, width = 500, height = 320) {
     }
   }
   divide(items, 0, 0, width, height)
+  return output
+}
+
+// Nome curto de atividade para as barras: corta no primeiro ", exceto" ou, em nome longo, na primeira vírgula depois do
+// trecho inicial. O nome completo continua no filtro, na dica (title) e no nome acessível.
+const SHORT_SECTOR_LIMIT = 60
+const SHORT_SECTOR_MIN_CUT = 25
+export function shortSectorName(label) {
+  const text = String(label ?? '').trim().replace(/\.$/, '')
+  const except = text.search(/,\s*exceto\b/i)
+  if (except > 0) return text.slice(0, except)
+  if (text.length <= SHORT_SECTOR_LIMIT) return text
+  const comma = text.indexOf(',', SHORT_SECTOR_MIN_CUT)
+  return comma > 0 ? text.slice(0, comma) : text
+}
+// Devolve Map(nome completo -> nome curto). Se dois setores da lista ficam com o mesmo nome curto, cada um ganha o
+// trecho que os diferencia (ex.: "Transporte rodoviário de carga · municipal"), para não haver duas barras iguais.
+export function shortSectorNames(labels) {
+  const groups = new Map()
+  for (const label of labels) {
+    const short = shortSectorName(label)
+    groups.set(short, [...(groups.get(short) ?? []), label])
+  }
+  const output = new Map()
+  for (const [short, group] of groups) {
+    if (group.length === 1) { output.set(group[0], short); continue }
+    let common = group.reduce((prefix, label) => { let i = 0; while (i < prefix.length && prefix[i] === label[i]) i++; return prefix.slice(0, i) })
+    common = common.slice(0, Math.max(common.lastIndexOf(' '), common.lastIndexOf(',')) + 1)
+    for (const label of group) {
+      const tail = label.slice(common.length).trim().replace(/^[-–,;]\s*/, '').replace(/\.$/, '')
+      output.set(label, tail && common.length >= short.length ? `${short} · ${tail}` : label)
+    }
+  }
   return output
 }

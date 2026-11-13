@@ -3,6 +3,7 @@ import { useNewsClock } from './useNewsClock.js'
 import { useMemo, useState } from 'react'
 import { dayOf, groupByDay, searchItems } from './reforma.js'
 import Estado from './Estado.jsx'
+import { limparManchete } from './newsTitle.js'
 
 const TZ = 'America/Sao_Paulo'
 const dayLabel = (key, today) => {
@@ -57,7 +58,7 @@ export default function NoticiasPorDia({ data, label = 'matérias', ariaLabel = 
                 {d.items.map((n) => (
                   <li key={n.link}>
                     <time dateTime={new Date(n.t).toISOString()}>{hm(n.t)}</time>
-                    <span>{prefixo?.(n)}<a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a><small>{n.source}</small></span>
+                    <span>{prefixo?.(n)}<a href={n.link} target="_blank" rel="noopener noreferrer">{limparManchete(n.title)}</a><small>{n.source}</small></span>
                   </li>
                 ))}
               </ul>

@@ -3,7 +3,7 @@ import RefreshButton from './RefreshButton.jsx'
 import { onRefresh } from './refreshBus.js'
 import { Aviso } from './Avisos.jsx'
 import { useEffect, useState } from 'react'
-import { FOCUS_MARK, INDICATORS, INSTITUTIONS, compareToFocus, idadeProjecao, scenarioValue, textoIdadeProjecao } from './scenarios.js'
+import { FOCUS_MARK, INDICATORS, INSTITUTIONS, PROJECAO_ANTIGA_DIAS, compareToFocus, idadeProjecao, scenarioValue, textoIdadeProjecao } from './scenarios.js'
 import FocusHistorico from './FocusHistorico.jsx'
 
 const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '') ? value.split('-').reverse().join('/') : 'data não informada'
@@ -25,6 +25,8 @@ export default function Projecoes({ macro, searchTarget }) {
     return () => { off(); ctrl.abort() }
   }, [])
   const focus = macro?.data?.focus
+  const ages = Object.fromEntries(INSTITUTIONS.slice(1).map((name) => [name, idadeProjecao(banks?.institutions?.find((item) => item.name === name)?.date)]))
+  const someOld = Object.values(ages).some((idade) => idade?.antiga)
   return (
     <section className="scenarios" aria-labelledby="scenarios-heading">
       <div className="history-head">
@@ -38,8 +40,13 @@ export default function Projecoes({ macro, searchTarget }) {
         <p className="scroll-hint">Deslize para ver os demais bancos →</p>
         <div className="scroll scenario-scroll" tabIndex={0} role="region" aria-label={`Comparação das projeções para ${year}`}>
           <table className="focus-table scenario-table">
-            <caption >Projeções para {year}, por instituição. Valores ausentes indicados por travessão. <span className="focus-legend">Sinais comparam cada banco com o FOCUS da mesma linha: <b className="fm up">▲</b> acima · <b className="fm down">▼</b> abaixo · <b className="fm same">=</b> igual (2 casas).</span></caption>
-            <thead><tr><th scope="col">Indicador</th>{INSTITUTIONS.map((name) => <th scope="col" key={name}>{name}</th>)}</tr></thead>
+            <caption >Projeções para {year}, por instituição. Abaixo de cada nome, a data da projeção. Valores ausentes indicados por travessão. <span className="focus-legend">Sinais comparam cada banco com o FOCUS da mesma linha: <b className="fm up">▲</b> acima · <b className="fm down">▼</b> abaixo · <b className="fm same">=</b> igual (2 casas).</span></caption>
+            <thead><tr><th scope="col">Indicador</th>{INSTITUTIONS.map((name) => {
+              // data de cada coluna logo abaixo do nome: coleta do Focus ou data da projeção do banco
+              const idade = name === 'FOCUS' ? idadeProjecao(focus?.date) : ages[name]
+              const semData = name !== 'FOCUS' && banks && !idade
+              return <th scope="col" key={name}>{name}{(idade || semData) && <small className="scenario-date" title={name === 'FOCUS' ? `Coleta até ${idade.data}` : textoIdadeProjecao(idade)}><span className="sr-only">{name === 'FOCUS' ? ' coleta até ' : ' projeção de '}</span>{idade ? idade.data : 'sem data'}</small>}</th>
+            })}</tr></thead>
             <tbody>{INDICATORS.map((indicator) => <tr key={indicator.id}>
               <th scope="row">{indicator.label}<small>{indicator.unit}</small></th>
               {INSTITUTIONS.map((name) => {
@@ -51,12 +58,7 @@ export default function Projecoes({ macro, searchTarget }) {
             </tr>)}</tbody>
           </table>
         </div>
-        {banks && <ul className="scenario-ages" aria-label="Idade das projeções dos bancos">
-          {INSTITUTIONS.slice(1).map((name) => {
-            const idade = idadeProjecao(banks.institutions?.find((item) => item.name === name)?.date)
-            return <li key={name} className={idade?.antiga ? 'old' : undefined}>{idade?.antiga && <span aria-hidden="true">⚠ </span>}<b>{name}</b>: {textoIdadeProjecao(idade)}{idade?.antiga ? ' · pode estar desatualizada' : ''}</li>
-          })}
-        </ul>}
+        {someOld && <p className="scenario-note">Há projeção de banco com mais de {PROJECAO_ANTIGA_DIAS} dias: pode estar desatualizada. Confira a data abaixo de cada nome.</p>}
         <Aviso title="Cenário econômico · método">
         <p className="status">USD: Focus = média de dezembro; Itaú BBA = dezembro; demais bancos = fim do período. Selic: Itaú = dezembro; demais fontes = fim do ano. As medidas não são idênticas. — = projeção não verificada ou indisponível, nunca zero.</p>
         <div className="scenario-sources">

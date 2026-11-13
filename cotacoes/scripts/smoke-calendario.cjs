@@ -21,17 +21,20 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       await f.getByRole('button', { name: '7 dias' }).click()
       await table.waitFor()
       let txt = await table.innerText()
-      assert.match(txt, /CPI Flash Estimate y\/y/); assert.match(txt, /Tokyo Core CPI/); assert.match(txt, /CPI: inflação ao consumidor/)
-      assert.doesNotMatch(txt, /Retail Sales/, 'impacto baixo oculto por padrão')
-      assert.match(txt, /2,1%|2\.1%/); assert.match(await table.locator('thead').innerText(), /Previsto[\s\S]*Anterior/)
+      // eventos em inglês aparecem em português, com a sigla original; o que não está no dicionário fica como veio
+      assert.match(txt, /Inflação ao consumidor, prévia, variação anual \(CPI\)/); assert.match(txt, /Núcleo da inflação ao consumidor de Tóquio \(Core CPI\)/); assert.match(txt, /CPI: inflação ao consumidor/); assert.match(txt, /Xyz Gadget Index/)
+      assert.doesNotMatch(txt, /CPI Flash Estimate|Tokyo Core CPI/)
+      assert.doesNotMatch(txt, /Vendas no varejo/, 'impacto baixo oculto por padrão')
+      assert.match(txt, /2,1%/); assert.match(txt, /4,0 bi/); assert.doesNotMatch(txt, /2\.1%|4\.0B/); assert.match(await table.locator('thead').innerText(), /Previsto[\s\S]*Anterior/)
       assert.ok(await table.locator('.cal-day').count() >= 1)
       // balão do evento: o que é, efeito na economia e ligação com o Brasil; sem categoria mapeada, impacto baixo
-      await table.getByRole('button', { name: 'Impacto de CPI Flash Estimate y/y' }).click()
+      await table.getByRole('button', { name: 'Impacto de Inflação ao consumidor, prévia, variação anual (CPI)' }).click()
       const balao = (titulo) => p.locator('.pop:visible').filter({ hasText: titulo })
       const fechar = async (titulo) => { if (width < 700) await balao(titulo).getByRole('button', { name: 'Fechar' }).click(); else { await p.keyboard.press('Escape'); await p.mouse.move(0, 0); await p.evaluate(() => document.activeElement?.blur()) } await balao(titulo).waitFor({ state: 'hidden' }) }
-      let pop = await balao('CPI Flash Estimate y/y').innerText()
+      let pop = await balao('Inflação ao consumidor, prévia, variação anual (CPI)').innerText()
+      assert.match(pop, /Nome na fonte:\s*CPI Flash Estimate y\/y/)
       assert.match(pop, /Na economia:/); assert.match(pop, /Brasil:[\s\S]*Zona do euro/); assert.match(pop, /Impacto:\s*Alto/)
-      await fechar('CPI Flash Estimate y/y')
+      await fechar('Inflação ao consumidor, prévia, variação anual (CPI)')
       await table.getByRole('button', { name: 'Impacto de Xyz Gadget Index' }).click()
       pop = await balao('Xyz Gadget Index').innerText()
       assert.match(pop, /Impacto baixo/); assert.match(pop, /correlação direta relevante mapeada com o Brasil/); assert.match(pop, /classifica como alto/)
@@ -39,9 +42,9 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       assert.match(await table.locator('.cal-time').first().innerText(), /^\d{2}:\d{2}$/)
       // impacto baixo entra ao ligar; país restringe
       await sec.getByRole('group', { name: 'Impacto dos eventos' }).getByRole('button', { name: 'Baixo' }).click()
-      assert.match(await table.innerText(), /Retail Sales/)
+      assert.match(await table.innerText(), /Vendas no varejo/)
       await sec.getByLabel('País do evento').selectOption('EU')
-      txt = await table.innerText(); assert.match(txt, /CPI Flash/); assert.doesNotMatch(txt, /Tokyo|Retail/)
+      txt = await table.innerText(); assert.match(txt, /Inflação ao consumidor, prévia/); assert.doesNotMatch(txt, /Tóquio|Vendas no varejo/)
       // o último filtro de impacto não pode ser desligado
       for (const n of ['Alto', 'Médio', 'Baixo']) await sec.getByRole('group', { name: 'Impacto dos eventos' }).getByRole('button', { name: n }).click()
       assert.equal(await sec.getByRole('group', { name: 'Impacto dos eventos' }).locator('[aria-pressed="true"]').count() >= 1, true)
