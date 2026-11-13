@@ -46,7 +46,10 @@ main.app.app-calculators .cx :is(.seg button, .cg-modes button, .cbs-month-butto
   border: 1px solid var(--cx-select-bg);
   font-weight: 700;
 }
-main.app.app-calculators .cx :is(.cg-modes button, .cbs-month-buttons button) { border-color: var(--cx-line-strong); }
+/* Um só desenho de escolha nas calculadoras: pílula redonda, como os chips da Operação x DI e do Capital de Giro.
+   Desmarcado = fundo transparente e texto discreto; marcado = amarelo (regra acima). */
+main.app.app-calculators .cx :is(.cg-modes button, .cbs-month-buttons button) { border-color: var(--cx-line-strong); border-radius: 999px; }
+main.app.app-calculators .cx :is(.cg-modes button, .cbs-month-buttons button):not([aria-pressed=true]) { background: transparent; color: var(--mut); }
 
 /* Botões secundários: iguais em todas. A ação principal (laranja) é só uma por tela. */
 main.app.app-calculators .cx :is(.cx-action, .cg-button, .desconto-titles button, .fi-goal button, .cx-lcd .cx-field button:not(.fi-help > button), .credit-comparison > button:not(.cx-back), .credit-controls button, .fi-help-close) {
