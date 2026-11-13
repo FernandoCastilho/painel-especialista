@@ -280,7 +280,7 @@ export default function CreditComparison({ onBack }) {
   const content = <Results results={results} columns={visible} scenario={scenario} cdi={cdi} source={source} equivalent={equivalent} investment={investment} shared={shared} />
   const allOk = results.every(r => r.ok)
   return <section className="cx bw credit-comparison credit-bw" aria-labelledby="credit-title"><button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-    <div className="bw-heading"><h2 id="credit-title"><strong>PEME</strong><span>Comparador de Crédito</span></h2>
+    <div className="bw-heading"><h2 id="credit-title"><strong>PME</strong><span>Comparador de Crédito</span></h2>
     <nav className="bw-nav" aria-label="Área do comparador">
       <button type="button" aria-pressed={area === 'compare'} onClick={() => setArea('compare')}>Comparar operações</button>
       <button type="button" aria-pressed={area === 'rules'} onClick={() => setArea('rules')}>Premissas e fontes</button>
