@@ -67,11 +67,11 @@ function Concept({ c, goto }) {
           <details>
             <summary>Versão precisa</summary>
             <p>{c.preciso.texto}</p>
-            <p className="learn-formula" role="math" aria-label={c.preciso.formula}>{c.preciso.formula}</p>
+            <p className="learn-formula" role={c.preciso.tipo === 'conceitual' ? undefined : 'math'} aria-label={c.preciso.formula}>{c.preciso.formula}</p>
           </details>
 
           <details>
-            <summary>Exemplo numérico · {c.exemplo.titulo}</summary>
+            <summary>{c.exemplo.tipo === 'histórico' ? 'Exemplo histórico' : 'Exemplo numérico'} · {c.exemplo.titulo}</summary>
             <ol>{c.exemplo.passos.map((t) => <li key={t}>{t}</li>)}</ol>
             <p className="learn-result"><strong>Resultado:</strong> {c.exemplo.resultado}</p>
           </details>
