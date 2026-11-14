@@ -100,7 +100,8 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       const fill = (id, value) => section.locator(`#e4-${id}`).fill(value)
       const cell = (label, column) => section.locator('.fm-comparison .cx-matrix tbody tr').filter({ has: page.getByRole('rowheader', { name: label }) }).first().locator('td').nth(column)
       const flow = section.locator('.fm-tabela tbody tr')
-      const linha = async (i) => [normalize(await flow.nth(i).locator('th').innerText()), ...(await flow.nth(i).locator('td').allInnerTexts()).map(normalize)]
+      // textContent: no celular a tabela esconde quatro colunas, mas os números continuam na página.
+      const linha = async (i) => [normalize(await flow.nth(i).locator('th').textContent()), ...(await flow.nth(i).locator('td').allTextContents()).map(normalize)]
 
       // Tela inicial no formato da cotação: poucos campos, 36 parcelas mensais a cada 30 dias, e o câmbio e o DI do
       // Painel já preenchidos, com a origem ao lado.
@@ -112,9 +113,11 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(await section.locator('.fm-operation:not(.e4-opcoes) .cx-field').count(), 6, 'seis campos na operação')
       assert.equal(await section.locator('.e4-mais').evaluate(el => el.open), false, 'Mais opções começa fechado')
       assert.equal(await flow.count(), 37, 'desembolso e 36 parcelas')
+      // No celular a tabela mostra o essencial; no notebook, todas as colunas.
+      assert.equal(await section.locator('.fm-tabela thead th:visible').count(), width < 641 ? 4 : 8)
       assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), usd(1e7 / 5.3127))
       const pills = normalize(await section.locator('.fm-pills').innerText())
-      assert.ok(pills.includes('Pagamentos mensais') && pills.includes('Principal em parcelas iguais') && pills.includes('Datas a cada 30 dias, em dia útil'), pills)
+      assert.ok(pills.includes('Principal em parcelas iguais') && pills.includes('Datas a cada 30 dias, em dia útil') && !pills.includes('Pagamentos'), pills)
 
       // Atingir meta: custo efetivo de 1,30% ao mês. A tela calcula a taxa all-in e recalcula o resto.
       const taxaAntes = await section.locator('#e4-rate').inputValue()
@@ -124,6 +127,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.match(await section.locator('#e4-rate').inputValue(), /^\d{1,2},\d{4}$/)
       assert.ok(normalize(await section.locator('.fm-headline').innerText()).includes('1,30% a.m.'), 'a meta aparece como custo efetivo')
       assert.match(normalize(await section.locator('#e4-meta-status').innerText()), /^Taxa all-in de Dólar \+ \d{1,2},\d{4}% a\.a\., calculada para chegar ao custo efetivo de 1,30% ao mês\.$/)
+      assert.equal(normalize(await section.locator('#e4-rate-origem').innerText()), 'Calculada pela meta.')
       // Meta abaixo do que a operação alcança com taxa zero: a tela explica e não mexe na taxa.
       const taxaMeta = await section.locator('#e4-rate').inputValue()
       await fill('meta', '0,10')
@@ -236,13 +240,16 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       // Taxas futuras da mesa coladas: cada parcela em reais passa a ser a parcela na moeda vezes a taxa colada.
       await section.locator('#e4-fwdMode').selectOption('mesa')
       await fill('fwd', '5,0300\n5,0700')
-      assert.match(normalize(await section.locator('#e4-fwd-err').innerText()), /Foram coladas 2 taxas; a operação tem 3 pagamentos\./)
+      assert.equal(normalize(await section.locator('#e4-fwd-err').innerText()), 'Falta 1 taxa: você colou 2 e a operação tem 3 pagamentos.')
       await fill('fwd', COLADAS.map(v => v.toFixed(4).replace('.', ',')).join('\n'))
       for (const [i, f] of PARCELAS.entries()) assert.equal((await linha(i + 1))[7], brl(f.usdTotal * COLADAS[i]), `parcela ${i + 1} com a taxa da mesa`)
       const comMesa = normalize(await section.locator('.fm-headline').innerText())
       assert.ok(comMesa.includes(`${pct(mes(CET_MESA))} a.m.`) && comMesa.includes(`${pct(ano(CET_MESA))} a.a. · exp/360`), comMesa)
-      assert.match(normalize(await section.locator('#e4-fwd-origem').innerText()), /^3 de 3 taxas · cupom cambial implícito no vencimento: /)
+      assert.match(normalize(await section.locator('#e4-fwd-origem').innerText()), /^✓ 3 de 3 taxas · cupom cambial implícito de -?\d+,\d{2}% a -?\d+,\d{2}% a\.a\., com o DI informado$/)
       assert.match(normalize(await section.locator('.fm-hero').innerText()), /Com as taxas futuras da mesa/)
+      // Colagem suspeita: ordem invertida avisa, sem bloquear a conta.
+      await fill('fwd', [...COLADAS].reverse().map(v => v.toFixed(4).replace('.', ',')).join('\n'))
+      assert.match(normalize(await section.locator('.e4-aviso').last().innerText()), /^A 2ª taxa colada é menor que a anterior: confira a ordem e os valores\.$/)
       await section.locator('#e4-fwdMode').selectOption('estimar')
       assert.equal((await linha(1))[7], brl(PARCELAS[0].brl))
       // Carência de um pagamento: a primeira linha só tem juros e o principal vai em duas parcelas.

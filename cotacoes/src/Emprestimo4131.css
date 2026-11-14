@@ -59,20 +59,23 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 .bw.e4 .e4-copiar { min-height:32px; padding:0 12px; border:1px solid #b9c7da; border-radius:8px; background:#fff; font:inherit; font-size:.76rem; font-weight:600; color:#006bdc; cursor:pointer; }
 .bw.e4 .e4-copiar:disabled { color:#7b8aa0; cursor:not-allowed; }
 .bw.e4 .e4-copiar:focus-visible, .bw.e4 .e4-meta-btn:focus-visible { outline:2px solid #006bdc; outline-offset:2px; }
-.bw.e4 .e4-condicoes dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 16px; margin:0; }
+.bw.e4 .e4-condicoes dl { display:grid; grid-template-columns:minmax(0,1fr); gap:0 16px; margin:0; }
 .bw.e4 .e4-condicoes dl > div { display:flex; flex-direction:row; align-items:baseline; justify-content:space-between; gap:10px; padding:4px 0; border-bottom:1px solid #e0e7f1; }
-.bw.e4 .e4-condicoes dt { flex:0 0 auto; }
+.bw.e4 .e4-condicoes dt { flex:0 1 auto; min-width:0; }
 .bw.e4 .e4-condicoes dt { font-size:.74rem; color:#5b6b82; }
-.bw.e4 .e4-condicoes dd { margin:0; font-size:.78rem; font-weight:600; color:#10284c; text-align:right; overflow-wrap:anywhere; }
+.bw.e4 .e4-condicoes dd { flex:0 0 auto; margin:0; font-size:.78rem; font-weight:600; color:#10284c; text-align:right; white-space:nowrap; overflow-wrap:normal; }
+@media (min-width:1600px) { .bw.e4 .e4-condicoes dl { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-flow:column; grid-template-rows:repeat(9,auto); column-gap:24px; } }
 /* Atingir meta: o custo desejado no topo; a tela devolve a taxa all-in. */
 .bw.e4 .e4-meta { padding:10px 12px; border:1px solid #c7d7ee; border-radius:12px; background:#eef4fd; }
 .bw.e4 .e4-meta h3 { display:flex; align-items:center; gap:4px; margin:0 0 6px; font-size:.8rem; font-weight:700; color:#062a5c; }
 .bw.e4 .e4-meta-campos { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto; gap:8px; align-items:center; }
-.bw.e4 .e4-meta-btn { min-height:40px; padding:0 14px; border:0; border-radius:8px; background:#062a5c; font:inherit; font-size:.82rem; font-weight:700; color:#fff; cursor:pointer; white-space:nowrap; }
+.bw.e4 .e4-meta-btn { height:44px; min-height:44px; padding:0 14px; border:1px solid #062a5c; border-radius:8px; background:#fff; font:inherit; font-size:.82rem; font-weight:700; color:#062a5c; cursor:pointer; white-space:nowrap; }
+.bw.e4 .cx-finame .e4-meta-campos select { height:44px; min-height:44px; }
 .bw.e4 .e4-meta .e4-origem { margin:6px 0 0; min-height:0; }
 .bw.e4 .e4-meta .e4-origem:empty { display:none; }
-@media (max-width:640px) { .bw.e4 .e4-meta-campos { grid-template-columns:minmax(0,1fr) minmax(0,1fr); } .bw.e4 .e4-meta-btn { grid-column:1/-1; min-height:44px; } .bw.e4 .e4-condicoes dl { grid-template-columns:minmax(0,1fr); } }
-.bw.e4 .e4-comparar > summary { min-height:44px; display:flex; align-items:center; gap:8px; list-style:none; padding:0 16px; font-size:.85rem; font-weight:700; color:#006bdc; cursor:pointer; }
+@media (max-width:640px) { .bw.e4 .e4-meta-campos { grid-template-columns:minmax(0,1fr) auto; } .bw.e4 .e4-meta-campos select { grid-column:1/-1; } .bw.e4 .e4-hedge .fm-group-fields > .fm-field-modo { grid-column:1/-1; } .bw.e4 .e4-copiar { min-height:44px; } }
+.bw.e4 .e4-comparar { box-shadow:none; }
+.bw.e4 .e4-comparar > summary { min-height:44px; display:flex; align-items:center; gap:8px; list-style:none; padding:0 14px; font-size:.78rem; font-weight:700; color:#006bdc; cursor:pointer; }
 .bw.e4 .e4-comparar .fm-details { margin:0 16px 12px; }
 .bw.e4 .e4-parcelas { margin-top:14px; }
 .bw.e4 .e4-parcelas .fm-tabela th, .bw.e4 .e4-parcelas .fm-tabela td { padding-top:7px; padding-bottom:7px; }
@@ -89,6 +92,24 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 }
 .bw.e4 .e4-aviso { margin:6px 16px 0; padding:8px 10px; border-left:3px solid #c96a00; border-radius:6px; background:#fff6ea; color:#5a3200; }
 .bw.e4 .e4-hedge .fm-group-fields > .e4-colar { grid-column:1/-1; display:block; }
-.bw.e4 .e4-colar textarea { width:100%; min-height:96px; margin-top:6px; padding:8px 10px; border:1px solid #8ea2bd; border-radius:8px; background:#fff; font:inherit; font-variant-numeric:tabular-nums; color:#10284c; resize:vertical; }
+.bw.e4 .e4-colar textarea { width:100%; min-height:96px; margin-top:6px; padding:8px 10px; line-height:1.4; border:1px solid #8ea2bd; border-radius:8px; background:#fff; font:inherit; font-variant-numeric:tabular-nums; color:#10284c; resize:vertical; }
 .bw.e4 .e4-colar textarea[aria-invalid="true"] { border-color:#c0392b; }
 .bw.e4 .e4-colar textarea:focus-visible { outline:2px solid #006bdc; outline-offset:1px; }
+.bw.e4 .e4-colar .e4-ok { color:#0a6b3d; font-weight:600; }
+.bw.e4 .e4-colar .e4-ok:empty { display:none; }
+@media (min-width:641px) { .bw.e4 .e4-colar textarea { font-size:.875rem; } }
+.bw.e4 .fm-show-result > span { white-space:nowrap; }
+/* Parcela a parcela: linhas inteiras com a primeira coluna fixa; no celular, só o essencial. */
+.bw.e4 .e4-parcelas .fm-tabela { border-collapse:separate; border-spacing:0; }
+.bw.e4 .e4-parcelas .fm-tabela thead th:first-child, .bw.e4 .e4-parcelas .fm-tabela tfoot th { text-align:left; }
+.bw.e4 .e4-estreito { display:none; }
+@media (max-width:640px) {
+  .bw.e4 .e4-parcelas .fm-tabela tr > :nth-child(n+3):nth-child(-n+6) { display:none; }
+  .bw.e4 .e4-parcelas .fm-tabela { width:100%; font-size:.75rem; }
+  .bw.e4 .e4-parcelas .fm-tabela th, .bw.e4 .e4-parcelas .fm-tabela td { padding-left:4px !important; padding-right:4px !important; min-width:0 !important; font-size:.75rem; }
+  .bw.e4 .e4-parcelas .fm-tabela thead th { white-space:normal; }
+  .bw.e4 .e4-largo { display:none; }
+  .bw.e4 .e4-estreito { display:block; }
+  .bw.e4 #fm-result > header .cx-heading { flex:1 0 100%; }
+  .bw.e4 #fm-result > header small, .bw.e4 .fm-input-panel > header.fm-rules small { width:auto; }
+}

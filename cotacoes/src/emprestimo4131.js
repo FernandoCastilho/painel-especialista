@@ -250,7 +250,8 @@ export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup 
   // para o equivalente em CDI e para o custo em base 252.
   const mesa = forwards != null
   if (mesa && (!Array.isArray(forwards) || forwards.length !== loan.flows.length)) return fail(`Informe ${loan.flows.length} ${loan.flows.length === 1 ? 'taxa futura' : 'taxas futuras'}, uma por pagamento: ${Array.isArray(forwards) ? `vieram ${forwards.length}` : 'lista inválida'}.`)
-  if (mesa && forwards.some((f) => !(f > 0) || !Number.isFinite(f))) return fail('As taxas futuras precisam ser números maiores que zero.')
+  // Posição por posição: lista com buraco também é recusada.
+  if (mesa && Array.from(forwards).some((f) => !(f > 0) || !Number.isFinite(f))) return fail('As taxas futuras precisam ser números maiores que zero.')
   if (!curve && (!(di > 0) || di > 200)) return fail('Informe o DI pré em % ao ano, maior que zero.')
   if (!curve && !mesa && (!(cupom > -50) || cupom > 200)) return fail('Informe o cupom cambial em % ao ano.')
   if (!(swapSpread >= 0) || !(ndfMarkup >= 0)) return fail('Os acréscimos do banco não podem ser negativos.')
@@ -336,7 +337,8 @@ export const METAS = [
 // Taxas futuras coladas da planilha ou do e-mail da mesa: uma por linha (ou separadas por espaço, tabulação ou ponto e
 // vírgula), com vírgula ou ponto decimal. Devolve { rates, bad }: os números lidos e o primeiro trecho que não é número.
 export function lerTaxasFuturas(text) {
-  const tokens = String(text ?? '').split(/[\s;]+/).filter(Boolean)
+  // Caracteres invisíveis de largura zero, comuns em texto copiado de e-mail, saem antes da leitura.
+  const tokens = String(text ?? '').replace(/[\u200B-\u200D\uFEFF]/g, '').split(/[\s;]+/).filter(Boolean)
   const rates = []
   for (const token of tokens) {
     if (!/^\d+(?:[.,]\d+)?$/.test(token)) return { rates, bad: token }

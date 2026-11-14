@@ -302,7 +302,7 @@ test('resumo no formato de e-mail · condições na ordem da cotação e os trê
   const texto = resumoE4({ loan, hedge })
   const br = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   assert.ok(texto.startsWith('4131 com NDF · Condições da operação\nData da cotação: 16/11/2026\n'))
-  assert.ok(texto.includes(`Custo efetivo total: taxa de juros prefixada em reais de ${br(hedge.ndf.cetMes)}% a.m. / ${br(hedge.ndf.cetAno)}% a.a. (exp/360), equivalente a CDI + ${br(hedge.ndf.spread)}%`))
+  assert.ok(texto.includes(`Custo efetivo total: taxa de juros prefixada em reais de ${br(hedge.ndf.cetMes)}% a.m. / ${br(hedge.ndf.cetAno)}% a.a. (exp/360), equivalente a CDI + ${br(hedge.ndf.spread)}% (com DI de 13,00% a.a.)`))
   assert.ok(texto.includes(`Economia de IOF (R$): ${br(hedge.ndf.iofGiro)}`))
   assert.ok(texto.includes(`Taxa equivalente em capital de giro: ${br(hedge.ndf.giroMes)}% a.m. / ${br(hedge.ndf.giroAno)}% a.a. (exp/360)`))
   assert.ok(texto.includes('Não inclui IR nem PIS/Cofins sobre ganho do derivativo.'))
@@ -372,6 +372,9 @@ test('taxas futuras da mesa · quantidade errada, zero e texto são recusados', 
   assert.equal(hedge4131(loan, { di: 14, forwards: [5.03, 0, 5.11] }).ok, false)
   assert.equal(hedge4131(loan, { di: 14, forwards: [5.03, NaN, 5.11] }).ok, false)
   assert.equal(hedge4131(loan, { di: 14, forwards: 'texto' }).ok, false)
+  // Lista com buraco (posição vazia) também é recusada.
+  // eslint-disable-next-line no-sparse-arrays
+  assert.match(hedge4131(loan, { di: 14, forwards: [5.03, , 5.11] }).error, /maiores que zero/)
   // Sem DI não há equivalente em CDI: continua obrigatório.
   assert.equal(hedge4131(loan, { di: 0, forwards: [5.03, 5.07, 5.11] }).ok, false)
   // Leitura do que foi colado: uma por linha, com vírgula ou ponto, tabulação ou ponto e vírgula.
@@ -380,4 +383,6 @@ test('taxas futuras da mesa · quantidade errada, zero e texto são recusados', 
   assert.deepEqual(lerTaxasFuturas(''), { rates: [], bad: null })
   assert.equal(lerTaxasFuturas('5,03\nR$5,07').bad, 'R$5,07')
   assert.equal(lerTaxasFuturas('5,03\n1.234,56').bad, '1.234,56')
+  // Caractere invisível de largura zero, comum em texto copiado de e-mail, não atrapalha.
+  assert.deepEqual(lerTaxasFuturas('\u200b5,03\n5,07\ufeff'), { rates: [5.03, 5.07], bad: null })
 })

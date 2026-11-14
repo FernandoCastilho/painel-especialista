@@ -17,7 +17,8 @@ export const E4_SLIDES = Object.freeze([
 ])
 export const E4_TITLE = 'Empréstimo externo · 4131'
 export const E4_NOTICE = 'Estimativa para comparar propostas, com câmbio a termo teórico. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. A cotação da mesa do banco e o contrato prevalecem.'
-// Quando as taxas futuras foram coladas da cotação da mesa, o NDF deixa de ser teórico; swap e sem proteção seguem estimados.
+// Quando as taxas futuras foram coladas da cotação da mesa, o NDF deixa de ser teórico. A coluna do swap usa as mesmas
+// taxas: é o fluxo do NDF lido em CDI, não uma cotação de swap. Sem proteção segue estimado por cenário.
 export const E4_NOTICE_MESA = 'Simulação com as taxas futuras informadas da cotação da mesa. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. A cotação confirmada pelo banco e o contrato prevalecem.'
 export const E4_PRINT_NOTICE_MESA = 'Simulação indicativa, sujeita à análise e aprovação da instituição financeira. Não constitui proposta, oferta, garantia de aprovação ou compromisso de crédito. O custo com NDF usa as taxas futuras informadas; a cotação confirmada pela mesa do banco e o contrato prevalecem.'
 // Leitura no formato das cotações de banco (4131 com NDF), igual na tela, na apresentação e no PDF.
@@ -106,7 +107,7 @@ export function resumoE4({ loan, hedge }) {
     '4131 com NDF · Condições da operação',
     ...condicoesE4(loan, hedge).map(([rotulo, valor]) => `${rotulo}: ${valor}`),
     '',
-    `Custo efetivo total: taxa de juros prefixada em reais de ${menos(pctText(hedge.ndf.cetMes))} a.m. / ${menos(pctText(hedge.ndf.cetAno))} a.a. (exp/360), equivalente a CDI ${spread < 0 ? '−' : '+'} ${pctText(Math.abs(spread))}`,
+    `Custo efetivo total: taxa de juros prefixada em reais de ${menos(pctText(hedge.ndf.cetMes))} a.m. / ${menos(pctText(hedge.ndf.cetAno))} a.a. (exp/360), equivalente a CDI ${spread < 0 ? '−' : '+'} ${pctText(Math.abs(spread))} (com DI de ${pctText(hedge.di)} a.a.)`,
     `Economia de IOF (R$): ${num(hedge.ndf.iofGiro)}${loan.iofRate > 0 ? ` (IOF que um capital de giro pagaria; não desconta o IOF-câmbio de R$ ${num(loan.iofUsd * loan.spot)} desta operação)` : ''}`,
     `Taxa equivalente em capital de giro: ${menos(pctText(hedge.ndf.giroMes))} a.m. / ${menos(pctText(hedge.ndf.giroAno))} a.a. (exp/360)`,
     '',
