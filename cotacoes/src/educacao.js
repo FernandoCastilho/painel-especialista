@@ -1,3 +1,4 @@
+import { CONCEITO_ACC } from './acc.js'
 import { CONCEITO_FASCISMO } from './fascismo.js'
 import { nf } from './format.js'
 import { CONCEITO_MAQUILA } from './maquila.js'
@@ -796,6 +797,7 @@ export const CONCEITOS = [
       resposta: 'Ficam devidos: sem exportação comprovada, a empresa paga os tributos suspensos com os acréscimos legais (juros e, conforme o caso, multa).',
     },
   },
+  CONCEITO_ACC,
   CONCEITO_MAQUILA,
   CONCEITO_FASCISMO,
   CONCEITO_IMPOSTO_SELETIVO,
@@ -1139,7 +1141,7 @@ export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de cr
 
 // Busca por palavras (todas precisam aparecer), sem diferenciar acento nem maiúscula, no conteúdo inteiro do conceito.
 const plain = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-export const textoDeBusca = (c) => plain([c.nome, ...(c.aliases ?? []), c.topico, c.frase, c.analogia, ...c.crianca, ...c.lacunas, c.preciso.texto, c.preciso.formula, c.exemplo.titulo, ...c.exemplo.passos, c.teste.pergunta, c.teste.resposta, c.estudoHistorico ? JSON.stringify(c.estudoHistorico) : ''].join(' '))
+export const textoDeBusca = (c) => plain([c.nome, ...(c.aliases ?? []), c.topico, c.frase, c.analogia, ...c.crianca, ...c.lacunas, c.preciso.texto, c.preciso.formula, c.exemplo.titulo, ...c.exemplo.passos, c.teste.pergunta, c.teste.resposta, c.estudoHistorico ? JSON.stringify(c.estudoHistorico) : '', c.fluxo ? JSON.stringify(c.fluxo) : ''].join(' '))
 export function buscarConceitos(termo, lista = CONCEITOS) {
   const palavras = plain(String(termo ?? '')).split(/\s+/).filter(Boolean)
   return palavras.length ? lista.filter((c) => { const t = textoDeBusca(c); return palavras.every((w) => t.includes(w)) }) : lista
@@ -1151,6 +1153,9 @@ export const porTopico = (lista) => TOPICOS.map((topico) => ({ topico, itens: li
 // outros conceitos (LIGACOES). Os testes recusam conceito sem papel, sem ligação ou com ligação para conceito que não existe.
 // LIGACOES é a fonte única: cada par vale nos dois sentidos e aparece em "Conecta com" de ambos os conceitos e no quadro geral.
 export const LIGACOES = [
+  ['acc', 'drawback', 'Os dois aliviam o caixa do exportador: o drawback suspende tributos dos insumos; o ACC antecipa a receita da venda.'],
+  ['acc', 'cupom-cambial', 'O juro do ACC é em dólar; o cupom cambial mostra quanto custa o dinheiro em dólar no Brasil.'],
+  ['acc', 'sofr', 'O custo do ACC parte do funding do banco em dólar, que acompanha referências externas como a SOFR.'],
   ['fascismo', 'juros-forcados', 'Uma política de juros ou de intervenção econômica não define, sozinha, um regime fascista; compare instituições e contexto histórico.'],
   ['marcacao-a-mercado', 'liquidacao-antecipada', 'Preço econômico e valor de quitação não são automaticamente iguais; confira contrato e normas aplicáveis.'],
   ['marcacao-a-mercado', 'debenture', 'O preço de uma debênture responde à curva de juros, ao risco do emissor e à liquidez.'],
@@ -1244,6 +1249,7 @@ export const CONEXAO = {
     { id: 'cri', texto: 'transforma recebíveis imobiliários em título para o investidor, com patrimônio separado e, para pessoa física, isenção de IR.' },
     { id: 'cra', texto: 'é o CRI do agronegócio: lastro em safra, insumos e contratos do agro, com risco ligado a clima, commodities e câmbio.' },
     { id: 'facil', texto: 'é a porta simplificada da CVM para companhias de menor porte (receita abaixo de R$ 500 milhões) captarem com investidores.' },
+    { id: 'acc', texto: 'antecipa em reais a receita de uma exportação; a dívida se quita com os dólares da venda, e o desvio desse caminho custa mais.' },
     { id: 'drawback', texto: 'suspende ou isenta os tributos dos insumos de quem exporta, liberando caixa do exportador.' },
     { id: 'lei-de-maquila', texto: 'organiza produção ou serviços no Paraguai para o exterior, sob programa aprovado, com tributação própria e obrigações de exportação.' },
     { id: 'inflacao', texto: 'é o que desconta o juro nominal para chegar ao juro real, e o que o Banco Central tenta controlar com a Selic.' },
@@ -1253,7 +1259,7 @@ export const CONEXAO = {
     { id: 'combustiveis', texto: 'é o caminho do derivado em dólar até a bomba, onde entram câmbio, impostos, etanol e margens, e de onde parte da inflação.' },
   ],
   // O caminho que une tudo, de ponta a ponta.
-  cadeia: 'Expectativas (Focus) → Inflação → Selic e curva DI → CDI → remuneração de debêntures, notas comerciais, CRI e CRA (com o FÁCIL abrindo esse caminho às empresas menores) → custo de funding (somando o risco, medido pelo CDS) → liquidação antecipada e break funding. No comércio exterior, o drawback alivia o caixa do exportador e a maquila organiza operações no Paraguai para o exterior, com regras próprias e custos no destino a avaliar. Na ponta externa, SOFR, Euribor, diferencial de juros e cupom cambial ligam o juro em reais ao juro em dólar e em euro. Nas commodities, o preço em dólar passa pelo câmbio e vira IC-Br, soja em reais e combustível na bomba, e daí volta à inflação.',
+  cadeia: 'Expectativas (Focus) → Inflação → Selic e curva DI → CDI → remuneração de debêntures, notas comerciais, CRI e CRA (com o FÁCIL abrindo esse caminho às empresas menores) → custo de funding (somando o risco, medido pelo CDS) → liquidação antecipada e break funding. No comércio exterior, o ACC antecipa a receita do exportador, o drawback alivia o caixa do exportador e a maquila organiza operações no Paraguai para o exterior, com regras próprias e custos no destino a avaliar. Na ponta externa, SOFR, Euribor, diferencial de juros e cupom cambial ligam o juro em reais ao juro em dólar e em euro. Nas commodities, o preço em dólar passa pelo câmbio e vira IC-Br, soja em reais e combustível na bomba, e daí volta à inflação.',
 }
 
 // Ligações de um conceito: [{ id, porque }] nos dois sentidos, na ordem de LIGACOES.
