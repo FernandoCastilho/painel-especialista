@@ -1,6 +1,6 @@
 // Apresentação e impressão do empréstimo externo (4131): cópia congelada do que a tela calculou.
 // Nunca recalcula nem busca taxa nova; se faltar número, não gera a cópia.
-import { moedaOf, unhedged4131 } from './emprestimo4131.js'
+import { IOF_SHORT_TERM, fronteiraIof, moedaOf, unhedged4131 } from './emprestimo4131.js'
 
 const freeze = (value) => {
   if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) }
@@ -28,6 +28,7 @@ export const E4_FX_SCENARIOS = Object.freeze([-10, 0, 5, 10, 20])
 export const E4_SOURCES = Object.freeze([
   { label: 'Resolução BCB 278/2022 · crédito externo', url: 'https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20BCB&numero=278' },
   { label: 'Decreto 6.306/2007 · IOF', url: 'https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306compilado.htm' },
+  { label: 'Decreto 6.306/2007 · IOF (texto atualizado, Câmara)', url: 'https://www2.camara.leg.br/legin/fed/decret/2007/decreto-6306-14-dezembro-2007-566561-normaatualizada-pe.html' },
   { label: 'Decreto 9.580/2018 · IR na fonte', url: 'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/decreto/d9580.htm' },
   { label: 'B3 · Termo de moeda (NDF)', url: 'https://www.b3.com.br/pt_br/produtos-e-servicos/registro/derivativos-de-balcao/contrato-a-termo-de-moeda.htm' },
 ])
@@ -98,6 +99,12 @@ export function condicoesE4(loan, hedge = null) {
 }
 
 // Texto no formato dos e-mails de cotação: condições, custo efetivo, economia de IOF e equivalente em giro.
+// Aviso que acompanha o resumo copiado, o PDF e a apresentação quando o prazo médio tem fração entre 364 e 365 dias.
+export function avisoFronteiraE4(loan) {
+  if (!fronteiraIof(loan)) return ''
+  return `Prazo médio exato de ${num(loan.avgTermExact)} dias corridos, entre ${IOF_SHORT_TERM.maxDays} e ${IOF_SHORT_TERM.maxDays + 1}: o IOF-câmbio zero vale se a fração de dia contar. Se o banco ou a Receita desprezarem a fração, o IOF é de ${pctText(IOF_SHORT_TERM.rate)}. Confirmar com o câmbio do banco.`
+}
+
 export function resumoE4({ loan, hedge }) {
   if (!loan?.ok || !hedge?.ok) return ''
   // Sinal decidido depois de arredondar: spread que arredonda para zero sai como "+ 0,00%".
@@ -110,6 +117,7 @@ export function resumoE4({ loan, hedge }) {
     `Custo efetivo total: taxa de juros prefixada em reais de ${menos(pctText(hedge.ndf.cetMes))} a.m. / ${menos(pctText(hedge.ndf.cetAno))} a.a. (exp/360), equivalente a CDI ${spread < 0 ? '−' : '+'} ${pctText(Math.abs(spread))} (com DI de ${pctText(hedge.di)} a.a.)`,
     `Economia de IOF (R$): ${num(hedge.ndf.iofGiro)}${loan.iofRate > 0 ? ` (IOF que um capital de giro pagaria; não desconta o IOF-câmbio de R$ ${num(loan.iofUsd * loan.spot)} desta operação)` : ''}`,
     `Taxa equivalente em capital de giro: ${menos(pctText(hedge.ndf.giroMes))} a.m. / ${menos(pctText(hedge.ndf.giroAno))} a.a. (exp/360)`,
+    ...(fronteiraIof(loan) ? [avisoFronteiraE4(loan)] : []),
     '',
     `Simulação indicativa, com ${hedge.source === 'mesa' ? 'as taxas futuras informadas da cotação' : 'taxa futura teórica'}. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. Sujeita a confirmação da cotação pela mesa do banco, a limite de crédito e a cadastro atualizado. Não constitui proposta nem compromisso de crédito.`,
   ].join('\n')

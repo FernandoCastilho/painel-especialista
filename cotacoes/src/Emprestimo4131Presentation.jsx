@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { presentationStep } from './bndesPresentation.js'
-import { E4_QUOTE_NOTE, E4_SLIDES, E4_TITLE, buildE4Slides, captureE4 } from './emprestimo4131Presentation.js'
+import { E4_QUOTE_NOTE, E4_SLIDES, E4_TITLE, avisoFronteiraE4, buildE4Slides, captureE4 } from './emprestimo4131Presentation.js'
 import { moedaOf } from './emprestimo4131.js'
 import './Apresentacao.css'
 import './BndesPresentation.css'
@@ -126,6 +126,7 @@ function E4Slide({ kind, snapshot }) {
     <li>O custo total em CDI inclui flat e IOF da entrada diluídos no prazo. O spread do swap é calculado sobre o principal, sem esses custos, para comparar com a cotação da mesa.</li>
     <li>Fora da conta: IR na fonte e PIS/Cofins sobre ganho do swap ou do NDF, e custo de garantias do derivativo. Flat e fiança: {labels.fees}.</li>
     <li>{E4_QUOTE_NOTE}</li>
+    {avisoFronteiraE4(loan) && <li>{avisoFronteiraE4(loan)}</li>}
     <li>Simulação indicativa. A cotação da mesa do banco e o contrato prevalecem.</li>
   </ul><p className="bnp-sources">{snapshot.sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>)}</p></>
 }
