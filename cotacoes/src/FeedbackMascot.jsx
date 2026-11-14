@@ -14,7 +14,7 @@ export function MascotIcon() {
   </span>
 }
 
-export default function FeedbackMascot({ configuration = config, onSearch }) {
+export default function FeedbackMascot({ configuration = config, onSearch, section }) {
   const [open, setOpen] = useState(false)
   const [values, setValues] = useState({ ...EMPTY_FEEDBACK })
   const [status, setStatus] = useState('idle')
@@ -69,7 +69,7 @@ export default function FeedbackMascot({ configuration = config, onSearch }) {
     } finally { clearTimeout(timeout); inFlight.current = false; controller.current = null }
   }
   return <>
-    <MascotDock onSearch={onSearch} icon={<MascotIcon />}>
+    <MascotDock section={section} onSearch={onSearch} icon={<MascotIcon />}>
       <span className="mascot-greeting">Prazer, sou Fredix</span>
       <button className="feedback-trigger" type="button" ref={trigger} aria-label="Abrir caixa de sugestões" title="Fredix — abrir caixa de sugestões" aria-haspopup="dialog" aria-expanded={open} aria-controls="feedback-dialog" onClick={() => { restoreFocus.current = true; setOpen(true) }}>💡 Sugestão</button>
     </MascotDock>

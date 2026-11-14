@@ -29,7 +29,6 @@ import Recado from './Recado.jsx'
 import AlertaVariacao from './AlertaVariacao.jsx'
 import { OnlineBadge } from './Acessos.jsx'
 import Laser from './Laser.jsx'
-import MascotSlot from './MascotSlot.jsx'
 const Feriados = lazy(() => import('./Feriados.jsx'))
 import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
@@ -300,9 +299,10 @@ export default function App() {
     {tab === 'resumo' && (
       <div className="clocks-top">
         <Clock codes={['BRL', 'USD', 'GBP', 'JPY', 'CNH']} />
-        <OnlineBadge /><AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" /><MascotSlot className="mascot-slot-m" />
+        <OnlineBadge /><AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" />
       </div>
     )}
+    <FeedbackMascot onSearch={setMascotSearch} section={tab} />
     <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
       {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
@@ -318,7 +318,7 @@ export default function App() {
       {tab !== 'resumo' && (
         <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}`}>
           {!['calculadora', 'noticias', 'feriados'].includes(tab) && <h1>{tab === 'setores' ? 'Central de setores' : TABS.find((t) => t.id === tab).label}</h1>}
-          <AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" /><MascotSlot className="mascot-slot-m" />
+          <AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" />
         </header>
       )}
 
@@ -382,7 +382,6 @@ export default function App() {
       )}
       </Suspense>
     </main>
-    <FeedbackMascot onSearch={setMascotSearch} />
     </AvisosProvider>
   )
 }

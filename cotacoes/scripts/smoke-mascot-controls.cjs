@@ -2,12 +2,12 @@ const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5231'
-const output = process.env.MASCOT_QA_OUTPUT || '/tmp/owl-qa'
+const output = process.env.MASCOT_QA_OUTPUT || (process.env.RUNNER_TEMP ? `${process.env.RUNNER_TEMP}/qa-universal/mascot` : '/tmp/owl-qa')
 fs.mkdirSync(output, { recursive: true })
 ;(async () => {
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
   try {
-    for (const width of [360, 390, 1280]) {
+    for (const width of [320, 360, 390, 699, 1280]) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, serviceWorkers: 'block' })
       const page = await context.newPage(), errors = [], posts = []
       page.on('pageerror', error => errors.push(error.message))
@@ -18,20 +18,52 @@ fs.mkdirSync(output, { recursive: true })
         if (url.pathname.endsWith('/calendar.json')) return route.fulfill({ status: 503, body: 'offline' })
         return route.continue()
       })
-      await page.goto(base + '/#calculadora/giro')
+      await page.goto(base + '/#resumo')
       const move = page.getByRole('button', { name: 'Mover mascote', exact: true })
-      // Começa pequena, no lugar reservado do cabeçalho (não cobre título nem botões); clicar amplia.
+      // Começa pequena, por cima da página; clicar amplia.
       const small = page.getByRole('button', { name: 'Ampliar mascote' })
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
-      // o cabeçalho das telas carregadas sob demanda aparece depois; a coruja entra no lugar assim que ele existe
-      await page.waitForFunction(() => !!document.querySelector('.mascot-mini')?.closest('.mascot-slot'), null, { timeout: 5000 }).catch(() => {})
-      assert.equal(await small.evaluate(el => !!el.closest('.mascot-slot')), true, 'coruja pequena no lugar reservado do cabeçalho')
+      // computador (barra do topo visível): a coruja pequena mora no lugar reservado da barra; abaixo disso, flutua (700-999) ou fica no espaço reservado do celular
+      if (width >= 1000) {
+        await page.waitForFunction(() => !!document.querySelector('.mascot-mini')?.closest('.mascot-slot-top'), null, { timeout: 5000 }).catch(() => {})
+        assert.equal(await small.evaluate(el => !!el.closest('.mascot-slot-top')), true, 'coruja pequena na barra do topo')
+      } else assert.equal(await small.evaluate(el => getComputedStyle(el).position), width < 700 ? 'absolute' : 'fixed')
+      const checkSmall = async state => {
+        assert.equal(await small.getAttribute('title'), null, 'sem dica redundante')
+        const box = await small.boundingBox()
+        const clocksLocator = page.locator('.clocks-top')
+        const onMarket = new URL(page.url()).hash === '#resumo'
+        assert.equal(await clocksLocator.count(), onMarket ? 1 : 0, 'relógios pertencem somente ao Mercado')
+        const clocks = onMarket ? await clocksLocator.boundingBox() : null
+        if (onMarket && width < 1000) assert.ok(clocks && clocks.height > 0, 'relógios móveis precisam estar visíveis')
+        if (clocks && clocks.height > 0) assert.ok(box.y >= clocks.y + clocks.height, `${width}/${state}: coruja não cobre relógios`)
+        if (width < 700) {
+          const tray = await page.locator('.mascot-tray').boundingBox()
+          const main = await page.locator('#conteudo').boundingBox()
+          assert.ok(box.y >= tray.y && box.y + box.height + 5 <= main.y, `${width}/${state}: miniatura e foco não cobrem Feriados nem conteúdo`)
+        }
+        assert.ok(box.x >= 0 && box.x + box.width <= width, `${width}/${state}: coruja cabe na tela`)
+        await page.screenshot({ path: `${output}/mini-${width}-${state}.png` })
+      }
+      await checkSmall('repouso')
       const smallBox = await small.boundingBox()
-      const livre = await page.evaluate(() => { const m = document.querySelector('.mascot-mini').getBoundingClientRect(); const cobre = (r) => r.width > 0 && r.height > 0 && !(r.right <= m.left || r.left >= m.right || r.bottom <= m.top || r.top >= m.bottom); return [...document.querySelectorAll('main h1, .topbar-tabs button, .theme-trigger, .clocks-info, .clock-one')].filter((el) => !el.closest('.sr-only') && !el.classList.contains('sr-only')).every((el) => { const range = document.createRange(); range.selectNodeContents(el); return !cobre(range.getBoundingClientRect()) }) })
-      assert.equal(livre, true, 'coruja pequena não cobre título, abas, relógios nem botões do cabeçalho')
       await small.hover(); await page.waitForTimeout(300)
-      assert.ok((await small.boundingBox()).width > smallBox.width, 'passar o mouse amplia')
-      await small.click()
+      assert.ok((await small.boundingBox()).width > smallBox.width * 1.5, 'passar o mouse amplia')
+      await checkSmall('hover')
+      await page.mouse.move(width - 1, 899)
+      await small.focus(); await page.waitForTimeout(300)
+      assert.equal(await small.evaluate(el => el === document.activeElement), true)
+      await checkSmall('foco')
+      // Troca real de seção sem recarga: relógios entram/saem do DOM.
+      await page.evaluate(() => { window.location.hash = '#calculadora/giro' })
+      await page.locator('.clocks-top').waitFor({ state: 'detached' })
+      await checkSmall('calculadora')
+      await page.evaluate(() => { window.location.hash = '#resumo' })
+      await page.locator('.clocks-top').waitFor({ state: 'attached' })
+      await checkSmall('retorno-mercado')
+      await page.evaluate(() => { window.location.hash = '#calculadora/giro' })
+      await page.locator('.clocks-top').waitFor({ state: 'detached' })
+      await small.focus(); await page.keyboard.press('Enter')
       await move.scrollIntoViewIfNeeded()
       await move.scrollIntoViewIfNeeded()
       const dock = page.locator('.mascot-dock')
@@ -61,7 +93,8 @@ fs.mkdirSync(output, { recursive: true })
       }
       await page.locator('.mascot-figure').dblclick()
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
-      await page.reload(); await small.waitFor(); await small.click(); await move.waitFor()
+      await checkSmall('reduzida')
+      await page.reload(); await small.waitFor(); await checkSmall('recarga'); await small.click(); await move.waitFor()
       const search = page.getByRole('button', { name: 'Pesquisar', exact: false })
       await search.click()
       const dialog = page.getByRole('dialog', { name: 'Buscar no painel' })
