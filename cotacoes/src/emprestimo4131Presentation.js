@@ -17,6 +17,9 @@ export const E4_SLIDES = Object.freeze([
 ])
 export const E4_TITLE = 'Empréstimo externo · 4131'
 export const E4_NOTICE = 'Estimativa para comparar propostas, com câmbio a termo teórico. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. A cotação da mesa do banco e o contrato prevalecem.'
+// Quando as taxas futuras foram coladas da cotação da mesa, o NDF deixa de ser teórico; swap e sem proteção seguem estimados.
+export const E4_NOTICE_MESA = 'Simulação com as taxas futuras informadas da cotação da mesa. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. A cotação confirmada pelo banco e o contrato prevalecem.'
+export const E4_PRINT_NOTICE_MESA = 'Simulação indicativa, sujeita à análise e aprovação da instituição financeira. Não constitui proposta, oferta, garantia de aprovação ou compromisso de crédito. O custo com NDF usa as taxas futuras informadas; a cotação confirmada pela mesa do banco e o contrato prevalecem.'
 // Leitura no formato das cotações de banco (4131 com NDF), igual na tela, na apresentação e no PDF.
 export const E4_QUOTE_NOTE = 'Custo efetivo: taxa que iguala o valor líquido em reais às parcelas travadas no NDF, por dias corridos; ao mês é a taxa de 30 dias e ao ano são 12 meses de 30 dias (exp/360). Economia de IOF: o que um capital de giro em reais pagaria de IOF no mesmo cronograma (0,38% + 0,0082% ao dia por parcela, até 365 dias). Equivalente em giro: a taxa de giro que leva ao mesmo custo final.'
 export const E4_PRINT_NOTICE = 'Simulação indicativa, sujeita à análise e aprovação da instituição financeira. Não constitui proposta, oferta, garantia de aprovação ou compromisso de crédito. Os custos com swap e NDF são teóricos; a cotação da mesa do banco e o contrato prevalecem.'
@@ -46,8 +49,8 @@ export function captureE4({ loan, hedge, labels = {} }, capturedAt = Date.now())
     hedge: { source: hedge.source, di: hedge.di, cupom: hedge.cupom, swapSpread: hedge.swapSpread, ndfMarkup: hedge.ndfMarkup, swap: hedge.swap, ndf: hedge.ndf, flows: hedge.flows },
     scenarios: scenarios.map(({ fxChange, fxEnd, totalBrl, cost }) => ({ fxChange, fxEnd, totalBrl, cost })),
     labels: { freq: String(labels.freq ?? ''), irPayer: String(labels.irPayer ?? ''), curve: String(labels.curve ?? ''), fees: String(labels.fees ?? ''), amort: String(labels.amort ?? ''), dates: String(labels.dates ?? '') },
-    notice: E4_NOTICE,
-    printNotice: E4_PRINT_NOTICE,
+    notice: hedge.source === 'mesa' ? E4_NOTICE_MESA : E4_NOTICE,
+    printNotice: hedge.source === 'mesa' ? E4_PRINT_NOTICE_MESA : E4_PRINT_NOTICE,
     sources: E4_SOURCES,
   }))
 }
@@ -99,6 +102,6 @@ export function resumoE4({ loan, hedge }) {
     `Economia de IOF (R$): ${num(hedge.ndf.iofGiro)}`,
     `Taxa equivalente em capital de giro: ${pctText(hedge.ndf.giroMes)} a.m. / ${pctText(hedge.ndf.giroAno)} a.a., exp/360`,
     '',
-    'Simulação indicativa, com taxa futura teórica. Sujeita a confirmação da cotação pela mesa do banco, a limite de crédito e a cadastro atualizado. Não constitui proposta nem compromisso de crédito.',
+    `Simulação indicativa, com ${hedge.source === 'mesa' ? 'as taxas futuras informadas da cotação' : 'taxa futura teórica'}. Sujeita a confirmação da cotação pela mesa do banco, a limite de crédito e a cadastro atualizado. Não constitui proposta nem compromisso de crédito.`,
   ].join('\n')
 }

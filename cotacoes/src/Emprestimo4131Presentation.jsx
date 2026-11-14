@@ -122,7 +122,7 @@ function E4Slide({ kind, snapshot }) {
   return <><h2>Premissas e limites</h2><ul className="bnp-premises">
     <li>Principal: {(labels.amort || 'no vencimento').toLowerCase()}. Juros lineares sobre o saldo, por dias corridos/360. Datas: {(labels.dates || 'mesmo dia do mês, sem ajuste para dia útil').toLowerCase()}.</li>
     <li>{loan.grossUp ? `IR na fonte de ${pct(loan.irrf, 0)} sobre os juros (RIR/2018, art. 760), pago pelo tomador com a base reajustada (art. 786).` : 'IR na fonte sobre os juros: já incluído na taxa all-in informada.'} IOF-câmbio de {pct(loan.iofRate)} na entrada (Decreto 6.306/2007, art. 15-B).</li>
-    <li>Câmbio a termo teórico: {labels.curve}. Até o vencimento, DI de {pct(hedge.di)} a.a. e {juro} de {pct(hedge.cupom)} a.a. Spread do banco no swap: {pct(hedge.swapSpread)} a.a.; acréscimo no NDF: {pct(hedge.ndfMarkup)}.</li>
+    <li>{hedge.source === 'mesa' ? 'Taxa futura de cada parcela' : 'Câmbio a termo teórico'}: {labels.curve}. Até o vencimento, DI de {pct(hedge.di)} a.a. e {juro}{hedge.source === 'mesa' ? ' implícito' : ''} de {pct(hedge.cupom)} a.a. Spread do banco no swap: {pct(hedge.swapSpread)} a.a.; acréscimo no NDF: {pct(hedge.ndfMarkup)}.</li>
     <li>O custo total em CDI inclui flat e IOF da entrada diluídos no prazo. O spread do swap é calculado sobre o principal, sem esses custos, para comparar com a cotação da mesa.</li>
     <li>Fora da conta: IR na fonte e PIS/Cofins sobre ganho do swap ou do NDF, e custo de garantias do derivativo. Flat e fiança: {labels.fees}.</li>
     <li>{E4_QUOTE_NOTE}</li>

@@ -15,7 +15,7 @@ import { cgToday } from './contaGarantida.js'
 import { useHolidays } from './useHolidays.js'
 import { useCurves } from './useCurves.js'
 import { addDays, busDaysIn, nextBusinessDay } from './holidays.js'
-import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, hedge4131, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
+import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, hedge4131, lerTaxasFuturas, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
 import { E4_FX_SCENARIOS, E4_QUOTE_NOTE, E4_SOURCES, condicoesE4, resumoE4 } from './emprestimo4131Presentation.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -33,6 +33,8 @@ const IR_PAYERS = [{ id: 'nao', label: 'Já incluído na taxa all-in' }, { id: '
 const FEE_PLACES = [{ id: 'nao', label: 'Banco no Brasil · sem IR' }, { id: 'sim', label: 'Exterior · IR sobre a comissão' }]
 const CURVE_MODES = [{ id: 'painel', label: 'Curvas do Painel (B3)' }, { id: 'manual', label: 'Digitar DI e cupom' }]
 const DAY = 864e5
+// Taxa futura de cada parcela: estimada pelo DI e pelo juro da moeda, ou colada da cotação da mesa.
+const FWD_MODES = [{ id: 'estimar', label: 'Estimar' }, { id: 'mesa', label: 'Colar as da mesa' }]
 const FREQ_PLURAL = { 1: 'mensais', 3: 'trimestrais', 6: 'semestrais', 12: 'anuais', 0: 'no vencimento' }
 // Desligado em 11/11/2026: a curva de cupom do Painel é o cupom sujo da B3 (DI x dólar, referido à PTAX do dia anterior).
 // Usá-la com o câmbio do dia distorce o câmbio a termo. Religar só depois de limpar o cupom (ver docs/emprestimo-4131.md).
@@ -101,6 +103,8 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const [swapText, setSwapText] = useState('0,00')
   const [ndfText, setNdfText] = useState('0,00')
   // Atingir meta: o custo desejado e a taxa que a tela calculou para chegar nele (ou o motivo de não ter chegado).
+  const [fwdMode, setFwdMode] = useState('estimar')
+  const [fwdText, setFwdText] = useState('')
   const [metaKind, setMetaKind] = useState('cetMes')
   const [metaText, setMetaText] = useState('')
   const [meta, setMeta] = useState(null)
@@ -171,17 +175,27 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const di = parseDecimal(diShown)
   errors.di = di !== null && di > 0 ? null : 'Informe o DI pré em % ao ano, por exemplo 12,75.'
   if (usingCurve) { errors.di = null; errors.cupom = null }
-  const hedgeErrors = ['di', 'cupom', 'swap', 'ndf'].some((k) => errors[k])
+  // Taxas futuras coladas da mesa: uma por pagamento, na ordem dos vencimentos. Com elas, o juro da moeda não é usado.
+  const mesa = fwdMode === 'mesa' && !usingCurve
+  const coladas = lerTaxasFuturas(fwdText)
+  errors.fwd = !mesa ? null
+    : coladas.bad ? `"${coladas.bad}" não é uma taxa. Cole só os números, um por linha, por exemplo 5,4321.`
+      : !coladas.rates.length ? 'Cole as taxas futuras da cotação, uma por linha, na ordem dos vencimentos.'
+        : coladas.rates.some((v) => !(v > 0)) ? 'As taxas futuras precisam ser maiores que zero.'
+          : loan && coladas.rates.length !== loan.flows.length ? `Foram coladas ${coladas.rates.length} ${coladas.rates.length === 1 ? 'taxa' : 'taxas'}; a operação tem ${loan.flows.length} ${loan.flows.length === 1 ? 'pagamento' : 'pagamentos'}.`
+            : null
+  if (mesa) errors.cupom = null
+  const hedgeErrors = ['di', 'cupom', 'fwd', 'swap', 'ndf'].some((k) => errors[k])
   // Dias úteis de cada pagamento com os feriados nacionais.
   const curve = usingCurve && loan ? curveFactors({ diPts: diCurve.pts, ccPts: ccCurve.pts, d0: busDaysIn(curveBase, start, ['BR'], hol.ctx), dc0: Math.round((Date.parse(`${start}T12:00:00Z`) - Date.parse(`${curveBase}T12:00:00Z`)) / DAY) }) : null
-  const hedgeParams = { di, cupom, swapSpread, ndfMarkup, curve, busDays: (a, b) => busDaysIn(a, b, ['BR'], hol.ctx) }
+  const hedgeParams = { di, cupom, swapSpread, ndfMarkup, curve, busDays: (a, b) => busDaysIn(a, b, ['BR'], hol.ctx), forwards: mesa ? coladas.rates : null }
   const hedgeResult = loan && !hedgeErrors ? hedge4131(loan, hedgeParams) : null
   const hedge = hedgeResult?.ok ? hedgeResult : null
   const scenarios = loan ? E4_FX_SCENARIOS.map((s) => unhedged4131(loan, s)).filter((s) => s.ok) : []
   const parado = scenarios.find((s) => s.fxChange === 0) ?? null
   const juro = cur.juro.toLowerCase()
   const origemDi = diDoPainel ? `DI da curva B3 de ${dm(diCurve.date)}` : diOwn ? 'DI digitado' : 'DI de exemplo'
-  const curveLabel = usingCurve ? `Curvas do Painel (B3) de ${dm(curveBase)}` : `${origemDi} e ${juro} ${cupomOwn ? 'digitado' : 'de exemplo'}, iguais para todos os prazos`
+  const curveLabel = usingCurve ? `Curvas do Painel (B3) de ${dm(curveBase)}` : mesa ? `Taxas futuras da mesa, coladas; ${origemDi} para o equivalente em CDI` : `${origemDi} e ${juro} ${cupomOwn ? 'digitado' : 'de exemplo'}, iguais para todos os prazos`
   const parcelas = loan ? loan.flows.filter((f) => f.principal > 0).length : 0
   const amortLabel = loan?.amort === 'parcelas' ? `Em ${parcelas} parcelas iguais${loan.grace ? `, depois de ${loan.grace} ${loan.grace === 1 ? 'pagamento' : 'pagamentos'} só de juros` : ''}` : 'No vencimento'
   const datesLabel = calendar === '30d' ? 'A cada 30 dias corridos, no próximo dia útil' : 'Mesmo dia do mês, sem ajuste para dia útil'
@@ -201,7 +215,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const diNote = diOwn ? <>digitado.{diAuto != null && <> {link(`Usar o do Painel (${pct(diAuto)})`, () => setDiOwn(false))}</>}</>
     : diAuto != null ? `do Painel, curva DI da B3 de ${dm(diCurve.date)}, para o prazo médio de ${loan.avgTermDays} dias.`
       : <><span className="e4-exemplo">valor de exemplo</span>, {!diCurve ? 'sem a curva DI do Painel agora' : !loan ? 'complete os dados da operação' : loan.start < diCurve.date ? `a curva do Painel começa em ${dm(diCurve.date)}` : 'a curva do Painel não cobre este prazo'}.</>
-  const cupomNote = cupomOwn ? null : <><span className="e4-exemplo">valor de exemplo</span>; digite o da sua cotação.</>
+  const cupomNote = mesa || cupomOwn ? null : <><span className="e4-exemplo">valor de exemplo</span>; digite o da sua cotação.</>
   const pendencia = loanResult?.error || hedgeResult?.error || (Object.values(errors).some(Boolean) ? 'Complete os campos indicados para calcular.' : null)
 
   // Atingir meta: procura a taxa all-in que leva o resultado à meta e a coloca no campo da taxa.
@@ -296,9 +310,16 @@ export default function Emprestimo4131({ onBack, quotes }) {
                 </div></section>
                 <section className="fm-group fm-payment e4-hedge" aria-labelledby="e4-hedge-h"><h3 id="e4-hedge-h"><BndesIcon kind="chart" />Proteção cambial (NDF)</h3><div className="fm-group-fields">
                   {CURVAS_DO_PAINEL && field('curve', 'curve', 'DI e cupom cambial', select('curve', curveMode, setCurveMode, CURVE_MODES), 'Curvas do Painel: cada pagamento usa o DI e o cupom cambial do seu prazo, das curvas da B3 já coletadas. Digitar: um DI e um cupom para todos os prazos; em prazo longo, o cupom linear único tende a encarecer a leitura.')}
+                  {!usingCurve && field('fwdMode', 'modo', 'Taxa futura', select('fwdMode', fwdMode, setFwdMode, FWD_MODES), 'Estimar: a tela calcula a taxa futura de cada parcela com o DI e o juro da moeda. Colar as da mesa: você cola as taxas futuras fechadas da cotação do banco, uma por parcela, e o resultado passa a usar exatamente essas taxas.')}
                   {usingCurve ? <p className="fm-financed e4-curve" aria-live="polite"><span>Até o vencimento · {dm(curveBase)}</span><b>{hedge ? `DI ${pct(hedge.di)} · cupom ${pct(hedge.cupom)}` : '—'}</b></p> : <>
-                    {field('di', 'di', 'DI pré do prazo', rateInput('di', diShown, (v) => { setDiText(v); setDiOwn(true) }), 'Taxa DI prefixada do prazo médio da operação, ao ano, base 252 dias úteis. Já vem da curva DI da B3 que o Painel coleta; você pode trocar.')}
-                    {field('cupom', 'cupom', cur.juro, rateInput('cupom', cupomShown, (v) => { setCupomText(v); setCupomOwn(true) }), `Juro em ${cur.nome} no Brasil para o prazo médio, ao ano, linear, base 360 dias corridos. Com o DI, define a taxa futura de cada parcela. Na cotação do banco, a taxa futura vem fechada pela mesa; aqui ela é estimada. O Painel não tem essa taxa confiável: digite a da sua cotação.`)}
+                    {field('di', 'di', 'DI pré do prazo', rateInput('di', diShown, (v) => { setDiText(v); setDiOwn(true) }), mesa ? 'Taxa DI prefixada do prazo médio da operação, ao ano, base 252 dias úteis. Com as taxas da mesa coladas, o DI serve só para o equivalente em CDI. Já vem da curva DI da B3 que o Painel coleta; você pode trocar.' : 'Taxa DI prefixada do prazo médio da operação, ao ano, base 252 dias úteis. Já vem da curva DI da B3 que o Painel coleta; você pode trocar.')}
+                    {!mesa && field('cupom', 'cupom', cur.juro, rateInput('cupom', cupomShown, (v) => { setCupomText(v); setCupomOwn(true) }), `Juro em ${cur.nome} no Brasil para o prazo médio, ao ano, linear, base 360 dias corridos. Com o DI, define a taxa futura de cada parcela. Na cotação do banco, a taxa futura vem fechada pela mesa; aqui ela é estimada. O Painel não tem essa taxa confiável: digite a da sua cotação.`)}
+                    {mesa && <div className="cx-field e4-colar">
+                      <span className="fm-rotulo"><label htmlFor="e4-fwd">Taxas futuras da mesa</label>{ajuda('Taxas futuras da mesa', 'Copie a coluna de taxa futura da planilha ou do e-mail de cotação e cole aqui: uma taxa por linha, na ordem dos vencimentos, uma para cada pagamento. Vale vírgula ou ponto decimal.')}</span>
+                      <textarea id="e4-fwd" rows={4} inputMode="decimal" autoComplete="off" spellCheck={false} placeholder={'5,4321\n5,4688\n5,5012'} aria-invalid={!!errors.fwd} aria-describedby="e4-fwd-origem e4-fwd-err" value={fwdText} onChange={(e) => setFwdText(e.target.value)} />
+                      <p className="e4-origem" id="e4-fwd-origem">{coladas.rates.length} de {loan ? loan.flows.length : '—'} {loan?.flows.length === 1 ? 'taxa' : 'taxas'}{hedge?.source === 'mesa' ? ` · ${juro} implícito no vencimento: ${pct(hedge.cupom)} a.a.` : ''}</p>
+                      <p className="cx-error" id="e4-fwd-err" role={errors.fwd ? 'alert' : undefined}>{errors.fwd ?? ''}</p>
+                    </div>}
                   </>}
                   {!usingCurve && <p className="e4-origem" id="e4-protecao-origem"><b>DI:</b> {diNote}{cupomNote && <> <b>{cur.juro}:</b> {cupomNote}</>}</p>}
                   {curveMode === 'painel' && curveBlocked && <p className="cx-hint e4-curve-note" role="status">{curveBlocked}</p>}
@@ -329,7 +350,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
 
               {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
               <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? 'Cotação ampliada' : undefined}>
-                <header className="fm-hero"><h3 className="cx-heading">Cotação · 4131 com NDF</h3><small>Projeção · custo estimado</small>{ajuda('Limites da projeção', 'Estimativa no formato das cotações de banco. A taxa futura de cada parcela é teórica, com um DI e um juro da moeda iguais para todos os prazos; a mesa do banco fecha uma taxa futura para cada vencimento e acrescenta o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
+                <header className="fm-hero"><h3 className="cx-heading">Cotação · 4131 com NDF</h3><small>{hedge?.source === 'mesa' ? 'Com as taxas futuras da mesa' : 'Projeção · custo estimado'}</small>{ajuda('Limites da projeção', 'Estimativa no formato das cotações de banco. A taxa futura de cada parcela é teórica, com um DI e um juro da moeda iguais para todos os prazos; a mesa do banco fecha uma taxa futura para cada vencimento e acrescenta o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
                 {hedge && <div className="fm-headline" aria-label="Custo efetivo total">
                   <div><span>Custo efetivo total · prefixado em reais{ajuda('Custo efetivo total', 'Taxa que iguala o valor líquido recebido em reais às parcelas travadas no NDF, por dias corridos. Ao mês: taxa de 30 dias. Ao ano: 12 meses de 30 dias (exp/360), como nas cotações de banco. ' + `Em ano de 365 dias, a mesma taxa é ${pct(hedge.ndf.cost365)} a.a.`)}</span><b>{pct(hedge.ndf.cetMes)} a.m.</b><small>{pct(hedge.ndf.cetAno)} a.a. · exp/360</small></div>
                   <div><span>Equivalente a{ajuda('Equivalente em CDI', 'Spread sobre o CDI que leva ao mesmo custo, com cada parcela descontada pelo DI informado. É uma estimativa: o custo com NDF é fixo e não acompanha o CDI.')}</span><b>CDI {signed(hedge.ndf.spread, pct)}</b><small>Total das parcelas {brl(hedge.ndf.totalBrl)}</small></div>
@@ -381,8 +402,8 @@ export default function Emprestimo4131({ onBack, quotes }) {
           {loan && (
             <details className="desk-panel cx-panel fm-fluxo-panel e4-parcelas" open>
               <summary>Parcelas</summary>
-              <header><h3 className="cx-heading">Parcela a parcela{ajuda('Parcela a parcela', `Desembolso em ${dm(loan.start)}. Saldo devedor: saldo antes do pagamento da linha, base dos juros. Juros e encargos: juros pelos dias corridos desde o pagamento anterior, sobre 360, mais IR do tomador e fiança, quando houver. A taxa futura usa o DI e o juro da moeda informados, com o acréscimo do banco. A parcela em reais é a parcela na moeda vezes a taxa futura.`)}</h3></header>
-              <p className="cx-hint cx-pad" id="e4-calendario">{calendar === '30d' ? 'Datas a cada 30 dias corridos, no próximo dia útil (feriados nacionais).' : 'Datas pelo dia do desembolso, sem ajuste para dia útil.'} Taxa futura teórica; a da mesa do banco prevalece. Não use como memória contratual.</p>
+              <header><h3 className="cx-heading">Parcela a parcela{ajuda('Parcela a parcela', `Desembolso em ${dm(loan.start)}. Saldo devedor: saldo antes do pagamento da linha, base dos juros. Juros e encargos: juros pelos dias corridos desde o pagamento anterior, sobre 360, mais IR do tomador e fiança, quando houver. A taxa futura é a colada da mesa ou, na estimativa, a calculada com o DI e o juro da moeda informados; o acréscimo do banco, se houver, entra por cima. A parcela em reais é a parcela na moeda vezes a taxa futura.`)}</h3></header>
+              <p className="cx-hint cx-pad" id="e4-calendario">{calendar === '30d' ? 'Datas a cada 30 dias corridos, no próximo dia útil (feriados nacionais).' : 'Datas pelo dia do desembolso, sem ajuste para dia útil.'} {hedge?.source === 'mesa' ? 'Taxas futuras coladas da cotação da mesa.' : 'Taxa futura teórica; a da mesa do banco prevalece.'} Não use como memória contratual.</p>
               <div className="cx-wrap fm-fluxo" role="region" aria-label="Parcela a parcela" aria-describedby="e4-calendario" tabIndex={0}>
                 <table className="cx-matrix fm-tabela">
                   <thead><tr><th scope="col">Prazo</th><th scope="col">Vencimento</th><th scope="col">Amortização</th><th scope="col">Saldo devedor</th><th scope="col">Juros e encargos</th><th scope="col">Parcela em {cur.nome}</th><th scope="col">Taxa futura</th><th scope="col">Parcela em reais</th></tr></thead>

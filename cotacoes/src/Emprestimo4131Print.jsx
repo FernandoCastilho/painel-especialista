@@ -49,8 +49,8 @@ export function Emprestimo4131PrintDocument({ snapshot }) {
     ['Flat · estruturação', `${pct(loan.flat)} · ${cur.sym} ${amount(loan.flatUsd)}`], ['Fiança ou SBLC', `${pct(loan.guarantee)} a.a.`],
     ['Flat e fiança pagos a', labels.fees || '—'], ['IR do tomador sobre o flat', `${cur.sym}\u00a0${amount(loan.flatIrUsd)}`],
     ['Valor líquido recebido', `${brl(loan.netBrl)} · ${cur.sym} ${amount(loan.netUsd)}`], [`Custo all-in em ${cur.nome}`, `${pct(loan.allIn)} a.a.`],
-    ['DI até o vencimento', `${pct(hedge.di)} a.a. · base 252`], [`${cur.juro} até o vencimento`, `${pct(hedge.cupom)} a.a. · linear 360`],
-    ['Origem do DI e do juro da moeda', labels.curve || '—'], ['Spread do swap, sem custos de entrada', `CDI ${signed(hedge.swap.runSpread, pct)}`],
+    ['DI até o vencimento', `${pct(hedge.di)} a.a. · base 252`], [`${cur.juro}${hedge.source === 'mesa' ? ' implícito' : ''} até o vencimento`, `${pct(hedge.cupom)} a.a. · linear 360`],
+    [hedge.source === 'mesa' ? 'Origem da taxa futura' : 'Origem do DI e do juro da moeda', labels.curve || '—'], ['Spread do swap, sem custos de entrada', `CDI ${signed(hedge.swap.runSpread, pct)}`],
     ['Spread do banco no swap', `${pct(hedge.swapSpread)} a.a.`], ['Acréscimo do banco no NDF', pct(hedge.ndfMarkup)],
   ]
   return <article className="bnprint-document">
@@ -80,7 +80,7 @@ export function Emprestimo4131PrintDocument({ snapshot }) {
       <li>IR na fonte sobre os juros pagos ao exterior (RIR/2018, art. 760). Quando o tomador assume o imposto, a base é reajustada (art. 786). O mesmo vale para flat e fiança quando pagos ao exterior.</li>
       <li>IOF-câmbio na entrada: 3,5% com prazo médio até 364 dias e zero acima (Decreto 6.306/2007, art. 15-B, XI e XII). Liquidar antes do prazo pode gerar o IOF com multa e juros.</li>
       <li>Custo all-in em {cur.nome}: taxa ao ano que iguala o valor líquido recebido aos pagamentos, em dias corridos/365.</li>
-      <li>Câmbio a termo teórico: câmbio de entrada × fator do DI (dias úteis/252) ÷ fator do {juro} (linear, dias corridos/360). Origem do DI e do juro da moeda: {labels.curve}.</li>
+      <li>{hedge.source === 'mesa' ? `Taxa futura de cada parcela: informada, da cotação da mesa. ${labels.curve}.` : `Câmbio a termo teórico: câmbio de entrada × fator do DI (dias úteis/252) ÷ fator do ${juro} (linear, dias corridos/360). Origem do DI e do juro da moeda: ${labels.curve}.`}</li>
       <li>O custo total em CDI inclui flat e IOF da entrada diluídos no prazo. O spread do swap é calculado sobre o principal, sem esses custos, para comparar com a cotação da mesa. Sem proteção em dias corridos/365; swap e NDF em base 252.</li>
       <li>{E4_QUOTE_NOTE}</li>
       <li>Fora da conta: IR na fonte e PIS/Cofins sobre ganho do swap ou do NDF, e custo de garantias do derivativo.</li>

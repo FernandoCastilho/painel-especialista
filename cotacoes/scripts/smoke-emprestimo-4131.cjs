@@ -66,6 +66,17 @@ const NET_PARCELAS = NET_USD * SPOT
 const Y_UNICO = (TOTAL_NDF / (NET_USD * SPOT)) ** (365 / DC) - 1
 const IOF_GIRO = P * SPOT * 0.0038 + PARCELAS.reduce((s, f) => s + P / 3 * SPOT * 0.000082 * f.dc, 0)
 const CET = tir(NET_PARCELAS), GIRO = tir(NET_PARCELAS + IOF_GIRO)
+// Taxas futuras fictícias, como se viessem da cotação da mesa, e o custo com elas (bisseção própria).
+const COLADAS = [5.03, 5.07, 5.11]
+const CET_MESA = (() => {
+  let lo = -0.9, hi = 10
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2
+    if (PARCELAS.reduce((s, f, k) => s + f.usdTotal * COLADAS[k] / (1 + mid) ** (f.dc / 365), 0) > NET_PARCELAS) lo = mid
+    else hi = mid
+  }
+  return (lo + hi) / 2
+})()
 const mes = y => (1 + y) ** (30 / 365) - 1, ano = y => (1 + y) ** (360 / 365) - 1
 // Cotações e curva DI simuladas: dólar 5,3127, euro 6,1844 e DI plano de 14% a.a.
 const NOW_S = Math.floor(Date.now() / 1000) - 120
@@ -207,6 +218,18 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. · exp/360`), cotacao)
       assert.match(cotacao, /Não desconta o IOF-câmbio de 3,50% desta operação/)
       assert.ok(GIRO < CET, 'com o IOF do giro a favor, a taxa equivalente fica abaixo do custo efetivo')
+      // Taxas futuras da mesa coladas: cada parcela em reais passa a ser a parcela na moeda vezes a taxa colada.
+      await section.locator('#e4-fwdMode').selectOption('mesa')
+      await fill('fwd', '5,0300\n5,0700')
+      assert.match(normalize(await section.locator('#e4-fwd-err').innerText()), /Foram coladas 2 taxas; a operação tem 3 pagamentos\./)
+      await fill('fwd', COLADAS.map(v => v.toFixed(4).replace('.', ',')).join('\n'))
+      for (const [i, f] of PARCELAS.entries()) assert.equal((await linha(i + 1))[7], brl(f.usdTotal * COLADAS[i]), `parcela ${i + 1} com a taxa da mesa`)
+      const comMesa = normalize(await section.locator('.fm-headline').innerText())
+      assert.ok(comMesa.includes(`${pct(mes(CET_MESA))} a.m.`) && comMesa.includes(`${pct(ano(CET_MESA))} a.a. · exp/360`), comMesa)
+      assert.match(normalize(await section.locator('#e4-fwd-origem').innerText()), /^3 de 3 taxas · cupom cambial implícito no vencimento: /)
+      assert.match(normalize(await section.locator('.fm-hero').innerText()), /Com as taxas futuras da mesa/)
+      await section.locator('#e4-fwdMode').selectOption('estimar')
+      assert.equal((await linha(1))[7], brl(PARCELAS[0].brl))
       // Carência de um pagamento: a primeira linha só tem juros e o principal vai em duas parcelas.
       await fill('grace', '1')
       assert.equal((await linha(1))[2], usd(0))

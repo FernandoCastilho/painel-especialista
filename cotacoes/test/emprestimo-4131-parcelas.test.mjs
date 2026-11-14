@@ -2,7 +2,7 @@
 // Números fictícios, com resultado esperado em fórmula fechada ou somado à mão aqui, sem o código do painel.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { diDoPrazo, hedge4131, iofGiro4131, loan4131, metaTaxa4131, taxa360 } from '../src/emprestimo4131.js'
+import { diDoPrazo, hedge4131, iofGiro4131, lerTaxasFuturas, loan4131, metaTaxa4131, taxa360 } from '../src/emprestimo4131.js'
 import { condicoesE4, resumoE4 } from '../src/emprestimo4131Presentation.js'
 
 const close = (a, b, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`)
@@ -297,4 +297,55 @@ test('resumo no formato de e-mail · condições na ordem da cotação e os trê
   assert.equal(resumoE4({ loan, hedge: null }), '')
   assert.deepEqual(condicoesE4(null), [])
   assert.match(Object.fromEntries(condicoesE4(loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 12, freq: 6 })))['Taxa'], /IR somado à taxa/)
+})
+
+test('taxas futuras da mesa · cada parcela em reais é a parcela na moeda vezes a taxa colada', () => {
+  // Três parcelas mensais em dia fixo, IR já na taxa; taxas futuras fictícias.
+  const loan = loan4131({ principal: 9e5, rate: 6, spot: 5, start: '2026-11-11', months: 3, freq: 1, amort: 'parcelas', grossUp: false })
+  const taxas = [5.03, 5.07, 5.11]
+  const h = hedge4131(loan, { di: 14, forwards: taxas })
+  assert.equal(h.ok, true)
+  assert.equal(h.source, 'mesa')
+  let total = 0
+  h.flows.forEach((f, i) => { close(f.ndfRate, taxas[i], 1e-12); close(f.brl, loan.flows[i].usd * taxas[i], 1e-6); total += loan.flows[i].usd * taxas[i] })
+  close(h.ndf.totalBrl, total, 1e-6)
+  // O custo zera o fluxo em reais com as taxas coladas, por dias corridos/365.
+  const y = (1 + h.ndf.cetMes / 100) ** (365 / 30) - 1
+  close(h.flows.reduce((s, f) => s + f.brl / (1 + y) ** (f.dc / 365), 0), loan.netBrl, 1e-4)
+  // O cupom devolvido é o implícito no vencimento: termo = à vista × fator do DI ÷ (1 + cupom × dc/360).
+  const ultimo = h.flows.at(-1)
+  close(5 * ultimo.diFactor / (1 + h.cupom / 100 * ultimo.dc / 360), 5.11, 1e-9)
+  // O acréscimo do banco, se houver, entra por cima da taxa colada.
+  close(hedge4131(loan, { di: 14, forwards: taxas, ndfMarkup: 1 }).flows[0].ndfRate, 5.03 * 1.01, 1e-12)
+})
+
+test('taxas futuras da mesa · com as mesmas taxas da estimativa, o resultado é o mesmo', () => {
+  const loan = loan4131({ principal: 2e6, rate: 6, spot: 5, start: '2026-11-16', months: 12, freq: 1, amort: 'parcelas', calendar: '30d', grossUp: false })
+  const estimado = hedge4131(loan, { di: 13, cupom: 5 })
+  const colado = hedge4131(loan, { di: 13, forwards: estimado.flows.map((f) => f.forward) })
+  close(colado.ndf.cetMes, estimado.ndf.cetMes, 1e-10)
+  close(colado.ndf.spread, estimado.ndf.spread, 1e-10)
+  close(colado.ndf.giroAno, estimado.ndf.giroAno, 1e-10)
+  close(colado.cupom, estimado.cupom, 1e-9)
+  // Atingir meta também vale com as taxas coladas.
+  const forwards = estimado.flows.map((f) => f.forward)
+  const meta = metaTaxa4131({ principal: 2e6, spot: 5, start: '2026-11-16', months: 12, freq: 1, amort: 'parcelas', calendar: '30d', grossUp: false }, { di: 13, forwards }, 'cetMes', 1.4)
+  assert.equal(meta.ok, true)
+  close(hedge4131(loan4131({ principal: 2e6, rate: meta.rate, spot: 5, start: '2026-11-16', months: 12, freq: 1, amort: 'parcelas', calendar: '30d', grossUp: false }), { di: 13, forwards }).ndf.cetMes, 1.4, 1e-3)
+})
+
+test('taxas futuras da mesa · quantidade errada, zero e texto são recusados', () => {
+  const loan = loan4131({ principal: 9e5, rate: 6, spot: 5, start: '2026-11-11', months: 3, freq: 1, amort: 'parcelas', grossUp: false })
+  assert.match(hedge4131(loan, { di: 14, forwards: [5.03, 5.07] }).error, /Informe 3 taxas futuras, uma por pagamento: vieram 2/)
+  assert.equal(hedge4131(loan, { di: 14, forwards: [5.03, 0, 5.11] }).ok, false)
+  assert.equal(hedge4131(loan, { di: 14, forwards: [5.03, NaN, 5.11] }).ok, false)
+  assert.equal(hedge4131(loan, { di: 14, forwards: 'texto' }).ok, false)
+  // Sem DI não há equivalente em CDI: continua obrigatório.
+  assert.equal(hedge4131(loan, { di: 0, forwards: [5.03, 5.07, 5.11] }).ok, false)
+  // Leitura do que foi colado: uma por linha, com vírgula ou ponto, tabulação ou ponto e vírgula.
+  assert.deepEqual(lerTaxasFuturas('5,0300\n5,0700\n5,1100\n'), { rates: [5.03, 5.07, 5.11], bad: null })
+  assert.deepEqual(lerTaxasFuturas(' 5.03\t5.07 ; 5,11 '), { rates: [5.03, 5.07, 5.11], bad: null })
+  assert.deepEqual(lerTaxasFuturas(''), { rates: [], bad: null })
+  assert.equal(lerTaxasFuturas('5,03\nR$5,07').bad, 'R$5,07')
+  assert.equal(lerTaxasFuturas('5,03\n1.234,56').bad, '1.234,56')
 })

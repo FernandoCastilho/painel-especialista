@@ -243,15 +243,22 @@ export const taxa360 = (y) => ({ mes: ((1 + y) ** (30 / 365) - 1) * 100, ano: ((
 // Com `curve` (de `curveFactors`), cada pagamento usa o DI e o cupom do seu prazo.
 // `busDays(inicio, data)` devolve dias úteis; sem ela, estimativa de dias corridos × 252/365.
 // `swapSpread`: % a.a. (252) do banco no swap, composto. `ndfMarkup`: % acrescido pelo banco sobre a taxa a termo.
-export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup = 0, curve = null }) {
+export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup = 0, curve = null, forwards = null }) {
   if (!loan?.ok) return fail('Empréstimo inválido.')
+  // `forwards`: taxas futuras da mesa, uma por pagamento, na ordem dos vencimentos. Com elas, o cupom não é usado: a
+  // taxa futura de cada parcela é a informada, e o cupom devolvido é o implícito no vencimento. O DI continua valendo
+  // para o equivalente em CDI e para o custo em base 252.
+  const mesa = forwards != null
+  if (mesa && (!Array.isArray(forwards) || forwards.length !== loan.flows.length)) return fail(`Informe ${loan.flows.length} ${loan.flows.length === 1 ? 'taxa futura' : 'taxas futuras'}, uma por pagamento: ${Array.isArray(forwards) ? `vieram ${forwards.length}` : 'lista inválida'}.`)
+  if (mesa && forwards.some((f) => !(f > 0) || !Number.isFinite(f))) return fail('As taxas futuras precisam ser números maiores que zero.')
   if (!curve && (!(di > 0) || di > 200)) return fail('Informe o DI pré em % ao ano, maior que zero.')
-  if (!curve && (!(cupom > -50) || cupom > 200)) return fail('Informe o cupom cambial em % ao ano.')
+  if (!curve && !mesa && (!(cupom > -50) || cupom > 200)) return fail('Informe o cupom cambial em % ao ano.')
   if (!(swapSpread >= 0) || !(ndfMarkup >= 0)) return fail('Os acréscimos do banco não podem ser negativos.')
   const du = (f) => (busDays ? busDays(loan.start, f.date) : f.dc * 252 / 365)
-  const base = loan.flows.map((f) => {
+  const base = loan.flows.map((f, i) => {
     const n = du(f)
     const diFactor = curve ? curve.diFactorAt(n) : (1 + di / 100) ** (n / 252)
+    if (mesa) return { ...f, du: n, diFactor, ccFactor: loan.spot * diFactor / forwards[i], forward: forwards[i] }
     const ccFactor = curve ? curve.cupomFactorAt(n, f.dc) : 1 + (cupom / 100) * f.dc / 360
     return { ...f, du: n, diFactor, ccFactor, forward: diFactor > 0 && ccFactor > 0 ? loan.spot * diFactor / ccFactor : NaN }
   })
@@ -314,7 +321,7 @@ export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup 
     // Alta do dólar ao ano a partir da qual o NDF sai mais barato que ficar sem proteção.
     breakeven: ((1 + cost365) / (1 + loan.allIn / 100) - 1) * 100,
   }
-  return { ok: true, source: curve ? 'curve' : 'manual', di: dAvg * 100, cupom: ccAvg * 100, swapSpread, ndfMarkup, flows, swap, ndf }
+  return { ok: true, source: mesa ? 'mesa' : curve ? 'curve' : 'manual', di: dAvg * 100, cupom: ccAvg * 100, swapSpread, ndfMarkup, flows, swap, ndf }
 }
 
 // Atingir meta: taxa do contrato (% a.a.) que leva o resultado com NDF à meta informada, com o resto da operação igual.
@@ -326,6 +333,18 @@ export const METAS = [
   { id: 'cetAno', label: 'Custo efetivo ao ano', unit: '% a.a.' },
   { id: 'spread', label: 'Equivalente em CDI +', unit: '% a.a.' },
 ]
+// Taxas futuras coladas da planilha ou do e-mail da mesa: uma por linha (ou separadas por espaço, tabulação ou ponto e
+// vírgula), com vírgula ou ponto decimal. Devolve { rates, bad }: os números lidos e o primeiro trecho que não é número.
+export function lerTaxasFuturas(text) {
+  const tokens = String(text ?? '').split(/[\s;]+/).filter(Boolean)
+  const rates = []
+  for (const token of tokens) {
+    if (!/^\d+(?:[.,]\d+)?$/.test(token)) return { rates, bad: token }
+    rates.push(Number(token.replace(',', '.')))
+  }
+  return { rates, bad: null }
+}
+
 export function metaTaxa4131(loanParams, hedgeParams, kind, target) {
   if (!['cetMes', 'cetAno', 'spread', 'giroMes'].includes(kind)) return fail('Escolha a meta.')
   if (!Number.isFinite(target)) return fail('Informe a meta em %.')

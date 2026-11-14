@@ -88,3 +88,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
   .bw.e4 #fm-result.fm-zoom .e4-condicoes dd { font-size:1.05rem; }
 }
 .bw.e4 .e4-aviso { margin:6px 16px 0; padding:8px 10px; border-left:3px solid #c96a00; border-radius:6px; background:#fff6ea; color:#5a3200; }
+.bw.e4 .e4-hedge .fm-group-fields > .e4-colar { grid-column:1/-1; display:block; }
+.bw.e4 .e4-colar textarea { width:100%; min-height:96px; margin-top:6px; padding:8px 10px; border:1px solid #8ea2bd; border-radius:8px; background:#fff; font:inherit; font-variant-numeric:tabular-nums; color:#10284c; resize:vertical; }
+.bw.e4 .e4-colar textarea[aria-invalid="true"] { border-color:#c0392b; }
+.bw.e4 .e4-colar textarea:focus-visible { outline:2px solid #006bdc; outline-offset:1px; }
