@@ -8,6 +8,8 @@ import FocusHistorico from './FocusHistorico.jsx'
 
 const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '') ? value.split('-').reverse().join('/') : 'data não informada'
 const YEARS = ['2026', '2027']
+// Unidade no cabeçalho da coluna: só a primeira parte; no celular "% no ano" encolhe para "% ano" (a palavra "no" some por estilo).
+const unidadeCurta = (unit) => { const [a, b] = unit.split(' · ')[0].split(' no '); return b ? <>{a}<span className="sc-wide"> no</span> {b}</> : a }
 const format = (value) => value === null ? '—' : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export default function Projecoes({ macro, searchTarget }) {
@@ -43,7 +45,7 @@ export default function Projecoes({ macro, searchTarget }) {
             <caption>Projeções por instituição, comparadas com o Focus da mesma coluna: <b className="fm up">▲</b> acima · <b className="fm down">▼</b> abaixo · <b className="fm same">=</b> igual (2 casas) · — sem projeção.</caption>
             <thead>
               <tr><th scope="col" rowSpan={2}>Instituição</th>{YEARS.map((y) => <th scope="colgroup" colSpan={INDICATORS.length} key={y} data-y={y} className="sc-year">{y}</th>)}</tr>
-              <tr>{YEARS.map((y) => INDICATORS.map((indicator, i) => <th scope="col" key={`${y}-${indicator.id}`} data-y={y} className={i === 0 ? 'sc-first' : undefined} title={indicator.unit}>{indicator.label}<small>{indicator.unit.split(' · ')[0]}</small></th>))}</tr>
+              <tr>{YEARS.map((y) => INDICATORS.map((indicator, i) => <th scope="col" key={`${y}-${indicator.id}`} data-y={y} className={i === 0 ? 'sc-first' : undefined} title={indicator.unit}>{indicator.label}<small>{unidadeCurta(indicator.unit)}</small></th>))}</tr>
             </thead>
             <tbody>{INSTITUTIONS.map((name) => {
               const ref = name === 'FOCUS'
