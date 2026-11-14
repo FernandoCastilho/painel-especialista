@@ -9,7 +9,7 @@ const freeze = (value) => {
 
 export const E4_SLIDES = Object.freeze([
   { id: 'operation', label: 'Dados da operação' },
-  { id: 'cost', label: 'Custo em dólar' },
+  { id: 'cost', label: 'Custo na moeda' },
   { id: 'results', label: 'Três caminhos em reais', required: true },
   { id: 'scenarios', label: 'Sem proteção: cenários de câmbio' },
   { id: 'flow', label: 'Pagamentos' },
@@ -17,6 +17,8 @@ export const E4_SLIDES = Object.freeze([
 ])
 export const E4_TITLE = 'Empréstimo externo · 4131'
 export const E4_NOTICE = 'Estimativa para comparar propostas, com câmbio a termo teórico. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. A cotação da mesa do banco e o contrato prevalecem.'
+// Leitura no formato das cotações de banco (4131 com NDF), igual na tela, na apresentação e no PDF.
+export const E4_QUOTE_NOTE = 'Custo efetivo: taxa que iguala o valor líquido em reais às parcelas travadas no NDF, por dias corridos; ao mês é a taxa de 30 dias e ao ano são 12 meses de 30 dias (exp/360). Economia de IOF: o que um capital de giro em reais pagaria de IOF no mesmo cronograma (0,38% + 0,0082% ao dia por parcela, até 365 dias). Equivalente em giro: a taxa de giro que leva ao mesmo custo final.'
 export const E4_PRINT_NOTICE = 'Simulação indicativa, sujeita à análise e aprovação da instituição financeira. Não constitui proposta, oferta, garantia de aprovação ou compromisso de crédito. Os custos com swap e NDF são teóricos; a cotação da mesa do banco e o contrato prevalecem.'
 export const E4_FX_SCENARIOS = Object.freeze([-10, 0, 5, 10, 20])
 export const E4_SOURCES = Object.freeze([
@@ -28,14 +30,14 @@ export const E4_SOURCES = Object.freeze([
 
 const finite = (object, keys) => keys.every((key) => Number.isFinite(object?.[key]))
 
-// `labels`: textos já escolhidos na tela (frequência dos juros, quem arca com o IR).
+// `labels`: textos já escolhidos na tela (frequência dos juros, quem arca com o IR, principal e regra das datas).
 export function captureE4({ loan, hedge, labels = {} }, capturedAt = Date.now()) {
   if (!loan?.ok || !hedge?.ok || !Number.isFinite(capturedAt)) return null
   if (!finite(loan, ['principal', 'rate', 'spot', 'months', 'irrf', 'flat', 'guarantee', 'avgTermDays', 'iofRate', 'flatUsd', 'iofUsd', 'flatIrUsd', 'netUsd', 'netBrl', 'grossedRate', 'allIn'])) return null
   if (!finite(loan.totals, ['interest', 'irrf', 'guarantee', 'principal', 'usd'])) return null
-  if (!finite(hedge, ['di', 'cupom', 'swapSpread', 'ndfMarkup']) || !finite(hedge.swap, ['pre', 'spread', 'pctCdi', 'runPre', 'runSpread', 'runPctCdi']) || !finite(hedge.ndf, ['pre', 'cost365', 'spread', 'pctCdi', 'totalBrl', 'breakeven'])) return null
+  if (!finite(hedge, ['di', 'cupom', 'swapSpread', 'ndfMarkup']) || !finite(hedge.swap, ['pre', 'spread', 'pctCdi', 'runPre', 'runSpread', 'runPctCdi']) || !finite(hedge.ndf, ['pre', 'cost365', 'spread', 'pctCdi', 'totalBrl', 'breakeven', 'cetMes', 'cetAno', 'iofGiro', 'giroMes', 'giroAno'])) return null
   if (!Array.isArray(loan.flows) || !loan.flows.length || hedge.flows?.length !== loan.flows.length) return null
-  if (!hedge.flows.every((flow) => finite(flow, ['days', 'dc', 'interest', 'irrf', 'guarantee', 'principal', 'usd', 'ndfRate', 'brl']))) return null
+  if (!hedge.flows.every((flow) => finite(flow, ['days', 'dc', 'balance', 'interest', 'irrf', 'guarantee', 'principal', 'usd', 'ndfRate', 'brl']))) return null
   const scenarios = E4_FX_SCENARIOS.map((change) => unhedged4131(loan, change))
   if (!scenarios.every((item) => item.ok && finite(item, ['fxEnd', 'totalBrl', 'cost']))) return null
   return freeze(structuredClone({
@@ -43,7 +45,7 @@ export function captureE4({ loan, hedge, labels = {} }, capturedAt = Date.now())
     loan,
     hedge: { source: hedge.source, di: hedge.di, cupom: hedge.cupom, swapSpread: hedge.swapSpread, ndfMarkup: hedge.ndfMarkup, swap: hedge.swap, ndf: hedge.ndf, flows: hedge.flows },
     scenarios: scenarios.map(({ fxChange, fxEnd, totalBrl, cost }) => ({ fxChange, fxEnd, totalBrl, cost })),
-    labels: { freq: String(labels.freq ?? ''), irPayer: String(labels.irPayer ?? ''), curve: String(labels.curve ?? ''), fees: String(labels.fees ?? '') },
+    labels: { freq: String(labels.freq ?? ''), irPayer: String(labels.irPayer ?? ''), curve: String(labels.curve ?? ''), fees: String(labels.fees ?? ''), amort: String(labels.amort ?? ''), dates: String(labels.dates ?? '') },
     notice: E4_NOTICE,
     printNotice: E4_PRINT_NOTICE,
     sources: E4_SOURCES,

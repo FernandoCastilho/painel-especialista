@@ -1,8 +1,8 @@
-# Empréstimo externo (4131) (11/11/2026)
+# Empréstimo externo (4131) (11/11/2026, ampliado em 14/11/2026)
 
 Rota: `#calculadora/emprestimo-4131` (atalhos de terminal: `4131`, `LEI4131`, `EMPRESTIMO4131`).
 
-Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara três caminhos em reais: sem proteção, com swap para CDI e com NDF (termo de moeda sem entrega) em cada pagamento.
+Calcula o custo de um empréstimo em dólar ou em euro tomado direto no exterior e compara três caminhos em reais: sem proteção, com swap para CDI e com NDF (termo de moeda sem entrega) em cada pagamento. Desde 14/11/2026 aceita principal em parcelas e mostra o resultado com NDF no formato das cotações de banco (seção "Ampliação de 14/11/2026").
 
 ## Regras levantadas (fontes oficiais lidas em 11/11/2026)
 
@@ -36,9 +36,42 @@ Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara 
 - NDF: taxa a termo × (1 + acréscimo do banco) em cada pagamento. Custo prefixado em base 252 e em dias corridos/365.
 - Ponto de equilíbrio: (1 + custo do NDF em 365) ÷ (1 + all-in em dólar) − 1.
 
+## Ampliação de 14/11/2026: parcelas, euro, cotações do dia e formato da cotação
+Origem: pedido de Fernando para a calculadora simular a operação como as cotações de banco de 4131 com NDF. A conta foi remontada com convenções de mercado e com regras que o Painel já usava. Nada de material interno de banco nem de operação real entra no projeto: os testes usam números fictícios.
+
+### Entradas novas
+- **Moeda**: dólar ou euro. A conta é a mesma. No euro, o campo de cupom vira "Juro do euro" (linear, base 360).
+- **Pagamentos**: inclui mensal.
+- **Principal**: no vencimento (padrão, sem mudança de resultado) ou em parcelas. Em parcelas, a amortização é constante: principal ÷ número de parcelas. A última parcela leva o saldo, para o total fechar no principal.
+- **Carência do principal**: número de pagamentos só de juros antes da primeira parcela. As parcelas ocupam os pagamentos restantes.
+- **Datas dos pagamentos**: dia fixo (padrão: mesmo dia do mês, sem ajuste) ou cada 30 dias. Na segunda regra, o primeiro pagamento é desembolso + 30 dias × meses do período, levado ao próximo dia útil (feriados nacionais); os demais são essa data + 30 dias × meses decorridos, cada um levado ao próximo dia útil. O ajuste de um pagamento não desloca os seguintes.
+- **Câmbio**: já vem com a cotação do Painel (preço de compra, o mesmo da tela Mercado) da moeda escolhida, com data e hora ao lado. Fica a primeira cotação que chegar; cotações novas não mudam o resultado sozinhas (link Atualizar). Digitar passa a valer o digitado, com link para voltar à do Painel. Sem cotação, fica um valor de exemplo, avisado na tela.
+- **DI pré do prazo**: já vem da curva DI x pré da B3 que o Painel coleta, para o prazo médio da operação: taxa a termo entre o desembolso e desembolso + prazo médio, em dias úteis (`diDoPrazo`). Arredondado a duas casas, como aparece no campo. Digitar passa a valer o digitado. Sem curva, com desembolso antes da data-base ou prazo além da curva, fica um valor de exemplo, avisado na tela.
+- **Cupom cambial / juro do euro**: continua digitado. O valor inicial é de exemplo e a tela avisa.
+
+### Contas novas (`src/emprestimo4131.js`)
+- Juros e fiança de cada período: saldo devedor × taxa × dias corridos ÷ 360. Com principal no vencimento, o saldo é sempre o principal (resultado igual ao de antes).
+- Prazo médio: soma(amortização × dias corridos desde o desembolso) ÷ principal, arredondado para baixo. É o prazo usado no IOF-câmbio da entrada: parcelas encurtam o prazo médio e podem trazer o IOF de 3,5% (18 meses em parcelas mensais têm prazo médio perto de 290 dias).
+- Custo efetivo com NDF, formato da cotação: taxa interna `y` do fluxo em reais (valor líquido recebido contra as parcelas travadas no NDF), com tempo em dias corridos ÷ 365. Ao mês: (1 + y)^(30/365) − 1. Ao ano, exp/360: (1 + y)^(360/365) − 1, que é o mês composto 12 vezes.
+- Economia de IOF (`iofGiro4131`): IOF de crédito que um capital de giro em reais pagaria com o mesmo valor e o mesmo cronograma de principal, pessoa jurídica fora do Simples: 0,38% × principal em reais + soma(parcela de principal em reais × 0,0082% × mínimo(dias corridos, 365)). Principal em reais pelo câmbio de entrada. Alíquotas de `IOF_PJ` (`src/emprestimo.js`), as mesmas das outras calculadoras.
+- Equivalente em capital de giro: a mesma taxa interna, com o IOF do giro somado ao valor líquido recebido; lida ao mês e ao ano do mesmo jeito. Giro com taxa abaixo dela sai mais barato que o 4131 com NDF.
+- Equivalente em CDI: o spread sobre o CDI que a tela já calculava para o NDF (cada pagamento descontado pelo fator do DI do seu prazo, base 252).
+
+### Conferência contra uma cotação de banco
+Feita em 14/11/2026, fora do projeto, contra uma cotação de banco de 4131 com NDF em parcelas mensais. Nenhum número dela foi gravado. Bateram as datas, o prazo médio, o saldo e as parcelas na moeda (diferença de centavos, por arredondamento da taxa exibida) e a economia de IOF, ao centavo. O custo efetivo e o equivalente em giro ficaram a cerca de 0,01 ponto percentual ao ano, com uma hipótese para a parte das taxas futuras que não estava disponível.
+
+### Limites desta ampliação
+- A cotação de banco usa a taxa futura fechada pela mesa em cada vencimento. A tela estima o câmbio a termo com um DI e um juro da moeda iguais para todos os prazos: o custo fica próximo, não igual.
+- O expoente da leitura ao mês (30/365) foi inferido pela conferência numérica: com 30/365, custo e giro fecham ao mesmo tempo; com 30/360, não. Falta confirmar a convenção em fonte escrita.
+- O equivalente em CDI não foi conferido contra uma fórmula de banco.
+- O custo ao ano aparece em duas convenções na mesma tela: base 252 (tabela dos três caminhos) e exp/360 (quadro da cotação). Os rótulos dizem qual é qual.
+- Economia de IOF considera pessoa jurídica fora do Simples e não considera isenções ou alíquota zero de casos específicos.
+- Juro do euro: o Painel não coleta; fica digitado.
+- Sistema de amortização: só constante. Price e cronogramas livres não são cobertos.
+
 ## Premissas e limites
 - Um DI e um cupom para todos os vencimentos (curvas planas). A mesa do banco usa uma taxa por prazo, o spread do derivativo e o risco de crédito da contraparte.
-- Só principal no vencimento. Amortização ao longo do prazo não é coberta.
+- Principal no vencimento ou em parcelas iguais (ver a ampliação de 14/11/2026). Outros sistemas de amortização não são cobertos.
 - Fora da conta: IR na fonte sobre ganho de swap ou NDF, PIS/Cofins, custo de garantias do derivativo.
 - A leitura "CDI + spread" do swap usa o DI informado; o custo real segue o CDI de cada período. É o custo total equivalente: inclui flat, IOF, IR e fiança diluídos no prazo, por isso fica acima do spread que a mesa cota para o swap (em 6 meses com IOF de 3,5%, a diferença passa de 8 pontos percentuais).
 - Sem proteção em dias corridos/365; swap e NDF em base 252. O ponto de equilíbrio usa 365 dos dois lados.
@@ -64,7 +97,7 @@ Calcula o custo de um empréstimo em dólar tomado direto no exterior e compara 
 - A aba Regras e fontes mostra as regras da tabela acima, com a fonte de cada uma.
 
 ## Verificações
-`node --test test/emprestimo-4131*.test.mjs`: 20 testes. Conta com resultado em fórmula fechada (juros, gross-up, IOF por prazo, custo all-in, relação com a variação do dólar, câmbio a termo, leitura em CDI, ponto de equilíbrio, entradas inválidas), IR sobre comissões ao exterior, spread do swap sem custos de entrada, fatores por curva e cópia congelada da apresentação e do PDF.
+`node --test test/emprestimo-4131*.test.mjs`: 32 testes (20 anteriores e 12 de `test/emprestimo-4131-parcelas.test.mjs`: parcelas, prazo médio, IOF por prazo médio, carência, datas a cada 30 dias, custo exp/360, economia de IOF, equivalente em giro, euro, regressão do principal no vencimento e DI do prazo). Conta com resultado em fórmula fechada (juros, gross-up, IOF por prazo, custo all-in, relação com a variação do dólar, câmbio a termo, leitura em CDI, ponto de equilíbrio, entradas inválidas), IR sobre comissões ao exterior, spread do swap sem custos de entrada, fatores por curva e cópia congelada da apresentação e do PDF.
 Conferência no navegador em 1440 px e 375 px: simulação, aba de regras, apresentação (6 slides), prévia do PDF e ausência de rolagem lateral da página.
 Revisão independente da conta em 11/11/2026, em duas rodadas: reimplementação em Python, 12 casos na primeira (diferença máxima de 2×10⁻¹⁴ contra o motor) e 12 na segunda, cobrindo spread do swap, IR sobre comissões e curvas (diferença máxima de 1×10⁻¹³). Achados de rótulo e de validação de data corrigidos; os de premissa estão em "Premissas e limites".
-Conferência de navegador automática: `scripts/smoke-emprestimo-4131.cjs` (390 e 1440 px), também no CI: pagamento único de 6 meses com IOF de 3,5%, números recalculados à parte, IR sobre comissões ao exterior, aviso de desembolso futuro, apresentação, prévia do PDF e aba de regras.
+Conferência de navegador automática: `scripts/smoke-emprestimo-4131.cjs` (390 e 1440 px), também no CI, com cotações e curva DI simuladas: câmbio e DI do dia preenchidos, três parcelas mensais no formato da cotação (recalculadas à parte), carência, datas a cada 30 dias, euro, pagamento único de 6 meses com IOF de 3,5%, números recalculados à parte, IR sobre comissões ao exterior, aviso de desembolso futuro, apresentação, prévia do PDF e aba de regras.

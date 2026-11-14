@@ -2,6 +2,11 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '14/11/2026', resumo: 'Empréstimo externo (4131): principal em parcelas, euro, câmbio e DI do dia e resultado no formato da cotação', items: [
+    'Calculadoras > Empréstimo externo (4131): além do dólar, a tela simula em euro. O principal pode ser pago no vencimento ou em parcelas iguais, com carência, e os pagamentos podem ser mensais. As datas seguem o dia fixo do mês ou caem a cada 30 dias, no próximo dia útil, como nas cotações de banco. Com parcelas, o prazo médio cai e pode trazer o IOF-câmbio de 3,5% na entrada.',
+    'O câmbio já vem com a cotação do Painel e o DI pré já vem da curva da B3, para o prazo médio, com a origem ao lado do campo; os dois podem ser trocados. O cupom cambial (ou o juro do euro) continua digitado.',
+    'Novo quadro com NDF no formato da cotação: custo efetivo total ao mês e ao ano (exp/360) com o equivalente em CDI, economia de IOF frente a um capital de giro em reais e a taxa de giro equivalente. Também na apresentação e no PDF. O câmbio a termo segue teórico: a cotação da mesa do banco prevalece.',
+  ] },
   { date: '12/11/2026', resumo: 'Calculadoras de crédito: 31/12 sem expediente bancário', items: [
     'Vencimento em 31/12 passa para o próximo dia útil no Capital de Giro, no Comparador de Crédito, na Análise de desconto e na Operação x DI (ex.: 31/12/2026 → 04/01/2027); juros, IOF e CET contam até a nova data. A contagem de dias úteis de CDI, DI e TLP continua com 31/12 como dia útil.',
   ] },

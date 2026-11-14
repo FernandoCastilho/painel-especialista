@@ -15,3 +15,21 @@
 .bw.e4 .e4-sources a { color:#006bdc; }
 @media (max-width:1100px) { .bw.e4 .e4-hedge .fm-group-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:600px) { .bw.e4 .e4-rules > div { grid-template-columns:minmax(0,1fr); } }
+/* Origem da cotação do campo (Painel, digitado ou exemplo) e o caminho de volta para a do Painel. */
+.bw.e4 .e4-origem { grid-column:1/-1; margin:2px 0 0; font-size:.72rem; line-height:1.35; color:#5b6b82; }
+.bw.e4 .e4-link { padding:0; border:0; background:none; font:inherit; color:#006bdc; text-decoration:underline; cursor:pointer; }
+.bw.e4 .e4-link:focus-visible { outline:2px solid #006bdc; outline-offset:2px; border-radius:2px; }
+.bw.e4 .fm-operation .fm-field-moeda, .bw.e4 .fm-operation .fm-field-amort, .bw.e4 .fm-operation .fm-field-carencia, .bw.e4 .fm-operation .fm-field-datas, .bw.e4 .fm-operation .fm-field-per { grid-column:span 1; }
+/* Leitura no formato das cotações de banco: custo efetivo, economia de IOF e equivalente em giro. */
+.bw.e4 .e4-cotacao { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:10px 0 0; }
+.bw.e4 .e4-cotacao > div { padding:10px 12px; border:1px solid #dbe3ee; border-radius:10px; background:#f7f9fc; min-width:0; }
+.bw.e4 .e4-cotacao dt { display:flex; align-items:center; gap:4px; font-size:.75rem; font-weight:600; color:#455c7a; }
+.bw.e4 .e4-cotacao dd { margin:4px 0 0; font-size:.85rem; color:#10284c; }
+.bw.e4 .e4-cotacao dd b { display:block; font-size:1.05rem; white-space:nowrap; }
+.bw.e4 .e4-cotacao dd small { display:block; margin-top:3px; font-size:.72rem; line-height:1.35; color:#5b6b82; }
+@media (max-width:700px) { .bw.e4 .e4-cotacao { grid-template-columns:minmax(0,1fr); } }
+.bw.e4 .fm-operation .fm-field-car, .bw.e4 .fm-operation .fm-field-data-lib { align-self:start; }
+.bw.e4 .e4-hedge .fm-group-fields > .e4-origem { grid-column:1/-1; margin:0; }
+.bw.e4 .e4-origem b { font-weight:600; color:#455c7a; }
+.bw.e4 .fm-operation .fm-field-carencia input:disabled { background:#eef2f7; border-color:#dbe3ee; color:#7b8aa0; cursor:not-allowed; }
+.bw.e4 .fm-operation .fm-field-data-lib .fm-rotulo { min-height:0; align-items:center; }
