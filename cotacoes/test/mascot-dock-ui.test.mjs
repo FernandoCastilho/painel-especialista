@@ -74,3 +74,18 @@ test('default desktop position returns after a temporary narrow viewport', async
   s.window.innerWidth = 1280; s.listeners.get('resize')(); await s.renderer.settle()
   assert.equal(s.dock().props.style.left, initial)
 })
+
+for (const width of [320, 390, 1280]) {
+  test(`small mascot keeps accessible name without tooltip at ${width}px`, async t => {
+    const s = await setup(t, width, false)
+    assert.equal(s.mini().props['aria-label'], 'Ampliar mascote')
+    assert.equal(s.mini().props.title, undefined)
+    assert.equal(s.mini().props.children.type, 'i')
+    assert.equal(s.mini().props.children.props['aria-hidden'], 'true')
+    s.mini().props.onClick(); await s.renderer.settle()
+    assert.ok(s.dock())
+    s.button('Reduzir mascote').props.onClick(); await s.renderer.settle()
+    assert.equal(s.mini().props.title, undefined)
+    assert.equal(s.mini().props['aria-label'], 'Ampliar mascote')
+  })
+}
