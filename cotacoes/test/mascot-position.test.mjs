@@ -27,3 +27,13 @@ test('mascot floats over the page: small badge on top, no reserved space', async
 test('desktop movement respects the sticky header exclusion', () => {
   assert.deepEqual(clampMascot({x:8,y:8},1280,900,96), {x:8,y:96})
 })
+
+test('mobile mini owns a flow lane before content, with space for hover and focus', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const css = await readFile(new URL('../src/FeedbackMascot.css', import.meta.url), 'utf8')
+  const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8')
+  assert.ok(app.indexOf('<FeedbackMascot ') < app.indexOf('<main id="conteudo"'))
+  assert.match(css, /@media\(max-width:699px\)\{\.mascot-tray\{position:relative;min-height:88px\}\.mascot-mini\{position:absolute;top:6px!important/)
+  // 40px × 1.9 hover + 6px inset + 5px focus outline fits the 88px lane.
+  assert.ok(40 * 1.9 + 6 + 5 <= 88)
+})

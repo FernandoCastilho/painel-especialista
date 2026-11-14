@@ -8,9 +8,12 @@ const NARROW = 1000
 const TOP = { y: 0 }
 const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
 // The small mascot parks as a badge hanging just under the top header (or at the screen edge when there is none).
-const parkTop = () => Math.max(0, window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0) + 4
+const parkTop = () => Math.max(0,
+  window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0,
+  window.document?.querySelector('.clocks-top')?.getBoundingClientRect().bottom ?? 0,
+) + 4
 
-export default function MascotDock({ children, icon, onSearch }) {
+export default function MascotDock({ children, icon, onSearch, section }) {
   const [preferences, setPreferences] = useState(() => readMascotPreferences({ getItem: key => window.localStorage.getItem(key) }))
   const [position, setPosition] = useState(() => place(preferences.desktop ?? TOP))
   const [large, setLarge] = useState(false)
@@ -22,7 +25,7 @@ export default function MascotDock({ children, icon, onSearch }) {
   useEffect(() => {
     try { localStorage.setItem(MASCOT_PREFERENCE_KEY, JSON.stringify(preferences)) } catch { /* Private browsing may disable storage. */ }
   }, [preferences])
-  useEffect(() => { setTop(parkTop()) }, [large])
+  useEffect(() => { setTop(parkTop()) }, [large, section])
   useEffect(() => {
     if (previousLarge.current !== large) {
       (large ? handle : mini).current?.focus({ preventScroll: true })
@@ -51,7 +54,7 @@ export default function MascotDock({ children, icon, onSearch }) {
   }
   const shrink = () => { setMoving(false); setLarge(false) }
   return <aside className={`mascot-tray${large ? ' mascot-tray-large' : ''}`} ref={tray} aria-label="Assistente do painel">
-    {!large ? <button ref={mini} type="button" className="mascot-mini" style={{ top }} aria-label="Ampliar mascote" title="Clique para ampliar" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
+    {!large ? <button ref={mini} type="button" className="mascot-mini" style={{ top }} aria-label="Ampliar mascote" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
       <div className="mascot-tools">
         <button type="button" ref={handle} className="mascot-move" aria-label="Mover mascote" aria-describedby="mascot-move-help" aria-expanded={moving} aria-controls="mascot-position-controls" title="Arraste ou use as setas do teclado" onClick={event => { if (event.detail === 0 || !drag.current?.moved) setMoving(v => !v) }} onKeyDown={event => {
           const offsets = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] }
