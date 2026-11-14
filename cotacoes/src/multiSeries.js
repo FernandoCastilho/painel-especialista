@@ -1,4 +1,5 @@
 // Séries sobrepostas no mesmo gráfico (aba BNDES › comparar): funções puras para alinhar, recortar e normalizar.
+import { marcasRedondas } from './chartEixo.js'
 const DAY = 864e5
 export const tOf = (iso) => Date.parse(`${iso}T12:00:00Z`)
 export const isoOf = (t) => new Date(t).toISOString().slice(0, 10)
@@ -31,15 +32,9 @@ export const toPoints = (list) => list.map((p) => ({ t: tOf(p.period), v: p.valu
 // Variação % sobre o primeiro ponto da própria série no período (séries com unidades diferentes ficam comparáveis).
 export const normalize = (points) => (points.length && points[0].v ? points.map((p) => ({ t: p.t, v: (p.v / points[0].v - 1) * 100 })) : [])
 
-// Eixo com 4 a 6 marcas "redondas" cobrindo [lo, hi].
-export function niceTicks(lo, hi, n = 5) {
-  if (!(hi > lo)) { const c = Number.isFinite(lo) ? lo : 0; return { ticks: [c - 1, c, c + 1], lo: c - 1, hi: c + 1 } }
-  const raw = (hi - lo) / (n - 1), mag = 10 ** Math.floor(Math.log10(raw)), f = raw / mag
-  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag
-  const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step
-  const ticks = []
-  for (let v = a; v <= b + step / 2; v += step) ticks.push(+v.toFixed(10))
-  return { ticks, lo: ticks[0], hi: ticks.at(-1) }
+// Eixo com 4 a 6 marcas "redondas" cobrindo [lo, hi]: mesma regra de todos os gráficos (chartEixo.js).
+export function niceTicks(lo, hi) {
+  return marcasRedondas(lo, hi)
 }
 
 // Resumo de cada série no recorte: primeiro, último e variação (p.p. para taxa; % para nível/normalizado).

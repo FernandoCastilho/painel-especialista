@@ -15,7 +15,7 @@
 .researched-flow{container-name:rflow}
 .rich-chain-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);align-items:stretch}
 .rich-stage{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;border:1px solid #b3c9e7;border-radius:12px;padding:14px 10px 12px;background:#fff;animation:rich-glow 6.6s linear infinite;animation-delay:var(--stage-delay)}
-.rich-emoji{font-size:2.5rem;line-height:1.1}.rich-stage strong{font-size:1rem;line-height:1.25}.rich-stage p{margin:0;font-size:.85rem;line-height:1.4;color:#41506b}
+.rich-emoji{font-size:1.9rem;line-height:1.1;filter:grayscale(1) contrast(1.15);opacity:.8}/* ícone em tom único, no mesmo peso visual dos ícones de traço do painel */.rich-stage strong{font-size:1rem;line-height:1.25}.rich-stage p{margin:0;font-size:.85rem;line-height:1.4;color:#41506b}
 .rich-stage .rich-bank{margin-top:auto;padding:6px 8px;border-radius:6px;background:#fff4d6;color:#5c4100;text-align:left;font-size:.8rem}.rich-stage p+.rich-bank{margin-top:8px}
 .rich-link{display:grid;align-content:center;gap:6px;padding:0 6px}.rich-lane{display:grid;gap:2px}
 .rich-track{position:relative;height:30px;container:rtrack/size;--dx:calc(100cqw - 24px);--dy:0px}

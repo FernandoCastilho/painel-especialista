@@ -1,5 +1,5 @@
 /* Apresentar: montagem (tema do painel) e apresentação em tela (identidade Itaú Empresas, sem logotipo: azul-marinho, azul, laranja e cinzas, fundo claro). */
-.apr-form { display: grid; gap: 18px; }
+.apr-form { display: grid; gap: 18px; padding: 12px; }
 .apr-bloco h3 { margin: 0 0 8px; font-size: .95rem; }
 .apr-bloco h3 small { font-weight: 400; }
 .apr-site { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }

@@ -10,6 +10,7 @@ import { hookRenderer } from './helpers/hooks.mjs'
 import * as newsWindow from '../src/newsWindow.js'
 import * as reforma from '../src/reforma.js'
 import * as feed from '../src/feed.js'
+import * as newsTitle from '../src/newsTitle.js'
 const require = createRequire(import.meta.url)
 const now = Date.parse('2026-11-05T12:00:00Z')
 const article = (title, t) => ({ title, t, link: `https://example.test/${title}`, source: 'Fonte de teste' })
@@ -30,6 +31,7 @@ async function setup(t, name, props = {}, resource = {}) {
     if (name === './newsWindow.js') return newsWindow
     if (name === './reforma.js') return reforma
     if (name === './feed.js') return feed
+    if (name === './newsTitle.js') return newsTitle
     if (name === './useNews.js') return { useNews: () => resource }
     if (name === './useQuotes.js') return { CURRENCIES: [{ code: 'USD' }, { code: 'EUR' }] }
     if (name === './Avisos.jsx') return { Aviso: wrapper }

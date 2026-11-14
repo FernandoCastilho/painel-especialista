@@ -38,3 +38,11 @@
 .cg-method ul { display:grid; gap:8px; margin:4px 0 12px; padding-left:20px; }
 .cg-method a { color:var(--amber, #ffb000); }
 @media (max-width:639px) { .cg-kpis { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; padding:8px; } .cg-kpis > div { padding:10px 8px; } .cg-kpis b { font-size:1rem; } .cg-pagination { gap:8px; padding:8px; } .cg-pagination span { text-align:center; } }
+
+/* Celular: na utilização única, os três campos (cada um já tem rótulo) ficam um embaixo do outro,
+   em vez de uma tabela que corta o segundo e o terceiro campo e exige rolar para o lado. */
+@media (max-width:699px) {
+  .cg-entry-single thead { display:none; }
+  .cg-entry-single, .cg-entry-single tbody, .cg-entry-single tr, .cg-entry-single td { display:block; width:100%; }
+  .cg-entry-single td, .cg-entry-single td:last-child { min-width:0; }
+}

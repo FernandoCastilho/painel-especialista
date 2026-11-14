@@ -86,6 +86,8 @@ const links = {
       await contained('Conta Garantida')
 
       await visit('aprender', '.knowledge-map')
+      // abaixo de 700 px o mapa abre em Lista (13/11/2026); toca em Grafo para conferir os pontos
+      if (width < 700) await page.locator('.km-switch').getByRole('button', { name: 'Grafo', exact: true }).click()
       await page.locator('.km-node').first().waitFor()
       assert.equal(await page.getByRole('button', { name: 'Mapa do conhecimento', exact: true }).getAttribute('aria-pressed'), 'true')
       assert.equal(await page.getByRole('navigation', { name: 'Explorar Aprender', exact: true }).getByRole('button', { name: 'Conceitos', exact: true }).getAttribute('aria-pressed'), 'false')

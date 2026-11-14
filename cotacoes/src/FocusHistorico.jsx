@@ -32,7 +32,7 @@ export default function FocusHistorico() {
     <section className="focus-hist" aria-labelledby="focus-hist-title" ref={ref}>
       <h3 id="focus-hist-title">Histórico do Focus · {file.data?.semanas ?? 52} semanas</h3>
       <p className="muted">Mediana das expectativas a cada semana (coleta até sexta, boletim de segunda), por ano de referência{ultima ? ` · última semana: ${dmy(ultima)}` : ''}.</p>
-      <p className="muted">Cada linha mantém o mesmo ano de referência da previsão. A janela carregada pode não alcançar o trecho do ano anterior; nesse caso, a comparação fica indisponível.</p>
+      <p className="muted">Cada linha é a previsão para um ano. Se faltar histórico, a comparação com o ano anterior não aparece.</p>
       {file.status === 'loading' && <Estado>Carregando o histórico do Focus…</Estado>}
       {file.status === 'error' && <Estado tipo="erro" erro={file.error}>Histórico do Focus indisponível no momento.</Estado>}
       {file.data?.stale && <Estado tipo="aviso">Última coleta do histórico falhou; mantida a versão anterior.</Estado>}
