@@ -91,7 +91,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await page.waitForFunction(() => document.querySelector('#e4-spot')?.value === '5,3127')
       assert.match(normalize(await section.locator('#e4-spot-origem').innerText()), /^Painel · \d{2}\/\d{2} \d{2}:\d{2}$/)
       await page.waitForFunction(() => document.querySelector('#e4-di')?.value === '14,00')
-      assert.match(normalize(await section.locator('#e4-protecao-origem').innerText()), /DI: do Painel, curva DI da B3 de 02\/01\/2026/)
+      assert.match(normalize(await section.locator('#e4-protecao-origem').innerText()), /DI: do Painel, curva DI da B3 de 02\/01\/2026.*Cupom cambial: valor de exemplo/)
       assert.equal(await section.locator('#e4-grace').isDisabled(), true)
 
       await fill('principal', '1.000.000,00')
@@ -156,9 +156,11 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
         assert.equal(row[9], brl(f.brl), `parcela ${i + 1} em reais`)
       }
       const cotacao = normalize(await section.locator('.e4-cotacao').innerText())
-      assert.ok(cotacao.includes(`${pct(mes(CET))} a.m.`) && cotacao.includes(`${pct(ano(CET))} a.a. (exp/360)`), cotacao)
+      assert.ok(cotacao.includes(`${pct(mes(CET))} a.m.`) && cotacao.includes(`${pct(ano(CET))} a.a. · equivale a CDI`), cotacao)
       assert.ok(cotacao.includes(brl(IOF_GIRO)), cotacao)
-      assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. (exp/360)`), cotacao)
+      assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. · taxa de giro`), cotacao)
+      assert.match(cotacao, /Não desconta o IOF-câmbio de 3,50% desta operação/)
+      assert.match(normalize(await section.locator('.e4-cotacao-titulo').innerText()), /dias corridos, exp\/360/)
       assert.ok(GIRO < CET, 'com o IOF do giro a favor, a taxa equivalente fica abaixo do custo efetivo')
       // Carência de um pagamento: a primeira linha só tem juros e o principal vai em duas parcelas.
       await fill('grace', '1')

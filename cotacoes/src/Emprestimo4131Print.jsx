@@ -40,14 +40,14 @@ export function Emprestimo4131PrintDocument({ snapshot }) {
   const cur = moedaOf(loan.currency)
   const juro = cur.juro.toLowerCase()
   const facts = [
-    ['Principal', `${cur.sym} ${amount(loan.principal)}`], ['Câmbio de entrada', `R$ ${amount(loan.spot, 4)}`],
+    ['Principal', `${cur.sym}\u00a0${amount(loan.principal)}`], ['Câmbio de entrada', `R$ ${amount(loan.spot, 4)}`],
     ['Taxa contratual', `${pct(loan.rate)} a.a. · linear 360`], ['Taxa com o IR por cima', `${pct(loan.grossedRate)} a.a.`],
     ['Desembolso', day(loan.start)], ['Vencimento', day(loan.end)],
     ['Prazo', `${loan.months} meses · prazo médio de ${loan.avgTermDays} dias corridos`], ['Pagamentos', labels.freq || '—'],
-    ['Principal pago', labels.amort || 'No vencimento'], ['Datas dos pagamentos', labels.dates || '—'],
+    ['Amortização', labels.amort || 'No vencimento'], ['Datas dos pagamentos', labels.dates || '—'],
     ['IR na fonte sobre os juros', `${pct(loan.irrf, 0)} · ${labels.irPayer || '—'}`], ['IOF-câmbio na entrada', `${pct(loan.iofRate)} · ${cur.sym} ${amount(loan.iofUsd)}`],
     ['Flat · estruturação', `${pct(loan.flat)} · ${cur.sym} ${amount(loan.flatUsd)}`], ['Fiança ou SBLC', `${pct(loan.guarantee)} a.a.`],
-    ['Flat e fiança pagos a', labels.fees || '—'], ['IR do tomador sobre o flat', `${cur.sym} ${amount(loan.flatIrUsd)}`],
+    ['Flat e fiança pagos a', labels.fees || '—'], ['IR do tomador sobre o flat', `${cur.sym}\u00a0${amount(loan.flatIrUsd)}`],
     ['Valor líquido recebido', `${brl(loan.netBrl)} · ${cur.sym} ${amount(loan.netUsd)}`], [`Custo all-in em ${cur.nome}`, `${pct(loan.allIn)} a.a.`],
     ['DI até o vencimento', `${pct(hedge.di)} a.a. · base 252`], [`${cur.juro} até o vencimento`, `${pct(hedge.cupom)} a.a. · linear 360`],
     ['Origem do DI e do juro da moeda', labels.curve || '—'], ['Spread do swap, sem custos de entrada', `CDI ${signed(hedge.swap.runSpread, pct)}`],
@@ -61,16 +61,16 @@ export function Emprestimo4131PrintDocument({ snapshot }) {
       <tr><th scope="row">Custo em reais ao ano</th><td>{pct(parado.cost)} com o {cur.nome} parado</td><td>{pct(hedge.swap.pre)} com o DI informado</td><td>{pct(hedge.ndf.pre)} fixo</td></tr>
       <tr><th scope="row">A dívida fica em</th><td>{cur.Nome}</td><td>CDI</td><td>Reais, prefixada</td></tr>
       <tr><th scope="row">Custo efetivo com NDF (exp/360)</th><td>—</td><td>—</td><td>{pct(hedge.ndf.cetMes)} a.m. · {pct(hedge.ndf.cetAno)} a.a.</td></tr>
-      <tr><th scope="row">Economia de IOF frente ao capital de giro</th><td>—</td><td>—</td><td>{brl(hedge.ndf.iofGiro)}</td></tr>
+      <tr><th scope="row">Economia de IOF frente ao giro{loan.iofRate > 0 ? ' (sem descontar o IOF-câmbio)' : ''}</th><td>—</td><td>—</td><td>{brl(hedge.ndf.iofGiro)}</td></tr>
       <tr><th scope="row">Equivalente em capital de giro (exp/360)</th><td>—</td><td>—</td><td>{pct(hedge.ndf.giroMes)} a.m. · {pct(hedge.ndf.giroAno)} a.a.</td></tr>
       <tr><th scope="row">Spread do swap, sem custos de entrada</th><td>—</td><td>CDI {signed(hedge.swap.runSpread, pct)}</td><td>—</td></tr>
       <tr><th scope="row">Custo total em CDI</th><td>—</td><td>CDI {signed(hedge.swap.spread, pct)} · {pct(hedge.swap.pctCdi, 1)} do CDI</td><td>CDI {signed(hedge.ndf.spread, pct)} hoje</td></tr>
       <tr><th scope="row">Total a pagar em reais</th><td>{brl(parado.totalBrl)}</td><td>Segue o CDI de cada período</td><td>{brl(hedge.ndf.totalBrl)}</td></tr>
       <tr><th scope="row">Risco que sobra</th><td>Câmbio</td><td>Alta do CDI</td><td>Custo de desfazer antes</td></tr>
-    </tbody></table><p className="bnprint-note">Ponto de equilíbrio: o NDF compensa se o {cur.nome} subir mais de {pct(hedge.ndf.breakeven)} ao ano. Custos com swap e NDF em base 252 dias úteis, exceto as linhas marcadas com exp/360.</p></section>
+    </tbody></table><p className="bnprint-note">Ponto de equilíbrio: o NDF compensa se o {cur.nome} subir mais de {pct(hedge.ndf.breakeven)} ao ano. Custo em reais ao ano: dias úteis, base 252. Custo efetivo e equivalente em giro: dias corridos, exp/360, como nas cotações de banco. É a mesma operação em duas convenções.</p></section>
     <section><h2>Sem proteção: custo conforme o {cur.nome}</h2><table><thead><tr><th scope="col">{cur.Nome} ao ano</th><th scope="col">Câmbio no vencimento</th><th scope="col">Total a pagar</th><th scope="col">Custo em reais ao ano</th></tr></thead><tbody>{scenarios.map((item) => <tr key={item.fxChange}><th scope="row">{item.fxChange === 0 ? 'Parado' : signed(item.fxChange, (value) => pct(value, 0))}</th><td>{amount(item.fxEnd, 4)}</td><td>{brl(item.totalBrl)}</td><td>{pct(item.cost)}</td></tr>)}</tbody></table><p className="bnprint-note">Variação constante do dólar ao ano, do desembolso a cada pagamento. Custo em dias corridos/365.</p></section>
     <p className="bnprint-disclaimer">{snapshot.printNotice}</p>
-    <section className="bnprint-schedule"><h2>Cronograma completo</h2><p className="bnprint-note">Valores em {cur.sym}, exceto o total com NDF, em R$. Desembolso: {day(loan.start)}. {hedge.flows.length} pagamentos.</p><table><thead><tr>{['Data', 'Dias', 'Saldo devedor', 'Juros', 'IR do tomador', 'Fiança', 'Principal', `Total em ${cur.nome}`, 'Câmbio a termo', 'Total com NDF (R$)'].map((label) => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>
+    <section className="bnprint-schedule"><h2>Cronograma completo</h2><p className="bnprint-note">Valores em {cur.sym}, exceto o total com NDF, em R$. Desembolso: {day(loan.start)}. {hedge.flows.length} pagamentos.</p><table><thead><tr>{['Data', 'Dias', 'Saldo inicial', 'Juros', 'IR do tomador', 'Fiança', 'Principal', `Total em ${cur.nome}`, 'Câmbio a termo', 'Total com NDF (R$)'].map((label) => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>
       <tr className="bnprint-upfront"><th scope="row">{day(loan.start)} · entrada</th><td>—</td><td>{amount(loan.principal)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>{amount(loan.flatUsd + loan.iofUsd + loan.flatIrUsd)}</td><td>{amount(loan.spot, 4)}</td><td>{amount((loan.flatUsd + loan.iofUsd + loan.flatIrUsd) * loan.spot)}</td></tr>
       {hedge.flows.map((flow) => <tr key={flow.date}><th scope="row">{day(flow.date)}</th><td>{flow.days}</td><td>{amount(flow.balance)}</td><td>{amount(flow.interest)}</td><td>{amount(flow.irrf)}</td><td>{amount(flow.guarantee)}</td><td>{amount(flow.principal)}</td><td>{amount(flow.usd)}</td><td>{amount(flow.ndfRate, 4)}</td><td>{amount(flow.brl)}</td></tr>)}
       <tr className="bnprint-total"><th scope="row">Total dos pagamentos</th><td>{hedge.flows.at(-1).dc}</td><td>—</td><td>{amount(loan.totals.interest)}</td><td>{amount(loan.totals.irrf)}</td><td>{amount(loan.totals.guarantee)}</td><td>{amount(loan.totals.principal)}</td><td>{amount(loan.totals.usd)}</td><td>—</td><td>{amount(hedge.ndf.totalBrl)}</td></tr>

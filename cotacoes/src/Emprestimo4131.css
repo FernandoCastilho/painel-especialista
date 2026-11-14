@@ -17,19 +17,41 @@
 @media (max-width:600px) { .bw.e4 .e4-rules > div { grid-template-columns:minmax(0,1fr); } }
 /* Origem da cotação do campo (Painel, digitado ou exemplo) e o caminho de volta para a do Painel. */
 .bw.e4 .e4-origem { grid-column:1/-1; margin:2px 0 0; font-size:.72rem; line-height:1.35; color:#5b6b82; }
-.bw.e4 .e4-link { padding:0; border:0; background:none; font:inherit; color:#006bdc; text-decoration:underline; cursor:pointer; }
+.bw.e4 .e4-origem b { font-weight:600; color:#455c7a; }
+.bw.e4 .e4-origem .e4-exemplo { color:#8a4300; font-weight:600; }
+.bw.e4 .e4-link { padding:6px 0; margin:-6px 0; border:0; background:none; font:inherit; color:#006bdc; text-decoration:underline; cursor:pointer; }
 .bw.e4 .e4-link:focus-visible { outline:2px solid #006bdc; outline-offset:2px; border-radius:2px; }
+.bw.e4 .e4-hedge .fm-group-fields > .e4-origem { grid-column:1/-1; margin:0; }
+/* Grupo Operação: Moeda | Câmbio, Principal | Taxa, Prazo | Data, Pagamentos | Regra das datas, Amortização | Carência. */
 .bw.e4 .fm-operation .fm-field-moeda, .bw.e4 .fm-operation .fm-field-amort, .bw.e4 .fm-operation .fm-field-carencia, .bw.e4 .fm-operation .fm-field-datas, .bw.e4 .fm-operation .fm-field-per { grid-column:span 1; }
+.bw.e4 .fm-operation .fm-field-moeda, .bw.e4 .fm-operation .fm-field-car { align-self:start; }
+.bw.e4 .fm-operation .fm-field-data-lib .fm-rotulo { min-height:0; align-items:center; }
+main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabled { background:#eef2f7; border-color:#dbe3ee; color:#7b8aa0; -webkit-text-fill-color:#7b8aa0; opacity:1; cursor:not-allowed; }
+@media (min-width:641px) { .bw.e4 .cx-finame .fm-operation .fm-field-data-lib { grid-column:span 1; } }
+@media (max-width:640px) {
+  .bw.e4 .cx-finame .fm-operation .fm-field-valor { grid-column:1/-1; }
+  .bw.e4 .fm-operation .fm-field-amort select, .bw.e4 .fm-operation .fm-field-datas select { padding-left:6px; padding-right:2px; }
+  .bw.e4 .e4-link { padding:10px 0; margin:-10px 0; }
+  .bw.e4 .e4-origem { margin-bottom:6px; }
+}
+@media (max-width:1100px) {
+  .bw.e4 .e4-hedge .fm-group-fields > .e4-origem { order:1; }
+  .bw.e4 .e4-hedge .fm-group-fields > .fm-field-swap, .bw.e4 .e4-hedge .fm-group-fields > .fm-field-ndf { order:2; }
+}
 /* Leitura no formato das cotações de banco: custo efetivo, economia de IOF e equivalente em giro. */
-.bw.e4 .e4-cotacao { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:10px 0 0; }
-.bw.e4 .e4-cotacao > div { padding:10px 12px; border:1px solid #dbe3ee; border-radius:10px; background:#f7f9fc; min-width:0; }
+.bw.e4 .e4-cotacao-titulo { margin:10px 16px 0; font-size:.72rem; font-weight:600; color:#455c7a; }
+.bw.e4 .e4-cotacao { display:flex; flex-wrap:wrap; gap:6px; margin:6px 16px 0; }
+.bw.e4 .e4-cotacao > div { flex:1 1 150px; padding:10px; border:1px solid #dbe3ee; border-radius:10px; background:#f7f9fc; min-width:0; }
 .bw.e4 .e4-cotacao dt { display:flex; align-items:center; gap:4px; font-size:.75rem; font-weight:600; color:#455c7a; }
 .bw.e4 .e4-cotacao dd { margin:4px 0 0; font-size:.85rem; color:#10284c; }
-.bw.e4 .e4-cotacao dd b { display:block; font-size:1.05rem; white-space:nowrap; }
+.bw.e4 .e4-cotacao dd b { display:block; font-size:1rem; white-space:nowrap; }
 .bw.e4 .e4-cotacao dd small { display:block; margin-top:3px; font-size:.72rem; line-height:1.35; color:#5b6b82; }
-@media (max-width:700px) { .bw.e4 .e4-cotacao { grid-template-columns:minmax(0,1fr); } }
-.bw.e4 .fm-operation .fm-field-car, .bw.e4 .fm-operation .fm-field-data-lib { align-self:start; }
-.bw.e4 .e4-hedge .fm-group-fields > .e4-origem { grid-column:1/-1; margin:0; }
-.bw.e4 .e4-origem b { font-weight:600; color:#455c7a; }
-.bw.e4 .fm-operation .fm-field-carencia input:disabled { background:#eef2f7; border-color:#dbe3ee; color:#7b8aa0; cursor:not-allowed; }
-.bw.e4 .fm-operation .fm-field-data-lib .fm-rotulo { min-height:0; align-items:center; }
+.bw.e4 .e4-junto { white-space:nowrap; }
+@media (max-width:700px) { .bw.e4 .e4-cotacao > div { flex-basis:100%; } }
+@media (min-width:1001px) {
+  .bw.e4 #fm-result.fm-zoom .e4-cotacao-titulo { margin:14px 24px 0; font-size:.9rem; }
+  .bw.e4 #fm-result.fm-zoom .e4-cotacao { margin:12px 24px 0; gap:12px; }
+  .bw.e4 #fm-result.fm-zoom .e4-cotacao dt { font-size:.95rem; }
+  .bw.e4 #fm-result.fm-zoom .e4-cotacao dd b { font-size:1.6rem; }
+  .bw.e4 #fm-result.fm-zoom .e4-cotacao dd small { font-size:.9rem; }
+}
