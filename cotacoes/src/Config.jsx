@@ -13,7 +13,7 @@ import { ATRASO_H, FONTES, NAVEGADOR, REGRAS, RESUMO } from './governanca.js'
 import { AcessosPanel } from './Acessos.jsx'
 
 const H = 3600e3
-const TONE = { ok: 'up', old: 'down', retained: 'down', partial: 'down', reserve: 'flat', missing: 'flat', loading: 'flat' }
+const TONE = { ok: 'up', old: 'down', retained: 'down', partial: 'down', reserve: 'flat', missing: 'flat', loading: 'flat', offhours: 'flat' }
 
 // Configurações: atalhos, estado de cada fonte de dados, aparência, instalação e histórico de mudanças.
 export default function Config({ quotesAt, quotesVia, quotes, quotesHealth, fx, setFx }) {
@@ -75,7 +75,7 @@ export default function Config({ quotesAt, quotesVia, quotes, quotesHealth, fx, 
     Date.now(),
   )
   // Uma linha por fonte: o estado e a coleta vêm das chaves que ela cobre (vale o pior estado e a coleta mais antiga).
-  const RANK = { missing: 6, retained: 5, partial: 4, old: 3, reserve: 2, loading: 1, ok: 0 }
+  const RANK = { missing: 6, retained: 5, partial: 4, old: 3, reserve: 2, loading: 1, offhours: 0, ok: 0 }
   const fontes = FONTES.map((f) => {
     const mine = rows.filter((r) => f.chaves.includes(r.key))
     const worst = mine.reduce((w, r) => (!w || RANK[r.state] > RANK[w.state] || (RANK[r.state] === RANK[w.state] && (r.at ?? 0) < (w.at ?? 0)) ? r : w), null)

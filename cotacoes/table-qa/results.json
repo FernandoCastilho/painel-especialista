@@ -1,0 +1,107 @@
+[
+  {
+    "width": 390,
+    "passed": true,
+    "bounds": [
+      {
+        "width": 126,
+        "height": 50.09375
+      },
+      {
+        "width": 126,
+        "height": 50.09375
+      },
+      {
+        "width": 126,
+        "height": 50.09375
+      },
+      {
+        "width": 126,
+        "height": 65.6875
+      }
+    ],
+    "errors": [],
+    "checks": [
+      "4 semantic rows",
+      "source-only absolute delta",
+      "CNH absolute and percent from the same base",
+      "JPY 5 decimals",
+      "4 row clicks",
+      "Enter and Space",
+      "Escape focus restore",
+      "back forward",
+      "reserve and error",
+      "no overflow"
+    ]
+  },
+  {
+    "width": 820,
+    "passed": true,
+    "bounds": [
+      {
+        "width": 160.859375,
+        "height": 53.59375
+      },
+      {
+        "width": 160.859375,
+        "height": 53.59375
+      },
+      {
+        "width": 160.859375,
+        "height": 53.59375
+      },
+      {
+        "width": 160.859375,
+        "height": 53.59375
+      }
+    ],
+    "errors": [],
+    "checks": [
+      "4 semantic rows",
+      "source-only absolute delta",
+      "CNH absolute and percent from the same base",
+      "JPY 5 decimals",
+      "4 row clicks",
+      "Enter and Space",
+      "Escape focus restore",
+      "back forward",
+      "reserve and error",
+      "no overflow"
+    ]
+  },
+  {
+    "width": 1440,
+    "passed": true,
+    "bounds": [
+      {
+        "width": 162.15625,
+        "height": 51.75
+      },
+      {
+        "width": 162.15625,
+        "height": 51.75
+      },
+      {
+        "width": 162.15625,
+        "height": 51.75
+      },
+      {
+        "width": 162.15625,
+        "height": 51.75
+      }
+    ],
+    "errors": [],
+    "checks": [
+      "4 semantic rows",
+      "source-only absolute delta",
+      "CNH absolute and percent from the same base",
+      "JPY 5 decimals",
+      "4 row clicks",
+      "Enter and Space",
+      "Escape focus restore",
+      "back forward",
+      "reserve and error",
+      "no overflow"
+    ]
+  }
+]

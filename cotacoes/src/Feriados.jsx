@@ -33,9 +33,17 @@ const fmt = (d) => {
   return { date: dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'UTC' }), wd }
 }
 const left = (n) => (n === 0 ? 'hoje' : n === 1 ? 'amanhã' : `${n} dias`)
+// Abre em "Brasil e B3" (feriados nacionais e pregões), que vale para quase todos; a escolha da pessoa fica guardada
+// neste navegador. "Todos os calendários" continua no seletor.
+const PADRAO = 'CIVBR+B3'
+const CHAVE = 'painel-feriados-calendario'
+const OPCOES = new Set(['all', PADRAO, ...LIST.map((item) => item.id)])
+const lerEscolha = () => { try { const v = localStorage.getItem(CHAVE); return OPCOES.has(v) ? v : PADRAO } catch { return PADRAO } }
+const guardarEscolha = (v) => { try { localStorage.setItem(CHAVE, v) } catch { /* sem armazenamento: só não lembra */ } }
 
 export default function Feriados({ hol }) {
-  const [place, setPlace] = useState('all')
+  const [place, setPlaceState] = useState(lerEscolha)
+  const setPlace = (v) => { setPlaceState(v); guardarEscolha(v) }
   const today = marketDate(Date.now())
   const y = Number(today.slice(0, 4))
   const map = new Map()
@@ -50,8 +58,14 @@ export default function Feriados({ hol }) {
       }
     }
   }
-  const groups = groupHolidayRows([...map.values()], place)
-  const selected = LIST.filter(c => place === 'all' || c.id === place)
+  const ids = place === 'all' ? null : place.split('+')
+  // com um recorte escolhido, cada linha mostra só os calendários desse recorte
+  const rows = ids ? [...map.values()].flatMap((row) => {
+    const keep = row.places.map((id, i) => ids.includes(id) ? i : -1).filter((i) => i >= 0)
+    return keep.length ? [{ ...row, where: keep.map((i) => row.where[i]), places: keep.map((i) => row.places[i]) }] : []
+  }) : [...map.values()]
+  const groups = groupHolidayRows(rows)
+  const selected = LIST.filter(c => !ids || ids.includes(c.id))
   const missing = selected.map(c => ({ ...c, years: [y, y + 1].filter(year => !calendarYearCovered(c.id, year, hol?.ctx)) })).filter(c => c.years.length)
   const count = groups.reduce((total, group) => total + group.rows.length, 0)
   const financial = ['B3', 'NY', 'UK', 'JP', 'CN'].includes(place)
@@ -64,13 +78,14 @@ export default function Feriados({ hol }) {
         </div>
         <label className="fer-filter">Calendário
           <select value={place} onChange={(event) => setPlace(event.target.value)}>
+            <option value={PADRAO}>Brasil e B3 · nacionais e pregões</option>
             <option value="all">Todos os calendários</option>
             {LIST.map((item) => <option key={item.id} value={item.id}>{item.where}</option>)}
           </select>
         </label>
       </div>
-      <p className="status">{place === 'all' ? 'A lista reúne feriados previstos em lei e datas sem funcionamento em calendários financeiros. Uma data pode valer apenas para o calendário indicado.' : financial ? place === 'B3' ? 'Suspensão de sessões de negociação da B3; não indica feriado civil, expediente bancário ou todas as regras de registro e liquidação. Em 24/12/2026 há exceção para alocação de registros de Balcão sem contraparte central.' : 'Calendário financeiro de referência da praça; não representa todas as bolsas ou modalidades de liquidação.' : place === 'CIVBR' ? 'Feriados nacionais de data fixa previstos em lei. Feriados religiosos, como Sexta-feira Santa e Corpus Christi, dependem da legislação municipal. Pontos facultativos e recessos administrativos não estão incluídos.' : 'Somente registros específicos desta cidade, estado ou região. Não inclui automaticamente os feriados nacionais nem os demais calendários aplicáveis; consulte também Brasil · feriados nacionais por lei.'}</p>
-      {missing.length > 0 && <p className="status stale" role="status">Cobertura parcial: {missing.map(c => `${c.where} (${c.years.join(', ')})`).join('; ')} sem calendário completo verificado nesta base. A ausência de registros não permite afirmar que não haverá feriados ou suspensões.</p>}
+      <p className="status">{place === PADRAO ? 'Feriados nacionais previstos em lei e dias sem pregão na B3. Para estados, cidades e praças de fora, escolha outro calendário.' : place === 'all' ? 'A lista reúne feriados previstos em lei e datas sem funcionamento em calendários financeiros. Uma data pode valer apenas para o calendário indicado.' : financial ? place === 'B3' ? 'Suspensão de sessões de negociação da B3; não indica feriado civil, expediente bancário ou todas as regras de registro e liquidação. Em 24/12/2026 há exceção para alocação de registros de Balcão sem contraparte central.' : 'Calendário financeiro de referência da praça; não representa todas as bolsas ou modalidades de liquidação.' : place === 'CIVBR' ? 'Feriados nacionais de data fixa previstos em lei. Feriados religiosos, como Sexta-feira Santa e Corpus Christi, dependem da legislação municipal. Pontos facultativos e recessos administrativos não estão incluídos.' : 'Somente registros específicos desta cidade, estado ou região. Não inclui automaticamente os feriados nacionais nem os demais calendários aplicáveis; consulte também Brasil · feriados nacionais por lei.'}</p>
+      {missing.length > 0 && <details className="fer-partial" role="status"><summary>Cobertura parcial em {missing.length} {missing.length === 1 ? 'calendário' : 'calendários'}</summary><p>Cobertura parcial: {missing.map(c => `${c.where} (${c.years.join(', ')})`).join('; ')} sem calendário completo verificado nesta base. A ausência de registros não permite afirmar que não haverá feriados ou suspensões.</p></details>}
       <div aria-live="polite" aria-atomic="true" className="fer-count">
         {count} {count === 1 ? 'data cadastrada' : 'datas cadastradas'} nesta seleção{missing.length > 0 ? ' · cobertura parcial' : ''}
       </div>

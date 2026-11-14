@@ -23,7 +23,11 @@ fs.mkdirSync(output, { recursive: true })
       // Começa pequena, por cima da página; clicar amplia.
       const small = page.getByRole('button', { name: 'Ampliar mascote' })
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
-      assert.equal(await small.evaluate(el => getComputedStyle(el).position), width < 700 ? 'absolute' : 'fixed')
+      // computador (barra do topo visível): a coruja pequena mora no lugar reservado da barra; abaixo disso, flutua (700-999) ou fica no espaço reservado do celular
+      if (width >= 1000) {
+        await page.waitForFunction(() => !!document.querySelector('.mascot-mini')?.closest('.mascot-slot-top'), null, { timeout: 5000 }).catch(() => {})
+        assert.equal(await small.evaluate(el => !!el.closest('.mascot-slot-top')), true, 'coruja pequena na barra do topo')
+      } else assert.equal(await small.evaluate(el => getComputedStyle(el).position), width < 700 ? 'absolute' : 'fixed')
       const checkSmall = async state => {
         assert.equal(await small.getAttribute('title'), null, 'sem dica redundante')
         const box = await small.boundingBox()
