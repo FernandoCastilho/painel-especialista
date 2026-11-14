@@ -53,7 +53,7 @@ test('Maquila: marco atual, condições e limites permanecem explícitos', () =>
 test('Maquila: agrupamento, mapa recíproco e conceito diário incluem o conceito', () => {
   assert.equal(CONCEITOS.filter((concept) => concept.id === id).length, 1)
   assert.equal(CONCEITOS.find((concept) => concept.id === id), CONCEITO_MAQUILA)
-  assert.deepEqual(porTopico(CONCEITOS).find((group) => group.topico === 'Comércio exterior').itens.map((concept) => concept.id), ['drawback', id])
+  assert.deepEqual(porTopico(CONCEITOS).find((group) => group.topico === 'Comércio exterior').itens.map((concept) => concept.id), ['drawback', 'acc', id])
   assert.ok(CONEXAO.itens.some((item) => item.id === id))
   for (const related of ['drawback', 'custo-de-funding', 'commodities-e-cambio']) {
     assert.ok(conexoesDe(id).some((item) => item.id === related), related)

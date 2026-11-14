@@ -1,6 +1,6 @@
 // Apresentação e impressão do empréstimo externo (4131): cópia congelada do que a tela calculou.
 // Nunca recalcula nem busca taxa nova; se faltar número, não gera a cópia.
-import { moedaOf, unhedged4131 } from './emprestimo4131.js'
+import { IOF_SHORT_TERM, fronteiraIof, moedaOf, unhedged4131 } from './emprestimo4131.js'
 
 const freeze = (value) => {
   if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) }
@@ -99,6 +99,12 @@ export function condicoesE4(loan, hedge = null) {
 }
 
 // Texto no formato dos e-mails de cotação: condições, custo efetivo, economia de IOF e equivalente em giro.
+// Aviso que acompanha o resumo copiado, o PDF e a apresentação quando o prazo médio tem fração entre 364 e 365 dias.
+export function avisoFronteiraE4(loan) {
+  if (!fronteiraIof(loan)) return ''
+  return `Prazo médio exato de ${num(loan.avgTermExact)} dias corridos, entre ${IOF_SHORT_TERM.maxDays} e ${IOF_SHORT_TERM.maxDays + 1}: o IOF-câmbio zero vale se a fração de dia contar. Se o banco ou a Receita desprezarem a fração, o IOF é de ${pctText(IOF_SHORT_TERM.rate)}. Confirmar com o câmbio do banco.`
+}
+
 export function resumoE4({ loan, hedge }) {
   if (!loan?.ok || !hedge?.ok) return ''
   // Sinal decidido depois de arredondar: spread que arredonda para zero sai como "+ 0,00%".
@@ -111,6 +117,7 @@ export function resumoE4({ loan, hedge }) {
     `Custo efetivo total: taxa de juros prefixada em reais de ${menos(pctText(hedge.ndf.cetMes))} a.m. / ${menos(pctText(hedge.ndf.cetAno))} a.a. (exp/360), equivalente a CDI ${spread < 0 ? '−' : '+'} ${pctText(Math.abs(spread))} (com DI de ${pctText(hedge.di)} a.a.)`,
     `Economia de IOF (R$): ${num(hedge.ndf.iofGiro)}${loan.iofRate > 0 ? ` (IOF que um capital de giro pagaria; não desconta o IOF-câmbio de R$ ${num(loan.iofUsd * loan.spot)} desta operação)` : ''}`,
     `Taxa equivalente em capital de giro: ${menos(pctText(hedge.ndf.giroMes))} a.m. / ${menos(pctText(hedge.ndf.giroAno))} a.a. (exp/360)`,
+    ...(fronteiraIof(loan) ? [avisoFronteiraE4(loan)] : []),
     '',
     `Simulação indicativa, com ${hedge.source === 'mesa' ? 'as taxas futuras informadas da cotação' : 'taxa futura teórica'}. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. Sujeita a confirmação da cotação pela mesa do banco, a limite de crédito e a cadastro atualizado. Não constitui proposta nem compromisso de crédito.`,
   ].join('\n')

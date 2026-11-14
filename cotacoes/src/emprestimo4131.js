@@ -80,6 +80,11 @@ const weekdayOnOrAfter = (iso) => { const w = new Date(ms(iso)).getUTCDay(); ret
 export function iofEntrada(avgTermDays) {
   return avgTermDays <= IOF_SHORT_TERM.maxDays ? IOF_SHORT_TERM.rate : 0
 }
+// Prazo médio com fração entre 364 e 365 dias: IOF zero pelo prazo exato, mas sem regra oficial de arredondamento
+// localizada. Só indica o caso para os avisos; não entra em conta. A folga tira 365 dias cravados com ruído da conta.
+export function fronteiraIof(loan) {
+  return loan?.iofRate === 0 && Number.isFinite(loan.avgTermExact) && loan.avgTermExact < IOF_SHORT_TERM.maxDays + 1 - 1e-9
+}
 
 // Taxa que zera o fluxo [{ v, t }] (t em anos), na visão do tomador: entrada positiva, pagamentos negativos.
 // Bisseção: o valor presente dos pagamentos encolhe quando a taxa sobe, então o saldo cresce com a taxa.

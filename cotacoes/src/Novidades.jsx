@@ -10,8 +10,8 @@ export const ENTRIES = [
     'Condições da operação na ordem do e-mail de cotação, com o botão Copiar resumo, que leva o texto pronto para colar.',
     'Taxa futura: além da estimativa pelo DI e pelo juro da moeda, dá para colar as taxas futuras fechadas da cotação da mesa, uma por parcela. Com elas, as parcelas em reais e o custo efetivo passam a usar exatamente as taxas do banco.',
     'O que foge do padrão fica em Mais opções (outra frequência, principal no vencimento, carência, IR somado à taxa, tarifa, fiança). A comparação com swap e sem proteção continua disponível, em painel próprio.',
-    'Regras e fontes da 4131: entraram as regras do IOF do empréstimo externo por inteiro (IOF de crédito, IOF-câmbio na entrada e na saída, quem cobra e quando, cálculo do prazo médio, liquidação antecipada e títulos com opção de antecipação).',
-    'IOF-câmbio pelo prazo médio: passa a valer o prazo exato. Até 364 dias paga 3,5%; qualquer fração acima de 364 não paga, e o prazo aparece arredondado para cima. Antes a tela arredondava para baixo. Entre 364 e 365 dias a tela avisa para confirmar com o câmbio do banco.',
+    'Regras e fontes da 4131: entraram as regras do IOF do empréstimo externo que constam do decreto (IOF de crédito, IOF-câmbio na entrada e na saída, quem cobra e quando, cálculo do prazo médio, liquidação antecipada e títulos com opção de antecipação).',
+    'IOF-câmbio pelo prazo médio: passa a valer o prazo exato. Até 364 dias paga 3,5%; qualquer fração acima de 364 não paga, e o prazo aparece arredondado para cima. Antes a tela arredondava para baixo. Entre 364 e 365 dias a tela, o resumo copiado, o PDF e a apresentação avisam para confirmar com o câmbio do banco.',
   ] },
   { date: '12/11/2026', resumo: 'Calculadoras de crédito: 31/12 sem expediente bancário', items: [
     'Vencimento em 31/12 passa para o próximo dia útil no Capital de Giro, no Comparador de Crédito, na Análise de desconto e na Operação x DI (ex.: 31/12/2026 → 04/01/2027); juros, IOF e CET contam até a nova data. A contagem de dias úteis de CDI, DI e TLP continua com 31/12 como dia útil.',

@@ -2,8 +2,8 @@
 // Números fictícios, com resultado esperado em fórmula fechada ou somado à mão aqui, sem o código do painel.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { diDoPrazo, hedge4131, iofEntrada, iofGiro4131, lerTaxasFuturas, loan4131, metaTaxa4131, taxa360 } from '../src/emprestimo4131.js'
-import { condicoesE4, resumoE4 } from '../src/emprestimo4131Presentation.js'
+import { diDoPrazo, fronteiraIof, hedge4131, iofEntrada, iofGiro4131, lerTaxasFuturas, loan4131, metaTaxa4131, taxa360 } from '../src/emprestimo4131.js'
+import { avisoFronteiraE4, condicoesE4, resumoE4 } from '../src/emprestimo4131Presentation.js'
 
 const close = (a, b, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`)
 const DAY = 864e5
@@ -222,6 +222,24 @@ test('prazo médio na fronteira · vale o prazo exato: 364 cravados pagam o IOF;
   close(ruido.avgTermExact, 364, 1e-9)
   assert.equal(ruido.avgTermDays, 364)
   assert.equal(ruido.iofRate, 3.5)
+  // Aviso da fronteira: só com fração entre 364 e 365 dias; acompanha o resumo copiado.
+  assert.equal(fronteiraIof(fracao), true)
+  assert.equal(fronteiraIof(pouco), true)
+  assert.equal(fronteiraIof(acima), false)
+  assert.equal(fronteiraIof(cravado), false)
+  assert.equal(fronteiraIof(ruido), false)
+  assert.match(avisoFronteiraE4(pouco), /^Prazo médio exato de 364,04 dias corridos, entre 364 e 365: .*3,50%.*câmbio do banco\.$/)
+  assert.equal(avisoFronteiraE4(acima), '')
+  assert.equal(avisoFronteiraE4(cravado), '')
+  // 365 dias cravados com principal quebrado: a conta sai um fio abaixo de 365 e não há fração a avisar.
+  const cheio = loan4131({ ...base, principal: 2e6 / 5.5, months: 13, grace: 10, start: '2026-01-01' })
+  assert.deepEqual(cheio.flows.filter((f) => f.principal > 0).map((f) => f.dc), [334, 365, 396])
+  assert.equal(cheio.avgTermDays, 365)
+  assert.equal(cheio.iofRate, 0)
+  assert.equal(fronteiraIof(cheio), false)
+  const hedgeDe = (loan) => hedge4131(loan, { di: 14, cupom: 5 })
+  assert.ok(resumoE4({ loan: fracao, hedge: hedgeDe(fracao) }).includes(avisoFronteiraE4(fracao)))
+  assert.ok(!resumoE4({ loan: acima, hedge: hedgeDe(acima) }).includes('Prazo médio exato'))
   // Principal no vencimento: a média exata é o próprio prazo.
   assert.equal(loan4131(MENSAL).avgTermExact, 365)
 })
