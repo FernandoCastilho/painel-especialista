@@ -10,7 +10,7 @@
 .cal-row.past { opacity:.55; }
 .cal-row .cal-title { font-weight:600; min-width:200px; }
 .cal-time { white-space:nowrap; color:var(--mut); }
-.cal-country-cell { white-space:nowrap; }
+.cal-country-cell, .cal-num { white-space:nowrap; }
 .cal-impact { letter-spacing:1px; white-space:nowrap; }
 .cal-impact.high { color:var(--down); } .cal-impact.medium { color:var(--warn); } .cal-impact.low, .cal-impact.holiday { color:var(--mut); }
 .cal-row .tent { font-style:normal; font-size:.75rem; color:var(--warn); border:1px solid var(--warn); border-radius:3px; padding:0 4px; margin-left:4px; }

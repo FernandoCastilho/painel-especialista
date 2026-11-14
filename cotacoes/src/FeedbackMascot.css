@@ -37,7 +37,12 @@
 .mascot-mini-face{display:block;width:100%;height:100%;border-radius:50%;border:1px solid var(--line);background:var(--bg) url('./assets/mascot-owl.webp') -2px 1px/44px auto no-repeat;box-shadow:0 2px 8px #0004}
 @media(prefers-reduced-motion:no-preference){.mascot-mini:not(:hover):not(:focus-visible) .mascot-mini-face{animation:mascot-peek 2.6s ease-in-out infinite}@keyframes mascot-peek{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}}
 @media(prefers-reduced-motion:reduce){.mascot-mini{transition:none}}
-@media(max-width:699px){.mascot-mini{right:auto;left:max(12px,env(safe-area-inset-left));transform-origin:top left}.mascot-dock .feedback-mascot-icon{width:88px;height:94px}}
+@media(max-width:699px){.mascot-tray{position:relative;min-height:88px}.mascot-mini{position:absolute;top:6px!important;right:auto;left:max(12px,env(safe-area-inset-left));transform-origin:top left}.mascot-dock .feedback-mascot-icon{width:88px;height:94px}}
+/* Computador: lugar reservado na barra do topo; a coruja pequena entra aqui e deixa de cobrir conteúdo e botões. */
+.mascot-slot{display:none;align-items:center;justify-content:center;flex:none;width:44px;min-height:44px}
+.mascot-slot .mascot-mini{position:static;width:36px;height:36px;transform-origin:top right}
+.mascot-slot .mascot-mini-face{background-position:-2px 1px;background-size:40px auto}
+.mascot-slot-top{display:flex;align-self:stretch;border-left:1px solid var(--line,#1d1b15)}
 .mascot-figure{display:flex;justify-content:center;cursor:zoom-out}
 .mascot-dock :focus-visible,.mascot-mini:focus-visible{outline:3px solid var(--amber,#ffb000);outline-offset:2px}
 .mascot-position-controls{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(290px,calc(100vw - 32px));padding:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 18px #0004;z-index:56;text-align:center}
@@ -46,7 +51,7 @@
 .mascot-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media print{.mascot-tray{display:none!important}}
 
-/* A coruja sempre flutua por cima da página: não reserva espaço nem empurra o conteúdo. */
+/* No celular, a miniatura reserva 88px entre relógios e conteúdo: 76px ampliada + foco e respiro. A coruja grande e o desktop continuam flutuantes. */
 /* Apresentação de Fredix abaixo do desenho, sem cobrir o rosto ou o escudo. */
 .mascot-dock .mascot-greeting{background:var(--bg);border:1px solid var(--line);position:relative;max-width:128px;box-sizing:border-box;margin-top:5px;padding:4px 7px;border-radius:10px;font-size:10px;line-height:14px;white-space:nowrap}
 .mascot-greeting::before{content:'';position:absolute;top:-5px;left:calc(50% - 4px);width:7px;height:7px;background:var(--bg);border-top:1px solid var(--line);border-left:1px solid var(--line);transform:rotate(45deg)}

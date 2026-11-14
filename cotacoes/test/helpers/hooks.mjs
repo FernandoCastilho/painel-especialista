@@ -21,6 +21,7 @@ export function hookRenderer(renderHook) {
     },
     useRef(initial) { const index = cursor++; return slots[index] ??= { current: initial } },
     useCallback(fn, deps) { return memo(() => fn, deps) },
+    useLayoutEffect(effect, deps) { return dispatcher.useEffect(effect, deps) }, // neste apoio de testes, mesmo momento do useEffect
     useEffect(effect, deps) {
       const index = cursor++, previous = slots[index]
       if (!previous || deps.some((dep, i) => !Object.is(dep, previous.deps[i]))) {
@@ -56,10 +57,11 @@ export const flush = () => new Promise((resolve) => setImmediate(resolve))
 export const json = (data) => ({ ok: true, json: async () => data })
 export const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b }); return { promise, resolve, reject } }
 
-export function browserClock(t) {
+// `start` fixa a hora inicial quando o comportamento testado depende do horário (ex.: janela de coleta do câmbio).
+export function browserClock(t, start = Date.now()) {
   const saved = Object.fromEntries(['document', 'window', 'fetch', 'setInterval', 'clearInterval', 'localStorage'].map((k) => [k, globalThis[k]]))
   const oldNow = Date.now
-  let now = Date.now(), id = 0
+  let now = start, id = 0
   const timers = new Map(), store = new Map(), cleanups = []
   const target = () => {
     const listeners = new Map()

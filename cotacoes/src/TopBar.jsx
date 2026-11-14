@@ -4,6 +4,7 @@ import { OnlineBadge } from './Acessos.jsx'
 import { DESK_TABS } from './terminal.js'
 import ThemeControl from './ThemeControl.jsx'
 import { AvisosButton } from './Avisos.jsx'
+import MascotSlot from './MascotSlot.jsx'
 import './TopBar.css'
 
 const CLOCKS = [
@@ -12,7 +13,7 @@ const CLOCKS = [
   ['GBP', 'LDN'],
   ['JPY', 'TYO'],
 ]
-const STATE_TEXT = { ok: 'Dados', delayed: 'Dado antigo', err: 'Sem atualização', loading: 'Carregando' }
+const STATE_TEXT = { ok: 'Dados', delayed: 'Dado antigo', idle: 'Fora do horário de coleta', err: 'Sem atualização', loading: 'Carregando' }
 
 const part = (now, tz, opts) => new Intl.DateTimeFormat('pt-BR', { timeZone: tz, hourCycle: 'h23', ...opts }).format(now)
 
@@ -71,6 +72,7 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
       <ThemeControl />
       <AvisosButton className="topbar-info" />
       <span className="laser-slot laser-slot-top" />
+      <MascotSlot className="mascot-slot-top" />
     </div>
   )
 }

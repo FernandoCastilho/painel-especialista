@@ -48,3 +48,16 @@ test('health: retenção, reserva e ausência não recebem estado recente', () =
   const future=quotes(now);future.USD.timestamp=now+H
   assert.equal(quoteHealth(future,{now}).state,'partial')
 })
+
+test('câmbio fora da janela de coleta: referências do fim da janela ficam neutras; atraso real continua alerta', () => {
+  const noite = at('2026-11-12T22:00:00-03:00'), fim = at('2026-11-12T19:41:00-03:00')
+  const rows = quotes(fim)
+  const h = quoteHealth(rows, { now: noite })
+  assert.equal(h.state, 'offhours'); assert.equal(h.label, 'Fora do horário de coleta'); assert.equal(h.feed, 'idle')
+  rows.CNH.stale = true // cruzamento retido à noite continua sendo referência do fim da janela
+  assert.equal(quoteHealth(rows, { now: noite }).state, 'offhours')
+  rows.USD.timestamp = at('2026-11-12T14:00:00-03:00') // coleta parou à tarde: alerta
+  assert.equal(quoteHealth(rows, { now: noite }).feed, 'delayed')
+  const semIene = quotes(fim); delete semIene.JPY
+  assert.equal(quoteHealth(semIene, { now: noite }).state, 'partial')
+})

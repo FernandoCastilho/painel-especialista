@@ -8,6 +8,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { hookRenderer } from './helpers/hooks.mjs'
 import * as sectorNews from '../src/sectorNews.js'
+import * as newsTitle from '../src/newsTitle.js'
 
 const require = createRequire(import.meta.url)
 const now = Date.parse('2026-11-05T12:00:00Z')
@@ -24,6 +25,7 @@ async function setup(t, resource, normalize = data => data) {
     if (name === './useDataFile.js') return { useDataFile: () => resource }
     if (name === './visiblePolling.js') return { DATA_POLL_MS: 60000, startVisiblePolling: fn => { polls.push(fn); return () => {} } }
     if (name === './newsWindow.js') return { NEWS_WINDOW_MS: 120 * 3600000 }
+    if (name === './newsTitle.js') return newsTitle
     if (name === './insumoPresentation.js') return { publicReference: value => value?.startsWith('https://www.gov.br/') }
     if (name === './sectorNews.js') return { ...sectorNews, normalizeSectorNews: normalize }
     if (name === './Estado.jsx') return ({ children }) => createElement('p', {}, children)

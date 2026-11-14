@@ -21,3 +21,9 @@ body .cen-nav button:hover, body .seg.bn-fam button:hover { color: var(--fg, #e8
 body .cen-nav button.on, body .seg.bn-fam button[aria-pressed='true'] { color: var(--amber, #ffb000); border-bottom-color: var(--amber, #ffb000); background: transparent; font-weight: 700; }
 body .cen-nav button + button, body .seg.bn-fam button + button { border-left: 0; }
 @media (max-width: 699px) { body .cen-nav button, body .seg.bn-fam button { min-height: 44px; } }
+/* Celular: os assuntos de Cenários ficam numa linha só, que desliza para o lado (antes ocupavam 5 linhas, um quarto da tela). */
+@media (max-width: 699px) {
+  body .cen-nav { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; padding-right: 32px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
+  body .cen-nav::-webkit-scrollbar { display: none; }
+  body .cen-nav button { flex: none; white-space: nowrap; scroll-snap-align: center; }
+}

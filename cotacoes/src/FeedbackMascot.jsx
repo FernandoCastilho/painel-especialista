@@ -14,7 +14,7 @@ export function MascotIcon() {
   </span>
 }
 
-export default function FeedbackMascot({ configuration = config, onSearch }) {
+export default function FeedbackMascot({ configuration = config, onSearch, section }) {
   const [open, setOpen] = useState(false)
   const [values, setValues] = useState({ ...EMPTY_FEEDBACK })
   const [status, setStatus] = useState('idle')
@@ -69,12 +69,12 @@ export default function FeedbackMascot({ configuration = config, onSearch }) {
     } finally { clearTimeout(timeout); inFlight.current = false; controller.current = null }
   }
   return <>
-    <MascotDock onSearch={onSearch} icon={<MascotIcon />}>
+    <MascotDock section={section} onSearch={onSearch} icon={<MascotIcon />}>
       <span className="mascot-greeting">Prazer, sou Fredix</span>
       <button className="feedback-trigger" type="button" ref={trigger} aria-label="Abrir caixa de sugestões" title="Fredix — abrir caixa de sugestões" aria-haspopup="dialog" aria-expanded={open} aria-controls="feedback-dialog" onClick={() => { restoreFocus.current = true; setOpen(true) }}>💡 Sugestão</button>
     </MascotDock>
     {createPortal(<dialog id="feedback-dialog" className="feedback-dialog" ref={dialog} aria-labelledby="feedback-title" aria-describedby="feedback-privacy" onCancel={event => { event.preventDefault(); setOpen(false) }} onClose={() => { if (!dialog.current?.open) setOpen(false) }}>
-      <header className="feedback-heading"><MascotIcon /><div><span>PEME</span><h2 id="feedback-title">Sua ideia faz diferença</h2></div><button type="button" className="feedback-close" aria-label="Fechar caixa de sugestões" onClick={() => setOpen(false)}>×</button></header>
+      <header className="feedback-heading"><MascotIcon /><div><span>PME</span><h2 id="feedback-title">Sua ideia faz diferença</h2></div><button type="button" className="feedback-close" aria-label="Fechar caixa de sugestões" onClick={() => setOpen(false)}>×</button></header>
       <p id="feedback-privacy" className="feedback-privacy">Envie sugestões, dicas ou problemas identificados. Não inclua dados de clientes, senhas ou informações confidenciais.</p>
       {!enabled && <p className="feedback-notice" role="status">O envio está em configuração. Nada será enviado por esta janela enquanto o serviço não estiver ativado.</p>}
       <form onSubmit={submit} aria-busy={status === 'sending'}>
