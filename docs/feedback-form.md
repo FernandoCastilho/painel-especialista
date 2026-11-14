@@ -1,6 +1,6 @@
 # Caixa de sugestões
 
-Mascote vetorial discreto, aberto somente por clique. O formulário contém tipo (sugestão/dica/problema), mensagem obrigatória e nome/e-mail opcionais. Não inclua dados de clientes nem informações confidenciais.
+Mascote vetorial discreto, aberto somente por clique. O formulário contém tipo (sugestão/dica/problema), mensagem e e-mail obrigatórios e nome opcional. Não inclua dados de clientes nem informações confidenciais.
 
 ## Estado da ativação
 
@@ -42,3 +42,15 @@ Verificação do candidato integrado: 1.558 testes passaram; build passou; lint 
 Candidato reconciliado também com a base `5ac2b122d9ffccaf1f738474f98a4079cc79c5b5`, em checkout isolado, preservando a reconciliação anterior. Suíte completa: 1.559 testes aprovados; build aprovado. O formulário público continua sem ID e com `verified: false`.
 
 O formulário `xaeegypp` existe no Formspree e o destino autorizado foi conferido sem alteração. A tela de submissões informa que nenhum formulário foi enviado; spam zero. A consulta da caixa de destino não encontrou mensagem de teste. Nenhum POST foi realizado nesta retomada. A prévia Vite iniciada em loopback não foi alcançada pelo navegador de revisão (`ERR_CONNECTION_REFUSED`), portanto a aparência e o recebimento real permanecem pendentes. Não publicar como funcional nem ativar o envio antes de concluir essas verificações. Nenhum acesso público de prévia foi criado.
+
+## E-mail obrigatório — 13/11/2026
+
+O formulário exige e-mail para permitir resposta à sugestão, com indicação explícita junto ao campo. Nome continua opcional. A validação nativa do campo e a validação antes do transporte bloqueiam e-mail ausente, em branco, inválido ou acima de 254 caracteres. O endereço é enviado sem espaços nas extremidades; não há confirmação de titularidade nem nova autenticação.
+
+Os testes sintéticos cobrem bloqueio antes da rede, correção e reenvio, preservação do rascunho ao fechar/reabrir e nova exigência após envio concluído. Nenhum formulário real é enviado. A exigência é do aplicativo; não foi alterada a configuração de validação do serviço externo, e chamadas diretas ao endpoint não são certificadas por esta mudança.
+
+Verificação local deste candidato: 1.890 testes aprovados, build aprovado, lint sem erros (cinco avisos preexistentes). A inspeção visual não foi concluída: Chromium instalado encerrou antes de abrir a página com `socket() failed: Operation not permitted`. Não houve envio real, publicação ou execução de CI deste candidato.
+
+Por pedido expresso de Fernando, foram removidos apenas os dois avisos visíveis de processamento pelo Formspree e duração do rascunho. O alerta para não incluir dados de clientes/senhas/informações confidenciais permanece. O processamento e a duração do rascunho não foram alterados.
+
+O texto de abertura foi substituído exatamente por: “Envie sugestões, dicas ou problemas identificados. Não inclua dados de clientes, senhas ou informações confidenciais.” Após os ajustes de texto e remoção dos avisos, 1.891 testes passaram; build passou e lint permaneceu sem erros e com os cinco avisos preexistentes. As limitações de inspeção visual e publicação acima permanecem.

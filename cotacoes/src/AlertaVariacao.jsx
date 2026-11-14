@@ -14,7 +14,7 @@ const ler = () => {
 const gravar = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)) } catch { /* deduplicação apenas nesta sessão */ } }
 const entregue = (entry) => Number.isFinite(entry?.sistemaEnviadoEm) && entry.sistemaEnviadoEm > 0
 
-export default function AlertaVariacao({ quotes }) {
+export default function AlertaVariacao({ quotes, hideBanner = false }) {
   const testing = typeof navigator !== 'undefined' && navigator.webdriver // o smoke próprio desliga isso
   const [estado, setEstado] = useState(ler)
   const estadoRef = useRef(estado)
@@ -87,7 +87,7 @@ export default function AlertaVariacao({ quotes }) {
     finally { pedindo.current = false; if (ativo.current) setSolicitando(false) }
   }
 
-  if (testing || (!visiveis.length && perm === 'granted')) return null
+  if (hideBanner || testing || (!visiveis.length && perm === 'granted')) return null
   return (
     <section className="alerta-variacao" aria-label="Alertas de câmbio" role="status" aria-live="polite">
       {visiveis.map((a) => (

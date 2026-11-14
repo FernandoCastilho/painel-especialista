@@ -46,7 +46,7 @@ async function setup(t, initialView = 'conceitos') {
 
 test('categorias começam recolhidas e expandem individualmente ou em conjunto', async t => {
   const h = await setup(t)
-  assert.equal(h.groups().length, 7)
+  assert.equal(h.groups().length, educacao.porTopico(educacao.CONCEITOS).length)
   assert.ok(h.groups().every(group => !group.props.open))
   assert.equal(h.button('Recolher todas').props.disabled, true)
   await h.toggle('Tributos e trabalho', true)
@@ -69,7 +69,7 @@ test('busca abre os grupos pertinentes e limpar restaura a seleção de categori
   await h.search('split payment')
   assert.ok(h.groups().every(group => group.props.open))
   await h.click('Limpar busca')
-  assert.equal(h.groups().length, 7)
+  assert.equal(h.groups().length, educacao.porTopico(educacao.CONCEITOS).length)
   assert.deepEqual(h.groups().filter(group => group.props.open).map(group => group.key), ['Juros e câmbio'])
   await h.search('palavra-inexistente-xyz')
   assert.equal(h.groups().length, 0)

@@ -38,21 +38,26 @@ test('pastas, seletor compacto e rotas antigas preservam a hierarquia', async ()
   const Component = await getComponent()
   const html = view => renderToStaticMarkup(createElement(Component, { view }))
   const catalog = html('central')
-  assert.equal((catalog.match(/class="central-folder"/g) || []).length, 11)
+  assert.equal((catalog.match(/class="central-folder"/g) || []).length, 15)
   assert.match(catalog, /Explorar Base florestal e madeira, 6 subsetores/)
-  assert.equal((catalog.match(/class="central-card-photo"/g) || []).length, 11)
+  assert.equal((catalog.match(/class="central-card-photo(?: central-sector-symbol)?"/g) || []).length, 15)
   assert.doesNotMatch(catalog, /central-folder-back|central-folder-sheet|central-folder-front/)
   assert.doesNotMatch(catalog, /Escolha um subsetor<\/h3>/)
   const folder = html('pasta/base-florestal')
   assert.match(folder, />SETOR</)
-  assert.equal((folder.match(/class="central-card-photo"/g) || []).length, 6)
+  assert.equal((folder.match(/class="central-card-photo(?: central-sector-symbol)?"/g) || []).length, 6)
   assert.match(folder, />Compensados</)
   assert.match(folder, /Caminho do setor/)
   assert.doesNotMatch(folder, /central-folder-tone-/)
   let imageBytes = 0
   for (const group of CATALOGO_SETORIAL) {
     const sector = html(`pasta/${group.id}`)
-    assert.equal((sector.match(/class="central-card-photo"/g) || []).length, group.topics.length, `${group.id}: cada subsetor tem uma foto`)
+    assert.equal((sector.match(/class="central-card-photo(?: central-sector-symbol)?"/g) || []).length, group.topics.length, `${group.id}: cada subsetor tem uma foto`)
+    if (['turismo', 'varejo', 'saude', 'pet'].includes(group.id)) {
+      assert.match(sector, /central-sector-symbol/)
+      assert.ok(!sector.includes(`./sector-images/${group.id}.jpg`), 'ícone editorial sem foto inexistente')
+      continue
+    }
     assert.ok(sector.includes(`./sector-images/${group.id}.jpg`))
     const asset = readFileSync(`public/sector-images/${group.id}.jpg`)
     assert.equal(asset[0], 0xff)
@@ -60,7 +65,7 @@ test('pastas, seletor compacto e rotas antigas preservam a hierarquia', async ()
     assert.ok(asset.length < 768 * 1024, `${group.id}: imagem dentro do orçamento`)
     imageBytes += asset.length
   }
-  assert.ok(imageBytes < 6 * 1024 * 1024, 'onze atlas somam menos de 6 MiB')
+  assert.ok(imageBytes < 6 * 1024 * 1024, 'quinze atlas somam menos de 6 MiB')
   const study = html('topico/base-florestal/3')
   assert.match(study, /Trocar subsetor/)
   assert.match(study, /<select aria-label="Trocar subsetor"/, 'seletor tem nome explícito sem concatenar as opções do label implícito')
@@ -73,4 +78,17 @@ test('pastas, seletor compacto e rotas antigas preservam a hierarquia', async ()
     assert.match(invalid, /Este setor ou subsetor não foi encontrado/)
     assert.doesNotMatch(invalid, /central-detail-selected/)
   }
+})
+
+
+test('cada setor apresenta síntese executiva antes dos subsetores, sem alterar rotas existentes', async () => {
+  const Component = await getComponent()
+  for (const group of CATALOGO_SETORIAL) {
+    const html = renderToStaticMarkup(createElement(Component, { view: `pasta/${group.id}` }))
+    assert.match(html, /LEITURA EXECUTIVA/)
+    assert.match(html, /O que acompanhar/)
+    assert.ok(html.indexOf('central-highlight') < html.indexOf('central-topics central-subsectors'))
+  }
+  assert.deepEqual(CATALOGO_SETORIAL.find(group => group.id === 'varejo').topics, ['Alimentos','Bebidas','Vestuário'])
+  assert.equal(CATALOGO_SETORIAL.find(group => group.id === 'tic').topics[0], 'Integração de TI e infraestrutura digital')
 })

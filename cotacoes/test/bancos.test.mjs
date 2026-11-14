@@ -5,6 +5,10 @@ import { BANKS, latestBankPoint, metricChange, bankComparison, bankSummary, shif
 import { normalizeBankQuarter } from '../scripts/bancos-lib.mjs'
 
 const point = (period, origin, value, basis = 'same') => ({ period, origin, metrics: { basel: { value, basis } } })
+test('seção Bancos mantém os sete bancos solicitados, sem ABC e Daycoval', () => {
+  assert.deepEqual(BANKS.map(bank => bank.id), ['itau', 'bb', 'bradesco', 'santander', 'caixa', 'safra', 'btg'])
+  assert.ok(BANKS.every(bank => bank.logo === `bank-logos/${bank.id}.png`))
+})
 test('latest result selects per bank; BC view keeps the original quarter; no older metric fills a new release', () => {
   const bank = { observations: [{ ...point(202606, 'bc', 15), metrics: { assets: { value: 9e9 } } }], releases: [point(202609, 'ri', 16)] }
   assert.equal(latestBankPoint(bank).period, 202609)
@@ -43,10 +47,10 @@ test('Cosif quarter profit subtracts the first quarter; expected loss uses match
   reports['2'].pop()
   assert.equal(normalizeBankQuarter(202606, reports)[0].metrics.provisionRatioTotal, undefined)
 })
-test('published snapshot covers nine unique banks with finite, source-backed values and exact quarters', async () => {
+test('published snapshot covers selected banks with finite, source-backed values and exact quarters', async () => {
   const data = JSON.parse(await readFile(new URL('../public/bancos.json', import.meta.url)))
-  assert.equal(data.banks.length, 9)
-  assert.equal(new Set(data.banks.map(b => b.id)).size, 9)
+  assert.equal(new Set(data.banks.map(b => b.id)).size, data.banks.length)
+  assert.ok(BANKS.every(bank => data.banks.some(item => item.id === bank.id)))
   for (const bank of data.banks) {
     assert.ok(latestBankPoint(bank)?.metrics.basel)
     assert.ok(latestBankPoint(bank)?.metrics.roe, bank.name + ': ROE deve ter fonte e critério explícitos')

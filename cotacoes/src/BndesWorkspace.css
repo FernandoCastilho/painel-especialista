@@ -488,3 +488,13 @@
 /* 13/11/2026 · Leitura: nenhum texto do resultado abaixo de 11 px (o título da primeira coluna e a nota do cabeçalho ficavam com 10 px). */
 .bw .fm-comparison .cx-matrix thead th:first-child,.bw .fm-quote-empty .cx-matrix thead th:first-child { text-transform:none; font-variant-caps:all-small-caps; font-size:.78rem; }
 .bw #fm-result > header small { font-size:.7rem; }
+/* Ajuste visual aprovado: datas juntas no desktop; impressão como ação secundária (cores pelas variáveis da tela, para acompanhar o tema). */
+@media (min-width:1001px) {
+  .bw .cx-finame .fm-operation .fm-field-data-lib,
+  .bw .cx-finame .fm-operation .fm-field-praca { grid-column:span 1; }
+  .bw .cx-finame .fm-operation .fm-field-data-lib .fm-rotulo,
+  .bw .cx-finame .fm-operation .fm-field-praca .fm-rotulo { min-height:40px; align-items:flex-start; }
+}
+.bw .fm-print-actions .bnprint-launch { background:var(--bw-card); border:1px solid var(--bw-line); color:var(--bw-ink); font-weight:600; box-shadow:none; }
+.bw .fm-print-actions .bnprint-launch:hover:not(:disabled) { background:var(--bw-soft); border-color:var(--bw-strong-line); }
+.bw .fm-print-actions .bnprint-launch:disabled { background:var(--bw-soft); color:var(--bw-mut); border-color:var(--bw-line); }

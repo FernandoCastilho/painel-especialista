@@ -4,10 +4,13 @@ import { marketDate } from './marketReturns.js'
 
 const today = () => marketDate(Date.now())
 const dm = (s) => s.split('-').reverse().join('/')
-// "02/11/2026 (em 5 dias)", "(hoje)" ou "(amanhã)": a data e quanto falta.
+const weekdays = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
+// A data do feriado é civil: usar UTC evita mudar o dia conforme o fuso do navegador.
+const weekday = (s) => weekdays[new Date(`${s}T12:00:00Z`).getUTCDay()]
+// "02/11/2026 · segunda-feira (em 5 dias)", "(hoje)" ou "(amanhã)": a data e quanto falta.
 const when = (d, t) => {
   const diff = Math.round((Date.parse(`${d}T12:00:00Z`) - Date.parse(`${t}T12:00:00Z`)) / 864e5)
-  return `${dm(d)} (${diff === 0 ? 'hoje' : diff === 1 ? 'amanhã' : `em ${diff} dias`})`
+  return `${dm(d)} · ${weekday(d)} (${diff === 0 ? 'hoje' : diff === 1 ? 'amanhã' : `em ${diff} dias`})`
 }
 
 // Aviso de feriados nas praças escolhidas (próximos dias) e de calendário chinês ainda não publicado.
