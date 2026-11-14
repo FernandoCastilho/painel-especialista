@@ -636,8 +636,6 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .alerta-var-permissao p { margin: 0 0 6px; }
 .alerta-var-metodo { margin: 0; font-size: .8rem; }
 
-.scenario-ages { list-style:none; margin:8px 0; padding:0; display:flex; flex-wrap:wrap; gap:4px 18px; color:var(--mut); font-size:.8125rem; line-height:1.5; }
-.scenario-ages li.old { color:var(--warn, #d29922); font-weight:600; }
 
 /* Aba Juros: atalhos no topo e tabelas do CDI futuro e das curvas com a mesma aparência da tabela de referência
    (faixa de título e moldura); cada linha abre o gráfico em tela própria. */

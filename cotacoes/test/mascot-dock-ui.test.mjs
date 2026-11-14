@@ -13,7 +13,7 @@ async function setup(t, width = 1280, open = true) {
   const store = new Map(), listeners = new Map(), searches = []
   const localStorage = { getItem: key => store.get(key), setItem: (key, value) => store.set(key, value) }
   const window = { innerWidth: width, innerHeight: 900, localStorage, addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: name => listeners.delete(name) }
-  const deps = { react: React, './mascotPosition.js': position }
+  const deps = { react: React, 'react-dom': { createPortal: el => el }, './mascotPosition.js': position, './mascotSlot.js': { currentMascotSlot: () => null, subscribeMascotSlot: () => () => {} } }
   const { code } = await transform(await readFile(new URL('../src/MascotDock.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, window, localStorage, require: name => deps[name] ?? require(name) })

@@ -32,12 +32,18 @@
 .bank-detail-table .bank-change { display:block; margin-top:4px; font-size:.75rem; color:var(--mut); }
 .bank-detail-table .bank-change--subiu { color:var(--up,#199e70); }
 .bank-detail-table .bank-change--caiu { color:var(--down,#d55181); }
+/* Provisão e inadimplência: subir não é "bom". A seta mostra a direção, sem verde nem vermelho. */
+.banks-table .bank-change--neutro,.bank-detail-table .bank-change--neutro { color:var(--mut); }
+.banks-alert { margin:8px 0; padding:8px 12px; border-left:3px solid var(--amber,#ffb000); background:var(--card); color:var(--fg); font-size:.85rem; line-height:1.5; }
+/* Janela alta: a tabela inteira cabe na página, sem caixa de rolagem cortando a última linha. */
+@media (min-width:1000px) and (min-height:860px) { .banks-table-scroll { max-height:none; } }
 .bank-details a,.banks-method a { color:var(--accent,var(--fg)); text-decoration:underline; }
 .bank-details p,.bank-details li,.banks-method { line-height:1.6; }
 .banks-method { margin-top:20px; padding:0 16px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:.85rem; }
 .banks-panel :focus-visible { outline:2px solid var(--accent,var(--fg)); outline-offset:3px; }
+/* Celular: filtros em duas colunas, para a tabela aparecer mais cedo. */
 @media(max-width:699px) {
-  .banks-heading{flex-direction:column;} .banks-controls{padding:12px;gap:12px;} .banks-controls label{flex-basis:100%;}
+  .banks-heading{flex-direction:column;} .banks-controls{padding:12px;gap:10px 8px;} .banks-controls label{flex:1 1 calc(50% - 4px);min-width:0;} .banks-controls select,.banks-controls input{text-overflow:ellipsis;}
   .banks-table{width:max(100%,calc(120px + var(--bank-columns)*165px));font-size:.8rem;}
   .banks-indicator-column,.banks-table thead th:first-child,.banks-table tbody th{width:120px;}
   .banks-table th,.banks-table td{padding:8px 8px;}

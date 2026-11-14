@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import RefreshButton from './RefreshButton.jsx'
-import { UF_NAMES, UNKNOWN_UF, UNKNOWN_SECTOR, validateRecoveryHistory, recoveryPeriod, filterRecovery, groupRecovery } from './recoveryHistory.js'
+import { UF_NAMES, UNKNOWN_UF, UNKNOWN_SECTOR, validateRecoveryHistory, recoveryPeriod, filterRecovery, groupRecovery, shortSectorNames } from './recoveryHistory.js'
 import geography from './recovery-geography.json'
 import RecoveryMapTooltip, { useRecoveryMapTooltip } from './RecoveryMapTooltip.jsx'
 import './RecoveryHistoryPanel.css'
@@ -12,6 +12,8 @@ const percentage = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFra
 const dateLabel = date => date.split('-').reverse().join('/')
 const PAGE_SIZE = 10
 const SECTOR_PREVIEW_SIZE = 8
+// Raio mínimo da bolha (unidades do mapa): UF com poucas menções continua visível, sobretudo no celular.
+const MIN_PIN_RADIUS = 9
 const stateLabel = uf => uf === UNKNOWN_UF ? 'Sem UF empresarial' : `${UF_NAMES[uf]} · ${uf}`
 const geographyUrl = 'https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais.html'
 
@@ -26,7 +28,7 @@ function StateMap({ records, selected, onSelect }) {
   const tipCount = counts.get(tip.active) ?? 0
   return <article className="rj-card" aria-labelledby="rj-map-title">
     <div className="rj-card-head">
-      <div><h3 id="rj-map-title">Distribuição por UF</h3><p>{state ? stateLabel(selected) : 'Brasil · área da bolha proporcional às menções'}</p></div>
+      <div><h3 id="rj-map-title">Distribuição por UF</h3><p>{state ? stateLabel(selected) : 'Brasil · quanto maior a bolha, mais menções'}</p></div>
       {state && <button type="button" className="btn" onClick={() => onSelect('')}>Ver Brasil</button>}
     </div>
     <p className="rj-map-instructions" id="rj-map-help">Passe o cursor, use Tab ou toque para ver os detalhes. Clique ou use Enter para filtrar. Esc fecha a dica.</p>
@@ -38,7 +40,7 @@ function StateMap({ records, selected, onSelect }) {
           aria-pressed={selected === item.uf} fillRule="evenodd" />)}
         {shownStates.filter(item => counts.get(item.uf)).map(item => {
           const count = counts.get(item.uf)
-          const radius = Math.sqrt(count / max) * 25
+          const radius = Math.max(MIN_PIN_RADIUS, Math.sqrt(count / max) * 25)
           return <g key={item.uf} aria-hidden="true" className={selected === item.uf ? 'rj-pin active' : 'rj-pin'}>
             <circle cx={item.x} cy={item.y} r={radius} />
             {radius >= 13 && <text x={item.x} y={item.y} dy=".34em">{item.uf}</text>}
@@ -63,6 +65,7 @@ function SectorRanking({ records, selected, onSelect }) {
   const groups = groupRecovery(records, 'sector', UNKNOWN_SECTOR)
   const visibleGroups = expanded ? groups : groups.slice(0, SECTOR_PREVIEW_SIZE)
   const maxCount = groups[0]?.count
+  const shortNames = shortSectorNames(groups.map(group => group.label))
 
   return <article className="rj-card" aria-labelledby="rj-sector-title">
     <div className="rj-card-head">
@@ -82,9 +85,10 @@ function SectorRanking({ records, selected, onSelect }) {
           const active = label === selected
           const mentions = count === 1 ? 'menção' : 'menções'
           return <li key={label}>
-            <button type="button" className="rj-sector-bar" aria-pressed={active}
+            <button type="button" className="rj-sector-bar" aria-pressed={active} title={shortNames.get(label) === label ? undefined : label}
+              aria-label={`${label}: ${integer.format(count)} ${mentions}, ${percentage.format(count / records.length)}`}
               onClick={() => onSelect(active ? '' : label)}>
-              <span className="rj-sector-name">{label}</span>
+              <span className="rj-sector-name">{shortNames.get(label)}</span>
               <span className="rj-sector-metric"><strong>{integer.format(count)} {mentions}</strong>
                 <small>{percentage.format(count / records.length)}</small></span>
               <span className="rj-sector-track" aria-hidden="true">
@@ -98,7 +102,7 @@ function SectorRanking({ records, selected, onSelect }) {
         aria-expanded={expanded} aria-controls="rj-sector-ranking" onClick={() => setExpanded(!expanded)}>
         {expanded ? 'Ver apenas os primeiros setores' : `Ver todos os ${integer.format(groups.length)} setores`}
       </button>}
-      {groups.some(group => group.label === UNKNOWN_SECTOR) && <p className="rj-card-note">Sem setor reúne menções sem atividade identificada.</p>}
+      {groups.some(group => group.label === UNKNOWN_SECTOR) && <p className="rj-card-note">{UNKNOWN_SECTOR} reúne as menções sem atividade informada. Nomes longos aparecem resumidos; o nome completo está no seletor acima.</p>}
     </> : <p className="rj-empty">Nenhum setor com menções neste recorte.</p>}
   </article>
 }
@@ -117,6 +121,7 @@ function HistoryDashboard({ data }) {
   const total = result.current.length
   const coveredUf = result.current.filter(row => row.uf).length
   const share = total ? percentage.format(visible.length / total) : '—'
+  const filtered = Boolean(uf || sector)
   const trend = !result.previousEditionCount || !result.editionCount ? 'Sem cobertura comparável' : !previous ? 'Base anterior igual a zero' : percentage.format((visible.length - previous) / previous)
   const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
   const currentPage = Math.min(page, pages - 1)
@@ -143,11 +148,14 @@ function HistoryDashboard({ data }) {
       <span className="rj-card-note">{dateRange} · {integer.format(result.editionCount)} edições</span>
     </div>
     <div className="rj-kpis" aria-live="polite">
-      <div><span>Menções no recorte</span><strong>{integer.format(visible.length)}</strong><small>De {integer.format(total)} no período</small></div>
-      <div><span>Participação na base</span><strong>{share}</strong><small>Inclui menções sem UF no total</small></div>
+      {filtered
+        ? <div><span>Menções no recorte</span><strong>{integer.format(visible.length)}</strong><small>De {integer.format(total)} no período</small></div>
+        : <div><span>Menções no período</span><strong>{integer.format(total)}</strong></div>}
+      {filtered && <div><span>Participação na base</span><strong>{share}</strong><small>Inclui menções sem UF no total</small></div>}
       <div><span>Cobertura de UF</span><strong>{total ? percentage.format(coveredUf / total) : '—'}</strong><small>{integer.format(total - coveredUf)} sem UF no período</small></div>
       <div><span>Variação anual de menções</span><strong className={trend.includes('%') ? undefined : 'rj-kpi-text'}>{trend}</strong>
-        <small>{result.previousEditionCount ? `${integer.format(previous)} menções em ${result.previousEditionCount} edições · ${dateLabel(result.previousStart)} a ${dateLabel(result.previousEnd)}` : 'Ano anterior sem edições no recorte'}</small></div>
+        <small>{result.previousEditionCount ? `${integer.format(previous)} menções em ${result.previousEditionCount} edições · ${dateLabel(result.previousStart)} a ${dateLabel(result.previousEnd)}` : 'Ano anterior sem edições no recorte'}</small>
+        <small className="rj-kpi-note">Compara com o mesmo período do ano anterior, na mesma base parcial. Não mede o total de pedidos do país.</small></div>
     </div>
     <div className="rj-viz-grid">
       <StateMap records={filterRecovery(result.current, '', sector)} selected={uf} onSelect={chooseUf}/>
@@ -155,9 +163,9 @@ function HistoryDashboard({ data }) {
     </div>
     <article className="rj-card rj-records" aria-labelledby="rj-records-title">
       <div className="rj-card-head"><div><h3 id="rj-records-title">Menções empresariais</h3><p>{integer.format(visible.length)} registros encontrados. Uma menção corresponde a um registro de empresa em um pedido.</p></div>
-        {(uf || sector) && <button type="button" className="btn" onClick={() => { chooseUf(''); chooseSector('') }}>Limpar seleção</button>}
+        {filtered && <button type="button" className="btn" onClick={() => { chooseUf(''); chooseSector('') }}>Limpar seleção</button>}
       </div>
-      {(uf || sector) && <div className="rj-chips">
+      {filtered && <div className="rj-chips">
         {uf && <button type="button" onClick={() => chooseUf('')} aria-label={`Remover filtro ${stateLabel(uf)}`}>{stateLabel(uf)} ×</button>}
         {sector && <button type="button" onClick={() => chooseSector('')} aria-label={`Remover filtro ${sector}`}>{sector} ×</button>}
       </div>}
@@ -165,7 +173,7 @@ function HistoryDashboard({ data }) {
         <div className="rj-table"><table>
           <thead><tr><th scope="col">Publicação</th><th scope="col">Empresa</th><th scope="col">UF</th><th scope="col">Setor</th></tr></thead>
           <tbody>{visible.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE).map(row =>
-            <tr key={row.id}><td>{dateLabel(row.date)}</td><td>{row.name ?? 'Identificação não exibida'}</td><td>{row.uf ?? UNKNOWN_UF}</td><td>{row.sector ?? UNKNOWN_SECTOR}</td></tr>)}</tbody>
+            <tr key={row.id}><td>{dateLabel(row.date)}</td><td>{row.name ?? 'Identificação não exibida'}</td><td>{row.uf ?? <><span aria-hidden="true" title="UF não identificada">—</span><span className="sr-only">UF não identificada</span></>}</td><td>{row.sector ?? UNKNOWN_SECTOR}</td></tr>)}</tbody>
         </table></div>
         {pages > 1 && <div className="rj-pagination" aria-label="Paginação">
           <button type="button" className="btn" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 0}>Anterior</button>
@@ -190,9 +198,13 @@ export default function RecoveryHistoryPanel() {
   }, [resource.data])
   return <section className="rj-history" aria-labelledby="rj-history-heading">
     <div className="history-head"><h2 id="rj-history-heading">Recuperação judicial</h2><RefreshButton files={['recuperacao-historico.json']}/></div>
-    <p className="rj-intro">Menções empresariais em pedidos de recuperação judicial · Base histórica do painel</p>
-    <p className="rj-card-note">Cobertura parcial das edições analisadas, não um total nacional. Uma mesma ação pode envolver várias empresas; menções não equivalem a processos únicos. Datas indicam publicação, não protocolo.</p>
-    {data && <p className="rj-card-note">Última edição na base: {dateLabel(data.editions.at(-1))} · {integer.format(data.editions.length)} edições no histórico.</p>}
+    <p className="rj-intro">Empresas citadas em pedidos de recuperação judicial. Cobertura parcial: não é o total do país.</p>
+    <details className="rj-read">
+      <summary>Como ler estes números</summary>
+      <p>Menções empresariais em pedidos de recuperação judicial · Base histórica do painel</p>
+      <p>Cobertura parcial das edições analisadas, não um total nacional. Uma mesma ação pode envolver várias empresas; menções não equivalem a processos únicos. Datas indicam publicação, não protocolo.</p>
+      {data && <p>Última edição na base: {dateLabel(data.editions.at(-1))} · {integer.format(data.editions.length)} edições no histórico.</p>}
+    </details>
     {resource.status === 'loading' && <p role="status">Carregando a base histórica.</p>}
     {resource.status !== 'loading' && !data && <p role="status">Base histórica indisponível. Use Atualizar para tentar novamente.</p>}
     {resource.stale && data && <p role="status">Exibindo a última base disponível.</p>}

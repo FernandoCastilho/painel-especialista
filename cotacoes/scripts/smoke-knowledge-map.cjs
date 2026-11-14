@@ -60,6 +60,9 @@ const localFits = stage => stage.evaluate(element => {
       const map = page.locator('.knowledge-map'), stage = map.locator('.km-stage')
       await map.getByRole('heading', { name: 'Mapa do conhecimento', exact: true }).waitFor()
       await page.waitForFunction(expected => document.documentElement.dataset.theme === expected, theme)
+      // no celular o mapa completo abre na Lista; o restante do roteiro confere o Grafo
+      assert.equal(await map.getByRole('button', { name: 'Lista', exact: true }).getAttribute('aria-pressed'), String(width < 700), 'Lista é a visão inicial só abaixo de 700 px')
+      if (width < 700) await map.getByRole('button', { name: 'Grafo', exact: true }).click()
       await page.waitForFunction(() => document.querySelectorAll('.km-node.km-news').length === 2)
       const total = await map.locator('.km-node').count()
       assert.ok(total > 130, 'matriz reúne setores, conceitos e notícias')

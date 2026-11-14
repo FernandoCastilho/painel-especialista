@@ -34,11 +34,9 @@ export function extractSearchText(source) {
   const visit = (node,parent,contextRoute='') => {
     const add=text=>{texts.push(text);(byRoute[contextRoute]??=[]).push(text)}
     if (!node || typeof node!=='object') return
-    if(node.type==='ConditionalExpression' && node.test?.type==='Identifier' && node.test.name==='fiscal') { visit(node.consequent,node,'cenarios/fiscal');visit(node.alternate,node,'cenarios/inflacao');return }
-    if(node.type==='LogicalExpression' && node.operator==='&&' && (node.left?.name==='fiscal' || (node.left?.type==='UnaryExpression' && node.left.argument?.name==='fiscal'))) { visit(node.right,node,node.left.name==='fiscal'?'cenarios/fiscal':'cenarios/inflacao');return }
     if(node.type==='JSXElement' && node.openingElement?.name?.name==='section') {
       const section=node.openingElement.attributes.find(a=>a.name?.name==='aria-labelledby')?.value?.value
-      contextRoute=({'market-context-heading':'cenarios/atividade','commodities-context-heading':'cenarios/commodities','freight-heading':'cenarios/frete'})[section] || contextRoute
+      contextRoute=({'market-context-heading':'cenarios/atividade','commodities-context-heading':'cenarios/commodities','freight-heading':'cenarios/commodities/frete','outros-title':'cenarios/inflacao','fiscal-heading':'cenarios/inflacao/fiscal'})[section] || contextRoute
     }
     if (node.type==='ImportDeclaration'  || node.type==='CommentLine' || node.type==='CommentBlock')return
     if (node.type==='JSXAttribute' && SKIP_ATTR.has(node.name?.name))return
@@ -55,7 +53,7 @@ export async function buildSearchIndex() {
   for(const [file,[route,title]] of Object.entries(SEARCH_PAGES)) {
     const {text,explain,byRoute,explainRoutes}=extractSearchText(await readFile(new URL('../src/'+file,import.meta.url),'utf8'))
     if(['MarketContext.jsx','Outros.jsx'].includes(file)) {
-      for(const [target,body] of Object.entries(byRoute))if(target)documents.push({id:'page:'+file+':'+target,title:({'cenarios/atividade':'Atividade e emprego','cenarios/commodities':'Commodities','cenarios/frete':'Frete marítimo','cenarios/fiscal':'Fiscal','cenarios/inflacao':'Inflação'})[target],body,route:target,kind:'Área do painel'})
+      for(const [target,body] of Object.entries(byRoute))if(target)documents.push({id:'page:'+file+':'+target,title:({'cenarios/atividade':'Atividade e emprego','cenarios/commodities':'Commodities','cenarios/commodities/frete':'Frete marítimo','cenarios/inflacao/fiscal':'Fiscal · dívida pública','cenarios/inflacao':'Inflação'})[target],body,route:target,kind:'Área do painel'})
     } else documents.push({id:'page:'+file,title,body:text,route,kind:'Área do painel',...(file==='GoogleTrends.jsx'?{context:{newsTab:'trends'}}:{})})
     for(const id of explain)glossaryRoutes[id]??=explainRoutes[id] || route
     if(file==='FinameMateriais.jsx')glossaryRoutes.fgi??=route // texto do glossário exibido dentro da ajuda modal, sem "?" aninhado
@@ -63,8 +61,8 @@ export async function buildSearchIndex() {
   // Subsections with conditional JSX need their own navigable entries.
   for(const [route,title,body] of [
     ['cenarios/atividade','Atividade e emprego','Indicadores de mercado ISM indústria serviços Caged desemprego payroll'],
-    ['cenarios/frete','Frete marítimo','Referência de transporte marítimo de mercadorias e Japão'],
-    ['cenarios/fiscal','Fiscal','Dívida bruta do governo geral em reais e em percentual do PIB'],
+    ['cenarios/commodities/frete','Frete marítimo','Referência de transporte marítimo de mercadorias e Japão'],
+    ['cenarios/inflacao/fiscal','Fiscal · dívida pública','Dívida bruta do governo geral em reais e em percentual do PIB'],
   ])documents.push({id:'route:'+route,title,body,route,kind:'Área do painel'})
   return {documents,glossaryRoutes}
 }
