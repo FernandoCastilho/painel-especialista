@@ -290,6 +290,11 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(await section.locator('#e4-spot').inputValue(), '6,1844')
       assert.equal(normalize(await section.locator('label[for="e4-cupom"]').innerText()), 'Juro do euro')
       assert.match(normalize(await section.locator('.fm-difference').innerText()), /se o euro subir/)
+      // PDF em euro: os textos falam em euro, não em dólar.
+      await section.getByRole('button', { name: 'Imprimir PDF' }).click()
+      const pdfEuro = normalize(await page.locator('.bnprint-document').innerText())
+      assert.ok(pdfEuro.includes('Variação constante do euro ao ano') && !/d[oó]lar/i.test(pdfEuro.replace('US$ 1 milhão', '')), 'PDF em euro não fala em dólar')
+      await page.getByRole('button', { name: 'Fechar prévia' }).click()
       await section.locator('#e4-currency').selectOption('USD')
       assert.equal(await section.locator('#e4-spot').inputValue(), '5,3127')
 
