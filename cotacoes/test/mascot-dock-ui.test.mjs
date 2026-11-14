@@ -89,3 +89,16 @@ for (const width of [320, 390, 1280]) {
     assert.equal(s.mini().props['aria-label'], 'Ampliar mascote')
   })
 }
+
+for (const width of [320, 390, 699]) {
+  test(`small mascot stays below actual mobile clocks at ${width}px`, async t => {
+    const s = await setup(t, width, false)
+    s.window.document = { querySelector: selector => ({ getBoundingClientRect: () => ({ bottom: selector === '.clocks-top' ? 65 : 0 }) }) }
+    s.listeners.get('resize')(); await s.renderer.settle()
+    assert.equal(s.mini().props.style.top, 69)
+    assert.equal(s.mini().props.title, undefined)
+    s.window.document = { querySelector: () => ({ getBoundingClientRect: () => ({ bottom: 0 }) }) }
+    s.listeners.get('resize')(); await s.renderer.settle()
+    assert.equal(s.mini().props.style.top, 4)
+  })
+}

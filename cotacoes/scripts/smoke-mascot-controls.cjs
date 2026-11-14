@@ -2,12 +2,12 @@ const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5231'
-const output = process.env.MASCOT_QA_OUTPUT || '/tmp/owl-qa'
+const output = process.env.MASCOT_QA_OUTPUT || (process.env.RUNNER_TEMP ? `${process.env.RUNNER_TEMP}/qa-universal/mascot` : '/tmp/owl-qa')
 fs.mkdirSync(output, { recursive: true })
 ;(async () => {
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
   try {
-    for (const width of [360, 390, 1280]) {
+    for (const width of [320, 360, 390, 699, 1280]) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, serviceWorkers: 'block' })
       const page = await context.newPage(), errors = [], posts = []
       page.on('pageerror', error => errors.push(error.message))
@@ -24,10 +24,24 @@ fs.mkdirSync(output, { recursive: true })
       const small = page.getByRole('button', { name: 'Ampliar mascote' })
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
       assert.equal(await small.evaluate(el => getComputedStyle(el).position), 'fixed')
+      const checkSmall = async state => {
+        assert.equal(await small.getAttribute('title'), null, 'sem dica redundante')
+        const box = await small.boundingBox()
+        const clocks = await page.locator('.clocks-top').boundingBox()
+        if (clocks && clocks.height > 0) assert.ok(box.y >= clocks.y + clocks.height, `${width}/${state}: coruja não cobre relógios`)
+        assert.ok(box.x >= 0 && box.x + box.width <= width, `${width}/${state}: coruja cabe na tela`)
+        await page.screenshot({ path: `${output}/mini-${width}-${state}.png` })
+      }
+      await checkSmall('repouso')
       const smallBox = await small.boundingBox()
       await small.hover(); await page.waitForTimeout(300)
       assert.ok((await small.boundingBox()).width > smallBox.width * 1.5, 'passar o mouse amplia')
-      await small.click()
+      await checkSmall('hover')
+      await page.mouse.move(width - 1, 899)
+      await small.focus(); await page.waitForTimeout(300)
+      assert.equal(await small.evaluate(el => el === document.activeElement), true)
+      await checkSmall('foco')
+      await page.keyboard.press('Enter')
       await move.scrollIntoViewIfNeeded()
       await move.scrollIntoViewIfNeeded()
       const dock = page.locator('.mascot-dock')
@@ -57,7 +71,8 @@ fs.mkdirSync(output, { recursive: true })
       }
       await page.locator('.mascot-figure').dblclick()
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
-      await page.reload(); await small.waitFor(); await small.click(); await move.waitFor()
+      await checkSmall('reduzida')
+      await page.reload(); await small.waitFor(); await checkSmall('recarga'); await small.click(); await move.waitFor()
       const search = page.getByRole('button', { name: 'Pesquisar', exact: false })
       await search.click()
       const dialog = page.getByRole('dialog', { name: 'Buscar no painel' })

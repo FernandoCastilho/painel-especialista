@@ -8,7 +8,10 @@ const NARROW = 1000
 const TOP = { y: 0 }
 const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), (window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88) + 8)
 // The small mascot parks as a badge hanging just under the top header (or at the screen edge when there is none).
-const parkTop = () => Math.max(0, window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0) + 4
+const parkTop = () => Math.max(0,
+  window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0,
+  window.document?.querySelector('.clocks-top')?.getBoundingClientRect().bottom ?? 0,
+) + 4
 
 export default function MascotDock({ children, icon, onSearch }) {
   const [preferences, setPreferences] = useState(() => readMascotPreferences({ getItem: key => window.localStorage.getItem(key) }))
