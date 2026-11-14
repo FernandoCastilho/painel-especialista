@@ -110,12 +110,15 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await page.waitForFunction(() => document.querySelector('#e4-di')?.value === '14,00')
       assert.match(normalize(await section.locator('#e4-protecao-origem').innerText()), /DI: do Painel, curva DI da B3 de 02\/01\/2026.*Cupom cambial: valor de exemplo/)
       assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Parcelas mensais')
-      assert.equal(await section.locator('.fm-operation:not(.e4-opcoes) .cx-field').count(), 6, 'seis campos na operação')
+      assert.equal(await section.locator('.fm-operation:not(.e4-opcoes) .cx-field:not(.fm-field-convertido)').count(), 6, 'seis campos para preencher na operação')
+      // Ordem pedida: principal em reais, moeda e o valor convertido na sequência.
+      assert.deepEqual((await section.locator('.fm-operation:not(.e4-opcoes) .cx-field label').allInnerTexts()).map(normalize).slice(0, 4), ['Principal (R$)', 'Moeda', 'Valor em dólar', 'Cotação de partida (R$/US$)'])
+      assert.equal(await section.locator('#e4-convertido').getAttribute('readonly'), '')
       assert.equal(await section.locator('.e4-mais').evaluate(el => el.open), false, 'Mais opções começa fechado')
       assert.equal(await flow.count(), 37, 'desembolso e 36 parcelas')
       // No celular a tabela mostra o essencial; no notebook, todas as colunas.
       assert.equal(await section.locator('.fm-tabela thead th:visible').count(), width < 641 ? 4 : 8)
-      assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), usd(1e7 / 5.3127))
+      assert.equal(normalize(await section.locator('#e4-convertido').inputValue()), usd(1e7 / 5.3127))
       const pills = normalize(await section.locator('.fm-pills').innerText())
       assert.ok(pills.includes('Principal em parcelas iguais') && pills.includes('Datas a cada 30 dias, em dia útil') && !pills.includes('Pagamentos'), pills)
 
@@ -183,7 +186,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Prazo total (meses)')
       assert.match(normalize(await section.locator('.e4-mais > summary').innerText()), /4 itens fora do padrão/)
 
-      assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), usd(P))
+      assert.equal(normalize(await section.locator('#e4-convertido').inputValue()), usd(P))
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), new RegExp(`IOF-câmbio de 3,50% na entrada: prazo médio de ${DC} dias corridos`))
       const headline = normalize(await section.locator('.fm-headline').innerText())
       assert.ok(headline.includes(`${pct(mes(Y_UNICO))} a.m.`) && headline.includes(`${pct(ano(Y_UNICO))} a.a. · exp/360`), headline)
@@ -281,6 +284,9 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       // Euro: rótulos trocam e a cotação de partida volta a vir do Painel, agora a do euro.
       await section.locator('#e4-currency').selectOption('EUR')
       assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa all-in (Euro +)')
+      assert.equal(normalize(await section.locator('label[for="e4-convertido"]').innerText()), 'Valor em euro')
+      assert.equal(normalize(await section.locator('label[for="e4-spot"]').innerText()), 'Cotação de partida (R$/€)')
+      assert.match(await section.locator('#e4-convertido').inputValue(), /^€/)
       assert.equal(await section.locator('#e4-spot').inputValue(), '6,1844')
       assert.equal(normalize(await section.locator('label[for="e4-cupom"]').innerText()), 'Juro do euro')
       assert.match(normalize(await section.locator('.fm-difference').innerText()), /se o euro subir/)

@@ -113,3 +113,6 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
   .bw.e4 #fm-result > header .cx-heading { flex:1 0 100%; }
   .bw.e4 #fm-result > header small, .bw.e4 .fm-input-panel > header.fm-rules small { width:auto; }
 }
+/* Valor na moeda: resultado da conversão, mostrado como campo somente de leitura logo depois da moeda. */
+main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-convertido input { background:#f1f5fa; border-color:#dbe3ee; color:#10284c; font-weight:600; cursor:default; }
+@media (max-width:640px) { .bw.e4 .cx-finame .fm-operation .fm-group-fields > .fm-field-car .fm-rotulo, .bw.e4 .cx-finame .fm-operation .fm-group-fields > .fm-field-prazo .fm-rotulo { min-height:2.9em; align-items:flex-end; } }

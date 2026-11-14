@@ -41,7 +41,7 @@ Origem: pedido de Fernando para a calculadora simular a operação como as cota�
 
 ### Desenho da tela (formato da cotação)
 Pedido de Fernando em 14/11/2026: a tela deve seguir a cotação de banco, sem excesso de campos.
-- **À vista, seis campos**: valor em reais, moeda, cotação de partida, parcelas mensais (ou prazo total, fora do padrão), taxa all-in e data da cotação. O principal na moeda é o valor em reais ÷ cotação de partida e aparece como "Valor na moeda".
+- **À vista, seis campos para preencher**: principal em reais (sempre em reais, primeiro campo), moeda, cotação de partida, parcelas mensais (ou prazo total, fora do padrão), taxa all-in e data da cotação. Logo depois da moeda, um campo somente de leitura mostra o valor convertido ("Valor em dólar" ou "Valor em euro"): principal em reais ÷ cotação de partida.
 - **Proteção cambial (NDF)**: DI pré do prazo e cupom cambial (ou juro do euro). Na cotação de banco a taxa futura de cada parcela vem fechada pela mesa; a tela a estima com esses dois números.
 - **Padrão, sem escolher**: pagamentos mensais, principal em parcelas iguais, datas a cada 30 dias em dia útil, carência zero, tarifa zero, fiança zero e IR já incluído na taxa all-in (nenhum gross-up é somado).
 - **Mais opções** (recolhido, com a contagem do que está fora do padrão): frequência, regra das datas, amortização, carência, IR somado à taxa e alíquota, tarifa (flat), fiança, local de pagamento das comissões, acréscimo do banco no NDF e spread do banco no swap.
