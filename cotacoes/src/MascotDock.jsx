@@ -51,7 +51,7 @@ export default function MascotDock({ children, icon, onSearch }) {
   }
   const shrink = () => { setMoving(false); setLarge(false) }
   return <aside className={`mascot-tray${large ? ' mascot-tray-large' : ''}`} ref={tray} aria-label="Assistente do painel">
-    {!large ? <button ref={mini} type="button" className="mascot-mini" style={{ top }} aria-label="Ampliar mascote" title="Clique para ampliar" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
+    {!large ? <button ref={mini} type="button" className="mascot-mini" style={{ top }} aria-label="Ampliar mascote" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button> : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
       <div className="mascot-tools">
         <button type="button" ref={handle} className="mascot-move" aria-label="Mover mascote" aria-describedby="mascot-move-help" aria-expanded={moving} aria-controls="mascot-position-controls" title="Arraste ou use as setas do teclado" onClick={event => { if (event.detail === 0 || !drag.current?.moved) setMoving(v => !v) }} onKeyDown={event => {
           const offsets = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] }
