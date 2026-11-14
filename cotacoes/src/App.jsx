@@ -282,6 +282,7 @@ export default function App() {
         <OnlineBadge /><AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" />
       </div>
     )}
+    <FeedbackMascot onSearch={setMascotSearch} section={tab} />
     <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
       {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
@@ -361,7 +362,6 @@ export default function App() {
       )}
       </Suspense>
     </main>
-    <FeedbackMascot onSearch={setMascotSearch} section={tab} />
     </AvisosProvider>
   )
 }

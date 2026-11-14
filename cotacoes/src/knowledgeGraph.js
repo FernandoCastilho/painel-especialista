@@ -22,7 +22,7 @@ const phraseIn = (title, phrase) => (` ${plain(title)} `).includes(` ${plain(phr
 const conceptMention = (title, alias) => {
   if (!phraseIn(title, alias)) return false
   // Short financial acronyms also name institutions or unrelated subjects.
-  return !/^(cet|cri|cra|cds)$/i.test(alias) || /credit|custo|taxa|juros|banc|recebive|emiss|divid|financ|invest|mercado|debentur|fund|capta|risco/.test(plain(title))
+  return !/^(cet|cri|cra|cds|acc)$/i.test(alias) || /credit|custo|taxa|juros|banc|recebive|emiss|divid|financ|invest|mercado|debentur|fund|capta|risco/.test(plain(title))
 }
 const shortId = value => { let n = 2166136261; for (const char of value) n = Math.imul(n ^ char.charCodeAt(0), 16777619); return (n >>> 0).toString(36) }
 
@@ -48,7 +48,7 @@ const CONCEPT_ALIASES = {
   debenture: ['debênture', 'debêntures'], 'nota-comercial': ['nota comercial', 'notas comerciais'],
   fidc: ['FIDC', 'fundos de direitos creditórios'], cri: ['certificado de recebíveis imobiliários', 'CRI'],
   cra: ['certificado de recebíveis do agronegócio', 'CRA'], facil: ['regime FÁCIL'],
-  drawback: ['drawback'], 'lei-de-maquila': ['maquila'], inflacao: ['inflação', 'IPCA'],
+  acc: ['adiantamento sobre contrato de câmbio', 'adiantamento de contrato de câmbio', 'ACC'], drawback: ['drawback'], 'lei-de-maquila': ['maquila'], inflacao: ['inflação', 'IPCA'],
   focus: ['boletim Focus', 'relatório Focus'], 'commodities-e-cambio': ['câmbio', 'commodities', 'dólar'],
   'ic-br': ['IC-Br'], combustiveis: ['combustíveis', 'gasolina', 'diesel', 'petróleo'],
 }

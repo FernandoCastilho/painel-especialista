@@ -23,7 +23,7 @@ fs.mkdirSync(output, { recursive: true })
       // Começa pequena, por cima da página; clicar amplia.
       const small = page.getByRole('button', { name: 'Ampliar mascote' })
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
-      assert.equal(await small.evaluate(el => getComputedStyle(el).position), 'fixed')
+      assert.equal(await small.evaluate(el => getComputedStyle(el).position), width < 700 ? 'absolute' : 'fixed')
       const checkSmall = async state => {
         assert.equal(await small.getAttribute('title'), null, 'sem dica redundante')
         const box = await small.boundingBox()
@@ -33,6 +33,11 @@ fs.mkdirSync(output, { recursive: true })
         const clocks = onMarket ? await clocksLocator.boundingBox() : null
         if (onMarket && width < 1000) assert.ok(clocks && clocks.height > 0, 'relógios móveis precisam estar visíveis')
         if (clocks && clocks.height > 0) assert.ok(box.y >= clocks.y + clocks.height, `${width}/${state}: coruja não cobre relógios`)
+        if (width < 700) {
+          const tray = await page.locator('.mascot-tray').boundingBox()
+          const main = await page.locator('#conteudo').boundingBox()
+          assert.ok(box.y >= tray.y && box.y + box.height + 5 <= main.y, `${width}/${state}: miniatura e foco não cobrem Feriados nem conteúdo`)
+        }
         assert.ok(box.x >= 0 && box.x + box.width <= width, `${width}/${state}: coruja cabe na tela`)
         await page.screenshot({ path: `${output}/mini-${width}-${state}.png` })
       }
