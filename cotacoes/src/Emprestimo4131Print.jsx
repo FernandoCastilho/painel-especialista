@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { E4_QUOTE_NOTE, captureE4 } from './emprestimo4131Presentation.js'
+import { E4_QUOTE_NOTE, avisoFronteiraE4, captureE4 } from './emprestimo4131Presentation.js'
 import { moedaOf } from './emprestimo4131.js'
 import BndesIcon from './BndesIcon.jsx'
 import './BndesPrint.css'
@@ -83,6 +83,7 @@ export function Emprestimo4131PrintDocument({ snapshot }) {
       <li>{hedge.source === 'mesa' ? `Taxa futura de cada parcela: informada, da cotação da mesa. ${labels.curve}.` : `Câmbio a termo teórico: câmbio de entrada × fator do DI (dias úteis/252) ÷ fator do ${juro} (linear, dias corridos/360). Origem do DI e do juro da moeda: ${labels.curve}.`}</li>
       <li>O custo total em CDI inclui flat e IOF da entrada diluídos no prazo. O spread do swap é calculado sobre o principal, sem esses custos, para comparar com a cotação da mesa. Sem proteção em dias corridos/365; swap e NDF em base 252.</li>
       <li>{E4_QUOTE_NOTE}</li>
+      {avisoFronteiraE4(loan) && <li>{avisoFronteiraE4(loan)}</li>}
       <li>Fora da conta: IR na fonte e PIS/Cofins sobre ganho do swap ou do NDF, e custo de garantias do derivativo.</li>
       <li>Operação a partir de US$ 1 milhão é declarada pelo devedor ao Banco Central (SCE-Crédito).</li>
     </ul><p className="bnprint-sources">{snapshot.sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>)}</p></section>
