@@ -39,6 +39,16 @@ Calcula o custo de um empréstimo em dólar ou em euro tomado direto no exterior
 ## Ampliação de 14/11/2026: parcelas, euro, cotações do dia e formato da cotação
 Origem: pedido de Fernando para a calculadora simular a operação como as cotações de banco de 4131 com NDF. A conta foi remontada com convenções de mercado e com regras que o Painel já usava. Nada de material interno de banco nem de operação real entra no projeto: os testes usam números fictícios.
 
+### Desenho da tela (formato da cotação)
+Pedido de Fernando em 14/11/2026: a tela deve seguir a cotação de banco, sem excesso de campos.
+- **À vista, seis campos**: valor em reais, moeda, cotação de partida, parcelas mensais (ou prazo total, fora do padrão), taxa all-in e data da cotação. O principal na moeda é o valor em reais ÷ cotação de partida e aparece como "Valor na moeda".
+- **Proteção cambial (NDF)**: DI pré do prazo e cupom cambial (ou juro do euro). Na cotação de banco a taxa futura de cada parcela vem fechada pela mesa; a tela a estima com esses dois números.
+- **Padrão, sem escolher**: pagamentos mensais, principal em parcelas iguais, datas a cada 30 dias em dia útil, carência zero, tarifa zero, fiança zero e IR já incluído na taxa all-in (nenhum gross-up é somado).
+- **Mais opções** (recolhido, com a contagem do que está fora do padrão): frequência, regra das datas, amortização, carência, IR somado à taxa e alíquota, tarifa (flat), fiança, local de pagamento das comissões, acréscimo do banco no NDF e spread do banco no swap.
+- **Resultado, na ordem da cotação**: custo efetivo total ao mês e ao ano (exp/360) com o equivalente em CDI; economia de IOF; equivalente em capital de giro; condições da operação; e o quadro parcela a parcela, aberto e em largura inteira (prazo, vencimento, amortização, saldo devedor, juros e encargos, parcela na moeda, taxa futura e parcela em reais).
+- **Comparar com swap e sem proteção** (recolhido): a tabela dos três caminhos em base 252, a composição do custo na moeda e os cenários de câmbio. Nada foi retirado.
+- Mudou o padrão de abertura da tela (antes: dólar, 24 meses, juros semestrais, principal no vencimento, IR somado à taxa, flat de 0,50%). As contas não mudaram.
+
 ### Entradas novas
 - **Moeda**: dólar ou euro. A conta é a mesma. No euro, o campo de cupom vira "Juro do euro" (linear, base 360).
 - **Pagamentos**: inclui mensal.

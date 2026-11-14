@@ -62,6 +62,8 @@ const tir = (entrada) => {
   return (lo + hi) / 2
 }
 const NET_PARCELAS = NET_USD * SPOT
+// Pagamento único: taxa interna por dias corridos/365, lida ao mês e ao ano no formato da cotação.
+const Y_UNICO = (TOTAL_NDF / (NET_USD * SPOT)) ** (365 / DC) - 1
 const IOF_GIRO = P * SPOT * 0.0038 + PARCELAS.reduce((s, f) => s + P / 3 * SPOT * 0.000082 * f.dc, 0)
 const CET = tir(NET_PARCELAS), GIRO = tir(NET_PARCELAS + IOF_GIRO)
 const mes = y => (1 + y) ** (30 / 365) - 1, ano = y => (1 + y) ** (360 / 365) - 1
@@ -86,33 +88,51 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await section.waitFor()
       const fill = (id, value) => section.locator(`#e4-${id}`).fill(value)
       const cell = (label, column) => section.locator('.fm-comparison .cx-matrix tbody tr').filter({ has: page.getByRole('rowheader', { name: label }) }).first().locator('td').nth(column)
+      const flow = section.locator('.fm-tabela tbody tr')
+      const linha = async (i) => [normalize(await flow.nth(i).locator('th').innerText()), ...(await flow.nth(i).locator('td').allInnerTexts()).map(normalize)]
 
-      // Cotações do dia: o câmbio e o DI já vêm do Painel, com a origem ao lado; digitar passa a valer o digitado.
+      // Tela inicial no formato da cotação: poucos campos, 36 parcelas mensais a cada 30 dias, e o câmbio e o DI do
+      // Painel já preenchidos, com a origem ao lado.
       await page.waitForFunction(() => document.querySelector('#e4-spot')?.value === '5,3127')
       assert.match(normalize(await section.locator('#e4-spot-origem').innerText()), /^Painel · \d{2}\/\d{2} \d{2}:\d{2}$/)
       await page.waitForFunction(() => document.querySelector('#e4-di')?.value === '14,00')
       assert.match(normalize(await section.locator('#e4-protecao-origem').innerText()), /DI: do Painel, curva DI da B3 de 02\/01\/2026.*Cupom cambial: valor de exemplo/)
-      assert.equal(await section.locator('#e4-grace').isDisabled(), true)
+      assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Parcelas mensais')
+      assert.equal(await section.locator('.fm-operation:not(.e4-opcoes) .cx-field').count(), 6, 'seis campos na operação')
+      assert.equal(await section.locator('.e4-mais').evaluate(el => el.open), false, 'Mais opções começa fechado')
+      assert.equal(await flow.count(), 37, 'desembolso e 36 parcelas')
+      assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), usd(1e7 / 5.3127))
+      const pills = normalize(await section.locator('.fm-pills').innerText())
+      assert.ok(pills.includes('Pagamentos mensais') && pills.includes('Principal em parcelas iguais') && pills.includes('Datas a cada 30 dias, em dia útil'), pills)
 
-      await fill('principal', '1.000.000,00')
+      // O que foge do padrão fica em Mais opções; a comparação com swap e sem proteção, em painel próprio.
+      await section.locator('.e4-mais > summary').click()
+      await section.locator('.e4-comparar > summary').click()
+      assert.equal(await section.locator('#e4-irrf').isDisabled(), true, 'alíquota do IR só vale quando o IR é somado à taxa')
+
+      // Pagamento único de 6 meses, em dia fixo, com o IR somado à taxa: R$ 5 milhões a 5,0000 são US$ 1 milhão.
+      await fill('valor', '5.000.000,00')
       await fill('rate', '6,00')
       await fill('spot', '5,0000')
       await fill('start', START)
       await fill('months', '6')
       await section.locator('#e4-freq').selectOption('0')
-      await fill('flat', '0,00')
-      await fill('guarantee', '0,00')
+      await section.locator('#e4-calendar').selectOption('mes')
+      await section.locator('#e4-amort').selectOption('bullet')
+      await section.locator('#e4-gross').selectOption('sim')
       await fill('di', '14,00')
       await fill('cupom', '5,00')
       assert.match(normalize(await section.locator('#e4-spot-origem').innerText()), /^Digitado\. Usar o do Painel \(5,3127\)$/)
+      assert.equal(await section.locator('#e4-grace').isDisabled(), true)
+      assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Prazo total (meses)')
+      assert.match(normalize(await section.locator('.e4-mais > summary').innerText()), /4 itens fora do padrão/)
 
-      assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), brl(NET_USD * SPOT))
+      assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), usd(P))
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), new RegExp(`IOF-câmbio de 3,50% na entrada: prazo médio de ${DC} dias corridos`))
       const headline = normalize(await section.locator('.fm-headline').innerText())
+      assert.ok(headline.includes(`${pct(mes(Y_UNICO))} a.m.`) && headline.includes(`${pct(ano(Y_UNICO))} a.a. · exp/360`), headline)
       assert.ok(headline.includes(`CDI + ${pct(SPREAD)}`), headline)
-      assert.ok(headline.includes(`Spread do swap: CDI + ${pct(RUN_SPREAD)}`), headline)
-      assert.ok(headline.includes(`${pct(PRE)} a.a.`), headline)
-      assert.ok(headline.includes(`Total ${brl(TOTAL_NDF)}`), headline)
+      assert.ok(headline.includes(`Total das parcelas ${brl(TOTAL_NDF)}`), headline)
       assert.equal(normalize(await cell('Custo em reais ao ano', 0).innerText()), pct(ALL_IN))
       assert.equal(normalize(await cell('Custo em reais ao ano', 2).innerText()), pct(PRE))
       assert.equal(normalize(await cell('Spread do swap', 1).innerText()), `CDI + ${pct(RUN_SPREAD)}`)
@@ -121,22 +141,23 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(normalize(await cell('Total a pagar em reais', 2).innerText()), brl(TOTAL_NDF))
       assert.ok(RUN_SPREAD < SPREAD - 0.05, 'com IOF de 3,5% em 6 meses, o spread do swap fica bem abaixo do custo total')
 
-      // Cronograma: uma linha de entrada e um pagamento, em dólar.
-      await section.locator('.fm-fluxo-panel > summary').click()
-      const flow = section.locator('.fm-tabela tbody tr')
+      // Parcela a parcela: a linha do desembolso (valor líquido recebido) e um pagamento.
       assert.equal(await flow.count(), 2)
-      const paid = (await flow.nth(1).locator('td').allInnerTexts()).map(normalize)
-      assert.deepEqual(paid.slice(0, 8), ['11/05/2027', String(DC), usd(P), usd(JUROS), usd(IR_USD), usd(0), usd(P), usd(TOTAL_USD)])
-      assert.equal(paid[9], brl(TOTAL_NDF))
+      const entrada = await linha(0)
+      assert.equal(entrada[4], usd(P * IOF), 'IOF descontado na entrada')
+      assert.equal(entrada[7], brl(NET_USD * SPOT), 'valor líquido recebido')
+      const paid = await linha(1)
+      assert.deepEqual(paid.slice(0, 6), [String(DC), '11/05/2027', usd(P), usd(P), usd(JUROS + IR_USD), usd(TOTAL_USD)])
+      assert.equal(paid[7], brl(TOTAL_NDF))
 
-      // Comissões pagas ao exterior: IR com gross-up sobre flat (na entrada) e fiança (no pagamento).
+      // Comissões pagas ao exterior: IR com gross-up sobre tarifa (na entrada) e fiança (no pagamento).
       await fill('flat', '1,00')
       await fill('guarantee', '1,00')
       await section.locator('#e4-fees').selectOption('sim')
-      assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), brl(NET_FEES * SPOT))
-      assert.equal(normalize(await flow.nth(1).locator('td').nth(4).innerText()), usd(IR_FEES))
+      assert.equal((await linha(0))[7], brl(NET_FEES * SPOT))
+      assert.equal((await linha(1))[4], usd(JUROS + FIANCA + IR_FEES))
       await section.locator('#e4-fees').selectOption('nao')
-      assert.equal(normalize(await flow.nth(1).locator('td').nth(4).innerText()), usd(IR_USD))
+      assert.equal((await linha(1))[4], usd(JUROS + FIANCA + IR_USD))
       await page.screenshot({ path: path.join(out, `simulacao-${width}.png`), fullPage: true })
 
       // Principal em três parcelas mensais: saldo, juros sobre o saldo e leitura no formato da cotação.
@@ -149,23 +170,21 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), /IOF-câmbio de 3,50% na entrada: prazo médio de 61 dias corridos/)
       assert.equal(await flow.count(), 4)
       for (const [i, f] of PARCELAS.entries()) {
-        const row = (await flow.nth(i + 1).locator('td').allInnerTexts()).map(normalize)
-        assert.deepEqual(row.slice(0, 4), [f.date.split('-').reverse().join('/'), String(i ? 31 : 30), usd(f.saldo), usd(f.juros)], `parcela ${i + 1}`)
-        assert.equal(row[6], usd(P / 3), `principal da parcela ${i + 1}`)
-        assert.equal(row[7], usd(f.usdTotal), `total da parcela ${i + 1}`)
-        assert.equal(row[9], brl(f.brl), `parcela ${i + 1} em reais`)
+        const row = await linha(i + 1)
+        assert.deepEqual(row.slice(0, 6), [String(f.dc), f.date.split('-').reverse().join('/'), usd(P / 3), usd(f.saldo), usd(f.juros / (1 - IR)), usd(f.usdTotal)], `parcela ${i + 1}`)
+        assert.equal(row[7], brl(f.brl), `parcela ${i + 1} em reais`)
       }
+      const custo = normalize(await section.locator('.fm-headline').innerText())
+      assert.ok(custo.includes(`${pct(mes(CET))} a.m.`) && custo.includes(`${pct(ano(CET))} a.a. · exp/360`), custo)
       const cotacao = normalize(await section.locator('.e4-cotacao').innerText())
-      assert.ok(cotacao.includes(`${pct(mes(CET))} a.m.`) && cotacao.includes(`${pct(ano(CET))} a.a. · equivale a CDI`), cotacao)
       assert.ok(cotacao.includes(brl(IOF_GIRO)), cotacao)
-      assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. · taxa de giro`), cotacao)
+      assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. · exp/360`), cotacao)
       assert.match(cotacao, /Não desconta o IOF-câmbio de 3,50% desta operação/)
-      assert.match(normalize(await section.locator('.e4-cotacao-titulo').innerText()), /dias corridos, exp\/360/)
       assert.ok(GIRO < CET, 'com o IOF do giro a favor, a taxa equivalente fica abaixo do custo efetivo')
       // Carência de um pagamento: a primeira linha só tem juros e o principal vai em duas parcelas.
       await fill('grace', '1')
-      assert.equal(normalize(await flow.nth(1).locator('td').nth(6).innerText()), usd(0))
-      assert.equal(normalize(await flow.nth(2).locator('td').nth(6).innerText()), usd(P / 2))
+      assert.equal((await linha(1))[2], usd(0))
+      assert.equal((await linha(2))[2], usd(P / 2))
       await fill('grace', '0')
       // Cada 30 dias, em dia útil: 11/12/2026 (sexta); 10/01/2027 é domingo e vai para segunda; 09/02/2027 é Carnaval e vai para quarta.
       await section.locator('#e4-calendar').selectOption('30d')
@@ -188,9 +207,9 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.match(normalize(await page.locator('.bnprint-document').innerText()), /Custo efetivo com NDF \(exp\/360\)/)
       await page.getByRole('button', { name: 'Fechar prévia' }).click()
 
-      // Euro: rótulos trocam e o câmbio volta a vir do Painel, agora o do euro.
+      // Euro: rótulos trocam e a cotação de partida volta a vir do Painel, agora a do euro.
       await section.locator('#e4-currency').selectOption('EUR')
-      assert.equal(normalize(await section.locator('label[for="e4-principal"]').innerText()), 'Principal (€)')
+      assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa all-in (Euro +)')
       assert.equal(await section.locator('#e4-spot').inputValue(), '6,1844')
       assert.equal(normalize(await section.locator('label[for="e4-cupom"]').innerText()), 'Juro do euro')
       assert.match(normalize(await section.locator('.fm-difference').innerText()), /se o euro subir/)

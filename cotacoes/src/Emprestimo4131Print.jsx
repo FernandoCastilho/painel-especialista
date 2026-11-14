@@ -40,12 +40,12 @@ export function Emprestimo4131PrintDocument({ snapshot }) {
   const cur = moedaOf(loan.currency)
   const juro = cur.juro.toLowerCase()
   const facts = [
-    ['Principal', `${cur.sym}\u00a0${amount(loan.principal)}`], ['Câmbio de entrada', `R$ ${amount(loan.spot, 4)}`],
-    ['Taxa contratual', `${pct(loan.rate)} a.a. · linear 360`], ['Taxa com o IR por cima', `${pct(loan.grossedRate)} a.a.`],
+    ['Valor na moeda', `${cur.sym}\u00a0${amount(loan.principal)}`], ['Cotação de partida', `R$ ${amount(loan.spot, 4)}`],
+    [loan.grossUp ? 'Taxa, antes do IR' : 'Taxa all-in', `${cur.Nome} + ${pct(loan.rate)} a.a. · linear 360`], loan.grossUp ? ['Taxa com o IR por cima', `${pct(loan.grossedRate)} a.a.`] : ['Valor em reais', brl(loan.principal * loan.spot)],
     ['Desembolso', day(loan.start)], ['Vencimento', day(loan.end)],
     ['Prazo', `${loan.months} meses · prazo médio de ${loan.avgTermDays} dias corridos`], ['Pagamentos', labels.freq || '—'],
     ['Amortização', labels.amort || 'No vencimento'], ['Datas dos pagamentos', labels.dates || '—'],
-    ['IR na fonte sobre os juros', `${pct(loan.irrf, 0)} · ${labels.irPayer || '—'}`], ['IOF-câmbio na entrada', `${pct(loan.iofRate)} · ${cur.sym} ${amount(loan.iofUsd)}`],
+    ['IR na fonte sobre os juros', loan.grossUp ? `${pct(loan.irrf, 0)} · somado à taxa` : 'Já incluído na taxa all-in'], ['IOF-câmbio na entrada', `${pct(loan.iofRate)} · ${cur.sym} ${amount(loan.iofUsd)}`],
     ['Flat · estruturação', `${pct(loan.flat)} · ${cur.sym} ${amount(loan.flatUsd)}`], ['Fiança ou SBLC', `${pct(loan.guarantee)} a.a.`],
     ['Flat e fiança pagos a', labels.fees || '—'], ['IR do tomador sobre o flat', `${cur.sym}\u00a0${amount(loan.flatIrUsd)}`],
     ['Valor líquido recebido', `${brl(loan.netBrl)} · ${cur.sym} ${amount(loan.netUsd)}`], [`Custo all-in em ${cur.nome}`, `${pct(loan.allIn)} a.a.`],
