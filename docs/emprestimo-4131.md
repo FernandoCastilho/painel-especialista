@@ -4,15 +4,20 @@ Rota: `#calculadora/emprestimo-4131` (atalhos de terminal: `4131`, `LEI4131`, `E
 
 Calcula o custo de um empréstimo em dólar ou em euro tomado direto no exterior e compara três caminhos em reais: sem proteção, com swap para CDI e com NDF (termo de moeda sem entrega) em cada pagamento. Desde 14/11/2026 aceita principal em parcelas e mostra o resultado com NDF no formato das cotações de banco (seção "Ampliação de 14/11/2026").
 
-## Regras levantadas (fontes oficiais lidas em 11/11/2026)
+## Regras levantadas (fontes oficiais lidas em 11/11/2026; IOF relido em 14/11/2026; o ADI RFB 41/2011 não foi lido na íntegra)
 
 | Tema | Regra | Fonte |
 |---|---|---|
 | Contratação | Livre, em qualquer moeda, sem aprovação prévia. Custos compatíveis com o mercado internacional e claros no contrato. | Res. BCB 278/2022, arts. 5º e 6º |
 | Declaração ao BC | O devedor declara no SCE-Crédito a operação a partir de US$ 1 milhão. O código vai em toda remessa. Mudança de prazo ou condições: 30 dias. | Res. BCB 278, arts. 17, 21, 23 e 25 |
 | Remessas | Limitadas a principal, juros e encargos. Liquidação antecipada permitida. | Res. BCB 278, arts. 7º e 8º |
-| IOF-câmbio na entrada | Prazo médio até 364 dias: 3,5%. Acima: zero, na entrada e na saída. | Decreto 6.306/2007, art. 15-B, XII e XI |
-| Liquidação antecipada | Se descumprir o prazo de 364 dias, IOF de 3,5% com multa e juros. | Decreto 6.306, art. 15-B, § 2º |
+| IOF de crédito | Não incide sobre operação de crédito externo; o imposto da operação é o IOF-câmbio. | Decreto 6.306/2007, art. 2º, § 2º |
+| IOF-câmbio na entrada | Ingresso de empréstimo externo sujeito a registro no Banco Central, contratado direto ou por emissão de títulos, com prazo médio mínimo de até 364 dias: 3,5%, inclusive em operações simultâneas. Demais ingressos e saídas de empréstimos e financiamentos externos: zero. | Decreto 6.306/2007, art. 15-B, XI e XII (o XII com a redação do Decreto 12.499/2025; o XI vem do Decreto 8.325/2014) |
+| IOF-câmbio na saída | Zero nas liquidações de câmbio de saída de recursos referentes a empréstimos e financiamentos externos. | Decreto 6.306, art. 15-B, XI |
+| Quem cobra e quando | Fato gerador e cobrança na liquidação da operação de câmbio. Base: o valor em reais da operação. Contribuinte: quem compra ou vende a moeda. Responsável por cobrar e recolher: a instituição autorizada a operar em câmbio, até o terceiro dia útil seguinte ao decêndio. | Decreto 6.306, arts. 11 a 14 e 17 |
+| Prazo médio | Média ponderada das parcelas de amortização de principal, com os prazos de amortização como fator de ponderação: soma(parcela × dias) ÷ principal. Juros não entram, segundo o resumo consultado. Não localizamos regra oficial de arredondamento. | ADI RFB 41/2011 (DOU 02/08/2011, seção 1, p. 19), não lido na íntegra |
+| Liquidação antecipada | Total ou parcial. Descumprido o prazo médio mínimo: imposto à alíquota do inciso XII, com juros moratórios e multa, sem prejuízo das penalidades do art. 23 da Lei 4.131/1962 e do art. 72 da Lei 9.069/1995. Prazo médio menor que o contratado, mas cumprido o mínimo: alíquota em vigor na data da liquidação do câmbio do pagamento. | Decreto 6.306, art. 15-B, §§ 2º e 3º |
+| Títulos com put/call | Em empréstimo via títulos com cláusula de antecipação, a primeira data prevista de exercício define a incidência. | Decreto 6.306, art. 15-B, § 1º |
 | IOF sobre derivativos | Zero desde 13/06/2013. | Decreto 6.306, art. 32-C, § 15 |
 | IRRF sobre juros | 15%, só sobre os juros. Tomador assumindo o imposto: base reajustada (100 viram 117,65). | RIR/2018, arts. 760 e 786 |
 | Swap | IR na fonte sobre o ganho na liquidação, 22,5% a 15% conforme o prazo; compensável no IRPJ. | IN RFB 1.585/2015, arts. 46, 50 e 70 |
@@ -64,18 +69,20 @@ Pedido de Fernando em 14/11/2026: a tela deve seguir a cotação de banco, sem e
 
 ### Contas novas (`src/emprestimo4131.js`)
 - Juros e fiança de cada período: saldo devedor × taxa × dias corridos ÷ 360. Com principal no vencimento, o saldo é sempre o principal (resultado igual ao de antes).
-- Prazo médio: soma(amortização × dias corridos desde o desembolso) ÷ principal. Para a regra do IOF vale o inteiro arredondado para baixo (cobra na dúvida); a média exata fica em `avgTermExact` e a tela avisa quando ela cai entre 355 e 365 dias. É o prazo usado no IOF-câmbio da entrada: parcelas encurtam o prazo médio e podem trazer o IOF de 3,5% (18 meses em parcelas mensais têm prazo médio perto de 290 dias).
+- Prazo médio: soma(amortização × dias corridos desde o desembolso) ÷ principal. Para a regra do IOF vale a média exata (`avgTermExact`): até 364 dias paga 3,5%; qualquer fração acima de 364 não paga. O número mostrado (`avgTermDays`) é a média arredondada para cima, o que leva à mesma decisão. Decisão de Fernando em 14/11/2026; antes a tela arredondava para baixo. A tela avisa quando a média fica entre 355 e 365 dias. É o prazo usado no IOF-câmbio da entrada: parcelas encurtam o prazo médio e podem trazer o IOF de 3,5% (18 meses em parcelas mensais têm prazo médio perto de 290 dias).
 - Custo efetivo com NDF, formato da cotação: taxa interna `y` do fluxo em reais (valor líquido recebido contra as parcelas travadas no NDF), com tempo em dias corridos ÷ 365. Ao mês: (1 + y)^(30/365) − 1. Ao ano, exp/360: (1 + y)^(360/365) − 1, que é o mês composto 12 vezes.
 - Economia de IOF (`iofGiro4131`): IOF de crédito que um capital de giro em reais pagaria com o mesmo valor e o mesmo cronograma de principal, pessoa jurídica fora do Simples: 0,38% × principal em reais + soma(parcela de principal em reais × 0,0082% × mínimo(dias corridos, 365)). Principal em reais pelo câmbio de entrada. Alíquotas de `IOF_PJ` (`src/emprestimo.js`), as mesmas das outras calculadoras.
 - Equivalente em capital de giro: a mesma taxa interna, com o IOF do giro somado ao valor líquido recebido; lida ao mês e ao ano do mesmo jeito. Giro com taxa abaixo dela sai mais barato que o 4131 com NDF.
 - Equivalente em CDI: o spread sobre o CDI que a tela já calculava para o NDF (cada pagamento descontado pelo fator do DI do seu prazo, base 252).
 
-### Conferência contra uma cotação de banco
-Feita em 14/11/2026, fora do projeto, contra uma cotação de banco de 4131 com NDF em parcelas mensais. Nenhum número dela foi gravado. Bateram as datas, o prazo médio, o saldo e as parcelas na moeda (diferença de centavos, por arredondamento da taxa exibida) e a economia de IOF, ao centavo. Com as taxas futuras da cotação coladas, as parcelas em reais conferidas bateram com diferença máxima de R$ 0,32 (mesmo arredondamento), e o custo efetivo e o equivalente em giro fecharam nos números da cotação, ao centésimo, com uma hipótese para as taxas futuras das últimas parcelas, que não estavam disponíveis.
-
 ### Revisões de 14/11/2026
 - **Revisão independente da conta**: reimplementação em Python escrita só a partir desta nota, antes de ler o motor. 24 casos fictícios (261 datas): maior diferença na casa de 10⁻¹³ em custo all-in, total com NDF, custo base 252, custo ao mês e ao ano exp/360, economia de IOF, equivalente em giro, spread sobre o CDI, prazo médio, IOF-câmbio e datas. DI do prazo: 18 consultas em 3 curvas, diferença máxima de 3×10⁻¹² p.p. Principal no vencimento: versão anterior do motor contra a nova em 6.000 casos aleatórios, sem diferença em nenhum campo. Nenhum erro de conta; as premissas apontadas estão em "Limites desta ampliação" e viraram avisos na tela.
 - **Revisão visual (Diretor de Arte)**: aprovada com ajustes, todos aplicados: origem de cada cotação (Painel, digitado ou exemplo), aviso do IOF-câmbio no quadro da economia de IOF, título da convenção exp/360, ordem e rótulos dos campos, celular e larguras de notebook.
+
+### Revisão da regra do prazo médio exato (14/11/2026)
+- **Revisão independente da conta**: prazo médio refeito por fora, com calendário próprio e aritmética de inteiros, em 8,8 milhões de combinações fictícias (datas de 2026 a 2028, 1 a 60 meses, todas as frequências, carências e regras de data) e 400 mil de prazos longos: nenhuma divergência em datas, prazo médio, alíquota e valor do IOF. Na comparação com a versão anterior, o IOF só mudou (de 3,5% para zero) entre 364 e 365 dias, e o prazo mostrado só subiu um dia quando há fração. A folga de 1e-9 da comparação é necessária: sem ela, parte dos casos de 364 dias cravados sairia com IOF zero por ruído da conta. Sem erro de conta.
+- **Aplicado da revisão**: o aviso da fronteira deixou de aparecer com 365 dias cravados; dois testes novos (fração pequena acima de 364; 364 cravados com principal quebrado).
+- **Efeito colateral medido**: o DI sugerido passa a ser lido para o prazo médio mostrado, até um dia útil adiante: cerca de 0,003 ponto percentual perto de um ano, em curvas fictícias.
 
 ### Revisões do desenho no formato da cotação (14/11/2026)
 - **Revisão independente do atingir meta**: 48 operações fictícias e 1.536 metas, todas atingidas; maior desvio de 0,00017 ponto percentual, dentro do arredondamento da taxa a quatro casas; taxa conferida contra raiz própria. O custo cresce com a taxa em todos os 67.968 pontos testados. Sem erro de conta. Aplicado: meta com o campo da taxa vazio, meta negativa em CDI, mínimo com quatro casas, teto da busca que desce em operação muito curta com tarifa alta, e os textos do resumo (IR somado com alíquota e taxa final, fiança, acréscimo no NDF, aviso do IOF-câmbio, sinal do CDI, convenção exp/360).
@@ -89,16 +96,16 @@ Feita em 14/11/2026, fora do projeto, contra uma cotação de banco de 4131 com 
 - Taxas implausíveis geram aviso, não bloqueio: a conta é feita com o que foi colado.
 
 ### Limites desta ampliação
-- Prazo médio entre 364 e 365 dias: a tela arredonda para baixo e cobra o IOF de 3,5% (o texto legal fala em prazo médio mínimo de até 364 dias). Não foi confirmado como banco e Banco Central arredondam. A diferença é de 3,5% do principal; a tela avisa na fronteira.
-- Regra de 30 dias: 12 meses somam 360 dias e trazem o IOF de 3,5%, que uma operação contratada com 365 dias não paga. A regra foi conferida contra cotação de banco só em parcelas mensais; em trimestral e semestral segue a mesma lógica, sem conferência externa.
+- Prazo médio entre 364 e 365 dias: a tela usa o prazo exato, mostra 365 e aplica IOF zero (o texto legal fala em prazo médio mínimo de até 364 dias). Não localizamos regra oficial de arredondamento nem confirmamos como banco e Receita tratam a fração: se desprezarem a fração, o IOF é de 3,5% do valor que entra. A tela avisa na fronteira, e o mesmo aviso acompanha o resumo copiado, o PDF e a apresentação (`avisoFronteiraE4`).
+- Regra de 30 dias: 12 meses somam 360 dias e trazem o IOF de 3,5%, que uma operação contratada com 365 dias não paga. Em trimestral e semestral a regra segue a mesma lógica do mensal (90 e 180 dias por período).
 - Leitura exp/360: fica abaixo da mesma taxa lida em ano de 365 dias (20% a.a. em 365 dias viram 19,70% a.a. e 1,51% a.m.). Comparar com giro cotado por mês de calendário ou com CET em 365 dias favorece o 4131 em cerca de 0,02 ponto ao mês. A ajuda do quadro mostra a taxa em 365 dias.
 - Equivalente em giro: o IOF do giro é calculado sobre principal × câmbio, não sobre o valor que o giro precisaria ter para entregar o mesmo líquido (diferença de −0,08 a +0,13 ponto ao ano nos exemplos da revisão). Fica de fora: tarifa do giro, reciprocidade e limite de crédito do NDF. A igualdade só é exata contra um giro com parcelas iguais nas mesmas datas.
 - Economia de IOF e IOF-câmbio usam as alíquotas atuais para qualquer data; para desembolso antes de 17/07/2025 a tela avisa.
 - Dias úteis do DI: contagem do Painel (data inicial fora, final dentro). Quando o pagamento cai em dia não útil, conta um dia útil a menos que a convenção de mercado; efeito de centésimos de ponto. Anterior a esta ampliação.
 - Prazo que não é múltiplo do período, em parcelas: a última parcela vence no fim do prazo, em intervalo mais curto; a tela avisa.
 - A cotação de banco usa a taxa futura fechada pela mesa em cada vencimento. A tela estima o câmbio a termo com um DI e um juro da moeda iguais para todos os prazos: o custo fica próximo, não igual.
-- O expoente da leitura ao mês (30/365) foi inferido pela conferência numérica: com 30/365, custo e giro fecham ao mesmo tempo; com 30/360, não. Falta confirmar a convenção em fonte escrita.
-- O equivalente em CDI não foi conferido contra uma fórmula de banco.
+- O expoente da leitura ao mês (30/365) é convenção adotada pela tela; falta confirmar em fonte escrita.
+- O equivalente em CDI é convenção adotada pela tela; falta confirmar em fonte escrita.
 - O custo ao ano aparece em duas convenções na mesma tela: base 252 (tabela dos três caminhos) e exp/360 (quadro da cotação). Os rótulos dizem qual é qual.
 - Economia de IOF considera pessoa jurídica fora do Simples e não considera isenções ou alíquota zero de casos específicos.
 - Juro do euro: o Painel não coleta; fica digitado.
@@ -117,9 +124,19 @@ Feita em 14/11/2026, fora do projeto, contra uma cotação de banco de 4131 com 
 ## Curvas do Painel: prontas no motor, desligadas na tela
 `curveFactors` monta os fatores de DI e de cupom por prazo a partir das curvas da B3 que o Painel já coleta, e `hedge4131` aceita esses fatores (testes em `test/emprestimo-4131-curvas.test.mjs`). A opção está desligada na tela (`CURVAS_DO_PAINEL = false`) porque a curva de cupom coletada é a DI x dólar das taxas referenciais da B3, que é o cupom sujo: referido à PTAX do dia anterior, com o trecho curto distorcido (em 10/11/2026, −9,32% a.a. em 21 dias úteis e 0,81% em 63). Usá-la com o câmbio do dia desloca todo o câmbio a termo na proporção câmbio do dia ÷ PTAX anterior, cerca de 1% naquela data. Com câmbio 1,2% acima da PTAX anterior, o erro no spread do swap seria de cerca de +0,65 p.p. em 24 meses e +2,6 p.p. em 6 meses. Para religar: coletar o cupom limpo (a B3 publica nas mesmas taxas referenciais; código a confirmar) ou limpar o sujo com a PTAX de referência, rever a regra "antes do primeiro vértice vale a taxa dele", conferir se as duas curvas têm a mesma data-base e validar contra uma cotação de mesa.
 
+## Regras do IOF: o que foi lido e como (14/11/2026)
+- **Lido na íntegra**, no texto atualizado do Decreto 6.306/2007 publicado pela Câmara dos Deputados: art. 2º, § 2º; arts. 11 a 14; art. 15-B, caput, incisos XI e XII e §§ 1º a 3º; art. 17; art. 32-C, § 15. O decreto não traz fórmula do prazo médio.
+- **Lido na íntegra**: Manual do Declarante do SCE-Crédito do Banco Central (versão de outubro de 2026). Não traz definição nem fórmula de prazo médio.
+- **Lido só por resumo de busca, não na íntegra**: Ato Declaratório Interpretativo RFB 41/2011 (define o prazo médio mínimo como a média ponderada das parcelas de amortização de principal, com os prazos de amortização como fator de ponderação) e a posição de que os juros não entram no cálculo. O site de normas da Receita e o Diário Oficial não puderam ser abertos nesta revisão. Falta confirmar na íntegra o texto, a vigência do ato e se há critério de arredondamento.
+- **Vigência da alíquota de 3,5%**: redação do Decreto 12.499/2025, sustada pelo Decreto Legislativo 176/2025 e restabelecida por decisão cautelar do STF na ADC 96, de 16/07/2025. Segundo fontes de terceiros, sem referendo do Plenário nem julgamento de mérito até 01/11/2026.
+- **A conta da calculadora** usa a média ponderada descrita no resumo consultado do ato: soma(amortização × dias corridos desde o desembolso) ÷ principal. Na fronteira entre 364 e 365 dias a tela decide pelo prazo exato, mostra o número arredondado para cima e avisa (ver "Limites desta ampliação").
+
 ## Pontos não confirmados em fonte oficial
 - IR na fonte sobre flat e fiança pagos ao exterior: o art. 760 do RIR/2018 cita comissões, mas a aplicação a cada tipo de comissão deve ser confirmada com o tributário.
 - IOF de 3,5%: vigente por liminar do STF de 16/07/2025 (ADC 96, ADIs 7.827 e 7.839). Sem notícia de julgamento do Plenário até 01/11/2026, segundo fonte de terceiros.
+- Cálculo do prazo médio: o Ato Declaratório Interpretativo RFB 41/2011 não foi lido na íntegra; critério de arredondamento não localizado.
+- IOF zero na saída: o inciso XI fala em saída de recursos referentes a empréstimos externos, sem citar juros. A leitura de que o pagamento de juros também tem alíquota zero não foi confirmada em texto oficial.
+- O inciso XII fala em empréstimo "sujeito a registro no Banco Central"; a declaração no SCE-Crédito vale a partir de US$ 1 milhão. Não foi confirmado como o IOF trata empréstimo abaixo desse valor.
 - IRRF de 25% para país com tributação favorecida: texto oficial (IN RFB 1.455/2014) não foi aberto.
 - Alíquota do swap: Lei 8.981, art. 74, fala em 10%; IN 1.585, em 22,5% a 15% (lida em cópia não oficial).
 - NDF de balcão: alcance dos 0,005% e dos 15% sobre ganho líquido não está expresso nos textos lidos.

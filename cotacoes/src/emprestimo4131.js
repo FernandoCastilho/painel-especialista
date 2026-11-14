@@ -74,9 +74,16 @@ const addDaysIso = (iso, n) => new Date(ms(iso) + n * DAY).toISOString().slice(0
 // Sem calendário de feriados: só pula sábado e domingo.
 const weekdayOnOrAfter = (iso) => { const w = new Date(ms(iso)).getUTCDay(); return w === 6 ? addDaysIso(iso, 2) : w === 0 ? addDaysIso(iso, 1) : iso }
 
-// IOF-câmbio na entrada pelo prazo médio em dias corridos (inteiro, arredondado para baixo). Principal no vencimento: prazo médio = prazo total.
+// IOF-câmbio na entrada pelo prazo médio em dias corridos. Vale o prazo exato: até 364 dias paga; qualquer fração acima
+// de 364 não paga. O inteiro que entra aqui é o exato arredondado para cima, o que dá a mesma resposta.
+// Principal no vencimento: prazo médio = prazo total.
 export function iofEntrada(avgTermDays) {
   return avgTermDays <= IOF_SHORT_TERM.maxDays ? IOF_SHORT_TERM.rate : 0
+}
+// Prazo médio com fração entre 364 e 365 dias: IOF zero pelo prazo exato, mas sem regra oficial de arredondamento
+// localizada. Só indica o caso para os avisos; não entra em conta. A folga tira 365 dias cravados com ruído da conta.
+export function fronteiraIof(loan) {
+  return loan?.iofRate === 0 && Number.isFinite(loan.avgTermExact) && loan.avgTermExact < IOF_SHORT_TERM.maxDays + 1 - 1e-9
 }
 
 // Taxa que zera o fluxo [{ v, t }] (t em anos), na visão do tomador: entrada positiva, pagamentos negativos.
@@ -143,9 +150,11 @@ export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf 
     left -= pay
     return row
   })
-  // Média exata (pode ter fração) e a que vale para a regra do IOF: inteira, arredondada para baixo (cobra na dúvida).
+  // Média exata (pode ter fração) e a mostrada: inteira, arredondada para cima. Decidir o IOF pelo inteiro arredondado
+  // para cima é o mesmo que decidir pela média exata (teto ≤ 364 só quando a exata ≤ 364). A folga de 1e-9 absorve o
+  // ruído da conta em ponto flutuante.
   const avgTermExact = split ? weighted / principal : daysBetween(start, end)
-  const avgTermDays = split ? Math.floor(avgTermExact + 1e-9) : avgTermExact
+  const avgTermDays = split ? Math.ceil(avgTermExact - 1e-9) : avgTermExact
   const iofRate = iofEntrada(avgTermDays)
   if (flat + iofRate >= 100) return fail('Flat e IOF consomem todo o valor: revise os percentuais.')
   const a = irrf / 100

@@ -2,8 +2,8 @@
 // Números fictícios, com resultado esperado em fórmula fechada ou somado à mão aqui, sem o código do painel.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { diDoPrazo, hedge4131, iofGiro4131, lerTaxasFuturas, loan4131, metaTaxa4131, taxa360 } from '../src/emprestimo4131.js'
-import { condicoesE4, resumoE4 } from '../src/emprestimo4131Presentation.js'
+import { diDoPrazo, fronteiraIof, hedge4131, iofEntrada, iofGiro4131, lerTaxasFuturas, loan4131, metaTaxa4131, taxa360 } from '../src/emprestimo4131.js'
+import { avisoFronteiraE4, condicoesE4, resumoE4 } from '../src/emprestimo4131Presentation.js'
 
 const close = (a, b, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`)
 const DAY = 864e5
@@ -37,10 +37,11 @@ test('parcelas iguais · amortização constante, juros sobre o saldo e total ig
   close(bullet.totals.interest, 1.2e6 * 0.06 * 365 / 360, 1e-6)
 })
 
-test('prazo médio · média dos dias corridos ponderada pela amortização, arredondada para baixo', () => {
+test('prazo médio · média dos dias corridos ponderada pela amortização, mostrada arredondada para cima', () => {
   const r = loan4131({ ...MENSAL, amort: 'parcelas' })
   const media = DATAS_12.reduce((s, d) => s + dc(MENSAL.start, d), 0) / 12
-  assert.equal(r.avgTermDays, Math.floor(media))
+  assert.ok(!Number.isInteger(media), String(media))
+  assert.equal(r.avgTermDays, Math.ceil(media))
   // Principal no vencimento: o prazo médio continua sendo o prazo total.
   assert.equal(loan4131(MENSAL).avgTermDays, 365)
 })
@@ -179,18 +180,66 @@ test('DI do prazo · lido da curva DI x pré, a termo quando o desembolso é dep
   assert.equal(diDoPrazo([], 0, 100), null)
 })
 
-test('prazo médio na fronteira · 364,7 dias conta como 364 e paga o IOF; 365,2 não paga', () => {
+test('prazo médio na fronteira · vale o prazo exato: 364 cravados pagam o IOF; 364,7 e 365,2 não pagam', () => {
   // 23 parcelas mensais em dia fixo: a média exata depende do dia do desembolso.
   const base = { principal: 1.2e6, rate: 5.5, spot: 5.5, months: 23, freq: 1, amort: 'parcelas' }
-  const abaixo = loan4131({ ...base, start: '2026-11-16' })
-  close(abaixo.avgTermExact, abaixo.flows.reduce((s, f) => s + f.principal * f.dc, 0) / 1.2e6, 1e-9)
-  assert.ok(abaixo.avgTermExact > 364.6 && abaixo.avgTermExact < 364.8, String(abaixo.avgTermExact))
-  assert.equal(abaixo.avgTermDays, 364)
-  assert.equal(abaixo.iofRate, 3.5)
+  const fracao = loan4131({ ...base, start: '2026-11-16' })
+  close(fracao.avgTermExact, fracao.flows.reduce((s, f) => s + f.principal * f.dc, 0) / 1.2e6, 1e-9)
+  assert.ok(fracao.avgTermExact > 364.6 && fracao.avgTermExact < 364.8, String(fracao.avgTermExact))
+  // Fração acima de 364: não paga, e o número mostrado sobe para 365.
+  assert.equal(fracao.avgTermDays, 365)
+  assert.equal(fracao.iofRate, 0)
+  close(fracao.netUsd, 1.2e6, 1e-6)
   const acima = loan4131({ ...base, start: '2026-12-01' })
   assert.ok(acima.avgTermExact > 365 && acima.avgTermExact < 365.3, String(acima.avgTermExact))
-  assert.equal(acima.avgTermDays, 365)
+  assert.equal(acima.avgTermDays, 366)
   assert.equal(acima.iofRate, 0)
+  // A decisão pelo inteiro mostrado é a mesma da média exata, em qualquer dia de desembolso.
+  for (let d = 1; d <= 28; d++) for (const months of [22, 23, 24]) {
+    const r = loan4131({ ...base, months, start: `2026-11-${String(d).padStart(2, '0')}` })
+    assert.equal(r.avgTermDays, Math.ceil(r.avgTermExact - 1e-9))
+    assert.equal(r.iofRate, r.avgTermExact <= 364 + 1e-9 ? 3.5 : 0, `${months} meses, dia ${d}`)
+    assert.equal(r.iofRate, iofEntrada(r.avgTermDays))
+  }
+  // 364 dias cravados (três parcelas iguais em 181, 365 e 546 dias: média 364): paga. Um dia a mais na média: não paga.
+  assert.equal(iofEntrada(364), 3.5)
+  assert.equal(iofEntrada(365), 0)
+  const cravado = loan4131({ ...base, months: 18, freq: 6, start: '2026-01-05' })
+  assert.deepEqual(cravado.flows.map((f) => f.dc), [181, 365, 546])
+  close(cravado.avgTermExact, 364, 1e-9)
+  assert.equal(cravado.avgTermDays, 364)
+  assert.equal(cravado.iofRate, 3.5)
+  // Fração pequena acima de 364 (8373/23 = 364,04): não paga. Arredondar a cobrança para o inteiro mais próximo erraria aqui.
+  const pouco = loan4131({ ...base, start: '2027-02-01' })
+  assert.equal(pouco.flows.reduce((s, f) => s + (f.principal > 0 ? f.dc : 0), 0), 8373)
+  assert.ok(pouco.avgTermExact > 364.04 && pouco.avgTermExact < 364.05, String(pouco.avgTermExact))
+  assert.equal(pouco.avgTermDays, 365)
+  assert.equal(pouco.iofRate, 0)
+  // 364 cravados com principal quebrado (valor em reais ÷ cotação): a conta sai um fio fora de 364 e a folga segura.
+  const ruido = loan4131({ ...base, principal: 1e7 / 5.6666, months: 18, freq: 3, grace: 1, start: '2026-01-01' })
+  assert.deepEqual(ruido.flows.filter((f) => f.principal > 0).map((f) => f.dc), [181, 273, 365, 455, 546])
+  assert.notEqual(ruido.avgTermExact, 364)
+  close(ruido.avgTermExact, 364, 1e-9)
+  assert.equal(ruido.avgTermDays, 364)
+  assert.equal(ruido.iofRate, 3.5)
+  // Aviso da fronteira: só com fração entre 364 e 365 dias; acompanha o resumo copiado.
+  assert.equal(fronteiraIof(fracao), true)
+  assert.equal(fronteiraIof(pouco), true)
+  assert.equal(fronteiraIof(acima), false)
+  assert.equal(fronteiraIof(cravado), false)
+  assert.equal(fronteiraIof(ruido), false)
+  assert.match(avisoFronteiraE4(pouco), /^Prazo médio exato de 364,04 dias corridos, entre 364 e 365: .*3,50%.*câmbio do banco\.$/)
+  assert.equal(avisoFronteiraE4(acima), '')
+  assert.equal(avisoFronteiraE4(cravado), '')
+  // 365 dias cravados com principal quebrado: a conta sai um fio abaixo de 365 e não há fração a avisar.
+  const cheio = loan4131({ ...base, principal: 2e6 / 5.5, months: 13, grace: 10, start: '2026-01-01' })
+  assert.deepEqual(cheio.flows.filter((f) => f.principal > 0).map((f) => f.dc), [334, 365, 396])
+  assert.equal(cheio.avgTermDays, 365)
+  assert.equal(cheio.iofRate, 0)
+  assert.equal(fronteiraIof(cheio), false)
+  const hedgeDe = (loan) => hedge4131(loan, { di: 14, cupom: 5 })
+  assert.ok(resumoE4({ loan: fracao, hedge: hedgeDe(fracao) }).includes(avisoFronteiraE4(fracao)))
+  assert.ok(!resumoE4({ loan: acima, hedge: hedgeDe(acima) }).includes('Prazo médio exato'))
   // Principal no vencimento: a média exata é o próprio prazo.
   assert.equal(loan4131(MENSAL).avgTermExact, 365)
 })

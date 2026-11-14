@@ -15,7 +15,7 @@ import { cgToday } from './contaGarantida.js'
 import { useHolidays } from './useHolidays.js'
 import { useCurves } from './useCurves.js'
 import { addDays, busDaysIn, nextBusinessDay } from './holidays.js'
-import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, hedge4131, lerTaxasFuturas, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
+import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, fronteiraIof, hedge4131, lerTaxasFuturas, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
 import { E4_FX_SCENARIOS, E4_QUOTE_NOTE, E4_SOURCES, condicoesE4, resumoE4 } from './emprestimo4131Presentation.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -29,6 +29,7 @@ const quando = (at) => new Date(at).toLocaleString('pt-BR', { timeZone: 'America
 // Valores de exemplo, usados só enquanto o Painel não entrega a cotação ou a curva (o cupom nunca vem do Painel).
 const EXEMPLO = { USD: { spot: '5,4000', cupom: '5,20' }, EUR: { spot: '6,2000', cupom: '3,50' } }
 const CONFERIDO_EM = '11/11/2026'
+const IOF_RELIDO_EM = '14/11/2026'
 const IR_PAYERS = [{ id: 'nao', label: 'Já incluído na taxa all-in' }, { id: 'sim', label: 'Somar à taxa (gross-up)' }]
 const FEE_PLACES = [{ id: 'nao', label: 'Banco no Brasil · sem IR' }, { id: 'sim', label: 'Exterior · IR sobre a comissão' }]
 const CURVE_MODES = [{ id: 'painel', label: 'Curvas do Painel (B3)' }, { id: 'manual', label: 'Digitar DI e cupom' }]
@@ -52,8 +53,13 @@ const REGRAS = [
   ['Contratação', 'Livre, em qualquer moeda, sem aprovação prévia do Banco Central. Custos compatíveis com o mercado internacional e claros no contrato.', 'Res. BCB 278/2022, arts. 5º e 6º'],
   ['Declaração ao Banco Central', 'O devedor declara no SCE-Crédito a operação a partir de US$ 1 milhão. O código gerado vai em toda remessa. Mudança de prazo ou de condições: declarar em 30 dias.', 'Res. BCB 278, arts. 17, 21, 23 e 25'],
   ['Remessas', 'Limitadas a principal, juros e encargos. Liquidação antecipada é permitida.', 'Res. BCB 278, arts. 7º e 8º'],
-  ['IOF-câmbio na entrada', 'Prazo médio até 364 dias: 3,5%. Acima disso: zero, na entrada e na saída. Alíquota vigente por decisão provisória do STF (2025).', 'Decreto 6.306/2007, art. 15-B, XI e XII'],
-  ['Liquidação antecipada', 'Se descumprir o prazo de 364 dias, o IOF de 3,5% é devido com multa e juros.', 'Decreto 6.306, art. 15-B, § 2º'],
+  ['IOF de crédito', 'Não incide sobre empréstimo tomado no exterior. O imposto desta operação é o IOF sobre o câmbio.', 'Decreto 6.306/2007, art. 2º, § 2º'],
+  ['IOF-câmbio na entrada', 'Empréstimo externo sujeito a registro no Banco Central, contratado direto ou por emissão de títulos, com prazo médio mínimo de até 364 dias: 3,5% sobre o valor que entra, inclusive em operações simultâneas de câmbio. Acima desse prazo: zero. A alíquota de 3,5% vale por decisão provisória do STF, de julho de 2025; não achamos notícia de julgamento definitivo até 01/11/2026.', 'Decreto 6.306/2007, art. 15-B, XI e XII (o XII com a redação do Decreto 12.499/2025); ADC 96'],
+  ['IOF-câmbio na saída', 'Zero no câmbio de saída de recursos do empréstimo externo. A aplicação aos juros não foi confirmada em texto oficial.', 'Decreto 6.306/2007, art. 15-B, XI'],
+  ['Quem cobra e quando', 'O imposto é devido e cobrado na liquidação do câmbio, sobre o valor em reais da operação. Quem paga é a empresa que vende a moeda na entrada. Quem cobra e recolhe é o banco que opera o câmbio, até o terceiro dia útil depois do decêndio.', 'Decreto 6.306/2007, arts. 11 a 14 e 17'],
+  ['Prazo médio', 'Média dos prazos das parcelas de principal, ponderada pelo valor de cada parcela: soma de (parcela × dias) dividida pelo principal. Pelo resumo consultado do ato da Receita, os juros não entram. Com o principal pago de uma vez, o prazo médio é o prazo total; em parcelas, fica bem abaixo dele. Não localizamos regra oficial de arredondamento: a tela decide pelo prazo exato (até 364 dias paga; qualquer fração acima não paga) e mostra o número arredondado para cima.', 'Ato Declaratório Interpretativo RFB 41/2011 (DOU de 02/08/2011) · texto ainda não conferido na íntegra'],
+  ['Liquidação antecipada', 'Total ou parcial. Se a antecipação descumprir o prazo médio mínimo, o IOF de 3,5% é devido com juros de mora e multa, além das penalidades cambiais. Se o prazo médio cair, mas continuar acima do mínimo, vale a alíquota em vigor na data do câmbio do pagamento.', 'Decreto 6.306/2007, art. 15-B, §§ 2º e 3º'],
+  ['Títulos com opção de antecipação', 'Em empréstimo por emissão de títulos com cláusula de antecipação do vencimento, pelo credor ou pelo devedor, a primeira data de exercício define a incidência do imposto.', 'Decreto 6.306/2007, art. 15-B, § 1º'],
   ['IR na fonte sobre os juros', '15%, só sobre os juros. Quando o tomador assume o imposto, a base é reajustada: 100 de juros viram 117,65. País com tributação favorecida: 25% (a confirmar com o tributário).', 'RIR/2018, arts. 760 e 786'],
   ['Swap', 'IR na fonte sobre o ganho na liquidação, de 22,5% a 15% conforme o prazo, compensável no IRPJ. IOF sobre derivativos: zero desde 2013.', 'IN RFB 1.585/2015, arts. 46, 50 e 70; Decreto 6.306, art. 32-C'],
   ['NDF', 'Sem ajuste diário e sem margem. Liquida pela diferença no vencimento, com a PTAX do dia útil anterior. Exige contrato geral de derivativos. IR na fonte de 0,005%.', 'Ficha B3 do Termo de Moeda; Lei 11.033/2004, art. 2º'],
@@ -225,7 +231,8 @@ export default function Emprestimo4131({ onBack, quotes }) {
     ndfMarkup > 0 && `Há um acréscimo do banco de ${pct(ndfMarkup)} por cima das taxas coladas (em Mais opções). Se elas já são as taxas fechadas, deixe o acréscimo em zero.`,
   ].filter(Boolean) : []
   const avisos = loan ? [
-    loan.avgTermExact >= 355 && loan.avgTermExact < 365 && `Prazo médio de ${dec(loan.avgTermExact, 1)} dias corridos, logo abaixo de 365: a tela aplica o IOF-câmbio de ${pct(IOF_SHORT_TERM.rate)}.${calendar === '30d' ? ' Na regra de 30 dias, 12 meses somam 360 dias.' : ''} Poucos dias a mais levam o IOF a zero: confirme o prazo médio com o câmbio do banco.`,
+    loan.iofRate > 0 && loan.avgTermExact >= 355 && `Prazo médio de ${dec(loan.avgTermExact, 1)} dias corridos, dentro do limite de ${IOF_SHORT_TERM.maxDays}: a tela aplica o IOF-câmbio de ${pct(IOF_SHORT_TERM.rate)}.${calendar === '30d' ? ' Na regra de 30 dias, 12 meses somam 360 dias.' : ''} Poucos dias a mais levam o IOF a zero: confirme o prazo médio com o câmbio do banco.`,
+    fronteiraIof(loan) && `Prazo médio de ${dec(loan.avgTermExact, 2)} dias corridos, entre ${IOF_SHORT_TERM.maxDays} e ${IOF_SHORT_TERM.maxDays + 1}: a tela usa o prazo exato, mostra ${loan.avgTermDays} (arredondado para cima) e aplica IOF-câmbio zero. Não localizamos regra oficial de arredondamento: se o banco ou a Receita desprezarem a fração, o IOF é de ${pct(IOF_SHORT_TERM.rate)} do valor. Confirme com o câmbio do banco antes de fechar.`,
     loan.amort === 'parcelas' && months % passo !== 0 && `O prazo de ${months} meses não é múltiplo do período dos pagamentos: a última parcela vence em intervalo mais curto que as demais.`,
     loan.start < '2025-07-17' && 'Desembolso anterior a 17/07/2025: o IOF-câmbio e a economia de IOF usam as alíquotas atuais, que não valiam nessa data.',
   ].filter(Boolean).concat(avisosMesa) : []
@@ -313,7 +320,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
         <section className="cx cx-finame" aria-label="Simulação">
           <div className="fm-workspace">
             <article className="desk-panel cx-panel fm-input-panel">
-              <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras conferidas em {CONFERIDO_EM}</small>{ajuda('Regras e fontes', <><p>Regras do Banco Central, da Receita Federal e da B3 lidas nas fontes oficiais. A lista completa está em Regras e fontes.</p><ul>{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul></>)}</header>
+              <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras conferidas em {CONFERIDO_EM}</small>{ajuda('Regras e fontes', <><p>Regras do Banco Central, da Receita Federal e da B3 lidas nas fontes oficiais, salvo as indicadas em Regras e fontes. As do IOF foram relidas em {IOF_RELIDO_EM}.</p><ul>{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul></>)}</header>
               <div className="cx-form">
                 <section className="e4-meta" aria-labelledby="e4-meta-h">
                   <h3 id="e4-meta-h">Atingir meta{ajuda('Atingir meta', 'Digite o custo que você quer chegar e a tela calcula a taxa all-in (moeda + % ao ano) que leva a ele, mantendo valor, parcelas, cotação, DI e juro da moeda. A taxa calculada vai para o campo Taxa all-in, com quatro casas, e todo o resto é recalculado.')}</h3>
@@ -456,7 +463,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
       </div>
 
       <div hidden={area !== 'rules'} className="bw-quotes">
-        <p className="status">Regras lidas em fontes oficiais em {CONFERIDO_EM}. Pontos não confirmados estão indicados; confirme com o tributário e com a mesa do banco antes de cotar.</p>
+        <p className="status">Regras lidas em fontes oficiais em {CONFERIDO_EM}; IOF relido em {IOF_RELIDO_EM}. O ato da Receita sobre o prazo médio não foi lido na íntegra. Pontos não confirmados estão indicados; confirme com o tributário e com a mesa do banco antes de cotar.</p>
         <dl className="e4-rules">{REGRAS.map(([tema, regra, fonte]) => <div key={tema}><dt>{tema}</dt><dd>{regra}<small>{fonte}</small></dd></div>)}</dl>
         <ul className="e4-sources">{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul>
       </div>
