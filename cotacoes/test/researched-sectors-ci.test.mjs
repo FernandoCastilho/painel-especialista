@@ -12,7 +12,7 @@ test('CI executa smoke dos estudos na branch dedicada sem publicar', () => {
 
 test('smoke percorre dataset e cobre interações e artefatos exigidos', () => {
   const source = readFileSync('scripts/smoke-researched-sectors.cjs', 'utf8')
-  for (const token of ['catalog.length, 68', 'studies.length <= 67', 'pending.entries()', 'pending-honest', '[1440, 390]', 'for (const study of studies)', 'chart.categoryLabel', 'research-bar-negative', 'playbackRate', 'preservesPitch', "reducedMotion: 'reduce'", "press('Escape')", 'page.goBack()', 'page.goForward()', 'report.json', 'interaction-failure.png']) assert.ok(source.includes(token), token)
+  for (const token of ['catalog.length, 81', 'studies.length <= 80', 'pending.entries()', 'pending-honest', '[1440, 390]', 'for (const study of studies)', 'chart.categoryLabel', 'research-bar-negative', 'playbackRate', 'preservesPitch', "reducedMotion: 'reduce'", "press('Escape')", 'page.goBack()', 'page.goForward()', 'report.json', 'interaction-failure.png']) assert.ok(source.includes(token), token)
 })
 
 test('smoke reproduz cada gravação e distingue controles de auditoria integral', () => {

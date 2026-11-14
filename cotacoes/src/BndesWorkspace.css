@@ -465,3 +465,14 @@
   .bw #fm-result.fm-zoom .fm-details { margin-left:24px; margin-right:24px; }
   .bw #fm-result.fm-zoom .fm-details > summary { font-size:.95rem; }
 }
+
+/* Ajuste visual aprovado: datas juntas no desktop; impressão como ação secundária. */
+@media (min-width:1001px) {
+  .bw .cx-finame .fm-operation .fm-field-data-lib,
+  .bw .cx-finame .fm-operation .fm-field-praca { grid-column:span 1; }
+  .bw .cx-finame .fm-operation .fm-field-data-lib .fm-rotulo,
+  .bw .cx-finame .fm-operation .fm-field-praca .fm-rotulo { min-height:40px; align-items:flex-start; }
+}
+.bw .fm-print-actions .bnprint-launch { background:#fff; border:1px solid #c8d5e7; color:#062a5c; font-weight:600; box-shadow:none; }
+.bw .fm-print-actions .bnprint-launch:hover:not(:disabled) { background:#f0f5fb; border-color:#6d88ac; }
+.bw .fm-print-actions .bnprint-launch:disabled { background:#f3f5f8; color:#69778b; border-color:#dce3ec; }

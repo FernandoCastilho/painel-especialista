@@ -10,6 +10,10 @@ export const ENTITIES_REVIEWED_AT = '2026-11-09'
 // Endereço vazio = sem site confirmado pelo verificador de links; a tela diz "Sem site indicado".
 // tipo: 'association' = associação ou entidade de classe; 'agency' = órgão público ou regulador.
 const ASSOCIATIONS = {
+  ibge: ['IBGE', 'Instituto Brasileiro de Geografia e Estatística', 'agency', 'https://www.ibge.gov.br', 'Estatísticas econômicas, demográficas e de comércio e serviços; atenção ao recorte de cada pesquisa.'],
+  mtur: ['MTur', 'Ministério do Turismo', 'agency', 'https://www.gov.br/turismo', 'Política e informações oficiais do turismo brasileiro.'],
+  ans: ['ANS', 'Agência Nacional de Saúde Suplementar', 'agency', 'https://www.gov.br/ans', 'Regulação e dados de planos de saúde; não representa todo o sistema de saúde.'],
+
   cni: ['CNI', 'Confederação Nacional da Indústria', 'association', 'https://www.portaldaindustria.com.br', 'Representa a indústria em geral; estudos e estatísticas industriais.'],
   iba: ['Ibá', 'Indústria Brasileira de Árvores', 'association', 'https://iba.org', 'Árvores cultivadas: celulose, papel, painéis de madeira e pisos laminados.'],
   abimci: ['ABIMCI', 'Associação Brasileira da Indústria de Madeira Processada Mecanicamente', 'association', 'https://www.abimci.com.br', 'Madeira serrada, compensados e demais produtos de madeira processada.'],
@@ -251,6 +255,10 @@ const PLAYERS = {
 
 // O que a entidade costuma divulgar, para saber onde buscar dados. Os títulos exatos variam: conferir no site.
 const PUBLISHES = {
+  ibge: 'Pesquisas conjunturais de comércio, serviços e indústria, com escopo e metodologia próprios.',
+  mtur: 'Informações e indicadores de turismo, Cadastur e orientações para prestadores.',
+  ans: 'Beneficiários e operadoras de planos, normas e padrão de troca de informações TISS.',
+
   cni: 'Sondagem Industrial, indicadores industriais e estudos econômicos.',
   iba: 'Relatório anual com área plantada, produção e exportação do setor.',
   abimci: 'Estudos setoriais de madeira processada (produção e exportação).',
@@ -359,6 +367,20 @@ const ROLES = {
 
 // Sempre por subsetor: [entidades, players]. Sem player confiável, a lista fica vazia e a tela diz isso.
 const TOPICS = {
+  'turismo:0': [["mtur", "ibge"], []],
+  'turismo:1': [["mtur", "ibge"], []],
+  'turismo:2': [["mtur", "ibge"], []],
+  'turismo:3': [["mtur", "ibge"], []],
+  'varejo:0': [["ibge", "abras"], []],
+  'varejo:1': [["ibge", "abras"], []],
+  'varejo:2': [["ibge", "abvtex"], []],
+  'saude:0': [["ans", "anvisa"], []],
+  'saude:1': [["ans", "anvisa"], []],
+  'saude:2': [["ans", "anvisa"], []],
+  'pet:0': [["mapa", "ibge"], []],
+  'pet:1': [["mapa", "ibge"], []],
+  'pet:2': [["mapa", "ibge"], []],
+
   'base-florestal:0': [['iba', 'cni'], ['suzano', 'klabin', 'eldorado', 'cmpc', 'bracell']],
   'base-florestal:1': [['abimci', 'iba'], ['berneck']],
   'base-florestal:2': [['abimci', 'iba'], ['berneck']],

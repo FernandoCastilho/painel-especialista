@@ -1,3 +1,4 @@
+import * as highlights from '../src/sectorHighlights.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
@@ -14,8 +15,12 @@ const catalog = await import(pathToFileURL(root + 'src/centralSetorial.js'))
 const history = await import(pathToFileURL(root + 'src/centralHistory.js'))
 const insumos = await import(pathToFileURL(root + 'src/insumos.js'))
 const { code } = await transform(readFileSync(root + 'src/Setores.jsx', 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
-const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof node === 'object' ? [node, ...nodes(node.props?.children)] : []
-const text = node => Array.isArray(node) ? node.map(text).join('') : node && typeof node === 'object' ? text(node.props?.children) : typeof node === 'string' || typeof node === 'number' ? String(node) : ''
+function children(node) {
+  if (['PautasSetoriais', 'EstudoRelacionado'].includes(node.type?.name)) return node.type(node.props)
+  return node.props?.children
+}
+const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof node === 'object' ? [node, ...nodes(children(node))] : []
+const text = node => Array.isArray(node) ? node.map(text).join('') : node && typeof node === 'object' ? text(children(node)) : typeof node === 'string' || typeof node === 'number' ? String(node) : ''
 
 async function setup(t, initial = 'central', state = { unrelatedFeature: { preserved: true } }) {
   let entries = [{ view: initial, state }], index = 0, view = initial, renderer, rafId = 0
@@ -28,7 +33,7 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
     cancelAnimationFrame(id) { frames.delete(id) },
     scrollTo(options) { calls.push({ scroll: options.top }); window.scrollY = options.top },
   }
-  const deps = { react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
+  const deps = { './sectorHighlights.js': highlights, react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, window, document, require: name => deps[name] ?? require(name) })
   const render = () => {
@@ -72,10 +77,10 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
   }
 }
 
-test('all 11 folders and 68 topic identities exist; folder breadcrumb restores focused opener', async t => {
+test('all 15 folders and 81 topic identities exist; folder breadcrumb restores focused opener', async t => {
   const h = await setup(t)
-  assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 11)
-  assert.equal(catalog.CATALOGO_SETORIAL.reduce((n, group) => n + group.topics.length, 0), 68)
+  assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 15)
+  assert.equal(catalog.CATALOGO_SETORIAL.reduce((n, group) => n + group.topics.length, 0), 81)
   await h.clickId('central-folder-base-florestal')
   assert.equal(h.view, 'pasta/base-florestal')
   assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-topic-')).length, 6)
@@ -113,7 +118,7 @@ test('invalid topic routes return the catalog, never a fake study', async t => {
   for (const view of ['topico/base-florestal/', 'topico/base-florestal/-1', 'topico/base-florestal/999', 'pasta/inexistente']) {
     const h = await setup(t, view)
     assert.match(text(h.tree), /não foi encontrado/)
-    assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 11)
+    assert.equal(nodes(h.tree).filter(node => node.props?.id?.startsWith('central-folder-')).length, 15)
     assert.equal(nodes(h.tree).filter(node => node.props?.className?.startsWith('central-detail')).length, 0)
   }
 })
@@ -187,4 +192,23 @@ test('Back restores result focus only after the remembered query has committed t
   await h.queryTo('outro termo')
   assert.equal(h.active, 'search-review', 'typing cancels the old restoration instead of stealing focus')
   assert.equal(h.query, 'outro termo')
+})
+
+test('pautas aparecem na busca, abrem com status pendente e apontam para estudos existentes', async t => {
+  const h = await setup(t)
+  await h.queryTo('materiais de construcao')
+  await h.clickId('central-research-materiais-de-construcao')
+  assert.equal(h.view, 'pesquisa/materiais-de-construcao')
+  assert.match(text(h.tree), /Pesquisa pendente/)
+  assert.match(text(h.tree), /Investigar sazonalidade, estoques, frete/)
+  await h.click('Todos os setores')
+  assert.equal(h.query, 'materiais de construcao')
+  assert.equal(h.active, 'central-research-materiais-de-construcao')
+  await h.back()
+  await h.reload()
+  assert.match(text(h.tree), /Pesquisa pendente/)
+  await h.click('Distribuição de materiais de construção')
+  assert.equal(h.view, 'topico/atacado/2')
+  await h.back()
+  assert.equal(h.view, 'pesquisa/materiais-de-construcao')
 })
