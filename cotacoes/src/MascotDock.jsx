@@ -13,7 +13,7 @@ const parkTop = () => Math.max(0,
   window.document?.querySelector('.clocks-top')?.getBoundingClientRect().bottom ?? 0,
 ) + 4
 
-export default function MascotDock({ children, icon, onSearch }) {
+export default function MascotDock({ children, icon, onSearch, section }) {
   const [preferences, setPreferences] = useState(() => readMascotPreferences({ getItem: key => window.localStorage.getItem(key) }))
   const [position, setPosition] = useState(() => place(preferences.desktop ?? TOP))
   const [large, setLarge] = useState(false)
@@ -25,7 +25,7 @@ export default function MascotDock({ children, icon, onSearch }) {
   useEffect(() => {
     try { localStorage.setItem(MASCOT_PREFERENCE_KEY, JSON.stringify(preferences)) } catch { /* Private browsing may disable storage. */ }
   }, [preferences])
-  useEffect(() => { setTop(parkTop()) }, [large])
+  useEffect(() => { setTop(parkTop()) }, [large, section])
   useEffect(() => {
     if (previousLarge.current !== large) {
       (large ? handle : mini).current?.focus({ preventScroll: true })

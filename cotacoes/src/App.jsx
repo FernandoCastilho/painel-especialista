@@ -361,7 +361,7 @@ export default function App() {
       )}
       </Suspense>
     </main>
-    <FeedbackMascot onSearch={setMascotSearch} />
+    <FeedbackMascot onSearch={setMascotSearch} section={tab} />
     </AvisosProvider>
   )
 }
