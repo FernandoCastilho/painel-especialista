@@ -329,7 +329,7 @@ export default function App() {
       {tab === 'bancos' && <Bancos />}
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
-      {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} />}
+      {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} quotes={quotes} />}
 
       {tab === 'feriados' && <Feriados hol={hol} />}
 
