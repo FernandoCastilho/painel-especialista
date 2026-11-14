@@ -67,41 +67,49 @@ const dia = (iso) => iso.split('-').reverse().join('/')
 const FREQ_NOME = { 1: 'Mensal', 3: 'Trimestral', 6: 'Semestral', 12: 'Anual', 0: 'No vencimento' }
 
 // Condições da operação, na ordem das cotações de banco de 4131 com NDF: [rótulo, valor]. Sem tomador, CNPJ, credor
-// e garantias: são dados do cliente e não passam pela calculadora.
-export function condicoesE4(loan) {
+// e garantias: são dados do cliente e não passam pela calculadora. Custos que entram no custo efetivo (IR somado,
+// fiança, IR sobre comissões, acréscimo no NDF) só aparecem quando existem.
+const taxaText = (value) => `${value.toLocaleString('pt-BR', Number.isInteger(Math.round(value * 1e6) / 1e4) ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { minimumFractionDigits: 4, maximumFractionDigits: 4 })}%`
+export function condicoesE4(loan, hedge = null) {
   if (!loan?.ok) return []
   const cur = moedaOf(loan.currency)
   const parcelas = loan.flows.filter((flow) => flow.principal > 0).length
+  const comIr = loan.grossUp && loan.irrf > 0
   return [
     ['Data da cotação', dia(loan.start)],
     ['Produto', '4131 com NDF'],
     ['Valor de principal', `R$ ${num(loan.principal * loan.spot)}`],
     ['Moeda', `${cur.Nome} · ${cur.sym} ${num(loan.principal)}`],
     ['Cotação de partida', num(loan.spot, 4)],
-    // Até quatro casas: a taxa calculada pelo Atingir meta vem com quatro.
-    ['Taxa', `${cur.Nome} + ${loan.rate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}% a.a.${loan.grossUp ? ' · IR somado à taxa' : ''}`],
+    ['Taxa', `${cur.Nome} + ${taxaText(loan.rate)} a.a.${comIr ? ` + IR de ${num(loan.irrf, 0)}% por conta do tomador (${taxaText(loan.grossedRate)} a.a. com o IR)` : ''}`],
     ['Prazo', `${loan.months} ${loan.months === 1 ? 'mês' : 'meses'}`],
-    ['Principal', loan.amort === 'parcelas' ? `${FREQ_NOME[loan.freq]} · ${parcelas} ${parcelas === 1 ? 'parcela' : 'parcelas'}` : 'No vencimento'],
+    ['Principal', loan.amort === 'parcelas' && parcelas > 1 ? `${FREQ_NOME[loan.freq]} · ${parcelas} parcelas` : 'No vencimento'],
     ['Juros', FREQ_NOME[loan.freq]],
     ['Prazo médio (DC)', String(loan.avgTermDays)],
-    ['Carência do principal', loan.grace ? `${loan.grace} ${loan.grace === 1 ? 'pagamento' : 'pagamentos'}` : 'Sem carência'],
+    ['Carência do principal', loan.amort !== 'parcelas' ? 'Não se aplica' : loan.grace ? `${loan.grace} ${loan.grace === 1 ? 'pagamento' : 'pagamentos'}` : 'Sem carência'],
     ['Tarifa de contratação', `R$ ${num(loan.flatUsd * loan.spot)}`],
     ['IOF-câmbio na entrada', `${pctText(loan.iofRate)} · R$ ${num(loan.iofUsd * loan.spot)}`],
+    ...(loan.guarantee > 0 ? [['Fiança ou SBLC', `${pctText(loan.guarantee)} a.a. sobre o saldo`]] : []),
+    ...(comIr && loan.feesAbroad && (loan.flat > 0 || loan.guarantee > 0) ? [['IR sobre comissões', `${num(loan.irrf, 0)}% · comissões pagas ao exterior`]] : []),
+    ...(hedge?.source === 'mesa' ? [['Taxa futura', 'Informada, da cotação da mesa']] : []),
+    ...(hedge?.ndfMarkup > 0 ? [['Acréscimo do banco no NDF', pctText(hedge.ndfMarkup)]] : []),
   ]
 }
 
 // Texto no formato dos e-mails de cotação: condições, custo efetivo, economia de IOF e equivalente em giro.
 export function resumoE4({ loan, hedge }) {
   if (!loan?.ok || !hedge?.ok) return ''
-  const sinal = hedge.ndf.spread >= 0 ? '+' : '−'
+  // Sinal decidido depois de arredondar: spread que arredonda para zero sai como "+ 0,00%".
+  const spread = Math.round(hedge.ndf.spread * 100) / 100
+  const menos = (text) => text.replace(/^-/, '−')
   return [
     '4131 com NDF · Condições da operação',
-    ...condicoesE4(loan).map(([rotulo, valor]) => `${rotulo}: ${valor}`),
+    ...condicoesE4(loan, hedge).map(([rotulo, valor]) => `${rotulo}: ${valor}`),
     '',
-    `Custo efetivo total: taxa de juros prefixada em reais de ${pctText(hedge.ndf.cetMes)} a.m. / ${pctText(hedge.ndf.cetAno)} a.a. (equivalente a CDI ${sinal} ${pctText(Math.abs(hedge.ndf.spread))}), exp/360`,
-    `Economia de IOF (R$): ${num(hedge.ndf.iofGiro)}`,
-    `Taxa equivalente em capital de giro: ${pctText(hedge.ndf.giroMes)} a.m. / ${pctText(hedge.ndf.giroAno)} a.a., exp/360`,
+    `Custo efetivo total: taxa de juros prefixada em reais de ${menos(pctText(hedge.ndf.cetMes))} a.m. / ${menos(pctText(hedge.ndf.cetAno))} a.a. (exp/360), equivalente a CDI ${spread < 0 ? '−' : '+'} ${pctText(Math.abs(spread))}`,
+    `Economia de IOF (R$): ${num(hedge.ndf.iofGiro)}${loan.iofRate > 0 ? ` (IOF que um capital de giro pagaria; não desconta o IOF-câmbio de R$ ${num(loan.iofUsd * loan.spot)} desta operação)` : ''}`,
+    `Taxa equivalente em capital de giro: ${menos(pctText(hedge.ndf.giroMes))} a.m. / ${menos(pctText(hedge.ndf.giroAno))} a.a. (exp/360)`,
     '',
-    `Simulação indicativa, com ${hedge.source === 'mesa' ? 'as taxas futuras informadas da cotação' : 'taxa futura teórica'}. Sujeita a confirmação da cotação pela mesa do banco, a limite de crédito e a cadastro atualizado. Não constitui proposta nem compromisso de crédito.`,
+    `Simulação indicativa, com ${hedge.source === 'mesa' ? 'as taxas futuras informadas da cotação' : 'taxa futura teórica'}. Não inclui IR nem PIS/Cofins sobre ganho do derivativo. Sujeita a confirmação da cotação pela mesa do banco, a limite de crédito e a cadastro atualizado. Não constitui proposta nem compromisso de crédito.`,
   ].join('\n')
 }

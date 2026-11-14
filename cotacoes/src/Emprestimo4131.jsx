@@ -164,12 +164,16 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const curveBase = diCurve && ccCurve ? diCurve.date : null
   const curveBlocked = !curveBase ? (curves.status === 'loading' ? 'Carregando as curvas do Painel…' : 'Curvas do Painel indisponíveis: usando DI e cupom digitados.') : start && start < curveBase ? `As curvas começam em ${dm(curveBase)}: para desembolso anterior, usando DI e cupom digitados.` : null
   const usingCurve = curveMode === 'painel' && !curveBlocked && !!start
-  const loanErrors = ['valor', 'rate', 'spot', 'start', 'months', 'grace', 'flat', 'guarantee'].some((k) => errors[k])
-  const loanParams = loanErrors ? null : { currency, principal: money.value / spot, rate, spot, start, months, freq: Number(freq), irrf: Number(irrf), grossUp: grossUp === 'sim', flat, guarantee, feesAbroad: feesAbroad === 'sim', amort, grace: amort === 'parcelas' ? grace : 0, calendar, nextBusDay: (d) => nextBusinessDay(d, ['BR'], hol.ctx) }
-  const loanResult = loanParams ? loan4131(loanParams) : null
+  // Operação sem a taxa: prazos, datas e prazo médio não dependem dela. Serve ao DI do prazo, à conferência das taxas
+  // coladas e ao Atingir meta, que funciona mesmo com o campo da taxa vazio.
+  const baseErrors = ['valor', 'spot', 'start', 'months', 'grace', 'flat', 'guarantee'].some((k) => errors[k])
+  const baseParams = baseErrors ? null : { currency, principal: money.value / spot, spot, start, months, freq: Number(freq), irrf: Number(irrf), grossUp: grossUp === 'sim', flat, guarantee, feesAbroad: feesAbroad === 'sim', amort, grace: amort === 'parcelas' ? grace : 0, calendar, nextBusDay: (d) => nextBusinessDay(d, ['BR'], hol.ctx) }
+  const esqueletoResult = baseParams ? loan4131({ ...baseParams, rate: 0 }) : null
+  const esqueleto = esqueletoResult?.ok ? esqueletoResult : null
+  const loanResult = baseParams && !errors.rate ? loan4131({ ...baseParams, rate }) : esqueletoResult && !esqueletoResult.ok ? esqueletoResult : null
   const loan = loanResult?.ok ? loanResult : null
   // DI pré do prazo médio, lido da curva DI x pré da B3 que o Painel coleta. Digitou, vale o digitado.
-  const diAuto = loan && diCurve && loan.start >= diCurve.date ? diDoPrazo(diCurve.pts, busDaysIn(diCurve.date, loan.start, ['BR'], hol.ctx), busDaysIn(loan.start, addDays(loan.start, loan.avgTermDays), ['BR'], hol.ctx)) : null
+  const diAuto = esqueleto && diCurve && esqueleto.start >= diCurve.date ? diDoPrazo(diCurve.pts, busDaysIn(diCurve.date, esqueleto.start, ['BR'], hol.ctx), busDaysIn(esqueleto.start, addDays(esqueleto.start, esqueleto.avgTermDays), ['BR'], hol.ctx)) : null
   const diDoPainel = !diOwn && diAuto != null
   const diShown = diDoPainel ? dec(diAuto) : diText
   const di = parseDecimal(diShown)
@@ -182,7 +186,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
     : coladas.bad ? `"${coladas.bad}" não é uma taxa. Cole só os números, um por linha, por exemplo 5,4321.`
       : !coladas.rates.length ? 'Cole as taxas futuras da cotação, uma por linha, na ordem dos vencimentos.'
         : coladas.rates.some((v) => !(v > 0)) ? 'As taxas futuras precisam ser maiores que zero.'
-          : loan && coladas.rates.length !== loan.flows.length ? `Foram coladas ${coladas.rates.length} ${coladas.rates.length === 1 ? 'taxa' : 'taxas'}; a operação tem ${loan.flows.length} ${loan.flows.length === 1 ? 'pagamento' : 'pagamentos'}.`
+          : esqueleto && coladas.rates.length !== esqueleto.flows.length ? `Foram coladas ${coladas.rates.length} ${coladas.rates.length === 1 ? 'taxa' : 'taxas'}; a operação tem ${esqueleto.flows.length} ${esqueleto.flows.length === 1 ? 'pagamento' : 'pagamentos'}.`
             : null
   if (mesa) errors.cupom = null
   const hedgeErrors = ['di', 'cupom', 'fwd', 'swap', 'ndf'].some((k) => errors[k])
@@ -213,22 +217,27 @@ export default function Emprestimo4131({ onBack, quotes }) {
     : src ? <>Painel · {quando(src.at)}{src.ref ? ' · referência do dia' : ''}{painel && painel.timestamp !== src.at && <> · {link('Atualizar', usarPainel)}</>}</>
       : <><span className="e4-exemplo">Valor de exemplo</span>: sem a cotação do Painel agora.</>
   const diNote = diOwn ? <>digitado.{diAuto != null && <> {link(`Usar o do Painel (${pct(diAuto)})`, () => setDiOwn(false))}</>}</>
-    : diAuto != null ? `do Painel, curva DI da B3 de ${dm(diCurve.date)}, para o prazo médio de ${loan.avgTermDays} dias.`
-      : <><span className="e4-exemplo">valor de exemplo</span>, {!diCurve ? 'sem a curva DI do Painel agora' : !loan ? 'complete os dados da operação' : loan.start < diCurve.date ? `a curva do Painel começa em ${dm(diCurve.date)}` : 'a curva do Painel não cobre este prazo'}.</>
+    : diAuto != null ? `do Painel, curva DI da B3 de ${dm(diCurve.date)}, para o prazo médio de ${esqueleto.avgTermDays} dias.`
+      : <><span className="e4-exemplo">valor de exemplo</span>, {!diCurve ? 'sem a curva DI do Painel agora' : !esqueleto ? 'complete os dados da operação' : esqueleto.start < diCurve.date ? `a curva do Painel começa em ${dm(diCurve.date)}` : 'a curva do Painel não cobre este prazo'}.</>
   const cupomNote = mesa || cupomOwn ? null : <><span className="e4-exemplo">valor de exemplo</span>; digite o da sua cotação.</>
   const pendencia = loanResult?.error || hedgeResult?.error || (Object.values(errors).some(Boolean) ? 'Complete os campos indicados para calcular.' : null)
 
   // Atingir meta: procura a taxa all-in que leva o resultado à meta e a coloca no campo da taxa.
   const metaAtual = METAS.find((m) => m.id === metaKind)
   const atingir = () => {
-    const alvo = parseDecimal(metaText)
-    if (alvo === null) return setMeta({ erro: 'Informe a meta em %, por exemplo 1,30.' })
-    if (!loan || !hedge) return setMeta({ erro: 'Complete os dados da operação antes de calcular.' })
-    const r = metaTaxa4131(loanParams, hedgeParams, metaKind, alvo)
+    // A meta em CDI + pode ser negativa (CDI − x); as de custo efetivo, não.
+    const texto0 = metaText.trim().replace('−', '-')
+    const negativa = metaKind === 'spread' && texto0.startsWith('-')
+    const lido = parseDecimal(negativa ? texto0.slice(1) : texto0)
+    if (lido === null) return setMeta({ erro: `Informe a meta em %, por exemplo ${metaKind === 'spread' ? '3,20' : '1,30'}.` })
+    const alvo = negativa ? -lido : lido
+    if (!baseParams || hedgeErrors) return setMeta({ erro: 'Complete os dados da operação antes de calcular.' })
+    const r = metaTaxa4131(baseParams, hedgeParams, metaKind, alvo)
     if (!r.ok) return setMeta({ erro: r.error })
     const texto = dec(r.rate, 4)
+    const meta4 = (v) => `${Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}%`
     setRateText(texto)
-    setMeta({ rateText: texto, alvo: { cetMes: `custo efetivo de ${pct(alvo)} ao mês`, cetAno: `custo efetivo de ${pct(alvo)} ao ano`, spread: `CDI ${signed(alvo, pct)}` }[metaKind] })
+    setMeta({ rateText: texto, alvo: { cetMes: `custo efetivo de ${meta4(alvo)} ao mês`, cetAno: `custo efetivo de ${meta4(alvo)} ao ano`, spread: `CDI ${alvo < 0 ? '−' : '+'} ${meta4(alvo)}` }[metaKind] })
   }
   const metaNote = meta?.erro ? <span className="e4-exemplo">{meta.erro}</span>
     : meta && meta.rateText === rateText && hedge ? `Taxa all-in de ${cur.Nome} + ${meta.rateText}% a.a., calculada para chegar ao ${meta.alvo}.`
@@ -292,7 +301,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
                   <h3 id="e4-meta-h">Atingir meta{ajuda('Atingir meta', 'Digite o custo que você quer chegar e a tela calcula a taxa all-in (moeda + % ao ano) que leva a ele, mantendo valor, parcelas, cotação, DI e juro da moeda. A taxa calculada vai para o campo Taxa all-in, com quatro casas, e todo o resto é recalculado.')}</h3>
                   <div className="e4-meta-campos">
                     <select id="e4-meta-kind" aria-label="Meta" value={metaKind} onChange={(e) => { setMetaKind(e.target.value); setMeta(null) }}>{METAS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}</select>
-                    <div className="cx-rate"><input id="e4-meta" aria-label={`Meta em ${metaAtual.unit}`} aria-describedby="e4-meta-status" inputMode="decimal" autoComplete="off" placeholder="1,30" value={metaText} onChange={(e) => setMetaText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') atingir() }} onFocus={(e) => e.target.select()} /><span className="fm-unidade">{metaAtual.unit}</span></div>
+                    <div className="cx-rate"><input id="e4-meta" aria-label={`Meta em ${metaAtual.unit}`} aria-describedby="e4-meta-status" inputMode="decimal" autoComplete="off" placeholder={metaKind === 'spread' ? '3,20' : '1,30'} value={metaText} onChange={(e) => setMetaText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') atingir() }} onFocus={(e) => e.target.select()} /><span className="fm-unidade">{metaAtual.unit}</span></div>
                     <button type="button" className="e4-meta-btn" onClick={atingir}>Calcular taxa</button>
                   </div>
                   <p className="e4-origem" id="e4-meta-status" role="status">{metaNote}</p>
@@ -317,7 +326,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
                     {mesa && <div className="cx-field e4-colar">
                       <span className="fm-rotulo"><label htmlFor="e4-fwd">Taxas futuras da mesa</label>{ajuda('Taxas futuras da mesa', 'Copie a coluna de taxa futura da planilha ou do e-mail de cotação e cole aqui: uma taxa por linha, na ordem dos vencimentos, uma para cada pagamento. Vale vírgula ou ponto decimal.')}</span>
                       <textarea id="e4-fwd" rows={4} inputMode="decimal" autoComplete="off" spellCheck={false} placeholder={'5,4321\n5,4688\n5,5012'} aria-invalid={!!errors.fwd} aria-describedby="e4-fwd-origem e4-fwd-err" value={fwdText} onChange={(e) => setFwdText(e.target.value)} />
-                      <p className="e4-origem" id="e4-fwd-origem">{coladas.rates.length} de {loan ? loan.flows.length : '—'} {loan?.flows.length === 1 ? 'taxa' : 'taxas'}{hedge?.source === 'mesa' ? ` · ${juro} implícito no vencimento: ${pct(hedge.cupom)} a.a.` : ''}</p>
+                      <p className="e4-origem" id="e4-fwd-origem">{coladas.rates.length} de {esqueleto ? esqueleto.flows.length : '—'} {esqueleto?.flows.length === 1 ? 'taxa' : 'taxas'}{hedge?.source === 'mesa' ? ` · ${juro} implícito no vencimento: ${pct(hedge.cupom)} a.a.` : ''}</p>
                       <p className="cx-error" id="e4-fwd-err" role={errors.fwd ? 'alert' : undefined}>{errors.fwd ?? ''}</p>
                     </div>}
                   </>}
@@ -361,7 +370,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
                 </dl>}
                 {loan && <section className="e4-condicoes" aria-labelledby="e4-condicoes-h">
                   <header><h4 id="e4-condicoes-h">Condições da operação</h4><button type="button" className="e4-copiar" disabled={!hedge} onClick={copiar}>{copiado ? 'Resumo copiado' : 'Copiar resumo'}</button><span className="sr-only" role="status">{copiado ? 'Resumo copiado para a área de transferência.' : ''}</span></header>
-                  <dl>{condicoesE4(loan).map(([rotulo, valor]) => <div key={rotulo}><dt>{rotulo}</dt><dd>{valor}</dd></div>)}</dl>
+                  <dl>{condicoesE4(loan, hedge).map(([rotulo, valor]) => <div key={rotulo}><dt>{rotulo}</dt><dd>{valor}</dd></div>)}</dl>
                 </section>}
                 <p className="fm-iof-premise">{loan ? `IOF-câmbio de ${pct(loan.iofRate)} na entrada: prazo médio de ${loan.avgTermDays} dias corridos. Liquidar antes do prazo pode gerar o IOF com multa e juros.` : `IOF-câmbio na entrada: ${pct(IOF_SHORT_TERM.rate)} com prazo médio até ${IOF_SHORT_TERM.maxDays} dias; zero acima.`}</p>
                 {avisos.map((texto) => <p className="cx-hint cx-pad e4-aviso" role="status" key={texto}>{texto}</p>)}

@@ -262,7 +262,19 @@ test('atingir meta · meta fora do alcance e entradas inválidas são recusadas'
   // Com taxa zero o custo já é positivo (o câmbio a termo embute a diferença de juros): meta abaixo disso não existe.
   const minimo = hedge4131(loan4131({ ...base, rate: 0 }), protecao).ndf.cetMes
   assert.ok(minimo > 0)
-  assert.match(metaTaxa4131(base, protecao, 'cetMes', minimo - 0.1).error, /Meta abaixo do mínimo/)
+  assert.match(metaTaxa4131(base, protecao, 'cetMes', minimo - 0.1).error, /Meta abaixo do mínimo: com taxa zero, o resultado já é \d+,\d{4}%\./)
+  // Meta igual ao mínimo devolve taxa zero; CDI negativo alcançável funciona.
+  assert.equal(metaTaxa4131(base, protecao, 'cetMes', minimo).rate, 0)
+  const negativo = hedge4131(loan4131({ ...base, rate: 1 }), protecao).ndf.spread
+  assert.ok(negativo < 0)
+  close(metaTaxa4131(base, protecao, 'spread', negativo).rate, 1, 1e-4)
+  // Sem os parâmetros da proteção, erro em vez de exceção.
+  assert.equal(metaTaxa4131(base, undefined, 'cetMes', 1.3).ok, false)
+  // Operação de 1 mês com tarifa alta: a 100% a.a. o custo passa do limite do motor; a busca desce o teto e resolve.
+  const curta = { principal: 1e6, spot: 5, start: '2026-11-11', months: 1, freq: 0, irrf: 25, grossUp: true, flat: 5 }
+  const alvo = hedge4131(loan4131({ ...curta, rate: 6 }), protecao).ndf.cetMes
+  close(metaTaxa4131(curta, protecao, 'cetMes', alvo).rate, 6, 1e-3)
+  assert.match(metaTaxa4131(curta, protecao, 'cetMes', 500).error, /Meta fora do alcance desta operação/)
   assert.match(metaTaxa4131(base, protecao, 'cetMes', 50).error, /Meta acima/)
   assert.equal(metaTaxa4131(base, protecao, 'outra', 1.3).ok, false)
   assert.equal(metaTaxa4131(base, protecao, 'cetMes', NaN).ok, false)
@@ -290,13 +302,33 @@ test('resumo no formato de e-mail · condições na ordem da cotação e os trê
   const texto = resumoE4({ loan, hedge })
   const br = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   assert.ok(texto.startsWith('4131 com NDF · Condições da operação\nData da cotação: 16/11/2026\n'))
-  assert.ok(texto.includes(`Custo efetivo total: taxa de juros prefixada em reais de ${br(hedge.ndf.cetMes)}% a.m. / ${br(hedge.ndf.cetAno)}% a.a. (equivalente a CDI + ${br(hedge.ndf.spread)}%), exp/360`))
+  assert.ok(texto.includes(`Custo efetivo total: taxa de juros prefixada em reais de ${br(hedge.ndf.cetMes)}% a.m. / ${br(hedge.ndf.cetAno)}% a.a. (exp/360), equivalente a CDI + ${br(hedge.ndf.spread)}%`))
   assert.ok(texto.includes(`Economia de IOF (R$): ${br(hedge.ndf.iofGiro)}`))
-  assert.ok(texto.includes(`Taxa equivalente em capital de giro: ${br(hedge.ndf.giroMes)}% a.m. / ${br(hedge.ndf.giroAno)}% a.a., exp/360`))
+  assert.ok(texto.includes(`Taxa equivalente em capital de giro: ${br(hedge.ndf.giroMes)}% a.m. / ${br(hedge.ndf.giroAno)}% a.a. (exp/360)`))
+  assert.ok(texto.includes('Não inclui IR nem PIS/Cofins sobre ganho do derivativo.'))
   // Sem resultado, sem texto; IR somado à taxa aparece na condição.
   assert.equal(resumoE4({ loan, hedge: null }), '')
   assert.deepEqual(condicoesE4(null), [])
-  assert.match(Object.fromEntries(condicoesE4(loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 12, freq: 6 })))['Taxa'], /IR somado à taxa/)
+  // IR somado à taxa: alíquota e taxa final aparecem; com alíquota zero, nada é dito.
+  const comIr = loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 24, freq: 6 })
+  assert.equal(Object.fromEntries(condicoesE4(comIr))['Taxa'], 'Dólar + 6,00% a.a. + IR de 15% por conta do tomador (7,0588% a.a. com o IR)')
+  assert.equal(Object.fromEntries(condicoesE4(loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 24, freq: 6, irrf: 0 })))['Taxa'], 'Dólar + 6,00% a.a.')
+  assert.equal(Object.fromEntries(condicoesE4(comIr))['Carência do principal'], 'Não se aplica')
+  assert.equal(Object.fromEntries(condicoesE4(comIr))['Principal'], 'No vencimento')
+  // Custos que entram no custo efetivo aparecem nas condições quando existem.
+  const cheio = loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 24, freq: 6, flat: 1, guarantee: 2, feesAbroad: true })
+  const extras = Object.fromEntries(condicoesE4(cheio, hedge4131(cheio, { di: 13, cupom: 5, ndfMarkup: 0.5 })))
+  assert.equal(extras['Fiança ou SBLC'], '2,00% a.a. sobre o saldo')
+  assert.equal(extras['IR sobre comissões'], '15% · comissões pagas ao exterior')
+  assert.equal(extras['Acréscimo do banco no NDF'], '0,50%')
+  assert.equal(Object.fromEntries(condicoesE4(loan, hedge4131(loan, { di: 13, forwards: hedge.flows.map((f) => f.forward) })))['Taxa futura'], 'Informada, da cotação da mesa')
+  // Economia de IOF com IOF-câmbio na entrada: o texto diz que o IOF-câmbio não foi descontado.
+  const curto = loan4131({ principal: 2e6, rate: 6, spot: 5, start: '2026-11-11', months: 6, freq: 0, grossUp: false })
+  assert.match(resumoE4({ loan: curto, hedge: hedge4131(curto, { di: 13, cupom: 5 }) }), /não desconta o IOF-câmbio de R\$ 350\.000,00 desta operação/)
+  // Spread que arredonda para zero sai com sinal de mais; negativo, com sinal de menos.
+  const zero = { ...hedge, ndf: { ...hedge.ndf, spread: -0.003 } }
+  assert.ok(resumoE4({ loan, hedge: zero }).includes('equivalente a CDI + 0,00%'))
+  assert.ok(resumoE4({ loan, hedge: { ...hedge, ndf: { ...hedge.ndf, spread: -1.25 } } }).includes('equivalente a CDI − 1,25%'))
 })
 
 test('taxas futuras da mesa · cada parcela em reais é a parcela na moeda vezes a taxa colada', () => {

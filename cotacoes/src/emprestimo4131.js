@@ -351,18 +351,23 @@ export function metaTaxa4131(loanParams, hedgeParams, kind, target) {
   const at = (rate) => {
     const loan = loan4131({ ...loanParams, rate })
     if (!loan.ok) return loan
-    const hedge = hedge4131(loan, hedgeParams)
+    const hedge = hedge4131(loan, hedgeParams ?? {})
     return hedge.ok ? { ok: true, value: hedge.ndf[kind] } : hedge
   }
+  const dec4 = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
   const low = at(0)
-  const high = at(100)
   if (!low.ok) return low
-  if (!high.ok) return high
-  if (target < low.value) return fail(`Meta abaixo do mínimo: com taxa zero, o resultado já é ${low.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%.`)
-  if (target > high.value) return fail('Meta acima do que uma taxa de 100% ao ano alcança.')
+  // Teto da busca: 100% a.a.; em operação muito curta com tarifa alta o custo passa do limite do motor, e o teto desce
+  // até a conta fechar.
+  let top = 100
+  let high = at(top)
+  while (!high.ok && top > 0.01) { top /= 2; high = at(top) }
+  if (!high.ok) return fail('Meta fora do alcance desta operação.')
+  if (target < low.value) return fail(`Meta abaixo do mínimo: com taxa zero, o resultado já é ${dec4(low.value)}%.`)
+  if (target > high.value) return fail(top < 100 ? 'Meta fora do alcance desta operação.' : 'Meta acima do que uma taxa de 100% ao ano alcança.')
   let lo = 0
-  let hi = 100
-  for (let i = 0; i < 60; i++) {
+  let hi = top
+  for (let i = 0; i < 40; i++) {
     const mid = (lo + hi) / 2
     const r = at(mid)
     if (!r.ok) return r

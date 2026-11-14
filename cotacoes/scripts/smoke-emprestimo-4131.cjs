@@ -130,6 +130,21 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await section.getByRole('button', { name: 'Calcular taxa' }).click()
       assert.match(normalize(await section.locator('#e4-meta-status').innerText()), /^Meta abaixo do mínimo/)
       assert.equal(await section.locator('#e4-rate').inputValue(), taxaMeta)
+      // Com o campo da taxa vazio, a meta ainda calcula: a taxa é justamente o que se procura.
+      await fill('rate', '')
+      await fill('meta', '1,30')
+      await section.getByRole('button', { name: 'Calcular taxa' }).click()
+      assert.equal(await section.locator('#e4-rate').inputValue(), taxaMeta)
+      // Meta em CDI pode ser negativa.
+      await section.locator('#e4-meta-kind').selectOption('spread')
+      await fill('meta', '-1,00')
+      await section.getByRole('button', { name: 'Calcular taxa' }).click()
+      assert.match(normalize(await section.locator('#e4-meta-status').innerText()), /calculada para chegar ao CDI − 1,00%\.$/)
+      assert.ok(normalize(await section.locator('.fm-headline').innerText()).includes('CDI − 1,00%'))
+      await section.locator('#e4-meta-kind').selectOption('cetMes')
+      await fill('meta', '1,30')
+      await section.getByRole('button', { name: 'Calcular taxa' }).click()
+      assert.equal(await section.locator('#e4-rate').inputValue(), taxaMeta)
 
       // Condições da operação na ordem do e-mail de cotação e o resumo copiado em texto.
       const condicoes = normalize(await section.locator('.e4-condicoes dl').innerText())
@@ -138,9 +153,9 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await section.getByRole('button', { name: 'Resumo copiado' }).waitFor()
       const resumo = await page.evaluate(() => navigator.clipboard.readText())
       assert.ok(resumo.startsWith('4131 com NDF · Condições da operação\n'), resumo)
-      assert.match(resumo, /Custo efetivo total: taxa de juros prefixada em reais de 1,30% a\.m\. \/ \d+,\d{2}% a\.a\. \(equivalente a CDI \+ \d+,\d{2}%\), exp\/360/)
+      assert.match(resumo, /Custo efetivo total: taxa de juros prefixada em reais de 1,30% a\.m\. \/ \d+,\d{2}% a\.a\. \(exp\/360\), equivalente a CDI \+ \d+,\d{2}%/)
       assert.match(resumo, /Economia de IOF \(R\$\): [\d.]+,\d{2}/)
-      assert.match(resumo, /Taxa equivalente em capital de giro: \d+,\d{2}% a\.m\. \/ \d+,\d{2}% a\.a\., exp\/360/)
+      assert.match(resumo, /Taxa equivalente em capital de giro: \d+,\d{2}% a\.m\. \/ \d+,\d{2}% a\.a\. \(exp\/360\)/)
 
       // O que foge do padrão fica em Mais opções; a comparação com swap e sem proteção, em painel próprio.
       await section.locator('.e4-mais > summary').click()
