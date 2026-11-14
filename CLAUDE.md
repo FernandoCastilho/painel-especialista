@@ -5,6 +5,9 @@ Estas regras valem em toda sessão deste projeto.
 ## 1. Pedido comum: executar sem perguntar
 - Quando Fernando pede algo, o Claude faz. Se der para decidir sozinho, escolhe a opção mais segura e anota o que escolheu.
 - Não pede "ok" no meio do caminho. Entrega e relata no fim.
+- Pedido de mudança no painel vai até o fim, sem esperar Fernando: achar onde está, conferir como está hoje, fazer a mudança, rodar testes, enviar para o ramo da sessão e abrir o PR em rascunho. Nunca terminar com "quer que eu abra o PR?".
+- Se o texto do pedido não bater com o código, procurar de onde ele vem (outra versão, outro lugar) antes de responder, em vez de devolver a dúvida.
+- O único passo que fica esperando é o da regra 2 (juntar ao ramo principal e publicar no ar). Nele, o Claude deixa tudo pronto e pede só o "ok" final.
 
 ## 2. Casos críticos: lista fechada
 Só nestes casos o Claude para e pede autorização:
