@@ -55,3 +55,4 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
   .bw.e4 #fm-result.fm-zoom .e4-cotacao dd b { font-size:1.6rem; }
   .bw.e4 #fm-result.fm-zoom .e4-cotacao dd small { font-size:.9rem; }
 }
+.bw.e4 .e4-aviso { margin:6px 16px 0; padding:8px 10px; border-left:3px solid #c96a00; border-radius:6px; background:#fff6ea; color:#5a3200; }

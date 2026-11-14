@@ -177,3 +177,50 @@ test('DI do prazo · lido da curva DI x pré, a termo quando o desembolso é dep
   assert.equal(diDoPrazo(curva, 0, 0), null)
   assert.equal(diDoPrazo([], 0, 100), null)
 })
+
+test('prazo médio na fronteira · 364,7 dias conta como 364 e paga o IOF; 365,2 não paga', () => {
+  // 23 parcelas mensais em dia fixo: a média exata depende do dia do desembolso.
+  const base = { principal: 1.2e6, rate: 5.5, spot: 5.5, months: 23, freq: 1, amort: 'parcelas' }
+  const abaixo = loan4131({ ...base, start: '2026-11-16' })
+  close(abaixo.avgTermExact, abaixo.flows.reduce((s, f) => s + f.principal * f.dc, 0) / 1.2e6, 1e-9)
+  assert.ok(abaixo.avgTermExact > 364.6 && abaixo.avgTermExact < 364.8, String(abaixo.avgTermExact))
+  assert.equal(abaixo.avgTermDays, 364)
+  assert.equal(abaixo.iofRate, 3.5)
+  const acima = loan4131({ ...base, start: '2026-12-01' })
+  assert.ok(acima.avgTermExact > 365 && acima.avgTermExact < 365.3, String(acima.avgTermExact))
+  assert.equal(acima.avgTermDays, 365)
+  assert.equal(acima.iofRate, 0)
+  // Principal no vencimento: a média exata é o próprio prazo.
+  assert.equal(loan4131(MENSAL).avgTermExact, 365)
+})
+
+test('datas a cada 30 dias · semestral: 180 dias por período e 12 meses somam 360, com IOF de 3,5%', () => {
+  // 16/11/2026 é segunda. +180 dias cai no sábado 15/05/2027 e vai para segunda 17/05, que vira a âncora:
+  // o segundo pagamento é 17/05 + 180 dias = 13/11/2027 (sábado), levado a segunda 15/11.
+  const r = loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 12, freq: 6, calendar: '30d' })
+  assert.deepEqual(r.flows.map((f) => [f.date, f.dc]), [['2027-05-17', 182], ['2027-11-15', 364]])
+  assert.equal(r.iofRate, 3.5)
+  // Pagamento único de 12 meses: 360 dias, IOF de 3,5%; em dia fixo, 365 dias e IOF zero.
+  const unico = loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 12, freq: 0, calendar: '30d' })
+  assert.equal(unico.flows[0].dc, 360)
+  assert.equal(unico.iofRate, 3.5)
+  assert.equal(loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 12, freq: 0 }).iofRate, 0)
+})
+
+test('prazo que não é múltiplo do período · a última parcela vence no fim do prazo, em intervalo mais curto', () => {
+  const r = loan4131({ principal: 9e5, rate: 6, spot: 5, start: '2026-01-15', months: 7, freq: 3, amort: 'parcelas' })
+  assert.deepEqual(r.flows.map((f) => f.date), ['2026-04-15', '2026-07-15', '2026-08-15'])
+  r.flows.forEach((f) => close(f.principal, 3e5, 1e-6))
+})
+
+test('principal no vencimento · números iguais aos da versão de 11/11/2026, antes da ampliação', () => {
+  // Valores gravados rodando a versão anterior do motor com as mesmas entradas.
+  const loan = loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-11', months: 24, freq: 6, irrf: 15, grossUp: true, flat: 0.5, guarantee: 0.3 })
+  const h = hedge4131(loan, { di: 13, cupom: 5 })
+  close(loan.allIn, 7.884716744192454, 1e-12)
+  close(loan.totals.usd, 1149425, 1e-6)
+  close(h.ndf.totalBrl, 6617669.360018991, 1e-6)
+  close(h.ndf.pre, 16.157198353821734, 1e-11)
+  close(h.swap.spread, 2.793980844090038, 1e-11)
+  close(h.swap.runSpread, 2.5227315341467715, 1e-11)
+})

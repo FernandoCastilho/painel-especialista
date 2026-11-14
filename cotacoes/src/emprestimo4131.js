@@ -143,7 +143,9 @@ export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf 
     left -= pay
     return row
   })
-  const avgTermDays = split ? Math.floor(weighted / principal + 1e-9) : daysBetween(start, end)
+  // Média exata (pode ter fração) e a que vale para a regra do IOF: inteira, arredondada para baixo (cobra na dúvida).
+  const avgTermExact = split ? weighted / principal : daysBetween(start, end)
+  const avgTermDays = split ? Math.floor(avgTermExact + 1e-9) : avgTermExact
   const iofRate = iofEntrada(avgTermDays)
   if (flat + iofRate >= 100) return fail('Flat e IOF consomem todo o valor: revise os percentuais.')
   const a = irrf / 100
@@ -177,7 +179,7 @@ export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf 
   if (allIn == null) return fail('Não foi possível calcular o custo: revise os valores.')
   return {
     ok: true, currency, principal, rate, spot, start, end, months, freq, irrf, grossUp, flat, guarantee, feesAbroad, amort, grace: split ? grace : 0, calendar,
-    avgTermDays, iofRate, flatUsd, iofUsd, flatIrUsd, netUsd, netBrl: netUsd * spot, flows, totals,
+    avgTermDays, avgTermExact, iofRate, flatUsd, iofUsd, flatIrUsd, netUsd, netBrl: netUsd * spot, flows, totals,
     grossedRate: grossUp ? rate / (1 - a) : rate,
     allIn: allIn * 100,
   }
