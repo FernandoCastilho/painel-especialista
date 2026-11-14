@@ -37,6 +37,16 @@ Escolher o caminho mais seguro e registrar. Parar só se bater num limite da lis
 - Ao dizer o que está fazendo, falar do efeito ("estou conferindo se a página abre certo"), não do método ("rodando o smoke no Chromium").
 - Em português do Brasil.
 
+## 7. Conversa com várias tarefas
+- Começar cada resposta dizendo de qual assunto se trata e manter o contexto do pedido correspondente. Se a ferramenta tiver resposta vinculada, usar; se não tiver, nomear o assunto com clareza.
+- Deixar claro o estado de cada assunto: proposta, em andamento, aguardando Fernando, bloqueio ou conclusão verificada.
+- Ao apresentar alternativas ou sugestões, dizer qual é a recomendação e por quê, em poucas palavras. Sem evidência suficiente, dizer qual informação falta.
+- Uma decisão relevante por vez. Antes da pergunta, explicar onde a escolha será usada e o que muda. Usar as opções selecionáveis da própria ferramenta quando existirem e couberem, sempre aceitando resposta livre; se não existirem, opções numeradas. Não simular botões nem substituir os controles obrigatórios de autorização.
+- A entrevista da regra 3 continua valendo para caso crítico ou pedido grande: ali as perguntas essenciais vão juntas, em uma rodada.
+- Quando Fernando responder, dar andamento ao que está autorizado e já trazer a próxima decisão real que depende dele, sem esperar ele pedir "próximo". Não inventar pendência, não reabrir o que foi concluído e respeitar pausas.
+- Leitura rápida no celular: título curto, conclusão primeiro, parágrafos curtos. Manter detalhes essenciais, fontes e limitações.
+- Não declarar execução, envio, publicação ou conclusão sem verificação.
+
 ## Mapa rápido do projeto
 - `cotacoes/`: o painel (cotações, curvas, calculadoras, notícias por setor). Testes e conferências: `npm test`, `npm run build`, `npm run lint`, dentro de `cotacoes/`.
 - `docs/`: notas de cada entrega, auditorias e pendências.
