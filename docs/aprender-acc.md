@@ -71,9 +71,12 @@ Pela Lei 11.101/2005 (art. 49, § 4º, e art. 86, II), o valor adiantado em ACC 
 - Ligações com Drawback, Cupom cambial e SOFR. O mapa do conhecimento passa a reconhecer o ACC em notícias.
 - Exemplo numérico é ilustrativo: juros simples na base 360 são convenção usual, não regra; vale o contrato.
 
-## Pendências e ressalvas
+## Pendências resolvidas (14/11/2026)
 
-- O prazo máximo não foi citado na tela. A revisão indicou até 1.500 dias entre embarque e liquidação (Resolução BCB 277/2022, art. 38, § 4º); vale conferir antes de usar.
-- O encargo do Banco Central aparece só como texto, sem conta: incluí-lo no exemplo seria nova regra de cálculo.
-- Os links do Planalto não puderam ser abertos daqui (bloqueio de rede); seguem o endereço padrão do site.
-- O tratamento de juros e encargos do ACC na recuperação judicial varia entre decisões judiciais.
+- **Prazo:** conferido no texto da Resolução BCB 277/2022 (art. 38): liquidação futura em até 1.500 dias da contratação e, se a liquidação vier depois do embarque, até 1.500 dias entre os dois. Incluído na tela.
+- **Encargo do Banco Central:** conferido no texto da Resolução CMN 5.056/2022: até 100% do valor adiantado, cobrado do exportador e recolhido pelo banco; dispensa com mercadoria embarcada ou serviço prestado e em cancelamentos de até US$ 10 mil que, somados, não passem de 10% do contrato. Decisão: fica em texto, sem conta no exemplo, porque o cálculo depende da LFT, do câmbio e da SOFR do período e um número fixo daria impressão falsa de precisão. Nenhuma regra de cálculo foi criada.
+- **Links:** Lei 14.286 e Lei 11.101 no Planalto confirmados pelo índice de busca (o site é bloqueado na rede desta sessão); Lei 4.728 trocada pelo texto atualizado da Câmara, aberto e conferido (art. 75); normas do Banco Central abertas e lidas.
+
+## Ressalva permanente
+
+- O tratamento de juros e encargos do ACC na recuperação judicial varia entre decisões judiciais. A tela orienta confirmar com o jurídico.
