@@ -6,6 +6,8 @@ export const ENTRIES = [
     'Calculadoras > Empréstimo externo (4131): a tela passou a seguir o formato das cotações de banco de 4131 com NDF. São seis campos: valor em reais, moeda (dólar ou euro), cotação de partida, parcelas mensais, taxa all-in e data. O resto já vem no padrão: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência e IR dentro da taxa.',
     'A cotação de partida já vem do Painel e o DI pré vem da curva da B3, para o prazo médio, com a origem ao lado do campo; os dois podem ser trocados. O cupom cambial (ou o juro do euro) continua digitado.',
     'Resultado como na cotação: custo efetivo total ao mês e ao ano (exp/360) com o equivalente em CDI, economia de IOF frente a um capital de giro em reais, taxa de giro equivalente e o quadro parcela a parcela, com saldo, juros, taxa futura e parcela em reais. A taxa futura é teórica: a da mesa do banco prevalece.',
+    'Atingir meta, no topo: digite o custo desejado (por exemplo, 1,30% ao mês prefixado, ou um CDI +) e a tela calcula a taxa all-in que chega nele, recalculando parcelas, economia de IOF e equivalente em giro.',
+    'Condições da operação na ordem do e-mail de cotação, com o botão Copiar resumo, que leva o texto pronto para colar.',
     'O que foge do padrão fica em Mais opções (outra frequência, principal no vencimento, carência, IR somado à taxa, tarifa, fiança). A comparação com swap e sem proteção continua disponível, em painel próprio.',
   ] },
   { date: '12/11/2026', resumo: 'Calculadoras de crédito: 31/12 sem expediente bancário', items: [

@@ -1,6 +1,6 @@
 // Apresentação e impressão do empréstimo externo (4131): cópia congelada do que a tela calculou.
 // Nunca recalcula nem busca taxa nova; se faltar número, não gera a cópia.
-import { unhedged4131 } from './emprestimo4131.js'
+import { moedaOf, unhedged4131 } from './emprestimo4131.js'
 
 const freeze = (value) => {
   if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) }
@@ -56,4 +56,49 @@ export function buildE4Slides(snapshot, { title = '', sections = E4_SLIDES.map((
   if (!snapshot) return null
   const slides = E4_SLIDES.filter((item) => item.required || sections.includes(item.id)).map((item) => item.id)
   return freeze({ title: String(title).trim().slice(0, 100) || E4_TITLE, textSize: ['normal', 'large', 'xl'].includes(textSize) ? textSize : 'normal', slides })
+}
+
+const num = (value, digits = 2) => value.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits })
+const pctText = (value) => `${num(Math.abs(value) < 0.005 ? 0 : value)}%`
+const dia = (iso) => iso.split('-').reverse().join('/')
+const FREQ_NOME = { 1: 'Mensal', 3: 'Trimestral', 6: 'Semestral', 12: 'Anual', 0: 'No vencimento' }
+
+// Condições da operação, na ordem das cotações de banco de 4131 com NDF: [rótulo, valor]. Sem tomador, CNPJ, credor
+// e garantias: são dados do cliente e não passam pela calculadora.
+export function condicoesE4(loan) {
+  if (!loan?.ok) return []
+  const cur = moedaOf(loan.currency)
+  const parcelas = loan.flows.filter((flow) => flow.principal > 0).length
+  return [
+    ['Data da cotação', dia(loan.start)],
+    ['Produto', '4131 com NDF'],
+    ['Valor de principal', `R$ ${num(loan.principal * loan.spot)}`],
+    ['Moeda', `${cur.Nome} · ${cur.sym} ${num(loan.principal)}`],
+    ['Cotação de partida', num(loan.spot, 4)],
+    // Até quatro casas: a taxa calculada pelo Atingir meta vem com quatro.
+    ['Taxa', `${cur.Nome} + ${loan.rate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}% a.a.${loan.grossUp ? ' · IR somado à taxa' : ''}`],
+    ['Prazo', `${loan.months} ${loan.months === 1 ? 'mês' : 'meses'}`],
+    ['Principal', loan.amort === 'parcelas' ? `${FREQ_NOME[loan.freq]} · ${parcelas} ${parcelas === 1 ? 'parcela' : 'parcelas'}` : 'No vencimento'],
+    ['Juros', FREQ_NOME[loan.freq]],
+    ['Prazo médio (DC)', String(loan.avgTermDays)],
+    ['Carência do principal', loan.grace ? `${loan.grace} ${loan.grace === 1 ? 'pagamento' : 'pagamentos'}` : 'Sem carência'],
+    ['Tarifa de contratação', `R$ ${num(loan.flatUsd * loan.spot)}`],
+    ['IOF-câmbio na entrada', `${pctText(loan.iofRate)} · R$ ${num(loan.iofUsd * loan.spot)}`],
+  ]
+}
+
+// Texto no formato dos e-mails de cotação: condições, custo efetivo, economia de IOF e equivalente em giro.
+export function resumoE4({ loan, hedge }) {
+  if (!loan?.ok || !hedge?.ok) return ''
+  const sinal = hedge.ndf.spread >= 0 ? '+' : '−'
+  return [
+    '4131 com NDF · Condições da operação',
+    ...condicoesE4(loan).map(([rotulo, valor]) => `${rotulo}: ${valor}`),
+    '',
+    `Custo efetivo total: taxa de juros prefixada em reais de ${pctText(hedge.ndf.cetMes)} a.m. / ${pctText(hedge.ndf.cetAno)} a.a. (equivalente a CDI ${sinal} ${pctText(Math.abs(hedge.ndf.spread))}), exp/360`,
+    `Economia de IOF (R$): ${num(hedge.ndf.iofGiro)}`,
+    `Taxa equivalente em capital de giro: ${pctText(hedge.ndf.giroMes)} a.m. / ${pctText(hedge.ndf.giroAno)} a.a., exp/360`,
+    '',
+    'Simulação indicativa, com taxa futura teórica. Sujeita a confirmação da cotação pela mesa do banco, a limite de crédito e a cadastro atualizado. Não constitui proposta nem compromisso de crédito.',
+  ].join('\n')
 }

@@ -15,8 +15,8 @@ import { cgToday } from './contaGarantida.js'
 import { useHolidays } from './useHolidays.js'
 import { useCurves } from './useCurves.js'
 import { addDays, busDaysIn, nextBusinessDay } from './holidays.js'
-import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, MOEDAS, curveFactors, diDoPrazo, hedge4131, loan4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
-import { E4_FX_SCENARIOS, E4_QUOTE_NOTE, E4_SOURCES } from './emprestimo4131Presentation.js'
+import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, hedge4131, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
+import { E4_FX_SCENARIOS, E4_QUOTE_NOTE, E4_SOURCES, condicoesE4, resumoE4 } from './emprestimo4131Presentation.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const dec = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -100,6 +100,11 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const [cupomOwn, setCupomOwn] = useState(false)
   const [swapText, setSwapText] = useState('0,00')
   const [ndfText, setNdfText] = useState('0,00')
+  // Atingir meta: o custo desejado e a taxa que a tela calculou para chegar nele (ou o motivo de não ter chegado).
+  const [metaKind, setMetaKind] = useState('cetMes')
+  const [metaText, setMetaText] = useState('')
+  const [meta, setMeta] = useState(null)
+  const [copiado, setCopiado] = useState(false)
 
   useEffect(() => {
     if (!ampliada) return
@@ -156,7 +161,8 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const curveBlocked = !curveBase ? (curves.status === 'loading' ? 'Carregando as curvas do Painel…' : 'Curvas do Painel indisponíveis: usando DI e cupom digitados.') : start && start < curveBase ? `As curvas começam em ${dm(curveBase)}: para desembolso anterior, usando DI e cupom digitados.` : null
   const usingCurve = curveMode === 'painel' && !curveBlocked && !!start
   const loanErrors = ['valor', 'rate', 'spot', 'start', 'months', 'grace', 'flat', 'guarantee'].some((k) => errors[k])
-  const loanResult = loanErrors ? null : loan4131({ currency, principal: money.value / spot, rate, spot, start, months, freq: Number(freq), irrf: Number(irrf), grossUp: grossUp === 'sim', flat, guarantee, feesAbroad: feesAbroad === 'sim', amort, grace: amort === 'parcelas' ? grace : 0, calendar, nextBusDay: (d) => nextBusinessDay(d, ['BR'], hol.ctx) })
+  const loanParams = loanErrors ? null : { currency, principal: money.value / spot, rate, spot, start, months, freq: Number(freq), irrf: Number(irrf), grossUp: grossUp === 'sim', flat, guarantee, feesAbroad: feesAbroad === 'sim', amort, grace: amort === 'parcelas' ? grace : 0, calendar, nextBusDay: (d) => nextBusinessDay(d, ['BR'], hol.ctx) }
+  const loanResult = loanParams ? loan4131(loanParams) : null
   const loan = loanResult?.ok ? loanResult : null
   // DI pré do prazo médio, lido da curva DI x pré da B3 que o Painel coleta. Digitou, vale o digitado.
   const diAuto = loan && diCurve && loan.start >= diCurve.date ? diDoPrazo(diCurve.pts, busDaysIn(diCurve.date, loan.start, ['BR'], hol.ctx), busDaysIn(loan.start, addDays(loan.start, loan.avgTermDays), ['BR'], hol.ctx)) : null
@@ -168,7 +174,8 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const hedgeErrors = ['di', 'cupom', 'swap', 'ndf'].some((k) => errors[k])
   // Dias úteis de cada pagamento com os feriados nacionais.
   const curve = usingCurve && loan ? curveFactors({ diPts: diCurve.pts, ccPts: ccCurve.pts, d0: busDaysIn(curveBase, start, ['BR'], hol.ctx), dc0: Math.round((Date.parse(`${start}T12:00:00Z`) - Date.parse(`${curveBase}T12:00:00Z`)) / DAY) }) : null
-  const hedgeResult = loan && !hedgeErrors ? hedge4131(loan, { di, cupom, swapSpread, ndfMarkup, curve, busDays: (a, b) => busDaysIn(a, b, ['BR'], hol.ctx) }) : null
+  const hedgeParams = { di, cupom, swapSpread, ndfMarkup, curve, busDays: (a, b) => busDaysIn(a, b, ['BR'], hol.ctx) }
+  const hedgeResult = loan && !hedgeErrors ? hedge4131(loan, hedgeParams) : null
   const hedge = hedgeResult?.ok ? hedgeResult : null
   const scenarios = loan ? E4_FX_SCENARIOS.map((s) => unhedged4131(loan, s)).filter((s) => s.ok) : []
   const parado = scenarios.find((s) => s.fxChange === 0) ?? null
@@ -197,6 +204,33 @@ export default function Emprestimo4131({ onBack, quotes }) {
   const cupomNote = cupomOwn ? null : <><span className="e4-exemplo">valor de exemplo</span>; digite o da sua cotação.</>
   const pendencia = loanResult?.error || hedgeResult?.error || (Object.values(errors).some(Boolean) ? 'Complete os campos indicados para calcular.' : null)
 
+  // Atingir meta: procura a taxa all-in que leva o resultado à meta e a coloca no campo da taxa.
+  const metaAtual = METAS.find((m) => m.id === metaKind)
+  const atingir = () => {
+    const alvo = parseDecimal(metaText)
+    if (alvo === null) return setMeta({ erro: 'Informe a meta em %, por exemplo 1,30.' })
+    if (!loan || !hedge) return setMeta({ erro: 'Complete os dados da operação antes de calcular.' })
+    const r = metaTaxa4131(loanParams, hedgeParams, metaKind, alvo)
+    if (!r.ok) return setMeta({ erro: r.error })
+    const texto = dec(r.rate, 4)
+    setRateText(texto)
+    setMeta({ rateText: texto, alvo: { cetMes: `custo efetivo de ${pct(alvo)} ao mês`, cetAno: `custo efetivo de ${pct(alvo)} ao ano`, spread: `CDI ${signed(alvo, pct)}` }[metaKind] })
+  }
+  const metaNote = meta?.erro ? <span className="e4-exemplo">{meta.erro}</span>
+    : meta && meta.rateText === rateText && hedge ? `Taxa all-in de ${cur.Nome} + ${meta.rateText}% a.a., calculada para chegar ao ${meta.alvo}.`
+      : null
+  const copiar = async () => {
+    const texto = resumoE4({ loan, hedge })
+    if (!texto) return
+    try { await navigator.clipboard.writeText(texto) } catch {
+      const area = document.createElement('textarea')
+      area.value = texto; area.setAttribute('readonly', ''); area.style.position = 'fixed'; area.style.opacity = '0'
+      document.body.appendChild(area); area.select()
+      try { document.execCommand('copy') } finally { area.remove() }
+    }
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2500)
+  }
   // Padrão da cotação de banco e o que está fora dele (aparece no resumo de "Mais opções").
   const padrao = freq === '1' && amort === 'parcelas'
   const foraDoPadrao = [freq !== '1', calendar !== '30d', amort !== 'parcelas', amort === 'parcelas' && grace !== 0, grossUp !== 'nao', flat !== 0, guarantee !== 0, feesAbroad !== 'nao', ndfMarkup !== 0, swapSpread !== 0].filter(Boolean).length
@@ -240,6 +274,15 @@ export default function Emprestimo4131({ onBack, quotes }) {
             <article className="desk-panel cx-panel fm-input-panel">
               <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras conferidas em {CONFERIDO_EM}</small>{ajuda('Regras e fontes', <><p>Regras do Banco Central, da Receita Federal e da B3 lidas nas fontes oficiais. A lista completa está em Regras e fontes.</p><ul>{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul></>)}</header>
               <div className="cx-form">
+                <section className="e4-meta" aria-labelledby="e4-meta-h">
+                  <h3 id="e4-meta-h">Atingir meta{ajuda('Atingir meta', 'Digite o custo que você quer chegar e a tela calcula a taxa all-in (moeda + % ao ano) que leva a ele, mantendo valor, parcelas, cotação, DI e juro da moeda. A taxa calculada vai para o campo Taxa all-in, com quatro casas, e todo o resto é recalculado.')}</h3>
+                  <div className="e4-meta-campos">
+                    <select id="e4-meta-kind" aria-label="Meta" value={metaKind} onChange={(e) => { setMetaKind(e.target.value); setMeta(null) }}>{METAS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}</select>
+                    <div className="cx-rate"><input id="e4-meta" aria-label={`Meta em ${metaAtual.unit}`} aria-describedby="e4-meta-status" inputMode="decimal" autoComplete="off" placeholder="1,30" value={metaText} onChange={(e) => setMetaText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') atingir() }} onFocus={(e) => e.target.select()} /><span className="fm-unidade">{metaAtual.unit}</span></div>
+                    <button type="button" className="e4-meta-btn" onClick={atingir}>Calcular taxa</button>
+                  </div>
+                  <p className="e4-origem" id="e4-meta-status" role="status">{metaNote}</p>
+                </section>
                 <section className="fm-group fm-operation" aria-labelledby="e4-operation-h"><h3 id="e4-operation-h"><BndesIcon kind="operation" />Operação</h3><div className="fm-group-fields">
                   {field('valor', 'valor', 'Valor (R$)', <MoneyInput prefix="R$" id="e4-valor" aria-invalid={!!errors.valor} aria-describedby="e4-valor-err" value={valorText} onChange={setValorText} />, 'Valor que a empresa recebe, em reais. O principal na moeda sai dele pela cotação de partida, como na cotação do banco.')}
                   {field('currency', 'moeda', 'Moeda', select('currency', currency, (v) => { setCurrency(v); setSpotOwn(false); setCupomOwn(false) }, MOEDAS.map((m) => ({ id: m.id, label: m.Nome }))), 'Moeda do empréstimo. A conta é a mesma nas duas.')}
@@ -295,9 +338,10 @@ export default function Emprestimo4131({ onBack, quotes }) {
                   <div><dt>Economia de IOF{ajuda('Economia de IOF', 'IOF de crédito que um capital de giro em reais, com o mesmo valor e as mesmas datas de principal, pagaria: 0,38% do valor mais 0,0082% ao dia sobre cada parcela, limitado a 365 dias (pessoa jurídica fora do Simples). O empréstimo externo não paga esse IOF. O IOF-câmbio da entrada, quando houver, é outro imposto: não é descontado aqui e já está no custo.')}</dt><dd><b>{brl(hedge.ndf.iofGiro)}</b><small>{loan.iofRate > 0 ? `IOF que o giro em reais pagaria. Não desconta o IOF-câmbio de ${pct(loan.iofRate)} desta operação, que já está no custo.` : 'IOF que um capital de giro em reais pagaria'}</small></dd></div>
                   <div><dt>Equivalente em capital de giro{ajuda('Equivalente em capital de giro', 'Taxa de um capital de giro em reais que leva ao mesmo custo final: a mesma conta do custo efetivo, com o IOF do giro somado ao valor recebido. Giro com taxa abaixo desta sai mais barato que o empréstimo externo com NDF. A comparação vale para um giro com as mesmas datas e parcelas iguais de principal, taxa em dias corridos (exp/360) e sem tarifa; não considera reciprocidade nem o limite de crédito do NDF.')}</dt><dd><b>{pct(hedge.ndf.giroMes)} a.m.</b><small>{pct(hedge.ndf.giroAno)} a.a. · exp/360</small></dd></div>
                 </dl>}
-                {loan && <dl className="e4-condicoes" aria-label="Condições da operação">
-                  {[['Valor na moeda', usd(loan.principal)], ['Cotação de partida', fx(loan.spot)], ['Valor em reais', brl(loan.principal * loan.spot)], ['Parcelas', parcelas === loan.flows.length ? `${parcelas} ${parcelas === 1 ? 'no vencimento' : FREQ_PLURAL[freq]}` : `${loan.flows.length} pagamentos · ${parcelas} com principal`], ['Taxa all-in', `${cur.Nome} + ${pct(loan.grossUp ? loan.grossedRate + loan.guarantee : loan.rate + loan.guarantee)} a.a.`], ['Prazo médio', `${loan.avgTermDays} dias corridos`]].map(([rotulo, valor]) => <div key={rotulo}><dt>{rotulo}</dt><dd>{valor}</dd></div>)}
-                </dl>}
+                {loan && <section className="e4-condicoes" aria-labelledby="e4-condicoes-h">
+                  <header><h4 id="e4-condicoes-h">Condições da operação</h4><button type="button" className="e4-copiar" disabled={!hedge} onClick={copiar}>{copiado ? 'Resumo copiado' : 'Copiar resumo'}</button><span className="sr-only" role="status">{copiado ? 'Resumo copiado para a área de transferência.' : ''}</span></header>
+                  <dl>{condicoesE4(loan).map(([rotulo, valor]) => <div key={rotulo}><dt>{rotulo}</dt><dd>{valor}</dd></div>)}</dl>
+                </section>}
                 <p className="fm-iof-premise">{loan ? `IOF-câmbio de ${pct(loan.iofRate)} na entrada: prazo médio de ${loan.avgTermDays} dias corridos. Liquidar antes do prazo pode gerar o IOF com multa e juros.` : `IOF-câmbio na entrada: ${pct(IOF_SHORT_TERM.rate)} com prazo médio até ${IOF_SHORT_TERM.maxDays} dias; zero acima.`}</p>
                 {avisos.map((texto) => <p className="cx-hint cx-pad e4-aviso" role="status" key={texto}>{texto}</p>)}
                 {pendencia && <p className="cx-hint cx-pad" role="status">{pendencia}</p>}

@@ -2,7 +2,8 @@
 // Números fictícios, com resultado esperado em fórmula fechada ou somado à mão aqui, sem o código do painel.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { diDoPrazo, hedge4131, iofGiro4131, loan4131, taxa360 } from '../src/emprestimo4131.js'
+import { diDoPrazo, hedge4131, iofGiro4131, loan4131, metaTaxa4131, taxa360 } from '../src/emprestimo4131.js'
+import { condicoesE4, resumoE4 } from '../src/emprestimo4131Presentation.js'
 
 const close = (a, b, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`)
 const DAY = 864e5
@@ -223,4 +224,77 @@ test('principal no vencimento · números iguais aos da versão de 11/11/2026, a
   close(h.ndf.pre, 16.157198353821734, 1e-11)
   close(h.swap.spread, 2.793980844090038, 1e-11)
   close(h.swap.runSpread, 2.5227315341467715, 1e-11)
+})
+
+test('atingir meta · a taxa encontrada leva o custo efetivo, o CDI + e o giro à meta', () => {
+  // 36 parcelas mensais a cada 30 dias, IR já na taxa: o padrão da tela.
+  const base = { principal: 2e6, spot: 5, start: '2026-11-16', months: 36, freq: 1, amort: 'parcelas', calendar: '30d', grossUp: false, flat: 0, guarantee: 0 }
+  const protecao = { di: 13, cupom: 5 }
+  for (const [kind, meta] of [['cetMes', 1.3], ['cetAno', 17], ['spread', 3], ['giroMes', 1.15]]) {
+    const r = metaTaxa4131(base, protecao, kind, meta)
+    assert.equal(r.ok, true, kind)
+    // Conferência à parte: recalcula a operação com a taxa devolvida.
+    const h = hedge4131(loan4131({ ...base, rate: r.rate }), protecao)
+    close(h.ndf[kind], r.value, 1e-12)
+    close(h.ndf[kind], meta, 1e-3)
+    assert.equal(r.rate, Math.round(r.rate * 1e4) / 1e4, 'taxa com quatro casas')
+  }
+  // Meta mais alta pede taxa mais alta.
+  assert.ok(metaTaxa4131(base, protecao, 'cetMes', 1.4).rate > metaTaxa4131(base, protecao, 'cetMes', 1.3).rate)
+})
+
+test('atingir meta · pagamento único confere com a conta fechada', () => {
+  // Sem custos: total em reais = principal × (1 + taxa × dc/360) × câmbio a termo; a meta define a taxa.
+  const base = { principal: 1e6, spot: 5, start: '2026-11-11', months: 6, freq: 0, grossUp: false, flat: 0, guarantee: 0 }
+  const protecao = { di: 14, cupom: 5, busDays: () => 124 }
+  const loan = loan4131({ ...base, rate: 0 })
+  const termo = 5 * 1.14 ** (124 / 252) / (1 + 0.05 * 181 / 360)
+  // Meta de 1,30% a.m.: fator total = 1,013^(181/30) sobre o líquido (com IOF de 3,5% na entrada).
+  const fator = 1.013 ** (181 / 30) * loan.netBrl / (1e6 * termo)
+  const taxa = (fator - 1) * 360 / 181 * 100
+  const r = metaTaxa4131(base, protecao, 'cetMes', 1.3)
+  close(r.rate, taxa, 1e-4)
+})
+
+test('atingir meta · meta fora do alcance e entradas inválidas são recusadas', () => {
+  const base = { principal: 2e6, spot: 5, start: '2026-11-16', months: 36, freq: 1, amort: 'parcelas', calendar: '30d', grossUp: false }
+  const protecao = { di: 13, cupom: 5 }
+  // Com taxa zero o custo já é positivo (o câmbio a termo embute a diferença de juros): meta abaixo disso não existe.
+  const minimo = hedge4131(loan4131({ ...base, rate: 0 }), protecao).ndf.cetMes
+  assert.ok(minimo > 0)
+  assert.match(metaTaxa4131(base, protecao, 'cetMes', minimo - 0.1).error, /Meta abaixo do mínimo/)
+  assert.match(metaTaxa4131(base, protecao, 'cetMes', 50).error, /Meta acima/)
+  assert.equal(metaTaxa4131(base, protecao, 'outra', 1.3).ok, false)
+  assert.equal(metaTaxa4131(base, protecao, 'cetMes', NaN).ok, false)
+  assert.equal(metaTaxa4131({ ...base, principal: 0 }, protecao, 'cetMes', 1.3).ok, false)
+  assert.equal(metaTaxa4131(base, { di: 0, cupom: 5 }, 'cetMes', 1.3).ok, false)
+})
+
+test('resumo no formato de e-mail · condições na ordem da cotação e os três resultados', () => {
+  const loan = loan4131({ currency: 'EUR', principal: 2e6, rate: 6, spot: 6, start: '2026-11-16', months: 36, freq: 1, amort: 'parcelas', calendar: '30d', grossUp: false })
+  const hedge = hedge4131(loan, { di: 13, cupom: 3 })
+  const condicoes = condicoesE4(loan)
+  assert.deepEqual(condicoes.map(([rotulo]) => rotulo), ['Data da cotação', 'Produto', 'Valor de principal', 'Moeda', 'Cotação de partida', 'Taxa', 'Prazo', 'Principal', 'Juros', 'Prazo médio (DC)', 'Carência do principal', 'Tarifa de contratação', 'IOF-câmbio na entrada'])
+  const mapa = Object.fromEntries(condicoes)
+  assert.equal(mapa['Data da cotação'], '16/11/2026')
+  assert.equal(mapa['Valor de principal'], 'R$ 12.000.000,00')
+  assert.equal(mapa['Moeda'], 'Euro · € 2.000.000,00')
+  assert.equal(mapa['Taxa'], 'Euro + 6,00% a.a.')
+  assert.equal(Object.fromEntries(condicoesE4(loan4131({ currency: 'EUR', principal: 2e6, rate: 6.5412, spot: 6, start: '2026-11-16', months: 36, freq: 1, amort: 'parcelas', grossUp: false })))['Taxa'], 'Euro + 6,5412% a.a.')
+  assert.equal(mapa['Prazo'], '36 meses')
+  assert.equal(mapa['Principal'], 'Mensal · 36 parcelas')
+  assert.equal(mapa['Juros'], 'Mensal')
+  assert.equal(mapa['Prazo médio (DC)'], String(loan.avgTermDays))
+  assert.equal(mapa['Carência do principal'], 'Sem carência')
+  assert.equal(mapa['Tarifa de contratação'], 'R$ 0,00')
+  const texto = resumoE4({ loan, hedge })
+  const br = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  assert.ok(texto.startsWith('4131 com NDF · Condições da operação\nData da cotação: 16/11/2026\n'))
+  assert.ok(texto.includes(`Custo efetivo total: taxa de juros prefixada em reais de ${br(hedge.ndf.cetMes)}% a.m. / ${br(hedge.ndf.cetAno)}% a.a. (equivalente a CDI + ${br(hedge.ndf.spread)}%), exp/360`))
+  assert.ok(texto.includes(`Economia de IOF (R$): ${br(hedge.ndf.iofGiro)}`))
+  assert.ok(texto.includes(`Taxa equivalente em capital de giro: ${br(hedge.ndf.giroMes)}% a.m. / ${br(hedge.ndf.giroAno)}% a.a., exp/360`))
+  // Sem resultado, sem texto; IR somado à taxa aparece na condição.
+  assert.equal(resumoE4({ loan, hedge: null }), '')
+  assert.deepEqual(condicoesE4(null), [])
+  assert.match(Object.fromEntries(condicoesE4(loan4131({ principal: 1e6, rate: 6, spot: 5, start: '2026-11-16', months: 12, freq: 6 })))['Taxa'], /IR somado à taxa/)
 })

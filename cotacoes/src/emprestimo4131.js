@@ -316,3 +316,41 @@ export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup 
   }
   return { ok: true, source: curve ? 'curve' : 'manual', di: dAvg * 100, cupom: ccAvg * 100, swapSpread, ndfMarkup, flows, swap, ndf }
 }
+
+// Atingir meta: taxa do contrato (% a.a.) que leva o resultado com NDF à meta informada, com o resto da operação igual.
+// `kind`: 'cetMes' ou 'cetAno' (custo efetivo exp/360), 'spread' (equivalente em CDI +) ou 'giroMes' (equivalente em giro).
+// O custo cresce com a taxa, então a busca é por bisseção entre 0% e 100% a.a. Devolve a taxa com quatro casas, que é
+// como ela vai para o campo; por isso o resultado pode diferir da meta na quarta casa.
+export const METAS = [
+  { id: 'cetMes', label: 'Custo efetivo ao mês', unit: '% a.m.' },
+  { id: 'cetAno', label: 'Custo efetivo ao ano', unit: '% a.a.' },
+  { id: 'spread', label: 'Equivalente em CDI +', unit: '% a.a.' },
+]
+export function metaTaxa4131(loanParams, hedgeParams, kind, target) {
+  if (!['cetMes', 'cetAno', 'spread', 'giroMes'].includes(kind)) return fail('Escolha a meta.')
+  if (!Number.isFinite(target)) return fail('Informe a meta em %.')
+  const at = (rate) => {
+    const loan = loan4131({ ...loanParams, rate })
+    if (!loan.ok) return loan
+    const hedge = hedge4131(loan, hedgeParams)
+    return hedge.ok ? { ok: true, value: hedge.ndf[kind] } : hedge
+  }
+  const low = at(0)
+  const high = at(100)
+  if (!low.ok) return low
+  if (!high.ok) return high
+  if (target < low.value) return fail(`Meta abaixo do mínimo: com taxa zero, o resultado já é ${low.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%.`)
+  if (target > high.value) return fail('Meta acima do que uma taxa de 100% ao ano alcança.')
+  let lo = 0
+  let hi = 100
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2
+    const r = at(mid)
+    if (!r.ok) return r
+    if (r.value < target) lo = mid
+    else hi = mid
+  }
+  const rate = Math.round(((lo + hi) / 2) * 1e4) / 1e4
+  const check = at(rate)
+  return check.ok ? { ok: true, rate, value: check.value } : check
+}

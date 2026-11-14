@@ -79,7 +79,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
   const errors = []
   try {
     for (const width of [390, 1440]) {
-      const page = await browser.newPage({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', serviceWorkers: 'block' })
+      const page = await browser.newPage({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', serviceWorkers: 'block', permissions: ['clipboard-read', 'clipboard-write'] })
       page.on('pageerror', e => errors.push(`${width}: ${e.message}`))
       await page.route('**/quotes.json*', route => route.fulfill({ json: QUOTES }))
       await page.route('**/curves.json*', route => route.fulfill({ json: CURVES }))
@@ -104,6 +104,32 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(normalize(await section.locator('.fm-operation .fm-financed b').innerText()), usd(1e7 / 5.3127))
       const pills = normalize(await section.locator('.fm-pills').innerText())
       assert.ok(pills.includes('Pagamentos mensais') && pills.includes('Principal em parcelas iguais') && pills.includes('Datas a cada 30 dias, em dia útil'), pills)
+
+      // Atingir meta: custo efetivo de 1,30% ao mês. A tela calcula a taxa all-in e recalcula o resto.
+      const taxaAntes = await section.locator('#e4-rate').inputValue()
+      await fill('meta', '1,30')
+      await section.getByRole('button', { name: 'Calcular taxa' }).click()
+      await page.waitForFunction(antes => document.querySelector('#e4-rate')?.value !== antes, taxaAntes)
+      assert.match(await section.locator('#e4-rate').inputValue(), /^\d{1,2},\d{4}$/)
+      assert.ok(normalize(await section.locator('.fm-headline').innerText()).includes('1,30% a.m.'), 'a meta aparece como custo efetivo')
+      assert.match(normalize(await section.locator('#e4-meta-status').innerText()), /^Taxa all-in de Dólar \+ \d{1,2},\d{4}% a\.a\., calculada para chegar ao custo efetivo de 1,30% ao mês\.$/)
+      // Meta abaixo do que a operação alcança com taxa zero: a tela explica e não mexe na taxa.
+      const taxaMeta = await section.locator('#e4-rate').inputValue()
+      await fill('meta', '0,10')
+      await section.getByRole('button', { name: 'Calcular taxa' }).click()
+      assert.match(normalize(await section.locator('#e4-meta-status').innerText()), /^Meta abaixo do mínimo/)
+      assert.equal(await section.locator('#e4-rate').inputValue(), taxaMeta)
+
+      // Condições da operação na ordem do e-mail de cotação e o resumo copiado em texto.
+      const condicoes = normalize(await section.locator('.e4-condicoes dl').innerText())
+      assert.ok(condicoes.includes('Produto 4131 com NDF') && condicoes.includes('Valor de principal R$ 10.000.000,00') && condicoes.includes('Prazo 36 meses') && condicoes.includes('Principal Mensal · 36 parcelas') && condicoes.includes('Juros Mensal'), condicoes)
+      await section.getByRole('button', { name: 'Copiar resumo' }).click()
+      await section.getByRole('button', { name: 'Resumo copiado' }).waitFor()
+      const resumo = await page.evaluate(() => navigator.clipboard.readText())
+      assert.ok(resumo.startsWith('4131 com NDF · Condições da operação\n'), resumo)
+      assert.match(resumo, /Custo efetivo total: taxa de juros prefixada em reais de 1,30% a\.m\. \/ \d+,\d{2}% a\.a\. \(equivalente a CDI \+ \d+,\d{2}%\), exp\/360/)
+      assert.match(resumo, /Economia de IOF \(R\$\): [\d.]+,\d{2}/)
+      assert.match(resumo, /Taxa equivalente em capital de giro: \d+,\d{2}% a\.m\. \/ \d+,\d{2}% a\.a\., exp\/360/)
 
       // O que foge do padrão fica em Mais opções; a comparação com swap e sem proteção, em painel próprio.
       await section.locator('.e4-mais > summary').click()
