@@ -19,6 +19,7 @@ import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
 import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
 import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
+import FinimpCotacao from './FinimpCotacao.jsx'
 import './CalculatorTheme.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -43,6 +44,7 @@ const CALCS = [
   { id: 'finame-materiais', title: 'BNDES', sub: 'Simular, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
   { id: 'emprestimo-4131', title: 'Empréstimo externo (4131)', sub: 'No formato da cotação: dólar ou euro, parcelas e NDF', Icon: Emprestimo4131Icon },
+  { id: 'finimp-cotacao', title: 'FINIMP · cotação', sub: 'No formato da cotação: NDF, TIR efetiva e atingir meta', Icon: FinimpIcon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
@@ -196,6 +198,7 @@ export default function Calculadora({ view, onView, quotes }) {
   if (view === 'bndes-tlp-exigivel') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'bndes-credito-tfb') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'bndes-selic-lcd') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
+  if (view === 'finimp-cotacao') return <FinimpCotacao onBack={() => onView('')} quotes={quotes} />
   if (view === 'finimp') return <FinimpComparacao onBack={() => onView('')} />
   if (view === 'conta-garantida') return <ContaGarantida onBack={() => onView('')} />
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
