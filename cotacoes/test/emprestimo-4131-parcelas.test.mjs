@@ -209,6 +209,19 @@ test('prazo médio na fronteira · vale o prazo exato: 364 cravados pagam o IOF;
   close(cravado.avgTermExact, 364, 1e-9)
   assert.equal(cravado.avgTermDays, 364)
   assert.equal(cravado.iofRate, 3.5)
+  // Fração pequena acima de 364 (8373/23 = 364,04): não paga. Arredondar a cobrança para o inteiro mais próximo erraria aqui.
+  const pouco = loan4131({ ...base, start: '2027-02-01' })
+  assert.equal(pouco.flows.reduce((s, f) => s + (f.principal > 0 ? f.dc : 0), 0), 8373)
+  assert.ok(pouco.avgTermExact > 364.04 && pouco.avgTermExact < 364.05, String(pouco.avgTermExact))
+  assert.equal(pouco.avgTermDays, 365)
+  assert.equal(pouco.iofRate, 0)
+  // 364 cravados com principal quebrado (valor em reais ÷ cotação): a conta sai um fio fora de 364 e a folga segura.
+  const ruido = loan4131({ ...base, principal: 1e7 / 5.6666, months: 18, freq: 3, grace: 1, start: '2026-01-01' })
+  assert.deepEqual(ruido.flows.filter((f) => f.principal > 0).map((f) => f.dc), [181, 273, 365, 455, 546])
+  assert.notEqual(ruido.avgTermExact, 364)
+  close(ruido.avgTermExact, 364, 1e-9)
+  assert.equal(ruido.avgTermDays, 364)
+  assert.equal(ruido.iofRate, 3.5)
   // Principal no vencimento: a média exata é o próprio prazo.
   assert.equal(loan4131(MENSAL).avgTermExact, 365)
 })
