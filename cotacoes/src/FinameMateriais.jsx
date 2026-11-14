@@ -244,7 +244,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
       </article>
 
       <div className={ampliada ? 'fm-results fm-zoomed' : 'fm-results'}>
-      <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
 
       {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
       <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? (comparar ? 'Cotação comparativa ampliada' : 'Cotação da operação ampliada') : undefined}>
@@ -290,6 +289,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
           </>
         )}
       </article>
+
+      <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
 
       {res && (
         <details className="desk-panel cx-panel fm-fluxo-panel">

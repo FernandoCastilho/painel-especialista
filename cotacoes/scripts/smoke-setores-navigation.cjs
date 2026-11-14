@@ -5,6 +5,7 @@ const path = require('node:path')
 const studies = require('../src/sectorStudies/studies.json')
 
 ;(async () => {
+  const { CATALOGO_SETORIAL } = await import('../src/centralSetorial.js')
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
   const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8773'
   const out = process.env.SETORES_QA_OUTPUT || 'workspace-qa/setores'
@@ -110,7 +111,7 @@ const studies = require('../src/sectorStudies/studies.json')
         await page.goto(base + '/#setores/b3/financeiro')
         await page.locator('.central-setorial > p[role="status"]').filter({ hasText: /antiga classificação B3 foi substituída/ }).waitFor()
         await page.locator('.central-folder').first().waitFor()
-        assert.equal(await page.locator('.central-folder').count(), 11)
+        assert.equal(await page.locator('.central-folder').count(), CATALOGO_SETORIAL.length)
         assert.equal(await page.locator('.central-detail').count(), 0)
         assert.equal(await page.getByRole('button', { name: 'Referência B3', exact: true }).count(), 0)
         for (const button of await page.locator('.central-setorial button:visible').all()) {

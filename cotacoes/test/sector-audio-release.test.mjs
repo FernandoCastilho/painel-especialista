@@ -6,7 +6,7 @@ import os from 'node:os'
 import { validateSectorRelease, sha256, CANDIDATE_FIELDS, REVIEW_CATEGORIES, REQUIRED_RATES, PLAYER_FILES, reviewCandidates, narrationText } from '../scripts/sector-audio-release-lib.mjs'
 import { transcriptText } from '../src/sectorStudies/presentation.js'
 
-async function fixture(t, count = 67) {
+async function fixture(t, count = 80) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'sector-release-synthetic-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   const appRoot = path.join(root, 'cotacoes')
@@ -27,7 +27,7 @@ test('explicit no-audio release permits exactly66 approved documentary studies a
   const result = await f.run()
   assert.deepEqual(result.issues, [])
   assert.equal(result.audioDeferred, true)
-  assert.equal(result.studies, 67)
+  assert.equal(result.studies, 80)
   const strict = await f.run({ allowNoAudio: false })
   assert.match(strict.issues.join('\n'), /audio missing/)
   assert.match(strict.issues.join('\n'), /manifest missing/)
@@ -36,7 +36,7 @@ test('explicit no-audio release permits exactly66 approved documentary studies a
 
 test('no-audio exception never accepts a partial or unreviewed batch', async t => {
   const partial = await fixture(t, 65)
-  assert.match((await partial.run()).issues.join('\n'), /must contain 67/)
+  assert.match((await partial.run()).issues.join('\n'), /must contain 80/)
   const unreviewed = await fixture(t)
   unreviewed.studies[0].reviewStatus = 'pending'
   await unreviewed.saveStudies()
@@ -97,15 +97,15 @@ async function completeFixture(t) {
     canonicalStudiesSha256: sha256(await readFile(path.join(f.appRoot, 'src/sectorStudies/studies.json'))),
     manifestSha256: sha256(await readFile(path.join(f.appRoot, 'public/audio/sectors/manifest.json'))),
   }
-  const technical = { schemaVersion: 1, status: 'complete_technical_audit', sources, summary: { canonicalStudies: 67, approvedStudies: 67, manifestEntries: 67, presentMp3Files: 67, auditedFiles: 67, passedTechnicalChecks: 67, filesWithWarnings: 0, filesFailed: 0, approvedStudiesPendingAudio: 0, filesAwaitingRegeneration: 0 }, pendingStudyKeys: [], awaitingRegenerationStudyKeys: [], manifestKeysWithoutCanonicalStudy: [], unreferencedMp3Files: [], files: {} }
-  const fidelity = { schemaVersion: 1, status: 'automatic_screening_complete_review_pending', sources, summary: { canonicalStudies: 67, availableAudioFiles: 67, filesFullyTranscribed: 67, currentTranscriptAudioFiles: 67, pendingFullTranscription: 0, availableAudioPendingTranscription: 0, studiesPendingAudio: 0, audioAwaitingRegeneration: 0, humanListeningCompleted: 0, finalAudioApproval: false }, pendingStudyKeys: [], pendingGeneratedStudyKeys: [], awaitingRegenerationStudyKeys: [], pendingGenerationStudyKeys: [], limitations: ['Synthetic test, no perceptual listening.'], method: { engine: 'synthetic unit fixture', modelPromptedWithExpectedTranscript: false }, files: {} }
+  const technical = { schemaVersion: 1, status: 'complete_technical_audit', sources, summary: { canonicalStudies: 80, approvedStudies: 80, manifestEntries: 80, presentMp3Files: 80, auditedFiles: 80, passedTechnicalChecks: 80, filesWithWarnings: 0, filesFailed: 0, approvedStudiesPendingAudio: 0, filesAwaitingRegeneration: 0 }, pendingStudyKeys: [], awaitingRegenerationStudyKeys: [], manifestKeysWithoutCanonicalStudy: [], unreferencedMp3Files: [], files: {} }
+  const fidelity = { schemaVersion: 1, status: 'automatic_screening_complete_review_pending', sources, summary: { canonicalStudies: 80, availableAudioFiles: 80, filesFullyTranscribed: 80, currentTranscriptAudioFiles: 80, pendingFullTranscription: 0, availableAudioPendingTranscription: 0, studiesPendingAudio: 0, audioAwaitingRegeneration: 0, humanListeningCompleted: 0, finalAudioApproval: false }, pendingStudyKeys: [], pendingGeneratedStudyKeys: [], awaitingRegenerationStudyKeys: [], pendingGenerationStudyKeys: [], limitations: ['Synthetic test, no perceptual listening.'], method: { engine: 'synthetic unit fixture', modelPromptedWithExpectedTranscript: false }, files: {} }
   const review = { schemaVersion: 1, status: 'complete_automated_discrepancy_review', sources: { ...sources }, humanOrNativeListeningPerformed: false, limitations: 'Synthetic fixture, no naturalness guarantee or perceptual listening.', files: {} }
   const playerFiles = {}
   for (const filename of PLAYER_FILES) {
     await f.write(filename, `synthetic player source ${filename}`)
     playerFiles[filename] = sha256(await readFile(path.join(f.root, filename)))
   }
-  const browser = { errors: [], audioPlayback: { schemaVersion: 1, expected: 67, sources: { ...sources, playerFiles }, humanOrNativeListeningPerformed: false, scope: 'Synthetic control tests, not integral listening.', results: [] } }
+  const browser = { errors: [], audioPlayback: { schemaVersion: 1, expected: 80, sources: { ...sources, playerFiles }, humanOrNativeListeningPerformed: false, scope: 'Synthetic control tests, not integral listening.', results: [] } }
   for (const study of f.studies) {
     const key = `${study.group}/${study.topicIndex}`
     const { fileSha256, textSha256, src, bytes } = study.audio
@@ -116,7 +116,7 @@ async function completeFixture(t) {
     review.files[key] = { ...identity, comparisonSha256: sha256(JSON.stringify(comparison)), reviewer: 'synthetic unit fixture', reviewedAt: '2026-11-06T12:00:00Z', method: 'synthetic review', reviewedCategories: REVIEW_CATEGORIES, resolutions: [] }
     browser.audioPlayback.results.push({ ...identity, src, status: 'passed', durationSeconds: 10, playedTo: 0.2, paused: true, ended: true, preservesPitch: true, durationLabels: true, seekedTo: 9.75, endedAt: 10, rates: REQUIRED_RATES, rateChecks: REQUIRED_RATES.map(rate => ({ rate, observedRate: rate, before: 1, after: 1.2 })), pauseObservation: { waitedMs: 150, before: 0.2, after: 0.2 } })
   }
-  const evidence = { schemaVersion: 1, scope: 'sector-automated-audio-release', expectedStudyCount: 67, sources, humanOrNativeListeningPerformed: false, absoluteAudioQualityGuaranteed: false, limitations: 'Synthetic test, not real release or perceptual listening.', reports: {} }
+  const evidence = { schemaVersion: 1, scope: 'sector-automated-audio-release', expectedStudyCount: 80, sources, humanOrNativeListeningPerformed: false, absoluteAudioQualityGuaranteed: false, limitations: 'Synthetic test, not real release or perceptual listening.', reports: {} }
   const reports = { technical, fidelity, review, browser }
   const save = async () => {
     review.sources.fidelityReportSha256 ??= sha256(JSON.stringify(fidelity))

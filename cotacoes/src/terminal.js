@@ -35,7 +35,7 @@ const TAB = {
   CALC: ['calculadora'], CALCULADORA: ['calculadora'], CALCULADORAS: ['calculadora'], GIRO: ['calculadora', 'giro'], DESCONTO: ['calculadora', 'analise-desconto'], ANALISEDEDESCONTO: ['calculadora', 'analise-desconto'], FINIMP: ['calculadora', 'finimp'], FINAME: ['calculadora', 'finame-materiais'], FINAMEMATERIAIS: ['calculadora', 'finame-materiais'],
   NEWS: ['noticias'], NOTICIAS: ['noticias'], AGENDA: ['noticias'],
   FERIADOS: ['feriados'], APRESENTAR: ['apresentar'], APRESENTACAO: ['apresentar'], CONFIG: ['config'], AJUDA: ['config'], HELP: ['config'],
-  APRENDER: ['aprender'], EDU: ['aprender'], EDUCACAO: ['aprender'], ESTUDAR: ['aprender'], CUPOM: ['aprender', 'cupom-cambial'], CUPOMCAMBIAL: ['aprender', 'cupom-cambial'], EURIBOR: ['aprender', 'euribor'], FUNDING: ['aprender', 'custo-de-funding'], CUSTODEFUNDING: ['aprender', 'custo-de-funding'], CDS: ['aprender', 'cds'],
+  FASCISMO: ['aprender', 'fascismo'], FACISMO: ['aprender', 'fascismo'], APRENDER: ['aprender'], EDU: ['aprender'], EDUCACAO: ['aprender'], ESTUDAR: ['aprender'], CUPOM: ['aprender', 'cupom-cambial'], CUPOMCAMBIAL: ['aprender', 'cupom-cambial'], EURIBOR: ['aprender', 'euribor'], FUNDING: ['aprender', 'custo-de-funding'], CUSTODEFUNDING: ['aprender', 'custo-de-funding'], CDS: ['aprender', 'cds'],
   MAQUILA: ['aprender', 'lei-de-maquila'], LEIDEMAQUILA: ['aprender', 'lei-de-maquila'], MAQUILAPARAGUAI: ['aprender', 'lei-de-maquila'], LEIDEMAQUILANOPARAGUAI: ['aprender', 'lei-de-maquila'],
 }
 

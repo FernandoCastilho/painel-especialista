@@ -11,6 +11,10 @@ export const CATALOGO_SETORIAL = [
   ['quimicos', 'Químicos, plásticos e borracha', ['Resinas','Transformação plástica','Embalagens flexíveis','Tintas','Limpeza','Borracha']],
   ['atacado', 'Atacado e distribuição', ['Distribuição de alimentos','Distribuição de medicamentos','Distribuição de materiais de construção','Distribuição de insumos industriais','Distribuição de equipamentos','Distribuição de válvulas para óleo e gás']],
   ['tic', 'Tecnologia da Informação e Comunicação — TIC', ['Integração de TI e infraestrutura digital','Cibersegurança','Redes e conectividade','Serviços gerenciados de TI','Comunicação e colaboração','Software e serviços de TI','Data centers e nuvem','Operadoras de telecomunicações']],
+  ['turismo', 'Turismo', ['Hotelaria','Agências e operadoras','Receptivo e experiências','Eventos e turismo corporativo']],
+  ['varejo', 'Varejo', ['Alimentos','Bebidas','Vestuário']],
+  ['saude', 'Saúde', ['Hospitais e clínicas','Diagnósticos','Produtos e equipamentos']],
+  ['pet', 'Pet', ['Alimentação pet','Produtos e varejo pet','Serviços veterinários']],
 ].map(([id, label, topics]) => ({ id, label, topics }))
 export const TOPICOS_ESTUDO = ['Resumo executivo','Funcionamento e cadeia de valor','Empresas, concorrência e polos de referência','Histórico e indicadores','Conjuntura e impactos','Economia da empresa e financiamento','Cenários e sinais de acompanhamento','Fontes, método e limitações']
 export const normalizeSector = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
@@ -63,7 +67,6 @@ export const PAUTAS_SETORIAIS = [
   {
     label: 'Próxima rodada',
     topics: [
-      { id: 'pet', title: 'Pet', scope: 'Distinguir alimentação, varejo e serviços veterinários. Investigar recorrência, estoques e canais de venda.' },
       { id: 'suplementos-e-wellness', title: 'Suplementos e Wellness', scope: 'Investigar fabricação, importação, distribuição, giro de estoque e concentração por canal de venda.' },
       { id: 'restaurantes', existingRoute: 'alimentacao-servicos', title: 'Restaurantes e alimentação', scope: 'Investigar margem por canal, perdas de estoque, sazonalidade, despesas fixas e prazo de recebimento.' },
       { id: 'academias', title: 'Academias', scope: 'Investigar receitas recorrentes, cancelamentos, ocupação, maturação de unidades e financiamento de equipamentos.' },
@@ -90,6 +93,7 @@ export const ESTUDOS_RELACIONADOS_AS_PAUTAS = [
   ['transporte-logistica', null],
   ['alimentos-agroindustria', 5],
   ['quimicos', 3],
+  ['pet', null],
 ]
 
 export const rotaPautaSetorial = topic => topic.existingRoute || `pesquisa/${topic.id}`

@@ -292,7 +292,7 @@ export default function App() {
           <button type="button" onClick={() => window.location.reload()}>Recarregar</button>
         </div>
       )}
-      <AlertaVariacao quotes={quotes} />
+      <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
       {tab !== 'resumo' && (
         <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}`}>
@@ -329,7 +329,7 @@ export default function App() {
       {tab === 'bancos' && <Bancos />}
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
-      {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} />}
+      {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} quotes={quotes} />}
 
       {tab === 'feriados' && <Feriados hol={hol} />}
 

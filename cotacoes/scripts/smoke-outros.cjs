@@ -574,7 +574,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await openCallouts(p)
       assert.match(await p.locator('.learn-detail').innerText(), /9,62%[\s\S]*R\$ 5,48/)
       // tópicos e busca
-      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho'])
+      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições'])
       const busca = p.getByRole('searchbox', { name: 'Buscar conceito' })
       await busca.fill('FIDC')
       assert.equal(await p.locator('.learn-list li').count(), 2) // FIDC e CRA (que cita a subordinação como num FIDC)

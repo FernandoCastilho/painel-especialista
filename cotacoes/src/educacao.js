@@ -1,3 +1,4 @@
+import { CONCEITO_FASCISMO } from './fascismo.js'
 import { nf } from './format.js'
 import { CONCEITO_MAQUILA } from './maquila.js'
 import { CONCEITO_JUROS_FORCADOS } from './jurosForcados.js'
@@ -796,6 +797,7 @@ export const CONCEITOS = [
     },
   },
   CONCEITO_MAQUILA,
+  CONCEITO_FASCISMO,
   CONCEITO_IMPOSTO_SELETIVO,
   {
     id: 'inflacao',
@@ -1133,11 +1135,11 @@ export const CONCEITOS = [
   },
 ]
 
-export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho']
+export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições']
 
 // Busca por palavras (todas precisam aparecer), sem diferenciar acento nem maiúscula, no conteúdo inteiro do conceito.
 const plain = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-export const textoDeBusca = (c) => plain([c.nome, c.topico, c.frase, c.analogia, ...c.crianca, ...c.lacunas, c.preciso.texto, c.preciso.formula, c.exemplo.titulo, ...c.exemplo.passos, c.teste.pergunta, c.teste.resposta, c.estudoHistorico ? JSON.stringify(c.estudoHistorico) : ''].join(' '))
+export const textoDeBusca = (c) => plain([c.nome, ...(c.aliases ?? []), c.topico, c.frase, c.analogia, ...c.crianca, ...c.lacunas, c.preciso.texto, c.preciso.formula, c.exemplo.titulo, ...c.exemplo.passos, c.teste.pergunta, c.teste.resposta, c.estudoHistorico ? JSON.stringify(c.estudoHistorico) : ''].join(' '))
 export function buscarConceitos(termo, lista = CONCEITOS) {
   const palavras = plain(String(termo ?? '')).split(/\s+/).filter(Boolean)
   return palavras.length ? lista.filter((c) => { const t = textoDeBusca(c); return palavras.every((w) => t.includes(w)) }) : lista
@@ -1149,6 +1151,7 @@ export const porTopico = (lista) => TOPICOS.map((topico) => ({ topico, itens: li
 // outros conceitos (LIGACOES). Os testes recusam conceito sem papel, sem ligação ou com ligação para conceito que não existe.
 // LIGACOES é a fonte única: cada par vale nos dois sentidos e aparece em "Conecta com" de ambos os conceitos e no quadro geral.
 export const LIGACOES = [
+  ['fascismo', 'juros-forcados', 'Uma política de juros ou de intervenção econômica não define, sozinha, um regime fascista; compare instituições e contexto histórico.'],
   ['marcacao-a-mercado', 'liquidacao-antecipada', 'Preço econômico e valor de quitação não são automaticamente iguais; confira contrato e normas aplicáveis.'],
   ['marcacao-a-mercado', 'debenture', 'O preço de uma debênture responde à curva de juros, ao risco do emissor e à liquidez.'],
   ['marcacao-a-mercado', 'custo-de-funding', 'Mudanças no custo exigido pelo mercado alteram o valor presente dos fluxos.'],
@@ -1216,6 +1219,7 @@ export const LIGACOES = [
 export const CONEXAO = {
   titulo: 'Como as peças se encaixam',
   itens: [
+    { id: 'fascismo', texto: 'distingue uma ideologia autoritária histórica de medidas econômicas isoladas e ajuda a ler o contexto institucional.' },
     { id: 'marcacao-a-mercado', texto: 'separa o valor atual da posição do fluxo contratado e ajuda a avaliar liquidez e risco de mercado.' },
     { id: 'substituicao-tributaria', texto: 'antecipa o ICMS das revendas em um ponto da cadeia; a mudança paulista exige conferir mercadoria, estoque, créditos e caixa.' },
     { id: 'imposto-seletivo', texto: 'explica o imposto do pecado no Brasil, seu objetivo de saúde e ambiente, as regras de transição e possíveis efeitos sobre preços e margens.' },

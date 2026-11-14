@@ -14,8 +14,20 @@
 // - Swap: custo em reais (base 252) dos fluxos a termo, composto com o spread do banco. Duas leituras em CDI:
 //   custo total (sobre o valor líquido, com flat e IOF) e spread do swap (sobre o principal, sem os custos de entrada).
 // - NDF: cada pagamento em dólar travado na taxa a termo (com o acréscimo do banco); o custo fica prefixado em reais.
+// Ampliação de 14/11/2026 (formato de cotação bancária de 4131 com NDF, ver docs/emprestimo-4131.md):
+// - Moeda: dólar ou euro. A conta é a mesma; no euro, o "cupom" é o juro do euro usado no câmbio a termo.
+// - Principal no vencimento ou em parcelas iguais (amortização constante), com carência em número de pagamentos.
+//   Juros e fiança incidem sobre o saldo devedor. Prazo médio = soma(amortização × dias corridos) ÷ principal.
+// - Datas: mesmo dia do mês (sem ajuste) ou a cada 30 dias corridos, no próximo dia útil. No segundo caso, o primeiro
+//   pagamento ajustado vira a âncora dos demais.
+// - Leitura no formato da cotação (NDF): taxa interna do fluxo em reais por dias corridos/365, lida ao mês como taxa de
+//   30 dias e ao ano como 12 meses de 30 dias (exp/360).
+// - Economia de IOF: IOF de crédito que um capital de giro em reais pagaria no mesmo cronograma de principal
+//   (0,38% + 0,0082% ao dia sobre cada parcela, até 365 dias). Equivalente em giro: a mesma taxa interna com esse IOF
+//   somado ao valor recebido.
 import { growthAt } from './cdiFuturo.js'
 import { interp } from './cupom.js'
+import { IOF_PJ } from './emprestimo.js'
 
 const DAY = 864e5
 const ms = (iso) => Date.parse(`${iso}T12:00:00Z`)
@@ -27,10 +39,24 @@ export const IRRF_OPTIONS = [
   { id: '0', rate: 0, label: '0% · isenção ou tratado' },
 ]
 export const FREQS = [
+  { id: '1', months: 1, label: 'Mensal' },
   { id: '3', months: 3, label: 'Trimestral' },
   { id: '6', months: 6, label: 'Semestral' },
   { id: '12', months: 12, label: 'Anual' },
   { id: '0', months: 0, label: 'No vencimento' },
+]
+export const MOEDAS = [
+  { id: 'USD', sym: 'US$', nome: 'dólar', Nome: 'Dólar', juro: 'Cupom cambial' },
+  { id: 'EUR', sym: '€', nome: 'euro', Nome: 'Euro', juro: 'Juro do euro' },
+]
+export const moedaOf = (id) => MOEDAS.find((m) => m.id === id) ?? MOEDAS[0]
+export const AMORTS = [
+  { id: 'bullet', label: 'No vencimento' },
+  { id: 'parcelas', label: 'Em parcelas' },
+]
+export const CALENDARIOS = [
+  { id: 'mes', label: 'Dia fixo' },
+  { id: '30d', label: 'Cada 30 dias' },
 ]
 export const IOF_SHORT_TERM = { rate: 3.5, maxDays: 364 }
 export const IOF_SOURCE = 'https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306compilado.htm'
@@ -44,7 +70,11 @@ export function addMonthsIso(iso, months) {
   return new Date(Date.UTC(y, m - 1 + months, Math.min(d, last))).toISOString().slice(0, 10)
 }
 
-// IOF-câmbio na entrada pelo prazo médio em dias corridos. Principal no vencimento: prazo médio = prazo total.
+const addDaysIso = (iso, n) => new Date(ms(iso) + n * DAY).toISOString().slice(0, 10)
+// Sem calendário de feriados: só pula sábado e domingo.
+const weekdayOnOrAfter = (iso) => { const w = new Date(ms(iso)).getUTCDay(); return w === 6 ? addDaysIso(iso, 2) : w === 0 ? addDaysIso(iso, 1) : iso }
+
+// IOF-câmbio na entrada pelo prazo médio em dias corridos (inteiro, arredondado para baixo). Principal no vencimento: prazo médio = prazo total.
 export function iofEntrada(avgTermDays) {
   return avgTermDays <= IOF_SHORT_TERM.maxDays ? IOF_SHORT_TERM.rate : 0
 }
@@ -68,24 +98,54 @@ const fail = (error) => ({ ok: false, error })
 // Data real do calendário (30/02 não passa), entre 2000 e 2100.
 const validDate = (iso) => /^\d{4}-\d{2}-\d{2}$/.test(iso ?? '') && !Number.isNaN(ms(iso)) && new Date(ms(iso)).toISOString().slice(0, 10) === iso && iso >= '2000-01-01' && iso <= '2100-12-31'
 
-// Fluxo do empréstimo em dólar. Taxas em % (5,8 = 5,80%). `spot` em R$ por dólar.
-export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf = 15, grossUp = true, flat = 0, guarantee = 0, feesAbroad = false }) {
-  if (!(principal > 0) || principal > MAX_PRINCIPAL) return fail('Informe o principal em dólar, maior que zero.')
+// Fluxo do empréstimo na moeda (dólar ou euro). Taxas em % (5,8 = 5,80%). `spot` em R$ por unidade da moeda.
+// `amort`: 'bullet' (principal no vencimento) ou 'parcelas' (amortização constante); `grace`: pagamentos só de juros antes
+// da primeira parcela de principal. `calendar`: 'mes' ou '30d'; `nextBusDay(iso)` devolve a própria data, se útil, ou o
+// dia útil seguinte (sem ela, só fins de semana são pulados).
+export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf = 15, grossUp = true, flat = 0, guarantee = 0, feesAbroad = false, amort = 'bullet', grace = 0, calendar = 'mes', nextBusDay = weekdayOnOrAfter, currency = 'USD' }) {
+  if (!MOEDAS.some((m) => m.id === currency)) return fail('Escolha a moeda.')
+  if (!(principal > 0) || principal > MAX_PRINCIPAL) return fail(`Informe o principal em ${moedaOf(currency).nome}, maior que zero.`)
   if (!(rate >= 0) || rate > 100) return fail('Informe a taxa em % ao ano, de 0 a 100.')
   if (!(spot > 0)) return fail('Informe o câmbio de entrada, maior que zero.')
   if (!validDate(start)) return fail('Informe uma data de desembolso válida, entre 2000 e 2100.')
   if (!Number.isInteger(months) || months < 1 || months > MAX_MONTHS) return fail(`Informe o prazo em meses, número inteiro de 1 a ${MAX_MONTHS}.`)
-  if (![0, 3, 6, 12].includes(freq)) return fail('Escolha a frequência dos juros.')
+  if (![0, 1, 3, 6, 12].includes(freq)) return fail('Escolha a frequência dos juros.')
+  if (!AMORTS.some((a) => a.id === amort)) return fail('Escolha como o principal é pago.')
+  if (!CALENDARIOS.some((c) => c.id === calendar)) return fail('Escolha a regra das datas.')
+  if (!Number.isInteger(grace) || grace < 0) return fail('Informe a carência em número de pagamentos, inteiro.')
   if (!(irrf >= 0) || irrf >= 100) return fail('Alíquota de IRRF inválida.')
   if (!(flat >= 0) || !(guarantee >= 0)) return fail('Flat e fiança não podem ser negativos.')
 
   const step = freq === 0 ? months : freq
-  const dates = []
-  for (let m = step; m < months; m += step) dates.push(addMonthsIso(start, m))
-  const end = addMonthsIso(start, months)
-  dates.push(end)
+  const marks = []
+  for (let m = step; m < months; m += step) marks.push(m)
+  marks.push(months)
+  let dates
+  if (calendar === '30d') {
+    const first = nextBusDay(addDaysIso(start, 30 * marks[0]))
+    dates = marks.map((m) => nextBusDay(addDaysIso(first, 30 * (m - marks[0]))))
+  } else dates = marks.map((m) => addMonthsIso(start, m))
+  if (dates.some((d, i) => !validDate(d) || d <= (i ? dates[i - 1] : start))) return fail('Não foi possível montar as datas dos pagamentos: revise a data e o prazo.')
+  const end = dates.at(-1)
 
-  const avgTermDays = daysBetween(start, end)
+  // Amortização constante depois da carência; a última parcela leva o saldo, para o total fechar no principal.
+  const n = dates.length
+  const split = amort === 'parcelas'
+  if (split && grace >= n) return fail(`A carência de ${grace} pagamentos não deixa parcela de principal: são ${n} pagamentos no prazo.`)
+  const parts = split ? n - grace : 1
+  const amortAt = (i, balance) => (i === n - 1 ? balance : split && i >= grace ? principal / parts : 0)
+  let weighted = 0
+  let left = principal
+  const schedule = dates.map((date, i) => {
+    const pay = amortAt(i, left)
+    const row = { date, dc: daysBetween(start, date), balance: left, principal: pay }
+    weighted += pay * row.dc
+    left -= pay
+    return row
+  })
+  // Média exata (pode ter fração) e a que vale para a regra do IOF: inteira, arredondada para baixo (cobra na dúvida).
+  const avgTermExact = split ? weighted / principal : daysBetween(start, end)
+  const avgTermDays = split ? Math.floor(avgTermExact + 1e-9) : avgTermExact
   const iofRate = iofEntrada(avgTermDays)
   if (flat + iofRate >= 100) return fail('Flat e IOF consomem todo o valor: revise os percentuais.')
   const a = irrf / 100
@@ -100,18 +160,17 @@ export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf 
   const flows = []
   const totals = { interest: 0, irrf: 0, guarantee: 0, principal: 0, usd: 0 }
   let prev = start
-  dates.forEach((date, i) => {
+  schedule.forEach(({ date, dc, balance, principal: pay }) => {
     const days = daysBetween(prev, date)
-    const interest = principal * (rate / 100) * days / 360
-    const fee = principal * (guarantee / 100) * days / 360
+    const interest = balance * (rate / 100) * days / 360
+    const fee = balance * (guarantee / 100) * days / 360
     const tax = taxOn(interest) + (feesAbroad ? taxOn(fee) : 0)
-    const amort = i === dates.length - 1 ? principal : 0
-    const usd = interest + tax + fee + amort
-    flows.push({ date, days, dc: daysBetween(start, date), interest, irrf: tax, guarantee: fee, principal: amort, usd })
+    const usd = interest + tax + fee + pay
+    flows.push({ date, days, dc, balance, interest, irrf: tax, guarantee: fee, principal: pay, usd })
     totals.interest += interest
     totals.irrf += tax
     totals.guarantee += fee
-    totals.principal += amort
+    totals.principal += pay
     totals.usd += usd
     prev = date
   })
@@ -119,8 +178,8 @@ export function loan4131({ principal, rate, spot, start, months, freq = 6, irrf 
   const allIn = irr([{ v: netUsd, t: 0 }, ...flows.map((f) => ({ v: -f.usd, t: f.dc / 365 }))])
   if (allIn == null) return fail('Não foi possível calcular o custo: revise os valores.')
   return {
-    ok: true, principal, rate, spot, start, end, months, freq, irrf, grossUp, flat, guarantee, feesAbroad,
-    avgTermDays, iofRate, flatUsd, iofUsd, flatIrUsd, netUsd, netBrl: netUsd * spot, flows, totals,
+    ok: true, currency, principal, rate, spot, start, end, months, freq, irrf, grossUp, flat, guarantee, feesAbroad, amort, grace: split ? grace : 0, calendar,
+    avgTermDays, avgTermExact, iofRate, flatUsd, iofUsd, flatIrUsd, netUsd, netBrl: netUsd * spot, flows, totals,
     grossedRate: grossUp ? rate / (1 - a) : rate,
     allIn: allIn * 100,
   }
@@ -161,19 +220,46 @@ export function curveFactors({ diPts, ccPts, d0 = 0, dc0 = 0 }) {
   }
 }
 
+// DI pré (% a.a., base 252) entre `d0` e `d0 + n` dias úteis da data-base da curva DI x pré; null fora da curva.
+export function diDoPrazo(diPts, d0, n) {
+  if (!(n > 0) || !(d0 >= 0)) return null
+  const g0 = growthAt(diPts, d0)
+  const g = growthAt(diPts, d0 + n)
+  return g0 == null || g == null ? null : ((g / g0) ** (252 / n) - 1) * 100
+}
+
+// IOF de crédito que um capital de giro em reais pagaria no mesmo cronograma de principal (pessoa jurídica):
+// adicional sobre o valor + alíquota diária sobre cada parcela de principal, limitada a 365 dias.
+export function iofGiro4131(loan) {
+  if (!loan?.ok) return null
+  const daily = loan.flows.reduce((sum, f) => sum + f.principal * loan.spot * (IOF_PJ.daily / 100) * Math.min(f.dc, IOF_PJ.maxDays), 0)
+  return loan.principal * loan.spot * IOF_PJ.fixed / 100 + daily
+}
+
+// Taxa interna em dias corridos/365 lida no formato da cotação: ao mês (30 dias) e ao ano (12 meses de 30 dias, exp/360).
+export const taxa360 = (y) => ({ mes: ((1 + y) ** (30 / 365) - 1) * 100, ano: ((1 + y) ** (360 / 365) - 1) * 100 })
+
 // Com proteção. Manual: `di` em % a.a. (252) e `cupom` em % a.a. linear (360), iguais para todos os prazos.
 // Com `curve` (de `curveFactors`), cada pagamento usa o DI e o cupom do seu prazo.
 // `busDays(inicio, data)` devolve dias úteis; sem ela, estimativa de dias corridos × 252/365.
 // `swapSpread`: % a.a. (252) do banco no swap, composto. `ndfMarkup`: % acrescido pelo banco sobre a taxa a termo.
-export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup = 0, curve = null }) {
+export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup = 0, curve = null, forwards = null }) {
   if (!loan?.ok) return fail('Empréstimo inválido.')
+  // `forwards`: taxas futuras da mesa, uma por pagamento, na ordem dos vencimentos. Com elas, o cupom não é usado: a
+  // taxa futura de cada parcela é a informada, e o cupom devolvido é o implícito no vencimento. O DI continua valendo
+  // para o equivalente em CDI e para o custo em base 252.
+  const mesa = forwards != null
+  if (mesa && (!Array.isArray(forwards) || forwards.length !== loan.flows.length)) return fail(`Informe ${loan.flows.length} ${loan.flows.length === 1 ? 'taxa futura' : 'taxas futuras'}, uma por pagamento: ${Array.isArray(forwards) ? `vieram ${forwards.length}` : 'lista inválida'}.`)
+  // Posição por posição: lista com buraco também é recusada.
+  if (mesa && Array.from(forwards).some((f) => !(f > 0) || !Number.isFinite(f))) return fail('As taxas futuras precisam ser números maiores que zero.')
   if (!curve && (!(di > 0) || di > 200)) return fail('Informe o DI pré em % ao ano, maior que zero.')
-  if (!curve && (!(cupom > -50) || cupom > 200)) return fail('Informe o cupom cambial em % ao ano.')
+  if (!curve && !mesa && (!(cupom > -50) || cupom > 200)) return fail('Informe o cupom cambial em % ao ano.')
   if (!(swapSpread >= 0) || !(ndfMarkup >= 0)) return fail('Os acréscimos do banco não podem ser negativos.')
   const du = (f) => (busDays ? busDays(loan.start, f.date) : f.dc * 252 / 365)
-  const base = loan.flows.map((f) => {
+  const base = loan.flows.map((f, i) => {
     const n = du(f)
     const diFactor = curve ? curve.diFactorAt(n) : (1 + di / 100) ** (n / 252)
+    if (mesa) return { ...f, du: n, diFactor, ccFactor: loan.spot * diFactor / forwards[i], forward: forwards[i] }
     const ccFactor = curve ? curve.cupomFactorAt(n, f.dc) : 1 + (cupom / 100) * f.dc / 360
     return { ...f, du: n, diFactor, ccFactor, forward: diFactor > 0 && ccFactor > 0 ? loan.spot * diFactor / ccFactor : NaN }
   })
@@ -216,7 +302,18 @@ export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup 
   const spread = spreadOf(loan.netBrl, flows)
   const cost365 = irr([{ v: loan.netBrl, t: 0 }, ...flows.map((f) => ({ v: -f.brl, t: f.dc / 365 }))])
   if (pre == null || spread == null || cost365 == null) return fail('Não foi possível calcular o custo com NDF.')
+  // Formato da cotação: custo efetivo ao mês e ao ano (exp/360), economia de IOF e taxa equivalente em capital de giro.
+  const iofGiro = iofGiro4131(loan)
+  const giro365 = irr([{ v: loan.netBrl + iofGiro, t: 0 }, ...flows.map((f) => ({ v: -f.brl, t: f.dc / 365 }))])
+  if (giro365 == null) return fail('Não foi possível calcular a taxa equivalente em capital de giro.')
+  const cet = taxa360(cost365)
+  const giro = taxa360(giro365)
   const ndf = {
+    cetMes: cet.mes,
+    cetAno: cet.ano,
+    iofGiro,
+    giroMes: giro.mes,
+    giroAno: giro.ano,
     pre: pre * 100,
     cost365: cost365 * 100,
     spread: spread * 100,
@@ -225,5 +322,61 @@ export function hedge4131(loan, { di, cupom, busDays, swapSpread = 0, ndfMarkup 
     // Alta do dólar ao ano a partir da qual o NDF sai mais barato que ficar sem proteção.
     breakeven: ((1 + cost365) / (1 + loan.allIn / 100) - 1) * 100,
   }
-  return { ok: true, source: curve ? 'curve' : 'manual', di: dAvg * 100, cupom: ccAvg * 100, swapSpread, ndfMarkup, flows, swap, ndf }
+  return { ok: true, source: mesa ? 'mesa' : curve ? 'curve' : 'manual', di: dAvg * 100, cupom: ccAvg * 100, swapSpread, ndfMarkup, flows, swap, ndf }
+}
+
+// Atingir meta: taxa do contrato (% a.a.) que leva o resultado com NDF à meta informada, com o resto da operação igual.
+// `kind`: 'cetMes' ou 'cetAno' (custo efetivo exp/360), 'spread' (equivalente em CDI +) ou 'giroMes' (equivalente em giro).
+// O custo cresce com a taxa, então a busca é por bisseção entre 0% e 100% a.a. Devolve a taxa com quatro casas, que é
+// como ela vai para o campo; por isso o resultado pode diferir da meta na quarta casa.
+export const METAS = [
+  { id: 'cetMes', label: 'Custo efetivo ao mês', unit: '% a.m.' },
+  { id: 'cetAno', label: 'Custo efetivo ao ano', unit: '% a.a.' },
+  { id: 'spread', label: 'Equivalente em CDI +', unit: '% a.a.' },
+]
+// Taxas futuras coladas da planilha ou do e-mail da mesa: uma por linha (ou separadas por espaço, tabulação ou ponto e
+// vírgula), com vírgula ou ponto decimal. Devolve { rates, bad }: os números lidos e o primeiro trecho que não é número.
+export function lerTaxasFuturas(text) {
+  // Caracteres invisíveis de largura zero, comuns em texto copiado de e-mail, saem antes da leitura.
+  const tokens = String(text ?? '').replace(/[\u200B-\u200D\uFEFF]/g, '').split(/[\s;]+/).filter(Boolean)
+  const rates = []
+  for (const token of tokens) {
+    if (!/^\d+(?:[.,]\d+)?$/.test(token)) return { rates, bad: token }
+    rates.push(Number(token.replace(',', '.')))
+  }
+  return { rates, bad: null }
+}
+
+export function metaTaxa4131(loanParams, hedgeParams, kind, target) {
+  if (!['cetMes', 'cetAno', 'spread', 'giroMes'].includes(kind)) return fail('Escolha a meta.')
+  if (!Number.isFinite(target)) return fail('Informe a meta em %.')
+  const at = (rate) => {
+    const loan = loan4131({ ...loanParams, rate })
+    if (!loan.ok) return loan
+    const hedge = hedge4131(loan, hedgeParams ?? {})
+    return hedge.ok ? { ok: true, value: hedge.ndf[kind] } : hedge
+  }
+  const dec4 = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+  const low = at(0)
+  if (!low.ok) return low
+  // Teto da busca: 100% a.a.; em operação muito curta com tarifa alta o custo passa do limite do motor, e o teto desce
+  // até a conta fechar.
+  let top = 100
+  let high = at(top)
+  while (!high.ok && top > 0.01) { top /= 2; high = at(top) }
+  if (!high.ok) return fail('Meta fora do alcance desta operação.')
+  if (target < low.value) return fail(`Meta abaixo do mínimo: com taxa zero, o resultado já é ${dec4(low.value)}%.`)
+  if (target > high.value) return fail(top < 100 ? 'Meta fora do alcance desta operação.' : 'Meta acima do que uma taxa de 100% ao ano alcança.')
+  let lo = 0
+  let hi = top
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2
+    const r = at(mid)
+    if (!r.ok) return r
+    if (r.value < target) lo = mid
+    else hi = mid
+  }
+  const rate = Math.round(((lo + hi) / 2) * 1e4) / 1e4
+  const check = at(rate)
+  return check.ok ? { ok: true, rate, value: check.value } : check
 }
