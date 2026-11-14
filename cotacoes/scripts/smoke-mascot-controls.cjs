@@ -23,6 +23,8 @@ fs.mkdirSync(output, { recursive: true })
       // Começa pequena, no lugar reservado do cabeçalho (não cobre título nem botões); clicar amplia.
       const small = page.getByRole('button', { name: 'Ampliar mascote' })
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
+      // o cabeçalho das telas carregadas sob demanda aparece depois; a coruja entra no lugar assim que ele existe
+      await page.waitForFunction(() => !!document.querySelector('.mascot-mini')?.closest('.mascot-slot'), null, { timeout: 5000 }).catch(() => {})
       assert.equal(await small.evaluate(el => !!el.closest('.mascot-slot')), true, 'coruja pequena no lugar reservado do cabeçalho')
       const smallBox = await small.boundingBox()
       const livre = await page.evaluate(() => { const m = document.querySelector('.mascot-mini').getBoundingClientRect(); const cobre = (r) => r.width > 0 && r.height > 0 && !(r.right <= m.left || r.left >= m.right || r.bottom <= m.top || r.top >= m.bottom); return [...document.querySelectorAll('main h1, .topbar-tabs button, .theme-trigger, .clocks-info, .clock-one')].filter((el) => !el.closest('.sr-only') && !el.classList.contains('sr-only')).every((el) => { const range = document.createRange(); range.selectNodeContents(el); return !cobre(range.getBoundingClientRect()) }) })
