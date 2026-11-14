@@ -121,6 +121,7 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
   .cbs .cbs-chart-dot { r:9px; }
 }
 .cbs-chart-scroll { overflow-x:auto; overscroll-behavior-inline:contain; }
+.cbs .cbs-chart-scroll svg text { fill:var(--fg); }
 .cbs .cbs-annual-chart { min-width:890px; }
 .cbs .cbs-annual-chart text { font:16px sans-serif; display:block; }
 .cbs .cbs-consult-label { margin:8px 0; color:var(--mut); font-size:.95rem; }

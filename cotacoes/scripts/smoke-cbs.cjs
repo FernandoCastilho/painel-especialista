@@ -18,12 +18,22 @@ async function run() {
     assert.equal(await page.locator('#cbs-regime').inputValue(), 'real')
     assert.equal(await page.locator('.cbs-result').count(), 0, 'missing current rate must not generate tax result')
     assert.match(await page.locator('body').innerText(), /NCG não calculada/)
+    for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+      await page.emulateMedia({ colorScheme: theme })
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
+      await page.screenshot({ path: path.join(out, `cenario-inicial-${theme}-${width}.png`), fullPage: true })
+    }
     await page.locator('#cbs-cmv').fill('2.000.000,00')
     await page.locator('#cbs-purchases').fill('2.000.000,00')
     assert.match(await page.locator('body').innerText(), /15\.000\.000,00/)
     await page.getByText('Editar meses e ver valores', { exact: true }).click()
     assert.match(await page.locator('#overview-month-0').locator('xpath=ancestor::div[contains(@class,"cx-field")]').innerText(), /15\.000\.000,00/)
     assert.equal(await page.getByRole('img', { name: /NCG operacional simplificada/ }).locator('circle').count(), 12)
+    for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+      await page.emulateMedia({ colorScheme: theme })
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
+      await page.screenshot({ path: path.join(out, `ncg-sintetica-${theme}-${width}.png`), fullPage: true })
+    }
     await page.locator('#cbs-cmv').fill('')
     assert.match(await page.locator('body').innerText(), /NCG não calculada/)
     assert.equal(await page.getByRole('img', { name: /NCG operacional simplificada/ }).count(), 0)
