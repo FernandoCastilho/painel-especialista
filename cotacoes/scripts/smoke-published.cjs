@@ -35,7 +35,13 @@ const links = {
         assert.ok(geometry.document <= geometry.width + 1, label + ': ' + JSON.stringify(geometry))
       }
 
-      await visit('calculadora/cbs-caixa', '.cbs-annual-chart')
+      await visit('calculadora/cbs-caixa', '#cbs-revenue')
+      assert.equal(await page.locator('.cbs-result').count(), 0, 'sem premissas confirmadas não há comparação tributária')
+      await page.locator('#cbs-group').fill('46.3')
+      await page.locator('#cbs-group').press('ArrowDown')
+      await page.locator('#cbs-group').press('Enter')
+      await page.locator('#cbs-currentNetRate').fill('3,65')
+      await page.locator('.cbs-annual-chart').waitFor()
       // Nome do painel no ar: aba do navegador em toda largura; marca do topo onde a barra aparece.
       assert.equal(await page.title(), 'PME · Painel Especializado no Mercado', 'nome na aba do navegador')
       if (width >= 1000) {
@@ -45,7 +51,7 @@ const links = {
       const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
       assert.equal(await page.locator('.cbs-annual-chart').isVisible(), true)
       assert.deepEqual(await page.locator('.cbs-annual-chart text').allTextContents(), months)
-      assert.equal(await page.locator('.cbs-chart-dot').count(), 12)
+      assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 12)
       const initialReading = await page.locator('.cbs-month-reading').innerText()
       await page.locator('.cbs-month-editor > summary').click()
       await page.locator('#cbs-month-1').fill('2.000.000,00')
@@ -54,11 +60,11 @@ const links = {
       await page.getByRole('button', { name: 'Jan', exact: true }).click()
       assert.equal(await page.locator('.cbs-month-reading').innerText(), initialReading)
       await page.locator('#cbs-month-1').fill('0')
-      assert.equal(await page.locator('.cbs-chart-dot').count(), 11)
+      assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 11)
       await page.getByRole('button', { name: 'Fev', exact: true }).click()
       assert.match(await page.locator('.cbs-month-reading').innerText(), /Faturamento inv/)
       await page.locator('.cbs-month-editor button').click()
-      assert.equal(await page.locator('.cbs-chart-dot').count(), 12)
+      assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 12)
       await page.locator('.cbs-month-editor > summary').click()
       await contained('CBS Jan-Dez')
       await page.screenshot({ path: path.join(out, width + '-cbs-jan-dez.png'), fullPage: true })
