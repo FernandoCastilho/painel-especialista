@@ -240,6 +240,9 @@ const localFits = stage => stage.evaluate(element => {
       // Functional actions are checked above. Screenshot persistence is not a
       // product requirement; record any dismissing events instead of guessing
       // their cause or altering the application's scroll/resize behaviour.
+      // A foto de página inteira acima redimensiona a janela por um instante; o menu fecha de propósito em resize/scroll,
+      // então espera esses eventos atrasados passarem antes de abrir o menu de novo.
+      await page.evaluate(() => new Promise(resolve => { let t = setTimeout(done, 400); function done() { removeEventListener('resize', again); removeEventListener('scroll', again, true); resolve() } function again() { clearTimeout(t); t = setTimeout(done, 400) } addEventListener('resize', again); addEventListener('scroll', again, true) }))
       await article.click({ button: 'right' })
       actions = page.getByRole('menu', { name: 'Ações do ponto', exact: true })
       await actions.waitFor()
