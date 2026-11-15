@@ -185,14 +185,24 @@ test('foco local mostra somente arestas diretas do selecionado, sem ligações e
   assert.equal(JSON.stringify(graph), before)
 })
 
-test('snapshot real gera relações sem fabricar matérias e expira com relógio avançado', async () => {
-  const sectorNews = JSON.parse(await readFile(new URL('../public/sector-news.json', import.meta.url)))
-  const curadoria = JSON.parse(await readFile(new URL('../public/curadoria-noticias.json', import.meta.url)))
+test('fixtures datadas geram relações sem fabricar matérias e expiram com relógio avançado', () => {
+  const sectorNews = { schemaVersion: 1, topics: { 'produtos-saude': { items: [institutional()] } } }
+  const curadoria = { schemaVersion: 1, windowDays: 7, topics: { reforma: { items: [generic({ title: 'Reforma tributária: IBS e CBS em debate' })] } } }
   const graph = buildKnowledgeGraph({ sectorNews, curadoria, now: NOW })
-  assert.ok(graph.meta.newsCount > 0)
+  assert.equal(graph.meta.newsCount, 2)
   assert.ok(newsNodes(graph).every(node => node.source && node.href.startsWith('https://') && withinWindow(node.t)))
   const expired = buildKnowledgeGraph({ sectorNews, curadoria, archive: archive(graph.archiveItems), now: NOW + 30 * 86400000 })
   assert.equal(expired.meta.newsCount, 0)
+})
+
+test('snapshots mutáveis respeitam relógio fixo, inclusive quando nenhuma matéria é elegível', async () => {
+  const sectorNews = JSON.parse(await readFile(new URL('../public/sector-news.json', import.meta.url)))
+  const curadoria = JSON.parse(await readFile(new URL('../public/curadoria-noticias.json', import.meta.url)))
+  const graph = buildKnowledgeGraph({ sectorNews, curadoria, now: NOW })
+  assert.equal(graph.meta.newsCount, newsNodes(graph).length)
+  assert.ok(newsNodes(graph).every(node => node.source && node.href.startsWith('https://') && withinWindow(node.t)))
+  const empty = buildKnowledgeGraph({ sectorNews: { schemaVersion: 1, topics: {} }, curadoria: { schemaVersion: 1, windowDays: 7, topics: {} }, now: NOW })
+  assert.equal(empty.meta.newsCount, 0)
 })
 function withinWindow(t) { return t >= NOW - KNOWLEDGE_WINDOW_MS && t <= NOW }
 

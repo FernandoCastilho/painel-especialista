@@ -1,3 +1,5 @@
+import ExpandablePanel from './ExpandablePanel.jsx'
+import './CalculatorStandard.css'
 import { useEffect, useRef, useState } from 'react'
 import './Calculadora.css'
 import './CalculatorLayout.css'
@@ -309,7 +311,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
   ] : []
 
   return (
-    <section className="cx bw e4" aria-labelledby="bw-title">
+    <section className="cx bw e4 calc-standard" aria-labelledby="bw-title">
       <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <div className="bw-heading"><h2 id="bw-title"><strong>4131</strong><span>Empréstimo externo</span></h2>
         <nav className="bw-nav" aria-label="Área do empréstimo externo">
@@ -364,7 +366,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
                 </div></section>
                 <details className="e4-mais" open={maisAberto} onToggle={(e) => setMaisAberto(e.currentTarget.open)}>
                   <summary>Mais opções{foraDoPadrao > 0 && <small>{foraDoPadrao === 1 ? '1 item fora do padrão' : `${foraDoPadrao} itens fora do padrão`}</small>}</summary>
-                  <p className="cx-hint">O padrão segue a cotação de banco: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência, sem tarifa e IR já dentro da taxa all-in. Mude só o que for diferente na sua operação.</p>
+                  <div className="cx-field-label cx-hint"><span>Condições padrão</span>{ajuda('Condições padrão', 'O padrão segue a cotação de banco: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência, sem tarifa e IR já dentro da taxa all-in. Mude só o que for diferente na sua operação.')}</div>
                   <section className="fm-group fm-operation e4-opcoes" aria-label="Mais opções da operação"><div className="fm-group-fields">
                     {field('freq', 'per', 'Pagamentos', select('freq', freq, setFreq, FREQS), 'Frequência dos pagamentos de juros. As parcelas de principal, quando houver, caem nas mesmas datas.')}
                     {field('calendar', 'datas', 'Regra das datas', select('calendar', calendar, setCalendar, CALENDARIOS), 'Cada 30 dias: como nas cotações de banco, cada mês conta 30 dias corridos (30 no mensal, 90 no trimestral, 180 no semestral). O primeiro pagamento vai para o próximo dia útil e os demais contam a partir dele, também em dia útil. Atenção: 12 meses somam 360 dias. Dia fixo: datas pelo dia do desembolso, mês a mês, sem ajuste para dia útil.')}
@@ -443,7 +445,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
               <header><h3 className="cx-heading">Parcela a parcela{ajuda('Parcela a parcela', `Desembolso em ${dm(loan.start)}. Saldo devedor: saldo antes do pagamento da linha, base dos juros. Juros e encargos: juros pelos dias corridos desde o pagamento anterior, sobre 360, mais IR do tomador e fiança, quando houver. A taxa futura é a colada da mesa ou, na estimativa, a calculada com o DI e o juro da moeda informados; o acréscimo do banco, se houver, entra por cima. A parcela em reais é a parcela na moeda vezes a taxa futura.`)}</h3></header>
               <p className="cx-hint cx-pad" id="e4-calendario">{calendar === '30d' ? 'Datas a cada 30 dias corridos, no próximo dia útil (feriados nacionais).' : 'Datas pelo dia do desembolso, sem ajuste para dia útil.'} {hedge?.source === 'mesa' ? 'Taxas futuras coladas da cotação da mesa.' : 'Taxa futura teórica; a da mesa do banco prevalece.'} Não use como memória contratual.</p>
               <p className="cx-hint cx-pad e4-estreito">No celular aparecem vencimento, taxa futura e parcela em reais. Para ver amortização, saldo e juros na moeda, vire o aparelho ou abra no notebook.</p>
-              <div className="cx-wrap fm-fluxo" role="region" aria-label="Parcela a parcela" aria-describedby="e4-calendario" tabIndex={0}>
+              <ExpandablePanel title="Memória das parcelas"><div className="cx-wrap fm-fluxo" role="region" aria-label="Parcela a parcela" aria-describedby="e4-calendario" tabIndex={0}>
                 <table className="cx-matrix fm-tabela">
                   <thead><tr><th scope="col">Prazo (dias)</th><th scope="col">Vencimento</th><th scope="col">Amortização</th><th scope="col">Saldo devedor</th><th scope="col">Juros e encargos</th><th scope="col">Parcela em {cur.nome}</th><th scope="col">Taxa futura</th><th scope="col">Parcela em reais</th></tr></thead>
                   <tbody>
@@ -455,7 +457,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
                   </tbody>
                   <tfoot><tr><th scope="row">Total</th><td>{loan.flows.length} {loan.flows.length === 1 ? 'pagamento' : 'pagamentos'}</td><td>{usd(loan.totals.principal)}</td><td>—</td><td>{usd(loan.totals.usd - loan.totals.principal)}</td><td>{usd(loan.totals.usd)}</td><td>—</td><td>{hedge ? brl(hedge.ndf.totalBrl) : '—'}</td></tr></tfoot>
                 </table>
-              </div>
+              </div></ExpandablePanel>
               <p className="cx-hint cx-pad">Prazo em dias corridos desde o desembolso. Na linha do desembolso, a última coluna é o valor líquido recebido{entrada > 0 ? ' e a coluna de encargos soma tarifa, IOF e IR da entrada, descontados desse valor' : ''}.</p>
             </details>
           )}

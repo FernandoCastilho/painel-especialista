@@ -20,3 +20,5 @@
 .credit-panel .ml-legend li { display:flex; align-items:center; gap:8px; }
 .credit-panel .ml-legend i { width:10px; height:10px; border-radius:2px; }
 .credit-panel .chart-access-text { min-height:1em; font-size:.8rem; color:var(--mut); }
+/* Celular: o título ganha a linha inteira; a hora da atualização desce para a linha de baixo. */
+@media (max-width:699px) { .credit-panel .history-head { gap:4px 12px; } .credit-panel .history-head > h2 { flex:1 1 100%; } }

@@ -1,0 +1,55 @@
+/* Same presentation rhythm across calculators; no financial rules live here. */
+main.app.app-calculators .cx.calc-standard {
+  --cx-space:16px; --cx-primary-bg:#ff6200; --cx-primary-fg:#000d3c;
+  --cx-select-bg:#0131ff; --cx-select-fg:#fff;
+  --cx-line-strong:#60748f; --cx-result-bg:#000d3c;
+  gap:20px;
+}
+:root[data-theme=dark] main.app.app-calculators .cx.calc-standard {
+  --bg:#000d3c; --card:#0c2142; --surface-2:#142e50;
+  --fg:#f3f6ff; --mut:#c0cada; --line:#526a89; --accent:#88baff;
+}
+main.app.app-calculators .cx.calc-standard .cx-panel { border-radius:12px; }
+main.app.app-calculators .cx.calc-standard .cx-panel > header { min-height:48px; padding:10px 16px; }
+main.app.app-calculators .cx.calc-standard .cx-panel > header h3 { border-left:3px solid #ff6200; padding-left:10px; }
+main.app.app-calculators .cx.calc-standard .cx-form {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:12px 16px; padding:16px;
+}
+main.app.app-calculators .cx.calc-standard .cx-field { min-width:0; gap:6px; }
+main.app.app-calculators .cx.calc-standard :is(.cx-field-label,.fi-label,.cx-field > label,.cx-field > .cx-label) { min-height:28px; }
+main.app.app-calculators .cx.calc-standard :is(.cx-field input:not([type=checkbox]),.cx-field select,.cx-iof > select) { min-height:44px; padding:8px 10px; font-size:.9375rem; }
+main.app.app-calculators .cx.calc-standard .cx-field .money-wrap > input { padding-left:42px; }
+main.app.app-calculators .cx.calc-standard .cx-matrix :is(td,th) { padding:9px 10px; font-size:.875rem; }
+main.app.app-calculators .cx.calc-standard :is(.cg-kpis,.desconto-kpis) { gap:12px; padding:16px; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); }
+main.app.app-calculators .cx.calc-standard :is(.cg-kpis,.desconto-kpis) > div { padding:12px; }
+main.app.app-calculators .cx.calc-standard :is(.cg-kpis,.desconto-kpis) b { font-size:1.25rem; }
+main.app.app-calculators .cx.calc-standard .cx-gap { display:none; }
+main.app.app-calculators .cx.calc-standard .calc-result-shell { padding:0; border:0; background:transparent; }
+.calc-standard .calc-panel-context { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.calc-standard .expandable-heading h3 { border-left:3px solid #ff6200; padding-left:10px; }
+.calc-standard .expandable-content > .cx-wrap { padding:0; }
+.calc-standard .expandable-content .fi-scroll { margin:0; }
+/* CBS retains wide activity search and month editors, while scalar fields reflow. */
+main.app.app-calculators .cx.calc-standard .cbs-essential > .cx-field { grid-column:auto; }
+main.app.app-calculators .cx.calc-standard .cbs-essential > .cbs-activity-search { grid-column:1/-1; }
+main.app.app-calculators .cx.calc-standard .cbs-primary-value { font-size:clamp(1.5rem,3vw,2rem); }
+/* No forced five-column tables or compressed values: scroll inside the table. */
+.calc-standard .cx-wrap,.calc-standard .fi-scroll { max-width:100%; overflow:auto; }
+@media(min-width:580px) {
+  main.app.app-calculators .cx.calc-standard.fi .fi-banks { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:480px) {
+  main.app.app-calculators .cx.calc-standard .cx-form { grid-template-columns:1fr; }
+}
+/* 4131 uses BNDES workspace variables; map them without touching its cash flows. */
+main.app.app-calculators .cx.calc-standard.bw.e4 {
+  --bw-card:var(--card); --bw-ink:var(--fg); --bw-muted:var(--mut); --bw-line:var(--line); --bw-soft:var(--surface-2);
+}
+main.app.app-calculators .cx.calc-standard.bw.e4 .fm-group-fields { grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:12px 16px; }
+main.app.app-calculators .cx.calc-standard.bw.e4 .fm-group { min-width:0; }
+/* Active TLP/LCD profiles keep complete conditions and compact result cards. */
+main.app.app-calculators .cx.calc-standard:is(.bndes-profile,.cx-lcd) .fm-grade {
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:12px; padding:12px 0;
+}
+main.app.app-calculators .cx.calc-standard:is(.bndes-profile,.cx-lcd) .fm-kpi { min-width:0; padding:12px; }
+main.app.app-calculators .cx.calc-standard:is(.bndes-profile,.cx-lcd) .fm-kpi b { font-size:1.25rem; overflow-wrap:anywhere; }

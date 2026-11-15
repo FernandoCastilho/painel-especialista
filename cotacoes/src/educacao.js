@@ -1,3 +1,4 @@
+import { CONCEITO_GROSS_UP } from './grossUp.js'
 import { CONCEITO_ACC } from './acc.js'
 import { CONCEITO_FASCISMO } from './fascismo.js'
 import { nf } from './format.js'
@@ -97,6 +98,7 @@ const pct = (f, d = 2) => `${nf(f * 100, d)}%`
 
 export const feeEstruturacao = (base, taxaFlat) => base * taxaFlat
 export const CONCEITOS = [
+  CONCEITO_GROSS_UP,
   CONCEITO_JUROS_FORCADOS,
   {
     id: 'marcacao-a-mercado',
@@ -1153,6 +1155,8 @@ export const porTopico = (lista) => TOPICOS.map((topico) => ({ topico, itens: li
 // outros conceitos (LIGACOES). Os testes recusam conceito sem papel, sem ligação ou com ligação para conceito que não existe.
 // LIGACOES é a fonte única: cada par vale nos dois sentidos e aparece em "Conecta com" de ambos os conceitos e no quadro geral.
 export const LIGACOES = [
+  ['gross-up', 'cet', 'O gross-up pode elevar o desembolso; o CET considera o fluxo completo e os demais encargos aplicáveis.'],
+  ['gross-up', 'custo-de-funding', 'Custo de captação e tributos assumidos contratualmente são componentes diferentes.'],
   ['acc', 'drawback', 'Os dois aliviam o caixa do exportador: o drawback suspende tributos dos insumos; o ACC antecipa a receita da venda.'],
   ['acc', 'cupom-cambial', 'O juro do ACC é em dólar; o cupom cambial mostra quanto custa o dinheiro em dólar no Brasil.'],
   ['acc', 'sofr', 'O custo do ACC parte do funding do banco em dólar, que acompanha referências externas como a SOFR.'],
@@ -1224,6 +1228,7 @@ export const LIGACOES = [
 export const CONEXAO = {
   titulo: 'Como as peças se encaixam',
   itens: [
+    { id: 'gross-up', texto: 'distingue o valor líquido combinado do pagamento bruto sujeito a retenção.' },
     { id: 'fascismo', texto: 'distingue uma ideologia autoritária histórica de medidas econômicas isoladas e ajuda a ler o contexto institucional.' },
     { id: 'marcacao-a-mercado', texto: 'separa o valor atual da posição do fluxo contratado e ajuda a avaliar liquidez e risco de mercado.' },
     { id: 'substituicao-tributaria', texto: 'antecipa o ICMS das revendas em um ponto da cadeia; a mudança paulista exige conferir mercadoria, estoque, créditos e caixa.' },

@@ -13,12 +13,15 @@ import * as money from '../src/moneyInput.js'
 import * as praca from '../src/pracaContrato.js'
 
 const require = createRequire(import.meta.url)
+// Isolate product state tests from the expansion shell; dialog behavior has separate tests.
+const panelStub = ({ title, children }) => createElement('section', null, createElement('h3', null, title), children)
+
 const CalculatorHelp = ({ title, label }) => createElement('button', { type: 'button', 'aria-label': `Ajuda: ${title || label}`, 'aria-expanded': false }, '?')
 async function compile(file, imports = {}) {
   const source = (await readFile(new URL('../src/' + file, import.meta.url), 'utf8')).replace(/^import ['"].+\.css['"]\s*$/gm, '')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
-  runInNewContext(code, { module, exports: module.exports, require: (name) => imports[name] || require(name) })
+  runInNewContext(code, { module, exports: module.exports, require: (name) => (name === './ExpandablePanel.jsx' ? panelStub : imports[name]) || require(name) })
   return module.exports
 }
 const MoneyInput = await compile('MoneyInput.jsx', { './moneyInput.js': money })

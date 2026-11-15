@@ -4,6 +4,7 @@ import { MacroStatus } from './Macro.jsx'
 import { CdiFuturoTable } from './CdiFuturo.jsx'
 import Curves from './Curves.jsx'
 import { reduceMotion } from './motion.js'
+import './Juros.css'
 const RateModal = lazy(() => import('./RateModal.jsx'))
 
 // Linha da tabela -> gráfico que ela abre (ids das linhas de juros de referência; as demais já chegam prontas).

@@ -1,3 +1,5 @@
+import ExpandablePanel from './ExpandablePanel.jsx'
+import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
@@ -44,7 +46,7 @@ export default function ContaGarantida({ onBack }) {
   }
   const pages = result ? Math.ceil(result.rows.length / 31) : 0
   const safePage = Math.min(page, Math.max(0, pages - 1))
-  return <section className="cx cx-cg" aria-labelledby="cg-heading">
+  return <section className="cx cx-cg calc-standard" aria-labelledby="cg-heading">
     <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
     <div className="cx-heading"><h2 id="cg-heading" className="cx-title"><span className="cx-icon"><ContaGarantidaIcon /></span>Conta Garantida</h2><CalculatorHelp title="Conta Garantida"><p>Simule uma utilização por prazo ou registre utilizações e amortizações por data. Veja o saldo diário, os juros e as duas parcelas do IOF.</p><p>Estimativa para crédito rotativo adimplente, com reutilização contratualmente prevista. Juros e IOF são pagos à parte, nunca incorporados ao saldo. Informe a taxa mensal da proposta e confira as convenções. Não é extrato nem cotação bancária.</p><p>CET: informe o limite contratado. Pela Resolução CMN 4.881/2020, art. 6º, o crédito rotativo calcula o CET com prazo de 30 dias e o limite pactuado. Regra aplicada conforme o resumo do painel; confira no texto da norma.</p><p>Os modos Utilização única e Lançamentos por dia simulam o rotativo. Comparar com parcelado estima sua substituição por um novo giro de principal definido. Nenhum modo calcula inadimplência ou renegociação.</p></CalculatorHelp></div>
     <p className="cg-notice">{comparing ? 'Compare encargos, parcelas e capacidade de pagamento. Estimativa, sem contratação ou CET.' : 'Estimativa para operação adimplente e rotativa. Não é extrato nem cotação bancária. O CET aparece quando você informa o limite contratado.'}</p>
@@ -115,8 +117,8 @@ export default function ContaGarantida({ onBack }) {
     </div>
     {warnings.map(warning => <p className="cg-notice" key={warning}>{warning}</p>)}
     {result && <>
-      <article className="desk-panel cx-panel">
-        <header className="cx-heading"><h3>Resultado estimado do período</h3><CalculatorHelp title="Resultado estimado do período"><p>Custo total = juros + IOF diário + IOF adicional, todos pagos à parte. Não inclui a devolução do principal nem outras tarifas. Saldo devedor final é exclusivamente o valor utilizado ainda não amortizado. O pagamento dos custos não gera novas utilizações.</p></CalculatorHelp></header>
+      <article className="desk-panel cx-panel calc-result-shell">
+        <ExpandablePanel title="Resultado estimado do período"><div className="calc-panel-context"><CalculatorHelp title="Resultado estimado do período"><p>Custo total = juros + IOF diário + IOF adicional, todos pagos à parte. Não inclui a devolução do principal nem outras tarifas. Saldo devedor final é exclusivamente o valor utilizado ainda não amortizado. O pagamento dos custos não gera novas utilizações.</p></CalculatorHelp></div>
         <div className="cg-kpis">
           {[['Juros apurados', result.totals.interest], ['IOF diário', result.totals.dailyIof], ['IOF adicional', result.totals.additionalIof], ['Custo total', result.totals.cost], ['Saldo devedor final', result.balance], ['Total de utilizações', result.totals.draw]].map(([label, value]) => <div key={label}><span>{label}</span><b>{brl(value)}</b></div>)}
         </div>
@@ -126,21 +128,21 @@ export default function ContaGarantida({ onBack }) {
             <div><span>CET ao mês</span><b>{pct(cet.monthly)} a.m.</b></div>
             <div><span>Pagamento no {CG_CET_DAYS}º dia</span><b>{brl(cet.payment)}</b></div>
           </div>
-          <div className="cx-heading cx-pad"><p className="cx-hint">Fluxo do CET: {brl(cet.net)} líquidos em {dateLabel(cet.start)}; {brl(cet.payment)} em {dateLabel(cet.end)}.</p><CalculatorHelp title="Como calculamos o CET"><p>Limite de {brl(cet.limit)} liberado em {dateLabel(cet.start)}, menos o IOF adicional ({brl(cet.additionalIof)}), cobrado na utilização: líquido de {brl(cet.net)}. Em {dateLabel(cet.end)}, devolução do limite + juros de {CG_CET_DAYS} dias ({brl(cet.interest)}) + IOF diário ({brl(cet.dailyIof)}), pela taxa, contagem de dias e IOF desta tela.</p><p>O CET é a taxa anual que iguala o valor liberado ao valor presente do pagamento, em dias corridos/365 (Resolução CMN 4.881/2020, arts. 4º e 6º). Ao mês: equivalente composta. Não há tarifas neste simulador.</p></CalculatorHelp></div>
+          <div className="cx-heading cx-pad"><span>Como calculamos o CET</span><CalculatorHelp title="Como calculamos o CET"><p>Fluxo do CET: {brl(cet.net)} líquidos em {dateLabel(cet.start)}; {brl(cet.payment)} em {dateLabel(cet.end)}.</p><p>Limite de {brl(cet.limit)} liberado em {dateLabel(cet.start)}, menos o IOF adicional ({brl(cet.additionalIof)}), cobrado na utilização: líquido de {brl(cet.net)}. Em {dateLabel(cet.end)}, devolução do limite + juros de {CG_CET_DAYS} dias ({brl(cet.interest)}) + IOF diário ({brl(cet.dailyIof)}), pela taxa, contagem de dias e IOF desta tela.</p><p>O CET é a taxa anual que iguala o valor liberado ao valor presente do pagamento, em dias corridos/365 (Resolução CMN 4.881/2020, arts. 4º e 6º). Ao mês: equivalente composta. Não há tarifas neste simulador.</p></CalculatorHelp></div>
           <p className="cg-notice">Regra do art. 6º da Resolução CMN 4.881/2020 (texto oficial conferido em 11/11/2026): prazo de 30 dias e limite pactuado. Obrigatória para pessoa física, ME e EPP (art. 1º); para as demais empresas, estimativa. Taxa e IOF do contrato prevalecem.</p>
         </div> : cet && !cet.ok ? <p className="cg-notice" role="alert">CET não calculado: {cet.error}</p>
           : <p className="cx-hint cx-pad">Sem CET: informe o limite contratado para ver o CET de 30 dias (art. 6º).</p>}
         <p className="cx-hint cx-pad">{dateLabel(params.start)} a {dateLabel(params.end)} · {result.rows.length} fechamentos apurados · {result.totals.interestDays} dias com saldo e contagem de juros · taxa do contrato: {form.rate}% a.m.</p>
-      </article>
-      <article className="desk-panel cx-panel">
-        <header className="cx-heading"><h3>Apuração mensal dentro do período</h3><CalculatorHelp title="Apuração mensal dentro do período"><p>Meses inicial e final podem estar incompletos. A tabela apura custo, não simula o calendário de recolhimento do banco. Soma dos saldos é uma base acumulada de reais × dias, não o saldo da conta.</p></CalculatorHelp></header>
+      </ExpandablePanel></article>
+      <article className="desk-panel cx-panel calc-result-shell">
+        <ExpandablePanel title="Apuração mensal dentro do período"><div className="calc-panel-context"><CalculatorHelp title="Apuração mensal dentro do período"><p>Meses inicial e final podem estar incompletos. A tabela apura custo, não simula o calendário de recolhimento do banco. Soma dos saldos é uma base acumulada de reais × dias, não o saldo da conta.</p></CalculatorHelp></div>
         <div className="cx-wrap" role="region" aria-label="Tabela mensal de juros e IOF" tabIndex={0}><table className="cx-matrix cg-results"><caption className="sr-only">Somatórios do período selecionado por mês; não são datas de pagamento</caption><thead><tr><th scope="col">Mês</th><th scope="col">Soma dos saldos</th><th scope="col">Soma dos acréscimos</th><th scope="col">Juros</th><th scope="col">IOF diário</th><th scope="col">IOF adicional</th><th scope="col">IOF total</th></tr></thead><tbody>{result.months.map(month => <tr key={month.month}><th scope="row">{month.month.split('-').reverse().join('/')}</th><td>{brl(month.dailyBase)}</td><td>{brl(month.additionalBase)}</td><td>{brl(month.interest)}</td><td>{brl(month.dailyIof)}</td><td>{brl(month.additionalIof)}</td><td>{brl(month.dailyIof + month.additionalIof)}</td></tr>)}</tbody></table></div>
-      </article>
-      <article className="desk-panel cx-panel">
-        <header><h3>Memória de cálculo diária</h3></header>
+      </ExpandablePanel></article>
+      <article className="desk-panel cx-panel calc-result-shell">
+        <ExpandablePanel title="Memória de cálculo diária">
         <div className="cx-wrap" role="region" aria-label="Tabela diária, role horizontalmente para ver todas as colunas" tabIndex={0}><table className="cx-matrix cg-results"><caption className="sr-only">Saldo utilizado no fechamento, juros pagos à parte e bases do IOF</caption><thead><tr><th scope="col">Data</th><th scope="col">Utilização</th><th scope="col">Amortização</th><th scope="col">Juros do dia</th><th scope="col">Saldo final / base IOF</th><th scope="col">Acréscimo / base adicional</th><th scope="col">IOF diário</th><th scope="col">IOF adicional</th></tr></thead><tbody>{result.rows.slice(safePage * 31, safePage * 31 + 31).map(row => <tr key={row.date}><th scope="row">{dateLabel(row.date)}{!row.countsInterest && <small>Sem juros neste dia</small>}</th>{['draw', 'payment', 'interest', 'balance', 'additionalBase', 'dailyIof', 'additionalIof'].map(key => <td key={key}>{brl(row[key])}</td>)}</tr>)}</tbody></table></div>
         <div className="cg-pagination"><button type="button" className="cg-button" disabled={safePage === 0} onClick={() => setPage(safePage - 1)}>Anterior</button><span>Página {safePage + 1} de {pages} · até 31 dias por página</span><button type="button" className="cg-button" disabled={safePage + 1 >= pages} onClick={() => setPage(safePage + 1)}>Próxima</button></div>
-      </article>
+      </ExpandablePanel></article>
     </>}
     <div className="cg-method cx-heading"><h3>Premissas e fórmulas</h3><CalculatorHelp title="Como calculamos e onde a simulação não se aplica"><ul>
       <li>Saldo anterior ao primeiro dia é zero. Agrupamos utilizações e amortizações da mesma data. Saldo utilizado = saldo anterior + utilizações − amortizações. Juros e IOF são pagos pelo cliente à parte: nunca viram principal, nunca geram juros sobre juros e nunca aumentam a base do IOF nesta simulação.</li>

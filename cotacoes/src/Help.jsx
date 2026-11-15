@@ -102,12 +102,15 @@ export default function Help({ label, align = 'left', wide = false, fixed = fals
     return () => document.removeEventListener('keydown', onKey, true)
   }, [show])
 
+  // Keep tooltips inside a modal top layer; body portals become inert behind native dialogs.
+  const portalRoot = portalTarget || ref.current?.closest('dialog[open]') || (typeof document !== 'undefined' ? document.body : null)
+
   const pop = (
         <span role="tooltip" id={id} ref={popRef} className={`pop ${align}${wide ? ' wide' : ''}`} style={floating ? { position: 'fixed', zIndex: 70, top: pos?.top ?? -9999, left: pos?.left ?? 0, right: 'auto', maxWidth: 'none', ...(pos?.width ? { width: pos.width } : {}) } : shift ? { transform: `translateX(${shift}px)` } : undefined}
           onPointerEnter={floating ? enter : undefined} onPointerLeave={floating ? leave : undefined}
           onFocus={() => setFocusIn(true)} onBlur={(e) => { if (!popRef.current?.contains(e.relatedTarget)) setFocusIn(false) }}>
           {children}
-          {(pinned || fixed) && mobile && <button type="button" className="pop-close" onClick={() => { setPinned(false); setHover(false); setFocusIn(false) }}>Fechar</button>}
+          {(pinned || fixed) && mobile && <button type="button" className="pop-close" onClick={() => { clearTimeout(leaveTimer.current); setDismissed(true); setPinned(false); setHover(false); setFocusIn(false) }}>Fechar</button>}
         </span>
   )
 
@@ -115,7 +118,7 @@ export default function Help({ label, align = 'left', wide = false, fixed = fals
     <span
       className="help"
       ref={ref}
-      onPointerEnter={(e) => e.pointerType === 'mouse' && enter()}
+      onPointerEnter={(e) => !mobile && e.pointerType === 'mouse' && enter()}
       onPointerLeave={leave}
     >
       <button
@@ -131,8 +134,8 @@ export default function Help({ label, align = 'left', wide = false, fixed = fals
       </button>
       {/* no celular o balão vira uma folha fixa na base da tela: vai para o corpo da página, senão a coluna fixa (sticky) das
           linhas de baixo de uma tabela fica por cima dele */}
-      {show && pinned && mobile && createPortal(<span className="pop-backdrop" onClick={() => setPinned(false)} aria-hidden="true" />, portalTarget || document.body)}
-      {show && (floating || mobile ? createPortal(pop, portalTarget || document.body) : pop)}
+      {show && pinned && mobile && createPortal(<span className="pop-backdrop" onClick={() => { clearTimeout(leaveTimer.current); setDismissed(true); setPinned(false); setHover(false); setFocusIn(false) }} aria-hidden="true" />, portalRoot)}
+      {show && (floating || mobile ? createPortal(pop, portalRoot) : pop)}
     </span>
   )
 }

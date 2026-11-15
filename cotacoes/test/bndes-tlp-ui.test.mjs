@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url)
 const source = (await readFile(new URL('../src/BndesTlpExigivel.jsx', import.meta.url), 'utf8')).replace(/^import ['"].+\.css['"]\s*$/gm, '')
 const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
 const MoneyInput = () => null
-const deps = { './format.js': await import('../src/format.js'), './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './bndesTlpExigivel.js': engine, './bndesProfileIof.js': profileIof }
+const deps = { './ExpandablePanel.jsx': { __esModule: true, default: ({ children }) => children }, './format.js': await import('../src/format.js'), './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './bndesTlpExigivel.js': engine, './bndesProfileIof.js': profileIof }
 const module = { exports: {} }
 runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
@@ -24,7 +24,7 @@ async function setup(t) {
   const field = id => nodes(render.value).find(node => node.props?.id === 'tlp-' + id)
   const set = async (id, value) => { const node = field(id); node.props.onChange(node.type === MoneyInput ? value : { target: { value, checked: value } }); await render.settle() }
   const submit = async () => { nodes(render.value).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} }); await render.settle() }
-  const rows = () => nodes(render.value).filter(node => node.type === 'tbody').flatMap(node => nodes(node).filter(child => child.type === 'tr'))
+  const rows = () => nodes(render.value).filter(node => node.props?.['aria-label'] === 'Cronograma TLP exigível').flatMap(node => nodes(node).filter(child => child.type === 'tbody')).flatMap(node => nodes(node).filter(child => child.type === 'tr'))
   const ready = async () => {
     for (const [id, value] of Object.entries({ amount: '10.000,00', release: '2026-10-15', j: '5', jSource: 'Sintético', bndes: '2', agent: '3', ipca: '4', schedule: '2027-10-15;252;C\n2028-10-16;252;A', scheduleSource: 'Sintético' })) await set(id, value)
     for (const id of ['jConfirmed', 'scenarioConfirmed', 'scheduleConfirmed']) await set(id, true)

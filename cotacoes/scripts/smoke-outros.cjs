@@ -113,7 +113,10 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.equal(await helps.count(), n, 'tooltip em cada linha do quadro')
       for (const [rot, rx] of [['Selic meta', /meta é definida pelo Copom/], ['CDI overnight', /B3 calcula a média/], ['SOFR overnight', /mediana, ponderada pelo volume/], ['Fed', /faixa/], ['€STR', /sem os 25% menores/], ['BCE', /piso do juro/], ['Japão', /Banco do Japão/]]) {
         const btn = p.locator('.executive-rates__table tbody tr', { hasText: rot }).first().locator('.help button')
-        await btn.hover(); const tip = p.locator('[role="tooltip"]'); await tip.waitFor()
+        // A folha móvel abre por acionamento explícito; hover é o contrato desktop.
+        if (width <= 560) await btn.click()
+        else await btn.hover()
+        const tip = p.locator('[role="tooltip"]'); await tip.waitFor()
         assert.match(await tip.innerText(), rx, rot)
         const box = await tip.boundingBox()
         assert.ok(box.x >= 0 && box.x + box.width <= width + 1 && box.y >= 0, `balão de ${rot} dentro da tela`)
@@ -342,6 +345,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
         await p.route('**/macro.json*', (r) => r.fulfill({ json: macro }))
         await p.goto(base + '/#resumo')
         const cards = p.locator('.kpis .kpi'); await cards.first().waitFor()
+        // FX cards can render before the independent macro fixture. Wait for its
+        // observed Selic value in both cases before checking presence or absence.
+        await p.waitForFunction(() => [...document.querySelectorAll('.kpis .kpi')].some(card => card.querySelector('.kpi-name')?.textContent.includes('Selic') && /14,50/.test(card.querySelector('.kpi-value')?.textContent || '')))
         const spark = (name) => cards.filter({ hasText: name }).first().locator('.kpi-spark[role="img"]')
         for (const name of ['Selic', 'CDI']) assert.equal(await spark(name).count(), expected ? 1 : 0, `${name} ${label}`)
         assert.equal(await spark('IPCA 12m').count(), 1, 'IPCA sempre tem 12 meses divulgados')

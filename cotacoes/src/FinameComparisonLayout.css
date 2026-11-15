@@ -1,0 +1,23 @@
+/* Formulário em largura total; o resultado completo pode ocupar a janela. */
+.bw .fm-workspace { grid-template-columns:minmax(0,1fr); gap:18px; }
+.bw .cx-finame .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); }
+.bw .fm-show-result:not(:disabled) { display:flex; justify-content:space-between; align-items:center; gap:12px; grid-column:1/-1; width:100%; }
+.bw .fm-results { gap:16px; }
+.fm-result-workspace > .expandable-content { display:grid; gap:16px; }
+.fm-operation-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:12px 18px; margin:0; }
+.fm-operation-summary div { min-width:0; }
+.fm-operation-summary dt { color:var(--bw-mut,var(--mut)); font-size:.8rem; }
+.fm-operation-summary dd { margin:4px 0 0; font-weight:650; overflow-wrap:anywhere; }
+.fm-parcel-scroll { max-height:300px; overflow:auto; }
+.fm-parcel-scroll table { width:100%; min-width:0 !important; }
+.fm-parcel-scroll th,.fm-parcel-scroll td { font-variant-numeric:tabular-nums; padding:8px; }
+.fm-parcel-scroll thead th { position:sticky; top:0; background:var(--bw-card,var(--card)); z-index:1; }
+.expandable-dialog.fm-parcels-callout .fm-parcel-scroll { max-height:none; }
+.bw #fm-result .fm-grade { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); }
+.fm-indexers-callout .expandable-content { overflow:hidden; }
+@media(max-width:480px) { .fm-operation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .fm-parcel-scroll th,.fm-parcel-scroll td { padding:8px 4px; font-size:.75rem; } }
+
+.bndes-official-logo { display:block; width:240px; max-width:100%; height:auto; padding:10px; border-radius:6px; background:#fff; box-sizing:content-box; margin-bottom:8px; }
+.bw-heading .bndes-official-logo { width:200px; }
+
+.bndes-page > .bndes-back { display:inline-flex; margin:0 0 12px; min-height:44px; align-items:center; }

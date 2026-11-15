@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useHolidays } from './useHolidays.js'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
@@ -15,6 +15,8 @@ import Help from './CalculatorHelp.jsx'
 import BndesPresentation from './BndesPresentation.jsx'
 import BndesPrint from './BndesPrint.jsx'
 import BndesIcon from './BndesIcon.jsx'
+import ExpandablePanel from './ExpandablePanel.jsx'
+import ComparaSeries from './BndesCompare.jsx'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -49,14 +51,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const [comparar, setComparar] = useState(false)
   // Cotação ampliada: o mesmo quadro do resultado vira uma janela sobre a tela (sem duplicar conteúdo). Esc ou o fundo fecham.
   const [ampliada, setAmpliada] = useState(false)
-  const ampliarRef = useRef(null)
-  useEffect(() => {
-    if (!ampliada) return
-    const onKey = event => { if (event.key === 'Escape' && !event.defaultPrevented && !document.querySelector('dialog[open]')) setAmpliada(false) } // com uma ajuda aberta, o Esc fecha só a ajuda
-    const previous = document.body.style.overflow, trigger = ampliarRef.current
-    document.body.style.overflow = 'hidden'; window.addEventListener('keydown', onKey); trigger?.focus()
-    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = previous; trigger?.focus() }
-  }, [ampliada])
+  const [chartPreset, setChartPreset] = useState(12)
+  const [chartCustom, setChartCustom] = useState(null)
   const { sistema, composicao, liberacao } = FINAME_PREMISES
   const [manualRates, setManualRates] = useState({})
   const [porte, setPorte] = useState('mpme')
@@ -163,6 +159,12 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
     res.fgi && { id: 'fgi', rotulo: 'FGI · ECG', ajuda: <><p>{`Encargo por Concessão de Garantia do FGI Tradicional: %G × K × VL × P, com %G = ${nf(res.fgi.percentual, 0)}%, K = ${nf(res.fgi.k, 2)}% por período de 30 dias, VL = ${brl(res.liberado)} e P = ${res.fgi.periodos} períodos de 30 dias até o último vencimento.`}</p><p>Pago à vista na liberação (item 2.1.3 do Anexo V), sem financiar o encargo. O cliente só paga se o agente repassar o custo. Garantia não é seguro de crédito.</p><p>{`Por que parece alto: o ECG é cobrado de uma vez, na liberação, pelo prazo inteiro da operação. Nesta simulação ele equivale a ${pct((res.fgi.ecg / res.liberado) * 100, 2)} do valor liberado. Com 80% de garantia, fica perto de 5% do valor liberado em quase qualquer prazo acima de 24 meses, porque o fator K cai quando o prazo aumenta.`}</p><p>Exemplos pela mesma fórmula (à vista):</p><ul>{ECG_EXEMPLOS.map(([v, g, n]) => { const a = ecgFgi({ valor: v, percentual: g, prazo: n, incorporar: false }); return <li key={`${v}-${g}-${n}`}>{`${brl(v)}, ${n} meses, ${g}% garantido: ${brl(a.ecg)} (${pct((a.ecg / v) * 100, 2)})`}</li> })}</ul><p>Os exemplos contam o prazo em períodos de 30 dias a partir do número de meses; na simulação, o P usa as datas, e o valor muda com o dia da liberação. Só FGI Tradicional: o FGI PEAC e a tabela comercial de cada banco têm regras próprias. A tabela de custo mensal do site do BNDES é ilustrativa e pode não coincidir com esta conta.</p></>, valor: brl(res.fgi.ecg), nota: <>{nf(res.fgi.percentual, 0)}% garantido · à vista</> },
     { id: 'total', rotulo: 'Pagamento final', ajuda: 'Valor financiado + juros totais + IOF + TAC + ECG do FGI (quando marcado): tudo o que o cliente paga nesta projeção TFC/TFB, sem outras tarifas ou seguros.', valor: brl(res.total), nota: null },
   ].filter(Boolean) : []
+  const alternatives = comparison?.ok ? comparison.alternatives : res ? [{ custo, result: res }] : []
+  const parcelDates = [...new Set(alternatives.flatMap(item => item.result.parcelas.map(row => row.vencimento)))].filter(Boolean).sort()
+  const historyItems = [
+    { id: 'tfc', name: `TFC · ${tfcCodigo}`, short: 'TFC', unit: '% a.a.', decimals: 2, list: tfcPts.map(([period, value]) => ({ period, value })) },
+    { id: 'tfb', name: `TFB · ${keyOf(faixa, liberacao)}`, short: 'TFB', unit: '% a.a.', decimals: 2, list: tfbPts.map(([period, value]) => ({ period, value })) },
+  ].filter(item => comparar || item.id === custo)
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
 
   const regrasAjuda = (
@@ -239,16 +241,19 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
           </div>
           <ul className="fm-pills" aria-label="Condições fixas"><li>Amortização <b>SAC</b></li><li>Liberação <b>até 90 dias</b></li><li>ECG <b>à vista{res?.fgi ? ` · ${brl(res.fgi.ecg)}` : ''}</b></li></ul>
           </div></section>
-          <button type="button" className="fm-show-result" disabled={!res} onClick={() => { const element = document.getElementById('fm-result'); element?.focus(); element?.scrollIntoView({ block: 'start' }) }}>{res ? <><span>{comparar && cets.every(Boolean) && cets.length ? 'Menor CET' : 'CET estimado'} <b>{comparar && cets.every(Boolean) && cets.length ? cetTexto(cets.reduce((best, item) => item.anual < best.anual ? item : best)) : cetTexto(cet)}</b></span><span>Ver resultado ↓</span></> : 'Ver resultado da simulação'}</button>
+          <button type="button" className="fm-show-result" disabled={!res} onClick={() => setAmpliada(true)}>{res ? <><span>{comparar && cets.every(Boolean) && cets.length ? 'Menor CET' : 'CET estimado'} <b>{comparar && cets.every(Boolean) && cets.length ? cetTexto(cets.reduce((best, item) => item.anual < best.anual ? item : best)) : cetTexto(cet)}</b></span><span>Abrir comparação ⤢</span></> : 'Ver resultado da simulação'}</button>
         </div>
       </article>
 
-      <div className={ampliada ? 'fm-results fm-zoomed' : 'fm-results'}>
+      <div className="fm-results">
+      <ExpandablePanel brand={<img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" />} title={comparar ? 'Cotação comparativa' : 'Cotação da operação'} open={ampliada} onOpenChange={setAmpliada} className="fm-result-workspace">
+      {res && <ExpandablePanel title="Dados básicos da operação"><dl className="fm-operation-summary">{[
+        ['Valor financiado', brl(res.liberado)], ['Prazo total', `${prazo} meses`], ['Carência', `${carencia} meses`],
+        ['Data da liberação', dmy(liberacaoText)], ['Porte e região', conditions.porte], ['Amortização', sistema.toUpperCase()],
+      ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></ExpandablePanel>}
+      <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
+        <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small>{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}</header>
 
-      {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
-      <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? (comparar ? 'Cotação comparativa ampliada' : 'Cotação da operação ampliada') : undefined}>
-        <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small>{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!res} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada(value => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
-        {res && <div className="fm-headline" aria-label="CET estimado e total">{(comparar ? (comparison?.ok ? comparison.alternatives.map((item, index) => ({ id: item.custo, cet: cets[index], total: item.result.total })) : []) : [{ id: custo, cet, total: res.total }]).map((item, index, all) => <div key={item.id} className={all.length > 1 && item.cet && all.every(other => other.cet) && item.cet.anual === Math.min(...all.map(other => other.cet.anual)) && all.some(other => other.cet.anual !== item.cet.anual) ? 'fm-best' : undefined}><span>{item.id.toUpperCase()} · CET estimado</span><b>{cetTexto(item.cet)}</b><small>Total {brl(item.total)}</small></div>)}</div>}
         <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
         {!res && <p className="cx-hint cx-pad" role="status">{funding?.mode !== 'inline' ? funding?.notice : r?.erros?.length ? r.erros.join(' ') : 'Complete os campos indicados para calcular.'}</p>}
@@ -281,22 +286,35 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
             </div>}
             {comparar && comparison?.ok && <details className="fm-comparison-details fm-details"><summary>Detalhes da comparação</summary><div className="cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th>{comparison.alternatives.map(item => <th scope="col" key={item.custo}>{item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[['Taxa final', 'taxa'], ['CET estimado a.m.', 'cet'], ['Juros totais', 'juros'], ['IOF', 'iof'], ['TAC à vista', 'tac'], ['ECG à vista', 'ecg']].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo}>{key === 'cet' ? cetTexto(cets[comparison.alternatives.indexOf(item)], 'mensal') : key === 'taxa' ? `${pct(item.result.taxa)} a.a.` : brl(key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])}</td>)}</tr>)}</tbody></table></div></details>}
             {!comparar && <p className="fm-reference-sources">{custo.toUpperCase()}: {pct(custoFinanceiro, 4)} a.a. · {rates[custo].manual ? 'Taxa manual' : `Cotação de ${dmy(quotes[custo]?.data)}`}</p>}
-            <details className="fm-details"><summary>Composição do resultado · {custo.toUpperCase()}</summary>
-            <div className="fm-grade">{quadros.map(quadro)}</div>
-            </details>
+            <ExpandablePanel title="Composição do resultado">
+              <div className="fm-parcel-scroll" role="region" tabIndex={0} aria-label="Composição das alternativas"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[
+                ['Juros totais', 'juros'], ['IOF', 'iof'], ['TAC à vista', 'tac'], ['ECG à vista', 'ecg'], ['Total projetado', 'total'],
+              ].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{alternatives.map(item => <td key={item.custo}>{brl(key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])}</td>)}</tr>)}</tbody></table></div>
+              <details className="fm-details"><summary>Detalhamento · {custo.toUpperCase()}</summary><div className="fm-grade">{quadros.map(quadro)}</div></details>
+            </ExpandablePanel>
             {spread != null && <p className="cx-hint cx-pad fm-rotulo">Equivale a <b>CDI + {pct(spread, 2)} a.a.</b>{ajuda('Equivale a CDI +', `Spread capitalizado sobre o CDI de hoje (${pct(cdi, 2)}) que dá a mesma taxa nominal: serve para comparar com o capital de giro.`)}</p>}
             {res.avisos.map((a) => <Estado key={a} tipo="aviso">{a}</Estado>)}
           </>
         )}
       </article>
 
+      {res && <ExpandablePanel title="Parcelas · opções lado a lado" className="fm-parcels-callout">
+        <p className="cx-hint">Datas projetadas · inclui juros na carência.{ajuda('Leitura das parcelas', 'Despesas à vista permanecem na composição e na memória completa. Traço significa ausência de parcela nessa data. Os valores A e B estão alinhados pelo vencimento para comparação.')}</p>
+        <div className="fm-parcel-scroll" role="region" tabIndex={0} aria-label="Datas e parcelas das alternativas"><table className="cx-matrix"><thead><tr><th scope="col">Data</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{parcelDates.map(date => <tr key={date}><th scope="row">{dmy(date)}</th>{alternatives.map(item => { const row = item.result.parcelas.find(p => p.vencimento === date); return <td key={item.custo}>{row ? brl(row.parcela) : '—'}</td> })}</tr>)}</tbody></table></div>
+      </ExpandablePanel>}
+      {funding?.mode === 'inline' && <ExpandablePanel title="Histórico dos indexadores" className="fm-indexers-callout">
+        <p className="cx-hint">Histórico, não projeção futura.{ajuda('Histórico dos indexadores', 'Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
+        {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
+        <ComparaSeries compactHelp items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: chartPreset, setPreset: setChartPreset, custom: chartCustom, setCustom: setChartCustom }} />
+      </ExpandablePanel>}
+
       <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
 
       {res && (
-        <details className="desk-panel cx-panel fm-fluxo-panel">
+        <ExpandablePanel title="Memória completa do fluxo"><details className="desk-panel cx-panel fm-fluxo-panel">
           <summary>Cronograma ilustrativo · {custo.toUpperCase()}</summary>
           <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Liberação em ${data(hoje)}. Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros de cada linha contam os dias corridos desde o vencimento anterior, sobre os dias do ano civil; não é memória contratual. O indexador (TFC ou TFB) é o da cotação em uso. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero pela premissa de recursos FINAME elegíveis. Na linha de liberação, "Total pago" soma as despesas à vista: IOF, TAC e ECG do FGI quando pago à vista.`)}</h3></header>
-          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário pela data da liberação: vencimento todo dia 15, ou no próximo dia útil, com juros por dias corridos. Não use como memória contratual.</p>
+          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário estimado. Não use como memória contratual.{ajuda('Calendário do fluxo', 'Calendário pela data da liberação: vencimento todo dia 15, ou no próximo dia útil, com juros por dias corridos.')}</p>
           <div className="cx-wrap fm-fluxo" role="region" aria-label="Fluxo parcela a parcela" aria-describedby="fm-calendario-hipotetico" tabIndex={0}>
             <table className="cx-matrix fm-tabela">
               <thead><tr><th scope="col">Nº</th><th scope="col">Vencimento</th><th scope="col">Saldo inicial</th><th scope="col">Juros pagos</th><th scope="col">Amortização</th><th scope="col">Parcela</th><th scope="col">Total pago</th><th scope="col">Saldo final</th></tr></thead>
@@ -307,10 +325,11 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
               <tfoot><tr><th scope="row">Total</th><td>{res.parcelas.length} meses</td><td>—</td><td>{brl(res.juros)}</td><td>{brl(res.financiado)}</td><td>{brl(res.juros + res.financiado)}</td><td>{brl(res.total)}</td><td>—</td></tr></tfoot>
             </table>
           </div>
-        </details>
+        </details></ExpandablePanel>
       )}
 
       <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
+      </ExpandablePanel>
       </div>
       </div>
 

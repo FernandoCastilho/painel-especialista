@@ -10,16 +10,19 @@ import { hookRenderer } from './helpers/hooks.mjs'
 import * as model from '../src/contaGarantida.js'
 
 const require = createRequire(import.meta.url)
+// Isolate product state tests from the expansion shell; dialog behavior has separate tests.
+const panelStub = ({ title, children }) => React.createElement('section', null, React.createElement('h3', null, title), children)
+
 const CalculatorHelp = ({ title, label }) => React.createElement('button', { type: 'button', 'aria-label': `Ajuda: ${title || label}`, 'aria-expanded': false }, '?')
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
-const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
+const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : (el.type === panelStub ? el.props.title : '') + textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
   const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
   for (const file of ['MoneyInput.jsx', 'ContaGarantida.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
-    runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name)) })
+    runInNewContext(code, { module, exports: module.exports, require: name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : deps[name]) ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name)) })
     deps['./' + file] = module.exports
   }
   let back = 0

@@ -220,16 +220,20 @@ async function proveLastColumn(region, file) {
         assert.equal(await page.locator('#fm-valor').inputValue(), '600.000,00')
         assert.equal(await page.locator('.fm-comparison table').innerText(), before, 'resultado preservado ao consultar taxas')
         assert.equal(await page.locator('#fm-compare').isChecked(), true)
-        const geometry = await page.locator('.fm-workspace').evaluate(element => { const left = element.children[0].getBoundingClientRect(), right = element.children[1].getBoundingClientRect(); return { left: left.x, right: right.x, width: document.documentElement.scrollWidth, viewport: innerWidth } })
+        const geometry = await page.locator('.fm-workspace').evaluate(element => { const left = element.children[0].getBoundingClientRect(), right = element.children[1].getBoundingClientRect(); return { formLeft: left.x, formBottom: left.bottom, formWidth: left.width, resultLeft: right.x, resultTop: right.top, resultWidth: right.width, width: document.documentElement.scrollWidth, viewport: innerWidth } })
         assert.ok(geometry.width <= geometry.viewport + 1, JSON.stringify(geometry))
         if (width === 1440) {
           const positions = await page.locator('.fm-group').evaluateAll(groups => groups.map(group => ({ x: group.getBoundingClientRect().x, y: group.getBoundingClientRect().y })))
-          // Layout de 11/11/2026 (revisto a pedido do Fernando): Operação e Custos lado a lado; os itens de Pagamento e a chave
-          // de comparação ficam dentro de Custos; resultado na coluna da direita, com pelo menos 400px.
+          // Disposição aprovada em 11/11/2026: comparação abaixo dos campos (não à direita).
+          // Fernando: 'Mas a disposição eu gostei. Não altere'. Fonte:
+          // https://chatgpt.com/c/6af3d517-23c8-83e9-b9af-b251205925d9?messageId=bbb2187c-1dbd-4bf1-a3dd-90a11b62b820
+          // Mantém Operação e Custos lado a lado e os itens de Pagamento dentro de Custos.
           assert.equal(positions.length, 2, 'só Operação e Custos como blocos de entrada')
-          assert.ok(positions[1].x > positions[0].x && Math.abs(positions[1].y - positions[0].y) < 1 && geometry.right > geometry.left, 'Operação e Custos na mesma linha e resultado à direita no desktop')
+          assert.ok(positions[1].x > positions[0].x && Math.abs(positions[1].y - positions[0].y) < 1, 'Operação e Custos na mesma linha no desktop')
+          assert.ok(geometry.resultTop >= geometry.formBottom - 1, 'resultado abaixo do formulário, sem sobreposição no desktop')
+          assert.ok(Math.abs(geometry.resultLeft - geometry.formLeft) < 1 && Math.abs(geometry.resultWidth - geometry.formWidth) < 1, 'resultado ocupa a mesma largura do formulário no desktop')
           assert.deepEqual(await page.locator('.fm-costs').evaluate(group => ['#fm-compare', '#fm-fgi', '#fm-per-l, .fm-field-per', '.fm-pills'].map(selector => !!group.querySelector(selector))), [true, true, true, true], 'comparação, FGI, juros na carência e condições fixas dentro de Custos')
-          assert.ok(await page.locator('.fm-results').evaluate(element => element.getBoundingClientRect().width) >= 400, 'coluna do resultado com pelo menos 400px no desktop')
+          assert.ok(await page.locator('.fm-results').evaluate(element => element.getBoundingClientRect().width) >= 400, 'resultado com pelo menos 400px no desktop')
         }
         await page.screenshot({ path: path.join(out, `${width}-${theme}-comparison.png`), fullPage: true })
         const comparisonRow = label => page.locator('.fm-comparison tbody tr, .fm-comparison-details tbody tr').filter({ has: page.getByRole('rowheader', { name: label, exact: true }) })

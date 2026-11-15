@@ -1,0 +1,11 @@
+.juros-graph-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:16px; align-items:start; }
+.juros-graph-card { min-width:0; border:1px solid var(--line,#36506a); border-radius:12px; padding:12px; scroll-margin-top:90px; }
+.juros-graph-open { display:flex; justify-content:space-between; width:100%; text-align:left; font-weight:700; font-size:1rem; min-height:44px; }
+.juros-graph-preview { cursor:zoom-in; min-width:0; }
+.juros-graph-preview .chart { margin:8px 0; }
+.juros-graph-preview .chart header { flex-wrap:wrap; }
+.juros-graph-preview .macro { padding:0; }
+.juros-graph-detail { min-height:44px; margin-top:8px; width:100%; }
+.juros-graph-card :is(svg,.chart) { max-width:100%; }
+.rate-trend { border-left:3px solid var(--accent,#0131ff); padding:8px 12px; margin:12px 0; }
+@media(min-width:1300px){.juros-graph-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
