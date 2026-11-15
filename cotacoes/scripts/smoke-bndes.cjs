@@ -197,7 +197,7 @@ const daily = (start, n, base, step, dec = 4) => Array.from({ length: n }, (_, i
       await noOverflow()
       // indexadores TR, TBF e TLP moram só em Cenários › Indexadores (não repetem em Juros); a TLP aponta para o histórico na aba BNDES
       // sem 'networkidle': as consultas periódicas de cotações mantêm a rede ocupada e estouravam o tempo no CI
-      await p.goto(base + '/#juros'); await p.locator('.desk-panel').first().waitFor({ state: 'attached' }); await p.locator('.executive-rates__table').first().waitFor()
+      await p.goto(base + '/#juros'); await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).waitFor(); await p.getByRole('button', { name: 'Ampliar Selic meta: ver tendência e tabela', exact: true }).waitFor()
       assert.equal(await p.locator('.idx-table').count(), 0, 'Juros não traz mais os indexadores')
       await p.goto(base + '/#cenarios/indexadores'); await p.locator('.idx-table').waitFor()
       assert.equal(await p.locator('.idx-table').count(), 1)

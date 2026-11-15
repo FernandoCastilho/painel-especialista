@@ -305,7 +305,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
       {funding?.mode === 'inline' && <ExpandablePanel title="Histórico dos indexadores" className="fm-indexers-callout">
         <p className="cx-hint">Histórico, não projeção futura.{ajuda('Histórico dos indexadores', 'Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
-        <ComparaSeries items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: chartPreset, setPreset: setChartPreset, custom: chartCustom, setCustom: setChartCustom }} />
+        <ComparaSeries compactHelp items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: chartPreset, setPreset: setChartPreset, custom: chartCustom, setCustom: setChartCustom }} />
       </ExpandablePanel>}
 
       <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>

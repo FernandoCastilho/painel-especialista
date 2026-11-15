@@ -47,3 +47,17 @@ test('secondary explanations move to help without hiding essential simulation li
   assert.match(conta, /<CalculatorHelp title="Como calculamos o CET"><p>Fluxo do CET:/)
   assert.match(conta, /Alíquotas consultadas em 05\/11\/2026; sem atualização automática/)
 })
+
+// Regression: the shared input padding must not override MoneyInput's prefix gutter.
+test('standard inputs retain the currency prefix gutter and section spacing', async () => {
+  const css = await source('CalculatorStandard.css')
+  assert.match(css, /\.calc-standard \.cx-field \.money-wrap > input \{ padding-left:42px; \}/)
+  assert.match(css, /gap:20px;/)
+})
+test('Finame history keeps instructions available through help', async () => {
+  assert.match(await source('FinameMateriais.jsx'), /<ComparaSeries compactHelp items=/)
+  const comparison = await source('BndesCompare.jsx')
+  assert.match(comparison, /compactHelp = false/)
+  assert.match(comparison, /<CalculatorHelp title="Como ler o histórico dos indexadores">/)
+  assert.match(comparison, /taxas são comparadas em pontos percentuais/)
+})

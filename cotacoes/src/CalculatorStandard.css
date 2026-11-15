@@ -3,7 +3,7 @@ main.app.app-calculators .cx.calc-standard {
   --cx-space:16px; --cx-primary-bg:#ff6200; --cx-primary-fg:#000d3c;
   --cx-select-bg:#0131ff; --cx-select-fg:#fff;
   --cx-line-strong:#60748f; --cx-result-bg:#000d3c;
-  gap:16px;
+  gap:20px;
 }
 :root[data-theme=dark] main.app.app-calculators .cx.calc-standard {
   --bg:#000d3c; --card:#0c2142; --surface-2:#142e50;
@@ -18,7 +18,7 @@ main.app.app-calculators .cx.calc-standard .cx-form {
 main.app.app-calculators .cx.calc-standard .cx-field { min-width:0; gap:6px; }
 main.app.app-calculators .cx.calc-standard :is(.cx-field-label,.fi-label,.cx-field > label,.cx-field > .cx-label) { min-height:28px; }
 main.app.app-calculators .cx.calc-standard :is(.cx-field input:not([type=checkbox]),.cx-field select,.cx-iof > select) { min-height:44px; padding:8px 10px; font-size:.9375rem; }
-main.app.app-calculators .cx.calc-standard .money-wrap > input { padding-left:42px; }
+main.app.app-calculators .cx.calc-standard .cx-field .money-wrap > input { padding-left:42px; }
 main.app.app-calculators .cx.calc-standard .cx-matrix :is(td,th) { padding:9px 10px; font-size:.875rem; }
 main.app.app-calculators .cx.calc-standard :is(.cg-kpis,.desconto-kpis) { gap:12px; padding:16px; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); }
 main.app.app-calculators .cx.calc-standard :is(.cg-kpis,.desconto-kpis) > div { padding:12px; }
