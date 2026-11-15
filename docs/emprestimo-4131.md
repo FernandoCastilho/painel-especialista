@@ -134,9 +134,28 @@ Pedido de Fernando em 14/11/2026: a tela deve seguir a cotação de banco, sem e
 - **Vigência da alíquota de 3,5%**: redação do Decreto 12.499/2025, sustada pelo Decreto Legislativo 176/2025 e restabelecida por decisão cautelar do STF na ADC 96, de 16/07/2025. Segundo fontes de terceiros, sem referendo do Plenário nem julgamento de mérito até 01/11/2026.
 - **A conta da calculadora** usa a média ponderada definida no ato: soma(amortização × dias corridos desde o desembolso) ÷ principal. Na fronteira entre 364 e 365 dias a tela decide pelo prazo exato, mostra o número arredondado para cima e avisa (ver "Limites desta ampliação").
 
+## Conferência de vigência das normas (15/11/2026)
+Pedido de Fernando: conferir as leis atualizadas, para não haver nada desatualizado nos cálculos. Resultado: nenhuma alíquota ou regra usada nas contas mudou.
+
+| O que a calculadora usa | Norma | Onde foi conferido em 15/11/2026 | Situação |
+|---|---|---|---|
+| IOF-câmbio de 3,5% com prazo médio até 364 dias; zero acima | Decreto 6.306/2007, art. 15-B, XI e XII | Texto atualizado da Câmara, baixado no dia (idêntico ao de 14/11) | Em vigor, com remissão ao Decreto Legislativo 176/2025 e à ADC 96 |
+| IOF do capital de giro (comparação): 0,0082% ao dia, teto de 365 dias, mais 0,38% | Decreto 6.306/2007, art. 7º, I, b, e §§ 1º e 15 | Mesmo texto da Câmara | Em vigor, com a mesma remissão |
+| Cálculo do prazo médio | ADI RFB 41/2011 | Site de normas da Receita | Vigente, sem alteração |
+| IR na fonte de 15% sobre os juros | RIR/2018, art. 760; IN RFB 1.455/2014, art. 9º | IN no site da Receita (a alteração de 2025, IN RFB 2.271, não trata de juros de empréstimo). RIR não relido nesta data | IN vigente |
+| IOF zero sobre derivativos | Decreto 6.306, art. 32-C, § 15; IN RFB 1.969/2020, art. 18 | Site da Receita (alterações de 2025 e 2026, IN RFB 2.286 e 2.334, tratam de outros temas) | Vigente |
+| IR sobre swap (22,5% a 15%) e NDF (0,005%) | IN RFB 1.585/2015, arts. 46, 50, 63 e 70 | Site da Receita | Vigente; última alteração em 2019 |
+| Declaração e remessas do crédito externo | Res. BCB 278/2022 | Site do Banco Central, versão atualizada em 30/09/2026 | Vigente. As Resoluções BCB 521/2025 e 575/2026 mudaram redações (ativos virtuais; prazo da declaração até o ingresso dos recursos), sem efeito nas contas |
+| PIS/Cofins de 4,65% sobre ganho financeiro (fora da conta) | Decreto 8.426/2015 | Fontes de terceiros | Vale em 2026; extinto em 2027 pela reforma tributária |
+
+Também foram vistas as ementas dos atos e decisões da Receita de 2025 e 2026 sobre IOF de câmbio (busca no site de normas): nenhuma trata de empréstimo externo ou de prazo médio.
+
 ## Pontos não confirmados em fonte oficial
 - IR na fonte sobre flat e fiança pagos ao exterior: o art. 760 do RIR/2018 cita comissões, mas a aplicação a cada tipo de comissão deve ser confirmada com o tributário.
-- IOF de 3,5%: vigente por liminar do STF de 16/07/2025 (ADC 96, ADIs 7.827 e 7.839). Sem notícia de julgamento do Plenário até 01/11/2026, segundo fonte de terceiros.
+- IOF de 3,5% e alíquota diária de 0,0082% do capital de giro: vigentes por liminar do STF de 16/07/2025 (ADC 96, ADIs 7.827 e 7.839). Sem notícia de julgamento do Plenário até novembro de 2026, segundo fontes de terceiros; o portal do STF não pôde ser aberto nesta sessão. Se a liminar cair, volta a redação anterior do decreto e as contas precisam ser revistas (segundo fontes de terceiros, a regra anterior do empréstimo externo usava prazo médio de até 180 dias, e a alíquota diária do capital de giro era menor).
+- RIR/2018, arts. 760 e 786: lidos em 11/11/2026; não relidos em 15/11 (o site do Planalto não abriu). Não foi localizada alteração.
+- Lei 15.329/2026: segundo resumo de busca, trata da retenção do IR sobre juros de compra de bens a prazo, não de empréstimo. Não foi lida.
+- PIS/Cofins a partir de 2027: extinção pela reforma tributária segundo fontes de terceiros; tratamento do ganho financeiro na CBS não verificado.
 - Arredondamento do prazo médio: o Ato Declaratório Interpretativo RFB 41/2011 não traz critério; a fórmula publicada na página do Diário Oficial não foi vista. Não foi localizada regra oficial sobre fração de dia.
 - As Soluções de Consulta citadas foram lidas pela ementa e tratam da regra anterior (6% e prazos maiores); a aplicação à regra atual (3,5% e 364 dias) é por mesma estrutura, sem decisão específica localizada.
 - IOF zero na saída: o inciso XI fala em saída de recursos referentes a empréstimos externos, sem citar juros. A leitura de que o pagamento de juros também tem alíquota zero não foi confirmada em texto oficial.

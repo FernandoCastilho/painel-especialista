@@ -4,6 +4,7 @@
 export const ENTRIES = [
   { date: '15/11/2026', items: [
     'Calculadoras > Empréstimo externo (4131), Regras e fontes: o ato da Receita sobre o prazo médio (ADI RFB 41/2011) foi lido no site de normas da Receita e está em vigor. Confirmado em decisão da Receita que os juros não entram no prazo médio. Entraram as regras de renovação, repactuação e conversão do empréstimo em capital. A conta não mudou.',
+    'Vigência das normas da 4131 reconferida em 15/11/2026: IOF do câmbio e do capital de giro, IR na fonte, swap, NDF e a norma do Banco Central sobre crédito externo (atualizada em 30/09/2026) seguem como a calculadora usa. Nenhuma alíquota mudou. A regra da declaração ao Banco Central ganhou o prazo: até a entrada dos recursos.',
   ] },
   { date: '14/11/2026', resumo: 'Empréstimo externo (4131) no formato da cotação de banco: principal em reais, parcelas, taxa all-in e custo efetivo com NDF', items: [
     'Calculadoras > Empréstimo externo (4131): a tela passou a seguir o formato das cotações de banco de 4131 com NDF. São seis campos: principal em reais, moeda (dólar ou euro), cotação de partida, parcelas mensais, taxa all-in e data. O valor na moeda aparece logo depois da moeda, já convertido. O resto já vem no padrão: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência e IR dentro da taxa.',
