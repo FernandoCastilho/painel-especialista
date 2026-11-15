@@ -14,7 +14,7 @@ const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof
 async function setup(t) {
   const listeners = new Map(), destinations = []
   const document = { activeElement: null, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) }
-  const targets = Array.from({ length: 6 }, (_, i) => ({ id: i, focus() { document.activeElement = this } }))
+  const targets = Array.from({ length: 5 }, (_, i) => ({ id: i, focus() { document.activeElement = this } }))
   const triggerTarget = { focus() { document.activeElement = this } }
   const container = { contains: target => target === triggerTarget || targets.includes(target) }
   const menuTarget = { querySelectorAll: () => targets }
@@ -50,10 +50,10 @@ test('mobile More names its menu, focuses first item and supports arrow/Home/End
   assert.equal(a.document.activeElement, a.targets[0], 'opening menu must focus its first item')
   assert.equal(a.trigger().props['aria-controls'], a.menu().props.id)
   assert.equal(a.menu().props['aria-labelledby'], a.trigger().props.id)
-  assert.equal(a.menuItems().length, 6)
+  assert.equal(a.menuItems().length, 5)
   assert.ok(a.menuItems().every(n => n.props.tabIndex === -1))
   assert.equal(a.menuItems().filter(n => n.props['aria-current'] === 'page').length, 1)
-  for (const [value, target] of [['ArrowDown', 1], ['End', 5], ['ArrowDown', 0], ['ArrowUp', 5], ['Home', 0]]) {
+  for (const [value, target] of [['ArrowDown', 1], ['End', 4], ['ArrowDown', 0], ['ArrowUp', 4], ['Home', 0]]) {
     const event = key(value); a.menu().props.onKeyDown(event)
     assert.equal(event.prevented, true)
     assert.equal(a.document.activeElement, a.targets[target])
@@ -68,7 +68,7 @@ test('mobile More names its menu, focuses first item and supports arrow/Home/End
 
 test('mobile More supports repeated keyboard opening, Tab exit and selecting a destination', async t => {
   const a = await setup(t)
-  for (const [value, target] of [['ArrowUp', 5], ['ArrowDown', 0]]) {
+  for (const [value, target] of [['ArrowUp', 4], ['ArrowDown', 0]]) {
     const event = key(value); a.trigger().props.onKeyDown(event); await a.render.settle()
     assert.equal(event.prevented, true)
     assert.equal(a.document.activeElement, a.targets[target])

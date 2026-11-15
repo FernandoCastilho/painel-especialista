@@ -45,6 +45,8 @@ import { centralMaxAge } from '../src/useQuotes.js'
 test('validade central acompanha janelas de coleta, inclusive fim de semana', () => {
   const min = 60000
   assert.equal(centralMaxAge(Date.parse('2026-10-23T15:00:00Z')), 45 * min)
+  assert.equal(centralMaxAge(Date.parse('2026-11-11T12:04:59Z')), 75 * min)
+  assert.equal(centralMaxAge(Date.parse('2026-11-11T12:05:00Z')), 45 * min)
   assert.equal(centralMaxAge(Date.parse('2026-10-23T23:00:00Z')), 75 * min)
   const saturday = Date.parse('2026-10-24T15:00:00Z')
   const lastFriday = Date.parse('2026-10-24T02:07:00Z')

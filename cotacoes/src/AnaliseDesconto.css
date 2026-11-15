@@ -6,6 +6,7 @@
 .desconto-kpis > div { display:flex; flex-direction:column; gap:5px; padding:12px; border:1px solid var(--line); background:var(--surface-2); min-width:0; }
 .desconto-kpis span, .desconto-kpis small { color:var(--mut); font-size:.75rem; }
 .desconto-kpis b { font-size:1.15rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.desconto-paydate { margin:0; align-self:end; color:var(--mut); font-size:.75rem; }
 .cx-desconto .cx-field select { width:100%; min-width:0; min-height:44px; padding:8px 10px; color:var(--fg); background:var(--bg); border:1px solid var(--line); font:inherit; font-size:.9rem; }
 .cx-desconto .cx-field select:focus-visible { outline:2px solid var(--amber, #ffb000); outline-offset:0; }
 .cx-desconto .cx-field select[aria-invalid="true"] { border-color:var(--down); }

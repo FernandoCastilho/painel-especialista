@@ -22,7 +22,7 @@ const phraseIn = (title, phrase) => (` ${plain(title)} `).includes(` ${plain(phr
 const conceptMention = (title, alias) => {
   if (!phraseIn(title, alias)) return false
   // Short financial acronyms also name institutions or unrelated subjects.
-  return !/^(cet|cri|cra|cds)$/i.test(alias) || /credit|custo|taxa|juros|banc|recebive|emiss|divid|financ|invest|mercado|debentur|fund|capta|risco/.test(plain(title))
+  return !/^(cet|cri|cra|cds|acc)$/i.test(alias) || /credit|custo|taxa|juros|banc|recebive|emiss|divid|financ|invest|mercado|debentur|fund|capta|risco/.test(plain(title))
 }
 const shortId = value => { let n = 2166136261; for (const char of value) n = Math.imul(n ^ char.charCodeAt(0), 16777619); return (n >>> 0).toString(36) }
 
@@ -48,7 +48,7 @@ const CONCEPT_ALIASES = {
   debenture: ['debênture', 'debêntures'], 'nota-comercial': ['nota comercial', 'notas comerciais'],
   fidc: ['FIDC', 'fundos de direitos creditórios'], cri: ['certificado de recebíveis imobiliários', 'CRI'],
   cra: ['certificado de recebíveis do agronegócio', 'CRA'], facil: ['regime FÁCIL'],
-  drawback: ['drawback'], 'lei-de-maquila': ['maquila'], inflacao: ['inflação', 'IPCA'],
+  acc: ['adiantamento sobre contrato de câmbio', 'adiantamento de contrato de câmbio', 'ACC'], drawback: ['drawback'], 'lei-de-maquila': ['maquila'], inflacao: ['inflação', 'IPCA'],
   focus: ['boletim Focus', 'relatório Focus'], 'commodities-e-cambio': ['câmbio', 'commodities', 'dólar'],
   'ic-br': ['IC-Br'], combustiveis: ['combustíveis', 'gasolina', 'diesel', 'petróleo'],
 }
@@ -238,10 +238,10 @@ export function buildKnowledgeGraph({ sectorNews, news, temas, curadoria, archiv
     }
     if (!matches.length) {
       pendingNewsCount++
-      addNode({ id: KNOWLEDGE_PENDING_ID, label: 'Classificação pendente', title: 'Notícias com classificação pendente', type: 'sector', subtype: 'classification', group: 'Organização das notícias', summary: 'Notícias válidas na janela de sete dias cujo assunto ainda não tem correspondência objetiva com os setores ou conceitos cadastrados. Não é um setor econômico.' })
-      matches.push([KNOWLEDGE_PENDING_ID, 'A classificar', 'Publicação válida e recente, mas sem correspondência temática objetiva nas regras atuais. Esta ligação indica classificação pendente, não relação com um setor ou conceito.'])
+      addNode({ id: KNOWLEDGE_PENDING_ID, label: 'Outras notícias', title: 'Notícias ainda não ligadas a um setor', type: 'sector', subtype: 'classification', group: 'Organização das notícias', summary: 'Notícias válidas na janela de sete dias cujo assunto ainda não tem correspondência objetiva com os setores ou conceitos cadastrados. Não é um setor econômico.' })
+      matches.push([KNOWLEDGE_PENDING_ID, 'Outras notícias', 'Publicação válida e recente que ainda não foi ligada a um setor ou conceito. Esta ligação não indica relação com um setor.'])
     } else classifiedNewsCount++
-    addNode({ id, label: item.title, title: item.title, type: 'news', group: 'Notícias · 7 dias', classification: matches[0][0] === KNOWLEDGE_PENDING_ID ? 'pending' : 'classified', summary: matches[0][0] === KNOWLEDGE_PENDING_ID ? 'Classificação temática pendente. Consulte a fonte para avaliar o assunto.' : 'Publicação conectada por assunto. Consulte a fonte para avaliar o contexto.', href: item.link, source: item.source, sourceUrl: item.sourceUrl, publishedAt: item.publishedAt, datePrecision: item.datePrecision, t: item.t, licenseUrl: item.licenseUrl })
+    addNode({ id, label: item.title, title: item.title, type: 'news', group: 'Notícias · 7 dias', classification: matches[0][0] === KNOWLEDGE_PENDING_ID ? 'pending' : 'classified', summary: matches[0][0] === KNOWLEDGE_PENDING_ID ? 'Ainda não ligada a um setor. Consulte a fonte para avaliar o assunto.' : 'Publicação conectada por assunto. Consulte a fonte para avaliar o contexto.', href: item.link, source: item.source, sourceUrl: item.sourceUrl, publishedAt: item.publishedAt, datePrecision: item.datePrecision, t: item.t, licenseUrl: item.licenseUrl })
     for (const [target, label, reason] of matches) addLink(id, target, label, reason)
   }
   // Archive generation is only an assembly time, never a new source collection.

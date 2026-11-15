@@ -4,7 +4,7 @@ import { GROUPS } from './moedas.js'
 import { creditStats } from './inadimplencia.js'
 // Pesquisa local: não lê campos, armazenamento pessoal ou páginas de terceiros.
 export const normalizeSearch = text => String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR')
-export const SEARCH_SECTIONS = Object.fromEntries(APP_SECTIONS.filter(section => !section.oculto).map(({ id, label }) => [id, label]))
+export const SEARCH_SECTIONS = Object.fromEntries(APP_SECTIONS.filter(section => !section.oculto || section.id === 'calculadora').map(({ id, label }) => [id, label]))
 export const SEARCH_SOURCES = [
   ['quotes.json','resumo','Cotações de câmbio'], ['history.json','resumo','Histórico de câmbio'], ['intraday.json','resumo','Câmbio intradiário'],
   ['macro.json','juros','Juros e projeções'], ['curves.json','juros','Curvas de juros'], ['curves-history.json','juros','Histórico das curvas'],
@@ -14,8 +14,8 @@ export const SEARCH_SOURCES = [
   ['market-indicators.json','cenarios/atividade','Atividade e emprego'], ['indicator-history.json','cenarios/atividade','Histórico de atividade'],
   ['commodities.json','cenarios/commodities','Commodities'], ['commodities-brl.json','cenarios/commodities','Commodities em reais'],
   ['oil.json','cenarios/commodities','Petróleo Brent'], ['fuels.json','cenarios/commodities','Combustíveis'],
-  ['freight.json','cenarios/frete','Frete marítimo'], ['freight-jp.json','cenarios/frete','Frete marítimo do Japão'],
-  ['ipca.json','cenarios/inflacao','IPCA'], ['ipca-groups.json','cenarios/inflacao','IPCA por grupos'], ['divida.json','cenarios/fiscal','Dívida bruta'],
+  ['freight.json','cenarios/commodities/frete','Frete marítimo'], ['freight-jp.json','cenarios/commodities/frete','Frete marítimo do Japão'],
+  ['ipca.json','cenarios/inflacao','IPCA'], ['ipca-groups.json','cenarios/inflacao','IPCA por grupos'], ['divida.json','cenarios/inflacao/fiscal','Dívida bruta'],
   ['indexadores.json','cenarios/indexadores','Indexadores'], ['bndes.json','bndes','Taxas do BNDES'], ['moedas.json','bndes/moedas','Moedas contratuais'],
   ['policy-rates.json','juros','Taxas dos bancos centrais'], ['estr.json','juros','Taxa €STR'], ['euro-curve.json','juros','Curva de juros do euro'],
   ['feriados.json','feriados','Feriados'], ['recado.json','resumo','Recado publicado'], ['insumos-precos.json','setores/cobre','Preços de insumos'], ['indices.json','resumo','Índices de mercado'],

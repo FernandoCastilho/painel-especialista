@@ -3,6 +3,8 @@ import { chartLinePath } from './chartLinePath.js'
 import ChartComparison from './ChartComparison.jsx'
 import { useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
+import { focoPorTeclado } from './chartToque.js'
+import { rotuloData } from './chartEixo.js'
 import { niceTicks, valueAt } from './multiSeries.js'
 
 const H = 260
@@ -50,7 +52,7 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
   const bx = hx + 12 + bw > width - 4 ? hx - 12 - bw : hx + 12
   return (
     <ChartComparison resetKey={resetKey} onRangeChange={setSelection} series={comparisonView} history={comparisonHistory} frequency={frequency} rate={rate} unavailable={compareUnavailable}><div className="ml">
-      <svg className="hist-svg ml-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} aria-label={ariaLabel} onKeyDown={onKey} onFocus={() => setHover(t0)} onBlur={() => setHover(null)}
+      <svg className="hist-svg ml-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} aria-label={ariaLabel} onKeyDown={onKey} onFocus={(e) => { if (focoPorTeclado(e)) setHover(t0) }} onBlur={() => setHover(null)}
         onMouseMove={onMove} onMouseLeave={() => setHover(null)} onTouchMove={(e) => onMove(e.touches[0] && { currentTarget: e.currentTarget, clientX: e.touches[0].clientX })}>
         {ticks.map((v) => (
           <g key={v}>
@@ -58,7 +60,7 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
             <text x={M.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="var(--mut)">{fmt(v, true)}</text>
           </g>
         ))}
-        {xTicks.map((t, i) => <text key={i} x={x(t)} y={H - 8} textAnchor={i === 0 ? 'start' : i === nx - 1 ? 'end' : 'middle'} fontSize="11" fill="var(--mut)">{dmy(t)}</text>)}
+        {xTicks.map((t, i) => <text key={i} x={x(t)} y={H - 8} textAnchor={i === 0 ? 'start' : i === nx - 1 ? 'end' : 'middle'} fontSize="11" fill="var(--mut)">{rotuloData(t, { de: t0, ate: t1, timeZone: 'UTC' })}</text>)}
         {series.map((s) => s.points.length > 0 && <path key={s.key} className="ml-line" data-key={s.key} d={chartLinePath(s.points, x, y, 'v', s.stepped)} fill="none" stroke={s.color} strokeWidth={series.length > 10 ? 1.4 : 2} strokeLinejoin="round" />)}
         {hoverAt != null && (
           <g pointerEvents="none">

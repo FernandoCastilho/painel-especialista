@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { cgDate, cgAddDays, cgToday, cgInitialForm, parseContaGarantidaForm, simulateContaGarantida } from '../src/contaGarantida.js'
+import { cgDate, cgAddDays, cgToday, cgInitialForm, parseContaGarantidaForm, simulateContaGarantida, contaGarantidaCet, CG_CET_DAYS } from '../src/contaGarantida.js'
 
 const close = (actual, expected, tolerance = 1e-8) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`)
 const event = (date, draw = 0, payment = 0) => ({ date, draw, payment })
@@ -181,4 +181,52 @@ test('somatórios do mês reconciliam com totais e balanço de principal', () =>
 test('feriados inativos não bloqueiam dias corridos após troca de convenção', () => {
   assert.equal(parseContaGarantidaForm(form({ dayCount: 'calendar', holidays: 'inválido' })).result.ok, true)
   assert.equal(parseContaGarantidaForm(form({ dayCount: 'business', holidays: 'inválido' })).result, null)
+})
+
+// CET pela Res. CMN 4.881/2020, art. 6º (resumo do painel): 30 dias sobre o limite pactuado, dias corridos/365.
+const cetByHand = (net, payment, days) => Math.pow(payment / net, 365 / days) - 1
+test('CET do art. 6º: limite vazio não gera CET e não muda o resultado do período', () => {
+  const r = parseContaGarantidaForm(form())
+  assert.equal(r.cet, null)
+  assert.equal(r.params.limit, null)
+  const withLimit = parseContaGarantidaForm(form({ limit: '250.000,00' }))
+  assert.deepEqual(withLimit.result.totals, r.result.totals)
+  assert.equal(withLimit.cet.ok, true)
+})
+test('CET do art. 6º: IOF adicional na liberação, limite + juros + IOF diário no 30º dia, recálculo independente', () => {
+  assert.equal(CG_CET_DAYS, 30)
+  const { cet } = parseContaGarantidaForm(form({ limit: '100.000,00' }))
+  // Juros proporcionais: 3% a.m. ÷ 30 × 30 dias corridos; IOF diário 0,0082% × 30 dias; adicional 0,38% sobre o limite.
+  const interest = 100000 * 0.03, iof = 100000 * 0.000082 * 30 + 100000 * 0.0038
+  close(cet.interest, interest, 1e-6); close(cet.iof, iof, 1e-6)
+  // O adicional de 0,38% é cobrado na utilização: sai do líquido (99.620); o pagamento do 30º dia é 100.000 + 3.000 + 246.
+  close(cet.net, 99620, 1e-6); assert.equal(cet.end, '2026-12-05')
+  close(cet.payment, 103246, 1e-6)
+  close(cet.annual, cetByHand(99620, 103246, 30), 1e-9)
+  close(cet.monthly, Math.pow(1 + cetByHand(99620, 103246, 30), 1 / 12) - 1, 1e-9)
+  assert.equal((cet.annual * 100).toFixed(2), '54.49'); assert.equal((cet.monthly * 100).toFixed(2), '3.69')
+  // Valor presente do pagamento ao CET devolve o líquido liberado.
+  close(cet.payment / (1 + cet.annual) ** (30 / 365), 99620, 1e-6)
+})
+test('CET do art. 6º segue a contagem de dias úteis da tela e independe do valor utilizado', () => {
+  const a = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business', holidays: '2026-11-20' })).cet
+  const b = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business', holidays: '2026-11-20', amount: '1.000' })).cet
+  // De 05/11/2026 a 04/12/2026: 22 dias de segunda a sexta, menos 20/11 (nacional e também informado) = 21 dias com juros.
+  const payment = 500000 + 500000 * 0.02 / 30 * 21 + 500000 * 0.000082 * 30
+  close(a.payment, payment, 1e-6); close(a.annual, cetByHand(500000 - 500000 * 0.0038, payment, 30), 1e-9)
+  assert.deepEqual(a, b)
+  // Sem digitar o feriado, o calendário nacional do painel já tira 20/11: mesmo CET.
+  const c = parseContaGarantidaForm(form({ limit: '500.000', rate: '2', dayCount: 'business' })).cet
+  assert.deepEqual(c, a)
+})
+test('CET do art. 6º: limite inválido bloqueia, saldo acima do limite avisa, Simples respeita o valor contratual', () => {
+  assert.match(parseContaGarantidaForm(form({ limit: '0' })).errors.limit, /maior que zero/)
+  assert.ok(parseContaGarantidaForm(form({ limit: '1,2,3' })).errors.limit)
+  const over = parseContaGarantidaForm(form({ limit: '50.000' }))
+  assert.ok(over.warnings.some(w => /passa do limite contratado/.test(w)))
+  assert.equal(contaGarantidaCet({ limit: 0, start: '2026-11-05', rate: 3 }).ok, false)
+  const simples = parseContaGarantidaForm(form({ amount: '10.000', taxProfile: 'simples', eligible: true, operationValue: '30.000', limit: '30.000' }))
+  assert.equal(simples.cet.ok, true); close(simples.cet.dailyIof, 30000 * 0.0000274 * 30, 1e-6)
+  const above = parseContaGarantidaForm(form({ amount: '10.000', taxProfile: 'simples', eligible: true, operationValue: '30.000', limit: '40.000' }))
+  assert.equal(above.cet.ok, false); assert.match(above.cet.error, /valor contratual/)
 })

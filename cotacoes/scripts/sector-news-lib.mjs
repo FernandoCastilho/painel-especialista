@@ -60,6 +60,9 @@ export function extractGovArticleLinks(html, source) {
     let link
     try { link = canonicalNewsUrl(new URL(attr.href, source.url).href) } catch { continue }
     if (!link?.startsWith(source.articlePrefix) || new URL(link).search || title.length < 12) continue
+    // Link com espaço ou caractere codificado (%) é recusado pelo transporte antes de qualquer acesso;
+    // ignorá-lo aqui evita suspender a fonte inteira por um endereço malformado do site.
+    if (/[%@\\\s?#]/u.test(link)) continue
     if (new URL(link).pathname.split('/').pop().length < 16 || /\/(?:RSS|@@|search|login)(?:[/?]|$)/i.test(link)) continue
     if (source.topics.some(id => sectorNewsItemMatchesTopic(id, { title, link }))) found.set(link, title)
   }

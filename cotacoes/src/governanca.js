@@ -10,7 +10,7 @@ export const CRONS = {
   pages: ['17 3-23 * * 1-5', '17 0-2 * * 2-6', '30 11 * * 1,2', '0 11,18 * * *'],
   focus: ['0,30 12-15 * * 1,2', '0 16 * * 1,2'],
   'quotes-watch': ['*/15 12-21 * * 1-5', '7,22,37,52 12-21 * * 1-5'],
-  quotes: ['20 12 * * 1-5', '20 15 * * 1-5', '50 17 * * 1-5', '7 3-12 * * 1-5', '7 21-23 * * 1-5', '7 0-2 * * 2-6'],
+  quotes: ['5 12 * * 1-5', '20 15 * * 1-5', '50 17 * * 1-5', '7 3-11 * * 1-5', '7 21-23 * * 1-5', '7 0-2 * * 2-6'],
 }
 
 // Idade máxima, em horas, antes de o app marcar a fonte como "Atrasado" (a pausa semanal não apaga atrasos anteriores).
@@ -22,7 +22,7 @@ const HORA = 'De hora em hora nos dias úteis (0h17 às 23h17)'
 export const FONTES = [
   { id: 'trends', chaves: ['trends'], nome: 'Google Trends: Em alta no Brasil', origem: 'Google Trends (RSS oficial)', coleta: 'Diariamente às 08h e 15h de Brasília; sujeito à fila do GitHub Actions', muda: 'Buscas com aumento recente. Não atualiza os snapshots históricos dos termos selecionados', atraso: `${ATRASO_H.trends} h` },
   {id:'heavy-vehicles',chaves:['heavy-vehicles'],nome:'Veículos pesados: caminhões e ônibus',origem:'ANFAVEA; Renavam/Senatran',coleta:'Conferência diária em dias úteis, com retenção em falha ou mudança de formato',muda:'Publicação mensal da Carta da ANFAVEA; valores sujeitos a revisão',atraso:`${ATRASO_H['heavy-vehicles']} h`},
-  { id: 'cambio', chaves: ['quotes'], nome: 'Câmbio (USD, EUR, JPY, CNH e EUR/USD)', origem: 'AwesomeAPI e BCB', coleta: 'A cada 5 min no pregão (9h30 às 18h, seg–sex), com vigia (duas agendas e conferência ao fim de cada coleta ou publicação) que redispara a coleta se ela passar de 15 min parada; 1 vez por hora de 0h07 às 9h07 e de 18h07 às 23h07, seg–sex; sem coleta no fim de semana', muda: 'Continuamente no pregão', atraso: 'Acima do esperado para o horário (cerca de 1 h fora do pregão)' },
+  { id: 'cambio', chaves: ['quotes'], nome: 'Câmbio (USD, EUR, JPY, CNH e EUR/USD)', origem: 'AwesomeAPI e BCB', coleta: 'A cada 5 min na janela intensiva (9h05 às 18h, seg–sex), com vigia (duas agendas e conferência ao fim de cada coleta ou publicação) que redispara a coleta se ela passar de 15 min parada; 1 vez por hora de 0h07 às 8h07 e de 18h07 às 23h07, seg–sex; sem coleta no fim de semana', muda: 'Continuamente no pregão', atraso: 'Acima do esperado para o horário (cerca de 1 h fora do pregão)' },
   { id: 'macro', chaves: ['macro'], nome: 'CDI, Selic, PTAX, SOFR e Focus', origem: 'Banco Central, NY Fed', coleta: HORA, muda: 'CDI, PTAX e SOFR a cada dia útil; Selic a cada reunião do Copom (cerca de 6 semanas); Focus toda segunda às 8h30; se ainda não saiu, nova tentativa de 30 em 30 min até 13h (10 tentativas); o mesmo na terça, para quando segunda é feriado', atraso: `${ATRASO_H.macro} h` },
   { id: 'curves', chaves: ['curves'], nome: 'Curvas DI x pré, cupom cambial e Treasuries', origem: 'B3, Tesouro dos EUA', coleta: HORA, muda: 'Uma vez por dia útil, com o ajuste do dia', atraso: `${ATRASO_H.curves} h` },
   { id: 'news', chaves: ['news'], nome: 'Notícias', origem: 'Fontes públicas de notícias', coleta: HORA, muda: 'Ao longo do dia', atraso: `${ATRASO_H.news} h` },
@@ -46,7 +46,7 @@ export const FONTES = [
 
 // Resumo no topo do painel: a resposta curta para "tudo é atualizado de 5 em 5 minutos?".
 export const RESUMO = [
-  'Só o câmbio é coletado de 5 em 5 minutos, e apenas no pregão (9h30 às 18h, segunda a sexta, horário de Brasília). Fora do pregão, 1 vez por hora em dias úteis; no fim de semana, nada.',
+  'Só o câmbio é coletado de 5 em 5 minutos, na janela intensiva (9h05 às 18h, segunda a sexta, horário de Brasília). Fora do pregão, 1 vez por hora em dias úteis; no fim de semana, nada.',
   'Juros, €STR, curvas, BNDES, petróleo, commodities, combustíveis, notícias e calendário são coletados de hora em hora nos dias úteis. IPCA e dívida bruta, no máximo a cada 6 horas; frete marítimo, 1 vez por dia.',
   'Coletar não é o mesmo que o número mudar: o dado só muda quando o órgão publica. O CDI e a curva DI mudam 1 vez por dia útil, a Selic a cada reunião do Copom (cerca de 6 semanas), e o IPCA e a dívida bruta 1 vez por mês. O CDI pode ser coletado 20 vezes no dia e mostrar o mesmo valor em todas.',
 ]

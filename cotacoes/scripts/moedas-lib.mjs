@@ -16,6 +16,9 @@ export const MOEDAS_SERIES = [
   { id: '236', name: 'TLP-IPCA', kind: 'pct', unit: '% no mês' },
   { id: 'TR1', name: 'TFBTR60.90', kind: 'rate', unit: '% a.a.' },
   { id: 'TR2', name: 'TFBTR120.90', kind: 'rate', unit: '% a.a.' },
+  { id: 'TD1', name: 'TFBD24.120', kind: 'rate', unit: '% a.a.' },
+  { id: 'TD2', name: 'TFBD72.120', kind: 'rate', unit: '% a.a.' },
+  { id: 'TD3', name: 'TFBD120.120', kind: 'rate', unit: '% a.a.' },
 ]
 export const MOEDAS_CATALOG = [
   ...TFC_SERIES.map(([id, name]) => ({ id, name, group: 'tfc', kind: 'rate', unit: '% a.a.' })),

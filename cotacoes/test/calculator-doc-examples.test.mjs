@@ -23,11 +23,33 @@ test('F5: exemplos CG de dez e quarenta dias sem capitalizar encargos', () => {
   assert.match(text, /Datas anteriores a 17\/07\/2025 são \*\*bloqueadas\*\*/)
 })
 
+test('CET da conta garantida (art. 6º): exemplo da documentação confere com o motor', () => {
+  const { cet } = parseContaGarantidaForm({ ...cgInitialForm('2026-11-06'), amount: '100.000,00', rate: '3', limit: '100.000,00' })
+  assert.equal(cet.ok, true)
+  near(cet.payment, 103246); near(cet.net, 99620)
+  near(cet.annual * 100, Math.pow(103246 / 99620, 365 / 30) * 100 - 100)
+  assert.equal((cet.annual * 100).toFixed(2), '54.49'); assert.equal((cet.monthly * 100).toFixed(2), '3.69')
+  const text = doc('conta-garantida')
+  assert.match(text, /líquido R\$ 99\.620,00 e pagamento R\$ 103\.246,00 → CET 54,49% a\.a\. \(3,69% a\.m\.\)/)
+  assert.match(text, /conferida no texto oficial da norma em 11\/11\/2026/)
+})
+
+test('Conta garantida em dias úteis: exemplo da documentação desconta o feriado nacional de 20/11', () => {
+  const r = parseContaGarantidaForm({ ...cgInitialForm('2026-11-18'), amount: '100.000,00', rate: '3', duration: '5', dayCount: 'business' }).result
+  near(r.totals.interest, 200); near(r.totals.dailyIof, 41); near(r.totals.additionalIof, 380)
+  assert.match(doc('conta-garantida'), /juros R\$ 200 \(antes, sem digitar o feriado, R\$ 300\); IOF diário R\$ 41/)
+})
+
 test('F5: exemplo atual do desconto usa juros e IOF automáticos', () => {
   const r = discountOperation({ date: '2026-11-05', titleRows: [{ value: 225600.43, count: 30, dueDate: '2026-12-05' }], rate: 1.83, convention: 'commercial30', taxProfile: 'pj', feeMode: 'total', fee: 564, tac: 260 })
   assert.equal(r.ok, true)
-  near(r.interest, 4128.49); near(r.base, 221471.94); near(r.iof, 1386.41)
-  near(r.cost, 6338.90); near(r.net, 219261.53)
+  // 05/12/2026 é sábado: pagamento em 07/12, 32 dias (regra de 11/11/2026).
+  assert.equal(r.rows[0].paymentDate, '2026-12-07')
+  near(r.interest, 4403.72); near(r.base, 221196.71); near(r.iof, 1420.97)
+  near(r.cost, 6648.69); near(r.net, 218951.74)
+  assert.equal((r.termCost * 100).toFixed(2), '40.66')
+  assert.equal((r.cet * 100).toFixed(2), '41.45') // art. 6º: 30 dias sobre o nominal
+  assert.match(doc('analise-desconto'), /art\. 6º: 30 dias sobre o nominal\): 41,45% a\.a\..*prazo real \(32 dias, não é CET\): 40,66% a\.a\./)
   assert.match(doc('analise-desconto'), /recalcula juros e IOF/)
   assert.match(doc('analise-desconto'), /não validam a versão atual automática/)
 })

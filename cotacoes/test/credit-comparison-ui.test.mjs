@@ -14,11 +14,13 @@ import * as money from '../src/moneyInput.js'
 import * as loan from '../src/emprestimo.js'
 import * as dates from '../src/contaGarantida.js'
 import * as iof from '../src/iofRules.js'
+import * as aplicacao from '../src/aplicacaoPj.js'
+import * as praca from '../src/pracaContrato.js'
 const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './CreditComparison.css': {}, './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) } }
+  const deps = { react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
   for (const file of ['MoneyInput.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
@@ -64,6 +66,10 @@ test('o cartão mostra parcela estimada e CET, ou o erro da coluna', async t => 
   const ui = await setup(t)
   assert.ok(ui.card(1).props.result.ok)
   assert.match(renderToStaticMarkup(ui.card(1)), /CET/)
+  assert.doesNotMatch(renderToStaticMarkup(ui.card(1)), /CDI projetado/)
+  const cdiCard = renderToStaticMarkup(ui.card(2))
+  assert.match(cdiCard, /CET · parte fixa \(regra do BC\)/); assert.match(cdiCard, /Custo com CDI projetado/)
+  assert.ok(ui.card(2).props.result.cet < ui.card(2).props.result.projectedCost)
   await ui.change(1, { rate: '' })
   assert.equal(ui.card(1).props.result.ok, false)
   assert.match(renderToStaticMarkup(ui.card(1)), /credit-card-error/)
@@ -74,7 +80,7 @@ test('o resultado só aparece ao comparar e some quando uma condição muda', as
   assert.equal(ui.find('Results'), undefined)
   await clickCompare(ui)
   const html = renderToStaticMarkup(ui.find('Results'))
-  for (const label of ['Valor líquido recebido', 'CET estimado', 'Juros totais', 'IOF', 'Total desembolsado', 'Cobertura nominal', '1. Giro prefixado', '2. Giro pós-CDI']) assert.ok(html.includes(label), label)
+  for (const label of ['Valor líquido recebido', 'CET estimado · parte fixa (regra do BC)', 'Custo com CDI projetado · a.a. (não é CET)', 'art. 5º', 'Juros totais', 'IOF', 'Total desembolsado', 'Cobertura nominal', '1. Giro prefixado', '2. Giro pós-CDI']) assert.ok(html.includes(label), label)
   await ui.change(2, { cdiPercent: '110' })
   assert.equal(ui.find('Results'), undefined)
   assert.match(text(ui.render.value), /As condições mudaram/)
@@ -138,4 +144,13 @@ test('gráfico Bullet inclui ponto inicial zero e pagamento final', async t => {
   const lines = [...renderToStaticMarkup(ui.find('Results')).matchAll(/<polyline points="([^"]+)"/g)]
   assert.equal(lines.length, 2)
   for (const line of lines) assert.equal(line[1].split(' ').length, 2)
+})
+test('aplicação financeira: regime na linha mestra, bloco da aplicação e crédito x caixa por coluna', async t => {
+  const ui = await setup(t)
+  const fields = ui.find('InvestmentFields'); fields.props.set({ ...fields.props.invest, on: true }); await ui.render.settle()
+  const shared = ui.find('SharedFields'); shared.props.set({ ...shared.props.shared, regime: 'simples' }); await ui.render.settle()
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.render.value)
+  for (const label of ['Regime tributário da empresa', 'Comparar com aplicação financeira', 'Rendimento líquido', 'IR retido na fonte (imposto final)', 'Tomar o crédito e manter o caixa aplicado', 'Crédito ou caixa próprio?']) assert.ok(html.includes(label), label)
+  assert.ok(/compensa|melhor usar o caixa/.test(html))
 })

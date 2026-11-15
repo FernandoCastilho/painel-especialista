@@ -19,7 +19,7 @@ function verifySectorFolders(root) {
     const label = `${expected.width}-${expected.theme}`
     const matches = rows.filter(row => row.width === expected.width && row.theme === expected.theme)
     const row = matches[0]
-    if (matches.length !== 1 || row?.status !== 'pass' || row?.folders !== 11 || row?.overflow !== false || requiredChecks.some(check => row?.[check] !== true)) errors.push(`${label}: expected one complete passing record`)
+    if (matches.length !== 1 || row?.status !== 'pass' || row?.folders !== 15 || row?.overflow !== false || requiredChecks.some(check => row?.[check] !== true)) errors.push(`${label}: expected one complete passing record`)
     for (const state of ['pastas', 'subsetores', 'estudo']) {
       const file = `${label}-${state}.png`
       try { if (!fs.statSync(path.join(root, file)).isFile() || fs.statSync(path.join(root, file)).size === 0) throw Error('empty artifact') }

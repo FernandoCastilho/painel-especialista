@@ -80,15 +80,18 @@ test('F2: TLPCAP com IPCA tem carência retroativa e capitalização verificada 
   }
 })
 
-test('F3: calendário hipotético visível, sem garantia de compensação anual nem memória contratual', () => {
+test('F3: calendário real pela data da liberação, juros por dias corridos e sem memória contratual', () => {
   const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
-  assert.match(source, /id="fm-calendario-hipotetico">Calendário hipotético, em meses iguais/)
+  assert.match(source, /id="fm-calendario-hipotetico">Calendário pela data da liberação: vencimento todo dia 15, ou no próximo dia útil/)
   assert.match(source, /<th scope="col">Vencimento<\/th><th scope="col">Saldo inicial<\/th>/)
-  assert.match(source, /0 · liberação hipotética/)
+  assert.match(source, /0 · liberação</)
   assert.match(source, /Não use como memória contratual/)
   assert.match(source, /diferenças de dias podem alterar os juros totais mesmo que a soma anual de dias úteis coincida/)
-  assert.doesNotMatch(source, /a diferença se compensa|se compensam ao longo/)
+  assert.match(source, /dataLiberacao: hoje, feriados: holidayCtx/)
+  assert.doesNotMatch(source, /a diferença se compensa|se compensam ao longo|Os juros ainda são calculados em meses iguais/)
+  // Sem data, o motor programático continua no modelo legado; com data, usa o calendário real (ACT/ACT).
   assert.equal(simular(base).calendario, 'meses-iguais-hipoteticos')
+  assert.equal(simular({ ...base, dataLiberacao: new Date(2026, 10, 11, 12) }).calendario, 'datas-reais-act-act')
 })
 
 test('F4: taxas zero e ínfimas Price fecham sem NaN, cancelamento ou juros negativos', () => {

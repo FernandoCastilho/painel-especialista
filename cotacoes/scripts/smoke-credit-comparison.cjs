@@ -55,6 +55,12 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await page.getByRole('button', { name: 'Base', exact: true }).click()
     await page.getByRole('button', { name: '2', exact: true }).click()
     await compare()
+    // Res. CMN 4.881, art. 5º: pós-CDI mostra o CET da parte fixa e, à parte, o custo com CDI projetado (que não é CET).
+    const cetFixed = await row('CET estimado · parte fixa (regra do BC) · a.a.').locator('td').allTextContents()
+    const projected = await row('Custo com CDI projetado · a.a. (não é CET)').locator('td').allTextContents()
+    const rate = text => Number(text.match(/[\d.,]+(?=%)/)[0].replace(/\./g, '').replace(',', '.'))
+    assert.ok(rate(cetFixed[0]) < rate(projected[0]), 'pós-CDI: CET da parte fixa abaixo do custo com CDI')
+    assert.equal(rate(cetFixed[1]), rate(projected[1]), 'prefixado: os dois números coincidem')
     await page.getByLabel('Conferi todos os encargos e as convenções para esta simulação.', { exact: true }).check()
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: theme })

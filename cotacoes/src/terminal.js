@@ -24,16 +24,19 @@ const TAB = {
   CENARIOS: ['cenarios'], FOCUS: ['cenarios', 'projecoes'], PROJECOES: ['cenarios', 'projecoes'],
   ATIVIDADE: ['cenarios', 'atividade'], PMI: ['cenarios', 'atividade'], PAYROLL: ['cenarios', 'atividade'], EMPREGO: ['cenarios', 'atividade'],
   COMMODITIES: ['cenarios', 'commodities'], PETROLEO: ['cenarios', 'commodities'], BRENT: ['cenarios', 'commodities'], OURO: ['cenarios', 'commodities'],
-  FRETE: ['cenarios', 'frete'],
+  FRETE: ['cenarios', 'commodities/frete'],
   BNDES: ['bndes'], TFB: ['bndes'],
   BANCOS: ['bancos'], BASILEIA: ['bancos'],
   SETORES: ['setores'], COBRE: ['setores', 'cobre'], ALUMINIO: ['setores', 'aluminio'], ACO: ['setores', 'aco'], TELECOM: ['setores', 'telecom'], INDUSTRIA: ['setores', 'industria'], VAREJO: ['setores', 'comercio'],
   TLPEXIGIVEL: ['calculadora', 'bndes-tlp-exigivel'], CREDITOTFB: ['calculadora', 'bndes-credito-tfb'],
   COMPARADORDECREDITO: ['calculadora', 'comparador-credito'],
+  EMPRESTIMO4131: ['calculadora', 'emprestimo-4131'], LEI4131: ['calculadora', 'emprestimo-4131'], 4131: ['calculadora', 'emprestimo-4131'],
+  OPERACAODI: ['calculadora', 'operacao-di'], OPERACAOXDI: ['calculadora', 'operacao-di'], OPXDI: ['calculadora', 'operacao-di'],
   CALC: ['calculadora'], CALCULADORA: ['calculadora'], CALCULADORAS: ['calculadora'], GIRO: ['calculadora', 'giro'], DESCONTO: ['calculadora', 'analise-desconto'], ANALISEDEDESCONTO: ['calculadora', 'analise-desconto'], FINIMP: ['calculadora', 'finimp'], FINAME: ['calculadora', 'finame-materiais'], FINAMEMATERIAIS: ['calculadora', 'finame-materiais'],
   NEWS: ['noticias'], NOTICIAS: ['noticias'], AGENDA: ['noticias'],
   FERIADOS: ['feriados'], APRESENTAR: ['apresentar'], APRESENTACAO: ['apresentar'], CONFIG: ['config'], AJUDA: ['config'], HELP: ['config'],
-  APRENDER: ['aprender'], EDU: ['aprender'], EDUCACAO: ['aprender'], ESTUDAR: ['aprender'], CUPOM: ['aprender', 'cupom-cambial'], CUPOMCAMBIAL: ['aprender', 'cupom-cambial'], EURIBOR: ['aprender', 'euribor'], FUNDING: ['aprender', 'custo-de-funding'], CUSTODEFUNDING: ['aprender', 'custo-de-funding'], CDS: ['aprender', 'cds'],
+  FASCISMO: ['aprender', 'fascismo'], FACISMO: ['aprender', 'fascismo'], APRENDER: ['aprender'], EDU: ['aprender'], EDUCACAO: ['aprender'], ESTUDAR: ['aprender'], CUPOM: ['aprender', 'cupom-cambial'], CUPOMCAMBIAL: ['aprender', 'cupom-cambial'], EURIBOR: ['aprender', 'euribor'], FUNDING: ['aprender', 'custo-de-funding'], CUSTODEFUNDING: ['aprender', 'custo-de-funding'], CDS: ['aprender', 'cds'],
+  ACC: ['aprender', 'acc'], ADIANTAMENTOSOBRECONTRATODECAMBIO: ['aprender', 'acc'], ADIANTAMENTODECONTRATODECAMBIO: ['aprender', 'acc'],
   MAQUILA: ['aprender', 'lei-de-maquila'], LEIDEMAQUILA: ['aprender', 'lei-de-maquila'], MAQUILAPARAGUAI: ['aprender', 'lei-de-maquila'], LEIDEMAQUILANOPARAGUAI: ['aprender', 'lei-de-maquila'],
 }
 
@@ -241,6 +244,6 @@ export function ageText(ageMs) {
 
 export const SHORTCUTS = [
   ['Ctrl + Shift + F', 'Buscar em todo o painel; o botão Buscar também está disponível no celular'],
-  ['Alt + 1 … 9, 0', 'Mercado, Juros, Cenários, Notícias, BNDES, Setores, Calculadoras, Feriados, Aprender, Config'],
+  ['Alt + 1 … 9', DESK_TABS.filter(tab => !tab.oculto).map(tab => tab.label).join(', ')],
   ['Ctrl + ~  ou  Ctrl + "', 'Laser pointer (Alt + L também vale): liga e desliga (Esc também para). Ligado, o mouse segue normal: clique clica; arrastar risca; Ctrl + arrastar faz um retângulo; Shift + arrastar, uma seta. Tudo se apaga sozinho'],
 ]

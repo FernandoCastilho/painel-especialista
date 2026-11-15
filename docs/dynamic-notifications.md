@@ -6,7 +6,7 @@ O projeto de referência é um template React Native/Expo com Skia, Reanimated e
 
 Os botões de atualização dos painéis apresentam um aviso compacto no topo, com detalhes expansíveis. Confirmações fecham após nove segundos; foco, hover e detalhes abertos suspendem o prazo. Falhas ficam até o fechamento manual. Escape fecha o aviso e restaura o foco quando ele estava dentro do aviso. A região de status anuncia o resultado sem mover o foco. O CSS respeita movimento reduzido e a área segura do dispositivo.
 
-Uma nova resposta substitui a anterior; não há fila histórica. Não são notificações push nem Live Activities do sistema operacional. Recados administrativos e conceito diário preservam seu comportamento.
+Uma nova resposta substitui a anterior; não há fila histórica. Não são notificações push nem Live Activities do sistema operacional. Recados administrativos e conceito diário preservam seu comportamento. (Desde 10/11/2026 o conceito diário não abre mais sozinho; ver panorama-horario.md.)
 
 ## Validação em 03/11/2026
 

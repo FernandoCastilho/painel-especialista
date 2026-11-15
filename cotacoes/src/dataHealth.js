@@ -1,9 +1,9 @@
-import { quoteAgeState } from './quoteFreshness.js'
+import { offHoursReference, quoteAgeState } from './quoteFreshness.js'
 
 const HOUR = 3600000
 const DAY = 24 * HOUR
 const CODES = ['USD', 'EUR', 'JPY', 'CNH']
-export const HEALTH_LABELS = { ok: 'Sem alerta', old: 'Coleta atrasada', retained: 'Último válido', partial: 'Atualização parcial', reserve: 'Reserva diária', missing: 'Indisponível', loading: 'Carregando' }
+export const HEALTH_LABELS = { ok: 'Sem alerta', old: 'Coleta atrasada', retained: 'Último válido', partial: 'Atualização parcial', reserve: 'Reserva diária', missing: 'Indisponível', loading: 'Carregando', offhours: 'Fora do horário de coleta' }
 export const healthTime = value => {
   const t = value instanceof Date ? value.getTime() : typeof value === 'number' ? value : typeof value === 'string' ? Date.parse(value) : NaN
   return Number.isFinite(t) && t > 0 ? t : null
@@ -72,9 +72,13 @@ export function quoteHealth(quotes, { error, now = Date.now(), checkedAt, lastSu
   else if (rows.some(r => r.quote?.fallback)) { state = 'reserve'; detail = 'Uma ou mais moedas usam referência diária de reserva.' }
   else if (rows.some(r => r.age === 'Dado antigo')) { state = 'old'; detail = 'Uma ou mais referências têm mais de dez minutos. Isso não informa se o mercado está aberto ou fechado.' }
   else { state = 'ok'; detail = 'Todas as moedas têm referências recentes e sem retenção.' }
+  // Fora da janela de coleta (dias úteis, 9h05 às 18h), referência do fim da última janela é o esperado: tom neutro, sem afirmar nada sobre o mercado.
+  if ((state === 'old' || (state === 'partial' && !missing.length)) && present.length === CODES.length && present.every(r => offHoursReference(r.quote, now))) {
+    state = 'offhours'; detail = 'Fora do horário de coleta do painel (dias úteis, 9h05 às 18h). As referências são as últimas da janela anterior.'
+  }
   return {
     state, label: state === 'old' ? 'Dado antigo' : state === 'ok' ? 'Referência recente' : HEALTH_LABELS[state], detail,
-    feed: state === 'loading' ? 'loading' : state === 'missing' ? 'err' : state === 'ok' ? 'ok' : 'delayed',
+    feed: state === 'loading' ? 'loading' : state === 'missing' ? 'err' : state === 'ok' ? 'ok' : state === 'offhours' ? 'idle' : 'delayed',
     generatedAt: validTime(collectedAt, now), checkedAt: validTime(checkedAt, now), lastSuccessAt: validTime(lastSuccessAt, now),
     observedAt: stamps.length ? Math.min(...stamps) : null,
     latestObservedAt: stamps.length ? Math.max(...stamps) : null,

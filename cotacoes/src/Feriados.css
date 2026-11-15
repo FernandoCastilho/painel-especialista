@@ -17,3 +17,6 @@
 .fer-month-count { color: var(--mut); font-size: .85rem; font-weight: 400; text-transform: none; }
 .fer-where { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
 .fer-where .flag { margin-right: 2px; }
+.fer-partial { margin: 8px 0; color: var(--mut); font-size: .85rem; }
+.fer-partial summary { width: max-content; max-width: 100%; min-height: 24px; cursor: pointer; }
+.fer-partial p { margin: 6px 0 0; }

@@ -9,9 +9,12 @@ import { hookRenderer } from './helpers/hooks.mjs'
 
 const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
-test('FINAME bloqueia sem confirmação, libera zero e revoga ao trocar funding', async t => {
-  const deps = { './BndesPresentation.jsx': { __esModule: true, default: () => null }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series: { C03: { points: [['2026-11-06', 10]] }, TFB_60_30: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] } } } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
-  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finameFunding', 'format']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
+const text = el => Array.isArray(el) ? el.map(text).join(' ') : el && typeof el === 'object' ? text(el.props?.children) : el == null || typeof el === 'boolean' ? '' : String(el)
+async function setup(t, overrides = {}) {
+  const series = { C01: { points: [['2026-11-06', 11]] }, C02: { points: [['2026-11-06', 11.5]] }, C03: { points: [['2026-11-06', 10]] }, C04: { points: [['2026-11-06', 10.5]] }, TFB_36_90: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] }, TFB_84_90: { points: [['2026-11-06', 13]] }, ...overrides }
+  const Presentation = () => null, Print = () => null
+  const deps = { './BndesIcon.jsx': { __esModule: true, default: () => null }, './BndesPrint.jsx': { __esModule: true, default: Print }, './BndesPresentation.jsx': { __esModule: true, default: Presentation }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
+  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
@@ -22,61 +25,145 @@ test('FINAME bloqueia sem confirmação, libera zero e revoga ao trocar funding'
   await render.settle()
   const field = id => nodes(render.value).find(node => node.props?.id === id)
   const hasResult = () => nodes(render.value).some(node => node.props?.className === 'fm-kpi')
-  assert.equal(field('fm-finame-eligible').props.checked, false)
-  assert.equal(field('fm-iof-fixo'), undefined)
-  assert.equal(field('fm-iof-diario'), undefined)
-  assert.equal(hasResult(), false)
-  field('fm-finame-eligible').props.onChange({ target: { checked: true } })
-  await render.settle()
+  const change = async (id, value) => { field(id).props.onChange({ target: { value, checked: value } }); await render.settle() }
+  const presentation = () => nodes(render.value).find(node => node.type === Presentation).props
+  const reset = async cost => { nodes(render.value).find(node => node.type === 'button' && text(node).replace(/\s+/g, ' ').trim() === `Usar cotação ${cost}`).props.onClick(); await render.settle() }
+  return { render, field, hasResult, change, presentation, reset, navigation, print: () => nodes(render.value).find(node => node.type === Print).props, Presentation, Print }
+}
+
+test('FINAME abre com premissas fixas, IOF zero e ECG sempre à vista', async t => {
+  const { render, field, hasResult, change, presentation } = await setup(t)
+  for (const id of ['fm-finame-eligible', 'fm-sis', 'fm-comp', 'fm-lib', 'fm-fgi-inc', 'fm-iof-fixo', 'fm-iof-diario']) assert.equal(field(id), undefined, id)
   assert.equal(hasResult(), true)
   assert.equal(field('fm-compare').props.checked, false)
-  field('fm-compare').props.onChange({ target: { checked: true } })
-  await render.settle()
-  assert.equal(field('fm-compare').props.checked, true)
-  assert.equal(field('fm-valor').props.value, '500.000,00')
-  field('fm-compare').props.onChange({ target: { checked: false } })
-  await render.settle()
-  assert.equal(field('fm-finame-eligible').props.checked, true)
-  field('fm-custo').props.onChange({ target: { value: 'tfb' } })
-  await render.settle()
-  const releaseSelected = days => nodes(render.value).some(node => node.type === 'button' && node.props?.children?.[0] === days && node.props?.['aria-pressed'] === true)
-  assert.equal(releaseSelected(30), true, 'liberação original de 30 dias')
-  field('fm-compare').props.onChange({ target: { checked: true } })
-  await render.settle()
-  assert.equal(releaseSelected(90), true, 'comparação alinha liberação em 90 dias')
-  field('fm-compare').props.onChange({ target: { checked: false } })
-  await render.settle()
-  assert.equal(releaseSelected(30), true, 'fechar comparação restaura cenário original')
-  field('fm-custo').props.onChange({ target: { value: 'tfc' } })
-  await render.settle()
-  field('fm-finame-eligible').props.onChange({ target: { checked: true } })
-  await render.settle()
+  const initial = presentation()
+  assert.equal(initial.conditions.sistema, 'sac')
+  assert.equal(initial.conditions.composicao, 'capitalizada')
+  assert.equal(initial.conditions.liberacao, 90)
+  assert.equal(initial.result.iof, 0)
+  assert.match(text(render.value), /FINAME/)
+  assert.equal(field('fm-rate-tfb'), undefined)
+  await change('fm-fgi', true)
+  const withFgi = presentation().result
+  assert.equal(withFgi.fgi.incorporado, false)
+  assert.equal(withFgi.financiado, initial.result.financiado)
+  assert.equal(withFgi.juros, initial.result.juros)
+  assert.equal(withFgi.primeiraParcela, initial.result.primeiraParcela)
+  assert.ok(Math.abs(withFgi.total - initial.result.total - withFgi.fgi.ecg) < 1e-6)
+})
+
+test('referências editáveis mudam as duas colunas e reset recupera a cotação', async t => {
+  const { field, change, presentation, reset } = await setup(t)
+  await change('fm-compare', true)
+  assert.ok(field('fm-rate-tfc')); assert.ok(field('fm-rate-tfb'))
+  const quoted = presentation().comparison
+  assert.equal(quoted.ok, true)
+  await change('fm-rate-tfc', '9,5')
+  await change('fm-rate-tfb', '10,5')
+  const manual = presentation().comparison
+  assert.equal(manual.ok, true)
+  for (let i = 0; i < 2; i++) assert.notEqual(manual.alternatives[i].result.total, quoted.alternatives[i].result.total)
+  assert.equal(presentation().result.total, manual.alternatives[0].result.total)
+  await reset('TFC'); await reset('TFB')
+  assert.deepEqual(presentation().comparison, quoted)
+  await change('fm-compare', false)
+  assert.equal(field('fm-rate-tfb'), undefined)
+  await change('fm-custo', 'tfb')
+  assert.equal(field('fm-rate-tfc'), undefined)
+  assert.ok(field('fm-rate-tfb'))
+  assert.equal(presentation().conditions.liberacao, 90)
+})
+
+test('taxas vazias, negativas e acima de 100 invalidam; zero explícito calcula', async t => {
+  const { field, hasResult, change, presentation } = await setup(t)
+  for (const invalid of ['', '-1', '100,01', 'abc']) {
+    await change('fm-rate-tfc', invalid)
+    assert.equal(hasResult(), false, `taxa inválida: ${invalid}`)
+  }
+  await change('fm-rate-tfc', '0')
+  assert.equal(hasResult(), true)
+  assert.equal(presentation().conditions.rate.value, 0)
+  await change('fm-compare', true)
+  await change('fm-rate-tfb', '')
+  assert.notEqual(presentation().comparison?.ok, true, 'comparação não usa cotação antiga quando campo está vazio')
+  await change('fm-rate-tfb', '0')
+  assert.equal(presentation().comparison.ok, true)
+  assert.equal(field('fm-rate-tfb').props.value, '0')
+})
+
+test('trocar prazo ou porte descarta taxas manuais para não reaproveitar referência incompatível', async t => {
+  const { change, presentation } = await setup(t)
+  await change('fm-compare', true)
+  await change('fm-rate-tfc', '5'); await change('fm-rate-tfb', '6')
+  await change('fm-prazo', '72')
+  assert.equal(presentation().conditions.rate.value, 10.5)
+  await change('fm-prazo', '60')
+  assert.equal(presentation().comparison.alternatives[1].rate.value, 12)
+  await change('fm-rate-tfc', '5'); await change('fm-rate-tfb', '6')
+  await change('fm-porte', '2')
+  assert.equal(presentation().conditions.rate.value, 11)
+  assert.equal(presentation().comparison.alternatives[1].rate.value, 12)
+})
+
+test('taxas manuais não liberam comparação entre datas nem faixas incompatíveis', async t => {
+  const { change, presentation } = await setup(t, { TFB_60_90: { points: [['2026-11-05', 12]] } })
+  await change('fm-compare', true)
+  await change('fm-rate-tfc', '9'); await change('fm-rate-tfb', '9')
+  assert.equal(presentation().comparison.ok, false)
+  assert.match(presentation().comparison.error, /mesma data/)
+  await change('fm-prazo', '36')
+  await change('fm-rate-tfc', '9'); await change('fm-rate-tfb', '9')
+  assert.equal(presentation().comparison.ok, false)
+  assert.match(presentation().comparison.error, /mesma faixa/)
+})
+
+test('perfis próprios bloqueiam resultado mensal e retorno preserva condições sem confirmação', async t => {
+  const { render, field, hasResult, change, navigation } = await setup(t)
   field('fm-valor').props.onChange('600.000,00')
-  field('fm-prazo').props.onChange({ target: { value: '36' } })
-  field('fm-car').props.onChange({ target: { value: '5' } })
-  await render.settle()
+  await change('fm-prazo', '36'); await change('fm-car', '5')
   assert.equal(hasResult(), true)
   assert.ok(field('fm-calendario-hipotetico'))
-  field('fm-custo').props.onChange({ target: { value: 'tlp' } })
-  await render.settle()
-  assert.equal(field('fm-finame-eligible').props.checked, false)
-  assert.equal(hasResult(), false)
-  assert.equal(field('fm-ipca'), undefined, 'TLP não pode abrir o campo de capitalização antigo')
-  assert.equal(field('fm-valor').props.value, '600.000,00')
-  assert.equal(field('fm-prazo').props.value, '36')
-  assert.equal(field('fm-car').props.value, '5')
-  const link = nodes(render.value).find(node => node.props?.href === '#calculadora/bndes-tlp-exigivel')
-  assert.ok(link)
-  let prevented = false
-  link.props.onClick({ preventDefault() { prevented = true } })
-  assert.equal(prevented, true)
-  assert.deepEqual(navigation, ['bndes-tlp-exigivel'])
-  field('fm-custo').props.onChange({ target: { value: 'tfc' } })
-  await render.settle()
-  assert.equal(field('fm-valor').props.value, '600.000,00', 'troca de seletor preserva o preenchimento')
-  assert.equal(field('fm-finame-eligible').props.checked, false)
-  assert.equal(hasResult(), false)
-  field('fm-finame-eligible').props.onChange({ target: { checked: true } })
-  await render.settle()
-  assert.equal(hasResult(), true)
+  for (const cost of ['tlp', 'lcd', 'tfbd']) {
+    await change('fm-custo', cost)
+    assert.equal(hasResult(), false)
+    assert.equal(field('fm-ipca'), undefined)
+    assert.equal(field('fm-valor').props.value, '600.000,00')
+    assert.equal(field('fm-prazo').props.value, '36')
+    assert.equal(field('fm-car').props.value, '5')
+    if (cost === 'tlp') {
+      const link = nodes(render.value).find(node => node.props?.href === '#calculadora/bndes-tlp-exigivel')
+      assert.ok(link)
+      let prevented = false
+      link.props.onClick({ preventDefault() { prevented = true } })
+      assert.equal(prevented, true)
+      assert.deepEqual(navigation, ['bndes-tlp-exigivel'])
+    }
+    await change('fm-custo', 'tfc')
+    assert.equal(hasResult(), true)
+  }
+})
+
+
+test('novo visual preserva campos e envia exatamente os resultados exibidos para o PDF', async t => {
+  const h = await setup(t)
+  const { Presentation, Print } = h
+  for (const id of ['fm-valor', 'fm-part', 'fm-prazo', 'fm-car', 'fm-porte', 'fm-custo', 'fm-bndes', 'fm-agente', 'fm-tac', 'fm-rate-tfc', 'fm-per', 'fm-fgi']) assert.ok(h.field(id), id)
+  assert.equal(h.print().result, h.presentation().result)
+  assert.equal(h.print().conditions, h.presentation().conditions)
+  assert.equal(h.print().compareRequested, false)
+  await h.change('fm-compare', true)
+  assert.equal(h.print().comparison, h.presentation().comparison)
+  assert.equal(h.print().compareRequested, true)
+  await h.change('fm-rate-tfc', '9,5')
+  assert.equal(h.print().conditions.rate.manual, true)
+  await h.change('fm-fgi', true)
+  assert.ok(h.field('fm-fgipct'))
+  assert.equal(h.print().result.fgi.incorporado, false)
+  await h.change('fm-prazo', '36')
+  assert.equal(h.print().comparison.ok, false)
+  await h.change('fm-rate-tfc', '')
+  assert.equal(h.print().result, null)
+  const actions = nodes(h.render.value).find(node => node.props?.className === 'fm-print-actions')
+  // Rodapé do resultado: só os botões Apresentar e Imprimir, sem premissas duplicadas.
+  assert.deepEqual(nodes(actions).slice(1).map(node => node.type), [Presentation, Print], 'rodapé contém apenas os botões, sem premissas duplicadas')
 })

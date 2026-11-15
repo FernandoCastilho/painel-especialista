@@ -14,7 +14,7 @@ const CalculatorHelp = ({ title, label }) => React.createElement('button', { typ
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
+  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
   for (const file of ['MoneyInput.jsx', 'ContaGarantida.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
@@ -34,6 +34,9 @@ async function setup(t) {
     field: id => nodes(render.value).find(node => node.props?.id === 'cg-' + id),
     button: text => nodes(render.value).find(node => node.type === 'button' && (node.props['aria-label'] || textOf(node)) === text),
     async change(id, value) { const node = this.field(id); assert.ok(node, id); node.props.onChange(typeof node.type === 'function' ? value : { target: { value, checked: value } }); await render.settle() },
+    // Sair do campo: é quando o erro dele passa a aparecer.
+    async blur(id) { const node = this.field(id); assert.ok(node, id); node.props.onBlur({ target: {} }); await render.settle() },
+    alerts: () => nodes(render.value).filter(node => node.props?.role === 'alert'),
     async click(text) { const node = this.button(text); assert.ok(node, text); assert.notEqual(node.props.disabled, true); node.props.onClick(); await render.settle() },
   }
 }
@@ -45,11 +48,30 @@ test('inicia sem valores presumidos, taxa vazia impede resultado e não oferece 
   assert.equal(h.field('capitalization'), undefined)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
   assert.match(h.text(), /Estimativa para operação adimplente e rotativa/)
-  assert.match(h.text(), /Não é extrato, cotação bancária nem CET/)
+  assert.match(h.text(), /Não é extrato nem cotação bancária/)
+  assert.match(h.text(), /O CET aparece quando você informa o limite contratado/)
+  assert.equal(h.field('limit').props.value, '')
   const help = nodes(h.render.value).find(node => node.type === CalculatorHelp && node.props.title === 'Conta Garantida')
   assert.match(renderToStaticMarkup(help.props.children), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
   assert.doesNotMatch(h.text(), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
   assert.equal(h.button('Utilização única').props['aria-pressed'], true)
+  // Ao abrir, nenhum campo em erro: só a orientação neutra do que preencher.
+  assert.equal(h.alerts().length, 0)
+  assert.deepEqual(h.fields().filter(node => node.props['aria-invalid'] === true).map(node => node.props.id), [])
+  assert.match(h.text(), /Preencha valor, taxa e prazo para ver o resultado\./)
+  assert.doesNotMatch(h.text(), /Preencha ou corrija os campos sinalizados/)
+  assert.doesNotMatch(h.text(), /Campo vazio não é zero|Use o formato brasileiro|para determinar o IOF/)
+  // Passou pelo campo e saiu sem preencher: o erro dele aparece, com o mesmo texto de antes.
+  await h.blur('rate')
+  assert.equal(h.field('rate').props['aria-invalid'], true)
+  assert.equal(h.field('amount').props['aria-invalid'], false)
+  assert.match(h.text(), /Informe um percentual de 0 a 100\. Campo vazio não é zero\./)
+  assert.match(h.text(), /Preencha ou corrija os campos sinalizados/)
+  assert.doesNotMatch(h.text(), /Preencha valor, taxa e prazo/)
+  await h.blur('amount')
+  assert.equal(h.field('amount').props['aria-invalid'], true)
+  assert.equal(h.field('taxProfile').props['aria-invalid'], true)
+  assert.match(h.text(), /Informe o valor total da operação para determinar o IOF\./)
   await h.change('amount', '100.000')
   await h.change('rate', '3')
   assert.match(h.text(), /Resultado estimado do período/)
@@ -88,12 +110,15 @@ test('prazo por data, erros inline, feriados e IOF automático operam sem result
   await h.change('rate', '3')
   await h.change('dateMode', 'end')
   await h.change('end', '2026-11-04')
+  assert.equal(h.field('end').props['aria-invalid'], false)
+  await h.blur('end')
   assert.equal(h.field('end').props['aria-invalid'], true)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
   await h.change('end', '2026-11-15')
   await h.change('dayCount', 'business')
   assert.ok(h.field('holidays'))
   await h.change('holidays', '2026-02-30')
+  await h.blur('holidays')
   assert.equal(h.field('holidays').props['aria-invalid'], true)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
   await h.change('holidays', '2026-11-09')
@@ -177,4 +202,30 @@ test('rota e documento de busca apontam à calculadora certa', async () => {
   const entry = index.documents.find(d => d.id === 'page:ContaGarantida.jsx')
   assert.equal(entry.route, 'calculadora/conta-garantida')
   assert.match(entry.body, /amortiza/i)
+})
+
+test('CET do art. 6º: sem limite pede o limite; com limite mostra 30 dias ao ano e ao mês, com aviso de conferir a norma', async t => {
+  const h = await setup(t)
+  await h.change('amount', '100.000')
+  await h.change('rate', '3')
+  assert.match(h.text(), /Sem CET: informe o limite contratado/)
+  assert.doesNotMatch(h.text(), /CET \(art\. 6º · 30 dias sobre o limite\)/)
+  await h.change('limit', '100.000')
+  // Recálculo independente: limite 100.000 menos IOF adicional de 0,38% na liberação; no 30º dia volta 100.000 + juros 3% × 30/30 + IOF 0,0082% × 30.
+  const payment = 100000 + 3000 + 100000 * 0.000082 * 30
+  const expected = Math.pow(payment / (100000 - 380), 365 / 30) - 1
+  const pct = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  assert.match(h.text(), /CET \(art\. 6º · 30 dias sobre o limite\)/)
+  assert.ok(h.text().includes(`${pct(expected)}% a.a.`), pct(expected))
+  assert.ok(h.text().includes(`${pct(Math.pow(1 + expected, 1 / 12) - 1)}% a.m.`))
+  assert.equal(pct(expected), '54,49')
+  assert.match(h.text(), /texto oficial conferido em 11\/11\/2026/)
+  // O limite não muda o resultado do período.
+  assert.match(h.text(), /1\.462,00/)
+  await h.change('limit', '0')
+  await h.blur('limit')
+  assert.equal(h.field('limit').props['aria-invalid'], true)
+  assert.doesNotMatch(h.text(), /Resultado estimado do período/)
+  await h.change('limit', '')
+  assert.match(h.text(), /Sem CET: informe o limite contratado/)
 })

@@ -2,6 +2,43 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '14/11/2026', resumo: 'Empréstimo externo (4131) no formato da cotação de banco: principal em reais, parcelas, taxa all-in e custo efetivo com NDF', items: [
+    'Calculadoras > Empréstimo externo (4131): a tela passou a seguir o formato das cotações de banco de 4131 com NDF. São seis campos: principal em reais, moeda (dólar ou euro), cotação de partida, parcelas mensais, taxa all-in e data. O valor na moeda aparece logo depois da moeda, já convertido. O resto já vem no padrão: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência e IR dentro da taxa.',
+    'A cotação de partida já vem do Painel e o DI pré vem da curva da B3, para o prazo médio, com a origem ao lado do campo; os dois podem ser trocados. O cupom cambial (ou o juro do euro) continua digitado.',
+    'Resultado como na cotação: custo efetivo total ao mês e ao ano (exp/360) com o equivalente em CDI, economia de IOF frente a um capital de giro em reais, taxa de giro equivalente e o quadro parcela a parcela, com saldo, juros, taxa futura e parcela em reais. A taxa futura é teórica: a da mesa do banco prevalece.',
+    'Atingir meta, no topo: digite o custo desejado (por exemplo, 1,30% ao mês prefixado, ou um CDI +) e a tela calcula a taxa all-in que chega nele, recalculando parcelas, economia de IOF e equivalente em giro.',
+    'Condições da operação na ordem do e-mail de cotação, com o botão Copiar resumo, que leva o texto pronto para colar.',
+    'Taxa futura: além da estimativa pelo DI e pelo juro da moeda, dá para colar as taxas futuras fechadas da cotação da mesa, uma por parcela. Com elas, as parcelas em reais e o custo efetivo passam a usar exatamente as taxas do banco.',
+    'O que foge do padrão fica em Mais opções (outra frequência, principal no vencimento, carência, IR somado à taxa, tarifa, fiança). A comparação com swap e sem proteção continua disponível, em painel próprio.',
+    'Regras e fontes da 4131: entraram as regras do IOF do empréstimo externo que constam do decreto (IOF de crédito, IOF-câmbio na entrada e na saída, quem cobra e quando, cálculo do prazo médio, liquidação antecipada e títulos com opção de antecipação).',
+    'IOF-câmbio pelo prazo médio: passa a valer o prazo exato. Até 364 dias paga 3,5%; qualquer fração acima de 364 não paga, e o prazo aparece arredondado para cima. Antes a tela arredondava para baixo. Entre 364 e 365 dias a tela, o resumo copiado, o PDF e a apresentação avisam para confirmar com o câmbio do banco.',
+  ] },
+  { date: '12/11/2026', resumo: 'Calculadoras de crédito: 31/12 sem expediente bancário', items: [
+    'Vencimento em 31/12 passa para o próximo dia útil no Capital de Giro, no Comparador de Crédito, na Análise de desconto e na Operação x DI (ex.: 31/12/2026 → 04/01/2027); juros, IOF e CET contam até a nova data. A contagem de dias úteis de CDI, DI e TLP continua com 31/12 como dia útil.',
+  ] },
+  { date: '12/11/2026', resumo: 'BNDES TLP exigível e Selic + LCD: IOF de pessoa jurídica por padrão', items: [
+    'O IOF dessas duas telas começa em PJ geral: 0,38% sobre o valor mais 0,0082% ao dia sobre o principal de cada amortização, até 365 dias, cobrados na liberação. A alíquota zero geral do BNDES (Decreto 6.306/2007, art. 8º, XXX) foi revogada pelo Decreto 8.511/2015; o zero agora depende de enquadramento, como recursos da FINAME (art. 8º, IX), fundo ou programa de governo (XV) ou bens de capital pela Lei 12.096/2009 (XXVIII). Texto consolidado conferido em 12/11/2026.',
+    'Zero continua como opção, para quando a instituição confirmar o enquadramento. O Finame Materiais segue com IOF zero (art. 8º, IX).',
+  ] },
+  { date: '11/11/2026', resumo: 'Nova calculadora Empréstimo externo (4131): custo em dólar, sem proteção, com swap e com NDF', items: [
+    'Calculadoras > Empréstimo externo (4131): informe principal em dólar, taxa, câmbio, prazo e frequência dos juros. A tela calcula o custo all-in em dólar (IR na fonte com gross-up, IOF-câmbio automático pelo prazo médio, flat e fiança) e compara três caminhos em reais: sem proteção, por cenário de câmbio; com swap, em CDI + spread e % do CDI; e com NDF em cada pagamento, com custo prefixado e o ponto de equilíbrio do dólar.',
+    'No padrão da calculadora BNDES: apresentação em slides, PDF, cronograma e a aba Regras e fontes, com as regras do Banco Central, da Receita e da B3. Swap e NDF são teóricos, com DI e cupom cambial digitados: a cotação da mesa do banco prevalece.',
+  ] },
+  { date: '11/11/2026', resumo: 'Comparador de Crédito: regime tributário da empresa e comparação com aplicação financeira (CDB e fundos)', items: [
+    'Comparador de Crédito: a linha mestra ganha o regime tributário da empresa (Lucro Real, Presumido ou Simples) e o adicional de IRPJ. Nova linha "Custo após IRPJ/CSLL": no Lucro Real, juros, IOF e tarifas do crédito reduzem o imposto.',
+    'Opção "Comparar com aplicação financeira": CDB pós ou pré e fundo de renda fixa, com o DI da curva B3 e a tributação da empresa (IR retido, come-cotas, PIS/Cofins até 2026, IOF antes de 30 dias). Mostra bruto, imposto e líquido, e em cada operação se compensa tomar o crédito e manter o caixa aplicado ou usar o caixa próprio.',
+  ] },
+  { date: '11/11/2026', resumo: 'Nova calculadora Operação x DI: compara pré, % do CDI ou CDI + spread com o DI projetado pela curva B3', items: [
+    'Calculadoras > Operação x DI: informe valor, tipo de taxa (pré ao ano, ao mês ou no período; % do CDI; CDI + spread), início e vencimento. A tela mostra, lado a lado com o DI projetado pela curva DI x pré da B3, a taxa no período, a taxa ao ano (252 dias úteis), juros ou rendimento e valor no vencimento; a diferença em R$ e em bps; e os equivalentes em % do CDI e CDI + spread. Escolha se a operação é crédito (custo) ou aplicação (rendimento). Pagamento único no vencimento, sem IOF, IR e tarifas: não é CET.',
+  ] },
+  { date: '10/11/2026', resumo: 'Menos pop-ups: Panorama e Conceito do dia abrem só por clique, no Mercado; Finame mostra os números principais no topo do resultado', items: [
+    'BNDES > Moedas: cotação diária da TFBD (Taxa Fixa BNDES em Dólar, operações indiretas), nas três faixas de prazo: TFBD24.120 (TD1), TFBD72.120 (TD2) e TFBD120.120 (TD3). É só a taxa em % ao ano; o saldo do contrato também acompanha o dólar (604).',
+    'Garantia FGI na calculadora BNDES Finame e no comparador de crédito: percentual garantido só em múltiplos de 10 (10% a 80%), crédito garantido limitado a R$ 20 milhões por cliente em cada agente e recusa em linha com TLP capitalizada ou para grande empresa, conforme o Regulamento do FGI Tradicional (Circular SUP/ADIG 62/2026). A ajuda do ECG explica por que o valor parece alto e traz exemplos.',
+    'Aviso de entrada: aparece na primeira vez neste aparelho e só volta quando o texto mudar. Para reler, abra o "i" (Informações e avisos gerais) e toque em "Ver o aviso de entrada".',
+    'Panorama do dia: não abre mais sozinho. Fica no botão "Panorama do dia", no topo do quadro Mercado hoje; um ponto no botão indica edição nova (dias úteis, das 9h às 18h).',
+    'Conceito do dia: não abre mais sozinho. Fica no botão "Conceito do dia" da faixa Aprender, no Mercado.',
+    'BNDES Finame Materiais: Taxa final, Parcelas, Juros totais e Pagamento final abrem o Resultado estimado, sem precisar abrir a Composição do resultado. A faixa "Cotação comparativa" só aparece ao comparar TFC e TFB. Nenhuma conta mudou.',
+  ] },
   { date: '09/11/2026', resumo: 'Calculadora BNDES Finame: TAC e garantia FGI no resultado; cronograma sem indexador e sem coluna de IOF', items: [
     'BNDES Finame Materiais: a TAC aparece ao lado do custo financeiro, editável e pré-preenchida com R$ 2.600,00; ela entra no pagamento final como despesa à vista.',
     'Nova opção no fim dos dados: garantia do FGI (Tradicional). O custo é o ECG, pela fórmula do Anexo V do Regulamento do FGI (Circular SUP/ADIG 65/2026): percentual garantido de 10% a 80%, fator K pelo prazo total e períodos de 30 dias. Pode ser financiado (incorporado ao saldo devedor) ou pago à vista. O FGI PEAC tem regras próprias e não é calculado.',
@@ -57,16 +94,26 @@ export const ENTRIES = [
   { date: '09/10/2026', items: ['SOFR com médias de 30/90/180 dias e faixa de percentis.', 'Relógio do país acima de cada cotação.', 'Cotação do CNH por cruzamento quando a direta está defasada.', 'Curvas de juros: DI x pré (B3) e Treasuries (EUA), com comparação entre datas.'] },
 ]
 
+// As mais recentes ficam à vista; as anteriores abrem por clique (a lista inteira passava de 10 telas no celular).
+const RECENTES = 6
+const entrada = (e, i) => (
+  <div key={`${e.date}-${i}`}>
+    <h3>{e.date}</h3>
+    <ul>{e.items.map((item) => <li key={item}>{item}</li>)}</ul>
+  </div>
+)
+
 export default function Novidades({ open = false }) {
   return (
     <details className="novidades" open={open}>
       <summary>O que há de novo</summary>
-      {ENTRIES.map((e, i) => (
-        <div key={`${e.date}-${i}`}>
-          <h3>{e.date}</h3>
-          <ul>{e.items.map((i) => <li key={i}>{i}</li>)}</ul>
-        </div>
-      ))}
+      {ENTRIES.slice(0, RECENTES).map(entrada)}
+      {ENTRIES.length > RECENTES && (
+        <details className="novidades-antigas">
+          <summary>Novidades anteriores ({ENTRIES.length - RECENTES})</summary>
+          {ENTRIES.slice(RECENTES).map((e, i) => entrada(e, i + RECENTES))}
+        </details>
+      )}
     </details>
   )
 }

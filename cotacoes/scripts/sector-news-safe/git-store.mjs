@@ -6,10 +6,16 @@ import { join } from 'node:path'
 import { APPROVED_PARSER_RELEASES, planParserRelease } from './parser-release.mjs'
 import { digest, validateState, validateTransition, STATE_REF, FEED_REF } from './state.mjs'
 import { createGitHubStore as createRestStore } from './github-store.mjs'
+import { planSourceRelease } from './source-release.mjs'
 const branded = new WeakSet()
 export const isGitHubPublisher = value => branded.has(value)
 const sha = value => { if (!/^[a-f0-9]{40}$/.test(value)) throw Error('git_invalid_sha'); return value }
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
+// Depois do push, o GitHub pode responder por alguns segundos com uma réplica ainda no commit anterior (falha de
+// 12/11/2026: gravação feita às 01:43:02 UTC e recusada por git_write_not_confirmed). A confirmação espera e relê
+// só enquanto o servidor mostra exatamente o pai esperado; qualquer outro commit continua sendo recusa imediata.
+const CONFIRM_ATTEMPTS = 6, CONFIRM_DELAY_MS = 2000
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 const locals = { [STATE_REF]: 'refs/remotes/journal/state', [FEED_REF]: 'refs/remotes/journal/feed' }
 
 export function createGitHubStore(options = {}) {
@@ -26,7 +32,7 @@ export function createLocalGitStoreForTests(options) {
   if (!options?.remote?.startsWith('/') || options.remote.includes('\0')) throw Error('local_test_remote_required')
   return build({ ...options, token: null, production: false })
 }
-function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtection, production, parserReleaseGrants = APPROVED_PARSER_RELEASES }) {
+function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtection, production, parserReleaseGrants = APPROVED_PARSER_RELEASES, confirmDelayMs = CONFIRM_DELAY_MS }) {
   sha(rootToken); sha(feedRootToken)
   if (!storeId || typeof verifyProtection !== 'function') throw Error('git_configuration_required')
   let closed = false, directory, busy = false
@@ -137,8 +143,13 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     // Identity is only metadata for this dedicated journal, never a user credential.
     const commit = sha(await command(['-c', 'user.name=Institutional news journal', '-c', 'user.email=journal@users.noreply.github.com', 'commit-tree', tree, '-p', expected], `Institutional news ${kind} journal\n`))
     await command(['push', '--quiet', '--porcelain', remote, `${commit}:${ref}`])
-    await fetchHeads()
-    if (await head(ref) !== commit) throw Error('git_write_not_confirmed')
+    for (let attempt = 1; ; attempt++) {
+      await fetchHeads()
+      const observed = await head(ref)
+      if (observed === commit) break
+      if (observed !== expected || attempt >= CONFIRM_ATTEMPTS) throw Error('git_write_not_confirmed')
+      await wait(confirmDelayMs)
+    }
     return commit
   }
   const store = Object.freeze({ ref: STATE_REF, kind: 'git-append-only-journal', read: () => exclusive(readUnlocked), compareAndSwap: (token, next) => exclusive(async () => {
@@ -146,6 +157,7 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     const before = await readUnlocked()
     if (before.token !== token) throw Error('git_cas_conflict')
     if (JSON.stringify(before.state.parserRelease) !== JSON.stringify(next.parserRelease)) throw Error('parser_release_dedicated_operation_required')
+    if (JSON.stringify(before.state.sourceReleases) !== JSON.stringify(next.sourceReleases)) throw Error('source_release_dedicated_operation_required')
     validateTransition(before.state, next, { allowProduction: true, parserReleaseGrants })
     const committed = await append(STATE_REF, token, next, 'state')
     const observed = await readUnlocked()
@@ -163,6 +175,18 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     if (observed.token !== committed || !same(observed.state, next)) throw Error('parser_release_not_confirmed')
     return observed
   })
+  // Liberação revisada de fontes: só a concessão exata do código, uma gravação, releitura obrigatória.
+  const applySourceRelease = (expectedToken, review, now) => exclusive(async () => {
+    sha(expectedToken)
+    const before = await readUnlocked()
+    if (before.token !== expectedToken) throw Error('git_cas_conflict')
+    const next = planSourceRelease(before.state, review, now)
+    validateTransition(before.state, next, { allowProduction: true, parserReleaseGrants })
+    const committed = await append(STATE_REF, expectedToken, next, 'state')
+    const observed = await readUnlocked()
+    if (observed.token !== committed || !same(observed.state, next)) throw Error('source_release_not_confirmed')
+    return observed
+  })
   const publisher = Object.freeze({ ref: FEED_REF, publish: (feed, expectedDigest) => exclusive(async () => {
     if (digest(feed) !== expectedDigest) throw Error('git_feed_digest_mismatch')
     const before = await feedUnlocked()
@@ -172,5 +196,5 @@ function build({ remote, token, rootToken, feedRootToken, storeId, verifyProtect
     return { confirmed: true, receipt, digest: expectedDigest }
   }) })
   if (production) branded.add(publisher)
-  return Object.freeze({ store, publisher, applyParserRelease, verifyProtection, readFeed: () => exclusive(feedUnlocked), bootstrap: async () => { throw Error('git_explicit_external_bootstrap_required') }, close: async () => { await ready.catch(() => {}); if (busy) throw Error('git_operation_in_progress'); closed = true; if (directory) await rm(directory, { recursive: true, force: true }); for (const key of Object.keys(env)) delete env[key] } })
+  return Object.freeze({ store, publisher, applyParserRelease, applySourceRelease, verifyProtection, readFeed: () => exclusive(feedUnlocked), bootstrap: async () => { throw Error('git_explicit_external_bootstrap_required') }, close: async () => { await ready.catch(() => {}); if (busy) throw Error('git_operation_in_progress'); closed = true; if (directory) await rm(directory, { recursive: true, force: true }); for (const key of Object.keys(env)) delete env[key] } })
 }

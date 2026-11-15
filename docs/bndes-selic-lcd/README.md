@@ -34,7 +34,11 @@ A tela recebe um evento por linha: `AAAA-MM-DD; dias úteis; C ou A`. C indica c
 
 O cenário explícito de Selic constante implica fator `(1 + Selic/100)^(DU/252)`. A soma BNDES + intermediação + agente + LD1 entra no fator fixo. O componente fixo é cobrado; não é capitalizado silenciosamente.
 
-Não há IOF, tarifas, seguros, liberações múltiplas, Price ou CET. Campos não suportados são recusados pelo motor, em vez de ignorados. A tela avisa as exclusões.
+IOF (11/11/2026, lacuna apontada pela revisão independente): escolha na tela entre **Zero (recursos BNDES/FINAME elegíveis)**, padrão; **PJ geral** (0,0082% ao dia); e **Simples/MEI** (0,00274% ao dia até R$ 30 mil, com confirmação do enquadramento), mais 0,38% de adicional sobre o valor, pelas regras compartilhadas de `iofRules.js`. O IOF diário incide sobre o principal de cada amortização (sem a Selic capitalizada no saldo), pelos dias corridos da liberação até o vencimento, com teto de 365 dias. Tudo é cobrado na liberação e sai do valor líquido do CET, nas duas linhas (parte fixa e custo projetado). Juros e parcelas não mudam e seguem em dias úteis/252. Cálculo em `src/bndesProfileIof.js`, arredondado uma vez em centavos.
+
+A alíquota zero cita o Decreto 6.306/2007, art. 8º, IX, que o painel usa para recursos FINAME. **Não foi conferido se esse inciso alcança a linha Selic + LCD fora do FINAME**; o enquadramento depende da origem dos recursos e o painel não o verifica. A tela avisa isso no campo, na ajuda e nos avisos do resultado.
+
+Não há seguros, liberações múltiplas ou Price. Tarifa na liberação e CET (Res. CMN 4.881/2020) foram acrescentados depois; IOF conforme acima. Campos não suportados são recusados pelo motor, em vez de ignorados. A tela avisa as exclusões.
 
 ## Precisão
 

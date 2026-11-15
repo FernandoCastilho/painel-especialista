@@ -163,7 +163,7 @@ export function centralMaxAge(now = Date.now()) {
     return now - (friday.getTime() + 3 * 3600000) + 75 * 60000
   }
   const minute = br.getUTCHours() * 60 + br.getUTCMinutes()
-  return (minute >= 570 && minute <= 1080 ? 45 : 75) * 60000
+  return (minute >= 545 && minute <= 1080 ? 45 : 75) * 60000
 }
 
 export async function fetchCentral(signal, base = DATA_BASE, meta) {

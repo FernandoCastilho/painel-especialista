@@ -58,7 +58,7 @@ async function runAlert(items) {
     return { existsSync: () => true, readFileSync: () => JSON.stringify({ hours: 6, items }) }
   }
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
-  await new AsyncFunction('require', 'process', 'github', 'context', 'fetch', script)(fakeRequire, { env: { RUNNER_TEMP: '/tmp' } }, github, { repo: { owner: 'fixture', repo: 'synthetic' }, serverUrl: 'https://github.com', runId: 123 }, () => { throw new Error('rede proibida no teste') })
+  await new AsyncFunction('require', 'process', 'github', 'context', 'fetch', 'core', script)(fakeRequire, { env: { RUNNER_TEMP: '/tmp' } }, github, { repo: { owner: 'fixture', repo: 'synthetic' }, serverUrl: 'https://github.com', runId: 123 }, () => { throw new Error('rede proibida no teste') }, { warning() {} })
   return sent
 }
 

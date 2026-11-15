@@ -80,6 +80,7 @@
 .market-footnotes .status { display:inline; margin:0; font-size:inherit; }
 .market-terminal .market-open .market-state { color:#ffd37b; font-weight:600; }
 .status.src .dot.delayed { background:#e5b453; }
+.status.src .dot.idle { background:var(--mut,#8a8577); }
 .compare-trigger { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; min-width:44px; padding:8px; border:1px solid #a05b66; border-radius:4px; background:transparent; color:#fff; cursor:pointer; }
 .compare-trigger:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .compare-trigger span { font-size:.75rem; }

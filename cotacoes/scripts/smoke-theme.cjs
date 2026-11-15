@@ -184,7 +184,7 @@ async function assertSectorHeader(page, initial) {
         diagnostics.push({kind:'console',width,initial,message:message.text()})
         console.error(`Widget ${initial} ${width}: ${message.text()}`)
       })
-      for (const [route, selector] of [['resumo','.terminal-desk'],['calculadora/giro','.cx #cx-value'],['aprender','.learn'],['juros','.macro .plot svg[role=img]'],['cenarios/commodities','.cen-nav button'], ...(width === 320 ? [['setores','main.app .top h1']] : [])]) {
+      for (const [route, selector] of [['resumo','.terminal-desk'],['calculadora/giro','.cx #cx-value'],['aprender','.learn'],['juros','.executive-rates__table tbody tr'],['cenarios/commodities','.cen-nav button'], ...(width === 320 ? [['setores','main.app .top h1']] : [])]) {
         await page.goto(`${base}/#${route}`); await page.locator(selector).first().waitFor()
         const label = `${initial}-${width}-${route.replace('/', '-')}`
         report.push({ label, ...await assertTheme(page, initial, label) })

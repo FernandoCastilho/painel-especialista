@@ -25,9 +25,12 @@ test('Price cash-flow has equal payments across actual dates; SAC principal is e
   near(p.rows.reduce((sum, r) => sum + r.payment / (1 + p.cet) ** (r.days / 365), 0), p.net)
 })
 test('capitalized grace is explicitly computed before amortization and does not inflate IOF original principal', () => {
+  // 08/02/2027 é segunda de Carnaval: o vencimento passa para 10/02/2027. A carência capitalizada continua a contratada (62 dias);
+  // os 2 dias do ajuste a dia útil entram nos juros da própria 1ª parcela.
   const r = creditOperation({ ...base, firstDue: '2027-02-08', system: 'sac' })
-  assert.ok(r.ok); assert.equal(r.graceDays, 62)
+  assert.ok(r.ok); assert.equal(r.rows[0].date, '2027-02-10'); assert.equal(r.graceDays, 62)
   near(r.capitalizedGrace, base.value * ((1.02) ** (62 / 30) - 1))
+  near(r.rows[0].interest, (base.value + r.capitalizedGrace) * ((1.02) ** (32 / 30) - 1))
   near(r.rows.reduce((sum, row) => sum + row.originalAmortization, 0), base.value)
   near(r.rows.reduce((sum, row) => sum + row.amortization, 0), base.value + r.capitalizedGrace)
   assert.ok(r.iof <= base.value * (0.0038 + 365 * 0.000082) + 1e-6)
@@ -93,9 +96,31 @@ test('equivalence finds valid principal even when doubled upper probe exceeds mo
 })
 test('percentage of CDI scales the daily rate before compounding, not annual log return', () => {
   const p = { ...base, rateType: 'cdi', system: 'bullet', cdi: 15, cdiPercent: 200, rate: 0, start: '2026-11-08', firstDue: '2027-11-07' }
+  // Dias úteis descontam fins de semana e feriados nacionais: 260 dias de segunda a sexta, 249 dias úteis.
   const du = creditBusinessDays(p.start, p.firstDue), r = creditOperation(p)
-  assert.equal(du, 260); assert.ok(r.ok, r.error)
+  assert.equal(creditBusinessDays(p.start, p.firstDue, [], false), 260)
+  assert.equal(du, 249); assert.ok(r.ok, r.error)
   const daily = Math.pow(1.15, 1 / 252) - 1
-  near(r.interest, 100000 * (Math.pow(1 + daily * 2, 260) - 1), 1e-6)
-  near(r.interest, 33418.11, 0.01)
+  near(r.interest, 100000 * (Math.pow(1 + daily * 2, 249) - 1), 1e-6)
+})
+test('Res. CMN 4.881, art. 5º: no pós-CDI o CET regulatório é o do mesmo contrato com CDI zero, recálculo independente', () => {
+  const p = { ...base, system: 'bullet', rateType: 'cdi', rate: 0.35, cdi: 14.9, cdiPercent: 100, firstDue: '2027-11-08' }
+  const r = creditOperation(p)
+  assert.ok(r.ok, r.error)
+  // Só o spread, na mesma base de dias úteis/252 com feriados nacionais e nas mesmas datas.
+  const du = creditBusinessDays(p.start, r.rows[0].date), days = r.rows[0].days
+  const payment = p.value * Math.pow(1.0035, 12 * du / 252)
+  const net = p.value - p.value * 0.0038 - p.value * Math.min(days, 365) * 0.000082
+  const expected = Math.pow(payment / net, 365 / days) - 1
+  near(r.cetRegulatory, expected, 1e-9); near(r.regulatoryNet, net, 1e-6)
+  // O CET com CDI projetado continua disponível e é maior; o regulatório não depende do cenário do CDI.
+  assert.ok(r.cet > r.cetRegulatory)
+  near(creditOperation({ ...p, cdi: 10 }).cetRegulatory, r.cetRegulatory, 1e-12)
+  near(creditOperation({ ...p, cdi: 0 }).cet, r.cetRegulatory, 1e-12)
+})
+test('no prefixado o CET regulatório coincide com o CET do fluxo', () => {
+  for (const system of ['price', 'sac', 'bullet']) {
+    const r = creditOperation({ ...base, system })
+    assert.equal(r.cetRegulatory, r.cet); assert.equal(r.regulatoryNet, r.net)
+  }
 })

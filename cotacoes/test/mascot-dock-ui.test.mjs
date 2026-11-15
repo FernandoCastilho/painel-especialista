@@ -9,23 +9,37 @@ import { hookRenderer } from './helpers/hooks.mjs'
 import * as position from '../src/mascotPosition.js'
 const require = createRequire(import.meta.url)
 const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof node === 'object' ? [node, ...nodes(node.props?.children)] : []
-async function setup(t, width = 1280) {
+async function setup(t, width = 1280, open = true) {
   const store = new Map(), listeners = new Map(), searches = []
   const localStorage = { getItem: key => store.get(key), setItem: (key, value) => store.set(key, value) }
   const window = { innerWidth: width, innerHeight: 900, localStorage, addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: name => listeners.delete(name) }
-  const deps = { react: React, './mascotPosition.js': position }
+  const deps = { react: React, 'react-dom': { createPortal: el => el }, './mascotPosition.js': position, './mascotSlot.js': { currentMascotSlot: () => null, subscribeMascotSlot: () => () => {} } }
   const { code } = await transform(await readFile(new URL('../src/MascotDock.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, window, localStorage, require: name => deps[name] ?? require(name) })
-  const renderer = hookRenderer(() => module.exports.default({ onSearch: request => searches.push(request), children: 'Owl' }))
+  let section = 'calculadora'
+  const renderer = hookRenderer(() => module.exports.default({ section, onSearch: request => searches.push(request), children: 'Owl' }))
   t.after(() => renderer.close()); await renderer.settle()
   const find = predicate => nodes(renderer.value).find(predicate)
+  const mini = () => find(node => node.props?.className === 'mascot-mini')
+  if (open) { mini().props.onClick(); await renderer.settle() }
   const button = label => find(node => node.props?.['aria-label'] === label)
   const dock = () => find(node => node.props?.className === 'mascot-dock')
   const key = async name => { button('Mover mascote').props.onKeyDown({ key: name, preventDefault() {} }); await renderer.settle() }
-  return { renderer, find, button, dock, key, store, window, listeners, searches }
+  return { renderer, find, mini, button, dock, key, store, window, listeners, searches, async navigate(next) { section = next; renderer.render(); await renderer.settle() } }
 }
-test('mascot controls: keyboard, click controls, reset, hide and restore persist UI only', async t => {
+test('mascot starts small and floating; click enlarges, shrink button and double click return to small', async t => {
+  const s = await setup(t, 1280, false)
+  assert.equal(s.dock(), undefined); assert.ok(s.mini())
+  assert.equal(s.find(node => node.props?.className?.startsWith('mascot-tray')).props.className, 'mascot-tray')
+  s.mini().props.onClick(); await s.renderer.settle(); assert.ok(s.dock()); assert.equal(s.mini(), undefined)
+  s.button('Reduzir mascote').props.onClick(); await s.renderer.settle(); assert.equal(s.dock(), undefined); assert.ok(s.mini())
+  s.mini().props.onClick(); await s.renderer.settle()
+  s.find(node => node.props?.className === 'mascot-figure').props.onDoubleClick(); await s.renderer.settle()
+  assert.equal(s.dock(), undefined); assert.ok(s.mini())
+  assert.deepEqual(JSON.parse(s.store.get(position.MASCOT_PREFERENCE_KEY)), { hidden: false, desktop: null })
+})
+test('mascot controls: keyboard, click controls, reset, shrink and enlarge persist UI only', async t => {
   const s = await setup(t)
   const initial = s.dock().props.style.left
   await s.key('ArrowLeft'); assert.equal(s.dock().props.style.left, initial - 20)
@@ -33,8 +47,8 @@ test('mascot controls: keyboard, click controls, reset, hide and restore persist
   s.button('Mover para esquerda').props.onClick(); await s.renderer.settle()
   assert.equal(s.dock().props.style.left, initial - 40)
   await s.key('Home'); assert.equal(s.dock().props.style.left, initial)
-  s.button('Ocultar mascote').props.onClick(); await s.renderer.settle(); assert.equal(s.dock(), undefined)
-  s.find(node => node.props?.className === 'mascot-restore').props.onClick(); await s.renderer.settle(); assert.ok(s.dock())
+  s.button('Reduzir mascote').props.onClick(); await s.renderer.settle(); assert.equal(s.dock(), undefined)
+  s.mini().props.onClick(); await s.renderer.settle(); assert.ok(s.dock())
   assert.deepEqual(JSON.parse(s.store.get(position.MASCOT_PREFERENCE_KEY)), { hidden: false, desktop: null })
 })
 test('mascot controls: pointer clamps and resize recovers; search passes actual anchor/opener', async t => {
@@ -60,4 +74,48 @@ test('default desktop position returns after a temporary narrow viewport', async
   s.window.innerWidth = 390; s.listeners.get('resize')(); await s.renderer.settle()
   s.window.innerWidth = 1280; s.listeners.get('resize')(); await s.renderer.settle()
   assert.equal(s.dock().props.style.left, initial)
+})
+
+for (const width of [320, 390, 1280]) {
+  test(`small mascot keeps accessible name without tooltip at ${width}px`, async t => {
+    const s = await setup(t, width, false)
+    assert.equal(s.mini().props['aria-label'], 'Ampliar mascote')
+    assert.equal(s.mini().props.title, undefined)
+    assert.equal(s.mini().props.children.type, 'i')
+    assert.equal(s.mini().props.children.props['aria-hidden'], 'true')
+    s.mini().props.onClick(); await s.renderer.settle()
+    assert.ok(s.dock())
+    s.button('Reduzir mascote').props.onClick(); await s.renderer.settle()
+    assert.equal(s.mini().props.title, undefined)
+    assert.equal(s.mini().props['aria-label'], 'Ampliar mascote')
+  })
+}
+
+for (const width of [320, 390, 699]) {
+  test(`small mascot stays below actual mobile clocks at ${width}px`, async t => {
+    const s = await setup(t, width, false)
+    s.window.document = { querySelector: selector => ({ getBoundingClientRect: () => ({ bottom: selector === '.clocks-top' ? 65 : 0 }) }) }
+    s.listeners.get('resize')(); await s.renderer.settle()
+    assert.equal(s.mini().props.style.top, 69)
+    assert.equal(s.mini().props.title, undefined)
+    s.window.document = { querySelector: () => ({ getBoundingClientRect: () => ({ bottom: 0 }) }) }
+    s.listeners.get('resize')(); await s.renderer.settle()
+    assert.equal(s.mini().props.style.top, 4)
+  })
+}
+
+
+test('small mascot recalculates after clocks appear or disappear on section navigation', async t => {
+  const s = await setup(t, 390, false)
+  let clocksBottom = 0
+  s.window.document = { querySelector: selector => selector === '.clocks-top' && !clocksBottom ? null : { getBoundingClientRect: () => ({ bottom: selector === '.clocks-top' ? clocksBottom : 0 }) } }
+  clocksBottom = 65
+  await s.navigate('resumo')
+  assert.equal(s.mini().props.style.top, 69)
+  clocksBottom = 0
+  await s.navigate('calculadora')
+  assert.equal(s.mini().props.style.top, 4)
+  clocksBottom = 65
+  await s.navigate('resumo')
+  assert.equal(s.mini().props.style.top, 69)
 })

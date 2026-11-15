@@ -1,3 +1,5 @@
+import { CONCEITO_ACC } from './acc.js'
+import { CONCEITO_FASCISMO } from './fascismo.js'
 import { nf } from './format.js'
 import { CONCEITO_MAQUILA } from './maquila.js'
 import { CONCEITO_JUROS_FORCADOS } from './jurosForcados.js'
@@ -96,6 +98,57 @@ const pct = (f, d = 2) => `${nf(f * 100, d)}%`
 export const feeEstruturacao = (base, taxaFlat) => base * taxaFlat
 export const CONCEITOS = [
   CONCEITO_JUROS_FORCADOS,
+  {
+    id: 'marcacao-a-mercado',
+    topico: 'Funding e risco',
+    nome: 'Marcação a mercado (MtM)',
+    revisadoEm: '2026-11-11',
+    frase: 'É estimar quanto uma posição vale hoje pelas condições de mercado, não apenas pela taxa contratada.',
+    crianca: [
+      'Pense em um título que promete um pagamento futuro. Seu preço hoje pode mudar, mesmo que essa promessa continue igual. Se o mercado passa a exigir juros maiores para o mesmo fluxo, o preço cai; se exige juros menores, o preço sobe.',
+      'Na curva, o valor evolui pela taxa contratada. A mercado, usa as condições atuais. Em títulos prefixados e indexados à inflação, prazo e sensibilidade aos juros importam: duration é uma medida dessa sensibilidade. Renda fixa não significa preço fixo antes do vencimento.',
+      'Para a empresa, a pergunta prática é: precisarei vender a aplicação antes do prazo? A oscilação pode afetar a reserva de caixa. Em um hedge, avalie o derivativo junto da exposição protegida e confira quando há pagamentos ou exigência de garantias.',
+    ],
+    analogia: 'É como separar o valor combinado de uma venda futura do preço que alguém pagaria por esse direito hoje.',
+    lacunas: [
+      'Preço estimado não é oferta firme: liquidez, risco de crédito, spreads e custos podem mudar o valor efetivo de saída.',
+      'Uma queda no extrato não é, sozinha, um desembolso. Nos futuros há ajustes diários pagos ou recebidos; outros contratos podem ter regras diferentes. Marcação, ajuste e margem não são sinônimos.',
+      'Manter um título até o vencimento não apaga risco de crédito. O fluxo contratado depende do cumprimento pelo emissor; impostos e custos também afetam o resultado líquido.',
+      'Não aplique o preço teórico de um título à quitação de qualquer empréstimo: a liquidação antecipada segue contrato e normas aplicáveis. Break funding é outro conceito.',
+      'Perguntas de visita: qual é o horizonte do caixa? Há ativos longos financiando compromissos curtos? Quem valida as marcações? Qual cenário exigiria caixa para ajustes ou garantias?',
+    ],
+    preciso: {
+      texto: 'Para um título de fluxos definidos, a referência é o valor presente dos pagamentos pela curva de desconto compatível com prazo e risco. A fórmula abaixo simplifica as taxas como anuais compostas; instrumentos reais usam convenções próprias. Derivativos exigem modelo adequado às suas características. A classificação contábil e eventual hedge accounting devem ser avaliados separadamente pelo contador, não deduzidos apenas da oscilação de preço.',
+      formula: 'Preço = Σ fluxo_t ÷ (1 + taxa_t)^t; em um fluxo único: P = F ÷ (1 + i)^t.',
+    },
+    exemplo: (() => {
+      const principal = 1000, taxa = 0.1
+      const base = { principal, taxa, anosTotal: 1, anosRestantes: 1 }
+      const futuro = principal * (1 + taxa)
+      const alta = valorAMercado({ ...base, taxaMercado: 0.12 })
+      const baixa = valorAMercado({ ...base, taxaMercado: 0.08 })
+      return {
+        titulo: 'Mesmo fluxo, três taxas · valores hipotéticos',
+        passos: [
+          `Título sem cupons comprado por R$ ${nf(principal)} para pagar R$ ${nf(futuro)} em um ano: taxa de ${pct(taxa)} a.a.`,
+          `Sem passagem de tempo, se a taxa exigida sobe a ${pct(0.12)} a.a., o preço passa a R$ ${nf(alta)}; variação de R$ ${nf(alta - principal)} frente à compra.`,
+          `Se a taxa cai a ${pct(0.08)} a.a., o preço passa a R$ ${nf(baixa)}; variação de R$ ${nf(baixa - principal)}. O pagamento futuro não foi alterado.`,
+          'Hipóteses: fluxo único, ausência de inadimplência, impostos, custos e diferença entre compra e venda. Não é cotação nem cálculo de liquidação de crédito.',
+        ],
+        resultado: `Taxa maior reduz o preço; taxa menor aumenta o preço. O fluxo permanece R$ ${nf(futuro)} no vencimento, se cumprido pelo emissor.`,
+      }
+    })(),
+    teste: {
+      pergunta: 'Uma aplicação prefixada caiu de preço: isso prova inadimplência ou exige venda imediata?',
+      resposta: 'Não. Pode refletir aumento da taxa exigida pelo mercado. Confira risco do emissor, liquidez e necessidade de caixa. Vender, manter ou proteger exige avaliar o conjunto, não apenas a variação no extrato.',
+    },
+    fontes: [
+      { nome: 'B3 · relação entre juros e preço dos títulos', url: 'https://borainvestir.b3.com.br/objetivos-financeiros/investir-melhor/devo-resgatar-meu-titulo-do-tesouro-direto-com-prejuizo-e-reinvestir/' },
+      { nome: 'Tesouro Direto · preços e resgate antecipado', url: 'https://www.tesourodireto.com.br/sobre-o-tesouro/regras-e-regulamento' },
+      { nome: 'B3 · futuros, ajustes diários e garantias', url: 'https://www.b3.com.br/pt_br/produtos-e-servicos/negociacao/renda-variavel/mercado-de-acoes/dinamica-de-negociacao.htm' },
+    ],
+    noApp: { tab: 'aprender', view: 'liquidacao-antecipada', texto: 'Compare valor na curva, valor a mercado e break funding em liquidação antecipada.' },
+  },
   {
     id: 'diferencial-de-juros',
     topico: 'Juros e câmbio',
@@ -744,7 +797,9 @@ export const CONCEITOS = [
       resposta: 'Ficam devidos: sem exportação comprovada, a empresa paga os tributos suspensos com os acréscimos legais (juros e, conforme o caso, multa).',
     },
   },
+  CONCEITO_ACC,
   CONCEITO_MAQUILA,
+  CONCEITO_FASCISMO,
   CONCEITO_IMPOSTO_SELETIVO,
   {
     id: 'inflacao',
@@ -1082,11 +1137,11 @@ export const CONCEITOS = [
   },
 ]
 
-export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho']
+export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições']
 
 // Busca por palavras (todas precisam aparecer), sem diferenciar acento nem maiúscula, no conteúdo inteiro do conceito.
 const plain = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-export const textoDeBusca = (c) => plain([c.nome, c.topico, c.frase, c.analogia, ...c.crianca, ...c.lacunas, c.preciso.texto, c.preciso.formula, c.exemplo.titulo, ...c.exemplo.passos, c.teste.pergunta, c.teste.resposta, c.estudoHistorico ? JSON.stringify(c.estudoHistorico) : ''].join(' '))
+export const textoDeBusca = (c) => plain([c.nome, ...(c.aliases ?? []), c.topico, c.frase, c.analogia, ...c.crianca, ...c.lacunas, c.preciso.texto, c.preciso.formula, c.exemplo.titulo, ...c.exemplo.passos, c.teste.pergunta, c.teste.resposta, c.estudoHistorico ? JSON.stringify(c.estudoHistorico) : '', c.fluxo ? JSON.stringify(c.fluxo) : ''].join(' '))
 export function buscarConceitos(termo, lista = CONCEITOS) {
   const palavras = plain(String(termo ?? '')).split(/\s+/).filter(Boolean)
   return palavras.length ? lista.filter((c) => { const t = textoDeBusca(c); return palavras.every((w) => t.includes(w)) }) : lista
@@ -1098,6 +1153,13 @@ export const porTopico = (lista) => TOPICOS.map((topico) => ({ topico, itens: li
 // outros conceitos (LIGACOES). Os testes recusam conceito sem papel, sem ligação ou com ligação para conceito que não existe.
 // LIGACOES é a fonte única: cada par vale nos dois sentidos e aparece em "Conecta com" de ambos os conceitos e no quadro geral.
 export const LIGACOES = [
+  ['acc', 'drawback', 'Os dois aliviam o caixa do exportador: o drawback suspende tributos dos insumos; o ACC antecipa a receita da venda.'],
+  ['acc', 'cupom-cambial', 'O juro do ACC é em dólar; o cupom cambial mostra quanto custa o dinheiro em dólar no Brasil.'],
+  ['acc', 'sofr', 'O custo do ACC parte do funding do banco em dólar, que acompanha referências externas como a SOFR.'],
+  ['fascismo', 'juros-forcados', 'Uma política de juros ou de intervenção econômica não define, sozinha, um regime fascista; compare instituições e contexto histórico.'],
+  ['marcacao-a-mercado', 'liquidacao-antecipada', 'Preço econômico e valor de quitação não são automaticamente iguais; confira contrato e normas aplicáveis.'],
+  ['marcacao-a-mercado', 'debenture', 'O preço de uma debênture responde à curva de juros, ao risco do emissor e à liquidez.'],
+  ['marcacao-a-mercado', 'custo-de-funding', 'Mudanças no custo exigido pelo mercado alteram o valor presente dos fluxos.'],
   ['substituicao-tributaria', 'reforma-tributaria', 'A exclusão de ICMS-ST muda o recolhimento do ICMS vigente; não se confunde com a transição da reforma para IBS e CBS.'],
   ['substituicao-tributaria', 'custo-de-funding', 'A antecipação do imposto e o prazo de utilização do crédito de estoque podem alterar a necessidade de financiar o capital de giro.'],
   ['imposto-seletivo', 'reforma-tributaria', 'O IS integra a reforma do consumo, com incidência e cálculo próprios, ao lado do IBS e da CBS.'],
@@ -1162,6 +1224,8 @@ export const LIGACOES = [
 export const CONEXAO = {
   titulo: 'Como as peças se encaixam',
   itens: [
+    { id: 'fascismo', texto: 'distingue uma ideologia autoritária histórica de medidas econômicas isoladas e ajuda a ler o contexto institucional.' },
+    { id: 'marcacao-a-mercado', texto: 'separa o valor atual da posição do fluxo contratado e ajuda a avaliar liquidez e risco de mercado.' },
     { id: 'substituicao-tributaria', texto: 'antecipa o ICMS das revendas em um ponto da cadeia; a mudança paulista exige conferir mercadoria, estoque, créditos e caixa.' },
     { id: 'imposto-seletivo', texto: 'explica o imposto do pecado no Brasil, seu objetivo de saúde e ambiente, as regras de transição e possíveis efeitos sobre preços e margens.' },
     { id: 'juros-forcados', texto: 'compara seis histórias de juros baixos, controle da curva e repressão financeira, com benefícios, custos e limites de causalidade.' },
@@ -1185,6 +1249,7 @@ export const CONEXAO = {
     { id: 'cri', texto: 'transforma recebíveis imobiliários em título para o investidor, com patrimônio separado e, para pessoa física, isenção de IR.' },
     { id: 'cra', texto: 'é o CRI do agronegócio: lastro em safra, insumos e contratos do agro, com risco ligado a clima, commodities e câmbio.' },
     { id: 'facil', texto: 'é a porta simplificada da CVM para companhias de menor porte (receita abaixo de R$ 500 milhões) captarem com investidores.' },
+    { id: 'acc', texto: 'antecipa em reais a receita de uma exportação; a dívida se quita com os dólares da venda, e o desvio desse caminho custa mais.' },
     { id: 'drawback', texto: 'suspende ou isenta os tributos dos insumos de quem exporta, liberando caixa do exportador.' },
     { id: 'lei-de-maquila', texto: 'organiza produção ou serviços no Paraguai para o exterior, sob programa aprovado, com tributação própria e obrigações de exportação.' },
     { id: 'inflacao', texto: 'é o que desconta o juro nominal para chegar ao juro real, e o que o Banco Central tenta controlar com a Selic.' },
@@ -1194,7 +1259,7 @@ export const CONEXAO = {
     { id: 'combustiveis', texto: 'é o caminho do derivado em dólar até a bomba, onde entram câmbio, impostos, etanol e margens, e de onde parte da inflação.' },
   ],
   // O caminho que une tudo, de ponta a ponta.
-  cadeia: 'Expectativas (Focus) → Inflação → Selic e curva DI → CDI → remuneração de debêntures, notas comerciais, CRI e CRA (com o FÁCIL abrindo esse caminho às empresas menores) → custo de funding (somando o risco, medido pelo CDS) → liquidação antecipada e break funding. No comércio exterior, o drawback alivia o caixa do exportador e a maquila organiza operações no Paraguai para o exterior, com regras próprias e custos no destino a avaliar. Na ponta externa, SOFR, Euribor, diferencial de juros e cupom cambial ligam o juro em reais ao juro em dólar e em euro. Nas commodities, o preço em dólar passa pelo câmbio e vira IC-Br, soja em reais e combustível na bomba, e daí volta à inflação.',
+  cadeia: 'Expectativas (Focus) → Inflação → Selic e curva DI → CDI → remuneração de debêntures, notas comerciais, CRI e CRA (com o FÁCIL abrindo esse caminho às empresas menores) → custo de funding (somando o risco, medido pelo CDS) → liquidação antecipada e break funding. No comércio exterior, o ACC antecipa a receita do exportador, o drawback alivia o caixa do exportador e a maquila organiza operações no Paraguai para o exterior, com regras próprias e custos no destino a avaliar. Na ponta externa, SOFR, Euribor, diferencial de juros e cupom cambial ligam o juro em reais ao juro em dólar e em euro. Nas commodities, o preço em dólar passa pelo câmbio e vira IC-Br, soja em reais e combustível na bomba, e daí volta à inflação.',
 }
 
 // Ligações de um conceito: [{ id, porque }] nos dois sentidos, na ordem de LIGACOES.
