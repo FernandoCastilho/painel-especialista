@@ -342,6 +342,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
         await p.route('**/macro.json*', (r) => r.fulfill({ json: macro }))
         await p.goto(base + '/#resumo')
         const cards = p.locator('.kpis .kpi'); await cards.first().waitFor()
+        // FX cards can render before the independent macro fixture. Wait for its
+        // observed Selic value in both cases before checking presence or absence.
+        await p.waitForFunction(() => [...document.querySelectorAll('.kpis .kpi')].some(card => card.querySelector('.kpi-name')?.textContent.includes('Selic') && /14,50/.test(card.querySelector('.kpi-value')?.textContent || '')))
         const spark = (name) => cards.filter({ hasText: name }).first().locator('.kpi-spark[role="img"]')
         for (const name of ['Selic', 'CDI']) assert.equal(await spark(name).count(), expected ? 1 : 0, `${name} ${label}`)
         assert.equal(await spark('IPCA 12m').count(), 1, 'IPCA sempre tem 12 meses divulgados')

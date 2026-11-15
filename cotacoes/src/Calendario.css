@@ -17,3 +17,6 @@
 @media (max-width:639px) { .cal-cname { display:none; } .cal-row .cal-title { min-width:140px; } }
 
 .cal-day th::first-letter { text-transform:uppercase; }
+
+/* Keep focused/auto-scrolled event controls clear of fixed navigation. */
+.calendario button, .calendario select { scroll-margin-block:100px; }
