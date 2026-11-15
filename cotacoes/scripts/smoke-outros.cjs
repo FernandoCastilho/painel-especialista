@@ -124,17 +124,39 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       }
       const corpo = await p.locator('main').innerText()
       assert.doesNotMatch(corpo, /Reino Unido|Bank Rate|Bank of England|BoE/, 'sem Reino Unido em Juros')
-      assert.match(await p.locator('section[aria-labelledby="juros-exterior"] .executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
-      await p.locator('.chart h3', { hasText: 'Área do euro · €STR' }).first().waitFor()
-      await p.locator('.chart h3', { hasText: 'Brasil · CDI' }).first().waitFor()
-      const curvaEuro = p.locator('.chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })
+      assert.match(await p.locator('#juros-ref-exterior .executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
+      // os gráficos abrem pela linha da tabela, em tela própria (a página não traz gráfico solto)
+      assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página de Juros')
+      const abrir = async (botao, titulo) => {
+        await p.getByRole('button', { name: botao }).first().click()
+        const d = p.locator('dialog.is-modal'); await d.locator('.chart h3', { hasText: titulo }).first().waitFor()
+        return d
+      }
+      const fechar = async (d) => { await d.getByRole('button', { name: 'Fechar detalhes' }).click(); await d.waitFor({ state: 'detached' }) }
+      for (const [botao, titulo] of [['Área do euro · €STR overnight: abrir gráfico', 'Área do euro · €STR'], ['Brasil · CDI overnight: abrir gráfico', 'Brasil · CDI'], ['Brasil · Selic meta: abrir gráfico', 'Brasil · Selic meta'], ['EUA · SOFR overnight: abrir gráfico', 'SOFR']]) {
+        const d = await abrir(botao, titulo)
+        assert.equal(await d.locator('.chart h3 .flag').count(), 1, `bandeira no título do gráfico: ${titulo}`)
+        assert.ok(await d.locator('.chart-filters').count() === 1, `período dentro da tela: ${titulo}`)
+        await fechar(d)
+      }
+      // juros de política do exterior: linha em degraus a partir da série oficial; o Fed mostra o limite superior da faixa
+      const fed = await abrir('EUA · Fed (faixa-alvo): abrir gráfico', 'EUA · Fed (faixa-alvo)')
+      await fed.locator('.plot svg').first().waitFor(); await fechar(fed)
+      // o valor da linha também abre o gráfico; o "?" não
+      await p.locator('.executive-rates__table tbody tr', { hasText: 'BCE (depósito)' }).locator('td').first().click()
+      const bce = p.locator('dialog.is-modal'); await bce.locator('.chart h3', { hasText: 'Área do euro · BCE (depósito)' }).waitFor(); await fechar(bce)
+      // curva do euro: números na tabela e gráfico em tela própria
+      const tabEuro = p.locator('.curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
+      assert.equal(await tabEuro.locator('h2 .flag').count(), 1, 'bandeira da zona do euro na tabela da curva')
+      assert.equal(await tabEuro.locator('thead th').count(), 1 + 3, 'uma coluna por data de comparação')
+      await tabEuro.locator('tbody tr').first().click()
+      const curvaEuro = p.locator('dialog.is-modal .chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })
       await curvaEuro.waitFor()
       assert.ok(await curvaEuro.locator('h3 .flag').count() === 1, 'bandeira da zona do euro na curva')
       assert.equal(await curvaEuro.locator('.curve-legend > button').count(), 3, 'três datas de comparação')
       assert.ok(await curvaEuro.locator('svg path').count() >= 3, 'uma linha por data')
       const eixo = await curvaEuro.locator('svg text.tick').allTextContents()
       assert.ok(eixo.includes('3M') && eixo.includes('30A'), 'eixo do 3M ao 30A')
-      assert.ok(await p.locator('.chart h3 .flag').count() >= 4, 'bandeira nos títulos dos gráficos e curvas por região')
       await p.close()
     }
     // governança dos dados em Configurações: tabela por fonte, regras e nenhuma rolagem lateral da página
@@ -297,6 +319,8 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.goto(base + '/#config')
       const bd = p.locator('.desk-panel', { has: p.getByRole('heading', { name: 'Base de dados' }) }); await bd.waitFor()
       assert.ok(await bd.locator('.config-base tbody tr').count() >= 40, 'uma linha por referência')
+      assert.equal(await bd.locator('details.base-grupo[open]').count(), 0, 'grupos começam recolhidos')
+      await bd.locator('details.base-grupo').evaluateAll(ds => ds.forEach(d => { d.open = true }))
       const t = await bd.innerText()
       assert.match(t, /economia\.awesomeapi\.com\.br\/json\/last/); assert.match(t, /SGS 432/); assert.match(t, /resumo_semanal_lpc/); assert.match(t, /BLS\.gov não pode atestar/)
       await bd.getByLabel('Buscar na base de dados').fill('SGS 4389')
@@ -360,15 +384,37 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await foc.locator('.ml-legend').first().innerText(), /2026[\s\S]*2027/)
       const tabelaBox = await sc.boundingBox(), focBox = await foc.boundingBox()
       assert.ok(focBox.y > tabelaBox.y, 'histórico abaixo da tabela')
+      // uma linha por instituição, uma coluna por indicador; o Focus abre a tabela e não recebe sinal
       const rowOf = (name) => sc.locator('tbody tr', { hasText: name }).first()
-      await rowOf('PIB').locator('.fm').first().waitFor()
-      assert.equal(await rowOf('PIB').getByRole('img', { name: 'acima do Focus' }).count(), 1, 'Itaú acima no PIB')
-      assert.equal(await rowOf('PIB').getByRole('img', { name: 'igual ao Focus' }).count(), 1, 'Bradesco igual no PIB')
-      assert.equal(await rowOf('IPCA').getByRole('img', { name: 'abaixo do Focus' }).count(), 1, 'Itaú abaixo no IPCA')
-      assert.equal(await rowOf('Selic').getByRole('img', { name: 'igual ao Focus' }).count(), 1)
-      assert.equal(await sc.locator('tbody tr', { hasText: 'IPCA' }).first().locator('td').first().locator('.fm').count(), 0, 'a coluna FOCUS não recebe sinal')
-      assert.equal(await rowOf('USD').getByRole('img', { name: 'igual ao Focus' }).count(), 1)
+      const cell = (name, indicador, ano = '2026') => rowOf(name).locator(`td[data-y="${ano}"]`).nth(['PIB', 'IPCA', 'Selic', 'USD'].indexOf(indicador))
+      await cell('Itaú BBA', 'PIB').locator('.fm').waitFor()
+      assert.deepEqual((await sc.locator('tbody tr th[scope="row"]').allInnerTexts()).map((t) => t.split('\n')[0].trim()), ['Focus', 'Itaú BBA', 'Bradesco', 'Santander', 'BB', 'BTG'])
+      assert.equal(await cell('Itaú BBA', 'PIB').getByRole('img', { name: 'acima do Focus' }).count(), 1, 'Itaú acima no PIB')
+      assert.equal(await cell('Bradesco', 'PIB').getByRole('img', { name: 'igual ao Focus' }).count(), 1, 'Bradesco igual no PIB')
+      assert.equal(await cell('Itaú BBA', 'IPCA').getByRole('img', { name: 'abaixo do Focus' }).count(), 1, 'Itaú abaixo no IPCA')
+      assert.equal(await cell('Itaú BBA', 'Selic').getByRole('img', { name: 'igual ao Focus' }).count(), 1)
+      assert.equal(await cell('Itaú BBA', 'USD').getByRole('img', { name: 'igual ao Focus' }).count(), 1)
+      assert.equal(await rowOf('Focus').locator('.fm').count(), 0, 'a linha do Focus não recebe sinal')
+      assert.match(await cell('Focus', 'IPCA').innerText(), /4,50/)
+      assert.match(await cell('Bradesco', 'Selic').innerText(), /—/, 'projeção ausente é travessão, nunca zero')
       assert.match(await sc.locator('caption').innerText(), /▲[\s\S]*acima[\s\S]*▼[\s\S]*abaixo[\s\S]*=[\s\S]*igual/)
+      // a idade da projeção fica na linha do banco (20/10 já passou de 14 dias) e há uma só nota de aviso
+      assert.match(await rowOf('Itaú BBA').locator('th').innerText(), /20\/10[\s\S]*há \d+ dias/)
+      assert.equal(await p.locator('.scenarios .scenario-note').count(), 1)
+      // computador: 2026 e 2027 lado a lado, sem botão de ano; celular: um ano por vez, tabela inteira na tela
+      const anos = p.getByRole('group', { name: 'Ano das projeções' })
+      if (width >= 1100) {
+        assert.equal(await anos.isVisible(), false, 'botões de ano só em tela estreita')
+        assert.equal(await cell('Focus', 'PIB', '2027').isVisible(), true)
+        assert.match(await cell('Focus', 'PIB', '2027').innerText(), /2,00/)
+      } else {
+        assert.equal(await cell('Focus', 'PIB', '2027').isVisible(), false)
+        assert.equal(await sc.evaluate((t) => t.parentElement.scrollWidth <= t.parentElement.clientWidth + 1), true, 'a tabela cabe na tela do celular sem deslizar')
+        await anos.getByRole('button', { name: '2027' }).click()
+        assert.equal(await anos.getByRole('button', { name: '2027' }).getAttribute('aria-pressed'), 'true')
+        assert.equal(await cell('Focus', 'PIB', '2027').isVisible(), true)
+        assert.equal(await cell('Focus', 'PIB', '2026').isVisible(), false)
+      }
       // menu na ordem pedida
       const names = await p.getByRole('navigation', { name: /Navegação principal|Seções/ }).getByRole('button').allInnerTexts()
       if (width >= 700) assert.deepEqual(names.slice(0, 3).map((t) => t.trim().toLowerCase().split(' ')[0]), ['mercado', 'juros', 'cenários'])
@@ -418,12 +464,15 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       for (const label of ['Câmbio', 'Petróleo', 'Soja', 'Milho', 'Expectativas', 'Juros']) await ft.getByRole('rowheader', { name: new RegExp(label) }).waitFor()
       assert.match(await ft.locator('tr', { hasText: 'Expectativas' }).innerText(), /4,50%.*meta 3,0%/)
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
-      // dívida bruta do governo geral: assunto próprio (Cenários › Fiscal), fora da tela de inflação; a linha abre o histórico
-      assert.equal(await p.locator('.ind-table').count(), 1, 'a tela de Inflação não traz a dívida')
-      await p.locator('.cen-nav button', { hasText: 'Fiscal' }).click(); await p.waitForURL('**/#cenarios/fiscal')
-      assert.equal((await p.locator('#outros-title').textContent()).trim(), 'Fiscal')
-      assert.equal(await p.locator('section.infl').count(), 0, 'o quadro da inflação fica em Inflação')
-      const dt = p.locator('.ind-table').first(); await dt.waitFor()
+      // dívida bruta do governo geral: seção "Fiscal · dívida pública" dentro da tela de Inflação, abaixo do IPCA; a linha abre o histórico
+      assert.equal(await p.locator('.cen-nav button', { hasText: 'Fiscal' }).count(), 0, 'Fiscal não é mais um assunto à parte')
+      assert.equal((await p.locator('#fiscal-heading').textContent()).trim(), 'Fiscal · dívida pública')
+      assert.ok(await p.evaluate(() => document.querySelector('section.infl').compareDocumentPosition(document.getElementById('cen-fiscal')) & Node.DOCUMENT_POSITION_FOLLOWING), 'Fiscal vem depois da inflação')
+      // endereço antigo #cenarios/fiscal abre Inflação já rolada até a seção Fiscal, e o endereço vira o novo
+      await p.goto(base + '/#cenarios/fiscal'); await p.waitForURL('**/#cenarios/inflacao/fiscal')
+      await p.locator('.cen-nav [aria-current="true"]', { hasText: /^Inflação$/ }).waitFor()
+      await p.waitForFunction(() => { const top = document.getElementById('cen-fiscal')?.getBoundingClientRect().top; const fim = scrollY + innerHeight >= document.documentElement.scrollHeight - 2; return top !== undefined && (Math.abs(top) < 60 || (fim && top < innerHeight)) })
+      const dt = p.locator('#cen-fiscal .ind-table').first(); await dt.waitFor()
       assert.equal(await dt.locator('tbody').count(), 2, 'duas leituras da dívida bruta')
       assert.match(await dt.innerText(), /Máxima da série[\s\S]*DBGG · % do PIB[\s\S]*DBGG · saldo em R\$ bilhões/)
       assert.match(await dt.locator('tbody').first().innerText(), /82,93%[\s\S]*82,87%[\s\S]*\+0,06 p\.p\./, '% do PIB com duas casas, como o BCB publica: variação de 0,06 p.p. visível')
@@ -453,8 +502,12 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await trig.innerText(), /^[a-zç]{3}\/\d{2} → [a-zç]{3}\/\d{2}$/)
       await p.keyboard.press('Escape'); await d.waitFor({ state: 'hidden' })
       // frete marítimo: mesma tabela; a linha abre o gráfico
-      await p.goto(base + '/#cenarios/frete')
-      const f = p.locator('.ind-table', { hasText: 'Transporte marítimo' })
+      // seção própria dentro de Commodities; o endereço antigo abre Commodities rolada até ela
+      await p.goto(base + '/#cenarios/frete'); await p.waitForURL('**/#cenarios/commodities/frete')
+      await p.locator('.cen-nav [aria-current="true"]', { hasText: /^Commodities$/ }).waitFor()
+      assert.equal(await p.locator('.cen-nav button', { hasText: 'Frete' }).count(), 0, 'Frete não é mais um assunto à parte')
+      await p.waitForFunction(() => { const top = document.getElementById('cen-frete')?.getBoundingClientRect().top; const fim = scrollY + innerHeight >= document.documentElement.scrollHeight - 2; return top !== undefined && (Math.abs(top) < 60 || (fim && top < innerHeight)) })
+      const f = p.locator('#cen-frete .ind-table', { hasText: 'Transporte marítimo' })
       await f.waitFor()
       assert.match(await f.innerText(), /Δ mês %[\s\S]*12 meses %[\s\S]*Ano %/)
       assert.equal(await f.locator('tbody').count(), 2, 'EUA e Japão')
@@ -510,6 +563,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.clock.setFixedTime(Date.parse('2026-11-05T15:00:00Z'))
       await p.goto(base + '/#feriados')
       await p.locator('.fer-filter select').waitFor()
+      // abre em "Brasil e B3"; a escolha fica guardada ao recarregar
+      assert.equal(await p.locator('.fer-filter select').inputValue(), 'CIVBR+B3')
+      assert.doesNotMatch(await p.locator('.fer-months').innerText(), /Cascavel|Londrina/, 'padrão sem aniversários de cidades')
       const opts = await p.locator('.fer-filter option').allInnerTexts()
       for (const praca of ['Londres', 'Tóquio', 'China (continental)', 'Curitiba']) assert.ok(opts.includes(praca), praca)
       assert.ok(await p.locator('.fer-where .flag').count() > 0, 'bandeiras nas linhas de feriado')
@@ -523,9 +579,13 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.doesNotMatch(await p.locator('.fer-months').innerText(), /Aniversário de Curitiba/, 'aniversário não é feriado municipal')
       await p.locator('.fer-filter select').selectOption('PRE')
       assert.equal(await p.locator('.fer-filter select').inputValue(), 'PRE')
+      await p.reload(); await p.locator('.fer-filter select').waitFor()
+      assert.equal(await p.locator('.fer-filter select').inputValue(), 'PRE', 'escolha guardada')
       assert.equal(await p.locator('.fer-list li').count(), 0, 'sem datas estaduais inventadas ou herdadas dos calendários nacionais e municipais')
       assert.match(await p.locator('.fer-count').innerText(), /^0 datas cadastradas nesta seleção · cobertura parcial$/)
-      assert.match(await p.locator('.feriados [role="status"]').innerText(), /Cobertura parcial: Estado do Paraná \(2026, 2027\) sem calendário completo verificado nesta base\. A ausência de registros não permite afirmar que não haverá feriados ou suspensões\./)
+      // aviso de cobertura parcial: uma linha; o texto completo fica dentro de "detalhes"
+      assert.equal(await p.locator('.feriados details.fer-partial summary').innerText(), 'Cobertura parcial em 1 calendário')
+      assert.match(await p.locator('.feriados [role="status"]').textContent(), /Cobertura parcial: Estado do Paraná \(2026, 2027\) sem calendário completo verificado nesta base\. A ausência de registros não permite afirmar que não haverá feriados ou suspensões\./)
       assert.match(await p.locator('.feriados').innerText(), /Não há datas cadastradas nesta seleção\. Consulte a fonte oficial: a cobertura incompleta não indica ausência de feriados\./)
       assert.doesNotMatch(await p.locator('.feriados').innerText(), /Emancipação Política do Paraná/, '19 de dezembro não volta a ser apresentado como feriado civil estadual')
       // aprender: lista de conceitos de um lado, explicação do outro, sem texto sobre o método
@@ -552,7 +612,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await openCallouts(p)
       assert.match(await p.locator('.learn-detail').innerText(), /9,62%[\s\S]*R\$ 5,48/)
       // tópicos e busca
-      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho'])
+      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições'])
       const busca = p.getByRole('searchbox', { name: 'Buscar conceito' })
       await busca.fill('FIDC')
       assert.equal(await p.locator('.learn-list li').count(), 2) // FIDC e CRA (que cita a subordinação como num FIDC)

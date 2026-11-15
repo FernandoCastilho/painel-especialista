@@ -66,7 +66,7 @@ test('todos os estudos integrados renderizam sem erros e mantêm sua identidade'
   for (const study of studies) {
     const html=renderToStaticMarkup(createElement(Component,{study}))
     assert.ok(html.includes(study.title),study.title)
-    assert.match(html,/Perguntas para conversar com a empresa \(6\)/)
+    assert.ok(html.includes(`Perguntas para conversar com a empresa (${study.canvasQuestions.length})`))
     assert.doesNotMatch(html,/study-callout|study-nav|Capítulos do estudo/)
     assert.match(html,/class="study-summary"/)
     assert.match(html,/Relações da cadeia|rich-chain/)
@@ -117,4 +117,11 @@ test('cadeia em desenhos mostra produto, dinheiro, banco e ciclo; sem emoji cai 
   assert.match(plain, /sector-chain-nodes/)
   const missingCash = { ...rich, edges: [{ ...rich.edges[0], cash: undefined }] }
   assert.doesNotMatch(renderToStaticMarkup(createElement(Component, { study: { ...fixture, diagram: missingCash } })), /rich-chain/)
+})
+
+test('novos estudos usam data própria e não herdam a data histórica fixa', async () => {
+  const Component = await component('src/ResearchedSectorStudy.jsx')
+  const html = renderToStaticMarkup(createElement(Component, { study: { ...fixture, reviewedAt: '2026-11-13' } }))
+  assert.match(html, /dateTime="2026-11-13">13\/11\/2026/)
+  assert.doesNotMatch(html, /dateTime="2026-11-06"/)
 })

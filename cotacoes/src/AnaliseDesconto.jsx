@@ -22,10 +22,20 @@ export function DescontoIcon() {
 
 export default function AnaliseDesconto({ onBack }) {
   const [form, setForm] = useState(() => ({ ...DISCOUNT_INITIAL_FORM, titleRows: DISCOUNT_INITIAL_FORM.titleRows.map(row => ({ ...row })) }))
-  const { errors, operation, result: calculated } = parseDiscountForm(form)
+  const [visited, setVisited] = useState({})
+  const { errors: found, operation, result: calculated } = parseDiscountForm(form)
   const result = calculated?.ok ? calculated : null
+  // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
+  // O erro de um grupo de títulos também aparece ao mexer na data da operação; o aviso geral da operação só
+  // aparece quando não resta campo pendente ainda não visitado. A validação usa sempre a lista completa (found).
+  const visit = (key) => setVisited((old) => old[key] ? old : { ...old, [key]: true })
+  const seen = (key) => !!visited[key] || (key.startsWith('titleRow') && !!visited.date)
+  const unseen = Object.keys(found).filter((key) => key !== 'operation' && !seen(key))
+  const errors = Object.fromEntries(Object.entries(found).filter(([key]) => key === 'operation' ? unseen.length === 0 : seen(key)))
+  const pending = Object.keys(found).length > 0, flagged = Object.keys(errors).length > 0
+  const guide = unseen.length === 1 && unseen[0] === 'titleFeeMode' ? 'Escolha como a tarifa dos títulos é cobrada para ver a comparação.' : 'Preencha os campos que faltam para ver a comparação.'
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
-  const props = (key) => ({ id: `ad-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `ad-${key}-err ad-${key}-hint` })
+  const props = (key) => ({ id: `ad-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `ad-${key}-err ad-${key}-hint`, onBlur: () => visit(key) })
   const field = (key, label, control, hint = '') => <div className="cx-field" key={key}>
     <div className="cx-field-label"><label htmlFor={`ad-${key}`}>{label}</label>{hint && <CalculatorHelp title={label}><p>{hint}</p></CalculatorHelp>}</div>{control}
     <p className="sr-only" id={`ad-${key}-hint`}>{hint}</p>
@@ -83,12 +93,12 @@ export default function AnaliseDesconto({ onBack }) {
       <div className="desconto-titles">
         <h4>Títulos ou grupos com o mesmo vencimento</h4>
         <p>Informe o valor nominal total de cada grupo e a quantidade de títulos. Não multiplique o valor pela quantidade. Todos usam a taxa contratual acima.</p>
-        {form.titleRows.map((row, index) => <fieldset key={index} className="cx-form"><legend>Grupo {index + 1}</legend>
+        {form.titleRows.map((row, index) => <fieldset key={index} className="cx-form" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) visit('titleRow' + index) }}><legend>Grupo {index + 1}</legend>
           <label>Valor nominal total do grupo<MoneyInput value={row.value} onChange={value => setRow(index, 'value', value)} /></label>
           <label>Quantidade de títulos<input inputMode="numeric" value={row.count} onChange={event => setRow(index, 'count', event.target.value)} /></label>
           <label>Vencimento contratual<input type="date" value={row.dueDate} onChange={event => setRow(index, 'dueDate', event.target.value)} /></label>
           {operation?.rows[index]?.adjusted && <p className="desconto-paydate">Pago em {dateBr(operation.rows[index].paymentDate)}, próximo dia útil.</p>}
-          <button type="button" disabled={form.titleRows.length === 1} onClick={() => set('titleRows', form.titleRows.filter((_, i) => i !== index))}>Remover grupo {index + 1}</button>
+          <button type="button" disabled={form.titleRows.length === 1} onClick={() => { set('titleRows', form.titleRows.filter((_, i) => i !== index)); setVisited((old) => Object.fromEntries(Object.entries(old).filter(([key]) => !key.startsWith('titleRow')))) }}>Remover grupo {index + 1}</button>
           {errors['titleRow' + index] && <p role="alert">{errors['titleRow' + index]}</p>}
         </fieldset>)}
         <button type="button" disabled={form.titleRows.length >= 500} onClick={() => set('titleRows', [...form.titleRows, { value: '', count: '1', dueDate: '' }])}>Adicionar grupo de títulos</button>
@@ -125,7 +135,9 @@ export default function AnaliseDesconto({ onBack }) {
     </article>
 
     <div aria-live="polite" className="desconto-result-status">
-      {Object.keys(errors).length > 0 && <p className="desconto-notice">Preencha ou corrija os campos sinalizados para liberar a comparação.</p>}
+      {pending && (flagged
+        ? <p className="desconto-notice">Preencha ou corrija os campos sinalizados para liberar a comparação.</p>
+        : <p className="desconto-notice desconto-guide">{guide}</p>)}
       {calculated && !calculated.ok && <p role="alert" className="cx-error">{calculated.error}</p>}
       {result && <p className="desconto-result-caption">Principal do giro: <b>{brl(result.principal)}</b> · {number(result.operations)} operações de desconto por mês · Price a {form.giroRate}% a.m.</p>}
     </div>

@@ -8,6 +8,7 @@ import { CURRENCIES } from './useQuotes.js'
 import { useNews } from './useNews.js'
 import { buildFeed } from './feed.js'
 import Estado from './Estado.jsx'
+import { limparManchete } from './newsTitle.js'
 
 const stamp = (t) => {
   if (!t) return '—'
@@ -60,7 +61,7 @@ export default function News({ colors }) {
                   </span>
                   <span className="feed-body">
                     <a href={n.link} target="_blank" rel="noopener noreferrer" title={n.original ? `Original: ${n.original}` : undefined}>
-                      {n.title}
+                      {limparManchete(n.title)}
                     </a>
                     <small className="muted">
                       {n.source}

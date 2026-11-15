@@ -21,6 +21,25 @@ function AprenderAudio() {
   </section>
 }
 
+// Quadro de etapas: concessão, caminho normal, desvio e custos (usado no ACC).
+function LearnFlow({ f }) {
+  const etapas = (bloco, classe) => <section className={`learn-flow-block ${classe}`} aria-label={bloco.titulo}>
+    <h4>{bloco.titulo}</h4>
+    <ol className="learn-flow-steps">{bloco.passos.map((p) => <li key={p.quem}><strong>{p.quem}</strong><span>{p.texto}</span></li>)}</ol>
+    {bloco.fim && <p className="learn-flow-end">{bloco.fim}</p>}
+  </section>
+  return <section className="learn-flow" aria-label={f.titulo}>
+    <h3>{f.titulo}</h3>
+    {etapas(f.concessao, 'is-start')}
+    {etapas(f.principal, 'is-main')}
+    {etapas(f.desvio, 'is-alt')}
+    <section className="learn-flow-block is-cost" aria-label={f.custos.titulo}>
+      <h4>{f.custos.titulo}</h4>
+      <dl className="learn-flow-costs">{f.custos.itens.map((i) => <div key={i.nome}><dt>{i.nome}</dt><dd>{i.texto}</dd></div>)}</dl>
+    </section>
+  </section>
+}
+
 // Aba Aprender: lista de conceitos à esquerda; o conceito escolhido abre à direita (frase, explicação simples, lacunas, versão precisa, exemplo, teste).
 function Concept({ c, goto }) {
   if (c.diagramaIcms) return <IcmsStDiagram goto={goto} />
@@ -35,6 +54,8 @@ function Concept({ c, goto }) {
           <h3>Explicação simples</h3>
           {c.crianca.map((t) => <p key={t}>{t}</p>)}
           <p className="learn-analogy"><span className="learn-tag">Analogia</span>{c.analogia}</p>
+
+          {c.fluxo && <LearnFlow f={c.fluxo} />}
 
           {c.estudoHistorico && <section className="learn-history" aria-label={c.estudoHistorico.titulo}>
             <h3>{c.estudoHistorico.titulo}</h3>
@@ -67,11 +88,11 @@ function Concept({ c, goto }) {
           <details>
             <summary>Versão precisa</summary>
             <p>{c.preciso.texto}</p>
-            <p className="learn-formula" role="math" aria-label={c.preciso.formula}>{c.preciso.formula}</p>
+            <p className="learn-formula" role={c.preciso.tipo === 'conceitual' ? undefined : 'math'} aria-label={c.preciso.formula}>{c.preciso.formula}</p>
           </details>
 
           <details>
-            <summary>Exemplo numérico · {c.exemplo.titulo}</summary>
+            <summary>{c.exemplo.tipo === 'histórico' ? 'Exemplo histórico' : 'Exemplo numérico'} · {c.exemplo.titulo}</summary>
             <ol>{c.exemplo.passos.map((t) => <li key={t}>{t}</li>)}</ol>
             <p className="learn-result"><strong>Resultado:</strong> {c.exemplo.resultado}</p>
           </details>

@@ -19,10 +19,7 @@ import DateRangePicker from './DateRangePicker.jsx'
 import { fadeIn } from './motion.js'
 import { CURRENCIES, REFRESH_DAILY_MAX, useQuotes } from './useQuotes.js'
 import HistoryChart from './HistoryChart.jsx'
-const Macro = lazy(() => import('./Macro.jsx'))
-const RatesSnapshot = lazy(() => import('./RatesSnapshot.jsx'))
-const Curves = lazy(() => import('./Curves.jsx'))
-const CdiFuturo = lazy(() => import('./CdiFuturo.jsx'))
+const Juros = lazy(() => import('./Juros.jsx'))
 import HolidayNotice from './HolidayNotice.jsx'
 import AvisoInicial from './AvisoInicial.jsx'
 import MarketPopup from './MarketPopup.jsx'
@@ -67,11 +64,13 @@ const CEN_VIEWS = [
   { id: 'recuperacao', label: 'Recuperação judicial' },
   { id: 'atividade', label: 'Atividade e emprego' },
   { id: 'commodities', label: 'Commodities' },
-  { id: 'frete', label: 'Frete marítimo' },
   { id: 'indexadores', label: 'Indexadores' },
   { id: 'inflacao', label: 'Inflação' },
-  { id: 'fiscal', label: 'Fiscal' },
 ]
+// Seções dentro de um assunto (#cenarios/assunto/secao): a tela abre já rolada até a seção.
+const CEN_SECTIONS = { 'inflacao/fiscal': 'cen-fiscal', 'commodities/frete': 'cen-frete' }
+// Endereços antigos continuam valendo e viram o novo sem nova entrada no histórico.
+const CEN_OLD = { outros: 'inflacao', fiscal: 'inflacao/fiscal', frete: 'commodities/frete' }
 const PRESETS = [
   { id: 'day', label: 'Dia (intraday)', days: 0 },
   { id: '7', label: '7 dias', days: 7 },
@@ -208,7 +207,9 @@ export default function App() {
   const [avisoAberto, setAvisoAberto] = useState(() => !navigator.webdriver && avisoPendente())
   const fecharAviso = () => { marcarAvisoVisto(); setAvisoAberto(false) }
   const panorama = usePanorama()
-  const cenView = sub === 'outros' ? 'inflacao' : CEN_VIEWS.some((v) => v.id === sub) ? sub : 'projecoes' // #cenarios/outros (endereço antigo) abre Inflação
+  const cenSub = CEN_OLD[sub] ?? sub
+  const cenView = CEN_VIEWS.some((v) => v.id === cenSub.split('/')[0]) ? cenSub.split('/')[0] : 'projecoes'
+  const cenAnchor = tab === 'cenarios' ? CEN_SECTIONS[cenSub] : undefined
   const goto = (id, to = '', replace = false) => {
     setTab(id)
     setSub(to)
@@ -220,14 +221,30 @@ export default function App() {
     }
     if (!(id === 'bndes' && tab === 'bndes')) window.scrollTo({ top: 0 }) // escolher série e período na aba BNDES não leva ao topo
   }
-  useEffect(() => { // endereço antigo (#cenarios/outros) vira o novo, sem nova entrada no histórico
-    if (tab !== 'cenarios' || sub !== 'outros') return
-    setSub('inflacao')
-    try { window.history.replaceState(null, '', '#cenarios/inflacao') } catch { /* sem histórico */ }
+  useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
+    if (tab !== 'cenarios' || !CEN_OLD[sub]) return
+    setSub(CEN_OLD[sub])
+    try { window.history.replaceState(null, '', `#cenarios/${CEN_OLD[sub]}`) } catch { /* sem histórico */ }
   }, [tab, sub])
+  useEffect(() => { // seção dentro do assunto: rola até ela; repete uma vez se os quadros de cima terminarem de carregar e a empurrarem
+    if (!cenAnchor) return
+    let feito = null
+    const ir = () => { const el = document.getElementById(cenAnchor); if (!el) return false; el.scrollIntoView({ block: 'start' }); feito = window.scrollY; return true }
+    const t1 = setTimeout(() => { if (!ir()) setTimeout(ir, 300) }, 0)
+    const t2 = setTimeout(() => { if (feito !== null && Math.abs(window.scrollY - feito) < 2) ir() }, 1200) // só se a pessoa não rolou
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [cenAnchor])
   // Troca de tela preservada da atualização publicada em paralelo.
   const viewKey = ['cenarios', 'setores', 'calculadora', 'aprender'].includes(tab) ? `${tab}/${tab !== 'cenarios' ? sub.split('/')[0] : cenView}` : tab
   const mainRef = useRef(null)
+  // Celular: a faixa de assuntos de Cenários desliza para o lado; o assunto aberto fica sempre à vista.
+  const cenNav = useRef(null)
+  useEffect(() => {
+    const nav = cenNav.current, on = nav?.querySelector('[aria-current="true"]')
+    if (!nav || !on || nav.scrollWidth <= nav.clientWidth) return
+    const left = on.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft
+    nav.scrollLeft = Math.max(0, left - (nav.clientWidth - on.offsetWidth) / 2)
+  }, [tab, cenView])
   const viewAnim = useRef(null)
   useLayoutEffect(() => { viewAnim.current = fadeIn(mainRef.current, viewAnim.current) }, [viewKey])
   const openCurrency = CURRENCIES.find((c) => c.code === open)
@@ -285,6 +302,7 @@ export default function App() {
         <OnlineBadge /><AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" />
       </div>
     )}
+    <FeedbackMascot onSearch={setMascotSearch} section={tab} />
     <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
       {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
@@ -295,7 +313,7 @@ export default function App() {
           <button type="button" onClick={() => window.location.reload()}>Recarregar</button>
         </div>
       )}
-      <AlertaVariacao quotes={quotes} />
+      <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
       {tab !== 'resumo' && (
         <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}`}>
@@ -313,31 +331,17 @@ export default function App() {
       )}
 
       {tab === 'juros' && (
-        <>
-          <section aria-labelledby="juros-brasil">
-            <h2 id="juros-brasil">Brasil</h2>
-            <RatesSnapshot macro={macro} region="brasil" />
-            <Macro macro={macro} region="brasil" />
-            <CdiFuturo curves={curves} macro={macro.data} hol={hol} />
-            <Curves curves={curves} region="brasil" />
-          </section>
-          <section aria-labelledby="juros-exterior">
-            <h2 id="juros-exterior">Outros países</h2>
-            <RatesSnapshot macro={macro} region="exterior" />
-            <Macro macro={macro} region="exterior" />
-            <Curves curves={curves} region="exterior" />
-          </section>
-        </>
+        <Juros macro={macro} curves={curves} hol={hol} />
       )}
 
       {tab === 'cenarios' && (
         <>
-          <nav className="learn-nav cen-nav" aria-label="Assuntos de Cenários">
+          <nav className="learn-nav cen-nav" aria-label="Assuntos de Cenários" ref={cenNav}>
             {CEN_VIEWS.map((v) => (
               <button key={v.id} type="button" className={cenView === v.id ? 'on' : ''} aria-current={cenView === v.id ? 'true' : undefined} onClick={() => goto('cenarios', v.id)}>{v.label}</button>
             ))}
           </nav>
-          {cenView === 'projecoes' ? <Projecoes macro={macro} searchTarget={searchSelection?.doc} /> : cenView === 'inflacao' || cenView === 'fiscal' ? <Outros macro={macro} part={cenView} /> : cenView === 'indexadores' ? <Indexadores onBndes={() => goto('bndes', 'tlp/TLP')} /> : cenView === 'calendario' ? <Calendario /> : cenView === 'inadimplencia' ? <Inadimplencia searchTarget={searchSelection?.doc} /> : cenView === 'recuperacao' ? <RecuperacaoJudicial onSources={() => goto('config')} /> : <MarketContext part={cenView} />}
+          {cenView === 'projecoes' ? <Projecoes macro={macro} searchTarget={searchSelection?.doc} /> : cenView === 'inflacao' ? <Outros macro={macro} /> : cenView === 'indexadores' ? <Indexadores onBndes={() => goto('bndes', 'tlp/TLP')} /> : cenView === 'calendario' ? <Calendario /> : cenView === 'inadimplencia' ? <Inadimplencia searchTarget={searchSelection?.doc} /> : cenView === 'recuperacao' ? <RecuperacaoJudicial onSources={() => goto('config')} /> : <MarketContext part={cenView} />}
         </>
       )}
 
@@ -346,7 +350,7 @@ export default function App() {
       {tab === 'bancos' && <Bancos />}
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
-      {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} />}
+      {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} quotes={quotes} />}
 
       {tab === 'feriados' && <Feriados hol={hol} />}
 
@@ -378,7 +382,6 @@ export default function App() {
       )}
       </Suspense>
     </main>
-    <FeedbackMascot onSearch={setMascotSearch} />
     </AvisosProvider>
   )
 }

@@ -13,7 +13,8 @@ export function validateFeedback(values) {
   if (typeof values?.message !== 'string' || !values.message.trim()) return 'Escreva sua mensagem antes de enviar.'
   if (values.message.length > FEEDBACK_LIMITS.message) return 'A mensagem deve ter até 4.000 caracteres.'
   if (typeof values.name !== 'string' || values.name.length > FEEDBACK_LIMITS.name) return 'O nome deve ter até 100 caracteres.'
-  if (typeof values.email !== 'string' || values.email.length > FEEDBACK_LIMITS.email || (values.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))) return 'Confira o e-mail ou deixe esse campo em branco.'
+  if (typeof values.email !== 'string' || !values.email.trim()) return 'Informe seu e-mail para que Fernando possa responder.'
+  if (typeof values.email !== 'string' || values.email.length > FEEDBACK_LIMITS.email || (values.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))) return 'Informe um e-mail válido para receber a resposta.'
   return ''
 }
 
@@ -29,7 +30,7 @@ export async function sendFeedback(config, values, { fetcher = fetch, signal } =
     body: JSON.stringify({
       assunto: `[PEME] ${values.type}`, tipo: values.type,
       message: values.message.trim(), ...(values.name.trim() && { name: values.name.trim() }),
-      ...(values.email.trim() && { email: values.email.trim() }), _gotcha: '',
+      email: values.email.trim(), _gotcha: '',
     }),
   })
   const result = await response.json().catch(() => null)

@@ -30,3 +30,6 @@
 .context-mini .spark { display:block; width:100%; height:70px }
 .context-mini span { font-size:.76rem; color:var(--mut,#a5acb8); line-height:1.4 }
 .indicator-history-plot .tip { left:50% !important; width:max-content; max-width:calc(100% - 16px); white-space:normal; overflow-wrap:anywhere; }
+/* Seção que antes era um assunto à parte (Fiscal dentro de Inflação, Frete dentro de Commodities): separada por espaço
+   e uma linha; ao abrir pelo endereço antigo, a tela rola até ela deixando um respiro em cima. */
+.cen-section { margin-top: 36px; padding-top: 4px; scroll-margin-top: 16px; }

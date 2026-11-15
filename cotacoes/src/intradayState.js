@@ -1,5 +1,5 @@
 import { marketDate as localDate } from './marketReturns.js'
-import { QUOTE_AGE_LIMIT_MS } from './quoteFreshness.js'
+import { QUOTE_AGE_LIMIT_MS, offHoursReference } from './quoteFreshness.js'
 
 // Availability follows the actual retained samples, never a weekday assumption.
 export function intradaySelection(points, selectedDate) {
@@ -15,6 +15,8 @@ export function intradayObservationWarning(points, selectedDate, now = Date.now(
   const last = points?.at(-1)
   if (!last || selectedDate !== localDate(now)) return ''
   if (last.t > now + 60000) return 'Horário da última amostra está no futuro; confira o relógio e a fonte.'
+  // Fora da janela de coleta, a última amostra da janela anterior é o esperado: informa sem tom de alerta.
+  if (now - last.t > QUOTE_AGE_LIMIT_MS && offHoursReference({ timestamp: last.t }, now)) return 'Fora do horário de coleta do painel (dias úteis, 9h05 às 18h). O gráfico vai até a última amostra.'
   return now - last.t > QUOTE_AGE_LIMIT_MS
     ? 'Última amostra com mais de 10 minutos. O gráfico não representa a cotação atual.'
     : ''

@@ -2,6 +2,17 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '14/11/2026', resumo: 'Empréstimo externo (4131) no formato da cotação de banco: principal em reais, parcelas, taxa all-in e custo efetivo com NDF', items: [
+    'Calculadoras > Empréstimo externo (4131): a tela passou a seguir o formato das cotações de banco de 4131 com NDF. São seis campos: principal em reais, moeda (dólar ou euro), cotação de partida, parcelas mensais, taxa all-in e data. O valor na moeda aparece logo depois da moeda, já convertido. O resto já vem no padrão: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência e IR dentro da taxa.',
+    'A cotação de partida já vem do Painel e o DI pré vem da curva da B3, para o prazo médio, com a origem ao lado do campo; os dois podem ser trocados. O cupom cambial (ou o juro do euro) continua digitado.',
+    'Resultado como na cotação: custo efetivo total ao mês e ao ano (exp/360) com o equivalente em CDI, economia de IOF frente a um capital de giro em reais, taxa de giro equivalente e o quadro parcela a parcela, com saldo, juros, taxa futura e parcela em reais. A taxa futura é teórica: a da mesa do banco prevalece.',
+    'Atingir meta, no topo: digite o custo desejado (por exemplo, 1,30% ao mês prefixado, ou um CDI +) e a tela calcula a taxa all-in que chega nele, recalculando parcelas, economia de IOF e equivalente em giro.',
+    'Condições da operação na ordem do e-mail de cotação, com o botão Copiar resumo, que leva o texto pronto para colar.',
+    'Taxa futura: além da estimativa pelo DI e pelo juro da moeda, dá para colar as taxas futuras fechadas da cotação da mesa, uma por parcela. Com elas, as parcelas em reais e o custo efetivo passam a usar exatamente as taxas do banco.',
+    'O que foge do padrão fica em Mais opções (outra frequência, principal no vencimento, carência, IR somado à taxa, tarifa, fiança). A comparação com swap e sem proteção continua disponível, em painel próprio.',
+    'Regras e fontes da 4131: entraram as regras do IOF do empréstimo externo que constam do decreto (IOF de crédito, IOF-câmbio na entrada e na saída, quem cobra e quando, cálculo do prazo médio, liquidação antecipada e títulos com opção de antecipação).',
+    'IOF-câmbio pelo prazo médio: passa a valer o prazo exato. Até 364 dias paga 3,5%; qualquer fração acima de 364 não paga, e o prazo aparece arredondado para cima. Antes a tela arredondava para baixo. Entre 364 e 365 dias a tela, o resumo copiado, o PDF e a apresentação avisam para confirmar com o câmbio do banco.',
+  ] },
   { date: '12/11/2026', resumo: 'Calculadoras de crédito: 31/12 sem expediente bancário', items: [
     'Vencimento em 31/12 passa para o próximo dia útil no Capital de Giro, no Comparador de Crédito, na Análise de desconto e na Operação x DI (ex.: 31/12/2026 → 04/01/2027); juros, IOF e CET contam até a nova data. A contagem de dias úteis de CDI, DI e TLP continua com 31/12 como dia útil.',
   ] },
@@ -83,16 +94,26 @@ export const ENTRIES = [
   { date: '09/10/2026', items: ['SOFR com médias de 30/90/180 dias e faixa de percentis.', 'Relógio do país acima de cada cotação.', 'Cotação do CNH por cruzamento quando a direta está defasada.', 'Curvas de juros: DI x pré (B3) e Treasuries (EUA), com comparação entre datas.'] },
 ]
 
+// As mais recentes ficam à vista; as anteriores abrem por clique (a lista inteira passava de 10 telas no celular).
+const RECENTES = 6
+const entrada = (e, i) => (
+  <div key={`${e.date}-${i}`}>
+    <h3>{e.date}</h3>
+    <ul>{e.items.map((item) => <li key={item}>{item}</li>)}</ul>
+  </div>
+)
+
 export default function Novidades({ open = false }) {
   return (
     <details className="novidades" open={open}>
       <summary>O que há de novo</summary>
-      {ENTRIES.map((e, i) => (
-        <div key={`${e.date}-${i}`}>
-          <h3>{e.date}</h3>
-          <ul>{e.items.map((i) => <li key={i}>{i}</li>)}</ul>
-        </div>
-      ))}
+      {ENTRIES.slice(0, RECENTES).map(entrada)}
+      {ENTRIES.length > RECENTES && (
+        <details className="novidades-antigas">
+          <summary>Novidades anteriores ({ENTRIES.length - RECENTES})</summary>
+          {ENTRIES.slice(RECENTES).map((e, i) => entrada(e, i + RECENTES))}
+        </details>
+      )}
     </details>
   )
 }

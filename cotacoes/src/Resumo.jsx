@@ -5,11 +5,10 @@ import SectorNews from './SectorNews.jsx'
 import ChartComparison from './ChartComparison.jsx'
 import { Aviso } from './Avisos.jsx'
 import { buildFeed } from './feed.js'
-import RefreshButton from './RefreshButton.jsx'
 import './MarketTable.css'
 import './MarketTerminal.css'
 import { accumulatedReturns, cnhPtaxCross, compatiblePtax, marketDate, ptaxLabel } from './marketReturns.js'
-import { quoteAgeState } from './quoteFreshness.js'
+import { offHoursReference as offHours, quoteAgeLabel, quoteAgeState } from './quoteFreshness.js'
 import { nextChartIndex } from './chartNavigation.js'
 import { focoPorTeclado, saidaDeToque, useTocarFora } from './chartToque.js'
 import { dataTimestamp } from './dataTimestamp.js'
@@ -77,7 +76,7 @@ function QuoteRow({ code, quote, ptax, returns, selected, onOpen, color }) {
     <tr className="market-values" onClick={open}>
       <th scope="row"><button type="button" className="market-open" aria-pressed={selected} onClick={e => { e.stopPropagation(); open() }} aria-label={cur.name + ': abrir gráfico' + (quote?.stale ? '. Última cotação válida de ' + dataTimestamp(quote.timestamp) : '')}>
         <b><Flag code={series} width={20} height={14} /> {series}/BRL <span aria-hidden="true">›</span></b><small>{seriesName(cur, series)}</small>
-        {quoteAgeState(quote) && <small className="market-state" title={quote?.stale ? quote.error : undefined}>{quote?.stale ? 'Última válida · ' + dataTimestamp(quote.timestamp) : quoteAgeState(quote)}</small>}
+        {quoteAgeState(quote) && <small className={'market-state' + (quoteAgeLabel(quote).tone === 'neutral' || (quote?.stale && offHours(quote)) ? ' is-neutral' : '')} title={quote?.stale ? quote.error : undefined}>{quote?.stale ? 'Última válida · ' + dataTimestamp(quote.timestamp) : quoteAgeLabel(quote).text}</small>}
       </button></th>
       <td className="market-price">{quote ? brl(quote.bid, code === 'JPY' ? 5 : 4).replace('R$ ', '') : <span className="muted">—</span>}</td>
       <td className={delta == null ? 'muted' : 'pct ' + toneOf(delta)}>{delta == null ? <span aria-label={quote?.cross ? 'Variação absoluta indisponível para o cruzamento' : 'Variação absoluta indisponível'} title={quote?.cross ? 'A fonte não fornece variação absoluta deste cruzamento' : 'Variação absoluta não fornecida'}>—</span> : (delta > 0 ? '+' : delta < 0 ? '−' : '') + Math.abs(delta).toLocaleString('pt-BR', { minimumFractionDigits: code === 'JPY' ? 5 : 4, maximumFractionDigits: code === 'JPY' ? 5 : 4 })}</td>
@@ -399,7 +398,7 @@ function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPre
 }
 
 // Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
-function MoedasPanel({ quotes, ptax, onOpen, colors, quoteRefresh, searchTarget, panorama }) {
+function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
   const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
   useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
   const daily = useCentralDaily()
@@ -424,7 +423,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, quoteRefresh, searchTarget,
       <section className="market-terminal" aria-labelledby="r-moedas">
         <div className="sec-head terminal-titlebar">
           <h2 id="r-moedas">Mercado hoje <Explain id="mercadoHoje" /> <button type="button" className="img-share" aria-label="Enviar imagem das últimas cotações de câmbio" title="Compartilha as últimas cotações de câmbio, sem gráficos ou petróleo" onClick={() => shareQuotesImage(quotes)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></button></h2>
-          {quoteRefresh && <RefreshButton custom={quoteRefresh} label="cotações do câmbio" />}
+          {/* atualizar o câmbio: um botão só, na linha de estado logo acima do quadro */}
           {panorama && <button type="button" className="compare-trigger panorama-trigger sinal-novo-host" aria-label={panorama.nova ? 'Panorama do dia (edição nova)' : 'Panorama do dia'} aria-haspopup="dialog" title={panorama.nova ? 'Há uma edição nova do Panorama do dia. Abre só quando você pede.' : 'Abrir o Panorama do dia: câmbio, juros futuros e Brent em uma tela'} onClick={panorama.abrir}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-9" /></svg><span>Panorama do dia</span>{panorama.nova && <i className="sinal-novo" aria-hidden="true" />}</button>}
           <button type="button" ref={compareTrigger} className="compare-trigger" aria-label="Comparar moedas" aria-haspopup="dialog" aria-expanded={compareOpen} title="Montar comparação de moedas" onClick={() => setCompareOpen(true)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 3v18h18M5 16l5-7 4 4 6-9M5 10l5 4 5-7 5 9" /></svg><span>Comparar</span></button>
         </div>
@@ -450,14 +449,14 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, quoteRefresh, searchTarget,
           <p>O traço indica dado indisponível. A cotação do CNH usa a compra de USD/BRL dividida pela venda de USD/CNH. As duas variações usam a mesma cotação anterior estimada, mantendo a diferença proporcional atual entre compra e venda do USD/CNH. Sem dados para estimar a base anterior, as duas variações ficam indisponíveis.</p>
           <p>Não há PTAX oficial do yuan. A coluna mostra uma referência cruzada (PTAX do dólar ÷ USD/CNH no horário do boletim), só com cotações das duas pontas a até 15 min dele. CNY e CNH são referências distintas.</p>
           <ul>{CURRENCIES.map(c => { const q = quotes?.[c.code], p = ptaxes[c.code], r = returns[c.code]; return <li key={c.code}>
-            <b>{q?.source || c.code}/BRL:</b> <span className={quoteAgeState(q) ? 'status stale' : ''}>{!q ? quotes ? 'Cotação indisponível' : 'Carregando cotação' : (q.stale ? 'Atualização pendente · ' : q.fallback ? 'Referência diária de reserva · ' : quoteAgeState(q) ? quoteAgeState(q) + ' · ' : '') + dataTimestamp(q.timestamp)}</span>
+            <b>{q?.source || c.code}/BRL:</b> <span className={quoteAgeState(q) && quoteAgeLabel(q).tone !== 'neutral' ? 'status stale' : ''}>{!q ? quotes ? 'Cotação indisponível' : 'Carregando cotação' : (q.stale ? 'Atualização pendente · ' : q.fallback ? 'Referência diária de reserva · ' : quoteAgeLabel(q).tone === 'neutral' ? 'Fora do horário de coleta · ' : quoteAgeState(q) ? quoteAgeState(q) + ' · ' : '') + dataTimestamp(q.timestamp)}</span>
             {' · '}{q ? q.cross ? 'CNH offshore por cruzamento' : q.fallback ? 'referência diária' : '' : 'Aguardando cotação válida'}
             {p && <> · PTAX venda, boletim {p.kind}, {p.date.split('-').reverse().join('/')}, R$ por 1 {c.code}</>}
             {['month', 'year'].map(k => <span key={k}> · {k === 'month' ? 'Mês' : 'Ano'}: {r[k] ? `base ${r[k].baseDate.split('-').reverse().join('/')} → ${r[k].endDate.split('-').reverse().join('/')}` : 'sem base/cobertura compatível'}</span>)}
           </li> })}</ul>
           <p>Acumulados: (última observação diária ÷ última observação diária anterior ao início do mês/ano − 1) × 100, mesma série diária. Dias civis em America/Sao_Paulo. Barras do dia atual excluídas; lacunas superiores a 7 dias junto à base ou ao fim impedem o cálculo. {daily.status === 'error' ? 'Falha ao consultar o histórico dos acumulados.' : daily.status === 'loading' ? 'Carregando histórico dos acumulados.' : 'Arquivo histórico: ' + dataTimestamp(daily.data?.generatedAt)}</p>
           <p>PTAX é referência oficial independente, não spot. Gráficos: {spark.label}; histórico desde {toInput(limits.start).split('-').reverse().join('/')}, sujeito a lacunas.</p>
-          <p>Cotação do dia: última referência recebida, não um feed em tempo real. “Dado antigo” sinaliza horário há mais de 10 min; esse limite não é garantia de latência. O horário original permanece indicado acima. Ausência de novo preço não é tratada como mercado fechado.</p>
+          <p>Cotação do dia: última referência recebida, não um feed em tempo real. “Dado antigo” sinaliza horário há mais de 10 min dentro da janela de coleta do painel (dias úteis, 9h05 às 18h); esse limite não é garantia de latência. Fora dessa janela, a linha mostra a data e a hora da última referência, sem alerta. O horário original permanece indicado acima. Ausência de novo preço não é tratada como mercado fechado.</p>
           </Aviso>
       </section>
       {compareOpen && <Expandable modal label="Comparar moedas" onClose={closeCompare}>
@@ -532,7 +531,7 @@ function MarketNews({ bare = false }) {
   </aside>
 }
 // Mercado: cards de câmbio e juros, tabela de pares com manchetes e referência do Brent. Juros, curvas e agenda ficam nas próprias abas.
-export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, goto, status, quoteRefresh, searchTarget, panorama }) {
+export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, goto, status, searchTarget, panorama }) {
   const rates = rateTiles(macro?.data, curves?.data)
   const [rateOpen, setRateOpen] = useState(null)
   useDataFile('oil.json')
@@ -543,7 +542,7 @@ export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, go
     <div className="terminal-desk">
       <KpiRow quotes={quotes} rates={rates} ipca={ipcaSeries} ibov={indices.data} macro={macro?.data} colors={colors} onOpen={onOpen} onRate={setRateOpen} goto={goto} status={status} />
       {rateOpen && <Suspense fallback={null}><RateModal kind={rateOpen} macro={macro} curves={curves} onClose={() => setRateOpen(null)} /></Suspense>}
-      <div className="resumo desk-markets"><MoedasPanel searchTarget={searchTarget} quotes={quotes} ptax={ptax} onOpen={onOpen} colors={colors} quoteRefresh={quoteRefresh} panorama={panorama} /></div>
+      <div className="resumo desk-markets"><MoedasPanel searchTarget={searchTarget} quotes={quotes} ptax={ptax} onOpen={onOpen} colors={colors} panorama={panorama} /></div>
     </div>
   )
 }

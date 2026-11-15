@@ -31,11 +31,24 @@ async function proveLastColumn(region, file) {
       try {
         await page.route('**/bndes.json*', route => route.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { TFB_60_90: { points: [['2026-11-06', 13]] }, TFB_60_30: { points: [['2026-11-06', 13.2]] } }, tlp: { points: [['2026-11-01', 7]] }, errors: [], stale: {} } }))
         await page.route('**/moedas.json*', route => route.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { C03: { points: [['2026-11-06', 12]] }, C01: { points: [['2026-11-06', 12.5]] } }, errors: [], stale: {} } }))
+        await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }))
+        await page.route('**/recado.json*', route => route.fulfill({ json: { ativo: false } }))
         await page.goto(base + '/#calculadora')
+        await page.locator('dialog.aviso-inicial:not(.recado)').getByRole('button', { name: 'Entendi' }).click()
         await page.getByRole('button', { name: 'BNDES: abrir calculadora', exact: true }).waitFor()
         assert.equal(await page.getByRole('button', { name: /^BNDES.*abrir calculadora$/ }).count(), 1, 'entrada única BNDES')
         await page.getByRole('button', { name: 'BNDES: abrir calculadora', exact: true }).click()
         await page.locator('#fm-compare').waitFor()
+        // Regressão visual aprovada em 13/11: resumo de câmbio fora da calculadora.
+        assert.equal(await page.locator('.alerta-variacao').count(), 0)
+        const dateBox = await page.locator('#fm-data-lib').boundingBox()
+        const placeBox = await page.locator('#fm-praca').boundingBox()
+        if (width > 1000) assert.ok(Math.abs(dateBox.y - placeBox.y) <= 1, 'Data e Praça alinhadas no desktop')
+        else assert.ok(placeBox.y > dateBox.y, 'Data e Praça empilhadas no mobile/tablet')
+        const pdfStyle = await page.locator('.fm-print-actions .bnprint-launch').evaluate(el => ({ background: getComputedStyle(el).backgroundImage, minHeight: parseFloat(getComputedStyle(el).minHeight) }))
+        assert.equal(pdfStyle.background, 'none', 'PDF sem gradiente de ação principal')
+        assert.ok(pdfStyle.minHeight >= 44, 'PDF preserva alvo acessível')
+        assert.ok(await page.locator('#fm-result').evaluate(el => !!(el.compareDocumentPosition(document.querySelector('.fm-print-actions')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'ações após o resultado')
         // O nome completo do porte/região deve caber sem depender de abrir o seletor.
         const businessSize = page.locator('#fm-porte')
         const originalBusinessSize = await businessSize.inputValue()
@@ -78,7 +91,8 @@ async function proveLastColumn(region, file) {
           await amount.blur()
         }
         await page.screenshot({ path: path.join(out, `${width}-${theme}-initial.png`), fullPage: true })
-        assert.equal(await page.locator('#fm-custo').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)', 'campos claros também no tema escuro')
+        // Decisão de 13/11/2026: a tela acompanha o tema (campo branco no claro, fundo escuro das calculadoras no escuro).
+        assert.equal(await page.locator('#fm-custo').evaluate(element => getComputedStyle(element).backgroundColor), theme === 'dark' ? 'rgb(7, 17, 34)' : 'rgb(255, 255, 255)', 'campos acompanham o tema')
         assert.equal(await page.locator('#fm-finame-eligible, #fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc').count(), 0)
         // Os números principais abrem o resultado, sem precisar abrir a composição; a faixa "Cotação comparativa" só existe ao comparar.
         const highlights = page.locator('.fm-destaques tbody tr')
