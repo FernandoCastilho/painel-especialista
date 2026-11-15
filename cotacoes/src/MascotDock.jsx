@@ -11,8 +11,8 @@ const TOP = { y: 0 }
 // A coruja grande abre abaixo do cabeçalho (e da barra do topo, onde mora a pequena no computador).
 const headerBottom = () => Math.max(window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 88, currentMascotSlot()?.getBoundingClientRect().bottom ?? 0)
 const place = point => clampMascot(point, window.innerWidth, window.innerHeight - (window.innerWidth < NARROW ? 76 : 0), headerBottom() + 8)
-// A coruja pequena mora no espaço reservado da barra do topo (computador). Sem esse espaço (celular, tela cheia),
-// fica logo abaixo do topo e dos relógios do Mercado; no celular, num espaço reservado entre os relógios e o conteúdo.
+// A coruja pequena mora no espaço reservado do topo: barra do topo no computador, linha de ícones no celular.
+// Sem esse espaço (tela cheia, apresentação, enquanto a tela carrega), flutua logo abaixo do topo e dos relógios do Mercado.
 const parkTop = () => Math.max(0,
   window.document?.querySelector('.term-head')?.getBoundingClientRect().bottom ?? 0,
   window.document?.querySelector('.clocks-top')?.getBoundingClientRect().bottom ?? 0,
