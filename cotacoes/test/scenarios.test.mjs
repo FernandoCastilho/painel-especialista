@@ -68,3 +68,13 @@ test('idade da projeção: dias corridos em Brasília e alerta acima de 14 dias'
   assert.equal(textoIdadeProjecao(idadeProjecao('2026-11-08', agora)), 'projeção de 08/11 (há 1 dia)')
   assert.equal(textoIdadeProjecao(null), 'fonte pendente')
 })
+
+import { textoHaDias } from '../src/scenarios.js'
+test('idade da projeção em texto curto, para a linha do banco na tabela', () => {
+  const agora = Date.parse('2026-11-09T15:00:00Z')
+  assert.equal(textoHaDias(idadeProjecao('2026-09-25', agora)), 'há 45 dias')
+  assert.equal(textoHaDias(idadeProjecao('2026-11-08', agora)), 'há 1 dia')
+  assert.equal(textoHaDias(idadeProjecao('2026-11-09', agora)), 'hoje')
+  assert.equal(textoHaDias(idadeProjecao('2026-11-12', agora)), 'data futura')
+  assert.equal(textoHaDias(null), '')
+})
