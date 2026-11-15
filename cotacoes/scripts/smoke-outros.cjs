@@ -124,7 +124,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       }
       const corpo = await p.locator('main').innerText()
       assert.doesNotMatch(corpo, /Reino Unido|Bank Rate|Bank of England|BoE/, 'sem Reino Unido em Juros')
-      assert.match(await p.locator('.executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
+      assert.match(await p.locator('#juros-ref-exterior .executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
       // os gráficos abrem pela linha da tabela, em tela própria (a página não traz gráfico solto)
       assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página de Juros')
       const abrir = async (botao, titulo) => {

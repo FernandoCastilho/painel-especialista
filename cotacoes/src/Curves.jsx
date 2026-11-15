@@ -227,7 +227,9 @@ export function CurveDetail({ id, curves: c }) {
 const TABELAS = ['br', 'cc', 'us', 'eu']
 
 // Aba Juros: cada curva vira uma tabela (prazo × data de comparação); a linha abre o gráfico em tela própria.
-export default function Curves({ curves: c, onOpen }) {
+export default function Curves({ curves: c, onOpen, region }) {
+  const tables = TABELAS.filter(id => region === 'brasil' ? ['br', 'cc'].includes(id) : region === 'exterior' ? ['us', 'eu'].includes(id) : true)
+  const stale = Object.entries(c.data?.stale ?? {}).filter(([id]) => tables.includes(id))
   const d = c.data
   const euro = useEuroCurve()
   const dados = { br: d?.br, cc: d?.cc, us: d?.us, eu: euro.data }
@@ -239,14 +241,14 @@ export default function Curves({ curves: c, onOpen }) {
       {c.status === 'ok' && c.data.generatedAt && (Date.now() - c.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (
         <p className="status stale">Atenção: as curvas foram coletadas há mais de 3 horas; a atualização automática pode ter parado.</p>
       )}
-      {c.status === 'ok' && Object.keys(c.data.stale ?? {}).length > 0 && (
+      {c.status === 'ok' && stale.length > 0 && (
         <p className="status stale">
-          Atualização indisponível na última coleta; mantido o último dado publicado: {Object.entries(c.data.stale).map(([k, t]) => `${{ br: 'DI x pré', cc: 'cupom cambial', us: 'Treasuries' }[k] ?? k} (coletado em ${t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'data desconhecida'})`).join(', ')}.
+          Atualização indisponível na última coleta; mantido o último dado publicado: {stale.map(([k, t]) => `${{ br: 'DI x pré', cc: 'cupom cambial', us: 'Treasuries' }[k] ?? k} (coletado em ${t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'data desconhecida'})`).join(', ')}.
         </p>
       )}
       {c.status === 'error' && <Estado tipo="erro" erro={c.error}>Curvas de juros indisponíveis agora.</Estado>}
-      {euro.stale && <p className="status stale" role="status">Não foi possível atualizar a curva do euro. Mantida a última coleta disponível.</p>}
-      {TABELAS.map((id) => {
+      {region !== 'brasil' && euro.stale && <p className="status stale" role="status">Não foi possível atualizar a curva do euro. Mantida a última coleta disponível.</p>}
+      {tables.map((id) => {
         const def = CURVAS[id]
         const pronto = id === 'eu' ? !euro.loading : c.status === 'ok'
         const t = pronto && dados[id] ? curveTable(dados[id], def.mode) : { columns: [], rows: [] }

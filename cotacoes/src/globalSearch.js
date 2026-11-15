@@ -10,7 +10,7 @@ export const SEARCH_SOURCES = [
   ['macro.json','juros','Juros e projeções'], ['curves.json','juros','Curvas de juros'], ['curves-history.json','juros','Histórico das curvas'],
   ['news.json','noticias','Manchetes'], ['temas.json','resumo','Notícias por tema'], ['reforma-tributaria.json','resumo','Reforma tributária'],
   ['focus-history.json','cenarios/projecoes','Histórico semanal do Focus'], ['cenarios.json','cenarios/projecoes','Projeções por instituição'], ['projecoes.json','cenarios/projecoes','Projeções'],
-  ['heavy-vehicles.json','setores/veiculos-pesados','Veículos pesados — ANFAVEA'], ['recuperacao.json','cenarios/recuperacao','Recuperação judicial: cobertura e lacunas'], ['calendar.json','cenarios/calendario','Calendário econômico'], ['inadimplencia.json','cenarios/inadimplencia','Inadimplência PF e PJ'],
+  ['heavy-vehicles.json','setores/veiculos-pesados','Veículos pesados — ANFAVEA'], ['calendar.json','cenarios/calendario','Calendário econômico'], ['inadimplencia.json','cenarios/inadimplencia','Inadimplência PF e PJ'],
   ['market-indicators.json','cenarios/atividade','Atividade e emprego'], ['indicator-history.json','cenarios/atividade','Histórico de atividade'],
   ['commodities.json','cenarios/commodities','Commodities'], ['commodities-brl.json','cenarios/commodities','Commodities em reais'],
   ['oil.json','cenarios/commodities','Petróleo Brent'], ['fuels.json','cenarios/commodities','Combustíveis'],
