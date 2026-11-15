@@ -188,13 +188,15 @@ test('foco local mostra somente arestas diretas do selecionado, sem ligações e
 test('snapshot real gera relações sem fabricar matérias e expira com relógio avançado', async () => {
   const sectorNews = JSON.parse(await readFile(new URL('../public/sector-news.json', import.meta.url)))
   const curadoria = JSON.parse(await readFile(new URL('../public/curadoria-noticias.json', import.meta.url)))
-  const graph = buildKnowledgeGraph({ sectorNews, curadoria, now: NOW })
+  // O relógio é o da própria coleta: na rodada só de Trends, os arquivos vêm do site publicado e são mais novos que NOW.
+  const now = Math.max(NOW, ...[sectorNews.generatedAt, curadoria.generatedAt].map(v => new Date(v).getTime()).filter(Number.isFinite))
+  const graph = buildKnowledgeGraph({ sectorNews, curadoria, now })
   assert.ok(graph.meta.newsCount > 0)
-  assert.ok(newsNodes(graph).every(node => node.source && node.href.startsWith('https://') && withinWindow(node.t)))
-  const expired = buildKnowledgeGraph({ sectorNews, curadoria, archive: archive(graph.archiveItems), now: NOW + 30 * 86400000 })
+  assert.ok(newsNodes(graph).every(node => node.source && node.href.startsWith('https://') && withinWindow(node.t, now)))
+  const expired = buildKnowledgeGraph({ sectorNews, curadoria, archive: archive(graph.archiveItems), now: now + 30 * 86400000 })
   assert.equal(expired.meta.newsCount, 0)
 })
-function withinWindow(t) { return t >= NOW - KNOWLEDGE_WINDOW_MS && t <= NOW }
+function withinWindow(t, now = NOW) { return t >= now - KNOWLEDGE_WINDOW_MS && t <= now }
 
 test('every eligible item from each live source has a connection and honest counters', () => {
   const unknown = generic({ title: 'Prefeitura anuncia programação local', link: 'https://example.org/museu' })
