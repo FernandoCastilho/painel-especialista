@@ -482,6 +482,10 @@ main.app .cen-nav { margin: 0 0 12px; }
 .kpi-label small { margin-left: auto; text-align: right; }
 .market-open b .flag { vertical-align: middle; margin-right: 4px; }
 .ind-table .market-open b .flag { margin-right: 4px; }
+/* O "?" tem 44px de área de toque e empurrava o nome do indexador para baixo dos valores da linha.
+   Ele deixa de alargar a linha (a área de toque continua a mesma) e o atalho abaixo ganha distância dele. */
+main.app .idx-table tbody th .help { margin-block: -14px; }
+main.app .idx-table tbody th small .idx-link { display: inline-block; margin-top: 16px; }
 main.app .idx-table .idx-rel { min-width: 220px; }
 main.app .idx-table .idx-rel small { display: block; color: var(--muted, #8a8a8a); }
 

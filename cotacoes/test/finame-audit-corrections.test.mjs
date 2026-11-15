@@ -82,7 +82,8 @@ test('F2: TLPCAP com IPCA tem carência retroativa e capitalização verificada 
 
 test('F3: calendário real pela data da liberação, juros por dias corridos e sem memória contratual', () => {
   const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
-  assert.match(source, /id="fm-calendario-hipotetico">Calendário pela data da liberação: vencimento todo dia 15, ou no próximo dia útil/)
+  assert.match(source, /id="fm-calendario-hipotetico">Calendário estimado. Não use como memória contratual/)
+  assert.match(source, /Calendário pela data da liberação: vencimento todo dia 15, ou no próximo dia útil/)
   assert.match(source, /<th scope="col">Vencimento<\/th><th scope="col">Saldo inicial<\/th>/)
   assert.match(source, /0 · liberação</)
   assert.match(source, /Não use como memória contratual/)

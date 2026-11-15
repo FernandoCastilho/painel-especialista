@@ -31,7 +31,7 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   assert.match(source, /Taxa de referência/)
   assert.match(source, /Primeira parcela após carência/)
   assert.match(source, /brl\(res.total\)/)
-  assert.match(source, /<details className="fm-details"><summary>Composição do resultado · \{custo\.toUpperCase\(\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
+  assert.match(source, /<details className="fm-details"><summary>Detalhamento · \{custo\.toUpperCase\(\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
   assert.doesNotMatch(source, /<details className="fm-details" open/)
   // A faixa azul não aparece sozinha: só junto da comparação.
   assert.match(source, /className=\{comparar \? 'fm-hero' : undefined\}/)

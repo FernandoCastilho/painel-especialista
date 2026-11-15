@@ -13,7 +13,7 @@ const text = el => Array.isArray(el) ? el.map(text).join(' ') : el && typeof el 
 async function setup(t, overrides = {}) {
   const series = { C01: { points: [['2026-11-06', 11]] }, C02: { points: [['2026-11-06', 11.5]] }, C03: { points: [['2026-11-06', 10]] }, C04: { points: [['2026-11-06', 10.5]] }, TFB_36_90: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] }, TFB_84_90: { points: [['2026-11-06', 13]] }, ...overrides }
   const Presentation = () => null, Print = () => null
-  const deps = { './BndesIcon.jsx': { __esModule: true, default: () => null }, './BndesPrint.jsx': { __esModule: true, default: Print }, './BndesPresentation.jsx': { __esModule: true, default: Presentation }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
+  const deps = { './ExpandablePanel.jsx': { __esModule: true, default: () => null }, './BndesCompare.jsx': { __esModule: true, default: () => null }, './FinameComparisonLayout.css': {}, './BndesIcon.jsx': { __esModule: true, default: () => null }, './BndesPrint.jsx': { __esModule: true, default: Print }, './BndesPresentation.jsx': { __esModule: true, default: Presentation }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
   for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
@@ -166,4 +166,24 @@ test('novo visual preserva campos e envia exatamente os resultados exibidos para
   const actions = nodes(h.render.value).find(node => node.props?.className === 'fm-print-actions')
   // Rodapé do resultado: só os botões Apresentar e Imprimir, sem premissas duplicadas.
   assert.deepEqual(nodes(actions).slice(1).map(node => node.type), [Presentation, Print], 'rodapé contém apenas os botões, sem premissas duplicadas')
+})
+
+test('parcelas compactas comparam A e B pela mesma data sem recalcular valores', async t => {
+  const { render, change, presentation } = await setup(t)
+  await change('fm-compare', true)
+  const alternatives = presentation().comparison.alternatives
+  const panel = nodes(render.value).find(node => node.props?.title === 'Parcelas · opções lado a lado')
+  const table = nodes(panel).find(node => node.type === 'table')
+  assert.match(text(table).replace(/\s+/g, ' '), /Opção A.*TFC.*Opção B.*TFB/)
+  const body = nodes(table).find(node => node.type === 'tbody')
+  const rows = nodes(body).filter(node => node.type === 'tr')
+  const dates = [...new Set(alternatives.flatMap(item => item.result.parcelas.map(row => row.vencimento)))].sort()
+  assert.equal(rows.length, dates.length)
+  const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  rows.forEach((row, index) => {
+    const cells = nodes(row).filter(node => node.type === 'td')
+    assert.equal(cells.length, 2)
+    alternatives.forEach((item, column) => assert.equal(text(cells[column]), brl(item.result.parcelas.find(p => p.vencimento === dates[index]).parcela)))
+  })
+  for (const title of ['Dados básicos da operação', 'Composição do resultado', 'Histórico dos indexadores', 'Memória completa do fluxo']) assert.ok(nodes(render.value).some(node => node.props?.title === title), title)
 })

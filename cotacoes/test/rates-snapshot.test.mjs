@@ -39,19 +39,15 @@ test('missing, stale and loading data stay explicit without invented values',()=
  const loading=snapshotRows({periods,errors:{macro:'Carregando juros…'}})
  assert.equal(loading[0].cells.day.status,'Carregando juros…')
 })
-test('Juros: a página traz só tabelas; cada linha abre o gráfico em tela própria, sem consultas de câmbio nem Focus',async()=>{
+test('Juros: gráficos prioritários abrem detalhe com tabelas, sem câmbio nem Focus',async()=>{
  const {readFile}=await import('node:fs/promises')
  const read=p=>readFile(new URL('../src/'+p,import.meta.url),'utf8')
  const app=await read('App.jsx'), snapshot=await read('RatesSnapshot.jsx'), macro=await read('Macro.jsx'), juros=await read('Juros.jsx'), modal=await read('RateModal.jsx')
  const section=app.slice(app.indexOf("{tab === 'juros'"),app.indexOf("{tab === 'cenarios'"))
  assert.match(section,/<Juros macro=\{macro\} curves=\{curves\} hol=\{hol\}/)
- // ordem da página: referência, CDI futuro e curvas; nenhum gráfico solto na página
- assert.ok(juros.indexOf('<RatesSnapshot')<juros.indexOf('<CdiFuturoTable'));assert.ok(juros.indexOf('<CdiFuturoTable')<juros.indexOf('<Curves'))
- assert.doesNotMatch(juros,/<(SelicChart|CdiChart|SofrChart|EstrChart|CurveChart|CdiFuturo) /)
- for(const tabela of ['<RatesSnapshot','<CdiFuturoTable','<Curves']) assert.match(juros.slice(juros.indexOf(tabela)),/^[^\n]*onOpen=\{abrir\}/,tabela+' abre o gráfico')
- // toda linha da tabela de referência tem gráfico na tela de detalhe
- for(const id of ['SELIC','CDI','SOFR','ESTR','FED','ECB','BOJ']) { const kind=new RegExp(id+": '(\\w+)'").exec(juros)?.[1]; assert.ok(kind,id+' sem destino'); assert.ok(modal.includes("'"+kind+"'"),kind+' sem gráfico') }
- assert.match(modal,/kind === 'cdif'/);assert.match(modal,/<CurveDetail/);assert.match(modal,/<Expandable modal/)
+ for(const chart of ['SelicChart','CdiChart','SofrChart','CdiFuturo']) assert.ok(juros.includes('<'+chart+' '))
+ for(const kind of ['selic','cdi','sofr','estr','fed','ecb','boj']) assert.ok(juros.includes('"'+kind+'"') || juros.includes("'"+kind+"'"))
+ assert.match(modal,/<RatesSnapshot/);assert.match(modal,/<Curves/);assert.match(modal,/<Expandable modal/)
  assert.doesNotMatch(snapshot,/fetch\(|history.json|oil.json|quotes|DATA_BASE/)
  assert.doesNotMatch(macro,/FocusTable|useMacro/)
  assert.match(snapshot,/SOFR não é a taxa básica do Fed/)

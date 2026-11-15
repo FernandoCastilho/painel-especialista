@@ -1,3 +1,5 @@
+import ExpandablePanel from './ExpandablePanel.jsx'
+import './CalculatorStandard.css'
 import { useState } from 'react'
 import { nbr5891 } from './format.js'
 import './Calculadora.css'
@@ -100,7 +102,7 @@ function CapitalDeGiro({ onBack }) {
     </div>
   )
   return (
-    <section className="cx" aria-labelledby="calc-h">
+    <section className="cx calc-standard" aria-labelledby="calc-h">
       <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
       <h2 id="calc-h" className="cx-title cx-heading"><span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><GiroIcon /></span><span>Capital de Giro</span></span><Help title="Capital de Giro: cálculo e premissas"><p>Estimativa com a taxa e a TAC informadas, sem seguros nem outros encargos. O CET segue a Resolução CMN 4.881/2020: taxa anual que iguala o valor líquido liberado (valor menos IOF e TAC) às parcelas, em dias corridos/365. O CET do contrato prevalece.</p><p>Vencimentos mensais no dia do primeiro vencimento; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Juros de cada parcela por dias corridos desde o vencimento anterior, em juros compostos sobre a taxa ao mês ((1 + taxa)^(dias/30)); taxa ao ano convertida para ao mês por juros compostos. Primeiro vencimento além de 30 dias: os juros do período extra são capitalizados. O IOF de pessoa jurídica é cobrado na liberação: adicional sobre o valor e diário sobre o principal de cada parcela, pelos dias até o vencimento, limitados a 365.</p></Help></h2>
 
@@ -128,9 +130,9 @@ function CapitalDeGiro({ onBack }) {
           {field('start', 'Data da liberação', <input id="cx-start" type="date" max="9999-12-31" value={start} onChange={e => setStart(e.target.value)} />)}
           {field('firstDue', 'Primeiro vencimento mensal', <input id="cx-firstDue" type="date" max="9999-12-31" value={firstDue} onChange={e => setFirstDue(e.target.value)} />)}
           <div className="cx-field">
-            <div className="cx-field-label"><label htmlFor="cx-praca">Praça do contrato (feriados)</label><Help title="Praça do contrato (feriados)"><p>{PRACA_AJUDA}</p><p>{PRACA_RESSALVA}</p></Help></div>
+            <div className="cx-field-label"><label htmlFor="cx-praca">Praça do contrato (feriados)</label><Help title="Praça do contrato (feriados)"><p>A praça define os feriados locais que adiam vencimentos.</p><p>{PRACA_AJUDA}</p><p>{PRACA_RESSALVA}</p></Help></div>
             <select id="cx-praca" value={praca} onChange={e => setPraca(e.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
-            <p className="cx-hint">A praça define os feriados locais que adiam vencimentos.</p>
+
           </div>
           <div className="cx-iof">
             <label htmlFor="cx-profile">Enquadramento do IOF</label>
@@ -139,15 +141,15 @@ function CapitalDeGiro({ onBack }) {
             <p className="cx-hint">{tax.ok ? `IOF automático: ${tax.additional.toLocaleString('pt-BR')}% adicional + ${tax.daily.toLocaleString('pt-BR', { maximumFractionDigits: 5 })}% ao dia, até 365 dias por parcela.` : 'Alíquotas calculadas conforme data e enquadramento.'}</p>
             <p className="cx-error" role={errors.iof ? 'alert' : undefined}>{errors.iof}</p>
             {tax.ok && <p className="cx-hint"><a href={tax.source} target="_blank" rel="noreferrer">Base legal: Decreto 6.306/2007, art. 7º</a> · Enquadramento automático; mudanças futuras não são antecipadas.</p>}
-            <p className="cx-hint">Juros por dias corridos; vencimento em dia não útil (fim de semana, feriado ou 31/12) passa para o próximo dia útil. No Bullet, paga-se no último vencimento mensal.</p>
+            <div className="cx-field-label cx-hint"><span>Juros e vencimentos</span><Help title="Juros e vencimentos"><p>Juros por dias corridos; vencimento em dia não útil (fim de semana, feriado ou 31/12) passa para o próximo dia útil. No Bullet, paga-se no último vencimento mensal.</p></Help></div>
           </div>
         </div>
       </article>
 
       <div className="cx-gap" aria-hidden="true" />
 
-      <article className="desk-panel cx-panel" aria-live="polite">
-        <header><h3 className="cx-heading"><span>Resultado</span><Help title="Como comparar os resultados"><p>As colunas usam o mesmo valor, prazo, taxa, TAC e IOF; muda apenas o sistema de amortização. O pagamento final soma parcelas, IOF e TAC. O CET compara o custo de cada sistema pela regra do Banco Central.</p></Help></h3></header>
+      <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">
+        <ExpandablePanel title="Resultado"><div className="calc-panel-context"><Help title="Como comparar os resultados"><p>As colunas usam o mesmo valor, prazo, taxa, TAC e IOF; muda apenas o sistema de amortização. O pagamento final soma parcelas, IOF e TAC. O CET compara o custo de cada sistema pela regra do Banco Central.</p></Help></div>
         <div className="cx-wrap" role="region" aria-label="Resultado por sistema de amortização; role para ver todas as colunas" tabIndex={0}>
           <table className="cx-matrix">
             <thead>
@@ -184,7 +186,7 @@ function CapitalDeGiro({ onBack }) {
             ))}
           </ul>
         )}
-      </article>
+      </ExpandablePanel></article>
       <p className="status">Estimativa sem tarifas e seguros · Não é CET</p>
     </section>
   )

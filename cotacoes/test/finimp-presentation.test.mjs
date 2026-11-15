@@ -14,6 +14,9 @@ import * as loan from '../src/emprestimo.js'
 import * as help from '../src/finimpHelpContent.js'
 
 const require = createRequire(import.meta.url)
+// Isolate product state tests from the expansion shell; dialog behavior has separate tests.
+const panelStub = ({ title, children }) => React.createElement('section', null, React.createElement('h3', null, title), children)
+
 const source = await readFile(new URL('../src/FinimpComparacao.jsx', import.meta.url), 'utf8')
 const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
 const module = { exports: {} }
@@ -29,7 +32,7 @@ const dependencies = {
   './FinimpHelp.jsx': () => null,
   './FinimpComparacao.css': {},
 }
-runInNewContext(code, { module, exports: module.exports, require: name => dependencies[name] ?? require(name) })
+runInNewContext(code, { module, exports: module.exports, require: name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : dependencies[name]) ?? require(name) })
 
 const nodes = node => !node || typeof node !== 'object' ? [] : Array.isArray(node) ? node.flatMap(nodes) : [node, ...nodes(node.props?.children)]
 const findAll = (tree, predicate) => nodes(tree).filter(predicate)

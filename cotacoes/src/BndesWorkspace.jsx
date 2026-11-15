@@ -5,6 +5,7 @@ import BndesLcdCap from './BndesLcdCap.jsx'
 import BndesCreditoTfb from './BndesCreditoTfb.jsx'
 import Bndes from './Bndes.jsx'
 import './BndesWorkspace.css'
+import './FinameComparisonLayout.css'
 
 const PROFILES = [
   ['finame-materiais', 'Finame Materiais Industrializados'],
@@ -20,9 +21,10 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
   const historical = profile === 'bndes-credito-tfb'
   const navigate = next => { setArea('simulate'); onView(next) }
   const profileControl = <div className="bw-profile"><label htmlFor="bw-profile">Linha</label><select id="bw-profile" value={profile} onChange={event => navigate(event.target.value)}>{PROFILES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
-  return <section className="cx bw" aria-labelledby="bw-title">
-    <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-    <div className="bw-heading"><h2 id="bw-title"><strong>BNDES</strong><span>{profile === 'finame-materiais' ? 'Finame Materiais' : 'Financiamentos'}</span></h2>
+  return <div className="bndes-page">
+    <button type="button" className="cx-back bndes-back" onClick={onBack}>‹ Calculadoras</button>
+    <section className="cx bw" aria-labelledby="bw-title">
+    <div className="bw-heading"><h2 id="bw-title"><img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" /><span>{profile === 'finame-materiais' ? 'Finame Materiais' : 'Financiamentos'}</span></h2>
     <nav className="bw-nav" aria-label="Área BNDES">
       <button type="button" aria-pressed={area === 'simulate' && !historical} onClick={() => { setArea('simulate'); if (historical) onView('finame-materiais') }} aria-label="Simular financiamento">Simular</button>
       <button type="button" aria-pressed={area === 'quotes'} onClick={() => setArea('quotes')}>Taxas e históricos</button>
@@ -38,5 +40,5 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
       <p className="status">Todas as famílias disponíveis no painel: TFB, TFC, TLP e moedas contratuais. Cada referência conserva data, unidade, fonte e avisos; não significa cotação ao vivo.</p>
       <Bndes embedded view={quotesView} onView={setQuotesView} />
     </div>
-  </section>
+  </section></div>
 }

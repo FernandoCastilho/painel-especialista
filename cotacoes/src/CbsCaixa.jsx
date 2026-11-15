@@ -1,3 +1,5 @@
+import ExpandablePanel from './ExpandablePanel.jsx'
+import './CalculatorStandard.css'
 import { useState } from 'react'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
@@ -54,11 +56,11 @@ export default function CbsCaixa({ onBack }) {
       {invalid && <p id={`cbs-${key}-error`} className="cx-error">Informe {suffix === 'dias' ? 'dias inteiros de 0 a 365' : `um percentual de 0 a ${key === 'spendingPct' ? 500 : 100}`}.</p>}
     </div>
   }
-  return <section className="cx cbs" aria-labelledby="cbs-title">
+  return <section className="cx cbs calc-standard" aria-labelledby="cbs-title">
     <div className="cx-toolbar"><button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <button type="button" className="cx-action" onClick={() => { setForm(initial); setMonthlyOverrides({}); setActivityConfirmed(false); setSearchReset(value => value + 1) }}>Restaurar exemplo</button></div>
     <h2 id="cbs-title" className="cx-title cx-heading"><span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><CbsIcon /></span><span>Reforma tributária · impacto no caixa</span></span></h2>
-    <p className="cbs-intro">Simule a CBS, tributo federal que substitui PIS/Cofins, e seu efeito no caixa.</p>
+    <div className="cx-field-label cbs-intro"><span>O que esta simulação faz</span><Help title="O que esta simulação faz"><p>Simule a CBS, tributo federal que substitui PIS/Cofins, e seu efeito no caixa.</p></Help></div>
     <p className="cbs-assumptions">Simulação educativa de CBS · preços brutos mantidos · não inclui IBS nem apuração fiscal.</p>
     <div className="cbs-workspace">
       <article className="desk-panel cx-panel">
@@ -87,8 +89,8 @@ export default function CbsCaixa({ onBack }) {
         <CbsOverview revenue={form.revenue} inputs={{ ...inputs, currentNetRate: form.regime === 'simples' || !activityConfirmed ? NaN : inputs.currentNetRate, spendingRatio: ratio }} monthlyCmv={cmv.ok ? cmv.value : NaN} monthlyPurchases={purchases.ok ? purchases.value : NaN} overrides={monthlyOverrides} onOverridesChange={setMonthlyOverrides} />
         {form.regime === 'simples' && <div className="cbs-message" role="status">O Simples com IBS/CBS dentro do DAS tem sistemática própria de créditos. Esta versão calcula o regime regular. Não aplicamos o cálculo padrão ao DAS. Uma opção pelo regime regular exige análise própria.</div>}
         {result && !result.ok && <p className="cx-error" role="alert">{currentRateMissing ? 'Informe a carga atual líquida para comparar os tributos.' : result.error}</p>}
-        {result?.ok && <article className="desk-panel cx-panel cbs-result" aria-labelledby="cbs-result-title">
-          <header><h3 id="cbs-result-title">Reserva adicional para cobrir os prazos</h3><Help title="Como a reserva é estimada"><p>Fluxo mensal uniforme, divisor 30 e prazos médios constantes. A reserva compara a disponibilidade temporária do imposto atual com a da CBS líquida futura, ponderando a parcela de split e o vencimento. Não é o imposto mensal multiplicado pelo ano.</p><p>Primeiro cenário: créditos utilizáveis já disponíveis. Segundo: indisponibilidade temporária desses créditos conforme compra, estoque, pagamento e prazo adicional informado. A espera positiva é calculada separadamente na parcela com split e na parcela recolhida no vencimento, antes de ponderar os resultados; um recolhimento posterior não anula a espera da parcela antecipada. São cenários de sensibilidade, não intervalo estatístico nem déficit máximo comprovado. Não somar novamente esses valores à retenção bruta ou à NCG integral.</p><p>O ciclo financeiro é apresentado em dias; não calculamos a NCG total da empresa, saldo de caixa, sazonalidade, margem, renegociação de preços, CAPEX, ressarcimento ou capacidade de pagamento. O resultado não é limite de crédito nem recomendação de contratação.</p></Help></header>
+        {result?.ok && <article className="desk-panel cx-panel cbs-result calc-result-shell" aria-labelledby="cbs-result-title">
+          <span className="sr-only" id="cbs-result-title">Reserva adicional para cobrir os prazos</span><ExpandablePanel title="Reserva adicional para cobrir os prazos"><div className="calc-panel-context"><Help title="Como a reserva é estimada"><p>Fluxo mensal uniforme, divisor 30 e prazos médios constantes. A reserva compara a disponibilidade temporária do imposto atual com a da CBS líquida futura, ponderando a parcela de split e o vencimento. Não é o imposto mensal multiplicado pelo ano.</p><p>Primeiro cenário: créditos utilizáveis já disponíveis. Segundo: indisponibilidade temporária desses créditos conforme compra, estoque, pagamento e prazo adicional informado. A espera positiva é calculada separadamente na parcela com split e na parcela recolhida no vencimento, antes de ponderar os resultados; um recolhimento posterior não anula a espera da parcela antecipada. São cenários de sensibilidade, não intervalo estatístico nem déficit máximo comprovado. Não somar novamente esses valores à retenção bruta ou à NCG integral.</p><p>O ciclo financeiro é apresentado em dias; não calculamos a NCG total da empresa, saldo de caixa, sazonalidade, margem, renegociação de preços, CAPEX, ressarcimento ou capacidade de pagamento. O resultado não é limite de crédito nem recomendação de contratação.</p></Help></div>
           <p className="cbs-used-assumptions">Hipóteses: CBS {form.cbsRate}% · gastos elegíveis a crédito {form.eligibleShare}% · vendas com split {form.splitShare}%.</p>
           <div className="cbs-reserve">
             <p className="cbs-eyebrow">Considerando a espera para usar os créditos</p>
@@ -144,7 +146,7 @@ export default function CbsCaixa({ onBack }) {
             </div>
           </details>
           </details>
-        </article>}
+        </ExpandablePanel></article>}
         <details className="desk-panel cx-panel cbs-details cbs-settings"><summary>Ajustar hipóteses de impostos e prazos</summary>
           <header><h3>Hipóteses do cenário</h3><Help title="Hipóteses, não enquadramento fiscal"><p>O setor estima gastos. Não define sozinho a alíquota, elegibilidade fiscal, regularidade do fornecedor ou adoção do split payment. Esses percentuais e prazos são hipóteses editáveis, não estatísticas do IBGE.</p><p>O exemplo usa CBS de 11,2% por fora: referência técnica de 11,3% calculada pelo TCU menos 0,1 ponto percentual na transição 2027/2028 (LC 214, art. 347). Não é alíquota definitiva para sua empresa. Benefícios, alíquota zero e regimes específicos exigem ajuste.</p></Help></header>
           <div className="cbs-premise-summary">Hipóteses editáveis — CBS: {form.cbsRate}% · gastos que podem gerar crédito: {form.eligibleShare}% · vendas com split: {form.splitShare}%<br />PIS/Cofins atuais após créditos: {form.currentNetRate.trim() ? `${form.currentNetRate}% do faturamento` : 'não informado'}.</div>

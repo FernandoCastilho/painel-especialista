@@ -17,7 +17,7 @@
 .bnprint-document h2 { margin:18px 0 8px; background:#dce6f3; color:#062a5c; padding:6px 10px; font-size:14px; break-after:avoid; }
 .bnprint-facts { display:grid; grid-template-columns:1fr 1fr; gap:5px 20px; margin:10px 0; }
 .bnprint-facts div { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.bnprint-facts dt { font-weight:700; }.bnprint-facts dd { margin:0; }
+.bnprint-facts dt { font-weight:700; color:#33465f; }.bnprint-facts dd { margin:0; }
 .bnprint-document table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
 .bnprint-document th,.bnprint-document td { padding:6px; border:1px solid #bdccdf; text-align:right; }
 .bnprint-document th:first-child { text-align:left; }
@@ -35,6 +35,7 @@
 @media screen and (max-width:700px) { .bnprint-document { min-width:690px; margin:12px; }.bnprint-dialog { overflow:auto; }.bnprint-controls { position:sticky; left:0; width:100%; box-sizing:border-box; }.bnprint-heading strong { font-size:22px; } }
 @media print {
   @page { size:A4 portrait; margin:12mm 10mm; }
+  html:has(body.bnprint-active) { background:white !important; color-scheme:light; }
   body.bnprint-active { background:white !important; overflow:visible !important; }
   body.bnprint-active > :not(.bnprint-dialog) { display:none !important; }
   body.bnprint-active > .bnprint-dialog { display:block !important; position:static !important; inset:auto !important; width:auto !important; max-width:none !important; height:auto !important; max-height:none !important; overflow:visible !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:white !important; }

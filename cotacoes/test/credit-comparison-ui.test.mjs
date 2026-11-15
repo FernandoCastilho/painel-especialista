@@ -21,7 +21,7 @@ const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
   const deps = { react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
-  for (const file of ['MoneyInput.jsx', 'CreditComparison.jsx']) {
+  for (const file of ['MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
     runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
@@ -80,7 +80,7 @@ test('o resultado só aparece ao comparar e some quando uma condição muda', as
   assert.equal(ui.find('Results'), undefined)
   await clickCompare(ui)
   const html = renderToStaticMarkup(ui.find('Results'))
-  for (const label of ['Valor líquido recebido', 'CET estimado · parte fixa (regra do BC)', 'Custo com CDI projetado · a.a. (não é CET)', 'art. 5º', 'Juros totais', 'IOF', 'Total desembolsado', 'Cobertura nominal', '1. Giro prefixado', '2. Giro pós-CDI']) assert.ok(html.includes(label), label)
+  for (const label of ['Valor líquido recebido', 'CET estimado · parte fixa (regra do BC)', 'Custo com CDI projetado · a.a. (não é CET)', 'Juros totais', 'IOF', 'Total desembolsado', 'Cobertura nominal', '1. Giro prefixado', '2. Giro pós-CDI']) assert.ok(html.includes(label), label)
   await ui.change(2, { cdiPercent: '110' })
   assert.equal(ui.find('Results'), undefined)
   assert.match(text(ui.render.value), /As condições mudaram/)
@@ -101,7 +101,7 @@ test('cinco colunas geram tabela com cinco séries no gráfico', async t => {
   await clickCompare(ui)
   const html = renderToStaticMarkup(ui.find('Results'))
   assert.equal([...html.matchAll(/<polyline /g)].length, 5)
-  assert.equal([...html.matchAll(/<th scope="col">\d\. /g)].length, 5)
+  assert.equal([...html.match(/<table class="credit-table credit-matrix">([\s\S]*?)<\/table>/)[1].matchAll(/<th scope="col" class="[^"]*">\d\. /g)].length, 5)
   assert.match(html, /menor CET/)
 })
 test('cenário do CDI só aparece com coluna indexada e muda só essa coluna', async t => {
@@ -153,4 +153,90 @@ test('aplicação financeira: regime na linha mestra, bloco da aplicação e cr�
   const html = renderToStaticMarkup(ui.render.value)
   for (const label of ['Regime tributário da empresa', 'Comparar com aplicação financeira', 'Rendimento líquido', 'IR retido na fonte (imposto final)', 'Tomar o crédito e manter o caixa aplicado', 'Crédito ou caixa próprio?']) assert.ok(html.includes(label), label)
   assert.ok(/compensa|melhor usar o caixa/.test(html))
+})
+
+
+test('resultado usa matriz única, resumo e parcelas com data e valor', async t => {
+  const ui = await setup(t)
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.find('Results'))
+  assert.match(html, /Dados básicos da operação/)
+  assert.match(html, /Indicadores em linhas · modalidades em colunas/)
+  assert.match(html, /Parcelas · data e valor/)
+  assert.match(html, /Ampliar Comparação financeira das operações/)
+  assert.match(html, /Fluxos completos e memória do cálculo/)
+  assert.equal([...html.matchAll(/class="credit-table credit-matrix"/g)].length, 1)
+  const parcels = html.match(/<table class="credit-table credit-matrix credit-payment-matrix">([\s\S]*?)<\/table>/)?.[1] ?? ''
+  assert.match(parcels, /Valor da parcela/)
+  assert.doesNotMatch(parcels, /Amortização|Saldo|Juros totais/)
+})
+test('cinco modalidades mantêm todos os valores e oferecem duas visíveis no compacto', async t => {
+  const ui = await setup(t)
+  nodes(ui.render.value).find(n => n.type === 'button' && text(n) === '5').props.onClick(); await ui.render.settle()
+  await ui.change(4, { fDays: '180' })
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.find('Results'))
+  assert.match(html, /Modalidades visíveis em telas estreitas/)
+  const matrix = html.match(/<table class="credit-table credit-matrix">([\s\S]*?)<\/table>/)[1]
+  const headers = [...matrix.matchAll(/<th scope="col" class="([^"]*)">\d\. /g)]
+  assert.equal(headers.length, 5)
+  assert.equal(headers.filter(x => x[1] === '').length, 2)
+  assert.equal(headers.filter(x => x[1] === 'credit-extra-column').length, 3)
+})
+
+
+test('parcelas em matriz unem datas diferentes sem deslocar nem recalcular pagamentos', async t => {
+  const ui = await setup(t)
+  await clickCompare(ui)
+  const result = ui.find('Results')
+  const results = result.props.results.map((r, i) => ({ ...r, rows: i === 0 ? [
+    { number: 1, date: '2026-12-15', payment: 100, cumulative: 100 },
+    { number: 2, date: '2027-01-15', payment: 0, cumulative: 100 },
+    { number: 3, date: '2027-01-15', payment: 25, cumulative: 125 },
+  ] : [
+    { number: 1, date: '2026-12-20', payment: 200, cumulative: 200 },
+    { number: 2, date: '2027-01-15', payment: 300, cumulative: 500 },
+  ] }))
+  const before = JSON.stringify(results)
+  const html = renderToStaticMarkup(React.cloneElement(result, { results }))
+  const matrix = html.match(/<table class="credit-table credit-matrix credit-payment-matrix">([\s\S]*?)<\/table>/)[1]
+  assert.equal([...matrix.matchAll(/<th scope="col">Data<\/th>/g)].length, 1)
+  const body = matrix.match(/<tbody>([\s\S]*?)<\/tbody>/)[1]
+  const rows = [...body.matchAll(/<tr><th scope="row">([^<]+)<\/th>([\s\S]*?)<\/tr>/g)]
+  assert.deepEqual(rows.map(r => r[1]), ['15/12/2026', '20/12/2026', '15/01/2027'])
+  const cells = row => [...row[2].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => c[1])
+  assert.match(cells(rows[0])[0], /100,00/)
+  assert.match(cells(rows[0])[1], /Sem pagamento nesta data/)
+  assert.match(cells(rows[1])[0], /Sem pagamento nesta data/)
+  assert.match(cells(rows[1])[1], /200,00/)
+  assert.equal([...cells(rows[2])[0].matchAll(/credit-payment-value/g)].length, 2)
+  assert.match(cells(rows[2])[0], /0,00/)
+  assert.match(cells(rows[2])[0], /25,00/)
+  assert.match(cells(rows[2])[1], /300,00/)
+  assert.equal(JSON.stringify(results), before)
+  assert.doesNotMatch(matrix, /Amortização|Saldo|Juros totais/)
+})
+
+
+test('parcelas ampliadas não mantêm o limite de altura do quadro compacto', async () => {
+  const css = await readFile(new URL('../src/CreditComparison.css', import.meta.url), 'utf8')
+  assert.match(css, /\.credit-payment-scroll\{max-height:320px;overflow:auto\}/)
+  assert.match(css, /\.credit-presentation>\.credit-payment-scroll\{max-height:none\}/)
+  assert.ok(css.indexOf('.credit-presentation>.credit-payment-scroll{max-height:none}') > css.indexOf('.credit-payment-scroll{max-height:320px;overflow:auto}'))
+})
+
+
+test('explicações ficam em ajuda clicável e alertas essenciais continuam visíveis', async t => {
+  const ui = await setup(t)
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.render.value)
+  assert.match(html, /Ajuda: Como usar o comparador/)
+  assert.match(html, /Ajuda: Como ler CET e custo projetado/)
+  assert.match(html, /Ajuda: Comparar pelo mesmo valor líquido/)
+  assert.doesNotMatch(html, /A ordem de menor CET usa o CET da parte fixa/)
+  assert.doesNotMatch(html, /Ao reduzir a quantidade, as colunas escondidas/)
+  for (const warning of ['Valores iniciais são exemplos', 'resultados são preliminares', 'não CET certificado do contrato', 'não é CET', 'Projeção, não taxa futura garantida', 'Não há vencedor absoluto']) assert.ok(html.includes(warning), warning)
+  const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
+  assert.match(source, /A ordem de menor CET usa o CET da parte fixa/)
+  assert.match(source, /Ao reduzir a quantidade, as colunas escondidas/)
 })

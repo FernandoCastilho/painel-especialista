@@ -1,3 +1,5 @@
+import ExpandablePanel from './ExpandablePanel.jsx'
+import './CalculatorStandard.css'
 import { useState } from 'react'
 import { nbr5891 } from './format.js'
 import './Calculadora.css'
@@ -103,7 +105,7 @@ export default function OperacaoDi({ onBack }) {
   const more = r && r.diff > 0
 
   return (
-    <section className="cx" aria-labelledby="od-h">
+    <section className="cx calc-standard" aria-labelledby="od-h">
       <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
       <h2 id="od-h" className="cx-title cx-heading">
         <span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><OperacaoDiIcon /></span><span>Operação x DI</span></span>
@@ -162,8 +164,8 @@ export default function OperacaoDi({ onBack }) {
 
       <div className="cx-gap" aria-hidden="true" />
 
-      <article className="desk-panel cx-panel" aria-live="polite">
-        <header><h3 className="cx-heading"><span>Resultado</span><Help title="Como ler o resultado"><p>A coluna DI mostra quanto o mesmo valor renderia no DI projetado pela curva no mesmo período. A diferença em pontos-base (bps; 100 bps = 1 ponto percentual) compara as taxas equivalentes ao ano.</p><p>Os equivalentes dizem qual % do CDI ou qual CDI + spread dariam o mesmo resultado da operação.</p></Help></h3></header>
+      <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">
+        <ExpandablePanel title="Resultado"><div className="calc-panel-context"><Help title="Como ler o resultado"><p>A coluna DI mostra quanto o mesmo valor renderia no DI projetado pela curva no mesmo período. A diferença em pontos-base (bps; 100 bps = 1 ponto percentual) compara as taxas equivalentes ao ano.</p><p>Os equivalentes dizem qual % do CDI ou qual CDI + spread dariam o mesmo resultado da operação.</p></Help></div>
         {r ? (
           <>
             <div className="cx-wrap" role="region" aria-label="Operação e DI lado a lado" tabIndex={0}>
@@ -193,7 +195,7 @@ export default function OperacaoDi({ onBack }) {
         ) : (
           <p className="cx-hint cx-pad" role={result?.error ? 'alert' : undefined}>{result?.error || (base ? 'Preencha a operação.' : 'A comparação aparece quando a curva DI estiver disponível.')}</p>
         )}
-      </article>
+      </ExpandablePanel></article>
       <p className="status">{credit ? 'Projeção pela curva DI da data-base · IOF e tarifas na liberação · CET pela Res. CMN 4.881/2020' : 'Projeção pela curva DI da data-base · Sem IOF, IR e tarifas'}</p>
     </section>
   )

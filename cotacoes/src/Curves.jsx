@@ -201,7 +201,7 @@ export function useEuroCurve() {
 }
 
 // Gráfico de uma curva na tela de detalhe (aberta pela tabela da aba Juros). O cupom leva junto a leitura de cenário.
-export function CurveDetail({ id, curves: c }) {
+export function CurveDetail({ id, curves: c, preview = false }) {
   const euro = useEuroCurve()
   if (id === 'eu') {
     if (!euro.data) return <p className="status">{euro.loading ? 'Carregando curva do euro…' : 'Curva do euro indisponível nesta atualização.'}</p>
@@ -218,8 +218,10 @@ export function CurveDetail({ id, curves: c }) {
   return (
     <>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
+      {d?.stale?.[id] && <p className="status stale" role="status">Atualização pendente desta curva; última coleta: {new Date(d.stale[id]).toLocaleString('pt-BR')}.</p>}
+      {d?.generatedAt && Date.now() - d.generatedAt > 3 * 3600e3 && !isWeekendBR() && <p className="status stale" role="status">Curvas coletadas há mais de 3 horas; atualização pode estar pendente.</p>}
       {d?.[id] ? grafico(id, d[id]) : <p className="status">Curva indisponível nesta atualização.</p>}
-      {id === 'cc' && d?.cc && d?.br && <CupomLeitura curves={d} />}
+      {!preview && id === 'cc' && d?.cc && d?.br && <CupomLeitura curves={d} />}
     </>
   )
 }
@@ -227,8 +229,8 @@ export function CurveDetail({ id, curves: c }) {
 const TABELAS = ['br', 'cc', 'us', 'eu']
 
 // Aba Juros: cada curva vira uma tabela (prazo × data de comparação); a linha abre o gráfico em tela própria.
-export default function Curves({ curves: c, onOpen, region }) {
-  const tables = TABELAS.filter(id => region === 'brasil' ? ['br', 'cc'].includes(id) : region === 'exterior' ? ['us', 'eu'].includes(id) : true)
+export default function Curves({ curves: c, onOpen, region, onlyId }) {
+  const tables = TABELAS.filter(id => !onlyId || id === onlyId).filter(id => region === 'brasil' ? ['br', 'cc'].includes(id) : region === 'exterior' ? ['us', 'eu'].includes(id) : true)
   const stale = Object.entries(c.data?.stale ?? {}).filter(([id]) => tables.includes(id))
   const d = c.data
   const euro = useEuroCurve()
@@ -253,7 +255,7 @@ export default function Curves({ curves: c, onOpen, region }) {
         const pronto = id === 'eu' ? !euro.loading : c.status === 'ok'
         const t = pronto && dados[id] ? curveTable(dados[id], def.mode) : { columns: [], rows: [] }
         return (
-          <div key={id} id={`juros-curva-${id}`} className="executive-rates curve-table juros-tabela">
+          <div key={id} id={`${onlyId ? 'juros-detail-curva' : 'juros-curva'}-${id}`} className="executive-rates curve-table juros-tabela">
             <header className="executive-rates__heading">
               <h2><Flag code={bandeiraDe(def.title)} width={18} height={12} />{def.title} <small>{def.subtitle}</small></h2>
               <Explain id={def.help} />

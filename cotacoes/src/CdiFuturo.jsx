@@ -13,7 +13,7 @@ const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maxi
 const dm = (iso) => iso.split('-').reverse().join('/')
 
 // CDI futuro: taxa a termo implícita nos futuros de DI (curva DI x pré da B3), em % a.a., por data.
-export default function CdiFuturo({ curves, macro, hol }) {
+export default function CdiFuturo({ curves, macro, hol, preview = false }) {
   const [ref, width] = useWidth()
   const br = curves.data?.br
   const today = br?.compare?.find((c) => c.id === 'hoje')
@@ -44,8 +44,9 @@ export default function CdiFuturo({ curves, macro, hol }) {
   const rows = useMemo(() => horizonTable(pts), [pts])
 
   return (
-    <section className="macro" aria-labelledby="cdif-h">
-      <h2 id="cdif-h">CDI futuro</h2>
+    <section className="macro" aria-labelledby={preview ? 'cdif-preview-h' : 'cdif-h'}>
+      <h2 id={preview ? 'cdif-preview-h' : 'cdif-h'}>CDI futuro</h2>
+      {(curves.stale || curves.data?.stale?.br) && <p className="status stale" role="status">Atualização pendente; curva da última coleta disponível.</p>}
       {curves.status === 'loading' && <div className="placeholder">Carregando curva DI…</div>}
       {curves.status !== 'loading' && !pts && <p className="status">CDI futuro indisponível: depende da curva DI x pré, que não veio na última atualização.</p>}
       {pts && (
@@ -61,9 +62,9 @@ export default function CdiFuturo({ curves, macro, hol }) {
               {light ? '☾' : '☀'}
             </button>
           </header>
-          <div className="period">
+          {!preview && <div className="period">
             <DateRangePicker label="Período do CDI futuro" start={rawFrom} end={rawTo} min={base} max={maxIso} onChange={(from, to) => setPick({ from, to })} />
-          </div>
+          </div>}
           {adjusted && <p className="status stale">Datas ajustadas: a curva vale de {dm(base)} (data-base) a {dm(maxIso)} (último vértice). Mostrando {dm(from)} a {dm(to)}.</p>}
           {term != null ? (
             <p className="cdif-result">
@@ -75,7 +76,7 @@ export default function CdiFuturo({ curves, macro, hol }) {
             <p className="status stale">Escolha um intervalo dentro da curva (até {dm(maxIso)}), com “Até” depois de “De”.</p>
           )}
           <div ref={ref}>{series && <Plot points={series} width={width} color="var(--chart-teal)" code="cdif" fmt={pct} label="CDI a termo" compare={false} compareReason="a curva a termo projeta taxas por horizonte, sem série histórica anual equivalente nesta visão." scales={false} nice labels light={light} />}</div>
-          <details className="table" open>
+          {!preview && <details className="table" open>
             <summary>Tabela por horizonte</summary>
             <div className="scroll">
             <table>
@@ -93,7 +94,7 @@ export default function CdiFuturo({ curves, macro, hol }) {
               </tbody>
             </table>
             </div>
-          </details>
+          </details>}
           <Aviso title="CDI futuro · método"><p className="status">
             DI x pré de {dm(today.date)}. É o CDI que o mercado precifica, com prêmio de risco embutido, não uma projeção oficial. "CDI médio até lá" é a taxa composta do DI até o vértice; "a termo no trecho" é a taxa implícita entre o horizonte anterior e este. Para a visão de analistas, veja o Boletim Focus (Selic).
           </p></Aviso>
