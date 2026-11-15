@@ -86,9 +86,30 @@ export const freshOnly = recentNews
 // "as" existe nas duas línguas e por isso não conta para nenhuma: antes ele empatava manchetes como
 // "GBP/USD Tests 2026 Lows as Fed Hike Bets Overpower Strong UK GDP", que ficavam sem tradução.
 // Palavras comuns de manchete de mercado em inglês também contam.
-const EN = /\b(the|and|of|to|in|for|on|with|at|by|from|is|are|was|be|its|it|this|that|after|over|amid|near|not|off|into|than|while|ahead|rises|rise|falls|fall|says|hit|hits|test|tests|lows|highs|bets|gains|slides|slips|jumps|edges|eyes|hovers|retreats|surges|drops|climbs|rate|rates|yields|bank|dollar|yen|euro|yuan|stocks|shares|strong|weak|higher|lower|hike|cut|cuts)\b/gi
+const EN = /\b(the|and|of|to|in|for|on|with|at|by|from|is|are|was|be|its|it|this|that|after|over|amid|near|not|off|into|than|while|ahead|rises|rise|falls|fall|says|hit|hits|test|tests|lows|highs|bets|gains|slides|slips|jumps|edges|eyes|hovers|retreats|surges|drops|climbs|rate|rates|yields|bank|dollar|yen|euro|yuan|stocks|shares|strong|weak|higher|lower|hike|cut|cuts|cannot|can|will|would|could|should|warns|warn|policy|says|said|sees|seen|amid|despite|against|before|between|under|about|could|may|might|must|has|have|had|were|been|which|who|what|how|why|new|record|outlook|forecast|preview|week|weekly|month|year|tariff|tariffs|trade|inflation|growth|jobs|data)\b/gi
 const PT = /\b(de|do|da|dos|das|em|para|com|que|os|um|uma|no|na|nos|nas|ao|aos|pelo|pela|mais|após|diante|sobre|alta|queda|é|e|se|sobe|cai|fecha|ações|juros|dólar|bolsa)\b/gi
-export const isEnglish = (t) => (t.match(EN) ?? []).length > (t.match(PT) ?? []).length
+// Sem palavra de nenhuma das listas, decide pela grafia: manchete sem nenhum acento nem ç, com 4+ palavras, é tratada como inglês.
+const ACENTO_PT = /[ãõçáéíóúâêôàü]/i
+export const isEnglish = (t) => {
+  const en = (t.match(EN) ?? []).length, pt = (t.match(PT) ?? []).length
+  if (en !== pt) return en > pt
+  return en === 0 && !ACENTO_PT.test(t) && t.split(/\s+/).filter((w) => /[a-z]{2,}/i.test(w)).length >= 4
+}
+
+// A mesma matéria às vezes chega nas edições em inglês e em português da mesma fonte, com minutos de diferença.
+// Depois da tradução, tira a versão traduzida quando há uma original em português muito parecida (mesma fonte, até 60 min).
+const palavrasDe = (t) => new Set(String(t).toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '').match(/[a-z0-9]{4,}/g) ?? [])
+export function semTraducaoRepetida(items) {
+  const nativas = items.filter((n) => !n.original)
+  return items.filter((n) => {
+    if (!n.original) return true
+    const a = palavrasDe(n.title)
+    return !nativas.some((m) => m.source === n.source && Math.abs((m.t ?? 0) - (n.t ?? 0)) <= 3600e3 && (() => {
+      const b = palavrasDe(m.title), comuns = [...a].filter((w) => b.has(w)).length
+      return comuns / Math.min(a.size, b.size || 1) >= 0.6
+    })())
+  })
+}
 
 // Google Tradutor (endpoint público, sem chave), vários títulos por chamada, um por linha.
 export const GTX = 'https://translate.googleapis.com/translate_a/single'

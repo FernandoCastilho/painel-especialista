@@ -1,7 +1,7 @@
 // Coleta manchetes por moeda e grava public/news.json. Rodado pelo GitHub Actions a cada hora.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fillNewsFromPrevious, loadPrevious } from './prev-lib.mjs'
-import { GTX, MARKET_QUERIES, balance, canonicalSource, freshOnly, fromLingva, fromMyMemory, googleUrl, gtxBody, isEnglish, lingvaUrl, mentionsCurrency, myMemoryUrl, parseRss, pick, splitBatch } from './news-lib.mjs'
+import { GTX, MARKET_QUERIES, balance, canonicalSource, freshOnly, fromLingva, fromMyMemory, googleUrl, gtxBody, isEnglish, lingvaUrl, mentionsCurrency, myMemoryUrl, parseRss, pick, semTraducaoRepetida, splitBatch } from './news-lib.mjs'
 
 const SITES = {
   valor: 'site:valor.globo.com',
@@ -137,6 +137,7 @@ for (const n of Object.values(news).flat()) {
   const tr = translated.get(n.title)
   if (tr) Object.assign(n, { original: n.title, title: tr })
 }
+for (const k of Object.keys(news)) news[k] = semTraducaoRepetida(news[k])
 
 // Moeda sem manchetes novas: mantém as anteriores (e avisa na tela).
 const stale = fillNewsFromPrevious(news, await loadPrevious('news.json'))
