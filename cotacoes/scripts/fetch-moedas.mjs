@@ -6,17 +6,23 @@ import { MOEDAS_CATALOG, SOURCE_STATUS, buildMoedas, fillSeriesFromPrevious, moe
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const errors = []
+// Prazo total da coleta: a etapa do GitHub Actions é interrompida em 8 min e, interrompida, não grava nada (o site perdia o arquivo).
+// Passado o prazo, as séries que faltam ficam com o último dado válido publicado e o arquivo é gravado assim mesmo.
+const PRAZO_MS = Number(process.env.MOEDAS_PRAZO_MS) || 6 * 60e3
+const inicio = Date.now()
+const restante = () => PRAZO_MS - (Date.now() - inicio)
 
 async function getText(url, label, tries = 3) {
   let last
   for (let i = 1; i <= tries; i++) {
+    if (restante() < 5000) { last = new Error('prazo da coleta esgotado'); break }
     try {
-      const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-moedas)', referer: 'https://www.bndes.gov.br/', accept: 'text/plain,*/*' }, signal: AbortSignal.timeout(40000) })
+      const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-moedas)', referer: 'https://www.bndes.gov.br/', accept: 'text/plain,*/*' }, signal: AbortSignal.timeout(Math.min(40000, restante())) })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return await res.text()
     } catch (e) {
       last = e
-      await sleep(2000 * i)
+      if (i < tries) await sleep(Math.min(2000 * i, Math.max(0, restante())))
     }
   }
   errors.push(`${label}: ${last.message}`)
