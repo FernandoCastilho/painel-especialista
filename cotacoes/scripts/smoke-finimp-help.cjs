@@ -97,12 +97,19 @@ async function smokeConverter(browser, width, base, out) {
     p.on('pageerror',error=>errors.push(error.message))
     await p.goto(base+'/#calculadora/finimp')
     const section=p.locator('section.fi');await section.waitFor()
+    // Measure the settled target, not fractional coordinates during the 260 ms
+    // main entrance animation. Keep the strict 44 px minimum unchanged.
+    await p.locator('main').evaluate(async el => {
+      await Promise.all(el.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})))
+    })
     assert.equal(await p.getByRole('dialog').count(),0)
     assert.doesNotMatch(await section.innerText(),/A moeda apenas identifica|Flat cobrado|As mesmas condições|Calcula a taxa anual/)
     assert.equal(await section.locator('.fi-tac-status').innerText(),'TAC excluída.')
     for(const title of ['Moeda','Prazo e base de cálculo','Flat · Instituição 1','Flat · Instituição 2','TAC','Custo total · Instituição 1','Atingir meta']){
       const button=p.getByRole('button',{name:'Ajuda: '+title,exact:true})
-      const buttonBox=await button.boundingBox();assert.ok(buttonBox.width>=44&&buttonBox.height>=44,'área de ajuda com pelo menos 44px')
+      const buttonBox=await button.boundingBox()
+      const size=await button.evaluate(el=>{const s=getComputedStyle(el);return {width:s.width,height:s.height,minWidth:s.minWidth,minHeight:s.minHeight}})
+      assert.ok(buttonBox && buttonBox.width>=44&&buttonBox.height>=44,`área de ajuda com pelo menos 44px: ${title}, viewport ${width}, box ${JSON.stringify(buttonBox)}, CSS ${JSON.stringify(size)}`)
       if(width!==390){
         await button.hover()
         const preview=p.getByRole('tooltip');await preview.waitFor()
