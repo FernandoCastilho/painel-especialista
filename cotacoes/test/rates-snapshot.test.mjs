@@ -39,13 +39,14 @@ test('missing, stale and loading data stay explicit without invented values',()=
  const loading=snapshotRows({periods,errors:{macro:'Carregando juros…'}})
  assert.equal(loading[0].cells.day.status,'Carregando juros…')
 })
-test('Juros: gráficos prioritários abrem detalhe com tabelas, sem câmbio nem Focus',async()=>{
+test('Juros: tabelas iniciais abrem gráficos e detalhes, sem câmbio nem Focus',async()=>{
  const {readFile}=await import('node:fs/promises')
  const read=p=>readFile(new URL('../src/'+p,import.meta.url),'utf8')
  const app=await read('App.jsx'), snapshot=await read('RatesSnapshot.jsx'), macro=await read('Macro.jsx'), juros=await read('Juros.jsx'), modal=await read('RateModal.jsx')
  const section=app.slice(app.indexOf("{tab === 'juros'"),app.indexOf("{tab === 'cenarios'"))
  assert.match(section,/<Juros macro=\{macro\} curves=\{curves\} hol=\{hol\}/)
- for(const chart of ['SelicChart','CdiChart','SofrChart','CdiFuturo']) assert.ok(juros.includes('<'+chart+' '))
+ for(const chart of ['SelicChart','CdiChart','SofrChart','CdiFuturo']) assert.ok(modal.includes('<'+chart+' '))
+ for(const table of ['RatesSnapshot','CdiFuturoTable','Curves']) assert.ok(juros.includes('<'+table+' '))
  for(const kind of ['selic','cdi','sofr','estr','fed','ecb','boj']) assert.ok(juros.includes('"'+kind+'"') || juros.includes("'"+kind+"'"))
  assert.match(modal,/<RatesSnapshot/);assert.match(modal,/<Curves/);assert.match(modal,/<Expandable modal/)
  assert.doesNotMatch(snapshot,/fetch\(|history.json|oil.json|quotes|DATA_BASE/)

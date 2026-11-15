@@ -1,3 +1,5 @@
+> **Reconciliação posterior de 15/11/2026:** a composição principal foi restaurada para tabelas Brasil/exterior, CDI futuro e curvas; gráficos seguem acessíveis pelas linhas. A documentação abaixo descreve a proposta anterior, não o estado final aprovado. A busca não recuperou revogação do pedido literal de 22/10/2026: “coloque [...] antes dos gráficos [...] num formato de tabela, e que apareça na tela”. Mantidas melhorias compatíveis no detalhe: leitura descritiva, tabelas e fontes. Testes de interface antigos não foram enfraquecidos para aceitar remoção das tabelas. Validação de navegador da reconciliação ainda depende da nova execução do CI.
+
 # Juros: gráficos prioritários — 15/11/2026
 
 Implementação local, não publicada. Pedido: gráficos na tela principal, detalhe com tendência e tabelas, preservando indicadores, fontes e cálculos.
