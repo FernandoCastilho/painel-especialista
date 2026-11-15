@@ -35,7 +35,10 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       assert.match(pop, /Nome na fonte:\s*CPI Flash Estimate y\/y/)
       assert.match(pop, /Na economia:/); assert.match(pop, /Brasil:[\s\S]*Zona do euro/); assert.match(pop, /Impacto:\s*Alto/)
       await fechar('Inflação ao consumidor, prévia, variação anual (CPI)')
-      await table.getByRole('button', { name: 'Impacto de Xyz Gadget Index' }).click()
+      // Pelo teclado: o balão anterior acabou de fechar e, em tela estreita, o balão aberto pelo ponteiro (folha na base da tela)
+      // pode cobrir este "?" e interceptar o clique. O clique já foi conferido no primeiro balão.
+      await p.mouse.move(0, 0)
+      const xyz = table.getByRole('button', { name: 'Impacto de Xyz Gadget Index' }); await xyz.focus(); await p.keyboard.press('Enter')
       pop = await balao('Xyz Gadget Index').innerText()
       assert.match(pop, /Impacto baixo/); assert.match(pop, /correlação direta relevante mapeada com o Brasil/); assert.match(pop, /classifica como alto/)
       await fechar('Xyz Gadget Index')
