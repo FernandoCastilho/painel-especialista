@@ -28,12 +28,14 @@ test('desktop movement respects the sticky header exclusion', () => {
   assert.deepEqual(clampMascot({x:8,y:8},1280,900,96), {x:8,y:96})
 })
 
-test('mobile mini owns a flow lane before content, with space for hover and focus', async () => {
+test('celular: a coruja pequena mora na linha de ícones do topo, sem espaço reservado acima do conteúdo (15/11/2026)', async () => {
   const { readFile } = await import('node:fs/promises')
   const css = await readFile(new URL('../src/FeedbackMascot.css', import.meta.url), 'utf8')
   const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8')
-  assert.ok(app.indexOf('<FeedbackMascot ') < app.indexOf('<main id="conteudo"'))
-  assert.match(css, /@media\(max-width:699px\)\{\.mascot-tray\{position:relative;min-height:88px\}\.mascot-mini\{position:absolute;top:6px!important/)
-  // 40px × 1.9 hover + 6px inset + 5px focus outline fits the 88px lane.
-  assert.ok(40 * 1.9 + 6 + 5 <= 88)
+  // o lugar está na linha dos relógios do Mercado e no topo das outras telas, ao lado do botão de tema
+  assert.equal(app.match(/<ThemeControl className="theme-mobile" \/><MascotSlot className="mascot-slot-m" \/>/g)?.length, 2)
+  assert.match(css, /@media\(max-width:999px\)\{\.mascot-slot-m\{display:inline-flex/)
+  assert.doesNotMatch(css, /\.mascot-tray\{position:relative;min-height:88px\}/)
+  // ampliar no lugar não cobre os vizinhos: 36px × 1,12 cabe no espaço de 44px
+  assert.ok(36 * 1.12 <= 44)
 })
