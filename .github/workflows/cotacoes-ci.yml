@@ -243,7 +243,7 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: |
           failures=()
-          for s in smoke-mascot-controls smoke-ui smoke-market-table smoke-data-health smoke-market-workspace smoke-market-followup smoke-ux smoke-chart-compare smoke-outros smoke-date-range smoke-cupom smoke-calendario smoke-heavy-vehicles smoke-setores-navigation smoke-dynamic-notifications smoke-finimp-help smoke-recado smoke-conceito-diario smoke-motion smoke-apresentacao; do
+          for s in smoke-mascot-controls smoke-ui smoke-market-table smoke-data-health smoke-market-workspace smoke-market-followup smoke-ux smoke-chart-compare smoke-outros smoke-juros-regioes smoke-date-range smoke-cupom smoke-calendario smoke-heavy-vehicles smoke-setores-navigation smoke-dynamic-notifications smoke-finimp-help smoke-recado smoke-conceito-diario smoke-motion smoke-apresentacao; do
             echo "::group::$s"
             if ! FINIMP_HELP_QA_OUTPUT="$RUNNER_TEMP/qa-universal/finimp-help" SETORES_QA_OUTPUT="$RUNNER_TEMP/qa-universal/setores" SEARCH_QA_OUTPUT="$RUNNER_TEMP/qa-universal" CONCEITO_QA_OUTPUT="$RUNNER_TEMP/qa-c" UX_QA_OUTPUT="$RUNNER_TEMP/qa-ux" TABLE_QA_OUTPUT="$RUNNER_TEMP/qa-t" WORKSPACE_QA_OUTPUT="$RUNNER_TEMP/qa-w" FOLLOWUP_QA_OUTPUT="$RUNNER_TEMP/qa-f" node scripts/$s.cjs; then
               failures+=("$s")

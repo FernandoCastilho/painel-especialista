@@ -223,7 +223,8 @@ const STALE_LABELS = { cdi: 'CDI', selic: 'Selic', sofr: 'SOFR', sofrAvg: 'médi
 const stamp = (t) => (t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'data desconhecida')
 
 // Avisos sobre a coleta das taxas (carregando, falha, dado antigo); os gráficos abrem pela tabela, em tela própria.
-export function MacroStatus({ macro: m }) {
+export function MacroStatus({ macro: m, region }) {
+  const staleKeys = region === 'brasil' ? ['cdi', 'selic'] : region === 'exterior' ? ['sofr', 'sofrAvg'] : ['cdi', 'selic', 'sofr', 'sofrAvg']
   return (
     <>
       {m.status === 'loading' && <p className="status">Carregando dados…</p>}
@@ -232,9 +233,9 @@ export function MacroStatus({ macro: m }) {
       {m.status === 'ok' && m.data.generatedAt && (Date.now() - m.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (
         <p className="status stale">Atenção: os dados foram coletados há mais de 3 horas; a atualização automática pode ter parado.</p>
       )}
-      {m.status === 'ok' && Object.keys(m.data.stale ?? {}).some(k => ['cdi', 'selic', 'sofr', 'sofrAvg'].includes(k)) && (
+      {m.status === 'ok' && Object.keys(m.data.stale ?? {}).some(k => staleKeys.includes(k)) && (
         <p className="status stale">
-          Atualização indisponível na última coleta; mantido o último dado publicado: {Object.entries(m.data.stale).filter(([k]) => ['cdi', 'selic', 'sofr', 'sofrAvg'].includes(k)).map(([k, t]) => `${STALE_LABELS[k] ?? k} (coletado em ${stamp(t)})`).join(', ')}.
+          Atualização indisponível na última coleta; mantido o último dado publicado: {Object.entries(m.data.stale).filter(([k]) => staleKeys.includes(k)).map(([k, t]) => `${STALE_LABELS[k] ?? k} (coletado em ${stamp(t)})`).join(', ')}.
         </p>
       )}
     </>
