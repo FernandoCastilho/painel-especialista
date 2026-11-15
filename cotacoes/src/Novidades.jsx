@@ -2,6 +2,9 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '15/11/2026', items: [
+    'Calculadoras > Empréstimo externo (4131), Regras e fontes: o ato da Receita sobre o prazo médio (ADI RFB 41/2011) foi lido no site de normas da Receita e está em vigor. Confirmado em decisão da Receita que os juros não entram no prazo médio. Entraram as regras de renovação, repactuação e conversão do empréstimo em capital. A conta não mudou.',
+  ] },
   { date: '14/11/2026', resumo: 'Empréstimo externo (4131) no formato da cotação de banco: principal em reais, parcelas, taxa all-in e custo efetivo com NDF', items: [
     'Calculadoras > Empréstimo externo (4131): a tela passou a seguir o formato das cotações de banco de 4131 com NDF. São seis campos: principal em reais, moeda (dólar ou euro), cotação de partida, parcelas mensais, taxa all-in e data. O valor na moeda aparece logo depois da moeda, já convertido. O resto já vem no padrão: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência e IR dentro da taxa.',
     'A cotação de partida já vem do Painel e o DI pré vem da curva da B3, para o prazo médio, com a origem ao lado do campo; os dois podem ser trocados. O cupom cambial (ou o juro do euro) continua digitado.',

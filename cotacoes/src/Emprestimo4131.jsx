@@ -29,7 +29,7 @@ const quando = (at) => new Date(at).toLocaleString('pt-BR', { timeZone: 'America
 // Valores de exemplo, usados só enquanto o Painel não entrega a cotação ou a curva (o cupom nunca vem do Painel).
 const EXEMPLO = { USD: { spot: '5,4000', cupom: '5,20' }, EUR: { spot: '6,2000', cupom: '3,50' } }
 const CONFERIDO_EM = '11/11/2026'
-const IOF_RELIDO_EM = '14/11/2026'
+const IOF_RELIDO_EM = '15/11/2026'
 const IR_PAYERS = [{ id: 'nao', label: 'Já incluído na taxa all-in' }, { id: 'sim', label: 'Somar à taxa (gross-up)' }]
 const FEE_PLACES = [{ id: 'nao', label: 'Banco no Brasil · sem IR' }, { id: 'sim', label: 'Exterior · IR sobre a comissão' }]
 const CURVE_MODES = [{ id: 'painel', label: 'Curvas do Painel (B3)' }, { id: 'manual', label: 'Digitar DI e cupom' }]
@@ -57,8 +57,9 @@ const REGRAS = [
   ['IOF-câmbio na entrada', 'Empréstimo externo sujeito a registro no Banco Central, contratado direto ou por emissão de títulos, com prazo médio mínimo de até 364 dias: 3,5% sobre o valor que entra, inclusive em operações simultâneas de câmbio. Acima desse prazo: zero. A alíquota de 3,5% vale por decisão provisória do STF, de julho de 2025; não achamos notícia de julgamento definitivo até 01/11/2026.', 'Decreto 6.306/2007, art. 15-B, XI e XII (o XII com a redação do Decreto 12.499/2025); ADC 96'],
   ['IOF-câmbio na saída', 'Zero no câmbio de saída de recursos do empréstimo externo. A aplicação aos juros não foi confirmada em texto oficial.', 'Decreto 6.306/2007, art. 15-B, XI'],
   ['Quem cobra e quando', 'O imposto é devido e cobrado na liquidação do câmbio, sobre o valor em reais da operação. Quem paga é a empresa que vende a moeda na entrada. Quem cobra e recolhe é o banco que opera o câmbio, até o terceiro dia útil depois do decêndio.', 'Decreto 6.306/2007, arts. 11 a 14 e 17'],
-  ['Prazo médio', 'Média dos prazos das parcelas de principal, ponderada pelo valor de cada parcela: soma de (parcela × dias) dividida pelo principal. Pelo resumo consultado do ato da Receita, os juros não entram. Com o principal pago de uma vez, o prazo médio é o prazo total; em parcelas, fica bem abaixo dele. Não localizamos regra oficial de arredondamento: a tela decide pelo prazo exato (até 364 dias paga; qualquer fração acima não paga) e mostra o número arredondado para cima.', 'Ato Declaratório Interpretativo RFB 41/2011 (DOU de 02/08/2011) · texto ainda não conferido na íntegra'],
-  ['Liquidação antecipada', 'Total ou parcial. Se a antecipação descumprir o prazo médio mínimo, o IOF de 3,5% é devido com juros de mora e multa, além das penalidades cambiais. Se o prazo médio cair, mas continuar acima do mínimo, vale a alíquota em vigor na data do câmbio do pagamento.', 'Decreto 6.306/2007, art. 15-B, §§ 2º e 3º'],
+  ['Prazo médio', 'Média dos prazos das parcelas de principal, ponderada pelo valor de cada parcela: soma de (parcela × dias) dividida pelo principal. Só entram as parcelas de principal; os juros ficam de fora. Com o principal pago de uma vez, o prazo médio é o prazo total; em parcelas, fica bem abaixo dele. Vale também para empréstimo entre empresas do mesmo grupo, qualquer que seja a participação. O ato não traz regra de arredondamento: a tela decide pelo prazo exato (até 364 dias paga; qualquer fração acima não paga) e mostra o número arredondado para cima.', 'ADI RFB 41/2011, art. 1º, §§ 1º e 2º (DOU de 02/08/2011, p. 19); Solução de Consulta Disit/SRRF08 234/2012'],
+  ['Liquidação antecipada', 'Total ou parcial. Se a antecipação descumprir o prazo médio mínimo, perde-se o IOF zero desde a entrada: o imposto de 3,5% é devido com juros de mora e multa, além das penalidades cambiais. Se o prazo médio cair, mas continuar acima do mínimo, vale a alíquota em vigor na data do câmbio do pagamento.', 'Decreto 6.306/2007, art. 15-B, §§ 2º e 3º; Solução de Consulta Cosit 61/2014'],
+  ['Renovação e conversão em capital', 'Renovar, repactuar ou transferir a dívida exige operações simultâneas de câmbio, que valem como operações efetivas para o imposto. Converter o empréstimo em capital da empresa antes do prazo médio mínimo conta como liquidação antecipada. As decisões são da regra anterior, de mesma estrutura (6% e prazo maior).', 'Soluções de Consulta Cosit 248/2014, 261/2014 e 597/2017'],
   ['Títulos com opção de antecipação', 'Em empréstimo por emissão de títulos com cláusula de antecipação do vencimento, pelo credor ou pelo devedor, a primeira data de exercício define a incidência do imposto.', 'Decreto 6.306/2007, art. 15-B, § 1º'],
   ['IR na fonte sobre os juros', '15%, só sobre os juros. Quando o tomador assume o imposto, a base é reajustada: 100 de juros viram 117,65. País com tributação favorecida: 25% (a confirmar com o tributário).', 'RIR/2018, arts. 760 e 786'],
   ['Swap', 'IR na fonte sobre o ganho na liquidação, de 22,5% a 15% conforme o prazo, compensável no IRPJ. IOF sobre derivativos: zero desde 2013.', 'IN RFB 1.585/2015, arts. 46, 50 e 70; Decreto 6.306, art. 32-C'],
@@ -320,7 +321,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
         <section className="cx cx-finame" aria-label="Simulação">
           <div className="fm-workspace">
             <article className="desk-panel cx-panel fm-input-panel">
-              <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras conferidas em {CONFERIDO_EM}</small>{ajuda('Regras e fontes', <><p>Regras do Banco Central, da Receita Federal e da B3 lidas nas fontes oficiais, salvo as indicadas em Regras e fontes. As do IOF foram relidas em {IOF_RELIDO_EM}.</p><ul>{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul></>)}</header>
+              <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras conferidas em {CONFERIDO_EM} · IOF relido em {IOF_RELIDO_EM}</small>{ajuda('Regras e fontes', <><p>Regras do Banco Central, da Receita Federal e da B3 lidas nas fontes oficiais, salvo as indicadas em Regras e fontes. As do IOF foram relidas em {IOF_RELIDO_EM}.</p><ul>{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul></>)}</header>
               <div className="cx-form">
                 <section className="e4-meta" aria-labelledby="e4-meta-h">
                   <h3 id="e4-meta-h">Atingir meta{ajuda('Atingir meta', 'Digite o custo que você quer chegar e a tela calcula a taxa all-in (moeda + % ao ano) que leva a ele, mantendo valor, parcelas, cotação, DI e juro da moeda. A taxa calculada vai para o campo Taxa all-in, com quatro casas, e todo o resto é recalculado.')}</h3>
@@ -458,12 +459,12 @@ export default function Emprestimo4131({ onBack, quotes }) {
               <p className="cx-hint cx-pad">Prazo em dias corridos desde o desembolso. Na linha do desembolso, a última coluna é o valor líquido recebido{entrada > 0 ? ' e a coluna de encargos soma tarifa, IOF e IR da entrada, descontados desse valor' : ''}.</p>
             </details>
           )}
-          <p className="status">Regras conferidas em {CONFERIDO_EM} · {curveLabel} · A cotação da mesa do banco e o contrato prevalecem.</p>
+          <p className="status">Regras conferidas em {CONFERIDO_EM} · IOF relido em {IOF_RELIDO_EM} · {curveLabel} · A cotação da mesa do banco e o contrato prevalecem.</p>
         </section>
       </div>
 
       <div hidden={area !== 'rules'} className="bw-quotes">
-        <p className="status">Regras lidas em fontes oficiais em {CONFERIDO_EM}; IOF relido em {IOF_RELIDO_EM}. O ato da Receita sobre o prazo médio não foi lido na íntegra. Pontos não confirmados estão indicados; confirme com o tributário e com a mesa do banco antes de cotar.</p>
+        <p className="status">Regras lidas em fontes oficiais em {CONFERIDO_EM}; IOF relido em {IOF_RELIDO_EM}, com o ato e as decisões da Receita sobre o prazo médio. Pontos não confirmados estão indicados; confirme com o tributário e com a mesa do banco antes de cotar.</p>
         <dl className="e4-rules">{REGRAS.map(([tema, regra, fonte]) => <div key={tema}><dt>{tema}</dt><dd>{regra}<small>{fonte}</small></dd></div>)}</dl>
         <ul className="e4-sources">{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul>
       </div>

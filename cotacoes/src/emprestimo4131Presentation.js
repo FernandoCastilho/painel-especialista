@@ -29,6 +29,7 @@ export const E4_SOURCES = Object.freeze([
   { label: 'Resolução BCB 278/2022 · crédito externo', url: 'https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20BCB&numero=278' },
   { label: 'Decreto 6.306/2007 · IOF', url: 'https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306compilado.htm' },
   { label: 'Decreto 6.306/2007 · IOF (texto atualizado, Câmara)', url: 'https://www2.camara.leg.br/legin/fed/decret/2007/decreto-6306-14-dezembro-2007-566561-normaatualizada-pe.html' },
+  { label: 'ADI RFB 41/2011 · prazo médio (Receita)', url: 'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/5736' },
   { label: 'Decreto 9.580/2018 · IR na fonte', url: 'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/decreto/d9580.htm' },
   { label: 'B3 · Termo de moeda (NDF)', url: 'https://www.b3.com.br/pt_br/produtos-e-servicos/registro/derivativos-de-balcao/contrato-a-termo-de-moeda.htm' },
 ])
