@@ -181,10 +181,14 @@ jobs:
         run: node scripts/fetch-moedas.mjs
         continue-on-error: true
         timeout-minutes: 8
+      - name: Recuperar somente séries TFC ausentes com snapshot oficial validado
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        run: node scripts/recover-tfc.mjs
+        timeout-minutes: 2
       - name: Gerar CSV das séries do BNDES (Power Query)
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        # Bloqueia publicação se não houver CSV atual nem cópia publicada válida.
         run: node scripts/export-csv.mjs
-        continue-on-error: true
         timeout-minutes: 2
       - name: Coletar feriados da China (dados oficiais)
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
