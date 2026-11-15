@@ -6,5 +6,10 @@
 .ind-table .market-values { cursor:pointer; }
 .ind-table-wrap { overflow-x:auto; max-width:100%; }
 .ind-table td { min-width:100px; white-space:normal; overflow-wrap:break-word; }
+/* Computador: datas e referências numa linha só ("jul-set/2026", "não informada", "87,66% · out de 2020").
+   Abaixo de 1200px a quebra continua, para a tabela não precisar deslizar de lado. */
+@media (min-width:1200px) { .ind-table td, .ind-table thead th { white-space:nowrap; } }
+/* Duas tabelas seguidas: a legenda da segunda fica junto dela, não colada na tabela de cima. */
+.ind-table-wrap + .ind-table-wrap { margin-top:24px; }
 .ind-note { margin:8px 0 0; color:var(--mut); font-size:.78rem; line-height:1.5; }
 .outros h3 { margin:20px 0 6px; font-size:.95rem; color:var(--amber); }
