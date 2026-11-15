@@ -152,13 +152,16 @@ function NodeContextMenu({ node, point, onClose, onSelect, onOpen, portalTarget 
     el.querySelector('[role="menuitem"]:not([aria-disabled="true"])')?.focus({ preventScroll: true })
     const outside = e => { if (!el.contains(e.target)) onClose() }
     const dismiss = () => onClose()
+    // o próprio clique às vezes gera um ajuste de rolagem logo após abrir; rolagem só fecha o menu passado esse instante
+    const openedAt = Date.now()
+    const dismissScroll = () => { if (Date.now() - openedAt > 250) onClose() }
     document.addEventListener('pointerdown', outside, true)
-    window.addEventListener('scroll', dismiss, true)
+    window.addEventListener('scroll', dismissScroll, true)
     window.addEventListener('resize', dismiss)
     window.addEventListener('wheel', dismiss, { capture: true, passive: true })
     return () => {
       document.removeEventListener('pointerdown', outside, true)
-      window.removeEventListener('scroll', dismiss, true)
+      window.removeEventListener('scroll', dismissScroll, true)
       window.removeEventListener('resize', dismiss)
       window.removeEventListener('wheel', dismiss, true)
     }

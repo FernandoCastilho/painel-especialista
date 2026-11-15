@@ -66,3 +66,26 @@ test('manchete em inglês é reconhecida para tradução, inclusive as que empat
   for (const t of ['Euro cai face ao dólar pela terceira sessão consecutiva', 'Dólar a R$ 5,65 é o maior valor em 17 meses, e Ibovespa cai', 'Lucro da Yduqs cresce 20% no 3º trimestre',
     'Taiwan - Ações fecharam o pregão em alta e o Índice Taiwan Weighted avançou 1,55%', 'BB desaba e pressiona Ibovespa; dólar sobe a R$ 5,652', 'Volume diário de transações com Pix bate novo recorde']) assert.equal(isEnglish(t), false, t)
 })
+
+test('manchete em inglês sem palavras da lista é reconhecida pela grafia; português sem acento continua português', async () => {
+  const { isEnglish } = await import('../scripts/news-lib.mjs')
+  assert.equal(isEnglish('ECB cannot replace sound fiscal policy, presidential contender Knot warns'), true)
+  assert.equal(isEnglish('BCE não pode substituir política fiscal responsável, alerta Knot'), false)
+  assert.equal(isEnglish('Ibovespa sobe 2,35% na semana, apesar de cautela fiscal'), false)
+  assert.equal(isEnglish('HELL/USD Hoje - Valor Hellhound em Dólar Americano'), false)
+})
+
+test('mesma matéria nas edições em inglês e em português: fica só a original em português', async () => {
+  const { semTraducaoRepetida } = await import('../scripts/news-lib.mjs')
+  const t = Date.parse('2026-11-15T09:00:00Z')
+  const itens = [
+    { title: 'BCE não pode substituir política fiscal sólida, alerta candidato presidencial Knot', original: 'ECB cannot replace sound fiscal policy, presidential contender Knot warns', source: 'Investing.com', t },
+    { title: 'BCE não pode substituir política fiscal responsável, alerta Knot', source: 'Investing.com', t: t - 4 * 60e3 },
+    { title: 'Euro cai frente ao dólar', original: 'Euro falls against dollar', source: 'Investing.com', t },
+  ]
+  const ficou = semTraducaoRepetida(itens)
+  assert.deepEqual(ficou.map((n) => n.title), ['BCE não pode substituir política fiscal responsável, alerta Knot', 'Euro cai frente ao dólar'])
+  // fonte diferente ou longe no tempo: não remove
+  assert.equal(semTraducaoRepetida([{ ...itens[0], source: 'Reuters' }, itens[1]]).length, 2)
+  assert.equal(semTraducaoRepetida([{ ...itens[0], t: t + 3 * 3600e3 }, itens[1]]).length, 2)
+})
