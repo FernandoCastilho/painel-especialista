@@ -9,7 +9,8 @@
 .infl-general th, .infl-general td { background:var(--surface-2); }
 .infl-top th { box-shadow:inset 3px 0 0 var(--accent); }
 .infl-bottom th { box-shadow:inset 3px 0 0 var(--mut); }
-.infl .fm { margin-left:0; }
+/* O sinal ▲ ▼ = desta tabela tem estilo próprio: não depende da tela de Projeções ter sido aberta antes. */
+.infl .fm { display:inline-block; min-width:1.1em; text-align:center; margin-left:0; font-size:12px; font-weight:700; }
 .infl .fm.up { color:var(--accent); } .infl .fm.down { color:var(--warn); } .infl .fm.same { color:var(--mut); }
 .infl-factors td, .infl-factors th { text-align:left; white-space:normal; vertical-align:top; }
 .infl-factors td:nth-child(2) { min-width:200px; }

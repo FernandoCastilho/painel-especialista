@@ -30,6 +30,8 @@
   .scenarios .scenario-table [data-y="2027"].sc-first { border-left:1px solid var(--line); }
 }
 @media (max-width:1099px) {
+  /* Tablet e celular: os botões de ano têm a altura de toque que o seletor antigo tinha. */
+  .scenarios .scenario-year button { min-height:44px; }
   .scenarios .scenario-table[data-year="2026"] [data-y="2027"], .scenarios .scenario-table[data-year="2027"] [data-y="2026"] { display:none; }
 }
 @media (max-width:699px) {
