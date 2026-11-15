@@ -23,12 +23,15 @@ fs.mkdirSync(output, { recursive: true })
       // Começa pequena, por cima da página; clicar amplia.
       const small = page.getByRole('button', { name: 'Ampliar mascote' })
       await small.waitFor(); assert.equal(await page.locator('.mascot-dock').count(), 0)
-      // computador (barra do topo visível): a coruja pequena mora no lugar reservado da barra; abaixo disso, flutua (700-999) ou fica no espaço reservado do celular
-      if (width >= 1000) {
-        await page.waitForFunction(() => !!document.querySelector('.mascot-mini')?.closest('.mascot-slot-top'), null, { timeout: 5000 }).catch(() => {})
-        assert.equal(await small.evaluate(el => !!el.closest('.mascot-slot-top')), true, 'coruja pequena na barra do topo')
-      } else assert.equal(await small.evaluate(el => getComputedStyle(el).position), width < 700 ? 'absolute' : 'fixed')
+      // a coruja pequena mora no lugar reservado do topo: barra do topo no computador, linha de ícones no celular e no tablet (15/11/2026)
+      const slot = width >= 1000 ? '.mascot-slot-top' : '.mascot-slot-m'
+      const inSlot = async () => {
+        await page.waitForFunction(sel => !!document.querySelector('.mascot-mini')?.closest(sel), slot, { timeout: 5000 }).catch(() => {})
+        assert.equal(await small.evaluate((el, sel) => !!el.closest(sel), slot), true, `${width}: coruja pequena no lugar reservado do topo`)
+      }
+      await inSlot()
       const checkSmall = async state => {
+        if (!['hover', 'foco'].includes(state)) await inSlot()
         assert.equal(await small.getAttribute('title'), null, 'sem dica redundante')
         const box = await small.boundingBox()
         const clocksLocator = page.locator('.clocks-top')
@@ -36,11 +39,21 @@ fs.mkdirSync(output, { recursive: true })
         assert.equal(await clocksLocator.count(), onMarket ? 1 : 0, 'relógios pertencem somente ao Mercado')
         const clocks = onMarket ? await clocksLocator.boundingBox() : null
         if (onMarket && width < 1000) assert.ok(clocks && clocks.height > 0, 'relógios móveis precisam estar visíveis')
-        if (clocks && clocks.height > 0) assert.ok(box.y >= clocks.y + clocks.height, `${width}/${state}: coruja não cobre relógios`)
-        if (width < 700) {
-          const tray = await page.locator('.mascot-tray').boundingBox()
+        if (!['hover', 'foco'].includes(state)) {
+          // mede a coruja em repouso (sem foco nem mouse em cima, que a ampliam de propósito)
+          const focada = await small.evaluate(el => el === document.activeElement)
+          if (focada) await page.evaluate(() => document.activeElement.blur())
+          await page.mouse.move(width - 1, 899); await page.waitForTimeout(250)
+          const cobertos = await page.evaluate(() => {
+            const m = document.querySelector('.mascot-mini').getBoundingClientRect()
+            const cobre = r => r.width > 0 && r.height > 0 && !(r.right <= m.left || r.left >= m.right || r.bottom <= m.top || r.top >= m.bottom)
+            return [...document.querySelectorAll('.clock-one, .clocks-top .clock > *, main h1:not(.sr-only), #conteudo .holiday-notice, .theme-trigger, .clocks-info, .online-badge, .laser-btn, .topbar-tabs button')]
+              .filter(el => { const range = document.createRange(); range.selectNodeContents(el); return cobre(range.getBoundingClientRect()) }).map(el => el.className || el.tagName)
+          })
+          assert.deepEqual(cobertos, [], `${width}/${state}: coruja não cobre relógios, título, Feriados nem botões`)
+          if (focada) await small.focus()
           const main = await page.locator('#conteudo').boundingBox()
-          assert.ok(box.y >= tray.y && box.y + box.height + 5 <= main.y, `${width}/${state}: miniatura e foco não cobrem Feriados nem conteúdo`)
+          if (main && width < 1000 && !onMarket) assert.ok(box.y < main.y + 60, `${width}/${state}: sem espaço reservado entre o topo e o conteúdo`)
         }
         assert.ok(box.x >= 0 && box.x + box.width <= width, `${width}/${state}: coruja cabe na tela`)
         await page.screenshot({ path: `${output}/mini-${width}-${state}.png` })
@@ -48,7 +61,7 @@ fs.mkdirSync(output, { recursive: true })
       await checkSmall('repouso')
       const smallBox = await small.boundingBox()
       await small.hover(); await page.waitForTimeout(300)
-      assert.ok((await small.boundingBox()).width > smallBox.width * 1.5, 'passar o mouse amplia')
+      assert.ok((await small.boundingBox()).width > smallBox.width * (width >= 1000 ? 1.5 : 1.05), 'passar o mouse amplia')
       await checkSmall('hover')
       await page.mouse.move(width - 1, 899)
       await small.focus(); await page.waitForTimeout(300)

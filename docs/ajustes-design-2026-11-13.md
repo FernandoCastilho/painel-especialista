@@ -6,7 +6,7 @@ Entrega dos ajustes pedidos a partir de `docs/revisao-design-2026-11-13.md` ("aj
 
 | Item | Situação | O que mudou |
 |---|---|---|
-| 1. Coruja sobre o título | Feito | A coruja pequena ganhou lugar próprio no cabeçalho, em todas as larguras. A grande abre abaixo da linha de ícones. |
+| 1. Coruja sobre o título | Feito | A coruja pequena ganhou lugar próprio no topo: na barra do topo no computador e na linha de ícones (ao lado do tema) no celular e no tablet. Não há mais o espaço reservado de ~90 px acima do conteúdo no celular (decisão do Fernando em 15/11/2026). A grande abre abaixo do topo. |
 | 2. "Dado antigo" com mercado fechado | Feito | Fora da janela de coleta do painel (dias úteis, 9h05 às 18h), a referência do fim da janela aparece em tom neutro com data e hora ("Referência de 12/11 19:41"; no topo, "Fora do horário de coleta"). A regra de 10 minutos não mudou. Uma coleta parada no meio da tarde continua em alerta. O painel continua sem afirmar "mercado fechado". |
 | 3. Erro vermelho ao abrir | Feito | Conta Garantida e Análise de desconto abrem sem erro. O erro só aparece depois que a pessoa mexe no campo. |
 | 4. Cenários no celular | Feito | Os assuntos ficam numa linha que desliza. Fiscal passou para a tela de Inflação e Frete marítimo para a de Commodities (de 10 para 8 assuntos). Os endereços antigos continuam funcionando. |
@@ -23,7 +23,7 @@ Entrega dos ajustes pedidos a partir de `docs/revisao-design-2026-11-13.md` ("aj
 | 15. BNDES | Feito | Os atalhos de comparação (Selic × LCD, somar ao gráfico, mesmo prazo) estão reunidos logo acima do gráfico. No celular, o nome da série fica ao lado da caixa de comparar. |
 | 16. Título colado na borda | Feito | Painéis no celular e margens em BNDES, Acessos e Apresentar. |
 | 17. Textos sobrepostos | Feito | Ibovespa, "Cenário econômico" e a data ao lado do botão de atualizar. |
-| 18. Notícias | Feito | A sobra do agregador no fim da manchete é limpa na tela. A etiqueta de moeda só é posta quando a manchete fala da moeda ou de câmbio, a partir da próxima coleta. |
+| 18. Notícias | Feito | A sobra do agregador no fim da manchete é limpa na tela. A etiqueta de moeda só é posta quando a manchete fala da moeda ou de câmbio, a partir da próxima coleta. | Manchetes que a fonte manda Com Maiúscula Em Cada Palavra aparecem na escrita normal (nomes conhecidos e siglas ficam como vieram).
 | 19. Contraste | Feito | Selo invisível removido. "% a.a.", CET, textos miúdos das calculadoras e etiquetas de moeda no tema claro passam de 4,5. |
 | 20. Configurações | Feito | Novidades antigas e grupos da Base de dados recolhidos (abrem por clique ou pela busca). Em telas estreitas, os ajustes de uso vêm antes das tabelas. |
 | 21. Feriados | Feito | Abre em "Brasil e B3"; a escolha fica guardada no navegador. |
@@ -45,6 +45,7 @@ Entrega dos ajustes pedidos a partir de `docs/revisao-design-2026-11-13.md` ("aj
 - **Cupom cambial:** mesmo com a nova escala, a curva continua bem plana, porque os dados vão de cerca de 0 a 21%.
 - **IPCA por grupo:** o gráfico de barras de 12 meses ainda mostra os meses sem o ano.
 - **Dado a conferir na fonte:** o histórico do dólar tem um ponto em 18/10/2026, que é domingo.
+- **Publicado em 14/11/2026** (#432, merge autorizado pelo Fernando; site conferido no ar). Ajustes de 15/11 (coruja no celular e manchetes) em PR próprio.
 - **Teste instável:** o teste de tela do mapa do conhecimento falhou 1 vez em 4 numa etapa de toque longo. Parece instável, sem relação com estas mudanças.
 
 ## Outras mudanças
