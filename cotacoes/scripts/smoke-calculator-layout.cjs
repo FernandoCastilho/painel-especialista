@@ -369,12 +369,16 @@ async function assertComparatorFamily(browser) {
               available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
               meta:form.querySelector('.e4-meta').getBoundingClientRect().width,
               operation:form.querySelector('.fm-operation').getBoundingClientRect().width,
+              hedge:form.querySelector('.e4-hedge').getBoundingClientRect().width,
+              options:form.querySelector('.e4-mais').getBoundingClientRect().width,
               select:form.querySelector('#e4-meta-kind').getBoundingClientRect().width,
               value:form.querySelector('#e4-meta').getBoundingClientRect().width,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
-          assert.ok(Math.abs(geometry.meta - geometry.available) <= 2 && Math.abs(geometry.operation - geometry.available) <= 2, details + ': blocos ocupam a largura útil')
+          for (const block of ['meta', 'operation', 'hedge', 'options']) {
+            assert.ok(Math.abs(geometry[block] - geometry.available) <= 2, details + ': ' + block + ' ocupa a largura útil')
+          }
           assert.ok(geometry.select >= 160 && geometry.value >= 120, details + ': campos da meta têm largura de leitura')
         }
         if (width === 1440 && route === 'finame-materiais') {
