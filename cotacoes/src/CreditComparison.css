@@ -96,6 +96,7 @@
 .credit-bw .credit-shared{grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px;padding:16px;margin:12px 0}.credit-bw .credit-shared-title{margin:-16px -16px 0;padding:10px 16px}
 .credit-bw .credit-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px}.credit-bw .credit-fields{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
 .credit-bw .credit-card-body{padding:12px;gap:10px}.credit-bw .credit-field{gap:5px}.credit-bw .credit-field input,.credit-bw .credit-field select{padding:7px 9px}
+.credit-bw .credit-field .money-wrap input{padding-left:42px}
 .credit-bw .credit-controls{padding:14px;margin:12px 0;gap:12px}.credit-bw .credit-controls>.credit-field{flex:1 1 180px;width:auto}
 .credit-result-panel{border:1px solid var(--bw-line,var(--line));border-radius:10px;background:var(--bw-card,var(--bg));color:var(--bw-ink,var(--fg));margin:12px 0;padding:14px;min-width:0}
 .credit-result-panel>header{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--bw-line,var(--line));padding-bottom:8px;margin-bottom:12px}
@@ -107,11 +108,11 @@
 .credit-payment-scroll{max-height:320px;overflow:auto}
 /* Ao ampliar só as parcelas, a rolagem vertical pertence ao diálogo. */
 .credit-presentation>.credit-payment-scroll{max-height:none}
-.credit-payment-matrix td{text-align:right;font-variant-numeric:tabular-nums}.credit-payment-value{display:block}.credit-payment-matrix th:first-child{width:24%}.credit-payment-matrix thead th{background:var(--bw-tint,var(--bg))}.credit-payment-matrix tbody th{font-variant-numeric:tabular-nums}
+.credit-payment-matrix td{text-align:right;font-variant-numeric:tabular-nums}.credit-payment-value{display:block;white-space:nowrap}.credit-payment-matrix th:first-child{width:24%}.credit-payment-matrix thead th{background:var(--bw-tint,var(--bg))}.credit-payment-matrix tbody th{font-variant-numeric:tabular-nums}
 
 .credit-result-panel .credit-chart{padding:0;margin:0;border:0;background:transparent}.credit-presentation{background:var(--bw-page,var(--bg));color:var(--bw-ink,var(--fg));padding:16px}.credit-presentation>header{position:sticky;top:-16px;z-index:3;background:var(--bw-page,var(--bg));padding:12px 0;border-bottom:1px solid var(--bw-line,var(--line));margin-bottom:12px}.credit-presentation>header h2{font-size:1.25rem;margin:0}.credit-presentation>header button{flex:none}
 @media(max-width:900px){.credit-matrix .credit-extra-column{display:none}.credit-matrix th:first-child{width:34%}.credit-matrix-scroll td,.credit-matrix-scroll th{padding:8px}.credit-result-panel{padding:12px}}
-@media(max-width:420px){.credit-matrix-scroll{overflow:auto}.credit-matrix-scroll .credit-matrix{min-width:360px}.credit-result-panel{padding:10px}.credit-presentation{padding:10px}.credit-presentation>header{top:-10px}.credit-bw .credit-shared{grid-template-columns:1fr}}
+@media(max-width:420px){.credit-matrix-scroll{overflow:auto}.credit-matrix-scroll .credit-matrix{min-width:410px}.credit-result-panel{padding:10px}.credit-presentation{padding:10px}.credit-presentation>header{top:-10px}.credit-bw .credit-shared{grid-template-columns:1fr}}
 @media print{.credit-result-panel>header button,.credit-pair-picker{display:none}.credit-matrix .credit-extra-column{display:table-cell}.credit-payment-scroll{max-height:none;overflow:visible}}
 
 .credit-help-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.875rem;line-height:1.5;color:var(--bw-mut,var(--fg))}.credit-help-line>.fi-help{flex:none}.credit-analysis>.credit-help-line{margin:12px 0}

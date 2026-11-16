@@ -29,6 +29,37 @@ export const SOURCE_STATUS = Object.freeze({ LD1: Object.freeze({ endpointConfir
 export const moedaUrl = (id) => SOURCE_STATUS[id]?.endpointConfirmed === false ? null : `https://www.bndes.gov.br/Moedas/um${id}.txt`
 
 const DATE = /^(\d{2})\/(\d{2})\/(\d{4})$/
+export function isMoedaDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const date = new Date(value + 'T12:00:00Z')
+  return Number.isFinite(+date) && date.toISOString().slice(0, 10) === value
+}
+
+export const moedaDateInBrasilia = now => new Date(now).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+
+// O BNDES pode antecipar fixings; as cópias oficiais preservam os arquivos brutos.
+export function onlyEffectiveMoedas(data, now) {
+  if (!data?.series || typeof data.series !== 'object') return data
+  const cutoff = moedaDateInBrasilia(now)
+  const series = { ...data.series }, stale = { ...data.stale }
+  let changed = false
+  for (const [id, entry] of Object.entries(series)) {
+    if (!validMoedaPoints(entry?.points) || !entry.points.some(([date]) => date > cutoff)) continue
+    changed = true
+    const points = entry.points.filter(([date]) => date <= cutoff)
+    if (points.length) series[id] = { ...entry, points }
+    else {
+      delete series[id]
+      delete stale[id]
+    }
+  }
+  return changed ? { ...data, series, stale } : data
+}
+
+export const validMoedaPoints = points => Array.isArray(points) && points.every((point, i) =>
+  Array.isArray(point) && point.length === 2 && isMoedaDate(point[0]) && Number.isFinite(point[1]) &&
+  (!i || point[0] > points[i - 1][0]))
+
 // Texto do arquivo -> [[AAAA-MM-DD, valor]] em ordem crescente, sem datas repetidas, sem linhas inválidas.
 export function parseMoeda(text) {
   const byDay = new Map()
@@ -39,8 +70,7 @@ export function parseMoeda(text) {
     const value = Number(line.slice(i + 1).replace(/\s+/g, '').replace(/\./g, '').replace(',', '.'))
     if (!m || line.slice(i + 1).trim() === '' || !Number.isFinite(value) || Math.abs(value) > 1e6) continue
     const iso = `${m[3]}-${m[2]}-${m[1]}`
-    const real = new Date(`${iso}T12:00:00Z`)
-    if (Number.isNaN(+real) || real.toISOString().slice(0, 10) !== iso) continue // 31/02 e afins
+    if (!isMoedaDate(iso)) continue // 31/02 e afins
     byDay.set(iso, value)
   }
   return [...byDay].sort((a, b) => (a[0] < b[0] ? -1 : 1))
@@ -56,16 +86,24 @@ export function buildMoedas(results, errors = [], now = Date.now()) {
   return { schemaVersion: 1, generatedAt: now, series, errors }
 }
 
-// Série que falhou nesta coleta volta com o último dado publicado; `stale` guarda o instante da coleta original.
+// Conserva o histórico íntegro. Uma coleta ausente ou mais antiga não substitui o último dado nem sua data original.
 export function fillSeriesFromPrevious(out, prev) {
   const stale = {}
   for (const { id } of MOEDAS_CATALOG) {
     if (SOURCE_STATUS[id]?.endpointConfirmed === false) continue
     if (id === 'LD1' && !(prev?.series?.LD1?.sourceValidated === true && prev.series.LD1.source === moedaUrl('LD1'))) continue
-    if (!out.series[id] && prev?.series?.[id]) {
-      out.series[id] = prev.series[id]
+    const previous = prev?.series?.[id]
+    if (previous === undefined) continue
+    if (!validMoedaPoints(previous?.points)) throw new Error(`Série publicada ${id} inválida`)
+    if (!previous.points.length) continue
+    const current = out.series[id]
+    if (!current?.points.length || current.points.at(-1)[0] < previous.points.at(-1)[0]) {
+      out.series[id] = previous
       stale[id] = prev.stale?.[id] ?? prev.generatedAt ?? null
+      continue
     }
+    const history = new Map([...previous.points, ...current.points])
+    current.points = [...history].sort(([a], [b]) => a.localeCompare(b))
   }
   out.stale = stale
   return out

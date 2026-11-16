@@ -38,12 +38,12 @@ export default function FinimpComparacao({ onBack }) {
     return <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor={id}>{label}</label>{helpKey && help(helpKey, suffix)}</div>{monetary ? <MoneyInput {...attrs} prefix={options.prefix ?? currency} value={value} onChange={change} /> : <input {...attrs} inputMode="decimal" autoComplete="off" value={displayedValue} onFocus={() => setFocusedField(id)} onChange={e => change(e.target.value)} />}{error && <p className="cx-error" id={`${id}-err`} role="alert">{error}</p>}</div>
   }
   const bankFields = (name, bank, setBank, key) => <fieldset className="fi-bank"><legend>{name}</legend>{field('Taxa anual simples (%)', `fi-${key}-rate`, bank.annualRate, v => setBank({ ...bank, annualRate: v }), false, 'rate', name)}{field('Flat único sobre o principal (%)', `fi-${key}-flat`, bank.flatRate, v => setBank({ ...bank, flatRate: v }), false, 'flat', name)}{useTac && field('TAC à vista (R$)', `fi-${key}-tac`, bank.tac, v => setBank({ ...bank, tac: v }), true, 'tac', name, { prefix: 'R$' })}</fieldset>
-  return <section className="cx fi calc-standard" aria-labelledby="fi-heading">
+  return <section className="cx fi bw calc-standard calc-workspace" aria-labelledby="fi-heading">
     <div className="cx-toolbar">
       <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <button type="button" className="cx-back" onClick={() => { finimpDraftStore.reset(); setTouched({}); setSelectedDays(null); setFocusedField(null) }}>Nova simulação</button>
     </div>
-    <h2 id="fi-heading" className="cx-title cx-heading"><span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><FinimpIcon /></span><span>FINIMP · comparação de propostas</span></span>{help('simulation')}</h2>
+    <div className="bw-heading calc-workspace-heading"><h2 id="fi-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>FINIMP · comparação de propostas</span></h2>{help('simulation')}</div>
     {/* Tela recém-aberta: dica curta do que preencher, sem valores de exemplo. Some quando as condições estão completas. */}
     {!conditionsReady && <p className="fi-guide">Informe o principal e as condições das instituições.<FinimpHelp title="Como começar"><p>Para começar, informe o principal e, em cada instituição, a taxa anual e o flat. A tabela e a meta de custo se completam sozinhas.</p></FinimpHelp></p>}
     <article className="desk-panel cx-panel"><header><h3 className="cx-heading"><span>Condições</span></h3></header><div className="cx-form">

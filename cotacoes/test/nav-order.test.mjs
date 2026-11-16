@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 const src = readFileSync(new URL('../src/Nav.jsx', import.meta.url), 'utf8')
 test('menu: Mercado hoje, Juros, Cenários e depois as demais; barra do celular com as 4 primeiras', () => {
   const ids = APP_SECTIONS.map(section => section.id)
-  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'calculadora', 'feriados', 'aprender', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
+  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
   assert.match(src, /const PRIMARY = \['resumo', 'juros', 'cenarios', 'noticias'\]/)
 })
 
@@ -29,9 +29,9 @@ test('Configurações fica fora do menu (oculta), mas a rota continua', async ()
   assert.match(src, /TABS\.filter\(\(t\) => !t\.oculto\)/)
 })
 
-test('Calculadoras fica oculta no menu e mantém busca e acesso direto', () => {
-  assert.equal(APP_SECTIONS.find(section => section.id === 'calculadora').oculto, true)
-  assert.equal(DESK_TABS.find(section => section.id === 'calculadora').oculto, true)
+test('Calculadoras aparece no menu e mantém busca e acesso direto', () => {
+  assert.ok(!APP_SECTIONS.find(section => section.id === 'calculadora').oculto)
+  assert.ok(!DESK_TABS.find(section => section.id === 'calculadora').oculto)
   assert.equal(SEARCH_SECTIONS.calculadora, 'Calculadoras')
   assert.deepEqual(parseCommand('CALCULADORAS'), { kind: 'tab', id: 'calculadora', sub: '' })
 })

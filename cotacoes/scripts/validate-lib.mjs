@@ -16,6 +16,28 @@ const JUMP = { daily: 0.12, intraday: 0.06 } // salto máximo entre pontos conse
 // Entre amostras muito espaçadas (fim de semana, pausa da coleta) vale o limite diário, não o de 5 min.
 const GAP_MS = 30 * 60000
 const hours = (ms) => Math.round(ms / 36e5 * 10) / 10
+const QUOTES_STALE_MS = 6 * 36e5
+const DAY_MS = 864e5
+const BRASILIA_OFFSET_MS = 3 * 36e5
+
+function quotesCollectionStopped(now, age) {
+  if (age <= QUOTES_STALE_MS) return false
+  // Em qualquer intervalo de mais de 54 horas há mais de seis horas de dia útil.
+  if (age > QUOTES_STALE_MS + 2 * DAY_MS) return true
+
+  // Horário fixo UTC−3 do cron em quotes.yml. O alerta de pregão é separado.
+  const localNow = now - BRASILIA_OFFSET_MS
+  const localStart = localNow - age
+  const localToday = Math.floor(localNow / DAY_MS) * DAY_MS
+  let collectionAge = age
+  for (let day = localToday; day + DAY_MS > localStart; day -= DAY_MS) {
+    const weekday = new Date(day).getUTCDay()
+    if (weekday === 0 || weekday === 6) {
+      collectionAge -= Math.min(day + DAY_MS, localNow) - Math.max(day, localStart)
+    }
+  }
+  return collectionAge > QUOTES_STALE_MS
+}
 
 export function validateQuotes(file, now = Date.now()) {
   const out = []
@@ -24,7 +46,7 @@ export function validateQuotes(file, now = Date.now()) {
   if (!q) return [{ area: 'quotes', message: 'quotes.json ausente ou inválido' }]
   const age = now - num(file.generatedAt)
   if (!Number.isFinite(age)) add('quotes', 'quotes.json sem data de coleta')
-  else if (age > 6 * 36e5) add('quotes', `coleta de cotações parada há ${hours(age)} h`)
+  else if (quotesCollectionStopped(now, age)) add('quotes', `coleta de cotações parada há ${hours(age)} h (mais de seis horas na janela de coleta)`)
   for (const key of ['USDBRL', 'EURBRL', 'JPYBRL', 'USDCNH']) {
     const r = q[key]
     if (!r) { add('quotes', `${key} ausente`); continue }

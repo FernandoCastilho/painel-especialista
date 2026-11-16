@@ -288,6 +288,84 @@ async function fillScenario(page, section, route) {
   }
 }
 
+const workspaceRoutes = {
+  '': '.cx-tile',
+  'comparador-credito': '#credit-shared-value',
+  'operacao-di': '#od-value',
+  'emprestimo-4131': '#e4-valor',
+  'cbs-caixa': '#cbs-revenue',
+  'finame-materiais': '#fm-valor',
+  'bndes-credito-tfb': '#tfb-heading',
+  'bndes-tlp-exigivel': '#tlp-heading',
+  'bndes-selic-lcd': '#lcd-heading, #lcd-title',
+  'conta-garantida': '#cg-rate',
+  'finimp': '#fi-currency',
+  'giro': '#cx-value',
+  'analise-desconto': '#ad-date',
+}
+
+async function assertComparatorFamily(browser) {
+  for (const width of [390, 820, 1440]) for (const theme of ['light', 'dark']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    try {
+      await fixtures(page)
+      await page.goto(base + '/#resumo')
+      if (width < 1000) {
+        await page.getByRole('button', { name: 'Mais', exact: true }).click()
+        await page.getByRole('menuitem', { name: 'Calculadoras', exact: true }).click()
+      } else {
+        await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('button', { name: 'Calculadoras', exact: true }).click()
+      }
+      await page.locator(workspaceRoutes['']).first().waitFor()
+      for (const [route, anchor] of Object.entries(workspaceRoutes)) {
+        if (route) await page.goto(base + '/#calculadora/' + route)
+        await page.locator(anchor).first().waitFor()
+        const heading = page.locator('main.app-calculators .bw > .bw-heading h2').first()
+        await heading.waitFor()
+        const style = await heading.evaluate(element => {
+          const workspace = element.closest('.bw')
+          const css = getComputedStyle(workspace)
+          const sample = document.createElement('span')
+          sample.hidden = true
+          sample.style.backgroundColor = 'var(--bw-soft)'
+          workspace.append(sample)
+          const surfaceColor = getComputedStyle(sample).backgroundColor
+          sample.remove()
+          return {
+            border:css.borderTopWidth,
+            surfaceColor,
+            background:css.backgroundColor,
+            theme:document.documentElement.dataset.theme,
+            width:workspace.getBoundingClientRect().width,
+            viewport:document.documentElement.clientWidth,
+            document:document.documentElement.scrollWidth,
+            headingWidth:element.getBoundingClientRect().width,
+          }
+        })
+        const description = `${route || 'catálogo'} · ${width}px · ${theme}`
+        assert.equal(style.theme, theme, description + ': tema aplicado')
+        assert.equal(style.border, '1px', description + ': moldura compartilhada')
+        assert.notEqual(style.surfaceColor, 'rgba(0, 0, 0, 0)', description + ': cor da superfície definida')
+        assert.equal(style.background, style.surfaceColor, description + ': fundo renderizado usa a superfície do Comparador')
+        assert.ok(style.document <= style.viewport + 1 && style.headingWidth <= style.width, description + ': conteúdo contido na tela')
+        if (route === 'comparador-credito') {
+          const overlaps = await page.locator('#credit-shared-value').evaluate(input => {
+            const prefix = input.parentElement.querySelector('i')
+            return prefix.getBoundingClientRect().right + 4 > input.getBoundingClientRect().left + parseFloat(getComputedStyle(input).paddingLeft)
+          })
+          assert.equal(overlaps, false, description + ': prefixo monetário separado do valor')
+        }
+        if ((width === 390 && theme === 'dark') || (width === 1440 && theme === 'light')) {
+          await page.screenshot({ path:path.join(out, `família-${route || 'catalogo'}-${width}-${theme}.png`) })
+        }
+      }
+      console.log(`PASS família visual do Comparador · ${width}px · ${theme}`)
+    } finally {
+      await page.close()
+    }
+  }
+}
+
 ;(async () => {
   fs.mkdirSync(out, { recursive: true })
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
@@ -326,6 +404,7 @@ async function fillScenario(page, section, route) {
         }
       }
     }
+    await assertComparatorFamily(browser)
     assert.deepEqual(failures, [], 'conformidade das seis calculadoras nas cinco larguras')
   } finally {
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2))

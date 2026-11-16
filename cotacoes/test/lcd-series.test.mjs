@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { MOEDAS_CATALOG, SOURCE_STATUS, buildMoedas, fillSeriesFromPrevious, moedaUrl } from '../scripts/moedas-lib.mjs'
+import { collectMoedas, fetchMoedas } from '../scripts/fetch-moedas.mjs'
 import { buildCsvs } from '../scripts/csv-lib.mjs'
 import { groupRows } from '../src/moedas.js'
 import { familyRows, seriesFor } from '../src/bndesView.js'
@@ -94,9 +95,23 @@ test('tela tem atalhos de seleção143/LD1 e aviso contra custo total inferido',
   assert.match(source, /sem atualização automática; valores após essa cobertura não estão confirmados/)
   assert.match(source, /familyRows\(f\.id, bndes\.data, moedasData/)
   assert.match(source, /seriesFor\(family, id, bndes\.data, moedasData/)
-  const collector = readFileSync(new URL('../scripts/fetch-moedas.mjs', import.meta.url), 'utf8')
-  assert.match(collector, /automaticCollectionEnabled === false\).*errors\.push\(SOURCE_STATUS\[id\]\.reason\); continue/)
-  assert.ok(collector.indexOf('automaticCollectionEnabled === false') < collector.indexOf('results[id] = await getText'))
-  assert.match(collector, /const out = withOfficialLcdSnapshot\(fillSeriesFromPrevious/)
-  assert.ok(collector.indexOf('const out = withOfficialLcdSnapshot') < collector.indexOf('await writeFile'))
+})
+
+test('coleta não consulta LD1 e preserva o histórico oficial na base publicada', async () => {
+  const calls = []
+  const current = await collectMoedas({
+    previous: async () => ({ status: 'missing', data: null }),
+    collect: () => fetchMoedas({
+      fetchImpl: async url => {
+        calls.push(url)
+        return new Response('05/11/2026;4,125555')
+      },
+      now: () => NOW,
+    }),
+  })
+  assert.ok(calls.includes(moedaUrl('143')))
+  assert.ok(!calls.includes(moedaUrl('LD1')))
+  assert.ok(current.errors.includes(SOURCE_STATUS.LD1.reason))
+  assert.equal(current.series.LD1.points.length, 9)
+  assert.deepEqual(current.series.LD1.points.at(-1), ['2026-10-01', -0.11])
 })

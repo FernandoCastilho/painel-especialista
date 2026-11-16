@@ -351,7 +351,7 @@ export default function CreditComparison({ onBack }) {
     {showResults && <>
       <label className="credit-confirm"><input type="checkbox" checked={complete} onChange={e => setConfirmed(e.target.checked ? signature : null)} /> Conferi todos os encargos e as convenções para esta simulação.</label>
       <p>CET estimado do fluxo informado, não CET certificado do contrato. {complete ? 'Conferência declarada pelo usuário; não é auditoria contratual.' : 'Encargos ainda não conferidos: resultados são preliminares.'}</p>
-      <button type="button" disabled={!allOk || !complete} onClick={() => setPresent(content)}>Apresentar comparação</button>
+      <button type="button" className="cx-action" disabled={!allOk || !complete} onClick={() => setPresent(content)}>Apresentar comparação</button>
       {content}</>}
     </div>
     <div className="credit-bw-body" hidden={area !== 'rules'}>

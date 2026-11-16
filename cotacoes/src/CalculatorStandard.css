@@ -1,13 +1,7 @@
 /* Same presentation rhythm across calculators; no financial rules live here. */
 main.app.app-calculators .cx.calc-standard {
-  --cx-space:16px; --cx-primary-bg:#ff6200; --cx-primary-fg:#000d3c;
-  --cx-select-bg:#0131ff; --cx-select-fg:#fff;
-  --cx-line-strong:#60748f; --cx-result-bg:#000d3c;
+  --cx-space:16px;
   gap:20px;
-}
-:root[data-theme=dark] main.app.app-calculators .cx.calc-standard {
-  --bg:#000d3c; --card:#0c2142; --surface-2:#142e50;
-  --fg:#f3f6ff; --mut:#c0cada; --line:#526a89; --accent:#88baff;
 }
 main.app.app-calculators .cx.calc-standard .cx-panel { border-radius:12px; }
 main.app.app-calculators .cx.calc-standard .cx-panel > header { min-height:48px; padding:10px 16px; }
@@ -53,3 +47,83 @@ main.app.app-calculators .cx.calc-standard:is(.bndes-profile,.cx-lcd) .fm-grade 
 }
 main.app.app-calculators .cx.calc-standard:is(.bndes-profile,.cx-lcd) .fm-kpi { min-width:0; padding:12px; }
 main.app.app-calculators .cx.calc-standard:is(.bndes-profile,.cx-lcd) .fm-kpi b { font-size:1.25rem; overflow-wrap:anywhere; }
+
+/* Credit Comparison is the visual reference for simulation pages. The BNDES
+   workspace supplies the shared light/dark surfaces, field and focus colors. */
+:root[data-theme] body main.app.app-calculators .calc-workspace {
+  --calc-workspace-gutter:clamp(10px, 1.4vw, 20px);
+  padding:0 var(--calc-workspace-gutter) var(--calc-workspace-gutter);
+}
+:root[data-theme] body main.app.app-calculators .calc-workspace > .calc-workspace-heading {
+  margin:0 calc(-1 * var(--calc-workspace-gutter));
+  padding:6px var(--calc-workspace-gutter) 12px;
+}
+:root[data-theme] body main.app.app-calculators .calc-workspace > :is(.cx-back, .cx-toolbar) + .calc-workspace-heading {
+  margin-top:-15px;
+}
+:root[data-theme] body main.app.app-calculators .calc-catalog > .calc-workspace-heading { padding-top:14px; }
+main.app.app-calculators .calc-workspace > :is(.cx-back, .cx-toolbar) { margin:0; }
+main.app.app-calculators .calc-workspace .cx-tile {
+  border-radius:10px;
+  background:var(--bw-card);
+  border-color:var(--bw-line);
+}
+main.app.app-calculators .calc-workspace .cx-tile:is(:hover,:focus-visible) {
+  background:var(--bw-tint);
+  border-color:var(--bw-field-line);
+}
+main.app.app-calculators .bw :is(.calc-workspace-heading,.bw-heading) h2 span { min-width:0; }
+main.app.app-calculators .bw :is(.cx-panel,.expandable-panel) {
+  min-width:0;
+  border-color:var(--bw-line);
+}
+main.app.app-calculators .calc-workspace .cx-panel {
+  border-radius:10px; background:var(--bw-card); color:var(--bw-ink);
+}
+main.app.app-calculators .calc-workspace .cx-panel.calc-result-shell {
+  border:0; background:transparent;
+}
+main.app.app-calculators .calc-workspace .cx-panel > header {
+  background:var(--bw-tint);
+  border-radius:9px 9px 0 0;
+  border-color:var(--bw-line);
+  color:var(--bw-ink);
+}
+main.app.app-calculators .calc-workspace .cx-panel > header h3 {
+  border-left:0;
+  padding-left:0;
+}
+main.app.app-calculators .calc-workspace > .cx-panel:first-of-type > header,
+main.app.app-calculators .calc-workspace > .cbs-workspace > .cx-panel > header,
+main.app.app-calculators .bw-simulation > :is(.bndes-profile,.cx-lcd) > .cx-panel:first-of-type > header,
+main.app.app-calculators .bw-simulation > .bndes-profile > form > .cx-panel:first-of-type > header {
+  background:linear-gradient(110deg,#052956,#07336b);
+  color:white;
+  border-bottom:4px solid #ff7900;
+}
+main.app.app-calculators .calc-workspace > .cx-panel:first-of-type > header :is(h3,p,.fi-help > button),
+main.app.app-calculators .calc-workspace > .cbs-workspace > .cx-panel > header :is(h3,p,.fi-help > button),
+main.app.app-calculators .bw-simulation > :is(.bndes-profile,.cx-lcd) > .cx-panel:first-of-type > header :is(h3,p,.fi-help > button),
+main.app.app-calculators .bw-simulation > .bndes-profile > form > .cx-panel:first-of-type > header :is(h3,p,.fi-help > button) {
+  color:inherit;
+}
+main.app.app-calculators .bw .cx-field :is(label,.cx-label) {
+  color:var(--bw-mut);
+  line-height:1.4;
+}
+main.app.app-calculators .bw .expandable-heading h3 { border-left:0; padding-left:0; }
+main.app.app-calculators .bw :is(.cx-matrix,.fi-compare) > thead th {
+  background:var(--bw-tint);
+  color:var(--bw-ink);
+}
+main.app.app-calculators .bw :is(.cx-matrix,.fi-compare) > tbody tr:nth-child(odd) { background:var(--bw-soft); }
+main.app.app-calculators .bw :is(.cx-matrix,.fi-compare) > tbody tr:nth-child(even) { background:var(--bw-card); }
+main.app.app-calculators .bw :is(.cx-matrix,.fi-compare) td { font-variant-numeric:tabular-nums; }
+main.app.app-calculators .bw .fi-bank {
+  background:var(--bw-card); border:1px solid var(--bw-line); border-radius:10px;
+}
+main.app.app-calculators .bw :is(.cg-kpis,.desconto-kpis,.fm-grade) > div {
+  border-color:var(--bw-line);
+  background:var(--bw-soft);
+  border-radius:8px;
+}

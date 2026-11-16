@@ -105,10 +105,10 @@ export default function OperacaoDi({ onBack }) {
   const more = r && r.diff > 0
 
   return (
-    <section className="cx calc-standard" aria-labelledby="od-h">
+    <section className="cx bw calc-standard calc-workspace" aria-labelledby="od-h">
       <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
-      <h2 id="od-h" className="cx-title cx-heading">
-        <span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><OperacaoDiIcon /></span><span>Operação x DI</span></span>
+      <div className="bw-heading calc-workspace-heading">
+        <h2 id="od-h" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Operação x DI</span></h2>
         <Help title="Operação x DI: cálculo e premissas">
           <p>Compara a operação com aplicar o mesmo valor no DI, do início ao vencimento. O DI de cada dia vem da curva DI x pré da B3 da data-base: é a expectativa do mercado naquele dia, não uma garantia.</p>
           <p>Dias úteis contados com os feriados nacionais. Entre dois vértices da curva, a taxa a termo é constante (interpolação do logaritmo do fator). Pagamento único no vencimento.</p>
@@ -116,7 +116,7 @@ export default function OperacaoDi({ onBack }) {
           <p>CET pela Resolução CMN 4.881/2020: taxa anual que iguala o valor líquido liberado (valor menos IOF e tarifas) ao pagamento no vencimento, em dias corridos/365. Com % do CDI ou CDI + spread, o CDI fica fora do CET (art. 5º): mostramos o CET da parte fixa e, à parte, o custo com o CDI projetado pela curva, que não é CET. O CET do contrato prevalece.</p>
           <p>Aplicação: convenção de renda fixa em dias úteis/252 (pré ao mês convertida para o ano por (1 + taxa)^12), sem IR, IOF ou tarifas: não é rentabilidade líquida.</p>
         </Help>
-      </h2>
+      </div>
 
       <article className="desk-panel cx-panel">
         <header><h3 className="cx-heading"><span>Operação</span></h3></header>

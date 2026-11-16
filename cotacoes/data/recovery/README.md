@@ -11,3 +11,12 @@ O snapshot contém 4.970 pontos, com última referência em 13/11/2026 para toda
 Segurança: snapshot alterado, origem divergente, série não permitida ou falta de base válida interrompem a recuperação. Não há opção de ambiente para ignorar o hash. A publicação não deve passar se recuperação ou exportação falharem.
 
 Integração: revisar diff sobre HEAD atual, executar testes e build, passar gates de CI e publicar pelo fluxo normal. Depois conferir JSON e CSV públicos e uma rodada de preservação de Trends. Não alterar cron nem desabilitar os gates para recuperar dados.
+
+## Preservação das moedas contratuais
+
+O snapshot de nove moedas preserva os arquivos oficiais brutos, inclusive
+referências publicadas pelo BNDES com antecedência. A recuperação e a coleta
+publicam no JSON somente referências vigentes na data de Brasília. O CSV segue
+o mesmo limite e a exportação de moedas e TFC bloqueia a publicação se alguma
+observação já vigente desaparecer. A coleta dá uma tentativa a cada série antes
+de repetir e mantém as observações anteriores quando o arquivo oficial vem menor.
