@@ -513,7 +513,7 @@ main.app .idx-table .idx-rel small { display: block; color: var(--muted, #8a8a8a
 
 /* Estados de painel (carregando, vazio, aviso, erro): uma linha discreta, sem competir com o dado */
 .estado { display: flex; align-items: baseline; gap: 8px; margin: 6px 0; font-size: .76rem; line-height: 1.35; color: var(--mut, #8a8576); }
-.estado small { color: inherit; opacity: .75; font-size: inherit; }
+.estado small { color: inherit; font-size: inherit; } /* sem transparência: o motivo do erro precisa do mesmo contraste (4,5:1) do texto */
 .estado-ponto { flex: none; width: 7px; height: 7px; border-radius: 50%; background: currentColor; transform: translateY(-1px); }
 .estado-erro { color: #ff6b5f; }
 .estado-aviso { color: #d29922; }

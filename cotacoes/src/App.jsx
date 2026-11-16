@@ -257,7 +257,7 @@ export default function App() {
   const feedAt = health.observedAt ? new Date(health.observedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : null
   const quoteStatus = (
     <p className="status src">
-          <span className={`dot ${feed}`} aria-label={health.detail} />
+          <span className={`dot ${feed}`} role="img" aria-label={health.detail} />
           {error
             ? `Falha ao atualizar as cotações de câmbio (${error}). Tentando novamente…`
             : `Câmbio — ${health.label}`}
