@@ -21,7 +21,7 @@ test('weekly Focus cron at 08:30 Brazil on Monday and Tuesday (Monday holiday); 
  const crons=[...y.matchAll(/- cron: '([^']+)'/g)].map(m=>m[1]);assert.deepEqual(crons,['0 11,18 * * *','17 3-23 * * 1-5','17 0-2 * * 2-6','30 11 * * 1,2']);assert.equal(new Set(crons).size,4)
  assert.match(y,/if: github.event.schedule == '30 11 \* \* 1,2'/)
  const deploy=y.split('\n  deploy:\n')[1];assert.ok(deploy)
- const regular=deploy.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,35);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
+ const regular=deploy.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,36);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
  assert.match(deploy,/Consumir snapshot institucional confirmado[^\n]*\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\)\n\s+run: node scripts\/sector-news-live\.mjs --snapshot/)
  const institutional=y.split('\n  institutional-news:\n')[1].split('\n  deploy:')[0]
  assert.match(institutional,/needs\.approve-source\.result == 'success'/)
