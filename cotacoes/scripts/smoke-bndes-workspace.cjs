@@ -114,7 +114,22 @@ async function proveLastColumn(region, file) {
         if (width <= 390) await proveLastColumn(page.getByRole('region', { name: 'Resultados TFC e TFB', exact: true }), path.join(out, `${width}-${theme}-comparison-last-column.png`))
         assert.match(await page.locator('.fm-hero h3').innerText(), /Cotação comparativa/)
         assert.equal(await highlights.count(), 0, 'comparação substitui tabela simples sem duplicar resultados')
-        assert.deepEqual((await page.locator('.fm-comparison thead th').allInnerTexts()).slice(1), ['Com TFC', 'Com TFB'])
+        // Cabeçalho executivo: uma coluna por opção (nome e CET estimado) e a diferença B − A.
+        const comparisonHeads = (await page.locator('.fm-comparison thead th').allInnerTexts()).slice(1).map(text => text.replace(/\s+/g, ' ').trim())
+        assert.equal(comparisonHeads.length, 3)
+        assert.match(comparisonHeads[0], /Opção A · TFC \d+,\d{2}%/i)
+        assert.match(comparisonHeads[1], /Opção B · TFB \d+,\d{2}%/i)
+        assert.match(comparisonHeads[2], /^Diferença B − A$/i)
+        assert.equal(await page.locator('.fm-comparison .fm-badge').count(), 1, 'um único selo de menor custo')
+        assert.match(await page.locator('.fm-verdict').innerText(), /Menor custo[\s\S]*Opção [AB] · TF[CB]/i)
+        // Sem barra de rolagem vertical nos indicadores, e a composição não se repete em outro quadro.
+        assert.equal(await page.locator('.fm-results').evaluate(root => [...root.querySelectorAll('*')].filter(el => /(auto|scroll)/.test(getComputedStyle(el).overflowY) && el.clientHeight > 0 && el.scrollHeight > el.clientHeight + 1).length), 0, 'sem rolagem vertical interna na comparação')
+        assert.equal(await page.getByRole('heading', { name: 'Composição do resultado', exact: true }).count(), 0)
+        // A lista completa de parcelas abre em tela cheia pelo botão dos marcos e fecha com Esc.
+        await page.getByRole('button', { name: /Ver todas as parcelas/ }).click()
+        assert.ok(await page.locator('dialog.fm-parcels-callout[open] tbody tr').count() > 3, 'lista completa de parcelas')
+        await page.keyboard.press('Escape')
+        assert.equal(await page.locator('dialog.fm-parcels-callout[open]').count(), 0)
         assert.match(await page.locator('.fm-input-panel').innerText(), /TFB_60_90/)
         assert.match(await page.locator('.fm-input-panel').innerText(), /C03/)
         assert.match(await page.locator('.fm-input-panel').innerText(), /06\/11\/2026/)

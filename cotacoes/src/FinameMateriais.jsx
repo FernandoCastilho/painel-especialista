@@ -49,6 +49,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const [carText, setCarText] = useState('12')
   const [custo, setCusto] = useState('tfc')
   const [comparar, setComparar] = useState(false)
+  const [parcelasAbertas, setParcelasAbertas] = useState(false)
   // Cotação ampliada: o mesmo quadro do resultado vira uma janela sobre a tela (sem duplicar conteúdo). Esc ou o fundo fecham.
   const [ampliada, setAmpliada] = useState(false)
   const [chartPreset, setChartPreset] = useState(12)
@@ -162,12 +163,37 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const alternatives = comparison?.ok ? comparison.alternatives : res ? [{ custo, result: res }] : []
   // Tabelas de opções ocupam só o necessário e crescem a cada alternativa comparada (largura em FinameComparisonLayout.css).
   const fitStyle = { '--fm-opcoes': Math.max(1, alternatives.length) }
+  // Comparação executiva: só apresenta os resultados já calculados (nenhuma conta nova além da diferença entre as colunas).
+  const resumida = comparar && !!comparison?.ok
+  const opcao = index => `Opção ${String.fromCharCode(65 + index)} · ${alternatives[index].custo.toUpperCase()}`
+  const cetsOk = cets.length === alternatives.length && cets.every(Boolean)
+  const custoDe = index => cetsOk ? cets[index].anual : alternatives[index].result.total
+  const melhor = resumida ? alternatives.reduce((best, _, index) => custoDe(index) < custoDe(best) - .005 ? index : best, 0) : 0
+  const empate = resumida && alternatives.every((_, index) => Math.abs(custoDe(index) - custoDe(melhor)) < .005)
+  // A coluna de diferença só existe com duas opções (B − A); com mais opções, cada uma ganha a própria coluna.
+  const comDiferenca = resumida && alternatives.length === 2
+  const matrizStyle = { '--fm-opcoes': alternatives.length + (comDiferenca ? 1 : 0) }
+  const diferenca = (valores, tipo) => {
+    // Em reais, a diferença é entre os valores já arredondados para centavos, como aparecem na tela.
+    const d = tipo === 'pct' ? valores[1] - valores[0] : (Math.round(valores[1] * 100) - Math.round(valores[0] * 100)) / 100
+    if (!valores.every(Number.isFinite) || Math.abs(d) < .005) return <td className="fm-delta fm-delta-zero">—</td>
+    return <td className="fm-delta">{d > 0 ? '+' : '−'}{tipo === 'pct' ? `${nf(Math.abs(d), 2)} p.p.` : brl(Math.abs(d))}</td>
+  }
+  const linhaComparada = (rotulo, valores, tipo, { className, textos, extra } = {}) => <tr key={rotulo} className={className}><th scope="row">{rotulo}{extra}</th>{alternatives.map((item, index) => <td key={item.custo} className={`fm-result-${item.custo}${!empate && index === melhor ? ' fm-best' : ''}`}>{textos ? textos[index] : tipo === 'pct' ? pct(valores[index], 2) : brl(valores[index])}</td>)}{comDiferenca && diferenca(valores, tipo)}</tr>
+  const grupoComparado = rotulo => <tr key={rotulo} className="fm-grp"><th scope="colgroup" colSpan={alternatives.length + 1 + (comDiferenca ? 1 : 0)}>{rotulo}</th></tr>
+  // Marcos das parcelas: primeiro pagamento na carência (quando houver), primeira parcela com amortização e a última.
+  const marcos = resumida ? (() => {
+    const base = alternatives[0].result.parcelas.filter(row => row.vencimento)
+    const juros = base.find(row => row.carencia && row.parcela > .005), amort = base.find(row => !row.carencia), ultima = base.at(-1)
+    return [juros && ['1º pagamento de juros', juros.vencimento], amort && ['1ª parcela após carência', amort.vencimento], ultima && ultima !== amort && ['Última parcela', ultima.vencimento]].filter(Boolean)
+  })() : []
   const parcelDates = [...new Set(alternatives.flatMap(item => item.result.parcelas.map(row => row.vencimento)))].filter(Boolean).sort()
   const historyItems = [
     { id: 'tfc', name: `TFC · ${tfcCodigo}`, short: 'TFC', unit: '% a.a.', decimals: 2, list: tfcPts.map(([period, value]) => ({ period, value })) },
     { id: 'tfb', name: `TFB · ${keyOf(faixa, liberacao)}`, short: 'TFB', unit: '% a.a.', decimals: 2, list: tfbPts.map(([period, value]) => ({ period, value })) },
   ].filter(item => comparar || item.id === custo)
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
+  const detalhamento = <details className="fm-details"><summary>Detalhamento · {custo.toUpperCase()}</summary><div className="fm-grade">{quadros.map(quadro)}</div></details>
 
   const regrasAjuda = (
     <>
@@ -256,12 +282,12 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
         <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small>{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}</header>
 
-        <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>
+        {!resumida && <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>}
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
         {!res && <p className="cx-hint cx-pad" role="status">{funding?.mode !== 'inline' ? funding?.notice : r?.erros?.length ? r.erros.join(' ') : 'Complete os campos indicados para calcular.'}</p>}
         {res && (
           <>
-            {referenceRetained && <p className="status stale cx-pad" role="status">Referência retida ou atualização indisponível. Confira as datas em Taxas e históricos antes de cotar.</p>}
+            {referenceRetained && !resumida && <p className="status stale cx-pad" role="status">Referência retida ou atualização indisponível. Confira as datas em Taxas e históricos antes de cotar.</p>}
             {!comparar && <section className="fm-destaques" aria-labelledby="fm-destaques-h">
               <h4 id="fm-destaques-h" className="sr-only">Principais números · {custo.toUpperCase()}</h4>
               <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Resultado</th><th scope="col" className={`fm-result-${custo}`}>{custo.toUpperCase()}</th></tr></thead><tbody>
@@ -275,32 +301,59 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
             </section>}
             {comparar && <div className="fm-comparison" aria-label="Comparação TFC e TFB">
               {comparison?.ok ? <>
-                <div className="cx-wrap" role="region" tabIndex={0} aria-label="Resultados TFC e TFB"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">% a.a. ou R$</th>{comparison.alternatives.map(item => <th key={item.custo} scope="col" className={`fm-result-${item.custo}`}>Com {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>
-                  <tr><th scope="row">Taxa de referência</th>{comparison.alternatives.map(item => <td key={item.custo} className={`fm-result-${item.custo}`}>{pct(item.rate.value, 2)}</td>)}</tr>
-                  <tr><th scope="row">Taxa final</th>{comparison.alternatives.map(item => <td key={item.custo} className={`fm-result-${item.custo}`}>{pct(item.result.taxa, 2)}</td>)}</tr>
-                  <tr className="fm-cet-row"><th scope="row">CET estimado{ajuda('CET estimado', cetAjuda)}</th>{comparison.alternatives.map((item, index) => <td key={item.custo} className={`fm-result-${item.custo}`}>{cetTexto(cets[index]).replace(' a.a.', '')}</td>)}</tr>
-                  {[['Primeira parcela após carência', 'primeiraParcela'], ['Última parcela', 'ultimaParcela']].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo} className={`fm-result-${item.custo}`}>{brl(item.result[key])}</td>)}</tr>)}
-                  <tr className="fm-total-row"><th scope="row">Custo total estimado</th>{comparison.alternatives.map(item => <td key={item.custo} className={`fm-result-${item.custo}`}>{brl(item.result.total)}</td>)}</tr>
-                </tbody></table></div>
+                <div className="fm-verdict">
+                  <div className="fm-verdict-main"><small>{empate ? 'Resultado' : 'Menor custo'}</small><strong>{empate ? 'Custos iguais nas opções' : opcao(melhor)}</strong></div>
+                  <div className="fm-verdict-kpi"><small>CET estimado</small><b>{cetsOk ? pct(cets[melhor].anual, 2) : 'Não mensurável'}</b>{cetsOk && <span>a.a.</span>}</div>
+                  {comDiferenca && !empate && <div className="fm-verdict-kpi"><small>Custo total {alternatives[melhor].result.total <= alternatives[1 - melhor].result.total ? 'a menos' : 'a mais'} que a {alternatives[1 - melhor].custo.toUpperCase()}</small><b>{brl(Math.abs(alternatives[1 - melhor].result.total - alternatives[melhor].result.total))}</b></div>}
+                  {comDiferenca && !empate && cetsOk && <div className="fm-verdict-kpi"><small>CET abaixo da {alternatives[1 - melhor].custo.toUpperCase()}</small><b>{nf(Math.abs(cets[1 - melhor].anual - cets[melhor].anual), 2)}</b><span>p.p.</span></div>}
+                </div>
+                {referenceRetained && <p className="status stale" role="status">Referência retida ou atualização indisponível. Confira as datas em Taxas e históricos antes de cotar.</p>}
+                <div className="fm-exec" style={matrizStyle}>
+                  <div className="cx-wrap" role="region" tabIndex={0} aria-label="Resultados TFC e TFB"><table className="cx-matrix fm-fit fm-exec-matrix" style={matrizStyle}><thead><tr><th scope="col">% a.a. ou R$</th>{alternatives.map((item, index) => <th key={item.custo} scope="col" className={`fm-opt fm-result-${item.custo}${!empate && index === melhor ? ' fm-best' : ''}`}>{!empate && index === melhor && <span className="fm-badge">{cetsOk ? 'Menor CET' : 'Menor custo'}</span>}<span className="fm-opt-name">{opcao(index)}</span><b>{cetsOk ? pct(cets[index].anual, 2) : '—'}</b><span className="fm-opt-unit">CET estimado a.a.</span></th>)}{comDiferenca && <th scope="col" className="fm-delta-head">Diferença<br />B − A</th>}</tr></thead><tbody>
+                    {grupoComparado('Taxas')}
+                    {linhaComparada('Taxa de referência', alternatives.map(item => item.rate.value), 'pct')}
+                    {linhaComparada('Taxa final', alternatives.map(item => item.result.taxa), 'pct')}
+                    {linhaComparada('CET estimado', cets.map(item => item?.anual), 'pct', { className: 'fm-cet-row', textos: cets.map(item => cetTexto(item).replace(' a.a.', '')), extra: ajuda('CET estimado', cetAjuda) })}
+                    {grupoComparado('Parcelas')}
+                    {[['Primeira parcela após carência', 'primeiraParcela'], ['Última parcela', 'ultimaParcela']].map(([label, key]) => linhaComparada(label, alternatives.map(item => item.result[key]), 'brl'))}
+                    {grupoComparado('Composição do custo')}
+                    {[['Juros totais', 'juros'], ['TAC à vista', 'tac'], ['IOF', 'iof'], ['ECG à vista', 'ecg']].map(([label, key]) => linhaComparada(label, alternatives.map(item => key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key]), 'brl'))}
+                    {linhaComparada('Custo total estimado', alternatives.map(item => item.result.total), 'brl', { className: 'fm-total-row' })}
+                  </tbody></table></div>
+                  <div className="fm-exec-side">
+                    {marcos.length > 0 && <section className="fm-marcos" aria-labelledby="fm-marcos-h">
+                      <h4 id="fm-marcos-h">Parcelas · marcos</h4>
+                      <div className="fm-marcos-grid" style={fitStyle}>
+                        <span className="fm-marcos-head">Momento</span>{alternatives.map(item => <span key={item.custo} className="fm-marcos-head fm-marcos-valor">{item.custo.toUpperCase()}</span>)}
+                        {marcos.map(([rotulo, data]) => [<span key={rotulo} className="fm-marcos-rotulo">{rotulo} · {dmy(data)}</span>, ...alternatives.map(item => { const row = item.result.parcelas.find(p => p.vencimento === data); return <span key={rotulo + item.custo} className="fm-marcos-valor">{row ? brl(row.parcela) : '—'}</span> })])}
+                      </div>
+                      <button type="button" className="fm-marcos-todas" onClick={() => setParcelasAbertas(true)}>Ver todas as parcelas <BndesIcon kind="expand" /></button>
+                    </section>}
+                    <section className="fm-leitura" aria-labelledby="fm-leitura-h">
+                      <h4 id="fm-leitura-h">Leitura</h4>
+                      <p className="fm-difference">{Math.abs(comparison.totalDifference) < .005 ? 'Os totais projetados são iguais.' : <>Na TFB, o total fica <b>{brl(Math.abs(comparison.totalDifference))} {comparison.totalDifference > 0 ? 'maior' : 'menor'}</b></>}{cets.every(Boolean) && <>{Math.abs(comparison.totalDifference) < .005 ? ' O CET' : ' e o CET'} {Math.abs(cets[1].anual - cets[0].anual) < .005 ? 'é igual nas duas' : <><b>{nf(Math.abs(cets[1].anual - cets[0].anual), 2)} p.p. {cets[1].anual > cets[0].anual ? 'acima' : 'abaixo'}</b></>}</>}. Mesmas condições; inclui TAC e ECG do FGI quando informados, sem outras tarifas ou seguros.</p>
+                      <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>
+                    </section>
+                  </div>
+                </div>
                 <p className="fm-reference-sources">Referências do painel: {comparison.alternatives.map(item => `${item.custo.toUpperCase()} ${pct(item.rate.value, 4)} a.a.${item.rate.manual ? ' (taxa manual)' : ''} · referência ${item.quote.codigo} de ${dmy(item.quote.data)}`).join('; ')}. Taxas manuais, quando indicadas, substituem a referência apenas nesta simulação.</p>
-                <p className="fm-difference">{Math.abs(comparison.totalDifference) < .005 ? 'Os totais projetados são iguais.' : <>Na TFB, o total fica <b>{brl(Math.abs(comparison.totalDifference))} {comparison.totalDifference > 0 ? 'maior' : 'menor'}</b></>}{cets.every(Boolean) && <>{Math.abs(comparison.totalDifference) < .005 ? ' O CET' : ' e o CET'} {Math.abs(cets[1].anual - cets[0].anual) < .005 ? 'é igual nas duas' : <><b>{nf(Math.abs(cets[1].anual - cets[0].anual), 2)} p.p. {cets[1].anual > cets[0].anual ? 'acima' : 'abaixo'}</b></>}</>}. Mesmas condições; inclui TAC e ECG do FGI quando informados, sem outras tarifas ou seguros.</p>
               </> : <p className="status stale" role="status">{comparison?.error || 'Complete os dados para comparar as alternativas.'}</p>}
             </div>}
-            {comparar && comparison?.ok && <details className="fm-comparison-details fm-details"><summary>Detalhes da comparação</summary><div className="cx-wrap"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Indicador</th>{comparison.alternatives.map(item => <th scope="col" key={item.custo}>{item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[['Taxa final', 'taxa'], ['CET estimado a.m.', 'cet'], ['Juros totais', 'juros'], ['IOF', 'iof'], ['TAC à vista', 'tac'], ['ECG à vista', 'ecg']].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo}>{key === 'cet' ? cetTexto(cets[comparison.alternatives.indexOf(item)], 'mensal') : key === 'taxa' ? `${pct(item.result.taxa)} a.a.` : brl(key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])}</td>)}</tr>)}</tbody></table></div></details>}
+            {comparar && comparison?.ok && <details className="fm-comparison-details fm-details"><summary>Taxas com mais casas</summary><div className="cx-wrap"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Indicador</th>{comparison.alternatives.map(item => <th scope="col" key={item.custo}>{item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[['Taxa final a.a.', 'taxa'], ['CET estimado a.m.', 'cet']].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{comparison.alternatives.map(item => <td key={item.custo}>{key === 'cet' ? cetTexto(cets[comparison.alternatives.indexOf(item)], 'mensal') : key === 'taxa' ? `${pct(item.result.taxa)} a.a.` : brl(key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])}</td>)}</tr>)}</tbody></table></div></details>}
             {!comparar && <p className="fm-reference-sources">{custo.toUpperCase()}: {pct(custoFinanceiro, 4)} a.a. · {rates[custo].manual ? 'Taxa manual' : `Cotação de ${dmy(quotes[custo]?.data)}`}</p>}
-            <ExpandablePanel title="Composição do resultado">
-              <div className="fm-parcel-scroll" role="region" tabIndex={0} aria-label="Composição das alternativas"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Indicador</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[
+            {resumida ? detalhamento : <ExpandablePanel title="Composição do resultado">
+              <div className="fm-parcel-scroll fm-composicao" role="region" tabIndex={0} aria-label="Composição das alternativas"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Indicador</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[
                 ['Juros totais', 'juros'], ['IOF', 'iof'], ['TAC à vista', 'tac'], ['ECG à vista', 'ecg'], ['Total projetado', 'total'],
               ].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{alternatives.map(item => <td key={item.custo}>{brl(key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])}</td>)}</tr>)}</tbody></table></div>
-              <details className="fm-details"><summary>Detalhamento · {custo.toUpperCase()}</summary><div className="fm-grade">{quadros.map(quadro)}</div></details>
-            </ExpandablePanel>
+              {detalhamento}
+            </ExpandablePanel>}
             {spread != null && <p className="cx-hint cx-pad fm-rotulo">Equivale a <b>CDI + {pct(spread, 2)} a.a.</b>{ajuda('Equivale a CDI +', `Spread capitalizado sobre o CDI de hoje (${pct(cdi, 2)}) que dá a mesma taxa nominal: serve para comparar com o capital de giro.`)}</p>}
             {res.avisos.map((a) => <Estado key={a} tipo="aviso">{a}</Estado>)}
           </>
         )}
       </article>
 
-      {res && <ExpandablePanel title="Parcelas · opções lado a lado" className="fm-parcels-callout">
+      {res && <ExpandablePanel title="Parcelas · opções lado a lado" className={`fm-parcels-callout${resumida ? ' fm-parcels-resumidas' : ''}`} {...(resumida ? { open: parcelasAbertas, onOpenChange: setParcelasAbertas } : {})}>
         <p className="cx-hint">Datas projetadas · inclui juros na carência.{ajuda('Leitura das parcelas', 'Despesas à vista permanecem na composição e na memória completa. Traço significa ausência de parcela nessa data. Os valores A e B estão alinhados pelo vencimento para comparação.')}</p>
         <div className="fm-parcel-scroll" role="region" tabIndex={0} aria-label="Datas e parcelas das alternativas"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Data</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{parcelDates.map(date => <tr key={date}><th scope="row">{dmy(date)}</th>{alternatives.map(item => { const row = item.result.parcelas.find(p => p.vencimento === date); return <td key={item.custo}>{row ? brl(row.parcela) : '—'}</td> })}</tr>)}</tbody></table></div>
       </ExpandablePanel>}
