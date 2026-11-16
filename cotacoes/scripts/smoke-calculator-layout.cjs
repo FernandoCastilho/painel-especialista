@@ -363,9 +363,9 @@ async function assertComparatorFamily(browser) {
           await page.screenshot({ path:path.join(out, `família-${route || 'catalogo'}-${width}-${theme}.png`) })
         }
         if (width === 390 && route === 'emprestimo-4131') {
-          const geometry = await page.locator('.e4 .fm-operation .fm-group-fields').evaluate(fields => ({
-            principal:fields.querySelector('.fm-field-valor input').getBoundingClientRect().width,
-            converted:fields.querySelector('.fm-field-convertido input').getBoundingClientRect().width,
+          const geometry = await page.locator('#e4-convertido').evaluate(converted => ({
+            principal:converted.closest('.fm-group-fields').querySelector('#e4-valor').getBoundingClientRect().width,
+            converted:converted.getBoundingClientRect().width,
           }))
           assert.ok(geometry.converted >= 240 && Math.abs(geometry.converted - geometry.principal) <= 2,
             `${description} ${JSON.stringify(geometry)}: valor convertido usa a linha inteira no celular`)
