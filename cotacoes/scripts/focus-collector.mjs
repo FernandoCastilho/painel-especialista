@@ -28,6 +28,16 @@ export function expectedFocusDate(now = Date.now()) {
  return day.toISOString().slice(0, 10)
 }
 
+// Boletim da semana em atraso: o painel ainda mostra uma coleta anterior à esperada e o boletim já deveria ter saído
+// (segunda a partir das 08h25 de Brasília). Serve de rede de segurança: o GitHub nem sempre dispara a coleta semanal
+// nem o vigia no horário (em 16/11/2026 nenhum dos dois rodou), então qualquer atualização automática que aconteça
+// depois da divulgação busca o Focus, em vez de esperar o próximo disparo semanal.
+export function focusDue(publishedDate, now = Date.now()) {
+ const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' }).formatToParts(new Date(now)).map((x) => [x.type, x.value]))
+ if (p.weekday === 'Mon' && Number(p.hour) * 60 + Number(p.minute) < 8 * 60 + 25) return false
+ return !publishedDate || publishedDate < expectedFocusDate(now)
+}
+
 // Vigia do Focus (focus.yml): segunda (e terça, para segunda feriado), de 30 em 30 min. A tentativa 1 é a coleta semanal
 // das 08:30 (pages.yml); o vigia faz as tentativas 2 a 10 (09:00 a 13:00) e só dispara a atualização se o boletim da semana
 // ainda não estiver publicado no painel.

@@ -69,3 +69,24 @@ test('Focus watch: tries 2 to 10 every 30 min (09:00–13:00 Brasília) on Monda
  assert.equal(at('2026-11-03T12:30:00Z','2026-10-23').run,true) // terça após segunda feriado
  assert.equal(at('2026-11-11T12:00:00Z','2026-10-30').run,false) // quarta: fora
 })
+
+test('Focus em atraso: atualização automática depois da divulgação busca o boletim, sem esperar o disparo semanal', async () => {
+  const { focusDue, expectedFocusDate } = await import('../scripts/focus-collector.mjs')
+  const at = iso => Date.parse(iso)
+  // Segunda 16/11/2026: o boletim esperado é o de sexta 13/11. Antes das 08h25 de Brasília ainda não saiu.
+  assert.equal(expectedFocusDate(at('2026-11-16T14:30:00Z')), '2026-11-13')
+  assert.equal(focusDue('2026-11-06', at('2026-11-16T11:20:00Z')), false, 'segunda 08h20: ainda não divulgado')
+  assert.equal(focusDue('2026-11-06', at('2026-11-16T11:33:00Z')), true, 'segunda 08h33: já divulgado e o painel está na semana anterior')
+  assert.equal(focusDue('2026-11-13', at('2026-11-16T11:33:00Z')), false, 'boletim da semana já no painel')
+  // Se segunda e terça passarem sem disparo, quarta em diante ainda busca.
+  assert.equal(focusDue('2026-11-06', at('2026-11-18T15:00:00Z')), true)
+  assert.equal(focusDue('2026-11-13', at('2026-11-20T15:00:00Z')), false)
+  assert.equal(focusDue(null, at('2026-11-18T15:00:00Z')), true, 'sem Focus publicado')
+  const macro = await readFile(new URL('../scripts/fetch-macro.mjs', import.meta.url), 'utf8')
+  assert.match(macro, /const focusAtrasado = scheduled && focusDue\(previous\?\.focus\?\.date, now\.getTime\(\)\)/)
+  assert.match(macro, /const coletaFocus = !scheduled \|\| focusAtrasado/)
+  assert.match(macro, /if \(!coletaFocus\) \{ delete out\.stale\.focus; preserveFocus\(out, previous, \{ skipped: true \}\) \}/)
+  const history = await readFile(new URL('../scripts/fetch-focus-history.mjs', import.meta.url), 'utf8')
+  assert.match(history, /const atrasado = scheduled && !weekly && focusDue\(ultimaData\(previous\?\.series\), now\)/)
+  assert.match(history, /if \(scheduled && !weekly && !atrasado\) \{/)
+})
