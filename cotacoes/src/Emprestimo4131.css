@@ -41,7 +41,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 .bw.e4 .e4-mais .e4-opcoes { border:0; border-top:1px solid var(--bw-line); border-radius:0; box-shadow:none; background:none; }
 @media (max-width:640px) {
   .bw.e4 .cx-finame .fm-operation .fm-group-fields, .bw.e4 .cx-finame .e4-hedge .fm-group-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .bw.e4 .cx-finame .fm-operation .fm-group-fields > .fm-field-valor { grid-column:1/-1; }
+  .bw.e4 .cx-finame .fm-operation .fm-group-fields > :is(.fm-field-valor,.fm-field-convertido) { grid-column:1/-1; }
   .bw.e4 .e4-link { padding:10px 0; margin:-10px 0; }
   .bw.e4 .e4-origem { margin-bottom:6px; }
 }
