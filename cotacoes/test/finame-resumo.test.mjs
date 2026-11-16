@@ -47,7 +47,8 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
 
 test('comparação mantém cabeçalho limpo e resultados usam a taxa adotada com origem visível', () => {
   const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
-  assert.match(source, /Com \{item\.custo\.toUpperCase\(\)\}<\/th>/)
+  // Cabeçalho da opção: nome, CET estimado e, na de menor custo, o selo (desenho aprovado em 16/11/2026).
+  assert.match(source, /<span className="fm-opt-name">\{opcao\(index\)\}<\/span><b>\{cetsOk \? pct\(cets\[index\]\.anual, 2\) : '—'\}<\/b>/)
   assert.doesNotMatch(source, /scope="col">\{item\.custo\.toUpperCase\(\)\}<small>/)
   assert.match(source, /pct\(item\.rate\.value, 4\)/)
   assert.match(source, /item\.rate\.manual \? ' \(taxa manual\)' : ''/)
