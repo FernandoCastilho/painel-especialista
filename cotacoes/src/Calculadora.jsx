@@ -102,9 +102,9 @@ function CapitalDeGiro({ onBack }) {
     </div>
   )
   return (
-    <section className="cx calc-standard" aria-labelledby="calc-h">
+    <section className="cx bw calc-standard calc-workspace" aria-labelledby="calc-h">
       <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
-      <h2 id="calc-h" className="cx-title cx-heading"><span className="cx-heading-text"><span className="cx-icon" aria-hidden="true"><GiroIcon /></span><span>Capital de Giro</span></span><Help title="Capital de Giro: cálculo e premissas"><p>Estimativa com a taxa e a TAC informadas, sem seguros nem outros encargos. O CET segue a Resolução CMN 4.881/2020: taxa anual que iguala o valor líquido liberado (valor menos IOF e TAC) às parcelas, em dias corridos/365. O CET do contrato prevalece.</p><p>Vencimentos mensais no dia do primeiro vencimento; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Juros de cada parcela por dias corridos desde o vencimento anterior, em juros compostos sobre a taxa ao mês ((1 + taxa)^(dias/30)); taxa ao ano convertida para ao mês por juros compostos. Primeiro vencimento além de 30 dias: os juros do período extra são capitalizados. O IOF de pessoa jurídica é cobrado na liberação: adicional sobre o valor e diário sobre o principal de cada parcela, pelos dias até o vencimento, limitados a 365.</p></Help></h2>
+      <div className="bw-heading calc-workspace-heading"><h2 id="calc-h" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Capital de Giro</span></h2><Help title="Capital de Giro: cálculo e premissas"><p>Estimativa com a taxa e a TAC informadas, sem seguros nem outros encargos. O CET segue a Resolução CMN 4.881/2020: taxa anual que iguala o valor líquido liberado (valor menos IOF e TAC) às parcelas, em dias corridos/365. O CET do contrato prevalece.</p><p>Vencimentos mensais no dia do primeiro vencimento; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Juros de cada parcela por dias corridos desde o vencimento anterior, em juros compostos sobre a taxa ao mês ((1 + taxa)^(dias/30)); taxa ao ano convertida para ao mês por juros compostos. Primeiro vencimento além de 30 dias: os juros do período extra são capitalizados. O IOF de pessoa jurídica é cobrado na liberação: adicional sobre o valor e diário sobre o principal de cada parcela, pelos dias até o vencimento, limitados a 365.</p></Help></div>
 
       <article className="desk-panel cx-panel">
         <header><h3 className="cx-heading"><span>Condições gerais</span></h3></header>
@@ -207,8 +207,8 @@ export default function Calculadora({ view, onView, quotes }) {
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   return (
-    <section className="cx" aria-labelledby="calc-title">
-      <h2 id="calc-title" className="cx-title cx-heading"><span>Calculadoras</span></h2>
+    <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
+      <div className="bw-heading calc-workspace-heading"><h2 id="calc-title"><strong aria-hidden="true">{'PME'}</strong><span>Calculadoras</span></h2></div>
       <div className="cx-tiles">
         {CALCS.map(({ id, title, sub, Icon }) => (
           <button key={id} type="button" className="cx-tile" onClick={() => onView(id)} aria-label={`${title}: abrir calculadora`}>

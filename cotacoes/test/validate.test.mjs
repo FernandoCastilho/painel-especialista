@@ -17,6 +17,26 @@ test('quotes: ponta do CNH ausente, defasada e incoerências são apontadas', ()
   const p = good(); p.quotes.EURBRL = r(9)
   assert.ok(validateQuotes(p, now).some((i) => /EUR\/USD implícito/.test(i.message)))
 })
+test('idade das cotações desconta o fim de semana de Brasília e volta a contar na segunda', () => {
+  const fridayClose = Date.parse('2026-11-14T02:07:00Z') // sexta-feira, 23h07 em Brasília
+  const stopped = (generatedAt, checkedAt) => validateQuotes({ ...good(), generatedAt }, Date.parse(checkedAt))
+    .some(({ message }) => message.includes('coleta de cotações parada'))
+
+  assert.equal(stopped(fridayClose, '2026-11-14T02:59:00Z'), false)
+  assert.equal(stopped(fridayClose, '2026-11-16T01:19:00Z'), false) // domingo, 22h19 em Brasília
+  assert.equal(stopped(fridayClose, '2026-11-16T08:07:00Z'), false) // exatamente seis horas de coleta
+  assert.equal(stopped(fridayClose, '2026-11-16T08:08:00Z'), true)
+  assert.equal(stopped(Date.parse('2026-11-13T19:00:00Z'), '2026-11-15T12:00:00Z'), true)
+})
+
+test('pausa prevista não oculta cotação inválida ou ausente', () => {
+  const { quotes, ...file } = good()
+  delete quotes.USDCNH
+  const sunday = Date.parse('2026-11-15T12:00:00Z')
+  const output = validateQuotes({ ...file, quotes, generatedAt: undefined }, sunday)
+  assert.ok(output.some(({ message }) => message.includes('sem data de coleta')))
+  assert.ok(output.some(({ message }) => message.includes('USDCNH ausente')))
+})
 test('PTAX: divergência acima de 3% do mesmo par', () => {
   assert.deepEqual(validateAgainstPtax(good(), { ptax: { USD: { sell: 5.3 } } }), [])
   assert.match(validateAgainstPtax(good(), { ptax: { USD: { sell: 4.5 } } })[0].message, /USD\/BRL/)

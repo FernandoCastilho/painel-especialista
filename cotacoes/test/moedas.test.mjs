@@ -50,3 +50,15 @@ test('groupRows: valor vigente ignora datas futuras; variação em % para nívei
 test('changePct: igual, queda e referência ausente', () => {
   assert.equal(changePct(5, ['d', 5.0001]).dir, 'same'); assert.equal(changePct(4.5, ['d', 5]).text, '▼ −10,00%'); assert.equal(changePct(4, null), null); assert.equal(changePct(4, ['d', 0]), null)
 })
+
+test('uma resposta truncada conserva observações anteriores e uma resposta antiga não regride a série', () => {
+  const previous = { generatedAt: 500, stale: { '143': 250 }, series: { '143': { points: [
+    ['2026-11-10', 4.1], ['2026-11-11', 4.2], ['2026-11-12', 4.3],
+  ] } } }
+  const older = fillSeriesFromPrevious(buildMoedas({ 143: '11/11/2026;4,19' }), previous)
+  assert.deepEqual(older.series['143'], previous.series['143'])
+  assert.equal(older.stale['143'], 250)
+  const partial = fillSeriesFromPrevious(buildMoedas({ 143: '12/11/2026;4,31\n13/11/2026;4,4' }), previous)
+  assert.deepEqual(partial.series['143'].points, [['2026-11-10', 4.1], ['2026-11-11', 4.2], ['2026-11-12', 4.31], ['2026-11-13', 4.4]])
+  assert.equal(partial.stale['143'], undefined)
+})

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { CONCEITOS } from '../src/educacao.js'
-import { normalizeSearch, makeSearchDoc, plainContent, searchDocuments, highlightParts, searchSnippet, indexSearchData, isSearchShortcut, SEARCH_SOURCES } from '../src/globalSearch.js'
+import { normalizeSearch, makeSearchDoc, plainContent, searchDocuments, groupSearchResults, highlightParts, searchSnippet, indexSearchData, isSearchShortcut, SEARCH_SOURCES } from '../src/globalSearch.js'
 import { buildSearchIndex, extractSearchText } from '../scripts/build-search-index.mjs'
 test('global search finds full concept bodies across unloaded routes, accents and case',()=>{
  const docs=CONCEITOS.map(c=>makeSearchDoc({id:c.id,title:c.nome,body:plainContent(c),route:'aprender/'+c.id,kind:'Conceito'}))
@@ -17,6 +17,19 @@ test('query terms all match and title matches rank before body matches',()=>{
  const docs=[makeSearchDoc({id:'a',title:'FIDC',body:'risco de inadimplência',route:'aprender/fidc'}),makeSearchDoc({id:'b',title:'Risco de inadimplência',body:'FIDC',route:'resumo'})]
  assert.equal(searchDocuments(docs,'risco inadimplencia')[0].id,'b')
  assert.equal(searchDocuments(docs,'risco inflação').length,0)
+})
+test('a busca por FINIMP põe a calculadora antes dos conceitos que citam o termo', async () => {
+ const index = await buildSearchIndex()
+ const concept = CONCEITOS.find(c => c.id === 'gross-up')
+ const docs = [
+   makeSearchDoc({ id: concept.id, title: concept.nome, body: plainContent(concept), route: 'aprender/gross-up', kind: 'Conceito' }),
+   ...index.documents.filter(d => d.route === 'calculadora/finimp').map(makeSearchDoc),
+ ]
+ const groups = groupSearchResults(searchDocuments(docs, 'FINIMP'))
+ assert.deepEqual(groups.map(group => group.section), ['Calculadoras', 'Aprender'])
+ assert.equal(groups[0].items[0].route, 'calculadora/finimp')
+ assert.match(groups[0].items[0].title, /^FINIMP: comparação de propostas/)
+ assert.equal(groups[1].items[0].route, 'aprender/gross-up')
 })
 test('highlight preserves original Unicode and treats markup as plain text',()=>{
  const text='😀 Crédito: INADIMPLÊNCIA <script>local</script>'

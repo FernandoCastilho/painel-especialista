@@ -17,7 +17,8 @@ test('calculators and BNDES profiles use the compact standard and expansion shel
   }
   const css = await source('CalculatorStandard.css')
   assert.match(css, /repeat\(auto-fit,minmax\(min\(100%,220px\),1fr\)\)/)
-  assert.match(css, /--cx-select-bg:#0131ff/)
+  assert.doesNotMatch(css, /--cx-select-bg:/, 'herda a seleção âmbar do Comparador')
+  assert.match(css, /background:var\(--bw-tint\)/)
 })
 test('expansion shell renders one copy of results and an explicitly labelled control', async () => {
   const raw = (await source('ExpandablePanel.jsx')).replace(/^import ['"].+\.css['"]\s*$/gm, '')

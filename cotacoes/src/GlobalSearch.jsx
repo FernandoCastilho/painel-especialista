@@ -3,7 +3,7 @@ import { newsCollectionStale } from './newsWindow.js'
 import { useNewsClock } from './useNewsClock.js'
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { SEARCH_SECTIONS, SEARCH_SOURCES, currentSearchDocument, highlightParts, indexSearchData, isNewsSearchFile, isSearchShortcut, searchDocuments, searchSnippet } from './globalSearch.js'
+import { SEARCH_SOURCES, currentSearchDocument, groupSearchResults, highlightParts, indexSearchData, isNewsSearchFile, isSearchShortcut, searchDocuments, searchSnippet } from './globalSearch.js'
 import { DATA_BASE } from './useQuotes.js'
 import { loadDataFile } from './useDataFile.js'
 import './GlobalSearch.css'
@@ -94,7 +94,7 @@ export default function GlobalSearch({ onNavigate, request }) {
   const currentDocs = useMemo(() => [...docs, ...newsSnapshots.flatMap(({ file, data, route, label }) => indexSearchData(file, data, route, label, now).docs)], [docs, newsSnapshots, now])
   const results=useMemo(()=>searchDocuments(currentDocs,deferred),[currentDocs,deferred])
   const shown=results.slice(0,limit)
-  const groups=Object.values(SEARCH_SECTIONS).map(section=>({section,items:shown.filter(d=>d.section===section)})).filter(g=>g.items.length)
+  const groups=groupSearchResults(shown)
   const currentSources = sources.map(source => {
     const snapshot = newsSnapshots.find(snapshot => snapshot.file === source.file)
     return snapshot ? { ...source, stale: source.stale || newsCollectionStale(snapshot.data, now) } : source

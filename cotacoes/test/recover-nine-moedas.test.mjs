@@ -96,3 +96,21 @@ test('newer current observations and original freshness win over snapshot',()=>{
  assert.deepEqual(data.series['604'],current.series['604'])
  assert.equal(data.stale['604'],current.stale['604'])
 })
+
+test('publicação da recuperação guarda referências a partir da vigência em Brasília', async () => {
+  const current = base()
+  current.series['604'] = { points: [['2026-11-16', 5.6518]] }
+  const at = async now => runRecovery({
+    readCurrent: async () => JSON.stringify(current),
+    readSnapshot: async () => snapshot,
+    save: async () => {},
+    now,
+  })
+  const sunday = await at(Date.UTC(2026, 10, 16, 2))
+  assert.equal(sunday.data.series['604'].points.at(-1)[0], '2026-11-13')
+  assert.equal(sunday.data.series['143'].points.at(-1)[0], '2026-11-13')
+  const monday = await at(Date.UTC(2026, 10, 16, 3))
+  assert.equal(monday.data.series['604'].points.at(-1)[0], '2026-11-16')
+  assert.equal(monday.data.series['143'].points.at(-1)[0], '2026-11-16')
+  assert.deepEqual(monday.data.series.LD1, current.series.LD1)
+})

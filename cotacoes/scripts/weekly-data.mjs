@@ -37,13 +37,14 @@ export function validatePublishedFile(file, text) {
   return text
 }
 
-export async function loadPublishedFile(file, { repo = process.env.GITHUB_REPOSITORY, fetchImpl = fetch } = {}) {
+export async function loadPublishedFile(file, { repo = process.env.GITHUB_REPOSITORY, fetchImpl = fetch, allowMissing = false } = {}) {
   const [owner, name] = (repo ?? '').split('/')
   if (!owner || !name) throw aborted(file, 'repositório não configurado')
   const url = new URL('https://' + owner.toLowerCase() + '.github.io/' + name + '/' + file)
   url.searchParams.set('weekly', Date.now())
   try {
     const response = await fetchImpl(url, { signal: AbortSignal.timeout(20000), headers: { 'Cache-Control': 'no-cache' } })
+    if (allowMissing && response.status === 404) return null
     if (!response.ok) throw new Error('HTTP ' + response.status)
     // Response.text() remove o BOM UTF-8 dos CSV. Decodificar o buffer o preserva.
     return Buffer.from(await response.arrayBuffer()).toString('utf8')

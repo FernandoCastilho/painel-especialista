@@ -24,6 +24,7 @@
 .bw.e4 .e4-hedge .fm-group-fields > .e4-origem { grid-column:1/-1; margin:0; }
 /* Formato da cotação de banco: Operação com seis campos em três colunas; o que foge do padrão fica em "Mais opções". */
 .bw.e4 .cx-finame .cx-form { grid-template-columns:minmax(0,1fr); }
+.bw.e4 .cx-finame .cx-form > :is(.e4-meta,.fm-operation) { grid-column:1/-1; }
 .bw.e4 .cx-finame .fm-operation .fm-group-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; }
 .bw.e4 .cx-finame .fm-operation .fm-group-fields > .cx-field { grid-column:span 1; grid-row:auto; }
 .bw.e4 .cx-finame .fm-operation .fm-group-fields > .cx-field .fm-rotulo { min-height:0; align-items:center; }
@@ -40,7 +41,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 .bw.e4 .e4-mais .e4-opcoes { border:0; border-top:1px solid var(--bw-line); border-radius:0; box-shadow:none; background:none; }
 @media (max-width:640px) {
   .bw.e4 .cx-finame .fm-operation .fm-group-fields, .bw.e4 .cx-finame .e4-hedge .fm-group-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .bw.e4 .cx-finame .fm-operation .fm-group-fields > .fm-field-valor { grid-column:1/-1; }
+  .bw.e4 .cx-finame .fm-operation .fm-group-fields > :is(.fm-field-valor,.fm-field-convertido) { grid-column:1/-1; }
   .bw.e4 .e4-link { padding:10px 0; margin:-10px 0; }
   .bw.e4 .e4-origem { margin-bottom:6px; }
 }
@@ -68,7 +69,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 /* Atingir meta: o custo desejado no topo; a tela devolve a taxa all-in. */
 .bw.e4 .e4-meta { padding:10px 12px; border:1px solid var(--bw-line); border-radius:12px; background:var(--bw-soft); }
 .bw.e4 .e4-meta h3 { display:flex; align-items:center; gap:4px; margin:0 0 6px; font-size:.8rem; font-weight:700; color:var(--bw-ink); }
-.bw.e4 .e4-meta-campos { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto; gap:8px; align-items:center; }
+.bw.e4 .e4-meta-campos { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto; gap:8px; align-items:center; max-width:600px; }
 .bw.e4 .e4-meta-btn { height:44px; min-height:44px; padding:0 14px; border:1px solid var(--bw-ink); border-radius:8px; background:var(--bw-card); font:inherit; font-size:.82rem; font-weight:700; color:var(--bw-ink); cursor:pointer; white-space:nowrap; }
 .bw.e4 .cx-finame .e4-meta-campos select { height:44px; min-height:44px; }
 .bw.e4 .e4-meta .e4-origem { margin:6px 0 0; min-height:0; }
