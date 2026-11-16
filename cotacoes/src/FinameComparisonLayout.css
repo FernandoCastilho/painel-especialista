@@ -24,3 +24,11 @@
 .bw-heading .bndes-official-logo { width:200px; }
 
 .bndes-page > .bndes-back { display:inline-flex; margin:0 0 12px; min-height:44px; align-items:center; }
+
+/* Tabelas de opções: largura pelo conteúdo (rótulo + uma coluna por alternativa), sem esticar pela tela toda.
+   Crescem a cada alternativa comparada e nunca passam da área disponível. */
+.bw table.cx-matrix.fm-fit,.expandable-dialog table.cx-matrix.fm-fit { --fm-rotulo:260px; --fm-coluna:210px; width:min(100%,calc(var(--fm-rotulo) + var(--fm-opcoes,2) * var(--fm-coluna))) !important; min-width:0 !important; table-layout:fixed; }
+.bw table.cx-matrix.fm-fit > thead > tr > th:first-child,.expandable-dialog table.cx-matrix.fm-fit > thead > tr > th:first-child { width:var(--fm-rotulo); text-align:left; }
+.bw .fm-comparison:has(table.fm-fit) > :is(.fm-reference-sources,.fm-difference) { max-width:min(100%,960px); }
+/* Em tela estreita não sobra espaço para encolher: volta a ocupar a largura disponível, com colunas pelo conteúdo. */
+@media(max-width:700px) { .bw table.cx-matrix.fm-fit,.expandable-dialog table.cx-matrix.fm-fit { width:100% !important; table-layout:auto; } .bw table.cx-matrix.fm-fit > thead > tr > th:first-child,.expandable-dialog table.cx-matrix.fm-fit > thead > tr > th:first-child { width:auto; } }
