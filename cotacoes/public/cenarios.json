@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-10-21",
+  "reviewedAt": "2026-11-16",
   "institutions": [
     {
       "name": "Itaú BBA",
@@ -23,21 +23,21 @@
     },
     {
       "name": "Bradesco",
-      "date": "2026-09-18",
+      "date": "2026-11-06",
       "url": "https://www.economiaemdia.com.br/home/projecoes/longo-prazo",
       "note": "câmbio no fim do período",
       "years": {
         "2026": {
-          "pib": 1.7,
-          "ipca": 4.9,
-          "selic": 13.25,
-          "usd": 5
+          "pib": 1.5,
+          "ipca": 5.5,
+          "selic": 13.75,
+          "usd": 5.5
         },
         "2027": {
-          "pib": 1,
-          "ipca": 4.1,
-          "selic": 11,
-          "usd": 5.2
+          "pib": 0.4,
+          "ipca": 5.3,
+          "selic": 12.75,
+          "usd": 5.5
         }
       }
     },
@@ -63,20 +63,20 @@
     },
     {
       "name": "BB",
-      "date": "2026-10-16",
+      "date": "2026-11-13",
       "url": "https://www.bb.com.br/docs/portal/utg/CenarioEconomico.pdf",
       "note": "PDF, p. 1 · câmbio no fim do período, publicado com uma casa decimal",
       "years": {
         "2026": {
-          "pib": 1.8,
-          "ipca": 5,
-          "selic": 13.25,
-          "usd": 5.3
+          "pib": 1.6,
+          "ipca": 5.2,
+          "selic": 13.75,
+          "usd": 5.6
         },
         "2027": {
-          "pib": 1.2,
-          "ipca": 4.5,
-          "selic": 11.75,
+          "pib": 1,
+          "ipca": 5,
+          "selic": 12.75,
           "usd": 5.4
         }
       }
