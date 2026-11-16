@@ -3,6 +3,7 @@
 import { writeFile, readFile } from 'node:fs/promises'
 import { readPrevious } from './prev-lib.mjs'
 import { INDICADORES, arquivoHistorico, mesclar, semanal, ultimaData } from './focus-history-lib.mjs'
+import { focusDue } from './focus-collector.mjs'
 
 const OLINDA = 'https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais'
 const output = new URL('../public/focus-history.json', import.meta.url)
@@ -20,7 +21,10 @@ if (remote.status === 'unreadable' && !local && process.env.PREV_IGNORAR_ILEGIVE
 }
 const previous = remote.data ?? local
 
-if (scheduled && !weekly) {
+// Rede de segurança: se o boletim da semana já deveria estar no histórico e não está, a atualização automática busca.
+const atrasado = scheduled && !weekly && focusDue(ultimaData(previous?.series), now)
+if (atrasado) console.log('Focus histórico: boletim da semana em atraso; buscando nesta atualização automática')
+if (scheduled && !weekly && !atrasado) {
   // coleta de hora em hora: o Focus não muda; mantém o que está publicado
   await writeFile(output, JSON.stringify(previous ?? arquivoHistorico({}, now, { error: 'ainda sem coleta semanal' })))
   console.log('Focus histórico: preservado (coleta horária)')

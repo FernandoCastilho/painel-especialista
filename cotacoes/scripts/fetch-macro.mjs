@@ -1,4 +1,4 @@
-import { preserveFocus } from './focus-collector.mjs'
+import { focusDue, preserveFocus } from './focus-collector.mjs'
 // Coleta CDI, Selic, PTAX e Boletim Focus (Banco Central) e grava public/macro.json. Rodado a cada hora pelo GitHub Actions.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fillFromPrevious, loadPreviousOrFail } from './prev-lib.mjs'
@@ -56,11 +56,15 @@ const out = { generatedAt: Date.now(), cdi: [], selic: [], sofr: [], sofrAvg: []
   console.log('SOFR médias:', out.sofrAvg.length, 'pontos')
 }
 
-// Focus: coleta semanal (segunda/terça 08:30, com o vigia de 30 em 30 min em focus.yml) e manual/push; as coletas de hora em hora não tocam no Focus.
+// Focus: coleta semanal (segunda/terça 08:30, com o vigia de 30 em 30 min em focus.yml) e manual/push; as coletas de hora em hora só buscam o Focus quando o boletim da semana está em atraso no painel (focusDue).
 // Se o macro.json publicado existe mas não pôde ser lido, a coleta para aqui: publicar sem ele apagaria o Focus do painel.
 const previous = await loadPreviousOrFail('macro.json')
 const scheduled = process.env.GITHUB_EVENT_NAME === 'schedule'
-if (!scheduled) {
+// Nas atualizações automáticas o Focus só é buscado quando o boletim da semana já deveria estar no painel e não está.
+const focusAtrasado = scheduled && focusDue(previous?.focus?.date, now.getTime())
+if (focusAtrasado) console.log('Focus: boletim da semana ainda não está no painel (publicado até', previous?.focus?.date ?? '—', '); buscando nesta atualização automática')
+const coletaFocus = !scheduled || focusAtrasado
+if (coletaFocus) {
   const since = new Date(now.getTime() - 21 * 864e5).toISOString().slice(0, 10)
   const names = { Selic: 'Selic', IPCA: 'IPCA', 'PIB Total': 'PIB', Câmbio: 'Câmbio' }
   const rowsOut = []
@@ -109,7 +113,7 @@ out.ptaxHist = {}
 if (errors.length) console.warn('Falhas:', errors.join(' | '))
 // Fonte que falhou: mantém o último dado publicado (e avisa na tela) em vez de apagar o bloco ou travar o deploy.
 fillFromPrevious(out, previous, ['cdi', 'selic', 'sofr', 'sofrAvg', 'focus', 'ptax', 'ptaxHist'])
-if (scheduled) { delete out.stale.focus; preserveFocus(out, previous, { skipped: true }) }
+if (!coletaFocus) { delete out.stale.focus; preserveFocus(out, previous, { skipped: true }) }
 if (Object.keys(out.stale).length) console.log('Reaproveitado do último publicado:', Object.keys(out.stale).join(', '))
 const ok = out.cdi.length && out.selic.length
 if (!ok && process.env.MACRO_STRICT === 'true') {
