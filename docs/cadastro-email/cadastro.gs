@@ -14,8 +14,24 @@ var VALIDADE_CODIGO_S = 600       // 10 minutos
 var MSG_BLOQUEADO = 'Este e-mail está bloqueado. Fale com o administrador.'
 
 function doGet(e) {
-  var p = (e && e.parameter) || {}
+  // Usado só durante a troca coordenada da versão do site.
+  if (PropertiesService.getScriptProperties().getProperty('PERMITIR_GET_LEGADO') === 'true') {
+    return atender_((e && e.parameter) || {})
+  }
+  return resposta_({ ok: false, erro: 'Use o formulário atualizado do painel.' })
+}
+
+function doPost(e) {
+  var tipo = String(e && e.postData && e.postData.type || '').split(';')[0].trim().toLowerCase()
+  if (tipo !== 'application/x-www-form-urlencoded' || e.queryString) {
+    return resposta_({ ok: false, erro: 'Formato de solicitação inválido.' })
+  }
+  return atender_((e && e.parameter) || {})
+}
+
+function atender_(p) {
   try {
+    if (p.acao === 'capacidade') return resposta_({ ok: true, transporte: 'post' })
     if (p.acao === 'pedir') return resposta_(pedir_(p.email, p.pedido))
     if (p.acao === 'confirmar') return resposta_(confirmar_(p.email, p.codigo))
     if (p.acao === 'visita') return resposta_(visita_(p.email, p.token))
@@ -126,7 +142,7 @@ function visita_(emailBruto, token) {
 function liberar_(email) {
   var aba = aba_('Liberados', ['E-mail liberado', 'Liberado em'])
   if (contem_(aba, email)) return
-  aba.appendRow([email, new Date()])
+  aba.appendRow([emailTexto_(email), new Date()])
 }
 
 // Aba "Bloqueados": um e-mail por linha na coluna A (a linha 1 é o título). Quem estiver aqui
@@ -166,7 +182,12 @@ function token_(email) {
 }
 
 function registrar_(tipo, email) {
-  aba_('Acessos', ['Data e hora', 'E-mail', 'Tipo']).appendRow([new Date(), email, tipo])
+  aba_('Acessos', ['Data e hora', 'E-mail', 'Tipo']).appendRow([new Date(), emailTexto_(email), tipo])
+}
+
+function emailTexto_(email) {
+  // O Sheets interpretaria um endereço começado por "=" como fórmula.
+  return email.startsWith('=') ? "'" + email : email
 }
 
 function planilha_() {

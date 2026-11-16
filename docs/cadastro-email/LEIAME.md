@@ -46,3 +46,20 @@ Clientes anteriores sem ID continuam compatíveis sem essa deduplicação.
 O deploy frontend não atualiza Apps Script. Atualizar código preservando ID_PLANILHA,
 remetente e demais configurações existentes; salvar e atualizar a implantação
 EXISTENTE para nova versão, mantendo URL, executor e permissões. Não criar endpoint.
+
+## Migração do envio sem dados de acesso na URL
+
+1. Na implantação existente do Apps Script, guardar temporariamente a propriedade
+   `PERMITIR_GET_LEGADO` com valor `true` e instalar a nova versão de `cadastro.gs`.
+2. A partir do domínio do painel, testar uma requisição POST sem dados pessoais,
+   com formulário URL-encoded e campo `acao=capacidade`. Conferir a resposta
+   `{"ok":true,"transporte":"post"}` antes de publicar o novo frontend.
+3. Publicar o frontend e testar solicitação, confirmação e visita com uma conta
+   autorizada. Conferir as linhas correspondentes em Acessos.
+4. Remover `PERMITIR_GET_LEGADO` e confirmar que um GET sem dados é recusado.
+   Se for necessário voltar temporariamente ao frontend anterior, reabilitar
+   a propriedade antes da reversão.
+
+Para conferir o relatório das 06h, usar o dia anterior em America/Sao_Paulo.
+Separar as solicitações dos cadastros confirmados, entradas diretas e visitas.
+O relatório por e-mail fica restrito ao destinatário autorizado.
