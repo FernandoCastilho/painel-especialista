@@ -314,6 +314,10 @@ async function assertComparatorFamily(browser) {
         await page.getByRole('button', { name: 'Mais', exact: true }).click()
         await page.getByRole('menuitem', { name: 'Calculadoras', exact: true }).click()
       } else {
+        const navigationRows = await page.locator('.topbar-tabs > button').evaluateAll(buttons =>
+          new Set(buttons.map(button => Math.round(button.getBoundingClientRect().top))).size
+        )
+        assert.equal(navigationRows, 1, 'navegação do desktop mantém as dez abas na mesma linha a 1440px')
         await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('button', { name: 'Calculadoras', exact: true }).click()
       }
       await page.locator(workspaceRoutes['']).first().waitFor()
@@ -354,6 +358,27 @@ async function assertComparatorFamily(browser) {
             return prefix.getBoundingClientRect().right + 4 > input.getBoundingClientRect().left + parseFloat(getComputedStyle(input).paddingLeft)
           })
           assert.equal(overlaps, false, description + ': prefixo monetário separado do valor')
+        }
+        if (width === 1440 && route === 'emprestimo-4131') {
+          const geometry = await page.locator('.e4 .fm-input-panel > .cx-form').evaluate(form => ({
+            form:form.clientWidth,
+            meta:form.querySelector('.e4-meta').getBoundingClientRect().width,
+            operation:form.querySelector('.fm-operation').getBoundingClientRect().width,
+            select:form.querySelector('#e4-meta-kind').getBoundingClientRect().width,
+            value:form.querySelector('#e4-meta').getBoundingClientRect().width,
+          }))
+          assert.ok(geometry.meta >= geometry.form - 2 && geometry.operation >= geometry.form - 2, description + ': blocos ocupam a largura útil')
+          assert.ok(geometry.select >= 160 && geometry.value >= 120, description + ': campos da meta têm largura de leitura')
+        }
+        if (width === 1440 && route === 'finame-materiais') {
+          const geometry = await page.locator('.cx-finame .fm-input-panel > .cx-form').evaluate(form => {
+            const operation = form.querySelector('.fm-operation').getBoundingClientRect()
+            const costs = form.querySelector('.fm-costs').getBoundingClientRect()
+            const results = form.closest('.fm-workspace').querySelector('.fm-results').getBoundingClientRect()
+            return { form:form.clientWidth, used:costs.right - operation.left, topGap:Math.abs(costs.top - operation.top), formBottom:form.getBoundingClientRect().bottom, resultsTop:results.top }
+          })
+          assert.ok(geometry.used >= geometry.form - 2 && geometry.topGap <= 2, description + ': Operação e Custos preenchem a mesma linha')
+          assert.ok(geometry.resultsTop >= geometry.formBottom, description + ': cotação permanece na linha seguinte')
         }
         if ((width === 390 && theme === 'dark') || (width === 1440 && theme === 'light')) {
           await page.screenshot({ path:path.join(out, `família-${route || 'catalogo'}-${width}-${theme}.png`) })

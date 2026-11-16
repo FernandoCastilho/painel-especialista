@@ -6,3 +6,7 @@
   .term-head .topbar-tabs { flex-wrap: wrap; align-content: flex-start; overflow: visible; }
   .term-head .topbar-tabs > button { min-height: 44px; }
 }
+/* Clear room for all ten destinations with the desktop clock and status. */
+@media (min-width:1400px) and (max-width:1599px) {
+  .term-head .topbar-tabs > button { padding-inline:5px; letter-spacing:.025em; }
+}

@@ -39,7 +39,7 @@ main.app.app-calculators .cx.calc-standard .cbs-primary-value { font-size:clamp(
 main.app.app-calculators .cx.calc-standard.bw.e4 {
   --bw-card:var(--card); --bw-ink:var(--fg); --bw-muted:var(--mut); --bw-line:var(--line); --bw-soft:var(--surface-2);
 }
-main.app.app-calculators .cx.calc-standard.bw.e4 .fm-group-fields { grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:12px 16px; }
+main.app.app-calculators .cx.calc-standard.bw.e4 .fm-group-fields { gap:12px 16px; }
 main.app.app-calculators .cx.calc-standard.bw.e4 .fm-group { min-width:0; }
 /* Active TLP/LCD profiles keep complete conditions and compact result cards. */
 main.app.app-calculators .cx.calc-standard:is(.bndes-profile,.cx-lcd) .fm-grade {

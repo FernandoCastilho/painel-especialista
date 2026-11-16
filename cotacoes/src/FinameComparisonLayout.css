@@ -1,6 +1,9 @@
 /* Formulário em largura total; o resultado completo pode ocupar a janela. */
 .bw .fm-workspace { grid-template-columns:minmax(0,1fr); gap:18px; }
-.bw .cx-finame .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); }
+.bw:not(.e4) .cx-finame .cx-form { grid-template-columns:minmax(0,1fr); }
+@media (min-width:1001px) {
+  .bw:not(.e4) .cx-finame .cx-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
 .bw .fm-show-result:not(:disabled) { display:flex; justify-content:space-between; align-items:center; gap:12px; grid-column:1/-1; width:100%; }
 .bw .fm-results { gap:16px; }
 .fm-result-workspace > .expandable-content { display:grid; gap:16px; }
