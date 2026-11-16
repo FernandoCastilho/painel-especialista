@@ -113,6 +113,18 @@ export function searchDocuments(docs, query) {
   const seen=new Set()
   return docs.filter(d=>{if(!SEARCH_SECTIONS[d.route?.split('/')[0]])return false;const key=d.route+'|'+d.titleNormalized+'|'+d.body;if(seen.has(key))return false;seen.add(key);return tokens.every(t=>d.normalized.includes(t))}).map(d=>({...d, score:(d.titleNormalized === q ? 100 : d.titleNormalized.includes(q) ? 30 : 0) + tokens.filter(t=>d.titleNormalized.includes(t)).length * 5 + (d.kind==='Conceito' ? 2 : 0)})).sort((a,b)=>b.score-a.score || a.title.localeCompare(b.title,'pt-BR'))
 }
+// Preserve the search ranking when presenting results by section. The menu
+// order can change independently of the relevance of a search result.
+export function groupSearchResults(results) {
+  const groups = new Map()
+  for (const result of results) {
+    const { section } = result
+    if (!groups.has(section)) groups.set(section, { section, items: [] })
+    groups.get(section).items.push(result)
+  }
+  return [...groups.values()]
+}
+
 export function highlightParts(text, query) {
   const tokens = [...new Set(normalizeSearch(query).trim().split(/\s+/).filter(Boolean))]
   let normalized = '', offset = 0
