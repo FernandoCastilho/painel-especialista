@@ -56,7 +56,7 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
       </div>
       <nav className="topbar-tabs" aria-label="Navegação principal">
         {DESK_TABS.filter((t) => !t.oculto).map((t, i) => (
-          <button key={t.id} type="button" className={t.id === tab ? 'on' : ''} aria-current={t.id === tab ? 'page' : undefined} onClick={() => onTab(t.id)} title={`Alt+${(i + 1) % 10}`}>
+          <button key={t.id} type="button" className={t.id === tab ? 'on' : ''} aria-current={t.id === tab ? 'page' : undefined} onClick={() => onTab(t.id)} title={i < 10 ? `Alt+${(i + 1) % 10}` : undefined}>
             {t.label}
           </button>
         ))}

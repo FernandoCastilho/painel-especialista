@@ -33,7 +33,8 @@ export default function ExpandablePanel({ title, brand, children, className = ''
     }
   }, [expanded, setOpen, restoreFocus])
   const content = <><header className="expandable-heading"><div>{brand}<h3 id={titleId}>{title}</h3></div><button type="button" ref={expanded ? undefined : trigger} className="expandable-toggle" onClick={() => setOpen(!expanded)} aria-label={`${expanded ? 'Recolher' : 'Ampliar'}: ${title}`} title={expanded ? 'Recolher (Esc)' : 'Ampliar na tela'} aria-expanded={expanded}><BndesIcon kind={expanded ? 'collapse' : 'expand'} /></button></header><div className="expandable-content">{children}</div></>
-  return <section className={`expandable-panel ${className}`}>
+  // data-painel: nome do quadro, para a aba Apresentar esconder as memórias de cálculo e tabelas longas nos slides.
+  return <section className={`expandable-panel ${className}`} data-painel={title}>
     {!expanded && content}
     <dialog ref={dialog} className={`expandable-dialog ${className}`} aria-labelledby={titleId} onCancel={event => { event.preventDefault(); setOpen(false) }}>{expanded && content}</dialog>
   </section>

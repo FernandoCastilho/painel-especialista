@@ -4,7 +4,8 @@ import { GROUPS } from './moedas.js'
 import { creditStats } from './inadimplencia.js'
 // Pesquisa local: não lê campos, armazenamento pessoal ou páginas de terceiros.
 export const normalizeSearch = text => String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR')
-export const SEARCH_SECTIONS = Object.fromEntries(APP_SECTIONS.filter(section => !section.oculto || section.id === 'calculadora').map(({ id, label }) => [id, label]))
+// Apresentar monta slides com o conteúdo das outras abas: não é destino de busca.
+export const SEARCH_SECTIONS = Object.fromEntries(APP_SECTIONS.filter(section => (!section.oculto || section.id === 'calculadora') && section.id !== 'apresentar').map(({ id, label }) => [id, label]))
 export const SEARCH_SOURCES = [
   ['quotes.json','resumo','Cotações de câmbio'], ['history.json','resumo','Histórico de câmbio'], ['intraday.json','resumo','Câmbio intradiário'],
   ['macro.json','juros','Juros e projeções'], ['curves.json','juros','Curvas de juros'], ['curves-history.json','juros','Histórico das curvas'],
