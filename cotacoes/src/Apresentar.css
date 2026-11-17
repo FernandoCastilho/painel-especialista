@@ -118,7 +118,10 @@
 .sl-rj-numeros .rj-viz-grid { display: none; }
 .sl-rj-uf .rj-kpis, .sl-rj-setor .rj-kpis { display: none; }
 .sl-rj-uf .rj-viz-grid, .sl-rj-setor .rj-viz-grid { grid-template-columns: 1fr; }
-.sl-rj-uf .rj-viz-grid > .rj-card:nth-child(2), .sl-rj-setor .rj-viz-grid > .rj-card:nth-child(1) { display: none; }
+/* Um cartão por slide. O cartão é reconhecido pelo título a que está ligado, e não pela posição: assim a regra vale com ou sem
+   a moldura de maximizar em volta dele. `$=` porque cada slide prefixa os identificadores (apresentarIds.js). */
+.sl-rj-uf .rj-viz-grid > :is([aria-labelledby$="rj-sector-title"], :has([aria-labelledby$="rj-sector-title"])),
+.sl-rj-setor .rj-viz-grid > :is([aria-labelledby$="rj-map-title"], :has([aria-labelledby$="rj-map-title"])) { display: none; }
 .sl-pesos .infl > h3:first-child, .sl-pesos .infl-hint { display: none; }
 .sl-pesos-grupos [id$="infl-fatores"], .sl-pesos-grupos .infl-wrap:has(.infl-factors) { display: none; }
 .sl-pesos-fatores .infl-summary, .sl-pesos-fatores [id$="infl-fatores"], .sl-pesos-fatores .infl-wrap:not(:has(.infl-factors)) { display: none; }
@@ -202,6 +205,8 @@
 /* BNDES: resumo em dois por linha; tabela TFC dividida em dois slides complementares */
 .sl-bndes-resumo .bn-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .sl-bndes-parte-1 .bn-main tbody tr:nth-child(n+14), .sl-bndes-parte-2 .bn-main tbody tr:nth-child(-n+13) { display: none; }
+/* Tabela de commodities em dólar (mais de 20 referências): dois slides complementares, onze linhas no primeiro e o restante no segundo. */
+.sl-tabela-parte-1 .ind-table tbody:nth-of-type(n+12), .sl-tabela-parte-2 .ind-table tbody:nth-of-type(-n+11) { display: none; }
 
 /* Revisão visual: títulos internos repetidos e controles de tela saem do slide */
 .sl-corpo .ctx-head > h2, .sl-corpo .history-head > h2, .sl-corpo .credit-panel > .history-head > h2 { display: none !important; }

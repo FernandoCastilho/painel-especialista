@@ -3,7 +3,15 @@
 const { chromium } = require('playwright'), assert = require('node:assert/strict')
 const DIA = 864e5, agora = Date.now()
 const diaria = (n, de, ate) => Array.from({ length: n }, (_, i) => ({ t: agora - (n - 1 - i) * DIA, bid: +(de + ((ate - de) * i) / (n - 1)).toFixed(4), high: ate, low: de }))
-const history = { generatedAt: agora, series: { USD: { source: 'USD', points: diaria(400, 5.0, 5.3) }, EUR: { source: 'EUR', points: diaria(400, 5.8, 6.1) }, JPY: { source: 'JPY', points: diaria(400, 0.034, 0.035) }, CNH: { source: 'CNH', points: diaria(400, 0.7, 0.74) } } }
+// Dólar com degraus de 1,2% a cada 60 dias: dias de variação forte, que o painel marca com bolinhas de notícia.
+const usdPontos = diaria(400, 5.0, 5.3).map((p, i) => ({ ...p, bid: +(p.bid * (Math.floor(i / 60) % 2 ? 1.012 : 1)).toFixed(4) }))
+const diaBr = (t) => new Date(t - 3 * 3600e3).toISOString().slice(0, 10)
+const fxNoticias = { generatedAt: agora, moedas: { USD: { dias: Object.fromEntries(usdPontos.map((p) => [diaBr(p.t), { itens: [{ t: p.t, title: 'Manchete de teste sobre o dólar', source: 'Veículo de teste', link: `https://exemplo.test/fx/${diaBr(p.t)}` }] }])) } } }
+// Tabela de commodities com as 20 referências do painel (mais o Brent, de oil.json): 21 linhas, como no site.
+const IDS_COMMODITIES = ['wti', 'henry-hub', 'ny-diesel', 'ny-gasoline', 'gold', 'copper', 'aluminum', 'iron-ore', 'soybeans', 'corn', 'sugar', 'coffee', 'urea', 'dap', 'wheat', 'beef', 'cotton', 'coal', 'cocoa', 'pulp-br']
+const mesesAtras = (i) => { const d = new Date(agora); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - i); return d.toISOString().slice(0, 7) }
+const commodities = { schemaVersion: 1, generatedAt: new Date(agora).toISOString(), commodities: IDS_COMMODITIES.map((id, k) => ({ id, label: `Referência ${id}`, unit: 'USD/tonelada', nature: 'média mensal', sourceName: 'Fonte de teste', sourceUrl: 'https://exemplo.test/fonte', benchmark: 'ref', value: 100 + k, period: mesesAtras(1), checkedAt: new Date(agora).toISOString(), stale: false, error: null, history: Array.from({ length: 13 }, (_, i) => ({ period: mesesAtras(13 - i), value: 90 + k + i })) })) }
+const history = { generatedAt: agora, series: { USD: { source: 'USD', points: usdPontos }, EUR: { source: 'EUR', points: diaria(400, 5.8, 6.1) }, JPY: { source: 'JPY', points: diaria(400, 0.034, 0.035) }, CNH: { source: 'CNH', points: diaria(400, 0.7, 0.74) } } }
 const raw = (bid, pct) => ({ bid: String(bid), ask: String(bid * 1.0003), high: String(bid * 1.01), low: String(bid * 0.99), pctChange: String(pct), varBid: '0.01', timestamp: String(Math.floor((agora - 60000) / 1000)) })
 const quotes = { generatedAt: agora - 60000, source: 'AwesomeAPI', rejected: {}, quotes: { USDBRL: raw(5.3, 0.25), EURBRL: raw(6.1, -0.1), JPYBRL: raw(0.035, 0), USDCNH: raw(7.16, 0.05) } }
 const macro = { generatedAt: agora, cdi: Array.from({ length: 260 }, (_, i) => [agora - (259 - i) * DIA, +(14.9 - Math.floor(i / 52) * 0.25).toFixed(2)]), selic: [[agora - 300 * DIA, 15], [agora - 40 * DIA, 13.75]], sofr: [], sofrAvg: [], focus: { date: new Date(agora - 4 * DIA).toISOString().slice(0, 10), rows: [] }, ptax: {}, ptaxHist: {}, errors: [], stale: {} }
@@ -29,6 +37,8 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await p.route('**/news.json*', (r) => r.fulfill({ json: news }))
       await p.route('**/temas.json*', (r) => r.fulfill({ json: temas }))
       await p.route('**/ipca.json*', (r) => r.fulfill({ json: ipca }))
+      await p.route('**/fx-noticias.json*', (r) => r.fulfill({ json: fxNoticias }))
+      await p.route('**/commodities.json*', (r) => r.fulfill({ json: commodities }))
       await p.goto(base + '/#apresentar')
       const tela = p.locator('.apz'); await tela.waitFor()
       const tema = () => p.evaluate(() => document.documentElement.dataset.theme)
@@ -192,7 +202,39 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await marcar(await grupo('Mercado'), /^Dólar$/)
       const dolar = p.locator('.apz-item', { hasText: 'Dólar em reais' })
       await dolar.locator('.plot, .placeholder').first().waitFor()
-      assert.equal(await dolar.locator('.fx-dots:visible, .fx-legend:visible, .fx-news:visible').count(), 0)
+      await dolar.locator('.plot').first().waitFor()
+      assert.ok(await dolar.locator('.fx-dots button').count() > 0, 'o teste precisa de bolinhas no gráfico para provar que elas ficam fora do slide')
+      assert.equal(await dolar.locator('.fx-dots:visible, .fx-dots button:visible, .fx-legend:visible, .fx-news:visible').count(), 0)
+      // o conteúdo de um slide da montagem cabe inteiro no corpo dele (nada cortado embaixo nem do lado)
+      const semCorte = async (item, nome) => {
+        await p.waitForTimeout(900)
+        const m = await item.evaluate((el) => { const c = el.querySelector('.sl-ajuste'), mi = el.querySelector('.sl-miolo'), rc = c.getBoundingClientRect(); return { baixo: mi.getBoundingClientRect().height - rc.height, lado: Math.max(0, ...[...mi.querySelectorAll('*')].filter((e) => e.getClientRects().length).map((e) => e.getBoundingClientRect().right - rc.right)) } })
+        assert.ok(m.baixo <= 2 && m.lado <= 2, `${nome}: conteúdo cortado (${Math.round(m.baixo)}px embaixo, ${Math.round(m.lado)}px ao lado)`)
+      }
+      // recuperação judicial: cada slide mostra só o seu cartão (mapa por estado ou barras por setor), sem corte
+      const cenarios = await grupo('Cenários')
+      await marcar(cenarios, 'Recuperação judicial · por estado')
+      await marcar(cenarios, 'Recuperação judicial · por setor')
+      for (const [nome, titulo] of [['distribuição por estado', 'Distribuição por UF'], ['distribuição por setor', 'Distribuição por setor']]) {
+        const item = p.locator('.apz-item', { hasText: `Recuperação judicial · ${nome}` })
+        await item.locator('.rj-card:visible').first().waitFor()
+        assert.deepEqual(await item.locator('.rj-card:visible h3').allInnerTexts(), [titulo], `slide ${nome}: um cartão só`)
+        await semCorte(item, `Recuperação judicial · ${nome}`)
+      }
+      // commodities em dólar: 21 referências em dois slides complementares, todas as linhas dentro do slide
+      await marcar(cenarios, 'Commodities em dólar · primeira parte')
+      await marcar(cenarios, 'Commodities em dólar · segunda parte')
+      const linhas = []
+      for (const parte of ['primeira parte', 'segunda parte']) {
+        const item = p.locator('.apz-item', { hasText: `Commodities em dólar · ${parte}` })
+        await item.locator('.ind-table tbody:visible').first().waitFor()
+        linhas.push(await item.locator('.ind-table tbody:visible .market-open b').allInnerTexts())
+        await semCorte(item, `Commodities em dólar · ${parte}`)
+      }
+      assert.equal(linhas[0].length, 11)
+      assert.equal(linhas[0].length + linhas[1].length, 21, 'nenhuma referência fica de fora')
+      assert.equal(new Set([...linhas[0], ...linhas[1]]).size, 21, 'nenhuma referência repetida')
+      assert.ok(linhas[1].some((t) => /pulp-br/.test(t)), 'a celulose aparece na segunda parte')
       // leitura executiva do setor entra pela escolha do setor
       const setores = await grupo('Setores')
       await setores.locator('.apz-opcao', { hasText: 'Leitura executiva do setor' }).locator('input').check()

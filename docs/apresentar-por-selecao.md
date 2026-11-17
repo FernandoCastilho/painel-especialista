@@ -20,7 +20,7 @@ a ter onze abas e precisa do ajuste de espaçamento que está no histórico (com
 |---|---|
 | Mercado | indicadores do dia (com Selic, CDI e DI), tabela de câmbio, gráfico de cada moeda, comparação entre moedas, Panorama do dia, veículos pesados |
 | Juros | CDI, CDI futuro, DI x pré, cupom cambial, SOFR, Fed, €STR, BCE, Japão, Treasuries, curva do euro |
-| Cenários | Focus e bancos, histórico do Focus (geral e por indicador), agenda da semana, inadimplência, recuperação judicial (números, estado, setor), atividade e emprego, indexadores, IPCA, IPCA por grupos, fatores da inflação, dívida pública, commodities (tabelas e gráfico de cada referência), combustíveis, frete |
+| Cenários | Focus e bancos, histórico do Focus (geral e por indicador), agenda da semana, inadimplência, recuperação judicial (números, estado, setor), atividade e emprego, indexadores, IPCA, IPCA por grupos, fatores da inflação, dívida pública, commodities (tabela em dólar em dois slides, tabela em reais e gráfico de cada referência, inclusive celulose), combustíveis, frete |
 | Notícias | por tema: mercado e moedas, tributos e trabalho, setores e insumos; a lista "Escolher notícias" tira manchetes |
 | BNDES | resumo do dia, tabelas TFB, TLP, TFC (em dois slides) e moedas, histórico de 12 meses das quatro referências |
 | Setores | por setor: leitura executiva; por estudo: resumo executivo, cadeia de valor, indicadores e perguntas; por insumo: o que move o preço |
@@ -45,7 +45,7 @@ Aprender e Configurações ficam de fora.
 ## Limites conhecidos
 - Não há tema de notícias "madeira". O mais próximo é "Têxtil, vestuário e móveis". Criar o tema mexe na coleta de
   notícias e depende de decisão à parte.
-- Referências sem histórico na coleta (hoje: WTI, ouro, minério, soja e milho em dólar) mostram aviso em vez de gráfico.
+- Referência sem histórico na coleta do dia mostra aviso em vez de gráfico.
 - Slides com muito conteúdo (os 4 gráficos do Focus juntos, bancos, TFC) ficam com letra menor. Há slides individuais
   para o Focus e para os indicadores dos bancos.
 - Calculadoras sem valores iniciais abrem no modo Dados, com rolagem dentro do slide.
@@ -85,10 +85,24 @@ indicadores quando não há cotação, e esta nota completada. O Auditor conferi
 site: 61 slides de notícias, 31 com manchetes, nenhum erro.
 
 ## Atualizações do painel incorporadas (17/11/2026)
-O ramo publicado andou três vezes durante a entrega; ela foi atualizada e testada de novo a cada vez.
+O ramo publicado andou quatro vezes durante a entrega, e ela foi atualizada a cada vez. Na terceira junção (maximizar
+gráficos), os testes automáticos passaram, mas a varredura de todos os slides não foi refeita e dois slides de
+recuperação judicial quebraram; o Auditor achou e a correção está abaixo. Desde então, cada junção é seguida de
+varredura de todos os blocos com os arquivos reais do site.
 - Bolinhas de notícia do dólar e calculadora Faturamento: ver "Ficou de fora".
 - Celulose (exportação do Brasil): entrou como gráfico em Cenários › Commodities.
 - Maximizar gráficos: o botão não aparece no slide, que já é a visão ampliada.
+- Filtro das manchetes do dólar (rascunho nº 464): sem efeito na aba.
+
+## Segundo parecer do Auditor (17/11/2026)
+**Requer correção** (83,2), no commit `1fb02f7`. Achados e correções:
+- Recuperação judicial "por estado" e "por setor" saíam iguais e cortados depois da junção do maximizar gráficos. A
+  regra que escolhe o cartão de cada slide passou a reconhecê-lo pelo título, e não pela posição.
+- "Commodities em dólar" cortava as últimas linhas com as 21 referências do site. Virou dois slides complementares.
+- O teste de tela não provava que as bolinhas do dólar ficam fora do slide (a série de teste não gerava bolinhas).
+  Agora gera, e o teste exige que existam e não apareçam. Também cobre os dois slides de recuperação judicial e as
+  21 referências de commodities.
+- Base atualizada de novo (rascunho nº 464) e textos corrigidos.
 
 ## Conferência
 - `test/apresentar.test.mjs`: seleção, ordem, teclado, notícias, busca de blocos, montagem só em memória, tema imposto.
