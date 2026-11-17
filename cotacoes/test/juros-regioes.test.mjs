@@ -30,7 +30,7 @@ test('juros: gráficos de referência precedem as curvas em cada região',()=>{
 })
 test('detalhe de gráfico abre em janela no centro da tela no computador', () => {
  const css=source('styles.css')
- assert.match(css, /\.expandable-panel\.is-dialog\.is-modal \{ inset:0; margin:auto; width:min\(1120px, calc\(100vw - 64px\)\); height:auto; max-height:calc\(100dvh - 64px\);/)
+ assert.match(css, /\.expandable-panel\.is-dialog\.is-modal \{ inset:0; margin:auto; width:min\(1120px, calc\(100vw - 64px\)\); height:fit-content; max-height:calc\(100dvh - 64px\);/)
  assert.doesNotMatch(css, /\.expandable-panel\.is-dialog\.is-modal \{ inset:0 0 0 auto/)
  // sem `transform` depois de aberta: calendário e balões de posição fixa continuam se medindo pela tela
  assert.match(css, /\.expandable-panel\.is-modal\[open\] \{ animation:modal-in \.28s cubic-bezier\(\.16,1,\.3,1\) backwards; \}/)

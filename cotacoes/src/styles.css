@@ -591,7 +591,7 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
    então um não desalinha o outro. Com "reduzir movimento", nada disto roda. */
 @media (min-width: 900px) {
   /* detalhe ao clicar num indicador, moeda ou taxa: janela no centro da tela, ampla mas sem ocupar a tela toda */
-  .expandable-panel.is-dialog.is-modal { inset:0; margin:auto; width:min(1120px, calc(100vw - 64px)); height:auto; max-height:calc(100dvh - 64px); border:1px solid var(--line); border-radius:8px; box-shadow:0 24px 64px rgba(0,0,0,.35); }
+  .expandable-panel.is-dialog.is-modal { inset:0; margin:auto; width:min(1120px, calc(100vw - 64px)); height:fit-content; max-height:calc(100dvh - 64px); border:1px solid var(--line); border-radius:8px; box-shadow:0 24px 64px rgba(0,0,0,.35); }
   .expandable-panel.is-modal > .expandable-controls { border-radius:8px 8px 0 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
