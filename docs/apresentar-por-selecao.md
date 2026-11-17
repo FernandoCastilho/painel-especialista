@@ -14,7 +14,7 @@ perguntas da visita) foi removida. A aba agora aparece no menu.
 ## O que pode virar slide
 | Seção | Blocos |
 |---|---|
-| Mercado | indicadores do dia, tabela de câmbio, gráfico de cada moeda, comparação entre moedas |
+| Mercado | indicadores do dia (com Selic, CDI e DI), tabela de câmbio, gráfico de cada moeda, comparação entre moedas |
 | Juros | CDI, CDI futuro, DI x pré, cupom cambial, SOFR, Fed, €STR, BCE, Japão, Treasuries, curva do euro |
 | Cenários | Focus e bancos, histórico do Focus (geral e por indicador), agenda da semana, inadimplência, recuperação judicial (números, estado, setor), atividade e emprego, indexadores, IPCA, IPCA por grupos, fatores da inflação, dívida pública, commodities (tabelas e gráfico de cada referência), combustíveis, frete |
 | Notícias | por tema: mercado e moedas, tributos e trabalho, setores e insumos; a lista "Escolher notícias" tira manchetes |
@@ -45,6 +45,19 @@ Aprender e Configurações ficam de fora.
 - Slides com muito conteúdo (os 4 gráficos do Focus juntos, bancos, TFC) ficam com letra menor. Há slides individuais
   para o Focus e para os indicadores dos bancos.
 - Calculadoras sem valores iniciais abrem no modo Dados, com rolagem dentro do slide.
+
+## Ficou de fora desta entrega
+- Panorama do dia, buscas do Google (Trends) e o quadro de veículos pesados da aba Mercado. Os dois últimos têm
+  rolagem própria ou conteúdo de terceiros e não cabem bem num slide; veículos pesados entra como tema de notícias.
+- Destaques e pautas da Central de setores (só os estudos e os insumos viram slide).
+- Quando o mesmo quadro aparece em mais de um slide, os identificadores internos se repetem na página. O efeito é só
+  para leitor de tela (pode anunciar o título do primeiro). Correção fica para um ajuste próprio nas peças de origem.
+
+## Revisão independente (17/11/2026)
+Leitura do código por revisor sem o histórico da montagem. Um ponto importante, corrigido: com uma janela de detalhe
+aberta dentro do slide, Esc e as setas agiam na apresentação e podiam deixar a janela presa. Agora as teclas ficam com
+a janela. Também corrigidos: "Limpar tudo" apaga cliente, setor e slides; o foco volta para a miniatura ao sair; a
+contagem de notícias considera só as retiradas ainda na janela. Nenhuma regra de cálculo foi alterada.
 
 ## Conferência
 - `test/apresentar.test.mjs`: seleção, ordem, teclado, notícias, busca de blocos, montagem só em memória, tema imposto.

@@ -45,7 +45,8 @@ const dm = (t) => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', mont
 function NoticiasSlide({ fontes, opcoes }) {
   const { itens, carregando, falhou } = useNoticias(fontes)
   const lista = noticiasDoSlide(itens, opcoes?.ocultas, LIMITE)
-  const sobram = itens.length - (opcoes?.ocultas?.length ?? 0)
+  const fora = new Set(opcoes?.ocultas ?? [])
+  const sobram = itens.filter((n) => !fora.has(n.chave)).length // só conta as retiradas que ainda estão na janela de notícias
   if (!lista.length) return <p className="sl-aviso" role="status">{carregando ? 'Carregando notícias…' : falhou ? 'Notícias indisponíveis no momento.' : itens.length ? 'Todas as notícias deste tema foram tiradas da apresentação.' : 'Nenhuma notícia deste tema nos últimos dias.'}</p>
   return (
     <div className="sl-noticias">
@@ -70,7 +71,7 @@ function NoticiasAjuste({ fontes, opcoes, onOpcoes }) {
   const alternar = (chave) => onOpcoes({ ...opcoes, ocultas: ocultas.includes(chave) ? ocultas.filter((x) => x !== chave) : [...ocultas, chave] })
   return (
     <details className="apz-ajuste">
-      <summary>Escolher notícias <small>({itens.length - ocultas.length} de {itens.length}; o slide mostra até {LIMITE})</small></summary>
+      <summary>Escolher notícias <small>({itens.filter((n) => !ocultas.includes(n.chave)).length} de {itens.length}; o slide mostra até {LIMITE})</small></summary>
       <ul>
         {itens.map((n) => (
           <li key={n.chave}><label><input type="checkbox" checked={!ocultas.includes(n.chave)} onChange={() => alternar(n.chave)} /><span><small>{dm(n.t)}{n.source ? ` · ${n.source}` : ''}</small>{limparManchete(n.title)}</span></label></li>

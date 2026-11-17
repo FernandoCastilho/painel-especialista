@@ -6,7 +6,21 @@
   .term-head .topbar-tabs { flex-wrap: wrap; align-content: flex-start; overflow: visible; }
   .term-head .topbar-tabs > button { min-height: 44px; }
 }
-/* Clear room for all ten destinations with the desktop clock and status. */
+/* Clear room for all eleven destinations with the desktop clock and the longest status text
+   ("Fora do horário de coleta"), so the bar stays on one row at common laptop widths. */
+@media (min-width:1000px) and (max-width:1099px) {
+  .term-head .topbar-tabs > button { padding-inline:2px; }
+  .term-head .topbar-brand { padding-inline:6px; }
+}
+@media (min-width:1300px) and (max-width:1365px) {
+  .term-head .topbar-tabs > button { padding-inline:4px; letter-spacing:0; }
+}
+@media (min-width:1366px) and (max-width:1399px) {
+  .term-head .topbar-tabs > button { padding-inline:6px; letter-spacing:.015em; }
+}
 @media (min-width:1400px) and (max-width:1599px) {
-  .term-head .topbar-tabs > button { padding-inline:5px; letter-spacing:.025em; }
+  .term-head .topbar-tabs > button { padding-inline:3px; letter-spacing:.012em; }
+}
+@media (min-width:1600px) and (max-width:1699px) {
+  .term-head .topbar-tabs > button { padding-inline:6px; letter-spacing:.04em; }
 }

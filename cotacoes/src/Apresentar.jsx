@@ -91,19 +91,23 @@ function Palco({ slides, ctx, cliente, setor, opcoes, onOpcoes, onMover, onTirar
   const kTela = escala(janela.w, janela.h - BARRA)
   const k = on ? kTela : kMini
   const fechar = () => onAtual(null)
+  const ultimo = useRef(0) // último slide mostrado: ao sair, o foco volta para a miniatura dele
+  if (on) ultimo.current = atual
   const ir = (f) => onAtual((cur) => (cur == null ? cur : Math.max(0, Math.min(n - 1, f(cur)))))
 
   // Ao abrir: foco no palco, página de trás parada. Ao fechar: sai da tela cheia e devolve o foco.
   useEffect(() => {
     if (!on) return
-    const origem = document.activeElement
-    ref.current?.focus()
+    const origem = document.activeElement, palco = ref.current
+    palco?.focus()
     const anterior = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = anterior
       if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {})
-      if (origem?.isConnected) origem.focus()
+      // Aberta pela miniatura, o botão de origem saiu da tela durante a apresentação: o foco vai para a miniatura do último slide.
+      if (origem && origem !== document.body && origem.isConnected) origem.focus()
+      else palco?.querySelectorAll('.apz-abrir')[ultimo.current]?.focus()
     }
   }, [on])
   useLayoutEffect(() => {
@@ -114,6 +118,9 @@ function Palco({ slides, ctx, cliente, setor, opcoes, onOpcoes, onMover, onTirar
   useEffect(() => {
     if (!on) return
     const onKey = (e) => {
+      // Com uma janela de detalhe aberta dentro do slide (histórico de um indicador, ajuda), as teclas são dela:
+      // Esc fecha só a janela, e o slide não troca por baixo.
+      if (document.querySelector('dialog[open]')) return
       if (e.key === 'Escape') { e.preventDefault(); fechar(); return }
       if (e.key === 'Tab') {
         const alvo = [...ref.current.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex]:not([tabindex="-1"])')].filter((el) => el.getClientRects().length && !el.closest('[inert]'))
@@ -135,7 +142,7 @@ function Palco({ slides, ctx, cliente, setor, opcoes, onOpcoes, onMover, onTirar
   }, [on, atual, n]) // eslint-disable-line react-hooks/exhaustive-deps
   // Deslizar troca de slide, exceto quando o gesto começa num gráfico, tabela ou campo.
   const toque = useRef(null)
-  const onPointerDown = (e) => { toque.current = !on || e.target.closest?.('svg, table, input, select, textarea, button, a, .plot, .ml') ? null : { x: e.clientX, y: e.clientY } }
+  const onPointerDown = (e) => { toque.current = !on || document.querySelector('dialog[open]') || e.target.closest?.('svg, table, input, select, textarea, button, a, .plot, .ml') ? null : { x: e.clientX, y: e.clientY } }
   const onPointerUp = (e) => {
     const t = toque.current; toque.current = null
     if (!t) return
@@ -154,7 +161,7 @@ function Palco({ slides, ctx, cliente, setor, opcoes, onOpcoes, onMover, onTirar
           return (
             <li key={s.id} className={`apz-item${visivel ? ' apz-atual' : ''}`} aria-hidden={on && !visivel ? 'true' : undefined}>
               <div className="apz-quadro" style={{ width: PALCO.w * k, height: PALCO.h * k }}>
-                <div className="apz-escala" style={{ width: PALCO.w, height: PALCO.h, transform: `scale(${k})` }} {...(visivel ? { 'aria-live': 'polite' } : { inert: '' })}>
+                <div className="apz-escala" style={{ width: PALCO.w, height: PALCO.h, transform: `scale(${k})` }} {...(visivel ? {} : { inert: '' })}>
                   {s.capa
                     ? <Capa cliente={cliente} setor={setor} agora={ctx.agora} />
                     : <Slide bloco={s.bloco} ctx={ctx} numero={i + 1} total={n} cliente={cliente} opcoes={opcoes[s.id]} onOpcoes={(v) => onOpcoes(s.id, v)} ativo={visivel} />}
@@ -182,6 +189,7 @@ function Palco({ slides, ctx, cliente, setor, opcoes, onOpcoes, onMover, onTirar
         <div className="apr-barra apz-barra">
           <button type="button" onClick={() => ir((c) => c - 1)} disabled={atual === 0} aria-label="Slide anterior">‹</button>
           <span className="apr-contador" aria-label={`Slide ${atual + 1} de ${n}`}>{atual + 1} / {n}</span>
+          <span className="sr-only" aria-live="polite">{`Slide ${atual + 1} de ${n}: ${slides[atual].capa ? 'Capa' : slides[atual].bloco.titulo ?? slides[atual].bloco.label}`}</span>
           <button type="button" onClick={() => ir((c) => c + 1)} disabled={atual === n - 1} aria-label="Próximo slide">›</button>
           <span className="apr-barra-sep" />
           <button type="button" onClick={telaCheia}>Tela cheia</button>
@@ -267,7 +275,7 @@ export default function Apresentar({ quotes, macro, curves, hol, colors }) {
     <div className="apz">
       <header className="apz-topo">
         <div className="apz-campos">
-          <label>Cliente <small>(fica só nesta tela, não é guardado)</small>
+          <label>Cliente <small>(não é gravado; some ao limpar ou recarregar)</small>
             <input type="text" value={m.cliente} maxLength={80} autoComplete="off" onChange={(e) => setM((cur) => ({ ...cur, cliente: e.target.value }))} placeholder="Nome para a capa" />
           </label>
           <label>Setor <small>(opcional)</small>
@@ -276,7 +284,7 @@ export default function Apresentar({ quotes, macro, curves, hol, colors }) {
         </div>
         <div className="apz-acoes">
           <span className="apz-total" role="status">{m.sel.length ? `${slides.length} slides` : 'Nenhum bloco marcado'}</span>
-          {m.sel.length > 0 && <button type="button" className="apz-btn" onClick={() => setSel([])}>Limpar</button>}
+          {(m.sel.length > 0 || m.cliente || m.setor) && <button type="button" className="apz-btn" title="Apaga o cliente, o setor e todos os slides" onClick={() => setM({ cliente: '', setor: '', sel: [], opcoes: {} })}>Limpar tudo</button>}
           <button type="button" className="apz-btn apz-btn-primario" disabled={!m.sel.length} onClick={() => setAtual(0)}>Iniciar apresentação</button>
         </div>
       </header>

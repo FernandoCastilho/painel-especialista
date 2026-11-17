@@ -10,6 +10,8 @@ const macro = { generatedAt: agora, cdi: Array.from({ length: 260 }, (_, i) => [
 const materia = (i, assunto) => ({ t: agora - (i + 1) * 3 * 3600e3, title: `${assunto}: matéria de teste ${i + 1}`, source: 'Veículo de teste', link: `https://exemplo.test/${assunto}/${i + 1}` })
 const news = { generatedAt: agora, news: { USD: [0, 1, 2].map((i) => materia(i, 'dolar')), EUR: [], JPY: [], CNH: [], MERCADO: [materia(0, 'mercado')] }, stale: {}, errors: [] }
 const temas = { schemaVersion: 1, generatedAt: agora, windowDays: 5, stale: false, errors: [], temas: { 'moeda-usd': { label: 'Dólar', grupo: 'moeda', items: [materia(3, 'dolar-imprensa')] } } }
+const mesIso = (i) => { const d = new Date(agora); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - i); return d.toISOString().slice(0, 7) }
+const ipca = { schemaVersion: 1, generatedAt: new Date(agora).toISOString(), series: { id: 'ipca', sourceName: 'IBGE', sourceUrl: 'https://exemplo.test/ipca', checkedAt: new Date(agora).toISOString(), stale: false, points: Array.from({ length: 30 }, (_, i) => ({ period: mesIso(30 - i), mom: +(0.2 + (i % 5) * 0.1).toFixed(2), ytd: +(1 + (i % 12) * 0.35).toFixed(2), y12: +(4 + (i % 7) * 0.1).toFixed(2), index: 7000 + i * 25 })) } }
 const NOME = 'Cliente Fictício de Teste'
 const out = process.env.SMOKE_OUT || '/tmp'
 ;(async () => {
@@ -26,6 +28,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await p.route('**/macro.json*', (r) => r.fulfill({ json: macro }))
       await p.route('**/news.json*', (r) => r.fulfill({ json: news }))
       await p.route('**/temas.json*', (r) => r.fulfill({ json: temas }))
+      await p.route('**/ipca.json*', (r) => r.fulfill({ json: ipca }))
       await p.goto(base + '/#apresentar')
       const tela = p.locator('.apz'); await tela.waitFor()
       const tema = () => p.evaluate(() => document.documentElement.dataset.theme)
@@ -154,9 +157,25 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.equal(await tema(), 'light')
       assert.equal(await p.locator('.apz-total').innerText(), '5 slides')
       assert.equal(await p.getByRole('textbox', { name: /Cliente/ }).inputValue(), NOME)
-      // limpar tira os blocos e mantém a capa
-      await p.getByRole('button', { name: 'Limpar' }).click()
+      // janela de detalhe aberta dentro do slide: Esc fecha só a janela e as setas não trocam o slide por baixo
+      await marcar(await grupo('Cenários'), /^IPCA$/)
+      await p.getByRole('button', { name: /Apresentar a partir do slide 6/ }).click()
+      const palco2 = p.getByRole('dialog', { name: 'Apresentação' })
+      await palco2.locator('.apz-atual table button').first().click()
+      const detalhe = p.locator('dialog[open]').last(); await detalhe.waitFor()
+      await p.keyboard.press('ArrowLeft')
+      assert.equal(await palco2.locator('.apr-contador').innerText(), '6 / 6')
+      await p.keyboard.press('Escape')
+      await detalhe.waitFor({ state: 'detached' })
+      assert.equal(await palco2.locator('.apr-contador').innerText(), '6 / 6', 'a apresentação continua aberta')
+      await p.keyboard.press('Escape')
+      await palco2.waitFor({ state: 'detached' })
+      // saindo, o foco volta para a miniatura do slide mostrado
+      assert.match(await p.evaluate(() => document.activeElement?.getAttribute('aria-label') || ''), /Apresentar a partir do slide 6/)
+      // limpar tudo apaga cliente, setor e slides; fica só a capa
+      await p.getByRole('button', { name: 'Limpar tudo' }).click()
       assert.equal(await p.locator('.apz-item').count(), 1)
+      assert.equal(await p.getByRole('textbox', { name: /Cliente/ }).inputValue(), '')
       assert.deepEqual(errors, [])
       await ctx.close()
     }

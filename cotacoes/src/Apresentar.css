@@ -209,3 +209,4 @@
 .sl-rj .rj-card-note, .sl-rj .rj-card label, .sl-rj .rj-map-instructions { display: none; }
 /* Áreas com rolagem própria (tabelas largas) se abrem no slide: assim o ajuste enxerga a largura real e reduz até caber. */
 .sl-miolo [role="region"], .sl-miolo .scroll { overflow: visible !important; max-height: none !important; }
+.sl-corpo .kpi.kpi-taxa { display: grid; } /* no slide, os juros entram como cartões (no painel eles ficam na faixa do topo) */
