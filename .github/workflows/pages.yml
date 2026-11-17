@@ -134,13 +134,13 @@ jobs:
         run: node scripts/fetch-news.mjs
         env:
           NEWS_STRICT: ${{ github.event_name == 'schedule' }}
-      - name: Coletar manchetes por dia para as bolinhas do gráfico do dólar (acumula no arquivo publicado)
+      - name: Coletar manchetes por dia para as bolinhas dos gráficos de câmbio (acumula no arquivo publicado)
         if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
         # Sem "continuar em caso de erro": o acumulado só existe no site. Se o arquivo publicado não puder ser lido, a rodada para
         # e o site fica como está; publicar só a base do git apagaria os dias acumulados depois dela.
         run: node scripts/fetch-fx-noticias.mjs
-        timeout-minutes: 4
-      - name: Preservar as manchetes do dólar nas rodadas de Trends e Focus (sem nova busca)
+        timeout-minutes: 8
+      - name: Preservar as manchetes de câmbio nas rodadas de Trends e Focus (sem nova busca)
         if: github.event.schedule == '0 11,18 * * *' || github.event.schedule == '30 11 * * 1,2'
         run: node scripts/preserve-fx-noticias.mjs
         timeout-minutes: 2

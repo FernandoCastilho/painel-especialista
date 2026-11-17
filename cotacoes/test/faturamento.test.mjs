@@ -149,3 +149,13 @@ test('tela abre vazia, sem dados de cliente, e está no catálogo de calculadora
   assert.match(calc, /id: 'faturamento', title: 'Faturamento'/)
   assert.match(calc, /view === 'faturamento'\) return <Faturamento/)
 })
+
+test('total curto do quadro do período segue a unidade colada', () => {
+  assert.equal(fat.totalCurto(23400, 'R$ mil'), 'R$ 23,4 MM')
+  assert.equal(fat.totalCurto(950, 'R$ mil'), 'R$ 950 mil')
+  assert.equal(fat.totalCurto(21.5, 'R$ milhões'), 'R$ 21,5 MM')
+  assert.equal(fat.totalCurto(1234.5, null), '1.234,5')
+  assert.equal(fat.totalCurto(null, 'R$ mil'), '—')
+  // Variação do exemplo da apresentação: 21,5 contra 23,4 = -8%.
+  assert.equal(Math.round(fat.variacao(21500, 23400) * 100), -8)
+})
