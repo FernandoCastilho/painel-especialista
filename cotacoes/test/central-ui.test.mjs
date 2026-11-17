@@ -40,25 +40,30 @@ test('pastas, seletor compacto e rotas antigas preservam a hierarquia', async ()
   const catalog = html('central')
   assert.equal((catalog.match(/class="central-folder"/g) || []).length, 15)
   assert.match(catalog, /Explorar Base florestal e madeira, 6 subsetores/)
-  assert.equal((catalog.match(/class="central-card-photo(?: central-sector-symbol)?"/g) || []).length, 15)
+  assert.equal((catalog.match(/class="central-card-photo"/g) || []).length, 15)
   assert.doesNotMatch(catalog, /central-folder-back|central-folder-sheet|central-folder-front/)
   assert.doesNotMatch(catalog, /Escolha um subsetor<\/h3>/)
   const folder = html('pasta/base-florestal')
   assert.match(folder, />SETOR</)
-  assert.equal((folder.match(/class="central-card-photo(?: central-sector-symbol)?"/g) || []).length, 6)
+  assert.equal((folder.match(/class="central-card-photo"/g) || []).length, 6)
   assert.match(folder, />Compensados</)
   assert.match(folder, /Caminho do setor/)
   assert.doesNotMatch(folder, /central-folder-tone-/)
   let imageBytes = 0
   for (const group of CATALOGO_SETORIAL) {
     const sector = html(`pasta/${group.id}`)
-    assert.equal((sector.match(/class="central-card-photo(?: central-sector-symbol)?"/g) || []).length, group.topics.length, `${group.id}: cada subsetor tem uma foto`)
-    if (['turismo', 'varejo', 'saude', 'pet'].includes(group.id)) {
-      assert.match(sector, /central-sector-symbol/)
-      assert.ok(!sector.includes(`./sector-images/${group.id}.jpg`), 'ícone editorial sem foto inexistente')
-      continue
+    assert.equal((sector.match(/class="central-card-photo"/g) || []).length, group.topics.length, `${group.id}: cada subsetor tem uma foto`)
+    assert.doesNotMatch(sector, /central-sector-symbol/, 'todos os setores usam o mesmo tratamento fotográfico')
+    const photos = sector.match(/<img\b[^>]*>/g) || []
+    assert.equal(photos.length, group.topics.length, `${group.id}: cada subsetor renderiza seu atlas`)
+    for (const photo of photos) {
+      assert.ok(photo.includes(`src="./sector-images/${group.id}.jpg"`))
+      assert.match(photo, /alt=""/, 'fotografia decorativa não duplica o nome acessível')
+      assert.match(photo, /loading="lazy"/, 'carregamento adiado preservado')
+      assert.match(photo, /width="1536" height="1024"/, 'dimensões intrínsecas preservadas')
     }
-    assert.ok(sector.includes(`./sector-images/${group.id}.jpg`))
+    assert.equal((sector.match(/class="central-card-photo" aria-hidden="true"/g) || []).length, group.topics.length)
+    assert.equal((sector.match(/class="central-image-fallback"/g) || []).length, group.topics.length)
     const asset = readFileSync(`public/sector-images/${group.id}.jpg`)
     assert.equal(asset[0], 0xff)
     assert.equal(asset[1], 0xd8, `${group.id}: ativo JPEG local válido`)
