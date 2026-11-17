@@ -2,9 +2,38 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '17/11/2026', resumo: 'Nova calculadora Faturamento: cole o faturamento mensal e compare com os mesmos meses do ano anterior', items: [
+    'Calculadoras > Faturamento: cole o texto Mês/Faturamento/Endividamento (aceita o modelo do DAC e tabela com barras) e veja barras e linha. Clique num mês ou arraste um período para comparar com os mesmos meses do ano anterior. Mês sem informação (traço) fica como posição vazia; a unidade do cabeçalho, como (R$ mil), aparece no gráfico.',
+  ] },
+  { date: '17/11/2026', resumo: 'Juros só em gráficos; tabelas e escolha do período ficam no detalhe, no centro da tela', items: [
+    'Juros: indicadores de referência, CDI futuro e as quatro curvas passam a aparecer em gráfico, sem tabela na página. Clicar no gráfico (ou em Ampliar) abre o detalhe no centro da tela, com a escolha do período e as tabelas. Selic meta sai da aba Juros (segue na barra do topo e em Cenários).',
+    'No computador, o detalhe de qualquer gráfico do painel abre em janela no centro da tela, da altura do conteúdo, em vez da gaveta à direita. No celular segue em tela inteira. Gráficos do Painel podem ser maximizados.',
+  ] },
+  { date: '17/11/2026', resumo: 'Gráfico do dólar com as manchetes dos dias de maior alta e baixa', items: [
+    'Câmbio: no gráfico diário, marcação nas 5 maiores altas e 5 maiores baixas do período (variação de 0,5% ou mais) em dias com manchetes guardadas; no gráfico do dia, uma marcação por manchete, no horário em que saiu. O toque abre as manchetes, com aviso de que não comprovam a causa. Histórico inicial de 60 dias; manchetes de outros ativos e valores em dólares de empresas ficam de fora.',
+  ] },
+  { date: '17/11/2026', resumo: 'Cenários › Commodities: celulose (referência mensal do Comex Stat)', items: [
+    'Cenários › Commodities: celulose, com referência mensal do Comex Stat.',
+    'Apresentar refeita: o usuário marca blocos do painel e cada um vira um slide claro, na ordem escolhida, com prévia ao lado. Continua fora do menu (abre por #apresentar ou pelo comando APRESENTAR).',
+  ] },
+  { date: '16/11/2026', items: [
+    'Cenários: projeções do BB (13/11/2026) e do Bradesco (06/11/2026) atualizadas pelas fontes oficiais. Itaú BBA, Santander e BTG ficam como estavam até a fonte primária poder ser lida.',
+    'Focus: se a coleta semanal de segunda não disparar, a próxima atualização automática busca o boletim e o histórico de 52 semanas. Nenhuma regra de cálculo mudou.',
+    'Finame: comparação executiva, com a conclusão primeiro (opção de menor custo, CET e diferença), uma tabela só e sem barra de rolagem. Nenhum número nem regra de cálculo mudou.',
+    'Acessibilidade: o leitor de tela passa a ler o status do câmbio e a variação dos bancos; o contraste do motivo de erro em Mercado foi corrigido.',
+  ] },
   { date: '15/11/2026', items: [
     'Calculadoras > Empréstimo externo (4131), Regras e fontes: o ato da Receita sobre o prazo médio (ADI RFB 41/2011) foi lido no site de normas da Receita e está em vigor. A fórmula publicada no Diário Oficial é a mesma média da calculadora. Decisão da Receita, lida pelo resumo oficial, confirma que os juros não entram no prazo médio. Entrou a regra de renovação e conversão do empréstimo em capital, com o que a norma do Banco Central pede hoje. A conta não mudou.',
     'Textos das normas da 4131 reconferidos em 15/11/2026: IOF do câmbio e do capital de giro, IR na fonte, swap, NDF e a norma do Banco Central sobre crédito externo (atualizada em 30/09/2026) seguem como a calculadora usa. Nenhuma alíquota mudou. O IOF de 3,5% e a alíquota do capital de giro dependem de decisão provisória do STF, que não pôde ser conferida no site do tribunal. A regra da declaração ao Banco Central ganhou o prazo: até a entrada dos recursos.',
+    'BNDES: a coleta da TFC e das moedas tem prazo total; o que não der tempo de buscar fica com o último dado válido. Corrige o dia em que Finame e aba BNDES ficaram sem TFC.',
+    'PDF do BNDES e do 4131 sai em fundo branco também com o painel no tema escuro. Notícias: manchete em inglês passa a ser traduzida e matéria repetida em inglês e português sai.',
+  ] },
+  { date: '14/11/2026', resumo: 'Aprender: ACC (Adiantamento sobre Contrato de Câmbio)', items: [
+    'Aprender: novo conceito ACC (Adiantamento sobre Contrato de Câmbio), em Comércio exterior, com fluxo da operação, exemplo ilustrativo, prazo e encargo conferidos nas normas do Banco Central e do CMN, e ligações com drawback, cupom cambial e SOFR.',
+  ] },
+  { date: '14/11/2026', resumo: 'Reforma tributária · caixa: cenário da CBS e necessidade de capital de giro simplificada', items: [
+    'Calculadoras > Reforma tributária · caixa: cenário da CBS e cálculo simplificado da necessidade de capital de giro operacional.',
+    'Cenários: tabela de projeções redesenhada, com uma linha por instituição e o Focus no topo como referência; no celular, um ano por vez. Nenhum número mudou.',
   ] },
   { date: '14/11/2026', resumo: 'Empréstimo externo (4131) no formato da cotação de banco: principal em reais, parcelas, taxa all-in e custo efetivo com NDF', items: [
     'Calculadoras > Empréstimo externo (4131): a tela passou a seguir o formato das cotações de banco de 4131 com NDF. São seis campos: principal em reais, moeda (dólar ou euro), cotação de partida, parcelas mensais, taxa all-in e data. O valor na moeda aparece logo depois da moeda, já convertido. O resto já vem no padrão: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência e IR dentro da taxa.',

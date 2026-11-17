@@ -47,6 +47,11 @@ Escolher o caminho mais seguro e registrar. Parar só se bater num limite da lis
 - Leitura rápida no celular: título curto, conclusão primeiro, parágrafos curtos. Manter detalhes essenciais, fontes e limitações.
 - Não declarar execução, envio, publicação ou conclusão sem verificação.
 
+## Registro de Novidades
+- Toda entrega que muda o que aparece no painel já leva a sua linha em `cotacoes/src/Novidades.jsx`, no mesmo envio.
+- `resumo` só para mudança relevante (aba, dado, cálculo, fonte ou calculadora nova). Ajuste de desenho, texto ou correção fica sem `resumo`.
+- Uma rotina diária no fim do dia confere o que entrou no ramo principal sem registro e abre uma proposta só com o texto que faltou, para Fernando aprovar.
+
 ## Mapa rápido do projeto
 - `cotacoes/`: o painel (cotações, curvas, calculadoras, notícias por setor). Testes e conferências: `npm test`, `npm run build`, `npm run lint`, dentro de `cotacoes/`.
 - `docs/`: notas de cada entrega, auditorias e pendências.
