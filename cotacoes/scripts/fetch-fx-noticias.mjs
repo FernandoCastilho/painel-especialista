@@ -23,30 +23,35 @@ async function lerJson(url) {
   try { return JSON.parse(await readFile(url, 'utf8')) } catch { return null }
 }
 
-async function get(url) {
-  for (let i = 1; i <= 3; i++) {
+async function get(url, tentativas = 3, timeoutMs = 20000) {
+  for (let i = 1; i <= tentativas; i++) {
     try {
-      const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-news)' }, signal: AbortSignal.timeout(20000) })
+      const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-news)' }, signal: AbortSignal.timeout(timeoutMs) })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return await res.text()
     } catch (e) {
-      if (i === 3) throw e
+      if (i === tentativas) throw e
       await sleep(2000 * i * i)
     }
   }
 }
 
 // Coleta os dias pedidos. Falha numa busca não interrompe: o dia fica com o que veio das outras (ou com o que já estava guardado).
-async function coletar(dias) {
+// `prazoMs`: tempo máximo da coleta. Esgotado, para de buscar e grava o que tem (o resto fica como estava guardado).
+// A rodada de hora em hora não pode travar a publicação do painel inteiro por causa destas manchetes.
+async function coletar(dias, { prazoMs = Infinity, tentativas = 3, timeoutMs = 20000 } = {}) {
   const agora = Date.now()
+  const limite = agora + prazoMs
   const out = { generatedAt: agora, moedas: {} }
-  for (const code of FX_MOEDAS) {
-    const destino = (out.moedas[code] = { dias: {} }).dias
-    for (const dia of dias) {
+  for (const dia of dias) {
+    for (const code of FX_MOEDAS) {
+      const destino = ((out.moedas[code] ??= { dias: {} })).dias
+      if (Date.now() > limite) { erros.push(`${code}/${dia}: tempo da coleta esgotado`); continue }
       const brutos = []
       for (const q of FX_BUSCAS[code]) {
+        if (Date.now() > limite) break
         try {
-          brutos.push(...parseRss(await get(urlBuscaDia(q, dia))).map((it) => ({ ...it, source: canonicalSource(it) })))
+          brutos.push(...parseRss(await get(urlBuscaDia(q, dia), tentativas, timeoutMs)).map((it) => ({ ...it, source: canonicalSource(it) })))
         } catch (e) {
           erros.push(`${code}/${dia}: ${e.message}`)
         }
@@ -74,7 +79,8 @@ if (arg > 0) {
 } else {
   // Arquivo publicado ilegível interrompe a rodada (o site fica como está): publicar só a base apagaria os dias acumulados.
   const anterior = await loadPreviousOrFail(FX_ARQUIVO)
-  const novo = await coletar(diasUteis(5))
+  // De hora em hora: só os últimos 3 dias úteis, do mais recente para o mais antigo, com 1 tentativa por busca e no máximo 2,5 minutos.
+  const novo = await coletar(diasUteis(5).slice(-3).reverse(), { prazoMs: 150000, tentativas: 1, timeoutMs: 10000 })
   const arquivo = { ...juntar([await lerJson(BASE), anterior, novo]), generatedAt: novo.generatedAt, errors: erros }
   await writeFile(SAIDA, JSON.stringify(arquivo))
   console.log(`${FX_ARQUIVO} gravado:`, contarDias(arquivo), 'dias com manchetes', erros.length ? `| Falhas: ${erros.join(' | ')}` : '')
