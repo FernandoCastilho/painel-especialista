@@ -120,3 +120,10 @@ test('mercado do dia completa a moeda até 4 manchetes, sem repetir, marcadas co
   assert.equal(ev.length, 1)
   assert.ok(ev[0].itens.every((n) => n.geral))
 })
+
+test('iene e yuan exigem o nome da moeda; mercado do dia prioriza bolsa, dólar e juros', () => {
+  assert.deepEqual(escolherDoDia([item('Banco central da China eleva compulsório cambial', '2026-10-15T15:00:01Z')], '2026-10-15', 'JPY'), [])
+  assert.equal(escolherDoDia([item('Iene recua com BoJ', '2026-10-15T15:00:01Z')], '2026-10-15', 'JPY').length, 1)
+  const m = escolherDoDia([item('Minério de ferro recua em Dalian', '2026-10-15T12:00:01Z'), item('Ibovespa cai com fiscal', '2026-10-15T18:00:01Z')], '2026-10-15', 'MERCADO')
+  assert.equal(m[0].title, 'Ibovespa cai com fiscal')
+})

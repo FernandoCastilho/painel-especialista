@@ -52,7 +52,11 @@ const outroAssunto = (code) => new RegExp(`^(${ATIVOS.filter((a) => !(PROPRIA[co
 const OUTRO_ASSUNTO = Object.fromEntries(Object.keys(PROPRIA).map((c) => [c, outroAssunto(c)]))
 const plano = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const chave = (s) => plano(s).replace(/[^a-z0-9]+/g, ' ').trim()
-export const pontuar = (it) => (MOVIMENTO.test(plano(it.title)) ? 2 : 0) + (it.source === 'Valor Econômico' ? 1 : 0)
+// Euro, iene e yuan: a manchete precisa citar a própria moeda (só "câmbio" não basta: costuma ser de outra moeda).
+const PROPRIO_NOME = { EUR: /\b(euro|euros|bce)\b/, JPY: /\b(iene|ienes|yen|boj|banco do japao)\b/, CNH: /\b(yuan|iuane|renminbi|pboc)\b/ }
+// Mercado do dia: manchetes do mercado brasileiro (bolsa, dólar, juros) vêm antes das de outros temas.
+const MERCADO_BR = /\b(ibovespa|bolsa|dolar|juros|di|selic|copom|fiscal)\b/
+export const pontuar = (it, code) => (MOVIMENTO.test(plano(it.title)) ? 2 : 0) + (it.source === 'Valor Econômico' ? 1 : 0) + (code === 'MERCADO' && MERCADO_BR.test(plano(it.title)) ? 2 : 0)
 
 // Escolhe até `limite` manchetes do dia: só as publicadas naquele dia (Brasília), que falam da moeda, sem repetir título.
 export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
@@ -60,7 +64,7 @@ export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
   const validos = []
   for (const it of itens) {
     if (!it?.title || !/^https?:\/\//.test(it.link ?? '') || !Number.isFinite(it.t) || it.t <= 0) continue
-    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title) || VALOR_EM_DOLAR.test(plano(it.title)) || OUTRO_ASSUNTO[code]?.test(plano(it.title).trim())) continue
+    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title) || VALOR_EM_DOLAR.test(plano(it.title)) || OUTRO_ASSUNTO[code]?.test(plano(it.title).trim()) || (PROPRIO_NOME[code] && !PROPRIO_NOME[code].test(plano(it.title)))) continue
     const k = chave(it.title)
     if (vistos.has(k)) continue
     vistos.add(k)
@@ -68,7 +72,7 @@ export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
     const semHora = it.t % 36e5 === 0
     validos.push({ title: it.title, link: it.link, source: it.source || canonicalSource(it), t: it.t, ...(semHora ? { semHora } : {}) })
   }
-  return validos.sort((a, b) => pontuar(b) - pontuar(a) || a.t - b.t).slice(0, limite)
+  return validos.sort((a, b) => pontuar(b, code) - pontuar(a, code) || a.t - b.t).slice(0, limite)
 }
 
 const vazio = () => ({ generatedAt: 0, fonte: 'Google Notícias (busca por data)', moedas: {} })
