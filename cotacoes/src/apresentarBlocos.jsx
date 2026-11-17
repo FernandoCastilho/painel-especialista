@@ -144,8 +144,8 @@ const CENARIOS = [
   { id: 'cen-ipca-fatores', sub: 'Inflação e indexadores', label: 'Fatores que pressionam a inflação', dica: 'Câmbio, petróleo, alimentos e expectativas', titulo: 'Inflação · fatores fora do índice', fonte: 'Banco Central e fontes de preços do painel', classe: 'sl-pesos sl-pesos-fatores', Corpo: ({ ctx }) => <Outros macro={ctx.macro} so="pesos" /> },
   { id: 'cen-fiscal', sub: 'Inflação e indexadores', label: 'Dívida pública', titulo: 'Fiscal · dívida bruta do governo', fonte: 'Banco Central do Brasil', Corpo: ({ ctx }) => <Outros macro={ctx.macro} so="fiscal" /> },
   // A tabela em dólar tem mais de 20 referências: vai em dois slides complementares (nenhuma linha fica de fora).
-  { id: 'cen-commodities-usd', sub: 'Commodities · tabelas', label: 'Commodities em dólar · primeira parte', dica: 'Petróleo, gás, metais e minério', titulo: 'Commodities em dólar · primeira parte', fonte: 'EIA, Banco Mundial e demais fontes do painel', classe: 'sl-tabela-parte-1', Corpo: () => <MarketContext part="commodities" so="usd" /> },
-  { id: 'cen-commodities-usd-2', sub: 'Commodities · tabelas', label: 'Commodities em dólar · segunda parte', dica: 'Grãos, fertilizantes, carne, fibras e celulose', titulo: 'Commodities em dólar · segunda parte', fonte: 'EIA, Banco Mundial e demais fontes do painel', classe: 'sl-tabela-parte-2', Corpo: () => <MarketContext part="commodities" so="usd" /> },
+  { id: 'cen-commodities-usd', sub: 'Commodities · tabelas', label: 'Commodities em dólar · primeira parte', dica: 'Energia, metais, minério, soja e milho', titulo: 'Commodities em dólar · primeira parte', fonte: 'EIA, Banco Mundial e demais fontes do painel', classe: 'sl-tabela-parte-1', Corpo: () => <MarketContext part="commodities" so="usd" /> },
+  { id: 'cen-commodities-usd-2', sub: 'Commodities · tabelas', label: 'Commodities em dólar · segunda parte', dica: 'Açúcar, café, fertilizantes, trigo, carne, algodão, carvão, cacau e celulose', titulo: 'Commodities em dólar · segunda parte', fonte: 'EIA, Banco Mundial e demais fontes do painel', classe: 'sl-tabela-parte-2', Corpo: () => <MarketContext part="commodities" so="usd" /> },
   { id: 'cen-commodities-brl', sub: 'Commodities · tabelas', label: 'Commodities em reais', dica: 'IC-Br e soja por saca', titulo: 'Commodities em reais', fonte: 'Banco Central do Brasil (IC-Br) e estimativa do painel para a soja', Corpo: () => <MarketContext part="commodities" so="brl" /> },
   { id: 'cen-combustiveis', sub: 'Commodities · tabelas', label: 'Combustíveis ao consumidor', titulo: 'Combustíveis ao consumidor', fonte: 'ANP', Corpo: () => <MarketContext part="commodities" so="combustiveis" /> },
   { id: 'cen-frete', sub: 'Commodities · tabelas', label: 'Frete marítimo', titulo: 'Frete marítimo · referência de preços', fonte: 'BLS (EUA) e Banco do Japão', Corpo: () => <MarketContext part="commodities" so="frete" /> },
@@ -201,8 +201,8 @@ const FERIADOS = [
 // Calculadoras: a própria calculadora dentro do slide (mesma conta da aba Calculadoras), em dois modos:
 // "Resultado" mostra só os números principais, ocupando o slide; "Dados" mostra os campos para digitar.
 // Memórias de cálculo, tabelas de parcelas e planilhas ficam de fora nos dois modos (regras em Apresentar.css).
-const calculadora = ([view, nome, dica]) => ({
-  id: `calc-${view}`, grupo: 'calculadoras', label: nome, dica, titulo: nome, fonte: 'simulação do painel, sem valor de proposta', classe: `sl-calc sl-calc-${view}`, semAjuste: true,
+const calculadora = ([view, nome, dica, fonte = 'simulação do painel, sem valor de proposta']) => ({
+  id: `calc-${view}`, grupo: 'calculadoras', label: nome, dica, titulo: nome, fonte, classe: `sl-calc sl-calc-${view}`, semAjuste: true,
   Corpo: ({ ctx }) => <CalculadoraSlide><Calculadora view={view} onView={nada} quotes={ctx.quotes} /></CalculadoraSlide>,
 })
 const CALCULADORAS = [
@@ -218,6 +218,8 @@ const CALCULADORAS = [
   ['bndes-selic-lcd', 'BNDES · Selic + LCD'],
   ['bndes-credito-tfb', 'BNDES · Crédito TFB'],
   ['cbs-caixa', 'Reforma tributária · caixa', 'CBS, créditos e giro adicional'],
+  // Faturamento: os números são colados no próprio slide (modo Dados) e ficam só na tela, como na aba Calculadoras.
+  ['faturamento', 'Faturamento', 'Faturamento x endividamento, contra o ano anterior', 'números informados na tela; nada é salvo nem enviado'],
 ].map(calculadora)
 
 export const BLOCOS = [...MERCADO, ...JUROS, ...CENARIOS, ...NOTICIAS, ...BNDES, ...SETORES, ...BANCOS, ...FERIADOS, ...CALCULADORAS]

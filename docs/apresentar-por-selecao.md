@@ -26,7 +26,7 @@ a ter onze abas e precisa do ajuste de espaçamento que está no histórico (com
 | Setores | por setor: leitura executiva; por estudo: resumo executivo, cadeia de valor, indicadores e perguntas; por insumo: o que move o preço |
 | Bancos | tabela comparativa e histórico de quatro indicadores |
 | Feriados | próximos três meses com feriado |
-| Calculadoras | 12 calculadoras (todas menos Faturamento), em dois modos: **Resultado** (números principais) e **Dados** (campos) |
+| Calculadoras | as 13 calculadoras, inclusive Faturamento, em dois modos: **Resultado** (números principais) e **Dados** (campos) |
 
 Aprender e Configurações ficam de fora.
 
@@ -45,16 +45,16 @@ Aprender e Configurações ficam de fora.
 ## Limites conhecidos
 - Teto de 80 blocos por apresentação. Cada slide mantém viva uma peça do painel; com quase 190 blocos de uma vez o
   navegador de teste ficou sem memória. A tela avisa quando o teto é atingido.
-- Não há tema de notícias "madeira". O mais próximo é "Têxtil, vestuário e móveis". Criar o tema mexe na coleta de
-  notícias e depende de decisão à parte.
+- O tema de notícias "Madeira e base florestal" vem só da busca da imprensa (ver "Segunda rodada"). Aparece nos slides
+  e, como os demais temas de `temas.json`, alimenta a busca do painel e o mapa de conhecimento. Não tem pasta própria na
+  aba Notícias, que usa fontes institucionais por setor. Na busca do painel, a manchete de madeira ainda abre em
+  Mercado › Notícias › Moedas, onde ela não aparece (o mesmo já acontece com trigo e outros insumos novos).
 - Referência sem histórico na coleta do dia mostra aviso em vez de gráfico.
 - Slides com muito conteúdo (os 4 gráficos do Focus juntos, bancos, TFC) ficam com letra menor. Há slides individuais
   para o Focus e para os indicadores dos bancos.
 - Calculadoras sem valores iniciais abrem no modo Dados, com rolagem dentro do slide.
 
 ## Ficou de fora
-- Calculadora Faturamento (entrou no painel em 17/11/2026, depois desta montagem). Ela recebe faturamento e
-  endividamento colados, que são dado de cliente; incluir ou não na apresentação é decisão do Fernando.
 - Bolinhas de notícia e de maiores altas e baixas do gráfico de moeda (também de 17/11/2026): ficam só no painel. No
   slide, as notícias entram pelo bloco de Notícias, onde dá para escolher as manchetes.
 - Buscas do Google (Trends): o gráfico é carregado direto do Google, o painel não confirma o conteúdo e ele não cabe
@@ -91,7 +91,7 @@ O ramo publicado andou quatro vezes durante a entrega, e ela foi atualizada a ca
 gráficos), os testes automáticos passaram, mas a varredura de todos os slides não foi refeita e dois slides de
 recuperação judicial quebraram; o Auditor achou e a correção está abaixo. Desde então, cada junção é seguida de
 varredura de todos os blocos com os arquivos reais do site.
-- Bolinhas de notícia do dólar e calculadora Faturamento: ver "Ficou de fora".
+- Bolinhas de notícia do dólar: ver "Ficou de fora". Calculadora Faturamento: entrou na segunda rodada (abaixo).
 - Celulose (exportação do Brasil): entrou como gráfico em Cenários › Commodities.
 - Maximizar gráficos: o botão não aparece no slide, que já é a visão ampliada.
 - Filtro das manchetes do dólar (rascunho nº 464): sem efeito na aba.
@@ -110,3 +110,52 @@ varredura de todos os blocos com os arquivos reais do site.
 - `test/apresentar.test.mjs`: seleção, ordem, teclado, notícias, busca de blocos, montagem só em memória, tema imposto.
 - `scripts/smoke-apresentar.cjs` (na conferência automática): montagem, slides claros sem corte, notícias com ajuste,
   calculadora nos dois modos, teclado, celular e computador, nome do cliente fora do armazenamento.
+
+## Segunda rodada (17/11/2026, depois da publicação)
+Decisões do Fernando no mesmo dia: incluir a calculadora Faturamento, criar o tema de notícias "madeira" e manter a aba
+fora do menu.
+- **Faturamento nos slides.** Entra em Calculadoras, como as demais. Sem números, o slide abre nos campos; depois de
+  colar a tabela (ou usar o exemplo fictício), o botão "Resultado" mostra o gráfico de faturamento e endividamento, o
+  resumo por ano e, com um período escolhido, a comparação com o ano anterior. O gráfico cabe inteiro na largura do
+  slide (no painel ele rola para o lado). A conta é a da calculadora; nenhuma regra mudou. O rodapé do slide diz
+  "números informados na tela; nada é salvo nem enviado". Como nas outras calculadoras, o que for colado fica só na
+  memória da página e some ao recarregar. Fernando informou que os números usados são genéricos; a regra do projeto
+  continua valendo: extrato e dado real de cliente não vão para o git.
+- **Tema "Madeira e base florestal".** Novo tema em `scripts/temas-lib.mjs` (quatro buscas no Google Notícias, janela
+  de cinco dias, como os demais). O título precisa citar o setor (madeira, serraria, MDF, MDP, compensado, florestas
+  plantadas, concessão ou manejo florestal, eucalipto, pinus, Ibá, ABIMCI, moveleiro, indústria de móveis, Dexco,
+  Duratex, Eucatex, Berneck, Arauco) e trazer contexto de mercado. O filtro tira, pelas palavras do título: a Ilha da
+  Madeira (governo, turismo, hotel, imóveis, Portugal), o Rio Madeira (hidrelétricas, hidrovia), o MDF-e, sobrenome
+  Madeira em cargo público, a loja MadeiraMadeira, objetos de madeira (berço, brinquedo, ponte), apreensão de carga,
+  fiscalização, furto, acidente e incêndio em empresa. "Apreensão" no sentido de preocupação e a lei antidesmatamento
+  europeia entram. Um título que cite a ilha ou o rio sem nenhuma dessas palavras ainda pode passar. Na Apresentar o
+  tema aparece em Notícias › Setores · Indústria e transformação. A coleta ganha quatro buscas por rodada.
+- **Descrição dos slides de commodities em dólar** corrigida (primeira parte: energia, metais, minério, soja e milho;
+  segunda: açúcar, café, fertilizantes, trigo, carne, algodão, carvão, cacau e celulose). Era o achado de baixa
+  gravidade do terceiro parecer do Auditor.
+
+- **Quadro do slide não rola.** Escolher um campo dentro de um slide podia deslocar o slide alguns pontos no celular
+  (visto no teste de tela). O quadro agora não rola por foco nem por código.
+
+### Atualização do ramo publicado nesta rodada
+O ramo publicado recebeu o rascunho nº 470 (Faturamento: quadro pontilhado por período, total e seta da variação)
+depois da primeira conferência. O ramo foi juntado (`d61e49f`), o slide do Faturamento foi refeito com o gráfico novo
+(quadros pontilhados, totais e seta dentro do slide; tabela de comparação mais compacta para o gráfico ficar maior) e
+testes, teste de tela e varredura dos slides foram repetidos no estado juntado.
+Depois entrou o nº 466 (Focus com a data de publicação do boletim; aviso "Em construção" na primeira tela das
+calculadoras), juntado em `cc9739b`. O aviso fica só na lista de calculadoras, não dentro de cada uma, então não
+aparece nos slides; o slide "Focus e bancos" passa a mostrar a data de publicação do boletim, como na aba Cenários.
+Testes, teste de tela e varredura repetidos também nesse estado.
+
+### Parecer do Auditor nesta rodada
+Primeiro parecer: **Requer correção** (81,3), no commit `f3cbc0f`. Passou: Faturamento nos slides, nada colado é gravado
+ou enviado, nenhuma conta mudou, aba fora do menu. Achados e correções: ramo publicado tinha andado (juntado, acima);
+o filtro de madeira aceitava ruído (hotel na Madeira, hidrelétricas do Madeira, MDF-e) e recusava notícia do setor
+("apreensão" com tarifa, lei antidesmatamento) — filtro refeito e testado com as baterias do Auditor (28 de 30
+legítimas aceitas; as duas recusadas são celulose pura e título em inglês; 0 de 25 ruídos aceitos); duas frases desta
+nota corrigidas; teste de tela passou a exigir o slide no lugar.
+
+Não conferido nesta rodada: o filtro do tema madeira com manchetes reais. O ambiente da sessão não alcança o Google
+Notícias; o filtro foi testado com manchetes de exemplo. A primeira coleta real acontece na publicação, e o resultado
+precisa ser lido no site depois dela. Com mais de 24 meses colados, os rótulos do gráfico do Faturamento ficam
+pequenos no slide; os números principais estão na tabela e no resumo por ano.

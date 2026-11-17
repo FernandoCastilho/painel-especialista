@@ -87,6 +87,8 @@ const tema = (id, sub, label, fontes) => ({
 })
 // Temas que também têm busca na imprensa (temas.json), além das fontes institucionais por setor.
 const NA_IMPRENSA = ['industria', 'veiculos-pesados', 'comercio', 'servicos', 'telecom']
+// Temas de setor que só existem na busca da imprensa (sem pasta própria na aba Notícias): [grupo do setor, id em temas.json, nome].
+const SO_NA_IMPRENSA = [['Indústria e transformação', 'madeira', 'Madeira e base florestal']]
 const COM_FONTE_SETORIAL = ['cobre', 'aluminio', 'aco', 'minerio', 'petroleo']
 const INSUMOS = [['cobre', 'Cobre'], ['aluminio', 'Alumínio'], ['aco', 'Aço'], ['minerio', 'Minério de ferro'], ['petroleo', 'Petróleo e diesel'], ['trigo', 'Trigo'], ['acucar', 'Açúcar'], ['carne', 'Carne bovina'], ['algodao', 'Algodão'], ['carvao', 'Carvão'], ['cacau', 'Cacau'], ['cafe', 'Café'], ['fertilizantes', 'Fertilizantes']]
 
@@ -95,6 +97,9 @@ export const NOTICIAS = [
   ...[['USD', 'Dólar'], ['EUR', 'Euro'], ['JPY', 'Iene'], ['CNH', 'Yuan']].map(([code, nome]) => tema(`moeda-${code.toLowerCase()}`, 'Mercado e moedas', nome, [['manchetes', code], ['temas', `moeda-${code.toLowerCase()}`]])),
   tema('eleicoes-eua', 'Mercado e moedas', 'Eleições nos EUA', [['temas', 'eleicoes-eua']]),
   ...CURADORIA_TOPICS.map((t) => tema(`curadoria-${t.id}`, 'Tributos e trabalho', t.label, [['curadoria', t.id]])),
-  ...BANKING_GROUPS.flatMap((g) => g.topics.map(([id, label]) => tema(`setor-${id}`, `Setores · ${g.label}`, label, [['setor', id], ...(NA_IMPRENSA.includes(id) ? [['temas', id]] : [])]))),
+  ...BANKING_GROUPS.flatMap((g) => [
+    ...g.topics.map(([id, label]) => tema(`setor-${id}`, `Setores · ${g.label}`, label, [['setor', id], ...(NA_IMPRENSA.includes(id) ? [['temas', id]] : [])])),
+    ...SO_NA_IMPRENSA.filter(([grupo]) => grupo === g.label).map(([, id, label]) => tema(`setor-${id}`, `Setores · ${g.label}`, label, [['temas', id]])),
+  ]),
   ...INSUMOS.map(([id, label]) => tema(`insumo-${id}`, 'Insumos', label, [['temas', id], ...(COM_FONTE_SETORIAL.includes(id) ? [['setor', id]] : [])])),
 ]

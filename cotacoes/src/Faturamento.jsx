@@ -192,7 +192,7 @@ export default function Faturamento({ onBack }) {
       </article>
 
       {meses.length > 0 && (
-        <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">
+        <article className="desk-panel cx-panel calc-result-shell" aria-live="polite" data-apz-pronto="">
           <ExpandablePanel title={`Faturamento x Endividamento${unidade ? ` (${unidade})` : ''}`}>
             <div className="ft-legend" aria-hidden="true"><span className="ft-key-f" /> Faturamento <span className="ft-key-d" /> Endividamento <span className="ft-key-box" /> Período escolhido e mesmo período do ano anterior</div>
             <div className="ft-chart-wrap"><Grafico meses={serie} sel={selValida} onSelecionar={selecionar} comparacao={comparacao} unidade={unidade} /></div>

@@ -45,7 +45,7 @@
 .apz-vazio { margin: 0 0 12px; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--mut); line-height: 1.45; }
 .apz-grade { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--colunas, 2), minmax(0, 1fr)); gap: 16px; }
 .apz-item { min-width: 0; }
-.apz-quadro { position: relative; overflow: hidden; border-radius: 8px; box-shadow: 0 1px 2px #0002, 0 0 0 1px var(--line); background: #fff; }
+.apz-quadro { position: relative; overflow: hidden; overflow: clip; border-radius: 8px; box-shadow: 0 1px 2px #0002, 0 0 0 1px var(--line); background: #fff; }
 .apz-escala { transform-origin: 0 0; }
 .apz-abrir { position: absolute; inset: 0; background: none; border: 0; padding: 0; cursor: zoom-in; border-radius: 8px; }
 .apz-abrir:hover { box-shadow: inset 0 0 0 3px var(--blue); }
@@ -193,6 +193,26 @@
 .sl-calc [data-painel^="Evolução"], .sl-calc [data-painel^="Composição"], .sl-calc [data-painel^="Caso conferido"],
 .sl-calc [data-painel^="Dados básicos"], .sl-calc details.desk-panel, .sl-calc details[open] { display: none; }
 .sl-calc .calc-result-shell:not(:has([data-painel]:not([data-painel^="Memória"], [data-painel^="Parcelas"], [data-painel^="Apuração"], [data-painel^="Histórico"], [data-painel^="Evolução"], [data-painel^="Composição"], [data-painel^="Caso conferido"], [data-painel^="Dados básicos"]))):has([data-painel]) { display: none; }
+/* Faturamento: o gráfico cabe inteiro na largura do slide (sem rolagem lateral) e tem altura limitada. Com um período
+   escolhido, a comparação fica à esquerda e o resumo por ano, à direita. O texto de ajuda de uso sai; as ressalvas ficam. */
+.sl-calc-faturamento .ft > .status, .sl-calc-faturamento .ft-pad { display: none; }
+.sl-calc-faturamento .ft-chart-wrap { overflow: visible; }
+.sl-calc-faturamento .ft-chart { min-width: 0 !important; width: auto; max-width: 100%; height: auto; max-height: 230px; margin: 0 auto; }
+.sl-calc-faturamento .expandable-content:not(:has(.ft-compare)) .ft-chart { max-height: 300px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) { display: grid; grid-template-columns: minmax(0, 1fr) 270px; column-gap: 20px; align-items: start; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) :is(.ft-legend, .ft-chart-wrap) { grid-column: 1 / -1; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) :is(.ft-range, .ft-compare) { grid-column: 1; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-years { grid-column: 2; grid-row: 3 / span 3; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year { padding: 5px 10px; gap: 0; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year b { font-size: .9rem; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year span { font-size: .78rem; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-range :is(select, button) { min-height: 32px; padding: 2px 8px; }
+.sl-calc-faturamento .ft-table th[scope="row"] { white-space: nowrap; text-align: left; }
+.sl-calc-faturamento .ft .ft-table :is(th, td) { padding: 4px 10px !important; font-size: 14px; line-height: 1.35; }
+.sl-calc-faturamento .ft-compare-title { display: none; } /* os dois períodos já estão no cabeçalho da tabela */
+.sl-calc-faturamento .ft-compare .cx-hint { margin: 6px 0 0; font-size: 12px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-chart { max-height: 200px; }
+.sl-calc-faturamento .ft-range { margin: 8px 0; }
 .sl-corpo .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row; grid-auto-columns: auto; gap: 10px; overflow: visible; }
 .sl-corpo .kpis > * { min-width: 0; width: auto; flex: none; }
 

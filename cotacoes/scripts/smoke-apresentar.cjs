@@ -17,7 +17,7 @@ const quotes = { generatedAt: agora - 60000, source: 'AwesomeAPI', rejected: {},
 const macro = { generatedAt: agora, cdi: Array.from({ length: 260 }, (_, i) => [agora - (259 - i) * DIA, +(14.9 - Math.floor(i / 52) * 0.25).toFixed(2)]), selic: [[agora - 300 * DIA, 15], [agora - 40 * DIA, 13.75]], sofr: [], sofrAvg: [], focus: { date: new Date(agora - 4 * DIA).toISOString().slice(0, 10), rows: [] }, ptax: {}, ptaxHist: {}, errors: [], stale: {} }
 const materia = (i, assunto) => ({ t: agora - (i + 1) * 3 * 3600e3, title: `${assunto}: matéria de teste ${i + 1}`, source: 'Veículo de teste', link: `https://exemplo.test/${assunto}/${i + 1}` })
 const news = { generatedAt: agora, news: { USD: [0, 1, 2].map((i) => materia(i, 'dolar')), EUR: [], JPY: [], CNH: [], MERCADO: [materia(0, 'mercado')] }, stale: {}, errors: [] }
-const temas = { schemaVersion: 1, generatedAt: agora, windowDays: 5, stale: false, errors: [], temas: { 'moeda-usd': { label: 'Dólar', grupo: 'moeda', items: [materia(3, 'dolar-imprensa')] } } }
+const temas = { schemaVersion: 1, generatedAt: agora, windowDays: 5, stale: false, errors: [], temas: { 'moeda-usd': { label: 'Dólar', grupo: 'moeda', items: [materia(3, 'dolar-imprensa')] }, madeira: { label: 'Madeira e base florestal', grupo: 'setor', items: [materia(0, 'madeira'), materia(1, 'madeira')] } } }
 const mesIso = (i) => { const d = new Date(agora); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - i); return d.toISOString().slice(0, 7) }
 const ipca = { schemaVersion: 1, generatedAt: new Date(agora).toISOString(), series: { id: 'ipca', sourceName: 'IBGE', sourceUrl: 'https://exemplo.test/ipca', checkedAt: new Date(agora).toISOString(), stale: false, points: Array.from({ length: 30 }, (_, i) => ({ period: mesIso(30 - i), mom: +(0.2 + (i % 5) * 0.1).toFixed(2), ytd: +(1 + (i % 12) * 0.35).toFixed(2), y12: +(4 + (i % 7) * 0.1).toFixed(2), index: 7000 + i * 25 })) } }
 const NOME = 'Cliente Fictício de Teste'
@@ -235,6 +235,45 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.equal(linhas[0].length + linhas[1].length, 21, 'nenhuma referência fica de fora')
       assert.equal(new Set([...linhas[0], ...linhas[1]]).size, 21, 'nenhuma referência repetida')
       assert.ok(linhas[1].some((t) => /pulp-br/.test(t)), 'a celulose aparece na segunda parte')
+      // notícias de madeira: tema só da busca na imprensa, dentro de Indústria e transformação
+      if ((await noticias.getAttribute('open')) === null) await noticias.locator('summary').first().click()
+      await marcar(noticias, /^Madeira e base florestal$/)
+      const slideMadeira = p.locator('.apz-item', { hasText: 'Notícias · Madeira e base florestal' })
+      await slideMadeira.locator('.sl-noticias li').first().waitFor()
+      assert.equal(await slideMadeira.locator('.sl-noticias li').count(), 2)
+      // Faturamento: sem números, abre nos campos; com o exemplo fictício, o gráfico entra e cabe no slide; o período compara com o ano anterior
+      await marcar(await grupo('Calculadoras'), /^Faturamento/)
+      const posicao = (await p.locator('.apz-nome').allInnerTexts()).indexOf('Faturamento') + 1
+      assert.ok(posicao > 1, 'o slide do Faturamento entrou na montagem')
+      await p.getByRole('button', { name: new RegExp(`Apresentar a partir do slide ${posicao}\\b`) }).click()
+      const palcoFat = p.getByRole('dialog', { name: 'Apresentação' }), fat = palcoFat.locator('.apz-atual .sl')
+      await fat.locator('.ft-input').waitFor()
+      assert.ok(await fat.getByRole('button', { name: 'Resultado', exact: true }).isDisabled(), 'sem números não há resultado')
+      assert.match(await fat.locator('.sl-rodape').innerText(), /nada é salvo nem enviado/)
+      await fat.getByRole('button', { name: 'Usar exemplo fictício' }).click()
+      await fat.locator('.ft-chart').waitFor()
+      assert.equal(await fat.getByRole('button', { name: 'Resultado', exact: true }).getAttribute('aria-pressed'), 'true')
+      assert.equal(await fat.locator('.ft-input:visible').count(), 0) // no resultado, a caixa de colar sai
+      const meses = await fat.locator('.ft-range select').first().locator('option:not([disabled])').evaluateAll((os) => os.map((o) => o.value))
+      await fat.locator('.ft-range select').nth(0).selectOption(meses.at(-6))
+      await fat.locator('.ft-range select').nth(1).selectOption(meses.at(-1))
+      await fat.locator('.ft-table').waitFor()
+      await p.waitForTimeout(700)
+      const encaixe = await p.evaluate(() => {
+        const sl = document.querySelector('.apz-atual .sl'), c = sl.querySelector('.sl-ajuste'), mi = c.querySelector('.sl-miolo'), g = sl.querySelector('.ft-chart').getBoundingClientRect(), r = c.getBoundingClientRect()
+        const q = sl.closest('.apz-quadro')
+        return { sobra: mi.getBoundingClientRect().height - r.height, graficoDentro: g.left >= r.left - 1 && g.right <= r.right + 1, anos: sl.querySelectorAll('.ft-year').length, rolagem: q ? [q.scrollLeft, q.scrollTop] : [0, 0], caixas: sl.querySelectorAll('.ft-box').length }
+      })
+      assert.ok(encaixe.sobra <= 2, `Faturamento cortado em ${encaixe.sobra}px`)
+      assert.ok(encaixe.graficoDentro, 'o gráfico do Faturamento cabe na largura do slide')
+      assert.ok(encaixe.anos >= 2, 'o resumo por ano aparece')
+      assert.deepEqual(encaixe.rolagem, [0, 0], 'escolher o período não pode tirar o slide do lugar')
+      assert.equal(encaixe.caixas, 2, 'o período escolhido e o do ano anterior ficam marcados no gráfico')
+      await p.screenshot({ path: `${out}/apresentar-faturamento-${width}.png` })
+      await palcoFat.getByRole('button', { name: 'Sair' }).click()
+      // os números colados ficam só na página
+      const guardadoFat = await p.evaluate(() => JSON.stringify([{ ...localStorage }, { ...sessionStorage }]))
+      assert.ok(!/Jan\/2[0-9]|Faturamento \(R\$/.test(guardadoFat), 'os números do Faturamento não podem ficar guardados')
       // leitura executiva do setor entra pela escolha do setor
       const setores = await grupo('Setores')
       await setores.locator('.apz-opcao', { hasText: 'Leitura executiva do setor' }).locator('input').check()
