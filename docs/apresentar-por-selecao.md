@@ -43,6 +43,8 @@ Aprender e Configurações ficam de fora.
 - `ApresentacaoBase.css` guarda só o visual compartilhado com as apresentações das calculadoras do BNDES e do 4131.
 
 ## Limites conhecidos
+- Teto de 80 blocos por apresentação. Cada slide mantém viva uma peça do painel; com quase 190 blocos de uma vez o
+  navegador de teste ficou sem memória. A tela avisa quando o teto é atingido.
 - Não há tema de notícias "madeira". O mais próximo é "Têxtil, vestuário e móveis". Criar o tema mexe na coleta de
   notícias e depende de decisão à parte.
 - Referência sem histórico na coleta do dia mostra aviso em vez de gráfico.

@@ -191,7 +191,7 @@ function BancoHistorico({ metric }) {
 const bancoHistorico = (metric, nome) => ({ id: `bancos-historico-${metric}`, sub: 'Histórico por indicador', label: nome, titulo: `Bancos · ${nome}`, fonte: 'Banco Central (IF.data) e resultados divulgados pelos bancos', classe: 'sl-banco-historico', Corpo: () => <BancoHistorico metric={metric} /> })
 const BANCOS = [
   { id: 'bancos-tabela', label: 'Comparação dos bancos', dica: 'Capital, crédito, provisão, inadimplência e resultado', titulo: 'Bancos · capital, crédito e resultado', fonte: 'Banco Central (IF.data) e resultados divulgados pelos bancos', classe: 'sl-bancos', Corpo: () => <Bancos /> },
-  bancoHistorico('basel', 'Basileia'), bancoHistorico('creditPJ', 'Carteira PJ'), bancoHistorico('nplPJ', 'Inadimplência PJ'), bancoHistorico('roe', 'Rentabilidade (ROE)'),
+  bancoHistorico('basel', 'Basileia'), bancoHistorico('creditPJ', 'Carteira PJ'), bancoHistorico('nplTotal', 'Inadimplência total'), bancoHistorico('roe', 'Rentabilidade (ROE)'),
 ].map((b) => ({ ...b, grupo: 'bancos' }))
 
 const FERIADOS = [

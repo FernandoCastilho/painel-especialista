@@ -232,3 +232,4 @@
 
 /* O botão de maximizar gráfico do painel não entra no slide: o slide já é a visão ampliada. */
 .sl-corpo .chart-fullscreen-toolbar { display: none; }
+.apz-limite { flex-basis: 100%; color: var(--warn, #865500); font-size: .85rem; font-weight: 600; }

@@ -9,6 +9,11 @@ export const escala = (largura, altura = Infinity) => {
   return Number.isFinite(k) && k > 0 ? k : 1
 }
 
+// Cada slide mantém viva uma peça do painel (gráfico, tabela ou calculadora). Com blocos demais o navegador pode ficar sem
+// memória no meio da visita; por isso a apresentação tem um teto, bem acima do que uma visita usa.
+export const LIMITE_BLOCOS = 80
+export const limitar = (sel) => sel.slice(0, LIMITE_BLOCOS)
+
 // Marca ou desmarca um bloco; o novo entra no fim, na ordem em que foi escolhido.
 export const alternar = (sel, id) => (sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id])
 

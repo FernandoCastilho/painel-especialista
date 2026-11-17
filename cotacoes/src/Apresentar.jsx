@@ -3,7 +3,7 @@ import './ApresentacaoBase.css'
 import './Apresentar.css'
 import { setThemeOverride } from './systemTheme.js'
 import { fadeIn } from './motion.js'
-import { PALCO, alternar, alternarVarios, buscarBlocos, contarPorGrupo, dataCapa, dataHora, escala, guardarMontagem, lerMontagem, mover, passoTecla, validos } from './apresentar.js'
+import { LIMITE_BLOCOS, PALCO, alternar, alternarVarios, buscarBlocos, contarPorGrupo, limitar, dataCapa, dataHora, escala, guardarMontagem, lerMontagem, mover, passoTecla, validos } from './apresentar.js'
 import { BLOCOS, BLOCO_POR_ID, GRUPOS } from './apresentarBlocos.jsx'
 import Ajuste from './ApresentarAjuste.jsx'
 import { isolarIds } from './apresentarIds.js'
@@ -281,7 +281,7 @@ export default function Apresentar({ quotes, macro, curves, hol, colors }) {
   }, [])
   const ctx = useMemo(() => ({ quotes, macro, curves, hol, colors, agora }), [quotes, macro, curves, hol, colors, agora])
   const slides = useMemo(() => [{ id: 'capa', capa: true }, ...m.sel.map((id) => ({ id, bloco: BLOCO_POR_ID[id] }))], [m.sel])
-  const setSel = (sel) => setM((cur) => ({ ...cur, sel }))
+  const setSel = (sel) => setM((cur) => ({ ...cur, sel: limitar(sel) }))
   const setOpcoes = (id, v) => setM((cur) => ({ ...cur, opcoes: { ...cur.opcoes, [id]: v } }))
   const cliente = m.cliente.trim(), setor = m.setor.trim()
   return (
@@ -297,6 +297,7 @@ export default function Apresentar({ quotes, macro, curves, hol, colors }) {
         </div>
         <div className="apz-acoes">
           <span className="apz-total" role="status">{m.sel.length ? `${slides.length} slides` : 'Nenhum bloco marcado'}</span>
+          {m.sel.length >= LIMITE_BLOCOS && <span className="apz-limite" role="status">Limite de {LIMITE_BLOCOS} blocos por apresentação: tire algum para incluir outro.</span>}
           {(m.sel.length > 0 || m.cliente || m.setor) && <button type="button" className="apz-btn" title="Apaga o cliente, o setor e todos os slides" onClick={() => setM({ cliente: '', setor: '', sel: [], opcoes: {} })}>Limpar tudo</button>}
           <button type="button" className="apz-btn apz-btn-primario" disabled={!m.sel.length} onClick={() => setAtual(0)}>Iniciar apresentação</button>
         </div>

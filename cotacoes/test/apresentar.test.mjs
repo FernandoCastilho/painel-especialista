@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { PALCO, alternar, alternarVarios, buscarBlocos, chaveNoticia, contarPorGrupo, dataCapa, escala, guardarMontagem, lerMontagem, mover, noticiasDoSlide, passoTecla, validos } from '../src/apresentar.js'
+import { LIMITE_BLOCOS, limitar, PALCO, alternar, alternarVarios, buscarBlocos, chaveNoticia, contarPorGrupo, dataCapa, escala, guardarMontagem, lerMontagem, mover, noticiasDoSlide, passoTecla, validos } from '../src/apresentar.js'
 import { readTheme, readThemePreference, setThemeOverride, setThemePreference, THEME_EVENT } from '../src/systemTheme.js'
 
 const src = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8')
@@ -29,6 +29,15 @@ test('apresentar: marcar, desmarcar e ordenar os slides', () => {
   assert.equal(mover(base, 'z', 1), base)
   assert.deepEqual(validos(['a', 'sumiu', 'b'], new Set(['a', 'b'])), ['a', 'b'])
   assert.deepEqual(contarPorGrupo(['a', 'b', 'z'], [{ id: 'a', grupo: 'juros' }, { id: 'b', grupo: 'juros' }, { id: 'c', grupo: 'mercado' }]), { juros: 2 })
+})
+
+test('apresentar: a seleção tem teto de blocos e mantém os primeiros escolhidos', () => {
+  assert.equal(LIMITE_BLOCOS, 80)
+  const muitos = Array.from({ length: 95 }, (_, i) => `b${i}`)
+  assert.equal(limitar(muitos).length, 80)
+  assert.deepEqual(limitar(muitos).slice(0, 3), ['b0', 'b1', 'b2'])
+  assert.deepEqual(limitar(['a', 'b']), ['a', 'b'])
+  assert.match(readFileSync(new URL('../src/Apresentar.jsx', import.meta.url), 'utf8'), /sel: limitar\(sel\)/) // toda mudança da seleção passa pelo teto
 })
 
 test('apresentar: teclado troca de slide sem sair dos limites', () => {
