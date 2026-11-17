@@ -30,7 +30,9 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
   }, [])
   const focus = macro?.data?.focus
   const idades = Object.fromEntries(INSTITUTIONS.slice(1).map((name) => [name, idadeProjecao(banks?.institutions?.find((item) => item.name === name)?.date)]))
-  const coletaFocus = idadeProjecao(focus?.date)?.data // dd/mm; sem data válida, a linha do Focus não mostra "até"
+  // Referência do Focus: data de publicação do boletim (lida na página do Banco Central). Sem ela, vale a data da coleta ("até").
+  const publicado = Boolean(focus?.link && idadeProjecao(focus?.release))
+  const refFocus = idadeProjecao(publicado ? focus.release : focus?.date)?.data // dd/mm; sem data válida, a linha do Focus não mostra data
   const algumaAntiga = Object.values(idades).some((idade) => idade?.antiga)
   return (
     <section className="scenarios" aria-labelledby="scenarios-heading">
@@ -55,7 +57,7 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
               return <tr key={name} className={ref ? 'sc-ref' : undefined}>
                 <th scope="row">{ref ? 'Focus' : name}
                   {ref
-                    ? <small>mediana<span className="sc-wide"> do mercado</span>{coletaFocus && <><span className="sc-sep"> · </span><span className="sc-age">até {coletaFocus}</span></>}</small>
+                    ? <small>mediana<span className="sc-wide"> do mercado</span>{refFocus && <><span className="sc-sep"> · </span><span className="sc-age">{publicado ? '' : 'até '}{refFocus}</span></>}</small>
                     : banks && <small>{idade?.antiga && <span className="sc-warn" aria-hidden="true">⚠ </span>}{idade ? <>{idade.data}<span className="sc-sep"> · </span><span className="sc-age">{textoHaDias(idade)}</span></> : 'fonte pendente'}{idade?.antiga && <span className="sc-sr"> · pode estar desatualizada</span>}</small>}
                 </th>
                 {YEARS.map((y) => INDICATORS.map((indicator, i) => {
@@ -72,7 +74,7 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
         <Aviso title="Cenário econômico · método">
         <p className="status">USD: Focus = média de dezembro; Itaú BBA = dezembro; demais bancos = fim do período. Selic: Itaú = dezembro; demais fontes = fim do ano. As medidas não são idênticas. — = projeção não verificada ou indisponível, nunca zero.</p>
         <div className="scenario-sources">
-          <p>Focus: {focus ? `coleta até ${date(focus.date)}` : 'indisponível'}{macro?.data?.stale?.focus ? ' · dado de reserva' : ''}.</p>
+          <p>Focus: {!focus ? 'indisponível' : publicado ? <><a href={focus.link} target="_blank" rel="noopener noreferrer">boletim publicado em {date(focus.release)}</a> · coleta até {date(focus.date)}</> : `coleta até ${date(focus.date)}`}{macro?.data?.stale?.focus ? ' · dado de reserva' : ''}.</p>
           {INSTITUTIONS.slice(1).map((name) => {
             const bank = banks?.institutions?.find((item) => item.name === name)
             return <p key={name}>{name}: {bank?.date ? date(bank.date) : 'fonte pendente'}{bank?.note ? ` · ${bank.note}` : ''}.</p>
