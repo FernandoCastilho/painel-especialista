@@ -3,30 +3,39 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { summarizeRate } from '../src/rateTrend.js'
 const source = name => readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8')
-// Pedido de 17/11/2026 (substitui o de 15/11): indicadores de referência em gráfico na página, sem a Selic meta;
-// CDI futuro e curvas seguem em tabela. Brasil antes do exterior. Tudo amplia no detalhe, no centro da tela.
-test('juros: indicadores em gráfico por região, sem Selic meta, e tabelas de CDI futuro e curvas abrem detalhes', () => {
+// Pedido de 17/11/2026 (substitui o de 15/11): só gráficos na página, sem a Selic meta. As tabelas e a escolha de
+// período ficam no detalhe, que abre no centro da tela ao clicar no gráfico. Brasil antes do exterior.
+test('juros: só gráficos na página, sem Selic meta; tabelas ficam no detalhe', () => {
  const s=source('Juros.jsx'), br=s.slice(s.indexOf('aria-labelledby="juros-brasil">'),s.indexOf('aria-labelledby="juros-exterior">')), ex=s.slice(s.indexOf('aria-labelledby="juros-exterior">'))
- assert.match(br, /<Indicadores region="brasil".*onOpen=\{abrir\}/)
- assert.match(ex, /<Indicadores region="exterior".*onOpen=\{abrir\}/)
- assert.match(br, /<CdiFuturoTable.*onOpen=\{abrir\}/)
- assert.match(br, /<Curves.*region="brasil".*onOpen=\{abrir\}/)
- assert.match(ex, /<Curves.*region="exterior".*onOpen=\{abrir\}/)
- assert.match(s, /<RateModal kind=\{open\}/)
- assert.match(s, /brasil: \[\['cdi', 'CDI'\]\]/)
- assert.match(s, /exterior: \[\['sofr', 'SOFR'\], \['fed', 'Fed \(faixa-alvo\)'\], \['estr', '€STR'\], \['ecb', 'BCE \(depósito\)'\], \['boj', 'Japão \(meta overnight\)'\]\]/)
- // Selic meta fora da aba: nem gráfico, nem tabela de referência, nem atalho para o detalhe dela.
- assert.doesNotMatch(s, /<SelicChart|<RatesSnapshot|'selic'|SELIC/)
+ assert.match(br, /<Graficos region="brasil".*onOpen=\{abrir\}/)
+ assert.match(ex, /<Graficos region="exterior".*onOpen=\{abrir\}/)
+ assert.match(s, /brasil: \[\['cdi', 'CDI', 'juros-ref-brasil'\], \['cdif', 'CDI futuro', 'juros-cdif'\], \['curva-br', 'DI x pré', 'juros-curva-br'\], \['curva-cc', 'Cupom cambial', 'juros-curva-cc'\]\]/)
+ assert.match(s, /exterior: \[\['sofr', 'SOFR', 'juros-ref-exterior'\], \['fed', 'Fed \(faixa-alvo\)'\], \['estr', '€STR'\], \['ecb', 'BCE \(depósito\)'\], \['boj', 'Japão \(meta overnight\)'\], \['curva-us', 'Treasuries', 'juros-curva-us'\], \['curva-eu', 'Curva do euro', 'juros-curva-eu'\]\]/)
+ // nenhuma tabela na página: nem a de referência, nem a de CDI futuro, nem as das curvas
+ assert.doesNotMatch(s, /<RatesSnapshot|<CdiFuturoTable|<Curves |IndicatorTable|<table/)
+ assert.match(s, /<CdiFuturo preview /); assert.match(s, /<CurveDetail preview /)
+ // Selic meta fora da aba
+ assert.doesNotMatch(s, /<SelicChart|'selic'|SELIC/)
+ // clicar no gráfico abre o detalhe; os controles do próprio gráfico não disparam a abertura
+ assert.match(s, /onClick=\{\(e\) => \{ if \(!e\.target\.closest\(CONTROLE\)\) onOpen\(kind\) \}\}/)
  assert.match(s, /aria-label=\{`Ampliar gráfico: \$\{nome\}`\}/)
+ assert.match(s, /<RateModal kind=\{open\}/)
+ // no detalhe, as tabelas vêm abaixo do gráfico
+ const m=source('RateModal.jsx')
+ assert.match(m, /<CdiFuturo curves=\{curves\} macro=\{data\} hol=\{hol\} \/><CdiFuturoTable curves=\{curves\} \/>/)
+ assert.match(m, /<RatesSnapshot.*onlyIds/); assert.match(m, /<Curves curves=\{curves\} onlyId=/)
+ // tabela dentro do detalhe não tem linha clicável
+ assert.match(source('IndicatorTable.jsx'), /const off = r\.disabled \|\| !onOpen/)
 })
 test('juros: detalhe preserva gráficos, inclui leitura e tabelas filtradas',()=>{
  const s=source('RateModal.jsx'); assert.match(s,/<RateTrend/);assert.match(s,/<RatesSnapshot.*onlyIds/);assert.match(s,/<Curves.*onlyId/)
  assert.match(source('RatesSnapshot.jsx'),/onlyIds.includes\(row.id\)/)
  assert.match(source('Curves.jsx'),/!onlyId \|\| id === onlyId/)
 })
-test('juros: gráficos de referência precedem as curvas em cada região',()=>{
+test('juros: referência vem antes do CDI futuro e das curvas em cada região',()=>{
  const s=source('Juros.jsx')
- for (const region of ['brasil','exterior']) assert.ok(s.indexOf(`<Indicadores region="${region}"`) < s.indexOf(`<Curves curves={curves} region="${region}"`))
+ assert.ok(s.indexOf("['cdi', 'CDI'") < s.indexOf("['cdif'") && s.indexOf("['cdif'") < s.indexOf("['curva-br'") && s.indexOf("['curva-br'") < s.indexOf("['curva-cc'"))
+ assert.ok(s.indexOf("['sofr'") < s.indexOf("['boj'") && s.indexOf("['boj'") < s.indexOf("['curva-us'") && s.indexOf("['curva-us'") < s.indexOf("['curva-eu'"))
 })
 test('detalhe de gráfico abre em janela no centro da tela no computador', () => {
  const css=source('styles.css')

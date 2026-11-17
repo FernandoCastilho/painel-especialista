@@ -32,10 +32,11 @@ Parecer: a estrutura faz sentido (número primeiro, gráfico sob demanda, mesmo 
 
 ## Mudança de 17/11/2026 (pedido do Fernando)
 
-Substitui, para os indicadores de referência, a decisão de 12 e 15/11 de mostrar só tabelas na página.
+Substitui a decisão de 12 e 15/11 de mostrar só tabelas na página.
 
-- **Selic meta fora da aba Juros.** Não aparece mais como gráfico nem como linha. Continua na barra do topo e em Cenários; o detalhe dela segue disponível para outras telas.
-- **Indicadores de referência em gráfico na página**, com um período único no topo: CDI no Brasil; SOFR, Fed, €STR, BCE e Japão no exterior. CDI futuro e curvas (DI x pré, cupom cambial, Treasuries e euro) continuam em tabela.
-- **Cada gráfico tem o botão "Ampliar"**, que abre o mesmo gráfico com a leitura descritiva e a comparação por datas fixas (última, 1 mês, 180 dias e 1 ano).
-- **Janela no centro da tela.** No computador, o detalhe de qualquer gráfico do painel (moedas, taxas, curvas e indicadores) abre no centro, com até 1.120 px de largura e margem em volta, em vez da gaveta encostada à direita. No celular continua em tela inteira.
-- A comparação por datas fixas dos indicadores deixou de aparecer na página e ficou só dentro do detalhe.
+- **Só gráficos na página.** Brasil: CDI, CDI futuro, DI x pré e cupom cambial. Outros países: SOFR, Fed, €STR, BCE, Japão, Treasuries e curva do euro. Nenhuma tabela na página.
+- **Selic meta fora da aba Juros.** Continua na barra do topo e em Cenários; o detalhe dela segue disponível para outras telas.
+- **Clicar no gráfico abre o detalhe** (também pelo botão "Ampliar"). Lá ficam a escolha de período e, abaixo do gráfico, as tabelas: comparação por datas fixas nos indicadores, horizontes no CDI futuro e prazos por data nas curvas. Os controles do próprio gráfico ("?", atualizar, agrupar, séries) continuam funcionando sem abrir o detalhe.
+- **Na página, os indicadores mostram sempre o último ano.** O período se escolhe no detalhe.
+- **Janela no centro da tela.** No computador, o detalhe de qualquer gráfico do painel (moedas, taxas, curvas e indicadores) abre no centro, com até 1.120 px de largura, a altura do conteúdo e margem em volta, em vez da gaveta encostada à direita. No celular continua em tela inteira.
+- Os avisos gerais da coleta das curvas aparecem uma vez no topo da página, e não em cada gráfico.

@@ -104,14 +104,14 @@ export default function CdiFuturo({ curves, macro, hol, preview = false }) {
   )
 }
 
-// Aba Juros: os números do CDI futuro por horizonte; a linha abre o gráfico e a escolha de datas em tela própria.
-export function CdiFuturoTable({ curves, onOpen }) {
+// Números do CDI futuro por horizonte. Fica dentro do detalhe, abaixo do gráfico; com `onOpen`, a linha abre o gráfico.
+export function CdiFuturoTable({ curves, onOpen, id = 'juros-detail-cdif' }) {
   const br = curves.data?.br
   const today = br?.compare?.find((c) => c.id === 'hoje')
   const pts = today ? br.curves[today.date] : null
   const rows = useMemo(() => horizonTable(pts), [pts])
   return (
-    <section id="juros-cdif" className="macro executive-rates cdif-table juros-tabela" aria-labelledby="cdif-table-h">
+    <section id={id} className="macro executive-rates cdif-table juros-tabela" aria-labelledby="cdif-table-h">
       <header className="executive-rates__heading">
         <h2 id="cdif-table-h"><Flag code="BRL" width={18} height={12} />CDI futuro <small>taxa a termo implícita nos futuros de DI</small></h2>
         <Explain id="cdiFuturo" />
@@ -129,7 +129,7 @@ export function CdiFuturoTable({ curves, onOpen }) {
               onOpen={onOpen}
             />
           </div>
-          <p className="ind-note">Taxa que o mercado precifica nos futuros de DI, em % a.a., com base em {dm(today.date)}. Toque em uma linha para abrir o gráfico e escolher as datas.</p>
+          <p className="ind-note">Taxa que o mercado precifica nos futuros de DI, em % a.a., com base em {dm(today.date)}.{onOpen ? ' Toque em uma linha para abrir o gráfico e escolher as datas.' : ''}</p>
         </>
       )}
     </section>

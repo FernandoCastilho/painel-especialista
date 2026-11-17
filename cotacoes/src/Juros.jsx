@@ -1,76 +1,70 @@
 import { useState } from 'react'
-import ChartFilters from './ChartFilters.jsx'
-import { MacroStatus, CdiChart, RatesPeriod, fromInput, rangeFor } from './Macro.jsx'
+import { MacroStatus, CdiChart, rangeFor } from './Macro.jsx'
 import SofrChart from './Sofr.jsx'
-import { CdiFuturoTable } from './CdiFuturo.jsx'
-import Curves from './Curves.jsx'
+import CdiFuturo from './CdiFuturo.jsx'
+import { CurveDetail, CurvesStatus } from './Curves.jsx'
 import RateModal, { Estr, Policy } from './RateModal.jsx'
 import { reduceMotion } from './motion.js'
 import './Juros.css'
 
-// Indicadores de referência de cada região, na ordem da página. A Selic meta saiu da aba a pedido (17/11/2026):
-// o CDI já acompanha a meta, e a Selic continua na barra do topo e em Cenários.
-const INDICADORES = {
-  brasil: [['cdi', 'CDI']],
-  exterior: [['sofr', 'SOFR'], ['fed', 'Fed (faixa-alvo)'], ['estr', '€STR'], ['ecb', 'BCE (depósito)'], ['boj', 'Japão (meta overnight)']],
+// Gráficos de cada região, na ordem da página: [tipo do detalhe, nome, id do bloco (alvo dos atalhos)].
+// A Selic meta saiu da aba a pedido (17/11/2026): o CDI já acompanha a meta, e ela continua na barra do topo e em Cenários.
+const GRAFICOS = {
+  brasil: [['cdi', 'CDI', 'juros-ref-brasil'], ['cdif', 'CDI futuro', 'juros-cdif'], ['curva-br', 'DI x pré', 'juros-curva-br'], ['curva-cc', 'Cupom cambial', 'juros-curva-cc']],
+  exterior: [['sofr', 'SOFR', 'juros-ref-exterior'], ['fed', 'Fed (faixa-alvo)'], ['estr', '€STR'], ['ecb', 'BCE (depósito)'], ['boj', 'Japão (meta overnight)'], ['curva-us', 'Treasuries', 'juros-curva-us'], ['curva-eu', 'Curva do euro', 'juros-curva-eu']],
 }
 
-// Atalhos do topo: cada botão leva direto a um bloco da página (não esconde nada).
+// Atalhos do topo: cada botão leva direto a um gráfico da página (não esconde nada).
 const ATALHOS = [['juros-ref-brasil', 'Brasil · referência'], ['juros-cdif', 'CDI futuro'], ['juros-curva-br', 'DI x pré'], ['juros-curva-cc', 'Cupom cambial'], ['juros-ref-exterior', 'Exterior · referência'], ['juros-curva-us', 'Treasuries'], ['juros-curva-eu', 'Euro']]
 const irPara = (id) => document.getElementById(id)?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' })
 
-// Gráficos dos indicadores de uma região. Cada um tem o botão "Ampliar", que abre o mesmo gráfico no centro da tela,
-// com a leitura descritiva e a comparação por datas fixas.
-function Indicadores({ region, macro, range, onOpen }) {
+// Na página os gráficos mostram sempre o último ano; o período é escolhido dentro do detalhe.
+const UM_ANO = rangeFor(365)
+// Clique em qualquer ponto do gráfico abre o detalhe; os controles do próprio gráfico ("?", atualizar, agrupar, séries) seguem funcionando.
+const CONTROLE = 'button, a, input, select, summary, label, [role="tooltip"]'
+
+// Um gráfico por indicador, CDI futuro e curva. Clicar no gráfico (ou em "Ampliar") abre o detalhe no centro da tela,
+// com a escolha de período e as tabelas logo abaixo.
+function Graficos({ region, macro, curves, hol, onOpen }) {
   const data = macro?.data
   return (
     <div className="charts juros-charts">
-      {INDICADORES[region].map(([kind, nome]) => (
-        <div className="juros-grafico" key={kind}>
+      {GRAFICOS[region].map(([kind, nome, id]) => (
+        <div className="juros-grafico" key={kind} id={id} onClick={(e) => { if (!e.target.closest(CONTROLE)) onOpen(kind) }}>
           <button type="button" className="juros-ampliar" onClick={() => onOpen(kind)} aria-label={`Ampliar gráfico: ${nome}`}>Ampliar <span aria-hidden="true">⤢</span></button>
-          {kind === 'cdi' && (data?.cdi?.length ? <CdiChart macro={data} range={range} /> : <p className="status">CDI indisponível no momento.</p>)}
-          {kind === 'sofr' && (data?.sofr?.length ? <SofrChart macro={data} range={range} /> : <p className="status">SOFR indisponível no momento.</p>)}
-          {kind === 'estr' && <Estr range={range} />}
-          {['fed', 'ecb', 'boj'].includes(kind) && <Policy kind={kind} range={range} />}
+          {kind === 'cdi' && (data?.cdi?.length ? <CdiChart macro={data} range={UM_ANO} /> : <p className="status">CDI indisponível no momento.</p>)}
+          {kind === 'sofr' && (data?.sofr?.length ? <SofrChart macro={data} range={UM_ANO} /> : <p className="status">SOFR indisponível no momento.</p>)}
+          {kind === 'estr' && <Estr range={UM_ANO} />}
+          {['fed', 'ecb', 'boj'].includes(kind) && <Policy kind={kind} range={UM_ANO} />}
+          {kind === 'cdif' && <CdiFuturo preview curves={curves} macro={data} hol={hol} />}
+          {kind.startsWith('curva-') && <CurveDetail preview id={kind.slice(6)} curves={curves} />}
         </div>
       ))}
     </div>
   )
 }
 
-// Aba Juros: indicadores de referência em gráfico; CDI futuro e curvas em tabela. Gráficos e linhas das tabelas
-// abrem o detalhe no centro da tela.
+// Aba Juros: só gráficos na página (pedido de 17/11/2026). As tabelas e a escolha de período ficam no detalhe,
+// que abre no centro da tela ao clicar em um gráfico.
 export default function Juros({ macro, curves, hol }) {
   const [open, setOpen] = useState(null)
-  const [preset, setPreset] = useState('365')
-  const [range, setRange] = useState(() => rangeFor(365))
-  const onPreset = (p) => { setPreset(p.id); setRange(rangeFor(p.days)) }
-  const onDates = (a, b) => {
-    let start = fromInput(a), end = fromInput(b)
-    if (start > end) [start, end] = [end, start]
-    setPreset('custom'); setRange({ start, end })
-  }
   const abrir = (id) => setOpen(id)
   return (
     <>
       <nav className="learn-nav cen-nav juros-nav" aria-label="Atalhos da aba Juros">
         {ATALHOS.map(([id, label]) => <button key={id} type="button" onClick={() => irPara(id)}>{label}</button>)}
       </nav>
-      <section className="macro juros-periodo" aria-label="Período dos gráficos de juros">
-        <ChartFilters><RatesPeriod range={range} preset={preset} onPreset={onPreset} onDates={onDates} /></ChartFilters>
-      </section>
+      <p className="ind-note juros-dica">Clique em um gráfico para ampliar, escolher o período e ver as tabelas.</p>
+      <CurvesStatus curves={curves} />
       <section className="macro" aria-labelledby="juros-brasil">
         <h2 id="juros-brasil">Brasil</h2>
-        <div id="juros-ref-brasil"><Indicadores region="brasil" macro={macro} range={range} onOpen={abrir} /></div>
         <MacroStatus macro={macro} region="brasil" />
-        <CdiFuturoTable curves={curves} onOpen={abrir} />
-        <Curves curves={curves} region="brasil" onOpen={abrir} />
+        <Graficos region="brasil" macro={macro} curves={curves} hol={hol} onOpen={abrir} />
       </section>
       <section className="macro" aria-labelledby="juros-exterior">
         <h2 id="juros-exterior">Outros países</h2>
-        <div id="juros-ref-exterior"><Indicadores region="exterior" macro={macro} range={range} onOpen={abrir} /></div>
         <MacroStatus macro={macro} region="exterior" />
-        <Curves curves={curves} region="exterior" onOpen={abrir} />
+        <Graficos region="exterior" macro={macro} curves={curves} hol={hol} onOpen={abrir} />
       </section>
       {open && <RateModal kind={open} macro={macro} curves={curves} hol={hol} onClose={() => setOpen(null)} />}
     </>
