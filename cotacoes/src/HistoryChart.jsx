@@ -299,12 +299,12 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           <ul>
             {aberto.itens.map((n) => (
               <li key={n.link}>
-                <time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}
+                {n.semHora ? null : <><time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}</>}
                 <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}</small>
               </li>
             ))}
           </ul>
-          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília). Mostram o que saiu na imprensa, não comprovam a causa do movimento.</p>
+          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa). Mostram o que saiu na imprensa, não comprovam a causa do movimento.</p>
         </div>
       )}
       {range && (

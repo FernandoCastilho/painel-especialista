@@ -28,6 +28,7 @@ test('escolhe só manchetes do dia, sobre o dólar, sem repetir, movimento prime
     item('Dólar fecha em alta de 1% com tensão fiscal', '2026-10-15T20:30:00Z'),
     item('Dólar fecha em alta de 1% com tensão fiscal', '2026-10-15T20:31:00Z'),
     item('Dólar cai no dia seguinte', '2026-10-16T14:00:00Z'),
+    item('Empresa transfere bilhões de dólares em ações', '2026-10-15T16:00:00Z'),
     { title: 'Dólar sem link', link: '', t: T('2026-10-15T15:00:00Z') },
   ]
   const out = escolherDoDia(itens, '2026-10-15', 'USD')
@@ -83,4 +84,13 @@ test('gráfico do dia: bolinha no horário da manchete, sobre a cotação mais p
   assert.equal(ev.length, 1)
   assert.equal(ev[0].bid, 5.06)
   assert.equal(ev[0].tom, 'news')
+})
+
+test('horário cheio vira "sem hora" e fica fora do gráfico do dia', () => {
+  const [n] = escolherDoDia([item('Dólar sobe', '2026-10-15T07:00:00Z')], '2026-10-15', 'USD')
+  assert.equal(n.semHora, true)
+  const [m] = escolherDoDia([item('Dólar sobe', '2026-10-15T07:12:30Z')], '2026-10-15', 'USD')
+  assert.equal(m.semHora, undefined)
+  const arq = { moedas: { USD: { dias: { '2026-10-15': { itens: [n] } } } } }
+  assert.deepEqual(eventosDoDia([ponto('2026-10-15T06:00:00Z', 5), ponto('2026-10-15T20:00:00Z', 5)], arq, 'USD', '2026-10-15'), [])
 })

@@ -1,11 +1,8 @@
 name: Carga inicial das manchetes do dólar (60 dias)
 
-# Roda só no ramo de trabalho ou sob demanda: busca as manchetes dos últimos 60 dias no Google Notícias
-# e grava cotacoes/data/fx-noticias-base.json no próprio ramo. Não publica o site.
+# Roda só sob demanda: busca as manchetes dos últimos 60 dias no Google Notícias
+# e grava cotacoes/data/fx-noticias-base.json no ramo escolhido. Não publica o site.
 on:
-  push:
-    branches: [ccr-28c1dfc5-7by680]
-    paths: ['cotacoes/scripts/fetch-fx-noticias.mjs', 'cotacoes/scripts/fx-noticias-lib.mjs', '.github/workflows/fx-noticias-base.yml']
   workflow_dispatch:
 
 permissions:

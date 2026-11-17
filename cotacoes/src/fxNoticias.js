@@ -26,13 +26,13 @@ export function eventosDiarios(points, arquivo, code, { maiores = FX_MAIORES, mi
   return [...altas, ...baixas].sort((a, b) => a.t - b.t)
 }
 
-// Gráfico do dia: uma bolinha por manchete, no horário em que saiu, sobre a cotação mais próxima desse horário.
+// Gráfico do dia: uma bolinha por manchete com horário confiável, no horário em que saiu, sobre a cotação mais próxima desse horário.
 export function eventosDoDia(points, arquivo, code, dia) {
   const itens = diasDa(arquivo, code)?.[dia]?.itens
   if (!itens?.length || !Array.isArray(points) || !points.length) return []
   const t0 = points[0].t, t1 = points.at(-1).t
   return itens
-    .filter((n) => n.t >= t0 && n.t <= t1)
+    .filter((n) => !n.semHora && n.t >= t0 && n.t <= t1)
     .map((n) => {
       const perto = points.reduce((b, p) => (Math.abs(p.t - n.t) < Math.abs(b.t - n.t) ? p : b), points[0])
       return { t: n.t, bid: perto.bid, dia, tom: 'news', itens: [n] }

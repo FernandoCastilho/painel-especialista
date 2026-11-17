@@ -36,6 +36,8 @@ export const urlBuscaDia = (q, dia) => {
 
 // Manchete que fala do movimento do dia (fecha, sobe, cai...) vem antes das demais.
 const MOVIMENTO = /\b(fecha|fechou|sobe|subiu|cai|caiu|recua|recuou|avanca|avancou|dispara|disparou|despenca|despencou|salta|saltou|renova|alta|queda|maior|menor)\b/
+// "Bilhões de dólares" é valor em dinheiro, não câmbio (ex.: matéria de empresa).
+const VALOR_EM_DOLAR = /\b(mil|milhao|milhoes|bilhao|bilhoes|trilhao|trilhoes|bi|mi|tri) de dolares\b/
 const plano = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const chave = (s) => plano(s).replace(/[^a-z0-9]+/g, ' ').trim()
 export const pontuar = (it) => (MOVIMENTO.test(plano(it.title)) ? 2 : 0) + (it.source === 'Valor Econômico' ? 1 : 0)
@@ -46,11 +48,13 @@ export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
   const validos = []
   for (const it of itens) {
     if (!it?.title || !/^https?:\/\//.test(it.link ?? '') || !Number.isFinite(it.t) || it.t <= 0) continue
-    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title)) continue
+    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title) || VALOR_EM_DOLAR.test(plano(it.title))) continue
     const k = chave(it.title)
     if (vistos.has(k)) continue
     vistos.add(k)
-    validos.push({ title: it.title, link: it.link, source: it.source || canonicalSource(it), t: it.t })
+    // Busca por data devolve muitas matérias antigas só com o dia (horário cheio, ex.: 07:00:00 GMT): a hora não é confiável.
+    const semHora = it.t % 36e5 === 0
+    validos.push({ title: it.title, link: it.link, source: it.source || canonicalSource(it), t: it.t, ...(semHora ? { semHora } : {}) })
   }
   return validos.sort((a, b) => pontuar(b) - pontuar(a) || a.t - b.t).slice(0, limite)
 }
