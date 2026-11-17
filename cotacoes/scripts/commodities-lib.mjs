@@ -5,7 +5,9 @@ export const NY_DIESEL_URL = 'https://www.eia.gov/dnav/pet/hist/EER_EPD2DXL0_PF4
 export const NY_GASOLINE_URL = 'https://www.eia.gov/dnav/pet/hist/EER_EPMRU_PF4_Y35NY_DPGD.htm'
 // US¢/libra-peso a partir de USD/kg (1 lb = 0,45359237 kg): convenção de mercado para açúcar e café.
 export const CENTS_PER_LB = 100 * 0.45359237
+export const PULP_URL = 'https://comexstat.mdic.gov.br/pt/geral'
 export const COMMODITIES = [
+  { id: 'pulp-br', label: 'Celulose · exportação Brasil', unit: 'USD/tonelada', nature: 'preço médio FOB mensal', sourceName: 'MDIC/SECEX', sourceUrl: PULP_URL, benchmark: 'Exportações brasileiras • não é cotação spot nem preço por tipo de fibra', decimals: 2 },
   { id: 'wti', label: 'Petróleo WTI', unit: 'USD/barril', nature: 'spot diário', sourceName: 'EIA', sourceUrl: WTI_URL, benchmark: 'Cushing, Oklahoma • FOB' },
   { id: 'iron-ore', label: 'Minério de ferro', unit: 'USD/tonelada seca', nature: 'média mensal', sourceName: 'Banco Mundial • Pink Sheet', sourceUrl: PINK_PAGE_URL, benchmark: '62% Fe • CFR China • spot' },
   { id: 'soybeans', label: 'Soja', unit: 'USD/tonelada', nature: 'média mensal', sourceName: 'Banco Mundial • Pink Sheet', sourceUrl: PINK_PAGE_URL, benchmark: 'FOB US Gulf' },
@@ -154,6 +156,7 @@ export function validCommodity(value, id) {
   const def = meta(id)
   if (!def || value?.id !== id || value.unit !== def.unit || value.nature !== def.nature || !(id === 'wti' ? Number.isFinite(value.value) : positive(value.value))) return false
   if (!(isDaily(id) ? isoDay(value.period) : /^\d{4}-(?:0[1-9]|1[0-2])$/.test(value.period ?? ''))) return false
+  if (id === 'pulp-br') return value.sourceUrl === def.sourceUrl && isoDay(value.releaseDate) && value.period <= value.releaseDate && Number.isFinite(Date.parse(value.checkedAt)) && value.period <= value.checkedAt.slice(0, 7)
   if (!isoDay(value.releaseDate) || value.period > value.releaseDate || !Number.isFinite(Date.parse(value.checkedAt))) return false
   try { const url = new URL(value.sourceUrl); return url.protocol === 'https:' && (isDaily(id) ? url.href === def.sourceUrl : url.hostname === 'thedocs.worldbank.org') } catch { return false }
 }

@@ -97,6 +97,221 @@
       "previousPeriod": "2026-08",
       "variationPct": -2.0856948537746542,
       "variationBasis": "mês anterior"
+    },
+    {
+      "id": "pulp-br",
+      "label": "Celulose · exportação Brasil",
+      "unit": "USD/tonelada",
+      "nature": "preço médio FOB mensal",
+      "sourceName": "MDIC/SECEX",
+      "sourceUrl": "https://comexstat.mdic.gov.br/pt/geral",
+      "benchmark": "Exportações brasileiras • não é cotação spot nem preço por tipo de fibra",
+      "decimals": 2,
+      "value": 524.3492782011839,
+      "period": "2026-10",
+      "releaseDate": "2026-11-06",
+      "checkedAt": "2026-11-17T09:43:26.540Z",
+      "stale": false,
+      "error": null,
+      "previousValue": 506.7412110082428,
+      "previousPeriod": "2026-09",
+      "variationPct": 3.4747651879165398,
+      "variationBasis": "mês anterior",
+      "history": [
+        {
+          "period": "2025-10",
+          "value": 448.3410347549087,
+          "fobUSD": 816385051,
+          "netKg": 1820901920
+        },
+        {
+          "period": "2025-11",
+          "value": 481.46017714712264,
+          "fobUSD": 857757184,
+          "netKg": 1781574520
+        },
+        {
+          "period": "2025-12",
+          "value": 478.0459236103859,
+          "fobUSD": 863801732,
+          "netKg": 1806942993
+        },
+        {
+          "period": "2026-01",
+          "value": 493.7448153889823,
+          "fobUSD": 929991944,
+          "netKg": 1883547766
+        },
+        {
+          "period": "2026-02",
+          "value": 484.57470088533097,
+          "fobUSD": 822856349,
+          "netKg": 1698100102
+        },
+        {
+          "period": "2026-03",
+          "value": 488.9673956453145,
+          "fobUSD": 810293259,
+          "netKg": 1657151921
+        },
+        {
+          "period": "2026-04",
+          "value": 500.95294944704835,
+          "fobUSD": 854734414,
+          "netKg": 1706216951
+        },
+        {
+          "period": "2026-05",
+          "value": 502.61877176377413,
+          "fobUSD": 817026102,
+          "netKg": 1625538376
+        },
+        {
+          "period": "2026-06",
+          "value": 508.34597681829007,
+          "fobUSD": 916956088,
+          "netKg": 1803803177
+        },
+        {
+          "period": "2026-07",
+          "value": 542.01779240421,
+          "fobUSD": 1054326653,
+          "netKg": 1945188272
+        },
+        {
+          "period": "2026-08",
+          "value": 553.9957771560964,
+          "fobUSD": 898576846,
+          "netKg": 1621992230
+        },
+        {
+          "period": "2026-09",
+          "value": 506.7412110082428,
+          "fobUSD": 967332979,
+          "netKg": 1908928972
+        },
+        {
+          "period": "2026-10",
+          "value": 524.3492782011839,
+          "fobUSD": 1026705212,
+          "netKg": 1958055927
+        }
+      ],
+      "methodology": "Soma do valor FOB em US$ dividida pela soma do peso líquido em kg, multiplicada por 1000. SH4 4701–4706; exclui aparas SH4 4707.",
+      "queryUrl": "https://api-comexstat.mdic.gov.br/general",
+      "publicationUrl": "https://api-comexstat.mdic.gov.br/general/dates/updated",
+      "queries": [
+        {
+          "flow": "export",
+          "monthDetail": true,
+          "period": {
+            "from": "2025-10",
+            "to": "2025-12"
+          },
+          "filters": [
+            {
+              "filter": "heading",
+              "values": [
+                4701,
+                4702,
+                4703,
+                4704,
+                4705,
+                4706
+              ]
+            }
+          ],
+          "details": [
+            "heading"
+          ],
+          "metrics": [
+            "metricFOB",
+            "metricKG"
+          ]
+        },
+        {
+          "flow": "export",
+          "monthDetail": true,
+          "period": {
+            "from": "2026-01",
+            "to": "2026-10"
+          },
+          "filters": [
+            {
+              "filter": "heading",
+              "values": [
+                4701,
+                4702,
+                4703,
+                4704,
+                4705,
+                4706
+              ]
+            }
+          ],
+          "details": [
+            "heading"
+          ],
+          "metrics": [
+            "metricFOB",
+            "metricKG"
+          ]
+        }
+      ],
+      "reconciliationQueries": [
+        {
+          "flow": "export",
+          "monthDetail": true,
+          "period": {
+            "from": "2025-10",
+            "to": "2025-12"
+          },
+          "filters": [
+            {
+              "filter": "heading",
+              "values": [
+                4701,
+                4702,
+                4703,
+                4704,
+                4705,
+                4706
+              ]
+            }
+          ],
+          "details": [],
+          "metrics": [
+            "metricFOB",
+            "metricKG"
+          ]
+        },
+        {
+          "flow": "export",
+          "monthDetail": true,
+          "period": {
+            "from": "2026-01",
+            "to": "2026-10"
+          },
+          "filters": [
+            {
+              "filter": "heading",
+              "values": [
+                4701,
+                4702,
+                4703,
+                4704,
+                4705,
+                4706
+              ]
+            }
+          ],
+          "details": [],
+          "metrics": [
+            "metricFOB",
+            "metricKG"
+          ]
+        }
+      ]
     }
   ]
 }
