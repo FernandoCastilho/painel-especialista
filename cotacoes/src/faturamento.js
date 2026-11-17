@@ -149,6 +149,17 @@ export function compararPeriodo(meses, de, ate) {
   }
 }
 
+// Total curto para o quadro do período, como em apresentação: 23.400 (R$ mil) -> "R$ 23,4 MM".
+export function totalCurto(v, unidade) {
+  if (v == null) return '—'
+  const u = semAcento(unidade ?? '').replace(/\s+/g, '')
+  const mm = (x) => `R$ ${x.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MM`
+  if (u === 'r$mil') return Math.abs(v) >= 1000 ? mm(v / 1000) : `R$ ${Math.round(v).toLocaleString('pt-BR')} mil`
+  if (u === 'r$milhoes' || u === 'r$mi') return mm(v)
+  const n = v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+  return u.startsWith('r$') ? `R$ ${n}` : n
+}
+
 // Resumo por ano, só com os meses colados (como os quadros do DAC).
 export function resumoPorAno(meses) {
   const anos = new Map()

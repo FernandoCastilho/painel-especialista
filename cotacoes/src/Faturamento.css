@@ -6,8 +6,9 @@
   --ft-debt-fg: #fff;
   --ft-sel: rgba(255, 176, 0, .28);
   --ft-prev: rgba(91, 120, 232, .16);
+  --ft-box: #c99700;
 }
-:root:not([data-theme="light"]) .ft { --ft-bar: #5b78e8; --ft-bar-fg: #000d3c; --ft-debt: #ff7a2e; --ft-debt-fg: #000d3c; }
+:root:not([data-theme="light"]) .ft { --ft-bar: #5b78e8; --ft-bar-fg: #000d3c; --ft-debt: #ff7a2e; --ft-debt-fg: #000d3c; --ft-box: #ffb000; }
 .ft-input { display: grid; gap: 8px; padding: 16px; }
 .ft-input label { font-weight: 600; }
 .ft-input textarea { width: 100%; min-height: 160px; padding: 10px; font: .875rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: vertical; box-sizing: border-box; }
@@ -22,13 +23,18 @@
 .ft-legend span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: -8px; vertical-align: middle; }
 .ft-key-f { background: var(--ft-bar); }
 .ft-key-d { background: var(--ft-debt); }
-.ft-key-sel { background: var(--ft-sel); border-radius: 3px !important; outline: 1px solid #ffb000; }
-.ft-key-prev { background: var(--ft-prev); border-radius: 3px !important; outline: 1px dashed #5b78e8; }
+.ft-key-box { width: 16px !important; border-radius: 2px !important; border: 2px dashed var(--ft-box); box-sizing: border-box; }
 .ft-chart-wrap { max-width: 100%; overflow-x: auto; }
 .ft-chart { display: block; width: 100%; min-width: 640px; height: auto; user-select: none; touch-action: pan-y; cursor: pointer; }
 .ft-chart text { font: 600 11px system-ui, sans-serif; text-anchor: middle; }
-.ft-band-sel { fill: var(--ft-sel); stroke: #ffb000; stroke-width: 1; }
-.ft-band-prev { fill: var(--ft-prev); stroke: #5b78e8; stroke-width: 1; stroke-dasharray: 4 3; }
+.ft-box { fill: none; stroke: var(--ft-box); stroke-width: 2.5; stroke-dasharray: 9 6; }
+.ft-chart text.ft-box-total { fill: var(--ft-box); font-size: 14px; font-weight: 700; }
+.ft-arrow line { stroke-width: 3; }
+.ft-arrow-down line { stroke: var(--down, #d33); }
+.ft-arrow-down polygon, .ft-chart .ft-arrow-down text, .ft-chart text.ft-arrow-down { fill: var(--down, #d33); }
+.ft-arrow-up line { stroke: var(--up, #1a7f37); }
+.ft-arrow-up polygon, .ft-chart .ft-arrow-up text, .ft-chart text.ft-arrow-up { fill: var(--up, #1a7f37); }
+.ft-chart .ft-arrow text, .ft-chart text.ft-arrow-down, .ft-chart text.ft-arrow-up { font-size: 14px; font-weight: 700; }
 .ft-axis { stroke: currentColor; opacity: .25; }
 .ft-area { fill: var(--ft-debt); opacity: .1; }
 .ft-bar { fill: var(--ft-bar); }
