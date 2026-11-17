@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import { TREND_GROUPS, exploreUrl, trendEmbedUrl, validTrendData, trendsOld, trendStamp } from './trends.js'
@@ -10,11 +11,11 @@ function HistoricalSnapshot({ group }) {
   const date = i => new Date(Date.parse(SNAPSHOT_START) + i * 86400000).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
   const points = series.values.map((v, i) => `${36 + i / (series.values.length - 1) * 548},${174 - v * 1.5}`).join(' ')
   return <figure className="trends-snapshot"><figcaption><strong>{series.term}</strong> · Brasil · interesse relativo (0–100)</figcaption>
-    <svg viewBox="0 0 600 205" role="img" aria-label={`Interesse em ${series.term}, de 03/08 a 02/11/2026. Valores na tabela abaixo.`}>
+    <ChartFullscreen><svg viewBox="0 0 600 205" role="img" aria-label={`Interesse em ${series.term}, de 03/08 a 02/11/2026. Valores na tabela abaixo.`}>
       {[0,50,100].map(v => <g key={v}><line x1="36" x2="584" y1={174-v*1.5} y2={174-v*1.5} stroke="currentColor" opacity=".15" /><text x="3" y={179-v*1.5} fill="currentColor" fontSize="12">{v}</text></g>)}
       <polyline points={points} fill="none" stroke="var(--amber)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
       <text x="36" y="199" fill="currentColor" fontSize="12">03/08/2026</text><text x="584" y="199" textAnchor="end" fill="currentColor" fontSize="12">02/11/2026</text>
-    </svg>
+    </svg></ChartFullscreen>
     <p className="trends-status">Snapshot histórico consultado em {stamp(SNAPSHOT_AT)} (Brasília). Não atualiza automaticamente. Último dia parcial excluído. Escalas independentes entre termos; zero pode indicar volume insuficiente.</p>
     <details><summary>Ver valores diários</summary><div className="trends-values"><table><thead><tr><th>Data (UTC)</th><th>Índice</th></tr></thead><tbody>{series.values.map((v,i) => <tr key={i}><td>{date(i)}</td><td>{v}</td></tr>)}</tbody></table></div></details>
   </figure>
@@ -42,7 +43,7 @@ export default function GoogleTrends() {
       <label>Período do gráfico <select value={period} onChange={e => setPeriod(e.target.value)}><option value="today 3-m">3 meses</option><option value="today 12-m">12 meses</option></select></label>
       <p>Brasil · Pesquisa na Web · Fonte: Google Trends Explore</p>
       <p className="trends-status">Histórico incorporado do Google Trends, consultado ao abrir ou trocar o tema/período. Os três termos são comparados no mesmo recorte. A disponibilidade e a atualização do gráfico dependem do Google.</p>
-      <iframe key={`${group}:${period}`} className="trends-live-chart" src={trendEmbedUrl(group, period)} title={`Google Trends: ${active.label}, ${period === 'today 3-m' ? '3' : '12'} meses`} sandbox="allow-scripts allow-same-origin allow-popups" referrerPolicy="strict-origin-when-cross-origin" />
+      <ChartFullscreen><iframe key={`${group}:${period}`} className="trends-live-chart" src={trendEmbedUrl(group, period)} title={`Google Trends: ${active.label}, ${period === 'today 3-m' ? '3' : '12'} meses`} sandbox="allow-scripts allow-same-origin allow-popups" referrerPolicy="strict-origin-when-cross-origin" /></ChartFullscreen>
       <p className="trends-status">Se o gráfico estiver vazio, demorar ou solicitar verificação, use o link abaixo. O painel não consegue confirmar o conteúdo carregado pelo Google.</p>
       <a className="trends-chart-link" href={exploreUrl(active.terms, period)} target="_blank" rel="noopener noreferrer">Abrir gráfico no Google Trends ↗</a>
       <p className="trends-status">As consultas das 8h e 15h abrangem somente o feed Em alta. O gráfico acima não é coletado nem armazenado pelo painel. A coleta automática das séries ainda depende de acesso à API oficial em alpha.</p>

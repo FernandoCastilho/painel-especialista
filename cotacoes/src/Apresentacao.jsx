@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { createLatestRequest } from './latestRequest.js'
 import { recentNews, newsCollectionStale } from './newsWindow.js'
 import { useNewsClock } from './useNewsClock.js'
@@ -257,7 +258,7 @@ function Barras({ pontos, rotulo }) {
   const max = Math.max(...pontos.map((p) => Math.abs(p.v)), 1)
   const iw = W - M.l - M.r, ih = H - M.t - M.b, zero = M.t + ih / 2, bw = iw / pontos.length
   return (
-    <svg className="apr-barras" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={rotulo} preserveAspectRatio="none">
+    <ChartFullscreen><svg className="apr-barras" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={rotulo} preserveAspectRatio="none">
       <line x1={M.l} x2={W - M.r} y1={zero} y2={zero} stroke="var(--line)" />
       {pontos.map((p, i) => {
         const h = (Math.abs(p.v) / max) * (ih / 2)
@@ -266,7 +267,7 @@ function Barras({ pontos, rotulo }) {
           <text x={M.l + i * bw + bw / 2} y={H - 7} textAnchor="middle" fontSize="11" fill="var(--mut)">{p.rotulo}</text>
         </g>
       })}
-    </svg>
+    </svg></ChartFullscreen>
   )
 }
 
