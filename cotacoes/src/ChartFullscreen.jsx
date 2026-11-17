@@ -4,7 +4,7 @@ import './ChartFullscreen.css'
 
 // O host do portal permanece o mesmo ao mudar de lugar. Não remonta o gráfico,
 // preservando filtros, seleções e tooltips. O dialog nativo isola foco e fundo.
-export default function ChartFullscreen({ children, disabled = false }) {
+export default function ChartFullscreen({ children, disabled = false, compact = false }) {
   const [expanded, setExpanded] = useState(false)
   const [host] = useState(() => typeof document === 'undefined' ? null : document.createElement('div'))
   const inline = useRef(null), dialog = useRef(null), button = useRef(null)
@@ -32,11 +32,11 @@ export default function ChartFullscreen({ children, disabled = false }) {
   if (disabled || !host) return children
   const keepEscapeInside = event => { if (expanded && event.key === 'Escape') event.stopPropagation() }
   const content = <>
-    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'}</button></div>
+    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" aria-label={expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : compact ? '⛶' : 'Maximizar gráfico'}</button></div>
     <div className="chart-fullscreen-content" onKeyDown={keepEscapeInside}>{children}</div>
   </>
   return <>
-    <div ref={inline} className="chart-fullscreen" />
+    <div ref={inline} className={'chart-fullscreen' + (compact ? ' chart-fullscreen-compact' : '')} />
     <dialog ref={dialog} className="chart-fullscreen is-expanded" aria-label="Gráfico maximizado" onCancel={event => { event.preventDefault(); event.stopPropagation(); setExpanded(false) }} onKeyDown={event => {
       // O alvo trata primeiro Escape (por exemplo, limpa a seleção). Não o
       // cancelamos aqui: sem seleção, o navegador dispara cancel no dialog.

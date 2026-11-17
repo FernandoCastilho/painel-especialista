@@ -87,9 +87,32 @@ const intraday={generatedAt:instant.getTime(),series:Object.fromEntries(['USD','
     assert.ok(layout.visible&&layout.scrollHeight<=layout.clientHeight+1&&layout.top>=0&&layout.bottom<=viewport.height,
      size+' exibe cartões, resumo e rodapé sem rolagem: '+JSON.stringify(layout))
     await modal.screenshot({path:out+'/'+size+'-'+theme+'.png'})
+    for(const key of ['brent','cnh']){
+     const control=modal.locator('.mp-'+key).getByRole('button',{name:'Maximizar gráfico',exact:true})
+     await control.click()
+     const maximized=modal.locator('dialog.chart-fullscreen[open]')
+     const rect=await maximized.boundingBox()
+     assert.equal(rect.width,viewport.width);assert.equal(rect.height,viewport.height,'gráfico '+key+' ocupa altura inteira')
+     await p.keyboard.press('Escape')
+     assert.equal(await modal.evaluate(e=>e.open),true)
+    }
    }
    await p.setViewportSize({width,height:900})
   }
+  // Cada miniatura maximiza sem fechar o Panorama e mantém acesso por teclado.
+  const maximize=modal.getByRole('button',{name:'Maximizar gráfico',exact:true}).first()
+  await modal.getByRole('button',{name:'Fechar panorama'}).focus()
+  await p.keyboard.press('Tab')
+  assert.equal(await maximize.evaluate(e=>e===document.activeElement),true,'Tab alcança maximização')
+  await maximize.click()
+  const expanded=modal.locator('dialog.chart-fullscreen[open]')
+  await expanded.waitFor()
+  const full=await expanded.boundingBox()
+  assert.equal(full.width,width);assert.equal(full.height,900)
+  await p.keyboard.press('Escape')
+  assert.equal(await expanded.count(),0)
+  assert.equal(await modal.evaluate(e=>e.open),true,'restaurar não fecha Panorama')
+  assert.equal(await maximize.evaluate(e=>e===document.activeElement),true,'foco volta à miniatura')
   // O botão permanece alcançável após rolar, com alvo de pelo menos 44px.
   await modal.evaluate(e=>e.scrollTop=e.scrollHeight)
   const box=await modal.getByRole('button',{name:'Fechar panorama'}).boundingBox()
