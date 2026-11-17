@@ -21,7 +21,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         await p.route('**/curves.json*', (r) => r.fulfill({ json: curves }))
         await p.goto(base + '/#juros')
         // 1) barras da variação do cupom: crescem do zero em cascata curta, cada uma < 1 s, sem loop
-        await p.locator('.curve-table', { hasText: 'Brasil · Cupom cambial' }).getByRole('button', { name: /1 ano: abrir gráfico da curva/ }).click() // a leitura do cupom fica na tela da curva
+        await p.getByRole('button', { name: 'Ampliar gráfico: Cupom cambial', exact: true }).click() // a leitura do cupom fica na tela da curva
         const s = p.locator('.cupom-leitura'); await s.waitFor(); await s.scrollIntoViewIfNeeded()
         await s.getByRole('button', { name: 'Variação por vértice' }).click()
         const bars = s.locator('.cl-bar-track i'); await bars.first().waitFor()
@@ -35,7 +35,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         // valores já no final, sem contagem
         assert.match(await s.locator('.cl-bar-val').first().innerText(), /bps$/)
         // balão do "?": surge curto (< 0,2 s); com reduzir movimento, aparece direto
-        await p.getByRole('button', { name: /^O que é: Curvas de comparação/ }).click()
+        await p.locator('dialog.is-modal').getByRole('button', { name: /^O que é: Curvas de comparação/ }).click()
         const tip = p.locator('[role=tooltip]').filter({ hasText: 'Curvas de comparação' }).first(); await tip.waitFor()
         const ta = (await anims(tip)).find((a) => a.name === 'pop-in')
         if (calm) assert.ok(!ta, 'reduzir movimento: balão sem animação')
@@ -44,7 +44,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         await p.getByRole('button', { name: 'Fechar detalhes' }).click(); await p.locator('dialog.is-modal').waitFor({ state: 'detached' })
         if (width < 700) {
           // celular: balão do "?" de um gráfico de juros fica na frente do que vem abaixo (nada o cobre)
-          const ajudas = p.locator('.juros-grafico .chart h3 .help > button'); await ajudas.first().waitFor()
+          const ajudas = p.locator('.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"]) .chart h3 .help > button'); await ajudas.first().waitFor()
           await ajudas.nth(2).scrollIntoViewIfNeeded(); await ajudas.nth(2).click()
           const pop = p.locator('.pop').first(); await pop.waitFor(); await p.waitForTimeout(250)
           const bb = await pop.boundingBox()

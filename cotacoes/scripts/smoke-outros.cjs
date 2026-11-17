@@ -104,19 +104,22 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       // Juros de referência voltaram ao formato de gráfico (pedido de 17/11/2026); a Selic meta saiu da aba.
       await p.goto(base + '/#juros'); await p.locator('.juros-grafico .chart h3').first().waitFor()
       await p.locator('.juros-grafico .chart h3', { hasText: '€STR' }).waitFor() // o arquivo simulado chega depois da primeira renderização
-      const titulos = (await p.locator('.juros-grafico .chart h3').allInnerTexts()).map((t) => t.replace(/\s+/g, ' '))
+      // indicadores de referência: os seis gráficos de série no tempo (CDI futuro e curvas são conferidos no smoke-cupom)
+      const REF = '.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"])'
+      const titulos = (await p.locator(`${REF} .chart h3`).allInnerTexts()).map((t) => t.replace(/\s+/g, ' '))
       const n = titulos.length
       assert.equal(n, 6, `CDI, SOFR, Fed, €STR, BCE e BoJ em gráfico (${titulos.join(' | ')})`)
+      assert.equal(await p.locator('main table').count(), 0, 'nenhuma tabela na página de Juros')
       for (const rot of ['Brasil · CDI', 'SOFR', 'Fed (faixa-alvo)', '€STR', 'BCE (depósito)', 'Japão']) assert.ok(titulos.some((t) => t.includes(rot)), `gráfico de ${rot}`)
       assert.doesNotMatch(await p.locator('main').innerText(), /Selic meta/i, 'Selic meta fora da aba Juros')
       assert.equal(await p.getByRole('button', { name: /Ampliar gráfico: Selic/ }).count(), 0)
-      assert.equal(await p.locator('.juros-grafico .chart h3 .flag').count(), n, 'bandeira em cada gráfico')
-      assert.equal(await p.locator('.juros-grafico .plot svg[role=img]').count(), n, 'um gráfico por indicador na página')
+      assert.equal(await p.locator(`${REF} .chart h3 .flag`).count(), n, 'bandeira em cada gráfico')
+      assert.equal(await p.locator(`${REF} .plot svg[role=img]`).count(), n, 'um gráfico por indicador na página')
       // tooltips: todo gráfico tem o "?" e o balão abre inteiro
-      const helps = p.locator('.juros-grafico .chart h3 .help button')
+      const helps = p.locator(`${REF} .chart h3 .help button`)
       assert.equal(await helps.count(), n, 'tooltip em cada gráfico')
       for (const [rot, rx] of [['Brasil · CDI', /B3 calcula a média/], ['SOFR', /mediana, ponderada pelo volume/], ['Fed', /faixa/], ['€STR', /sem os 25% menores/], ['BCE (depósito)', /piso do juro/], ['Japão', /Banco do Japão/]]) {
-        const btn = p.locator('.juros-grafico .chart h3', { hasText: rot }).first().locator('.help button')
+        const btn = p.locator(`${REF} .chart h3`, { hasText: rot }).first().locator('.help button')
         await btn.scrollIntoViewIfNeeded()
         // A folha móvel abre por acionamento explícito; hover é o contrato desktop.
         if (width <= 560) await btn.click()
@@ -133,7 +136,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       }
       const corpo = await p.locator('main').innerText()
       assert.doesNotMatch(corpo, /Reino Unido|Bank Rate|Bank of England|BoE/, 'sem Reino Unido em Juros')
-      assert.match(await p.locator('#juros-ref-exterior').innerText(), /Área do euro · BCE[\s\S]*Japão/)
+      assert.match(await p.locator('section[aria-labelledby="juros-exterior"]').innerText(), /Área do euro · BCE[\s\S]*Japão/)
       // cada gráfico amplia no centro da tela, com período, leitura e comparação por datas fixas
       const abrir = async (botao, titulo) => {
         await p.getByRole('button', { name: botao, exact: true }).click()
@@ -156,11 +159,12 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const fed = await abrir('Ampliar gráfico: Fed (faixa-alvo)', 'EUA · Fed (faixa-alvo)')
       await fed.locator('.plot svg').first().waitFor(); await fechar(fed)
       const bce = await abrir('Ampliar gráfico: BCE (depósito)', 'Área do euro · BCE (depósito)'); await fechar(bce)
-      // curva do euro: números na tabela e gráfico em tela própria
-      const tabEuro = p.locator('.curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
+      // curva do euro: gráfico na página; no detalhe, o gráfico e, abaixo, a tabela com uma coluna por data de comparação
+      await p.locator('#juros-curva-eu .plot svg').first().waitFor()
+      await p.getByRole('button', { name: 'Ampliar gráfico: Curva do euro', exact: true }).click()
+      const tabEuro = p.locator('dialog.is-modal .curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
       assert.equal(await tabEuro.locator('h2 .flag').count(), 1, 'bandeira da zona do euro na tabela da curva')
       assert.equal(await tabEuro.locator('thead th').count(), 1 + 3, 'uma coluna por data de comparação')
-      await tabEuro.locator('tbody tr').first().click()
       const curvaEuro = p.locator('dialog.is-modal .chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })
       await curvaEuro.waitFor()
       assert.ok(await curvaEuro.locator('h3 .flag').count() === 1, 'bandeira da zona do euro na curva')
