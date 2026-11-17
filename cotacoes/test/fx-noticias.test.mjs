@@ -29,6 +29,8 @@ test('escolhe só manchetes do dia, sobre o dólar, sem repetir, movimento prime
     item('Dólar fecha em alta de 1% com tensão fiscal', '2026-10-15T20:31:00Z'),
     item('Dólar cai no dia seguinte', '2026-10-16T14:00:00Z'),
     item('Empresa transfere bilhões de dólares em ações', '2026-10-15T16:00:00Z'),
+    item('Açúcar recua em Nova York com pressão do câmbio', '2026-10-15T16:10:00Z'),
+    item('Ouro cai com valorização do dólar', '2026-10-15T16:20:00Z'),
     { title: 'Dólar sem link', link: '', t: T('2026-10-15T15:00:00Z') },
   ]
   const out = escolherDoDia(itens, '2026-10-15', 'USD')
