@@ -14,12 +14,12 @@ perguntas da visita) foi removida. A aba agora aparece no menu.
 ## O que pode virar slide
 | Seção | Blocos |
 |---|---|
-| Mercado | indicadores do dia (com Selic, CDI e DI), tabela de câmbio, gráfico de cada moeda, comparação entre moedas |
+| Mercado | indicadores do dia (com Selic, CDI e DI), tabela de câmbio, gráfico de cada moeda, comparação entre moedas, Panorama do dia, veículos pesados |
 | Juros | CDI, CDI futuro, DI x pré, cupom cambial, SOFR, Fed, €STR, BCE, Japão, Treasuries, curva do euro |
 | Cenários | Focus e bancos, histórico do Focus (geral e por indicador), agenda da semana, inadimplência, recuperação judicial (números, estado, setor), atividade e emprego, indexadores, IPCA, IPCA por grupos, fatores da inflação, dívida pública, commodities (tabelas e gráfico de cada referência), combustíveis, frete |
 | Notícias | por tema: mercado e moedas, tributos e trabalho, setores e insumos; a lista "Escolher notícias" tira manchetes |
 | BNDES | resumo do dia, tabelas TFB, TLP, TFC (em dois slides) e moedas, histórico de 12 meses das quatro referências |
-| Setores | por estudo: resumo executivo, cadeia de valor, indicadores e perguntas; por insumo: o que move o preço |
+| Setores | por setor: leitura executiva; por estudo: resumo executivo, cadeia de valor, indicadores e perguntas; por insumo: o que move o preço |
 | Bancos | tabela comparativa e histórico de quatro indicadores |
 | Feriados | próximos três meses com feriado |
 | Calculadoras | as 12 calculadoras, em dois modos: **Resultado** (números principais) e **Dados** (campos) |
@@ -46,12 +46,12 @@ Aprender e Configurações ficam de fora.
   para o Focus e para os indicadores dos bancos.
 - Calculadoras sem valores iniciais abrem no modo Dados, com rolagem dentro do slide.
 
-## Ficou de fora desta entrega
-- Panorama do dia, buscas do Google (Trends) e o quadro de veículos pesados da aba Mercado. Os dois últimos têm
-  rolagem própria ou conteúdo de terceiros e não cabem bem num slide; veículos pesados entra como tema de notícias.
-- Destaques e pautas da Central de setores (só os estudos e os insumos viram slide).
-- Quando o mesmo quadro aparece em mais de um slide, os identificadores internos se repetem na página. O efeito é só
-  para leitor de tela (pode anunciar o título do primeiro). Correção fica para um ajuste próprio nas peças de origem.
+## Ficou de fora
+- Buscas do Google (Trends): o gráfico é carregado direto do Google, o painel não confirma o conteúdo e ele não cabe
+  bem num slide.
+- Pautas editoriais da Central de setores (são roteiro de pesquisa, não conteúdo para cliente).
+- Finame e 4131 usam os mesmos identificadores internos; se os dois estiverem na mesma apresentação, um leitor de tela
+  pode anunciar o título do primeiro. Os demais slides têm identificadores próprios (`apresentarIds.js`).
 
 ## Revisão independente (17/11/2026)
 Leitura do código por revisor sem o histórico da montagem. Um ponto importante, corrigido: com uma janela de detalhe

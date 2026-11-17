@@ -30,7 +30,8 @@ function QuoteCard({ item, daily=false }) {
 function MarketHeading({ slot }) {
   return <div className="mp-title-row"><span className="mp-chart-icon" aria-hidden="true"><i/><i/><i/></span><div><h2 id="market-popup-title">Panorama do dia</h2><p>Leitura rápida para decisões de crédito e câmbio</p></div><p className="mp-edition">{slot && <>{new Date(slot.day+'T12:00:00Z').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'})}<br/>{slot.hour!=null?<>Edição das {slot.hour}h · Brasília</>:'Fora do horário das edições · últimos dados'}</>}</p></div>
 }
-function Panorama({ slot, quotes, curves, oil }) {
+// Exportado para a aba Apresentar, que mostra o mesmo quadro dentro de um slide.
+export function Panorama({ slot, quotes, curves, oil }) {
   const day=fromInput(slot.day)
   const usd=useIntraday('USD',day), eur=useIntraday('EUR',day), cnh=useIntraday('CNH',day)
   const now=Date.now()

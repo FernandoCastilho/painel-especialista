@@ -6,6 +6,7 @@ import { fadeIn } from './motion.js'
 import { PALCO, alternar, alternarVarios, buscarBlocos, contarPorGrupo, dataCapa, dataHora, escala, guardarMontagem, lerMontagem, mover, passoTecla, validos } from './apresentar.js'
 import { BLOCOS, BLOCO_POR_ID, GRUPOS } from './apresentarBlocos.jsx'
 import Ajuste from './ApresentarAjuste.jsx'
+import { isolarIds } from './apresentarIds.js'
 
 // Apresentar: o usuário marca blocos do painel e cada um vira um slide claro, em formato de apresentação.
 // Os slides usam as próprias peças do painel, então os números são os mesmos das outras abas.
@@ -34,13 +35,25 @@ function Capa({ cliente, setor, agora }) {
 
 function Slide({ bloco, ctx, numero, total, cliente, opcoes, onOpcoes, ativo }) {
   const Corpo = bloco.Corpo
+  const corpo = useRef(null)
+  // Identificadores próprios por slide (ver apresentarIds.js). As calculadoras ficam de fora: o visual delas depende dos identificadores originais.
+  useEffect(() => {
+    const el = corpo.current
+    if (!el || bloco.semAjuste) return
+    let quadro = 0
+    const aplicar = () => isolarIds(el, `${bloco.id}--`)
+    aplicar()
+    const mo = new MutationObserver(() => { cancelAnimationFrame(quadro); quadro = requestAnimationFrame(aplicar) })
+    mo.observe(el, { childList: true, subtree: true })
+    return () => { mo.disconnect(); cancelAnimationFrame(quadro) }
+  }, [bloco.id, bloco.semAjuste])
   return (
     <article className={`sl sl-g-${bloco.grupo}${bloco.classe ? ` ${bloco.classe}` : ''}`}>
       <header className="sl-topo">
         <p className="sl-secao">{GRUPOS.find((g) => g.id === bloco.grupo)?.label}</p>
         <h2>{bloco.titulo ?? bloco.label}</h2>
       </header>
-      <div className="sl-corpo">
+      <div className="sl-corpo" ref={corpo}>
         <QuadroSeguro>
           <Suspense fallback={<p className="sl-aviso" role="status">Carregando…</p>}>
             {bloco.semAjuste ? <Corpo ctx={ctx} opcoes={opcoes} onOpcoes={onOpcoes} ativo={ativo} /> : <Ajuste min={bloco.zoomMin} max={bloco.zoomMax}><Corpo ctx={ctx} opcoes={opcoes} onOpcoes={onOpcoes} ativo={ativo} /></Ajuste>}

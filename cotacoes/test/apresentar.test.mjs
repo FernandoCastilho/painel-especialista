@@ -69,7 +69,7 @@ test('apresentar: a montagem fica só na memória da página, nunca no armazenam
   const m = { cliente: 'Empresa de teste', setor: 'Madeira', sel: ['juros-cdi'], opcoes: {} }
   guardarMontagem(m)
   assert.equal(lerMontagem(), m)
-  for (const f of ['apresentar.js', 'Apresentar.jsx', 'apresentarBlocos.jsx', 'apresentarNoticias.jsx', 'apresentarSetores.jsx', 'ApresentarCalculadora.jsx', 'ApresentarAjuste.jsx']) {
+  for (const f of ['apresentar.js', 'Apresentar.jsx', 'apresentarBlocos.jsx', 'apresentarNoticias.jsx', 'apresentarSetores.jsx', 'ApresentarCalculadora.jsx', 'ApresentarAjuste.jsx', 'apresentarIds.js']) {
     assert.doesNotMatch(src(f), /localStorage|sessionStorage|indexedDB|document\.cookie/, `${f}: a montagem (e o nome do cliente) não pode ser gravada`)
     assert.doesNotMatch(src(f), /\bfetch\(/, `${f}: a aba só lê os arquivos de dados do próprio painel`)
   }

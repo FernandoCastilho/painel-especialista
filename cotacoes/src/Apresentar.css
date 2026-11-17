@@ -110,7 +110,7 @@
 .sl-corpo .ctx-head, .sl-corpo .history-head { min-height: 0; margin: 0 0 4px; justify-content: flex-end; }
 
 /* Cenários */
-.sl-corpo #focus-hist-title, .sl-corpo .focus-hist > p.muted + p.muted { display: none; }
+.sl-corpo [id$="focus-hist-title"], .sl-corpo .focus-hist > p.muted + p.muted { display: none; }
 .sl-corpo .focus-hist-grade:has(> :only-child) { grid-template-columns: 1fr; }
 .sl-calendario .cal-filters, .sl-calendario .cal-row .help { display: none; }
 .sl-inadimplencia .credit-controls, .sl-inadimplencia .credit-panel > details ~ p.muted { display: none; }
@@ -120,8 +120,8 @@
 .sl-rj-uf .rj-viz-grid, .sl-rj-setor .rj-viz-grid { grid-template-columns: 1fr; }
 .sl-rj-uf .rj-viz-grid > .rj-card:nth-child(2), .sl-rj-setor .rj-viz-grid > .rj-card:nth-child(1) { display: none; }
 .sl-pesos .infl > h3:first-child, .sl-pesos .infl-hint { display: none; }
-.sl-pesos-grupos #infl-fatores, .sl-pesos-grupos .infl-wrap:has(.infl-factors) { display: none; }
-.sl-pesos-fatores .infl-summary, .sl-pesos-fatores #infl-fatores, .sl-pesos-fatores .infl-wrap:not(:has(.infl-factors)) { display: none; }
+.sl-pesos-grupos [id$="infl-fatores"], .sl-pesos-grupos .infl-wrap:has(.infl-factors) { display: none; }
+.sl-pesos-fatores .infl-summary, .sl-pesos-fatores [id$="infl-fatores"], .sl-pesos-fatores .infl-wrap:not(:has(.infl-factors)) { display: none; }
 
 /* Notícias */
 .sl-noticias ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
@@ -210,3 +210,13 @@
 /* Áreas com rolagem própria (tabelas largas) se abrem no slide: assim o ajuste enxerga a largura real e reduz até caber. */
 .sl-miolo [role="region"], .sl-miolo .scroll { overflow: visible !important; max-height: none !important; }
 .sl-corpo .kpi.kpi-taxa { display: grid; } /* no slide, os juros entram como cartões (no painel eles ficam na faixa do topo) */
+
+/* Veículos pesados e Panorama do dia dentro do slide */
+.sl-veiculos .heavy-vehicles { margin: 0; }
+.sl-veiculos .heavy-vehicles > h3, .sl-veiculos .heavy-vehicles > p:has(a), .sl-veiculos .heavy-vehicles > small, .sl-veiculos .heavy-vehicles > a { display: none; }
+.sl-veiculos .heavy-segments { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.sl-panorama .market-popup { position: static; display: block; width: auto; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; color: inherit; overflow: visible; }
+.sl-leitura dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0 0; }
+.sl-leitura dl > div { padding: 14px 16px; border: 1px solid #d9dde3; border-left: 4px solid var(--blue); border-radius: 8px; }
+.sl-leitura dt { color: var(--blue); font-size: .8em; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.sl-leitura dd { margin: 0; line-height: 1.45; }

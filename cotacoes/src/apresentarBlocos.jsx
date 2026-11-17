@@ -6,6 +6,9 @@ import { normalizeIpca } from './ipca.js'
 import { KpiRow } from './TerminalDesk.jsx'
 import HistoryChart from './HistoryChart.jsx'
 import { CambioTabela, ResumoChart, SPARK, useCambio } from './Resumo.jsx'
+import HeavyVehicles from './HeavyVehicles.jsx'
+import { Panorama } from './MarketPopup.jsx'
+import { marketMoment } from './marketPopup.js'
 import { CdiChart, rangeFor } from './Macro.jsx'
 import SofrChart from './Sofr.jsx'
 import CdiFuturo from './CdiFuturo.jsx'
@@ -77,11 +80,20 @@ function CompararMoedas({ ctx }) {
   const [sel, setSel] = useState(['USD', 'EUR'])
   return <ResumoChart comparison colors={ctx.colors} spark={SPARK.find((s) => s.id === 'year')} selection={sel} onSelection={setSel} onPrevious={nada} />
 }
+// Panorama do dia: câmbio, juros futuros, Brent e "O que mudou", como no botão Panorama da aba Mercado.
+function PanoramaSlide({ ctx }) {
+  const oil = useDataFile('oil.json')
+  const [momento] = useState(() => marketMoment())
+  if (!momento) return <Aviso>O Panorama do dia não tem edição disponível neste momento.</Aviso>
+  return <div className="market-popup"><Panorama slot={momento} quotes={ctx.quotes} curves={ctx.curves?.data} oil={oil.data} /></div>
+}
 const MERCADO = [
   { id: 'mercado-cartoes', label: 'Indicadores do dia', dica: 'Dólar, euro, IPCA, Ibovespa, Selic, CDI e DI', titulo: 'Mercado hoje', fonte: 'coleta central do painel, Banco Central, IBGE e B3', Corpo: CartoesMercado },
   { id: 'mercado-cambio', label: 'Tabela de câmbio', dica: 'Cotação, variação do dia, mês, ano e PTAX', titulo: 'Câmbio em reais', fonte: 'coleta central do painel (AwesomeAPI) e PTAX do Banco Central', Corpo: TabelaCambio },
   moeda('USD', 'Dólar'), moeda('EUR', 'Euro'), moeda('JPY', 'Iene'), moeda('CNH', 'Yuan'),
   { id: 'mercado-comparar', sub: 'Gráfico de cada moeda', label: 'Comparação entre moedas', dica: 'Variação em % no último ano', titulo: 'Moedas comparadas · último ano', fonte: 'coleta central do painel (AwesomeAPI)', Corpo: CompararMoedas },
+  { id: 'mercado-panorama', sub: 'Outros quadros do Mercado', label: 'Panorama do dia', dica: 'Câmbio, juros futuros, Brent e o que mudou', titulo: 'Panorama do dia', fonte: 'coleta central do painel, B3 e EIA', classe: 'sl-panorama', Corpo: PanoramaSlide },
+  { id: 'mercado-veiculos-pesados', sub: 'Outros quadros do Mercado', label: 'Veículos pesados', dica: 'Caminhões e ônibus: emplacamento, produção e exportação', titulo: 'Veículos pesados · caminhões e ônibus', fonte: 'ANFAVEA', classe: 'sl-veiculos', Corpo: () => <HeavyVehicles /> },
 ].map((b) => ({ ...b, grupo: 'mercado' }))
 
 // Juros: os mesmos gráficos da aba Juros, com o último ano.

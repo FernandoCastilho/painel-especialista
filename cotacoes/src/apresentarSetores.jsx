@@ -3,6 +3,7 @@ import { useDataFile } from './useDataFile.js'
 import { validSectorStudy } from './sectorStudySchema.js'
 import { CATALOGO_SETORIAL } from './centralSetorial.js'
 import { INSUMOS } from './insumos.js'
+import { SECTOR_HIGHLIGHTS } from './sectorHighlights.js'
 import { ResearchChart } from './ResearchedSectorStudy.jsx'
 import SectorValueChain from './SectorValueChain.jsx'
 import disponiveis from './sectorStudies/catalog.generated.json'
@@ -43,6 +44,13 @@ const BLOCOS_ESTUDOS = ESTUDOS.flatMap((e) => PARTES.map(([parte, nome]) => ({
   Corpo: () => <Estudo grupoId={e.grupo.id} topico={e.i} parte={parte} />,
 })))
 
+// Leitura executiva do setor (a síntese que abre cada setor na Central de setores).
+const idLeitura = (grupoId) => `setores-leitura-${grupoId}`
+const BLOCOS_LEITURA = CATALOGO_SETORIAL.filter((g) => SECTOR_HIGHLIGHTS[g.id]).map((g) => ({
+  id: idLeitura(g.id), grupo: 'setores', oculto: true, label: `${g.label} · Leitura executiva`, titulo: `${g.label} · o essencial`, fonte: 'síntese analítica da Central de setores do painel', classe: 'sl-leitura', zoomMax: 1.8,
+  Corpo: () => { const h = SECTOR_HIGHLIGHTS[g.id]; return <div className="sl-estudo"><p className="sl-estudo-destaque">{h.summary}</p><dl><div><dt>O que acompanhar</dt><dd>{h.drivers}</dd></div><div><dt>Ponto de atenção</dt><dd>{h.attention}</dd></div></dl></div> },
+}))
+
 // Escolha do estudo: setor, recorte e os slides daquele recorte.
 export function SeletorEstudos({ sel, onSel }) {
   const grupos = CATALOGO_SETORIAL.filter((g) => ESTUDOS.some((e) => e.grupo.id === g.id))
@@ -58,6 +66,12 @@ export function SeletorEstudos({ sel, onSel }) {
           {grupos.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
         </select>
       </label>
+      {SECTOR_HIGHLIGHTS[grupoId] && (
+        <label className="apz-opcao">
+          <input type="checkbox" checked={sel.includes(idLeitura(grupoId))} onChange={() => onSel(alternar(sel, idLeitura(grupoId)))} />
+          <span>Leitura executiva do setor<small>O essencial, o que acompanhar e o ponto de atenção</small></span>
+        </label>
+      )}
       <label>Recorte do estudo
         <select value={atual.chave} onChange={(e) => setChave(e.target.value)}>
           {recortes.map((e) => <option key={e.chave} value={e.chave}>{e.nome}</option>)}
@@ -81,4 +95,4 @@ const BLOCOS_INSUMOS = INSUMOS.filter((i) => i.move?.length).map((i) => ({
   Corpo: () => <ul className="sl-lista">{i.move.map((texto) => <li key={texto}>{texto}</li>)}</ul>,
 }))
 
-export const SETORES = [...BLOCOS_ESTUDOS, ...BLOCOS_INSUMOS]
+export const SETORES = [...BLOCOS_LEITURA, ...BLOCOS_ESTUDOS, ...BLOCOS_INSUMOS]

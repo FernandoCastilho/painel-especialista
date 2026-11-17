@@ -172,6 +172,21 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await palco2.waitFor({ state: 'detached' })
       // saindo, o foco volta para a miniatura do slide mostrado
       assert.match(await p.evaluate(() => document.activeElement?.getAttribute('aria-label') || ''), /Apresentar a partir do slide 6/)
+      // a mesma peça em dois slides (IPCA e IPCA por grupos): cada quadro continua ligado ao título do próprio slide
+      await marcar(await grupo('Cenários'), /^IPCA por grupos/)
+      await p.waitForTimeout(400)
+      const ligacoes = await p.evaluate(() => {
+        const refs = [...document.querySelectorAll('.apz-item [aria-labelledby]')].map((el) => ({ el, id: el.getAttribute('aria-labelledby').split(/\s+/)[0] }))
+        const achar = (base, id) => base.querySelectorAll(`[id="${CSS.escape(id)}"]`).length
+        return { total: refs.length, repetidos: refs.filter((r) => achar(document, r.id) > 1).map((r) => r.id), fora: refs.filter((r) => achar(document, r.id) === 1 && !achar(r.el.closest('.apz-item'), r.id)).map((r) => r.id) }
+      })
+      assert.ok(ligacoes.total > 2)
+      assert.deepEqual(ligacoes.repetidos, [], 'identificador repetido entre slides')
+      assert.deepEqual(ligacoes.fora, [], 'quadro ligado a título de outro slide')
+      // leitura executiva do setor entra pela escolha do setor
+      const setores = await grupo('Setores')
+      await setores.locator('.apz-opcao', { hasText: 'Leitura executiva do setor' }).locator('input').check()
+      assert.match(await p.locator('.apz-item').last().innerText(), /O QUE ACOMPANHAR|O que acompanhar/)
       // limpar tudo apaga cliente, setor e slides; fica só a capa
       await p.getByRole('button', { name: 'Limpar tudo' }).click()
       assert.equal(await p.locator('.apz-item').count(), 1)
