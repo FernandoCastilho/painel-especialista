@@ -41,7 +41,7 @@ const CALCS = [
 ]
 
 // Aba Calculadoras: lista de calculadoras (ícones) e a calculadora aberta, com endereço próprio (#calculadora/giro).
-export default function Calculadora({ view, onView, quotes }) {
+export default function Calculadora({ view, onView, quotes, apresentacao = false }) {
   if (view === 'cbs-caixa') return <CbsCaixa onBack={() => onView('')} />
   if (view === 'bndes-tlp-exigivel') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'bndes-credito-tfb') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
@@ -51,7 +51,7 @@ export default function Calculadora({ view, onView, quotes }) {
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
   if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} />
-  if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} />
+  if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
   if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />

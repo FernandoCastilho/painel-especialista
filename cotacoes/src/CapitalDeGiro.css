@@ -195,6 +195,9 @@ main.app-calculators:has(> .giro-screen) { background: #fff; }
 .giro-rounding { margin: 0 12px; color: var(--giro-muted); font-size: .82rem; }
 .giro-comparison { margin: 4px 12px 8px; }
 
+.sl-calc-giro .giro-columns { grid-template-columns: minmax(0, 1fr); }
+.sl-calc-giro :is(.giro-back, .giro-header, .giro-simulate, .giro-installments) { display: none; }
+
 @media (max-width: 870px) {
   .giro-columns { grid-template-columns: minmax(0, 1fr); gap: 13px; }
 }

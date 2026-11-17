@@ -126,11 +126,11 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.equal(await modos.getByRole('button', { name: 'Resultado' }).getAttribute('aria-pressed'), 'true')
       const antes = await atual.locator('.calc-result-shell').innerText()
       assert.match(antes, /R\$\s[\d.]+,\d\d/)
-      assert.equal(await atual.locator('.cx-form:visible').count(), 0) // no modo Resultado os campos saem
+      assert.equal(await atual.locator('.giro-form:visible').count(), 0) // no modo Resultado os campos saem
       await modos.getByRole('button', { name: 'Dados' }).click()
-      await atual.locator('.cx-form').waitFor()
+      await atual.locator('.giro-form').waitFor()
       assert.equal(await atual.locator('.calc-result-shell:visible').count(), 0)
-      const valor = atual.locator('.cx-form input').first()
+      const valor = atual.getByLabel('Valor solicitado', { exact: true })
       await valor.fill('250.000,00'); await valor.blur()
       // dentro de um campo, as setas e o espaço são do campo: o slide não troca
       await valor.focus(); await p.keyboard.press('ArrowLeft')

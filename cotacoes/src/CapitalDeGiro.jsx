@@ -31,7 +31,7 @@ function Field({ id, label, issue, children }) {
   </div>
 }
 
-export default function CapitalDeGiro({ onBack }) {
+export default function CapitalDeGiro({ onBack, apresentacao }) {
   const [form, setForm] = useState(() => {
     const start = cgToday()
     return { value: '100.000,00', n: '12', rate: '2,00', unit: 'am', system: 'price',
@@ -41,7 +41,7 @@ export default function CapitalDeGiro({ onBack }) {
   const [dirty, setDirty] = useState(false)
   const change = patch => {
     setForm(previous => ({ ...previous, ...patch }))
-    setDirty(true)
+    if (!apresentacao) setDirty(true)
   }
   const bind = key => ({ value: form[key], onChange: event => change({ [key]: event.target.value }) })
   const principal = parseMoneyInput(form.value)
@@ -183,7 +183,7 @@ export default function CapitalDeGiro({ onBack }) {
         <button className="giro-simulate" type="submit">Simular</button>
       </form>
 
-      <aside className="giro-result" aria-labelledby="giro-result-title" aria-live="polite">
+      <aside className="giro-result calc-result-shell" aria-labelledby="giro-result-title" aria-live="polite">
         <h3 id="giro-result-title">Resultado da simulação</h3>
         <p>Valor líquido liberado<strong>{moneyText(result?.net)}</strong></p>
         <dl>
