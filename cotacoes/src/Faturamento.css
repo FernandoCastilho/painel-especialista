@@ -1,0 +1,50 @@
+/* Calculadora Faturamento: gráfico de barras (faturamento) e linha (endividamento) com seleção de período. */
+.ft {
+  --ft-bar: #000d3c;
+  --ft-bar-fg: #fff;
+  --ft-debt: #c2410c;
+  --ft-debt-fg: #fff;
+  --ft-sel: rgba(255, 176, 0, .28);
+  --ft-prev: rgba(91, 120, 232, .16);
+}
+:root:not([data-theme="light"]) .ft { --ft-bar: #5b78e8; --ft-bar-fg: #000d3c; --ft-debt: #ff7a2e; --ft-debt-fg: #000d3c; }
+.ft-input { display: grid; gap: 8px; padding: 16px; }
+.ft-input label { font-weight: 600; }
+.ft-input textarea { width: 100%; min-height: 160px; padding: 10px; font: .875rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: vertical; box-sizing: border-box; }
+.ft-actions, .ft-range { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.ft-actions button, .ft-range button { min-height: 40px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--cx-line-strong, #77725f); background: transparent; color: inherit; cursor: pointer; }
+.ft-range { margin: 12px 0; }
+.ft-range label { display: flex; gap: 6px; align-items: center; }
+.ft-range select { min-height: 40px; padding: 6px 8px; }
+.ft-avisos { margin: 0; padding-left: 18px; color: var(--down, #d33); font-size: .8125rem; }
+.ft-avisos code { opacity: .8; }
+.ft-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: .8125rem; margin-bottom: 8px; }
+.ft-legend span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: -8px; vertical-align: middle; }
+.ft-key-f { background: var(--ft-bar); }
+.ft-key-d { background: var(--ft-debt); }
+.ft-key-sel { background: var(--ft-sel); border-radius: 3px !important; outline: 1px solid #ffb000; }
+.ft-key-prev { background: var(--ft-prev); border-radius: 3px !important; outline: 1px dashed #5b78e8; }
+.ft-chart-wrap { max-width: 100%; overflow-x: auto; }
+.ft-chart { display: block; width: 100%; min-width: 640px; height: auto; user-select: none; touch-action: pan-y; cursor: pointer; }
+.ft-chart text { font: 600 11px system-ui, sans-serif; text-anchor: middle; }
+.ft-band-sel { fill: var(--ft-sel); stroke: #ffb000; stroke-width: 1; }
+.ft-band-prev { fill: var(--ft-prev); stroke: #5b78e8; stroke-width: 1; stroke-dasharray: 4 3; }
+.ft-axis { stroke: currentColor; opacity: .25; }
+.ft-area { fill: var(--ft-debt); opacity: .1; }
+.ft-bar { fill: var(--ft-bar); }
+.ft-line { fill: none; stroke: var(--ft-debt); stroke-width: 2; }
+.ft-dot { fill: var(--ft-debt); }
+.ft-tag-f { fill: var(--ft-bar); }
+.ft-tag-ft { fill: var(--ft-bar-fg); }
+.ft-tag-d { fill: var(--ft-debt); }
+.ft-tag-dt { fill: var(--ft-debt-fg); }
+.ft-month { fill: currentColor; font-weight: 400 !important; opacity: .8; }
+.ft-compare-title { margin: 4px 0 8px; }
+.ft-table td { text-align: right; white-space: nowrap; }
+.ft-up { color: var(--up, #1a7f37); }
+.ft-down { color: var(--down, #d33); }
+.ft-pad { padding: 4px 0; }
+.ft-years { display: grid; gap: 12px; margin-top: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.ft-year { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--line, #444); border-radius: 10px; }
+.ft-year b { font-size: 1.25rem; }
+.ft-year span { display: flex; justify-content: space-between; gap: 8px; font-size: .875rem; }
