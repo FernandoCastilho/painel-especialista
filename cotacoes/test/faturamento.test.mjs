@@ -62,6 +62,18 @@ test('lê o modelo com título, unidade no cabeçalho e meia-risca como mês sem
   assert.equal(fat.parseFaturamento(fat.EXEMPLO).unidade, 'R$ mil')
 })
 
+test('lê a tabela com barras (| Competência | ... |) e ignora a linha de traços', () => {
+  const texto = `| Competência | Faturamento (R$ mil) | Endividamento (R$ mil) |
+|---|---:|---:|
+| Jan/25 | 350 | 2.235 |
+| Mar/25 | 1.683 | – |
+| Out/26 | 12.839 | 0 |`
+  const { meses, avisos, unidade } = fat.parseFaturamento(texto)
+  assert.deepEqual(avisos, [])
+  assert.equal(unidade, 'R$ mil')
+  assert.deepEqual(meses.map((m) => [m.rotulo, m.faturamento, m.endividamento]), [['jan/25', 350, 2235], ['mar/25', 1683, null], ['out/26', 12839, 0]])
+})
+
 test('gráfico usa série contínua: mês faltando vira posição vazia, sem saltos na marcação', () => {
   const { meses } = fat.parseFaturamento(MODELO)
   const serie = fat.serieContinua(meses)

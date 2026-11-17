@@ -53,7 +53,10 @@ export function parseFaturamento(texto) {
   const porChave = new Map()
   const avisos = []
   linhas.forEach((bruta, i) => {
-    const linha = bruta.trim()
+    // Tabela em formato de texto com barras (| Jan/25 | 350 | 2.235 |): barra vira separador
+    // e a linha de traços (|---|---:|) é ignorada.
+    if (/^\s*\|?[\s:|-]+\|?\s*$/.test(bruta) && bruta.includes('-') && bruta.includes('|')) return
+    const linha = bruta.replace(/\|/g, ' ').trim()
     if (!linha) return
     const m = linha.match(INICIO)
     const mes = m && parseMes(m[1])
