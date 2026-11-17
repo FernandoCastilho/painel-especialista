@@ -59,8 +59,8 @@ const assert = require('node:assert/strict')
  assert.match(await dialog.locator('.chart-access-text[role="status"]').innerText(),/Cotação/)
  await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'})
  await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Juros',exact:true}).click()
- // Juros: a linha da tabela abre o gráfico em tela própria; teclado no gráfico e Escape para fechar
- await page.getByRole('button',{name:'Brasil · CDI overnight: abrir gráfico'}).click()
+ // Juros: o botão Ampliar abre o gráfico no centro da tela; teclado no gráfico e Escape para fechar
+ await page.getByRole('button',{name:'Ampliar gráfico: CDI',exact:true}).click()
  const rateDialog=page.getByRole('dialog',{name:'detalhes: CDI'})
  const cdi=rateDialog.locator('.plot svg[tabindex="0"]').first()
  await cdi.waitFor();await cdi.focus();await page.keyboard.press('End')

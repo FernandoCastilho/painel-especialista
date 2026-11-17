@@ -15,11 +15,11 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       // tela cheia só com "Fechar"; filtros (período e escala) num único bloco acima do gráfico
       assert.deepEqual(await d.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
       assert.equal(await d.locator('.chart-filters').count(), 1)
-      await p.waitForTimeout(600) // cortina da gaveta termina de abrir
+      await p.waitForTimeout(600) // a janela termina de abrir
       const full = await d.boundingBox()
-      // celular: tela inteira; computador (≥ 900 px): gaveta lateral encostada à direita, altura toda
-      const drawerW = width >= 900 ? Math.min(860, width) : width
-      assert.ok(Math.abs(full.width - drawerW) <= 1 && Math.abs(full.x + full.width - width) <= 1 && full.height >= 1099, `detalhe como gaveta (${JSON.stringify(full)})`)
+      // celular: tela inteira; computador (≥ 900 px): janela no centro da tela, ampla mas sem ocupar a tela toda
+      if (width >= 900) assert.ok(Math.abs(full.width - Math.min(1120, width - 64)) <= 1 && Math.abs((full.x + full.width / 2) - width / 2) <= 1 && full.y >= 31 && full.height <= (await p.evaluate(() => innerHeight)) - 63, `detalhe em janela central (${JSON.stringify(full)})`)
+      else assert.ok(Math.abs(full.width - width) <= 1 && full.x <= 1 && full.height >= 1099, `detalhe em tela inteira no celular (${JSON.stringify(full)})`)
       assert.ok((await d.locator('.chart-filters').boundingBox()).y < (await d.locator('.plot svg').first().boundingBox()).y, 'filtros acima do gráfico')
       const svg = d.locator('.plot svg').first()
       await svg.waitFor(); await svg.scrollIntoViewIfNeeded()

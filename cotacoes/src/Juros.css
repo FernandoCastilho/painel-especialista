@@ -9,3 +9,13 @@
 .juros-graph-card :is(svg,.chart) { max-width:100%; }
 .rate-trend { border-left:3px solid var(--accent,#0131ff); padding:8px 12px; margin:12px 0; }
 @media(min-width:1300px){.juros-graph-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+
+/* Indicadores em gráfico: dois por linha no computador; um gráfico sozinho ocupa a linha inteira. */
+.juros-charts { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; margin:0 0 12px; }
+@media (min-width:900px) { .juros-charts { grid-template-columns:repeat(2,minmax(0,1fr)); } .juros-charts:has(> .juros-grafico:only-child) { grid-template-columns:minmax(0,1fr); } }
+.juros-grafico { position:relative; min-width:0; }
+.juros-grafico > .juros-ampliar { display:flex; align-items:center; gap:6px; margin:0 0 6px auto; min-height:36px; padding:4px 12px; border:1px solid var(--line); border-radius:4px; background:var(--card); color:var(--fg); font:600 .78rem/1 system-ui, sans-serif; cursor:pointer; }
+.juros-grafico > .juros-ampliar:hover { border-color:var(--amber, #e5b453); color:var(--amber, #e5b453); }
+.juros-grafico > .juros-ampliar:focus-visible { outline:2px solid var(--amber, #e5b453); outline-offset:2px; }
+.juros-periodo { margin:0 0 4px; }
+@media (max-width:899px) { .juros-grafico > .juros-ampliar { min-height:44px; } }

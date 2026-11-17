@@ -101,18 +101,23 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const euroCurve = { schemaVersion: 1, generatedAt: new Date().toISOString(), curve: { id: 'euro-curve', sourceName: 'BCE (fixture de teste)', sourceUrl: 'https://www.ecb.europa.eu/', checkedAt: new Date().toISOString(), stale: false, sourceDate: datas[0].date, compare: datas,
         curves: Object.fromEntries(datas.map((d, k) => [d.date, prazos.map(([anos, rot], j) => [anos, +(2.5 + j * 0.12 - k * 0.1).toFixed(4), rot])])) } }
       await p.route('**/euro-curve.json*', (r) => r.fulfill({ json: euroCurve }))
-      await p.goto(base + '/#juros'); await p.locator('.executive-rates__table tbody tr').first().waitFor()
-      const linhas = p.locator('.executive-rates__table tbody tr .executive-rates__name')
-      const n = await linhas.count()
-      assert.ok(n >= 7, 'Selic, CDI, SOFR, Fed, €STR, BCE e BoJ')
-      await p.locator('.executive-rates__table tbody tr', { hasText: '€STR' }).filter({ hasText: /\d,\d{3}%/ }).first().waitFor() // o arquivo simulado chega depois da primeira renderização
-      assert.match(await p.locator('.executive-rates__table tbody tr', { hasText: '€STR' }).first().innerText(), /Área do euro · €STR overnight[\s\S]*\d,\d{3}%/)
-      assert.equal(await p.locator('.executive-rates__table tbody tr .executive-rates__name .flag').count(), n, 'bandeira em cada linha')
-      // tooltips: toda linha do quadro tem o "?" e o balão abre inteiro (não cortado pela rolagem da tabela)
-      const helps = p.locator('.executive-rates__table tbody tr .executive-rates__name .help button')
-      assert.equal(await helps.count(), n, 'tooltip em cada linha do quadro')
-      for (const [rot, rx] of [['Selic meta', /meta é definida pelo Copom/], ['CDI overnight', /B3 calcula a média/], ['SOFR overnight', /mediana, ponderada pelo volume/], ['Fed', /faixa/], ['€STR', /sem os 25% menores/], ['BCE', /piso do juro/], ['Japão', /Banco do Japão/]]) {
-        const btn = p.locator('.executive-rates__table tbody tr', { hasText: rot }).first().locator('.help button')
+      // Juros de referência voltaram ao formato de gráfico (pedido de 17/11/2026); a Selic meta saiu da aba.
+      await p.goto(base + '/#juros'); await p.locator('.juros-grafico .chart h3').first().waitFor()
+      await p.locator('.juros-grafico .chart h3', { hasText: '€STR' }).waitFor() // o arquivo simulado chega depois da primeira renderização
+      const titulos = (await p.locator('.juros-grafico .chart h3').allInnerTexts()).map((t) => t.replace(/\s+/g, ' '))
+      const n = titulos.length
+      assert.equal(n, 6, `CDI, SOFR, Fed, €STR, BCE e BoJ em gráfico (${titulos.join(' | ')})`)
+      for (const rot of ['Brasil · CDI', 'SOFR', 'Fed (faixa-alvo)', '€STR', 'BCE (depósito)', 'Japão']) assert.ok(titulos.some((t) => t.includes(rot)), `gráfico de ${rot}`)
+      assert.doesNotMatch(await p.locator('main').innerText(), /Selic meta/i, 'Selic meta fora da aba Juros')
+      assert.equal(await p.getByRole('button', { name: /Ampliar gráfico: Selic/ }).count(), 0)
+      assert.equal(await p.locator('.juros-grafico .chart h3 .flag').count(), n, 'bandeira em cada gráfico')
+      assert.equal(await p.locator('.juros-grafico .plot svg[role=img]').count(), n, 'um gráfico por indicador na página')
+      // tooltips: todo gráfico tem o "?" e o balão abre inteiro
+      const helps = p.locator('.juros-grafico .chart h3 .help button')
+      assert.equal(await helps.count(), n, 'tooltip em cada gráfico')
+      for (const [rot, rx] of [['Brasil · CDI', /B3 calcula a média/], ['SOFR', /mediana, ponderada pelo volume/], ['Fed', /faixa/], ['€STR', /sem os 25% menores/], ['BCE (depósito)', /piso do juro/], ['Japão', /Banco do Japão/]]) {
+        const btn = p.locator('.juros-grafico .chart h3', { hasText: rot }).first().locator('.help button')
+        await btn.scrollIntoViewIfNeeded()
         // A folha móvel abre por acionamento explícito; hover é o contrato desktop.
         if (width <= 560) await btn.click()
         else await btn.hover()
@@ -122,32 +127,35 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
         assert.ok(box.x >= 0 && box.x + box.width <= width + 1 && box.y >= 0, `balão de ${rot} dentro da tela`)
         const topo = await tip.evaluate((el) => { const r = el.getBoundingClientRect(); const e = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 30)); return !!e?.closest('[role="tooltip"]') })
         assert.ok(topo, `balão de ${rot} visível por inteiro, sem ficar atrás ou cortado`)
-        if (width < 700) { await tip.locator('.pop-close').click(); assert.equal(await p.locator('[role="tooltip"]').count(), 0, `no celular o balão de ${rot} fecha pelo botão Fechar`) }
+        // O "?" do gráfico não tem botão Fechar: no celular, o balão fecha com Esc ou ao tocar fora.
+        if (width < 700) { await p.keyboard.press('Escape'); await p.locator('[role="tooltip"]').waitFor({ state: 'detached' }) }
         await p.mouse.move(2, 2)
       }
       const corpo = await p.locator('main').innerText()
       assert.doesNotMatch(corpo, /Reino Unido|Bank Rate|Bank of England|BoE/, 'sem Reino Unido em Juros')
-      assert.match(await p.locator('#juros-ref-exterior .executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
-      // os gráficos abrem pela linha da tabela, em tela própria (a página não traz gráfico solto)
-      assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página de Juros')
+      assert.match(await p.locator('#juros-ref-exterior').innerText(), /Área do euro · BCE[\s\S]*Japão/)
+      // cada gráfico amplia no centro da tela, com período, leitura e comparação por datas fixas
       const abrir = async (botao, titulo) => {
-        await p.getByRole('button', { name: botao }).first().click()
+        await p.getByRole('button', { name: botao, exact: true }).click()
         const d = p.locator('dialog.is-modal'); await d.locator('.chart h3', { hasText: titulo }).first().waitFor()
         return d
       }
       const fechar = async (d) => { await d.getByRole('button', { name: 'Fechar detalhes' }).click(); await d.waitFor({ state: 'detached' }) }
-      for (const [botao, titulo] of [['Área do euro · €STR overnight: abrir gráfico', 'Área do euro · €STR'], ['Brasil · CDI overnight: abrir gráfico', 'Brasil · CDI'], ['Brasil · Selic meta: abrir gráfico', 'Brasil · Selic meta'], ['EUA · SOFR overnight: abrir gráfico', 'SOFR']]) {
+      for (const [botao, titulo] of [['Ampliar gráfico: €STR', 'Área do euro · €STR'], ['Ampliar gráfico: CDI', 'Brasil · CDI'], ['Ampliar gráfico: SOFR', 'SOFR']]) {
         const d = await abrir(botao, titulo)
         assert.equal(await d.locator('.chart h3 .flag').count(), 1, `bandeira no título do gráfico: ${titulo}`)
         assert.ok(await d.locator('.chart-filters').count() === 1, `período dentro da tela: ${titulo}`)
+        assert.equal(await d.locator('.executive-rates__table tbody tr').count(), 1, `comparação por datas fixas no detalhe: ${titulo}`)
+        if (width >= 900) {
+          const box = await d.boundingBox()
+          assert.ok(Math.abs((box.x + box.width / 2) - width / 2) <= 2 && box.width < width - 40, `janela no centro, sem ocupar a tela toda (${JSON.stringify(box)})`)
+        }
         await fechar(d)
       }
       // juros de política do exterior: linha em degraus a partir da série oficial; o Fed mostra o limite superior da faixa
-      const fed = await abrir('EUA · Fed (faixa-alvo): abrir gráfico', 'EUA · Fed (faixa-alvo)')
+      const fed = await abrir('Ampliar gráfico: Fed (faixa-alvo)', 'EUA · Fed (faixa-alvo)')
       await fed.locator('.plot svg').first().waitFor(); await fechar(fed)
-      // o valor da linha também abre o gráfico; o "?" não
-      await p.locator('.executive-rates__table tbody tr', { hasText: 'BCE (depósito)' }).locator('td').first().click()
-      const bce = p.locator('dialog.is-modal'); await bce.locator('.chart h3', { hasText: 'Área do euro · BCE (depósito)' }).waitFor(); await fechar(bce)
+      const bce = await abrir('Ampliar gráfico: BCE (depósito)', 'Área do euro · BCE (depósito)'); await fechar(bce)
       // curva do euro: números na tabela e gráfico em tela própria
       const tabEuro = p.locator('.curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
       assert.equal(await tabEuro.locator('h2 .flag').count(), 1, 'bandeira da zona do euro na tabela da curva')
