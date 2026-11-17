@@ -23,7 +23,9 @@ const curves = { generatedAt: Date.now(), br: set(14.3, -0.2), cc: set(5.2, -0.1
       await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button', { name: 'Treasuries' }).click()
       await p.waitForFunction(() => { const r = document.getElementById('juros-curva-us').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight })
       assert.equal(await p.locator('.juros-tabela .executive-rates__heading').count(), 5, 'CDI futuro e quatro curvas com a faixa de título')
-      assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página')
+      // na página, gráfico só nos indicadores de referência; CDI futuro e curvas seguem em tabela
+      assert.ok(await p.locator('.juros-grafico .plot svg[role=img]').count() >= 1, 'indicadores de referência em gráfico')
+      assert.equal(await p.locator('main .plot svg[role=img]').count(), await p.locator('.juros-grafico .plot svg[role=img]').count(), 'sem gráfico de curva solto na página')
       assert.equal(await p.locator('.juros-period').count(), 0)
       const tabela = (t) => p.locator('.curve-table', { hasText: t })
       for (const t of ['Brasil · DI x pré', 'Brasil · Cupom cambial', 'EUA · Treasuries']) assert.ok(await tabela(t).locator('tbody tr').count() >= 4, `${t}: prazos na tabela`)

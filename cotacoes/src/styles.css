@@ -595,7 +595,9 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
   .expandable-panel.is-modal > .expandable-controls { border-radius:8px 8px 0 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .expandable-panel.is-modal[open] { animation:modal-in .28s cubic-bezier(.16,1,.3,1) both; }
+  /* `backwards` (e não `both`): terminada a abertura, a janela fica sem `transform`. Com ele, o calendário e os balões
+     (posição fixa) passariam a se medir pela janela, e não pela tela, e sairiam do lugar. */
+  .expandable-panel.is-modal[open] { animation:modal-in .28s cubic-bezier(.16,1,.3,1) backwards; }
   .expandable-panel.is-modal[open]::backdrop { animation:fade-in .3s ease-out both; }
   .expandable-panel.is-modal.is-closing { animation:modal-out .24s cubic-bezier(.7,0,.84,0) both; }
   .expandable-panel.is-modal.is-closing::backdrop { animation:fade-out .24s ease-in both; }
