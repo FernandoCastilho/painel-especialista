@@ -194,15 +194,21 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.deepEqual(errors, [])
       await ctx.close()
     }
-    // a aba aparece no menu do computador
-    const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' })
-    const p = await ctx.newPage()
-    await ctx.route('**/*', (r) => (r.request().url().startsWith(base) ? r.continue() : r.abort()))
-    await p.goto(base + '/')
-    await p.locator('nav.topbar-tabs button', { hasText: 'Apresentar' }).click()
-    await p.locator('.apz').waitFor()
-    assert.match(await p.evaluate(() => location.hash), /^#apresentar/)
-    await ctx.close()
+    // por enquanto a aba fica fora do menu (computador e celular); o acesso é pelo endereço direto
+    for (const width of [1280, 390]) {
+      const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
+      const p = await ctx.newPage()
+      await ctx.route('**/*', (r) => (r.request().url().startsWith(base) ? r.continue() : r.abort()))
+      await p.goto(base + '/')
+      await p.locator('#conteudo').waitFor()
+      if (width < 700) { await p.getByRole('button', { name: /^Mais/ }).filter({ visible: true }).first().click(); await p.getByRole('menuitem').first().waitFor() }
+      assert.ok(await p.locator('nav button, nav [role="menuitem"]').filter({ visible: true }).count() >= 5)
+      assert.equal(await p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).count(), 0, 'Apresentar não aparece no menu')
+      if (width < 700) await p.keyboard.press('Escape')
+      await p.evaluate(() => { location.hash = '#apresentar' })
+      await p.locator('.apz').waitFor()
+      await ctx.close()
+    }
     console.log('smoke-apresentar ok')
   } finally { await b.close() }
 })().catch((e) => { console.error(e); process.exit(1) })

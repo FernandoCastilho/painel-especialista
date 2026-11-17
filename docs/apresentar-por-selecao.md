@@ -1,7 +1,11 @@
 # Apresentar por seleção (17/11/2026)
 
 A aba **Apresentar** foi refeita do zero a pedido. A montagem antiga (por setor, com leitura do site do cliente, cadeia e
-perguntas da visita) foi removida. A aba agora aparece no menu.
+perguntas da visita) foi removida.
+
+**Acesso:** por enquanto a aba fica fora do menu, a pedido (17/11/2026). Abre pelo endereço `#apresentar` ou pelo
+comando APRESENTAR. Para colocá-la no menu, tirar `oculto: true` em `appSections.js`; nesse caso o menu do topo passa
+a ter onze abas e precisa do ajuste de espaçamento que está no histórico (commit `4f4fa79`, `TopBar.css`).
 
 ## O que faz
 - O usuário marca blocos do painel e cada um vira um slide claro, em formato 16:9, na ordem da escolha.
