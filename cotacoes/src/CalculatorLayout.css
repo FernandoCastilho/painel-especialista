@@ -260,3 +260,6 @@ main.app.app-calculators {
 }
 .cx .cx-error, .cx .cx-hint, .cx > .status { font-size:.95rem; }
 .cx :focus-visible { outline-color:var(--amber); }
+/* Aviso da primeira tela das calculadoras: em construção, uso só para estudo. */
+.cx.bw .cx-construcao { margin:14px 0 16px; padding:10px 14px; border:1px solid var(--bw-warm-tint); border-left:4px solid #ff7900; border-radius:8px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.9rem; line-height:1.45; }
+.cx.bw .cx-construcao strong { color:var(--bw-warm-ink); }
