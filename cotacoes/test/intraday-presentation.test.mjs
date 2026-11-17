@@ -26,7 +26,7 @@ function render(points, overrides = {}) {
     './useHistory.js': { useIntraday: () => state, useHistory: () => state, useCentralDaily: () => ({}), centralFull: () => [] },
     './useMacro.js': { useMacro: () => ({}) }, './useQuotes.js': { seriesName: () => 'Dólar' },
     './dataTimestamp.js': { dataTimestamp }, './stats.js': { periodChange }, './chartLinePath.js': { chartLinePath },
-    './storage.js': { readStorage: () => null }, './flags.js': { flagSvg: () => '' },
+    './storage.js': { readStorage: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'loading' }) }, './fxNoticias.js': { eventosDiarios: () => [], eventosDoDia: () => [] }, './flags.js': { flagSvg: () => '' },
     './resample.js': { scaleOptions: () => [] }, './ChartFilters.jsx': { useFilterSlot: () => null },
     './rangeCompare.js': {}, './chartNavigation.js': {}, './chartToque.js': chartToque, './chartEixo.js': chartEixo, './Explain.jsx': () => null, './ChartAccess.css': {},
   }

@@ -16,6 +16,8 @@ import { readStorage } from './storage.js'
 import { priorYear, rangeBetween } from './rangeCompare.js'
 import { resample, scaleOptions } from './resample.js'
 import { flagSvg } from './flags.js'
+import { useDataFile } from './useDataFile.js'
+import { eventosDiarios, eventosDoDia } from './fxNoticias.js'
 
 const H = 240
 const M = { t: 12, r: 16, b: 28, l: 58 }
@@ -62,20 +64,21 @@ export function Plot({ points, scales = true, ...props }) {
   return (
     <>
       {picker && (slot ? createPortal(picker, slot) : picker)}
-      <PlotView {...props} points={view} history={props.history ?? points} intraday={active ? active.id === 'hora' : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
+      <PlotView {...props} points={view} history={props.history ?? points} eventos={active ? undefined : props.eventos} intraday={active ? active.id === 'hora' : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
     </>
   )
 }
 
 // `history`: série completa para achar o mesmo trecho um ano antes (padrão: os próprios pontos). `step`: série em degraus.
-function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.' }) {
+function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos }) {
   const [hover, setHover] = useState(null)
+  const [aberto, setAberto] = useState(null)
   const [sel, setSel] = useState(null)
   const [dragging, setDragging] = useState(false)
   const drag = useRef(null)
   const plotRef = useTocarFora(hover != null, setHover)
   const sig = `${base.length}:${base[0]?.t}:${base[base.length - 1]?.t}`
-  useEffect(() => { setSel(null) }, [sig])
+  useEffect(() => { setSel(null); setAberto(null) }, [sig])
   // seleção guardada como dois pontos (tempo e valor): vale mesmo quando o gráfico se estende ao ano anterior
   const range = useMemo(() => (sel ? rangeBetween(sel.a, sel.b) : null), [sel])
   const prior = useMemo(() => (range && compare ? priorYear(history ?? base, range.t0, range.t1, step) : null), [range, compare, history, base, step])
@@ -271,6 +274,39 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           </g>
         )}
       </svg>
+      {eventos?.length > 0 && !range && (
+        <div className="fx-dots">
+          {eventos.filter((ev) => ev.t >= g.t0 && ev.t <= g.t1).map((ev) => (
+            <button
+              type="button"
+              key={`${ev.t}-${ev.itens[0]?.link}`}
+              className={`fx-dot ${ev.tom}${aberto?.t === ev.t ? ' on' : ''}`}
+              style={{ left: g.x(ev.t), top: g.y(ev.bid) }}
+              aria-expanded={aberto?.t === ev.t}
+              aria-label={`${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `dólar ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
+              onClick={() => setAberto(aberto?.t === ev.t ? null : ev)}
+            />
+          ))}
+        </div>
+      )}
+      {aberto && !range && (
+        <div className="fx-news" role="region" aria-label="Manchetes do dia">
+          <p className="fx-news-head">
+            <b>{fmtDate(aberto.t, true)}</b>
+            {aberto.pct != null && <em className={aberto.tom}>{aberto.pct > 0 ? '▲' : '▼'} {signed(aberto.pct, 2)}% no dia</em>}
+            <button type="button" className="sel-clear" onClick={() => setAberto(null)}>Fechar</button>
+          </p>
+          <ul>
+            {aberto.itens.map((n) => (
+              <li key={n.link}>
+                <time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}
+                <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}</small>
+              </li>
+            ))}
+          </ul>
+          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília). Mostram o que saiu na imprensa, não comprovam a causa do movimento.</p>
+        </div>
+      )}
       {range && (
         <div className="sel-panel" role="status">
           <span><b>Trecho</b> {when(range.t0)} → {when(range.t1)}: <em className={tone(range.delta)}>{fmtPct(range.pct)}{rate && ' rel.'} · {abs(range.delta)}</em></span>
@@ -322,6 +358,11 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
   useEffect(() => { try { localStorage.setItem('tabelaAberta', tableOpen ? '1' : '0') } catch { /* sem armazenamento */ } }, [tableOpen])
   const macroH = useMacro()
   const ptaxH = macroH.data?.ptaxHist?.[currency.code]
+  const fx = useDataFile('fx-noticias.json')
+  const eventos = useMemo(() => {
+    if (!pts || fx.status !== 'ok') return undefined
+    return intraday ? eventosDoDia(pts, fx.data, currency.code, day) : eventosDiarios(pts, fx.data, currency.code)
+  }, [pts, fx.status, fx.data, currency.code, intraday, day])
   const td = currency.code === 'JPY' ? 4 : 2 // iene vale centavos: precisa de mais casas
   const pct = periodChange(pts)
   const trend = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat'
@@ -353,7 +394,10 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
             <small>{h.error}</small>
           </div>
         )}
-        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} />}
+        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} />}
+        {eventos?.length > 0 && (intraday
+          ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre o dólar publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
+          : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas do dólar no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bolinha para ver as manchetes.</p>)}
       </div>
       {pts && h.warning && <p className="status stale" role="status">{h.warning}</p>}
       {pts?.length === 1 && <p className="status stale" role="status">Uma única amostra disponível; aguardando outra para calcular a variação.</p>}

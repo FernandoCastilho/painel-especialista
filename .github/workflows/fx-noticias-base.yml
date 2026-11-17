@@ -1,0 +1,39 @@
+name: Carga inicial das manchetes do dólar (60 dias)
+
+# Roda só no ramo de trabalho ou sob demanda: busca as manchetes dos últimos 60 dias no Google Notícias
+# e grava cotacoes/data/fx-noticias-base.json no próprio ramo. Não publica o site.
+on:
+  push:
+    branches: [ccr-28c1dfc5-7by680]
+    paths: ['cotacoes/scripts/fetch-fx-noticias.mjs', 'cotacoes/scripts/fx-noticias-lib.mjs', '.github/workflows/fx-noticias-base.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fx-noticias-base
+  cancel-in-progress: true
+
+jobs:
+  base:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Buscar manchetes dos últimos 60 dias
+        run: node scripts/fetch-fx-noticias.mjs --base 60
+      - name: Gravar a base no ramo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/fx-noticias-base.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Manchetes do dólar: carga inicial dos últimos 60 dias"
+          git push origin HEAD:${{ github.ref_name }}
