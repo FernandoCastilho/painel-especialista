@@ -90,7 +90,7 @@ test('tela abre vazia, sem dados de cliente, e está no catálogo de calculadora
   const { code } = await transform(raw, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
   const stub = ({ children }) => createElement('div', null, children)
-  runInNewContext(code, { module, exports: module.exports, require: (n) => n === './ExpandablePanel.jsx' || n === './CalculatorHelp.jsx' ? stub : n === './faturamento.js' ? fat : require(n) })
+  runInNewContext(code, { module, exports: module.exports, require: (n) => n === './ChartFullscreen.jsx' || n === './ExpandablePanel.jsx' || n === './CalculatorHelp.jsx' ? stub : n === './faturamento.js' ? fat : require(n) })
   const html = renderToStaticMarkup(createElement(module.exports.default, { onBack: () => {} }))
   assert.match(html, /Cole aqui: Mês, Faturamento e Endividamento/)
   assert.match(html, /Nenhum mês lido ainda/)

@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
@@ -59,7 +60,7 @@ function Grafico({ meses, sel, onSelecionar }) {
   const linha = pontos.filter(Boolean).join(' ')
 
   return (
-    <svg
+    <ChartFullscreen><svg
       ref={svg}
       className="ft-chart"
       viewBox={`0 0 ${W} ${ALT}`}
@@ -93,7 +94,7 @@ function Grafico({ meses, sel, onSelecionar }) {
           </g>
         )
       })}
-    </svg>
+    </svg></ChartFullscreen>
   )
 }
 

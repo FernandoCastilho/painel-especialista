@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { useEffect, useRef } from 'react'
 import { fromInput, useIntraday } from './useHistory.js'
 import { marketFx, marketDi, marketBrent, marketSummary, signedMarketChange, marketTone } from './marketPopup.js'
@@ -8,10 +9,10 @@ function MiniLine({ points, color, label }) {
   if (points.length < 2) return <p className="mp-no-chart">Série indisponível</p>
   const min=Math.min(...points.map(p=>p.bid)), max=Math.max(...points.map(p=>p.bid)), start=points[0].t, span=points.at(-1).t-start
   const line=points.map((p,i)=>`${i?'L':'M'}${span?8+(p.t-start)/span*384:8+i/(points.length-1)*384},${max===min?38:68-(p.bid-min)/(max-min)*56}`).join(' ')
-  return <svg viewBox="0 0 400 76" preserveAspectRatio="none" role="img" aria-label={label}>
+  return <ChartFullscreen compact><svg viewBox="0 0 400 76" preserveAspectRatio="none" role="img" aria-label={label}>
     <defs><linearGradient id={id} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor={color} stopOpacity=".18"/><stop offset="1" stopColor={color} stopOpacity=".02"/></linearGradient></defs>
     <path d={line+' L392,76 L8,76 Z'} fill={`url(#${id})`} /><path d={line} stroke={color} strokeWidth="2.5" fill="none" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
-  </svg>
+  </svg></ChartFullscreen>
 }
 function Change({ value, unit='%', rate=false }) {
   return <span className={'mp-change '+marketTone(value)+(rate?' mp-rate-change':'')}>{signedMarketChange(value,unit)}{Number.isFinite(value)&&Math.abs(value)>=.005&&<span aria-hidden="true"> {value>0?'▲':'▼'}</span>}</span>
@@ -71,7 +72,7 @@ export default function MarketPopup({ open, slot, onClose, quotes, curves, oil }
     }
   },[open])
   const close=onClose
-  return <dialog ref={dialog} className="market-popup" aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}} onKeyDown={e=>{if(e.key==='Tab'){e.preventDefault();dialog.current.querySelector('button')?.focus()}}}>
+  return <dialog ref={dialog} className="market-popup" aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}}>
     <div className="mp-ribbon"><span>PME · Panorama de mercado</span><button type="button" aria-label="Fechar panorama" autoFocus onClick={close}>×</button></div>
     <div className="mp-content"><MarketHeading slot={slot}/>{open&&slot&&<Panorama slot={slot} quotes={quotes} curves={curves} oil={oil}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Edições de hora em hora em dias úteis nacionais, das 9h às 18h. O Panorama só abre quando você pede, pelo botão no Mercado.</p></div>
   </dialog>

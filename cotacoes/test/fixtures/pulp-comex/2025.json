@@ -1,0 +1,106 @@
+{
+  "data": {
+    "list": [
+      {
+        "year": "2025",
+        "monthNumber": "12",
+        "headingCode": "4703",
+        "heading": "Pastas químicas de madeira, à soda ou ao sulfato, exceto pastas para dissolução",
+        "metricFOB": "770853548",
+        "metricKG": "1687601082"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "11",
+        "headingCode": "4703",
+        "heading": "Pastas químicas de madeira, à soda ou ao sulfato, exceto pastas para dissolução",
+        "metricFOB": "752025997",
+        "metricKG": "1642470399"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "10",
+        "headingCode": "4703",
+        "heading": "Pastas químicas de madeira, à soda ou ao sulfato, exceto pastas para dissolução",
+        "metricFOB": "731462679",
+        "metricKG": "1708780399"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "11",
+        "headingCode": "4702",
+        "heading": "Pasta química de madeira, para dissolução",
+        "metricFOB": "105608007",
+        "metricKG": "138894568"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "12",
+        "headingCode": "4702",
+        "heading": "Pasta química de madeira, para dissolução",
+        "metricFOB": "92815475",
+        "metricKG": "119072733"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "10",
+        "headingCode": "4702",
+        "heading": "Pasta química de madeira, para dissolução",
+        "metricFOB": "84612818",
+        "metricKG": "111480486"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "10",
+        "headingCode": "4701",
+        "heading": "Pastas mecânicas de madeira",
+        "metricFOB": "290081",
+        "metricKG": "627474"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "12",
+        "headingCode": "4701",
+        "heading": "Pastas mecânicas de madeira",
+        "metricFOB": "121570",
+        "metricKG": "267067"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "11",
+        "headingCode": "4701",
+        "heading": "Pastas mecânicas de madeira",
+        "metricFOB": "74274",
+        "metricKG": "161972"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "11",
+        "headingCode": "4706",
+        "heading": "Pastas de fibras obtidas a partir de papel ou de cartão reciclados (desperdícios e aparas) ou de outras matérias fibrosas celulósicas",
+        "metricFOB": "48906",
+        "metricKG": "47581"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "10",
+        "headingCode": "4706",
+        "heading": "Pastas de fibras obtidas a partir de papel ou de cartão reciclados (desperdícios e aparas) ou de outras matérias fibrosas celulósicas",
+        "metricFOB": "19473",
+        "metricKG": "13561"
+      },
+      {
+        "year": "2025",
+        "monthNumber": "12",
+        "headingCode": "4706",
+        "heading": "Pastas de fibras obtidas a partir de papel ou de cartão reciclados (desperdícios e aparas) ou de outras matérias fibrosas celulósicas",
+        "metricFOB": "11139",
+        "metricKG": "2111"
+      }
+    ]
+  },
+  "success": true,
+  "message": null,
+  "processo_info": null,
+  "language": "pt"
+}

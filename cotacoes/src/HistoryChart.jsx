@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { dataTimestamp } from './dataTimestamp.js'
 import { periodChange } from './stats.js'
 import { chartLinePath } from './chartLinePath.js'
@@ -200,7 +201,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const tone = (v) => (v > 0 ? 'up' : v < 0 ? 'down' : 'flat')
 
   return (
-    <div ref={plotRef} className={`plot${light ? ' light' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
+    <ChartFullscreen><div ref={plotRef} className={`plot${light ? ' light' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
       <span id={`${plotId}-hint`} className="chart-access-text">Use as setas para percorrer os pontos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho; Escape limpa. Com o mouse ou o dedo, arraste sobre o gráfico para selecionar um trecho.</span>
       <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
       <svg
@@ -333,7 +334,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           )}
         </div>
       )}
-    </div>
+    </div></ChartFullscreen>
   )
 }
 

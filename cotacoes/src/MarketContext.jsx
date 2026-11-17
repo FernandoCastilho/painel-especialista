@@ -78,7 +78,7 @@ function FreightTable({entries, onOpen}) {
 }
 // Commodities no mesmo formato da tabela do Mercado: último, anterior, variação, 12 meses e ano; a linha abre o histórico quando há série.
 // Brent e WTI: observações diárias; demais: médias mensais. Sem série, a linha mostra só o que a fonte divulgou e não abre gráfico.
-function CommodityTable({items, failed, onOpen, caption = 'Referências internacionais em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
+function CommodityTable({items, failed, onOpen, caption = 'Commodities em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
   const pct = v => v == null ? {text:'—'} : {text:fsgn(v, 2, '%'), tone:ftone(v)}
   const rows = items.map(item => {
     const stats = seriesStats(item.history)
@@ -176,12 +176,12 @@ export default function MarketContext({ part = '', so = '' }) {
       <Aviso title="Atividade e emprego · método"><p className="context-method">Leituras conferidas manualmente; não há atualização automática destes indicadores. PMI ISM em pontos: acima de 50 indica expansão; abaixo de 50, contração. Saldos de emprego podem ser negativos e sujeitos a revisão.</p></Aviso>
     </section>}
     {(!part || part === 'commodities') && so !== 'frete' && <section aria-labelledby="commodities-context-heading"><div className="ctx-head"><h2 id="commodities-context-heading">Commodities</h2><RefreshButton files={['commodities.json', 'oil.json', 'commodities-brl.json', 'fuels.json']} label="Commodities" /></div>
-      <Aviso title="Commodities"><p className="context-intro">Referências internacionais em dólar. Petróleo spot diário e demais produtos em médias mensais, não preços em tempo real nem contratos futuros.</p></Aviso>
+      <Aviso title="Commodities"><p className="context-intro">Referências em dólar, incluindo exportações brasileiras de celulose. Petróleo spot diário e demais produtos em médias mensais, não preços em tempo real nem contratos futuros.</p></Aviso>
       {(!so || so === 'usd') && <>
       {!all.length && <Estado tipo={commodities.failed || brent.failed ? 'erro' : 'info'}>{commodities.failed || brent.failed ? 'Não foi possível carregar as referências.' : 'Carregando referências…'}</Estado>}
       {all.length > 0 && <CommodityTable items={all} failed={commodities.failed || brent.failed} onOpen={id => setOpenCommodity(all.find(i => i.id === id))} />}
       {all.length > 0 && (!brent.data || !commodities.data || commodities.data.length < COMMODITY_IDS.length) && <Estado tipo="aviso">Cobertura parcial: uma das fontes ainda não está disponível.</Estado>}
-      <Aviso title="Commodities · método"><p className="context-method">Em falhas, o painel preserva a última referência. A data da atualização não é a data do preço. Frequência de publicação e unidades variam; valores ausentes nunca são convertidos em zero. Petróleo, gás natural, diesel e gasolina de Nova York: spot diário (gás em US$/MMBtu; derivados em US$/galão, na costa leste dos EUA, antes de impostos, margens e frete). Açúcar e café: média mensal convertida de US$/kg para US¢/libra-peso, a unidade de mercado.</p></Aviso>
+      <Aviso title="Commodities · método"><p className="context-method">Em falhas, o painel preserva a última referência. A data da atualização não é a data do preço. Frequência de publicação e unidades variam; valores ausentes nunca são convertidos em zero. Petróleo, gás natural, diesel e gasolina de Nova York: spot diário (gás em US$/MMBtu; derivados em US$/galão, na costa leste dos EUA, antes de impostos, margens e frete). Açúcar e café: média mensal convertida de US$/kg para US¢/libra-peso, a unidade de mercado. Celulose: preço médio FOB mensal das exportações brasileiras (MDIC/SECEX), em US$/tonelada; não é cotação spot, preço de tabela ou referência exclusiva de fibra curta ou longa. Calculado como valor FOB total dividido pelo peso líquido total, convertido de kg para tonelada (SH4 4701 a 4706; exclui aparas 4707). A coleta preserva a última referência em caso de falha.</p></Aviso>
       </>}
       {brl.data && (!so || so === 'brl') && <>
         <CommodityTable items={brl.data} failed={brl.failed} onOpen={id => setOpenCommodity(brl.data.find(i => i.id === id))} caption="Em reais · IC-Br e soja" ariaLabel="Tabela de commodities em reais; role para ver todas as colunas" />
