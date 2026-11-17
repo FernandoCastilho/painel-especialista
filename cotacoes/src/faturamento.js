@@ -30,8 +30,9 @@ export function parseMes(token) {
 // Número no padrão brasileiro: "7.123", "7.123,45", "R$ 7.123", "-12,5". Vazio ou "-" = sem dado (null).
 // Retorna undefined quando o texto não é número.
 export function parseNumero(token) {
-  let t = String(token ?? '').replace(/R\$/gi, '').replace(/\s/g, '')
-  if (t === '' || t === '-' || t === '—') return null
+  // Traço comum, meia-risca (–), travessão (—) ou sinal de menos (−) sozinhos = sem dado.
+  let t = String(token ?? '').replace(/R\$/gi, '').replace(/\s/g, '').replace(/[–−]/g, '-')
+  if (t === '' || /^[-—]+$/.test(t)) return null
   const negativo = /^\(.*\)$/.test(t) || t.startsWith('-')
   t = t.replace(/^[(-]|\)$/g, '')
   if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.')
@@ -75,7 +76,21 @@ export function parseFaturamento(texto) {
     porChave.set(chave, { chave, rotulo: rotuloMes(chave), ano: mes.ano, mes: mes.mes, faturamento: nums[0] ?? null, endividamento: nums.length > 1 ? nums[1] : null })
   })
   const meses = [...porChave.values()].sort((a, b) => a.chave - b.chave)
-  return { meses, avisos }
+  const u = String(texto ?? '').match(/\(\s*(R\$\s*(?:mil|milh[õo]es|bilh[õo]es|mi|bi)?)\s*\)/i)
+  const unidade = u ? u[1].replace(/\s+/g, ' ').replace(/R\$(?=\S)/i, 'R$ ').trim() : null
+  return { meses, avisos, unidade }
+}
+
+// Série contínua para o gráfico: mês sem linha colada vira posição vazia, para o período escolhido
+// e o do ano anterior ficarem marcados em todos os meses, sem saltos.
+export function serieContinua(meses, limite = 240) {
+  if (meses.length < 2 || meses.at(-1).chave - meses[0].chave >= limite) return meses
+  const porChave = new Map(meses.map((m) => [m.chave, m]))
+  const serie = []
+  for (let k = meses[0].chave; k <= meses.at(-1).chave; k++) {
+    serie.push(porChave.get(k) ?? { chave: k, rotulo: rotuloMes(k), ano: Math.floor(k / 12), mes: (k % 12) + 1, faturamento: null, endividamento: null, vazio: true })
+  }
+  return serie
 }
 
 const soma = (xs) => xs.reduce((s, x) => s + x, 0)
@@ -144,25 +159,40 @@ export function resumoPorAno(meses) {
   return [...anos.values()].map((a) => ({ ...a, media: a.total / a.meses }))
 }
 
-export const EXEMPLO = `Mês\tFaturamento\tEndividamento
-jan/25\t4.100\t7.200
-fev/25\t3.950\t7.050
-mar/25\t4.420\t7.600
-abr/25\t4.310\t7.480
-mai/25\t4.600\t7.390
-jun/25\t4.250\t7.700
-jul/25\t4.880\t7.520
-ago/25\t4.700\t7.610
-set/25\t4.530\t7.300
-out/25\t4.960\t7.810
-nov/25\t4.820\t7.690
-dez/25\t3.400\t7.150
-jan/26\t4.300\t7.740
-fev/26\t4.050\t7.420
-mar/26\t4.950\t7.950
-abr/26\t4.010\t7.330
-mai/26\t4.520\t8.120
-jun/26\t4.180\t8.240
-jul/26\t4.390\t7.760
-ago/26\t3.560\t0
-set/26\t3.700\t0`
+// Exemplo fictício no modelo do DAC: título, cabeçalho com a unidade e traço para mês sem informação.
+export const EXEMPLO = `Faturamento e endividamento
+Competência	Faturamento (R$ mil)	Endividamento (R$ mil)
+Jan/24	1.331	–
+Fev/24	2.090	–
+Mar/24	1.394	–
+Abr/24	1.764	–
+Mai/24	2.146	–
+Jun/24	1.649	–
+Jul/24	1.794	–
+Ago/24	2.680	–
+Set/24	2.508	–
+Out/24	2.176	–
+Nov/24	2.574	–
+Dez/24	2.916	–
+Jan/25	2.499	3.399
+Fev/25	2.598	–
+Mar/25	3.108	–
+Abr/25	2.892	3.360
+Mai/25	3.766	3.568
+Jun/25	3.685	3.443
+Jul/25	3.750	3.470
+Ago/25	4.279	–
+Set/25	3.970	3.796
+Out/25	3.949	–
+Nov/25	3.760	4.153
+Dez/25	4.595	3.725
+Jan/26	4.475	3.852
+Fev/26	4.381	–
+Mar/26	4.849	–
+Abr/26	4.301	4.288
+Mai/26	5.056	4.141
+Jun/26	4.956	4.324
+Jul/26	4.970	–
+Ago/26	5.533	0
+Set/26	5.024	0
+Out/26	5.675	0`
