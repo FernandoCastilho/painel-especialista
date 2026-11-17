@@ -3,7 +3,7 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
-import { EXEMPLO, compararPeriodo, parseFaturamento, resumoPorAno, rotuloMes, serieContinua } from './faturamento.js'
+import { EXEMPLO, compararPeriodo, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
 
 const num = (v, casas = 0) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }))
@@ -22,10 +22,12 @@ export function FaturamentoIcon() {
 }
 
 // Geometria do gráfico (unidades do desenho; o SVG se ajusta à largura da tela).
-const SLOT = 56, TOPO = 46, BASE = 28, ALT = 300, BARRA = 20
+const SLOT = 56, TOPO = 84, BASE = 28, ALT = 338, BARRA = 20
+// Faixa de cima: seta da variação (y 10-24), total de cada período (y 40) e topo dos quadros (y 48).
+const Y_SETA = 22, Y_TOTAL = 40, Y_QUADRO = 48
 const larguraRotulo = (txt) => txt.length * 6.6 + 10
 
-function Grafico({ meses, sel, onSelecionar }) {
+function Grafico({ meses, sel, onSelecionar, comparacao, unidade }) {
   const arrastando = useRef(false)
   const svg = useRef(null)
   const W = meses.length * SLOT
@@ -54,8 +56,19 @@ function Grafico({ meses, sel, onSelecionar }) {
   const up = () => { arrastando.current = false }
 
   const [ini, fim] = sel ? [Math.min(sel.de, sel.ate), Math.max(sel.de, sel.ate)] : [null, null]
-  const noPeriodo = (k) => sel && k >= ini && k <= fim
-  const noAnterior = (k) => sel && k >= ini - 12 && k <= fim - 12
+  // Um quadro pontilhado por período (escolhido e mesmo período do ano anterior), como em apresentação.
+  const pos = new Map(meses.map((m, i) => [m.chave, i]))
+  const quadro = (a, b) => {
+    const ia = [...Array(b - a + 1)].map((_, j) => pos.get(a + j)).filter((i) => i != null)
+    if (!ia.length) return null
+    const x0 = ia[0] * SLOT + 4, x1 = (ia.at(-1) + 1) * SLOT - 4
+    return { x0, x1, meio: (x0 + x1) / 2 }
+  }
+  const qAtual = sel ? quadro(ini, fim) : null
+  const qAnterior = sel ? quadro(ini - 12, fim - 12) : null
+  const f = comparacao?.faturamento
+  const v = f?.variacao
+  const temSeta = qAtual && qAnterior && v != null && qAtual.x0 - qAnterior.x1 > 30
   const pontos = meses.map((m, i) => (m.endividamento == null ? null : `${cx(i)},${y(m.endividamento)}`))
   const linha = pontos.filter(Boolean).join(' ')
 
@@ -72,9 +85,20 @@ function Grafico({ meses, sel, onSelecionar }) {
       onPointerUp={up}
       onPointerCancel={up}
     >
-      {meses.map((m, i) => (noPeriodo(m.chave) || noAnterior(m.chave)) && (
-        <rect key={`b${m.chave}`} className={noPeriodo(m.chave) ? 'ft-band-sel' : 'ft-band-prev'} x={i * SLOT + 2} y={6} width={SLOT - 4} height={ALT - 8} rx="6" />
+      {[['ant', qAnterior, f?.anterior], ['atu', qAtual, f?.atual]].map(([id, q, total]) => q && (
+        <g key={id}>
+          <rect className="ft-box" x={q.x0} y={Y_QUADRO} width={q.x1 - q.x0} height={ALT - Y_QUADRO - 3} />
+          {total != null && <text className="ft-box-total" x={q.meio} y={Y_TOTAL}>{totalCurto(total, unidade)}</text>}
+        </g>
       ))}
+      {temSeta && (
+        <g className={v < 0 ? 'ft-arrow ft-arrow-down' : 'ft-arrow ft-arrow-up'}>
+          <line x1={qAnterior.x1 + 10} x2={qAtual.x0 - 14} y1={Y_SETA} y2={Y_SETA} />
+          <polygon points={`${qAtual.x0 - 6},${Y_SETA} ${qAtual.x0 - 16},${Y_SETA - 5} ${qAtual.x0 - 16},${Y_SETA + 5}`} />
+          <text x={(qAnterior.x1 + qAtual.x0) / 2} y={Y_SETA - 6}>{pct(v)}</text>
+        </g>
+      )}
+      {!temSeta && qAtual && v != null && <text className={v < 0 ? 'ft-arrow ft-arrow-down' : 'ft-arrow ft-arrow-up'} x={qAtual.meio} y={Y_SETA - 4}>{pct(v)} vs. ano anterior</text>}
       <line className="ft-axis" x1="0" x2={W} y1={ALT - BASE} y2={ALT - BASE} />
       {temDivida && <polygon className="ft-area" points={`${cx(meses.findIndex((m) => m.endividamento != null))},${ALT - BASE} ${linha} ${cx(meses.findLastIndex((m) => m.endividamento != null))},${ALT - BASE}`} />}
       {meses.map((m, i) => m.faturamento != null && (
@@ -170,8 +194,8 @@ export default function Faturamento({ onBack }) {
       {meses.length > 0 && (
         <article className="desk-panel cx-panel calc-result-shell" aria-live="polite" data-apz-pronto="">
           <ExpandablePanel title={`Faturamento x Endividamento${unidade ? ` (${unidade})` : ''}`}>
-            <div className="ft-legend" aria-hidden="true"><span className="ft-key-f" /> Faturamento <span className="ft-key-d" /> Endividamento <span className="ft-key-sel" /> Período escolhido <span className="ft-key-prev" /> Ano anterior</div>
-            <div className="ft-chart-wrap"><Grafico meses={serie} sel={selValida} onSelecionar={selecionar} /></div>
+            <div className="ft-legend" aria-hidden="true"><span className="ft-key-f" /> Faturamento <span className="ft-key-d" /> Endividamento <span className="ft-key-box" /> Período escolhido e mesmo período do ano anterior</div>
+            <div className="ft-chart-wrap"><Grafico meses={serie} sel={selValida} onSelecionar={selecionar} comparacao={comparacao} unidade={unidade} /></div>
             <div className="ft-range">
               <label>De <select value={ini} onChange={(e) => { const k = Number(e.target.value); selecionar(k, fim === '' || fim < k ? k : fim) }}><option value="" disabled>mês</option>{serie.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
               <label>Até <select value={fim} onChange={(e) => { const k = Number(e.target.value); selecionar(ini === '' || ini > k ? k : ini, k) }}><option value="" disabled>mês</option>{serie.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
