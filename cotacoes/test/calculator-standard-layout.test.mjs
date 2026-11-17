@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 const require = createRequire(import.meta.url)
 const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf8')
 test('calculators and BNDES profiles use the compact standard and expansion shell', async () => {
-  for (const name of ['Calculadora','OperacaoDi','CbsCaixa','ContaGarantida','FinimpComparacao','AnaliseDesconto','Faturamento','Emprestimo4131','BndesTlpExigivel','BndesLcdCap','BndesCreditoTfb']) {
+  for (const name of ['OperacaoDi','CbsCaixa','ContaGarantida','FinimpComparacao','AnaliseDesconto','Faturamento','Emprestimo4131','BndesTlpExigivel','BndesLcdCap','BndesCreditoTfb']) {
     const text = await source(name+'.jsx')
     assert.match(text, /import '\.\/CalculatorStandard.css'/, name)
     assert.match(text, /className="cx[^"]*calc-standard/, name)
@@ -33,8 +33,8 @@ test('expansion shell renders one copy of results and an explicitly labelled con
 })
 
 test('secondary explanations move to help without hiding essential simulation limitations', async () => {
-  const capital = await source('Calculadora.jsx')
-  assert.match(capital, /<Help title="Juros e vencimentos"><p>Juros por dias corridos/)
+  const capital = await source('CapitalDeGiro.jsx')
+  assert.match(capital, /<Help title="Capital de Giro: cálculo e premissas">\s*<p>Estimativa prefixada com juros por dias corridos/)
   const tlp = await source('BndesTlpExigivel.jsx')
   assert.match(tlp, /<p className="status">Projeção de IPCA constante/)
   assert.match(tlp, /<Help title="Composição da TLP exigível">/)

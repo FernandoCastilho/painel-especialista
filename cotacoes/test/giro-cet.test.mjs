@@ -44,3 +44,53 @@ test('Bullet paga tudo no último vencimento mensal, em dia útil', () => {
   assert.ok(r.ok); assert.equal(r.rows.length, 1); assert.equal(r.installment, null)
   assert.equal(r.rows[0].date, '2027-11-11')
 })
+
+test('despesas à vista e financiadas reconciliam líquido, saldo, parcelas e CET', () => {
+  const setup = { ...base, value: 120000, system: 'sac', rate: 1, start: '2026-11-17', firstDue: '2026-12-17' }
+  const expenses = { fees: 300, financedFees: 1200 }
+  const periods = [30, 62, 92, 120, 153, 181, 212, 244, 273, 304, 335, 365]
+  const iof = 121200 * 0.0038 + periods.reduce((sum, days) => sum + 10100 * days * 0.000082, 0)
+  const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-5, `${actual} ≠ ${expected}`)
+  for (const financeIof of [false, true]) {
+    const r = giroOperation({ ...setup, ...expenses, financeIof })
+    assert.ok(r.ok, r.error)
+    assert.deepEqual(r.rows.map(row => row.days), periods)
+    const principal = 121200 + (financeIof ? iof : 0)
+    const net = 120000 - 300 - (financeIof ? 0 : iof)
+    const amortization = principal / 12
+    let balance = principal, previous = 0, paid = 0
+    const payments = periods.map(days => {
+      const payment = amortization + balance * (1.01 ** ((days - previous) / 30) - 1)
+      paid += payment
+      balance -= amortization
+      previous = days
+      return payment
+    })
+    close(r.iof, iof)
+    close(r.financedBalance, principal)
+    close(r.net, net)
+    close(r.cost, paid - net)
+    close(r.total, paid + (120000 - net))
+    r.rows.forEach((row, i) => close(row.payment, payments[i]))
+    close(payments.reduce((sum, payment, i) => sum + payment / (1 + r.cet) ** (periods[i] / 365), 0), net)
+  }
+})
+
+test('custos financiados seguem a carência capitalizada e a garantia não é premissa numérica', () => {
+  const setup = { ...base, system: 'price', firstDue: '2027-01-10', financedFees: 1200 }
+  const r = giroOperation(setup)
+  assert.ok(r.ok, r.error)
+  assert.equal(r.graceDays, 30)
+  assert.ok(Math.abs(r.capitalizedGrace - 2024) < 1e-6)
+  assert.deepEqual(giroOperation({ ...setup, guarantee: 'Aval' }), r)
+  assert.equal(giroOperation({ ...setup, fees: setup.value }).ok, false)
+  assert.equal(giroOperation({ ...setup, financedFees: -1 }).ok, false)
+})
+
+test('CET respeita o limite técnico no fluxo selecionado, sem validar um fluxo à vista hipotético', () => {
+  const setup = { ...base, system: 'bullet', n: 1, rate: 16.947, start: '2026-11-23', firstDue: '2026-11-26' }
+  assert.equal(giroOperation(setup).ok, false)
+  const financed = giroOperation({ ...setup, financeIof: true })
+  assert.ok(financed.ok, financed.error)
+  assert.ok(financed.cet < 10)
+})
