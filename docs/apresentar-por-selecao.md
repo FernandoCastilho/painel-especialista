@@ -142,6 +142,10 @@ O ramo publicado recebeu o rascunho nº 470 (Faturamento: quadro pontilhado por 
 depois da primeira conferência. O ramo foi juntado (`d61e49f`), o slide do Faturamento foi refeito com o gráfico novo
 (quadros pontilhados, totais e seta dentro do slide; tabela de comparação mais compacta para o gráfico ficar maior) e
 testes, teste de tela e varredura dos slides foram repetidos no estado juntado.
+Depois entrou o nº 466 (Focus com a data de publicação do boletim; aviso "Em construção" na primeira tela das
+calculadoras), juntado em `cc9739b`. O aviso fica só na lista de calculadoras, não dentro de cada uma, então não
+aparece nos slides; o slide "Focus e bancos" passa a mostrar a data de publicação do boletim, como na aba Cenários.
+Testes, teste de tela e varredura repetidos também nesse estado.
 
 ### Parecer do Auditor nesta rodada
 Primeiro parecer: **Requer correção** (81,3), no commit `f3cbc0f`. Passou: Faturamento nos slides, nada colado é gravado
