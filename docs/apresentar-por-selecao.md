@@ -26,7 +26,7 @@ a ter onze abas e precisa do ajuste de espaçamento que está no histórico (com
 | Setores | por setor: leitura executiva; por estudo: resumo executivo, cadeia de valor, indicadores e perguntas; por insumo: o que move o preço |
 | Bancos | tabela comparativa e histórico de quatro indicadores |
 | Feriados | próximos três meses com feriado |
-| Calculadoras | as 12 calculadoras, em dois modos: **Resultado** (números principais) e **Dados** (campos) |
+| Calculadoras | 12 calculadoras (todas menos Faturamento), em dois modos: **Resultado** (números principais) e **Dados** (campos) |
 
 Aprender e Configurações ficam de fora.
 
@@ -51,6 +51,10 @@ Aprender e Configurações ficam de fora.
 - Calculadoras sem valores iniciais abrem no modo Dados, com rolagem dentro do slide.
 
 ## Ficou de fora
+- Calculadora Faturamento (entrou no painel em 17/11/2026, depois desta montagem). Ela recebe faturamento e
+  endividamento colados, que são dado de cliente; incluir ou não na apresentação é decisão do Fernando.
+- Bolinhas de notícia e de maiores altas e baixas do gráfico de moeda (também de 17/11/2026): ficam só no painel. No
+  slide, as notícias entram pelo bloco de Notícias, onde dá para escolher as manchetes.
 - Buscas do Google (Trends): o gráfico é carregado direto do Google, o painel não confirma o conteúdo e ele não cabe
   bem num slide.
 - Pautas editoriais da Central de setores (são roteiro de pesquisa, não conteúdo para cliente).
@@ -62,6 +66,23 @@ Leitura do código por revisor sem o histórico da montagem. Um ponto importante
 aberta dentro do slide, Esc e as setas agiam na apresentação e podiam deixar a janela presa. Agora as teclas ficam com
 a janela. Também corrigidos: "Limpar tudo" apaga cliente, setor e slides; o foco volta para a miniatura ao sair; a
 contagem de notícias considera só as retiradas ainda na janela. Nenhuma regra de cálculo foi alterada.
+
+## Não conferido
+- Publicação e site no ar (só depois da autorização e do parecer do Auditor).
+- `smoke-inadimplencia` não roda no ambiente da sessão (pede um navegador que não está instalado); não faz parte da
+  conferência automática.
+- Bloco a bloco dentro de cada aba de origem: as nove seções estão no catálogo, mas a comparação foi por seção.
+
+## Ajuste em teste existente
+`test/base-dados.test.mjs` proíbe o texto "Fonte:" nas telas do painel (as fontes ficam em Base de dados). O rodapé do
+slide é a exceção aberta nesta entrega: o slide sai do painel para a visita e leva o nome curto da fonte.
+
+## Parecer do Auditor Independente (17/11/2026)
+Primeiro parecer: **Requer correção** (86,6). A aba passou; o ramo publicado tinha recebido duas mudanças depois dos
+testes (bolinhas do dólar e calculadora Faturamento) e a entrega precisava ser atualizada e testada de novo. Correções
+feitas: ramo atualizado, índice da busca refeito, bolinhas fora do slide, Faturamento declarada fora, aviso no slide de
+indicadores quando não há cotação, e esta nota completada. O Auditor conferiu as notícias com os arquivos reais do
+site: 61 slides de notícias, 31 com manchetes, nenhum erro.
 
 ## Conferência
 - `test/apresentar.test.mjs`: seleção, ordem, teclado, notícias, busca de blocos, montagem só em memória, tema imposto.

@@ -183,6 +183,16 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.ok(ligacoes.total > 2)
       assert.deepEqual(ligacoes.repetidos, [], 'identificador repetido entre slides')
       assert.deepEqual(ligacoes.fora, [], 'quadro ligado a título de outro slide')
+      // indicadores do dia: cartões de câmbio no slide; sem cotação válida o slide avisa em vez de ficar em branco
+      await marcar(await grupo('Mercado'), 'Indicadores do dia')
+      const indicadores = p.locator('.apz-item', { hasText: 'Mercado hoje' })
+      await indicadores.locator('.kpi').first().waitFor()
+      assert.ok(await indicadores.locator('.kpi').count() >= 2)
+      // o gráfico de moeda vai sem as bolinhas de notícia do painel (no slide, notícia entra pelo bloco de Notícias)
+      await marcar(await grupo('Mercado'), /^Dólar$/)
+      const dolar = p.locator('.apz-item', { hasText: 'Dólar em reais' })
+      await dolar.locator('.plot, .placeholder').first().waitFor()
+      assert.equal(await dolar.locator('.fx-dots:visible, .fx-legend:visible, .fx-news:visible').count(), 0)
       // leitura executiva do setor entra pela escolha do setor
       const setores = await grupo('Setores')
       await setores.locator('.apz-opcao', { hasText: 'Leitura executiva do setor' }).locator('input').check()

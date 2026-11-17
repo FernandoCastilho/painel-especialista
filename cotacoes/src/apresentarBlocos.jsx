@@ -4,6 +4,7 @@ import { CURRENCIES } from './useQuotes.js'
 import { rateTiles } from './snapshot.js'
 import { normalizeIpca } from './ipca.js'
 import { KpiRow } from './TerminalDesk.jsx'
+import { kpiItems } from './terminal.js'
 import HistoryChart from './HistoryChart.jsx'
 import { CambioTabela, ResumoChart, SPARK, useCambio } from './Resumo.jsx'
 import HeavyVehicles from './HeavyVehicles.jsx'
@@ -64,8 +65,10 @@ function CartoesMercado({ ctx }) {
   const ipcaFile = useDataFile('ipca.json')
   const indices = useDataFile('indices.json')
   const ipca = useMemo(() => { try { return ipcaFile.data ? normalizeIpca(ipcaFile.data) : null } catch { return null } }, [ipcaFile.data])
-  if (!ctx.quotes) return <Aviso>Carregando cotações…</Aviso>
-  return <KpiRow quotes={ctx.quotes} rates={rateTiles(ctx.macro?.data, ctx.curves?.data)} ipca={ipca} ibov={indices.data} macro={ctx.macro?.data} colors={ctx.colors} onOpen={nada} onRate={nada} goto={nada} />
+  const rates = rateTiles(ctx.macro?.data, ctx.curves?.data)
+  // Sem nenhum indicador válido (cotações fora do ar ou ainda carregando), o slide avisa em vez de ficar em branco.
+  if (!kpiItems(ctx.quotes, rates, ipca, indices.data).length) return <Aviso>Indicadores do dia indisponíveis no momento.</Aviso>
+  return <KpiRow quotes={ctx.quotes} rates={rates} ipca={ipca} ibov={indices.data} macro={ctx.macro?.data} colors={ctx.colors} onOpen={nada} onRate={nada} goto={nada} />
 }
 function TabelaCambio({ ctx }) {
   const { returns, ptaxes } = useCambio(ctx.quotes, ctx.macro?.data?.ptax)

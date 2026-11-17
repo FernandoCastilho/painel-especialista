@@ -220,3 +220,7 @@
 .sl-leitura dl > div { padding: 14px 16px; border: 1px solid #d9dde3; border-left: 4px solid var(--blue); border-radius: 8px; }
 .sl-leitura dt { color: var(--blue); font-size: .8em; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
 .sl-leitura dd { margin: 0; line-height: 1.45; }
+
+/* Gráfico de moeda: as bolinhas de notícia e de maiores altas e baixas (e o quadro de manchetes que elas abrem) ficam só no painel.
+   No slide, as notícias entram pelo bloco de Notícias, onde dá para escolher as manchetes. */
+.sl-corpo .fx-dots, .sl-corpo .fx-legend, .sl-corpo .fx-news { display: none; }
