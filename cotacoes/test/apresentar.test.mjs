@@ -119,3 +119,12 @@ test('apresentar: estrutura da aba e regras dos slides', () => {
   assert.match(calc, /LINHAS_DE_PLANILHA = 14/) // tabelas longas (memórias e planilhas) não entram no slide das calculadoras
   assert.match(css, /\.sl-calc \[data-painel\^="Memória"\]/)
 })
+
+test('apresentar: Faturamento entra nos slides e o tema de notícias madeira existe', () => {
+  const blocos = src('apresentarBlocos.jsx'), calc = src('ApresentarCalculadora.jsx'), fat = src('Faturamento.jsx'), noticias = src('apresentarNoticias.jsx'), css = src('Apresentar.css')
+  assert.match(blocos, /\['faturamento', 'Faturamento', [^\]]*'números informados na tela; nada é salvo nem enviado'\]/) // rodapé próprio: não é simulação de crédito
+  assert.match(fat, /calc-result-shell" aria-live="polite" data-apz-pronto=""/) // o gráfico já é o resultado, mesmo sem R$ nem %
+  assert.match(calc, /hasAttribute\('data-apz-pronto'\)/)
+  assert.match(css, /\.sl-calc-faturamento \.ft-chart \{[^}]*min-width: 0 !important/) // o gráfico cabe na largura do slide, sem rolagem lateral
+  assert.match(noticias, /SO_NA_IMPRENSA = \[\['Indústria e transformação', 'madeira', 'Madeira e base florestal'\]\]/)
+})

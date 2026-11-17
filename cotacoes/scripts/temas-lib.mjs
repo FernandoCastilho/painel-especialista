@@ -29,6 +29,13 @@ export const TEMAS = [
     queries: ['telecomunicações internet banda larga Anatel', 'telecom 5G operadoras Vivo Claro TIM', 'provedores de internet fibra Brasil', 'data center nuvem internet infraestrutura Brasil'],
     termos: re('telecom|internet|banda larga|\\b5G\\b|fibra [óo]ptica|operadoras?|Anatel|provedor(?:es)?|Vivo\\b|\\bTIM\\b|\\bClaro\\b|data center|conectividade'),
     contexto: re('receita|invest|leil[ãa]o|espectro|tarifa|pre[çc]o|assinantes|clientes|lucro|resultado|regula|licen|expans|rede|cobertura|queda|alta|cresc|fus[ãa]o|aquisi|contrato') },
+  // Madeira e base florestal (pedido de 17/11/2026, para visitas a indústrias de madeira): mercado, preço e comércio exterior.
+  // Fica de fora o que não é do negócio: Ilha e Rio Madeira, fiscalização, apreensão e ocorrência policial.
+  { id: 'madeira', grupo: 'setor', label: 'Madeira e base florestal',
+    queries: ['madeira serrada compensado exportação preço', 'indústria madeireira setor florestal Brasil', 'painéis de madeira MDF MDP indústria moveleira', 'florestas plantadas eucalipto pinus madeira mercado'],
+    termos: re('madeir|serraria|\\bMDF\\b|\\bMDP\\b|compensados? de (?:pinus|eucalipto)|florestas? plantadas?|setor florestal|base florestal|eucalipto|\\bpinus\\b|ABIMCI|\\bIb[áa](?![\\wÀ-ú])|moveleir'),
+    contexto: re('pre[çc]o|exporta|importa|tarifa|produ[çc][ãa]o|demanda|vendas|custo|mercado|ind[úu]stria|setor|invest|f[áa]brica|emprego|queda|alta|cresc|recua|EUA|Estados Unidos|China|constru[çc][ãa]o|celulose|faturamento|plantio'),
+    excluir: re('Ilha da Madeira|Rio Madeira|Funchal|madeirense|arquip[ée]lago|Madeira-Mamor[ée]|Jirau|apreen|ilegal|desmat|pol[íi]cia|\\bPF\\b|\\bPRF\\b|Ibama|inc[êe]ndio|\\bpres[oa]s?\\b|crime|contraband|\\bmultas?\\b|acidente|\\btomba|morre|morto|casa de madeira') },
   { id: 'cobre', grupo: 'insumo', label: 'Cobre',
     queries: ['cobre preço LME', 'cobre China demanda estoques', 'cobre mineração Chile Peru produção', 'cobre tarifa Estados Unidos commodities'],
     termos: re('\\bcobre\\b|copper|Codelco|Freeport'),

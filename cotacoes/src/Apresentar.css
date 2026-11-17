@@ -193,6 +193,20 @@
 .sl-calc [data-painel^="Evolução"], .sl-calc [data-painel^="Composição"], .sl-calc [data-painel^="Caso conferido"],
 .sl-calc [data-painel^="Dados básicos"], .sl-calc details.desk-panel, .sl-calc details[open] { display: none; }
 .sl-calc .calc-result-shell:not(:has([data-painel]:not([data-painel^="Memória"], [data-painel^="Parcelas"], [data-painel^="Apuração"], [data-painel^="Histórico"], [data-painel^="Evolução"], [data-painel^="Composição"], [data-painel^="Caso conferido"], [data-painel^="Dados básicos"]))):has([data-painel]) { display: none; }
+/* Faturamento: o gráfico cabe inteiro na largura do slide (sem rolagem lateral) e tem altura limitada. Com um período
+   escolhido, a comparação fica à esquerda e o resumo por ano, à direita. O texto de ajuda de uso sai; as ressalvas ficam. */
+.sl-calc-faturamento .ft > .status, .sl-calc-faturamento .ft-pad { display: none; }
+.sl-calc-faturamento .ft-chart-wrap { overflow: visible; }
+.sl-calc-faturamento .ft-chart { min-width: 0 !important; width: auto; max-width: 100%; height: auto; max-height: 230px; margin: 0 auto; }
+.sl-calc-faturamento .expandable-content:not(:has(.ft-compare)) .ft-chart { max-height: 300px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) { display: grid; grid-template-columns: minmax(0, 1fr) 270px; column-gap: 20px; align-items: start; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) :is(.ft-legend, .ft-chart-wrap) { grid-column: 1 / -1; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) :is(.ft-range, .ft-compare) { grid-column: 1; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-years { grid-column: 2; grid-row: 3 / span 3; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year { padding: 8px 12px; gap: 2px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year b { font-size: 1rem; }
+.sl-calc-faturamento .ft-table th[scope="row"] { white-space: nowrap; text-align: left; }
+.sl-calc-faturamento .ft-range { margin: 8px 0; }
 .sl-corpo .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row; grid-auto-columns: auto; gap: 10px; overflow: visible; }
 .sl-corpo .kpis > * { min-width: 0; width: auto; flex: none; }
 

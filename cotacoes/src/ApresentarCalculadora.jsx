@@ -16,7 +16,8 @@ export function marcarModo(raiz, modo) {
   const todos = [...raiz.querySelectorAll(RESULTADO)]
   const resultados = todos.filter((el) => !todos.some((outro) => outro !== el && outro.contains(el)))
   // Conta só o que a pessoa veria (os quadros estão sem marca neste ponto): texto de ajuda e memórias escondidas não valem.
-  const comNumero = resultados.filter((el) => visivel(el) && TEM_NUMERO.test(el.innerText ?? el.textContent)).length
+  // Quadro que já nasce pronto (gráfico sem R$ nem %) avisa com data-apz-pronto.
+  const comNumero = resultados.filter((el) => visivel(el) && (el.hasAttribute('data-apz-pronto') || TEM_NUMERO.test(el.innerText ?? el.textContent))).length
   if (modo === 'dados') { for (const el of resultados) el.setAttribute('data-apz-fora', ''); return comNumero }
   if (!comNumero) return 0
   const manter = new Set()
