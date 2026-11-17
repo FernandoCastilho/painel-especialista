@@ -3,26 +3,46 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { summarizeRate } from '../src/rateTrend.js'
 const source = name => readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8')
-// Pedido explícito: tabela inicial; Brasil antes do exterior. Gráficos abrem no detalhe.
-test('juros: tabelas iniciais separadas em Brasil e exterior abrem detalhes', () => {
- const s=source('Juros.jsx'), br=s.slice(s.indexOf('<section aria-labelledby="juros-brasil">'),s.indexOf('<section aria-labelledby="juros-exterior">')), ex=s.slice(s.indexOf('<section aria-labelledby="juros-exterior">'))
- assert.match(br, /<RatesSnapshot.*region="brasil".*onOpen=\{abrir\}/)
- assert.match(ex, /<RatesSnapshot.*region="exterior".*onOpen=\{abrir\}/)
- assert.match(br, /<CdiFuturoTable.*onOpen=\{abrir\}/)
- assert.match(br, /<Curves.*region="brasil".*onOpen=\{abrir\}/)
- assert.match(ex, /<Curves.*region="exterior".*onOpen=\{abrir\}/)
+// Pedido de 17/11/2026 (substitui o de 15/11): só gráficos na página, sem a Selic meta. As tabelas e a escolha de
+// período ficam no detalhe, que abre no centro da tela ao clicar no gráfico. Brasil antes do exterior.
+test('juros: só gráficos na página, sem Selic meta; tabelas ficam no detalhe', () => {
+ const s=source('Juros.jsx'), br=s.slice(s.indexOf('aria-labelledby="juros-brasil">'),s.indexOf('aria-labelledby="juros-exterior">')), ex=s.slice(s.indexOf('aria-labelledby="juros-exterior">'))
+ assert.match(br, /<Graficos region="brasil".*onOpen=\{abrir\}/)
+ assert.match(ex, /<Graficos region="exterior".*onOpen=\{abrir\}/)
+ assert.match(s, /brasil: \[\['cdi', 'CDI', 'juros-ref-brasil'\], \['cdif', 'CDI futuro', 'juros-cdif'\], \['curva-br', 'DI x pré', 'juros-curva-br'\], \['curva-cc', 'Cupom cambial', 'juros-curva-cc'\]\]/)
+ assert.match(s, /exterior: \[\['sofr', 'SOFR', 'juros-ref-exterior'\], \['fed', 'Fed \(faixa-alvo\)'\], \['estr', '€STR'\], \['ecb', 'BCE \(depósito\)'\], \['boj', 'Japão \(meta overnight\)'\], \['curva-us', 'Treasuries', 'juros-curva-us'\], \['curva-eu', 'Curva do euro', 'juros-curva-eu'\]\]/)
+ // nenhuma tabela na página: nem a de referência, nem a de CDI futuro, nem as das curvas
+ assert.doesNotMatch(s, /<RatesSnapshot|<CdiFuturoTable|<Curves |IndicatorTable|<table/)
+ assert.match(s, /<CdiFuturo preview /); assert.match(s, /<CurveDetail preview /)
+ // Selic meta fora da aba
+ assert.doesNotMatch(s, /<SelicChart|'selic'|SELIC/)
+ // clicar no gráfico abre o detalhe; os controles do próprio gráfico não disparam a abertura
+ assert.match(s, /onClick=\{\(e\) => \{ if \(!e\.target\.closest\(CONTROLE\)\) onOpen\(kind\) \}\}/)
+ assert.match(s, /aria-label=\{`Ampliar gráfico: \$\{nome\}`\}/)
  assert.match(s, /<RateModal kind=\{open\}/)
- assert.doesNotMatch(s, /<GraphCard|<SelicChart|<CdiChart|<SofrChart/)
- for (const id of ['SELIC','CDI','SOFR','ESTR','FED','ECB','BOJ']) assert.ok(s.includes(id + ':'), id)
+ // no detalhe, as tabelas vêm abaixo do gráfico
+ const m=source('RateModal.jsx')
+ assert.match(m, /<CdiFuturo curves=\{curves\} macro=\{data\} hol=\{hol\} \/><CdiFuturoTable curves=\{curves\} \/>/)
+ assert.match(m, /<RatesSnapshot.*onlyIds/); assert.match(m, /<Curves curves=\{curves\} onlyId=/)
+ // tabela dentro do detalhe não tem linha clicável
+ assert.match(source('IndicatorTable.jsx'), /const off = r\.disabled \|\| !onOpen/)
 })
 test('juros: detalhe preserva gráficos, inclui leitura e tabelas filtradas',()=>{
  const s=source('RateModal.jsx'); assert.match(s,/<RateTrend/);assert.match(s,/<RatesSnapshot.*onlyIds/);assert.match(s,/<Curves.*onlyId/)
  assert.match(source('RatesSnapshot.jsx'),/onlyIds.includes\(row.id\)/)
  assert.match(source('Curves.jsx'),/!onlyId \|\| id === onlyId/)
 })
-test('juros: tabela de referência precede as curvas em cada região',()=>{
+test('juros: referência vem antes do CDI futuro e das curvas em cada região',()=>{
  const s=source('Juros.jsx')
- for (const region of ['brasil','exterior']) assert.ok(s.indexOf(`<RatesSnapshot macro={macro} region="${region}"`) < s.indexOf(`<Curves curves={curves} region="${region}"`))
+ assert.ok(s.indexOf("['cdi', 'CDI'") < s.indexOf("['cdif'") && s.indexOf("['cdif'") < s.indexOf("['curva-br'") && s.indexOf("['curva-br'") < s.indexOf("['curva-cc'"))
+ assert.ok(s.indexOf("['sofr'") < s.indexOf("['boj'") && s.indexOf("['boj'") < s.indexOf("['curva-us'") && s.indexOf("['curva-us'") < s.indexOf("['curva-eu'"))
+})
+test('detalhe de gráfico abre em janela no centro da tela no computador', () => {
+ const css=source('styles.css')
+ assert.match(css, /\.expandable-panel\.is-dialog\.is-modal \{ inset:0; margin:auto; width:min\(1120px, calc\(100vw - 64px\)\); height:fit-content; max-height:calc\(100dvh - 64px\);/)
+ assert.doesNotMatch(css, /\.expandable-panel\.is-dialog\.is-modal \{ inset:0 0 0 auto/)
+ // sem `transform` depois de aberta: calendário e balões de posição fixa continuam se medindo pela tela
+ assert.match(css, /\.expandable-panel\.is-modal\[open\] \{ animation:modal-in \.28s cubic-bezier\(\.16,1,\.3,1\) backwards; \}/)
 })
 const day=86400000, range={start:new Date(10*day),end:new Date(20*day)}
 test('tendência: não usa dados futuros nem converte faltantes em zero',()=>{

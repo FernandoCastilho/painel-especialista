@@ -590,13 +590,16 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
    Entrada usa transform/clip-path no próprio elemento; passar o mouse usa outras propriedades (cor, opacidade),
    então um não desalinha o outro. Com "reduzir movimento", nada disto roda. */
 @media (min-width: 900px) {
-  /* detalhe ao clicar num indicador: gaveta lateral à direita, com o painel ainda visível ao lado */
-  .expandable-panel.is-dialog.is-modal { inset:0 0 0 auto; margin:0 0 0 auto; width:min(860px, 100%); border-left:1px solid var(--line); }
+  /* detalhe ao clicar num indicador, moeda ou taxa: janela no centro da tela, ampla mas sem ocupar a tela toda */
+  .expandable-panel.is-dialog.is-modal { inset:0; margin:auto; width:min(1120px, calc(100vw - 64px)); height:fit-content; max-height:calc(100dvh - 64px); border:1px solid var(--line); border-radius:8px; box-shadow:0 24px 64px rgba(0,0,0,.35); }
+  .expandable-panel.is-modal > .expandable-controls { border-radius:8px 8px 0 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .expandable-panel.is-modal[open] { animation:curtain-in .45s cubic-bezier(.16,1,.3,1) both; }
+  /* `backwards` (e não `both`): terminada a abertura, a janela fica sem `transform`. Com ele, o calendário e os balões
+     (posição fixa) passariam a se medir pela janela, e não pela tela, e sairiam do lugar. */
+  .expandable-panel.is-modal[open] { animation:modal-in .28s cubic-bezier(.16,1,.3,1) backwards; }
   .expandable-panel.is-modal[open]::backdrop { animation:fade-in .3s ease-out both; }
-  .expandable-panel.is-modal.is-closing { animation:curtain-out .24s cubic-bezier(.7,0,.84,0) both; }
+  .expandable-panel.is-modal.is-closing { animation:modal-out .24s cubic-bezier(.7,0,.84,0) both; }
   .expandable-panel.is-modal.is-closing::backdrop { animation:fade-out .24s ease-in both; }
   .bar-grow { transform-origin:left center; animation:bar-grow-x .5s cubic-bezier(.2,.8,.2,1) both; animation-delay:var(--bar-delay, 0ms); }
   .bar-grow-y { transform-box:fill-box; transform-origin:center bottom; animation:bar-grow-y .5s cubic-bezier(.2,.8,.2,1) both; animation-delay:var(--bar-delay, 0ms); }
@@ -607,6 +610,9 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 }
 @keyframes pop-in { from { opacity:0; translate:0 4px; } }
 @keyframes curtain-in { from { clip-path:inset(0 0 0 100%); } to { clip-path:inset(0 0 0 0); } }
+/* janela central: surge esmaecendo e crescendo um pouco; some do mesmo jeito */
+@keyframes modal-in { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
+@keyframes modal-out { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(.97); } }
 @keyframes curtain-out { from { clip-path:inset(0 0 0 0); } to { clip-path:inset(0 0 0 100%); } }
 @keyframes fade-in { from { opacity:0; } }
 @keyframes fade-out { to { opacity:0; } }

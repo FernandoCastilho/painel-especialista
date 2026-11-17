@@ -3,7 +3,7 @@ import Expandable from './Expandable.jsx'
 import ChartFilters from './ChartFilters.jsx'
 import { MacroStatus, CdiChart, EstrChart, PolicyChart, RateChart, RatesPeriod, SelicChart, fromInput, rangeFor } from './Macro.jsx'
 import SofrChart from './Sofr.jsx'
-import CdiFuturo from './CdiFuturo.jsx'
+import CdiFuturo, { CdiFuturoTable } from './CdiFuturo.jsx'
 import { CURVAS, CurveDetail } from './Curves.jsx'
 import { useDataFile } from './useDataFile.js'
 import { normalizeEstr } from './estr.js'
@@ -56,7 +56,8 @@ export function Policy({ kind, range }) {
   )
 }
 
-// Tela de detalhe dos juros: o gráfico de um indicador, do CDI futuro ou de uma curva, aberto pela linha da tabela.
+// Tela de detalhe dos juros: o gráfico de um indicador, do CDI futuro ou de uma curva, aberto pelo gráfico da aba Juros,
+// com as tabelas logo abaixo.
 // Período e datas ficam aqui dentro, como no gráfico das moedas.
 export default function RateModal({ kind, macro, curves, hol, onClose }) {
   const [preset, setPreset] = useState('365')
@@ -70,7 +71,7 @@ export default function RateModal({ kind, macro, curves, hol, onClose }) {
   const data = macro?.data
   const di = useMemo(() => (kind === 'di1' ? di1Points(curves?.data) : []), [kind, curves?.data])
   const title = TITLES[kind] ?? kind
-  if (kind === 'cdif') return <Expandable modal label={`detalhes: ${title}`} onClose={onClose}><CdiFuturo curves={curves} macro={data} hol={hol} /></Expandable>
+  if (kind === 'cdif') return <Expandable modal label={`detalhes: ${title}`} onClose={onClose}><CdiFuturo curves={curves} macro={data} hol={hol} /><CdiFuturoTable curves={curves} /></Expandable>
   return (
     <Expandable modal label={`detalhes: ${title}`} onClose={onClose}>
       <section className="macro rate-modal">

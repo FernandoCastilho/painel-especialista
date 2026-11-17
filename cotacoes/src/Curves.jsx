@@ -200,7 +200,19 @@ export function useEuroCurve() {
   return { data, loading: f.status === 'loading', stale: !!(data?.stale || f.stale) }
 }
 
-// Gráfico de uma curva na tela de detalhe (aberta pela tabela da aba Juros). O cupom leva junto a leitura de cenário.
+// Gráfico de uma curva: na aba Juros (`preview`, sem os avisos gerais da coleta, que a página dá uma vez só) e na tela
+// de detalhe. No detalhe, o cupom leva junto a leitura de cenário.
+// Avisos gerais da coleta das curvas, uma vez por página (os gráficos em `preview` não os repetem).
+export function CurvesStatus({ curves: c }) {
+  const d = c?.data
+  return (
+    <>
+      {c?.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
+      {d?.generatedAt && Date.now() - d.generatedAt > 3 * 3600e3 && !isWeekendBR() && <p className="status stale" role="status">Curvas coletadas há mais de 3 horas; atualização pode estar pendente.</p>}
+    </>
+  )
+}
+
 export function CurveDetail({ id, curves: c, preview = false }) {
   const euro = useEuroCurve()
   if (id === 'eu') {
@@ -217,9 +229,9 @@ export function CurveDetail({ id, curves: c, preview = false }) {
   const d = c.data
   return (
     <>
-      {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
+      {!preview && c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
       {d?.stale?.[id] && <p className="status stale" role="status">Atualização pendente desta curva; última coleta: {new Date(d.stale[id]).toLocaleString('pt-BR')}.</p>}
-      {d?.generatedAt && Date.now() - d.generatedAt > 3 * 3600e3 && !isWeekendBR() && <p className="status stale" role="status">Curvas coletadas há mais de 3 horas; atualização pode estar pendente.</p>}
+      {!preview && d?.generatedAt && Date.now() - d.generatedAt > 3 * 3600e3 && !isWeekendBR() && <p className="status stale" role="status">Curvas coletadas há mais de 3 horas; atualização pode estar pendente.</p>}
       {d?.[id] ? grafico(id, d[id]) : <p className="status">Curva indisponível nesta atualização.</p>}
       {!preview && id === 'cc' && d?.cc && d?.br && <CupomLeitura curves={d} />}
     </>
@@ -237,7 +249,7 @@ export default function Curves({ curves: c, onOpen, region, onlyId }) {
   const dados = { br: d?.br, cc: d?.cc, us: d?.us, eu: euro.data }
   return (
     <section className="macro curve-tables" aria-label="Curvas de juros">
-      <p className="ind-note">Curvas de juros: taxas em % a.a. por prazo, na última data e nas datas de comparação. Toque em uma linha para abrir o gráfico da curva.</p>
+      <p className="ind-note">Curvas de juros: taxas em % a.a. por prazo, na última data e nas datas de comparação.{onOpen ? ' Toque em uma linha para abrir o gráfico da curva.' : ''}</p>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível. {c.error}</p>}
       {c.status === 'loading' && <div className="placeholder">Carregando curvas…</div>}
       {c.status === 'ok' && c.data.generatedAt && (Date.now() - c.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (

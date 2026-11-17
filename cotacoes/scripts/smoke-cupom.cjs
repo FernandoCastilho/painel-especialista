@@ -16,38 +16,44 @@ const curves = { generatedAt: Date.now(), br: set(14.3, -0.2), cc: set(5.2, -0.1
       p.on('pageerror', (e) => errors.push(e.message))
       await p.route('**/curves.json*', (r) => r.fulfill({ json: curves }))
       await p.goto(base + '/#juros')
-      // a página traz só tabelas: referência, CDI futuro e uma por curva (DI x pré, cupom, Treasuries); nenhum gráfico solto
-      await p.locator('.curve-table').first().waitFor()
-      // atalhos no topo levam a cada tabela; todas com a mesma faixa de título e moldura da tabela de referência
+      // a página traz só gráficos (pedido de 17/11/2026): referência, CDI futuro e uma curva por gráfico; nenhuma tabela
+      await p.locator('#juros-curva-br .plot svg[role=img]').waitFor()
+      // atalhos no topo levam a cada gráfico
       assert.deepEqual(await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button').allInnerTexts().then((t) => t.map((x) => x.toLowerCase())), ['brasil · referência', 'cdi futuro', 'di x pré', 'cupom cambial', 'exterior · referência', 'treasuries', 'euro'])
       await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button', { name: 'Treasuries' }).click()
       await p.waitForFunction(() => { const r = document.getElementById('juros-curva-us').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight })
-      assert.equal(await p.locator('.juros-tabela .executive-rates__heading').count(), 5, 'CDI futuro e quatro curvas com a faixa de título')
-      assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página')
+      assert.equal(await p.locator('main table').count(), 0, 'nenhuma tabela na página')
+      for (const id of ['juros-cdif', 'juros-curva-br', 'juros-curva-cc', 'juros-curva-us']) assert.ok(await p.locator(`#${id} .plot svg`).count() >= 1, `${id} em gráfico`)
       assert.equal(await p.locator('.juros-period').count(), 0)
-      const tabela = (t) => p.locator('.curve-table', { hasText: t })
-      for (const t of ['Brasil · DI x pré', 'Brasil · Cupom cambial', 'EUA · Treasuries']) assert.ok(await tabela(t).locator('tbody tr').count() >= 4, `${t}: prazos na tabela`)
+      const abrir = async (nome, titulo) => { await p.getByRole('button', { name: `Ampliar gráfico: ${nome}`, exact: true }).click(); const d = p.getByRole('dialog', { name: `detalhes: ${titulo}` }); await d.locator('.plot svg').first().waitFor(); return d }
+      const fechar = async (d) => { await d.getByRole('button', { name: 'Fechar detalhes' }).click(); await d.waitFor({ state: 'hidden' }) }
+      // DI x pré: clicar no próprio gráfico abre o detalhe; a tabela fica abaixo, com uma coluna por data de comparação
+      const cartao = p.locator('#juros-curva-br .plot svg[role=img]'); await cartao.scrollIntoViewIfNeeded(); await cartao.click()
+      const dlgBr = p.getByRole('dialog', { name: 'detalhes: Brasil · DI x pré' }); await dlgBr.locator('.curve-table tbody tr').first().waitFor()
+      const tabBr = dlgBr.locator('.curve-table')
+      assert.ok(await tabBr.locator('tbody tr').count() >= 4, 'DI x pré: prazos na tabela do detalhe')
       // números da curva na tabela: 1 ano do DI na última data = 14,3 − 0,2 (curva sintética), e uma coluna por data de comparação
-      assert.match(await tabela('Brasil · DI x pré').locator('tbody tr', { hasText: '1 ano' }).innerText(), /14,10%[\s\S]*14,05%/)
-      assert.equal(await tabela('Brasil · DI x pré').locator('thead th').count(), 1 + dates.length)
-      assert.match(await tabela('EUA · Treasuries').locator('tbody tr').first().innerText(), /3 meses[\s\S]*4,08%/)
-      // CDI futuro: números por horizonte na página; a linha abre o gráfico com a escolha de datas
-      const cdif = p.locator('.cdif-table'); assert.match(await cdif.locator('tbody tr', { hasText: '1 ano' }).innerText(), /14,10%/)
-      await cdif.getByRole('button', { name: 'CDI futuro, 1 ano: abrir gráfico' }).click()
-      const dlgCdif = p.getByRole('dialog', { name: 'detalhes: CDI futuro' }); await dlgCdif.locator('.plot svg').first().waitFor()
+      assert.match(await tabBr.locator('tbody tr', { hasText: '1 ano' }).innerText(), /14,10%[\s\S]*14,05%/)
+      assert.equal(await tabBr.locator('thead th').count(), 1 + dates.length)
+      assert.ok((await tabBr.boundingBox()).y > (await dlgBr.locator('article.chart.curve').boundingBox()).y, 'tabela abaixo do gráfico')
+      assert.equal(await tabBr.locator('tbody button:not([disabled])').count(), 0, 'linhas da tabela do detalhe não são clicáveis')
+      await fechar(dlgBr)
+      // CDI futuro: gráfico com a escolha de datas e, abaixo, os números por horizonte
+      const dlgCdif = await abrir('CDI futuro', 'CDI futuro')
       assert.match(await dlgCdif.innerText(), /CDI a termo de/)
-      await dlgCdif.getByRole('button', { name: 'Fechar detalhes' }).click(); await dlgCdif.waitFor({ state: 'hidden' })
-      // Treasuries: a linha abre a curva em tela própria, com a explicação da seleção de períodos
-      await tabela('EUA · Treasuries').locator('tbody tr').first().click()
-      const dlgUs = p.getByRole('dialog', { name: 'detalhes: EUA · Treasuries' }); await dlgUs.locator('.plot svg[role=img]').waitFor()
+      assert.match(await dlgCdif.locator('.cdif-table tbody tr', { hasText: '1 ano' }).innerText(), /14,10%/)
+      await fechar(dlgCdif)
+      // Treasuries: a curva em tela própria, com a explicação da seleção de períodos e a tabela abaixo
+      const dlgUs = await abrir('Treasuries', 'EUA · Treasuries'); await dlgUs.locator('.plot svg[role=img]').waitFor()
+      assert.match(await dlgUs.locator('.curve-table tbody tr').first().innerText(), /3 meses[\s\S]*4,08%/)
       assert.equal(await dlgUs.locator('.curve-legend-title').count(), 1, 'explicação dos períodos na curva')
       await dlgUs.getByRole('button', { name: 'O que é: Curvas de comparação: Treasuries' }).click()
       const tip = p.locator('[role=tooltip]').filter({ hasText: 'Curvas de comparação: Treasuries' }).first(); await tip.waitFor()
       const tt = await tip.innerText(); assert.match(tt, /Último dia[\s\S]*1 semana[\s\S]*1 ano/); assert.match(tt, /fim de semana ou feriado/); assert.match(tt, /Inversão/)
       await p.keyboard.press('Escape'); if (width < 700) await p.locator('.pop-close:visible').first().click().catch(() => {})
-      await dlgUs.getByRole('button', { name: 'Fechar detalhes' }).click(); await dlgUs.waitFor({ state: 'hidden' })
+      await fechar(dlgUs)
       // cupom cambial: a tela da curva traz o gráfico e, logo abaixo, a leitura de cenário
-      await tabela('Brasil · Cupom cambial').getByRole('button', { name: /1 ano: abrir gráfico da curva/ }).click()
+      await p.getByRole('button', { name: 'Ampliar gráfico: Cupom cambial', exact: true }).click()
       const dlg = p.getByRole('dialog', { name: 'detalhes: Brasil · Cupom cambial' })
       const s = dlg.locator('.cupom-leitura'); await s.waitFor(); await s.scrollIntoViewIfNeeded()
       const txt = await s.innerText()
@@ -70,6 +76,6 @@ const curves = { generatedAt: Date.now(), br: set(14.3, -0.2), cc: set(5.2, -0.1
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
       assert.deepEqual(errors, [])
     }
-    console.log('PASS juros: tabelas das curvas e do CDI futuro abrem o gráfico em tela própria; cupom cambial com resumo, variação por vértice e cupom no tempo (390 e 1280)')
+    console.log('PASS juros: só gráficos na página; detalhe com tabelas de curvas e CDI futuro; cupom cambial com resumo, variação por vértice e cupom no tempo (390 e 1280)')
   } finally { await b.close() }
 })().catch((e) => { console.error(e); process.exit(1) })
