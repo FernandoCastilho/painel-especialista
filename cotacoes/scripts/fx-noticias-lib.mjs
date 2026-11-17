@@ -38,6 +38,8 @@ export const urlBuscaDia = (q, dia) => {
 const MOVIMENTO = /\b(fecha|fechou|sobe|subiu|cai|caiu|recua|recuou|avanca|avancou|dispara|disparou|despenca|despencou|salta|saltou|renova|alta|queda|maior|menor)\b/
 // "Bilhões de dólares" é valor em dinheiro, não câmbio (ex.: matéria de empresa).
 const VALOR_EM_DOLAR = /\b(mil|milhao|milhoes|bilhao|bilhoes|trilhao|trilhoes|bi|mi|tri) de dolares\b/
+// Manchete cujo assunto é outro ativo (ouro, açúcar, euro, ações...) e cita o dólar só de passagem fica de fora.
+const OUTRO_ASSUNTO = /^(ouro|prata|acucar|cafe|soja|milho|trigo|algodao|cacau|boi|petroleo|brent|cobre|minerio|acoes|bitcoin|cripto|euro|iene|yuan|libra)\b/
 const plano = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const chave = (s) => plano(s).replace(/[^a-z0-9]+/g, ' ').trim()
 export const pontuar = (it) => (MOVIMENTO.test(plano(it.title)) ? 2 : 0) + (it.source === 'Valor Econômico' ? 1 : 0)
@@ -48,7 +50,7 @@ export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
   const validos = []
   for (const it of itens) {
     if (!it?.title || !/^https?:\/\//.test(it.link ?? '') || !Number.isFinite(it.t) || it.t <= 0) continue
-    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title) || VALOR_EM_DOLAR.test(plano(it.title))) continue
+    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title) || VALOR_EM_DOLAR.test(plano(it.title)) || OUTRO_ASSUNTO.test(plano(it.title).trim())) continue
     const k = chave(it.title)
     if (vistos.has(k)) continue
     vistos.add(k)
