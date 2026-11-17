@@ -3,7 +3,7 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
-import { EXEMPLO, compararPeriodo, parseFaturamento, resumoPorAno, rotuloMes } from './faturamento.js'
+import { EXEMPLO, compararPeriodo, parseFaturamento, resumoPorAno, rotuloMes, serieContinua } from './faturamento.js'
 import './Faturamento.css'
 
 const num = (v, casas = 0) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }))
@@ -63,6 +63,7 @@ function Grafico({ meses, sel, onSelecionar }) {
     <ChartFullscreen><svg
       ref={svg}
       className="ft-chart"
+      style={{ minWidth: `${Math.max(640, meses.length * 46)}px` }}
       viewBox={`0 0 ${W} ${ALT}`}
       role="img"
       aria-label={`Gráfico de ${meses.length} meses, de ${meses[0].rotulo} a ${meses.at(-1).rotulo}. Clique em um mês ou arraste para escolher o período.`}
@@ -133,8 +134,9 @@ function Comparacao({ c }) {
 export default function Faturamento({ onBack }) {
   const [texto, setTexto] = useState('')
   const [sel, setSel] = useState(null)
-  const { meses, avisos } = parseFaturamento(texto)
-  const chaves = new Set(meses.map((m) => m.chave))
+  const { meses, avisos, unidade } = parseFaturamento(texto)
+  const serie = serieContinua(meses)
+  const chaves = new Set(serie.map((m) => m.chave))
   const selValida = sel && chaves.has(sel.de) && chaves.has(sel.ate) ? sel : null
   const comparacao = selValida ? compararPeriodo(meses, selValida.de, selValida.ate) : null
   const anos = resumoPorAno(meses)
@@ -144,18 +146,18 @@ export default function Faturamento({ onBack }) {
   return (
     <section className="cx bw calc-standard calc-workspace ft" aria-labelledby="ft-h">
       <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
-      <div className="bw-heading calc-workspace-heading"><h2 id="ft-h" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Faturamento</span></h2><Help title="Faturamento: como usar"><p>Cole a tabela com uma linha por mês: mês, faturamento e endividamento (por exemplo, copiada do DAC). Aceita meses como out/24, out/2024 ou 10/2024 e números como 7.123 ou 7.123,45. A primeira linha de títulos é ignorada.</p><p>Os valores ficam na unidade em que foram colados (normalmente R$ mil). Clique em um mês ou arraste sobre vários para comparar com os mesmos meses do ano anterior. Só entram na variação os meses que existem nos dois anos. Endividamento zero ou vazio conta como sem informação, porque costuma ser mês ainda não fechado.</p><p>Os dados ficam só nesta tela: nada é salvo nem enviado.</p></Help></div>
+      <div className="bw-heading calc-workspace-heading"><h2 id="ft-h" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Faturamento</span></h2><Help title="Faturamento: como usar"><p>Cole a tabela com uma linha por mês: competência, faturamento e endividamento (por exemplo, copiada do DAC). Aceita meses como Jan/24, out/2024 ou 10/2024 e números como 7.123 ou 7.123,45; traço (– ou -) é mês sem informação. Também aceita a tabela com barras (| Jan/25 | 350 | 2.235 |). Linhas de título e cabeçalho são ignoradas, e a unidade do cabeçalho, como (R$ mil), aparece no gráfico.</p><p>Os valores ficam na unidade em que foram colados (normalmente R$ mil). Clique em um mês ou arraste sobre vários para comparar com os mesmos meses do ano anterior. Só entram na variação os meses que existem nos dois anos. Endividamento zero ou vazio conta como sem informação, porque costuma ser mês ainda não fechado.</p><p>Os dados ficam só nesta tela: nada é salvo nem enviado.</p></Help></div>
 
       <article className="desk-panel cx-panel">
         <header><h3 className="cx-heading"><span>Dados</span></h3></header>
         <div className="ft-input">
-          <label htmlFor="ft-texto">Cole aqui: Mês, Faturamento e Endividamento</label>
-          <textarea id="ft-texto" rows={8} spellCheck={false} placeholder={'Mês\tFaturamento\tEndividamento\nout/24\t7.123\t9.530\nnov/24\t5.797\t9.530'} value={texto} onChange={(e) => setTexto(e.target.value)} aria-describedby="ft-status" />
+          <label htmlFor="ft-texto">Cole aqui: Competência (mês), Faturamento e Endividamento</label>
+          <textarea id="ft-texto" rows={8} spellCheck={false} placeholder={'Faturamento e endividamento\nCompetência\tFaturamento (R$ mil)\tEndividamento (R$ mil)\nJan/24\t87\t–\nFev/24\t1.246\t–\nJan/25\t350\t2.235'} value={texto} onChange={(e) => setTexto(e.target.value)} aria-describedby="ft-status" />
           <div className="ft-actions">
             <button type="button" onClick={() => { setTexto(EXEMPLO); setSel(null) }}>Usar exemplo fictício</button>
             {texto && <button type="button" onClick={() => { setTexto(''); setSel(null) }}>Limpar</button>}
           </div>
-          <p id="ft-status" className="cx-hint" role="status">{meses.length ? `${meses.length} ${meses.length === 1 ? 'mês lido' : 'meses lidos'}, de ${meses[0].rotulo} a ${meses.at(-1).rotulo}.` : 'Nenhum mês lido ainda.'}</p>
+          <p id="ft-status" className="cx-hint" role="status">{meses.length ? `${meses.length} ${meses.length === 1 ? 'mês lido' : 'meses lidos'}, de ${meses[0].rotulo} a ${meses.at(-1).rotulo}${unidade ? `, valores em ${unidade}` : ''}.` : 'Nenhum mês lido ainda.'}</p>
           {avisos.length > 0 && (
             <ul className="ft-avisos" role="alert">
               {avisos.slice(0, 6).map((a) => <li key={a.linha}>Linha {a.linha} ignorada: {a.motivo} <code>{a.texto}</code></li>)}
@@ -167,12 +169,12 @@ export default function Faturamento({ onBack }) {
 
       {meses.length > 0 && (
         <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">
-          <ExpandablePanel title="Faturamento x Endividamento">
+          <ExpandablePanel title={`Faturamento x Endividamento${unidade ? ` (${unidade})` : ''}`}>
             <div className="ft-legend" aria-hidden="true"><span className="ft-key-f" /> Faturamento <span className="ft-key-d" /> Endividamento <span className="ft-key-sel" /> Período escolhido <span className="ft-key-prev" /> Ano anterior</div>
-            <div className="ft-chart-wrap"><Grafico meses={meses} sel={selValida} onSelecionar={selecionar} /></div>
+            <div className="ft-chart-wrap"><Grafico meses={serie} sel={selValida} onSelecionar={selecionar} /></div>
             <div className="ft-range">
-              <label>De <select value={ini} onChange={(e) => { const k = Number(e.target.value); selecionar(k, fim === '' || fim < k ? k : fim) }}><option value="" disabled>mês</option>{meses.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
-              <label>Até <select value={fim} onChange={(e) => { const k = Number(e.target.value); selecionar(ini === '' || ini > k ? k : ini, k) }}><option value="" disabled>mês</option>{meses.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
+              <label>De <select value={ini} onChange={(e) => { const k = Number(e.target.value); selecionar(k, fim === '' || fim < k ? k : fim) }}><option value="" disabled>mês</option>{serie.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
+              <label>Até <select value={fim} onChange={(e) => { const k = Number(e.target.value); selecionar(ini === '' || ini > k ? k : ini, k) }}><option value="" disabled>mês</option>{serie.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
               {selValida && <button type="button" onClick={() => setSel(null)}>Limpar seleção</button>}
             </div>
             <Comparacao c={comparacao} />
@@ -188,7 +190,7 @@ export default function Faturamento({ onBack }) {
           </ExpandablePanel>
         </article>
       )}
-      <p className="status">Valores na unidade colada · Meses do ano anterior: {!selValida ? 'escolha um período' : ini === fim ? rotuloMes(ini - 12) : `${rotuloMes(ini - 12)} a ${rotuloMes(fim - 12)}`}</p>
+      <p className="status">{unidade ? `Valores em ${unidade}` : 'Valores na unidade colada'} · Meses do ano anterior: {!selValida ? 'escolha um período' : ini === fim ? rotuloMes(ini - 12) : `${rotuloMes(ini - 12)} a ${rotuloMes(fim - 12)}`}</p>
     </section>
   )
 }

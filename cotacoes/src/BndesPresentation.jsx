@@ -2,7 +2,7 @@ import ChartFullscreen from './ChartFullscreen.jsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { nbr5891 } from './format.js'
 import { BNDES_SLIDES, buildBndesSlides, captureBndesPresentation, presentationStep } from './bndesPresentation.js'
-import './Apresentacao.css'
+import './ApresentacaoBase.css'
 import './BndesPresentation.css'
 
 const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

@@ -23,10 +23,16 @@ test('Configurações fica fora do menu (oculta), mas a rota continua', async ()
   assert.equal(DESK_TABS.find((t) => t.id === 'config').oculto, true)
   assert.equal(APP_SECTIONS.find(section => section.id === 'config').oculto, true)
   assert.equal(SEARCH_SECTIONS.config, undefined)
-  assert.equal(SEARCH_SECTIONS.apresentar, undefined)
   assert.equal(SEARCH_SECTIONS.resumo, 'Mercado hoje')
   assert.equal(DESK_TABS[0].label, 'Mercado')
   assert.match(src, /TABS\.filter\(\(t\) => !t\.oculto\)/)
+})
+
+test('Apresentar fica fora do menu por enquanto, abre pelo comando e não vira destino da busca', () => {
+  assert.equal(APP_SECTIONS.find(section => section.id === 'apresentar').oculto, true)
+  assert.equal(DESK_TABS.find(section => section.id === 'apresentar').oculto, true)
+  assert.equal(SEARCH_SECTIONS.apresentar, undefined) // a aba monta slides; o conteúdo buscável continua nas abas de origem
+  assert.deepEqual(parseCommand('APRESENTAR'), { kind: 'tab', id: 'apresentar', sub: '' })
 })
 
 test('Calculadoras aparece no menu e mantém busca e acesso direto', () => {

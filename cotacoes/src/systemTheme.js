@@ -4,6 +4,8 @@ export const THEME_COLORS = { dark: '#050505', light: '#f5f4f0' }
 export const THEME_STORAGE_KEY = 'painel-theme'
 export const THEME_EVENT = 'painel-theme-change'
 const sessionChoices = new WeakMap()
+// Tema imposto por uma tela enquanto ela está aberta (Apresentar é sempre clara). Não altera a escolha salva.
+const overrides = new WeakMap()
 const normalize = value => value === 'light' || value === 'dark' ? value : 'system'
 
 export function readSystemTheme(target = globalThis) {
@@ -16,6 +18,7 @@ export function readThemePreference(target = globalThis) {
 }
 
 export function readTheme(target = globalThis) {
+  if (overrides.has(target)) return overrides.get(target)
   const preference = readThemePreference(target)
   return preference === 'system' ? readSystemTheme(target) : preference
 }
@@ -28,6 +31,13 @@ export function setThemePreference(value, target = globalThis) {
     if (preference === 'system') target.localStorage?.removeItem(THEME_STORAGE_KEY)
     else target.localStorage?.setItem(THEME_STORAGE_KEY, preference)
   } catch { /* The choice still applies in memory. */ }
+  target.dispatchEvent?.(new Event(THEME_EVENT))
+}
+
+// 'light' ou 'dark' impõe o tema; qualquer outro valor devolve o painel à escolha do usuário.
+export function setThemeOverride(value, target = globalThis) {
+  if (value === 'light' || value === 'dark') overrides.set(target, value)
+  else overrides.delete(target)
   target.dispatchEvent?.(new Event(THEME_EVENT))
 }
 

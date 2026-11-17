@@ -31,6 +31,57 @@ test('lê o texto colado do DAC, com cabeçalho, espaços ou tabulação', () =>
   assert.deepEqual(tab.meses.map((m) => [m.rotulo, m.faturamento, m.endividamento]), [['jan/26', 5584.5, 10349], ['set/26', 4647, 0]])
 })
 
+// Modelo do DAC enviado por Fernando (números inventados): título, cabeçalho com (R$ mil) e meia-risca (–) sem dado.
+const MODELO = `Faturamento e endividamento
+Competência     Faturamento (R$ mil)    Endividamento (R$ mil)
+Jan/24  87      –
+Fev/24  1.246   –
+Mar/24  2.596   –
+Jan/25  350     2.235
+Fev/25  549     2.777
+Mar/25  1.683   –
+Jan/26  5.440   3.825
+Fev/26  5.483   3.752
+Mar/26  11.416  0
+`
+
+test('lê o modelo com título, unidade no cabeçalho e meia-risca como mês sem informação', () => {
+  const { meses, avisos, unidade } = fat.parseFaturamento(MODELO)
+  assert.deepEqual(avisos, [])
+  assert.equal(unidade, 'R$ mil')
+  assert.equal(meses.length, 9)
+  assert.deepEqual(meses.slice(0, 1).map((m) => [m.rotulo, m.faturamento, m.endividamento]), [['jan/24', 87, null]])
+  assert.equal(fat.parseNumero('–'), null)
+  assert.equal(fat.parseNumero('—'), null)
+  // Período de vários meses: todos os meses do ano anterior entram, inclusive sem endividamento.
+  const c = fat.compararPeriodo(meses, fat.chaveMes(2025, 1), fat.chaveMes(2025, 3))
+  assert.equal(c.mesesComparados, 3)
+  assert.equal(c.faturamento.anterior, 87 + 1246 + 2596)
+  assert.equal(c.endividamento.mesesComparados, 0)
+  assert.equal(fat.parseFaturamento(fat.EXEMPLO).avisos.length, 0)
+  assert.equal(fat.parseFaturamento(fat.EXEMPLO).unidade, 'R$ mil')
+})
+
+test('lê a tabela com barras (| Competência | ... |) e ignora a linha de traços', () => {
+  const texto = `| Competência | Faturamento (R$ mil) | Endividamento (R$ mil) |
+|---|---:|---:|
+| Jan/25 | 350 | 2.235 |
+| Mar/25 | 1.683 | – |
+| Out/26 | 12.839 | 0 |`
+  const { meses, avisos, unidade } = fat.parseFaturamento(texto)
+  assert.deepEqual(avisos, [])
+  assert.equal(unidade, 'R$ mil')
+  assert.deepEqual(meses.map((m) => [m.rotulo, m.faturamento, m.endividamento]), [['jan/25', 350, 2235], ['mar/25', 1683, null], ['out/26', 12839, 0]])
+})
+
+test('gráfico usa série contínua: mês faltando vira posição vazia, sem saltos na marcação', () => {
+  const { meses } = fat.parseFaturamento(MODELO)
+  const serie = fat.serieContinua(meses)
+  assert.equal(serie.length, 27)
+  assert.deepEqual(serie.slice(2, 5).map((m) => [m.rotulo, m.faturamento, !!m.vazio]), [['mar/24', 2596, false], ['abr/24', null, true], ['mai/24', null, true]])
+  for (let i = 1; i < serie.length; i++) assert.equal(serie[i].chave, serie[i - 1].chave + 1)
+})
+
 test('formatos de mês e número aceitos e linhas ruins viram aviso', () => {
   assert.deepEqual(fat.parseMes('Out. 2024'), { ano: 2024, mes: 10 })
   assert.deepEqual(fat.parseMes('março/25'), { ano: 2025, mes: 3 })
@@ -82,7 +133,6 @@ test('período arrastado soma só os meses que existem nos dois anos e ignora sa
 test('resumo por ano usa só os meses colados', () => {
   const anos = fat.resumoPorAno(fat.parseFaturamento(TEXTO).meses)
   assert.deepEqual(anos.map((a) => [a.ano, a.meses, a.total, a.media]), [[2024, 2, 12000, 6000], [2025, 4, 23200, 5800], [2026, 2, 10600, 5300]])
-  assert.equal(fat.parseFaturamento(fat.EXEMPLO).avisos.length, 0)
 })
 
 test('tela abre vazia, sem dados de cliente, e está no catálogo de calculadoras', async () => {
@@ -92,7 +142,7 @@ test('tela abre vazia, sem dados de cliente, e está no catálogo de calculadora
   const stub = ({ children }) => createElement('div', null, children)
   runInNewContext(code, { module, exports: module.exports, require: (n) => n === './ChartFullscreen.jsx' || n === './ExpandablePanel.jsx' || n === './CalculatorHelp.jsx' ? stub : n === './faturamento.js' ? fat : require(n) })
   const html = renderToStaticMarkup(createElement(module.exports.default, { onBack: () => {} }))
-  assert.match(html, /Cole aqui: Mês, Faturamento e Endividamento/)
+  assert.match(html, /Cole aqui: Competência \(mês\), Faturamento e Endividamento/)
   assert.match(html, /Nenhum mês lido ainda/)
   assert.doesNotMatch(html, /<svg[^>]*ft-chart/)
   const calc = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
