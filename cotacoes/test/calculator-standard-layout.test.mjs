@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 const require = createRequire(import.meta.url)
 const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf8')
 test('calculators and BNDES profiles use the compact standard and expansion shell', async () => {
-  for (const name of ['Calculadora','OperacaoDi','CbsCaixa','ContaGarantida','FinimpComparacao','AnaliseDesconto','Emprestimo4131','BndesTlpExigivel','BndesLcdCap','BndesCreditoTfb']) {
+  for (const name of ['Calculadora','OperacaoDi','CbsCaixa','ContaGarantida','FinimpComparacao','AnaliseDesconto','Faturamento','Emprestimo4131','BndesTlpExigivel','BndesLcdCap','BndesCreditoTfb']) {
     const text = await source(name+'.jsx')
     assert.match(text, /import '\.\/CalculatorStandard.css'/, name)
     assert.match(text, /className="cx[^"]*calc-standard/, name)

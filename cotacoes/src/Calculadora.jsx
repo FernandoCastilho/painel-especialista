@@ -21,6 +21,7 @@ import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
 import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
 import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
+import Faturamento, { FaturamentoIcon } from './Faturamento.jsx'
 import './CalculatorTheme.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -48,6 +49,7 @@ const CALCS = [
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
+  { id: 'faturamento', title: 'Faturamento', sub: 'Cole o faturamento e o endividamento e compare com o ano anterior', Icon: FaturamentoIcon },
 ]
 
 function CapitalDeGiro({ onBack }) {
@@ -205,6 +207,7 @@ export default function Calculadora({ view, onView, quotes }) {
   if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
+  if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
