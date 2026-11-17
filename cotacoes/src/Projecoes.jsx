@@ -12,7 +12,8 @@ const YEARS = ['2026', '2027']
 const unidadeCurta = (unit) => { const [a, b] = unit.split(' · ')[0].split(' no '); return b ? <>{a}<span className="sc-wide"> no</span> {b}</> : a }
 const format = (value) => value === null ? '—' : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export default function Projecoes({ macro, searchTarget }) {
+// `semHistorico` (aba Apresentar): só a tabela; o histórico do Focus vira um slide próprio.
+export default function Projecoes({ macro, searchTarget, semHistorico = false }) {
   const [year, setYear] = useState('2026')
   useEffect(()=>{const target=searchTarget?.context?.year;if(YEARS.includes(target))setYear(target)},[searchTarget])
   const [banks, setBanks] = useState(null)
@@ -81,7 +82,7 @@ export default function Projecoes({ macro, searchTarget }) {
         </Aviso>
           {failed && <p role="status">Não foi possível carregar as projeções dos bancos.</p>}
       </article>
-      <article className="chart"><FocusHistorico /></article>
+      {!semHistorico && <article className="chart"><FocusHistorico /></article>}
     </section>
   )
 }

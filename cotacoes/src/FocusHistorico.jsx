@@ -11,7 +11,8 @@ const dmy = (d) => d.split('-').reverse().join('/')
 
 // Cenários › Projeções: abaixo da tabela, a mediana do Focus semana a semana (52 semanas) para cada indicador, com uma linha
 // por ano de referência. Os dados vêm de focus-history.json (coleta semanal, junto com o boletim).
-export default function FocusHistorico() {
+// `so` (aba Apresentar): id de um indicador (selic, ipca, pib ou usd) para mostrar só o gráfico dele.
+export default function FocusHistorico({ so = '' }) {
   const file = useDataFile('focus-history.json')
   const ref = useRef(null)
   const [width, setWidth] = useState(560)
@@ -23,7 +24,7 @@ export default function FocusHistorico() {
   }, [])
   const series = file.data?.series ?? {}
   const anos = file.data?.anos ?? []
-  const graficos = INDICATORS.map((ind) => ({
+  const graficos = INDICATORS.filter((ind) => !so || ind.id === so).map((ind) => ({
     ind,
     series: anos.map((ano, i) => ({ key: `${ind.focus}-${ano}`, name: ano, unit: ind.id==='usd'?'R$':ind.unit, color: COR[i % COR.length], points: (series[ind.focus]?.[ano] ?? []).map((p) => ({ t: Date.parse(`${p.d}T12:00:00Z`), v: p.v })) })).filter((s) => s.points.length > 1),
   })).filter((g) => g.series.length)
