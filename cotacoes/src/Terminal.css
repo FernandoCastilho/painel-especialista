@@ -419,10 +419,10 @@ main.app .scenario-table caption { white-space: normal; }
   .topbar-clocks { display: none; }
 }
 @media (min-width: 1400px) and (max-width: 1599px) {
-  .topbar-clocks span:nth-child(n+2) { display: none; }
+  .topbar-clocks > .topbar-clock:nth-child(n+2) { display: none; }
 }
 @media (min-width: 1400px) and (max-width: 1799px) {
-  .topbar-clocks span:nth-child(n+3) { display: none; }
+  .topbar-clocks > .topbar-clock:nth-child(n+3) { display: none; }
   .topbar-tabs button { padding: 0 8px; }
 }
 @media (min-width: 1000px) and (max-width: 1299px) {

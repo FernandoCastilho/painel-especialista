@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ZONES } from './Clock.jsx'
+import Flag from './Flag.jsx'
 import { OnlineBadge } from './Acessos.jsx'
 import { DESK_TABS } from './terminal.js'
 import ThemeControl from './ThemeControl.jsx'
@@ -26,7 +27,8 @@ function Clocks() {
   return (
     <div className="topbar-clocks" role="timer" aria-label="Horários de São Paulo, Nova York, Londres e Tóquio">
       {CLOCKS.map(([code, short], i) => (
-        <span key={code} className={i === 2 ? 'opt' : undefined} title={ZONES[code].city}>
+        <span key={code} className={`topbar-clock${i === 2 ? ' opt' : ''}`} title={ZONES[code].city}>
+          <Flag code={code} width={18} height={12} />
           <b>{short}</b>
           {part(now, ZONES[code].tz, { hour: '2-digit', minute: '2-digit', ...(code === 'BRL' ? { second: '2-digit' } : {}) })}
         </span>

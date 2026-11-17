@@ -10,3 +10,9 @@
 @media (min-width:1400px) and (max-width:1599px) {
   .term-head .topbar-tabs > button { padding-inline:5px; letter-spacing:.025em; }
 }
+
+/* SVG local: não depende do suporte a emojis de bandeiras no desktop. */
+.topbar-clock { display: inline-flex; align-items: center; gap: 5px; }
+.topbar-clock > .flag { display: inline-flex; flex: 0 0 18px; width: 18px; height: 12px; }
+.topbar-clock > .flag svg { display: block; width: 18px; height: 12px; }
+.topbar-clocks .topbar-clock > b { margin-right: 0; }
