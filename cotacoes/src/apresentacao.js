@@ -278,7 +278,7 @@ export function linhasCenario(dados) {
   for (const ind of ['Selic', 'IPCA']) {
     const row = m?.focus?.rows?.find((r) => r.indicator === ind)
     const v = row?.values?.[ano]?.median
-    if (Number.isFinite(v)) out.push({ key: `focus-${ind}`, label: `Focus ${ano}: ${ind}`, valor: `${nf(v, 2)}%`, nota: `mediana · Focus de ${m.focus.date ? dm(Date.parse(`${m.focus.date}T12:00:00Z`)) : ''}` })
+    if (Number.isFinite(v)) out.push({ key: `focus-${ind}`, label: `Focus ${ano}: ${ind}`, valor: `${nf(v, 2)}%`, nota: `mediana · Focus de ${(m.focus.link && m.focus.release) || m.focus.date ? dm(Date.parse(`${(m.focus.link && m.focus.release) || m.focus.date}T12:00:00Z`)) : ''}` })
   }
   return out.map((l) => ({ ...l, leitura: LEITURA_CENARIO[l.key] ?? null }))
 }
