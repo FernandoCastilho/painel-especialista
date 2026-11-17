@@ -129,9 +129,16 @@ Fica de fora do tema escuro: azul-marinho, azul vivo e os dois laranjas.
 2. **Cabeçalho em uma linha e a primeira tela abrindo pelo número** (itens 3 e 4).
 3. **Movimento com regra: resposta ao toque, espera com forma e número que rola** (item 6).
 
-## Decisão pendente
+## Decisão do Fernando (17/11/2026)
 
-O item 1 desfaz uma decisão registrada em 13/11: as calculadoras em azul-marinho com laranja. A recomendação é levar as calculadoras para o visual do terminal e guardar o azul-marinho para PDF e Apresentar, que são o material que vai para fora. Motivo: quem usa o painel passa de uma tela para outra o dia inteiro; o material para cliente é outro contexto e pode ter outra roupa. Se o Fernando preferir manter as calculadoras como estão, os demais itens continuam valendo.
+**Unificar o painel, menos as calculadoras.** Cor, letra e movimento novos valem para o resto do painel. As calculadoras continuam em azul-marinho com laranja, como decidido em 13/11.
+
+O que isso muda nesta revisão:
+
+- Item 1: vale para Mercado, Juros, Cenários, BNDES, Setores, Bancos, Aprender e Notícias. Não vale para Calculadoras.
+- Item 13 (ícones de ajuda, logotipo repetido, peso dos cartões): continua valendo, porque não mexe na cor das calculadoras.
+- Etapa 5 da ordem de execução: passa a ser só "Setores e Aprender no mesmo sistema".
+- Ressalva: o painel fica com dois visuais. A passagem do terminal para as calculadoras continua sendo uma troca de ambiente. A recomendação da revisão era unificar tudo; fica registrada, sem reabrir.
 
 ## Riscos e ressalvas
 
