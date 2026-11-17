@@ -13,7 +13,7 @@
 .credit-table th,.credit-table td { padding:8px; text-align:right; border-bottom:1px solid var(--line); }
 .credit-panel > .muted { color:var(--mut); font-size:.85rem; line-height:1.6; }
 @media(max-width:540px) { .credit-cards { grid-template-columns:1fr; } .credit-controls label { flex-wrap:wrap; } }
-.credit-panel { font-family:system-ui,sans-serif; }
+.credit-panel { font-family:var(--sans); }
 .credit-controls select { font:inherit; }
 .credit-card strong { font-family:var(--mono); }
 .credit-panel .ml-legend { list-style:none; margin:8px 0 20px; padding:0; display:flex; flex-wrap:wrap; gap:12px 24px; font-size:.85rem; }

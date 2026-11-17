@@ -1,5 +1,5 @@
 .chart-comparison { min-width:0; }
-.chart-comparison .comparison-readout { display:block; padding:12px; margin:10px 0; border:1px solid var(--line); font: .82rem/1.6 system-ui,sans-serif; color:var(--fg); background:var(--card); overflow-wrap:anywhere; }
+.chart-comparison .comparison-readout { display:block; padding:12px; margin:10px 0; border:1px solid var(--line); font: .82rem/1.6 var(--sans); color:var(--fg); background:var(--card); overflow-wrap:anywhere; }
 .comparison-row { display:flex; gap:8px 20px; flex-wrap:wrap; margin:8px 0; }
 .comparison-row b { min-width:100%; }
 .comparison-readout button { font:inherit; background:var(--surface-2); color:var(--fg); border:1px solid var(--line); padding:8px 12px; cursor:pointer; }

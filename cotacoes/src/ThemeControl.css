@@ -4,7 +4,7 @@
 .theme-control .theme-trigger:hover, .theme-control .theme-trigger[aria-expanded=true] { background:var(--surface-2); color:var(--fg); }
 .theme-control button:focus-visible { outline:2px solid var(--amber); outline-offset:-3px; }
 .theme-options { position:absolute; top:calc(100% + 4px); right:0; z-index:90; width:220px; max-width:calc(100vw - 24px); padding:5px; background:var(--card); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px #0004; }
-.theme-options button { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:9px 10px; border:0; border-radius:4px; background:transparent; color:var(--fg); text-align:left; font:500 .82rem/1.4 system-ui,sans-serif; cursor:pointer; }
+.theme-options button { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:9px 10px; border:0; border-radius:4px; background:transparent; color:var(--fg); text-align:left; font:500 .82rem/1.4 var(--sans); cursor:pointer; }
 .theme-options button:hover, .theme-options button[aria-pressed=true] { background:var(--surface-2); }
 .theme-options svg { flex:none; }
 .theme-options small { display:block; font-size:.75rem; font-weight:400; color:var(--mut); }
