@@ -224,3 +224,6 @@
 /* Gráfico de moeda: as bolinhas de notícia e de maiores altas e baixas (e o quadro de manchetes que elas abrem) ficam só no painel.
    No slide, as notícias entram pelo bloco de Notícias, onde dá para escolher as manchetes. */
 .sl-corpo .fx-dots, .sl-corpo .fx-legend, .sl-corpo .fx-news { display: none; }
+
+/* O botão de maximizar gráfico do painel não entra no slide: o slide já é a visão ampliada. */
+.sl-corpo .chart-fullscreen-toolbar { display: none; }

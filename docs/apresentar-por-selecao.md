@@ -84,6 +84,12 @@ feitas: ramo atualizado, índice da busca refeito, bolinhas fora do slide, Fatur
 indicadores quando não há cotação, e esta nota completada. O Auditor conferiu as notícias com os arquivos reais do
 site: 61 slides de notícias, 31 com manchetes, nenhum erro.
 
+## Atualizações do painel incorporadas (17/11/2026)
+O ramo publicado andou três vezes durante a entrega; ela foi atualizada e testada de novo a cada vez.
+- Bolinhas de notícia do dólar e calculadora Faturamento: ver "Ficou de fora".
+- Celulose (exportação do Brasil): entrou como gráfico em Cenários › Commodities.
+- Maximizar gráficos: o botão não aparece no slide, que já é a visão ampliada.
+
 ## Conferência
 - `test/apresentar.test.mjs`: seleção, ordem, teclado, notícias, busca de blocos, montagem só em memória, tema imposto.
 - `scripts/smoke-apresentar.cjs` (na conferência automática): montagem, slides claros sem corte, notícias com ajuste,
