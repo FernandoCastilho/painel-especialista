@@ -1,8 +1,9 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 // Barras horizontais com base em zero para comparar valores em R$ (custos, rendimentos). O vencedor/destaque usa a cor de ação.
 export default function HBars({ rows, title }) {
   const max = Math.max(...rows.map((r) => Math.abs(r.value)), 1)
   return (
-    <div className="hbars" role="group" aria-label={title}>
+    <ChartFullscreen><div className="hbars" role="group" aria-label={title}>
       <p className="chart-comparison-note">Comparação de cenários, sem eixo de datas para selecionar um período anual.</p>
       {rows.map((r) => (
         <div className="hbar" key={r.label}>
@@ -13,6 +14,6 @@ export default function HBars({ rows, title }) {
           <b className="hbar-val">{r.text}</b>
         </div>
       ))}
-    </div>
+    </div></ChartFullscreen>
   )
 }

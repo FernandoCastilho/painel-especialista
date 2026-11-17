@@ -26,6 +26,7 @@ export function useRecoveryMapTooltip() {
     onFocus:() => show(value), onBlur:leave,
     onClick:() => { show(value); activate() },
     onKeyDown:event => {
+      if (event.key === 'Escape' && active) { event.preventDefault(); event.stopPropagation(); hide(); return }
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         if (!event.repeat) { show(value); activate() }

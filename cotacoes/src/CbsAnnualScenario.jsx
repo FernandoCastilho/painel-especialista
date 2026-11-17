@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import ExpandablePanel from './ExpandablePanel.jsx'
 import { useState } from 'react'
 import MoneyInput from './MoneyInput.jsx'
@@ -19,7 +20,7 @@ export default function CbsAnnualScenario({ revenue, inputs, overrides, onOverri
     <ExpandablePanel title="Gráfico mensal"><p className="cbs-chart-scale">Reserva adicional de CBS (R$) · {valid.length === 0 ? 'sem valores válidos' : max > 0 ? `escala de R$ 0 a ${money(top)}` : 'R$ 0'}</p>
     <p className="cbs-chart-mobile-hint">Deslize o gráfico para ver os 12 meses.</p>
     <div className="cbs-chart-scroll" tabIndex="0" role="region" aria-label="Gráfico de janeiro a dezembro, com rolagem horizontal">
-    <svg className={`cbs-annual-chart${max === 0 ? ' is-zero' : ''}`} viewBox={max === 0 ? '0 135 890 90' : '0 0 890 220'} role="img" aria-labelledby="cbs-chart-title cbs-chart-description">
+    <ChartFullscreen><svg className={`cbs-annual-chart${max === 0 ? ' is-zero' : ''}`} viewBox={max === 0 ? '0 135 890 90' : '0 0 890 220'} role="img" aria-labelledby="cbs-chart-title cbs-chart-description">
       <title id="cbs-chart-title">Reserva estimada de janeiro a dezembro</title>
       <desc id="cbs-chart-description">{max === 0 && valid.length === 12 ? 'Todos os meses têm reserva adicional de zero reais.' : 'Linha da reserva estimada. Use os botões dos meses ou a tabela para consultar valores exatos.'}</desc>
       {(valid.length === 0 ? [] : max === 0 ? [0] : [0, 0.5, 1]).map(fraction => <g key={fraction}><line x1="110" x2="845" y1={y(top * fraction)} y2={y(top * fraction)} vectorEffect="non-scaling-stroke" className="cbs-chart-grid"/></g>)}
@@ -28,7 +29,7 @@ export default function CbsAnnualScenario({ revenue, inputs, overrides, onOverri
         {month.result.ok && <circle cx={x(index)} cy={y(month.result.reserveDelayed)} r={selected === index ? 6 : 4} className="cbs-chart-dot"/>}
         <text x={x(index)} y="207" textAnchor="middle">{month.month}</text>
       </g>)}
-    </svg>
+    </svg></ChartFullscreen>
     </div>
     </ExpandablePanel><p className="cbs-consult-label">Consultar valores de um mês:</p>
     <div className="cbs-month-buttons" aria-label="Consultar mês">{months.map((month, index) => <button key={month.month} type="button" aria-pressed={selected === index} onClick={() => setSelected(index)}>{month.month}</button>)}</div>

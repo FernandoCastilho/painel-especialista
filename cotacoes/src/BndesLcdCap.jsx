@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useMemo, useState } from 'react'
@@ -21,7 +22,7 @@ function BalanceChart({ result }) {
   const points = [{ date: result.rows[0].from, value: result.totals.principalCents }, ...result.rows.map(row => ({ date: row.date, value: row.closingCents }))]
   const max = Math.max(...points.map(point => point.value)), from = Date.parse(points[0].date), duration = Date.parse(points.at(-1).date) - from
   const line = points.map(point => `${40 + (Date.parse(point.date) - from) / duration * 920},${160 - point.value / max * 140}`).join(' ')
-  return <figure className="lcd-chart"><figcaption>Saldo após cada cobrança · projeção informada</figcaption><svg viewBox="0 0 1000 190" role="img" aria-label="Evolução projetada do saldo, da liberação à quitação. Valores disponíveis no cronograma abaixo."><path d="M40 20V160H960" fill="none" stroke="currentColor" opacity="0.3" /><polyline points={line} fill="none" stroke="var(--amber, #ffb000)" strokeWidth="3" /><text x="40" y="184">{dmy(points[0].date)}</text><text x="960" y="184" textAnchor="end">{dmy(points.at(-1).date)}</text><text x="45" y="16">Máximo {brl(max)}</text></svg></figure>
+  return <figure className="lcd-chart"><figcaption>Saldo após cada cobrança · projeção informada</figcaption><ChartFullscreen><svg viewBox="0 0 1000 190" role="img" aria-label="Evolução projetada do saldo, da liberação à quitação. Valores disponíveis no cronograma abaixo."><path d="M40 20V160H960" fill="none" stroke="currentColor" opacity="0.3" /><polyline points={line} fill="none" stroke="var(--amber, #ffb000)" strokeWidth="3" /><text x="40" y="184">{dmy(points[0].date)}</text><text x="960" y="184" textAnchor="end">{dmy(points.at(-1).date)}</text><text x="45" y="16">Máximo {brl(max)}</text></svg></ChartFullscreen></figure>
 }
 
 export default function BndesLcdCap({ onBack }) {
