@@ -45,8 +45,10 @@ Aprender e Configurações ficam de fora.
 ## Limites conhecidos
 - Teto de 80 blocos por apresentação. Cada slide mantém viva uma peça do painel; com quase 190 blocos de uma vez o
   navegador de teste ficou sem memória. A tela avisa quando o teto é atingido.
-- O tema de notícias "Madeira e base florestal" existe só na busca da imprensa e só aparece nos slides (ver "Segunda
-  rodada"). Não tem pasta própria na aba Notícias, que usa fontes institucionais por setor.
+- O tema de notícias "Madeira e base florestal" vem só da busca da imprensa (ver "Segunda rodada"). Aparece nos slides
+  e, como os demais temas de `temas.json`, alimenta a busca do painel e o mapa de conhecimento. Não tem pasta própria na
+  aba Notícias, que usa fontes institucionais por setor. Na busca do painel, a manchete de madeira ainda abre em
+  Mercado › Notícias › Moedas, onde ela não aparece (o mesmo já acontece com trigo e outros insumos novos).
 - Referência sem histórico na coleta do dia mostra aviso em vez de gráfico.
 - Slides com muito conteúdo (os 4 gráficos do Focus juntos, bancos, TFC) ficam com letra menor. Há slides individuais
   para o Focus e para os indicadores dos bancos.
@@ -120,14 +122,36 @@ fora do menu.
   memória da página e some ao recarregar. Fernando informou que os números usados são genéricos; a regra do projeto
   continua valendo: extrato e dado real de cliente não vão para o git.
 - **Tema "Madeira e base florestal".** Novo tema em `scripts/temas-lib.mjs` (quatro buscas no Google Notícias, janela
-  de cinco dias, como os demais). O título precisa citar o setor (madeira, serraria, MDF, MDP, compensado de pinus,
-  florestas plantadas, eucalipto, pinus, Ibá, ABIMCI, moveleiro) e trazer contexto de mercado. Ficam de fora a Ilha e
-  o Rio Madeira, fiscalização, apreensão e ocorrência policial. Na Apresentar ele aparece em Notícias › Setores ·
-  Indústria e transformação. A coleta ganha quatro buscas por rodada.
+  de cinco dias, como os demais). O título precisa citar o setor (madeira, serraria, MDF, MDP, compensado, florestas
+  plantadas, concessão ou manejo florestal, eucalipto, pinus, Ibá, ABIMCI, moveleiro, indústria de móveis, Dexco,
+  Duratex, Eucatex, Berneck, Arauco) e trazer contexto de mercado. O filtro tira, pelas palavras do título: a Ilha da
+  Madeira (governo, turismo, hotel, imóveis, Portugal), o Rio Madeira (hidrelétricas, hidrovia), o MDF-e, sobrenome
+  Madeira em cargo público, a loja MadeiraMadeira, objetos de madeira (berço, brinquedo, ponte), apreensão de carga,
+  fiscalização, furto, acidente e incêndio em empresa. "Apreensão" no sentido de preocupação e a lei antidesmatamento
+  europeia entram. Um título que cite a ilha ou o rio sem nenhuma dessas palavras ainda pode passar. Na Apresentar o
+  tema aparece em Notícias › Setores · Indústria e transformação. A coleta ganha quatro buscas por rodada.
 - **Descrição dos slides de commodities em dólar** corrigida (primeira parte: energia, metais, minério, soja e milho;
   segunda: açúcar, café, fertilizantes, trigo, carne, algodão, carvão, cacau e celulose). Era o achado de baixa
   gravidade do terceiro parecer do Auditor.
 
+- **Quadro do slide não rola.** Escolher um campo dentro de um slide podia deslocar o slide alguns pontos no celular
+  (visto no teste de tela). O quadro agora não rola por foco nem por código.
+
+### Atualização do ramo publicado nesta rodada
+O ramo publicado recebeu o rascunho nº 470 (Faturamento: quadro pontilhado por período, total e seta da variação)
+depois da primeira conferência. O ramo foi juntado (`d61e49f`), o slide do Faturamento foi refeito com o gráfico novo
+(quadros pontilhados, totais e seta dentro do slide; tabela de comparação mais compacta para o gráfico ficar maior) e
+testes, teste de tela e varredura dos slides foram repetidos no estado juntado.
+
+### Parecer do Auditor nesta rodada
+Primeiro parecer: **Requer correção** (81,3), no commit `f3cbc0f`. Passou: Faturamento nos slides, nada colado é gravado
+ou enviado, nenhuma conta mudou, aba fora do menu. Achados e correções: ramo publicado tinha andado (juntado, acima);
+o filtro de madeira aceitava ruído (hotel na Madeira, hidrelétricas do Madeira, MDF-e) e recusava notícia do setor
+("apreensão" com tarifa, lei antidesmatamento) — filtro refeito e testado com as baterias do Auditor (28 de 30
+legítimas aceitas; as duas recusadas são celulose pura e título em inglês; 0 de 25 ruídos aceitos); duas frases desta
+nota corrigidas; teste de tela passou a exigir o slide no lugar.
+
 Não conferido nesta rodada: o filtro do tema madeira com manchetes reais. O ambiente da sessão não alcança o Google
 Notícias; o filtro foi testado com manchetes de exemplo. A primeira coleta real acontece na publicação, e o resultado
-precisa ser lido no site depois dela.
+precisa ser lido no site depois dela. Com mais de 24 meses colados, os rótulos do gráfico do Faturamento ficam
+pequenos no slide; os números principais estão na tabela e no resumo por ano.

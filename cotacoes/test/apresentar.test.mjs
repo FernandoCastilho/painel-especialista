@@ -126,5 +126,6 @@ test('apresentar: Faturamento entra nos slides e o tema de notícias madeira exi
   assert.match(fat, /calc-result-shell" aria-live="polite" data-apz-pronto=""/) // o gráfico já é o resultado, mesmo sem R$ nem %
   assert.match(calc, /hasAttribute\('data-apz-pronto'\)/)
   assert.match(css, /\.sl-calc-faturamento \.ft-chart \{[^}]*min-width: 0 !important/) // o gráfico cabe na largura do slide, sem rolagem lateral
+  assert.match(css, /\.apz-quadro \{[^}]*overflow: hidden; overflow: clip/) // o quadro do slide não rola nem por foco nem por código
   assert.match(noticias, /SO_NA_IMPRENSA = \[\['Indústria e transformação', 'madeira', 'Madeira e base florestal'\]\]/)
 })

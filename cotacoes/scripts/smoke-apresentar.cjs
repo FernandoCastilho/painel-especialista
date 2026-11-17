@@ -261,11 +261,14 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await p.waitForTimeout(700)
       const encaixe = await p.evaluate(() => {
         const sl = document.querySelector('.apz-atual .sl'), c = sl.querySelector('.sl-ajuste'), mi = c.querySelector('.sl-miolo'), g = sl.querySelector('.ft-chart').getBoundingClientRect(), r = c.getBoundingClientRect()
-        return { sobra: mi.getBoundingClientRect().height - r.height, graficoDentro: g.left >= r.left - 1 && g.right <= r.right + 1, anos: sl.querySelectorAll('.ft-year').length }
+        const q = sl.closest('.apz-quadro')
+        return { sobra: mi.getBoundingClientRect().height - r.height, graficoDentro: g.left >= r.left - 1 && g.right <= r.right + 1, anos: sl.querySelectorAll('.ft-year').length, rolagem: q ? [q.scrollLeft, q.scrollTop] : [0, 0], caixas: sl.querySelectorAll('.ft-box').length }
       })
       assert.ok(encaixe.sobra <= 2, `Faturamento cortado em ${encaixe.sobra}px`)
       assert.ok(encaixe.graficoDentro, 'o gráfico do Faturamento cabe na largura do slide')
       assert.ok(encaixe.anos >= 2, 'o resumo por ano aparece')
+      assert.deepEqual(encaixe.rolagem, [0, 0], 'escolher o período não pode tirar o slide do lugar')
+      assert.equal(encaixe.caixas, 2, 'o período escolhido e o do ano anterior ficam marcados no gráfico')
       await p.screenshot({ path: `${out}/apresentar-faturamento-${width}.png` })
       await palcoFat.getByRole('button', { name: 'Sair' }).click()
       // os números colados ficam só na página
