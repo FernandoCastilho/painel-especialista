@@ -51,6 +51,9 @@ test('fontes detalhadas ficam na Base de dados, com exceções contextuais de At
     // A apresentação para cliente preserva as referências do cálculo apenas
     // no slide obrigatório de premissas, sem liberar catálogo no restante da UI.
     if (f === 'BndesPresentation.jsx') t = t.replace(/<section className="bnp-references">[\s\S]*?<\/section>/, '')
+    // Os slides da aba Apresentar saem do painel para a visita ao cliente: cada um leva,
+    // no rodapé, o nome curto da fonte. Só o rodapé do slide é liberado, não o resto da tela.
+    if (f === 'Apresentar.jsx') t = t.replace(/<footer className="sl-rodape">[\s\S]*?<\/footer>/g, '')
     // O PDF autônomo solicitado precisa levar consigo as referências do cálculo.
     if (f === 'BndesPrint.jsx') t = t.replace(/<p className="bnprint-sources">[\s\S]*?<\/p>/, '')
     assert.doesNotMatch(t, /Fontes?: /, `${f}: texto "Fonte:" em painel`)

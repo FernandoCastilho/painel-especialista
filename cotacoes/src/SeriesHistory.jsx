@@ -13,7 +13,8 @@ const tOf = (p) => Date.parse(isDay(p) ? `${p}T12:00:00Z` : `${p}-15T12:00:00Z`)
 const startFor = (last, months) => { const d = new Date(tOf(last)); d.setUTCMonth(d.getUTCMonth() - months); return d.toISOString().slice(0, isDay(last) ? 10 : 7) }
 
 // Histórico de uma referência (commodity) em tela cheia: período e escala no topo, gráfico com seleção de trecho e tabela de observações.
-export default function SeriesHistory({ item, points, onClose }) {
+// `embutido` (aba Apresentar): só o gráfico dos últimos 12 meses, sem janela, filtros nem tabela.
+export default function SeriesHistory({ item, points, onClose, embutido = false }) {
   const [ref, width] = useWidth()
   const [preset, setPreset] = useState(12)
   const [custom, setCustom] = useState(null)
@@ -26,6 +27,15 @@ export default function SeriesHistory({ item, points, onClose }) {
   const label = (p) => (daily ? contextDate(p) : contextDate(p))
   const fmt = (v) => `${nf(v)} ${item.unit}`
   const bad = range && range.start > range.end
+  if (embutido) return (
+    <div className="indicator-history">
+      <p className="indicator-history__lead">{item.unit} · {item.nature}{item.benchmark ? ` · ${item.benchmark}` : ''}</p>
+      {plot.length > 1
+        ? <><p className="muted">Último dado: {nf(shown.at(-1).value)} {item.unit} em {label(shown.at(-1).period)} · {shown.length} observações {daily ? (/semanal/.test(item.nature) ? 'semanais' : 'diárias') : 'mensais'} em 12 meses.</p>
+          <div ref={ref}><Plot points={plot} history={history} width={width} color="var(--chart-oil)" code={`commodity-${item.id}`} intraday={false} fmt={fmt} vfmt={(v) => nf(v)} dateLabel={daily ? undefined : (t) => contextDate(new Date(t).toISOString().slice(0, 7))} label={item.label} rate={/%/.test(item.unit)} labels scales={false} /></div></>
+        : <p role="status">Histórico indisponível para esta referência. Ausência não significa zero.</p>}
+    </div>
+  )
   return (
     <Expandable label={`histórico de ${item.label}`} modal onClose={onClose}>
       <h2>{item.label} · histórico</h2>

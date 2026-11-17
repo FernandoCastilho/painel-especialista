@@ -45,7 +45,7 @@ const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('
 const pct = (v) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2).replace('.', ',')}%`
 const p2 = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const bps = (d) => `${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(Math.round(d * 100))} bps`
-const SPARK = [
+export const SPARK = [
   { id: 'day', label: 'Dia', days: 1, intraday: true },
   { id: 'week', label: 'Semana', days: 7 },
   { id: 'month', label: 'Mês', days: 30 },
@@ -291,7 +291,7 @@ function Wide({ render }) {
   return <div ref={ref}>{width > 0 ? render(width) : null}</div>
 }
 
-function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPrevious, comparison = false }) {
+export function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPrevious, comparison = false }) {
   const w = useWindow(spark)
   const dia = !!spark.intraday
   // hooks em número fixo (uma consulta por moeda; ficam em cache)
@@ -397,10 +397,8 @@ function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPre
   )
 }
 
-// Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
-function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
-  const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
-  useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
+// Acumulados do mês e do ano e PTAX compatível de cada moeda: a mesma conta para o quadro do Mercado e para a aba Apresentar.
+export function useCambio(quotes, ptax) {
   const daily = useCentralDaily()
   const returns = Object.fromEntries(CURRENCIES.map(c => [c.code, quotes?.[c.code]?.source && quotes[c.code].source !== c.code ? { month: null, year: null } : accumulatedReturns(daily.data, c.code)]))
   const ptaxes = Object.fromEntries(CURRENCIES.map(c => [c.code, compatiblePtax(c.code, quotes?.[c.code], ptax?.[c.code])]))
@@ -408,6 +406,25 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
   const ptaxDay = fromInput(ptaxes.USD?.date ?? marketDate(Date.now()))
   const usdTicks = useIntraday('USD', ptaxDay, !ptaxes.USD), cnhTicks = useIntraday('CNH', ptaxDay, !ptaxes.USD)
   if (ptaxes.USD && quotes?.CNH && !quotes.CNH.fallback && usdTicks.status === 'ok' && cnhTicks.status === 'ok') ptaxes.CNH = cnhPtaxCross(ptaxes.USD, usdTicks.data.points, cnhTicks.data.points)
+  return { daily, returns, ptaxes }
+}
+
+// Tabela de câmbio em reais. `onOpen` (opcional) abre o gráfico da moeda ao tocar na linha.
+export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen = () => {}, colors }) {
+  return (
+    <table className="market-table" aria-busy={!quotes}>
+            <caption className="market-caption">Câmbio em reais · últimas referências disponíveis</caption>
+            <thead><tr><th scope="col">Par</th><th scope="col">Cotação <small>(R$)</small></th><th scope="col" aria-label="Variação absoluta do dia em reais">Δ dia <small>(R$)</small></th><th scope="col" aria-label="Variação percentual do dia">Δ dia %</th><th scope="col" aria-label="Acumulado no mês em percentual">Mês %</th><th scope="col" aria-label="Acumulado no ano em percentual">Ano %</th><th scope="col" aria-label="PTAX de venda em reais por unidade">PTAX <small>venda</small></th></tr></thead>
+            {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={onOpen} color={colors?.[c.code]} />)}
+          </table>
+  )
+}
+
+// Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
+function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
+  const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
+  useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
+  const { daily, returns, ptaxes } = useCambio(quotes, ptax)
   const [selection, setSelection] = useState(['USD'])
   const [compareOpen, setCompareOpen] = useState(false)
   const [compareSelection, setCompareSelection] = useState(['USD', 'EUR'])
@@ -431,11 +448,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         <div className="terminal-quotes">
         <p className="market-scroll-hint">Deslize para ver mês, ano e PTAX →</p>
         <div className="market-table-wrap" role="region" aria-label="Tabela de câmbio; role horizontalmente para ver todas as colunas" tabIndex={0}>
-          <table className="market-table" aria-busy={!quotes}>
-            <caption className="market-caption">Câmbio em reais · últimas referências disponíveis</caption>
-            <thead><tr><th scope="col">Par</th><th scope="col">Cotação <small>(R$)</small></th><th scope="col" aria-label="Variação absoluta do dia em reais">Δ dia <small>(R$)</small></th><th scope="col" aria-label="Variação percentual do dia">Δ dia %</th><th scope="col" aria-label="Acumulado no mês em percentual">Mês %</th><th scope="col" aria-label="Acumulado no ano em percentual">Ano %</th><th scope="col" aria-label="PTAX de venda em reais por unidade">PTAX <small>venda</small></th></tr></thead>
-            {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={openSelected} color={colors?.[c.code]} />)}
-          </table>
+          <CambioTabela quotes={quotes} returns={returns} ptaxes={ptaxes} selection={selection} onOpen={openSelected} colors={colors} />
         </div>
         </div>
         <div className="terminal-chart terminal-news">

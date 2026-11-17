@@ -15,7 +15,8 @@ const monthName = (period) => new Date(`${period}-15T12:00:00Z`).toLocaleDateStr
 
 // Cenários › Inflação: IPCA oficial, o quadro "o que pesa" e, abaixo, a seção Fiscal (dívida bruta), que antes era um assunto à parte.
 // #cenarios/inflacao/fiscal abre a tela já na seção Fiscal (id cen-fiscal).
-export default function Outros({ macro }) {
+// `so` (aba Apresentar): mostra só uma parte: 'ipca' (tabela), 'pesos' (o que pesa na inflação) ou 'fiscal' (dívida pública).
+export default function Outros({ macro, so = '' }) {
   const file = useDataFile('ipca.json')
   const parsed = useMemo(() => { try { return file.data ? normalizeIpca(file.data) : null } catch { return null } }, [file.data])
   const rows = useMemo(() => (parsed ? ipcaRows(parsed) : []), [parsed])
@@ -59,11 +60,11 @@ export default function Outros({ macro }) {
   })
   return (
     <div className="outros">
-      <section aria-labelledby="outros-title">
+      {so !== 'fiscal' && <section aria-labelledby="outros-title">
       <div className="ctx-head"><h2 id="outros-title">Inflação</h2><RefreshButton files={['ipca.json', 'ipca-groups.json', 'oil.json', 'commodities.json', 'macro.json']} label="Inflação" /></div>
-      <h3>IPCA</h3>
-      {!parsed && <p role="status">{failed ? 'Não foi possível carregar o IPCA. Tente novamente mais tarde.' : 'Carregando IPCA…'}</p>}
-      {parsed && (
+      {so !== 'pesos' && <h3>IPCA</h3>}
+      {so !== 'pesos' && !parsed && <p role="status">{failed ? 'Não foi possível carregar o IPCA. Tente novamente mais tarde.' : 'Carregando IPCA…'}</p>}
+      {so !== 'pesos' && parsed && (
         <>
           <IndicatorTable
             caption={`IPCA oficial · último mês divulgado: ${rows[0]?.last ? monthName(rows[0].last.period) : '—'}`}
@@ -76,9 +77,9 @@ export default function Outros({ macro }) {
           <Aviso title="IPCA · método"><p className="ind-note">IPCA (Índice Nacional de Preços ao Consumidor Amplo), série completa desde dez/1979. Variação mensal, acumulados no ano e em 12 meses e número-índice (dez/1993 = 100) são os valores divulgados oficialmente, sem recálculo. Em Variação, os percentuais são diferença em pontos percentuais; no número-índice, variação relativa. Conferência: {new Date(parsed.checkedAt).toLocaleDateString('pt-BR')}.</p></Aviso>
         </>
       )}
-      <InflacaoPesos macro={macro} />
-      </section>
-      <section id="cen-fiscal" className="cen-section" aria-labelledby="fiscal-heading">
+      {so !== 'ipca' && <InflacaoPesos macro={macro} />}
+      </section>}
+      {(!so || so === 'fiscal') && <section id="cen-fiscal" className="cen-section" aria-labelledby="fiscal-heading">
       <div className="ctx-head"><h2 id="fiscal-heading">Fiscal · dívida pública</h2><RefreshButton files={['divida.json']} label="Fiscal" /></div>
       <h3>Dívida Bruta do Governo Geral (DBGG)</h3>
       {!dParsed && <p role="status">{dFailed ? 'Não foi possível carregar a dívida bruta. Tente novamente mais tarde.' : 'Carregando dívida bruta…'}</p>}
@@ -95,7 +96,7 @@ export default function Outros({ macro }) {
           <Aviso title="Dívida bruta · método"><p className="ind-note">Dívida Bruta do Governo Geral (DBGG): governo federal, INSS e governos estaduais e municipais, sem as empresas estatais e sem o Banco Central. Saldo ao fim do mês, divulgado nas Estatísticas Fiscais, em R$ e em % do PIB (PIB acumulado em 12 meses). Série mensal desde dez/2006, sem recálculo; meses anteriores são revisados quando muda a metodologia ou o PIB. Em Variação, a diferença da razão está em pontos percentuais do PIB e a do saldo, em R$ bilhões. Conferência: {new Date(dParsed.checkedAt).toLocaleDateString('pt-BR')}.</p></Aviso>
         </>
       )}
-      </section>
+      </section>}
       {dRow && (
         <IndicatorHistory
           item={{ id: dRow.metric.id, label: dRow.metric.label, unit: dRow.metric.unit, decimals: dRow.metric.decimals, sourceUrl: dParsed.sourceUrl, sourceName: dParsed.sourceName, checkedAt: dParsed.checkedAt }}
