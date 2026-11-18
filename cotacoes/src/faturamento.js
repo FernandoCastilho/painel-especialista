@@ -204,6 +204,147 @@ export function leituraCrescimento(c) {
   return { fat, div, diferencaPp, relacao }
 }
 
+// Análise automática da série colada: tendência, sazonalidade, estabilidade, meses fora do padrão e
+// endividamento. Só estatística descritiva dos números colados; os limites usados para os alertas estão
+// nas constantes abaixo e na ajuda da tela. Não é parecer de crédito.
+export const LIMITES_ANALISE = {
+  sazonalForte: 0.05,      // mês ≥ 5% acima (ou abaixo) do nível normal entra como forte (ou fraco)
+  sazonalRelevante: 0.15,  // diferença entre o mês mais forte e o mais fraco para chamar de sazonal
+  atipico: 0.25,           // mês 25% fora do esperado (média dos 12 anteriores ajustada pela sazonalidade)
+  instavel: 0.25,          // coeficiente de variação acima de 25% em 12 meses
+  estavel: 0.10,           // abaixo de 10%
+  quedaForte: -0.10,       // queda de 10% ou mais em 12 meses
+}
+const desvio = (xs) => { const m = media(xs); return Math.sqrt(media(xs.map((x) => (x - m) ** 2))) }
+// Inclinação da reta (mínimos quadrados) por passo, sobre pares [x, y].
+function inclinacao(pares) {
+  if (pares.length < 3) return null
+  const mx = media(pares.map(([x]) => x)), my = media(pares.map(([, y]) => y))
+  const num = soma(pares.map(([x, y]) => (x - mx) * (y - my)))
+  const den = soma(pares.map(([x]) => (x - mx) ** 2))
+  return den ? num / den : null
+}
+const mesDoAno = (k) => ((k % 12) + 12) % 12
+
+export function analisarSerie(meses) {
+  const L = LIMITES_ANALISE
+  const fat = meses.filter((m) => m.faturamento != null)
+  if (fat.length < 6) return { suficiente: false, motivo: 'Cole pelo menos 6 meses de faturamento para a análise.' }
+  const val = new Map(fat.map((m) => [m.chave, m.faturamento]))
+  const ini = fat[0].chave, fim = fat.at(-1).chave
+
+  // Sazonalidade: cada mês dividido pela média móvel centrada de 12 meses (método clássico de razão à média
+  // móvel). Precisa de 6 meses completos antes e depois; a média por mês do ano vira o índice sazonal.
+  const razoes = Array.from({ length: 12 }, () => [])
+  for (let k = ini + 6; k <= fim - 6; k++) {
+    const janela = []
+    for (let j = -6; j <= 6; j++) janela.push(val.get(k + j))
+    if (janela.some((x) => x == null)) continue
+    const mm = (janela[0] / 2 + soma(janela.slice(1, 12)) + janela[12] / 2) / 12
+    if (mm > 0) razoes[mesDoAno(k)].push(janela[6] / mm)
+  }
+  let indices = razoes.map((r, i) => ({ mes: i, rotulo: MESES[i], n: r.length, indice: r.length ? media(r) : null }))
+  const cobertos = indices.filter((x) => x.indice != null)
+  let sazonalidade = null
+  if (cobertos.length === 12) {
+    const f = media(cobertos.map((x) => x.indice))
+    indices = indices.map((x) => ({ ...x, indice: x.indice / f }))
+    const ordem = [...indices].sort((a, b) => b.indice - a.indice)
+    const amplitude = ordem[0].indice - ordem.at(-1).indice
+    sazonalidade = {
+      indices,
+      anos: Math.max(...indices.map((x) => x.n)),
+      amplitude,
+      relevante: amplitude >= L.sazonalRelevante,
+      fortes: ordem.filter((x) => x.indice >= 1 + L.sazonalForte).slice(0, 3),
+      fracos: [...ordem].reverse().filter((x) => x.indice <= 1 - L.sazonalForte).slice(0, 3),
+    }
+  }
+
+  // Últimos 12 meses: tendência (reta), estabilidade (coeficiente de variação), melhor e pior mês.
+  const ult = fat.filter((m) => m.chave > fim - 12)
+  const mUlt = media(ult.map((m) => m.faturamento))
+  const inc = inclinacao(ult.map((m) => [m.chave, m.faturamento]))
+  const tendenciaAno = inc != null && mUlt > 0 ? (inc * 12) / mUlt : null
+  const cv = mUlt > 0 && ult.length >= 6 ? desvio(ult.map((m) => m.faturamento)) / mUlt : null
+  const melhor = ult.reduce((a, b) => (b.faturamento > a.faturamento ? b : a))
+  const pior = ult.reduce((a, b) => (b.faturamento < a.faturamento ? b : a))
+  const tres = fat.filter((m) => m.chave > fim - 3)
+  const ritmoRecente = mUlt > 0 && tres.length === 3 ? media(tres.map((m) => m.faturamento)) / mUlt - 1 : null
+
+  // Sequência atual de quedas ou altas seguidas (só meses vizinhos).
+  let quedas = 0, altas = 0
+  for (let k = fim; val.has(k) && val.has(k - 1); k--) {
+    if (val.get(k) < val.get(k - 1) && altas === 0) quedas++
+    else if (val.get(k) > val.get(k - 1) && quedas === 0) altas++
+    else break
+  }
+
+  // Meses fora do padrão: comparado à média dos 12 meses anteriores (mínimo 6), ajustada pela sazonalidade.
+  const atipicos = []
+  for (const m of fat) {
+    const ant = fat.filter((x) => x.chave < m.chave && x.chave >= m.chave - 12)
+    if (ant.length < 6) continue
+    const base = media(ant.map((x) => x.faturamento)) * (sazonalidade ? sazonalidade.indices[mesDoAno(m.chave)].indice : 1)
+    if (base <= 0) continue
+    const desvioPct = m.faturamento / base - 1
+    if (Math.abs(desvioPct) >= L.atipico) atipicos.push({ rotulo: m.rotulo, chave: m.chave, desvio: desvioPct })
+  }
+
+  // Endividamento: só meses com saldo (zero ou vazio = sem informação).
+  const saldos = meses.filter((m) => temSaldo(m.endividamento))
+  let endividamento = null
+  if (saldos.length >= 2) {
+    const ultS = saldos.at(-1)
+    const ano = saldos.find((m) => m.chave === ultS.chave - 12) ?? null
+    const maxS = saldos.reduce((a, b) => (b.endividamento > a.endividamento ? b : a))
+    // Alavancagem mês a mês: saldo ÷ média do faturamento dos 12 meses até aquele mês (mínimo 6 meses).
+    const alav = saldos.map((m) => {
+      const jan = fat.filter((x) => x.chave <= m.chave && x.chave > m.chave - 12)
+      const mf = jan.length >= 6 ? media(jan.map((x) => x.faturamento)) : null
+      return mf > 0 ? { rotulo: m.rotulo, chave: m.chave, valor: m.endividamento / mf } : null
+    }).filter(Boolean)
+    const alavAno = alav.find((a) => a.chave === ultS.chave - 12) ?? null
+    const semSaldoNoFim = meses.filter((m) => m.chave > ultS.chave && m.chave <= fim).length
+    endividamento = {
+      ultimo: ultS.endividamento, ultimoRotulo: ultS.rotulo,
+      anoAntes: ano?.endividamento ?? null, anoAntesRotulo: ano?.rotulo ?? null,
+      variacao12m: ano ? variacao(ultS.endividamento, ano.endividamento) : null,
+      maximo: maxS.endividamento, maximoRotulo: maxS.rotulo,
+      alavancagemAtual: alav.at(-1)?.chave === ultS.chave ? alav.at(-1).valor : null,
+      alavancagemAnoAntes: alavAno?.valor ?? null,
+      alavancagemMax: alav.length ? alav.reduce((a, b) => (b.valor > a.valor ? b : a)) : null,
+      semSaldoNoFim,
+    }
+  }
+
+  // Faturamento 12 meses contra os 12 anteriores (mesmo critério de indicadores12m).
+  const i12 = indicadores12m(meses)
+
+  // Pontos de atenção, nos limites de LIMITES_ANALISE.
+  const atencao = []
+  if (i12?.variacao != null && i12.variacao <= L.quedaForte) atencao.push(`Faturamento dos últimos 12 meses ${Math.round(Math.abs(i12.variacao) * 100)}% menor que nos 12 anteriores.`)
+  if (tendenciaAno != null && tendenciaAno <= L.quedaForte) atencao.push('Tendência de queda do faturamento nos últimos 12 meses.')
+  if (cv != null && cv > L.instavel) atencao.push('Faturamento instável: os meses variam muito em torno da média.')
+  if (quedas >= 3) atencao.push(`${quedas} quedas seguidas de faturamento até ${fat.at(-1).rotulo}.`)
+  const recentesBaixo = atipicos.filter((a) => a.desvio < 0 && a.chave > fim - 6)
+  if (recentesBaixo.length) atencao.push(`Mês recente bem abaixo do esperado: ${recentesBaixo.map((a) => a.rotulo).join(', ')}.`)
+  if (endividamento?.variacao12m != null && i12?.variacao != null && endividamento.variacao12m > i12.variacao + 0.05) atencao.push('Endividamento cresceu mais que o faturamento em 12 meses.')
+  if (endividamento?.alavancagemAtual != null && endividamento.alavancagemAnoAntes != null && endividamento.alavancagemAtual > endividamento.alavancagemAnoAntes * 1.1) atencao.push('Alavancagem subiu mais de 10% em 12 meses.')
+  if (endividamento?.semSaldoNoFim) atencao.push(`${endividamento.semSaldoNoFim} ${endividamento.semSaldoNoFim === 1 ? 'mês final sem' : 'meses finais sem'} saldo de endividamento (provável mês ainda não fechado).`)
+
+  return {
+    suficiente: true,
+    meses: fat.length, de: fat[0].rotulo, ate: fat.at(-1).rotulo,
+    tendenciaAno, ritmoRecente, cv, melhor, pior, quedas, altas,
+    variacao12m: i12?.variacao ?? null,
+    sazonalidade, sazonalidadeCobertura: cobertos.length,
+    atipicos: atipicos.slice(-4),
+    endividamento,
+    atencao,
+  }
+}
+
 // Total curto para o quadro do período, como em apresentação: 23.400 (R$ mil) -> "R$ 23,4 MM".
 export function totalCurto(v, unidade) {
   if (v == null) return '—'

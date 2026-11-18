@@ -213,3 +213,37 @@ test('crescimento do faturamento x endividamento no período escolhido', () => {
   // Sem saldo nos dois períodos: mostra só o faturamento, sem conclusão.
   assert.equal(fat.leituraCrescimento({ faturamento: { variacao: 0.1 }, endividamento: { variacaoMedia: null } }).relacao, null)
 })
+
+test('análise automática: sazonalidade, tendência, meses fora do padrão e endividamento', () => {
+  // 36 meses fictícios: base 1.000 crescendo 1% ao mês, dezembro +30% e fevereiro -20%; saldo de dívida estável.
+  const linhas = ['Mês Faturamento Endividamento']
+  for (let i = 0; i < 36; i++) {
+    const k = fat.chaveMes(2023, 11) + i
+    const m = ((k % 12) + 12) % 12
+    const efeito = m === 11 ? 1.3 : m === 1 ? 0.8 : 1
+    linhas.push(`${fat.rotuloMes(k)} ${Math.round(1000 * 1.01 ** i * efeito)} ${i >= 34 ? 0 : 2000}`)
+  }
+  const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+  assert.equal(a.suficiente, true)
+  assert.equal(a.meses, 36)
+  assert.ok(a.sazonalidade, 'com 36 meses há sazonalidade')
+  assert.equal(a.sazonalidade.fortes[0].rotulo, 'dez')
+  assert.equal(a.sazonalidade.fracos[0].rotulo, 'fev')
+  assert.ok(Math.abs(a.sazonalidade.indices[11].indice - 1.3 / 1.0083) < 0.05)
+  assert.equal(a.sazonalidade.relevante, true)
+  assert.ok(a.tendenciaAno > 0, 'tendência de alta')
+  // Com a sazonalidade descontada, dezembro e fevereiro não viram "fora do padrão".
+  assert.equal(a.atipicos.filter((x) => /^(dez|fev)/.test(x.rotulo)).length, 0)
+  assert.equal(a.endividamento.ultimoRotulo, 'ago/26')
+  assert.equal(a.endividamento.semSaldoNoFim, 2)
+  assert.ok(a.atencao.some((t) => /sem saldo/.test(t)))
+})
+
+test('análise com poucos meses avisa e não inventa sazonalidade', () => {
+  assert.equal(fat.analisarSerie(fat.parseFaturamento('jan/26 1 1\nfev/26 2 2').meses).suficiente, false)
+  const curta = fat.analisarSerie(fat.parseFaturamento(['jan/26 1.000 500', 'fev/26 900 500', 'mar/26 800 500', 'abr/26 700 500', 'mai/26 600 500', 'jun/26 500 500', 'jul/26 400 500'].join('\n')).meses)
+  assert.equal(curta.sazonalidade, null)
+  assert.ok(curta.quedas >= 3)
+  assert.ok(curta.atencao.some((t) => /quedas seguidas/.test(t)))
+  assert.ok(curta.tendenciaAno < 0)
+})
