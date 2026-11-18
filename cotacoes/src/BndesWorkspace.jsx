@@ -6,6 +6,7 @@ import BndesCreditoTfb from './BndesCreditoTfb.jsx'
 import Bndes from './Bndes.jsx'
 import './BndesWorkspace.css'
 import './FinameComparisonLayout.css'
+import './CalculatorPattern.css'
 
 const PROFILES = [
   ['finame-materiais', 'Finame Materiais Industrializados'],

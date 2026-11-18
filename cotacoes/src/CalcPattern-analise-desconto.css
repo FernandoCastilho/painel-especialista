@@ -1,0 +1,133 @@
+/* Análise de desconto · padrão visual das calculadoras (aprovado em 18/11/2026), o mesmo do BNDES Finame.
+   Tudo escopado em .cx-desconto: nenhuma outra calculadora é afetada. Só apresentação: nenhuma regra de cálculo mora aqui.
+   O prefixo :root[data-theme] body main.app.app-calculators vence as camadas anteriores sem !important. */
+.cx-desconto {
+  --dscp-orange:#ff6200;
+  --dscp-navy:linear-gradient(110deg,#052956,#07336b);
+}
+
+/* ── Dados à esquerda, resultado ao lado (computador largo) ou abaixo ── */
+.cx-desconto .dsc-workspace { display:grid; gap:20px; min-width:0; }
+.cx-desconto .dsc-inputs { display:grid; gap:20px; min-width:0; }
+.cx-desconto .dsc-result-col { min-width:0; }
+@media (min-width:1200px) {
+  .cx-desconto .dsc-workspace { grid-template-columns:minmax(0,1fr) minmax(360px,400px); align-items:start; }
+  .cx-desconto .dsc-result-col { position:sticky; top:88px; max-height:calc(100vh - 100px); overflow:auto; overscroll-behavior:contain; border-radius:12px; }
+}
+
+/* ── Quadros de entrada: faixa azul-marinho, título branco, linha laranja; um destaque só (sem barra laranja à esquerda) ── */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel { overflow:hidden; border-radius:10px; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel > header { flex-wrap:nowrap; min-height:46px; margin:0; padding:2px 14px; background:var(--dscp-navy); color:#fff; border:0; border-bottom:3px solid var(--dscp-orange); border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel > header h3 { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; letter-spacing:0; text-transform:none; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel > header .fi-help > button { color:#fff; border-color:#ffffff66; }
+/* Rótulos em uma linha; campos com a mesma altura e o mesmo tamanho de valor. */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label > label:not(.dsc-check) { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label { flex-wrap:nowrap; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs :is(.cx-field input:not([type=checkbox]), .cx-field select) { height:44px; min-height:44px; font-size:.9375rem; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); }
+/* Linha do rótulo com a altura do "?" (44px), com ou sem ajuda: campos alinhados. */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label { min-height:44px; align-items:center; }
+
+/* ── Quadro do resultado: o único com borda laranja; faixa azul sem linha laranja ── */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box { display:flex; flex-direction:column; padding:0; border:2px solid var(--dscp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .dsc-result-head,
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .expandable-panel > .expandable-heading { min-height:46px; margin:0; padding:10px 14px; background:var(--dscp-navy); color:#fff; border:0; border-bottom:1px solid #2f4a78; border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .dsc-result-head h3,
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .expandable-panel > .expandable-heading h3 { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .expandable-panel > .expandable-heading .expandable-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .expandable-panel { border:0; border-radius:0; background:transparent; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .expandable-content { display:flex; flex-direction:column; gap:12px; padding:12px; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-result-status:not(:empty) { display:grid; gap:8px; padding:12px 12px 0; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-notice { margin:12px 12px 0; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > :last-child:is(.desconto-result-status, .desconto-notice) { margin-bottom:12px; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-result-status:not(:empty):last-child { padding-bottom:12px; }
+
+/* Avisos: faixa âmbar com "!" */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box :is(.desconto-result-status, .dsc-alerts) .desconto-notice,
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-notice { position:relative; padding:10px 12px 10px 38px; border:1px solid color-mix(in srgb, #ffb000 45%, var(--bw-line)); border-left:4px solid #ffb000; border-radius:8px; background:color-mix(in srgb, #ffb000 10%, var(--bw-card)); color:var(--bw-ink, var(--fg)); font-size:.8rem; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box :is(.desconto-result-status, .dsc-alerts) .desconto-notice::before,
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-notice::before { content:"!"; position:absolute; left:10px; top:10px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#ffb000; color:#000; font-size:.75rem; font-weight:800; line-height:1; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-alerts { display:grid; gap:8px; }
+
+/* a. Resposta principal */
+.cx-desconto .dsc-answer { display:grid; grid-template-columns:1fr; gap:8px; }
+.cx-desconto .dsc-answer > div { display:flex; flex-direction:column; gap:2px; min-width:0; padding:12px 14px; border-radius:10px; }
+.cx-desconto .dsc-answer small { font-size:.75rem; }
+.cx-desconto .dsc-answer > div > span { font-size:.72rem; line-height:1.35; }
+.cx-desconto .dsc-answer-main { background:var(--dscp-navy); color:#fff; border:1px solid #34507f; }
+.cx-desconto .dsc-answer .dsc-answer-main > :is(small, span) { color:#c9d6ee; }
+.cx-desconto .dsc-answer-main b { white-space:nowrap; font-size:1.75rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:#fff; overflow-wrap:anywhere; }
+.cx-desconto .dsc-answer-side { border:1px solid var(--bw-line); background:var(--bw-soft); }
+.cx-desconto .dsc-answer-side > small, .cx-desconto .dsc-answer-side > span { color:var(--bw-mut, var(--mut)); }
+.cx-desconto .dsc-answer-side b { font-size:1.1rem; font-variant-numeric:tabular-nums; color:var(--bw-ink, var(--fg)); white-space:nowrap; }
+
+/* b. Equivalências */
+.cx-desconto .dsc-equiv { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; border:1px solid var(--bw-line); border-radius:8px; overflow:hidden; }
+.cx-desconto .dsc-equiv > div { display:flex; flex-direction:column; gap:3px; min-width:0; padding:8px 10px; }
+.cx-desconto .dsc-equiv > div + div { border-left:1px solid var(--bw-line); }
+.cx-desconto .dsc-equiv span { color:var(--bw-mut, var(--mut)); font-size:.7rem; line-height:1.3; }
+.cx-desconto .dsc-equiv b { color:var(--bw-ink, var(--fg)); font-size:.9rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+/* c. Valores em reais: rótulo à esquerda, valor à direita, terminando no total */
+.cx-desconto .dsc-values { display:grid; border:1px solid var(--bw-line); border-radius:8px; overflow:hidden; }
+.cx-desconto .dsc-values > div { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:7px 12px; border-top:1px solid var(--bw-line); }
+.cx-desconto .dsc-values > div > span { color:var(--bw-ink, var(--fg)); font-size:.85rem; }
+.cx-desconto .dsc-values > div b { font-size:.9rem; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--bw-ink, var(--fg)); }
+.cx-desconto .dsc-values > .dsc-grp { margin:0; padding:10px 12px 4px; color:var(--bw-mut, var(--mut)); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.cx-desconto .dsc-values > .dsc-grp:first-child { padding-top:8px; }
+.cx-desconto .dsc-values > .dsc-total { border-top:2px solid var(--bw-ink, var(--fg)); background:var(--bw-soft); }
+.cx-desconto .dsc-values > .dsc-total :is(span, b) { font-weight:800; font-size:.95rem; }
+
+/* d. Notas e detalhes recolhidos */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .dsc-note { margin:0; padding:0; color:var(--bw-mut, var(--mut)); font-size:.75rem; line-height:1.45; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .calc-panel-context.dsc-note { margin:0; gap:6px; }
+.cx-desconto .dsc-more > summary, .cx-desconto .dsc-tables > summary { display:flex; align-items:center; min-height:44px; cursor:pointer; color:var(--bw-ink, var(--fg)); font-weight:600; }
+.cx-desconto .dsc-tables { display:block; min-width:0; max-width:100%; padding:4px 16px 14px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); }
+.cx-desconto .dsc-tables:not([open]) { padding-bottom:4px; }
+.cx-desconto .dsc-tables[open] > summary { margin-bottom:4px; }
+.cx-desconto .dsc-tables > .cx-panel + .cx-panel { margin-top:12px; }
+.cx-desconto .dsc-more > summary:focus-visible, .cx-desconto .dsc-tables > summary:focus-visible { outline:2px solid var(--dscp-orange); outline-offset:2px; }
+
+/* "‹ Calculadoras" fora do quadro, logo acima dele (a moldura da tela continua a mesma). */
+:root[data-theme] body main.app.app-calculators .cx-desconto.calc-workspace { position:relative; margin-top:48px; overflow:visible; }
+:root[data-theme] body main.app.app-calculators .cx-desconto.calc-workspace > .cx-back { position:absolute; top:-48px; left:0; min-height:44px; padding:0 12px 0 2px; border:0; background:transparent; color:var(--bw-mut, var(--mut)); font-size:1rem; }
+:root[data-theme] body main.app.app-calculators .cx-desconto.calc-workspace > .cx-back:hover { color:var(--bw-ink, var(--fg)); }
+:root[data-theme] body main.app.app-calculators .cx-desconto.calc-workspace > .cx-back + .calc-workspace-heading { margin-top:0; }
+
+/* Seta de abrir/fechar nos detalhes recolhidos. */
+.cx-desconto .dsc-tables > summary { list-style:none; gap:8px; }
+.cx-desconto .dsc-tables > summary::-webkit-details-marker { display:none; }
+.cx-desconto .dsc-tables > summary::before { content:"▸"; display:inline-block; width:1em; color:var(--bw-mut, var(--mut)); transition:transform .15s; }
+.cx-desconto .dsc-tables[open] > summary::before { transform:rotate(90deg); }
+
+@media (max-width:480px) {
+  .cx-desconto .dsc-answer { grid-template-columns:1fr; }
+  .cx-desconto .dsc-answer-main b { font-size:1.55rem; }
+  .cx-desconto .dsc-equiv { grid-template-columns:1fr; }
+  .cx-desconto .dsc-equiv > div + div { border-left:0; border-top:1px solid var(--bw-line); }
+  .cx-desconto .dsc-tables { padding:4px 10px 10px; }
+}
+
+/* Específico da Análise de desconto */
+.cx-desconto .dsc-equiv small { color:var(--bw-mut, var(--mut)); font-size:.68rem; }
+.cx-desconto .dsc-values > .dsc-sub { background:var(--bw-soft); }
+.cx-desconto .dsc-values > .dsc-sub > :is(span, b) { font-weight:700; }
+/* Direção da economia: símbolo ▲/▼ e palavras; a cor só reforça. */
+.cx-desconto .dsc-answer-main[data-direction="giro"] b > span { color:#7ee2a8; }
+.cx-desconto .dsc-answer-main[data-direction="desconto"] b > span { color:#ff9b9b; }
+.cx-desconto .dsc-answer-main b > span { font-size:.7em; vertical-align:.12em; }
+.cx-desconto .dsc-values b > span { color:var(--bw-mut, var(--mut)); font-size:.75em; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .desconto-result-caption { margin:0; color:var(--bw-mut, var(--mut)); font-size:.75rem; line-height:1.45; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .desconto-result-caption b { color:var(--bw-ink, var(--fg)); }
+/* Erro de cálculo também vira faixa no topo do quadro. */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-result-status > .cx-error { margin:0; padding:10px 12px; border:1px solid var(--bw-line); border-left:4px solid var(--down, #d33); border-radius:8px; background:var(--bw-soft); }
+/* Ao lado da resposta principal, a média mensal em uma linha só. */
+.cx-desconto .dsc-answer > .dsc-answer-side { display:grid; grid-template-columns:auto 1fr; align-items:baseline; column-gap:10px; padding:8px 14px; }
+.cx-desconto .dsc-answer > .dsc-answer-side > span { grid-column:1 / -1; }
+.cx-desconto .dsc-answer > .dsc-answer-side > b { justify-self:end; }
+
+/* Celular: rótulos longos quebram linha em vez de serem cortados (nenhum texto escondido). */
+@media (max-width:480px) {
+  :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label > label:not(.dsc-check) { overflow:visible; white-space:normal; text-overflow:clip; }
+}
+.cx-desconto .dsc-tables > .cx-panel { min-width:0; max-width:100%; }

@@ -10,6 +10,7 @@ import { FINIMP_CURRENCIES, validateFinimpInputs } from './finimpInputs.js'
 import { parseDecimal } from './emprestimo.js'
 import { formatFinimpRate, formatFinimpPercent as pct, formatFinimpDelta as delta } from './finimpPresentation.js'
 import './FinimpComparacao.css'
+import './CalcPattern-finimp.css'
 
 export function FinimpIcon() { return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 7h18M17 3l4 4-4 4M21 17H3m4-4-4 4 4 4" /></svg> }
 export default function FinimpComparacao({ onBack }) {
@@ -38,6 +39,12 @@ export default function FinimpComparacao({ onBack }) {
     return <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor={id}>{label}</label>{helpKey && help(helpKey, suffix)}</div>{monetary ? <MoneyInput {...attrs} prefix={options.prefix ?? currency} value={value} onChange={change} /> : <input {...attrs} inputMode="decimal" autoComplete="off" value={displayedValue} onFocus={() => setFocusedField(id)} onChange={e => change(e.target.value)} />}{error && <p className="cx-error" id={`${id}-err`} role="alert">{error}</p>}</div>
   }
   const bankFields = (name, bank, setBank, key) => <fieldset className="fi-bank"><legend>{name}</legend>{field('Taxa anual simples (%)', `fi-${key}-rate`, bank.annualRate, v => setBank({ ...bank, annualRate: v }), false, 'rate', name)}{field('Flat único sobre o principal (%)', `fi-${key}-flat`, bank.flatRate, v => setBank({ ...bank, flatRate: v }), false, 'flat', name)}{useTac && field('TAC à vista (R$)', `fi-${key}-tac`, bank.tac, v => setBank({ ...bank, tac: v }), true, 'tac', name, { prefix: 'R$' })}</fieldset>
+  // Resposta principal: o prazo da linha destacada ou, sem destaque, o da meta. Só lê valores já calculados na tabela.
+  const answerDays = selectedDays ?? FINIMP_TERMS[goalTerm]
+  const answerRow = rows[FINIMP_TERMS.indexOf(answerDays)]
+  const answer = conditionsReady && answerRow?.ok ? answerRow : null
+  // Meta: a taxa atual da Instituição 2 contra a taxa requerida (o custo cresce com a taxa; nenhuma conta nova).
+  const goalMet = goal.ok && b.annualRate !== null ? b.annualRate <= goal.annualRate * (1 + 1e-12) + 1e-12 : null
   return <section className="cx fi bw calc-standard calc-workspace" aria-labelledby="fi-heading">
     <div className="cx-toolbar">
       <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
@@ -45,17 +52,40 @@ export default function FinimpComparacao({ onBack }) {
     </div>
     <div className="bw-heading calc-workspace-heading"><h2 id="fi-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>FINIMP · comparação de propostas</span></h2>{help('simulation')}</div>
     {/* Tela recém-aberta: dica curta do que preencher, sem valores de exemplo. Some quando as condições estão completas. */}
-    {!conditionsReady && <p className="fi-guide">Informe o principal e as condições das instituições.<FinimpHelp title="Como começar"><p>Para começar, informe o principal e, em cada instituição, a taxa anual e o flat. A tabela e a meta de custo se completam sozinhas.</p></FinimpHelp></p>}
-    <article className="desk-panel cx-panel"><header><h3 className="cx-heading"><span>Condições</span></h3></header><div className="cx-form">
+    <div className="fi-inputs">
+    <article className="desk-panel cx-panel fi-box"><header><h3 className="cx-heading"><span>Condições</span></h3></header>
+    {!conditionsReady && <p className="fi-guide fi-alerta"><span className="fi-alerta-icone" aria-hidden="true">!</span><span>Informe o principal e as condições das instituições.</span><FinimpHelp title="Como começar"><p>Para começar, informe o principal e, em cada instituição, a taxa anual e o flat. A tabela e a meta de custo se completam sozinhas.</p></FinimpHelp></p>}
+    <div className="cx-form">
       {field(`Principal (${currency})`, 'fi-principal', principalText, setPrincipal, true)}
       <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor="fi-currency">Moeda</label>{help('currency')}</div><select id="fi-currency" value={currency} onChange={e => setCurrency(e.target.value)}>{FINIMP_CURRENCIES.map(code => <option key={code}>{code}</option>)}</select></div>
       {useTac && currency !== 'BRL' && field(`Câmbio da TAC (R$ por ${currency})`, 'fi-tac-fx', tacFxText, setTacFx, false, 'tacFx', currency, { raw: true, showError: a.tacBrl > 0 || b.tacBrl > 0 })}
     </div><div className="fi-tac-toggle"><label className="fi-check"><input type="checkbox" checked={useTac} onChange={e => setUseTac(e.target.checked)} /> Incluir TAC à vista</label>{help('tac')}</div>
     <p className="fi-tac-status" role="status">TAC {useTac ? 'incluída' : 'excluída'}.</p>
     <div className="fi-banks">{bankFields('Instituição 1', competitor, setCompetitor, 'a')}{bankFields('Instituição 2', itau, setItau, 'b')}</div></article>
-    <article className="desk-panel cx-panel fi-results calc-result-shell"><ExpandablePanel title="Tabela comparativa FINIMP"><div className="calc-panel-context">{help('period')}</div>
+    <article className="desk-panel cx-panel fi-box fi-goal-box"><header><h3 className="cx-heading"><span>Atingir meta de custo</span>{help('goal')}</h3></header><div className="cx-form"><div className="cx-field"><div className="cx-field-label"><label htmlFor="fi-goal-mode">Meta</label></div><select id="fi-goal-mode" value={goalMode} onChange={e => setGoalMode(e.target.value)}><option value="equal">Igualar custo da Instituição 1</option><option value="target">Custo alvo informado</option></select></div><div className="cx-field"><div className="cx-field-label"><label htmlFor="fi-goal-term">Prazo da meta</label></div><select id="fi-goal-term" value={goalTerm} onChange={e => setGoalTerm(Number(e.target.value))}>{FINIMP_TERMS.map((days, i) => <option key={days} value={i}>{days} dias</option>)}</select></div>{goalMode === 'target' && field(`Custo alvo (${currency})`, 'fi-target', targetText, setTarget, true)}</div></article>
+    </div>
+    {/* Resultado: o único quadro com borda laranja. A comparação é larga, então fica abaixo dos dados, na largura toda. */}
+    <article className="desk-panel cx-panel fi-results calc-result-shell"><header className="fi-result-head"><h3 className="cx-heading"><span>Resultado da comparação</span></h3></header>
+      {!conditionsReady && <p className="status fi-alerta" role="status"><span className="fi-alerta-icone" aria-hidden="true">!</span><span>Informe o principal e as condições das duas instituições para comparar os prazos.</span></p>}
+      <div className="fi-answer">
+        <div className="fi-answer-main" aria-live="polite">{answer ? <>
+          <small>Prazo de {answerDays} dias{selectedDays != null ? ' · linha destacada' : ' · prazo da meta'}</small>
+          {/* Sem apontar vencedor (decisão do Fernando registrada em docs/finimp-comparacao.md): só a diferença, com o sinal. */}
+          <strong className="fi-answer-verdict">Instituição 2 menos Instituição 1</strong>
+          <b>{differenceAmount(answer.difference)}</b>
+          <span className="fi-answer-note">{delta(answer.deltaPp)} no período</span>
+        </> : <><small>Diferença entre as propostas</small><span className="fi-answer-note">{conditionsReady ? (answerRow?.error || 'Resultado fora do limite numérico; revise as condições.') : 'Aparece quando as condições estiverem completas.'}</span></>}</div>
+        <div className="fi-answer-side"><small>Meta · {FINIMP_TERMS[goalTerm]} dias</small>
+          <div className="fi-goal" role="status">{goal.ok ? <>{goalMet !== null && <p className={`fi-goal-met${goalMet ? ' is-met' : ''}`}><span aria-hidden="true">{goalMet ? '▼' : '▲'}</span> Instituição 2 hoje a {pct(b.annualRate)} a.a.: {goalMet ? 'atinge a meta' : 'acima da taxa requerida, não atinge a meta'}</p>}<strong>Taxa requerida: {pct(goal.annualRate)} a.a.</strong><p>Custo calculado: {money(goal.result.cost)} ({pct(goal.result.periodPercent)} no período).</p><button type="button" onClick={() => setItau({ ...itau, annualRate: goal.annualRate.toLocaleString('pt-BR', { useGrouping: false, maximumSignificantDigits: 17 }) })}>Aplicar taxa à Instituição 2</button></> : <p>{conditionsReady ? goal.error : 'Preencha o principal e as condições das instituições para ver a taxa que atinge a meta.'}</p>}</div>
+        </div>
+      </div>
+      {answer && <section className="fi-values" aria-label={`Valores no prazo de ${answerDays} dias`}><h4>Custo no prazo de {answerDays} dias</h4><dl>
+        <div><dt>Instituição 1</dt><dd>{money(answer.competitor.cost)} <small>{pct(answer.competitor.periodPercent)}</small></dd></div>
+        <div><dt>Instituição 2</dt><dd>{money(answer.itau.cost)} <small>{pct(answer.itau.periodPercent)}</small></dd></div>
+        <div className="fi-values-total"><dt>Diferença (Instituição 2 − Instituição 1)</dt><dd>{differenceAmount(answer.difference)} <small>{delta(answer.deltaPp)}</small></dd></div>
+      </dl></section>}
+      <ExpandablePanel title="Tabela comparativa FINIMP"><div className="calc-panel-context">{help('period')}</div>
       <p id="fi-table-help" className="sr-only">12 prazos fixos, de 30 a 360 dias. Clique em uma linha para destacá-la. Pelo teclado, use Tab até o botão do prazo e pressione Enter ou Espaço. Use rolagem para acessar todas as colunas.</p>
-      {!conditionsReady && <p className="status" role="status">Informe o principal e as condições das duas instituições para comparar os prazos.</p>}
       <div className="fi-scroll" role="region" aria-label="Comparação por prazo" aria-describedby="fi-table-help" tabIndex={0}>
         <table className="fi-compare"><caption className="sr-only">Comparação de custos no período. Instituição 2 menos Instituição 1.</caption>
           <thead><tr><th scope="col" rowSpan={2}>Prazo<br />(dias)</th><th scope="colgroup" colSpan={useTac ? 5 : 4}>Instituição 1</th><th scope="colgroup" colSpan={useTac ? 5 : 4}>Instituição 2</th><th scope="colgroup" colSpan={2}>Comparação</th></tr>
@@ -65,7 +95,5 @@ export default function FinimpComparacao({ onBack }) {
         </table>
       </div>
     </ExpandablePanel></article>
-    <article className="desk-panel cx-panel"><header><h3 className="cx-heading"><span>Atingir meta de custo</span>{help('goal')}</h3></header><div className="cx-form"><div className="cx-field"><div className="cx-field-label"><label htmlFor="fi-goal-mode">Meta</label></div><select id="fi-goal-mode" value={goalMode} onChange={e => setGoalMode(e.target.value)}><option value="equal">Igualar custo da Instituição 1</option><option value="target">Custo alvo informado</option></select></div><div className="cx-field"><div className="cx-field-label"><label htmlFor="fi-goal-term">Prazo da meta</label></div><select id="fi-goal-term" value={goalTerm} onChange={e => setGoalTerm(Number(e.target.value))}>{FINIMP_TERMS.map((days, i) => <option key={days} value={i}>{days} dias</option>)}</select></div>{goalMode === 'target' && field(`Custo alvo (${currency})`, 'fi-target', targetText, setTarget, true)}</div>
-    <div className="fi-goal" role="status">{goal.ok ? <><strong>Taxa requerida: {pct(goal.annualRate)} a.a.</strong><p>Custo calculado: {money(goal.result.cost)} ({pct(goal.result.periodPercent)} no período).</p><button type="button" onClick={() => setItau({ ...itau, annualRate: goal.annualRate.toLocaleString('pt-BR', { useGrouping: false, maximumSignificantDigits: 17 }) })}>Aplicar taxa à Instituição 2</button></> : <p>{conditionsReady ? goal.error : 'Preencha o principal e as condições das instituições para ver a taxa que atinge a meta.'}</p>}</div></article>
   </section>
 }
