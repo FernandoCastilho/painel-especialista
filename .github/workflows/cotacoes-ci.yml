@@ -76,6 +76,8 @@ jobs:
         run: OPERACAO_DI_QA_OUTPUT="$RUNNER_TEMP/qa-universal/operacao-di" node scripts/smoke-operacao-di.cjs
       - name: Conferir Empréstimo externo 4131 (IOF, gross-up, swap, NDF, apresentação e PDF)
         run: EMPRESTIMO_4131_QA_OUTPUT="$RUNNER_TEMP/qa-universal/emprestimo-4131" node scripts/smoke-emprestimo-4131.cjs
+      - name: Conferir Árvore de Crédito (folha, CNPJ simulado e visão do cliente)
+        run: ARVORE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/arvore" node scripts/smoke-arvore-credito.cjs
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4
