@@ -32,22 +32,24 @@ export const TEMAS = [
   // Madeira e base florestal (pedido de 17/11/2026, para visitas a indústrias de madeira). Uso educativo: entra toda matéria
   // que cite o setor, inclusive queda de preço, acidente, fiscalização e notícia de outros países (decisão do Fernando em
   // 18/11/2026: nenhuma matéria do setor fica de fora por causa de uma palavra). Sem filtro de contexto econômico.
-  // Só sai o que não é madeira: a Ilha da Madeira (e o vinho e o clube de lá), o Rio Madeira, o MDF-e (documento fiscal),
-  // o município de Serraria e o sobrenome Madeira logo depois de um cargo ou posição de jogador.
+  // Sai só o título em que "Madeira" é outra coisa (a ilha, o rio, sobrenome, o município de Serraria, o MDF-e) e que não
+  // cita o setor em nenhum outro trecho.
   { id: 'madeira', grupo: 'setor', label: 'Madeira e base florestal',
     queries: ['madeira serrada compensado exportação preço', 'indústria madeireira setor florestal Brasil', 'painéis de madeira MDF MDP indústria moveleira', 'florestas plantadas eucalipto pinus madeira mercado'],
     termos: re(['madeir', 'serraria', '\\bMDF\\b(?!-e)', '\\bMDP\\b', 'compensados? (?:de (?:pinus|eucalipto)|brasileir)', 'florestas? plantadas?', 'setor florestal', 'base florestal',
       'concess\\S+ floresta', 'manejo florestal', 'eucalipto', '\\bpinus\\b', 'ABIMCI', '\\bIb[áa](?![\\wÀ-ú])', 'moveleir', 'Abim[óo]vel', '(?:ind[úu]stria|produ[çc][ãa]o|setor) de m[óo]veis',
       'Dexco', 'Duratex', 'Eucatex', 'Berneck', 'Arauco'].join('|')),
-    excluir: re([
+    // Outros sentidos da palavra. Não descartam a matéria: o trecho é apagado do título antes de procurar o setor, então
+    // "Madeireiros escoam produção pelo Rio Madeira" entra e "Hidrelétricas do Madeira reduzem produção" não.
+    homonimos: new RegExp([
       // a ilha
-      'Ilha da Madeira', 'Governo (?:Regional )?da Madeira', 'Regi[ãa]o Aut[óo]noma da Madeira', 'Porto Santo', 'Funchal', 'madeirense', 'arquip[ée]lago da Madeira',
-      'aeroporto da Madeira', '(?:clima|tempo|custo de vida) na Madeira', 'Nacional da Madeira', 'vinhos? (?:da |de )?Madeira',
+      'Ilha da Madeira', 'Governo (?:Regional )?da Madeira', 'Regi[ãa]o Aut[óo]noma da Madeira', '\\bPorto Santo\\b', 'Funchal', 'madeirense', 'arquip[ée]lago da Madeira',
+      'aeroporto da Madeira', '(?:clima|tempo|custo de vida) na Madeira', 'vinhos? (?:da |de )?Madeira',
       // o rio
       'Rio Madeira', '\\b(?:do|no|pelo) Madeira\\b', 'Madeira-Mamor[ée]',
-      // outros sentidos da palavra
+      // pessoas e lugares com o nome
       '(?:deputad[oa]|senador[a]?|vereador[a]?|prefeit[oa]|ministr[oa]|jogador|t[ée]cnico|atacante|zagueiro|goleiro) Madeira\\b', '(?:Prefeitura|munic[íi]pio|cidade) de Serraria',
-    ].join('|')) },
+    ].join('|'), 'gi') },
   { id: 'cobre', grupo: 'insumo', label: 'Cobre',
     queries: ['cobre preço LME', 'cobre China demanda estoques', 'cobre mineração Chile Peru produção', 'cobre tarifa Estados Unidos commodities'],
     termos: re('\\bcobre\\b|copper|Codelco|Freeport'),
@@ -125,7 +127,12 @@ export const TEMAS = [
     contexto: re('EUA|Estados Unidos|americana?s?|Trump|midterms?|republican|democrat|Congresso|Senado|C[âa]mara|Casa Branca|Wall Street|Treasur') },
 ]
 export const TEMA_IDS = TEMAS.map((t) => t.id)
-export const relevanteTema = (tema, title) => (!tema.excluir || !tema.excluir.test(title)) && tema.termos.test(title) && (!tema.contexto || tema.contexto.test(title))
+// `homonimos` (opcional): outros sentidos da palavra do setor. O trecho sai do título antes de procurar o setor; a matéria
+// só fica de fora se não sobrar nenhuma menção ao setor.
+export const relevanteTema = (tema, title) => {
+  const texto = tema.homonimos ? String(title ?? '').replace(tema.homonimos, ' ') : title
+  return (!tema.excluir || !tema.excluir.test(title)) && tema.termos.test(texto) && (!tema.contexto || tema.contexto.test(title))
+}
 
 export function temasFile(porTema, now, { stale = false, errors = [] } = {}) {
   return { schemaVersion: 1, generatedAt: now, windowDays: WINDOW_DAYS, stale, errors, temas: Object.fromEntries(TEMAS.map((t) => [t.id, { label: t.label, grupo: t.grupo, items: porTema[t.id] ?? [] }])) }

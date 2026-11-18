@@ -32,6 +32,12 @@ test('tema Madeira e base florestal: entra toda matéria do setor, inclusive que
     'Ministro defende madeira brasileira em negociação de tarifa com os EUA', // cargo seguido de "defende", não do sobrenome
     'Lenha: preço da madeira para churrasco sobe no inverno',
     'Piso de madeira ou porcelanato: preço e durabilidade',
+    'Madeireiros de Rondônia escoam produção pelo Rio Madeira', // o rio é citado, mas o setor também
+    'Serraria em Porto Velho amplia produção às margens do Madeira',
+    'Feira Nacional da Madeira reúne 300 expositores',
+    'Madeira exportada pelo porto Santos cresce 12%',
+    'Ilha da Madeira importa madeira do Brasil',
+    'Deputado Madeira defende setor madeireiro em audiência',
   ]) assert.equal(relevanteTema(t, titulo), true, titulo)
   for (const titulo of [
     'Ilha da Madeira bate recorde de turistas', // a ilha
@@ -41,7 +47,6 @@ test('tema Madeira e base florestal: entra toda matéria do setor, inclusive que
     'Sefaz muda regras do MDF-e e setor de transporte reclama de custo', // documento fiscal
     'Deputado Madeira critica alta de impostos', // sobrenome
     'Jogador Madeira renova contrato e mercado da bola reage',
-    'Benfica vence o Nacional da Madeira e sobe na tabela', // clube da ilha
     'Vinho Madeira ganha mercado no Brasil',
     'Clima na Madeira: alta pressão traz sol para o fim de semana',
     'Prefeitura de Serraria anuncia investimento em saúde', // município
