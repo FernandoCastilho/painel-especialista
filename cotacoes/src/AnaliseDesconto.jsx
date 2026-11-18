@@ -6,6 +6,7 @@ import MoneyInput from './MoneyInput.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import { DISCOUNT_INITIAL_FORM, DISCOUNT_TERMS, TITLE_FEE_MODES, parseDiscountForm } from './analiseDesconto.js'
 import './AnaliseDesconto.css'
+import './CalcPattern-analise-desconto.css'
 import { IOF_SOURCE } from './iofRules.js'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_RESSALVA } from './pracaContrato.js'
 
@@ -15,6 +16,8 @@ const pct = (value) => `${nbr5891(value * 100).toLocaleString('pt-BR', { minimum
 // CET anual (decimal) com o equivalente mensal composto.
 const cetText = (cet) => cet == null ? 'Não mensurável' : `${pct(cet)} a.a.`
 const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(cet) / 12))} a.m.`
+// Direção da economia em símbolo, além da cor: ▲ giro com menor custo, ▼ giro com maior custo.
+const arrow = (value) => value > 0 ? '▲' : value < 0 ? '▼' : '='
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
 const CET_HELP = 'CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): nas operações de desconto, o CET usa o prazo de 30 dias e o valor do limite pactuado — aqui, o valor nominal da operação. Líquido = nominal − juros de 30 dias − IOF de 30 dias − TAC − tarifa de títulos; o nominal volta em 30 dias corridos; taxa anual em dias corridos/365. O custo pelo prazo real usa a data de pagamento de cada título e não é o CET da norma.'
 
@@ -77,6 +80,9 @@ export default function AnaliseDesconto({ onBack }) {
     <div className="bw-heading calc-workspace-heading"><h2 id="ad-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Análise de desconto</span></h2><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p></CalculatorHelp></div>
     <p className="desconto-notice">Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p>
 
+    {/* Padrão visual de 18/11/2026: dados à esquerda e resultado ao lado (computador largo) ou abaixo (telas menores). Só apresentação. */}
+    <div className="dsc-workspace">
+    <div className="dsc-inputs">
     <article className="desk-panel cx-panel desconto-input-panel">
       <header className="cx-heading"><h3>1. Operação simulada de desconto</h3><CalculatorHelp title="Operação simulada de desconto"><p>Os valores iniciais são um exemplo ilustrativo. Substitua pelos títulos e condições do contrato. O custo completo inclui juros, IOF, TAC e tarifa dos títulos.</p></CalculatorHelp></header>
       <div className="cx-form">
@@ -136,35 +142,75 @@ export default function AnaliseDesconto({ onBack }) {
       </div>
     </article>
 
-    <div aria-live="polite" className="desconto-result-status">
-      {pending && (flagged
-        ? <p className="desconto-notice">Preencha ou corrija os campos sinalizados para liberar a comparação.</p>
-        : <p className="desconto-notice desconto-guide">{guide}</p>)}
-      {calculated && !calculated.ok && <p role="alert" className="cx-error">{calculated.error}</p>}
-      {result && <p className="desconto-result-caption">Principal do giro: <b>{brl(result.principal)}</b> · {number(result.operations)} operações de desconto por mês · Price a {form.giroRate}% a.m.</p>}
+    </div>
+    <aside className="dsc-result-col" aria-label="Resultado da comparação">
+    <article className="desk-panel cx-panel dsc-result-box">
+      {!result && <header className="dsc-result-head"><h3>Resultado</h3></header>}
+      {/* Falta de dados: faixa no topo do quadro do resultado. */}
+      <div aria-live="polite" className="desconto-result-status">
+        {pending && (flagged
+          ? <p className="desconto-notice">Preencha ou corrija os campos sinalizados para liberar a comparação.</p>
+          : <p className="desconto-notice desconto-guide">{guide}</p>)}
+        {calculated && !calculated.ok && <p role="alert" className="cx-error">{calculated.error}</p>}
+      </div>
+      {result && <ExpandablePanel title="Desconto × giro: resultado">
+        {/* a. Resposta principal: quanto o giro custa a menos (ou a mais) que o desconto em 12 meses. Só reorganiza números já calculados. */}
+        <div className="dsc-answer">
+          <div className="dsc-answer-main" data-direction={first.savings > 0 ? 'giro' : first.savings < 0 ? 'desconto' : 'igual'}>
+            <small>Economia estimada com giro · 12 meses</small>
+            <b><span aria-hidden="true">{arrow(first.savings)}</span> {brl(first.savings)}</b>
+            <span>{first.savings > 0 ? 'O giro custa menos que o desconto neste cenário.' : first.savings < 0 ? 'O giro custa mais: neste cenário o desconto sai mais barato.' : 'Os dois caminhos custam o mesmo neste cenário.'}</span>
+          </div>
+          <div className="dsc-answer-side"><small>Por mês</small><b>{brl(first.savings / 12)}</b><span>Média do cenário de 12 meses</span></div>
+        </div>
+        {/* b. Equivalências: taxa efetiva (CET) dos dois caminhos */}
+        <div className="dsc-equiv">
+          <div><span>CET do desconto</span><b>{cetText(result.projected.cet)}</b><small>Projeção mensal · art. 6º</small></div>
+          <div><span>CET do giro · 12 meses</span><b>{cetText(first.giro.cet)}</b><small>Price · art. 4º</small></div>
+        </div>
+        {/* c. Valores em reais, agrupados, terminando no total */}
+        <div className="dsc-values" role="group" aria-label="Valores em reais">
+          <h4 className="dsc-grp">Desconto · por mês</h4>
+          {summaryRows.map(([label, monthly, , count]) => <div key={label} className={label === 'Custo total do desconto' ? 'dsc-sub' : undefined}><span>{label}</span><b>{count ? number(monthly) : brl(monthly)}</b></div>)}
+          <h4 className="dsc-grp">Economia estimada com giro · por prazo</h4>
+          {DISCOUNT_TERMS.map((months, index) => <div key={months}><span>{months} meses</span><b><span aria-hidden="true">{arrow(result.comparisons[index].savings)}</span> {brl(result.comparisons[index].savings)}</b></div>)}
+          <h4 className="dsc-grp">Em 12 meses</h4>
+          <div><span>Desconto: juros + TAC + títulos + IOF</span><b>{brl(first.discountCost)}</b></div>
+          <div><span>Giro: juros + TAC + IOF</span><b>{brl(first.giro.cost)}</b></div>
+          <div className="dsc-total"><span>Economia estimada com giro</span><b>{brl(first.savings)}</b></div>
+        </div>
+        {/* Notas depois dos números */}
+        <p className="desconto-result-caption">Principal do giro: <b>{brl(result.principal)}</b> · {number(result.operations)} operações de desconto por mês · Price a {form.giroRate}% a.m.</p>
+        <p className="dsc-note">Economia = custo do desconto − custo do giro. ▲ positivo: giro com menor custo; ▼ negativo: maior custo. Não comprova economia efetiva.</p>
+      </ExpandablePanel>}
+    </article>
+    </aside>
     </div>
 
-    <article className="desk-panel cx-panel desconto-summary-panel calc-result-shell">
-      <ExpandablePanel title="Resumo dos custos do desconto">
-      <div className="cx-wrap" role="region" aria-label="Resumo mensal e anual do desconto" tabIndex={0}>
-        <table className="cx-matrix desconto-table"><caption className="sr-only">Volume e custos de desconto no mês e em doze meses</caption><thead><tr><th scope="col">Item</th><th scope="col">Mês</th><th scope="col">Ano</th></tr></thead><tbody>{summaryRows.map(([label, monthly, annual, count]) => <tr key={label}><th scope="row">{label}</th><td>{count ? number(monthly) : brl(monthly)}</td><td>{count ? number(annual) : brl(annual)}</td></tr>)}</tbody></table>
-      </div>
-    </ExpandablePanel></article>
+    {/* d. Tabelas completas em largura total, recolhidas: nada foi apagado. */}
+    <details className="dsc-tables"><summary>Tabelas: custos do desconto, desconto × giro por prazo e composição do giro</summary>
+      <article className="desk-panel cx-panel desconto-summary-panel calc-result-shell">
+        <ExpandablePanel title="Resumo dos custos do desconto">
+        <div className="cx-wrap" role="region" aria-label="Resumo mensal e anual do desconto" tabIndex={0}>
+          <table className="cx-matrix desconto-table"><caption className="sr-only">Volume e custos de desconto no mês e em doze meses</caption><thead><tr><th scope="col">Item</th><th scope="col">Mês</th><th scope="col">Ano</th></tr></thead><tbody>{summaryRows.map(([label, monthly, annual, count]) => <tr key={label}><th scope="row">{label}</th><td>{count ? number(monthly) : brl(monthly)}</td><td>{count ? number(annual) : brl(annual)}</td></tr>)}</tbody></table>
+        </div>
+      </ExpandablePanel></article>
 
-    <article className="desk-panel cx-panel desconto-comparison-panel calc-result-shell">
-      <ExpandablePanel title="Desconto × giro: CET e custo financeiro"><div className="calc-panel-context"><CalculatorHelp title="Como comparar desconto e giro"><p>{CET_HELP} O CET do desconto usa a projeção mensal e vale para qualquer prazo, pois a operação se repete. No giro, o líquido é o principal menos TAC e IOF.</p><p>Economia = custo do desconto − custo do giro. Positivo: giro tem menor custo no cenário; negativo: maior custo. Na coluna Mês, os custos são a média do cenário de 12 meses; as duas linhas de parcela/desembolso já são mensais.</p><p>A média mensal all-in não é a parcela contratual. Ela distribui principal, juros, TAC e IOF pelo prazo. A parcela Price aparece separadamente, sem TAC e IOF.</p><p>Os fluxos não são equivalentes: o desconto é repetido todo mês e o giro é amortizado. A diferença de custos não comprova economia efetiva nem substitui a análise do ciclo de caixa. Esta simulação não é proposta nem recomendação de contratação.</p></CalculatorHelp></div>
-      <div className="cx-wrap" role="region" aria-label="Comparação de desconto e giro em 12, 24, 36 e 48 meses; role para ver todas as colunas" tabIndex={0}>
-        <table className="cx-matrix desconto-table"><caption className="sr-only">CET, custo acumulado por prazo, economia estimada e desembolso mensal</caption><thead><tr><th scope="col">Item</th><th scope="col">Mês<small>base: giro de 12 meses</small></th>{DISCOUNT_TERMS.map((months) => <th scope="col" key={months}>{months} meses</th>)}</tr></thead><tbody>{comparisonRows.map((row) => <tr key={row.label} className={row.savings ? 'desconto-savings' : undefined}><th scope="row">{row.label}</th><td data-negative={row.savings && row.month < 0 ? 'true' : undefined}>{(row.format || brl)(row.month)}</td>{DISCOUNT_TERMS.map((months, index) => { const value = result ? row.value(result.comparisons[index]) : null; return <td key={months} data-negative={row.savings && value < 0 ? 'true' : undefined}>{(row.format || brl)(value)}</td> })}</tr>)}</tbody></table>
-      </div>
-      <p className="desconto-notice desconto-inset"><b>A média mensal all-in não é a parcela contratual.</b> Os fluxos não são equivalentes; compare também o CET. A diferença de custos não comprova economia efetiva.</p>
-    </ExpandablePanel></article>
+      <article className="desk-panel cx-panel desconto-comparison-panel calc-result-shell">
+        <ExpandablePanel title="Desconto × giro: CET e custo financeiro"><div className="calc-panel-context"><CalculatorHelp title="Como comparar desconto e giro"><p>{CET_HELP} O CET do desconto usa a projeção mensal e vale para qualquer prazo, pois a operação se repete. No giro, o líquido é o principal menos TAC e IOF.</p><p>Economia = custo do desconto − custo do giro. Positivo: giro tem menor custo no cenário; negativo: maior custo. Na coluna Mês, os custos são a média do cenário de 12 meses; as duas linhas de parcela/desembolso já são mensais.</p><p>A média mensal all-in não é a parcela contratual. Ela distribui principal, juros, TAC e IOF pelo prazo. A parcela Price aparece separadamente, sem TAC e IOF.</p><p>Os fluxos não são equivalentes: o desconto é repetido todo mês e o giro é amortizado. A diferença de custos não comprova economia efetiva nem substitui a análise do ciclo de caixa. Esta simulação não é proposta nem recomendação de contratação.</p></CalculatorHelp></div>
+        <div className="cx-wrap" role="region" aria-label="Comparação de desconto e giro em 12, 24, 36 e 48 meses; role para ver todas as colunas" tabIndex={0}>
+          <table className="cx-matrix desconto-table"><caption className="sr-only">CET, custo acumulado por prazo, economia estimada e desembolso mensal</caption><thead><tr><th scope="col">Item</th><th scope="col">Mês<small>base: giro de 12 meses</small></th>{DISCOUNT_TERMS.map((months) => <th scope="col" key={months}>{months} meses</th>)}</tr></thead><tbody>{comparisonRows.map((row) => <tr key={row.label} className={row.savings ? 'desconto-savings' : undefined}><th scope="row">{row.label}</th><td data-negative={row.savings && row.month < 0 ? 'true' : undefined}>{(row.format || brl)(row.month)}</td>{DISCOUNT_TERMS.map((months, index) => { const value = result ? row.value(result.comparisons[index]) : null; return <td key={months} data-negative={row.savings && value < 0 ? 'true' : undefined}>{(row.format || brl)(value)}</td> })}</tr>)}</tbody></table>
+        </div>
+        <p className="desconto-notice desconto-inset"><b>A média mensal all-in não é a parcela contratual.</b> Os fluxos não são equivalentes; compare também o CET. A diferença de custos não comprova economia efetiva.</p>
+      </ExpandablePanel></article>
 
-    <article className="desk-panel cx-panel desconto-comparison-panel calc-result-shell">
-      <ExpandablePanel title="Composição do custo do giro">
-      <div className="cx-wrap" role="region" aria-label="Juros, TAC e IOF do giro por prazo; role para ver todas as colunas" tabIndex={0}>
-        <table className="cx-matrix desconto-table"><caption className="sr-only">Encargos totais do giro e separação do IOF diário e adicional</caption><thead><tr><th scope="col">Item</th>{DISCOUNT_TERMS.map((months) => <th scope="col" key={months}>{months} meses</th>)}</tr></thead><tbody>{[['Juros totais', 'interest'], ['TAC única', 'tac'], ['IOF diário', 'dailyIof'], ['IOF adicional', 'additionalIof'], ['IOF total', 'iof'], ['Custo financeiro total', 'cost']].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{DISCOUNT_TERMS.map((months, index) => <td key={months}>{brl(result?.comparisons[index].giro[key])}</td>)}</tr>)}</tbody></table>
-      </div>
-    </ExpandablePanel></article>
+      <article className="desk-panel cx-panel desconto-comparison-panel calc-result-shell">
+        <ExpandablePanel title="Composição do custo do giro">
+        <div className="cx-wrap" role="region" aria-label="Juros, TAC e IOF do giro por prazo; role para ver todas as colunas" tabIndex={0}>
+          <table className="cx-matrix desconto-table"><caption className="sr-only">Encargos totais do giro e separação do IOF diário e adicional</caption><thead><tr><th scope="col">Item</th>{DISCOUNT_TERMS.map((months) => <th scope="col" key={months}>{months} meses</th>)}</tr></thead><tbody>{[['Juros totais', 'interest'], ['TAC única', 'tac'], ['IOF diário', 'dailyIof'], ['IOF adicional', 'additionalIof'], ['IOF total', 'iof'], ['Custo financeiro total', 'cost']].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{DISCOUNT_TERMS.map((months, index) => <td key={months}>{brl(result?.comparisons[index].giro[key])}</td>)}</tr>)}</tbody></table>
+        </div>
+      </ExpandablePanel></article>
+    </details>
 
     <div className="desconto-method cx-heading"><h3>Premissas e fórmulas</h3><CalculatorHelp title="Premissas, fórmulas e pontos de atenção">
       <ul>

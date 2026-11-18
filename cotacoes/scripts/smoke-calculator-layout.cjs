@@ -272,6 +272,9 @@ async function fillScenario(page, section, route) {
     const monthlyInterest = gross * 0.0175 * days / 30
     const monthlyNet = gross - monthlyInterest - (gross - monthlyInterest) * (0.0038 + days * 0.000082) - 564 - 260
     const monthlyCost = 6 * (gross - monthlyNet)
+    // Padrão de 18/11/2026: as tabelas completas ficam recolhidas abaixo do resultado; a pessoa abre para conferir.
+    assert.equal(await section.locator('details.dsc-tables').evaluate(element => element.open), false, 'tabelas começam recolhidas')
+    await section.locator('details.dsc-tables > summary').click()
     const row = section.locator('.desconto-summary-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Custo total do desconto', exact: true }) })
     assert.equal(normalize(await row.locator('td').first().innerText()), brl(monthlyCost))
     assert.equal(normalize(await row.locator('td').nth(1).innerText()), brl(monthlyCost * 12))
@@ -281,6 +284,13 @@ async function fillScenario(page, section, route) {
     assert.equal(await giroCet.locator('td').count(), 5)
     for (const cell of await giroCet.locator('td').allInnerTexts()) assert.match(normalize(cell), /^\d+,\d{2}% a\.a\.$/)
     assert.doesNotMatch(await section.innerText(), /[Nn]ão é CET/)
+    // Padrão de 18/11/2026: a resposta principal repete a economia de 12 meses da tabela, com direção em palavras e símbolo.
+    const savingsRow = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Economia estimada com giro', exact: true }) })
+    const savings12 = normalize(await savingsRow.locator('td').nth(1).innerText())
+    const answer = normalize(await section.locator('.dsc-answer-main').innerText())
+    assert.ok(answer.includes(savings12), `resposta principal traz a economia de 12 meses (${savings12})`)
+    assert.match(answer, savings12.startsWith('-') ? /▼.*O giro custa mais/ : /▲.*O giro custa menos/)
+    await assertResultBeside(page, section, '.dsc-inputs', '.dsc-result-col')
   } else if (route === 'finimp') {
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)

@@ -22,6 +22,8 @@ const fs = require('node:fs')
   const before=await page.locator('.desconto-kpis').innerText()
   await page.locator('#ad-operationRate').fill('3,66')
   assert.notEqual(await page.locator('.desconto-kpis').innerText(),before)
+  // Padrão de 18/11/2026: as tabelas completas ficam recolhidas; abre para conferir os totais.
+  await page.locator('details.dsc-tables > summary').click()
   const totals=await page.locator('.desconto-summary-panel').innerText()
   await page.locator('#ad-averageValue').fill('451200,86')
   assert.notEqual(await page.locator('.desconto-summary-panel').innerText(),totals)
