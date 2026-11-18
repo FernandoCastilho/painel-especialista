@@ -4,7 +4,7 @@ A aba **Apresentar** foi refeita do zero a pedido. A montagem antiga (por setor,
 perguntas da visita) foi removida.
 
 **Acesso:** fora do menu desde 18/11/2026 (pedido do Fernando: "fica oculto por enquanto"); abre pelo endereço
-`#apresentar` e pelo comando APRESENTAR. De 17 a 18/11 ficou fora do menu. Não é destino da busca do painel (o conteúdo
+`#apresentar` e pelo comando APRESENTAR. Ficou fora do menu de 17 a 18/11 e voltou ao menu por algumas horas em 18/11. Não é destino da busca do painel (o conteúdo
 buscável continua nas abas de origem).
 
 ## O que faz
