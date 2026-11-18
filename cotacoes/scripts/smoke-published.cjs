@@ -41,6 +41,8 @@ const links = {
       await page.locator('#cbs-group').press('ArrowDown')
       await page.locator('#cbs-group').press('Enter')
       await page.locator('#cbs-currentNetRate').fill('3,65')
+      // Padrão de 18/11/2026: o mês a mês fica recolhido dentro do resultado; abre para conferir os 12 meses.
+      await page.locator('.cbs-annual-details > summary').click()
       await page.locator('.cbs-annual-chart').waitFor()
       // Nome do painel no ar: aba do navegador em toda largura; marca do topo onde a barra aparece.
       assert.equal(await page.title(), 'PME · Painel Especializado no Mercado', 'nome na aba do navegador')

@@ -47,6 +47,8 @@ async function run() {
     await page.locator('#cbs-stockDays').fill('30')
     await page.getByRole('heading', { name: 'Reserva adicional para cobrir os prazos' }).waitFor()
     await page.locator('.cbs-calculation > summary').click()
+    // Padrão de 18/11/2026: o mês a mês fica recolhido dentro do resultado; abre para conferir os 12 meses.
+    await page.locator('.cbs-annual-details > summary').click()
     const { simulateCbsCash } = await import('../src/cbsCash.js')
     const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/ibgeCbsSnapshot.json'), 'utf8'))
     const expected = change => simulateCbsCash({ revenue: 1000000, spendingRatio: snapshot.datasets.find(d => d.kind === 'comercio').groups.find(g => g.id === 'comercio-83319').spendingRatio, eligibleShare: 70, cbsRate: 11.2, currentNetRate: 3.65, splitShare: 50, receiveDays: 30, payDays: 30, stockDays: 30, currentDueDays: 40, futureDueDays: 40, creditDelayDays: 30, ...change })
