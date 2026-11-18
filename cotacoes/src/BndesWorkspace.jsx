@@ -4,6 +4,7 @@ import BndesTlpExigivel from './BndesTlpExigivel.jsx'
 import BndesLcdCap from './BndesLcdCap.jsx'
 import BndesCreditoTfb from './BndesCreditoTfb.jsx'
 import Bndes from './Bndes.jsx'
+import BndesCustosProdutos from './BndesCustosProdutos.jsx'
 import './BndesWorkspace.css'
 import './FinameComparisonLayout.css'
 import './CalculatorPattern.css'
@@ -41,6 +42,7 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
     <nav className="bw-nav" aria-label="Área BNDES">
       <button type="button" aria-pressed={area === 'simulate' && !historical} onClick={() => { setArea('simulate'); if (historical) navigate('finame-materiais') }} aria-label="Simular financiamento">Simular</button>
       <button type="button" aria-pressed={area === 'quotes'} onClick={() => setArea('quotes')}>Taxas e históricos</button>
+      <button type="button" aria-pressed={area === 'costs'} onClick={() => setArea('costs')}>Custos por produto</button>
     </nav></div>
     <div hidden={area !== 'simulate'} className="bw-simulation">
       {!historical && profile !== 'finame-materiais' && profileControl}
@@ -49,6 +51,7 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
       {profile === 'bndes-selic-lcd' && <BndesLcdCap onBack={onBack} />}
       {historical && <BndesCreditoTfb onBack={onBack} />}
     </div>
+    {area === 'costs' && <div className="bw-costs"><BndesCustosProdutos /></div>}
     <div hidden={area !== 'quotes'} className="bw-quotes">
       <p className="status">Todas as famílias disponíveis no painel: TFB, TFC, TLP e moedas contratuais. Cada referência conserva data, unidade, fonte e avisos; não significa cotação ao vivo.</p>
       <Bndes embedded view={quotesView} onView={setQuotesView} />
