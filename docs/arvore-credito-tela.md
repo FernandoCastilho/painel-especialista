@@ -1,6 +1,6 @@
 # Árvore de Crédito — tela (etapa 1, 18/11/2026)
 
-Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECREDITO`). Entra no menu Calculadoras e na busca.
+Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECREDITO`). **Fora do menu Calculadoras e da busca** (decisão de Fernando, 18/11/2026, como a tela Apresentar): abre só pelo endereço ou pelo atalho, para teste.
 
 ## O que faz
 
