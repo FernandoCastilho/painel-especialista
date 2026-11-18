@@ -1,4 +1,5 @@
 import ChartFullscreen from './ChartFullscreen.jsx'
+import ExpandIcon from './ExpandIcon.jsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
@@ -149,7 +150,7 @@ function ResultPanel({ title, children, className = '' }) {
   const [expanded, setExpanded] = useState(false)
   const close = useCallback(() => setExpanded(false), [])
   return <section className={`credit-result-panel ${className}`}>
-    <header><h3>{title}</h3><button type="button" onClick={() => setExpanded(true)} aria-label={`Ampliar ${title}`}>Ampliar ↗</button></header>
+    <header><h3>{title}</h3><button type="button" className="btn-expand" onClick={() => setExpanded(true)} aria-label={`Ampliar ${title}`} title="Ampliar"><ExpandIcon /></button></header>
     {!expanded && children}
     {expanded && <Presentation title={title} onClose={close}>{children}</Presentation>}
   </section>

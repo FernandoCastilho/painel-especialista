@@ -228,3 +228,32 @@ possível". Decisão: opção 1, "Sim, ampliar e publicar".
   novos. Corrigido como descrito acima, com essas manchetes nos testes.
 - Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
   depois da publicação, principalmente cobre, alumínio, carvão e café.
+
+## Quinta rodada (18/11/2026): régua dos veículos de referência
+Pedido do Fernando: "Mude a régua para ficar realmente eficiente e com a informação real".
+- Antes: quando um tema tinha 6 ou mais matérias de veículos de referência (Valor, Folha, InfoMoney, Reuters e outros da
+  lista `PREFERIDOS`), todas as matérias de outros portais sumiam, inclusive as que traziam fato novo. Em 18/11, Petróleo
+  caiu de 25 para 6 matérias por causa disso.
+- Agora (`filtraVeiculos`, `mesmoFato` e `semInformacaoUtil` em `cotacoes/scripts/temas-lib.mjs`): de cada fato fica uma
+  versão só, a mais recente de veículo de referência quando houver; a matéria de outro portal entra quando traz um fato
+  que ainda não está na lista. A repetição é reconhecida pelo título (até 3 dias de distância, 4 palavras ou mais em
+  comum e a maior parte das palavras do título mais curto); se os dois títulos trazem números e nenhum se repete (outra
+  data, outro percentual), são fatos diferentes.
+- Saem também as matérias sem informação útil: título em outra língua (letras do vietnamita, cirílico, árabe, chinês,
+  japonês, coreano) e as colunas diárias traduzidas do Vietnam.vn ("Preços da gasolina e do diesel hoje, 15 de
+  novembro…", sobre o preço no Vietnã, em dong). Outras matérias do Vietnam.vn continuam (exemplo: antidumping da UE
+  sobre o aço vietnamita).
+- Vale para todos os temas de `temas.json` (setor, insumo, moedas, eleições e madeira). Em madeira, só sai repetição;
+  nenhuma matéria do setor sai por palavra.
+- Teste com as matérias reais de 18/11 (as coletas das 08:32 e das 10:47 juntas, 397 matérias): ficam 351. Saem 10 sem
+  informação útil (7 em Petróleo, 3 em Café) e o restante por repetição (exemplos: "Preço mundial do açúcar sobe 25%…" =
+  "Preço do açúcar sobe 25%…"; várias versões de "dólar fecha a R$ 5,77" viram uma). Petróleo fica com 18 de 26, sem
+  nenhuma coluna traduzida.
+- Primeiro parecer do Auditor: **Insuficiente** (82,5), no commit `b8604aa`: CI ainda rodando; em Petróleo, 8 das 25
+  matérias eram do Vietnam.vn, uma em vietnamita; a repetição entre veículos de referência continuava (23 pares no
+  Dólar). Corrigido como descrito acima.
+- Risco: o reconhecimento é pelo título. Nas matérias reais, 2 das repetições apontadas eram, na leitura do Auditor, fatos
+  diferentes ("Preço do boi gordo recorde, mas sobe menos que bezerro…" tratado como igual a "Preço em dólares do boi
+  gordo, bezerro, milho e soja recuam…", e duas previsões de bancos diferentes para o euro). E a mesma notícia escrita
+  com palavras bem diferentes continua aparecendo duas vezes (exemplo: três matérias sobre o fim do subsídio ao diesel
+  importado).
