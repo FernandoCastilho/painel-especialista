@@ -119,7 +119,7 @@ async function proveLastColumn(region, file) {
         assert.equal(comparisonHeads.length, 3)
         assert.match(comparisonHeads[0], /Opção A · TFC \d+,\d{2}%/i)
         assert.match(comparisonHeads[1], /Opção B · TFB \d+,\d{2}%/i)
-        assert.match(comparisonHeads[2], /^Diferença B − A$/i)
+        assert.match(comparisonHeads[2], /^Diferença B − A Taxas em p\.p\. a\.a\.$/i)
         assert.equal(await page.locator('.fm-comparison .fm-badge').count(), 1, 'um único selo de menor custo')
         assert.match(await page.locator('.fm-verdict').innerText(), /Menor custo[\s\S]*Opção [AB] · TF[CB]/i)
         // Sem barra de rolagem vertical nos indicadores, e a composição não se repete em outro quadro.

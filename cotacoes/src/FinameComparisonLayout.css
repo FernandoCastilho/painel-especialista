@@ -109,3 +109,7 @@ section.expandable-panel.fm-parcels-resumidas > :is(.expandable-heading,.expanda
   .bw .fm-exec-side { max-width:none; }
   .bw .fm-marcos-todas { min-height:44px; }
 }
+
+/* Equivalências lado a lado, com quebra entre valores em telas estreitas. */
+.fm-rate-pair { display:inline-flex; max-width:100%; flex-wrap:wrap; justify-content:flex-end; gap:0 .3em; white-space:normal; }
+.fm-rate-pair > span { white-space:nowrap; }
