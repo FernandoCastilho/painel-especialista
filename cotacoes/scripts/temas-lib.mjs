@@ -140,7 +140,7 @@ export const MERCADO_AMPLO = [
   'preju[íi]zo (?:l[íi]quido|de R\\$|bilion|milion|no trimestre|trimestral|no ano)', '(?:tem|registra|reverte|amplia) preju',
   'receita (?:l[íi]quida|bruta|de vendas)', 'faturamento', 'balan[çc]o (?:trimestral|do trimestre|anual|patrimonial|financeiro)', 'divulga balan',
   'sobretaxa', 'antidumping', 'tarifa[çc]o', 'tarifas? (?:de (?:importa|exporta)|dos EUA|americanas?|de Trump|sobre|extras?|adicionais?)',
-  'aquisi[çc]', 'fus[ãa]o (?:com|entre|de empresas)', 'cota[çc][ãa]o', 'export', 'importa(?:[çc]|d|dor|m\\b|r\\b)|(?<!n[ãa]o |que |pouco )importa\\b',
+  'aquisi[çc]', 'fus[ãa]o (?:com|entre|de empresas)', 'cota[çc][ãa]o', 'export', 'importa(?:[çc]|d|dor|m\\b|r\\b)|(?<!n[ãa]o |que |pouco |mais |menos )importa\\b',
   'financiamento', 'linha de cr[ée]dito', 'cr[ée]dito (?:rural|agr|para|do BNDES|[àa] exporta|de carbono)', 'recorde (?:de|na|no|em) (?:produ|vendas|export|import|safra|lucro|receita|embarque|faturamento|moagem|pre[çc]o|emplacamento|colheita)',
   '(?:pre[çc]o|safra|produ[çc][ãa]o|exporta[çc][ãa]o|vendas) recorde', 'capacidade (?:produtiva|instalada|de produ)',
   'amplia(?:r|[çc][ãa]o)? (?:a |sua )?(?:produ|capacidade|f[áa]brica|unidade|planta|opera|vendas|exporta)', 'nova (?:linha|unidade|planta|f[áa]brica)',
@@ -149,7 +149,7 @@ export const MERCADO_AMPLO = [
 export const MERCADO_AGRO = ['safra', 'colheita']
 // Nas listas próprias, "importa" não pode pegar "importante" nem "não importa", e "invest" não pode pegar "investiga" nem
 // "investe contra".
-const IMPORTA = String.raw`importa(?:[çc]|d|dor|m\b|r\b)|(?<!n[ãa]o |que |pouco )importa\b`
+const IMPORTA = String.raw`importa(?:[çc]|d|dor|m\b|r\b)|(?<!n[ãa]o |que |pouco |mais |menos )importa\b`
 const INVESTE = String.raw`investe\b(?! contra)|investem|investiu|investir|investiment|investidor`
 const SEM_FALSO = (fonte) => fonte.replace(/importa(?:\[[^\]]*\])?/g, `(?:${IMPORTA})`).replace(/invest(?:imento)?/g, `(?:${INVESTE})`)
 for (const t of TEMAS) {

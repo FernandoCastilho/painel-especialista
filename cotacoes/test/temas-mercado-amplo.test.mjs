@@ -53,6 +53,7 @@ test('temas de setor e insumo: uso comum da palavra continua fora', () => {
     ['veiculos-pesados', 'Tarifa de ônibus sobe para R$ 5 em São Paulo'],
     ['minerio', 'Vale do Silício investe em IA'],
     ['cafe', 'Café da manhã: não importa a hora'], // "não importa" não é importação
+    ['cafe', 'Café: o que mais importa na hora de escolher'],
     ['veiculos-pesados', 'Acidente entre caminhão e ônibus: não importa o culpado'],
     ['veiculos-pesados', 'PM investe contra manifestantes e ônibus é incendiado'], // "investe contra" não é investimento
     ['aco', 'Nervos de aço: Flamengo investe em reforço'],
