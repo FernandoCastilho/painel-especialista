@@ -272,3 +272,28 @@ Setores › Turismo).
   acompanhar" vem antes dos cartões). Rodado três vezes seguidas aqui, sem falha.
 - Não conferido: se a instabilidade some de vez no ambiente da conferência automática; só o uso nas próximas
   publicações mostra.
+
+### Conferência no site depois da publicação (18/11/2026) e correção do topo
+No site publicado, o menu do topo foi para duas linhas em algumas larguras: 1000 a 1099 px nos dois temas e, no tema
+claro, 1200, 1600, 1680 e 1920 px. A causa é o contador de pessoas online ("2 online", cerca de 94 px), que só aparece no
+site publicado e não existia nos testes locais.
+
+Primeira correção: o contador mostra só o ponto e o número e os rótulos ficaram mais juntos em algumas faixas. O Auditor
+mediu de 5 em 5 px e achou ainda duas linhas no tema claro de 1800 a 1875 px (onde aparecem os relógios extras) e com
+estados longos do texto dos dados ("Fora do horário de coleta", toda noite e fim de semana; "Atualização parcial";
+"Último válido"; "Reserva diária"). Parecer: **Requer correção** (72,0). Segundo parecer, sobre a correção final:
+**Aprovado** (93,0).
+
+Correção final (`TopBar.css` e `Acessos.jsx`):
+- No computador, o contador de pessoas online mostra só o ponto e o número; o texto "N online agora" fica na dica ao
+  passar o mouse, no nome do botão (leitor de tela) e no balão.
+- No computador, o estado dos dados mostra só o ponto e a hora em todas as larguras (antes, só de 1300 a 1599 px). O
+  texto completo fica na dica e na linha de consulta do Mercado. O erro ("Indisponível") continua escrito.
+- Rótulos das abas mais juntos em algumas faixas (de 1000 a 1099 px: 11 px no tema claro e 12,5 px no escuro).
+- Medição de 1000 a 1920 px, de 5 em 5 px, nos dois temas, com o contador de 2 e de 123 pessoas e com cada rótulo do
+  estado dos dados (Referência recente, Dado antigo, Fora do horário de coleta, Atualização parcial, Último válido, Reserva
+  diária e Indisponível): uma linha em todas as combinações.
+- O teste de tela da aba (`smoke-apresentar`) simula o contador e o estado dos dados e confere o topo em 1920, 1820,
+  1600, 1280, 1205 e 1024 px, inclusive com "Fora do horário de coleta" e "Indisponível". Ele falha nas duas versões
+  anteriores (a publicada e a da primeira correção) e passa com a final.
+- Ressalva: de 1000 a 1099 px as letras do menu ficam pequenas (11 px no tema claro); a altura de toque continua com 44 px.
