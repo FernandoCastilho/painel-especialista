@@ -70,7 +70,8 @@ execuções 644 e 645; 18/11, execuções 678 e 679).
 Como fica:
 - A fila (`concurrency: pages`, sem cancelar) vale só para o trabalho `deploy`. Os testes de código correm sem esperar.
 - Nas agendas, o passo "Agenda espera a publicação de código em andamento" consulta as execuções de Pages do mesmo ramo.
-  Se houver push ou execução manual ainda não concluída, a agenda termina sem publicar (sem falha) e não entra na fila.
+  Se houver push ou execução manual ainda não concluída (inclui os disparos automáticos do vigia do Focus, `focus.yml`),
+  a agenda termina sem publicar (sem falha) e não entra na fila.
   A publicação de código já coleta e publica os dados.
 - Sem publicação de código em andamento, a agenda segue como antes: exige o mesmo código já aprovado e publica.
 
