@@ -261,40 +261,50 @@ export function analisarSerie(meses) {
     }
   }
 
-  // Últimos 12 meses: tendência (reta), estabilidade (coeficiente de variação), melhor e pior mês.
+  // Série dessazonalizada (valor ÷ índice do mês do ano) quando há sazonalidade: tendência, estabilidade,
+  // ritmo recente, quedas seguidas e meses fora do padrão olham a série sem o efeito do calendário.
+  const ajustada = sazonalidade != null
+  const aj = (m) => (ajustada ? m.faturamento / sazonalidade.indices[mesDoAno(m.chave)].indice : m.faturamento)
+  const valAj = new Map(fat.map((m) => [m.chave, aj(m)]))
+
+  // Últimos 12 meses (ou os que houver): tendência (reta), estabilidade (coeficiente de variação), melhor e pior mês.
   const ult = fat.filter((m) => m.chave > fim - 12)
-  const mUlt = media(ult.map((m) => m.faturamento))
-  const inc = inclinacao(ult.map((m) => [m.chave, m.faturamento]))
-  const tendenciaAno = inc != null && mUlt > 0 ? (inc * 12) / mUlt : null
-  const cv = mUlt > 0 && ult.length >= 6 ? desvio(ult.map((m) => m.faturamento)) / mUlt : null
+  const mUlt = media(ult.map(aj))
+  const inc = inclinacao(ult.map((m) => [m.chave, aj(m)]))
+  const tendenciaAno = inc != null && mUlt > 0 ? Math.max(-1, (inc * 12) / mUlt) : null
+  const cv = mUlt > 0 && ult.length >= 6 ? desvio(ult.map(aj)) / mUlt : null
   const melhor = ult.reduce((a, b) => (b.faturamento > a.faturamento ? b : a))
   const pior = ult.reduce((a, b) => (b.faturamento < a.faturamento ? b : a))
   const tres = fat.filter((m) => m.chave > fim - 3)
-  const ritmoRecente = mUlt > 0 && tres.length === 3 ? media(tres.map((m) => m.faturamento)) / mUlt - 1 : null
+  const ritmoRecente = mUlt > 0 && tres.length === 3 ? media(tres.map(aj)) / mUlt - 1 : null
 
-  // Sequência atual de quedas ou altas seguidas (só meses vizinhos).
+  // Sequência atual de quedas ou altas seguidas (só meses vizinhos), na série dessazonalizada.
   let quedas = 0, altas = 0
-  for (let k = fim; val.has(k) && val.has(k - 1); k--) {
-    if (val.get(k) < val.get(k - 1) && altas === 0) quedas++
-    else if (val.get(k) > val.get(k - 1) && quedas === 0) altas++
+  for (let k = fim; valAj.has(k) && valAj.has(k - 1); k--) {
+    if (valAj.get(k) < valAj.get(k - 1) && altas === 0) quedas++
+    else if (valAj.get(k) > valAj.get(k - 1) && quedas === 0) altas++
     else break
   }
 
-  // Meses fora do padrão: comparado à média dos 12 meses anteriores (mínimo 6), ajustada pela sazonalidade.
+  // Meses fora do padrão: o esperado vem da reta dos 12 meses anteriores (mínimo 6) na série dessazonalizada,
+  // projetada para o mês; assim o crescimento normal da empresa não vira "anomalia".
   const atipicos = []
   for (const m of fat) {
     const ant = fat.filter((x) => x.chave < m.chave && x.chave >= m.chave - 12)
     if (ant.length < 6) continue
-    const base = media(ant.map((x) => x.faturamento)) * (sazonalidade ? sazonalidade.indices[mesDoAno(m.chave)].indice : 1)
-    if (base <= 0) continue
-    const desvioPct = m.faturamento / base - 1
+    const pares = ant.map((x) => [x.chave, aj(x)])
+    const b = inclinacao(pares) ?? 0
+    const mx = media(pares.map(([x]) => x)), my = media(pares.map(([, y]) => y))
+    const esperado = my + b * (m.chave - mx)
+    if (esperado <= 0) continue
+    const desvioPct = aj(m) / esperado - 1
     if (Math.abs(desvioPct) >= L.atipico) atipicos.push({ rotulo: m.rotulo, chave: m.chave, desvio: desvioPct })
   }
 
   // Endividamento: só meses com saldo (zero ou vazio = sem informação).
   const saldos = meses.filter((m) => temSaldo(m.endividamento))
   let endividamento = null
-  if (saldos.length >= 2) {
+  if (saldos.length >= 1) {
     const ultS = saldos.at(-1)
     const ano = saldos.find((m) => m.chave === ultS.chave - 12) ?? null
     const maxS = saldos.reduce((a, b) => (b.endividamento > a.endividamento ? b : a))
@@ -307,7 +317,7 @@ export function analisarSerie(meses) {
     const alavAno = alav.find((a) => a.chave === ultS.chave - 12) ?? null
     const semSaldoNoFim = meses.filter((m) => m.chave > ultS.chave && m.chave <= fim).length
     endividamento = {
-      ultimo: ultS.endividamento, ultimoRotulo: ultS.rotulo,
+      ultimo: ultS.endividamento, ultimoRotulo: ultS.rotulo, ultimoChave: ultS.chave,
       anoAntes: ano?.endividamento ?? null, anoAntesRotulo: ano?.rotulo ?? null,
       variacao12m: ano ? variacao(ultS.endividamento, ano.endividamento) : null,
       maximo: maxS.endividamento, maximoRotulo: maxS.rotulo,
@@ -324,12 +334,21 @@ export function analisarSerie(meses) {
   // Pontos de atenção, nos limites de LIMITES_ANALISE.
   const atencao = []
   if (i12?.variacao != null && i12.variacao <= L.quedaForte) atencao.push(`Faturamento dos últimos 12 meses ${Math.round(Math.abs(i12.variacao) * 100)}% menor que nos 12 anteriores.`)
-  if (tendenciaAno != null && tendenciaAno <= L.quedaForte) atencao.push('Tendência de queda do faturamento nos últimos 12 meses.')
-  if (cv != null && cv > L.instavel) atencao.push('Faturamento instável: os meses variam muito em torno da média.')
+  if (tendenciaAno != null && tendenciaAno <= L.quedaForte) atencao.push(`Tendência de queda do faturamento nos últimos ${ult.length} meses${ajustada ? ', já descontada a sazonalidade' : ''}.`)
+  if (cv != null && cv > L.instavel) atencao.push(`Faturamento instável: os meses variam muito em torno da média${ajustada ? ', mesmo descontada a sazonalidade' : ''}.`)
   if (quedas >= 3) atencao.push(`${quedas} quedas seguidas de faturamento até ${fat.at(-1).rotulo}.`)
   const recentesBaixo = atipicos.filter((a) => a.desvio < 0 && a.chave > fim - 6)
   if (recentesBaixo.length) atencao.push(`Mês recente bem abaixo do esperado: ${recentesBaixo.map((a) => a.rotulo).join(', ')}.`)
-  if (endividamento?.variacao12m != null && i12?.variacao != null && endividamento.variacao12m > i12.variacao + 0.05) atencao.push('Endividamento cresceu mais que o faturamento em 12 meses.')
+  // Dívida x faturamento na mesma janela: saldo do último mês com saldo contra 12 meses antes, e faturamento
+  // dos 12 meses até esse mês contra os 12 anteriores (só com as duas janelas completas).
+  let fatMesmaJanela = null
+  if (endividamento?.variacao12m != null) {
+    const k = endividamento.ultimoChave
+    const j1 = fat.filter((m) => m.chave > k - 12 && m.chave <= k), j0 = fat.filter((m) => m.chave > k - 24 && m.chave <= k - 12)
+    if (j1.length === 12 && j0.length === 12) fatMesmaJanela = variacao(soma(j1.map((m) => m.faturamento)), soma(j0.map((m) => m.faturamento)))
+    if (endividamento) endividamento.faturamentoMesmaJanela = fatMesmaJanela
+  }
+  if (fatMesmaJanela != null && endividamento.variacao12m > fatMesmaJanela + 0.05) atencao.push(`Endividamento evoluiu pior que o faturamento em 12 meses até ${endividamento.ultimoRotulo} (dívida ${Math.round(endividamento.variacao12m * 100)}%, faturamento ${Math.round(fatMesmaJanela * 100)}%).`)
   if (endividamento?.alavancagemAtual != null && endividamento.alavancagemAnoAntes != null && endividamento.alavancagemAtual > endividamento.alavancagemAnoAntes * 1.1) atencao.push('Alavancagem subiu mais de 10% em 12 meses.')
   if (endividamento?.semSaldoNoFim) atencao.push(`${endividamento.semSaldoNoFim} ${endividamento.semSaldoNoFim === 1 ? 'mês final sem' : 'meses finais sem'} saldo de endividamento (provável mês ainda não fechado).`)
 
@@ -339,7 +358,8 @@ export function analisarSerie(meses) {
     tendenciaAno, ritmoRecente, cv, melhor, pior, quedas, altas,
     variacao12m: i12?.variacao ?? null,
     sazonalidade, sazonalidadeCobertura: cobertos.length,
-    atipicos: atipicos.slice(-4),
+    atipicos: atipicos.slice(-4), atipicosTotal: atipicos.length,
+    mesesJanela: ult.length, ajustada,
     endividamento,
     atencao,
   }

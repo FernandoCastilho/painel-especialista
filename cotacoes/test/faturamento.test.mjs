@@ -247,3 +247,47 @@ test('análise com poucos meses avisa e não inventa sazonalidade', () => {
   assert.ok(curta.atencao.some((t) => /quedas seguidas/.test(t)))
   assert.ok(curta.tendenciaAno < 0)
 })
+
+test('análise desconta a sazonalidade: agro e varejo sem crescimento não geram alarme falso', () => {
+  const agro = [0.6, 0.8, 1.6, 1.9, 1.7, 1.3, 0.9, 0.7, 0.6, 0.6, 0.6, 0.7]
+  const varejo = [0.85, 0.85, 0.9, 0.95, 1, 0.95, 1, 1, 0.95, 1, 1.15, 1.4]
+  for (const [nome, perfil] of [['agro', agro], ['varejo', varejo]]) {
+    for (let fimMes = 0; fimMes < 12; fimMes++) {
+      const linhas = []
+      for (let i = 0; i < 36; i++) {
+        const k = fat.chaveMes(2023, 1) + fimMes + 1 + i
+        linhas.push(`${fat.rotuloMes(k)} ${Math.round(1000 * perfil[((k % 12) + 12) % 12])} 2.000`)
+      }
+      const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+      assert.ok(a.ajustada, `${nome}: sazonalidade detectada`)
+      assert.ok(Math.abs(a.tendenciaAno) < 0.05, `${nome} terminando no mês ${fimMes}: tendência ${a.tendenciaAno}`)
+      assert.ok(a.cv < 0.05, `${nome}: estável depois de descontar a sazonalidade`)
+      assert.ok(a.quedas < 3, `${nome}: sem quedas seguidas falsas`)
+      assert.equal(a.atipicosTotal, 0, `${nome}: nenhum mês fora do padrão`)
+      assert.deepEqual(a.atencao, [], `${nome}: sem alertas`)
+    }
+  }
+})
+
+test('crescimento constante não vira mês fora do padrão e o alerta de dívida usa a mesma janela', () => {
+  const linhas = []
+  for (let i = 0; i < 30; i++) {
+    const k = fat.chaveMes(2024, 1) + i
+    // Faturamento crescendo 3% ao mês; dívida estável: não pode dizer que a dívida "cresceu".
+    linhas.push(`${fat.rotuloMes(k)} ${Math.round(1000 * 1.03 ** i)} 5.000`)
+  }
+  const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+  assert.equal(a.atipicosTotal, 0)
+  assert.ok(!a.atencao.some((t) => /pior que o faturamento/.test(t)))
+  // Agora a dívida sobe 50% e o faturamento cai: o alerta aparece com os dois números.
+  const l2 = []
+  for (let i = 0; i < 30; i++) {
+    const k = fat.chaveMes(2024, 1) + i
+    l2.push(`${fat.rotuloMes(k)} ${1000 - i * 5} ${i >= 18 ? '7.500' : '5.000'}`)
+  }
+  const b = fat.analisarSerie(fat.parseFaturamento(l2.join('\n')).meses)
+  assert.ok(b.atencao.some((t) => /Endividamento evoluiu pior que o faturamento em 12 meses até jun\/26 \(dívida 50%/.test(t)), b.atencao.join(' | '))
+  // Um saldo só já aparece na análise.
+  const c = fat.analisarSerie(fat.parseFaturamento('jan/26 1.000 0\nfev/26 1.000 0\nmar/26 1.000 0\nabr/26 1.000 0\nmai/26 1.000 0\njun/26 1.000 3.000').meses)
+  assert.equal(c.endividamento.ultimo, 3000)
+})

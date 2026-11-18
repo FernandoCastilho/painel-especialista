@@ -2,7 +2,7 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
-import { EXEMPLO, analisarSerie, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
+import { EXEMPLO, LIMITES_ANALISE, analisarSerie, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
 
 const num = (v, casas = 0) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }))
@@ -222,21 +222,23 @@ function Analise({ a, unidade }) {
   const p0 = (v) => (v == null ? '—' : `${v > 0 ? '+' : ''}${Math.round(v * 100)}%`)
   const s = a.sazonalidade, e = a.endividamento
   const tendencia = a.tendenciaAno == null ? null : Math.abs(a.tendenciaAno) < 0.05 ? 'estável' : a.tendenciaAno > 0 ? `de alta, perto de ${p0(a.tendenciaAno)} ao ano` : `de queda, perto de ${p0(a.tendenciaAno)} ao ano`
-  const estabilidade = a.cv == null ? null : a.cv < 0.10 ? 'estável' : a.cv <= 0.25 ? 'com oscilação moderada' : 'instável'
+  const estabilidade = a.cv == null ? null : a.cv < LIMITES_ANALISE.estavel ? 'estável' : a.cv <= LIMITES_ANALISE.instavel ? 'com oscilação moderada' : 'instável'
+  const janela = a.mesesJanela === 12 ? 'últimos 12 meses' : `últimos ${a.mesesJanela} meses`
+  const semSaz = a.ajustada ? ', descontada a sazonalidade' : ''
   const lista = (xs) => xs.map((x) => `${x.rotulo} (${p0(x.indice - 1)})`).join(', ')
   return (
     <article className="desk-panel cx-panel ft-analise" aria-labelledby="ft-analise-h">
-      <header><h3 className="cx-heading" id="ft-analise-h"><span>Análise</span><Help title="Como a análise é feita"><p>Leitura automática dos números colados, sem dado externo. Não é parecer de crédito.</p><p>Tendência: reta ajustada aos últimos 12 meses de faturamento, em % da média. Estabilidade: desvio padrão dividido pela média dos últimos 12 meses (até 10% estável; acima de 25% instável).</p><p>Sazonalidade: cada mês é dividido pela média móvel centrada de 12 meses e os resultados são médios por mês do ano. Precisa de cerca de 24 meses seguidos; com um ano só de cada mês, a leitura é preliminar. Mês forte ou fraco: 5% ou mais acima ou abaixo do normal.</p><p>Mês fora do padrão: 25% ou mais acima ou abaixo da média dos 12 meses anteriores, já ajustada pela sazonalidade. Alavancagem do mês: saldo de endividamento ÷ média do faturamento dos 12 meses até aquele mês.</p></Help></h3></header>
+      <header><h3 className="cx-heading" id="ft-analise-h"><span>Análise</span><Help title="Como a análise é feita"><p>Leitura automática dos números colados, sem dado externo. Não é parecer de crédito.</p><p>Quando há sazonalidade, tendência, estabilidade, ritmo recente e quedas seguidas usam o faturamento descontado do efeito de cada mês do ano. Tendência: reta ajustada aos últimos 12 meses, em % da média. Estabilidade: desvio padrão dividido pela média dos últimos 12 meses (até 10% estável; acima de 25% instável).</p><p>Sazonalidade: cada mês é dividido pela média móvel centrada de 12 meses e os resultados são médios por mês do ano. Precisa de cerca de 24 meses seguidos; com um ano só de cada mês, a leitura é preliminar. Mês forte ou fraco: 5% ou mais acima ou abaixo do normal.</p><p>Mês fora do padrão: 25% ou mais acima ou abaixo do esperado pela reta dos 12 meses anteriores, já descontada a sazonalidade. Alavancagem do mês: saldo de endividamento ÷ média do faturamento dos 12 meses até aquele mês.</p></Help></h3></header>
       <div className="ft-analise-grid">
         <section>
           <h4>Faturamento</h4>
           <ul>
             <li>Base: {a.meses} meses, de {a.de} a {a.ate}.</li>
             {a.variacao12m != null && <li>Últimos 12 meses contra os 12 anteriores: <b className={sinal(a.variacao12m)}>{p0(a.variacao12m)}</b>.</li>}
-            {tendencia && <li>Tendência nos últimos 12 meses: <b>{tendencia}</b>.</li>}
-            {a.ritmoRecente != null && <li>Últimos 3 meses: média {p0(a.ritmoRecente)} em relação à média dos 12 meses.</li>}
-            {estabilidade && <li>Comportamento mês a mês: <b>{estabilidade}</b> (variação típica de {Math.round(a.cv * 100)}% em torno da média).</li>}
-            <li>Nos últimos 12 meses, o melhor mês foi {a.melhor.rotulo} ({valor(a.melhor.faturamento)}) e o pior, {a.pior.rotulo} ({valor(a.pior.faturamento)}).</li>
+            {tendencia && <li>Tendência nos {janela}{semSaz}: <b>{tendencia}</b>.</li>}
+            {a.ritmoRecente != null && <li>Últimos 3 meses: média {p0(a.ritmoRecente)} em relação à média dos {janela}{semSaz}.</li>}
+            {estabilidade && <li>Comportamento mês a mês{semSaz}: <b>{estabilidade}</b> (variação típica de {Math.round(a.cv * 100)}% em torno da média).</li>}
+            <li>Nos {janela}, o melhor mês foi {a.melhor.rotulo} ({valor(a.melhor.faturamento)}) e o pior, {a.pior.rotulo} ({valor(a.pior.faturamento)}).</li>
             {a.quedas >= 2 && <li>{a.quedas} quedas seguidas até {a.ate}.</li>}
             {a.altas >= 2 && <li>{a.altas} altas seguidas até {a.ate}.</li>}
           </ul>
@@ -261,7 +263,7 @@ function Analise({ a, unidade }) {
               </ul>
             </>
           )}
-          {a.atipicos.length > 0 && <p className="ft-analise-nota">Meses fora do padrão: {a.atipicos.map((x) => `${x.rotulo} (${p0(x.desvio)})`).join(', ')}.</p>}
+          {a.atipicos.length > 0 && <p className="ft-analise-nota">Meses fora do padrão (contra o esperado pela tendência{a.ajustada ? ' e pela sazonalidade' : ''}): {a.atipicos.map((x) => `${x.rotulo} (${p0(x.desvio)})`).join(', ')}{a.atipicosTotal > a.atipicos.length ? `; mais ${a.atipicosTotal - a.atipicos.length} anteriores` : ''}.</p>}
         </section>
         <section>
           <h4>Endividamento</h4>
