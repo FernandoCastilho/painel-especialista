@@ -1,0 +1,89 @@
+/* Direção de arte, etapa 1 (docs/revisao-arte-2026-11-17.md): cabeçalho e tela Mercado no tema escuro, mais as regras de movimento.
+   Carregado por último. O que troca cor ou forma vale só no tema escuro (o claro fica como estava); disposição e movimento valem nos dois.
+   Âmbar só para a marca e para o que está selecionado; números e títulos em branco.
+   As calculadoras não entram (decisão de 17/11/2026) e os slides de Apresentar também não: as regras do Mercado ficam presas a .terminal-desk. */
+
+/* ===== Cabeçalho (computador) ===== */
+@media (min-width: 1000px) {
+  .topbar-tabs { position: relative; }
+  .topbar-mark { position: absolute; left: 0; top: 0; height: 2px; border-radius: 2px 2px 0 0; background: var(--amber); pointer-events: none; }
+  :root[data-theme="light"] .topbar-mark { display: none; } /* no claro, a aba aberta continua com o fundo cheio */
+
+  :root:not([data-theme="light"]) .topbar-brand { gap: 8px; background: transparent; color: var(--fg); }
+  :root:not([data-theme="light"]) .topbar-brand::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--amber); box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 70%, transparent); }
+  :root:not([data-theme="light"]) .topbar-tabs button { border-right-color: transparent; color: var(--mut); font: 500 .8125rem/1 var(--sans); letter-spacing: 0; text-transform: none; }
+  :root:not([data-theme="light"]) .topbar-tabs button:hover { background: transparent; color: var(--fg); }
+  :root:not([data-theme="light"]) .topbar-tabs button.on { background: transparent; color: var(--fg); }
+  :root:not([data-theme="light"]) .topbar-tabs button.on i { color: var(--mut); }
+}
+/* Faixa estreita em que a marca fica em duas linhas (ThemeControl.css): sem o quadradinho, para não empilhar. */
+@media (min-width: 1000px) and (max-width: 1199px) { :root:not([data-theme="light"]) .topbar-brand::before { display: none; } }
+/* Uma linha só de 1280 a 1920 px: entre 1300 e 1599 o estado dos dados mostra o ponto e a hora (o texto completo fica na dica
+   e na linha de consulta do Mercado), como já acontecia abaixo de 1300. */
+@media (min-width: 1300px) and (max-width: 1599px) {
+  .topbar-feed:not(.err) { font-size: 0; }
+  .topbar-feed b { font-size: .75rem; }
+  .topbar-feed span { margin-right: 7px; }
+  :root:not([data-theme="light"]) .term-head .topbar-tabs > button { padding-inline: 9px; }
+}
+
+/* ===== Mercado: a tela abre pelo número ===== */
+.manchete { margin: 2px 0 12px; color: var(--fg); font: 600 clamp(1.05rem, .92rem + .55vw, 1.375rem)/1.3 var(--sans); letter-spacing: -.01em; text-wrap: balance; }
+.manchete-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sl-corpo .manchete { display: none; } /* slides: só os quadros */
+.terminal-desk .kpi-block > .holiday-notice { margin: 8px 0 0; }
+.terminal-desk .kpi-block > .insight-aprender { margin: 8px 0 0; }
+
+:root:not([data-theme="light"]) .terminal-desk .kpi-title { color: var(--mut); }
+:root:not([data-theme="light"]) .terminal-desk .kpi { padding: 12px 14px; border-radius: var(--r-card); }
+:root:not([data-theme="light"]) .terminal-desk .kpi::before { display: none; }
+:root:not([data-theme="light"]) .terminal-desk .kpi:hover { background: var(--raised); border-color: color-mix(in srgb, var(--fg) 16%, transparent); }
+:root:not([data-theme="light"]) .terminal-desk .kpi:focus-visible { outline-offset: 2px; }
+:root:not([data-theme="light"]) .terminal-desk .insight-aprender { border-left-color: var(--line); background: var(--card); }
+:root:not([data-theme="light"]) .terminal-desk .insight-aprender b { color: var(--fg); }
+:root:not([data-theme="light"]) .terminal-desk .insight-aprender .linklike { color: var(--fg); }
+:root:not([data-theme="light"]) .terminal-desk .insight-aprender .linklike:hover { color: var(--amber); }
+:root:not([data-theme="light"]) .terminal-desk .holiday-notice { border-left-color: var(--line); }
+
+/* Quadro "Mercado hoje": títulos e nomes em branco; o âmbar fica com o que está selecionado. */
+:root:not([data-theme="light"]) .terminal-desk .market-terminal .terminal-titlebar h2 { color: var(--fg); }
+:root:not([data-theme="light"]) .terminal-desk .compare-trigger { border-color: var(--line); color: var(--fg); }
+:root:not([data-theme="light"]) .terminal-desk .compare-trigger:hover { border-color: var(--amber); }
+:root:not([data-theme="light"]) .terminal-desk .market-terminal .market-open b { color: var(--fg); }
+:root:not([data-theme="light"]) .terminal-desk .market-terminal .market-open .market-state { color: var(--mut); }
+:root:not([data-theme="light"]) .terminal-desk .market-terminal .market-open .market-state:not(.is-neutral) { color: var(--amber); } /* dado atrasado em pleno horário de coleta: é aviso */
+
+/* Espera com a forma do conteúdo: quadros vazios com um brilho que passa, no lugar de um texto. Só existe enquanto as cotações carregam. */
+.kpi-espera { min-height: 92px; cursor: default; background: linear-gradient(100deg, var(--card) 30%, color-mix(in srgb, var(--amber) 10%, var(--card)) 50%, var(--card) 70%); background-size: 220% 100%; }
+.kpi-espera::before { display: none; }
+@media (min-width: 1000px) { .kpis-espera > :nth-child(6) { display: none; } }
+
+/* ===== Movimento =====
+   Três tempos (--t-fast: resposta ao toque; --t-base: troca de estado; --t-slow: entrada) e duas curvas. Nada em laço, fora a fita de
+   cotações e a espera acima. Com "reduzir movimento" ligado no aparelho, tudo aparece pronto. */
+@media (prefers-reduced-motion: no-preference) {
+  /* resposta ao toque: o botão afunda um pouco (no celular não existe "passar o cursor") */
+  :where(.term-head, .nav-top, .clocks-top, main.app:not(.app-calculators)) :where(button, summary) { transition: scale var(--t-fast) var(--ease-std); }
+  :where(.term-head, .nav-top, .clocks-top, main.app:not(.app-calculators)) :where(button, summary):active:not(:disabled) { scale: .97; }
+  .terminal-desk .kpi { transition: scale var(--t-fast) var(--ease-std), background-color var(--t-base) var(--ease-std), border-color var(--t-base) var(--ease-std); }
+
+  /* traço da aba aberta desliza até a nova aba */
+  .topbar-mark { transition: translate var(--t-slow) var(--ease-out), width var(--t-slow) var(--ease-out); }
+
+  /* abertura do Mercado: manchete e quadros sobem em sequência; o minigráfico se revela da esquerda para a direita. Tudo abaixo de 1 s. */
+  .terminal-desk .manchete, .terminal-desk .kpis > * { animation: kpi-entra var(--t-slow) var(--ease-out) backwards; animation-delay: calc(min(var(--i, 0), 6) * 55ms); }
+  .terminal-desk .kpi-spark .spark { animation: spark-revela 500ms var(--ease-std) backwards; animation-delay: calc(min(var(--i, 0), 6) * 55ms + 120ms); }
+  .terminal-desk .kpis > .kpi-espera { animation: espera-brilho 1.2s linear infinite; } /* depois da entrada, para valer sobre ela */
+
+  /* cotação nova: o número acende em verde ou vermelho e volta ao branco (o valor rola em RollingNumber.jsx) */
+  .kpi-value[data-tick="up"] { animation: tick-up 900ms ease-out; }
+  .kpi-value[data-tick="down"] { animation: tick-down 900ms ease-out; }
+
+  /* linha da tabela de câmbio: o realce entra suave */
+  .terminal-desk .market-terminal .market-record { transition: background-color var(--t-fast) var(--ease-std); }
+}
+@keyframes kpi-entra { from { opacity: 0; translate: 0 8px; } }
+@keyframes spark-revela { from { clip-path: inset(0 100% 0 0); } }
+@keyframes espera-brilho { to { background-position: -220% 0; } }
+@keyframes tick-up { from { color: var(--up); } }
+@keyframes tick-down { from { color: var(--down); } }

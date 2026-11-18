@@ -10,6 +10,10 @@
   --accent:#0131ff; --down:#b82030; --surface-2:#edf2fa; --amber:#b94700;
 }
 main.app.app-calculators {
+  /* Decisão de 17/11/2026: as calculadoras não entram no novo visual do terminal. Aqui valem as letras de antes (as do aparelho). */
+  --sans:system-ui, sans-serif;
+  --mono:ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  font-family:var(--sans);
   --cx-space:clamp(16px, 1.6vw, 24px);
   width:100%;
   max-width:none;

@@ -17,7 +17,7 @@
 .juros-grafico :is(button, a, input, select, summary) { cursor:revert; }
 .juros-grafico .macro > h2 { display:none !important; } /* o CDI futuro já traz o título no próprio gráfico */
 .juros-dica { margin:0 0 4px; }
-.juros-grafico > .juros-ampliar { display:flex; align-items:center; gap:6px; margin:0 0 6px auto; min-height:36px; padding:4px 12px; border:1px solid var(--line); border-radius:4px; background:var(--card); color:var(--fg); font:600 .78rem/1 system-ui, sans-serif; cursor:pointer; }
+.juros-grafico > .juros-ampliar { display:flex; align-items:center; gap:6px; margin:0 0 6px auto; min-height:36px; padding:4px 12px; border:1px solid var(--line); border-radius:4px; background:var(--card); color:var(--fg); font:600 .78rem/1 var(--sans); cursor:pointer; }
 .juros-grafico > .juros-ampliar:hover { border-color:var(--amber, #e5b453); color:var(--amber, #e5b453); }
 .juros-grafico > .juros-ampliar:focus-visible { outline:2px solid var(--amber, #e5b453); outline-offset:2px; }
 @media (max-width:899px) { .juros-grafico > .juros-ampliar { min-height:44px; } }

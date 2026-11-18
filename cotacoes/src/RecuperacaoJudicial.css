@@ -1,4 +1,4 @@
-.recovery-panel { font: .9rem/1.6 system-ui,sans-serif; min-width:0; }
+.recovery-panel { font: .9rem/1.6 var(--sans); min-width:0; }
 .recovery-intro,.recovery-panel .muted,.recovery-review { color:var(--mut); }
 .recovery-coverage { border:1px solid var(--accent); padding:16px; margin:20px 0; }
 .recovery-coverage p { margin:8px 0 0; max-width:75ch; }
