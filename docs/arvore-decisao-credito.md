@@ -283,6 +283,72 @@ Não apareceu projeto pronto que escolha modalidade de crédito para empresa bra
 
 ---
 
+## 10. Entrevista de 18/11/2026 — o que ficou entendido
+
+Entrevista conduzida com Fernando para cruzar necessidade, operação, risco e retorno. As regras públicas pesquisadas no mesmo dia estão em `arvore-credito-regras-produtos.md`.
+
+### Decisões de Fernando
+
+| Decisão | Observação |
+|---|---|
+| Perfil do cliente preenchido pelo CNPJ | Substitui a escolha anterior, de entrada manual. A entrada manual fica como alternativa. |
+| Risco informado por faixa (baixo, médio, alto) mais garantias | Não aparece na visão que o cliente enxerga. O que a faixa muda na folha ainda não foi definido. |
+| Vinte necessidades | As dez da nota original mais as dez sugeridas (N11 a N20). |
+| Nada do banco na tela | Substitui o objetivo anterior de mostrar retorno para o banco. Custo de captação e ordem entre linhas ficam fora da tela e deste documento. |
+| Uso: o especialista prepara sozinho e depois mostra ao cliente uma visão de apresentação | — |
+| Números em modo misto | A folha sempre traz a comparação em texto. Parcelas e custo total só nas operações em que o especialista digitar a taxa. |
+| Abertura da tela | Primeiro quem é o cliente; depois o pedido (o que precisa, para quê, valor e prazo); em seguida a checagem do pedido contra o faturamento. |
+| Faturamento e endividamento entram pela mesma tabela colada da calculadora Faturamento | Competência, faturamento e endividamento, mês a mês. Fica só na tela. |
+
+### Como Fernando decide (relato, caso da máquina importada de R$ 5 milhões)
+
+1. **Cobertura e regras:** o que a operação paga e quais impostos incidem. O FINIMP, na prática do time, não paga os impostos de importação; o 4131 paga máquina e impostos e não tem IOF de crédito.
+2. **Fluxo:** prazo e parcelas casados com o caixa da empresa.
+3. **Moeda:** dívida em moeda estrangeira com NDF, para ficar em reais.
+4. **Custo para o cliente:** custo efetivo total, com imposto e proteção.
+
+**Ordem da folha nesse caso:** 4131 com NDF; FINIMP com proteção cambial (valor menor, só a máquina); CPR, se a empresa estiver apta pelo CNAE e pela validação das notas fiscais; Finame, pelo custo; capital de giro por último. As operações em que a empresa não se enquadra saem da folha.
+
+**Ressalva registrada:** o Finame Materiais financia bem de fabricação nacional (conteúdo importado de até 40%). Para máquina importada, só entraria se houvesse alternativa nacional.
+
+### Regras relatadas por Fernando
+
+- **Tributação:** no Lucro Presumido, o ganho do NDF é tributado e a empresa não abate o outro lado; no Lucro Real a operação fecha. Conferido nos textos de lei; falta validação de tributarista. Deve ser considerado em todas as modalidades.
+- **Cidade:** muda o acesso a linhas e condições de fomento (exemplo: Nordeste).
+- **S.A.:** pode fazer nota comercial no regime FÁCIL. A pesquisa mostrou que nota comercial também serve para Ltda.; FÁCIL e debênture, só para S.A.
+- **CNAE e porte:** CNAE habilita a CPR; o banco não faz CPR para microempresa (regra do banco, não da lei).
+- **BNDES:** linha que aceite o bem ou saia mais barata deve entrar na comparação.
+
+### Parcela sazonal (relato)
+
+- Mês de faturamento baixo: sem parcela de principal; no mínimo, pagar os juros, para a dívida não crescer.
+- Mês de faturamento alto: parcela maior.
+- Critério: equilíbrio entre o que a empresa aguenta no mês fraco e o custo total.
+- Objetivo: nunca haver estrangulamento de caixa nem dívida excessiva de curto prazo. Dívida curta demais pede alongamento.
+
+### O que a tabela de faturamento e endividamento permite
+
+- **Permite:** ver picos e vales de faturamento (sazonalidade), a evolução do saldo de dívida e o tamanho da dívida em meses de faturamento.
+- **Não permite:** saber quanto da dívida vence em cada mês. A tabela traz o saldo, não os vencimentos. Dívida concentrada no curto prazo só aparece se o especialista informar quanto vence em 12 meses.
+
+### Propostas do Claude ainda não confirmadas
+
+- Mostrar, por mês, quanto do faturamento vai para pagar a nova operação, sem limite fixo; o ponto de alerta seria definido por Fernando.
+- Campo opcional "quanto da dívida vence em 12 meses".
+- A tela pode sugerir alongamento da dívida atual mesmo quando o pedido do cliente é outro.
+
+### Pendências
+
+- O que a faixa de risco muda na folha.
+- Em quais operações o banco aceita parcela irregular e pagamento só de juros.
+- O que é validado nas notas fiscais para a CPR.
+- A ordem da folha para as outras 19 necessidades (Fernando só descreveu a da máquina importada).
+- Validação tributária do efeito do regime sobre a proteção cambial.
+- Teste dos serviços públicos de CNPJ (bloqueados na sessão de 18/11/2026).
+
+---
+
 ## Histórico
+- 2026-11-18 — Claude (Agente de Ideação): registrada a entrevista com Fernando (seção 10) e a pesquisa de regras dos produtos em arquivo próprio.
 - 2026-11-18 — Claude: registrada a ideia inicial de Fernando para a tela e a busca de apoio no Painel e no GitHub (seção 9).
 - 2026-11-18 — Claude: estruturação em passos, filtros, ficha de modalidades e fichas de situação, a partir da nota do Obsidian de 2026-11-17. Nenhuma regra de cálculo do Painel foi alterada. Proposta, sem validação de Fernando.
