@@ -59,3 +59,27 @@ Agora o vigia das cotações (`quotes-watch.yml`, que já roda de 15 em 15 minut
 Nada mudou na régua de segurança das cotações nem no limite de 10 minutos mostrado na tela. A regra está em `quotesAlertDecision`, em `cotacoes/scripts/quotes-watch.mjs`. Em ano sem calendário da B3 conferido (2027 em diante, até o calendário entrar), o aviso considera todo dia de semana como dia de pregão.
 
 **Leitura dos dados anteriores na coleta.** A cada rodada a coleta publica a branch `data` inteira de novo. Antes, uma falha de rede ao consultar essa branch era tratada como "a branch não existe", e o intradiário de 5 dias podia recomeçar do zero. Agora a coleta separa os dois casos: branch inexistente é a primeira publicação e segue normal; branch que existe mas não pôde ser lida (3 tentativas) faz a rodada **não coletar nem publicar**, com aviso no registro, e a rodada seguinte (5 minutos depois, no pregão) tenta de novo.
+
+## Fila de publicação (18/11/2026)
+O que acontecia: a fila valia para a execução inteira de Pages e o GitHub guarda só uma execução em espera por fila. Uma
+publicação de código (push) que esperava atrás da atualização de hora em hora era trocada pela agenda seguinte e
+cancelada. Essa agenda e as próximas falhavam em "Exigir código já aprovado nas agendas de dados", porque o código novo
+não tinha publicação aprovada, e os dados deixavam de ser atualizados até alguém repetir a publicação cancelada (17/11,
+execuções 644 e 645; 18/11, execuções 678 e 679).
+
+Como fica:
+- A fila (`concurrency: pages`, sem cancelar) vale só para o trabalho `deploy`. Os testes de código correm sem esperar.
+- Nas agendas, o passo "Agenda espera a publicação de código em andamento" consulta as execuções de Pages do mesmo ramo.
+  Se houver push ou execução manual ainda não concluída, a agenda termina sem publicar (sem falha) e não entra na fila.
+  A publicação de código já coleta e publica os dados.
+- Sem publicação de código em andamento, a agenda segue como antes: exige o mesmo código já aprovado e publica.
+
+Riscos e ressalvas:
+- Enquanto uma publicação de código está em andamento (cerca de 30 minutos), as agendas daquele horário não rodam; os
+  dados chegam pela própria publicação de código.
+- Se a publicação de código falhar, a agenda seguinte continua bloqueada até a correção, como antes (regra de segurança
+  mantida).
+- Uma agenda que começou antes do push e está em espera ainda pode ser trocada pela publicação de código; nesse caso
+  quem perde a vez é a agenda, não o código.
+- Testes: `test/publication-gates.test.mjs` ("a fila vale só para a publicação…").
+
