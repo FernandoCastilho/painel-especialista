@@ -30,7 +30,10 @@ const CNPJ_FICTICIO = { razao_social: 'EMPRESA EXEMPLO INDUSTRIA S.A.', municipi
         await page.getByRole('heading', { name: 'Árvore de Crédito' }).waitFor()
         // Consulta de CNPJ desligada: o botão não existe e os dados são preenchidos à mão.
         assert.equal(await page.getByRole('button', { name: 'Consultar dados públicos' }).count(), 0)
-        assert.equal(await page.getByRole('link', { name: /Consultar CNPJ no site da Receita Federal/ }).getAttribute('target'), '_blank')
+        const receita = page.getByRole('link', { name: /Consultar CNPJ no site da Receita Federal/ })
+        assert.equal(await receita.getAttribute('target'), '_blank')
+        const recuo = await receita.evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft))
+        assert.ok(recuo >= 8, `botão da Receita sem recuo lateral em ${nome}: ${recuo}px`)
         await page.fill('#ac-nome', CNPJ_FICTICIO.razao_social)
         await page.fill('#ac-uf', 'SP')
         await page.fill('#ac-cnae', '2813500')
