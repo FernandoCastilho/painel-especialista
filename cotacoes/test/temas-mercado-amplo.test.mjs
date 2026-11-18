@@ -19,6 +19,9 @@ test('temas de setor e insumo: notícia do assunto com palavra de mercado ampla 
     ['fertilizantes', 'Fertilizantes: Mosaic fecha fábrica e corta vagas'],
     ['industria', 'Indústria têxtil demite 500 e dá férias coletivas no Sul'],
     ['veiculos-pesados', 'Roubo de carga encarece o frete de caminhões'],
+    ['cafe', 'Cafés especiais batem recorde de exportação'],
+    ['minerio', 'Vale investe US$ 2 bi em minério de ferro no Pará'],
+    ['industria', 'Montadora inaugura fábrica e abre 800 vagas'],
   ]) assert.equal(relevanteTema(t(id), titulo), true, `${id}: ${titulo}`)
 })
 
@@ -32,6 +35,19 @@ test('temas de setor e insumo: uso comum da palavra continua fora', () => {
     ['veiculos-pesados', 'Acidente com ônibus em rodovia deixa feridos'],
     ['veiculos-pesados', 'Caminhão tomba na BR-116 e interdita a pista'],
     ['aco', 'Nervos de aço: atleta supera lesão e vence final'],
+    // palavras da lista ampla fora do sentido de mercado (achados do Auditor, 18/11/2026)
+    ['cafe', 'Café faz bem? Estudo importante revela benefícios'], // "importante" não é importação
+    ['cobre', 'Plano de saúde cobre exame importante? Entenda'],
+    ['petroleo', 'Polícia investiga adulteração de gasolina em posto'], // "investiga" não é investimento
+    ['cobre', 'Neve cobre a cidade e amplia caos no trânsito'],
+    ['cobre', 'Repórter cobre recorde de público no Maracanã'],
+    ['aco', 'Nervos de aço: atleta bate recorde mundial'],
+    ['veiculos-pesados', 'Polícia investiga acidente com ônibus que deixou 12 mortos'],
+    ['veiculos-pesados', 'Motorista de caminhão morre em acidente perto de usina'],
+    ['veiculos-pesados', 'Balanço do feriado: 30 acidentes com caminhões nas rodovias'],
+    ['veiculos-pesados', 'Ônibus com capacidade para 40 passageiros pega fogo'],
+    ['veiculos-pesados', 'Tarifa de ônibus sobe para R$ 5 em São Paulo'],
+    ['minerio', 'Vale do Silício investe em IA'],
   ]) assert.equal(relevanteTema(t(id), titulo), false, `${id}: ${titulo}`)
 })
 

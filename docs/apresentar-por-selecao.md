@@ -195,16 +195,29 @@ possível". Decisão: opção 1, "Sim, ampliar e publicar".
   palavra de mercado no título. É o que mantém fora o uso comum da palavra ("câmera cobre o show", receita de bolo de
   trigo, "como fazer o café perfeito").
 - A lista de palavras de mercado ganhou uma parte comum a todos esses temas (`MERCADO_AMPLO` em
-  `cotacoes/scripts/temas-lib.mjs`): demissão, férias coletivas, fechamento ou abertura de fábrica, usina, mineradora,
-  investimento, lucro, prejuízo, faturamento, balanço, sobretaxa, tarifa, antidumping, safra, colheita, aquisição, fusão,
-  cotação, exportação, importação, financiamento, crédito, recorde, capacidade, expansão, nova unidade, emprego e vagas.
+  `cotacoes/scripts/temas-lib.mjs`), com cada palavra presa ao sentido de mercado: demissão, férias coletivas, abertura ou
+  fechamento de fábrica, mineradora, usina de açúcar ou siderúrgica, investimento, lucro, prejuízo líquido, faturamento,
+  balanço trimestral, sobretaxa, tarifaço ou tarifa de importação, antidumping, safra, colheita, aquisição, fusão com
+  empresa, cotação, exportação, importação, financiamento, crédito, "recorde de exportação/vendas/produção", "capacidade
+  produtiva", "amplia a produção", nova fábrica ou unidade e "abre/fecha/corta vagas". Palavra solta como "recorde",
+  "capacidade", "balanço" ou "tarifa" não conta.
+- Nas listas próprias e na lista comum, "importa" não pega mais "importante" e "invest" não pega "investiga" (o defeito já
+  existia em trigo, petróleo, carvão, fertilizantes e alumínio).
+- Minério de ferro: "Vale do Silício" e outros vales com nome próprio não contam como a mineradora Vale.
 - Veículos pesados não tem mais lista de palavras que derrubam (acidente, roubo, morte). Como o título já precisa trazer
   assunto de mercado, "Acidente com ônibus deixa feridos" continua fora e "Roubo de carga encarece o frete de caminhões"
   passa a entrar.
 - Defeito antigo corrigido: o tema Café não reconhecia "café" quando a palavra vinha seguida de espaço ou pontuação
   (a marca de fim de palavra não funciona depois de letra acentuada). Só entravam títulos com "arábica", "conilon" etc.
+  O plural "cafés" continua reconhecido.
 - Moedas e eleições nos EUA seguem só com a lista própria; madeira segue sem filtro de mercado (terceira rodada).
 - Conferência: as 351 matérias reais coletadas hoje em todos os temas continuam entrando; testes novos em
   `cotacoes/test/temas-mercado-amplo.test.mjs` com manchetes que devem entrar e manchetes de uso comum que devem ficar fora.
+- Ainda passa, como antes: título que cita o nome do tema com outro sentido e traz uma palavra de mercado (exemplos de
+  teste: "Fábrica de Talentos abre vagas para jovens" em Indústria; "Bancos de praça: prefeitura investe em reforma" em
+  Serviços). É raro e sai do slide em "Escolher notícias".
+- Primeiro parecer do Auditor: **Requer correção** (72,0), no commit `888abe8`: a lista comum sem limite de palavra
+  deixava entrar "Café faz bem? Estudo importante…" e "Polícia investiga acidente com ônibus…", e o plural "cafés" tinha
+  deixado de ser reconhecido. Corrigido como descrito acima, com essas manchetes nos testes.
 - Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
   depois da publicação, principalmente cobre, alumínio, carvão e café.
