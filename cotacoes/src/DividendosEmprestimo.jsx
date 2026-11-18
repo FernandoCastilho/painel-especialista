@@ -32,6 +32,7 @@ export function DividendosEmprestimoIcon() {
 export default function DividendosEmprestimo({ onBack }) {
   const [form, setForm] = useState({ valor: '10.000.000,00', taxa: '1,31', cdi: '', pctCdi: '100', aliquotaPj: '34', aliquotaDiv: '10' })
   const [cdiOwn, setCdiOwn] = useState(false)
+  const [mutuo, setMutuo] = useState(false)
   const [sel, setSel] = useState(12)
   const macro = useMacro()
   const cdiPainel = latestCdi(macro.data)
@@ -48,6 +49,7 @@ export default function DividendosEmprestimo({ onBack }) {
     pctCdi: parseDecimal(form.pctCdi) / 100,
     aliquotaPj: parseDecimal(form.aliquotaPj) / 100,
     aliquotaDividendos: parseDecimal(form.aliquotaDiv) / 100,
+    mutuo,
   }
   const filled = Object.values(form).every((v) => String(v).trim())
   const result = filled ? simularDividendosEmprestimo(p) : null
@@ -84,6 +86,7 @@ export default function DividendosEmprestimo({ onBack }) {
               {text('taxa', 'Taxa do empréstimo (% a.m.)', 'Taxa mensal da operação, tabela Price. Garantia: 100% da aplicação do sócio.', 'ex.: 1,31')}
               {text('aliquotaPj', 'IR + CSLL da empresa (%)', 'Lucro real: 25% de IRPJ + 9% de CSLL = 34%. Juros e IOF do empréstimo reduzem esse imposto.', 'ex.: 34')}
             </div>
+            <label className="de-check cd-pad-x"><input type="checkbox" checked={mutuo} onChange={(e) => setMutuo(e.target.checked)} /> Repasse ao sócio por mútuo (cobra IOF do sócio)</label>
             <p className="cx-hint cd-pad-x">IOF não financiado, pago na contratação: {rateText(IOF_PJ.fixed)}% + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização, até {IOF_PJ.maxDays} dias.</p>
           </article>
 
@@ -118,18 +121,19 @@ export default function DividendosEmprestimo({ onBack }) {
                   <span>{r.resultado >= 0 ? 'a mais do que distribuir o dividendo hoje' : 'a menos do que distribuir o dividendo hoje'}</span>
                 </div>
                 <div className="cd-kpis cd-highlight">
+                  <div><span>Se o imposto for pago no fim</span><b className={r.resultadoAdiado < 0 ? 'de-neg-ink' : undefined}>{brl(r.resultadoAdiado)}</b><small>lucros seguem acumulados; imposto só adiado</small></div>
                   <div><span>Como a planilha calcula</span><b>{brl(r.montantePlanilha)}</b><small>soma simples, sem custo de oportunidade</small></div>
                   <div><span>Compensa se o imposto evitado for maior que</span><b>{r.aliquotaEmpate <= 0 ? '0% (sempre)' : pct(r.aliquotaEmpate)}</b><small>dos dividendos</small></div>
                 </div>
                 <p className={r.resultado >= 0 ? 'cd-answer' : 'cd-warn'}><span aria-hidden="true">{r.resultado >= 0 ? '✓' : '!'}</span><span>
-                  Sócio: <b>{brl(r.socio)}</b> de imposto sobre dividendos evitado, com o rendimento. Empresa: <b>{brl(r.empresa)}</b> de efeito do empréstimo, já com a economia de IR e o caixa mantido rendendo CDI. {r.aliquotaEmpate > 0 ? <>A operação só compensa se o imposto evitado for maior que <b>{pct(r.aliquotaEmpate)}</b>.</> : 'Aqui o empréstimo compensa mesmo sem imposto evitado.'}
+                  Sócio: <b>{brl(r.socio)}</b> de imposto sobre dividendos evitado{r.custoMutuo > 0 ? ' menos o IOF do mútuo' : ''}, com o rendimento. Empresa: <b>{brl(r.empresa)}</b> de efeito do empréstimo, já com a economia de IR e o caixa mantido rendendo CDI. {r.aliquotaEmpate > 0 ? <>A operação só compensa se o imposto evitado for maior que <b>{pct(r.aliquotaEmpate)}</b>.</> : 'Aqui o empréstimo compensa mesmo sem imposto evitado.'}
                 </span></p>
 
                 <section className="cd-card" aria-labelledby="de-ponte">
                   <h4 id="de-ponte">Da planilha ao resultado justo · {r.n} meses</h4>
                   <table className="cd-steps"><caption className="sr-only">Ajustes da visão da planilha até o resultado justo</caption><tbody>
                     <tr><td className="cd-op" aria-hidden="true"></td><th scope="row">Montante final, como na planilha</th><td>{brl(r.montantePlanilha)}</td></tr>
-                    <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">Rendimento que o sócio teria mesmo recebendo o dividendo líquido</th><td>{brl(Math.abs(r.ajusteSocio))}</td></tr>
+                    <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">Rendimento que o sócio teria mesmo recebendo o dividendo líquido{r.custoMutuo > 0 ? ', e IOF do mútuo' : ''}</th><td>{brl(Math.abs(r.ajusteSocio))}</td></tr>
                     <tr className={r.ajusteEmpresa < 0 ? 'cd-minus' : undefined}><td className="cd-op" aria-hidden="true">{r.ajusteEmpresa < 0 ? '−' : '+'}</td><th scope="row">CDI do caixa da empresa sobre parcelas e economia de IR (valor futuro)</th><td>{brl(Math.abs(r.ajusteEmpresa))}</td></tr>
                     <tr className="cd-total"><td className="cd-op" aria-hidden="true">=</td><th scope="row">Resultado justo</th><td>{brl(r.resultado)}</td></tr>
                   </tbody></table>
@@ -159,9 +163,11 @@ export default function DividendosEmprestimo({ onBack }) {
                 {row('Dividendos evitados', (x) => x.dividendos)}
                 {row('Montante final', (x) => x.montantePlanilha, brl, 'de-sub')}
                 {block('Comparação justa (valor futuro pelo CDI)')}
-                {row('Sócio: imposto evitado + rendimento', (x) => x.socio)}
+                {mutuo && row('IOF do mútuo ao sócio', (x) => x.custoMutuo)}
+                {row(mutuo ? 'Sócio: imposto evitado − IOF do mútuo, com rendimento' : 'Sócio: imposto evitado + rendimento', (x) => x.socio)}
                 {row('Empresa: caixa mantido − custo do empréstimo', (x) => x.empresa)}
                 {row('Resultado justo', (x) => x.resultado, brl, 'de-total')}
+                {row('Se o imposto for pago no fim (adiado)', (x) => x.resultadoAdiado, brl, 'de-sub')}
                 {row('Imposto evitado mínimo para compensar', (x) => Math.max(x.aliquotaEmpate, 0), pct)}
               </tbody>
             </table></div>
@@ -171,8 +177,8 @@ export default function DividendosEmprestimo({ onBack }) {
         <article className="desk-panel cx-panel de-avisos" aria-labelledby="de-avisos-h">
           <header className="cx-heading"><h3 id="de-avisos-h">Riscos e ressalvas</h3></header>
           <ul>
-            <li><b>Como o dinheiro chega ao sócio.</b> Se o repasse for dividendo, há o imposto que a conta supõe evitar. Se for empréstimo da empresa ao sócio (mútuo), há novo IOF e risco de a Receita tratar como distribuição disfarçada de lucros. A conta não cobra esse IOF.</li>
-            <li><b>Adiamento, não isenção.</b> Os lucros continuam acumulados na empresa; uma distribuição futura volta a ser tributada.</li>
+            <li><b>Como o dinheiro chega ao sócio.</b> Se o repasse for dividendo, há o imposto que a conta supõe evitar. Se for empréstimo da empresa ao sócio (mútuo), há novo IOF (marque a opção no quadro 1 para descontá-lo) e risco de a Receita tratar como distribuição disfarçada de lucros.</li>
+            <li><b>Adiamento, não isenção.</b> Os lucros continuam acumulados na empresa; uma distribuição futura volta a ser tributada. Por isso a tela mostra também o resultado se o imposto for pago no fim.</li>
             <li><b>Retenção de 10% (Lei 15.270/2025).</b> Só vale quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês. Pagamentos menores, mês a mês, não têm retenção na fonte, mas entram no imposto mínimo anual; no caminho direto, distribuir aos poucos também reduz o imposto que a conta supõe evitar. Lucros até 2025 com distribuição aprovada até 31/12/2025 ficam fora.</li>
             <li><b>Redutor e imposto mínimo anual.</b> Sócio com renda acima de R$ 600 mil no ano entra no imposto mínimo. Se a empresa já paga 34% de alíquota efetiva, o redutor pode devolver parte ou todo o imposto sobre os dividendos no ajuste anual. Nesse caso o imposto evitado é menor e a operação pode não compensar.</li>
             <li><b>Dedutibilidade.</b> Juros só reduzem o IR se a despesa for necessária à atividade. Crédito tomado para repassar ao sócio pode ter a dedução questionada.</li>
@@ -185,10 +191,12 @@ export default function DividendosEmprestimo({ onBack }) {
       <div className="cx-heading cd-method"><h3>Premissas e fórmulas</h3><CalculatorHelp title="Premissas e fórmulas"><ul>
         <li>Parcela Price = valor × i ÷ (1 − (1 + i)^−n). IOF = {rateText(IOF_PJ.fixed)}% do valor + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização (30 dias por mês, até 365 dias). A planilha original usa 0,0041% ao dia, regra anterior ao Decreto 12.499/2025.</li>
         <li>Economia de IR/CSLL = alíquota × (juros + IOF).</li>
-        <li>Aplicação: CDI diário = (1 + CDI)^(1/252) − 1; rendimento = (1 + CDI diário × % do CDI)^(21 × meses) − 1. IR de pessoa física pelos dias corridos: 22,5% até 180; 20% até 360; 17,5% até 720; 15% acima.</li>
+        <li>Aplicação: CDI diário = (1 + CDI)^(1/252) − 1; rendimento = (1 + CDI diário × % do CDI)^(21 × meses) − 1. IR de pessoa física pelos dias corridos (meses × 365/12; 12 meses = 365 dias): 22,5% até 180; 20% até 360; 17,5% até 720; 15% acima. A planilha original usa 30 dias por mês (12 meses = 20%).</li>
+        <li>IOF do mútuo (opcional): 0,38% + 0,0082% ao dia sobre o valor, até 365 dias, pago pelo sócio na contratação; não reduz o IR da empresa.</li>
+        <li>Se o imposto for pago no fim = resultado justo − alíquota de dividendos × valor.</li>
         <li>Visão da planilha = (valor + ganho líquido) − pagamento total + dividendos evitados + economia de IR.</li>
-        <li>Resultado justo = sócio + empresa, na data final. Sócio = imposto evitado × (1 + rendimento líquido): no caminho direto ele aplicaria o dividendo líquido. Empresa = valor mantido em caixa, rendendo CDI líquido de PIS/Cofins ({pctCurto(PIS_COFINS_FINANCEIRO)}) e IR/CSLL, menos o IOF e cada parcela líquidos da economia de IR, todos levados à data final por esse mesmo CDI líquido.</li>
-        <li>Imposto evitado mínimo = −empresa ÷ (valor × (1 + rendimento líquido)).</li>
+        <li>Resultado justo = sócio + empresa, na data final. Sócio = (imposto evitado − IOF do mútuo) × (1 + rendimento líquido): no caminho direto ele aplicaria o dividendo líquido. Empresa = valor mantido em caixa, rendendo CDI líquido de PIS/Cofins ({pctCurto(PIS_COFINS_FINANCEIRO)}) e IR/CSLL, menos o IOF e cada parcela líquidos da economia de IR, todos levados à data final por esse mesmo CDI líquido.</li>
+        <li>Imposto evitado mínimo = (IOF do mútuo × (1 + rendimento líquido) − empresa) ÷ (valor × (1 + rendimento líquido)).</li>
       </ul></CalculatorHelp></div>
     </section>
   )

@@ -8,7 +8,12 @@
 //   amortização, até 365 dias). A planilha original usa 0,0041% ao dia (regra anterior ao Decreto 12.499/2025).
 // - Juros e IOF são despesa dedutível na empresa de lucro real: economia de IR/CSLL = alíquota × despesa.
 // - Aplicação do sócio (pessoa física) em % do CDI, CDI constante, 21 dias úteis por mês, sem resgates;
-//   IR regressivo por dias corridos (22,5% / 20% / 17,5% / 15%). Sem IOF (prazo acima de 30 dias).
+//   IR regressivo por dias corridos reais (meses × 365/12, decisão de Fernando em 18/11/2026; a planilha usa 30 dias por mês):
+//   22,5% / 20% / 17,5% / 15%. Sem IOF (prazo acima de 30 dias).
+// - Repasse por mútuo (opcional): IOF de crédito do sócio pessoa física, 0,38% + 0,0082% ao dia até 365 dias sobre o valor,
+//   pago na contratação com o próprio dinheiro repassado (o sócio aplica o valor menos o IOF). Não é dedutível na empresa.
+// - Imposto adiado: os lucros continuam acumulados; se o imposto sobre dividendos for pago na data final, o resultado cai
+//   exatamente o imposto (alíquota × valor). A tela mostra os dois cenários.
 // - Comparação justa (valor futuro pelo CDI): no caminho direto o sócio também aplicaria o dividendo líquido; e o caixa
 //   que a empresa deixa de pagar hoje rende CDI na empresa, tributado no lucro real (PIS/Cofins 4,65% e IR/CSLL).
 //   Cada parcela e cada economia de IR são levadas à data final por esse CDI líquido da empresa.
@@ -17,6 +22,12 @@ import { IOF_PJ } from './emprestimo.js'
 export const PRAZOS = [12, 24, 36, 48, 60]
 export const PIS_COFINS_FINANCEIRO = 0.0465
 export const IOF_PLANILHA = { fixed: 0.38, daily: 0.0041, maxDays: 365 }
+export const diasCorridos = (meses) => Math.round((meses * 365) / 12)
+
+// IOF do mútuo da empresa ao sócio pessoa física (principal definido, devolvido no fim do prazo).
+export function iofMutuo(valor, meses, iof = IOF_PJ) {
+  return valor * (iof.fixed / 100 + (iof.daily / 100) * Math.min(diasCorridos(meses), iof.maxDays))
+}
 
 // "1,31" → 1.31; "10.000.000,00" → 10000000; vazio ou inválido → NaN.
 export function parseDecimal(text) {
@@ -51,14 +62,14 @@ export function emprestimoPrice(valor, i, n, iof = IOF_PJ) {
   return { parcela, iof: iofTotal, juros, totalPago: parcela * n + iofTotal, fluxo }
 }
 
-export function simularPrazo({ valor, taxaMes, cdi, pctCdi = 1, aliquotaPj = 0.34, aliquotaDividendos = 0.1, iof = IOF_PJ }, n) {
+export function simularPrazo({ valor, taxaMes, cdi, pctCdi = 1, aliquotaPj = 0.34, aliquotaDividendos = 0.1, iof = IOF_PJ, mutuo = false }, n) {
   const emp = emprestimoPrice(valor, taxaMes, n, iof)
   const reducaoIr = aliquotaPj * (emp.juros + emp.iof)
 
   // Aplicação do sócio: CDI diário × % do CDI, 21 dias úteis por mês.
   const cdiDia = (1 + cdi) ** (1 / 252) - 1
   const bruto = (1 + cdiDia * pctCdi) ** (21 * n) - 1
-  const ir = irPessoaFisica(30 * n)
+  const ir = irPessoaFisica(diasCorridos(n))
   const liquidoPct = bruto * (1 - ir)
   const ganhoBruto = valor * bruto
   const ganhoLiquido = valor * liquidoPct
@@ -71,7 +82,9 @@ export function simularPrazo({ valor, taxaMes, cdi, pctCdi = 1, aliquotaPj = 0.3
 
   // Comparação justa, na data final.
   // Sócio: no caminho direto aplicaria o dividendo líquido; a diferença é o imposto evitado, aplicado no mesmo produto.
-  const socio = dividendos * (1 + liquidoPct)
+  // Com mútuo, o sócio paga o IOF na contratação e aplica menos.
+  const custoMutuo = mutuo ? iofMutuo(valor, n, iof) : 0
+  const socio = (dividendos - custoMutuo) * (1 + liquidoPct)
   // Empresa: no caminho direto pagaria o valor hoje. Com o empréstimo, guarda esse caixa (rende CDI líquido de PIS/Cofins e IR/CSLL),
   // paga o IOF líquido de IR na contratação e cada parcela líquida da economia de IR sobre os juros do mês.
   const rEmpresa = ((1 + cdiDia * pctCdi) ** 21 - 1) * (1 - PIS_COFINS_FINANCEIRO) * (1 - aliquotaPj)
@@ -80,17 +93,19 @@ export function simularPrazo({ valor, taxaMes, cdi, pctCdi = 1, aliquotaPj = 0.3
   for (const f of emp.fluxo) empresa -= (emp.parcela - aliquotaPj * f.juros) * vf(n - f.mes)
   const resultado = socio + empresa
   // Imposto sobre dividendos que zera o resultado (resultado é linear na alíquota).
-  const aliquotaEmpate = -empresa / (valor * (1 + liquidoPct))
+  const aliquotaEmpate = (custoMutuo * (1 + liquidoPct) - empresa) / (valor * (1 + liquidoPct))
+  // Se o imposto sobre dividendos for pago na data final (adiado, não evitado).
+  const resultadoAdiado = resultado - dividendos
 
   // Ponte planilha → justo.
-  const ajusteSocio = -(valor - dividendos) * liquidoPct
+  const ajusteSocio = -(valor - dividendos) * liquidoPct - custoMutuo * (1 + liquidoPct)
   const ajusteEmpresa = empresa - (valor - emp.totalPago + reducaoIr)
 
   return {
     n, parcela: emp.parcela, iof: emp.iof, juros: emp.juros, totalPago: emp.totalPago, reducaoIr,
     bruto, ir, liquidoPct, ganhoBruto, ganhoLiquido,
     dividendos, rentabilidade, ganhoPlanilha, montantePlanilha,
-    socio, empresa, resultado, aliquotaEmpate, ajusteSocio, ajusteEmpresa,
+    custoMutuo, socio, empresa, resultado, resultadoAdiado, aliquotaEmpate, ajusteSocio, ajusteEmpresa,
     rEmpresaMes: rEmpresa,
   }
 }

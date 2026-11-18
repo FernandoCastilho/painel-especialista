@@ -15,3 +15,6 @@
 :root[data-theme] body .cx.de-pattern .cd-quote .cd-result > :is(.de-prazos, .cd-card) { grid-column:1 / -1; }
 :root[data-theme] body .cx.de-pattern .de-table th[scope="row"] { min-width:200px; }
 :root[data-theme] body .cx.de-pattern .de-table thead th:first-child { text-align:left; }
+:root[data-theme] body .cx.de-pattern .de-check { display:flex; gap:8px; align-items:center; margin-bottom:8px; font-size:.875rem; cursor:pointer; }
+:root[data-theme] body .cx.de-pattern .de-check input { width:18px; height:18px; accent-color:var(--cd-orange); }
+:root[data-theme] body .cx.de-pattern .cd-kpis b.de-neg-ink { color:var(--down, #b42318); }

@@ -18,7 +18,7 @@ test('montante da planilha = ganho + dividendos + economia de IR (prova com os n
   near(0.34 * (10988323 - 10000000), 336030, 1) // economia = 34% × (juros + IOF)
   const r = simularPrazo({ ...base, iof: IOF_PLANILHA }, 12)
   near(r.montantePlanilha, r.ganhoPlanilha + r.dividendos + r.reducaoIr, 1e-6)
-  assert.equal(r.ir, 0.2)
+  assert.equal(r.ir, 0.175) // 12 meses = 365 dias (decisão de Fernando); a planilha usa 20% (360 dias)
 })
 
 test('faixas de IR da aplicação de pessoa física', () => {
@@ -26,7 +26,7 @@ test('faixas de IR da aplicação de pessoa física', () => {
   assert.equal(irPessoaFisica(360), 0.2)
   assert.equal(irPessoaFisica(720), 0.175)
   assert.equal(irPessoaFisica(1800), 0.15)
-  assert.deepEqual(simularDividendosEmprestimo(base).prazos.map((x) => x.ir), [0.2, 0.175, 0.15, 0.15, 0.15])
+  assert.deepEqual(simularDividendosEmprestimo(base).prazos.map((x) => x.ir), [0.175, 0.15, 0.15, 0.15, 0.15])
 })
 
 // Conferência independente: livro-caixa mês a mês dos dois caminhos, sem as fórmulas da calculadora.
@@ -44,14 +44,16 @@ function livroCaixa(p, n) {
   let caixaB = p.valor - iof * (1 - p.aliquotaPj)
   for (const [, , j] of amort) caixaB = caixaB * (1 + rPj) - pmt + p.aliquotaPj * j
   // Caminho A: empresa paga o valor hoje; caixa zero. Sócio aplica o líquido; no B aplica o valor cheio.
-  const fator = 1 + ((1 + cdiMes) ** n - 1) * (1 - irPessoaFisica(30 * n))
-  const socioB = p.valor * fator
+  const dias = Math.round(n * 365 / 12)
+  const fator = 1 + ((1 + cdiMes) ** n - 1) * (1 - irPessoaFisica(dias))
+  const iofSocio = p.mutuo ? p.valor * (0.0038 + 0.000082 * Math.min(dias, 365)) : 0
+  const socioB = (p.valor - iofSocio) * fator
   const socioA = p.valor * (1 - p.aliquotaDividendos) * fator
   return (socioB - socioA) + (caixaB - 0)
 }
 
 test('conferência independente pelo livro-caixa, todos os prazos e cenários', () => {
-  for (const p of [base, { ...base, cdi: 0.1415, pctCdi: 0.95, taxaMes: 0.011, aliquotaDividendos: 0.05 }, { ...base, aliquotaPj: 0.24, valor: 3_500_000 }]) {
+  for (const p of [base, { ...base, cdi: 0.1415, pctCdi: 0.95, taxaMes: 0.011, aliquotaDividendos: 0.05 }, { ...base, aliquotaPj: 0.24, valor: 3_500_000 }, { ...base, mutuo: true }]) {
     for (const r of simularDividendosEmprestimo(p).prazos) near(r.resultado, livroCaixa(p, r.n), 0.05)
   }
 })
@@ -70,6 +72,18 @@ test('exemplo da planilha com IOF atual: ganho justo bem menor que a soma simple
   near(r60.resultado, 656000, 15000)
   assert.ok(r12.montantePlanilha > r12.resultado + 500000)
   assert.ok(r12.iof > 200000 && r12.iof < 205000, 'IOF atual (0,0082% ao dia) acima do da planilha')
+})
+
+test('imposto adiado e IOF do mútuo', () => {
+  const sem = simularDividendosEmprestimo(base).prazos
+  const com = simularDividendosEmprestimo({ ...base, mutuo: true }).prazos
+  for (const r of sem) near(r.resultadoAdiado, r.resultado - 1_000_000, 1e-6)
+  near(com[0].custoMutuo, 10_000_000 * (0.0038 + 0.000082 * 365), 0.01) // 337.300
+  assert.ok(com[0].resultado < sem[0].resultado - 337_300)
+  for (const r of com) {
+    near(r.montantePlanilha + r.ajusteSocio + r.ajusteEmpresa, r.resultado, 1e-4)
+    near(simularPrazo({ ...base, mutuo: true, aliquotaDividendos: r.aliquotaEmpate }, r.n).resultado, 0, 1e-4)
+  }
 })
 
 test('erros de preenchimento', () => {
