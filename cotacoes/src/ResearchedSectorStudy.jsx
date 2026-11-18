@@ -1,3 +1,5 @@
+import SectorCreditReading from './SectorCreditReading.jsx'
+import { uniqueParagraphs, sectionParagraphs, readableSectionTitle, chartConsultationLabel, studyGlossary } from './sectorEditorial.js'
 import ChartFullscreen from './ChartFullscreen.jsx'
 import { StudyTable, StudyMethod } from './StudyParts.jsx'
 import { useRef, useState } from 'react'
@@ -22,17 +24,21 @@ export function ResearchChart({ chart }) {
     <div className="research-bar-axis" aria-hidden="true"><span>{scale.negative ? (-scale.maximum).toLocaleString('pt-BR') : '0'}</span>{scale.negative && <span>0</span>}<span>{scale.maximum.toLocaleString('pt-BR', { signDisplay: scale.negative ? 'always' : 'auto' })}</span></div>
     <ChartFullscreen><div className="study-bars" role="img" aria-label={`${chart.title}. ${series.label}. Valores com sinal na tabela abaixo.`}>{chart.years.map((year, index) => <div className="study-bar-row research-bar-row" key={year}><span>{year}</span><span className="study-bar-track research-bar-track"><span className="research-bar-zero" style={{ left: `${scale.zero}%` }} aria-hidden="true" /><span className={`study-bar research-bar${series.values[index] < 0 ? ' research-bar-negative' : ''}`} style={barPosition(series.values[index], scale)} /></span><strong>{series.values[index].toLocaleString('pt-BR', { signDisplay: scale.negative ? 'exceptZero' : 'auto' })}</strong></div>)}</div></ChartFullscreen>
     <details><summary>Ver todos os dados e método</summary><div className="study-table-wrap"><table><caption>{chart.title} · {chart.unit}</caption><thead><tr><th scope="col">{chart.categoryLabel || 'Ano'}</th>{chart.series.map(item => <th scope="col" key={item.label}>{item.label}</th>)}</tr></thead><tbody>{chart.years.map((year, index) => <tr key={year}><th scope="row">{year}</th>{chart.series.map(item => <td key={item.label}>{item.values[index].toLocaleString('pt-BR')}</td>)}</tr>)}</tbody></table></div><p>{chart.method}</p></details>
-    <p className="central-note">{publicAgencySources([chart.source]).length > 0 && <>Fonte: {link(chart.source)} · </>}Referência: {chart.period} · consulta: 06/11/2026.</p>
+    <p className="central-note">{publicAgencySources([chart.source]).length > 0 && <>Fonte: {link(chart.source)} · </>}Referência: {chart.period} · {chartConsultationLabel(chart)}.</p>
   </section>
 }
 
 export default function ResearchedSectorStudy({ study, goto }) {
+  const summary = uniqueParagraphs(study.summary)
+  const glossary = studyGlossary(study)
   const prefix = `sector-${study.group}-${study.topicIndex}`
   return <article className="sector-study" aria-labelledby={`${prefix}-title`}>
     <p className="central-kicker">ESTUDO SETORIAL · PESQUISA DE MERCADO</p><h3 id={`${prefix}-title`}>{study.title}</h3>
     <p className="central-note">Pesquisa pública realizada em {study.reviewedAt ? <time dateTime={study.reviewedAt}>{study.reviewedAt.split('-').reverse().join('/')}</time> : 'data não informada'}. Dados têm períodos próprios; atualização não é automática.</p>
     {study.reviewStatus !== 'approved' && <p role="status" className="study-warning"><strong>NÃO CONFERIDO · revisão independente pendente. Versão de trabalho, não usar como estudo final.</strong></p>}
-    <section className="study-summary" aria-labelledby={`${prefix}-summary`}><p className="central-kicker">RESUMO EXECUTIVO</p><h4 id={`${prefix}-summary`} className="sr-only">Resumo executivo</h4>{study.summary.map((text, index) => <p key={text} className={index === 0 ? 'study-summary-lead' : undefined}>{text}</p>)}</section>
+    <section className="study-summary" aria-labelledby={`${prefix}-summary`}><p className="central-kicker">RESUMO EXECUTIVO</p><h4 id={`${prefix}-summary`} className="sr-only">Resumo executivo</h4>{summary.map((text, index) => <p key={text} className={index === 0 ? 'study-summary-lead' : undefined}>{text}</p>)}</section>
+    <SectorCreditReading group={study.group} />
+    {glossary.length > 0 && <details className="study-section"><summary>Termos em linguagem simples</summary><dl>{glossary.map(item => <div key={item.term}><dt>{item.term}</dt><dd>{item.meaning}</dd></div>)}</dl></details>}
     <details className="study-section study-canvas-details">
       <summary>Perguntas para conversar com a empresa ({study.canvasQuestions.length})</summary>
       <p className="study-canvas-intro">Roteiro inspirado no Business Model Canvas. Peça números e um contrato real para sustentar as respostas.</p>
@@ -41,7 +47,7 @@ export default function ResearchedSectorStudy({ study, goto }) {
     <KnowledgeMap compact key={`${study.group}-${study.topicIndex}`} goto={goto} sectorContext={{ group: study.group, topicIndex: study.topicIndex, study }} />
     <ResearchAudio study={study} />
     {study.diagram?.nodes?.length > 0 && <SectorValueChain diagram={study.diagram} title={study.title} />}
-    {study.sections.map(section => <details className="study-section" id={`${prefix}-${section.id}`} key={section.id} open={section.id === 'negocio' || section.id === 'indicadores' || undefined}><summary>{section.title}</summary>{section.paragraphs?.map(text => <p key={text}>{text}</p>)}<StudyTable section={section} />{section.bullets && <ul>{section.bullets.map(text => <li key={text}>{text}</li>)}</ul>}{publicAgencySources(section.sources).length > 0 && <p className="central-note">Fontes: {publicAgencySources(section.sources).map((source, index) => <span key={source.url}>{index > 0 ? ' · ' : ''}{link(source)}</span>)}</p>}</details>)}
+    {study.sections.map(section => <details className="study-section" id={`${prefix}-${section.id}`} key={section.id} open={section.id === 'negocio' || section.id === 'indicadores' || undefined}><summary>{readableSectionTitle(section.title)}</summary>{sectionParagraphs(section, summary).map(text => <p key={text}>{text}</p>)}<StudyTable section={section} />{section.bullets && <ul>{section.bullets.map(text => <li key={text}>{text}</li>)}</ul>}{publicAgencySources(section.sources).length > 0 && <p className="central-note">Fontes: {publicAgencySources(section.sources).map((source, index) => <span key={source.url}>{index > 0 ? ' · ' : ''}{link(source)}</span>)}</p>}</details>)}
     {study.charts.length > 0 && <section aria-label="Indicadores e séries históricas">{study.charts.map(chart => <ResearchChart key={chart.id} chart={chart} />)}</section>}
     <StudyMethod study={study} />
   </article>
@@ -69,3 +75,4 @@ function ResearchAudio({ study }) {
     <details><summary>{study.audio?.src ? 'Ler transcrição' : 'Ler síntese em texto'}</summary>{transcriptParagraphs(study.transcript).map((text, index) => <p key={index}>{text}</p>)}</details>
   </section>
 }
+

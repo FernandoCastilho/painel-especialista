@@ -18,16 +18,26 @@ const giroOracle = (system, principal = 100000, daily = 0.0082) => {
   // Sem carência: o dia a mais do 1º vencimento (06/12 domingo → 07/12) é cobrado na própria 1ª parcela.
   const r = d => Math.pow(1.02, d / 30) - 1
   const periods = days.map((d, k) => d - (k ? days[k - 1] : 0))
+  const cents = value => Math.round(Number((value * 100).toPrecision(14))) / 100
   let interest = 0, iof = principal * 0.0038, bal = principal
   const payments = []
-  let pmt = 0
-  if (system === 'price') { let disc = 0, acc = 1; for (const p of periods) { acc /= 1 + r(p); disc += acc } pmt = principal / disc }
+  let pmt = 0, theoretical = principal
+  if (system === 'price') {
+    let disc = 0, acc = 1
+    for (const p of periods) { acc /= 1 + r(p); disc += acc }
+    pmt = principal / disc
+  }
   periods.forEach((p, k) => {
-    const j = bal * r(p), a = system === 'price' ? pmt - j : principal / 12
-    interest += j; bal -= a; iof += a * Math.min(days[k], 365) * daily / 100; payments.push(a + j)
+    const j = cents(bal * r(p))
+    theoretical = system === 'price' ? theoretical * (1 + r(p)) - pmt : principal * (1 - (k + 1) / periods.length)
+    const a = k === periods.length - 1 ? bal : cents(cents(principal - theoretical) - (principal - bal))
+    interest += j
+    bal = cents(bal - a)
+    iof += a * Math.min(days[k], 365) * daily / 100
+    payments.push(cents(a + j))
   })
-  const paid = payments.reduce((s, v) => s + v, 0)
-  return { first: payments[0], last: payments.at(-1), interest, iof, total: paid + iof }
+  const paid = cents(payments.reduce((s, v) => s + v, 0))
+  return { first: payments[0], last: payments.at(-1), interest, iof: cents(iof), total: paid + cents(iof) }
 }
 
 const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\s+/g, ' ')
@@ -145,7 +155,7 @@ async function assertHelp(page, section, label, directory) {
   assert.equal(await dialog.evaluate(element => element === document.activeElement || element.contains(document.activeElement)), true, `${label}: ajuda recebe o foco`)
   // Native showModal makes the page inert without adding an inert attribute.
   // Prove that even a direct focus request cannot reach the background.
-  assert.equal(await section.locator('.cx-back').first().evaluate(element => { element.focus(); return element === document.activeElement }), false, `${label}: fundo modal recusa foco`)
+  assert.equal(await section.locator('.cx-back, .giro-back').first().evaluate(element => { element.focus(); return element === document.activeElement }), false, `${label}: fundo modal recusa foco`)
   for (const key of ['Tab', 'Tab', 'Shift+Tab']) {
     await page.keyboard.press(key)
     const focus = await dialog.evaluate(element => ({ inside: element === document.activeElement || element.contains(document.activeElement), body: document.activeElement === document.body, modal: element.matches(':modal') }))
@@ -169,13 +179,24 @@ async function assertHelp(page, section, label, directory) {
 
 async function fillScenario(page, section, route) {
   if (route === 'giro') {
+    await section.getByText('Datas e praça do contrato', { exact: true }).click()
     await section.locator('#cx-start').fill('2026-11-06')
     await section.locator('#cx-firstDue').fill('2026-12-06')
-    const table = section.locator('.cx-matrix')
-    assert.ok(normalize(await table.locator('tbody tr').nth(0).locator('td').first().innerText()).startsWith(brl(giroOracle('price').first)))
-    assert.equal(normalize(await table.locator('tbody tr').nth(4).locator('td').first().innerText()), brl(giroOracle('price').total))
-    await section.getByRole('button', { name: 'SAC', exact: true }).click()
-    assert.equal(normalize(await table.locator('tbody tr').nth(4).locator('td').nth(1).innerText()), brl(giroOracle('sac').total))
+    await section.getByText('Datas e praça do contrato', { exact: true }).click()
+    const simulate = () => section.getByRole('button', { name: 'Simular', exact: true }).click()
+    const amount = async label => normalize(await section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').innerText())
+    await simulate()
+    assert.equal(await amount('Primeira parcela'), brl(giroOracle('price').first))
+    assert.equal(await amount('Custo total'), brl(giroOracle('price').total - 100000))
+    await section.getByLabel('Amortização', { exact: true }).selectOption('sac')
+    await simulate()
+    assert.equal(await amount('Custo total'), brl(giroOracle('sac').total - 100000))
+    const form = await section.locator('.giro-form').boundingBox()
+    const result = await section.locator('.giro-result').boundingBox()
+    const installments = await section.getByText('Ver parcelas', { exact: true }).boundingBox()
+    assert.ok(installments.y >= Math.max(form.y + form.height, result.y + result.height), 'parcelas abaixo do formulário e resultado')
+    if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
+    else assert.ok(result.y >= form.y + form.height)
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
     assert.equal(await section.getByText('Situação da operação', { exact: true }).count(), 0)
@@ -324,6 +345,13 @@ async function assertComparatorFamily(browser) {
       for (const [route, anchor] of Object.entries(workspaceRoutes)) {
         if (route) await page.goto(base + '/#calculadora/' + route)
         await page.locator(anchor).first().waitFor()
+        if (route === 'giro') {
+          const giro = page.locator('.giro-screen')
+          assert.equal(await giro.evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)', 'Capital de Giro segue branco nos dois temas')
+          await assertWorkspace(page, giro, `Capital de Giro · ${width}px · ${theme}`)
+          if (width === 390 || width === 1440) await page.screenshot({ path: path.join(out, `giro-${width}-${theme}.png`), fullPage: true })
+          continue
+        }
         const heading = page.locator('main.app-calculators .bw > .bw-heading h2').first()
         await heading.waitFor()
         const style = await heading.evaluate(element => {
@@ -428,13 +456,13 @@ async function assertComparatorFamily(browser) {
         try {
           await fixtures(page)
           await page.goto(`${base}/#calculadora/${route}`)
-          const section = page.locator('main.app section.cx').first(); await section.waitFor()
+          const section = page.locator(route === 'giro' ? '.giro-screen' : 'main.app section.cx').first(); await section.waitFor()
           if (route === 'finame-materiais') await section.locator('.fm-destaques').waitFor()
           await settleLayout(page)
           await assertWorkspace(page, section, `${route} ${width}`)
           await page.screenshot({ path: path.join(directory, `${route}-initial.png`), fullPage: true })
           await fillScenario(page, section, route)
-          await section.locator('.cx-back').first().focus()
+          await section.locator('.cx-back, .giro-back').first().focus()
           await page.evaluate(() => window.scrollTo(0, 0))
           await settleLayout(page)
           await assertWorkspace(page, section, `${route} preenchida ${width}`)

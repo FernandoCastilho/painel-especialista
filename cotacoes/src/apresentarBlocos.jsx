@@ -203,7 +203,7 @@ const FERIADOS = [
 // Memórias de cálculo, tabelas de parcelas e planilhas ficam de fora nos dois modos (regras em Apresentar.css).
 const calculadora = ([view, nome, dica, fonte = 'simulação do painel, sem valor de proposta']) => ({
   id: `calc-${view}`, grupo: 'calculadoras', label: nome, dica, titulo: nome, fonte, classe: `sl-calc sl-calc-${view}`, semAjuste: true,
-  Corpo: ({ ctx }) => <CalculadoraSlide><Calculadora view={view} onView={nada} quotes={ctx.quotes} /></CalculadoraSlide>,
+  Corpo: ({ ctx }) => <CalculadoraSlide><Calculadora view={view} onView={nada} quotes={ctx.quotes} apresentacao /></CalculadoraSlide>,
 })
 const CALCULADORAS = [
   ['giro', 'Capital de Giro', 'Parcelas, juros e total a pagar'],

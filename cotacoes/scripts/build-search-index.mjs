@@ -24,7 +24,7 @@ export const SEARCH_PAGES = {
   'RecoveryHistoryPanel.jsx':['cenarios/recuperacao','Recuperação judicial'], 'Inadimplencia.jsx':['cenarios/inadimplencia','Inadimplência PF e PJ'], 'MarketContext.jsx':['cenarios/commodities','Commodities e atividade'],
   'Outros.jsx':['cenarios/inflacao','Inflação e fiscal'], 'Indexadores.jsx':['cenarios/indexadores','Indexadores'],
   'InflacaoPesos.jsx':['cenarios/inflacao','Inflação: o que pesa'], 'Bndes.jsx':['bndes','BNDES'], 'Setores.jsx':['setores','Setores e insumos'],
-  'BndesLcdCap.jsx':['calculadora/bndes-selic-lcd','BNDES Selic capitalizada + LCD'], 'Calculadora.jsx':['calculadora/giro','Capital de Giro'], 'Feriados.jsx':['feriados','Feriados'], 'News.jsx':['noticias','Notícias'],
+  'BndesLcdCap.jsx':['calculadora/bndes-selic-lcd','BNDES Selic capitalizada + LCD'], 'CapitalDeGiro.jsx':['calculadora/giro','Capital de Giro'], 'Feriados.jsx':['feriados','Feriados'], 'News.jsx':['noticias','Notícias'],
   'ReformaTributaria.jsx':['resumo','Notícias do Mercado'], 'Aprender.jsx':['aprender','Aprender'],
   'ConceitoDiario.jsx':['aprender','Conceito do dia'],
   'AlertaVariacao.jsx':['resumo','Alerta de variação'], 'IpcaGrupoChart.jsx':['cenarios/inflacao','IPCA por grupos'],
