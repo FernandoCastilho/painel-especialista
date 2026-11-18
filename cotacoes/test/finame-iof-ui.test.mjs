@@ -189,3 +189,25 @@ test('parcelas compactas comparam A e B pela mesma data sem recalcular valores',
   // Na comparação, a composição do custo fica na tabela principal: o quadro separado não se repete.
   assert.equal(nodes(render.value).some(node => node.props?.title === 'Composição do resultado'), false)
 })
+
+test('cotação destaca taxa final e CET anual e mensal, reutilizando resultados', async t => {
+  const { render, change, presentation } = await setup(t)
+  const { nf, nbr5891 } = await import('../src/format.js')
+  const pct = (value, decimals) => `${nf(nbr5891(value, decimals), decimals)}%`
+  const row = label => nodes(render.value).find(node => node.type === 'tr' && nodes(node).some(child => child.type === 'th' && text(child).trim().startsWith(label)))
+  const initial = presentation().result
+  assert.ok(text(row('Taxa final')).includes(pct(initial.taxa, 2) + ' a.a.'))
+  assert.ok(text(row('Taxa final')).includes(pct(initial.taxaMensal, 3) + ' a.m.'))
+  const cetRow = text(row('CET estimado'))
+  assert.match(cetRow, /a\.a\. · .*a\.m\./)
+  // Mesmos valores mensais já presentes no detalhamento, agora no resumo.
+  const cetDetail = nodes(render.value).find(node => node.props?.className === 'fm-kpi' && text(node).startsWith('CET estimado'))
+  const monthly = cetRow.match(/· (.+? a\.m\.)/)[1]
+  assert.ok(text(cetDetail).includes(monthly))
+  await change('fm-compare', true)
+  for (const alternative of presentation().comparison.alternatives) {
+    assert.ok(text(row('Taxa final')).includes(pct(alternative.result.taxaMensal, 3) + ' a.m.'))
+    assert.ok(text(row('Taxa final')).includes(pct(alternative.result.taxa, 2) + ' a.a.'))
+  }
+  assert.equal((text(row('CET estimado')).match(/a\.m\./g) || []).length, 2)
+})
