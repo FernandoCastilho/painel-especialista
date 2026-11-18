@@ -7,16 +7,10 @@
   --cd-amber:#f5a524;
 }
 
-/* Cotação ao lado dos dados no computador largo; abaixo deles nas telas menores. */
+/* Resultado abaixo dos quadros de entrada, centralizado (pedido de Fernando, 18/11/2026): na coluna lateral com rolagem
+   própria, a tela do notebook (1366 × 768) escondia parte do resultado. Referência de conferência: notebook. */
 :root[data-theme] body .cx.cd-pattern .cd-layout { display:grid; gap:20px; min-width:0; }
-@media (min-width:1200px) {
-  :root[data-theme] body .cx.cd-pattern .cd-layout { grid-template-columns:minmax(0,1fr) minmax(380px,420px); align-items:start; }
-  :root[data-theme] body .cx.cd-pattern .cd-results { position:sticky; top:88px; }
-  /* A cotação rola por dentro, com a borda laranja e o título sempre à vista. */
-  :root[data-theme] body .cx.cd-pattern .cd-quote { max-height:calc(100vh - 100px); overflow:auto; overscroll-behavior:contain; }
-  :root[data-theme] body .cx.cd-pattern .cd-quote > header { position:sticky; top:0; z-index:1; }
-}
-:root[data-theme] body .cx.cd-pattern .cd-results { min-width:0; }
+:root[data-theme] body .cx.cd-pattern .cd-results { min-width:0; width:100%; max-width:1040px; margin:0 auto; }
 
 /* Quadros de entrada: faixa azul-marinho, título branco e uma linha laranja (sem barra laranja à esquerda). */
 :root[data-theme] body .cx.cd-pattern .cd-input { overflow:hidden; }
@@ -42,7 +36,7 @@
 :root[data-theme] body .cx.cd-pattern .cd-quote > header { border-bottom:0; }
 :root[data-theme] body .cx.cd-pattern .cd-status:empty { display:none; }
 :root[data-theme] body .cx.cd-pattern .cd-status > .cd-notice { margin:12px; }
-:root[data-theme] body .cx.cd-pattern .cd-quote .cd-result { display:flex; flex-direction:column; gap:12px; padding:12px; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-result { display:flex; flex-direction:column; gap:12px; padding:16px; }
 
 /* a. Resposta principal */
 :root[data-theme] body .cx.cd-pattern .cd-answer-main { display:flex; flex-direction:column; gap:2px; padding:12px 14px; border:1px solid #34507f; border-radius:10px; background:var(--cd-navy); color:#fff; }
@@ -68,7 +62,7 @@
 :root[data-theme] body .cx.cd-pattern .cd-quote .cd-memory summary { display:flex; align-items:center; min-height:32px; font-size:.85rem; }
 
 /* Frase para o cliente: depois dos números. */
-:root[data-theme] body .cx.cd-pattern .cd-phrase-box { margin:0 12px 12px; border:1px solid var(--bw-line); border-radius:10px; }
+:root[data-theme] body .cx.cd-pattern .cd-phrase-box { margin:0 16px 16px; border:1px solid var(--bw-line); border-radius:10px; }
 :root[data-theme] body .cx.cd-pattern .cd-phrase-box h4 { margin:0; padding:8px 12px; color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--bw-line); }
 :root[data-theme] body .cx.cd-pattern .cd-phrase-box .cd-phrase { padding:10px 12px; font-size:.85rem; line-height:1.55; }
 
@@ -76,4 +70,15 @@
   :root[data-theme] body .cx.cd-pattern .cd-answer-main b { font-size:1.6rem; }
   :root[data-theme] body .cx.cd-pattern .cd-quote .cd-highlight { grid-template-columns:1fr 1fr; }
   :root[data-theme] body .cx.cd-pattern .cd-quote .cd-kpis b { font-size:.95rem; }
+}
+
+/* Resultado centralizado, abaixo dos quadros (vem por último para valer sobre as regras de coluna única acima). */
+@media (min-width:900px) {
+  /* Resposta e números lado a lado; os dois quadros de detalhe lado a lado; memória e frase na largura toda. */
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; align-items:start; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > :is(.cd-answer, .cd-warn, .cd-memory) { grid-column:1 / -1; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-answer-main { align-self:stretch; justify-content:center; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > .cd-card { align-self:stretch; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > .cd-highlight { align-self:stretch; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > .cd-highlight > div { justify-content:center; }
 }
