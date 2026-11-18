@@ -1,5 +1,5 @@
 /* Direção de arte, etapa 1 (docs/revisao-arte-2026-11-17.md): cabeçalho e tela Mercado no tema escuro, mais as regras de movimento.
-   Carregado por último. O que troca cor ou forma vale só no tema escuro (o claro fica como estava); disposição e movimento valem nos dois.
+   Carregado por último. Vale nos dois temas (o claro entrou na etapa 4, em 18/11/2026); as cores vêm dos tokens de cada tema.
    Âmbar só para a marca e para o que está selecionado; números e títulos em branco.
    As calculadoras não entram (decisão de 17/11/2026) e os slides de Apresentar também não: as regras do Mercado ficam presas a .terminal-desk. */
 
@@ -7,24 +7,23 @@
 @media (min-width: 1000px) {
   .topbar-tabs { position: relative; }
   .topbar-mark { position: absolute; left: 0; top: 0; height: 2px; border-radius: 2px 2px 0 0; background: var(--amber); pointer-events: none; }
-  :root[data-theme="light"] .topbar-mark { display: none; } /* no claro, a aba aberta continua com o fundo cheio */
 
-  :root:not([data-theme="light"]) .topbar-brand { gap: 8px; background: transparent; color: var(--fg); }
-  :root:not([data-theme="light"]) .topbar-brand::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--amber); box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 70%, transparent); }
-  :root:not([data-theme="light"]) .topbar-tabs button { border-right-color: transparent; color: var(--mut); font: 500 .8125rem/1 var(--sans); letter-spacing: 0; text-transform: none; }
-  :root:not([data-theme="light"]) .topbar-tabs button:hover { background: transparent; color: var(--fg); }
-  :root:not([data-theme="light"]) .topbar-tabs button.on { background: transparent; color: var(--fg); }
-  :root:not([data-theme="light"]) .topbar-tabs button.on i { color: var(--mut); }
+  :root .topbar-brand { gap: 8px; background: transparent; color: var(--fg); }
+  :root .topbar-brand::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 2px; background: var(--brand-fill, var(--amber)); box-shadow: 0 0 12px color-mix(in srgb, var(--brand-fill, var(--amber)) 70%, transparent); }
+  :root .topbar-tabs button { border-right-color: transparent; color: var(--mut); font: 500 .8125rem/1 var(--sans); letter-spacing: 0; text-transform: none; }
+  :root .topbar-tabs button:hover { background: transparent; color: var(--fg); }
+  :root .topbar-tabs button.on { background: transparent; color: var(--fg); }
+  :root .topbar-tabs button.on i { color: var(--mut); }
 }
 /* Faixa estreita em que a marca fica em duas linhas (ThemeControl.css): sem o quadradinho, para não empilhar. */
-@media (min-width: 1000px) and (max-width: 1199px) { :root:not([data-theme="light"]) .topbar-brand::before { display: none; } }
+@media (min-width: 1000px) and (max-width: 1199px) { :root .topbar-brand::before { display: none; } }
 /* Uma linha só de 1280 a 1920 px: entre 1300 e 1599 o estado dos dados mostra o ponto e a hora (o texto completo fica na dica
    e na linha de consulta do Mercado), como já acontecia abaixo de 1300. */
 @media (min-width: 1300px) and (max-width: 1599px) {
   .topbar-feed:not(.err) { font-size: 0; }
   .topbar-feed b { font-size: .75rem; }
   .topbar-feed span { margin-right: 7px; }
-  :root:not([data-theme="light"]) .term-head .topbar-tabs > button { padding-inline: 9px; }
+  :root .term-head .topbar-tabs > button { padding-inline: 9px; }
 }
 
 /* ===== Mercado: a tela abre pelo número ===== */
@@ -34,67 +33,80 @@
 .terminal-desk .kpi-block > .holiday-notice { margin: 8px 0 0; }
 .terminal-desk .kpi-block > .insight-aprender { margin: 8px 0 0; }
 
-:root:not([data-theme="light"]) .terminal-desk .kpi-title { color: var(--mut); }
-:root:not([data-theme="light"]) .terminal-desk .kpi { padding: 12px 14px; border-radius: var(--r-card); }
-:root:not([data-theme="light"]) .terminal-desk .kpi::before { display: none; }
-:root:not([data-theme="light"]) .terminal-desk .kpi:hover { background: var(--raised); border-color: color-mix(in srgb, var(--fg) 16%, transparent); }
-:root:not([data-theme="light"]) .terminal-desk .kpi:focus-visible { outline-offset: 2px; }
-:root:not([data-theme="light"]) .terminal-desk .insight-aprender { border-left-color: var(--line); background: var(--card); }
-:root:not([data-theme="light"]) .terminal-desk .insight-aprender b { color: var(--fg); }
-:root:not([data-theme="light"]) .terminal-desk .insight-aprender .linklike { color: var(--fg); }
-:root:not([data-theme="light"]) .terminal-desk .insight-aprender .linklike:hover { color: var(--amber); }
-:root:not([data-theme="light"]) .terminal-desk .holiday-notice { border-left-color: var(--line); }
+:root .terminal-desk .kpi-title { color: var(--mut); }
+:root .terminal-desk .kpi { padding: 12px 14px; border-radius: var(--r-card); }
+:root .terminal-desk .kpi::before { display: none; }
+:root .terminal-desk .kpi:hover { background: var(--raised); border-color: color-mix(in srgb, var(--fg) 16%, transparent); }
+:root .terminal-desk .kpi:focus-visible { outline-offset: 2px; }
+:root .terminal-desk .insight-aprender { border-left-color: var(--line); background: var(--card); }
+:root .terminal-desk .insight-aprender b { color: var(--fg); }
+:root .terminal-desk .insight-aprender .linklike { color: var(--fg); }
+:root .terminal-desk .insight-aprender .linklike:hover { color: var(--amber); }
+:root .terminal-desk .holiday-notice { border-left-color: var(--line); }
 
 /* Quadro "Mercado hoje": títulos e nomes em branco; o âmbar fica com o que está selecionado. */
-:root:not([data-theme="light"]) .terminal-desk .market-terminal .terminal-titlebar h2 { color: var(--fg); }
-:root:not([data-theme="light"]) .terminal-desk .compare-trigger { border-color: var(--line); color: var(--fg); }
-:root:not([data-theme="light"]) .terminal-desk .compare-trigger:hover { border-color: var(--amber); }
-:root:not([data-theme="light"]) .terminal-desk .market-terminal .market-open b { color: var(--fg); }
-:root:not([data-theme="light"]) .terminal-desk .market-terminal .market-open .market-state { color: var(--mut); }
-:root:not([data-theme="light"]) .terminal-desk .market-terminal .market-open .market-state:not(.is-neutral) { color: var(--amber); } /* dado atrasado em pleno horário de coleta: é aviso */
+:root .terminal-desk .market-terminal .terminal-titlebar h2 { color: var(--fg); }
+:root .terminal-desk .compare-trigger { border-color: var(--line); color: var(--fg); }
+:root .terminal-desk .compare-trigger:hover { border-color: var(--amber); }
+:root .terminal-desk .market-terminal .market-open b { color: var(--fg); }
+:root .terminal-desk .market-terminal .market-open .market-state { color: var(--mut); }
+:root .terminal-desk .market-terminal .market-open .market-state:not(.is-neutral) { color: var(--amber); } /* dado atrasado em pleno horário de coleta: é aviso */
 
 /* Espera com a forma do conteúdo: quadros vazios com um brilho que passa, no lugar de um texto. Só existe enquanto as cotações carregam. */
 .kpi-espera { min-height: 92px; cursor: default; background: linear-gradient(100deg, var(--card) 30%, color-mix(in srgb, var(--amber) 10%, var(--card)) 50%, var(--card) 70%); background-size: 220% 100%; }
 .kpi-espera::before { display: none; }
 @media (min-width: 1000px) { .kpis-espera > :nth-child(6) { display: none; } }
 
-/* ===== Etapas 2 e 3: Juros, Cenários, BNDES, Setores, Bancos, Aprender, Notícias e Feriados (tema escuro) =====
+/* ===== Etapas 2 e 3: Juros, Cenários, BNDES, Setores, Bancos, Aprender, Notícias e Feriados =====
    Mesmas regras do Mercado: títulos e nomes em branco, sem maiúsculas espaçadas; o âmbar fica com a aba aberta, o que está
    selecionado e os avisos (⚠, dado atrasado). Setas de comparação (acima/abaixo do Focus, do mês anterior) em branco: são
    posição, não alerta. Tema claro, demais telas e slides ficam como estavam. */
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .top h1 { color: var(--fg); font: 700 1.375rem/1.2 var(--sans); letter-spacing: -.01em; text-transform: none; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .top h1::after { display: none; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h2, section.macro > h2, .ctx-head > h2, .desk-panel > header h2) { color: var(--fg); font: 600 1.125rem/1.3 var(--sans); letter-spacing: 0; text-transform: none; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.infl > h3, .outros section > h3, .cen-section > h3) { color: var(--fg); }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h2, section.macro > h2, .ctx-head > h2)::after { display: none; } /* sem traço: as outras seções destas telas não têm */
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .cen-nav button { font: 500 .8125rem/1 var(--sans); letter-spacing: 0; text-transform: none; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .cen-nav button.on { color: var(--fg); border-bottom-color: var(--amber); font-weight: 600; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open b { color: var(--fg); }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open b span { color: var(--mut); }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open:hover b { color: var(--amber); }
-:root:not([data-theme="light"]) main.app[data-tab="cenarios"] :is(.scenarios, .infl) .fm:is(.up, .down) { color: var(--fg); }
-:root:not([data-theme="light"]) main.app[data-tab="cenarios"] .infl-sig:is(.pressure, .relief) { color: var(--fg); }
-:root:not([data-theme="light"]) main.app[data-tab="cenarios"] :is(.idx-defs dt, td.num) { color: var(--fg); }
-:root:not([data-theme="light"]) main.app[data-tab="cenarios"] .idx-link { color: var(--fg); }
-:root:not([data-theme="light"]) main.app[data-tab="cenarios"] .idx-link:hover { color: var(--amber); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .top h1 { color: var(--fg); font: 700 1.375rem/1.2 var(--sans); letter-spacing: -.01em; text-transform: none; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .top h1::after { display: none; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h2, section.macro > h2, .ctx-head > h2, .desk-panel > header h2) { color: var(--fg); font: 600 1.125rem/1.3 var(--sans); letter-spacing: 0; text-transform: none; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.infl > h3, .outros section > h3, .cen-section > h3) { color: var(--fg); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h2, section.macro > h2, .ctx-head > h2)::after { display: none; } /* sem traço: as outras seções destas telas não têm */
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .cen-nav button { font: 500 .8125rem/1 var(--sans); letter-spacing: 0; text-transform: none; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .cen-nav button.on { color: var(--fg); border-bottom-color: var(--amber); font-weight: 600; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open b { color: var(--fg); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open b span { color: var(--mut); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open:hover b { color: var(--amber); }
+:root main.app[data-tab="cenarios"] :is(.scenarios, .infl) .fm:is(.up, .down) { color: var(--fg); }
+:root main.app[data-tab="cenarios"] .infl-sig:is(.pressure, .relief) { color: var(--fg); }
+:root main.app[data-tab="cenarios"] :is(.idx-defs dt, td.num) { color: var(--fg); }
+:root main.app[data-tab="cenarios"] .idx-link { color: var(--fg); }
+:root main.app[data-tab="cenarios"] .idx-link:hover { color: var(--amber); }
 /* Etapa 3 */
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h1, .fer-month h2, .learn-list-title) { color: var(--fg); font: 600 1.125rem/1.3 var(--sans); letter-spacing: 0; text-transform: none; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h1, .fer-month h2)::after { display: none; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .learn-list-title { font-size: .9375rem; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .seg.bn-fam button { font: 500 .8125rem/1 var(--sans); letter-spacing: 0; text-transform: none; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .seg.bn-fam button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--amber); font-weight: 600; }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(td.num, .bn-card-v, .learn-links strong, .learn-topic span) { color: var(--fg); }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(tr.bn-on td.num, .bn-card.bn-on .bn-card-v) { color: var(--amber); } /* a série ou o quadro selecionado */
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.bn-official-links a, .learn-link, .banks-method a, .linklike, .km-coverage > summary) { color: var(--fg); }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.bn-official-links a, .learn-link, .banks-method a, .linklike):hover { color: var(--amber); }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .bn-official-links a:hover { border-color: var(--amber); }
-:root:not([data-theme="light"]) main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .central-kicker { color: var(--mut); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h1, .fer-month h2, .learn-list-title) { color: var(--fg); font: 600 1.125rem/1.3 var(--sans); letter-spacing: 0; text-transform: none; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.history-head h1, .fer-month h2)::after { display: none; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .learn-list-title { font-size: .9375rem; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .seg.bn-fam button { font: 500 .8125rem/1 var(--sans); letter-spacing: 0; text-transform: none; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .seg.bn-fam button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--amber); font-weight: 600; }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(td.num, .bn-card-v, .learn-links strong, .learn-topic span) { color: var(--fg); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(tr.bn-on td.num, .bn-card.bn-on .bn-card-v) { color: var(--amber); } /* a série ou o quadro selecionado */
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.bn-official-links a, .learn-link, .banks-method a, .linklike, .km-coverage > summary) { color: var(--fg); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) :is(.bn-official-links a, .learn-link, .banks-method a, .linklike):hover { color: var(--amber); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .bn-official-links a:hover { border-color: var(--amber); }
+:root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .central-kicker { color: var(--mut); }
 /* Juros: os quadros entram em sequência, como os do Mercado (só na abertura da tela; com "reduzir movimento", aparecem prontos). */
 @media (prefers-reduced-motion: no-preference) {
   main.app[data-tab="juros"] .juros-grafico { animation: kpi-entra var(--t-slow) var(--ease-out) backwards; }
   main.app[data-tab="juros"] .juros-grafico:nth-child(2) { animation-delay: 55ms; }
   main.app[data-tab="juros"] .juros-grafico:nth-child(3) { animation-delay: 110ms; }
   main.app[data-tab="juros"] .juros-grafico:nth-child(n+4) { animation-delay: 165ms; }
+}
+
+/* Links: texto normal (o sublinhado de cada lista continua o mesmo) e âmbar ao passar o cursor, nos dois temas.
+   Antes eram dourados no escuro e marrons no claro. As calculadoras ficam como estavam. */
+:root main.app:not(.app-calculators) a, :root main.app:not(.app-calculators) a:visited { color: var(--fg); }
+:root main.app:not(.app-calculators) a:hover { color: var(--amber); }
+/* Cabeçalho de dia nas listas de notícias ("Hoje · 18/11"): texto normal, como os demais títulos. */
+:root main.app .reforma-day { color: var(--fg); }
+
+/* Campos de preenchimento das calculadoras (valor, taxa, prazo…): 36 px de altura no computador, como já era no Finame desde
+   11/11/2026 (pedido de 18/11/2026: ganhar espaço). No celular e no tablet ficam com 44 px, tamanho confortável para o dedo. */
+@media (min-width: 1001px) {
+  html:root[data-theme] body main.app.app-calculators :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]), select) { height: 36px; min-height: 36px; padding-top: 4px; padding-bottom: 4px; }
 }
 
 /* ===== Ampliar: um ícone só, pequeno, no canto de cima à direita de cada gráfico ou quadro =====
