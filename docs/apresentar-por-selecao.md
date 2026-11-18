@@ -159,3 +159,72 @@ Não conferido nesta rodada: o filtro do tema madeira com manchetes reais. O amb
 Notícias; o filtro foi testado com manchetes de exemplo. A primeira coleta real acontece na publicação, e o resultado
 precisa ser lido no site depois dela. Com mais de 24 meses colados, os rótulos do gráfico do Faturamento ficam
 pequenos no slide; os números principais estão na tabela e no resumo por ano.
+
+## Terceira rodada (18/11/2026): tema madeira sem descarte por palavra
+Decisão do Fernando, literal: "Não pode nada ficar fora por conta de palavras como "desabon", por exemplo. Pode incluir
+tudo, porque aqui é educativo." (Ele se referia a "desabam", do exemplo "Exportações de madeira desabam 40%".)
+- O filtro do tema "Madeira e base florestal" deixa de descartar matérias por palavras do título (desaba, tomba,
+  benefícios, Portugal, apreensão, polícia, ilegal, incêndio, acidente, objetos de madeira e outras) e deixa de exigir
+  palavra de contexto econômico. Entra toda matéria que cite o setor, inclusive queda de preço, acidente, fiscalização e
+  notícia de outros países.
+- Outros sentidos da palavra não descartam a matéria. Expressões como "Ilha da Madeira", "Rio Madeira", "do Madeira",
+  "Deputado Madeira" ou "Prefeitura de Serraria" são apagadas do título antes de procurar o setor: se o título ainda
+  citar madeira, serraria, madeireiro, MDF, pinus ou outro termo do setor, a matéria entra ("Madeireiros escoam produção
+  pelo Rio Madeira" entra; "Hidrelétricas do Madeira reduzem produção" não). O MDF-e (documento fiscal) não conta como
+  MDF. Regra em `relevanteTema`, campo `homonimos`, usado só por este tema.
+- Efeito esperado: mais matérias, inclusive de consumo ligado à madeira (piso, lenha, móveis planejados). Dá para tirar
+  do slide as que não servirem em "Escolher notícias". Também passam títulos sobre a ilha que não usam as expressões
+  acima, como "Madeira: aeroporto fecha por causa do vento", "hotel na Madeira" e jogo do clube Nacional da Madeira.
+- Conferência do filtro: as 13 manchetes reais já coletadas continuam entrando; nas baterias do Auditor, todas as
+  manchetes legítimas do setor entram, inclusive as que citam o rio, a ilha ou o "porto Santos" (ficam fora só duas sem
+  palavra do setor: uma de celulose e uma em inglês).
+- Os demais temas de notícias continuam com seus filtros; esta decisão vale só para madeira.
+
+### Parecer do Auditor nesta rodada
+Primeiro parecer: **Insuficiente** (81,2), no commit `fc50e0d`, com o CI ainda rodando. Achados: as exclusões de rio,
+ilha e "Nacional da Madeira" ainda descartavam matéria do setor ("Madeireiros escoam produção pelo Rio Madeira", "Feira
+Nacional da Madeira", "porto Santos"); esta nota dizia "só sai o que não é madeira" e citava Fernando sem o literal.
+Correção: exclusão trocada pela regra dos homônimos acima, "Porto Santo" com fim de palavra, "Nacional da Madeira"
+retirado, testes com os títulos do Auditor e nota corrigida.
+
+## Quarta rodada (18/11/2026): palavras de mercado mais amplas nos demais temas
+Pergunta do Fernando: qual a melhor sugestão "para não poluir também, porque a ideia é trazer as coisas o mais assertivas
+possível". Decisão: opção 1, "Sim, ampliar e publicar".
+- Os temas de setor e de insumo (indústria, comércio, serviços, telecom, veículos pesados, cobre, alumínio, aço, minério,
+  petróleo, trigo, açúcar, carne, algodão, carvão, cacau, café e fertilizantes) continuam exigindo, além do assunto, uma
+  palavra de mercado no título. É o que mantém fora o uso comum da palavra ("câmera cobre o show", receita de bolo de
+  trigo, "como fazer o café perfeito").
+- A lista de palavras de mercado ganhou uma parte comum a todos esses temas (`MERCADO_AMPLO` em
+  `cotacoes/scripts/temas-lib.mjs`), com cada palavra presa ao sentido de mercado: demissão, férias coletivas, abertura ou
+  fechamento de fábrica, mineradora, usina de açúcar ou siderúrgica, investimento, lucro, prejuízo líquido, faturamento,
+  balanço trimestral, sobretaxa, tarifaço ou tarifa de importação, antidumping, aquisição, fusão com empresa, cotação,
+  exportação, importação, financiamento, linha de crédito ou crédito rural, "recorde de exportação/vendas/produção", "capacidade
+  produtiva", "amplia a produção", nova fábrica ou unidade e "abre/fecha/corta vagas". Palavra solta como "recorde",
+  "capacidade", "balanço", "tarifa" ou "crédito" não conta. Safra e colheita contam só nos temas de insumo (em veículos
+  pesados, "caminhão com safra de milho tomba" é acidente).
+- Nas listas próprias e na lista comum, "importa" não pega mais "importante" nem "não importa", e "invest" não pega
+  "investiga" nem "investe contra" (o defeito de "importante" já existia em trigo, petróleo, carvão, fertilizantes e
+  alumínio). "Brasil importa mais trigo" continua valendo.
+- Minério de ferro: "Vale do Silício" e outros vales com nome próprio não contam como a mineradora Vale. Aço: "nervos de
+  aço", "homem de aço" e expressões parecidas não contam.
+- Veículos pesados não tem mais lista de palavras que derrubam (acidente, roubo, morte). Como o título já precisa trazer
+  assunto de mercado, "Acidente com ônibus deixa feridos" continua fora e "Roubo de carga encarece o frete de caminhões"
+  passa a entrar.
+- Defeito antigo corrigido: o tema Café não reconhecia "café" quando a palavra vinha seguida de espaço ou pontuação
+  (a marca de fim de palavra não funciona depois de letra acentuada). Só entravam títulos com "arábica", "conilon" etc.
+  O plural "cafés" continua reconhecido.
+- Moedas e eleições nos EUA seguem só com a lista própria; madeira segue sem filtro de mercado (terceira rodada).
+- Conferência: as 351 matérias reais coletadas hoje em todos os temas continuam entrando; testes novos em
+  `cotacoes/test/temas-mercado-amplo.test.mjs` com manchetes que devem entrar e manchetes de uso comum que devem ficar fora.
+- Passam a entrar com a lista comum, por usar o nome do tema em outro sentido junto com uma palavra de mercado (exemplos
+  de teste, que ficavam fora antes): "Fábrica de Talentos abre vagas para jovens" (Indústria), "Bancos de praça:
+  prefeitura investe em reforma" e "Tecnologia: governo investe em escolas" (Serviços), "Plano cobre financiamento de
+  cirurgia" (Cobre), "Usina de ideias: café com empreendedores" (Café). Também entra "Roubo de caminhão com carga de
+  exportação" (Veículos pesados), porque traz palavra de mercado. São casos raros e saem do slide em "Escolher notícias".
+- Primeiro parecer do Auditor: **Requer correção** (72,0), no commit `888abe8`: a lista comum sem limite de palavra
+  deixava entrar "Café faz bem? Estudo importante…" e "Polícia investiga acidente com ônibus…", e o plural "cafés" tinha
+  deixado de ser reconhecido. Segundo parecer: **Requer correção** (80,0), no commit `c4397e8`: "não importa" e "PM
+  investe contra" ainda entravam, "crédito" e "safra" soltos abriam poluição, e esta nota dizia "como antes" sobre casos
+  novos. Corrigido como descrito acima, com essas manchetes nos testes.
+- Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
+  depois da publicação, principalmente cobre, alumínio, carvão e café.

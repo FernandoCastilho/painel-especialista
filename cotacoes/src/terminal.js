@@ -31,6 +31,7 @@ const TAB = {
   TLPEXIGIVEL: ['calculadora', 'bndes-tlp-exigivel'], CREDITOTFB: ['calculadora', 'bndes-credito-tfb'],
   COMPARADORDECREDITO: ['calculadora', 'comparador-credito'],
   EMPRESTIMO4131: ['calculadora', 'emprestimo-4131'], LEI4131: ['calculadora', 'emprestimo-4131'], 4131: ['calculadora', 'emprestimo-4131'],
+  CDIDOLAR: ['calculadora', 'cdi-dolar'], CDIXDOLAR: ['calculadora', 'cdi-dolar'], CDIVSDOLAR: ['calculadora', 'cdi-dolar'],
   OPERACAODI: ['calculadora', 'operacao-di'], OPERACAOXDI: ['calculadora', 'operacao-di'], OPXDI: ['calculadora', 'operacao-di'],
   CALC: ['calculadora'], CALCULADORA: ['calculadora'], CALCULADORAS: ['calculadora'], GIRO: ['calculadora', 'giro'], DESCONTO: ['calculadora', 'analise-desconto'], ANALISEDEDESCONTO: ['calculadora', 'analise-desconto'], FATURAMENTO: ['calculadora', 'faturamento'], ARVORE: ['calculadora', 'arvore-credito'], ARVOREDECREDITO: ['calculadora', 'arvore-credito'], FINIMP: ['calculadora', 'finimp'], FINAME: ['calculadora', 'finame-materiais'], FINAMEMATERIAIS: ['calculadora', 'finame-materiais'],
   NEWS: ['noticias'], NOTICIAS: ['noticias'], AGENDA: ['noticias'],

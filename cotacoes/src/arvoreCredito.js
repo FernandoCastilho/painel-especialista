@@ -36,6 +36,7 @@ const F = {
   facil: fonte('Resolução CVM 232/2025 (regime FÁCIL)', 'https://conteudo.cvm.gov.br/legislacao/resolucoes/anexos/200/resol232.htm', 'busca'),
   res4815: fonte('Resolução 4.815 (recebíveis e duplicatas)', 'https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=4815'),
   res2325: fonte('Resolução CMN 2.325/1996 (garantias)', 'https://www.bcb.gov.br/api/conteudo/app/normativos/exibenormativo?p1=Resolu%C3%A7%C3%A3o&p2=2325'),
+  cnaeCpr: fonte('Lista de CNAEs emitentes de CPR (leitura da lei, a conferir)', 'https://concla.ibge.gov.br/busca-online-cnae.html', 'nc'),
   lei14133: fonte('Lei 14.133/2021 (garantia em contrato público)', 'https://www2.camara.leg.br/legin/fed/lei/2021/lei-14133-1-abril-2021-791222-normaatualizada-pl.html'),
 }
 
@@ -92,7 +93,7 @@ export const OPERACOES = {
     nome: 'FINIMP com proteção cambial',
     resumo: 'Financiamento da importação: o banco paga o fornecedor no exterior e a empresa paga depois, com NDF para travar o câmbio.',
     cobre: 'O valor pago ao fornecedor estrangeiro (bem ou serviço importado).',
-    foraDeCobertura: 'Impostos de importação e despesas locais, na prática do banco. A norma não proíbe financiá-los; é desenho do produto.',
+    foraDeCobertura: 'Impostos de importação e despesas locais costumam ficar de fora; depende do produto de cada instituição. A norma não proíbe financiá-los.',
     impostos: 'Sem IOF de crédito. Se financiar despesa local com recurso que entra no País e prazo médio de até 364 dias, essa parcela paga 3,5% de IOF de câmbio.',
     parcelaAjustavel: false,
     moedaEstrangeira: true,
@@ -116,11 +117,11 @@ export const OPERACOES = {
     parcelaAjustavel: true,
     calculadora: null,
     marca: 'of',
-    fontes: [F.cpr],
+    fontes: [F.cpr, F.cnaeCpr],
     requisito(ctx) {
       if (!cnaeCpr(ctx.cnae)) return 'Atividade (CNAE) fora da lista de emitentes de CPR.'
       if (!ctx.notasCpr) return 'Faltam as notas fiscais validadas para a CPR.'
-      if (ctx.porte === 'micro') return 'O banco não faz CPR para microempresa (regra do banco, não da lei).'
+      if (ctx.porte === 'micro') return 'Microempresa: confirme se a instituição opera CPR com esse porte (a lei não restringe).'
       return null
     },
     avisos: () => ['A lista de CNAEs que habilitam a CPR é leitura da lei, a conferir; confirme a atividade real e o objeto social.'],
@@ -141,7 +142,7 @@ export const OPERACOES = {
       return null
     },
     avisos(ctx) {
-      const a = ['Até 7 anos, com até 2 de carência. Parcela fixa.', 'O BNDES aceita notas de até 12 meses; confirme se o banco trabalha com 11.']
+      const a = ['Até 7 anos, com até 2 de carência. Parcela fixa.']
       if (ctx.cnae && /^0[1-3]/.test(soDigitos(ctx.cnae))) a.push('Atividade principal agro: o recurso só pode ser usado em agro.')
       if (UF_NORTE_NORDESTE.includes(ctx.uf)) a.push('Norte e Nordeste: taxa do BNDES menor nesta linha.')
       return a
@@ -412,7 +413,7 @@ export function montarFolha(entrada) {
 export function observacoesPerfil(ctx) {
   const o = []
   const fundo = FUNDO_REGIONAL[ctx.uf]
-  if (fundo) o.push(`${ctx.uf} está na área do ${fundo} (fundo constitucional regional, isento de IOF). Consulte as condições com o banco administrador.`)
+  if (fundo) o.push(`${ctx.uf} está na área do ${fundo} (fundo constitucional regional, isento de IOF pelo Decreto 6.306/2007, art. 9º, III). Consulte as condições com o banco administrador.`)
   if (ctx.uf === 'MG' || ctx.uf === 'ES') o.push('Em MG e ES, alguns municípios estão na área do FNE (Sudene); a lista é por município.')
   if (ctx.regime === 'simples' && ctx.valor > 0 && ctx.valor <= 30_000) o.push('Simples Nacional com operação de até R$ 30 mil: IOF de crédito diário menor (0,00274%).')
   if (ctx.exporta && ctx.importa) o.push('A empresa exporta e importa: a receita em moeda estrangeira pode pagar a dívida da importação. Desde 01/10/2026, a exportadora pode ter conta em moeda estrangeira no Brasil (Res. BCB 575/2026).')

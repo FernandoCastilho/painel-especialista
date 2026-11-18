@@ -12,7 +12,7 @@ Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECRE
 
 ## Regras usadas
 
-- Ordem das folhas, regra do giro no gap de caixa (só acima de 12 meses), parcela ajustável (4131, capital de giro, CPR e nota comercial), CPR fora para microempresa (regra do banco) e giro do BNDES com aviso nos dividendos: decisões e relatos de Fernando, em `arvore-decisao-credito.md`, seção 10.
+- Ordem das folhas, regra do giro no gap de caixa (só acima de 12 meses), parcela ajustável (4131, capital de giro, CPR e nota comercial), CPR fora para microempresa com motivo neutro na tela ("confirme se a instituição opera CPR com esse porte"), após parecer do Auditor de 18/11/2026 e giro do BNDES com aviso nos dividendos: decisões e relatos de Fernando, em `arvore-decisao-credito.md`, seção 10.
 - Enquadramento e impostos: pesquisa de 18/11/2026, em `arvore-credito-regras-produtos.md`.
 - Código: `cotacoes/src/arvoreCredito.js` (regras, folhas, leitura da tabela, CNPJ) e `cotacoes/src/ArvoreCredito.jsx` (tela).
 
@@ -26,9 +26,9 @@ Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECRE
 
 ## Conferências
 
-- `node --test test/arvore-credito.test.mjs`: 13 testes (ordem das oito folhas, limite de três, motivos de exclusão, regime tributário, CPR e porte, exportação, debênture só S.A., aviso do giro BNDES, fundos regionais, tabela de faturamento, CNPJ, consulta com falhas, tela).
+- `node --test test/arvore-credito.test.mjs`: 13 testes da tela (ordem das oito folhas, limite de três, motivos de exclusão, regime tributário, CPR e porte, exportação, debênture só S.A., aviso do giro BNDES, fundos regionais, tabela de faturamento, CNPJ, consulta com falhas, tela).
 - `scripts/smoke-arvore-credito.cjs`: navegador em 390 e 1440 px, temas claro e escuro, CNPJ com resposta **simulada**, sem rolagem lateral, visão do cliente. Incluído no CI.
-- `npm test` (2.105 testes), `npm run build` e `npm run lint` (0 erros; 5 avisos antigos em outros arquivos).
+- `npm test` (todos os testes do Painel), `npm run build` e `npm run lint` (0 erros; avisos antigos em outros arquivos). Números atualizados em cada PR.
 
 ## Não conferido
 

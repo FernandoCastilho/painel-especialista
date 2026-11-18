@@ -42,10 +42,12 @@ test('gap de caixa: prazo acima de 12 meses tira Conta Garantida e desconto; not
   assert.ok(f.sairam.some((o) => o.id === 'desconto'))
 })
 
-test('CPR: microempresa sai por regra do banco, não da lei', () => {
+test('CPR: microempresa sai da folha com motivo neutro, sem expor política interna', () => {
   const f = ac.montarFolha({ necessidade: 'estoque-nacional', receitaAnual: 300_000, cnae: '0115600', notasCpr: true })
   const cpr = f.sairam.find((o) => o.id === 'cpr')
-  assert.match(cpr.motivo, /regra do banco, não da lei/)
+  assert.match(cpr.motivo, /confirme se a instituição opera CPR/)
+  assert.doesNotMatch(JSON.stringify(f), /regra do banco|prática do banco|banco trabalha com 11/)
+  assert.equal(cpr.fontes.find((x) => /CNAE/.test(x.nome)).marca, 'nc')
   assert.equal(ac.porteBndes(360_000), 'micro')
   assert.equal(ac.porteBndes(360_001), 'pequena')
   assert.equal(ac.porteBndes(300_000_001), 'grande')
