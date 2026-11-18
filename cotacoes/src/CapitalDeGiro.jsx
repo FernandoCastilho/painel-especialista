@@ -148,7 +148,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
               return <div className="giro-cost" key={id}>
                 <span className="giro-cost-label">{label}</span>
                 {id === 'iof' && !financeIof ? <output className="giro-readonly" aria-label="Valor do IOF">{moneyText(result?.iof)}</output> :
-                  <div><MoneyInput id={`cx-${id}`} aria-label={id === 'iof' ? 'IOF financiado da cotação' : `Valor de ${label}`} placeholder={id === 'iof' ? 'Valor da cotação' : undefined} {...fieldError(errorKey, `cx-${id}`)}
+                  <div><MoneyInput id={`cx-${id}`} aria-label={id === 'iof' ? 'IOF financiado da cotação' : `Valor de ${label}`} placeholder={id === 'iof' ? 'Cotação' : undefined} {...fieldError(errorKey, `cx-${id}`)}
                     value={form.costs[id]} onChange={value => change({ costs: { ...form.costs, [id]: value } })} />
                     {errors[errorKey] && <small id={`cx-${id}-err`} className="giro-error" role="alert">{errors[errorKey]}</small>}</div>}
                 <select aria-label={`Forma de pagamento de ${label}`} value={form.timings[id] ? 'financed' : 'upfront'}
