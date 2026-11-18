@@ -5,21 +5,31 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
 // vencimento no próximo dia útil, IOF e TAC na liberação. Recálculo independente do motor (datas ajustadas à mão).
 // Vencimentos dia 6 a partir de 06/12/2026, ajustados à mão: 06/12 dom → 07/12; 06/02/2027 sáb → 08/02 e 09/02 Carnaval → 10/02;
 // 06/03 sáb → 08/03; 06/06 dom → 07/06; 06/11/2027 sáb → 08/11. Dias corridos desde 06/11/2026.
-const giroOracle = (system, principal = 100000, daily = 0.0082) => {
+const giroOracle = (system, principal = 100000, daily = 0.0082, monthly = 0.02) => {
   const days = [31, 61, 96, 122, 151, 181, 213, 242, 273, 304, 334, 367]
   // Sem carência: o dia a mais do 1º vencimento (06/12 domingo → 07/12) é cobrado na própria 1ª parcela.
-  const r = d => Math.pow(1.02, d / 30) - 1
+  const r = d => Math.pow(1 + monthly, d / 30) - 1
   const periods = days.map((d, k) => d - (k ? days[k - 1] : 0))
+  const cents = value => Math.round(Number((value * 100).toPrecision(14))) / 100
   let interest = 0, iof = principal * 0.0038, bal = principal
   const payments = []
-  let pmt = 0
-  if (system === 'price') { let disc = 0, acc = 1; for (const p of periods) { acc /= 1 + r(p); disc += acc } pmt = principal / disc }
+  let pmt = 0, theoretical = principal
+  if (system === 'price') {
+    let disc = 0, acc = 1
+    for (const p of periods) { acc /= 1 + r(p); disc += acc }
+    pmt = principal / disc
+  }
   periods.forEach((p, k) => {
-    const j = bal * r(p), a = system === 'price' ? pmt - j : principal / 12
-    interest += j; bal -= a; iof += a * Math.min(days[k], 365) * daily / 100; payments.push(a + j)
+    const j = cents(bal * r(p))
+    theoretical = system === 'price' ? theoretical * (1 + r(p)) - pmt : principal * (1 - (k + 1) / periods.length)
+    const a = k === periods.length - 1 ? bal : cents(cents(principal - theoretical) - (principal - bal))
+    interest += j
+    bal = cents(bal - a)
+    iof += a * Math.min(days[k], 365) * daily / 100
+    payments.push(cents(a + j))
   })
-  const paid = payments.reduce((s, v) => s + v, 0)
-  return { first: payments[0], last: payments.at(-1), interest, iof, total: paid + iof }
+  const paid = cents(payments.reduce((s, v) => s + v, 0))
+  return { first: payments[0], last: payments.at(-1), interest, iof: cents(iof), total: paid + cents(iof) }
 }
 
 const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\s+/g, ' ')
@@ -78,18 +88,19 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.equal(await iof(), brl(financedFeeIof))
       await sec.getByLabel('Forma de pagamento de IOF').selectOption('financed')
       await simulate()
-      assert.equal(await amount('Saldo financiado'), '—')
-      const quotedIof = sec.getByLabel('IOF financiado da cotação', { exact: true })
-      assert.equal(await quotedIof.getAttribute('aria-invalid'), 'true')
-      await quotedIof.fill('2.450,00')
-      await simulate()
-      assert.equal(await amount('Saldo financiado'), brl(103650))
-      assert.equal(await quotedIof.inputValue(), '2.450,00')
+      // Recálculo independente do IOF com amortização em centavos sobre o saldo bruto.
+      assert.equal(await amount('Saldo financiado'), brl(103266.94))
+      assert.equal(await iof(), brl(2066.94))
       await sec.getByLabel('Forma de pagamento de IOF').selectOption('upfront')
       await sec.getByLabel('Valor de Fee de estruturação').fill('0,00')
       await sec.getByLabel('Valor de Outras despesas').fill('0,00')
       await sec.getByLabel('Amortização', { exact: true }).selectOption('bullet'); await simulate()
       assert.equal(await amount('Pagamento único'), brl(127411.54))
+      await sec.getByLabel('Forma de pagamento de IOF').selectOption('financed'); await simulate()
+      assert.equal(await amount('Saldo financiado'), brl(103490.74))
+      assert.equal(await iof(), brl(3490.74))
+      assert.equal(await amount('Pagamento único'), brl(127411.54085294812 * 103490.74 / 100000))
+      await sec.getByLabel('Forma de pagamento de IOF').selectOption('upfront')
       assert.equal(await sec.getByLabel('Carência', { exact: true }).isDisabled(), true)
       await sec.getByLabel('Amortização', { exact: true }).selectOption('price')
       await sec.getByText('Enquadramento do IOF', { exact: true }).click()
@@ -106,7 +117,8 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       await value.fill('100.000,00')
       await sec.getByLabel('Período da taxa').selectOption('aa')
       await sec.getByLabel('Taxa prefixada', { exact: true }).fill('12,6825'); await simulate()
-      assert.equal(await amount('Primeira parcela'), brl(8893.37))
+      const expectedAnnualPrice = giroOracle('price', 100000, 0.0082, (1 + 12.6825 / 100) ** (1 / 12) - 1)
+      assert.equal(await amount('Primeira parcela'), brl(expectedAnnualPrice.first))
       await sec.getByLabel('Prazo', { exact: true }).fill('0')
       assert.match(await sec.locator('#cx-n-err').innerText(), /prazo em meses/)
       assert.equal(await amount('Primeira parcela'), '—')
@@ -116,7 +128,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.equal(await value.getAttribute('aria-invalid'), 'true')
       await value.fill('100.000,00'); await simulate()
       assert.equal(await sec.locator('[role="alert"]').count(), 0)
-      assert.equal(await amount('Primeira parcela'), brl(8893.37))
+      assert.equal(await amount('Primeira parcela'), brl(expectedAnnualPrice.first))
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
       await sec.getByRole('button', { name: /Calculadoras/ }).click(); await p.waitForURL('**/#calculadora')
       const help = async (title, content, scope = p) => {

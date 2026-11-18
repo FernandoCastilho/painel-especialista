@@ -34,7 +34,7 @@ test('expansion shell renders one copy of results and an explicitly labelled con
 
 test('secondary explanations move to help without hiding essential simulation limitations', async () => {
   const capital = await source('CapitalDeGiro.jsx')
-  assert.match(capital, /<Help title="Capital de Giro: cálculo e premissas">\s*<p>Estimativa prefixada com juros por dias corridos/)
+  assert.match(capital, /<Help title="Capital de Giro: cálculo e premissas">\s*<p>Operação prefixada com juros por dias corridos/)
   const tlp = await source('BndesTlpExigivel.jsx')
   assert.match(tlp, /<p className="status">Projeção de IPCA constante/)
   assert.match(tlp, /<Help title="Composição da TLP exigível">/)

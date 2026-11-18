@@ -36,7 +36,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
     const start = cgToday()
     return { value: '100.000,00', n: '12', rate: '2,00', unit: 'am', system: 'price',
       start, firstDue: cgAddDays(start, 30), praca: PRACA_PADRAO, profile: 'pj', eligible: false,
-      guarantee: GUARANTEES[0], costs: { iof: '', fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }
+      guarantee: GUARANTEES[0], costs: { fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }
   })
   const [dirty, setDirty] = useState(false)
   const change = patch => {
@@ -53,9 +53,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const sumExpenses = financed => expenses.reduce((sum, item) =>
     sum + (!!form.timings[item.id] === financed ? item.parsed.value : 0), 0)
   const financedFees = sumExpenses(true)
-  const financeIof = !!form.timings.iof
-  const quotedIof = financeIof ? parseMoneyInput(form.costs.iof) : null
-  const tax = financeIof ? null : resolveCreditIof({ date: form.start, profile: form.profile, operationValue: principal.value + financedFees, eligible: form.eligible })
+  const tax = resolveCreditIof({ date: form.start, profile: form.profile, operationValue: principal.value + financedFees, eligible: form.eligible })
   const untilFirst = periodDays(form.start, form.firstDue)
   const grace = untilFirst === null ? 0 : Math.max(0, untilFirst - 30)
   const isBullet = form.system === 'bullet'
@@ -64,14 +62,13 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
     n: n >= 1 && n <= 600 ? null : 'Informe o prazo em meses, de 1 a 600.',
     rate: rate !== null && rate <= 1000 ? null : 'Informe uma taxa entre 0% e 1.000%.',
     dates: untilFirst > 0 ? null : 'Informe a liberação e o primeiro vencimento posterior à liberação.',
-    iof: tax && !tax.ok ? tax.error : null,
-    quotedIof: quotedIof && !quotedIof.ok ? (form.costs.iof.trim() ? quotedIof.error : 'Informe o IOF da cotação.') : null,
+    iof: tax.ok ? null : tax.error,
   }
   for (const item of expenses) errors[item.id] = item.parsed.ok ? null : item.parsed.error
   const hasErrors = Object.values(errors).some(Boolean)
   const params = { value: principal.value, n, rate, unit: form.unit, start: form.start, firstDue: form.firstDue,
     profile: form.profile, eligible: form.eligible, fees: sumExpenses(false), financedFees,
-    financeIof, quotedIof: quotedIof?.value, calendars: pracaCalendars(form.praca) }
+    financeIof: !!form.timings.iof, calendars: pracaCalendars(form.praca) }
   const calculation = !dirty && !hasErrors ? giroOperation({ ...params, system: form.system }) : null
   const result = calculation?.ok ? calculation : null
   const moneyText = value => result ? brl(value) : '—'
@@ -87,9 +84,9 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
       <p>Painel do Especialista</p>
       <div><h2 id="calc-h">Capital de giro</h2>
         <Help title="Capital de Giro: cálculo e premissas">
-          <p>Estimativa prefixada com juros por dias corridos na base de 30 dias. O vencimento passa ao próximo dia útil conforme a praça do contrato. No Bullet, o pagamento acontece no último vencimento.</p>
+          <p>Operação prefixada com juros por dias corridos na base de 30 dias. O vencimento passa ao próximo dia útil conforme a praça do contrato. No Bullet, o pagamento acontece no último vencimento.</p>
           <p>Os custos à vista são abatidos na liberação. Custos financiados compõem o saldo e as parcelas. O CET é anual, calculado sobre o fluxo em dias corridos na base de 365 dias. O CET do contrato prevalece.</p>
-          <p>Para IOF à vista, a estimativa usa o valor solicitado e as demais despesas financiadas. Para IOF financiado, informe o valor da cotação. Esse valor entra no saldo e nas parcelas uma única vez.</p>
+          <p>O IOF é calculado pelo principal de cada parcela e pelos dias corridos, com limite de 365 dias. À vista, é abatido na liberação. Quando incorporado ao principal da mesma operação, o IOF integra o saldo financiado e o valor total para o limite do Simples Nacional.</p>
           <p>{PRACA_AJUDA}</p>
         </Help>
       </div>
@@ -143,23 +140,19 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
           </div>
           <div className="giro-costs">
             <div className="giro-cost-head" aria-hidden="true"><span>Despesa</span><span>Valor</span><span>Forma de pagamento</span></div>
-            {EXPENSES.map(({ id, label }) => {
-              const errorKey = id === 'iof' ? 'quotedIof' : id
-              return <div className="giro-cost" key={id}>
-                <span className="giro-cost-label">{label}</span>
-                {id === 'iof' && !financeIof ? <output className="giro-readonly" aria-label="Valor do IOF">{moneyText(result?.iof)}</output> :
-                  <div><MoneyInput id={`cx-${id}`} aria-label={id === 'iof' ? 'IOF financiado da cotação' : `Valor de ${label}`} placeholder={id === 'iof' ? 'Cotação' : undefined} {...fieldError(errorKey, `cx-${id}`)}
-                    value={form.costs[id]} onChange={value => change({ costs: { ...form.costs, [id]: value } })} />
-                    {errors[errorKey] && <small id={`cx-${id}-err`} className="giro-error" role="alert">{errors[errorKey]}</small>}</div>}
-                <select aria-label={`Forma de pagamento de ${label}`} value={form.timings[id] ? 'financed' : 'upfront'}
-                  onChange={event => change({ timings: { ...form.timings, [id]: event.target.value === 'financed' },
-                    ...(id === 'iof' ? { costs: { ...form.costs, iof: '' } } : {}) })}>
-                  <option value="upfront">À vista</option><option value="financed">Financiado</option>
-                </select>
-              </div>
-            })}
+            {EXPENSES.map(({ id, label }) => <div className="giro-cost" key={id}>
+              <span className="giro-cost-label">{label}</span>
+              {id === 'iof' ? <output className="giro-readonly" aria-label="Valor do IOF">{moneyText(result?.iof)}</output> :
+                <div><MoneyInput id={`cx-${id}`} aria-label={`Valor de ${label}`} {...fieldError(id, `cx-${id}`)}
+                  value={form.costs[id]} onChange={value => change({ costs: { ...form.costs, [id]: value } })} />
+                  {errors[id] && <small id={`cx-${id}-err`} className="giro-error" role="alert">{errors[id]}</small>}</div>}
+              <select aria-label={`Forma de pagamento de ${label}`} value={form.timings[id] ? 'financed' : 'upfront'}
+                onChange={event => change({ timings: { ...form.timings, [id]: event.target.value === 'financed' } })}>
+                <option value="upfront">À vista</option><option value="financed">Financiado</option>
+              </select>
+            </div>)}
           </div>
-          {!financeIof && <details className="giro-settings">
+          <details className="giro-settings">
             <summary>Enquadramento do IOF</summary>
             <div className="giro-iof">
               <Field id="cx-profile" label="Perfil tributário" issue={errors.iof}>
@@ -168,9 +161,9 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
                 </select>
               </Field>
               {form.profile === 'simples' && <label><input type="checkbox" checked={form.eligible} onChange={event => change({ eligible: event.target.checked })} /> Confirmo o enquadramento e a documentação da operação.</label>}
-              {tax?.ok && <p><a href={tax.source} target="_blank" rel="noreferrer">Base legal do IOF automático</a></p>}
+              {tax.ok && <p><a href={tax.source} target="_blank" rel="noreferrer">Base legal do IOF automático</a></p>}
             </div>
-          </details>}
+          </details>
         </fieldset>
 
         <fieldset className="giro-card">
@@ -178,6 +171,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
           <div className="giro-grid giro-grid-pair">
             <Field id="cx-system" label="Amortização">
               <select id="cx-system" {...bind('system')}>{SYSTEMS.map(system => <option key={system.id} value={system.id}>{system.label}</option>)}</select>
+              {isBullet && <p className="giro-note">Principal e juros pagos no vencimento.</p>}
             </Field>
             <Field id="cx-frequency" label="Periodicidade">
               <input id="cx-frequency" readOnly value={isBullet ? 'Pagamento único' : 'Mensal'} />
@@ -217,7 +211,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
           <tfoot><tr><th scope="row" colSpan={4}>Total das parcelas</th><td>{brl(result.paid)}</td><td>—</td></tr></tfoot>
         </table>
       </div>
-      <p className="giro-rounding">Os totais usam os valores antes do arredondamento de cada parcela para centavos.</p>
+      <p className="giro-rounding">O CET usa o valor líquido e as parcelas deste cronograma, em centavos. Nas tabelas Price e SAC, o arredondamento pode gerar diferenças de centavos entre parcelas ou amortizações.</p>
       <details className="giro-settings giro-comparison">
         <summary>Comparar amortizações</summary>
         <div className="giro-table-scroll" role="region" aria-label="Comparação dos sistemas" tabIndex={0}>

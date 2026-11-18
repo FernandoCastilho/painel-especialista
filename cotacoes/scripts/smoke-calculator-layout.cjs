@@ -18,16 +18,26 @@ const giroOracle = (system, principal = 100000, daily = 0.0082) => {
   // Sem carência: o dia a mais do 1º vencimento (06/12 domingo → 07/12) é cobrado na própria 1ª parcela.
   const r = d => Math.pow(1.02, d / 30) - 1
   const periods = days.map((d, k) => d - (k ? days[k - 1] : 0))
+  const cents = value => Math.round(Number((value * 100).toPrecision(14))) / 100
   let interest = 0, iof = principal * 0.0038, bal = principal
   const payments = []
-  let pmt = 0
-  if (system === 'price') { let disc = 0, acc = 1; for (const p of periods) { acc /= 1 + r(p); disc += acc } pmt = principal / disc }
+  let pmt = 0, theoretical = principal
+  if (system === 'price') {
+    let disc = 0, acc = 1
+    for (const p of periods) { acc /= 1 + r(p); disc += acc }
+    pmt = principal / disc
+  }
   periods.forEach((p, k) => {
-    const j = bal * r(p), a = system === 'price' ? pmt - j : principal / 12
-    interest += j; bal -= a; iof += a * Math.min(days[k], 365) * daily / 100; payments.push(a + j)
+    const j = cents(bal * r(p))
+    theoretical = system === 'price' ? theoretical * (1 + r(p)) - pmt : principal * (1 - (k + 1) / periods.length)
+    const a = k === periods.length - 1 ? bal : cents(cents(principal - theoretical) - (principal - bal))
+    interest += j
+    bal = cents(bal - a)
+    iof += a * Math.min(days[k], 365) * daily / 100
+    payments.push(cents(a + j))
   })
-  const paid = payments.reduce((s, v) => s + v, 0)
-  return { first: payments[0], last: payments.at(-1), interest, iof, total: paid + iof }
+  const paid = cents(payments.reduce((s, v) => s + v, 0))
+  return { first: payments[0], last: payments.at(-1), interest, iof: cents(iof), total: paid + cents(iof) }
 }
 
 const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\s+/g, ' ')

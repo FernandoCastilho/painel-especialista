@@ -78,15 +78,18 @@ test('giro: saldo por dias reais zera, IOF e TAC na liberação e CET recalculad
   // Juros por dias corridos entre vencimentos: (1 + i)^(dias/30). As parcelas pagas devem quitar o saldo.
   let balance = principal, prior = '2026-11-05', paid = 0
   for (const row of g.schedule) {
-    balance = balance * (1 + rate / 100) ** (dayCount(prior, row.dueDate) / 30) - row.installment
+    const interest = Math.round(balance * ((1 + rate / 100) ** (dayCount(prior, row.dueDate) / 30) - 1) * 100) / 100
+    near(row.interest, interest)
+    balance = Math.round((balance + interest - row.installment) * 100) / 100
     paid += row.installment; prior = row.dueDate
   }
   near(balance, 0, 1e-4)
-  // Parcela Price constante (a última fecha o saldo).
-  for (const row of g.schedule) near(row.installment, g.installment, 0.01)
+  // Prestações teóricas Price podem variar em centavos após arredondar o principal acumulado.
+  for (const row of g.schedule) near(row.installment, g.installment, 0.03)
   // IOF: adicional sobre o principal + diário sobre cada amortização pelos dias até a parcela.
   near(g.schedule.reduce((s, row) => s + row.amortization, 0), principal, 1e-4)
-  const iof = principal * 0.0038 + g.schedule.reduce((s, row) => s + row.amortization * Math.min(dayCount('2026-11-05', row.dueDate), 365) * 0.000082, 0)
+  const rawIof = principal * 0.0038 + g.schedule.reduce((s, row) => s + row.amortization * Math.min(dayCount('2026-11-05', row.dueDate), 365) * 0.000082, 0)
+  const iof = Math.round(rawIof * 100) / 100
   near(g.iof, iof, 1e-4)
   const net = principal - tac - iof
   near(g.net, net, 1e-4)
