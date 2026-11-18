@@ -20,6 +20,9 @@ Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECRE
 
 ## Sigilo
 
+**Consulta de CNPJ desligada na publicação** (decisão de Fernando, 18/11/2026, após parecer do Auditor): a tela pede os dados à mão e nenhum dado sai dela. O código da consulta continua pronto (`CONSULTA_CNPJ_ATIVA` em `arvoreCredito.js`) para ser ligado depois de confirmada a política do banco sobre consulta em serviço externo. Quando ligada, valem os pontos abaixo.
+
+
 - O CNPJ só sai da tela quando o especialista clica em consultar, e só para a BrasilAPI. CNPJ com dígito errado não é enviado.
 - O CNPJ não entra no endereço da página nem fica guardado. Nada da tela é salvo.
 - O serviço público fica sabendo qual CNPJ foi consultado. Confirmar a política do banco antes de publicar.

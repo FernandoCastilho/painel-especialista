@@ -173,7 +173,11 @@ test('a tela abre com os três passos, o aviso de envio do CNPJ e o padrão das 
   assert.match(html, /1\. Quem é o cliente/)
   assert.match(html, /2\. O que ele precisa/)
   assert.match(html, /3\. Faturamento e endividamento/)
-  assert.match(html, /o CNPJ é enviado à BrasilAPI, serviço público e gratuito fora do banco/)
+  // Consulta de CNPJ desligada (decisão de Fernando, 18/11/2026): nenhum botão de consulta e aviso de que nada sai da tela.
+  assert.equal(ac.CONSULTA_CNPJ_ATIVA, false)
+  assert.doesNotMatch(html, /Consultar dados públicos/)
+  assert.match(html, /consulta automática pelo CNPJ está desligada/)
+  assert.match(html, /id="ac-nome"/)
   assert.match(html, /Folhas confirmadas/)
   assert.match(html, /Propostas, a revisar/)
   const fonte = await readFile(new URL('../src/ArvoreCredito.jsx', import.meta.url), 'utf8')

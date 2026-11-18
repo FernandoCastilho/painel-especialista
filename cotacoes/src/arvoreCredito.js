@@ -492,6 +492,9 @@ export function cnpjValido(cnpj) {
   return c.endsWith(`${d1}${d2}`)
 }
 export const formatarCnpj = (cnpj) => soDigitos(cnpj).replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5')
+// Consulta automática desligada (decisão de Fernando, 18/11/2026): só volta depois de confirmada a política do banco
+// sobre consulta em serviço externo. Com ela desligada, nenhum CNPJ sai da tela.
+export const CONSULTA_CNPJ_ATIVA = false
 export const CNPJ_SERVICO = { nome: 'BrasilAPI', url: (cnpj) => `https://brasilapi.com.br/api/cnpj/v1/${soDigitos(cnpj)}` }
 
 // Tipo societário pelo código de natureza jurídica da Receita (2046/2054 S.A.; 2062 e 2240 limitada; 2143 cooperativa).

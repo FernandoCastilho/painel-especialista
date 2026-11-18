@@ -1,5 +1,5 @@
 // Teste de tela da Árvore de Crédito: preenche um caso fictício de máquina importada, confere a folha,
-// a consulta de CNPJ (resposta simulada, sem rede externa) e a visão para o cliente, em celular e computador.
+// que a consulta de CNPJ está desligada (nenhum pedido externo) e a visão para o cliente, em celular e computador.
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -28,12 +28,13 @@ const CNPJ_FICTICIO = { razao_social: 'EMPRESA EXEMPLO INDUSTRIA S.A.', municipi
         })
         await page.goto(`${base}/#calculadora/arvore-credito`)
         await page.getByRole('heading', { name: 'Árvore de Crédito' }).waitFor()
-        await page.fill('#ac-cnpj', '00000000000191')
-        await page.getByRole('button', { name: 'Consultar dados públicos' }).click()
-        await page.getByText('EMPRESA EXEMPLO INDUSTRIA S.A.').first().waitFor()
-        assert.equal(await page.inputValue('#ac-uf'), 'SP')
-        assert.equal(await page.inputValue('#ac-tipo'), 'sa')
-        assert.equal(await page.inputValue('#ac-regime'), 'presumido')
+        // Consulta de CNPJ desligada: o botão não existe e os dados são preenchidos à mão.
+        assert.equal(await page.getByRole('button', { name: 'Consultar dados públicos' }).count(), 0)
+        await page.fill('#ac-nome', CNPJ_FICTICIO.razao_social)
+        await page.fill('#ac-uf', 'SP')
+        await page.fill('#ac-cnae', '2813500')
+        await page.selectOption('#ac-tipo', 'sa')
+        await page.selectOption('#ac-regime', 'presumido')
         await page.selectOption('#ac-nec', 'maquina-importada')
         await page.fill('#ac-valor', '5.000.000,00')
         await page.fill('#ac-prazo', '36')
@@ -57,9 +58,9 @@ const CNPJ_FICTICIO = { razao_social: 'EMPRESA EXEMPLO INDUSTRIA S.A.', municipi
         await page.close()
       }
     }
-    assert.ok(consultas.every((u) => u.endsWith('/00000000000191')), consultas.join(' '))
+    assert.deepEqual(consultas, [], 'nenhum CNPJ pode sair da tela com a consulta desligada')
     assert.deepEqual(erros, [])
-    console.log(`ok: ${consultas.length} consultas simuladas, capturas em ${out}`)
+    console.log(`ok: nenhuma consulta externa, capturas em ${out}`)
   } finally {
     await browser.close()
   }

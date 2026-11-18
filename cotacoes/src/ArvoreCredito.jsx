@@ -5,7 +5,7 @@ import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import {
   NECESSIDADES, OPERACOES, MARCAS, CONSULTA, MAX_FOLHA, UNIDADES, PORTE_ROTULO, CNPJ_SERVICO,
-  montarFolha, analisarFaturamento, consultarCnpj, cnpjValido, formatarCnpj, soDigitos, porteBndes,
+  montarFolha, analisarFaturamento, consultarCnpj, cnpjValido, formatarCnpj, soDigitos, porteBndes, CONSULTA_CNPJ_ATIVA,
 } from './arvoreCredito.js'
 import './CalculatorStandard.css'
 import './ArvoreCredito.css'
@@ -152,13 +152,14 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
         <Help title="Árvore de Crédito: como usar">
           <p>Informe quem é o cliente, o que ele precisa e, se tiver, a tabela de faturamento e endividamento. A tela mostra até {MAX_FOLHA} possibilidades, na ordem combinada para cada necessidade: primeiro as mais baratas em que a empresa se enquadra, por último as linhas livres em reais.</p>
           <p>Cada possibilidade traz o que cobre, o que fica de fora, os impostos e a regra com fonte e data. As operações em que a empresa não se enquadra saem da folha, com o motivo.</p>
-          <p>Nada é salvo. Só o CNPJ sai desta tela, e só quando você clica em consultar.</p>
+          <p>Nada é salvo e nada sai desta tela.</p>
         </Help>
       </div>
       <p className="cx-construcao" role="note"><strong>Em construção!</strong> Sugestões para estudo, não oferta nem parecer de crédito. Regras conferidas em {CONSULTA}.</p>
 
       <article className="desk-panel cx-panel">
         <header><h3 className="cx-heading"><span>1. Quem é o cliente</span></h3></header>
+        {CONSULTA_CNPJ_ATIVA ? <>
         <div className="cx-form cx-pad">
           <Campo id="ac-cnpj" label="CNPJ">
             <input id="ac-cnpj" inputMode="numeric" autoComplete="off" value={cnpj} onChange={(e) => { setCnpj(e.target.value); setConsulta({ estado: 'parado' }) }} onBlur={() => cnpjValido(cnpj) && setCnpj(formatarCnpj(cnpj))} aria-invalid={soDigitos(cnpj).length === 14 && !cnpjValido(cnpj)} aria-describedby="ac-cnpj-nota" />
@@ -175,6 +176,14 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
             {consulta.dados.cnaeDescricao && <> · {consulta.dados.cnaeDescricao}</>}
             {consulta.dados.regime && consulta.dados.anoRegime && <> · regime informado para {consulta.dados.anoRegime}</>}
           </p>
+        )}
+        </> : (
+          <>
+            <div className="cx-form cx-pad">
+              <Campo id="ac-nome" label="Cliente (opcional)"><input id="ac-nome" autoComplete="off" value={empresa.razaoSocial} onChange={alterar('razaoSocial')} maxLength={120} /></Campo>
+            </div>
+            <p className="cx-hint cx-pad">Preencha os dados abaixo. A consulta automática pelo CNPJ está desligada até a confirmação da política do banco sobre consulta em serviço externo: nenhum dado sai desta tela.</p>
+          </>
         )}
         <div className="cx-form cx-pad">
           <Campo id="ac-uf" label="UF"><input id="ac-uf" maxLength={2} value={empresa.uf} onChange={(e) => setEmpresa((d) => ({ ...d, uf: e.target.value.toUpperCase() }))} /></Campo>
