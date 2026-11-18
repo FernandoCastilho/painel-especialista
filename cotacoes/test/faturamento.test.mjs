@@ -304,3 +304,14 @@ test('mês do ano sempre zerado não apaga a análise: usa a série sem ajuste',
   assert.ok(a.tendenciaAno != null && a.cv != null, "tendência e estabilidade não somem")
   assert.ok(a.atencao.some((t) => /12 meses .*menor/.test(t)))
 })
+
+test('blocos da análise para a imagem exportada', () => {
+  const a = fat.analisarSerie(fat.parseFaturamento(fat.EXEMPLO).meses)
+  const b = fat.blocosAnalise(a)
+  assert.deepEqual(b.map((x) => x.titulo), ['Faturamento', 'Sazonalidade', 'Endividamento', 'Pontos de atenção'])
+  assert.ok(b[0].itens.some((t) => /^Tendência nos últimos 12 meses, descontada a sazonalidade: alta/.test(t)))
+  assert.ok(b[1].itens.some((t) => /^Há sazonalidade/.test(t)))
+  assert.ok(b[2].itens.some((t) => /^Alavancagem em jun\/26: 0,99x/.test(t)))
+  assert.equal(b[3].alerta, true)
+  assert.deepEqual(fat.blocosAnalise({ suficiente: false }), [])
+})
