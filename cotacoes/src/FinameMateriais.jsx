@@ -229,7 +229,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
       <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
       <h2 id="calc-h" className="cx-title"><span className="cx-icon" aria-hidden="true"><FinameIcon /></span>BNDES Finame Materiais</h2>
 
-      <div className="fm-workspace">
+      <div className={`fm-workspace${comparar ? ' fm-cmp' : ''}`}>
       <article className="desk-panel cx-panel fm-input-panel">
         <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras do produto conferidas em {dmy(REGRAS.conferidoEm)}</small>{ajuda('Regras do produto e fontes', regrasAjuda)}</header>
         <div className="cx-form">
@@ -294,12 +294,25 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
             {referenceRetained && !resumida && <p className="status stale cx-pad" role="status">Referência retida ou atualização indisponível. Confira as datas em Taxas e históricos antes de cotar.</p>}
             {!comparar && <section className="fm-destaques" aria-labelledby="fm-destaques-h">
               <h4 id="fm-destaques-h" className="sr-only">Principais números · {custo.toUpperCase()}</h4>
-              <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Resultado</th><th scope="col" className={`fm-result-${custo}`}>{custo.toUpperCase()}</th></tr></thead><tbody>
+              {/* Resposta principal primeiro; equivalência em seguida; depois taxas e valores em reais, agrupados. Só apresentação: nenhuma conta nova. */}
+              <div className="fm-answer">
+                <div className="fm-answer-main"><small>CET estimado</small><b>{cet ? pct(cet.anual, 2) : 'Não mensurável'}</b>{cet && <span>a.a. · {cetTexto(cet, 'mensal')}</span>}</div>
+                <div className="fm-answer-side"><small>Custo total estimado</small><b>{brl(res.total)}</b><span>{res.parcelasAmortizacao}x · SAC</span></div>
+              </div>
+              {spread != null && <p className="fm-equiv fm-rotulo">Equivale a <b>CDI + {pct(spread, 2)} a.a.</b>{ajuda('Equivale a CDI +', `Spread capitalizado sobre o CDI de hoje (${pct(cdi, 2)}) que dá a mesma taxa nominal: serve para comparar com o capital de giro.`)}</p>}
+              <div className="fm-quote-empty cx-wrap"><table className="cx-matrix fm-grouped"><thead><tr><th scope="col">Resultado</th><th scope="col" className={`fm-result-${custo}`}>{custo.toUpperCase()}</th></tr></thead><tbody>
+                <tr className="fm-grp"><th scope="colgroup" colSpan={2}>Taxas</th></tr>
                 <tr><th scope="row">Taxa de referência</th><td>{pct(custoFinanceiro, 2)} a.a.</td></tr>
                 <tr><th scope="row">Taxa final</th><td>{taxaResumo(res)}</td></tr>
                 <tr className="fm-cet-row"><th scope="row">CET estimado{ajuda('CET estimado', cetAjuda)}</th><td>{cetResumo(cet)}</td></tr>
+                <tr className="fm-grp"><th scope="colgroup" colSpan={2}>Valores em reais</th></tr>
+                <tr><th scope="row">Valor financiado</th><td>{brl(res.liberado)}</td></tr>
                 <tr className="fm-summary-row"><th scope="row">Primeira parcela após carência{ajuda('Primeira parcela', 'Primeira parcela com amortização. Quando houver carência com juros, podem existir cobranças anteriores conforme a periodicidade informada.')}</th><td>{brl(res.primeiraParcela)}</td></tr>
                 <tr><th scope="row">Última parcela</th><td>{brl(res.ultimaParcela)}</td></tr>
+                <tr><th scope="row">Juros totais</th><td>{brl(res.juros)}</td></tr>
+                <tr><th scope="row">TAC à vista</th><td>{brl(res.tac)}</td></tr>
+                <tr><th scope="row">IOF</th><td>{brl(res.iof)}</td></tr>
+                {res.fgi && <tr><th scope="row">ECG à vista</th><td>{brl(res.fgi.ecg)}</td></tr>}
                 <tr className="fm-total-row"><th scope="row">Custo total estimado{ajuda('Custo total estimado', quadros.find(item => item.id === 'total')?.ajuda)}</th><td>{brl(res.total)}</td></tr>
               </tbody></table></div>
             </section>}
@@ -351,12 +364,19 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
               ].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{alternatives.map(item => <td key={item.custo}>{brl(key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])}</td>)}</tr>)}</tbody></table></div>
               {detalhamento}
             </ExpandablePanel>}
-            {spread != null && <p className="cx-hint cx-pad fm-rotulo">Equivale a <b>CDI + {pct(spread, 2)} a.a.</b>{ajuda('Equivale a CDI +', `Spread capitalizado sobre o CDI de hoje (${pct(cdi, 2)}) que dá a mesma taxa nominal: serve para comparar com o capital de giro.`)}</p>}
+            {comparar && spread != null && <p className="cx-hint cx-pad fm-rotulo">Equivale a <b>CDI + {pct(spread, 2)} a.a.</b>{ajuda('Equivale a CDI +', `Spread capitalizado sobre o CDI de hoje (${pct(cdi, 2)}) que dá a mesma taxa nominal: serve para comparar com o capital de giro.`)}</p>}
             {res.avisos.map((a) => <Estado key={a} tipo="aviso">{a}</Estado>)}
           </>
         )}
       </article>
 
+      <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
+      </ExpandablePanel>
+      </div>
+      </div>
+
+      {/* Detalhe abaixo, em largura total: parcelas, histórico, memória do fluxo e premissas (recolhidos). */}
+      <div className="fm-secondary">
       {res && <ExpandablePanel title="Parcelas · opções lado a lado" className={`fm-parcels-callout${resumida ? ' fm-parcels-resumidas' : ''}`} {...(resumida ? { open: parcelasAbertas, onOpenChange: setParcelasAbertas } : {})}>
         <p className="cx-hint">Datas projetadas · inclui juros na carência.{ajuda('Leitura das parcelas', 'Despesas à vista permanecem na composição e na memória completa. Traço significa ausência de parcela nessa data. Os valores A e B estão alinhados pelo vencimento para comparação.')}</p>
         <div className="fm-parcel-scroll" role="region" tabIndex={0} aria-label="Datas e parcelas das alternativas"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Data</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{parcelDates.map(date => <tr key={date}><th scope="row">{dmy(date)}</th>{alternatives.map(item => { const row = item.result.parcelas.find(p => p.vencimento === date); return <td key={item.custo}>{row ? brl(row.parcela) : '—'}</td> })}</tr>)}</tbody></table></div>
@@ -367,7 +387,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
         <ComparaSeries compactHelp items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: chartPreset, setPreset: setChartPreset, custom: chartCustom, setCustom: setChartCustom }} />
       </ExpandablePanel>}
 
-      <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
 
       {res && (
         <ExpandablePanel title="Memória completa do fluxo"><details className="desk-panel cx-panel fm-fluxo-panel">
@@ -388,8 +407,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
       )}
 
       <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
-      </ExpandablePanel>
-      </div>
       </div>
 
       <p className="status">Base de regras: {dmy(REGRAS.conferidoEm)} · Custos: painel BNDES · Fontes em Configurações &gt; Base de dados.</p>

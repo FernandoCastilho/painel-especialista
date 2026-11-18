@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
 import { EXEMPLO, LIMITES_ANALISE, analisarSerie, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
+import './CalcPattern-faturamento.css'
 
 const num = (v, casas = 0) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }))
 const valor = (v) => (v == null ? '—' : num(v, Number.isInteger(v) ? 0 : 2))
@@ -54,6 +55,9 @@ async function imagemDoGrafico(svgEl, titulo, subtitulo) {
 }
 
 const sinal = (v) => (v == null || Math.abs(v) < 0.0005 ? '' : v > 0 ? 'ft-up' : 'ft-down')
+// Sentido da mudança em palavras e seta, não só na cor (só apresentação).
+const seta = (v) => (v == null ? '' : sinal(v) === 'ft-up' ? '▲ ' : sinal(v) === 'ft-down' ? '▼ ' : '')
+const sentido = (v) => (v == null ? '' : sinal(v) === 'ft-up' ? 'Alta de ' : sinal(v) === 'ft-down' ? 'Queda de ' : 'Estável: ')
 
 export function FaturamentoIcon() {
   return (
@@ -190,8 +194,8 @@ function Comparacao({ c }) {
       <p className="ft-compare-title"><b>{c.rotulo}</b> comparado com <b>{c.rotuloAnterior}</b></p>
       {c.mesesComparados > 0 && (
         <div className={`ft-cresc${cr.relacao === 'piorou' ? ' ft-cresc-alerta' : ''}`} role="group" aria-label="Crescimento do faturamento e do endividamento">
-          <div><span>Faturamento</span><b className={sinal(cr.fat)}>{pct(cr.fat)}</b><small>soma do período</small></div>
-          <div><span>Endividamento</span><b className={sinal(cr.div == null ? null : -cr.div)}>{pct(cr.div)}</b><small>{cr.div == null ? 'sem saldo nos dois períodos' : 'média do período'}</small></div>
+          <div><span>Faturamento</span><b className={sinal(cr.fat)}><span aria-hidden="true">{seta(cr.fat)}</span>{pct(cr.fat)}</b><small>soma do período</small></div>
+          <div><span>Endividamento</span><b className={sinal(cr.div == null ? null : -cr.div)}><span aria-hidden="true">{seta(cr.div)}</span>{pct(cr.div)}</b><small>{cr.div == null ? 'sem saldo nos dois períodos' : 'média do período'}</small></div>
           {conclusao && <p>{conclusao}</p>}
         </div>
       )}
@@ -204,7 +208,7 @@ function Comparacao({ c }) {
               <tbody>
                 {linhas.map(([rotulo, a, b, v]) => (
                   // Endividamento subindo é sinal de alerta: cor invertida em relação ao faturamento.
-                  <tr key={rotulo}><th scope="row">{rotulo}</th><td>{valor(a)}</td><td>{valor(b)}</td><td className={sinal(v == null ? null : rotulo.startsWith('Endividamento') ? -v : v)}>{pct(v)}</td></tr>
+                  <tr key={rotulo}><th scope="row">{rotulo}</th><td>{valor(a)}</td><td>{valor(b)}</td><td className={sinal(v == null ? null : rotulo.startsWith('Endividamento') ? -v : v)}><span aria-hidden="true">{seta(v)}</span>{pct(v)}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -342,9 +346,16 @@ export default function Faturamento({ onBack }) {
       <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
       <div className="bw-heading calc-workspace-heading"><h2 id="ft-h" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Faturamento</span></h2><Help title="Faturamento: como usar"><p>Cole a tabela com uma linha por mês: competência, faturamento e endividamento (por exemplo, copiada do DAC). Aceita meses como Jan/24, out/2024 ou 10/2024 e números como 7.123 ou 7.123,45; traço (– ou -) é mês sem informação. Também aceita a tabela com barras (| Jan/25 | 350 | 2.235 |). Linhas de título e cabeçalho são ignoradas, e a unidade do cabeçalho, como (R$ mil), aparece no gráfico.</p><p>Os valores ficam na unidade em que foram colados (normalmente R$ mil). Clique em um mês ou arraste sobre vários para comparar com os mesmos meses do ano anterior. Só entram na variação os meses que existem nos dois anos. Endividamento zero ou vazio conta como sem informação, porque costuma ser mês ainda não fechado.</p><p>Os dados ficam só nesta tela: nada é salvo nem enviado.</p></Help></div>
 
-      <article className="desk-panel cx-panel">
+      <article className="desk-panel cx-panel ft-dados">
         <header><h3 className="cx-heading"><span>Dados</span></h3></header>
         <div className="ft-input">
+          {/* Linhas ignoradas: aviso no topo do quadro. */}
+          {avisos.length > 0 && (
+            <ul className="ft-avisos" role="alert">
+              {avisos.slice(0, 6).map((a) => <li key={a.linha}>Linha {a.linha} ignorada: {a.motivo} <code>{a.texto}</code></li>)}
+              {avisos.length > 6 && <li>Mais {avisos.length - 6} linhas ignoradas.</li>}
+            </ul>
+          )}
           <label htmlFor="ft-texto">Cole aqui: Competência (mês), Faturamento e Endividamento</label>
           <textarea id="ft-texto" rows={8} spellCheck={false} placeholder={'Faturamento e endividamento\nCompetência\tFaturamento (R$ mil)\tEndividamento (R$ mil)\nJan/24\t87\t–\nFev/24\t1.246\t–\nJan/25\t350\t2.235'} value={texto} onChange={(e) => setTexto(e.target.value)} aria-describedby="ft-status" />
           <div className="ft-actions">
@@ -352,34 +363,40 @@ export default function Faturamento({ onBack }) {
             {texto && <button type="button" onClick={() => { setTexto(''); setSel(null) }}>Limpar</button>}
           </div>
           <p id="ft-status" className="cx-hint" role="status">{meses.length ? `${meses.length} ${meses.length === 1 ? 'mês lido' : 'meses lidos'}, de ${meses[0].rotulo} a ${meses.at(-1).rotulo}${unidade ? `, valores em ${unidade}` : ''}.` : 'Nenhum mês lido ainda.'}</p>
-          {avisos.length > 0 && (
-            <ul className="ft-avisos" role="alert">
-              {avisos.slice(0, 6).map((a) => <li key={a.linha}>Linha {a.linha} ignorada: {a.motivo} <code>{a.texto}</code></li>)}
-              {avisos.length > 6 && <li>Mais {avisos.length - 6} linhas ignoradas.</li>}
-            </ul>
-          )}
         </div>
       </article>
 
       {meses.length > 0 && (
-        <article className="desk-panel cx-panel calc-result-shell" aria-live="polite" data-apz-pronto="">
+        <article className="desk-panel cx-panel ft-result calc-result-shell" aria-live="polite" data-apz-pronto="">
           <ExpandablePanel title={tituloGrafico}>
             {ind && (
               <div className="ft-kpis" role="group" aria-label="Últimos 12 meses e alavancagem">
-                <div><span>Faturamento {ind.meses === 12 ? 'últimos 12 meses' : `últimos ${ind.meses} meses informados`}</span><b>{totalCurto(ind.total, unidade)}</b><small>{ind.de} a {ind.ate}</small></div>
-                <div><span>12 meses anteriores</span><b>{ind.mesesAnterior ? totalCurto(ind.totalAnterior, unidade) : '—'}</b><small className={sinal(ind.variacao)}>{ind.variacao != null ? `${pct(ind.variacao)} contra ${ind.anteriorDe} a ${ind.anteriorAte}` : ind.mesesAnterior ? `só ${ind.mesesAnterior} de 12 meses informados` : 'sem dados do período'}</small></div>
-                <div><span>Média mensal</span><b>{valor(Math.round(ind.media))}</b><small>{ind.meses} {ind.meses === 1 ? 'mês' : 'meses'}</small></div>
-                <div><span>Endividamento</span><b>{valor(ind.endividamento)}</b><small className={ind.endividamentoForaDaJanela ? 'ft-down' : undefined}>{ind.endividamentoMes ? `último saldo: ${ind.endividamentoMes}${ind.endividamentoForaDaJanela ? ' (fora dos 12 meses)' : ''}` : 'sem saldo informado'}</small></div>
-                <div><span>Alavancagem <Help title="Alavancagem e últimos 12 meses"><p>Mesmo critério do DAC. Alavancagem = endividamento do último mês com saldo ÷ média mensal do faturamento dos últimos 12 meses.</p><p>Os 12 meses terminam no último mês com faturamento informado. Endividamento zero ou vazio conta como mês sem informação. A comparação com os 12 meses anteriores só aparece quando os dois períodos têm os 12 meses.</p></Help></span><b>{ind.alavancagem != null ? `${vezes(ind.alavancagem)} faturamento` : '—'}</b><small>{ind.meses < 12 ? `média de ${ind.meses} meses` : 'endividamento ÷ média mensal'}</small></div>
+                {/* Resposta principal; equivalências; valores agrupados terminando no total. Só apresentação: nenhuma conta nova. */}
+                <div className="ft-answer">
+                  <div className="ft-answer-main"><small>Faturamento {ind.meses === 12 ? 'últimos 12 meses' : `últimos ${ind.meses} meses informados`}</small><b>{totalCurto(ind.total, unidade)}</b><span>{ind.de} a {ind.ate}</span></div>
+                  <div className="ft-answer-side"><small>Contra os 12 meses anteriores</small><b className={sinal(ind.variacao)}>{ind.variacao != null ? <>{seta(ind.variacao)}{sentido(ind.variacao)}{pct(ind.variacao)}</> : '—'}</b><span>{ind.variacao != null ? `${pct(ind.variacao)} contra ${ind.anteriorDe} a ${ind.anteriorAte}` : ind.mesesAnterior ? `só ${ind.mesesAnterior} de 12 meses informados` : 'sem dados do período'}</span></div>
+                </div>
+                <p className="ft-equiv"><span>Alavancagem <Help title="Alavancagem e últimos 12 meses"><p>Mesmo critério do DAC. Alavancagem = endividamento do último mês com saldo ÷ média mensal do faturamento dos últimos 12 meses.</p><p>Os 12 meses terminam no último mês com faturamento informado. Endividamento zero ou vazio conta como mês sem informação. A comparação com os 12 meses anteriores só aparece quando os dois períodos têm os 12 meses.</p></Help></span><b>{ind.alavancagem != null ? `${vezes(ind.alavancagem)} faturamento` : '—'}</b><small>{ind.meses < 12 ? `média de ${ind.meses} meses` : 'endividamento ÷ média mensal'}</small></p>
+                <div className="ft-values-box">
+                <p className="ft-values-grp">Valores {unidade ? `em ${unidade}` : 'na unidade colada'}</p>
+                <dl className="ft-values">
+                  <div><dt>12 meses anteriores</dt><dd>{ind.mesesAnterior ? totalCurto(ind.totalAnterior, unidade) : '—'}</dd></div>
+                  <div><dt>Média mensal <small>{ind.meses} {ind.meses === 1 ? 'mês' : 'meses'}</small></dt><dd>{valor(Math.round(ind.media))}</dd></div>
+                  <div><dt>Endividamento <small className={ind.endividamentoForaDaJanela ? 'ft-down' : undefined}>{ind.endividamentoMes ? `último saldo: ${ind.endividamentoMes}${ind.endividamentoForaDaJanela ? ' (fora dos 12 meses)' : ''}` : 'sem saldo informado'}</small></dt><dd>{valor(ind.endividamento)}</dd></div>
+                  <div className="ft-values-total"><dt>Faturamento {ind.meses === 12 ? 'últimos 12 meses' : `últimos ${ind.meses} meses informados`}</dt><dd>{totalCurto(ind.total, unidade)}</dd></div>
+                </dl>
+                </div>
               </div>
             )}
             <div className="ft-tools">
               <div className="ft-atalhos" role="group" aria-label="Atalhos de período">
                 <span>Período:</span>
-                <button type="button" onClick={() => atalho(3)}>Últimos 3 meses</button>
-                <button type="button" onClick={() => atalho(6)}>Últimos 6 meses</button>
-                <button type="button" onClick={() => atalho(12)}>Últimos 12 meses</button>
-                <button type="button" onClick={anoAteAgora}>Ano até agora</button>
+                <div className="ft-seg">
+                  <button type="button" onClick={() => atalho(3)}>Últimos 3 meses</button>
+                  <button type="button" onClick={() => atalho(6)}>Últimos 6 meses</button>
+                  <button type="button" onClick={() => atalho(12)}>Últimos 12 meses</button>
+                  <button type="button" onClick={anoAteAgora}>Ano até agora</button>
+                </div>
               </div>
               <div className="ft-atalhos" role="group" aria-label="Rótulos e imagem">
                 <button type="button" onClick={() => exportar('copiar')}>Copiar imagem</button>

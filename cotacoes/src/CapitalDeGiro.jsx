@@ -9,6 +9,7 @@ import { cgAddDays, cgDate, cgToday } from './contaGarantida.js'
 import { resolveCreditIof } from './iofRules.js'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 import './CapitalDeGiro.css'
+import './CalcPattern-giro.css'
 
 const EXPENSES = [
   { id: 'iof', label: 'IOF' },
@@ -184,19 +185,31 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         <button className="giro-simulate" type="submit">Simular</button>
       </form>
 
+      {/* Resultado: único quadro com borda laranja. Resposta principal no topo (CET e parcela); depois a taxa e os valores
+          em reais, terminando no custo total. Só apresentação: os mesmos valores calculados de antes. */}
       <aside className="giro-result calc-result-shell" aria-labelledby="giro-result-title" aria-live="polite">
         <h3 id="giro-result-title">Resultado da simulação</h3>
-        <p>Valor líquido liberado<strong>{moneyText(result?.net)}</strong></p>
-        <dl>
-          <div><dt>Saldo financiado</dt><dd>{moneyText(result?.financedBalance)}</dd></div>
-          <div><dt>{isBullet ? 'Pagamento único' : 'Primeira parcela'}</dt><dd>{moneyText(result?.rows[0].payment)}</dd></div>
-          {!isBullet && <div><dt>Última parcela</dt><dd>{moneyText(result?.rows.at(-1).payment)}</dd></div>}
-          <div><dt>Custo total</dt><dd>{moneyText(result?.cost)}</dd></div>
-          <div className="giro-cet"><dt>Custo Efetivo Total (CET)</dt><dd>{result ? percent(result.cet) : '—'}</dd></div>
-        </dl>
-        {!result && <small role={calculation?.error ? 'alert' : undefined}>
-          {calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.')}
-        </small>}
+        <div className="giro-result-body">
+          {!result && <small className={`giro-result-alert${calculation?.error || hasErrors ? ' is-warning' : ''}`} role={calculation?.error ? 'alert' : undefined}>
+            {calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.')}
+          </small>}
+          <div className="giro-answer">
+            <div className="giro-answer-main"><small>Custo Efetivo Total</small><b>{result ? percent(result.cet) : '—'}</b><span>CET anual do fluxo, em dias corridos</span></div>
+            <div className="giro-answer-side"><small>{isBullet ? 'Pagamento único' : 'Primeira parcela'}</small><b>{moneyText(result?.rows[0].payment)}</b><span>{isBullet ? 'no vencimento' : 'parcelas mensais'}</span></div>
+          </div>
+          <h4 className="giro-result-group">Taxa e custo efetivo</h4>
+          <dl>
+            <div className="giro-cet"><dt>Custo Efetivo Total (CET)</dt><dd>{result ? percent(result.cet) : '—'}</dd></div>
+          </dl>
+          <h4 className="giro-result-group">Valores em reais</h4>
+          <dl>
+            <div><dt>Valor líquido liberado</dt><dd>{moneyText(result?.net)}</dd></div>
+            <div><dt>Saldo financiado</dt><dd>{moneyText(result?.financedBalance)}</dd></div>
+            <div><dt>{isBullet ? 'Pagamento único' : 'Primeira parcela'}</dt><dd>{moneyText(result?.rows[0].payment)}</dd></div>
+            {!isBullet && <div><dt>Última parcela</dt><dd>{moneyText(result?.rows.at(-1).payment)}</dd></div>}
+            <div className="giro-total"><dt>Custo total</dt><dd>{moneyText(result?.cost)}</dd></div>
+          </dl>
+        </div>
       </aside>
     </div>
 

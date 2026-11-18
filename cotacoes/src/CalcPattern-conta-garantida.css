@@ -1,0 +1,135 @@
+/* Conta Garantida · padrão visual das calculadoras (aprovado em 18/11/2026), o mesmo do BNDES Finame.
+   Tudo escopado em .cx-cg: nenhuma outra calculadora é afetada. Só apresentação: nenhuma regra de cálculo mora aqui.
+   O prefixo :root[data-theme] body main.app.app-calculators vence as camadas anteriores sem !important. */
+.cx-cg {
+  --cgp-orange:#ff6200;
+  --cgp-navy:linear-gradient(110deg,#052956,#07336b);
+}
+
+/* ── Modos de simulação: uma barra segmentada; só o escolhido em amarelo ── */
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes { display:inline-flex; flex-wrap:nowrap; gap:0; align-self:flex-start; max-width:100%; padding:0; border:1px solid var(--cx-line-strong, var(--bw-line)); border-radius:10px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button { flex:1 1 0; min-width:0; min-height:44px; margin:0; padding:8px 16px; border:0; border-radius:0; background:transparent; color:var(--bw-mut, var(--mut)); font-weight:600; line-height:1.25; white-space:normal; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button + button { border-left:1px solid var(--cx-line-strong, var(--bw-line)); }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button:not([aria-pressed=true]):hover { background:var(--bw-soft); color:var(--bw-ink, var(--fg)); }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button[aria-pressed=true] { background:var(--cx-select-bg, #ffb000); color:var(--cx-select-fg, #000); border:0; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button[aria-pressed=true] + button,
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button + button[aria-pressed=true] { border-left:1px solid var(--cx-line-strong, var(--bw-line)); }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button:focus-visible { outline:2px solid var(--cgp-orange); outline-offset:-3px; }
+@media (max-width:699px) {
+  :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes { display:flex; width:100%; align-self:stretch; }
+  :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button { padding:6px 8px; font-size:.78rem; }
+}
+
+/* ── Dados à esquerda, resultado ao lado (computador largo) ou abaixo ── */
+.cx-cg .cg-workspace { display:grid; gap:20px; min-width:0; }
+.cx-cg .cg-inputs { display:grid; gap:20px; min-width:0; }
+.cx-cg .cg-result-col { min-width:0; }
+@media (min-width:1200px) {
+  .cx-cg .cg-workspace { grid-template-columns:minmax(0,1fr) minmax(360px,400px); align-items:start; }
+  .cx-cg .cg-result-col { position:sticky; top:88px; max-height:calc(100vh - 100px); overflow:auto; overscroll-behavior:contain; border-radius:12px; }
+}
+
+/* ── Quadros de entrada: faixa azul-marinho, título branco, linha laranja; um destaque só (sem barra laranja à esquerda) ── */
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs > .cx-panel { overflow:hidden; border-radius:10px; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs > .cx-panel > header { flex-wrap:nowrap; min-height:46px; margin:0; padding:2px 14px; background:var(--cgp-navy); color:#fff; border:0; border-bottom:3px solid var(--cgp-orange); border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs > .cx-panel > header h3 { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; letter-spacing:0; text-transform:none; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs > .cx-panel > header .fi-help > button { color:#fff; border-color:#ffffff66; }
+/* Rótulos em uma linha; campos com a mesma altura e o mesmo tamanho de valor. */
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs .cx-field-label > label:not(.cg-check) { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs .cx-field-label { flex-wrap:nowrap; min-height:44px; align-items:center; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs :is(.cx-field input:not([type=checkbox]), .cx-field select) { height:44px; min-height:44px; font-size:.9375rem; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs .cg-entry td { font-size:.9375rem; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); }
+
+/* ── Quadro do resultado: o único com borda laranja; faixa azul sem linha laranja ── */
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box { display:flex; flex-direction:column; padding:0; border:2px solid var(--cgp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .cg-result-head,
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .expandable-panel > .expandable-heading { min-height:46px; margin:0; padding:10px 14px; background:var(--cgp-navy); color:#fff; border:0; border-bottom:1px solid #2f4a78; border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .cg-result-head h3,
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .expandable-panel > .expandable-heading h3 { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .expandable-panel > .expandable-heading .expandable-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .expandable-panel { border:0; border-radius:0; background:transparent; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box .expandable-content { display:flex; flex-direction:column; gap:12px; padding:12px; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .cg-result-status:not(:empty) { display:grid; gap:8px; padding:12px 12px 0; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .cg-notice { margin:12px 12px 0; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > :last-child:is(.cg-result-status, .cg-notice) { margin-bottom:12px; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .cg-result-status:not(:empty):last-child { padding-bottom:12px; }
+
+/* Avisos: faixa âmbar com "!" */
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box :is(.cg-result-status, .cg-alerts) .cg-notice,
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .cg-notice { position:relative; padding:10px 12px 10px 38px; border:1px solid color-mix(in srgb, #ffb000 45%, var(--bw-line)); border-left:4px solid #ffb000; border-radius:8px; background:color-mix(in srgb, #ffb000 10%, var(--bw-card)); color:var(--bw-ink, var(--fg)); font-size:.8rem; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box :is(.cg-result-status, .cg-alerts) .cg-notice::before,
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box > .cg-notice::before { content:"!"; position:absolute; left:10px; top:10px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#ffb000; color:#000; font-size:.75rem; font-weight:800; line-height:1; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-alerts { display:grid; gap:8px; }
+
+/* a. Resposta principal */
+.cx-cg .cg-answer { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:10px; }
+.cx-cg .cg-answer > div { display:flex; flex-direction:column; gap:2px; min-width:0; padding:12px 14px; border-radius:10px; }
+.cx-cg .cg-answer small { font-size:.75rem; }
+.cx-cg .cg-answer span { font-size:.72rem; line-height:1.35; }
+.cx-cg .cg-answer-main { background:var(--cgp-navy); color:#fff; border:1px solid #34507f; }
+.cx-cg .cg-answer .cg-answer-main :is(small, span) { color:#c9d6ee; }
+.cx-cg .cg-answer-main b { font-size:1.75rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:#fff; overflow-wrap:anywhere; }
+.cx-cg .cg-answer-side { border:1px solid var(--bw-line); background:var(--bw-soft); }
+.cx-cg .cg-answer-side small, .cx-cg .cg-answer-side span { color:var(--bw-mut, var(--mut)); }
+.cx-cg .cg-answer-side b { font-size:1.1rem; font-variant-numeric:tabular-nums; color:var(--bw-ink, var(--fg)); white-space:nowrap; }
+
+/* b. Equivalências */
+.cx-cg .cg-equiv { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; border:1px solid var(--bw-line); border-radius:8px; overflow:hidden; }
+.cx-cg .cg-equiv > div { display:flex; flex-direction:column; gap:3px; min-width:0; padding:8px 10px; }
+.cx-cg .cg-equiv > div + div { border-left:1px solid var(--bw-line); }
+.cx-cg .cg-equiv span { color:var(--bw-mut, var(--mut)); font-size:.7rem; line-height:1.3; }
+.cx-cg .cg-equiv b { color:var(--bw-ink, var(--fg)); font-size:.9rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+/* c. Valores em reais: rótulo à esquerda, valor à direita, terminando no total */
+.cx-cg .cg-values { display:grid; border:1px solid var(--bw-line); border-radius:8px; overflow:hidden; }
+.cx-cg .cg-values > div { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:7px 12px; border-top:1px solid var(--bw-line); }
+.cx-cg .cg-values > div span { color:var(--bw-ink, var(--fg)); font-size:.85rem; }
+.cx-cg .cg-values > div b { font-size:.9rem; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--bw-ink, var(--fg)); }
+.cx-cg .cg-values > .cg-grp { margin:0; padding:10px 12px 4px; color:var(--bw-mut, var(--mut)); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.cx-cg .cg-values > .cg-grp:first-child { padding-top:8px; }
+.cx-cg .cg-values > .cg-total { border-top:2px solid var(--bw-ink, var(--fg)); background:var(--bw-soft); }
+.cx-cg .cg-values > .cg-total :is(span, b) { font-weight:800; font-size:.95rem; }
+
+/* d. Notas e detalhes recolhidos */
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box .cg-note { margin:0; padding:0; color:var(--bw-mut, var(--mut)); font-size:.75rem; line-height:1.45; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-result-box .calc-panel-context.cg-note { margin:0; gap:6px; }
+.cx-cg .cg-more { border-top:1px solid var(--bw-line); padding-top:4px; font-size:.8rem; }
+.cx-cg .cg-more > summary, .cx-cg .cg-tables > summary { display:flex; align-items:center; min-height:44px; cursor:pointer; color:var(--bw-ink, var(--fg)); font-weight:600; }
+.cx-cg .cg-more > :not(summary) { margin-top:8px; }
+.cx-cg .cg-more > .cx-heading { padding:0; font-size:.8rem; color:var(--bw-mut, var(--mut)); }
+.cx-cg .cg-tables { display:block; min-width:0; max-width:100%; padding:4px 16px 14px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); }
+.cx-cg .cg-tables:not([open]) { padding-bottom:4px; }
+.cx-cg .cg-tables[open] > summary { margin-bottom:4px; }
+.cx-cg .cg-tables > .cx-panel + .cx-panel { margin-top:12px; }
+.cx-cg .cg-more > summary:focus-visible, .cx-cg .cg-tables > summary:focus-visible { outline:2px solid var(--cgp-orange); outline-offset:2px; }
+
+/* "‹ Calculadoras" fora do quadro, logo acima dele (a moldura da tela continua a mesma). */
+:root[data-theme] body main.app.app-calculators .cx-cg.calc-workspace { position:relative; margin-top:48px; overflow:visible; }
+:root[data-theme] body main.app.app-calculators .cx-cg.calc-workspace > .cx-back { position:absolute; top:-48px; left:0; min-height:44px; padding:0 12px 0 2px; border:0; background:transparent; color:var(--bw-mut, var(--mut)); font-size:1rem; }
+:root[data-theme] body main.app.app-calculators .cx-cg.calc-workspace > .cx-back:hover { color:var(--bw-ink, var(--fg)); }
+:root[data-theme] body main.app.app-calculators .cx-cg.calc-workspace > .cx-back + .calc-workspace-heading { margin-top:0; }
+
+/* Modos no computador: cada opção no tamanho do próprio texto, sem quebrar linha. */
+@media (min-width:700px) {
+  :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button { flex:0 0 auto; white-space:nowrap; }
+}
+/* Seta de abrir/fechar nos detalhes recolhidos. */
+.cx-cg :is(.cg-more, .cg-tables) > summary { list-style:none; gap:8px; }
+.cx-cg :is(.cg-more, .cg-tables) > summary::-webkit-details-marker { display:none; }
+.cx-cg :is(.cg-more, .cg-tables) > summary::before { content:"▸"; display:inline-block; width:1em; color:var(--bw-mut, var(--mut)); transition:transform .15s; }
+.cx-cg :is(.cg-more, .cg-tables)[open] > summary::before { transform:rotate(90deg); }
+
+@media (max-width:480px) {
+  .cx-cg .cg-answer { grid-template-columns:1fr; }
+  .cx-cg .cg-answer-main b { font-size:1.55rem; }
+  .cx-cg .cg-equiv { grid-template-columns:1fr; }
+  .cx-cg .cg-equiv > div + div { border-left:0; border-top:1px solid var(--bw-line); }
+  .cx-cg .cg-tables { padding:4px 10px 10px; }
+}
+
+/* Celular: rótulos longos quebram linha em vez de serem cortados (nenhum texto escondido). */
+@media (max-width:480px) {
+  :root[data-theme] body main.app.app-calculators .cx-cg .cg-inputs .cx-field-label > label:not(.cg-check) { overflow:visible; white-space:normal; text-overflow:clip; }
+}
+.cx-cg .cg-tables > .cx-panel { min-width:0; max-width:100%; }

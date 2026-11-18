@@ -132,6 +132,15 @@ async function assertWorkspace(page, section, label) {
   assert.deepEqual(explanations, [], `${label}: explicações extensas ficam nas ajudas`)
 }
 
+// Padrão de 18/11/2026: resultado ao lado dos dados a partir de 1200px; abaixo deles nas telas menores.
+async function assertResultBeside(page, section, inputs, results) {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const box = await section.locator(inputs).boundingBox(), result = await section.locator(results).boundingBox()
+  const details = JSON.stringify({ box, result })
+  if (page.viewportSize().width >= 1200) assert.ok(result.x >= box.x + box.width && Math.abs(result.y - box.y) <= 2, 'resultado ao lado dos dados ' + details)
+  else assert.ok(result.y >= box.y + box.height - 1, 'resultado abaixo dos dados ' + details)
+}
+
 async function assertHelp(page, section, label, directory) {
   const help = section.getByRole('button', { name: /^Ajuda: / }).first()
   assert.ok(await help.count(), `${label}: ajuda disponível`)
@@ -195,7 +204,9 @@ async function fillScenario(page, section, route) {
     const result = await section.locator('.giro-result').boundingBox()
     const installments = await section.getByText('Ver parcelas', { exact: true }).boundingBox()
     assert.ok(installments.y >= Math.max(form.y + form.height, result.y + result.height), 'parcelas abaixo do formulário e resultado')
-    if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
+    // Padrão de 18/11/2026: a partir de 1200 px o resultado fica fixo ao lado dos dados (acompanha a rolagem, sem subir acima deles).
+    if (page.viewportSize().width >= 1200) assert.ok(result.x >= form.x + form.width && result.y >= form.y - 2 && await section.locator('.giro-result').evaluate(element => getComputedStyle(element).position) === 'sticky', 'resultado fixo ao lado dos dados')
+    else if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
     else assert.ok(result.y >= form.y + form.height)
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
@@ -212,20 +223,24 @@ async function fillScenario(page, section, route) {
     await page.locator('#cg-duration').fill('10')
     await page.locator('#cg-amount').fill('100000')
     assert.ok(await page.locator('#cg-taxProfile').count(), 'enquadramento do IOF preservado')
-    const kpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
+    // Padrão de 18/11/2026: valores em reais agrupados no quadro do resultado, terminando no custo total.
+    const kpi = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/)
-    const interest = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
+    const interest = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
     assert.match(await interest.locator('b').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
     // CET do art. 6º (Res. CMN 4.881/2020): sem limite, só o pedido; com limite, 30 dias sobre o limite em dias corridos/365.
     assert.equal(await section.getByText('Sem CET: informe o limite contratado', { exact: false }).count(), 1)
     assert.equal(await page.locator('#cg-limit').inputValue(), '', 'limite começa vazio')
     await page.locator('#cg-limit').fill('100000')
-    const cetKpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
+    const cetKpi = section.locator('.cg-equiv > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
     const cetAnnual = Math.pow((100000 + 3000 + 100000 * 0.000082 * 30) / (100000 - 380), 365 / 30) - 1 // IOF adicional na liberação
     const pct2 = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
     assert.ok(await section.getByText('texto oficial conferido em 11/11/2026', { exact: false }).count())
+    // Padrão de 18/11/2026: resposta principal = custo total; resultado ao lado dos dados a partir de 1200px, abaixo antes disso.
+    assert.match(normalize(await section.locator('.cg-answer-main b').innerText()), /^R\$\s*1\.462,00$/)
+    await assertResultBeside(page, section, '.cg-inputs', '.cg-result-col')
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
@@ -259,6 +274,9 @@ async function fillScenario(page, section, route) {
     const monthlyInterest = gross * 0.0175 * days / 30
     const monthlyNet = gross - monthlyInterest - (gross - monthlyInterest) * (0.0038 + days * 0.000082) - 564 - 260
     const monthlyCost = 6 * (gross - monthlyNet)
+    // Padrão de 18/11/2026: as tabelas completas ficam recolhidas abaixo do resultado; a pessoa abre para conferir.
+    assert.equal(await section.locator('details.dsc-tables').evaluate(element => element.open), false, 'tabelas começam recolhidas')
+    await section.locator('details.dsc-tables > summary').click()
     const row = section.locator('.desconto-summary-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Custo total do desconto', exact: true }) })
     assert.equal(normalize(await row.locator('td').first().innerText()), brl(monthlyCost))
     assert.equal(normalize(await row.locator('td').nth(1).innerText()), brl(monthlyCost * 12))
@@ -268,6 +286,13 @@ async function fillScenario(page, section, route) {
     assert.equal(await giroCet.locator('td').count(), 5)
     for (const cell of await giroCet.locator('td').allInnerTexts()) assert.match(normalize(cell), /^\d+,\d{2}% a\.a\.$/)
     assert.doesNotMatch(await section.innerText(), /[Nn]ão é CET/)
+    // Padrão de 18/11/2026: a resposta principal repete a economia de 12 meses da tabela, com direção em palavras e símbolo.
+    const savingsRow = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Economia estimada com giro', exact: true }) })
+    const savings12 = normalize(await savingsRow.locator('td').nth(1).innerText())
+    const answer = normalize(await section.locator('.dsc-answer-main').innerText())
+    assert.ok(answer.includes(savings12), `resposta principal traz a economia de 12 meses (${savings12})`)
+    assert.match(answer, savings12.startsWith('-') ? /▼.*O giro custa mais/ : /▲.*O giro custa menos/)
+    await assertResultBeside(page, section, '.dsc-inputs', '.dsc-result-col')
   } else if (route === 'finimp') {
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)
@@ -299,7 +324,7 @@ async function fillScenario(page, section, route) {
     const eligibilityWarning = section.locator('.fm-iof-premise')
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /FINAME|Finame/)
-    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 6, 'números principais à vista, sem abrir a composição: taxas, CET, parcelas e custo total')
+    assert.equal(await section.locator('.fm-destaques tbody tr:not(.fm-grp)').count(), 10, 'números principais à vista, sem abrir a composição: taxas, CET e valores em reais até o custo total')
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
@@ -427,13 +452,16 @@ async function assertComparatorFamily(browser) {
               available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
               used:costs.right - operation.left,
               topGap:Math.abs(costs.top - operation.top),
-              formBottom:form.getBoundingClientRect().bottom,
+              formTop:form.getBoundingClientRect().top,
+              formRight:form.getBoundingClientRect().right,
               resultsTop:results.top,
+              resultsLeft:results.left,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
           assert.ok(Math.abs(geometry.used - geometry.available) <= 2 && geometry.topGap <= 2, details + ': Operação e Custos preenchem a mesma linha')
-          assert.ok(geometry.resultsTop >= geometry.formBottom, details + ': cotação permanece na linha seguinte')
+          // Padrão de 18/11/2026: no computador, a cotação fica ao lado dos dados, alinhada pelo topo.
+          assert.ok(geometry.resultsLeft >= geometry.formRight && Math.abs(geometry.resultsTop - geometry.formTop) <= 48, details + ': cotação ao lado dos dados')
         }
       }
       console.log(`PASS família visual do Comparador · ${width}px · ${theme}`)

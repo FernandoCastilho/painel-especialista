@@ -45,13 +45,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
   .bw.e4 .e4-link { padding:10px 0; margin:-10px 0; }
   .bw.e4 .e4-origem { margin-bottom:6px; }
 }
-/* Economia de IOF e equivalente em giro, logo abaixo do custo efetivo. */
-.bw.e4 .e4-cotacao { display:flex; flex-wrap:wrap; gap:6px; margin:10px 16px 0; }
-.bw.e4 .e4-cotacao > div { flex:1 1 180px; padding:10px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-soft); min-width:0; }
-.bw.e4 .e4-cotacao dt { display:flex; align-items:center; gap:4px; font-size:.75rem; font-weight:600; color:var(--bw-mut); }
-.bw.e4 .e4-cotacao dd { margin:4px 0 0; font-size:.85rem; color:var(--bw-ink); }
-.bw.e4 .e4-cotacao dd b { display:block; font-size:1rem; white-space:nowrap; }
-.bw.e4 .e4-cotacao dd small { display:block; margin-top:3px; font-size:.72rem; line-height:1.35; color:var(--bw-mut); }
+/* Resultado organizado (equivalências e valores) em CalcPattern-4131.css. */
 .bw.e4 .fm-headline small { display:block; }
 /* Condições da operação, na ordem do e-mail de cotação, com o botão que copia o resumo em texto. */
 .bw.e4 .e4-condicoes { margin:12px 16px 0; padding:10px 12px 12px; border-radius:10px; background:var(--bw-soft); }
@@ -80,12 +74,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 .bw.e4 .e4-comparar .fm-details { margin:0 16px 12px; }
 .bw.e4 .e4-parcelas { margin-top:14px; }
 .bw.e4 .e4-parcelas .fm-tabela th, .bw.e4 .e4-parcelas .fm-tabela td { padding-top:7px; padding-bottom:7px; }
-@media (max-width:700px) { .bw.e4 .e4-cotacao > div { flex-basis:100%; } }
 @media (min-width:1001px) {
-  .bw.e4 #fm-result.fm-zoom .e4-cotacao { margin:12px 24px 0; gap:12px; }
-  .bw.e4 #fm-result.fm-zoom .e4-cotacao dt { font-size:.95rem; }
-  .bw.e4 #fm-result.fm-zoom .e4-cotacao dd b { font-size:1.6rem; }
-  .bw.e4 #fm-result.fm-zoom .e4-cotacao dd small { font-size:.9rem; }
   .bw.e4 #fm-result.fm-zoom .e4-condicoes { margin:16px 24px 0; }
   .bw.e4 #fm-result.fm-zoom .e4-condicoes h4 { font-size:1rem; }
   .bw.e4 #fm-result.fm-zoom .e4-condicoes dt { font-size:.95rem; }
