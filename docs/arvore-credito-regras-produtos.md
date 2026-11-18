@@ -9,7 +9,7 @@ A pesquisa foi dividida em quatro frentes. Este arquivo recebe cada uma quando t
 | 1. Comércio exterior e câmbio | Recebida |
 | 2. Impostos por modalidade e por regime | Recebida |
 | 3. BNDES e linhas direcionadas | Recebida |
-| 4. Reais, mercado de capitais e garantias | Em andamento |
+| 4. Reais, mercado de capitais e garantias | Recebida |
 
 **Marcas de situação**
 
@@ -349,6 +349,29 @@ Comparação útil: 4131 com prazo médio de até 364 dias paga 3,5% na entrada;
 - IOF no FINIMP por repasse; se os 3,5% alcançam FINIMP curto; IOF de nota comercial comprada pelo banco; ACE igual a ACC.
 - Efeito da conta em moeda estrangeira (Res. BCB 575/2026) no IOF de câmbio do 4131.
 
+## 2.8 Complemento: duas perguntas de IOF de câmbio
+
+Respondidas pelo texto do decreto. Não foi localizada orientação da Receita em nenhuma das duas.
+
+**4131 creditado em conta em moeda estrangeira no Brasil, sem câmbio na entrada**
+- O imposto nasce "no ato da liquidação da operação de câmbio" (Decreto 6.306, art. 11, parágrafo único). [OF]
+- O decreto do IOF não tem dispositivo sobre conta em moeda estrangeira no País. [OF, por ausência]
+- Leitura do pesquisador, não confirmada: se o dinheiro fica em moeda estrangeira e é usado no exterior, não há câmbio nem fato gerador. Se é convertido para reais depois, o imposto nasce nessa conversão, e os 3,5% do empréstimo curto parecem alcançá-la.
+- A Receita já tributou operações "simultâneas" de câmbio sem fluxo real de moeda (decisões de 2014 a 2017).
+- **Para a árvore:** tratar como "sem definição oficial". Não apresentar a conta em moeda estrangeira como forma de evitar IOF.
+
+**FINIMP que financia também frete, tributos e seguros internos**
+
+| Parcela | IOF | Norma | Situação |
+|---|---|---|---|
+| Pagamento ao fornecedor no exterior | Sem IOF de crédito; câmbio para pagar bem importado é isento | Decreto 6.306, art. 2º, § 2º; art. 16, I | [OF] |
+| Gasto local com dinheiro que ingressa no País, prazo médio de até 364 dias | 3,5% sobre o valor em reais do câmbio de entrada | Art. 15-B, XII | [OF] no texto; aplicação ao FINIMP é leitura |
+| Mesmo caso, prazo médio acima de 364 dias | Zero | Art. 15-B, XI | [OF] no texto |
+| Parcela local emprestada em reais por banco no Brasil | IOF de crédito comum | Art. 7º | [OF] no texto |
+
+- O inciso XII só fala em empréstimo sujeito a registro no Banco Central. Como fica o IOF abaixo de US$ 1 milhão não está confirmado.
+- **Para a árvore:** no FINIMP curto, a parcela de gasto local custa 3,5% logo na entrada. Isso reforça comparar essa parcela com giro em reais, ou usar prazo médio acima de 364 dias.
+
 ## Fontes da frente 2 (consulta em 18/11/2026)
 
 - [RIR/2018, Decreto 9.580, Câmara](https://www2.camara.leg.br/legin/fed/decret/2018/decreto-9580-22-novembro-2018-787360-normaatualizada-pe.html)
@@ -560,3 +583,161 @@ Regra sugerida para a tela: CNAE nesses grupos = "CPR é candidata; confirmar a 
 - [Lei 7.827/1989 (fundos constitucionais), Câmara](https://www2.camara.leg.br/legin/fed/lei/1989/lei-7827-27-setembro-1989-365476-normaatualizada-pl.html)
 - [LC 125/2007 (Sudene), Câmara](https://www2.camara.leg.br/legin/fed/leicom/2007/leicomplementar-125-3-janeiro-2007-548989-normaatualizada-pl.html)
 - [Lei 8.929/1994 (CPR), Câmara](https://www2.camara.leg.br/legin/fed/lei/1994/lei-8929-22-agosto-1994-349613-normaatualizada-pl.html)
+
+---
+
+# Frente 4 — Crédito em reais, mercado de capitais e garantias
+
+Nesta frente só abriram os sites do Banco Central e da Câmara. Quase tudo de CVM e Susep está como [BUSCA]. A marca **[PM]** significa prática de mercado, sem regra pública e sem fonte conferida; não substitui a política do banco.
+
+**Quatro pontos que mudam o que está escrito na árvore**
+1. "S.A. ou Ltda." não separa quem acessa mercado de capitais: nota comercial pode ser emitida por S.A., Ltda. e cooperativa. [OF]
+2. Dívida cara em outro banco (N19): portabilidade existe para empresa, mas o rito padronizado e as proteções de quitação antecipada só valem para pessoa física, micro e pequena empresa. [OF]
+3. Desconto de duplicatas: a duplicata escritural já começou e passa a ser obrigatória por porte a partir de 2027. O Painel não menciona. [OF]
+4. CRI e CRA deixaram de servir para empresa cujo setor principal não seja imobiliário ou agro. [OF]
+
+## 4.1 Capital de giro (CCB), prefixado ou pós-CDI
+
+- Uso livre, todos os portes. Prazo usual de 12 a 60 meses. [PM]
+- CCB é título executivo e pode ter garantia real ou pessoal (Lei 10.931, arts. 26 a 28). [OF]
+- Todo crédito exige instrumento com taxa efetiva mensal e anual, indexador, tributos, tarifas e encargos de atraso (Res. CMN 5.004, arts. 2º e 3º). [OF]
+- CET obrigatório só para pessoa física, micro e pequena empresa (Res. 4.881, art. 1º). [OF]
+- Tarifa de quitação antecipada vedada só para pessoa física, micro e pequena (Res. 3.516). Média e grande: vale o contrato. [OF]
+- Portabilidade: o banco de origem é obrigado a aceitar, e devedor inclui pessoa jurídica (Res. CMN 5.057, arts. 2º e 3º). O rito eletrônico com prazos só cobre operações de PJ "passíveis de contratação por pessoa natural" (art. 4º). [OF]
+
+## 4.2 Conta Garantida
+
+- Limite de 90 a 360 dias, renovável a critério do banco. [PM]
+- Não há norma própria para conta garantida de empresa. O teto de 8% ao mês do cheque especial vale só para pessoa física e MEI (Res. 4.765, art. 1º). [OF]
+- Sem teto de juros para empresa; renovação não garantida.
+
+## 4.3 Desconto de duplicatas e duplicata escritural
+
+- **Três operações distintas** (Res. 4.815, redação da 5.094/2023): aquisição (venda definitiva, sem coobrigação), desconto (com coobrigação) e crédito garantido por recebíveis. [OF]
+- **Obrigação de usar só duplicata escritural**, contada do fim da última etapa de integração dos sistemas: grande empresa (receita acima de R$ 300 milhões) em 180 dias; média (acima de R$ 4,8 milhões até R$ 300 milhões) em 360 dias; pequena em 540 dias. [OF]
+- **Início oficial:** 15/07/2026 (Comunicado BCB 45.562). [OF]
+- **Datas da obrigação:** conta do pesquisador indica cerca de julho de 2027 (grande), janeiro de 2028 (média) e julho de 2028 (pequena); a imprensa cita junho de 2027, dezembro de 2027 e junho de 2028. Diferença de cerca de um mês, a confirmar. Microempresa não aparece no cronograma.
+- Dinheiro que sobra da liquidação das duplicatas dadas em garantia volta à empresa em até 2 dias úteis (Res. 4.815, art. 5º, § 2º). [OF]
+- Cláusula que proíbe ou onera emitir ou circular duplicata é nula (Lei 13.775, art. 10). [OF]
+- **O que muda para a empresa:** contratar um escriturador; o comprador passa a aceitar ou recusar no sistema; o mesmo título não pode ser dado a dois financiadores; a agenda fica visível a outros bancos mediante autorização.
+
+## 4.4 Recebíveis de cartão
+
+- Banco só opera com recebível registrado em registradora (Res. 4.734, art. 3º). [OF]
+- O valor preso não pode passar do saldo devedor ou do limite (art. 4º, § 2º). Liberação do que sobra em até 2 dias úteis após a quitação (art. 6º). [OF]
+- **Novo em 2026:** a credenciadora tem até 4 dias úteis para cancelar a antecipação automática quando o lojista pede (Res. BCB 562, desde 11/05/2026). Facilita trocar de financiador. [OF]
+
+## 4.5 Risco sacado, vendor e compror
+
+- **Risco sacado:** a compradora (âncora) confirma a fatura; o banco paga o fornecedor antes, com desconto; a âncora paga o banco no vencimento. Devedor: a compradora. [PM] Consome o limite dela no banco.
+- **Vendor:** o banco paga o fornecedor à vista e financia o comprador; o fornecedor fica como garantidor. [BUSCA, PM]
+- **Compror:** parte do comprador; o banco paga o fornecedor à vista, sem garantia do fornecedor. [BUSCA, PM]
+- Não há norma do Banco Central específica para vendor, compror ou "risco sacado". [OF, por busca na base de normas]
+
+## 4.6 Leasing e CDC de bens
+
+- Prazo mínimo do leasing financeiro: 2 anos para bem com vida útil de até 5 anos; 3 anos para os demais (Res. CMN 4.977, art. 7º). [OF]
+- Comprar o bem antes do prazo mínimo transforma a operação em compra e venda a prazo. [OF]
+- Vender o bem ao banco e arrendá-lo de volta: só pessoa jurídica, só leasing financeiro (art. 11). [OF]
+- Em recuperação judicial, o arrendador fica fora (Lei 11.101, art. 49, § 3º). [OF]
+- CDC: sem prazo mínimo em norma; garantia usual é a alienação fiduciária do próprio bem. [PM]
+
+## 4.7 Nota comercial
+
+- Podem emitir S.A., Ltda. e cooperativa; quem aprova é a administração (Lei 14.195, art. 46). [OF]
+- Só em forma eletrônica, por escriturador autorizado pela CVM; é título executivo (arts. 45 e 48). [OF]
+- Oferta a investidores profissionais por registro automático da Res. CVM 160; exemplo de 2026 de uma Ltda. com oferta de R$ 180 milhões. [BUSCA]
+- Não foi achada tabela confiável de custo nem de valor mínimo.
+
+## 4.8 Debêntures e regime FÁCIL (lado prático)
+
+- Conselho ou diretoria podem aprovar debênture não conversível (Lei 6.404, art. 59, § 1º, pela Lei 14.711/2023). [OF]
+- Em setembro de 2026 a área técnica da CVM afastou a emissão pública de debêntures por sociedade limitada. [BUSCA]
+- FÁCIL: receita bruta anual abaixo de R$ 500 milhões; ofertas simplificadas de até R$ 300 milhões a cada 12 meses; oferta de dívida a profissionais sem coordenador. **Vigência: as fontes divergem entre 02/01/2026 e 16/03/2026.** [BUSCA]
+- Custo: uma única fonte fala em 1,5% a 5% do valor captado; uma opinião antiga cita cerca de R$ 30 milhões como piso para compensar. Só ordem de grandeza. [BUSCA]
+- Exigências típicas: balanço auditado, coordenador, agente fiduciário, escriturador, assessoria jurídica. [PM]
+
+## 4.9 CRI e CRA
+
+- Não pode servir de lastro título de dívida cujo devedor ou garantidor seja empresa com setor principal fora do imobiliário (CRI) ou do agro (CRA). Setor principal é o que gera mais de dois terços da receita (Res. CMN 5.118/2024, com a 5.212, de 22/05/2025). [OF]
+- Faz sentido para incorporadora, loteadora, locação, agroindústria e cadeia do agro. Indústria ou varejo comum não usam mais.
+
+## 4.10 FIDC
+
+- Venda recorrente de recebíveis a um fundo; alternativa ao desconto bancário. Para carteira grande e pulverizada. [PM]
+- Escala de cerca de R$ 10 milhões por mês em recebíveis para diluir o custo fixo. [BUSCA, fonte comercial]
+- Novo em 2026: fundo não pode comprar direito de ação judicial antes de decisão definitiva (Res. CMN 5.343, de 24/09/2026). [OF]
+
+## 4.11 Garantias e Marco Legal das Garantias [OF]
+
+- **Alienação fiduciária de imóvel:** qualquer pessoa física ou jurídica pode contratar (Lei 9.514, art. 22, § 1º).
+- **Segunda alienação do mesmo imóvel:** permitida; o credor mais antigo tem prioridade. Não pagar uma dívida permite vencer as outras garantidas pelo mesmo imóvel (art. 22, §§ 3º, 4º e 6º).
+- **Extensão da garantia:** o mesmo imóvel pode garantir novas operações, só com o mesmo credor (Lei 13.476, art. 9º-A).
+- **Saldo que sobra:** em limite de crédito com garantia, se a venda não cobrir, a empresa e os avalistas continuam devendo (Lei 13.476, art. 9º).
+- **Agente de garantia:** um agente pode gerir e executar a garantia em nome de vários credores (Código Civil, art. 853-A).
+- **Recuperação judicial:** credor com propriedade fiduciária e arrendador ficam fora; bem de capital essencial não sai da empresa durante a suspensão (Lei 11.101, art. 49, § 3º).
+- Aval, cessão fiduciária de recebíveis e penhor: não conferidos nesta rodada. [NC]
+
+## 4.12 Fiança bancária e seguro garantia
+
+- Em contrato público, quem escolhe a modalidade é o contratado: caução, seguro garantia, fiança bancária ou título de capitalização (Lei 14.133, art. 96, § 1º). [OF]
+- Limite de até 5% do contrato, podendo ir a 10%; até 30% em obra de grande vulto, só por seguro garantia com cláusula de retomada (arts. 98, 99 e 102). [OF]
+- Em processo judicial, fiança bancária e seguro garantia valem como dinheiro se cobrirem o débito mais 30% (CPC, art. 835, § 2º). [OF]
+- A fiança consome limite de crédito no banco; o seguro não. O seguro tende a custar menos. Em contrato privado, quem recebe a garantia decide o que aceita. [BUSCA, PM]
+
+## 4.13 Crédito com garantia de imóvel e financiamento imobiliário PJ
+
+- O teto de 60% do valor do imóvel é escrito para empréstimo a pessoa natural. Para empresa não há teto do CMN; o banco define (Res. 4.676; leitura do pesquisador). [OF no texto]
+- Dinheiro só sai depois de a garantia estar constituída (art. 9º). [OF]
+- De 5 a 15 anos; contratação lenta; custos de cartório e avaliação. [PM]
+
+## 4.14 Onde tipo societário, porte ou setor mudam o acesso
+
+| Regra | Quem é afetado | Situação |
+|---|---|---|
+| CET obrigatório | Só pessoa física, micro e pequena empresa | [OF] |
+| Tarifa de quitação antecipada vedada | Só pessoa física, micro e pequena. Média e grande: vale o contrato | [OF] |
+| Portabilidade com rito e prazos | Pessoa física e operações de PJ equivalentes às de pessoa natural | [OF] |
+| Duplicata escritural obrigatória | Grande, depois média, depois pequena | [OF] |
+| Nota comercial | S.A., Ltda. e cooperativa | [OF] |
+| Debênture | Sociedade por ações | [OF] na lei; posição da CVM [BUSCA] |
+| Regime FÁCIL | Receita abaixo de R$ 500 milhões | [BUSCA] |
+| CRI e CRA | Só empresa com mais de dois terços da receita no setor imobiliário ou no agro | [OF] |
+| Venda do bem com arrendamento de volta | Só pessoa jurídica, só leasing financeiro | [OF] |
+
+## 4.15 O que ficou sem conferência
+
+- Tudo da CVM (Res. 160, 175, 226, 231, 232) e da Susep: sites bloqueados.
+- Datas exatas da obrigação da duplicata escritural.
+- Custos e valor mínimo de emissão de nota comercial, debênture e FIDC: precisam de cotação real.
+- Vendor e compror: não há norma.
+- Risco sacado: tratamento contábil e situação das ações no STF.
+- Aval, cessão fiduciária de recebíveis, penhor e posição dos tribunais em recuperação judicial.
+- Prazos, garantias e portes "usuais" de todas as fichas são prática de mercado sem fonte.
+
+## Fontes da frente 4 (consulta em 18/11/2026)
+
+- [Res. CMN 5.004](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=5004)
+- [Res. CMN 4.881](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=4881)
+- [Res. 3.516](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=3516)
+- [Res. CMN 5.057](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=5057)
+- [Res. 4.765](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=4765)
+- [Res. 4.815](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=4815)
+- [Res. CMN 5.094](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=5094)
+- [Res. BCB 339](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20BCB&numero=339)
+- [Res. BCB 540](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20BCB&numero=540)
+- [Comunicado BCB 45.562](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Comunicado&numero=45562)
+- [Res. 4.734](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=4734)
+- [Res. BCB 562](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20BCB&numero=562)
+- [Res. CMN 4.977](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=4977)
+- [Res. CMN 5.118](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=5118)
+- [Res. CMN 5.212](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=5212)
+- [Res. CMN 5.343](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=5343)
+- [Res. 4.676](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o&numero=4676)
+- [Lei 10.931/2004, Câmara](https://www2.camara.leg.br/legin/fed/lei/2004/lei-10931-2-agosto-2004-533165-normaatualizada-pl.html)
+- [Lei 13.775/2018, Câmara](https://www2.camara.leg.br/legin/fed/lei/2018/lei-13775-20-dezembro-2018-787500-publicacaooriginal-157047-pl.html)
+- [Lei 14.195/2021, Câmara](https://www2.camara.leg.br/legin/fed/lei/2021/lei-14195-26-agosto-2021-791684-normaatualizada-pl.html)
+- [Lei 14.711/2023, Câmara](https://www2.camara.leg.br/legin/fed/lei/2023/lei-14711-30-outubro-2023-794873-publicacaooriginal-169906-pl.html)
+- [Lei 9.514/1997, Câmara](https://www2.camara.leg.br/legin/fed/lei/1997/lei-9514-20-novembro-1997-365383-normaatualizada-pl.html)
+- [Lei 14.133/2021, Câmara](https://www2.camara.leg.br/legin/fed/lei/2021/lei-14133-1-abril-2021-791222-normaatualizada-pl.html)
+- Via busca, páginas não abertas: [Capital Aberto, regras do FÁCIL](https://capitalaberto.com.br/regulacao/2025/07/cvm-publica-regras-do-facil-validas-a-partir-de-janeiro-de-2026), [Mattos Filho, FÁCIL em vigor](https://www.mattosfilho.com.br/unico/regime-facil-entra-vigor/), [Pinheiro Guimarães, debêntures de limitadas](https://pinheiroguimaraes.com.br/publicacoes/cvm-sre-afasta-possibilidade-de-emissao-publica-de-debentures-por-sociedades-limitadas/), [DGABC, cronograma das duplicatas](https://www.dgabc.com.br/noticia/4332379/cronograma-do-bc-para-duplicatas-escriturais-preve-implementacao-escalonada-ate-junho-de-2028)
