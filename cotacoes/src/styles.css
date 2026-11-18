@@ -1,6 +1,6 @@
 :root { color-scheme: dark; --bg:#0d1117; --card:#161b22; --line:#30363d; --fg:#e6edf3; --mut:#9aa4af; --up:#3fb950; --down:#f85149; --accent:#58a6ff; --warn:#d29922; --surface-2:#1c2330; }
 * { box-sizing: border-box; }
-body { margin:0; background:var(--bg); color:var(--fg); font-family: system-ui, sans-serif; }
+body { margin:0; background:var(--bg); color:var(--fg); font-family: var(--sans); }
 main { max-width: 1200px; margin: 0 auto; padding: 32px 16px; }
 h1 { margin:0 0 8px; font-size: 1.6rem; }
 .status { color:var(--mut); display:flex; align-items:center; gap:8px; margin:0 0 24px; }
@@ -69,7 +69,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline:2px s
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 
 .help { position:relative; display:inline-flex; margin-left:6px; vertical-align:middle; }
-.help button { width:16px; height:16px; padding:0; border-radius:50%; border:1px solid var(--mut); background:transparent; color:var(--mut); font:600 12px/1 system-ui, sans-serif; cursor:help; display:inline-flex; align-items:center; justify-content:center; }
+.help button { width:16px; height:16px; padding:0; border-radius:50%; border:1px solid var(--mut); background:transparent; color:var(--mut); font:600 12px/1 var(--sans); cursor:help; display:inline-flex; align-items:center; justify-content:center; }
 .help button:hover, .help button[aria-expanded="true"] { color:var(--fg); border-color:var(--fg); }
 .pop { position:absolute; top:calc(100% + 6px); z-index:20; width:230px; max-width:calc(100vw - 32px); background:var(--pop-bg); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:.78rem; line-height:1.45; font-weight:400; text-align:left; box-shadow:0 6px 20px rgba(0,0,0,.4); }
 .pop.left { left:-8px; } .pop.right { right:-8px; }
@@ -569,7 +569,7 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .expandable-body > h2:first-child { margin-top:4px; }
 .chart-filters { display:grid; gap:8px; margin:0 0 12px; padding:10px 12px; border:1px solid var(--line); background:var(--card); }
 .cf-row { display:grid; grid-template-columns:64px minmax(0,1fr); gap:10px; align-items:center; }
-.cf-label { color:var(--mut); font:700 .75rem/1.2 system-ui, sans-serif; letter-spacing:.1em; text-transform:uppercase; }
+.cf-label { color:var(--mut); font:700 .75rem/1.2 var(--sans); letter-spacing:.1em; text-transform:uppercase; }
 .cf-body { min-width:0; }
 .cf-scale:has(.cf-body:empty) { display:none; }
 .chart-filters .scale-seg { margin:0; }
