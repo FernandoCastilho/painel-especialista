@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ZONES } from './Clock.jsx'
 import { OnlineBadge } from './Acessos.jsx'
 import { DESK_TABS } from './terminal.js'
@@ -49,17 +49,36 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
     return () => document.removeEventListener('keydown', onKey)
   }, [onTab])
 
+  // Traço sob a seção aberta: desliza de uma aba para a outra (o tempo fica no CSS). Segue a aba também quando a largura
+  // muda ou quando as abas quebram em duas linhas; sem aba aberta à vista (rota oculta, barra escondida), some.
+  const tabsRef = useRef(null)
+  const [mark, setMark] = useState(null)
+  useLayoutEffect(() => {
+    const nav = tabsRef.current
+    if (!nav) return undefined
+    const place = () => {
+      const on = nav.querySelector('button.on')
+      setMark(on && on.offsetWidth ? { x: on.offsetLeft, y: on.offsetTop + on.offsetHeight - 2, w: on.offsetWidth } : null)
+    }
+    place()
+    const watch = typeof ResizeObserver === 'function' ? new ResizeObserver(place) : null
+    watch?.observe(nav)
+    document.fonts?.ready?.then(place).catch(() => {})
+    return () => watch?.disconnect()
+  }, [tab])
+
   return (
     <div className="topbar">
       <div className="topbar-brand" title="Painel Especializado no Mercado">
         <abbr title="Painel Especializado no Mercado" style={{ textDecoration: 'none', cursor: 'help' }}>PME</abbr>
       </div>
-      <nav className="topbar-tabs" aria-label="Navegação principal">
+      <nav className="topbar-tabs" aria-label="Navegação principal" ref={tabsRef}>
         {DESK_TABS.filter((t) => !t.oculto).map((t, i) => (
           <button key={t.id} type="button" className={t.id === tab ? 'on' : ''} aria-current={t.id === tab ? 'page' : undefined} onClick={() => onTab(t.id)} title={i < 10 ? `Alt+${(i + 1) % 10}` : undefined}>
             {t.label}
           </button>
         ))}
+        <span className="topbar-mark" aria-hidden="true" hidden={!mark} style={mark ? { width: mark.w, translate: `${mark.x}px ${mark.y}px` } : undefined} />
       </nav>
       <Clocks />
       <OnlineBadge />
