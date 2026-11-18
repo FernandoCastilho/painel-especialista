@@ -293,7 +293,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.deepEqual(errors, [])
       await ctx.close()
     }
-    // a aba aparece no menu (computador e celular) desde 18/11/2026 e continua abrindo pelo endereço direto;
+    // a aba saiu do menu (computador e celular) em 18/11/2026, a pedido, e continua abrindo pelo endereço direto;
     // o menu do topo fica em uma linha também com o contador de pessoas online, que só aparece no site publicado
     for (const [width, tema] of [[1920, 'light'], [1820, 'light'], [1820, 'dark'], [1600, 'light'], [1280, 'light'], [1205, 'dark'], [1024, 'light'], [1024, 'dark'], [390, 'light']]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
@@ -308,11 +308,11 @@ const out = process.env.SMOKE_OUT || '/tmp'
       if (width < 700) { await p.getByRole('button', { name: /^Mais/ }).filter({ visible: true }).first().click(); await p.getByRole('menuitem').first().waitFor() }
       assert.ok(await p.locator('nav button, nav [role="menuitem"]').filter({ visible: true }).count() >= 5)
       const item = p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).filter({ visible: true })
-      assert.equal(await item.count(), 1, 'Apresentar aparece no menu')
-      await item.click()
+      assert.equal(await item.count(), 0, 'Apresentar fica fora do menu')
+      if (width < 700) await p.keyboard.press('Escape')
+      await p.evaluate(() => { location.hash = '#apresentar' }) // fora do menu, abre pelo endereço direto
       await p.locator('.apz').waitFor()
-      assert.equal(await p.evaluate(() => location.hash), '#apresentar')
-      // no computador, o menu do topo continua em uma linha com a aba a mais
+      // no computador, o menu do topo continua em uma linha
       if (width > 700) {
         await p.locator('.online-badge').waitFor()
         await p.evaluate(() => document.fonts.ready)
