@@ -213,3 +213,94 @@ test('crescimento do faturamento x endividamento no período escolhido', () => {
   // Sem saldo nos dois períodos: mostra só o faturamento, sem conclusão.
   assert.equal(fat.leituraCrescimento({ faturamento: { variacao: 0.1 }, endividamento: { variacaoMedia: null } }).relacao, null)
 })
+
+test('análise automática: sazonalidade, tendência, meses fora do padrão e endividamento', () => {
+  // 36 meses fictícios: base 1.000 crescendo 1% ao mês, dezembro +30% e fevereiro -20%; saldo de dívida estável.
+  const linhas = ['Mês Faturamento Endividamento']
+  for (let i = 0; i < 36; i++) {
+    const k = fat.chaveMes(2023, 11) + i
+    const m = ((k % 12) + 12) % 12
+    const efeito = m === 11 ? 1.3 : m === 1 ? 0.8 : 1
+    linhas.push(`${fat.rotuloMes(k)} ${Math.round(1000 * 1.01 ** i * efeito)} ${i >= 34 ? 0 : 2000}`)
+  }
+  const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+  assert.equal(a.suficiente, true)
+  assert.equal(a.meses, 36)
+  assert.ok(a.sazonalidade, 'com 36 meses há sazonalidade')
+  assert.equal(a.sazonalidade.fortes[0].rotulo, 'dez')
+  assert.equal(a.sazonalidade.fracos[0].rotulo, 'fev')
+  assert.ok(Math.abs(a.sazonalidade.indices[11].indice - 1.3 / 1.0083) < 0.05)
+  assert.equal(a.sazonalidade.relevante, true)
+  assert.ok(a.tendenciaAno > 0, 'tendência de alta')
+  // Com a sazonalidade descontada, dezembro e fevereiro não viram "fora do padrão".
+  assert.equal(a.atipicos.filter((x) => /^(dez|fev)/.test(x.rotulo)).length, 0)
+  assert.equal(a.endividamento.ultimoRotulo, 'ago/26')
+  assert.equal(a.endividamento.semSaldoNoFim, 2)
+  assert.ok(a.atencao.some((t) => /sem saldo/.test(t)))
+})
+
+test('análise com poucos meses avisa e não inventa sazonalidade', () => {
+  assert.equal(fat.analisarSerie(fat.parseFaturamento('jan/26 1 1\nfev/26 2 2').meses).suficiente, false)
+  const curta = fat.analisarSerie(fat.parseFaturamento(['jan/26 1.000 500', 'fev/26 900 500', 'mar/26 800 500', 'abr/26 700 500', 'mai/26 600 500', 'jun/26 500 500', 'jul/26 400 500'].join('\n')).meses)
+  assert.equal(curta.sazonalidade, null)
+  assert.ok(curta.quedas >= 3)
+  assert.ok(curta.atencao.some((t) => /quedas seguidas/.test(t)))
+  assert.ok(curta.tendenciaAno < 0)
+})
+
+test('análise desconta a sazonalidade: agro e varejo sem crescimento não geram alarme falso', () => {
+  const agro = [0.6, 0.8, 1.6, 1.9, 1.7, 1.3, 0.9, 0.7, 0.6, 0.6, 0.6, 0.7]
+  const varejo = [0.85, 0.85, 0.9, 0.95, 1, 0.95, 1, 1, 0.95, 1, 1.15, 1.4]
+  for (const [nome, perfil] of [['agro', agro], ['varejo', varejo]]) {
+    for (let fimMes = 0; fimMes < 12; fimMes++) {
+      const linhas = []
+      for (let i = 0; i < 36; i++) {
+        const k = fat.chaveMes(2023, 1) + fimMes + 1 + i
+        linhas.push(`${fat.rotuloMes(k)} ${Math.round(1000 * perfil[((k % 12) + 12) % 12])} 2.000`)
+      }
+      const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+      assert.ok(a.ajustada, `${nome}: sazonalidade detectada`)
+      assert.ok(Math.abs(a.tendenciaAno) < 0.05, `${nome} terminando no mês ${fimMes}: tendência ${a.tendenciaAno}`)
+      assert.ok(a.cv < 0.05, `${nome}: estável depois de descontar a sazonalidade`)
+      assert.ok(a.quedas < 3, `${nome}: sem quedas seguidas falsas`)
+      assert.equal(a.atipicosTotal, 0, `${nome}: nenhum mês fora do padrão`)
+      assert.deepEqual(a.atencao, [], `${nome}: sem alertas`)
+    }
+  }
+})
+
+test('crescimento constante não vira mês fora do padrão e o alerta de dívida usa a mesma janela', () => {
+  const linhas = []
+  for (let i = 0; i < 30; i++) {
+    const k = fat.chaveMes(2024, 1) + i
+    // Faturamento crescendo 3% ao mês; dívida estável: não pode dizer que a dívida "cresceu".
+    linhas.push(`${fat.rotuloMes(k)} ${Math.round(1000 * 1.03 ** i)} 5.000`)
+  }
+  const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+  assert.equal(a.atipicosTotal, 0)
+  assert.ok(!a.atencao.some((t) => /pior que o faturamento/.test(t)))
+  // Agora a dívida sobe 50% e o faturamento cai: o alerta aparece com os dois números.
+  const l2 = []
+  for (let i = 0; i < 30; i++) {
+    const k = fat.chaveMes(2024, 1) + i
+    l2.push(`${fat.rotuloMes(k)} ${1000 - i * 5} ${i >= 18 ? '7.500' : '5.000'}`)
+  }
+  const b = fat.analisarSerie(fat.parseFaturamento(l2.join('\n')).meses)
+  assert.ok(b.atencao.some((t) => /Endividamento evoluiu pior que o faturamento em 12 meses até jun\/26 \(dívida 50%/.test(t)), b.atencao.join(' | '))
+  // Um saldo só já aparece na análise.
+  const c = fat.analisarSerie(fat.parseFaturamento('jan/26 1.000 0\nfev/26 1.000 0\nmar/26 1.000 0\nabr/26 1.000 0\nmai/26 1.000 0\njun/26 1.000 3.000').meses)
+  assert.equal(c.endividamento.ultimo, 3000)
+})
+
+test('mês do ano sempre zerado não apaga a análise: usa a série sem ajuste', () => {
+  const linhas = []
+  for (let i = 0; i < 36; i++) {
+    const k = fat.chaveMes(2023, 11) + i
+    const m = ((k % 12) + 12) % 12
+    linhas.push(`${fat.rotuloMes(k)} ${m <= 1 ? 0 : Math.round(1000 * 0.98 ** i)} 1.000`)
+  }
+  const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+  assert.equal(a.ajustada, false)
+  assert.ok(a.tendenciaAno != null && a.cv != null, "tendência e estabilidade não somem")
+  assert.ok(a.atencao.some((t) => /12 meses .*menor/.test(t)))
+})
