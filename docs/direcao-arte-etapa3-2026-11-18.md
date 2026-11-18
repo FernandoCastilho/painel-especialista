@@ -35,6 +35,8 @@ Fotos de antes e depois: pasta `docs/direcao-arte-etapa3/`.
 
 - Levantamento automático de todo texto em âmbar nas seis abas (nove telas, contando subtelas). Antes: 23 tipos de elemento; depois, só o selecionado no BNDES e o aviso de feriado próximo.
 - Fotos das telas no computador e no celular, antes e depois.
+- Testes do painel: 2.143 passando. Conferência de código: sem erros. Montagem: ok.
+- Conferências de tela: as 33 da rotina automática mais 11 das abas mexidas (Bancos, BNDES, mapa do conhecimento, setores, feriados, Aprender, notícias). 44 de 44 passaram.
 
 ## O que não deu para conferir
 
