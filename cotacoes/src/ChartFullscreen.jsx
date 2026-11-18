@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import ExpandIcon from './ExpandIcon.jsx'
 import './ChartFullscreen.css'
 
 // O host do portal permanece o mesmo ao mudar de lugar. Não remonta o gráfico,
@@ -32,7 +33,7 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
   if (disabled || !host) return children
   const keepEscapeInside = event => { if (expanded && event.key === 'Escape') event.stopPropagation() }
   const content = <>
-    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" aria-label={expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : compact ? '⛶' : 'Maximizar gráfico'}</button></div>
+    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" className={expanded ? undefined : 'btn-expand'} aria-label={expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'} title={expanded ? undefined : 'Ampliar'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : <ExpandIcon />}</button></div>
     <div className="chart-fullscreen-content" onKeyDown={keepEscapeInside}>{children}</div>
   </>
   return <>

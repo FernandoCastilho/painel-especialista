@@ -58,6 +58,23 @@
 .kpi-espera::before { display: none; }
 @media (min-width: 1000px) { .kpis-espera > :nth-child(6) { display: none; } }
 
+/* ===== Ampliar: um ícone só, pequeno, no canto de cima à direita de cada gráfico ou quadro =====
+   Vale no painel inteiro, calculadoras incluídas (pedido de 18/11/2026). Cores pelos tokens de cada tela. */
+html button.btn-expand { display:inline-flex; align-items:center; justify-content:center; flex:none; width:32px; height:32px; min-width:0; min-height:0; padding:0; border:1px solid var(--line); border-radius:var(--r-ctl, 8px); background:var(--card); color:var(--mut); font:inherit; line-height:0; cursor:pointer; }
+.icon-expand { display:inline-block; flex:none; width:16px; height:16px; background:currentColor; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7'/%3E%3C/svg%3E") center / contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7'/%3E%3C/svg%3E") center / contain no-repeat; }
+html button.btn-expand:hover { color:var(--fg); border-color:var(--amber, var(--accent)); }
+html button.btn-expand:focus-visible { outline:2px solid var(--amber, var(--accent)); outline-offset:2px; }
+@media (max-width:999px), (pointer:coarse) { html button.btn-expand { width:44px; height:44px; } }
+/* No gráfico, o ícone fica sobre o canto de cima à direita, sem ocupar uma linha própria. */
+.chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) { position:relative; }
+.chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar { position:absolute; top:0; right:0; z-index:3; margin:0; }
+/* Quando o ampliar envolve o quadro inteiro (mapa e setores da recuperação judicial), o ícone fica dentro da borda. */
+.chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar:has(+ .chart-fullscreen-content > .rj-card) { top:12px; right:12px; }
+/* "Mercado hoje": o ícone de tela cheia segue o mesmo desenho dos outros (antes era texto sem contorno). */
+@media (min-width: 1000px) {
+  .desk-markets .expandable-panel:not(.is-modal) > .expandable-controls .btn.btn-expand { width:32px; height:32px; min-height:0; padding:0; border:1px solid var(--line); background:var(--card); }
+}
+
 /* ===== Movimento =====
    Três tempos (--t-fast: resposta ao toque; --t-base: troca de estado; --t-slow: entrada) e duas curvas. Nada em laço, fora a fita de
    cotações e a espera acima. Com "reduzir movimento" ligado no aparelho, tudo aparece pronto. */
