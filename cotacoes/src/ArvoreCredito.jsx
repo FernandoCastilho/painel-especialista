@@ -5,7 +5,7 @@ import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import {
   NECESSIDADES, OPERACOES, MARCAS, CONSULTA, MAX_FOLHA, UNIDADES, PORTE_ROTULO, CNPJ_SERVICO,
-  montarFolha, analisarFaturamento, consultarCnpj, cnpjValido, formatarCnpj, soDigitos, porteBndes, CONSULTA_CNPJ_ATIVA,
+  montarFolha, analisarFaturamento, consultarCnpj, cnpjValido, formatarCnpj, soDigitos, porteBndes, CONSULTA_CNPJ_ATIVA, RECEITA_CNPJ,
 } from './arvoreCredito.js'
 import './CalculatorStandard.css'
 import './ArvoreCredito.css'
@@ -182,7 +182,10 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
             <div className="cx-form cx-pad">
               <Campo id="ac-nome" label="Cliente (opcional)"><input id="ac-nome" autoComplete="off" value={empresa.razaoSocial} onChange={alterar('razaoSocial')} maxLength={120} /></Campo>
             </div>
-            <p className="cx-hint cx-pad">Preencha os dados abaixo. A consulta automática pelo CNPJ está desligada até a confirmação da política do banco sobre consulta em serviço externo: nenhum dado sai desta tela.</p>
+            <div className="cx-pad ac-linha">
+              <a className="ac-receita" href={RECEITA_CNPJ.url} target="_blank" rel="noreferrer">Consultar CNPJ no site da {RECEITA_CNPJ.nome} ↗</a>
+            </div>
+            <p className="cx-hint cx-pad">No site da Receita, digite o CNPJ e copie para cá CNAE, município, UF e natureza jurídica. O CNPJ vai só para a Receita. A consulta automática pelo CNPJ está desligada até a confirmação da política do banco sobre consulta em serviço externo: nenhum dado sai desta tela.</p>
           </>
         )}
         <div className="cx-form cx-pad">

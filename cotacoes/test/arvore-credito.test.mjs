@@ -178,6 +178,9 @@ test('a tela abre com os três passos, o aviso de envio do CNPJ e o padrão das 
   assert.doesNotMatch(html, /Consultar dados públicos/)
   assert.match(html, /consulta automática pelo CNPJ está desligada/)
   assert.match(html, /id="ac-nome"/)
+  // Atalho para o comprovante oficial da Receita, em outra aba (Fernando, 18/11/2026).
+  assert.match(html, /href="https:\/\/solucoes\.receita\.fazenda\.gov\.br\/servicos\/cnpjreva\/cnpjreva_solicitacao\.asp" target="_blank" rel="noreferrer"/)
+  assert.match(html, /O CNPJ vai só para a Receita/)
   assert.match(html, /Folhas confirmadas/)
   assert.match(html, /Propostas, a revisar/)
   const fonte = await readFile(new URL('../src/ArvoreCredito.jsx', import.meta.url), 'utf8')
