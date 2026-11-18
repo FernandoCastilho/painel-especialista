@@ -366,6 +366,45 @@ export function analisarSerie(meses) {
   }
 }
 
+// Texto da análise em blocos simples, para a imagem exportada (mesma leitura do quadro da tela).
+export function blocosAnalise(a, fmt = (v) => v.toLocaleString('pt-BR')) {
+  if (!a?.suficiente) return []
+  const p0 = (v) => (v == null ? '—' : `${v > 0 ? '+' : ''}${Math.round(v * 100)}%`)
+  const vz = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`
+  const L = LIMITES_ANALISE
+  const janela = a.mesesJanela === 12 ? 'últimos 12 meses' : `últimos ${a.mesesJanela} meses`
+  const semSaz = a.ajustada ? ', descontada a sazonalidade' : ''
+  const fatur = [`Base: ${a.meses} meses, de ${a.de} a ${a.ate}.`]
+  if (a.variacao12m != null) fatur.push(`12 meses contra os 12 anteriores: ${p0(a.variacao12m)}.`)
+  if (a.tendenciaAno != null) fatur.push(`Tendência nos ${janela}${semSaz}: ${Math.abs(a.tendenciaAno) < 0.05 ? 'estável' : a.tendenciaAno > 0 ? `alta, perto de ${p0(a.tendenciaAno)} ao ano` : `queda, perto de ${p0(a.tendenciaAno)} ao ano`}.`)
+  if (a.ritmoRecente != null) fatur.push(`Últimos 3 meses: ${p0(a.ritmoRecente)} sobre a média dos ${janela}.`)
+  if (a.cv != null) fatur.push(`Mês a mês: ${a.cv < L.estavel ? 'estável' : a.cv <= L.instavel ? 'oscilação moderada' : 'instável'} (variação típica de ${Math.round(a.cv * 100)}%).`)
+  fatur.push(`Melhor mês: ${a.melhor.rotulo} (${fmt(a.melhor.faturamento)}); pior: ${a.pior.rotulo} (${fmt(a.pior.faturamento)}).`)
+  if (a.quedas >= 2) fatur.push(`${a.quedas} quedas seguidas até ${a.ate}${semSaz}.`)
+  if (a.altas >= 2) fatur.push(`${a.altas} altas seguidas até ${a.ate}${semSaz}.`)
+  const s = a.sazonalidade
+  const saz = !s ? [`Dados insuficientes: são precisos cerca de 24 meses seguidos.`] : [
+    `${s.relevante ? 'Há sazonalidade' : 'Sazonalidade fraca'}: o mês mais forte fica ${Math.round(s.amplitude * 100)} p.p. acima do mais fraco.`,
+    ...(s.fortes.length ? [`Mais fortes: ${s.fortes.map((x) => `${x.rotulo} (${p0(x.indice - 1)})`).join(', ')}.`] : []),
+    ...(s.fracos.length ? [`Mais fracos: ${s.fracos.map((x) => `${x.rotulo} (${p0(x.indice - 1)})`).join(', ')}.`] : []),
+    s.anos >= 2 ? `Base de até ${s.anos} anos por mês.` : 'Base de um ano por mês: leitura preliminar.',
+  ]
+  if (a.atipicos?.length) saz.push(`Fora do padrão: ${a.atipicos.map((x) => `${x.rotulo} (${p0(x.desvio)})`).join(', ')}${a.atipicosTotal > a.atipicos.length ? ` e mais ${a.atipicosTotal - a.atipicos.length}` : ''}.`)
+  const e = a.endividamento
+  const div = !e ? ['Sem saldos suficientes de endividamento.'] : [
+    `Último saldo: ${fmt(e.ultimo)} em ${e.ultimoRotulo}${e.variacao12m != null ? ` (${p0(e.variacao12m)} contra ${e.anoAntesRotulo})` : ''}.`,
+    `Maior saldo: ${fmt(e.maximo)} em ${e.maximoRotulo}.`,
+    ...(e.alavancagemAtual != null ? [`Alavancagem em ${e.ultimoRotulo}: ${vz(e.alavancagemAtual)}${e.alavancagemAnoAntes != null ? ` (era ${vz(e.alavancagemAnoAntes)} um ano antes)` : ''}.`] : []),
+    ...(e.alavancagemMax ? [`Maior alavancagem: ${vz(e.alavancagemMax.valor)} em ${e.alavancagemMax.rotulo}.`] : []),
+  ]
+  return [
+    { titulo: 'Faturamento', itens: fatur },
+    { titulo: 'Sazonalidade', itens: saz },
+    { titulo: 'Endividamento', itens: div },
+    { titulo: 'Pontos de atenção', itens: a.atencao.length ? a.atencao : ['Nenhum ponto de atenção pelos critérios da análise.'], alerta: a.atencao.length > 0 },
+  ]
+}
+
 // Total curto para o quadro do período, como em apresentação: 23.400 (R$ mil) -> "R$ 23,4 MM".
 export function totalCurto(v, unidade) {
   if (v == null) return '—'

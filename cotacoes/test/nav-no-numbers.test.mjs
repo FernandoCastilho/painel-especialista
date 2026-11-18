@@ -10,7 +10,7 @@ test('menus exibem nomes sem numeração e preservam ordem e navegação', async
   assert.doesNotMatch(nav, /<i\b|>\s*\{i\s*\+\s*1\}/)
   assert.match(nav, /\{t\.label\}/)
   assert.match(nav, /onClick=\{\(\) => onTab\(t\.id\)\}/)
-  assert.deepEqual(APP_SECTIONS.filter(t => !t.oculto).map(t => t.id), ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora', 'apresentar'])
+  assert.deepEqual(APP_SECTIONS.filter(t => !t.oculto).map(t => t.id), ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora'])
   // O pedido é visual: atalhos existentes continuam disponíveis.
   assert.match(top, /e\.altKey/)
 })

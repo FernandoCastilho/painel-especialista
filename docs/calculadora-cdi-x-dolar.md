@@ -40,3 +40,9 @@ Proposta do Diretor de Arte: resposta em uma frase; três números (prazo, data 
 (aplicado + bruto − IOF − IR = líquido); barra "Líquido x alta do dólar"; aviso quando a troca de faixa do IR ou do IOF é o
 que faz o líquido alcançar o alvo; memória de cálculo recolhida. Sem repetição de itens. Nenhuma regra de cálculo mudou.
 O IR em reais exibido é a diferença dos valores arredondados (bruto − IOF − líquido), para a coluna fechar no centavo.
+
+## Resultado abaixo e centralizado (18/11/2026, pedido de Fernando)
+O padrão visual de 18/11 (#491) pôs o resultado numa coluna fixa à direita com rolagem própria. Em notebook (1366 × 768)
+a coluna ficava curta e escondia parte do resultado. Agora, só na CDI x Dólar: resultado abaixo dos quadros de entrada,
+centralizado (até 1.040 px), em duas colunas a partir de 900 px. Conferido em 1280 × 720, 1366 × 768, 1536 × 864,
+1920 × 1080, tema escuro e celular: resultado com 513 px de altura, inteiro na tela do notebook, sem rolagem interna.

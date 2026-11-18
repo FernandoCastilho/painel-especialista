@@ -2,7 +2,7 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
-import { EXEMPLO, LIMITES_ANALISE, analisarSerie, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
+import { EXEMPLO, LIMITES_ANALISE, analisarSerie, blocosAnalise, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
 import './CalcPattern-faturamento.css'
 
@@ -13,7 +13,20 @@ const vezes = (v) => (v == null ? '—' : `${v.toLocaleString('pt-BR', { minimum
 
 // Gera a imagem PNG do gráfico (2x), em cores claras e com título, para colar em apresentação.
 const PROPS_IMAGEM = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'opacity', 'font-family', 'font-size', 'font-weight', 'text-anchor']
-async function imagemDoGrafico(svgEl, titulo, subtitulo) {
+// Imagem no tamanho de tela de notebook (1920 x 1080, 16:9), como um slide: título, gráfico,
+// destaque do período escolhido e os blocos da análise.
+export const IMAGEM_LARGURA = 1920, IMAGEM_ALTURA = 1080
+function quebrarLinhas(ctx, texto, largura) {
+  const palavras = String(texto).split(' '), linhas = []
+  let atual = ''
+  for (const p of palavras) {
+    const teste = atual ? `${atual} ${p}` : p
+    if (ctx.measureText(teste).width > largura && atual) { linhas.push(atual); atual = p } else atual = teste
+  }
+  if (atual) linhas.push(atual)
+  return linhas
+}
+async function imagemDoGrafico(svgEl, titulo, subtitulo, destaque, blocos, rodape) {
   const raiz = svgEl.closest('.ft')
   raiz?.setAttribute('data-ft-export', 'claro')
   let xml, W, H
@@ -37,20 +50,65 @@ async function imagemDoGrafico(svgEl, titulo, subtitulo) {
   const img = new Image()
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml)
   await img.decode()
-  const escala = 2, topo = subtitulo ? 56 : 36
+  const LW = IMAGEM_LARGURA, LH = IMAGEM_ALTURA, M = 48, FONTE = 'system-ui, sans-serif'
   const canvas = document.createElement('canvas')
-  canvas.width = W * escala
-  canvas.height = (H + topo) * escala
+  canvas.width = LW
+  canvas.height = LH
   const ctx = canvas.getContext('2d')
-  ctx.scale(escala, escala)
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, W, H + topo)
+  ctx.fillRect(0, 0, LW, LH)
   ctx.fillStyle = '#000d3c'
-  ctx.textAlign = 'center'
-  ctx.font = '700 18px system-ui, sans-serif'
-  ctx.fillText(titulo, W / 2, 24)
-  if (subtitulo) { ctx.font = '400 13px system-ui, sans-serif'; ctx.fillText(subtitulo, W / 2, 44) }
-  ctx.drawImage(img, 0, topo, W, H)
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.font = `700 34px ${FONTE}`
+  ctx.fillText(titulo, M, 58)
+  let y = 58
+  if (subtitulo) { ctx.font = `400 22px ${FONTE}`; ctx.fillStyle = '#334155'; ctx.fillText(subtitulo, M, 94); y = 94 }
+  // Gráfico: largura útil, no máximo 46% da altura.
+  const gw = LW - 2 * M, gh = Math.min(LH * 0.46, (gw * H) / W)
+  const gx = M + (gw - (gh * W) / H) / 2
+  ctx.drawImage(img, gx, y + 14, (gh * W) / H, gh)
+  y += 14 + gh + 12
+  // Destaque do período escolhido (faturamento x endividamento).
+  if (destaque) {
+    ctx.fillStyle = destaque.alerta ? '#fdecec' : '#ecf7ef'
+    ctx.fillRect(M, y, LW - 2 * M, 50)
+    ctx.fillStyle = destaque.alerta ? '#c62828' : '#1a7f37'
+    ctx.fillRect(M, y, 6, 50)
+    ctx.fillStyle = '#0f172a'
+    ctx.font = `600 22px ${FONTE}`
+    ctx.fillText(destaque.texto, M + 20, y + 33, LW - 2 * M - 30)
+    y += 62
+  }
+  // Blocos da análise em colunas; a fonte diminui até caber.
+  if (blocos?.length) {
+    const gap = 20, colW = (LW - 2 * M - gap * (blocos.length - 1)) / blocos.length
+    const fundo = LH - M - 30
+    for (let tam = 21; tam >= 13; tam--) {
+      ctx.font = `400 ${tam}px ${FONTE}`
+      const lh = Math.round(tam * 1.35)
+      const alturas = blocos.map((b) => 44 + b.itens.reduce((acc, t) => acc + quebrarLinhas(ctx, `• ${t}`, colW - 28).length * lh + 4, 0))
+      if (y + Math.max(...alturas) <= fundo || tam === 13) {
+        const alt = Math.min(Math.max(...alturas) + 10, fundo - y)
+        blocos.forEach((b, i) => {
+          const x = M + i * (colW + gap)
+          ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.5
+          ctx.strokeRect(x, y, colW, alt)
+          if (b.alerta != null) { ctx.fillStyle = b.alerta ? '#c62828' : '#1a7f37'; ctx.fillRect(x, y, 5, alt) }
+          ctx.fillStyle = '#000d3c'; ctx.font = `700 ${tam + 2}px ${FONTE}`
+          ctx.fillText(b.titulo, x + 16, y + 32)
+          ctx.font = `400 ${tam}px ${FONTE}`; ctx.fillStyle = '#1f2937'
+          let yy = y + 44 + tam
+          for (const t of b.itens) {
+            for (const l of quebrarLinhas(ctx, `• ${t}`, colW - 28)) { if (yy < y + alt - 6) ctx.fillText(l, x + 14, yy); yy += lh }
+            yy += 4
+          }
+        })
+        break
+      }
+    }
+  }
+  if (rodape) { ctx.font = `400 16px ${FONTE}`; ctx.fillStyle = '#64748b'; ctx.fillText(rodape, M, LH - 22) }
   return new Promise((ok, erro) => canvas.toBlob((b) => (b ? ok(b) : erro(new Error('imagem'))), 'image/png'))
 }
 
@@ -316,7 +374,13 @@ export default function Faturamento({ onBack }) {
   const exportar = async (modo) => {
     if (!svgRef.current) return
     const sub = comparacao ? `${comparacao.rotulo} contra ${comparacao.rotuloAnterior}${comparacao.faturamento.variacao != null ? ` · faturamento ${pct(comparacao.faturamento.variacao)}` : ''}${comparacao.endividamento.variacaoMedia != null ? ` · endividamento médio ${pct(comparacao.endividamento.variacaoMedia)}` : ''}` : ''
-    const blob = imagemDoGrafico(svgRef.current, tituloGrafico, sub)
+    const cr = comparacao ? leituraCrescimento(comparacao) : null
+    const destaque = cr?.relacao ? {
+      alerta: cr.relacao === 'piorou',
+      texto: `${comparacao.rotulo} x ${comparacao.rotuloAnterior}: faturamento ${pct(cr.fat)} e endividamento ${pct(cr.div)} — relação dívida/faturamento ${cr.relacao === 'piorou' ? 'piorou' : cr.relacao === 'melhorou' ? 'melhorou' : 'estável'} (${Math.abs(cr.diferencaPp).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} p.p.).`,
+    } : null
+    const rodape = `${unidade ? `Valores em ${unidade}` : 'Valores na unidade colada'}${emMil ? ' (gráfico em R$ MM)' : ''}. Leitura automática dos números colados; não substitui a análise de crédito.`
+    const blob = imagemDoGrafico(svgRef.current, tituloGrafico, destaque ? `${comparacao.rotulo} contra ${comparacao.rotuloAnterior}` : sub, destaque, blocosAnalise(analise, valor), rodape)
     try {
       if (modo === 'copiar') {
         if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('sem área de transferência')
