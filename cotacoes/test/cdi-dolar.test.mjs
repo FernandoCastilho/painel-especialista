@@ -91,3 +91,22 @@ test('calculadora aparece na lista e abre pelo endereço e pelo terminal', () =>
   const term = readFileSync(new URL('../src/terminal.js', import.meta.url), 'utf8')
   assert.match(term, /CDIDOLAR: \['calculadora', 'cdi-dolar'\]/)
 })
+
+test('dados de apoio do painel: CDI do dia, PTAX de 12 meses e CDI projetado', async () => {
+  const { latestCdi, ptaxSeries, projectedCdi } = await import('../src/cdiDolar.js')
+  assert.deepEqual(latestCdi({ cdi: [[Date.parse('2026-11-16T12:00:00Z'), 13.65], [Date.parse('2026-11-17T12:00:00Z'), 13.65]] }), { rate: 13.65, date: '2026-11-17' })
+  assert.equal(latestCdi({}), null)
+  const hist = { '2025-10-01': 5.6, '2025-11-20': 5.3, '2026-05-08': 4.9, '2026-11-17': 5.78 }
+  const s = ptaxSeries({ ptaxHist: { USD: hist } })
+  assert.equal(s.points.length, 3) // 01/10/2025 fica fora dos 12 meses
+  assert.equal(s.min, 4.9)
+  assert.equal(s.max, 5.78)
+  // curva plana de 13,65%: a termo e médio iguais à taxa
+  const flat = [[21, 13.65], [126, 13.65], [252, 13.65], [504, 13.65]]
+  const p = projectedCdi(flat, '2026-11-17', 129)
+  assert.equal(p.days, 129)
+  assert.ok(Math.abs(p.average - 13.65) < 1e-9)
+  assert.ok(p.points.every((x) => Math.abs(x.bid - 13.65) < 1e-9))
+  assert.equal(projectedCdi(flat, '2026-11-17', 2000).clipped, true)
+  assert.equal(projectedCdi(null, '2026-11-17', 100), null)
+})

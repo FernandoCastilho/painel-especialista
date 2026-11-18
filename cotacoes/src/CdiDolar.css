@@ -17,3 +17,7 @@
 .cx-cd .cd-method { margin-top:4px; }
 @media (max-width:899px) { .cx-cd .cd-grid { grid-template-columns:1fr; } .cx-cd .cd-highlight { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 @media (max-width:639px) { .cx-cd .cd-kpis { gap:8px; padding:8px; } .cx-cd .cd-kpis > div { padding:10px 8px; } .cx-cd .cd-kpis b { font-size:1rem; } }
+.cx-cd .cd-chart { border-top:1px solid var(--line); padding:8px 12px 12px; min-width:0; }
+.cx-cd .cd-chart-head { padding:4px 0 6px; font-size:.8rem; font-weight:600; }
+.cx-cd .cd-chart-note { margin:6px 0 0; }
+.cx-cd .cd-pad-x { margin-left:12px; margin-right:12px; }

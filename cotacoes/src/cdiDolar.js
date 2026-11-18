@@ -11,6 +11,7 @@
 // - Ganho líquido = ganho bruto × (1 − IOF) × (1 − IR) (o IR incide sobre o rendimento já descontado do IOF).
 // - Prazo necessário = primeiro dia útil em que ganho líquido ÷ valor aplicado ≥ oscilação necessária. Busca até 5.000 dias úteis.
 import { iofRate, irRate } from './aplicacaoPj.js'
+import { forwardBetween, forwardSeries } from './cdiFuturo.js'
 
 export const MAX_BUSINESS_DAYS = 5000
 const DAY = 864e5
@@ -64,4 +65,37 @@ export function parseDecimal(text) {
   if (/^\d+(\.\d+)?$/.test(t)) return Number(t)
   if (/^(\d+|\d{1,3}(\.\d{3})+)(,\d+)?$/.test(t)) return Number(t.replaceAll('.', '').replace(',', '.'))
   return NaN
+}
+
+// ---- Dados do painel para apoio (não entram na regra de cálculo) ----
+
+// Último CDI publicado pelo Banco Central na coleta do painel (macro.json: cdi = [[instante, % a.a.], ...]).
+export function latestCdi(macro) {
+  const last = macro?.cdi?.at?.(-1)
+  return last && Number.isFinite(last[1]) && last[1] > 0 ? { rate: last[1], date: new Date(last[0]).toISOString().slice(0, 10) } : null
+}
+
+// PTAX do dólar dos últimos `days` dias corridos (macro.json: ptaxHist.USD = { 'AAAA-MM-DD': valor }).
+export function ptaxSeries(macro, days = 365) {
+  const hist = macro?.ptaxHist?.USD
+  if (!hist) return null
+  const all = Object.entries(hist).filter(([, v]) => Number.isFinite(v) && v > 0).sort(([a], [b]) => (a < b ? -1 : 1))
+  if (all.length < 2) return null
+  const lastT = Date.parse(`${all.at(-1)[0]}T12:00:00Z`)
+  const points = all.map(([d, v]) => ({ t: Date.parse(`${d}T12:00:00Z`), bid: v })).filter((p) => p.t >= lastT - days * 864e5)
+  if (points.length < 2) return null
+  const vals = points.map((p) => p.bid)
+  return { points, min: Math.min(...vals), max: Math.max(...vals), last: points.at(-1) }
+}
+
+// CDI projetado pela curva DI x pré da B3, da data-base até `horizon` dias úteis (mínimo de 3 meses).
+// Devolve a série a termo para o gráfico e o CDI médio composto do período.
+export function projectedCdi(pts, base, horizon) {
+  if (!pts?.length || !base) return null
+  const maxD = Math.max(...pts.map((p) => p[0]))
+  const d2 = Math.min(maxD, Math.max(63, Math.round(horizon || 252)))
+  const t0 = Date.parse(`${base}T12:00:00Z`)
+  const points = forwardSeries(pts, 0, d2).map((p) => ({ t: t0 + (p.d / 252) * 365 * 864e5, bid: p.rate }))
+  const average = forwardBetween(pts, 0, d2)
+  return points.length >= 2 && average != null ? { points, average, days: d2, clipped: d2 < Math.round(horizon || 0) } : null
 }

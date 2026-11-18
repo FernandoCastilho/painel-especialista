@@ -28,3 +28,9 @@ com uma conta independente para prazo curto (IOF e IR de 22,5%).
 ## Limites
 Data final por dias úteis × 7/5, sem feriados (como na planilha). CDI constante. Não considera spread e IOF de câmbio
 nem tributação de pessoa jurídica.
+
+## Ajustes de 18/11/2026 (tarde), pedidos de Fernando
+- CDI atual preenchido com o último CDI do Banco Central coletado pelo painel (`macro.json`); pode ser digitado.
+- Quadro 1: gráfico da PTAX do dólar nos últimos 12 meses, com mínima, máxima e posição do alvo.
+- Quadro 2: gráfico do CDI projetado pela curva DI x pré da B3 (taxa a termo) até o prazo calculado, com o CDI médio projetado.
+  É só apoio: a conta continua com o CDI informado constante, como na planilha (usar a curva na conta seria mudança de regra de cálculo).

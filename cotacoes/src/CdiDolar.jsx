@@ -1,15 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './CalculatorStandard.css'
 import './CdiDolar.css'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
-import { parseDecimal, simulateCdiDolar } from './cdiDolar.js'
+import { latestCdi, parseDecimal, projectedCdi, ptaxSeries, simulateCdiDolar } from './cdiDolar.js'
+import { Plot, useWidth } from './HistoryChart.jsx'
+import { useMacro } from './useMacro.js'
+import { useCurves } from './useCurves.js'
 
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const fx = (n) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
 const pct = (n, d = 2) => `${(n * 100).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}%`
 const pctShort = (n) => `${(n * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
+const rate = (n) => `${n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+const real4 = (n) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
+const rateText = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const dateLabel = (d) => (d ? d.split('-').reverse().join('/') : '—')
 const todayIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10) }
 
@@ -36,12 +42,22 @@ export function clientPhrase(r, f) {
 export default function CdiDolar({ onBack, quotes }) {
   const [form, setForm] = useState({ spot: '', target: '', amount: '', cdi: '', pct: '100', start: todayIso() })
   const [spotOwn, setSpotOwn] = useState(false)
+  const [cdiOwn, setCdiOwn] = useState(false)
+  const macro = useMacro()
+  const curves = useCurves()
+  const [fxRef, fxWidth] = useWidth()
+  const [cdiRef, cdiWidth] = useWidth()
+  const cdiPainel = latestCdi(macro.data)
+  const ptax = useMemo(() => ptaxSeries(macro.data), [macro.data])
+  useEffect(() => {
+    if (cdiPainel && !cdiOwn) setForm((old) => (old.cdi ? old : { ...old, cdi: rateText(cdiPainel.rate) }))
+  }, [cdiPainel?.rate, cdiOwn]) // eslint-disable-line react-hooks/exhaustive-deps
   const [copied, setCopied] = useState(false)
   const painel = quotes?.USD && quotes.USD.bid > 0 ? quotes.USD : null
   useEffect(() => {
     if (painel && !spotOwn) setForm((old) => (old.spot ? old : { ...old, spot: painel.bid.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) }))
   }, [painel, spotOwn])
-  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); setCopied(false); if (key === 'spot') setSpotOwn(true) }
+  const set = (key, value) => { setForm((old) => ({ ...old, [key]: value })); setCopied(false); if (key === 'spot') setSpotOwn(true); if (key === 'cdi') setCdiOwn(true) }
 
   const money = parseMoneyInput(form.amount)
   const values = { spot: parseDecimal(form.spot), target: parseDecimal(form.target), amount: money.ok ? money.value : NaN, cdi: parseDecimal(form.cdi) / 100, pct: parseDecimal(form.pct) / 100, start: form.start }
@@ -49,6 +65,10 @@ export default function CdiDolar({ onBack, quotes }) {
   const result = filled ? simulateCdiDolar(values) : null
   const r = result?.ok ? result : null
   const phrase = r ? clientPhrase(r, values) : ''
+  const br = curves.data?.br
+  const curveDay = br?.compare?.find((c) => c.id === 'hoje')
+  const curvePts = curveDay ? br.curves?.[curveDay.date] : null
+  const projection = useMemo(() => projectedCdi(curvePts, curveDay?.date, r && !r.already ? r.n : 252), [curvePts, curveDay?.date, r?.n, r?.already]) // eslint-disable-line react-hooks/exhaustive-deps
   const osc = values.spot > 0 && values.target > 0 ? values.target / values.spot - 1 : null
 
   const field = (key, label, input, hint) => (
@@ -74,13 +94,18 @@ export default function CdiDolar({ onBack, quotes }) {
           <header className="cx-heading"><h3>1. Câmbio</h3></header>
           <div className="cx-form">
             {text('spot', 'Dólar atual (R$ por US$ 1)', 'Entra a cotação do dólar do Painel quando disponível. Digite outro valor se quiser.', 'ex.: 5,2000')}
-            {painel && spotOwn && <button type="button" className="cd-link" onClick={() => { setSpotOwn(false); setForm((old) => ({ ...old, spot: painel.bid.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) })) }}>Usar cotação do Painel ({fx(painel.bid)})</button>}
             {text('target', 'Dólar alvo de saída (R$ por US$ 1)', 'Câmbio em que o cliente pretende comprar ou sair.', 'ex.: 5,5000')}
           </div>
+          {painel && spotOwn && <button type="button" className="cd-link cd-pad-x" onClick={() => { setSpotOwn(false); setForm((old) => ({ ...old, spot: painel.bid.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) })) }}>Usar cotação do Painel ({fx(painel.bid)})</button>}
           <div className="cd-kpis">
             <div><span>Oscilação necessária</span><b>{osc == null ? '—' : pct(osc)}</b></div>
             <div><span>Variação em R$ por US$ 1</span><b>{osc == null ? '—' : brl(values.target - values.spot)}</b></div>
             <div className="cd-wide"><span>Leitura rápida</span><b>{osc == null ? '—' : osc >= 0 ? `Dólar precisa subir ${pct(osc)}` : `Dólar precisa cair ${pct(-osc)}`}</b></div>
+          </div>
+          <div className="cd-chart">
+            <div className="cx-heading cd-chart-head"><span>Dólar nos últimos 12 meses (PTAX)</span><CalculatorHelp title="Dólar nos últimos 12 meses"><p>PTAX diária do dólar publicada pelo Banco Central, coletada pelo painel. Serve de apoio para escolher o câmbio alvo. A conta usa o dólar atual informado acima.</p></CalculatorHelp></div>
+            <div ref={fxRef}>{ptax ? <Plot points={ptax.points} width={fxWidth} color="var(--chart-teal)" code="USD" fmt={real4} label="Dólar PTAX" compare={false} compareReason="gráfico de apoio da calculadora." scales={false} labels /> : <p className="cx-hint cx-pad">{macro.status === 'loading' ? 'Carregando o histórico do dólar…' : 'Histórico do dólar indisponível na última atualização.'}</p>}</div>
+            {ptax && <p className="cx-hint cd-chart-note">Mínima de 12 meses: {real4(ptax.min)} · máxima: {real4(ptax.max)}{values.target > 0 && <> · alvo de {real4(values.target)} {values.target > ptax.max ? 'acima da máxima do período' : values.target < ptax.min ? 'abaixo da mínima do período' : 'dentro da faixa do período'}</>}.</p>}
           </div>
         </article>
 
@@ -88,13 +113,20 @@ export default function CdiDolar({ onBack, quotes }) {
           <header className="cx-heading"><h3>2. Aplicação</h3></header>
           <div className="cx-form">
             {field('amount', 'Valor aplicado', <MoneyInput id="cd-amount" value={form.amount} onChange={(v) => set('amount', v)} />, 'Formato brasileiro: 520.000,00 ou 520000.')}
-            {text('cdi', 'CDI atual (% a.a.)', 'Taxa anual do CDI, mantida constante em todo o prazo.', 'ex.: 14,15')}
+            {text('cdi', 'CDI atual (% a.a.)', 'Entra o último CDI do Banco Central coletado pelo painel. Digite outro valor se quiser. A conta mantém essa taxa constante em todo o prazo.', 'ex.: 14,15')}
             {text('pct', 'Produto rende (% do CDI)', 'Exemplo: 98 para um CDB a 98% do CDI.', 'ex.: 98')}
             {field('start', 'Data de início', <input id="cd-start" type="date" value={form.start} onChange={(e) => set('start', e.target.value)} />, 'A data final soma os dias corridos estimados a esta data.')}
           </div>
+          {cdiPainel && !cdiOwn && <p className="cx-hint cd-chart-note cd-pad-x">CDI do painel: {rate(cdiPainel.rate)} a.a. em {dateLabel(cdiPainel.date)} (Banco Central).</p>}
+          {cdiPainel && cdiOwn && <button type="button" className="cd-link cd-pad-x" onClick={() => { setCdiOwn(false); setForm((old) => ({ ...old, cdi: rateText(cdiPainel.rate) })) }}>Usar CDI do Painel ({rate(cdiPainel.rate)})</button>}
           {form.amount && !money.ok && <p className="cx-error cx-pad" role="alert">{money.error}</p>}
           {values.cdi > 0 && values.cdi < 0.01 && <p className="cd-notice cd-pad" role="alert">CDI abaixo de 1% ao ano. Confira: digite 14,15 para 14,15% a.a., não 0,1415.</p>}
           {values.pct > 0 && values.pct < 0.1 && <p className="cd-notice cd-pad" role="alert">Produto abaixo de 10% do CDI. Confira: digite 98 para 98% do CDI, não 0,98.</p>}
+          <div className="cd-chart">
+            <div className="cx-heading cd-chart-head"><span>CDI projetado pela curva de juros futuros (% a.a.)</span><CalculatorHelp title="CDI projetado"><p>Taxa a termo do DI implícita na curva DI x pré da B3: é o CDI que o mercado precifica para cada trecho do prazo, com prêmio de risco embutido. Não é projeção oficial.</p><p>O gráfico vai da data-base da curva até o prazo calculado (ou 1 ano, antes do cálculo). É só apoio: a conta da calculadora usa o CDI informado acima, constante, como na planilha.</p></CalculatorHelp></div>
+            <div ref={cdiRef}>{projection ? <Plot points={projection.points} width={cdiWidth} color="var(--chart-teal)" code="cdif" fmt={rate} label="CDI projetado" compare={false} compareReason="a curva projeta taxas por horizonte, sem série histórica equivalente." scales={false} nice labels /> : <p className="cx-hint cx-pad">{curves.status === 'loading' ? 'Carregando a curva de juros…' : 'Curva de juros indisponível na última atualização.'}</p>}</div>
+            {projection && <p className="cx-hint cd-chart-note">CDI médio projetado para os próximos {projection.days} dias úteis: <b>{rate(projection.average)} a.a.</b>{values.cdi > 0 && <> · CDI na conta: {rate(values.cdi * 100)}</>}{projection.clipped && ' · a curva não cobre o prazo inteiro'}. Curva DI x pré da B3 de {dateLabel(curveDay.date)}.</p>}
+          </div>
         </article>
       </div>
 
@@ -149,6 +181,7 @@ export default function CdiDolar({ onBack, quotes }) {
         <li>IR: 22,5% até 180 dias; 20% de 181 a 360; 17,5% de 361 a 720; 15% acima de 720.</li>
         <li>Ganho líquido = ganho bruto × (1 − IOF) × (1 − IR).</li>
         <li>Prazo necessário: primeiro dia em que ganho líquido ÷ valor aplicado ≥ oscilação do câmbio. Busca até 5.000 dias úteis.</li>
+        <li>O CDI entra preenchido com o último valor do Banco Central coletado pelo painel. O gráfico de CDI projetado (curva DI x pré da B3) é só apoio: a conta mantém o CDI informado constante.</li>
         <li>Não considera variação do CDI, cupom cambial, custo de câmbio (spread e IOF de câmbio) nem regime tributário de pessoa jurídica.</li>
       </ul></CalculatorHelp></div>
     </section>
