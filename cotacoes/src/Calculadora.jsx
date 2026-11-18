@@ -22,6 +22,7 @@ import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
 import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
 import Faturamento, { FaturamentoIcon } from './Faturamento.jsx'
+import ArvoreCredito, { ArvoreCreditoIcon } from './ArvoreCredito.jsx'
 import './CalculatorTheme.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -40,6 +41,7 @@ function GiroIcon() {
 }
 
 const CALCS = [
+  { id: 'arvore-credito', title: 'Árvore de Crédito', sub: 'Necessidade do cliente → até três possibilidades, com a regra de cada uma', Icon: ArvoreCreditoIcon },
   { id: 'comparador-credito', title: 'Comparador de Crédito', sub: 'De 2 a 5 modalidades lado a lado: custo, CET e fluxo', Icon: CreditIcon },
   { id: 'operacao-di', title: 'Operação x DI', sub: 'Pré, % do CDI ou CDI + spread contra o DI da curva B3', Icon: OperacaoDiIcon },
   { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
@@ -208,6 +210,7 @@ export default function Calculadora({ view, onView, quotes }) {
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
   if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
+  if (view === 'arvore-credito') return <ArvoreCredito onBack={() => onView('')} onView={onView} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
