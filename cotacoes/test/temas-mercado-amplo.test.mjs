@@ -1,0 +1,78 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { TEMAS, relevanteTema, MERCADO_AMPLO } from '../scripts/temas-lib.mjs'
+
+const t = (id) => TEMAS.find((x) => x.id === id)
+
+// Decisão de 18/11/2026: lista de palavras de mercado mais ampla nos temas de setor e de insumo, sem abrir para o uso comum
+// da palavra. Moedas e eleições seguem com a lista própria.
+test('temas de setor e insumo: notícia do assunto com palavra de mercado ampla entra', () => {
+  for (const [id, titulo] of [
+    ['cobre', 'Codelco demite 300 trabalhadores e adia investimento em mina no Chile'],
+    ['cobre', 'Cobre: mineradora anuncia férias coletivas em Carajás'],
+    ['aluminio', 'Alumínio: CBA registra lucro recorde no trimestre'],
+    ['aco', 'Usiminas anuncia férias coletivas em Ipatinga'],
+    ['carvao', 'Carvão: usina térmica tem contrato renovado e amplia capacidade'],
+    ['cafe', 'Cooperativa de café inaugura nova unidade de torrefação'],
+    ['trigo', 'Moinho de trigo anuncia nova fábrica no Paraná'],
+    ['cacau', 'Cacau: indústria de chocolate tem prejuízo com alta da amêndoa'],
+    ['fertilizantes', 'Fertilizantes: Mosaic fecha fábrica e corta vagas'],
+    ['industria', 'Indústria têxtil demite 500 e dá férias coletivas no Sul'],
+    ['veiculos-pesados', 'Roubo de carga encarece o frete de caminhões'],
+    ['cafe', 'Cafés especiais batem recorde de exportação'],
+    ['minerio', 'Vale investe US$ 2 bi em minério de ferro no Pará'],
+    ['industria', 'Montadora inaugura fábrica e abre 800 vagas'],
+    ['trigo', 'Brasil importa mais trigo da Argentina'], // "importa" como verbo de comércio continua valendo
+    ['algodao', 'Algodão: colheita atrasa e preço sobe'],
+    ['cafe', 'Café: linha de crédito do Funcafé é liberada'],
+    ['minerio', 'Vale lucra R$ 10 bi com minério de ferro'],
+  ]) assert.equal(relevanteTema(t(id), titulo), true, `${id}: ${titulo}`)
+})
+
+test('temas de setor e insumo: uso comum da palavra continua fora', () => {
+  for (const [id, titulo] of [
+    ['cobre', 'Câmera cobre o show do Coldplay em São Paulo'],
+    ['cobre', 'Plano de saúde cobre cirurgia bariátrica? Entenda'],
+    ['trigo', 'Receita de bolo de trigo fofinho'],
+    ['cafe', 'Como fazer o café perfeito em casa'],
+    ['cacau', 'Manteiga de cacau: benefícios para a pele'],
+    ['veiculos-pesados', 'Acidente com ônibus em rodovia deixa feridos'],
+    ['veiculos-pesados', 'Caminhão tomba na BR-116 e interdita a pista'],
+    ['aco', 'Nervos de aço: atleta supera lesão e vence final'],
+    // palavras da lista ampla fora do sentido de mercado (achados do Auditor, 18/11/2026)
+    ['cafe', 'Café faz bem? Estudo importante revela benefícios'], // "importante" não é importação
+    ['cobre', 'Plano de saúde cobre exame importante? Entenda'],
+    ['petroleo', 'Polícia investiga adulteração de gasolina em posto'], // "investiga" não é investimento
+    ['cobre', 'Neve cobre a cidade e amplia caos no trânsito'],
+    ['cobre', 'Repórter cobre recorde de público no Maracanã'],
+    ['aco', 'Nervos de aço: atleta bate recorde mundial'],
+    ['veiculos-pesados', 'Polícia investiga acidente com ônibus que deixou 12 mortos'],
+    ['veiculos-pesados', 'Motorista de caminhão morre em acidente perto de usina'],
+    ['veiculos-pesados', 'Balanço do feriado: 30 acidentes com caminhões nas rodovias'],
+    ['veiculos-pesados', 'Ônibus com capacidade para 40 passageiros pega fogo'],
+    ['veiculos-pesados', 'Tarifa de ônibus sobe para R$ 5 em São Paulo'],
+    ['minerio', 'Vale do Silício investe em IA'],
+    ['cafe', 'Café da manhã: não importa a hora'], // "não importa" não é importação
+    ['cafe', 'Café: o que mais importa na hora de escolher'],
+    ['veiculos-pesados', 'Acidente entre caminhão e ônibus: não importa o culpado'],
+    ['veiculos-pesados', 'PM investe contra manifestantes e ônibus é incendiado'], // "investe contra" não é investimento
+    ['aco', 'Nervos de aço: Flamengo investe em reforço'],
+    ['cobre', 'Cartão de crédito: seguro cobre compras perdidas'], // crédito solto não conta
+    ['trigo', 'Bolo de trigo: crédito da receita para a vovó'],
+    ['veiculos-pesados', 'Caminhão carregado com safra de milho tomba na BR-163'], // safra só conta nos insumos
+  ]) assert.equal(relevanteTema(t(id), titulo), false, `${id}: ${titulo}`)
+})
+
+test('café com acento no fim do título é reconhecido (o \\b não funciona depois do "é")', () => {
+  assert.equal(relevanteTema(t('cafe'), 'Preço do café sobe 5% na semana'), true)
+  assert.equal(relevanteTema(t('cafe'), 'Exportações de café batem recorde'), true)
+  assert.equal(relevanteTema(t('cafe'), 'Cafeteria abre nova loja com preço baixo'), false)
+})
+
+test('moedas e eleições não recebem a lista ampla; madeira segue sem filtro de mercado', () => {
+  for (const id of ['moeda-usd', 'moeda-eur', 'moeda-jpy', 'moeda-cnh', 'eleicoes-eua']) assert.ok(!t(id).contexto.source.includes(MERCADO_AMPLO[0]), id)
+  for (const x of TEMAS.filter((x) => ['setor', 'insumo'].includes(x.grupo) && x.contexto)) assert.ok(x.contexto.source.includes(MERCADO_AMPLO[0]), x.id)
+  assert.equal(t('madeira').contexto, undefined)
+  assert.equal(t('veiculos-pesados').excluir, undefined)
+  assert.equal(relevanteTema(t('moeda-cnh'), 'China anuncia novo plano de saúde'), false)
+})

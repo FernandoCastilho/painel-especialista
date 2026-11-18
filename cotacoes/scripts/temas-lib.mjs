@@ -15,8 +15,9 @@ export const TEMAS = [
   { id: 'veiculos-pesados', grupo:'setor',label:'Veículos pesados',
     queries:['ANFAVEA caminhões ônibus produção emplacamento exportação','veículos pesados caminhões mercado financiamento Brasil','caminhões ônibus vendas Brasil renovação frota'],
     termos:re('caminh[õo]es|caminh[ãa]o|[ôo]nibus|ve[íi]culos? pesad'),
-    contexto:re('emplac|licenciam|produ[çc][ãa]o|exporta|vendas|financia|mercado|frota|montadora|Anfavea|Fenabrave'),
-    excluir:re('acidente|colis[ãa]o|atropel|assalto|roubo|morre|morto') },
+    // Sem lista de palavras que derrubam (decisão de 18/11/2026): acidente, roubo ou morte só ficam de fora quando o título
+    // não traz assunto de mercado. "Acidente com ônibus deixa feridos" sai; "Roubo de carga encarece o frete de caminhões" entra.
+    contexto:re('emplac|licenciam|produ[çc][ãa]o|exporta|vendas|financia|mercado|frota|montadora|Anfavea|Fenabrave|frete|seguro de carga|encarece') },
   { id: 'comercio', grupo: 'setor', label: 'Comércio e consumo',
     queries: ['varejo vendas comércio Brasil', 'consumo das famílias confiança do consumidor', 'vendas no varejo IBGE CNC', 'supermercados e-commerce vendas Black Friday'],
     termos: re('varejo|com[ée]rcio|consumo|consumidor|lojista|supermercad|e-commerce|Abras|\\bCNC\\b|Black Friday'),
@@ -59,10 +60,12 @@ export const TEMAS = [
     termos: re('alum[íi]nio|aluminum|aluminium|bauxita|Albras|Novelis|\\bCBA\\b'),
     contexto: re('pre[çc]o|tonelada|\\bLME\\b|tarifa|China|produ[çc][ãa]o|energia|demanda|estoque|oferta|exporta|importa|custo|eletrointensiv') },
   { id: 'aco', grupo: 'insumo', label: 'Aço',
+    homonimos: /(?:nervos?|homem|mulher|punho|cora[çc][ãa]o|vontade|cortina|dama) de a[çc]o/gi,
     queries: ['aço preço siderurgia Brasil', 'aço importação China antidumping', 'Gerdau CSN Usiminas aço resultado', 'aço tarifa produção demanda'],
     termos: re('\\baço\\b|siderurg|Gerdau|\\bCSN\\b|Usiminas|Aço Brasil|laminados?|\\bsteel\\b'),
     contexto: re('pre[çc]o|importa[çc]|antidumping|tarifa|produ[çc][ãa]o|China|demanda|custo|siderurg|vendas|cota|resultado|estoque|exporta') },
   { id: 'minerio', grupo: 'insumo', label: 'Minério de ferro',
+    homonimos: /Vale do Sil[íi]cio|Vale do (?:Para[íi]ba|Jequitinhonha|S[ãa]o Francisco|Itaja[íi]|Ribeira|A[çc]o)/gi,
     queries: ['minério de ferro preço China', 'minério de ferro Vale produção', 'minério de ferro Dalian demanda siderurgia', 'minério de ferro exportação Brasil'],
     termos: re('min[ée]rio de ferro|iron ore|Dalian|Vale\\b'),
     contexto: re('pre[çc]o|tonelada|China|demanda|produ[çc][ãa]o|exporta|Dalian|siderurg|estoque|cota[çc][ãa]o|oferta|embarque|porto') },
@@ -97,7 +100,7 @@ export const TEMAS = [
     contexto: re('pre[çc]o|cota[çc][ãa]o|safra|Costa do Marfim|Gana|Nova York|Londres|tonelada|oferta|demanda|alta|queda|chocolate|colheita|clima') },
   { id: 'cafe', grupo: 'insumo', label: 'Café',
     queries: ['café arábica preço saca cotação', 'café safra Brasil exportação Cecafé', 'café Nova York tarifa preço'],
-    termos: re('\\bcaf[ée]\\b|ar[áa]bica|\\brobusta\\b|conilon|Cecaf[ée]'),
+    termos: re('\\bcaf[ée]s?(?![\\wÀ-ú])|ar[áa]bica|\\brobusta\\b|conilon|Cecaf[ée]'),
     contexto: re('pre[çc]o|cota[çc][ãa]o|safra|saca|exporta|Nova York|Londres|tarifa|oferta|demanda|alta|queda|colheita|clima|estoque') },
   { id: 'fertilizantes', grupo: 'insumo', label: 'Fertilizantes',
     queries: ['fertilizantes preço ureia potássio', 'fertilizantes importação Brasil Rússia China', 'adubo preço safra custo produtor'],
@@ -126,6 +129,35 @@ export const TEMAS = [
     termos: re('elei[çc]|midterms?|eleitor|urnas|vota[çc][ãa]o|apura[çc][ãa]o|pesquisa eleitoral'),
     contexto: re('EUA|Estados Unidos|americana?s?|Trump|midterms?|republican|democrat|Congresso|Senado|C[âa]mara|Casa Branca|Wall Street|Treasur') },
 ]
+// Palavras de mercado comuns a todos os temas de setor e de insumo (decisão de 18/11/2026): a lista própria de cada tema era
+// curta e deixava de fora notícia do assunto ("demitem", "férias coletivas", "lucro"). Cada palavra vem presa ao sentido de
+// mercado ("recorde de exportação", não só "recorde"; "capacidade produtiva", não "capacidade para 40 passageiros"), para não
+// abrir a porta ao uso comum ("câmera cobre o show", receita de bolo de trigo, "café faz bem?"). Moedas e eleições seguem só
+// com a lista própria; madeira não tem filtro de mercado.
+export const MERCADO_AMPLO = [
+  'demi(?:te|tem|tiu|tiram|tir|ss[ãa]o|ss[õo]es)\\b', 'f[ée]rias coletivas', 'fecha (?:unidade|usina|mina|f[áa]brica)', '(?:abre|inaugura|constr[óo]i|amplia|paralisa|suspende|desativa) (?:a |sua |uma |nova )?f[áa]brica', 'mineradora',
+  'usinas? (?:de|sider|termel|t[ée]rmica|hidrel|a[çc]ucareira)', 'investe\\b(?! contra)|investem|investiu|investir|investiment|investidor', 'lucr(?:o|os|a|am|ou|aram)\\b',
+  'preju[íi]zo (?:l[íi]quido|de R\\$|bilion|milion|no trimestre|trimestral|no ano)', '(?:tem|registra|reverte|amplia) preju',
+  'receita (?:l[íi]quida|bruta|de vendas)', 'faturamento', 'balan[çc]o (?:trimestral|do trimestre|anual|patrimonial|financeiro)', 'divulga balan',
+  'sobretaxa', 'antidumping', 'tarifa[çc]o', 'tarifas? (?:de (?:importa|exporta)|dos EUA|americanas?|de Trump|sobre|extras?|adicionais?)',
+  'aquisi[çc]', 'fus[ãa]o (?:com|entre|de empresas)', 'cota[çc][ãa]o', 'export', 'importa(?:[çc]|d|dor|m\\b|r\\b)|(?<!n[ãa]o |que |pouco |mais |menos )importa\\b',
+  'financiamento', 'linha de cr[ée]dito', 'cr[ée]dito (?:rural|agr|para|do BNDES|[àa] exporta|de carbono)', 'recorde (?:de|na|no|em) (?:produ|vendas|export|import|safra|lucro|receita|embarque|faturamento|moagem|pre[çc]o|emplacamento|colheita)',
+  '(?:pre[çc]o|safra|produ[çc][ãa]o|exporta[çc][ãa]o|vendas) recorde', 'capacidade (?:produtiva|instalada|de produ)',
+  'amplia(?:r|[çc][ãa]o)? (?:a |sua )?(?:produ|capacidade|f[áa]brica|unidade|planta|opera|vendas|exporta)', 'nova (?:linha|unidade|planta|f[áa]brica)',
+  '(?:abre|fecha|corta|gera|cria|elimina) (?:\\d[\\d.,]* )?(?:mil )?(?:vagas|empregos|postos)']
+// Safra e colheita só contam nos temas de insumo: em veículos pesados, "caminhão com safra de milho tomba" é acidente.
+export const MERCADO_AGRO = ['safra', 'colheita']
+// Nas listas próprias, "importa" não pode pegar "importante" nem "não importa", e "invest" não pode pegar "investiga" nem
+// "investe contra".
+const IMPORTA = String.raw`importa(?:[çc]|d|dor|m\b|r\b)|(?<!n[ãa]o |que |pouco |mais |menos )importa\b`
+const INVESTE = String.raw`investe\b(?! contra)|investem|investiu|investir|investiment|investidor`
+const SEM_FALSO = (fonte) => fonte.replace(/importa(?:\[[^\]]*\])?/g, `(?:${IMPORTA})`).replace(/invest(?:imento)?/g, `(?:${INVESTE})`)
+for (const t of TEMAS) {
+  if (!['setor', 'insumo'].includes(t.grupo) || !t.contexto) continue
+  const lista = [...MERCADO_AMPLO, ...(t.grupo === 'insumo' ? MERCADO_AGRO : [])]
+  t.contexto = new RegExp(`${SEM_FALSO(t.contexto.source)}|${lista.join('|')}`, 'i')
+}
+
 export const TEMA_IDS = TEMAS.map((t) => t.id)
 // `homonimos` (opcional): outros sentidos da palavra do setor. O trecho sai do título antes de procurar o setor; a matéria
 // só fica de fora se não sobrar nenhuma menção ao setor.
