@@ -3,7 +3,7 @@
 A aba **Apresentar** foi refeita do zero a pedido. A montagem antiga (por setor, com leitura do site do cliente, cadeia e
 perguntas da visita) foi removida.
 
-**Acesso:** no menu desde 18/11/2026, a pedido, como a última aba (depois de Calculadoras); também abre pelo endereço
+**Acesso:** fora do menu desde 18/11/2026 (pedido do Fernando: "fica oculto por enquanto"); abre pelo endereço
 `#apresentar` e pelo comando APRESENTAR. De 17 a 18/11 ficou fora do menu. Não é destino da busca do painel (o conteúdo
 buscável continua nas abas de origem).
 
@@ -297,3 +297,9 @@ Correção final (`TopBar.css` e `Acessos.jsx`):
   1600, 1280, 1205 e 1024 px, inclusive com "Fora do horário de coleta" e "Indisponível". Ele falha nas duas versões
   anteriores (a publicada e a da primeira correção) e passa com a final.
 - Ressalva: de 1000 a 1099 px as letras do menu ficam pequenas (11 px no tema claro); a altura de toque continua com 44 px.
+
+## Sétima rodada (18/11/2026): aba sai do menu
+Pedido do Fernando: tirar Apresentar do menu, que "fica oculto por enquanto". `appSections.js` volta a marcar a aba como
+`oculto`: some do menu do topo e do "Mais" do celular e continua abrindo pelo endereço `#apresentar` e pelo comando
+APRESENTAR. Testes de menu atualizados (`nav-order`, `nav-no-numbers`, `nav-accessibility`, `smoke-sector-folders`,
+`smoke-apresentar`). Para voltar ao menu, basta tirar `oculto: true` da linha e reverter esses testes.
