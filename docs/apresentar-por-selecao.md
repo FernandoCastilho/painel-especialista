@@ -159,3 +159,30 @@ Não conferido nesta rodada: o filtro do tema madeira com manchetes reais. O amb
 Notícias; o filtro foi testado com manchetes de exemplo. A primeira coleta real acontece na publicação, e o resultado
 precisa ser lido no site depois dela. Com mais de 24 meses colados, os rótulos do gráfico do Faturamento ficam
 pequenos no slide; os números principais estão na tabela e no resumo por ano.
+
+## Terceira rodada (18/11/2026): tema madeira sem descarte por palavra
+Decisão do Fernando, literal: "Não pode nada ficar fora por conta de palavras como "desabon", por exemplo. Pode incluir
+tudo, porque aqui é educativo." (Ele se referia a "desabam", do exemplo "Exportações de madeira desabam 40%".)
+- O filtro do tema "Madeira e base florestal" deixa de descartar matérias por palavras do título (desaba, tomba,
+  benefícios, Portugal, apreensão, polícia, ilegal, incêndio, acidente, objetos de madeira e outras) e deixa de exigir
+  palavra de contexto econômico. Entra toda matéria que cite o setor, inclusive queda de preço, acidente, fiscalização e
+  notícia de outros países.
+- Outros sentidos da palavra não descartam a matéria. Expressões como "Ilha da Madeira", "Rio Madeira", "do Madeira",
+  "Deputado Madeira" ou "Prefeitura de Serraria" são apagadas do título antes de procurar o setor: se o título ainda
+  citar madeira, serraria, madeireiro, MDF, pinus ou outro termo do setor, a matéria entra ("Madeireiros escoam produção
+  pelo Rio Madeira" entra; "Hidrelétricas do Madeira reduzem produção" não). O MDF-e (documento fiscal) não conta como
+  MDF. Regra em `relevanteTema`, campo `homonimos`, usado só por este tema.
+- Efeito esperado: mais matérias, inclusive de consumo ligado à madeira (piso, lenha, móveis planejados). Dá para tirar
+  do slide as que não servirem em "Escolher notícias". Também passam títulos sobre a ilha que não usam as expressões
+  acima, como "Madeira: aeroporto fecha por causa do vento", "hotel na Madeira" e jogo do clube Nacional da Madeira.
+- Conferência do filtro: as 13 manchetes reais já coletadas continuam entrando; nas baterias do Auditor, todas as
+  manchetes legítimas do setor entram, inclusive as que citam o rio, a ilha ou o "porto Santos" (ficam fora só duas sem
+  palavra do setor: uma de celulose e uma em inglês).
+- Os demais temas de notícias continuam com seus filtros; esta decisão vale só para madeira.
+
+### Parecer do Auditor nesta rodada
+Primeiro parecer: **Insuficiente** (81,2), no commit `fc50e0d`, com o CI ainda rodando. Achados: as exclusões de rio,
+ilha e "Nacional da Madeira" ainda descartavam matéria do setor ("Madeireiros escoam produção pelo Rio Madeira", "Feira
+Nacional da Madeira", "porto Santos"); esta nota dizia "só sai o que não é madeira" e citava Fernando sem o literal.
+Correção: exclusão trocada pela regra dos homônimos acima, "Porto Santo" com fim de palavra, "Nacional da Madeira"
+retirado, testes com os títulos do Auditor e nota corrigida.
