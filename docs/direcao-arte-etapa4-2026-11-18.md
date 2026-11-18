@@ -52,6 +52,8 @@ Os valores estão dentro dos limites do produto: prazo de até 84 meses e carên
 - Levantamento automático do texto em âmbar nos dois temas, em 16 telas: o âmbar ficou nos mesmos lugares nos dois (selecionado, avisos, bolinha de impacto médio, feriado próximo).
 - O tema escuro ficou idêntico ao publicado (mesmo levantamento antes e depois).
 - Altura dos campos medida em todas as calculadoras, no computador e no celular.
+- Testes do painel: 2.143 passando. Conferência de código: sem erros. Montagem: ok.
+- Conferências de tela: as 33 da rotina automática mais 11 das telas e calculadoras mexidas. 41 passaram de primeira; 3 falharam porque esperavam os valores antigos (R$ 500.000,00, 60 meses, 12 de carência e campos de 44 px no computador). As expectativas foram atualizadas para os valores novos, sem mudar o que conferem, e as 3 passaram.
 
 ## O que não deu para conferir
 

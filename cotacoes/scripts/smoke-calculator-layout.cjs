@@ -330,7 +330,7 @@ async function fillScenario(page, section, route) {
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
     await section.locator('.fm-fluxo-panel > summary').click()
-    assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 60)
+    assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 48) // prazo padrão de 48 meses (18/11/2026)
     assert.match(await section.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
   }
 }

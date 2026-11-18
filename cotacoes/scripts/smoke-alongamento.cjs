@@ -42,7 +42,8 @@ module.exports = async function checkAlongamento(page, section, directory, width
     selectionGeometry.push({ state, width, controls })
     fs.writeFileSync(path.join(directory, 'alongamento-selections.json'), JSON.stringify(selectionGeometry, null, 2))
     assert.deepEqual(controls.filter(control => control.width < control.required).map(control => control.id), [], `alongamento ${state} ${width}: seleção financeira aparece inteira`)
-    assert.ok(controls.every(control => control.height >= 43.9), 'selects retain 44px targets')
+    // 44px no celular e no tablet; 36px no computador (acima de 1000px), decisão de 18/11/2026 para todas as calculadoras.
+    assert.ok(controls.every(control => control.height >= (width > 1000 ? 35.9 : 43.9)), 'selects retain 44px targets (36px no computador)')
   }
   await assertSelections('price')
   await page.screenshot({ path: path.join(directory, 'alongamento-filled.png'), fullPage: true })
