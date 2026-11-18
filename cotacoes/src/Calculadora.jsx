@@ -12,6 +12,7 @@ import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
 import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
 import Faturamento, { FaturamentoIcon } from './Faturamento.jsx'
+import ArvoreCredito from './ArvoreCredito.jsx'
 import CdiDolar, { CdiDolarIcon } from './CdiDolar.jsx'
 import './CalculatorTheme.css'
 
@@ -57,6 +58,8 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
   if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
+  // Árvore de Crédito: fora do menu e da busca (decisão de Fernando, 18/11/2026); abre só pelo endereço #calculadora/arvore-credito ou pelo atalho ARVORE.
+  if (view === 'arvore-credito') return <ArvoreCredito onBack={() => onView('')} onView={onView} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
