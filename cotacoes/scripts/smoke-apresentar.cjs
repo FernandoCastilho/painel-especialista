@@ -295,7 +295,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
     }
     // a aba aparece no menu (computador e celular) desde 18/11/2026 e continua abrindo pelo endereço direto;
     // o menu do topo fica em uma linha também com o contador de pessoas online, que só aparece no site publicado
-    for (const [width, tema] of [[1600, 'light'], [1280, 'light'], [1024, 'light'], [1024, 'dark'], [390, 'light']]) {
+    for (const [width, tema] of [[1920, 'light'], [1820, 'light'], [1820, 'dark'], [1600, 'light'], [1280, 'light'], [1205, 'dark'], [1024, 'light'], [1024, 'dark'], [390, 'light']]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
       await ctx.addInitScript((t) => { try { localStorage.setItem('painel-theme', t) } catch { /* sem armazenamento */ } }, tema)
       const p = await ctx.newPage()
@@ -316,7 +316,13 @@ const out = process.env.SMOKE_OUT || '/tmp'
       if (width > 700) {
         await p.locator('.online-badge').waitFor()
         await p.evaluate(() => document.fonts.ready)
-        assert.ok(await p.evaluate(() => { const b = [...document.querySelectorAll('.topbar-tabs > button')].filter((e) => e.getClientRects().length); return new Set(b.map((e) => Math.round(e.getBoundingClientRect().top))).size === 1 }), `menu do topo em uma linha a ${width}px (${tema})`)
+        const umaLinha = () => p.evaluate(() => { const b = [...document.querySelectorAll('.topbar-tabs > button')].filter((e) => e.getClientRects().length); return new Set(b.map((e) => Math.round(e.getBoundingClientRect().top))).size === 1 })
+        assert.ok(await umaLinha(), `menu do topo em uma linha a ${width}px (${tema})`)
+        // os estados mais longos do texto dos dados (dataHealth.js): "Fora do horário de coleta" toda noite e fim de semana, e o erro escrito
+        for (const [classe, rotulo] of [['idle', 'Fora do horário de coleta'], ['err', 'Indisponível']]) {
+          await p.evaluate(([classe, rotulo]) => { const f = document.querySelector('.topbar-feed'); f.className = `topbar-feed ${classe}`; const t = [...f.childNodes].find((n) => n.nodeType === 3); if (t) t.textContent = rotulo; else f.append(rotulo) }, [classe, rotulo])
+          assert.ok(await umaLinha(), `menu do topo em uma linha a ${width}px (${tema}) com o estado "${rotulo}"`)
+        }
         assert.match(await p.locator('.online-badge').getAttribute('aria-label'), /12 online agora/) // o texto completo continua para leitor de tela
       }
       await p.evaluate(() => { location.hash = '#resumo' }); await p.evaluate(() => { location.hash = '#apresentar' })
