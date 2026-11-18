@@ -3,9 +3,9 @@
 A aba **Apresentar** foi refeita do zero a pedido. A montagem antiga (por setor, com leitura do site do cliente, cadeia e
 perguntas da visita) foi removida.
 
-**Acesso:** por enquanto a aba fica fora do menu, a pedido (17/11/2026). Abre pelo endereço `#apresentar` ou pelo
-comando APRESENTAR. Para colocá-la no menu, tirar `oculto: true` em `appSections.js`; nesse caso o menu do topo passa
-a ter onze abas e precisa do ajuste de espaçamento que está no histórico (commit `4f4fa79`, `TopBar.css`).
+**Acesso:** no menu desde 18/11/2026, a pedido, como a última aba (depois de Calculadoras); também abre pelo endereço
+`#apresentar` e pelo comando APRESENTAR. De 17 a 18/11 ficou fora do menu. Não é destino da busca do painel (o conteúdo
+buscável continua nas abas de origem).
 
 ## O que faz
 - O usuário marca blocos do painel e cada um vira um slide claro, em formato 16:9, na ordem da escolha.
@@ -257,3 +257,18 @@ Pedido do Fernando: "Mude a régua para ficar realmente eficiente e com a inform
   gordo, bezerro, milho e soja recuam…", e duas previsões de bancos diferentes para o euro). E a mesma notícia escrita
   com palavras bem diferentes continua aparecendo duas vezes (exemplo: três matérias sobre o fim do subsídio ao diesel
   importado).
+
+## Sexta rodada (18/11/2026): aba no menu e teste instável de Setores
+Pedido do Fernando: "Faça as duas sugestões" (colocar a aba Apresentar no menu; corrigir o teste instável da tela
+Setores › Turismo).
+- **Aba no menu.** `appSections.js` sem `oculto` na Apresentar: ela aparece no menu do topo e no "Mais" do celular, como
+  última aba. O menu do topo, agora com onze abas, continua em uma linha de 1000 a 1920 px nos dois temas; no tema
+  claro, de 1000 a 1099 px, os rótulos em caixa alta ficaram um pouco mais juntos e menores (`TopBar.css`) para caber.
+  Testes de menu atualizados (`nav-order`, `nav-no-numbers`, `nav-accessibility`, `smoke-sector-folders`,
+  `smoke-apresentar`, que agora abre a aba pelo menu e confere o topo em uma linha).
+- **Teste de Setores.** Em 18/11, `smoke-sector-folders` falhou uma vez em "turismo: resumo vem antes dos cards" e passou
+  na repetição, sem mudança na tela. O teste passou a medir só com a tela parada: letras carregadas, imagens prontas,
+  sem animação de entrada e com a posição igual em duas leituras seguidas. A regra conferida não mudou (o resumo "O que
+  acompanhar" vem antes dos cartões). Rodado três vezes seguidas aqui, sem falha.
+- Não conferido: se a instabilidade some de vez no ambiente da conferência automática; só o uso nas próximas
+  publicações mostra.

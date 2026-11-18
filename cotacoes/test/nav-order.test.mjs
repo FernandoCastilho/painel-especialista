@@ -28,9 +28,9 @@ test('Configurações fica fora do menu (oculta), mas a rota continua', async ()
   assert.match(src, /TABS\.filter\(\(t\) => !t\.oculto\)/)
 })
 
-test('Apresentar fica fora do menu por enquanto, abre pelo comando e não vira destino da busca', () => {
-  assert.equal(APP_SECTIONS.find(section => section.id === 'apresentar').oculto, true)
-  assert.equal(DESK_TABS.find(section => section.id === 'apresentar').oculto, true)
+test('Apresentar aparece no menu (desde 18/11/2026), abre pelo comando e não vira destino da busca', () => {
+  assert.ok(!APP_SECTIONS.find(section => section.id === 'apresentar').oculto)
+  assert.ok(!DESK_TABS.find(section => section.id === 'apresentar').oculto)
   assert.equal(SEARCH_SECTIONS.apresentar, undefined) // a aba monta slides; o conteúdo buscável continua nas abas de origem
   assert.deepEqual(parseCommand('APRESENTAR'), { kind: 'tab', id: 'apresentar', sub: '' })
 })

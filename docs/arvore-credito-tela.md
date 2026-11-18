@@ -20,7 +20,7 @@ Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECRE
 
 ## Sigilo
 
-**Consulta de CNPJ desligada na publicação** (decisão de Fernando, 18/11/2026, após parecer do Auditor): a tela pede os dados à mão e nenhum dado sai dela. O código da consulta continua pronto (`CONSULTA_CNPJ_ATIVA` em `arvoreCredito.js`) para ser ligado depois de confirmada a política do banco sobre consulta em serviço externo. Quando ligada, valem os pontos abaixo.
+**Consulta de CNPJ desligada na publicação** (decisão de Fernando, 18/11/2026, após parecer do Auditor): a tela pede os dados à mão e nenhum dado sai dela. O código da consulta continua pronto (`CONSULTA_CNPJ_ATIVA` em `arvoreCredito.js`) para ser ligado depois de confirmada a política do banco sobre consulta em serviço externo. Enquanto isso, a tela tem um botão que abre em outra aba o [Comprovante de Inscrição e de Situação Cadastral da Receita Federal](https://solucoes.receita.fazenda.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp): o especialista digita o CNPJ lá e copia os dados; o CNPJ vai só para a Receita (decisão de Fernando, 18/11/2026). Endereço confirmado por busca; a página não abriu neste ambiente. Quando ligada, valem os pontos abaixo.
 
 
 - O CNPJ só sai da tela quando o especialista clica em consultar, e só para a BrasilAPI. CNPJ com dígito errado não é enviado.

@@ -33,6 +33,11 @@
 .ac-fontes { margin:0; font-size:.75rem; color:var(--mut); line-height:1.45; }
 .ac-fontes a { color:inherit; }
 .ac-sim { align-self:flex-start; }
+.ac-receita { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; border:1px solid var(--amber, #ffb000); color:var(--fg); text-decoration:none; font-size:.9rem; }
+/* Mais específica que a regra geral de links externos no celular (Terminal.css, até 1099px), que zera o recuo lateral. */
+main.app section.ac .ac-linha a.ac-receita[target="_blank"] { display:inline-flex; padding:8px 14px; }
+.ac-receita:hover { background:var(--bw-tint, transparent); }
+.ac-receita:focus-visible { outline:2px solid var(--amber, #ffb000); outline-offset:1px; }
 .ac-mais { margin:10px 0; border-top:1px solid var(--line); padding-top:8px; }
 .ac-mais summary { min-height:44px; display:flex; align-items:center; cursor:pointer; font-size:.9rem; }
 .ac-sairam { margin:6px 0; padding-left:18px; font-size:.85rem; line-height:1.5; }
