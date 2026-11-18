@@ -584,6 +584,94 @@ Regra sugerida para a tela: CNAE nesses grupos = "CPR é candidata; confirmar a 
 - [LC 125/2007 (Sudene), Câmara](https://www2.camara.leg.br/legin/fed/leicom/2007/leicomplementar-125-3-janeiro-2007-548989-normaatualizada-pl.html)
 - [Lei 8.929/1994 (CPR), Câmara](https://www2.camara.leg.br/legin/fed/lei/1994/lei-8929-22-agosto-1994-349613-normaatualizada-pl.html)
 
+## 3.10 Catálogo completo do BNDES (segunda rodada, 18/11/2026)
+
+**Resultado**
+- 125 páginas de produto, linha ou modalidade com conteúdo, mais 4 fundos garantidores, abertas hoje no site do BNDES: 46 linhas diretas do tipo Finem, 22 de agro, 9 do Fundo Clima, 8 do Brasil Soberano, 5 do Exim, 5 do Mais Inovação e 30 outras.
+- **Não dá para afirmar que a lista está completa.** O índice de linhas do site é montado por consulta interna, bloqueada neste ambiente; o mapa do site não existe. A lista foi montada por links internos, endereços citados nas páginas e busca.
+- Conferência cruzada: a lista oficial de linhas indiretas que aceitam FGI (Circular 102/2025) bate com o que foi achado.
+- Pode faltar: Fundo da Marinha Mercante, Finame Direto e Exim Pré-embarque Empresa Inovadora (páginas vazias), BNDESPAR e apoio não reembolsável fora de Funtec, Fundo Cultural e Socioambiental.
+- Taxa final nas linhas indiretas = custo financeiro + taxa do BNDES + taxa do banco repassador. Selic suspensa como custo financeiro desde a Circular 09/2026. [OF]
+
+**Linhas indiretas para empresas (via banco repassador)** [OF, salvo marca]
+
+| Produto | Para que serve | Quem pode | Não financia | Limite | Prazo / carência | Custo | Reembolso |
+|---|---|---|---|---|---|---|---|
+| [Finame Materiais Industrializados](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-materiais-industrializados) | Materiais industrializados nacionais da lista NCM, origem pelo CST/CSOSN | Todos os portes, inclusive produtor rural e cooperativas | Alimentos, bebidas, combustíveis, lubrificantes, máquinas credenciáveis no Finame | R$ 20 mi por operação; R$ 150 mi por cliente em 12 meses | 7 anos / 2 (1 em TFB e TFC) | TFB, TFBD, TLP, LCD (só MPME), TFC + 0,95% (MPME Norte/Nordeste) ou 1,25% + banco | 12 meses antes do protocolo |
+| [Finame BK Aquisição](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-finame-bk-aquisicao-comercializacao) | Máquina, equipamento, ônibus, caminhão, nacionais e credenciados; giro associado até 30% (MPME) | Empresas, transportador autônomo | Importado, usado | Até R$ 150 mi por operação | 10 / 2 | + 0,75% (Norte/Nordeste) ou 0,95%; caminhão e ônibus 0,95% ou 1,25% + banco | 12 meses [BUSCA] |
+| [Finame Baixo Carbono](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-finame-baixo-carbono) | Máquinas eficientes, solar, veículos elétricos, nacionais | Empresas | Importado | [NC] | 10 / 2 | + 0,75% + banco | Igual ao Finame BK [BUSCA] |
+| [Finame Máquinas 4.0](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-finame-maquinas-40) | Máquinas com tecnologia 4.0, credenciadas | Empresas | Importado | [NC] | 10 / 2 | + 0,75% + banco | Igual ao Finame BK [BUSCA] |
+| [BNDES Automático – Projeto](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-automatico) | Obra, ampliação, modernização, com giro associado | Empresas | Terreno, custeio, importados, imobiliário, remessa ao exterior | Até R$ 150 mi | Até 20 anos / 3 | + 0,75% (MPME), 0,95% ou 1,15% (grande) + banco | 12 meses |
+| [Automático Emergencial](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-automatico-emergencial) | Retomada após desastre | MPME em município com emergência reconhecida | — | R$ 20 mi em 12 meses | 90 meses / 36 | + 0,6% ou 0,95% + banco | [NC] |
+| [Crédito Pequenas e Médias Empresas](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-credito-pequenas-e-medias-empresas) | Giro livre, sem projeto e sem comprovar uso | Receita até R$ 300 mi | Importados; setores vedados | R$ 20 mi por ano | 5 / 2 | + 1,35% ou 0,95% (Norte/Nordeste) + banco | Não se aplica |
+| [Crédito Digital](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-credito-digital) | Giro 100% digital (BTG, BB e Sicredi) | MEI e MPME | Alguns CNAEs | R$ 300 mil (micro e pequena) ou R$ 2,5 mi (média) por operação | 5 / 1 | TFB DIG + 0,6% ou 1,25% + banco | Não se aplica |
+| [Cartão BNDES](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/cartao-bndes) | Bens, insumos, peças, software e serviços credenciados | MPME e MEI de controle nacional | **Capital de giro** | Até R$ 2 mi por banco emissor | 48 parcelas fixas | Taxa mensal do portal + abertura até 2% | Não |
+| [Crédito Serviços 4.0](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-credito-servicos-4.0) | Serviços tecnológicos credenciados; giro até 20% | Empresas | — | [NC] | 10 / 2 | + 0,95% + banco | 12 meses [BUSCA] |
+| [Mais Inovação – Investimento Automático](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-mais-inovacao-investimento-automatico) | Plano de digitalização; aceita máquina e software importados sem similar | Empresas privadas | — | R$ 15 mi em 12 meses | 10 / 2 | TR + 1,5% + banco até 4% | [NC] |
+| [Mais Inovação – Difusão Tecnológica](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/programa-bndes-mais-inovacao-difusao-tecnologica) | Máquinas 4.0, informática com PPB, serviços tecnológicos | Empresas, produtor rural | Caminhões e reboques | R$ 50 mi em 12 meses | 120 meses / 12 | TFC em TR + 1,4% ou 2,0% + banco | [NC] |
+| [Fundo Clima Automático – Máquinas](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/fundo-clima/fundo-clima-automatico-maquinas-equipamentos) | Máquinas eficientes, solar, eólico, baterias, veículos elétricos; giro até 30% | Empresas, produtor rural | Importado | R$ 50 mi em 12 meses | 16 / 5 | 6,5% a.a. (solar 9,5%) + 0,9% ou 1,4% + banco até 2,5% | [NC] |
+| [Fundo Clima Automático – Projetos](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/fundo-clima/fundo-clima-automatico-projetos-de-investimento) | Indústria verde, renovável, logística verde | Idem | — | R$ 50 mi (até R$ 150 mi) | 16 a 25 anos / 5 a 8 | 6,5% + 0,9% ou 1,4% + banco até 2,5% | [NC] |
+| [Exim Pré-embarque indireto](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-exim-pre-embarque) | Produção para exportar | Exportadoras | Bem sem índice de nacionalização | 100% do valor exportado (MPME) ou 80% | 4 a 5 anos | + 0,50% (MPME), 0,80% ou 1,05% + banco | Não se aplica |
+| [Exim Pós Automático](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/exim-pos-emb-automatico) | Desconto de carta de crédito de banco no exterior | Exportador ou trading | — | US$ 10 mi por pedido | 7 anos | Conforme risco do país | Não |
+| [Crédito Cerealistas](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-credito-cerealistas) | Armazém de grãos | Cerealistas | — | 100% | 10 / 2 ou 13 / 3 | TFB ou TLP + 0,95% + banco | 12 meses; protocolo até 16/12/2026 |
+| [Pro-CDD](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-pro-cdd) | Novo crédito para liquidar dívida BNDES existente | Pessoa jurídica privada | Dívida que não seja BNDES | R$ 20 mi em 12 meses | 7 / 2 | + 1,45% (MPME) ou 2,25% + banco | Não se aplica; até 30/06/2027 |
+| [FUST Equipamentos](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-fust-automatico-equipamentos) e [Finame Funttel](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-funttel) | Equipamento de telecom | Provedores e teles | — | R$ 10 mi em 12 meses | 10 / 2 | TR + 1,15% a 1,45% + banco até 7% | [NC] |
+| [Microcrédito](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-microcredito-empreendedor) e [Procapcred](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/procapcred) | Microempreendedor; cotas de cooperativa de crédito | — | — | — | — | — | — |
+
+**Brasil Soberano Competitividade (temporário)** [OF]
+- Só para empresa elegível pela Lei 15.473/2026: exportadoras e fornecedores afetados pela tarifa dos EUA, fertilizantes e Golfo Pérsico. CNPJ conferido em consulta própria. Teto de R$ 50 mi por cliente no canal indireto.
+- Giro (aberto): 60 meses / 12. Giro Exportação: **protocolo suspenso**. Bens de Capital: 8% + 1,5% + banco, 60 / 12. Investimento: 6,5% + 1,5% + banco, 240 / 48. Nada adquirido antes de 24/03/2026.
+
+**Agro (via banco; o FGI não garante)** [OF]
+- [Crédito Rural](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-credito-rural): Investimento, Máquinas, Custeio, Cooperativas e CPR BNDES (CPR só para MPME). Reembolso de 12 meses.
+- Plano Safra: Moderfrota, Inovagro, PCA, Prodecoop, Proirriga, Pronamp, Renovagro, Procap-Agro, Pronaf. Taxas prefixadas de 8% a 12% a.a., vigentes até 30/06/2027. Moderagro aparece expirado.
+
+**Linhas diretas (valores altos)** [OF]
+- Crédito direto em geral só acima de R$ 20 mi. Máquina isolada sempre via banco, pelo Finame ou pelo Cartão ([Formas de apoio](https://www.bndes.gov.br/wps/portal/site/home/financiamento/guia/formas-de-apoio)).
+- Finem e setoriais (mínimo R$ 40 mi, ou R$ 20 mi em alguns setores); Crédito Direto Médias Empresas (R$ 40 mi); Máquinas e Serviços (R$ 20 mi); [Crédito Cadeias Produtivas](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-credito-cadeias-produtivas) (giro repassado por empresa-âncora à cadeia de MPME, R$ 20 mi); Exim direto; Fundo Clima direto; Mais Inovação direto.
+
+**Garantias**: FGI, FGI PEAC, FG BNDES-Sebrae, [FGEnergia](https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/bndes-fgenergia/bndes-fgenergia) (80% de projeto de eficiência energética de MPME) e BNDES Garantia. [OF]
+
+**Regra geral de reembolso** ([guia oficial](https://www.bndes.gov.br/wps/portal/site/home/financiamento/guia/participacao-maxima-bndes-contrapartida-reembolso)): 12 meses no Automático e no Finame Direto; 6 meses nos demais, salvo regra própria. Finame Materiais, Crédito Rural, Cerealistas e Plano Safra declaram 12 meses. [OF]
+
+## 3.11 Finame Materiais: reembolso e o que falta no Painel [OF]
+
+Fontes: [página do produto](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/finame-materiais-industrializados), [Circular 14/2022 consolidada](https://www.bndes.gov.br/wps/wcm/connect/site/0992576f-dd8a-46e3-bcd0-b1ca9a007a01/22Cir14+BNDES+Finame.pdf?MOD=AJPERES&CVID=pR0sh1Y), [Anexo I da Circular 13, versão de 21/08/2026](https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/01-22Cir13-Anexo-I-Procedimentos-Operacionais20260821.pdf), [validações de notas, versão 2026](https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/Validacoes-na-Consulta-e-PL-FINAME-Materiais-Industrializados-v2026.pdf).
+
+- **Reembolso: 12 meses**, contados para trás da data de protocolo da operação no BNDES. Não há regra de 11 meses no BNDES. Hipótese do pesquisador, não confirmada: os 11 meses de Fernando são folga do banco, porque o protocolo no BNDES vem depois da aprovação interna.
+- **Fernando está certo no essencial:** é reembolso do que já foi gasto. O dinheiro vai ao cliente ou ao fornecedor por ordem dele. A nota fiscal de compra é sempre exigida.
+- **O que a nota precisa ter:** emitida para o CNPJ do cliente (vale matriz e filiais); nota eletrônica ativa, de saída, nunca usada em outro financiamento BNDES; natureza de venda (venda para entrega futura não serve); cada item com NCM e CST/CSOSN elegíveis. Valor financiável = produto + IPI + ICMS-ST − descontos.
+- **Prazos operacionais:** liberação em até 24 meses da contratação; dados da contratação ao BNDES em até 270 dias da aprovação.
+- **Atividade agro:** empresa com atividade principal agro (CNAE seção A) só investe em agro; as demais, em tudo menos agro.
+- **Divergências com o Painel:** o teto de R$ 20 mi por operação é norma oficial (Circular 14, item 6.2.2, pela Circular 64/2023), e o Painel diz que vem só de terceiros. O Painel escreve "bens novos"; a norma não diz "novos" para materiais.
+
+## 3.12 Necessidade do cliente e produtos BNDES candidatos
+
+| Necessidade | Candidatos (via banco primeiro) | Onde o BNDES não atende |
+|---|---|---|
+| Gap de caixa / capital de giro | Crédito PME (até R$ 20 mi/ano); Crédito Digital; Brasil Soberano Giro, se elegível; giro associado em Finame, Automático e Fundo Clima; Finame Materiais por reembolso de notas | Cartão BNDES não financia giro [OF] |
+| Importar matéria-prima | **Nenhuma linha.** Insumo nacional entra pelo Finame Materiais ou pelo Cartão | Giro PME veda importados; Automático veda remessa ao exterior [OF] |
+| Máquina importada | Só sem similar nacional: Mais Inovação Investimento Automático (até R$ 15 mi, digitalização); diretas a partir de R$ 20 mi; Prodecoop (cooperativa) | Finame BK, Automático e giro PME vedam importado. Regra nova (Circulares 88 e 89/2026): prova de que não há similar, liberação só após a nota de entrega, sem remessa ao exterior [OF]. Leitura do pesquisador: compra de importador no Brasil, não pagamento ao fornecedor lá fora |
+| Máquina ou frota nacional | Finame BK, Máquinas 4.0, Baixo Carbono, Fundo Clima Máquinas, Cartão BNDES, Brasil Soberano Bens de Capital; agro: Moderfrota, Crédito Rural Máquinas | Usado e importado |
+| Estoque nacional com prazo longo | **Finame Materiais** (reembolso de 12 meses, até 7 anos); Cartão BNDES (48 meses) | Itens fora da lista NCM. Comércio de revenda: [NC] |
+| Obra, ampliação, planta nova | BNDES Automático, Fundo Clima Projetos, Brasil Soberano Investimento, Cerealistas e PCA; Finem direto | Terreno, imobiliário para venda ou aluguel [OF] |
+| Inovação e digitalização | Mais Inovação Difusão e Investimento Automático, Serviços 4.0, Máquinas 4.0 | — |
+| Exportação | Exim Pré-embarque indireto, Exim Pós Automático; Brasil Soberano Giro Exportação (suspenso) | — |
+| Comprar outra empresa | **Nenhuma linha indireta.** O Glossário admite "aquisição de empresas" como item, mas nenhuma página de produto prevê; na prática, só direta caso a caso [NC] | Automático e Finame |
+| Pagar dividendos | **O BNDES não atende.** Nenhum item do Glossário cobre distribuição de lucro [OF]. Usar o giro PME para isso é desvio de finalidade [interpretação] | — |
+| Agro | Crédito Rural (inclui CPR BNDES para MPME), Plano Safra | FGI não garante crédito rural [OF] |
+| Eficiência energética | Finame Baixo Carbono, Fundo Clima Automático, FGEnergia | — |
+
+## 3.13 O que ficou sem conferência (segunda rodada)
+
+- Lista oficial completa (índice interno bloqueado).
+- Reembolso no Finame BK, Máquinas 4.0, Baixo Carbono e Serviços 4.0.
+- Limites de Baixo Carbono e Máquinas 4.0.
+- Se o fim do recurso em TR em 31/12/2026 vale também para as linhas indiretas do Mais Inovação.
+- Finame Materiais para comércio que revende.
+- Uso prático da exigência "sem remessa ao exterior" para importados.
+- Se a medida provisória do Brasil Soberano virou lei.
+
 ---
 
 # Frente 4 — Crédito em reais, mercado de capitais e garantias
