@@ -363,7 +363,7 @@ async function assertComparatorFamily(browser) {
         const navigationRows = await page.locator('.topbar-tabs > button').evaluateAll(buttons =>
           new Set(buttons.map(button => Math.round(button.getBoundingClientRect().top))).size
         )
-        assert.equal(navigationRows, 1, 'navegação do desktop mantém as onze abas na mesma linha a 1440px')
+        assert.equal(navigationRows, 1, 'navegação do desktop mantém as dez abas na mesma linha a 1440px')
         await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('button', { name: 'Calculadoras', exact: true }).click()
       }
       await page.locator(workspaceRoutes['']).first().waitFor()
