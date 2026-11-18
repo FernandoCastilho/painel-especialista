@@ -123,6 +123,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const cet = res ? finameCet(res, hoje, holidayCtx, calendarios) : null
   const cets = comparison?.ok ? comparison.alternatives.map(item => finameCet(item.result, hoje, holidayCtx, calendarios)) : []
   const cetTexto = (c, unidade = 'anual') => c ? `${pct(unidade === 'anual' ? c.anual : c.mensal, 2)} ${unidade === 'anual' ? 'a.a.' : 'a.m.'}` : 'Não mensurável'
+  // Somente apresentação: reutiliza as equivalências já calculadas, sem conta nova.
+  const parTaxas = (anual, mensal) => <span className="fm-rate-pair"><span>{anual}</span><span aria-hidden="true">·</span><span>{mensal}</span></span>
+  const taxaResumo = resultado => parTaxas(`${pct(resultado.taxa, 2)} a.a.`, `${pct(resultado.taxaMensal, 3)} a.m.`)
+  const cetResumo = valor => valor ? parTaxas(cetTexto(valor), cetTexto(valor, 'mensal')) : 'Não mensurável'
   const cetAjuda = 'CET estimado (Resolução CMN 4.881/2020): taxa anual que iguala o valor líquido recebido na liberação (valor liberado menos TAC, ECG do FGI à vista e IOF) às parcelas do cronograma, em dias corridos/365. Usa as datas hipotéticas do fluxo (dia 15 ou próximo dia útil) e não inclui seguros nem outras tarifas: o CET do contrato, informado pelo agente, prevalece.'
   const referenceRetained = !!(((custo === 'tfc' || comparar) && (moedas.stale || moedas.status === 'error' || moedas.data?.stale?.[tfcCodigo])) || ((custo === 'tfb' || comparar) && (bndes.stale || bndes.status === 'error' || bndes.data?.stale?.[keyOf(faixa, liberacao)])))
 
@@ -291,9 +295,9 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
             {!comparar && <section className="fm-destaques" aria-labelledby="fm-destaques-h">
               <h4 id="fm-destaques-h" className="sr-only">Principais números · {custo.toUpperCase()}</h4>
               <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Resultado</th><th scope="col" className={`fm-result-${custo}`}>{custo.toUpperCase()}</th></tr></thead><tbody>
-                <tr><th scope="row">Taxa de referência</th><td>{pct(custoFinanceiro, 2)}</td></tr>
-                <tr><th scope="row">Taxa final</th><td>{pct(res.taxa, 2)}</td></tr>
-                <tr className="fm-cet-row"><th scope="row">CET estimado{ajuda('CET estimado', cetAjuda)}</th><td>{cetTexto(cet)}</td></tr>
+                <tr><th scope="row">Taxa de referência</th><td>{pct(custoFinanceiro, 2)} a.a.</td></tr>
+                <tr><th scope="row">Taxa final</th><td>{taxaResumo(res)}</td></tr>
+                <tr className="fm-cet-row"><th scope="row">CET estimado{ajuda('CET estimado', cetAjuda)}</th><td>{cetResumo(cet)}</td></tr>
                 <tr className="fm-summary-row"><th scope="row">Primeira parcela após carência{ajuda('Primeira parcela', 'Primeira parcela com amortização. Quando houver carência com juros, podem existir cobranças anteriores conforme a periodicidade informada.')}</th><td>{brl(res.primeiraParcela)}</td></tr>
                 <tr><th scope="row">Última parcela</th><td>{brl(res.ultimaParcela)}</td></tr>
                 <tr className="fm-total-row"><th scope="row">Custo total estimado{ajuda('Custo total estimado', quadros.find(item => item.id === 'total')?.ajuda)}</th><td>{brl(res.total)}</td></tr>
@@ -309,11 +313,11 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
                 </div>
                 {referenceRetained && <p className="status stale" role="status">Referência retida ou atualização indisponível. Confira as datas em Taxas e históricos antes de cotar.</p>}
                 <div className="fm-exec" style={matrizStyle}>
-                  <div className="cx-wrap" role="region" tabIndex={0} aria-label="Resultados TFC e TFB"><table className="cx-matrix fm-fit fm-exec-matrix" style={matrizStyle}><thead><tr><th scope="col">% a.a. ou R$</th>{alternatives.map((item, index) => <th key={item.custo} scope="col" className={`fm-opt fm-result-${item.custo}${!empate && index === melhor ? ' fm-best' : ''}`}>{!empate && index === melhor && <span className="fm-badge">{cetsOk ? 'Menor CET' : 'Menor custo'}</span>}<span className="fm-opt-name">{opcao(index)}</span><b>{cetsOk ? pct(cets[index].anual, 2) : '—'}</b><span className="fm-opt-unit">CET estimado a.a.</span></th>)}{comDiferenca && <th scope="col" className="fm-delta-head">Diferença<br />B − A</th>}</tr></thead><tbody>
+                  <div className="cx-wrap" role="region" tabIndex={0} aria-label="Resultados TFC e TFB"><table className="cx-matrix fm-fit fm-exec-matrix" style={matrizStyle}><thead><tr><th scope="col">Taxas e valores</th>{alternatives.map((item, index) => <th key={item.custo} scope="col" className={`fm-opt fm-result-${item.custo}${!empate && index === melhor ? ' fm-best' : ''}`}>{!empate && index === melhor && <span className="fm-badge">{cetsOk ? 'Menor CET' : 'Menor custo'}</span>}<span className="fm-opt-name">{opcao(index)}</span><b>{cetsOk ? pct(cets[index].anual, 2) : '—'}</b><span className="fm-opt-unit">CET estimado a.a.</span></th>)}{comDiferenca && <th scope="col" className="fm-delta-head">Diferença<br />B − A<br /><small>Taxas em p.p. a.a.</small></th>}</tr></thead><tbody>
                     {grupoComparado('Taxas')}
-                    {linhaComparada('Taxa de referência', alternatives.map(item => item.rate.value), 'pct')}
-                    {linhaComparada('Taxa final', alternatives.map(item => item.result.taxa), 'pct')}
-                    {linhaComparada('CET estimado', cets.map(item => item?.anual), 'pct', { className: 'fm-cet-row', textos: cets.map(item => cetTexto(item).replace(' a.a.', '')), extra: ajuda('CET estimado', cetAjuda) })}
+                    {linhaComparada('Taxa de referência a.a.', alternatives.map(item => item.rate.value), 'pct')}
+                    {linhaComparada('Taxa final', alternatives.map(item => item.result.taxa), 'pct', { textos: alternatives.map(item => taxaResumo(item.result)) })}
+                    {linhaComparada('CET estimado', cets.map(item => item?.anual), 'pct', { className: 'fm-cet-row', textos: cets.map(item => cetResumo(item)), extra: ajuda('CET estimado', cetAjuda) })}
                     {grupoComparado('Parcelas')}
                     {[['Primeira parcela após carência', 'primeiraParcela'], ['Última parcela', 'ultimaParcela']].map(([label, key]) => linhaComparada(label, alternatives.map(item => item.result[key]), 'brl'))}
                     {grupoComparado('Composição do custo')}
