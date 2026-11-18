@@ -281,7 +281,8 @@ site publicado e não existia nos testes locais.
 Primeira correção: o contador mostra só o ponto e o número e os rótulos ficaram mais juntos em algumas faixas. O Auditor
 mediu de 5 em 5 px e achou ainda duas linhas no tema claro de 1800 a 1875 px (onde aparecem os relógios extras) e com
 estados longos do texto dos dados ("Fora do horário de coleta", toda noite e fim de semana; "Atualização parcial";
-"Indisponível"). Parecer: **Requer correção** (72,0).
+"Último válido"; "Reserva diária"). Parecer: **Requer correção** (72,0). Segundo parecer, sobre a correção final:
+**Aprovado** (93,0).
 
 Correção final (`TopBar.css` e `Acessos.jsx`):
 - No computador, o contador de pessoas online mostra só o ponto e o número; o texto "N online agora" fica na dica ao
