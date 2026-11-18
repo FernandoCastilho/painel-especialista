@@ -159,3 +159,20 @@ Não conferido nesta rodada: o filtro do tema madeira com manchetes reais. O amb
 Notícias; o filtro foi testado com manchetes de exemplo. A primeira coleta real acontece na publicação, e o resultado
 precisa ser lido no site depois dela. Com mais de 24 meses colados, os rótulos do gráfico do Faturamento ficam
 pequenos no slide; os números principais estão na tabela e no resumo por ano.
+
+## Terceira rodada (18/11/2026): tema madeira sem descarte por palavra
+Decisão do Fernando: "Não pode nada ficar fora por conta de palavras como 'desabam'. Pode incluir tudo, porque aqui é
+educativo."
+- O filtro do tema "Madeira e base florestal" deixa de descartar matérias por palavras do título (desaba, tomba,
+  benefícios, Portugal, apreensão, polícia, ilegal, incêndio, acidente, objetos de madeira e outras) e deixa de exigir
+  palavra de contexto econômico. Entra toda matéria que cite o setor, inclusive queda de preço, acidente, fiscalização e
+  notícia de outros países.
+- Só sai o que não é madeira: a Ilha da Madeira (governo, aeroporto, clima, custo de vida, vinho e o clube Nacional), o
+  Rio Madeira, o MDF-e (documento fiscal), o município de Serraria e o sobrenome Madeira logo depois de um cargo ou de
+  uma posição de jogador.
+- Efeito esperado: mais matérias, inclusive de consumo ligado à madeira (piso, lenha, móveis planejados). Dá para tirar
+  do slide as que não servirem em "Escolher notícias". Um título sobre a ilha sem nenhuma dessas expressões ainda pode
+  passar (exemplo: "Madeira: aeroporto fecha por causa do vento").
+- Conferência do filtro: as 13 manchetes reais já coletadas continuam entrando; nas baterias do Auditor, todas as 45
+  manchetes legítimas do setor entram (ficam fora só duas sem palavra do setor: uma de celulose e uma em inglês).
+- Os demais temas de notícias continuam com seus filtros; esta decisão vale só para madeira.
