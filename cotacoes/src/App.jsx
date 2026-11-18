@@ -304,7 +304,7 @@ export default function App() {
       </div>
     )}
     <FeedbackMascot onSearch={setMascotSearch} section={tab} />
-    <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
+    <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} data-tab={tab} ref={mainRef}>
       {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
       <Suspense fallback={<p className="status" role="status">Carregando seção…</p>}>
