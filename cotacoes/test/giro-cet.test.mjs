@@ -52,10 +52,11 @@ test('despesas à vista e financiadas reconciliam líquido, saldo, parcelas e CE
   const iof = 121200 * 0.0038 + periods.reduce((sum, days) => sum + 10100 * days * 0.000082, 0)
   const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-5, `${actual} ≠ ${expected}`)
   for (const financeIof of [false, true]) {
-    const r = giroOperation({ ...setup, ...expenses, financeIof })
+    const quotedIof = 2473.70
+    const r = giroOperation({ ...setup, ...expenses, financeIof, quotedIof })
     assert.ok(r.ok, r.error)
     assert.deepEqual(r.rows.map(row => row.days), periods)
-    const principal = 121200 + (financeIof ? iof : 0)
+    const principal = 121200 + (financeIof ? quotedIof : 0)
     const net = 120000 - 300 - (financeIof ? 0 : iof)
     const amortization = principal / 12
     let balance = principal, previous = 0, paid = 0
@@ -66,7 +67,7 @@ test('despesas à vista e financiadas reconciliam líquido, saldo, parcelas e CE
       previous = days
       return payment
     })
-    close(r.iof, iof)
+    close(r.iof, financeIof ? quotedIof : iof)
     close(r.financedBalance, principal)
     close(r.net, net)
     close(r.cost, paid - net)
@@ -90,7 +91,22 @@ test('custos financiados seguem a carência capitalizada e a garantia não é pr
 test('CET respeita o limite técnico no fluxo selecionado, sem validar um fluxo à vista hipotético', () => {
   const setup = { ...base, system: 'bullet', n: 1, rate: 16.947, start: '2026-11-23', firstDue: '2026-11-26' }
   assert.equal(giroOperation(setup).ok, false)
-  const financed = giroOperation({ ...setup, financeIof: true })
+  const financed = giroOperation({ ...setup, financeIof: true, quotedIof: 404.6 })
   assert.ok(financed.ok, financed.error)
   assert.ok(financed.cet < 10)
+})
+
+test('IOF financiado exige a cotação e usa o valor integral sem presumir o enquadramento do Simples', () => {
+  const setup = { ...base, value: 30000, system: 'sac', profile: 'simples', eligible: true, financeIof: true }
+  for (const quotedIof of [null, -1, NaN]) {
+    assert.match(giroOperation({ ...setup, quotedIof }).error, /IOF financiado da cotação/)
+  }
+  const regular = giroOperation({ ...setup, quotedIof: 612.30 })
+  assert.ok(regular.ok, regular.error)
+  assert.equal(regular.net, 30000)
+  assert.equal(regular.financedBalance, 30612.30)
+  assert.equal(regular.rows.at(-1).balance, 0)
+  assert.equal(regular.iof, 612.30)
+  assert.equal(regular.tax, null)
+  assert.equal(giroOperation({ ...setup, quotedIof: 0 }).iof, 0)
 })

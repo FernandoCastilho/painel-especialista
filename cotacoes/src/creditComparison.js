@@ -35,7 +35,7 @@ export function creditOperation(p) {
   return simulateCredit(p)
 }
 
-function simulateCredit(p, { requested = p.value, financeIof = false } = {}) {
+function simulateCredit(p, { requested = p.value, quotedIof = null } = {}) {
   const { value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false,
     rateType = 'fixed', cdi = 0, cdiPercent = 100, fees = 0, monthlyFees = 0, holidays = [], guaranteeValue = null, calendars = ['BR'] } = p
   if (!money(value) || value <= 0 || !Number.isInteger(n) || n < 1 || n > 600) return fail('Informe valor positivo e de 1 a 600 parcelas.')
@@ -52,8 +52,8 @@ function simulateCredit(p, { requested = p.value, financeIof = false } = {}) {
   const raw = loanDates(start, firstDue, system === 'bullet' ? 1 : n)
   const dates = raw && raw.map(d => { const date = nextUseful(d.date); return { date, days: days(start, date) } })
   if (!dates || dates.at(-1).days > 22000) return fail('Informe datas reais, primeiro pagamento posterior à liberação e horizonte de até 60 anos.')
-  const tax = resolveCreditIof({ date: start, profile, operationValue: value, eligible })
-  if (!tax.ok) return fail(tax.error)
+  const tax = quotedIof === null ? resolveCreditIof({ date: start, profile, operationValue: value, eligible }) : null
+  if (tax && !tax.ok) return fail(tax.error)
   const monthly = monthlyRate(rate, unit)
   const logFactor = (from, to) => rateType === 'fixed' ? Math.log1p(monthly) * days(from, to) / 30
     : (Math.log1p(Math.expm1(Math.log1p(cdi / 100) / 252) * cdiPercent / 100) + Math.log1p(monthly) * 12 / 252) * creditBusinessDays(from, to, holidays, true, cals)
@@ -69,7 +69,7 @@ function simulateCredit(p, { requested = p.value, financeIof = false } = {}) {
   const discountSum = logs.reduce((sum, log) => { cumulative += log; return sum + Math.exp(-cumulative) }, 0)
   const installment = opening / discountSum
   let balance = opening, originalBalance = value, paid = 0, interestTotal = opening - value
-  let rows = dates.map((d, k) => {
+  const rows = dates.map((d, k) => {
     const interest = balance * Math.expm1(logs[k])
     const amortization = k === dates.length - 1 ? balance : system === 'sac' ? opening / n : installment - interest
     const originalAmortization = k === dates.length - 1 ? originalBalance : amortization * value / opening
@@ -79,26 +79,11 @@ function simulateCredit(p, { requested = p.value, financeIof = false } = {}) {
     return { ...d, number: k + 1, interest, amortization, originalAmortization, payment, balance: Math.max(0, balance), cumulative: paid }
   })
   if (!money(opening) || !money(paid) || rows.some(r => !money(r.payment) || r.amortization < -0.000001 || !money(r.interest))) return fail('Condições fora do limite numérico ou com amortização negativa. Reduza taxa, prazo ou carência.')
-  const iofFixed = value * tax.additional / 100
-  const iofDaily = rows.reduce((sum, r) => sum + r.originalAmortization * Math.min(r.days, tax.maxDays) * tax.daily / 100, 0)
-  const iof = iofFixed + iofDaily
-  // O IOF financiado incide no fluxo como saldo, após a apuração do imposto.
-  // A amortização do principal tributável, as datas e a taxa não mudam.
-  const scale = financeIof ? (value + iof) / value : 1
-  if (scale !== 1) {
-    rows = rows.map(row => ({
-      ...row,
-      interest: row.interest * scale,
-      amortization: row.amortization * scale,
-      payment: row.payment * scale,
-      balance: row.balance * scale,
-      cumulative: row.cumulative * scale,
-    }))
-    paid *= scale
-    interestTotal *= scale
-    if (!money(value + iof) || !money(paid)) return fail('O valor financiado excede o limite da simulação.')
-  }
-  const upfront = fees + (financeIof ? 0 : iof)
+  const iofFixed = tax ? value * tax.additional / 100 : null
+  const iofDaily = tax ? rows.reduce((sum, r) => sum + r.originalAmortization * Math.min(r.days, tax.maxDays) * tax.daily / 100, 0) : null
+  const iof = quotedIof ?? (iofFixed + iofDaily)
+  const upfrontIof = quotedIof === null ? iof : 0
+  const upfront = fees + upfrontIof
   const net = requested - upfront
   if (!(net > 0)) return fail('IOF e encargos iniciais devem ser menores que o valor contratado.')
   const cet = creditCet(net, rows)
@@ -113,21 +98,22 @@ function simulateCredit(p, { requested = p.value, financeIof = false } = {}) {
     regulatoryNet = fixedPart.ok ? fixedPart.net : null
   }
   return { ok: true, value, net, rows, iof, iofFixed, iofDaily, fees, monthlyFees, tax, interest: interestTotal,
-    total: paid + fees + (financeIof ? 0 : iof), cost: paid - net, paid, cet, cetRegulatory, regulatoryNet, graceDays, capitalizedGrace: (opening - value) * scale,
+    total: paid + fees + upfrontIof, cost: paid - net, paid, cet, cetRegulatory, regulatoryNet, graceDays, capitalizedGrace: opening - value,
     coverage: guaranteeValue === null ? null : guaranteeValue / value * 100, guaranteeValue,
     maxPayment: Math.max(...rows.map(r => r.payment)), lastDate: rows.at(-1).date }
 }
 // O Giro usa o mesmo calendário, regime de juros e regra de IOF do Comparador.
-export function giroOperation({ value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false, fees = 0, financedFees = 0, financeIof = false, calendars = ['BR'] }) {
+export function giroOperation({ value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false, fees = 0, financedFees = 0, financeIof = false, quotedIof = null, calendars = ['BR'] }) {
   if (!['price', 'sac', 'bullet'].includes(system)) return fail('Escolha o sistema de amortização.')
   if (!money(value) || value <= 0 || !money(fees) || !money(financedFees)) return fail('Confira o valor solicitado e as despesas.')
   const due = system === 'bullet' ? loanDates(start, firstDue, n)?.at(-1)?.date : firstDue
   if (!due) return fail('Informe a liberação e o primeiro vencimento mensal posterior à liberação.')
-  const principal = value + financedFees
+  if (financeIof && !money(quotedIof)) return fail('Informe o valor do IOF financiado da cotação.')
+  const principal = value + financedFees + (financeIof ? quotedIof : 0)
   const r = simulateCredit({ value: principal, n, rate, unit, system, start, firstDue: due, profile, eligible,
-    rateType: 'fixed', fees, calendars }, { requested: value, financeIof })
+    rateType: 'fixed', fees, calendars }, { requested: value, quotedIof: financeIof ? quotedIof : null })
   if (!r.ok) return r
-  return { ...r, value, financedBalance: principal + (financeIof ? r.iof : 0), financedFees, financeIof, system, n,
+  return { ...r, value, financedBalance: principal, financedFees, financeIof, system, n,
     installment: system === 'bullet' ? null : r.rows[0].payment, last: system === 'sac' ? r.rows.at(-1).payment : null }
 }
 

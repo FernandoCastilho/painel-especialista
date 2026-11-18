@@ -1,3 +1,4 @@
+import SectorCreditReading from './SectorCreditReading.jsx'
 import ChartFullscreen from './ChartFullscreen.jsx'
 import { StudyTable, StudyMethod } from './StudyParts.jsx'
 import { useState } from 'react'
@@ -36,9 +37,11 @@ export default function SectorStudy({ goto }) {
       <p className="study-canvas-intro">Roteiro inspirado no Business Model Canvas. Peça números e um contrato real para sustentar as respostas.</p>
       <ol className="study-canvas-questions">{TIC_CANVAS_QUESTIONS.map(item => <li key={item.dimension}><strong>{item.dimension}</strong><p>{item.question}</p></li>)}</ol>
     </details>
+    <SectorCreditReading group="tic" />
     <KnowledgeMap compact goto={goto} sectorContext={{ group: 'tic', topicIndex: 0, study }} />
     <SectorPodcast />
     {study.sections.map(section => <details className="study-section" id={`tic-${section.id}`} key={section.id} open={section.id === 'negocio' || section.id === 'indicadores' || undefined}><summary>{section.title}</summary>{section.id === 'negocio' && <TechnologyIntegrationDiagram />}{section.paragraphs?.map(text => <p key={text}>{text}</p>)}<StudyTable section={section} />{section.bullets && <ul>{section.bullets.map(text => <li key={text}>{text}</li>)}</ul>}{section.id === 'indicadores' && study.charts.map(chart => <StudyChart key={chart.id} chart={chart} />)}{publicAgencySources(section.sources).length > 0 && <p className="central-note">Fontes: {publicAgencySources(section.sources).map((source, index) => <span key={source.url}>{index > 0 ? ' · ' : ''}{link(source)}</span>)}</p>}</details>)}
     <StudyMethod study={study} />
   </article>
 }
+
