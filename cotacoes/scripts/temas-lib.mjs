@@ -172,10 +172,11 @@ export function temasFile(porTema, now, { stale = false, errors = [] } = {}) {
 // Veículos de economia e negócios de referência (Valor, Folha, InfoMoney, Reuters e outros).
 export const PREFERIDOS = /valor|folha|estad[aã]o|globo|g1\b|cnn|infomoney|exame|bloomberg|reuters|investing|money times|poder360|uol|veja|[ée]poca|brazil journal|seu dinheiro|bnamericas|ag[eê]ncia brasil|ag[eê]ncia de not[ií]cias da ind[uú]stria|cni|brasil mineral|not[ií]cias de minera[cç][aã]o|mining|teletime|tele\.?s[ií]ntese|mobile time|converge|e-investidor|neofeed|cnbc|financial times|wall street journal|forbes|istoé dinheiro|isto[eé] dinheiro|correio braziliense|o tempo|zero hora|gaúchazh|agência estado|broadcast|metr[oó]poles|band|r7|sbt|valor international/i
 export const MIN_PREFERIDOS = 6 // mantido para quem já usa; a régua abaixo não descarta mais por quantidade (decisão de 18/11/2026)
-// Régua dos veículos (decisão de 18/11/2026: "eficiente e com a informação real"): a matéria de veículo de referência entra
-// sempre; a de outro portal entra quando traz um fato que nenhum veículo de referência noticiou. Sai só a repetição: o mesmo
-// fato contado de novo por outro portal (agregador ou reprodução), reconhecido pelas palavras do título. Antes, bastavam 6
-// matérias de referência para todas as outras sumirem, inclusive as que traziam fato novo.
+// Régua dos veículos (decisão de 18/11/2026: "eficiente e com a informação real"): de cada fato fica uma versão, a mais recente
+// de veículo de referência quando houver; a matéria de outro portal entra quando traz um fato que ainda não está na lista. Sai a
+// repetição (o mesmo fato contado de novo, reconhecido pelas palavras do título) e o que não tem informação útil (título em outra
+// língua, coluna diária traduzida sobre preço no Vietnã). Antes, bastavam 6 matérias de referência para todas as outras
+// sumirem, inclusive as que traziam fato novo.
 const VAZIAS = new Set(['para', 'como', 'mais', 'menos', 'sobre', 'apos', 'entre', 'pelo', 'pela', 'pelos', 'pelas', 'contra', 'desde', 'ainda', 'tambem',
   'este', 'esta', 'isso', 'essa', 'esse', 'sera', 'pode', 'podem', 'diz', 'dizem', 'veja', 'hoje', 'nesta', 'neste', 'semana', 'segundo', 'aponta', 'mostra'])
 const palavrasDoTitulo = (titulo) => new Set(String(titulo ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9%]+/)
@@ -191,11 +192,20 @@ export function mesmoFato(a, b) {
   const comuns = [...pa].filter((w) => pb.has(w)).length
   return comuns >= 4 && comuns / Math.min(pa.size, pb.size) >= 0.7
 }
+// Sem informação útil: título em outra língua (letras do vietnamita, cirílico, árabe, chinês, japonês, coreano) e as colunas
+// diárias traduzidas do Vietnam.vn ("Preços da gasolina e do diesel hoje, 15 de novembro…"), que tratam do preço no Vietnã.
+const OUTRA_LINGUA = /[\u0103\u0111\u01a1\u01b0\u1ea0-\u1ef9\u0400-\u04ff\u0600-\u06ff\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]/i
+const COLUNA_DIARIA_TRADUZIDA = (i) => /vietnam\.vn/i.test(i.source ?? '') && /\bhoje\b[^:]*\d/i.test(i.title ?? '')
+export const semInformacaoUtil = (i) => OUTRA_LINGUA.test(i.title ?? '') || COLUNA_DIARIA_TRADUZIDA(i)
+// A lista chega da mais recente para a mais antiga; de cada fato fica a primeira versão, com preferência pelo veículo de referência.
 export function filtraVeiculos(items) {
   const deReferencia = (i) => PREFERIDOS.test(i.source ?? '')
-  const bons = items.filter(deReferencia), mantidos = []
-  for (const i of items) {
-    if (deReferencia(i)) { mantidos.push(i); continue }
+  const uteis = items.filter((i) => !semInformacaoUtil(i))
+  const bons = []
+  for (const i of uteis) if (deReferencia(i) && !bons.some((b) => mesmoFato(b, i))) bons.push(i)
+  const mantidos = []
+  for (const i of uteis) {
+    if (deReferencia(i)) { if (bons.includes(i)) mantidos.push(i); continue }
     if (bons.some((b) => mesmoFato(b, i)) || mantidos.some((m) => !deReferencia(m) && mesmoFato(m, i))) continue
     mantidos.push(i)
   }

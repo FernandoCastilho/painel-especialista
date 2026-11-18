@@ -109,7 +109,7 @@ test('preço diário do cobre: libra → tonelada, pontos inválidos de fora, de
   assert.equal(dailyFile({ cobre: { stale: true } }, 1).stale, true); assert.equal(dailyFile({ cobre: { stale: false } }, 1).stale, false)
 })
 
-import { filtraVeiculos, MIN_PREFERIDOS, mesmoFato } from '../scripts/temas-lib.mjs'
+import { filtraVeiculos, MIN_PREFERIDOS, mesmoFato, semInformacaoUtil } from '../scripts/temas-lib.mjs'
 import { FILING, pick } from '../scripts/news-lib.mjs'
 test('notícias: registros da SEC (Form 4, 13F…) ficam de fora; régua dos veículos tira só a repetição', () => {
   assert.ok(FILING.test('Formulário 4 Blue Biofuels Inc: Chris J. Kneppers (Diretor)')); assert.ok(FILING.test('Form 4 Acme Corp')); assert.ok(!FILING.test('Formação de preços do cobre'))
@@ -137,4 +137,17 @@ test('régua dos veículos: a repetição do mesmo fato por outro portal sai; fa
   assert.equal(mesmoFato({ title: 'Preço do algodão sobe no Brasil e Conab prevê safra de 4,157 milhões de toneladas', t }, { title: 'Preço do algodão sobe no Brasil com valorização do dólar', t }), false)
   // mais de 3 dias de distância não é repetição
   assert.equal(mesmoFato(valor, { ...copia, t: t - 4 * dia }), false)
+})
+
+test('régua dos veículos: repetição entre veículos de referência sai; título em outra língua e coluna traduzida do Vietnã saem', () => {
+  const t = 1_800_000_000_000
+  const recente = { title: 'Dólar fecha a R$ 5,77, maior valor desde abril de 2025', source: 'Valor Econômico', t }
+  const repetida = { title: 'Dólar fecha cotado a R$ 5,77, maior valor desde abril de 2025', source: 'InfoMoney', t: t - 3600e3 }
+  const outra = { title: 'Banco Central faz leilão de swap para conter alta do dólar', source: 'Folha de S.Paulo', t: t - 7200e3 }
+  assert.deepEqual(filtraVeiculos([recente, repetida, outra]), [recente, outra], 'de cada fato fica a versão mais recente')
+  assert.equal(semInformacaoUtil({ title: 'Giá dầu Algeria tăng vọt, dẫn đầu nhóm dầu thô Arab của OPEC', source: 'Vietnam.vn' }), true)
+  assert.equal(semInformacaoUtil({ title: 'Preços da gasolina e do diesel hoje, 15 de novembro de 2026: Os preços globais caem', source: 'Vietnam.vn' }), true)
+  assert.equal(semInformacaoUtil({ title: 'Os preços do petróleo subiram após incidentes no Estreito de Ormuz.', source: 'Vietnam.vn' }), false, 'matéria do Vietnam.vn sem ser coluna diária continua')
+  assert.equal(semInformacaoUtil({ title: 'Petróleo hoje: preço sobe 2% com tensão no Oriente Médio', source: 'Valor Econômico' }), false, 'título em português com acento continua')
+  assert.equal(semInformacaoUtil({ title: 'Ação da Petrobras sobe; câmbio e juros em foco', source: 'InfoMoney' }), false)
 })
