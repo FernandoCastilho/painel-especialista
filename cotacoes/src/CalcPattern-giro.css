@@ -72,3 +72,8 @@
   :root[data-theme] body main.app-calculators > .giro-screen .giro-columns { grid-template-columns:minmax(0,1fr) minmax(360px,420px); }
   :root[data-theme] body main.app-calculators > .giro-screen .giro-result { position:sticky; top:88px; }
 }
+
+/* Telas muito estreitas (até 360 px): um campo por linha, para o campo com unidade ("meses") não ficar menor que 44 px. */
+@media (max-width:360px) {
+  :root[data-theme] body .giro-screen .giro-grid { grid-template-columns:minmax(0,1fr); }
+}
