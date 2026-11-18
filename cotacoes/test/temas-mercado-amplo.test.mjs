@@ -22,6 +22,10 @@ test('temas de setor e insumo: notícia do assunto com palavra de mercado ampla 
     ['cafe', 'Cafés especiais batem recorde de exportação'],
     ['minerio', 'Vale investe US$ 2 bi em minério de ferro no Pará'],
     ['industria', 'Montadora inaugura fábrica e abre 800 vagas'],
+    ['trigo', 'Brasil importa mais trigo da Argentina'], // "importa" como verbo de comércio continua valendo
+    ['algodao', 'Algodão: colheita atrasa e preço sobe'],
+    ['cafe', 'Café: linha de crédito do Funcafé é liberada'],
+    ['minerio', 'Vale lucra R$ 10 bi com minério de ferro'],
   ]) assert.equal(relevanteTema(t(id), titulo), true, `${id}: ${titulo}`)
 })
 
@@ -48,6 +52,13 @@ test('temas de setor e insumo: uso comum da palavra continua fora', () => {
     ['veiculos-pesados', 'Ônibus com capacidade para 40 passageiros pega fogo'],
     ['veiculos-pesados', 'Tarifa de ônibus sobe para R$ 5 em São Paulo'],
     ['minerio', 'Vale do Silício investe em IA'],
+    ['cafe', 'Café da manhã: não importa a hora'], // "não importa" não é importação
+    ['veiculos-pesados', 'Acidente entre caminhão e ônibus: não importa o culpado'],
+    ['veiculos-pesados', 'PM investe contra manifestantes e ônibus é incendiado'], // "investe contra" não é investimento
+    ['aco', 'Nervos de aço: Flamengo investe em reforço'],
+    ['cobre', 'Cartão de crédito: seguro cobre compras perdidas'], // crédito solto não conta
+    ['trigo', 'Bolo de trigo: crédito da receita para a vovó'],
+    ['veiculos-pesados', 'Caminhão carregado com safra de milho tomba na BR-163'], // safra só conta nos insumos
   ]) assert.equal(relevanteTema(t(id), titulo), false, `${id}: ${titulo}`)
 })
 

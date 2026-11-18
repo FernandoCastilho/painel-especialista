@@ -197,13 +197,16 @@ possível". Decisão: opção 1, "Sim, ampliar e publicar".
 - A lista de palavras de mercado ganhou uma parte comum a todos esses temas (`MERCADO_AMPLO` em
   `cotacoes/scripts/temas-lib.mjs`), com cada palavra presa ao sentido de mercado: demissão, férias coletivas, abertura ou
   fechamento de fábrica, mineradora, usina de açúcar ou siderúrgica, investimento, lucro, prejuízo líquido, faturamento,
-  balanço trimestral, sobretaxa, tarifaço ou tarifa de importação, antidumping, safra, colheita, aquisição, fusão com
-  empresa, cotação, exportação, importação, financiamento, crédito, "recorde de exportação/vendas/produção", "capacidade
+  balanço trimestral, sobretaxa, tarifaço ou tarifa de importação, antidumping, aquisição, fusão com empresa, cotação,
+  exportação, importação, financiamento, linha de crédito ou crédito rural, "recorde de exportação/vendas/produção", "capacidade
   produtiva", "amplia a produção", nova fábrica ou unidade e "abre/fecha/corta vagas". Palavra solta como "recorde",
-  "capacidade", "balanço" ou "tarifa" não conta.
-- Nas listas próprias e na lista comum, "importa" não pega mais "importante" e "invest" não pega "investiga" (o defeito já
-  existia em trigo, petróleo, carvão, fertilizantes e alumínio).
-- Minério de ferro: "Vale do Silício" e outros vales com nome próprio não contam como a mineradora Vale.
+  "capacidade", "balanço", "tarifa" ou "crédito" não conta. Safra e colheita contam só nos temas de insumo (em veículos
+  pesados, "caminhão com safra de milho tomba" é acidente).
+- Nas listas próprias e na lista comum, "importa" não pega mais "importante" nem "não importa", e "invest" não pega
+  "investiga" nem "investe contra" (o defeito de "importante" já existia em trigo, petróleo, carvão, fertilizantes e
+  alumínio). "Brasil importa mais trigo" continua valendo.
+- Minério de ferro: "Vale do Silício" e outros vales com nome próprio não contam como a mineradora Vale. Aço: "nervos de
+  aço", "homem de aço" e expressões parecidas não contam.
 - Veículos pesados não tem mais lista de palavras que derrubam (acidente, roubo, morte). Como o título já precisa trazer
   assunto de mercado, "Acidente com ônibus deixa feridos" continua fora e "Roubo de carga encarece o frete de caminhões"
   passa a entrar.
@@ -213,11 +216,15 @@ possível". Decisão: opção 1, "Sim, ampliar e publicar".
 - Moedas e eleições nos EUA seguem só com a lista própria; madeira segue sem filtro de mercado (terceira rodada).
 - Conferência: as 351 matérias reais coletadas hoje em todos os temas continuam entrando; testes novos em
   `cotacoes/test/temas-mercado-amplo.test.mjs` com manchetes que devem entrar e manchetes de uso comum que devem ficar fora.
-- Ainda passa, como antes: título que cita o nome do tema com outro sentido e traz uma palavra de mercado (exemplos de
-  teste: "Fábrica de Talentos abre vagas para jovens" em Indústria; "Bancos de praça: prefeitura investe em reforma" em
-  Serviços). É raro e sai do slide em "Escolher notícias".
+- Passam a entrar com a lista comum, por usar o nome do tema em outro sentido junto com uma palavra de mercado (exemplos
+  de teste, que ficavam fora antes): "Fábrica de Talentos abre vagas para jovens" (Indústria), "Bancos de praça:
+  prefeitura investe em reforma" e "Tecnologia: governo investe em escolas" (Serviços), "Plano cobre financiamento de
+  cirurgia" (Cobre), "Usina de ideias: café com empreendedores" (Café). Também entra "Roubo de caminhão com carga de
+  exportação" (Veículos pesados), porque traz palavra de mercado. São casos raros e saem do slide em "Escolher notícias".
 - Primeiro parecer do Auditor: **Requer correção** (72,0), no commit `888abe8`: a lista comum sem limite de palavra
   deixava entrar "Café faz bem? Estudo importante…" e "Polícia investiga acidente com ônibus…", e o plural "cafés" tinha
-  deixado de ser reconhecido. Corrigido como descrito acima, com essas manchetes nos testes.
+  deixado de ser reconhecido. Segundo parecer: **Requer correção** (80,0), no commit `c4397e8`: "não importa" e "PM
+  investe contra" ainda entravam, "crédito" e "safra" soltos abriam poluição, e esta nota dizia "como antes" sobre casos
+  novos. Corrigido como descrito acima, com essas manchetes nos testes.
 - Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
   depois da publicação, principalmente cobre, alumínio, carvão e café.

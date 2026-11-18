@@ -60,6 +60,7 @@ export const TEMAS = [
     termos: re('alum[íi]nio|aluminum|aluminium|bauxita|Albras|Novelis|\\bCBA\\b'),
     contexto: re('pre[çc]o|tonelada|\\bLME\\b|tarifa|China|produ[çc][ãa]o|energia|demanda|estoque|oferta|exporta|importa|custo|eletrointensiv') },
   { id: 'aco', grupo: 'insumo', label: 'Aço',
+    homonimos: /(?:nervos?|homem|mulher|punho|cora[çc][ãa]o|vontade|cortina|dama) de a[çc]o/gi,
     queries: ['aço preço siderurgia Brasil', 'aço importação China antidumping', 'Gerdau CSN Usiminas aço resultado', 'aço tarifa produção demanda'],
     termos: re('\\baço\\b|siderurg|Gerdau|\\bCSN\\b|Usiminas|Aço Brasil|laminados?|\\bsteel\\b'),
     contexto: re('pre[çc]o|importa[çc]|antidumping|tarifa|produ[çc][ãa]o|China|demanda|custo|siderurg|vendas|cota|resultado|estoque|exporta') },
@@ -135,18 +136,27 @@ export const TEMAS = [
 // com a lista própria; madeira não tem filtro de mercado.
 export const MERCADO_AMPLO = [
   'demi(?:te|tem|tiu|tiram|tir|ss[ãa]o|ss[õo]es)\\b', 'f[ée]rias coletivas', 'fecha (?:unidade|usina|mina|f[áa]brica)', '(?:abre|inaugura|constr[óo]i|amplia|paralisa|suspende|desativa) (?:a |sua |uma |nova )?f[áa]brica', 'mineradora',
-  'usinas? (?:de|sider|termel|t[ée]rmica|hidrel|a[çc]ucareira)', 'invest(?!ig)', 'lucro',
+  'usinas? (?:de|sider|termel|t[ée]rmica|hidrel|a[çc]ucareira)', 'investe\\b(?! contra)|investem|investiu|investir|investiment|investidor', 'lucr(?:o|os|a|am|ou|aram)\\b',
   'preju[íi]zo (?:l[íi]quido|de R\\$|bilion|milion|no trimestre|trimestral|no ano)', '(?:tem|registra|reverte|amplia) preju',
   'receita (?:l[íi]quida|bruta|de vendas)', 'faturamento', 'balan[çc]o (?:trimestral|do trimestre|anual|patrimonial|financeiro)', 'divulga balan',
   'sobretaxa', 'antidumping', 'tarifa[çc]o', 'tarifas? (?:de (?:importa|exporta)|dos EUA|americanas?|de Trump|sobre|extras?|adicionais?)',
-  'safra', 'colheita', 'aquisi[çc]', 'fus[ãa]o (?:com|entre|de empresas)', 'cota[çc][ãa]o', 'export', 'importa(?!n)', 'importad',
-  'financiamento', 'cr[ée]dito', 'recorde (?:de|na|no|em) (?:produ|vendas|export|import|safra|lucro|receita|embarque|faturamento|moagem|pre[çc]o|emplacamento|colheita)',
+  'aquisi[çc]', 'fus[ãa]o (?:com|entre|de empresas)', 'cota[çc][ãa]o', 'export', 'importa(?:[çc]|d|dor|m\\b|r\\b)|(?<!n[ãa]o |que |pouco )importa\\b',
+  'financiamento', 'linha de cr[ée]dito', 'cr[ée]dito (?:rural|agr|para|do BNDES|[àa] exporta|de carbono)', 'recorde (?:de|na|no|em) (?:produ|vendas|export|import|safra|lucro|receita|embarque|faturamento|moagem|pre[çc]o|emplacamento|colheita)',
   '(?:pre[çc]o|safra|produ[çc][ãa]o|exporta[çc][ãa]o|vendas) recorde', 'capacidade (?:produtiva|instalada|de produ)',
   'amplia(?:r|[çc][ãa]o)? (?:a |sua )?(?:produ|capacidade|f[áa]brica|unidade|planta|opera|vendas|exporta)', 'nova (?:linha|unidade|planta|f[áa]brica)',
   '(?:abre|fecha|corta|gera|cria|elimina) (?:\\d[\\d.,]* )?(?:mil )?(?:vagas|empregos|postos)']
-// Nas listas próprias, "importa" não pode pegar "importante" nem "invest", "investiga".
-const SEM_FALSO = (fonte) => fonte.replace(/importa(?!\(\?!)/g, 'importa(?!n)').replace(/invest(?!\(\?!)/g, 'invest(?!ig)')
-for (const t of TEMAS) if (['setor', 'insumo'].includes(t.grupo) && t.contexto) t.contexto = new RegExp(`${SEM_FALSO(t.contexto.source)}|${MERCADO_AMPLO.join('|')}`, 'i')
+// Safra e colheita só contam nos temas de insumo: em veículos pesados, "caminhão com safra de milho tomba" é acidente.
+export const MERCADO_AGRO = ['safra', 'colheita']
+// Nas listas próprias, "importa" não pode pegar "importante" nem "não importa", e "invest" não pode pegar "investiga" nem
+// "investe contra".
+const IMPORTA = String.raw`importa(?:[çc]|d|dor|m\b|r\b)|(?<!n[ãa]o |que |pouco )importa\b`
+const INVESTE = String.raw`investe\b(?! contra)|investem|investiu|investir|investiment|investidor`
+const SEM_FALSO = (fonte) => fonte.replace(/importa(?:\[[^\]]*\])?/g, `(?:${IMPORTA})`).replace(/invest(?:imento)?/g, `(?:${INVESTE})`)
+for (const t of TEMAS) {
+  if (!['setor', 'insumo'].includes(t.grupo) || !t.contexto) continue
+  const lista = [...MERCADO_AMPLO, ...(t.grupo === 'insumo' ? MERCADO_AGRO : [])]
+  t.contexto = new RegExp(`${SEM_FALSO(t.contexto.source)}|${lista.join('|')}`, 'i')
+}
 
 export const TEMA_IDS = TEMAS.map((t) => t.id)
 // `homonimos` (opcional): outros sentidos da palavra do setor. O trecho sai do título antes de procurar o setor; a matéria
