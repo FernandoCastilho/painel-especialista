@@ -1,0 +1,83 @@
+/* FINIMP no padrão visual das calculadoras (aprovado em 18/11/2026), o mesmo do BNDES Finame e do 4131.
+   Quadros de entrada: faixa azul-marinho com linha laranja. Resultado: único quadro com borda laranja. A comparação
+   por prazo é larga (duas propostas lado a lado), então o resultado fica abaixo dos dados, na largura toda, em qualquer tela.
+   Só apresentação: nenhuma regra de cálculo mora aqui. Tudo restrito a .cx.fi; sem !important. */
+:root {
+  --fi-orange:#ff6200;
+  --fi-navy:linear-gradient(110deg,#052956,#07336b);
+}
+
+/* "‹ Calculadoras" e "Nova simulação" fora do quadro, acima dele (continuam na seção, para a ordem do teclado). */
+:root[data-theme] body main.app.app-calculators .cx.fi { position:relative; margin-top:52px; overflow:visible; }
+:root[data-theme] body main.app.app-calculators .cx.fi > .cx-toolbar { position:absolute; left:0; bottom:calc(100% + 4px); margin:0; padding:0; display:flex; gap:8px; }
+:root[data-theme] body main.app.app-calculators .cx.fi > .cx-toolbar + .calc-workspace-heading { margin-top:0; }
+
+/* Dados: condições e meta, um sobre o outro (os rótulos das instituições precisam da largura toda). */
+:root[data-theme] body .cx.fi .fi-inputs { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; }
+
+/* Quadros de entrada: faixa azul-marinho, título branco em negrito e uma linha laranja (sem a barra laranja à esquerda). */
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box { overflow:hidden; border:1px solid var(--bw-line); border-radius:10px; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header { min-height:44px; padding:10px 14px; background:var(--fi-navy); color:#fff; border:0; border-bottom:3px solid var(--fi-orange); border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header h3 { display:flex; align-items:center; gap:6px; margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header h3::before { content:none; display:none; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header .fi-help > button { color:#fff; border-color:#ffffff88; }
+/* Rótulos em uma linha; "?" com área de toque de 24px ou mais. */
+:root[data-theme] body .cx.fi .fi-box .cx-field-label { flex-wrap:nowrap; white-space:nowrap; min-width:0; }
+:root[data-theme] body .cx.fi .fi-help > button { min-width:24px; min-height:24px; }
+:root[data-theme] body .cx.fi .fi-box :is(input:not([type=checkbox]),select) { font-size:.95rem; }
+
+/* Aviso de dado faltando: faixa âmbar no topo do quadro, com "!". */
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-alerta { display:flex; align-items:center; gap:8px; margin:12px var(--cx-space, 20px) 0; padding:8px 10px; border:0; border-left:4px solid #e08a00; border-radius:6px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.82rem; line-height:1.4; }
+:root[data-theme] body .cx.fi .fi-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.72rem; font-weight:800; line-height:1; }
+
+/* Resultado: o único quadro com borda laranja; faixa azul-marinho sem linha laranja. */
+:root[data-theme] body main.app.app-calculators .cx.fi .cx-panel.fi-results { margin-top:16px; padding:0 0 4px; overflow:hidden; border:2px solid var(--fi-orange); border-radius:12px; background:var(--bw-card); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-results > .fi-result-head { min-height:44px; padding:10px 16px; background:var(--fi-navy); color:#fff; border:0; border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-results > .fi-result-head h3 { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-results > .fi-result-head h3::before { content:none; display:none; }
+/* A tabela continua no quadro do resultado, sem moldura própria. */
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-results > .expandable-panel { margin:4px 0 0; border:0; border-top:1px solid var(--bw-line); border-radius:0; box-shadow:none; }
+
+/* a. Resposta principal: proposta mais barata no prazo e por quanto; ao lado, a meta. */
+:root[data-theme] body .cx.fi .fi-answer { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:12px; margin:14px var(--cx-space, 20px) 10px; }
+:root[data-theme] body .cx.fi .fi-answer > div { display:flex; flex-direction:column; gap:4px; min-width:0; padding:12px 14px; border-radius:10px; }
+:root[data-theme] body .cx.fi .fi-answer-main { background:var(--fi-navy); border:1px solid #34507f; color:#fff; }
+:root[data-theme] body .cx.fi .fi-answer-main small { font-size:.75rem; color:#c9d6ee; }
+:root[data-theme] body .cx.fi .fi-answer-main .fi-answer-verdict { font-size:1.05rem; font-weight:700; color:#fff; }
+:root[data-theme] body .cx.fi .fi-answer-main .fi-answer-verdict > span { color:#7fe0a8; }
+:root[data-theme] body .cx.fi .fi-answer-main b { font-size:1.9rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:#fff; overflow-wrap:anywhere; }
+:root[data-theme] body .cx.fi .fi-answer-main b > span { font-size:.8rem; font-weight:500; color:#c9d6ee; }
+:root[data-theme] body .cx.fi .fi-answer-main .fi-answer-note { font-size:.75rem; color:#c9d6ee; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cx.fi .fi-answer-side { border:1px solid var(--bw-line); background:var(--bw-soft); color:var(--bw-ink); }
+:root[data-theme] body .cx.fi .fi-answer-side > small { font-size:.75rem; color:var(--bw-mut); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-answer-side .fi-goal { padding:0; display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+:root[data-theme] body .cx.fi .fi-answer-side .fi-goal strong { font-size:1.05rem; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cx.fi .fi-answer-side .fi-goal p { margin:0; font-size:.8rem; line-height:1.45; }
+:root[data-theme] body .cx.fi .fi-answer-side .fi-goal-met { font-weight:600; color:var(--bw-warn-ink); }
+:root[data-theme] body .cx.fi .fi-answer-side .fi-goal-met.is-met { color:#0a6b3d; }
+:root[data-theme] body .cx.fi .fi-answer-side .fi-goal button { margin-top:4px; }
+:root[data-theme="dark"] body .cx.fi .fi-answer-side .fi-goal-met.is-met { color:#7fe0a8; }
+
+/* b/c. Custos no prazo, agrupados: rótulo à esquerda, valor à direita, terminando na diferença. */
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values { margin:0 var(--cx-space, 20px) 12px; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values h4 { margin:6px 0 4px; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--bw-mut); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values dl { display:block; margin:0; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values dl > div { display:flex; flex-direction:row; justify-content:space-between; align-items:baseline; gap:12px; padding:6px 2px; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values dt { min-width:0; font-size:.85rem; color:var(--bw-ink); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values dd { margin:0; font-size:.9rem; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--bw-ink); text-align:right; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values dd small { margin-left:8px; font-size:.75rem; font-weight:500; color:var(--bw-mut); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values dl > .fi-values-total { border-top:2px solid var(--bw-strong-line, var(--bw-line)); border-bottom:0; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-values dl > .fi-values-total :is(dt,dd) { font-weight:700; }
+
+@media (max-width:700px) {
+  :root[data-theme] body .cx.fi .fi-answer { grid-template-columns:1fr; margin-left:12px; margin-right:12px; }
+  :root[data-theme] body .cx.fi .fi-answer-main b { font-size:1.6rem; }
+  :root[data-theme] body .cx.fi .fi-values { margin-left:12px; margin-right:12px; }
+  :root[data-theme] body .cx.fi .fi-values dl > div { flex-wrap:wrap; }
+}
+
+/* Rótulos das instituições em uma linha: corpo um pouco menor e, no celular, um campo por linha. */
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-bank .cx-field-label label { font-size:.85rem; }
+@media (max-width:700px) {
+  :root[data-theme] body main.app.app-calculators .cx.fi .fi-bank { grid-template-columns:minmax(0,1fr); }
+}

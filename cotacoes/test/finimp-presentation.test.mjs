@@ -31,6 +31,7 @@ const dependencies = {
   './MoneyInput.jsx': () => null,
   './FinimpHelp.jsx': () => null,
   './FinimpComparacao.css': {},
+  './CalcPattern-finimp.css': {},
 }
 runInNewContext(code, { module, exports: module.exports, require: name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : dependencies[name]) ?? require(name) })
 
