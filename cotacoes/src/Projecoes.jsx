@@ -5,6 +5,14 @@ import { Aviso } from './Avisos.jsx'
 import { useEffect, useState } from 'react'
 import { FOCUS_MARK, INDICATORS, INSTITUTIONS, PROJECAO_ANTIGA_DIAS, compareToFocus, idadeProjecao, scenarioValue, textoHaDias } from './scenarios.js'
 import FocusHistorico from './FocusHistorico.jsx'
+import Flag from './Flag.jsx'
+
+// Marca de cada linha: bandeira do Brasil no Focus (boletim do Banco Central) e o logotipo oficial de cada banco,
+// das cópias locais em public/bank-logos (origem no README da pasta). Decorativas: o nome vem logo ao lado.
+const LOGOS = { 'Itaú BBA': 'itau', Bradesco: 'bradesco', Santander: 'santander', BB: 'bb', BTG: 'btg' }
+const Marca = ({ name }) => name === 'FOCUS'
+  ? <Flag code="BRL" width={20} height={14} className="sc-logo sc-flag" />
+  : LOGOS[name] ? <img className="sc-logo" src={`bank-logos/${LOGOS[name]}.png`} alt="" width={20} height={20} loading="lazy" decoding="async" /> : null
 
 const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '') ? value.split('-').reverse().join('/') : 'data não informada'
 const YEARS = ['2026', '2027']
@@ -55,7 +63,7 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
               const ref = name === 'FOCUS'
               const idade = idades[name]
               return <tr key={name} className={ref ? 'sc-ref' : undefined}>
-                <th scope="row">{ref ? 'Focus' : name}
+                <th scope="row"><span className="sc-inst"><Marca name={name} />{ref ? 'Focus' : name}</span>
                   {ref
                     ? <small>mediana<span className="sc-wide"> do mercado</span>{refFocus && <><span className="sc-sep"> · </span><span className="sc-age">{publicado ? '' : 'até '}{refFocus}</span></>}</small>
                     : banks && <small>{idade?.antiga && <span className="sc-warn" aria-hidden="true">⚠ </span>}{idade ? <>{idade.data}<span className="sc-sep"> · </span><span className="sc-age">{textoHaDias(idade)}</span></> : 'fonte pendente'}{idade?.antiga && <span className="sc-sr"> · pode estar desatualizada</span>}</small>}

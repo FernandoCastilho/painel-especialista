@@ -71,10 +71,18 @@ export default function Help({ label, align = 'left', wide = false, fixed = fals
   }, [show, floating])
   useEffect(() => {
     if (!floating || !show) return
+    // Fecha só quando a rolagem tira o "?" do lugar: uma rolagem que não mexe nele (por exemplo, a janela de detalhe
+    // terminando de se acomodar) não fecha o balão que acabou de abrir.
+    const start = ref.current?.getBoundingClientRect()
+    const moved = () => {
+      const now = ref.current?.getBoundingClientRect()
+      return !start || !now || Math.abs(now.top - start.top) > 2 || Math.abs(now.left - start.left) > 2
+    }
     const close = () => { setHover(false); setPinned(false); setFocusIn(false) }
-    window.addEventListener('scroll', close, true)
+    const onScroll = () => { if (moved()) close() }
+    window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', close)
-    return () => { window.removeEventListener('scroll', close, true); window.removeEventListener('resize', close) }
+    return () => { window.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', close) }
   }, [floating, show])
 
   useEffect(() => {
