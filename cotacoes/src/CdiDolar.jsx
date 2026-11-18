@@ -93,6 +93,8 @@ export default function CdiDolar({ onBack, quotes }) {
             {field('start', 'Data de início', <input id="cd-start" type="date" value={form.start} onChange={(e) => set('start', e.target.value)} />, 'A data final soma os dias corridos estimados a esta data.')}
           </div>
           {form.amount && !money.ok && <p className="cx-error cx-pad" role="alert">{money.error}</p>}
+          {values.cdi > 0 && values.cdi < 0.01 && <p className="cd-notice cd-pad" role="alert">CDI abaixo de 1% ao ano. Confira: digite 14,15 para 14,15% a.a., não 0,1415.</p>}
+          {values.pct > 0 && values.pct < 0.1 && <p className="cd-notice cd-pad" role="alert">Produto abaixo de 10% do CDI. Confira: digite 98 para 98% do CDI, não 0,98.</p>}
         </article>
       </div>
 
