@@ -3,7 +3,7 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
-import { EXEMPLO, compararPeriodo, emMilhoes, indicadores12m, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
+import { EXEMPLO, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
 
 const num = (v, casas = 0) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }))
@@ -115,6 +115,7 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
   const f = comparacao?.faturamento
   const v = f?.variacao
   const temSeta = qAtual && qAnterior && v != null && qAtual.x0 - qAnterior.x1 > 30
+  const vd = comparacao?.endividamento?.variacaoMedia ?? null
   const pontos = meses.map((m, i) => (m.endividamento == null ? null : `${cx(i)},${y(m.endividamento)}`))
   const linha = pontos.filter(Boolean).join(' ')
 
@@ -144,7 +145,8 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
           <text x={(qAnterior.x1 + qAtual.x0) / 2} y={Y_SETA - 6}>{pct(v)}</text>
         </g>
       )}
-      {!temSeta && qAtual && v != null && <text className={v < 0 ? 'ft-arrow ft-arrow-down' : 'ft-arrow ft-arrow-up'} x={qAtual.meio} y={Y_SETA - 4}>{pct(v)} vs. ano anterior</text>}
+      {temSeta && vd != null && <text className="ft-arrow-div" x={(qAnterior.x1 + qAtual.x0) / 2} y={Y_SETA + 16}>Endividamento {pct(vd)}</text>}
+      {!temSeta && qAtual && v != null && <text className={v < 0 ? 'ft-arrow ft-arrow-down' : 'ft-arrow ft-arrow-up'} x={qAtual.meio} y={Y_SETA - 4}>Faturamento {pct(v)}{vd != null ? ` · Endividamento ${pct(vd)}` : ''} vs. ano anterior</text>}
       <line className="ft-axis" x1="0" x2={W} y1={ALT - BASE} y2={ALT - BASE} />
       {temDivida && <polygon className="ft-area" points={`${cx(meses.findIndex((m) => m.endividamento != null))},${ALT - BASE} ${linha} ${cx(meses.findLastIndex((m) => m.endividamento != null))},${ALT - BASE}`} />}
       {meses.map((m, i) => m.faturamento != null && (
@@ -172,6 +174,12 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
 function Comparacao({ c }) {
   if (!c) return <p className="cx-hint ft-pad">Clique em um mês do gráfico, ou clique e arraste sobre vários meses, para comparar com o mesmo período do ano anterior.</p>
   const f = c.faturamento, d = c.endividamento
+  const cr = leituraCrescimento(c)
+  const pp = (v) => `${Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.`
+  const conclusao = cr.relacao == null ? null
+    : cr.relacao === 'estavel' ? 'Faturamento e endividamento cresceram no mesmo ritmo: a relação dívida/faturamento ficou estável.'
+      : cr.relacao === 'piorou' ? `O endividamento cresceu ${pp(cr.diferencaPp)} acima do faturamento: a relação dívida/faturamento piorou no período.`
+        : `O faturamento cresceu ${pp(cr.diferencaPp)} acima do endividamento: a relação dívida/faturamento melhorou no período.`
   const linhas = [
     ['Faturamento no período', f.atual, f.anterior, f.variacao],
     ['Faturamento médio mensal', f.mediaAtual, f.mediaAnterior, f.variacao],
@@ -181,6 +189,13 @@ function Comparacao({ c }) {
   return (
     <div className="ft-compare">
       <p className="ft-compare-title"><b>{c.rotulo}</b> comparado com <b>{c.rotuloAnterior}</b></p>
+      {c.mesesComparados > 0 && (
+        <div className={`ft-cresc${cr.relacao === 'piorou' ? ' ft-cresc-alerta' : ''}`} role="group" aria-label="Crescimento do faturamento e do endividamento">
+          <div><span>Faturamento</span><b className={sinal(cr.fat)}>{pct(cr.fat)}</b><small>soma do período</small></div>
+          <div><span>Endividamento</span><b className={sinal(cr.div == null ? null : -cr.div)}>{pct(cr.div)}</b><small>{cr.div == null ? 'sem saldo nos dois períodos' : 'média do período'}</small></div>
+          {conclusao && <p>{conclusao}</p>}
+        </div>
+      )}
       {c.mesesComparados === 0
         ? <p className="cx-hint" role="status">Não há dados do ano anterior para esses meses.</p>
         : (
@@ -189,7 +204,8 @@ function Comparacao({ c }) {
               <thead><tr><th scope="col"><span className="sr-only">Item</span></th><th scope="col">{c.rotulo}</th><th scope="col">{c.rotuloAnterior}</th><th scope="col">Variação</th></tr></thead>
               <tbody>
                 {linhas.map(([rotulo, a, b, v]) => (
-                  <tr key={rotulo}><th scope="row">{rotulo}</th><td>{valor(a)}</td><td>{valor(b)}</td><td className={sinal(v)}>{pct(v)}</td></tr>
+                  // Endividamento subindo é sinal de alerta: cor invertida em relação ao faturamento.
+                  <tr key={rotulo}><th scope="row">{rotulo}</th><td>{valor(a)}</td><td>{valor(b)}</td><td className={sinal(v == null ? null : rotulo.startsWith('Endividamento') ? -v : v)}>{pct(v)}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -225,7 +241,7 @@ export default function Faturamento({ onBack }) {
   const anoAteAgora = () => ultimo != null && selecionar(Math.max(primeiro, Math.floor(ultimo / 12) * 12), ultimo)
   const exportar = async (modo) => {
     if (!svgRef.current) return
-    const sub = comparacao ? `${comparacao.rotulo} contra ${comparacao.rotuloAnterior}${comparacao.faturamento.variacao != null ? ` · faturamento ${pct(comparacao.faturamento.variacao)}` : ''}` : ''
+    const sub = comparacao ? `${comparacao.rotulo} contra ${comparacao.rotuloAnterior}${comparacao.faturamento.variacao != null ? ` · faturamento ${pct(comparacao.faturamento.variacao)}` : ''}${comparacao.endividamento.variacaoMedia != null ? ` · endividamento médio ${pct(comparacao.endividamento.variacaoMedia)}` : ''}` : ''
     const blob = imagemDoGrafico(svgRef.current, tituloGrafico, sub)
     try {
       if (modo === 'copiar') {
