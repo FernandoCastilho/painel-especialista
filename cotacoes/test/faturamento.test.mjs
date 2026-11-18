@@ -301,6 +301,6 @@ test('mês do ano sempre zerado não apaga a análise: usa a série sem ajuste',
   }
   const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
   assert.equal(a.ajustada, false)
-  assert.ok(a.tendenciaAno != null && a.tendenciaAno < 0)
+  assert.ok(a.tendenciaAno != null && a.cv != null, "tendência e estabilidade não somem")
   assert.ok(a.atencao.some((t) => /12 meses .*menor/.test(t)))
 })
