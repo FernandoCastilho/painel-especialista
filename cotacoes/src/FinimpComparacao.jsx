@@ -43,8 +43,6 @@ export default function FinimpComparacao({ onBack }) {
   const answerDays = selectedDays ?? FINIMP_TERMS[goalTerm]
   const answerRow = rows[FINIMP_TERMS.indexOf(answerDays)]
   const answer = conditionsReady && answerRow?.ok ? answerRow : null
-  const cheaper = !answer || answer.difference === 0 ? null : answer.difference > 0 ? 'Instituição 1' : 'Instituição 2'
-  const gap = answer && answer.difference !== 0 && Math.abs(answer.difference) < 0.005 ? `menos de 0,01 ${currency}` : answer ? money(Math.abs(answer.difference)) : ''
   // Meta: a taxa atual da Instituição 2 contra a taxa requerida (o custo cresce com a taxa; nenhuma conta nova).
   const goalMet = goal.ok && b.annualRate !== null ? b.annualRate <= goal.annualRate * (1 + 1e-12) + 1e-12 : null
   return <section className="cx fi bw calc-standard calc-workspace" aria-labelledby="fi-heading">
@@ -72,10 +70,11 @@ export default function FinimpComparacao({ onBack }) {
       <div className="fi-answer">
         <div className="fi-answer-main" aria-live="polite">{answer ? <>
           <small>Prazo de {answerDays} dias{selectedDays != null ? ' · linha destacada' : ' · prazo da meta'}</small>
-          <strong className="fi-answer-verdict">{cheaper ? <>{cheaper} sai mais barata <span aria-hidden="true">▼</span></> : 'As duas propostas têm o mesmo custo'}</strong>
-          {cheaper && <b>{gap} <span>a menos no período</span></b>}
-          <span className="fi-answer-note">Instituição 2 menos Instituição 1: {differenceAmount(answer.difference)} · {delta(answer.deltaPp)} no período</span>
-        </> : <><small>Melhor proposta</small><span className="fi-answer-note">{conditionsReady ? (answerRow?.error || 'Resultado fora do limite numérico; revise as condições.') : 'Aparece quando as condições estiverem completas.'}</span></>}</div>
+          {/* Sem apontar vencedor (decisão do Fernando registrada em docs/finimp-comparacao.md): só a diferença, com o sinal. */}
+          <strong className="fi-answer-verdict">Instituição 2 menos Instituição 1</strong>
+          <b>{differenceAmount(answer.difference)}</b>
+          <span className="fi-answer-note">{delta(answer.deltaPp)} no período</span>
+        </> : <><small>Diferença entre as propostas</small><span className="fi-answer-note">{conditionsReady ? (answerRow?.error || 'Resultado fora do limite numérico; revise as condições.') : 'Aparece quando as condições estiverem completas.'}</span></>}</div>
         <div className="fi-answer-side"><small>Meta · {FINIMP_TERMS[goalTerm]} dias</small>
           <div className="fi-goal" role="status">{goal.ok ? <>{goalMet !== null && <p className={`fi-goal-met${goalMet ? ' is-met' : ''}`}><span aria-hidden="true">{goalMet ? '▼' : '▲'}</span> Instituição 2 hoje a {pct(b.annualRate)} a.a.: {goalMet ? 'atinge a meta' : 'acima da taxa requerida, não atinge a meta'}</p>}<strong>Taxa requerida: {pct(goal.annualRate)} a.a.</strong><p>Custo calculado: {money(goal.result.cost)} ({pct(goal.result.periodPercent)} no período).</p><button type="button" onClick={() => setItau({ ...itau, annualRate: goal.annualRate.toLocaleString('pt-BR', { useGrouping: false, maximumSignificantDigits: 17 }) })}>Aplicar taxa à Instituição 2</button></> : <p>{conditionsReady ? goal.error : 'Preencha o principal e as condições das instituições para ver a taxa que atinge a meta.'}</p>}</div>
         </div>
