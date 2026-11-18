@@ -232,5 +232,57 @@ Agronegócio (CPR, crédito rural) fica fora até Fernando dizer se entra no esc
 
 ---
 
+## 9. Ideia inicial de Fernando para a tela (18/11/2026)
+
+**Fluxo pedido:** o especialista informa a necessidade de crédito → a tela captura informações do cliente (cidade, CNAE, tributação, S.A. ou Ltda., informações de risco) e as perguntas próprias daquela necessidade → a tela devolve duas ou três sugestões.
+
+Isso encaixa nos passos desta árvore: as informações do cliente alimentam os filtros da seção 4, e as perguntas por necessidade são as fichas da seção 6.
+
+### O que cada informação muda (hipóteses a validar **[V]**, salvo marca)
+
+| Informação | Para que serviria |
+|---|---|
+| Cidade / UF | Linhas regionais; leitura de risco da região (o Painel já tem recuperação judicial por UF). |
+| CNAE | Ligar ao estudo setorial do Painel; sazonalidade; linhas próprias do setor (exportador, agro, bem elegível ao BNDES). |
+| Tributação | Simples Nacional paga IOF de crédito menor em operação de até R$ 30 mil **[R]** `iofRules.js`. O regime muda o peso dos juros no imposto da empresa. |
+| S.A. ou Ltda. | Acesso a instrumentos de mercado de capitais. |
+| Risco | Garantia exigida, prazo possível e linhas ao alcance. |
+
+### O que o Painel já tem e pode ser reaproveitado
+
+- Calculadoras para simular cada sugestão (seção 5).
+- Estudos setoriais em 12 grupos e 37 temas. Não há ligação automática com CNAE (`setores-bancarios.md`); essa ponte teria de ser criada.
+- Busca de atividade do IBGE por nome ou código (usada na calculadora de CBS).
+- Regime tributário já tratado em duas calculadoras: IOF (Simples ou não) e Aplicação PJ (Lucro Real, Presumido, Simples).
+- Recuperação judicial por UF e setor, com dados públicos.
+- O Painel é um site sem servidor próprio: o que se digita nas calculadoras fica só na tela.
+
+### Projetos públicos encontrados no GitHub (busca de 18/11/2026)
+
+Avaliação só por descrição, estrelas, licença e data da última atualização. O código de cada um não foi aberto.
+
+| Para que | Projeto | Estrelas | Licença | Última atualização |
+|---|---|---|---|---|
+| Regras de decisão em tabela | CacheControl/json-rules-engine | 3.149 | ISC | 2026-02-16 |
+| Regras de decisão em tabela | gorules/zen | 2.139 | MIT | 2026-11-17 |
+| Regras de decisão em tabela | jwadhams/json-logic-js | 1.489 | MIT | 2024-07-09 |
+| Formulário guiado por perguntas | surveyjs/survey-library | 4.931 | MIT | 2026-11-17 |
+| Dados públicos da empresa pelo CNPJ | BrasilAPI/BrasilAPI | 11.596 | MIT | 2026-11-17 |
+| Dados públicos da empresa pelo CNPJ | cuducos/minha-receita | 1.611 | não informada | 2026-01-04 |
+| Dados públicos da empresa pelo CNPJ | Hitmasu/OpenCNPJ | 430 | MIT | 2026-11-03 |
+| Base da Receita para consulta própria | rictom/cnpj-sqlite | 246 | MIT | 2026-10-26 |
+| Lista de CNAE | endersonmaia/ibge-cnae-sql | 30 | MIT | 2022-02-13 |
+
+Não apareceu projeto pronto que escolha modalidade de crédito para empresa brasileira. Os "motores de crédito" encontrados dão nota de risco ao tomador, o que é outra coisa.
+
+### Riscos e limites
+
+- **Sigilo:** consultar o CNPJ de um cliente em serviço de terceiro revela quem o banco está analisando. Depende de autorização de Fernando.
+- **Risco interno:** rating, limite e dados internos de cliente não entram no Painel em nenhuma hipótese.
+- **Sugestão não é oferta:** a tela indicaria candidatas; aprovação, preço e enquadramento continuam fora dela.
+
+---
+
 ## Histórico
+- 2026-11-18 — Claude: registrada a ideia inicial de Fernando para a tela e a busca de apoio no Painel e no GitHub (seção 9).
 - 2026-11-18 — Claude: estruturação em passos, filtros, ficha de modalidades e fichas de situação, a partir da nota do Obsidian de 2026-11-17. Nenhuma regra de cálculo do Painel foi alterada. Proposta, sem validação de Fernando.
