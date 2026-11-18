@@ -204,7 +204,9 @@ async function fillScenario(page, section, route) {
     const result = await section.locator('.giro-result').boundingBox()
     const installments = await section.getByText('Ver parcelas', { exact: true }).boundingBox()
     assert.ok(installments.y >= Math.max(form.y + form.height, result.y + result.height), 'parcelas abaixo do formulário e resultado')
-    if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
+    // Padrão de 18/11/2026: a partir de 1200 px o resultado fica fixo ao lado dos dados (acompanha a rolagem, sem subir acima deles).
+    if (page.viewportSize().width >= 1200) assert.ok(result.x >= form.x + form.width && result.y >= form.y - 2 && await section.locator('.giro-result').evaluate(element => getComputedStyle(element).position) === 'sticky', 'resultado fixo ao lado dos dados')
+    else if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
     else assert.ok(result.y >= form.y + form.height)
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
