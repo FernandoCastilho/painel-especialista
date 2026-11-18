@@ -15,8 +15,9 @@ export const TEMAS = [
   { id: 'veiculos-pesados', grupo:'setor',label:'Veículos pesados',
     queries:['ANFAVEA caminhões ônibus produção emplacamento exportação','veículos pesados caminhões mercado financiamento Brasil','caminhões ônibus vendas Brasil renovação frota'],
     termos:re('caminh[õo]es|caminh[ãa]o|[ôo]nibus|ve[íi]culos? pesad'),
-    contexto:re('emplac|licenciam|produ[çc][ãa]o|exporta|vendas|financia|mercado|frota|montadora|Anfavea|Fenabrave'),
-    excluir:re('acidente|colis[ãa]o|atropel|assalto|roubo|morre|morto') },
+    // Sem lista de palavras que derrubam (decisão de 18/11/2026): acidente, roubo ou morte só ficam de fora quando o título
+    // não traz assunto de mercado. "Acidente com ônibus deixa feridos" sai; "Roubo de carga encarece o frete de caminhões" entra.
+    contexto:re('emplac|licenciam|produ[çc][ãa]o|exporta|vendas|financia|mercado|frota|montadora|Anfavea|Fenabrave|frete|seguro de carga|encarece') },
   { id: 'comercio', grupo: 'setor', label: 'Comércio e consumo',
     queries: ['varejo vendas comércio Brasil', 'consumo das famílias confiança do consumidor', 'vendas no varejo IBGE CNC', 'supermercados e-commerce vendas Black Friday'],
     termos: re('varejo|com[ée]rcio|consumo|consumidor|lojista|supermercad|e-commerce|Abras|\\bCNC\\b|Black Friday'),
@@ -97,7 +98,7 @@ export const TEMAS = [
     contexto: re('pre[çc]o|cota[çc][ãa]o|safra|Costa do Marfim|Gana|Nova York|Londres|tonelada|oferta|demanda|alta|queda|chocolate|colheita|clima') },
   { id: 'cafe', grupo: 'insumo', label: 'Café',
     queries: ['café arábica preço saca cotação', 'café safra Brasil exportação Cecafé', 'café Nova York tarifa preço'],
-    termos: re('\\bcaf[ée]\\b|ar[áa]bica|\\brobusta\\b|conilon|Cecaf[ée]'),
+    termos: re('\\bcaf(?:e\\b|é(?![\\wÀ-ú]))|ar[áa]bica|\\brobusta\\b|conilon|Cecaf[ée]'),
     contexto: re('pre[çc]o|cota[çc][ãa]o|safra|saca|exporta|Nova York|Londres|tarifa|oferta|demanda|alta|queda|colheita|clima|estoque') },
   { id: 'fertilizantes', grupo: 'insumo', label: 'Fertilizantes',
     queries: ['fertilizantes preço ureia potássio', 'fertilizantes importação Brasil Rússia China', 'adubo preço safra custo produtor'],
@@ -126,6 +127,16 @@ export const TEMAS = [
     termos: re('elei[çc]|midterms?|eleitor|urnas|vota[çc][ãa]o|apura[çc][ãa]o|pesquisa eleitoral'),
     contexto: re('EUA|Estados Unidos|americana?s?|Trump|midterms?|republican|democrat|Congresso|Senado|C[âa]mara|Casa Branca|Wall Street|Treasur') },
 ]
+// Palavras de mercado comuns a todos os temas de setor e de insumo (decisão de 18/11/2026): a lista própria de cada tema era
+// curta e deixava de fora notícia do assunto ("demitem", "férias coletivas", "lucro"). São ações e números de empresa e de
+// produção, que não aparecem no uso comum da palavra (receita de bolo, "cobre" como verbo, café como bebida). Moedas e
+// eleições seguem só com a lista própria; madeira não tem filtro de mercado.
+export const MERCADO_AMPLO = ['demi(?:te|tem|tiu|tiram|ss[ãa]o|ss[õo]es|tir)', 'f[ée]rias coletivas', 'fechamento de (?:f[áa]brica|unidade|usina|mina)',
+  'fecha (?:f[áa]brica|unidade|usina|mina|vagas)', 'f[áa]brica', 'usina', 'mineradora', 'invest', 'lucro', 'preju[íi]zo', 'receita (?:l[íi]quida|bruta|de vendas)',
+  'faturamento', 'balan[çc]o', 'sobretaxa', 'tarifa', 'antidumping', 'safra', 'colheita', 'aquisi', 'fus[ãa]o', 'cota[çc][ãa]o', 'export', 'import',
+  'financiamento', 'cr[ée]dito', 'recorde', 'capacidade', 'expans', 'amplia', 'nova (?:linha|unidade|planta|f[áa]brica)', 'emprego', 'vagas']
+for (const t of TEMAS) if (['setor', 'insumo'].includes(t.grupo) && t.contexto) t.contexto = new RegExp(`${t.contexto.source}|${MERCADO_AMPLO.join('|')}`, 'i')
+
 export const TEMA_IDS = TEMAS.map((t) => t.id)
 // `homonimos` (opcional): outros sentidos da palavra do setor. O trecho sai do título antes de procurar o setor; a matéria
 // só fica de fora se não sobrar nenhuma menção ao setor.

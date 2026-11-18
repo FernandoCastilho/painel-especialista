@@ -186,3 +186,25 @@ ilha e "Nacional da Madeira" ainda descartavam matéria do setor ("Madeireiros e
 Nacional da Madeira", "porto Santos"); esta nota dizia "só sai o que não é madeira" e citava Fernando sem o literal.
 Correção: exclusão trocada pela regra dos homônimos acima, "Porto Santo" com fim de palavra, "Nacional da Madeira"
 retirado, testes com os títulos do Auditor e nota corrigida.
+
+## Quarta rodada (18/11/2026): palavras de mercado mais amplas nos demais temas
+Pergunta do Fernando: qual a melhor sugestão "para não poluir também, porque a ideia é trazer as coisas o mais assertivas
+possível". Decisão: opção 1, "Sim, ampliar e publicar".
+- Os temas de setor e de insumo (indústria, comércio, serviços, telecom, veículos pesados, cobre, alumínio, aço, minério,
+  petróleo, trigo, açúcar, carne, algodão, carvão, cacau, café e fertilizantes) continuam exigindo, além do assunto, uma
+  palavra de mercado no título. É o que mantém fora o uso comum da palavra ("câmera cobre o show", receita de bolo de
+  trigo, "como fazer o café perfeito").
+- A lista de palavras de mercado ganhou uma parte comum a todos esses temas (`MERCADO_AMPLO` em
+  `cotacoes/scripts/temas-lib.mjs`): demissão, férias coletivas, fechamento ou abertura de fábrica, usina, mineradora,
+  investimento, lucro, prejuízo, faturamento, balanço, sobretaxa, tarifa, antidumping, safra, colheita, aquisição, fusão,
+  cotação, exportação, importação, financiamento, crédito, recorde, capacidade, expansão, nova unidade, emprego e vagas.
+- Veículos pesados não tem mais lista de palavras que derrubam (acidente, roubo, morte). Como o título já precisa trazer
+  assunto de mercado, "Acidente com ônibus deixa feridos" continua fora e "Roubo de carga encarece o frete de caminhões"
+  passa a entrar.
+- Defeito antigo corrigido: o tema Café não reconhecia "café" quando a palavra vinha seguida de espaço ou pontuação
+  (a marca de fim de palavra não funciona depois de letra acentuada). Só entravam títulos com "arábica", "conilon" etc.
+- Moedas e eleições nos EUA seguem só com a lista própria; madeira segue sem filtro de mercado (terceira rodada).
+- Conferência: as 351 matérias reais coletadas hoje em todos os temas continuam entrando; testes novos em
+  `cotacoes/test/temas-mercado-amplo.test.mjs` com manchetes que devem entrar e manchetes de uso comum que devem ficar fora.
+- Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
+  depois da publicação, principalmente cobre, alumínio, carvão e café.
