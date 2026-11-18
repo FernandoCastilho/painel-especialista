@@ -19,6 +19,7 @@ const norm = (s) =>
 const CURRENCY = { USD: 'USD', USDBRL: 'USD', DOLAR: 'USD', EUR: 'EUR', EURBRL: 'EUR', EURO: 'EUR', JPY: 'JPY', JPYBRL: 'JPY', IENE: 'JPY', CNH: 'CNH', CNHBRL: 'CNH', CNY: 'CNH', YUAN: 'CNH' }
 const PAIR = new Set(['EURUSD', 'PARIDADE', 'PAR'])
 const TAB = {
+  PODCAST: ['podcast'], PODCASTS: ['podcast'],
   MERCADO: ['resumo'], RESUMO: ['resumo'], HOME: ['resumo'],
   JUROS: ['juros'], DI: ['juros'], SELIC: ['juros'], CDI: ['juros'], CURVA: ['juros'], CURVAS: ['juros'], SOFR: ['juros'], TREASURY: ['juros'], UST: ['juros'],
   CENARIOS: ['cenarios'], FOCUS: ['cenarios', 'projecoes'], PROJECOES: ['cenarios', 'projecoes'],
