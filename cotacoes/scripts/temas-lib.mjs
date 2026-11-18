@@ -169,12 +169,36 @@ export const relevanteTema = (tema, title) => {
 export function temasFile(porTema, now, { stale = false, errors = [] } = {}) {
   return { schemaVersion: 1, generatedAt: now, windowDays: WINDOW_DAYS, stale, errors, temas: Object.fromEntries(TEMAS.map((t) => [t.id, { label: t.label, grupo: t.grupo, items: porTema[t.id] ?? [] }])) }
 }
-// Veículos de economia e negócios de referência. Quando um assunto já tem matérias suficientes deles na semana, os demais ficam de fora
-// (evita portais regionais e agregadores); assunto com pouca cobertura mantém tudo para não ficar vazio.
+// Veículos de economia e negócios de referência (Valor, Folha, InfoMoney, Reuters e outros).
 export const PREFERIDOS = /valor|folha|estad[aã]o|globo|g1\b|cnn|infomoney|exame|bloomberg|reuters|investing|money times|poder360|uol|veja|[ée]poca|brazil journal|seu dinheiro|bnamericas|ag[eê]ncia brasil|ag[eê]ncia de not[ií]cias da ind[uú]stria|cni|brasil mineral|not[ií]cias de minera[cç][aã]o|mining|teletime|tele\.?s[ií]ntese|mobile time|converge|e-investidor|neofeed|cnbc|financial times|wall street journal|forbes|istoé dinheiro|isto[eé] dinheiro|correio braziliense|o tempo|zero hora|gaúchazh|agência estado|broadcast|metr[oó]poles|band|r7|sbt|valor international/i
-export const MIN_PREFERIDOS = 6
+export const MIN_PREFERIDOS = 6 // mantido para quem já usa; a régua abaixo não descarta mais por quantidade (decisão de 18/11/2026)
+// Régua dos veículos (decisão de 18/11/2026: "eficiente e com a informação real"): a matéria de veículo de referência entra
+// sempre; a de outro portal entra quando traz um fato que nenhum veículo de referência noticiou. Sai só a repetição: o mesmo
+// fato contado de novo por outro portal (agregador ou reprodução), reconhecido pelas palavras do título. Antes, bastavam 6
+// matérias de referência para todas as outras sumirem, inclusive as que traziam fato novo.
+const VAZIAS = new Set(['para', 'como', 'mais', 'menos', 'sobre', 'apos', 'entre', 'pelo', 'pela', 'pelos', 'pelas', 'contra', 'desde', 'ainda', 'tambem',
+  'este', 'esta', 'isso', 'essa', 'esse', 'sera', 'pode', 'podem', 'diz', 'dizem', 'veja', 'hoje', 'nesta', 'neste', 'semana', 'segundo', 'aponta', 'mostra'])
+const palavrasDoTitulo = (titulo) => new Set(String(titulo ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9%]+/)
+  .filter((w) => (w.length > 3 || /\d/.test(w)) && !VAZIAS.has(w)))
+const TRES_DIAS = 3 * 864e5
+// Mesma notícia: até 3 dias de distância, 4 palavras ou mais em comum e a maior parte das palavras do título mais curto no
+// outro (70%). Se os dois títulos trazem números e nenhum se repete (outra data, outro percentual), são fatos diferentes.
+export function mesmoFato(a, b) {
+  if (a.t && b.t && Math.abs(a.t - b.t) > TRES_DIAS) return false
+  const pa = palavrasDoTitulo(a.title), pb = palavrasDoTitulo(b.title)
+  const na = [...pa].filter((w) => /\d/.test(w)), nb = [...pb].filter((w) => /\d/.test(w))
+  if (na.length && nb.length && !na.some((n) => nb.includes(n))) return false
+  const comuns = [...pa].filter((w) => pb.has(w)).length
+  return comuns >= 4 && comuns / Math.min(pa.size, pb.size) >= 0.7
+}
 export function filtraVeiculos(items) {
-  const bons = items.filter((i) => PREFERIDOS.test(i.source ?? ''))
-  return bons.length >= MIN_PREFERIDOS ? bons : items
+  const deReferencia = (i) => PREFERIDOS.test(i.source ?? '')
+  const bons = items.filter(deReferencia), mantidos = []
+  for (const i of items) {
+    if (deReferencia(i)) { mantidos.push(i); continue }
+    if (bons.some((b) => mesmoFato(b, i)) || mantidos.some((m) => !deReferencia(m) && mesmoFato(m, i))) continue
+    mantidos.push(i)
+  }
+  return mantidos
 }
 export const mergeTema = (tema, fresh, previous, now) => filtraVeiculos(mergeItems(fresh, previous, now, WINDOW_DAYS, (title) => relevanteTema(tema, title)))

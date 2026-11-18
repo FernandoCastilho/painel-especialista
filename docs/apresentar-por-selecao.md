@@ -228,3 +228,24 @@ possível". Decisão: opção 1, "Sim, ampliar e publicar".
   novos. Corrigido como descrito acima, com essas manchetes nos testes.
 - Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
   depois da publicação, principalmente cobre, alumínio, carvão e café.
+
+## Quinta rodada (18/11/2026): régua dos veículos de referência
+Pedido do Fernando: "Mude a régua para ficar realmente eficiente e com a informação real".
+- Antes: quando um tema tinha 6 ou mais matérias de veículos de referência (Valor, Folha, InfoMoney, Reuters e outros da
+  lista `PREFERIDOS`), todas as matérias de outros portais sumiam, inclusive as que traziam fato novo. Em 18/11, Petróleo
+  caiu de 25 para 6 matérias por causa disso.
+- Agora (`filtraVeiculos` e `mesmoFato` em `cotacoes/scripts/temas-lib.mjs`): a matéria de veículo de referência entra
+  sempre; a de outro portal entra quando traz um fato que nenhuma matéria já mantida noticiou. Sai só a repetição: o
+  mesmo fato contado de novo por outro portal, reconhecido pelo título (até 3 dias de distância, 4 palavras ou mais em
+  comum e a maior parte das palavras do título mais curto). Se os dois títulos trazem números e nenhum se repete (outra
+  data, outro percentual), são fatos diferentes.
+- Vale para todos os temas de `temas.json` (setor, insumo, moedas, eleições e madeira). Em madeira, só sai repetição;
+  nenhuma matéria do setor sai por palavra.
+- Teste com as matérias reais de 18/11 (as coletas das 08:32 e das 10:47 juntas, 397 matérias): ficam 376; as 21 que
+  saem são repetições de outra matéria da lista (exemplos: "Preço mundial do açúcar sobe 25%…" = "Preço do açúcar sobe
+  25%…"; "Saca de café arábica é arrematada por R$ 20 mil…" = "Saca de café é vendida por R$ 20 mil em leilão…").
+  Petróleo fica com 25 de 26.
+- Risco: o reconhecimento é pelo título. Duas matérias sobre fatos parecidos e com quase as mesmas palavras podem ser
+  tratadas como repetição (exemplo do teste: "Preço do boi gordo recorde, mas sobe menos que bezerro…" e "Preço em
+  dólares do boi gordo, bezerro, milho e soja recuam…"); e a mesma notícia escrita com palavras bem diferentes continua
+  aparecendo duas vezes. As matérias de veículos de referência nunca saem.
