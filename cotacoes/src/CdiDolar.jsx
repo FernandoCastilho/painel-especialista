@@ -138,29 +138,51 @@ export default function CdiDolar({ onBack, quotes }) {
       {r && (
         <article className="desk-panel cx-panel">
           <header className="cx-heading"><h3>3. Resultado estimado</h3><CalculatorHelp title="Resultado estimado"><p>Prazo = primeiro dia útil em que o ganho líquido ÷ valor aplicado alcança a oscilação necessária do dólar.</p></CalculatorHelp></header>
-          {r.already ? <p className="cd-notice cd-pad">O dólar alvo não está acima do atual: a aplicação já supera o câmbio, sem prazo mínimo.</p> : <>
+          {r.already ? <p className="cd-notice cd-pad">O dólar alvo não está acima do atual: a aplicação já supera o câmbio, sem prazo mínimo.</p> : <div className="cd-result">
+            <p className="cd-answer"><span aria-hidden="true">✓</span><span>Em <b>{r.n} dias úteis</b>, por volta de <b>{dateLabel(r.end)}</b>, o rendimento líquido da aplicação cobre a alta de <b>{pct(r.oscillation)}</b> do dólar.</span></p>
             <div className="cd-kpis cd-highlight">
-              <div><span>Dias úteis necessários</span><b>{r.n}</b></div>
-              <div><span>Data final estimada</span><b>{dateLabel(r.end)}</b></div>
-              <div><span>Dias corridos aproximados</span><b>{r.days}</b></div>
-              <div><span>Ganho líquido estimado</span><b>{brl(r.netGain)}</b></div>
+              <div className="cd-main"><span>Prazo necessário</span><b>{r.n} dias úteis</b><small>≈ {r.days} dias corridos</small></div>
+              <div><span>Data final estimada</span><b>{dateLabel(r.end)}</b><small>início em {dateLabel(form.start)}</small></div>
+              <div><span>Ganho líquido</span><b>{brl(r.netGain)}</b><small>após IR e IOF</small></div>
             </div>
-            <div className="cx-wrap"><table className="cx-matrix cd-table"><caption className="sr-only">Memória do cálculo</caption><tbody>
-              {[
-                ['CDI diário estimado', pct(r.dailyCdi, 4)],
-                ['Retorno diário do produto', pct(r.dailyProduct, 4)],
-                ['Rentabilidade líquida-alvo (igual à oscilação do câmbio)', pct(r.oscillation)],
-                ['Rentabilidade bruta no prazo', pct(r.gross)],
-                ['Rentabilidade líquida no prazo', pct(r.net)],
-                ['Valor bruto ao atingir o alvo líquido', brl(r.grossValue)],
-                ['Ganho bruto estimado', brl(r.grossGain)],
-                ['Alíquota de IOF aplicável', pct(r.iof)],
-                ['Alíquota de IR renda fixa aplicável', pct(r.ir)],
-                ['Ganho líquido estimado', brl(r.netGain)],
-                ['Valor líquido estimado', brl(r.netValue)],
-              ].map(([label, value]) => <tr key={label}><th scope="row">{label}</th><td>{value}</td></tr>)}
-            </tbody></table></div>
-          </>}
+            <div className="cd-cols">
+              <section className="cd-card" aria-labelledby="cd-waterfall">
+                <h4 id="cd-waterfall">Do bruto ao líquido</h4>
+                <table className="cd-steps"><caption className="sr-only">Do valor aplicado ao valor líquido</caption><tbody>
+                  <tr><td className="cd-op" aria-hidden="true"></td><th scope="row">Valor aplicado</th><td className="cd-rate"></td><td>{brl(values.amount)}</td></tr>
+                  <tr><td className="cd-op" aria-hidden="true">+</td><th scope="row">Rendimento bruto</th><td className="cd-rate">{pct(r.gross)}</td><td>{brl(r.grossGain)}</td></tr>
+                  <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">IOF</th><td className="cd-rate">{pctShort(r.iof)}</td><td>{brl(r.iofAmount)}</td></tr>
+                  <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">IR renda fixa</th><td className="cd-rate">{pctShort(r.ir)}</td><td>{brl((Math.round(r.grossGain * 100) - Math.round(r.iofAmount * 100) - Math.round(r.netGain * 100)) / 100)}</td></tr>
+                  <tr className="cd-total"><td className="cd-op" aria-hidden="true">=</td><th scope="row">Valor líquido</th><td className="cd-rate">{pct(r.net)}</td><td>{brl(r.netValue)}</td></tr>
+                </tbody></table>
+              </section>
+              <section className="cd-card" aria-labelledby="cd-vs">
+                <h4 id="cd-vs">Líquido x alta do dólar</h4>
+                <div className="cd-vs">
+                  {(() => { const top = Math.max(r.net, r.oscillation) * 1.03; return <div className="cd-bar" role="img" aria-label={`Rendimento líquido de ${pct(r.net)} contra alta do dólar de ${pct(r.oscillation)}`}><i style={{ width: `${(r.net / top) * 100}%` }} /><em style={{ left: `${(r.oscillation / top) * 100}%` }} /></div> })()}
+                  <div className="cd-legend"><span>Líquido no prazo <b>{pct(r.net)}</b></span><span>Alta do dólar <b>{pct(r.oscillation)}</b></span></div>
+                  <div className="cd-facts">
+                    <div><span>Dólar de {fx(values.spot)} para</span><b>{fx(values.target)}</b></div>
+                    <div><span>Aplicação</span><b>{pctShort(values.pct)} do CDI · CDI {pct(values.cdi)} a.a.</b></div>
+                  </div>
+                  {r.taxStep && <p className="cd-warn"><span aria-hidden="true">!</span><span>{r.taxStep.irFrom > r.taxStep.irTo
+                    ? <>Prazo logo acima de {r.taxStep.daysBefore} dias, quando o IR cai de {pctShort(r.taxStep.irFrom)} para {pctShort(r.taxStep.irTo)}. Antes disso, o IR maior impede alcançar a alta do dólar.</>
+                    : <>Prazo logo depois de uma redução do IOF ({pctShort(r.taxStep.iofFrom)} para {pctShort(r.taxStep.iofTo)}). Antes disso, o IOF maior impede alcançar a alta do dólar.</>}</span></p>}
+                </div>
+              </section>
+            </div>
+            <details className="cd-memory">
+              <summary>Memória de cálculo</summary>
+              <div className="cx-wrap"><table className="cx-matrix cd-table"><caption className="sr-only">Memória do cálculo</caption><tbody>
+                {[
+                  ['CDI diário estimado', pct(r.dailyCdi, 4)],
+                  ['Retorno diário do produto', pct(r.dailyProduct, 4)],
+                  ['Dias corridos (dias úteis × 7/5, arredondado para cima)', String(r.days)],
+                  ['Valor bruto ao atingir o alvo líquido', brl(r.grossValue)],
+                ].map(([label, value]) => <tr key={label}><th scope="row">{label}</th><td>{value}</td></tr>)}
+              </tbody></table></div>
+            </details>
+          </div>}
         </article>
       )}
 

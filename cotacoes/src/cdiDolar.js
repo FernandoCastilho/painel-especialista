@@ -27,7 +27,9 @@ export function returnAt(n, { amount, dailyProduct }) {
   const ir = irRate(days, 'cdb-pos')
   const grossGain = amount * gross
   const netGain = grossGain * (1 - iof) * (1 - ir)
-  return { n, days, gross, iof, ir, grossGain, netGain, grossValue: amount + grossGain, netValue: amount + netGain, net: netGain / amount }
+  const iofAmount = grossGain * iof
+  const irAmount = (grossGain - iofAmount) * ir
+  return { n, days, gross, iof, ir, grossGain, iofAmount, irAmount, netGain, grossValue: amount + grossGain, netValue: amount + netGain, net: netGain / amount }
 }
 
 function validate({ spot, target, amount, cdi, pct, start }) {
@@ -53,7 +55,12 @@ export function simulateCdiDolar(p) {
   if (oscillation <= 0) return { ...base, already: true }
   for (let n = 1; n <= MAX_BUSINESS_DAYS; n++) {
     const r = returnAt(n, { amount, dailyProduct })
-    if (r.net >= oscillation) return { ...base, ...r, end: addCalendarDays(start, r.days) }
+    if (r.net >= oscillation) {
+      // Se no dia útil anterior o imposto era maior, foi a troca de faixa (IR ou IOF) que fez o líquido alcançar o alvo.
+      const prev = n > 1 ? returnAt(n - 1, { amount, dailyProduct }) : null
+      const taxStep = prev && (prev.ir > r.ir || prev.iof > r.iof) ? { irFrom: prev.ir, irTo: r.ir, iofFrom: prev.iof, iofTo: r.iof, daysBefore: prev.days } : null
+      return { ...base, ...r, taxStep, end: addCalendarDays(start, r.days) }
+    }
   }
   return { ok: false, error: `Com essas taxas, o CDI líquido não alcança a alta do dólar em ${MAX_BUSINESS_DAYS.toLocaleString('pt-BR')} dias úteis (cerca de 20 anos).`, oscillation }
 }

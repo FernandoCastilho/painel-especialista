@@ -110,3 +110,17 @@ test('dados de apoio do painel: CDI do dia, PTAX de 12 meses e CDI projetado', a
   assert.equal(projectedCdi(flat, '2026-11-17', 2000).clipped, true)
   assert.equal(projectedCdi(null, '2026-11-17', 100), null)
 })
+
+test('do bruto ao líquido e aviso de troca de faixa do IR', () => {
+  // Exemplo de 18/11/2026: dólar 5,7963 → 6,10, CDI 13,65%, 98% do CDI.
+  const r = simulateCdiDolar({ spot: 5.7963, target: 6.1, amount: 520000, cdi: 0.1365, pct: 0.98, start: '2026-11-18' })
+  assert.equal(r.n, 129)
+  assert.equal(r.days, 181)
+  near(r.grossGain, 34473.53)
+  near(r.irAmount, 6894.71, 0.01)
+  assert.equal(r.iofAmount, 0)
+  near(r.grossGain - r.iofAmount - r.irAmount, r.netGain, 1e-9)
+  assert.deepEqual({ from: r.taxStep.irFrom, to: r.taxStep.irTo, before: r.taxStep.daysBefore }, { from: 0.225, to: 0.2, before: 180 })
+  // Exemplo da planilha: 136 dias úteis, sem troca de faixa no dia anterior.
+  assert.equal(simulateCdiDolar(base).taxStep, null)
+})

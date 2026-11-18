@@ -34,3 +34,9 @@ nem tributação de pessoa jurídica.
 - Quadro 1: gráfico da PTAX do dólar nos últimos 12 meses, com mínima, máxima e posição do alvo.
 - Quadro 2: gráfico do CDI projetado pela curva DI x pré da B3 (taxa a termo) até o prazo calculado, com o CDI médio projetado.
   É só apoio: a conta continua com o CDI informado constante, como na planilha (usar a curva na conta seria mudança de regra de cálculo).
+
+## Quadro "Resultado estimado" redesenhado (18/11/2026, aprovado por Fernando)
+Proposta do Diretor de Arte: resposta em uma frase; três números (prazo, data final, ganho líquido); "Do bruto ao líquido"
+(aplicado + bruto − IOF − IR = líquido); barra "Líquido x alta do dólar"; aviso quando a troca de faixa do IR ou do IOF é o
+que faz o líquido alcançar o alvo; memória de cálculo recolhida. Sem repetição de itens. Nenhuma regra de cálculo mudou.
+O IR em reais exibido é a diferença dos valores arredondados (bruto − IOF − líquido), para a coluna fechar no centavo.
