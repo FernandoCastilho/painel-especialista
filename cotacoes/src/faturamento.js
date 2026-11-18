@@ -190,6 +190,20 @@ export function indicadores12m(meses) {
 // Rótulo do gráfico em milhões a partir de R$ mil (5.931 -> "5,9"), como nos slides.
 export const emMilhoes = (v) => (v == null ? '—' : (v / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }))
 
+// Crescimento do faturamento x crescimento do endividamento no período escolhido, contra o mesmo
+// período do ano anterior. Usa variações já calculadas em compararPeriodo (faturamento somado e
+// endividamento médio) e só diz qual cresceu mais: não é regra nova de cálculo.
+export function leituraCrescimento(c) {
+  const fat = c?.faturamento?.variacao ?? null
+  const div = c?.endividamento?.variacaoMedia ?? null
+  if (fat == null || div == null) return { fat, div, diferencaPp: null, relacao: null }
+  const diferencaPp = (div - fat) * 100
+  // Dívida média sobre faturamento médio muda na razão (1 + div) / (1 + fat).
+  const razao = (1 + div) / (1 + fat)
+  const relacao = Math.abs(razao - 1) < 0.0005 ? 'estavel' : razao > 1 ? 'piorou' : 'melhorou'
+  return { fat, div, diferencaPp, relacao }
+}
+
 // Total curto para o quadro do período, como em apresentação: 23.400 (R$ mil) -> "R$ 23,4 MM".
 export function totalCurto(v, unidade) {
   if (v == null) return '—'

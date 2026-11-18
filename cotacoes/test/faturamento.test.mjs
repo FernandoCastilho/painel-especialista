@@ -197,3 +197,19 @@ test('com menos de 24 meses não compara 12 contra 12 e a média usa os meses in
   assert.equal(fat.emMilhoes(5931), '5,9')
   assert.equal(fat.emMilhoes(null), '—')
 })
+
+test('crescimento do faturamento x endividamento no período escolhido', () => {
+  const texto = 'Mês Faturamento Endividamento\njan/25 1.000 2.000\nfev/25 1.000 2.000\njan/26 900 2.400\nfev/26 900 2.400'
+  const { meses } = fat.parseFaturamento(texto)
+  const c = fat.compararPeriodo(meses, fat.chaveMes(2026, 1), fat.chaveMes(2026, 2))
+  const cr = fat.leituraCrescimento(c)
+  assert.ok(Math.abs(cr.fat - -0.1) < 1e-12)
+  assert.ok(Math.abs(cr.div - 0.2) < 1e-12)
+  assert.ok(Math.abs(cr.diferencaPp - 30) < 1e-9)
+  assert.equal(cr.relacao, 'piorou')
+  const melhor = fat.leituraCrescimento({ faturamento: { variacao: 0.3 }, endividamento: { variacaoMedia: 0.1 } })
+  assert.equal(melhor.relacao, 'melhorou')
+  assert.equal(fat.leituraCrescimento({ faturamento: { variacao: 0.1 }, endividamento: { variacaoMedia: 0.1 } }).relacao, 'estavel')
+  // Sem saldo nos dois períodos: mostra só o faturamento, sem conclusão.
+  assert.equal(fat.leituraCrescimento({ faturamento: { variacao: 0.1 }, endividamento: { variacaoMedia: null } }).relacao, null)
+})
