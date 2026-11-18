@@ -129,8 +129,8 @@ export default function DividendosEmprestimo({ onBack }) {
                   <h4 id="de-ponte">Da planilha ao resultado justo · {r.n} meses</h4>
                   <table className="cd-steps"><caption className="sr-only">Ajustes da visão da planilha até o resultado justo</caption><tbody>
                     <tr><td className="cd-op" aria-hidden="true"></td><th scope="row">Montante final, como na planilha</th><td>{brl(r.montantePlanilha)}</td></tr>
-                    <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">Rendimento que o sócio teria mesmo recebendo o dividendo líquido</th><td>{brl(r.ajusteSocio)}</td></tr>
-                    <tr className={r.ajusteEmpresa < 0 ? 'cd-minus' : undefined}><td className="cd-op" aria-hidden="true">{r.ajusteEmpresa < 0 ? '−' : '+'}</td><th scope="row">CDI do caixa da empresa sobre parcelas e economia de IR (valor futuro)</th><td>{brl(r.ajusteEmpresa)}</td></tr>
+                    <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">Rendimento que o sócio teria mesmo recebendo o dividendo líquido</th><td>{brl(Math.abs(r.ajusteSocio))}</td></tr>
+                    <tr className={r.ajusteEmpresa < 0 ? 'cd-minus' : undefined}><td className="cd-op" aria-hidden="true">{r.ajusteEmpresa < 0 ? '−' : '+'}</td><th scope="row">CDI do caixa da empresa sobre parcelas e economia de IR (valor futuro)</th><td>{brl(Math.abs(r.ajusteEmpresa))}</td></tr>
                     <tr className="cd-total"><td className="cd-op" aria-hidden="true">=</td><th scope="row">Resultado justo</th><td>{brl(r.resultado)}</td></tr>
                   </tbody></table>
                 </section>
@@ -173,10 +173,11 @@ export default function DividendosEmprestimo({ onBack }) {
           <ul>
             <li><b>Como o dinheiro chega ao sócio.</b> Se o repasse for dividendo, há o imposto que a conta supõe evitar. Se for empréstimo da empresa ao sócio (mútuo), há novo IOF e risco de a Receita tratar como distribuição disfarçada de lucros. A conta não cobra esse IOF.</li>
             <li><b>Adiamento, não isenção.</b> Os lucros continuam acumulados na empresa; uma distribuição futura volta a ser tributada.</li>
-            <li><b>Retenção de 10% (Lei 15.270/2025).</b> Só vale quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês. Pagamentos menores, mês a mês, não têm retenção. Lucros até 2025 com distribuição aprovada até 31/12/2025 ficam fora.</li>
+            <li><b>Retenção de 10% (Lei 15.270/2025).</b> Só vale quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês. Pagamentos menores, mês a mês, não têm retenção na fonte, mas entram no imposto mínimo anual; no caminho direto, distribuir aos poucos também reduz o imposto que a conta supõe evitar. Lucros até 2025 com distribuição aprovada até 31/12/2025 ficam fora.</li>
             <li><b>Redutor e imposto mínimo anual.</b> Sócio com renda acima de R$ 600 mil no ano entra no imposto mínimo. Se a empresa já paga 34% de alíquota efetiva, o redutor pode devolver parte ou todo o imposto sobre os dividendos no ajuste anual. Nesse caso o imposto evitado é menor e a operação pode não compensar.</li>
             <li><b>Dedutibilidade.</b> Juros só reduzem o IR se a despesa for necessária à atividade. Crédito tomado para repassar ao sócio pode ter a dedução questionada.</li>
-            <li>CDI constante, sem curva de juros. Sem PIS/Cofins sobre a despesa de juros. Meses de 30 dias.</li>
+            <li>CDI constante, sem curva de juros. Sem PIS/Cofins sobre a despesa de juros. Meses de 30 dias. Fundo de investimento: a conta não aplica o come-cotas semestral, então o resultado de fundo sai um pouco otimista.</li>
+            <li><b>Caixa da empresa.</b> A conta supõe que a empresa tem o valor em caixa rendendo CDI. Se o lucro acumulado já está investido no negócio, a comparação muda.</li>
           </ul>
         </article>
       </div>

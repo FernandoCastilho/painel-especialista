@@ -99,7 +99,7 @@ export function simularDividendosEmprestimo(p) {
   if (!(p.valor > 0)) return { ok: false, error: 'Informe o valor dos lucros acumulados (valor da operação).' }
   if (!(p.taxaMes > 0 && p.taxaMes < 0.2)) return { ok: false, error: 'Informe a taxa do empréstimo ao mês, entre 0% e 20%. Ex.: 1,31.' }
   if (!(p.cdi > 0 && p.cdi < 1)) return { ok: false, error: 'Informe o CDI ao ano. Ex.: 14,15.' }
-  if (!(p.pctCdi > 0 && p.pctCdi <= 2)) return { ok: false, error: 'Informe o % do CDI da aplicação entre 1% e 200%.' }
+  if (!(p.pctCdi >= 0.01 && p.pctCdi <= 2)) return { ok: false, error: 'Informe o % do CDI da aplicação entre 1% e 200%.' }
   if (!(p.aliquotaPj >= 0 && p.aliquotaPj < 1)) return { ok: false, error: 'Informe a alíquota de IR/CSLL da empresa. Ex.: 34.' }
   if (!(p.aliquotaDividendos >= 0 && p.aliquotaDividendos < 1)) return { ok: false, error: 'Informe o imposto sobre dividendos evitado. Ex.: 10.' }
   return { ok: true, prazos: (p.prazos ?? PRAZOS).map((n) => simularPrazo(p, n)) }
