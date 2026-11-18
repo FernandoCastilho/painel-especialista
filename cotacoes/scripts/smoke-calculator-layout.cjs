@@ -299,7 +299,7 @@ async function fillScenario(page, section, route) {
     const eligibilityWarning = section.locator('.fm-iof-premise')
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /FINAME|Finame/)
-    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 6, 'números principais à vista, sem abrir a composição: taxas, CET, parcelas e custo total')
+    assert.equal(await section.locator('.fm-destaques tbody tr:not(.fm-grp)').count(), 10, 'números principais à vista, sem abrir a composição: taxas, CET e valores em reais até o custo total')
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
@@ -427,13 +427,16 @@ async function assertComparatorFamily(browser) {
               available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
               used:costs.right - operation.left,
               topGap:Math.abs(costs.top - operation.top),
-              formBottom:form.getBoundingClientRect().bottom,
+              formTop:form.getBoundingClientRect().top,
+              formRight:form.getBoundingClientRect().right,
               resultsTop:results.top,
+              resultsLeft:results.left,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
           assert.ok(Math.abs(geometry.used - geometry.available) <= 2 && geometry.topGap <= 2, details + ': Operação e Custos preenchem a mesma linha')
-          assert.ok(geometry.resultsTop >= geometry.formBottom, details + ': cotação permanece na linha seguinte')
+          // Padrão de 18/11/2026: no computador, a cotação fica ao lado dos dados, alinhada pelo topo.
+          assert.ok(geometry.resultsLeft >= geometry.formRight && Math.abs(geometry.resultsTop - geometry.formTop) <= 48, details + ': cotação ao lado dos dados')
         }
       }
       console.log(`PASS família visual do Comparador · ${width}px · ${theme}`)

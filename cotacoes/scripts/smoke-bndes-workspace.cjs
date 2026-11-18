@@ -95,9 +95,12 @@ async function proveLastColumn(region, file) {
         assert.equal(await page.locator('#fm-custo').evaluate(element => getComputedStyle(element).backgroundColor), theme === 'dark' ? 'rgb(7, 17, 34)' : 'rgb(255, 255, 255)', 'campos acompanham o tema')
         assert.equal(await page.locator('#fm-finame-eligible, #fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc').count(), 0)
         // Os números principais abrem o resultado, sem precisar abrir a composição; a faixa "Cotação comparativa" só existe ao comparar.
-        const highlights = page.locator('.fm-destaques tbody tr')
+        // Padrão de 18/11/2026: resposta principal (CET e custo total) no topo; depois taxas e valores em reais, agrupados.
+        assert.equal(await page.locator('.fm-destaques .fm-answer').isVisible(), true)
+        const highlights = page.locator('.fm-destaques tbody tr:not(.fm-grp)')
         await highlights.first().waitFor()
-        assert.deepEqual((await highlights.locator('th').allInnerTexts()).map(text => text.replace(/\s*\?\s*$/, '').trim()), ['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado'])
+        assert.deepEqual(await page.locator('.fm-destaques tbody tr.fm-grp th').allTextContents(), ['Taxas', 'Valores em reais'])
+        assert.deepEqual((await highlights.locator('th').allInnerTexts()).map(text => text.replace(/\s*\?\s*$/, '').trim()), ['Taxa de referência', 'Taxa final', 'CET estimado', 'Valor financiado', 'Primeira parcela após carência', 'Última parcela', 'Juros totais', 'TAC à vista', 'IOF', 'Custo total estimado'])
         for (const item of await highlights.all()) assert.equal(await item.isVisible(), true)
         assert.equal(await page.locator('.fm-details:not(.fm-comparison-details)').evaluate(element => element.open), false)
         assert.equal(await page.locator('.fm-hero').count(), 0)
