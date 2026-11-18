@@ -291,3 +291,16 @@ test('crescimento constante não vira mês fora do padrão e o alerta de dívida
   const c = fat.analisarSerie(fat.parseFaturamento('jan/26 1.000 0\nfev/26 1.000 0\nmar/26 1.000 0\nabr/26 1.000 0\nmai/26 1.000 0\njun/26 1.000 3.000').meses)
   assert.equal(c.endividamento.ultimo, 3000)
 })
+
+test('mês do ano sempre zerado não apaga a análise: usa a série sem ajuste', () => {
+  const linhas = []
+  for (let i = 0; i < 36; i++) {
+    const k = fat.chaveMes(2023, 11) + i
+    const m = ((k % 12) + 12) % 12
+    linhas.push(`${fat.rotuloMes(k)} ${m <= 1 ? 0 : Math.round(1000 * 0.98 ** i)} 1.000`)
+  }
+  const a = fat.analisarSerie(fat.parseFaturamento(linhas.join('\n')).meses)
+  assert.equal(a.ajustada, false)
+  assert.ok(a.tendenciaAno != null && a.tendenciaAno < 0)
+  assert.ok(a.atencao.some((t) => /12 meses .*menor/.test(t)))
+})

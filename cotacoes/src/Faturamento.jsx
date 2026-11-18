@@ -239,8 +239,8 @@ function Analise({ a, unidade }) {
             {a.ritmoRecente != null && <li>Últimos 3 meses: média {p0(a.ritmoRecente)} em relação à média dos {janela}{semSaz}.</li>}
             {estabilidade && <li>Comportamento mês a mês{semSaz}: <b>{estabilidade}</b> (variação típica de {Math.round(a.cv * 100)}% em torno da média).</li>}
             <li>Nos {janela}, o melhor mês foi {a.melhor.rotulo} ({valor(a.melhor.faturamento)}) e o pior, {a.pior.rotulo} ({valor(a.pior.faturamento)}).</li>
-            {a.quedas >= 2 && <li>{a.quedas} quedas seguidas até {a.ate}.</li>}
-            {a.altas >= 2 && <li>{a.altas} altas seguidas até {a.ate}.</li>}
+            {a.quedas >= 2 && <li>{a.quedas} quedas seguidas até {a.ate}{semSaz}.</li>}
+            {a.altas >= 2 && <li>{a.altas} altas seguidas até {a.ate}{semSaz}.</li>}
           </ul>
         </section>
         <section>

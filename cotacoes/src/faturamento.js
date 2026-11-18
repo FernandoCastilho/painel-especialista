@@ -263,7 +263,8 @@ export function analisarSerie(meses) {
 
   // Série dessazonalizada (valor ÷ índice do mês do ano) quando há sazonalidade: tendência, estabilidade,
   // ritmo recente, quedas seguidas e meses fora do padrão olham a série sem o efeito do calendário.
-  const ajustada = sazonalidade != null
+  // Só desconta a sazonalidade se todos os índices forem positivos (mês do ano sempre zerado = série sem ajuste).
+  const ajustada = sazonalidade != null && sazonalidade.indices.every((x) => x.indice > 0)
   const aj = (m) => (ajustada ? m.faturamento / sazonalidade.indices[mesDoAno(m.chave)].indice : m.faturamento)
   const valAj = new Map(fat.map((m) => [m.chave, aj(m)]))
 
@@ -336,7 +337,7 @@ export function analisarSerie(meses) {
   if (i12?.variacao != null && i12.variacao <= L.quedaForte) atencao.push(`Faturamento dos últimos 12 meses ${Math.round(Math.abs(i12.variacao) * 100)}% menor que nos 12 anteriores.`)
   if (tendenciaAno != null && tendenciaAno <= L.quedaForte) atencao.push(`Tendência de queda do faturamento nos últimos ${ult.length} meses${ajustada ? ', já descontada a sazonalidade' : ''}.`)
   if (cv != null && cv > L.instavel) atencao.push(`Faturamento instável: os meses variam muito em torno da média${ajustada ? ', mesmo descontada a sazonalidade' : ''}.`)
-  if (quedas >= 3) atencao.push(`${quedas} quedas seguidas de faturamento até ${fat.at(-1).rotulo}.`)
+  if (quedas >= 3) atencao.push(`${quedas} quedas seguidas de faturamento até ${fat.at(-1).rotulo}${ajustada ? ', descontada a sazonalidade' : ''}.`)
   const recentesBaixo = atipicos.filter((a) => a.desvio < 0 && a.chave > fim - 6)
   if (recentesBaixo.length) atencao.push(`Mês recente bem abaixo do esperado: ${recentesBaixo.map((a) => a.rotulo).join(', ')}.`)
   // Dívida x faturamento na mesma janela: saldo do último mês com saldo contra 12 meses antes, e faturamento
