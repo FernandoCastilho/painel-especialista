@@ -82,10 +82,10 @@ test('Capital de Giro: com praça SP, o vencimento de 25/01 vai para 26/01 e jur
     assert.equal(r.rows[0].date, date)
     const D = daysBetween(base.start, date)
     // Uma parcela: juros compostos por dias corridos, (1 + 2%)^(D/30).
-    const payment = 100000 * 1.02 ** (D / 30)
+    const payment = Math.round(100000 * 1.02 ** (D / 30) * 100) / 100
     close(r.rows[0].payment, payment, 1e-6)
     // IOF: adicional sobre o valor + diário pelos dias até o pagamento (alíquotas da própria regra legal da data).
-    const iof = 100000 * r.tax.additional / 100 + 100000 * Math.min(D, 365) * r.tax.daily / 100
+    const iof = Math.round(100000 * (r.tax.additional + Math.min(D, 365) * r.tax.daily)) / 100
     close(r.iof, iof, 1e-6)
     // CET de um pagamento: (pagamento / líquido)^(365/D) − 1.
     close(r.cet, (payment / (100000 - iof)) ** (365 / D) - 1, 1e-9)

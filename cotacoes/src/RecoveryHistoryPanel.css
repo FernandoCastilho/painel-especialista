@@ -1,4 +1,4 @@
-.rj-history { min-width: 0; font: .9rem/1.5 system-ui, sans-serif; }
+.rj-history { min-width: 0; font: .9rem/1.5 var(--sans); }
 .rj-intro { margin: 0 0 4px; color: var(--mut); }
 .rj-read { margin: 4px 0 0; font-size: .82rem; }
 .rj-read summary { width: max-content; max-width: 100%; cursor: pointer; font-weight: 600; }
@@ -26,7 +26,7 @@
 .rj-pin { cursor: pointer; }
 .rj-pin circle { fill: #154ad0; stroke: #fff; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .rj-pin.active circle { fill: #9c3b00; stroke-width: 2; }
-.rj-pin text { fill: #fff; font: 700 13px system-ui, sans-serif; pointer-events: none; }
+.rj-pin text { fill: #fff; font: 700 13px var(--sans); pointer-events: none; }
 .rj-pin text { text-anchor: middle; }
 .rj-sector-select { margin-top: 12px; }
 .rj-sector-ranking { display: grid; gap: 4px; list-style: none; margin: 8px 0; padding: 0; }

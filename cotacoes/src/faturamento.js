@@ -1,6 +1,7 @@
 // Faturamento x Endividamento: lê o texto colado (Mês, Faturamento, Endividamento) e compara
-// um período escolhido com os mesmos meses do ano anterior. Não há regra financeira aqui: só soma,
-// média e variação percentual dos números colados, na unidade em que vieram (ex.: R$ mil).
+// um período escolhido com os mesmos meses do ano anterior (soma, média e variação %), na unidade
+// em que os números vieram (ex.: R$ mil). A única regra financeira é a alavancagem de indicadores12m,
+// no critério do DAC; mudar essa regra exige aprovação do Fernando e revisão independente.
 
 export const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
@@ -148,6 +149,46 @@ export function compararPeriodo(meses, de, ate) {
     },
   }
 }
+
+// Últimos 12 meses e alavancagem, no mesmo critério do DAC:
+// - janela de 12 meses terminando no último mês com faturamento informado;
+// - média mensal = soma dos meses da janela com faturamento ÷ quantidade desses meses;
+// - endividamento = último mês com saldo maior que zero (zero ou vazio = mês sem informação);
+// - alavancagem = endividamento ÷ média mensal (em "x faturamento").
+// Os 12 meses anteriores são comparados só se a janela anterior tiver os mesmos meses informados.
+export function indicadores12m(meses) {
+  const comFat = meses.filter((m) => m.faturamento != null)
+  if (!comFat.length) return null
+  const fim = comFat.at(-1).chave
+  const janela = (a, b) => comFat.filter((m) => m.chave >= a && m.chave <= b)
+  const atual = janela(fim - 11, fim)
+  const anterior = janela(fim - 23, fim - 12)
+  const total = soma(atual.map((m) => m.faturamento))
+  const media = total / atual.length
+  const ultimoSaldo = [...meses].reverse().find((m) => temSaldo(m.endividamento)) ?? null
+  const comparavel = atual.length === 12 && anterior.length === 12
+  const totalAnterior = anterior.length ? soma(anterior.map((m) => m.faturamento)) : null
+  return {
+    de: atual[0].rotulo,
+    ate: atual.at(-1).rotulo,
+    meses: atual.length,
+    total,
+    media,
+    anteriorDe: rotuloMes(fim - 23),
+    anteriorAte: rotuloMes(fim - 12),
+    mesesAnterior: anterior.length,
+    totalAnterior,
+    variacao: comparavel ? variacao(total, totalAnterior) : null,
+    endividamento: ultimoSaldo ? ultimoSaldo.endividamento : null,
+    endividamentoMes: ultimoSaldo ? ultimoSaldo.rotulo : null,
+    // Saldo fora da janela de 12 meses: a conta segue a regra, mas a tela avisa que o saldo é defasado.
+    endividamentoForaDaJanela: !!ultimoSaldo && (ultimoSaldo.chave < fim - 11 || ultimoSaldo.chave > fim),
+    alavancagem: ultimoSaldo && media > 0 ? ultimoSaldo.endividamento / media : null,
+  }
+}
+
+// Rótulo do gráfico em milhões a partir de R$ mil (5.931 -> "5,9"), como nos slides.
+export const emMilhoes = (v) => (v == null ? '—' : (v / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }))
 
 // Total curto para o quadro do período, como em apresentação: 23.400 (R$ mil) -> "R$ 23,4 MM".
 export function totalCurto(v, unidade) {
