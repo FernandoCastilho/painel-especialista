@@ -184,24 +184,27 @@ async function assertSectorHeader(page, initial) {
         diagnostics.push({kind:'console',width,initial,message:message.text()})
         console.error(`Widget ${initial} ${width}: ${message.text()}`)
       })
-      for (const [route, selector] of [['resumo','.terminal-desk'],['calculadora/giro','.cx #cx-value'],['aprender','.learn'],['juros','.juros-grafico .chart'],['cenarios/commodities','.cen-nav button'], ...(width === 320 ? [['setores','main.app .top h1']] : [])]) {
+      for (const [route, selector] of [['resumo','.terminal-desk'],['calculadora/giro','.giro-screen #cx-value'],['aprender','.learn'],['juros','.juros-grafico .chart'],['cenarios/commodities','.cen-nav button'], ...(width === 320 ? [['setores','main.app .top h1']] : [])]) {
         await page.goto(`${base}/#${route}`); await page.locator(selector).first().waitFor()
         const label = `${initial}-${width}-${route.replace('/', '-')}`
         report.push({ label, ...await assertTheme(page, initial, label) })
         if (route === 'setores') headerScenarios.push(await assertSectorHeader(page, initial))
         if (route === 'calculadora/giro') {
           await page.locator('#cx-value').fill('250.000,00')
-          const before = await page.locator('.cx-matrix').innerText()
+          await page.locator('.giro-simulate').click()
+          const before = await page.locator('.giro-result').innerText()
           const other = initial === 'dark' ? 'light' : 'dark'
           await page.emulateMedia({colorScheme:other})
           report.push({ label:`${label}-live`, ...await assertTheme(page, other, `${label} live`) })
           assert.equal(await page.locator('#cx-value').inputValue(), '250.000,00', 'live switch keeps input')
-          assert.equal(await page.locator('.cx-matrix').innerText(), before, 'live switch keeps financial results')
+          assert.equal(await page.locator('.giro-result').innerText(), before, 'live switch keeps financial results')
           await page.emulateMedia({colorScheme:initial})
           await assertTheme(page, initial, label)
           const help = page.getByRole('button', {name:/^Ajuda:/}).first()
-          await help.focus()
+          await help.scrollIntoViewIfNeeded()
+          await page.mouse.move(0, 0)
           await help.hover()
+          await page.waitForFunction(() => document.querySelector('.giro-header .fi-help button')?.hasAttribute('aria-describedby'))
           const previewId = await help.getAttribute('aria-describedby')
           assert.ok(previewId, 'hovered help identifies its own preview')
           await page.locator(`[role="tooltip"][id="${previewId}"]`).waitFor()
