@@ -159,3 +159,41 @@ test('total curto do quadro do período segue a unidade colada', () => {
   // Variação do exemplo da apresentação: 21,5 contra 23,4 = -8%.
   assert.equal(Math.round(fat.variacao(21500, 23400) * 100), -8)
 })
+
+test('últimos 12 meses e alavancagem no critério do DAC (endividamento do último saldo ÷ média mensal de 12 meses)', () => {
+  // 24 meses fictícios: faturamento 1.000 no primeiro ano e 1.200 no segundo; saldo 0 nos dois últimos meses.
+  const linhas = ['Mês Faturamento Endividamento']
+  for (let i = 0; i < 24; i++) {
+    const k = fat.chaveMes(2024, 11) + i
+    const divida = i >= 22 ? 0 : 2400
+    linhas.push(`${fat.rotuloMes(k)} ${i < 12 ? '1.000' : '1.200'} ${i === 21 ? '3.000' : divida}`)
+  }
+  const ind = fat.indicadores12m(fat.parseFaturamento(linhas.join('\n')).meses)
+  assert.equal(ind.de, 'nov/25')
+  assert.equal(ind.ate, 'out/26')
+  assert.equal(ind.meses, 12)
+  assert.equal(ind.total, 14400)
+  assert.equal(ind.media, 1200)
+  assert.equal(ind.totalAnterior, 12000)
+  assert.ok(Math.abs(ind.variacao - 0.2) < 1e-12)
+  // Saldo zero em set/26 e out/26: vale o último saldo informado (ago/26 = 3.000).
+  assert.equal(ind.endividamentoMes, 'ago/26')
+  assert.equal(ind.endividamento, 3000)
+  assert.equal(ind.alavancagem, 2.5)
+  assert.equal(ind.endividamentoForaDaJanela, false)
+  // Saldo antigo (fora dos 12 meses): a conta segue a regra e a tela recebe o aviso.
+  const antigo = fat.indicadores12m(fat.parseFaturamento('jan/20 1.000 5.000\njan/26 1.000 0').meses)
+  assert.equal(antigo.endividamentoForaDaJanela, true)
+})
+
+test('com menos de 24 meses não compara 12 contra 12 e a média usa os meses informados', () => {
+  const ind = fat.indicadores12m(fat.parseFaturamento('jan/26 1.000 500\nfev/26 2.000 –\nmar/26 3.000 1.000').meses)
+  assert.equal(ind.meses, 3)
+  assert.equal(ind.media, 2000)
+  assert.equal(ind.variacao, null)
+  assert.equal(ind.mesesAnterior, 0)
+  assert.equal(ind.alavancagem, 0.5)
+  assert.equal(fat.indicadores12m([]), null)
+  assert.equal(fat.emMilhoes(5931), '5,9')
+  assert.equal(fat.emMilhoes(null), '—')
+})

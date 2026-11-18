@@ -3,12 +3,57 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
-import { EXEMPLO, compararPeriodo, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
+import { EXEMPLO, compararPeriodo, emMilhoes, indicadores12m, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
 
 const num = (v, casas = 0) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }))
 const valor = (v) => (v == null ? '—' : num(v, Number.isInteger(v) ? 0 : 2))
 const pct = (v) => (v == null ? '—' : `${v > 0 ? '+' : ''}${(v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`)
+const vezes = (v) => (v == null ? '—' : `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`)
+
+// Gera a imagem PNG do gráfico (2x), em cores claras e com título, para colar em apresentação.
+const PROPS_IMAGEM = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'opacity', 'font-family', 'font-size', 'font-weight', 'text-anchor']
+async function imagemDoGrafico(svgEl, titulo, subtitulo) {
+  const raiz = svgEl.closest('.ft')
+  raiz?.setAttribute('data-ft-export', 'claro')
+  let xml, W, H
+  try {
+    const clone = svgEl.cloneNode(true)
+    const origem = svgEl.querySelectorAll('*'), copia = clone.querySelectorAll('*')
+    origem.forEach((el, i) => {
+      const cs = getComputedStyle(el)
+      copia[i].setAttribute('style', PROPS_IMAGEM.map((p) => `${p}:${cs.getPropertyValue(p)}`).join(';'))
+    })
+    const vb = svgEl.viewBox.baseVal
+    W = vb.width; H = vb.height
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    clone.setAttribute('width', W)
+    clone.setAttribute('height', H)
+    clone.setAttribute('style', 'font-family:system-ui,sans-serif')
+    xml = new XMLSerializer().serializeToString(clone)
+  } finally {
+    raiz?.removeAttribute('data-ft-export')
+  }
+  const img = new Image()
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml)
+  await img.decode()
+  const escala = 2, topo = subtitulo ? 56 : 36
+  const canvas = document.createElement('canvas')
+  canvas.width = W * escala
+  canvas.height = (H + topo) * escala
+  const ctx = canvas.getContext('2d')
+  ctx.scale(escala, escala)
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, W, H + topo)
+  ctx.fillStyle = '#000d3c'
+  ctx.textAlign = 'center'
+  ctx.font = '700 18px system-ui, sans-serif'
+  ctx.fillText(titulo, W / 2, 24)
+  if (subtitulo) { ctx.font = '400 13px system-ui, sans-serif'; ctx.fillText(subtitulo, W / 2, 44) }
+  ctx.drawImage(img, 0, topo, W, H)
+  return new Promise((ok, erro) => canvas.toBlob((b) => (b ? ok(b) : erro(new Error('imagem'))), 'image/png'))
+}
+
 const sinal = (v) => (v == null || Math.abs(v) < 0.0005 ? '' : v > 0 ? 'ft-up' : 'ft-down')
 
 export function FaturamentoIcon() {
@@ -27,9 +72,10 @@ const SLOT = 56, TOPO = 84, BASE = 28, ALT = 338, BARRA = 20
 const Y_SETA = 22, Y_TOTAL = 40, Y_QUADRO = 48
 const larguraRotulo = (txt) => txt.length * 6.6 + 10
 
-function Grafico({ meses, sel, onSelecionar, comparacao, unidade }) {
+function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor, svgRef }) {
   const arrastando = useRef(false)
-  const svg = useRef(null)
+  const local = useRef(null)
+  const svg = svgRef || local
   const W = meses.length * SLOT
   const max = Math.max(1, ...meses.flatMap((m) => [m.faturamento ?? 0, m.endividamento ?? 0]))
   const plotH = ALT - TOPO - BASE
@@ -110,7 +156,7 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade }) {
         let yd = m.endividamento != null ? y(m.endividamento) : null
         // Rótulo do endividamento sobe se for encostar no do faturamento.
         if (yf != null && yd != null && Math.abs(yd - yf) < 22) yd = Math.min(yd, yf) - 22
-        const tf = valor(m.faturamento), td = valor(m.endividamento)
+        const tf = rotulo(m.faturamento), td = rotulo(m.endividamento)
         return (
           <g key={`l${m.chave}`}>
             {yf != null && <><rect className="ft-tag-f" x={cx(i) - larguraRotulo(tf) / 2} y={yf - 22} width={larguraRotulo(tf)} height="17" rx="3" /><text className="ft-tag-ft" x={cx(i)} y={yf - 9.5}>{tf}</text></>}
@@ -158,6 +204,9 @@ function Comparacao({ c }) {
 export default function Faturamento({ onBack }) {
   const [texto, setTexto] = useState('')
   const [sel, setSel] = useState(null)
+  const [milhoes, setMilhoes] = useState(false)
+  const [aviso, setAviso] = useState('')
+  const svgRef = useRef(null)
   const { meses, avisos, unidade } = parseFaturamento(texto)
   const serie = serieContinua(meses)
   const chaves = new Set(serie.map((m) => m.chave))
@@ -165,6 +214,41 @@ export default function Faturamento({ onBack }) {
   const comparacao = selValida ? compararPeriodo(meses, selValida.de, selValida.ate) : null
   const anos = resumoPorAno(meses)
   const selecionar = (de, ate) => setSel({ de, ate })
+  const ind = indicadores12m(meses)
+  const emMil = unidade === 'R$ mil'
+  const rotulo = milhoes ? emMilhoes : valor
+  const unidadeGrafico = milhoes ? (emMil ? 'R$ MM' : 'em milhares') : unidade
+  const tituloGrafico = `Faturamento x Endividamento${unidadeGrafico ? ` (${unidadeGrafico})` : ''}`
+  const ultimo = meses.filter((m) => m.faturamento != null).at(-1)?.chave
+  const primeiro = serie[0]?.chave
+  const atalho = (n) => ultimo != null && selecionar(Math.max(primeiro, ultimo - n + 1), ultimo)
+  const anoAteAgora = () => ultimo != null && selecionar(Math.max(primeiro, Math.floor(ultimo / 12) * 12), ultimo)
+  const exportar = async (modo) => {
+    if (!svgRef.current) return
+    const sub = comparacao ? `${comparacao.rotulo} contra ${comparacao.rotuloAnterior}${comparacao.faturamento.variacao != null ? ` · faturamento ${pct(comparacao.faturamento.variacao)}` : ''}` : ''
+    const blob = imagemDoGrafico(svgRef.current, tituloGrafico, sub)
+    try {
+      if (modo === 'copiar') {
+        if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('sem área de transferência')
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+        setAviso('Imagem copiada. Cole no PowerPoint com Ctrl+V.')
+        return
+      }
+    } catch {
+      setAviso('Não deu para copiar neste navegador; a imagem foi baixada.')
+    }
+    try {
+      const url = URL.createObjectURL(await blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'faturamento-endividamento.png'
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      if (modo !== 'copiar') setAviso('Imagem baixada.')
+    } catch {
+      setAviso('Não foi possível gerar a imagem.')
+    }
+  }
   const [ini, fim] = selValida ? [Math.min(selValida.de, selValida.ate), Math.max(selValida.de, selValida.ate)] : ['', '']
 
   return (
@@ -193,9 +277,36 @@ export default function Faturamento({ onBack }) {
 
       {meses.length > 0 && (
         <article className="desk-panel cx-panel calc-result-shell" aria-live="polite" data-apz-pronto="">
-          <ExpandablePanel title={`Faturamento x Endividamento${unidade ? ` (${unidade})` : ''}`}>
+          <ExpandablePanel title={tituloGrafico}>
+            {ind && (
+              <div className="ft-kpis" role="group" aria-label="Últimos 12 meses e alavancagem">
+                <div><span>Faturamento {ind.meses === 12 ? 'últimos 12 meses' : `últimos ${ind.meses} meses informados`}</span><b>{totalCurto(ind.total, unidade)}</b><small>{ind.de} a {ind.ate}</small></div>
+                <div><span>12 meses anteriores</span><b>{ind.mesesAnterior ? totalCurto(ind.totalAnterior, unidade) : '—'}</b><small className={sinal(ind.variacao)}>{ind.variacao != null ? `${pct(ind.variacao)} contra ${ind.anteriorDe} a ${ind.anteriorAte}` : ind.mesesAnterior ? `só ${ind.mesesAnterior} de 12 meses informados` : 'sem dados do período'}</small></div>
+                <div><span>Média mensal</span><b>{valor(Math.round(ind.media))}</b><small>{ind.meses} {ind.meses === 1 ? 'mês' : 'meses'}</small></div>
+                <div><span>Endividamento</span><b>{valor(ind.endividamento)}</b><small className={ind.endividamentoForaDaJanela ? 'ft-down' : undefined}>{ind.endividamentoMes ? `último saldo: ${ind.endividamentoMes}${ind.endividamentoForaDaJanela ? ' (fora dos 12 meses)' : ''}` : 'sem saldo informado'}</small></div>
+                <div><span>Alavancagem <Help title="Alavancagem e últimos 12 meses"><p>Mesmo critério do DAC. Alavancagem = endividamento do último mês com saldo ÷ média mensal do faturamento dos últimos 12 meses.</p><p>Os 12 meses terminam no último mês com faturamento informado. Endividamento zero ou vazio conta como mês sem informação. A comparação com os 12 meses anteriores só aparece quando os dois períodos têm os 12 meses.</p></Help></span><b>{ind.alavancagem != null ? `${vezes(ind.alavancagem)} faturamento` : '—'}</b><small>{ind.meses < 12 ? `média de ${ind.meses} meses` : 'endividamento ÷ média mensal'}</small></div>
+              </div>
+            )}
+            <div className="ft-tools">
+              <div className="ft-atalhos" role="group" aria-label="Atalhos de período">
+                <span>Período:</span>
+                <button type="button" onClick={() => atalho(3)}>Últimos 3 meses</button>
+                <button type="button" onClick={() => atalho(6)}>Últimos 6 meses</button>
+                <button type="button" onClick={() => atalho(12)}>Últimos 12 meses</button>
+                <button type="button" onClick={anoAteAgora}>Ano até agora</button>
+              </div>
+              <div className="ft-atalhos" role="group" aria-label="Rótulos e imagem">
+                <span className="seg" role="group" aria-label="Rótulos do gráfico">
+                  <button type="button" aria-pressed={!milhoes} onClick={() => setMilhoes(false)}>{emMil ? 'R$ mil' : 'Como colado'}</button>
+                  <button type="button" aria-pressed={milhoes} onClick={() => setMilhoes(true)}>{emMil ? 'R$ MM' : '÷ 1.000'}</button>
+                </span>
+                <button type="button" onClick={() => exportar('copiar')}>Copiar imagem</button>
+                <button type="button" onClick={() => exportar('baixar')}>Baixar PNG</button>
+              </div>
+              <p className="cx-hint ft-aviso" role="status">{aviso}</p>
+            </div>
             <div className="ft-legend" aria-hidden="true"><span className="ft-key-f" /> Faturamento <span className="ft-key-d" /> Endividamento <span className="ft-key-box" /> Período escolhido e mesmo período do ano anterior</div>
-            <div className="ft-chart-wrap"><Grafico meses={serie} sel={selValida} onSelecionar={selecionar} comparacao={comparacao} unidade={unidade} /></div>
+            <div className="ft-chart-wrap"><Grafico meses={serie} sel={selValida} onSelecionar={selecionar} comparacao={comparacao} unidade={unidade} rotulo={rotulo} svgRef={svgRef} /></div>
             <div className="ft-range">
               <label>De <select value={ini} onChange={(e) => { const k = Number(e.target.value); selecionar(k, fim === '' || fim < k ? k : fim) }}><option value="" disabled>mês</option>{serie.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
               <label>Até <select value={fim} onChange={(e) => { const k = Number(e.target.value); selecionar(ini === '' || ini > k ? k : ini, k) }}><option value="" disabled>mês</option>{serie.map((m) => <option key={m.chave} value={m.chave}>{m.rotulo}</option>)}</select></label>
