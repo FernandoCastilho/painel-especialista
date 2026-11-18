@@ -1,0 +1,17 @@
+/* Dividendos via empréstimo: complementos do padrão visual do CDI x Dólar (.cd-pattern). Só apresentação. */
+:root[data-theme] body .cx.de-pattern .de-prazos { display:flex; flex-wrap:wrap; gap:6px; }
+:root[data-theme] body .cx.de-pattern .de-prazos button { min-height:36px; padding:6px 12px; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-card); color:var(--bw-ink); font:inherit; font-size:.85rem; cursor:pointer; }
+:root[data-theme] body .cx.de-pattern .de-prazos button[aria-pressed="true"] { border-color:var(--cd-orange); background:var(--cd-orange); color:#fff; font-weight:700; }
+:root[data-theme] body .cx.de-pattern .cd-answer-main b.de-neg { color:#ffb4a8; }
+:root[data-theme] body .cx.de-pattern .de-table-panel,
+:root[data-theme] body .cx.de-pattern .de-avisos { min-width:0; width:100%; max-width:1040px; margin:0 auto; }
+:root[data-theme] body .cx.de-pattern .de-table { width:100%; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cx.de-pattern .de-table th[scope="row"] { text-align:left; font-weight:400; white-space:normal; }
+:root[data-theme] body .cx.de-pattern .de-table td { text-align:right; white-space:nowrap; }
+:root[data-theme] body .cx.de-pattern .de-table .de-block th { padding-top:14px; color:var(--mut); font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; text-align:left; }
+:root[data-theme] body .cx.de-pattern .de-table .de-sub :is(th,td) { font-weight:600; }
+:root[data-theme] body .cx.de-pattern .de-table .de-total :is(th,td) { font-weight:700; border-top:2px solid currentColor; }
+:root[data-theme] body .cx.de-pattern .de-avisos ul { margin:0; padding:12px 16px 14px 32px; display:grid; gap:8px; font-size:.85rem; line-height:1.5; }
+:root[data-theme] body .cx.de-pattern .cd-quote .cd-result > :is(.de-prazos, .cd-card) { grid-column:1 / -1; }
+:root[data-theme] body .cx.de-pattern .de-table th[scope="row"] { min-width:200px; }
+:root[data-theme] body .cx.de-pattern .de-table thead th:first-child { text-align:left; }
