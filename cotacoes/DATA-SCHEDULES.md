@@ -41,3 +41,6 @@ Leitura real Focus27/10/2026 00:59:52UTC: quatro indicadores(Selic,IPCA,PIB,Câm
 Qualquer achado abre (ou comenta) a issue "Dados da página de cotações com problema de validação" e avisa o Teams, se configurado; ao normalizar, a issue é fechada.
 
 Revisão de 10/11/2026: o limite de 6 h acima continua valendo na validação de hora em hora, mas a cotação parada no pregão agora gera aviso próprio em cerca de 30 minutos (vigia das cotações). O envio ao Teams registra aviso quando não chega, há um teste manual de alerta e um lembrete do fim do calendário da B3. Detalhes em `docs/publicacao-e-calendario.md`.
+
+## Balanço histórico dos bancos (CVM)
+Arquivo `bancos-cvm.json`. Coletado no mesmo fluxo do Pages que `bancos.json`, mas em passo separado e tolerante a falha. A CVM divulga a DFP até 90 dias após o fim do ano e a ITR até 45 dias após cada trimestre; o coletor só lê o ano anterior e o corrente. DFP do ano corrente não é pedida (só existe no ano seguinte). Falha total preserva a base anterior com `stale: true`.

@@ -4,6 +4,7 @@ import RefreshButton from './RefreshButton.jsx'
 import Expandable from './Expandable.jsx'
 import { BANK_SOURCE_PAGE, BANKS, BANK_METRICS, bankNumber, quarterLabel, latestBankPoint, bankComparison, metricChange } from './bancos.js'
 import BankMetricHistory from './BankMetricHistory.jsx'
+import BancosCvm from './BancosCvm.jsx'
 import { bankMetricLeaders } from './bancosHistory.js'
 import './Bancos.css'
 
@@ -27,7 +28,7 @@ function BankDetails({ bank, point, previous, expanded = false }) {
 }
 export default function Bancos() {
   const file = useDataFile('bancos.json')
-  const [mode, setMode] = useState('latest'), [segment, setSegment] = useState('Total'), [comparison, setComparison] = useState(-1), [query, setQuery] = useState(''), [details, setDetails] = useState(null), [history, setHistory] = useState(null)
+  const [mode, setMode] = useState('latest'), [segment, setSegment] = useState('Total'), [comparison, setComparison] = useState(-1), [query, setQuery] = useState(''), [details, setDetails] = useState(null), [history, setHistory] = useState(null), [view, setView] = useState('trimestral')
   const banks = (file.data?.banks || []).filter(b => BANKS.some(item => item.id === b.id) && b.name.toLocaleLowerCase('pt-BR').includes(query.trim().toLocaleLowerCase('pt-BR'))).map(b => ({ ...b, logo: BANKS.find(item => item.id === b.id).logo }))
   const selectedBank = file.data?.banks?.find(bank => bank.id === details)
   const selectedPoint = latestBankPoint(selectedBank, mode)
@@ -43,7 +44,9 @@ export default function Bancos() {
     setHistory({ metric, bank: cellBank || banks[0]?.id })
   }
   return <section className="banks-panel" aria-labelledby="banks-title">
-    <div className="banks-heading"><div><h2 id="banks-title">Bancos · capital, crédito e resultado</h2><p className="muted">Última divulgação disponível por banco · valores em R$ bilhões · índices em %</p></div><RefreshButton files={['bancos.json']} label="bancos" /></div>
+    <div className="banks-heading"><div><h2 id="banks-title">Bancos · capital, crédito e resultado</h2><p className="muted">{view === 'cvm' ? 'Balanço contábil dos últimos anos · CVM' : 'Última divulgação disponível por banco · valores em R$ bilhões · índices em %'}</p></div><RefreshButton key={view} files={[view === 'cvm' ? 'bancos-cvm.json' : 'bancos.json']} label="bancos" /></div>
+    <div className="seg bn-fam" role="group" aria-label="Visão dos bancos"><button type="button" aria-pressed={view === 'trimestral'} onClick={() => setView('trimestral')}>Comparativo trimestral</button><button type="button" aria-pressed={view === 'cvm'} onClick={() => setView('cvm')}>Balanço histórico (CVM)</button></div>
+    {view === 'cvm' ? <BancosCvm /> : <>
     <div className="banks-controls">
       <label>Base de comparação<select aria-label="Base de comparação" value={mode} onChange={e => setMode(e.target.value)}><option value="latest">Último resultado por banco</option><option value="bc">Banco Central · base padronizada</option></select></label>
       <label>Provisões e inadimplência<select aria-label="Provisões e inadimplência" value={segment} onChange={e => setSegment(e.target.value)}><option value="Total">Total</option><option value="PJ">Pessoa jurídica</option><option value="PF">Pessoa física</option></select></label>
@@ -68,5 +71,6 @@ export default function Bancos() {
     </details>
     {history && <Expandable modal label={`Histórico de ${BANK_METRICS[history.metric][0]}`} onClose={() => setHistory(null)}><BankMetricHistory key={`${history.metric}-${mode}`} banks={banks} metric={history.metric} mode={mode} comparison={comparison} initialBank={history.bank} ranking={rankings[history.metric]} /></Expandable>}
     {selectedBank && <Expandable modal label={`Detalhes e fontes — ${selectedBank.name}`} onClose={() => setDetails(null)}><h2>{selectedBank.name} · {quarterLabel(selectedPoint?.period)}</h2><BankDetails bank={selectedBank} point={selectedPoint} previous={bankComparison(selectedBank, selectedPoint, comparison)} expanded /></Expandable>}
+    </>}
   </section>
 }

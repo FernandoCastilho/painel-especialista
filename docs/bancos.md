@@ -55,3 +55,16 @@ Compactação por espaçamentos e larguras, preservando o tamanho das letras e o
 
 ### Recuperação de transporte do IF.data
 Os relatórios são consultados sequencialmente, evitando seis transferências grandes simultâneas. Falhas reconhecidas de conexão/timeout e HTTP 408/429/500/502/503/504 recebem no máximo três tentativas, com espera limitada e respeito a cooldowns longos (sem nova tentativa automática). Recusas de acesso, redirecionamentos e falhas desconhecidas não são repetidos. O aviso identifica trimestre e relatório. Persistindo a falha, o snapshot anterior continua preservado; uma execução de testes não comprova disponibilidade do serviço externo.
+
+## Balanço histórico (CVM) — adicionado em 2026-11-18
+Segunda visão dentro de Bancos, em aba própria ("Balanço histórico (CVM)"), ao lado do "Comparativo trimestral" (que permanece como visão inicial e não foi alterado).
+
+- **Fonte:** dados abertos da CVM, demonstrações consolidadas anuais (DFP) e trimestrais (ITR), `dados.cvm.gov.br`. Coleta: `scripts/fetch-cvm-bancos.mjs` (leitura em `scripts/cvm-lib.mjs`), arquivo publicado `public/bancos-cvm.json`, passo próprio no Pages (`continue-on-error`, para uma falha da CVM não travar a publicação). Falha preserva a última base e marca aviso na tela.
+- **Bancos:** Itaú, Banco do Brasil, Bradesco, Santander e BTG Pactual. Caixa e Safra não têm registro de companhia aberta na CVM e ficam só no Banco Central. ABC e Daycoval estão na CVM, mas não fazem parte do catálogo exibido na tela.
+- **Indicadores:** ativo total, passivos financeiros ao custo amortizado, patrimônio líquido consolidado, receita de intermediação e lucro líquido consolidado. Anual (últimos 3 anos fechados) e trimestral (desde 1T de três anos atrás).
+- **Reconhecimento por nome da conta, não por código.** O plano de contas varia: "2.03" é Provisões no BB, Bradesco e Santander, e Passivos financeiros no Itaú e BTG. Conta ausente ou ambígua não é publicada.
+- **4º trimestre:** a CVM não publica o trimestre isolado de receita e lucro. Calculado como ano (DFP) menos nove meses (ITR) e marcado como "calculado". Saldos de ativo, passivo e patrimônio são de fim de período.
+- **Reapresentações:** vale a versão mais alta do documento.
+- **Não se mistura com o Banco Central:** perímetro contábil consolidado versus conglomerado prudencial; lucro contábil versus recorrente gerencial dos relatórios. Séries, rótulos e tabelas ficam separados. Inadimplência, Basileia e carteira PF/PJ continuam só no Banco Central e nos relatórios dos bancos.
+- **Atualização:** primeira coleta lê três anos fechados mais o corrente; depois, só o ano anterior e o corrente (`CVM_FULL=1` refaz tudo). `CVM_CACHE_DIR` aponta uma pasta com os ZIPs já baixados (testes e uso local).
+- **Rede:** o ambiente de desenvolvimento precisa liberar `dados.cvm.gov.br`.

@@ -86,3 +86,17 @@
 .bank-metric-history .bank-detail-table { max-width:100%; }
 .bank-metric-history .bank-detail-table table { min-width:600px; }
 .bank-metric-history .bank-detail-table th,.bank-metric-history .bank-detail-table td { padding:12px; border-bottom:1px solid var(--line); }
+/* Balanço histórico (CVM) */
+.banks-panel > .seg.bn-fam { margin:12px 0; }
+.cvm-panel { min-width:0; }
+.cvm-panel .banks-controls { margin:12px 0; }
+.cvm-bar { fill:var(--accent,var(--fg)); }
+.cvm-bar[data-derived] { fill-opacity:.45; stroke:var(--accent,var(--fg)); stroke-width:1.5; stroke-dasharray:4 3; }
+.cvm-panel .bank-detail-table table { min-width:0; width:100%; }
+.cvm-panel .bank-detail-table td, .cvm-panel .bank-detail-table th { text-align:right; }
+.cvm-panel .bank-detail-table thead th:first-child, .cvm-panel .bank-detail-table tbody th { text-align:left; }
+.cvm-panel .bank-detail-table td:last-child { min-width:0!important; }
+.cvm-panel .bank-history-sources td:last-child { text-align:left; min-width:220px!important; }
+.cvm-panel .bank-detail-table table { min-width:460px; }
+.cvm-panel .bank-detail-table td, .cvm-panel .bank-detail-table th { white-space:nowrap; }
+.cvm-panel .bank-history-sources td:last-child { white-space:normal; }

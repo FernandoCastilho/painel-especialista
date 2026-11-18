@@ -1,0 +1,1093 @@
+{
+  "generatedAt": 1795002078416,
+  "lastAttemptAt": 1795002078416,
+  "stale": false,
+  "errors": [],
+  "source": "CVM · dados abertos · DFP e ITR consolidados",
+  "banks": [
+    {
+      "id": "itau",
+      "name": "Itaú",
+      "cvmCode": 19348,
+      "annual": [
+        {
+          "year": 2023,
+          "metrics": {
+            "assets": 2543100000000,
+            "funding": 1944162000000,
+            "equity": 199050000000,
+            "revenue": 313221000000,
+            "profit": 33877000000
+          },
+          "source": "DFP 2023"
+        },
+        {
+          "year": 2024,
+          "metrics": {
+            "assets": 2854475000000,
+            "funding": 2148776000000,
+            "equity": 221284000000,
+            "revenue": 335328000000,
+            "profit": 42128000000
+          },
+          "source": "DFP 2024"
+        },
+        {
+          "year": 2025,
+          "metrics": {
+            "assets": 3066169000000,
+            "funding": 2350901000000,
+            "equity": 215076000000,
+            "revenue": 387118000000,
+            "profit": 45849000000
+          },
+          "source": "DFP 2025"
+        }
+      ],
+      "quarterly": [
+        {
+          "period": 202303,
+          "metrics": {
+            "assets": 2388492000000,
+            "funding": 1801332000000,
+            "equity": 181519000000,
+            "revenue": 75704000000,
+            "profit": 7534000000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202306,
+          "metrics": {
+            "assets": 2434208000000,
+            "funding": 1840419000000,
+            "equity": 188941000000,
+            "revenue": 82045000000,
+            "profit": 8929000000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202309,
+          "metrics": {
+            "assets": 2509117000000,
+            "funding": 1908530000000,
+            "equity": 192674000000,
+            "revenue": 80380000000,
+            "profit": 8469000000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202312,
+          "metrics": {
+            "assets": 2543100000000,
+            "funding": 1944162000000,
+            "equity": 199050000000,
+            "revenue": 75092000000,
+            "profit": 8945000000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2023 − ITR 2023"
+        },
+        {
+          "period": 202403,
+          "metrics": {
+            "assets": 2608695000000,
+            "funding": 1979093000000,
+            "equity": 193677000000,
+            "revenue": 79968000000,
+            "profit": 10040000000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202406,
+          "metrics": {
+            "assets": 2722720000000,
+            "funding": 2075229000000,
+            "equity": 202733000000,
+            "revenue": 86189000000,
+            "profit": 10370000000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202409,
+          "metrics": {
+            "assets": 2783431000000,
+            "funding": 2099872000000,
+            "equity": 210987000000,
+            "revenue": 77935000000,
+            "profit": 10595000000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202412,
+          "metrics": {
+            "assets": 2854475000000,
+            "funding": 2148776000000,
+            "equity": 221284000000,
+            "revenue": 91236000000,
+            "profit": 11123000000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2024 − ITR 2024"
+        },
+        {
+          "period": 202503,
+          "metrics": {
+            "assets": 2802812000000,
+            "funding": 2116119000000,
+            "equity": 211022000000,
+            "revenue": 97490000000,
+            "profit": 10707000000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202506,
+          "metrics": {
+            "assets": 2877420000000,
+            "funding": 2161919000000,
+            "equity": 218451000000,
+            "revenue": 102761000000,
+            "profit": 11398000000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202509,
+          "metrics": {
+            "assets": 2969351000000,
+            "funding": 2236838000000,
+            "equity": 224707000000,
+            "revenue": 97389000000,
+            "profit": 11600000000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202512,
+          "metrics": {
+            "assets": 3066169000000,
+            "funding": 2350901000000,
+            "equity": 215076000000,
+            "revenue": 89478000000,
+            "profit": 12144000000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2025 − ITR 2025"
+        },
+        {
+          "period": 202603,
+          "metrics": {
+            "assets": 3171201000000,
+            "funding": 2413006000000,
+            "equity": 220017000000,
+            "revenue": 99045000000,
+            "profit": 11875000000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202606,
+          "metrics": {
+            "assets": 3202125000000,
+            "funding": 2409635000000,
+            "equity": 228026000000,
+            "revenue": 100073000000,
+            "profit": 12324000000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202609,
+          "metrics": {
+            "assets": 3323991000000,
+            "funding": 2498897000000,
+            "equity": 239262000000,
+            "revenue": 110278000000,
+            "profit": 12270000000
+          },
+          "source": "ITR 2026"
+        }
+      ]
+    },
+    {
+      "id": "bb",
+      "name": "Banco do Brasil",
+      "cvmCode": 1023,
+      "annual": [
+        {
+          "year": 2023,
+          "metrics": {
+            "assets": 2153878452000,
+            "funding": 1884405380000,
+            "equity": 173570326000,
+            "revenue": 265438605000,
+            "profit": 33165591000
+          },
+          "source": "DFP 2023"
+        },
+        {
+          "year": 2024,
+          "metrics": {
+            "assets": 2398719197000,
+            "funding": 2102659213000,
+            "equity": 184236344000,
+            "revenue": 273505274000,
+            "profit": 29171564000
+          },
+          "source": "DFP 2024"
+        },
+        {
+          "year": 2025,
+          "metrics": {
+            "assets": 2455143253000,
+            "funding": 2149846333000,
+            "equity": 193567416000,
+            "revenue": 319462104000,
+            "profit": 16781938000
+          },
+          "source": "DFP 2025"
+        }
+      ],
+      "quarterly": [
+        {
+          "period": 202303,
+          "metrics": {
+            "assets": 2089927595000,
+            "funding": 1831045817000,
+            "equity": 168133312000,
+            "revenue": 65909746000,
+            "profit": 7290982000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202306,
+          "metrics": {
+            "assets": 2075762530000,
+            "funding": 1815553394000,
+            "equity": 167171328000,
+            "revenue": 66896468000,
+            "profit": 9092514000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202309,
+          "metrics": {
+            "assets": 2226283389000,
+            "funding": 1962026638000,
+            "equity": 170696223000,
+            "revenue": 70840719000,
+            "profit": 8841647000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202312,
+          "metrics": {
+            "assets": 2153878452000,
+            "funding": 1884405380000,
+            "equity": 173570326000,
+            "revenue": 61791672000,
+            "profit": 7940448000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2023 − ITR 2023"
+        },
+        {
+          "period": 202403,
+          "metrics": {
+            "assets": 2283160278000,
+            "funding": 2012588389000,
+            "equity": 180219330000,
+            "revenue": 66655193000,
+            "profit": 8680714000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202406,
+          "metrics": {
+            "assets": 2330349036000,
+            "funding": 2050390893000,
+            "equity": 183479152000,
+            "revenue": 66597527000,
+            "profit": 9485229000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202409,
+          "metrics": {
+            "assets": 2436404436000,
+            "funding": 2147475304000,
+            "equity": 185848547000,
+            "revenue": 68547731000,
+            "profit": 5865367000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202412,
+          "metrics": {
+            "assets": 2398719197000,
+            "funding": 2102659213000,
+            "equity": 184236344000,
+            "revenue": 71704823000,
+            "profit": 5140254000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2024 − ITR 2024"
+        },
+        {
+          "period": 202503,
+          "metrics": {
+            "assets": 2427051877000,
+            "funding": 2135864062000,
+            "equity": 187015211000,
+            "revenue": 71720089000,
+            "profit": 4177854000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202506,
+          "metrics": {
+            "assets": 2441421369000,
+            "funding": 2146763038000,
+            "equity": 186448138000,
+            "revenue": 77532482000,
+            "profit": 3582262000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202509,
+          "metrics": {
+            "assets": 2540770431000,
+            "funding": 2236652913000,
+            "equity": 187149880000,
+            "revenue": 84767065000,
+            "profit": 3006743000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202512,
+          "metrics": {
+            "assets": 2455143253000,
+            "funding": 2149846333000,
+            "equity": 193567416000,
+            "revenue": 85442468000,
+            "profit": 6015079000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2025 − ITR 2025"
+        },
+        {
+          "period": 202603,
+          "metrics": {
+            "assets": 2610200817000,
+            "funding": 2296520177000,
+            "equity": 196911536000,
+            "revenue": 78452578000,
+            "profit": 3106277000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202606,
+          "metrics": {
+            "assets": 2588103740000,
+            "funding": 2281392957000,
+            "equity": 190767860000,
+            "revenue": 81771473000,
+            "profit": 3256684000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202609,
+          "metrics": {
+            "assets": 2552481433000,
+            "funding": 2242302496000,
+            "equity": 191896847000,
+            "revenue": 81917415000,
+            "profit": 1770788000
+          },
+          "source": "ITR 2026"
+        }
+      ]
+    },
+    {
+      "id": "bradesco",
+      "name": "Bradesco",
+      "cvmCode": 906,
+      "annual": [
+        {
+          "year": 2023,
+          "metrics": {
+            "assets": 1927523249000,
+            "funding": 1323281107000,
+            "equity": 167014124000,
+            "revenue": 224457793000,
+            "profit": 14502765000
+          },
+          "source": "DFP 2023"
+        },
+        {
+          "year": 2024,
+          "metrics": {
+            "assets": 2069506045000,
+            "funding": 1422679055000,
+            "equity": 168942492000,
+            "revenue": 213219736000,
+            "profit": 17542153000
+          },
+          "source": "DFP 2024"
+        },
+        {
+          "year": 2025,
+          "metrics": {
+            "assets": 2330327216000,
+            "funding": 1626740058000,
+            "equity": 178948630000,
+            "revenue": 270183106000,
+            "profit": 23924636000
+          },
+          "source": "DFP 2025"
+        }
+      ],
+      "quarterly": [
+        {
+          "period": 202303,
+          "metrics": {
+            "assets": 1828731521000,
+            "funding": 1253819925000,
+            "equity": 163046282000,
+            "revenue": 57434165000,
+            "profit": 5473810000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202306,
+          "metrics": {
+            "assets": 1863388514000,
+            "funding": 1273452273000,
+            "equity": 167059682000,
+            "revenue": 56851528000,
+            "profit": 4071265000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202309,
+          "metrics": {
+            "assets": 1895059109000,
+            "funding": 1299124546000,
+            "equity": 166886152000,
+            "revenue": 56066988000,
+            "profit": 3471044000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202312,
+          "metrics": {
+            "assets": 1927523249000,
+            "funding": 1323281107000,
+            "equity": 167014124000,
+            "revenue": 54105112000,
+            "profit": 1486646000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2023 − ITR 2023"
+        },
+        {
+          "period": 202403,
+          "metrics": {
+            "assets": 1956078468000,
+            "funding": 1330853515000,
+            "equity": 166498908000,
+            "revenue": 52766144000,
+            "profit": 4202768000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202406,
+          "metrics": {
+            "assets": 2003850390000,
+            "funding": 1377228328000,
+            "equity": 165151206000,
+            "revenue": 51496698000,
+            "profit": 4185407000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202409,
+          "metrics": {
+            "assets": 2017703133000,
+            "funding": 1376184784000,
+            "equity": 167653558000,
+            "revenue": 52502678000,
+            "profit": 4945083000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202412,
+          "metrics": {
+            "assets": 2069506045000,
+            "funding": 1422679055000,
+            "equity": 168942492000,
+            "revenue": 56454216000,
+            "profit": 4208895000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2024 − ITR 2024"
+        },
+        {
+          "period": 202503,
+          "metrics": {
+            "assets": 2054649704000,
+            "funding": 1393299491000,
+            "equity": 171050827000,
+            "revenue": 60135729000,
+            "profit": 5675662000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202506,
+          "metrics": {
+            "assets": 2147570089000,
+            "funding": 1461910941000,
+            "equity": 174542189000,
+            "revenue": 65314006000,
+            "profit": 6139265000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202509,
+          "metrics": {
+            "assets": 2202774724000,
+            "funding": 1507942703000,
+            "equity": 176144427000,
+            "revenue": 70374059000,
+            "profit": 5568016000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202512,
+          "metrics": {
+            "assets": 2330327216000,
+            "funding": 1626740058000,
+            "equity": 178948630000,
+            "revenue": 74359312000,
+            "profit": 6541693000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2025 − ITR 2025"
+        },
+        {
+          "period": 202603,
+          "metrics": {
+            "assets": 2435136333000,
+            "funding": 1707423848000,
+            "equity": 180290406000,
+            "revenue": 78114045000,
+            "profit": 5230545000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202606,
+          "metrics": {
+            "assets": 2468826550000,
+            "funding": 1714772073000,
+            "equity": 182736591000,
+            "revenue": 77095555000,
+            "profit": 7245808000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202609,
+          "metrics": {
+            "assets": 2503930379000,
+            "funding": 1739458949000,
+            "equity": 196585999000,
+            "revenue": 78472483000,
+            "profit": 7435747000
+          },
+          "source": "ITR 2026"
+        }
+      ]
+    },
+    {
+      "id": "santander",
+      "name": "Santander",
+      "cvmCode": 20532,
+      "annual": [
+        {
+          "year": 2023,
+          "metrics": {
+            "assets": 1115652776000,
+            "funding": 910550506000,
+            "equity": 114856354000,
+            "revenue": 128282707000,
+            "profit": 9498812000
+          },
+          "source": "DFP 2023"
+        },
+        {
+          "year": 2024,
+          "metrics": {
+            "assets": 1238796810000,
+            "funding": 1001581240000,
+            "equity": 119827132000,
+            "revenue": 137183478000,
+            "profit": 13413763000
+          },
+          "source": "DFP 2024"
+        },
+        {
+          "year": 2025,
+          "metrics": {
+            "assets": 1270029465000,
+            "funding": 992386546000,
+            "equity": 126553144000,
+            "revenue": 162494639000,
+            "profit": 12965123000
+          },
+          "source": "DFP 2025"
+        }
+      ],
+      "quarterly": [
+        {
+          "period": 202303,
+          "metrics": {
+            "assets": 1025113074000,
+            "funding": 828300045000,
+            "equity": 112529100000,
+            "revenue": 32149175000,
+            "profit": 3047471000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202306,
+          "metrics": {
+            "assets": 1058204534000,
+            "funding": 851865956000,
+            "equity": 113097769000,
+            "revenue": 30854182000,
+            "profit": 2585057000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202309,
+          "metrics": {
+            "assets": 1126953893000,
+            "funding": 922406946000,
+            "equity": 113750372000,
+            "revenue": 32651076000,
+            "profit": 2780672000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202312,
+          "metrics": {
+            "assets": 1115652776000,
+            "funding": 910550506000,
+            "equity": 114856354000,
+            "revenue": 32628274000,
+            "profit": 2065776000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2023 − ITR 2023"
+        },
+        {
+          "period": 202403,
+          "metrics": {
+            "assets": 1134125222000,
+            "funding": 913967778000,
+            "equity": 115831175000,
+            "revenue": 32603990000,
+            "profit": 3060928000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202406,
+          "metrics": {
+            "assets": 1189995630000,
+            "funding": 956994933000,
+            "equity": 117573503000,
+            "revenue": 32763817000,
+            "profit": 3633428000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202409,
+          "metrics": {
+            "assets": 1228927671000,
+            "funding": 993079648000,
+            "equity": 118462810000,
+            "revenue": 35201643000,
+            "profit": 3649544000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202412,
+          "metrics": {
+            "assets": 1238796810000,
+            "funding": 1001581240000,
+            "equity": 119827132000,
+            "revenue": 36614028000,
+            "profit": 3069863000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2024 − ITR 2024"
+        },
+        {
+          "period": 202503,
+          "metrics": {
+            "assets": 1252506194000,
+            "funding": 1014690187000,
+            "equity": 121946441000,
+            "revenue": 38750552000,
+            "profit": 3151583000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202506,
+          "metrics": {
+            "assets": 1240333567000,
+            "funding": 991712075000,
+            "equity": 123265240000,
+            "revenue": 40645279000,
+            "profit": 1987932000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202509,
+          "metrics": {
+            "assets": 1263370224000,
+            "funding": 994036755000,
+            "equity": 125149258000,
+            "revenue": 40505744000,
+            "profit": 3882410000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202512,
+          "metrics": {
+            "assets": 1270029465000,
+            "funding": 992386546000,
+            "equity": 126553144000,
+            "revenue": 42593063000,
+            "profit": 3943197000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2025 − ITR 2025"
+        },
+        {
+          "period": 202603,
+          "metrics": {
+            "assets": 1293864838000,
+            "funding": 1014775406000,
+            "equity": 128271103000,
+            "revenue": 42434402000,
+            "profit": 3281550000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202606,
+          "metrics": {
+            "assets": 1290558915000,
+            "funding": 1051789698000,
+            "equity": 129093065000,
+            "revenue": 43039312000,
+            "profit": 3393953000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202609,
+          "metrics": {
+            "assets": 1316588030000,
+            "funding": 1061684618000,
+            "equity": 130326462000,
+            "revenue": 37916734000,
+            "profit": 2842395000
+          },
+          "source": "ITR 2026"
+        }
+      ]
+    },
+    {
+      "id": "btg",
+      "name": "BTG Pactual",
+      "cvmCode": 22616,
+      "annual": [
+        {
+          "year": 2023,
+          "metrics": {
+            "assets": 495115810000,
+            "funding": 341911634000,
+            "equity": 56388167000,
+            "revenue": 24617325000,
+            "profit": 10254760000
+          },
+          "source": "DFP 2023"
+        },
+        {
+          "year": 2024,
+          "metrics": {
+            "assets": 649216711000,
+            "funding": 413050438000,
+            "equity": 65871805000,
+            "revenue": 34660017000,
+            "profit": 11080445000
+          },
+          "source": "DFP 2024"
+        },
+        {
+          "year": 2025,
+          "metrics": {
+            "assets": 809301519000,
+            "funding": 567556952000,
+            "equity": 80293552000,
+            "revenue": 28145817000,
+            "profit": 16663803000
+          },
+          "source": "DFP 2025"
+        }
+      ],
+      "quarterly": [
+        {
+          "period": 202303,
+          "metrics": {
+            "assets": 473837646000,
+            "funding": 302861857000,
+            "equity": 51491389000,
+            "revenue": 5764128000,
+            "profit": 2152555000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202306,
+          "metrics": {
+            "assets": 477835279000,
+            "funding": 315334887000,
+            "equity": 54214810000,
+            "revenue": 6503560000,
+            "profit": 2451009000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202309,
+          "metrics": {
+            "assets": 498410244000,
+            "funding": 333587610000,
+            "equity": 54493602000,
+            "revenue": 5464264000,
+            "profit": 2688982000
+          },
+          "source": "ITR 2023"
+        },
+        {
+          "period": 202312,
+          "metrics": {
+            "assets": 495115810000,
+            "funding": 341911634000,
+            "equity": 56388167000,
+            "revenue": 7014004000,
+            "profit": 2962214000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2023 − ITR 2023"
+        },
+        {
+          "period": 202403,
+          "metrics": {
+            "assets": 569747020000,
+            "funding": 381756952000,
+            "equity": 58612672000,
+            "revenue": 6206010000,
+            "profit": 2619138000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202406,
+          "metrics": {
+            "assets": 601934759000,
+            "funding": 407421299000,
+            "equity": 60513494000,
+            "revenue": 5843419000,
+            "profit": 2743554000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202409,
+          "metrics": {
+            "assets": 613163305000,
+            "funding": 420170154000,
+            "equity": 65182552000,
+            "revenue": 6569982000,
+            "profit": 3111294000
+          },
+          "source": "ITR 2024"
+        },
+        {
+          "period": 202412,
+          "metrics": {
+            "assets": 649216711000,
+            "funding": 413050438000,
+            "equity": 65871805000,
+            "revenue": 16453325000,
+            "profit": 2606460000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2024 − ITR 2024"
+        },
+        {
+          "period": 202503,
+          "metrics": {
+            "assets": 611754584000,
+            "funding": 406452547000,
+            "equity": 68794384000,
+            "revenue": 5126458000,
+            "profit": 3261874000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202506,
+          "metrics": {
+            "assets": 659438351000,
+            "funding": 434906247000,
+            "equity": 73137137000,
+            "revenue": 8286132000,
+            "profit": 4222778000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202509,
+          "metrics": {
+            "assets": 688463478000,
+            "funding": 461603815000,
+            "equity": 76052690000,
+            "revenue": 8992610000,
+            "profit": 4676223000
+          },
+          "source": "ITR 2025"
+        },
+        {
+          "period": 202512,
+          "metrics": {
+            "assets": 809301519000,
+            "funding": 567556952000,
+            "equity": 80293552000,
+            "revenue": 7220430000,
+            "profit": 4502928000
+          },
+          "derived": [
+            "revenue",
+            "profit"
+          ],
+          "source": "DFP 2025 − ITR 2025"
+        },
+        {
+          "period": 202603,
+          "metrics": {
+            "assets": 849183853000,
+            "funding": 585738590000,
+            "equity": 83816334000,
+            "revenue": 8069991000,
+            "profit": 4935166000
+          },
+          "source": "ITR 2026"
+        },
+        {
+          "period": 202606,
+          "metrics": {
+            "assets": 929990141000,
+            "funding": 642674133000,
+            "equity": 89941316000,
+            "revenue": 8704792000,
+            "profit": 5137107000
+          },
+          "source": "ITR 2026"
+        }
+      ]
+    }
+  ]
+}
