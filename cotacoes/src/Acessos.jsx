@@ -64,7 +64,7 @@ export function OnlineBadge() {
   return (
     <span className="online-wrap" ref={ref}>
       <button type="button" className="online-badge" aria-expanded={aberto} aria-controls="online-pop" onClick={() => setAberto((v) => !v)} aria-label={`${online} online agora; ver acessos ao app`}>
-        <span className="online-dot" aria-hidden="true" />{n(online)} online
+        <span className="online-dot" aria-hidden="true" />{n(online)}<span className="online-txt"> online</span>
       </button>
       {aberto && (
         <div id="online-pop" className="online-pop" role="dialog" aria-label="Acessos ao app">

@@ -293,11 +293,16 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.deepEqual(errors, [])
       await ctx.close()
     }
-    // a aba aparece no menu (computador e celular) desde 18/11/2026 e continua abrindo pelo endereço direto
-    for (const width of [1280, 390]) {
+    // a aba aparece no menu (computador e celular) desde 18/11/2026 e continua abrindo pelo endereço direto;
+    // o menu do topo fica em uma linha também com o contador de pessoas online, que só aparece no site publicado
+    for (const [width, tema] of [[1600, 'light'], [1280, 'light'], [1024, 'light'], [1024, 'dark'], [390, 'light']]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
+      await ctx.addInitScript((t) => { try { localStorage.setItem('painel-theme', t) } catch { /* sem armazenamento */ } }, tema)
       const p = await ctx.newPage()
       await ctx.route('**/*', (r) => (r.request().url().startsWith(base) ? r.continue() : r.abort()))
+      await ctx.route('**/acessos.json*', (r) => r.fulfill({ json: { generatedAt: Date.now(), online: 12, hoje: { visitantes: 30, views: 90 }, semana: { visitantes: 120, views: 400 }, dias: [] } }))
+      await ctx.route('**/quotes.json*', (r) => r.fulfill({ json: quotes })) // estado dos dados como no site (texto do estado ocupa espaço no topo)
+      await ctx.route('**/macro.json*', (r) => r.fulfill({ json: macro }))
       await p.goto(base + '/')
       await p.locator('#conteudo').waitFor()
       if (width < 700) { await p.getByRole('button', { name: /^Mais/ }).filter({ visible: true }).first().click(); await p.getByRole('menuitem').first().waitFor() }
@@ -308,7 +313,12 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await p.locator('.apz').waitFor()
       assert.equal(await p.evaluate(() => location.hash), '#apresentar')
       // no computador, o menu do topo continua em uma linha com a aba a mais
-      if (width > 700) assert.ok(await p.evaluate(() => { const b = [...document.querySelectorAll('.topbar-tabs > button')].filter((e) => e.getClientRects().length); return new Set(b.map((e) => Math.round(e.getBoundingClientRect().top))).size === 1 }), 'menu do topo em uma linha')
+      if (width > 700) {
+        await p.locator('.online-badge').waitFor()
+        await p.evaluate(() => document.fonts.ready)
+        assert.ok(await p.evaluate(() => { const b = [...document.querySelectorAll('.topbar-tabs > button')].filter((e) => e.getClientRects().length); return new Set(b.map((e) => Math.round(e.getBoundingClientRect().top))).size === 1 }), `menu do topo em uma linha a ${width}px (${tema})`)
+        assert.match(await p.locator('.online-badge').getAttribute('aria-label'), /12 online agora/) // o texto completo continua para leitor de tela
+      }
       await p.evaluate(() => { location.hash = '#resumo' }); await p.evaluate(() => { location.hash = '#apresentar' })
       await p.locator('.apz').waitFor()
       await ctx.close()

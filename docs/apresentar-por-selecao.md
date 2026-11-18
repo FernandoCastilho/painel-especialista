@@ -272,3 +272,14 @@ Setores › Turismo).
   acompanhar" vem antes dos cartões). Rodado três vezes seguidas aqui, sem falha.
 - Não conferido: se a instabilidade some de vez no ambiente da conferência automática; só o uso nas próximas
   publicações mostra.
+
+### Conferência no site depois da publicação (18/11/2026) e correção do topo
+No site publicado, o menu do topo foi para duas linhas em algumas larguras: 1000 a 1099 px nos dois temas e, no tema
+claro, 1200, 1600, 1680 e 1920 px. A causa é o contador de pessoas online ("2 online", cerca de 94 px), que só aparece no
+site publicado e não existia nos testes locais. Correção (`TopBar.css` e `Acessos.jsx`): no computador, o contador mostra
+só o ponto e o número (o texto completo "N online agora" continua no nome do botão, para leitor de tela, e no balão); de
+1000 a 1099 px os rótulos ficam mais juntos (tema claro 11 px, escuro 12,5 px); no tema claro, os rótulos ficam um pouco
+mais juntos também de 1100 a 1399 px e de 1600 a 1699 px. Medido de 1000 a 1920 px, nos dois temas, com o contador e
+com o estado dos dados em dia e em erro: uma linha em todas. O teste de tela da aba (`smoke-apresentar`) passou a
+simular o contador e o estado dos dados e a conferir o topo em 1600, 1280 e 1024 px; contra a versão publicada antes da
+correção ele falha (1600 px, tema claro), e com a correção passa.
