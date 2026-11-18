@@ -36,7 +36,8 @@ Fotos de antes e depois: pasta `docs/direcao-arte-etapa2/`.
 
 - Levantamento automático de todo texto em âmbar nas nove telas, antes e depois. Antes: 30 tipos de elemento; depois, só os avisos (⚠) e a bolinha de impacto médio.
 - Fotos das nove telas no computador e no celular, antes e depois.
-- Testes, conferência de código, montagem e conferências de tela (resultado no relato da entrega e no PR).
+- Testes do painel: 2.141 passando. Conferência de código: sem erros. Montagem: ok.
+- Conferências de tela: as 33 da rotina automática mais Recuperação judicial, histórico de juros, Aprender (juros) e Panorama do dia. 37 de 37 passaram.
 
 ## O que não deu para conferir
 
