@@ -17,7 +17,7 @@ const CalculatorHelp = ({ title, label }) => React.createElement('button', { typ
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : (el.type === panelStub ? el.props.title : '') + textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
+  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalcPattern-conta-garantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
   for (const file of ['MoneyInput.jsx', 'ContaGarantida.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
@@ -160,14 +160,18 @@ test('taxa mensal simplificada preserva os encargos de 2% por 10 dias e o enquad
   assert.equal(h.field('rate').props.value, '2')
   const original = model.parseContaGarantidaForm({ ...model.cgInitialForm('2026-11-05'), amount: '100.000', rate: '2', duration: '10', rateBase: '30', conversion: 'proportional', status: 'performing' })
   assert.equal(original.result.ok, true)
-  const kpis = nodes(h.render.value).find(node => node.props?.className === 'cg-kpis')
+  // Padrão visual de 18/11/2026: valores em reais agrupados (utilização, depois custo), terminando no custo total.
+  const kpis = nodes(h.render.value).find(node => node.props?.className === 'cg-values')
   const actual = nodes(kpis).filter(node => node.type === 'b').map(textOf)
   const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  assert.deepEqual(actual, [original.result.totals.interest, original.result.totals.dailyIof, original.result.totals.additionalIof, original.result.totals.cost, original.result.balance, original.result.totals.draw].map(brl))
-  assert.equal(actual[0], brl(666.67))
-  assert.equal(actual[1], brl(82))
-  assert.equal(actual[2], brl(380))
-  assert.equal(actual[3], brl(1128.67))
+  assert.deepEqual(actual, [original.result.totals.draw, original.result.balance, original.result.totals.interest, original.result.totals.dailyIof, original.result.totals.additionalIof, original.result.totals.cost].map(brl))
+  assert.equal(actual[2], brl(666.67))
+  assert.equal(actual[3], brl(82))
+  assert.equal(actual[4], brl(380))
+  assert.equal(actual[5], brl(1128.67))
+  // A resposta principal repete o custo total, sem conta nova.
+  const answer = nodes(h.render.value).find(node => node.props?.className === 'cg-answer-main')
+  assert.match(textOf(answer), new RegExp(brl(1128.67).replace(/[.$]/g, '\\$&')))
   await h.change('taxProfile', 'simples')
   assert.ok(h.field('operationValue'))
   assert.ok(h.field('eligible'))

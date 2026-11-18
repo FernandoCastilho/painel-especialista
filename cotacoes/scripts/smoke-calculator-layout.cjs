@@ -132,6 +132,15 @@ async function assertWorkspace(page, section, label) {
   assert.deepEqual(explanations, [], `${label}: explicações extensas ficam nas ajudas`)
 }
 
+// Padrão de 18/11/2026: resultado ao lado dos dados a partir de 1200px; abaixo deles nas telas menores.
+async function assertResultBeside(page, section, inputs, results) {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const box = await section.locator(inputs).boundingBox(), result = await section.locator(results).boundingBox()
+  const details = JSON.stringify({ box, result })
+  if (page.viewportSize().width >= 1200) assert.ok(result.x >= box.x + box.width && Math.abs(result.y - box.y) <= 2, 'resultado ao lado dos dados ' + details)
+  else assert.ok(result.y >= box.y + box.height - 1, 'resultado abaixo dos dados ' + details)
+}
+
 async function assertHelp(page, section, label, directory) {
   const help = section.getByRole('button', { name: /^Ajuda: / }).first()
   assert.ok(await help.count(), `${label}: ajuda disponível`)
@@ -212,20 +221,24 @@ async function fillScenario(page, section, route) {
     await page.locator('#cg-duration').fill('10')
     await page.locator('#cg-amount').fill('100000')
     assert.ok(await page.locator('#cg-taxProfile').count(), 'enquadramento do IOF preservado')
-    const kpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
+    // Padrão de 18/11/2026: valores em reais agrupados no quadro do resultado, terminando no custo total.
+    const kpi = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/)
-    const interest = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
+    const interest = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
     assert.match(await interest.locator('b').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
     // CET do art. 6º (Res. CMN 4.881/2020): sem limite, só o pedido; com limite, 30 dias sobre o limite em dias corridos/365.
     assert.equal(await section.getByText('Sem CET: informe o limite contratado', { exact: false }).count(), 1)
     assert.equal(await page.locator('#cg-limit').inputValue(), '', 'limite começa vazio')
     await page.locator('#cg-limit').fill('100000')
-    const cetKpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
+    const cetKpi = section.locator('.cg-equiv > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
     const cetAnnual = Math.pow((100000 + 3000 + 100000 * 0.000082 * 30) / (100000 - 380), 365 / 30) - 1 // IOF adicional na liberação
     const pct2 = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
     assert.ok(await section.getByText('texto oficial conferido em 11/11/2026', { exact: false }).count())
+    // Padrão de 18/11/2026: resposta principal = custo total; resultado ao lado dos dados a partir de 1200px, abaixo antes disso.
+    assert.match(normalize(await section.locator('.cg-answer-main b').innerText()), /^R\$\s*1\.462,00$/)
+    await assertResultBeside(page, section, '.cg-inputs', '.cg-result-col')
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
