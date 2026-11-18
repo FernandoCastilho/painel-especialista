@@ -38,15 +38,16 @@ export function FinameIcon() {
 // Calculadoras › BNDES Finame Materiais: condições do produto (prazo, carência, custo financeiro, taxas), resultado e fluxo
 // parcela a parcela. O custo financeiro vem do painel: TFC ou TFB da faixa de prazo (aba BNDES). TLP exigível tem projeção própria.
 // As explicações ficam no "?" ao lado de cada rótulo; na tela só os valores.
+// Valores que já vêm preenchidos (pedido do Fernando, 18/11/2026): operação de R$ 1.000.000,00, 48 meses de prazo e 3 de carência.
 export default function FinameMateriais({ onBack, onFundingView, profileControl }) {
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
   const macro = useMacro()
   const { ctx: holidayCtx } = useHolidays()
-  const [valorText, setValorText] = useState('500.000,00')
+  const [valorText, setValorText] = useState('1.000.000,00')
   const [partText, setPartText] = useState('100')
-  const [prazoText, setPrazoText] = useState('60')
-  const [carText, setCarText] = useState('12')
+  const [prazoText, setPrazoText] = useState('48')
+  const [carText, setCarText] = useState('3')
   const [custo, setCusto] = useState('tfc')
   const [comparar, setComparar] = useState(false)
   const [parcelasAbertas, setParcelasAbertas] = useState(false)

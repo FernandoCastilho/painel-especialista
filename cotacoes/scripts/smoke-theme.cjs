@@ -230,7 +230,7 @@ async function assertSectorHeader(page, initial) {
       await page.emulateMedia({colorScheme:other})
       await page.waitForFunction(expected => document.querySelector('tv-single-ticker')?.getAttribute('theme') === expected, other)
       assert.equal(await widget.count(), 1, 'live switch replaces the widget without duplicates')
-      assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'), other === 'light' ? '#f5f4f0' : '#050505')
+      assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'), other === 'light' ? '#f3f3f1' : '#050505')
       assert.deepEqual(errors, [], `${initial} ${width}: browser errors`)
       await context.close()
     }

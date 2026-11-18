@@ -183,8 +183,9 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       if (!(await fm.locator('.fm-grade').isVisible())) await fm.locator('.fm-details > summary').click()
       await fm.locator('.fm-grade').waitFor()
       assert.match(await kpi('Taxa final'), /^\d{2},\d{2}% a\.a\.$/)
-      assert.equal(await kpi('Valor financiado'), 'R$\u00a0500.000,00')
-      assert.match(await kpiBox('Parcelas').innerText(), /48x mensais/)
+      // Padrão de 18/11/2026: R$ 1.000.000,00 e 3 meses de carência; o prazo foi posto em 60 acima, então são 57 parcelas.
+      assert.equal(await kpi('Valor financiado'), 'R$\u00a01.000.000,00')
+      assert.match(await kpiBox('Parcelas').innerText(), /57x mensais/)
       // IOF zero como premissa FINAME, com ressalva tributária.
       const iofKpi = kpiBox('IOF')
       assert.match(await iofKpi.innerText(), /R\$\s*0,00\s+Alíquota zero/)
@@ -213,7 +214,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.equal(await fm.locator('.fm-tabela tbody tr.fm-carencia').count(), 12)
       assert.deepEqual(await fm.locator('.fm-tabela thead th').allInnerTexts(), ['Nº', 'Vencimento', 'Saldo inicial', 'Juros pagos', 'Amortização', 'Parcela', 'Total pago', 'Saldo final'])
       assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').first().innerText(), /^\d{2}\/\d{2}\/\d{4}$/, 'data da liberação')
-      assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').last().innerText(), /^R\$\s*500\.000,00$/, 'saldo após a liberação')
+      assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').last().innerText(), /^R\$\s*1\.000\.000,00$/, 'saldo após a liberação (valor padrão de 18/11/2026)')
       assert.match(await fm.locator('.fm-tabela tbody tr.fm-liberacao td').nth(5).innerText(), /^R\$\s*2\.600,00$/, 'só a TAC pré-preenchida na liberação (sem IOF nem FGI)')
       assert.match(await fm.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/, 'saldo zera')
       const totalPago = await fm.locator('.fm-tabela tfoot td').nth(5).innerText()
