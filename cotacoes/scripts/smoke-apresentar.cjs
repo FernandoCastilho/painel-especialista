@@ -293,7 +293,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.deepEqual(errors, [])
       await ctx.close()
     }
-    // por enquanto a aba fica fora do menu (computador e celular); o acesso é pelo endereço direto
+    // a aba aparece no menu (computador e celular) desde 18/11/2026 e continua abrindo pelo endereço direto
     for (const width of [1280, 390]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
       const p = await ctx.newPage()
@@ -302,9 +302,14 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await p.locator('#conteudo').waitFor()
       if (width < 700) { await p.getByRole('button', { name: /^Mais/ }).filter({ visible: true }).first().click(); await p.getByRole('menuitem').first().waitFor() }
       assert.ok(await p.locator('nav button, nav [role="menuitem"]').filter({ visible: true }).count() >= 5)
-      assert.equal(await p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).count(), 0, 'Apresentar não aparece no menu')
-      if (width < 700) await p.keyboard.press('Escape')
-      await p.evaluate(() => { location.hash = '#apresentar' })
+      const item = p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).filter({ visible: true })
+      assert.equal(await item.count(), 1, 'Apresentar aparece no menu')
+      await item.click()
+      await p.locator('.apz').waitFor()
+      assert.equal(await p.evaluate(() => location.hash), '#apresentar')
+      // no computador, o menu do topo continua em uma linha com a aba a mais
+      if (width > 700) assert.ok(await p.evaluate(() => { const b = [...document.querySelectorAll('.topbar-tabs > button')].filter((e) => e.getClientRects().length); return new Set(b.map((e) => Math.round(e.getBoundingClientRect().top))).size === 1 }), 'menu do topo em uma linha')
+      await p.evaluate(() => { location.hash = '#resumo' }); await p.evaluate(() => { location.hash = '#apresentar' })
       await p.locator('.apz').waitFor()
       await ctx.close()
     }
