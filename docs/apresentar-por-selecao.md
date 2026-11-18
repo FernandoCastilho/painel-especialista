@@ -186,3 +186,45 @@ ilha e "Nacional da Madeira" ainda descartavam matéria do setor ("Madeireiros e
 Nacional da Madeira", "porto Santos"); esta nota dizia "só sai o que não é madeira" e citava Fernando sem o literal.
 Correção: exclusão trocada pela regra dos homônimos acima, "Porto Santo" com fim de palavra, "Nacional da Madeira"
 retirado, testes com os títulos do Auditor e nota corrigida.
+
+## Quarta rodada (18/11/2026): palavras de mercado mais amplas nos demais temas
+Pergunta do Fernando: qual a melhor sugestão "para não poluir também, porque a ideia é trazer as coisas o mais assertivas
+possível". Decisão: opção 1, "Sim, ampliar e publicar".
+- Os temas de setor e de insumo (indústria, comércio, serviços, telecom, veículos pesados, cobre, alumínio, aço, minério,
+  petróleo, trigo, açúcar, carne, algodão, carvão, cacau, café e fertilizantes) continuam exigindo, além do assunto, uma
+  palavra de mercado no título. É o que mantém fora o uso comum da palavra ("câmera cobre o show", receita de bolo de
+  trigo, "como fazer o café perfeito").
+- A lista de palavras de mercado ganhou uma parte comum a todos esses temas (`MERCADO_AMPLO` em
+  `cotacoes/scripts/temas-lib.mjs`), com cada palavra presa ao sentido de mercado: demissão, férias coletivas, abertura ou
+  fechamento de fábrica, mineradora, usina de açúcar ou siderúrgica, investimento, lucro, prejuízo líquido, faturamento,
+  balanço trimestral, sobretaxa, tarifaço ou tarifa de importação, antidumping, aquisição, fusão com empresa, cotação,
+  exportação, importação, financiamento, linha de crédito ou crédito rural, "recorde de exportação/vendas/produção", "capacidade
+  produtiva", "amplia a produção", nova fábrica ou unidade e "abre/fecha/corta vagas". Palavra solta como "recorde",
+  "capacidade", "balanço", "tarifa" ou "crédito" não conta. Safra e colheita contam só nos temas de insumo (em veículos
+  pesados, "caminhão com safra de milho tomba" é acidente).
+- Nas listas próprias e na lista comum, "importa" não pega mais "importante" nem "não importa", e "invest" não pega
+  "investiga" nem "investe contra" (o defeito de "importante" já existia em trigo, petróleo, carvão, fertilizantes e
+  alumínio). "Brasil importa mais trigo" continua valendo.
+- Minério de ferro: "Vale do Silício" e outros vales com nome próprio não contam como a mineradora Vale. Aço: "nervos de
+  aço", "homem de aço" e expressões parecidas não contam.
+- Veículos pesados não tem mais lista de palavras que derrubam (acidente, roubo, morte). Como o título já precisa trazer
+  assunto de mercado, "Acidente com ônibus deixa feridos" continua fora e "Roubo de carga encarece o frete de caminhões"
+  passa a entrar.
+- Defeito antigo corrigido: o tema Café não reconhecia "café" quando a palavra vinha seguida de espaço ou pontuação
+  (a marca de fim de palavra não funciona depois de letra acentuada). Só entravam títulos com "arábica", "conilon" etc.
+  O plural "cafés" continua reconhecido.
+- Moedas e eleições nos EUA seguem só com a lista própria; madeira segue sem filtro de mercado (terceira rodada).
+- Conferência: as 351 matérias reais coletadas hoje em todos os temas continuam entrando; testes novos em
+  `cotacoes/test/temas-mercado-amplo.test.mjs` com manchetes que devem entrar e manchetes de uso comum que devem ficar fora.
+- Passam a entrar com a lista comum, por usar o nome do tema em outro sentido junto com uma palavra de mercado (exemplos
+  de teste, que ficavam fora antes): "Fábrica de Talentos abre vagas para jovens" (Indústria), "Bancos de praça:
+  prefeitura investe em reforma" e "Tecnologia: governo investe em escolas" (Serviços), "Plano cobre financiamento de
+  cirurgia" (Cobre), "Usina de ideias: café com empreendedores" (Café). Também entra "Roubo de caminhão com carga de
+  exportação" (Veículos pesados), porque traz palavra de mercado. São casos raros e saem do slide em "Escolher notícias".
+- Primeiro parecer do Auditor: **Requer correção** (72,0), no commit `888abe8`: a lista comum sem limite de palavra
+  deixava entrar "Café faz bem? Estudo importante…" e "Polícia investiga acidente com ônibus…", e o plural "cafés" tinha
+  deixado de ser reconhecido. Segundo parecer: **Requer correção** (80,0), no commit `c4397e8`: "não importa" e "PM
+  investe contra" ainda entravam, "crédito" e "safra" soltos abriam poluição, e esta nota dizia "como antes" sobre casos
+  novos. Corrigido como descrito acima, com essas manchetes nos testes.
+- Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
+  depois da publicação, principalmente cobre, alumínio, carvão e café.

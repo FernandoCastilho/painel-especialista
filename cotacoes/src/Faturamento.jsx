@@ -1,9 +1,8 @@
-import ChartFullscreen from './ChartFullscreen.jsx'
 import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
-import { EXEMPLO, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
+import { EXEMPLO, LIMITES_ANALISE, analisarSerie, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
 
 const num = (v, casas = 0) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }))
@@ -120,7 +119,7 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
   const linha = pontos.filter(Boolean).join(' ')
 
   return (
-    <ChartFullscreen><svg
+    <svg
       ref={svg}
       className="ft-chart"
       style={{ minWidth: `${Math.max(640, meses.length * 46)}px` }}
@@ -167,7 +166,7 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
           </g>
         )
       })}
-    </svg></ChartFullscreen>
+    </svg>
   )
 }
 
@@ -217,10 +216,79 @@ function Comparacao({ c }) {
   )
 }
 
+// Quadro de análise automática da série (tendência, sazonalidade, estabilidade, endividamento).
+function Analise({ a, unidade }) {
+  if (!a.suficiente) return <article className="desk-panel cx-panel ft-analise"><header><h3 className="cx-heading"><span>Análise</span></h3></header><p className="cx-hint ft-pad2">{a.motivo}</p></article>
+  const p0 = (v) => (v == null ? '—' : `${v > 0 ? '+' : ''}${Math.round(v * 100)}%`)
+  const s = a.sazonalidade, e = a.endividamento
+  const tendencia = a.tendenciaAno == null ? null : Math.abs(a.tendenciaAno) < 0.05 ? 'estável' : a.tendenciaAno > 0 ? `de alta, perto de ${p0(a.tendenciaAno)} ao ano` : `de queda, perto de ${p0(a.tendenciaAno)} ao ano`
+  const estabilidade = a.cv == null ? null : a.cv < LIMITES_ANALISE.estavel ? 'estável' : a.cv <= LIMITES_ANALISE.instavel ? 'com oscilação moderada' : 'instável'
+  const janela = a.mesesJanela === 12 ? 'últimos 12 meses' : `últimos ${a.mesesJanela} meses`
+  const semSaz = a.ajustada ? ', descontada a sazonalidade' : ''
+  const lista = (xs) => xs.map((x) => `${x.rotulo} (${p0(x.indice - 1)})`).join(', ')
+  return (
+    <article className="desk-panel cx-panel ft-analise" aria-labelledby="ft-analise-h">
+      <header><h3 className="cx-heading" id="ft-analise-h"><span>Análise</span><Help title="Como a análise é feita"><p>Leitura automática dos números colados, sem dado externo. Não é parecer de crédito.</p><p>Quando há sazonalidade, tendência, estabilidade, ritmo recente e quedas seguidas usam o faturamento descontado do efeito de cada mês do ano. Tendência: reta ajustada aos últimos 12 meses, em % da média. Estabilidade: desvio padrão dividido pela média dos últimos 12 meses (até 10% estável; acima de 25% instável).</p><p>Sazonalidade: cada mês é dividido pela média móvel centrada de 12 meses e os resultados são médios por mês do ano. Precisa de cerca de 24 meses seguidos; com um ano só de cada mês, a leitura é preliminar. Mês forte ou fraco: 5% ou mais acima ou abaixo do normal.</p><p>Mês fora do padrão: 25% ou mais acima ou abaixo do esperado pela reta dos 12 meses anteriores, já descontada a sazonalidade. Alavancagem do mês: saldo de endividamento ÷ média do faturamento dos 12 meses até aquele mês.</p></Help></h3></header>
+      <div className="ft-analise-grid">
+        <section>
+          <h4>Faturamento</h4>
+          <ul>
+            <li>Base: {a.meses} meses, de {a.de} a {a.ate}.</li>
+            {a.variacao12m != null && <li>Últimos 12 meses contra os 12 anteriores: <b className={sinal(a.variacao12m)}>{p0(a.variacao12m)}</b>.</li>}
+            {tendencia && <li>Tendência nos {janela}{semSaz}: <b>{tendencia}</b>.</li>}
+            {a.ritmoRecente != null && <li>Últimos 3 meses: média {p0(a.ritmoRecente)} em relação à média dos {janela}{semSaz}.</li>}
+            {estabilidade && <li>Comportamento mês a mês{semSaz}: <b>{estabilidade}</b> (variação típica de {Math.round(a.cv * 100)}% em torno da média).</li>}
+            <li>Nos {janela}, o melhor mês foi {a.melhor.rotulo} ({valor(a.melhor.faturamento)}) e o pior, {a.pior.rotulo} ({valor(a.pior.faturamento)}).</li>
+            {a.quedas >= 2 && <li>{a.quedas} quedas seguidas até {a.ate}{semSaz}.</li>}
+            {a.altas >= 2 && <li>{a.altas} altas seguidas até {a.ate}{semSaz}.</li>}
+          </ul>
+        </section>
+        <section>
+          <h4>Sazonalidade</h4>
+          {!s ? <p className="cx-hint">Dados insuficientes: são precisos cerca de 24 meses seguidos ({a.sazonalidadeCobertura} de 12 meses do ano cobertos).</p> : (
+            <>
+              <div className="ft-saz" role="img" aria-label={`Índice sazonal por mês: ${s.indices.map((x) => `${x.rotulo} ${p0(x.indice - 1)}`).join(', ')}`}>
+                {s.indices.map((x) => (
+                  <div key={x.mes} className={x.indice >= 1 ? 'ft-saz-alto' : 'ft-saz-baixo'} title={`${x.rotulo}: ${p0(x.indice - 1)} (${x.n} ${x.n === 1 ? 'ano' : 'anos'})`}>
+                    <span style={{ height: `${Math.min(100, Math.abs(x.indice - 1) * 250)}%` }} />
+                    <small>{x.rotulo}</small>
+                  </div>
+                ))}
+              </div>
+              <ul>
+                <li>{s.relevante ? <b>Há sazonalidade</b> : <b>Sazonalidade fraca</b>}: o mês mais forte fica {Math.round(s.amplitude * 100)} p.p. acima do mais fraco.</li>
+                {s.fortes.length > 0 && <li>Meses mais fortes: {lista(s.fortes)}.</li>}
+                {s.fracos.length > 0 && <li>Meses mais fracos: {lista(s.fracos)}.</li>}
+                <li className="cx-hint">{s.anos >= 2 ? `Base de até ${s.anos} anos por mês.` : 'Base de um ano por mês: leitura preliminar.'}</li>
+              </ul>
+            </>
+          )}
+          {a.atipicos.length > 0 && <p className="ft-analise-nota">Meses fora do padrão (contra o esperado pela tendência{a.ajustada ? ' e pela sazonalidade' : ''}): {a.atipicos.map((x) => `${x.rotulo} (${p0(x.desvio)})`).join(', ')}{a.atipicosTotal > a.atipicos.length ? `; mais ${a.atipicosTotal - a.atipicos.length} anteriores` : ''}.</p>}
+        </section>
+        <section>
+          <h4>Endividamento</h4>
+          {!e ? <p className="cx-hint">Sem saldos suficientes de endividamento.</p> : (
+            <ul>
+              <li>Último saldo: {valor(e.ultimo)} em {e.ultimoRotulo}{e.variacao12m != null && <>, <b className={sinal(-e.variacao12m)}>{p0(e.variacao12m)}</b> contra {e.anoAntesRotulo}</>}.</li>
+              <li>Maior saldo da série: {valor(e.maximo)} em {e.maximoRotulo}.</li>
+              {e.alavancagemAtual != null && <li>Alavancagem em {e.ultimoRotulo}: <b>{vezes(e.alavancagemAtual)}</b>{e.alavancagemAnoAntes != null && <> (era {vezes(e.alavancagemAnoAntes)} um ano antes)</>}.</li>}
+              {e.alavancagemMax && <li>Maior alavancagem da série: {vezes(e.alavancagemMax.valor)} em {e.alavancagemMax.rotulo}.</li>}
+            </ul>
+          )}
+        </section>
+        <section className={a.atencao.length ? 'ft-analise-alerta' : 'ft-analise-ok'}>
+          <h4>Pontos de atenção</h4>
+          {a.atencao.length ? <ul>{a.atencao.map((t) => <li key={t}>{t}</li>)}</ul> : <p>Nenhum ponto de atenção pelos critérios da análise.</p>}
+        </section>
+      </div>
+      <p className="cx-hint ft-pad2">Valores {unidade ? `em ${unidade}` : 'na unidade colada'}. Leitura automática dos números colados; não substitui a análise de crédito.</p>
+    </article>
+  )
+}
+
 export default function Faturamento({ onBack }) {
   const [texto, setTexto] = useState('')
   const [sel, setSel] = useState(null)
-  const [milhoes, setMilhoes] = useState(false)
   const [aviso, setAviso] = useState('')
   const svgRef = useRef(null)
   const { meses, avisos, unidade } = parseFaturamento(texto)
@@ -232,8 +300,10 @@ export default function Faturamento({ onBack }) {
   const selecionar = (de, ate) => setSel({ de, ate })
   const ind = indicadores12m(meses)
   const emMil = unidade === 'R$ mil'
-  const rotulo = milhoes ? emMilhoes : valor
-  const unidadeGrafico = milhoes ? (emMil ? 'R$ MM' : 'em milhares') : unidade
+  // Com valores em R$ mil, o gráfico sempre mostra R$ MM (5.931 -> 5,9), como nos slides.
+  const rotulo = emMil ? emMilhoes : valor
+  const unidadeGrafico = emMil ? 'R$ MM' : unidade
+  const analise = meses.length ? analisarSerie(meses) : null
   const tituloGrafico = `Faturamento x Endividamento${unidadeGrafico ? ` (${unidadeGrafico})` : ''}`
   const ultimo = meses.filter((m) => m.faturamento != null).at(-1)?.chave
   const primeiro = serie[0]?.chave
@@ -312,10 +382,6 @@ export default function Faturamento({ onBack }) {
                 <button type="button" onClick={anoAteAgora}>Ano até agora</button>
               </div>
               <div className="ft-atalhos" role="group" aria-label="Rótulos e imagem">
-                <span className="seg" role="group" aria-label="Rótulos do gráfico">
-                  <button type="button" aria-pressed={!milhoes} onClick={() => setMilhoes(false)}>{emMil ? 'R$ mil' : 'Como colado'}</button>
-                  <button type="button" aria-pressed={milhoes} onClick={() => setMilhoes(true)}>{emMil ? 'R$ MM' : '÷ 1.000'}</button>
-                </span>
                 <button type="button" onClick={() => exportar('copiar')}>Copiar imagem</button>
                 <button type="button" onClick={() => exportar('baixar')}>Baixar PNG</button>
               </div>
@@ -341,6 +407,7 @@ export default function Faturamento({ onBack }) {
           </ExpandablePanel>
         </article>
       )}
+      {analise && <Analise a={analise} unidade={unidade} />}
       <p className="status">{unidade ? `Valores em ${unidade}` : 'Valores na unidade colada'} · Meses do ano anterior: {!selValida ? 'escolha um período' : ini === fim ? rotuloMes(ini - 12) : `${rotuloMes(ini - 12)} a ${rotuloMes(fim - 12)}`}</p>
     </section>
   )
