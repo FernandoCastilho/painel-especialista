@@ -3,9 +3,9 @@
 A aba **Apresentar** foi refeita do zero a pedido. A montagem antiga (por setor, com leitura do site do cliente, cadeia e
 perguntas da visita) foi removida.
 
-**Acesso:** fora do menu por enquanto (pedido de 18/11/2026, à tarde). A aba continua publicada e abre pelo endereço
-`#apresentar` e pelo comando APRESENTAR. Ficou no menu só em 18/11, entre a sexta e a sétima rodada. Não é destino da
-busca do painel (o conteúdo buscável continua nas abas de origem).
+**Acesso:** fora do menu desde 18/11/2026 (pedido do Fernando: "fica oculto por enquanto"); abre pelo endereço
+`#apresentar` e pelo comando APRESENTAR. Ficou fora do menu de 17 a 18/11 e voltou ao menu por algumas horas em 18/11. Não é destino da busca do painel (o conteúdo
+buscável continua nas abas de origem).
 
 ## O que faz
 - O usuário marca blocos do painel e cada um vira um slide claro, em formato 16:9, na ordem da escolha.
@@ -298,12 +298,8 @@ Correção final (`TopBar.css` e `Acessos.jsx`):
   anteriores (a publicada e a da primeira correção) e passa com a final.
 - Ressalva: de 1000 a 1099 px as letras do menu ficam pequenas (11 px no tema claro); a altura de toque continua com 44 px.
 
-## Sétima rodada (18/11/2026): aba fora do menu de novo e fila de publicação
-Pedido do Fernando: "sim mas tire a Apresentar do menu por enquanto ele fica publicado mas não aparece a todos".
-- **Aba fora do menu.** `appSections.js` volta a marcar a Apresentar como `oculto`: ela sai do menu do topo e do "Mais"
-  do celular, continua publicada e abre por `#apresentar` e pelo comando APRESENTAR. Testes de menu voltaram ao estado
-  de antes da sexta rodada (`nav-order`, `nav-no-numbers`, `nav-accessibility`, `smoke-sector-folders`,
-  `smoke-calculator-layout`). O `smoke-apresentar` agora confere que a aba não está no menu e abre pelo endereço, e
-  mantém a conferência do topo em uma linha com o contador online e os estados longos dos dados.
-- Os ajustes do topo (`TopBar.css`, `Acessos.jsx`) ficam: com dez abas, o topo tem ainda mais folga.
-- **Fila de publicação.** Ver `docs/publicacao-e-calendario.md`, seção "Fila de publicação (18/11/2026)".
+## Sétima rodada (18/11/2026): aba sai do menu
+Pedido do Fernando: tirar Apresentar do menu, que "fica oculto por enquanto". `appSections.js` volta a marcar a aba como
+`oculto`: some do menu do topo e do "Mais" do celular e continua abrindo pelo endereço `#apresentar` e pelo comando
+APRESENTAR. Testes de menu atualizados (`nav-order`, `nav-no-numbers`, `nav-accessibility`, `smoke-sector-folders`,
+`smoke-apresentar`). Para voltar ao menu, basta tirar `oculto: true` da linha e reverter esses testes.

@@ -293,7 +293,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.deepEqual(errors, [])
       await ctx.close()
     }
-    // a aba fica fora do menu (computador e celular) por enquanto, de novo desde 18/11/2026, e continua abrindo pelo endereço direto;
+    // a aba saiu do menu (computador e celular) em 18/11/2026, a pedido, e continua abrindo pelo endereço direto;
     // o menu do topo fica em uma linha também com o contador de pessoas online, que só aparece no site publicado
     for (const [width, tema] of [[1920, 'light'], [1820, 'light'], [1820, 'dark'], [1600, 'light'], [1280, 'light'], [1205, 'dark'], [1024, 'light'], [1024, 'dark'], [390, 'light']]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
@@ -307,12 +307,14 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await p.locator('#conteudo').waitFor()
       if (width < 700) { await p.getByRole('button', { name: /^Mais/ }).filter({ visible: true }).first().click(); await p.getByRole('menuitem').first().waitFor() }
       assert.ok(await p.locator('nav button, nav [role="menuitem"]').filter({ visible: true }).count() >= 5)
-      assert.equal(await p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).count(), 0, 'Apresentar fica fora do menu')
+      const item = p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).filter({ visible: true })
+      assert.equal(await item.count(), 0, 'Apresentar fica fora do menu')
       if (width < 700) await p.keyboard.press('Escape')
+      await p.evaluate(() => { location.hash = '#apresentar' }) // fora do menu, abre pelo endereço direto
+      await p.locator('.apz').waitFor()
       // no computador, o menu do topo continua em uma linha
       if (width > 700) {
-        const badge = p.locator('.online-badge').filter({ visible: true }).first() // no Resumo o contador aparece no topo e no painel
-        await badge.waitFor()
+        await p.locator('.online-badge').waitFor()
         await p.evaluate(() => document.fonts.ready)
         const umaLinha = () => p.evaluate(() => { const b = [...document.querySelectorAll('.topbar-tabs > button')].filter((e) => e.getClientRects().length); return new Set(b.map((e) => Math.round(e.getBoundingClientRect().top))).size === 1 })
         assert.ok(await umaLinha(), `menu do topo em uma linha a ${width}px (${tema})`)
@@ -321,11 +323,10 @@ const out = process.env.SMOKE_OUT || '/tmp'
           await p.evaluate(([classe, rotulo]) => { const f = document.querySelector('.topbar-feed'); f.className = `topbar-feed ${classe}`; const t = [...f.childNodes].find((n) => n.nodeType === 3); if (t) t.textContent = rotulo; else f.append(rotulo) }, [classe, rotulo])
           assert.ok(await umaLinha(), `menu do topo em uma linha a ${width}px (${tema}) com o estado "${rotulo}"`)
         }
-        assert.match(await badge.getAttribute('aria-label'), /12 online agora/) // o texto completo continua para leitor de tela
+        assert.match(await p.locator('.online-badge').getAttribute('aria-label'), /12 online agora/) // o texto completo continua para leitor de tela
       }
-      await p.evaluate(() => { location.hash = '#apresentar' }) // fora do menu, mas o endereço direto abre a aba
+      await p.evaluate(() => { location.hash = '#resumo' }); await p.evaluate(() => { location.hash = '#apresentar' })
       await p.locator('.apz').waitFor()
-      assert.equal(await p.evaluate(() => location.hash), '#apresentar')
       await ctx.close()
     }
     console.log('smoke-apresentar ok')
