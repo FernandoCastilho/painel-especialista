@@ -331,6 +331,17 @@ Entrevista conduzida com Fernando para cruzar necessidade, operação, risco e r
 - **Permite:** ver picos e vales de faturamento (sazonalidade), a evolução do saldo de dívida e o tamanho da dívida em meses de faturamento.
 - **Não permite:** saber quanto da dívida vence em cada mês. A tabela traz o saldo, não os vencimentos. Dívida concentrada no curto prazo só aparece se o especialista informar quanto vence em 12 meses.
 
+### Continuação da entrevista (18/11/2026)
+
+- **Faixa de risco removida da tela** (decisão de Fernando). Substitui a escolha anterior, de faixa mais garantias. Ficam as garantias disponíveis e a checagem do pedido contra o faturamento.
+- **Regras embutidas na tela** (pedido de Fernando): legislação e regras de BNDES, CPR, 4131, FINIMP, ACC/ACE, debênture e nota comercial, com fonte e data, para a sugestão sair correta. Cada possibilidade mostra a regra que a incluiu ou excluiu.
+- **Necessidades que mais chegam ao time:** gap de caixa; importação de matéria-prima; operação estruturada para distribuir dividendos; compra de outra empresa; compra de estoque nacional por prazo longo; além da máquina importada.
+- **Folha do gap de caixa, na ordem de Fernando:** 4131; Finame Materiais, se as notas estiverem validadas; CPR, se o CNAE permitir e as notas estiverem validadas; capital de giro, se o prazo passar de 12 meses; Conta Garantida ou desconto de duplicatas, se for pontual.
+- **Regra geral de ordem (confirmada por Fernando):** primeiro as linhas mais baratas em que a empresa se enquadra; por último as linhas livres em reais.
+- **Finame Materiais (correção de Fernando):** funciona como reembolso de notas de gastos já feitos, não só de compra futura. Fernando fala em 11 meses; o Painel registra notas de até 12 meses antes do protocolo. Em conferência no site do BNDES.
+- **Parcela irregular e pagamento só de juros nos meses fracos:** dá em 4131, capital de giro, CPR e nota comercial (relato de Fernando). FINIMP e Finame não foram citados; tratados como parcela fixa até confirmação.
+- **Cuidado registrado:** no Lucro Presumido, o 4131 continua na folha com aviso sobre o imposto do NDF.
+
 ### Propostas do Claude ainda não confirmadas
 
 - Mostrar, por mês, quanto do faturamento vai para pagar a nova operação, sem limite fixo; o ponto de alerta seria definido por Fernando.
