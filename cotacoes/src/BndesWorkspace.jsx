@@ -10,30 +10,33 @@ import './FinameComparisonLayout.css'
 const PROFILES = [
   ['finame-materiais', 'Finame Materiais Industrializados'],
   ['finame-veiculos', 'Finame Veículos'],
+  ['bndes-giro', 'BNDES Giro'],
   ['bndes-tlp-exigivel', 'TLP exigível · projeção própria'],
   ['bndes-selic-lcd', 'Selic + LCD · projeção própria'],
 ]
+
+const ALIASES = { 'finame-veiculos': 'Finame Veículos', 'bndes-giro': 'BNDES Giro' }
 
 // Uma entrada, com os motores e as condições de cada modalidade preservados.
 // As rotas anteriores continuam válidas; abrir taxas não desmonta o formulário.
 export default function BndesWorkspace({ profile = 'finame-materiais', onView, onBack }) {
   const [area, setArea] = useState('simulate')
   const [quotesView, setQuotesView] = useState('')
-  // "Finame Veículos" é só uma opção de apresentação: usa a mesma calculadora e os mesmos cálculos do Finame Materiais.
-  const [veiculos, setVeiculos] = useState(false)
+  // "Finame Veículos" e "BNDES Giro" são só opções de apresentação: usam a mesma calculadora e os mesmos cálculos do Finame Materiais.
+  const [variante, setVariante] = useState('')
   const historical = profile === 'bndes-credito-tfb'
   const navigate = next => {
     setArea('simulate')
-    const isVeiculos = next === 'finame-veiculos'
-    setVeiculos(isVeiculos)
-    onView(isVeiculos ? 'finame-materiais' : next)
+    const alias = ALIASES[next]
+    setVariante(alias ? next : '')
+    onView(alias ? 'finame-materiais' : next)
   }
-  const selected = profile === 'finame-materiais' && veiculos ? 'finame-veiculos' : profile
+  const selected = profile === 'finame-materiais' && variante ? variante : profile
   const profileControl = <div className="bw-profile"><label htmlFor="bw-profile">Linha</label><select id="bw-profile" value={selected} onChange={event => navigate(event.target.value)}>{PROFILES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
   return <div className="bndes-page">
     <button type="button" className="cx-back bndes-back" onClick={onBack}>‹ Calculadoras</button>
     <section className="cx bw" aria-labelledby="bw-title">
-    <div className="bw-heading"><h2 id="bw-title"><img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" /><span>{profile === 'finame-materiais' ? (veiculos ? 'Finame Veículos' : 'Finame Materiais') : 'Financiamentos'}</span></h2>
+    <div className="bw-heading"><h2 id="bw-title"><img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" /><span>{profile === 'finame-materiais' ? (ALIASES[variante] ?? 'Finame Materiais') : 'Financiamentos'}</span></h2>
     <nav className="bw-nav" aria-label="Área BNDES">
       <button type="button" aria-pressed={area === 'simulate' && !historical} onClick={() => { setArea('simulate'); if (historical) navigate('finame-materiais') }} aria-label="Simular financiamento">Simular</button>
       <button type="button" aria-pressed={area === 'quotes'} onClick={() => setArea('quotes')}>Taxas e históricos</button>
