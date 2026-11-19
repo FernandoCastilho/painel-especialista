@@ -260,6 +260,9 @@ async function run() {
     await page.getByRole('option').first().tap()
     assert.match(await page.locator('#cbs-activity-selected').innerText(), /Serviços/)
     await page.locator('#cbs-regime').selectOption('simples')
+    // O exemplo já traz o DAS preenchido; sem as duas partes, não pode calcular.
+    await page.locator('#cbs-simplesCbs').fill('')
+    await page.locator('#cbs-simplesIbs').fill('')
     assert.equal(await page.locator('.cbs-result').count(), 0, 'Simples needs the DAS shares before calculating')
     assert.match(await page.locator('.cbs-alerts').innerText(), /parte de CBS e a parte de IBS/)
     await page.locator('#cbs-simplesCbs').fill('2,75')
