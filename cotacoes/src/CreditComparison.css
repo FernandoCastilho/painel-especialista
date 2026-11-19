@@ -116,3 +116,9 @@
 @media print{.credit-result-panel>header button,.credit-pair-picker{display:none}.credit-matrix .credit-extra-column{display:table-cell}.credit-payment-scroll{max-height:none;overflow:visible}}
 
 .credit-help-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.875rem;line-height:1.5;color:var(--bw-mut,var(--fg))}.credit-help-line>.fi-help{flex:none}.credit-analysis>.credit-help-line{margin:12px 0}
+
+/* Cotação única: indicador e valor cabem juntos, inclusive no painel ampliado. */
+.credit-single-matrix.credit-matrix-scroll .credit-matrix{width:100%;min-width:0;table-layout:fixed}
+.credit-single-matrix .credit-matrix th:first-child{width:48%}
+.credit-single-matrix .credit-matrix th,.credit-single-matrix .credit-matrix td{white-space:normal;overflow-wrap:anywhere;min-width:0}
+.credit-single-matrix .credit-payment-value{white-space:normal;overflow-wrap:anywhere}

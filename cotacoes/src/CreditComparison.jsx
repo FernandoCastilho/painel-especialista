@@ -56,7 +56,7 @@ function SharedFields({ shared, set, onClear }) {
   </LinhaMestra></div>
 }
 
-function ColumnCard({ index, col, set, result, shared }) {
+function ColumnCard({ index, col, set, result, shared, individual }) {
   const prefix = `credit-c${index + 1}`
   const update = (key, value) => set({ ...col, [key]: value })
   const text = (key, label, opts = {}) => <label className="credit-field" htmlFor={`${prefix}-${key}`}><span>{label}</span><input id={`${prefix}-${key}`} type={opts.type ?? 'text'} inputMode={opts.type || opts.numeric === false ? undefined : 'decimal'} placeholder={opts.placeholder} value={col[key]} onChange={e => update(key, e.target.value)} /></label>
@@ -119,16 +119,16 @@ function ColumnCard({ index, col, set, result, shared }) {
     {select('system', 'Amortização própria', [['', 'Igual à comum'], ...SYSTEM_OPTIONS])}
   </>
   const single = result?.ok && result.rows.length === 1
-  return <article className={`credit-card credit-card-${m}`} aria-label={`Comparação ${index + 1}`}>
+  return <article className={`credit-card credit-card-${m}`} aria-label={individual ? 'Operação 1' : `Comparação ${index + 1}`}>
     <header className="credit-card-head">
       <span className="credit-card-icon"><ModalityIcon id={m} /></span>
-      <label htmlFor={`${prefix}-modality`}><span className="credit-card-number">Comparação {index + 1}</span>
+      <label htmlFor={`${prefix}-modality`}><span className="credit-card-number">{individual ? 'Operação' : 'Comparação'} {index + 1}</span>
         <select id={`${prefix}-modality`} value={m} onChange={e => set({ ...newColumn(e.target.value), value: col.value, term: col.term, grace: col.grace, system: col.system, guarantee: col.guarantee, guaranteeValue: col.guaranteeValue })}>{MODALITIES.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}</select></label>
     </header>
     <div className="credit-card-body">
       {result && !result.ok && <p className="credit-card-error credit-alert" role="status">{result.error ?? '—'}</p>}
       <p className="credit-hint">{MODALITIES.find(x => x.id === m)?.hint}</p>
-      <p className="credit-hint"><b>Valores iniciais são exemplos.</b> Troque pelos dados da proposta antes de comparar.</p>
+      <p className="credit-hint"><b>Valores iniciais são exemplos.</b> Troque pelos dados da proposta antes de {individual ? 'gerar a cotação' : 'comparar'}.</p>
       <div className="credit-fields">{rateCard}</div>
       <div className="credit-fields">{select('guarantee', 'Garantia', GUARANTEES.map(g => [g, g || 'Não informada']))}{amount('guaranteeValue', 'Valor da garantia (opcional)')}</div>
       <details><summary>Mais condições desta modalidade</summary><div className="credit-fields">{more}</div></details>
@@ -167,8 +167,9 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
   })
   const columnClass = i => selected.includes(i) ? '' : 'credit-extra-column'
 
+  const single = results.length === 1
   const failed = results.map((r, i) => ({ r, i })).filter(x => !x.r.ok)
-  if (failed.length) return <div role="status" className="credit-errors">{failed.map(({ r, i }) => <p key={i}>Comparação {i + 1} · {modalityLabel(columns[i].modality)}: {r.error}</p>)}</div>
+  if (failed.length) return <div role="status" className="credit-errors">{failed.map(({ r, i }) => <p key={i}>{single ? 'Operação' : 'Comparação'} {i + 1} · {modalityLabel(columns[i].modality)}: {r.error}</p>)}</div>
   // Alinha pela data real, não pelo número da parcela. Não soma nem recalcula fluxos.
   const paymentDates = [...new Set(results.flatMap(r => r.rows.map(row => row.date)))].sort()
   const paymentsByDate = results.map(r => {
@@ -194,7 +195,7 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
       ['Parcela estimada (1ª)', r => brl(r.firstPayment)], ['Maior pagamento', r => brl(r.maxPayment)],
       ['Juros totais', r => brl(r.interest)], ['IOF', r => brl(r.iof)], ['Tarifas e encargos totais (sem IOF)', r => brl(r.fees)],
       ['Custo sobre o líquido', (r, i) => `${brl(r.cost)}${best.lowestCost === i ? ' · menor custo' : ''}`],
-      ['Diferença de custo para a comparação 1', (r, i) => i === 0 ? '—' : brl(r.cost - results[0].cost)],
+      ...(!single ? [['Diferença de custo para a comparação 1', (r, i) => i === 0 ? '—' : brl(r.cost - results[0].cost)]] : []),
       ...(shared ? [[`Custo após IRPJ/CSLL (${regimeLabel(shared.regime)})`, r => brl(r.cost - expenseShield(shared.regime, shared.adicional) * r.cost)]] : []),
       ['Total desembolsado', r => brl(r.total), 'credit-total-row'],
     ], 'credit-num'],
@@ -221,22 +222,22 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
   const [mainCard, sideCard] = best.lowestCet !== null ? [cetCard, costCard] : [costCard, cetCard]
   return <div className="credit-results">
     <section className="credit-answer" aria-label="Resposta principal">
-      <div className="credit-answer-main">{mainCard}</div>
-      <div className="credit-answer-side">{sideCard}</div>
+      <div className="credit-answer-main">{single ? <div><small>Cotação individual</small><b>{head(0)}</b><span>CET estimado · parte fixa: <strong>{results[0].cet === null ? 'Não mensurável' : cetText(0)}</strong></span></div> : mainCard}</div>
+      <div className="credit-answer-side">{single ? <div><small>Custo sobre o líquido</small><b>{brl(results[0].cost)}</b><span>Uma operação, sem classificação comparativa.</span></div> : sideCard}</div>
     </section>
     <p className="credit-notice">Simulação · {scenario} · {equivalent ? 'Mesmo valor líquido' : 'Condições originais'}. {usesCdiIn(columns) && <>CDI constante de {pct(cdi)} a.a. · {source}. Projeção, não taxa futura garantida.</>}</p>
-    <ResultPanel title="Comparação financeira das operações">
+    <ResultPanel title={single ? 'Cotação da operação' : 'Comparação financeira das operações'}>
       {results.length > 2 && <div className="credit-pair-picker" role="group" aria-label="Modalidades visíveis em telas estreitas"><span>Em telas estreitas, compare duas por vez:</span>{selected.map((value, slot) => <label key={slot}>Modalidade visível {slot + 1}<select value={value} onChange={e => choose(slot, Number(e.target.value))}>{results.map((r, i) => <option key={i} value={i}>{head(i)}</option>)}</select></label>)}</div>}
-      <div className="credit-scroll credit-matrix-scroll" tabIndex="0" role="region" aria-label="Quadro comparativo por modalidade"><table className="credit-table credit-matrix"><caption>Indicadores em linhas · modalidades em colunas</caption><thead><tr><th scope="col">Modalidade</th>{results.map((r, i) => <th scope="col" className={columnClass(i)} key={i}>{head(i)}</th>)}</tr></thead><tbody>{groups.map(([group, rows, groupClass]) => [
+      <div className={`credit-scroll credit-matrix-scroll${single ? ' credit-single-matrix' : ''}`} tabIndex="0" role="region" aria-label={single ? 'Indicadores da operação' : 'Quadro comparativo por modalidade'}><table className="credit-table credit-matrix"><caption>{single ? 'Indicadores da operação' : 'Indicadores em linhas · modalidades em colunas'}</caption><thead><tr><th scope="col">Modalidade</th>{results.map((r, i) => <th scope="col" className={columnClass(i)} key={i}>{head(i)}</th>)}</tr></thead><tbody>{groups.map(([group, rows, groupClass]) => [
         <tr key={group} className="credit-grp"><th scope="colgroup" colSpan={results.length + 1}>{group}</th></tr>,
         ...rows.map(([label, get, rowClass]) => <tr key={label} className={[groupClass, rowClass].filter(Boolean).join(' ') || undefined}><th scope="row">{label}</th>{results.map((r, i) => <td className={columnClass(i)} key={i}>{get(r, i)}</td>)}</tr>),
       ])}</tbody></table></div>
     </ResultPanel>
     <section className="credit-analysis"><h3>Leitura consultiva</h3>
-      <p>{best.lowestCet !== null ? <>Menor CET estimado: <strong>{head(best.lowestCet)}</strong>. </> : best.mixed ? <>Há tipos diferentes de taxa: o CET compara só colunas do mesmo tipo (prefixado com prefixado, pós-fixado com pós-fixado), porque no pós-fixado o índice fica fora do CET. Entre tipos diferentes, compare o custo em reais. {Object.entries(best.lowestCetByGroup).map(([g, i]) => <span key={g}>Menor CET entre {CET_GROUPS[g]}: <strong>{head(i)}</strong>. </span>)}</> : 'O CET não pôde ser comparado entre as colunas. '}{best.lowestCost !== null && <>Menor custo em reais sobre o líquido: <strong>{head(best.lowestCost)}</strong>. </>}{best.unmeasurable.length > 0 && <>CET não mensurável em: {best.unmeasurable.map(i => head(i)).join(', ')}. </>}</p>
+      <p>{single ? 'Cotação individual: confira custo, CET e fluxo da operação. ' : best.lowestCet !== null ? <>Menor CET estimado: <strong>{head(best.lowestCet)}</strong>. </> : best.mixed ? <>Há tipos diferentes de taxa: o CET compara só colunas do mesmo tipo (prefixado com prefixado, pós-fixado com pós-fixado), porque no pós-fixado o índice fica fora do CET. Entre tipos diferentes, compare o custo em reais. {Object.entries(best.lowestCetByGroup).map(([g, i]) => <span key={g}>Menor CET entre {CET_GROUPS[g]}: <strong>{head(i)}</strong>. </span>)}</> : 'O CET não pôde ser comparado entre as colunas. '}{best.lowestCost !== null && <>Menor custo em reais sobre o líquido: <strong>{head(best.lowestCost)}</strong>. </>}{best.unmeasurable.length > 0 && <>CET não mensurável em: {best.unmeasurable.map(i => head(i)).join(', ')}. </>}</p>
       <div className="credit-help-line"><span>Como ler CET e custo projetado</span><CalculatorHelp title="Como ler CET e custo projetado">      <p>CET estimado do fluxo informado, não certificado do contrato. Prefixado: juros compostos em dias corridos/30. CDI: dias úteis/252, segunda a sexta menos feriados nacionais, os da praça do contrato e os informados. Vencimento em dia não útil passa para o próximo dia útil, pelos mesmos feriados e também em 31/12 (sem expediente bancário). Cada modalidade segue as convenções da sua calculadora. Confira as condições contratuais.</p>
       <p>No pós-fixado, o CET segue a Resolução CMN 4.881/2020, art. 5º: a taxa flutuante (CDI) não entra. Mostramos o CET da parte fixa (mesmo contrato com CDI zero, só o spread) e, à parte, o custo com o CDI projetado, que não é CET. A ordem de menor CET usa o CET da parte fixa. Nas modalidades prefixadas os dois números coincidem. No BNDES com TLP capitalizada, o IPCA fica fora do CET da mesma forma. Na conta garantida, o CET segue o art. 6º (30 dias sobre o limite, igual à calculadora própria) e o custo pelo prazo de uso aparece à parte. O CET da parte fixa refaz o IOF no ritmo de amortização sem CDI, o que pode mudar o líquido em centavos.</p></CalculatorHelp></div>
-      <p>{new Set(results.map(r => r.net.toFixed(2))).size > 1 ? 'Os valores líquidos são diferentes. Use a comparação pelo mesmo valor líquido antes de comparar custos absolutos. ' : 'O líquido recebido é equivalente. '}Prazos, risco de juros e garantias também importam. Não há vencedor absoluto.</p>
+      <p>{single ? 'Considere o valor líquido recebido. ' : new Set(results.map(r => r.net.toFixed(2))).size > 1 ? 'Os valores líquidos são diferentes. Use a comparação pelo mesmo valor líquido antes de comparar custos absolutos. ' : 'O líquido recebido é equivalente. '}Prazos, risco de juros e garantias também importam.{!single && ' Não há vencedor absoluto.'}</p>
       <p>Cobertura nominal = valor da garantia ÷ crédito contratado. Não representa avaliação, liquidez ou aceitação pelo banco e não indica condição melhor ou pior.</p></section>
     {investment && <InvestmentBlock alone={investment.alone} regime={shared.regime} adicional={shared.adicional} product={investment.product} />}
     {investment && <section className="credit-analysis"><h3>Crédito ou caixa próprio?</h3>
@@ -251,12 +252,12 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
         <div><dt>Amortização</dt><dd>{SYSTEM_OPTIONS.find(([id]) => id === shared.system)?.[1] ?? shared.system}</dd></div>
         <div><dt>Liberação</dt><dd>{day(shared.start)}</dd></div>
         <div><dt>Regime tributário</dt><dd>{regimeLabel(shared.regime)}</dd></div>
-      </dl><p className="credit-hint">Condições comuns. Diferenças de valor, prazo, carência e amortização de cada modalidade aparecem na comparação acima.</p>
+      </dl><p className="credit-hint">{single ? 'Condições da operação. Valor, prazo, carência e amortização aparecem na cotação acima.' : 'Condições comuns. Diferenças de valor, prazo, carência e amortização de cada modalidade aparecem na comparação acima.'}</p>
     </ResultPanel>}
     <details className="credit-more"><summary>Parcelas por data e gráfico dos fluxos</summary>
     <div className="credit-result-grid">
       <ResultPanel title="Parcelas · data e valor">
-        <div className="credit-scroll credit-matrix-scroll credit-payment-scroll" tabIndex="0" role="region" aria-label="Parcelas alinhadas por data e modalidade"><table className="credit-table credit-matrix credit-payment-matrix"><caption>Valor da parcela por data · — indica ausência de pagamento</caption><thead><tr><th scope="col">Data</th>{results.map((r, i) => <th scope="col" className={columnClass(i)} key={i}>{head(i)}</th>)}</tr></thead><tbody>{paymentDates.map(date => <tr key={date}><th scope="row">{day(date)}</th>{paymentsByDate.map((byDate, i) => <td className={columnClass(i)} key={i}>{byDate.has(date) ? byDate.get(date).map((payment, n) => <span className="credit-payment-value" key={n}>{brl(payment)}</span>) : <span aria-label="Sem pagamento nesta data">—</span>}</td>)}</tr>)}</tbody></table></div>
+        <div className={`credit-scroll credit-matrix-scroll credit-payment-scroll${single ? ' credit-single-matrix' : ''}`} tabIndex="0" role="region" aria-label="Parcelas alinhadas por data e modalidade"><table className="credit-table credit-matrix credit-payment-matrix"><caption>Valor da parcela por data · — indica ausência de pagamento</caption><thead><tr><th scope="col">Data</th>{results.map((r, i) => <th scope="col" className={columnClass(i)} key={i}>{head(i)}</th>)}</tr></thead><tbody>{paymentDates.map(date => <tr key={date}><th scope="row">{day(date)}</th>{paymentsByDate.map((byDate, i) => <td className={columnClass(i)} key={i}>{byDate.has(date) ? byDate.get(date).map((payment, n) => <span className="credit-payment-value" key={n}>{brl(payment)}</span>) : <span aria-label="Sem pagamento nesta data">—</span>}</td>)}</tr>)}</tbody></table></div>
       </ResultPanel>
       <ResultPanel title="Gráficos dos fluxos"><CreditChart results={results} /></ResultPanel>
     </div>
@@ -317,7 +318,7 @@ function InvestmentBlock({ alone, regime, adicional, product }) {
   </section>
 }
 
-function Presentation({ children, onClose, title = 'Comparador de Crédito' }) {
+function Presentation({ children, onClose, title = 'Necessidade do Cliente' }) {
   const dialog = useRef(null)
   useEffect(() => {
     const element = dialog.current, trigger = document.activeElement, overflow = document.body.style.overflow
@@ -328,7 +329,7 @@ function Presentation({ children, onClose, title = 'Comparador de Crédito' }) {
   return <dialog className="credit-presentation" ref={dialog} onCancel={onClose} aria-label={title}><header><h2>{title}</h2><button type="button" onClick={onClose}>Fechar ×</button></header>{children}</dialog>
 }
 export default function CreditComparison({ onBack }) {
-  const [columns, setColumns] = useState(initialColumns), [count, setCount] = useState(MIN_COLUMNS)
+  const [columns, setColumns] = useState(initialColumns), [count, setCount] = useState(2)
   const [shared, setSharedState] = useState(() => ({ ...initialShared(cgToday()), ...lmLoad(cgToday()) }))
   const setShared = next => { setSharedState(next); lmSave(Object.fromEntries(Object.keys(lmDefaults('')).map(k => [k, next[k]]))) }
   const clearShared = () => { lmClear(); setConfirmed(null); setSharedState(old => ({ ...old, ...lmDefaults(cgToday()) })) }
@@ -365,32 +366,32 @@ export default function CreditComparison({ onBack }) {
   const content = <Results results={results} columns={visible} scenario={scenario} cdi={cdi} source={source} equivalent={equivalent} investment={investment} shared={shared} />
   const allOk = results.every(r => r.ok)
   return <div className="credit-workspace"><section className="cx bw credit-comparison credit-bw" aria-labelledby="credit-title">
-    <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="credit-title"><span>Comparador de Crédito</span></h2></div>
-    <nav className="bw-nav" aria-label="Área do comparador">
-      <button type="button" aria-pressed={area === 'compare'} onClick={() => setArea('compare')}>Comparar operações</button>
+    <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="credit-title"><span>Necessidade do Cliente</span></h2></div>
+    <nav className="bw-nav" aria-label="Área da necessidade do cliente">
+      <button type="button" aria-pressed={area === 'compare'} onClick={() => setArea('compare')}>{count === 1 ? 'Cotar operação' : 'Comparar operações'}</button>
       <button type="button" aria-pressed={area === 'rules'} onClick={() => setArea('rules')}>Premissas e fontes</button>
     </nav></div>
     <div className="credit-bw-body" hidden={area !== 'compare'}>
-    <div className="credit-intro credit-help-line"><span>Preencha a operação e compare as modalidades.</span><CalculatorHelp title="Como usar o comparador"><p>Escolha as modalidades, preencha a linha mestra uma vez e compare custo, CET e fluxo. Opcional: contra deixar o dinheiro aplicado, com a tributação da empresa.</p></CalculatorHelp></div>
+    <div className="credit-intro credit-help-line"><span>{count === 1 ? 'Preencha a operação e gere a cotação.' : 'Preencha a operação e compare as modalidades.'}</span><CalculatorHelp title={count === 1 ? 'Como gerar a cotação' : 'Como usar o comparador'}><p>{count === 1 ? 'Escolha a modalidade, preencha a linha mestra e confira custo, CET e fluxo.' : 'Escolha as modalidades, preencha a linha mestra uma vez e compare custo, CET e fluxo.'} Opcional: contra deixar o dinheiro aplicado, com a tributação da empresa.</p></CalculatorHelp></div>
     <SharedFields shared={shared} set={invalidate(setShared)} onClear={clearShared} />
-    <div className="credit-count" role="group" aria-label="Quantidade de comparações"><span id="credit-count-label">Quantas comparações?</span>
+    <div className="credit-count" role="group" aria-label="Quantidade de operações"><span id="credit-count-label">Quantas operações?</span>
       <div className="seg">{Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, k) => k + MIN_COLUMNS).map(n => <button type="button" key={n} aria-pressed={n === count} onClick={() => invalidate(setCount)(n)}>{n}</button>)}</div>
-      <CalculatorHelp title="Quantidade de comparações"><p>Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado.</p></CalculatorHelp></div>
-    <div className="credit-grid" style={{ '--credit-cols': count }}>{visible.map((col, i) => <ColumnCard key={i} index={i} col={col} set={setColumn(i)} result={results[i]} shared={shared} />)}</div>
+      <CalculatorHelp title="Quantidade de operações"><p>Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado.</p></CalculatorHelp></div>
+    <div className="credit-grid" style={{ '--credit-cols': count }}>{visible.map((col, i) => <ColumnCard individual={count === 1} key={i} index={i} col={col} set={setColumn(i)} result={results[i]} shared={shared} />)}</div>
     {usesCdi && <section className="desk-panel credit-controls credit-cdi"><h3>Cenários do CDI</h3><p className={!manual && !reference ? 'credit-alert' : undefined} role={!manual && !reference ? 'status' : undefined}>{source}</p><label><input type="checkbox" checked={manual} onChange={e => invalidate(setManual)(e.target.checked)} /> Informar referência manual</label>{manual && <label className="credit-field">CDI base (% a.a.)<input inputMode="decimal" value={cdiText} onChange={e => invalidate(setCdi)(e.target.value)} /></label>}<label className="credit-field">Variação dos cenários (pontos percentuais a.a.)<input inputMode="decimal" value={shock} onChange={e => invalidate(setShock)(e.target.value)} /></label><div className="seg" aria-label="Cenário">{['Queda', 'Base', 'Alta'].map(s => <button type="button" key={s} aria-pressed={s === scenario} onClick={() => invalidate(setScenario)(s)}>{s}</button>)}</div><p>CDI constante em cada cenário; queda limitada a zero. Variação ilustrativa ajustável, não previsão de mercado. Referência de mercado não define o CDI futuro do contrato.</p></section>}
     <InvestmentFields invest={invest} set={invalidate(setInvest)} curveBase={curveToday?.date} />
-    <section className="desk-panel credit-controls"><label><input type="checkbox" checked={equivalent} onChange={e => invalidate(setEquivalent)(e.target.checked)} /> Comparar pelo mesmo valor líquido</label>{equivalent && <label className="credit-field" htmlFor="credit-target">Líquido comum<MoneyInput id="credit-target" value={target} onChange={invalidate(setTarget)} /></label>}<CalculatorHelp title="Comparar pelo mesmo valor líquido"><p>Recalcula o valor contratado de cada coluna para o líquido comum, mantendo taxas, encargos fixos, prazos e garantias. Os valores originais permanecem nos formulários.</p></CalculatorHelp></section>
-    <div className="credit-actions"><button type="button" className="credit-compare" onClick={() => setCompared(signature)}><span aria-hidden="true">⇄</span> Comparar modalidades</button></div>
-    {compared !== null && !showResults && <p className="credit-notice credit-alert" role="status">As condições mudaram desde a última comparação. Clique em Comparar modalidades para atualizar o resultado.</p>}
-    {/* Resultado: único quadro com borda laranja; abaixo dos dados em largura total, porque compara de 2 a 5 modalidades lado a lado. */}
+    <section className="desk-panel credit-controls"><label><input type="checkbox" checked={equivalent} onChange={e => invalidate(setEquivalent)(e.target.checked)} /> {count === 1 ? 'Definir o valor líquido desejado' : 'Comparar pelo mesmo valor líquido'}</label>{equivalent && <label className="credit-field" htmlFor="credit-target">{count === 1 ? 'Líquido desejado' : 'Líquido comum'}<MoneyInput id="credit-target" value={target} onChange={invalidate(setTarget)} /></label>}<CalculatorHelp title={count === 1 ? 'Definir o valor líquido desejado' : 'Comparar pelo mesmo valor líquido'}><p>{count === 1 ? 'Ajusta o valor contratado para o líquido desejado, mantendo taxas, encargos fixos, prazo e garantias.' : 'Recalcula o valor contratado de cada coluna para o líquido comum, mantendo taxas, encargos fixos, prazos e garantias.'} Os valores originais permanecem nos formulários.</p></CalculatorHelp></section>
+    <div className="credit-actions"><button type="button" className="credit-compare" onClick={() => setCompared(signature)}><span aria-hidden="true">⇄</span> {count === 1 ? 'Gerar cotação' : 'Comparar modalidades'}</button></div>
+    {compared !== null && !showResults && <p className="credit-notice credit-alert" role="status">{count === 1 ? 'As condições mudaram desde a última cotação. Clique em Gerar cotação para atualizar o resultado.' : 'As condições mudaram desde a última comparação. Clique em Comparar modalidades para atualizar o resultado.'}</p>}
+    {/* Resultado: único quadro com borda laranja; abaixo dos dados em largura total, porque exibe de 1 a 5 modalidades lado a lado. */}
     {showResults && <section className="credit-result-box" aria-labelledby="credit-result-title">
-      <header className="credit-result-head"><h3 id="credit-result-title">Resultado da comparação</h3></header>
+      <header className="credit-result-head"><h3 id="credit-result-title">{count === 1 ? 'Resultado da cotação' : 'Resultado da comparação'}</h3></header>
       <div className="credit-result-body">
         <p className="credit-result-status">CET estimado do fluxo informado, não CET certificado do contrato. {complete ? 'Conferência declarada pelo usuário; não é auditoria contratual.' : 'Encargos ainda não conferidos: resultados são preliminares.'}</p>
         {content}
         <div className="credit-result-actions">
           <label className="credit-confirm"><input type="checkbox" checked={complete} onChange={e => setConfirmed(e.target.checked ? signature : null)} /> Conferi todos os encargos e as convenções para esta simulação.</label>
-          <button type="button" className="cx-action" disabled={!allOk || !complete} onClick={() => setPresent(content)}>Apresentar comparação</button>
+          <button type="button" className="cx-action" disabled={!allOk || !complete} onClick={() => setPresent(content)}>{count === 1 ? 'Apresentar cotação' : 'Apresentar comparação'}</button>
         </div>
       </div>
     </section>}
