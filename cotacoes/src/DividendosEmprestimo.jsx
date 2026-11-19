@@ -17,6 +17,8 @@ const pctCurto = (n) => `${(n * 100).toLocaleString('pt-BR', { maximumFractionDi
 const rateText = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const dateLabel = (d) => (d ? d.split('-').reverse().join('/') : '—')
 const nomeFormato = (id) => FORMATOS.find((f) => f.id === id)?.label ?? id
+const resultadoDo = (linha, id) => linha?.formatos.find((x) => x.formato === id)
+const iofDiaText = IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })
 
 export function DividendosEmprestimoIcon() {
   return (
@@ -60,8 +62,8 @@ export default function DividendosEmprestimo({ onBack }) {
   const prazos = result?.ok ? result.prazos : null
   const linha = prazos?.find((x) => x.n === prazo)
   const formato = formatoEscolhido ?? linha?.melhor
-  const r = linha?.formatos.find((x) => x.formato === formato)
-  const melhor = linha?.formatos.find((x) => x.formato === linha.melhor)
+  const r = resultadoDo(linha, formato)
+  const melhor = resultadoDo(linha, linha?.melhor)
 
   const field = (key, label, input, hint) => (
     <div className="cx-field" key={key}>
@@ -91,7 +93,7 @@ export default function DividendosEmprestimo({ onBack }) {
             </div>
             {check('de-iof', comIof, setComIof, 'Operação com IOF')}
             <p className="cx-hint cd-pad-x">{comIof
-              ? <>IOF pago na contratação: {rateText(IOF_PJ.fixed)}% + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização, até {IOF_PJ.maxDays} dias.</>
+              ? <>IOF pago na contratação: {rateText(IOF_PJ.fixed)}% + {iofDiaText}% ao dia sobre cada amortização, até {IOF_PJ.maxDays} dias.</>
               : 'Sem IOF: para operações estruturadas sem incidência. Confirme o enquadramento.'}</p>
           </article>
 
@@ -165,7 +167,7 @@ export default function DividendosEmprestimo({ onBack }) {
               <tbody>
                 {FORMATOS.map((f) => (
                   <tr key={f.id}><th scope="row">{f.label}</th>{prazos.map((x) => {
-                    const c = x.formatos.find((y) => y.formato === f.id)
+                    const c = resultadoDo(x, f.id)
                     return <td key={x.n} className={x.melhor === f.id ? 'de-best' : c.eficiencia < 0 ? 'de-neg-cell' : undefined}>{brl(c.eficiencia)}</td>
                   })}</tr>
                 ))}
@@ -176,7 +178,7 @@ export default function DividendosEmprestimo({ onBack }) {
                   ['Economia de IR/CSLL', (c) => c.economiaIr],
                   ['Rendimento líquido do sócio', (c) => c.ganhoSocio],
                   ['Empréstimo x caixa próprio (+ = empréstimo mais barato)', (c) => c.emprestimoVsCaixa],
-                ].map(([label, get]) => <tr key={label}><th scope="row">{label}</th>{prazos.map((x) => <td key={x.n}>{brl(get(x.formatos.find((y) => y.formato === x.melhor)))}</td>)}</tr>)}
+                ].map(([label, get]) => <tr key={label}><th scope="row">{label}</th>{prazos.map((x) => <td key={x.n}>{brl(get(resultadoDo(x, x.melhor)))}</td>)}</tr>)}
               </tbody>
             </table></div>
             <p className="cx-hint cd-pad-x">Em destaque, o formato mais eficiente de cada prazo.</p>
@@ -197,7 +199,7 @@ export default function DividendosEmprestimo({ onBack }) {
 
       <div className="cx-heading cd-method"><h3>Premissas e fórmulas</h3><CalculatorHelp title="Premissas e fórmulas"><ul>
         <li>Formatos: Price (parcelas iguais), SAC (amortização constante + juros), juros mensais com principal no fim, e tudo no fim (juros acumulados mês a mês, pagos com o principal no vencimento).</li>
-        <li>IOF (opcional) = {rateText(IOF_PJ.fixed)}% do valor + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização do principal (30 dias por mês, até 365 dias), pago na contratação.</li>
+        <li>IOF (opcional) = {rateText(IOF_PJ.fixed)}% do valor + {iofDiaText}% ao dia sobre cada amortização do principal (30 dias por mês, até 365 dias), pago na contratação.</li>
         <li>Economia de IR/CSLL = alíquota × (juros + IOF). Juros entram no mês em que correm, mesmo quando pagos no fim.</li>
         <li>Aplicação do sócio: CDI diário = (1 + CDI)^(1/252) − 1; rendimento = (1 + CDI diário × % do CDI)^(21 × meses) − 1. IR pelos dias corridos (meses × 365/12): 22,5% até 180; 20% até 360; 17,5% até 720; 15% acima.</li>
         <li>Custo da empresa, na data final = IOF e cada pagamento, menos a economia de IR do mês, corrigidos pelo CDI líquido do caixa da empresa (PIS/Cofins {pctCurto(PIS_COFINS_FINANCEIRO)} e IR/CSLL), menos o valor recebido no empréstimo.</li>

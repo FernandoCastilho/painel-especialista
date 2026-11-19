@@ -77,13 +77,13 @@ export function simularOperacao(p, n, formato) {
   // Sócio.
   const impostoDividendo = temAta ? 0 : valor * aliquotaDividendos
   const aplicado = valor - impostoDividendo
-  const cdiDia = (1 + cdi) ** (1 / 252) - 1
-  const bruto = (1 + cdiDia * pctCdi) ** (21 * n) - 1
+  const rendimentoDia = ((1 + cdi) ** (1 / 252) - 1) * pctCdi
+  const bruto = (1 + rendimentoDia) ** (21 * n) - 1
   const ir = irPessoaFisica(diasCorridos(n))
   const ganhoSocio = aplicado * bruto * (1 - ir)
 
   // Empresa: valor futuro dos desembolsos líquidos de IR pelo CDI líquido do caixa da empresa.
-  const rEmpresa = ((1 + cdiDia * pctCdi) ** 21 - 1) * (1 - PIS_COFINS_FINANCEIRO) * (1 - aliquotaPj)
+  const rEmpresa = ((1 + rendimentoDia) ** 21 - 1) * (1 - PIS_COFINS_FINANCEIRO) * (1 - aliquotaPj)
   const vf = (m) => (1 + rEmpresa) ** m
   let custoEmpresa = iof * (1 - aliquotaPj) * vf(n) - valor
   for (const f of fluxo) custoEmpresa += (f.pagamento - aliquotaPj * f.juros) * vf(n - f.mes)
@@ -96,10 +96,9 @@ export function simularOperacao(p, n, formato) {
   const emprestimoVsCaixa = custoCaixaProprio - custoEmpresa // positivo: o empréstimo sai mais barato que usar o caixa
 
   return {
-    n, formato, juros, iof, economiaIr, totalPago: fluxo.reduce((a, f) => a + f.pagamento, 0) + iof,
-    primeiroPagamento: fluxo[0].pagamento,
+    n, formato, juros, iof, economiaIr, primeiroPagamento: fluxo[0].pagamento,
     impostoDividendo, aplicado, bruto, ir, ganhoSocio,
-    custoEmpresa, custoNominal, efeitoTempo, eficiencia, custoCaixaProprio, emprestimoVsCaixa, rEmpresaMes: rEmpresa,
+    custoEmpresa, custoNominal, efeitoTempo, eficiencia, custoCaixaProprio, emprestimoVsCaixa,
   }
 }
 
