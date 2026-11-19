@@ -1,6 +1,6 @@
 // Câmbio futuro: compara o mesmo empréstimo cotado pela mesa em dólar, euro e yuan (planilha de Fernando, 19/11/2026).
 // Regras (iguais às da planilha):
-// - Valor em R$ = valor na moeda × cotação de partida.
+// - Valor em R$ = valor na moeda × cotação de partida. A TAC (R$) sai do valor recebido.
 // - Amortização constante; juros = saldo × taxa × dias corridos / 360 (linear), pagos em cada vencimento.
 // - Cada parcela vira reais pelo câmbio futuro informado para o seu vencimento.
 // - TIR ao ano: taxa que zera o fluxo em reais, dias corridos/365 (mesma convenção do custo all-in do 4131 no Painel).
@@ -31,11 +31,14 @@ export function vencimentos(start, end, n) {
 }
 
 // Fluxo de uma moeda. `futuros`: R$ por unidade da moeda em cada vencimento (null onde ainda não foi informado).
-export function fluxoMoeda({ valor, cotacao, taxa, start, dates, futuros = [] }) {
+export function fluxoMoeda({ valor, cotacao, taxa, tac = 0, start, dates, futuros = [] }) {
   if (!(valor > 0)) return { ok: false, error: 'Informe o valor na moeda.' }
   if (!(cotacao > 0)) return { ok: false, error: 'Informe a cotação de partida.' }
   if (!(taxa >= 0) || taxa > 100) return { ok: false, error: 'Taxa all-in: de 0 a 100% ao ano.' }
+  if (!(tac >= 0)) return { ok: false, error: 'TAC não pode ser negativa.' }
   const brl = valor * cotacao
+  const liquido = brl - tac
+  if (!(liquido > 0)) return { ok: false, error: 'A TAC consome todo o valor.' }
   const n = dates.length
   let saldo = valor
   let prev = start
@@ -50,17 +53,17 @@ export function fluxoMoeda({ valor, cotacao, taxa, start, dates, futuros = [] })
     return linha
   })
   const juros = linhas.reduce((s, l) => s + l.juros, 0)
-  const out = { ok: true, valor, cotacao, taxa, brl, linhas, juros, totalMoeda: valor + juros }
+  const out = { ok: true, valor, cotacao, taxa, tac, brl, liquido, linhas, juros, totalMoeda: valor + juros }
   if (linhas.some((l) => !l.futuro)) return { ...out, completo: false }
   const totalBrl = linhas.reduce((s, l) => s + l.parcelaBrl, 0)
-  const y = irr([{ v: brl, t: 0 }, ...linhas.map((l) => ({ v: -l.parcelaBrl, t: l.prazo / 365 }))])
-  return { ...out, completo: true, totalBrl, periodo: (totalBrl / brl - 1) * 100, tir: y == null ? null : y * 100 }
+  const y = irr([{ v: liquido, t: 0 }, ...linhas.map((l) => ({ v: -l.parcelaBrl, t: l.prazo / 365 }))])
+  return { ...out, completo: true, totalBrl, periodo: (totalBrl / liquido - 1) * 100, tir: y == null ? null : y * 100 }
 }
 
-// Câmbio futuro único que leva a TIR ao ano (dias corridos/365) à meta: valor presente das parcelas = valor em R$.
+// Câmbio futuro único que leva a TIR ao ano (dias corridos/365) à meta: valor presente das parcelas = valor líquido.
 export function cambioMeta(fluxo, metaPct) {
   if (!fluxo?.ok || !(metaPct > -100)) return null
   const m = 1 + metaPct / 100
   const pv = fluxo.linhas.reduce((s, l) => s + l.parcela / m ** (l.prazo / 365), 0)
-  return pv > 0 ? fluxo.brl / pv : null
+  return pv > 0 ? fluxo.liquido / pv : null
 }

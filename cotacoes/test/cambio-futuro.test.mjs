@@ -24,7 +24,7 @@ test('dólar: juros lineares 360 e parcela em reais pelo câmbio futuro', () => 
 })
 
 test('atingir meta devolve o câmbio que reproduz a TIR', () => {
-  const base = { valor: 100000, cotacao: 5.916, taxa: 11.2, start: '2026-11-13', dates: vencimentos('2026-11-13', '2028-11-13', 4).dates }
+  const base = { valor: 100000, cotacao: 5.916, taxa: 11.2, tac: 1000, start: '2026-11-13', dates: vencimentos('2026-11-13', '2028-11-13', 4).dates }
   const alvo = cambioMeta(fluxoMoeda(base), 20)
   const f = fluxoMoeda({ ...base, futuros: Array(4).fill(alvo) })
   near(f.tir, 20, 1e-6)
@@ -44,5 +44,5 @@ test('valida entradas', () => {
   assert.equal(vencimentos('2026-01-10', '2026-01-01', 1).ok, false)
   assert.equal(vencimentos('2026-01-01', '2026-01-03', 5).ok, false)
   assert.equal(fluxoMoeda({ valor: 100, cotacao: 0, taxa: 1, start: '2026-01-01', dates: ['2026-02-01'] }).ok, false)
-  assert.equal(fluxoMoeda({ valor: 100, cotacao: 5, taxa: -1, start: '2026-01-01', dates: ['2026-02-01'] }).ok, false)
+  assert.equal(fluxoMoeda({ valor: 100, cotacao: 5, taxa: 1, tac: 600, start: '2026-01-01', dates: ['2026-02-01'] }).ok, false)
 })

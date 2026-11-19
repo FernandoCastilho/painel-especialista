@@ -11,7 +11,7 @@ const brl = (n) => `R$ ${num(n)}`
 const pct = (n) => `${num(n)}%`
 const dateLabel = (iso) => iso.split('-').reverse().join('/')
 const todayIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10) }
-const blank = { valor: '', cotacao: '', taxa: '', futuros: [] }
+const blank = { valor: '', cotacao: '', taxa: '', tac: '0', futuros: [] }
 
 export function CambioFuturoIcon() {
   return (
@@ -48,7 +48,7 @@ export default function CambioFuturo({ onBack }) {
     const m = moedas[id]
     const started = m.cotacao.trim() || m.taxa.trim()
     if (!dates.length || !started) return [id, null]
-    return [id, fluxoMoeda({ valor: valorDe(id), cotacao: parseDecimal(m.cotacao), taxa: parseDecimal(m.taxa), start: op.start, dates, futuros: dates.map((_, i) => parseDecimal(m.futuros[i] ?? '')) })]
+    return [id, fluxoMoeda({ valor: valorDe(id), cotacao: parseDecimal(m.cotacao), taxa: parseDecimal(m.taxa), tac: parseDecimal(m.tac || '0'), start: op.start, dates, futuros: dates.map((_, i) => parseDecimal(m.futuros[i] ?? '')) })]
   }))
   const ativas = MOEDAS_CF.filter(({ id }) => fluxos[id]?.ok)
   const prontos = MOEDAS_CF.filter(({ id }) => fluxos[id]?.completo && fluxos[id].tir != null)
@@ -62,14 +62,14 @@ export default function CambioFuturo({ onBack }) {
   )
 
   return (
-    <section className="cx cf bw calc-standard calc-workspace" aria-labelledby="cf-heading">
+    <section className="cx cf cf-pattern bw calc-standard calc-workspace" aria-labelledby="cf-heading">
       <div className="bw-heading calc-workspace-heading">
         <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-heading" className="cx-title"><span>Câmbio futuro</span></h2></div>
         <CalculatorHelp title="Câmbio futuro"><p>Compara o mesmo empréstimo cotado pela mesa em dólar, euro e yuan. Você informa a cotação de partida, a taxa all-in e o câmbio futuro de cada vencimento; a tela mostra a TIR em reais e o câmbio futuro que atinge a meta.</p></CalculatorHelp>
       </div>
-      <p className="cf-notice">Simulação com as cotações que você digitar. Não considera IR sobre juros, IOF nem tarifas. Os dados ficam só nesta tela.</p>
+      <p className="cf-notice">Simulação com as cotações que você digitar. Não considera IR sobre juros, IOF nem outras tarifas além da TAC. Os dados ficam só nesta tela.</p>
 
-      <article className="desk-panel cx-panel">
+      <article className="desk-panel cx-panel cf-input">
         <header className="cx-heading"><h3>1. Operação</h3></header>
         <div className="cx-form">
           <div className="cx-field"><div className="cx-field-label"><label htmlFor="cf-start">Desembolso</label></div><input id="cf-start" type="date" value={op.start} onChange={(e) => setOp({ ...op, start: e.target.value })} /></div>
@@ -80,7 +80,7 @@ export default function CambioFuturo({ onBack }) {
         {venc && !venc.ok && <p className="cx-error cx-pad" role="alert">{venc.error}</p>}
       </article>
 
-      <article className="desk-panel cx-panel">
+      <article className="desk-panel cx-panel cf-input">
         <header className="cx-heading"><h3>2. Cotação da mesa</h3><CalculatorHelp title="Cotação da mesa"><p>Comece pelo dólar. Juros lineares: saldo × taxa × dias corridos ÷ 360. Euro e yuan: se o valor na moeda ficar em branco, a tela usa o mesmo valor em reais do dólar convertido pela cotação da moeda.</p></CalculatorHelp></header>
         <div className="cx-wrap"><table className="cx-matrix cf-table cf-mesa"><caption className="sr-only">Cotação da mesa por moeda</caption>
           <thead><tr><th scope="col"></th>{MOEDAS_CF.map(({ id, nome }) => <th key={id} scope="col">{nome}</th>)}</tr></thead>
@@ -90,6 +90,7 @@ export default function CambioFuturo({ onBack }) {
               ['cotacao', 'Cotação partida (R$)', 'ex.: 5,9160'],
               ['brl', 'Valor R$'],
               ['taxa', 'Taxa all-in (% a.a.)', 'ex.: 11,20'],
+              ['tac', 'TAC (R$)', '0'],
             ].map(([key, label, ph]) => key === 'brl' ? (
               <tr key={key} className="cf-total"><th scope="row">{label}</th>
                 {MOEDAS_CF.map(({ id }) => { const f = fluxos[id]; return <td key={id}>{f?.ok ? brl(f.brl) : f ? <span role="alert" className="cf-erro">{f.error}</span> : '—'}</td> })}
@@ -107,7 +108,7 @@ export default function CambioFuturo({ onBack }) {
       </article>
 
       {dates.length > 0 && (
-        <article className="desk-panel cx-panel">
+        <article className="desk-panel cx-panel cf-input">
           <header className="cx-heading"><h3>3. Fluxo de caixa por vencimento</h3><CalculatorHelp title="Fluxo de caixa por vencimento"><ul>
             <li>Uma linha por data: o desembolso e cada vencimento, com as moedas lado a lado.</li>
             <li>Parcela na moeda = amortização constante + juros (saldo × taxa × dias corridos ÷ 360).</li>
@@ -121,7 +122,7 @@ export default function CambioFuturo({ onBack }) {
               <tr>{ativas.map(({ id, sym }) => [<th key={`${id}-p`} scope="col" className="cf-group">Parcela ({sym})</th>, <th key={`${id}-c`} scope="col">Câmbio</th>, <th key={`${id}-r`} scope="col">Fluxo (R$)</th>])}</tr>
             </thead>
             <tbody>
-              <tr className="cf-start"><th scope="row">{dateLabel(op.start)}</th><td>0</td>{ativas.map(({ id, sym }) => { const f = fluxos[id]; return [<td key={`${id}-p`} className="cf-group">{sym} {num(f.valor)}</td>, <td key={`${id}-c`}>{num(f.cotacao, 4)}</td>, <td key={`${id}-r`}>−{brl(f.brl)}</td>] })}</tr>
+              <tr className="cf-start"><th scope="row">{dateLabel(op.start)}</th><td>0</td>{ativas.map(({ id, sym }) => { const f = fluxos[id]; return [<td key={`${id}-p`} className="cf-group">{sym} {num(f.valor)}</td>, <td key={`${id}-c`}>{num(f.cotacao, 4)}</td>, <td key={`${id}-r`}>−{brl(f.liquido)}</td>] })}</tr>
               {dates.map((d, i) => (
                 <tr key={d}><th scope="row">{dateLabel(d)}</th><td>{daysBetween(op.start, d)}</td>
                   {ativas.map(({ id, sym }) => { const l = fluxos[id].linhas[i]; return [
@@ -137,9 +138,9 @@ export default function CambioFuturo({ onBack }) {
         </article>
       )}
 
-      <article className="desk-panel cx-panel">
+      <article className="desk-panel cx-panel cf-quote">
         <header className="cx-heading"><h3>4. Resultado</h3><CalculatorHelp title="Resultado"><ul>
-          <li>Fluxo em reais: entra o valor em R$; sai cada parcela na moeda × câmbio futuro.</li>
+          <li>Fluxo em reais: entra o valor em R$ menos a TAC; sai cada parcela na moeda × câmbio futuro.</li>
           <li>TIR ao ano: taxa que zera esse fluxo, em dias corridos/365.</li>
           <li>No período: total pago em R$ ÷ valor recebido − 1, sem anualizar.</li>
           <li>Câmbio para a meta: câmbio futuro único que deixa a TIR ao ano igual à meta. Acima dele, a operação custa mais que a meta.</li>
@@ -153,7 +154,7 @@ export default function CambioFuturo({ onBack }) {
               return (
                 <tr key={id} className={id === melhor ? 'cf-best' : undefined}>
                   <th scope="row">{nome}{id === melhor && <small> · menor custo</small>}</th>
-                  <td>{brl(f.brl)}</td><td>{brl(f.totalBrl)}</td><td>{pct(f.periodo)}</td><td><b>{pct(f.tir)}</b></td>
+                  <td>{brl(f.liquido)}</td><td>{brl(f.totalBrl)}</td><td>{pct(f.periodo)}</td><td><b>{pct(f.tir)}</b></td>
                   <td>{alvo ? `R$ ${num(alvo, 4)}` : '—'}</td>
                 </tr>
               )
