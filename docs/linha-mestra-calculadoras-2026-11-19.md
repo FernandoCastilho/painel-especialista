@@ -50,12 +50,12 @@ O campo **1º vencimento (opcional)** continua existindo: se preenchido, vale a 
 | Botão principal (Simular, Comparar modalidades, Calcular taxa) | azul vivo, laranja ou azul-marinho; letra de 13 a 19 px | laranja, letra de 14 px |
 | Botões secundários (Apresentar, Imprimir, Adicionar grupo, Restaurar exemplo…) | fundos e cantos variados | contorno fino, cantos de 8 px, letra de 13 px |
 | Cantos | retos, 8 px ou pílula | 8 px em todos |
-| "‹ Calculadoras" | dois tons, um com fundo, um azul | um tom só, sem fundo |
+| Botões de voltar que restam dentro das telas ("Nova simulação" no Finimp, "Voltar" na Árvore) | dois tons, um com fundo | um tom só, sem fundo. A volta para a lista de calculadoras virou a seta ao lado do nome (PR #507, que entrou no ramo principal no mesmo dia) |
 | Ícone de ampliar | três versões (44 px cheio, contorno branco, 32 px) | uma: quadrado de 32 px com contorno (44 px no celular); a cor acompanha o fundo |
 | "?" de ajuda | um com fundo próprio no Comparador | sem fundo em todas |
 | Nomes dos campos | 12, 15 ou 16 px | 13 px em todas |
 | Letra dentro dos campos | 14 a 16 px | 14 px no computador; 16 px no celular |
-| Capital de giro | tela branca nos dois temas, título grande, botão azul | mesma moldura e cores das outras, nos dois temas |
+| Capital de giro | tela branca nos dois temas, título grande, botão azul | mesma moldura e cores das outras, nos dois temas, com a seta de voltar ao lado do nome (padrão do PR #507) |
 
 ## Decisões tomadas sem consulta (reversíveis)
 
