@@ -14,12 +14,12 @@ main.app.app-calculators {
 :root[data-theme=light] main.app.app-calculators { --u-mut:#42526b; }
 
 /* ── Selecionado: um só, em laranja ── */
-/* Grupos de opções (prazos, tipo de taxa, quantidade de comparações, modo da conta garantida, abas do topo do BNDES). */
+/* Opções e botões com 44 px de altura, o alvo de toque combinado do painel. Grupos de opções (prazos, tipo de taxa, quantidade de comparações, modo da conta garantida, abas do topo do BNDES). */
 main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos, .bw-nav) {
   display:inline-flex; flex-wrap:wrap; gap:6px; padding:0; border:0; background:none; box-shadow:none;
 }
 main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos) > button {
-  height:auto; min-height:36px; padding:6px 14px; margin:0; border:1px solid var(--bw-field-line, var(--line)); border-radius:8px;
+  height:auto; min-height:44px; padding:6px 14px; margin:0; border:1px solid var(--bw-field-line, var(--line)); border-radius:8px;
   background:transparent; color:var(--bw-ink, var(--fg)); font:inherit; font-size:.8125rem; font-weight:600; line-height:1.2; box-shadow:none;
 }
 main.app.app-calculators:not(#u) .bw-nav > button {
@@ -40,9 +40,9 @@ main.app.app-calculators:not(#u) :is(.giro-simulate, .credit-compare, .e4-meta-b
 }
 main.app.app-calculators:not(#u) :is(.giro-simulate, .credit-compare, .e4-meta-btn):hover:not(:disabled) { background:var(--u-orange-hover); border-color:var(--u-orange-hover); }
 
-/* ── Botões secundários: contorno, letra 13 px ── */
+/* ── Botões secundários: contorno, letra 13 px; 44 px de altura (alvo de toque combinado do painel) ── */
 main.app.app-calculators:not(#u) :is(.cx-action, .bnp-launch, .bnprint-launch, .e4-copiar, .cg-button, .desconto-titles > button, fieldset.cx-form > button, .ft-actions > button, .ac-linha > button, .cx-field > button) {
-  height:auto; min-height:36px; padding:6px 14px; border:1px solid var(--bw-field-line, var(--line)); border-radius:8px;
+  height:auto; min-height:44px; padding:6px 14px; border:1px solid var(--bw-field-line, var(--line)); border-radius:8px;
   background:transparent; color:var(--bw-ink, var(--fg)); font:inherit; font-size:.8125rem; font-weight:600; line-height:1.2; box-shadow:none;
 }
 main.app.app-calculators:not(#u) :is(.cx-action, .bnp-launch, .bnprint-launch, .e4-copiar, .cg-button, .desconto-titles > button, fieldset.cx-form > button, .ft-actions > button, .ac-linha > button, .cx-field > button):hover:not(:disabled) {
