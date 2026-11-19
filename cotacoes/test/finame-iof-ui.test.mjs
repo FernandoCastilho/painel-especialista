@@ -14,7 +14,7 @@ async function setup(t, overrides = {}) {
   const series = { C01: { points: [['2026-11-06', 11]] }, C02: { points: [['2026-11-06', 11.5]] }, C03: { points: [['2026-11-06', 10]] }, C04: { points: [['2026-11-06', 10.5]] }, TFB_36_90: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] }, TFB_84_90: { points: [['2026-11-06', 13]] }, ...overrides }
   const Presentation = () => null, Print = () => null
   const deps = { './ExpandablePanel.jsx': { __esModule: true, default: () => null }, './BndesCompare.jsx': { __esModule: true, default: () => null }, './FinameComparisonLayout.css': {}, './BndesIcon.jsx': { __esModule: true, default: () => null }, './BndesPrint.jsx': { __esModule: true, default: Print }, './BndesPresentation.jsx': { __esModule: true, default: Presentation }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
-  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
+  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
@@ -117,8 +117,8 @@ test('taxas manuais não liberam comparação entre datas nem faixas incompatív
   assert.match(presentation().comparison.error, /mesma faixa/)
 })
 
-test('perfis próprios bloqueiam resultado mensal e retorno preserva condições sem confirmação', async t => {
-  const { render, field, hasResult, change, navigation } = await setup(t)
+test('pós-fixados sem cotação nem Focus não calculam e a troca preserva as condições', async t => {
+  const { field, hasResult, change, navigation } = await setup(t)
   field('fm-valor').props.onChange('600.000,00')
   await change('fm-prazo', '36'); await change('fm-car', '5')
   assert.equal(hasResult(), true)
@@ -130,14 +130,9 @@ test('perfis próprios bloqueiam resultado mensal e retorno preserva condições
     assert.equal(field('fm-valor').props.value, '600.000,00')
     assert.equal(field('fm-prazo').props.value, '36')
     assert.equal(field('fm-car').props.value, '5')
-    if (cost === 'tlp') {
-      const link = nodes(render.value).find(node => node.props?.href === '#calculadora/bndes-tlp-exigivel')
-      assert.ok(link)
-      let prevented = false
-      link.props.onClick({ preventDefault() { prevented = true } })
-      assert.equal(prevented, true)
-      assert.deepEqual(navigation, ['bndes-tlp-exigivel'])
-    }
+    // Desde 19/11/2026 TLP, LCD e TFBD calculam nesta tela: sem cotação do painel nem Focus, não há resultado, mas o campo da taxa aparece.
+    assert.ok(field(`fm-rate-${cost}`))
+    assert.equal(navigation.length, 0)
     await change('fm-custo', 'tfc')
     assert.equal(hasResult(), true)
   }

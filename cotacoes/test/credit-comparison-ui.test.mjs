@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -20,11 +21,11 @@ const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
-  for (const file of ['ExpandIcon.jsx', 'MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'CreditComparison.jsx']) {
+  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
+  for (const file of ['ExpandIcon.jsx', 'MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'LinhaMestra.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
-    runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
+    runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => deps[name] ?? require(name)) })
     deps['./' + file] = module.exports
   }
   const render = hookRenderer(() => deps['./CreditComparison.jsx'].default({ onBack: () => {} }))
@@ -35,14 +36,14 @@ async function setup(t) {
   const find = name => nodes(render.value).find(n => n.type?.name === name)
   return { render, cards, card, button, find, async change(i, values) { const c = card(i); c.props.set({ ...c.props.col, ...values }); await render.settle() } }
 }
-const clickCompare = async ui => { ui.button('Comparar modalidades').props.onClick(); await ui.render.settle() }
+const clickCompare = async ui => { (ui.button('Comparar modalidades') ?? ui.button('Gerar cotação')).props.onClick(); await ui.render.settle() }
 
-test('começa com duas comparações e deixa escolher de 2 a 5', async t => {
+test('começa com duas operações e permite cotação individual até cinco', async t => {
   const ui = await setup(t)
   assert.equal(ui.cards().length, 2)
-  const counts = nodes(ui.render.value).filter(n => n.type === 'button' && /^[2-5]$/.test(text(n)))
-  assert.deepEqual(counts.map(text), ['2', '3', '4', '5'])
-  for (const n of [5, 3, 2]) { counts.find(b => text(b) === String(n)).props.onClick(); await ui.render.settle(); assert.equal(ui.cards().length, n) }
+  const counts = nodes(ui.render.value).filter(n => n.type === 'button' && /^[1-5]$/.test(text(n)))
+  assert.deepEqual(counts.map(text), ['1', '2', '3', '4', '5'])
+  for (const n of [1, 5, 3, 2]) { counts.find(b => text(b) === String(n)).props.onClick(); await ui.render.settle(); assert.equal(ui.cards().length, n) }
 })
 test('cada coluna aceita qualquer modalidade e mostra os campos dela', async t => {
   const ui = await setup(t)
@@ -239,4 +240,35 @@ test('explicações ficam em ajuda clicável e alertas essenciais continuam vis�
   const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
   assert.match(source, /A ordem de menor CET usa o CET da parte fixa/)
   assert.match(source, /Ao reduzir a quantidade, as colunas escondidas/)
+})
+
+test('cotação individual exibe resultado sem inventar concorrente e preserva cálculo ao alternar quantidade', async t => {
+  const ui = await setup(t)
+  const choose = async n => {
+    nodes(ui.render.value).find(x => x.type === 'button' && text(x) === String(n)).props.onClick()
+    await ui.render.settle()
+  }
+  await choose(1)
+  assert.ok(ui.button('Gerar cotação'))
+  assert.equal(ui.button('Comparar modalidades'), undefined)
+  await clickCompare(ui)
+  assert.ok(text(ui.render.value).includes('Resultado da cotação'))
+  const single = ui.find('Results')
+  assert.equal(single.props.results.length, 1)
+  const baseline = JSON.stringify(single.props.results[0])
+  const html = renderToStaticMarkup(single)
+  assert.match(html, /credit-single-matrix/)
+  assert.ok(ui.button('Apresentar cotação'))
+  assert.equal(ui.button('Apresentar comparação'), undefined)
+  assert.match(renderToStaticMarkup(ui.card(1)), /Operação<!-- --> 1|Operação 1/)
+  assert.match(html, /Cotação individual/)
+  assert.match(html, /Cotação da operação/)
+  assert.doesNotMatch(html, /segunda mais barata|a menos.*que|O CET não pôde ser comparado|Diferença de custo para a comparação 1|Não há vencedor absoluto/)
+  assert.match(html, /Necessidade do Cliente|Custo sobre o líquido/)
+  for (const n of [5, 2, 1]) {
+    await choose(n)
+    await clickCompare(ui)
+    assert.equal(ui.find('Results').props.results.length, n)
+    assert.equal(JSON.stringify(ui.find('Results').props.results[0]), baseline)
+  }
 })

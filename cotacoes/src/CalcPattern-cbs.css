@@ -76,14 +76,13 @@
 /* Notas depois dos números */
 .cbs .cbs-notes { display:grid; gap:8px; padding:16px 24px; font-size:.9rem; }
 :root[data-theme] body .cbs .cbs-notes p { color:var(--mut); }
-:root[data-theme] body .cbs .cbs-notes .cbs-monthly-change b { color:var(--fg); }
 :root[data-theme] body main.app.app-calculators .cbs .cbs-notes .cbs-used-assumptions { padding:0; font-size:.85rem; }
 
 /* Mês a mês: botões dos meses numa barra só, opções encostadas; só o escolhido em amarelo. */
 :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:0; border:1px solid var(--cx-line-strong, var(--line)); border-radius:8px; overflow:hidden; }
 :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button { min-width:0; min-height:44px; margin:0; border:0; border-radius:0; background:transparent; color:var(--mut); font-weight:500; }
 :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button + button { border-left:1px solid var(--cx-line-strong, var(--line)); }
-:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button[aria-pressed=true] { background:var(--cx-select-bg, #ffb000); color:var(--cx-select-fg, #000); font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button[aria-pressed=true] { background:#0131ff; color:#fff; font-weight:700; }
 @media (max-width:640px) {
   /* No celular, 12 meses não cabem numa linha com área de toque: duas linhas de seis, no mesmo contêiner. */
   :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons { grid-template-columns:repeat(6,minmax(0,1fr)); }

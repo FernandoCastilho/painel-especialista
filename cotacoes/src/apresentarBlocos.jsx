@@ -207,7 +207,7 @@ const calculadora = ([view, nome, dica, fonte = 'simulação do painel, sem valo
 })
 const CALCULADORAS = [
   ['giro', 'Capital de Giro', 'Parcelas, juros e total a pagar'],
-  ['comparador-credito', 'Comparador de Crédito', 'Modalidades lado a lado'],
+  ['comparador-credito', 'Necessidade do Cliente', 'Modalidades lado a lado'],
   ['operacao-di', 'Operação x DI', 'Taxa da operação contra o DI'],
   ['conta-garantida', 'Conta Garantida', 'Juros e IOF sobre saldos'],
   ['analise-desconto', 'Análise de desconto', 'Desconto de títulos contra giro'],

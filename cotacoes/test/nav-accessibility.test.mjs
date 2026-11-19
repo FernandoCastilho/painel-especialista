@@ -1,3 +1,4 @@
+import * as navigationPriority from '../src/navigationPriority.js'
 import * as appSections from '../src/appSections.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -14,7 +15,7 @@ const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof
 async function setup(t) {
   const listeners = new Map(), destinations = []
   const document = { activeElement: null, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) }
-  const targets = Array.from({ length: 7 }, (_, i) => ({ id: i, focus() { document.activeElement = this } }))
+  const targets = Array.from({ length: 5 }, (_, i) => ({ id: i, focus() { document.activeElement = this } }))
   const triggerTarget = { focus() { document.activeElement = this } }
   const container = { contains: target => target === triggerTarget || targets.includes(target) }
   const menuTarget = { querySelectorAll: () => targets }
@@ -28,12 +29,13 @@ async function setup(t) {
     } },
     './Nav.css': {},
     './appSections.js': appSections,
+    './navigationPriority.js': navigationPriority,
   }
   const source = await readFile(process.env.NAV_SOURCE || new URL('../src/Nav.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, document, require: name => deps[name] ?? require(name) })
-  const render = hookRenderer(() => module.exports.default({ tab: 'setores', onTab: id => destinations.push(id) }))
+  const render = hookRenderer(() => module.exports.default({ tab: 'aprender', onTab: id => destinations.push(id) }))
   t.after(() => render.close())
   await render.settle()
   const find = fn => nodes(render.value).find(fn)
@@ -50,10 +52,10 @@ test('mobile More names its menu, focuses first item and supports arrow/Home/End
   assert.equal(a.document.activeElement, a.targets[0], 'opening menu must focus its first item')
   assert.equal(a.trigger().props['aria-controls'], a.menu().props.id)
   assert.equal(a.menu().props['aria-labelledby'], a.trigger().props.id)
-  assert.equal(a.menuItems().length, 7)
+  assert.equal(a.menuItems().length, 5)
   assert.ok(a.menuItems().every(n => n.props.tabIndex === -1))
   assert.equal(a.menuItems().filter(n => n.props['aria-current'] === 'page').length, 1)
-  for (const [value, target] of [['ArrowDown', 1], ['End', 6], ['ArrowDown', 0], ['ArrowUp', 6], ['Home', 0]]) {
+  for (const [value, target] of [['ArrowDown', 1], ['End', 4], ['ArrowDown', 0], ['ArrowUp', 4], ['Home', 0]]) {
     const event = key(value); a.menu().props.onKeyDown(event)
     assert.equal(event.prevented, true)
     assert.equal(a.document.activeElement, a.targets[target])
@@ -68,7 +70,7 @@ test('mobile More names its menu, focuses first item and supports arrow/Home/End
 
 test('mobile More supports repeated keyboard opening, Tab exit and selecting a destination', async t => {
   const a = await setup(t)
-  for (const [value, target] of [['ArrowUp', 6], ['ArrowDown', 0]]) {
+  for (const [value, target] of [['ArrowUp', 4], ['ArrowDown', 0]]) {
     const event = key(value); a.trigger().props.onKeyDown(event); await a.render.settle()
     assert.equal(event.prevented, true)
     assert.equal(a.document.activeElement, a.targets[target])
@@ -79,7 +81,7 @@ test('mobile More supports repeated keyboard opening, Tab exit and selecting a d
   }
   a.trigger().props.onClick(); await a.render.settle()
   a.menuItems()[1].props.onClick(); await a.render.settle()
-  assert.deepEqual(a.destinations, ['setores'])
+  assert.deepEqual(a.destinations, ['podcast'])
   assert.equal(a.document.activeElement, a.triggerTarget)
   assert.equal(a.menu(), undefined)
 })

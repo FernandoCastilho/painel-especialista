@@ -25,6 +25,7 @@ Fora dessa lista, não interromper. Abrir PR em rascunho e enviar para o ramo da
 ## 4. Garantia de entrega
 "Pronto" só vale com testes, build e lint passando e o CI verde. Mexeu em cálculo financeiro: pedir também revisão independente.
 O relato final separa três coisas: o que foi feito, o que foi conferido, o que não deu para conferir.
+Toda entrega passa pelo Simplificador antes de ser dada como pronta (pedido de Fernando em 2026-11-19). Onde o Simplificador da central não estiver instalado, usar o simplificador de código da sessão e a revisão de excesso (ponytail) e dizer isso no relato.
 
 ## 5. Se travar
 Escolher o caminho mais seguro e registrar. Parar só se bater num limite da lista da regra 2.

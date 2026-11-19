@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -8,6 +9,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { hookRenderer } from './helpers/hooks.mjs'
 import * as model from '../src/contaGarantida.js'
+import * as lm from '../src/linhaMestra.js'
 
 const require = createRequire(import.meta.url)
 // Isolate product state tests from the expansion shell; dialog behavior has separate tests.
@@ -17,12 +19,12 @@ const CalculatorHelp = ({ title, label }) => React.createElement('button', { typ
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : (el.type === panelStub ? el.props.title : '') + textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalcPattern-conta-garantida.css': {}, './CalculatorHelp.jsx': CalculatorHelp }
-  for (const file of ['MoneyInput.jsx', 'ContaGarantida.jsx']) {
+  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalcPattern-conta-garantida.css': {}, './LinhaMestra.css': {}, './linhaMestra.js': { ...lm, lmLoad: () => lm.lmDefaults('2026-11-05') }, './pracaContrato.js': await import('../src/pracaContrato.js'), './CalculatorHelp.jsx': CalculatorHelp }
+  for (const file of ['MoneyInput.jsx', 'LinhaMestra.jsx', 'ContaGarantida.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
-    runInNewContext(code, { module, exports: module.exports, require: name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : deps[name]) ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name)) })
+    runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : deps[name]) ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name))) })
     deps['./' + file] = module.exports
   }
   let back = 0
@@ -34,7 +36,11 @@ async function setup(t) {
     text: () => textOf(render.value),
     get back() { return back },
     fields: () => nodes(render.value).filter(node => node.props?.id),
-    field: id => nodes(render.value).find(node => node.props?.id === 'cg-' + id),
+    // Valor e data da utilização única ficam na linha mestra comum (19/11/2026): o teste fala com o quadro pelo nome do campo.
+    field: id => nodes(render.value).find(node => node.props?.id === 'cg-' + id) ?? (() => {
+      const key = { amount: 'value', start: 'start' }[id], line = nodes(render.value).find(node => node.props?.prefix === 'cg' && node.props?.values)
+      return key && line ? { type: 'linha-mestra', props: { id: 'cg-' + id, value: line.props.values[key], 'aria-invalid': !!line.props.errors?.[key], onChange: v => line.props.onChange(key, typeof v === 'object' ? v.target.value : v), onBlur: () => {} } } : undefined
+    })(),
     button: text => nodes(render.value).find(node => node.type === 'button' && (node.props['aria-label'] || textOf(node)) === text),
     async change(id, value) { const node = this.field(id); assert.ok(node, id); node.props.onChange(typeof node.type === 'function' ? value : { target: { value, checked: value } }); await render.settle() },
     // Sair do campo: é quando o erro dele passa a aparecer.
@@ -44,10 +50,11 @@ async function setup(t) {
   }
 }
 
-test('inicia sem valores presumidos, taxa vazia impede resultado e não oferece capitalização', async t => {
+test('inicia com o valor da linha mestra e sem taxa presumida, taxa vazia impede resultado e não oferece capitalização', async t => {
   const h = await setup(t)
   assert.equal(h.field('rate').props.value, '')
-  assert.equal(h.field('amount').props.value, '')
+  // Valor utilizado vem da linha mestra comum: padrão de R$ 1.000.000,00 (pedido de 19/11/2026).
+  assert.equal(h.field('amount').props.value, '1.000.000,00')
   assert.equal(h.field('capitalization'), undefined)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
   assert.match(h.text(), /Estimativa para operação adimplente e rotativa/)
@@ -71,7 +78,8 @@ test('inicia sem valores presumidos, taxa vazia impede resultado e não oferece 
   assert.match(h.text(), /Informe um percentual de 0 a 100\. Campo vazio não é zero\./)
   assert.match(h.text(), /Preencha ou corrija os campos sinalizados/)
   assert.doesNotMatch(h.text(), /Preencha valor, taxa e prazo/)
-  await h.blur('amount')
+  // Apagou o valor da linha mestra: o erro dele aparece.
+  await h.change('amount', '')
   assert.equal(h.field('amount').props['aria-invalid'], true)
   assert.equal(h.field('taxProfile').props['aria-invalid'], true)
   assert.match(h.text(), /Informe o valor total da operação para determinar o IOF\./)
@@ -103,8 +111,8 @@ test('trocar modos, editar, adicionar/remover repetidamente e voltar sem efeitos
   await h.click('Utilização única')
   assert.equal(h.field('amount').props.value, '100.000')
   assert.match(h.text(), /1\.462,00/)
-  await h.click('‹ Calculadoras')
-  assert.equal(h.back, 1)
+  // O "‹ Voltar" fica no topo do painel (App.jsx), não dentro da calculadora.
+  assert.equal(h.back, 0)
 })
 
 test('prazo por data, erros inline, feriados e IOF automático operam sem resultados antigos', async t => {
