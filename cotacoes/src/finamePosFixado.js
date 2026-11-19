@@ -11,7 +11,7 @@
 //   Base 360 dias corridos.
 // "⊕" é a composição capitalizada do BNDES: (1 + a)(1 + b)(1 + c) − 1.
 // Dias úteis: feriados nacionais e da praça do contrato. Vencimentos: dia 15 ou próximo dia útil (mesmo calendário da TFC/TFB).
-import { REGRAS, PERIODICIDADES, calendarioFiname, taxaFinal } from './finameMateriais.js'
+import { REGRAS, PERIODICIDADES, FGI, calendarioFiname, ecgFgi, erroPercentualFgi, taxaFinal } from './finameMateriais.js'
 import { contractCalendars } from './pracaContrato.js'
 import { busDaysIn } from './holidays.js'
 import { creditCet } from './creditComparison.js'
@@ -44,6 +44,18 @@ export function trajetoriaFocus(focus, indicador, anoInicial) {
   const row = focus?.rows?.find(r => r.indicator === indicador)
   if (!row?.values) return []
   return Object.entries(row.values).map(([ano, v]) => ({ ano: Number(ano), valor: v?.median })).filter(item => Number.isInteger(item.ano) && item.ano >= anoInicial && Number.isFinite(item.valor)).sort((a, b) => a.ano - b.ano)
+}
+
+// Selic da Taxa LCD (decisão do Fernando em 19/11/2026, após a revisão independente): o Focus traz a Selic de fim de ano, mas o BNDES
+// capitaliza a média diária. Cada ano usa a média entre o fim do ano anterior e o fim do ano; o ano da liberação usa a Selic atual.
+export function trajetoriaSelicMedia(focus, anoInicial, selicAtual) {
+  const fins = trajetoriaFocus(focus, 'Selic', anoInicial - 1)
+  const fim = ano => fins.find(item => item.ano === ano)?.valor
+  return fins.filter(item => item.ano >= anoInicial).map(item => {
+    if (item.ano === anoInicial && Number.isFinite(selicAtual)) return { ano: item.ano, valor: selicAtual }
+    const anterior = fim(item.ano - 1)
+    return { ano: item.ano, valor: Number.isFinite(anterior) ? Math.round(((anterior + item.valor) / 2) * 1e4) / 1e4 : item.valor }
+  })
 }
 
 // Fator do índice de taxa (IPCA ou Selic) entre duas datas: produto por ano civil de (1 + taxa do ano)^(du no ano / 252).
@@ -96,7 +108,9 @@ export function simularPos({ custo, valor, participacao = 100, prazo, carencia =
   if (custo === 'tfbd' && !(Number.isFinite(cambioInicial) && cambioInicial > 0 && cambioInicial <= 100)) erros.push('Informe o dólar do dia da liberação (R$ por US$).')
   if (!(Number.isFinite(tac) && tac >= 0 && tac <= 1e9)) erros.push('Informe a TAC em R$, de zero em diante.')
   if (!PERIODICIDADES.some(p => p.id === periodicidade)) erros.push('Escolha periodicidade mensal, trimestral ou semestral.')
-  if (fgi) erros.push('Retire a garantia do FGI: o FGI Tradicional não aceita operações em TLP, Selic/LCD capitalizada ou TFBD (Anexo I do Regulamento, item 1).')
+  // FGI Tradicional: o Anexo I veda TLP capitalizada, Selic/TR capitalizadas e TFBD; a TLP exigível é aceita (decisão de 19/11/2026).
+  if (fgi && custo !== 'tlp') erros.push('Retire a garantia do FGI: o FGI Tradicional não aceita Selic/LCD capitalizada nem TFBD (Anexo I do Regulamento, item 1).')
+  if (fgi && custo === 'tlp' && erroPercentualFgi(fgi.percentual)) erros.push(erroPercentualFgi(fgi.percentual))
   const cals = contractCalendars(calendarios)
   if (!cals) erros.push('Escolha a praça do contrato entre as praças disponíveis.')
   const calendario = cals && Number.isInteger(prazo) && prazo >= 1 && prazo <= REGRAS.prazoMaxMeses ? calendarioFiname(dataLiberacao, prazo, feriados, calendarios) : null
@@ -104,6 +118,10 @@ export function simularPos({ custo, valor, participacao = 100, prazo, carencia =
   if (erros.length) return { ok: false, erros, avisos: [] }
 
   const liberado = valor * participacao / 100
+  if (fgi && liberado > FGI.limiteCredito) return { ok: false, erros: [`Com garantia do FGI, o crédito é limitado a ${FGI.limiteCredito.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por cliente em cada agente financeiro. Reduza o valor ou retire a garantia.`], avisos: [] }
+  // ECG do FGI (só TLP exigível): pago à vista na liberação, sem financiar o encargo, como na TFC e na TFB desta tela.
+  const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos, incorporar: false }) : null
+  const ecg = ecgCalc?.ecg ?? 0
   const taxa = taxaFinal(taxaFixa, taxaBndes, taxaAgente, composicao)
   const inicio = calendario.inicio
   const anoInicial = Number(inicio.slice(0, 4))
@@ -173,14 +191,14 @@ export function simularPos({ custo, valor, participacao = 100, prazo, carencia =
   const jSoCusto = jurosDe(taxaFinal(taxaFixa, 0, 0, composicao)), jSemAgente = jurosDe(taxaFinal(taxaFixa, taxaBndes, 0, composicao))
   const atribuicao = { custoFinanceiro: jSoCusto, bndes: jSemAgente - jSoCusto, agente: juros - jSemAgente }
   const fluxo = parcelas.map((p, k) => ({ ...p, saldoInicial: k ? parcelas[k - 1].saldo : liberado, iof: 0, pago: p.parcela, vencimento: calendario.datas[k], dias: calendario.dias[k], anos: calendario.anos[k], du: periodos[k].du, fatorIndice: periodos[k].fatorIndice, ...(custo === 'tfbd' ? { cambio: periodos[k].cambio } : {}) }))
-  const total = somar(fluxo.map(p => p.pago)) + tac
+  const total = somar(fluxo.map(p => p.pago)) + tac + ecg
   const amort = fluxo.filter(p => !p.carencia)
-  const fecha = Math.abs(somar(parcelas.map(p => p.amortizacao)) - (liberado + correcao)) < 0.01 && Math.abs(total - (liberado + correcao + juros + tac)) < 0.01
+  const fecha = Math.abs(somar(parcelas.map(p => p.amortizacao)) - (liberado + correcao)) < 0.01 && Math.abs(total - (liberado + correcao + juros + tac + ecg)) < 0.01
   if (!fecha) return { ok: false, erros: ['Resultado sem fechamento em centavos. Reduza o valor ou revise as taxas.'], avisos: [] }
 
   // CET (Res. CMN 4.881/2020): valor líquido na liberação = liberado − TAC (IOF zero nesta tela); dias corridos/365.
   // Art. 5º: o índice (IPCA, Selic, variação cambial) fica fora do CET da parte fixa; o projetado inclui a hipótese do Focus.
-  const liquido = liberado - tac
+  const liquido = liberado - tac - ecg
   const cetDe = rows => {
     const anual = creditCet(liquido, rows.filter(p => p.parcela > 0).map(p => ({ days: calendario.dias[p.mes - 1], payment: p.parcela })))
     return anual === null ? null : { anual: anual * 100, mensal: Math.expm1(Math.log1p(anual) / 12) * 100, liquido }
@@ -188,14 +206,16 @@ export function simularPos({ custo, valor, participacao = 100, prazo, carencia =
   const cet = cetDe(fluxo)
   const cetFixo = cetDe(fluxoPara(taxa, 'zero'))
   // Taxa nominal projetada do primeiro ano (índice do ano da liberação composto com a taxa final), só para o equivalente em CDI.
+  // Índice dos 12 meses seguintes à liberação (só para a tela e o equivalente em CDI): no fim do ano, o ano corrente já está quase realizado.
+  const umAno = isoDe(civil(inicio) + 365)
   const indicePrimeiroAno = custo === 'tfbd'
-    ? (cambioNaData(cambioInicial, inicio, trajetoria, isoDe(civil(inicio) + 365)) / cambioInicial - 1) * 100
-    : valorDoAno(trajetoria, anoInicial)
+    ? (cambioNaData(cambioInicial, inicio, trajetoria, umAno) / cambioInicial - 1) * 100
+    : (({ fator, du }) => (du > 0 ? (fator ** (252 / du) - 1) * 100 : valorDoAno(trajetoria, anoInicial)))(fatorTaxaAnual(trajetoria, inicio, umAno, cals, feriados))
   const taxaNominal = custo === 'tfbd' ? ((1 + taxa / 100) * (1 + indicePrimeiroAno / 100) - 1) * 100 : Math.expm1(Math.log1p(taxa / 100) + Math.log1p(indicePrimeiroAno / 100)) * 100
   const avisos = []
   if (custo === 'tfbd') avisos.push('TFBD não disponível no Itaú (tabela de premissas da calculadora BNDES).')
   return {
-    ok: true, perfil: custo, financiado: liberado, liberado, tac, cet, cetFixo, fgi: null, taxa, taxaFixa,
+    ok: true, perfil: custo, financiado: liberado, liberado, tac, cet, cetFixo, fgi: ecgCalc ? { percentual: fgi.percentual, incorporado: false, ecg, k: ecgCalc.k, periodos: ecgCalc.p } : null, taxa, taxaFixa,
     taxaMensal: monthlyRate(taxa, 'aa') * 100, taxaNominal, composicao, parcelas: fluxo,
     calendario: 'datas-reais-act-act', baseJuros: custo === 'tfbd' ? 'dias corridos/360' : 'dias úteis/252', liberacao: inicio,
     indice: { ...INDICE_POS[custo], trajetoria, cambioInicial: custo === 'tfbd' ? cambioInicial : null, primeiroAno: indicePrimeiroAno },

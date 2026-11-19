@@ -29,12 +29,12 @@ export const FINAME_FUNDING_OPTIONS = Object.freeze([
   // Pós-fixados no mesmo cronograma (pedido de 19/11/2026): taxa do painel + hipótese do índice (Focus ano a ano, editável).
   Object.freeze({
     id: 'tlp', label: 'TLP', mode: 'pos', calculatorId: 'bndes-tlp-exigivel',
-    hint: 'TLP exigível: J (parte prefixada da TLP, moeda 777 do BNDES, do mês da contratação) mais IPCA, cobrados com os juros nos vencimentos; o IPCA não corrige o saldo. Juros em dias úteis/252. O IPCA futuro é hipótese: vem do Focus ano a ano e pode ser editado. Carência de até 24 meses. Sem FGI Tradicional.',
+    hint: 'TLP exigível: J (parte prefixada da TLP, moeda 777 do BNDES, do mês da contratação) mais IPCA, cobrados com os juros nos vencimentos; o IPCA não corrige o saldo. Juros em dias úteis/252. O IPCA futuro é hipótese: vem do Focus ano a ano e pode ser editado. Carência de até 24 meses. Aceita FGI Tradicional (o regulamento veda só a TLP capitalizada).',
     notice: 'TLP: J do painel e IPCA projetado pelo Focus.',
   }),
   Object.freeze({
     id: 'lcd', label: 'Taxa LCD', mode: 'pos', calculatorId: 'bndes-selic-lcd',
-    hint: 'Selic capitalizada no saldo mais a sobretaxa LD1 (moeda LD1 do BNDES, referência trimestral, pode ser negativa), a taxa do BNDES e o spread do agente, cobrados nos vencimentos. Juros em dias úteis/252. A Selic futura é hipótese: vem do Focus ano a ano e pode ser editada. Carência de até 24 meses. Sem FGI Tradicional.',
+    hint: 'Selic capitalizada no saldo mais a sobretaxa LD1 (moeda LD1 do BNDES, referência trimestral, pode ser negativa), a taxa do BNDES e o spread do agente, cobrados nos vencimentos. Juros em dias úteis/252. A Selic futura é hipótese: média dos fins de ano do Focus (no ano da liberação, a Selic atual), editável. Carência de até 24 meses. Sem FGI Tradicional.',
     notice: 'Taxa LCD: LD1 do painel e Selic projetada pelo Focus.',
   }),
   Object.freeze({

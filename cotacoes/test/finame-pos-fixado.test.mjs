@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { simularPos, cambioNaData, valorDoAno, trajetoriaFocus, codigoTfbd } from '../src/finamePosFixado.js'
+import { simularPos, cambioNaData, valorDoAno, trajetoriaFocus, trajetoriaSelicMedia, codigoTfbd } from '../src/finamePosFixado.js'
+import { ecgFgi } from '../src/finameMateriais.js'
 import { compareFinamePair, resolvePosRate, parseSignedDecimal } from '../src/finameFunding.js'
 
 // Contas de conferência feitas à parte, sem o motor: dias úteis contados à mão (seg-sex, sem feriados no período escolhido).
@@ -88,6 +89,15 @@ test('regras do produto: carência até 24 meses, sem FGI, taxas e projeções v
   assert.equal(simularPos({ ...base, prazo: 48, carencia: 24, custo: 'tlp', taxaFixa: 7, trajetoria: t }).ok, true)
   assert.equal(simularPos({ ...base, prazo: 48, carencia: 25, custo: 'tlp', taxaFixa: 7, trajetoria: t }).ok, false)
   assert.match(simularPos({ ...base, custo: 'lcd', taxaFixa: 0, trajetoria: t, fgi: { percentual: 80 } }).erros.join(), /FGI/)
+  assert.match(simularPos({ ...base, custo: 'tfbd', taxaFixa: 6, trajetoria: [{ ano: 2027, valor: 5.5 }], cambioInicial: 5.5, fgi: { percentual: 80 } }).erros.join(), /FGI/)
+  // TLP exigível aceita FGI (o Anexo I veda só a TLP capitalizada): ECG à vista entra no total e sai do valor líquido do CET.
+  const sem = simularPos({ ...base, prazo: 24, custo: 'tlp', taxaFixa: 7, trajetoria: t })
+  const com = simularPos({ ...base, prazo: 24, custo: 'tlp', taxaFixa: 7, trajetoria: t, fgi: { percentual: 80 } })
+  assert.equal(com.ok, true, com.erros?.join())
+  const ecg = ecgFgi({ valor: 1_000_000, percentual: 80, prazo: 24, incorporar: false }).ecg
+  perto(com.fgi.ecg, ecg); perto(com.total, sem.total + ecg); perto(com.juros, sem.juros)
+  assert.ok(com.cet.anual > sem.cet.anual)
+  assert.equal(simularPos({ ...base, custo: 'tlp', taxaFixa: 7, trajetoria: t, fgi: { percentual: 85 } }).ok, false)
   assert.equal(simularPos({ ...base, custo: 'tfbd', taxaFixa: 6, trajetoria: [{ ano: 2027, valor: 5.5 }] }).ok, false) // sem dólar do dia
   assert.equal(simularPos({ ...base, custo: 'tlp', taxaFixa: 7, trajetoria: [] }).ok, false)
   assert.equal(simularPos({ ...base, custo: 'tfc', taxaFixa: 7, trajetoria: t }).ok, false)
@@ -99,6 +109,10 @@ test('Focus ano a ano, faixa da TFBD e taxa de referência que aceita LD1 negati
   assert.deepEqual(trajetoriaFocus(focus, 'Selic', 2026), [])
   assert.equal(valorDoAno([{ ano: 2026, valor: 5 }, { ano: 2027, valor: 4 }], 2030), 4)
   assert.equal(valorDoAno([{ ano: 2026, valor: 5 }, { ano: 2027, valor: 4 }], 2025), 5)
+  // Selic da LCD: ano da liberação com a Selic atual; seguintes pela média dos fins de ano do Focus.
+  const selic = { rows: [{ indicator: 'Selic', values: { 2026: { median: 13.75 }, 2027: { median: 12.75 }, 2028: { median: 11 } } }] }
+  assert.deepEqual(trajetoriaSelicMedia(selic, 2026, 14), [{ ano: 2026, valor: 14 }, { ano: 2027, valor: 13.25 }, { ano: 2028, valor: 11.875 }])
+  assert.deepEqual(trajetoriaSelicMedia(selic, 2027, null), [{ ano: 2027, valor: 13.25 }, { ano: 2028, valor: 11.875 }])
   assert.deepEqual([24, 25, 72, 73, 84].map(codigoTfbd), ['TD1', 'TD2', 'TD2', 'TD3', 'TD3'])
   assert.equal(resolvePosRate('lcd', { valor: -0.11 }).value, -0.11)
   assert.equal(resolvePosRate('lcd', null, '−0,11').value, -0.11)
