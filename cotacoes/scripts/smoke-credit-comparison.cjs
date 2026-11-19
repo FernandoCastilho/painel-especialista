@@ -31,10 +31,17 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await page.getByRole('heading', { name: 'Resultado da cotação', exact: true }).waitFor()
     assert.equal(await page.getByRole('heading', { name: 'Resultado da comparação', exact: true }).count(), 0)
     assert.equal(await row('Valor contratado').locator('td').count(), 1)
+    assert.equal(await row('Diferença de custo para a comparação 1').count(), 0)
+    assert.equal(await page.getByRole('button', { name: 'Apresentar cotação', exact: true }).count(), 1)
     const singleQuote = await page.locator('.credit-results').first().innerText()
     for (const width of [390, 820, 1440]) {
       await page.setViewportSize({ width, height: 1000 })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `single quote overflow/${width}`)
+      const matrix = page.getByRole('region', { name: 'Indicadores da operação', exact: true })
+      assert.equal(await matrix.evaluate(el => el.scrollWidth <= el.clientWidth + 1), true, `single quote internal overflow/${width}`)
+      const regionBounds = await matrix.boundingBox()
+      const valueBounds = await row('Valor contratado').locator('td').boundingBox()
+      assert.ok(valueBounds.x >= regionBounds.x && valueBounds.x + valueBounds.width <= regionBounds.x + regionBounds.width + 1, `single quote value visible/${width}`)
       await page.screenshot({ path: path.join(out, `single-quote-${width}.png`), fullPage: true })
     }
     await page.getByRole('button', { name: '5', exact: true }).click()
