@@ -401,6 +401,18 @@ jobs:
           mkdir -p "$CAPTURE_QA_OUTPUT"
           node scripts/smoke-capture-viewport-micro.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
         shell: bash
+      - name: Diagnosticar rolagem no diálogo real CDI com referência viewport
+        id: real_dialog
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 2
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/real-dialog
+          CAPTURE_REFERENCE_MODE: device
+          CAPTURE_TEXT_RASTER: grayscale
+        run: |
+          mkdir -p "$CAPTURE_QA_OUTPUT"
+          node scripts/smoke-capture-real-dialog.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
+        shell: bash
       - name: Capturas, métricas de fidelidade e prova de colagem
         if: ${{ !cancelled() && steps.serve.outcome != 'skipped' }}
         uses: actions/upload-artifact@v4
