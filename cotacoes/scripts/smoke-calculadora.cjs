@@ -193,12 +193,12 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.equal(await fm.locator('#fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc, #fm-finame-eligible').count(), 0, 'premissas fixas sem controles redundantes')
       assert.equal(await fm.getByLabel('Diária (% ao dia)', { exact: true }).count(), 0, 'não permite inventar alíquota')
       await help('Regras do produto e fontes', /Base legal e onde cada regra foi conferida/)
-      // TFB limita carência a 12; TLP abre projeção exigível própria, sem fluxo capitalizado.
+      // TFB limita carência a 12; TLP calcula no Finame (exigível, 19/11/2026) e mantém o atalho para a projeção própria.
       await fm.getByLabel('Carência (meses)', { exact: true }).fill('18')
       await fm.getByText(/Carência de 0 a 12 meses com TFB/).waitFor()
       const retainedTlpValue = await fm.locator('#fm-valor').inputValue()
       await fm.locator('#fm-custo').selectOption('tlp')
-      assert.equal(await fm.locator('.fm-grade, .fm-fluxo-panel, #fm-ipca').count(), 0)
+      assert.equal(await fm.locator('#fm-ipca').count(), 0, 'sem o campo antigo de IPCA único')
       await fm.getByRole('link', { name: 'Abrir projeção TLP exigível' }).waitFor()
       assert.ok(p.url().endsWith('#calculadora/finame-materiais'), 'escolher TLP não navega automaticamente')
       assert.equal(await fm.locator('#fm-valor').inputValue(), retainedTlpValue)
