@@ -29,8 +29,9 @@ test('comparação executiva: conclusão primeiro, uma tabela só e sem barra de
   assert.match(jsx, /\{resumida \? detalhamento : <ExpandablePanel title="Composição do resultado">/)
   assert.match(jsx, /className="fm-parcel-scroll fm-composicao"/)
   assert.match(css, /\.bw \.fm-composicao \{ max-height:none; overflow:visible; \}/)
-  // A lista completa de parcelas abre em tela cheia pelo botão dos marcos.
-  assert.match(jsx, /className="fm-marcos-todas" onClick=\{\(\) => setParcelasAbertas\(true\)\}/)
-  assert.match(jsx, /resumida \? \{ open: parcelasAbertas, onOpenChange: setParcelasAbertas \} : \{\}/)
-  assert.match(css, /section\.expandable-panel\.fm-parcels-resumidas > :is\(\.expandable-heading,\.expandable-content\) \{ display:none !important; \}/)
+  // A lista completa só abre a pedido, pelo sumário ou comando dos marcos.
+  assert.match(jsx, /className="fm-marcos-todas" onClick=\{abrirParcelas\} aria-controls="fm-parcelas"/)
+  assert.match(jsx, /<details id="fm-parcelas" ref=\{parcelasRef\}[^>]*>/)
+  assert.doesNotMatch(jsx, /<details id="fm-parcelas"[^>]*\bopen[= >]/)
+  assert.match(jsx, /detalhes\.open = true/)
 })

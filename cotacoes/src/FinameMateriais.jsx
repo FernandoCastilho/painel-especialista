@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useHolidays } from './useHolidays.js'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
@@ -13,8 +13,6 @@ import { nf, nbr5891 } from './format.js'
 import Estado from './Estado.jsx'
 import { GLOSSARY } from './glossary.js'
 import Help from './CalculatorHelp.jsx'
-import BndesPresentation from './BndesPresentation.jsx'
-import BndesPrint from './BndesPrint.jsx'
 import BndesIcon from './BndesIcon.jsx'
 import ExpandablePanel from './ExpandablePanel.jsx'
 import ComparaSeries from './BndesCompare.jsx'
@@ -54,9 +52,30 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const [outro, setOutro] = useState('tfb') // segundo custo do comparativo (qualquer par, pedido de 19/11/2026)
   const [trajetoriaManual, setTrajetoriaManual] = useState({}) // { tlp: { 2027: '5,00' }, ... }: projeção editada por ano
   const [cambioManual, setCambioManual] = useState(null) // dólar do dia da liberação editado (TFBD)
-  const [parcelasAbertas, setParcelasAbertas] = useState(false)
-  // Cotação ampliada: o mesmo quadro do resultado vira uma janela sobre a tela (sem duplicar conteúdo). Esc ou o fundo fecham.
-  const [ampliada, setAmpliada] = useState(false)
+  const parcelasRef = useRef(null)
+  const [cotacaoAmpliada, setCotacaoAmpliada] = useState(false)
+  const abrirAposRecolher = useRef(false)
+  const mostrarParcelas = useCallback(() => {
+    const detalhes = parcelasRef.current
+    if (!detalhes) return
+    detalhes.open = true
+    detalhes.querySelector('summary')?.focus({ preventScroll: true })
+    detalhes.scrollIntoView({ block: 'start' })
+  }, [])
+  const abrirParcelas = () => {
+    if (!cotacaoAmpliada) return mostrarParcelas()
+    abrirAposRecolher.current = true
+    setCotacaoAmpliada(false)
+  }
+  useEffect(() => {
+    if (cotacaoAmpliada || !abrirAposRecolher.current) return
+    // Depois de fechar o diálogo nativo e da restauração de foco do acordeão ampliável.
+    const frame = requestAnimationFrame(() => {
+      abrirAposRecolher.current = false
+      mostrarParcelas()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [cotacaoAmpliada, mostrarParcelas])
   const [chartPreset, setChartPreset] = useState(12)
   const [chartCustom, setChartCustom] = useState(null)
   const { sistema, composicao, liberacao } = FINAME_PREMISES
@@ -174,7 +193,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const cetAjuda = 'CET estimado (Resolução CMN 4.881/2020): taxa anual que iguala o valor líquido recebido na liberação (valor liberado menos TAC, ECG do FGI à vista e IOF) às parcelas do cronograma, em dias corridos/365. Usa as datas hipotéticas do fluxo (dia 15 ou próximo dia útil) e não inclui seguros nem outras tarifas: o CET do contrato, informado pelo agente, prevalece.'
   const referenceRetained = !!((emUso.some(id => ['lcd', 'tfbd'].includes(id)) && (moedas.stale || moedas.status === 'error')) || (emUso.includes('tlp') && (bndes.stale || bndes.status === 'error')) || ((emUso.includes('tfc')) && (moedas.stale || moedas.status === 'error' || moedas.data?.stale?.[tfcCodigo])) || ((emUso.includes('tfb')) && (bndes.stale || bndes.status === 'error' || bndes.data?.stale?.[keyOf(faixa, liberacao)])))
 
-  const conditions = { valor: money.value, participacao, prazo, carencia, custo, quote: quotes[custo], liberacao, porte: PORTES.find(item => item.id === porte).label, taxaBndes, taxaAgente, sistema, periodicidade: PERIODICIDADES.find(item => item.id === periodicidade).label, composicao, finameEligible: true, rate: rates[custo], rulesDate: REGRAS.conferidoEm, retained: referenceRetained }
 
   const ajuda = (label, texto) => (texto ? <Help label={`Ajuda: ${label}`}>{texto}</Help> : null)
   const field = (key, label, control, hint, valor) => (
@@ -276,7 +294,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
     <section className="cx cx-finame" aria-labelledby="calc-h">
       <h2 id="calc-h" className="cx-title"><span className="cx-icon" aria-hidden="true"><FinameIcon /></span>BNDES Finame Materiais</h2>
 
-      <div className={`fm-workspace${comparar ? ' fm-cmp' : ''}`}>
+      <div className={`fm-workspace fm-quote-layout${comparar ? ' fm-cmp' : ''}`}>
       <article className="desk-panel cx-panel fm-input-panel">
         <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras do produto conferidas em {dmy(REGRAS.conferidoEm)}</small>{ajuda('Regras do produto e fontes', regrasAjuda)}</header>
         <div className="cx-form">
@@ -335,15 +353,14 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
           </div>
           <ul className="fm-pills" aria-label="Condições fixas"><li>Amortização <b>SAC</b></li><li>Liberação <b>até 90 dias</b></li><li>ECG <b>à vista{res?.fgi ? ` · ${brl(res.fgi.ecg)}` : ''}</b></li></ul>
           </div></section>
-          <button type="button" className="fm-show-result" disabled={!res} onClick={() => setAmpliada(true)}>{res ? <><span>{comparar && cets.every(Boolean) && cets.length ? 'Menor CET' : 'CET estimado'} <b>{comparar && cets.every(Boolean) && cets.length ? cetTexto(cets.reduce((best, item) => item.anual < best.anual ? item : best)) : cetTexto(cet)}</b></span><span>Abrir comparação ⤢</span></> : 'Ver resultado da simulação'}</button>
         </div>
       </article>
 
       <div className="fm-results">
-      <ExpandablePanel brand={<img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" />} title={comparar ? 'Cotação comparativa' : 'Cotação da operação'} open={ampliada} onOpenChange={setAmpliada} className="fm-result-workspace">
+      <ExpandablePanel title={comparar ? 'Cotação comparativa' : 'Cotação da operação'} className="fm-result-workspace" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
       {res && <ExpandablePanel title="Dados básicos da operação"><dl className="fm-operation-summary">{[
         ['Valor financiado', brl(res.liberado)], ['Prazo total', `${prazo} meses`], ['Carência', `${carencia} meses`],
-        ['Data da liberação', dmy(liberacaoText)], ['Porte e região', conditions.porte], ['Amortização', sistema.toUpperCase()],
+        ['Data da liberação', dmy(liberacaoText)], ['Porte e região', PORTES.find(item => item.id === porte).label], ['Amortização', sistema.toUpperCase()],
       ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></ExpandablePanel>}
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
         <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small>{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}</header>
@@ -409,7 +426,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
                         <span className="fm-marcos-head">Momento</span>{alternatives.map(item => <span key={item.custo} className="fm-marcos-head fm-marcos-valor">{item.custo.toUpperCase()}</span>)}
                         {marcos.map(([rotulo, data]) => [<span key={rotulo} className="fm-marcos-rotulo">{rotulo} · {dmy(data)}</span>, ...alternatives.map(item => { const row = item.result.parcelas.find(p => p.vencimento === data); return <span key={rotulo + item.custo} className="fm-marcos-valor">{row ? brl(row.parcela) : '—'}</span> })])}
                       </div>
-                      <button type="button" className="fm-marcos-todas" onClick={() => setParcelasAbertas(true)}>Ver todas as parcelas <BndesIcon kind="expand" /></button>
+                      <button type="button" className="fm-marcos-todas" onClick={abrirParcelas} aria-controls="fm-parcelas">Ver todas as parcelas</button>
                     </section>}
                     <section className="fm-leitura" aria-labelledby="fm-leitura-h">
                       <h4 id="fm-leitura-h">Leitura</h4>
@@ -435,17 +452,19 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
         )}
       </article>
 
-      <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
       </ExpandablePanel>
       </div>
       </div>
 
       {/* Detalhe abaixo, em largura total: parcelas, histórico, memória do fluxo e premissas (recolhidos). */}
       <div className="fm-secondary">
-      {res && <ExpandablePanel title="Parcelas · opções lado a lado" className={`fm-parcels-callout${resumida ? ' fm-parcels-resumidas' : ''}`} {...(resumida ? { open: parcelasAbertas, onOpenChange: setParcelasAbertas } : {})}>
+      {res && <details id="fm-parcelas" ref={parcelasRef} className="desk-panel cx-panel fm-parcels-callout fm-fluxo-panel">
+        <summary>{resumida ? 'Parcelas · opções lado a lado' : 'Parcelas da operação'}</summary>
+        <div className="fm-installments-content">
         <p className="cx-hint">Datas projetadas · inclui juros na carência.{ajuda('Leitura das parcelas', 'Despesas à vista permanecem na composição e na memória completa. Traço significa ausência de parcela nessa data. Os valores A e B estão alinhados pelo vencimento para comparação.')}</p>
         <div className="fm-parcel-scroll" role="region" tabIndex={0} aria-label="Datas e parcelas das alternativas"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Data</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{parcelDates.map(date => <tr key={date}><th scope="row">{dmy(date)}</th>{alternatives.map(item => { const row = item.result.parcelas.find(p => p.vencimento === date); return <td key={item.custo}>{row ? brl(row.parcela) : '—'}</td> })}</tr>)}</tbody></table></div>
-      </ExpandablePanel>}
+        </div>
+      </details>}
       {funding?.mode === 'inline' && <ExpandablePanel title="Histórico dos indexadores" className="fm-indexers-callout">
         <p className="cx-hint">Histórico, não projeção futura.{ajuda('Histórico dos indexadores', 'Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
