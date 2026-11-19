@@ -1,6 +1,6 @@
 import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
 import { EXEMPLO, LIMITES_ANALISE, analisarSerie, blocosAnalise, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
@@ -145,6 +145,9 @@ const SLOT = 56, TOPO = 84, BASE = 28, ALT = 338, BARRA = 20
 // Faixa de cima: seta da variação (y 10-24), total de cada período (y 40) e topo dos quadros (y 48).
 const Y_SETA = 22, Y_TOTAL = 40, Y_QUADRO = 48
 const larguraRotulo = (txt) => txt.length * 6.6 + 10
+// Texto centrado perto da borda não pode sair do desenho (o SVG corta o que passa da largura).
+// Estimativa da largura em unidades do desenho: ~8,4 por caractere no texto de 14 px em negrito.
+const dentro = (x, txt, W, porLetra = 8.4) => { const meia = (String(txt).length * porLetra) / 2 + 4; return Math.min(Math.max(x, meia), W - meia) }
 
 function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor, svgRef }) {
   const arrastando = useRef(false)
@@ -155,7 +158,9 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
   const plotH = ALT - TOPO - BASE
   const y = (v) => TOPO + (1 - Math.max(0, v) / max) * plotH
   const cx = (i) => i * SLOT + SLOT / 2
-  const temDivida = meses.some((m) => m.endividamento != null)
+  // Saldo zero ou vazio é "sem informação" (mesma regra da análise): não vira ponto nem derruba a linha a zero.
+  const saldo = (m) => (m.endividamento != null && m.endividamento > 0 ? m.endividamento : null)
+  const temDivida = meses.some((m) => saldo(m) != null)
 
   const indice = (e) => {
     const r = svg.current.getBoundingClientRect()
@@ -190,7 +195,16 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
   const v = f?.variacao
   const temSeta = qAtual && qAnterior && v != null && qAtual.x0 - qAnterior.x1 > 30
   const vd = comparacao?.endividamento?.variacaoMedia ?? null
-  const pontos = meses.map((m, i) => (m.endividamento == null ? null : `${cx(i)},${y(m.endividamento)}`))
+  // Gráfico mais largo que a tela (celular, tablet): abre mostrando os meses mais recentes, ou o fim do período escolhido,
+  // em vez de esconder justamente a borda direita.
+  const alvoX = qAtual ? qAtual.x1 : null
+  useLayoutEffect(() => {
+    const wrap = svg.current?.parentElement
+    if (!wrap || wrap.scrollWidth <= wrap.clientWidth + 1) return
+    const escala = wrap.scrollWidth / W
+    wrap.scrollLeft = alvoX == null ? wrap.scrollWidth : Math.max(0, alvoX * escala + 24 - wrap.clientWidth)
+  }, [svg, W, alvoX])
+  const pontos = meses.map((m, i) => (saldo(m) == null ? null : `${cx(i)},${y(saldo(m))}`))
   const linha = pontos.filter(Boolean).join(' ')
 
   return (
@@ -210,34 +224,34 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
       {[['ant', qAnterior, f?.anterior], ['atu', qAtual, f?.atual]].map(([id, q, total]) => q && (
         <g key={id}>
           <rect className="ft-box" x={q.x0} y={Y_QUADRO} width={q.x1 - q.x0} height={ALT - Y_QUADRO - 3} />
-          {total != null && <text className="ft-box-total" x={q.meio} y={Y_TOTAL}>{totalCurto(total, unidade)}</text>}
+          {total != null && <text className="ft-box-total" x={dentro(q.meio, totalCurto(total, unidade), W)} y={Y_TOTAL}>{totalCurto(total, unidade)}</text>}
         </g>
       ))}
       {temSeta && (
         <g className={v < 0 ? 'ft-arrow ft-arrow-down' : 'ft-arrow ft-arrow-up'}>
           <line x1={qAnterior.x1 + 10} x2={qAtual.x0 - 14} y1={Y_SETA} y2={Y_SETA} />
           <polygon points={`${qAtual.x0 - 6},${Y_SETA} ${qAtual.x0 - 16},${Y_SETA - 5} ${qAtual.x0 - 16},${Y_SETA + 5}`} />
-          <text x={(qAnterior.x1 + qAtual.x0) / 2} y={Y_SETA - 6}>{pct(v)}</text>
+          <text x={dentro((qAnterior.x1 + qAtual.x0) / 2, pct(v), W)} y={Y_SETA - 6}>{pct(v)}</text>
         </g>
       )}
-      {temSeta && vd != null && <text className="ft-arrow-div" x={(qAnterior.x1 + qAtual.x0) / 2} y={Y_SETA + 16}>Endividamento {pct(vd)}</text>}
-      {!temSeta && qAtual && v != null && <text className={v < 0 ? 'ft-arrow ft-arrow-down' : 'ft-arrow ft-arrow-up'} x={qAtual.meio} y={Y_SETA - 4}>Faturamento {pct(v)}{vd != null ? ` · Endividamento ${pct(vd)}` : ''} vs. ano anterior</text>}
+      {temSeta && vd != null && <text className="ft-arrow-div" x={dentro((qAnterior.x1 + qAtual.x0) / 2, `Endividamento ${pct(vd)}`, W, 7.2)} y={Y_SETA + 16}>Endividamento {pct(vd)}</text>}
+      {!temSeta && qAtual && v != null && (() => { const txt = `Faturamento ${pct(v)}${vd != null ? ` · Endividamento ${pct(vd)}` : ''} vs. ano anterior`; return <text className={v < 0 ? 'ft-arrow ft-arrow-down' : 'ft-arrow ft-arrow-up'} x={dentro(qAtual.meio, txt, W)} y={Y_SETA - 4}>{txt}</text> })()}
       <line className="ft-axis" x1="0" x2={W} y1={ALT - BASE} y2={ALT - BASE} />
-      {temDivida && <polygon className="ft-area" points={`${cx(meses.findIndex((m) => m.endividamento != null))},${ALT - BASE} ${linha} ${cx(meses.findLastIndex((m) => m.endividamento != null))},${ALT - BASE}`} />}
+      {temDivida && <polygon className="ft-area" points={`${cx(meses.findIndex((m) => saldo(m) != null))},${ALT - BASE} ${linha} ${cx(meses.findLastIndex((m) => saldo(m) != null))},${ALT - BASE}`} />}
       {meses.map((m, i) => m.faturamento != null && (
         <rect key={`f${m.chave}`} className="ft-bar" x={cx(i) - BARRA / 2} y={y(m.faturamento)} width={BARRA} height={ALT - BASE - y(m.faturamento)} rx="3" />
       ))}
       {temDivida && <polyline className="ft-line" points={linha} />}
       {meses.map((m, i) => {
         const yf = m.faturamento != null ? y(m.faturamento) : null
-        let yd = m.endividamento != null ? y(m.endividamento) : null
+        let yd = saldo(m) != null ? y(saldo(m)) : null
         // Rótulo do endividamento sobe se for encostar no do faturamento.
         if (yf != null && yd != null && Math.abs(yd - yf) < 22) yd = Math.min(yd, yf) - 22
-        const tf = rotulo(m.faturamento), td = rotulo(m.endividamento)
+        const tf = rotulo(m.faturamento), td = rotulo(saldo(m))
         return (
           <g key={`l${m.chave}`}>
             {yf != null && <><rect className="ft-tag-f" x={cx(i) - larguraRotulo(tf) / 2} y={yf - 22} width={larguraRotulo(tf)} height="17" rx="3" /><text className="ft-tag-ft" x={cx(i)} y={yf - 9.5}>{tf}</text></>}
-            {yd != null && <><circle className="ft-dot" cx={cx(i)} cy={y(m.endividamento)} r="3" /><rect className="ft-tag-d" x={cx(i) - larguraRotulo(td) / 2} y={Math.max(2, yd - 24)} width={larguraRotulo(td)} height="17" rx="3" /><text className="ft-tag-dt" x={cx(i)} y={Math.max(2, yd - 24) + 12.5}>{td}</text></>}
+            {yd != null && <><circle className="ft-dot" cx={cx(i)} cy={y(saldo(m))} r="3" /><rect className="ft-tag-d" x={cx(i) - larguraRotulo(td) / 2} y={Math.max(2, yd - 24)} width={larguraRotulo(td)} height="17" rx="3" /><text className="ft-tag-dt" x={cx(i)} y={Math.max(2, yd - 24) + 12.5}>{td}</text></>}
             <text className="ft-month" x={cx(i)} y={ALT - 9}>{m.rotulo}</text>
           </g>
         )
