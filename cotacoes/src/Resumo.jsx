@@ -1,3 +1,4 @@
+import { observeMarketNewsHeight } from './marketNewsHeight.js'
 import { useNewsClock } from './useNewsClock.js'
 import { NEWS_WINDOW_DAYS, newsCollectionStale } from './newsWindow.js'
 import HeavyVehicles from './HeavyVehicles.jsx'
@@ -427,6 +428,8 @@ export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen =
 
 // Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
 function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
+  const newsHeightRef = useRef(null)
+  useEffect(() => observeMarketNewsHeight(newsHeightRef.current), [])
   const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
   useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
   const { daily, returns, ptaxes } = useCambio(quotes, ptax)
@@ -456,7 +459,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
           <CambioTabela quotes={quotes} returns={returns} ptaxes={ptaxes} selection={selection} onOpen={openSelected} colors={colors} />
         </div>
         </div>
-        <div className="terminal-chart terminal-news">
+        <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
         <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>{newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'eleicoes' ? <TemaNoticias id="eleicoes-eua" simples /> : newsTab === 'trends' ? <GoogleTrends /> : newsTab === 'veiculos-pesados' ? <><HeavyVehicles compact/><SectorNews id="veiculos-pesados" label="Veículos pesados" /></> : <MarketNews bare />}</Panel>
         </div>
         </div>
