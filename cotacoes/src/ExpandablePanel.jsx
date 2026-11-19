@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import BndesIcon from './BndesIcon.jsx'
+import ExpandIcon from './ExpandIcon.jsx'
 import './ExpandablePanel.css'
 
 let scrollLocks = 0
@@ -32,7 +33,7 @@ export default function ExpandablePanel({ title, brand, help, children, classNam
       queueMicrotask(restoreFocus)
     }
   }, [expanded, setOpen, restoreFocus])
-  const content = <><header className="expandable-heading"><div>{brand}<h3 id={titleId}>{title}</h3>{help}</div><button type="button" ref={expanded ? undefined : trigger} className="expandable-toggle" onClick={() => setOpen(!expanded)} aria-label={`${expanded ? 'Recolher' : 'Ampliar'}: ${title}`} title={expanded ? 'Recolher (Esc)' : 'Ampliar na tela'} aria-expanded={expanded}><BndesIcon kind={expanded ? 'collapse' : 'expand'} /></button></header><div className="expandable-content">{children}</div></>
+  const content = <><header className="expandable-heading"><div>{brand}<h3 id={titleId}>{title}</h3>{help}</div><button type="button" ref={expanded ? undefined : trigger} className="expandable-toggle" onClick={() => setOpen(!expanded)} aria-label={`${expanded ? 'Recolher' : 'Ampliar'}: ${title}`} title={expanded ? 'Recolher (Esc)' : 'Ampliar na tela'} aria-expanded={expanded}>{expanded ? <BndesIcon kind="collapse" /> : <ExpandIcon />}</button></header><div className="expandable-content">{children}</div></>
   // data-painel: nome do quadro, para a aba Apresentar esconder as memórias de cálculo e tabelas longas nos slides.
   return <section className={`expandable-panel ${className}`} data-painel={title}>
     {!expanded && content}

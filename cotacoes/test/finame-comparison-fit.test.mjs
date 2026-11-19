@@ -20,13 +20,14 @@ test('comparação executiva: conclusão primeiro, uma tabela só e sem barra de
   // A faixa de conclusão vem antes da tabela e só mostra resultados já calculados.
   assert.ok(jsx.indexOf('className="fm-verdict"') > 0 && jsx.indexOf('className="fm-verdict"') < jsx.indexOf('fm-exec-matrix'))
   // Taxas, parcelas e composição do custo ficam na mesma tabela, com os rótulos que os demais testes e o cliente já conhecem.
-  for (const grupo of ['Taxas', 'Parcelas', 'Composição do custo']) assert.match(jsx, new RegExp(`grupoComparado\\('${grupo}'\\)`), grupo)
+  // Os três assuntos viram abas da mesma tabela (taxas, parcelas, custo total), uma por vez, para não encher a tela.
+  for (const aba of ['taxas', 'parcelas', 'custo']) assert.ok(jsx.includes(`abaComparacao === '${aba}'`), aba)
   for (const linha of ['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela após carência', 'Última parcela', 'Juros totais', 'TAC à vista', 'IOF', 'ECG à vista', 'Custo total estimado']) assert.ok(jsx.includes(`'${linha}'`), linha)
   // A diferença só aparece com duas opções e, em reais, usa os valores já arredondados para centavos.
   assert.match(jsx, /const comDiferenca = resumida && alternatives\.length === 2/)
   assert.match(jsx, /\(Math\.round\(valores\[1\] \* 100\) - Math\.round\(valores\[0\] \* 100\)\) \/ 100/)
   // Na comparação, a composição não se repete em outro quadro; sem comparar, o quadro continua e não tem rolagem.
-  assert.match(jsx, /\{resumida \? detalhamento : <ExpandablePanel title="Composição do resultado">/)
+  assert.match(jsx, /\{resumida \? detalhamento : <section className="fm-composicao-details" aria-labelledby="fm-composicao-h"><h4 id="fm-composicao-h">Composição do resultado<\/h4>/)
   assert.match(jsx, /className="fm-parcel-scroll fm-composicao"/)
   assert.match(css, /\.bw \.fm-composicao \{ max-height:none; overflow:visible; \}/)
   // A lista completa só abre a pedido, pelo sumário ou comando dos marcos.

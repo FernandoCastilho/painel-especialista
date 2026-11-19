@@ -70,7 +70,6 @@ section.expandable-panel.fm-parcels-resumidas > :is(.expandable-heading,.expanda
 .bw .fm-exec-matrix .fm-delta-head { color:var(--bw-mut) !important; font-size:.75rem; font-weight:600; }
 .bw .fm-exec-matrix .fm-delta { color:var(--bw-warm-ink); font-weight:600; }
 .bw .fm-exec-matrix .fm-delta-zero { color:var(--bw-mut); font-weight:400; }
-.bw .fm-exec-matrix .fm-grp > th { text-align:left; padding-top:12px; font-size:.7rem; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--bw-mut); }
 .bw .fm-exec-matrix .fm-cet-row > * { font-weight:700; }
 .bw .fm-exec-matrix .fm-total-row > * { font-weight:700; font-size:.95rem; border-top:2px solid var(--bw-line); border-bottom:0; padding-top:10px; padding-bottom:10px; }
 .bw .fm-marcos,.bw .fm-leitura { border:1px solid var(--bw-line); border-radius:8px; padding:14px 16px; background:var(--bw-card); }

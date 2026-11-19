@@ -59,11 +59,10 @@
   .bw:not(.e4) .fm-answer-main b { font-size:1.6rem; }
 }
 
-/* Ordem dentro da cotação: resposta primeiro; dados básicos e avisos depois (só ordem visual; o conteúdo não muda). */
+/* Ordem dentro da cotação: dados básicos primeiro (o que foi cotado), depois a resposta e os avisos (só ordem visual; o conteúdo não muda). */
 :root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content { display:flex; flex-direction:column; }
 :root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content > #fm-result { order:1; }
 :root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content > .fm-print-actions { order:2; }
-:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content > .expandable-panel { order:3; }
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result { display:flex; flex-direction:column; }
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > * { order:2; }
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > header,
@@ -72,9 +71,10 @@
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-iof-premise,
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .status,
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-reference-sources { margin:8px 0 0; font-size:.72rem; }
-/* Dados básicos: compactos, como lembrete do que foi cotado. */
-:root[data-theme] body .bw:not(.e4) .fm-results .fm-result-workspace .expandable-panel .expandable-heading { padding:8px 12px !important; }
-:root[data-theme] body .bw:not(.e4) .fm-results .fm-result-workspace .expandable-panel .expandable-heading h3 { font-size:.8rem; color:var(--bw-mut); }
+/* Dados básicos: compactos, no topo, como lembrete do que foi cotado. */
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-basic { border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-soft,var(--bw-card)); }
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-basic > h4 { margin:0; padding:8px 12px; border-bottom:1px solid var(--bw-line); font-size:.8rem; color:var(--bw-mut); }
+.fm-tabs { margin:0 0 10px; }
 :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px 12px; padding:10px 12px; }
 :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary dt { font-size:.68rem; }
 :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary dd { margin-top:1px; font-size:.78rem; }
@@ -123,9 +123,11 @@
 @media (min-width:1101px) {
   :root[data-theme] body .bw:not(.e4) .fm-quote-layout .cx-form { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
 }
-:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle { width:44px; min-width:44px; height:44px; min-height:44px; padding:0; margin:-5px -4px -5px 0; border:0; background:none; }
-:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle > svg { width:16px; height:16px; }
-:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle:hover { background:var(--bw-soft); color:var(--bw-ink); }
 :root[data-theme] body .bw:not(.e4) .cx-finame #fm-parcelas { scroll-margin-top:120px; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content { padding:0 14px 14px; min-width:0; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content .fm-parcel-scroll { max-height:none; overflow-x:auto; }
+
+/* "Composição do resultado": bloco simples, sem botão de ampliar (o ampliar fica só nos quadros grandes). */
+.bw .fm-composicao-details { margin:8px 0 0; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-soft); }
+.bw .fm-composicao-details > h4 { margin:0; padding:10px 14px; border-bottom:1px solid var(--bw-line); font-size:.85rem; color:var(--bw-ink); }
+.bw .fm-composicao-details > .fm-parcel-scroll, .bw .fm-composicao-details > .fm-details { margin:0 12px 12px; }

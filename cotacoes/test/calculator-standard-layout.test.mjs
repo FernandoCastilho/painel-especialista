@@ -24,7 +24,7 @@ test('expansion shell renders one copy of results and an explicitly labelled con
   const raw = (await source('ExpandablePanel.jsx')).replace(/^import ['"].+\.css['"]\s*$/gm, '')
   const { code } = await transform(raw,{loader:'jsx',format:'cjs',jsx:'automatic'})
   const module={exports:{}}
-  runInNewContext(code,{module,exports:module.exports,require:name=>name==='./BndesIcon.jsx'?()=>null:require(name)})
+  runInNewContext(code,{module,exports:module.exports,require:name=>['./BndesIcon.jsx','./ExpandIcon.jsx'].includes(name)?()=>null:require(name)})
   const html=renderToStaticMarkup(React.createElement(module.exports.default,{title:'Parcelas'},React.createElement('p',null,'RESULTADO_UNICO')))
   assert.equal(html.match(/RESULTADO_UNICO/g).length,1)
   assert.match(html,/aria-label="Ampliar: Parcelas"/)

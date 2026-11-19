@@ -8,3 +8,6 @@
 .expandable-dialog::backdrop { background:rgb(0 13 60 / .78); }
 .expandable-dialog > .expandable-heading { position:sticky; top:0; z-index:4; background:var(--bw-card,var(--card)); }
 @media(max-width:480px) { .expandable-dialog { width:100vw; height:100dvh; border-radius:0; } .expandable-content { padding:10px; } }
+
+/* Um tamanho só para o ícone de ampliar/recolher em todos os quadros (a caixa de 32 px vem de CalcUnificado.css). */
+.expandable-toggle > svg { width:16px; height:16px; }

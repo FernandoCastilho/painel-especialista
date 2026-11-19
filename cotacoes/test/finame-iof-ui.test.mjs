@@ -197,7 +197,8 @@ test('parcelas compactas comparam A e B pela mesma data sem recalcular valores',
     assert.equal(cells.length, 2)
     alternatives.forEach((item, column) => assert.equal(text(cells[column]), brl(item.result.parcelas.find(p => p.vencimento === dates[index]).parcela)))
   })
-  for (const title of ['Dados básicos da operação', 'Histórico dos indexadores', 'Memória completa do fluxo']) assert.ok(nodes(render.value).some(node => node.props?.title === title), title)
+  assert.ok(nodes(render.value).some(node => node.type === 'section' && node.props?.className === 'fm-operation-basic'), 'dados básicos no topo, sem botão de ampliar')
+  for (const title of ['Histórico dos indexadores', 'Memória completa do fluxo']) assert.ok(nodes(render.value).some(node => node.props?.title === title), title)
   // Na comparação, a composição do custo fica na tabela principal: o quadro separado não se repete.
   assert.equal(nodes(render.value).some(node => node.props?.title === 'Composição do resultado'), false)
 })

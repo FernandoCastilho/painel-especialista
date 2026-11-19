@@ -17,7 +17,7 @@ test('expansão usa dialog, não duplica conteúdo e fecha/restaura por Escape e
   const dialog = { showModal: () => shown++, close: () => closed++ }
   const trigger = { focus: () => focused++ }
   const module = { exports:{} }
-  const deps = { react: { ...React, useId: () => 'test-title' }, './BndesIcon.jsx': { __esModule:true, default: () => null }, './ExpandablePanel.css':{} }
+  const deps = { react: { ...React, useId: () => 'test-title' }, './BndesIcon.jsx': { __esModule:true, default: () => null }, './ExpandIcon.jsx': { __esModule:true, default: () => null }, './ExpandablePanel.css':{} }
   runInNewContext(code, { module, exports:module.exports, require:n => deps[n] ?? require(n), document:{body}, window:{addEventListener:(k,f)=>listeners.set(k,f),removeEventListener:k=>listeners.delete(k)}, queueMicrotask })
   const sentinel = React.createElement('p', {id:'unique-result'}, 'Resultado')
   const render = hookRenderer(() => {
