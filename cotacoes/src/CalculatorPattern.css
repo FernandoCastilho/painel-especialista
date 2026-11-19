@@ -16,7 +16,8 @@
 /* Cotação ao lado dos dados (computador largo) */
 @media (min-width:1200px) {
   :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,400px); gap:20px; align-items:start; }
-  :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) > .fm-results { position:sticky; top:88px; max-height:calc(100vh - 100px); overflow:auto; overscroll-behavior:contain; }
+  /* Cotação inteira, sem rolagem interna nem corte: cresce com o conteúdo e acompanha a rolagem da página (pedido de 18/11/2026). */
+  :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) > .fm-results { position:static; max-height:none; overflow:visible; }
   /* Com a cotação ao lado, os dois quadros de entrada ficam um sobre o outro só quando a coluna é estreita. */
   :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .cx-finame .cx-form,
   :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr)); }
@@ -93,3 +94,14 @@
 @media (max-width:640px) {
   :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* Quadro da cotação e parcelas sem corte (pedido de 18/11/2026): o quadro não encolhe dentro da coluna,
+   a tabela da composição ocupa a largura do quadro e as parcelas aparecem todas, na largura do painel. */
+:root[data-theme] body .bw:not(.e4) .fm-results > * { flex-shrink:0; }
+:root[data-theme] body .bw:not(.e4) .fm-results table.cx-matrix.fm-fit { width:100% !important; table-layout:auto; }
+:root[data-theme] body .bw:not(.e4) .fm-results table.cx-matrix.fm-fit > thead > tr > th:first-child { width:auto; }
+:root[data-theme] body .bw:not(.e4) .fm-results table.cx-matrix.fm-fit :is(th,td) { white-space:nowrap; width:auto; }
+:root[data-theme] body .bw:not(.e4) .fm-cmp .fm-results table.cx-matrix.fm-fit { max-width:960px; }
+:root[data-theme] body .bw:not(.e4) .fm-parcels-callout .fm-parcel-scroll { max-height:none; overflow:visible; }
+:root[data-theme] body .bw:not(.e4) .fm-parcels-callout .fm-parcel-scroll table.cx-matrix.fm-fit { width:min(100%, calc(240px + var(--fm-opcoes,2) * 280px)) !important; }
+@media (min-width:1200px) { :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .fm-results .fm-operation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } }

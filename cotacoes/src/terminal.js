@@ -19,6 +19,7 @@ const norm = (s) =>
 const CURRENCY = { USD: 'USD', USDBRL: 'USD', DOLAR: 'USD', EUR: 'EUR', EURBRL: 'EUR', EURO: 'EUR', JPY: 'JPY', JPYBRL: 'JPY', IENE: 'JPY', CNH: 'CNH', CNHBRL: 'CNH', CNY: 'CNH', YUAN: 'CNH' }
 const PAIR = new Set(['EURUSD', 'PARIDADE', 'PAR'])
 const TAB = {
+  PODCAST: ['podcast'], PODCASTS: ['podcast'],
   MERCADO: ['resumo'], RESUMO: ['resumo'], HOME: ['resumo'],
   JUROS: ['juros'], DI: ['juros'], SELIC: ['juros'], CDI: ['juros'], CURVA: ['juros'], CURVAS: ['juros'], SOFR: ['juros'], TREASURY: ['juros'], UST: ['juros'],
   CENARIOS: ['cenarios'], FOCUS: ['cenarios', 'projecoes'], PROJECOES: ['cenarios', 'projecoes'],
@@ -31,6 +32,7 @@ const TAB = {
   TLPEXIGIVEL: ['calculadora', 'bndes-tlp-exigivel'], CREDITOTFB: ['calculadora', 'bndes-credito-tfb'],
   COMPARADORDECREDITO: ['calculadora', 'comparador-credito'],
   EMPRESTIMO4131: ['calculadora', 'emprestimo-4131'], LEI4131: ['calculadora', 'emprestimo-4131'], 4131: ['calculadora', 'emprestimo-4131'],
+  DIVIDENDOS: ['calculadora', 'dividendos-emprestimo'], DIVIDENDO: ['calculadora', 'dividendos-emprestimo'], DIVIDENDOSVIAEMPRESTIMO: ['calculadora', 'dividendos-emprestimo'],
   CDIDOLAR: ['calculadora', 'cdi-dolar'], CDIXDOLAR: ['calculadora', 'cdi-dolar'], CDIVSDOLAR: ['calculadora', 'cdi-dolar'],
   OPERACAODI: ['calculadora', 'operacao-di'], OPERACAOXDI: ['calculadora', 'operacao-di'], OPXDI: ['calculadora', 'operacao-di'],
   CALC: ['calculadora'], CALCULADORA: ['calculadora'], CALCULADORAS: ['calculadora'], GIRO: ['calculadora', 'giro'], DESCONTO: ['calculadora', 'analise-desconto'], ANALISEDEDESCONTO: ['calculadora', 'analise-desconto'], FATURAMENTO: ['calculadora', 'faturamento'], ARVORE: ['calculadora', 'arvore-credito'], ARVOREDECREDITO: ['calculadora', 'arvore-credito'], FINIMP: ['calculadora', 'finimp'], FINAME: ['calculadora', 'finame-materiais'], FINAMEMATERIAIS: ['calculadora', 'finame-materiais'],

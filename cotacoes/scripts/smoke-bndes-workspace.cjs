@@ -145,7 +145,7 @@ async function proveLastColumn(region, file) {
         const pdf = page.getByRole('dialog', { name: 'Prévia do PDF da simulação BNDES', exact: true })
         await pdf.waitFor()
         assert.equal(await pdf.locator('.bnprint-schedule').count(), 2)
-        for (const table of await pdf.locator('.bnprint-schedule table').all()) assert.equal(await table.locator('tbody tr').count(), 62, '60 meses, liberação e total')
+        for (const table of await pdf.locator('.bnprint-schedule table').all()) assert.equal(await table.locator('tbody tr').count(), 50, '48 meses (padrão de 18/11/2026), liberação e total')
         assert.match(await pdf.innerText(), /TAXA MANUAL/)
         assert.match(await pdf.innerText(), /Não constitui proposta/)
         await page.screenshot({ path: path.join(out, `${width}-${theme}-print-preview.png`), fullPage: true })

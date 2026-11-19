@@ -1,0 +1,23 @@
+.bcp { display:grid; grid-template-columns:minmax(0, 1fr); gap:16px; min-width:0; }
+.bcp .status { margin:0; font-size:.8125rem; line-height:1.5; color:var(--mut); }
+.bcp-pick { display:grid; grid-template-columns:auto minmax(0, 420px); justify-content:start; gap:8px 16px; align-items:center; }
+.bcp-pick label { font-size:.8125rem; }
+.bcp-pick select { min-height:44px; width:100%; min-width:0; max-width:100%; padding:8px 12px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; font:inherit; font-size:.875rem; }
+.bcp-lists { display:grid; grid-template-columns:minmax(0, 2fr) minmax(0, 1fr); gap:16px; }
+.bcp-lists h4 { margin:0 0 8px; font-size:.875rem; }
+.bcp-ok { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.bcp-ok li { border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:var(--surface-2); font-size:.8125rem; line-height:1.5; }
+.bcp-ok li small { color:var(--mut); }
+.bcp-ok li span { display:block; margin-top:4px; }
+.bcp-ok li em { display:block; margin-top:4px; font-style:normal; font-weight:600; color:var(--amber); }
+.bcp-no { margin:0; font-size:.875rem; line-height:1.6; color:var(--mut); }
+.bcp-table > summary { min-height:44px; padding:12px 0; cursor:pointer; font-size:.875rem; color:var(--fg); }
+.bcp-scroll { position:relative; overflow-x:auto; border:1px solid var(--line); border-radius:8px; }
+.bcp-scroll table { border-collapse:collapse; min-width:900px; width:100%; font-size:.75rem; }
+.bcp-scroll th, .bcp-scroll td { border:1px solid var(--line); padding:6px 8px; text-align:center; color:var(--fg); }
+.bcp-scroll tbody th { text-align:left; font-weight:600; min-width:220px; }
+.bcp-scroll tbody th small { display:block; font-weight:400; color:var(--mut); }
+.bcp-scroll tr[aria-current=true] { background:var(--surface-2); }
+.bcp-x { font-weight:700; color:#0131ff; }
+.bcp-notes { margin:12px 0 0; padding-left:18px; font-size:.75rem; line-height:1.5; color:var(--mut); display:grid; gap:4px; }
+@media (max-width:699px) { .bcp-pick, .bcp-lists { grid-template-columns:1fr; } }
