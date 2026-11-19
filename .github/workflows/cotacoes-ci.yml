@@ -305,7 +305,7 @@ jobs:
     # Runner descartável próprio: os testes não acessam a área de transferência de outra máquina.
     runs-on: ubuntu-24.04
     needs: test-build
-    timeout-minutes: 26
+    timeout-minutes: 32
     defaults:
       run:
         working-directory: cotacoes
@@ -369,6 +369,18 @@ jobs:
         run: |
           mkdir -p "$CAPTURE_QA_OUTPUT"
           node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
+        shell: bash
+      - name: Diagnosticar diálogo rolável com geometria preparada antes do clique
+        id: stable_dialog
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 6
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/stable-dialog
+          CAPTURE_REFERENCE_MODE: device
+          CAPTURE_TEXT_RASTER: grayscale
+        run: |
+          mkdir -p "$CAPTURE_QA_OUTPUT"
+          node scripts/smoke-capture-stable-dialog.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
         shell: bash
       - name: Conferir PNG colado com Ctrl+V real em campo local
         id: paste

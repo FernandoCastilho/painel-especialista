@@ -4,7 +4,7 @@ const compare=require('./capture-rgb-metrics.cjs')
 const captureSpecialRegions=require('./capture-special-regions.cjs')
 const nativeReference=require('./capture-native-reference.cjs')
 let sequence=0
-module.exports=async function deviceFidelity(page,target,bytes,selectors){
+module.exports=async function deviceFidelity(page,target,bytes,selectors,{prepared=false}={}){
  const {captureSize}=await import('../src/captureImage.js')
  const geometry=await target.evaluate(el=>{const b=el.getBoundingClientRect();return {x:b.x+scrollX,y:b.y+scrollY,width:b.width,height:b.height,scrollHeight:el.scrollHeight,scrolled:!!(el.scrollTop||el.scrollLeft)}})
  const cssWidth=Math.ceil(geometry.width),cssHeight=Math.ceil(geometry.scrolled?geometry.height:Math.max(geometry.scrollHeight,geometry.height))
@@ -14,7 +14,8 @@ module.exports=async function deviceFidelity(page,target,bytes,selectors){
  const out=process.env.CAPTURE_QA_OUTPUT||'workspace-qa/capturas',prefix=`device-${++sequence}`
  await fs.mkdir(out,{recursive:true})
  try{
-  await session.send('Emulation.setDeviceMetricsOverride',{width:viewport.width,height:viewport.height,deviceScaleFactor:size.scale,mobile:false})
+  if(prepared && Math.abs(originalDpr-size.scale)>1e-6)throw new Error('DPR preparado não corresponde à escala de captura')
+  if(!prepared)await session.send('Emulation.setDeviceMetricsOverride',{width:viewport.width,height:viewport.height,deviceScaleFactor:size.scale,mobile:false})
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
   const current=await target.evaluate(el=>{const b=el.getBoundingClientRect();return {x:b.x+scrollX,y:b.y+scrollY,width:b.width,height:b.height}})
   if(['x','y','width','height'].some(k=>Math.abs(current[k]-geometry[k])>.01))throw new Error('DPR alterou layout original; experimento interrompido: '+JSON.stringify({geometry,current}))
@@ -58,7 +59,7 @@ module.exports=async function deviceFidelity(page,target,bytes,selectors){
   if(result.negatives.some(n=>!n.rejected))throw new Error('Comparador aceitou negativo real: '+JSON.stringify(result.negatives))
   return result.proof
  }finally{
-  await session.send('Emulation.setDeviceMetricsOverride',{width:viewport.width,height:viewport.height,deviceScaleFactor:originalDpr,mobile:false})
+  if(!prepared)await session.send('Emulation.setDeviceMetricsOverride',{width:viewport.width,height:viewport.height,deviceScaleFactor:originalDpr,mobile:false})
   await session.detach()
  }
 }
