@@ -1,3 +1,4 @@
+import CaptureButton from './CaptureButton.jsx'
 import GlobalSearch, { SearchDestination } from './GlobalSearch.jsx'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { dataTimestamp } from './dataTimestamp.js'
@@ -315,6 +316,7 @@ export default function App() {
           <button type="button" onClick={() => window.location.reload()}>Recarregar</button>
         </div>
       )}
+      {['resumo', 'juros', 'cenarios'].includes(tab) && <div className="screen-capture-bar" data-capture-ignore><span>Copiar tela atual</span><CaptureButton label={TABS.find(t => t.id === tab)?.label || tab} getTarget={() => mainRef.current} /></div>}
       <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
       {tab !== 'resumo' && (

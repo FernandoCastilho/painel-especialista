@@ -301,6 +301,65 @@ jobs:
             ${{ runner.temp }}/qa-universal
           if-no-files-found: ignore
           retention-days: 7
+  clipboard-capture:
+    # Runner descartável próprio: os testes não acessam a área de transferência de outra máquina.
+    runs-on: ubuntu-24.04
+    needs: test-build
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: cotacoes
+    env:
+      SMOKE_BASE_URL: http://127.0.0.1:8768
+      SMOKE_CHANNEL: chrome
+      CHROMIUM_PATH: /usr/bin/google-chrome
+      CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - name: Build com os dados na própria origem
+        run: VITE_DATA_BASE="$SMOKE_BASE_URL" npm run build
+      - name: Preparar Playwright com o Chrome já disponível no runner
+        timeout-minutes: 3
+        run: |
+          npm install --no-save playwright@1.63.0
+          google-chrome --version
+      - name: Servir o build somente em loopback
+        id: serve
+        run: |
+          mkdir -p "$CAPTURE_QA_OUTPUT"
+          nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$CAPTURE_QA_OUTPUT/server.log" 2>&1 &
+          for i in $(seq 1 20); do
+            if curl -fs "$SMOKE_BASE_URL/" > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Conferir fidelidade visual das imagens copiadas
+        id: fidelity
+        timeout-minutes: 6
+        run: node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/fidelidade.log"
+        shell: bash
+      - name: Conferir PNG colado com Ctrl+V real em campo local
+        id: paste
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 2
+        env:
+          REAL_CLIPBOARD: '1'
+        run: node scripts/smoke-capture-paste.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/colagem.log"
+        shell: bash
+      - name: Capturas, métricas de fidelidade e prova de colagem
+        if: ${{ !cancelled() && steps.serve.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: clipboard-capture-design
+          path: ${{ runner.temp }}/qa-clipboard-capture
+          if-no-files-found: error
+          retention-days: 7
   bndes-workspace:
     runs-on: ubuntu-24.04
     timeout-minutes: 12

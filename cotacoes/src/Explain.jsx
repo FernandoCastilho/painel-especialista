@@ -1,3 +1,4 @@
+import CaptureButton from './CaptureButton.jsx'
 import Help from './Help.jsx'
 import { GLOSSARY } from './glossary.js'
 
@@ -7,7 +8,7 @@ export default function Explain({ id, align = 'left', fixed = false, tipo, grafi
   const g = GLOSSARY[id]
   if (!g) return null
   return (
-    <Help label={`O que é: ${g.t}`} align={align} wide fixed={fixed}>
+    <>{grafico && <CaptureButton label={g.t} />}<Help label={`O que é: ${g.t}`} align={align} wide fixed={fixed}>
       <b className="ex-t">{g.t}</b>
       <span className="ex">{g.a}</span>
       {tipo && <span className="ex"><i>{tipo.t}:</i> {tipo.a}</span>}
@@ -15,6 +16,6 @@ export default function Explain({ id, align = 'left', fixed = false, tipo, grafi
       <span className="ex"><i>Exemplo:</i> {g.b}</span>
       <span className="ex"><i>Na prática:</i> {g.c}</span>
       {g.d && <span className="ex"><i>Para dominar:</i> {g.d}</span>}
-    </Help>
+    </Help></>
   )
 }

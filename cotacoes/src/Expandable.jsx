@@ -1,3 +1,4 @@
+import CaptureButton from './CaptureButton.jsx'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { FilterScope } from './ChartFilters.jsx'
 import { reduceMotion } from './motion.js'
@@ -49,6 +50,7 @@ export default function Expandable({ children, label, modal = false, onClose }) 
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close()
       }}>
       <div className="expandable-controls">
+        <CaptureButton label={label || 'quadro'} getTarget={() => ref.current} />
         {modal
           ? <button type="button" className="btn" onClick={close} aria-label="Fechar detalhes">Fechar ×</button>
           : <button type="button" className={full ? 'btn' : 'btn btn-expand'} aria-label={`${full ? 'Restaurar' : 'Maximizar'} ${label}`} aria-pressed={full} title={full ? undefined : 'Ampliar'} onClick={() => setFull((v) => !v)}>{full ? '↙ Restaurar' : <ExpandIcon />}</button>}
