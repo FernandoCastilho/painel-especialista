@@ -3,9 +3,9 @@
 A aba **Apresentar** foi refeita do zero a pedido. A montagem antiga (por setor, com leitura do site do cliente, cadeia e
 perguntas da visita) foi removida.
 
-**Acesso:** por enquanto a aba fica fora do menu, a pedido (17/11/2026). Abre pelo endereço `#apresentar` ou pelo
-comando APRESENTAR. Para colocá-la no menu, tirar `oculto: true` em `appSections.js`; nesse caso o menu do topo passa
-a ter onze abas e precisa do ajuste de espaçamento que está no histórico (commit `4f4fa79`, `TopBar.css`).
+**Acesso:** fora do menu desde 18/11/2026 (pedido do Fernando: "fica oculto por enquanto"); abre pelo endereço
+`#apresentar` e pelo comando APRESENTAR. Ficou fora do menu de 17 a 18/11 e voltou ao menu por algumas horas em 18/11. Não é destino da busca do painel (o conteúdo
+buscável continua nas abas de origem).
 
 ## O que faz
 - O usuário marca blocos do painel e cada um vira um slide claro, em formato 16:9, na ordem da escolha.
@@ -159,3 +159,147 @@ Não conferido nesta rodada: o filtro do tema madeira com manchetes reais. O amb
 Notícias; o filtro foi testado com manchetes de exemplo. A primeira coleta real acontece na publicação, e o resultado
 precisa ser lido no site depois dela. Com mais de 24 meses colados, os rótulos do gráfico do Faturamento ficam
 pequenos no slide; os números principais estão na tabela e no resumo por ano.
+
+## Terceira rodada (18/11/2026): tema madeira sem descarte por palavra
+Decisão do Fernando, literal: "Não pode nada ficar fora por conta de palavras como "desabon", por exemplo. Pode incluir
+tudo, porque aqui é educativo." (Ele se referia a "desabam", do exemplo "Exportações de madeira desabam 40%".)
+- O filtro do tema "Madeira e base florestal" deixa de descartar matérias por palavras do título (desaba, tomba,
+  benefícios, Portugal, apreensão, polícia, ilegal, incêndio, acidente, objetos de madeira e outras) e deixa de exigir
+  palavra de contexto econômico. Entra toda matéria que cite o setor, inclusive queda de preço, acidente, fiscalização e
+  notícia de outros países.
+- Outros sentidos da palavra não descartam a matéria. Expressões como "Ilha da Madeira", "Rio Madeira", "do Madeira",
+  "Deputado Madeira" ou "Prefeitura de Serraria" são apagadas do título antes de procurar o setor: se o título ainda
+  citar madeira, serraria, madeireiro, MDF, pinus ou outro termo do setor, a matéria entra ("Madeireiros escoam produção
+  pelo Rio Madeira" entra; "Hidrelétricas do Madeira reduzem produção" não). O MDF-e (documento fiscal) não conta como
+  MDF. Regra em `relevanteTema`, campo `homonimos`, usado só por este tema.
+- Efeito esperado: mais matérias, inclusive de consumo ligado à madeira (piso, lenha, móveis planejados). Dá para tirar
+  do slide as que não servirem em "Escolher notícias". Também passam títulos sobre a ilha que não usam as expressões
+  acima, como "Madeira: aeroporto fecha por causa do vento", "hotel na Madeira" e jogo do clube Nacional da Madeira.
+- Conferência do filtro: as 13 manchetes reais já coletadas continuam entrando; nas baterias do Auditor, todas as
+  manchetes legítimas do setor entram, inclusive as que citam o rio, a ilha ou o "porto Santos" (ficam fora só duas sem
+  palavra do setor: uma de celulose e uma em inglês).
+- Os demais temas de notícias continuam com seus filtros; esta decisão vale só para madeira.
+
+### Parecer do Auditor nesta rodada
+Primeiro parecer: **Insuficiente** (81,2), no commit `fc50e0d`, com o CI ainda rodando. Achados: as exclusões de rio,
+ilha e "Nacional da Madeira" ainda descartavam matéria do setor ("Madeireiros escoam produção pelo Rio Madeira", "Feira
+Nacional da Madeira", "porto Santos"); esta nota dizia "só sai o que não é madeira" e citava Fernando sem o literal.
+Correção: exclusão trocada pela regra dos homônimos acima, "Porto Santo" com fim de palavra, "Nacional da Madeira"
+retirado, testes com os títulos do Auditor e nota corrigida.
+
+## Quarta rodada (18/11/2026): palavras de mercado mais amplas nos demais temas
+Pergunta do Fernando: qual a melhor sugestão "para não poluir também, porque a ideia é trazer as coisas o mais assertivas
+possível". Decisão: opção 1, "Sim, ampliar e publicar".
+- Os temas de setor e de insumo (indústria, comércio, serviços, telecom, veículos pesados, cobre, alumínio, aço, minério,
+  petróleo, trigo, açúcar, carne, algodão, carvão, cacau, café e fertilizantes) continuam exigindo, além do assunto, uma
+  palavra de mercado no título. É o que mantém fora o uso comum da palavra ("câmera cobre o show", receita de bolo de
+  trigo, "como fazer o café perfeito").
+- A lista de palavras de mercado ganhou uma parte comum a todos esses temas (`MERCADO_AMPLO` em
+  `cotacoes/scripts/temas-lib.mjs`), com cada palavra presa ao sentido de mercado: demissão, férias coletivas, abertura ou
+  fechamento de fábrica, mineradora, usina de açúcar ou siderúrgica, investimento, lucro, prejuízo líquido, faturamento,
+  balanço trimestral, sobretaxa, tarifaço ou tarifa de importação, antidumping, aquisição, fusão com empresa, cotação,
+  exportação, importação, financiamento, linha de crédito ou crédito rural, "recorde de exportação/vendas/produção", "capacidade
+  produtiva", "amplia a produção", nova fábrica ou unidade e "abre/fecha/corta vagas". Palavra solta como "recorde",
+  "capacidade", "balanço", "tarifa" ou "crédito" não conta. Safra e colheita contam só nos temas de insumo (em veículos
+  pesados, "caminhão com safra de milho tomba" é acidente).
+- Nas listas próprias e na lista comum, "importa" não pega mais "importante" nem "não importa", e "invest" não pega
+  "investiga" nem "investe contra" (o defeito de "importante" já existia em trigo, petróleo, carvão, fertilizantes e
+  alumínio). "Brasil importa mais trigo" continua valendo.
+- Minério de ferro: "Vale do Silício" e outros vales com nome próprio não contam como a mineradora Vale. Aço: "nervos de
+  aço", "homem de aço" e expressões parecidas não contam.
+- Veículos pesados não tem mais lista de palavras que derrubam (acidente, roubo, morte). Como o título já precisa trazer
+  assunto de mercado, "Acidente com ônibus deixa feridos" continua fora e "Roubo de carga encarece o frete de caminhões"
+  passa a entrar.
+- Defeito antigo corrigido: o tema Café não reconhecia "café" quando a palavra vinha seguida de espaço ou pontuação
+  (a marca de fim de palavra não funciona depois de letra acentuada). Só entravam títulos com "arábica", "conilon" etc.
+  O plural "cafés" continua reconhecido.
+- Moedas e eleições nos EUA seguem só com a lista própria; madeira segue sem filtro de mercado (terceira rodada).
+- Conferência: as 351 matérias reais coletadas hoje em todos os temas continuam entrando; testes novos em
+  `cotacoes/test/temas-mercado-amplo.test.mjs` com manchetes que devem entrar e manchetes de uso comum que devem ficar fora.
+- Passam a entrar com a lista comum, por usar o nome do tema em outro sentido junto com uma palavra de mercado (exemplos
+  de teste, que ficavam fora antes): "Fábrica de Talentos abre vagas para jovens" (Indústria), "Bancos de praça:
+  prefeitura investe em reforma" e "Tecnologia: governo investe em escolas" (Serviços), "Plano cobre financiamento de
+  cirurgia" (Cobre), "Usina de ideias: café com empreendedores" (Café). Também entra "Roubo de caminhão com carga de
+  exportação" (Veículos pesados), porque traz palavra de mercado. São casos raros e saem do slide em "Escolher notícias".
+- Primeiro parecer do Auditor: **Requer correção** (72,0), no commit `888abe8`: a lista comum sem limite de palavra
+  deixava entrar "Café faz bem? Estudo importante…" e "Polícia investiga acidente com ônibus…", e o plural "cafés" tinha
+  deixado de ser reconhecido. Segundo parecer: **Requer correção** (80,0), no commit `c4397e8`: "não importa" e "PM
+  investe contra" ainda entravam, "crédito" e "safra" soltos abriam poluição, e esta nota dizia "como antes" sobre casos
+  novos. Corrigido como descrito acima, com essas manchetes nos testes.
+- Não conferido: quanto cada tema ganha com a coleta real (o Google Notícias está fora da rede da sessão). Ler no site
+  depois da publicação, principalmente cobre, alumínio, carvão e café.
+
+## Quinta rodada (18/11/2026): régua dos veículos de referência
+Pedido do Fernando: "Mude a régua para ficar realmente eficiente e com a informação real".
+- Antes: quando um tema tinha 6 ou mais matérias de veículos de referência (Valor, Folha, InfoMoney, Reuters e outros da
+  lista `PREFERIDOS`), todas as matérias de outros portais sumiam, inclusive as que traziam fato novo. Em 18/11, Petróleo
+  caiu de 25 para 6 matérias por causa disso.
+- Agora (`filtraVeiculos`, `mesmoFato` e `semInformacaoUtil` em `cotacoes/scripts/temas-lib.mjs`): de cada fato fica uma
+  versão só, a mais recente de veículo de referência quando houver; a matéria de outro portal entra quando traz um fato
+  que ainda não está na lista. A repetição é reconhecida pelo título (até 3 dias de distância, 4 palavras ou mais em
+  comum e a maior parte das palavras do título mais curto); se os dois títulos trazem números e nenhum se repete (outra
+  data, outro percentual), são fatos diferentes.
+- Saem também as matérias sem informação útil: título em outra língua (letras do vietnamita, cirílico, árabe, chinês,
+  japonês, coreano) e as colunas diárias traduzidas do Vietnam.vn ("Preços da gasolina e do diesel hoje, 15 de
+  novembro…", sobre o preço no Vietnã, em dong). Outras matérias do Vietnam.vn continuam (exemplo: antidumping da UE
+  sobre o aço vietnamita).
+- Vale para todos os temas de `temas.json` (setor, insumo, moedas, eleições e madeira). Em madeira, só sai repetição;
+  nenhuma matéria do setor sai por palavra.
+- Teste com as matérias reais de 18/11 (as coletas das 08:32 e das 10:47 juntas, 397 matérias): ficam 351. Saem 10 sem
+  informação útil (7 em Petróleo, 3 em Café) e o restante por repetição (exemplos: "Preço mundial do açúcar sobe 25%…" =
+  "Preço do açúcar sobe 25%…"; várias versões de "dólar fecha a R$ 5,77" viram uma). Petróleo fica com 18 de 26, sem
+  nenhuma coluna traduzida.
+- Primeiro parecer do Auditor: **Insuficiente** (82,5), no commit `b8604aa`: CI ainda rodando; em Petróleo, 8 das 25
+  matérias eram do Vietnam.vn, uma em vietnamita; a repetição entre veículos de referência continuava (23 pares no
+  Dólar). Corrigido como descrito acima.
+- Risco: o reconhecimento é pelo título. Nas matérias reais, 2 das repetições apontadas eram, na leitura do Auditor, fatos
+  diferentes ("Preço do boi gordo recorde, mas sobe menos que bezerro…" tratado como igual a "Preço em dólares do boi
+  gordo, bezerro, milho e soja recuam…", e duas previsões de bancos diferentes para o euro). E a mesma notícia escrita
+  com palavras bem diferentes continua aparecendo duas vezes (exemplo: três matérias sobre o fim do subsídio ao diesel
+  importado).
+
+## Sexta rodada (18/11/2026): aba no menu e teste instável de Setores
+Pedido do Fernando: "Faça as duas sugestões" (colocar a aba Apresentar no menu; corrigir o teste instável da tela
+Setores › Turismo).
+- **Aba no menu.** `appSections.js` sem `oculto` na Apresentar: ela aparece no menu do topo e no "Mais" do celular, como
+  última aba. O menu do topo, agora com onze abas, continua em uma linha de 1000 a 1920 px nos dois temas; no tema
+  claro, de 1000 a 1099 px, os rótulos em caixa alta ficaram um pouco mais juntos e menores (`TopBar.css`) para caber.
+  Testes de menu atualizados (`nav-order`, `nav-no-numbers`, `nav-accessibility`, `smoke-sector-folders`,
+  `smoke-apresentar`, que agora abre a aba pelo menu e confere o topo em uma linha).
+- **Teste de Setores.** Em 18/11, `smoke-sector-folders` falhou uma vez em "turismo: resumo vem antes dos cards" e passou
+  na repetição, sem mudança na tela. O teste passou a medir só com a tela parada: letras carregadas, imagens prontas,
+  sem animação de entrada e com a posição igual em duas leituras seguidas. A regra conferida não mudou (o resumo "O que
+  acompanhar" vem antes dos cartões). Rodado três vezes seguidas aqui, sem falha.
+- Não conferido: se a instabilidade some de vez no ambiente da conferência automática; só o uso nas próximas
+  publicações mostra.
+
+### Conferência no site depois da publicação (18/11/2026) e correção do topo
+No site publicado, o menu do topo foi para duas linhas em algumas larguras: 1000 a 1099 px nos dois temas e, no tema
+claro, 1200, 1600, 1680 e 1920 px. A causa é o contador de pessoas online ("2 online", cerca de 94 px), que só aparece no
+site publicado e não existia nos testes locais.
+
+Primeira correção: o contador mostra só o ponto e o número e os rótulos ficaram mais juntos em algumas faixas. O Auditor
+mediu de 5 em 5 px e achou ainda duas linhas no tema claro de 1800 a 1875 px (onde aparecem os relógios extras) e com
+estados longos do texto dos dados ("Fora do horário de coleta", toda noite e fim de semana; "Atualização parcial";
+"Último válido"; "Reserva diária"). Parecer: **Requer correção** (72,0). Segundo parecer, sobre a correção final:
+**Aprovado** (93,0).
+
+Correção final (`TopBar.css` e `Acessos.jsx`):
+- No computador, o contador de pessoas online mostra só o ponto e o número; o texto "N online agora" fica na dica ao
+  passar o mouse, no nome do botão (leitor de tela) e no balão.
+- No computador, o estado dos dados mostra só o ponto e a hora em todas as larguras (antes, só de 1300 a 1599 px). O
+  texto completo fica na dica e na linha de consulta do Mercado. O erro ("Indisponível") continua escrito.
+- Rótulos das abas mais juntos em algumas faixas (de 1000 a 1099 px: 11 px no tema claro e 12,5 px no escuro).
+- Medição de 1000 a 1920 px, de 5 em 5 px, nos dois temas, com o contador de 2 e de 123 pessoas e com cada rótulo do
+  estado dos dados (Referência recente, Dado antigo, Fora do horário de coleta, Atualização parcial, Último válido, Reserva
+  diária e Indisponível): uma linha em todas as combinações.
+- O teste de tela da aba (`smoke-apresentar`) simula o contador e o estado dos dados e confere o topo em 1920, 1820,
+  1600, 1280, 1205 e 1024 px, inclusive com "Fora do horário de coleta" e "Indisponível". Ele falha nas duas versões
+  anteriores (a publicada e a da primeira correção) e passa com a final.
+- Ressalva: de 1000 a 1099 px as letras do menu ficam pequenas (11 px no tema claro); a altura de toque continua com 44 px.
+
+## Sétima rodada (18/11/2026): aba sai do menu
+Pedido do Fernando: tirar Apresentar do menu, que "fica oculto por enquanto". `appSections.js` volta a marcar a aba como
+`oculto`: some do menu do topo e do "Mais" do celular e continua abrindo pelo endereço `#apresentar` e pelo comando
+APRESENTAR. Testes de menu atualizados (`nav-order`, `nav-no-numbers`, `nav-accessibility`, `smoke-sector-folders`,
+`smoke-apresentar`). Para voltar ao menu, basta tirar `oculto: true` da linha e reverter esses testes.

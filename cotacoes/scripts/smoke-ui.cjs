@@ -42,7 +42,14 @@ const assert = require('node:assert/strict')
  await page.keyboard.press('Enter')
  assert.equal(await holidays.evaluate(el=>el.open),false,'feriados recolhem novamente')
  for(const label of ['Juros','Feriados','Cenários','Notícias','Mercado hoje']){
-  await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:{'Configurações':/^Config(urações)?$/,'Mercado hoje':/^Mercado( hoje)?$/}[label]??label,exact:true}).click()
+  const navigation=page.getByRole('navigation',{name:'Navegação principal'})
+  if(label==='Feriados'){
+   await navigation.getByRole('button',{name:'Mais',exact:true}).click()
+   await navigation.getByRole('menuitem',{name:label,exact:true}).click()
+  }else{
+   await navigation.getByRole('button',{name:label==='Mercado hoje'?/^Mercado( hoje)?$/:label,exact:true}).click()
+  }
+  await page.waitForURL('**/#'+({'Juros':'juros','Feriados':'feriados','Cenários':'cenarios','Notícias':'noticias','Mercado hoje':'resumo'}[label]))
   await page.waitForTimeout(200)
   assert.equal(await page.getByRole('heading',{name:'Não foi possível exibir esta tela'}).count(),0,label)
  }
@@ -59,6 +66,7 @@ const assert = require('node:assert/strict')
  assert.match(await dialog.locator('.chart-access-text[role="status"]').innerText(),/Cotação/)
  await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'})
  await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Juros',exact:true}).click()
+ await page.waitForURL('**/#juros')
  // Juros: o botão Ampliar abre o gráfico no centro da tela; teclado no gráfico e Escape para fechar
  await page.getByRole('button',{name:'Ampliar gráfico: CDI',exact:true}).click()
  const rateDialog=page.getByRole('dialog',{name:'detalhes: CDI'})
@@ -76,6 +84,7 @@ const assert = require('node:assert/strict')
  await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Cenários',exact:true}).click()
  await page.waitForURL('**/#cenarios');await page.goBack();await page.waitForURL('**/#juros')
  assert.equal(await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Juros',exact:true}).getAttribute('aria-current'),'page')
+ await page.keyboard.press('Escape')
  await page.goForward();await page.waitForURL('**/#cenarios')
  await page.goto(`${base}/#cenarios/calendario`)
  await page.locator('#cal-title').waitFor();await page.waitForTimeout(300)

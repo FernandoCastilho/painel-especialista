@@ -130,10 +130,8 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await modos.getByRole('button', { name: 'Dados' }).click()
       await atual.locator('.giro-form').waitFor()
       assert.equal(await atual.locator('.calc-result-shell:visible').count(), 0)
-      const dates = atual.getByText('Datas e praça do contrato', { exact: true })
-      await dates.click()
+      // Data da liberação fica à vista, na linha mestra (19/11/2026).
       assert.equal(await atual.getByLabel('Data da liberação', { exact: true }).isVisible(), true)
-      await dates.click()
       const iof = atual.getByText('Enquadramento do IOF', { exact: true })
       await iof.click()
       assert.equal(await atual.getByLabel('Perfil tributário', { exact: true }).isVisible(), true)
@@ -293,18 +291,39 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.deepEqual(errors, [])
       await ctx.close()
     }
-    // por enquanto a aba fica fora do menu (computador e celular); o acesso é pelo endereço direto
-    for (const width of [1280, 390]) {
+    // a aba saiu do menu (computador e celular) em 18/11/2026, a pedido, e continua abrindo pelo endereço direto;
+    // o menu do topo fica em uma linha também com o contador de pessoas online, que só aparece no site publicado
+    for (const [width, tema] of [[1920, 'light'], [1820, 'light'], [1820, 'dark'], [1600, 'light'], [1280, 'light'], [1205, 'dark'], [1024, 'light'], [1024, 'dark'], [390, 'light']]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
+      await ctx.addInitScript((t) => { try { localStorage.setItem('painel-theme', t) } catch { /* sem armazenamento */ } }, tema)
       const p = await ctx.newPage()
       await ctx.route('**/*', (r) => (r.request().url().startsWith(base) ? r.continue() : r.abort()))
+      await ctx.route('**/acessos.json*', (r) => r.fulfill({ json: { generatedAt: Date.now(), online: 12, hoje: { visitantes: 30, views: 90 }, semana: { visitantes: 120, views: 400 }, dias: [] } }))
+      await ctx.route('**/quotes.json*', (r) => r.fulfill({ json: quotes })) // estado dos dados como no site (texto do estado ocupa espaço no topo)
+      await ctx.route('**/macro.json*', (r) => r.fulfill({ json: macro }))
       await p.goto(base + '/')
       await p.locator('#conteudo').waitFor()
       if (width < 700) { await p.getByRole('button', { name: /^Mais/ }).filter({ visible: true }).first().click(); await p.getByRole('menuitem').first().waitFor() }
       assert.ok(await p.locator('nav button, nav [role="menuitem"]').filter({ visible: true }).count() >= 5)
-      assert.equal(await p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).count(), 0, 'Apresentar não aparece no menu')
+      const item = p.locator('nav button, nav [role="menuitem"]', { hasText: /^Apresentar$/ }).filter({ visible: true })
+      assert.equal(await item.count(), 0, 'Apresentar fica fora do menu')
       if (width < 700) await p.keyboard.press('Escape')
-      await p.evaluate(() => { location.hash = '#apresentar' })
+      await p.evaluate(() => { location.hash = '#apresentar' }) // fora do menu, abre pelo endereço direto
+      await p.locator('.apz').waitFor()
+      // no computador, o menu do topo continua em uma linha
+      if (width > 700) {
+        await p.locator('.online-badge').waitFor()
+        await p.evaluate(() => document.fonts.ready)
+        const umaLinha = () => p.evaluate(() => { const b = [...document.querySelectorAll('.topbar-tabs > button')].filter((e) => e.getClientRects().length); return new Set(b.map((e) => Math.round(e.getBoundingClientRect().top))).size === 1 })
+        assert.ok(await umaLinha(), `menu do topo em uma linha a ${width}px (${tema})`)
+        // os estados mais longos do texto dos dados (dataHealth.js): "Fora do horário de coleta" toda noite e fim de semana, e o erro escrito
+        for (const [classe, rotulo] of [['idle', 'Fora do horário de coleta'], ['err', 'Indisponível']]) {
+          await p.evaluate(([classe, rotulo]) => { const f = document.querySelector('.topbar-feed'); f.className = `topbar-feed ${classe}`; const t = [...f.childNodes].find((n) => n.nodeType === 3); if (t) t.textContent = rotulo; else f.append(rotulo) }, [classe, rotulo])
+          assert.ok(await umaLinha(), `menu do topo em uma linha a ${width}px (${tema}) com o estado "${rotulo}"`)
+        }
+        assert.match(await p.locator('.online-badge').getAttribute('aria-label'), /12 online agora/) // o texto completo continua para leitor de tela
+      }
+      await p.evaluate(() => { location.hash = '#resumo' }); await p.evaluate(() => { location.hash = '#apresentar' })
       await p.locator('.apz').waitFor()
       await ctx.close()
     }

@@ -1,0 +1,96 @@
+/* Reforma tributária · caixa (CBS): padrão visual das calculadoras (aprovado em 18/11/2026).
+   Tudo preso à raiz .cbs. Só apresentação: nenhuma regra de cálculo ou tributária mora aqui.
+   O resultado tem cenário mês a mês e duas hipóteses, por isso fica abaixo dos dados em largura total. */
+.cbs { --cbs-orange:#ff6200; --cbs-navy:linear-gradient(110deg,#052956,#07336b); }
+
+/* Quadros de entrada: faixa azul-marinho, título branco, linha laranja; sem barra laranja à esquerda. */
+:root[data-theme] body main.app.app-calculators .cbs .cbs-workspace > .cx-panel > header { background:var(--cbs-navy); color:#fff; border-bottom:4px solid var(--cbs-orange); }
+:root[data-theme] body main.app.app-calculators .cbs .cx-panel > header h3 { border-left:0; padding-left:0; color:inherit; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-settings > summary { background:var(--cbs-navy); color:#fff; border-bottom:4px solid var(--cbs-orange); border-radius:9px 9px 0 0; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-settings:not([open]) > summary { border-radius:9px; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-settings { overflow:hidden; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-settings > header { background:var(--bw-tint, transparent); color:var(--bw-ink, var(--fg)); border-bottom:1px solid var(--bw-line, var(--line)); }
+
+/* Rótulos numa linha, campos e valores do mesmo tamanho. */
+:root[data-theme] body main.app.app-calculators .cbs .cbs-essential { grid-template-columns:repeat(3,minmax(0,1fr)); }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-settings .cx-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+/* Mesma altura de rótulo com ou sem "?", para os campos ficarem alinhados. */
+:root[data-theme] body main.app.app-calculators .cbs .cx-field > label { display:block; min-height:44px; line-height:44px; }
+:root[data-theme] body main.app.app-calculators .cbs .cx-field-label { flex-wrap:nowrap; align-items:center; min-height:44px; }
+@media (min-width:641px) {
+  :root[data-theme] body main.app.app-calculators .cbs .cx-field > label,
+  :root[data-theme] body main.app.app-calculators .cbs .cx-field-label > label { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+}
+@media (max-width:640px) {
+  /* No celular o rótulo pode quebrar: cortar o texto esconderia informação. */
+  :root[data-theme] body main.app.app-calculators .cbs .cx-field > label { line-height:1.4; display:flex; align-items:center; }
+}
+:root[data-theme] body main.app.app-calculators .cbs :is(.cx-field input, .cx-field select) { min-height:44px; height:44px; font-size:.9375rem; }
+:root[data-theme] body main.app.app-calculators .cbs .fi-help > button { min-width:24px; min-height:24px; }
+/* Colunas só quando o rótulo inteiro cabe numa linha. */
+@media (max-width:1199px) {
+  :root[data-theme] body main.app.app-calculators .cbs .cbs-essential { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:999px) {
+  :root[data-theme] body main.app.app-calculators .cbs .cbs-settings .cx-form { grid-template-columns:1fr; }
+}
+@media (max-width:899px) {
+  :root[data-theme] body main.app.app-calculators .cbs :is(.cbs-essential, .cbs-settings .cx-form) { grid-template-columns:1fr; }
+}
+
+/* Avisos de dados faltando: faixa âmbar no topo do quadro. */
+.cbs .cbs-alerts { display:grid; gap:8px; padding:12px 16px 0; }
+:root[data-theme] body .cbs :is(.cbs-alerts, .cbs-giro) > .cbs-alert { position:relative; margin:0; padding:10px 12px 10px 40px; border:1px solid var(--line); border-left:4px solid var(--amber, #ffb000); border-radius:8px; background:var(--surface-2, transparent); color:var(--fg); font-size:.9rem; line-height:1.5; }
+:root[data-theme] body .cbs :is(.cbs-alerts, .cbs-giro) > .cbs-alert::before { content:"!"; position:absolute; left:12px; top:11px; width:18px; height:18px; border-radius:50%; background:var(--amber, #ffb000); color:#000; font-weight:800; font-size:.75rem; line-height:18px; text-align:center; }
+:root[data-theme] body .cbs :is(.cbs-giro) > .cbs-alert.cbs-alert { margin:0 0 8px; }
+
+/* Resultado: único quadro com borda laranja; faixa azul-marinho sem linha laranja. */
+:root[data-theme] body main.app.app-calculators .cbs .cbs-result > .expandable-panel { border:2px solid var(--cbs-orange); border-radius:12px; overflow:hidden; background:var(--bw-card, var(--card)); }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-result > .expandable-panel > .expandable-heading { background:var(--cbs-navy); color:#fff; border-bottom:1px solid #2f4a78; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-result > .expandable-panel > .expandable-heading h3 { color:#fff; border-left:0; padding-left:0; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-result > .expandable-panel > .expandable-heading .expandable-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
+.cbs .cbs-result .calc-panel-context { margin:0 0 -8px; padding:4px 24px 0; justify-content:flex-end; }
+
+/* Resposta principal */
+:root[data-theme] body .cbs .cbs-reserve { margin:8px 24px 0; padding:14px 18px; border:1px solid #34507f; border-left:1px solid #34507f; border-radius:10px; background:var(--cbs-navy); color:#fff; display:grid; gap:2px; }
+:root[data-theme] body .cbs .cbs-reserve p { color:#c9d6ee; font-size:.85rem; }
+:root[data-theme] body .cbs .cbs-reserve .cbs-answer-label { color:#fff; font-weight:700; font-size:.95rem; }
+:root[data-theme] body .cbs .cbs-reserve .cbs-primary-reading { color:#fff; margin:0; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-reserve .cbs-primary-value { color:#fff; font-size:clamp(2rem,3vw,2.5rem); font-weight:800; line-height:1.15; margin:4px 0; font-variant-numeric:tabular-nums; }
+
+/* Equivalências em dias */
+:root[data-theme] body .cbs .cbs-equiv { margin:10px 24px 0; padding:8px 12px; border:1px solid var(--line); border-radius:8px; font-size:.9rem; color:var(--mut); }
+:root[data-theme] body .cbs .cbs-equiv b { color:var(--fg); font-variant-numeric:tabular-nums; }
+
+/* Valores em reais, agrupados: rótulo à esquerda, valor à direita. */
+.cbs .cbs-values { padding:4px 24px 0; }
+:root[data-theme] body .cbs .cbs-values .cbs-values-grp { margin:16px 0 0; padding:0 0 4px; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--mut); border-bottom:1px solid var(--line); }
+:root[data-theme] body .cbs .cbs-values .cbs-breakdown { display:block; padding:0; margin:0; }
+:root[data-theme] body .cbs .cbs-values .cbs-breakdown > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; padding:8px 0; border-bottom:1px solid var(--line); background:none; }
+:root[data-theme] body .cbs .cbs-values .cbs-breakdown :is(dt,dd) { font-size:.9rem; }
+:root[data-theme] body .cbs .cbs-values .cbs-breakdown dt { color:var(--fg); }
+:root[data-theme] body .cbs .cbs-values .cbs-breakdown dd { margin:0; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cbs .cbs-values .cbs-breakdown strong { font-size:1rem; font-weight:700; }
+:root[data-theme] body .cbs .cbs-values .cbs-breakdown > .cbs-delta { border-top:2px solid var(--line); border-bottom:0; font-weight:700; }
+:root[data-theme] body .cbs .cbs-values .cbs-detail-intro { padding:6px 0 0; font-size:.85rem; color:var(--mut); }
+/* Notas depois dos números */
+.cbs .cbs-notes { display:grid; gap:8px; padding:16px 24px; font-size:.9rem; }
+:root[data-theme] body .cbs .cbs-notes p { color:var(--mut); }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-notes .cbs-used-assumptions { padding:0; font-size:.85rem; }
+
+/* Mês a mês: botões dos meses numa barra só, opções encostadas; só o escolhido em amarelo. */
+:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:0; border:1px solid var(--cx-line-strong, var(--line)); border-radius:8px; overflow:hidden; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button { min-width:0; min-height:44px; margin:0; border:0; border-radius:0; background:transparent; color:var(--mut); font-weight:500; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button + button { border-left:1px solid var(--cx-line-strong, var(--line)); }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button[aria-pressed=true] { background:#0131ff; color:#fff; font-weight:700; }
+@media (max-width:640px) {
+  /* No celular, 12 meses não cabem numa linha com área de toque: duas linhas de seis, no mesmo contêiner. */
+  :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons { grid-template-columns:repeat(6,minmax(0,1fr)); }
+  :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button:nth-child(7) { border-left:0; }
+  :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button:nth-child(n+7) { border-top:1px solid var(--cx-line-strong, var(--line)); }
+  :root[data-theme] body .cbs :is(.cbs-reserve, .cbs-equiv) { margin-inline:16px; }
+  .cbs :is(.cbs-values, .cbs-notes) { padding-inline:16px; }
+  .cbs .cbs-result .calc-panel-context { padding-inline:16px; }
+  :root[data-theme] body .cbs .cbs-values .cbs-breakdown > div { grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+  :root[data-theme] body .cbs .cbs-values .cbs-breakdown dd { text-align:right; }
+}

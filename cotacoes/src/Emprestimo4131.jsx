@@ -6,6 +6,7 @@ import './CalculatorLayout.css'
 import './CalculatorTheme.css'
 import './BndesWorkspace.css'
 import './Emprestimo4131.css'
+import './CalcPattern-4131.css'
 import MoneyInput from './MoneyInput.jsx'
 import Help from './CalculatorHelp.jsx'
 import BndesIcon from './BndesIcon.jsx'
@@ -19,6 +20,7 @@ import { useCurves } from './useCurves.js'
 import { addDays, busDaysIn, nextBusinessDay } from './holidays.js'
 import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, fronteiraIof, hedge4131, lerTaxasFuturas, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
 import { E4_FX_SCENARIOS, E4_QUOTE_NOTE, E4_SOURCES, condicoesE4, resumoE4 } from './emprestimo4131Presentation.js'
+import CalcBack from './CalcBack.jsx'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const dec = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -312,8 +314,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
 
   return (
     <section className="cx bw e4 calc-standard" aria-labelledby="bw-title">
-      <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-      <div className="bw-heading"><h2 id="bw-title"><strong>4131</strong><span>Empréstimo externo</span></h2>
+      <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="bw-title"><strong>4131</strong><span>Empréstimo externo</span></h2></div>
         <nav className="bw-nav" aria-label="Área do empréstimo externo">
           <button type="button" aria-pressed={area === 'simulate'} onClick={() => setArea('simulate')} aria-label="Simular empréstimo">Simular</button>
           <button type="button" aria-pressed={area === 'rules'} onClick={() => setArea('rules')}>Regras e fontes</button>
@@ -349,6 +350,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
                   <ul className="fm-pills" aria-label="Condições da operação">{freq !== '1' && <li>Pagamentos <b>{FREQ_PLURAL[freq]}</b></li>}<li>Principal <b>{amort === 'parcelas' ? `em parcelas iguais${loan?.grace ? `, carência de ${loan.grace}` : ''}` : 'no vencimento'}</b></li><li>Datas <b>{calendar === '30d' ? 'a cada 30 dias, em dia útil' : 'no dia fixo do mês'}</b></li><li>IOF na entrada <b>{loan ? pct(loan.iofRate) : 'automático'}</b></li></ul>
                 </div></section>
                 <section className="fm-group fm-payment e4-hedge" aria-labelledby="e4-hedge-h"><h3 id="e4-hedge-h"><BndesIcon kind="chart" />Proteção cambial (NDF)</h3><div className="fm-group-fields">
+                  {curveMode === 'painel' && curveBlocked && <p className="cx-hint e4-curve-note e4-alerta" role="status"><span className="e4-alerta-icone" aria-hidden="true">!</span><span>{curveBlocked}</span></p>}
                   {CURVAS_DO_PAINEL && field('curve', 'curve', 'DI e cupom cambial', select('curve', curveMode, setCurveMode, CURVE_MODES), 'Curvas do Painel: cada pagamento usa o DI e o cupom cambial do seu prazo, das curvas da B3 já coletadas. Digitar: um DI e um cupom para todos os prazos; em prazo longo, o cupom linear único tende a encarecer a leitura.')}
                   {!usingCurve && field('fwdMode', 'modo', 'Taxa futura', select('fwdMode', fwdMode, setFwdMode, FWD_MODES), 'Estimar: a tela calcula a taxa futura de cada parcela com o DI e o juro da moeda. Colar as da mesa: você cola as taxas futuras fechadas da cotação do banco, uma por parcela, e o resultado passa a usar exatamente essas taxas.')}
                   {usingCurve ? <p className="fm-financed e4-curve" aria-live="polite"><span>Até o vencimento · {dm(curveBase)}</span><b>{hedge ? `DI ${pct(hedge.di)} · cupom ${pct(hedge.cupom)}` : '—'}</b></p> : <>
@@ -362,7 +364,6 @@ export default function Emprestimo4131({ onBack, quotes }) {
                     </div>}
                   </>}
                   {!usingCurve && <p className="e4-origem" id="e4-protecao-origem"><b>DI:</b> {diNote}{cupomNote && <> <b>{cur.juro}:</b> {cupomNote}</>}</p>}
-                  {curveMode === 'painel' && curveBlocked && <p className="cx-hint e4-curve-note" role="status">{curveBlocked}</p>}
                 </div></section>
                 <details className="e4-mais" open={maisAberto} onToggle={(e) => setMaisAberto(e.currentTarget.open)}>
                   <summary>Mais opções{foraDoPadrao > 0 && <small>{foraDoPadrao === 1 ? '1 item fora do padrão' : `${foraDoPadrao} itens fora do padrão`}</small>}</summary>
@@ -386,28 +387,41 @@ export default function Emprestimo4131({ onBack, quotes }) {
             </article>
 
             <div className={ampliada ? 'fm-results fm-zoomed' : 'fm-results'}>
-              <div className="fm-print-actions"><Emprestimo4131Presentation loan={loan} hedge={hedge} labels={labels} /><Emprestimo4131Print loan={loan} hedge={hedge} labels={labels} /></div>
-
               {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
               <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? 'Cotação ampliada' : undefined}>
                 <header className="fm-hero"><h3 className="cx-heading">Cotação · 4131 com NDF</h3><small>{hedge?.source === 'mesa' ? 'Com as taxas futuras da mesa' : 'Projeção · custo estimado'}</small>{ajuda('Limites da projeção', colado ? 'Simulação com as taxas futuras coladas da cotação da mesa: as parcelas em reais usam exatamente essas taxas. O equivalente em CDI depende do DI informado. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação confirmada pelo banco e o contrato prevalecem.' : 'Estimativa no formato das cotações de banco. A taxa futura de cada parcela é teórica, com um DI e um juro da moeda iguais para todos os prazos; a mesa do banco fecha uma taxa futura para cada vencimento e acrescenta o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
-                {hedge && <div className="fm-headline" aria-label="Custo efetivo total">
-                  <div><span>Custo efetivo total{ajuda('Custo efetivo total', 'Taxa que iguala o valor líquido recebido em reais às parcelas travadas no NDF, por dias corridos. Ao mês: taxa de 30 dias. Ao ano: 12 meses de 30 dias (exp/360), como nas cotações de banco. ' + `Em ano de 365 dias, a mesma taxa é ${pct(hedge.ndf.cost365)} a.a.`)}</span><b>{pct(hedge.ndf.cetMes)} a.m.</b><small>{pct(hedge.ndf.cetAno)} a.a. · exp/360 · prefixado em reais</small></div>
-                  <div><span>Equivalente a{ajuda('Equivalente em CDI', 'Spread sobre o CDI que leva ao mesmo custo, com cada parcela descontada pelo DI informado. É uma estimativa: o custo com NDF é fixo e não acompanha o CDI.')}</span><b>CDI {signed(hedge.ndf.spread, pct)}</b><small>Total das parcelas {brl(hedge.ndf.totalBrl)}</small><small>com DI de {pct(hedge.di)} a.a.{!diOwn && diAuto == null && !usingCurve ? ' (de exemplo)' : ''}</small></div>
+                {/* Padrão de 18/11/2026: falta de dados no topo; resposta principal; equivalências; valores agrupados; notas depois dos números; condições recolhidas. Só apresentação: nenhuma conta nova. */}
+                {pendencia && <p className="e4-alerta" role="status"><span className="e4-alerta-icone" aria-hidden="true">!</span><span>{pendencia}</span></p>}
+                {hedge && <div className="fm-headline e4-answer" aria-label="Custo efetivo total">
+                  <div className="e4-answer-main"><span>Custo efetivo total{ajuda('Custo efetivo total', 'Taxa que iguala o valor líquido recebido em reais às parcelas travadas no NDF, por dias corridos. Ao mês: taxa de 30 dias. Ao ano: 12 meses de 30 dias (exp/360), como nas cotações de banco. ' + `Em ano de 365 dias, a mesma taxa é ${pct(hedge.ndf.cost365)} a.a.`)}</span><b>{pct(hedge.ndf.cetMes)} a.m.</b><small>{pct(hedge.ndf.cetAno)} a.a. · exp/360 · prefixado em reais</small></div>
+                  <div className="e4-answer-side"><span>Total das parcelas</span><b>{brl(hedge.ndf.totalBrl)}</b><small>em reais, com NDF · {loan.flows.length} {loan.flows.length === 1 ? 'pagamento' : 'pagamentos'}</small></div>
                 </div>}
-                {hedge && <dl className="e4-cotacao" aria-label="Economia de IOF e equivalente em capital de giro">
-                  <div><dt>Economia de IOF{ajuda('Economia de IOF', 'IOF de crédito que um capital de giro em reais, com o mesmo valor e as mesmas datas de principal, pagaria: 0,38% do valor mais 0,0082% ao dia sobre cada parcela, limitado a 365 dias (pessoa jurídica fora do Simples). O empréstimo externo não paga esse IOF. O IOF-câmbio da entrada, quando houver, é outro imposto: não é descontado aqui e já está no custo.')}</dt><dd><b>{brl(hedge.ndf.iofGiro)}</b><small>{loan.iofRate > 0 ? `IOF que o giro em reais pagaria. Não desconta o IOF-câmbio de ${pct(loan.iofRate)} desta operação, que já está no custo.` : 'IOF que um capital de giro em reais pagaria'}</small></dd></div>
+                {hedge && <dl className="e4-equiv" aria-label="Equivalências">
+                  <div><dt>Equivale a{ajuda('Equivalente em CDI', 'Spread sobre o CDI que leva ao mesmo custo, com cada parcela descontada pelo DI informado. É uma estimativa: o custo com NDF é fixo e não acompanha o CDI.')}</dt><dd><b>CDI {signed(hedge.ndf.spread, pct)}</b><small>com DI de {pct(hedge.di)} a.a.{!diOwn && diAuto == null && !usingCurve ? ' (de exemplo)' : ''}</small></dd></div>
+                  <div><dt>Em % do CDI</dt><dd><b>{pct(hedge.ndf.pctCdi, 1)}</b><small>custo total com NDF</small></dd></div>
                   <div><dt>Equivalente em capital de giro{ajuda('Equivalente em capital de giro', 'Taxa de um capital de giro em reais que leva ao mesmo custo final: a mesma conta do custo efetivo, com o IOF do giro somado ao valor recebido. Giro com taxa abaixo desta sai mais barato que o empréstimo externo com NDF. A comparação vale para um giro com as mesmas datas e parcelas iguais de principal, taxa em dias corridos (exp/360) e sem tarifa; não considera reciprocidade nem o limite de crédito do NDF.')}</dt><dd><b>{pct(hedge.ndf.giroMes)} a.m.</b><small>{pct(hedge.ndf.giroAno)} a.a. · exp/360</small></dd></div>
+                  <div><dt>Custo all-in em {cur.nome}</dt><dd><b>{pct(loan.allIn)} a.a.</b><small>dias corridos/365</small></dd></div>
                 </dl>}
-                {loan && <section className="e4-condicoes" aria-labelledby="e4-condicoes-h">
-                  <header><h4 id="e4-condicoes-h">Condições da operação</h4><button type="button" className="e4-copiar" disabled={!hedge} onClick={copiar}>{copiado ? 'Resumo copiado' : 'Copiar resumo'}</button><span className="sr-only" role="status">{copiado ? 'Resumo copiado para a área de transferência.' : ''}</span></header>
-                  <dl>{condicoesE4(loan, hedge).map(([rotulo, valor]) => <div key={rotulo}><dt>{rotulo}</dt><dd>{valor}</dd></div>)}</dl>
-                </section>}
+                {hedge && <table className="cx-matrix e4-valores"><caption className="sr-only">Valores em {cur.nome} e em reais</caption><tbody>
+                  <tr className="e4-grp"><th scope="colgroup" colSpan={2}>Em {cur.nome}</th></tr>
+                  <tr><th scope="row">Principal</th><td>{usd(loan.principal)}</td></tr>
+                  <tr><th scope="row">Total a pagar</th><td>{usd(loan.totals.usd)}</td></tr>
+                  <tr className="e4-grp"><th scope="colgroup" colSpan={2}>Em reais</th></tr>
+                  <tr><th scope="row">Valor líquido recebido</th><td>{brl(loan.netBrl)}</td></tr>
+                  <tr><th scope="row">Economia de IOF{ajuda('Economia de IOF', 'IOF de crédito que um capital de giro em reais, com o mesmo valor e as mesmas datas de principal, pagaria: 0,38% do valor mais 0,0082% ao dia sobre cada parcela, limitado a 365 dias (pessoa jurídica fora do Simples). O empréstimo externo não paga esse IOF. O IOF-câmbio da entrada, quando houver, é outro imposto: não é descontado aqui e já está no custo.')}<small>{loan.iofRate > 0 ? `IOF que o giro em reais pagaria. Não desconta o IOF-câmbio de ${pct(loan.iofRate)} desta operação, que já está no custo.` : 'IOF que um capital de giro em reais pagaria'}</small></th><td>{brl(hedge.ndf.iofGiro)}</td></tr>
+                  <tr className="e4-total-row"><th scope="row">Total das parcelas</th><td>{brl(hedge.ndf.totalBrl)}</td></tr>
+                </tbody></table>}
                 <p className="fm-iof-premise">{loan ? `IOF-câmbio de ${pct(loan.iofRate)} na entrada: prazo médio de ${loan.avgTermDays} dias corridos. Liquidar antes do prazo pode gerar o IOF com multa e juros.` : `IOF-câmbio na entrada: ${pct(IOF_SHORT_TERM.rate)} com prazo médio até ${IOF_SHORT_TERM.maxDays} dias; zero acima.`}</p>
                 {avisos.map((texto) => <p className="cx-hint cx-pad e4-aviso" role="status" key={texto}>{texto}</p>)}
-                {pendencia && <p className="cx-hint cx-pad" role="status">{pendencia}</p>}
+                {loan && <details className="e4-condicoes-box"><summary>Condições da operação</summary><section className="e4-condicoes" aria-label="Condições da operação">
+                  <dl>{condicoesE4(loan, hedge).map(([rotulo, valor]) => <div key={rotulo}><dt>{rotulo}</dt><dd>{valor}</dd></div>)}</dl>
+                </section></details>}
               </article>
-
+              <div className="fm-print-actions"><Emprestimo4131Presentation loan={loan} hedge={hedge} labels={labels} /><Emprestimo4131Print loan={loan} hedge={hedge} labels={labels} /><button type="button" className="e4-copiar" disabled={!hedge} onClick={copiar}>{copiado ? 'Resumo copiado' : 'Copiar resumo'}</button><span className="sr-only" role="status">{copiado ? 'Resumo copiado para a área de transferência.' : ''}</span></div>
+            </div>
+          </div>
+          {/* Detalhe abaixo, em largura total: comparação com swap, premissas e parcelas (recolhidos). */}
+          <div className="e4-secondary">
               {loan && (
                 <details className="desk-panel cx-panel e4-comparar">
                   <summary>Comparar com swap e sem proteção</summary>
@@ -435,10 +449,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
                   </details>}
                 </details>
               )}
-
-              <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>Principal: {amortLabel.toLowerCase()} · datas: {datesLabel.toLowerCase()} · juros lineares sobre o saldo, por dias corridos/360 · IR na fonte e IOF-câmbio pelas regras vigentes em {CONFERIDO_EM}.</p><p>{colado ? 'Taxas futuras coladas da cotação da mesa, uma por pagamento; o equivalente em CDI usa o DI informado.' : 'Taxa futura teórica, com um DI e um juro da moeda iguais para todos os prazos; a mesa do banco fecha uma taxa futura para cada vencimento, então o custo real fica próximo, não igual. O juro linear único tende a encarecer a leitura acima de 5 anos.'} Não inclui IR nem PIS/Cofins sobre ganho do derivativo, nem custo de garantias.</p><p>{E4_QUOTE_NOTE}</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
-            </div>
-          </div>
+            <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>Principal: {amortLabel.toLowerCase()} · datas: {datesLabel.toLowerCase()} · juros lineares sobre o saldo, por dias corridos/360 · IR na fonte e IOF-câmbio pelas regras vigentes em {CONFERIDO_EM}.</p><p>{colado ? 'Taxas futuras coladas da cotação da mesa, uma por pagamento; o equivalente em CDI usa o DI informado.' : 'Taxa futura teórica, com um DI e um juro da moeda iguais para todos os prazos; a mesa do banco fecha uma taxa futura para cada vencimento, então o custo real fica próximo, não igual. O juro linear único tende a encarecer a leitura acima de 5 anos.'} Não inclui IR nem PIS/Cofins sobre ganho do derivativo, nem custo de garantias.</p><p>{E4_QUOTE_NOTE}</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
           {loan && (
             <details className="desk-panel cx-panel fm-fluxo-panel e4-parcelas" open>
               <summary>Parcelas</summary>
@@ -461,6 +472,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
               <p className="cx-hint cx-pad">Prazo em dias corridos desde o desembolso. Na linha do desembolso, a última coluna é o valor líquido recebido{entrada > 0 ? ' e a coluna de encargos soma tarifa, IOF e IR da entrada, descontados desse valor' : ''}.</p>
             </details>
           )}
+          </div>
           <p className="status">Regras conferidas em {CONFERIDO_EM} · IOF relido em {IOF_RELIDO_EM} · {curveLabel} · A cotação da mesa do banco e o contrato prevalecem.</p>
         </section>
       </div>

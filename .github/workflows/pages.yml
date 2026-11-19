@@ -19,9 +19,10 @@ permissions:
   id-token: write
   issues: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: false # A consulta semanal aguarda o deploy ativo; não o cancela.
+# A fila de publicação fica só no passo que publica (deploy, abaixo). Antes ela valia para a execução inteira: uma
+# atualização de hora em hora que chegava enquanto uma publicação de código esperava na fila tomava o lugar dela (o GitHub
+# guarda só uma execução em espera por fila), a publicação era cancelada e as agendas seguintes ficavam bloqueadas por falta
+# de código aprovado (17/11 e 18/11/2026). Agora a agenda que encontra publicação de código em andamento não entra na fila.
 
 jobs:
   verify-source:
@@ -37,14 +38,28 @@ jobs:
     permissions:
       actions: read
       contents: read
+    outputs:
+      pular: ${{ steps.fila.outputs.pular }}
     steps:
       - name: Exigir verificações antes de publicar código
         if: github.event_name != 'schedule' && needs.verify-source.result != 'success'
         uses: actions/github-script@v7
         with:
           script: core.setFailed('Verificações de código ou interface não passaram. Publicação bloqueada.')
-      - name: Exigir código já aprovado nas agendas de dados
+      - name: Agenda espera a publicação de código em andamento
+        id: fila
         if: github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = context.ref.replace('refs/heads/', '')
+            const { data } = await github.rest.actions.listWorkflowRuns({ ...context.repo, workflow_id: 'pages.yml', branch, per_page: 50 })
+            const emCurso = data.workflow_runs.find(run => run.id !== context.runId && run.status !== 'completed' && ['push', 'workflow_dispatch'].includes(run.event))
+            if (!emCurso) return core.setOutput('pular', 'false')
+            core.setOutput('pular', 'true')
+            core.notice(`Publicação de código em andamento (execução ${emCurso.id}); esta agenda não entra na fila para não cancelá-la. A publicação de código já atualiza os dados.`)
+      - name: Exigir código já aprovado nas agendas de dados
+        if: github.event_name == 'schedule' && steps.fila.outputs.pular != 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -65,14 +80,17 @@ jobs:
             core.setFailed(`Agenda bloqueada: o código ${context.sha} ainda não possui publicação aprovada com todos os testes de código e interface. Execute a publicação manual ou corrija a falha do push; nenhum código será publicado por esta agenda.`)
   institutional-news:
     needs: approve-source
-    if: ${{ !cancelled() && needs.approve-source.result == 'success' && github.event.schedule != '0 11,18 * * *' && github.event.schedule != '30 11 * * 1,2' }}
+    if: ${{ !cancelled() && needs.approve-source.result == 'success' && needs.approve-source.outputs.pular != 'true' && github.event.schedule != '0 11,18 * * *' && github.event.schedule != '30 11 * * 1,2' }}
     uses: ./.github/workflows/institutional-news.yml
     permissions:
       contents: write
   deploy:
     needs: [approve-source, institutional-news]
-    if: ${{ always() && !cancelled() }}
+    if: ${{ always() && !cancelled() && needs.approve-source.outputs.pular != 'true' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false # Uma publicação espera a outra terminar; nunca a cancela.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

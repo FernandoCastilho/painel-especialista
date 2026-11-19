@@ -74,7 +74,7 @@ test('first-paint script uses the same saved choice, fallback and browser color'
     const localStorage = { getItem: key => { assert.equal(key, THEME_STORAGE_KEY); if (blocked) throw Error('blocked'); return saved } }
     runInNewContext(script, { document, localStorage, matchMedia: () => ({ matches: osLight }) })
     assert.equal(document.documentElement.dataset.theme, expected)
-    assert.equal(meta.content, expected === 'light' ? '#f5f4f0' : '#050505')
+    assert.equal(meta.content, expected === 'light' ? '#f3f3f1' : '#050505')
   }
 })
 
