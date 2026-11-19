@@ -11,7 +11,7 @@ const brl = (n) => `R$ ${num(n)}`
 const pct = (n) => `${num(n)}%`
 const dateLabel = (iso) => iso.split('-').reverse().join('/')
 const todayIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10) }
-const blank = { valor: '', cotacao: '', taxa: '', tac: '0', futuros: [] }
+const blank = { valor: '', cotacao: '', taxa: '', futuros: [] }
 
 export function CambioFuturoIcon() {
   return (
@@ -48,7 +48,7 @@ export default function CambioFuturo({ onBack }) {
     const m = moedas[id]
     const started = m.cotacao.trim() || m.taxa.trim()
     if (!dates.length || !started) return [id, null]
-    return [id, fluxoMoeda({ valor: valorDe(id), cotacao: parseDecimal(m.cotacao), taxa: parseDecimal(m.taxa), tac: parseDecimal(m.tac || '0'), start: op.start, dates, futuros: dates.map((_, i) => parseDecimal(m.futuros[i] ?? '')) })]
+    return [id, fluxoMoeda({ valor: valorDe(id), cotacao: parseDecimal(m.cotacao), taxa: parseDecimal(m.taxa), start: op.start, dates, futuros: dates.map((_, i) => parseDecimal(m.futuros[i] ?? '')) })]
   }))
   const ativas = MOEDAS_CF.filter(({ id }) => fluxos[id]?.ok)
   const prontos = MOEDAS_CF.filter(({ id }) => fluxos[id]?.completo && fluxos[id].tir != null)
@@ -67,7 +67,7 @@ export default function CambioFuturo({ onBack }) {
         <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-heading" className="cx-title"><span>Câmbio futuro</span></h2></div>
         <CalculatorHelp title="Câmbio futuro"><p>Compara o mesmo empréstimo cotado pela mesa em dólar, euro e yuan. Você informa a cotação de partida, a taxa all-in e o câmbio futuro de cada vencimento; a tela mostra a TIR em reais e o câmbio futuro que atinge a meta.</p></CalculatorHelp>
       </div>
-      <p className="cf-notice">Simulação com as cotações que você digitar. Não considera IR sobre juros, IOF nem outras tarifas além da TAC. Os dados ficam só nesta tela.</p>
+      <p className="cf-notice">Simulação com as cotações que você digitar. Não considera IR sobre juros, IOF nem tarifas. Os dados ficam só nesta tela.</p>
 
       <article className="desk-panel cx-panel">
         <header className="cx-heading"><h3>1. Operação</h3></header>
@@ -87,10 +87,14 @@ export default function CambioFuturo({ onBack }) {
           <tbody>
             {[
               ['valor', 'Valor na moeda', 'ex.: 100.000,00'],
-              ['cotacao', 'Cotação de partida (R$)', 'ex.: 5,9160'],
+              ['cotacao', 'Cotação partida (R$)', 'ex.: 5,9160'],
+              ['brl', 'Valor R$'],
               ['taxa', 'Taxa all-in (% a.a.)', 'ex.: 11,20'],
-              ['tac', 'TAC (R$)', '0'],
-            ].map(([key, label, ph]) => (
+            ].map(([key, label, ph]) => key === 'brl' ? (
+              <tr key={key} className="cf-total"><th scope="row">{label}</th>
+                {MOEDAS_CF.map(({ id }) => { const f = fluxos[id]; return <td key={id}>{f?.ok ? brl(f.brl) : f ? <span role="alert" className="cf-erro">{f.error}</span> : '—'}</td> })}
+              </tr>
+            ) : (
               <tr key={key}><th scope="row">{label}</th>
                 {MOEDAS_CF.map(({ id, sym, nome }) => {
                   const sugerido = key === 'valor' && id !== 'USD' && !moedas[id].valor.trim() ? valorDe(id) : NaN
@@ -98,9 +102,6 @@ export default function CambioFuturo({ onBack }) {
                 })}
               </tr>
             ))}
-            <tr className="cf-total"><th scope="row">Valor em R$</th>
-              {MOEDAS_CF.map(({ id }) => { const f = fluxos[id]; return <td key={id}>{f?.ok ? brl(f.brl) : f ? <span role="alert" className="cf-erro">{f.error}</span> : '—'}</td> })}
-            </tr>
           </tbody>
         </table></div>
       </article>
@@ -120,7 +121,7 @@ export default function CambioFuturo({ onBack }) {
               <tr>{ativas.map(({ id, sym }) => [<th key={`${id}-p`} scope="col" className="cf-group">Parcela ({sym})</th>, <th key={`${id}-c`} scope="col">Câmbio</th>, <th key={`${id}-r`} scope="col">Fluxo (R$)</th>])}</tr>
             </thead>
             <tbody>
-              <tr className="cf-start"><th scope="row">{dateLabel(op.start)}</th><td>0</td>{ativas.map(({ id, sym }) => { const f = fluxos[id]; return [<td key={`${id}-p`} className="cf-group">{sym} {num(f.valor)}</td>, <td key={`${id}-c`}>{num(f.cotacao, 4)}</td>, <td key={`${id}-r`}>−{brl(f.liquido)}</td>] })}</tr>
+              <tr className="cf-start"><th scope="row">{dateLabel(op.start)}</th><td>0</td>{ativas.map(({ id, sym }) => { const f = fluxos[id]; return [<td key={`${id}-p`} className="cf-group">{sym} {num(f.valor)}</td>, <td key={`${id}-c`}>{num(f.cotacao, 4)}</td>, <td key={`${id}-r`}>−{brl(f.brl)}</td>] })}</tr>
               {dates.map((d, i) => (
                 <tr key={d}><th scope="row">{dateLabel(d)}</th><td>{daysBetween(op.start, d)}</td>
                   {ativas.map(({ id, sym }) => { const l = fluxos[id].linhas[i]; return [
@@ -138,7 +139,7 @@ export default function CambioFuturo({ onBack }) {
 
       <article className="desk-panel cx-panel">
         <header className="cx-heading"><h3>4. Resultado</h3><CalculatorHelp title="Resultado"><ul>
-          <li>Fluxo em reais: entra o valor em R$ menos a TAC; sai cada parcela na moeda × câmbio futuro.</li>
+          <li>Fluxo em reais: entra o valor em R$; sai cada parcela na moeda × câmbio futuro.</li>
           <li>TIR ao ano: taxa que zera esse fluxo, em dias corridos/365.</li>
           <li>No período: total pago em R$ ÷ valor recebido − 1, sem anualizar.</li>
           <li>Câmbio para a meta: câmbio futuro único que deixa a TIR ao ano igual à meta. Acima dele, a operação custa mais que a meta.</li>
@@ -152,7 +153,7 @@ export default function CambioFuturo({ onBack }) {
               return (
                 <tr key={id} className={id === melhor ? 'cf-best' : undefined}>
                   <th scope="row">{nome}{id === melhor && <small> · menor custo</small>}</th>
-                  <td>{brl(f.liquido)}</td><td>{brl(f.totalBrl)}</td><td>{pct(f.periodo)}</td><td><b>{pct(f.tir)}</b></td>
+                  <td>{brl(f.brl)}</td><td>{brl(f.totalBrl)}</td><td>{pct(f.periodo)}</td><td><b>{pct(f.tir)}</b></td>
                   <td>{alvo ? `R$ ${num(alvo, 4)}` : '—'}</td>
                 </tr>
               )
