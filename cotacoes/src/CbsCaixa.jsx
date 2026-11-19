@@ -32,7 +32,7 @@ const initialYear = 2027
 // Exemplo completo e plausível (empresa fictícia): compras a prazo menores que as vendas, CMV preenchido.
 const initial = { kind: 'comercio', group: 'comercio-83319', regime: 'presumido', revenue: '3.000.000,00', year: String(initialYear),
   receiveDays: '60', payDays: '30', stockDays: '45', monthlyCmv: '2.100.000,00', monthlyPurchases: '1.500.000,00', spendingPct: '', eligibleShare: '70',
-  ...ratesFor(initialYear), reduction: '', isRate: '0', simplesCbs: '', simplesIbs: '', simplesTipo: '1',
+  ...ratesFor(initialYear), reduction: '', isRate: '0', simplesCbs: '2,75', simplesIbs: '1,25', simplesTipo: '1',
   currentNetRate: '3,65', splitShare: '50', currentDueDays: '40', futureDueDays: '40', creditDelayDays: '30' }
 export function CbsIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 5h18v14H3zM3 10h18M8 5v14M13 14h5M16 12l2 2-2 2" /></svg>
@@ -108,8 +108,8 @@ export default function CbsCaixa({ onBack }) {
             <select id="cbs-year" value={form.year} onChange={e => setForm(f => ({ ...f, year: e.target.value, ...ratesFor(Number(e.target.value)) }))}>{ANOS_REFORMA.map(y => <option key={y} value={y}>{y}{y === 2026 ? ' · alíquotas oficiais' : ' · alíquotas em hipótese'}</option>)}</select></div>
           <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-regime">Regime atual</label></div><select id="cbs-regime" value={form.regime} onChange={e => set('regime', e.target.value)}><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option><option value="simples">Simples Nacional (DAS)</option></select></div>
           {simples ? <>
-            {field('simplesCbs', 'Parte do DAS que é CBS', 'Alíquota efetiva de CBS dentro do DAS, calculada pelo PGDAS-D. A calculadora oficial também não calcula esse número: ela recebe pronto e só reparte.', '%')}
-            {field('simplesIbs', 'Parte do DAS que é IBS', 'Alíquota efetiva de IBS dentro do DAS, calculada pelo PGDAS-D. Some estadual e municipal.', '%')}
+            {field('simplesCbs', 'Parte do DAS que é CBS', 'Alíquota efetiva de CBS dentro do DAS, calculada pelo PGDAS-D. A calculadora oficial também não calcula esse número: ela recebe pronto e só reparte. O exemplo usa 2,75%, valor de um teste oficial da Receita.', '%')}
+            {field('simplesIbs', 'Parte do DAS que é IBS', 'Alíquota efetiva de IBS dentro do DAS, calculada pelo PGDAS-D. Some estadual e municipal. O exemplo usa 1,25%, valor de um teste oficial da Receita.', '%')}
             <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-simples-tipo">Tipo de venda</label><Help title="Tipo de venda no Simples"><p>Regra oficial do Simples: venda no mercado interno conta inteira; venda mista conta pela metade; exportação direta não paga; exportação indireta fica suspensa (não entra no imposto a pagar).</p><p>Créditos nas compras não entram: no Simples, CBS e IBS ficam dentro do DAS.</p></Help></div>
               <select id="cbs-simples-tipo" value={form.simplesTipo} onChange={e => set('simplesTipo', e.target.value)}>{Object.entries(TIPOS_RECEITA_SIMPLES).map(([k, t]) => <option key={k} value={k}>{t.rotulo}</option>)}</select></div>
           </> : <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-reduction">Tratamento da venda</label><Help title="Reduções da tabela oficial"><p>Reduções de 30% a 100% copiadas da tabela oficial de classificação da Receita (cClassTrib). A conta é a mesma da oficial: alíquota × (1 − redução).</p><p>Escolha só se toda a venda tiver essa redução. Diferimento, crédito presumido e regimes específicos não entram.</p></Help></div>
