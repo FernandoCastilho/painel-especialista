@@ -1,6 +1,6 @@
-/* Empréstimo externo (4131) no padrão visual das calculadoras (aprovado em 18/11/2026), o mesmo do BNDES Finame.
-   Quadros de entrada: faixa azul-marinho com linha laranja. Cotação: única com borda laranja, fixa ao lado dos dados
-   no computador (a partir de 1200 px) e logo abaixo deles em telas menores. Só apresentação: nenhuma regra de cálculo mora aqui.
+/* Empréstimo externo (4131) no padrão visual do Comparador de Crédito (pedido de Fernando em 19/11/2026).
+   Quadros de entrada: faixa azul-marinho com linha laranja, em largura total. Cotação: um quadro só, com borda laranja,
+   em largura total e abaixo dos dados, organizado como o resultado do Comparador. Só apresentação: nenhuma regra de cálculo mora aqui.
    Tudo restrito a .bw.e4; seletores com :root[data-theme] body para vencer as camadas anteriores sem !important. */
 :root {
   --e4-orange:#ff6200;
@@ -39,106 +39,151 @@
 /* Avisos de dado faltando: faixa âmbar no topo do quadro, com "!". */
 :root[data-theme] body .bw.e4 .e4-alerta { grid-column:1/-1; order:-1; display:flex; align-items:flex-start; gap:8px; margin:0 0 4px; padding:8px 10px; border:0; border-left:4px solid #e08a00; border-radius:6px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.8rem; line-height:1.4; }
 :root[data-theme] body .bw.e4 .e4-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.72rem; font-weight:800; line-height:1; }
-:root[data-theme] body .bw.e4 #fm-result > .e4-alerta { margin:12px 14px 0; }
 
-/* Cotação ao lado dos dados (computador largo); abaixo deles nas telas menores. */
-@media (min-width:1200px) {
-  :root[data-theme] body .bw.e4 .fm-workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,420px); gap:20px; align-items:start; }
-  :root[data-theme] body .bw.e4 .fm-workspace > .fm-results:not(.fm-zoomed) { position:sticky; top:88px; max-height:calc(100vh - 100px); overflow:auto; overscroll-behavior:contain; overflow-anchor:none; }
-  /* Com a cotação sempre à vista, o atalho laranja "Custo · Ver resultado" fica redundante. */
-  :root[data-theme] body .bw.e4 .fm-workspace .fm-show-result { display:none; }
+/* Dados em largura total, um quadro abaixo do outro, como no Comparador. */
+:root[data-theme] body .bw.e4 .fm-workspace { display:block; }
+:root[data-theme] body .bw.e4 .fm-workspace > .fm-input-panel { padding:0; border:0; background:none; box-shadow:none; }
+:root[data-theme] body .bw.e4 .cx-finame .cx-form { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; padding:0; }
+
+/* Sem espaço morto no topo do quadro: a abertura encosta no cabeçalho, como no Comparador. */
+:root[data-theme] body main.app .cx.bw.e4 { row-gap:0; }
+:root[data-theme] body .bw.e4 > :is(.bw-simulation,.bw-quotes) { margin-top:0; padding-top:12px; }
+
+/* Abertura: o que fazer, à esquerda, com a ajuda das regras ao lado (como "Preencha a operação…" no Comparador). */
+:root[data-theme] body .bw.e4 .fm-input-panel > header.e4-intro { display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:4px 8px; margin:0 0 10px; padding:0; border:0; background:none; }
+:root[data-theme] body .bw.e4 .fm-input-panel > header.e4-intro p { margin:0; color:var(--bw-mut); font-size:.875rem; line-height:1.5; }
+:root[data-theme] body .bw.e4 .fm-input-panel > header.e4-intro .fi-help > button { width:28px; min-width:28px; height:28px; min-height:28px; }
+
+/* Operação: os sete campos lado a lado no computador, como a linha mestra do Comparador. */
+:root[data-theme] body .bw.e4 .cx-finame .fm-operation:not(.e4-opcoes) .fm-group-fields { grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); }
+@media (min-width:1100px) { :root[data-theme] body .bw.e4 .cx-finame .fm-operation:not(.e4-opcoes) .fm-group-fields { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+:root[data-theme] body .bw.e4 .cx-finame .fm-operation:not(.e4-opcoes) .fm-group-fields > :is(.fm-pills,.e4-future) { grid-column:1/-1; }
+:root[data-theme] body .bw.e4 .cx-finame .e4-hedge .fm-group-fields { grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); }
+:root[data-theme] body .bw.e4 .cx-finame .e4-mais .e4-opcoes .fm-group-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); align-items:end; }
+:root[data-theme] body .bw.e4 .cx-finame .e4-mais .e4-opcoes .fm-group-fields > .cx-field { grid-column:auto; grid-row:auto; }
+
+/* Atalho para a cotação: o botão laranja centralizado do Comparador ("Comparar modalidades"). */
+:root[data-theme] body .bw.e4 .e4-cta { display:flex; justify-content:center; margin:8px 0 0; }
+:root[data-theme] body .bw.e4 .e4-cta .fm-show-result,
+:root[data-theme] body .bw.e4 .e4-cta .fm-show-result:not(:disabled) { position:static; display:inline-flex; align-items:center; justify-content:center; gap:12px; width:auto; min-width:280px; min-height:48px; margin:0; padding:12px 28px; border:0; border-radius:8px; background:#ff7900; color:#10284c; box-shadow:none; font:inherit; font-size:1.05rem; font-weight:700; cursor:pointer; }
+:root[data-theme] body .bw.e4 .e4-cta .fm-show-result > span:last-child { padding:0; background:none; color:#10284c; border-radius:0; font-weight:600; }
+:root[data-theme] body .bw.e4 .e4-cta .fm-show-result b { color:#10284c; font-size:1.05rem; margin-left:4px; }
+:root[data-theme] body .bw.e4 .e4-cta .fm-show-result:disabled { background:var(--bw-soft); color:var(--bw-mut); border:1px solid var(--bw-line); cursor:default; }
+:root[data-theme] body .bw.e4 .e4-cta .fm-show-result:focus-visible { outline:3px solid var(--bw-link); outline-offset:3px; }
+
+/* Resultado: o único quadro com borda laranja; faixa azul-marinho sem linha laranja; abaixo dos dados, em largura total. */
+:root[data-theme] body .bw.e4 .e4-result-box.fm-results { position:static; display:block; gap:0; width:auto; max-height:none; overflow:hidden; }
+:root[data-theme] body .bw.e4 .e4-result-box { margin:16px 0 0; border:2px solid var(--e4-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); color:var(--bw-ink); scroll-margin-top:96px; }
+:root[data-theme] body .bw.e4 .e4-result-box:focus { outline:none; }
+:root[data-theme] body .bw.e4 .e4-result-box:focus-visible { outline:3px solid var(--bw-link); outline-offset:2px; }
+:root[data-theme] body .bw.e4 .e4-result-head { display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; margin:0; padding:12px 16px; background:var(--e4-navy); border:0; border-radius:0; color:#fff; }
+:root[data-theme] body .bw.e4 .e4-result-box > .e4-result-head > h3 { flex:1 1 auto; min-width:0; margin:0; color:#fff; font-size:1.05rem; font-weight:700; letter-spacing:0; text-transform:none; }
+:root[data-theme] body .bw.e4 .e4-result-head small { color:#c9d6ee; font-size:.78rem; }
+:root[data-theme] body .bw.e4 .e4-result-head .fi-help > button { color:#fff; border-color:#ffffff88; }
+:root[data-theme] body .bw.e4 .e4-result-body { display:flex; flex-direction:column; gap:12px; min-width:0; padding:14px; }
+:root[data-theme] body .bw.e4 .e4-result-status { margin:0; color:var(--bw-mut); font-size:.8rem; line-height:1.45; }
+:root[data-theme] body .bw.e4 .e4-result-body > .e4-alerta { margin:0; }
+
+/* a. Resposta principal: custo efetivo em destaque (azul) e total das parcelas ao lado (claro). */
+:root[data-theme] body .bw.e4 .e4-answer { display:grid; grid-auto-flow:row; grid-auto-columns:auto; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:10px; margin:0; padding:0; background:none; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-answer > div > div { display:flex; flex-direction:column; gap:4px; min-width:0; height:100%; box-sizing:border-box; padding:12px 14px; border-radius:10px; text-align:left; }
+:root[data-theme] body .bw.e4 .e4-answer-main > div { background:var(--e4-navy); color:#fff; border:1px solid #34507f; }
+:root[data-theme] body .bw.e4 .e4-answer-main :is(small,span) { color:#dbe5f5; }
+:root[data-theme] body .bw.e4 .e4-answer-main b { color:#fff; font-size:1.6rem; line-height:1.15; font-weight:800; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .bw.e4 .e4-answer-main strong { color:#fff; }
+:root[data-theme] body .bw.e4 .e4-answer-main .fi-help > button { color:#fff; border-color:#ffffff88; }
+:root[data-theme] body .bw.e4 .e4-answer-side > div { border:1px solid var(--bw-line); background:var(--bw-soft); color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-answer-side b { font-size:1.15rem; line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-answer-side :is(small,span) { color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 .e4-answer-side small { color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-answer-side strong { color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-answer small { display:flex; align-items:center; gap:4px; font-size:.75rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+:root[data-theme] body .bw.e4 .e4-answer span { font-size:.875rem; line-height:1.45; font-variant-numeric:tabular-nums; }
+
+/* b. Premissa da simulação, logo abaixo da resposta. */
+:root[data-theme] body .bw.e4 .e4-notice { margin:0; padding:8px 12px; border:1px solid var(--bw-line); border-radius:8px; background:transparent; color:var(--bw-mut); font-size:.85rem; line-height:1.45; }
+
+/* c. Quadros internos (resultado e condições): moldura fina, título com linha embaixo e botão de ampliar. */
+:root[data-theme] body .bw.e4 .e4-result-panel { margin:0; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-result-panel > .expandable-heading,
+:root[data-theme] body .bw.e4 .e4-condicoes-panel > header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 14px; padding:10px 0 8px !important; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body .bw.e4 .e4-result-panel :is(.expandable-heading h3,header h4) { margin:0; font-size:1rem; line-height:1.4; font-weight:700; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-result-panel > .expandable-content { padding:12px 14px 14px; }
+
+/* Quadro agrupado: rótulo à esquerda, valor à direita, números alinhados, grupos em letra pequena e o total marcado. */
+:root[data-theme] body .bw.e4 .e4-matrix-scroll { margin:0; overflow:auto; }
+:root[data-theme] body .bw.e4 .e4-matrix { width:100%; min-width:0; margin:0; table-layout:fixed; border-collapse:collapse; border:1px solid var(--bw-line); font-size:.875rem; }
+:root[data-theme] body .bw.e4 .e4-matrix caption { padding:0 0 10px; text-align:left; font-weight:700; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-matrix :is(th,td) { padding:10px 12px; border:1px solid var(--bw-line); color:var(--bw-ink); line-height:1.4; vertical-align:top; text-align:left; overflow-wrap:anywhere; }
+:root[data-theme] body .bw.e4 .e4-matrix thead th { background:var(--bw-tint); font-weight:700; }
+:root[data-theme] body .bw.e4 .e4-matrix thead th:first-child { width:50%; background:#0b2e63; color:#fff; font-size:1.05rem; }
+:root[data-theme] body .bw.e4 .e4-matrix tbody th { font-weight:700; }
+:root[data-theme] body .bw.e4 .e4-matrix tbody th small { display:block; margin-top:2px; font-size:.75rem; font-weight:400; line-height:1.35; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 .e4-matrix tbody th .fi-help { display:inline-flex; vertical-align:middle; }
+:root[data-theme] body .bw.e4 .e4-matrix tbody tr:nth-child(odd) { background:var(--bw-soft); }
+:root[data-theme] body .bw.e4 .e4-matrix tbody tr:nth-child(even) { background:var(--bw-card); }
+:root[data-theme] body .bw.e4 .e4-matrix td { font-variant-numeric:tabular-nums; }
+:root[data-theme] body .bw.e4 .e4-matrix tr.e4-num > td { text-align:right; white-space:nowrap; overflow-wrap:normal; }
+:root[data-theme] body .bw.e4 .e4-matrix tr.e4-grp > th { padding:12px 12px 4px; background:var(--bw-card); color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-left:0; border-right:0; }
+:root[data-theme] body .bw.e4 .e4-matrix tr.e4-total-row > * { font-weight:800; border-top:2px solid var(--bw-strong-line, var(--bw-ink)); }
+
+/* d. Leitura da cotação: o que os números querem dizer e os avisos, depois dos números. */
+:root[data-theme] body .bw.e4 .e4-leitura { display:flex; flex-direction:column; gap:8px; margin:0; padding:16px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-leitura h4 { margin:0 0 4px; font-size:1rem; font-weight:700; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-leitura p { margin:0; font-size:.9rem; line-height:1.6; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-leitura > .fm-iof-premise { color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-leitura > .e4-aviso { margin:0; padding:10px 12px; border:0; border-left:4px solid #e08a00; border-radius:6px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.875rem; line-height:1.45; }
+
+/* e. Condições da operação: grade compacta, como os "Dados básicos da operação" do Comparador. */
+:root[data-theme] body .bw.e4 .e4-condicoes-panel .e4-condicoes { margin:0; padding:12px 14px 4px; border-radius:0; background:none; }
+:root[data-theme] body .bw.e4 .e4-condicoes-panel .e4-condicoes dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); grid-auto-flow:row; grid-template-rows:none; gap:10px 14px; margin:0; }
+:root[data-theme] body .bw.e4 .e4-condicoes-panel .e4-condicoes dl > div { display:block; min-width:0; padding:0; border:0; }
+:root[data-theme] body .bw.e4 .e4-condicoes-panel .e4-condicoes dt { font-size:.8rem; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 .e4-condicoes-panel .e4-condicoes dd { margin:3px 0 0; font-size:.875rem; font-weight:700; color:var(--bw-ink); text-align:left; white-space:normal; overflow-wrap:anywhere; }
+:root[data-theme] body .bw.e4 .e4-condicoes-panel .e4-hint { margin:4px 14px 12px; font-size:.8rem; line-height:1.45; color:var(--bw-mut); }
+
+/* f. Detalhes: parcelas, comparação com swap e premissas, no estilo dos detalhes do Comparador. */
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe { min-width:0; margin:0; padding:0 12px; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-soft); box-shadow:none; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe > summary { display:flex; align-items:center; gap:8px; min-height:44px; box-sizing:border-box; padding:12px 0; color:var(--bw-ink); font-size:.95rem; font-weight:700; cursor:pointer; list-style:none; }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe > summary::-webkit-details-marker { display:none; }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe > summary::before { content:'▶'; font-size:.7rem; transition:transform .15s; }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe[open] > summary::before { transform:rotate(90deg); }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe[open] { padding-bottom:12px; }
+@media (prefers-reduced-motion:reduce) { :root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe > summary::before { transition:none; } }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe > :not(summary) { background:var(--bw-card); }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe > p { margin:0 0 8px; padding:0; background:none; font-size:.85rem; line-height:1.55; color:var(--bw-ink); }
+:root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe > .cx-hint { margin:0 0 8px; padding:0; background:none; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 .e4-help-line { display:flex; align-items:center; gap:8px; margin:0 0 8px; background:none !important; font-size:.875rem; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 .e4-parcelas > .expandable-panel { margin:0 0 8px; }
+:root[data-theme] body .bw.e4 .e4-comparar > .fm-comparison { margin:0 0 8px; padding:12px; border:1px solid var(--bw-line); border-radius:8px; }
+:root[data-theme] body .bw.e4 .e4-comparar > .fm-details { margin:8px 0 0; padding:0 12px; border:1px solid var(--bw-line); border-radius:8px; }
+
+/* g. Ações no fim do quadro: as regras à esquerda; apresentar, imprimir e copiar à direita. */
+:root[data-theme] body .bw.e4 .e4-result-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; padding-top:12px; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .bw.e4 .e4-result-actions > p { margin:0; font-size:.8rem; line-height:1.45; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 .e4-result-actions > .fm-print-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin:0; padding:0; }
+:root[data-theme] body .bw.e4 .e4-result-actions > .fm-print-actions > :not(.sr-only) { flex:0 0 auto; width:auto; }
+:root[data-theme] body .bw.e4 .e4-result-actions > .fm-print-actions :is(button.bnprint-launch,button.bnp-launch,.e4-copiar) { min-height:44px; padding:0 16px; border:1px solid var(--bw-field-line); border-radius:8px; background:var(--bw-soft); background-image:none; color:var(--bw-ink); font:inherit; font-size:.875rem; font-weight:600; box-shadow:none; }
+:root[data-theme] body .bw.e4 .e4-result-actions > .fm-print-actions .e4-copiar:disabled { color:var(--bw-mut); }
+
+/* Celular: resposta em uma coluna; tabela de resultado com rótulo e valor sem rolar de lado; ações uma por linha. */
+@media (max-width:640px) {
+  :root[data-theme] body .bw.e4 .e4-answer { grid-template-columns:1fr; }
+  :root[data-theme] body .bw.e4 .e4-answer-main b { font-size:1.35rem; }
+  :root[data-theme] body .bw.e4 .e4-result-body { padding:10px; }
+  :root[data-theme] body .bw.e4 .e4-matrix :is(th,td) { padding:8px 6px; }
+  :root[data-theme] body .bw.e4 .e4-matrix td { font-size:.8rem; }
+  :root[data-theme] body .bw.e4 .e4-result-panel > .expandable-content { padding:10px 8px 10px; }
+  :root[data-theme] body .bw.e4 .e4-result-panel > .expandable-heading, :root[data-theme] body .bw.e4 .e4-condicoes-panel > header { margin:0 8px; }
+  :root[data-theme] body .bw.e4 .e4-result-body > details.e4-detalhe { padding:0 8px; }
+  :root[data-theme] body .bw.e4 .e4-parcelas .expandable-content { padding:8px 0; }
+  :root[data-theme] body .bw.e4 .e4-parcelas .cx-wrap { overflow-x:auto; }
+  :root[data-theme] body .bw.e4 .e4-matrix thead th:first-child { width:50%; font-size:.95rem; }
+  :root[data-theme] body .bw.e4 .e4-cta .fm-show-result,
+  :root[data-theme] body .bw.e4 .e4-cta .fm-show-result:not(:disabled) { width:100%; min-width:0; padding:12px 16px; }
+  :root[data-theme] body .bw.e4 .e4-result-actions > .fm-print-actions { width:100%; display:grid; grid-template-columns:minmax(0,1fr); }
+  :root[data-theme] body .bw.e4 .e4-result-actions > .fm-print-actions > :not(.sr-only), :root[data-theme] body .bw.e4 .e4-result-actions > .fm-print-actions button { width:100%; }
 }
-@media (max-width:1199px) {
-  :root[data-theme] body .bw.e4 .fm-workspace { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
-}
-:root[data-theme] body .bw.e4 .fm-results { display:flex; flex-direction:column; gap:10px; min-width:0; }
-:root[data-theme] body .bw.e4 .e4-secondary { display:grid; gap:12px; margin-top:16px; min-width:0; }
-:root[data-theme] body .bw.e4 .e4-secondary > .e4-parcelas { margin-top:0; }
-
-/* Quadro da cotação: o único com borda laranja; faixa azul-marinho sem linha laranja. */
-:root[data-theme] body .bw.e4 #fm-result { display:flex; flex-direction:column; padding:0 0 12px; border:2px solid var(--e4-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); box-shadow:none; }
-:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:0; padding:10px 14px; background:var(--e4-navy); border:0; border-radius:0; color:#fff; }
-:root[data-theme] body .bw.e4 #fm-result > header.fm-hero .cx-heading { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; font-variant-caps:normal; letter-spacing:0; text-transform:none; }
-:root[data-theme] body .bw.e4 #fm-result > header.fm-hero .cx-heading::before,
-:root[data-theme] body .bw.e4 #fm-result > header.fm-hero .cx-heading::after { content:none; display:none; }
-:root[data-theme] body .bw.e4 #fm-result > header.fm-hero small { margin-left:auto; color:#c9d6ee; font-size:.72rem; }
-:root[data-theme] body .bw.e4 #fm-result > header.fm-hero .fi-help > button { color:#fff; border-color:#ffffff88; }
-:root[data-theme] body .bw.e4 #fm-result > header.fm-hero .fm-zoom-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
-
-/* a. Resposta principal: custo efetivo em destaque e total das parcelas ao lado. */
-:root[data-theme] body .bw.e4 #fm-result .e4-answer { display:grid; grid-auto-flow:row; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:10px; margin:12px 14px 10px; padding:0; background:none; color:var(--bw-ink); }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer > div { display:flex; flex-direction:column; gap:2px; min-width:0; padding:12px 14px; border-radius:10px; text-align:left; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-main { background:var(--e4-navy); border:1px solid #34507f; color:#fff; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-main span { display:flex; align-items:center; gap:4px; font-size:.75rem; color:#c9d6ee; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-main .fi-help > button { color:#fff; border-color:#ffffff88; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-main b { font-size:1.9rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:#fff; white-space:nowrap; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-main small { font-size:.75rem; color:#c9d6ee; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-side { border:1px solid var(--bw-line); background:var(--bw-soft); }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-side span { font-size:.75rem; color:var(--bw-mut); }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-side b { font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--bw-ink); white-space:nowrap; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-side small { font-size:.72rem; color:var(--bw-mut); }
-
-/* b. Equivalências: CDI, % do CDI, capital de giro e custo na moeda. */
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin:0 14px 10px; }
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv > div { min-width:0; padding:8px 10px; border:1px solid var(--bw-line); border-radius:8px; }
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv dt { display:flex; align-items:center; gap:4px; font-size:.72rem; font-weight:600; color:var(--bw-mut); }
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv dd { margin:2px 0 0; }
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv dd b { display:block; font-size:.95rem; font-variant-numeric:tabular-nums; color:var(--bw-ink); white-space:nowrap; }
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv dd small { display:block; margin-top:1px; font-size:.7rem; line-height:1.3; color:var(--bw-mut); }
-
-/* c. Valores na moeda e em reais, agrupados: rótulo à esquerda, valor à direita, terminando no total. */
-:root[data-theme] body .bw.e4 #fm-result .e4-valores { width:calc(100% - 28px); min-width:0; table-layout:auto; margin:0 14px 8px; border-collapse:collapse; font-size:.82rem; }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores th,
-:root[data-theme] body .bw.e4 #fm-result .e4-valores td { padding:6px 4px; background:none; border:0; border-bottom:1px solid var(--bw-line); color:var(--bw-ink); vertical-align:top; }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores th { width:auto; min-width:0; text-align:left; font-weight:500; white-space:normal; }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores td { width:1%; }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores th small { display:block; margin-top:2px; font-size:.68rem; font-weight:400; line-height:1.35; color:var(--bw-mut); }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores td { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; font-weight:600; }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores tr.e4-grp > th { padding:10px 4px 4px; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--bw-mut); }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores tr.e4-total-row > * { border-top:2px solid var(--bw-strong-line, var(--bw-line)); border-bottom:0; font-size:.9rem; font-weight:700; }
-
-/* Notas depois dos números. */
-:root[data-theme] body .bw.e4 #fm-result > .fm-iof-premise { margin:4px 14px 0; font-size:.72rem; }
-:root[data-theme] body .bw.e4 #fm-result > .e4-aviso { margin:6px 14px 0; font-size:.74rem; }
-
-/* d. Condições da operação: recolhidas, como lembrete do que foi cotado. */
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box { margin:10px 14px 0; border:1px solid var(--bw-line); border-radius:8px; }
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box > summary { display:flex; align-items:center; gap:8px; min-height:40px; padding:0 12px; font-size:.78rem; font-weight:700; color:var(--bw-link); cursor:pointer; list-style:none; }
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box > summary::-webkit-details-marker { display:none; }
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box > summary::before { content:'▶'; font-size:.6rem; }
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box[open] > summary::before { transform:rotate(90deg); }
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box .e4-condicoes { margin:0; padding:0 12px 10px; background:none; }
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box .e4-condicoes dl { grid-template-columns:minmax(0,1fr); grid-auto-flow:row; grid-template-rows:none; }
-
-/* Ações da cotação: apresentar, imprimir e copiar o resumo, lado a lado. */
-:root[data-theme] body .bw.e4 .fm-results > .fm-print-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; padding:0; }
-:root[data-theme] body .bw.e4 .fm-results > .fm-print-actions .e4-copiar { width:100%; min-height:44px; border-radius:8px; font-size:.8rem; }
-
-/* Zoom da cotação: números maiores. */
-@media (min-width:1001px) {
-  :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-answer-main b { font-size:2.6rem; }
-  :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-answer-side b { font-size:1.5rem; }
-  :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-equiv { grid-template-columns:repeat(4,minmax(0,1fr)); }
-  :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-equiv dd b { font-size:1.3rem; }
-  :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-valores { font-size:1rem; }
-}
-
-/* Detalhe abaixo: títulos sem a barra laranja (um destaque só). */
-:root[data-theme] body .bw.e4 .e4-secondary .cx-heading::before,
-:root[data-theme] body .bw.e4 .e4-secondary .cx-heading::after { content:none; display:none; }
-:root[data-theme] body .bw.e4 .e4-secondary .cx-heading { padding-left:0; border-left:0; }
-
-@media (max-width:480px) {
-  :root[data-theme] body .bw.e4 #fm-result .e4-answer { grid-template-columns:1fr; }
-  :root[data-theme] body .bw.e4 #fm-result .e4-answer-main b { font-size:1.6rem; }
-  :root[data-theme] body .bw.e4 .fm-results > .fm-print-actions { grid-template-columns:1fr; }
-}
-/* Faixa da cotação: título e "ampliar" na primeira linha; a origem da projeção e a ajuda logo abaixo. */
-:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero .cx-heading { flex:1 1 auto; min-width:0; order:0; }
-:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero .fm-zoom-toggle { order:1; }
-:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero::after { content:''; order:1; flex-basis:100%; height:0; }
-:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero small { order:2; flex:0 1 auto; margin-left:0; }
-:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero > .fi-help { order:3; }
 @media (max-width:640px) {
   /* Celular: um campo por linha, para cada rótulo caber em uma linha. */
   :root[data-theme] body .bw.e4 .cx-finame :is(.fm-operation,.e4-hedge) .fm-group-fields { grid-template-columns:minmax(0,1fr); }

@@ -2,6 +2,9 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '19/11/2026', items: [
+    'Calculadoras > Empréstimo externo (4131): a tela segue agora o desenho do Comparador de Crédito. Os dados ficam em largura total e a cotação vem logo abaixo, num quadro único: custo efetivo em destaque com o CDI equivalente, total das parcelas, quadro agrupado do resultado, leitura da cotação, condições da operação à vista, parcela a parcela e os botões de apresentar, imprimir e copiar o resumo. Nenhuma conta mudou.',
+  ] },
   { date: '18/11/2026', items: [
     'Calculadoras > BNDES Finame Materiais, Regras e fontes: o teto de R$ 20 milhões por operação passa a citar a norma oficial (Circular BNDES 14/2022, item 6.2.2, com a redação da Circular 64/2023), no lugar de materiais de terceiros. O aviso acima desse valor continua só aviso; a conta não mudou.',
     'Saiu a palavra "novos" da descrição dos itens: a norma do BNDES fala em bens industrializados de fabricação nacional, sem exigir que sejam novos.',
