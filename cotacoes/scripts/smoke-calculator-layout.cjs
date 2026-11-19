@@ -454,16 +454,16 @@ async function assertComparatorFamily(browser) {
               available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
               used:costs.right - operation.left,
               topGap:Math.abs(costs.top - operation.top),
-              formTop:form.getBoundingClientRect().top,
-              formRight:form.getBoundingClientRect().right,
+              formBottom:form.getBoundingClientRect().bottom,
+              formLeft:form.getBoundingClientRect().left,
+              resultWidth:results.width,
               resultsTop:results.top,
               resultsLeft:results.left,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
           assert.ok(Math.abs(geometry.used - geometry.available) <= 2 && geometry.topGap <= 2, details + ': Operação e Custos preenchem a mesma linha')
-          // Padrão de 18/11/2026: no computador, a cotação fica ao lado dos dados, alinhada pelo topo.
-          assert.ok(geometry.resultsLeft >= geometry.formRight && Math.abs(geometry.resultsTop - geometry.formTop) <= 48, details + ': cotação ao lado dos dados')
+          assert.ok(geometry.resultsTop >= geometry.formBottom - 1 && Math.abs(geometry.resultsLeft - geometry.formLeft) <= 2 && Math.abs(geometry.resultWidth - geometry.available) <= 2, details + ': cotação abaixo e em largura total')
         }
       }
       console.log(`PASS família visual do Comparador · ${width}px · ${theme}`)
