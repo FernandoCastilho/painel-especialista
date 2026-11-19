@@ -76,7 +76,7 @@ export default function DividendosEmprestimo({ onBack }) {
     <section className="cx cx-cd bw calc-standard calc-workspace cd-pattern de-pattern" aria-labelledby="de-heading">
       <div className="bw-heading calc-workspace-heading">
         <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="de-heading" className="cx-title"><span>Dividendos via empréstimo</span></h2></div>
-        <CalculatorHelp title="Dividendos via empréstimo"><p>A empresa de lucro real toma crédito e paga ao sócio o dividendo aprovado em ata. O sócio aplica e deixa a aplicação como garantia. Os juros reduzem o IR da empresa e o dinheiro rende na pessoa física.</p><p>A tela mede a eficiência total: rendimento líquido do sócio + economia de IR da empresa − juros e IOF, e indica o formato de pagamento mais eficiente.</p><p>Simulação para estudo. Não é recomendação tributária nem cotação.</p></CalculatorHelp>
+        <CalculatorHelp title="Dividendos via empréstimo"><p>A empresa de lucro real toma crédito e paga ao sócio o dividendo aprovado em ata. O sócio aplica e deixa a aplicação como garantia. Os juros reduzem o IR da empresa e o dinheiro rende na pessoa física.</p><p>A tela mede a eficiência total na data final: rendimento líquido do sócio + economia de IR da empresa − juros e IOF − o rendimento que o caixa da empresa deixa de ter com os pagamentos (e o imposto sobre o dividendo, se não houver ata). Indica o formato de pagamento mais eficiente.</p><p>Simulação para estudo. Não é recomendação tributária nem cotação.</p></CalculatorHelp>
       </div>
       <p className="cd-notice">Simulação para estudo, com CDI constante e regras tributárias simplificadas. Confirme a estrutura com o jurídico e o contador da empresa. Os dados ficam só nesta tela.</p>
 
@@ -87,7 +87,7 @@ export default function DividendosEmprestimo({ onBack }) {
             <div className="cx-form">
               {field('valor', 'Valor do dividendo (valor da operação)', <MoneyInput id="de-valor" value={form.valor} onChange={(v) => set('valor', v)} />, 'Valor que a empresa toma emprestado e paga ao sócio como dividendo.')}
               {text('taxa', 'Taxa do empréstimo (% a.m.)', 'Taxa mensal da operação. Garantia: aplicação do sócio.', 'ex.: 1,31')}
-              {text('aliquotaPj', 'IR + CSLL da empresa (%)', 'Lucro real: 25% de IRPJ + 9% de CSLL = 34%. Juros e IOF do empréstimo reduzem esse imposto.', 'ex.: 34')}
+              {text('aliquotaPj', 'IR + CSLL da empresa (%)', 'Lucro real: IRPJ de 15% + adicional de 10% sobre o lucro acima de R$ 20 mil por mês, mais 9% de CSLL = 34%. Empresa com lucro menor tem alíquota efetiva abaixo disso. Juros e IOF do empréstimo reduzem esse imposto.', 'ex.: 34')}
             </div>
             {check('de-iof', comIof, setComIof, 'Operação com IOF')}
             <p className="cx-hint cd-pad-x">{comIof
@@ -111,7 +111,7 @@ export default function DividendosEmprestimo({ onBack }) {
 
         <aside className="cd-results" aria-label="Resultado estimado">
           <article className="desk-panel cx-panel cd-quote">
-            <header className="cx-heading"><h3>3. Eficiência da operação</h3><CalculatorHelp title="Eficiência da operação"><p>Quanto empresa e sócio ganham juntos, na data final: rendimento líquido da aplicação do sócio + economia de IR da empresa − juros e IOF, considerando que o caixa usado nos pagamentos renderia CDI na empresa.</p></CalculatorHelp></header>
+            <header className="cx-heading"><h3>3. Eficiência da operação</h3><CalculatorHelp title="Eficiência da operação"><p>Quanto empresa e sócio ganham juntos, na data final: rendimento líquido da aplicação do sócio + economia de IR da empresa − juros e IOF − o rendimento que o caixa usado nos pagamentos teria na empresa (e o imposto sobre o dividendo, se não houver ata).</p><p>O formato vencedor depende da taxa do empréstimo depois do IR: se ela fica acima do rendimento líquido do caixa da empresa, pagar antes (SAC, Price) ganha; se fica abaixo, pagar no fim ganha. SAC e Price supõem que a empresa tem caixa para as parcelas.</p></CalculatorHelp></header>
             <div aria-live="polite" className="cd-status">
               {!filled && <p className="cd-notice cd-guide">Preencha os campos para ver o resultado.</p>}
               {result && !result.ok && <p className="cd-notice" role="alert">{result.error}</p>}
@@ -187,8 +187,8 @@ export default function DividendosEmprestimo({ onBack }) {
           <header className="cx-heading"><h3 id="de-avisos-h">Riscos e ressalvas</h3></header>
           <ul>
             <li><b>Ata de distribuição.</b> A isenção vale para lucros apurados até 2025 com distribuição aprovada até 31/12/2025 e paga nos termos da ata, dentro do prazo da regra de transição da Lei 15.270/2025. Confirme a ata e o prazo com o contador.</li>
-            <li><b>Sem ata.</b> A retenção de 10% vale quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês; pagamentos menores não têm retenção na fonte, mas entram no imposto mínimo anual de quem ganha mais de R$ 600 mil.</li>
-            <li><b>Dedutibilidade.</b> Juros só reduzem o IR se a despesa for necessária à atividade. Crédito tomado para pagar dividendo pode ter a dedução questionada pela Receita.</li>
+            <li><b>Sem ata.</b> A retenção de 10% vale quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês; pagamentos menores não têm retenção na fonte, mas entram no imposto mínimo anual de quem ganha mais de R$ 600 mil. A retenção é antecipação do imposto mínimo anual: com o redutor que limita a carga empresa + sócio a 34%, parte ou todo o valor pode voltar no ajuste anual. A conta trata o imposto como custo final (visão conservadora).</li>
+            <li><b>Dedutibilidade.</b> Juros só reduzem o IR se a despesa for necessária à atividade. Crédito tomado para pagar dividendo pode ter a dedução questionada pela Receita. A economia só existe se a empresa tiver lucro tributável no período; a conta supõe abatimento todo mês, e na apuração trimestral ou anual ele chega mais tarde.</li>
             <li><b>Caixa da empresa.</b> A conta supõe que o caixa usado nos pagamentos renderia o mesmo % do CDI na empresa, com PIS/Cofins e IR/CSLL. Se a empresa usa esse caixa na operação, o custo de oportunidade é outro.</li>
             <li>CDI constante, sem curva de juros. Meses de 30 dias. Sem PIS/Cofins sobre a despesa de juros. Fundo de investimento: a conta não aplica o come-cotas semestral, então o resultado de fundo sai um pouco otimista.</li>
           </ul>
