@@ -20,8 +20,8 @@ import * as praca from '../src/pracaContrato.js'
 const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
-async function setup(t) {
-  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './cdiFuturo.js': await import('../src/cdiFuturo.js'), './holidays.js': await import('../src/holidays.js'), './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
+async function setup(t, options = {}) {
+  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './cdiFuturo.js': await import('../src/cdiFuturo.js'), './holidays.js': await import('../src/holidays.js'), './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => options.curves ? options.curves() : ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
   for (const file of ['ExpandIcon.jsx', 'MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'LinhaMestra.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
@@ -317,4 +317,56 @@ test('CDI base manual vem preenchido com a média da curva DI no prazo da linha 
   const avg = Number(field.props.value.replace(',', '.'))
   assert.ok(avg > 13 && avg < 15, `média ${avg}`)
   assert.match(text(ui.render.value), /em 36 meses/)
+})
+
+
+test('CDI automático acompanha 12→36; edição manual é preservada; Usar a média retoma acompanhamento', async t => {
+  const ui = await setup(t)
+  await ui.change(2, modalities.newColumn('giro-cdi'))
+  const setTerm = async term => { const f = ui.find('SharedFields'); f.props.set({ ...f.props.shared, term }); await ui.render.settle() }
+  const field = () => nodes(ui.render.value).find(n => n.type === 'label' && text(n).startsWith('CDI base (% a.a.)')).props.children.find(n => n?.type === 'input')
+  const toggle = async checked => { nodes(ui.render.value).find(n => n.type === 'label' && text(n).includes('Informar referência manual')).props.children[0].props.onChange({ target: { checked } }); await ui.render.settle() }
+  await setTerm('12'); await toggle(true)
+  const rate12 = field().props.value
+  assert.equal(rate12, '14,20')
+  await setTerm('36')
+  assert.equal(field().props.value, '13,50')
+  await clickCompare(ui); assert.equal(ui.find('Results').props.cdi, 13.5)
+  field().props.onChange({ target: { value: '11,77' } }); await ui.render.settle()
+  await setTerm('12'); assert.equal(field().props.value, '11,77')
+  await setTerm('36'); assert.equal(field().props.value, '11,77')
+  await toggle(false); await toggle(true); assert.equal(field().props.value, '11,77')
+  ui.button('Usar a média').props.onClick(); await ui.render.settle()
+  assert.equal(field().props.value, '13,50')
+  await setTerm('12'); assert.equal(field().props.value, rate12)
+  await setTerm('36'); assert.equal(field().props.value, '13,50')
+  field().props.onChange({ target: { value: '' } }); await ui.render.settle()
+  await setTerm('12'); assert.equal(field().props.value, '', 'campo apagado é edição manual, não autorização para repor taxa')
+})
+
+
+test('curva assíncrona preenche automático, não sobrescreve manual nem taxa própria da operação', async t => {
+  let curve = { status: 'loading', data: null }
+  const ui = await setup(t, { curves: () => curve })
+  const field = () => nodes(ui.render.value).find(n => n.type === 'label' && text(n).startsWith('CDI base (% a.a.)')).props.children.find(n => n?.type === 'input')
+  const manual = nodes(ui.render.value).find(n => n.type === 'label' && text(n).includes('Informar referência manual')).props.children[0]
+  manual.props.onChange({ target: { checked: true } }); await ui.render.settle()
+  assert.equal(field().props.value, '')
+  const shared = ui.find('SharedFields'); shared.props.set({ ...shared.props.shared, term: '12' }); await ui.render.settle()
+  curve = { status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [756, 13.5]] } } } }
+  ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '14,20')
+  const loadedCurve = curve
+  curve = { status: 'loading', data: null }; ui.render.render(); await ui.render.settle()
+  assert.equal(field().props.value, '', 'automático não conserva taxa velha sem curva disponível')
+  curve = loadedCurve; ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '14,20')
+  field().props.onChange({ target: { value: '11,77' } }); await ui.render.settle()
+  curve = { status: 'loading', data: null }; ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '11,77')
+  curve = { status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 15], [252, 14], [756, 13]] } } } }
+  ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '11,77')
+  await ui.change(1, { rate: '2,13', profile: 'pj' })
+  await ui.change(1, { profile: 'pf' })
+  assert.equal(ui.card(1).props.col.rate, '2,13')
+  assert.equal(field().props.value, '11,77')
+  ui.button('Usar a média').props.onClick(); await ui.render.settle(); assert.equal(field().props.value, '14,00')
+  assert.equal(ui.card(1).props.col.rate, '2,13')
 })
