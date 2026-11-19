@@ -10,3 +10,53 @@
 @media (min-width:1400px) and (max-width:1599px) {
   .term-head .topbar-tabs > button { padding-inline:5px; letter-spacing:.025em; }
 }
+/* Onze destinos (Apresentar no menu desde 18/11/2026). No computador, para o menu caber em uma linha também com o contador
+   de pessoas online (que só aparece no site publicado): o contador mostra só o ponto e o número (o texto completo continua no
+   nome do botão, para leitor de tela, e no balão), e, nas telas menores, os rótulos das abas ficam mais juntos. */
+@media (min-width:1000px) {
+  .term-head .online-txt { display:none; }
+  .term-head .online-badge { padding:0 8px; gap:5px; min-width:44px; justify-content:center; }
+}
+@media (min-width:1000px) and (max-width:1099px) {
+  .term-head .topbar-tabs > button { padding-inline:2px; letter-spacing:0; }
+  :root[data-theme="light"] .term-head .topbar-tabs > button { font-size:11px; }
+  :root:not([data-theme="light"]) .term-head .topbar-tabs > button { font-size:12.5px; }
+}
+@media (min-width:1100px) and (max-width:1199px) {
+  :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:3px; letter-spacing:0; }
+}
+/* Com o estado dos dados em erro ("Indisponível", texto mais longo), o tema claro também cabe em uma linha de 1200 a 1399 px. */
+@media (min-width:1200px) and (max-width:1299px) {
+  :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:4px; }
+}
+@media (min-width:1300px) and (max-width:1399px) {
+  :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:6px; }
+}
+@media (min-width:1600px) and (max-width:1699px) {
+  :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:6px; }
+}
+/* Estado dos dados no computador: só o ponto e a hora, em todas as larguras (antes, só de 1300 a 1599 px; ver Direcao.css).
+   O texto completo ("Fora do horário de coleta", "Referência recente"…) fica na dica e na linha de consulta do Mercado.
+   Com os rótulos longos e os relógios extras de 1800 px em diante, o menu de onze abas ia para duas linhas no tema claro.
+   "Indisponível" (erro) continua escrito. */
+@media (min-width:1000px) {
+  .topbar-feed:not(.err) { font-size:0; }
+  .topbar-feed b { font-size:.75rem; }
+  .topbar-feed span { margin-right:7px; }
+}
+/* Com o estado em erro ("Indisponível" escrito) e contador de até três dígitos: rótulos um pouco mais juntos nas faixas em
+   que ainda faltavam alguns pixels. */
+@media (min-width:1200px) and (max-width:1299px) {
+  :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:2px; letter-spacing:0; }
+  :root:not([data-theme="light"]) .term-head .topbar .topbar-tabs > button { padding-inline:4px; }
+}
+@media (min-width:1300px) and (max-width:1399px) {
+  :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:5px; }
+}
+@media (min-width:1400px) and (max-width:1499px) {
+  .term-head .topbar-tabs > button { padding-inline:3px; letter-spacing:.01em; }
+  :root:not([data-theme="light"]) .term-head .topbar .topbar-tabs > button { padding-inline:6px; }
+}
+@media (min-width:1800px) and (max-width:1919px) {
+  :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:6px; }
+}

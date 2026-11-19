@@ -25,7 +25,6 @@ export default function BndesCreditoTfb({ onBack }) {
   const interest = result.rows.reduce((sum, row) => sum + row.interestCents, 0)
   const payments = result.cashFlows.slice(1).reduce((sum, row) => sum + row.cashOutCents, 0)
   return <section className="cx bndes-profile calc-standard" aria-labelledby="tfb-heading">
-    <button className="cx-back" type="button" onClick={onBack}>‹ Calculadoras</button>
     <h2 id="tfb-heading" className="cx-title"><span className="cx-icon"><TfbIcon /></span>BNDES Crédito Pequenas Empresas · TFB</h2>
     <p className="status">Conferência do exemplo histórico · 34 pagamentos · Não é cotação atual</p>
     <article className="desk-panel cx-panel calc-result-shell">

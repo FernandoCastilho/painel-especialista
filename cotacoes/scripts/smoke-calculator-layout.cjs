@@ -83,12 +83,13 @@ async function assertWorkspace(page, section, label) {
 
   const controls = await section.locator('input:not([type=checkbox]):not([type=hidden]), select, textarea, .fi-help > button').evaluateAll(elements => elements.filter(element => element.getClientRects().length).map(element => {
     const rect = element.getBoundingClientRect()
-    // Decisão de 11/11/2026: no Finame, em tela de computador (acima de 1000px), os campos têm 36px; o "?" e as telas menores seguem com 44px.
-    const compact = !!element.closest('.cx-finame') && innerWidth > 1000 && !element.closest('.fi-help')
+    // Decisões de 11/11/2026 (Finame) e 18/11/2026 (todas as calculadoras): em tela de computador (acima de 1000px), os campos têm 36px;
+    // o "?" e as telas menores seguem com 44px.
+    const compact = innerWidth > 1000 && !element.closest('.fi-help')
     return { id: element.id || element.getAttribute('aria-label'), width: rect.width, height: rect.height, min: compact ? 36 : 44 }
   }))
   assert.ok(controls.length > 0)
-  assert.deepEqual(controls.filter(control => control.height < control.min - .1 || control.width < control.min - .1), [], `${label}: campos e ? com a altura mínima combinada (44px; 36px nos campos do Finame em computador)`)
+  assert.deepEqual(controls.filter(control => control.height < control.min - .1 || control.width < control.min - .1), [], `${label}: campos e ? com a altura mínima combinada (44px; 36px nos campos em computador)`)
   const currencyOverlaps = await section.locator('.money-wrap').evaluateAll(elements => elements.filter(element => element.getClientRects().length).filter(element => {
     const input = element.querySelector('input'), prefix = element.querySelector('i')
     return input && prefix && prefix.getBoundingClientRect().right + 4 > input.getBoundingClientRect().left + parseFloat(getComputedStyle(input).paddingLeft)
@@ -132,6 +133,15 @@ async function assertWorkspace(page, section, label) {
   assert.deepEqual(explanations, [], `${label}: explicações extensas ficam nas ajudas`)
 }
 
+// Padrão de 18/11/2026: resultado ao lado dos dados a partir de 1200px; abaixo deles nas telas menores.
+async function assertResultBeside(page, section, inputs, results) {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const box = await section.locator(inputs).boundingBox(), result = await section.locator(results).boundingBox()
+  const details = JSON.stringify({ box, result })
+  if (page.viewportSize().width >= 1200) assert.ok(result.x >= box.x + box.width && Math.abs(result.y - box.y) <= 2, 'resultado ao lado dos dados ' + details)
+  else assert.ok(result.y >= box.y + box.height - 1, 'resultado abaixo dos dados ' + details)
+}
+
 async function assertHelp(page, section, label, directory) {
   const help = section.getByRole('button', { name: /^Ajuda: / }).first()
   assert.ok(await help.count(), `${label}: ajuda disponível`)
@@ -155,7 +165,7 @@ async function assertHelp(page, section, label, directory) {
   assert.equal(await dialog.evaluate(element => element === document.activeElement || element.contains(document.activeElement)), true, `${label}: ajuda recebe o foco`)
   // Native showModal makes the page inert without adding an inert attribute.
   // Prove that even a direct focus request cannot reach the background.
-  assert.equal(await section.locator('.cx-back, .giro-back').first().evaluate(element => { element.focus(); return element === document.activeElement }), false, `${label}: fundo modal recusa foco`)
+  assert.equal(await section.locator('.calc-back').first().evaluate(element => { element.focus(); return element === document.activeElement }), false, `${label}: fundo modal recusa foco`)
   for (const key of ['Tab', 'Tab', 'Shift+Tab']) {
     await page.keyboard.press(key)
     const focus = await dialog.evaluate(element => ({ inside: element === document.activeElement || element.contains(document.activeElement), body: document.activeElement === document.body, modal: element.matches(':modal') }))
@@ -179,10 +189,11 @@ async function assertHelp(page, section, label, directory) {
 
 async function fillScenario(page, section, route) {
   if (route === 'giro') {
-    await section.getByText('Datas e praça do contrato', { exact: true }).click()
+    // Linha mestra comum (19/11/2026): o caso de referência é digitado nela (R$ 100.000,00 em 12 meses, sem carência).
+    await section.locator('#cx-value').fill('100.000,00'); await section.locator('#cx-term').fill('12'); await section.locator('#cx-grace').fill('0')
+    await section.getByLabel('Amortização', { exact: true }).selectOption('price')
     await section.locator('#cx-start').fill('2026-11-06')
     await section.locator('#cx-firstDue').fill('2026-12-06')
-    await section.getByText('Datas e praça do contrato', { exact: true }).click()
     const simulate = () => section.getByRole('button', { name: 'Simular', exact: true }).click()
     const amount = async label => normalize(await section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').innerText())
     await simulate()
@@ -195,7 +206,9 @@ async function fillScenario(page, section, route) {
     const result = await section.locator('.giro-result').boundingBox()
     const installments = await section.getByText('Ver parcelas', { exact: true }).boundingBox()
     assert.ok(installments.y >= Math.max(form.y + form.height, result.y + result.height), 'parcelas abaixo do formulário e resultado')
-    if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
+    // Padrão de 18/11/2026: a partir de 1200 px o resultado fica fixo ao lado dos dados (acompanha a rolagem, sem subir acima deles).
+    if (page.viewportSize().width >= 1200) assert.ok(result.x >= form.x + form.width && result.y >= form.y - 2 && await section.locator('.giro-result').evaluate(element => getComputedStyle(element).position) === 'sticky', 'resultado fixo ao lado dos dados')
+    else if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
     else assert.ok(result.y >= form.y + form.height)
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
@@ -205,31 +218,35 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.getByText('Preencha valor, taxa e prazo para ver o resultado.', { exact: true }).count(), 1)
     await page.locator('#cg-rate').focus(); await page.locator('#cg-rate').blur()
     assert.equal(await page.locator('#cg-rate').getAttribute('aria-invalid'), 'true', 'erro aparece ao sair do campo vazio')
-    assert.equal(await page.locator('#cg-amount').getAttribute('aria-invalid'), 'false', 'campo ainda não visitado segue sem erro')
+    assert.equal(await page.locator('#cg-value').getAttribute('aria-invalid'), 'false', 'campo ainda não visitado segue sem erro')
     assert.equal(await section.getByText('Preencha ou corrija os campos sinalizados', { exact: false }).count(), 1)
     await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).fill('3')
     await page.locator('#cg-start').fill('2026-11-05')
     await page.locator('#cg-duration').fill('10')
-    await page.locator('#cg-amount').fill('100000')
+    await page.locator('#cg-value').fill('100000')
     assert.ok(await page.locator('#cg-taxProfile').count(), 'enquadramento do IOF preservado')
-    const kpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
+    // Padrão de 18/11/2026: valores em reais agrupados no quadro do resultado, terminando no custo total.
+    const kpi = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/)
-    const interest = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
+    const interest = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
     assert.match(await interest.locator('b').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
     // CET do art. 6º (Res. CMN 4.881/2020): sem limite, só o pedido; com limite, 30 dias sobre o limite em dias corridos/365.
     assert.equal(await section.getByText('Sem CET: informe o limite contratado', { exact: false }).count(), 1)
     assert.equal(await page.locator('#cg-limit').inputValue(), '', 'limite começa vazio')
     await page.locator('#cg-limit').fill('100000')
-    const cetKpi = section.locator('.cg-kpis > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
+    const cetKpi = section.locator('.cg-equiv > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
     const cetAnnual = Math.pow((100000 + 3000 + 100000 * 0.000082 * 30) / (100000 - 380), 365 / 30) - 1 // IOF adicional na liberação
     const pct2 = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
     assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
     assert.ok(await section.getByText('texto oficial conferido em 11/11/2026', { exact: false }).count())
+    // Padrão de 18/11/2026: resposta principal = custo total; resultado ao lado dos dados a partir de 1200px, abaixo antes disso.
+    assert.match(normalize(await section.locator('.cg-answer-main b').innerText()), /^R\$\s*1\.462,00$/)
+    await assertResultBeside(page, section, '.cg-inputs', '.cg-result-col')
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
-    await page.locator('#ad-date').fill('2026-11-05')
+    await page.locator('#ad-lm-start').fill('2026-11-05')
     await section.getByLabel('Vencimento contratual', { exact: true }).fill('2026-12-05')
     // The nested MoneyInput adds the currency prefix to the label's text.
     const nominal = section.getByLabel(/^Valor nominal total do grupo/)
@@ -259,6 +276,9 @@ async function fillScenario(page, section, route) {
     const monthlyInterest = gross * 0.0175 * days / 30
     const monthlyNet = gross - monthlyInterest - (gross - monthlyInterest) * (0.0038 + days * 0.000082) - 564 - 260
     const monthlyCost = 6 * (gross - monthlyNet)
+    // Padrão de 18/11/2026: as tabelas completas ficam recolhidas abaixo do resultado; a pessoa abre para conferir.
+    assert.equal(await section.locator('details.dsc-tables').evaluate(element => element.open), false, 'tabelas começam recolhidas')
+    await section.locator('details.dsc-tables > summary').click()
     const row = section.locator('.desconto-summary-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Custo total do desconto', exact: true }) })
     assert.equal(normalize(await row.locator('td').first().innerText()), brl(monthlyCost))
     assert.equal(normalize(await row.locator('td').nth(1).innerText()), brl(monthlyCost * 12))
@@ -268,6 +288,13 @@ async function fillScenario(page, section, route) {
     assert.equal(await giroCet.locator('td').count(), 5)
     for (const cell of await giroCet.locator('td').allInnerTexts()) assert.match(normalize(cell), /^\d+,\d{2}% a\.a\.$/)
     assert.doesNotMatch(await section.innerText(), /[Nn]ão é CET/)
+    // Padrão de 18/11/2026: a resposta principal repete a economia de 12 meses da tabela, com direção em palavras e símbolo.
+    const savingsRow = section.locator('.desconto-comparison-panel tbody tr', { has: page.getByRole('rowheader', { name: 'Economia estimada com giro', exact: true }) })
+    const savings12 = normalize(await savingsRow.locator('td').nth(1).innerText())
+    const answer = normalize(await section.locator('.dsc-answer-main').innerText())
+    assert.ok(answer.includes(savings12), `resposta principal traz a economia de 12 meses (${savings12})`)
+    assert.match(answer, savings12.startsWith('-') ? /▼.*O giro custa mais/ : /▲.*O giro custa menos/)
+    await assertResultBeside(page, section, '.dsc-inputs', '.dsc-result-col')
   } else if (route === 'finimp') {
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)
@@ -299,12 +326,12 @@ async function fillScenario(page, section, route) {
     const eligibilityWarning = section.locator('.fm-iof-premise')
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /FINAME|Finame/)
-    assert.equal(await section.locator('.fm-destaques tbody tr').count(), 6, 'números principais à vista, sem abrir a composição: taxas, CET, parcelas e custo total')
+    assert.equal(await section.locator('.fm-destaques tbody tr:not(.fm-grp)').count(), 10, 'números principais à vista, sem abrir a composição: taxas, CET e valores em reais até o custo total')
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
     await section.locator('.fm-fluxo-panel > summary').click()
-    assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 60)
+    assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 48) // prazo padrão de 48 meses (18/11/2026)
     assert.match(await section.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
   }
 }
@@ -322,7 +349,7 @@ const workspaceRoutes = {
   'conta-garantida': '#cg-rate',
   'finimp': '#fi-currency',
   'giro': '#cx-value',
-  'analise-desconto': '#ad-date',
+  'analise-desconto': '#ad-lm-start',
 }
 
 async function assertComparatorFamily(browser) {
@@ -332,13 +359,12 @@ async function assertComparatorFamily(browser) {
       await fixtures(page)
       await page.goto(base + '/#resumo')
       if (width < 1000) {
-        await page.getByRole('button', { name: 'Mais', exact: true }).click()
-        await page.getByRole('menuitem', { name: 'Calculadoras', exact: true }).click()
+        await page.getByRole('navigation', { name: 'Seções', exact: true }).getByRole('button', { name: 'Calculadoras', exact: true }).click()
       } else {
-        const navigationRows = await page.locator('.topbar-tabs > button').evaluateAll(buttons =>
+        const navigationRows = await page.locator('.topbar-tabs > button, .topbar-tabs > .more-tab > button').evaluateAll(buttons =>
           new Set(buttons.map(button => Math.round(button.getBoundingClientRect().top))).size
         )
-        assert.equal(navigationRows, 1, 'navegação do desktop mantém as dez abas na mesma linha a 1440px')
+        assert.equal(navigationRows, 1, 'navegação do desktop mantém as seis abas e Mais na mesma linha a 1440px')
         await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('button', { name: 'Calculadoras', exact: true }).click()
       }
       await page.locator(workspaceRoutes['']).first().waitFor()
@@ -347,7 +373,8 @@ async function assertComparatorFamily(browser) {
         await page.locator(anchor).first().waitFor()
         if (route === 'giro') {
           const giro = page.locator('.giro-screen')
-          assert.equal(await giro.evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)', 'Capital de Giro segue branco nos dois temas')
+          // Desde 19/11/2026 o Capital de Giro usa a moldura e as cores das outras calculadoras, nos dois temas.
+          assert.equal(await giro.evaluate(element => element.classList.contains('bw')), true, 'Capital de Giro na moldura padrão')
           await assertWorkspace(page, giro, `Capital de Giro · ${width}px · ${theme}`)
           if (width === 390 || width === 1440) await page.screenshot({ path: path.join(out, `giro-${width}-${theme}.png`), fullPage: true })
           continue
@@ -427,13 +454,16 @@ async function assertComparatorFamily(browser) {
               available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
               used:costs.right - operation.left,
               topGap:Math.abs(costs.top - operation.top),
-              formBottom:form.getBoundingClientRect().bottom,
+              formTop:form.getBoundingClientRect().top,
+              formRight:form.getBoundingClientRect().right,
               resultsTop:results.top,
+              resultsLeft:results.left,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
           assert.ok(Math.abs(geometry.used - geometry.available) <= 2 && geometry.topGap <= 2, details + ': Operação e Custos preenchem a mesma linha')
-          assert.ok(geometry.resultsTop >= geometry.formBottom, details + ': cotação permanece na linha seguinte')
+          // Padrão de 18/11/2026: no computador, a cotação fica ao lado dos dados, alinhada pelo topo.
+          assert.ok(geometry.resultsLeft >= geometry.formRight && Math.abs(geometry.resultsTop - geometry.formTop) <= 48, details + ': cotação ao lado dos dados')
         }
       }
       console.log(`PASS família visual do Comparador · ${width}px · ${theme}`)
@@ -462,7 +492,7 @@ async function assertComparatorFamily(browser) {
           await assertWorkspace(page, section, `${route} ${width}`)
           await page.screenshot({ path: path.join(directory, `${route}-initial.png`), fullPage: true })
           await fillScenario(page, section, route)
-          await section.locator('.cx-back, .giro-back').first().focus()
+          await section.locator('.calc-back').first().focus()
           await page.evaluate(() => window.scrollTo(0, 0))
           await settleLayout(page)
           await assertWorkspace(page, section, `${route} preenchida ${width}`)

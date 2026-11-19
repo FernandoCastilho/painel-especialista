@@ -1,6 +1,6 @@
 // The saved choice overrides the OS; without one, the panel stays automatic.
 export const THEME_QUERY = '(prefers-color-scheme: light)'
-export const THEME_COLORS = { dark: '#050505', light: '#f5f4f0' }
+export const THEME_COLORS = { dark: '#050505', light: '#f3f3f1' }
 export const THEME_STORAGE_KEY = 'painel-theme'
 export const THEME_EVENT = 'painel-theme-change'
 const sessionChoices = new WeakMap()

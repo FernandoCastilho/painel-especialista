@@ -1,0 +1,58 @@
+.cx-cd .cd-notice { margin:0; padding:12px 14px; border:1px solid var(--line); border-left:3px solid var(--amber, #ffb000); background:var(--surface-2); font-size:.8rem; line-height:1.5; }
+.cx-cd .cd-pad { margin:12px; }
+.cx-cd .cd-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+.cx-cd .cd-kpis { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; padding:12px; }
+.cx-cd .cd-highlight { grid-template-columns:repeat(4, minmax(0, 1fr)); }
+.cx-cd .cd-kpis > div { display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--line); background:var(--surface-2); min-width:0; }
+.cx-cd .cd-kpis .cd-wide { grid-column:1 / -1; }
+.cx-cd .cd-kpis span { color:var(--mut); font-size:.75rem; }
+.cx-cd .cd-kpis b { font-size:1.1rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.cx-cd .cd-table { width:100%; table-layout:auto; }
+.cx-cd .cd-table th { width:100%; min-width:0; white-space:normal; text-align:left; font-weight:400; }
+.cx-cd .cd-table td { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.cx-cd .cd-phrase { margin:0; padding:12px 14px; font-size:.9rem; line-height:1.6; }
+.cx-cd .cd-actions { display:flex; justify-content:flex-end; padding:0 12px 12px; }
+.cx-cd .cd-link { align-self:flex-start; padding:6px 10px; border:1px solid var(--line); background:var(--surface-2); color:inherit; font:inherit; font-size:.8rem; cursor:pointer; }
+.cx-cd .cd-link:hover { border-color:var(--accent, currentColor); }
+.cx-cd .cd-method { margin-top:4px; }
+@media (max-width:899px) { .cx-cd .cd-grid { grid-template-columns:1fr; } .cx-cd .cd-highlight { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+@media (max-width:639px) { .cx-cd .cd-kpis { gap:8px; padding:8px; } .cx-cd .cd-kpis > div { padding:10px 8px; } .cx-cd .cd-kpis b { font-size:1rem; } }
+.cx-cd .cd-chart { border-top:1px solid var(--line); padding:8px 12px 12px; min-width:0; }
+.cx-cd .cd-chart-head { padding:4px 0 6px; font-size:.8rem; font-weight:600; }
+.cx-cd .cd-chart-note { margin:6px 0 0; }
+.cx-cd .cd-pad-x { margin-left:12px; margin-right:12px; }
+/* Quadro 3: resposta, números principais, do bruto ao líquido e comparação com o dólar. */
+.cx-cd .cd-result { display:grid; gap:16px; padding:16px; }
+.cx-cd .cd-answer { display:flex; gap:12px; align-items:center; margin:0; padding:12px 14px; border:1px solid color-mix(in srgb, var(--chart-teal, #0f7b74) 35%, transparent); border-left:4px solid var(--chart-teal, #0f7b74); background:color-mix(in srgb, var(--chart-teal, #0f7b74) 10%, transparent); font-size:.95rem; line-height:1.45; }
+.cx-cd .cd-answer > span:first-child { flex:none; display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--chart-teal, #0f7b74); color:#fff; font-weight:700; }
+.cx-cd .cd-result .cd-highlight { grid-template-columns:repeat(3, minmax(0, 1fr)); padding:0; }
+.cx-cd .cd-kpis small { color:var(--mut); font-size:.75rem; }
+.cx-cd .cd-kpis .cd-main { border-color:var(--chart-teal, #0f7b74); box-shadow:inset 0 0 0 1px var(--chart-teal, #0f7b74); }
+.cx-cd .cd-kpis .cd-main b { color:var(--chart-teal, #0f7b74); }
+.cx-cd .cd-cols { display:grid; grid-template-columns:minmax(0, 1.35fr) minmax(0, 1fr); gap:16px; }
+.cx-cd .cd-card { border:1px solid var(--line); min-width:0; }
+.cx-cd .cd-card h4 { margin:0; padding:10px 14px; background:var(--surface-2); border-bottom:1px solid var(--line); color:var(--mut); font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; }
+.cx-cd .cd-steps { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.cx-cd .cd-steps th, .cx-cd .cd-steps td { padding:9px 14px; border-bottom:1px solid var(--line); }
+.cx-cd .cd-steps th { text-align:left; font-weight:400; }
+.cx-cd .cd-steps td:last-child { text-align:right; font-weight:600; white-space:nowrap; }
+.cx-cd .cd-steps .cd-op { width:22px; padding-right:0; color:var(--mut); font-weight:700; text-align:center; }
+.cx-cd .cd-steps .cd-rate { text-align:right; color:var(--mut); font-size:.8rem; white-space:nowrap; }
+.cx-cd .cd-steps .cd-minus td:last-child { color:var(--down, #b42318); }
+.cx-cd .cd-steps .cd-total th, .cx-cd .cd-steps .cd-total td { border-top:2px solid currentColor; border-bottom:0; font-weight:700; }
+.cx-cd .cd-vs { display:grid; gap:12px; padding:14px; }
+.cx-cd .cd-bar { position:relative; height:12px; border-radius:6px; background:var(--surface-2); border:1px solid var(--line); }
+.cx-cd .cd-bar i { position:absolute; inset:0 auto 0 0; border-radius:6px; background:var(--chart-teal, #0f7b74); }
+.cx-cd .cd-bar em { position:absolute; top:-6px; bottom:-6px; width:2px; margin-left:-1px; background:var(--text, currentColor); }
+.cx-cd .cd-legend { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; color:var(--mut); font-size:.8rem; }
+.cx-cd .cd-legend b { color:var(--text, inherit); }
+.cx-cd .cd-facts { display:grid; gap:6px; font-size:.85rem; }
+.cx-cd .cd-facts div { display:flex; justify-content:space-between; gap:8px; padding-bottom:6px; border-bottom:1px dashed var(--line); }
+.cx-cd .cd-facts b { text-align:right; font-variant-numeric:tabular-nums; }
+.cx-cd .cd-warn { display:flex; gap:10px; margin:0; padding:10px 12px; border:1px solid color-mix(in srgb, var(--amber, #ffb000) 55%, transparent); background:color-mix(in srgb, var(--amber, #ffb000) 10%, transparent); font-size:.82rem; line-height:1.45; }
+.cx-cd .cd-warn > span:first-child { flex:none; display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--amber, #ff8a00); color:#fff; font-weight:700; font-size:.75rem; }
+.cx-cd .cd-memory { border:1px solid var(--line); padding:10px 14px; }
+.cx-cd .cd-memory summary { cursor:pointer; font-weight:600; min-height:24px; }
+.cx-cd .cd-memory .cx-wrap { margin-top:10px; }
+@media (max-width:899px) { .cx-cd .cd-cols { grid-template-columns:1fr; } }
+@media (max-width:639px) { .cx-cd .cd-result { padding:10px; gap:12px; } .cx-cd .cd-result .cd-highlight { grid-template-columns:repeat(2, minmax(0, 1fr)); } .cx-cd .cd-result .cd-highlight .cd-main { grid-column:1 / -1; } .cx-cd .cd-steps th, .cx-cd .cd-steps td { padding:8px 8px; } }

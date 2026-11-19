@@ -12,6 +12,9 @@ import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
 import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
 import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
 import Faturamento, { FaturamentoIcon } from './Faturamento.jsx'
+import ArvoreCredito from './ArvoreCredito.jsx'
+import CdiDolar, { CdiDolarIcon } from './CdiDolar.jsx'
+import DividendosEmprestimo, { DividendosEmprestimoIcon } from './DividendosEmprestimo.jsx'
 import './CalculatorTheme.css'
 
 // Ícone do Capital de Giro: pilha de moedas com a seta de retorno do caixa.
@@ -28,11 +31,13 @@ function GiroIcon() {
 }
 
 const CALCS = [
-  { id: 'comparador-credito', title: 'Comparador de Crédito', sub: 'De 2 a 5 modalidades lado a lado: custo, CET e fluxo', Icon: CreditIcon },
+  { id: 'finame-materiais', title: 'BNDES', sub: 'Simular Finame, comparar custos e consultar taxas', Icon: FinameIcon },
+  { id: 'comparador-credito', title: 'Necessidade do Cliente', sub: 'De 1 a 5 operações: cotação, custo, CET e fluxo', Icon: CreditIcon },
   { id: 'operacao-di', title: 'Operação x DI', sub: 'Pré, % do CDI ou CDI + spread contra o DI da curva B3', Icon: OperacaoDiIcon },
-  { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
-  { id: 'finame-materiais', title: 'BNDES', sub: 'Simular, comparar custos e consultar taxas', Icon: FinameIcon },
+  { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, IBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
+  { id: 'cdi-dolar', title: 'CDI x Dólar', sub: 'Em quanto tempo o CDI líquido alcança a alta do dólar', Icon: CdiDolarIcon },
+  { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: crédito na empresa x distribuir dividendos hoje', Icon: DividendosEmprestimoIcon },
   { id: 'emprestimo-4131', title: 'Empréstimo externo (4131)', sub: 'No formato da cotação: dólar ou euro, parcelas e NDF', Icon: Emprestimo4131Icon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
@@ -51,13 +56,18 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
   if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} />
+  if (view === 'cdi-dolar') return <CdiDolar onBack={() => onView('')} quotes={quotes} />
+  if (view === 'dividendos-emprestimo') return <DividendosEmprestimo onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
   if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
+  // Árvore de Crédito: fora do menu e da busca (decisão de Fernando, 18/11/2026); abre só pelo endereço #calculadora/arvore-credito ou pelo atalho ARVORE.
+  if (view === 'arvore-credito') return <ArvoreCredito onBack={() => onView('')} onView={onView} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
-      <div className="bw-heading calc-workspace-heading"><h2 id="calc-title"><strong aria-hidden="true">{'PME'}</strong><span>Calculadoras</span></h2></div>
+      <a className="calc-bndes-rates" href="#bndes">Taxas BNDES · consultar séries e históricos</a>
+      <div className="bw-heading calc-workspace-heading"><h2 id="calc-title"><span>Calculadoras</span></h2></div>
       <p className="cx-construcao" role="note"><strong>Em construção!</strong> Os cálculos podem conter erros. Use somente para estudo.</p>
       <div className="cx-tiles">
         {CALCS.map(({ id, title, sub, Icon }) => (

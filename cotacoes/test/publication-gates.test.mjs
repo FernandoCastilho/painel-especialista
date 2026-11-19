@@ -10,7 +10,7 @@ const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
 test('code releases require reusable actual CI; hourly schedules avoid the browser suite', () => {
   assert.match(ci, /on:\n {2}workflow_call:/)
   assert.match(pages, /verify-source:\n[\s\S]*?if: github.event_name != 'schedule'\n {4}uses: \.\/\.github\/workflows\/cotacoes-ci.yml/)
-  assert.match(pages, /deploy:\n {4}needs: \[approve-source, institutional-news\]\n {4}if: \$\{\{ always\(\) && !cancelled\(\) \}\}/)
+  assert.match(pages, /deploy:\n {4}needs: \[approve-source, institutional-news\]\n {4}if: \$\{\{ always\(\) && !cancelled\(\) && needs\.approve-source\.outputs\.pular != 'true' \}\}/)
   const gate = pages.indexOf('name: Exigir verificações antes de publicar código')
   assert.ok(gate > 0 && gate < pages.indexOf('uses: actions/checkout@v4'))
   assert.match(pages, /if: github.event_name != 'schedule' && needs.verify-source.result != 'success'/)
@@ -88,11 +88,12 @@ test('institutional live collection waits for exact source approval and cannot g
   const approve = pages.split('  approve-source:\n')[1].split('\n  institutional-news:')[0]
   const collect = pages.split('  institutional-news:\n')[1].split('\n  deploy:')[0]
   const deploy = pages.split('  deploy:\n')[1]
-  const global = pages.split('permissions:\n')[1].split('\nconcurrency:')[0]
+  const global = pages.split('permissions:\n')[1].split('\njobs:')[0]
   assert.match(approve, /needs: verify-source/)
   assert.match(approve, /if: \$\{\{ always\(\) && !cancelled\(\) \}\}/)
   assert.match(collect, /needs: approve-source/)
   assert.match(collect, /needs.approve-source.result == 'success'/)
+  assert.match(collect, /needs.approve-source.outputs.pular != 'true'/)
   for (const agenda of ["github.event.schedule != '0 11,18 * * *'", "github.event.schedule != '30 11 * * 1,2'"]) assert.ok(collect.includes(agenda))
   assert.match(collect, /uses: \.\/\.github\/workflows\/institutional-news.yml/)
   assert.match(collect, /contents: write/)
@@ -103,4 +104,40 @@ test('institutional live collection waits for exact source approval and cannot g
   assert.match(deploy, /run: node scripts\/sector-news-live.mjs --snapshot/)
   assert.doesNotMatch(deploy, /fetch-sector-news.mjs --offline/)
   assert.match(deploy, /GITHUB_TOKEN: \$\{\{ secrets.GITHUB_TOKEN \}\}/)
+})
+
+test('a fila vale só para a publicação: agenda não cancela publicação de código em espera (17 e 18/11/2026)', async () => {
+  // Fila no nível da execução inteira deixava a agenda seguinte tomar o lugar da publicação de código que esperava.
+  assert.doesNotMatch(pages.split('\njobs:')[0], /^concurrency:/m)
+  const deploy = pages.split('  deploy:\n')[1]
+  assert.match(deploy, /^ {4}concurrency:\n {6}group: pages\n {6}cancel-in-progress: false/m)
+  assert.equal((pages.match(/concurrency:/g) || []).length, 1)
+  const approve = pages.split('  approve-source:\n')[1].split('\n  institutional-news:')[0]
+  assert.match(approve, /outputs:\n {6}pular: \$\{\{ steps\.fila\.outputs\.pular \}\}/)
+  const marker = 'name: Agenda espera a publicação de código em andamento'
+  assert.ok(approve.indexOf(marker) > 0 && approve.indexOf(marker) < approve.indexOf('name: Exigir código já aprovado nas agendas de dados'))
+  const section = approve.split(marker)[1].split('      - name:')[0]
+  assert.match(section, /id: fila\n {8}if: github.event_name == 'schedule'/)
+  assert.match(approve, /name: Exigir código já aprovado nas agendas de dados\n {8}if: github.event_name == 'schedule' && steps.fila.outputs.pular != 'true'/)
+  const script = section.split('          script: |\n')[1].split('\n').map(line => line.replace(/^ {12}/, '')).join('\n')
+  const run = (id, event, status) => ({ id, event, status })
+  for (const [runs, pular] of [
+    [[], 'false'],
+    [[run(30, 'schedule', 'in_progress')], 'false'], // a própria execução não conta
+    [[run(29, 'schedule', 'in_progress'), run(28, 'push', 'completed')], 'false'],
+    [[run(27, 'push', 'in_progress')], 'true'],
+    [[run(27, 'push', 'queued')], 'true'],
+    [[run(27, 'push', 'waiting')], 'true'],
+    [[run(26, 'workflow_dispatch', 'in_progress')], 'true'],
+  ]) {
+    const outputs = {}
+    const github = { rest: { actions: { listWorkflowRuns: async params => {
+      assert.equal(params.workflow_id, 'pages.yml')
+      assert.equal(params.branch, 'claude/obsidian-plugin-analysis-bagjz3')
+      return { data: { workflow_runs: runs } }
+    } } } }
+    const core = { setOutput: (k, v) => { outputs[k] = v }, notice() {} }
+    await new AsyncFunction('github', 'context', 'core', script)(github, { repo: { owner: 'fixture', repo: 'fixture' }, ref: 'refs/heads/claude/obsidian-plugin-analysis-bagjz3', runId: 30 }, core)
+    assert.equal(outputs.pular, pular, JSON.stringify(runs))
+  }
 })

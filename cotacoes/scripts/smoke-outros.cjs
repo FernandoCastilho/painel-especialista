@@ -435,7 +435,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       }
       // menu na ordem pedida
       const names = await p.getByRole('navigation', { name: /Navegação principal|Seções/ }).getByRole('button').allInnerTexts()
-      if (width >= 700) assert.deepEqual(names.slice(0, 3).map((t) => t.trim().toLowerCase().split(' ')[0]), ['mercado', 'juros', 'cenários'])
+      assert.deepEqual(names.map((t) => t.trim()), width >= 1000
+        ? ['Mercado', 'Cenários', 'Juros', 'Calculadoras', 'Setores', 'Notícias', 'Podcast', 'Mais']
+        : ['Mercado', 'Cenários', 'Juros', 'Calculadoras', 'Setores', 'Mais'], 'ordem completa dos destinos prioritários em cada tela')
       // card do topo do Mercado: IPCA 12m no lugar do Brent; clique leva a Cenários › Inflação
       await p.route('**/indices.json*', (r) => r.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), stale: false, errors: [], series: { ibov: { symbol: '^BVSP', unit: 'pontos', points: Array.from({ length: 10 }, (_, i) => [Date.now() - (10 - i) * 864e5, 130000 - (i === 9 ? 2600 : 0)]), stale: false } } } }))
       await p.goto(base + '/#resumo')
@@ -630,7 +632,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await openCallouts(p)
       assert.match(await p.locator('.learn-detail').innerText(), /9,62%[\s\S]*R\$ 5,48/)
       // tópicos e busca
-      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições'])
+      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições', 'Gestão e estratégia'])
       const busca = p.getByRole('searchbox', { name: 'Buscar conceito' })
       await busca.fill('FIDC')
       assert.equal(await p.locator('.learn-list li').count(), 2) // FIDC e CRA (que cita a subordinação como num FIDC)

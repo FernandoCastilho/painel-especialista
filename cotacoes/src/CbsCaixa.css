@@ -20,7 +20,6 @@
 .cbs-breakdown > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; padding:10px 0; border-bottom:1px solid var(--line); }
 .cbs-breakdown dd { margin:0; text-align:right; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .cbs-total { font-weight:700; }
-.cbs-monthly-change b { color:var(--fg); }
 .cbs-check { margin-top:20px; border:1px solid var(--line); border-radius:8px; }
 .cbs-check summary { cursor:pointer; padding:12px; min-height:48px; }
 .cbs-check p { padding:0 12px 12px; }
@@ -72,7 +71,7 @@
 .cbs-annual { padding:24px; }
 .cbs h4 { margin:0 0 6px; font-size:1.1rem; }
 .cbs-chart-heading p,.cbs-annual>p { color:var(--mut); font-size:.95rem; }
-.cbs-annual-chart { display:block; width:100%; height:240px; overflow:visible; }
+.cbs-annual-chart { display:block; width:100%; height:auto; overflow:visible; }
 .cbs-chart-grid { stroke:var(--line); stroke-width:1; }
 .cbs-chart-line { stroke:var(--accent); stroke-width:3; }
 .cbs-chart-dot { fill:var(--accent); }
@@ -101,7 +100,6 @@
   .cbs-essential>.cx-field,.cbs-essential>.cx-field:nth-child(2),.cbs-essential>.cx-field:nth-child(3) { grid-column:auto; }
   .cbs .cx-form,.cbs .desk-panel>header,.cbs-annual,.cbs-monthly-summary,.cbs-explanation { padding:16px; }
   .cbs-reserve { margin:16px 16px 0; padding-left:12px; }
-  .cbs-annual-chart { height:190px; }
   .cbs-month-buttons button { flex-basis:14%; }
   .cbs-details summary,.cbs-method summary { padding:16px; }
   .cbs-method>p { padding-inline:16px; }
@@ -114,22 +112,58 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
 @media (max-width:640px) {
   .cbs .cbs-used-assumptions { padding-inline:16px; }
 }
-.cbs .cbs-annual-chart.is-zero { height:120px; }
 .cbs .cbs-chart-scale { margin-top:12px; color:var(--mut); font-size:.95rem; }
 @media (max-width:640px) {
-  .cbs .cbs-annual-chart.is-zero { height:90px; }
   .cbs .cbs-chart-dot { r:9px; }
 }
 .cbs-chart-scroll { overflow-x:auto; overscroll-behavior-inline:contain; }
 .cbs .cbs-chart-scroll svg text { fill:var(--fg); }
-.cbs .cbs-annual-chart { min-width:890px; }
-.cbs .cbs-annual-chart text { font:16px sans-serif; display:block; }
+.cbs .cbs-annual-chart text { font:16px sans-serif; display:block; fill:var(--fg); }
 .cbs .cbs-consult-label { margin:8px 0; color:var(--mut); font-size:.95rem; }
-.cbs-chart-mobile-hint { display:none; }
 @media (max-width:640px) {
-  .cbs-chart-mobile-hint { display:block; color:var(--mut); font-size:.95rem; }
-  .cbs .cbs-annual-chart { height:220px; }
-  .cbs .cbs-annual-chart.is-zero { height:100px; }
-  .cbs .cbs-annual-chart .cbs-chart-dot { r:4px; }
-  .cbs .cbs-annual-chart g>text { display:block; }
+  /* Desenho encolhe ~2,5x no celular: letra maior no desenho para ficar com ~11px na tela. */
+  .cbs .cbs-annual-chart text { font-size:28px; }
 }
+/* Alíquotas do ano: rótulo oficial/hipótese sempre visível. */
+.cbs-rates { grid-column:1 / -1; border:1px solid var(--line); border-radius:8px; padding:12px; display:grid; gap:8px; min-width:0; }
+.cbs-rates p { margin:0; line-height:1.5; }
+.cbs-rates-title { font-weight:700; color:var(--fg); }
+.cbs .cbs-rate-origin { color:var(--mut); font-size:.9rem; }
+.cbs-rate-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+.cbs-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:.8rem; font-weight:600; border:1px solid var(--amber, #ffb000); color:var(--fg); }
+.cbs-tag.is-official { border-color:var(--accent); }
+.cbs-official-source p { overflow-wrap:anywhere; }
+/* Revisão do Diretor de Arte (2026-11-19). */
+.cbs-tag.is-neutral { border-color:var(--line); color:var(--mut); }
+.cbs-rates-title .cbs-tag + .cbs-tag { margin-left:4px; }
+.cbs-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+:root[data-theme] body .cbs .cbs-giro, :root[data-theme] body .cbs .cbs-overview { padding:16px; }
+@media (min-width:900px) { :root[data-theme] body .cbs .cbs-giro, :root[data-theme] body .cbs .cbs-overview { padding:24px; } }
+.cbs-overview svg { display:block; max-width:100%; }
+.cbs-headline { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px 32px; }
+.cbs-headline-tax { min-width:0; }
+.cbs-delta-arrow.is-up { color:var(--down); }
+/* Sobre o cartão azul, o vermelho escuro some: usa o vermelho claro do tema escuro nos dois temas. */
+:root[data-theme] body .cbs .cbs-headline .cbs-delta-arrow.is-up { color:#ff9b9b; }
+/* "?" do cabeçalho azul do resultado: claro nos dois temas. */
+:root[data-theme] body main.app.app-calculators .cbs .cbs-result > .expandable-panel > .expandable-heading .fi-help > button { color:#fff; border-color:#ffffffaa; background:transparent; }
+/* Títulos dos quadros de giro: sem margem de cima, para o respiro ficar igual ao das laterais. */
+:root[data-theme] body .cbs :is(.cbs-giro, .cbs-overview) > h3 { margin-top:0; }
+/* Nota neutra (aviso de 2026): informação, não alerta. */
+.cbs .cbs-neutral-note { color:var(--mut); border-left:3px solid var(--line); padding-left:12px; }
+:root[data-theme] body .cbs .cbs-illustrative { padding:16px; display:grid; gap:12px; }
+@media (min-width:900px) { :root[data-theme] body .cbs .cbs-illustrative { padding:24px; } }
+:root[data-theme] body .cbs .cbs-illustrative .cbs-breakdown > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; }
+.cbs-illustrative h3 { margin:0; }
+.cbs .expandable-heading > div { display:flex; align-items:center; gap:8px; }
+:root[data-theme] body .cbs .cbs-headline .cbs-tag { color:#fff; border-color:#ffb000; }
+.cbs-headline .cbs-delta-arrow { font-size:.6em; vertical-align:.2em; }
+:root[data-theme] body .cbs .cbs-giro p, :root[data-theme] body .cbs .cbs-overview > p { margin:0 0 8px; }
+/* Gráficos do quadro de giro (rodada 3 do Diretor de Arte): meses com letra fixa e respiro antes do próximo título. */
+.cbs-series { margin-bottom:24px; }
+.cbs-series-chart { width:100%; height:auto; }
+.cbs-series-months { position:relative; height:1.5em; font-size:.75rem; color:var(--fg); }
+.cbs-series-months span { position:absolute; top:0; transform:translateX(-50%); white-space:nowrap; }
+@media (max-width:400px) { .cbs-series-months { font-size:.6875rem; } }
+/* Celular bem estreito: um mês sim, outro não, para os nomes não se encostarem. */
+@media (max-width:359px) { .cbs-series-months span:nth-child(even) { visibility:hidden; } }

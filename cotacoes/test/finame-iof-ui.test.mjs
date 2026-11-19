@@ -14,7 +14,7 @@ async function setup(t, overrides = {}) {
   const series = { C01: { points: [['2026-11-06', 11]] }, C02: { points: [['2026-11-06', 11.5]] }, C03: { points: [['2026-11-06', 10]] }, C04: { points: [['2026-11-06', 10.5]] }, TFB_36_90: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] }, TFB_84_90: { points: [['2026-11-06', 13]] }, ...overrides }
   const Presentation = () => null, Print = () => null
   const deps = { './ExpandablePanel.jsx': { __esModule: true, default: () => null }, './BndesCompare.jsx': { __esModule: true, default: () => null }, './FinameComparisonLayout.css': {}, './BndesIcon.jsx': { __esModule: true, default: () => null }, './BndesPrint.jsx': { __esModule: true, default: Print }, './BndesPresentation.jsx': { __esModule: true, default: Presentation }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
-  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
+  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
@@ -117,8 +117,8 @@ test('taxas manuais não liberam comparação entre datas nem faixas incompatív
   assert.match(presentation().comparison.error, /mesma faixa/)
 })
 
-test('perfis próprios bloqueiam resultado mensal e retorno preserva condições sem confirmação', async t => {
-  const { render, field, hasResult, change, navigation } = await setup(t)
+test('pós-fixados sem cotação nem Focus não calculam e a troca preserva as condições', async t => {
+  const { field, hasResult, change, navigation } = await setup(t)
   field('fm-valor').props.onChange('600.000,00')
   await change('fm-prazo', '36'); await change('fm-car', '5')
   assert.equal(hasResult(), true)
@@ -130,14 +130,9 @@ test('perfis próprios bloqueiam resultado mensal e retorno preserva condições
     assert.equal(field('fm-valor').props.value, '600.000,00')
     assert.equal(field('fm-prazo').props.value, '36')
     assert.equal(field('fm-car').props.value, '5')
-    if (cost === 'tlp') {
-      const link = nodes(render.value).find(node => node.props?.href === '#calculadora/bndes-tlp-exigivel')
-      assert.ok(link)
-      let prevented = false
-      link.props.onClick({ preventDefault() { prevented = true } })
-      assert.equal(prevented, true)
-      assert.deepEqual(navigation, ['bndes-tlp-exigivel'])
-    }
+    // Desde 19/11/2026 TLP, LCD e TFBD calculam nesta tela: sem cotação do painel nem Focus, não há resultado, mas o campo da taxa aparece.
+    assert.ok(field(`fm-rate-${cost}`))
+    assert.equal(navigation.length, 0)
     await change('fm-custo', 'tfc')
     assert.equal(hasResult(), true)
   }
@@ -188,4 +183,26 @@ test('parcelas compactas comparam A e B pela mesma data sem recalcular valores',
   for (const title of ['Dados básicos da operação', 'Histórico dos indexadores', 'Memória completa do fluxo']) assert.ok(nodes(render.value).some(node => node.props?.title === title), title)
   // Na comparação, a composição do custo fica na tabela principal: o quadro separado não se repete.
   assert.equal(nodes(render.value).some(node => node.props?.title === 'Composição do resultado'), false)
+})
+
+test('cotação destaca taxa final e CET anual e mensal, reutilizando resultados', async t => {
+  const { render, change, presentation } = await setup(t)
+  const { nf, nbr5891 } = await import('../src/format.js')
+  const pct = (value, decimals) => `${nf(nbr5891(value, decimals), decimals)}%`
+  const row = label => nodes(render.value).find(node => node.type === 'tr' && nodes(node).some(child => child.type === 'th' && text(child).trim().startsWith(label)))
+  const initial = presentation().result
+  assert.ok(text(row('Taxa final')).includes(pct(initial.taxa, 2) + ' a.a.'))
+  assert.ok(text(row('Taxa final')).includes(pct(initial.taxaMensal, 3) + ' a.m.'))
+  const cetRow = text(row('CET estimado'))
+  assert.match(cetRow, /a\.a\. · .*a\.m\./)
+  // Mesmos valores mensais já presentes no detalhamento, agora no resumo.
+  const cetDetail = nodes(render.value).find(node => node.props?.className === 'fm-kpi' && text(node).startsWith('CET estimado'))
+  const monthly = cetRow.match(/· (.+? a\.m\.)/)[1]
+  assert.ok(text(cetDetail).includes(monthly))
+  await change('fm-compare', true)
+  for (const alternative of presentation().comparison.alternatives) {
+    assert.ok(text(row('Taxa final')).includes(pct(alternative.result.taxaMensal, 3) + ' a.m.'))
+    assert.ok(text(row('Taxa final')).includes(pct(alternative.result.taxa, 2) + ' a.a.'))
+  }
+  assert.equal((text(row('CET estimado')).match(/a\.m\./g) || []).length, 2)
 })

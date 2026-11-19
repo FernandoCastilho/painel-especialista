@@ -15,7 +15,7 @@ test('dialog modal preserva host e restaura por botão, cancel e rota', async t 
   const origin={appendChild:h=>{assert.equal(h,host);parent='inline'}}
   const modal={appendChild:h=>{assert.equal(h,host);parent='modal'},showModal:()=>{shown=true},close:()=>{shown=false}}
   const trigger={focus:()=>focus++},module={exports:{}}
-  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
+  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
   const children={content:'mesma instância'}
   const h=hookRenderer(()=>{const tree=module.exports.default({children});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.ref.current=trigger;return tree})
   t.after(()=>h.close());await h.settle()
