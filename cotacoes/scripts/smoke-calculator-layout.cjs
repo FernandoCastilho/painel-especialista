@@ -358,13 +358,12 @@ async function assertComparatorFamily(browser) {
       await fixtures(page)
       await page.goto(base + '/#resumo')
       if (width < 1000) {
-        await page.getByRole('button', { name: 'Mais', exact: true }).click()
-        await page.getByRole('menuitem', { name: 'Calculadoras', exact: true }).click()
+        await page.getByRole('navigation', { name: 'Seções', exact: true }).getByRole('button', { name: 'Calculadoras', exact: true }).click()
       } else {
-        const navigationRows = await page.locator('.topbar-tabs > button').evaluateAll(buttons =>
+        const navigationRows = await page.locator('.topbar-tabs > button, .topbar-tabs > .more-tab > button').evaluateAll(buttons =>
           new Set(buttons.map(button => Math.round(button.getBoundingClientRect().top))).size
         )
-        assert.equal(navigationRows, 1, 'navegação do desktop mantém as dez abas na mesma linha a 1440px')
+        assert.equal(navigationRows, 1, 'navegação do desktop mantém as seis abas e Mais na mesma linha a 1440px')
         await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('button', { name: 'Calculadoras', exact: true }).click()
       }
       await page.locator(workspaceRoutes['']).first().waitFor()
