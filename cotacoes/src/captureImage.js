@@ -5,6 +5,12 @@ export function captureSize(width, height) {
   if (scale < 0.6) throw new Error('Tela muito longa para uma imagem legível. Copie um quadro menor.')
   return { width: Math.ceil(width * scale), height: Math.ceil(height * scale), scale }
 }
+// Área rolável conserva o mesmo recorte no topo e depois da rolagem.
+export function captureUsesViewport(target, css = getComputedStyle(target)) {
+  return !!(target.scrollTop || target.scrollLeft) ||
+    (/(auto|scroll|hidden|clip)/.test(css.overflowY) && target.scrollHeight > target.clientHeight) ||
+    (/(auto|scroll|hidden|clip)/.test(css.overflowX) && target.scrollWidth > target.clientWidth)
+}
 function cloneStyled(node) {
   if (node.nodeType !== 1) return node.cloneNode()
   if (node.matches('script')) return document.createTextNode('')
@@ -73,12 +79,13 @@ export async function capturePng(target) {
   await document.fonts.ready
   const { captureFontCss } = await import('./captureFonts.js')
   const fontCss = await captureFontCss()
+  const viewport = captureUsesViewport(target)
   const width = Math.ceil(target.getBoundingClientRect().width)
-  const height = Math.ceil(target.scrollTop || target.scrollLeft ? target.getBoundingClientRect().height : Math.max(target.scrollHeight, target.getBoundingClientRect().height))
+  const height = Math.ceil(viewport ? target.getBoundingClientRect().height : Math.max(target.scrollHeight, target.getBoundingClientRect().height))
   const size = captureSize(width, height)
   const copy = cloneStyled(target)
   copy.style.width = width + 'px'; copy.style.height = height + 'px'
-  copy.style.margin = '0'; copy.style.maxHeight = 'none'; copy.style.overflow = target.scrollTop || target.scrollLeft ? 'hidden' : 'visible'
+  copy.style.margin = '0'; copy.style.maxHeight = 'none'; copy.style.overflow = viewport ? 'hidden' : 'visible'
   const root = document.createElement('div')
   root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
   root.style.cssText = `width:${width}px;height:${height}px;background:${getComputedStyle(document.body).backgroundColor};`

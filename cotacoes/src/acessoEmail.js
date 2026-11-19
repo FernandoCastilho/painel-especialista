@@ -31,16 +31,27 @@ export function limparAcesso(storage = typeof localStorage !== 'undefined' ? loc
 
 // Chamada ao script (GET com parâmetros: é o que o Google aceita de uma página de outro endereço).
 // Devolve { ok, ... } ou { ok: false, erro, rede: true } quando não foi possível falar com o script.
-export async function chamar(acao, params, { url = ACESSO_URL, fetchFn = globalThis.fetch } = {}) {
+export async function chamar(acao, params, { url = ACESSO_URL, fetchFn = globalThis.fetch, timeoutMs = 0 } = {}) {
+  const controller = timeoutMs > 0 ? new AbortController() : null
+  let timer
   try {
     const q = new URLSearchParams({ acao, ...params })
-    const r = await fetchFn(`${url}${url.includes('?') ? '&' : '?'}${q}`, { cache: 'no-store' })
-    const d = await r.json()
+    const request = (async () => {
+      const r = await fetchFn(`${url}${url.includes('?') ? '&' : '?'}${q}`, { cache: 'no-store', ...(controller ? { signal: controller.signal } : {}) })
+      if (r.ok === false) throw new Error('HTTP')
+      return r.json()
+    })()
+    const d = controller ? await Promise.race([request, new Promise((_, reject) => {
+      timer = setTimeout(() => { reject(new Error('timeout')); controller.abort() }, timeoutMs)
+    })]) : await request
     return d && typeof d === 'object' ? d : { ok: false, erro: 'Resposta inesperada.', rede: true }
   } catch {
     return { ok: false, erro: 'Não foi possível falar com o servidor agora. Tente de novo.', rede: true }
-  }
+  } finally { clearTimeout(timer) }
 }
 export const pedirCodigo = (email, opts) => chamar('pedir', { email: normalizarEmail(email), pedido: globalThis.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2)}` }, opts)
 export const confirmarCodigo = (email, codigo, opts) => chamar('confirmar', { email: normalizarEmail(email), codigo: String(codigo).trim() }, opts)
 export const registrarVisita = (acesso, opts) => chamar('visita', acesso, opts)
+
+// Conferência sem registrar visita nem enviar código.
+export const validarAcesso = (acesso, opts) => chamar('validar', acesso, { timeoutMs: 15000, ...opts })

@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import './AcessoPorEmail.css'
-import { codigoValido, confirmarCodigo, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail, pedirCodigo, registrarVisita } from './acessoEmail.js'
+import { codigoValido, confirmarCodigo, emailValido, exigirAcesso, guardarAcesso, lerAcesso, limparAcesso, normalizarEmail, pedirCodigo, registrarVisita, validarAcesso } from './acessoEmail.js'
 
 const ESPERA_REENVIO = 60
 
 // Porta de entrada: pede o e-mail, envia um código de 6 dígitos para ele e só libera o painel com o código certo.
-// Quem já confirmou neste aparelho entra direto; a visita é registrada em segundo plano (no máximo uma vez por dia).
+// Sessão lembrada só abre após conferência atual. A visita continua registrada no máximo uma vez por dia.
 export default function AcessoPorEmail({ children }) {
   const [exigir] = useState(() => exigirAcesso())
   const [acesso, setAcesso] = useState(() => (exigir ? lerAcesso() : null))
+  const [validado, setValidado] = useState(null)
+  const [validacaoErro, setValidacaoErro] = useState('')
+  const [tentativa, setTentativa] = useState(0)
   const [etapa, setEtapa] = useState('email') // 'email' | 'codigo'
   const [email, setEmail] = useState('')
   const [codigo, setCodigo] = useState('')
@@ -18,16 +21,29 @@ export default function AcessoPorEmail({ children }) {
   const [espera, setEspera] = useState(0)
 
   useEffect(() => {
-    if (!exigir || !acesso) return
+    if (!exigir || !acesso || validado === acesso) return
+    let ativo = true
+    setValidacaoErro('')
+    validarAcesso(acesso).then(r => {
+      if (!ativo) return
+      if (r.ok) setValidado(acesso)
+      else if (!r.revogado) setValidacaoErro(r.erro || 'Não foi possível conferir seu acesso.')
+      else { limparAcesso(); setAcesso(null); setErro(r.erro || 'Acesso não reconhecido.') }
+    })
+    return () => { ativo = false }
+  }, [exigir, acesso, validado, tentativa])
+
+  useEffect(() => {
+    if (!exigir || !acesso || validado !== acesso) return
     const hoje = new Date().toISOString().slice(0, 10)
     let ultima = null
     try { ultima = localStorage.getItem('painel-acesso-visita') } catch { /* sem armazenamento */ }
     if (ultima === hoje) return
     registrarVisita(acesso).then((r) => {
       if (r.ok) { try { localStorage.setItem('painel-acesso-visita', hoje) } catch { /* ok */ } }
-      else if (!r.rede) { limparAcesso(); setAcesso(null) } // o servidor não reconhece mais este acesso
+      else if (r.revogado) { limparAcesso(); setAcesso(null) } // o servidor não reconhece mais este acesso
     })
-  }, [exigir, acesso])
+  }, [exigir, acesso, validado])
 
   useEffect(() => {
     if (espera <= 0) return undefined
@@ -35,7 +51,12 @@ export default function AcessoPorEmail({ children }) {
     return () => clearTimeout(t)
   }, [espera])
 
-  if (!exigir || acesso) return children
+  if (!exigir || (acesso && validado === acesso)) return children
+  if (acesso) return <main className="acesso-email"><section className="acesso-card" aria-label="Conferência de acesso">
+    <h1>PME · Painel Especializado no Mercado</h1>
+    <p role="status">{validacaoErro || 'Conferindo seu acesso…'}</p>
+    {validacaoErro && <button type="button" className="btn" onClick={() => setTentativa(t => t + 1)}>Tentar novamente</button>}
+  </section></main>
 
   const enviarCodigo = async (e) => {
     e?.preventDefault()
@@ -64,6 +85,7 @@ export default function AcessoPorEmail({ children }) {
 
   function entrar(novo) {
     guardarAcesso(novo)
+    setValidado(novo)
     setAcesso(novo)
   }
 

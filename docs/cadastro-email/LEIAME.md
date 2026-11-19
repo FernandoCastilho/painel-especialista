@@ -46,3 +46,21 @@ Clientes anteriores sem ID continuam compatíveis sem essa deduplicação.
 O deploy frontend não atualiza Apps Script. Atualizar código preservando ID_PLANILHA,
 remetente e demais configurações existentes; salvar e atualizar a implantação
 EXISTENTE para nova versão, mantendo URL, executor e permissões. Não criar endpoint.
+
+## Sessão lembrada e bloqueio (19/11/2026)
+
+A ação `validar` confere e-mail, assinatura e a aba Bloqueados sem enviar código
+nem criar linha de acesso. A tela aguarda essa resposta a cada abertura completa,
+mesmo que a visita do dia já tenha sido registrada. Sem rede, não libera conteúdo;
+exibe tentativa novamente e preserva a sessão para recuperar a conexão.
+
+Implantar primeiro a nova versão do Apps Script **na implantação existente**,
+preservando URL, segredo, ID da planilha, executor e permissões. Depois publicar
+frontend pelo CI habitual. O CI do GitHub não publica o Apps Script.
+Não é necessário criar aba, nova implantação ou novo acesso.
+
+A sessão que já está aberta não é expulsa imediatamente: a conferência ocorre
+na próxima abertura/recarregamento. Continua sendo filtro de uso normal em site
+público, não controle de segurança para dados confidenciais.
+
+A conferência da sessão lembrada espera no máximo 15 segundos por tentativa, incluindo a leitura da resposta. Em indisponibilidade, timeout ou erro interno, o painel permanece fechado, preserva a sessão e oferece Tentar novamente. Somente recusa explícita (revogado: true, por bloqueio ou token inválido) remove a sessão. Não há repetição automática nem expulsão de uma tela já aberta: a conferência acontece na próxima abertura/recarregamento.

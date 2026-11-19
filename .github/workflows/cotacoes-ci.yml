@@ -305,7 +305,7 @@ jobs:
     # Runner descartável próprio: os testes não acessam a área de transferência de outra máquina.
     runs-on: ubuntu-24.04
     needs: test-build
-    timeout-minutes: 32
+    timeout-minutes: 38
     defaults:
       run:
         working-directory: cotacoes
@@ -412,6 +412,18 @@ jobs:
         run: |
           mkdir -p "$CAPTURE_QA_OUTPUT"
           node scripts/smoke-capture-real-dialog.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
+        shell: bash
+      - name: Conferir números completos e curva nas telas visíveis
+        id: visible_screens
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 6
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/visible-screens
+          CAPTURE_REFERENCE_MODE: device
+          CAPTURE_TEXT_RASTER: grayscale
+        run: |
+          mkdir -p "$CAPTURE_QA_OUTPUT"
+          node scripts/smoke-capture-visible-screens.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
         shell: bash
       - name: Capturas, métricas de fidelidade e prova de colagem
         if: ${{ !cancelled() && steps.serve.outcome != 'skipped' }}

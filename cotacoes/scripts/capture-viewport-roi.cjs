@@ -12,6 +12,7 @@ module.exports=async(page,target,bytes,out,id)=>{
   const decode=async b=>createImageBitmap(new Blob([new Uint8Array(b)],{type:'image/png'}))
   const [a,r]=await Promise.all([decode(bytes),decode(reference)])
   if(r.width!==780||r.height!==1900)throw new Error('Viewport PNG inesperado')
+  if(a.width!==780||a.height!==1900)throw new Error('Diálogo deve manter área visível780x1900 no topo e rolado')
   const f=geometry.fixture,t=geometry.target
   // Recorte inteiro no bitmap, SEM redimensionamento: rejeita fase fracionária diferente.
   const rx=f.x*2,ry=f.y*2,ax=(f.x-t.x)*2,ay=(f.y-t.y)*2,w=f.width*2,h=f.height*2

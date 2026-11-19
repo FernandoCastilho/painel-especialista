@@ -19,8 +19,9 @@ test('B acrescenta somente flag LCD a uma cópia; exige opt-in device',()=>{
 test('workflow conserva A e legado, separa B e recolhe artefato existente',()=>{
  const workflow=readFileSync(new URL('../../.github/workflows/cotacoes-ci.yml',import.meta.url),'utf8')
  const job=workflow.split('  clipboard-capture:')[1].split('  bndes-workspace:')[0]
- assert.equal((job.match(/CAPTURE_TEXT_RASTER: grayscale/g)||[]).length,3)
+ assert.equal((job.match(/CAPTURE_TEXT_RASTER: grayscale/g)||[]).length,4)
  assert.match(job,/id: real_dialog/)
+ assert.match(job,/id: visible_screens/)
  assert.match(job,/qa-clipboard-capture\/real-dialog/)
  assert.match(job,/id: stable_dialog/)
  assert.match(job,/qa-clipboard-capture\/stable-dialog/)
