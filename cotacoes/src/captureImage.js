@@ -11,6 +11,14 @@ export function captureUsesViewport(target, css = getComputedStyle(target)) {
     (/(auto|scroll|hidden|clip)/.test(css.overflowY) && target.scrollHeight > target.clientHeight) ||
     (/(auto|scroll|hidden|clip)/.test(css.overflowX) && target.scrollWidth > target.clientWidth)
 }
+export function isCaptureMascotDecoration(node) {
+  return node.matches('.mascot-mini-face') && !!node.closest('[data-capture-ignore="mascot"]')
+}
+export function captureBackgroundImage(node, backgroundImage) {
+  if (!/url\(/i.test(backgroundImage)) return backgroundImage
+  if (isCaptureMascotDecoration(node)) return 'none'
+  throw new Error('Esta área contém fundo com imagem. Copie um quadro menor.')
+}
 function cloneStyled(node) {
   if (node.nodeType !== 1) return node.cloneNode()
   if (node.matches('script')) return document.createTextNode('')
@@ -42,7 +50,8 @@ function cloneStyled(node) {
   copy.style.setProperty('animation', 'none')
   copy.style.setProperty('transition', 'none')
   copy.style.setProperty('position', css.position === 'fixed' || css.position === 'sticky' ? 'static' : css.position)
-  if (/url\(/i.test(css.backgroundImage)) throw new Error('Esta área contém fundo com imagem. Copie um quadro menor.')
+  // Só a decoração marcada do mascote é descartada; opera exclusivamente no clone.
+  copy.style.backgroundImage = captureBackgroundImage(node, css.backgroundImage)
   if (node.matches('input')) copy.setAttribute('value', node.value)
   if (node.matches('textarea')) copy.textContent = node.value
   else if (!node.matches('canvas')) for (const child of node.childNodes) copy.append(cloneStyled(child))

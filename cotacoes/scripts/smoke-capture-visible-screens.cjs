@@ -21,6 +21,15 @@ const base=process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768',out=process.env.C
      const main=page.locator('main.app')
      await main.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))})
      const before=await main.evaluate(el=>({dpr:devicePixelRatio,x:scrollX,y:scrollY,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height}))
+     let mascotBefore=null
+     if(route==='juros'&&width===390){
+      const mascot=main.locator('[data-capture-ignore="mascot"] .mascot-mini-face')
+      await mascot.waitFor({state:'visible'})
+      mascotBefore=await mascot.evaluate(el=>{const b=el.getBoundingClientRect();return {insideMain:!!el.closest('main.app'),background:getComputedStyle(el).backgroundImage,box:{x:b.x,y:b.y,width:b.width,height:b.height}}})
+      await fs.writeFile(path.join(out,`mascot-dom-${width}-${theme}.json`),JSON.stringify(mascotBefore,null,2))
+      assert.equal(mascotBefore.insideMain,true)
+      assert.match(mascotBefore.background,/mascot-owl.*\.webp/,'Asset local identificado no DOM real')
+     }
      const countBefore=await page.evaluate(()=>window.captureWrites.length)
      await main.locator('.screen-capture-bar .capture-button').click()
      let waitingError=null
@@ -40,6 +49,11 @@ const base=process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768',out=process.env.C
       throw new Error('Câmera da seção não gerou PNG novo: '+JSON.stringify({route,width,theme,countBefore,waitingError,...outcome}))
      }
      assert.match(outcome.status,/Imagem copiada/,'Status do produto confirma nova imagem')
+     if(mascotBefore){
+      const afterMascot=await main.locator('[data-capture-ignore="mascot"] .mascot-mini-face').evaluate(el=>{const b=el.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height}})
+      assert.deepEqual(afterMascot,mascotBefore.box,'Captura não muda geometria do mascote original')
+     }
+
      const bytes=await page.evaluate(n=>window.captureWrites[n],countBefore)
      const result=await proof(page,main,bytes,out,route.replaceAll('/','-')+'-'+width+'-'+theme)
      assert.deepEqual(await main.evaluate(el=>({dpr:devicePixelRatio,x:scrollX,y:scrollY,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height})),before)
