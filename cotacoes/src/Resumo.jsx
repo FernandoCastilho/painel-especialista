@@ -7,7 +7,7 @@ import { Aviso } from './Avisos.jsx'
 import { buildFeed } from './feed.js'
 import './MarketTable.css'
 import './MarketTerminal.css'
-import { accumulatedReturns, cnhPtaxCross, compatiblePtax, marketDate, ptaxLabel } from './marketReturns.js'
+import { accumulatedReturns, cnhPtaxCross, compatiblePtax, destaquesMes, marketDate, ptaxLabel } from './marketReturns.js'
 import { offHoursReference as offHours, quoteAgeLabel, quoteAgeState } from './quoteFreshness.js'
 import { nextChartIndex } from './chartNavigation.js'
 import { focoPorTeclado, saidaDeToque, useTocarFora } from './chartToque.js'
@@ -66,7 +66,11 @@ function Arrow({ v }) {
   return <span aria-hidden="true">{v > 0 ? '▲' : v < 0 ? '▼' : '■'}</span>
 }
 
-function QuoteRow({ code, quote, ptax, returns, selected, onOpen, color }) {
+const DESTAQUE = {
+  maior: { icone: '🔥', texto: 'Maior alta no mês entre as moedas da tabela' },
+  menor: { icone: '🛡️', texto: 'Menor alta no mês entre as moedas da tabela' },
+}
+function QuoteRow({ code, quote, ptax, returns, selected, onOpen, color, destaque }) {
   const cur = CURRENCIES.find(c => c.code === code)
   const hasDay = !!quote && !quote.fallback && Number.isFinite(quote.pct)
   const delta = hasDay && Number.isFinite(quote.delta) ? quote.delta : null
@@ -75,7 +79,7 @@ function QuoteRow({ code, quote, ptax, returns, selected, onOpen, color }) {
   return <tbody className={'market-record' + (selected ? ' is-selected' : '')} style={{ '--series': color }}>
     <tr className="market-values" onClick={open}>
       <th scope="row"><button type="button" className="market-open" aria-pressed={selected} onClick={e => { e.stopPropagation(); open() }} aria-label={cur.name + ': abrir gráfico' + (quote?.stale ? '. Última cotação válida de ' + dataTimestamp(quote.timestamp) : '')}>
-        <b><Flag code={series} width={20} height={14} /> {series}/BRL <span aria-hidden="true">›</span></b><small>{seriesName(cur, series)}</small>
+        <b><Flag code={series} width={20} height={14} /> {series}/BRL <span aria-hidden="true">›</span>{destaque && <span className="market-destaque" role="img" aria-label={DESTAQUE[destaque].texto} title={DESTAQUE[destaque].texto}> {DESTAQUE[destaque].icone}</span>}</b><small>{seriesName(cur, series)}</small>
         {quoteAgeState(quote) && <small className={'market-state' + (quoteAgeLabel(quote).tone === 'neutral' || (quote?.stale && offHours(quote)) ? ' is-neutral' : '')} title={quote?.stale ? quote.error : undefined}>{quote?.stale ? 'Última válida · ' + dataTimestamp(quote.timestamp) : quoteAgeLabel(quote).text}</small>}
       </button></th>
       <td className="market-price">{quote ? brl(quote.bid, code === 'JPY' ? 5 : 4).replace('R$ ', '') : <span className="muted">—</span>}</td>
@@ -411,11 +415,12 @@ export function useCambio(quotes, ptax) {
 
 // Tabela de câmbio em reais. `onOpen` (opcional) abre o gráfico da moeda ao tocar na linha.
 export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen = () => {}, colors }) {
+  const destaques = destaquesMes(returns)
   return (
     <table className="market-table" aria-busy={!quotes}>
             <caption className="market-caption">Câmbio em reais · últimas referências disponíveis</caption>
             <thead><tr><th scope="col">Par</th><th scope="col">Cotação <small>(R$)</small></th><th scope="col" aria-label="Variação absoluta do dia em reais">Δ dia <small>(R$)</small></th><th scope="col" aria-label="Variação percentual do dia">Δ dia %</th><th scope="col" aria-label="Acumulado no mês em percentual">Mês %</th><th scope="col" aria-label="Acumulado no ano em percentual">Ano %</th><th scope="col" aria-label="PTAX de venda em reais por unidade">PTAX <small>venda</small></th></tr></thead>
-            {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={onOpen} color={colors?.[c.code]} />)}
+            {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={onOpen} color={colors?.[c.code]} destaque={destaques.maior === c.code ? 'maior' : destaques.menor === c.code ? 'menor' : undefined} />)}
           </table>
   )
 }
@@ -458,7 +463,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
 
 
         <Aviso title="Câmbio · datas e metodologia">
-          <p id="market-help">Toque na linha para selecionar e abrir o gráfico. Filtros alteram apenas os gráficos. Cotação e Δ dia: última referência da fonte; mês/ano: observações diárias de dias encerrados, não a cotação intradiária.</p>
+          <p id="market-help">Toque na linha para selecionar e abrir o gráfico. 🔥 marca a moeda que mais subiu no mês e 🛡️ a que menos subiu, entre as da tabela; só indicam a variação, não dizem se é bom ou ruim. Filtros alteram apenas os gráficos. Cotação e Δ dia: última referência da fonte; mês/ano: observações diárias de dias encerrados, não a cotação intradiária.</p>
           <p>O traço indica dado indisponível. A cotação do CNH usa a compra de USD/BRL dividida pela venda de USD/CNH. As duas variações usam a mesma cotação anterior estimada, mantendo a diferença proporcional atual entre compra e venda do USD/CNH. Sem dados para estimar a base anterior, as duas variações ficam indisponíveis.</p>
           <p>Não há PTAX oficial do yuan. A coluna mostra uma referência cruzada (PTAX do dólar ÷ USD/CNH no horário do boletim), só com cotações das duas pontas a até 15 min dele. CNY e CNH são referências distintas.</p>
           <ul>{CURRENCIES.map(c => { const q = quotes?.[c.code], p = ptaxes[c.code], r = returns[c.code]; return <li key={c.code}>
