@@ -44,9 +44,10 @@ test('UI executa motores corretos e separa seus limites em vez de expor números
   assert.match(source('BndesTlpExigivel.jsx'), /Custo com IPCA projetado/)
 })
 test('Finame nunca executa TLP pelo motor mensal capitalizado', () => {
-  assert.equal(finameFundingOption('tlp').mode, 'dedicated')
+  // Desde 19/11/2026 a TLP calcula no Finame, mas pelo motor pós-fixado (exigível), nunca pelo mensal capitalizado.
+  assert.equal(finameFundingOption('tlp').mode, 'pos')
   assert.equal(finameFundingAnnualRate('tlp', { tlp: 8.12 }), null)
-  assert.match(source('FinameMateriais.jsx'), /const pronto = funding\?\.mode === 'inline'/)
+  assert.match(source('FinameMateriais.jsx'), /isFinamePos\(id\)\s*\? simularPos\(/)
   assert.doesNotMatch(source('FinameMateriais.jsx'), /na TLP, iguais em termos reais|a diferença se compensa|correção pelo IPCA \(TLP\) \+ IOF/)
   assert.doesNotMatch(source('FinameMateriais.jsx'), /id="fm-finame-eligible"/)
 })

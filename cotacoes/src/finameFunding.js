@@ -26,25 +26,41 @@ export const FINAME_FUNDING_SOURCES = Object.freeze([
 
 export const FINAME_FUNDING_OPTIONS = Object.freeze([
   ...CUSTOS.filter(option => option.id !== 'tlp').map(option => Object.freeze({ ...option, mode: 'inline' })),
+  // Pós-fixados no mesmo cronograma (pedido de 19/11/2026): taxa do painel + hipótese do índice (Focus ano a ano, editável).
   Object.freeze({
-    id: 'tlp', label: 'TLP exigível', mode: 'dedicated', calculatorId: 'bndes-tlp-exigivel',
-    hint: 'TLP exigível: IPCA e remunerações compõem juros cobrados nos vencimentos. IPCA positivo não aumenta o principal. Use a projeção própria com J aplicável, hipótese explícita de IPCA e cronograma confirmado.',
-    notice: 'TLP exigível utiliza projeção própria. O cronograma mensal com correção capitalizada foi retirado desta opção.',
+    id: 'tlp', label: 'TLP', mode: 'pos', calculatorId: 'bndes-tlp-exigivel',
+    hint: 'TLP exigível: J (parte prefixada da TLP, moeda 777 do BNDES, do mês da contratação) mais IPCA, cobrados com os juros nos vencimentos; o IPCA não corrige o saldo. Juros em dias úteis/252. O IPCA futuro é hipótese: vem do Focus ano a ano e pode ser editado. Carência de até 24 meses. Sem FGI Tradicional.',
+    notice: 'TLP: J do painel e IPCA projetado pelo Focus.',
   }),
   Object.freeze({
-    id: 'lcd', label: 'Taxa LCD', mode: 'dedicated', calculatorId: 'bndes-selic-lcd',
-    hint: 'Selic acumulada mais sobretaxa LCD. A referência LD1 é somente a sobretaxa das operações indiretas, não o custo financeiro completo. A série 143 é um índice Selic acumulado D-2, não uma taxa anual. Abra a projeção própria, com Selic, LD1, datas e cronograma confirmados; as condições do Finame não são transferidas nem presumidas.',
-    notice: 'Taxa LCD utiliza a projeção própria de Selic + LCD.',
+    id: 'lcd', label: 'Taxa LCD', mode: 'pos', calculatorId: 'bndes-selic-lcd',
+    hint: 'Selic capitalizada no saldo mais a sobretaxa LD1 (moeda LD1 do BNDES, referência trimestral, pode ser negativa), a taxa do BNDES e o spread do agente, cobrados nos vencimentos. Juros em dias úteis/252. A Selic futura é hipótese: vem do Focus ano a ano e pode ser editada. Carência de até 24 meses. Sem FGI Tradicional.',
+    notice: 'Taxa LCD: LD1 do painel e Selic projetada pelo Focus.',
   }),
   Object.freeze({
-    id: 'tfbd', label: 'TFBD · dólar', mode: 'unavailable',
-    hint: 'Modalidade prevista no Finame Materiais. O saldo em reais é atualizado pela variação da unidade monetária 604 do BNDES, além da taxa TFBD fixada e das remunerações aplicáveis. As referências são TD1 até 24 meses, TD2 acima de 24 até 72 e TD3 acima de 72 até 120; no Finame Materiais continua valendo o limite próprio de 84 meses. O cálculo contratual usa juros proporcionais por dias corridos, base 360. A cotação do dólar sozinha não fornece esse custo; a taxa TFBD do dia está em BNDES > Moedas (TD1, TD2 e TD3), mas este modelo ainda não projeta a trajetória cambial contratual.',
-    notice: 'TFBD indisponível: faltam a taxa fixada e a trajetória cambial contratual.',
+    id: 'tfbd', label: 'TFBD · dólar', mode: 'pos',
+    hint: 'Taxa Fixa BNDES em dólar: o saldo em reais acompanha a moeda 604 (dólar) do BNDES e os juros usam a taxa fixa TFBD (TD1 até 24 meses, TD2 acima de 24 até 72, TD3 acima de 72), proporcionais aos dias corridos, base 360. O dólar futuro é hipótese: parte do dólar do dia e segue o Focus de fim de ano, editável. Carência de até 24 meses. Sem FGI Tradicional. Não disponível no Itaú.',
+    notice: 'TFBD: taxa fixa do painel e dólar projetado pelo Focus. Não disponível no Itaú.',
     referenceCodes: Object.freeze(['TD1', 'TD2', 'TD3', '604']),
   }),
 ])
 
 export const finameFundingOption = id => FINAME_FUNDING_OPTIONS.find(option => option.id === id) ?? null
+export const isFinamePos = id => finameFundingOption(id)?.mode === 'pos'
+
+// Taxa de referência dos pós-fixados (J da TLP, LD1 ou TFBD): cotação do painel ou taxa manual. A LD1 pode ser negativa.
+export const validPosQuote = quote => Number.isFinite(quote?.valor) && quote.valor > -50 && quote.valor <= 100 && typeof quote.codigo === 'string' && quote.codigo.length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(quote.data)
+export function resolvePosRate(id, quote, manualText = null) {
+  const manual = manualText !== null
+  const raw = manual ? parseSignedDecimal(manualText) : quote?.valor
+  const value = isFinamePos(id) && Number.isFinite(raw) && raw > -50 && raw <= 100 ? raw : null
+  return { value, manual, error: value === null ? (manual ? 'Informe uma taxa de −50 a 100% a.a.' : 'Cotação indisponível. Informe a taxa manualmente ou aguarde a referência.') : null }
+}
+export function parseSignedDecimal(text) {
+  const value = String(text ?? '').trim().replace('−', '-'), negative = value.startsWith('-')
+  const parsed = parseDecimal(negative ? value.slice(1) : value)
+  return parsed === null ? null : negative ? -parsed : parsed
+}
 
 // Somente os dois perfis já suportados pelo cronograma mensal podem fornecer
 // custoFinanceiro. TLP/LCD/TFBD e códigos isolados nunca herdam a taxa da TLP.
@@ -67,6 +83,22 @@ export function compareFinameFunding(params, quotes, manualRates = {}) {
     const result = simular({ ...params, custo, custoFinanceiro: rate.value })
     return result.ok ? { custo, quote: quotes[custo], rate, result } : null
   })
+  if (alternatives.some(item => !item)) return { ok: false, error: 'Uma das referências está indisponível ou as condições estão incompletas. Ausência de taxa não significa zero.' }
+  return { ok: true, alternatives, totalDifference: alternatives[1].result.total - alternatives[0].result.total }
+}
+
+// Comparativo de qualquer par de custos (pedido de 19/11/2026). O par TFC × TFB mantém as travas de mesma faixa,
+// mesma data de referência e liberação em 90 dias; os demais pares usam cada um a sua referência, mostrada na tela.
+// `simularCusto(id)` devolve { custo, quote, rate, result } ou null quando falta taxa ou a conta não fecha.
+export function compareFinamePair(pair, params, quotes, manualRates, simularCusto) {
+  if (!Array.isArray(pair) || pair.length !== 2 || pair[0] === pair[1] || !pair.every(id => finameFundingOption(id))) return { ok: false, error: 'Escolha dois custos diferentes para comparar.' }
+  if (pair.every(id => ['tfc', 'tfb'].includes(id))) {
+    const result = compareFinameFunding({ ...params, custo: pair[0] }, quotes, manualRates)
+    if (!result.ok) return result
+    const alternatives = pair.map(id => result.alternatives.find(item => item.custo === id))
+    return { ok: true, alternatives, totalDifference: alternatives[1].result.total - alternatives[0].result.total }
+  }
+  const alternatives = pair.map(id => simularCusto(id))
   if (alternatives.some(item => !item)) return { ok: false, error: 'Uma das referências está indisponível ou as condições estão incompletas. Ausência de taxa não significa zero.' }
   return { ok: true, alternatives, totalDifference: alternatives[1].result.total - alternatives[0].result.total }
 }
