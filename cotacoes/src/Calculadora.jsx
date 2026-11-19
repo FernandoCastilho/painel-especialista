@@ -15,6 +15,7 @@ import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
 import Faturamento, { FaturamentoIcon } from './Faturamento.jsx'
 import ArvoreCredito from './ArvoreCredito.jsx'
 import CdiDolar, { CdiDolarIcon } from './CdiDolar.jsx'
+import CambioFuturo, { CambioFuturoIcon } from './CambioFuturo.jsx'
 import DividendosEmprestimo, { DividendosEmprestimoIcon } from './DividendosEmprestimo.jsx'
 import './CalculatorTheme.css'
 
@@ -40,6 +41,7 @@ const CALCS = [
   { id: 'cdi-dolar', title: 'CDI x Dólar', sub: 'Em quanto tempo o CDI líquido alcança a alta do dólar', Icon: CdiDolarIcon },
   { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: eficiência de pagar o dividendo com crédito na empresa', Icon: DividendosEmprestimoIcon },
   { id: 'emprestimo-4131', title: 'Empréstimo externo (4131)', sub: 'No formato da cotação: dólar ou euro, parcelas e NDF', Icon: Emprestimo4131Icon },
+  { id: 'cambio-futuro', title: 'Câmbio futuro', sub: 'Dólar, euro e yuan: TIR em reais e câmbio para a meta', Icon: CambioFuturoIcon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
@@ -57,6 +59,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
   if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} />
+  if (view === 'cambio-futuro') return <CambioFuturo onBack={() => onView('')} />
   if (view === 'cdi-dolar') return <CdiDolar onBack={() => onView('')} quotes={quotes} />
   if (view === 'dividendos-emprestimo') return <DividendosEmprestimo onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} apresentacao={apresentacao} />

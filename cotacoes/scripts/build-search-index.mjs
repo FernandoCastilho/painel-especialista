@@ -11,6 +11,7 @@ export const SEARCH_PAGES = {
   'ContaGarantida.jsx':['calculadora/conta-garantida','Conta Garantida: utilização, amortização, juros e IOF'],
   'OperacaoDi.jsx':['calculadora/operacao-di','Operação x DI: pré, % do CDI ou CDI + spread contra a curva DI'],
   'Emprestimo4131.jsx':['calculadora/emprestimo-4131','Empréstimo externo (4131): custo em dólar, swap para CDI e NDF'],
+  'CambioFuturo.jsx':['calculadora/cambio-futuro','Câmbio futuro: dólar, euro e yuan, TIR em reais e atingir meta'],
   'CreditComparison.jsx':['calculadora/comparador-credito','Necessidade do Cliente: comparação de propostas, CET e garantias'],
   'AnaliseDesconto.jsx':['calculadora/analise-desconto','Análise de desconto: títulos e capital de giro Price'],
   'DividendosEmprestimo.jsx':['calculadora/dividendos-emprestimo','Dividendos via empréstimo: lucro real, juros dedutíveis e aplicação do sócio'],
