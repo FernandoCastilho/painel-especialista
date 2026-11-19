@@ -305,7 +305,7 @@ jobs:
     # Runner descartável próprio: os testes não acessam a área de transferência de outra máquina.
     runs-on: ubuntu-24.04
     needs: test-build
-    timeout-minutes: 12
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: cotacoes
@@ -346,6 +346,17 @@ jobs:
           CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
         timeout-minutes: 6
         run: node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/fidelidade.log"
+        shell: bash
+      - name: Diagnóstico independente de referência DOM em device pixels
+        id: device_reference
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 6
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/device-reference
+          CAPTURE_REFERENCE_MODE: device
+        run: |
+          mkdir -p "$CAPTURE_QA_OUTPUT"
+          node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
         shell: bash
       - name: Conferir PNG colado com Ctrl+V real em campo local
         id: paste

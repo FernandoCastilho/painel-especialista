@@ -1,3 +1,4 @@
+const captureControls = require('./smoke-capture-controls.cjs')
 const openCallouts = require('./smoke-aprender-disclosures.cjs')
 // Cenários › Inflação (IPCA) e › Fiscal (dívida bruta) e Frete marítimo: tabela no formato do Mercado; clicar abre o gráfico em tela cheia com filtros no topo.
 const { chromium } = require('playwright'), assert = require('node:assert/strict')
@@ -34,10 +35,64 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
   const topicCount = porTopico(CONCEITOS).length
   const b = await chromium.launch(require('./smoke-launch.cjs')()), base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5216'
   const out = process.env.SMOKE_OUT
+  // A matriz de navegador fornece SEARCH_QA_OUTPUT, não SMOKE_OUT.
+  const economiaOut = out || path.join(process.env.SEARCH_QA_OUTPUT || 'workspace-qa', 'economia-contexto')
+  await mkdir(economiaOut, { recursive: true })
   if (out) await mkdir(out, { recursive: true })
   const offline = async (p) => { await p.route('**/*', (r) => r.request().url().startsWith(base) ? r.continue() : r.abort()); return p }
   const openPage = async (options) => offline(await b.newPage(options))
   try {
+    // Economia em contexto: links locais verificados; nenhuma navegação aos veículos.
+    for (const width of [320, 390, 820, 1280]) for (const theme of ['light', 'dark']) {
+      const p = await openPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+      const label = `Economia em contexto ${width}px ${theme}`
+      const shot = path.join(economiaOut, `economia-contexto-${width}-${theme}.png`)
+      try {
+        const now = Date.now()
+        await p.route('**/news.json*', r => r.fulfill({ json: {
+          generatedAt: now, stale: {}, news: { USD: [{ title:'Manchete sintética para conferir a ordem', source:'Fixture local', link:'https://example.invalid/manchete', t:now - 60000 }] },
+        } }))
+        await p.goto(base + '/#noticias')
+        const section = p.getByRole('region', { name:'Economia em contexto', exact:true })
+        await section.waitFor()
+        await p.locator('.news .feed li').first().waitFor()
+        await p.evaluate(() => document.fonts.ready)
+        const links = await section.locator('h3 a').evaluateAll(anchors => anchors.map(a => ({ href:a.href, target:a.target, rel:a.rel })))
+        assert.deepEqual(links.map(a => a.href), [
+          'https://braziljournal.com/como-acabar-com-a-jabuticaba-dos-juros-sem-truque',
+          'https://braziljournal.com/custo-brasil-chega-a-27-5-do-pib-ainda-maior-do-que-se-imaginava',
+          'https://braziljournal.com/o-split-payment-pode-acabar-com-a-sonegacao-mas-vai-ser-bem-confuso',
+        ], label + ': três destinos corretos sem duplicidade')
+        assert.ok(links.every(a => a.target === '_blank' && a.rel.includes('noopener') && a.rel.includes('noreferrer')), label + ': links externos seguros')
+        const geometry = await section.evaluate(el => {
+          const prior = el.previousElementSibling, r = el.getBoundingClientRect()
+          return { theme:document.documentElement.dataset.theme, viewport:document.documentElement.clientWidth, document:document.documentElement.scrollWidth,
+            priorIsNews:prior?.matches('.news'), below:prior && r.top >= prior.getBoundingClientRect().bottom - 1,
+            left:r.left, right:r.right, cards:[...el.querySelectorAll('li')].map(li => {
+              const b=li.getBoundingClientRect(), a=li.querySelector('a').getBoundingClientRect()
+              return {left:b.left,right:b.right,top:b.top,clipped:li.scrollWidth > li.clientWidth + 1,touch:a.width >= 44 && a.height >= 44}
+            }) }
+        })
+        assert.equal(geometry.theme,theme,label + ': tema aplicado')
+        assert.ok(geometry.priorIsNews && geometry.below,label + ': imediatamente abaixo de Manchetes carregadas')
+        assert.ok(geometry.document <= geometry.viewport + 1 && geometry.left >= -1 && geometry.right <= geometry.viewport + 1,label + ': sem rolagem horizontal')
+        assert.equal(geometry.cards.length,3)
+        assert.ok(geometry.cards.every(c => !c.clipped && c.touch && c.left >= geometry.left - 1 && c.right <= geometry.right + 1),label + ': cartões legíveis e links tocáveis')
+        assert.equal(new Set(geometry.cards.map(c => Math.round(width < 1000 ? c.left : c.top))).size,1,label + ': coluna móvel/tablet ou linha desktop')
+        const text = await section.innerText()
+        assert.match(text,/opiniões do entrevistado/)
+        assert.match(text,/27\/07\/2026/)
+        assert.match(text,/Não use como cronograma vigente/)
+        assert.match(text,/Não é um feed em tempo real/)
+        await section.locator('h3 a').first().focus()
+        assert.equal(await section.locator('h3 a').first().evaluate(el => el === document.activeElement),true,label + ': foco disponível')
+        if (shot) await p.screenshot({path:shot,fullPage:true})
+        console.log('PASS ' + label)
+      } catch (error) {
+        if (shot) await p.screenshot({path:shot,fullPage:true}).catch(()=>{})
+        throw error
+      } finally { await p.close() }
+    }
     const { FONTES } = await import('../src/governanca.js')
     assert.equal(new Set(FONTES.map((fonte) => fonte.id)).size, FONTES.length, 'catálogo não duplica fonte por id')
     const expectedSources = FONTES.map((fonte) => fonte.nome)
@@ -508,7 +563,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.getByRole('button', { name: 'Acumulado em 12 meses: abrir gráfico' }).click()
       const d = p.getByRole('dialog', { name: /histórico de IPCA/ })
       await d.waitFor()
-      assert.deepEqual(await d.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
+      await captureControls(d)
       assert.equal(await d.locator('.chart-filters').count(), 1, 'filtros num bloco só, acima do gráfico')
       await d.getByRole('group', { name: 'Período do indicador' }).getByRole('button', { name: 'Tudo' }).click()
       await d.locator('.plot svg').first().waitFor()
@@ -547,7 +602,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await at.getByRole('button', { name: /Payroll . EUA: abrir gráfico/ }).click()
       const ad = p.getByRole('dialog', { name: /histórico de Payroll/i }); await ad.waitFor()
       assert.equal(await ad.locator('.chart-filters').count(), 1)
-      assert.deepEqual(await ad.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
+      await captureControls(ad)
       await p.keyboard.press('Escape'); await ad.waitFor({ state: 'hidden' })
       // commodities: tabela com variações; a linha com histórico abre o gráfico, a sem histórico não abre
       await p.goto(base + '/#cenarios/commodities')
@@ -557,7 +612,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await ct.getByRole('button', { name: /Ouro: abrir gráfico/ }).click()
       const cd = p.getByRole('dialog', { name: /histórico de Ouro/i }); await cd.waitFor()
       assert.equal(await cd.locator('.chart-filters').count(), 1)
-      assert.deepEqual(await cd.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
+      await captureControls(cd)
       await cd.locator('.plot svg').first().waitFor()
       await p.keyboard.press('Escape'); await cd.waitFor({ state: 'hidden' })
       // o petróleo (Brent) mora aqui, na tabela de Commodities, e não mais solto no Mercado

@@ -1,0 +1,13 @@
+.economia-contexto { margin-top:20px; padding:18px; border:1px solid var(--line); background:var(--card); color:var(--fg); min-width:0; }
+.economia-contexto h2 { margin:0 0 8px; font-size:1.1rem; }
+.economia-contexto header p { margin:0 0 6px; }
+.economia-contexto small, .economia-contexto-meta, .economia-contexto-note { color:var(--mut); font-size:.8rem; line-height:1.5; }
+.economia-contexto-grid { list-style:none; padding:0; margin:16px 0 0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.economia-contexto-grid li { min-width:0; padding:12px; background:var(--surface-2); border:1px solid var(--line); overflow-wrap:anywhere; }
+.economia-contexto-grid h3 { margin:0; font-size:.95rem; }
+.economia-contexto-grid h3 a { display:block; min-height:44px; }
+.economia-link-hint { display:block; font-size:.75rem; font-weight:400; margin-top:4px; }
+.economia-contexto-grid p { font-size:.85rem; line-height:1.5; margin:10px 0; }
+.economia-contexto-grid .economia-contexto-meta { font-size:.75rem; }
+.economia-contexto-note { margin:14px 0 0; }
+@media(max-width:999px) { .economia-contexto-grid { grid-template-columns:1fr; } }

@@ -5,7 +5,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8768'
-const fidelity = require('./smoke-capture-fidelity.cjs')
+const fidelity = process.env.CAPTURE_REFERENCE_MODE === 'device' ? require('./smoke-capture-device.cjs') : require('./smoke-capture-fidelity.cjs')
 const out = process.env.CAPTURE_QA_OUTPUT || 'workspace-qa/capturas'
 ;(async()=>{
  await fs.mkdir(out,{recursive:true})

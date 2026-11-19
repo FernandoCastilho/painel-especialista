@@ -1,4 +1,5 @@
 import CaptureButton from './CaptureButton.jsx'
+import EconomiaContexto from './EconomiaContexto.jsx'
 import GlobalSearch, { SearchDestination } from './GlobalSearch.jsx'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { dataTimestamp } from './dataTimestamp.js'
@@ -360,6 +361,7 @@ export default function App() {
       {tab === 'noticias' && (
         <>
           <News colors={COLORS} />
+          <EconomiaContexto />
           <p className="noticias-agenda">Agenda da semana (Copom, IPCA, payroll…) em <button type="button" className="linklike" onClick={() => goto('cenarios', 'calendario')}>Cenários › Calendário econômico</button>.</p>
         </>
       )}

@@ -1,3 +1,4 @@
+const captureControls = require('./smoke-capture-controls.cjs')
 // Seleção de trecho no gráfico: arrastar marca o intervalo (linhas pontilhadas), mostra a variação e compara com o ano anterior.
 const { chromium } = require('playwright'), assert = require('node:assert/strict')
 ;(async () => {
@@ -12,8 +13,8 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       const d = p.getByRole('dialog', { name: /histórico de Petróleo Brent/i })
       await d.waitFor()
       await d.getByRole('group', { name: 'Período da referência' }).getByRole('button', { name: '12 meses', exact: true }).click()
-      // tela cheia só com "Fechar"; filtros (período e escala) num único bloco acima do gráfico
-      assert.deepEqual(await d.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
+      // quadro modal com câmera e "Fechar"; filtros (período e escala) num único bloco acima do gráfico
+      await captureControls(d)
       assert.equal(await d.locator('.chart-filters').count(), 1)
       await p.waitForTimeout(600) // a janela termina de abrir
       const full = await d.boundingBox()
@@ -47,6 +48,8 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       await panel.waitFor()
       // trecho sem ano anterior avisa em vez de inventar
       assert.match(await panel.innerText(), /Ano anterior/)
+      await d.getByRole('button', { name: 'Fechar detalhes', exact: true }).click()
+      await d.waitFor({ state: 'hidden' })
       assert.deepEqual(errors, [])
       console.log(width + ' PASS arrastar/linhas/variação/ano anterior/Escape/clique/Shift+setas')
       await p.close()

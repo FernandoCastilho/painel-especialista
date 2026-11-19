@@ -1,3 +1,4 @@
+const captureControls = require('./smoke-capture-controls.cjs')
 // Seletor de período em uma linha: abre o calendário, escolhe início e fim com dois cliques, Escape fecha só o calendário.
 const { chromium } = require('playwright'), assert = require('node:assert/strict')
 ;(async () => {
@@ -73,7 +74,9 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       await ini.press('Enter'); await cal.waitFor({ state: 'hidden' })
       const um = fimTxt.replace(/\/(\d{2})(\d{2})$/, '/$2')
       assert.equal(await trigger.innerText(), `${um} → ${um}`, 'período de um dia digitado')
-      await d.locator('.expandable-controls button').first().click()
+      const close = await captureControls(d)
+      await close.click()
+      await d.waitFor({ state: 'hidden' })
       assert.deepEqual(errors, [])
     }
     console.log('PASS seletor de período em uma linha (Brent em Commodities): 390 e 1440')
