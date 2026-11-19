@@ -137,13 +137,14 @@
   :root[data-theme] body .giro-screen .giro-cost-label { grid-column: 1 / -1; min-height: 0; padding: 1px 0; }
 }
 
-/* Campo com prefixo (R$) ou unidade (% a.m.): a borda fica só na moldura, como nos outros campos. Peso extra (#u) para vencer
+/* Campo com prefixo (R$) ou unidade (% a.m.): a borda fica só na moldura, como nos outros campos; por dentro, a altura combinada
+   (36 px no computador, 44 px no celular), como antes. Peso extra (#u) para vencer
    a regra comum de altura dos campos. */
-main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) { min-height: 36px; }
-main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) :is(input, select) { height: 34px; min-height: 34px; padding-top: 0; padding-bottom: 0; border: 0; background: transparent; }
+main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) { min-height: 38px; }
+main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) :is(input, select) { height: 36px; min-height: 36px; padding-top: 0; padding-bottom: 0; border: 0; background: transparent; }
 @media (max-width: 1000px) {
-  main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) { min-height: 44px; }
-  main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) :is(input, select) { height: 42px; min-height: 42px; }
+  main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) { min-height: 46px; }
+  main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) :is(input, select) { height: 44px; min-height: 44px; }
 }
 @media (max-width: 540px) {
   :root[data-theme] body .giro-screen .giro-cost .giro-readonly { padding-left: 6px; padding-right: 4px; font-size: .8rem; }
