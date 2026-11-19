@@ -50,6 +50,7 @@ export default function CambioFuturo({ onBack }) {
     if (!dates.length || !started) return [id, null]
     return [id, fluxoMoeda({ valor: valorDe(id), cotacao: parseDecimal(m.cotacao), taxa: parseDecimal(m.taxa), tac: parseDecimal(m.tac || '0'), start: op.start, dates, futuros: dates.map((_, i) => parseDecimal(m.futuros[i] ?? '')) })]
   }))
+  const ativas = MOEDAS_CF.filter(({ id }) => fluxos[id]?.ok)
   const prontos = MOEDAS_CF.filter(({ id }) => fluxos[id]?.completo && fluxos[id].tir != null)
   const melhor = prontos.length > 1 ? prontos.reduce((a, b) => (fluxos[b.id].tir < fluxos[a.id].tir ? b : a)).id : null
 
@@ -80,38 +81,58 @@ export default function CambioFuturo({ onBack }) {
       </article>
 
       <article className="desk-panel cx-panel">
-        <header className="cx-heading"><h3>2. Cotação da mesa</h3><CalculatorHelp title="Cotação da mesa"><p>Comece pelo dólar. Euro e yuan: se o valor na moeda ficar em branco, a tela usa o mesmo valor em reais do dólar convertido pela cotação da moeda.</p></CalculatorHelp></header>
-        <div className="cf-moedas">
-          {MOEDAS_CF.map(({ id, sym, nome }) => {
-            const m = moedas[id]
-            const sugerido = id !== 'USD' && !m.valor.trim() ? valorDe(id) : NaN
-            const auto = sugerido > 0 ? num(sugerido) : ''
-            const f = fluxos[id]
-            return (
-              <fieldset key={id} className="cf-moeda">
-                <legend>{nome}</legend>
-                {input(`cf-${id}-valor`, `Valor em ${sym}`, m.valor, (v) => setMoeda(id, 'valor', v), auto || 'ex.: 100.000,00')}
-                {input(`cf-${id}-cot`, `Cotação de partida (R$ por ${sym} 1)`, m.cotacao, (v) => setMoeda(id, 'cotacao', v), 'ex.: 5,9160')}
-                {input(`cf-${id}-taxa`, 'Taxa all-in (% a.a.)', m.taxa, (v) => setMoeda(id, 'taxa', v), 'ex.: 11,20', 'Juros lineares: saldo × taxa × dias corridos ÷ 360.')}
-                {input(`cf-${id}-tac`, 'TAC (R$)', m.tac, (v) => setMoeda(id, 'tac', v), '0')}
-                <p className="cf-brl">{f?.ok ? <>Valor em reais: <b>{brl(f.brl)}</b></> : f ? <span role="alert">{f.error}</span> : 'Preencha cotação e taxa.'}</p>
-              </fieldset>
-            )
-          })}
-        </div>
+        <header className="cx-heading"><h3>2. Cotação da mesa</h3><CalculatorHelp title="Cotação da mesa"><p>Comece pelo dólar. Juros lineares: saldo × taxa × dias corridos ÷ 360. Euro e yuan: se o valor na moeda ficar em branco, a tela usa o mesmo valor em reais do dólar convertido pela cotação da moeda.</p></CalculatorHelp></header>
+        <div className="cx-wrap"><table className="cx-matrix cf-table cf-mesa"><caption className="sr-only">Cotação da mesa por moeda</caption>
+          <thead><tr><th scope="col"></th>{MOEDAS_CF.map(({ id, nome }) => <th key={id} scope="col">{nome}</th>)}</tr></thead>
+          <tbody>
+            {[
+              ['valor', 'Valor na moeda', 'ex.: 100.000,00'],
+              ['cotacao', 'Cotação de partida (R$)', 'ex.: 5,9160'],
+              ['taxa', 'Taxa all-in (% a.a.)', 'ex.: 11,20'],
+              ['tac', 'TAC (R$)', '0'],
+            ].map(([key, label, ph]) => (
+              <tr key={key}><th scope="row">{label}</th>
+                {MOEDAS_CF.map(({ id, sym, nome }) => {
+                  const sugerido = key === 'valor' && id !== 'USD' && !moedas[id].valor.trim() ? valorDe(id) : NaN
+                  return <td key={id}><input id={`cf-${id}-${key}`} type="text" inputMode="decimal" autoComplete="off" aria-label={`${label} · ${nome}`} placeholder={sugerido > 0 ? `${sym} ${num(sugerido)}` : ph} value={moedas[id][key]} onChange={(e) => setMoeda(id, key, e.target.value)} /></td>
+                })}
+              </tr>
+            ))}
+            <tr className="cf-total"><th scope="row">Valor em R$</th>
+              {MOEDAS_CF.map(({ id }) => { const f = fluxos[id]; return <td key={id}>{f?.ok ? brl(f.brl) : f ? <span role="alert" className="cf-erro">{f.error}</span> : '—'}</td> })}
+            </tr>
+          </tbody>
+        </table></div>
       </article>
 
       {dates.length > 0 && (
         <article className="desk-panel cx-panel">
-          <header className="cx-heading"><h3>3. Câmbio futuro por vencimento</h3><CalculatorHelp title="Câmbio futuro"><p>R$ por unidade da moeda em cada vencimento, como a mesa passar. Cada parcela vira reais por esse câmbio.</p></CalculatorHelp></header>
-          <div className="cx-wrap"><table className="cx-matrix cf-table"><caption className="sr-only">Câmbio futuro por vencimento e moeda</caption>
-            <thead><tr><th scope="col">Vencimento</th><th scope="col">Prazo</th>{MOEDAS_CF.map(({ id, sym }) => <th key={id} scope="col">{sym}</th>)}</tr></thead>
-            <tbody>{dates.map((d, i) => (
-              <tr key={d}><th scope="row">{dateLabel(d)}</th><td>{daysBetween(op.start, d)} dias</td>
-                {MOEDAS_CF.map(({ id, sym }) => <td key={id}><input type="text" inputMode="decimal" autoComplete="off" aria-label={`Câmbio futuro ${sym} em ${dateLabel(d)}`} placeholder="R$" value={moedas[id].futuros[i] ?? ''} onChange={(e) => setFuturo(id, i, e.target.value)} /></td>)}
-              </tr>
-            ))}</tbody>
+          <header className="cx-heading"><h3>3. Fluxo de caixa por vencimento</h3><CalculatorHelp title="Fluxo de caixa por vencimento"><ul>
+            <li>Uma linha por data: o desembolso e cada vencimento, com as moedas lado a lado.</li>
+            <li>Parcela na moeda = amortização constante + juros (saldo × taxa × dias corridos ÷ 360).</li>
+            <li>Digite o câmbio futuro da mesa (R$ por unidade da moeda) na linha de cada vencimento; a parcela em reais sai na hora.</li>
+            <li>Sinais como na planilha: o desembolso sai (−) e as parcelas voltam (+).</li>
+          </ul></CalculatorHelp></header>
+          {!ativas.length ? <p className="cf-notice cx-pad">Preencha a cotação da mesa para montar o fluxo.</p> : (
+          <div className="cx-wrap"><table className="cx-matrix cf-table cf-flow"><caption className="sr-only">Fluxo de caixa por vencimento e moeda</caption>
+            <thead>
+              <tr><th scope="col" rowSpan="2">Data</th><th scope="col" rowSpan="2">Prazo</th>{ativas.map(({ id, nome }) => <th key={id} scope="colgroup" colSpan="3" className="cf-group">{nome}</th>)}</tr>
+              <tr>{ativas.map(({ id, sym }) => [<th key={`${id}-p`} scope="col" className="cf-group">Parcela ({sym})</th>, <th key={`${id}-c`} scope="col">Câmbio</th>, <th key={`${id}-r`} scope="col">Fluxo (R$)</th>])}</tr>
+            </thead>
+            <tbody>
+              <tr className="cf-start"><th scope="row">{dateLabel(op.start)}</th><td>0</td>{ativas.map(({ id, sym }) => { const f = fluxos[id]; return [<td key={`${id}-p`} className="cf-group">{sym} {num(f.valor)}</td>, <td key={`${id}-c`}>{num(f.cotacao, 4)}</td>, <td key={`${id}-r`}>−{brl(f.liquido)}</td>] })}</tr>
+              {dates.map((d, i) => (
+                <tr key={d}><th scope="row">{dateLabel(d)}</th><td>{daysBetween(op.start, d)}</td>
+                  {ativas.map(({ id, sym }) => { const l = fluxos[id].linhas[i]; return [
+                    <td key={`${id}-p`} className="cf-group">{sym} {num(l.parcela)}<small>juros {num(l.juros)}</small></td>,
+                    <td key={`${id}-c`}><input type="text" inputMode="decimal" autoComplete="off" aria-label={`Câmbio futuro ${sym} em ${dateLabel(d)}`} placeholder="R$" value={moedas[id].futuros[i] ?? ''} onChange={(e) => setFuturo(id, i, e.target.value)} /></td>,
+                    <td key={`${id}-r`}>{l.parcelaBrl ? brl(l.parcelaBrl) : '—'}</td>] })}
+                </tr>
+              ))}
+              <tr className="cf-total"><th scope="row">Total</th><td></td>{ativas.map(({ id, sym }) => { const f = fluxos[id]; return [<td key={`${id}-p`} className="cf-group">{sym} {num(f.totalMoeda)}</td>, <td key={`${id}-c`}></td>, <td key={`${id}-r`}>{f.completo ? brl(f.totalBrl) : '—'}</td>] })}</tr>
+            </tbody>
           </table></div>
+          )}
         </article>
       )}
 
@@ -140,23 +161,6 @@ export default function CambioFuturo({ onBack }) {
         )}
       </article>
 
-      {MOEDAS_CF.filter(({ id }) => fluxos[id]?.ok).map(({ id, sym, nome }) => {
-        const f = fluxos[id]
-        return (
-          <details key={id} className="desk-panel cx-panel cf-fluxo">
-            <summary>Fluxo · {nome} · juros {sym} {num(f.juros)} · total {sym} {num(f.totalMoeda)}</summary>
-            <div className="cx-wrap"><table className="cx-matrix cf-table"><caption className="sr-only">Fluxo em {nome}</caption>
-              <thead><tr><th scope="col">Prazo</th><th scope="col">Vencimento</th><th scope="col">Saldo devedor</th><th scope="col">Amortização</th><th scope="col">Juros ({num(f.taxa)}%)</th><th scope="col">Parcela</th><th scope="col">Câmbio futuro</th><th scope="col">Parcela (R$)</th></tr></thead>
-              <tbody>
-                <tr><td>0</td><td>{dateLabel(op.start)}</td><td colSpan="5">Desembolso: {sym} {num(f.valor)} × {num(f.cotacao, 4)}{f.tac > 0 && ` − TAC ${brl(f.tac)}`}</td><td>{brl(f.liquido)}</td></tr>
-                {f.linhas.map((l) => (
-                  <tr key={l.date}><td>{l.prazo}</td><td>{dateLabel(l.date)}</td><td>{sym} {num(l.saldo)}</td><td>{sym} {num(l.amort)}</td><td>{sym} {num(l.juros)}</td><td>{sym} {num(l.parcela)}</td><td>{l.futuro ? num(l.futuro, 4) : '—'}</td><td>{l.parcelaBrl ? brl(l.parcelaBrl) : '—'}</td></tr>
-                ))}
-              </tbody>
-            </table></div>
-          </details>
-        )
-      })}
     </section>
   )
 }

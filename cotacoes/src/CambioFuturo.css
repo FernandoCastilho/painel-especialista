@@ -1,11 +1,13 @@
 /* Câmbio futuro: três moedas lado a lado e tabelas compactas. */
 .cf .cf-notice { margin:0; color:var(--muted, inherit); font-size:.875rem; }
-.cf .cf-moedas { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:16px; padding:12px 16px 16px; }
-.cf .cf-moeda { display:grid; gap:10px; min-width:0; margin:0; padding:12px; border:1px solid var(--line, rgba(127,127,127,.3)); border-radius:8px; }
-.cf .cf-moeda legend { padding:0 6px; font-weight:600; }
-.cf .cf-brl { margin:0; font-size:.875rem; }
-.cf .cf-table td input { width:100%; min-width:90px; min-height:36px; padding:4px 8px; font-size:.875rem; }
+.cf .cf-table td input { width:100%; min-width:70px; min-height:36px; padding:4px 8px; font-size:.875rem; }
 .cf .cf-table td, .cf .cf-table th { text-align:right; white-space:nowrap; }
 .cf .cf-table :is(td,th):first-child { text-align:left; }
 .cf .cf-best { background:var(--bw-tint, rgba(127,127,127,.1)); }
-.cf .cf-fluxo > summary { cursor:pointer; padding:12px 16px; font-weight:600; }
+.cf .cf-flow .cf-group { border-left:1px solid var(--line, rgba(127,127,127,.3)); }
+.cf .cf-flow thead th.cf-group[colspan] { text-align:center; }
+.cf .cf-flow td small { display:block; opacity:.7; font-size:.75rem; }
+.cf .cf-flow :is(.cf-start,.cf-total) :is(td,th) { font-weight:600; }
+.cf .cf-mesa td input { min-width:120px; }
+.cf .cf-erro { white-space:normal; font-size:.75rem; }
+.cf .cf-flow :is(td,th) { padding:8px 5px; }
