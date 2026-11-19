@@ -166,7 +166,23 @@ Também foram vistas as ementas dos atos e decisões da Receita de 2025 e 2026 s
 - NDF de balcão: a IN RFB 1.585/2015, art. 63, III, b, prevê 0,005% sobre o valor da liquidação financeira nos mercados a termo com liquidação exclusivamente financeira (lida em 15/11/2026). O alcance dos 15% sobre ganho líquido não está expresso nos textos lidos.
 - Fórmulas oficiais de swap da B3 e norma de registro obrigatório de derivativos: páginas não abriram.
 
-## Tela (padrão da calculadora BNDES)
+## Tela no padrão do Comparador de Crédito (19/11/2026)
+Pedido de Fernando em 19/11/2026: seguir o desenho do Comparador de Crédito. Só apresentação: nenhuma regra de cálculo mudou e nenhum número novo foi criado; todos os valores do resultado já existiam na tela anterior (o único rearranjo é "Juros e encargos" na moeda, que é o total a pagar menos o principal, já mostrado no rodapé do quadro de parcelas).
+- **Dados em largura total**, um quadro abaixo do outro: Atingir meta, Operação (quatro campos por linha no computador, para cada rótulo caber inteiro), Proteção cambial (NDF) e Mais opções. Abertura "Preencha a operação…" à esquerda, como no Comparador.
+- **Botão laranja centralizado** "Ver cotação ↓ · Custo x% a.m.", no lugar do "Comparar modalidades" do Comparador. A conta continua automática a cada mudança; o botão só leva até a cotação.
+- **Cotação num quadro único**, com borda laranja e faixa azul-marinho, em largura total, abaixo dos dados (antes: coluna fixa à direita no computador). Dentro, na ordem do Comparador:
+  1. aviso curto de que é custo estimado e, se faltar dado, a faixa âmbar;
+  2. resposta principal: custo efetivo total em destaque (azul), com o CDI equivalente, e o total das parcelas ao lado (claro);
+  3. premissa da simulação (DI, cupom ou taxas da mesa e cotação de partida);
+  4. "Resultado da operação" ampliável: quadro com indicador em linhas, agrupado em taxas e custo efetivo, valores na moeda, valores em reais (terminando no total das parcelas) e prazo e IOF;
+  5. "Leitura da cotação": premissa do IOF-câmbio, leitura do custo fixo frente ao giro em reais e os avisos;
+  6. "Condições da operação" à vista, em grade, como os "Dados básicos" do Comparador (antes recolhidas);
+  7. detalhes: Parcela a parcela (aberto, porque é o formato da cotação de banco), Comparar com swap e sem proteção, e Premissas e limites (recolhidos);
+  8. rodapé com a data das regras e os botões Apresentar simulação, Imprimir PDF e Copiar resumo.
+- O "ampliar" da cotação inteira saiu; cada quadro tem o seu, como no Comparador. A cotação ganhou identificador próprio (`#e4-cotacao`) para não herdar as regras do Finame (`#fm-result`); a classe `fm-results` continua marcando a área de resultado para a aba Apresentar.
+- Estilo em `CalcPattern-4131.css`, com as mesmas medidas e cores de `CalcPattern-comparador.css`.
+
+## Tela (padrão da calculadora BNDES, até 18/11/2026)
 A descrição de 11/11/2026 (grupos Operação, Custos e tributos e Proteção cambial; cotação comparativa em destaque; cronograma recolhido) foi substituída em 14/11/2026 pelo desenho no formato da cotação. O desenho atual está na seção "Desenho da tela (formato da cotação)". Em resumo:
 - `src/Emprestimo4131.jsx` usa a estrutura e o estilo do BNDES (`BndesWorkspace.css`): cartão claro e título com abas (Simular · Regras e fontes). À esquerda: Atingir meta, Operação (seis campos e o valor convertido), Proteção cambial (NDF) e Mais opções, recolhido. À direita: botões Apresentar simulação e Imprimir PDF; cotação com o custo efetivo e o equivalente em CDI em destaque, com ampliação na tela; economia de IOF e equivalente em giro; condições da operação com Copiar resumo; comparação com swap e sem proteção e premissas, recolhidas. Abaixo, em largura inteira, o quadro parcela a parcela, aberto.
 - Apresentação (`Emprestimo4131Presentation.jsx`) e PDF (`Emprestimo4131Print.jsx`) trabalham sobre uma cópia congelada (`emprestimo4131Presentation.js`): não recalculam nem buscam taxa nova.

@@ -2,6 +2,9 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '19/11/2026', items: [
+    'Calculadoras > Empréstimo externo (4131): a tela segue agora o desenho do Comparador de Crédito. Os dados ficam em largura total e a cotação vem logo abaixo, num quadro único: custo efetivo em destaque com o CDI equivalente, total das parcelas, quadro agrupado do resultado, leitura da cotação, condições da operação à vista, parcela a parcela e os botões de apresentar, imprimir e copiar o resumo. Nenhuma conta mudou.',
+  ] },
   { date: '15/11/2026', items: [
     'Calculadoras > Empréstimo externo (4131), Regras e fontes: o ato da Receita sobre o prazo médio (ADI RFB 41/2011) foi lido no site de normas da Receita e está em vigor. A fórmula publicada no Diário Oficial é a mesma média da calculadora. Decisão da Receita, lida pelo resumo oficial, confirma que os juros não entram no prazo médio. Entrou a regra de renovação e conversão do empréstimo em capital, com o que a norma do Banco Central pede hoje. A conta não mudou.',
     'Textos das normas da 4131 reconferidos em 15/11/2026: IOF do câmbio e do capital de giro, IR na fonte, swap, NDF e a norma do Banco Central sobre crédito externo (atualizada em 30/09/2026) seguem como a calculadora usa. Nenhuma alíquota mudou. O IOF de 3,5% e a alíquota do capital de giro dependem de decisão provisória do STF, que não pôde ser conferida no site do tribunal. A regra da declaração ao Banco Central ganhou o prazo: até a entrada dos recursos.',

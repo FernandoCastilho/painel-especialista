@@ -101,8 +101,9 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       const cell = (label, column) => section.locator('.fm-comparison .cx-matrix tbody tr').filter({ has: page.getByRole('rowheader', { name: label }) }).first().locator('td').nth(column)
       const flow = section.locator('.fm-tabela tbody tr')
       // textContent: no celular a tabela esconde quatro colunas, mas os números continuam na página.
-      // Padrão de 18/11/2026: resposta principal (custo efetivo e total das parcelas) e, logo abaixo, as equivalências (CDI, giro).
-      const resposta = async () => normalize((await section.locator('#fm-result .fm-headline, #fm-result .e4-equiv').allInnerTexts()).join(' '))
+      // Padrão do Comparador (19/11/2026): resposta principal com o custo efetivo (e o CDI equivalente) e o total das parcelas.
+      // textContent: os rótulos da resposta aparecem em maiúsculas só pelo estilo.
+      const resposta = async () => normalize((await section.locator('#e4-cotacao .fm-headline').allTextContents()).join(' '))
       const linha = async (i) => [normalize(await flow.nth(i).locator('th').textContent()), ...(await flow.nth(i).locator('td').allTextContents()).map(normalize)]
 
       // Tela inicial no formato da cotação: poucos campos, 36 parcelas mensais a cada 30 dias, e o câmbio e o DI do
@@ -156,9 +157,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(await section.locator('#e4-rate').inputValue(), taxaMeta)
 
       // Condições da operação na ordem do e-mail de cotação e o resumo copiado em texto.
-      // Padrão de 18/11/2026: as condições ficam recolhidas no fim da cotação; o botão de copiar fica junto de Apresentar e Imprimir.
-      assert.equal(await section.locator('.e4-condicoes-box').evaluate(el => el.open), false, 'condições começam recolhidas')
-      await section.locator('.e4-condicoes-box > summary').click()
+      // Padrão do Comparador (19/11/2026): as condições ficam à vista, como os dados básicos; copiar fica junto de Apresentar e Imprimir.
       const condicoes = normalize(await section.locator('.e4-condicoes dl').innerText())
       assert.ok(condicoes.includes('Produto 4131 com NDF') && condicoes.includes('Valor de principal R$ 10.000.000,00') && condicoes.includes('Prazo 36 meses') && condicoes.includes('Principal Mensal · 36 parcelas') && condicoes.includes('Juros Mensal'), condicoes)
       await section.getByRole('button', { name: 'Copiar resumo' }).click()
@@ -240,8 +239,8 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       }
       const custo = normalize(await section.locator('.fm-headline').innerText())
       assert.ok(custo.includes(`${pct(mes(CET))} a.m.`) && custo.includes(`${pct(ano(CET))} a.a. · exp/360`), custo)
-      // Padrão de 18/11/2026: economia de IOF e giro equivalente agora ficam em "Equivalências" e "Valores".
-      const cotacao = normalize((await section.locator('#fm-result .e4-equiv, #fm-result .e4-valores').allInnerTexts()).join(' '))
+      // Padrão do Comparador (19/11/2026): economia de IOF e giro equivalente ficam no quadro agrupado do resultado.
+      const cotacao = normalize((await section.locator('#e4-cotacao .e4-valores').allInnerTexts()).join(' '))
       assert.ok(cotacao.includes(brl(IOF_GIRO)), cotacao)
       assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. · exp/360`), cotacao)
       assert.match(cotacao, /Não desconta o IOF-câmbio de 3,50% desta operação/)
