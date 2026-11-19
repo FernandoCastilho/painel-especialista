@@ -74,50 +74,81 @@ test('consulta renova chave de cache, omite credenciais e propaga falhas sem epi
   await assert.rejects(loadLatestPodcast(PODCASTS[0], { now, Parser, fetcher: async () => ({ ok: false }) }), /indisponível/)
 })
 const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof node === 'object' ? [node, ...nodes(node.props?.children)] : []
-async function renderPodcast(t, loader) {
+async function renderPodcast(t, loader, programs = catalog.PODCASTS) {
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
-  const deps = { react: React, './podcasts.js': { ...catalog, loadLatestPodcast: loader }, './Podcast.css': {} }
+  const deps = { react: React, './podcasts.js': { ...catalog, PODCASTS: programs, loadLatestPodcast: loader }, './Podcast.css': {} }
   runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name), AbortController, setTimeout, clearTimeout })
   const render = hookRenderer(() => module.exports.default())
   t.after(() => render.close())
   await render.settle()
   return { render, all: type => nodes(render.value).filter(n => n.type === type) }
 }
-test('título e data independem do player; abrir, trocar, fechar, erro e atualização', async t => {
+test('player único seleciona todo cadastro, sem autoplay; mantém fontes e atualização', async t => {
   let calls = 0
   const { render, all } = await renderPodcast(t, async p => { calls++; return { episode: { ...episode, audioUrl: episode.audioUrl + '?' + p.id }, checkedAt: now } })
   assert.equal(calls, 2)
-  assert.equal(all('audio').length, 0)
-  assert.equal(all('h3').length, 2)
-  assert.equal(all('time').length, 2)
-  assert.equal(all('iframe').length, 0)
-  assert.equal(all('a').length, 2)
-  all('button')[1].props.onClick(); await render.settle()
   assert.equal(all('audio').length, 1)
   assert.equal(all('audio')[0].props.preload, 'none')
   assert.equal(all('audio')[0].props.autoPlay, undefined)
-  assert.equal(all('audio')[0].props.controls, true)
+  assert.equal(all('iframe').length, 0)
+  assert.equal(all('button').filter(n => n.props['aria-pressed'] !== undefined).length, PODCASTS.length)
   assert.match(all('audio')[0].props.src, /morning-call$/)
-  all('button')[2].props.onClick(); await render.settle()
+  const programs = () => all('button').filter(n => n.props['aria-pressed'] !== undefined)
+  programs()[1].props.onClick(); await render.settle()
   assert.equal(all('audio').length, 1)
   assert.match(all('audio')[0].props.src, /itau-views$/)
+  assert.equal(programs()[1].props['aria-pressed'], true)
+  assert.equal(all('a')[0].props.href, podcastUrl(PODCASTS[1]))
   all('audio')[0].props.onError(); await render.settle()
-  assert.ok(all('p').some(n => n.props.children === 'O áudio não carregou. Use o link do programa abaixo.'))
-  all('button')[2].props.onClick(); await render.settle()
-  assert.equal(all('audio').length, 0)
-  all('button')[1].props.onClick(); await render.settle()
-  all('button')[0].props.onClick(); await render.settle()
+  assert.ok(all('p').some(n => String(n.props.children).includes('O áudio não carregou')))
+  all('button').find(n => n.props.children === 'Atualizar episódios').props.onClick(); await render.settle()
   assert.equal(calls, 4)
-  assert.equal(all('audio').length, 0)
+  assert.equal(all('audio').length, 1)
 })
-test('falha de uma fonte não impede outra; erro não inventa edição de hoje', async t => {
-  const { all } = await renderPodcast(t, async p => {
+test('contrato dos controles com elemento de áudio simulado: play, pausa, limites, velocidade e volume', async t => {
+  const { render, all } = await renderPodcast(t, async () => ({ episode, checkedAt: now }))
+  let plays = 0, pauses = 0
+  const player = { paused: true, currentTime: 0, duration: 100, playbackRate: 1, volume: 1, pause() { this.paused = true; pauses++ }, async play() { this.paused = false; plays++ } }
+  all('audio')[0].ref.current = player
+  all('audio')[0].props.onLoadedMetadata({currentTarget:player}); await render.settle()
+  const button = label => all('button').find(n => n.props['aria-label'] === label)
+  await button('Reproduzir episódio').props.onClick()
+  assert.equal(plays, 1)
+  all('audio')[0].props.onPlaying(); await render.settle()
+  await button('Pausar episódio').props.onClick(); assert.equal(pauses, 1)
+  all('audio')[0].props.onPause(); await render.settle()
+  button('Voltar 15 segundos').props.onClick(); assert.equal(player.currentTime, 0)
+  button('Avançar 30 segundos').props.onClick(); assert.equal(player.currentTime, 30)
+  player.currentTime = 95; all('audio')[0].props.onTimeUpdate({currentTarget:player}); await render.settle()
+  button('Avançar 30 segundos').props.onClick(); assert.equal(player.currentTime, 100)
+  all('select')[0].props.onChange({target:{value:'1.5'}}); assert.equal(player.playbackRate, 1.5)
+  all('input').find(n => n.props['aria-label'] === 'Volume').props.onChange({target:{value:'0.25'}}); assert.equal(player.volume, .25)
+  player.play = async () => { throw Error('blocked') }
+  await button('Reproduzir episódio').props.onClick(); await render.settle()
+  assert.ok(all('p').some(n => String(n.props.children).includes('O áudio não carregou')))
+})
+test('falha de uma fonte preserva cadastro e permite selecionar a outra', async t => {
+  const { render, all } = await renderPodcast(t, async p => {
     if (p.id === 'morning-call') throw new Error('offline')
     return { episode, checkedAt: now }
   })
-  assert.equal(all('h3').length, 1)
   assert.equal(all('audio').length, 0)
   assert.ok(all('p').some(n => String(n.props.children).includes('Não foi possível consultar')))
-  assert.equal(all('a').length, 2)
+  all('button').filter(n => n.props['aria-pressed'] !== undefined)[1].props.onClick(); await render.settle()
+  assert.equal(all('audio').length, 1)
+  assert.equal(all('a')[0].props.href, podcastUrl(PODCASTS[1]))
+})
+
+test('novo programa cadastrado aparece e alimenta o mesmo player sem nova interface', async t => {
+  const third = { ...PODCASTS[0], id: 'terceiro-teste', title: 'Programa de teste', appleId: '1234567890' }
+  const programs = [...PODCASTS, third]
+  const { render, all } = await renderPodcast(t, async p => ({ episode: { ...episode, audioUrl: episode.audioUrl + '?' + p.id }, checkedAt: now }), programs)
+  const buttons = () => all('button').filter(n => n.props['aria-pressed'] !== undefined)
+  assert.equal(buttons().length, 3)
+  buttons()[2].props.onClick(); await render.settle()
+  assert.equal(buttons()[2].props['aria-pressed'], true)
+  assert.equal(all('audio').length, 1)
+  assert.match(all('audio')[0].props.src, /terceiro-teste$/)
+  assert.equal(all('a')[0].props.href, podcastUrl(third))
 })
