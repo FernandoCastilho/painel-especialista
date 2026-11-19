@@ -12,6 +12,27 @@ async function run() {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1100 }, hasTouch: true })
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', route => route.request().url().startsWith(base + '/') ? route.continue() : route.abort())
+    // Um só editor de meses (rodada 3 do Diretor de Arte), no quadro de giro.
+    const setEditor = async open => { const editor = page.locator('.cbs-month-editor'); if (await editor.evaluate(el => el.open) !== open) await editor.locator('> summary').click() }
+    const resetMonths = 'Usar faturamento principal em todos os meses'
+    // Gráficos do quadro de giro: nome dos meses legível, alinhado ao ponto, sem encostar no vizinho nem no título seguinte.
+    const checkSeriesLabels = async label => {
+      const charts = await page.locator('.cbs-series').evaluateAll(sections => sections.map(section => {
+        const spans = [...section.querySelectorAll('.cbs-series-months span')].map(s => ({ r: s.getBoundingClientRect(), size: parseFloat(getComputedStyle(s).fontSize) }))
+        const dots = [...section.querySelectorAll('circle')].map(c => { const r = c.getBoundingClientRect(); return r.x + r.width / 2 })
+        const next = section.nextElementSibling.getBoundingClientRect()
+        return { count: spans.length, minSize: Math.min(...spans.map(s => s.size)), minGap: Math.min(...spans.slice(1).map((s, i) => s.r.left - spans[i].r.right)),
+          aligned: dots.length === 12 && dots.every((d, i) => Math.abs(d - spans[i].r.left - spans[i].r.width / 2) < 1), inside: spans.every(s => s.r.left >= 0 && s.r.right <= innerWidth), spaceBelow: next.top - Math.max(...spans.map(s => s.r.bottom)) }
+      }))
+      assert.ok(charts.length >= 1, `${label}: há gráfico de meses`)
+      for (const c of charts) {
+        assert.equal(c.count, 12, label)
+        assert.ok(c.minSize >= 11, `${label}: letra dos meses ${c.minSize}px`)
+        assert.ok(c.minGap >= 2, `${label}: meses encostados (${c.minGap}px)`)
+        assert.ok(c.aligned && c.inside, `${label}: meses alinhados aos pontos e dentro da tela`)
+        assert.ok(c.spaceBelow >= 16, `${label}: respiro abaixo do gráfico ${c.spaceBelow}px`)
+      }
+    }
     await page.goto(base + '/#calculadora/cbs-caixa')
     await page.getByRole('heading', { name: 'Faturamento e necessidade de giro' }).waitFor()
     assert.equal(await page.locator('#cbs-revenue').inputValue(), '3.000.000,00')
@@ -23,6 +44,9 @@ async function run() {
     assert.match(await page.locator('.cbs-rates').innerText(), /carga inicial do banco da Receita[\s\S]*art\. 347[\s\S]*art\. 349/)
     assert.equal(await page.locator('#cbs-cbsRate').inputValue(), '8,4')
     await page.locator('#cbs-year').selectOption('2026')
+    assert.equal(await page.locator('.cbs-month-editor').count(), 1, 'um só editor de meses')
+    assert.equal(await page.locator('.cbs-overview .cbs-month-editor input').count(), 12)
+    assert.equal(await page.getByRole('button', { name: 'Usar faturamento principal em todos', exact: true }).count() + await page.getByRole('button', { name: 'Repetir média em todos os meses', exact: true }).count(), 0, 'nomes antigos do botão saíram')
     assert.match(await page.locator('.cbs-rates').innerText(), /Alíquotas de 2026\s*oficial[\s\S]*CBS 0,9% · IBS estadual 0,1% · IBS municipal 0%/)
     assert.equal(await page.locator('#cbs-cbsRate').count(), 0, 'official 2026 rates are not editable')
     await page.locator('#cbs-year').selectOption('2033')
@@ -49,6 +73,7 @@ async function run() {
     assert.equal(await page.locator('#cbs-currentNetRate').count(), 0, '2026 replaces no tax')
     assert.ok((await page.locator('.cbs-illustrative').innerText()).replace(/\s/g, '').includes('R$27.000,00'), '2026: 0,9% de R$ 3 milhões')
     assert.match(await page.locator('.cbs-illustrative').innerText(), /CBS \(0,9%\)/)
+    assert.match(await page.locator('.cbs-rates').innerText(), /veja a conta ilustrativa abaixo\./)
     assert.match(await page.locator('.cbs-overview').innerText(), /Diferença tributária estimada \(R\$\/mês\): não se aplica em 2026/)
     assert.equal(await page.locator('.cbs-illustrative .cbs-critical').count(), 0, '2026: nota neutra, não alerta')
     await page.locator('#cbs-reduction').selectOption('200028')
@@ -58,6 +83,7 @@ async function run() {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `2026 overflow ${theme}/${width}`)
+      assert.ok(await page.evaluate(() => document.querySelector('.cbs-rates').getBoundingClientRect().bottom <= document.querySelector('.cbs-illustrative').getBoundingClientRect().top), `2026: conta ilustrativa abaixo ${theme}/${width}`)
       await page.screenshot({ path: path.join(out, `ano-2026-${theme}-${width}.png`), fullPage: true })
     }
     await page.locator('#cbs-year').selectOption('2027')
@@ -66,15 +92,33 @@ async function run() {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
       await page.screenshot({ path: path.join(out, `cenario-inicial-${theme}-${width}.png`), fullPage: true })
     }
+    // Cenário inicial com meses variando: gráficos do quadro de giro com nomes legíveis; cada mês mostra reserva, diferença e NCG.
+    await setEditor(true)
+    await page.locator('#cbs-month-1').fill('2.000.000,00')
+    assert.match(await page.locator('#cbs-month-result-1').innerText(), /Reserva: R\$[\s\S]*Diferença tributária: -?R\$[\s\S]*NCG: R\$/)
+    assert.equal(await page.locator('.cbs-month-notice').count(), 0, 'exemplo inicial: tudo calculado, sem aviso')
+    for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+      await page.emulateMedia({ colorScheme: theme })
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
+      await page.evaluate(() => document.fonts.ready)
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `meses variando overflow ${theme}/${width}`)
+      await checkSeriesLabels(`meses variando ${theme}/${width}`)
+      await page.screenshot({ path: path.join(out, `cenario-meses-variando-${theme}-${width}.png`), fullPage: true })
+    }
+    await page.setViewportSize({ width: 1440, height: 1100 })
+    await page.getByRole('button', { name: resetMonths, exact: true }).click()
+    assert.equal(await page.locator('#cbs-month-1').inputValue(), '3.000.000,00')
+    await setEditor(false)
     await page.locator('#cbs-cmv').fill('')
     assert.match(await page.locator('body').innerText(), /NCG não calculada/)
     await page.locator('#cbs-cmv').fill('2.000.000,00')
     await page.locator('#cbs-purchases').fill('2.000.000,00')
     assert.match(await page.locator('body').innerText(), /7\.000\.000,00/)
-    await page.getByText('Editar meses e ver valores', { exact: true }).click()
-    assert.match(await page.locator('#overview-month-0').locator('xpath=ancestor::div[contains(@class,"cx-field")]').innerText(), /7\.000\.000,00/)
+    await setEditor(true)
+    assert.match(await page.locator('#cbs-month-0').locator('xpath=ancestor::div[contains(@class,"cx-field")]').innerText(), /7\.000\.000,00/)
     assert.match(await page.locator('.cbs-overview').innerText(), /NCG operacional simplificada[^:]*: R\$\s?7\.000\.000,00, igual em todos os meses/)
     assert.equal(await page.locator('.cbs-overview details').evaluate(el => el.open), true, 'opened by the test, closed by default')
+    assert.equal(await page.locator('.cbs-month-notice').count(), 0)
     for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
@@ -83,6 +127,10 @@ async function run() {
     await page.locator('#cbs-cmv').fill('')
     assert.match(await page.locator('body').innerText(), /NCG não calculada/)
     assert.equal(await page.getByRole('img', { name: /NCG operacional simplificada/ }).count(), 0)
+    // Sem NCG: um aviso único no editor, sem "Não calculado" repetido nos 12 meses.
+    assert.equal(await page.locator('.cbs-month-editor .cbs-month-notice', { hasText: 'NCG não calculada' }).count(), 1)
+    assert.doesNotMatch(await page.locator('.cbs-month-grid').innerText(), /calculad|NCG:/i)
+    assert.equal((await page.locator('.cbs-month-grid').innerText()).match(/Reserva: R\$/g).length, 12, 'reserva segue em cada mês')
     await page.locator('#cbs-group').fill('46.3')
     await page.locator('#cbs-group').press('ArrowDown')
     await page.locator('#cbs-group').press('Enter')
@@ -95,6 +143,9 @@ async function run() {
     await page.locator('.cbs-calculation > summary').click()
     // Padrão de 18/11/2026: o mês a mês fica recolhido dentro do resultado; abre para conferir os 12 meses.
     await page.locator('.cbs-annual-details > summary').click()
+    // Bloco Reserva: sem editor próprio, só o aviso apontando para o quadro de giro.
+    assert.equal(await page.locator('.cbs-annual input').count(), 0)
+    assert.match(await page.locator('.cbs-annual .cbs-month-pointer').innerText(), /“Editar meses e ver valores” no quadro “Faturamento, giro e impacto tributário”/)
     const { simulateCbsCash } = await import('../src/cbsCash.js')
     const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/ibgeCbsSnapshot.json'), 'utf8'))
     const taxes = { regime: 'regular', aliquotas: { cbs: 8.4, ibsUf: 0.05, ibsMun: 0.05 }, reducao: {}, isRate: 0 }
@@ -116,20 +167,22 @@ async function run() {
     assert.ok((await monthly()).includes(format(reduced.cbs)))
     await page.locator('#cbs-reduction').selectOption('')
     await checkReserves(expected({}))
-    await page.locator('.cbs-month-editor > summary').click()
+    await setEditor(true)
     await page.locator('#cbs-month-1').fill('2.000.000,00')
     await page.getByRole('button', { name: 'Fev', exact: true }).click()
     assert.ok((await page.locator('.cbs-month-reading').innerText()).replace(/\s/g, '').includes(format(expected({ revenue: 2000000 }).reserveDelayed)))
     await page.locator('#cbs-month-1').fill('0')
     assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 11, 'invalid month must create a gap')
     assert.match(await page.locator('.cbs-month-reading').innerText(), /inválido/)
-    await page.getByRole('button', { name: 'Usar faturamento principal em todos', exact: true }).click()
+    assert.equal(await page.locator('#cbs-month-1').getAttribute('aria-invalid'), 'true')
+    assert.equal(await page.locator('#cbs-month-result-1').innerText(), 'Informe um faturamento positivo válido.')
+    await page.getByRole('button', { name: resetMonths, exact: true }).click()
     // Meses iguais: texto no lugar do gráfico reto; um só botão de ampliar (o do bloco Reserva).
     assert.equal(await page.locator('.cbs-annual-chart').count(), 0)
     assert.match(await page.locator('.cbs-annual').innerText(), /Reserva adicional: R\$\s?[\d.,]+ em todos os meses/)
     assert.equal(await page.locator('.cbs-annual .expandable-panel').count(), 0, 'sem ampliar duplicado')
     await page.locator('#cbs-month-1').fill('2.000.000,00')
-    await page.locator('.cbs-month-editor > summary').click()
+    await setEditor(false)
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: theme })
       for (const width of [390, 1440]) {
@@ -137,6 +190,7 @@ async function run() {
         await page.evaluate(() => document.fonts.ready)
         const overflow = await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > innerWidth, offenders: [...document.querySelectorAll('body *')].filter(el => el.getBoundingClientRect().right > innerWidth + 1).slice(0, 12).map(el => ({tag:el.tagName, className:String(el.className), right:el.getBoundingClientRect().right})) }))
         assert.equal(overflow.overflow, false, `overflow ${theme}/${width}: ${JSON.stringify(overflow.offenders)}`)
+        await checkSeriesLabels(`reserva ${theme}/${width}`)
         const fits = await page.locator('.cbs-annual-chart').evaluate(element => [...element.querySelectorAll('text')].every(t => { const r = t.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 9 }))
         assert.equal(fits, true, `chart fits with readable labels ${theme}/${width}`)
         assert.equal(await page.locator('.cbs-annual-chart').evaluate(element => {
@@ -165,9 +219,9 @@ async function run() {
         await page.locator('#cbs-group').press('Escape')
       }
     }
-    await page.locator('.cbs-month-editor > summary').click()
-    await page.getByRole('button', { name: 'Usar faturamento principal em todos', exact: true }).click()
-    await page.locator('.cbs-month-editor > summary').click()
+    await setEditor(true)
+    await page.getByRole('button', { name: resetMonths, exact: true }).click()
+    await setEditor(false)
     await page.getByText('Ajustar hipóteses', { exact: true }).click()
     await page.getByText('Como isso aparece no recebimento e nos prazos?', { exact: true }).click()
     await page.getByText('Uma reserva de prazo significa pagar esse valor a mais todo mês?', { exact: true }).click()

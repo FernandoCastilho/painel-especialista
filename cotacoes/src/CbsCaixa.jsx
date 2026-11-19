@@ -123,7 +123,7 @@ export default function CbsCaixa({ onBack }) {
             </div>}
             {!simples && yearRates.origem.map(o => <p key={o} className="cbs-rate-origin">{o}</p>)}
             {!simples && (year === 2027 || year === 2028) && <p className="cbs-rate-origin"><a href={CBS_SOURCES.law} target="_blank" rel="noreferrer">Ler a LC 214/2025 atualizada (arts. 344, 347 e 349)</a></p>}
-            {testYear && <p className="cbs-rate-origin">2026 é ano de teste: veja a conta ilustrativa ao lado.</p>}
+            {testYear && <p className="cbs-rate-origin">2026 é ano de teste: veja a conta ilustrativa abaixo.</p>}
             <p className="cbs-rate-origin">Regras e reduções: calculadora oficial da Receita, versão {oficial.fonte.versaoCalculadora}, tabela {oficial.fonte.versaoBaseDados} de {isoDate(oficial.fonte.dataBaseDados)}.</p>
           </div>
           <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-revenue">{simples ? 'Receita bruta mensal' : 'Vendas mensais sem tributos'}</label>{simples ? <Help title="Receita bruta"><p>No Simples, a base é a receita bruta, que já contém o DAS. CBS e IBS são uma parte desse valor, não são somados ao preço.</p></Help> : <Help title="Vendas sem tributos"><p>Valor médio das vendas sem ICMS, ISS, PIS, Cofins e IPI. É a base de cálculo da calculadora oficial: CBS e IBS são somados por fora, sobre esse valor.</p><p>O cliente paga as vendas mais CBS, IBS e Imposto Seletivo. Frete e outras cobranças entram na base; descontos incondicionais saem.</p></Help>}</div><MoneyInput id="cbs-revenue" value={form.revenue} onChange={value => set('revenue', value)} aria-invalid={!parsedMoney.ok || parsedMoney.value <= 0} /></div>
@@ -204,7 +204,7 @@ export default function CbsCaixa({ onBack }) {
             <p className="cbs-used-assumptions">{statusTag === 'hipótese' ? 'Hipóteses' : 'Valores usados'}: {rateLabel}{simples ? '' : ` · gastos elegíveis a crédito ${form.eligibleShare}%`} · vendas com split {form.splitShare}%.</p>
           </div>
           <details className="cbs-details cbs-annual-details"><summary>Reserva mês a mês · janeiro a dezembro</summary>
-            <CbsAnnualScenario key={searchReset} revenue={form.revenue} inputs={{ ...inputs, spendingRatio: ratio }} overrides={monthlyOverrides} onOverridesChange={setMonthlyOverrides} />
+            <CbsAnnualScenario key={searchReset} revenue={form.revenue} inputs={{ ...inputs, spendingRatio: ratio }} overrides={monthlyOverrides} />
           </details>
           <details className="cbs-details cbs-calculation"><summary>Entender o cálculo e os dois cenários</summary>
           <details className="cbs-details cbs-cash-details"><summary>Como isso aparece no recebimento e nos prazos?</summary>

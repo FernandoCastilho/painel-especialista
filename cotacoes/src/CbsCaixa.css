@@ -159,3 +159,11 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
 :root[data-theme] body .cbs .cbs-headline .cbs-tag { color:#fff; border-color:#ffb000; }
 .cbs-headline .cbs-delta-arrow { font-size:.6em; vertical-align:.2em; }
 :root[data-theme] body .cbs .cbs-giro p, :root[data-theme] body .cbs .cbs-overview > p { margin:0 0 8px; }
+/* Gráficos do quadro de giro (rodada 3 do Diretor de Arte): meses com letra fixa e respiro antes do próximo título. */
+.cbs-series { margin-bottom:24px; }
+.cbs-series-chart { width:100%; height:auto; }
+.cbs-series-months { position:relative; height:1.5em; font-size:.75rem; color:var(--fg); }
+.cbs-series-months span { position:absolute; top:0; transform:translateX(-50%); white-space:nowrap; }
+@media (max-width:400px) { .cbs-series-months { font-size:.6875rem; } }
+/* Celular bem estreito: um mês sim, outro não, para os nomes não se encostarem. */
+@media (max-width:359px) { .cbs-series-months span:nth-child(even) { visibility:hidden; } }

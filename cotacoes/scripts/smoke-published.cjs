@@ -60,6 +60,10 @@ const links = {
         assert.equal(await page.locator('.topbar-brand').getAttribute('title'), 'Painel Especializado no Mercado', 'nome completo ao passar o mouse')
       }
       const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      // Um só editor de meses, no quadro de giro; o bloco Reserva só aponta para ele.
+      assert.equal(await page.locator('.cbs-month-editor').count(), 1)
+      assert.equal(await page.locator('.cbs-annual input').count(), 0)
+      assert.match(await page.locator('.cbs-annual').innerText(), /Editar meses e ver valores/)
       await page.locator('.cbs-month-editor > summary').click()
       const initialJan = await page.locator('#cbs-month-result-0').innerText()
       await page.locator('#cbs-month-1').fill('2.000.000,00')
@@ -76,7 +80,7 @@ const links = {
       assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 11)
       await page.getByRole('button', { name: 'Fev', exact: true }).click()
       assert.match(await page.locator('.cbs-month-reading').innerText(), /Faturamento inv/)
-      await page.locator('.cbs-month-editor button').click()
+      await page.getByRole('button', { name: 'Usar faturamento principal em todos os meses', exact: true }).click()
       assert.equal(await page.locator('.cbs-annual-chart').count(), 0, 'restaurar volta aos 12 meses iguais')
       assert.match(await page.locator('.cbs-annual .cbs-series-flat').innerText(), /em todos os meses/)
       await page.locator('.cbs-month-editor > summary').click()

@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import MoneyInput from './MoneyInput.jsx'
 import { buildCbsAnnual } from './cbsAnnual.js'
 
 const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-export default function CbsAnnualScenario({ revenue, inputs, overrides, onOverridesChange }) {
+export default function CbsAnnualScenario({ revenue, inputs, overrides }) {
   const [selected, setSelected] = useState(0)
   const months = buildCbsAnnual(revenue, overrides, inputs)
   const valid = months.filter(month => month.result.ok)
@@ -34,10 +33,6 @@ export default function CbsAnnualScenario({ revenue, inputs, overrides, onOverri
     <p className="cbs-month-reading" aria-live="polite"><b>{current.month}</b> · {current.result.ok ? <>Faturamento: {money(current.revenue)} · Reserva: <b>{money(current.result.reserveDelayed)}</b></> : 'Faturamento inválido. Corrija este mês para calcular a reserva.'}</p>
     </>}
     <p>{valid.length === 0 ? 'Corrija os faturamentos para calcular os meses. Nenhuma reserva foi calculada.' : valid.length < 12 ? 'Meses com faturamento inválido ficam sem ponto e sem ligação na linha. Corrija-os para completar a simulação.' : max === 0 ? 'Com estes faturamentos e hipóteses, o modelo não indica reserva adicional de prazo.' : uniform ? 'O valor se repete porque faturamento, prazos e hipóteses são iguais.' : 'A variação mostra o efeito dos faturamentos informados, mantendo os mesmos prazos.'} Os valores não se acumulam e não representam o saldo de caixa.</p>
-    <details className="cbs-details cbs-month-editor"><summary>Editar faturamento dos meses e ver valores</summary>
-      <p>Por padrão, o faturamento principal se repete nos 12 meses. Edite um mês para testar uma mudança; os demais continuam usando o valor principal.</p>
-      <button type="button" className="cx-action" onClick={() => onOverridesChange({})}>Usar faturamento principal em todos</button>
-      <div className="cbs-month-grid">{months.map((month, index) => <div key={month.month} className="cx-field"><label htmlFor={`cbs-month-${index}`}>{month.month} · faturamento</label><MoneyInput id={`cbs-month-${index}`} value={month.value} onChange={value => onOverridesChange(values => ({ ...values, [index]: value }))} aria-invalid={!month.result.ok} aria-describedby={`cbs-month-result-${index}`} /><p id={`cbs-month-result-${index}`}>{month.result.ok ? `Reserva: ${money(month.result.reserveDelayed)}` : 'Informe um faturamento positivo válido.'}</p></div>)}</div>
-    </details>
+    <p className="cbs-month-pointer">Para mudar o faturamento de um mês, use “Editar meses e ver valores” no quadro “Faturamento, giro e impacto tributário”.</p>
   </section>
 }
