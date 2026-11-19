@@ -1,4 +1,4 @@
-const {chromium}=require('playwright'),fs=require('node:fs/promises'),assert=require('node:assert/strict')
+const {chromium}=require('playwright'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict')
 const proof=require('./capture-visible-proof.cjs')
 const base=process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768',out=process.env.CAPTURE_QA_OUTPUT||'workspace-qa/visible-screens'
 ;(async()=>{
@@ -21,9 +21,26 @@ const base=process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768',out=process.env.C
      const main=page.locator('main.app')
      await main.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))})
      const before=await main.evaluate(el=>({dpr:devicePixelRatio,x:scrollX,y:scrollY,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height}))
+     const countBefore=await page.evaluate(()=>window.captureWrites.length)
      await main.locator('.screen-capture-bar .capture-button').click()
-     await page.waitForFunction(()=>window.captureWrites.length>0)
-     const bytes=await page.evaluate(()=>window.captureWrites.at(-1))
+     let waitingError=null
+     try{
+      await page.waitForFunction(n=>window.captureWrites.length>n ||
+       (!document.querySelector('.screen-capture-bar .capture-button')?.disabled && !!document.querySelector('.screen-capture-bar [role="status"]')?.textContent),countBefore)
+      await page.waitForFunction(()=>document.querySelector('.screen-capture-bar .capture-button')?.disabled===false)
+     }catch(error){waitingError=error.message}
+     const outcome=await main.evaluate(el=>{
+      const button=el.querySelector('.screen-capture-bar .capture-button'),box=el.getBoundingClientRect(),css=getComputedStyle(el)
+      return {writes:window.captureWrites.length,status:el.querySelector('.screen-capture-bar [role="status"]')?.textContent||'',busy:button?.disabled,geometry:{width:box.width,height:box.height,scrollHeight:el.scrollHeight,scrollWidth:el.scrollWidth,clientHeight:el.clientHeight,clientWidth:el.clientWidth,scrollTop:el.scrollTop,scrollLeft:el.scrollLeft,overflowX:css.overflowX,overflowY:css.overflowY}}
+     })
+     const prefix=route.replaceAll('/','-')+'-'+width+'-'+theme
+     await fs.writeFile(path.join(out,prefix+'-outcome.json'),JSON.stringify({route,width,theme,countBefore,waitingError,...outcome},null,2))
+     if(waitingError||outcome.writes!==countBefore+1){
+      await page.screenshot({path:path.join(out,prefix+'-error.png'),fullPage:false,scale:'device'})
+      throw new Error('Câmera da seção não gerou PNG novo: '+JSON.stringify({route,width,theme,countBefore,waitingError,...outcome}))
+     }
+     assert.match(outcome.status,/Imagem copiada/,'Status do produto confirma nova imagem')
+     const bytes=await page.evaluate(n=>window.captureWrites[n],countBefore)
      const result=await proof(page,main,bytes,out,route.replaceAll('/','-')+'-'+width+'-'+theme)
      assert.deepEqual(await main.evaluate(el=>({dpr:devicePixelRatio,x:scrollX,y:scrollY,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height})),before)
      if(route==='juros')assert.ok(result.geometry.regions.some(r=>r.kind==='curva'),'Curva CDI deve estar visível para prova')
