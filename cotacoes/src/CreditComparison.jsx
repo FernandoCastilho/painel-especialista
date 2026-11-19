@@ -86,7 +86,7 @@ function SharedFields({ shared, set, onClear }) {
   const update = (key, value) => set({ ...shared, [key]: value })
   // Linha mestra comum (19/11/2026): valor, prazo, carência, amortização, data e praça passam para as outras calculadoras de empréstimo.
   // Regime tributário e adicional do IR são só do Comparador.
-  return <div className="credit-shared-wrap"><LinhaMestra prefix="credit-shared" title="Dados comuns da demanda" values={shared} onChange={update} onClear={onClear} note="cada coluna pode ter condições próprias">
+  return <div className="credit-shared-wrap"><LinhaMestra prefix="credit-shared" title="Dados comuns da necessidade do cliente" values={shared} onChange={update} onClear={onClear} note="cada coluna pode ter condições próprias">
     <div className="lm-field"><span className="lm-label"><label htmlFor="credit-shared-regime">Regime tributário</label><CalculatorHelp title="Regime tributário da empresa"><p>Regime tributário da empresa que toma o crédito. Define o imposto da aplicação financeira e se juros, IOF e tarifas reduzem o IRPJ/CSLL.</p></CalculatorHelp></span><select id="credit-shared-regime" value={shared.regime} onChange={e => update('regime', e.target.value)}>{REGIMES.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}</select></div>
     {shared.regime !== 'simples' && <label className="credit-check lm-wide"><input type="checkbox" checked={shared.adicional} onChange={e => update('adicional', e.target.checked)} /> Paga o adicional de 10% do IRPJ (lucro acima de R$ 20 mil por mês): IRPJ + CSLL = {shared.adicional ? '34%' : '24%'}</label>}
   </LinhaMestra></div>
@@ -355,7 +355,7 @@ function InvestmentBlock({ alone, regime, adicional, product }) {
   </section>
 }
 
-function Presentation({ children, onClose, title = 'Demanda' }) {
+function Presentation({ children, onClose, title = 'Necessidade do Cliente' }) {
   const dialog = useRef(null)
   useEffect(() => {
     const element = dialog.current, trigger = document.activeElement, overflow = document.body.style.overflow
@@ -406,8 +406,8 @@ export default function CreditComparison({ onBack }) {
   const combinedEmail = showResults && allOk && count > 1
     ? emailDraft(results.map((result, index) => ({ result, index })), emailContext) : undefined
   return <div className="credit-workspace"><section className="cx bw credit-comparison credit-bw" aria-labelledby="credit-title">
-    <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="credit-title"><span>Demanda</span></h2></div>
-    <nav className="bw-nav" aria-label="Área da demanda">
+    <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="credit-title"><span>Necessidade do Cliente</span></h2></div>
+    <nav className="bw-nav" aria-label="Área da necessidade do cliente">
       <button type="button" aria-pressed={area === 'compare'} onClick={() => setArea('compare')}>{count === 1 ? 'Cotar operação' : 'Comparar operações'}</button>
       <button type="button" aria-pressed={area === 'rules'} onClick={() => setArea('rules')}>Premissas e fontes</button>
     </nav></div>

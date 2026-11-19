@@ -95,3 +95,12 @@
 @media (max-width:639px) { .fm-grade { grid-template-columns:repeat(2, minmax(0, 1fr)); padding:8px; } }
 .fm-fontes-titulo { margin:12px 0 0; font-size:.8rem; color:var(--fg); font-weight:600; }
 @media (max-width:639px) { .fm-grade { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+
+/* Agrupamento exclusivo do catálogo; não altera telas ou contas das calculadoras. */
+.calc-catalog .calc-catalog-groups { display:grid; gap:24px; min-width:0; }
+.calc-catalog .calc-catalog-group { min-width:0; border-top:1px solid var(--line); padding-top:16px; }
+.calc-catalog .calc-catalog-group h3 { margin:0; color:var(--fg); font-size:1rem; line-height:1.4; }
+.calc-catalog .calc-group-description { margin:4px 0 12px; color:var(--mut); font-size:.85rem; line-height:1.5; }
+.calc-catalog .calc-catalog-group .cx-tiles { grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); }
+.calc-catalog .calc-catalog-group .cx-tile { min-width:0; }
+.calc-catalog .calc-catalog-group .cx-tile-text { overflow-wrap:anywhere; }
