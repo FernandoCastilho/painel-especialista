@@ -37,7 +37,7 @@ const CALCS = [
   { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, IBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
   { id: 'cdi-dolar', title: 'CDI x Dólar', sub: 'Em quanto tempo o CDI líquido alcança a alta do dólar', Icon: CdiDolarIcon },
-  { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: crédito na empresa x distribuir dividendos hoje', Icon: DividendosEmprestimoIcon },
+  { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: eficiência de pagar o dividendo com crédito na empresa', Icon: DividendosEmprestimoIcon },
   { id: 'emprestimo-4131', title: 'Empréstimo externo (4131)', sub: 'No formato da cotação: dólar ou euro, parcelas e NDF', Icon: Emprestimo4131Icon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
