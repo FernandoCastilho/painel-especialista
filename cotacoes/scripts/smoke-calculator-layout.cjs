@@ -189,10 +189,11 @@ async function assertHelp(page, section, label, directory) {
 
 async function fillScenario(page, section, route) {
   if (route === 'giro') {
-    await section.getByText('Datas e praça do contrato', { exact: true }).click()
+    // Linha mestra comum (19/11/2026): o caso de referência é digitado nela (R$ 100.000,00 em 12 meses, sem carência).
+    await section.locator('#cx-value').fill('100.000,00'); await section.locator('#cx-term').fill('12'); await section.locator('#cx-grace').fill('0')
+    await section.getByLabel('Amortização', { exact: true }).selectOption('price')
     await section.locator('#cx-start').fill('2026-11-06')
     await section.locator('#cx-firstDue').fill('2026-12-06')
-    await section.getByText('Datas e praça do contrato', { exact: true }).click()
     const simulate = () => section.getByRole('button', { name: 'Simular', exact: true }).click()
     const amount = async label => normalize(await section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').innerText())
     await simulate()
@@ -373,7 +374,8 @@ async function assertComparatorFamily(browser) {
         await page.locator(anchor).first().waitFor()
         if (route === 'giro') {
           const giro = page.locator('.giro-screen')
-          assert.equal(await giro.evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)', 'Capital de Giro segue branco nos dois temas')
+          // Desde 19/11/2026 o Capital de Giro usa a moldura e as cores das outras calculadoras, nos dois temas.
+          assert.equal(await giro.evaluate(element => element.classList.contains('bw')), true, 'Capital de Giro na moldura padrão')
           await assertWorkspace(page, giro, `Capital de Giro · ${width}px · ${theme}`)
           if (width === 390 || width === 1440) await page.screenshot({ path: path.join(out, `giro-${width}-${theme}.png`), fullPage: true })
           continue

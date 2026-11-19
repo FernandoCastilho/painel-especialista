@@ -1,220 +1,150 @@
-main.app-calculators:has(> .giro-screen) { background: #fff; }
-
-.giro-screen {
-  --giro-navy: #000f34;
-  --giro-blue: #003ffd;
-  --giro-orange: #fe760b;
-  --giro-border: #bdcbea;
-  --giro-control: #8494b0;
-  --giro-muted: #4d5a70;
-  box-sizing: border-box;
-  width: 100%;
-  padding: clamp(12px, 2vw, 28px);
-  color: var(--giro-navy);
-  background: #fff;
-  color-scheme: light;
-  font-family: Inter, system-ui, sans-serif;
-}
-
+/* Capital de Giro no padrão das calculadoras (19/11/2026): mesma moldura e mesmas cores do BNDES, nos dois temas.
+   Antes a tela era branca nos dois temas (decisão de 17/11/2026, revista a pedido do Fernando em 19/11/2026).
+   Cores pelas variáveis da moldura .bw (BndesWorkspace.css). Só apresentação: nenhuma regra de cálculo mora aqui. */
 .giro-screen *, .giro-screen *::before, .giro-screen *::after { box-sizing: border-box; }
+:root[data-theme] body .giro-screen { font-variant-numeric: tabular-nums; }
+:root[data-theme] body .giro-screen > .giro-columns,
+:root[data-theme] body .giro-screen > .giro-installments { margin-left: 16px; margin-right: 16px; }
+:root[data-theme] body .giro-screen > .giro-columns { margin-top: 16px; }
+:root[data-theme] body .giro-screen > .giro-installments { margin-bottom: 16px; width: auto; }
 
-.giro-back {
-  min-height: 44px;
-  padding: 0 8px 0 0;
-  background: transparent;
-  border: 0;
-  color: var(--giro-blue);
-  font: inherit;
-  font-weight: 650;
-  cursor: pointer;
-}
-
-.giro-header { margin: 8px 0 24px; }
-.giro-header > p {
-  margin: 0 0 12px;
-  padding-left: 14px;
-  border-left: 4px solid var(--giro-orange);
-  font-size: clamp(16px, 1.6vw, 22px);
-  font-weight: 750;
-}
-.giro-header > div { display: flex; align-items: center; gap: 12px; }
-.giro-header .fi-help > button {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--giro-blue);
-  font: 650 .88rem/1 system-ui, sans-serif;
-  cursor: pointer;
-}
-.giro-header .fi-help > button::before {
-  content: '';
-  position: absolute;
-  inset: 11px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-}
-.giro-header h2 { margin: 0; color: inherit; font-size: clamp(28px, 4vw, 54px); letter-spacing: -.032em; line-height: 1.1; }
-
-.giro-columns { display: grid; grid-template-columns: minmax(0, 62fr) minmax(0, 38fr); gap: 20px; align-items: start; }
+.giro-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .giro-form { display: grid; gap: 14px; min-width: 0; }
-.giro-card {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  margin: 0;
-  padding: 16px 20px;
-  border: 1px solid var(--giro-border);
-  border-radius: 10px;
-  background: #fff;
+
+/* Quadros de entrada: faixa azul-marinho, título branco e linha laranja (igual ao BNDES e à linha mestra). */
+:root[data-theme] body .giro-screen .giro-card {
+  display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0 0 14px; overflow: hidden;
+  border: 1px solid var(--bw-line); border-radius: 10px; background: var(--bw-card); color: var(--bw-ink);
 }
-.giro-card > legend {
-  float: left;
-  width: 100%;
-  margin: 0 0 8px;
-  padding: 0;
-  color: inherit;
-  font-size: clamp(18px, 1.8vw, 26px);
-  font-weight: 760;
-  line-height: 1.2;
+:root[data-theme] body .giro-screen .giro-card > legend {
+  float: left; width: 100%; margin: 0 0 12px; padding: 10px 14px; background: var(--cp-navy); color: #fff;
+  border-bottom: 3px solid var(--cp-orange); font-size: .95rem; font-weight: 700; line-height: 1.3;
 }
+:root[data-theme] body .giro-screen .giro-card > :not(legend) { margin-left: 14px; margin-right: 14px; clear: both; }
+
 .giro-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .giro-grid-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .giro-field { min-width: 0; }
-.giro-field > label, .giro-cost-head, .giro-cost-label { display: block; font-weight: 650; line-height: 1.2; }
-.giro-field > label { margin: 0 0 5px; }
-.giro-screen input:not([type=checkbox]), .giro-screen select, .giro-readonly {
-  display: block;
-  min-width: 0;
-  width: 100%;
-  min-height: 44px;
-  margin: 0;
-  padding: 7px 10px;
-  border: 1px solid var(--giro-control);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--giro-navy);
-  font: inherit;
-  line-height: 1.2;
+:root[data-theme] body .giro-screen :is(.giro-field > label, .giro-cost-label) { display: block; color: var(--bw-mut); font-size: .8125rem; font-weight: 500; line-height: 1.25; }
+:root[data-theme] body .giro-screen .giro-field > label { margin: 0 0 6px; }
+:root[data-theme] body .giro-screen .giro-cost-label { color: var(--bw-ink); }
+
+/* Campos: mesma cor, borda e cantos dos demais campos das calculadoras. Altura pela regra comum (36 px no computador, 44 px no celular). */
+:root[data-theme] body .giro-screen :is(.giro-card input:where(:not([type=checkbox])), .giro-card select, .giro-readonly) {
+  display: block; min-width: 0; width: 100%; min-height: 44px; margin: 0; padding: 7px 10px;
+  border: 1px solid var(--bw-field-line); border-radius: 8px; background: var(--cx-field-bg); color: var(--bw-ink); font: inherit; font-size: .875rem; line-height: 1.2;
 }
-.giro-screen input::placeholder { color: var(--giro-muted); opacity: 1; }
-.giro-screen input:disabled { color: var(--giro-muted); background: #f5f7fc; }
-.giro-screen input[aria-invalid=true], .giro-screen select[aria-invalid=true] { border-color: #a32520; }
-.giro-screen :is(button, summary, input, select, [tabindex]):focus-visible { outline: 2px solid var(--giro-blue); outline-offset: 2px; }
-.giro-screen .money-wrap, .giro-input-unit {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  padding: 0 9px;
-  border: 1px solid var(--giro-control);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--giro-navy);
+:root[data-theme] body .giro-screen input::placeholder { color: var(--bw-mut); opacity: 1; }
+:root[data-theme] body .giro-screen input[readonly] { background: var(--bw-soft); }
+:root[data-theme] body .giro-screen :is(input, select)[aria-invalid=true] { border-color: var(--bw-bad-ink); }
+:root[data-theme] body .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) {
+  display: flex; align-items: center; min-width: 0; padding: 0 0 0 10px; border: 1px solid var(--bw-field-line); border-radius: 8px;
+  background: var(--cx-field-bg); color: var(--bw-ink);
 }
-.giro-screen .money-wrap > i { position: static; transform: none; color: inherit; font: inherit; white-space: nowrap; }
-.giro-screen .money-wrap input, .giro-screen .giro-input-unit input, .giro-screen .giro-input-unit select { border: 0; padding-left: 3px; padding-right: 3px; }
-.giro-screen .money-wrap input { padding-left: 5px; }
-.giro-screen .giro-input-unit select { width: auto; flex: 0 0 auto; }
-.giro-input-unit span { padding-left: 3px; white-space: nowrap; }
+:root[data-theme] body .giro-screen .giro-card .money-wrap > i { position: static; transform: none; color: var(--bw-mut); font-style: normal; font-size: .8rem; white-space: nowrap; }
+:root[data-theme] body .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) :is(input, select) { border: 0; min-height: 34px; padding-left: 6px; padding-right: 6px; background: transparent; }
+:root[data-theme] body .giro-screen .giro-input-unit select { width: auto; flex: 0 0 auto; }
+:root[data-theme] body .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) input { flex: 1 1 auto; min-width: 0; width: 100%; }
 .giro-readonly { display: flex; align-items: center; }
 .giro-rate { width: min(100%, 320px); margin-bottom: 9px; }
 .giro-rate .giro-field { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 10px; }
 .giro-rate .giro-error { grid-column: 1 / -1; }
-.giro-rate .giro-field label { margin: 0; }
+:root[data-theme] body .giro-screen .giro-rate .giro-field label { margin: 0; }
 .giro-cost { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .9fr) minmax(0, 1.05fr); align-items: start; gap: 9px; }
-.giro-cost + .giro-cost { margin-top: 4px; }
+.giro-cost + .giro-cost { margin-top: 6px; }
+:root[data-theme] body .giro-screen .giro-cost-head { color: var(--bw-mut); font-size: .8125rem; font-weight: 500; }
 .giro-cost-head { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .9fr) minmax(0, 1.05fr); gap: 9px; margin-bottom: 5px; }
-.giro-cost-label { padding: 10px 7px; border: 1px solid var(--giro-control); border-radius: 6px; min-height: 44px; overflow-wrap: anywhere; }
+:root[data-theme] body .giro-screen .giro-cost-label { padding: 9px 0; min-height: 36px; overflow-wrap: anywhere; }
 .giro-guarantee { margin-top: 10px; }
 .giro-guarantee .giro-field { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; }
-.giro-guarantee label { margin: 0; }
-.giro-settings { margin-top: 4px; font-size: .86rem; }
-.giro-settings summary { width: fit-content; max-width: 100%; padding: 7px 0; color: var(--giro-blue); cursor: pointer; }
-.giro-settings p, .giro-note { margin: 8px 0 0; color: var(--giro-muted); font-size: .82rem; }
+:root[data-theme] body .giro-screen .giro-guarantee label { margin: 0; }
+:root[data-theme] body .giro-screen .giro-settings { margin-top: 4px; font-size: .86rem; }
+:root[data-theme] body .giro-screen .giro-settings summary { width: fit-content; max-width: 100%; padding: 7px 0; color: var(--bw-link); cursor: pointer; }
+:root[data-theme] body .giro-screen :is(.giro-settings p, .giro-note, .giro-hint) { display: block; margin: 6px 0 0; color: var(--bw-mut); font-size: .78rem; }
 .giro-iof { display: grid; gap: 8px; }
 .giro-iof > label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
-.giro-error { display: block; margin-top: 4px; color: #a32520; }
-.giro-simulate {
-  background: var(--giro-blue);
-  color: #fff;
-  min-height: 48px;
-  border: 0;
-  border-radius: 7px;
-  font: inherit;
-  font-size: 1.2rem;
-  font-weight: 750;
-  cursor: pointer;
-}
-.giro-simulate:hover { background: #002cc7; }
+:root[data-theme] body .giro-screen .giro-error { display: block; margin-top: 4px; color: var(--bw-bad-ink); font-size: .78rem; }
 
-.giro-result {
-  min-width: 0;
-  padding: 19px clamp(14px, 2vw, 25px);
-  border-radius: 10px;
-  background: var(--giro-navy);
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-}
-.giro-result h3 { margin: 0 0 22px; color: inherit; font-size: clamp(18px, 2vw, 28px); line-height: 1.15; }
-.giro-result p { margin: 0 0 20px; color: inherit; font-size: clamp(14px, 1.25vw, 18px); }
-.giro-result p strong { display: block; margin-top: 3px; color: inherit; font-size: clamp(23px, 3.7vw, 52px); font-weight: 800; letter-spacing: -.045em; overflow-wrap: anywhere; line-height: 1.1; }
-.giro-result dl { display: block; margin: 0; }
-.giro-result dl > div { display: flex; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 6px 10px; padding: 10px 0; border-top: 1px solid #8796b2; }
-.giro-result :is(dt, dd) { margin: 0; color: inherit; font-size: clamp(14px, 1.25vw, 18px); }
-.giro-result dd { text-align: right; white-space: nowrap; }
-.giro-result .giro-cet { font-weight: 760; }
-.giro-result small { display: block; margin-top: 8px; color: #e5ebfa; }
+/* Botão principal: o mesmo das outras calculadoras (regra comum em CalcUnificado.css). */
+:root[data-theme] body .giro-screen .giro-simulate { justify-self: start; min-width: 160px; }
 
-.giro-installments {
-  display: block;
-  width: 100%;
-  margin-top: 13px;
-  border: 1px solid var(--giro-border);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--giro-blue);
-  text-align: left;
-}
-.giro-installments > summary, .giro-installments-disabled {
-  min-height: 46px;
-  padding: 10px 14px;
-  font: inherit;
-  font-weight: 750;
-}
+/* Resultado: o único quadro com borda laranja. */
+:root[data-theme] body main.app .giro-screen .giro-result.calc-result-shell { min-width: 0; padding: 0; overflow: hidden; border: 2px solid var(--cp-orange); border-radius: 12px; background: var(--bw-card); color: var(--bw-ink); }
+:root[data-theme] body .giro-screen .giro-result > h3 { margin: 0; padding: 12px 16px; background: var(--cp-navy); color: #fff; font-size: .95rem; font-weight: 700; line-height: 1.3; letter-spacing: 0; text-transform: none; }
+:root[data-theme] body .giro-screen .giro-result > h3::after { content: none; }
+:root[data-theme] body .giro-screen .giro-result-body { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; }
+:root[data-theme] body .giro-screen .giro-result small.giro-result-alert { position: relative; display: block; margin: 0; padding: 10px 12px; border-left: 4px solid var(--bw-link); border-radius: 6px; background: var(--bw-soft); color: var(--bw-ink); font-size: .875rem; line-height: 1.4; }
+:root[data-theme] body .giro-screen .giro-result small.giro-result-alert.is-warning { padding-left: 40px; border-left-color: #b86e00; background: var(--bw-warm-soft); color: var(--bw-warn-ink); }
+:root[data-theme] body .giro-screen .giro-result small.giro-result-alert.is-warning::before { content: '!'; position: absolute; left: 12px; top: 10px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #b86e00; color: #fff; font-weight: 800; font-size: .8rem; line-height: 1; }
+:root[data-theme] body .giro-screen .giro-answer { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; margin: 0 0 4px; }
+:root[data-theme] body .giro-screen .giro-answer > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 12px; border-radius: 10px; }
+:root[data-theme] body .giro-screen .giro-answer small { font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+:root[data-theme] body .giro-screen .giro-answer span { font-size: .75rem; line-height: 1.3; }
+:root[data-theme] body .giro-screen .giro-answer-main { background: var(--cp-navy); color: #fff; border: 1px solid #34507f; }
+:root[data-theme] body .giro-screen .giro-answer-main :is(small, span) { color: #c9d6ee; }
+:root[data-theme] body .giro-screen .giro-answer-main b { font-size: 1.6rem; line-height: 1.1; font-weight: 800; white-space: nowrap; }
+:root[data-theme] body .giro-screen .giro-answer-side { border: 1px solid var(--bw-line); background: var(--bw-soft); }
+:root[data-theme] body .giro-screen .giro-answer-side :is(small, span) { color: var(--bw-mut); }
+:root[data-theme] body .giro-screen .giro-answer-side b { font-size: 1.15rem; line-height: 1.2; white-space: nowrap; }
+:root[data-theme] body .giro-screen .giro-result-group { margin: 8px 0 0; color: var(--bw-mut); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+:root[data-theme] body .giro-screen .giro-result dl { display: block; margin: 0; }
+:root[data-theme] body .giro-screen .giro-result dl > div { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 10px; padding: 8px 0; border-top: 1px solid var(--bw-line); }
+:root[data-theme] body .giro-screen .giro-result :is(dt, dd) { margin: 0; color: inherit; font-size: .9rem; }
+:root[data-theme] body .giro-screen .giro-result dd { text-align: right; white-space: nowrap; }
+:root[data-theme] body .giro-screen .giro-result .giro-cet { font-weight: 600; }
+:root[data-theme] body .giro-screen .giro-result .giro-total { border-top: 2px solid var(--bw-strong-line); font-weight: 800; }
+
+/* Parcelas e comparação de amortizações, recolhidas. */
+:root[data-theme] body .giro-screen .giro-installments { display: block; margin-top: 16px; border: 1px solid var(--bw-line); border-radius: 10px; background: var(--bw-card); color: var(--bw-ink); text-align: left; }
+.giro-installments > summary, .giro-installments-disabled { min-height: 44px; padding: 10px 14px; font: inherit; font-weight: 700; }
 .giro-installments > summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; }
 .giro-installments > summary::-webkit-details-marker { display: none; }
 .giro-installments > summary::after { content: '›'; font-size: 1.55em; line-height: 1; }
 .giro-installments[open] > summary::after { transform: rotate(90deg); }
-.giro-installments-disabled { color: var(--giro-muted); opacity: 1; }
-.giro-table-scroll { overflow: auto; padding: 0 12px 12px; color: var(--giro-navy); }
-.giro-table-scroll table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.giro-table-scroll :is(th, td) { padding: 8px; border-bottom: 1px solid var(--giro-border); text-align: right; white-space: nowrap; }
+:root[data-theme] body .giro-screen .giro-installments-disabled { color: var(--bw-mut); opacity: 1; }
+:root[data-theme] body .giro-screen .giro-table-scroll { overflow: auto; padding: 0 12px 12px; color: var(--bw-ink); }
+.giro-table-scroll table { width: 100%; border-collapse: collapse; }
+:root[data-theme] body .giro-screen .giro-table-scroll :is(th, td) { padding: 8px; border-bottom: 1px solid var(--bw-line); text-align: right; white-space: nowrap; }
 .giro-table-scroll th:first-child { text-align: left; }
-.giro-rounding { margin: 0 12px; color: var(--giro-muted); font-size: .82rem; }
+:root[data-theme] body .giro-screen .giro-rounding { margin: 0 12px; color: var(--bw-mut); font-size: .82rem; }
 .giro-comparison { margin: 4px 12px 8px; }
 
+/* Dentro do modo Apresentar (sl-calc-giro): uma coluna, sem botões de navegação. */
 .sl-calc-giro .giro-columns { grid-template-columns: minmax(0, 1fr); }
 .sl-calc-giro .giro-form details.giro-settings { display: block; }
 .sl-calc-giro :is(.giro-back, .giro-header, .giro-simulate, .giro-installments) { display: none; }
 
-@media (max-width: 870px) {
-  .giro-columns { grid-template-columns: minmax(0, 1fr); gap: 13px; }
+/* Tela média (871 a 1199 px): resultado ao lado dos dados, como antes. */
+@media (min-width: 871px) and (max-width: 1199px) {
+  .giro-columns { grid-template-columns: minmax(0, 62fr) minmax(0, 38fr); }
+}
+/* Computador largo: resultado numa coluna fixa ao lado dos dados e sempre à vista. */
+@media (min-width: 1200px) {
+  :root[data-theme] body main.app-calculators > .giro-screen .giro-columns { grid-template-columns: minmax(0, 1fr) minmax(360px, 420px); }
+  :root[data-theme] body main.app-calculators > .giro-screen .giro-result { position: sticky; top: 88px; }
 }
 @media (max-width: 540px) {
-  .giro-card { padding: 13px 11px; }
   .giro-grid:not(.giro-grid-pair) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .giro-grid:not(.giro-grid-pair) > :first-child { grid-column: 1 / -1; }
   .giro-cost, .giro-cost-head { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) minmax(0, 1fr); gap: 4px; font-size: .84rem; }
-  .giro-cost select, .giro-cost .giro-readonly, .giro-cost .money-wrap { padding-left: 4px; padding-right: 3px; }
-  .giro-cost-label { padding: 8px 4px; }
-  .giro-input-unit { padding: 0 5px; }
+  :root[data-theme] body .giro-screen .giro-answer { grid-template-columns: 1fr; }
 }
 @media (max-width: 360px) {
-  .giro-grid:has(#cx-grace) > :last-child { grid-column: 1 / -1; }
+  .giro-grid, .giro-grid-pair { grid-template-columns: minmax(0, 1fr); }
   .giro-rate .giro-field { grid-template-columns: minmax(0, 1fr); }
   .giro-cost-head { display: none; }
   .giro-cost { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: 8px; }
-  .giro-cost-label { grid-column: 1 / -1; min-height: 0; padding: 1px 0; border: 0; }
+  :root[data-theme] body .giro-screen .giro-cost-label { grid-column: 1 / -1; min-height: 0; padding: 1px 0; }
+}
+
+/* Campo com prefixo (R$) ou unidade (% a.m.): a borda fica só na moldura, como nos outros campos. Peso extra (#u) para vencer
+   a regra comum de altura dos campos. */
+main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) { min-height: 36px; }
+main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) :is(input, select) { height: 34px; min-height: 34px; padding-top: 0; padding-bottom: 0; border: 0; background: transparent; }
+@media (max-width: 1000px) {
+  main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) { min-height: 44px; }
+  main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-input-unit) :is(input, select) { height: 42px; min-height: 42px; }
+}
+@media (max-width: 540px) {
+  :root[data-theme] body .giro-screen .giro-cost .giro-readonly { padding-left: 6px; padding-right: 4px; font-size: .8rem; }
 }

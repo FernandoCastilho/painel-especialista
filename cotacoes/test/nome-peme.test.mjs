@@ -4,15 +4,14 @@ import { readFile, readdir } from 'node:fs/promises'
 
 // Marca visível nas telas: PME (Painel Especializado no Mercado), desde 12/11/2026. PEME fica só na identidade interna
 // (aplicativo instalado, assunto do e-mail de sugestões e alertas do Teams), para não quebrar instalação e filtros já feitos.
-test('marca do topo permanece PME e a referência aprovada do Giro tem o próprio cabeçalho', async () => {
+test('marca do topo permanece PME, inclusive no Capital de Giro', async () => {
   const src = new URL('../src/', import.meta.url)
   const arquivos = (await readdir(src, { recursive: true })).filter(nome => /\.(jsx?|css)$/.test(nome)).map(nome => new URL(nome, src))
   arquivos.push(new URL('../index.html', import.meta.url), new URL('../public/manifest.webmanifest', import.meta.url))
   const comNomeAntigo = []
   for (const arquivo of arquivos) if (/Painel (do )?Especialista/i.test(await readFile(arquivo, 'utf8'))) comNomeAntigo.push(arquivo.pathname.split('/cotacoes/')[1])
-  // O cabeçalho local do Giro segue o desenho solicitado; a marca global continua PME.
-  assert.deepEqual(comNomeAntigo, ['src/CapitalDeGiro.jsx'])
-  assert.match(await readFile(new URL('CapitalDeGiro.jsx', src), 'utf8'), /<p>Painel do Especialista<\/p>/)
+  // Desde 19/11/2026 o Capital de Giro usa o cabeçalho comum das calculadoras ("PME Capital de giro").
+  assert.deepEqual(comNomeAntigo, [])
   const topo = await readFile(new URL('TopBar.jsx', src), 'utf8')
   assert.match(topo, /className="topbar-brand" title="Painel Especializado no Mercado"/)
   assert.match(topo, />PME<\/abbr>/)

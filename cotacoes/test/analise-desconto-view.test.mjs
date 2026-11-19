@@ -25,7 +25,11 @@ async function compile(file, imports = {}) {
   return module.exports
 }
 const MoneyInput = await compile('MoneyInput.jsx', { './moneyInput.js': money })
-const component = await compile('AnaliseDesconto.jsx', { './iofRules.js': iof, './MoneyInput.jsx': MoneyInput, './analiseDesconto.js': engine, './CalculatorHelp.jsx': CalculatorHelp, './pracaContrato.js': praca, './format.js': await import('../src/format.js') })
+// Linha mestra comum (19/11/2026): no teste, data de 05/11/2026 (a do exemplo de referência) e padrão de R$ 1.000.000,00.
+const lm = await import('../src/linhaMestra.js')
+const lmTest = { ...lm, lmLoad: () => lm.lmDefaults('2026-11-05') }
+const LinhaMestra = await compile('LinhaMestra.jsx', { './MoneyInput.jsx': MoneyInput, './CalculatorHelp.jsx': CalculatorHelp, './pracaContrato.js': praca, './linhaMestra.js': lmTest })
+const component = await compile('AnaliseDesconto.jsx', { './iofRules.js': iof, './MoneyInput.jsx': MoneyInput, './analiseDesconto.js': engine, './CalculatorHelp.jsx': CalculatorHelp, './pracaContrato.js': praca, './format.js': await import('../src/format.js'), './contaGarantida.js': await import('../src/contaGarantida.js'), './LinhaMestra.jsx': LinhaMestra, './linhaMestra.js': lmTest })
 function nodes(node) {
   if (!node || typeof node !== 'object') return []
   if (Array.isArray(node)) return node.flatMap(nodes)

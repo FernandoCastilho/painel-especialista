@@ -1,0 +1,87 @@
+/* Padrão único das calculadoras (pedido do Fernando em 19/11/2026, modelo: calculadora do BNDES · Finame).
+   Uma regra para botões, selecionado, voltar, ícone de ampliar, "?" e rótulos, em todas as calculadoras.
+   Só apresentação: nenhuma regra de cálculo mora aqui.
+   O prefixo main.app.app-calculators:not(#u) pesa mais que as camadas de cada calculadora (carregadas depois, sob demanda),
+   sem usar !important. O #u não existe na página: só dá o peso. */
+
+/* ── Cores ── */
+main.app.app-calculators {
+  --u-orange:#ff6200;      /* laranja das linhas das faixas: selecionado e botão principal */
+  --u-orange-hover:#ff7a26;
+  --u-on-orange:#10284c;   /* texto sobre o laranja (contraste acima de 4,5:1) */
+  --u-mut:#bbc5d6;         /* cinza das calculadoras (o mesmo do BNDES), também fora da moldura .bw */
+}
+:root[data-theme=light] main.app.app-calculators { --u-mut:#42526b; }
+
+/* ── Selecionado: um só, em laranja ── */
+/* Grupos de opções (prazos, tipo de taxa, quantidade de comparações, modo da conta garantida, abas do topo do BNDES). */
+main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos, .bw-nav) {
+  display:inline-flex; flex-wrap:wrap; gap:6px; padding:0; border:0; background:none; box-shadow:none;
+}
+main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos) > button {
+  height:auto; min-height:36px; padding:6px 14px; margin:0; border:1px solid var(--bw-field-line, var(--line)); border-radius:8px;
+  background:transparent; color:var(--bw-ink, var(--fg)); font:inherit; font-size:.8125rem; font-weight:600; line-height:1.2; box-shadow:none;
+}
+main.app.app-calculators:not(#u) .bw-nav > button {
+  min-height:32px; padding:6px 12px; margin:0; border:1px solid transparent; border-radius:8px;
+  background:transparent; color:inherit; font:inherit; font-size:.8125rem; font-weight:600; line-height:1.2; box-shadow:none; opacity:.9;
+}
+main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos, .bw-nav) > button:is([aria-pressed=true], [aria-selected=true], [aria-current=page], [aria-current=true]) {
+  background:var(--u-orange); border-color:var(--u-orange); color:var(--u-on-orange); font-weight:700; opacity:1;
+}
+main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos, .bw-nav) > button:not([aria-pressed=true], [aria-selected=true], [aria-current=page], [aria-current=true]):hover:not(:disabled) {
+  border-color:var(--u-orange);
+}
+
+/* ── Botão principal (Simular, Comparar modalidades, Calcular taxa): laranja, letra 14 px ── */
+main.app.app-calculators:not(#u) :is(.giro-simulate, .credit-compare, .e4-meta-btn) {
+  min-height:44px; padding:8px 20px; border:1px solid var(--u-orange); border-radius:8px;
+  background:var(--u-orange); color:var(--u-on-orange); font:inherit; font-size:.875rem; font-weight:700; line-height:1.2; cursor:pointer; box-shadow:none;
+}
+main.app.app-calculators:not(#u) :is(.giro-simulate, .credit-compare, .e4-meta-btn):hover:not(:disabled) { background:var(--u-orange-hover); border-color:var(--u-orange-hover); }
+
+/* ── Botões secundários: contorno, letra 13 px ── */
+main.app.app-calculators:not(#u) :is(.cx-action, .bnp-launch, .bnprint-launch, .e4-copiar, .cg-button, .desconto-titles > button, fieldset.cx-form > button, .ft-actions > button, .ac-linha > button, .cx-field > button) {
+  height:auto; min-height:36px; padding:6px 14px; border:1px solid var(--bw-field-line, var(--line)); border-radius:8px;
+  background:transparent; color:var(--bw-ink, var(--fg)); font:inherit; font-size:.8125rem; font-weight:600; line-height:1.2; box-shadow:none;
+}
+main.app.app-calculators:not(#u) :is(.cx-action, .bnp-launch, .bnprint-launch, .e4-copiar, .cg-button, .desconto-titles > button, fieldset.cx-form > button, .ft-actions > button, .ac-linha > button, .cx-field > button):hover:not(:disabled) {
+  border-color:var(--u-orange); background:var(--bw-soft, var(--surface-2));
+}
+main.app.app-calculators:not(#u) :is(.cx-action, .cg-button, .desconto-titles > button, fieldset.cx-form > button):disabled { opacity:.5; }
+
+/* ── Voltar ("‹ Calculadoras", "Nova simulação"): texto simples, um tom só ── */
+main.app.app-calculators:not(#u) .cx-back {
+  min-height:44px; padding:0 12px 0 0; border:0; border-radius:0; background:transparent; box-shadow:none;
+  color:var(--bw-mut, var(--u-mut)); font:inherit; font-size:.875rem; font-weight:500;
+}
+main.app.app-calculators:not(#u) .cx-back:hover { color:var(--bw-ink, var(--fg)); }
+
+/* ── Ícone de ampliar: um só desenho (quadrado de 32 px com contorno); a cor acompanha o fundo ── */
+main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle) {
+  display:inline-grid; place-items:center; width:32px; min-width:32px; height:32px; min-height:32px; padding:0;
+  border:1px solid color-mix(in srgb, currentColor 45%, transparent); border-radius:8px; background:transparent; box-shadow:none;
+}
+main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle):hover { background:color-mix(in srgb, currentColor 12%, transparent); }
+@media (max-width:999px), (pointer:coarse) {
+  main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle) { width:44px; min-width:44px; height:44px; min-height:44px; }
+}
+
+/* ── "?" de ajuda: sem fundo próprio; a cor acompanha o fundo ── */
+main.app.app-calculators:not(#u) .fi-help > button { background:transparent; box-shadow:none; }
+
+/* ── Rótulos dos campos: 13 px, cinza ── */
+main.app.app-calculators:not(#u) :is(.cx-field-label > label, .cx-field > label, .fm-rotulo > label, .bw-profile > label, .giro-field > label, .credit-field > span:first-child, .credit-label > label, .lm-label > label) {
+  color:var(--bw-mut, var(--mut)); font-size:.8125rem; font-weight:500; line-height:1.25; letter-spacing:0; text-transform:none;
+}
+
+/* ── Letra dos campos: 14 px no computador; 16 px no celular (abaixo disso o iPhone aproxima a tela ao tocar) ── */
+@media (min-width:1001px) {
+  main.app.app-calculators:not(#u) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]), select, textarea) { font-size:.875rem; }
+}
+
+/* ── Toque: no celular, opções e botões com 44 px ── */
+@media (max-width:999px), (pointer:coarse) {
+  main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos) > button,
+  main.app.app-calculators:not(#u) :is(.cx-action, .bnp-launch, .bnprint-launch, .e4-copiar, .cg-button, .desconto-titles > button, fieldset.cx-form > button, .ft-actions > button, .ac-linha > button, .cx-field > button, .bw-nav > button) { min-height:44px; }
+}
