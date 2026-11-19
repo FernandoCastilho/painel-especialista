@@ -9,7 +9,9 @@ const fidelity = process.env.CAPTURE_REFERENCE_MODE === 'device' ? require('./sm
 const out = process.env.CAPTURE_QA_OUTPUT || 'workspace-qa/capturas'
 ;(async()=>{
  await fs.mkdir(out,{recursive:true})
- const browser=await chromium.launch(require('./smoke-launch.cjs')())
+ const launchOptions=require('./capture-raster-options.cjs')(require('./smoke-launch.cjs')())
+ const browser=await chromium.launch(launchOptions)
+ if(process.env.CAPTURE_REFERENCE_MODE==='device') await fs.writeFile(path.join(out,'raster-process.json'),JSON.stringify({mode:process.env.CAPTURE_TEXT_RASTER||'normal',launchOptions,browserVersion:browser.version()},null,2))
  try {
   for(const width of [390,1440]) for(const theme of ['light','dark']){
    const page=await browser.newPage({viewport:{width,height:950},colorScheme:theme,serviceWorkers:'block',reducedMotion:'reduce'})
@@ -35,6 +37,16 @@ const out = process.env.CAPTURE_QA_OUTPUT || 'workspace-qa/capturas'
       const image=document.createElement('img');image.id='capture-local-logo';image.src=new URL('bank-logos/itau.png',document.baseURI).href;image.width=40;image.height=40
       el.append(image);await image.decode()
     })
+    if(process.env.CAPTURE_REFERENCE_MODE==='device'){
+      const typography=await chart.evaluate(async el=>{
+        await document.fonts.ready
+        return {dpr:devicePixelRatio,fontsStatus:document.fonts.status,regions:['h3','.pct'].map(selector=>{
+          const node=el.querySelector(selector),css=getComputedStyle(node),b=node.getBoundingClientRect()
+          return {selector,text:node.textContent,box:{x:b.x,y:b.y,width:b.width,height:b.height},fontFamily:css.fontFamily,fontSize:css.fontSize,fontWeight:css.fontWeight,fontStyle:css.fontStyle,fontStretch:css.fontStretch,fontFeatureSettings:css.fontFeatureSettings,fontVariationSettings:css.fontVariationSettings,letterSpacing:css.letterSpacing,lineHeight:css.lineHeight,color:css.color,fontLoaded:document.fonts.check(css.fontSize+' '+css.fontFamily,node.textContent)}
+        })}
+      })
+      await fs.writeFile(path.join(out,`cdi-${width}-${theme}-typography.json`),JSON.stringify(typography,null,2))
+    }
     await chart.getByRole('button',{name:/Copiar imagem:/}).click()
     await page.waitForFunction(()=>window.captureWrites.length===1)
     assert.match(await chart.innerText(),/Imagem copiada/)

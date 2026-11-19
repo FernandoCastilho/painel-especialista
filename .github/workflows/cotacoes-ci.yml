@@ -305,7 +305,7 @@ jobs:
     # Runner descartável próprio: os testes não acessam a área de transferência de outra máquina.
     runs-on: ubuntu-24.04
     needs: test-build
-    timeout-minutes: 20
+    timeout-minutes: 26
     defaults:
       run:
         working-directory: cotacoes
@@ -354,6 +354,18 @@ jobs:
         env:
           CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/device-reference
           CAPTURE_REFERENCE_MODE: device
+        run: |
+          mkdir -p "$CAPTURE_QA_OUTPUT"
+          node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
+        shell: bash
+      - name: Experimento B de rasterização sem LCD, gate RGB inalterado
+        id: grayscale_reference
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 6
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/device-grayscale
+          CAPTURE_REFERENCE_MODE: device
+          CAPTURE_TEXT_RASTER: grayscale
         run: |
           mkdir -p "$CAPTURE_QA_OUTPUT"
           node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
