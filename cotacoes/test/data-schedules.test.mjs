@@ -111,3 +111,15 @@ test('Focus: data de publicação vem da página do boletim no Banco Central, nu
  assert.match(src,/const publicado = Boolean\(focus\?\.link && idadeProjecao\(focus\?\.release\)\)/)
  assert.match(src,/boletim publicado em \{date\(focus\.release\)\}/)
 })
+
+test('câmbio aberto só em dia de pregão da B3, das 9h05 às 18h de Brasília', async () => {
+  const { fxSessionOpen } = await import('../scripts/data-schedules.mjs')
+  const at = (iso) => fxSessionOpen(Date.parse(iso))
+  assert.equal(at('2026-11-19T12:04:00Z'), false) // 9h04, antes da abertura
+  assert.equal(at('2026-11-19T12:05:00Z'), true) // 9h05
+  assert.equal(at('2026-11-19T21:00:00Z'), true) // 18h00
+  assert.equal(at('2026-11-19T21:01:00Z'), false) // 18h01
+  assert.equal(at('2026-11-20T15:00:00Z'), false) // Consciência Negra: feriado da B3
+  assert.equal(at('2026-11-21T15:00:00Z'), false) // sábado
+  assert.equal(at('2027-03-10T15:00:00Z'), true) // ano sem calendário conferido: dia útil segue aberto
+})

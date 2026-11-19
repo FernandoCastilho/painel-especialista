@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DATA_POLL_MS, startVisiblePolling } from './visiblePolling.js'
+import { b3ClosedDay, fxSessionOpen } from '../scripts/data-schedules.mjs'
 import { rawQuoteError, cnhCross, cnhQuoteError, withCnhVariation, cnhTimingError } from './quoteSafety.js'
 
 export const CURRENCIES = [
@@ -162,6 +163,8 @@ export function centralMaxAge(now = Date.now()) {
     friday.setUTCHours(23, 7, 0, 0)
     return now - (friday.getTime() + 3 * 3600000) + 75 * 60000
   }
+  // Feriado da B3 em dia útil: só as partidas agendadas coletam (9h05, 12h20, 14h50 e de hora em hora a partir de 18h07).
+  if (b3ClosedDay(now) === true) return 4 * 60 * 60000
   const minute = br.getUTCHours() * 60 + br.getUTCMinutes()
   return (minute >= 545 && minute <= 1080 ? 45 : 75) * 60000
 }
@@ -359,12 +362,13 @@ export function useQuotes(intervalMs = DATA_POLL_MS) {
     }
   }, [load, intervalMs])
 
-  // Quadros online: a cada 10 min, com a aba visível, consulta a API direto (não gasta o limite do botão).
+  // Quadros online: a cada 10 min, com a aba visível e o câmbio aberto, consulta a API direto (não gasta o limite do botão).
   // Em segundo plano o timer fica desarmado; ao voltar, a leitura automática de 1 min já renova pela coleta central.
   useEffect(() => {
     if (typeof document === 'undefined') return undefined
     let id = null
-    const tick = () => { if (!document.hidden) load(true) }
+    // Só com o câmbio aberto (dia de pregão da B3, 9h05 às 18h): fora disso a cotação quase não anda e a coleta central basta.
+    const tick = () => { if (!document.hidden && fxSessionOpen()) load(true) }
     const sync = () => {
       if (document.hidden) {
         clearInterval(id)

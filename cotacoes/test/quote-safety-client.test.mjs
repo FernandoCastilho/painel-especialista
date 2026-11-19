@@ -13,6 +13,7 @@ async function client() {
   source = source.replace("from 'react'", `from '${pathToFileURL(require.resolve('react'))}'`)
     .replace("from './visiblePolling.js'", `from '${new URL('../src/visiblePolling.js', import.meta.url)}'`)
     .replace("from './quoteSafety.js'", `from '${new URL('../src/quoteSafety.js', import.meta.url)}'`)
+    .replace("from '../scripts/data-schedules.mjs'", `from '${new URL('../scripts/data-schedules.mjs', import.meta.url)}'`)
     .replace('import.meta.env?.VITE_DATA_BASE', "'https://central.example'")
   return import(`data:text/javascript;base64,${Buffer.from(`${source}\n// safety ${++version}`).toString('base64')}`)
 }
