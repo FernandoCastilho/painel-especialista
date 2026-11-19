@@ -44,13 +44,26 @@ test('Calculadoras aparece no menu e mantém busca e acesso direto', () => {
 
 import { DESKTOP_PRIMARY, MOBILE_PRIMARY, MORE_GROUPS, shortcutTitle } from '../src/navigationPriority.js'
 test('prioridade aprovada separa visual de atalhos históricos', () => {
- assert.deepEqual(DESKTOP_PRIMARY, ['resumo','cenarios','calculadora','setores','noticias','podcast'])
- assert.deepEqual(MOBILE_PRIMARY, ['resumo','cenarios','calculadora','setores'])
- assert.deepEqual(MORE_GROUPS, [{label:'Acompanhar',ids:['juros','noticias','podcast']},{label:'Consultar',ids:['bancos','feriados']},{label:'Aprender',ids:['aprender']}])
+ assert.deepEqual(DESKTOP_PRIMARY, ['resumo','cenarios','juros','calculadora','setores','noticias','podcast'])
+ assert.deepEqual(MOBILE_PRIMARY, ['resumo','cenarios','juros','calculadora','setores'])
+ assert.deepEqual(MORE_GROUPS, [{label:'Acompanhar',ids:['noticias','podcast']},{label:'Consultar',ids:['bancos','feriados']},{label:'Aprender',ids:['aprender']}])
  assert.deepEqual(APP_SECTIONS.filter(t=>!t.oculto).slice(0,10).map(t=>shortcutTitle(t.id)),['Alt+1','Alt+2','Alt+3','Alt+4','Alt+5','Alt+6','Alt+7','Alt+8','Alt+9','Alt+0'])
  assert.deepEqual(parseCommand('BNDES'), {kind:'tab',id:'bndes',sub:''})
  assert.deepEqual(parseCommand('FINAME'), {kind:'tab',id:'calculadora',sub:'finame-materiais'})
  const calc=readFileSync(new URL('../src/Calculadora.jsx',import.meta.url),'utf8')
  assert.match(calc,/const CALCS = \[\s*\{ id: 'finame-materiais'/)
  assert.match(calc,/href="#bndes">Taxas BNDES/)
+})
+
+test('Juros fica imediatamente após Cenários em todas as telas, nunca duplicado em Mais', () => {
+ for (const primary of [DESKTOP_PRIMARY, MOBILE_PRIMARY]) {
+  assert.equal(primary[primary.indexOf('cenarios') + 1], 'juros')
+  assert.equal(primary.filter(id => id === 'juros').length, 1)
+  const secondary = MORE_GROUPS.flatMap(group => group.ids).filter(id => !primary.includes(id))
+  assert.ok(!secondary.includes('juros'))
+  const destinations = [...primary, ...secondary]
+  assert.equal(new Set(destinations).size, destinations.length)
+  for (const id of ['resumo','cenarios','juros','calculadora','setores','noticias','podcast','bancos','feriados','aprender']) assert.ok(destinations.includes(id), id)
+ }
+ assert.equal(shortcutTitle('juros'), 'Alt+2')
 })

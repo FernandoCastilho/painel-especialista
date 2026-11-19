@@ -56,3 +56,16 @@
 .priority-desktop .more-sheet button{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;text-align:left;border:0;background:transparent;color:var(--fg);font:inherit;cursor:pointer}
 .priority-desktop .more-sheet button:hover,.priority-desktop .more-sheet button:focus-visible{background:var(--card)}
 .calc-bndes-rates{display:block;margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:8px}
+
+/* Cinco destinos e Mais, sem esconder Juros ou cortar Calculadoras no celular. */
+@media (max-width:699px) {
+  .nav-top nav.tabs { display:grid; grid-template-columns:minmax(44px,1fr) minmax(44px,1fr) 44px minmax(70px,1.6fr) minmax(44px,1fr) 44px; gap:0; padding-inline:4px; overflow:visible; }
+  .nav-top nav.tabs > button,.nav-top nav.tabs > .more-tab { min-width:0; width:100%; }
+  .nav-top nav.tabs > button,.nav-top nav.tabs > .more-tab > button { padding:8px 1px; min-height:54px; font-size:clamp(.65rem,2.8vw,.75rem); white-space:normal; }
+  .nav-top nav.tabs > .more-tab > button { width:100%; }
+}
+/* Rótulos curtos também mantêm área de toque no desktop compacto. */
+@media (min-width:1000px) {
+  .term-head .topbar-tabs.priority-desktop > button,
+  .term-head .topbar-tabs.priority-desktop > .more-tab > button { min-width:44px; min-height:44px; flex-shrink:0; }
+}

@@ -43,7 +43,7 @@ const assert = require('node:assert/strict')
  assert.equal(await holidays.evaluate(el=>el.open),false,'feriados recolhem novamente')
  for(const label of ['Juros','Feriados','Cenários','Notícias','Mercado hoje']){
   const navigation=page.getByRole('navigation',{name:'Navegação principal'})
-  if(['Juros','Feriados'].includes(label)){
+  if(label==='Feriados'){
    await navigation.getByRole('button',{name:'Mais',exact:true}).click()
    await navigation.getByRole('menuitem',{name:label,exact:true}).click()
   }else{
@@ -65,8 +65,7 @@ const assert = require('node:assert/strict')
  await plot.waitFor();await plot.focus();await page.keyboard.press('End')
  assert.match(await dialog.locator('.chart-access-text[role="status"]').innerText(),/Cotação/)
  await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'})
- await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Mais',exact:true}).click()
- await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('menuitem',{name:'Juros',exact:true}).click()
+ await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Juros',exact:true}).click()
  await page.waitForURL('**/#juros')
  // Juros: o botão Ampliar abre o gráfico no centro da tela; teclado no gráfico e Escape para fechar
  await page.getByRole('button',{name:'Ampliar gráfico: CDI',exact:true}).click()
@@ -84,8 +83,7 @@ const assert = require('node:assert/strict')
  await page.keyboard.press('Escape');await curveDialog.waitFor({state:'detached'})
  await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Cenários',exact:true}).click()
  await page.waitForURL('**/#cenarios');await page.goBack();await page.waitForURL('**/#juros')
- await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Mais',exact:true}).click()
- assert.equal(await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('menuitem',{name:'Juros',exact:true}).getAttribute('aria-current'),'page')
+ assert.equal(await page.getByRole('navigation',{name:/Navegação principal|Seções/}).getByRole('button',{name:'Juros',exact:true}).getAttribute('aria-current'),'page')
  await page.keyboard.press('Escape')
  await page.goForward();await page.waitForURL('**/#cenarios')
  await page.goto(`${base}/#cenarios/calendario`)
