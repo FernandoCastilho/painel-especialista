@@ -66,7 +66,8 @@
 .bank-info-icon { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border:1px solid currentColor; border-radius:50%; font-size:12px; font-style:normal; line-height:1; }
 .bank-quarter { margin-top:0!important; }
 .bank-value-line { display:inline-flex; align-items:center; justify-content:flex-end; gap:6px; }
-.bank-trophy { display:inline; flex:none; font-size:.9rem; line-height:1; }
+/* Destaque do indicador: ponto âmbar (antes era um troféu em emoji, que muda de desenho em cada aparelho). O nome falado vem do aria-label. */
+.bank-trophy { display:inline-block; flex:none; width:7px; height:7px; margin-left:6px; border-radius:50%; background:var(--amber, #ffb000); box-shadow:0 0 0 2px color-mix(in srgb, var(--amber, #ffb000) 25%, transparent); vertical-align:middle; }
 .bank-history-picker { display:flex; flex-direction:column; gap:8px; max-width:340px; font-size:.85rem; }
 .bank-history-picker select { width:100%; min-height:44px; border:1px solid var(--line); border-radius:5px; background:var(--surface-2); color:var(--fg); padding:8px; font:inherit; }
 .bank-metric-history h2 { font-size:1.15rem; margin:0 0 16px; }

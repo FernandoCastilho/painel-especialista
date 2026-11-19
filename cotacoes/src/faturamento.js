@@ -1,6 +1,7 @@
 // Faturamento x Endividamento: lê o texto colado (Mês, Faturamento, Endividamento) e compara
-// um período escolhido com os mesmos meses do ano anterior. Não há regra financeira aqui: só soma,
-// média e variação percentual dos números colados, na unidade em que vieram (ex.: R$ mil).
+// um período escolhido com os mesmos meses do ano anterior (soma, média e variação %), na unidade
+// em que os números vieram (ex.: R$ mil). A única regra financeira é a alavancagem de indicadores12m,
+// no critério do DAC; mudar essa regra exige aprovação do Fernando e revisão independente.
 
 export const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
@@ -30,8 +31,9 @@ export function parseMes(token) {
 // Número no padrão brasileiro: "7.123", "7.123,45", "R$ 7.123", "-12,5". Vazio ou "-" = sem dado (null).
 // Retorna undefined quando o texto não é número.
 export function parseNumero(token) {
-  let t = String(token ?? '').replace(/R\$/gi, '').replace(/\s/g, '')
-  if (t === '' || t === '-' || t === '—') return null
+  // Traço comum, meia-risca (–), travessão (—) ou sinal de menos (−) sozinhos = sem dado.
+  let t = String(token ?? '').replace(/R\$/gi, '').replace(/\s/g, '').replace(/[–−]/g, '-')
+  if (t === '' || /^[-—]+$/.test(t)) return null
   const negativo = /^\(.*\)$/.test(t) || t.startsWith('-')
   t = t.replace(/^[(-]|\)$/g, '')
   if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.')
@@ -52,7 +54,10 @@ export function parseFaturamento(texto) {
   const porChave = new Map()
   const avisos = []
   linhas.forEach((bruta, i) => {
-    const linha = bruta.trim()
+    // Tabela em formato de texto com barras (| Jan/25 | 350 | 2.235 |): barra vira separador
+    // e a linha de traços (|---|---:|) é ignorada.
+    if (/^\s*\|?[\s:|-]+\|?\s*$/.test(bruta) && bruta.includes('-') && bruta.includes('|')) return
+    const linha = bruta.replace(/\|/g, ' ').trim()
     if (!linha) return
     const m = linha.match(INICIO)
     const mes = m && parseMes(m[1])
@@ -75,7 +80,21 @@ export function parseFaturamento(texto) {
     porChave.set(chave, { chave, rotulo: rotuloMes(chave), ano: mes.ano, mes: mes.mes, faturamento: nums[0] ?? null, endividamento: nums.length > 1 ? nums[1] : null })
   })
   const meses = [...porChave.values()].sort((a, b) => a.chave - b.chave)
-  return { meses, avisos }
+  const u = String(texto ?? '').match(/\(\s*(R\$\s*(?:mil|milh[õo]es|bilh[õo]es|mi|bi)?)\s*\)/i)
+  const unidade = u ? u[1].replace(/\s+/g, ' ').replace(/R\$(?=\S)/i, 'R$ ').trim() : null
+  return { meses, avisos, unidade }
+}
+
+// Série contínua para o gráfico: mês sem linha colada vira posição vazia, para o período escolhido
+// e o do ano anterior ficarem marcados em todos os meses, sem saltos.
+export function serieContinua(meses, limite = 240) {
+  if (meses.length < 2 || meses.at(-1).chave - meses[0].chave >= limite) return meses
+  const porChave = new Map(meses.map((m) => [m.chave, m]))
+  const serie = []
+  for (let k = meses[0].chave; k <= meses.at(-1).chave; k++) {
+    serie.push(porChave.get(k) ?? { chave: k, rotulo: rotuloMes(k), ano: Math.floor(k / 12), mes: (k % 12) + 1, faturamento: null, endividamento: null, vazio: true })
+  }
+  return serie
 }
 
 const soma = (xs) => xs.reduce((s, x) => s + x, 0)
@@ -131,6 +150,272 @@ export function compararPeriodo(meses, de, ate) {
   }
 }
 
+// Últimos 12 meses e alavancagem, no mesmo critério do DAC:
+// - janela de 12 meses terminando no último mês com faturamento informado;
+// - média mensal = soma dos meses da janela com faturamento ÷ quantidade desses meses;
+// - endividamento = último mês com saldo maior que zero (zero ou vazio = mês sem informação);
+// - alavancagem = endividamento ÷ média mensal (em "x faturamento").
+// Os 12 meses anteriores são comparados só se a janela anterior tiver os mesmos meses informados.
+export function indicadores12m(meses) {
+  const comFat = meses.filter((m) => m.faturamento != null)
+  if (!comFat.length) return null
+  const fim = comFat.at(-1).chave
+  const janela = (a, b) => comFat.filter((m) => m.chave >= a && m.chave <= b)
+  const atual = janela(fim - 11, fim)
+  const anterior = janela(fim - 23, fim - 12)
+  const total = soma(atual.map((m) => m.faturamento))
+  const media = total / atual.length
+  const ultimoSaldo = [...meses].reverse().find((m) => temSaldo(m.endividamento)) ?? null
+  const comparavel = atual.length === 12 && anterior.length === 12
+  const totalAnterior = anterior.length ? soma(anterior.map((m) => m.faturamento)) : null
+  return {
+    de: atual[0].rotulo,
+    ate: atual.at(-1).rotulo,
+    meses: atual.length,
+    total,
+    media,
+    anteriorDe: rotuloMes(fim - 23),
+    anteriorAte: rotuloMes(fim - 12),
+    mesesAnterior: anterior.length,
+    totalAnterior,
+    variacao: comparavel ? variacao(total, totalAnterior) : null,
+    endividamento: ultimoSaldo ? ultimoSaldo.endividamento : null,
+    endividamentoMes: ultimoSaldo ? ultimoSaldo.rotulo : null,
+    // Saldo fora da janela de 12 meses: a conta segue a regra, mas a tela avisa que o saldo é defasado.
+    endividamentoForaDaJanela: !!ultimoSaldo && (ultimoSaldo.chave < fim - 11 || ultimoSaldo.chave > fim),
+    alavancagem: ultimoSaldo && media > 0 ? ultimoSaldo.endividamento / media : null,
+  }
+}
+
+// Rótulo do gráfico em milhões a partir de R$ mil (5.931 -> "5,9"), como nos slides.
+export const emMilhoes = (v) => (v == null ? '—' : (v / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }))
+
+// Crescimento do faturamento x crescimento do endividamento no período escolhido, contra o mesmo
+// período do ano anterior. Usa variações já calculadas em compararPeriodo (faturamento somado e
+// endividamento médio) e só diz qual cresceu mais: não é regra nova de cálculo.
+export function leituraCrescimento(c) {
+  const fat = c?.faturamento?.variacao ?? null
+  const div = c?.endividamento?.variacaoMedia ?? null
+  if (fat == null || div == null) return { fat, div, diferencaPp: null, relacao: null }
+  const diferencaPp = (div - fat) * 100
+  // Dívida média sobre faturamento médio muda na razão (1 + div) / (1 + fat).
+  const razao = (1 + div) / (1 + fat)
+  const relacao = Math.abs(razao - 1) < 0.0005 ? 'estavel' : razao > 1 ? 'piorou' : 'melhorou'
+  return { fat, div, diferencaPp, relacao }
+}
+
+// Análise automática da série colada: tendência, sazonalidade, estabilidade, meses fora do padrão e
+// endividamento. Só estatística descritiva dos números colados; os limites usados para os alertas estão
+// nas constantes abaixo e na ajuda da tela. Não é parecer de crédito.
+export const LIMITES_ANALISE = {
+  sazonalForte: 0.05,      // mês ≥ 5% acima (ou abaixo) do nível normal entra como forte (ou fraco)
+  sazonalRelevante: 0.15,  // diferença entre o mês mais forte e o mais fraco para chamar de sazonal
+  atipico: 0.25,           // mês 25% fora do esperado (média dos 12 anteriores ajustada pela sazonalidade)
+  instavel: 0.25,          // coeficiente de variação acima de 25% em 12 meses
+  estavel: 0.10,           // abaixo de 10%
+  quedaForte: -0.10,       // queda de 10% ou mais em 12 meses
+}
+const desvio = (xs) => { const m = media(xs); return Math.sqrt(media(xs.map((x) => (x - m) ** 2))) }
+// Inclinação da reta (mínimos quadrados) por passo, sobre pares [x, y].
+function inclinacao(pares) {
+  if (pares.length < 3) return null
+  const mx = media(pares.map(([x]) => x)), my = media(pares.map(([, y]) => y))
+  const num = soma(pares.map(([x, y]) => (x - mx) * (y - my)))
+  const den = soma(pares.map(([x]) => (x - mx) ** 2))
+  return den ? num / den : null
+}
+const mesDoAno = (k) => ((k % 12) + 12) % 12
+
+export function analisarSerie(meses) {
+  const L = LIMITES_ANALISE
+  const fat = meses.filter((m) => m.faturamento != null)
+  if (fat.length < 6) return { suficiente: false, motivo: 'Cole pelo menos 6 meses de faturamento para a análise.' }
+  const val = new Map(fat.map((m) => [m.chave, m.faturamento]))
+  const ini = fat[0].chave, fim = fat.at(-1).chave
+
+  // Sazonalidade: cada mês dividido pela média móvel centrada de 12 meses (método clássico de razão à média
+  // móvel). Precisa de 6 meses completos antes e depois; a média por mês do ano vira o índice sazonal.
+  const razoes = Array.from({ length: 12 }, () => [])
+  for (let k = ini + 6; k <= fim - 6; k++) {
+    const janela = []
+    for (let j = -6; j <= 6; j++) janela.push(val.get(k + j))
+    if (janela.some((x) => x == null)) continue
+    const mm = (janela[0] / 2 + soma(janela.slice(1, 12)) + janela[12] / 2) / 12
+    if (mm > 0) razoes[mesDoAno(k)].push(janela[6] / mm)
+  }
+  let indices = razoes.map((r, i) => ({ mes: i, rotulo: MESES[i], n: r.length, indice: r.length ? media(r) : null }))
+  const cobertos = indices.filter((x) => x.indice != null)
+  let sazonalidade = null
+  if (cobertos.length === 12) {
+    const f = media(cobertos.map((x) => x.indice))
+    indices = indices.map((x) => ({ ...x, indice: x.indice / f }))
+    const ordem = [...indices].sort((a, b) => b.indice - a.indice)
+    const amplitude = ordem[0].indice - ordem.at(-1).indice
+    sazonalidade = {
+      indices,
+      anos: Math.max(...indices.map((x) => x.n)),
+      amplitude,
+      relevante: amplitude >= L.sazonalRelevante,
+      fortes: ordem.filter((x) => x.indice >= 1 + L.sazonalForte).slice(0, 3),
+      fracos: [...ordem].reverse().filter((x) => x.indice <= 1 - L.sazonalForte).slice(0, 3),
+    }
+  }
+
+  // Série dessazonalizada (valor ÷ índice do mês do ano) quando há sazonalidade: tendência, estabilidade,
+  // ritmo recente, quedas seguidas e meses fora do padrão olham a série sem o efeito do calendário.
+  // Só desconta a sazonalidade se todos os índices forem positivos (mês do ano sempre zerado = série sem ajuste).
+  const ajustada = sazonalidade != null && sazonalidade.indices.every((x) => x.indice > 0)
+  const aj = (m) => (ajustada ? m.faturamento / sazonalidade.indices[mesDoAno(m.chave)].indice : m.faturamento)
+  const valAj = new Map(fat.map((m) => [m.chave, aj(m)]))
+
+  // Últimos 12 meses (ou os que houver): tendência (reta), estabilidade (coeficiente de variação), melhor e pior mês.
+  const ult = fat.filter((m) => m.chave > fim - 12)
+  const mUlt = media(ult.map(aj))
+  const inc = inclinacao(ult.map((m) => [m.chave, aj(m)]))
+  const tendenciaAno = inc != null && mUlt > 0 ? Math.max(-1, (inc * 12) / mUlt) : null
+  const cv = mUlt > 0 && ult.length >= 6 ? desvio(ult.map(aj)) / mUlt : null
+  const melhor = ult.reduce((a, b) => (b.faturamento > a.faturamento ? b : a))
+  const pior = ult.reduce((a, b) => (b.faturamento < a.faturamento ? b : a))
+  const tres = fat.filter((m) => m.chave > fim - 3)
+  const ritmoRecente = mUlt > 0 && tres.length === 3 ? media(tres.map(aj)) / mUlt - 1 : null
+
+  // Sequência atual de quedas ou altas seguidas (só meses vizinhos), na série dessazonalizada.
+  let quedas = 0, altas = 0
+  for (let k = fim; valAj.has(k) && valAj.has(k - 1); k--) {
+    if (valAj.get(k) < valAj.get(k - 1) && altas === 0) quedas++
+    else if (valAj.get(k) > valAj.get(k - 1) && quedas === 0) altas++
+    else break
+  }
+
+  // Meses fora do padrão: o esperado vem da reta dos 12 meses anteriores (mínimo 6) na série dessazonalizada,
+  // projetada para o mês; assim o crescimento normal da empresa não vira "anomalia".
+  const atipicos = []
+  for (const m of fat) {
+    const ant = fat.filter((x) => x.chave < m.chave && x.chave >= m.chave - 12)
+    if (ant.length < 6) continue
+    const pares = ant.map((x) => [x.chave, aj(x)])
+    const b = inclinacao(pares) ?? 0
+    const mx = media(pares.map(([x]) => x)), my = media(pares.map(([, y]) => y))
+    const esperado = my + b * (m.chave - mx)
+    if (esperado <= 0) continue
+    const desvioPct = aj(m) / esperado - 1
+    if (Math.abs(desvioPct) >= L.atipico) atipicos.push({ rotulo: m.rotulo, chave: m.chave, desvio: desvioPct })
+  }
+
+  // Endividamento: só meses com saldo (zero ou vazio = sem informação).
+  const saldos = meses.filter((m) => temSaldo(m.endividamento))
+  let endividamento = null
+  if (saldos.length >= 1) {
+    const ultS = saldos.at(-1)
+    const ano = saldos.find((m) => m.chave === ultS.chave - 12) ?? null
+    const maxS = saldos.reduce((a, b) => (b.endividamento > a.endividamento ? b : a))
+    // Alavancagem mês a mês: saldo ÷ média do faturamento dos 12 meses até aquele mês (mínimo 6 meses).
+    const alav = saldos.map((m) => {
+      const jan = fat.filter((x) => x.chave <= m.chave && x.chave > m.chave - 12)
+      const mf = jan.length >= 6 ? media(jan.map((x) => x.faturamento)) : null
+      return mf > 0 ? { rotulo: m.rotulo, chave: m.chave, valor: m.endividamento / mf } : null
+    }).filter(Boolean)
+    const alavAno = alav.find((a) => a.chave === ultS.chave - 12) ?? null
+    const semSaldoNoFim = meses.filter((m) => m.chave > ultS.chave && m.chave <= fim).length
+    endividamento = {
+      ultimo: ultS.endividamento, ultimoRotulo: ultS.rotulo, ultimoChave: ultS.chave,
+      anoAntes: ano?.endividamento ?? null, anoAntesRotulo: ano?.rotulo ?? null,
+      variacao12m: ano ? variacao(ultS.endividamento, ano.endividamento) : null,
+      maximo: maxS.endividamento, maximoRotulo: maxS.rotulo,
+      alavancagemAtual: alav.at(-1)?.chave === ultS.chave ? alav.at(-1).valor : null,
+      alavancagemAnoAntes: alavAno?.valor ?? null,
+      alavancagemMax: alav.length ? alav.reduce((a, b) => (b.valor > a.valor ? b : a)) : null,
+      semSaldoNoFim,
+    }
+  }
+
+  // Faturamento 12 meses contra os 12 anteriores (mesmo critério de indicadores12m).
+  const i12 = indicadores12m(meses)
+
+  // Pontos de atenção, nos limites de LIMITES_ANALISE.
+  const atencao = []
+  if (i12?.variacao != null && i12.variacao <= L.quedaForte) atencao.push(`Faturamento dos últimos 12 meses ${Math.round(Math.abs(i12.variacao) * 100)}% menor que nos 12 anteriores.`)
+  if (tendenciaAno != null && tendenciaAno <= L.quedaForte) atencao.push(`Tendência de queda do faturamento nos últimos ${ult.length} meses${ajustada ? ', já descontada a sazonalidade' : ''}.`)
+  if (cv != null && cv > L.instavel) atencao.push(`Faturamento instável: os meses variam muito em torno da média${ajustada ? ', mesmo descontada a sazonalidade' : ''}.`)
+  if (quedas >= 3) atencao.push(`${quedas} quedas seguidas de faturamento até ${fat.at(-1).rotulo}${ajustada ? ', descontada a sazonalidade' : ''}.`)
+  const recentesBaixo = atipicos.filter((a) => a.desvio < 0 && a.chave > fim - 6)
+  if (recentesBaixo.length) atencao.push(`Mês recente bem abaixo do esperado: ${recentesBaixo.map((a) => a.rotulo).join(', ')}.`)
+  // Dívida x faturamento na mesma janela: saldo do último mês com saldo contra 12 meses antes, e faturamento
+  // dos 12 meses até esse mês contra os 12 anteriores (só com as duas janelas completas).
+  let fatMesmaJanela = null
+  if (endividamento?.variacao12m != null) {
+    const k = endividamento.ultimoChave
+    const j1 = fat.filter((m) => m.chave > k - 12 && m.chave <= k), j0 = fat.filter((m) => m.chave > k - 24 && m.chave <= k - 12)
+    if (j1.length === 12 && j0.length === 12) fatMesmaJanela = variacao(soma(j1.map((m) => m.faturamento)), soma(j0.map((m) => m.faturamento)))
+    if (endividamento) endividamento.faturamentoMesmaJanela = fatMesmaJanela
+  }
+  if (fatMesmaJanela != null && endividamento.variacao12m > fatMesmaJanela + 0.05) atencao.push(`Endividamento evoluiu pior que o faturamento em 12 meses até ${endividamento.ultimoRotulo} (dívida ${Math.round(endividamento.variacao12m * 100)}%, faturamento ${Math.round(fatMesmaJanela * 100)}%).`)
+  if (endividamento?.alavancagemAtual != null && endividamento.alavancagemAnoAntes != null && endividamento.alavancagemAtual > endividamento.alavancagemAnoAntes * 1.1) atencao.push('Alavancagem subiu mais de 10% em 12 meses.')
+  if (endividamento?.semSaldoNoFim) atencao.push(`${endividamento.semSaldoNoFim} ${endividamento.semSaldoNoFim === 1 ? 'mês final sem' : 'meses finais sem'} saldo de endividamento (provável mês ainda não fechado).`)
+
+  return {
+    suficiente: true,
+    meses: fat.length, de: fat[0].rotulo, ate: fat.at(-1).rotulo,
+    tendenciaAno, ritmoRecente, cv, melhor, pior, quedas, altas,
+    variacao12m: i12?.variacao ?? null,
+    sazonalidade, sazonalidadeCobertura: cobertos.length,
+    atipicos: atipicos.slice(-4), atipicosTotal: atipicos.length,
+    mesesJanela: ult.length, ajustada,
+    endividamento,
+    atencao,
+  }
+}
+
+// Texto da análise em blocos simples, para a imagem exportada (mesma leitura do quadro da tela).
+export function blocosAnalise(a, fmt = (v) => v.toLocaleString('pt-BR')) {
+  if (!a?.suficiente) return []
+  const p0 = (v) => (v == null ? '—' : `${v > 0 ? '+' : ''}${Math.round(v * 100)}%`)
+  const vz = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`
+  const L = LIMITES_ANALISE
+  const janela = a.mesesJanela === 12 ? 'últimos 12 meses' : `últimos ${a.mesesJanela} meses`
+  const semSaz = a.ajustada ? ', descontada a sazonalidade' : ''
+  const fatur = [`Base: ${a.meses} meses, de ${a.de} a ${a.ate}.`]
+  if (a.variacao12m != null) fatur.push(`12 meses contra os 12 anteriores: ${p0(a.variacao12m)}.`)
+  if (a.tendenciaAno != null) fatur.push(`Tendência nos ${janela}${semSaz}: ${Math.abs(a.tendenciaAno) < 0.05 ? 'estável' : a.tendenciaAno > 0 ? `alta, perto de ${p0(a.tendenciaAno)} ao ano` : `queda, perto de ${p0(a.tendenciaAno)} ao ano`}.`)
+  if (a.ritmoRecente != null) fatur.push(`Últimos 3 meses: ${p0(a.ritmoRecente)} sobre a média dos ${janela}.`)
+  if (a.cv != null) fatur.push(`Mês a mês: ${a.cv < L.estavel ? 'estável' : a.cv <= L.instavel ? 'oscilação moderada' : 'instável'} (variação típica de ${Math.round(a.cv * 100)}%).`)
+  fatur.push(`Melhor mês: ${a.melhor.rotulo} (${fmt(a.melhor.faturamento)}); pior: ${a.pior.rotulo} (${fmt(a.pior.faturamento)}).`)
+  if (a.quedas >= 2) fatur.push(`${a.quedas} quedas seguidas até ${a.ate}${semSaz}.`)
+  if (a.altas >= 2) fatur.push(`${a.altas} altas seguidas até ${a.ate}${semSaz}.`)
+  const s = a.sazonalidade
+  const saz = !s ? [`Dados insuficientes: são precisos cerca de 24 meses seguidos.`] : [
+    `${s.relevante ? 'Há sazonalidade' : 'Sazonalidade fraca'}: o mês mais forte fica ${Math.round(s.amplitude * 100)} p.p. acima do mais fraco.`,
+    ...(s.fortes.length ? [`Mais fortes: ${s.fortes.map((x) => `${x.rotulo} (${p0(x.indice - 1)})`).join(', ')}.`] : []),
+    ...(s.fracos.length ? [`Mais fracos: ${s.fracos.map((x) => `${x.rotulo} (${p0(x.indice - 1)})`).join(', ')}.`] : []),
+    s.anos >= 2 ? `Base de até ${s.anos} anos por mês.` : 'Base de um ano por mês: leitura preliminar.',
+  ]
+  if (a.atipicos?.length) saz.push(`Fora do padrão: ${a.atipicos.map((x) => `${x.rotulo} (${p0(x.desvio)})`).join(', ')}${a.atipicosTotal > a.atipicos.length ? ` e mais ${a.atipicosTotal - a.atipicos.length}` : ''}.`)
+  const e = a.endividamento
+  const div = !e ? ['Sem saldos suficientes de endividamento.'] : [
+    `Último saldo: ${fmt(e.ultimo)} em ${e.ultimoRotulo}${e.variacao12m != null ? ` (${p0(e.variacao12m)} contra ${e.anoAntesRotulo})` : ''}.`,
+    `Maior saldo: ${fmt(e.maximo)} em ${e.maximoRotulo}.`,
+    ...(e.alavancagemAtual != null ? [`Alavancagem em ${e.ultimoRotulo}: ${vz(e.alavancagemAtual)}${e.alavancagemAnoAntes != null ? ` (era ${vz(e.alavancagemAnoAntes)} um ano antes)` : ''}.`] : []),
+    ...(e.alavancagemMax ? [`Maior alavancagem: ${vz(e.alavancagemMax.valor)} em ${e.alavancagemMax.rotulo}.`] : []),
+  ]
+  return [
+    { titulo: 'Faturamento', itens: fatur },
+    { titulo: 'Sazonalidade', itens: saz },
+    { titulo: 'Endividamento', itens: div },
+    { titulo: 'Pontos de atenção', itens: a.atencao.length ? a.atencao : ['Nenhum ponto de atenção pelos critérios da análise.'], alerta: a.atencao.length > 0 },
+  ]
+}
+
+// Total curto para o quadro do período, como em apresentação: 23.400 (R$ mil) -> "R$ 23,4 MM".
+export function totalCurto(v, unidade) {
+  if (v == null) return '—'
+  const u = semAcento(unidade ?? '').replace(/\s+/g, '')
+  const mm = (x) => `R$ ${x.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MM`
+  if (u === 'r$mil') return Math.abs(v) >= 1000 ? mm(v / 1000) : `R$ ${Math.round(v).toLocaleString('pt-BR')} mil`
+  if (u === 'r$milhoes' || u === 'r$mi') return mm(v)
+  const n = v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+  return u.startsWith('r$') ? `R$ ${n}` : n
+}
+
 // Resumo por ano, só com os meses colados (como os quadros do DAC).
 export function resumoPorAno(meses) {
   const anos = new Map()
@@ -144,25 +429,40 @@ export function resumoPorAno(meses) {
   return [...anos.values()].map((a) => ({ ...a, media: a.total / a.meses }))
 }
 
-export const EXEMPLO = `Mês\tFaturamento\tEndividamento
-jan/25\t4.100\t7.200
-fev/25\t3.950\t7.050
-mar/25\t4.420\t7.600
-abr/25\t4.310\t7.480
-mai/25\t4.600\t7.390
-jun/25\t4.250\t7.700
-jul/25\t4.880\t7.520
-ago/25\t4.700\t7.610
-set/25\t4.530\t7.300
-out/25\t4.960\t7.810
-nov/25\t4.820\t7.690
-dez/25\t3.400\t7.150
-jan/26\t4.300\t7.740
-fev/26\t4.050\t7.420
-mar/26\t4.950\t7.950
-abr/26\t4.010\t7.330
-mai/26\t4.520\t8.120
-jun/26\t4.180\t8.240
-jul/26\t4.390\t7.760
-ago/26\t3.560\t0
-set/26\t3.700\t0`
+// Exemplo fictício no modelo do DAC: título, cabeçalho com a unidade e traço para mês sem informação.
+export const EXEMPLO = `Faturamento e endividamento
+Competência	Faturamento (R$ mil)	Endividamento (R$ mil)
+Jan/24	1.331	–
+Fev/24	2.090	–
+Mar/24	1.394	–
+Abr/24	1.764	–
+Mai/24	2.146	–
+Jun/24	1.649	–
+Jul/24	1.794	–
+Ago/24	2.680	–
+Set/24	2.508	–
+Out/24	2.176	–
+Nov/24	2.574	–
+Dez/24	2.916	–
+Jan/25	2.499	3.399
+Fev/25	2.598	–
+Mar/25	3.108	–
+Abr/25	2.892	3.360
+Mai/25	3.766	3.568
+Jun/25	3.685	3.443
+Jul/25	3.750	3.470
+Ago/25	4.279	–
+Set/25	3.970	3.796
+Out/25	3.949	–
+Nov/25	3.760	4.153
+Dez/25	4.595	3.725
+Jan/26	4.475	3.852
+Fev/26	4.381	–
+Mar/26	4.849	–
+Abr/26	4.301	4.288
+Mai/26	5.056	4.141
+Jun/26	4.956	4.324
+Jul/26	4.970	–
+Ago/26	5.533	0
+Set/26	5.024	0
+Out/26	5.675	0`

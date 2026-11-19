@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { presentationStep } from './bndesPresentation.js'
 import { E4_QUOTE_NOTE, E4_SLIDES, E4_TITLE, avisoFronteiraE4, buildE4Slides, captureE4 } from './emprestimo4131Presentation.js'
 import { moedaOf } from './emprestimo4131.js'
-import './Apresentacao.css'
+import './ApresentacaoBase.css'
 import './BndesPresentation.css'
 
 const brl = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

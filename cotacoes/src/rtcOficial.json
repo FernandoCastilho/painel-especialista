@@ -1,0 +1,678 @@
+{
+ "fonte": {
+  "nome": "Calculadora oficial da reforma tributária (regime regular) — Receita Federal",
+  "repositorio": "https://github.com/ReceitaFederal/calculadora-rtc-regime-regular",
+  "repositorioSimples": "https://github.com/ReceitaFederal/calculadora-rtc-simples-nacional",
+  "licenca": "MIT — Copyright (c) 2026 Receita Federal do Brasil",
+  "versaoCalculadora": "1.6.1",
+  "commit": "150cccbe414d4a5edea703e4f7a424af5aa222c7",
+  "dataCommit": "2026-10-22",
+  "versaoBaseDados": "V0059",
+  "dataBaseDados": "2026-09-30",
+  "descricaoBaseDados": "Habilitação de 820 para NFSe.",
+  "extraidoEm": "2026-11-19",
+  "arquivos": "flyway/sql/criacao/B0001__sistema_tributario_completo.sql e flyway/sql/manutencao/V0002–V0059",
+  "metodo": "Leitura dos arquivos SQL como texto (scripts/extract-rtc-oficial.py); nada do repositório oficial foi executado."
+ },
+ "aliquotasReferencia": [
+  {
+   "ano": 2026,
+   "inicio": "2026-01-01",
+   "fim": "2026-12-31",
+   "cbs": 0.9,
+   "ibsUf": 0.1,
+   "ibsMun": 0.0
+  }
+ ],
+ "reducoes": [
+  {
+   "cClassTrib": "200001",
+   "descricao": "Serviços de transporte de bens até as zonas de processamento de exportação e bens exportados a partir das zonas de processamento de exportação",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200002",
+   "descricao": "Fornecimento ou importação para produtor rural não contribuinte ou TAC",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200003",
+   "descricao": "Vendas de produtos destinados à alimentação humana (Anexo I)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200004",
+   "descricao": "Fornecimento de dispositivos médicos (Anexo XII)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200005",
+   "descricao": "Fornecimento de dispositivos médicos para órgãos da administração pública e entidades de saúde imunes (Anexo IV)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200006",
+   "descricao": "Situação de emergência de saúde pública reconhecida pelo Poder público",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200007",
+   "descricao": "Fornecimento dos dispositivos de acessibilidade próprios para pessoas com deficiência (Anexo XIII)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200008",
+   "descricao": "Fornecimento dos dispositivos de acessibilidade próprios para pessoas com deficiência adquiridos por órgãos da administração pública (Anexo V)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200009",
+   "descricao": "Fornecimento dos medicamentos registrados na Anvisa",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200010",
+   "descricao": "Fornecimento dos medicamentos registrados na Anvisa, adquiridos por órgãos da administração pública",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200011",
+   "descricao": "Fornecimento das composições para nutrição enteral e parenteral quando adquiridas por órgãos da administração pública (Anexo VI)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200012",
+   "descricao": "Situação de emergência de saúde pública reconhecida pelo Poder público",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200013",
+   "descricao": "Fornecimento de tampões higiênicos, absorventes higiênicos internos ou externos",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200014",
+   "descricao": "Fornecimento dos produtos hortícolas, frutas e ovos (Anexo XV)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200015",
+   "descricao": "Venda de automóveis de passageiros de fabricação nacional adquiridos por motoristas profissionais ou pessoas com deficiência",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200016",
+   "descricao": "Prestação de serviços de pesquisa e desenvolvimento por Instituição Científica, Tecnológica e de Inovação (ICT)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200017",
+   "descricao": "Operações relacionadas ao FGTS",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200018",
+   "descricao": "Operações de resseguro e retrocessão",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200019",
+   "descricao": "Importador dos serviços financeiros contribuinte",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200020",
+   "descricao": "Operação praticada por sociedades cooperativas optantes por regime específico do IBS e CBS",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200021",
+   "descricao": "Serviços de transporte público coletivo de passageiros ferroviário e hidroviário",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200022",
+   "descricao": "Operação originada fora da ZFM que destine bem material industrializado a contribuinte estabelecido na ZFM",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200023",
+   "descricao": "Operação realizada por indústria incentivada que destine bem material intermediário para outra indústria incentivada na ZFM",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200024",
+   "descricao": "Operação originada fora das Áreas de Livre Comércio destinadas a contribuinte estabelecido nas Áreas de Livre Comércio",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200025",
+   "descricao": "Fornecimento dos serviços de educação relacionados ao Programa Universidade para Todos (Prouni)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200053",
+   "descricao": "Fornecimento de medicamentos registrados na Anvisa, quando classificados como soros ou vacinas",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200054",
+   "descricao": "Fornecimento de bem material pela cooperativa de produção agropecuária a associado não sujeito ao regime regular do IBS e da CBS",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 100.0,
+    "ibsUf": 100.0,
+    "ibsMun": 100.0
+   }
+  },
+  {
+   "cClassTrib": "200026",
+   "descricao": "Locação de imóveis localizados nas zonas reabilitadas",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 80.0,
+    "ibsUf": 80.0,
+    "ibsMun": 80.0
+   }
+  },
+  {
+   "cClassTrib": "200027",
+   "descricao": "Operações de locação, cessão onerosa e arrendamento de bens imóveis",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 70.0,
+    "ibsUf": 70.0,
+    "ibsMun": 70.0
+   }
+  },
+  {
+   "cClassTrib": "011001",
+   "descricao": "Planos de assistência funerária.",
+   "cst": "011",
+   "cstDescricao": "Tributação com alíquotas uniformes reduzidas",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "011002",
+   "descricao": "Planos de assistência à saúde",
+   "cst": "011",
+   "cstDescricao": "Tributação com alíquotas uniformes reduzidas",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "011003",
+   "descricao": "Intermediação de planos de assistência à saúde",
+   "cst": "011",
+   "cstDescricao": "Tributação com alíquotas uniformes reduzidas",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200028",
+   "descricao": "Fornecimento dos serviços de educação (Anexo II)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200029",
+   "descricao": "Fornecimento dos serviços de saúde humana (Anexo III)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200030",
+   "descricao": "Venda dos dispositivos médicos (Anexo IV)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200031",
+   "descricao": "Fornecimento dos dispositivos de acessibilidade próprios para pessoas com deficiência (Anexo V)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200032",
+   "descricao": "Fornecimento dos medicamentos registrados na Anvisa ou produzidos por farmácias de manipulação, ressalvados os medicamentos sujeitos à alíquota zero",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200033",
+   "descricao": "Fornecimento das composições para nutrição enteral e parenteral (Anexo VI)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200034",
+   "descricao": "Fornecimento dos alimentos destinados ao consumo humano (Anexo VII)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200035",
+   "descricao": "Fornecimento dos produtos de higiene pessoal e limpeza (Anexo VIII)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200036",
+   "descricao": "Fornecimento de produtos agropecuários, aquícolas, pesqueiros, florestais e extrativistas vegetais in natura",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200037",
+   "descricao": "Fornecimento de serviços ambientais de conservação ou recuperação da vegetação nativa",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200038",
+   "descricao": "Fornecimento dos insumos agropecuários e aquícolas (Anexo IX)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200039",
+   "descricao": "Fornecimento dos bens e serviços relacionados com produções nacionais artísticas, culturais, de eventos, jornalísticas e audiovisuais (Anexo X)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200040",
+   "descricao": "Fornecimento de serviços de comunicação institucional à administração pública",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200041",
+   "descricao": "Fornecimento de serviço de educação desportiva (art. 141. I)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200042",
+   "descricao": "Fornecimento de serviço de gestão e exploração do desporto (art. 141. II)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200043",
+   "descricao": "Fornecimento à administração pública dos serviços e dos bens relativos à soberania (Anexo XI)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200044",
+   "descricao": "Operações e prestações de serviços de segurança da informação e segurança cibernética desenvolvidos por sociedade que tenha sócio brasileiro (Anexo XI)",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200045",
+   "descricao": "Operações relacionadas a projetos de reabilitação urbana de zonas históricas e de áreas críticas de recuperação e reconversão urbanística",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "515001",
+   "descricao": "Operações, sujeitas a diferimento, com insumos agropecuários e aquícolas (Anexo IX)",
+   "cst": "515",
+   "cstDescricao": "Diferimento com redução de alíquota",
+   "reducao": {
+    "cbs": 60.0,
+    "ibsUf": 60.0,
+    "ibsMun": 60.0
+   }
+  },
+  {
+   "cClassTrib": "200046",
+   "descricao": "Operações com bens imóveis",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 50.0,
+    "ibsUf": 50.0,
+    "ibsMun": 50.0
+   }
+  },
+  {
+   "cClassTrib": "200047",
+   "descricao": "Bares e Restaurantes",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 40.0,
+    "ibsUf": 40.0,
+    "ibsMun": 40.0
+   }
+  },
+  {
+   "cClassTrib": "200048",
+   "descricao": "Hotelaria, Parques de Diversão e Parques Temáticos",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 40.0,
+    "ibsUf": 40.0,
+    "ibsMun": 40.0
+   }
+  },
+  {
+   "cClassTrib": "200049",
+   "descricao": "Transporte coletivo de passageiros rodoviário, ferroviário e hidroviário",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 40.0,
+    "ibsUf": 40.0,
+    "ibsMun": 40.0
+   }
+  },
+  {
+   "cClassTrib": "200050",
+   "descricao": "Serviços de transporte aéreo regional coletivo de passageiros ou de carga",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 40.0,
+    "ibsUf": 40.0,
+    "ibsMun": 40.0
+   }
+  },
+  {
+   "cClassTrib": "200051",
+   "descricao": "Agências de Turismo",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 40.0,
+    "ibsUf": 40.0,
+    "ibsMun": 40.0
+   }
+  },
+  {
+   "cClassTrib": "011005",
+   "descricao": "Planos de assistência à saúde de animais domésticos",
+   "cst": "011",
+   "cstDescricao": "Tributação com alíquotas uniformes reduzidas",
+   "reducao": {
+    "cbs": 30.0,
+    "ibsUf": 30.0,
+    "ibsMun": 30.0
+   }
+  },
+  {
+   "cClassTrib": "200052",
+   "descricao": "Prestação de serviços de profissões intelectuais",
+   "cst": "200",
+   "cstDescricao": "Alíquota reduzida",
+   "reducao": {
+    "cbs": 30.0,
+    "ibsUf": 30.0,
+    "ibsMun": 30.0
+   }
+  }
+ ]
+}

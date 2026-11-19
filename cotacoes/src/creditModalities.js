@@ -12,7 +12,7 @@ import { resolveCreditIof } from './iofRules.js'
 import { PRACA_PADRAO, pracaContrato } from './pracaContrato.js'
 
 export const MAX_COLUMNS = 5
-export const MIN_COLUMNS = 2
+export const MIN_COLUMNS = 1
 export const MODALITIES = Object.freeze([
   { id: 'giro-pre', label: 'Giro prefixado', hint: 'Capital de giro com taxa fixa' },
   { id: 'giro-cdi', label: 'Giro pós-CDI', hint: 'Capital de giro com percentual do CDI mais spread' },

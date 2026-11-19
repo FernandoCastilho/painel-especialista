@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { dataTimestamp } from './dataTimestamp.js'
 import { periodChange } from './stats.js'
 import { chartLinePath } from './chartLinePath.js'
@@ -200,7 +201,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const tone = (v) => (v > 0 ? 'up' : v < 0 ? 'down' : 'flat')
 
   return (
-    <div ref={plotRef} className={`plot${light ? ' light' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
+    <ChartFullscreen><div ref={plotRef} className={`plot${light ? ' light' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
       <span id={`${plotId}-hint`} className="chart-access-text">Use as setas para percorrer os pontos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho; Escape limpa. Com o mouse ou o dedo, arraste sobre o gráfico para selecionar um trecho.</span>
       <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
       <svg
@@ -283,7 +284,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
               className={`fx-dot ${ev.tom}${aberto?.t === ev.t ? ' on' : ''}`}
               style={{ left: g.x(ev.t), top: g.y(ev.bid) }}
               aria-expanded={aberto?.t === ev.t}
-              aria-label={`${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `dólar ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
+              aria-label={`${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `${code} ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
               onClick={() => setAberto(aberto?.t === ev.t ? null : ev)}
             />
           ))}
@@ -300,11 +301,11 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             {aberto.itens.map((n) => (
               <li key={n.link}>
                 {n.semHora ? null : <><time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}</>}
-                <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}</small>
+                <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}{n.geral ? ' · mercado do dia' : ''}</small>
               </li>
             ))}
           </ul>
-          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa). Mostram o que saiu na imprensa, não comprovam a causa do movimento.</p>
+          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa). Primeiro as que falam da moeda; "mercado do dia" são manchetes gerais que podem ajudar a explicar o movimento. Mostram o que saiu na imprensa, não comprovam a causa.</p>
         </div>
       )}
       {range && (
@@ -333,7 +334,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           )}
         </div>
       )}
-    </div>
+    </div></ChartFullscreen>
   )
 }
 
@@ -396,8 +397,8 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
         )}
         {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} />}
         {eventos?.length > 0 && (intraday
-          ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre o dólar publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
-          : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas do dólar no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bolinha para ver as manchetes.</p>)}
+          ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre a moeda e o mercado publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
+          : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas da moeda no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bolinha para ver as manchetes.</p>)}
       </div>
       {pts && h.warning && <p className="status stale" role="status">{h.warning}</p>}
       {pts?.length === 1 && <p className="status stale" role="status">Uma única amostra disponível; aguardando outra para calcular a variação.</p>}

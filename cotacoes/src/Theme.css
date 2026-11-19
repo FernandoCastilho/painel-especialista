@@ -1,4 +1,5 @@
 /* Resolved automatic or manual theme: keep the terminal vocabulary, layout and semantic colors.
+   Claro (etapa 4, 18/11/2026): fundo cinza neutro no lugar do bege; âmbar escuro só para texto selecionado e avisos.
    Brand fill stays amber; amber text gets a darker ink on light surfaces. */
 :root {
   color-scheme: dark;
@@ -38,13 +39,14 @@ main.app .bn-official-links a {
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f5f4f0;
+  --bg: #f3f3f1;
   --card: #fff;
-  --surface-2: #eeece6;
-  --surface-3: #e2ded4;
-  --line: #cec8bb;
-  --fg: #24231f;
-  --mut: #625e53;
+  --surface-2: #ebebe8;
+  --surface-3: #dfdeda;
+  --raised: #ebebe8;
+  --line: #d4d3ce;
+  --fg: #1c1c1e;
+  --mut: #5c5b57;
   --up: #087a43;
   --down: #bb252b;
   --amber: #865500;
@@ -79,11 +81,9 @@ main.app .bn-official-links a {
 
 /* Legacy terminal surfaces: scoped overrides also cover lazy-loaded screens. */
 :root[data-theme="light"] body .term-head, :root[data-theme="light"] body .topbar, :root[data-theme="light"] body .tape { background:var(--card); }
-:root[data-theme="light"] body .tape-item, :root[data-theme="light"] body .topbar-tabs button { border-right-color:var(--line); }
+:root[data-theme="light"] body .tape-item { border-right-color:var(--line); } /* abas do topo sem divisória, como no escuro (etapa 4) */
 :root[data-theme="light"] body .topbar-tabs button:hover, :root[data-theme="light"] body .kpi:hover { background:var(--surface-2); }
-:root[data-theme="light"] body .topbar-brand, :root[data-theme="light"] body .topbar-tabs button.on {
-  background:var(--brand-fill); color:var(--on-brand);
-}
+/* Etapa 4 (18/11/2026): no claro, a marca e a aba aberta seguem o escuro (texto escuro e traço âmbar, em Direcao.css), sem fundo âmbar cheio. */
 :root[data-theme="light"] body .desk-panel > header, :root[data-theme="light"] body .market-terminal > .terminal-titlebar,
 :root[data-theme="light"] body .executive-rates .executive-rates__heading, :root[data-theme="light"] body .learn-list-title {
   background:var(--surface-2);

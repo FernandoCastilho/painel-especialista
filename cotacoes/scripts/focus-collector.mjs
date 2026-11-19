@@ -10,8 +10,24 @@ export async function collectFocus({fetchImpl=fetch,now=Date.now()}={}) {
   if(!f || !/^\d{4}-\d{2}-\d{2}$/.test(f.date) || Date.parse(f.date+'T12:00:00Z')>now || !Object.keys(f.values).length || Object.entries(f.values).some(([year,v])=>!/^\d{4}$/.test(year)||!Number.isFinite(v.median)) || (date && f.date!==date))throw new Error('Focus incompleto ou datas de coleta divergentes')
   date=f.date;rows.push({label,indicator,values:f.values})
  }
- return {date,rows}
+ return {date,rows,...(await focusPublication(date,{fetchImpl}) ?? {})}
 }
+// Data de publicação do boletim, lida na página do próprio boletim no site do Banco Central (campo "data"), e o link dessa página.
+// A coleta vai até a sexta; o boletim sai na segunda (ou depois, em feriado). Sem resposta válida devolve null: a tela mostra só a data da coleta, nunca uma data presumida.
+export async function focusPublication(date,{fetchImpl=fetch}={}) {
+ try {
+  const id=date.split('-').reverse().join('')
+  const response=await fetchImpl(`https://www.bcb.gov.br/api/servico/sitebcb/focus/principal?filtro=${encodeURIComponent(`IdentificadorUrl eq '${id}'`)}`,{signal:AbortSignal.timeout(20000)})
+  if(!response.ok)return null
+  const item=(await response.json())?.conteudo?.[0],at=Date.parse(item?.data)
+  if(!item || String(item.DataReferencia).slice(0,10)!==date || !Number.isFinite(at))return null
+  const release=new Date(at).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'})
+  if(release<date || Date.parse(release)-Date.parse(date)>10*864e5)return null
+  return {release,link:`https://www.bcb.gov.br/publicacoes/focus/${id}`}
+ } catch { return null }
+}
+// Mesma semana e publicação já confirmada antes: mantém a data e o link quando o site do Banco Central não responde.
+export const keepPublication=(focus,previous)=>focus && !focus.link && previous?.link && previous.date===focus.date ? {...focus,release:previous.release,link:previous.link} : focus
 export function preserveFocus(out,previous,{checkedAt,error,skipped=false}={}) {
  out.focus=previous?.focus ?? null
  out.focusCheckedAt=skipped ? previous?.focusCheckedAt ?? null : checkedAt

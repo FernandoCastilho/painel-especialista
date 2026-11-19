@@ -33,12 +33,13 @@ import MascotSlot from './MascotSlot.jsx'
 const Feriados = lazy(() => import('./Feriados.jsx'))
 import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
+const Podcast = lazy(() => import('./Podcast.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
 const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
-const Apresentacao = lazy(() => import('./Apresentacao.jsx'))
+const Apresentar = lazy(() => import('./Apresentar.jsx'))
 import { useDataFile } from './useDataFile.js'
 import Nav, { TABS } from './Nav.jsx'
 import Resumo from './Resumo.jsx'
@@ -304,7 +305,7 @@ export default function App() {
       </div>
     )}
     <FeedbackMascot onSearch={setMascotSearch} section={tab} />
-    <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
+    <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} data-tab={tab} ref={mainRef}>
       {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
       <Suspense fallback={<p className="status" role="status">Carregando seção…</p>}>
@@ -325,8 +326,7 @@ export default function App() {
 
       {tab === 'resumo' && (
         <>
-          <HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />
-          <Resumo searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} panorama={panorama} />
+          <Resumo aviso={<HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />} loading={feed === 'loading'} searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} panorama={panorama} />
 
         </>
       )}
@@ -362,9 +362,10 @@ export default function App() {
         </>
       )}
 
+      {tab === 'podcast' && <Podcast />}
       {tab === 'aprender' && <Aprender view={sub} goto={goto} />}
 
-      {tab === 'apresentar' && <Apresentacao quotes={quotes} macro={macro} />}
+      {tab === 'apresentar' && <Apresentar quotes={quotes} macro={macro} curves={curves} hol={hol} colors={COLORS} />}
 
       {tab === 'config' && <Config quotesAt={updatedAt} quotesVia={via} quotes={quotes} quotesHealth={health} fx={fx} setFx={setFx} />}
 

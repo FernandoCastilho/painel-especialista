@@ -7,6 +7,7 @@ import ThemeControl from './ThemeControl.jsx'
 import { AvisosButton } from './Avisos.jsx'
 import MascotSlot from './MascotSlot.jsx'
 import './TopBar.css'
+import Nav from './Nav.jsx'
 
 const CLOCKS = [
   ['BRL', 'BRT'],
@@ -56,13 +57,7 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
       <div className="topbar-brand" title="Painel Especializado no Mercado">
         <abbr title="Painel Especializado no Mercado" style={{ textDecoration: 'none', cursor: 'help' }}>PME</abbr>
       </div>
-      <nav className="topbar-tabs" aria-label="Navegação principal">
-        {DESK_TABS.filter((t) => !t.oculto).map((t, i) => (
-          <button key={t.id} type="button" className={t.id === tab ? 'on' : ''} aria-current={t.id === tab ? 'page' : undefined} onClick={() => onTab(t.id)} title={`Alt+${(i + 1) % 10}`}>
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <Nav desktop tab={tab} onTab={onTab} />
       <Clocks />
       <OnlineBadge />
       <div className={`topbar-feed ${feed}`} role="status" title={feedTitle || 'Estado das referências de câmbio'}>

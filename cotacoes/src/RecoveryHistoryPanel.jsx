@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { useMemo, useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import RefreshButton from './RefreshButton.jsx'
@@ -26,7 +27,7 @@ function StateMap({ records, selected, onSelect }) {
   const shownStates = state ? [state] : geography.states
   const tipState = shownStates.find(item => item.uf === tip.active)
   const tipCount = counts.get(tip.active) ?? 0
-  return <article className="rj-card" aria-labelledby="rj-map-title">
+  return <ChartFullscreen><article className="rj-card" aria-labelledby="rj-map-title">
     <div className="rj-card-head">
       <div><h3 id="rj-map-title">Distribuição por UF</h3><p>{state ? stateLabel(selected) : 'Brasil · quanto maior a bolha, mais menções'}</p></div>
       {state && <button type="button" className="btn" onClick={() => onSelect('')}>Ver Brasil</button>}
@@ -57,7 +58,7 @@ function StateMap({ records, selected, onSelect }) {
       </select>
     </label>
     <p className="rj-card-note">Sem UF no recorte: {integer.format(counts.get(UNKNOWN_UF) ?? 0)}. <a href={geographyUrl} target="_blank" rel="noreferrer">Malha territorial IBGE</a>.</p>
-  </article>
+  </article></ChartFullscreen>
 }
 
 function SectorRanking({ records, selected, onSelect }) {
@@ -67,7 +68,7 @@ function SectorRanking({ records, selected, onSelect }) {
   const maxCount = groups[0]?.count
   const shortNames = shortSectorNames(groups.map(group => group.label))
 
-  return <article className="rj-card" aria-labelledby="rj-sector-title">
+  return <ChartFullscreen><article className="rj-card" aria-labelledby="rj-sector-title">
     <div className="rj-card-head">
       <div><h3 id="rj-sector-title">Distribuição por setor</h3><p>Menções por setor no período e na UF selecionados.</p></div>
     </div>
@@ -104,7 +105,7 @@ function SectorRanking({ records, selected, onSelect }) {
       </button>}
       {groups.some(group => group.label === UNKNOWN_SECTOR) && <p className="rj-card-note">{UNKNOWN_SECTOR} reúne as menções sem atividade informada. Nomes longos aparecem resumidos; o nome completo está no seletor acima.</p>}
     </> : <p className="rj-empty">Nenhum setor com menções neste recorte.</p>}
-  </article>
+  </article></ChartFullscreen>
 }
 
 function HistoryDashboard({ data }) {

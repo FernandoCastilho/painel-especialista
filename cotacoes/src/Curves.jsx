@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import Flag from './Flag.jsx'
 import { bandeiraDe } from './paises.js'
 import RefreshButton from './RefreshButton.jsx'
@@ -119,7 +120,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
       </div>
       <div ref={ref}>
         {g ? (
-          <div ref={plotRef} className="plot" onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
+          <ChartFullscreen><div ref={plotRef} className="plot" onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
             <span id={`${chartId}-hint`} className="chart-access-text">Use as setas para percorrer os prazos; Home e End vão ao primeiro e ao último.</span>
             <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
             <svg tabIndex={0} aria-describedby={`${chartId}-hint`} onFocus={(e) => { if (focoPorTeclado(e)) setHover(0) }} onBlur={() => setHover(null)} onKeyDown={onKey} viewBox={`0 0 ${width} ${H}`} width="100%" height={H} role="img" aria-label={`Curva de juros: ${title}`} onPointerMove={onMove} onPointerDown={onMove}>
@@ -158,7 +159,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
                 })}
               </div>
             )}
-          </div>
+          </div></ChartFullscreen>
         ) : (
           <div className="placeholder" style={{ height: H }}>Selecione ao menos uma data.</div>
         )}

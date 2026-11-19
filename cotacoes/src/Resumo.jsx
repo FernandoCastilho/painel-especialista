@@ -1,3 +1,4 @@
+import { observeMarketNewsHeight } from './marketNewsHeight.js'
 import { useNewsClock } from './useNewsClock.js'
 import { NEWS_WINDOW_DAYS, newsCollectionStale } from './newsWindow.js'
 import HeavyVehicles from './HeavyVehicles.jsx'
@@ -7,7 +8,7 @@ import { Aviso } from './Avisos.jsx'
 import { buildFeed } from './feed.js'
 import './MarketTable.css'
 import './MarketTerminal.css'
-import { accumulatedReturns, cnhPtaxCross, compatiblePtax, marketDate, ptaxLabel } from './marketReturns.js'
+import { accumulatedReturns, cnhPtaxCross, compatiblePtax, destaquesMes, marketDate, ptaxLabel } from './marketReturns.js'
 import { offHoursReference as offHours, quoteAgeLabel, quoteAgeState } from './quoteFreshness.js'
 import { nextChartIndex } from './chartNavigation.js'
 import { focoPorTeclado, saidaDeToque, useTocarFora } from './chartToque.js'
@@ -45,7 +46,7 @@ const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('
 const pct = (v) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2).replace('.', ',')}%`
 const p2 = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const bps = (d) => `${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(Math.round(d * 100))} bps`
-const SPARK = [
+export const SPARK = [
   { id: 'day', label: 'Dia', days: 1, intraday: true },
   { id: 'week', label: 'Semana', days: 7 },
   { id: 'month', label: 'Mês', days: 30 },
@@ -66,7 +67,11 @@ function Arrow({ v }) {
   return <span aria-hidden="true">{v > 0 ? '▲' : v < 0 ? '▼' : '■'}</span>
 }
 
-function QuoteRow({ code, quote, ptax, returns, selected, onOpen, color }) {
+const DESTAQUE = {
+  maior: { icone: '🔥', texto: 'Maior alta no mês entre as moedas da tabela' },
+  menor: { icone: '🛡️', texto: 'Menor alta no mês entre as moedas da tabela' },
+}
+function QuoteRow({ code, quote, ptax, returns, selected, onOpen, color, destaque }) {
   const cur = CURRENCIES.find(c => c.code === code)
   const hasDay = !!quote && !quote.fallback && Number.isFinite(quote.pct)
   const delta = hasDay && Number.isFinite(quote.delta) ? quote.delta : null
@@ -75,7 +80,7 @@ function QuoteRow({ code, quote, ptax, returns, selected, onOpen, color }) {
   return <tbody className={'market-record' + (selected ? ' is-selected' : '')} style={{ '--series': color }}>
     <tr className="market-values" onClick={open}>
       <th scope="row"><button type="button" className="market-open" aria-pressed={selected} onClick={e => { e.stopPropagation(); open() }} aria-label={cur.name + ': abrir gráfico' + (quote?.stale ? '. Última cotação válida de ' + dataTimestamp(quote.timestamp) : '')}>
-        <b><Flag code={series} width={20} height={14} /> {series}/BRL <span aria-hidden="true">›</span></b><small>{seriesName(cur, series)}</small>
+        <b><Flag code={series} width={20} height={14} /> {series}/BRL <span aria-hidden="true">›</span>{destaque && <span className="market-destaque" role="img" aria-label={DESTAQUE[destaque].texto} title={DESTAQUE[destaque].texto}> {DESTAQUE[destaque].icone}</span>}</b><small>{seriesName(cur, series)}</small>
         {quoteAgeState(quote) && <small className={'market-state' + (quoteAgeLabel(quote).tone === 'neutral' || (quote?.stale && offHours(quote)) ? ' is-neutral' : '')} title={quote?.stale ? quote.error : undefined}>{quote?.stale ? 'Última válida · ' + dataTimestamp(quote.timestamp) : quoteAgeLabel(quote).text}</small>}
       </button></th>
       <td className="market-price">{quote ? brl(quote.bid, code === 'JPY' ? 5 : 4).replace('R$ ', '') : <span className="muted">—</span>}</td>
@@ -291,7 +296,7 @@ function Wide({ render }) {
   return <div ref={ref}>{width > 0 ? render(width) : null}</div>
 }
 
-function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPrevious, comparison = false }) {
+export function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPrevious, comparison = false }) {
   const w = useWindow(spark)
   const dia = !!spark.intraday
   // hooks em número fixo (uma consulta por moeda; ficam em cache)
@@ -397,10 +402,8 @@ function ResumoChart({ colors, spark, selection: sel, onSelection: setSel, onPre
   )
 }
 
-// Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
-function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
-  const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
-  useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
+// Acumulados do mês e do ano e PTAX compatível de cada moeda: a mesma conta para o quadro do Mercado e para a aba Apresentar.
+export function useCambio(quotes, ptax) {
   const daily = useCentralDaily()
   const returns = Object.fromEntries(CURRENCIES.map(c => [c.code, quotes?.[c.code]?.source && quotes[c.code].source !== c.code ? { month: null, year: null } : accumulatedReturns(daily.data, c.code)]))
   const ptaxes = Object.fromEntries(CURRENCIES.map(c => [c.code, compatiblePtax(c.code, quotes?.[c.code], ptax?.[c.code])]))
@@ -408,6 +411,28 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
   const ptaxDay = fromInput(ptaxes.USD?.date ?? marketDate(Date.now()))
   const usdTicks = useIntraday('USD', ptaxDay, !ptaxes.USD), cnhTicks = useIntraday('CNH', ptaxDay, !ptaxes.USD)
   if (ptaxes.USD && quotes?.CNH && !quotes.CNH.fallback && usdTicks.status === 'ok' && cnhTicks.status === 'ok') ptaxes.CNH = cnhPtaxCross(ptaxes.USD, usdTicks.data.points, cnhTicks.data.points)
+  return { daily, returns, ptaxes }
+}
+
+// Tabela de câmbio em reais. `onOpen` (opcional) abre o gráfico da moeda ao tocar na linha.
+export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen = () => {}, colors }) {
+  const destaques = destaquesMes(returns)
+  return (
+    <table className="market-table" aria-busy={!quotes}>
+            <caption className="market-caption">Câmbio em reais · últimas referências disponíveis</caption>
+            <thead><tr><th scope="col">Par</th><th scope="col">Cotação <small>(R$)</small></th><th scope="col" aria-label="Variação absoluta do dia em reais">Δ dia <small>(R$)</small></th><th scope="col" aria-label="Variação percentual do dia">Δ dia %</th><th scope="col" aria-label="Acumulado no mês em percentual">Mês %</th><th scope="col" aria-label="Acumulado no ano em percentual">Ano %</th><th scope="col" aria-label="PTAX de venda em reais por unidade">PTAX <small>venda</small></th></tr></thead>
+            {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={onOpen} color={colors?.[c.code]} destaque={destaques.maior === c.code ? 'maior' : destaques.menor === c.code ? 'menor' : undefined} />)}
+          </table>
+  )
+}
+
+// Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
+function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
+  const newsHeightRef = useRef(null)
+  useEffect(() => observeMarketNewsHeight(newsHeightRef.current), [])
+  const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
+  useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
+  const { daily, returns, ptaxes } = useCambio(quotes, ptax)
   const [selection, setSelection] = useState(['USD'])
   const [compareOpen, setCompareOpen] = useState(false)
   const [compareSelection, setCompareSelection] = useState(['USD', 'EUR'])
@@ -431,21 +456,17 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         <div className="terminal-quotes">
         <p className="market-scroll-hint">Deslize para ver mês, ano e PTAX →</p>
         <div className="market-table-wrap" role="region" aria-label="Tabela de câmbio; role horizontalmente para ver todas as colunas" tabIndex={0}>
-          <table className="market-table" aria-busy={!quotes}>
-            <caption className="market-caption">Câmbio em reais · últimas referências disponíveis</caption>
-            <thead><tr><th scope="col">Par</th><th scope="col">Cotação <small>(R$)</small></th><th scope="col" aria-label="Variação absoluta do dia em reais">Δ dia <small>(R$)</small></th><th scope="col" aria-label="Variação percentual do dia">Δ dia %</th><th scope="col" aria-label="Acumulado no mês em percentual">Mês %</th><th scope="col" aria-label="Acumulado no ano em percentual">Ano %</th><th scope="col" aria-label="PTAX de venda em reais por unidade">PTAX <small>venda</small></th></tr></thead>
-            {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={openSelected} color={colors?.[c.code]} />)}
-          </table>
+          <CambioTabela quotes={quotes} returns={returns} ptaxes={ptaxes} selection={selection} onOpen={openSelected} colors={colors} />
         </div>
         </div>
-        <div className="terminal-chart terminal-news">
+        <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
         <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>{newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'eleicoes' ? <TemaNoticias id="eleicoes-eua" simples /> : newsTab === 'trends' ? <GoogleTrends /> : newsTab === 'veiculos-pesados' ? <><HeavyVehicles compact/><SectorNews id="veiculos-pesados" label="Veículos pesados" /></> : <MarketNews bare />}</Panel>
         </div>
         </div>
 
 
         <Aviso title="Câmbio · datas e metodologia">
-          <p id="market-help">Toque na linha para selecionar e abrir o gráfico. Filtros alteram apenas os gráficos. Cotação e Δ dia: última referência da fonte; mês/ano: observações diárias de dias encerrados, não a cotação intradiária.</p>
+          <p id="market-help">Toque na linha para selecionar e abrir o gráfico. 🔥 marca a moeda que mais subiu no mês e 🛡️ a que menos subiu, entre as da tabela; só indicam a variação, não dizem se é bom ou ruim. Filtros alteram apenas os gráficos. Cotação e Δ dia: última referência da fonte; mês/ano: observações diárias de dias encerrados, não a cotação intradiária.</p>
           <p>O traço indica dado indisponível. A cotação do CNH usa a compra de USD/BRL dividida pela venda de USD/CNH. As duas variações usam a mesma cotação anterior estimada, mantendo a diferença proporcional atual entre compra e venda do USD/CNH. Sem dados para estimar a base anterior, as duas variações ficam indisponíveis.</p>
           <p>Não há PTAX oficial do yuan. A coluna mostra uma referência cruzada (PTAX do dólar ÷ USD/CNH no horário do boletim), só com cotações das duas pontas a até 15 min dele. CNY e CNH são referências distintas.</p>
           <ul>{CURRENCIES.map(c => { const q = quotes?.[c.code], p = ptaxes[c.code], r = returns[c.code]; return <li key={c.code}>
@@ -531,7 +552,7 @@ function MarketNews({ bare = false }) {
   </aside>
 }
 // Mercado: cards de câmbio e juros, tabela de pares com manchetes e referência do Brent. Juros, curvas e agenda ficam nas próprias abas.
-export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, goto, status, searchTarget, panorama }) {
+export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, goto, status, aviso, loading, searchTarget, panorama }) {
   const rates = rateTiles(macro?.data, curves?.data)
   const [rateOpen, setRateOpen] = useState(null)
   useDataFile('oil.json')
@@ -540,7 +561,7 @@ export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, go
   const ipcaSeries = useMemo(() => { try { return ipcaFile.data ? normalizeIpca(ipcaFile.data) : null } catch { return null } }, [ipcaFile.data])
   return (
     <div className="terminal-desk">
-      <KpiRow quotes={quotes} rates={rates} ipca={ipcaSeries} ibov={indices.data} macro={macro?.data} colors={colors} onOpen={onOpen} onRate={setRateOpen} goto={goto} status={status} />
+      <KpiRow quotes={quotes} rates={rates} ipca={ipcaSeries} ibov={indices.data} macro={macro?.data} colors={colors} onOpen={onOpen} onRate={setRateOpen} goto={goto} status={status} aviso={aviso} loading={loading} />
       {rateOpen && <Suspense fallback={null}><RateModal kind={rateOpen} macro={macro} curves={curves} onClose={() => setRateOpen(null)} /></Suspense>}
       <div className="resumo desk-markets"><MoedasPanel searchTarget={searchTarget} quotes={quotes} ptax={ptax} onOpen={onOpen} colors={colors} panorama={panorama} /></div>
     </div>

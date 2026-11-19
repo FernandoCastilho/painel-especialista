@@ -76,6 +76,8 @@ jobs:
         run: OPERACAO_DI_QA_OUTPUT="$RUNNER_TEMP/qa-universal/operacao-di" node scripts/smoke-operacao-di.cjs
       - name: Conferir Empréstimo externo 4131 (IOF, gross-up, swap, NDF, apresentação e PDF)
         run: EMPRESTIMO_4131_QA_OUTPUT="$RUNNER_TEMP/qa-universal/emprestimo-4131" node scripts/smoke-emprestimo-4131.cjs
+      - name: Conferir Árvore de Crédito (folha, CNPJ simulado e visão do cliente)
+        run: ARVORE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/arvore" node scripts/smoke-arvore-credito.cjs
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4
@@ -206,6 +208,28 @@ jobs:
             echo "::error::Cenários corrigidos com falha: ${failures[*]}"
             exit 1
           fi
+      - name: Conferir player Podcast, controles e disposição móvel
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: PODCAST_QA_OUTPUT="$RUNNER_TEMP/qa-universal/podcast" node scripts/smoke-podcast.cjs
+      - name: Capturas e relatório do player Podcast
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: podcast-player
+          path: ${{ runner.temp }}/qa-universal/podcast
+          if-no-files-found: error
+          retention-days: 7
+      - name: Conferir prioridade dos menus e navegação por teclado
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: MENU_QA_OUTPUT="$RUNNER_TEMP/qa-menu-priority" node scripts/smoke-menu-priority.cjs
+      - name: Capturas dos menus desktop, tablet e celular
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-priority
+          path: ${{ runner.temp }}/qa-menu-priority
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir história dos juros, busca e navegação em Aprender
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: INTEREST_HISTORY_QA_OUTPUT="$RUNNER_TEMP/qa-universal/interest-history" node scripts/smoke-interest-history.cjs
@@ -243,7 +267,7 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: |
           failures=()
-          for s in smoke-mascot-controls smoke-ui smoke-market-table smoke-data-health smoke-market-workspace smoke-market-followup smoke-ux smoke-chart-compare smoke-outros smoke-juros-regioes smoke-date-range smoke-cupom smoke-calendario smoke-heavy-vehicles smoke-setores-navigation smoke-dynamic-notifications smoke-finimp-help smoke-recado smoke-conceito-diario smoke-motion smoke-apresentacao; do
+          for s in smoke-mascot-controls smoke-ui smoke-market-table smoke-data-health smoke-market-workspace smoke-market-learning smoke-market-followup smoke-ux smoke-chart-compare smoke-outros smoke-juros-regioes smoke-date-range smoke-cupom smoke-calendario smoke-heavy-vehicles smoke-setores-navigation smoke-dynamic-notifications smoke-finimp-help smoke-recado smoke-conceito-diario smoke-motion smoke-apresentar; do
             echo "::group::$s"
             if ! FINIMP_HELP_QA_OUTPUT="$RUNNER_TEMP/qa-universal/finimp-help" SETORES_QA_OUTPUT="$RUNNER_TEMP/qa-universal/setores" SEARCH_QA_OUTPUT="$RUNNER_TEMP/qa-universal" CONCEITO_QA_OUTPUT="$RUNNER_TEMP/qa-c" UX_QA_OUTPUT="$RUNNER_TEMP/qa-ux" TABLE_QA_OUTPUT="$RUNNER_TEMP/qa-t" WORKSPACE_QA_OUTPUT="$RUNNER_TEMP/qa-w" FOLLOWUP_QA_OUTPUT="$RUNNER_TEMP/qa-f" node scripts/$s.cjs; then
               failures+=("$s")

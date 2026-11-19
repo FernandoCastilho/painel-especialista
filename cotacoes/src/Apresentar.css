@@ -1,0 +1,256 @@
+/* Apresentar: montagem (lista do que mostrar + slides ao lado) e slides claros em formato 16:9.
+   Identidade das apresentações do painel: azul-marinho, azul e laranja sobre fundo claro, sem logotipo. */
+.apz { --navy: #001a57; --blue: #1e40af; --orange: #ff8200; display: grid; gap: 16px; padding: 4px 0 24px; }
+
+/* Cabeçalho da montagem: cliente, setor e a ação principal */
+.apz-topo { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.apz-campos { display: flex; flex-wrap: wrap; gap: 12px; flex: 1 1 420px; }
+.apz-campos label { display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px; font-size: .85rem; font-weight: 600; color: var(--fg); }
+.apz-campos label small { font-weight: 400; color: var(--mut); }
+.apz-campos input { min-height: 44px; padding: 0 12px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font: inherit; font-weight: 400; }
+.apz-campos input:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.apz-acoes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.apz-total { color: var(--mut); font-size: .9rem; }
+.apz-btn { min-height: 44px; padding: 0 16px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font: 600 .9rem system-ui, sans-serif; cursor: pointer; }
+.apz-btn:hover:not(:disabled) { border-color: var(--blue); }
+.apz-btn:disabled { opacity: .5; cursor: default; }
+.apz-btn-primario { background: var(--navy); border-color: var(--navy); color: #fff; padding: 0 28px; }
+.apz-btn-primario:hover:not(:disabled) { background: var(--blue); }
+
+.apz-corpo { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.apz-corpo > section > h2 { margin: 0 0 10px; font-size: 1rem; color: var(--fg); }
+.apz-corpo > section > h2 small { font-weight: 400; color: var(--mut); }
+
+/* Lista do que mostrar */
+.apz-col-seletor { position: sticky; top: 8px; max-height: calc(100vh - 24px); overflow: auto; padding-right: 4px; }
+.apz-seletor { display: grid; gap: 8px; }
+.apz-grupo { background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.apz-grupo > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 14px; cursor: pointer; font-weight: 600; list-style: none; }
+.apz-grupo > summary::-webkit-details-marker { display: none; }
+.apz-grupo > summary::before { content: '›'; margin-right: 8px; color: var(--mut); transition: rotate .15s; }
+.apz-grupo[open] > summary::before { rotate: 90deg; }
+.apz-grupo-nome { flex: 1; }
+.apz-grupo-conta { min-width: 28px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--mut); font-size: .78rem; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+.apz-grupo-conta.on { background: var(--navy); color: #fff; }
+.apz-grupo-nota { margin: 0 14px 8px; color: var(--mut); font-size: .82rem; line-height: 1.4; }
+.apz-todos { margin: 0 14px 6px; padding: 6px 0; background: none; border: 0; color: var(--blue); font: 600 .82rem system-ui, sans-serif; cursor: pointer; text-decoration: underline; }
+.apz-sub { padding: 0 6px 8px; }
+.apz-sub-nome { margin: 6px 8px 2px; color: var(--mut); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.apz-opcao { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: .92rem; }
+.apz-opcao:hover { background: var(--surface-2); }
+.apz-opcao input { width: 18px; height: 18px; accent-color: var(--navy); flex: none; }
+.apz-opcao small { display: block; color: var(--mut); font-size: .78rem; }
+
+/* Slides da montagem: miniaturas do slide real, na ordem */
+.apz-vazio { margin: 0 0 12px; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--mut); line-height: 1.45; }
+.apz-grade { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--colunas, 2), minmax(0, 1fr)); gap: 16px; }
+.apz-item { min-width: 0; }
+.apz-quadro { position: relative; overflow: hidden; overflow: clip; border-radius: 8px; box-shadow: 0 1px 2px #0002, 0 0 0 1px var(--line); background: #fff; }
+.apz-escala { transform-origin: 0 0; }
+.apz-abrir { position: absolute; inset: 0; background: none; border: 0; padding: 0; cursor: zoom-in; border-radius: 8px; }
+.apz-abrir:hover { box-shadow: inset 0 0 0 3px var(--blue); }
+.apz-abrir:focus-visible { outline: 3px solid var(--orange); outline-offset: -3px; }
+.apz-legenda { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 2px 0; font-size: .85rem; }
+.apz-num { min-width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; background: var(--surface-2); color: var(--mut); font-weight: 600; font-size: .78rem; font-variant-numeric: tabular-nums; }
+.apz-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.apz-ordem { display: flex; gap: 4px; }
+.apz-ordem button { width: 32px; height: 32px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; font: 600 .95rem system-ui, sans-serif; cursor: pointer; }
+.apz-ordem button:hover:not(:disabled) { border-color: var(--blue); }
+.apz-ordem button:disabled { opacity: .35; cursor: default; }
+
+/* Apresentação em tela: o mesmo slide, centralizado e ampliado */
+.apz-palco { outline: none; }
+.apz-on { background: #dfe2e8; }
+.apz-on:fullscreen { background: #dfe2e8; }
+.apz-on .apz-grade { flex: 1; min-height: 0; display: block; position: relative; }
+.apz-on .apz-item { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; visibility: hidden; }
+.apz-on .apz-item.apz-atual { visibility: visible; }
+.apz-on .apz-quadro { border-radius: 0; box-shadow: 0 8px 32px #0003; }
+
+@media (max-width: 899px) {
+  .apz-corpo { grid-template-columns: 1fr; }
+  .apz-col-seletor { position: static; max-height: none; overflow: visible; padding-right: 0; }
+  .apz-acoes { width: 100%; justify-content: space-between; }
+}
+
+/* ---------- Slide (palco lógico de 1120 x 630) ---------- */
+.sl { --navy: #001a57; --blue: #1e40af; --orange: #ff8200;
+  width: 1120px; height: 630px; box-sizing: border-box; display: flex; flex-direction: column; padding: 30px 48px 16px; background: #fff; color: #242424;
+  font-family: 'Segoe UI', system-ui, Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.4; overflow: hidden; text-align: left; }
+.sl-topo { flex: none; margin-bottom: 14px; }
+.sl-secao { margin: 0 0 2px; color: var(--blue); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.sl-topo h2 { margin: 0; color: var(--navy); font-size: 30px; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; }
+.sl-topo h2::after { content: ''; display: block; width: 48px; height: 4px; margin-top: 8px; border-radius: 2px; background: var(--orange); }
+.sl-corpo { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.sl-ajuste { flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
+.sl-miolo { transform-origin: 0 0; display: flow-root; }
+.sl-rodape { flex: none; display: flex; justify-content: space-between; gap: 16px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #d9dde3; color: #58595b; font-size: 11.5px; }
+.sl-aviso { margin: auto; color: #58595b; font-size: 17px; text-align: center; max-width: 60ch; }
+
+/* Capa */
+.sl-capa { background: var(--navy); color: #fff; padding: 48px 64px 20px; }
+.sl-capa-texto { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 880px; }
+.sl-capa-chamada { margin: 0 0 10px; color: var(--orange); font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.sl-capa h2 { margin: 0; font-size: 64px; line-height: 1.05; letter-spacing: -.02em; font-weight: 700; overflow-wrap: anywhere; }
+.sl-capa-setor { margin: 18px 0 0; color: #c7cfe0; font-size: 22px; }
+.sl-capa .sl-rodape { color: #c7cfe0; border-color: #2a3c7a; font-size: 13px; }
+
+/* Peças do painel dentro do slide: sem comandos de tela (ajuda, atualizar, ampliar) e sem moldura própria */
+.sl-corpo .chart { margin: 0; padding: 0; border: 0; background: none; box-shadow: none; }
+.sl-corpo .refresh-btn, .sl-corpo .help, .sl-corpo .chart-actions, .sl-corpo .scale-seg { display: none; }
+
+/* Mercado */
+.sl-corpo .insight-aprender, .sl-corpo .kpi-title, .sl-corpo .kpi-chart-date, .sl-corpo details.table, .sl-corpo .market-open b span { display: none; }
+.sl-corpo .market-table { table-layout: auto; }
+.sl-corpo .market-table thead th { width: auto !important; }
+
+/* Regras gerais das peças do painel dentro do slide */
+.sl-miolo section, .sl-miolo .cen-section, .sl-miolo article { margin-top: 0; }
+.sl-corpo .ctx-head > h2, .sl-corpo .history-head > h2, .sl-corpo details:not([open]), .sl-corpo .mode-btn { display: none; }
+.sl-corpo .ctx-head, .sl-corpo .history-head { min-height: 0; margin: 0 0 4px; justify-content: flex-end; }
+
+/* Cenários */
+.sl-corpo [id$="focus-hist-title"], .sl-corpo .focus-hist > p.muted + p.muted { display: none; }
+.sl-corpo .focus-hist-grade:has(> :only-child) { grid-template-columns: 1fr; }
+.sl-calendario .cal-filters, .sl-calendario .cal-row .help { display: none; }
+.sl-inadimplencia .credit-controls, .sl-inadimplencia .credit-panel > details ~ p.muted { display: none; }
+.sl-rj .rj-records, .sl-rj .rj-intro { display: none; }
+.sl-rj-numeros .rj-viz-grid { display: none; }
+.sl-rj-uf .rj-kpis, .sl-rj-setor .rj-kpis { display: none; }
+.sl-rj-uf .rj-viz-grid, .sl-rj-setor .rj-viz-grid { grid-template-columns: 1fr; }
+/* Um cartão por slide. O cartão é reconhecido pelo título a que está ligado, e não pela posição: assim a regra vale com ou sem
+   a moldura de maximizar em volta dele. `$=` porque cada slide prefixa os identificadores (apresentarIds.js). */
+.sl-rj-uf .rj-viz-grid > :is([aria-labelledby$="rj-sector-title"], :has([aria-labelledby$="rj-sector-title"])),
+.sl-rj-setor .rj-viz-grid > :is([aria-labelledby$="rj-map-title"], :has([aria-labelledby$="rj-map-title"])) { display: none; }
+.sl-pesos .infl > h3:first-child, .sl-pesos .infl-hint { display: none; }
+.sl-pesos-grupos [id$="infl-fatores"], .sl-pesos-grupos .infl-wrap:has(.infl-factors) { display: none; }
+.sl-pesos-fatores .infl-summary, .sl-pesos-fatores [id$="infl-fatores"], .sl-pesos-fatores .infl-wrap:not(:has(.infl-factors)) { display: none; }
+
+/* Notícias */
+.sl-noticias ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.sl-noticias li { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: baseline; padding-left: 12px; border-left: 3px solid #d9dde3; }
+.sl-noticias time { color: var(--blue); font-weight: 600; font-variant-numeric: tabular-nums; }
+.sl-noticias a { color: #242424; font-weight: 600; text-decoration: none; line-height: 1.3; }
+.sl-noticias a:hover { text-decoration: underline; }
+.sl-noticias small { display: block; margin-top: 2px; color: #58595b; font-size: .82em; }
+.sl-noticias-nota { margin: 14px 0 0; color: #58595b; font-size: .8em; }
+.apz-ajuste, .apz-ajuste-nota { margin: 0 8px 6px 36px; font-size: .82rem; color: var(--mut); }
+.apz-ajuste > summary { min-height: 32px; display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--blue); font-weight: 600; }
+.apz-ajuste ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; max-height: 260px; overflow: auto; }
+.apz-ajuste label { display: flex; gap: 8px; align-items: flex-start; padding: 6px 4px; border-radius: 6px; cursor: pointer; color: var(--fg); line-height: 1.3; }
+.apz-ajuste label:hover { background: var(--surface-2); }
+.apz-ajuste input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--navy); flex: none; }
+.apz-ajuste label small { display: block; color: var(--mut); }
+
+/* BNDES */
+.sl-bndes .desk-panel > header, .sl-bndes .bn-official-links, .sl-bndes .bn-fam, .sl-bndes .bn-cmp-bar, .sl-bndes .bn-cmp, .sl-bndes .bn-sub { display: none; }
+.sl-bndes .desk-panel { border: 0; background: none; }
+.sl-bndes-resumo .desk-panel { display: none; }
+.sl-bndes-tabela .bn-cards, .sl-bndes-tabela .bn-scroll ~ * { display: none; }
+.sl-bndes-historico .summary-period-controls { display: none; }
+
+/* Bancos */
+.sl-bancos .banks-heading h2, .sl-bancos .banks-controls, .sl-bancos .banks-scroll-hint, .sl-bancos .bank-details-button { display: none; }
+.sl-bancos .banks-table-scroll { overflow: visible; }
+
+/* Feriados: só os três primeiros meses com feriado */
+.sl-feriados .history-head, .sl-feriados .fer-filter, .sl-feriados .fer-month:nth-child(n+4) { display: none; }
+.sl-feriados .fer-months { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+
+/* Setores */
+.sl-estudo p { margin: 0 0 12px; line-height: 1.45; }
+.sl-estudo-destaque { font-size: 1.2em; font-weight: 600; color: var(--navy); }
+.sl-estudo-nota { color: #58595b; font-size: .8em; }
+.sl-estudo-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; }
+.sl-estudo-perguntas, .sl-lista { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; line-height: 1.4; }
+.sl-estudo-perguntas li::marker, .sl-lista li::marker { color: var(--orange); font-weight: 700; }
+.sl-estudo-perguntas strong { display: block; color: var(--navy); }
+.apz-estudo { display: grid; gap: 8px; padding: 0 14px 8px; }
+.apz-estudo > label { display: grid; gap: 4px; font-size: .82rem; font-weight: 600; }
+.apz-estudo select { min-height: 40px; padding: 0 8px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font: inherit; font-weight: 400; max-width: 100%; }
+.apz-estudo .apz-sub { padding: 0; }
+
+/* Acertos finos das peças do painel dentro do slide */
+:root .sl .sl-noticias a, :root .sl .sl-noticias a:visited { color: #242424; }
+.sl-bndes .bn-fam, .sl-bndes .bn-atalhos, .sl-bndes .bn-prazo, .sl-bndes .bn-sub, .sl-bndes .bn-def, .sl-bndes .bn-src { display: none !important; }
+.sl-bndes .bn-scroll { max-height: none; overflow: visible; }
+.sl-corpo .chart-filters { display: none; }
+.sl-banco-historico .bank-history-ranking, .sl-banco-historico .bank-history-sources, .sl-banco-historico .bank-detail-table, .sl-banco-historico .bank-metric-history > h2, .sl-banco-historico .bank-metric-history > h3 { display: none; }
+.sl-feriados .feriados > .status, .sl-feriados .fer-count { display: none; }
+
+/* Calculadoras: a calculadora viva em dois modos (Resultado e Dados). Memórias de cálculo, parcelas e planilhas ficam de fora. */
+.sl-calc-quadro { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.sl-calc-modos { flex: none; display: flex; align-items: center; justify-content: flex-end; margin-bottom: 8px; }
+.sl-calc-modos span { margin-right: auto; color: #58595b; font-size: 13px; }
+.sl-calc-modos button { min-height: 36px; padding: 0 14px; background: #fff; color: var(--navy); border: 1px solid #c9ced8; font: 600 13px inherit; cursor: pointer; }
+.sl-calc-modos button:first-child { border-radius: 8px 0 0 8px; } .sl-calc-modos button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
+.sl-calc-modos button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+.sl-calc-modos button:disabled { opacity: .45; cursor: default; }
+.sl-ajuste-rolar { overflow: auto; }
+.sl-calc [data-apz-fora] { display: none !important; }
+.sl-calc .cx-back, .sl-calc .bnprint-launch, .sl-calc .bnp-launch, .sl-calc .fm-show-result, .sl-calc .calc-workspace-heading, .sl-calc .expandable-toggle { display: none !important; }
+.sl-calc [data-painel^="Memória"], .sl-calc [data-painel^="Parcelas"], .sl-calc [data-painel^="Apuração"], .sl-calc [data-painel^="Histórico"],
+.sl-calc [data-painel^="Evolução"], .sl-calc [data-painel^="Composição"], .sl-calc [data-painel^="Caso conferido"],
+.sl-calc [data-painel^="Dados básicos"], .sl-calc details.desk-panel, .sl-calc details[open] { display: none; }
+.sl-calc .calc-result-shell:not(:has([data-painel]:not([data-painel^="Memória"], [data-painel^="Parcelas"], [data-painel^="Apuração"], [data-painel^="Histórico"], [data-painel^="Evolução"], [data-painel^="Composição"], [data-painel^="Caso conferido"], [data-painel^="Dados básicos"]))):has([data-painel]) { display: none; }
+/* Faturamento: o gráfico cabe inteiro na largura do slide (sem rolagem lateral) e tem altura limitada. Com um período
+   escolhido, a comparação fica à esquerda e o resumo por ano, à direita. O texto de ajuda de uso sai; as ressalvas ficam. */
+.sl-calc-faturamento .ft > .status, .sl-calc-faturamento .ft-pad { display: none; }
+.sl-calc-faturamento .ft-chart-wrap { overflow: visible; }
+.sl-calc-faturamento .ft-chart { min-width: 0 !important; width: auto; max-width: 100%; height: auto; max-height: 230px; margin: 0 auto; }
+.sl-calc-faturamento .expandable-content:not(:has(.ft-compare)) .ft-chart { max-height: 300px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) { display: grid; grid-template-columns: minmax(0, 1fr) 270px; column-gap: 20px; align-items: start; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) :is(.ft-legend, .ft-chart-wrap) { grid-column: 1 / -1; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) :is(.ft-range, .ft-compare) { grid-column: 1; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-years { grid-column: 2; grid-row: 3 / span 3; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year { padding: 5px 10px; gap: 0; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year b { font-size: .9rem; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-year span { font-size: .78rem; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-range :is(select, button) { min-height: 32px; padding: 2px 8px; }
+.sl-calc-faturamento .ft-table th[scope="row"] { white-space: nowrap; text-align: left; }
+.sl-calc-faturamento .ft .ft-table :is(th, td) { padding: 4px 10px !important; font-size: 14px; line-height: 1.35; }
+.sl-calc-faturamento .ft-compare-title { display: none; } /* os dois períodos já estão no cabeçalho da tabela */
+.sl-calc-faturamento .ft-compare .cx-hint { margin: 6px 0 0; font-size: 12px; }
+.sl-calc-faturamento .expandable-content:has(.ft-compare) .ft-chart { max-height: 200px; }
+.sl-calc-faturamento .ft-range { margin: 8px 0; }
+.sl-calc-faturamento :is(.ft-tools, .ft-kpis, .ft-cresc, .ft-analise) { display: none; } /* botões da calculadora e indicadores de 12 meses ficam fora do slide; o slide mantém o desenho aprovado */
+.sl-corpo .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row; grid-auto-columns: auto; gap: 10px; overflow: visible; }
+.sl-corpo .kpis > * { min-width: 0; width: auto; flex: none; }
+
+/* Busca de blocos na montagem */
+.apz-busca { display: grid; gap: 4px; font-size: .82rem; font-weight: 600; }
+.apz-busca input { min-height: 44px; padding: 0 12px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font: inherit; font-weight: 400; }
+.apz-achados { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+:root[data-tema-fixo] .theme-control { display: none; }
+
+/* BNDES: resumo em dois por linha; tabela TFC dividida em dois slides complementares */
+.sl-bndes-resumo .bn-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sl-bndes-parte-1 .bn-main tbody tr:nth-child(n+14), .sl-bndes-parte-2 .bn-main tbody tr:nth-child(-n+13) { display: none; }
+/* Tabela de commodities em dólar (mais de 20 referências): dois slides complementares, onze linhas no primeiro e o restante no segundo. */
+.sl-tabela-parte-1 .ind-table tbody:nth-of-type(n+12), .sl-tabela-parte-2 .ind-table tbody:nth-of-type(-n+11) { display: none; }
+
+/* Revisão visual: títulos internos repetidos e controles de tela saem do slide */
+.sl-corpo .ctx-head > h2, .sl-corpo .history-head > h2, .sl-corpo .credit-panel > .history-head > h2 { display: none !important; }
+.sl-corpo button.linklike, .sl-corpo .ind-bndes-link { display: none; }
+.sl-rj .rj-card-note, .sl-rj .rj-card label, .sl-rj .rj-map-instructions { display: none; }
+/* Áreas com rolagem própria (tabelas largas) se abrem no slide: assim o ajuste enxerga a largura real e reduz até caber. */
+.sl-miolo [role="region"], .sl-miolo .scroll { overflow: visible !important; max-height: none !important; }
+.sl-corpo .kpi.kpi-taxa { display: grid; } /* no slide, os juros entram como cartões (no painel eles ficam na faixa do topo) */
+
+/* Veículos pesados e Panorama do dia dentro do slide */
+.sl-veiculos .heavy-vehicles { margin: 0; }
+.sl-veiculos .heavy-vehicles > h3, .sl-veiculos .heavy-vehicles > p:has(a), .sl-veiculos .heavy-vehicles > small, .sl-veiculos .heavy-vehicles > a { display: none; }
+.sl-veiculos .heavy-segments { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.sl-panorama .market-popup { position: static; display: block; width: auto; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; color: inherit; overflow: visible; }
+.sl-leitura dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0 0; }
+.sl-leitura dl > div { padding: 14px 16px; border: 1px solid #d9dde3; border-left: 4px solid var(--blue); border-radius: 8px; }
+.sl-leitura dt { color: var(--blue); font-size: .8em; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.sl-leitura dd { margin: 0; line-height: 1.45; }
+
+/* Gráfico de moeda: as bolinhas de notícia e de maiores altas e baixas (e o quadro de manchetes que elas abrem) ficam só no painel.
+   No slide, as notícias entram pelo bloco de Notícias, onde dá para escolher as manchetes. */
+.sl-corpo .fx-dots, .sl-corpo .fx-legend, .sl-corpo .fx-news { display: none; }
+
+/* O botão de maximizar gráfico do painel não entra no slide: o slide já é a visão ampliada. */
+.sl-corpo .chart-fullscreen-toolbar { display: none; }
+.apz-limite { flex-basis: 100%; color: var(--warn, #865500); font-size: .85rem; font-weight: 600; }

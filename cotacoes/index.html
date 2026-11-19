@@ -18,7 +18,7 @@
         try { choice = localStorage.getItem('painel-theme') } catch { /* Automatic without storage. */ }
         const theme = choice === 'light' || choice === 'dark' ? choice : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
         document.documentElement.dataset.theme = theme
-        document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#f5f4f0' : '#050505'
+        document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#f3f3f1' : '#050505'
       })()
     </script>
     <title>PME · Painel Especializado no Mercado</title>

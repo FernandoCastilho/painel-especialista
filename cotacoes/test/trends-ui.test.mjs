@@ -14,7 +14,7 @@ const nodes = value => Array.isArray(value) ? value.flatMap(nodes) : value && ty
 async function setup(t, file = { status: 'ready', data: null }) {
   const source = await readFile(new URL('../src/GoogleTrends.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
-  const deps = { react: React, './trends.js': model, './trendsSnapshot.js': snapshot, './GoogleTrends.css': {}, './useDataFile.js': { useDataFile: () => file } }
+  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './trends.js': model, './trendsSnapshot.js': snapshot, './GoogleTrends.css': {}, './useDataFile.js': { useDataFile: () => file } }
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, URL, URLSearchParams, require: name => deps[name] ?? require(name) })
   const render = hookRenderer(() => module.exports.default())

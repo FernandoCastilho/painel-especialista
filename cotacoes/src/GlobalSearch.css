@@ -1,5 +1,5 @@
 .global-search-dialog :focus-visible,.search-destination:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
-.global-search-dialog { box-sizing:border-box; width:min(820px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); padding:24px; color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:12px; font: .9rem/1.5 system-ui,sans-serif; overflow:auto; overscroll-behavior:contain; }
+.global-search-dialog { box-sizing:border-box; width:min(820px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); padding:24px; color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:12px; font: .9rem/1.5 var(--sans); overflow:auto; overscroll-behavior:contain; }
 .global-search-dialog::backdrop { background:rgba(0,0,0,.8); }
 .global-search-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
 .global-search-head h2 { font-size:1.3rem; margin:0; }
@@ -20,7 +20,7 @@
 .global-search-result small,.search-destination small { color:#b2aa9c; font-size:.75rem; }
 .search-open { color:var(--accent); font-size:.75rem; }
 .global-search-dialog mark,.search-destination mark { color:#050505; background:#ffb000; border-radius:2px; padding:0 1px; }
-.search-destination { border:1px solid var(--accent); padding:16px; margin:12px 0 24px; font:.85rem/1.6 system-ui,sans-serif; scroll-margin-top:110px; }
+.search-destination { border:1px solid var(--accent); padding:16px; margin:12px 0 24px; font:.85rem/1.6 var(--sans); scroll-margin-top:110px; }
 .search-destination > div { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
 .search-destination p { max-width:75ch; overflow-wrap:anywhere; }
 .search-more { margin:0 0 12px; }

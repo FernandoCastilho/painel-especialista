@@ -4,10 +4,13 @@ import ErrorBoundary from './ErrorBoundary.jsx'
 import App from './App.jsx'
 import DynamicNotifications from './DynamicNotifications.jsx'
 import AcessoPorEmail from './AcessoPorEmail.jsx'
+import './Fonts.css'
 import './styles.css'
 import './Terminal.css'
 import './Abas.css'
 import './Theme.css'
+import './Direcao.css'
+import './CalcUnificado.css'
 import { iniciarContagem } from './acessos.js'
 
 createRoot(document.getElementById('root')).render(

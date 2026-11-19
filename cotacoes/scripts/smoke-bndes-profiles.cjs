@@ -89,7 +89,7 @@ const out = process.env.BNDES_PROFILES_QA_OUTPUT || 'workspace-qa/bndes-profiles
       await page.goto(base + '/#calculadora/finame-materiais')
       const fm = page.locator('.cx-finame')
       await fm.locator('#fm-custo').selectOption('tlp')
-      assert.equal(await fm.locator('.fm-grade,.fm-fluxo-panel,#fm-ipca').count(), 0)
+      assert.equal(await fm.locator('#fm-ipca').count(), 0, 'sem o campo antigo de IPCA único')
       await fm.getByRole('link', { name: 'Abrir projeção TLP exigível' }).click()
       await page.waitForURL('**/#calculadora/bndes-tlp-exigivel')
       assert.equal(await page.locator('#tlp-amount').inputValue(), '', 'não transfere condições do Finame')

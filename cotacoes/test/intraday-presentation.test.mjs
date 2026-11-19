@@ -22,7 +22,7 @@ const require = createRequire(import.meta.url)
 function render(points, overrides = {}) {
   const state = { status: points.length ? 'ok' : 'empty', generatedAt: now, data: points.length ? { source: 'USD', points, generatedAt: now, resolution: '5 min' } : null, ...overrides }
   const module = { exports: {} }
-  const stubs = {
+  const stubs = { './ChartFullscreen.jsx': ({ children }) => children,
     './useHistory.js': { useIntraday: () => state, useHistory: () => state, useCentralDaily: () => ({}), centralFull: () => [] },
     './useMacro.js': { useMacro: () => ({}) }, './useQuotes.js': { seriesName: () => 'Dólar' },
     './dataTimestamp.js': { dataTimestamp }, './stats.js': { periodChange }, './chartLinePath.js': { chartLinePath },
