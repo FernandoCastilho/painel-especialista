@@ -13,7 +13,7 @@ export const SEARCH_PAGES = {
   'Emprestimo4131.jsx':['calculadora/emprestimo-4131','Empréstimo externo (4131): custo em dólar, swap para CDI e NDF'],
   'CreditComparison.jsx':['calculadora/comparador-credito','Necessidade do Cliente: comparação de propostas, CET e garantias'],
   'AnaliseDesconto.jsx':['calculadora/analise-desconto','Análise de desconto: títulos e capital de giro Price'],
-  'DividendosEmprestimo.jsx':['calculadora/dividendos-emprestimo','Dividendos via empréstimo: lucro real, IR sobre juros e imposto sobre dividendos'],
+  'DividendosEmprestimo.jsx':['calculadora/dividendos-emprestimo','Dividendos via empréstimo: lucro real, juros dedutíveis e aplicação do sócio'],
   'Faturamento.jsx':['calculadora/faturamento','Faturamento x endividamento: comparação com o ano anterior'],
   'Bancos.jsx':['bancos','Bancos — Basileia, carteiras PJ e PF, provisões e inadimplência'],
   'finimpHelpContent.js':['calculadora/finimp','FINIMP: fórmulas e explicações'],
