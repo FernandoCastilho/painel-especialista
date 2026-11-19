@@ -29,16 +29,20 @@ export default function CbsOverview({ revenue, inputs, monthlyCmv, monthlyPurcha
     ncg: operatingWorkingCapital({ revenue: m.revenue, receiveDays: inputs.receiveDays, payDays: inputs.payDays,
       stockDays: inputs.stockDays, monthlyCmv, monthlyPurchases }) }))
   const show = v => Number.isFinite(v) ? money(v) : 'Não calculado'
+  // 2026 é ano de teste: CBS e IBS não substituem nada, então não há diferença a mostrar.
+  const testYear = months[0].result.illustrative
+  const delta = m => testYear ? 'não se aplica em 2026' : show(m.result.ok ? m.result.monthlyTaxDelta : null)
   return <section className="desk-panel cx-panel cbs-overview"><h3>Faturamento, giro e impacto tributário</h3>
     <p>Os 12 meses são cenários independentes; não são um fluxo de caixa nem transportam saldos. A média de faturamento se repete até ser alterada. CMV e compras são mantidos constantes.</p>
     <Series title="Faturamento (R$/mês)" values={months.map(m => m.revenue)} />
     <Series title="NCG operacional simplificada (R$ de saldo)" values={months.map(m => m.ncg?.total)} />
-    <Series title="Diferença tributária estimada (R$/mês)" values={months.map(m => m.result.ok ? m.result.monthlyTaxDelta : null)} />
+    {testYear ? <p className="cbs-series-flat"><b>Diferença tributária estimada (R$/mês):</b> não se aplica em 2026.</p>
+      : <Series title="Diferença tributária estimada (R$/mês)" values={months.map(m => m.result.ok ? m.result.monthlyTaxDelta : null)} />}
     <p>Impacto negativo indica imposto menor sob as hipóteses selecionadas, não economia comprovada. A reserva de prazo é separada e não deve ser somada automaticamente à NCG. Valores de NCG são saldos, não devem ser somados ao longo do ano.</p>
     <details><summary>Editar meses e ver valores</summary><button type="button" className="cx-action" onClick={() => onOverridesChange({})}>Repetir média em todos os meses</button>
       <div className="cbs-month-grid">{months.map((m, i) => <div className="cx-field" key={m.month}><label htmlFor={`overview-month-${i}`}>{m.month} · faturamento</label>
         <MoneyInput id={`overview-month-${i}`} value={m.value} onChange={value => onOverridesChange(prev => ({ ...prev, [i]: value }))} />
-        <p>Faturamento: {show(m.revenue)}<br />NCG: {show(m.ncg?.total)}<br />Diferença tributária: {show(m.result.ok ? m.result.monthlyTaxDelta : null)}</p></div>)}</div>
+        <p>{!testYear && <>Reserva: {show(m.result.ok ? m.result.reserveDelayed : null)}<br /></>}NCG: {show(m.ncg?.total)}<br />Diferença tributária: {delta(m)}</p></div>)}</div>
     </details>
   </section>
 }

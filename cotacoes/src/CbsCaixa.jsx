@@ -12,7 +12,7 @@ import snapshot from './ibgeCbsSnapshot.json'
 import oficial from './rtcOficial.json'
 import { simulateCbsCash } from './cbsCash.js'
 import { ANOS_REFORMA, aliquotasDoAno } from './rtcAnos.js'
-import { TIPOS_RECEITA_SIMPLES } from './rtcCalc.js'
+import { TIPOS_RECEITA_SIMPLES, aliquotaEfetiva } from './rtcCalc.js'
 import { CBS_SOURCES } from './baseDados.js'
 import './CbsCaixa.css'
 import './CalcPattern-cbs.css'
@@ -22,6 +22,8 @@ const money = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL
 const decimal = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 const numeric = text => String(text).trim() === '' ? NaN : Number(String(text).replace(',', '.'))
 const pctText = n => String(n).replace('.', ',')
+// Ciclo financeiro em palavras: número negativo de dias confunde.
+const cycleText = d => d > 0 ? `paga ${d} dias antes de receber` : d < 0 ? `recebe ${-d} dias antes de pagar` : 'paga e recebe no mesmo prazo'
 const isoDate = iso => new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR')
 // Tratamentos com redução de alíquota (CST 200 e 011) da tabela oficial; CST 515 (diferimento) fica de fora.
 const REDUCOES = oficial.reducoes.filter(r => r.cst === '200' || r.cst === '011')
@@ -104,7 +106,7 @@ export default function CbsCaixa({ onBack }) {
           <IbgeActivitySearch key={searchReset} datasets={snapshot.datasets} selected={{ ...group, kind: form.kind }} onSelect={option => { setActivityConfirmed(true); setForm(f => ({ ...f, kind: option.kind, group: option.id, spendingPct: '' })) }} />
           <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-year">Ano da simulação</label><Help title="Ano da simulação"><p>2026 é o ano de teste, com as alíquotas oficiais do banco da Receita (CBS 0,9% e IBS 0,1%). Nesse ano, quem cumpre as obrigações em regra não recolhe esses valores.</p><p>De 2027 em diante a Receita ainda não publicou alíquotas. A tela traz um valor inicial marcado como hipótese, que você pode trocar. Ao mudar o ano, as alíquotas voltam ao valor inicial daquele ano.</p></Help></div>
             <select id="cbs-year" value={form.year} onChange={e => setForm(f => ({ ...f, year: e.target.value, ...ratesFor(Number(e.target.value)) }))}>{ANOS_REFORMA.map(y => <option key={y} value={y}>{y}{y === 2026 ? ' · alíquotas oficiais' : ' · alíquotas em hipótese'}</option>)}</select></div>
-          <div className="cx-field"><label htmlFor="cbs-regime">Regime atual</label><select id="cbs-regime" value={form.regime} onChange={e => set('regime', e.target.value)}><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option><option value="simples">Simples Nacional (DAS)</option></select></div>
+          <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-regime">Regime atual</label></div><select id="cbs-regime" value={form.regime} onChange={e => set('regime', e.target.value)}><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option><option value="simples">Simples Nacional (DAS)</option></select></div>
           {simples ? <>
             {field('simplesCbs', 'Parte do DAS que é CBS', 'Alíquota efetiva de CBS dentro do DAS, calculada pelo PGDAS-D. A calculadora oficial também não calcula esse número: ela recebe pronto e só reparte.', '%')}
             {field('simplesIbs', 'Parte do DAS que é IBS', 'Alíquota efetiva de IBS dentro do DAS, calculada pelo PGDAS-D. Some estadual e municipal.', '%')}
@@ -120,7 +122,7 @@ export default function CbsCaixa({ onBack }) {
               {field('ibsMunRate', 'IBS municipal', 'Hipótese editável. A Receita não publicou a alíquota deste ano.', '%')}
             </div>}
             {!simples && yearRates.origem.map(o => <p key={o} className="cbs-rate-origin">{o}</p>)}
-            {!simples && (year === 2027 || year === 2028) && <p className="cbs-rate-origin"><a href={CBS_SOURCES.law} target="_blank" rel="noreferrer">Ler a LC 214/2025 atualizada (arts. 344 e 347)</a></p>}
+            {!simples && (year === 2027 || year === 2028) && <p className="cbs-rate-origin"><a href={CBS_SOURCES.law} target="_blank" rel="noreferrer">Ler a LC 214/2025 atualizada (arts. 344, 347 e 349)</a></p>}
             {testYear && <p className="cbs-rate-origin">2026 é ano de teste: veja a conta ilustrativa ao lado.</p>}
             <p className="cbs-rate-origin">Regras e reduções: calculadora oficial da Receita, versão {oficial.fonte.versaoCalculadora}, tabela {oficial.fonte.versaoBaseDados} de {isoDate(oficial.fonte.dataBaseDados)}.</p>
           </div>
@@ -128,8 +130,8 @@ export default function CbsCaixa({ onBack }) {
           {field('receiveDays', 'Recebimento médio', 'Dias entre a venda e o recebimento. Use a média ponderada dos valores, incluindo vendas à vista.')}
           {field('payDays', 'Pagamento das compras a prazo', 'Prazo médio ponderado apenas das compras a prazo informadas. Não inclua compras à vista nesta média. Ajuda a situar o crédito, cuja liberação é uma hipótese separada.')}
           {field('stockDays', 'Estoque médio', 'Dias entre a compra e a venda. Serviços sem estoque podem informar zero. Matérias-primas e produtos em elaboração exigem aproximação do ciclo completo.')}
-          <div className="cx-field"><label htmlFor="cbs-cmv">Custo mensal das mercadorias vendidas (CMV)</label><MoneyInput id="cbs-cmv" value={form.monthlyCmv} onChange={v => set('monthlyCmv', v)} /><p className="cbs-field-hint">Necessário para estimar o estoque ao custo.</p></div>
-          <div className="cx-field"><label htmlFor="cbs-purchases">Compras mensais a prazo</label><MoneyInput id="cbs-purchases" value={form.monthlyPurchases} onChange={v => set('monthlyPurchases', v)} /><p className="cbs-field-hint">Necessário para estimar fornecedores; não inclui compras à vista.</p></div>
+          <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-cmv">Custo mensal das mercadorias vendidas (CMV)</label></div><MoneyInput id="cbs-cmv" value={form.monthlyCmv} onChange={v => set('monthlyCmv', v)} /><p className="cbs-field-hint">Necessário para estimar o estoque ao custo.</p></div>
+          <div className="cx-field"><div className="cx-field-label"><label htmlFor="cbs-purchases">Compras mensais a prazo</label></div><MoneyInput id="cbs-purchases" value={form.monthlyPurchases} onChange={v => set('monthlyPurchases', v)} /><p className="cbs-field-hint">Necessário para estimar fornecedores; não inclui compras à vista.</p></div>
           {testYear ? <p className="cbs-field-hint">Tributos atuais substituídos: nenhum em 2026 (ano de teste).</p> : field('currentNetRate', 'Tributos atuais substituídos, após créditos', 'Percentual efetivamente pago hoje, sobre as vendas sem tributos, dos tributos que a CBS e o IBS substituem no ano escolhido. Em 2027 e 2028: PIS/Cofins. De 2029 a 2032 o ICMS e o ISS saem aos poucos: some a parte que deixa de existir. Em 2033: PIS/Cofins, ICMS e ISS. No Simples, use a parte do DAS que corresponde a esses tributos.', '%')}
         </div>
       </article>
@@ -151,11 +153,11 @@ export default function CbsCaixa({ onBack }) {
         {result?.illustrative && <article className="desk-panel cx-panel cbs-result cbs-illustrative" aria-labelledby="cbs-illustrative-title">
           <h3 id="cbs-illustrative-title">2026 · conta ilustrativa</h3>
           <dl className="cbs-breakdown cbs-monthly-tax">
-            <div><dt>CBS (0,9%)</dt><dd>{money(result.cbs)}</dd></div>
+            <div><dt>CBS ({pctText(aliquotaEfetiva(taxes.aliquotas.cbs, treatment?.reducao.cbs ?? 0))}%{treatment ? ` com redução de ${pctText(treatment.reducao.cbs)}%` : ''})</dt><dd>{money(result.cbs)}</dd></div>
             <div><dt>IBS (estadual {money(result.ibsUf)} + municipal {money(result.ibsMun)})</dt><dd>{money(result.ibs)}</dd></div>
             <div className="cbs-total"><dt>Total do teste no mês</dt><dd>{money(result.outputTax)}</dd></div>
           </dl>
-          <p className="cbs-critical">Em 2026 esses valores são compensados com PIS/Cofins ou dispensados (LC 214/2025, art. 348). Não há reserva de caixa nem diferença de imposto a mostrar. Escolha 2027 ou depois para simular o efeito no caixa.</p>
+          <p className="cbs-neutral-note">Em 2026 esses valores são compensados com PIS/Cofins ou dispensados (LC 214/2025, art. 348). Não há reserva de caixa nem diferença de imposto a mostrar. Escolha 2027 ou depois para simular o efeito no caixa.</p>
         </article>}
         {result?.ok && !result.illustrative && <article className="desk-panel cx-panel cbs-result calc-result-shell" aria-labelledby="cbs-result-title">
           <span className="sr-only" id="cbs-result-title">Reserva adicional para cobrir os prazos</span><ExpandablePanel title="Reserva adicional para cobrir os prazos" help={<Help title="Como a reserva é estimada"><p>Fluxo mensal uniforme, divisor 30 e prazos médios constantes. A reserva compara a disponibilidade temporária do imposto atual com a da CBS e do IBS líquidos futuros, ponderando a parcela de split e o vencimento. Não é o imposto mensal multiplicado pelo ano.</p><p>Primeiro cenário: créditos utilizáveis já disponíveis. Segundo: indisponibilidade temporária desses créditos conforme compra, estoque, pagamento e prazo adicional informado. A espera positiva é calculada separadamente na parcela com split e na parcela recolhida no vencimento, antes de ponderar os resultados; um recolhimento posterior não anula a espera da parcela antecipada. São cenários de sensibilidade, não intervalo estatístico nem déficit máximo comprovado. Não somar novamente esses valores à retenção bruta ou à NCG integral.</p><p>O ciclo financeiro é apresentado em dias; não calculamos a NCG total da empresa, saldo de caixa, sazonalidade, margem, renegociação de preços, CAPEX, ressarcimento ou capacidade de pagamento. O resultado não é limite de crédito nem recomendação de contratação.</p></Help>}>
@@ -175,14 +177,14 @@ export default function CbsCaixa({ onBack }) {
               <p className="cbs-primary-reading">Muda o dinheiro que sobra depois do imposto, todo mês. Avalie preço e margem.</p>
             </div>
           </div>
-          <p className="cbs-equiv">Ciclo financeiro: <b>{result.cycleDays} dias</b> · Espera para usar os créditos: <b>{decimal(result.creditGapDays)} dias</b> no modelo</p>
+          <p className="cbs-equiv">Ciclo financeiro: <b>{cycleText(result.cycleDays)}</b>{result.creditsUsable > 0 && <> · Espera para usar os créditos: <b>{decimal(result.creditGapDays)} dias</b> no modelo</>}</p>
           <div className="cbs-values">
             <h4 className="cbs-values-grp">Reserva de prazo · duas hipóteses</h4>
             <dl className="cbs-breakdown cbs-scenarios">
               <div><dt>Créditos já disponíveis</dt><dd><strong>{money(result.reserveImmediate)}</strong></dd></div>
               <div><dt>Créditos disponíveis após a espera</dt><dd><strong>{money(result.reserveDelayed)}</strong></dd></div>
             </dl>
-            <p className="cbs-detail-intro">Duas hipóteses de reserva para cobrir prazos. Não some os valores e não multiplique por 12. Zero não significa caixa suficiente.</p>
+            <p className="cbs-detail-intro">Duas hipóteses de reserva para cobrir prazos. Não some os valores e não multiplique por 12. Zero não significa caixa suficiente.{result.creditsUsable === 0 && (simples ? ' No Simples a empresa não usa créditos de CBS e IBS nas compras, por isso as duas hipóteses dão o mesmo valor.' : ' Sem créditos para abater, as duas hipóteses dão o mesmo valor.')}</p>
             <h4 className="cbs-values-grp">Imposto por mês · outra informação</h4>
             <dl className="cbs-breakdown cbs-monthly-tax">
               <div><dt>CBS nas vendas</dt><dd>{money(result.cbs)}</dd></div>
@@ -234,7 +236,7 @@ export default function CbsCaixa({ onBack }) {
         <article className="desk-panel cx-panel cbs-giro" aria-labelledby="cbs-giro-title"><h3 id="cbs-giro-title">Faturamento e necessidade de giro</h3>
           {!ncg && <p className="cbs-alert" role="status">NCG não calculada: confira faturamento e prazos válidos e informe CMV e compras mensais a prazo. Campos vazios não são zero.</p>}
           {parsedMoney.ok && parsedMoney.value > 0 && parsedMoney.value <= 1e13 && Number.isInteger(inputs.receiveDays) && inputs.receiveDays >= 0 && inputs.receiveDays <= 365 && <p>Valores a receber estimados: <b>{money(parsedMoney.value * inputs.receiveDays / 30)}</b> (vendas uniformes).</p>}
-          {[inputs.receiveDays, inputs.payDays, inputs.stockDays].every(v => Number.isInteger(v) && v >= 0 && v <= 365) && <p>Ciclo financeiro: <b>{inputs.receiveDays + inputs.stockDays - inputs.payDays} dias</b>.</p>}
+          {[inputs.receiveDays, inputs.payDays, inputs.stockDays].every(v => Number.isInteger(v) && v >= 0 && v <= 365) && <p>Ciclo financeiro: <b>{cycleText(inputs.receiveDays + inputs.stockDays - inputs.payDays)}</b>.</p>}
           {ncg && <p>NCG operacional simplificada: <b>{money(ncg.total)}</b> = recebíveis {money(ncg.receivables)} + estoques {money(ncg.inventory)} − fornecedores {money(ncg.suppliers)}.</p>}
           <p>Estimativa média, sem outras contas operacionais. Use valores na mesma base, descontando tributos recuperáveis quando aplicável. Não representa projeção de caixa. No cálculo de prazo tributário, o prazo das compras a prazo é uma aproximação para todas as compras, inclusive à vista.</p>
         </article>
@@ -248,11 +250,11 @@ export default function CbsCaixa({ onBack }) {
         </details>
       </div>
     </div>
-    <details className="cbs-method"><summary>Fontes e limites da referência setorial</summary><p>{dataset.description}</p><p>{dataset.population}. Ano-base {dataset.year}; coleta em {new Date(dataset.retrievedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}. Razão entre somas do setor, não média de percentuais individuais. Valores suprimidos pelo IBGE são excluídos, nunca convertidos em zero. Bases preservadas quando a atualização falha; não há consulta a dados do cliente.</p><p><a href={dataset.query} target="_blank" rel="noreferrer">Valores consultados na API SIDRA</a> · <a href={CBS_SOURCES.law} target="_blank" rel="noreferrer">LC 214/2025, arts. 27, 31–35, 47–48 e 347</a> · <a href={CBS_SOURCES.tcu} target="_blank" rel="noreferrer">Referência técnica do TCU</a></p></details>
+    <details className="cbs-method"><summary>Fontes e limites da referência setorial</summary><p>{dataset.description}</p><p>{dataset.population}. Ano-base {dataset.year}; coleta em {new Date(dataset.retrievedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}. Razão entre somas do setor, não média de percentuais individuais. Valores suprimidos pelo IBGE são excluídos, nunca convertidos em zero. Bases preservadas quando a atualização falha; não há consulta a dados do cliente.</p><p><a href={dataset.query} target="_blank" rel="noreferrer">Valores consultados na API SIDRA</a> · <a href={CBS_SOURCES.law} target="_blank" rel="noreferrer">LC 214/2025, arts. 27, 31–35, 47–48 e 347</a></p></details>
     <details className="cbs-method cbs-official-source"><summary>Fonte das regras e das alíquotas</summary>
       <p>Fórmulas e dados da <a href={oficial.fonte.repositorio} target="_blank" rel="noreferrer">calculadora oficial da Receita Federal (regime regular)</a> e da <a href={oficial.fonte.repositorioSimples} target="_blank" rel="noreferrer">versão do Simples Nacional</a>. Licença MIT, Copyright (c) 2026 Receita Federal do Brasil.</p>
       <p>Versão da calculadora {oficial.fonte.versaoCalculadora} · tabela de dados {oficial.fonte.versaoBaseDados}, de {isoDate(oficial.fonte.dataBaseDados)} · copiada em {isoDate(oficial.fonte.extraidoEm)}. {REDUCOES.length} tratamentos com redução.</p>
-      <p>Oficial: alíquotas de 2026, reduções e a forma de calcular. Hipótese: alíquotas de 2027 a 2033, prazos, split e parcela dos gastos que gera crédito. Uma rotina semanal avisa quando a Receita publicar tabela nova; a troca dos dados é feita à mão.</p>
+      <p>Oficial: alíquotas de 2026, reduções e a forma de calcular. Hipótese: alíquotas de 2027 a 2033 (escada da carga inicial do banco da Receita, retirada em 28/08/2026), prazos, split e parcela dos gastos que gera crédito. Uma rotina semanal avisa quando a Receita publicar tabela nova; a troca dos dados é feita à mão.</p>
       <p>Fora do cálculo: nota fiscal item a item, crédito presumido, diferimento, regimes específicos, compras do governo e o cálculo da alíquota do DAS.</p>
     </details>
     <p className="status">Estimativa educativa · sem apuração fiscal, promessa de economia ou compromisso de crédito.</p>

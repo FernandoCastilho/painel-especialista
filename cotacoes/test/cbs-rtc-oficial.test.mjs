@@ -29,6 +29,19 @@ test('dados oficiais: 2026 com CBS 0,9%, IBS estadual 0,1% e municipal 0%; 2027+
   assert.ok(oficial.reducoes.some(r => r.reducao.cbs === 30) && oficial.reducoes.some(r => r.reducao.cbs === 100))
   assert.match(oficial.fonte.versaoBaseDados, /^V\d{4}$/)
 })
+test('valores iniciais de 2027 a 2033: escada da carga inicial da Receita (decisão de Fernando, 19/11/2026)', () => {
+  // B0001 linhas 36269–36440, apagadas pela V0053 em 28/08/2026. Hipótese editável, não alíquota oficial.
+  const escada = { 2027: [8.4, 0.05, 0.05], 2028: [8.4, 0.05, 0.05], 2029: [8.5, 1.6, 0.25], 2030: [8.5, 3.2, 0.5],
+    2031: [8.5, 4.8, 0.75], 2032: [8.5, 6.4, 1], 2033: [8.5, 16, 2.5] }
+  for (const [ano, [cbs, ibsUf, ibsMun]] of Object.entries(escada)) {
+    const a = aliquotasDoAno(Number(ano), oficial)
+    assert.deepEqual({ cbs: a.cbs, ibsUf: a.ibsUf, ibsMun: a.ibsMun }, { cbs, ibsUf, ibsMun }, ano)
+    assert.ok(a.origem.every(o => !/TCU/.test(o)), `${ano} sem referência ao TCU`)
+  }
+  const a2033 = aliquotasDoAno(2033, oficial)
+  assert.equal(moeda(a2033.cbs + a2033.ibsUf + a2033.ibsMun), 27)
+  for (const ano of [2027, 2028]) assert.match(aliquotasDoAno(ano, oficial).origem.join(' '), /art\. 347[\s\S]*art\. 349[\s\S]*art\. 344/)
+})
 test('RR Teste_000001_1 (2026, tributação integral)', () => {
   confere(calcularRegular({ baseCalculo: 200, aliquotas: a2026 }), { vBC: 200, cbs: 1.8, ibsUf: 0.2, ibsMun: 0 })
 })

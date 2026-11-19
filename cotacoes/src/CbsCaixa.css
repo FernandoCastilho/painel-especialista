@@ -71,7 +71,7 @@
 .cbs-annual { padding:24px; }
 .cbs h4 { margin:0 0 6px; font-size:1.1rem; }
 .cbs-chart-heading p,.cbs-annual>p { color:var(--mut); font-size:.95rem; }
-.cbs-annual-chart { display:block; width:100%; height:240px; overflow:visible; }
+.cbs-annual-chart { display:block; width:100%; height:auto; overflow:visible; }
 .cbs-chart-grid { stroke:var(--line); stroke-width:1; }
 .cbs-chart-line { stroke:var(--accent); stroke-width:3; }
 .cbs-chart-dot { fill:var(--accent); }
@@ -100,7 +100,6 @@
   .cbs-essential>.cx-field,.cbs-essential>.cx-field:nth-child(2),.cbs-essential>.cx-field:nth-child(3) { grid-column:auto; }
   .cbs .cx-form,.cbs .desk-panel>header,.cbs-annual,.cbs-monthly-summary,.cbs-explanation { padding:16px; }
   .cbs-reserve { margin:16px 16px 0; padding-left:12px; }
-  .cbs-annual-chart { height:190px; }
   .cbs-month-buttons button { flex-basis:14%; }
   .cbs-details summary,.cbs-method summary { padding:16px; }
   .cbs-method>p { padding-inline:16px; }
@@ -113,24 +112,17 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
 @media (max-width:640px) {
   .cbs .cbs-used-assumptions { padding-inline:16px; }
 }
-.cbs .cbs-annual-chart.is-zero { height:120px; }
 .cbs .cbs-chart-scale { margin-top:12px; color:var(--mut); font-size:.95rem; }
 @media (max-width:640px) {
-  .cbs .cbs-annual-chart.is-zero { height:90px; }
   .cbs .cbs-chart-dot { r:9px; }
 }
 .cbs-chart-scroll { overflow-x:auto; overscroll-behavior-inline:contain; }
 .cbs .cbs-chart-scroll svg text { fill:var(--fg); }
-.cbs .cbs-annual-chart { min-width:890px; }
-.cbs .cbs-annual-chart text { font:16px sans-serif; display:block; }
+.cbs .cbs-annual-chart text { font:16px sans-serif; display:block; fill:var(--fg); }
 .cbs .cbs-consult-label { margin:8px 0; color:var(--mut); font-size:.95rem; }
-.cbs-chart-mobile-hint { display:none; }
 @media (max-width:640px) {
-  .cbs-chart-mobile-hint { display:block; color:var(--mut); font-size:.95rem; }
-  .cbs .cbs-annual-chart { height:220px; }
-  .cbs .cbs-annual-chart.is-zero { height:100px; }
-  .cbs .cbs-annual-chart .cbs-chart-dot { r:4px; }
-  .cbs .cbs-annual-chart g>text { display:block; }
+  /* Desenho encolhe ~2,5x no celular: letra maior no desenho para ficar com ~11px na tela. */
+  .cbs .cbs-annual-chart text { font-size:28px; }
 }
 /* Alíquotas do ano: rótulo oficial/hipótese sempre visível. */
 .cbs-rates { grid-column:1 / -1; border:1px solid var(--line); border-radius:8px; padding:12px; display:grid; gap:8px; min-width:0; }
@@ -151,6 +143,14 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
 .cbs-headline { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px 32px; }
 .cbs-headline-tax { min-width:0; }
 .cbs-delta-arrow.is-up { color:var(--down); }
+/* Sobre o cartão azul, o vermelho escuro some: usa o vermelho claro do tema escuro nos dois temas. */
+:root[data-theme] body .cbs .cbs-headline .cbs-delta-arrow.is-up { color:#ff9b9b; }
+/* "?" do cabeçalho azul do resultado: claro nos dois temas. */
+:root[data-theme] body main.app.app-calculators .cbs .cbs-result > .expandable-panel > .expandable-heading .fi-help > button { color:#fff; border-color:#ffffffaa; background:transparent; }
+/* Títulos dos quadros de giro: sem margem de cima, para o respiro ficar igual ao das laterais. */
+:root[data-theme] body .cbs :is(.cbs-giro, .cbs-overview) > h3 { margin-top:0; }
+/* Nota neutra (aviso de 2026): informação, não alerta. */
+.cbs .cbs-neutral-note { color:var(--mut); border-left:3px solid var(--line); padding-left:12px; }
 :root[data-theme] body .cbs .cbs-illustrative { padding:16px; display:grid; gap:12px; }
 @media (min-width:900px) { :root[data-theme] body .cbs .cbs-illustrative { padding:24px; } }
 :root[data-theme] body .cbs .cbs-illustrative .cbs-breakdown > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; }

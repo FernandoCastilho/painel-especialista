@@ -18,13 +18,23 @@ async function run() {
     assert.equal(await page.locator('#cbs-regime').inputValue(), 'presumido')
     assert.equal(await page.locator('#cbs-year').inputValue(), '2027')
     assert.match(await page.locator('.cbs-rates').innerText(), /Alíquotas de 2027\s*hipótese/)
-    assert.match(await page.locator('.cbs-rates').innerText(), /TCU/)
-    assert.equal(await page.locator('#cbs-cbsRate').inputValue(), '11,2')
+    // Escada da Receita (decisão de Fernando, 19/11/2026): carga inicial do banco oficial, retirada em 28/08/2026.
+    assert.doesNotMatch(await page.locator('body').innerText(), /TCU/)
+    assert.match(await page.locator('.cbs-rates').innerText(), /carga inicial do banco da Receita[\s\S]*art\. 347[\s\S]*art\. 349/)
+    assert.equal(await page.locator('#cbs-cbsRate').inputValue(), '8,4')
     await page.locator('#cbs-year').selectOption('2026')
     assert.match(await page.locator('.cbs-rates').innerText(), /Alíquotas de 2026\s*oficial[\s\S]*CBS 0,9% · IBS estadual 0,1% · IBS municipal 0%/)
     assert.equal(await page.locator('#cbs-cbsRate').count(), 0, 'official 2026 rates are not editable')
     await page.locator('#cbs-year').selectOption('2033')
-    assert.equal(await page.locator('#cbs-ibsUfRate').inputValue(), '16')
+    assert.deepEqual(await Promise.all(['#cbs-cbsRate', '#cbs-ibsUfRate', '#cbs-ibsMunRate'].map(id => page.locator(id).inputValue())), ['8,5', '16', '2,5'])
+    await page.locator('.cbs-result').waitFor()
+    for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+      await page.emulateMedia({ colorScheme: theme })
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `2033 overflow ${theme}/${width}`)
+      await page.screenshot({ path: path.join(out, `ano-2033-${theme}-${width}.png`), fullPage: true })
+    }
+    await page.setViewportSize({ width: 1440, height: 1100 })
     await page.locator('#cbs-year').selectOption('2027')
     assert.match(await page.locator('.cbs-rates').innerText(), /tabela V\d{4} de \d{2}\/\d{2}\/\d{4}/)
     assert.match(await page.locator('.cbs-official-source').textContent(), /Licença MIT/)
@@ -38,6 +48,12 @@ async function run() {
     assert.equal(await page.locator('.calc-result-shell').count(), 0, '2026 has no reserve')
     assert.equal(await page.locator('#cbs-currentNetRate').count(), 0, '2026 replaces no tax')
     assert.ok((await page.locator('.cbs-illustrative').innerText()).replace(/\s/g, '').includes('R$27.000,00'), '2026: 0,9% de R$ 3 milhões')
+    assert.match(await page.locator('.cbs-illustrative').innerText(), /CBS \(0,9%\)/)
+    assert.match(await page.locator('.cbs-overview').innerText(), /Diferença tributária estimada \(R\$\/mês\): não se aplica em 2026/)
+    assert.equal(await page.locator('.cbs-illustrative .cbs-critical').count(), 0, '2026: nota neutra, não alerta')
+    await page.locator('#cbs-reduction').selectOption('200028')
+    assert.match(await page.locator('.cbs-illustrative').innerText(), /CBS \(0,36% com redução de 60%\)/)
+    await page.locator('#cbs-reduction').selectOption('')
     for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
@@ -81,7 +97,7 @@ async function run() {
     await page.locator('.cbs-annual-details > summary').click()
     const { simulateCbsCash } = await import('../src/cbsCash.js')
     const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/ibgeCbsSnapshot.json'), 'utf8'))
-    const taxes = { regime: 'regular', aliquotas: { cbs: 11.2, ibsUf: 0.05, ibsMun: 0.05 }, reducao: {}, isRate: 0 }
+    const taxes = { regime: 'regular', aliquotas: { cbs: 8.4, ibsUf: 0.05, ibsMun: 0.05 }, reducao: {}, isRate: 0 }
     const expected = change => simulateCbsCash({ revenue: 1000000, spendingRatio: snapshot.datasets.find(d => d.kind === 'comercio').groups.find(g => g.id === 'comercio-83319').spendingRatio, eligibleShare: 70, taxes, currentNetRate: 3.65, splitShare: 50, receiveDays: 30, payDays: 30, stockDays: 30, currentDueDays: 40, futureDueDays: 40, creditDelayDays: 30, ...change })
     const format = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\s/g, '')
     async function checkReserves(result) {
@@ -108,6 +124,11 @@ async function run() {
     assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 11, 'invalid month must create a gap')
     assert.match(await page.locator('.cbs-month-reading').innerText(), /inválido/)
     await page.getByRole('button', { name: 'Usar faturamento principal em todos', exact: true }).click()
+    // Meses iguais: texto no lugar do gráfico reto; um só botão de ampliar (o do bloco Reserva).
+    assert.equal(await page.locator('.cbs-annual-chart').count(), 0)
+    assert.match(await page.locator('.cbs-annual').innerText(), /Reserva adicional: R\$\s?[\d.,]+ em todos os meses/)
+    assert.equal(await page.locator('.cbs-annual .expandable-panel').count(), 0, 'sem ampliar duplicado')
+    await page.locator('#cbs-month-1').fill('2.000.000,00')
     await page.locator('.cbs-month-editor > summary').click()
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: theme })
@@ -116,6 +137,8 @@ async function run() {
         await page.evaluate(() => document.fonts.ready)
         const overflow = await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > innerWidth, offenders: [...document.querySelectorAll('body *')].filter(el => el.getBoundingClientRect().right > innerWidth + 1).slice(0, 12).map(el => ({tag:el.tagName, className:String(el.className), right:el.getBoundingClientRect().right})) }))
         assert.equal(overflow.overflow, false, `overflow ${theme}/${width}: ${JSON.stringify(overflow.offenders)}`)
+        const fits = await page.locator('.cbs-annual-chart').evaluate(element => [...element.querySelectorAll('text')].every(t => { const r = t.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 9 }))
+        assert.equal(fits, true, `chart fits with readable labels ${theme}/${width}`)
         assert.equal(await page.locator('.cbs-annual-chart').evaluate(element => {
           const points = [...element.querySelectorAll('circle')]
           const labels = [...element.querySelectorAll('text')]
@@ -142,6 +165,9 @@ async function run() {
         await page.locator('#cbs-group').press('Escape')
       }
     }
+    await page.locator('.cbs-month-editor > summary').click()
+    await page.getByRole('button', { name: 'Usar faturamento principal em todos', exact: true }).click()
+    await page.locator('.cbs-month-editor > summary').click()
     await page.getByText('Ajustar hipóteses', { exact: true }).click()
     await page.getByText('Como isso aparece no recebimento e nos prazos?', { exact: true }).click()
     await page.getByText('Uma reserva de prazo significa pagar esse valor a mais todo mês?', { exact: true }).click()
@@ -154,6 +180,8 @@ async function run() {
     await page.locator('#cbs-splitShare').fill('100')
     await checkReserves(expected({ receiveDays: 60, payDays: 90, stockDays: 0, creditDelayDays: 60, splitShare: 100 }))
     assert.match(await page.locator('.cbs-result-note').innerText(), /dias no modelo/)
+    assert.match(await page.locator('.cbs-equiv').innerText(), /Ciclo financeiro: recebe 30 dias antes de pagar/)
+    assert.match(await page.locator('.cbs-giro').innerText(), /Ciclo financeiro: recebe 30 dias antes de pagar/)
     const selectedBefore = await page.locator('#cbs-activity-selected').innerText()
     const reserveBefore = await page.locator('.cbs-scenarios').innerText()
     await page.locator('#cbs-group').fill('atividadequenaoexiste999')
@@ -187,6 +215,11 @@ async function run() {
     assert.ok(monthlySimples.includes('R$27.500,00') && monthlySimples.includes('R$12.500,00'), 'Simples: 2,75% e 1,25% de R$ 1 milhão')
     assert.doesNotMatch(await page.locator('.cbs-cash-details').textContent(), /Mais CBS/, 'Simples: DAS já está na receita bruta')
     assert.match(await page.locator('.cbs-cash-details').textContent(), /Receita bruta \(já inclui o DAS\)/)
+    // Simples: sem créditos nas compras, as duas reservas são iguais por construção; a tela explica e não mostra espera de créditos.
+    const [r1, r2] = await page.locator('.cbs-scenarios strong').allTextContents()
+    assert.equal(r1, r2)
+    assert.match(await page.locator('.cbs-values').innerText(), /No Simples a empresa não usa créditos/)
+    assert.doesNotMatch(await page.locator('.cbs-equiv').innerText(), /Espera para usar os créditos/)
     for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
