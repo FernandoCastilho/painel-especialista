@@ -41,3 +41,13 @@ Leitura real Focus27/10/2026 00:59:52UTC: quatro indicadores(Selic,IPCA,PIB,Câm
 Qualquer achado abre (ou comenta) a issue "Dados da página de cotações com problema de validação" e avisa o Teams, se configurado; ao normalizar, a issue é fechada.
 
 Revisão de 10/11/2026: o limite de 6 h acima continua valendo na validação de hora em hora, mas a cotação parada no pregão agora gera aviso próprio em cerca de 30 minutos (vigia das cotações). O envio ao Teams registra aviso quando não chega, há um teste manual de alerta e um lembrete do fim do calendário da B3. Detalhes em `docs/publicacao-e-calendario.md`.
+
+## Câmbio: só no horário do mercado brasileiro (19/11/2026)
+
+Horário conferido: dólar futuro (DOL/WDO) negocia das 9h às 18h desde 13/04/2026 ([CE 013/2026 B3](https://b3.com.br/data/files/53/E0/08/C0/16F4D9101073F4D9AC094EA8/CE%20013-2026-VNC%20ALTERA%C3%87%C3%83O%20HOR%C3%81RIO%20DE%20NEGOCIA%C3%87%C3%83O%20-%20FUTUROS_PT.pdf)); o à vista interbancário vai até cerca de 17h. A janela da coleta continua 9h05 às 18h de Brasília.
+
+Regra única em `scripts/data-schedules.mjs` (`fxSessionOpen`): dia de pregão da B3 e 9h05 às 18h. Usada por:
+- coleta central (`quotes.yml`): em feriado da B3 cada partida coleta uma vez só, sem o laço de 5 min;
+- vigia (`quotes-watch.mjs`): não religa a coleta em feriado;
+- navegador (`useQuotes.js`): a consulta direta automática de 10 em 10 min só roda com o câmbio aberto; fora disso vale a coleta central (leitura do arquivo publicado, sem gastar a cota da fonte). Em feriado, a cotação central vale por até 4 h.
+Ano sem calendário B3 conferido (2027 em diante): dia útil segue tratado como aberto, para nunca deixar de coletar.

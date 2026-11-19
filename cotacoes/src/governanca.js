@@ -55,7 +55,7 @@ const min = (ms) => Math.round(ms / 60000)
 // Como o navegador lê e atualiza (valores vêm das constantes do código, não de texto digitado).
 export const NAVEGADOR = [
   `Relê os arquivos publicados a cada ${min(DATA_POLL_MS)} min, só enquanto a aba está visível; ao voltar para a aba, atualiza na hora.`,
-  `Atualização automática das cotações a cada ${min(AUTO_REFRESH_MS)} min.`,
+  `Atualização automática das cotações a cada ${min(AUTO_REFRESH_MS)} min, só com o câmbio aberto (dias de pregão da B3, 9h05 às 18h de Brasília).`,
   `Botão Atualizar: consulta direta à fonte, no máximo 1 a cada ${REFRESH_COOLDOWN_S} s e ${REFRESH_DAILY_MAX} por dia neste navegador.`,
   'Alertas de câmbio: mais de ±0,30% em relação ao fechamento anterior da fonte, usando o mesmo Δ dia da tabela. Sem fechamento no dia anterior, vale o último fechamento disponível na fonte. Alertas a partir das 9h de Brasília. A faixa no painel não exige permissão; a notificação do sistema exige autorização deste navegador. Não há monitoramento contínuo em segundo plano nem com o app fechado, mesmo instalado como aplicativo. Uma consulta já iniciada pode terminar e gerar um aviso após ocultar a aba.',
 ]

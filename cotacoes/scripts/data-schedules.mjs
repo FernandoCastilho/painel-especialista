@@ -26,6 +26,15 @@ export function b3ClosedDay(now=Date.now()) {
  if(!b3CalendarStatus(p.date.slice(0,4)).verified)return null
  return closed2026.has(p.date.slice(5))
 }
+// Janela do câmbio brasileiro usada pela coleta de cotações: 9h05 às 18h de Brasília, só em dia de pregão da B3.
+// Referência: dólar futuro (DOL/WDO) negocia das 9h às 18h desde 13/04/2026 (B3); o dólar à vista interbancário vai até cerca de 17h.
+// Ano sem calendário B3 conferido (b3ClosedDay = null): trata dia útil como aberto, para nunca deixar de coletar por falta de calendário.
+export const FX_ABERTURA=9*60+5,FX_FECHAMENTO=18*60
+export function fxSessionOpen(now=Date.now()) {
+ if(b3ClosedDay(now)===true)return false
+ const p=saoPauloParts(now),min=Number(p.hour)*60+Number(p.minute)
+ return min>=FX_ABERTURA&&min<=FX_FECHAMENTO
+}
 // Lembrete ao dono: quantos dias faltam para o fim do calendário B3 conferido. Não inclui nem inventa ano novo; só conta.
 // A cobertura vai até 31/12 do último ano conferido em sequência (hoje, 2026). Depois dessa data as curvas da B3 param de atualizar.
 export const B3_CALENDAR_REMINDER_DAYS=60
