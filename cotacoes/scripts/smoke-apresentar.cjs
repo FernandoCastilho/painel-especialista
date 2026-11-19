@@ -130,10 +130,8 @@ const out = process.env.SMOKE_OUT || '/tmp'
       await modos.getByRole('button', { name: 'Dados' }).click()
       await atual.locator('.giro-form').waitFor()
       assert.equal(await atual.locator('.calc-result-shell:visible').count(), 0)
-      const dates = atual.getByText('Datas e praça do contrato', { exact: true })
-      await dates.click()
+      // Data da liberação fica à vista, na linha mestra (19/11/2026).
       assert.equal(await atual.getByLabel('Data da liberação', { exact: true }).isVisible(), true)
-      await dates.click()
       const iof = atual.getByText('Enquadramento do IOF', { exact: true })
       await iof.click()
       assert.equal(await atual.getByLabel('Perfil tributário', { exact: true }).isVisible(), true)

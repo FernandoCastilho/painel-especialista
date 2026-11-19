@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
-import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA } from './pracaContrato.js'
+import LinhaMestra from './LinhaMestra.jsx'
+import { lmClear, lmDefaults, lmLoad, lmSave } from './linhaMestra.js'
+import { PRACA_AJUDA, PRACA_RESSALVA } from './pracaContrato.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { IOF_SOURCE } from './iofRules.js'
 import { parseDecimal } from './emprestimo.js'
@@ -23,8 +25,6 @@ import CalcBack from './CalcBack.jsx'
 const brl = v => Number.isFinite(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
 const pct = v => Number.isFinite(v) ? `${nbr5891(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%` : 'Não mensurável'
 const day = d => d.split('-').reverse().join('/')
-const TERMS = [6, 12, 18, 24, 36, 48, 60, 72, 84]
-const GRACES = [0, 3, 6, 12, 18, 24]
 const GUARANTEES = ['', 'Aval', 'Recebíveis', 'Alienação fiduciária', 'Fundo garantidor (FGI)', 'Outra garantia']
 const COLUMN_COLORS = ['#0075bf', '#c76d00', '#2a8a4a', '#8a3ffc', '#c2185b']
 const COLUMN_DASH = ['', '8 4', '2 4', '10 3 2 3', '4 4']
@@ -46,19 +46,14 @@ function ModalityIcon({ id }) {
 }
 const usesCdiIn = columns => columns.some(c => c.modality === 'giro-cdi' || (c.modality === 'outra' && c.rateType === 'cdi'))
 
-function SharedFields({ shared, set }) {
+function SharedFields({ shared, set, onClear }) {
   const update = (key, value) => set({ ...shared, [key]: value })
-  return <section className="desk-panel credit-shared" aria-labelledby="credit-shared-title">
-    <h3 id="credit-shared-title" className="credit-shared-title">Linha mestra · vale para todas as operações <small>cada coluna pode ter condições próprias</small></h3>
-    <label className="credit-field" htmlFor="credit-shared-value"><span>Valor da operação</span><MoneyInput id="credit-shared-value" value={shared.value} onChange={v => update('value', v)} /></label>
-    <label className="credit-field" htmlFor="credit-shared-term"><span>Prazo</span><select id="credit-shared-term" value={shared.term} onChange={e => update('term', e.target.value)}>{TERMS.map(t => <option key={t} value={t}>{t} meses</option>)}</select></label>
-    <label className="credit-field" htmlFor="credit-shared-grace"><span>Carência</span><select id="credit-shared-grace" value={shared.grace} onChange={e => update('grace', e.target.value)}>{GRACES.map(g => <option key={g} value={g}>{g === 0 ? 'Sem carência' : `${g} meses`}</option>)}</select></label>
-    <label className="credit-field" htmlFor="credit-shared-system"><span>Amortização</span><select id="credit-shared-system" value={shared.system} onChange={e => update('system', e.target.value)}>{SYSTEM_OPTIONS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
-    <label className="credit-field" htmlFor="credit-shared-start"><span>Data da liberação</span><input id="credit-shared-start" type="date" max="9999-12-31" value={shared.start} onChange={e => update('start', e.target.value)} /></label>
-    <div className="credit-field"><span className="credit-label"><label htmlFor="credit-shared-regime">Regime tributário</label><CalculatorHelp title="Regime tributário da empresa"><p>Regime tributário da empresa que toma o crédito. Define o imposto da aplicação financeira e se juros, IOF e tarifas reduzem o IRPJ/CSLL.</p></CalculatorHelp></span><select id="credit-shared-regime" value={shared.regime} onChange={e => update('regime', e.target.value)}>{REGIMES.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}</select></div>
-    <div className="credit-field" title={`${PRACA_AJUDA} ${PRACA_RESSALVA}`}><span className="credit-label"><label htmlFor="credit-shared-praca">Praça do contrato</label><CalculatorHelp title="Praça do contrato (feriados)"><p>{PRACA_AJUDA}</p><p>{PRACA_RESSALVA}</p></CalculatorHelp></span><select id="credit-shared-praca" aria-describedby="credit-shared-praca-hint" value={shared.praca ?? PRACA_PADRAO} onChange={e => update('praca', e.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select><small id="credit-shared-praca-hint" className="credit-hint">Feriados locais que adiam vencimentos.</small></div>
-    {shared.regime !== 'simples' && <label className="credit-check credit-shared-wide"><input type="checkbox" checked={shared.adicional} onChange={e => update('adicional', e.target.checked)} /> Paga o adicional de 10% do IRPJ (lucro acima de R$ 20 mil por mês): IRPJ + CSLL = {shared.adicional ? '34%' : '24%'}</label>}
-  </section>
+  // Linha mestra comum (19/11/2026): valor, prazo, carência, amortização, data e praça passam para as outras calculadoras de empréstimo.
+  // Regime tributário e adicional do IR são só do Comparador.
+  return <div className="credit-shared-wrap"><LinhaMestra prefix="credit-shared" values={shared} onChange={update} onClear={onClear} note="cada coluna pode ter condições próprias">
+    <div className="lm-field"><span className="lm-label"><label htmlFor="credit-shared-regime">Regime tributário</label><CalculatorHelp title="Regime tributário da empresa"><p>Regime tributário da empresa que toma o crédito. Define o imposto da aplicação financeira e se juros, IOF e tarifas reduzem o IRPJ/CSLL.</p></CalculatorHelp></span><select id="credit-shared-regime" value={shared.regime} onChange={e => update('regime', e.target.value)}>{REGIMES.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}</select></div>
+    {shared.regime !== 'simples' && <label className="credit-check lm-wide"><input type="checkbox" checked={shared.adicional} onChange={e => update('adicional', e.target.checked)} /> Paga o adicional de 10% do IRPJ (lucro acima de R$ 20 mil por mês): IRPJ + CSLL = {shared.adicional ? '34%' : '24%'}</label>}
+  </LinhaMestra></div>
 }
 
 function ColumnCard({ index, col, set, result, shared }) {
@@ -334,7 +329,9 @@ function Presentation({ children, onClose, title = 'Comparador de Crédito' }) {
 }
 export default function CreditComparison({ onBack }) {
   const [columns, setColumns] = useState(initialColumns), [count, setCount] = useState(MIN_COLUMNS)
-  const [shared, setShared] = useState(() => initialShared(cgToday()))
+  const [shared, setSharedState] = useState(() => ({ ...initialShared(cgToday()), ...lmLoad(cgToday()) }))
+  const setShared = next => { setSharedState(next); lmSave(Object.fromEntries(Object.keys(lmDefaults('')).map(k => [k, next[k]]))) }
+  const clearShared = () => { lmClear(); setConfirmed(null); setSharedState(old => ({ ...old, ...lmDefaults(cgToday()) })) }
   const [scenario, setScenario] = useState('Base'), [manual, setManual] = useState(false), [cdiText, setCdi] = useState('')
   const [shock, setShock] = useState('2'), [equivalent, setEquivalent] = useState(false), [target, setTarget] = useState('500.000,00')
   const [present, setPresent] = useState(false), [confirmed, setConfirmed] = useState(null), [compared, setCompared] = useState(null)
@@ -375,7 +372,7 @@ export default function CreditComparison({ onBack }) {
     </nav></div>
     <div className="credit-bw-body" hidden={area !== 'compare'}>
     <div className="credit-intro credit-help-line"><span>Preencha a operação e compare as modalidades.</span><CalculatorHelp title="Como usar o comparador"><p>Escolha as modalidades, preencha a linha mestra uma vez e compare custo, CET e fluxo. Opcional: contra deixar o dinheiro aplicado, com a tributação da empresa.</p></CalculatorHelp></div>
-    <SharedFields shared={shared} set={invalidate(setShared)} />
+    <SharedFields shared={shared} set={invalidate(setShared)} onClear={clearShared} />
     <div className="credit-count" role="group" aria-label="Quantidade de comparações"><span id="credit-count-label">Quantas comparações?</span>
       <div className="seg">{Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, k) => k + MIN_COLUMNS).map(n => <button type="button" key={n} aria-pressed={n === count} onClick={() => invalidate(setCount)(n)}>{n}</button>)}</div>
       <CalculatorHelp title="Quantidade de comparações"><p>Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado.</p></CalculatorHelp></div>

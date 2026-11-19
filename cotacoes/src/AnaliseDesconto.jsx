@@ -8,7 +8,9 @@ import { DISCOUNT_INITIAL_FORM, DISCOUNT_TERMS, TITLE_FEE_MODES, parseDiscountFo
 import './AnaliseDesconto.css'
 import './CalcPattern-analise-desconto.css'
 import { IOF_SOURCE } from './iofRules.js'
-import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_RESSALVA } from './pracaContrato.js'
+import { cgAddDays, cgToday } from './contaGarantida.js'
+import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
+import { lmLoad } from './linhaMestra.js'
 import CalcBack from './CalcBack.jsx'
 
 const brl = (value) => value == null ? '—' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -27,9 +29,14 @@ export function DescontoIcon() {
 }
 
 export default function AnaliseDesconto({ onBack }) {
-  const [form, setForm] = useState(() => ({ ...DISCOUNT_INITIAL_FORM, titleRows: DISCOUNT_INITIAL_FORM.titleRows.map(row => ({ ...row })) }))
+  // Linha mestra comum (19/11/2026): data da operação e praça vêm dela; o valor pode ser o principal do giro comparado.
+  const [lm, setLm, clearLm] = useLinhaMestra(cgToday())
+  // O exemplo de títulos vence 30 dias depois da data da operação, como no exemplo de referência (05/11 → 05/12).
+  const [form, setForm] = useState(() => ({ ...DISCOUNT_INITIAL_FORM, titleRows: DISCOUNT_INITIAL_FORM.titleRows.map(row => ({ ...row, dueDate: cgAddDays(lmLoad(cgToday()).start, 30) ?? row.dueDate })) }))
   const [visited, setVisited] = useState({})
-  const { errors: found, operation, result: calculated } = parseDiscountForm(form)
+  const fromLine = form.giroPrincipalMode === 'linha'
+  const filled = { ...form, date: lm.start, praca: lm.praca, giroPrincipalMode: fromLine ? 'manual' : form.giroPrincipalMode, giroPrincipal: fromLine ? lm.value : form.giroPrincipal }
+  const { errors: found, operation, result: calculated } = parseDiscountForm(filled)
   const result = calculated?.ok ? calculated : null
   // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
   // O erro de um grupo de títulos também aparece ao mexer na data da operação; o aviso geral da operação só
@@ -41,6 +48,7 @@ export default function AnaliseDesconto({ onBack }) {
   const pending = Object.keys(found).length > 0, flagged = Object.keys(errors).length > 0
   const guide = unseen.length === 1 && unseen[0] === 'titleFeeMode' ? 'Escolha como a tarifa dos títulos é cobrada para ver a comparação.' : 'Preencha os campos que faltam para ver a comparação.'
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
+  const changeLm = (key, value) => { setLm(key, value); visit(key === 'start' ? 'date' : key === 'value' ? 'giroPrincipal' : key) }
   const props = (key) => ({ id: `ad-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `ad-${key}-err ad-${key}-hint`, onBlur: () => visit(key) })
   const field = (key, label, control, hint = '') => <div className="cx-field" key={key}>
     <div className="cx-field-label"><label htmlFor={`ad-${key}`}>{label}</label>{hint && <CalculatorHelp title={label}><p>{hint}</p></CalculatorHelp>}</div>{control}
@@ -83,14 +91,14 @@ export default function AnaliseDesconto({ onBack }) {
     {/* Padrão visual de 18/11/2026: dados à esquerda e resultado ao lado (computador largo) ou abaixo (telas menores). Só apresentação. */}
     <div className="dsc-workspace">
     <div className="dsc-inputs">
+    <LinhaMestra prefix="ad-lm" values={lm} onChange={changeLm} onClear={clearLm} fields={['start', 'praca', 'value']}
+      labels={{ start: 'Data da operação e liberação do giro', value: 'Valor para o giro comparado' }} errors={{ start: errors.date }} />
     <article className="desk-panel cx-panel desconto-input-panel">
       <header className="cx-heading"><h3>1. Operação simulada de desconto</h3><CalculatorHelp title="Operação simulada de desconto"><p>Os valores iniciais são um exemplo ilustrativo. Substitua pelos títulos e condições do contrato. O custo completo inclui juros, IOF, TAC e tarifa dos títulos.</p></CalculatorHelp></header>
       <div className="cx-form">
-        {field('date', 'Data da operação e liberação do giro', <input {...props('date')} type="date" min="1900-01-01" max="9995-12-31" value={form.date} onChange={(event) => set('date', event.target.value)} />, 'A primeira parcela do giro vence no mês seguinte, no mesmo dia (limitado ao último dia do mês) ou no próximo dia útil.')}
         <div><span>Valor bruto dos títulos</span><b>{brl(operation?.value)}</b></div>
         {textField('operationRate', 'Taxa da operação (% a.m.)', 'Aplicada a cada grupo de títulos pelos dias corridos até o vencimento informado, conforme a convenção selecionada.')}
         {field('convention', 'Convenção contratual de desconto', <select {...props('convention')} value={form.convention} onChange={event => set('convention', event.target.value)}><option value="commercial30">Comercial simples (por fora), mês de 30 dias</option><option value="rational30">Racional simples (por dentro), mês de 30 dias</option></select>, 'Selecione a convenção efetiva do contrato. Vencimento em fim de semana, feriado nacional ou feriado da praça do contrato passa para o próximo dia útil; juros e IOF contam até essa data.')}
-        {field('praca', 'Praça do contrato (feriados)', <select {...props('praca')} value={form.praca} onChange={event => set('praca', event.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>, `${PRACA_AJUDA} Vale para os títulos e para as parcelas do giro. ${PRACA_RESSALVA}`)}
         {taxFields('taxProfile', 'eligible')}
         {field('titleFeeMode', 'Como calcular a tarifa dos títulos?', <select {...props('titleFeeMode')} value={form.titleFeeMode} onChange={(event) => set('titleFeeMode', event.target.value)}><option value="">Selecione a forma de cobrança</option>{TITLE_FEE_MODES.map((mode) => <option key={mode.id} value={mode.id}>{mode.label}</option>)}</select>, 'A referência mostra R$ 564,00 como “unitário”, mas os totais o tratam como tarifa da operação. Escolha a interpretação correta.')}
         {feeField}
@@ -134,7 +142,7 @@ export default function AnaliseDesconto({ onBack }) {
     <article className="desk-panel cx-panel desconto-input-panel">
       <header className="cx-heading"><h3>3. Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana, feriado nacional, feriado da praça do contrato ou 31/12 (sem expediente bancário) passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
       <div className="cx-form">
-        {field('giroPrincipalMode', 'Principal usado no giro', <select {...props('giroPrincipalMode')} value={form.giroPrincipalMode} onChange={(event) => set('giroPrincipalMode', event.target.value)}><option value="monthly">Igual ao volume bruto mensal do desconto</option><option value="manual">Informar outro valor</option></select>, 'Usar o volume mensal é uma hipótese de comparação, não uma necessidade de capital de giro (NCG) apurada.')}
+        {field('giroPrincipalMode', 'Principal usado no giro', <select {...props('giroPrincipalMode')} value={form.giroPrincipalMode} onChange={(event) => set('giroPrincipalMode', event.target.value)}><option value="monthly">Igual ao volume bruto mensal do desconto</option><option value="linha">Valor da linha mestra (R$ {lm.value})</option><option value="manual">Informar outro valor</option></select>, 'Usar o volume mensal é uma hipótese de comparação, não uma necessidade de capital de giro (NCG) apurada.')}
         {form.giroPrincipalMode === 'manual' && moneyField('giroPrincipal', 'Valor financiado no giro', 'Ao informar outro principal, os montantes comparados também ficam diferentes.')}
         {textField('giroRate', 'Taxa do giro Price (% a.m.)', 'Taxa mensal efetiva, com parcelas mensais. Se o primeiro vencimento passar de 30 dias, os dias extras de juros entram no saldo.')}
         {moneyField('giroTac', 'TAC do giro, uma única vez', 'R$ 3.150,00 é o valor inferido para reconciliar a referência. Confirme a proposta; não é uma tarifa padrão.')}

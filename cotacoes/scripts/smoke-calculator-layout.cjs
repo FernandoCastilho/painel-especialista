@@ -189,10 +189,11 @@ async function assertHelp(page, section, label, directory) {
 
 async function fillScenario(page, section, route) {
   if (route === 'giro') {
-    await section.getByText('Datas e praça do contrato', { exact: true }).click()
+    // Linha mestra comum (19/11/2026): o caso de referência é digitado nela (R$ 100.000,00 em 12 meses, sem carência).
+    await section.locator('#cx-value').fill('100.000,00'); await section.locator('#cx-term').fill('12'); await section.locator('#cx-grace').fill('0')
+    await section.getByLabel('Amortização', { exact: true }).selectOption('price')
     await section.locator('#cx-start').fill('2026-11-06')
     await section.locator('#cx-firstDue').fill('2026-12-06')
-    await section.getByText('Datas e praça do contrato', { exact: true }).click()
     const simulate = () => section.getByRole('button', { name: 'Simular', exact: true }).click()
     const amount = async label => normalize(await section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').innerText())
     await simulate()
@@ -217,12 +218,12 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.getByText('Preencha valor, taxa e prazo para ver o resultado.', { exact: true }).count(), 1)
     await page.locator('#cg-rate').focus(); await page.locator('#cg-rate').blur()
     assert.equal(await page.locator('#cg-rate').getAttribute('aria-invalid'), 'true', 'erro aparece ao sair do campo vazio')
-    assert.equal(await page.locator('#cg-amount').getAttribute('aria-invalid'), 'false', 'campo ainda não visitado segue sem erro')
+    assert.equal(await page.locator('#cg-value').getAttribute('aria-invalid'), 'false', 'campo ainda não visitado segue sem erro')
     assert.equal(await section.getByText('Preencha ou corrija os campos sinalizados', { exact: false }).count(), 1)
     await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).fill('3')
     await page.locator('#cg-start').fill('2026-11-05')
     await page.locator('#cg-duration').fill('10')
-    await page.locator('#cg-amount').fill('100000')
+    await page.locator('#cg-value').fill('100000')
     assert.ok(await page.locator('#cg-taxProfile').count(), 'enquadramento do IOF preservado')
     // Padrão de 18/11/2026: valores em reais agrupados no quadro do resultado, terminando no custo total.
     const kpi = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
@@ -245,7 +246,7 @@ async function fillScenario(page, section, route) {
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
-    await page.locator('#ad-date').fill('2026-11-05')
+    await page.locator('#ad-lm-start').fill('2026-11-05')
     await section.getByLabel('Vencimento contratual', { exact: true }).fill('2026-12-05')
     // The nested MoneyInput adds the currency prefix to the label's text.
     const nominal = section.getByLabel(/^Valor nominal total do grupo/)
@@ -348,7 +349,7 @@ const workspaceRoutes = {
   'conta-garantida': '#cg-rate',
   'finimp': '#fi-currency',
   'giro': '#cx-value',
-  'analise-desconto': '#ad-date',
+  'analise-desconto': '#ad-lm-start',
 }
 
 async function assertComparatorFamily(browser) {
@@ -372,7 +373,8 @@ async function assertComparatorFamily(browser) {
         await page.locator(anchor).first().waitFor()
         if (route === 'giro') {
           const giro = page.locator('.giro-screen')
-          assert.equal(await giro.evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 255, 255)', 'Capital de Giro segue branco nos dois temas')
+          // Desde 19/11/2026 o Capital de Giro usa a moldura e as cores das outras calculadoras, nos dois temas.
+          assert.equal(await giro.evaluate(element => element.classList.contains('bw')), true, 'Capital de Giro na moldura padrão')
           await assertWorkspace(page, giro, `Capital de Giro · ${width}px · ${theme}`)
           if (width === 390 || width === 1440) await page.screenshot({ path: path.join(out, `giro-${width}-${theme}.png`), fullPage: true })
           continue
