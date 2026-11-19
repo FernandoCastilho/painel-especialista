@@ -273,7 +273,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
 
   return (
     <section className="cx cx-finame" aria-labelledby="calc-h">
-      <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
       <h2 id="calc-h" className="cx-title"><span className="cx-icon" aria-hidden="true"><FinameIcon /></span>BNDES Finame Materiais</h2>
 
       <div className={`fm-workspace${comparar ? ' fm-cmp' : ''}`}>

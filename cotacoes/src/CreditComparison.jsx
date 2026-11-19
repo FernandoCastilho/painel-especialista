@@ -18,6 +18,7 @@ import { useHolidays } from './useHolidays.js'
 import { REGIMES, PRODUCTS, investmentAlone, creditVsCash, expenseShield } from './aplicacaoPj.js'
 import './CreditComparison.css'
 import './CalcPattern-comparador.css'
+import CalcBack from './CalcBack.jsx'
 
 const brl = v => Number.isFinite(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
 const pct = v => Number.isFinite(v) ? `${nbr5891(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%` : 'Não mensurável'
@@ -366,8 +367,8 @@ export default function CreditComparison({ onBack }) {
   const setColumn = i => invalidate(col => setColumns(list => list.map((c, k) => k === i ? col : c)))
   const content = <Results results={results} columns={visible} scenario={scenario} cdi={cdi} source={source} equivalent={equivalent} investment={investment} shared={shared} />
   const allOk = results.every(r => r.ok)
-  return <div className="credit-workspace"><button type="button" className="cx-back credit-back" onClick={onBack}>‹ Calculadoras</button><section className="cx bw credit-comparison credit-bw" aria-labelledby="credit-title">
-    <div className="bw-heading"><h2 id="credit-title"><strong>PME</strong><span>Comparador de Crédito</span></h2>
+  return <div className="credit-workspace"><section className="cx bw credit-comparison credit-bw" aria-labelledby="credit-title">
+    <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="credit-title"><span>Comparador de Crédito</span></h2></div>
     <nav className="bw-nav" aria-label="Área do comparador">
       <button type="button" aria-pressed={area === 'compare'} onClick={() => setArea('compare')}>Comparar operações</button>
       <button type="button" aria-pressed={area === 'rules'} onClick={() => setArea('rules')}>Premissas e fontes</button>

@@ -130,7 +130,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       assert.equal(await sec.locator('[role="alert"]').count(), 0)
       assert.equal(await amount('Primeira parcela'), brl(expectedAnnualPrice.first))
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
-      await sec.getByRole('button', { name: /Calculadoras/ }).click(); await p.waitForURL('**/#calculadora')
+      await sec.getByRole('button', { name: 'Voltar para a lista de calculadoras' }).click(); await p.waitForURL('**/#calculadora')
       const help = async (title, content, scope = p) => {
         await scope.getByRole('button', { name: `Ajuda: ${title}`, exact: true }).click()
         const dialog = p.getByRole('dialog', { name: title, exact: true }); await dialog.waitFor()

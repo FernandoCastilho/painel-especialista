@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -24,7 +25,7 @@ async function setup(t) {
   for (const file of ['ExpandIcon.jsx', 'MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
-    runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
+    runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => deps[name] ?? require(name)) })
     deps['./' + file] = module.exports
   }
   const render = hookRenderer(() => deps['./CreditComparison.jsx'].default({ onBack: () => {} }))

@@ -165,7 +165,7 @@ async function assertHelp(page, section, label, directory) {
   assert.equal(await dialog.evaluate(element => element === document.activeElement || element.contains(document.activeElement)), true, `${label}: ajuda recebe o foco`)
   // Native showModal makes the page inert without adding an inert attribute.
   // Prove that even a direct focus request cannot reach the background.
-  assert.equal(await section.locator('.cx-back, .giro-back').first().evaluate(element => { element.focus(); return element === document.activeElement }), false, `${label}: fundo modal recusa foco`)
+  assert.equal(await section.locator('.calc-back').first().evaluate(element => { element.focus(); return element === document.activeElement }), false, `${label}: fundo modal recusa foco`)
   for (const key of ['Tab', 'Tab', 'Shift+Tab']) {
     await page.keyboard.press(key)
     const focus = await dialog.evaluate(element => ({ inside: element === document.activeElement || element.contains(document.activeElement), body: document.activeElement === document.body, modal: element.matches(':modal') }))
@@ -491,7 +491,7 @@ async function assertComparatorFamily(browser) {
           await assertWorkspace(page, section, `${route} ${width}`)
           await page.screenshot({ path: path.join(directory, `${route}-initial.png`), fullPage: true })
           await fillScenario(page, section, route)
-          await section.locator('.cx-back, .giro-back').first().focus()
+          await section.locator('.calc-back').first().focus()
           await page.evaluate(() => window.scrollTo(0, 0))
           await settleLayout(page)
           await assertWorkspace(page, section, `${route} preenchida ${width}`)
