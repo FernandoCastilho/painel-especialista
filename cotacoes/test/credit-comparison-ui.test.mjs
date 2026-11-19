@@ -272,3 +272,23 @@ test('cotação individual exibe resultado sem inventar concorrente e preserva c
     assert.equal(JSON.stringify(ui.find('Results').props.results[0]), baseline)
   }
 })
+
+test('nome aprovado identifica a tela, apresentação, navegação e busca sem remover envelopes', async t => {
+  const ui = await setup(t)
+  const heading = nodes(ui.render.value).find(n => n.props?.id === 'credit-title')
+  assert.equal(text(heading), 'Necessidade do Cliente')
+  const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
+  assert.match(source, /title = 'Necessidade do Cliente'/)
+  assert.match(source, /aria-label="Área da necessidade do cliente"/)
+  assert.doesNotMatch(source, /title = 'Demanda'|<span>Demanda<\/span>/)
+  assert.match(source, /Preparar e-mail da cotação/)
+  assert.match(source, /Preparar e-mail com as/)
+  const search = await readFile(new URL('../scripts/build-search-index.mjs', import.meta.url), 'utf8')
+  assert.match(search, /Necessidade do Cliente: comparação de propostas/)
+  const menu = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
+  assert.match(menu, /id: 'comparador-credito', title: 'Necessidade do Cliente'/)
+  const { buildSearchIndex } = await import('../scripts/build-search-index.mjs')
+  const index = await buildSearchIndex()
+  const entry = index.documents.find(d => d.route === 'calculadora/comparador-credito')
+  assert.equal(entry.title, 'Necessidade do Cliente: comparação de propostas, CET e garantias')
+})
