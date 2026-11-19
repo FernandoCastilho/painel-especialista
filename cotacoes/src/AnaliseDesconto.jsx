@@ -11,6 +11,7 @@ import { IOF_SOURCE } from './iofRules.js'
 import { cgAddDays, cgToday } from './contaGarantida.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { lmLoad } from './linhaMestra.js'
+import CalcBack from './CalcBack.jsx'
 
 const brl = (value) => value == null ? '—' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const number = (value) => value == null ? '—' : value.toLocaleString('pt-BR')
@@ -84,8 +85,7 @@ export default function AnaliseDesconto({ onBack }) {
     { label: 'Média mensal all-in: principal + custos', month: first?.giro.averageMonthlyOutflow, value: (row) => row.giro.averageMonthlyOutflow },
   ]
   return <section className="cx cx-desconto bw calc-standard calc-workspace" aria-labelledby="ad-heading">
-    <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
-    <div className="bw-heading calc-workspace-heading"><h2 id="ad-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Análise de desconto</span></h2><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p></CalculatorHelp></div>
+    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="ad-heading" className="cx-title"><span>Análise de desconto</span></h2></div><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p></CalculatorHelp></div>
     <p className="desconto-notice">Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p>
 
     {/* Padrão visual de 18/11/2026: dados à esquerda e resultado ao lado (computador largo) ou abaixo (telas menores). Só apresentação. */}

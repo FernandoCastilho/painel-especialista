@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -23,7 +24,7 @@ async function setup(t) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
-    runInNewContext(code, { module, exports: module.exports, require: name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : deps[name]) ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name)) })
+    runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : deps[name]) ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name))) })
     deps['./' + file] = module.exports
   }
   let back = 0
@@ -110,8 +111,8 @@ test('trocar modos, editar, adicionar/remover repetidamente e voltar sem efeitos
   await h.click('Utilização única')
   assert.equal(h.field('amount').props.value, '100.000')
   assert.match(h.text(), /1\.462,00/)
-  await h.click('‹ Calculadoras')
-  assert.equal(h.back, 1)
+  // O "‹ Voltar" fica no topo do painel (App.jsx), não dentro da calculadora.
+  assert.equal(h.back, 0)
 })
 
 test('prazo por data, erros inline, feriados e IOF automático operam sem resultados antigos', async t => {

@@ -9,7 +9,7 @@ const css = await readFile(new URL('../src/FinameComparisonLayout.css', import.m
 test('tabelas de opções do Finame têm largura pelo número de colunas', () => {
   assert.match(jsx, /const fitStyle = \{ '--fm-opcoes': Math\.max\(1, alternatives\.length\) \}/)
   assert.match(jsx, /const matrizStyle = \{ '--fm-opcoes': alternatives\.length \+ \(comDiferenca \? 1 : 0\) \}/)
-  assert.match(jsx, /aria-label="Resultados TFC e TFB"><table className="cx-matrix fm-fit fm-exec-matrix" style=\{matrizStyle\}>/)
+  assert.match(jsx, /aria-label=\{`Resultados \$\{custo\.toUpperCase\(\)\} e \$\{outro\.toUpperCase\(\)\}`\}><table className="cx-matrix fm-fit fm-exec-matrix" style=\{matrizStyle\}>/)
   for (const rotulo of ['Composição das alternativas', 'Datas e parcelas das alternativas']) {
     assert.match(jsx, new RegExp(`aria-label="${rotulo}"><table className="cx-matrix fm-fit" style=\\{fitStyle\\}>`), rotulo)
   }

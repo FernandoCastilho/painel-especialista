@@ -46,7 +46,6 @@ export default function BndesTlpExigivel({ onBack }) {
   const field = (key, label, hint, type = 'text') => <div className="cx-field"><div className="cx-field-label"><label htmlFor={`tlp-${key}`}>{label}</label><Help title={label}><p>{hint}</p></Help></div><input id={`tlp-${key}`} type={type} value={form[key]} onChange={event => update(key, event.target.value)} inputMode={['j', 'bndes', 'agent', 'ipca'].includes(key) ? 'decimal' : undefined} autoComplete="off" /></div>
   const check = (key, label) => <label className="bndes-check" htmlFor={`tlp-${key}`}><input id={`tlp-${key}`} type="checkbox" checked={form[key]} onChange={event => update(key, event.target.checked)} />{label}</label>
   return <section className="cx bndes-profile calc-standard" aria-labelledby="tlp-heading">
-    <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
     <h2 id="tlp-heading" className="cx-title"><span className="cx-icon"><TlpIcon /></span>BNDES TLP exigível</h2>
     <p className="status">Projeção de IPCA constante · Juros pagos nos vencimentos · CET pela regra do BC, sem IPCA · Não é TLPCAP</p>
     <p className="cx-hint">Informe as taxas e o cronograma próprios desta operação.<Help title="Composição da TLP exigível"><p>IPCA, J da TLP e spreads compõem os juros exigíveis. IPCA positivo não aumenta o principal, inclusive na carência. Informe o cronograma e as taxas do caso; nenhuma condição do Finame é transferida automaticamente.</p></Help></p>

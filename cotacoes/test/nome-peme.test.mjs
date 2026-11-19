@@ -4,13 +4,13 @@ import { readFile, readdir } from 'node:fs/promises'
 
 // Marca visível nas telas: PME (Painel Especializado no Mercado), desde 12/11/2026. PEME fica só na identidade interna
 // (aplicativo instalado, assunto do e-mail de sugestões e alertas do Teams), para não quebrar instalação e filtros já feitos.
-test('marca do topo permanece PME, inclusive no Capital de Giro', async () => {
+test('marca do topo permanece PME e nenhuma calculadora repete o nome do painel', async () => {
   const src = new URL('../src/', import.meta.url)
   const arquivos = (await readdir(src, { recursive: true })).filter(nome => /\.(jsx?|css)$/.test(nome)).map(nome => new URL(nome, src))
   arquivos.push(new URL('../index.html', import.meta.url), new URL('../public/manifest.webmanifest', import.meta.url))
   const comNomeAntigo = []
   for (const arquivo of arquivos) if (/Painel (do )?Especialista/i.test(await readFile(arquivo, 'utf8'))) comNomeAntigo.push(arquivo.pathname.split('/cotacoes/')[1])
-  // Desde 19/11/2026 o Capital de Giro usa o cabeçalho comum das calculadoras ("PME Capital de giro").
+  // 19/11/2026: o Giro deixou de mostrar "Painel do Especialista" (pedido de Fernando); a marca fica só no topo, como PME.
   assert.deepEqual(comNomeAntigo, [])
   const topo = await readFile(new URL('TopBar.jsx', src), 'utf8')
   assert.match(topo, /className="topbar-brand" title="Painel Especializado no Mercado"/)

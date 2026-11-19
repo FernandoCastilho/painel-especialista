@@ -13,6 +13,7 @@ import { resolveCreditIof } from './iofRules.js'
 import { PRACA_AJUDA, pracaCalendars } from './pracaContrato.js'
 import './CalculatorStandard.css'
 import './CapitalDeGiro.css'
+import CalcBack from './CalcBack.jsx'
 
 const EXPENSES = [
   { id: 'iof', label: 'IOF' },
@@ -80,9 +81,8 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const fieldError = (key, id) => ({ 'aria-invalid': !!errors[key], 'aria-describedby': errors[key] ? `${id}-err` : undefined })
 
   return <section className="cx bw calc-standard calc-workspace giro-screen" aria-labelledby="calc-h">
-    <button type="button" className="cx-back giro-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
     <div className="bw-heading calc-workspace-heading giro-header">
-      <h2 id="calc-h" className="cx-title"><strong aria-hidden="true">PME</strong><span>Capital de giro</span></h2>
+      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="calc-h" className="cx-title"><span>Capital de giro</span></h2></div>
       <Help title="Capital de Giro: cálculo e premissas">
         <p>Operação prefixada com juros por dias corridos na base de 30 dias. O vencimento passa ao próximo dia útil conforme a praça do contrato. No Bullet, o pagamento acontece no fim do prazo.</p>
         <p>Prazo total e carência em meses, como no Comparador de Crédito: parcelas = prazo − carência; a primeira vence um mês depois do fim da carência. Os juros da carência são somados ao saldo.</p>

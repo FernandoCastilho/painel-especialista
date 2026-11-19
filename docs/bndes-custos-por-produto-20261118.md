@@ -46,7 +46,7 @@ Prefixados: Custo Fixo a TFC TR. Pós-fixados: TFBD, TLP, SELIC_LCD, SOFR.
 ## Conferência com as calculadoras atuais
 
 Nenhuma regra de cálculo mudou. O que o painel já fazia está de acordo com a tabela:
-- Finame Materiais oferece TFC (série MPME conforme o porte), TFB e TLPCAP: todos permitidos; Pré 5 e Pré 3 não aparecem, como manda a tabela.
+- Finame Materiais oferece TFC (série MPME conforme o porte), TFB, TLP, Taxa LCD e TFBD (desde 19/11/2026): todos permitidos; Pré 5 e Pré 3 não aparecem, como manda a tabela.
 - Carência de até 12 meses com TFB/TFC já era aplicada.
 - TFB/TFC em dias corridos sobre 365/366; TLP exigível e Selic + LCD em dias úteis/252.
 

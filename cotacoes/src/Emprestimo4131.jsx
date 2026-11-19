@@ -20,6 +20,7 @@ import { useCurves } from './useCurves.js'
 import { addDays, busDaysIn, nextBusinessDay } from './holidays.js'
 import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, fronteiraIof, hedge4131, lerTaxasFuturas, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
 import { E4_FX_SCENARIOS, E4_QUOTE_NOTE, E4_SOURCES, condicoesE4, resumoE4 } from './emprestimo4131Presentation.js'
+import CalcBack from './CalcBack.jsx'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const dec = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -313,8 +314,7 @@ export default function Emprestimo4131({ onBack, quotes }) {
 
   return (
     <section className="cx bw e4 calc-standard" aria-labelledby="bw-title">
-      <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-      <div className="bw-heading"><h2 id="bw-title"><strong>4131</strong><span>Empréstimo externo</span></h2>
+      <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="bw-title"><strong>4131</strong><span>Empréstimo externo</span></h2></div>
         <nav className="bw-nav" aria-label="Área do empréstimo externo">
           <button type="button" aria-pressed={area === 'simulate'} onClick={() => setArea('simulate')} aria-label="Simular empréstimo">Simular</button>
           <button type="button" aria-pressed={area === 'rules'} onClick={() => setArea('rules')}>Regras e fontes</button>
