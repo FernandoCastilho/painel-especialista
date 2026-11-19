@@ -15,6 +15,12 @@ const catalog = await import(pathToFileURL(root + 'src/centralSetorial.js'))
 const history = await import(pathToFileURL(root + 'src/centralHistory.js'))
 const insumos = await import(pathToFileURL(root + 'src/insumos.js'))
 const { code } = await transform(readFileSync(root + 'src/Setores.jsx', 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+// Load the extracted image component through the same JSX transform as Setores.
+// Keep the real implementation; navigation assertions and hook behavior stay unchanged.
+const imageAssets = await import(pathToFileURL(root + 'src/sectorImages.js'))
+const { code: imageCode } = await transform(readFileSync(root + 'src/SectorImage.jsx', 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+const imageModule = { exports: {} }
+runInNewContext(imageCode, { module: imageModule, exports: imageModule.exports, require: name => name === './sectorImages.js' ? imageAssets : require(name) })
 function children(node) {
   if (['PautasSetoriais', 'EstudoRelacionado'].includes(node.type?.name)) return node.type(node.props)
   return node.props?.children
@@ -33,7 +39,7 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
     cancelAnimationFrame(id) { frames.delete(id) },
     scrollTo(options) { calls.push({ scroll: options.top }); window.scrollY = options.top },
   }
-  const deps = { './sectorHighlights.js': highlights, react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
+  const deps = { './SectorImage.jsx': imageModule.exports, './sectorHighlights.js': highlights, react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, window, document, require: name => deps[name] ?? require(name) })
   const render = () => {

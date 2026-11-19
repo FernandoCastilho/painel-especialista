@@ -2,6 +2,11 @@
 // `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
 // função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
 export const ENTRIES = [
+  { date: '18/11/2026', items: [
+    'Calculadoras > BNDES Finame Materiais, Regras e fontes: o teto de R$ 20 milhões por operação passa a citar a norma oficial (Circular BNDES 14/2022, item 6.2.2, com a redação da Circular 64/2023), no lugar de materiais de terceiros. O aviso acima desse valor continua só aviso; a conta não mudou.',
+    'Saiu a palavra "novos" da descrição dos itens: a norma do BNDES fala em bens industrializados de fabricação nacional, sem exigir que sejam novos.',
+    'Entrou o que a nota fiscal precisa ter no reembolso: eletrônica, ativa, de saída, para o CNPJ do cliente (matriz e filiais), nunca usada em outro financiamento do BNDES, de venda (venda para entrega futura não serve; vale a nota de remessa) e com itens de NCM e CST/CSOSN aceitos. Valor financiável = produto + IPI + ICMS-ST − descontos. Fontes: validações de notas do BNDES (2026) e Anexo I da Circular 13.',
+  ] },
   { date: '17/11/2026', resumo: 'Nova calculadora Faturamento: cole o faturamento mensal e compare com os mesmos meses do ano anterior', items: [
     'Calculadoras > Faturamento: cole o texto Mês/Faturamento/Endividamento (aceita o modelo do DAC e tabela com barras) e veja barras e linha. Clique num mês ou arraste um período para comparar com os mesmos meses do ano anterior. Mês sem informação (traço) fica como posição vazia; a unidade do cabeçalho, como (R$ mil), aparece no gráfico.',
   ] },

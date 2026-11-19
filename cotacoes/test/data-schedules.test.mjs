@@ -90,3 +90,24 @@ test('Focus em atraso: atualização automática depois da divulgação busca o 
   assert.match(history, /const atrasado = scheduled && !weekly && focusDue\(ultimaData\(previous\?\.series\), now\)/)
   assert.match(history, /if \(scheduled && !weekly && !atrasado\) \{/)
 })
+test('Focus: data de publicação vem da página do boletim no Banco Central, nunca presumida',async()=>{
+ const {focusPublication,keepPublication}=await import('../scripts/focus-collector.mjs')
+ const page=(item)=>async(url)=>{assert.match(String(url),/sitebcb\/focus\/principal\?filtro=IdentificadorUrl%20eq%20'13112026'/);return {ok:true,json:async()=>({conteudo:item?[item]:[]})}}
+ const item={data:'2026-11-16T11:25:00Z',DataReferencia:'2026-11-13T03:00:00Z'}
+ assert.deepEqual(await focusPublication('2026-11-13',{fetchImpl:page(item)}),{release:'2026-11-16',link:'https://www.bcb.gov.br/publicacoes/focus/13112026'})
+ // Publicado às 23h de Brasília: vale o dia de Brasília, não o dia UTC.
+ assert.equal((await focusPublication('2026-11-13',{fetchImpl:page({...item,data:'2026-11-18T02:00:00Z'})})).release,'2026-11-17')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page(null)}),null)
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page({...item,DataReferencia:'2026-11-06T03:00:00Z'})}),null,'boletim de outra semana')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page({...item,data:'2026-11-12T11:25:00Z'})}),null,'publicação antes da coleta')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page({...item,data:'2026-12-20T11:25:00Z'})}),null,'publicação distante demais')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:async()=>({ok:false,status:503})}),null)
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:async()=>{throw new Error('rede')}}),null)
+ const ok={date:'2026-11-13',release:'2026-11-16',link:'https://www.bcb.gov.br/publicacoes/focus/13112026'}
+ assert.deepEqual(keepPublication({date:'2026-11-13',rows:[]},ok),{date:'2026-11-13',rows:[],release:ok.release,link:ok.link})
+ assert.deepEqual(keepPublication({date:'2026-11-20',rows:[]},ok),{date:'2026-11-20',rows:[]},'semana nova não herda a data antiga')
+ assert.deepEqual(keepPublication({date:'2026-11-13',rows:[]},{date:'2026-11-13',release:'2026-11-16'}),{date:'2026-11-13',rows:[]},'data presumida antiga (sem link) não é herdada')
+ const src=await readFile(new URL('../src/Projecoes.jsx',import.meta.url),'utf8')
+ assert.match(src,/const publicado = Boolean\(focus\?\.link && idadeProjecao\(focus\?\.release\)\)/)
+ assert.match(src,/boletim publicado em \{date\(focus\.release\)\}/)
+})

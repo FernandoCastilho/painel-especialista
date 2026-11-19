@@ -3,13 +3,18 @@
 import { FILING, canonicalSource, mentionsCurrency } from './news-lib.mjs'
 
 export const FX_ARQUIVO = 'fx-noticias.json'
-export const FX_MOEDAS = ['USD']
+// MERCADO: manchetes gerais do dia (bolsa, juros, dólar, exterior). Completam o quadro quando a moeda tem pouca notícia própria.
+export const FX_MOEDAS = ['USD', 'EUR', 'JPY', 'CNH', 'MERCADO']
 export const FX_ITENS_POR_DIA = 4
 export const FX_RETENCAO_DIAS = 400
 
 // Buscas em português, por dia. A busca por data do Google Notícias aceita after:/before:; o dia exato é conferido depois pelo horário de publicação.
 export const FX_BUSCAS = {
   USD: ['dólar câmbio real', 'dólar site:valor.globo.com'],
+  EUR: ['euro câmbio real', 'euro BCE moeda'],
+  JPY: ['iene câmbio', 'iene Banco do Japão'],
+  CNH: ['yuan câmbio China', 'yuan PBOC moeda chinesa'],
+  MERCADO: ['Ibovespa dólar juros fecha', 'mercado financeiro bolsa dólar site:valor.globo.com'],
 }
 
 const TZ = 'America/Sao_Paulo'
@@ -38,11 +43,20 @@ export const urlBuscaDia = (q, dia) => {
 const MOVIMENTO = /\b(fecha|fechou|sobe|subiu|cai|caiu|recua|recuou|avanca|avancou|dispara|disparou|despenca|despencou|salta|saltou|renova|alta|queda|maior|menor)\b/
 // "Bilhões de dólares" é valor em dinheiro, não câmbio (ex.: matéria de empresa).
 const VALOR_EM_DOLAR = /\b(mil|milhao|milhoes|bilhao|bilhoes|trilhao|trilhoes|bi|mi|tri) de dolares\b/
-// Manchete cujo assunto é outro ativo (ouro, açúcar, euro, ações...) e cita o dólar só de passagem fica de fora.
-const OUTRO_ASSUNTO = /^(ouro|prata|acucar|cafe|soja|milho|trigo|algodao|cacau|boi|petroleo|brent|cobre|minerio|acoes|bitcoin|cripto|euro|iene|yuan|libra)\b/
+// Manchete cujo assunto é outro ativo (ouro, açúcar, outra moeda, ações...) e cita a moeda só de passagem fica de fora.
+// A própria moeda não conta como "outro assunto"; as manchetes gerais de mercado (MERCADO) não passam por esse filtro.
+const ATIVOS = ['ouro', 'prata', 'acucar', 'cafe', 'soja', 'milho', 'trigo', 'algodao', 'cacau', 'boi', 'petroleo', 'brent', 'cobre', 'minerio', 'acoes', 'bitcoin', 'cripto', 'libra', 'euro', 'iene', 'yuan']
+const PROPRIA = { USD: [], EUR: ['euro'], JPY: ['iene'], CNH: ['yuan'] }
+// Manchete que começa por "dólar" vale para todas: o dólar mexe com o real e com as demais moedas no mesmo dia.
+const outroAssunto = (code) => new RegExp(`^(${ATIVOS.filter((a) => !(PROPRIA[code] ?? []).includes(a)).join('|')})\\b`)
+const OUTRO_ASSUNTO = Object.fromEntries(Object.keys(PROPRIA).map((c) => [c, outroAssunto(c)]))
 const plano = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const chave = (s) => plano(s).replace(/[^a-z0-9]+/g, ' ').trim()
-export const pontuar = (it) => (MOVIMENTO.test(plano(it.title)) ? 2 : 0) + (it.source === 'Valor Econômico' ? 1 : 0)
+// Euro, iene e yuan: a manchete precisa citar a própria moeda (só "câmbio" não basta: costuma ser de outra moeda).
+const PROPRIO_NOME = { EUR: /\b(euro|euros|bce)\b/, JPY: /\b(iene|ienes|yen|boj|banco do japao)\b/, CNH: /\b(yuan|iuane|renminbi|pboc)\b/ }
+// Mercado do dia: manchetes do mercado brasileiro (bolsa, dólar, juros) vêm antes das de outros temas.
+const MERCADO_BR = /\b(ibovespa|bolsa|dolar|juros|di|selic|copom|fiscal)\b/
+export const pontuar = (it, code) => (MOVIMENTO.test(plano(it.title)) ? 2 : 0) + (it.source === 'Valor Econômico' ? 1 : 0) + (code === 'MERCADO' && MERCADO_BR.test(plano(it.title)) ? 2 : 0)
 
 // Escolhe até `limite` manchetes do dia: só as publicadas naquele dia (Brasília), que falam da moeda, sem repetir título.
 export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
@@ -50,7 +64,7 @@ export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
   const validos = []
   for (const it of itens) {
     if (!it?.title || !/^https?:\/\//.test(it.link ?? '') || !Number.isFinite(it.t) || it.t <= 0) continue
-    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title) || VALOR_EM_DOLAR.test(plano(it.title)) || OUTRO_ASSUNTO.test(plano(it.title).trim())) continue
+    if (diaBrasilia(it.t) !== dia || FILING.test(it.title) || !mentionsCurrency(code, it.title) || VALOR_EM_DOLAR.test(plano(it.title)) || OUTRO_ASSUNTO[code]?.test(plano(it.title).trim()) || (PROPRIO_NOME[code] && !PROPRIO_NOME[code].test(plano(it.title)))) continue
     const k = chave(it.title)
     if (vistos.has(k)) continue
     vistos.add(k)
@@ -58,7 +72,7 @@ export function escolherDoDia(itens, dia, code, limite = FX_ITENS_POR_DIA) {
     const semHora = it.t % 36e5 === 0
     validos.push({ title: it.title, link: it.link, source: it.source || canonicalSource(it), t: it.t, ...(semHora ? { semHora } : {}) })
   }
-  return validos.sort((a, b) => pontuar(b) - pontuar(a) || a.t - b.t).slice(0, limite)
+  return validos.sort((a, b) => pontuar(b, code) - pontuar(a, code) || a.t - b.t).slice(0, limite)
 }
 
 const vazio = () => ({ generatedAt: 0, fonte: 'Google Notícias (busca por data)', moedas: {} })

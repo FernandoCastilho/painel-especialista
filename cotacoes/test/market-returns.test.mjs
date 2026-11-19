@@ -67,3 +67,13 @@ test('PTAX do CNH: referência cruzada só com as duas pontas a até 15 min do b
   assert.equal(cnhPtaxCross(ptax, [], cnh), null)
   assert.equal(cnhPtaxCross({ ...ptax, at: 'x' }, usd, cnh), null)
 })
+
+test('destaques do mês: maior e menor alta, sem marca com dado insuficiente ou empate', async () => {
+  const { destaquesMes } = await import('../src/marketReturns.js')
+  const r = v => ({ month: v == null ? null : { value: v }, year: null })
+  assert.deepEqual(destaquesMes({ USD: r(6.22), EUR: r(4.39), JPY: r(4.97), CNH: r(5.99) }), { maior: 'USD', menor: 'EUR' })
+  assert.deepEqual(destaquesMes({ USD: r(-1), EUR: r(-3) }), { maior: 'USD', menor: 'EUR' })
+  assert.deepEqual(destaquesMes({ USD: r(2), EUR: r(null) }), {})
+  assert.deepEqual(destaquesMes({ USD: r(2), EUR: r(2) }), {})
+  assert.deepEqual(destaquesMes(undefined), {})
+})

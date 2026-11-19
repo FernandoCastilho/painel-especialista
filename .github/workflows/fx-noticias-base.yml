@@ -1,4 +1,4 @@
-name: Carga inicial das manchetes do dólar (60 dias)
+name: Carga inicial das manchetes de câmbio (60 dias)
 
 # Roda só sob demanda: busca as manchetes dos últimos 60 dias no Google Notícias
 # e grava cotacoes/data/fx-noticias-base.json no ramo escolhido. Não publica o site.
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   base:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: cotacoes
@@ -32,5 +32,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/fx-noticias-base.json
           git diff --cached --quiet && exit 0
-          git commit -m "Manchetes do dólar: carga inicial dos últimos 60 dias"
+          git commit -m "Manchetes de câmbio: carga inicial dos últimos 60 dias"
           git push origin HEAD:${{ github.ref_name }}

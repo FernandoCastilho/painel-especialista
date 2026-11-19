@@ -5,6 +5,14 @@ import { Aviso } from './Avisos.jsx'
 import { useEffect, useState } from 'react'
 import { FOCUS_MARK, INDICATORS, INSTITUTIONS, PROJECAO_ANTIGA_DIAS, compareToFocus, idadeProjecao, scenarioValue, textoHaDias } from './scenarios.js'
 import FocusHistorico from './FocusHistorico.jsx'
+import Flag from './Flag.jsx'
+
+// Marca de cada linha: bandeira do Brasil no Focus (boletim do Banco Central) e o logotipo oficial de cada banco,
+// das cópias locais em public/bank-logos (origem no README da pasta). Decorativas: o nome vem logo ao lado.
+const LOGOS = { 'Itaú BBA': 'itau', Bradesco: 'bradesco', Santander: 'santander', BB: 'bb', BTG: 'btg' }
+const Marca = ({ name }) => name === 'FOCUS'
+  ? <Flag code="BRL" width={20} height={14} className="sc-logo sc-flag" />
+  : LOGOS[name] ? <img className="sc-logo" src={`bank-logos/${LOGOS[name]}.png`} alt="" width={20} height={20} loading="lazy" decoding="async" /> : null
 
 const date = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '') ? value.split('-').reverse().join('/') : 'data não informada'
 const YEARS = ['2026', '2027']
@@ -30,7 +38,9 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
   }, [])
   const focus = macro?.data?.focus
   const idades = Object.fromEntries(INSTITUTIONS.slice(1).map((name) => [name, idadeProjecao(banks?.institutions?.find((item) => item.name === name)?.date)]))
-  const coletaFocus = idadeProjecao(focus?.date)?.data // dd/mm; sem data válida, a linha do Focus não mostra "até"
+  // Referência do Focus: data de publicação do boletim (lida na página do Banco Central). Sem ela, vale a data da coleta ("até").
+  const publicado = Boolean(focus?.link && idadeProjecao(focus?.release))
+  const refFocus = idadeProjecao(publicado ? focus.release : focus?.date)?.data // dd/mm; sem data válida, a linha do Focus não mostra data
   const algumaAntiga = Object.values(idades).some((idade) => idade?.antiga)
   return (
     <section className="scenarios" aria-labelledby="scenarios-heading">
@@ -53,9 +63,9 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
               const ref = name === 'FOCUS'
               const idade = idades[name]
               return <tr key={name} className={ref ? 'sc-ref' : undefined}>
-                <th scope="row">{ref ? 'Focus' : name}
+                <th scope="row"><span className="sc-inst"><Marca name={name} />{ref ? 'Focus' : name}</span>
                   {ref
-                    ? <small>mediana<span className="sc-wide"> do mercado</span>{coletaFocus && <><span className="sc-sep"> · </span><span className="sc-age">até {coletaFocus}</span></>}</small>
+                    ? <small>mediana<span className="sc-wide"> do mercado</span>{refFocus && <><span className="sc-sep"> · </span><span className="sc-age">{publicado ? '' : 'até '}{refFocus}</span></>}</small>
                     : banks && <small>{idade?.antiga && <span className="sc-warn" aria-hidden="true">⚠ </span>}{idade ? <>{idade.data}<span className="sc-sep"> · </span><span className="sc-age">{textoHaDias(idade)}</span></> : 'fonte pendente'}{idade?.antiga && <span className="sc-sr"> · pode estar desatualizada</span>}</small>}
                 </th>
                 {YEARS.map((y) => INDICATORS.map((indicator, i) => {
@@ -72,7 +82,7 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
         <Aviso title="Cenário econômico · método">
         <p className="status">USD: Focus = média de dezembro; Itaú BBA = dezembro; demais bancos = fim do período. Selic: Itaú = dezembro; demais fontes = fim do ano. As medidas não são idênticas. — = projeção não verificada ou indisponível, nunca zero.</p>
         <div className="scenario-sources">
-          <p>Focus: {focus ? `coleta até ${date(focus.date)}` : 'indisponível'}{macro?.data?.stale?.focus ? ' · dado de reserva' : ''}.</p>
+          <p>Focus: {!focus ? 'indisponível' : publicado ? <><a href={focus.link} target="_blank" rel="noopener noreferrer">boletim publicado em {date(focus.release)}</a> · coleta até {date(focus.date)}</> : `coleta até ${date(focus.date)}`}{macro?.data?.stale?.focus ? ' · dado de reserva' : ''}.</p>
           {INSTITUTIONS.slice(1).map((name) => {
             const bank = banks?.institutions?.find((item) => item.name === name)
             return <p key={name}>{name}: {bank?.date ? date(bank.date) : 'fonte pendente'}{bank?.note ? ` · ${bank.note}` : ''}.</p>

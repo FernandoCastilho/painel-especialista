@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { FilterScope } from './ChartFilters.jsx'
 import { reduceMotion } from './motion.js'
+import ExpandIcon from './ExpandIcon.jsx'
 
 // O mesmo conteúdo permanece montado ao ampliar: filtros e seleções são preservados.
 // O diálogo nativo mantém foco e Escape dentro da vista ampliada, inclusive no celular.
@@ -50,7 +51,7 @@ export default function Expandable({ children, label, modal = false, onClose }) 
       <div className="expandable-controls">
         {modal
           ? <button type="button" className="btn" onClick={close} aria-label="Fechar detalhes">Fechar ×</button>
-          : <button type="button" className="btn" aria-label={`${full ? 'Restaurar' : 'Maximizar'} ${label}`} aria-pressed={full} onClick={() => setFull((v) => !v)}>{full ? '↙ Restaurar' : '⛶ Tela cheia'}</button>}
+          : <button type="button" className={full ? 'btn' : 'btn btn-expand'} aria-label={`${full ? 'Restaurar' : 'Maximizar'} ${label}`} aria-pressed={full} title={full ? undefined : 'Ampliar'} onClick={() => setFull((v) => !v)}>{full ? '↙ Restaurar' : <ExpandIcon />}</button>}
       </div>
       {modal ? <FilterScope><div className="expandable-body">{children}</div></FilterScope> : children}
     </dialog>

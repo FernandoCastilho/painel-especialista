@@ -115,7 +115,7 @@ function focusLines(macro) {
   const years = [...new Set(f.rows.flatMap((r) => Object.keys(r.values)))].sort().slice(0, 2)
   const fmt = { Selic: (v) => `${p2(v)}%`, IPCA: (v) => `${p2(v)}%`, PIB: (v) => `${p2(v)}%`, Câmbio: (v) => `R$ ${p2(v)}` }
   const parts = f.rows.map((r) => `${r.label} ${years.map((y) => (r.values[y] ? (fmt[r.label] ?? p2)(r.values[y].median) : '—')).join(' / ')}`)
-  return [`*Focus* (${years.join(' / ')}) · ${dm((f.release ?? f.date) + 'T12:00:00Z')}`, parts.join(' · ')]
+  return [`*Focus* (${years.join(' / ')}) · ${dm(((f.link && f.release) || f.date) + 'T12:00:00Z')}`, parts.join(' · ')]
 }
 
 export function buildSummary({ quotes, macro, curves, when = new Date() }) {

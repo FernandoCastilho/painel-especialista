@@ -1,8 +1,8 @@
-import { focusDue, preserveFocus } from './focus-collector.mjs'
+import { focusDue, focusPublication, keepPublication, preserveFocus } from './focus-collector.mjs'
 // Coleta CDI, Selic, PTAX e Boletim Focus (Banco Central) e grava public/macro.json. Rodado a cada hora pelo GitHub Actions.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fillFromPrevious, loadPreviousOrFail } from './prev-lib.mjs'
-import { changePoints, focusFor, focusRelease, parseSgs, parseSofr, parseSofrAvg, ptaxFrom, toBr, windows } from './macro-lib.mjs'
+import { changePoints, focusFor, parseSgs, parseSofr, parseSofrAvg, ptaxFrom, toBr, windows } from './macro-lib.mjs'
 
 const SGS = (code, a, b) => `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${code}/dados?formato=json&dataInicial=${a}&dataFinal=${b}`
 const OLINDA = 'https://olinda.bcb.gov.br/olinda/servico'
@@ -78,8 +78,9 @@ if (coletaFocus) {
       if (f.date > date) date = f.date
     } else errors.push(`focus ${indicator}: sem dados`)
   }
-  out.focus = rowsOut.length ? { date, release: focusRelease(date), rows: rowsOut } : null
-  console.log('Focus:', rowsOut.length, 'indicadores; coleta até', date, '; divulgação', date && focusRelease(date))
+  // Data de publicação e link vêm da página do boletim no Banco Central; sem resposta, vale a já confirmada da mesma semana ou nenhuma.
+  out.focus = rowsOut.length ? keepPublication({ date, ...(await focusPublication(date) ?? {}), rows: rowsOut }, previous?.focus) : null
+  console.log('Focus:', rowsOut.length, 'indicadores; coleta até', date, '; publicação', out.focus?.release ?? 'não confirmada')
 }
 
 // PTAX (USD, EUR, JPY): último dia útil com boletim

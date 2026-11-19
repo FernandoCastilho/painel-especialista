@@ -11,6 +11,7 @@ import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import Flag from './Flag.jsx'
 import InsightAprender from './InsightAprender.jsx'
+import RollingNumber from './RollingNumber.jsx'
 
 const MARK = { up: '▲', down: '▼', flat: '■' }
 
@@ -66,26 +67,37 @@ function useDaySeries() {
   return marketPreviews(usd.retainedPoints, eur.retainedPoints, marketDate(Date.now()))
 }
 
-// Indicadores do topo do Mercado, com o título "Mapa de variação – dia" e, abaixo dos quadros, a linha da última consulta (`status`).
-// Clique abre o gráfico da moeda ou a aba de juros.
-export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRate, goto, status }) {
+// Indicadores do topo do Mercado: quadros com o título "Mapa de variação – dia",
+// a linha da última consulta (`status`) e, por último, os avisos
+// (`aviso`: feriados; e a linha "Aprender"). Clique num quadro abre o gráfico da moeda ou a aba de juros.
+// Enquanto as cotações não chegam (`loading`), os quadros aparecem como formas vazias no lugar de um texto de espera.
+export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRate, goto, status, aviso, loading }) {
   const series = useDaySeries()
   const items = kpiItems(quotes, rates, ipca, ibov)
   const sparks = { ...kpiSparks({ macro, ipca }), IBOV: ibovSpark(ibov) }
-  if (!items.length) return status ?? null
+  if (!items.length) {
+    if (!loading) return <>{status ?? null}{aviso}</>
+    return (
+      <section className="kpi-block" aria-busy="true">
+        <p className="sr-only" role="status">Carregando cotações…</p>
+        <div className="kpis kpis-espera" aria-hidden="true">{[0, 1, 2, 3, 4, 5].map((n) => <span key={n} className="kpi kpi-espera" />)}</div>
+        {status}
+        {aviso}
+      </section>
+    )
+  }
   return (
     <section className="kpi-block" aria-labelledby="kpi-title">
-      <InsightAprender goto={goto} />
       <h2 id="kpi-title" className="kpi-title">Mapa de variação – dia</h2>
     <div className="kpis" role="group" aria-label="Indicadores principais">
-      {items.map((i) => {
+      {items.map((i, ordem) => {
         const preview = series[i.code]
         const points = preview?.points ?? sparks[i.key]
         const note = !series[i.code] && sparks[i.key]?.length && SPARK_NOTE[i.key] ? `${i.label.replace(/ 12m$/, '')}: ${SPARK_NOTE[i.key]}` : null
         const card = (
-          <button key={i.key} type="button" className={`kpi${i.rate ? ' kpi-taxa' : ''}`} style={{ '--series': i.rate || i.key === 'IPCA' || i.key === 'IBOV' ? 'var(--amber)' : colors?.[i.code] || 'var(--amber)' }} onClick={() => (i.rate ? onRate(i.key) : i.key === 'IPCA' ? goto('cenarios', 'inflacao') : i.key === 'IBOV' ? goto('noticias') : onOpen(i.code))} aria-label={`${i.label} ${i.value}${i.text ? `, ${i.text}` : ''}: ${i.key === 'IBOV' ? 'abrir notícias' : 'abrir gráfico'}`}>
+          <button key={i.key} type="button" className={`kpi${i.rate ? ' kpi-taxa' : ''}`} style={{ '--i': ordem, '--series': i.rate || i.key === 'IPCA' || i.key === 'IBOV' ? 'var(--amber)' : colors?.[i.code] || 'var(--amber)' }} onClick={() => (i.rate ? onRate(i.key) : i.key === 'IPCA' ? goto('cenarios', 'inflacao') : i.key === 'IBOV' ? goto('noticias') : onOpen(i.code))} aria-label={`${i.label} ${i.value}${i.text ? `, ${i.text}` : ''}: ${i.key === 'IBOV' ? 'abrir notícias' : 'abrir gráfico'}`}>
             <span className="kpi-label"><span className="kpi-name"><Flag code={i.rate || i.key === 'IPCA' || i.key === 'IBOV' ? 'BRL' : i.code} width={16} height={11} />{i.label}</span>{i.rate && <small>{i.key === 'di1' ? 'B3' : i.key === 'selic' ? 'meta a.a.' : 'a.a.'}</small>}{i.key === 'IPCA' && <small>IBGE{i.note ? ` · ${i.note}` : ''}</small>}{i.key === 'IBOV' && <small>pontos · fech.{i.note ? ` ${i.note}` : ''}{i.stale ? ' · sem atualização' : ''}</small>}</span>
-            <span className="kpi-value">{i.value}</span>
+            <RollingNumber className="kpi-value" value={i.value} />
             <span className={`kpi-change ${i.tone}`}>
               {i.text ? <><span aria-hidden="true">{MARK[i.tone]}</span> {i.text}</> : <span className="muted" title={i.reason || undefined}>var. indisponível</span>}
             </span>
@@ -97,7 +109,7 @@ export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRat
         if (!fin) return card
         // "?" fica fora do botão do quadro (botão dentro de botão não é válido), no canto superior direito
         return (
-          <div key={i.key} className="kpi-cell">
+          <div key={i.key} className="kpi-cell" style={{ '--i': ordem }}>
             {card}
             <span className="kpi-help"><FinimpHelp fin={fin} at={i.at} comparable={i.comparable} direct={i.direct} /></span>
           </div>
@@ -105,6 +117,8 @@ export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRat
       })}
     </div>
       {status}
+      {aviso}
+      <InsightAprender goto={goto} />
     </section>
   )
 }

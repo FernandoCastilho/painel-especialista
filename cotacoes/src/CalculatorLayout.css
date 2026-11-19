@@ -10,6 +10,10 @@
   --accent:#0131ff; --down:#b82030; --surface-2:#edf2fa; --amber:#b94700;
 }
 main.app.app-calculators {
+  /* Decisão de 17/11/2026: as calculadoras não entram no novo visual do terminal. Aqui valem as letras de antes (as do aparelho). */
+  --sans:system-ui, sans-serif;
+  --mono:ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  font-family:var(--sans);
   --cx-space:clamp(16px, 1.6vw, 24px);
   width:100%;
   max-width:none;
@@ -260,3 +264,6 @@ main.app.app-calculators {
 }
 .cx .cx-error, .cx .cx-hint, .cx > .status { font-size:.95rem; }
 .cx :focus-visible { outline-color:var(--amber); }
+/* Aviso da primeira tela das calculadoras: em construção, uso só para estudo. */
+.cx.bw .cx-construcao { margin:14px 0 16px; padding:10px 14px; border:1px solid var(--bw-warm-tint); border-left:4px solid #ff7900; border-radius:8px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.9rem; line-height:1.45; }
+.cx.bw .cx-construcao strong { color:var(--bw-warm-ink); }

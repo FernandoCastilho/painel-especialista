@@ -6,8 +6,9 @@
   --ft-debt-fg: #fff;
   --ft-sel: rgba(255, 176, 0, .28);
   --ft-prev: rgba(91, 120, 232, .16);
+  --ft-box: #c99700;
 }
-:root:not([data-theme="light"]) .ft { --ft-bar: #5b78e8; --ft-bar-fg: #000d3c; --ft-debt: #ff7a2e; --ft-debt-fg: #000d3c; }
+:root:not([data-theme="light"]) .ft { --ft-bar: #5b78e8; --ft-bar-fg: #000d3c; --ft-debt: #ff7a2e; --ft-debt-fg: #000d3c; --ft-box: #ffb000; }
 .ft-input { display: grid; gap: 8px; padding: 16px; }
 .ft-input label { font-weight: 600; }
 .ft-input textarea { width: 100%; min-height: 160px; padding: 10px; font: .875rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: vertical; box-sizing: border-box; }
@@ -22,13 +23,18 @@
 .ft-legend span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: -8px; vertical-align: middle; }
 .ft-key-f { background: var(--ft-bar); }
 .ft-key-d { background: var(--ft-debt); }
-.ft-key-sel { background: var(--ft-sel); border-radius: 3px !important; outline: 1px solid #ffb000; }
-.ft-key-prev { background: var(--ft-prev); border-radius: 3px !important; outline: 1px dashed #5b78e8; }
+.ft-key-box { width: 16px !important; border-radius: 2px !important; border: 2px dashed var(--ft-box); box-sizing: border-box; }
 .ft-chart-wrap { max-width: 100%; overflow-x: auto; }
 .ft-chart { display: block; width: 100%; min-width: 640px; height: auto; user-select: none; touch-action: pan-y; cursor: pointer; }
 .ft-chart text { font: 600 11px system-ui, sans-serif; text-anchor: middle; }
-.ft-band-sel { fill: var(--ft-sel); stroke: #ffb000; stroke-width: 1; }
-.ft-band-prev { fill: var(--ft-prev); stroke: #5b78e8; stroke-width: 1; stroke-dasharray: 4 3; }
+.ft-box { fill: none; stroke: var(--ft-box); stroke-width: 2.5; stroke-dasharray: 9 6; }
+.ft-chart text.ft-box-total { fill: var(--ft-box); font-size: 14px; font-weight: 700; }
+.ft-arrow line { stroke-width: 3; }
+.ft-arrow-down line { stroke: var(--down, #d33); }
+.ft-arrow-down polygon, .ft-chart .ft-arrow-down text, .ft-chart text.ft-arrow-down { fill: var(--down, #d33); }
+.ft-arrow-up line { stroke: var(--up, #1a7f37); }
+.ft-arrow-up polygon, .ft-chart .ft-arrow-up text, .ft-chart text.ft-arrow-up { fill: var(--up, #1a7f37); }
+.ft-chart .ft-arrow text, .ft-chart text.ft-arrow-down, .ft-chart text.ft-arrow-up { font-size: 14px; font-weight: 700; }
 .ft-axis { stroke: currentColor; opacity: .25; }
 .ft-area { fill: var(--ft-debt); opacity: .1; }
 .ft-bar { fill: var(--ft-bar); }
@@ -48,3 +54,50 @@
 .ft-year { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--line, #444); border-radius: 10px; }
 .ft-year b { font-size: 1.25rem; }
 .ft-year span { display: flex; justify-content: space-between; gap: 8px; font-size: .875rem; }
+
+/* Indicadores dos últimos 12 meses, atalhos de período, rótulos e imagem. */
+.ft-kpis { display: grid; gap: 10px; margin-bottom: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); }
+.ft-kpis > div { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line, #444); border-radius: 10px; }
+.ft-kpis span { display: flex; align-items: center; gap: 6px; font-size: .8125rem; opacity: .85; }
+.ft-kpis b { font-size: 1.125rem; }
+.ft-kpis small { font-size: .75rem; opacity: .85; }
+.ft-tools { display: grid; gap: 8px; margin-bottom: 8px; }
+.ft-atalhos { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ft-atalhos > button, .ft-atalhos .seg > button { min-height: 40px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--cx-line-strong, #77725f); background: transparent; color: inherit; cursor: pointer; }
+.ft-atalhos .seg { display: inline-flex; gap: 0; }
+.ft-atalhos .seg > button { border-radius: 0; }
+.ft-atalhos .seg > button:first-child { border-radius: 8px 0 0 8px; }
+.ft-atalhos .seg > button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
+.ft-atalhos .seg > button[aria-pressed=true] { background: var(--cx-select-bg, #ffb000); color: var(--cx-select-fg, #000); }
+.ft-aviso:empty { display: none; }
+/* Paleta clara usada só no instante de gerar a imagem. */
+:root .ft.ft[data-ft-export] { --ft-bar: #000d3c; --ft-bar-fg: #fff; --ft-debt: #c2410c; --ft-debt-fg: #fff; --ft-box: #c99700; --up: #1a7f37; --down: #c62828; }
+:root .ft.ft[data-ft-export] .ft-chart { color: #1f2937; }
+
+/* Crescimento do faturamento x endividamento no período escolhido. */
+.ft-cresc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 10px; }
+.ft-cresc > div { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line, #444); border-radius: 10px; }
+.ft-cresc span { font-size: .8125rem; opacity: .85; }
+.ft-cresc b { font-size: 1.375rem; }
+.ft-cresc small { font-size: .75rem; opacity: .85; }
+.ft-cresc > p { grid-column: 1 / -1; margin: 0; padding: 8px 12px; border-left: 3px solid var(--up, #1a7f37); font-size: .875rem; }
+.ft-cresc-alerta > p { border-left-color: var(--down, #d33); }
+.ft-chart text.ft-arrow-div { fill: var(--ft-debt); font-size: 12px; font-weight: 700; }
+
+/* Quadro de análise automática. */
+.ft-analise-grid { display: grid; gap: 12px; padding: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.ft-analise-grid section { border: 1px solid var(--line, #444); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.ft-analise-grid h4 { margin: 0 0 8px; font-size: .9375rem; }
+.ft-analise-grid ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .875rem; line-height: 1.45; }
+.ft-analise-grid p { margin: 0; font-size: .875rem; }
+.ft-analise-nota { margin-top: 8px !important; }
+.ft-analise-alerta { border-left: 4px solid var(--down, #d33) !important; }
+.ft-analise-ok { border-left: 4px solid var(--up, #1a7f37) !important; }
+.ft-pad2 { padding: 0 16px 14px; margin: 0; }
+.ft-saz { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; height: 90px; margin-bottom: 8px; }
+.ft-saz > div { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.ft-saz > div::before { content: ''; position: absolute; left: 0; right: 0; top: 40px; border-top: 1px solid currentColor; opacity: .25; }
+.ft-saz span { position: absolute; left: 20%; right: 20%; border-radius: 2px; }
+.ft-saz-alto span { bottom: calc(100% - 40px); background: var(--up, #1a7f37); max-height: 40px; }
+.ft-saz-baixo span { top: 40px; background: var(--down, #d33); max-height: 34px; }
+.ft-saz small { position: absolute; bottom: 0; font-size: .6875rem; opacity: .8; }
