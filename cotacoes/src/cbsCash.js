@@ -10,7 +10,9 @@ function newTaxes(revenue, taxes) {
     if (!pct(taxes.pCbs) || !pct(taxes.pIbs) || !TIPOS_RECEITA_SIMPLES[taxes.tipoReceita]) return null
     const s = calcularSimples({ receita: revenue, pCbs: taxes.pCbs, pIbs: taxes.pIbs, tipoReceita: taxes.tipoReceita })
     // Simples in the DAS does not appropriate IBS/CBS credits on its purchases.
-    return { cbs: s.cbs, ibsUf: s.ibs, ibsMun: 0, ibs: s.ibs, is: 0, base: s.baseCalculo, creditRate: 0, pending: s.cbsPendente + s.ibsPendente }
+    // In the DAS the base is the gross revenue, which already contains the tax (official case 02):
+    // nothing is added on top of what the customer pays.
+    return { cbs: s.cbs, ibsUf: s.ibs, ibsMun: 0, ibs: s.ibs, is: 0, base: s.baseCalculo, creditRate: 0, pending: s.cbsPendente + s.ibsPendente, embedded: true }
   }
   const a = taxes?.aliquotas ?? {}, red = taxes?.reducao ?? {}
   if (![a.cbs, a.ibsUf, a.ibsMun, red.cbs ?? 0, red.ibsUf ?? 0, red.ibsMun ?? 0, taxes?.isRate ?? 0].every(pct)) return null
@@ -18,7 +20,7 @@ function newTaxes(revenue, taxes) {
     impostoSeletivo: taxes.isRate > 0 ? { base: revenue, adValorem: taxes.isRate, impostoInformado: 0 } : null })
   // Same effective rate assumed for eligible purchases (homogeneous scenario, conservative).
   return { cbs: r.cbs.valor, ibsUf: r.ibsUf.valor, ibsMun: r.ibsMun.valor, ibs: r.ibs, is: r.impostoSeletivo, base: r.baseCalculo,
-    creditRate: r.cbs.aliquotaEfetiva + r.ibsUf.aliquotaEfetiva + r.ibsMun.aliquotaEfetiva, pending: 0 }
+    creditRate: r.cbs.aliquotaEfetiva + r.ibsUf.aliquotaEfetiva + r.ibsMun.aliquotaEfetiva, pending: 0, embedded: false }
 }
 
 export function simulateCbsCash(input) {
@@ -34,6 +36,14 @@ export function simulateCbsCash(input) {
     return { ok: false, error: 'Prazos devem ser dias inteiros entre 0 e 365.' }
   const t = newTaxes(revenue, taxes)
   if (!t) return { ok: false, error: 'Alíquotas e reduções devem estar entre 0 e 100.' }
+  // 2026 (LC 214/2025, art. 348): CBS and IBS are offset against PIS/Cofins or waived. They replace
+  // nothing and do not change cash: only the illustrative amounts are returned, with no reserve or delta.
+  if (taxes.compensated) {
+    const outputTax = t.cbs + t.ibs
+    return { ok: true, illustrative: true, taxBase: t.base, cbs: t.cbs, ibsUf: t.ibsUf, ibsMun: t.ibsMun, ibs: t.ibs, isTax: 0,
+      pendingTax: t.pending, outputTax, currentTax: 0, monthlyTaxDelta: 0, reserveImmediate: 0, reserveDelayed: 0,
+      cycleDays: receiveDays + stockDays - payDays }
+  }
   const spending = revenue * spendingRatio
   const outputTax = t.cbs + t.ibs
   const isTax = t.is
@@ -60,7 +70,7 @@ export function simulateCbsCash(input) {
   const creditGapDays = splitShare / 100 * Math.max(0, creditAvailableDays - Math.min(receiveDays, futureDueDays)) +
     (1 - splitShare / 100) * Math.max(0, creditAvailableDays - futureDueDays)
   const creditExposure = creditsUsable * creditGapDays / 30
-  const grossReceipts = revenue + outputTax + isTax
+  const grossReceipts = t.embedded ? revenue : revenue + outputTax + isTax
   return { ok: true, spending, taxBase: t.base, cbs: t.cbs, ibsUf: t.ibsUf, ibsMun: t.ibsMun, ibs: t.ibs, isTax, pendingTax: t.pending,
     creditRate: t.creditRate, outputTax, credits, creditsUsable, excessCredits, netTax,
     currentTax, splitGross, splitNet, grossReceipts, receiptsAfterNetSplit: grossReceipts - splitNet,

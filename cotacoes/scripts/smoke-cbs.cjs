@@ -15,7 +15,7 @@ async function run() {
     await page.goto(base + '/#calculadora/cbs-caixa')
     await page.getByRole('heading', { name: 'Faturamento e necessidade de giro' }).waitFor()
     assert.equal(await page.locator('#cbs-revenue').inputValue(), '3.000.000,00')
-    assert.equal(await page.locator('#cbs-regime').inputValue(), 'real')
+    assert.equal(await page.locator('#cbs-regime').inputValue(), 'presumido')
     assert.equal(await page.locator('#cbs-year').inputValue(), '2027')
     assert.match(await page.locator('.cbs-rates').innerText(), /Alíquotas de 2027\s*hipótese/)
     assert.match(await page.locator('.cbs-rates').innerText(), /TCU/)
@@ -28,19 +28,37 @@ async function run() {
     await page.locator('#cbs-year').selectOption('2027')
     assert.match(await page.locator('.cbs-rates').innerText(), /tabela V\d{4} de \d{2}\/\d{2}\/\d{4}/)
     assert.match(await page.locator('.cbs-official-source').textContent(), /Licença MIT/)
-    assert.equal(await page.locator('.cbs-result').count(), 0, 'missing current rate must not generate tax result')
-    assert.match(await page.locator('body').innerText(), /NCG não calculada/)
+    // Exemplo inicial completo: calcula sem alerta e com NCG.
+    assert.equal(await page.locator('.cbs-result').count(), 1, 'initial example must calculate')
+    assert.equal(await page.locator('.cbs-alerts').count(), 0, 'initial example must not show alerts')
+    assert.doesNotMatch(await page.locator('body').innerText(), /NCG não calculada/)
+    assert.match(await page.locator('.cbs-headline').innerText(), /imposto por mês\s*hipótese/i)
+    await page.locator('#cbs-year').selectOption('2026')
+    await page.locator('.cbs-illustrative').waitFor()
+    assert.equal(await page.locator('.calc-result-shell').count(), 0, '2026 has no reserve')
+    assert.equal(await page.locator('#cbs-currentNetRate').count(), 0, '2026 replaces no tax')
+    assert.ok((await page.locator('.cbs-illustrative').innerText()).replace(/\s/g, '').includes('R$27.000,00'), '2026: 0,9% de R$ 3 milhões')
+    for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
+      await page.emulateMedia({ colorScheme: theme })
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `2026 overflow ${theme}/${width}`)
+      await page.screenshot({ path: path.join(out, `ano-2026-${theme}-${width}.png`), fullPage: true })
+    }
+    await page.locator('#cbs-year').selectOption('2027')
     for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
       await page.screenshot({ path: path.join(out, `cenario-inicial-${theme}-${width}.png`), fullPage: true })
     }
+    await page.locator('#cbs-cmv').fill('')
+    assert.match(await page.locator('body').innerText(), /NCG não calculada/)
     await page.locator('#cbs-cmv').fill('2.000.000,00')
     await page.locator('#cbs-purchases').fill('2.000.000,00')
-    assert.match(await page.locator('body').innerText(), /15\.000\.000,00/)
+    assert.match(await page.locator('body').innerText(), /7\.000\.000,00/)
     await page.getByText('Editar meses e ver valores', { exact: true }).click()
-    assert.match(await page.locator('#overview-month-0').locator('xpath=ancestor::div[contains(@class,"cx-field")]').innerText(), /15\.000\.000,00/)
-    assert.equal(await page.getByRole('img', { name: /NCG operacional simplificada/ }).locator('circle').count(), 12)
+    assert.match(await page.locator('#overview-month-0').locator('xpath=ancestor::div[contains(@class,"cx-field")]').innerText(), /7\.000\.000,00/)
+    assert.match(await page.locator('.cbs-overview').innerText(), /NCG operacional simplificada[^:]*: R\$\s?7\.000\.000,00, igual em todos os meses/)
+    assert.equal(await page.locator('.cbs-overview details').evaluate(el => el.open), true, 'opened by the test, closed by default')
     for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })
@@ -71,7 +89,7 @@ async function run() {
       assert.deepEqual(values.map(value => value.replace(/\s/g, '')), [format(result.reserveImmediate), format(result.reserveDelayed)])
     }
     await checkReserves(expected({}))
-    assert.equal((await page.locator('.cbs-primary-value').innerText()).replace(/\s/g, ''), format(expected({}).reserveDelayed))
+    assert.equal((await page.locator('.cbs-primary-value').first().innerText()).replace(/\s/g, ''), format(expected({}).reserveDelayed))
     const monthly = async () => (await page.locator('.cbs-monthly-tax').innerText()).replace(/\s/g, '')
     assert.ok((await monthly()).includes(format(expected({}).cbs)), 'CBS por fora no resultado')
     assert.ok((await monthly()).includes(format(expected({}).ibs)), 'IBS no resultado')
@@ -124,7 +142,7 @@ async function run() {
         await page.locator('#cbs-group').press('Escape')
       }
     }
-    await page.getByText('Ajustar hipóteses de impostos e prazos', { exact: true }).click()
+    await page.getByText('Ajustar hipóteses', { exact: true }).click()
     await page.getByText('Como isso aparece no recebimento e nos prazos?', { exact: true }).click()
     await page.getByText('Uma reserva de prazo significa pagar esse valor a mais todo mês?', { exact: true }).click()
     assert.match(await page.locator('.cbs-check').innerText(), /diferença mensal do imposto/)
@@ -167,6 +185,8 @@ async function run() {
     await page.locator('.cbs-result').waitFor()
     const monthlySimples = (await page.locator('.cbs-monthly-tax').innerText()).replace(/\s/g, '')
     assert.ok(monthlySimples.includes('R$27.500,00') && monthlySimples.includes('R$12.500,00'), 'Simples: 2,75% e 1,25% de R$ 1 milhão')
+    assert.doesNotMatch(await page.locator('.cbs-cash-details').textContent(), /Mais CBS/, 'Simples: DAS já está na receita bruta')
+    assert.match(await page.locator('.cbs-cash-details').textContent(), /Receita bruta \(já inclui o DAS\)/)
     for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: width === 390 ? 844 : 1100 })

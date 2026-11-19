@@ -20,7 +20,6 @@
 .cbs-breakdown > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; padding:10px 0; border-bottom:1px solid var(--line); }
 .cbs-breakdown dd { margin:0; text-align:right; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .cbs-total { font-weight:700; }
-.cbs-monthly-change b { color:var(--fg); }
 .cbs-check { margin-top:20px; border:1px solid var(--line); border-radius:8px; }
 .cbs-check summary { cursor:pointer; padding:12px; min-height:48px; }
 .cbs-check p { padding:0 12px 12px; }
@@ -142,3 +141,21 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
 .cbs-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:.8rem; font-weight:600; border:1px solid var(--amber, #ffb000); color:var(--fg); }
 .cbs-tag.is-official { border-color:var(--accent); }
 .cbs-official-source p { overflow-wrap:anywhere; }
+/* Revisão do Diretor de Arte (2026-11-19). */
+.cbs-tag.is-neutral { border-color:var(--line); color:var(--mut); }
+.cbs-rates-title .cbs-tag + .cbs-tag { margin-left:4px; }
+.cbs-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+:root[data-theme] body .cbs .cbs-giro, :root[data-theme] body .cbs .cbs-overview { padding:16px; }
+@media (min-width:900px) { :root[data-theme] body .cbs .cbs-giro, :root[data-theme] body .cbs .cbs-overview { padding:24px; } }
+.cbs-overview svg { display:block; max-width:100%; }
+.cbs-headline { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px 32px; }
+.cbs-headline-tax { min-width:0; }
+.cbs-delta-arrow.is-up { color:var(--down); }
+:root[data-theme] body .cbs .cbs-illustrative { padding:16px; display:grid; gap:12px; }
+@media (min-width:900px) { :root[data-theme] body .cbs .cbs-illustrative { padding:24px; } }
+:root[data-theme] body .cbs .cbs-illustrative .cbs-breakdown > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; }
+.cbs-illustrative h3 { margin:0; }
+.cbs .expandable-heading > div { display:flex; align-items:center; gap:8px; }
+:root[data-theme] body .cbs .cbs-headline .cbs-tag { color:#fff; border-color:#ffb000; }
+.cbs-headline .cbs-delta-arrow { font-size:.6em; vertical-align:.2em; }
+:root[data-theme] body .cbs .cbs-giro p, :root[data-theme] body .cbs .cbs-overview > p { margin:0 0 8px; }

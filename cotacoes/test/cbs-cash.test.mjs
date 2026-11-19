@@ -103,3 +103,19 @@ test('zero, missing, negative, infinite and invalid percentage inputs', () => {
     assert.equal(simulateCbsCash({ ...base, ...change }).ok, false)
   }
 })
+test('Simples: tributo do DAS já está na receita bruta, nada é somado ao recebimento', () => {
+  const r = simulateCbsCash({ ...base, revenue: 100000, taxes: { regime: 'simples', pCbs: 2.75, pIbs: 1.25, tipoReceita: 1 } })
+  assert.equal(r.outputTax, 4000)
+  assert.equal(r.grossReceipts, 100000)
+  assert.equal(r.receiptsAfterNetSplit, 100000 - r.splitNet)
+})
+test('2026: CBS e IBS compensados com PIS/Cofins, só conta ilustrativa, sem reserva nem diferença', () => {
+  const r = simulateCbsCash({ ...base, currentNetRate: 3, taxes: regular({ cbs: 0.9, ibsUf: 0.1, ibsMun: 0 }, { compensated: true }) })
+  assert.equal(r.illustrative, true)
+  assert.equal(r.cbs, 9000)
+  assert.equal(r.ibs, 1000)
+  assert.equal(r.currentTax, 0)
+  assert.equal(r.monthlyTaxDelta, 0)
+  assert.equal(r.reserveImmediate, 0)
+  assert.equal(r.reserveDelayed, 0)
+})

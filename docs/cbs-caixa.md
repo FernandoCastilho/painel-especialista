@@ -93,7 +93,7 @@ Pedido de Fernando: reformular a calculadora com as regras da calculadora oficia
 - Base "por fora", como na oficial: o usuário informa as vendas sem ICMS, ISS, PIS, Cofins e IPI. Imposto = base × alíquota efetiva. O IS entra na base de CBS e IBS. Antes a CBS era tirada de dentro do faturamento bruto (`valor × t ÷ (100 + t)`).
 - Seletor de ano de 2026 a 2033.
   - 2026: alíquotas oficiais do banco da Receita (CBS 0,9%, IBS estadual 0,1%, IBS municipal 0%), sem edição. Aviso de que 2026 é ano de teste.
-  - 2027 a 2033: valores iniciais editáveis, rotulados "hipótese", com a origem na tela. CBS: referência técnica do TCU (11,3%, out/2026) menos 0,1 ponto em 2027–2028, e 11,3% depois (mesma referência já usada pela calculadora). IBS: escada da carga inicial do banco da Receita (0,05% + 0,05% em 2027–2028 até 16% + 2,5% em 2033), que a própria Receita apagou em 28/08/2026 por não estar em lei. Na tela, essa origem aparece escrita; os números não são apresentados como oficiais. Ao trocar o ano, as alíquotas voltam ao valor inicial daquele ano.
+  - 2027 a 2033: valores iniciais editáveis, rotulados "hipótese", com a origem na tela. CBS: referência técnica do TCU (11,3%, out/2026) menos 0,1 ponto em 2027–2028, e 11,3% depois (mesma referência já usada pela calculadora). IBS 2027–2028: 0,05% estadual + 0,05% municipal, previstos na LC 214/2025, art. 344 (texto atualizado da Câmara, conferido em 19/11/2026, com link na tela). IBS 2029–2033: escada da carga inicial do banco da Receita (até 16% + 2,5% em 2033), que a própria Receita apagou em 28/08/2026 por não estar em lei. Na tela, essa origem aparece escrita; os números não são apresentados como oficiais. Ao trocar o ano, as alíquotas voltam ao valor inicial daquele ano.
 - Reduções de 30% a 100% da tabela oficial de classificação (cClassTrib, CST 200 e 011): alíquota × (1 − redução), por tributo. CST 515 (redução com diferimento) ficou de fora do seletor.
 - Simples Nacional (a partir de 2027): o usuário informa a parte de CBS e a parte de IBS do DAS (alíquotas efetivas do PGDAS-D). A calculadora reparte como a oficial: receita × fator do tipo de venda × alíquota. Venda interna 1; mista 0,5; exportação direta 0; exportação indireta suspensa (aparece como suspenso, fora do imposto a pagar). Sem crédito nas compras. Em 2026 o Simples fica bloqueado com aviso.
 - Motor de caixa preservado (prazos, split, crédito com espera, reserva). Recebe CBS + IBS como imposto com split e crédito; o IS vence no prazo informado, sem split e sem crédito.
@@ -131,9 +131,21 @@ Pedido de Fernando: reformular a calculadora com as regras da calculadora oficia
 | Reduções vindas da tabela oficial | os testes acima leem as reduções do `rtcOficial.json` (011002, 200032, 200002, 200028, 200003) |
 | 2026 oficial; 2027+ sem alíquota oficial | teste de dados em `cbs-rtc-oficial.test.mjs`; smoke confere rótulos "oficial"/"hipótese" e campos bloqueados em 2026 |
 | Extrator lê o SQL sem executar e para em forma desconhecida | teste com arquivos de exemplo em `cbs-rtc-oficial.test.mjs` |
-| Motor de caixa preservado com novos tributos | `test/cbs-cash.test.mjs` (12 testes, inclui IBS, redução, IS e Simples), `cbs-annual`, `cbs-ncg` |
+| Motor de caixa preservado com novos tributos | `test/cbs-cash.test.mjs` (14 testes, inclui IBS, redução, IS, Simples com DAS dentro da receita e 2026 só ilustrativo), `cbs-annual`, `cbs-ncg` |
 | Tela: ano, redução, Simples, fonte e versão | `scripts/smoke-cbs.cjs` (Chromium), capturas em `cotacoes/workspace-qa/reforma-oficial/` (390 e 1440, claro e escuro) |
 | Rotina semanal só avisa | `reforma-oficial-versao.yml`; lógica conferida com simulação local (igual, versão nova, fechar aviso). Chamada real à API do GitHub não conferida na sessão |
-| Testes, build, lint | `npm test` 2192/2192; build ok; lint 0 erros (5 avisos antigos em outros arquivos) |
+| Testes, build, lint | `npm test` 2210/2210 (44 nos arquivos `cbs-*`); build ok; lint 0 erros (5 avisos antigos em outros arquivos) |
 | CI verde | pendente: só depois do envio do ramo |
 | Revisões | Simplificador da central não instalado: usados o simplificador de código da sessão (passada única, sem subagentes) e a revisão ponytail; Diretor de Arte (instruções da skill) revisou as capturas e pediu título e rótulo curto no Simples, aplicados. **Revisão independente do cálculo: pendente** |
+
+## Correções das revisões independentes (2026-11-19)
+
+Cálculo (revisor tributário, "Requer correção"; dentro do combinado, porque alinha à regra oficial):
+- Simples: a base do DAS é a receita bruta, que já contém o tributo (caso 02 oficial). Nada é somado ao recebimento; o campo passa a se chamar "Receita bruta mensal". Teste: `cbs-cash.test.mjs` (R$ 100.000 com 2,75% + 1,25% → imposto R$ 4.000, recebimento R$ 100.000).
+- 2026: CBS e IBS são compensados com PIS/Cofins ou dispensados (LC 214/2025, art. 348, conferido no texto atualizado). Não substituem tributo: o campo de tributos atuais some, não há reserva nem diferença, e a tela mostra só a "conta ilustrativa". Teste no mesmo arquivo.
+- Aviso curto de que o crédito das compras pode ser maior (compras com alíquota cheia quando a venda tem redução) e virar saldo a ressarcir.
+- IBS 2027–2028 rotulado como previsto na LC 214/2025, art. 344, com link. A EC 132/2023 (planalto.gov.br) não abriu nesta sessão; a lei complementar, sim. Valores iniciais de 2027+ não mudaram (aguardam decisão de Fernando).
+
+Visual (Diretor de Arte, "Requer correção"): margem interna de 16 px (celular) e 24 px (computador) nos quadros de giro e de meses; gráficos presos à largura; frase do "exemplo inicial" removida; reserva e aumento de imposto lado a lado, com selo "hipótese" a partir de 2027; exemplo completo (Lucro Presumido, compras a prazo R$ 1,5 mi, CMV R$ 2,1 mi, prazos 60/30/45) que calcula sem alerta; meses iguais viram uma linha "igual em todos os meses"; selo "informado" neutro e "hipótese" visível no Simples; mês selecionado em azul #0131FF com texto branco; notas dos campos no mesmo estilo; um botão de ampliar por quadro e "?" junto ao título; "Restaurar exemplo" na linha do título; faixa "Ajustar hipóteses" mais curta; seta de aumento na cor de alerta.
+
+Evidência: `npm test` 2210/2210; build e lint ok; smoke Chromium passou, com capturas novas em `cotacoes/workspace-qa/reforma-oficial/` (inclui `ano-2026-*` e `simples-dark-390.png`).
