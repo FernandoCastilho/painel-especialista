@@ -105,7 +105,6 @@
 :root[data-theme] body .bw:not(.e4) .fm-parcels-callout .fm-parcel-scroll { max-height:none; overflow:visible; }
 :root[data-theme] body .bw:not(.e4) .fm-parcels-callout .fm-parcel-scroll table.cx-matrix.fm-fit { width:min(100%, calc(240px + var(--fm-opcoes,2) * 280px)) !important; }
 @media (min-width:1200px) { :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .fm-results .fm-operation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-<<<<<<< HEAD
 
 /* Projeção do índice dos pós-fixados (TLP, LCD, TFBD): um campo por ano, do Focus, editável (19/11/2026). */
 .bw .fm-projecao { grid-column:1/-1; display:grid; gap:6px; }
@@ -116,5 +115,3 @@
 .bw .fm-projecao .fm-rate-reset { justify-self:start; }
 .bw .fm-compare-outro { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; align-items:center; margin-top:8px; font-size:.875rem; }
 .bw .fm-compare-outro select { min-height:40px; max-width:100%; }
-=======
->>>>>>> d6fec837a99df9cbee2346f9d5eeb90f913d8745
