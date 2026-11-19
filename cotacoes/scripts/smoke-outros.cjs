@@ -1,3 +1,4 @@
+const captureControls = require('./smoke-capture-controls.cjs')
 const openCallouts = require('./smoke-aprender-disclosures.cjs')
 // Cenários › Inflação (IPCA) e › Fiscal (dívida bruta) e Frete marítimo: tabela no formato do Mercado; clicar abre o gráfico em tela cheia com filtros no topo.
 const { chromium } = require('playwright'), assert = require('node:assert/strict')
@@ -562,7 +563,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.getByRole('button', { name: 'Acumulado em 12 meses: abrir gráfico' }).click()
       const d = p.getByRole('dialog', { name: /histórico de IPCA/ })
       await d.waitFor()
-      assert.deepEqual(await d.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
+      await captureControls(d)
       assert.equal(await d.locator('.chart-filters').count(), 1, 'filtros num bloco só, acima do gráfico')
       await d.getByRole('group', { name: 'Período do indicador' }).getByRole('button', { name: 'Tudo' }).click()
       await d.locator('.plot svg').first().waitFor()
@@ -601,7 +602,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await at.getByRole('button', { name: /Payroll . EUA: abrir gráfico/ }).click()
       const ad = p.getByRole('dialog', { name: /histórico de Payroll/i }); await ad.waitFor()
       assert.equal(await ad.locator('.chart-filters').count(), 1)
-      assert.deepEqual(await ad.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
+      await captureControls(ad)
       await p.keyboard.press('Escape'); await ad.waitFor({ state: 'hidden' })
       // commodities: tabela com variações; a linha com histórico abre o gráfico, a sem histórico não abre
       await p.goto(base + '/#cenarios/commodities')
@@ -611,7 +612,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await ct.getByRole('button', { name: /Ouro: abrir gráfico/ }).click()
       const cd = p.getByRole('dialog', { name: /histórico de Ouro/i }); await cd.waitFor()
       assert.equal(await cd.locator('.chart-filters').count(), 1)
-      assert.deepEqual(await cd.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
+      await captureControls(cd)
       await cd.locator('.plot svg').first().waitFor()
       await p.keyboard.press('Escape'); await cd.waitFor({ state: 'hidden' })
       // o petróleo (Brent) mora aqui, na tabela de Commodities, e não mais solto no Mercado

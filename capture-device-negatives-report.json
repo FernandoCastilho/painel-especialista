@@ -1,0 +1,72 @@
+[
+  {
+    "name": "curva_removida_eixos_preservados",
+    "rejected": true,
+    "selector": "curva",
+    "meanError": 0.008149098419324078,
+    "referenceColors": 29,
+    "samples": 89964,
+    "ink": 308,
+    "inkRecall": 0
+  },
+  {
+    "name": "curva_cor_incorreta",
+    "rejected": true,
+    "selector": "curva",
+    "meanError": 0.007126379963750167,
+    "referenceColors": 29,
+    "samples": 89964,
+    "ink": 308,
+    "inkRecall": 0
+  },
+  {
+    "name": "valor_alterado",
+    "rejected": true,
+    "selector": "valor",
+    "meanError": 0.24560639070443022,
+    "referenceColors": 94,
+    "samples": 3510,
+    "ink": 383,
+    "inkRecall": 0.09921671018276762
+  },
+  {
+    "name": "sinal_invertido",
+    "rejected": true,
+    "selector": "sinal",
+    "meanError": 0.24553376906318136,
+    "referenceColors": 12,
+    "samples": 864,
+    "ink": 90,
+    "inkRecall": 0.17777777777777778
+  },
+  {
+    "name": "um_digito_substituido",
+    "rejected": true,
+    "selector": "ultimo_digito",
+    "meanError": 0.18044057129024452,
+    "referenceColors": 32,
+    "samples": 486,
+    "ink": 62,
+    "inkRecall": 0.11290322580645161
+  },
+  {
+    "name": "titulo_ausente",
+    "rejected": true,
+    "selector": "titulo",
+    "meanError": 0.23810356183817122,
+    "referenceColors": 148,
+    "samples": 4644,
+    "ink": 580,
+    "inkRecall": 0
+  },
+  {
+    "name": "layout_deslocado_4px",
+    "rejected": true,
+    "selector": "titulo",
+    "meanError": 0.30669301312256414,
+    "referenceColors": 148,
+    "samples": 4644,
+    "ink": 580,
+    "inkRecall": 0.09482758620689655
+  }
+]

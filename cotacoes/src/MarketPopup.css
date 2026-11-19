@@ -100,4 +100,4 @@ dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}
 .market-popup .chart-fullscreen-compact{position:relative}
 .market-popup .chart-fullscreen-compact .chart-fullscreen-toolbar{position:absolute;right:0;bottom:0;margin:0;z-index:1}
 .market-popup .chart-fullscreen-compact .chart-fullscreen-toolbar button{width:44px;min-height:44px;padding:0;background:#fff;color:#081035;border-color:#cad1e1;font-size:22px}
-.market-popup .chart-fullscreen-compact .chart-fullscreen-content{padding-right:48px}
+.market-popup .chart-fullscreen-compact .chart-fullscreen-content{padding-right:92px}

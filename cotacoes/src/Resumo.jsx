@@ -33,7 +33,7 @@ import { liveCross, mergeDaily, mergeTicks } from './parity.js'
 import { periodChange } from './stats.js'
 import { flagSvg } from './flags.js'
 import Flag from './Flag.jsx'
-import { shareQuotesImage } from './shareImage.js'
+import CaptureButton from './CaptureButton.jsx'
 import { rateTiles } from './snapshot.js'
 import { useNews } from './useNews.js'
 import Sparkline from './Sparkline.jsx'
@@ -444,10 +444,10 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
   const limits = fullWindow(fromInput(marketDate(Date.now())))
   const openSelected = code => { if (CURRENCIES.some(c => c.code === code)) setSelection([code]); onOpen(code, spark) }
   return (
-      <Expandable label="Mercado hoje">
+      <Expandable label="Mercado hoje" capture={false}>
       <section className="market-terminal" aria-labelledby="r-moedas">
         <div className="sec-head terminal-titlebar">
-          <h2 id="r-moedas">Mercado hoje <Explain id="mercadoHoje" /> <button type="button" className="img-share" aria-label="Enviar imagem das últimas cotações de câmbio" title="Compartilha as últimas cotações de câmbio, sem gráficos ou petróleo" onClick={() => shareQuotesImage(quotes)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></button></h2>
+          <h2 id="r-moedas">Mercado hoje <Explain id="mercadoHoje" /> <CaptureButton label="Mercado hoje" /></h2>
           {/* atualizar o câmbio: um botão só, na linha de estado logo acima do quadro */}
           {panorama && <button type="button" className="compare-trigger panorama-trigger sinal-novo-host" aria-label={panorama.nova ? 'Panorama do dia (edição nova)' : 'Panorama do dia'} aria-haspopup="dialog" title={panorama.nova ? 'Há uma edição nova do Panorama do dia. Abre só quando você pede.' : 'Abrir o Panorama do dia: câmbio, juros futuros e Brent em uma tela'} onClick={panorama.abrir}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-9" /></svg><span>Panorama do dia</span>{panorama.nova && <i className="sinal-novo" aria-hidden="true" />}</button>}
           <button type="button" ref={compareTrigger} className="compare-trigger" aria-label="Comparar moedas" aria-haspopup="dialog" aria-expanded={compareOpen} title="Montar comparação de moedas" onClick={() => setCompareOpen(true)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 3v18h18M5 16l5-7 4 4 6-9M5 10l5 4 5-7 5 9" /></svg><span>Comparar</span></button>

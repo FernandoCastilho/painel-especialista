@@ -374,7 +374,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
         <h3>
           <span className="flag" aria-hidden="true" dangerouslySetInnerHTML={{ __html: flagSvg(currency.code, 'width="24" height="16"') }} /> {h.data?.source ?? currency.code}/BRL
           <small>{seriesName(currency, h.data?.source)}</small>
-          <Explain id="historico" />
+          <Explain id="historico" grafico />
         </h3>
         {pct != null && (
           <div className={`pct ${trend}`}>

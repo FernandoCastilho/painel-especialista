@@ -66,7 +66,7 @@ export default function MascotDock({ children, icon, onSearch, section }) {
     setAnnouncement('Mascote na posição inicial.')
   }
   const shrink = () => { setMoving(false); setLarge(false) }
-  const miniEl = <button ref={mini} type="button" className="mascot-mini" style={slot ? undefined : { top }} aria-label="Ampliar mascote" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button>
+  const miniEl = <button ref={mini} type="button" className="mascot-mini" data-capture-ignore="mascot" style={slot ? undefined : { top }} aria-label="Ampliar mascote" onClick={() => { setPosition(place(preferences.desktop ?? TOP)); setLarge(true) }}><i className="mascot-mini-face" aria-hidden="true" /></button>
   const miniButton = slot ? createPortal(miniEl, slot) : miniEl
   return <aside className={`mascot-tray${large ? ' mascot-tray-large' : ''}`} ref={tray} aria-label="Assistente do painel">
     {!large ? miniButton : <div ref={dock} className="mascot-dock" style={{ left: current.x, top: current.y }}>
