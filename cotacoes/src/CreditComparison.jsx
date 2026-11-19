@@ -181,11 +181,11 @@ function ColumnCard({ index, col, set, result, shared, individual, email }) {
   </article>
 }
 
-function ResultPanel({ title, children, className = '' }) {
+function ResultPanel({ title, children, className = '', plain = false }) {
   const [expanded, setExpanded] = useState(false)
   const close = useCallback(() => setExpanded(false), [])
   return <section className={`credit-result-panel ${className}`}>
-    <header><h3>{title}</h3><button type="button" className="btn-expand" onClick={() => setExpanded(true)} aria-label={`Ampliar ${title}`} title="Ampliar"><ExpandIcon /></button></header>
+    <header><h3>{title}</h3>{!plain && <button type="button" className="btn-expand" onClick={() => setExpanded(true)} aria-label={`Ampliar ${title}`} title="Ampliar"><ExpandIcon /></button>}</header>
     {!expanded && children}
     {expanded && <Presentation title={title} onClose={close}>{children}</Presentation>}
   </section>
@@ -258,6 +258,16 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
       : <div><small>CET</small><span>O CET não pôde ser comparado entre as colunas.</span></div>
   const [mainCard, sideCard] = best.lowestCet !== null ? [cetCard, costCard] : [costCard, cetCard]
   return <div className="credit-results">
+    {shared && <ResultPanel title="Dados básicos da operação" plain>
+      <dl className="credit-operation-summary">
+        <div><dt>{equivalent ? 'Valor comum de referência' : 'Valor da operação'}</dt><dd>{brl(parseMoneyInput(shared.value).value)}</dd></div>
+        <div><dt>Prazo</dt><dd>{shared.term} meses</dd></div>
+        <div><dt>Carência</dt><dd>{shared.grace} meses</dd></div>
+        <div><dt>Amortização</dt><dd>{SYSTEM_OPTIONS.find(([id]) => id === shared.system)?.[1] ?? shared.system}</dd></div>
+        <div><dt>Liberação</dt><dd>{day(shared.start)}</dd></div>
+        <div><dt>Regime tributário</dt><dd>{regimeLabel(shared.regime)}</dd></div>
+      </dl><p className="credit-hint">{single ? 'Condições da operação. Valor, prazo, carência e amortização aparecem na cotação abaixo.' : 'Condições comuns. Diferenças de valor, prazo, carência e amortização de cada modalidade aparecem na comparação abaixo.'}</p>
+    </ResultPanel>}
     <section className="credit-answer" aria-label="Resposta principal">
       <div className="credit-answer-main">{single ? <div><small>Cotação individual</small><b>{head(0)}</b><span>CET estimado · parte fixa: <strong>{results[0].cet === null ? 'Não mensurável' : cetText(0)}</strong></span></div> : mainCard}</div>
       <div className="credit-answer-side">{single ? <div><small>Custo sobre o líquido</small><b>{brl(results[0].cost)}</b><span>Uma operação, sem classificação comparativa.</span></div> : sideCard}</div>
@@ -281,16 +291,6 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
       <div className="credit-help-line"><span>Como funciona a comparação com caixa próprio</span><CalculatorHelp title="Crédito ou caixa próprio">      <p>Conta: a empresa recebe o líquido do crédito, mantém essa quantia na aplicação e resgata para pagar cada parcela, com o imposto do regime. {shared.regime === 'real' ? `No Lucro Real, juros, IOF e tarifas do crédito reduzem o IRPJ/CSLL (${shared.adicional ? '34%' : '24%'}).` : 'Neste regime, as despesas do crédito não reduzem o imposto.'}{investment.product.startsWith('fundo') && shared.regime !== 'simples' ? ' Fora do Simples, o come-cotas é antecipação e não muda o imposto final; não é simulado.' : ''} Sobra positiva no fim: compensa tomar o crédito; negativa: usar o caixa próprio sai mais barato.</p></CalculatorHelp></div>
       <ul>{results.map((r, i) => { const v = investment.vsCash[i]; return <li key={i}><b>{head(i)}:</b> {!v?.ok ? v?.error : v.leftover >= 0 ? <>manter o caixa aplicado deixa <b>{brl(v.leftover)}</b> a mais no fim ({day(r.lastDate)}).</> : <>usar o caixa próprio economiza <b>{brl(-v.leftover)}</b>{v.shortfall > 0 ? ' (a aplicação não cobre todas as parcelas)' : ''}.</>}</li> })}</ul>
       <p>Projeção pela curva DI do dia, não garantia. Prejuízo fiscal, compensações e o momento exato do recolhimento não são simulados.</p></section>}
-    {shared && <ResultPanel title="Dados básicos da operação">
-      <dl className="credit-operation-summary">
-        <div><dt>{equivalent ? 'Valor comum de referência' : 'Valor da operação'}</dt><dd>{brl(parseMoneyInput(shared.value).value)}</dd></div>
-        <div><dt>Prazo</dt><dd>{shared.term} meses</dd></div>
-        <div><dt>Carência</dt><dd>{shared.grace} meses</dd></div>
-        <div><dt>Amortização</dt><dd>{SYSTEM_OPTIONS.find(([id]) => id === shared.system)?.[1] ?? shared.system}</dd></div>
-        <div><dt>Liberação</dt><dd>{day(shared.start)}</dd></div>
-        <div><dt>Regime tributário</dt><dd>{regimeLabel(shared.regime)}</dd></div>
-      </dl><p className="credit-hint">{single ? 'Condições da operação. Valor, prazo, carência e amortização aparecem na cotação acima.' : 'Condições comuns. Diferenças de valor, prazo, carência e amortização de cada modalidade aparecem na comparação acima.'}</p>
-    </ResultPanel>}
     <details className="credit-more"><summary>Parcelas por data e gráfico dos fluxos</summary>
     <div className="credit-result-grid">
       <ResultPanel title="Parcelas · data e valor">
