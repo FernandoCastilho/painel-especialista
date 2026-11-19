@@ -23,7 +23,17 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
         const id = route.request().url().includes('f84d76fc') ? 'morning' : 'views'
         return route.fulfill({ contentType: 'application/rss+xml', headers: { 'access-control-allow-origin': '*' }, body: '<rss><channel><item><title>Teste ' + id + '</title><pubDate>Tue, 17 Nov 2026 12:00:00 GMT</pubDate><enclosure url="https://podcast-fixture.invalid/' + id + '.wav" type="audio/wav"/></item></channel></rss>' })
       })
-      await context.route('https://podcast-fixture.invalid/**', route => route.fulfill({ contentType: 'audio/wav', body: wav, headers: { 'access-control-allow-origin': '*' } }))
+      await context.route('https://podcast-fixture.invalid/**', route => {
+        // Media seeking requires byte ranges, like the producer's audio server.
+        const range = route.request().headers().range
+        const headers = { 'access-control-allow-origin': '*', 'accept-ranges': 'bytes' }
+        if (!range) return route.fulfill({ status: 200, contentType: 'audio/wav', body: wav, headers })
+        const match = /^bytes=(\d+)-(\d*)$/.exec(range)
+        const start = match ? Number(match[1]) : wav.length
+        const end = match && match[2] ? Math.min(Number(match[2]), wav.length - 1) : wav.length - 1
+        if (start > end || start >= wav.length) return route.fulfill({ status: 416, headers: { ...headers, 'content-range': 'bytes */' + wav.length }, body: '' })
+        return route.fulfill({ status: 206, contentType: 'audio/wav', body: wav.subarray(start, end + 1), headers: { ...headers, 'content-range': 'bytes ' + start + '-' + end + '/' + wav.length } })
+      })
       page = await context.newPage()
       await page.goto(base + '/#podcast', { waitUntil: 'domcontentloaded' })
       await page.locator('.podcast-program').nth(1).waitFor()
@@ -54,9 +64,12 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
         played.push(await page.locator('audio').evaluate(a => ({src:a.currentSrc,time:a.currentTime,duration:a.duration})))
         await page.getByRole('button', { name:'Pausar episódio', exact:true }).click()
         assert.equal(await page.locator('audio').evaluate(a => a.paused), true)
+        await page.waitForFunction(() => { const a=document.querySelector('audio'); return a.seekable.length && a.seekable.end(a.seekable.length - 1) >= 60 })
         await page.getByRole('button', { name:'Avançar 30 segundos', exact:true }).click()
+        await page.waitForFunction(() => { const a=document.querySelector('audio'); return !a.seeking && a.currentTime >= 30 })
         assert.ok(await page.locator('audio').evaluate(a => a.currentTime >= 30))
         await page.getByRole('button', { name:'Voltar 15 segundos', exact:true }).click()
+        await page.waitForFunction(() => { const a=document.querySelector('audio'); return !a.seeking && a.currentTime >= 15 && a.currentTime < 17 })
         assert.ok(await page.locator('audio').evaluate(a => a.currentTime >= 15 && a.currentTime < 17))
         await page.getByLabel('Velocidade de reprodução').selectOption('1.5')
         assert.equal(await page.locator('audio').evaluate(a => a.playbackRate), 1.5)
@@ -65,6 +78,7 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
         assert.equal(await page.locator('audio').evaluate(a => a.volume), .95)
         await page.getByLabel('Posição do episódio', {exact:true}).press('Home')
         await page.getByLabel('Posição do episódio', {exact:true}).press('ArrowRight')
+        await page.waitForFunction(() => { const a=document.querySelector('audio'); return !a.seeking && Math.abs(a.currentTime - 1) < .1 })
         assert.ok(await page.locator('audio').evaluate(a => Math.abs(a.currentTime - 1) < .1))
       }
       await page.screenshot({path:path.join(out, width + '-' + theme + '.png'), fullPage:true})
@@ -74,6 +88,7 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
     report.passed = true
   } catch (error) {
     report.error = error.stack
+    if (page && !page.isClosed()) report.mediaAtFailure = await page.locator('audio').evaluate(a => ({ currentTime:a.currentTime, duration:a.duration, paused:a.paused, seeking:a.seeking, readyState:a.readyState, networkState:a.networkState, seekable:Array.from({length:a.seekable.length},(_,i)=>[a.seekable.start(i),a.seekable.end(i)]), error:a.error?.code ?? null })).catch(()=>null)
     if (page && !page.isClosed()) await page.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{})
     throw error
   } finally {
