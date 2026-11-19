@@ -34,6 +34,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
   const topicCount = porTopico(CONCEITOS).length
   const b = await chromium.launch(require('./smoke-launch.cjs')()), base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5216'
   const out = process.env.SMOKE_OUT
+  // A matriz de navegador fornece SEARCH_QA_OUTPUT, não SMOKE_OUT.
+  const economiaOut = out || path.join(process.env.SEARCH_QA_OUTPUT || 'workspace-qa', 'economia-contexto')
+  await mkdir(economiaOut, { recursive: true })
   if (out) await mkdir(out, { recursive: true })
   const offline = async (p) => { await p.route('**/*', (r) => r.request().url().startsWith(base) ? r.continue() : r.abort()); return p }
   const openPage = async (options) => offline(await b.newPage(options))
@@ -42,7 +45,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
     for (const width of [320, 390, 820, 1280]) for (const theme of ['light', 'dark']) {
       const p = await openPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
       const label = `Economia em contexto ${width}px ${theme}`
-      const shot = out && path.join(out, `economia-contexto-${width}-${theme}.png`)
+      const shot = path.join(economiaOut, `economia-contexto-${width}-${theme}.png`)
       try {
         const now = Date.now()
         await p.route('**/news.json*', r => r.fulfill({ json: {

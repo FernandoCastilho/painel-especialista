@@ -23,7 +23,11 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     // Duas operações no início; o usuário escolhe de 1 a 5.
     assert.equal(await page.locator('.credit-card').count(), 2)
     assert.equal(await page.locator('.credit-results').count(), 0, 'resultado só depois de comparar')
-    assert.equal(await page.locator('#credit-title').innerText(), 'Necessidade do Cliente')
+    assert.equal(await page.locator('#credit-title').innerText(), 'Demanda')
+    const envelope = i => page.getByRole('link', { name: `Preparar e-mail da cotação ${i}`, exact: true })
+    const summaryEnvelope = n => page.getByRole('link', { name: `Preparar e-mail com as ${n} cotações da comparação`, exact: true })
+    assert.equal(await envelope(1).getAttribute('href'), null)
+    assert.equal(await envelope(1).innerText(), '')
     await page.getByRole('button', { name: '1', exact: true }).click()
     assert.equal(await page.locator('.credit-card').count(), 1)
     assert.equal(await page.getByRole('button', { name: 'Comparar modalidades', exact: true }).count(), 0)
@@ -33,6 +37,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     assert.equal(await row('Valor contratado').locator('td').count(), 1)
     assert.equal(await row('Diferença de custo para a comparação 1').count(), 0)
     assert.equal(await page.getByRole('button', { name: 'Apresentar cotação', exact: true }).count(), 1)
+    assert.match(new URL(await envelope(1).getAttribute('href')).searchParams.get('body'), /Giro prefixado/)
     const singleQuote = await page.locator('.credit-results').first().innerText()
     for (const width of [390, 820, 1440]) {
       await page.setViewportSize({ width, height: 1000 })
@@ -67,7 +72,34 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await page.locator('#credit-c1-rate').fill('')
     assert.equal(await page.locator('.credit-results').count(), 0, 'edição esconde resultado antigo')
     assert.ok(await page.locator('.credit-card-error').count() >= 1)
-    await page.locator('#credit-c1-rate').fill('1,45')
+    await page.locator('#credit-c1-rate').fill('1,46')
+    assert.equal(await envelope(1).getAttribute('href'), null, 'edição desativa rascunho antigo')
+    await page.getByRole('button', { name: '3', exact: true }).click()
+    await compare()
+    const link = summaryEnvelope(3)
+    const draft = new URL(await link.getAttribute('href'))
+    assert.equal(draft.origin + draft.pathname, 'https://outlook.office.com/mail/deeplink/compose')
+    assert.equal(draft.searchParams.get('to'), null)
+    assert.equal(await link.innerText(), '')
+    assert.match(draft.searchParams.get('body'), /1\. Giro prefixado[\s\S]*2\. BNDES[\s\S]*3\. FINIMP/)
+    assert.doesNotMatch(new URL(await envelope(2).getAttribute('href')).searchParams.get('body'), /FINIMP/)
+    const composeRoute = 'https://outlook.office.com/mail/deeplink/compose?*'
+    await page.context().route(composeRoute, route => route.fulfill({ status: 200, body: 'Rascunho de teste' }))
+    const [popup] = await Promise.all([page.waitForEvent('popup'), link.click()])
+    await popup.waitForLoadState()
+    assert.equal(popup.url(), draft.href)
+    await popup.close()
+    await page.context().unroute(composeRoute)
+    for (const theme of ['light', 'dark']) {
+      await page.emulateMedia({ colorScheme: theme })
+      await page.locator(`html[data-theme="${theme}"]`).waitFor({ state: 'attached' })
+      assert.equal(Math.round((await link.boundingBox()).width), 32)
+      const grid = page.locator('.credit-grid')
+      await grid.evaluate(element => element.scrollIntoView({ block: 'center' }))
+      await grid.screenshot({ path: path.join(out, `three-quotes-${theme}.png`) })
+      await page.locator('.credit-result-head').screenshot({ path: path.join(out, `combined-envelope-${theme}.png`) })
+    }
+    await page.getByRole('button', { name: '4', exact: true }).click()
     // Mesmo valor líquido.
     await page.getByLabel('Comparar pelo mesmo valor líquido', { exact: true }).check()
     await compare()
@@ -101,7 +133,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     }
     const trigger = page.getByRole('button', { name: 'Apresentar comparação', exact: true })
     await trigger.click()
-    const dialog = page.getByRole('dialog', { name: 'Necessidade do Cliente' })
+    const dialog = page.getByRole('dialog', { name: 'Demanda' })
     await dialog.waitFor()
     await page.screenshot({ path: path.join(out, 'presentation.png') })
     for (const width of [390, 820, 1440]) {
@@ -124,7 +156,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await page.goBack(); await page.locator('#credit-title').waitFor()
     await page.goForward(); await page.locator('#calc-title').waitFor()
     assert.deepEqual(errors, [])
-    fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['1 a 5 operações', 'cotação individual e retorno 1 → 5 → 1', 'cotação individual 390/820/1440', 'modalidade por coluna', 'invalid outputs hidden', 'net equivalence', 'CDI scenarios', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
+    fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['1 a 5 operações', 'cotação individual e retorno 1 → 5 → 1', 'cotação individual 390/820/1440', 'modalidade por coluna', 'invalid outputs hidden', 'rascunhos individuais e consolidado', 'net equivalence', 'CDI scenarios', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
     console.log('Credit comparator browser checks passed')
   } catch (error) {
     if (page) { await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true }).catch(() => {}); fs.writeFileSync(path.join(out, 'failure.txt'), String(error)) }
