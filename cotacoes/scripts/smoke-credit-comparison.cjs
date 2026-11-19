@@ -23,7 +23,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     // Duas operações no início; o usuário escolhe de 1 a 5.
     assert.equal(await page.locator('.credit-card').count(), 2)
     assert.equal(await page.locator('.credit-results').count(), 0, 'resultado só depois de comparar')
-    assert.equal(await page.locator('#credit-title').innerText(), 'Demanda')
+    assert.equal(await page.locator('#credit-title').innerText(), 'Necessidade do Cliente')
     const envelope = i => page.getByRole('link', { name: `Preparar e-mail da cotação ${i}`, exact: true })
     const summaryEnvelope = n => page.getByRole('link', { name: `Preparar e-mail com as ${n} cotações da comparação`, exact: true })
     assert.equal(await envelope(1).getAttribute('href'), null)
@@ -133,7 +133,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     }
     const trigger = page.getByRole('button', { name: 'Apresentar comparação', exact: true })
     await trigger.click()
-    const dialog = page.getByRole('dialog', { name: 'Demanda' })
+    const dialog = page.getByRole('dialog', { name: 'Necessidade do Cliente' })
     await dialog.waitFor()
     await page.screenshot({ path: path.join(out, 'presentation.png') })
     for (const width of [390, 820, 1440]) {

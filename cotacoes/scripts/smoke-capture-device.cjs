@@ -1,6 +1,7 @@
 // Experimento opt-in: screenshot do DOM original, nunca do clone de captura.
 const fs=require('node:fs/promises'),path=require('node:path')
 const compare=require('./capture-rgb-metrics.cjs')
+const captureSpecialRegions=require('./capture-special-regions.cjs')
 let sequence=0
 module.exports=async function deviceFidelity(page,target,bytes,selectors){
  const {captureSize}=await import('../src/captureImage.js')
@@ -23,14 +24,7 @@ module.exports=async function deviceFidelity(page,target,bytes,selectors){
   }
   // Não mistura os eixos com a curva nem o sinal com o restante do valor.
   if(selectors.includes('h3')&&selectors.includes('.pct')){
-   const special=await target.evaluate(el=>{
-    const root=el.getBoundingClientRect(),line=el.querySelector('svg[role="img"] path.line'),value=el.querySelector('.pct')
-    const result=[]
-    if(line){const b=line.getBoundingClientRect(),rgb=getComputedStyle(line).stroke.match(/[\d.]+/g)?.slice(0,3).map(Number);if(rgb)result.push({selector:'curva-sem-eixos',x:b.x-root.x-2,y:b.y-root.y-2,w:b.width+4,h:b.height+4,color:rgb})}
-    const node=[...value.childNodes].find(n=>n.nodeType===3&&/[▲▼■]/.test(n.textContent))
-    if(node){for(const [name,index] of [['sinal',node.textContent.search(/[▲▼■]/)],['digito',node.textContent.search(/\d/)]]){const range=document.createRange();range.setStart(node,index);range.setEnd(node,index+1);const b=range.getBoundingClientRect();result.push({selector:name,x:b.x-root.x,y:b.y-root.y,w:b.width,h:b.height})}}
-    return result
-   })
+   const special=await target.evaluate(captureSpecialRegions)
    regions.push(...special.map(r=>({...r,x:r.x*size.scale,y:r.y*size.scale,w:r.w*size.scale,h:r.h*size.scale})))
   }
   const reference=await page.screenshot({clip:{x:geometry.x,y:geometry.y,width:cssWidth,height:cssHeight},scale:'device',animations:'disabled',style:'[data-capture-ignore], [data-capture-ignore] * {visibility:hidden!important}'})

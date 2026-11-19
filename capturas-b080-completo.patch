@@ -1,0 +1,1393 @@
+diff --git a/.github/workflows/cotacoes-ci.yml b/.github/workflows/cotacoes-ci.yml
+index 15d9d70..88f4e48 100644
+--- a/.github/workflows/cotacoes-ci.yml
++++ b/.github/workflows/cotacoes-ci.yml
+@@ -301,6 +301,80 @@ jobs:
+             ${{ runner.temp }}/qa-universal
+           if-no-files-found: ignore
+           retention-days: 7
++  clipboard-capture:
++    # Runner descartável próprio: os testes não acessam a área de transferência de outra máquina.
++    runs-on: ubuntu-24.04
++    needs: test-build
++    timeout-minutes: 20
++    defaults:
++      run:
++        working-directory: cotacoes
++    env:
++      SMOKE_BASE_URL: http://127.0.0.1:8768
++      SMOKE_CHANNEL: chrome
++      CHROMIUM_PATH: /usr/bin/google-chrome
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-node@v4
++        with:
++          node-version: 22
++          cache: npm
++          cache-dependency-path: cotacoes/package-lock.json
++      - run: npm ci
++      - name: Build com os dados na própria origem
++        run: VITE_DATA_BASE="$SMOKE_BASE_URL" npm run build
++      - name: Preparar Playwright com o Chrome já disponível no runner
++        timeout-minutes: 3
++        run: |
++          npm install --no-save playwright@1.63.0
++          google-chrome --version
++      - name: Servir o build somente em loopback
++        id: serve
++        env:
++          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
++        run: |
++          mkdir -p "$CAPTURE_QA_OUTPUT"
++          nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$CAPTURE_QA_OUTPUT/server.log" 2>&1 &
++          for i in $(seq 1 20); do
++            if curl -fs "$SMOKE_BASE_URL/" > /dev/null; then exit 0; fi
++            sleep 1
++          done
++          exit 1
++      - name: Conferir fidelidade visual das imagens copiadas
++        id: fidelity
++        env:
++          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
++        timeout-minutes: 6
++        run: node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/fidelidade.log"
++        shell: bash
++      - name: Diagnóstico independente de referência DOM em device pixels
++        id: device_reference
++        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
++        timeout-minutes: 6
++        env:
++          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/device-reference
++          CAPTURE_REFERENCE_MODE: device
++        run: |
++          mkdir -p "$CAPTURE_QA_OUTPUT"
++          node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
++        shell: bash
++      - name: Conferir PNG colado com Ctrl+V real em campo local
++        id: paste
++        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
++        timeout-minutes: 2
++        env:
++          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
++          REAL_CLIPBOARD: '1'
++        run: node scripts/smoke-capture-paste.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/colagem.log"
++        shell: bash
++      - name: Capturas, métricas de fidelidade e prova de colagem
++        if: ${{ !cancelled() && steps.serve.outcome != 'skipped' }}
++        uses: actions/upload-artifact@v4
++        with:
++          name: clipboard-capture-design
++          path: ${{ runner.temp }}/qa-clipboard-capture
++          if-no-files-found: error
++          retention-days: 7
+   bndes-workspace:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 12
+diff --git a/CAPTURAS-COMBINADO.md b/CAPTURAS-COMBINADO.md
+new file mode 100644
+index 0000000..da60b61
+--- /dev/null
++++ b/CAPTURAS-COMBINADO.md
+@@ -0,0 +1,12 @@
++# Candidato combinado, somente local
++
++Base PR #523: 6961e2dec5f742cb0862d018a2522208b28a168f.
++Produção conciliada: 3ed790252a118a68d9b7bd322c1eebad1ef6f070 (#522).
++
++Conflito único: imports de App.jsx. União preserva CaptureButton e EconomiaContexto. Comparado com produção, App.jsx acrescenta somente import/câmera. EconomiaContexto.jsx/.css, economiaContexto.js e teste são idênticos à produção. smoke-outros preserva integralmente bloco Economia e capturas; altera apenas três assertivas antigas de controles e import do helper.
++
++Controles: nomes acessíveis; câmera única visível/habilitada/focável; fechar comprovado, sem confundir câmera com maximizar. Busca protegida durante modal, Escape e aria-pressed mantidos.
++
++DPR: passo diagnóstico separado no job clipboard-capture, mesmo servidor, captura do DOM original e gate RGB intacto. Executa mesmo após falha da fidelidade normal. Salva em subpasta device-reference do artefato existente; resultado de falha continua visível, sem continue-on-error, conforme contrato existente do CI. Não substitui a validação normal. Job20min acomoda diagnóstico6min sem retirar tempo da colagem real. Demais jobs, Podcast e etapas existentes preservados.
++
++Dois patches: `capturas-combinado.patch` traz o candidato completo desde head6961e2d; `capturas-controles-dpr-pos-merge.patch` é apenas delta após integrar3ed7902 e resolver import de App com ambas linhas. Não aplicar os dois juntos. Nada publicado, nenhum Actions acionado. Browser/CI seguem necessários.
+diff --git a/CAPTURAS-DEVICE-EXPERIMENTO.md b/CAPTURAS-DEVICE-EXPERIMENTO.md
+new file mode 100644
+index 0000000..c6a4c00
+--- /dev/null
++++ b/CAPTURAS-DEVICE-EXPERIMENTO.md
+@@ -0,0 +1,10 @@
++# Experimento de referência em device pixels
++Base #523 6961e2d. Nenhum produto ou workflow alterado. O caminho normal do smoke continua intacto.
++
++Acionamento exclusivo no runner existente: `CAPTURE_REFERENCE_MODE=device node scripts/smoke-capture-image.cjs` com os mesmos SMOKE_BASE_URL/SMOKE_CHANNEL/CHROMIUM_PATH/CAPTURE_QA_OUTPUT já aprovados. Não executar em produção ou notebook.
++
++O comparador experimental calcula a escala exata usada pelo PNG por `captureSize`, ajusta temporariamente deviceScaleFactor no contexto Chromium descartável e fotografa o DOM ORIGINAL com `scale:'device'` e recorte geométrico. Verifica que a mudança de DPR não mudou posição ou dimensões CSS; caso mude, interrompe. Restaura DPR em finally. Não captura o clone nem reamostra o PNG. Divergência de dimensões físicas interrompe com imagens salvas. Controles excluídos ficam apenas invisíveis no DOM de referência, sem remover espaço, como no teste anterior.
++
++Gate RGB mantido: meanError<.08, contraste45, ink>20, inkRecall>.7, sem tolerância espacial. Mantém todas as regiões originais e acrescenta curva sem eixos (máscara de cor da série) e glifos separados do sinal/primeiro dígito via DOM Range. Inclui negativos derivados da mesma screenshot real dentro do mesmo comparador: curva apagada, curva de cor incorreta, sinal/dígito apagados, título ausente e deslocamento. Falha se algum negativo for aceito. Artefatos `device-N-{reference,actual}.png` e report.json.
++
++Validação local: dois testes unitários RGB passam; sete negativos dos PNGs reais V3 foram rejeitados usando este MESMO módulo JS (relatório anexo). Não confundir com execução de browser: esta ainda depende do runner. Não há aprovação de fidelidade nem promessa de sucesso. O experimento deve permanecer separado da publicação.
+diff --git a/CAPTURAS-QA.md b/CAPTURAS-QA.md
+new file mode 100644
+index 0000000..555f2f1
+--- /dev/null
++++ b/CAPTURAS-QA.md
+@@ -0,0 +1,40 @@
++# Capturas V2: candidato, não publicado
++
++Produto só escreve PNG no clipboard. Sem download ou envio.
++
++## Alterações
++Rolagem interna passa a viewport SVG com x/y serializados. Fidelidade proposta, ainda não comprovada no navegador. Smoke compara imagens reais com screenshot independente: título, valor e curva, diferença média e recuperação dos pixels de conteúdo. Fundo sólido não passa pelo critério de traços. Inclui Mercado, Juros e Cenários/Calendário, claro/escuro e390/1440px, detalhe e rolagem vertical/horizontal.
++
++## Runner descartável autorizado
++Usar dependências/navegador já disponíveis e prévia local do build. Não instalar, publicar demonstração, alterar permissões ou contornar isolamento. O job clipboard-capture de Cotações CI usa a própria VM descartável, com o Chrome já disponível, build em localhost e o mesmo Playwright do smoke existente. O job roda os dois testes e salva o artefato clipboard-capture-design, inclusive logs se houver falha. A única escrita de clipboard sem mock é a do passo Ctrl+V nessa VM.
++
++Na pasta cotacoes, prévia já em execução:
++SMOKE_CHANNEL=chromium SMOKE_BASE_URL=http://127.0.0.1:8768 CAPTURE_QA_OUTPUT=/tmp/qa-capturas node scripts/smoke-capture-image.cjs
++
++Esse teste simula só clipboard. PNG e comparação de imagens são reais.
++
++Somente com autorização para substituir o clipboard transitório de um runner descartável:
++REAL_CLIPBOARD=1 SMOKE_CHANNEL=chromium SMOKE_BASE_URL=http://127.0.0.1:8768 CAPTURE_QA_OUTPUT=/tmp/qa-capturas node scripts/smoke-capture-paste.cjs
++
++A segunda prova não usa mocks, dispatchEvent, clipboard.read ou grantPermissions. Clica no produto e usa Control+V num campo local; verifica evento paste confiável com PNG. Não lê conteúdo preexistente. Fecha contexto depois. Recusa do navegador faz teste falhar: não adicionar permissão permanente ou download alternativo.
++
++Artefatos: PNGs gerados/referências/métricas; colagem-real.png e colagem-real.json (trusted=true, image/png, dimensões). Conferir título, número, filtro e datas nas imagens. Prova no runner não assegura suporte em qualquer outro app/navegador.
++
++## Limites
++Chromium local não inicia: socket Operation not permitted. Nenhum smoke ou Ctrl+V real foi executado aqui. Solução de rolagem ainda precisa passar na prova. Imagens externas/fundos com URL recusados; telas muito longas podem exceder limite de legibilidade/memória. Layout atual preservado, não convertido de móvel para desktop. Recolhidos continuam recolhidos. Cobertura de todas as telas exige matriz/auditoria; não liberar produção antes disso.
++
++## V3 (base PR #523 0d301c5)
++- Câmera legada do Mercado substituída pela cópia PNG; não chama shareQuotesImage. Uma câmera de quadro no cabeçalho, sem repetir a mesma ação no Expandable.
++- Câmera no host ChartFullscreen, preservando o mesmo conteúdo no zoom; cobre mapa/quadros de recuperação judicial, Trends e minigráficos do Panorama. Câmera no Panorama completo e nos quadros Inadimplência/IPCA.
++- Imagens já carregadas da mesma origem viram data PNG por canvas sem fetch. Imagens de outra origem continuam recusadas. Ainda não carregadas pedem aguardar.
++- Iframes/vídeos não são acessados. O PNG contém um retângulo identificado como conteúdo externo não incluído, e o status explica o recorte. Isso NÃO equivale a copiar o gráfico externo.
++- Smoke expandido às oito subabas de Cenários (além de Mercado/Juros), logo local comparado com referência e iframe com aviso. A prova visual/colagem deve ser executada no runner; não houve navegador local.
++- Workflow e correção CAPTURE_QA_OUTPUT do runner preservados sem alteração.
++
++
++## Complemento V3: fidelidade de fontes e geometria (CI 44512756037)
++- Evidência recebida: h3 meanError 0,057734 / inkRecall 0,149410; PNG móvel capturado não foi salvo antes da falha. O PNG de colagem é desktop e não pode ser comparado geometricamente à referência móvel.
++- Defeitos identificados no código: o SVG isolado não recebia as definições @font-face do documento; remover o nó da câmera alterava a linha flex e a baseline do cabeçalho. Corrigido: incorporar fontes do próprio app em data URLs e ocultar os controles conservando sua estrutura e geometria.
++- A leitura de fontes usa somente URLs de mesma origem, sem credenciais, com cache; fontes externas são recusadas, nunca contornadas. Não instala fontes ou dependências. `document.fonts.ready` sozinho não transfere fontes para a imagem SVG.
++- A referência de comparação oculta exclusivamente `[data-capture-ignore]` sem remover espaço. Título, valores, gráfico e limiares permanecem intactos. Guarda referência bruta, referência usada, PNG e métricas antes da assertiva.
++- Não há confirmação de correção visual até nova execução no runner. Ctrl+V real verde comprova entrega do PNG, não fidelidade. Build local pode avisar fontes ausentes no node_modules reutilizado; CI usa as dependências já declaradas/lockadas. Não baixar/instalar dependências nesta tarefa.
+diff --git a/CAPTURAS-RECONCILIADO-B080.md b/CAPTURAS-RECONCILIADO-B080.md
+new file mode 100644
+index 0000000..2a3805d
+--- /dev/null
++++ b/CAPTURAS-RECONCILIADO-B080.md
+@@ -0,0 +1,17 @@
++# Candidato reconciliado de câmeras
++
++Produção b080b5836ee122071341ba4db726752d9fc69b1a + PR523 209514e21bb25e1bca4debb74863813fb692087c.
++Integração local sem conflito. Nenhuma publicação ou execução Actions.
++
++Correções novas:
++- Range DPR procura sinal e dígito em Text nodes independentes e usa regex corretas. Região ausente falha explicitamente; não há skip.
++- Recovery: dois controles do ChartFullscreen agora em linha própria, evitando cobrir Ver Brasil. Smoke verifica não sobreposição e clique real/fechamento, sem force.
++- Miniaturas do Panorama reservam92px para dois botões44px, em vez de48px.
++- Trends e fixture #multi distinguem SVG gráfico de ícone de câmera.
++- Smoke UX mede controles visíveis e abre Panorama para medir sua câmera44px; não ignora definitivamente o controle que antes estava fechado.
++
++Preservação: arquivos Economia, catálogo de Calculadoras e Necessidade do Cliente idênticos à produção. App.jsx mantém Economia e adiciona apenas câmera; smoke-outros mantém bloco Economia e muda somente contratos de controles. Nenhum índice gerado incluído, nenhuma fórmula alterada.
++
++Gate RGB legado continua intacto; diagnóstico DPR separado e registrado no runner conforme #523. Erro anterior de fidelidade ainda NÃO foi resolvido/validado. Precisam rodar novamente smokes e diagnóstico e revisar artefatos, sem liberar produto antecipadamente.
++
++Pacote contém patches ALTERNATIVOS: completo desde b080b58 (todos arquivos #523 + correções), ou delta desde209514e (integração produção + correções). Não aplicar ambos. Manifesto identifica bases e hashes atuais; documentos antigos do PR permanecem como histórico, não são prova do estado atual.
+diff --git a/capture-device-negatives-report.json b/capture-device-negatives-report.json
+new file mode 100644
+index 0000000..dbb64c0
+--- /dev/null
++++ b/capture-device-negatives-report.json
+@@ -0,0 +1,72 @@
++[
++  {
++    "name": "curva_removida_eixos_preservados",
++    "rejected": true,
++    "selector": "curva",
++    "meanError": 0.008149098419324078,
++    "referenceColors": 29,
++    "samples": 89964,
++    "ink": 308,
++    "inkRecall": 0
++  },
++  {
++    "name": "curva_cor_incorreta",
++    "rejected": true,
++    "selector": "curva",
++    "meanError": 0.007126379963750167,
++    "referenceColors": 29,
++    "samples": 89964,
++    "ink": 308,
++    "inkRecall": 0
++  },
++  {
++    "name": "valor_alterado",
++    "rejected": true,
++    "selector": "valor",
++    "meanError": 0.24560639070443022,
++    "referenceColors": 94,
++    "samples": 3510,
++    "ink": 383,
++    "inkRecall": 0.09921671018276762
++  },
++  {
++    "name": "sinal_invertido",
++    "rejected": true,
++    "selector": "sinal",
++    "meanError": 0.24553376906318136,
++    "referenceColors": 12,
++    "samples": 864,
++    "ink": 90,
++    "inkRecall": 0.17777777777777778
++  },
++  {
++    "name": "um_digito_substituido",
++    "rejected": true,
++    "selector": "ultimo_digito",
++    "meanError": 0.18044057129024452,
++    "referenceColors": 32,
++    "samples": 486,
++    "ink": 62,
++    "inkRecall": 0.11290322580645161
++  },
++  {
++    "name": "titulo_ausente",
++    "rejected": true,
++    "selector": "titulo",
++    "meanError": 0.23810356183817122,
++    "referenceColors": 148,
++    "samples": 4644,
++    "ink": 580,
++    "inkRecall": 0
++  },
++  {
++    "name": "layout_deslocado_4px",
++    "rejected": true,
++    "selector": "titulo",
++    "meanError": 0.30669301312256414,
++    "referenceColors": 148,
++    "samples": 4644,
++    "ink": 580,
++    "inkRecall": 0.09482758620689655
++  }
++]
+\ No newline at end of file
+diff --git a/cotacoes/scripts/capture-rgb-metrics.cjs b/cotacoes/scripts/capture-rgb-metrics.cjs
+new file mode 100644
+index 0000000..c114abf
+--- /dev/null
++++ b/cotacoes/scripts/capture-rgb-metrics.cjs
+@@ -0,0 +1,24 @@
++// Mesmo gate RGB: distância <45, sem tolerância espacial.
++module.exports = function compare({got,want,width,height,regions}) {
++  return regions.map(r=>{
++    let error=0,n=0;const colors=new Set(), histogram=new Map(), samples=[]
++    // Identifica fundo dominante da região; exige coincidência nos traços/texto,
++    // para que um PNG de fundo sólido não passe pela média de pixels.
++
++    for(let y=Math.max(0,Math.ceil(r.y));y<Math.min(height,r.y+r.h);y++)
++     for(let x=Math.max(0,Math.ceil(r.x));x<Math.min(width,r.x+r.w);x++){
++      const i=(y*width+x)*4
++      const key=[want[i]>>4,want[i+1]>>4,want[i+2]>>4].join(',')
++      colors.add(key);histogram.set(key,(histogram.get(key)||0)+1);samples.push(i)
++      for(let c=0;c<3;c++){error+=Math.abs(got[i+c]-want[i+c])/255;n++}
++     }
++    const dominant=[...histogram].sort((a,b)=>b[1]-a[1])[0][0].split(',').map(v=>Number(v)*16+8)
++    let ink=0,matched=0
++    for(const i of samples){
++      if(r.color ? Math.max(...r.color.map((v,c)=>Math.abs(want[i+c]-v)))>=45 : Math.max(...dominant.map((v,c)=>Math.abs(want[i+c]-v)))<45)continue
++      ink++
++      if(Math.max(...dominant.map((_,c)=>Math.abs(want[i+c]-got[i+c])))<45)matched++
++    }
++    return {selector:r.selector,meanError:error/n,referenceColors:colors.size,samples:n,ink,inkRecall:ink?matched/ink:0}
++  })
++}
+diff --git a/cotacoes/scripts/capture-special-regions.cjs b/cotacoes/scripts/capture-special-regions.cjs
+new file mode 100644
+index 0000000..7cd17ce
+--- /dev/null
++++ b/cotacoes/scripts/capture-special-regions.cjs
+@@ -0,0 +1,20 @@
++// Avaliado no DOM original pelo Playwright; sem ignorar regiões ausentes.
++module.exports = function captureSpecialRegions(el) {
++ const root=el.getBoundingClientRect(),line=el.querySelector('svg[role="img"] path.line'),value=el.querySelector('.pct')
++ if(!line||!value)throw new Error('Diagnóstico incompleto: curva ou valor ausente.')
++ const b=line.getBoundingClientRect(),rgb=getComputedStyle(line).stroke.match(/[\d.]+/g)?.slice(0,3).map(Number)
++ if(!rgb||rgb.length!==3||rgb.some(v=>!Number.isFinite(v)))throw new Error('Diagnóstico incompleto: cor da curva não reconhecida.')
++ const result=[{selector:'curva-sem-eixos',x:b.x-root.x-2,y:b.y-root.y-2,w:b.width+4,h:b.height+4,color:rgb}]
++ for(const [name,pattern] of [['sinal',/[▲▼■]/],['digito',/\d/]]){
++  // React pode renderizar símbolo, espaço e número em Text nodes distintos.
++  const node=[...value.childNodes].find(n=>n.nodeType===3&&pattern.test(n.textContent))
++  if(!node)throw new Error('Diagnóstico incompleto: glifo de '+name+' ausente.')
++  const index=node.textContent.search(pattern)
++  if(index<0||index>=node.textContent.length)throw new Error('Diagnóstico incompleto: índice inválido de '+name)
++  const range=document.createRange();range.setStart(node,index);range.setEnd(node,index+1)
++  const rect=range.getBoundingClientRect()
++  if(!(rect.width>0&&rect.height>0))throw new Error('Diagnóstico incompleto: glifo de '+name+' sem área visível.')
++  result.push({selector:name,x:rect.x-root.x,y:rect.y-root.y,w:rect.width,h:rect.height})
++ }
++ return result
++}
+diff --git a/cotacoes/scripts/smoke-capture-controls.cjs b/cotacoes/scripts/smoke-capture-controls.cjs
+new file mode 100644
+index 0000000..81aa789
+--- /dev/null
++++ b/cotacoes/scripts/smoke-capture-controls.cjs
+@@ -0,0 +1,18 @@
++// Contrato dos controles do quadro, sem copiar imagem ou alterar o clipboard do runner.
++const assert = require('node:assert/strict')
++module.exports = async function captureControls(dialog) {
++  const controls = dialog.locator('.expandable-controls')
++  const camera = controls.getByRole('button', { name: /^Copiar imagem: quadro completo: / })
++  const close = controls.getByRole('button', { name: 'Fechar detalhes', exact: true })
++  assert.equal(await controls.getByRole('button').count(), 2, 'somente câmera e fechar no quadro modal')
++  assert.equal(await camera.count(), 1, 'uma câmera identificada por nome acessível')
++  assert.equal(await camera.isVisible(), true)
++  assert.equal(await camera.isEnabled(), true)
++  await camera.focus()
++  assert.equal(await camera.evaluate(el => el === document.activeElement), true, 'câmera alcançável por foco')
++  assert.equal(await close.count(), 1)
++  assert.equal(await close.innerText(), 'Fechar ×')
++  assert.equal(await close.isEnabled(), true)
++  assert.equal(await controls.getByRole('button', { name: /^(Maximizar|Restaurar) / }).count(), 0, 'sem zoom duplicado no modal')
++  return close
++}
+diff --git a/cotacoes/scripts/smoke-capture-device.cjs b/cotacoes/scripts/smoke-capture-device.cjs
+new file mode 100644
+index 0000000..797625f
+--- /dev/null
++++ b/cotacoes/scripts/smoke-capture-device.cjs
+@@ -0,0 +1,62 @@
++// Experimento opt-in: screenshot do DOM original, nunca do clone de captura.
++const fs=require('node:fs/promises'),path=require('node:path')
++const compare=require('./capture-rgb-metrics.cjs')
++const captureSpecialRegions=require('./capture-special-regions.cjs')
++let sequence=0
++module.exports=async function deviceFidelity(page,target,bytes,selectors){
++ const {captureSize}=await import('../src/captureImage.js')
++ const geometry=await target.evaluate(el=>{const b=el.getBoundingClientRect();return {x:b.x+scrollX,y:b.y+scrollY,width:b.width,height:b.height,scrollHeight:el.scrollHeight,scrolled:!!(el.scrollTop||el.scrollLeft)}})
++ const cssWidth=Math.ceil(geometry.width),cssHeight=Math.ceil(geometry.scrolled?geometry.height:Math.max(geometry.scrollHeight,geometry.height))
++ const size=captureSize(cssWidth,cssHeight),viewport=page.viewportSize()
++ const session=await page.context().newCDPSession(page)
++ const originalDpr=await page.evaluate(()=>devicePixelRatio)
++ const out=process.env.CAPTURE_QA_OUTPUT||'workspace-qa/capturas',prefix=`device-${++sequence}`
++ await fs.mkdir(out,{recursive:true})
++ try{
++  await session.send('Emulation.setDeviceMetricsOverride',{width:viewport.width,height:viewport.height,deviceScaleFactor:size.scale,mobile:false})
++  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
++  const current=await target.evaluate(el=>{const b=el.getBoundingClientRect();return {x:b.x+scrollX,y:b.y+scrollY,width:b.width,height:b.height}})
++  if(['x','y','width','height'].some(k=>Math.abs(current[k]-geometry[k])>.01))throw new Error('DPR alterou layout original; experimento interrompido: '+JSON.stringify({geometry,current}))
++  const regions=[]
++  for(const selector of selectors){
++   const loc=target.locator(selector).first();await loc.waitFor();const b=await loc.boundingBox();const t=await target.boundingBox()
++   regions.push({selector,x:(b.x-t.x)*size.scale,y:(b.y-t.y)*size.scale,w:b.width*size.scale,h:b.height*size.scale})
++  }
++  // Não mistura os eixos com a curva nem o sinal com o restante do valor.
++  if(selectors.includes('h3')&&selectors.includes('.pct')){
++   const special=await target.evaluate(captureSpecialRegions)
++   regions.push(...special.map(r=>({...r,x:r.x*size.scale,y:r.y*size.scale,w:r.w*size.scale,h:r.h*size.scale})))
++  }
++  const reference=await page.screenshot({clip:{x:geometry.x,y:geometry.y,width:cssWidth,height:cssHeight},scale:'device',animations:'disabled',style:'[data-capture-ignore], [data-capture-ignore] * {visibility:hidden!important}'})
++  await fs.writeFile(path.join(out,prefix+'-reference.png'),reference)
++  await fs.writeFile(path.join(out,prefix+'-actual.png'),Buffer.from(bytes))
++  const result=await page.evaluate(async({bytes,reference,regions,source})=>{
++   const decode=async b=>createImageBitmap(new Blob([new Uint8Array(b)],{type:'image/png'}))
++   const [actual,expected]=await Promise.all([decode(bytes),decode(reference)])
++   if(actual.width!==expected.width||actual.height!==expected.height)throw new Error('Dimensão diferente; sem reamostragem: '+JSON.stringify({actual:[actual.width,actual.height],reference:[expected.width,expected.height]}))
++   const canvas=document.createElement('canvas');canvas.width=expected.width;canvas.height=expected.height
++   const ctx=canvas.getContext('2d');ctx.drawImage(expected,0,0);const want=ctx.getImageData(0,0,canvas.width,canvas.height).data
++   ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(actual,0,0);const got=ctx.getImageData(0,0,canvas.width,canvas.height).data
++   const compare=new Function('return ('+source+')')(),args={want,width:canvas.width,height:canvas.height,regions}
++   const proof=compare({...args,got}),negatives=[]
++   for(const [name,selector,mode] of [['curva removida','curva-sem-eixos','erase'],['cor da curva','curva-sem-eixos','red'],['sinal alterado','sinal','erase'],['dígito alterado','digito','erase'],['título ausente','h3','erase'],['deslocamento','h3','shift']]){
++    const r=regions.find(r=>r.selector===selector);if(!r)continue
++    const changed=new Uint8ClampedArray(want)
++    for(let y=Math.max(0,Math.ceil(r.y));y<Math.min(canvas.height,r.y+r.h);y++)for(let x=Math.max(0,Math.ceil(r.x));x<Math.min(canvas.width,r.x+r.w);x++){
++     const i=(y*canvas.width+x)*4
++     if(r.color&&Math.max(...r.color.map((v,c)=>Math.abs(want[i+c]-v)))>=45)continue
++     for(let c=0;c<3;c++)changed[i+c]=mode==='red'?[220,20,20][c]:mode==='shift'?want[(Math.max(0,y-8)*canvas.width+Math.max(0,x-8))*4+c]:255
++    }
++    const metric=compare({...args,got:changed,regions:[r]})[0]
++    negatives.push({name,metric,rejected:!(metric.meanError<.08&&metric.ink>20&&metric.inkRecall>.7)})
++   }
++   return {proof,negatives,dimensions:[actual.width,actual.height]}
++  },{bytes,reference:Array.from(reference),regions,source:compare.toString()})
++  await fs.writeFile(path.join(out,prefix+'-report.json'),JSON.stringify({geometry,size,regions,...result},null,2))
++  if(result.negatives.some(n=>!n.rejected))throw new Error('Comparador aceitou negativo real: '+JSON.stringify(result.negatives))
++  return result.proof
++ }finally{
++  await session.send('Emulation.setDeviceMetricsOverride',{width:viewport.width,height:viewport.height,deviceScaleFactor:originalDpr,mobile:false})
++  await session.detach()
++ }
++}
+diff --git a/cotacoes/scripts/smoke-capture-fidelity.cjs b/cotacoes/scripts/smoke-capture-fidelity.cjs
+new file mode 100644
+index 0000000..0fe6225
+--- /dev/null
++++ b/cotacoes/scripts/smoke-capture-fidelity.cjs
+@@ -0,0 +1,46 @@
++// Compare PNG gerado com screenshot independente do navegador, por região de texto/gráfico.
++// Controles intencionalmente não exportados ficam invisíveis na referência, mantendo geometria.
++// Título, valores e traço continuam integrais e sujeitos aos mesmos limiares.
++// A comparação inclui cores, não só alfa: fundo sólido ou conteúdo ausente deve falhar.
++module.exports = async function fidelity(page, target, bytes, selectors) {
++ const bounds=await target.boundingBox()
++ const regions=[]
++ for(const selector of selectors){
++  const locator=target.locator(selector).first()
++  await locator.waitFor()
++  const box=await locator.boundingBox()
++  if(!box||box.width<10||box.height<10)throw new Error('Região de prova ausente: '+selector)
++  regions.push({selector,x:box.x-bounds.x,y:box.y-bounds.y,w:box.width,h:box.height})
++ }
++ const reference=Array.from(await target.screenshot({animations:'disabled',style:'[data-capture-ignore], [data-capture-ignore] * { visibility: hidden !important; }'}))
++ return page.evaluate(async({bytes,reference,regions})=>{
++  const decode=async b=>createImageBitmap(new Blob([new Uint8Array(b)],{type:'image/png'}))
++  const [actual,expected]=await Promise.all([decode(bytes),decode(reference)])
++  const canvas=document.createElement('canvas');canvas.width=expected.width;canvas.height=expected.height
++  const ctx=canvas.getContext('2d');ctx.drawImage(actual,0,0,canvas.width,canvas.height)
++  const got=ctx.getImageData(0,0,canvas.width,canvas.height).data
++  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(expected,0,0)
++  const want=ctx.getImageData(0,0,canvas.width,canvas.height).data
++  return regions.map(r=>{
++    let error=0,n=0;const colors=new Set(), histogram=new Map(), samples=[]
++    // Identifica fundo dominante da região; exige coincidência nos traços/texto,
++    // para que um PNG de fundo sólido não passe pela média de pixels.
++
++    for(let y=Math.max(0,Math.ceil(r.y));y<Math.min(canvas.height,r.y+r.h);y++)
++     for(let x=Math.max(0,Math.ceil(r.x));x<Math.min(canvas.width,r.x+r.w);x++){
++      const i=(y*canvas.width+x)*4
++      const key=[want[i]>>4,want[i+1]>>4,want[i+2]>>4].join(',')
++      colors.add(key);histogram.set(key,(histogram.get(key)||0)+1);samples.push(i)
++      for(let c=0;c<3;c++){error+=Math.abs(got[i+c]-want[i+c])/255;n++}
++     }
++    const dominant=[...histogram].sort((a,b)=>b[1]-a[1])[0][0].split(',').map(v=>Number(v)*16+8)
++    let ink=0,matched=0
++    for(const i of samples){
++      if(Math.max(...dominant.map((v,c)=>Math.abs(want[i+c]-v)))<45)continue
++      ink++
++      if(Math.max(...dominant.map((_,c)=>Math.abs(want[i+c]-got[i+c])))<45)matched++
++    }
++    return {selector:r.selector,meanError:error/n,referenceColors:colors.size,samples:n,ink,inkRecall:ink?matched/ink:0}
++  })
++ },{bytes,reference,regions})
++}
+diff --git a/cotacoes/scripts/smoke-capture-image.cjs b/cotacoes/scripts/smoke-capture-image.cjs
+new file mode 100644
+index 0000000..2267b07
+--- /dev/null
++++ b/cotacoes/scripts/smoke-capture-image.cjs
+@@ -0,0 +1,108 @@
++// PNG real no Chromium; clipboard simulado para não tocar a área de transferência do executor.
++// Não prova colagem no sistema operacional. Rodar somente contra prévia/CI.
++const { chromium } = require('playwright')
++const assert = require('node:assert/strict')
++const fs = require('node:fs/promises')
++const path = require('node:path')
++const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8768'
++const fidelity = process.env.CAPTURE_REFERENCE_MODE === 'device' ? require('./smoke-capture-device.cjs') : require('./smoke-capture-fidelity.cjs')
++const out = process.env.CAPTURE_QA_OUTPUT || 'workspace-qa/capturas'
++;(async()=>{
++ await fs.mkdir(out,{recursive:true})
++ const browser=await chromium.launch(require('./smoke-launch.cjs')())
++ try {
++  for(const width of [390,1440]) for(const theme of ['light','dark']){
++   const page=await browser.newPage({viewport:{width,height:950},colorScheme:theme,serviceWorkers:'block',reducedMotion:'reduce'})
++   try{
++    await page.route('**/*',r=>r.request().url().startsWith(base)?r.continue():r.abort())
++    const now=Date.now(), points=Array.from({length:12},(_,i)=>[now-(11-i)*86400000,12+i/10])
++    await page.route('**/macro.json*',r=>r.fulfill({json:{generatedAt:now,cdi:points,selic:points,sofr:points,sofrAvg:[],focus:{},stale:{}}}))
++    await page.addInitScript(()=>{
++      window.captureWrites=[]
++      class Item { constructor(values){this.values=values} }
++      Object.defineProperty(window,'ClipboardItem',{configurable:true,value:Item})
++      Object.defineProperty(navigator,'clipboard',{configurable:true,value:{write:async items=>{
++       if(window.captureDenied) throw new Error('Permissão de cópia negada.')
++       const blob=await items[0].values['image/png']
++       const bytes=Array.from(new Uint8Array(await blob.arrayBuffer()))
++       window.captureWrites.push(bytes)
++      }}})
++    })
++    await page.goto(base+'/#juros')
++    const chart=page.locator('#juros-ref-brasil article.chart')
++    await chart.locator('svg[role="img"]').first().waitFor()
++    await chart.evaluate(async el=>{
++      const image=document.createElement('img');image.id='capture-local-logo';image.src=new URL('bank-logos/itau.png',document.baseURI).href;image.width=40;image.height=40
++      el.append(image);await image.decode()
++    })
++    await chart.getByRole('button',{name:/Copiar imagem:/}).click()
++    await page.waitForFunction(()=>window.captureWrites.length===1)
++    assert.match(await chart.innerText(),/Imagem copiada/)
++    const bytes=await page.evaluate(()=>window.captureWrites[0])
++    assert.deepEqual(bytes.slice(0,8),[137,80,78,71,13,10,26,10])
++    await chart.screenshot({path:path.join(out,`cdi-${width}-${theme}-reference-raw.png`)})
++    await chart.screenshot({path:path.join(out,`cdi-${width}-${theme}-reference.png`),style:'[data-capture-ignore], [data-capture-ignore] * { visibility: hidden !important; }'})
++    const proof=await fidelity(page,chart,bytes,['h3','.pct','svg[role="img"]','#capture-local-logo'])
++    // Persistir evidências antes de falhar: nunca perder o PNG divergente.
++    await fs.writeFile(path.join(out,`cdi-${width}-${theme}.png`),Buffer.from(bytes))
++    await fs.writeFile(path.join(out,`cdi-${width}-${theme}-fidelity.json`),JSON.stringify(proof,null,2))
++    for(const region of proof){
++      assert.ok(region.referenceColors>=4 && region.samples>100, 'referência contém texto ou gráfico: '+JSON.stringify(region))
++      assert.ok(region.meanError<0.08 && region.ink>20 && region.inkRecall>0.7,'fidelidade de texto/gráfico: '+JSON.stringify(region))
++    }
++    await page.locator('#juros-ref-brasil').getByRole('button',{name:'Ampliar gráfico: CDI',exact:true}).click()
++    const dialog=page.getByRole('dialog')
++    await dialog.locator('.capture-button').first().waitFor()
++    await dialog.locator('.capture-button').first().click()
++    await page.waitForFunction(()=>window.captureWrites.length===2)
++    // Regressão de rolagem vertical e horizontal, com conteúdo distinguível.
++    await dialog.evaluate(el=>{
++      const fixture=document.createElement('div');fixture.id='capture-scroll-fixture'
++      fixture.style.cssText='width:220px;height:90px;overflow:auto;background:white;color:black'
++      fixture.innerHTML='<div style="width:700px;height:320px;position:relative"><div style="position:absolute;left:260px;top:150px;background:#00aa44;color:white;font:24px monospace;padding:12px">VALOR 98765</div><div style="background:#cc0000;color:white">INÍCIO 12345</div></div>'
++      el.querySelector('.expandable-body').prepend(fixture)
++      fixture.scrollTop=130;fixture.scrollLeft=240
++    })
++    await dialog.locator('.capture-button').first().click()
++    await page.waitForFunction(()=>window.captureWrites.length===3)
++    const scrolledBytes=await page.evaluate(()=>window.captureWrites[2])
++    const scrollProof=await fidelity(page,dialog,scrolledBytes,['#capture-scroll-fixture'])
++    assert.ok(scrollProof[0].referenceColors>=4 && scrollProof[0].meanError<0.08 && scrollProof[0].ink>20 && scrollProof[0].inkRecall>0.7,'rolagem fiel: '+JSON.stringify(scrollProof))
++    await fs.writeFile(path.join(out,`rolagem-${width}-${theme}.png`),Buffer.from(scrolledBytes))
++    await page.evaluate(()=>window.captureDenied=true)
++    await dialog.locator('.capture-button').first().click()
++    await dialog.getByRole('status').filter({hasText:'Permissão de cópia negada.'}).waitFor()
++    assert.equal(await page.evaluate(()=>window.captureWrites.length),3)
++    await page.screenshot({path:path.join(out,`detalhe-${width}-${theme}.png`),fullPage:true})
++    console.log('PASS captura PNG gráfico/detalhe/rolagem/recusa',width,theme)
++    await page.evaluate(()=>window.captureDenied=false)
++    await dialog.evaluate(el=>{
++      const frame=document.createElement('iframe');frame.title='Google Trends · fixture externa';frame.src='https://example.invalid/externo';frame.style.cssText='width:240px;height:100px'
++      el.querySelector('.expandable-body').prepend(frame)
++    })
++    const beforeExternal=await page.evaluate(()=>window.captureWrites.length)
++    await dialog.locator('.capture-button').first().click()
++    await page.waitForFunction(n=>window.captureWrites.length===n+1,beforeExternal)
++    await dialog.getByRole('status').filter({hasText:'conteúdo externo não incluído'}).waitFor()
++    await fs.writeFile(path.join(out,`iframe-aviso-${width}-${theme}.png`),Buffer.from(await page.evaluate(()=>window.captureWrites.at(-1))))
++
++    for(const [route,selector] of [['resumo','.market-table'],['juros','#juros-ref-brasil article.chart'],['cenarios/calendario','#cal-title'],['cenarios/projecoes','#scenarios-heading'],['cenarios/inadimplencia','#credit-title'],['cenarios/recuperacao','#rj-history-heading'],['cenarios/atividade','#market-context-heading'],['cenarios/commodities','#commodities-context-heading'],['cenarios/indexadores','.idx-table'],['cenarios/inflacao','#outros-title']]){
++      await page.goto(base+'/#'+route)
++      await page.locator(selector).first().waitFor()
++      const main=page.locator('main.app')
++      await main.locator('img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode().catch(()=>{}))))
++      const before=await page.evaluate(()=>window.captureWrites.length)
++      await main.locator('.screen-capture-bar .capture-button').click()
++      await page.waitForFunction(n=>window.captureWrites.length===n+1,before)
++      const screenBytes=await page.evaluate(()=>window.captureWrites.at(-1))
++      await main.screenshot({path:path.join(out,`tela-${route.replaceAll('/','-')}-${width}-${theme}-reference.png`)})
++      const screenProof=await fidelity(page,main,screenBytes,[selector])
++      for(const region of screenProof)assert.ok(region.referenceColors>=4 && region.meanError<0.08 && region.ink>20 && region.inkRecall>0.7,'tela fiel: '+route+' '+JSON.stringify(region))
++      const name=route.replaceAll('/','-')
++      await fs.writeFile(path.join(out,`tela-${name}-${width}-${theme}.png`),Buffer.from(screenBytes))
++      await fs.writeFile(path.join(out,`tela-${name}-${width}-${theme}.json`),JSON.stringify(screenProof,null,2))
++    }
++   } finally {await page.close()}
++  }
++ } finally {await browser.close()}
++})().catch(e=>{console.error(e);process.exit(1)})
+diff --git a/cotacoes/scripts/smoke-capture-paste.cjs b/cotacoes/scripts/smoke-capture-paste.cjs
+new file mode 100644
+index 0000000..764ae1b
+--- /dev/null
++++ b/cotacoes/scripts/smoke-capture-paste.cjs
+@@ -0,0 +1,52 @@
++// Opt-in: altera SOMENTE o clipboard do runner descartável autorizado.
++// Sem mocks, grantPermissions, configurações persistentes ou clipboard.read.
++// Verifica o PNG recebido por evento paste provocado por Control+V real do navegador.
++const {chromium}=require('playwright')
++const assert=require('node:assert/strict')
++const fs=require('node:fs/promises'),path=require('node:path')
++if(process.env.REAL_CLIPBOARD!=='1')throw new Error('Defina REAL_CLIPBOARD=1 somente no runner descartável autorizado.')
++const base=process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768'
++if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Teste restrito à prévia local do runner.')
++;(async()=>{
++ const browser=await chromium.launch(require('./smoke-launch.cjs')())
++ const context=await browser.newContext({viewport:{width:1440,height:950},serviceWorkers:'block',reducedMotion:'reduce'})
++ try{
++  const page=await context.newPage()
++  await page.route('**/*',r=>r.request().url().startsWith(base)?r.continue():r.abort())
++  const now=Date.now(),points=Array.from({length:12},(_,i)=>[now-(11-i)*86400000,12+i/10])
++  await page.route('**/macro.json*',r=>r.fulfill({json:{generatedAt:now,cdi:points,selic:points,sofr:points,sofrAvg:[],focus:{},stale:{}}}))
++  await page.goto(base+'/#juros')
++  const chart=page.locator('#juros-ref-brasil article.chart')
++  await chart.locator('svg[role="img"]').first().waitFor()
++  await chart.getByRole('button',{name:/Copiar imagem:/}).click()
++  await chart.getByRole('status').filter({hasText:'Imagem copiada.'}).waitFor()
++  await page.evaluate(()=>{
++   const field=document.createElement('div');field.id='paste-proof';field.contentEditable='true'
++   field.setAttribute('aria-label','Destino local de teste de colagem')
++   field.style.cssText='position:fixed;top:10px;left:10px;background:white;color:black;z-index:999999;padding:10px'
++   field.textContent='Cole aqui';document.body.append(field)
++   field.addEventListener('paste',async event=>{
++    event.preventDefault()
++    const file=[...event.clipboardData.files].find(f=>f.type==='image/png')
++    if(!file){window.pasteProof={error:'Evento paste sem PNG'};return}
++    const bytes=Array.from(new Uint8Array(await file.arrayBuffer()))
++    const bitmap=await createImageBitmap(file)
++    window.pasteProof={bytes,width:bitmap.width,height:bitmap.height,type:file.type,trusted:event.isTrusted}
++   })
++  })
++  await page.locator('#paste-proof').click()
++  await page.keyboard.press('Control+V')
++  await page.waitForFunction(()=>window.pasteProof)
++  const proof=await page.evaluate(()=>window.pasteProof)
++  assert.equal(proof.error,undefined)
++  assert.equal(proof.trusted,true,'paste originado do navegador, não dispatchEvent')
++  assert.equal(proof.type,'image/png')
++  assert.ok(proof.width>200&&proof.height>100)
++  assert.deepEqual(proof.bytes.slice(0,8),[137,80,78,71,13,10,26,10])
++  const out=process.env.CAPTURE_QA_OUTPUT||'workspace-qa/capturas'
++  await fs.mkdir(out,{recursive:true})
++  await fs.writeFile(path.join(out,'colagem-real.png'),Buffer.from(proof.bytes))
++  await fs.writeFile(path.join(out,'colagem-real.json'),JSON.stringify({...proof,bytes:undefined},null,2))
++  console.log('PASS PNG recebido por Control+V real no runner descartável.')
++ }finally{await context.close();await browser.close()}
++})().catch(e=>{console.error(e);process.exit(1)})
+diff --git a/cotacoes/scripts/smoke-chart-compare.cjs b/cotacoes/scripts/smoke-chart-compare.cjs
+index 17a02ac..df49db0 100644
+--- a/cotacoes/scripts/smoke-chart-compare.cjs
++++ b/cotacoes/scripts/smoke-chart-compare.cjs
+@@ -1,3 +1,4 @@
++const captureControls = require('./smoke-capture-controls.cjs')
+ // Seleção de trecho no gráfico: arrastar marca o intervalo (linhas pontilhadas), mostra a variação e compara com o ano anterior.
+ const { chromium } = require('playwright'), assert = require('node:assert/strict')
+ ;(async () => {
+@@ -12,8 +13,8 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
+       const d = p.getByRole('dialog', { name: /histórico de Petróleo Brent/i })
+       await d.waitFor()
+       await d.getByRole('group', { name: 'Período da referência' }).getByRole('button', { name: '12 meses', exact: true }).click()
+-      // tela cheia só com "Fechar"; filtros (período e escala) num único bloco acima do gráfico
+-      assert.deepEqual(await d.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
++      // quadro modal com câmera e "Fechar"; filtros (período e escala) num único bloco acima do gráfico
++      await captureControls(d)
+       assert.equal(await d.locator('.chart-filters').count(), 1)
+       await p.waitForTimeout(600) // a janela termina de abrir
+       const full = await d.boundingBox()
+@@ -47,6 +48,8 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
+       await panel.waitFor()
+       // trecho sem ano anterior avisa em vez de inventar
+       assert.match(await panel.innerText(), /Ano anterior/)
++      await d.getByRole('button', { name: 'Fechar detalhes', exact: true }).click()
++      await d.waitFor({ state: 'hidden' })
+       assert.deepEqual(errors, [])
+       console.log(width + ' PASS arrastar/linhas/variação/ano anterior/Escape/clique/Shift+setas')
+       await p.close()
+diff --git a/cotacoes/scripts/smoke-chart-comparison.cjs b/cotacoes/scripts/smoke-chart-comparison.cjs
+index d9e9d25..3bcfa6f 100644
+--- a/cotacoes/scripts/smoke-chart-comparison.cjs
++++ b/cotacoes/scripts/smoke-chart-comparison.cjs
+@@ -2,7 +2,7 @@ const {chromium}=require('playwright'), assert=require('node:assert/strict'), pa
+ const output=process.env.COMPARISON_QA_OUTPUT || path.join(__dirname,'../../qa-universal');fs.mkdirSync(output,{recursive:true});
+ const base=process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5220';
+ async function drag(p,svg,touch=false){await svg.scrollIntoViewIfNeeded();const b=await svg.boundingBox(),x=b.x+b.width*.25,y=b.y+b.height*.5,x1=b.x+b.width*.8;if(touch){const c=await p.context().newCDPSession(p);await c.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});for(let i=1;i<=12;i++){await c.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+(x1-x)*i/12,y}]});await p.waitForTimeout(15)}await c.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await c.detach()}else{await p.mouse.move(x,y);await p.mouse.down();await p.mouse.move(x1,y,{steps:14});await p.mouse.up()}}
+-(async()=>{const browser=await chromium.launch(require('./smoke-launch.cjs')());try{for(const width of [390,1280]){const c=await browser.newContext({viewport:{width,height:1000},hasTouch:true,serviceWorkers:'block'}),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.route('**/acessos.json*',r=>r.fulfill({json:{generatedAt:Date.now(),dias:Array.from({length:500},(_,i)=>({d:new Date(Date.UTC(2024,0,1+i)).toISOString().slice(0,10),visitantes:10+i%10,views:20}))}}));await p.route('https://**/*',r=>r.fulfill({status:503,body:'offline'}));await p.goto(base+'/test/fixtures/chart-comparison.html');await p.locator('#multi svg').waitFor();
++(async()=>{const browser=await chromium.launch(require('./smoke-launch.cjs')());try{for(const width of [390,1280]){const c=await browser.newContext({viewport:{width,height:1000},hasTouch:true,serviceWorkers:'block'}),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.route('**/acessos.json*',r=>r.fulfill({json:{generatedAt:Date.now(),dias:Array.from({length:500},(_,i)=>({d:new Date(Date.UTC(2024,0,1+i)).toISOString().slice(0,10),visitantes:10+i%10,views:20}))}}));await p.route('https://**/*',r=>r.fulfill({status:503,body:'offline'}));await p.goto(base+'/test/fixtures/chart-comparison.html');await p.locator('#multi').getByRole('img',{name:'Ensaio PF e PJ',exact:true}).waitFor();
+  for(const id of ['multi','single','bars','sofr','spark']){const block=p.locator('#'+id),svg=block.locator('svg[role="img"]').first();await drag(p,svg,width===390);const readout=block.locator(id==='single'?'.sel-panel':'.comparison-readout');await readout.waitFor();const text=await readout.innerText();assert.match(text,/Ano anterior/);if(id!=='spark')assert.doesNotMatch(text,/indisponível/i,id);if(id==='multi')assert.equal(await readout.locator('.comparison-row').count(),2);if(id==='bars')assert.match(text,/acumulado composto/);console.log('PASS '+id+' '+width+(width===390?' touch':' mouse'));
+   await svg.focus();await p.keyboard.press('Escape');assert.equal(await readout.count(),0);await p.keyboard.press('Shift+End');await readout.waitFor();await svg.focus();await p.keyboard.press('Escape');}
+  // Moving averages remain selectable and retain raw and percentile-band rendering.
+diff --git a/cotacoes/scripts/smoke-date-range.cjs b/cotacoes/scripts/smoke-date-range.cjs
+index 4836187..cc73415 100644
+--- a/cotacoes/scripts/smoke-date-range.cjs
++++ b/cotacoes/scripts/smoke-date-range.cjs
+@@ -1,3 +1,4 @@
++const captureControls = require('./smoke-capture-controls.cjs')
+ // Seletor de período em uma linha: abre o calendário, escolhe início e fim com dois cliques, Escape fecha só o calendário.
+ const { chromium } = require('playwright'), assert = require('node:assert/strict')
+ ;(async () => {
+@@ -73,7 +74,9 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
+       await ini.press('Enter'); await cal.waitFor({ state: 'hidden' })
+       const um = fimTxt.replace(/\/(\d{2})(\d{2})$/, '/$2')
+       assert.equal(await trigger.innerText(), `${um} → ${um}`, 'período de um dia digitado')
+-      await d.locator('.expandable-controls button').first().click()
++      const close = await captureControls(d)
++      await close.click()
++      await d.waitFor({ state: 'hidden' })
+       assert.deepEqual(errors, [])
+     }
+     console.log('PASS seletor de período em uma linha (Brent em Commodities): 390 e 1440')
+diff --git a/cotacoes/scripts/smoke-global-search.cjs b/cotacoes/scripts/smoke-global-search.cjs
+index db932eb..915b809 100644
+--- a/cotacoes/scripts/smoke-global-search.cjs
++++ b/cotacoes/scripts/smoke-global-search.cjs
+@@ -22,7 +22,7 @@ const base=process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5220';
+    return r.fulfill({json:{generatedAt:now}});
+  }return r.continue()});
+  await p.goto(base+'/');await p.locator('.expandable-panel[open]').first().waitFor();assert.equal(await p.locator('.expandable-panel:modal').count(),0,'painel de mercado está no modo normal');
+- await p.locator('.expandable-controls button').first().click();await p.locator('.expandable-panel:modal').waitFor();await p.keyboard.press('Control+Shift+F');assert.equal(await p.locator('.global-search-dialog[open]').count(),0,'preserva modal nativo ampliado');await p.keyboard.press('Escape');await p.locator('.expandable-panel:modal').waitFor({state:'hidden'});
++ await p.getByRole('button',{name:'Maximizar Mercado hoje',exact:true}).click();await p.locator('.expandable-panel:modal').waitFor();assert.equal(await p.getByRole('button',{name:'Restaurar Mercado hoje',exact:true}).getAttribute('aria-pressed'),'true');await p.keyboard.press('Control+Shift+F');assert.equal(await p.locator('.global-search-dialog[open]').count(),0,'preserva modal nativo ampliado');await p.keyboard.press('Escape');await p.locator('.expandable-panel:modal').waitFor({state:'hidden'});assert.equal(await p.getByRole('button',{name:'Maximizar Mercado hoje',exact:true}).getAttribute('aria-pressed'),'false');
+  await p.evaluate(()=>{const modal=document.createElement('div');modal.id='qa-protected-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');document.body.append(modal)});await p.keyboard.press('Control+Shift+F');assert.equal(await p.locator('.global-search-dialog[open]').count(),0,'não abre sobre outro diálogo');await p.locator('#qa-protected-modal').evaluate(el=>el.remove());
+  const trigger={click:()=>p.keyboard.press('Control+Shift+F')};assert.equal(await p.locator('.global-search-trigger').count(),0);await trigger.click();await p.getByRole('dialog',{name:'Buscar no painel'}).waitFor();await p.getByRole('button',{name:'Fechar busca',exact:true}).click();await p.getByRole('dialog',{name:'Buscar no painel'}).waitFor({state:'hidden'});await trigger.click();
+  const dialog=p.getByRole('dialog',{name:'Buscar no painel'}), input=dialog.getByRole('searchbox');await dialog.waitFor();await input.fill('INADIMPLENCIA');
+diff --git a/cotacoes/scripts/smoke-outros.cjs b/cotacoes/scripts/smoke-outros.cjs
+index 54e1d2c..2b1921b 100644
+--- a/cotacoes/scripts/smoke-outros.cjs
++++ b/cotacoes/scripts/smoke-outros.cjs
+@@ -1,3 +1,4 @@
++const captureControls = require('./smoke-capture-controls.cjs')
+ const openCallouts = require('./smoke-aprender-disclosures.cjs')
+ // Cenários › Inflação (IPCA) e › Fiscal (dívida bruta) e Frete marítimo: tabela no formato do Mercado; clicar abre o gráfico em tela cheia com filtros no topo.
+ const { chromium } = require('playwright'), assert = require('node:assert/strict')
+@@ -562,7 +563,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
+       await p.getByRole('button', { name: 'Acumulado em 12 meses: abrir gráfico' }).click()
+       const d = p.getByRole('dialog', { name: /histórico de IPCA/ })
+       await d.waitFor()
+-      assert.deepEqual(await d.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
++      await captureControls(d)
+       assert.equal(await d.locator('.chart-filters').count(), 1, 'filtros num bloco só, acima do gráfico')
+       await d.getByRole('group', { name: 'Período do indicador' }).getByRole('button', { name: 'Tudo' }).click()
+       await d.locator('.plot svg').first().waitFor()
+@@ -601,7 +602,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
+       await at.getByRole('button', { name: /Payroll . EUA: abrir gráfico/ }).click()
+       const ad = p.getByRole('dialog', { name: /histórico de Payroll/i }); await ad.waitFor()
+       assert.equal(await ad.locator('.chart-filters').count(), 1)
+-      assert.deepEqual(await ad.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
++      await captureControls(ad)
+       await p.keyboard.press('Escape'); await ad.waitFor({ state: 'hidden' })
+       // commodities: tabela com variações; a linha com histórico abre o gráfico, a sem histórico não abre
+       await p.goto(base + '/#cenarios/commodities')
+@@ -611,7 +612,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
+       await ct.getByRole('button', { name: /Ouro: abrir gráfico/ }).click()
+       const cd = p.getByRole('dialog', { name: /histórico de Ouro/i }); await cd.waitFor()
+       assert.equal(await cd.locator('.chart-filters').count(), 1)
+-      assert.deepEqual(await cd.locator('.expandable-controls button').allInnerTexts(), ['Fechar ×'])
++      await captureControls(cd)
+       await cd.locator('.plot svg').first().waitFor()
+       await p.keyboard.press('Escape'); await cd.waitFor({ state: 'hidden' })
+       // o petróleo (Brent) mora aqui, na tabela de Commodities, e não mais solto no Mercado
+diff --git a/cotacoes/scripts/smoke-recuperacao.cjs b/cotacoes/scripts/smoke-recuperacao.cjs
+index d4e02f1..91924ad 100644
+--- a/cotacoes/scripts/smoke-recuperacao.cjs
++++ b/cotacoes/scripts/smoke-recuperacao.cjs
+@@ -108,7 +108,13 @@ async function smoke(browser, width, colorScheme) {
+   assert.match(await panel.locator('.rj-pagination').innerText(), /Página 2 de 16/)
+   await panel.locator('.rj-state[aria-label^="São Paulo"]').click()
+   await panel.getByRole('button', {name:'Ver Brasil', exact:true}).waitFor()
+-  await panel.getByRole('button', {name:'Ver Brasil', exact:true}).click()
++  const backToBrazil=panel.getByRole('button',{name:'Ver Brasil',exact:true})
++  const backBox=await backToBrazil.boundingBox()
++  const mapControls=panel.locator('.chart-fullscreen-toolbar').filter({has:page.getByRole('button',{name:'Maximizar gráfico',exact:true})}).first()
++  const toolbarBox=await mapControls.boundingBox()
++  assert.ok(toolbarBox.y+toolbarBox.height<=backBox.y||toolbarBox.x+toolbarBox.width<=backBox.x||toolbarBox.x>=backBox.x+backBox.width,'câmera/zoom não cobrem Ver Brasil')
++  await backToBrazil.click()
++  await backToBrazil.waitFor({state:'hidden'})
+   await panel.getByLabel('Selecionar UF').selectOption('Sem UF')
+   assert.match(await panel.locator('.rj-kpis').innerText(), /67/)
+   await panel.getByRole('button', {name:'Limpar seleção', exact:true}).click()
+diff --git a/cotacoes/scripts/smoke-trends.cjs b/cotacoes/scripts/smoke-trends.cjs
+index 2f66c77..c667dc4 100644
+--- a/cotacoes/scripts/smoke-trends.cjs
++++ b/cotacoes/scripts/smoke-trends.cjs
+@@ -35,7 +35,7 @@ const assert = require('node:assert/strict')
+         assert.match(await panel.innerText(), /Hipótese para a conversa/)
+         assert.equal(await panel.locator('iframe.trends-live-chart').count(), 1)
+         assert.match(await panel.locator('iframe').getAttribute('title'), new RegExp(name))
+-        assert.equal(await panel.locator('figure svg:visible').count(), 0)
++        assert.equal(await panel.locator('figure svg[role="img"]:visible').count(), 0)
+         const url = new URL(await panel.locator('iframe').getAttribute('src'))
+         const request = JSON.parse(url.searchParams.get('req'))
+         assert.equal(request.comparisonItem.length, 3)
+@@ -44,13 +44,13 @@ const assert = require('node:assert/strict')
+       await panel.getByRole('combobox').selectOption('today 12-m')
+       assert.match(await panel.locator('iframe').getAttribute('title'), /12 meses/)
+       assert.ok(JSON.parse(new URL(await panel.locator('iframe').getAttribute('src')).searchParams.get('req')).comparisonItem.every(item => item.time === 'today 12-m'))
+-      assert.equal(await panel.locator('figure svg:visible').count(), 0)
++      assert.equal(await panel.locator('figure svg[role="img"]:visible').count(), 0)
+       await panel.getByRole('combobox').selectOption('today 3-m')
+       await panel.locator('.trends-archive > summary').click()
+       assert.match(await panel.innerText(), /Não atualiza automaticamente/)
+-      assert.equal(await panel.locator('figure svg:visible').count(), 1)
++      assert.equal(await panel.locator('figure svg[role="img"]:visible').count(), 1)
+       await panel.locator('.trends-archive > summary').click()
+-      assert.equal(await panel.locator('figure svg:visible').count(), 0)
++      assert.equal(await panel.locator('figure svg[role="img"]:visible').count(), 0)
+       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+       assert.deepEqual(errors, [])
+       await panel.screenshot({ path: `${out}/${width}-trends.png` })
+diff --git a/cotacoes/scripts/smoke-ux.cjs b/cotacoes/scripts/smoke-ux.cjs
+index 3e22a2c..6a4961e 100644
+--- a/cotacoes/scripts/smoke-ux.cjs
++++ b/cotacoes/scripts/smoke-ux.cjs
+@@ -25,8 +25,17 @@ const fs = require('node:fs')
+   })
+   await page.goto(base+'/#resumo')
+   await page.getByRole('button',{name:'Dólar americano: abrir gráfico',exact:true}).waitFor() // o botão de atualizar só ocupa espaço depois que as cotações carregam
+-  const sizes=await page.locator('.img-share,.refresh-mini,.help button:not(.pop-close)').evaluateAll(es=>es.map(e=>({label:e.getAttribute('aria-label'),w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})))
++  const sizes=await page.locator('.capture-button,.refresh-mini,.help button:not(.pop-close)').filter({visible:true}).evaluateAll(es=>es.map(e=>({label:e.getAttribute('aria-label'),w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})))
+   assert.ok(sizes.every(s=>Math.round(s.w)>=44 && Math.round(s.h)>=44),JSON.stringify(sizes.filter(s=>s.w<44||s.h<44)))
++  assert.ok(sizes.some(s=>s.label==='Copiar imagem: Mercado hoje'),'câmera de Mercado medida')
++  await page.getByRole('button',{name:/^Panorama do dia(?: \(edição nova\))?$/}).click()
++  const panorama=page.getByRole('dialog',{name:'Panorama do dia',exact:true})
++  await panorama.waitFor()
++  const camera=panorama.getByRole('button',{name:'Copiar imagem: Panorama do dia',exact:true})
++  await camera.waitFor();const cb=await camera.boundingBox()
++  assert.ok(Math.round(cb.width)>=44&&Math.round(cb.height)>=44,'câmera de Panorama medida quando aberta')
++  await panorama.getByRole('button',{name:'Fechar panorama',exact:true}).click()
++  await panorama.waitFor({state:'hidden'})
+   assert.match(await page.locator('.status.src').innerText(),/Câmbio.*25\/10\/2026.*Brasília/)
+   await page.screenshot({path:`${out}/${width}-empty.png`,fullPage:true})
+   assert.equal(await page.locator('.calendar-trigger,.resumo-chart').count(),0)
+diff --git a/cotacoes/src/App.jsx b/cotacoes/src/App.jsx
+index 0269f0b..3cdf978 100644
+--- a/cotacoes/src/App.jsx
++++ b/cotacoes/src/App.jsx
+@@ -1,3 +1,4 @@
++import CaptureButton from './CaptureButton.jsx'
+ import EconomiaContexto from './EconomiaContexto.jsx'
+ import GlobalSearch, { SearchDestination } from './GlobalSearch.jsx'
+ import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
+@@ -316,6 +317,7 @@ export default function App() {
+           <button type="button" onClick={() => window.location.reload()}>Recarregar</button>
+         </div>
+       )}
++      {['resumo', 'juros', 'cenarios'].includes(tab) && <div className="screen-capture-bar" data-capture-ignore><span>Copiar tela atual</span><CaptureButton label={TABS.find(t => t.id === tab)?.label || tab} getTarget={() => mainRef.current} /></div>}
+       <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
+       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
+       {tab !== 'resumo' && (
+diff --git a/cotacoes/src/CaptureButton.css b/cotacoes/src/CaptureButton.css
+new file mode 100644
+index 0000000..9a8faa8
+--- /dev/null
++++ b/cotacoes/src/CaptureButton.css
+@@ -0,0 +1,6 @@
++.capture-action { display:inline-flex; align-items:center; vertical-align:middle; position:relative; }
++.capture-button { display:inline-flex; justify-content:center; align-items:center; min-width:44px; min-height:44px; color:var(--fg); background:var(--surface-2); border:1px solid var(--line); border-radius:6px; cursor:pointer; }
++.capture-button:focus-visible { outline:2px solid var(--amber); outline-offset:2px; }
++.capture-button:disabled { opacity:.6; cursor:wait; }
++.capture-status { position:absolute; top:100%; right:0; z-index:30; width:min(280px,70vw); white-space:normal; padding:8px; background:var(--card); color:var(--fg); border:1px solid var(--line); font:400 .8rem/1.4 system-ui; }
++.screen-capture-bar { display:flex; justify-content:flex-end; align-items:center; gap:8px; margin:8px 0; font-size:.8rem; color:var(--mut); }
+diff --git a/cotacoes/src/CaptureButton.jsx b/cotacoes/src/CaptureButton.jsx
+new file mode 100644
+index 0000000..13bf828
+--- /dev/null
++++ b/cotacoes/src/CaptureButton.jsx
+@@ -0,0 +1,25 @@
++import { useRef, useState } from 'react'
++import { copyCapture } from './captureImage.js'
++import './CaptureButton.css'
++export default function CaptureButton({ getTarget, label = 'gráfico' }) {
++  const button = useRef(null)
++  const [busy,setBusy] = useState(false)
++  const [status,setStatus] = useState('')
++  const copy = async e => {
++    e.stopPropagation()
++    if (busy) return
++    setBusy(true);setStatus('')
++    try {
++      const target = getTarget ? getTarget() : button.current?.closest('[data-capture-surface], article.chart, .chart, .expandable-panel')
++      await copyCapture(target)
++      setStatus(target?.querySelector('iframe,video') ? 'Imagem copiada com aviso: conteúdo externo não incluído. Cole com Ctrl+V.' : 'Imagem copiada. Cole com Ctrl+V.')
++    } catch (error) { setStatus(error.name === 'NotAllowedError' ? 'Cópia não autorizada pelo navegador. Confira a permissão da área de transferência e tente novamente.' : error.message || 'Não foi possível copiar. Confira a permissão da área de transferência.') }
++    finally { setBusy(false) }
++  }
++  return <span className="capture-action" data-capture-ignore>
++    <button ref={button} type="button" className="capture-button" disabled={busy} onClick={copy} aria-label={`Copiar imagem: ${label}`} title={`Copiar imagem de ${label} para a área de transferência`}>
++      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v14H3z"/><circle cx="12" cy="13" r="4"/></svg>
++    </button>
++    {status && <span role="status" className="capture-status">{status}</span>}
++  </span>
++}
+diff --git a/cotacoes/src/ChartFullscreen.jsx b/cotacoes/src/ChartFullscreen.jsx
+index 81054dd..e81dd3d 100644
+--- a/cotacoes/src/ChartFullscreen.jsx
++++ b/cotacoes/src/ChartFullscreen.jsx
+@@ -1,3 +1,4 @@
++import CaptureButton from './CaptureButton.jsx'
+ import { useLayoutEffect, useRef, useState } from 'react'
+ import { createPortal } from 'react-dom'
+ import ExpandIcon from './ExpandIcon.jsx'
+@@ -33,7 +34,7 @@ export default function ChartFullscreen({ children, disabled = false, compact =
+   if (disabled || !host) return children
+   const keepEscapeInside = event => { if (expanded && event.key === 'Escape') event.stopPropagation() }
+   const content = <>
+-    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" className={expanded ? undefined : 'btn-expand'} aria-label={expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'} title={expanded ? undefined : 'Ampliar'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : <ExpandIcon />}</button></div>
++    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" className={expanded ? undefined : 'btn-expand'} aria-label={expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'} title={expanded ? undefined : 'Ampliar'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : <ExpandIcon />}</button><CaptureButton label="gráfico ampliável" getTarget={() => host.querySelector('.chart-fullscreen-content')} /></div>
+     <div className="chart-fullscreen-content" onKeyDown={keepEscapeInside}>{children}</div>
+   </>
+   return <>
+diff --git a/cotacoes/src/Direcao.css b/cotacoes/src/Direcao.css
+index b56aeba..0b31a7d 100644
+--- a/cotacoes/src/Direcao.css
++++ b/cotacoes/src/Direcao.css
+@@ -119,8 +119,8 @@ html button.btn-expand:focus-visible { outline:2px solid var(--amber, var(--acce
+ /* No gráfico, o ícone fica sobre o canto de cima à direita, sem ocupar uma linha própria. */
+ .chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) { position:relative; }
+ .chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar { position:absolute; top:0; right:0; z-index:3; margin:0; }
+-/* Quando o ampliar envolve o quadro inteiro (mapa e setores da recuperação judicial), o ícone fica dentro da borda. */
+-.chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar:has(+ .chart-fullscreen-content > .rj-card) { top:12px; right:12px; }
++/* No quadro de recuperação, dois controles ocupam linha própria para não cobrir Ver Brasil. */
++.chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar:has(+ .chart-fullscreen-content > .rj-card) { position:static; top:auto; right:auto; gap:4px; min-height:48px; margin:0 0 4px; }
+ /* "Mercado hoje": o ícone de tela cheia segue o mesmo desenho dos outros (antes era texto sem contorno). */
+ @media (min-width: 1000px) {
+   .desk-markets .expandable-panel:not(.is-modal) > .expandable-controls .btn.btn-expand { width:32px; height:32px; min-height:0; padding:0; border:1px solid var(--line); background:var(--card); }
+diff --git a/cotacoes/src/Expandable.jsx b/cotacoes/src/Expandable.jsx
+index d978d92..8ad0511 100644
+--- a/cotacoes/src/Expandable.jsx
++++ b/cotacoes/src/Expandable.jsx
+@@ -1,3 +1,4 @@
++import CaptureButton from './CaptureButton.jsx'
+ import { useLayoutEffect, useRef, useState } from 'react'
+ import { FilterScope } from './ChartFilters.jsx'
+ import { reduceMotion } from './motion.js'
+@@ -5,7 +6,7 @@ import ExpandIcon from './ExpandIcon.jsx'
+ 
+ // O mesmo conteúdo permanece montado ao ampliar: filtros e seleções são preservados.
+ // O diálogo nativo mantém foco e Escape dentro da vista ampliada, inclusive no celular.
+-export default function Expandable({ children, label, modal = false, onClose }) {
++export default function Expandable({ children, label, modal = false, onClose, capture = true }) {
+   const [full, setFull] = useState(false)
+   const ref = useRef(null)
+   const active = modal || full
+@@ -49,6 +50,7 @@ export default function Expandable({ children, label, modal = false, onClose })
+         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close()
+       }}>
+       <div className="expandable-controls">
++        {capture && <CaptureButton label={`quadro completo: ${label || 'detalhe'}`} getTarget={() => ref.current} />}
+         {modal
+           ? <button type="button" className="btn" onClick={close} aria-label="Fechar detalhes">Fechar ×</button>
+           : <button type="button" className={full ? 'btn' : 'btn btn-expand'} aria-label={`${full ? 'Restaurar' : 'Maximizar'} ${label}`} aria-pressed={full} title={full ? undefined : 'Ampliar'} onClick={() => setFull((v) => !v)}>{full ? '↙ Restaurar' : <ExpandIcon />}</button>}
+diff --git a/cotacoes/src/Explain.jsx b/cotacoes/src/Explain.jsx
+index 970a668..490233d 100644
+--- a/cotacoes/src/Explain.jsx
++++ b/cotacoes/src/Explain.jsx
+@@ -1,3 +1,4 @@
++import CaptureButton from './CaptureButton.jsx'
+ import Help from './Help.jsx'
+ import { GLOSSARY } from './glossary.js'
+ 
+@@ -7,7 +8,7 @@ export default function Explain({ id, align = 'left', fixed = false, tipo, grafi
+   const g = GLOSSARY[id]
+   if (!g) return null
+   return (
+-    <Help label={`O que é: ${g.t}`} align={align} wide fixed={fixed}>
++    <>{grafico && <CaptureButton label={g.t} />}<Help label={`O que é: ${g.t}`} align={align} wide fixed={fixed}>
+       <b className="ex-t">{g.t}</b>
+       <span className="ex">{g.a}</span>
+       {tipo && <span className="ex"><i>{tipo.t}:</i> {tipo.a}</span>}
+@@ -15,6 +16,6 @@ export default function Explain({ id, align = 'left', fixed = false, tipo, grafi
+       <span className="ex"><i>Exemplo:</i> {g.b}</span>
+       <span className="ex"><i>Na prática:</i> {g.c}</span>
+       {g.d && <span className="ex"><i>Para dominar:</i> {g.d}</span>}
+-    </Help>
++    </Help></>
+   )
+ }
+diff --git a/cotacoes/src/HistoryChart.jsx b/cotacoes/src/HistoryChart.jsx
+index b33e420..fdf6ce4 100644
+--- a/cotacoes/src/HistoryChart.jsx
++++ b/cotacoes/src/HistoryChart.jsx
+@@ -374,7 +374,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
+         <h3>
+           <span className="flag" aria-hidden="true" dangerouslySetInnerHTML={{ __html: flagSvg(currency.code, 'width="24" height="16"') }} /> {h.data?.source ?? currency.code}/BRL
+           <small>{seriesName(currency, h.data?.source)}</small>
+-          <Explain id="historico" />
++          <Explain id="historico" grafico />
+         </h3>
+         {pct != null && (
+           <div className={`pct ${trend}`}>
+diff --git a/cotacoes/src/Inadimplencia.jsx b/cotacoes/src/Inadimplencia.jsx
+index abdc1fd..8886ff8 100644
+--- a/cotacoes/src/Inadimplencia.jsx
++++ b/cotacoes/src/Inadimplencia.jsx
+@@ -1,3 +1,4 @@
++import CaptureButton from './CaptureButton.jsx'
+ import { useEffect, useRef, useState } from 'react'
+ import { useDataFile } from './useDataFile.js'
+ import { creditStats } from './inadimplencia.js'
+@@ -17,8 +18,8 @@ export default function Inadimplencia({ searchTarget }) {
+   const end = Math.max(0, ...selected.flatMap(s => s.points.map(p => p.t)))
+   const start = new Date(end); start.setUTCMonth(start.getUTCMonth() - period + 1)
+   const series = selected.map(s => ({ ...s, name: s.person === 'PF' ? 'Pessoa física' : 'Pessoa jurídica', color: s.person === 'PF' ? 'var(--currency-usd)' : 'var(--currency-eur)', points: s.points.filter(p => !period || p.t >= start.getTime()) }))
+-  return <section className="credit-panel" aria-labelledby="credit-title">
+-    <div className="history-head"><h2 id="credit-title">Inadimplência PF e PJ</h2><RefreshButton files={['inadimplencia.json']} /></div>
++  return <section data-capture-surface className="credit-panel" aria-labelledby="credit-title">
++    <div className="history-head"><h2 id="credit-title">Inadimplência PF e PJ</h2><CaptureButton label="Inadimplência PF e PJ" /><RefreshButton files={['inadimplencia.json']} /></div>
+     <p className="muted">Crédito no Sistema Financeiro Nacional · saldo com atraso superior a 90 dias · dados mensais</p>
+     <div className="credit-controls"><label>Carteira <select value={type} onChange={e => setType(e.target.value)}><option value="total">Total</option><option value="livres">Recursos livres</option><option value="direcionados">Recursos direcionados</option></select></label><label>Período <select value={period} onChange={e => setPeriod(Number(e.target.value))}><option value={12}>12 meses</option><option value={36}>3 anos</option><option value={0}>Histórico completo</option></select></label></div>
+     {file.status === 'loading' && <p role="status">Carregando inadimplência…</p>}
+diff --git a/cotacoes/src/IpcaGrupoChart.jsx b/cotacoes/src/IpcaGrupoChart.jsx
+index 91446be..79914f4 100644
+--- a/cotacoes/src/IpcaGrupoChart.jsx
++++ b/cotacoes/src/IpcaGrupoChart.jsx
+@@ -1,3 +1,4 @@
++import CaptureButton from './CaptureButton.jsx'
+ import ChartComparison from './ChartComparison.jsx'
+ import { useState } from 'react'
+ import { cascade } from './motion.js'
+@@ -33,9 +34,9 @@ export default function IpcaGrupoChart({ name, months, onClose }) {
+     else if (e.key === 'Home') { e.preventDefault(); setSel(0) } else if (e.key === 'End') { e.preventDefault(); setSel(n - 1) } else if (e.key === 'Escape') setSel(null)
+   }
+   return (
+-    <section className="infl-chart" aria-label={`${name}: variação mensal do IPCA nos últimos 12 meses`}>
++    <section data-capture-surface className="infl-chart" aria-label={`${name}: variação mensal do IPCA nos últimos 12 meses`}>
+       <div className="infl-chart-head">
+-        <h4>{name} · variação mensal, últimos 12 meses</h4>
++        <h4>{name} · variação mensal, últimos 12 meses</h4><CaptureButton label={`${name}: variação mensal do IPCA`} />
+         <button type="button" className="infl-close" onClick={onClose} aria-label="Fechar o gráfico do grupo">Fechar ×</button>
+       </div>
+       <p className="muted infl-chart-sum">
+diff --git a/cotacoes/src/MarketPopup.css b/cotacoes/src/MarketPopup.css
+index ec163d6..4478ff9 100644
+--- a/cotacoes/src/MarketPopup.css
++++ b/cotacoes/src/MarketPopup.css
+@@ -100,4 +100,4 @@ dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}
+ .market-popup .chart-fullscreen-compact{position:relative}
+ .market-popup .chart-fullscreen-compact .chart-fullscreen-toolbar{position:absolute;right:0;bottom:0;margin:0;z-index:1}
+ .market-popup .chart-fullscreen-compact .chart-fullscreen-toolbar button{width:44px;min-height:44px;padding:0;background:#fff;color:#081035;border-color:#cad1e1;font-size:22px}
+-.market-popup .chart-fullscreen-compact .chart-fullscreen-content{padding-right:48px}
++.market-popup .chart-fullscreen-compact .chart-fullscreen-content{padding-right:92px}
+diff --git a/cotacoes/src/MarketPopup.jsx b/cotacoes/src/MarketPopup.jsx
+index 9fdd037..289f019 100644
+--- a/cotacoes/src/MarketPopup.jsx
++++ b/cotacoes/src/MarketPopup.jsx
+@@ -1,3 +1,4 @@
++import CaptureButton from './CaptureButton.jsx'
+ import ChartFullscreen from './ChartFullscreen.jsx'
+ import { useEffect, useRef } from 'react'
+ import { fromInput, useIntraday } from './useHistory.js'
+@@ -73,7 +74,7 @@ export default function MarketPopup({ open, slot, onClose, quotes, curves, oil }
+   },[open])
+   const close=onClose
+   return <dialog ref={dialog} className="market-popup" aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}}>
+-    <div className="mp-ribbon"><span>PME · Panorama de mercado</span><button type="button" aria-label="Fechar panorama" autoFocus onClick={close}>×</button></div>
++    <div className="mp-ribbon"><span>PME · Panorama de mercado</span><button type="button" aria-label="Fechar panorama" autoFocus onClick={close}>×</button><CaptureButton label="Panorama do dia" getTarget={() => dialog.current} /></div>
+     <div className="mp-content"><MarketHeading slot={slot}/>{open&&slot&&<Panorama slot={slot} quotes={quotes} curves={curves} oil={oil}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Edições de hora em hora em dias úteis nacionais, das 9h às 18h. O Panorama só abre quando você pede, pelo botão no Mercado.</p></div>
+   </dialog>
+ }
+diff --git a/cotacoes/src/Resumo.jsx b/cotacoes/src/Resumo.jsx
+index 7530d03..f6106fd 100644
+--- a/cotacoes/src/Resumo.jsx
++++ b/cotacoes/src/Resumo.jsx
+@@ -33,7 +33,7 @@ import { liveCross, mergeDaily, mergeTicks } from './parity.js'
+ import { periodChange } from './stats.js'
+ import { flagSvg } from './flags.js'
+ import Flag from './Flag.jsx'
+-import { shareQuotesImage } from './shareImage.js'
++import CaptureButton from './CaptureButton.jsx'
+ import { rateTiles } from './snapshot.js'
+ import { useNews } from './useNews.js'
+ import Sparkline from './Sparkline.jsx'
+@@ -444,10 +444,10 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
+   const limits = fullWindow(fromInput(marketDate(Date.now())))
+   const openSelected = code => { if (CURRENCIES.some(c => c.code === code)) setSelection([code]); onOpen(code, spark) }
+   return (
+-      <Expandable label="Mercado hoje">
++      <Expandable label="Mercado hoje" capture={false}>
+       <section className="market-terminal" aria-labelledby="r-moedas">
+         <div className="sec-head terminal-titlebar">
+-          <h2 id="r-moedas">Mercado hoje <Explain id="mercadoHoje" /> <button type="button" className="img-share" aria-label="Enviar imagem das últimas cotações de câmbio" title="Compartilha as últimas cotações de câmbio, sem gráficos ou petróleo" onClick={() => shareQuotesImage(quotes)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></button></h2>
++          <h2 id="r-moedas">Mercado hoje <Explain id="mercadoHoje" /> <CaptureButton label="Mercado hoje" /></h2>
+           {/* atualizar o câmbio: um botão só, na linha de estado logo acima do quadro */}
+           {panorama && <button type="button" className="compare-trigger panorama-trigger sinal-novo-host" aria-label={panorama.nova ? 'Panorama do dia (edição nova)' : 'Panorama do dia'} aria-haspopup="dialog" title={panorama.nova ? 'Há uma edição nova do Panorama do dia. Abre só quando você pede.' : 'Abrir o Panorama do dia: câmbio, juros futuros e Brent em uma tela'} onClick={panorama.abrir}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-9" /></svg><span>Panorama do dia</span>{panorama.nova && <i className="sinal-novo" aria-hidden="true" />}</button>}
+           <button type="button" ref={compareTrigger} className="compare-trigger" aria-label="Comparar moedas" aria-haspopup="dialog" aria-expanded={compareOpen} title="Montar comparação de moedas" onClick={() => setCompareOpen(true)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 3v18h18M5 16l5-7 4 4 6-9M5 10l5 4 5-7 5 9" /></svg><span>Comparar</span></button>
+diff --git a/cotacoes/src/captureFonts.js b/cotacoes/src/captureFonts.js
+new file mode 100644
+index 0000000..2c89ef6
+--- /dev/null
++++ b/cotacoes/src/captureFonts.js
+@@ -0,0 +1,37 @@
++// Incorpora somente fontes do próprio aplicativo. Nenhum endpoint externo ou credencial.
++const fontData = new Map()
++async function inlineFont(url) {
++  const resolved = new URL(url, document.baseURI)
++  if (resolved.protocol === 'data:') return resolved.href
++  if (resolved.origin !== location.origin) throw new Error('Fonte externa não pode ser incluída na imagem.')
++  if (!fontData.has(resolved.href)) {
++    const pending = fetch(resolved.href, { credentials: 'omit', cache: 'force-cache', redirect: 'error' }).then(async response => {
++      if (!response.ok) throw new Error('Não foi possível carregar a fonte local para a imagem.')
++      const blob = await response.blob()
++      return new Promise((resolve, reject) => {
++        const reader = new FileReader()
++        reader.onload = () => resolve(reader.result)
++        reader.onerror = () => reject(new Error('Não foi possível preparar a fonte local.'))
++        reader.readAsDataURL(blob)
++      })
++    }).catch(error => { fontData.delete(resolved.href); throw error })
++    fontData.set(resolved.href, pending)
++  }
++  return fontData.get(resolved.href)
++}
++export async function captureFontCss() {
++  const rules = []
++  for (const sheet of document.styleSheets) {
++    if (sheet.href && new URL(sheet.href).origin !== location.origin) continue
++    for (const rule of sheet.cssRules) {
++      if (rule.type !== CSSRule.FONT_FACE_RULE) continue
++      let text = rule.cssText
++      for (const match of text.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
++        const url = new URL(match[1], sheet.href || document.baseURI).href
++        text = text.replace(match[0], `url("${await inlineFont(url)}")`)
++      }
++      rules.push(text)
++    }
++  }
++  return rules.join('\n')
++}
+diff --git a/cotacoes/src/captureImage.js b/cotacoes/src/captureImage.js
+new file mode 100644
+index 0000000..1d697e9
+--- /dev/null
++++ b/cotacoes/src/captureImage.js
+@@ -0,0 +1,106 @@
++// Captura local: nenhum upload, envio, consulta externa ou mudança de dados.
++export function captureSize(width, height) {
++  if (!(width > 0 && height > 0) || width > 12000 || height > 16000) throw new Error('Área muito grande. Abra um gráfico ou quadro menor para copiar.')
++  const scale = Math.min(2, 1920 / width, Math.sqrt(16000000 / (width * height)))
++  if (scale < 0.6) throw new Error('Tela muito longa para uma imagem legível. Copie um quadro menor.')
++  return { width: Math.ceil(width * scale), height: Math.ceil(height * scale), scale }
++}
++function cloneStyled(node) {
++  if (node.nodeType !== 1) return node.cloneNode()
++  if (node.matches('script')) return document.createTextNode('')
++  const css = getComputedStyle(node)
++  if (css.display === 'none' || css.visibility === 'hidden') return document.createTextNode('')
++  if (node.matches('iframe,video')) {
++    const placeholder = document.createElement('div')
++    const rect = node.getBoundingClientRect()
++    placeholder.style.cssText = `box-sizing:border-box;width:${rect.width}px;height:${rect.height}px;min-height:70px;padding:16px;border:2px dashed #64748b;background:#f1f5f9;color:#0f172a;font:16px/1.5 system-ui;overflow:hidden`
++    placeholder.textContent = `Conteúdo externo não incluído na imagem: ${node.title || 'mídia incorporada'}. Consulte a fonte no painel.`
++    return placeholder
++  }
++  let imageData = null
++  if (node.matches('img') && !node.src.startsWith('data:')) {
++    if (new URL(node.currentSrc || node.src, location.href).origin !== location.origin) throw new Error('Esta área contém imagem externa. Copie um quadro sem essa imagem.')
++    if (!node.complete || !node.naturalWidth) throw new Error('A imagem local ainda não carregou. Aguarde e tente novamente.')
++    const imageCanvas = document.createElement('canvas')
++    imageCanvas.width = node.naturalWidth; imageCanvas.height = node.naturalHeight
++    imageCanvas.getContext('2d').drawImage(node, 0, 0)
++    imageData = imageCanvas.toDataURL('image/png')
++  }
++  let copy = node.cloneNode(false)
++  if (imageData) { copy.removeAttribute('srcset'); copy.removeAttribute('sizes'); copy.src = imageData }
++  if (node.matches('canvas')) {
++    copy = document.createElement('img')
++    copy.src = node.toDataURL('image/png')
++  }
++  for (const key of css) copy.style.setProperty(key, css.getPropertyValue(key))
++  copy.style.setProperty('animation', 'none')
++  copy.style.setProperty('transition', 'none')
++  copy.style.setProperty('position', css.position === 'fixed' || css.position === 'sticky' ? 'static' : css.position)
++  if (/url\(/i.test(css.backgroundImage)) throw new Error('Esta área contém fundo com imagem. Copie um quadro menor.')
++  if (node.matches('input')) copy.setAttribute('value', node.value)
++  if (node.matches('textarea')) copy.textContent = node.value
++  else if (!node.matches('canvas')) for (const child of node.childNodes) copy.append(cloneStyled(child))
++  if (node.matches('[data-capture-ignore]')) {
++    // Invisível, mas conserva filhos, baseline e caixa flex/grid para não deslocar o título.
++    for (const element of [copy, ...copy.querySelectorAll('*')]) element.style.visibility = 'hidden'
++    copy.style.pointerEvents = 'none'
++  }
++  if (node.matches('select')) [...copy.options].forEach((option, index) => option.selected = node.options[index].selected)
++  if ((node.scrollTop || node.scrollLeft) && node.namespaceURI === 'http://www.w3.org/1999/xhtml') {
++    // SVG has a serializable viewport; unlike scrollTop, its translation survives rasterization.
++    const rect = node.getBoundingClientRect()
++    const viewport = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
++    viewport.setAttribute('width', String(rect.width))
++    viewport.setAttribute('height', String(rect.height))
++    viewport.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`)
++    viewport.style.cssText = copy.style.cssText
++    viewport.style.padding = '0'; viewport.style.border = '0'; viewport.style.overflow = 'hidden'
++    viewport.style.width = rect.width + 'px'; viewport.style.height = rect.height + 'px'
++    const content = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject')
++    content.setAttribute('x', String(-node.scrollLeft)); content.setAttribute('y', String(-node.scrollTop))
++    content.setAttribute('width', String(Math.max(node.scrollWidth, rect.width)))
++    content.setAttribute('height', String(Math.max(node.scrollHeight, rect.height)))
++    copy.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
++    copy.style.margin = '0'; copy.style.width = rect.width + 'px'; copy.style.height = rect.height + 'px'
++    copy.style.overflow = 'visible'; copy.style.maxHeight = 'none'
++    content.append(copy); viewport.append(content)
++    return viewport
++  }
++  return copy
++}
++export async function capturePng(target) {
++  if (!target) throw new Error('Área de captura não encontrada.')
++  await document.fonts.ready
++  const { captureFontCss } = await import('./captureFonts.js')
++  const fontCss = await captureFontCss()
++  const width = Math.ceil(target.getBoundingClientRect().width)
++  const height = Math.ceil(target.scrollTop || target.scrollLeft ? target.getBoundingClientRect().height : Math.max(target.scrollHeight, target.getBoundingClientRect().height))
++  const size = captureSize(width, height)
++  const copy = cloneStyled(target)
++  copy.style.width = width + 'px'; copy.style.height = height + 'px'
++  copy.style.margin = '0'; copy.style.maxHeight = 'none'; copy.style.overflow = target.scrollTop || target.scrollLeft ? 'hidden' : 'visible'
++  const root = document.createElement('div')
++  root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
++  root.style.cssText = `width:${width}px;height:${height}px;background:${getComputedStyle(document.body).backgroundColor};`
++  const fonts = document.createElement('style')
++  fonts.textContent = fontCss
++  root.append(fonts, copy)
++  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><foreignObject width="100%" height="100%">${new XMLSerializer().serializeToString(root)}</foreignObject></svg>`
++  const image = new Image()
++  await new Promise((resolve,reject) => {
++    image.onload=resolve; image.onerror=()=>reject(new Error('O navegador não conseguiu gerar esta imagem.'))
++    image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)
++  })
++  const canvas=document.createElement('canvas')
++  canvas.width=size.width; canvas.height=size.height
++  canvas.getContext('2d').drawImage(image,0,0,size.width,size.height)
++  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Não foi possível gerar o PNG.')),'image/png'))
++}
++export async function copyCapture(target, { clipboard = globalThis.navigator?.clipboard, Item = globalThis.ClipboardItem, render = capturePng } = {}) {
++  if (!clipboard?.write || !Item) throw new Error('Este navegador não permite copiar imagens. Use Chrome ou Edge em conexão segura.')
++  // A escrita começa no gesto do usuário; a imagem é resolvida depois, sem perder a ativação.
++  const png = render(target)
++  png.catch(() => {}) // Uma recusa imediata de clipboard não deixa a renderização sem observador.
++  const item = new Item({ 'image/png': png })
++  await clipboard.write([item])
++}
+diff --git a/cotacoes/test/capture-image.test.mjs b/cotacoes/test/capture-image.test.mjs
+new file mode 100644
+index 0000000..fd5aa13
+--- /dev/null
++++ b/cotacoes/test/capture-image.test.mjs
+@@ -0,0 +1,89 @@
++import test from 'node:test'
++import assert from 'node:assert/strict'
++import { readFile } from 'node:fs/promises'
++import { captureSize, copyCapture } from '../src/captureImage.js'
++test('PNG tem resolução para notebook sem exceder memória ou reduzir leitura demais',()=>{
++ assert.deepEqual(captureSize(960,600),{width:1920,height:1200,scale:2})
++ for(const [w,h] of [[0,400],[1000,20000],[12000,10000]]) assert.throws(()=>captureSize(w,h))
++})
++test('copia PNG só após a resolução e confirma sucesso somente depois da escrita',async()=>{
++ const blob=new Blob(['fixture'],{type:'image/png'}),target={}
++ let called=false
++ class Item { constructor(types){this.types=types} }
++ await copyCapture(target,{Item,render:async t=>{assert.equal(t,target);return blob},clipboard:{write:async items=>{
++   assert.equal(await items[0].types['image/png'],blob);called=true
++ }}})
++ assert.equal(called,true)
++})
++test('recusa e indisponibilidade de clipboard não simulam sucesso nem envio',async()=>{
++ await assert.rejects(copyCapture({}, {clipboard:null,Item:null}),/não permite/)
++ class Item { constructor(){} }
++ await assert.rejects(copyCapture({}, {Item,render:async()=>new Blob(),clipboard:{write:async()=>{throw new Error('negado')}}}),/negado/)
++})
++test('telas e detalhes têm câmera, sem tocar cálculo ou compartilhar externamente',async()=>{
++ const app=await readFile(new URL('../src/App.jsx',import.meta.url),'utf8')
++ assert.match(app,/\['resumo', 'juros', 'cenarios'\]\.includes\(tab\).*screen-capture-bar/)
++ const expanded=await readFile(new URL('../src/Expandable.jsx',import.meta.url),'utf8')
++ assert.match(expanded,/<CaptureButton label=\{`quadro completo:/)
++ const explain=await readFile(new URL('../src/Explain.jsx',import.meta.url),'utf8')
++ assert.match(explain,/grafico && <CaptureButton/)
++ const engine=await readFile(new URL('../src/captureImage.js',import.meta.url),'utf8')
++ assert.doesNotMatch(engine,/fetch\(|navigator\.share|\.click\(\)/)
++})
++test('rolagem usa viewport SVG e deslocamentos serializáveis, não scrollTop no clone',async()=>{
++ const src=await readFile(new URL('../src/captureImage.js',import.meta.url),'utf8')
++ assert.match(src,/content.setAttribute\('x', String\(-node.scrollLeft\)\)/)
++ assert.match(src,/content.setAttribute\('y', String\(-node.scrollTop\)\)/)
++ assert.match(src,/viewport.style.overflow = 'hidden'/)
++})
++
++test('câmeras cobrem zoom, Panorama, inadimplência e IPCA; Mercado não compartilha ou baixa',async()=>{
++ for(const name of ['ChartFullscreen','MarketPopup','Inadimplencia','IpcaGrupoChart']){
++  const src=await readFile(new URL('../src/'+name+'.jsx',import.meta.url),'utf8')
++  assert.match(src,/<CaptureButton/)
++ }
++ const market=await readFile(new URL('../src/Resumo.jsx',import.meta.url),'utf8')
++ assert.doesNotMatch(market,/shareQuotesImage|img-share/)
++ assert.match(market,/<CaptureButton label="Mercado hoje"/)
++ assert.match(market,/<Expandable label="Mercado hoje" capture=\{false\}/)
++})
++test('captura não acessa iframe; mídia externa vira aviso explícito e imagem local precisa estar carregada',async()=>{
++ const src=await readFile(new URL('../src/captureImage.js',import.meta.url),'utf8')
++ assert.match(src,/Conteúdo externo não incluído na imagem/)
++ assert.doesNotMatch(src,/contentDocument|contentWindow|fetch\(/)
++ assert.match(src,/location.origin/)
++ assert.match(src,/node.complete/)
++ assert.match(src,/node.naturalWidth/)
++ assert.match(src,/imageCanvas.getContext\('2d'\).drawImage\(node, 0, 0\)/)
++})
++
++test('captura incorpora fontes locais e oculta controles sem remover baseline',async()=>{
++ const engine=await readFile(new URL('../src/captureImage.js',import.meta.url),'utf8')
++ const fonts=await readFile(new URL('../src/captureFonts.js',import.meta.url),'utf8')
++ assert.match(engine,/import\('\.\/captureFonts.js'\)/)
++ assert.match(engine,/root.append\(fonts, copy\)/)
++ assert.match(engine,/element.style.visibility = 'hidden'/)
++ assert.match(fonts,/CSSRule.FONT_FACE_RULE/)
++ assert.match(fonts,/resolved.origin !== location.origin/)
++ assert.match(fonts,/credentials: 'omit'/)
++ assert.match(fonts,/reader.readAsDataURL\(blob\)/)
++})
++
++test('fontes: incorpora bytes locais sem credenciais e recusa origem externa',async()=>{
++ const { captureFontCss } = await import('../src/captureFonts.js')
++ const saved = Object.fromEntries(['document','location','CSSRule','fetch','FileReader'].map(k=>[k,globalThis[k]]))
++ try {
++  const local='https://preview.test/assets/test.woff2'
++  let requests=0
++  globalThis.location={origin:'https://preview.test'}
++  globalThis.CSSRule={FONT_FACE_RULE:5}
++  globalThis.document={baseURI:'https://preview.test/',styleSheets:[{href:'https://preview.test/assets/main.css',cssRules:[{type:5,cssText:`@font-face {font-family:Inter;src:url("${local}")}`}]}]}
++  globalThis.fetch=async(url,options)=>{requests++;assert.equal(url,local);assert.equal(options.credentials,'omit');return {ok:true,blob:async()=>new Blob(['font'])}}
++  globalThis.FileReader=class {readAsDataURL(){this.result='data:font/woff2;base64,Zm9udA==';this.onload()}}
++  assert.match(await captureFontCss(),/data:font\/woff2;base64/)
++  await captureFontCss();assert.equal(requests,1)
++  globalThis.document.styleSheets[0].cssRules[0].cssText='@font-face {src:url("https://third.test/font.woff2")}'
++  await assert.rejects(captureFontCss(),/Fonte externa/)
++  assert.equal(requests,1)
++ } finally {for(const [key,value] of Object.entries(saved)){if(value===undefined)delete globalThis[key];else globalThis[key]=value}}
++})
+diff --git a/cotacoes/test/capture-rgb-metrics.test.mjs b/cotacoes/test/capture-rgb-metrics.test.mjs
+new file mode 100644
+index 0000000..73eb1e8
+--- /dev/null
++++ b/cotacoes/test/capture-rgb-metrics.test.mjs
+@@ -0,0 +1,13 @@
++import test from 'node:test'
++import assert from 'node:assert/strict'
++import compare from '../scripts/capture-rgb-metrics.cjs'
++const width=40,height=30,regions=[{selector:'curva',x:0,y:0,w:40,h:30,color:[10,120,120]}]
++const want=new Uint8Array(width*height*4).fill(255)
++for(let x=5;x<35;x++){const i=(15*width+x)*4;want[i]=10;want[i+1]=want[i+2]=120}
++const measure=got=>compare({got,want,width,height,regions})[0]
++test('RGB idêntico preserva recall 1',()=>assert.equal(measure(want).inkRecall,1))
++test('curva ausente ou com cor incorreta não passa por ter os mesmos eixos',()=>{
++ const blank=new Uint8Array(want.length).fill(255),red=want.slice()
++ for(let x=5;x<35;x++){const i=(15*width+x)*4;red[i]=220;red[i+1]=red[i+2]=20}
++ assert.equal(measure(blank).inkRecall,0);assert.equal(measure(red).inkRecall,0)
++})
+diff --git a/cotacoes/test/capture-special-regions.test.mjs b/cotacoes/test/capture-special-regions.test.mjs
+new file mode 100644
+index 0000000..f49db69
+--- /dev/null
++++ b/cotacoes/test/capture-special-regions.test.mjs
+@@ -0,0 +1,22 @@
++import test from 'node:test'
++import assert from 'node:assert/strict'
++import capture from '../scripts/capture-special-regions.cjs'
++const text=t=>({nodeType:3,textContent:t})
++function fixture(nodes,stroke='rgb(15, 128, 128)'){
++ const oldDoc=globalThis.document,oldStyle=globalThis.getComputedStyle,seen=[]
++ const box=()=>({x:10,y:20,width:100,height:50})
++ globalThis.getComputedStyle=()=>({stroke})
++ globalThis.document={createRange:()=>({setStart(node,index){assert.ok(index>=0&&index<node.textContent.length);seen.push(node.textContent[index])},setEnd(){},getBoundingClientRect:()=>({x:20,y:30,width:8,height:16})})}
++ const el={getBoundingClientRect:box,querySelector:s=>s==='.pct'?{childNodes:nodes}:{getBoundingClientRect:box}}
++ try{return {regions:capture(el),seen}}finally{if(oldDoc===undefined)delete globalThis.document;else globalThis.document=oldDoc;if(oldStyle===undefined)delete globalThis.getComputedStyle;else globalThis.getComputedStyle=oldStyle}
++}
++test('sinal e número em nós React separados produzem regiões corretas',()=>{
++ const {regions,seen}=fixture([text('▲'),text(' '),text('1,10'),text(' p.p.'),{nodeType:1,textContent:'no período'}])
++ assert.deepEqual(seen,['▲','1']);assert.deepEqual(regions.map(r=>r.selector),['curva-sem-eixos','sinal','digito']);assert.deepEqual(regions[0].color,[15,128,128])
++})
++test('texto unido também funciona, inclusive negativo',()=>assert.deepEqual(fixture([text('▼ 2,30 p.p.')]).seen,['▼','2']))
++test('região ausente ou cor inválida falha honestamente, nunca pula',()=>{
++ assert.throws(()=>fixture([text('▲')]),/digito ausente/)
++ assert.throws(()=>fixture([text('1,10')]),/sinal ausente/)
++ assert.throws(()=>fixture([text('▲ 1,10')],'none'),/cor da curva/)
++})
+diff --git a/cotacoes/test/chart-fullscreen.test.mjs b/cotacoes/test/chart-fullscreen.test.mjs
+index eef4730..ca9185d 100644
+--- a/cotacoes/test/chart-fullscreen.test.mjs
++++ b/cotacoes/test/chart-fullscreen.test.mjs
+@@ -15,13 +15,13 @@ test('dialog modal preserva host e restaura por botão, cancel e rota', async t
+   const origin={appendChild:h=>{assert.equal(h,host);parent='inline'}}
+   const modal={appendChild:h=>{assert.equal(h,host);parent='modal'},showModal:()=>{shown=true},close:()=>{shown=false}}
+   const trigger={focus:()=>focus++},module={exports:{}}
+-  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
++  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:['./ExpandIcon.jsx','./CaptureButton.jsx'].includes(n)?{default:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
+   const children={content:'mesma instância'}
+-  const h=hookRenderer(()=>{const tree=module.exports.default({children});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.ref.current=trigger;return tree})
++  const h=hookRenderer(()=>{const tree=module.exports.default({children});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.find(n=>n.type==='button').ref.current=trigger;return tree})
+   t.after(()=>h.close());await h.settle()
+   const portal=()=>h.value.props.children[2]
+   const event=()=>({key:'Escape',preventDefault(){this.prevented=true},stopPropagation(){this.stopped=true}})
+-  const click=async()=>{portal().content.props.children[0].props.children.props.onClick(event());await h.settle()}
++  const click=async()=>{portal().content.props.children[0].props.children.find(n=>n.type==='button').props.onClick(event());await h.settle()}
+   for(const method of ['button','cancel','hashchange']){
+     await click();assert.equal(shown,true);assert.equal(parent,'modal');assert.equal(document.body.style.overflow,'hidden');assert.equal(portal().target,host);assert.equal(portal().content.props.children[1].props.children,children)
+     // Bubble handler must not prevent the native cancel default or preempt chart Escape.

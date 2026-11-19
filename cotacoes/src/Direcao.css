@@ -119,8 +119,8 @@ html button.btn-expand:focus-visible { outline:2px solid var(--amber, var(--acce
 /* No gráfico, o ícone fica sobre o canto de cima à direita, sem ocupar uma linha própria. */
 .chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) { position:relative; }
 .chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar { position:absolute; top:0; right:0; z-index:3; margin:0; }
-/* Quando o ampliar envolve o quadro inteiro (mapa e setores da recuperação judicial), o ícone fica dentro da borda. */
-.chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar:has(+ .chart-fullscreen-content > .rj-card) { top:12px; right:12px; }
+/* No quadro de recuperação, dois controles ocupam linha própria para não cobrir Ver Brasil. */
+.chart-fullscreen:not(.is-expanded):not(.chart-fullscreen-compact) > div > .chart-fullscreen-toolbar:has(+ .chart-fullscreen-content > .rj-card) { position:static; top:auto; right:auto; gap:4px; min-height:48px; margin:0 0 4px; }
 /* "Mercado hoje": o ícone de tela cheia segue o mesmo desenho dos outros (antes era texto sem contorno). */
 @media (min-width: 1000px) {
   .desk-markets .expandable-panel:not(.is-modal) > .expandable-controls .btn.btn-expand { width:32px; height:32px; min-height:0; padding:0; border:1px solid var(--line); background:var(--card); }
