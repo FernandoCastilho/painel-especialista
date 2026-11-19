@@ -1067,7 +1067,7 @@ export const CONCEITOS = [
       passos: ['Admita R$ 100 de débito nas vendas e R$ 40 de crédito válido nas compras.', 'Compensação ilustrativa: R$ 100 − R$ 40 = R$ 60.'],
       resultado: 'O saldo seria R$ 60, se todos os créditos fossem admitidos. Os valores não representam uma alíquota oficial nem o cálculo de 2026.',
     },
-    noApp: { texto: 'Na calculadora Reforma tributária · caixa, simule a CBS e o dinheiro necessário para cobrir mudanças de prazo. É uma estimativa educativa, sem apuração fiscal de CBS ou IBS.', tab: 'calculadora', view: 'cbs-caixa' },
+    noApp: { texto: 'Na calculadora Reforma tributária · caixa, simule CBS e IBS com as regras da calculadora oficial e o dinheiro necessário para cobrir mudanças de prazo. É uma estimativa educativa, sem apuração fiscal de CBS ou IBS.', tab: 'calculadora', view: 'cbs-caixa' },
     teste: { pergunta: 'Somar 0,9% de CBS e 0,1% de IBS em 2026 revela a alíquota definitiva de toda empresa?', resposta: 'Não. São alíquotas de teste, com regras de dispensa. A carga final depende do regime, da operação, das alíquotas aplicáveis e dos créditos admitidos.' },
   },
   {
