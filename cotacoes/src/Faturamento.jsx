@@ -26,7 +26,7 @@ function quebrarLinhas(ctx, texto, largura) {
   if (atual) linhas.push(atual)
   return linhas
 }
-async function imagemDoGrafico(svgEl, titulo, subtitulo, destaque, blocos, rodape) {
+async function imagemDoGrafico(svgEl, titulo, subtitulo, destaque, blocos, rodape, kpis) {
   const raiz = svgEl.closest('.ft')
   raiz?.setAttribute('data-ft-export', 'claro')
   let xml, W, H
@@ -65,10 +65,22 @@ async function imagemDoGrafico(svgEl, titulo, subtitulo, destaque, blocos, rodap
   let y = 58
   if (subtitulo) { ctx.font = `400 22px ${FONTE}`; ctx.fillStyle = '#334155'; ctx.fillText(subtitulo, M, 94); y = 94 }
   // Gráfico: largura útil, no máximo 46% da altura.
-  const gw = LW - 2 * M, gh = Math.min(LH * 0.46, (gw * H) / W)
+  const gw = LW - 2 * M, gh = Math.min(LH * (kpis?.length ? 0.38 : 0.46), (gw * H) / W)
   const gx = M + (gw - (gh * W) / H) / 2
   ctx.drawImage(img, gx, y + 14, (gh * W) / H, gh)
   y += 14 + gh + 12
+  // Quadros dos últimos 12 meses e alavancagem, em uma linha.
+  if (kpis?.length) {
+    const gap = 14, kw = (LW - 2 * M - gap * (kpis.length - 1)) / kpis.length, kh = 76
+    kpis.forEach((k, i) => {
+      const x = M + i * (kw + gap)
+      ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, kw, kh)
+      ctx.fillStyle = '#475569'; ctx.font = `400 17px ${FONTE}`; ctx.fillText(k.rotulo, x + 14, y + 24, kw - 24)
+      ctx.fillStyle = '#000d3c'; ctx.font = `700 25px ${FONTE}`; ctx.fillText(k.valor, x + 14, y + 52, kw - 24)
+      if (k.nota) { ctx.fillStyle = k.cor || '#64748b'; ctx.font = `400 15px ${FONTE}`; ctx.fillText(k.nota, x + 14, y + 70, kw - 24) }
+    })
+    y += kh + 12
+  }
   // Destaque do período escolhido (faturamento x endividamento).
   if (destaque) {
     ctx.fillStyle = destaque.alerta ? '#fdecec' : '#ecf7ef'
@@ -184,7 +196,8 @@ function Grafico({ meses, sel, onSelecionar, comparacao, unidade, rotulo = valor
     <svg
       ref={svg}
       className="ft-chart"
-      style={{ minWidth: `${Math.max(640, meses.length * 46)}px` }}
+      // Rótulos curtos (R$ MM) cabem em ~28 px por mês: o gráfico cabe na tela do notebook sem rolagem.
+      style={{ minWidth: `${Math.max(560, meses.length * (rotulo === emMilhoes ? 28 : 44))}px` }}
       viewBox={`0 0 ${W} ${ALT}`}
       role="img"
       aria-label={`Gráfico de ${meses.length} meses, de ${meses[0].rotulo} a ${meses.at(-1).rotulo}. Clique em um mês ou arraste para escolher o período.`}
@@ -380,7 +393,14 @@ export default function Faturamento({ onBack }) {
       texto: `${comparacao.rotulo} x ${comparacao.rotuloAnterior}: faturamento ${pct(cr.fat)} e endividamento ${pct(cr.div)} — relação dívida/faturamento ${cr.relacao === 'piorou' ? 'piorou' : cr.relacao === 'melhorou' ? 'melhorou' : 'estável'} (${Math.abs(cr.diferencaPp).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} p.p.).`,
     } : null
     const rodape = `${unidade ? `Valores em ${unidade}` : 'Valores na unidade colada'}${emMil ? ' (gráfico em R$ MM)' : ''}. Leitura automática dos números colados; não substitui a análise de crédito.`
-    const blob = imagemDoGrafico(svgRef.current, tituloGrafico, destaque ? `${comparacao.rotulo} contra ${comparacao.rotuloAnterior}` : sub, destaque, blocosAnalise(analise, valor), rodape)
+    const kpis = ind ? [
+      { rotulo: `Faturamento ${ind.meses === 12 ? 'últimos 12 meses' : `últimos ${ind.meses} meses`}`, valor: totalCurto(ind.total, unidade), nota: `${ind.de} a ${ind.ate}` },
+      { rotulo: '12 meses anteriores', valor: ind.mesesAnterior ? totalCurto(ind.totalAnterior, unidade) : '—', nota: ind.variacao != null ? `${pct(ind.variacao)} no período` : '', cor: ind.variacao == null ? null : ind.variacao < 0 ? '#c62828' : '#1a7f37' },
+      { rotulo: 'Média mensal', valor: valor(Math.round(ind.media)), nota: `${ind.meses} ${ind.meses === 1 ? 'mês' : 'meses'}` },
+      { rotulo: 'Endividamento', valor: valor(ind.endividamento), nota: ind.endividamentoMes ? `último saldo: ${ind.endividamentoMes}` : 'sem saldo informado' },
+      { rotulo: 'Alavancagem', valor: ind.alavancagem != null ? `${vezes(ind.alavancagem)} faturamento` : '—', nota: 'endividamento ÷ média mensal' },
+    ] : null
+    const blob = imagemDoGrafico(svgRef.current, tituloGrafico, destaque ? `${comparacao.rotulo} contra ${comparacao.rotuloAnterior}` : sub, destaque, blocosAnalise(analise, valor), rodape, kpis)
     try {
       if (modo === 'copiar') {
         if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('sem área de transferência')

@@ -12,7 +12,6 @@ import { parseMoneyInput } from './moneyInput.js'
 import Flag from './Flag.jsx'
 import InsightAprender from './InsightAprender.jsx'
 import RollingNumber from './RollingNumber.jsx'
-import { manchete } from './manchete.js'
 
 const MARK = { up: '▲', down: '▼', flat: '■' }
 
@@ -68,8 +67,8 @@ function useDaySeries() {
   return marketPreviews(usd.retainedPoints, eur.retainedPoints, marketDate(Date.now()))
 }
 
-// Indicadores do topo do Mercado: a tela abre pelo número. Primeiro a manchete (frase montada com os números dos próprios quadros),
-// depois os quadros com o título "Mapa de variação – dia", a linha da última consulta (`status`) e, por último, os avisos
+// Indicadores do topo do Mercado: quadros com o título "Mapa de variação – dia",
+// a linha da última consulta (`status`) e, por último, os avisos
 // (`aviso`: feriados; e a linha "Aprender"). Clique num quadro abre o gráfico da moeda ou a aba de juros.
 // Enquanto as cotações não chegam (`loading`), os quadros aparecem como formas vazias no lugar de um texto de espera.
 export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRate, goto, status, aviso, loading }) {
@@ -87,10 +86,8 @@ export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRat
       </section>
     )
   }
-  const frase = manchete(items)
   return (
     <section className="kpi-block" aria-labelledby="kpi-title">
-      {frase && <p className="manchete">{frase.map((f, n) => (f.tone || f.num ? <span key={n} className={`${f.num ? 'manchete-num' : ''}${f.tone ? ` ${f.tone}` : ''}`}>{f.text}</span> : f.text))}</p>}
       <h2 id="kpi-title" className="kpi-title">Mapa de variação – dia</h2>
     <div className="kpis" role="group" aria-label="Indicadores principais">
       {items.map((i, ordem) => {
