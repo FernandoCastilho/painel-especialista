@@ -313,7 +313,6 @@ jobs:
       SMOKE_BASE_URL: http://127.0.0.1:8768
       SMOKE_CHANNEL: chrome
       CHROMIUM_PATH: /usr/bin/google-chrome
-      CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -331,6 +330,8 @@ jobs:
           google-chrome --version
       - name: Servir o build somente em loopback
         id: serve
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
         run: |
           mkdir -p "$CAPTURE_QA_OUTPUT"
           nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$CAPTURE_QA_OUTPUT/server.log" 2>&1 &
@@ -341,6 +342,8 @@ jobs:
           exit 1
       - name: Conferir fidelidade visual das imagens copiadas
         id: fidelity
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
         timeout-minutes: 6
         run: node scripts/smoke-capture-image.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/fidelidade.log"
         shell: bash
@@ -349,6 +352,7 @@ jobs:
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         timeout-minutes: 2
         env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture
           REAL_CLIPBOARD: '1'
         run: node scripts/smoke-capture-paste.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/colagem.log"
         shell: bash
