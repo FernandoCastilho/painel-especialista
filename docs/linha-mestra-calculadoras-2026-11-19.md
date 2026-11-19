@@ -74,8 +74,8 @@ O campo **1º vencimento (opcional)** continua existindo: se preenchido, vale a 
   - Conta garantida: 3 casos (1, 10 e 45 dias; com limite para o CET).
   - Análise de desconto: exemplo de referência com tarifa total e com tarifa unitária.
 - **Giro e Comparador agora dão o mesmo número para o mesmo caso:** 4 casos (Price, SAC com carência, Bullet e Price com carência), mesma parcela e mesmo CET.
-- Testes do painel, conferência de código e montagem: ver o PR.
-- Conferências de tela: ver o PR.
+- Testes do painel: 2.172 passando (5 novos da linha mestra). Conferência de código: sem erros. Montagem: ok.
+- Conferências de tela: as 33 da rotina automática mais Apresentar, Alongamento e BNDES (36). Três precisaram de ajuste porque procuravam os campos antigos (Capital de giro sem linha mestra, tela branca, "Datas e praça do contrato", `#cg-amount`, `#ad-date`); os valores conferidos não mudaram. Duas apontaram problemas reais, corrigidos: campos com R$ do Giro com 34 px por dentro (voltaram a 36/44 px) e botão de PDF do BNDES abaixo de 44 px (todos os botões secundários e opções ficaram com 44 px). No fim, 36 de 36 passaram.
 - Fotos de todas as calculadoras no tema escuro, seis no tema claro e quatro no celular.
 
 ## O que não deu para conferir
