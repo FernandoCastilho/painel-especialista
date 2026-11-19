@@ -1,3 +1,4 @@
+import CaptureButton from './CaptureButton.jsx'
 import ChartComparison from './ChartComparison.jsx'
 import { useState } from 'react'
 import { cascade } from './motion.js'
@@ -33,9 +34,9 @@ export default function IpcaGrupoChart({ name, months, onClose }) {
     else if (e.key === 'Home') { e.preventDefault(); setSel(0) } else if (e.key === 'End') { e.preventDefault(); setSel(n - 1) } else if (e.key === 'Escape') setSel(null)
   }
   return (
-    <section className="infl-chart" aria-label={`${name}: variação mensal do IPCA nos últimos 12 meses`}>
+    <section data-capture-surface className="infl-chart" aria-label={`${name}: variação mensal do IPCA nos últimos 12 meses`}>
       <div className="infl-chart-head">
-        <h4>{name} · variação mensal, últimos 12 meses</h4>
+        <h4>{name} · variação mensal, últimos 12 meses</h4><CaptureButton label={`${name}: variação mensal do IPCA`} />
         <button type="button" className="infl-close" onClick={onClose} aria-label="Fechar o gráfico do grupo">Fechar ×</button>
       </div>
       <p className="muted infl-chart-sum">

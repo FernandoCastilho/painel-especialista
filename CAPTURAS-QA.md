@@ -22,3 +22,19 @@ Artefatos: PNGs gerados/referências/métricas; colagem-real.png e colagem-real.
 
 ## Limites
 Chromium local não inicia: socket Operation not permitted. Nenhum smoke ou Ctrl+V real foi executado aqui. Solução de rolagem ainda precisa passar na prova. Imagens externas/fundos com URL recusados; telas muito longas podem exceder limite de legibilidade/memória. Layout atual preservado, não convertido de móvel para desktop. Recolhidos continuam recolhidos. Cobertura de todas as telas exige matriz/auditoria; não liberar produção antes disso.
+
+## V3 (base PR #523 0d301c5)
+- Câmera legada do Mercado substituída pela cópia PNG; não chama shareQuotesImage. Uma câmera de quadro no cabeçalho, sem repetir a mesma ação no Expandable.
+- Câmera no host ChartFullscreen, preservando o mesmo conteúdo no zoom; cobre mapa/quadros de recuperação judicial, Trends e minigráficos do Panorama. Câmera no Panorama completo e nos quadros Inadimplência/IPCA.
+- Imagens já carregadas da mesma origem viram data PNG por canvas sem fetch. Imagens de outra origem continuam recusadas. Ainda não carregadas pedem aguardar.
+- Iframes/vídeos não são acessados. O PNG contém um retângulo identificado como conteúdo externo não incluído, e o status explica o recorte. Isso NÃO equivale a copiar o gráfico externo.
+- Smoke expandido às oito subabas de Cenários (além de Mercado/Juros), logo local comparado com referência e iframe com aviso. A prova visual/colagem deve ser executada no runner; não houve navegador local.
+- Workflow e correção CAPTURE_QA_OUTPUT do runner preservados sem alteração.
+
+
+## Complemento V3: fidelidade de fontes e geometria (CI 44512756037)
+- Evidência recebida: h3 meanError 0,057734 / inkRecall 0,149410; PNG móvel capturado não foi salvo antes da falha. O PNG de colagem é desktop e não pode ser comparado geometricamente à referência móvel.
+- Defeitos identificados no código: o SVG isolado não recebia as definições @font-face do documento; remover o nó da câmera alterava a linha flex e a baseline do cabeçalho. Corrigido: incorporar fontes do próprio app em data URLs e ocultar os controles conservando sua estrutura e geometria.
+- A leitura de fontes usa somente URLs de mesma origem, sem credenciais, com cache; fontes externas são recusadas, nunca contornadas. Não instala fontes ou dependências. `document.fonts.ready` sozinho não transfere fontes para a imagem SVG.
+- A referência de comparação oculta exclusivamente `[data-capture-ignore]` sem remover espaço. Título, valores, gráfico e limiares permanecem intactos. Guarda referência bruta, referência usada, PNG e métricas antes da assertiva.
+- Não há confirmação de correção visual até nova execução no runner. Ctrl+V real verde comprova entrega do PNG, não fidelidade. Build local pode avisar fontes ausentes no node_modules reutilizado; CI usa as dependências já declaradas/lockadas. Não baixar/instalar dependências nesta tarefa.

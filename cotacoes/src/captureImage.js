@@ -7,11 +7,27 @@ export function captureSize(width, height) {
 }
 function cloneStyled(node) {
   if (node.nodeType !== 1) return node.cloneNode()
-  if (node.matches('[data-capture-ignore],script,iframe,video')) return document.createTextNode('')
+  if (node.matches('script')) return document.createTextNode('')
   const css = getComputedStyle(node)
   if (css.display === 'none' || css.visibility === 'hidden') return document.createTextNode('')
-  if (node.matches('img') && !node.src.startsWith('data:')) throw new Error('Esta área contém imagem externa. Copie um quadro sem essa imagem.')
+  if (node.matches('iframe,video')) {
+    const placeholder = document.createElement('div')
+    const rect = node.getBoundingClientRect()
+    placeholder.style.cssText = `box-sizing:border-box;width:${rect.width}px;height:${rect.height}px;min-height:70px;padding:16px;border:2px dashed #64748b;background:#f1f5f9;color:#0f172a;font:16px/1.5 system-ui;overflow:hidden`
+    placeholder.textContent = `Conteúdo externo não incluído na imagem: ${node.title || 'mídia incorporada'}. Consulte a fonte no painel.`
+    return placeholder
+  }
+  let imageData = null
+  if (node.matches('img') && !node.src.startsWith('data:')) {
+    if (new URL(node.currentSrc || node.src, location.href).origin !== location.origin) throw new Error('Esta área contém imagem externa. Copie um quadro sem essa imagem.')
+    if (!node.complete || !node.naturalWidth) throw new Error('A imagem local ainda não carregou. Aguarde e tente novamente.')
+    const imageCanvas = document.createElement('canvas')
+    imageCanvas.width = node.naturalWidth; imageCanvas.height = node.naturalHeight
+    imageCanvas.getContext('2d').drawImage(node, 0, 0)
+    imageData = imageCanvas.toDataURL('image/png')
+  }
   let copy = node.cloneNode(false)
+  if (imageData) { copy.removeAttribute('srcset'); copy.removeAttribute('sizes'); copy.src = imageData }
   if (node.matches('canvas')) {
     copy = document.createElement('img')
     copy.src = node.toDataURL('image/png')
@@ -24,6 +40,11 @@ function cloneStyled(node) {
   if (node.matches('input')) copy.setAttribute('value', node.value)
   if (node.matches('textarea')) copy.textContent = node.value
   else if (!node.matches('canvas')) for (const child of node.childNodes) copy.append(cloneStyled(child))
+  if (node.matches('[data-capture-ignore]')) {
+    // Invisível, mas conserva filhos, baseline e caixa flex/grid para não deslocar o título.
+    for (const element of [copy, ...copy.querySelectorAll('*')]) element.style.visibility = 'hidden'
+    copy.style.pointerEvents = 'none'
+  }
   if (node.matches('select')) [...copy.options].forEach((option, index) => option.selected = node.options[index].selected)
   if ((node.scrollTop || node.scrollLeft) && node.namespaceURI === 'http://www.w3.org/1999/xhtml') {
     // SVG has a serializable viewport; unlike scrollTop, its translation survives rasterization.
@@ -50,6 +71,8 @@ function cloneStyled(node) {
 export async function capturePng(target) {
   if (!target) throw new Error('Área de captura não encontrada.')
   await document.fonts.ready
+  const { captureFontCss } = await import('./captureFonts.js')
+  const fontCss = await captureFontCss()
   const width = Math.ceil(target.getBoundingClientRect().width)
   const height = Math.ceil(target.scrollTop || target.scrollLeft ? target.getBoundingClientRect().height : Math.max(target.scrollHeight, target.getBoundingClientRect().height))
   const size = captureSize(width, height)
@@ -59,7 +82,9 @@ export async function capturePng(target) {
   const root = document.createElement('div')
   root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
   root.style.cssText = `width:${width}px;height:${height}px;background:${getComputedStyle(document.body).backgroundColor};`
-  root.append(copy)
+  const fonts = document.createElement('style')
+  fonts.textContent = fontCss
+  root.append(fonts, copy)
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><foreignObject width="100%" height="100%">${new XMLSerializer().serializeToString(root)}</foreignObject></svg>`
   const image = new Image()
   await new Promise((resolve,reject) => {

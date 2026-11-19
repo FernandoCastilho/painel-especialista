@@ -6,7 +6,7 @@ import ExpandIcon from './ExpandIcon.jsx'
 
 // O mesmo conteúdo permanece montado ao ampliar: filtros e seleções são preservados.
 // O diálogo nativo mantém foco e Escape dentro da vista ampliada, inclusive no celular.
-export default function Expandable({ children, label, modal = false, onClose }) {
+export default function Expandable({ children, label, modal = false, onClose, capture = true }) {
   const [full, setFull] = useState(false)
   const ref = useRef(null)
   const active = modal || full
@@ -50,7 +50,7 @@ export default function Expandable({ children, label, modal = false, onClose }) 
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close()
       }}>
       <div className="expandable-controls">
-        <CaptureButton label={label || 'quadro'} getTarget={() => ref.current} />
+        {capture && <CaptureButton label={`quadro completo: ${label || 'detalhe'}`} getTarget={() => ref.current} />}
         {modal
           ? <button type="button" className="btn" onClick={close} aria-label="Fechar detalhes">Fechar ×</button>
           : <button type="button" className={full ? 'btn' : 'btn btn-expand'} aria-label={`${full ? 'Restaurar' : 'Maximizar'} ${label}`} aria-pressed={full} title={full ? undefined : 'Ampliar'} onClick={() => setFull((v) => !v)}>{full ? '↙ Restaurar' : <ExpandIcon />}</button>}

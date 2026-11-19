@@ -15,13 +15,13 @@ test('dialog modal preserva host e restaura por botão, cancel e rota', async t 
   const origin={appendChild:h=>{assert.equal(h,host);parent='inline'}}
   const modal={appendChild:h=>{assert.equal(h,host);parent='modal'},showModal:()=>{shown=true},close:()=>{shown=false}}
   const trigger={focus:()=>focus++},module={exports:{}}
-  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
+  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:['./ExpandIcon.jsx','./CaptureButton.jsx'].includes(n)?{default:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
   const children={content:'mesma instância'}
-  const h=hookRenderer(()=>{const tree=module.exports.default({children});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.ref.current=trigger;return tree})
+  const h=hookRenderer(()=>{const tree=module.exports.default({children});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.find(n=>n.type==='button').ref.current=trigger;return tree})
   t.after(()=>h.close());await h.settle()
   const portal=()=>h.value.props.children[2]
   const event=()=>({key:'Escape',preventDefault(){this.prevented=true},stopPropagation(){this.stopped=true}})
-  const click=async()=>{portal().content.props.children[0].props.children.props.onClick(event());await h.settle()}
+  const click=async()=>{portal().content.props.children[0].props.children.find(n=>n.type==='button').props.onClick(event());await h.settle()}
   for(const method of ['button','cancel','hashchange']){
     await click();assert.equal(shown,true);assert.equal(parent,'modal');assert.equal(document.body.style.overflow,'hidden');assert.equal(portal().target,host);assert.equal(portal().content.props.children[1].props.children,children)
     // Bubble handler must not prevent the native cancel default or preempt chart Escape.

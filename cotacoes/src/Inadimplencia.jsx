@@ -1,3 +1,4 @@
+import CaptureButton from './CaptureButton.jsx'
 import { useEffect, useRef, useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import { creditStats } from './inadimplencia.js'
@@ -17,8 +18,8 @@ export default function Inadimplencia({ searchTarget }) {
   const end = Math.max(0, ...selected.flatMap(s => s.points.map(p => p.t)))
   const start = new Date(end); start.setUTCMonth(start.getUTCMonth() - period + 1)
   const series = selected.map(s => ({ ...s, name: s.person === 'PF' ? 'Pessoa física' : 'Pessoa jurídica', color: s.person === 'PF' ? 'var(--currency-usd)' : 'var(--currency-eur)', points: s.points.filter(p => !period || p.t >= start.getTime()) }))
-  return <section className="credit-panel" aria-labelledby="credit-title">
-    <div className="history-head"><h2 id="credit-title">Inadimplência PF e PJ</h2><RefreshButton files={['inadimplencia.json']} /></div>
+  return <section data-capture-surface className="credit-panel" aria-labelledby="credit-title">
+    <div className="history-head"><h2 id="credit-title">Inadimplência PF e PJ</h2><CaptureButton label="Inadimplência PF e PJ" /><RefreshButton files={['inadimplencia.json']} /></div>
     <p className="muted">Crédito no Sistema Financeiro Nacional · saldo com atraso superior a 90 dias · dados mensais</p>
     <div className="credit-controls"><label>Carteira <select value={type} onChange={e => setType(e.target.value)}><option value="total">Total</option><option value="livres">Recursos livres</option><option value="direcionados">Recursos direcionados</option></select></label><label>Período <select value={period} onChange={e => setPeriod(Number(e.target.value))}><option value={12}>12 meses</option><option value={36}>3 anos</option><option value={0}>Histórico completo</option></select></label></div>
     {file.status === 'loading' && <p role="status">Carregando inadimplência…</p>}

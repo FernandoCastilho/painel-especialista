@@ -25,7 +25,7 @@ const fs = require('node:fs')
   })
   await page.goto(base+'/#resumo')
   await page.getByRole('button',{name:'Dólar americano: abrir gráfico',exact:true}).waitFor() // o botão de atualizar só ocupa espaço depois que as cotações carregam
-  const sizes=await page.locator('.img-share,.refresh-mini,.help button:not(.pop-close)').evaluateAll(es=>es.map(e=>({label:e.getAttribute('aria-label'),w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})))
+  const sizes=await page.locator('.capture-button,.refresh-mini,.help button:not(.pop-close)').evaluateAll(es=>es.map(e=>({label:e.getAttribute('aria-label'),w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})))
   assert.ok(sizes.every(s=>Math.round(s.w)>=44 && Math.round(s.h)>=44),JSON.stringify(sizes.filter(s=>s.w<44||s.h<44)))
   assert.match(await page.locator('.status.src').innerText(),/Câmbio.*25\/10\/2026.*Brasília/)
   await page.screenshot({path:`${out}/${width}-empty.png`,fullPage:true})

@@ -1,4 +1,6 @@
 // Compare PNG gerado com screenshot independente do navegador, por região de texto/gráfico.
+// Controles intencionalmente não exportados ficam invisíveis na referência, mantendo geometria.
+// Título, valores e traço continuam integrais e sujeitos aos mesmos limiares.
 // A comparação inclui cores, não só alfa: fundo sólido ou conteúdo ausente deve falhar.
 module.exports = async function fidelity(page, target, bytes, selectors) {
  const bounds=await target.boundingBox()
@@ -10,7 +12,7 @@ module.exports = async function fidelity(page, target, bytes, selectors) {
   if(!box||box.width<10||box.height<10)throw new Error('Região de prova ausente: '+selector)
   regions.push({selector,x:box.x-bounds.x,y:box.y-bounds.y,w:box.width,h:box.height})
  }
- const reference=Array.from(await target.screenshot({animations:'disabled'}))
+ const reference=Array.from(await target.screenshot({animations:'disabled',style:'[data-capture-ignore], [data-capture-ignore] * { visibility: hidden !important; }'}))
  return page.evaluate(async({bytes,reference,regions})=>{
   const decode=async b=>createImageBitmap(new Blob([new Uint8Array(b)],{type:'image/png'}))
   const [actual,expected]=await Promise.all([decode(bytes),decode(reference)])

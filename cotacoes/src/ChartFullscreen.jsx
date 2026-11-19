@@ -1,3 +1,4 @@
+import CaptureButton from './CaptureButton.jsx'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import ExpandIcon from './ExpandIcon.jsx'
@@ -33,7 +34,7 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
   if (disabled || !host) return children
   const keepEscapeInside = event => { if (expanded && event.key === 'Escape') event.stopPropagation() }
   const content = <>
-    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" className={expanded ? undefined : 'btn-expand'} aria-label={expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'} title={expanded ? undefined : 'Ampliar'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : <ExpandIcon />}</button></div>
+    <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" className={expanded ? undefined : 'btn-expand'} aria-label={expanded ? 'Restaurar gráfico (Esc)' : 'Maximizar gráfico'} title={expanded ? undefined : 'Ampliar'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Restaurar gráfico (Esc)' : <ExpandIcon />}</button><CaptureButton label="gráfico ampliável" getTarget={() => host.querySelector('.chart-fullscreen-content')} /></div>
     <div className="chart-fullscreen-content" onKeyDown={keepEscapeInside}>{children}</div>
   </>
   return <>

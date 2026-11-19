@@ -31,19 +31,25 @@ const out = process.env.CAPTURE_QA_OUTPUT || 'workspace-qa/capturas'
     await page.goto(base+'/#juros')
     const chart=page.locator('#juros-ref-brasil article.chart')
     await chart.locator('svg[role="img"]').first().waitFor()
+    await chart.evaluate(async el=>{
+      const image=document.createElement('img');image.id='capture-local-logo';image.src=new URL('bank-logos/itau.png',document.baseURI).href;image.width=40;image.height=40
+      el.append(image);await image.decode()
+    })
     await chart.getByRole('button',{name:/Copiar imagem:/}).click()
     await page.waitForFunction(()=>window.captureWrites.length===1)
     assert.match(await chart.innerText(),/Imagem copiada/)
     const bytes=await page.evaluate(()=>window.captureWrites[0])
     assert.deepEqual(bytes.slice(0,8),[137,80,78,71,13,10,26,10])
-    await chart.screenshot({path:path.join(out,`cdi-${width}-${theme}-reference.png`)})
-    const proof=await fidelity(page,chart,bytes,['h3','.pct','svg[role="img"]'])
+    await chart.screenshot({path:path.join(out,`cdi-${width}-${theme}-reference-raw.png`)})
+    await chart.screenshot({path:path.join(out,`cdi-${width}-${theme}-reference.png`),style:'[data-capture-ignore], [data-capture-ignore] * { visibility: hidden !important; }'})
+    const proof=await fidelity(page,chart,bytes,['h3','.pct','svg[role="img"]','#capture-local-logo'])
+    // Persistir evidências antes de falhar: nunca perder o PNG divergente.
+    await fs.writeFile(path.join(out,`cdi-${width}-${theme}.png`),Buffer.from(bytes))
+    await fs.writeFile(path.join(out,`cdi-${width}-${theme}-fidelity.json`),JSON.stringify(proof,null,2))
     for(const region of proof){
       assert.ok(region.referenceColors>=4 && region.samples>100, 'referência contém texto ou gráfico: '+JSON.stringify(region))
       assert.ok(region.meanError<0.08 && region.ink>20 && region.inkRecall>0.7,'fidelidade de texto/gráfico: '+JSON.stringify(region))
     }
-    await fs.writeFile(path.join(out,`cdi-${width}-${theme}-fidelity.json`),JSON.stringify(proof,null,2))
-    await fs.writeFile(path.join(out,`cdi-${width}-${theme}.png`),Buffer.from(bytes))
     await page.locator('#juros-ref-brasil').getByRole('button',{name:'Ampliar gráfico: CDI',exact:true}).click()
     const dialog=page.getByRole('dialog')
     await dialog.locator('.capture-button').first().waitFor()
@@ -70,10 +76,21 @@ const out = process.env.CAPTURE_QA_OUTPUT || 'workspace-qa/capturas'
     await page.screenshot({path:path.join(out,`detalhe-${width}-${theme}.png`),fullPage:true})
     console.log('PASS captura PNG gráfico/detalhe/rolagem/recusa',width,theme)
     await page.evaluate(()=>window.captureDenied=false)
-    for(const [route,selector] of [['resumo','.market-table'],['juros','#juros-ref-brasil article.chart'],['cenarios/calendario','.cen-nav']]){
+    await dialog.evaluate(el=>{
+      const frame=document.createElement('iframe');frame.title='Google Trends · fixture externa';frame.src='https://example.invalid/externo';frame.style.cssText='width:240px;height:100px'
+      el.querySelector('.expandable-body').prepend(frame)
+    })
+    const beforeExternal=await page.evaluate(()=>window.captureWrites.length)
+    await dialog.locator('.capture-button').first().click()
+    await page.waitForFunction(n=>window.captureWrites.length===n+1,beforeExternal)
+    await dialog.getByRole('status').filter({hasText:'conteúdo externo não incluído'}).waitFor()
+    await fs.writeFile(path.join(out,`iframe-aviso-${width}-${theme}.png`),Buffer.from(await page.evaluate(()=>window.captureWrites.at(-1))))
+
+    for(const [route,selector] of [['resumo','.market-table'],['juros','#juros-ref-brasil article.chart'],['cenarios/calendario','#cal-title'],['cenarios/projecoes','#scenarios-heading'],['cenarios/inadimplencia','#credit-title'],['cenarios/recuperacao','#rj-history-heading'],['cenarios/atividade','#market-context-heading'],['cenarios/commodities','#commodities-context-heading'],['cenarios/indexadores','.idx-table'],['cenarios/inflacao','#outros-title']]){
       await page.goto(base+'/#'+route)
       await page.locator(selector).first().waitFor()
       const main=page.locator('main.app')
+      await main.locator('img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode().catch(()=>{}))))
       const before=await page.evaluate(()=>window.captureWrites.length)
       await main.locator('.screen-capture-bar .capture-button').click()
       await page.waitForFunction(n=>window.captureWrites.length===n+1,before)

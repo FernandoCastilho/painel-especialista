@@ -10,9 +10,9 @@ export default function CaptureButton({ getTarget, label = 'gráfico' }) {
     if (busy) return
     setBusy(true);setStatus('')
     try {
-      const target = getTarget ? getTarget() : button.current?.closest('article.chart, .chart, .expandable-panel')
+      const target = getTarget ? getTarget() : button.current?.closest('[data-capture-surface], article.chart, .chart, .expandable-panel')
       await copyCapture(target)
-      setStatus('Imagem copiada. Cole com Ctrl+V.')
+      setStatus(target?.querySelector('iframe,video') ? 'Imagem copiada com aviso: conteúdo externo não incluído. Cole com Ctrl+V.' : 'Imagem copiada. Cole com Ctrl+V.')
     } catch (error) { setStatus(error.name === 'NotAllowedError' ? 'Cópia não autorizada pelo navegador. Confira a permissão da área de transferência e tente novamente.' : error.message || 'Não foi possível copiar. Confira a permissão da área de transferência.') }
     finally { setBusy(false) }
   }
