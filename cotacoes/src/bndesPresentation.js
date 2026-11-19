@@ -1,5 +1,5 @@
 // A apresentação é uma cópia em memória: nunca consulta taxas nem recalcula.
-import { validFinameQuote } from './finameFunding.js'
+import { validFinameQuote, validPosQuote, isFinamePos } from './finameFunding.js'
 const freeze = value => { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value) } return value }
 export const BNDES_SLIDES = Object.freeze([
   { id: 'operation', label: 'Dados da operação' },
@@ -16,12 +16,14 @@ const SOURCES = [
 ]
 
 export function captureBndesPresentation({ result, comparison, conditions }, capturedAt = Date.now()) {
-  if (!result?.ok || conditions?.finameEligible !== true || !['tfc', 'tfb'].includes(conditions?.custo)) return null
+  const CUSTOS = ['tfc', 'tfb', 'tlp', 'lcd', 'tfbd']
+  if (!result?.ok || conditions?.finameEligible !== true || !CUSTOS.includes(conditions?.custo)) return null
   const valid = item => item?.ok && ['financiado', 'primeiraParcela', 'juros', 'iof', 'total', 'taxa'].every(key => Number.isFinite(item[key]))
-  const validQuote = validFinameQuote
-  const validRate = rate => Number.isFinite(rate?.value) && rate.value >= 0 && rate.value <= 100
+  // Pós-fixados (TLP, LCD, TFBD) aceitam referência negativa (a LD1 pode ser negativa).
+  const validQuote = (quote, custo = conditions.custo) => (isFinamePos(custo) ? validPosQuote(quote) : validFinameQuote(quote))
+  const validRate = (rate, custo = conditions.custo) => Number.isFinite(rate?.value) && rate.value <= 100 && rate.value >= (isFinamePos(custo) ? -50 : 0)
   if (!valid(result) || !validRate(conditions.rate) || (!validQuote(conditions.quote) && !conditions.rate.manual) || !Number.isFinite(capturedAt)) return null
-  const compared = comparison?.ok && comparison.alternatives?.length === 2 && ['tfc', 'tfb'].every(custo => comparison.alternatives.some(item => item.custo === custo && valid(item.result) && validQuote(item.quote) && validRate(item.rate))) && Number.isFinite(comparison.totalDifference)
+  const compared = comparison?.ok && comparison.alternatives?.length === 2 && comparison.alternatives[0].custo !== comparison.alternatives[1].custo && comparison.alternatives.every(item => CUSTOS.includes(item.custo) && valid(item.result) && (validQuote(item.quote, item.custo) || item.rate?.manual) && validRate(item.rate, item.custo)) && Number.isFinite(comparison.totalDifference)
   return freeze(structuredClone({
     capturedAt,
     conditions: { ...conditions, quote: validQuote(conditions.quote) ? conditions.quote : null },

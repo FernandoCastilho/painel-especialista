@@ -67,7 +67,7 @@ export function avaliarCusto(produtoId, custoId, { mpme = null } = {}) {
 // Como cada calculadora do painel se encaixa na tabela: produto de referência e custos que a tela oferece.
 // Os custos oferecidos precisam estar entre os permitidos (conferido nos testes).
 export const PERFIS_PAINEL = Object.freeze([
-  { perfil: 'finame-materiais', produtos: ['finame-materiais'], custos: ['tfc', 'tfcMpme', 'tfb', 'tlp'], nota: 'A TFC usa a série MPME quando o porte é MPME; TLPCAP é o perfil capitalizado da TLP.' },
+  { perfil: 'finame-materiais', produtos: ['finame-materiais'], custos: ['tfc', 'tfcMpme', 'tfb', 'tlp', 'selicLcd', 'tfbd'], nota: 'A TFC usa a série MPME quando o porte é MPME. Desde 19/11/2026, TLP (exigível), Taxa LCD e TFBD calculam na mesma tela, com o índice projetado pelo Focus.' },
   { perfil: 'bndes-tlp-exigivel', produtos: PRODUTOS_BNDES.filter(p => p.custos.includes('tlp')).map(p => p.id), custos: ['tlp'], nota: 'Vale para os produtos que aceitam TLP.' },
   { perfil: 'bndes-selic-lcd', produtos: PRODUTOS_BNDES.filter(p => p.custos.includes('selicLcd')).map(p => p.id), custos: ['selicLcd'], nota: 'Vale para os produtos que aceitam SELIC_LCD.' },
   { perfil: 'bndes-credito-tfb', produtos: ['credito-pme'], custos: ['tfb'], nota: 'Cenário de conferência com TFB.' },

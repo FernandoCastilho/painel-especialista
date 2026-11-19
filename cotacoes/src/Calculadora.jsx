@@ -67,7 +67,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
       <a className="calc-bndes-rates" href="#bndes">Taxas BNDES · consultar séries e históricos</a>
-      <div className="bw-heading calc-workspace-heading"><h2 id="calc-title"><strong aria-hidden="true">{'PME'}</strong><span>Calculadoras</span></h2></div>
+      <div className="bw-heading calc-workspace-heading"><h2 id="calc-title"><span>Calculadoras</span></h2></div>
       <p className="cx-construcao" role="note"><strong>Em construção!</strong> Os cálculos podem conter erros. Use somente para estudo.</p>
       <div className="cx-tiles">
         {CALCS.map(({ id, title, sub, Icon }) => (
