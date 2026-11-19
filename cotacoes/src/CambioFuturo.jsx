@@ -84,7 +84,8 @@ export default function CambioFuturo({ onBack }) {
         <div className="cf-moedas">
           {MOEDAS_CF.map(({ id, sym, nome }) => {
             const m = moedas[id]
-            const auto = id !== 'USD' && !m.valor.trim() && valorDe(id) > 0 ? num(valorDe(id)) : ''
+            const sugerido = id !== 'USD' && !m.valor.trim() ? valorDe(id) : NaN
+            const auto = sugerido > 0 ? num(sugerido) : ''
             const f = fluxos[id]
             return (
               <fieldset key={id} className="cf-moeda">
@@ -126,7 +127,7 @@ export default function CambioFuturo({ onBack }) {
             <thead><tr><th scope="col">Moeda</th><th scope="col">Recebe (R$)</th><th scope="col">Paga (R$)</th><th scope="col">No período</th><th scope="col">TIR a.a.</th><th scope="col">Câmbio para a meta</th></tr></thead>
             <tbody>{prontos.map(({ id, nome }) => {
               const f = fluxos[id]
-              const alvo = meta > -100 ? cambioMeta(f, meta) : null
+              const alvo = cambioMeta(f, meta)
               return (
                 <tr key={id} className={id === melhor ? 'cf-best' : undefined}>
                   <th scope="row">{nome}{id === melhor && <small> · menor custo</small>}</th>

@@ -52,8 +52,8 @@ export function fluxoMoeda({ valor, cotacao, taxa, tac = 0, start, dates, futuro
     prev = date
     return linha
   })
-  const out = { ok: true, valor, cotacao, taxa, tac, brl, liquido, linhas, juros: linhas.reduce((s, l) => s + l.juros, 0) }
-  out.totalMoeda = valor + out.juros
+  const juros = linhas.reduce((s, l) => s + l.juros, 0)
+  const out = { ok: true, valor, cotacao, taxa, tac, brl, liquido, linhas, juros, totalMoeda: valor + juros }
   if (linhas.some((l) => !l.futuro)) return { ...out, completo: false }
   const totalBrl = linhas.reduce((s, l) => s + l.parcelaBrl, 0)
   const y = irr([{ v: liquido, t: 0 }, ...linhas.map((l) => ({ v: -l.parcelaBrl, t: l.prazo / 365 }))])
