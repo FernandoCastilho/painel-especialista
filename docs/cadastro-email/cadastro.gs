@@ -18,6 +18,7 @@ function doGet(e) {
   try {
     if (p.acao === 'pedir') return resposta_(pedir_(p.email, p.pedido))
     if (p.acao === 'confirmar') return resposta_(confirmar_(p.email, p.codigo))
+    if (p.acao === 'validar') return resposta_(validar_(p.email, p.token))
     if (p.acao === 'visita') return resposta_(visita_(p.email, p.token))
     return resposta_({ ok: false, erro: 'Pedido desconhecido.' })
   } catch (err) {
@@ -114,9 +115,17 @@ function confirmar_(emailBruto, codigoBruto) {
   }
 }
 
+function validar_(emailBruto, token) {
+  var email = normalizar_(emailBruto)
+  if (!emailValido_(email) || String(token || '') !== token_(email)) return { ok: false, revogado: true, erro: 'Acesso não reconhecido.' }
+  if (bloqueado_(email)) return { ok: false, revogado: true, erro: MSG_BLOQUEADO }
+  return { ok: true }
+}
+
 function visita_(emailBruto, token) {
   var email = normalizar_(emailBruto)
-  if (!emailValido_(email) || String(token || '') !== token_(email) || bloqueado_(email)) return { ok: false, erro: 'Acesso não reconhecido.' }
+  var validacao = validar_(email, token)
+  if (!validacao.ok) return validacao
   registrar_('visita', email)
   return { ok: true }
 }

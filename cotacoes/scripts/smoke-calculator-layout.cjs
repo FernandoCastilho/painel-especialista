@@ -330,7 +330,7 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
-    await section.locator('.fm-fluxo-panel > summary').click()
+    await section.locator('summary').filter({ hasText: /^Cronograma ilustrativo ·/ }).click()
     assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 48) // prazo padrão de 48 meses (18/11/2026)
     assert.match(await section.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
   }
@@ -350,6 +350,77 @@ const workspaceRoutes = {
   'finimp': '#fi-currency',
   'giro': '#cx-value',
   'analise-desconto': '#ad-lm-start',
+}
+
+// Prova do catálogo agrupado nos dois temas, usando o mesmo artifact das calculadoras.
+async function assertGroupedCatalog(browser, report, failures) {
+  const expected = [
+    ['Crédito e capital de giro', ['BNDES', 'Necessidade do Cliente', 'Capital de Giro', 'Conta Garantida', 'Análise de desconto']],
+    ['Crédito internacional', ['FINIMP', 'Empréstimo externo (4131)']],
+    ['Taxas e câmbio', ['Operação x DI', 'CDI x Dólar']],
+    ['Planejamento e análise', ['Faturamento', 'Dividendos via empréstimo', 'Reforma tributária · caixa']],
+  ]
+  for (const width of widths) for (const theme of ['light', 'dark']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    const label = `catálogo agrupado ${width}px ${theme}`
+    const screenshot = path.join(out, `catalogo-grupos-${width}-${theme}.png`)
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    try {
+      await fixtures(page)
+      await page.goto(base + '/#calculadora')
+      const catalog = page.locator('.calc-catalog')
+      await catalog.locator('.calc-catalog-group').first().waitFor()
+      await settleLayout(page)
+      const state = await catalog.evaluate(element => {
+        const rect = element.getBoundingClientRect()
+        return {
+          theme: document.documentElement.dataset.theme,
+          viewport: document.documentElement.clientWidth,
+          document: document.documentElement.scrollWidth,
+          left: rect.left, right: rect.right,
+          groups: [...element.querySelectorAll('.calc-catalog-group')].map(group => {
+            const heading = group.querySelector('h3')
+            return {
+              title: heading.textContent.trim(),
+              labelled: group.getAttribute('aria-labelledby') === heading.id,
+              headingBottom: heading.getBoundingClientRect().bottom,
+              cards: [...group.querySelectorAll('.cx-tile')].map(button => {
+                const r = button.getBoundingClientRect()
+                return { title: button.querySelector('b').textContent.trim(), left:r.left, right:r.right, top:r.top, width:r.width, height:r.height,
+                  clipped: button.scrollWidth > button.clientWidth + 1 }
+              }),
+            }
+          }),
+        }
+      })
+      assert.equal(state.theme, theme, label + ': tema aplicado')
+      assert.deepEqual(state.groups.map(g => [g.title, g.cards.map(c => c.title)]), expected, label + ': itens, ordem e agrupamentos completos')
+      assert.ok(state.document <= state.viewport + 1 && state.left >= -1 && state.right <= state.viewport + 1, label + ': catálogo sem corte horizontal')
+      for (const group of state.groups) {
+        assert.ok(group.labelled, label + ': título acessível')
+        for (const card of group.cards) {
+          assert.ok(card.left >= state.left - 1 && card.right <= state.right + 1 && !card.clipped, label + ': cartão legível ' + card.title)
+          assert.ok(card.width >= 44 && card.height >= 44, label + ': alvo de toque ' + card.title)
+          assert.ok(card.top >= group.headingBottom, label + ': título antes dos cartões')
+        }
+        if (width === 320 || width === 390) {
+          assert.equal(new Set(group.cards.map(c => Math.round(c.left))).size, 1, label + ': coluna única no celular')
+        }
+      }
+      assert.equal(await catalog.getByRole('link', { name: 'Taxas BNDES · consultar séries e históricos', exact:true }).getAttribute('href'), '#bndes')
+      await catalog.getByRole('button', { name:'BNDES: abrir calculadora', exact:true }).focus()
+      assert.equal(await catalog.getByRole('button', { name:'BNDES: abrir calculadora', exact:true }).evaluate(el => el === document.activeElement), true, label + ': foco por teclado')
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.screenshot({ path:screenshot, fullPage:true })
+      assert.deepEqual(errors, [], label + ': sem erros do navegador')
+      report.push({ route:'catalogo-grupos', width, theme, status:'pass', screenshot:path.basename(screenshot) })
+    } catch (error) {
+      await page.screenshot({ path:screenshot, fullPage:true }).catch(() => {})
+      report.push({ route:'catalogo-grupos', width, theme, status:'fail', message:error.message })
+      failures.push(label + ': ' + error.message)
+    } finally { await page.close() }
+  }
 }
 
 async function assertComparatorFamily(browser) {
@@ -454,16 +525,16 @@ async function assertComparatorFamily(browser) {
               available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
               used:costs.right - operation.left,
               topGap:Math.abs(costs.top - operation.top),
-              formTop:form.getBoundingClientRect().top,
-              formRight:form.getBoundingClientRect().right,
+              formBottom:form.getBoundingClientRect().bottom,
+              formLeft:form.getBoundingClientRect().left,
+              resultWidth:results.width,
               resultsTop:results.top,
               resultsLeft:results.left,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
           assert.ok(Math.abs(geometry.used - geometry.available) <= 2 && geometry.topGap <= 2, details + ': Operação e Custos preenchem a mesma linha')
-          // Padrão de 18/11/2026: no computador, a cotação fica ao lado dos dados, alinhada pelo topo.
-          assert.ok(geometry.resultsLeft >= geometry.formRight && Math.abs(geometry.resultsTop - geometry.formTop) <= 48, details + ': cotação ao lado dos dados')
+          assert.ok(geometry.resultsTop >= geometry.formBottom - 1 && Math.abs(geometry.resultsLeft - geometry.formLeft) <= 2 && Math.abs(geometry.resultWidth - geometry.available) <= 2, details + ': cotação abaixo e em largura total')
         }
       }
       console.log(`PASS família visual do Comparador · ${width}px · ${theme}`)
@@ -478,6 +549,7 @@ async function assertComparatorFamily(browser) {
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
   const report = [], failures = []
   try {
+    await assertGroupedCatalog(browser, report, failures)
     for (const width of widths) {
       const directory = path.join(out, String(width)); fs.mkdirSync(directory, { recursive: true })
       for (const route of routes) {

@@ -115,3 +115,17 @@
 .bw .fm-projecao .fm-rate-reset { justify-self:start; }
 .bw .fm-compare-outro { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; align-items:center; margin-top:8px; font-size:.875rem; }
 .bw .fm-compare-outro select { min-height:40px; max-width:100%; }
+
+/* Finame Materiais: entradas primeiro (Custos ao lado), cotação em toda a largura abaixo. */
+:root[data-theme] body .bw:not(.e4) .fm-workspace.fm-quote-layout { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; }
+:root[data-theme] body .bw:not(.e4) .fm-quote-layout > .fm-results { position:static; }
+:root[data-theme] body .bw:not(.e4) .fm-quote-layout .cx-form { display:grid; grid-template-columns:minmax(0,1fr); }
+@media (min-width:1101px) {
+  :root[data-theme] body .bw:not(.e4) .fm-quote-layout .cx-form { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
+}
+:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle { width:44px; min-width:44px; height:44px; min-height:44px; padding:0; margin:-5px -4px -5px 0; border:0; background:none; }
+:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle > svg { width:16px; height:16px; }
+:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle:hover { background:var(--bw-soft); color:var(--bw-ink); }
+:root[data-theme] body .bw:not(.e4) .cx-finame #fm-parcelas { scroll-margin-top:120px; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content { padding:0 14px 14px; min-width:0; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content .fm-parcel-scroll { max-height:none; overflow-x:auto; }

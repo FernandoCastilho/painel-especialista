@@ -1,3 +1,4 @@
+import { CALCULATOR_GROUPS } from './calculatorGroups.js'
 import CapitalDeGiro from './CapitalDeGiro.jsx'
 import './CalculatorStandard.css'
 import './Calculadora.css'
@@ -37,7 +38,7 @@ const CALCS = [
   { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, IBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
   { id: 'cdi-dolar', title: 'CDI x Dólar', sub: 'Em quanto tempo o CDI líquido alcança a alta do dólar', Icon: CdiDolarIcon },
-  { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: crédito na empresa x distribuir dividendos hoje', Icon: DividendosEmprestimoIcon },
+  { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: eficiência de pagar o dividendo com crédito na empresa', Icon: DividendosEmprestimoIcon },
   { id: 'emprestimo-4131', title: 'Empréstimo externo (4131)', sub: 'No formato da cotação: dólar ou euro, parcelas e NDF', Icon: Emprestimo4131Icon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
@@ -69,13 +70,21 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
       <a className="calc-bndes-rates" href="#bndes">Taxas BNDES · consultar séries e históricos</a>
       <div className="bw-heading calc-workspace-heading"><h2 id="calc-title"><span>Calculadoras</span></h2></div>
       <p className="cx-construcao" role="note"><strong>Em construção!</strong> Os cálculos podem conter erros. Use somente para estudo.</p>
-      <div className="cx-tiles">
-        {CALCS.map(({ id, title, sub, Icon }) => (
+      <div className="calc-catalog-groups">
+        {CALCULATOR_GROUPS.map(group => (
+          <section key={group.id} className="calc-catalog-group" aria-labelledby={`calc-group-${group.id}`}>
+            <h3 id={`calc-group-${group.id}`}>{group.title}</h3>
+            <p className="calc-group-description">{group.description}</p>
+            <div className="cx-tiles">
+        {group.calculators.map(calcId => CALCS.find(calc => calc.id === calcId)).map(({ id, title, sub, Icon }) => (
           <button key={id} type="button" className="cx-tile" onClick={() => onView(id)} aria-label={`${title}: abrir calculadora`}>
             <span className="cx-icon" aria-hidden="true"><Icon /></span>
             <span className="cx-tile-text"><b>{title}</b><small>{sub}</small></span>
             <span className="cx-go" aria-hidden="true">›</span>
           </button>
+        ))}
+            </div>
+          </section>
         ))}
       </div>
     </section>
