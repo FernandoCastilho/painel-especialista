@@ -47,10 +47,9 @@ export default function FinimpComparacao({ onBack }) {
   const goalMet = goal.ok && b.annualRate !== null ? b.annualRate <= goal.annualRate * (1 + 1e-12) + 1e-12 : null
   return <section className="cx fi bw calc-standard calc-workspace" aria-labelledby="fi-heading">
     <div className="cx-toolbar">
-      <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <button type="button" className="cx-back" onClick={() => { finimpDraftStore.reset(); setTouched({}); setSelectedDays(null); setFocusedField(null) }}>Nova simulação</button>
     </div>
-    <div className="bw-heading calc-workspace-heading"><h2 id="fi-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>FINIMP · comparação de propostas</span></h2>{help('simulation')}</div>
+    <div className="bw-heading calc-workspace-heading"><h2 id="fi-heading" className="cx-title"><span>FINIMP · comparação de propostas</span></h2>{help('simulation')}</div>
     {/* Tela recém-aberta: dica curta do que preencher, sem valores de exemplo. Some quando as condições estão completas. */}
     <div className="fi-inputs">
     <article className="desk-panel cx-panel fi-box"><header><h3 className="cx-heading"><span>Condições</span></h3></header>

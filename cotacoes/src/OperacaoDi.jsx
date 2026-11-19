@@ -114,9 +114,8 @@ export default function OperacaoDi({ onBack }) {
 
   return (
     <section className="cx bw calc-standard calc-workspace od-pattern" aria-labelledby="od-h">
-      <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
       <div className="bw-heading calc-workspace-heading">
-        <h2 id="od-h" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Operação x DI</span></h2>
+        <h2 id="od-h" className="cx-title"><span>Operação x DI</span></h2>
         <Help title="Operação x DI: cálculo e premissas">
           <p>Compara a operação com aplicar o mesmo valor no DI, do início ao vencimento. O DI de cada dia vem da curva DI x pré da B3 da data-base: é a expectativa do mercado naquele dia, não uma garantia.</p>
           <p>Dias úteis contados com os feriados nacionais. Entre dois vértices da curva, a taxa a termo é constante (interpolação do logaritmo do fator). Pagamento único no vencimento.</p>

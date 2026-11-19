@@ -70,9 +70,8 @@ export default function DividendosEmprestimo({ onBack }) {
 
   return (
     <section className="cx cx-cd bw calc-standard calc-workspace cd-pattern de-pattern" aria-labelledby="de-heading">
-      <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <div className="bw-heading calc-workspace-heading">
-        <h2 id="de-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Dividendos via empréstimo</span></h2>
+        <h2 id="de-heading" className="cx-title"><span>Dividendos via empréstimo</span></h2>
         <CalculatorHelp title="Dividendos via empréstimo"><p>A empresa de lucro real toma crédito, repassa o dinheiro ao sócio, o sócio aplica e deixa a aplicação como garantia. A tela compara com distribuir o dividendo hoje e pagar o imposto sobre ele.</p><p>Simulação para estudo. Não é recomendação tributária nem cotação.</p></CalculatorHelp>
       </div>
       <p className="cd-notice">Simulação para estudo, com CDI constante e regras tributárias simplificadas. Confirme a estrutura com o jurídico e o contador da empresa. Os dados ficam só nesta tela.</p>

@@ -58,9 +58,9 @@ export default function CbsCaixa({ onBack }) {
     </div>
   }
   return <section className="cx cbs bw calc-standard calc-workspace" aria-labelledby="cbs-title">
-    <div className="cx-toolbar"><button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
+    <div className="cx-toolbar">
       <button type="button" className="cx-action" onClick={() => { setForm(initial); setMonthlyOverrides({}); setActivityConfirmed(false); setSearchReset(value => value + 1) }}>Restaurar exemplo</button></div>
-    <div className="bw-heading calc-workspace-heading"><h2 id="cbs-title" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Reforma tributária · impacto no caixa</span></h2></div>
+    <div className="bw-heading calc-workspace-heading"><h2 id="cbs-title" className="cx-title"><span>Reforma tributária · impacto no caixa</span></h2></div>
     <div className="cx-field-label cbs-intro"><span>O que esta simulação faz</span><Help title="O que esta simulação faz"><p>Simule a CBS, tributo federal que substitui PIS/Cofins, e seu efeito no caixa.</p></Help></div>
     <p className="cbs-assumptions">Simulação educativa de CBS · preços brutos mantidos · não inclui IBS nem apuração fiscal.</p>
     <div className="cbs-workspace">

@@ -36,7 +36,6 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
   const selected = profile === 'finame-materiais' && variante ? variante : profile
   const profileControl = <div className="bw-profile"><label htmlFor="bw-profile">Linha</label><select id="bw-profile" value={selected} onChange={event => navigate(event.target.value)}>{PROFILES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
   return <div className="bndes-page">
-    <button type="button" className="cx-back bndes-back" onClick={onBack}>‹ Calculadoras</button>
     <section className="cx bw" aria-labelledby="bw-title">
     <div className="bw-heading"><h2 id="bw-title"><img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" /><span>{profile === 'finame-materiais' ? (ALIASES[variante] ?? 'Finame Materiais') : 'Financiamentos'}</span></h2>
     <nav className="bw-nav" aria-label="Área BNDES">

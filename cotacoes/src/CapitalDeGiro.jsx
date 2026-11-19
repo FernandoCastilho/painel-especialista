@@ -80,7 +80,6 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   }
 
   return <section className="giro-screen" aria-labelledby="calc-h">
-    <button type="button" className="giro-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
     <header className="giro-header">
       <p>Painel do Especialista</p>
       <div><h2 id="calc-h">Capital de giro</h2>

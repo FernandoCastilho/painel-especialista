@@ -103,8 +103,8 @@ test('trocar modos, editar, adicionar/remover repetidamente e voltar sem efeitos
   await h.click('Utilização única')
   assert.equal(h.field('amount').props.value, '100.000')
   assert.match(h.text(), /1\.462,00/)
-  await h.click('‹ Calculadoras')
-  assert.equal(h.back, 1)
+  // O "‹ Voltar" fica no topo do painel (App.jsx), não dentro da calculadora.
+  assert.equal(h.back, 0)
 })
 
 test('prazo por data, erros inline, feriados e IOF automático operam sem resultados antigos', async t => {

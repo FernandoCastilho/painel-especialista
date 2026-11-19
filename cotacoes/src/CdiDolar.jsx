@@ -85,9 +85,8 @@ export default function CdiDolar({ onBack, quotes }) {
 
   return (
     <section className="cx cx-cd bw calc-standard calc-workspace cd-pattern" aria-labelledby="cd-heading">
-      <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <div className="bw-heading calc-workspace-heading">
-        <h2 id="cd-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>CDI x Dólar</span></h2>
+        <h2 id="cd-heading" className="cx-title"><span>CDI x Dólar</span></h2>
         <CalculatorHelp title="CDI x Dólar"><p>Em quantos dias úteis o ganho líquido de uma aplicação em % do CDI alcança a alta do dólar entre o câmbio atual e o câmbio alvo de saída.</p><p>Estimativa com CDI constante. Não é cotação nem recomendação.</p></CalculatorHelp>
       </div>
       <p className="cd-notice">Estimativa com CDI constante no período, IR de renda fixa e IOF sobre o rendimento. Os dados ficam só nesta tela.</p>

@@ -313,7 +313,6 @@ export default function Emprestimo4131({ onBack, quotes }) {
 
   return (
     <section className="cx bw e4 calc-standard" aria-labelledby="bw-title">
-      <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <div className="bw-heading"><h2 id="bw-title"><strong>4131</strong><span>Empréstimo externo</span></h2>
         <nav className="bw-nav" aria-label="Área do empréstimo externo">
           <button type="button" aria-pressed={area === 'simulate'} onClick={() => setArea('simulate')} aria-label="Simular empréstimo">Simular</button>
