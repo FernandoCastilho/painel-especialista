@@ -14,7 +14,7 @@ const LABELS = { value: 'Valor da operação', term: 'Prazo total', grace: 'Car�
 export default function LinhaMestra({ prefix, values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, children }) {
   const id = key => `${prefix}-${key}`
   const label = key => labels[key] ?? LABELS[key]
-  const invalid = key => errors[key] ? { 'aria-invalid': true, 'aria-describedby': `${id(key)}-err` } : {}
+  const invalid = key => ({ 'aria-invalid': !!errors[key], ...(errors[key] ? { 'aria-describedby': `${id(key)}-err` } : {}) })
   const issue = key => errors[key] ? <small id={`${id(key)}-err`} className="lm-error" role="alert">{errors[key]}</small> : null
   const months = key => <div className="lm-unit"><input id={id(key)} inputMode="numeric" autoComplete="off" value={values[key] ?? ''} {...invalid(key)}
     onChange={e => onChange(key, e.target.value.replace(/\D/g, '').slice(0, 3))} /><span aria-hidden="true">meses</span></div>
