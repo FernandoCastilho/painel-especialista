@@ -36,14 +36,14 @@ async function setup(t) {
   const find = name => nodes(render.value).find(n => n.type?.name === name)
   return { render, cards, card, button, find, async change(i, values) { const c = card(i); c.props.set({ ...c.props.col, ...values }); await render.settle() } }
 }
-const clickCompare = async ui => { ui.button('Comparar modalidades').props.onClick(); await ui.render.settle() }
+const clickCompare = async ui => { (ui.button('Comparar modalidades') ?? ui.button('Gerar cotação')).props.onClick(); await ui.render.settle() }
 
-test('começa com duas comparações e deixa escolher de 2 a 5', async t => {
+test('começa com duas operações e permite cotação individual até cinco', async t => {
   const ui = await setup(t)
   assert.equal(ui.cards().length, 2)
-  const counts = nodes(ui.render.value).filter(n => n.type === 'button' && /^[2-5]$/.test(text(n)))
-  assert.deepEqual(counts.map(text), ['2', '3', '4', '5'])
-  for (const n of [5, 3, 2]) { counts.find(b => text(b) === String(n)).props.onClick(); await ui.render.settle(); assert.equal(ui.cards().length, n) }
+  const counts = nodes(ui.render.value).filter(n => n.type === 'button' && /^[1-5]$/.test(text(n)))
+  assert.deepEqual(counts.map(text), ['1', '2', '3', '4', '5'])
+  for (const n of [1, 5, 3, 2]) { counts.find(b => text(b) === String(n)).props.onClick(); await ui.render.settle(); assert.equal(ui.cards().length, n) }
 })
 test('cada coluna aceita qualquer modalidade e mostra os campos dela', async t => {
   const ui = await setup(t)
@@ -240,4 +240,31 @@ test('explicações ficam em ajuda clicável e alertas essenciais continuam vis�
   const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
   assert.match(source, /A ordem de menor CET usa o CET da parte fixa/)
   assert.match(source, /Ao reduzir a quantidade, as colunas escondidas/)
+})
+
+test('cotação individual exibe resultado sem inventar concorrente e preserva cálculo ao alternar quantidade', async t => {
+  const ui = await setup(t)
+  const choose = async n => {
+    nodes(ui.render.value).find(x => x.type === 'button' && text(x) === String(n)).props.onClick()
+    await ui.render.settle()
+  }
+  await choose(1)
+  assert.ok(ui.button('Gerar cotação'))
+  assert.equal(ui.button('Comparar modalidades'), undefined)
+  await clickCompare(ui)
+  assert.ok(text(ui.render.value).includes('Resultado da cotação'))
+  const single = ui.find('Results')
+  assert.equal(single.props.results.length, 1)
+  const baseline = JSON.stringify(single.props.results[0])
+  const html = renderToStaticMarkup(single)
+  assert.match(html, /Cotação individual/)
+  assert.match(html, /Cotação da operação/)
+  assert.doesNotMatch(html, /segunda mais barata|a menos.*que|O CET não pôde ser comparado/)
+  assert.match(html, /Necessidade do Cliente|Custo sobre o líquido/)
+  for (const n of [5, 2, 1]) {
+    await choose(n)
+    await clickCompare(ui)
+    assert.equal(ui.find('Results').props.results.length, n)
+    assert.equal(JSON.stringify(ui.find('Results').props.results[0]), baseline)
+  }
 })

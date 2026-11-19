@@ -20,9 +20,30 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await page.locator('#credit-title').waitFor()
     const compare = () => page.getByRole('button', { name: /Comparar modalidades/ }).click()
     const row = label => page.locator('.credit-results').first().locator('tr').filter({ has: page.getByRole('rowheader', { name: label, exact: true }) })
-    // Duas comparações no início; o usuário escolhe de 2 a 5.
+    // Duas operações no início; o usuário escolhe de 1 a 5.
     assert.equal(await page.locator('.credit-card').count(), 2)
     assert.equal(await page.locator('.credit-results').count(), 0, 'resultado só depois de comparar')
+    assert.equal(await page.locator('#credit-title').innerText(), 'Necessidade do Cliente')
+    await page.getByRole('button', { name: '1', exact: true }).click()
+    assert.equal(await page.locator('.credit-card').count(), 1)
+    assert.equal(await page.getByRole('button', { name: 'Comparar modalidades', exact: true }).count(), 0)
+    await page.getByRole('button', { name: 'Gerar cotação', exact: true }).click()
+    await page.getByRole('heading', { name: 'Resultado da cotação', exact: true }).waitFor()
+    assert.equal(await page.getByRole('heading', { name: 'Resultado da comparação', exact: true }).count(), 0)
+    assert.equal(await row('Valor contratado').locator('td').count(), 1)
+    const singleQuote = await page.locator('.credit-results').first().innerText()
+    for (const width of [390, 820, 1440]) {
+      await page.setViewportSize({ width, height: 1000 })
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `single quote overflow/${width}`)
+      await page.screenshot({ path: path.join(out, `single-quote-${width}.png`), fullPage: true })
+    }
+    await page.getByRole('button', { name: '5', exact: true }).click()
+    assert.equal(await page.locator('.credit-card').count(), 5)
+    await compare()
+    assert.equal(await row('Valor contratado').locator('td').count(), 5)
+    await page.getByRole('button', { name: '1', exact: true }).click()
+    await page.getByRole('button', { name: 'Gerar cotação', exact: true }).click()
+    assert.equal(await page.locator('.credit-results').first().innerText(), singleQuote, 'cotação preservada após 1 → 5 → 1')
     await page.getByRole('button', { name: '4', exact: true }).click()
     assert.equal(await page.locator('.credit-card').count(), 4)
     // Modalidade de cada coluna: troca para BNDES e confere os campos próprios.
@@ -73,7 +94,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     }
     const trigger = page.getByRole('button', { name: 'Apresentar comparação', exact: true })
     await trigger.click()
-    const dialog = page.getByRole('dialog', { name: 'Comparador de Crédito' })
+    const dialog = page.getByRole('dialog', { name: 'Necessidade do Cliente' })
     await dialog.waitFor()
     await page.screenshot({ path: path.join(out, 'presentation.png') })
     for (const width of [390, 820, 1440]) {
@@ -96,7 +117,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await page.goBack(); await page.locator('#credit-title').waitFor()
     await page.goForward(); await page.locator('#calc-title').waitFor()
     assert.deepEqual(errors, [])
-    fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['2 a 5 colunas', 'modalidade por coluna', 'invalid outputs hidden', 'net equivalence', 'CDI scenarios', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
+    fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['1 a 5 operações', 'cotação individual e retorno 1 → 5 → 1', 'cotação individual 390/820/1440', 'modalidade por coluna', 'invalid outputs hidden', 'net equivalence', 'CDI scenarios', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
     console.log('Credit comparator browser checks passed')
   } catch (error) {
     if (page) { await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true }).catch(() => {}); fs.writeFileSync(path.join(out, 'failure.txt'), String(error)) }

@@ -32,7 +32,7 @@ function GiroIcon() {
 
 const CALCS = [
   { id: 'finame-materiais', title: 'BNDES', sub: 'Simular Finame, comparar custos e consultar taxas', Icon: FinameIcon },
-  { id: 'comparador-credito', title: 'Comparador de Crédito', sub: 'De 2 a 5 modalidades lado a lado: custo, CET e fluxo', Icon: CreditIcon },
+  { id: 'comparador-credito', title: 'Necessidade do Cliente', sub: 'De 1 a 5 operações: cotação, custo, CET e fluxo', Icon: CreditIcon },
   { id: 'operacao-di', title: 'Operação x DI', sub: 'Pré, % do CDI ou CDI + spread contra o DI da curva B3', Icon: OperacaoDiIcon },
   { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },

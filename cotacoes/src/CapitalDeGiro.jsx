@@ -85,7 +85,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
       <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="calc-h" className="cx-title"><span>Capital de giro</span></h2></div>
       <Help title="Capital de Giro: cálculo e premissas">
         <p>Operação prefixada com juros por dias corridos na base de 30 dias. O vencimento passa ao próximo dia útil conforme a praça do contrato. No Bullet, o pagamento acontece no fim do prazo.</p>
-        <p>Prazo total e carência em meses, como no Comparador de Crédito: parcelas = prazo − carência; a primeira vence um mês depois do fim da carência. Os juros da carência são somados ao saldo.</p>
+        <p>Prazo total e carência em meses, como na seção Necessidade do Cliente: parcelas = prazo − carência; a primeira vence um mês depois do fim da carência. Os juros da carência são somados ao saldo.</p>
         <p>Os custos à vista são abatidos na liberação. Custos financiados compõem o saldo e as parcelas. O CET é anual, calculado sobre o fluxo em dias corridos na base de 365 dias. O CET do contrato prevalece.</p>
         <p>O IOF é calculado pelo principal de cada parcela e pelos dias corridos, com limite de 365 dias. À vista, é abatido na liberação. Quando incorporado ao principal da mesma operação, o IOF integra o saldo financiado e o valor total para o limite do Simples Nacional.</p>
         <p>{PRACA_AJUDA}</p>
