@@ -18,7 +18,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.deepEqual((await nav.locator(':scope > button, :scope > .more-tab > button').allTextContents()).map(s=>s.trim()),expected)
    for(const button of await nav.locator(':scope > button, :scope > .more-tab > button').all()) {
     const bounds=await button.boundingBox()
-    assert.ok(bounds.width>=44&&bounds.height>=44,'primary touch target at least 44px')
+    assert.ok(bounds.width>=44&&bounds.height>=44,`${width}/${theme}: ${await button.innerText()} touch target ${bounds.width}×${bounds.height}, expected at least 44px`)
     assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1,'primary button within viewport')
     assert.equal(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true,'primary label not clipped')
    }

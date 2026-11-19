@@ -64,3 +64,8 @@
   .nav-top nav.tabs > button,.nav-top nav.tabs > .more-tab > button { padding:8px 1px; min-height:54px; font-size:clamp(.65rem,2.8vw,.75rem); white-space:normal; }
   .nav-top nav.tabs > .more-tab > button { width:100%; }
 }
+/* Rótulos curtos também mantêm área de toque no desktop compacto. */
+@media (min-width:1000px) {
+  .term-head .topbar-tabs.priority-desktop > button,
+  .term-head .topbar-tabs.priority-desktop > .more-tab > button { min-width:44px; min-height:44px; flex-shrink:0; }
+}
