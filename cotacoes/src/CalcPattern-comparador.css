@@ -64,8 +64,11 @@
 /* Resultado: o único quadro com borda laranja; faixa azul-marinho sem linha laranja.
    Fica abaixo dos dados, em largura total: compara de 2 a 5 modalidades lado a lado e não cabe numa coluna de 400 px. */
 :root[data-theme] body .credit-workspace .credit-result-box { margin:16px 0 0; border:2px solid var(--cp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); color:var(--bw-ink); }
-:root[data-theme] body .credit-workspace .credit-result-head { padding:12px 16px; background:var(--cp-navy); color:#fff; }
+:root[data-theme] body .credit-workspace .credit-result-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; background:var(--cp-navy); color:#fff; }
 :root[data-theme] body .credit-workspace .credit-result-head h3 { margin:0; color:#fff; font-size:1.05rem; font-weight:700; }
+:root[data-theme] body .credit-workspace a.credit-email { flex:none; color:#fff; }
+:root[data-theme] body .credit-workspace a.credit-email:focus-visible { outline:2px solid var(--cp-orange); outline-offset:2px; }
+:root[data-theme] body .credit-workspace a.credit-email[aria-disabled="true"] { opacity:.55; cursor:default; }
 :root[data-theme] body .credit-workspace .credit-result-body { display:flex; flex-direction:column; gap:12px; padding:14px; min-width:0; }
 :root[data-theme] body .credit-workspace .credit-result-status { margin:0; color:var(--bw-mut); font-size:.8rem; line-height:1.45; }
 :root[data-theme] body .credit-workspace .credit-result-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; padding-top:12px; border-top:1px solid var(--bw-line); }

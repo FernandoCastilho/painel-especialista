@@ -11,7 +11,7 @@ import './LinhaMestra.css'
 const SYSTEMS = [['price', 'Price'], ['sac', 'SAC'], ['bullet', 'Bullet capitalizado']]
 const LABELS = { value: 'Valor da operação', term: 'Prazo total', grace: 'Carência', system: 'Amortização', start: 'Data da liberação', praca: 'Praça do contrato' }
 
-export default function LinhaMestra({ prefix, values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, children }) {
+export default function LinhaMestra({ prefix, title = 'Linha mestra · necessidade do cliente', values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, children }) {
   const id = key => `${prefix}-${key}`
   const label = key => labels[key] ?? LABELS[key]
   const invalid = key => ({ 'aria-invalid': !!errors[key], ...(errors[key] ? { 'aria-describedby': `${id(key)}-err` } : {}) })
@@ -30,7 +30,7 @@ export default function LinhaMestra({ prefix, values, onChange, fields = ['value
   }
   return <section className="lm" aria-labelledby={`${prefix}-lm-title`}>
     <header className="lm-head">
-      <h3 id={`${prefix}-lm-title`}>Linha mestra · necessidade do cliente</h3>
+      <h3 id={`${prefix}-lm-title`}>{title}</h3>
       <div className="lm-head-side">
         {note && <small>{note}</small>}
         {onClear && <button type="button" className="lm-clear" onClick={onClear}>Limpar</button>}
