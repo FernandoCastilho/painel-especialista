@@ -391,6 +391,16 @@ jobs:
           REAL_CLIPBOARD: '1'
         run: node scripts/smoke-capture-paste.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/colagem.log"
         shell: bash
+      - name: Microteste isolado de referência viewport sem CDP secundário
+        id: viewport_micro
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 2
+        env:
+          CAPTURE_QA_OUTPUT: ${{ runner.temp }}/qa-clipboard-capture/viewport-micro
+        run: |
+          mkdir -p "$CAPTURE_QA_OUTPUT"
+          node scripts/smoke-capture-viewport-micro.cjs 2>&1 | tee "$CAPTURE_QA_OUTPUT/diagnostico.log"
+        shell: bash
       - name: Capturas, métricas de fidelidade e prova de colagem
         if: ${{ !cancelled() && steps.serve.outcome != 'skipped' }}
         uses: actions/upload-artifact@v4
