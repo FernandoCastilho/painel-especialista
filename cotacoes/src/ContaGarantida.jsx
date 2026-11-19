@@ -5,9 +5,11 @@ import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import ComparativoAlongamento from './ComparativoAlongamento.jsx'
-import { CG_CET_DAYS, CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, parseContaGarantidaForm } from './contaGarantida.js'
+import { CG_CET_DAYS, CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, cgToday, parseContaGarantidaForm } from './contaGarantida.js'
+import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import './ContaGarantida.css'
 import './CalcPattern-conta-garantida.css'
+import CalcBack from './CalcBack.jsx'
 
 const brl = n => n == null ? '—' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const pct = n => `${nbr5891(n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
@@ -17,11 +19,15 @@ export function ContaGarantidaIcon() {
 }
 export default function ContaGarantida({ onBack }) {
   const [form, setForm] = useState(cgInitialForm)
+  // Linha mestra comum (19/11/2026): na utilização única, o valor e a data vêm dela e passam para as outras calculadoras.
+  const [lm, setLm, clearLm] = useLinhaMestra(cgToday())
+  const single = form.mode === 'single'
+  const filled = single ? { ...form, amount: lm.value, start: lm.start } : form
   const [comparing, setComparing] = useState(false)
   const [page, setPage] = useState(0)
   const nextId = useRef(0)
   const [visited, setVisited] = useState({})
-  const { errors: found, warnings, params, result: calculation, cet } = parseContaGarantidaForm({ ...form, rateBase: '30', conversion: 'proportional', status: 'performing' })
+  const { errors: found, warnings, params, result: calculation, cet } = parseContaGarantidaForm({ ...filled, rateBase: '30', conversion: 'proportional', status: 'performing' })
   const result = calculation?.ok ? calculation : null
   // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
   // Erros que dependem de outros campos (IOF, data final, data do lançamento) aparecem quando um desses campos já foi visitado.
@@ -35,6 +41,7 @@ export default function ContaGarantida({ onBack }) {
     : form.mode === 'ledger' && missing.every(key => key === 'rate' || key.startsWith('row-')) ? 'Preencha os lançamentos e a taxa do contrato para ver o resultado.'
       : 'Preencha os campos que faltam para ver o resultado.'
   const set = (key, value) => { setForm(old => ({ ...old, [key]: value })); setPage(0) }
+  const changeLm = (key, value) => { setLm(key, value); visit(key === 'value' ? 'amount' : key); setPage(0) }
   const control = key => ({ id: `cg-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `cg-${key}-hint cg-${key}-error`, onBlur: () => visit(key) })
   const field = (key, label, input, hint = '', status = '') => <div className="cx-field" key={key}><div className="cx-field-label"><label htmlFor={`cg-${key}`}>{label}</label>{hint && <CalculatorHelp title={label}><p>{hint}</p></CalculatorHelp>}</div>{input}<p id={`cg-${key}-hint`} className={status ? 'cx-hint' : 'sr-only'}>{status || hint}</p><p id={`cg-${key}-error`} className="cx-error" role={errors[key] ? 'alert' : undefined}>{errors[key] || ''}</p></div>
   const input = (key, label, hint, type = 'text', status = '') => field(key, label, <input {...control(key)} type={type} inputMode={type === 'text' ? 'decimal' : undefined} value={form[key]} onChange={e => set(key, e.target.value)} />, hint, status)
@@ -48,8 +55,7 @@ export default function ContaGarantida({ onBack }) {
   const pages = result ? Math.ceil(result.rows.length / 31) : 0
   const safePage = Math.min(page, Math.max(0, pages - 1))
   return <section className="cx cx-cg bw calc-standard calc-workspace" aria-labelledby="cg-heading">
-    <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
-    <div className="bw-heading calc-workspace-heading"><h2 id="cg-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Conta Garantida</span></h2><CalculatorHelp title="Conta Garantida"><p>Simule uma utilização por prazo ou registre utilizações e amortizações por data. Veja o saldo diário, os juros e as duas parcelas do IOF.</p><p>Estimativa para crédito rotativo adimplente, com reutilização contratualmente prevista. Juros e IOF são pagos à parte, nunca incorporados ao saldo. Informe a taxa mensal da proposta e confira as convenções. Não é extrato nem cotação bancária.</p><p>CET: informe o limite contratado. Pela Resolução CMN 4.881/2020, art. 6º, o crédito rotativo calcula o CET com prazo de 30 dias e o limite pactuado. Regra aplicada conforme o resumo do painel; confira no texto da norma.</p><p>Os modos Utilização única e Lançamentos por dia simulam o rotativo. Comparar com parcelado estima sua substituição por um novo giro de principal definido. Nenhum modo calcula inadimplência ou renegociação.</p></CalculatorHelp></div>
+    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cg-heading" className="cx-title"><span>Conta Garantida</span></h2></div><CalculatorHelp title="Conta Garantida"><p>Simule uma utilização por prazo ou registre utilizações e amortizações por data. Veja o saldo diário, os juros e as duas parcelas do IOF.</p><p>Estimativa para crédito rotativo adimplente, com reutilização contratualmente prevista. Juros e IOF são pagos à parte, nunca incorporados ao saldo. Informe a taxa mensal da proposta e confira as convenções. Não é extrato nem cotação bancária.</p><p>CET: informe o limite contratado. Pela Resolução CMN 4.881/2020, art. 6º, o crédito rotativo calcula o CET com prazo de 30 dias e o limite pactuado. Regra aplicada conforme o resumo do painel; confira no texto da norma.</p><p>Os modos Utilização única e Lançamentos por dia simulam o rotativo. Comparar com parcelado estima sua substituição por um novo giro de principal definido. Nenhum modo calcula inadimplência ou renegociação.</p></CalculatorHelp></div>
     <p className="cg-notice">{comparing ? 'Compare encargos, parcelas e capacidade de pagamento. Estimativa, sem contratação ou CET.' : 'Estimativa para operação adimplente e rotativa. Não é extrato nem cotação bancária. O CET aparece quando você informa o limite contratado.'}</p>
     <div className="cg-modes" role="group" aria-label="Tipo de simulação">
       <button type="button" aria-pressed={!comparing && form.mode === 'single'} onClick={() => { setComparing(false); set('mode', 'single') }}>Utilização única</button>
@@ -57,25 +63,20 @@ export default function ContaGarantida({ onBack }) {
       <button type="button" aria-pressed={comparing} onClick={() => setComparing(true)}>Comparar com parcelado</button>
     </div>
     {/* Tela recém-aberta: dica curta no topo do que preencher, sem vermelho e sem valores de exemplo. Some quando a pessoa começa. */}
-    {!comparing && pending && !flagged && Object.keys(visited).length === 0 && <p className="cg-notice cg-guide cg-start">Para começar, preencha os quadros 1 e 2. O resultado aparece ao lado, no computador, ou logo abaixo deles, no celular.</p>}
+    {!comparing && pending && !flagged && Object.keys(visited).length === 0 && <p className="cg-notice cg-guide cg-start">Para começar, confira a linha mestra e informe a taxa do contrato. O resultado aparece ao lado, no computador, ou logo abaixo, no celular.</p>}
     <div hidden={!comparing}><ComparativoAlongamento /></div>
     {!comparing && <>
     {/* Padrão visual de 18/11/2026: dados à esquerda e resultado ao lado (computador largo) ou abaixo (telas menores). Só apresentação. */}
     <div className="cg-workspace">
     <div className="cg-inputs">
-    <article className="desk-panel cx-panel">
-      <header className="cx-heading"><h3>1. {form.mode === 'single' ? 'Valor e período de utilização' : 'Período e lançamentos'}</h3><CalculatorHelp title={form.mode === 'single' ? 'Valor e período de utilização' : 'Período e lançamentos'}>{form.mode === 'single' ? <p>A quitação é simulada no início da data final, antes dos encargos desse dia. O saldo inicial anterior à utilização é zero.</p> : <p>Valores em branco na tabela valem zero. Várias linhas da mesma data são somadas antes do cálculo, sem ordem intradia. Amortização reduz somente o valor utilizado; os pagamentos de juros e IOF ficam fora desta tabela. Para ver o IOF correto de uma conta existente, traga o histórico, não trate o saldo antigo como novo saque.</p>}</CalculatorHelp></header>
-      {form.mode === 'single' ? <>
-        <div className="cx-form">{select('dateMode', 'Como informar o prazo?', [['duration', 'Quantidade de dias corridos'], ['end', 'Data da quitação']], 'A quitação é simulada no início da data final, antes dos encargos desse dia.')}</div>
-        <div className="cx-wrap cg-entry-wrap" role="region" aria-label="Tabela de utilização única" tabIndex={0}>
-          <table className="cx-matrix cg-entry cg-entry-single"><caption className="sr-only">Valor utilizado, data inicial e prazo</caption><thead><tr><th scope="col">Utilização</th><th scope="col">Data inicial</th><th scope="col">{form.dateMode === 'duration' ? 'Prazo' : 'Quitação'}</th></tr></thead><tbody><tr>
-            <td>{money('amount', 'Valor utilizado (R$)', 'Pode ser zero; não há valor presumido.')}</td>
-            <td>{input('start', 'Data da utilização', 'Saldo inicial anterior a esta data: zero.', 'date')}</td>
-            <td>{form.dateMode === 'duration' ? input('duration', 'Dias corridos de uso', 'Exemplo: 10 dias = data inicial + 10. A quitação ocorre antes da apuração do dia final.', 'text', `Quitação: ${dateLabel(params.end)}.`) : input('end', 'Data da quitação', 'O saldo é liquidado antes da apuração do dia.', 'date')}</td>
-          </tr></tbody></table>
-        </div>
-        {errors.end && form.dateMode === 'duration' && <p className="cx-error cx-pad">{errors.end}</p>}
-      </> : <>
+    {single ? <LinhaMestra prefix="cg" values={lm} onChange={changeLm} onClear={clearLm} fields={['value', 'start']}
+      labels={{ value: 'Valor utilizado', start: 'Data da utilização' }} errors={{ value: errors.amount, start: errors.start }}>
+      {select('dateMode', 'Como informar o prazo?', [['duration', 'Quantidade de dias corridos'], ['end', 'Data da quitação']], 'A quitação é simulada no início da data final, antes dos encargos desse dia. O saldo inicial anterior à utilização é zero.')}
+      {form.dateMode === 'duration' ? input('duration', 'Dias corridos de uso', 'Exemplo: 10 dias = data inicial + 10. A quitação ocorre antes da apuração do dia final.', 'text', `Quitação: ${dateLabel(params.end)}.`) : input('end', 'Data da quitação', 'O saldo é liquidado antes da apuração do dia.', 'date')}
+      {errors.end && form.dateMode === 'duration' && <p className="cx-error lm-wide">{errors.end}</p>}
+    </LinhaMestra> : <article className="desk-panel cx-panel">
+      <header className="cx-heading"><h3>1. Período e lançamentos</h3><CalculatorHelp title="Período e lançamentos"><p>Valores em branco na tabela valem zero. Várias linhas da mesma data são somadas antes do cálculo, sem ordem intradia. Amortização reduz somente o valor utilizado; os pagamentos de juros e IOF ficam fora desta tabela. Para ver o IOF correto de uma conta existente, traga o histórico, não trate o saldo antigo como novo saque.</p></CalculatorHelp></header>
+
         <div className="cx-form">{input('start', 'Primeiro dia apurado', 'Saldo anterior: zero. Para saldo já utilizado, inclua o histórico desde a utilização original.', 'date')}{input('end', 'Último dia apurado, inclusive', 'Não gera amortização automática. O saldo final pode continuar em aberto.', 'date')}</div>
         <div className="cx-wrap cg-entry-wrap" role="region" aria-label="Tabela editável de utilizações e amortizações" tabIndex={0}>
           <table className="cx-matrix cg-entry"><caption className="sr-only">Lançamentos da conta garantida; valores em reais</caption><thead><tr><th scope="col">Data</th><th scope="col">Utilização</th><th scope="col">Amortização</th><th scope="col">Ação</th></tr></thead><tbody>{form.rows.map((row, index) => <tr key={row.id}>
@@ -87,11 +88,10 @@ export default function ContaGarantida({ onBack }) {
           </tr>)}</tbody></table>
         </div>
         <div className="cg-actions"><button type="button" className="cg-button" disabled={form.rows.length >= 500} onClick={addRow}>+ Adicionar lançamento</button><span className="cx-hint">{form.rows.length} de 500 linhas</span><CalculatorHelp title="Adicionar lançamentos"><p>Até 500 linhas. Lance somente utilização e amortização do principal. Juros e IOF são calculados separadamente.</p></CalculatorHelp></div>
-      </>}
-    </article>
+    </article>}
 
     <article className="desk-panel cx-panel cg-narrow">
-      <header className="cx-heading"><h3>2. Juros e convenções do contrato</h3><CalculatorHelp title="Juros e convenções do contrato"><p>Informe a taxa contratual em percentual ao mês. Para a apuração proporcional, os juros de cada dia correspondem ao saldo utilizado × taxa mensal ÷ 100 ÷ 30. O divisor 30 é fixo e não transforma o calendário real em meses de 30 dias. Juros não são capitalizados.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>{single ? 'Condições do produto · juros' : '2. Juros e convenções do contrato'}</h3><CalculatorHelp title="Juros e convenções do contrato"><p>Informe a taxa contratual em percentual ao mês. Para a apuração proporcional, os juros de cada dia correspondem ao saldo utilizado × taxa mensal ÷ 100 ÷ 30. O divisor 30 é fixo e não transforma o calendário real em meses de 30 dias. Juros não são capitalizados.</p></CalculatorHelp></header>
       <div className="cx-form">
         {input('rate', 'Taxa do contrato (% a.m.)', 'Taxa mensal em percentual, apurada proporcionalmente com base 30 e sem capitalização. Obrigatória. 0 significa sem juros; vazio não significa zero.')}
         {money('limit', 'Limite contratado (R$)', 'Opcional. Usado só para o CET: pela Resolução CMN 4.881/2020, art. 6º, o rotativo calcula o CET com prazo de 30 dias sobre o limite pactuado. Não muda o resultado do período.')}
@@ -101,7 +101,7 @@ export default function ContaGarantida({ onBack }) {
     </article>
 
     <article className="desk-panel cx-panel cg-narrow">
-      <header className="cx-heading"><h3>3. Referência de IOF</h3><CalculatorHelp title="Referência de IOF"><p>Juros e IOF são pagos à parte, sem capitalização ou financiamento no saldo utilizado. Operação rotativa por saldos diários: não se aplica um teto genérico de 365 dias. Os dois modos mantêm a mesma natureza rotativa, mesmo quando há apenas um saque.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>{single ? 'Condições do produto · IOF' : '3. Referência de IOF'}</h3><CalculatorHelp title="Referência de IOF"><p>Juros e IOF são pagos à parte, sem capitalização ou financiamento no saldo utilizado. Operação rotativa por saldos diários: não se aplica um teto genérico de 365 dias. Os dois modos mantêm a mesma natureza rotativa, mesmo quando há apenas um saque.</p></CalculatorHelp></header>
       <div className="cx-form">
         {select('taxProfile', 'Enquadramento da operação', CG_TAX_PROFILES.map(p => [p.id, p.label]), 'Referências consultadas em 05/11/2026. Não há atualização automática nem tratamento de mudanças de alíquota dentro do período.')}
         <div className="cg-tax-reference"><span>IOF diário automático</span><b>{params.iofDaily == null ? '—' : `${String(params.iofDaily).replace('.', ',')}% ao dia`}</b><span>IOF adicional automático</span><b>{params.iofAdditional == null ? '—' : `${String(params.iofAdditional).replace('.', ',')}% sobre acréscimos diários`}</b></div>
@@ -187,7 +187,7 @@ export default function ContaGarantida({ onBack }) {
       <li>Sem arredondamento intermediário; a exibição é arredondada para centavos. A soma dos centavos exibidos pode diferir do total calculado com precisão completa.</li>
       <li>CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): o limite contratado é liberado na data inicial e devolvido em 30 dias corridos, com juros de 30 dias pela taxa e contagem de dias desta tela e o IOF diário e adicional desse período. O IOF adicional é cobrado na utilização e sai do valor líquido; juros e IOF diário, apurados dia a dia, entram no pagamento do 30º dia. Não há tarifas neste simulador. O CET é a taxa anual que iguala o líquido ao valor presente do pagamento, em dias corridos/365; ao mês, a equivalente composta. Confira a regra no texto da norma.</li>
       <li>Não inclui indexadores variáveis como CDI, spread variável, mora, multa, excesso de limite, renegociação, isenções não confirmadas nem taxas que mudam no período. As regras de inadimplência dos §§ 18–19 não são simuladas. Contratos com principal definido têm base de IOF diferente.</li>
-      <li>Os dados ficam somente nesta tela. Sair da calculadora ou recarregar apaga o rascunho. Nenhum valor informado é enviado a serviços ou incluído na busca.</li>
+      <li>Valor e data da utilização ficam na linha mestra, comum às calculadoras de empréstimo, só nesta aba do navegador; fechar a aba ou clicar em Limpar apaga. Os demais campos ficam somente nesta tela. Nenhum valor informado é enviado a serviços ou incluído na busca.</li>
     </ul><p>Fontes consultadas em 05/11/2026: {CG_SOURCES.map((source, index) => <span key={source.url}>{index > 0 && ' · '}<a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></span>)}.</p></CalculatorHelp></div>
     </>}
   </section>

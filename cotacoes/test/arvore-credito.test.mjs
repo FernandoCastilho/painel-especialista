@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -163,7 +164,7 @@ async function carregarTela() {
   const { code } = await transform(raw, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const mod = { exports: {} }
   const req = (n) => (n === './arvoreCredito.js' ? ac : n === './CalculatorHelp.jsx' ? { __esModule: true, default: ({ children }) => createElement('aside', null, children) } : n === './ExpandablePanel.jsx' ? { __esModule: true, default: ({ title, children }) => createElement('div', { 'data-title': title }, children) } : n === './MoneyInput.jsx' ? { __esModule: true, default: (p) => createElement('input', { id: p.id, value: p.value, readOnly: true }) } : n === './moneyInput.js' ? { parseMoneyInput: (t) => ({ ok: true, value: Number(String(t).replace(/\D/g, '')) || 0 }) } : require(n))
-  runInNewContext(code, { module: mod, exports: mod.exports, require: req })
+  runInNewContext(code, { module: mod, exports: mod.exports, require: withCalcBack(req) })
   return mod.exports
 }
 

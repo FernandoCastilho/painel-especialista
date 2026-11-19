@@ -1,0 +1,10 @@
+/* Título da calculadora com o ícone de voltar à esquerda. */
+.calc-title-row { display:flex; align-items:center; gap:4px; min-width:0; }
+.calc-title-row > h2 { min-width:0; }
+.calc-back { flex:none; display:inline-grid; place-items:center; width:36px; height:36px; margin:-4px 0 -4px -8px; padding:0; border:0; border-radius:50%; background:transparent; color:inherit; opacity:.7; cursor:pointer; }
+.calc-back:hover, .calc-back:focus-visible { opacity:1; background:color-mix(in srgb, currentColor 10%, transparent); }
+@media print { .calc-back { display:none; } }
+.sl-calc .calc-back { display:none; }
+/* BNDES: logo em cima do nome; a seta acompanha o logo. */
+.calc-title-row:has(.bndes-official-logo) { align-items:flex-start; }
+.calc-title-row:has(.bndes-official-logo) > .calc-back { margin-top:10px; }

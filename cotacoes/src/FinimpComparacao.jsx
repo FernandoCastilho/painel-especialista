@@ -11,6 +11,7 @@ import { parseDecimal } from './emprestimo.js'
 import { formatFinimpRate, formatFinimpPercent as pct, formatFinimpDelta as delta } from './finimpPresentation.js'
 import './FinimpComparacao.css'
 import './CalcPattern-finimp.css'
+import CalcBack from './CalcBack.jsx'
 
 export function FinimpIcon() { return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 7h18M17 3l4 4-4 4M21 17H3m4-4-4 4 4 4" /></svg> }
 export default function FinimpComparacao({ onBack }) {
@@ -47,10 +48,9 @@ export default function FinimpComparacao({ onBack }) {
   const goalMet = goal.ok && b.annualRate !== null ? b.annualRate <= goal.annualRate * (1 + 1e-12) + 1e-12 : null
   return <section className="cx fi bw calc-standard calc-workspace" aria-labelledby="fi-heading">
     <div className="cx-toolbar">
-      <button type="button" className="cx-back" onClick={onBack}>‹ Calculadoras</button>
       <button type="button" className="cx-back" onClick={() => { finimpDraftStore.reset(); setTouched({}); setSelectedDays(null); setFocusedField(null) }}>Nova simulação</button>
     </div>
-    <div className="bw-heading calc-workspace-heading"><h2 id="fi-heading" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>FINIMP · comparação de propostas</span></h2>{help('simulation')}</div>
+    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="fi-heading" className="cx-title"><span>FINIMP · comparação de propostas</span></h2></div>{help('simulation')}</div>
     {/* Tela recém-aberta: dica curta do que preencher, sem valores de exemplo. Some quando as condições estão completas. */}
     <div className="fi-inputs">
     <article className="desk-panel cx-panel fi-box"><header><h3 className="cx-heading"><span>Condições</span></h3></header>

@@ -5,11 +5,15 @@ import { parseMoneyInput } from './moneyInput.js'
 import { SYSTEMS, parseDecimal } from './emprestimo.js'
 import { cetPct, dmy } from './format.js'
 import { giroOperation } from './creditComparison.js'
-import { cgAddDays, cgDate, cgToday } from './contaGarantida.js'
+import { cgToday } from './contaGarantida.js'
+import { addMonths } from './creditModalities.js'
+import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
+import { lmSchedule } from './linhaMestra.js'
 import { resolveCreditIof } from './iofRules.js'
-import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
+import { PRACA_AJUDA, pracaCalendars } from './pracaContrato.js'
+import './CalculatorStandard.css'
 import './CapitalDeGiro.css'
-import './CalcPattern-giro.css'
+import CalcBack from './CalcBack.jsx'
 
 const EXPENSES = [
   { id: 'iof', label: 'IOF' },
@@ -18,8 +22,6 @@ const EXPENSES = [
   { id: 'other', label: 'Outras despesas' },
 ]
 const GUARANTEES = ['A definir', 'Sem garantia', 'Aval', 'Recebíveis', 'Aplicação financeira', 'Imóvel', 'Outras']
-const DAY = 86400000
-const periodDays = (from, to) => cgDate(from) && cgDate(to) ? (cgDate(to) - cgDate(from)) / DAY : null
 const formatMoney = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const brl = value => formatMoney.format(value)
 const percent = rate => `${cetPct(rate * 100)}% a.a.`
@@ -33,20 +35,24 @@ function Field({ id, label, issue, children }) {
 }
 
 export default function CapitalDeGiro({ onBack, apresentacao }) {
-  const [form, setForm] = useState(() => {
-    const start = cgToday()
-    return { value: '100.000,00', n: '12', rate: '2,00', unit: 'am', system: 'price',
-      start, firstDue: cgAddDays(start, 30), praca: PRACA_PADRAO, profile: 'pj', eligible: false,
-      guarantee: GUARANTEES[0], costs: { fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }
-  })
+  // Valor, prazo, carência, amortização, data e praça vêm da linha mestra comum (19/11/2026); o resto é do produto.
+  const [lm, setLm, clearLm] = useLinhaMestra(cgToday())
+  const [form, setForm] = useState(() => ({ rate: '2,00', unit: 'am', firstDue: '', profile: 'pj', eligible: false,
+    guarantee: GUARANTEES[0], costs: { fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }))
   const [dirty, setDirty] = useState(false)
   const change = patch => {
     setForm(previous => ({ ...previous, ...patch }))
     if (!apresentacao) setDirty(true)
   }
+  const changeLm = (key, value) => { setLm(key, value); if (!apresentacao) setDirty(true) }
   const bind = key => ({ value: form[key], onChange: event => change({ [key]: event.target.value }) })
-  const principal = parseMoneyInput(form.value)
-  const n = /^\d+$/.test(form.n.trim()) ? Number(form.n) : null
+  const principal = parseMoneyInput(lm.value)
+  // Regra do Comparador (decisão de 19/11/2026): prazo total e carência em meses; parcelas = prazo − carência;
+  // 1º vencimento = liberação + carência + 1 mês (bullet: no fim do prazo). O 1º vencimento informado à mão prevalece.
+  const schedule = lmSchedule(lm)
+  const n = schedule.ok ? schedule.n : null
+  const autoDue = schedule.ok ? addMonths(lm.start, schedule.dueMonths) : null
+  const firstDue = form.firstDue || autoDue
   const rate = parseDecimal(form.rate)
   const expenses = EXPENSES.filter(cost => cost.id !== 'iof').map(cost => ({ ...cost,
     parsed: parseMoneyInput(form.costs[cost.id], { optional: true }),
@@ -54,81 +60,42 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const sumExpenses = financed => expenses.reduce((sum, item) =>
     sum + (!!form.timings[item.id] === financed ? item.parsed.value : 0), 0)
   const financedFees = sumExpenses(true)
-  const tax = resolveCreditIof({ date: form.start, profile: form.profile, operationValue: principal.value + financedFees, eligible: form.eligible })
-  const untilFirst = periodDays(form.start, form.firstDue)
-  const grace = untilFirst === null ? 0 : Math.max(0, untilFirst - 30)
-  const isBullet = form.system === 'bullet'
+  const tax = resolveCreditIof({ date: lm.start, profile: form.profile, operationValue: principal.value + financedFees, eligible: form.eligible })
+  const isBullet = lm.system === 'bullet'
   const errors = {
     value: principal.ok && principal.value > 0 ? null : principal.error || 'Informe um valor maior que zero.',
-    n: n >= 1 && n <= 600 ? null : 'Informe o prazo em meses, de 1 a 600.',
+    n: schedule.ok || /carência/.test(schedule.error) ? null : schedule.error,
+    grace: schedule.ok || !/carência/.test(schedule.error) ? null : schedule.error,
     rate: rate !== null && rate <= 1000 ? null : 'Informe uma taxa entre 0% e 1.000%.',
-    dates: untilFirst > 0 ? null : 'Informe a liberação e o primeiro vencimento posterior à liberação.',
+    dates: firstDue && lm.start && firstDue > lm.start ? null : 'Informe a liberação e o primeiro vencimento posterior à liberação.',
     iof: tax.ok ? null : tax.error,
   }
   for (const item of expenses) errors[item.id] = item.parsed.ok ? null : item.parsed.error
   const hasErrors = Object.values(errors).some(Boolean)
-  const params = { value: principal.value, n, rate, unit: form.unit, start: form.start, firstDue: form.firstDue,
+  const params = { value: principal.value, n, rate, unit: form.unit, start: lm.start, firstDue,
     profile: form.profile, eligible: form.eligible, fees: sumExpenses(false), financedFees,
-    financeIof: !!form.timings.iof, calendars: pracaCalendars(form.praca) }
-  const calculation = !dirty && !hasErrors ? giroOperation({ ...params, system: form.system }) : null
+    financeIof: !!form.timings.iof, calendars: pracaCalendars(lm.praca) }
+  const calculation = !dirty && !hasErrors ? giroOperation({ ...params, system: lm.system }) : null
   const result = calculation?.ok ? calculation : null
   const moneyText = value => result ? brl(value) : '—'
   const fieldError = (key, id) => ({ 'aria-invalid': !!errors[key], 'aria-describedby': errors[key] ? `${id}-err` : undefined })
-  const updateStart = event => {
-    const start = event.target.value
-    change({ start, firstDue: cgAddDays(start, untilFirst > 0 ? untilFirst : 30) ?? '' })
-  }
 
-  return <section className="giro-screen" aria-labelledby="calc-h">
-    <button type="button" className="giro-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
-    <header className="giro-header">
-      <p>Painel do Especialista</p>
-      <div><h2 id="calc-h">Capital de giro</h2>
-        <Help title="Capital de Giro: cálculo e premissas">
-          <p>Operação prefixada com juros por dias corridos na base de 30 dias. O vencimento passa ao próximo dia útil conforme a praça do contrato. No Bullet, o pagamento acontece no último vencimento.</p>
-          <p>Os custos à vista são abatidos na liberação. Custos financiados compõem o saldo e as parcelas. O CET é anual, calculado sobre o fluxo em dias corridos na base de 365 dias. O CET do contrato prevalece.</p>
-          <p>O IOF é calculado pelo principal de cada parcela e pelos dias corridos, com limite de 365 dias. À vista, é abatido na liberação. Quando incorporado ao principal da mesma operação, o IOF integra o saldo financiado e o valor total para o limite do Simples Nacional.</p>
-          <p>{PRACA_AJUDA}</p>
-        </Help>
-      </div>
-    </header>
+  return <section className="cx bw calc-standard calc-workspace giro-screen" aria-labelledby="calc-h">
+    <div className="bw-heading calc-workspace-heading giro-header">
+      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="calc-h" className="cx-title"><span>Capital de giro</span></h2></div>
+      <Help title="Capital de Giro: cálculo e premissas">
+        <p>Operação prefixada com juros por dias corridos na base de 30 dias. O vencimento passa ao próximo dia útil conforme a praça do contrato. No Bullet, o pagamento acontece no fim do prazo.</p>
+        <p>Prazo total e carência em meses, como no Comparador de Crédito: parcelas = prazo − carência; a primeira vence um mês depois do fim da carência. Os juros da carência são somados ao saldo.</p>
+        <p>Os custos à vista são abatidos na liberação. Custos financiados compõem o saldo e as parcelas. O CET é anual, calculado sobre o fluxo em dias corridos na base de 365 dias. O CET do contrato prevalece.</p>
+        <p>O IOF é calculado pelo principal de cada parcela e pelos dias corridos, com limite de 365 dias. À vista, é abatido na liberação. Quando incorporado ao principal da mesma operação, o IOF integra o saldo financiado e o valor total para o limite do Simples Nacional.</p>
+        <p>{PRACA_AJUDA}</p>
+      </Help>
+    </div>
 
     <div className="giro-columns">
       <form className="giro-form" noValidate onSubmit={event => { event.preventDefault(); setDirty(false) }}>
-        <fieldset className="giro-card">
-          <legend>Dados da operação</legend>
-          <div className="giro-grid">
-            <Field id="cx-value" label="Valor solicitado" issue={errors.value}>
-              <MoneyInput id="cx-value" {...fieldError('value', 'cx-value')} value={form.value} onChange={value => change({ value })} />
-            </Field>
-            <Field id="cx-n" label="Prazo" issue={errors.n}>
-              <div className="giro-input-unit"><input id="cx-n" inputMode="numeric" {...fieldError('n', 'cx-n')} {...bind('n')} /><span>meses</span></div>
-            </Field>
-            <Field id="cx-grace" label="Carência">
-              <div className="giro-input-unit"><input id="cx-grace" type="number" min="0" max="3630" step="1" inputMode="numeric"
-                placeholder={isBullet ? 'Pagamento único' : 'Sem carência'} disabled={isBullet} value={isBullet ? '' : grace || ''}
-                onChange={event => {
-                  const days = Number(event.target.value)
-                  if (Number.isInteger(days) && days >= 0 && days <= 3630) change({ firstDue: cgAddDays(form.start, 30 + days) ?? '' })
-                }} />{grace > 0 && !isBullet && <span>dias</span>}</div>
-            </Field>
-          </div>
-          <details className="giro-settings">
-            <summary>Datas e praça do contrato</summary>
-            <div className="giro-grid">
-              <Field id="cx-start" label="Data da liberação"><input id="cx-start" type="date" value={form.start} onChange={updateStart} /></Field>
-              <Field id="cx-firstDue" label="Primeiro vencimento mensal" issue={errors.dates}>
-                <input id="cx-firstDue" type="date" {...fieldError('dates', 'cx-firstDue')} {...bind('firstDue')} />
-              </Field>
-              <Field id="cx-praca" label="Praça do contrato">
-                <select id="cx-praca" {...bind('praca')}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
-              </Field>
-            </div>
-            <p>{PRACA_RESSALVA}</p>
-          </details>
-          {grace > 0 && !isBullet && <p className="giro-note">Carência de {grace} dias corridos além dos primeiros 30 dias. Os juros do período extra são somados ao saldo. O prazo informado corresponde ao número de parcelas mensais após a carência.</p>}
-        </fieldset>
-
+        <LinhaMestra prefix="cx" values={lm} onChange={changeLm} onClear={() => { clearLm(); if (!apresentacao) setDirty(true) }}
+          labels={{ value: 'Valor solicitado' }} errors={{ value: errors.value, term: errors.n, grace: errors.grace }} />
         <fieldset className="giro-card">
           <legend>Taxas, tributos e despesas</legend>
           <div className="giro-rate">
@@ -168,14 +135,15 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         </fieldset>
 
         <fieldset className="giro-card">
-          <legend>Condições da modalidade</legend>
+          <legend>Condições do produto</legend>
           <div className="giro-grid giro-grid-pair">
-            <Field id="cx-system" label="Amortização">
-              <select id="cx-system" {...bind('system')}>{SYSTEMS.map(system => <option key={system.id} value={system.id}>{system.label}</option>)}</select>
-              {isBullet && <p className="giro-note">Principal e juros pagos no vencimento.</p>}
+            <Field id="cx-firstDue" label={isBullet ? 'Vencimento (opcional)' : 'Primeiro vencimento (opcional)'} issue={errors.dates}>
+              <input id="cx-firstDue" type="date" {...fieldError('dates', 'cx-firstDue')} {...bind('firstDue')} />
+              <small className="giro-hint">{form.firstDue ? 'Data informada à mão.' : autoDue ? `Pela linha mestra: ${dmy(autoDue)}.` : 'Preencha prazo e carência.'}</small>
             </Field>
             <Field id="cx-frequency" label="Periodicidade">
               <input id="cx-frequency" readOnly value={isBullet ? 'Pagamento único' : 'Mensal'} />
+              {isBullet && <small className="giro-hint">Principal e juros pagos no vencimento.</small>}
             </Field>
           </div>
           <div className="giro-guarantee"><Field id="cx-guarantee" label="Garantia">
@@ -231,7 +199,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
           <table>
             <thead><tr><th scope="col">Amortização</th><th scope="col">Total pago</th><th scope="col">Juros totais</th><th scope="col">CET</th></tr></thead>
             <tbody>{SYSTEMS.filter(system => system.id !== 'bullet' || isBullet).map(system => {
-              const item = system.id === form.system ? result : giroOperation({ ...params, system: system.id })
+              const item = system.id === lm.system ? result : giroOperation({ ...params, system: system.id })
               return <tr key={system.id}><th scope="row">{system.label}</th><td>{item.ok ? brl(item.total) : '—'}</td><td>{item.ok ? brl(item.interest) : '—'}</td><td>{item.ok ? percent(item.cet) : '—'}</td></tr>
             })}</tbody>
           </table>

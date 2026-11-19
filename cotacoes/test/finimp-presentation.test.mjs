@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -33,8 +34,7 @@ const dependencies = {
   './FinimpComparacao.css': {},
   './CalcPattern-finimp.css': {},
 }
-runInNewContext(code, { module, exports: module.exports, require: name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : dependencies[name]) ?? require(name) })
-
+runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : dependencies[name]) ?? require(name)) })
 const nodes = node => !node || typeof node !== 'object' ? [] : Array.isArray(node) ? node.flatMap(nodes) : [node, ...nodes(node.props?.children)]
 const findAll = (tree, predicate) => nodes(tree).filter(predicate)
 const find = (tree, predicate) => findAll(tree, predicate)[0]

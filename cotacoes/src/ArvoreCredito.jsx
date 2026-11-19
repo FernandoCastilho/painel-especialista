@@ -9,6 +9,7 @@ import {
 } from './arvoreCredito.js'
 import './CalculatorStandard.css'
 import './ArvoreCredito.css'
+import CalcBack from './CalcBack.jsx'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 const um = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })
@@ -146,9 +147,8 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
 
   return (
     <section className="cx bw calc-standard calc-workspace ac" aria-labelledby="ac-h">
-      <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
       <div className="bw-heading calc-workspace-heading">
-        <h2 id="ac-h" className="cx-title"><strong aria-hidden="true">{'PME'}</strong><span>Árvore de Crédito</span></h2>
+        <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="ac-h" className="cx-title"><span>Árvore de Crédito</span></h2></div>
         <Help title="Árvore de Crédito: como usar">
           <p>Informe quem é o cliente, o que ele precisa e, se tiver, a tabela de faturamento e endividamento. A tela mostra até {MAX_FOLHA} possibilidades, na ordem combinada para cada necessidade: primeiro as mais baratas em que a empresa se enquadra, por último as linhas livres em reais.</p>
           <p>Cada possibilidade traz o que cobre, o que fica de fora, os impostos e a regra com fonte e data. As operações em que a empresa não se enquadra saem da folha, com o motivo.</p>

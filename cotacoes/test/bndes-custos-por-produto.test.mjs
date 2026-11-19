@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { CUSTOS_BNDES, PRODUTOS_BNDES, PERFIS_PAINEL, custosPermitidos, avaliarCusto, custoBndes } from '../src/bndesCustosPorProduto.js'
 import { CUSTOS, REGRAS, CUSTOS_FIXOS } from '../src/finameMateriais.js'
 import { LCDCAP_PROFILE } from '../src/bndesLcdCap.js'
+import { FINAME_FUNDING_OPTIONS } from '../src/finameFunding.js'
 
 // Transcrição literal da tabela da calculadora BNDES (foto de 18/11/2026). Ordem das colunas:
 // Custo Fixo, TFB, TFB TR, Pré 5, Pré 3, TFC, TFC MPME, TFC TR, TFBD, TLP, SELIC_LCD, SOFR.
@@ -64,9 +65,10 @@ test('calculadoras do painel só oferecem custos permitidos e usam a base da tab
     assert.ok(perfil.produtos.length > 0, perfil.perfil)
     for (const produto of perfil.produtos) for (const custo of perfil.custos) assert.equal(avaliarCusto(produto, custo).permitido, true, `${perfil.perfil}: ${produto}/${custo}`)
   }
-  // Finame Materiais oferece TFC, TFB e TLPCAP; todos aceitos pela linha do produto.
+  // Finame Materiais oferece TFC, TFB, TLP, Taxa LCD e TFBD; todos aceitos pela linha do produto.
   const materiais = PERFIS_PAINEL.find(p => p.perfil === 'finame-materiais')
-  for (const { id } of CUSTOS) assert.ok(materiais.custos.includes(id), id)
+  const naTabela = { tfc: 'tfc', tfb: 'tfb', tlp: 'tlp', lcd: 'selicLcd', tfbd: 'tfbd' }
+  for (const { id } of [...CUSTOS, ...FINAME_FUNDING_OPTIONS]) assert.ok(materiais.custos.includes(naTabela[id]), id)
   // Carência de até 12 meses com TFB, como na descrição da tabela.
   assert.equal(REGRAS.carenciaMaxTfbMeses, custoBndes('tfb').carenciaMaxMeses); assert.ok(CUSTOS_FIXOS.has('tfb'))
   // SELIC_LCD em base 252.

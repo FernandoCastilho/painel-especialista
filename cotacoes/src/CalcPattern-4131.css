@@ -8,7 +8,7 @@
 }
 
 /* "‹ Calculadoras" fora do quadro, acima dele (o botão continua dentro da seção, para a ordem do teclado). */
-:root[data-theme] body main.app .cx.bw.e4 { position:relative; margin-top:48px; overflow:visible; }
+:root[data-theme] body main.app .cx.bw.e4 { position:relative; margin-top:0; overflow:visible; }
 :root[data-theme] body main.app .cx.bw.e4 > .cx-back { position:absolute; left:0; bottom:calc(100% + 4px); margin:0; padding:0 12px 0 0; }
 
 /* Quadros de entrada: faixa azul-marinho, título branco em negrito e uma linha laranja (um destaque só). */
