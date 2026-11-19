@@ -21,7 +21,7 @@ const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
+  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './cdiFuturo.js': await import('../src/cdiFuturo.js'), './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
   for (const file of ['ExpandIcon.jsx', 'MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'LinhaMestra.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
@@ -291,4 +291,30 @@ test('nome aprovado identifica a tela, apresentação, navegação e busca sem r
   const index = await buildSearchIndex()
   const entry = index.documents.find(d => d.route === 'calculadora/comparador-credito')
   assert.equal(entry.title, 'Necessidade do Cliente: comparação de propostas, CET e garantias')
+})
+
+test('aplicação financeira vira a última coluna do quadro, com o saldo final no total', async t => {
+  const ui = await setup(t)
+  const fields = ui.find('InvestmentFields'); fields.props.set({ ...fields.props.invest, on: true }); await ui.render.settle()
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.find('Results'))
+  const table = html.match(/<table class="credit-table credit-matrix">([\s\S]*?)<\/table>/)[1]
+  const head = table.match(/<thead>([\s\S]*?)<\/thead>/)[1]
+  assert.ok(head.lastIndexOf('Aplicação financeira') > head.lastIndexOf('2. '), 'aplicação depois das operações')
+  for (const group of ['Taxas e custo efetivo', 'Valor e parcelas', 'Custos da operação', 'Prazo e fluxo', 'Caixa próprio', 'Garantia']) assert.ok(table.includes(group), group)
+  assert.match(table, /saldo final líquido/)
+  assert.match(table, /credit-invest-col/)
+})
+
+test('CDI base manual vem preenchido com a média da curva DI no prazo da linha mestra', async t => {
+  const ui = await setup(t)
+  await ui.change(2, modalities.newColumn('giro-cdi'))
+  const shared = ui.find('SharedFields'); shared.props.set({ ...shared.props.shared, term: '36' }); await ui.render.settle()
+  const manual = nodes(ui.render.value).find(n => n.type === 'label' && text(n).includes('Informar referência manual')).props.children[0]
+  manual.props.onChange({ target: { checked: true } }); await ui.render.settle()
+  const field = nodes(ui.render.value).find(n => n.type === 'input' && n.props.inputMode === 'decimal' && /^\d+,\d\d$/.test(n.props.value ?? ''))
+  assert.ok(field, 'campo preenchido')
+  const avg = Number(field.props.value.replace(',', '.'))
+  assert.ok(avg > 13 && avg < 15, `média ${avg}`)
+  assert.match(text(ui.render.value), /em 36 meses/)
 })
