@@ -40,20 +40,24 @@ test('acesso guardado: lê, grava, limpa e ignora lixo', () => {
   assert.equal(lerAcesso(st), null)
 })
 
-test('chamada ao script: monta o endereço e trata falha de rede sem liberar o acesso', async () => {
+test('chamada ao script: envia dados só no corpo e trata falha de rede', async () => {
   let pedido
-  const ok = await chamar('pedir', { email: 'a@b.com' }, { url: 'https://s/exec', fetchFn: async (u) => { pedido = u; return { json: async () => ({ ok: true }) } } })
+  const ok = await chamar('confirmar', { email: 'a@b.com', codigo: '123456' }, { url: 'https://s/exec', fetchFn: async (url, opcoes) => { pedido = { url, opcoes }; return { json: async () => ({ ok: true }) } } })
   assert.equal(ok.ok, true)
-  assert.equal(pedido, 'https://s/exec?acao=pedir&email=a%40b.com')
+  assert.equal(pedido.url, 'https://s/exec')
+  assert.equal(pedido.opcoes.method, 'POST')
+  assert.equal(pedido.opcoes.referrerPolicy, 'no-referrer')
+  assert.deepEqual(Object.fromEntries(pedido.opcoes.body), { acao: 'confirmar', email: 'a@b.com', codigo: '123456' })
   const falha = await chamar('pedir', {}, { url: 'https://s/exec', fetchFn: async () => { throw new Error('rede') } })
   assert.equal(falha.ok, false)
   assert.equal(falha.rede, true)
 })
 
 // ---- Script do Google, rodado com peças simuladas ----
-function criarScript({ bloqueados = [], diretos = [] } = {}) {
+function criarScript({ bloqueados = [], diretos = [], permitirGet = false } = {}) {
   const cache = new Map()
   const props = new Map()
+  if (permitirGet) props.set('PERMITIR_GET_LEGADO', 'true')
   const emails = []
   let cota = 100
   // Abas simuladas: cada uma guarda as linhas (a primeira é o título).
@@ -82,11 +86,34 @@ function criarScript({ bloqueados = [], diretos = [] } = {}) {
   }
   vm.createContext(ambiente)
   vm.runInContext(readFileSync(new URL('../../docs/cadastro-email/cadastro.gs', import.meta.url), 'utf8'), ambiente)
-  const chamarScript = (parameter) => JSON.parse(ambiente.doGet({ parameter }).texto)
+  const chamarScript = (parameter, options = {}) => {
+    if (options.get) return JSON.parse(ambiente.doGet({ parameter }).texto)
+    const postData = { type: options.tipo ?? 'application/x-www-form-urlencoded; charset=UTF-8' }
+    return JSON.parse(ambiente.doPost({ parameter, postData, queryString: options.queryString }).texto)
+  }
   const linhasDe = (nome) => (abas.get(nome)?.rows ?? []).slice(1)
   return { chamarScript, emails, bloq, linhasDe, get linhas() { return linhasDe('Acessos') }, setCota: (n) => { cota = n } }
 }
 const codigoDoEmail = (emails) => emails.at(-1).body.match(/é (\d{6})\./)[1]
+
+test('script: GET desligado por padrão e compatibilidade temporária explícita', () => {
+  const dados = { acao: 'pedir', email: 'ana@empresa.com' }
+  const script = criarScript()
+  assert.equal(script.chamarScript(dados, { get: true }).ok, false)
+  assert.equal(script.chamarScript(dados, { queryString: 'acao=pedir' }).ok, false)
+  assert.equal(script.chamarScript(dados, { tipo: 'text/plain' }).ok, false)
+  assert.equal(script.emails.length, 0)
+  assert.deepEqual(script.chamarScript({ acao: 'capacidade' }), { ok: true, transporte: 'post' })
+  assert.equal(criarScript({ permitirGet: true }).chamarScript(dados, { get: true }).ok, true)
+})
+
+test('script: endereços começados por sinal de fórmula são gravados como texto', () => {
+  const email = '=ana@empresa.com'
+  const script = criarScript({ diretos: [email] })
+  assert.equal(script.chamarScript({ acao: 'pedir', email }).ok, true)
+  assert.deepEqual(script.linhas.map(row => row[1]), ["'=ana@empresa.com", "'=ana@empresa.com"])
+  assert.equal(script.linhasDe('Liberados')[0][0], "'=ana@empresa.com")
+})
 
 test('script: fluxo completo — pede, erra, confirma, recebe assinatura e registra', () => {
   const s = criarScript()

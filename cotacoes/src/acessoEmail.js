@@ -29,12 +29,12 @@ export function limparAcesso(storage = typeof localStorage !== 'undefined' ? loc
   try { storage?.removeItem(CHAVE) } catch { /* nada a limpar */ }
 }
 
-// Chamada ao script (GET com parâmetros: é o que o Google aceita de uma página de outro endereço).
+// Envia os dados de entrada apenas no corpo da requisição.
 // Devolve { ok, ... } ou { ok: false, erro, rede: true } quando não foi possível falar com o script.
 export async function chamar(acao, params, { url = ACESSO_URL, fetchFn = globalThis.fetch } = {}) {
   try {
-    const q = new URLSearchParams({ acao, ...params })
-    const r = await fetchFn(`${url}${url.includes('?') ? '&' : '?'}${q}`, { cache: 'no-store' })
+    const body = new URLSearchParams({ acao, ...params })
+    const r = await fetchFn(url, { method: 'POST', body, cache: 'no-store', referrerPolicy: 'no-referrer' })
     const d = await r.json()
     return d && typeof d === 'object' ? d : { ok: false, erro: 'Resposta inesperada.', rede: true }
   } catch {
