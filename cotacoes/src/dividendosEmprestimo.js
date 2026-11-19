@@ -48,7 +48,7 @@ export function irPessoaFisica(dias) {
 export function fluxoEmprestimo(valor, i, n, formato) {
   const fluxo = []
   let saldo = valor
-  const parcela = i === 0 ? valor / n : (valor * i) / (1 - (1 + i) ** -n)
+  const parcela = (valor * i) / (1 - (1 + i) ** -n) // taxa > 0 garantida pela validação
   for (let k = 1; k <= n; k++) {
     const juros = saldo * i
     let amortizacao = 0
@@ -97,8 +97,7 @@ export function simularOperacao(p, n, formato) {
 
   return {
     n, formato, juros, iof, economiaIr, primeiroPagamento: fluxo[0].pagamento,
-    impostoDividendo, aplicado, bruto, ir, ganhoSocio,
-    custoEmpresa, custoNominal, efeitoTempo, eficiencia, custoCaixaProprio, emprestimoVsCaixa,
+    impostoDividendo, ir, ganhoSocio, efeitoTempo, eficiencia, emprestimoVsCaixa,
   }
 }
 
