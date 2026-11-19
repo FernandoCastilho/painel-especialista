@@ -9,14 +9,14 @@ import { parseMoneyInput } from './moneyInput.js'
 import { latestCdi } from './cdiDolar.js'
 import { useMacro } from './useMacro.js'
 import { IOF_PJ } from './emprestimo.js'
-import { PIS_COFINS_FINANCEIRO, parseDecimal, simularDividendosEmprestimo } from './dividendosEmprestimo.js'
+import { FORMATOS, PIS_COFINS_FINANCEIRO, parseDecimal, simularDividendosEmprestimo } from './dividendosEmprestimo.js'
 import CalcBack from './CalcBack.jsx'
 
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-const pct = (n, d = 2) => `${(n * 100).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}%`
 const pctCurto = (n) => `${(n * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 const rateText = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const dateLabel = (d) => (d ? d.split('-').reverse().join('/') : '—')
+const nomeFormato = (id) => FORMATOS.find((f) => f.id === id)?.label ?? id
 
 export function DividendosEmprestimoIcon() {
   return (
@@ -32,9 +32,11 @@ export function DividendosEmprestimoIcon() {
 
 export default function DividendosEmprestimo({ onBack }) {
   const [form, setForm] = useState({ valor: '10.000.000,00', taxa: '1,31', cdi: '', pctCdi: '100', aliquotaPj: '34', aliquotaDiv: '10' })
+  const [comIof, setComIof] = useState(true)
+  const [temAta, setTemAta] = useState(true)
   const [cdiOwn, setCdiOwn] = useState(false)
-  const [mutuo, setMutuo] = useState(false)
-  const [sel, setSel] = useState(12)
+  const [prazo, setPrazo] = useState(12)
+  const [formatoEscolhido, setFormatoEscolhido] = useState(null) // null = o mais eficiente do prazo
   const macro = useMacro()
   const cdiPainel = latestCdi(macro.data)
   useEffect(() => {
@@ -50,12 +52,16 @@ export default function DividendosEmprestimo({ onBack }) {
     pctCdi: parseDecimal(form.pctCdi) / 100,
     aliquotaPj: parseDecimal(form.aliquotaPj) / 100,
     aliquotaDividendos: parseDecimal(form.aliquotaDiv) / 100,
-    mutuo,
+    comIof,
+    temAta,
   }
-  const filled = Object.values(form).every((v) => String(v).trim())
+  const filled = ['valor', 'taxa', 'cdi', 'pctCdi', 'aliquotaPj'].every((k) => String(form[k]).trim()) && (temAta || String(form.aliquotaDiv).trim())
   const result = filled ? simularDividendosEmprestimo(p) : null
   const prazos = result?.ok ? result.prazos : null
-  const r = prazos?.find((x) => x.n === sel)
+  const linha = prazos?.find((x) => x.n === prazo)
+  const formato = formatoEscolhido ?? linha?.melhor
+  const r = linha?.formatos.find((x) => x.formato === formato)
+  const melhor = linha?.formatos.find((x) => x.formato === linha.melhor)
 
   const field = (key, label, input, hint) => (
     <div className="cx-field" key={key}>
@@ -63,17 +69,14 @@ export default function DividendosEmprestimo({ onBack }) {
       {input}
     </div>
   )
-  const text = (key, label, hint, placeholder) => field(key, label, <input id={`de-${key}`} type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={form[key]} onChange={(e) => set(key, e.target.value)} />, hint)
-  const row = (label, get, fmt = brl, cls) => (
-    <tr key={label} className={cls}><th scope="row">{label}</th>{prazos.map((x) => <td key={x.n}>{fmt(get(x))}</td>)}</tr>
-  )
-  const block = (title) => <tr className="de-block"><th scope="rowgroup" colSpan={prazos.length + 1}>{title}</th></tr>
+  const text = (key, label, hint, placeholder, disabled = false) => field(key, label, <input id={`de-${key}`} type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={form[key]} disabled={disabled} onChange={(e) => set(key, e.target.value)} />, hint)
+  const check = (id, checked, onChange, label) => <label className="de-check cd-pad-x" htmlFor={id}><input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} /> {label}</label>
 
   return (
     <section className="cx cx-cd bw calc-standard calc-workspace cd-pattern de-pattern" aria-labelledby="de-heading">
       <div className="bw-heading calc-workspace-heading">
         <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="de-heading" className="cx-title"><span>Dividendos via empréstimo</span></h2></div>
-        <CalculatorHelp title="Dividendos via empréstimo"><p>A empresa de lucro real toma crédito, repassa o dinheiro ao sócio, o sócio aplica e deixa a aplicação como garantia. A tela compara com distribuir o dividendo hoje e pagar o imposto sobre ele.</p><p>Simulação para estudo. Não é recomendação tributária nem cotação.</p></CalculatorHelp>
+        <CalculatorHelp title="Dividendos via empréstimo"><p>A empresa de lucro real toma crédito e paga ao sócio o dividendo aprovado em ata. O sócio aplica e deixa a aplicação como garantia. Os juros reduzem o IR da empresa e o dinheiro rende na pessoa física.</p><p>A tela mede a eficiência total: rendimento líquido do sócio + economia de IR da empresa − juros e IOF, e indica o formato de pagamento mais eficiente.</p><p>Simulação para estudo. Não é recomendação tributária nem cotação.</p></CalculatorHelp>
       </div>
       <p className="cd-notice">Simulação para estudo, com CDI constante e regras tributárias simplificadas. Confirme a estrutura com o jurídico e o contador da empresa. Os dados ficam só nesta tela.</p>
 
@@ -82,21 +85,24 @@ export default function DividendosEmprestimo({ onBack }) {
           <article className="desk-panel cx-panel cd-input">
             <header className="cx-heading"><h3>1. Empréstimo da empresa</h3></header>
             <div className="cx-form">
-              {field('valor', 'Lucros acumulados (valor da operação)', <MoneyInput id="de-valor" value={form.valor} onChange={(v) => set('valor', v)} />, 'Valor que seria distribuído como dividendo e que a empresa toma emprestado e repassa ao sócio.')}
-              {text('taxa', 'Taxa do empréstimo (% a.m.)', 'Taxa mensal da operação, tabela Price. Garantia: 100% da aplicação do sócio.', 'ex.: 1,31')}
+              {field('valor', 'Valor do dividendo (valor da operação)', <MoneyInput id="de-valor" value={form.valor} onChange={(v) => set('valor', v)} />, 'Valor que a empresa toma emprestado e paga ao sócio como dividendo.')}
+              {text('taxa', 'Taxa do empréstimo (% a.m.)', 'Taxa mensal da operação. Garantia: aplicação do sócio.', 'ex.: 1,31')}
               {text('aliquotaPj', 'IR + CSLL da empresa (%)', 'Lucro real: 25% de IRPJ + 9% de CSLL = 34%. Juros e IOF do empréstimo reduzem esse imposto.', 'ex.: 34')}
             </div>
-            <label className="de-check cd-pad-x"><input type="checkbox" checked={mutuo} onChange={(e) => setMutuo(e.target.checked)} /> Repasse ao sócio por mútuo (cobra IOF do sócio)</label>
-            <p className="cx-hint cd-pad-x">IOF não financiado, pago na contratação: {rateText(IOF_PJ.fixed)}% + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização, até {IOF_PJ.maxDays} dias.</p>
+            {check('de-iof', comIof, setComIof, 'Operação com IOF')}
+            <p className="cx-hint cd-pad-x">{comIof
+              ? <>IOF pago na contratação: {rateText(IOF_PJ.fixed)}% + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização, até {IOF_PJ.maxDays} dias.</>
+              : 'Sem IOF: para operações estruturadas sem incidência. Confirme o enquadramento.'}</p>
           </article>
 
           <article className="desk-panel cx-panel cd-input">
-            <header className="cx-heading"><h3>2. Aplicação do sócio e dividendos</h3></header>
+            <header className="cx-heading"><h3>2. Sócio e dividendo</h3></header>
             <div className="cx-form">
               {text('cdi', 'CDI (% a.a.)', 'Entra o último CDI do Banco Central coletado pelo painel. A conta mantém essa taxa constante em todo o prazo.', 'ex.: 14,15')}
-              {text('pctCdi', 'Aplicação rende (% do CDI)', 'CDB ou fundo do sócio, sem resgates. O mesmo % vale para o caixa que a empresa mantém.', 'ex.: 100')}
-              {text('aliquotaDiv', 'Imposto sobre dividendos evitado (%)', 'Imposto que o sócio pagaria se recebesse o valor como dividendo hoje. A retenção da Lei 15.270/2025 é de 10%, mas veja os avisos: o redutor pode devolver parte no ajuste anual.', 'ex.: 10')}
+              {text('pctCdi', 'Aplicação rende (% do CDI)', 'CDB ou fundo do sócio, sem resgates. O mesmo % vale para o caixa da empresa.', 'ex.: 100')}
+              {text('aliquotaDiv', 'Imposto sobre o dividendo (%)', 'Usado só sem ata. A retenção da Lei 15.270/2025 é de 10% quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês.', 'ex.: 10', temAta)}
             </div>
+            {check('de-ata', temAta, setTemAta, 'Distribuição aprovada em ata até 31/12/2025 (isenta)')}
             {cdiPainel && !cdiOwn && <p className="cx-hint cd-pad-x">CDI do painel: {rateText(cdiPainel.rate)}% a.a. em {dateLabel(cdiPainel.date)} (Banco Central).</p>}
             {cdiPainel && cdiOwn && <button type="button" className="cd-link cd-pad-x" onClick={() => { setCdiOwn(false); setForm((old) => ({ ...old, cdi: rateText(cdiPainel.rate) })) }}>Usar CDI do Painel ({rateText(cdiPainel.rate)}%)</button>}
             {form.valor && !money.ok && <p className="cx-error cx-pad" role="alert">{money.error}</p>}
@@ -105,7 +111,7 @@ export default function DividendosEmprestimo({ onBack }) {
 
         <aside className="cd-results" aria-label="Resultado estimado">
           <article className="desk-panel cx-panel cd-quote">
-            <header className="cx-heading"><h3>3. Resultado estimado</h3><CalculatorHelp title="Resultado estimado"><p>Resultado justo = quanto a família (empresa + sócio) tem a mais na data final com o empréstimo, comparado a distribuir o dividendo hoje. Positivo: o empréstimo compensa.</p></CalculatorHelp></header>
+            <header className="cx-heading"><h3>3. Eficiência da operação</h3><CalculatorHelp title="Eficiência da operação"><p>Quanto empresa e sócio ganham juntos, na data final: rendimento líquido da aplicação do sócio + economia de IR da empresa − juros e IOF, considerando que o caixa usado nos pagamentos renderia CDI na empresa.</p></CalculatorHelp></header>
             <div aria-live="polite" className="cd-status">
               {!filled && <p className="cd-notice cd-guide">Preencha os campos para ver o resultado.</p>}
               {result && !result.ok && <p className="cd-notice" role="alert">{result.error}</p>}
@@ -113,31 +119,39 @@ export default function DividendosEmprestimo({ onBack }) {
             {r && (
               <div className="cd-result">
                 <div className="de-prazos" role="group" aria-label="Prazo do empréstimo">
-                  {prazos.map((x) => <button key={x.n} type="button" aria-pressed={x.n === sel} onClick={() => setSel(x.n)}>{x.n} meses</button>)}
+                  {prazos.map((x) => <button key={x.n} type="button" aria-pressed={x.n === prazo} onClick={() => setPrazo(x.n)}>{x.n} meses</button>)}
+                </div>
+                <div className="de-formatos" role="group" aria-label="Formato de pagamento">
+                  {linha.formatos.map((x) => (
+                    <button key={x.formato} type="button" aria-pressed={x.formato === formato} onClick={() => setFormatoEscolhido(x.formato)}>
+                      <span>{nomeFormato(x.formato)}{x.formato === linha.melhor && <em>Mais eficiente</em>}</span>
+                      <b className={x.eficiencia < 0 ? 'de-neg-ink' : undefined}>{brl(x.eficiencia)}</b>
+                    </button>
+                  ))}
                 </div>
                 <div className="cd-answer-main">
-                  <small>Resultado justo em {r.n} meses</small>
-                  <b className={r.resultado < 0 ? 'de-neg' : undefined}>{brl(r.resultado)}</b>
-                  <span>{r.resultado >= 0 ? 'a mais do que distribuir o dividendo hoje' : 'a menos do que distribuir o dividendo hoje'}</span>
+                  <small>Eficiência em {r.n} meses · {nomeFormato(r.formato)}</small>
+                  <b className={r.eficiencia < 0 ? 'de-neg' : undefined}>{brl(r.eficiencia)}</b>
+                  <span>{r.eficiencia >= 0 ? 'de ganho para empresa + sócio' : 'de perda para empresa + sócio'}</span>
                 </div>
-                <div className="cd-kpis cd-highlight">
-                  <div><span>Se o imposto for pago no fim</span><b className={r.resultadoAdiado < 0 ? 'de-neg-ink' : undefined}>{brl(r.resultadoAdiado)}</b><small>lucros seguem acumulados; imposto só adiado</small></div>
-                  <div><span>Como a planilha calcula</span><b>{brl(r.montantePlanilha)}</b><small>soma simples, sem custo de oportunidade</small></div>
-                  <div><span>Compensa se o imposto evitado for maior que</span><b>{r.aliquotaEmpate <= 0 ? '0% (sempre)' : pct(r.aliquotaEmpate)}</b><small>dos dividendos</small></div>
-                </div>
-                <p className={r.resultado >= 0 ? 'cd-answer' : 'cd-warn'}><span aria-hidden="true">{r.resultado >= 0 ? '✓' : '!'}</span><span>
-                  Sócio: <b>{brl(r.socio)}</b> de imposto sobre dividendos evitado{r.custoMutuo > 0 ? ' menos o IOF do mútuo' : ''}, com o rendimento. Empresa: <b>{brl(r.empresa)}</b> de efeito do empréstimo, já com a economia de IR e o caixa mantido rendendo CDI. {r.aliquotaEmpate > 0 ? <>A operação só compensa se o imposto evitado for maior que <b>{pct(r.aliquotaEmpate)}</b>.</> : 'Aqui o empréstimo compensa mesmo sem imposto evitado.'}
-                </span></p>
+                {r.formato !== linha.melhor && <p className="cd-warn"><span aria-hidden="true">!</span><span>Neste prazo, <b>{nomeFormato(linha.melhor)}</b> é mais eficiente: <b>{brl(melhor.eficiencia)}</b> ({brl(melhor.eficiencia - r.eficiencia)} a mais). <button type="button" className="cd-link" onClick={() => setFormatoEscolhido(null)}>Usar o mais eficiente</button></span></p>}
 
-                <section className="cd-card" aria-labelledby="de-ponte">
-                  <h4 id="de-ponte">Da planilha ao resultado justo · {r.n} meses</h4>
-                  <table className="cd-steps"><caption className="sr-only">Ajustes da visão da planilha até o resultado justo</caption><tbody>
-                    <tr><td className="cd-op" aria-hidden="true"></td><th scope="row">Montante final, como na planilha</th><td>{brl(r.montantePlanilha)}</td></tr>
-                    <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">Rendimento que o sócio teria mesmo recebendo o dividendo líquido{r.custoMutuo > 0 ? ', e IOF do mútuo' : ''}</th><td>{brl(Math.abs(r.ajusteSocio))}</td></tr>
-                    <tr className={r.ajusteEmpresa < 0 ? 'cd-minus' : undefined}><td className="cd-op" aria-hidden="true">{r.ajusteEmpresa < 0 ? '−' : '+'}</td><th scope="row">CDI do caixa da empresa sobre parcelas e economia de IR (valor futuro)</th><td>{brl(Math.abs(r.ajusteEmpresa))}</td></tr>
-                    <tr className="cd-total"><td className="cd-op" aria-hidden="true">=</td><th scope="row">Resultado justo</th><td>{brl(r.resultado)}</td></tr>
+                <section className="cd-card" aria-labelledby="de-composicao">
+                  <h4 id="de-composicao">De onde vem o resultado · {r.n} meses</h4>
+                  <table className="cd-steps"><caption className="sr-only">Composição da eficiência</caption><tbody>
+                    <tr><td className="cd-op" aria-hidden="true">+</td><th scope="row">Rendimento líquido da aplicação do sócio (IR de {pctCurto(r.ir)})</th><td>{brl(r.ganhoSocio)}</td></tr>
+                    <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">Juros e IOF do empréstimo</th><td>{brl(r.juros + r.iof)}</td></tr>
+                    <tr><td className="cd-op" aria-hidden="true">+</td><th scope="row">Economia de IR/CSLL da empresa sobre juros e IOF</th><td>{brl(r.economiaIr)}</td></tr>
+                    <tr className={r.efeitoTempo > 0 ? 'cd-minus' : undefined}><td className="cd-op" aria-hidden="true">{r.efeitoTempo > 0 ? '−' : '+'}</td><th scope="row">{r.efeitoTempo > 0 ? 'Rendimento que o caixa da empresa deixa de ter com os pagamentos antes do fim' : 'Rendimento do caixa da empresa até os pagamentos'}</th><td>{brl(Math.abs(r.efeitoTempo))}</td></tr>
+                    {r.impostoDividendo > 0 && <tr className="cd-minus"><td className="cd-op" aria-hidden="true">−</td><th scope="row">Imposto sobre o dividendo (sem ata)</th><td>{brl(r.impostoDividendo)}</td></tr>}
+                    <tr className="cd-total"><td className="cd-op" aria-hidden="true">=</td><th scope="row">Eficiência da operação</th><td>{brl(r.eficiencia)}</td></tr>
                   </tbody></table>
                 </section>
+                <p className={r.emprestimoVsCaixa >= 0 ? 'cd-answer' : 'cd-warn'}><span aria-hidden="true">{r.emprestimoVsCaixa >= 0 ? '✓' : '!'}</span><span>
+                  {r.emprestimoVsCaixa >= 0
+                    ? <>Mesmo se a empresa tivesse o caixa, o empréstimo sai <b>{brl(r.emprestimoVsCaixa)}</b> mais barato que pagar o dividendo com caixa próprio.</>
+                    : <>Se a empresa tem o caixa, pagar o dividendo com caixa próprio daria <b>{brl(-r.emprestimoVsCaixa)}</b> a mais. O empréstimo vale quando o caixa não existe ou é necessário na operação.</>}
+                </span></p>
               </div>
             )}
           </article>
@@ -145,58 +159,50 @@ export default function DividendosEmprestimo({ onBack }) {
 
         {prazos && (
           <article className="desk-panel cx-panel de-table-panel">
-            <header className="cx-heading"><h3>4. Comparativo por prazo</h3></header>
-            <div className="cx-wrap"><table className="cx-matrix de-table"><caption className="sr-only">Empréstimo, aplicação e resultado por prazo</caption>
-              <thead><tr><th scope="col">Prazo (meses)</th>{prazos.map((x) => <th scope="col" key={x.n}>{x.n}</th>)}</tr></thead>
+            <header className="cx-heading"><h3>4. Eficiência por prazo e formato</h3></header>
+            <div className="cx-wrap"><table className="cx-matrix de-table"><caption className="sr-only">Eficiência da operação por prazo e formato de pagamento</caption>
+              <thead><tr><th scope="col">Formato</th>{prazos.map((x) => <th scope="col" key={x.n}>{x.n} meses</th>)}</tr></thead>
               <tbody>
-                {block('Empréstimo · pessoa jurídica')}
-                {row('Parcela', (x) => x.parcela)}
-                {row('IOF não financiado', (x) => x.iof)}
-                {row('Pagamento total (P + J + IOF)', (x) => x.totalPago)}
-                {row('Economia de IR/CSLL (juros + IOF)', (x) => x.reducaoIr)}
-                {block('Aplicação do sócio · sem resgates')}
-                {row('Ganho bruto', (x) => x.ganhoBruto)}
-                {row('IR', (x) => x.ir, pctCurto)}
-                {row('Ganho líquido', (x) => x.ganhoLiquido)}
-                {block('Visão da planilha (soma simples)')}
-                {row('Ganho (aplicação − pagamento)', (x) => x.ganhoPlanilha)}
-                {row('Dividendos evitados', (x) => x.dividendos)}
-                {row('Montante final', (x) => x.montantePlanilha, brl, 'de-sub')}
-                {block('Comparação justa (valor futuro pelo CDI)')}
-                {mutuo && row('IOF do mútuo ao sócio', (x) => x.custoMutuo)}
-                {row(mutuo ? 'Sócio: imposto evitado − IOF do mútuo, com rendimento' : 'Sócio: imposto evitado + rendimento', (x) => x.socio)}
-                {row('Empresa: caixa mantido − custo do empréstimo', (x) => x.empresa)}
-                {row('Resultado justo', (x) => x.resultado, brl, 'de-total')}
-                {row('Se o imposto for pago no fim (adiado)', (x) => x.resultadoAdiado, brl, 'de-sub')}
-                {row('Imposto evitado mínimo para compensar', (x) => Math.max(x.aliquotaEmpate, 0), pct)}
+                {FORMATOS.map((f) => (
+                  <tr key={f.id}><th scope="row">{f.label}</th>{prazos.map((x) => {
+                    const c = x.formatos.find((y) => y.formato === f.id)
+                    return <td key={x.n} className={x.melhor === f.id ? 'de-best' : c.eficiencia < 0 ? 'de-neg-cell' : undefined}>{brl(c.eficiencia)}</td>
+                  })}</tr>
+                ))}
+                <tr className="de-block"><th scope="rowgroup" colSpan={prazos.length + 1}>No formato mais eficiente</th></tr>
+                {[
+                  ['Primeiro pagamento mensal da empresa', (c) => c.primeiroPagamento],
+                  ['Juros e IOF', (c) => c.juros + c.iof],
+                  ['Economia de IR/CSLL', (c) => c.economiaIr],
+                  ['Rendimento líquido do sócio', (c) => c.ganhoSocio],
+                  ['Empréstimo x caixa próprio (+ = empréstimo mais barato)', (c) => c.emprestimoVsCaixa],
+                ].map(([label, get]) => <tr key={label}><th scope="row">{label}</th>{prazos.map((x) => <td key={x.n}>{brl(get(x.formatos.find((y) => y.formato === x.melhor)))}</td>)}</tr>)}
               </tbody>
             </table></div>
+            <p className="cx-hint cd-pad-x">Em destaque, o formato mais eficiente de cada prazo.</p>
           </article>
         )}
 
         <article className="desk-panel cx-panel de-avisos" aria-labelledby="de-avisos-h">
           <header className="cx-heading"><h3 id="de-avisos-h">Riscos e ressalvas</h3></header>
           <ul>
-            <li><b>Como o dinheiro chega ao sócio.</b> Se o repasse for dividendo, há o imposto que a conta supõe evitar. Se for empréstimo da empresa ao sócio (mútuo), há novo IOF (marque a opção no quadro 1 para descontá-lo) e risco de a Receita tratar como distribuição disfarçada de lucros.</li>
-            <li><b>Adiamento, não isenção.</b> Os lucros continuam acumulados na empresa; uma distribuição futura volta a ser tributada. Por isso a tela mostra também o resultado se o imposto for pago no fim.</li>
-            <li><b>Retenção de 10% (Lei 15.270/2025).</b> Só vale quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês. Pagamentos menores, mês a mês, não têm retenção na fonte, mas entram no imposto mínimo anual; no caminho direto, distribuir aos poucos também reduz o imposto que a conta supõe evitar. Lucros até 2025 com distribuição aprovada até 31/12/2025 ficam fora.</li>
-            <li><b>Redutor e imposto mínimo anual.</b> Sócio com renda acima de R$ 600 mil no ano entra no imposto mínimo. Se a empresa já paga 34% de alíquota efetiva, o redutor pode devolver parte ou todo o imposto sobre os dividendos no ajuste anual. Nesse caso o imposto evitado é menor e a operação pode não compensar.</li>
-            <li><b>Dedutibilidade.</b> Juros só reduzem o IR se a despesa for necessária à atividade. Crédito tomado para repassar ao sócio pode ter a dedução questionada.</li>
-            <li>CDI constante, sem curva de juros. Sem PIS/Cofins sobre a despesa de juros. Meses de 30 dias. Fundo de investimento: a conta não aplica o come-cotas semestral, então o resultado de fundo sai um pouco otimista.</li>
-            <li><b>Caixa da empresa.</b> A conta supõe que a empresa tem o valor em caixa rendendo CDI. Se o lucro acumulado já está investido no negócio, a comparação muda.</li>
+            <li><b>Ata de distribuição.</b> A isenção vale para lucros apurados até 2025 com distribuição aprovada até 31/12/2025 e paga nos termos da ata, dentro do prazo da regra de transição da Lei 15.270/2025. Confirme a ata e o prazo com o contador.</li>
+            <li><b>Sem ata.</b> A retenção de 10% vale quando a mesma empresa paga ao mesmo sócio mais de R$ 50 mil no mês; pagamentos menores não têm retenção na fonte, mas entram no imposto mínimo anual de quem ganha mais de R$ 600 mil.</li>
+            <li><b>Dedutibilidade.</b> Juros só reduzem o IR se a despesa for necessária à atividade. Crédito tomado para pagar dividendo pode ter a dedução questionada pela Receita.</li>
+            <li><b>Caixa da empresa.</b> A conta supõe que o caixa usado nos pagamentos renderia o mesmo % do CDI na empresa, com PIS/Cofins e IR/CSLL. Se a empresa usa esse caixa na operação, o custo de oportunidade é outro.</li>
+            <li>CDI constante, sem curva de juros. Meses de 30 dias. Sem PIS/Cofins sobre a despesa de juros. Fundo de investimento: a conta não aplica o come-cotas semestral, então o resultado de fundo sai um pouco otimista.</li>
           </ul>
         </article>
       </div>
 
       <div className="cx-heading cd-method"><h3>Premissas e fórmulas</h3><CalculatorHelp title="Premissas e fórmulas"><ul>
-        <li>Parcela Price = valor × i ÷ (1 − (1 + i)^−n). IOF = {rateText(IOF_PJ.fixed)}% do valor + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização (30 dias por mês, até 365 dias). A planilha original usa 0,0041% ao dia, regra anterior ao Decreto 12.499/2025.</li>
-        <li>Economia de IR/CSLL = alíquota × (juros + IOF).</li>
-        <li>Aplicação: CDI diário = (1 + CDI)^(1/252) − 1; rendimento = (1 + CDI diário × % do CDI)^(21 × meses) − 1. IR de pessoa física pelos dias corridos (meses × 365/12; 12 meses = 365 dias): 22,5% até 180; 20% até 360; 17,5% até 720; 15% acima. A planilha original usa 30 dias por mês (12 meses = 20%).</li>
-        <li>IOF do mútuo (opcional): 0,38% + 0,0082% ao dia sobre o valor, até 365 dias, pago pelo sócio na contratação; não reduz o IR da empresa.</li>
-        <li>Se o imposto for pago no fim = resultado justo − alíquota de dividendos × valor.</li>
-        <li>Visão da planilha = (valor + ganho líquido) − pagamento total + dividendos evitados + economia de IR.</li>
-        <li>Resultado justo = sócio + empresa, na data final. Sócio = (imposto evitado − IOF do mútuo) × (1 + rendimento líquido): no caminho direto ele aplicaria o dividendo líquido. Empresa = valor mantido em caixa, rendendo CDI líquido de PIS/Cofins ({pctCurto(PIS_COFINS_FINANCEIRO)}) e IR/CSLL, menos o IOF e cada parcela líquidos da economia de IR, todos levados à data final por esse mesmo CDI líquido.</li>
-        <li>Imposto evitado mínimo = (IOF do mútuo × (1 + rendimento líquido) − empresa) ÷ (valor × (1 + rendimento líquido)).</li>
+        <li>Formatos: Price (parcelas iguais), SAC (amortização constante + juros), juros mensais com principal no fim, e tudo no fim (juros acumulados mês a mês, pagos com o principal no vencimento).</li>
+        <li>IOF (opcional) = {rateText(IOF_PJ.fixed)}% do valor + {IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}% ao dia sobre cada amortização do principal (30 dias por mês, até 365 dias), pago na contratação.</li>
+        <li>Economia de IR/CSLL = alíquota × (juros + IOF). Juros entram no mês em que correm, mesmo quando pagos no fim.</li>
+        <li>Aplicação do sócio: CDI diário = (1 + CDI)^(1/252) − 1; rendimento = (1 + CDI diário × % do CDI)^(21 × meses) − 1. IR pelos dias corridos (meses × 365/12): 22,5% até 180; 20% até 360; 17,5% até 720; 15% acima.</li>
+        <li>Custo da empresa, na data final = IOF e cada pagamento, menos a economia de IR do mês, corrigidos pelo CDI líquido do caixa da empresa (PIS/Cofins {pctCurto(PIS_COFINS_FINANCEIRO)} e IR/CSLL), menos o valor recebido no empréstimo.</li>
+        <li>Eficiência = rendimento líquido do sócio − imposto sobre o dividendo (sem ata) − custo da empresa. O formato mais eficiente é o de maior eficiência no prazo.</li>
+        <li>Empréstimo x caixa próprio = rendimento que o valor teria no caixa da empresa no prazo − custo da empresa com o empréstimo.</li>
       </ul></CalculatorHelp></div>
     </section>
   )

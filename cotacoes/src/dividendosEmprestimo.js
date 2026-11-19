@@ -1,33 +1,34 @@
-// Dividendos via empréstimo: a empresa (lucro real) toma crédito, repassa o dinheiro ao sócio, o sócio aplica e deixa a
-// aplicação como garantia. Compara com o caminho direto: distribuir o dividendo hoje e pagar o imposto sobre ele.
-// Modelo combinado com Fernando em 18/11/2026, a partir da planilha "Dividendos_Comparativo".
+// Dividendos via empréstimo: a empresa de lucro real toma crédito, paga ao sócio o dividendo já aprovado em ata,
+// o sócio aplica e deixa a aplicação como garantia. Mede a eficiência total da operação.
+// Lógica combinada com Fernando em 19/11/2026.
+//
+// Eficiência (na data final) = ganho líquido da aplicação do sócio − imposto sobre o dividendo (se não houver ata)
+//                              − custo da empresa com o empréstimo.
+// Custo da empresa = IOF e cada pagamento, líquidos da economia de IR/CSLL sobre juros e IOF, levados à data final pelo
+// CDI líquido que o caixa da empresa renderia (PIS/Cofins 4,65% e IR/CSLL), menos o valor recebido no empréstimo.
+// Assim, pagar antes custa o rendimento que o caixa da empresa deixa de ter, e os formatos ficam comparáveis.
 //
 // Premissas:
-// - Empréstimo PJ pela tabela Price, meses de 30 dias, IOF não financiado (pago na contratação).
-// - IOF de crédito PJ: mesma regra das outras calculadoras do painel (IOF_PJ: 0,38% + 0,0082% ao dia sobre cada
-//   amortização, até 365 dias). A planilha original usa 0,0041% ao dia (regra anterior ao Decreto 12.499/2025).
-// - Juros e IOF são despesa dedutível na empresa de lucro real: economia de IR/CSLL = alíquota × despesa.
-// - Aplicação do sócio (pessoa física) em % do CDI, CDI constante, 21 dias úteis por mês, sem resgates;
-//   IR regressivo por dias corridos reais (meses × 365/12, decisão de Fernando em 18/11/2026; a planilha usa 30 dias por mês):
-//   22,5% / 20% / 17,5% / 15%. Sem IOF (prazo acima de 30 dias).
-// - Repasse por mútuo (opcional): IOF de crédito do sócio pessoa física, 0,38% + 0,0082% ao dia até 365 dias sobre o valor,
-//   pago na contratação com o próprio dinheiro repassado (o sócio aplica o valor menos o IOF). Não é dedutível na empresa.
-// - Imposto adiado: os lucros continuam acumulados; se o imposto sobre dividendos for pago na data final, o resultado cai
-//   exatamente o imposto (alíquota × valor). A tela mostra os dois cenários.
-// - Comparação justa (valor futuro pelo CDI): no caminho direto o sócio também aplicaria o dividendo líquido; e o caixa
-//   que a empresa deixa de pagar hoje rende CDI na empresa, tributado no lucro real (PIS/Cofins 4,65% e IR/CSLL).
-//   Cada parcela e cada economia de IR são levadas à data final por esse CDI líquido da empresa.
+// - Meses de 30 dias para juros e IOF; juros dedutíveis no mês em que correm (regime de competência, lucro real),
+//   inclusive quando são pagos só no fim.
+// - IOF de crédito PJ opcional: 0,38% + 0,0082% ao dia sobre cada amortização do principal, até 365 dias (IOF_PJ, a mesma
+//   regra das outras calculadoras), pago na contratação.
+// - Aplicação do sócio em % do CDI, CDI constante, 21 dias úteis por mês, sem resgates; IR regressivo por dias corridos
+//   reais (meses × 365/12): 22,5% / 20% / 17,5% / 15%.
+// - Dividendo: isento com ata de distribuição aprovada até 31/12/2025 (regra de transição da Lei 15.270/2025);
+//   sem ata, o imposto informado (padrão 10%) sai do valor que o sócio aplica.
 import { IOF_PJ } from './emprestimo.js'
 
 export const PRAZOS = [12, 24, 36, 48, 60]
 export const PIS_COFINS_FINANCEIRO = 0.0465
-export const IOF_PLANILHA = { fixed: 0.38, daily: 0.0041, maxDays: 365 }
-export const diasCorridos = (meses) => Math.round((meses * 365) / 12)
+export const FORMATOS = [
+  { id: 'price', label: 'Parcelas iguais (Price)' },
+  { id: 'sac', label: 'Amortização constante (SAC)' },
+  { id: 'juros', label: 'Juros mensais, principal no fim' },
+  { id: 'fim', label: 'Tudo no fim (juros acumulados)' },
+]
 
-// IOF do mútuo da empresa ao sócio pessoa física (principal definido, devolvido no fim do prazo).
-export function iofMutuo(valor, meses, iof = IOF_PJ) {
-  return valor * (iof.fixed / 100 + (iof.daily / 100) * Math.min(diasCorridos(meses), iof.maxDays))
-}
+export const diasCorridos = (meses) => Math.round((meses * 365) / 12)
 
 // "1,31" → 1.31; "10.000.000,00" → 10000000; vazio ou inválido → NaN.
 export function parseDecimal(text) {
@@ -36,7 +37,6 @@ export function parseDecimal(text) {
   return Number(t.replaceAll('.', '').replace(',', '.'))
 }
 
-// IR da aplicação de pessoa física pelo prazo em dias corridos.
 export function irPessoaFisica(dias) {
   if (dias <= 180) return 0.225
   if (dias <= 360) return 0.2
@@ -44,78 +44,76 @@ export function irPessoaFisica(dias) {
   return 0.15
 }
 
-// Empréstimo Price em n meses com taxa mensal i (decimal). IOF em % (fixed sobre o valor; daily por dia sobre cada amortização).
-export function emprestimoPrice(valor, i, n, iof = IOF_PJ) {
-  const parcela = i === 0 ? valor / n : (valor * i) / (1 - (1 + i) ** -n)
-  let saldo = valor
-  let iofDiario = 0
+// Fluxo mensal do empréstimo: pagamento, juros do mês (dedutíveis) e amortização do principal.
+export function fluxoEmprestimo(valor, i, n, formato) {
   const fluxo = []
+  let saldo = valor
+  const parcela = i === 0 ? valor / n : (valor * i) / (1 - (1 + i) ** -n)
   for (let k = 1; k <= n; k++) {
     const juros = saldo * i
-    const amortizacao = parcela - juros
-    saldo -= amortizacao
-    iofDiario += amortizacao * (iof.daily / 100) * Math.min(30 * k, iof.maxDays)
-    fluxo.push({ mes: k, juros, amortizacao })
+    let amortizacao = 0
+    let pagamento = 0
+    if (formato === 'price') { amortizacao = parcela - juros; pagamento = parcela; saldo -= amortizacao }
+    else if (formato === 'sac') { amortizacao = valor / n; pagamento = amortizacao + juros; saldo -= amortizacao }
+    else if (formato === 'juros') { amortizacao = k === n ? valor : 0; pagamento = juros + amortizacao }
+    else if (formato === 'fim') { saldo += juros; amortizacao = k === n ? valor : 0; pagamento = k === n ? saldo : 0 }
+    else throw new Error(`Formato desconhecido: ${formato}`)
+    fluxo.push({ mes: k, pagamento, juros, amortizacao })
   }
-  const iofTotal = valor * (iof.fixed / 100) + iofDiario
-  const juros = fluxo.reduce((a, f) => a + f.juros, 0)
-  return { parcela, iof: iofTotal, juros, totalPago: parcela * n + iofTotal, fluxo }
+  return fluxo
 }
 
-export function simularPrazo({ valor, taxaMes, cdi, pctCdi = 1, aliquotaPj = 0.34, aliquotaDividendos = 0.1, iof = IOF_PJ, mutuo = false }, n) {
-  const emp = emprestimoPrice(valor, taxaMes, n, iof)
-  const reducaoIr = aliquotaPj * (emp.juros + emp.iof)
+export function iofCredito(valor, fluxo, iof = IOF_PJ) {
+  return valor * (iof.fixed / 100) + fluxo.reduce((a, f) => a + f.amortizacao * (iof.daily / 100) * Math.min(30 * f.mes, iof.maxDays), 0)
+}
 
-  // Aplicação do sócio: CDI diário × % do CDI, 21 dias úteis por mês.
+export function simularOperacao(p, n, formato) {
+  const { valor, taxaMes, cdi, pctCdi = 1, aliquotaPj = 0.34, comIof = true, temAta = true, aliquotaDividendos = 0.1 } = p
+  const fluxo = fluxoEmprestimo(valor, taxaMes, n, formato)
+  const juros = fluxo.reduce((a, f) => a + f.juros, 0)
+  const iof = comIof ? iofCredito(valor, fluxo) : 0
+  const economiaIr = aliquotaPj * (juros + iof)
+
+  // Sócio.
+  const impostoDividendo = temAta ? 0 : valor * aliquotaDividendos
+  const aplicado = valor - impostoDividendo
   const cdiDia = (1 + cdi) ** (1 / 252) - 1
   const bruto = (1 + cdiDia * pctCdi) ** (21 * n) - 1
   const ir = irPessoaFisica(diasCorridos(n))
-  const liquidoPct = bruto * (1 - ir)
-  const ganhoBruto = valor * bruto
-  const ganhoLiquido = valor * liquidoPct
+  const ganhoSocio = aplicado * bruto * (1 - ir)
 
-  // Visão da planilha (soma simples): rendimento total da aplicação menos o que a empresa pagou, mais imposto evitado e economia de IR.
-  const dividendos = valor * aliquotaDividendos
-  const rentabilidade = valor + ganhoLiquido
-  const ganhoPlanilha = rentabilidade - emp.totalPago
-  const montantePlanilha = ganhoPlanilha + dividendos + reducaoIr
-
-  // Comparação justa, na data final.
-  // Sócio: no caminho direto aplicaria o dividendo líquido; a diferença é o imposto evitado, aplicado no mesmo produto.
-  // Com mútuo, o sócio paga o IOF na contratação e aplica menos.
-  const custoMutuo = mutuo ? iofMutuo(valor, n, iof) : 0
-  const socio = (dividendos - custoMutuo) * (1 + liquidoPct)
-  // Empresa: no caminho direto pagaria o valor hoje. Com o empréstimo, guarda esse caixa (rende CDI líquido de PIS/Cofins e IR/CSLL),
-  // paga o IOF líquido de IR na contratação e cada parcela líquida da economia de IR sobre os juros do mês.
+  // Empresa: valor futuro dos desembolsos líquidos de IR pelo CDI líquido do caixa da empresa.
   const rEmpresa = ((1 + cdiDia * pctCdi) ** 21 - 1) * (1 - PIS_COFINS_FINANCEIRO) * (1 - aliquotaPj)
-  const vf = (meses) => (1 + rEmpresa) ** meses
-  let empresa = (valor - emp.iof * (1 - aliquotaPj)) * vf(n)
-  for (const f of emp.fluxo) empresa -= (emp.parcela - aliquotaPj * f.juros) * vf(n - f.mes)
-  const resultado = socio + empresa
-  // Imposto sobre dividendos que zera o resultado (resultado é linear na alíquota).
-  const aliquotaEmpate = (custoMutuo * (1 + liquidoPct) - empresa) / (valor * (1 + liquidoPct))
-  // Se o imposto sobre dividendos for pago na data final (adiado, não evitado).
-  const resultadoAdiado = resultado - dividendos
+  const vf = (m) => (1 + rEmpresa) ** m
+  let custoEmpresa = iof * (1 - aliquotaPj) * vf(n) - valor
+  for (const f of fluxo) custoEmpresa += (f.pagamento - aliquotaPj * f.juros) * vf(n - f.mes)
+  const custoNominal = juros + iof - economiaIr
+  const efeitoTempo = custoEmpresa - custoNominal
 
-  // Ponte planilha → justo.
-  const ajusteSocio = -(valor - dividendos) * liquidoPct - custoMutuo * (1 + liquidoPct)
-  const ajusteEmpresa = empresa - (valor - emp.totalPago + reducaoIr)
+  const eficiencia = ganhoSocio - impostoDividendo - custoEmpresa
+  // Se a empresa pagasse o dividendo com caixa próprio: o sócio teria o mesmo ganho e a empresa perderia o rendimento do caixa.
+  const custoCaixaProprio = valor * (vf(n) - 1)
+  const emprestimoVsCaixa = custoCaixaProprio - custoEmpresa // positivo: o empréstimo sai mais barato que usar o caixa
 
   return {
-    n, parcela: emp.parcela, iof: emp.iof, juros: emp.juros, totalPago: emp.totalPago, reducaoIr,
-    bruto, ir, liquidoPct, ganhoBruto, ganhoLiquido,
-    dividendos, rentabilidade, ganhoPlanilha, montantePlanilha,
-    custoMutuo, socio, empresa, resultado, resultadoAdiado, aliquotaEmpate, ajusteSocio, ajusteEmpresa,
-    rEmpresaMes: rEmpresa,
+    n, formato, juros, iof, economiaIr, totalPago: fluxo.reduce((a, f) => a + f.pagamento, 0) + iof,
+    primeiroPagamento: fluxo[0].pagamento,
+    impostoDividendo, aplicado, bruto, ir, ganhoSocio,
+    custoEmpresa, custoNominal, efeitoTempo, eficiencia, custoCaixaProprio, emprestimoVsCaixa, rEmpresaMes: rEmpresa,
   }
 }
 
 export function simularDividendosEmprestimo(p) {
-  if (!(p.valor > 0)) return { ok: false, error: 'Informe o valor dos lucros acumulados (valor da operação).' }
+  if (!(p.valor > 0)) return { ok: false, error: 'Informe o valor do dividendo (valor da operação).' }
   if (!(p.taxaMes > 0 && p.taxaMes < 0.2)) return { ok: false, error: 'Informe a taxa do empréstimo ao mês, entre 0% e 20%. Ex.: 1,31.' }
   if (!(p.cdi > 0 && p.cdi < 1)) return { ok: false, error: 'Informe o CDI ao ano. Ex.: 14,15.' }
   if (!(p.pctCdi >= 0.01 && p.pctCdi <= 2)) return { ok: false, error: 'Informe o % do CDI da aplicação entre 1% e 200%.' }
   if (!(p.aliquotaPj >= 0 && p.aliquotaPj < 1)) return { ok: false, error: 'Informe a alíquota de IR/CSLL da empresa. Ex.: 34.' }
-  if (!(p.aliquotaDividendos >= 0 && p.aliquotaDividendos < 1)) return { ok: false, error: 'Informe o imposto sobre dividendos evitado. Ex.: 10.' }
-  return { ok: true, prazos: (p.prazos ?? PRAZOS).map((n) => simularPrazo(p, n)) }
+  if (!p.temAta && !(p.aliquotaDividendos >= 0 && p.aliquotaDividendos < 1)) return { ok: false, error: 'Informe o imposto sobre o dividendo. Ex.: 10.' }
+  const prazos = (p.prazos ?? PRAZOS).map((n) => {
+    const formatos = FORMATOS.map((f) => simularOperacao(p, n, f.id))
+    const melhor = formatos.reduce((a, b) => (b.eficiencia > a.eficiencia ? b : a))
+    return { n, formatos, melhor: melhor.formato }
+  })
+  return { ok: true, prazos }
 }
