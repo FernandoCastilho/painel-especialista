@@ -57,14 +57,14 @@ main.app.app-calculators:not(#u) .cx-back {
 }
 main.app.app-calculators:not(#u) .cx-back:hover { color:var(--bw-ink, var(--fg)); }
 
-/* ── Ícone de ampliar: um só desenho (quadrado de 32 px com contorno); a cor acompanha o fundo ── */
-main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle) {
+/* ── Ações por ícone: quadrado de 32 px com contorno; a cor acompanha o fundo ── */
+main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle, .credit-email) {
   display:inline-grid; place-items:center; width:32px; min-width:32px; height:32px; min-height:32px; padding:0;
   border:1px solid color-mix(in srgb, currentColor 45%, transparent); border-radius:8px; background:transparent; box-shadow:none;
 }
-main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle):hover { background:color-mix(in srgb, currentColor 12%, transparent); }
+main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle, .credit-email[href]):hover { background:color-mix(in srgb, currentColor 12%, transparent); }
 @media (max-width:999px), (pointer:coarse) {
-  main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle) { width:44px; min-width:44px; height:44px; min-height:44px; }
+  main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle, .credit-email) { width:44px; min-width:44px; height:44px; min-height:44px; }
 }
 
 /* ── "?" de ajuda: sem fundo próprio; a cor acompanha o fundo ── */
