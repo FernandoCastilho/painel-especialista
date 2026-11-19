@@ -195,6 +195,7 @@ async function quotesWithCentral() {
   src = src.replace("from 'react'", `from '${pathToFileURL(require.resolve('react'))}'`)
     .replace("from './visiblePolling.js'", `from '${new URL('../src/visiblePolling.js', import.meta.url)}'`)
     .replace("from './quoteSafety.js'", `from '${new URL('../src/quoteSafety.js', import.meta.url)}'`)
+    .replace("from '../scripts/data-schedules.mjs'", `from '${new URL('../scripts/data-schedules.mjs', import.meta.url)}'`)
     .replace('import.meta.env?.VITE_DATA_BASE', "'https://central.example'")
   return import(`data:text/javascript;base64,${Buffer.from(`${src}\n// test ${++version}`).toString('base64')}`)
 }
@@ -249,7 +250,7 @@ test('quotes: foco é automático, não concorre, manual prevalece e resposta ab
 })
 
 test('quotes: a cada 10 min com a aba visível consulta a API direto; oculta, não consulta', async (t) => {
-  const clock = browserClock(t), q = await quotesWithCentral(), urls = []
+  const clock = browserClock(t, Date.parse('2026-11-19T14:00:00Z')), q = await quotesWithCentral(), urls = []
   globalThis.fetch = async (url) => { urls.push(url); return url.startsWith('https://central.example') ? json({ generatedAt: clock.now, quotes: batch(clock.now) }) : json(batch(clock.now, 5.5)) }
   const r = hookRenderer(() => q.useQuotes())
   clock.cleanup(() => r.close())
@@ -262,6 +263,19 @@ test('quotes: a cada 10 min com a aba visível consulta a API direto; oculta, n�
   clock.doc.hidden = true; clock.doc.dispatch('visibilitychange')
   await clock.advance(30 * MIN); await r.settle(); assert.equal(direct(), 1)
 })
+
+for (const [iso, quando] of [['2026-11-19T23:00:00Z', 'noite'], ['2026-11-21T15:00:00Z', 'sábado'], ['2026-11-20T15:00:00Z', 'feriado da B3']]) {
+  test(`quotes: com o câmbio fechado (${quando}) não há consulta direta automática`, async (t) => {
+    const clock = browserClock(t, Date.parse(iso)), q = await quotesWithCentral(), urls = []
+    globalThis.fetch = async (url) => { urls.push(url); return url.startsWith('https://central.example') ? json({ generatedAt: clock.now, quotes: batch(clock.now) }) : json(batch(clock.now, 5.5)) }
+    const r = hookRenderer(() => q.useQuotes())
+    clock.cleanup(() => r.close())
+    await r.settle()
+    await clock.advance(30 * MIN); await r.settle()
+    assert.equal(urls.filter((u) => /awesomeapi/.test(u)).length, 0)
+    assert.ok(urls.some((u) => u.startsWith('https://central.example')))
+  })
+}
 
 test('quotes: central atrasada reutiliza cotação direta por 5 min sem alternar para BCE nem renovar data', async(t)=>{
  const clock=browserClock(t), q=await quotesWithCentral(), urls=[]

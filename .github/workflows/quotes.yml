@@ -3,7 +3,7 @@ name: Cotações (coleta central)
 # Um único robô consulta a AwesomeAPI e publica quotes.json, intraday.json e history.json na branch `data`.
 # Todos os usuários leem esses arquivos: a cota da API não depende de quantas pessoas abrem a página.
 #
-# Coleta intensiva (9h05 às 18h de Brasília = 12h05 às 21h UTC, segunda a sexta): o agendamento do GitHub não garante
+# Coleta intensiva (9h05 às 18h de Brasília = 12h05 às 21h UTC, dias de pregão da B3; feriado conta como fora do pregão): o agendamento do GitHub não garante
 # execuções a cada 5 min (na prática atrasa ou pula horas). Por isso cada execução do pregão fica ligada e coleta
 # a cada 5 min pelo relógio, até o fim do pregão ou até 5h40 de duração (limite de 6 h por job). Três partidas
 # escalonadas cobrem o dia: enquanto uma roda, a seguinte espera na fila (concurrency) e assume quando ela termina.
@@ -42,13 +42,9 @@ jobs:
           AWESOMEAPI_KEY: ${{ secrets.AWESOMEAPI_KEY }}
           PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
         run: |
-          # janela de coleta intensiva: 09h05 a 18h de Brasília (12h05 a 21h UTC).
-          # Não representa horário de bolsa: as fontes de câmbio permanecem as mesmas.
-          in_session() {
-            local dow hm
-            dow=$(date -u +%u); hm=$((10#$(date -u +%H%M)))
-            [ "$dow" -le 5 ] && [ "$hm" -ge 1205 ] && [ "$hm" -le 2100 ]
-          }
+          # janela de coleta intensiva: 09h05 a 18h de Brasília, só em dia de pregão da B3 (dólar futuro: 9h às 18h).
+          # Em feriado da B3 cada partida coleta uma vez só, como fora do pregão. Regra em cotacoes/scripts/data-schedules.mjs.
+          in_session() { node cotacoes/scripts/fx-session.mjs; }
           # Dados anteriores (branch data). Devolve 0 quando o estado é conhecido: arquivos baixados, ou a branch ainda não existe
           # (primeira publicação). Falha de rede NÃO é "branch não existe": devolve 1 e a rodada não coleta nem publica, porque a
           # publicação substitui a branch inteira e o intradiário de 5 dias recomeçaria do zero.
