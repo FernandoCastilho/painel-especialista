@@ -219,6 +219,17 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/podcast
           if-no-files-found: error
           retention-days: 7
+      - name: Conferir prioridade dos menus e navegação por teclado
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: MENU_QA_OUTPUT="$RUNNER_TEMP/qa-menu-priority" node scripts/smoke-menu-priority.cjs
+      - name: Capturas dos menus desktop, tablet e celular
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-priority
+          path: ${{ runner.temp }}/qa-menu-priority
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir história dos juros, busca e navegação em Aprender
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: INTEREST_HISTORY_QA_OUTPUT="$RUNNER_TEMP/qa-universal/interest-history" node scripts/smoke-interest-history.cjs
