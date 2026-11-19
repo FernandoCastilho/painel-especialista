@@ -31,10 +31,10 @@ function GiroIcon() {
 }
 
 const CALCS = [
+  { id: 'finame-materiais', title: 'BNDES', sub: 'Simular Finame, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'comparador-credito', title: 'Comparador de Crédito', sub: 'De 2 a 5 modalidades lado a lado: custo, CET e fluxo', Icon: CreditIcon },
   { id: 'operacao-di', title: 'Operação x DI', sub: 'Pré, % do CDI ou CDI + spread contra o DI da curva B3', Icon: OperacaoDiIcon },
   { id: 'cbs-caixa', title: 'Reforma tributária · caixa', sub: 'CBS, créditos e necessidade adicional de giro', Icon: CbsIcon },
-  { id: 'finame-materiais', title: 'BNDES', sub: 'Simular, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'conta-garantida', title: 'Conta Garantida', sub: 'Juros e IOF sobre saldos', Icon: ContaGarantidaIcon },
   { id: 'cdi-dolar', title: 'CDI x Dólar', sub: 'Em quanto tempo o CDI líquido alcança a alta do dólar', Icon: CdiDolarIcon },
   { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: crédito na empresa x distribuir dividendos hoje', Icon: DividendosEmprestimoIcon },
@@ -66,6 +66,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
+      <a className="calc-bndes-rates" href="#bndes">Taxas BNDES · consultar séries e históricos</a>
       <div className="bw-heading calc-workspace-heading"><h2 id="calc-title"><strong aria-hidden="true">{'PME'}</strong><span>Calculadoras</span></h2></div>
       <p className="cx-construcao" role="note"><strong>Em construção!</strong> Os cálculos podem conter erros. Use somente para estudo.</p>
       <div className="cx-tiles">
