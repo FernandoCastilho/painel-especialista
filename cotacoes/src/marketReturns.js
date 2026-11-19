@@ -50,3 +50,13 @@ export function cnhPtaxCross(ptaxUsd, usdPoints, cnhPoints, maxGapMs = 15 * 6000
   if (!usd || !cnh || Math.abs(usd.t - at) > maxGapMs || Math.abs(cnh.t - at) > maxGapMs || !(usd.bid > 0) || !(cnh.bid > 0)) return null
   return { ...ptaxUsd, sell: ptaxUsd.sell / (usd.bid / cnh.bid), cross: true }
 }
+
+// Destaques da tabela de câmbio: 🔥 na moeda que mais subiu no mês e 🛡️ na que menos subiu.
+// Só marca com duas ou mais moedas com acumulado do mês e quando a maior e a menor são diferentes.
+export function destaquesMes(returns) {
+  const vals = Object.entries(returns ?? {}).filter(([, r]) => Number.isFinite(r?.month?.value)).map(([code, r]) => [code, r.month.value])
+  if (vals.length < 2) return {}
+  const max = Math.max(...vals.map(v => v[1])), min = Math.min(...vals.map(v => v[1]))
+  if (max === min) return {}
+  return { maior: vals.find(v => v[1] === max)[0], menor: vals.find(v => v[1] === min)[0] }
+}
