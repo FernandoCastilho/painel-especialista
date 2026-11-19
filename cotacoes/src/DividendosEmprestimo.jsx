@@ -10,6 +10,7 @@ import { latestCdi } from './cdiDolar.js'
 import { useMacro } from './useMacro.js'
 import { IOF_PJ } from './emprestimo.js'
 import { PIS_COFINS_FINANCEIRO, parseDecimal, simularDividendosEmprestimo } from './dividendosEmprestimo.js'
+import CalcBack from './CalcBack.jsx'
 
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 const pct = (n, d = 2) => `${(n * 100).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}%`
@@ -71,7 +72,7 @@ export default function DividendosEmprestimo({ onBack }) {
   return (
     <section className="cx cx-cd bw calc-standard calc-workspace cd-pattern de-pattern" aria-labelledby="de-heading">
       <div className="bw-heading calc-workspace-heading">
-        <h2 id="de-heading" className="cx-title"><span>Dividendos via empréstimo</span></h2>
+        <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="de-heading" className="cx-title"><span>Dividendos via empréstimo</span></h2></div>
         <CalculatorHelp title="Dividendos via empréstimo"><p>A empresa de lucro real toma crédito, repassa o dinheiro ao sócio, o sócio aplica e deixa a aplicação como garantia. A tela compara com distribuir o dividendo hoje e pagar o imposto sobre ele.</p><p>Simulação para estudo. Não é recomendação tributária nem cotação.</p></CalculatorHelp>
       </div>
       <p className="cd-notice">Simulação para estudo, com CDI constante e regras tributárias simplificadas. Confirme a estrutura com o jurídico e o contador da empresa. Os dados ficam só nesta tela.</p>

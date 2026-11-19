@@ -8,6 +8,7 @@ import BndesCustosProdutos from './BndesCustosProdutos.jsx'
 import './BndesWorkspace.css'
 import './FinameComparisonLayout.css'
 import './CalculatorPattern.css'
+import CalcBack from './CalcBack.jsx'
 
 const PROFILES = [
   ['finame-materiais', 'Finame Materiais Industrializados'],
@@ -37,7 +38,7 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
   const profileControl = <div className="bw-profile"><label htmlFor="bw-profile">Linha</label><select id="bw-profile" value={selected} onChange={event => navigate(event.target.value)}>{PROFILES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
   return <div className="bndes-page">
     <section className="cx bw" aria-labelledby="bw-title">
-    <div className="bw-heading"><h2 id="bw-title"><img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" /><span>{profile === 'finame-materiais' ? (ALIASES[variante] ?? 'Finame Materiais') : 'Financiamentos'}</span></h2>
+    <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="bw-title"><img className="bndes-official-logo" src="./brands/bndes.png" alt="BNDES · O banco nacional do desenvolvimento" /><span>{profile === 'finame-materiais' ? (ALIASES[variante] ?? 'Finame Materiais') : 'Financiamentos'}</span></h2></div>
     <nav className="bw-nav" aria-label="Área BNDES">
       <button type="button" aria-pressed={area === 'simulate' && !historical} onClick={() => { setArea('simulate'); if (historical) navigate('finame-materiais') }} aria-label="Simular financiamento">Simular</button>
       <button type="button" aria-pressed={area === 'quotes'} onClick={() => setArea('quotes')}>Taxas e históricos</button>

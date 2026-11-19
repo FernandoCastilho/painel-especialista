@@ -13,6 +13,7 @@ import { simulateCbsCash } from './cbsCash.js'
 import { CBS_SOURCES } from './baseDados.js'
 import './CbsCaixa.css'
 import './CalcPattern-cbs.css'
+import CalcBack from './CalcBack.jsx'
 
 const money = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const decimal = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
@@ -60,7 +61,7 @@ export default function CbsCaixa({ onBack }) {
   return <section className="cx cbs bw calc-standard calc-workspace" aria-labelledby="cbs-title">
     <div className="cx-toolbar">
       <button type="button" className="cx-action" onClick={() => { setForm(initial); setMonthlyOverrides({}); setActivityConfirmed(false); setSearchReset(value => value + 1) }}>Restaurar exemplo</button></div>
-    <div className="bw-heading calc-workspace-heading"><h2 id="cbs-title" className="cx-title"><span>Reforma tributária · impacto no caixa</span></h2></div>
+    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cbs-title" className="cx-title"><span>Reforma tributária · impacto no caixa</span></h2></div></div>
     <div className="cx-field-label cbs-intro"><span>O que esta simulação faz</span><Help title="O que esta simulação faz"><p>Simule a CBS, tributo federal que substitui PIS/Cofins, e seu efeito no caixa.</p></Help></div>
     <p className="cbs-assumptions">Simulação educativa de CBS · preços brutos mantidos · não inclui IBS nem apuração fiscal.</p>
     <div className="cbs-workspace">

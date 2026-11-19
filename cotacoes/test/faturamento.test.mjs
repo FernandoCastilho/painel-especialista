@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -140,7 +141,7 @@ test('tela abre vazia, sem dados de cliente, e está no catálogo de calculadora
   const { code } = await transform(raw, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
   const stub = ({ children }) => createElement('div', null, children)
-  runInNewContext(code, { module, exports: module.exports, require: (n) => n === './ChartFullscreen.jsx' || n === './ExpandablePanel.jsx' || n === './CalculatorHelp.jsx' ? stub : n === './faturamento.js' ? fat : require(n) })
+  runInNewContext(code, { module, exports: module.exports, require: withCalcBack((n) => n === './ChartFullscreen.jsx' || n === './ExpandablePanel.jsx' || n === './CalculatorHelp.jsx' ? stub : n === './faturamento.js' ? fat : require(n)) })
   const html = renderToStaticMarkup(createElement(module.exports.default, { onBack: () => {} }))
   assert.match(html, /Cole aqui: Competência \(mês\), Faturamento e Endividamento/)
   assert.match(html, /Nenhum mês lido ainda/)

@@ -26,8 +26,3 @@
 @media (max-width: 999px) { .top .clocks-info { display: inline-flex; margin-left: auto; } }
 @media (min-width: 1000px) { .top.top-min { display: none; } }
 
-/* Calculadora aberta: "‹ Voltar" discreto no topo, no lugar do antigo "‹ Calculadoras" dentro de cada calculadora. */
-.top-back-btn { display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:0 12px 0 0; margin-right:auto; border:0; background:none; color:var(--mut); font:inherit; font-size:.875rem; cursor:pointer; }
-.top-back-btn span { font-size:1.15rem; line-height:1; }
-.top-back-btn:hover, .top-back-btn:focus-visible { color:var(--fg); }
-@media (min-width: 1000px) { .top.top-min.top-back { display:flex; justify-content:flex-start; margin:0 0 4px; } }

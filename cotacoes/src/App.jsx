@@ -318,8 +318,7 @@ export default function App() {
       <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
       {tab !== 'resumo' && (
-        <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}${tab === 'calculadora' && sub ? ' top-back' : ''}`}>
-          {tab === 'calculadora' && sub && <button type="button" className="top-back-btn" onClick={() => goto('calculadora', '')} aria-label="Voltar para a lista de calculadoras"><span aria-hidden="true">‹</span> Voltar</button>}
+        <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}`}>
           {!['calculadora', 'noticias', 'feriados'].includes(tab) && <h1>{tab === 'setores' ? 'Central de setores' : TABS.find((t) => t.id === tab).label}</h1>}
           <AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" /><MascotSlot className="mascot-slot-m" />
         </header>

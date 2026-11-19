@@ -10,6 +10,7 @@ import { resolveCreditIof } from './iofRules.js'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 import './CapitalDeGiro.css'
 import './CalcPattern-giro.css'
+import CalcBack from './CalcBack.jsx'
 
 const EXPENSES = [
   { id: 'iof', label: 'IOF' },
@@ -81,8 +82,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
 
   return <section className="giro-screen" aria-labelledby="calc-h">
     <header className="giro-header">
-      <p>Painel do Especialista</p>
-      <div><h2 id="calc-h">Capital de giro</h2>
+      <div><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="calc-h">Capital de giro</h2></div>
         <Help title="Capital de Giro: cálculo e premissas">
           <p>Operação prefixada com juros por dias corridos na base de 30 dias. O vencimento passa ao próximo dia útil conforme a praça do contrato. No Bullet, o pagamento acontece no último vencimento.</p>
           <p>Os custos à vista são abatidos na liberação. Custos financiados compõem o saldo e as parcelas. O CET é anual, calculado sobre o fluxo em dias corridos na base de 365 dias. O CET do contrato prevalece.</p>

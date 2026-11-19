@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -22,7 +23,7 @@ async function setup(t) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
-    runInNewContext(code, { module, exports: module.exports, require: name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : deps[name]) ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name)) })
+    runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : deps[name]) ?? (name === './moneyInput.js' ? { formatMoneyText: value => value } : require(name))) })
     deps['./' + file] = module.exports
   }
   let back = 0
