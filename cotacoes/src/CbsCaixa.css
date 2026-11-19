@@ -133,3 +133,12 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
   .cbs .cbs-annual-chart .cbs-chart-dot { r:4px; }
   .cbs .cbs-annual-chart g>text { display:block; }
 }
+/* Alíquotas do ano: rótulo oficial/hipótese sempre visível. */
+.cbs-rates { grid-column:1 / -1; border:1px solid var(--line); border-radius:8px; padding:12px; display:grid; gap:8px; min-width:0; }
+.cbs-rates p { margin:0; line-height:1.5; }
+.cbs-rates-title { font-weight:700; color:var(--fg); }
+.cbs .cbs-rate-origin { color:var(--mut); font-size:.9rem; }
+.cbs-rate-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+.cbs-tag { display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:.8rem; font-weight:600; border:1px solid var(--amber, #ffb000); color:var(--fg); }
+.cbs-tag.is-official { border-color:var(--accent); }
+.cbs-official-source p { overflow-wrap:anywhere; }

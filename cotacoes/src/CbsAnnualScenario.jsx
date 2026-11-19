@@ -17,7 +17,7 @@ export default function CbsAnnualScenario({ revenue, inputs, overrides, onOverri
   const uniform = valid.length === 12 && valid.every(month => month.result.reserveDelayed === valid[0].result.reserveDelayed)
   return <section className="cbs-annual" aria-labelledby="cbs-annual-title">
     <div className="cbs-chart-heading"><h4 id="cbs-annual-title">Reserva adicional por mês</h4><p>Cada mês é calculado separadamente, com os mesmos prazos e hipóteses.</p></div>
-    <ExpandablePanel title="Gráfico mensal"><p className="cbs-chart-scale">Reserva adicional de CBS (R$) · {valid.length === 0 ? 'sem valores válidos' : max > 0 ? `escala de R$ 0 a ${money(top)}` : 'R$ 0'}</p>
+    <ExpandablePanel title="Gráfico mensal"><p className="cbs-chart-scale">Reserva adicional de CBS e IBS (R$) · {valid.length === 0 ? 'sem valores válidos' : max > 0 ? `escala de R$ 0 a ${money(top)}` : 'R$ 0'}</p>
     <p className="cbs-chart-mobile-hint">Deslize o gráfico para ver os 12 meses.</p>
     <div className="cbs-chart-scroll" tabIndex="0" role="region" aria-label="Gráfico de janeiro a dezembro, com rolagem horizontal">
     <ChartFullscreen><svg className={`cbs-annual-chart${max === 0 ? ' is-zero' : ''}`} viewBox={max === 0 ? '0 135 890 90' : '0 0 890 220'} role="img" aria-labelledby="cbs-chart-title cbs-chart-description">

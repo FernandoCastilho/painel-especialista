@@ -82,3 +82,58 @@ O fluxo usa dados essenciais, uma reserva principal (cenário com espera pelos c
 A visão janeiro–dezembro aplica a mesma função `simulateCbsCash` a 12 cenários independentes. Por padrão, repete o faturamento principal, sem inventar sazonalidade; cada mês pode receber um faturamento próprio. Prazos e demais hipóteses permanecem comuns. Não há transferência de crédito ou saldo entre meses, soma anual de reservas, previsão de caixa ou cálculo integral de NCG. Faturamento inválido ou zero deixa o mês sem ponto, com orientação para corrigir, preservando o contrato de faturamento positivo da fórmula. Alterações mensais sobrevivem à correção de entradas principais inválidas; restaurar o exemplo as limpa.
 
 O gráfico mantém os rótulos dos meses ancorados nos pontos e rolagem interna no celular. Controles separados permitem consultar faturamento e reserva exatos. A apresentação foi revisada novamente pelo Diretor de Arte e pelo Simplificador após rejeição do formato anterior. A revisão local não implica nova publicação.
+
+# Reforma oficial (2026-11-19)
+
+Pedido de Fernando: reformular a calculadora com as regras da calculadora oficial da Receita. Contrato: `docs/reforma-tributaria-oficial/combinado.md` (aprovado com "Ok"). Captura das fontes: `docs/reforma-tributaria-oficial/captura-2026-11-19.md`.
+
+## O que mudou
+
+- Tributos: CBS, IBS estadual, IBS municipal e Imposto Seletivo (IS). Antes só CBS.
+- Base "por fora", como na oficial: o usuário informa as vendas sem ICMS, ISS, PIS, Cofins e IPI. Imposto = base × alíquota efetiva. O IS entra na base de CBS e IBS. Antes a CBS era tirada de dentro do faturamento bruto (`valor × t ÷ (100 + t)`).
+- Seletor de ano de 2026 a 2033.
+  - 2026: alíquotas oficiais do banco da Receita (CBS 0,9%, IBS estadual 0,1%, IBS municipal 0%), sem edição. Aviso de que 2026 é ano de teste.
+  - 2027 a 2033: valores iniciais editáveis, rotulados "hipótese", com a origem na tela. CBS: referência técnica do TCU (11,3%, out/2026) menos 0,1 ponto em 2027–2028, e 11,3% depois (mesma referência já usada pela calculadora). IBS: escada da carga inicial do banco da Receita (0,05% + 0,05% em 2027–2028 até 16% + 2,5% em 2033), que a própria Receita apagou em 28/08/2026 por não estar em lei. Na tela, essa origem aparece escrita; os números não são apresentados como oficiais. Ao trocar o ano, as alíquotas voltam ao valor inicial daquele ano.
+- Reduções de 30% a 100% da tabela oficial de classificação (cClassTrib, CST 200 e 011): alíquota × (1 − redução), por tributo. CST 515 (redução com diferimento) ficou de fora do seletor.
+- Simples Nacional (a partir de 2027): o usuário informa a parte de CBS e a parte de IBS do DAS (alíquotas efetivas do PGDAS-D). A calculadora reparte como a oficial: receita × fator do tipo de venda × alíquota. Venda interna 1; mista 0,5; exportação direta 0; exportação indireta suspensa (aparece como suspenso, fora do imposto a pagar). Sem crédito nas compras. Em 2026 o Simples fica bloqueado com aviso.
+- Motor de caixa preservado (prazos, split, crédito com espera, reserva). Recebe CBS + IBS como imposto com split e crédito; o IS vence no prazo informado, sem split e sem crédito.
+- "PIS/Cofins atual" virou "Tributos atuais substituídos, após créditos", em % das vendas sem tributos, com ajuda por ano (2027–2028 PIS/Cofins; 2029–2032 parte do ICMS/ISS que sai; 2033 todos).
+- Fonte, versão (calculadora 1.6.1, tabela V0059 de 30/09/2026) e rótulo oficial/hipótese/informado ficam visíveis no quadro de alíquotas. Detalhes e licença em "Fonte das regras e das alíquotas".
+
+## Arquivos
+
+- `cotacoes/src/rtcCalc.js`: fórmulas oficiais em JavaScript (8 casas internas, arredondamento bancário, como `ArredondamentoUtils.java`).
+- `cotacoes/src/rtcOficial.json`: tabela extraída (fonte, versão, commit `150cccbe`, alíquotas de referência, 59 classificações com redução).
+- `cotacoes/scripts/extract-rtc-oficial.py`: lê os arquivos SQL oficiais **como texto** e grava o JSON. Nada do repositório oficial é executado (não monta banco). Para em erro diante de comando que não reconhece.
+- `cotacoes/src/rtcAnos.js`: alíquotas por ano e origem de cada número.
+- `cotacoes/src/cbsCash.js`, `CbsCaixa.jsx`: motor e tela.
+- `.github/workflows/reforma-oficial-versao.yml`: rotina semanal (segundas, 09h17 de Brasília) que compara a versão da calculadora e da tabela oficial com o JSON e abre issue + aviso no Teams (mesmo padrão de `alerta-coleta.yml`). Não troca dados. Só roda depois de ir para o ramo principal.
+
+## Decisões tomadas sozinho (escolha mais segura, para revisão)
+
+1. Alíquotas iniciais de 2027+: CBS do TCU (mantém a hipótese já aprovada e é mais conservadora para caixa que os 8,4–8,5% apagados) e IBS da escada apagada pela Receita, com a origem escrita. Alternativa: deixar IBS em branco, o que subestima o imposto.
+2. Crédito nas compras usa a mesma alíquota efetiva das vendas (com a redução). Conservador: venda reduzida gera crédito menor.
+3. CST 515 (diferimento) fora do seletor de reduções; diferimento, crédito presumido, regimes específicos e compras do governo fora do cálculo, como no combinado.
+4. A comparação com os tributos atuais depende do percentual informado pelo usuário; a calculadora não modela a escada de redução do ICMS/ISS.
+
+## Limites
+
+- Não é cálculo por item de nota, apuração fiscal nem alíquota do DAS.
+- Os números de 2027–2033 são hipóteses; a lei ainda não os fixou.
+- Imposto Seletivo só com alíquota ad valorem; ad rem (por unidade) só nas fórmulas e testes.
+- Autenticidade da cópia oficial não conferida contra a Portaria Cotec 342/2026 (site bloqueado na sessão).
+
+## Matriz de evidências
+
+| Critério do combinado | Evidência |
+| --- | --- |
+| Contas batem com a oficial (≥ 10 casos) | `test/cbs-rtc-oficial.test.mjs`: 17 casos oficiais (12 do regime regular, 5 do Simples). Regime regular: Teste_000001_1, _2, _5, _6, _9 (6 variações de base), Teste_011002_1, Teste_200032_1, _2, Teste_200002_1, _2, `docs/exemplos.md` (educação 200028 e totais de 3 itens). Simples: Teste_SimplesNacionalCalculoService casos 01, 02, 03, 04, 05a07. Arredondamento de `ArredondamentoUtils.java` |
+| Reduções vindas da tabela oficial | os testes acima leem as reduções do `rtcOficial.json` (011002, 200032, 200002, 200028, 200003) |
+| 2026 oficial; 2027+ sem alíquota oficial | teste de dados em `cbs-rtc-oficial.test.mjs`; smoke confere rótulos "oficial"/"hipótese" e campos bloqueados em 2026 |
+| Extrator lê o SQL sem executar e para em forma desconhecida | teste com arquivos de exemplo em `cbs-rtc-oficial.test.mjs` |
+| Motor de caixa preservado com novos tributos | `test/cbs-cash.test.mjs` (12 testes, inclui IBS, redução, IS e Simples), `cbs-annual`, `cbs-ncg` |
+| Tela: ano, redução, Simples, fonte e versão | `scripts/smoke-cbs.cjs` (Chromium), capturas em `cotacoes/workspace-qa/reforma-oficial/` (390 e 1440, claro e escuro) |
+| Rotina semanal só avisa | `reforma-oficial-versao.yml`; lógica conferida com simulação local (igual, versão nova, fechar aviso). Chamada real à API do GitHub não conferida na sessão |
+| Testes, build, lint | `npm test` 2192/2192; build ok; lint 0 erros (5 avisos antigos em outros arquivos) |
+| CI verde | pendente: só depois do envio do ramo |
+| Revisões | Simplificador da central não instalado: usados o simplificador de código da sessão (passada única, sem subagentes) e a revisão ponytail; Diretor de Arte (instruções da skill) revisou as capturas e pediu título e rótulo curto no Simples, aplicados. **Revisão independente do cálculo: pendente** |

@@ -1,6 +1,6 @@
 # Combinado: nova calculadora da reforma tributária
 
-Estado: proposta, aguardando o "ok" de Fernando. Data: 2026-11-19.
+Estado: aprovado por Fernando ("Ok") em 2026-11-19. Entrega descrita em `docs/cbs-caixa.md`, seção "Reforma oficial (2026-11-19)". Data: 2026-11-19.
 Base: escolhas de Fernando nesta data e a captura em `captura-2026-11-19.md`.
 
 ## Objetivo

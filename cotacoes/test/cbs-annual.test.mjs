@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { buildCbsAnnual } from '../src/cbsAnnual.js'
 import { simulateCbsCash } from '../src/cbsCash.js'
 
-const inputs = { spendingRatio: 0.6, eligibleShare: 70, cbsRate: 11.2, currentNetRate: 3.65, splitShare: 50, receiveDays: 30, payDays: 30, stockDays: 30, currentDueDays: 40, futureDueDays: 40, creditDelayDays: 30 }
+const inputs = { spendingRatio: 0.6, eligibleShare: 70, taxes: { regime: 'regular', aliquotas: { cbs: 11.2, ibsUf: 0.05, ibsMun: 0.05 }, reducao: {}, isRate: 0 }, currentNetRate: 3.65, splitShare: 50, receiveDays: 30, payDays: 30, stockDays: 30, currentDueDays: 40, futureDueDays: 40, creditDelayDays: 30 }
 test('annual view repeats the base revenue without inventing seasonality or accumulating reserves', () => {
   const months = buildCbsAnnual('1.000.000,00', {}, inputs)
   assert.equal(months.length, 12)
