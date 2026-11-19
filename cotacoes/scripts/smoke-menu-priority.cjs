@@ -5,7 +5,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
  fs.mkdirSync(out,{recursive:true})
  const browser=await chromium.launch(require('./smoke-launch.cjs')()), report=[]
  try{
-  for(const width of [390,820,1024,1440]) for(const theme of ['light','dark']){
+  for(const width of [320,390,820,1024,1440]) for(const theme of ['light','dark']){
    const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme,serviceWorkers:'block'})
    const page=await context.newPage()
    await page.goto(base+'/#calculadora')
@@ -14,13 +14,19 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    if(await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
    await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,theme)
    const nav=page.getByRole('navigation',{name:width>=1000?'Navegação principal':'Seções',exact:true})
-   const expected=width>=1000?['Mercado','Cenários','Calculadoras','Setores','Notícias','Podcast','Mais']:['Mercado','Cenários','Calculadoras','Setores','Mais']
+   const expected=width>=1000?['Mercado','Cenários','Juros','Calculadoras','Setores','Notícias','Podcast','Mais']:['Mercado','Cenários','Juros','Calculadoras','Setores','Mais']
    assert.deepEqual((await nav.locator(':scope > button, :scope > .more-tab > button').allTextContents()).map(s=>s.trim()),expected)
+   for(const button of await nav.locator(':scope > button, :scope > .more-tab > button').all()) {
+    const bounds=await button.boundingBox()
+    assert.ok(bounds.width>=44&&bounds.height>=44,'primary touch target at least 44px')
+    assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1,'primary button within viewport')
+    assert.equal(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true,'primary label not clipped')
+   }
    await nav.getByRole('button',{name:'Mais',exact:true}).click()
    const menu=nav.getByRole('menu')
-   assert.equal(await menu.getByRole('group',{name:'Acompanhar',exact:true}).count(),1)
+   assert.equal(await menu.getByRole('group',{name:'Acompanhar',exact:true}).count(),width<1000?1:0)
    assert.equal(await menu.getByRole('group',{name:'Consultar',exact:true}).count(),1)
-   assert.equal(await menu.getByRole('menuitem',{name:'Juros',exact:true}).count(),1)
+   assert.equal(await menu.getByRole('menuitem',{name:'Juros',exact:true}).count(),0)
    assert.equal(await menu.getByRole('menuitem',{name:'Notícias',exact:true}).count(),width<1000?1:0)
    const bounds=await menu.boundingBox()
    assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1&&bounds.y>=0&&bounds.y+bounds.height<=1001)
@@ -44,14 +50,14 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.keyboard.press('Tab')
    assert.equal(await more.getAttribute('aria-expanded'),'false','Tab closes menu')
    // Every primary destination is a real clickable route.
-   const destinations=[['Mercado','resumo'],['Cenários','cenarios'],['Calculadoras','calculadora'],['Setores','setores']]
+   const destinations=[['Mercado','resumo'],['Cenários','cenarios'],['Juros','juros'],['Calculadoras','calculadora'],['Setores','setores']]
    if(width>=1000) destinations.push(['Notícias','noticias'],['Podcast','podcast'])
    for(const [label,id] of destinations){
     await nav.getByRole('button',{name:label,exact:true}).click()
     await page.waitForURL('**/#'+id)
     assert.equal(await nav.getByRole('button',{name:label,exact:true}).getAttribute('aria-current'),'page')
    }
-   const extra=[['Juros','juros'],...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Aprender','aprender']]
+   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Aprender','aprender']]
    for(const [label,id] of extra){
     await more.click()
     await menu.getByRole('menuitem',{name:label,exact:true}).click()

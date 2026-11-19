@@ -13,7 +13,7 @@ import { APP_SECTIONS as TABS } from './appSections.js'
 import { MOBILE_PRIMARY, DESKTOP_PRIMARY, MORE_GROUPS, shortcutTitle } from './navigationPriority.js'
 const DOTS = ['M5 12h.01M12 12h.01M19 12h.01']
 
-// Desktop mostra seis destinos; celular/tablet quatro. Mais preserva os demais em grupos.
+// Desktop mostra sete destinos; celular/tablet cinco. Mais preserva os demais em grupos.
 export default function Nav({ tab, onTab, desktop = false }) {
   const PRIMARY = desktop ? DESKTOP_PRIMARY : MOBILE_PRIMARY
   const [more, setMore] = useState(false)
