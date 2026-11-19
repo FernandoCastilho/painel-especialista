@@ -2,6 +2,7 @@
 const fs=require('node:fs/promises'),path=require('node:path')
 const compare=require('./capture-rgb-metrics.cjs')
 const captureSpecialRegions=require('./capture-special-regions.cjs')
+const nativeReference=require('./capture-native-reference.cjs')
 let sequence=0
 module.exports=async function deviceFidelity(page,target,bytes,selectors){
  const {captureSize}=await import('../src/captureImage.js')
@@ -27,7 +28,8 @@ module.exports=async function deviceFidelity(page,target,bytes,selectors){
    const special=await target.evaluate(captureSpecialRegions)
    regions.push(...special.map(r=>({...r,x:r.x*size.scale,y:r.y*size.scale,w:r.w*size.scale,h:r.h*size.scale})))
   }
-  const reference=await page.screenshot({clip:{x:geometry.x,y:geometry.y,width:cssWidth,height:cssHeight},scale:'device',animations:'disabled',style:'[data-capture-ignore], [data-capture-ignore] * {visibility:hidden!important}'})
+  const {reference,metadata:nativeMetadata}=await nativeReference(page,session,{x:geometry.x,y:geometry.y,width:cssWidth,height:cssHeight,dpr:size.scale})
+  await fs.writeFile(path.join(out,prefix+'-geometry.json'),JSON.stringify({geometry,size,nativeMetadata,regions},null,2))
   await fs.writeFile(path.join(out,prefix+'-reference.png'),reference)
   await fs.writeFile(path.join(out,prefix+'-actual.png'),Buffer.from(bytes))
   const result=await page.evaluate(async({bytes,reference,regions,source})=>{
@@ -52,7 +54,7 @@ module.exports=async function deviceFidelity(page,target,bytes,selectors){
    }
    return {proof,negatives,dimensions:[actual.width,actual.height]}
   },{bytes,reference:Array.from(reference),regions,source:compare.toString()})
-  await fs.writeFile(path.join(out,prefix+'-report.json'),JSON.stringify({geometry,size,regions,...result},null,2))
+  await fs.writeFile(path.join(out,prefix+'-report.json'),JSON.stringify({geometry,size,nativeMetadata,regions,...result},null,2))
   if(result.negatives.some(n=>!n.rejected))throw new Error('Comparador aceitou negativo real: '+JSON.stringify(result.negatives))
   return result.proof
  }finally{
