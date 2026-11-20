@@ -59,7 +59,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
   if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} />
-  if (view === 'cambio-futuro') return <CambioFuturo onBack={() => onView('')} />
+  if (view === 'cambio-futuro') return <CambioFuturo onBack={() => onView('')} quotes={quotes} />
   if (view === 'cdi-dolar') return <CdiDolar onBack={() => onView('')} quotes={quotes} />
   if (view === 'dividendos-emprestimo') return <DividendosEmprestimo onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} apresentacao={apresentacao} />

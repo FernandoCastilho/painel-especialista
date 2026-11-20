@@ -7,6 +7,8 @@ import Flag from './Flag.jsx'
 import { parseDecimal } from './cdiDolar.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { marketDate } from './marketReturns.js'
+import { fromInput, useCentralDaily, useIntraday } from './useHistory.js'
+import { explicacaoFaixa, explicacaoPonto, mesaDailyEur, mesaIntradayCnh, mesaSpotRange, spotDayPlan } from './cambioFuturoSpot.js'
 import { simularParcelaCambial } from './cambioFuturoParcela.js'
 
 export function CambioFuturoIcon() {
@@ -21,25 +23,59 @@ export function CambioFuturoIcon() {
 
 const dataBr = iso => iso ? iso.split('-').reverse().join('/') : '—'
 const decimalBr = n => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const spotBr = n => n.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+const horaBr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 const MOEDAS_MESA = [{ id: 'CNH', nome: 'Yuan (CNH)' }, { id: 'EUR', nome: 'Euro (EUR)' }]
 const mesaVazia = () => Object.fromEntries(MOEDAS_MESA.map(({ id }) => [id, { cotacao: '', futuro: '' }]))
 const comBandeira = (id, nome) => <span className="cf-com-bandeira"><Flag code={id} width={20} height={14} />{nome}</span>
 
-function Campo({ id, label, value, onChange, type = 'text', placeholder, erro }) {
+function ReferenciaIndisponivel({ loading }) {
+  return loading ? 'Consultando a referência à vista…' : 'Referência à vista indisponível.'
+}
+
+function EurDiario({ plan, price }) {
+  const history = useCentralDaily()
+  const ref = mesaDailyEur(history.data, plan)
+  return ref ? <>Referência diária indicativa (compra): R$ {spotBr(ref.value)}/EUR · {dataBr(ref.date)} (data de Brasília) · AwesomeAPI. {explicacaoPonto(price, ref)}</>
+    : <ReferenciaIndisponivel loading={history.status === 'loading'} />
+}
+
+function CnhIntradiario({ plan, price }) {
+  const history = useIntraday('CNH', fromInput(plan.previous))
+  const ref = mesaIntradayCnh(history.data, plan)
+  return ref ? <>Yuan offshore à vista, último ponto indicativo de compra: R$ {spotBr(ref.value)}/CNH · {dataBr(ref.date)} às {horaBr.format(ref.t)} (hora de Brasília) · AwesomeAPI (cruzamento). {explicacaoPonto(price, ref)}</>
+    : <ReferenciaIndisponivel loading={history.status === 'loading'} />
+}
+
+function ReferenciaMesa({ code, quote, offer, plan }) {
+  const ref = mesaSpotRange(code, quote, plan)
+  const price = parseDecimal(offer)
+  if (ref) {
+    const confronto = explicacaoFaixa(price, ref)
+    return <>{ref.today ? 'À vista hoje' : 'Última faixa à vista'} (compra–venda): R$ {spotBr(ref.bid)} a {spotBr(ref.ask)}/{code} · {dataBr(ref.date)} às {horaBr.format(ref.time)} (hora de Brasília) · {code === 'CNH' ? 'AwesomeAPI (CNH offshore, cruzamento)' : 'AwesomeAPI'}.{confronto && <> {confronto}</>}</>
+  }
+  if (plan.open || !plan.previous) return <ReferenciaIndisponivel />
+  return code === 'EUR' ? <EurDiario plan={plan} price={price} /> : <CnhIntradiario plan={plan} price={price} />
+}
+
+function Campo({ id, label, value, onChange, type = 'text', placeholder, erro, observacao }) {
   return <div className="cx-field">
     <label htmlFor={id}>{label}</label>
     <input id={id} type={type} inputMode={type === 'text' ? 'decimal' : undefined}
       autoComplete="off" value={value} placeholder={placeholder} aria-invalid={erro ? true : undefined}
-      aria-describedby={erro ? `${id}-erro` : undefined} onChange={e => onChange(e.target.value)} />
+      aria-describedby={[erro && `${id}-erro`, observacao && `${id}-obs`].filter(Boolean).join(' ') || undefined} onChange={e => onChange(e.target.value)} />
+    {observacao && <small id={`${id}-obs`} className="cf-observacao">{observacao}</small>}
     {erro && <small id={`${id}-erro`} className="cf-resultado-status">{erro}</small>}
   </div>
 }
 
-export default function CambioFuturo({ onBack }) {
+export default function CambioFuturo({ onBack, quotes }) {
   const [operacao, setOperacao] = useState({ valor: '', vencimento: '', cotacao: '', taxa: '' })
   const [mesa, setMesa] = useState(mesaVazia)
   const [diaCotacao, setDiaCotacao] = useState(() => marketDate(Date.now()))
-  const start = marketDate(Date.now())
+  const now = Date.now()
+  const start = marketDate(now)
+  const spotPlan = spotDayPlan(now)
   const mudouDia = diaCotacao !== start
   const mesaAtual = mudouDia ? mesaVazia() : mesa
   const spotUsd = mudouDia ? '' : operacao.cotacao
@@ -95,12 +131,14 @@ export default function CambioFuturo({ onBack }) {
 
     <article className="desk-panel cx-panel cf-input" aria-labelledby="cf-mesa">
       <header className="cx-heading"><h3 id="cf-mesa">Cotação da mesa</h3></header>
-      <p className="cf-notice">Use a cotação de partida e o câmbio futuro da assessoria do banco para o vencimento da operação. Se alterar a data, informe novamente o câmbio futuro.</p>
+      <p className="cf-notice">Informe os preços da assessoria. Ao mudar o vencimento, informe novamente o câmbio futuro. A referência à vista segue a janela de coleta do Painel.</p>
       <div className="cf-mesa-grid">
         {MOEDAS_MESA.map(({ id, nome }) => <fieldset key={id} className="cf-moeda">
           <legend>{comBandeira(id, nome)}</legend>
-          <Campo id={`cf-${id}-cotacao`} label={`Cotação de partida (R$/${id})`} value={mesaAtual[id].cotacao} onChange={v => mudarMesa(id, 'cotacao', v)} />
-          <Campo id={`cf-${id}-futuro`} label={`Câmbio futuro (R$/${id})`} value={mesaAtual[id].futuro} onChange={v => mudarMesa(id, 'futuro', v)} erro={futuroInvalido(mesaAtual[id].futuro) ? 'Informe um câmbio futuro maior que zero.' : undefined} />
+          <Campo id={`cf-${id}-cotacao`} label={`Cotação de partida (R$/${id})`} value={mesaAtual[id].cotacao} onChange={v => mudarMesa(id, 'cotacao', v)}
+            observacao={<ReferenciaMesa code={id} quote={quotes?.[id]} offer={mesaAtual[id].cotacao} plan={spotPlan} />} />
+          <Campo id={`cf-${id}-futuro`} label={`Câmbio futuro (R$/${id})`} value={mesaAtual[id].futuro} onChange={v => mudarMesa(id, 'futuro', v)}
+            observacao={operacao.vencimento ? `Taxa para ${dataBr(operacao.vencimento)}. Não é cotação à vista.` : 'Taxa para o vencimento da operação. Não é cotação à vista.'} erro={futuroInvalido(mesaAtual[id].futuro) ? 'Informe um câmbio futuro maior que zero.' : undefined} />
         </fieldset>)}
       </div>
     </article>
