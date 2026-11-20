@@ -9,8 +9,8 @@ const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
 
 test('code releases require reusable actual CI; hourly schedules avoid the browser suite', () => {
   assert.match(ci, /on:\n {2}workflow_call:/)
-  assert.match(pages, /verify-source:\n[\s\S]*?if: github.event_name != 'schedule'\n {4}uses: \.\/\.github\/workflows\/cotacoes-ci.yml/)
-  assert.match(pages, /deploy:\n {4}needs: \[approve-source, institutional-news\]\n {4}if: \$\{\{ always\(\) && !cancelled\(\) && needs\.approve-source\.outputs\.pular != 'true' \}\}/)
+  assert.match(pages, /verify-source:\n[\s\S]*?if: github\.ref == 'refs\/heads\/claude\/obsidian-plugin-analysis-bagjz3' && github\.event_name != 'schedule'\n {4}uses: \.\/\.github\/workflows\/cotacoes-ci.yml/)
+  assert.match(pages, /deploy:\n {4}needs: \[approve-source, institutional-news\]\n {4}if: \$\{\{ always\(\) && !cancelled\(\) && github\.ref == 'refs\/heads\/claude\/obsidian-plugin-analysis-bagjz3' && needs\.approve-source\.outputs\.pular != 'true' \}\}/)
   const gate = pages.indexOf('name: Exigir verificações antes de publicar código')
   assert.ok(gate > 0 && gate < pages.indexOf('uses: actions/checkout@v4'))
   assert.match(pages, /if: github.event_name != 'schedule' && needs.verify-source.result != 'success'/)
@@ -67,6 +67,7 @@ test('scheduled deployment executes exact-SHA approval guard before checkout and
     const listWorkflowRuns = Symbol('runs'), listJobsForWorkflowRun = Symbol('jobs')
     const github = { rest: { actions: { listWorkflowRuns, listJobsForWorkflowRun } }, paginate: async (method, params) => {
       if (method === listWorkflowRuns) {
+        assert.equal(params.branch, 'claude/obsidian-plugin-analysis-bagjz3')
         assert.equal(params.head_sha, 'approved-sha')
         assert.equal(params.workflow_id, 'pages.yml')
         return scenario.runs
@@ -76,11 +77,11 @@ test('scheduled deployment executes exact-SHA approval guard before checkout and
       return scenario.jobs
     } }
     const core = { setFailed: () => { failed = true }, info: () => { confirmed = true } }
-    await new AsyncFunction('github', 'context', 'core', script)(github, { repo: { owner: 'fixture', repo: 'fixture' }, sha: 'approved-sha', runId: 30 }, core)
+    await new AsyncFunction('github', 'context', 'core', script)(github, { repo: { owner: 'fixture', repo: 'fixture' }, sha: 'approved-sha', ref: 'refs/heads/claude/obsidian-plugin-analysis-bagjz3', runId: 30 }, core)
     assert.equal(confirmed, scenario.allowed, JSON.stringify(scenario))
     assert.equal(failed, !scenario.allowed, JSON.stringify(scenario))
   }
-  await assert.rejects(new AsyncFunction('github', 'context', 'core', script)({ rest: { actions: {} }, paginate: async () => { throw Error('API unavailable') } }, { repo: {}, sha: 'approved-sha' }, {}), /API unavailable/)
+  await assert.rejects(new AsyncFunction('github', 'context', 'core', script)({ rest: { actions: {} }, paginate: async () => { throw Error('API unavailable') } }, { repo: {}, sha: 'approved-sha', ref: 'refs/heads/claude/obsidian-plugin-analysis-bagjz3' }, {}), /API unavailable/)
 })
 
 
@@ -90,7 +91,7 @@ test('institutional live collection waits for exact source approval and cannot g
   const deploy = pages.split('  deploy:\n')[1]
   const global = pages.split('permissions:\n')[1].split('\njobs:')[0]
   assert.match(approve, /needs: verify-source/)
-  assert.match(approve, /if: \$\{\{ always\(\) && !cancelled\(\) \}\}/)
+  assert.match(approve, /if: \$\{\{ always\(\) && !cancelled\(\) && github\.ref == 'refs\/heads\/claude\/obsidian-plugin-analysis-bagjz3' \}\}/)
   assert.match(collect, /needs: approve-source/)
   assert.match(collect, /needs.approve-source.result == 'success'/)
   assert.match(collect, /needs.approve-source.outputs.pular != 'true'/)
@@ -110,7 +111,7 @@ test('a fila vale só para a publicação: agenda não cancela publicação de c
   // Fila no nível da execução inteira deixava a agenda seguinte tomar o lugar da publicação de código que esperava.
   assert.doesNotMatch(pages.split('\njobs:')[0], /^concurrency:/m)
   const deploy = pages.split('  deploy:\n')[1]
-  assert.match(deploy, /^ {4}concurrency:\n {6}group: pages\n {6}cancel-in-progress: false/m)
+  assert.match(deploy, /^ {4}concurrency:\n {6}group: pages\n {6}queue: max[^\n]*\n {6}cancel-in-progress: false/m)
   assert.equal((pages.match(/concurrency:/g) || []).length, 1)
   const approve = pages.split('  approve-source:\n')[1].split('\n  institutional-news:')[0]
   assert.match(approve, /outputs:\n {6}pular: \$\{\{ steps\.fila\.outputs\.pular \}\}/)
