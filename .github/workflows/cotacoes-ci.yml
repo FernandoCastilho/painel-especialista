@@ -29,9 +29,8 @@ jobs:
       - run: npm run build
       - name: Conferir preservação no build real
         run: node scripts/weekly-data.mjs dist "$RUNNER_TEMP/weekly-package-test.json"
-  smoke:
+  smoke-secoes:
     runs-on: ubuntu-24.04
-    needs: test-build
     timeout-minutes: 25
     defaults:
       run:
@@ -67,6 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: recovery-maps-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/recovery
           if-no-files-found: error
           retention-days: 7
@@ -83,6 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: credit-comparison-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/credit
           if-no-files-found: error
           retention-days: 7
@@ -93,6 +94,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bancos-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/bancos
           if-no-files-found: error
           retention-days: 7
@@ -106,6 +108,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: institutional-news-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/institutional-news
           if-no-files-found: error
           retention-days: 7
@@ -116,6 +119,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cbs-caixa-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/cbs
           if-no-files-found: error
           retention-days: 7
@@ -127,6 +131,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mapa-conhecimento-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/knowledge-map
           if-no-files-found: error
           retention-days: 7
@@ -139,6 +144,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: icms-st-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/icms-st
           if-no-files-found: error
           retention-days: 7
@@ -149,9 +155,57 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aprender-juros-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-juros
           if-no-files-found: error
           retention-days: 7
+      - name: Preparar evidências para o artefato consolidado
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/smoke-transfer"
+          for dir in qa-ux qa-t qa-w qa-f qa-c qa-universal; do
+            if test -d "$RUNNER_TEMP/$dir"; then cp -a "$RUNNER_TEMP/$dir" "$RUNNER_TEMP/smoke-transfer/"; fi
+          done
+          printf '%s\n' "$GITHUB_SHA $GITHUB_RUN_ID $GITHUB_RUN_ATTEMPT secoes" > "$RUNNER_TEMP/smoke-transfer/manifest.txt"
+      - name: Transferir evidências do grupo secoes
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-transfer-secoes
+          overwrite: true
+          path: ${{ runner.temp }}/smoke-transfer/
+          if-no-files-found: ignore
+          retention-days: 7
+  smoke-calculadoras:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: cotacoes
+    env:
+      SMOKE_BASE_URL: http://127.0.0.1:8768
+      SMOKE_CHANNEL: chrome
+      CHROMIUM_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - name: Build com os dados na própria origem
+        run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - name: Preparar Playwright com o Chrome do ambiente de testes
+        timeout-minutes: 3
+        run: |
+          npm install --no-save playwright@1.63.0
+          google-chrome --version
+      - name: Servir o build
+        id: serve
+        run: |
+          nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
       - name: Conferir seis calculadoras e alongamento em cinco larguras
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: CALCULATOR_QA_OUTPUT="$RUNNER_TEMP/qa-universal/calculators" node scripts/smoke-calculator-layout.cjs
@@ -169,6 +223,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pastas-setoriais-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/folders
           if-no-files-found: error
           retention-days: 7
@@ -177,6 +232,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: estudos-setoriais-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/researched-sectors
           if-no-files-found: error
           retention-days: 7
@@ -185,6 +241,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: calculadoras-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/calculators
           if-no-files-found: ignore
           retention-days: 7
@@ -216,6 +273,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: podcast-player
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/podcast
           if-no-files-found: error
           retention-days: 7
@@ -227,6 +285,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: menu-priority
+          overwrite: true
           path: ${{ runner.temp }}/qa-menu-priority
           if-no-files-found: error
           retention-days: 7
@@ -238,6 +297,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aprender-historia-juros
+          overwrite: true
           path: ${{ runner.temp }}/qa-universal/interest-history
           if-no-files-found: ignore
           retention-days: 7
@@ -263,6 +323,56 @@ jobs:
             echo "::error::Fluxos alterados com falha: ${failures[*]}"
             exit 1
           fi
+      - name: Verificar matriz de oito calculadoras e cabeçalho Setores320
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: node scripts/verify-smoke-matrix.cjs "$RUNNER_TEMP/qa-universal"
+      - name: Preparar evidências para o artefato consolidado
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/smoke-transfer"
+          for dir in qa-ux qa-t qa-w qa-f qa-c qa-universal; do
+            if test -d "$RUNNER_TEMP/$dir"; then cp -a "$RUNNER_TEMP/$dir" "$RUNNER_TEMP/smoke-transfer/"; fi
+          done
+          printf '%s\n' "$GITHUB_SHA $GITHUB_RUN_ID $GITHUB_RUN_ATTEMPT calculadoras" > "$RUNNER_TEMP/smoke-transfer/manifest.txt"
+      - name: Transferir evidências do grupo calculadoras
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-transfer-calculadoras
+          overwrite: true
+          path: ${{ runner.temp }}/smoke-transfer/
+          if-no-files-found: ignore
+          retention-days: 7
+  smoke-navegacao:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: cotacoes
+    env:
+      SMOKE_BASE_URL: http://127.0.0.1:8768
+      SMOKE_CHANNEL: chrome
+      CHROMIUM_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - name: Build com os dados na própria origem
+        run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - name: Preparar Playwright com o Chrome do ambiente de testes
+        timeout-minutes: 3
+        run: |
+          npm install --no-save playwright@1.63.0
+          google-chrome --version
+      - name: Servir o build
+        id: serve
+        run: |
+          nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
       - name: Smokes de navegador (abas, mercado, calendário e controles de 44 px)
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: |
@@ -284,23 +394,115 @@ jobs:
           npm run dev -- --host 127.0.0.1 --port 8770 > "$RUNNER_TEMP/comparison-vite.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8770/test/fixtures/chart-comparison.html > /dev/null && break; sleep 1; done
           SMOKE_BASE_URL=http://127.0.0.1:8770 COMPARISON_QA_OUTPUT="$RUNNER_TEMP/qa-universal" node scripts/smoke-chart-comparison.cjs
-      - name: Verificar matriz de oito calculadoras e cabeçalho Setores320
-        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
-        run: node scripts/verify-smoke-matrix.cjs "$RUNNER_TEMP/qa-universal"
+      - name: Preparar evidências para o artefato consolidado
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/smoke-transfer"
+          for dir in qa-ux qa-t qa-w qa-f qa-c qa-universal; do
+            if test -d "$RUNNER_TEMP/$dir"; then cp -a "$RUNNER_TEMP/$dir" "$RUNNER_TEMP/smoke-transfer/"; fi
+          done
+          printf '%s\n' "$GITHUB_SHA $GITHUB_RUN_ID $GITHUB_RUN_ATTEMPT navegacao" > "$RUNNER_TEMP/smoke-transfer/manifest.txt"
+      - name: Transferir evidências do grupo navegacao
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-transfer-navegacao
+          overwrite: true
+          path: ${{ runner.temp }}/smoke-transfer/
+          if-no-files-found: ignore
+          retention-days: 7
+  # Mantém o nome consumido pelo gate de publicação agendada e pelos checks existentes.
+  smoke:
+    runs-on: ubuntu-latest
+    needs: [test-build, smoke-secoes, smoke-calculadoras, smoke-navegacao]
+    if: ${{ !cancelled() }}
+    timeout-minutes: 5
+    steps:
+      - name: Reunir evidências dos grupos de navegador
+        uses: actions/download-artifact@v4
+        with:
+          pattern: smoke-transfer-*
+          path: ${{ runner.temp }}/smoke-grupos
+      - name: Validar origem e consolidar evidências sem sobrescrever
+        if: ${{ !cancelled() }}
+        env:
+          CI_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node --input-type=module - <<'JS'
+          import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs'
+          import { dirname, join } from 'node:path'
+          const { RUNNER_TEMP, GITHUB_SHA, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, CI_RESULTS } = process.env
+          const results = JSON.parse(CI_RESULTS)
+          const source = join(RUNNER_TEMP, 'smoke-grupos')
+          const output = join(RUNNER_TEMP, 'smoke-consolidado')
+          const roots = ['qa-ux', 'qa-t', 'qa-w', 'qa-f', 'qa-c', 'qa-universal']
+          const groups = ['secoes', 'calculadoras', 'navegacao']
+          const failures = []
+          function merge(from, into) {
+            for (const item of readdirSync(from, { withFileTypes: true })) {
+              const src = join(from, item.name), dst = join(into, item.name)
+              if (item.isDirectory()) { merge(src, dst); continue }
+              if (!item.isFile()) throw new Error(`Arquivo inesperado: ${item.name}`)
+              if (existsSync(dst)) {
+                if (!readFileSync(src).equals(readFileSync(dst))) failures.push(`Colisão de evidência: ${dst}`)
+                continue
+              }
+              mkdirSync(dirname(dst), { recursive: true })
+              cpSync(src, dst, { errorOnExist: true, force: false })
+            }
+          }
+          for (const group of groups) {
+            const dir = join(source, `smoke-transfer-${group}`)
+            const manifest = join(dir, 'manifest.txt')
+            const success = results[`smoke-${group}`]?.result === 'success'
+            if (!existsSync(manifest)) {
+              if (success) failures.push(`Evidência ausente: ${group}`)
+              continue
+            }
+            const [sha, run, attempt, name] = readFileSync(manifest, 'utf8').trim().split(' ')
+            if (sha !== GITHUB_SHA || run !== GITHUB_RUN_ID || name !== group || !/^\d+$/.test(attempt) || Number(attempt) < 1 || Number(attempt) > Number(GITHUB_RUN_ATTEMPT)) {
+              failures.push(`Origem inválida: ${group}`)
+              continue
+            }
+            console.log(`Evidências: ${group}, tentativa ${attempt}`)
+            const existing = roots.filter(root => existsSync(join(dir, root)))
+            if (success && !existing.length) failures.push(`Grupo sem capturas: ${group}`)
+            for (const root of existing) merge(join(dir, root), join(output, root))
+          }
+          if (failures.length) {
+            console.error(failures.join('\n'))
+            process.exitCode = 1
+          }
+          JS
       - name: Capturas de tela dos smokes
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: smoke-capturas
+          overwrite: true
           path: |
-            ${{ runner.temp }}/qa-ux
-            ${{ runner.temp }}/qa-t
-            ${{ runner.temp }}/qa-w
-            ${{ runner.temp }}/qa-f
-            ${{ runner.temp }}/qa-c
-            ${{ runner.temp }}/qa-universal
+            ${{ runner.temp }}/smoke-consolidado/qa-ux
+            ${{ runner.temp }}/smoke-consolidado/qa-t
+            ${{ runner.temp }}/smoke-consolidado/qa-w
+            ${{ runner.temp }}/smoke-consolidado/qa-f
+            ${{ runner.temp }}/smoke-consolidado/qa-c
+            ${{ runner.temp }}/smoke-consolidado/qa-universal
           if-no-files-found: ignore
           retention-days: 7
+      - name: Exigir sucesso em todos os grupos e no teste-build
+        if: always()
+        env:
+          CI_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node --input-type=module - <<'JS'
+          const results = JSON.parse(process.env.CI_RESULTS)
+          const expected = ['test-build', 'smoke-secoes', 'smoke-calculadoras', 'smoke-navegacao']
+          const failed = expected.filter(id => results[id]?.result !== 'success')
+          if (failed.length) {
+            console.error('Falha, cancelamento ou ausência de checks: ' + failed.join(', '))
+            process.exitCode = 1
+          }
+          JS
   bndes-workspace:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
@@ -344,6 +546,7 @@ jobs:
         if: always()
         with:
           name: bndes-workspace-design
+          overwrite: true
           path: /tmp/bndes-workspace
           if-no-files-found: error
           retention-days: 7
@@ -378,6 +581,7 @@ jobs:
         if: always()
         with:
           name: sector-graph-design
+          overwrite: true
           path: ${{ runner.temp }}/sector-graph
           if-no-files-found: error
           retention-days: 7
@@ -413,6 +617,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: intraday-state-design
+          overwrite: true
           path: ${{ runner.temp }}/qa-intraday
           if-no-files-found: error
           retention-days: 7
