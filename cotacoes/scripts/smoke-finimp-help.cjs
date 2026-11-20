@@ -18,6 +18,30 @@ async function smokeConverter(browser, width, base, out) {
     await p.goto(base + '/#resumo')
     const trigger = p.getByRole('button', { name: 'Paridade para a Finimp', exact: true })
     await trigger.waitFor()
+    const { flagSvg } = await import('../src/flags.js')
+    for (const [label, codes] of [['USD/BRL', ['USD', 'BRL']], ['EUR/BRL', ['EUR', 'BRL']], ['EUR/USD', ['EUR', 'USD']]]) {
+      const card = p.getByRole('button', { name: new RegExp('^' + label + ' .*abrir gráfico$') })
+      const name = card.locator('.kpi-name')
+      await name.waitFor()
+      assert.equal((await name.textContent()).trim(), '', label + ': sem siglas visíveis')
+      assert.equal(await name.getAttribute('title'), label, label + ': par identificável ao passar o mouse')
+      const expected = codes.map(code => flagSvg(code, 'width="16" height="11"'))
+      const correct = await name.evaluate((element, flags) => {
+        const rendered = [...element.querySelectorAll(':scope > .flag[aria-hidden="true"]')]
+        return rendered.length === flags.length && rendered.every((item, i) => {
+          const sample = document.createElement('template')
+          sample.innerHTML = flags[i]
+          const svg = item.querySelector('svg')
+          const box = svg?.getBoundingClientRect()
+          return !!box?.width && !!box.height && svg.isEqualNode(sample.content.firstElementChild)
+        })
+      }, expected)
+      assert.equal(correct, true, label + ': bandeiras visíveis das duas moedas, na ordem do par')
+    }
+    const parLabel = await p.getByRole('button', { name: /^EUR\/USD .*abrir gráfico$/ }).locator('.kpi-name').boundingBox()
+    const helpBox = await trigger.boundingBox()
+    assert.ok(helpBox && helpBox.width >= 44 && helpBox.height >= 44, 'ajuda mantém alvo de pelo menos 44 × 44 px')
+    assert.ok(parLabel && helpBox && parLabel.x + parLabel.width <= helpBox.x + 1, 'bandeiras não invadem o botão de ajuda')
     const market = p.locator('.kpi-cell').filter({ has: trigger }).locator('.kpi-value')
     assert.equal(await market.innerText(), '1,1172')
     assert.equal(await trigger.getAttribute('aria-haspopup'), 'dialog')
@@ -167,5 +191,7 @@ async function smokeConverter(browser, width, base, out) {
     await p.screenshot({path:`${out}/page-${width}.png`,fullPage:true})
     await p.close();console.log(`PASS ajudas e flat editável nas duas instituições ${width}`)
     await smokeConverter(browser,width,base,out)
-  }}finally{await browser.close()}
+  }
+    await smokeConverter(browser,320,base,out)
+  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exit(1)})
