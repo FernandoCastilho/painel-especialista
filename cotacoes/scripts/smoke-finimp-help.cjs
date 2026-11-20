@@ -187,5 +187,7 @@ async function smokeConverter(browser, width, base, out) {
     await p.screenshot({path:`${out}/page-${width}.png`,fullPage:true})
     await p.close();console.log(`PASS ajudas e flat editável nas duas instituições ${width}`)
     await smokeConverter(browser,width,base,out)
-  }}finally{await browser.close()}
+  }
+    await smokeConverter(browser,320,base,out)
+  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exit(1)})
