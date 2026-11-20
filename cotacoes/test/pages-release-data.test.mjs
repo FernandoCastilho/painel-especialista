@@ -97,15 +97,15 @@ test('push somente no ramo canônico e PR inclusive docs-only; recuperação Foc
   const load = file => readFile(new URL('../../.github/workflows/' + file + '.yml', import.meta.url), 'utf8')
   const [pages, ci, focus] = await Promise.all(['pages', 'cotacoes-ci', 'focus'].map(load))
   const branch = 'claude/obsidian-plugin-analysis-bagjz3'
-  assert.equal(pages.match(/^  push:\n((?: {4}.*\n)+)/m)[1], `    branches: [${branch}]\n`)
-  assert.match(ci, /^  pull_request:\npermissions:/m) // sem paths: documentação e workflow-only também são testados
+  assert.equal(pages.match(/^ {2}push:\n((?: {4}.*\n)+)/m)[1], `    branches: [${branch}]\n`)
+  assert.match(ci, /^ {2}pull_request:\npermissions:/m) // sem paths: documentação e workflow-only também são testados
   for (const job of ['verify-source', 'approve-source', 'deploy']) {
-    assert.ok(pages.split(`  ${job}:\n`)[1].split(/^  [\w-]+:/m)[0].includes(`github.ref == 'refs/heads/${branch}'`))
+    assert.ok(pages.split(`  ${job}:\n`)[1].split(/^ {2}[\w-]+:/m)[0].includes(`github.ref == 'refs/heads/${branch}'`))
   }
   assert.ok(focus.includes(`github.ref == 'refs/heads/${branch}'`))
   assert.match(focus, /gh workflow run pages\.yml --ref "\$GITHUB_REF_NAME" -f focus_retry=true/)
   assert.match(pages, /PAGES_REFRESH_DATA:.*inputs\.focus_retry == true/)
-  assert.match(pages, /Confirmar marcador servido[\s\S]*?conferir-publicado dist\n      - name: Conferir a interface/)
+  assert.match(pages, /Confirmar marcador servido[\s\S]*?conferir-publicado dist\n {6}- name: Conferir a interface/)
   assert.match(pages, /SMOKE_PUBLISHED_URL: \$\{\{ steps\.deployment\.outputs\.page_url \}\}/)
 })
 
