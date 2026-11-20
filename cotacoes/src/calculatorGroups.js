@@ -8,7 +8,7 @@ export const CALCULATOR_GROUPS = [
   {
     id: 'internacional', title: 'Crédito internacional',
     description: 'Avalie importações e empréstimos em moeda estrangeira.',
-    calculators: ['finimp', 'emprestimo-4131'],
+    calculators: ['finimp', 'emprestimo-4131', 'cambio-futuro'],
   },
   {
     id: 'taxas-cambio', title: 'Taxas e câmbio',

@@ -1,0 +1,44 @@
+/* Câmbio futuro · padrão visual das calculadoras (o mesmo do CDI x Dólar e do 4131): quadros de entrada com faixa
+   azul-marinho e linha laranja; resultado como único quadro de borda laranja. Tudo preso a .cf-pattern.
+   Só apresentação: nenhuma regra de cálculo mora aqui. */
+:root[data-theme] body .cx.cf-pattern {
+  --cf-orange:#ff6200;
+  --cf-navy:linear-gradient(110deg,#052956,#07336b);
+  display:grid; gap:20px; min-width:0;
+}
+:root[data-theme] body .cx.cf-pattern > .desk-panel { margin:0; }
+:root[data-theme] body .cx.cf-pattern .cf-notice { margin:0; color:var(--bw-mut); font-size:.85rem; line-height:1.45; }
+:root[data-theme] body .cx.cf-pattern .cx-panel > .cf-notice { margin:14px; }
+
+/* Quadros de entrada e resultado: faixa azul-marinho, título branco em negrito. */
+:root[data-theme] body .cx.cf-pattern :is(.cf-input,.cf-quote) { overflow:hidden; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); }
+:root[data-theme] body .cx.cf-pattern :is(.cf-input,.cf-quote) > header { background:var(--cf-navy); color:#fff; border-radius:0; }
+:root[data-theme] body .cx.cf-pattern .cf-input > header { border-bottom:4px solid var(--cf-orange); }
+:root[data-theme] body .cx.cf-pattern :is(.cf-input,.cf-quote) > header h3 { border-left:0; padding-left:0; color:#fff; font-weight:700; }
+:root[data-theme] body .cx.cf-pattern :is(.cf-input,.cf-quote) > header .fi-help > button { color:#fff; border-color:#ffffff88; }
+:root[data-theme] body .cx.cf-pattern .cf-quote { border:2px solid var(--cf-orange); border-radius:12px; }
+:root[data-theme] body .cx.cf-pattern .cf-input > .cx-form { padding:14px; }
+:root[data-theme] body .cx.cf-pattern :is(.cf-input,.cf-quote) > .cx-wrap { padding:12px 14px 14px; }
+
+/* Tabelas: mesmas linhas, fundos e números alinhados do restante das calculadoras. */
+:root[data-theme] body .cx.cf-pattern .cf-table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cx.cf-pattern .cf-table :is(td,th) { padding:8px 10px; border-bottom:1px solid var(--bw-line); text-align:right; white-space:nowrap; color:var(--bw-ink); }
+:root[data-theme] body .cx.cf-pattern .cf-table thead th { background:var(--bw-soft); color:var(--bw-mut); font-size:.75rem; font-weight:700; }
+:root[data-theme] body .cx.cf-pattern .cf-table :is(td,th):first-child { text-align:left; }
+:root[data-theme] body .cx.cf-pattern .cf-table tbody th { font-weight:600; }
+:root[data-theme] body .cx.cf-pattern .cf-table td input { width:100%; min-width:70px; min-height:36px; padding:4px 8px; font-size:.875rem; text-align:right; }
+:root[data-theme] body .cx.cf-pattern .cf-mesa td input { min-width:120px; }
+:root[data-theme] body .cx.cf-pattern .cf-total :is(td,th) { background:var(--bw-soft); font-weight:700; }
+:root[data-theme] body .cx.cf-pattern .cf-erro { white-space:normal; font-size:.75rem; color:var(--bw-warn-ink); }
+
+/* Fluxo por vencimento: cada moeda separada por uma linha vertical. */
+:root[data-theme] body .cx.cf-pattern .cf-flow :is(td,th) { padding:8px 5px; }
+:root[data-theme] body .cx.cf-pattern .cf-flow .cf-group { border-left:1px solid var(--bw-line); }
+:root[data-theme] body .cx.cf-pattern .cf-flow thead th.cf-group[colspan] { text-align:center; color:var(--bw-ink); }
+:root[data-theme] body .cx.cf-pattern .cf-flow td small { display:block; color:var(--bw-mut); font-size:.72rem; font-weight:400; }
+:root[data-theme] body .cx.cf-pattern .cf-flow .cf-start :is(td,th) { font-weight:600; }
+
+/* Resultado: menor custo destacado com a faixa laranja à esquerda. */
+:root[data-theme] body .cx.cf-pattern .cf-best :is(td,th) { background:var(--bw-warm-soft); }
+:root[data-theme] body .cx.cf-pattern .cf-best th { box-shadow:inset 4px 0 0 var(--cf-orange); }
+:root[data-theme] body .cx.cf-pattern .cf-best small { color:var(--bw-mut); }

@@ -7,12 +7,12 @@ import { transform } from 'esbuild'
 import React from 'react'
 import { CALCULATOR_GROUPS } from '../src/calculatorGroups.js'
 const nodes = n => Array.isArray(n) ? n.flatMap(nodes) : n && typeof n === 'object' ? [n, ...nodes(n.props?.children)] : []
-test('catálogo agrupa os 12 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
+test('catálogo agrupa os 13 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
   const source = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
   const original = [...source.slice(source.indexOf('const CALCS'),source.indexOf('// Aba Calculadoras')).matchAll(/id: '([^']+)'/g)].map(m=>m[1])
   const grouped = CALCULATOR_GROUPS.flatMap(g=>g.calculators)
-  assert.equal(grouped.length,12)
-  assert.equal(new Set(grouped).size,12)
+  assert.equal(grouped.length,13)
+  assert.equal(new Set(grouped).size,13)
   assert.deepEqual([...grouped].sort(),original.sort())
   assert.equal(grouped[0],'finame-materiais')
   assert.ok(!grouped.includes('arvore-credito'))
