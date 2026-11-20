@@ -3,6 +3,7 @@ import './CalculatorStandard.css'
 import './CambioFuturo.css'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import CalcBack from './CalcBack.jsx'
+import Flag from './Flag.jsx'
 import { parseDecimal } from './cdiDolar.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { marketDate } from './marketReturns.js'
@@ -22,6 +23,7 @@ const dataBr = iso => iso ? iso.split('-').reverse().join('/') : '—'
 const decimalBr = n => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const MOEDAS_MESA = [{ id: 'CNH', nome: 'Yuan (CNH)' }, { id: 'EUR', nome: 'Euro (EUR)' }]
 const mesaVazia = () => Object.fromEntries(MOEDAS_MESA.map(({ id }) => [id, { cotacao: '', futuro: '' }]))
+const comBandeira = (id, nome) => <span className="cf-com-bandeira"><Flag code={id} width={20} height={14} />{nome}</span>
 
 function Campo({ id, label, value, onChange, type = 'text', placeholder, erro }) {
   return <div className="cx-field">
@@ -82,7 +84,7 @@ export default function CambioFuturo({ onBack }) {
     <article className="desk-panel cx-panel cf-input" aria-labelledby="cf-operacao">
       <header className="cx-heading"><h3 id="cf-operacao">Operação</h3></header>
       <div className="cx-form cf-parcela-fields">
-        <Campo id="cf-valor" label="Valor da parcela (USD, com juros)" value={operacao.valor} onChange={v => mudarOp('valor', v)} placeholder="ex.: 100.000,00" />
+        <Campo id="cf-valor" label={comBandeira('USD', 'Valor da parcela (USD, com juros)')} value={operacao.valor} onChange={v => mudarOp('valor', v)} placeholder="ex.: 100.000,00" />
         <Campo id="cf-vencimento" label="Vencimento" type="date" value={operacao.vencimento} onChange={v => mudarOp('vencimento', v)} />
         <Campo id="cf-cotacao" label="Cotação de partida (R$/US$)" value={spotUsd} onChange={v => mudarOp('cotacao', v)} placeholder="ex.: 5,9160" />
         <Campo id="cf-taxa" label="Taxa all-in do empréstimo (% a.a.)" value={operacao.taxa} onChange={v => mudarOp('taxa', v)} placeholder="ex.: 11,20" />
@@ -96,7 +98,7 @@ export default function CambioFuturo({ onBack }) {
       <p className="cf-notice">Use a cotação de partida e o câmbio futuro da assessoria do banco para o vencimento da operação. Se alterar a data, informe novamente o câmbio futuro.</p>
       <div className="cf-mesa-grid">
         {MOEDAS_MESA.map(({ id, nome }) => <fieldset key={id} className="cf-moeda">
-          <legend>{nome}</legend>
+          <legend>{comBandeira(id, nome)}</legend>
           <Campo id={`cf-${id}-cotacao`} label={`Cotação de partida (R$/${id})`} value={mesaAtual[id].cotacao} onChange={v => mudarMesa(id, 'cotacao', v)} />
           <Campo id={`cf-${id}-futuro`} label={`Câmbio futuro (R$/${id})`} value={mesaAtual[id].futuro} onChange={v => mudarMesa(id, 'futuro', v)} erro={futuroInvalido(mesaAtual[id].futuro) ? 'Informe um câmbio futuro maior que zero.' : undefined} />
         </fieldset>)}
@@ -112,7 +114,7 @@ export default function CambioFuturo({ onBack }) {
       <p className="cf-notice">A TIR usa o pagamento em reais pelo câmbio futuro. Não soma impostos ou tarifas fora da taxa informada.</p>
       <div className="cf-resultado-grid">
         {resultados.map(({ id, nome, resultado }) => <section key={id} className="cf-resultado-moeda" aria-labelledby={`cf-resultado-${id}`}>
-          <h4 id={`cf-resultado-${id}`}>{nome}</h4>
+          <h4 id={`cf-resultado-${id}`}>{comBandeira(id, nome)}</h4>
           <dl>
             <div><dt>Vencimento</dt><dd>{dataBr(operacao.vencimento)}</dd></div>
             <div><dt>Valor da parcela ({id})</dt><dd>{resultado?.ok ? decimalBr(resultado.parcelaMoeda) : '—'}</dd></div>

@@ -30,6 +30,8 @@
 }
 :root[data-theme] body .cx.cf-pattern .cf-moeda { display:grid; gap:12px; }
 :root[data-theme] body .cx.cf-pattern .cf-moeda legend { padding:0 6px; font-weight:700; }
+:root[data-theme] body .cx.cf-pattern .cf-com-bandeira { display:inline-flex; align-items:center; min-width:0; gap:6px; }
+:root[data-theme] body .cx.cf-pattern .cf-com-bandeira .flag { flex:none; }
 :root[data-theme] body .cx.cf-pattern .cx-field { min-width:0; }
 :root[data-theme] body .cx.cf-pattern .cx-field input { width:100%; min-width:0; min-height:44px; box-sizing:border-box; }
 :root[data-theme] body .cx.cf-pattern .cf-resultado-moeda h4 { margin:0 0 10px; }

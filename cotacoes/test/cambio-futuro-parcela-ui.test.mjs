@@ -16,6 +16,7 @@ test('parcela única: formulário da mesa só em CNH/EUR e resultado independent
   const deps = {
     './CalculatorStandard.css': {}, './CambioFuturo.css': {},
     './CalculatorHelp.jsx': () => null, './CalcBack.jsx': () => null,
+    './Flag.jsx': function Flag() { return null },
     './cdiDolar.js': await import('../src/cdiDolar.js'),
     './moneyInput.js': await import('../src/moneyInput.js'),
     './marketReturns.js': { marketDate: () => dia },
@@ -35,6 +36,9 @@ test('parcela única: formulário da mesa só em CNH/EUR e resultado independent
   assert.deepEqual(nodes(ui.value).filter(n => n.type?.name === 'Campo').map(n => n.props.id), [
     'cf-valor', 'cf-vencimento', 'cf-cotacao', 'cf-taxa', 'cf-CNH-cotacao', 'cf-CNH-futuro', 'cf-EUR-cotacao', 'cf-EUR-futuro',
   ])
+  const flags = n => nodes(n).filter(el => el.type?.name === 'Flag').map(el => el.props.code)
+  assert.deepEqual(flags(nodes(ui.value).find(n => n.type?.name === 'Campo' && n.props.id === 'cf-valor').props.label), ['USD'])
+  assert.deepEqual(flags(ui.value), ['CNH', 'EUR', 'CNH', 'EUR'])
   assert.doesNotMatch(text(ui.value), /Fluxo de caixa por vencimento|Vencimento final/)
   assert.match(text(ui.value), /Data-base da simulação:\s+20\/11\/2026/)
   assert.equal(calls.length, 0)

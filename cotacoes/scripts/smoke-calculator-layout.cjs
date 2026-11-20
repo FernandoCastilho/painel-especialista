@@ -565,6 +565,9 @@ async function assertCambioFuturo(browser) {
       assert.deepEqual(await operacao.locator('input').evaluateAll(items => items.map(x => x.id)), ['cf-valor', 'cf-vencimento', 'cf-cotacao', 'cf-taxa'])
       const mesa = section.locator('article[aria-labelledby="cf-mesa"]')
       assert.deepEqual(await mesa.locator('fieldset legend').allTextContents(), ['Yuan (CNH)', 'Euro (EUR)'])
+      assert.equal(await operacao.locator('label[for="cf-valor"] .flag svg').count(), 1)
+      assert.equal(await mesa.locator('legend .flag svg').count(), 2)
+      assert.equal(await section.locator('.cf-resultado-moeda h4 .flag svg').count(), 2)
       for (const [id, valor] of Object.entries({ valor: '110.000', vencimento: '2026-12-27', cotacao: '5', taxa: '10',
         'EUR-cotacao': '6,25', 'EUR-futuro': '6,50', 'CNH-cotacao': '0,75', 'CNH-futuro': '0,80' })) {
         await section.locator('#cf-' + id).fill(valor)
