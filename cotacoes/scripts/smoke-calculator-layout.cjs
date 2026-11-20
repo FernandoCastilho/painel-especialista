@@ -545,55 +545,45 @@ async function assertComparatorFamily(browser) {
 }
 
 async function assertCambioFuturo(browser) {
-  // Caso fictício: amortizações de 50% e juros simples de 10% em 181 e 184 dias.
-  // TIR de referência: o valor presente das duas parcelas, em dias/365, é R$ 500.000.
-  for (const width of [390, 1440]) for (const theme of ['dark', 'light']) {
+  // USD 110 mil já com juros: em 360 dias a 10% a.a., o principal é USD 100 mil.
+  // EUR: 88 mil × 6,50 = R$ 572 mil; CNH: (550 mil ÷ 0,75) × 0,80.
+  // TIR anual = (pagamento em reais ÷ R$ 500 mil)^(365/360) − 1.
+  for (const width of [320, 1440]) for (const theme of ['dark', 'light']) {
     const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     try {
       await fixtures(page)
+      await page.clock.setFixedTime(new Date('2026-01-02T02:00:00Z'))
       await page.goto(`${base}/#calculadora/cambio-futuro`)
       const section = page.locator('section.cf-pattern')
       await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
-      await section.locator('#cf-quantidade').selectOption('2')
-      await section.locator('#cf-usd').fill('100.000')
-      await section.locator('#cf-taxa').fill('10')
-      await section.locator('#cf-parcelas').fill('2')
-      await section.locator('#cf-start').fill('2026-01-01')
-      await section.locator('#cf-moeda-0').selectOption('EUR')
-      await section.locator('#cf-moeda-1').selectOption('USD')
-      assert.equal(await section.locator('#cf-moeda-1 option[value=EUR]').isDisabled(), true)
-      await section.locator('#cf-USD-spot').fill('5')
-      await section.locator('#cf-EUR-spot').fill('6,25')
-      assert.match(await section.locator('#cf-principal-0').inputValue(), /80\.000,00/)
-      assert.match(await section.locator('#cf-principal-1').inputValue(), /100\.000,00/)
-      for (const [id, quotes] of [['USD', ['5,25', '5,50']], ['EUR', ['6,45', '6,60']]]) {
-        for (const [i, date] of ['2026-07-01', '2027-01-01'].entries()) {
-          await section.locator(`#cf-${id}-data-${i}`).fill(date)
-          await section.locator(`#cf-${id}-futuro-${i}`).fill(quotes[i])
-        }
+      assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
+      assert.match(await section.innerText(), /Data-base da simulação: 01\/01\/2026/)
+      assert.equal(await section.getByRole('heading', { name: 'Fluxo de caixa por vencimento' }).count(), 0)
+      const operacao = section.locator('article[aria-labelledby="cf-operacao"]')
+      assert.deepEqual(await operacao.locator('input').evaluateAll(items => items.map(x => x.id)), ['cf-valor', 'cf-vencimento', 'cf-cotacao', 'cf-taxa'])
+      const mesa = section.locator('article[aria-labelledby="cf-mesa"]')
+      assert.deepEqual(await mesa.locator('fieldset legend').allTextContents(), ['Yuan (CNH)', 'Euro (EUR)'])
+      for (const [id, valor] of Object.entries({ valor: '110.000', vencimento: '2026-12-27', cotacao: '5', taxa: '10',
+        'EUR-cotacao': '6,25', 'EUR-futuro': '6,50', 'CNH-cotacao': '0,75', 'CNH-futuro': '0,80' })) {
+        await section.locator('#cf-' + id).fill(valor)
       }
-      const usd = section.locator('article[aria-labelledby="cf-moeda-1-heading"]')
-      const eur = section.locator('article[aria-labelledby="cf-moeda-0-heading"]')
-      assert.match(await usd.innerText(), /21,57%/)
-      assert.match(await eur.innerText(), /16,95%/)
-      assert.match(await usd.innerText(), /50\.000,00/)
+      const eur = section.locator('#cf-resultado-EUR').locator('..')
+      const cnh = section.locator('#cf-resultado-CNH').locator('..')
+      assert.match(await eur.innerText(), /27\/12\/2026[\s\S]*88\.000,00[\s\S]*14,61%/)
+      assert.match(await cnh.innerText(), /27\/12\/2026[\s\S]*733\.333,33[\s\S]*17,59%/)
       await settleLayout(page)
-      await assertWorkspace(page, section, `Câmbio futuro ${width} ${theme}`)
-      await page.screenshot({ path: path.join(out, `cambio-futuro-${width}-${theme}.png`), fullPage: true })
-
-      await section.locator('#cf-USD-data-1').fill('2027-02-01')
-      assert.equal(await section.locator('#cf-USD-futuro-1').inputValue(), '')
-      assert.doesNotMatch(await usd.innerText(), /21,57%/)
-      assert.match(await eur.innerText(), /16,95%/)
-      await section.locator('#cf-USD-data-1').fill('2026-07-01')
-      assert.match(await usd.innerText(), /crescentes/)
-      assert.deepEqual(errors, [], `Câmbio futuro ${width} ${theme}: erros do navegador`)
-      console.log(`PASS Câmbio futuro ${width} ${theme}`)
-    } finally {
-      await page.close()
-    }
+      await assertWorkspace(page, section, `Câmbio futuro parcela única ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-parcela-${width}-${theme}.png`), fullPage: true })
+      await section.locator('#cf-vencimento').fill('2026-12-28')
+      assert.equal(await section.locator('#cf-EUR-futuro').inputValue(), '')
+      assert.equal(await section.locator('#cf-CNH-futuro').inputValue(), '')
+      assert.equal(await section.locator('#cf-EUR-cotacao').inputValue(), '6,25')
+      assert.doesNotMatch(await eur.innerText(), /14,61%/)
+      assert.deepEqual(errors, [])
+      console.log(`PASS Câmbio futuro parcela única ${width} ${theme}`)
+    } finally { await page.close() }
   }
 }
 
