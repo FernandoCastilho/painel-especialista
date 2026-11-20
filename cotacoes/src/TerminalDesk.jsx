@@ -13,6 +13,7 @@ import Flag from './Flag.jsx'
 import InsightAprender from './InsightAprender.jsx'
 import RollingNumber from './RollingNumber.jsx'
 
+const KPI_CURRENCY_PAIRS = { USD: ['USD', 'BRL'], EUR: ['EUR', 'BRL'], PAR: ['EUR', 'USD'] }
 const MARK = { up: '▲', down: '▼', flat: '■' }
 
 // Faixa corrida sob a barra superior (só no computador). Se os itens não cabem, ela rola devagar e pausa sob o mouse.
@@ -94,12 +95,13 @@ export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRat
       <h2 id="kpi-title" className="kpi-title">Mapa de variação – dia</h2>
     <div className="kpis" role="group" aria-label="Indicadores principais">
       {items.map((i, ordem) => {
+        const pair = KPI_CURRENCY_PAIRS[i.code]
         const preview = series[i.code]
         const points = preview?.points ?? sparks[i.key]
         const note = !series[i.code] && sparks[i.key]?.length && SPARK_NOTE[i.key] ? `${i.label.replace(/ 12m$/, '')}: ${SPARK_NOTE[i.key]}` : null
         const card = (
           <button key={i.key} type="button" className={`kpi${i.rate ? ' kpi-taxa' : ''}`} style={{ '--i': ordem, '--series': i.rate || i.key === 'IPCA' || i.key === 'IBOV' ? 'var(--amber)' : colors?.[i.code] || 'var(--amber)' }} onClick={() => (i.rate ? onRate(i.key) : i.key === 'IPCA' ? goto('cenarios', 'inflacao') : i.key === 'IBOV' ? goto('noticias') : onOpen(i.code))} aria-label={`${i.label} ${i.value}${i.text ? `, ${i.text}` : ''}: ${i.key === 'IBOV' ? 'abrir notícias' : 'abrir gráfico'}`}>
-            <span className="kpi-label"><span className="kpi-name"><Flag code={i.rate || i.key === 'IPCA' || i.key === 'IBOV' ? 'BRL' : i.code} width={16} height={11} />{i.label}</span>{i.rate && <small>{i.key === 'di1' ? 'B3' : i.key === 'selic' ? 'meta a.a.' : 'a.a.'}</small>}{i.key === 'IPCA' && <small>IBGE{i.note ? ` · ${i.note}` : ''}</small>}{i.key === 'IBOV' && <small>pontos · fech.{i.note ? ` ${i.note}` : ''}{i.stale ? ' · sem atualização' : ''}</small>}</span>
+            <span className="kpi-label"><span className="kpi-name"><Flag code={pair?.[0] ?? 'BRL'} width={16} height={11} />{i.label}{pair && <Flag code={pair[1]} width={16} height={11} />}</span>{i.rate && <small>{i.key === 'di1' ? 'B3' : i.key === 'selic' ? 'meta a.a.' : 'a.a.'}</small>}{i.key === 'IPCA' && <small>IBGE{i.note ? ` · ${i.note}` : ''}</small>}{i.key === 'IBOV' && <small>pontos · fech.{i.note ? ` ${i.note}` : ''}{i.stale ? ' · sem atualização' : ''}</small>}</span>
             <RollingNumber className="kpi-value" value={i.value} />
             <span className={`kpi-change ${i.tone}`}>
               {i.text ? <><span aria-hidden="true">{MARK[i.tone]}</span> {i.text}</> : <span className="muted" title={i.reason || undefined}>var. indisponível</span>}

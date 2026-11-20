@@ -18,6 +18,26 @@ async function smokeConverter(browser, width, base, out) {
     await p.goto(base + '/#resumo')
     const trigger = p.getByRole('button', { name: 'Paridade para a Finimp', exact: true })
     await trigger.waitFor()
+    const { flagSvg } = await import('../src/flags.js')
+    for (const [label, codes] of [['USD/BRL', ['USD', 'BRL']], ['EUR/BRL', ['EUR', 'BRL']], ['EUR/USD', ['EUR', 'USD']]]) {
+      const name = p.locator('.kpi-name').filter({ hasText: label })
+      await name.waitFor()
+      const expected = codes.map(code => flagSvg(code, 'width="16" height="11"'))
+      const correct = await name.evaluate((element, flags) => {
+        const rendered = [...element.querySelectorAll(':scope > .flag[aria-hidden="true"]')]
+        return rendered.length === flags.length && rendered.every((item, i) => {
+          const sample = document.createElement('template')
+          sample.innerHTML = flags[i]
+          const svg = item.querySelector('svg')
+          const box = svg?.getBoundingClientRect()
+          return !!box?.width && !!box.height && svg.isEqualNode(sample.content.firstElementChild)
+        })
+      }, expected)
+      assert.equal(correct, true, label + ': bandeiras visíveis das duas moedas, na ordem do par')
+    }
+    const parLabel = await p.locator('.kpi-name').filter({ hasText: 'EUR/USD' }).boundingBox()
+    const helpBox = await trigger.boundingBox()
+    assert.ok(parLabel && helpBox && parLabel.x + parLabel.width <= helpBox.x + 1, 'bandeiras não invadem o botão de ajuda')
     const market = p.locator('.kpi-cell').filter({ has: trigger }).locator('.kpi-value')
     assert.equal(await market.innerText(), '1,1172')
     assert.equal(await trigger.getAttribute('aria-haspopup'), 'dialog')
