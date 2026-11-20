@@ -575,6 +575,15 @@ async function assertCambioFuturo(browser) {
       assert.match(await cnh.innerText(), /27\/12\/2026[\s\S]*733\.333,33[\s\S]*17,59%/)
       await settleLayout(page)
       await assertWorkspace(page, section, `Câmbio futuro parcela única ${width} ${theme}`)
+      const metrics = await section.locator('.cf-resultado-moeda dd').evaluateAll(items => items.map(el => {
+        const range = document.createRange(); range.selectNodeContents(el)
+        const box = el.closest('.cf-resultado-moeda').getBoundingClientRect()
+        const text = range.getBoundingClientRect()
+        return { value: el.textContent, lines: range.getClientRects().length,
+          inside: text.left >= box.left && text.right <= box.right }
+      }))
+      assert.equal(metrics.length, 6)
+      assert.deepEqual(metrics.filter(m => m.lines !== 1 || !m.inside), [], 'datas, valores e TIR cabem inteiros no resultado')
       await page.screenshot({ path: path.join(out, `cambio-futuro-parcela-${width}-${theme}.png`), fullPage: true })
       await section.locator('#cf-vencimento').fill('2026-12-28')
       assert.equal(await section.locator('#cf-EUR-futuro').inputValue(), '')
