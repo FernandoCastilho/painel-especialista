@@ -6,7 +6,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
  const browser=await chromium.launch(require('./smoke-launch.cjs')()), report=[]
  try{
   for(const width of [320,390,820,1024,1440]) for(const theme of ['light','dark']){
-   const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme,serviceWorkers:'block'})
+   const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<=390,colorScheme:theme,serviceWorkers:'block'})
    const page=await context.newPage()
    await page.goto(base+'/#calculadora')
    await page.locator('.calc-catalog').waitFor()
@@ -14,13 +14,22 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    if(await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
    await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,theme)
    const nav=page.getByRole('navigation',{name:width>=1000?'Navegação principal':'Seções',exact:true})
-   const expected=width>=1000?['Mercado','Cenários','Juros','Calculadoras','Setores','Notícias','Podcast','Mais']:['Mercado','Cenários','Juros','Calculadoras','Setores','Mais']
-   assert.deepEqual((await nav.locator(':scope > button, :scope > .more-tab > button').allTextContents()).map(s=>s.trim()),expected)
+   const expected=width>=1000?['Mercado','Cenários','Juros','Calculadoras','Calculadora RPN','Setores','Notícias','Podcast','Mais']
+    :width<=359?['Merc.','Cen.','Juros','Calc.','RPN','Setores','Mais']:['Mercado','Cenários','Juros','Calculadoras','RPN','Setores','Mais']
+   await page.evaluate(()=>document.fonts.ready)
+   assert.deepEqual((await nav.locator(':scope > button, :scope > .more-tab > button').allInnerTexts()).map(s=>s.trim()),expected)
    for(const button of await nav.locator(':scope > button, :scope > .more-tab > button').all()) {
     const bounds=await button.boundingBox()
     assert.ok(bounds.width>=44&&bounds.height>=44,`${width}/${theme}: ${await button.innerText()} touch target ${bounds.width}×${bounds.height}, expected at least 44px`)
     assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1,'primary button within viewport')
     assert.equal(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true,'primary label not clipped')
+    if(width<=390) assert.ok(await button.evaluate(el=>{
+     const label=[...el.querySelectorAll(':scope > span')].find(span=>span.getClientRects().length)
+     if(!label) return false
+     const text=document.createRange();text.selectNodeContents(label)
+     const lines=[...text.getClientRects()],target=el.getBoundingClientRect()
+     return lines.length===1&&lines[0].left>=target.left-1&&lines[0].right<=target.right+1
+    }),`${width}/${theme}: rótulo ${await button.innerText()} em uma linha e dentro do alvo`)
    }
    await nav.getByRole('button',{name:'Mais',exact:true}).click()
    const menu=nav.getByRole('menu')
@@ -50,12 +59,63 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.keyboard.press('Tab')
    assert.equal(await more.getAttribute('aria-expanded'),'false','Tab closes menu')
    // Every primary destination is a real clickable route.
-   const destinations=[['Mercado','resumo'],['Cenários','cenarios'],['Juros','juros'],['Calculadoras','calculadora'],['Setores','setores']]
+   const destinations=[['Mercado','resumo'],['Cenários','cenarios'],['Juros','juros'],['Calculadoras','calculadora'],['Calculadora RPN','rpn'],['Setores','setores']]
    if(width>=1000) destinations.push(['Notícias','noticias'],['Podcast','podcast'])
    for(const [label,id] of destinations){
     await nav.getByRole('button',{name:label,exact:true}).click()
     await page.waitForURL('**/#'+id)
     assert.equal(await nav.getByRole('button',{name:label,exact:true}).getAttribute('aria-current'),'page')
+    if(id==='rpn'){
+     const panel=page.getByRole('region',{name:'Calculadora RPN',exact:true})
+     const display=panel.getByLabel('Resultado da calculadora')
+     await panel.waitFor()
+     assert.equal(await page.locator('#conteudo h1').count(),1,'a RPN tem um único título principal')
+     const heading=panel.getByRole('heading',{name:'Calculadora RPN',level:1,exact:true})
+     if(width<=390){
+      assert.ok(await heading.evaluate(el=>{
+       const text=document.createRange();text.selectNodeContents(el)
+       const lines=[...text.getClientRects()],box=el.parentElement.getBoundingClientRect()
+       return lines.length===1&&lines[0].left>=box.left&&lines[0].right<=box.right
+      }),`${width}/${theme}: título completo em uma linha no quadro azul`)
+      await page.screenshot({path:path.join(out,'rpn-top-'+width+'-'+theme+'.png')})
+     }
+     const initial=await display.innerText()
+     await page.keyboard.press('7')
+     assert.equal(await display.innerText(),initial,'teclado fora da região não altera o visor')
+     await panel.focus()
+     await panel.press('2')
+     await panel.press('Enter')
+     await panel.press('3')
+     await panel.press('+')
+     assert.match(await display.innerText(),/^5(?:,0+)?$/)
+     const enter=panel.getByRole('button',{name:'Enter: separar os números',exact:true})
+     await enter.focus()
+     await page.keyboard.press('Enter')
+     const stack=panel.getByRole('complementary',{name:'Pilha de valores'})
+     const register=name=>stack.getByText(name,{exact:true}).locator('..').locator('dd')
+     assert.match(await register('Y').innerText(),/^5(?:,0+)?$/)
+     assert.match(await register('Z').innerText(),/^0(?:,0+)?$/,'Enter nativo não duplica o empilhamento')
+     assert.ok(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'quadro RPN cabe no viewport')
+     if(width<=390||width===1440){
+      const trigger=button=>width<=390?button.tap():button.click()
+      const action=name=>trigger(panel.getByRole('button',{name,exact:true}))
+      const input=async keys=>{
+       await panel.focus()
+       await panel.press('Delete')
+       for(const key of keys) await panel.press(key)
+      }
+      await input('100')
+      await action('Trocar sinal')
+      await action('Adicionar X')
+      await input('80')
+      await action('Adicionar X')
+      await action('Calcular TIR')
+      const cash=panel.getByRole('group',{name:'Fluxo de caixa'})
+      assert.match(await cash.getByRole('status').innerText(),/Visor atual: [-−]20(?:,0+)?\b/)
+      assert.match(await cash.getByRole('status').innerText(),/TIR em % por período/)
+     }
+     await page.screenshot({path:path.join(out,'rpn-'+width+'-'+theme+'.png'),fullPage:true})
+    }
    }
    const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Aprender','aprender']]
    for(const [label,id] of extra){
