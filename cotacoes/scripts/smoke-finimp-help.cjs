@@ -37,6 +37,7 @@ async function smokeConverter(browser, width, base, out) {
     }
     const parLabel = await p.locator('.kpi-name').filter({ hasText: 'EUR/USD' }).boundingBox()
     const helpBox = await trigger.boundingBox()
+    assert.ok(helpBox && helpBox.width >= 44 && helpBox.height >= 44, 'ajuda mantém alvo de pelo menos 44 × 44 px')
     assert.ok(parLabel && helpBox && parLabel.x + parLabel.width <= helpBox.x + 1, 'bandeiras não invadem o botão de ajuda')
     const market = p.locator('.kpi-cell').filter({ has: trigger }).locator('.kpi-value')
     assert.equal(await market.innerText(), '1,1172')

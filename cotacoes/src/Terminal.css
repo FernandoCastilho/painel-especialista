@@ -553,7 +553,7 @@ main.app .idx-table .idx-rel small { display: block; color: var(--muted, #8a8a8a
 .kpi-help .help button:not(.pop-close) { color: var(--mut); }
 @media (max-width: 360px) {
   /* Paridade: mantém as duas bandeiras fora da área de toque de 44 px da ajuda. */
-  .kpi-cell > .kpi { padding-inline-start: 9px; }
+  :root .terminal-desk .kpi-cell > .kpi { padding-inline-start: 9px; }
   .kpi-cell .kpi-name { gap: 3px; letter-spacing: .05em; }
   .kpi-cell .kpi-name .flag svg { width: 13px; height: auto; }
 }
