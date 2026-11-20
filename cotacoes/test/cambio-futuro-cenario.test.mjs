@@ -87,3 +87,16 @@ test('quantias monetárias arredondam por parcela e protegem os limites de centa
   assert.equal(r.diferencaBrl,.01)
   assert.equal(simular({inicio,parcelas:[parcela('a',ano,1e16,1,1)]}).ok,false)
 })
+
+test('trava cruzada multiplica taxas decimais originais e arredonda centavos uma vez', async () => {
+  const { simularParcelasCambiaisComTravaCruzada, mostrarBrutoTravaCruzada } = await import('../src/cambioFuturoCenario.js')
+  const parcela = { id: 'p1', vencimento: '2027-01-01', valorMoeda: 1001, taxaParidade: .58, taxaTrava: 6.75, taxaCenario: 4, custoTravaBrl: .01 }
+  const result = simularParcelasCambiaisComTravaCruzada({ inicio:'2026-01-01', liquidoBrl:3800, parcelas:[parcela] })
+  assert.equal(mostrarBrutoTravaCruzada(1001,6.75,.58),3918.92)
+  assert.equal(result.totalComTravaBrl,3918.93)
+  assert.equal(result.totalSemTravaBrl,4004)
+  assert.ok(Math.abs(result.tirComTravaPct - (3918.93/3800-1)*100) < 1e-9)
+  const incompleto = simularParcelasCambiaisComTravaCruzada({ inicio:'2026-01-01', liquidoBrl:3800, parcelas:[{...parcela, taxaParidade:null}] })
+  assert.equal(incompleto.totalComTravaBrl,null)
+  assert.equal(incompleto.tirComTravaPct,null)
+})

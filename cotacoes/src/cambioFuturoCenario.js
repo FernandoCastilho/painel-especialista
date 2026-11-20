@@ -25,12 +25,18 @@ function decimal(value) {
 function arredondar(n, d) {
   return (n * 2n + d) / (d * 2n)
 }
-function centavos(amount, rate = 1, fee = 0) {
+function centavos(amount, rate = 1, fee = 0, cross = 1) {
   const [a, ad] = decimal(amount), [r, rd] = decimal(rate), [f, fd] = decimal(fee)
-  const den = ad * rd * fd
-  return arredondar((a * r * fd + f * ad * rd) * BASE, den)
+  const [c, cd] = decimal(cross)
+  const den = ad * rd * fd * cd
+  return arredondar((a * r * c * fd + f * ad * rd * cd) * BASE, den)
 }
 const reais = cents => cents == null ? null : Number(cents) / Number(BASE)
+export function mostrarBrutoTravaCruzada(amount, forward, parity) {
+  if (![amount, forward, parity].every(positivo)) return null
+  const cents = centavos(amount, forward, 0, parity)
+  return cents > CENTAVOS_MAX ? null : reais(cents)
+}
 function somar(linhas, key) {
   return linhas.every(linha => linha[key] !== null) ? linhas.reduce((s, linha) => s + linha[key], 0n) : null
 }
@@ -71,9 +77,18 @@ export function tirarTirCambialPct(recebido, pagamentos) {
   }
   return null
 }
-export function simularParcelasCambiais({ inicio, liquidoBrl, parcelas } = {}) {
+export function simularParcelasCambiais(input) {
+  return simularParcelas(input)
+}
+
+export function simularParcelasCambiaisComTravaCruzada(input) {
+  return simularParcelas(input, true)
+}
+
+function simularParcelas({ inicio, liquidoBrl, parcelas } = {}, cruzada = false) {
   if (!Array.isArray(parcelas) || parcelas.length < 1 || parcelas.length > 5) return falha('Escolha de 1 a 5 parcelas.')
   if (!parcelas.every(cadastroValido) || new Set(parcelas.map(p => p.id)).size !== parcelas.length) return falha('Confira os valores e os campos das parcelas.')
+  if (cruzada && parcelas.some(p => p.taxaParidade != null && !positivo(p.taxaParidade))) return falha('Confira a paridade da trava.')
   const initial = diaCivil(inicio)
   if (initial === null) return falha('Informe uma data inicial válida.')
   if (!INCOMPLETO(liquidoBrl) && !positivo(liquidoBrl)) return falha('Informe um valor líquido recebido maior que zero ou deixe em branco.')
@@ -83,12 +98,13 @@ export function simularParcelasCambiais({ inicio, liquidoBrl, parcelas } = {}) {
     const apta = dias !== null && positivo(p.valorMoeda)
     const custoH = p.custoTravaBrl ?? 0
     const custoS = p.custoSemTravaBrl ?? 0
-    const com = apta && positivo(p.taxaTrava) ? centavos(p.valorMoeda, p.taxaTrava, custoH) : null
+    const paridade = cruzada ? p.taxaParidade : 1
+    const com = apta && positivo(p.taxaTrava) && positivo(paridade) ? centavos(p.valorMoeda, p.taxaTrava, custoH, paridade) : null
     const sem = apta && positivo(p.taxaCenario) ? centavos(p.valorMoeda, p.taxaCenario, custoS) : null
     // Zero por arredondamento não é pagamento liquidável.
     const comCentavos = com !== 0n ? com : null
     const semCentavos = sem !== 0n ? sem : null
-    const ideal = comCentavos === null ? null : p.taxaTrava + (custoH - custoS) / p.valorMoeda
+    const ideal = comCentavos === null ? null : p.taxaTrava * paridade + (custoH - custoS) / p.valorMoeda
     const equilibrio = ideal !== null && positivo(ideal) ? ideal : null
     return { id: p.id, dias, comCentavos, semCentavos, equilibrio,
       comTravaBrl: reais(comCentavos), semTravaBrl: reais(semCentavos),

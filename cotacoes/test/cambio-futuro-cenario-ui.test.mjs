@@ -23,11 +23,12 @@ async function setup(t, quote = {}) {
     './marketReturns.js': await import('../src/marketReturns.js'),
     './cambioFuturoSpot.js': { spotDayPlan: now => ({ now }) },
     './useHistory.js': { useCentralDaily: () => ({ status: 'error', data: null }) },
-    './cambioFuturoCenario.js': { simularParcelasCambiais: input => { calls.push(input); return simularParcelasCambiais(input) } },
+    './cambioFuturoMoedaCruzada.mjs': await import('../src/cambioFuturoMoedaCruzada.mjs'),
+    './cambioFuturoCenario.js': { ...await import('../src/cambioFuturoCenario.js'), simularParcelasCambiais: input => { calls.push(input); return simularParcelasCambiais(input) } },
   }
   const DateFixture = class extends Date { static now() { return Date.parse('2026-11-20T02:30Z') } }
   const module = { exports: {} }
-  runInNewContext(code, { module, exports: module.exports, Date: DateFixture, require: name => deps[name] ?? require(name) })
+  runInNewContext(code, { module, exports: module.exports, Date: DateFixture, window: { confirm: () => true }, require: name => deps[name] ?? require(name) })
   const ui = hookRenderer(() => module.exports.default({ onBack() {}, quotes: quote }))
   t.after(() => ui.close())
   await ui.settle()
@@ -133,4 +134,31 @@ test('exemplo só entra por ação explícita, fica rotulado e restaura rascunho
   assert.equal(ui.field('p1-trava').value, '8,60')
   assert.equal(ui.field('p2-data'), undefined)
   assert.doesNotMatch(text(ui.ui.value), /Exemplo fictício/)
+})
+
+test('USD padrão, EUR independente: hipotético não entra como trava; custos uma vez após confirmar pernas', async t => {
+  const ui = await setup(t)
+  const select = id => ui.find(n => n.type === 'select' && n.props.id === 'cf-c-' + id)
+  const choose = async(id,value) => {select(id).props.onChange({target:{value}});await ui.ui.settle()}
+  assert.equal(select('moeda').props.value,'USD')
+  assert.equal(select('trava-moeda').props.value,'USD')
+  await ui.change('p1-data','2027-05-20')
+  await ui.change('p1-valor','10.000,00')
+  await ui.change('p1-cenario','6,65')
+  await choose('trava-moeda','EUR')
+  assert.equal(ui.field('p1-valor').value,'10.000,00')
+  await ui.change('p1-trava','7')
+  await ui.change('p1-cross','0,9')
+  await choose('p1-cross-status','cenario')
+  assert.equal(ui.total('total-trava'),'—')
+  assert.match(text(ui.ui.value),/Pagamento hipotético.*63\.000,00/)
+  await choose('p1-cross-status','contratada')
+  assert.equal(ui.total('total-trava'),'—')
+  ui.find(n => n.type === 'input' && n.props.type === 'checkbox').props.onChange({target:{checked:true}})
+  await ui.ui.settle()
+  assert.match(ui.total('total-trava'),/63\.000,00/)
+  await ui.change('p1-tarifa-trava','90')
+  assert.match(ui.total('total-trava'),/63\.090,00/)
+  await ui.change('p1-valor','11.000,00')
+  assert.equal(ui.total('total-trava'),'—')
 })

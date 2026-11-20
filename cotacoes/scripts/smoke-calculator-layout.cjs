@@ -552,10 +552,14 @@ async function assertCambioFuturoCenario(browser) {
     const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
+    page.on('dialog', dialog => dialog.accept())
     try {
       await fixtures(page)
-      await page.route('**/quotes.json*', route => route.fulfill({ json: { generatedAt: now, quotes: {} } }))
+      await page.route('**/quotes.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now, quotes: {
+        USDBRL: { bid: 5.71, ask: 5.72, high: 5.75, low: 5.65, timestamp: Date.parse('2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
+      } } }))
       await page.route('**/history.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now - 60000, series: {
+        USD: { source: 'USD', points: [{ t: t('2026-08-25'), bid: 5.60 }, { t: t('2026-11-12'), bid: 5.70 }, { t: t('2026-11-19'), bid: 5.71 }] },
         EUR: { source: 'EUR', points: [{ t: t('2026-08-25'), bid: 6.42 }, { t: t('2026-11-12'), bid: 6.65 }, { t: t('2026-11-19'), bid: 6.55 }] },
         CNH: { source: 'CNY', points: [{ t: t('2026-11-12'), bid: .85 }, { t: t('2026-11-19'), bid: .86 }] },
       } } }))
@@ -566,6 +570,22 @@ async function assertCambioFuturoCenario(browser) {
       assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
       assert.equal(await section.locator('#cf-c-inicio').inputValue(), '2026-11-20')
       assert.equal(await section.locator('#cf-c-p1-cenario').inputValue(), '')
+      assert.equal(await section.locator('#cf-c-moeda').inputValue(), 'USD')
+      assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'USD')
+      await section.getByText('Compra indicativa · 19/11/2026 às 18:04', { exact: true }).waitFor()
+      for (const [title, words] of [
+        ['Moedas e cotação indicativa', /AwesomeAPI.*trocar/is],
+        ['Parcelas e cotações', /vencimento.*Sem o cenário/s],
+        ['Resultado da comparação', /Preencha todas as parcelas.*Soma nominal/s],
+      ]) {
+        const help = section.getByRole('button', { name: 'Ajuda: ' + title, exact: true })
+        await help.click()
+        const modal = page.getByRole('dialog', { name: title, exact: true })
+        assert.match(await modal.innerText(), words)
+        await page.keyboard.press('Escape')
+        assert.equal(await modal.count(), 0)
+      }
+      assert.doesNotMatch(await section.innerText(), /Preencha todas as parcelas|Soma nominal das parcelas|As cotações são de cada vencimento/)
       const previous = section.getByRole('link', { name: 'Simular TIR da parcela em USD', exact: true })
       assert.equal(await previous.isVisible(), true)
       assert.equal(await previous.getAttribute('href'), '#calculadora/cambio-futuro/tir-usd')
@@ -594,10 +614,10 @@ async function assertCambioFuturoCenario(browser) {
       assert.match(await details.locator('section').first().innerText(), /Cotação de equilíbrio.*6,5500/s)
       await details.locator('summary').click()
       const graph = section.locator('.cf-c-graph')
-      await graph.getByRole('img', { name: /EUR\/BRL/ }).waitFor()
-      assert.match(await graph.getByRole('img', { name: /EUR\/BRL/ }).getAttribute('aria-label'), /12\/11/)
+      await graph.getByRole('img', { name: /USD\/BRL/ }).waitFor()
+      assert.match(await graph.getByRole('img', { name: /USD\/BRL/ }).getAttribute('aria-label'), /12\/11/)
       await section.getByRole('button', { name: '90 dias' }).click()
-      assert.match(await graph.getByRole('img', { name: /EUR\/BRL/ }).getAttribute('aria-label'), /25\/08/)
+      assert.match(await graph.getByRole('img', { name: /USD\/BRL/ }).getAttribute('aria-label'), /25\/08/)
       await settleLayout(page)
       await assertWorkspace(page, section, `Câmbio futuro, 3 parcelas ${width} ${theme}`)
       await page.screenshot({ path: path.join(out, `cambio-futuro-tres-parcelas-${width}-${theme}.png`), fullPage: true })
@@ -609,6 +629,38 @@ async function assertCambioFuturoCenario(browser) {
       await section.getByRole('button', { name: '5 parcelas', exact: true }).click()
       assert.equal(await section.locator('.cf-c-row').count(), 5)
       assert.equal(await section.locator('#cf-c-p3-cenario').inputValue(), '')
+      await section.getByRole('button', { name: '1 parcela', exact: true }).click()
+      for (const { code, conversion, forward, gross, total } of [
+        { code: 'EUR', conversion: '0,9', forward: '7', gross: 'R$63.000,00', total: 'R$63.090,00' },
+        { code: 'CNH', conversion: '7,5', forward: '0,8', gross: 'R$60.000,00', total: 'R$60.090,00' },
+      ]) {
+        await section.locator('#cf-c-trava-moeda').selectOption(code)
+        assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '10.000')
+        await section.locator('#cf-c-p1-trava').fill(forward)
+        await section.locator('#cf-c-p1-cross').fill(conversion)
+        await section.locator('#cf-c-p1-cross-status').selectOption('cenario')
+        await section.getByText(`Exposição residual USD/${code}. Não é cobertura integral.`, { exact: true }).waitFor()
+        assert.equal(await section.locator('#cf-c-total-trava').innerText(), '—')
+        const result = section.getByRole('region', { name: 'Resultado cruzado da parcela 1' })
+        assert.ok(normalizeMoney(await result.innerText()).includes(gross))
+        await section.locator('#cf-c-p1-cross-status').selectOption('contratada')
+        assert.equal(await section.locator('#cf-c-total-trava').innerText(), '—')
+        await section.getByRole('checkbox', { name: 'Trava em reais contratada para esta parcela' }).check()
+        assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), gross)
+        await costs.locator('summary').click()
+        await section.locator('#cf-c-p1-tarifa-trava').fill('90')
+        assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), total)
+        await costs.locator('summary').click()
+        await settleLayout(page)
+        await assertWorkspace(page, section, `Câmbio futuro USD/${code} ${width} ${theme}`)
+      }
+      const approvedTotal = normalizeMoney(await section.locator('#cf-c-total-trava').innerText())
+      await section.getByRole('button', { name: 'Gerar exemplo fictício', exact: true }).click()
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      await section.getByRole('button', { name: 'Sair do exemplo fictício', exact: true }).click()
+      assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'CNH')
+      assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), approvedTotal)
+      await section.getByRole('button', { name: '5 parcelas', exact: true }).click()
       await section.locator('#cf-c-moeda').selectOption('CNH')
       assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '')
       assert.equal(await graph.getByRole('img').count(), 0, 'histórico CNY não substitui CNH offshore')
