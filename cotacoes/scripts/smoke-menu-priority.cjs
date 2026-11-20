@@ -238,5 +238,57 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.getByRole('navigation',{name:'Seções',exact:true}).waitFor()
    await context.close()
   }
+  for (const behavior of ['unavailable', 'rejected', 'native']) {
+   const context = await browser.newContext({viewport:{width:390,height:844},isMobile:behavior !== 'native',hasTouch:behavior !== 'native',serviceWorkers:'block'})
+   const page = await context.newPage()
+   await page.addInitScript(behavior => {
+    let fullscreen = null
+    Object.defineProperty(document,'fullscreenEnabled',{ configurable:true, get:()=>behavior !== 'unavailable' })
+    Object.defineProperty(document,'fullscreenElement',{ configurable:true, get:()=>fullscreen })
+    HTMLElement.prototype.requestFullscreen = async function() {
+     if (behavior === 'rejected') throw new Error('fullscreen indisponível')
+     fullscreen = this
+     document.dispatchEvent(new Event('fullscreenchange'))
+    }
+    document.exitFullscreen = async () => { fullscreen = null; document.dispatchEvent(new Event('fullscreenchange')) }
+   },behavior)
+   await page.goto(base+'/#rpn')
+   const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   await panel.waitFor()
+   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+   await panel.focus()
+   for (const k of ['2','Enter','3','+']) await panel.press(k)
+   const value = async () => (await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim()
+   assert.match(await value(),/^5(?:,0+)?$/)
+   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
+   const close = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
+   await open.click()
+   await close.waitFor()
+   const native = behavior === 'native'
+   assert.equal(await panel.getAttribute('data-screen-mode'),native?'native':'page')
+   if (native) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false,'paisagem também funciona com ponteiro fino')
+   if (!native) assert.equal(await page.locator('.nav-top').isVisible(),false)
+   for (const [width,height] of [[780,390],[320,760]]) {
+    await page.setViewportSize({width,height})
+    const grade = panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
+    assert.equal(await grade.getByRole('button').count(),39)
+    assert.equal((await grade.getAttribute('class')).includes(width===780?'--wide':'--portrait'),true)
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true)
+    assert.match(await value(),/^5(?:,0+)?$/)
+   }
+   if (native) await page.evaluate(()=>document.exitFullscreen())
+   else await close.press('Escape')
+   await open.waitFor()
+   assert.equal(await panel.getAttribute('data-screen-mode'),null)
+   assert.match(await value(),/^5(?:,0+)?$/)
+   assert.equal(await page.locator('.nav-top').isVisible(),true)
+   await open.click()
+   await close.click()
+   await open.waitFor()
+   assert.match(await value(),/^5(?:,0+)?$/)
+   report.push({fullscreen:behavior,passed:true})
+   await context.close()
+  }
  }finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1})
