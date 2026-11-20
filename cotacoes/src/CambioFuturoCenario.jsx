@@ -128,6 +128,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
     setRows(parcelasExemplo(base))
   }
   const now = Date.now()
+  const spotPlan = spotDayPlan(now)
   const vencimentoMin = inicio || undefined
   const escolherMoeda = event => {
     if (event.target.value === code) return
@@ -231,6 +232,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
       <header className="cx-heading cf-c-section-title"><h3 id="cf-c-operacao">1. Operação</h3>
         <CalculatorHelp title="Moedas e cotação indicativa">
           <p>A referência de compra à vista vem da AwesomeAPI. Para CNH offshore, é um cruzamento. Não preenche o cenário. Horário de Brasília, só quando comprovado pela fonte.</p>
+          {hedge === 'USD' && <p><ReferenciaMesa code="USD" quote={quotes?.USD} plan={spotPlan} /></p>}
           <p>Trocar a moeda da operação limpa valores e cotações. Trocar só a moeda da trava preserva o valor original e o cenário. As datas não mudam. Diminuir a quantidade descarta as últimas parcelas.</p>
         </CalculatorHelp>
       </header>
@@ -257,7 +259,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
           </div>
           <Input id="cf-c-inicio" label="Data inicial" value={inicio} change={setInicio} type="date" />
         </div>
-        <small className="cf-observacao"><ReferenciaMesa code={hedge} quote={quotes?.[hedge]} plan={spotDayPlan(now)} compact /></small>
+        <small className="cf-observacao"><ReferenciaMesa code={hedge} quote={quotes?.[hedge]} plan={spotPlan} compact /></small>
         <details className="cf-c-details">
           <summary>Custos e valor líquido (opcionais)</summary>
           <p className="cf-notice">Informe o valor líquido recebido em reais, já descontados os custos iniciais. Ele é usado no custo do período e na TIR.</p>
