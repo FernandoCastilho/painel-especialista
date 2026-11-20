@@ -554,7 +554,20 @@ async function assertCambioFuturo(browser) {
     page.on('pageerror', error => errors.push(error.message))
     try {
       await fixtures(page)
-      await page.clock.setFixedTime(new Date('2026-01-02T02:00:00Z'))
+      let clock = Date.parse('2026-01-02T02:00:00Z') // 01/01 23h de Brasília, sem pregão.
+      const prev = Date.parse('2025-12-31T20:57:00Z')
+      const raw = (bid, ask, high, low, timestamp) => ({ bid, ask, high, low, timestamp: timestamp / 1000, pctChange: 0 })
+      await page.route('**/quotes.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: clock,
+        quotes: { EURBRL: raw(6.51, 6.52, 6.6, 6.4, clock - 120000), USDBRL: raw(5.7, 5.71, 5.75, 5.65, clock - 120000),
+          USDCNH: raw(6.7, 6.71, 6.8, 6.6, clock - 120000) },
+      } }))
+      await page.route('**/history.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: prev + 60000,
+        series: { EUR: { source: 'EUR', points: [{ t: prev, bid: 6.48 }] } },
+      } }))
+      await page.route('**/intraday.json*', route => route.fulfill({ json: { source: 'AwesomeAPI (coleta central a cada 5 min)', generatedAt: prev + 60000,
+        series: { CNH: { points: [[prev, .85]] } },
+      } }))
+      await page.clock.setFixedTime(new Date(clock))
       await page.goto(`${base}/#calculadora/cambio-futuro`)
       const section = page.locator('section.cf-pattern')
       await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
@@ -568,6 +581,17 @@ async function assertCambioFuturo(browser) {
       assert.equal(await operacao.locator('label[for="cf-valor"] .flag svg').count(), 1)
       assert.equal(await mesa.locator('legend .flag svg').count(), 2)
       assert.equal(await section.locator('.cf-resultado-moeda h4 .flag svg').count(), 2)
+      const eurNote = mesa.locator('#cf-EUR-cotacao-obs')
+      const cnhNote = mesa.locator('#cf-CNH-cotacao-obs')
+      await eurNote.filter({ hasText: /Referência diária indicativa/ }).waitFor()
+      await cnhNote.filter({ hasText: /último ponto indicativo/ }).waitFor()
+      assert.match(await eurNote.innerText(), /6,4800.*31\/12\/2025.*AwesomeAPI/i)
+      assert.match(await cnhNote.innerText(), /0,8500.*31\/12\/2025 às 17:57.*AwesomeAPI/i)
+      assert.match(await mesa.locator('#cf-EUR-futuro-obs').innerText(), /Não é cotação à vista/)
+      assert.equal(await mesa.locator('#cf-EUR-cotacao').inputValue(), '', 'referência não preenche o campo')
+      assert.equal(await mesa.locator('#cf-CNH-cotacao').inputValue(), '', 'referência não preenche o campo')
+      assert.doesNotMatch(await eurNote.innerText(), /Partida /)
+      assert.doesNotMatch(await cnhNote.innerText(), /Partida /)
       for (const [id, valor] of Object.entries({ valor: '110.000', vencimento: '2026-12-27', cotacao: '5', taxa: '10',
         'EUR-cotacao': '6,25', 'EUR-futuro': '6,50', 'CNH-cotacao': '0,75', 'CNH-futuro': '0,80' })) {
         await section.locator('#cf-' + id).fill(valor)
@@ -587,6 +611,10 @@ async function assertCambioFuturo(browser) {
       }))
       assert.equal(metrics.length, 6)
       assert.deepEqual(metrics.filter(m => m.lines !== 1 || !m.inside), [], 'datas, valores e TIR cabem inteiros no resultado')
+      assert.match(await mesa.locator('#cf-EUR-futuro-obs').innerText(), /Taxa para 27\/12\/2026.*Não é cotação à vista/)
+      assert.match(await eurNote.innerText(), /Partida abaixo do valor indicativo exibido/)
+      assert.match(await cnhNote.innerText(), /Partida abaixo do valor indicativo exibido/)
+      assert.doesNotMatch(await eurNote.innerText(), /da faixa|%/)
       await page.screenshot({ path: path.join(out, `cambio-futuro-parcela-${width}-${theme}.png`), fullPage: true })
       await section.locator('#cf-vencimento').fill('2026-12-28')
       assert.equal(await section.locator('#cf-EUR-futuro').inputValue(), '')
@@ -603,6 +631,21 @@ async function assertCambioFuturo(browser) {
         assert.equal(await section.locator('#cf-' + id).inputValue(), '')
       }
       assert.equal(await eur.locator('.cf-tir dd').innerText(), '—')
+      clock = Date.parse('2026-01-02T13:00:00Z')
+      await page.clock.setFixedTime(new Date(clock))
+      await page.reload()
+      await eurNote.filter({ hasText: /À vista hoje/ }).waitFor()
+      await cnhNote.filter({ hasText: /À vista hoje/ }).waitFor()
+      assert.match(await eurNote.innerText(), /compra–venda.*6,5100 a 6,5200\/EUR.*02\/01\/2026 às 09:58.*AwesomeAPI/)
+      assert.match(await cnhNote.innerText(), /compra–venda.*\/CNH.*02\/01\/2026 às 09:58.*CNH offshore/)
+      for (const [valor, state] of [['6,51', 'dentro'], ['6,59', 'acima'], ['6,4', 'abaixo']]) {
+        await mesa.locator('#cf-EUR-cotacao').fill(valor)
+        assert.match(await eurNote.innerText(), new RegExp('Partida ' + state + ' da faixa'))
+      }
+      assert.doesNotMatch(await cnhNote.innerText(), /Partida (dentro|acima|abaixo)/)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Referência à vista ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-spot-${width}-${theme}.png`), fullPage: true })
       assert.deepEqual(errors, [])
       console.log(`PASS Câmbio futuro parcela única ${width} ${theme}`)
     } finally { await page.close() }
