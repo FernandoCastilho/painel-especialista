@@ -104,7 +104,7 @@
 .rpn-key-slot { display: grid; align-content: end; min-inline-size: 0; grid-column: var(--key-column); grid-row: var(--key-row); }
 .rpn-key {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  inline-size: 100%; min-inline-size: 0; min-block-size: 44px;
+  inline-size: 100%; min-inline-size: 0; min-block-size: 46px;
   padding: 2px 0; gap: 0; border: 1px solid #0c0f12; border-radius: 5px;
   background: linear-gradient(165deg,#46494d,#292d30 75%);
   color: #fafbfd; box-shadow: inset 0 1px 0 #ffffff35, 0 2px 0 #08090b; line-height: 1;
