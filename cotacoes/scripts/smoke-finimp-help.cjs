@@ -20,8 +20,11 @@ async function smokeConverter(browser, width, base, out) {
     await trigger.waitFor()
     const { flagSvg } = await import('../src/flags.js')
     for (const [label, codes] of [['USD/BRL', ['USD', 'BRL']], ['EUR/BRL', ['EUR', 'BRL']], ['EUR/USD', ['EUR', 'USD']]]) {
-      const name = p.locator('.kpi-name').filter({ hasText: label })
+      const card = p.getByRole('button', { name: new RegExp('^' + label + ' .*abrir gráfico$') })
+      const name = card.locator('.kpi-name')
       await name.waitFor()
+      assert.equal((await name.textContent()).trim(), '', label + ': sem siglas visíveis')
+      assert.equal(await name.getAttribute('title'), label, label + ': par identificável ao passar o mouse')
       const expected = codes.map(code => flagSvg(code, 'width="16" height="11"'))
       const correct = await name.evaluate((element, flags) => {
         const rendered = [...element.querySelectorAll(':scope > .flag[aria-hidden="true"]')]
@@ -35,7 +38,7 @@ async function smokeConverter(browser, width, base, out) {
       }, expected)
       assert.equal(correct, true, label + ': bandeiras visíveis das duas moedas, na ordem do par')
     }
-    const parLabel = await p.locator('.kpi-name').filter({ hasText: 'EUR/USD' }).boundingBox()
+    const parLabel = await p.getByRole('button', { name: /^EUR\/USD .*abrir gráfico$/ }).locator('.kpi-name').boundingBox()
     const helpBox = await trigger.boundingBox()
     assert.ok(helpBox && helpBox.width >= 44 && helpBox.height >= 44, 'ajuda mantém alvo de pelo menos 44 × 44 px')
     assert.ok(parLabel && helpBox && parLabel.x + parLabel.width <= helpBox.x + 1, 'bandeiras não invadem o botão de ajuda')
