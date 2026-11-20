@@ -590,6 +590,16 @@ async function assertCambioFuturo(browser) {
       assert.equal(await section.locator('#cf-CNH-futuro').inputValue(), '')
       assert.equal(await section.locator('#cf-EUR-cotacao').inputValue(), '6,25')
       assert.doesNotMatch(await eur.innerText(), /14,61%/)
+      await section.locator('#cf-EUR-futuro').fill('6,50')
+      assert.match(await eur.locator('.cf-tir dd').innerText(), /%/)
+      await page.clock.setFixedTime(new Date('2026-01-02T03:00:00Z'))
+      await section.locator('#cf-valor').fill('111.000')
+      assert.match(await section.innerText(), /Data-base da simulação: 02\/01\/2026/)
+      assert.match(await section.innerText(), /Informe novamente as cotações/)
+      for (const id of ['cotacao', 'EUR-cotacao', 'EUR-futuro', 'CNH-cotacao', 'CNH-futuro']) {
+        assert.equal(await section.locator('#cf-' + id).inputValue(), '')
+      }
+      assert.equal(await eur.locator('.cf-tir dd').innerText(), '—')
       assert.deepEqual(errors, [])
       console.log(`PASS Câmbio futuro parcela única ${width} ${theme}`)
     } finally { await page.close() }

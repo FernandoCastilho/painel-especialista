@@ -12,12 +12,13 @@ const text = el => Array.isArray(el) ? el.map(text).join(' ') : el?.props ? text
 
 test('parcela única: formulário da mesa só em CNH/EUR e resultado independente por moeda', async t => {
   const calls = []
+  let dia = '2026-11-20'
   const deps = {
     './CalculatorStandard.css': {}, './CambioFuturo.css': {},
     './CalculatorHelp.jsx': () => null, './CalcBack.jsx': () => null,
     './cdiDolar.js': await import('../src/cdiDolar.js'),
     './moneyInput.js': await import('../src/moneyInput.js'),
-    './marketReturns.js': { marketDate: () => '2026-11-20' },
+    './marketReturns.js': { marketDate: () => dia },
     './cambioFuturoParcela.js': { simularParcelaCambial(args) {
       calls.push(args)
       return { ok: true, tir: args.futuroMoeda == null ? null : 12.34, parcelaMoeda: 3698.25, pagamentoBrl: args.futuroMoeda == null ? null : 4500, recebidoBrl: 4000 }
@@ -52,4 +53,19 @@ test('parcela única: formulário da mesa só em CNH/EUR e resultado independent
   assert.equal(field('cf-EUR-futuro').props.value, '')
   assert.equal(field('cf-EUR-cotacao').props.value, '6,00')
   assert.doesNotMatch(text(resultado('EUR')), /12,34%/)
+  await change('EUR-futuro', '6,25')
+  assert.match(text(resultado('EUR')), /12,34%/)
+  dia = '2026-11-21'
+  await change('valor', '105.000')
+  assert.match(text(ui.value), /A data-base mudou/)
+  for (const id of ['cf-cotacao', 'cf-EUR-cotacao', 'cf-EUR-futuro']) assert.equal(field(id).props.value, '')
+  assert.equal(field('cf-valor').props.value, '105.000')
+  assert.doesNotMatch(text(resultado('EUR')), /12,34%/)
+  await change('EUR-cotacao', '6,10')
+  await change('cotacao', '5,55')
+  assert.equal(field('cf-EUR-futuro').props.value, '')
+  assert.doesNotMatch(text(resultado('EUR')), /12,34%/)
+  await change('EUR-futuro', '6,35')
+  assert.match(text(resultado('EUR')), /12,34%/)
+  assert.equal(calls.at(-1).start, '2026-11-21')
 })

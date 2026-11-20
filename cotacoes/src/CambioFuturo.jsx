@@ -21,6 +21,7 @@ export function CambioFuturoIcon() {
 const dataBr = iso => iso ? iso.split('-').reverse().join('/') : '—'
 const decimalBr = n => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const MOEDAS_MESA = [{ id: 'CNH', nome: 'Yuan (CNH)' }, { id: 'EUR', nome: 'Euro (EUR)' }]
+const mesaVazia = () => Object.fromEntries(MOEDAS_MESA.map(({ id }) => [id, { cotacao: '', futuro: '' }]))
 
 function Campo({ id, label, value, onChange, type = 'text', placeholder, erro }) {
   return <div className="cx-field">
@@ -34,23 +35,42 @@ function Campo({ id, label, value, onChange, type = 'text', placeholder, erro })
 
 export default function CambioFuturo({ onBack }) {
   const [operacao, setOperacao] = useState({ valor: '', vencimento: '', cotacao: '', taxa: '' })
-  const [mesa, setMesa] = useState(() => Object.fromEntries(MOEDAS_MESA.map(({ id }) => [id, { cotacao: '', futuro: '' }])))
+  const [mesa, setMesa] = useState(mesaVazia)
+  const [diaCotacao, setDiaCotacao] = useState(() => marketDate(Date.now()))
+  const start = marketDate(Date.now())
+  const mudouDia = diaCotacao !== start
+  const mesaAtual = mudouDia ? mesaVazia() : mesa
+  const spotUsd = mudouDia ? '' : operacao.cotacao
   const mudarOp = (key, value) => {
-    if (key === 'vencimento' && value !== operacao.vencimento) {
+    const hoje = marketDate(Date.now())
+    if (key === 'cotacao' && hoje !== diaCotacao) {
+      setDiaCotacao(hoje)
+      setMesa(mesaVazia())
+    } else if (key === 'vencimento' && value !== operacao.vencimento) {
       setMesa(old => Object.fromEntries(Object.entries(old).map(([id, cot]) => [id, { ...cot, futuro: '' }])))
     }
     setOperacao(old => ({ ...old, [key]: value }))
   }
-  const mudarMesa = (id, key, value) => setMesa(old => ({ ...old, [id]: { ...old[id], [key]: value } }))
-  const start = marketDate(Date.now())
+  const mudarMesa = (id, key, value) => {
+    const hoje = marketDate(Date.now())
+    const mudou = hoje !== diaCotacao
+    if (mudou) {
+      setDiaCotacao(hoje)
+      setOperacao(old => ({ ...old, cotacao: '' }))
+    }
+    setMesa(old => {
+      const base = mudou ? mesaVazia() : old
+      return { ...base, [id]: { ...base[id], [key]: value } }
+    })
+  }
   const parcelaUsd = parseMoneyInput(operacao.valor)
-  const inputComplete = [operacao.valor, operacao.vencimento, operacao.cotacao, operacao.taxa].every(v => v.trim())
+  const inputComplete = [operacao.valor, operacao.vencimento, spotUsd, operacao.taxa].every(v => v.trim())
   const futuroInvalido = texto => texto.trim() && !(Number.isFinite(parseDecimal(texto)) && parseDecimal(texto) > 0)
   const resultados = MOEDAS_MESA.map(({ id, nome }) => {
-    const { cotacao, futuro } = mesa[id]
+    const { cotacao, futuro } = mesaAtual[id]
     const resultado = !inputComplete || !cotacao.trim() ? null : !parcelaUsd.ok
       ? { ok: false, error: parcelaUsd.error }
-      : simularParcelaCambial({ parcelaUsd: parcelaUsd.value, spotUsd: parseDecimal(operacao.cotacao), taxaPct: parseDecimal(operacao.taxa),
+      : simularParcelaCambial({ parcelaUsd: parcelaUsd.value, spotUsd: parseDecimal(spotUsd), taxaPct: parseDecimal(operacao.taxa),
           start, vencimento: operacao.vencimento, spotMoeda: parseDecimal(cotacao), futuroMoeda: futuroInvalido(futuro) || !futuro.trim() ? undefined : parseDecimal(futuro) })
     return { id, nome, resultado }
   })
@@ -64,10 +84,11 @@ export default function CambioFuturo({ onBack }) {
       <div className="cx-form cf-parcela-fields">
         <Campo id="cf-valor" label="Valor da parcela (USD, com juros)" value={operacao.valor} onChange={v => mudarOp('valor', v)} placeholder="ex.: 100.000,00" />
         <Campo id="cf-vencimento" label="Vencimento" type="date" value={operacao.vencimento} onChange={v => mudarOp('vencimento', v)} />
-        <Campo id="cf-cotacao" label="Cotação de partida (R$/US$)" value={operacao.cotacao} onChange={v => mudarOp('cotacao', v)} placeholder="ex.: 5,9160" />
+        <Campo id="cf-cotacao" label="Cotação de partida (R$/US$)" value={spotUsd} onChange={v => mudarOp('cotacao', v)} placeholder="ex.: 5,9160" />
         <Campo id="cf-taxa" label="Taxa all-in do empréstimo (% a.a.)" value={operacao.taxa} onChange={v => mudarOp('taxa', v)} placeholder="ex.: 11,20" />
       </div>
       <p className="cf-notice">Data-base da simulação: {dataBr(start)} (São Paulo).</p>
+      {mudouDia && <p className="cf-notice" role="status">A data-base mudou. Informe novamente as cotações para calcular a TIR.</p>}
     </article>
 
     <article className="desk-panel cx-panel cf-input" aria-labelledby="cf-mesa">
@@ -76,8 +97,8 @@ export default function CambioFuturo({ onBack }) {
       <div className="cf-mesa-grid">
         {MOEDAS_MESA.map(({ id, nome }) => <fieldset key={id} className="cf-moeda">
           <legend>{nome}</legend>
-          <Campo id={`cf-${id}-cotacao`} label={`Cotação de partida (R$/${id})`} value={mesa[id].cotacao} onChange={v => mudarMesa(id, 'cotacao', v)} />
-          <Campo id={`cf-${id}-futuro`} label={`Câmbio futuro (R$/${id})`} value={mesa[id].futuro} onChange={v => mudarMesa(id, 'futuro', v)} erro={futuroInvalido(mesa[id].futuro) ? 'Informe um câmbio futuro maior que zero.' : undefined} />
+          <Campo id={`cf-${id}-cotacao`} label={`Cotação de partida (R$/${id})`} value={mesaAtual[id].cotacao} onChange={v => mudarMesa(id, 'cotacao', v)} />
+          <Campo id={`cf-${id}-futuro`} label={`Câmbio futuro (R$/${id})`} value={mesaAtual[id].futuro} onChange={v => mudarMesa(id, 'futuro', v)} erro={futuroInvalido(mesaAtual[id].futuro) ? 'Informe um câmbio futuro maior que zero.' : undefined} />
         </fieldset>)}
       </div>
     </article>
