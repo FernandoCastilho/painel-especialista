@@ -50,7 +50,7 @@ function oddRate({pv,pmt,fv}, n, fraction, begin, compound) {
 export function solveClassicTvm(field, values, {begin=false, compound=false}={}) {
   if(!fields.includes(field)||fields.some(key=>key!==field&&!Number.isFinite(values[key])))return fail('Registradores financeiros inválidos.')
   if(field==='n')return classicTerm(values,begin)
-  const {n,i,pv,pmt,fv}=values
+  const {n,i,pv}=values
   if(!(n>=1&&n<=limit))return fail('Informe de 1 a 10.000 períodos.')
   const whole=Math.floor(n), fraction=n-whole, timing=begin?'begin':'end'
   if(!fraction)return solveTvm(field,values,timing)

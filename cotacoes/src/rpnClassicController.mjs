@@ -58,7 +58,7 @@ function writeDate(date, dmy) {
   return first + (second*10000+yr)/1e6
 }
 
-export function createClassicRpnController({ schedule = setTimeout, cancelScheduled = clearTimeout } = {}) {
+export function createClassicRpnController({ schedule = globalThis.setTimeout, cancelScheduled = globalThis.clearTimeout } = {}) {
   let stack=[0,0,0,0], last=0, entry=null, lift=false, tvmArmed=false, shift=null
   let memory=null, memoryDot=false, memoryOperation=null, places=2, sci=false, prefixDisplay=false, begin=false, compound=false, dmy=false
   let dateView=null, auxiliaryView=null, pauseTimer=null, paused=false, remainingSteps=1000
