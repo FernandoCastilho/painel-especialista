@@ -12,7 +12,7 @@ const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node?.props ? 
 const text = node => Array.isArray(node) ? node.map(text).join(' ') : node?.props ? text(node.props.children) : ['number', 'string'].includes(typeof node) ? String(node) : ''
 const { code } = await transform(await readFile(new URL('../src/CambioFuturoCenario.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
 
-async function setup(t, quote = {}) {
+async function setup(t, quote = {}, navigator) {
   const calls = []
   const deps = {
     './CalculatorStandard.css': {}, './CambioFuturo.css': {}, './CambioFuturoCenario.css': {},
@@ -28,7 +28,7 @@ async function setup(t, quote = {}) {
   }
   const DateFixture = class extends Date { static now() { return Date.parse('2026-11-20T02:30Z') } }
   const module = { exports: {} }
-  runInNewContext(code, { module, exports: module.exports, Date: DateFixture, window: { confirm: () => true }, require: name => deps[name] ?? require(name) })
+  runInNewContext(code, { module, exports: module.exports, Date: DateFixture, window: { confirm: () => true }, navigator, require: name => deps[name] ?? require(name) })
   const ui = hookRenderer(() => module.exports.default({ onBack() {}, quotes: quote }))
   t.after(() => ui.close())
   await ui.settle()
@@ -37,7 +37,7 @@ async function setup(t, quote = {}) {
   const change = async (id, value) => { field(id).change(value); await ui.settle() }
   const clickCount = async count => { find(n => n.type === 'button' && n.props.children === count).props.onClick(); await ui.settle() }
   const total = id => text(find(n => n.props.id === 'cf-c-' + id))
-  return { ui, find, field, change, clickCount, total, calls, historico: module.exports.historicoCenario }
+  return { ui, find, field, change, clickCount, total, calls, historico: module.exports.historicoCenario, components: module.exports }
 }
 
 test('três parcelas independentes e totais nominais, sem preencher cenário com referência do mercado', async t => {
@@ -62,7 +62,8 @@ test('três parcelas independentes e totais nominais, sem preencher cenário com
   for (const [i, taxa] of [[1, '6,70'], [2, '6,80'], [3, '6,75']]) await ui.change(`p${i}-cenario`, taxa)
   assert.match(ui.total('total-cenario'), /202\.500,00/)
   assert.match(ui.total('diferenca'), /4\.500,00/)
-  assert.match(text(ui.ui.value), /Economia neste cenário.*A trava dá previsibilidade/)
+  assert.match(text(ui.ui.value), /Economia neste cenário/)
+  assert.match(ui.find(n => n.type?.name === 'ResumoCliente').props.resumo.aviso, /A trava dá previsibilidade/)
   assert.deepEqual(Array.from(ui.calls.at(-1).parcelas, p => p.id), ['p1', 'p2', 'p3'])
   assert.equal(nodes(ui.ui.value).filter(n => n.type === 'details').every(n => n.props.open === undefined), true)
   await ui.change('p2-data', '2027-08-21')
@@ -161,4 +162,73 @@ test('USD padrão, EUR independente: hipotético não entra como trava; custos u
   assert.match(ui.total('total-trava'),/63\.090,00/)
   await ui.change('p1-valor','11.000,00')
   assert.equal(ui.total('total-trava'),'—')
+})
+
+test('valores monetários formatam ao sair do campo sem alterar o dado usado no cálculo', async t => {
+  const { components } = await setup(t)
+  const observed = []
+  const render = (value, extra = {}) => hookRenderer(() =>
+    components.Input({ id: 'money', label: 'Valor', money: true, value, change: v => observed.push(v), ...extra }))
+  const view = render('100000')
+  t.after(() => view.close())
+  const input = () => nodes(view.value).find(n => n.type === 'input').props
+  await view.settle()
+  assert.equal(input().value, '100.000,00')
+  input().onFocus(); await view.settle()
+  assert.equal(input().value, '100000')
+  input().onBlur(); await view.settle()
+  assert.equal(input().value, '100.000,00')
+  assert.deepEqual(observed, [], 'formatar não dispara mudança de valor nem reconfirmações')
+  const invalid = render('10,001')
+  t.after(() => invalid.close())
+  await invalid.settle()
+  assert.equal(nodes(invalid.value).find(n => n.type === 'input').props.value, '10,001')
+  const rate = render('6,55325', { money: false })
+  t.after(() => rate.close())
+  await rate.settle()
+  assert.equal(nodes(rate.value).find(n => n.type === 'input').props.value, '6,55325')
+})
+
+test('resumo ao cliente descreve economia, custo, empate e falta de cotação sem prometer', async t => {
+  const { components } = await setup(t)
+  const make = (com, sem, dif, extra = {}) => components.resumoClienteCambio({ result: {
+    totalComTravaBrl: com, totalSemTravaBrl: sem, diferencaBrl: dif,
+  }, code: 'USD', hedge: 'USD', count: 3, exemplo: false, ...extra })
+  const economia = make(1980000, 2025000, 45000, { exemplo: true })
+  assert.match(economia.texto, /^Exemplo fictício/)
+  assert.match(economia.texto, /3 parcelas em USD/)
+  assert.match(economia.texto, /a trava reduziria o total em R\$\s45\.000,00/)
+  assert.match(economia.texto, /Total com trava: R\$\s1\.980\.000,00/)
+  assert.match(economia.texto, /Total sem trava no cenário: R\$\s2\.025\.000,00/)
+  assert.match(economia.texto, /não garante economia/)
+  assert.match(make(700, 666, -34).texto, /custaria R\$\s34,00 a mais/)
+  assert.match(make(666, 666, 0).texto, /seriam iguais/)
+  assert.match(make(666, null, null).texto, /Falta completar o cenário sem trava/)
+  const cruzado = make(null, 666, null, { hedge: 'CNH' })
+  assert.match(cruzado.texto, /confirmar as duas cotações/)
+  assert.match(cruzado.texto, /Total com trava: não calculado/)
+  assert.doesNotMatch(cruzado.texto, /a trava reduziria/)
+  assert.equal(make(null, null, null), null)
+})
+
+test('copiar leva a explicação e os totais juntos; falha deixa texto selecionável', async t => {
+  const copied = []
+  const navigator = { clipboard: { writeText: async value => { copied.push(value) } } }
+  const { components } = await setup(t, {}, navigator)
+  const resumo = components.resumoClienteCambio({ result: {
+    totalComTravaBrl: 655000, totalSemTravaBrl: 670000, diferencaBrl: 15000,
+  }, code: 'USD', hedge: 'USD', count: 1 })
+  const view = hookRenderer(() => components.ResumoCliente({ resumo }))
+  t.after(() => view.close())
+  await view.settle()
+  const click = () => nodes(view.value).find(n => n.type === 'button').props.onClick()
+  await click(); await view.settle()
+  assert.deepEqual(copied, [resumo.texto])
+  assert.match(text(view.value), /Resumo copiado/)
+  navigator.clipboard.writeText = async () => { throw new Error('Bloqueado') }
+  await click(); await view.settle()
+  assert.match(text(view.value), /Não foi possível copiar automaticamente/)
+  const field = nodes(view.value).find(n => n.type === 'textarea').props
+  assert.equal(field.readOnly, true)
+  assert.equal(field.value, resumo.texto)
 })

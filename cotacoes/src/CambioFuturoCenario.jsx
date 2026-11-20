@@ -8,7 +8,7 @@ import Flag from './Flag.jsx'
 import { Plot, useWidth } from './HistoryChart.jsx'
 import { ReferenciaMesa } from './CambioFuturo.jsx'
 import { parseDecimal } from './cdiDolar.js'
-import { parseMoneyInput } from './moneyInput.js'
+import { formatMoneyText, parseMoneyInput } from './moneyInput.js'
 import { marketDate } from './marketReturns.js'
 import { spotDayPlan } from './cambioFuturoSpot.js'
 import { useCentralDaily } from './useHistory.js'
@@ -89,14 +89,72 @@ function Historico({ code, end }) {
   </article>
 }
 
-function Input({ id, label, value, change, type = 'text', error, compact, min }) {
+export function Input({ id, label, value, change, type = 'text', error, compact, min, money }) {
+  const [editing, setEditing] = useState(false)
+  const displayed = money && !editing ? formatMoneyText(value) : value
   return <div className={`cx-field${compact ? ' cf-c-compact-field' : ''}`}>
     <label htmlFor={id}>{label}</label>
     <input id={id} type={type} min={min} inputMode={type === 'text' ? 'decimal' : undefined} autoComplete="off"
-      value={value} onChange={event => change(event.target.value)} aria-invalid={error ? true : undefined}
+      value={displayed} onChange={event => change(event.target.value)}
+      onFocus={money ? () => setEditing(true) : undefined} onBlur={money ? () => setEditing(false) : undefined}
+      aria-invalid={error ? true : undefined}
       aria-describedby={error ? id + '-erro' : undefined} />
     {error && <small id={id + '-erro'} className="cf-resultado-status">{error}</small>}
   </div>
+}
+
+export function resumoClienteCambio({ result, code, hedge, count, exemplo }) {
+  const { totalComTravaBrl: com, totalSemTravaBrl: sem, diferencaBrl: dif } = result
+  const temCom = Number.isFinite(com), temSem = Number.isFinite(sem)
+  if (!temCom && !temSem) return null
+  const compara = temCom && temSem && Number.isFinite(dif)
+  const amount = currencyFmt(Math.abs(dif))
+  const quantidade = count === 1 ? '1 parcela' : count + ' parcelas'
+  const descricao = `Simulação de ${quantidade} em ${code}${hedge !== code ? `, com proteção avaliada em ${hedge}` : ''}.`
+  const explicacao = compara
+    ? dif > 0 ? `Neste cenário, a trava reduziria o total em ${amount}.`
+      : dif < 0 ? `Neste cenário, a trava custaria ${amount} a mais.`
+        : 'Neste cenário, os totais com e sem trava seriam iguais.'
+    : temCom ? 'O total com trava já está calculado. Falta completar o cenário sem trava para comparar.'
+      : hedge === code ? 'O total sem trava usa o cenário informado. Falta completar os dados da trava para comparar.'
+        : 'O total sem trava usa o cenário informado. Para comparar, é preciso confirmar as duas cotações contratadas por vencimento.'
+  const linhas = [
+    ['Total com trava', currencyFmt(com)],
+    ['Total sem trava no cenário', currencyFmt(sem)],
+    [compara && dif > 0 ? 'Economia neste cenário' : compara && dif < 0 ? 'Custo a mais neste cenário' : 'Diferença neste cenário',
+      compara ? amount : '—'],
+  ]
+  const aviso = 'Os totais somam os pagamentos nos vencimentos e só incluem os custos informados. A trava dá previsibilidade, não garante economia.'
+  const titulo = 'Resumo para o cliente'
+  const texto = [exemplo ? 'Exemplo fictício de câmbio futuro' : 'Simulação de câmbio futuro', descricao, explicacao,
+    'Resumo dos valores', ...linhas.map(([label, value]) => `${label}: ${value === '—' ? 'não calculado' : value}`), aviso].join('\n')
+  return { titulo, descricao, explicacao, linhas, aviso, texto }
+}
+
+export function ResumoCliente({ resumo }) {
+  const [copia, setCopia] = useState(null)
+  if (!resumo) return null
+  const status = copia?.texto === resumo.texto ? copia.status : null
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(resumo.texto)
+      setCopia({ texto: resumo.texto, status: 'copiado' })
+    } catch {
+      setCopia({ texto: resumo.texto, status: 'manual' })
+    }
+  }
+  return <section className="cf-c-client" aria-labelledby="cf-c-client-title">
+    <div className="cf-c-client-heading">
+      <h4 id="cf-c-client-title">{resumo.titulo}</h4>
+      <button type="button" className="cf-c-copy" onClick={copiar}>Copiar resumo</button>
+    </div>
+    <p>{resumo.descricao} {resumo.explicacao}</p>
+    <dl className="cf-c-client-totals">{resumo.linhas.map(([label, value]) =>
+      <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+    <p className="cf-notice">{resumo.aviso}</p>
+    {status === 'manual' && <textarea readOnly rows={6} value={resumo.texto} aria-label="Resumo para cópia manual" onFocus={e => e.currentTarget.select()} />}
+    <span role="status">{status === 'copiado' ? 'Resumo copiado.' : status === 'manual' ? 'Não foi possível copiar automaticamente. Selecione o resumo e copie manualmente.' : ''}</span>
+  </section>
 }
 
 export default function CambioFuturoCenario({ onBack, quotes }) {
@@ -264,12 +322,12 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
           <summary>Custos e valor líquido (opcionais)</summary>
           <p className="cf-notice">Informe o valor líquido recebido em reais, já descontados os custos iniciais. Ele é usado no custo do período e na TIR.</p>
           <p className="cf-notice">Custos de parcela são pagos no vencimento. Informe só os que ainda não estão na cotação nem no valor líquido, para não contar duas vezes.</p>
-          <Input id="cf-c-liquido" label="Valor líquido recebido (R$)" value={liquido} change={setLiquido} error={liquidoValidado.error} />
+          <Input money id="cf-c-liquido" label="Valor líquido recebido (R$)" value={liquido} change={setLiquido} error={liquidoValidado.error} />
           {rows.map((row, i) => <fieldset className="cf-c-cost-row" key={row.id}>
             <legend>Parcela {i + 1}</legend>
-            <Input id={`cf-c-${row.id}-tarifa-trava`} label={`Custo com trava da parcela ${i + 1} (R$)`} value={row.custoTravaBrl}
+            <Input money id={`cf-c-${row.id}-tarifa-trava`} label={`Custo com trava da parcela ${i + 1} (R$)`} value={row.custoTravaBrl}
               change={v => mudarLinha(row.id, 'custoTravaBrl', v)} error={validacao[i].custoTravaBrl.error} />
-            <Input id={`cf-c-${row.id}-tarifa-cenario`} label={`Custo sem trava da parcela ${i + 1} (R$)`} value={row.custoSemTravaBrl}
+            <Input money id={`cf-c-${row.id}-tarifa-cenario`} label={`Custo sem trava da parcela ${i + 1} (R$)`} value={row.custoSemTravaBrl}
               change={v => mudarLinha(row.id, 'custoSemTravaBrl', v)} error={validacao[i].custoSemTravaBrl.error} />
           </fieldset>)}
         </details>
@@ -290,7 +348,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
           <legend className="sr-only">Parcela {i + 1}</legend><span aria-hidden="true" className="cf-c-index"><span>Parcela </span>{i + 1}</span>
           <Input compact id={`cf-c-${row.id}-data`} label={`Vencimento da parcela ${i + 1}`} type="date" min={vencimentoMin} value={row.vencimento} change={v => mudarLinha(row.id, 'vencimento', v)}
             error={inicio && row.vencimento && row.vencimento <= inicio ? 'O vencimento deve ser posterior à data inicial.' : undefined} />
-          <Input compact id={`cf-c-${row.id}-valor`} label={`Valor da parcela ${i + 1} (${code})`} value={row.valorMoeda} change={v => mudarLinha(row.id, 'valorMoeda', v)} error={validacao[i].valorMoeda.error} />
+          <Input compact money id={`cf-c-${row.id}-valor`} label={`Valor da parcela ${i + 1} (${code})`} value={row.valorMoeda} change={v => mudarLinha(row.id, 'valorMoeda', v)} error={validacao[i].valorMoeda.error} />
           <Input compact id={`cf-c-${row.id}-trava`} label={`Cotação ${crossed ? 'futura' : 'contratada'} da parcela ${i + 1} (R$/${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
           <Input compact id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava da parcela ${i + 1} (R$/${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
           {crossed && <div className="cf-c-cross-fields">
@@ -363,7 +421,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
             })}</div>
           </details>
         </div>
-        <p className="cf-notice">A trava dá previsibilidade, não garante economia.</p>
+        <ResumoCliente resumo={resumoClienteCambio({ result, code, hedge, count: rows.length, exemplo: emExemplo })} />
       </div>
     </article>
     <Historico code={hedge} end={marketDate(now)} />
