@@ -99,7 +99,7 @@
   background: #232427;
   font-variant-numeric: tabular-nums;
 }
-.rpn-keypad--portrait { grid-template-columns: repeat(5,minmax(0,1fr)); grid-template-rows: repeat(8,minmax(64px,auto)); }
+.rpn-keypad--portrait { grid-template-columns: repeat(5,minmax(44px,1fr)); grid-template-rows: repeat(8,minmax(64px,auto)); }
 .rpn-keypad--wide { display: none; }
 .rpn-key-slot { display: grid; align-content: end; min-inline-size: 0; grid-column: var(--key-column); grid-row: var(--key-row); }
 .rpn-key {
@@ -174,6 +174,7 @@
 }
 @container (max-width: 330px) {
   .rpn-bezel { grid-template-columns: minmax(0,1fr); }
+  .rpn-keypad--portrait { gap: 3px; padding: 4px; }
 }
 @media (min-width: 1120px) {
   .rpn-desk--rates { grid-template-columns: minmax(0, 1fr) minmax(280px, 32%); }

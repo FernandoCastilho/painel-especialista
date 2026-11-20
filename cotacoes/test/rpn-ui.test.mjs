@@ -256,3 +256,14 @@ test('visor exibe o indicador C com descrição acessível somente enquanto ativ
   await tap('eex')
   assert.equal(compoundBadge(),undefined)
 })
+
+test('teclado de retrato reserva 44 px por coluna, inclusive na largura útil medida a 320 px', async () => {
+  const css = await readFile(new URL('../src/RpnCalculator.css',import.meta.url),'utf8')
+  assert.match(css,/\.rpn-keypad--portrait \{ grid-template-columns: repeat\(5,minmax\(44px,1fr\)\)/)
+  const compact = css.split('@container (max-width: 330px) {')[1]?.match(/\.rpn-keypad--portrait \{ gap: (\d+)px; padding: (\d+)px; \}/)
+  assert.ok(compact)
+  const [,gap,padding]=compact.map(Number)
+  // CI mediu 43,75 px por coluna com gap 5, padding 6 e borda 1 de cada lado.
+  const existingBorderBox = 5*43.75 + 4*5 + 2*6 + 2
+  assert.ok(5*44 + 4*gap + 2*padding + 2 <= existingBorderBox)
+})
