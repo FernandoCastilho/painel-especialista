@@ -205,6 +205,24 @@ jobs:
         run: |
           nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
+      - name: Preparar relatório da matriz RPN
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/qa-universal/rpn-classic-matrix"
+          printf '%s\n' '{"state":"not-started","message":"A prévia precisa iniciar antes do smoke."}' > "$RUNNER_TEMP/qa-universal/rpn-classic-matrix/report.json"
+      - name: Testar funções da RPN clássica em Chrome
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        timeout-minutes: 7
+        run: RPN_CLASSIC_QA_OUTPUT="$RUNNER_TEMP/qa-universal/rpn-classic-matrix" node scripts/smoke-rpn-classic-matrix.cjs
+      - name: Evidências da matriz da RPN clássica
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpn-classic-matrix
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/rpn-classic-matrix
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir seis calculadoras e alongamento em cinco larguras
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: CALCULATOR_QA_OUTPUT="$RUNNER_TEMP/qa-universal/calculators" node scripts/smoke-calculator-layout.cjs
