@@ -26,19 +26,31 @@
 :root[data-theme] body .cx.cf-pattern .cf-table thead th { background:var(--bw-soft); color:var(--bw-mut); font-size:.75rem; font-weight:700; }
 :root[data-theme] body .cx.cf-pattern .cf-table :is(td,th):first-child { text-align:left; }
 :root[data-theme] body .cx.cf-pattern .cf-table tbody th { font-weight:600; }
-:root[data-theme] body .cx.cf-pattern .cf-table td input { width:100%; min-width:70px; min-height:36px; padding:4px 8px; font-size:.875rem; text-align:right; }
-:root[data-theme] body .cx.cf-pattern .cf-mesa td input { min-width:120px; }
-:root[data-theme] body .cx.cf-pattern .cf-total :is(td,th) { background:var(--bw-soft); font-weight:700; }
-:root[data-theme] body .cx.cf-pattern .cf-erro { white-space:normal; font-size:.75rem; color:var(--bw-warn-ink); }
 
-/* Fluxo por vencimento: cada moeda separada por uma linha vertical. */
-:root[data-theme] body .cx.cf-pattern .cf-flow :is(td,th) { padding:8px 5px; }
-:root[data-theme] body .cx.cf-pattern .cf-flow .cf-group { border-left:1px solid var(--bw-line); }
-:root[data-theme] body .cx.cf-pattern .cf-flow thead th.cf-group[colspan] { text-align:center; color:var(--bw-ink); }
-:root[data-theme] body .cx.cf-pattern .cf-flow td small { display:block; color:var(--bw-mut); font-size:.72rem; font-weight:400; }
-:root[data-theme] body .cx.cf-pattern .cf-flow .cf-start :is(td,th) { font-weight:600; }
 
 /* Resultado: menor custo destacado com a faixa laranja à esquerda. */
 :root[data-theme] body .cx.cf-pattern .cf-best :is(td,th) { background:var(--bw-warm-soft); }
 :root[data-theme] body .cx.cf-pattern .cf-best th { box-shadow:inset 4px 0 0 var(--cf-orange); }
 :root[data-theme] body .cx.cf-pattern .cf-best small { color:var(--bw-mut); }
+
+/* Quadros por moeda, com vencimentos independentes e sem rolagem nos campos. */
+:root[data-theme] body .cx.cf-pattern .cf-fields,
+:root[data-theme] body .cx.cf-pattern .cf-installment {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%, 210px),1fr)); gap:12px; align-items:start;
+}
+:root[data-theme] body .cx.cf-pattern .cx-field { min-width:0; }
+:root[data-theme] body .cx.cf-pattern .cx-field :is(input,select) { box-sizing:border-box; width:100%; min-width:0; min-height:44px; }
+:root[data-theme] body .cx.cf-pattern .cf-installments { display:grid; gap:12px; padding:0 14px 14px; }
+:root[data-theme] body .cx.cf-pattern .cf-installment { min-width:0; margin:0; padding:12px; border:1px solid var(--bw-line); border-radius:8px; }
+:root[data-theme] body .cx.cf-pattern .cf-installment legend { padding:0 6px; font-weight:700; color:var(--bw-ink); }
+:root[data-theme] body .cx.cf-pattern .cf-values { grid-column:1/-1; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr)); gap:8px; margin:0; }
+:root[data-theme] body .cx.cf-pattern .cf-values > div { min-width:0; padding:8px; background:var(--bw-soft); border-radius:6px; overflow-wrap:anywhere; }
+:root[data-theme] body .cx.cf-pattern .cf-values dt { font-size:.8rem; color:var(--bw-mut); }
+:root[data-theme] body .cx.cf-pattern .cf-values dd { margin:4px 0 0; font-weight:700; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cx.cf-pattern .cf-options { margin:0 14px 14px; }
+:root[data-theme] body .cx.cf-pattern .cf-quote .cf-options { margin-top:12px; }
+:root[data-theme] body .cx.cf-pattern .cf-options summary { cursor:pointer; min-height:44px; padding:10px 0; box-sizing:border-box; }
+:root[data-theme] body .cx.cf-pattern .cf-options .cx-field { max-width:320px; }
+:root[data-theme] body .cx.cf-pattern :is(.cf-error,.cf-card-tir) { margin:0 14px 14px; overflow-wrap:anywhere; }
+:root[data-theme] body .cx.cf-pattern .cf-error { color:var(--bw-warn-ink); }
+:root[data-theme] body .cx.cf-pattern .cf-results { overflow-x:auto; }

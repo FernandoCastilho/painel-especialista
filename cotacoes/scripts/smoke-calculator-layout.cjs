@@ -544,6 +544,59 @@ async function assertComparatorFamily(browser) {
   }
 }
 
+async function assertCambioFuturo(browser) {
+  // Caso fictício: amortizações de 50% e juros simples de 10% em 181 e 184 dias.
+  // TIR de referência: o valor presente das duas parcelas, em dias/365, é R$ 500.000.
+  for (const width of [390, 1440]) for (const theme of ['dark', 'light']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    try {
+      await fixtures(page)
+      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      const section = page.locator('section.cf-pattern')
+      await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
+      await section.locator('#cf-quantidade').selectOption('2')
+      await section.locator('#cf-usd').fill('100.000')
+      await section.locator('#cf-taxa').fill('10')
+      await section.locator('#cf-parcelas').fill('2')
+      await section.locator('#cf-start').fill('2026-01-01')
+      await section.locator('#cf-moeda-0').selectOption('EUR')
+      await section.locator('#cf-moeda-1').selectOption('USD')
+      assert.equal(await section.locator('#cf-moeda-1 option[value=EUR]').isDisabled(), true)
+      await section.locator('#cf-USD-spot').fill('5')
+      await section.locator('#cf-EUR-spot').fill('6,25')
+      assert.match(await section.locator('#cf-principal-0').inputValue(), /80\.000,00/)
+      assert.match(await section.locator('#cf-principal-1').inputValue(), /100\.000,00/)
+      for (const [id, quotes] of [['USD', ['5,25', '5,50']], ['EUR', ['6,45', '6,60']]]) {
+        for (const [i, date] of ['2026-07-01', '2027-01-01'].entries()) {
+          await section.locator(`#cf-${id}-data-${i}`).fill(date)
+          await section.locator(`#cf-${id}-futuro-${i}`).fill(quotes[i])
+        }
+      }
+      const usd = section.locator('article[aria-labelledby="cf-moeda-1-heading"]')
+      const eur = section.locator('article[aria-labelledby="cf-moeda-0-heading"]')
+      assert.match(await usd.innerText(), /21,57%/)
+      assert.match(await eur.innerText(), /16,95%/)
+      assert.match(await usd.innerText(), /50\.000,00/)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Câmbio futuro ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-${width}-${theme}.png`), fullPage: true })
+
+      await section.locator('#cf-USD-data-1').fill('2027-02-01')
+      assert.equal(await section.locator('#cf-USD-futuro-1').inputValue(), '')
+      assert.doesNotMatch(await usd.innerText(), /21,57%/)
+      assert.match(await eur.innerText(), /16,95%/)
+      await section.locator('#cf-USD-data-1').fill('2026-07-01')
+      assert.match(await usd.innerText(), /crescentes/)
+      assert.deepEqual(errors, [], `Câmbio futuro ${width} ${theme}: erros do navegador`)
+      console.log(`PASS Câmbio futuro ${width} ${theme}`)
+    } finally {
+      await page.close()
+    }
+  }
+}
+
 ;(async () => {
   fs.mkdirSync(out, { recursive: true })
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
@@ -584,6 +637,7 @@ async function assertComparatorFamily(browser) {
       }
     }
     await assertComparatorFamily(browser)
+    await assertCambioFuturo(browser)
     assert.deepEqual(failures, [], 'conformidade das seis calculadoras nas cinco larguras')
   } finally {
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2))
