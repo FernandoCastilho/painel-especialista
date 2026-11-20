@@ -16,7 +16,9 @@
   color: var(--rpn-header-ink);
   border-radius: 11px 11px 0 0;
 }
-.rpn-heading h2, .rpn-workspace :is(h3, h4, p) { margin: 0; }
+.rpn-heading h1, .rpn-workspace :is(h2, h3, p) { margin: 0; }
+.rpn-heading h1 { font-size: clamp(1.25rem, 5.7vw, 1.5rem); line-height: 1.25; }
+.rpn-workspace :is(h2, h3) { font-size: 1.05rem; line-height: 1.25; }
 .rpn-heading p { margin-top: 4px; line-height: 1.45; }
 .rpn-console { display: grid; grid-template-columns: minmax(0, 3fr) minmax(120px, 1fr); gap: 14px; padding: 14px; }
 .rpn-display { display: grid; gap: 4px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }

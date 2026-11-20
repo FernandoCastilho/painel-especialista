@@ -8,7 +8,7 @@ const source = readFileSync(new URL('../src/Nav.jsx', import.meta.url), 'utf8')
 test('tablet navigation reuses More and phone layout preserves existing breakpoints', () => {
   assert.match(source, /import '\.\/Nav\.css'/)
   assert.match(css, /@media \(min-width: 700px\) and \(max-width: 999px\)/)
-  assert.equal((css.match(/@media/g) || []).length, 3)
+  assert.equal((css.match(/@media/g) || []).length, 4)
   assert.match(css, /\.nav-top nav\.tabs > button\.sec \{ display: none; \}/)
   assert.match(css, /\.nav-top nav\.tabs > \.more-tab \{ display: flex; \}/)
   assert.match(css, /overflow: visible/)
@@ -16,7 +16,8 @@ test('tablet navigation reuses More and phone layout preserves existing breakpoi
   assert.match(css, /@media \(max-width:699px\)/)
   assert.match(css, /grid-template-columns:repeat\(3,minmax\(44px,1fr\)\) minmax\(44px,1\.55fr\) repeat\(3,minmax\(44px,1fr\)\)/)
   assert.match(css, /min-height:54px/)
-  assert.match(css, /overflow-wrap:anywhere/)
+  assert.match(css, /white-space:nowrap/)
+  assert.match(css, /@media \(max-width:359px\)[\s\S]*?\.nav-label-full \{ display:none; \}[\s\S]*?\.nav-label-compact \{ display:block; \}/)
 })
 test('More destinations and dismissal remain available', () => {
   for (const id of ['cenarios', 'noticias', 'config']) assert.ok(APP_SECTIONS.some(section => section.id === id))

@@ -78,3 +78,10 @@ test('Calculadora RPN é destino principal distinto e não muda Alt+1 a Alt+0', 
   assert.deepEqual(parseCommand('RPN'), { kind: 'tab', id: 'rpn', sub: '' })
   assert.deepEqual(parseCommand('CALCULADORAS'), { kind: 'tab', id: 'calculadora', sub: '' })
 })
+
+test('rótulos compactos mantêm os nomes acessíveis completos e a RPN como destino próprio', () => {
+  assert.deepEqual(Object.fromEntries(APP_SECTIONS.filter(t => t.compactLabel).map(t => [t.id, t.compactLabel])),
+    { resumo: 'Merc.', cenarios: 'Cen.', calculadora: 'Calc.' })
+  assert.match(src, /aria-label=\{!desktop && \(t\.mobileLabel \|\| t\.compactLabel\) \? \(t\.terminalLabel \|\| t\.label\) : undefined\}/)
+  assert.match(src, /nav-label-compact" aria-hidden="true"/)
+})

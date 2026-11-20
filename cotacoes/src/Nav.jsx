@@ -71,9 +71,10 @@ export default function Nav({ tab, onTab, desktop = false }) {
   return (
     <nav className={desktop ? "topbar-tabs priority-desktop" : "tabs"} aria-label={desktop ? "Navegação principal" : "Seções"} ref={ref}>
       {PRIMARY.map(id => visiveis.find(t => t.id === id)).map((t) => (
-        <button key={t.id} type="button" className={`${t.id === tab ? 'on' : ''}${PRIMARY.includes(t.id) ? '' : ' sec'}`} aria-current={t.id === tab ? 'page' : undefined} aria-label={!desktop && t.mobileLabel ? t.label : undefined} title={shortcutTitle(t.id)} onClick={() => { setMore(false); onTab(t.id) }}>
+        <button key={t.id} type="button" className={`${t.id === tab ? 'on' : ''}${PRIMARY.includes(t.id) ? '' : ' sec'}`} aria-current={t.id === tab ? 'page' : undefined} aria-label={!desktop && (t.mobileLabel || t.compactLabel) ? (t.terminalLabel || t.label) : undefined} title={shortcutTitle(t.id)} onClick={() => { setMore(false); onTab(t.id) }}>
           {!desktop && <Icon d={t.icon} />}
-          <span>{(!desktop && t.mobileLabel) || t.terminalLabel || t.label}</span>
+          <span className={!desktop && t.compactLabel ? 'nav-label-full' : undefined}>{(!desktop && t.mobileLabel) || t.terminalLabel || t.label}</span>
+          {!desktop && t.compactLabel && <span className="nav-label-compact" aria-hidden="true">{t.compactLabel}</span>}
         </button>
       ))}
       <div className="more-tab">

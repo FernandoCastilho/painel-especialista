@@ -238,6 +238,8 @@ export default function App() {
     const t2 = setTimeout(() => { if (feito !== null && Math.abs(window.scrollY - feito) < 2) ir() }, 1200) // só se a pessoa não rolou
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [cenAnchor])
+  // Estas seções têm título próprio ou intencionalmente não exibem título na faixa de controles.
+  const compactHeader = ['calculadora', 'rpn', 'noticias', 'feriados'].includes(tab)
   // Troca de tela preservada da atualização publicada em paralelo.
   const viewKey = ['cenarios', 'setores', 'calculadora', 'aprender'].includes(tab) ? `${tab}/${tab !== 'cenarios' ? sub.split('/')[0] : cenView}` : tab
   const mainRef = useRef(null)
@@ -320,8 +322,8 @@ export default function App() {
       <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
       {tab !== 'resumo' && (
-        <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}`}>
-          {!['calculadora', 'noticias', 'feriados'].includes(tab) && <h1>{tab === 'setores' ? 'Central de setores' : TABS.find((t) => t.id === tab).label}</h1>}
+        <header className={`top${compactHeader ? ' top-min' : ''}`}>
+          {!compactHeader && <h1>{tab === 'setores' ? 'Central de setores' : TABS.find((t) => t.id === tab).label}</h1>}
           <AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" /><MascotSlot className="mascot-slot-m" />
         </header>
       )}

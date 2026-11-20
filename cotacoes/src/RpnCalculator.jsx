@@ -60,7 +60,7 @@ export default function RpnCalculator() {
   return (
     <section className="rpn-workspace" aria-labelledby={headingId} aria-describedby={helpId} tabIndex={0} onKeyDown={onKeyDown}>
       <header className="rpn-heading">
-        <h2 id={headingId}>Calculadora de pilha</h2>
+        <h1 id={headingId}>Calculadora RPN</h1>
         <p id={helpId}>Digite o primeiro número, pressione ENTER, digite o segundo e escolha a operação. Exemplo: 2 ENTER 3 +.</p>
       </header>
       <div className="rpn-console">
@@ -79,13 +79,13 @@ export default function RpnCalculator() {
           <p className="rpn-keyboard-tip">Com foco na calculadora: números, vírgula ou ponto, Enter, +, −, × (*) e ÷ (/). Backspace apaga um dígito enquanto você digita; Delete limpa a pilha.</p>
         </div>
         <aside className="rpn-stack" aria-label="Pilha de valores">
-          <h3>Pilha</h3>
+          <h2>Pilha</h2>
           <dl>{['X', 'Y', 'Z', 'T'].map((label, i) => <div key={label}><dt>{label}</dt><dd>{i === 0 ? view.display : show(view.stack?.[i])}</dd></div>)}</dl>
         </aside>
       </div>
 
       <section className="rpn-finance" aria-label="Funções financeiras">
-        <h3>Funções financeiras</h3>
+        <h2>Funções financeiras</h2>
         <p>Digite um valor e use Guardar. Para descobrir um valor, preencha os demais campos necessários e use Calcular. Use número inteiro de períodos. Taxa i e pagamentos usam o mesmo período. Valores recebidos são positivos; valores pagos, negativos.</p>
         <div className="rpn-finance-timing" role="group" aria-label="Momento do pagamento">
           <span>Pagamento</span>
@@ -106,7 +106,7 @@ export default function RpnCalculator() {
           {view.section === 'finance' && <><strong>Visor atual: {view.display}</strong>{view.message && <span>{view.message}</span>}</>}
         </div>
         <div className="rpn-cash" role="group" aria-label="Fluxo de caixa">
-          <h4>Fluxo de caixa</h4>
+          <h3>Fluxo de caixa</h3>
           <p>Adicione o valor inicial e depois um valor por período, em ordem. Entradas são positivas; saídas, negativas. O VPL usa a taxa guardada em i; a TIR é por período e pode ser ambígua.</p>
           <p>Para repetir o último fluxo, digite em X o total de ocorrências e use Repetir. O valor inicial não se repete.</p>
           <p>{view.cashFlows?.length ?? 0} {view.cashFlows?.length === 1 ? 'valor informado' : 'valores informados'}</p>
