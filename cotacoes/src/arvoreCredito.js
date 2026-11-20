@@ -355,12 +355,19 @@ export const NECESSIDADES = [
   { id: 'dividendos', nome: 'Distribuição de dividendos', confirmada: true, ordem: ['4131', 'giro', 'giro-bndes', 'nota-comercial', 'debenture'] },
   { id: 'compra-empresa', nome: 'Compra de outra empresa', confirmada: true, ordem: ['4131', 'giro', 'nota-comercial', 'debenture'] },
   { id: 'estoque-nacional', nome: 'Estoque nacional por prazo longo', confirmada: true, ordem: ['finame-materiais', '4131', 'cpr', 'giro', 'giro-bndes'] },
-  { id: 'alongar-divida', nome: 'Alongar dívida de curto prazo', confirmada: false, ordem: ['4131', 'giro', 'giro-bndes', 'nota-comercial'] },
+  { id: 'alongar-divida', nome: 'Alongar dívida de curto prazo', confirmada: false, ordem: ['giro', '4131', 'giro-bndes', 'nota-comercial', 'finame-materiais'] },
   { id: 'obra-ampliacao', nome: 'Obra, ampliação ou planta nova', confirmada: false, ordem: ['bndes-automatico', '4131', 'giro', 'nota-comercial', 'debenture'] },
   { id: 'garantia-fornecedor', nome: 'Garantia exigida por fornecedor estrangeiro', confirmada: false, ordem: ['carta-credito', 'finimp'], importa: true },
   { id: 'garantia-contrato', nome: 'Garantia de execução de contrato', confirmada: false, ordem: ['fianca', 'giro'] },
 ]
 export const necessidadePorId = (id) => NECESSIDADES.find((n) => n.id === id) ?? null
+
+// Critérios de triagem do alongamento, não parâmetros de crédito ou aprovação.
+export const CRITERIOS_ALONGAMENTO = [
+  ['caixa', 'O caixa está sem aperto relevante?'],
+  ['alavancagem', 'A alavancagem não é excessiva?'],
+  ['repagamento', 'A capacidade de pagar a nova dívida foi demonstrada?'],
+]
 
 // Monta o contexto usado pelas regras a partir do que o especialista informou.
 export function contexto(entrada = {}) {
@@ -381,6 +388,10 @@ export function contexto(entrada = {}) {
     importa: Boolean(entrada.importa || nec?.importa),
     notasFiname: Boolean(entrada.notasFiname),
     notasCpr: Boolean(entrada.notasCpr),
+    ...(nec?.id === 'alongar-divida' && {
+      alongamento: Object.fromEntries(CRITERIOS_ALONGAMENTO.map(([id]) => [id, entrada.alongamento?.[id] === true])),
+      notasFiname: entrada.notasFiname === true,
+    }),
     maquinaCredenciada: entrada.maquinaCredenciada !== false,
   }
 }
@@ -392,18 +403,39 @@ export function montarFolha(entrada) {
   const ctx = contexto(entrada)
   const entram = []
   const sairam = []
+  const complementares = []
   for (const id of nec.ordem) {
     const op = OPERACOES[id]
-    const motivo = op.requisito ? op.requisito(ctx) : null
+    const alongamento = nec.id === 'alongar-divida'
+    const finameIndireto = alongamento && id === 'finame-materiais'
+    const externa = alongamento && id === '4131'
+    const motivo = finameIndireto
+      // O valor da dívida não é o valor dos gastos reembolsáveis. O agente financeiro valida o limite da despesa.
+      ? (!ctx.notasFiname ? 'Faltam notas de compra elegíveis nos últimos 12 meses.' : null)
+      : externa && !CRITERIOS_ALONGAMENTO.every(([criterio]) => ctx.alongamento[criterio] === true)
+        ? 'Só entra com os três pontos confirmados: sem aperto relevante de caixa, sem alavancagem excessiva e com capacidade de pagamento demonstrada.'
+        : op.requisito?.(ctx)
     const item = { id, ...op, avisosPerfil: op.avisos ? op.avisos(ctx) : [] }
     if (motivo) sairam.push({ ...item, motivo })
-    else entram.push(item)
+    else if (finameIndireto) complementares.push({
+      ...item,
+      resumo: 'Somente para despesas elegíveis comprovadas. O reembolso pode recompor caixa, mas não quita diretamente a dívida.',
+      foraDeCobertura: `Quitação direta de dívida. ${item.foraDeCobertura}`,
+      avisosPerfil: [...item.avisosPerfil, 'Confirme a elegibilidade, o limite da despesa e se as notas já foram usadas em outro financiamento, com o agente financeiro.'],
+    })
+    else {
+      // No alongamento, Giro BNDES não é atalho para o Finame Materiais.
+      if (alongamento && id === 'giro-bndes') item.calculadora = null
+      if (externa) item.avisosPerfil.push('Compare com a linha em reais. Confirme a finalidade contratual, o custo da proteção cambial e a capacidade de pagar em cenário adverso.')
+      entram.push(item)
+    }
   }
   return {
     necessidade: nec,
     contexto: ctx,
     frente: entram.slice(0, MAX_FOLHA),
     outras: entram.slice(MAX_FOLHA),
+    ...(nec.id === 'alongar-divida' && { complementares }),
     sairam,
     observacoes: observacoesPerfil(ctx),
   }

@@ -4,7 +4,7 @@ import Help from './CalculatorHelp.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import {
-  NECESSIDADES, OPERACOES, MARCAS, CONSULTA, MAX_FOLHA, UNIDADES, PORTE_ROTULO, CNPJ_SERVICO,
+  NECESSIDADES, CRITERIOS_ALONGAMENTO, OPERACOES, MARCAS, CONSULTA, MAX_FOLHA, UNIDADES, PORTE_ROTULO, CNPJ_SERVICO,
   montarFolha, analisarFaturamento, consultarCnpj, cnpjValido, formatarCnpj, soDigitos, porteBndes, CONSULTA_CNPJ_ATIVA, RECEITA_CNPJ,
 } from './arvoreCredito.js'
 import './CalculatorStandard.css'
@@ -70,7 +70,7 @@ function Fontes({ fontes }) {
 function Cartao({ op, posicao, onView, cliente }) {
   return (
     <li className="ac-card">
-      <h4><span className="ac-pos" aria-hidden="true">{posicao}</span>{op.nome}</h4>
+      <h4>{posicao != null && <span className="ac-pos" aria-hidden="true">{posicao}</span>}{op.nome}</h4>
       <p className="ac-resumo">{op.resumo}</p>
       <dl className="ac-dl">
         <dt>Cobre</dt><dd>{op.cobre}</dd>
@@ -85,11 +85,21 @@ function Cartao({ op, posicao, onView, cliente }) {
   )
 }
 
+function OpcoesComplementares({ opcoes, onView, cliente }) {
+  if (!opcoes?.length) return null
+  return <section aria-label="Alívio indireto de caixa">
+    <h3>Alívio indireto de caixa</h3>
+    <ul className="ac-cards">{opcoes.map((op) => <Cartao key={op.id} op={op} onView={onView} cliente={cliente} />)}</ul>
+  </section>
+}
+
 export default function ArvoreCredito({ onBack, onView = () => {} }) {
   const [cnpj, setCnpj] = useState('')
   const [consulta, setConsulta] = useState({ estado: 'parado' })
   const [empresa, setEmpresa] = useState({ razaoSocial: '', municipio: '', uf: '', cnae: '', cnaeDescricao: '', tipo: '', regime: '' })
   const [necessidade, setNecessidade] = useState('')
+  const [alongamento, setAlongamento] = useState({})
+  const [notasAlongamento, setNotasAlongamento] = useState(false)
   const [finalidade, setFinalidade] = useState('')
   const [valorTexto, setValorTexto] = useState('')
   const [prazoTexto, setPrazoTexto] = useState('')
@@ -110,9 +120,26 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
   const folha = necessidade ? montarFolha({
     necessidade, valor: valor.ok ? valor.value : 0, prazoMeses: prazo, receitaAnual,
     regime: empresa.regime, tipo: empresa.tipo, uf: empresa.uf, cnae: empresa.cnae, garantias, ...marcas,
+    ...(necessidade === 'alongar-divida' && {
+      alongamento: Object.fromEntries(CRITERIOS_ALONGAMENTO.map(([id]) => [id, alongamento[id] === 'sim'])),
+      notasFiname: notasAlongamento,
+    }),
   }) : null
   const porte = porteBndes(receitaAnual)
   const marcar = (k) => (e) => setMarcas((m) => ({ ...m, [k]: e.target.checked }))
+  const invalidarRepagamento = () => {
+    if (necessidade === 'alongar-divida' && alongamento.repagamento) {
+      setAlongamento((anterior) => ({ ...anterior, repagamento: '' }))
+    }
+  }
+  const alterarValor = (novo) => {
+    if (novo !== valorTexto) invalidarRepagamento()
+    setValorTexto(novo)
+  }
+  const alterarPrazo = (novo) => {
+    if (novo !== prazoTexto) invalidarRepagamento()
+    setPrazoTexto(novo)
+  }
   const alterar = (k) => (e) => setEmpresa((d) => ({ ...d, [k]: e.target.value }))
   const nec = folha?.necessidade
 
@@ -137,6 +164,7 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
               {finalidade.trim() && <> · {finalidade.trim()}</>}
             </p>
             {folha.frente.length ? <ol className="ac-cards">{folha.frente.map((op, i) => <Cartao key={op.id} op={op} posicao={i + 1} cliente />)}</ol> : <p className="cx-hint">Nenhuma possibilidade com os dados informados.</p>}
+            <OpcoesComplementares opcoes={folha.complementares} onView={onView} cliente />
             {folha.observacoes.length > 0 && <ul className="ac-avisos">{folha.observacoes.map((o) => <li key={o}>{o}</li>)}</ul>}
             <p className="cx-hint">Possibilidades para análise. Não é oferta, aprovação nem cotação: prazos, taxas e enquadramento dependem da análise de crédito.</p>
           </ExpandablePanel>
@@ -203,24 +231,35 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
         <header><h3 className="cx-heading"><span>2. O que ele precisa</span></h3></header>
         <div className="cx-form cx-pad">
           <Campo id="ac-nec" label="Necessidade">
-            <select id="ac-nec" value={necessidade} onChange={(e) => setNecessidade(e.target.value)}>
+            <select id="ac-nec" value={necessidade} onChange={(e) => { setNecessidade(e.target.value); setAlongamento({}); setNotasAlongamento(false) }}>
               <option value="">Escolha</option>
               <optgroup label="Folhas confirmadas">{NECESSIDADES.filter((n) => n.confirmada).map((n) => <option key={n.id} value={n.id}>{n.nome}</option>)}</optgroup>
               <optgroup label="Propostas, a revisar">{NECESSIDADES.filter((n) => !n.confirmada).map((n) => <option key={n.id} value={n.id}>{n.nome}</option>)}</optgroup>
             </select>
           </Campo>
           <Campo id="ac-fin" label="Para quê (opcional)"><input id="ac-fin" value={finalidade} onChange={(e) => setFinalidade(e.target.value)} maxLength={120} /></Campo>
-          <Campo id="ac-valor" label="Valor pedido"><MoneyInput id="ac-valor" value={valorTexto} onChange={setValorTexto} /></Campo>
-          <Campo id="ac-prazo" label="Prazo pedido (meses)"><input id="ac-prazo" inputMode="numeric" value={prazoTexto} onChange={(e) => setPrazoTexto(e.target.value)} /></Campo>
+          <Campo id="ac-valor" label="Valor pedido"><MoneyInput id="ac-valor" value={valorTexto} onChange={alterarValor} /></Campo>
+          <Campo id="ac-prazo" label="Prazo pedido (meses)"><input id="ac-prazo" inputMode="numeric" value={prazoTexto} onChange={(e) => alterarPrazo(e.target.value)} /></Campo>
         </div>
         <fieldset className="ac-checks cx-pad">
           <legend>Situação da empresa</legend>
           <label><input type="checkbox" checked={marcas.exporta} onChange={marcar('exporta')} /> Exporta</label>
           <label><input type="checkbox" checked={marcas.importa} onChange={marcar('importa')} /> Importa</label>
-          <label><input type="checkbox" checked={marcas.notasFiname} onChange={marcar('notasFiname')} /> Tem notas de compra elegíveis ao Finame Materiais (últimos 12 meses)</label>
+          {necessidade !== 'alongar-divida' && <label><input type="checkbox" checked={marcas.notasFiname} onChange={marcar('notasFiname')} /> Tem notas de compra elegíveis ao Finame Materiais (últimos 12 meses)</label>}
           <label><input type="checkbox" checked={marcas.notasCpr} onChange={marcar('notasCpr')} /> Notas fiscais validadas para a CPR</label>
           {necessidade === 'maquina-nacional' && <label><input type="checkbox" checked={marcas.maquinaCredenciada} onChange={marcar('maquinaCredenciada')} /> Máquina credenciada no Finame</label>}
         </fieldset>
+        {necessidade === 'alongar-divida' && <fieldset className="ac-checks cx-pad">
+          <legend>Triagem do alongamento</legend>
+          <p className="cx-hint">Para considerar a 4131, confirme os três pontos. Campo sem confirmação não libera a opção. Mudou valor ou prazo? Confirme novamente a capacidade de pagamento.</p>
+          {CRITERIOS_ALONGAMENTO.map(([id, pergunta]) => <Campo key={id} id={`ac-alongar-${id}`} label={pergunta}>
+            <select id={`ac-alongar-${id}`} value={alongamento[id] ?? ''} onChange={(e) => setAlongamento((anterior) => ({ ...anterior, [id]: e.target.value }))}>
+              <option value="">Não comprovado</option><option value="sim">Sim</option><option value="nao">Não</option>
+            </select>
+          </Campo>)}
+          <label><input type="checkbox" checked={notasAlongamento} onChange={(e) => setNotasAlongamento(e.target.checked)} /> Há despesa elegível separada, com notas de compra dos últimos 12 meses, para avaliar reembolso pelo Finame Materiais</label>
+          <p className="cx-hint">Finame Materiais pode aliviar o caixa. Não é quitação direta da dívida.</p>
+        </fieldset>}
         <fieldset className="ac-checks cx-pad">
           <legend>Garantias disponíveis</legend>
           {GARANTIAS.map(([id, r]) => <label key={id}><input type="checkbox" checked={garantias.includes(id)} onChange={(e) => setGarantias((g) => e.target.checked ? [...g, id] : g.filter((x) => x !== id))} /> {r}</label>)}
@@ -267,6 +306,7 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
               {empresa.uf && <> · {empresa.uf}</>}{porte && <> · porte {PORTE_ROTULO[porte].toLowerCase()}</>}
             </p>
             {folha.frente.length ? <ol className="ac-cards">{folha.frente.map((op, i) => <Cartao key={op.id} op={op} posicao={i + 1} onView={onView} />)}</ol> : <p className="cx-hint">Nenhuma possibilidade com os dados informados. Veja abaixo por que cada uma saiu.</p>}
+            <OpcoesComplementares opcoes={folha.complementares} onView={onView} />
             {folha.observacoes.length > 0 && <ul className="ac-avisos">{folha.observacoes.map((o) => <li key={o}>{o}</li>)}</ul>}
             {folha.outras.length > 0 && (
               <details className="ac-mais">

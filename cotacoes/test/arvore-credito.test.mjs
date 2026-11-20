@@ -199,3 +199,51 @@ test('a tela abre com os três passos, o aviso de envio do CNPJ e o padrão das 
   assert.match(terminal, /ARVORE: \['calculadora', 'arvore-credito'\]/)
   assert.match(calc, /view === 'arvore-credito'\) return <ArvoreCredito onBack=\{\(\) => onView\(''\)\} onView=\{onView\} \/>/)
 })
+
+const todosCriterios = { caixa: true, alavancagem: true, repagamento: true }
+const alongar = (entrada = {}) => ac.montarFolha({ ...entrada, necessidade: 'alongar-divida' })
+
+test('alongamento: só permite comparar a 4131 após as três confirmações explícitas', () => {
+  const candidatos = (f) => [...f.frente, ...f.outras, ...f.complementares]
+  const elegivel = alongar({ alongamento: todosCriterios })
+  assert.equal(elegivel.frente[0].id, 'giro')
+  assert.match(candidatos(elegivel).find((item) => item.id === '4131').avisosPerfil.join(' '), /proteção cambial.*cenário adverso/)
+  assert.ok(!elegivel.sairam.some((item) => item.id === '4131'))
+  const casos = [undefined, {}, { caixa: false, alavancagem: false, repagamento: false }]
+  for (const id of Object.keys(todosCriterios)) {
+    for (const valor of [false, undefined, 'true', 1]) casos.push({ ...todosCriterios, [id]: valor })
+  }
+  for (const alongamento of casos) {
+    const f = alongar({ alongamento })
+    assert.ok(!candidatos(f).some((item) => item.id === '4131'), JSON.stringify(alongamento))
+    assert.match(f.sairam.find((item) => item.id === '4131').motivo, /três pontos confirmados/)
+  }
+})
+
+test('alongamento: Finame só para reembolso elegível, separado da quitação direta', () => {
+  for (const notasFiname of [undefined, false, 'true', 1]) {
+    const f = alongar({ notasFiname })
+    assert.deepEqual(f.complementares, [])
+    assert.match(f.sairam.find((item) => item.id === 'finame-materiais').motivo, /notas de compra elegíveis/)
+  }
+  const f = alongar({ notasFiname: true })
+  assert.ok(![...f.frente, ...f.outras].some((item) => item.id === 'finame-materiais'))
+  assert.deepEqual(ids(f.complementares), ['finame-materiais'])
+  assert.match(f.complementares[0].resumo, /não quita diretamente a dívida/)
+  assert.match(f.complementares[0].foraDeCobertura, /Quitação direta de dívida/)
+  assert.deepEqual(ids(alongar({ notasFiname: true, valor: 20_000_001 }).complementares), ['finame-materiais'], 'o saldo da dívida não informa se a despesa cabe no limite')
+  assert.ok(!f.frente.some((item) => item.id === '4131'))
+  assert.ok(ac.montarFolha({ necessidade: 'estoque-nacional', notasFiname: true }).frente.some((item) => item.id === 'finame-materiais'))
+})
+
+test('alongamento: só a opção complementar elegível abre a calculadora Finame Materiais', () => {
+  const diretas = (f) => [...f.frente, ...f.outras]
+  for (const notasFiname of [false, true]) {
+    const f = alongar({ notasFiname, receitaAnual: 40_000_000 })
+    assert.equal(diretas(f).find((op) => op.id === 'giro-bndes').calculadora, null)
+    assert.ok(!diretas(f).some((op) => op.calculadora === 'finame-materiais'))
+    assert.deepEqual(f.complementares.map((op) => op.calculadora), notasFiname ? ['finame-materiais'] : [])
+  }
+  const dividendos = ac.montarFolha({ necessidade: 'dividendos', receitaAnual: 40_000_000 })
+  assert.equal(diretas(dividendos).find((op) => op.id === 'giro-bndes').calculadora, 'finame-materiais')
+})
