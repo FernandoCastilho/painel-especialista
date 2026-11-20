@@ -34,8 +34,8 @@ test('actual failure notification distinguishes before, uncertain and after depl
 test('unsupported B3 year stays blocked and verified year identifies its official source', () => {
   assert.equal(b3CalendarStatus(2026).verified, true)
   assert.match(b3CalendarStatus(2026).source, /^https:\/\/www.b3.com.br\//)
-  assert.deepEqual(b3CalendarStatus(2027), { verified: false, year: 2027, source: null, reason: 'calendário B3 do ano não verificado' })
-  assert.equal(b3CollectionDecision('2027-01-04T15:00:00Z').run, false)
+  assert.deepEqual(b3CalendarStatus(2028), { verified: false, year: 2028, source: null, reason: 'calendário B3 do ano não verificado' })
+  assert.equal(b3CollectionDecision('2028-01-04T15:00:00Z').run, false)
 })
 
 test('institutional snapshot cannot claim that automatic live collection is enabled', () => {
