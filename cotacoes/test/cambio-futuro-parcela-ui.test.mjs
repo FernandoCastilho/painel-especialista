@@ -19,6 +19,8 @@ test('parcela única: formulário da mesa só em CNH/EUR e resultado independent
     './Flag.jsx': function Flag() { return null },
     './cdiDolar.js': await import('../src/cdiDolar.js'),
     './moneyInput.js': await import('../src/moneyInput.js'),
+    './useHistory.js': { fromInput() {}, useCentralDaily() {}, useIntraday() {} },
+    './cambioFuturoSpot.js': await import('../src/cambioFuturoSpot.js'),
     './marketReturns.js': { marketDate: () => dia },
     './cambioFuturoParcela.js': { simularParcelaCambial(args) {
       calls.push(args)
@@ -28,7 +30,7 @@ test('parcela única: formulário da mesa só em CNH/EUR e resultado independent
   const module = { exports: {} }
   const { code } = await transform(await readFile(new URL('../src/CambioFuturo.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
-  const ui = hookRenderer(() => module.exports.default({ onBack() {} }))
+  const ui = hookRenderer(() => module.exports.default({ onBack() {}, quotes: { EUR: { ask: 6.7225 }, CNH: { ask: 0.9134 } } }))
   t.after(() => ui.close())
   await ui.settle()
   const field = id => nodes(ui.value).find(n => n.props.id === id && n.type?.name === 'Campo')
@@ -36,6 +38,14 @@ test('parcela única: formulário da mesa só em CNH/EUR e resultado independent
   assert.deepEqual(nodes(ui.value).filter(n => n.type?.name === 'Campo').map(n => n.props.id), [
     'cf-valor', 'cf-vencimento', 'cf-cotacao', 'cf-taxa', 'cf-CNH-cotacao', 'cf-CNH-futuro', 'cf-EUR-cotacao', 'cf-EUR-futuro',
   ])
+  for (const [code, amount] of [['CNH', '0,9134'], ['EUR', '6,7225']]) {
+    const note = field(`cf-${code}-cotacao`).props.observacao
+    assert.equal(note.props.code, code)
+    assert.equal(note.props.offer, '')
+    assert.equal(note.props.quote.ask, Number(amount.replace(',', '.')))
+    assert.equal(field(`cf-${code}-cotacao`).props.value, '', 'referência não preenche a cotação manual')
+    assert.match(field(`cf-${code}-futuro`).props.observacao, /Não é cotação à vista/)
+  }
   const flags = n => nodes(n).filter(el => el.type?.name === 'Flag').map(el => el.props.code)
   assert.deepEqual(flags(nodes(ui.value).find(n => n.type?.name === 'Campo' && n.props.id === 'cf-valor').props.label), ['USD'])
   assert.deepEqual(flags(ui.value), ['CNH', 'EUR', 'CNH', 'EUR'])

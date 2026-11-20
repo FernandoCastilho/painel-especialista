@@ -48,3 +48,7 @@
 :root[data-theme] body .cx.cf-pattern .cf-resultado-moeda .cf-tir { background:var(--bw-warm-soft); align-items:center; }
 :root[data-theme] body .cx.cf-pattern .cf-resultado-moeda .cf-tir dd { font-size:1.22rem; }
 :root[data-theme] body .cx.cf-pattern .cf-resultado-status { margin:8px 0 0; color:var(--bw-mut); font-size:.82rem; }
+
+:root[data-theme] body .cx.cf-pattern .cf-observacao {
+  display:block; margin-top:4px; color:var(--bw-mut); font-size:.82rem; line-height:1.4; overflow-wrap:anywhere;
+}
