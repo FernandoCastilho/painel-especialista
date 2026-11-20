@@ -177,5 +177,66 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.waitForURL('**/#calculadora/finame-materiais')
    report.push({width,theme,passed:true});await context.close()
   }
+  for(const theme of ['light','dark']) {
+   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,colorScheme:theme,serviceWorkers:'block'})
+   const page=await context.newPage()
+   await page.goto(base+'/#rpn')
+   const panel=page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   const key=id=>panel.getByRole('group',{name:'Teclado da calculadora',exact:true}).locator('button[data-key="'+id+'"]')
+   const result=()=>panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()
+   await panel.waitFor()
+   await key('2').tap()
+   await key('enter').tap()
+   for(const [width,height] of [[844,390],[640,320],[568,280]]) {
+    await page.setViewportSize({width,height})
+    await page.waitForFunction(()=>{
+     const wide=document.querySelector('.rpn-keypad--wide'), display=document.querySelector('.rpn-display')
+     return wide?.getClientRects().length && display?.getBoundingClientRect().top>=0
+    })
+    const keyboard=panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
+    assert.equal(await keyboard.count(),1)
+    assert.equal(await keyboard.getByRole('button').count(),39)
+    for(const loc of [panel.getByLabel('Resultado da calculadora',{exact:true}), ...await keyboard.getByRole('button').all()]) {
+     const rect=await loc.boundingBox()
+     assert.ok(rect && rect.x>=0 && rect.y>=0 && rect.x+rect.width<=width+1 && rect.y+rect.height<=height,
+      `${width}×${height}/${theme}: visor/tecla dentro da altura útil ${JSON.stringify(rect)}`)
+     if(await loc.getAttribute('data-key')) assert.ok(rect.width>=44 && rect.height>=44,
+      `${width}×${height}/${theme}: alvo ${rect.width}×${rect.height}`)
+    }
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'sem rolagem horizontal')
+    await page.screenshot({path:path.join(out,`rpn-landscape-${width}-${height}-${theme}.png`)})
+    report.push({width,height,theme,orientation:'landscape',passed:true})
+   }
+   await key('3').tap()
+   await key('add').tap()
+   assert.match((await result()).trim(),/^5(?:,0+)?$/,'giro preserva pilha e cálculo')
+   await panel.getByRole('button',{name:'Taxas',exact:true}).tap()
+   const rates=panel.getByRole('region',{name:'Converter taxas',exact:true})
+   const source=rates.getByLabel('Taxa de origem (%)',{exact:true})
+   assert.ok(await source.evaluate(el=>el===document.activeElement && el.getBoundingClientRect().top>=0 &&
+    el.getBoundingClientRect().bottom<=innerHeight),'abertura de Taxas visível e com foco antes de digitar')
+   await source.fill('1')
+   assert.match(await rates.getByLabel('Taxa equivalente',{exact:true}).innerText(),/^12,6825/)
+   await rates.getByRole('button',{name:'Fechar conversor',exact:true}).tap()
+   assert.match((await result()).trim(),/^5(?:,0+)?$/,'conversor não altera o estado sem ação')
+   const helpButton=panel.getByRole('button',{name:'Ajuda da calculadora',exact:true})
+   await helpButton.tap()
+   const help=panel.getByRole('region',{name:'Como usar',exact:true})
+   await help.waitFor()
+   assert.ok(await help.evaluate(el=>el===document.activeElement && el.getBoundingClientRect().top>=0 &&
+    el.getBoundingClientRect().top<innerHeight),'ajuda visível e com foco')
+   await help.getByRole('button',{name:'Fechar ajuda',exact:true}).tap()
+   assert.ok(await help.isHidden())
+   assert.ok(await helpButton.evaluate(el=>el===document.activeElement),'fechar ajuda devolve foco')
+   await page.setViewportSize({width:390,height:844})
+   const back=panel.getByRole('link',{name:'Voltar ao Mercado',exact:true})
+   assert.equal(await back.count(),0,'atalho extra só na paisagem')
+   assert.match((await result()).trim(),/^5(?:,0+)?$/,'voltar ao retrato preserva o visor')
+   await page.setViewportSize({width:844,height:390})
+   await back.tap()
+   await page.waitForURL('**/#resumo')
+   await page.getByRole('navigation',{name:'Seções',exact:true}).waitFor()
+   await context.close()
+  }
  }finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1})

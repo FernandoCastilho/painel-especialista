@@ -9,6 +9,7 @@ const registers = [
   ['n', 'n', 'Número de períodos'], ['i', 'i', 'Taxa por período (%)'], ['pv', 'PV', 'Valor presente'],
   ['pmt', 'PMT', 'Pagamento periódico'], ['fv', 'FV', 'Valor futuro'],
 ]
+const compactLandscape = '(orientation: landscape) and (pointer: coarse) and (min-width: 500px) and (max-height: 520px)'
 const options = [['day', 'Ao dia'], ['month', 'Ao mês'], ['year', 'Ao ano']]
 const suffix = { day: 'a.d.', month: 'a.m.', year: 'a.a.' }
 const fmt = new Intl.NumberFormat('pt-BR', { maximumSignificantDigits: 12 })
@@ -132,8 +133,29 @@ export default function RpnCalculator() {
   const headingId = useId()
   const ratesId = useId()
   const trigger = useRef(null)
+  const helpTrigger = useRef(null)
+  const helpPanel = useRef(null)
   const [ratesOpen, setRatesOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const viewport = window.matchMedia?.(compactLandscape)
+    if (!viewport?.addEventListener) return
+    let frame = 0
+    const onRotate = event => {
+      cancelAnimationFrame(frame)
+      if (event.matches && !ratesOpen && !helpOpen) frame = requestAnimationFrame(() => window.scrollTo(0, 0))
+    }
+    viewport.addEventListener('change', onRotate)
+    return () => {
+      viewport.removeEventListener('change', onRotate)
+      cancelAnimationFrame(frame)
+    }
+  }, [ratesOpen, helpOpen])
+  useEffect(() => {
+    if (helpOpen && typeof window !== 'undefined' && window.matchMedia?.(compactLandscape).matches) helpPanel.current?.focus()
+  }, [helpOpen])
+  const closeHelp = () => { setHelpOpen(false); helpTrigger.current?.focus() }
   const [session] = useState(() => {
     try {
       const controller = createClassicRpnController()
@@ -203,12 +225,13 @@ export default function RpnCalculator() {
           </div>
           <div className="rpn-console-brand" aria-hidden="true"><span>Painel do</span><strong>Especialista</strong></div>
           <div className="rpn-bezel-tools">
+            <a className="rpn-landscape-back" href="#resumo" aria-label="Voltar ao Mercado">‹</a>
             <button type="button" className="rpn-rates-trigger" ref={trigger} onClick={() => ratesOpen ? closeRates() : setRatesOpen(true)}
               aria-expanded={ratesOpen} aria-controls={ratesId}>
               <span aria-hidden="true">⇄ </span>Taxas
             </button>
-            <button type="button" aria-label="Ajuda da calculadora" className="rpn-help-trigger" aria-expanded={helpOpen}
-              aria-controls={helpId} onClick={() => setHelpOpen(v => !v)}>?</button>
+            <button type="button" aria-label="Ajuda da calculadora" className="rpn-help-trigger" ref={helpTrigger} aria-expanded={helpOpen}
+              aria-controls={helpId} onClick={() => helpOpen ? closeHelp() : setHelpOpen(true)}>?</button>
           </div>
         </div>
         <p className="rpn-message" role="status">{view.message || (view.indicators?.paused ? <span className="rpn-sr-only">Programa em pausa.</span> : '')}</p>
@@ -219,8 +242,12 @@ export default function RpnCalculator() {
       <RatePanel id={ratesId} open={ratesOpen} onClose={closeRates} canUse={!failed && powered && !view.indicators?.program && !view.indicators?.running}
         onUse={value => { act(c => c.setDisplay(value)); closeRates() }} />
     </div>
-    <div hidden={!helpOpen} className="rpn-help" id={helpId}>
-      <h2>Como usar</h2>
+    <div hidden={!helpOpen} ref={helpPanel} tabIndex={-1} role="region" className="rpn-help" id={helpId}
+      aria-labelledby={helpId + '-heading'} onKeyDown={event => {
+        if (event.key === 'Escape') { event.preventDefault(); closeHelp() }
+      }}>
+      <h2 id={helpId + '-heading'}>Como usar</h2>
+      <button type="button" className="rpn-help-close" onClick={closeHelp}>Fechar ajuda</button>
       <p>Digite o primeiro valor, pressione ENTER, digite o segundo e escolha a operação. Exemplo: 2 ENTER 3 +.</p>
       <p>As teclas f e g selecionam a próxima função dourada ou azul. Teclas indisponíveis são identificadas. A taxa i e os pagamentos devem usar o mesmo período. Entradas são positivas e saídas, negativas.</p>
       <p>Com foco na calculadora: números, vírgula ou ponto, Enter, +, −, * e /. As teclas do conversor não alteram a pilha até você escolher “Usar no visor”.</p>
