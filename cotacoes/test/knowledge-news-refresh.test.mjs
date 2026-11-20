@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { refreshKnowledgeNews } from '../scripts/refresh-knowledge-news.mjs'
+import { RELEASE_FILES } from '../scripts/pages-release-data.mjs'
 
 const NOW = Date.parse('2026-11-07T15:00:00Z')
 const DAY = 86400000
@@ -106,10 +107,22 @@ test('revalidates each rerun against its actual time and rejects invalid assembl
   await assert.rejects(refreshKnowledgeNews({ directory, now: NaN, load: async () => null }), /Instante/)
 }))
 
-test('workflow packages retained graph history before build on every existing schedule', async () => {
+test('coletas retêm o histórico antes do build; release sem coleta preserva e verifica o mesmo arquivo', async () => {
   const text = await readFile(new URL('../../.github/workflows/pages.yml', import.meta.url), 'utf8')
-  const position = text.indexOf('run: node scripts/refresh-knowledge-news.mjs')
-  assert.ok(position > 0 && position < text.indexOf('run: npm run build'))
-  const step = text.slice(text.lastIndexOf('      - name:', position), text.indexOf('      - name:', position))
-  assert.equal(/\n\s+if:/.test(step), false)
+  const steps = text.split(/^ {6}- (?:name: |uses: |id: )/m)
+  const find = cmd => steps.findIndex(step => step.includes(`        run: ${cmd}\n`))
+  const refresh = find('node scripts/refresh-knowledge-news.mjs')
+  const capture = find('node scripts/pages-release-data.mjs capturar "$RUNNER_TEMP/pages-release-data.json"')
+  const verify = find('node scripts/pages-release-data.mjs conferir "$RUNNER_TEMP/pages-release-data.json" dist')
+  const build = find('npm run build')
+  const sector = find('node scripts/sector-news-live.mjs --snapshot')
+
+  // Todo schedule (inclusive Trends e Focus) e as recuperações explícitas rodam este passo.
+  assert.match(text, /^ {6}PAGES_REFRESH_DATA: \$\{\{ github\.event_name == 'schedule' \|\| inputs\.refresh_data == true \|\| inputs\.focus_retry == true \}\}$/m)
+  assert.ok(capture > 0 && refresh > capture && sector > refresh && build > sector && verify > build)
+  const condition = step => steps[step].split('\n').filter(line => line.trimStart().startsWith('if:'))
+  assert.deepEqual(condition(refresh), ["        if: env.PAGES_REFRESH_DATA == 'true'"])
+  assert.deepEqual(condition(capture), ["        if: env.PAGES_REFRESH_DATA != 'true'"])
+  assert.deepEqual(condition(verify), condition(capture))
+  assert.ok(RELEASE_FILES.includes('knowledge-news.json'), 'release sem coleta deve conservar o arquivo do mapa')
 })
