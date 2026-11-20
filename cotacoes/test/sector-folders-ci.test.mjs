@@ -62,7 +62,14 @@ test('CI adds the folders gates without replacing the calculator matrix or artif
   assert.match(workflow, /FOLDERS_QA_OUTPUT="\$RUNNER_TEMP\/qa-universal\/folders" node scripts\/smoke-sector-folders\.cjs/)
   assert.match(workflow, /node scripts\/verify-sector-folders\.cjs "\$RUNNER_TEMP\/qa-universal\/folders"/)
   assert.match(workflow, /node scripts\/verify-smoke-matrix\.cjs "\$RUNNER_TEMP\/qa-universal"/)
-  assert.match(workflow, /Capturas de tela dos smokes\n\s+if: always\(\)[\s\S]*?\$\{\{ runner\.temp \}\}\/qa-universal/)
+  const upload = workflow.split('      - name: Capturas de tela dos smokes\n')[1]?.split('\n      - name: ')[0] ?? ''
+  assert.match(upload, /if: always\(\)/)
+  assert.match(upload, /uses: actions\/upload-artifact@v4/)
+  assert.match(upload, /name: smoke-capturas\b/)
+  assert.match(upload, /\$\{\{ runner\.temp \}\}\/smoke-consolidado\/qa-universal/)
+  const group = workflow.split('\n  smoke-calculadoras:\n')[1]?.split('\n  smoke-navegacao:\n')[0] ?? ''
+  assert.match(group, /verify-sector-folders\.cjs[\s\S]*?smoke-transfer-calculadoras/)
+  assert.match(group, /cp -a "\$RUNNER_TEMP\/\$dir" "\$RUNNER_TEMP\/smoke-transfer\/"/)
   assert.doesNotMatch(workflow, /continue-on-error:\s*true/)
   assert.ok(workflow.indexOf('smoke-sector-folders.cjs') < workflow.indexOf('verify-sector-folders.cjs'))
   assert.match(workflow, /Capturas e relatório das pastas\n\s+if: always\(\)[\s\S]*?name: pastas-setoriais-design[\s\S]*?path: \$\{\{ runner\.temp \}\}\/qa-universal\/folders/)

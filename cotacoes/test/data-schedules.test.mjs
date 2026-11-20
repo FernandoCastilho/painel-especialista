@@ -22,7 +22,7 @@ test('weekly Focus cron at 08:30 Brazil on Monday and Tuesday (Monday holiday); 
  assert.match(y,/if: github.event.schedule == '30 11 \* \* 1,2'/)
  const deploy=y.split('\n  deploy:\n')[1];assert.ok(deploy)
  const regular=deploy.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,37);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
- assert.match(deploy,/Consumir snapshot institucional confirmado[^\n]*\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\)\n\s+run: node scripts\/sector-news-live\.mjs --snapshot/)
+ assert.match(deploy,/Consumir snapshot institucional confirmado[^\n]*\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\) && env\.PAGES_REFRESH_DATA == 'true'\n\s+run: node scripts\/sector-news-live\.mjs --snapshot/)
  const institutional=y.split('\n  institutional-news:\n')[1].split('\n  deploy:')[0]
  assert.match(institutional,/needs\.approve-source\.result == 'success'/)
  for(const cron of ['0 11,18 * * *','30 11 * * 1,2'])assert.ok(institutional.includes(`github.event.schedule != '${cron}'`))
