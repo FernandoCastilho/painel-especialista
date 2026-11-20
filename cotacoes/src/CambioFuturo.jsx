@@ -47,7 +47,7 @@ function CnhIntradiario({ plan, price }) {
     : <ReferenciaIndisponivel loading={history.status === 'loading'} />
 }
 
-function ReferenciaMesa({ code, quote, offer, plan }) {
+export function ReferenciaMesa({ code, quote, offer = '', plan }) {
   const ref = mesaSpotRange(code, quote, plan)
   const price = parseDecimal(offer)
   if (ref) {
