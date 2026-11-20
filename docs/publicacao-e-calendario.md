@@ -1,14 +1,23 @@
 # Publicação e calendário de coleta
 
-Revisão: 08/11/2026.
+Revisão do fluxo de publicação: 20/11/2026.
 
 ## Verificações da publicação
 
 Em push de código e execução manual, Pages aguarda o workflow reutilizável `cotacoes-ci.yml`: lint, testes, build e os testes reais de interface existentes. Se qualquer trabalho falha, a publicação é bloqueada e a issue registra a falha. O build de produção e a validação do pacote semanal continuam no próprio job de publicação. Agendas que só atualizam dados mantêm seus testes e validações, sem repetir toda a suíte de navegador a cada hora. Antes do checkout, exigem uma execução anterior de Pages com o mesmo SHA exato, originada de push ou execução manual, concluída com sucesso e com os três trabalhos de `verify-source` aprovados. Código novo ou reprovado não pode passar pela agenda; ausência de comprovação ou falha na consulta bloqueia a publicação.
 
-A conferência no endereço publicado permanece após o deploy. Uma falha nessa etapa **não restaura automaticamente** a versão anterior. A issue distingue falha anterior, falha retornada pelo serviço de publicação e falha posterior ao deploy. Esta última pode deixar a nova versão no ar.
+Depois do deploy, o workflow busca o marcador público com consulta sem cache e confirma o SHA, a execução e a tentativa que acabaram de publicar. Nos releases de código, em seguida roda a conferência de navegação no endereço publicado. Uma falha nessa etapa **não restaura automaticamente** a versão anterior. A issue distingue falha anterior, falha retornada pelo serviço de publicação e falha posterior ao deploy. Esta última pode deixar a nova versão no ar.
 
-Não há rollback automático homologado: não existe neste fluxo um artefato anterior fixado e validado para restauração. Para recuperar, conferir a execução e a versão publicada, selecionar um commit comprovadamente válido e executar seu workflow de publicação, que também deve passar pelas verificações. Reexecutar apenas o job de deploy de uma execução antiga não valida código novo.
+Não há rollback automático homologado: não existe neste fluxo um artefato anterior fixado e validado para restauração. Para recuperar, conferir a execução e a versão publicada, reverter no ramo de publicação para um estado comprovadamente válido e rodar novamente todas as verificações. Reexecutar apenas o job de deploy de uma execução antiga não valida código novo.
+
+## Release de código e coleta
+
+- O Pages aceita somente o ramo canônico `claude/obsidian-plugin-analysis-bagjz3`. Todo push nesse ramo, inclusive só de documentação, testa e publica o SHA correspondente. PRs também rodam o CI sem filtro de arquivos, mas não publicam. Hermes, Cloud e notebook seguem a mesma sequência quando enviam ao mesmo fluxo GitHub.
+- Push ou disparo manual normal publica o código após o CI, sem recolher as fontes. Sob o lock de Pages, valida e preserva o conjunto completo de dados coletados que já está no site (inclusive CSV, manchetes acumuladas de câmbio e notícias do mapa). Compara o hash de cada arquivo com o pacote compilado. Arquivo ausente, inválido ou alterado interrompe a publicação. Conteúdo editorial do Git não é sobrescrito; a coleta externa no ramo `data` segue separada.
+- O cron hourly, Trends e Focus conserva as rotinas atuais. O cron só republica o SHA já aprovado que o Pages identifica como ativo. A fila única não substitui outro deploy pendente; a ponta do ramo é conferida sob o lock e novamente antes de publicar.
+- Para recuperar dados, dispare manualmente o workflow do **ramo atual de publicação** com `refresh_data=true`. Continua exigindo CI e mantém o procedimento anterior de coleta sob o mesmo lock. O modo normal é preservar. O vigia automático do Focus envia `focus_retry=true` para manter a coleta de recuperação, sem consultar novamente o IBGE CBS.
+- O snapshot IBGE CBS validado acompanha o release como dados públicos agregados e é preservado no próximo build; mudança explícita do arquivo versionado pode substituí-lo. No primeiro rollout, sem marcador anterior (HTTP 404), usa o snapshot versionado. Depois disso, arquivo ausente ou incompatível não é substituído silenciosamente. Antes do primeiro rollout, compare o snapshot versionado com o dado efetivo exibido.
+- Para voltar ao código anterior, faça uma reversão no ramo atual e passe pelo CI. Não publique um SHA antigo por uma reexecução; a proteção de SHA recusa código obsoleto.
 
 ## Calendário B3
 
@@ -68,19 +77,12 @@ não tinha publicação aprovada, e os dados deixavam de ser atualizados até al
 execuções 644 e 645; 18/11, execuções 678 e 679).
 
 Como fica:
-- A fila (`concurrency: pages`, sem cancelar) vale só para o trabalho `deploy`. Os testes de código correm sem esperar.
-- Nas agendas, o passo "Agenda espera a publicação de código em andamento" consulta as execuções de Pages do mesmo ramo.
-  Se houver push ou execução manual ainda não concluída (inclui os disparos automáticos do vigia do Focus, `focus.yml`),
-  a agenda termina sem publicar (sem falha) e não entra na fila.
-  A publicação de código já coleta e publica os dados.
-- Sem publicação de código em andamento, a agenda segue como antes: exige o mesmo código já aprovado e publica.
-
-Riscos e ressalvas:
-- Enquanto uma publicação de código está em andamento (cerca de 30 minutos), as agendas daquele horário não rodam; os
-  dados chegam pela própria publicação de código.
-- Se a publicação de código falhar, a agenda seguinte continua bloqueada até a correção, como antes (regra de segurança
-  mantida).
-- Uma agenda que começou antes do push e está em espera ainda pode ser trocada pela publicação de código; nesse caso
-  quem perde a vez é a agenda, não o código.
-- Testes: `test/publication-gates.test.mjs` ("a fila vale só para a publicação…").
-
+- A fila (`concurrency: pages`, com `queue: max` e sem cancelamento de trabalho em execução) vale só para o job `deploy`.
+  Os testes de código correm sem esperar.
+- A agenda que encontra push ou disparo manual de Pages em andamento, inclusive a recuperação do Focus, encerra sem entrar
+  na fila. Não houve coleta naquele disparo. Um release de código normal preserva dados; não repõe a coleta perdida.
+- Uma agenda posterior pode coletar quando o SHA canônico atual estiver aprovado, publicado e identificado no marcador.
+  Se a publicação de código falhar, a agenda segue bloqueada até uma publicação aprovada.
+- Se uma agenda anterior já entrou na fila, ela só pode publicar se o SHA continuar atual e aprovado. Tanto o deploy de
+  código quanto o de dados conferem a ponta do ramo sob o lock e novamente antes de publicar.
+- Testes: `test/publication-gates.test.mjs` e `test/pages-release-data.test.mjs`.

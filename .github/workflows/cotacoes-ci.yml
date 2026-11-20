@@ -5,7 +5,6 @@ on:
     branches: ['feat/estudos-setoriais-completos']
     paths: ['cotacoes/**', 'docs/sector-research/**', '.github/workflows/cotacoes-ci.yml']
   pull_request:
-    paths: ['cotacoes/**', '.github/workflows/cotacoes-ci.yml']
 permissions:
   contents: read
 jobs:
