@@ -544,6 +544,105 @@ async function assertComparatorFamily(browser) {
   }
 }
 
+async function assertCambioFuturoCenario(browser) {
+  const now = Date.parse('2026-11-20T15:00:00Z')
+  const t = iso => Date.parse(iso + 'T19:00:00Z')
+  const normalizeMoney = value => value.replace(/\s/g, '')
+  for (const width of [320, 1440]) for (const theme of ['dark', 'light']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    try {
+      await fixtures(page)
+      await page.route('**/quotes.json*', route => route.fulfill({ json: { generatedAt: now, quotes: {} } }))
+      await page.route('**/history.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now - 60000, series: {
+        EUR: { source: 'EUR', points: [{ t: t('2026-08-25'), bid: 6.42 }, { t: t('2026-11-12'), bid: 6.65 }, { t: t('2026-11-19'), bid: 6.55 }] },
+        CNH: { source: 'CNY', points: [{ t: t('2026-11-12'), bid: .85 }, { t: t('2026-11-19'), bid: .86 }] },
+      } } }))
+      await page.clock.setFixedTime(new Date(now))
+      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      const section = page.locator('section.cf-cenario')
+      await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
+      assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
+      assert.equal(await section.locator('#cf-c-inicio').inputValue(), '2026-11-20')
+      assert.equal(await section.locator('#cf-c-p1-cenario').inputValue(), '')
+      const previous = section.getByRole('link', { name: 'Simular TIR da parcela em USD', exact: true })
+      assert.equal(await previous.isVisible(), true)
+      assert.equal(await previous.getAttribute('href'), '#calculadora/cambio-futuro/tir-usd')
+      const costs = section.locator('.cf-c-details').first()
+      await costs.locator('summary').click()
+      assert.match(await costs.innerText(), /descontados os custos iniciais.*Custos de parcela são pagos no vencimento.*não estão na cotação nem no valor líquido/s)
+      await costs.locator('summary').click()
+      await section.getByRole('button', { name: '3 parcelas', exact: true }).click()
+      assert.equal(await section.locator('.cf-c-row').count(), 3)
+      for (const [i, date, locked] of [[1, '2027-05-20', '6,55'], [2, '2027-08-20', '6,60'], [3, '2027-11-20', '6,65']]) {
+        await section.locator(`#cf-c-p${i}-data`).fill(date)
+        await section.locator(`#cf-c-p${i}-valor`).fill('10.000')
+        await section.locator(`#cf-c-p${i}-trava`).fill(locked)
+      }
+      assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), 'R$198.000,00')
+      assert.equal(await section.locator('#cf-c-total-cenario').innerText(), '—')
+      assert.equal(await section.locator('#cf-c-diferenca').innerText(), '—')
+      for (const [i, scenario] of [[1, '6,70'], [2, '6,80'], [3, '6,75']]) await section.locator(`#cf-c-p${i}-cenario`).fill(scenario)
+      assert.equal(normalizeMoney(await section.locator('#cf-c-total-cenario').innerText()), 'R$202.500,00')
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      assert.match(await section.locator('#cf-c-diferenca').locator('..').innerText(), /Economia neste cenário/)
+      const details = section.locator('.cf-c-result-foot details')
+      assert.equal(await details.getAttribute('open'), null)
+      await details.locator('summary').click()
+      assert.equal(await details.locator('section').count(), 3)
+      assert.match(await details.locator('section').first().innerText(), /Cotação de equilíbrio.*6,5500/s)
+      await details.locator('summary').click()
+      const graph = section.locator('.cf-c-graph')
+      await graph.getByRole('img', { name: /EUR\/BRL/ }).waitFor()
+      assert.match(await graph.getByRole('img', { name: /EUR\/BRL/ }).getAttribute('aria-label'), /12\/11/)
+      await section.getByRole('button', { name: '90 dias' }).click()
+      assert.match(await graph.getByRole('img', { name: /EUR\/BRL/ }).getAttribute('aria-label'), /25\/08/)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Câmbio futuro, 3 parcelas ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-tres-parcelas-${width}-${theme}.png`), fullPage: true })
+      await section.locator('#cf-c-p2-data').fill('2027-08-21')
+      assert.equal(await section.locator('#cf-c-p2-trava').inputValue(), '')
+      assert.equal(await section.locator('#cf-c-p2-cenario').inputValue(), '')
+      assert.equal(await section.locator('#cf-c-p3-cenario').inputValue(), '6,75')
+      await section.getByRole('button', { name: '2 parcelas', exact: true }).click()
+      await section.getByRole('button', { name: '5 parcelas', exact: true }).click()
+      assert.equal(await section.locator('.cf-c-row').count(), 5)
+      assert.equal(await section.locator('#cf-c-p3-cenario').inputValue(), '')
+      await section.locator('#cf-c-moeda').selectOption('CNH')
+      assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '')
+      assert.equal(await graph.getByRole('img').count(), 0, 'histórico CNY não substitui CNH offshore')
+      await graph.getByText('Histórico indisponível neste período.').waitFor()
+      const example = section.getByRole('button', { name: 'Gerar exemplo fictício', exact: true })
+      const help = section.getByRole('button', { name: 'Ajuda: Câmbio futuro', exact: true })
+      assert.ok(await example.evaluate(el => el.parentElement === el.closest('.cf-c-heading-actions') &&
+        !!el.parentElement.querySelector('.fi-help')), 'atalho fica no mesmo grupo do botão de ajuda')
+      assert.equal(await help.isVisible(), true)
+      assert.equal(await example.getAttribute('aria-pressed'), 'false')
+      await section.locator('#cf-c-p1-valor').fill('123,45')
+      await example.click()
+      const quit = section.getByRole('button', { name: 'Sair do exemplo fictício', exact: true })
+      assert.equal(await quit.getAttribute('aria-pressed'), 'true')
+      assert.equal(await section.getByText('Exemplo fictício.', { exact: true }).isVisible(), true)
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      assert.equal(await section.locator('.cf-c-row').count(), 3)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Exemplo de câmbio futuro ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-exemplo-${width}-${theme}.png`), fullPage: true })
+      await quit.click()
+      assert.equal(await section.locator('#cf-c-moeda').inputValue(), 'CNH')
+      assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '123,45')
+      assert.equal(await section.locator('.cf-c-row').count(), 5)
+      assert.equal(await section.getByText('Exemplo fictício.', { exact: true }).count(), 0)
+      await previous.click()
+      await page.waitForURL('**/#calculadora/cambio-futuro/tir-usd')
+      await page.locator('#cf-valor').waitFor()
+      assert.deepEqual(errors, [])
+      console.log(`PASS Câmbio futuro até cinco parcelas ${width} ${theme}`)
+    } finally { await page.close() }
+  }
+}
+
 async function assertCambioFuturo(browser) {
   // USD 110 mil já com juros: em 360 dias a 10% a.a., o principal é USD 100 mil.
   // EUR: 88 mil × 6,50 = R$ 572 mil; CNH: (550 mil ÷ 0,75) × 0,80.
@@ -568,7 +667,7 @@ async function assertCambioFuturo(browser) {
         series: { CNH: { points: [[prev, .85]] } },
       } }))
       await page.clock.setFixedTime(new Date(clock))
-      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      await page.goto(`${base}/#calculadora/cambio-futuro/tir-usd`)
       const section = page.locator('section.cf-pattern')
       await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
       assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
@@ -693,6 +792,7 @@ async function assertCambioFuturo(browser) {
     }
     await assertComparatorFamily(browser)
     await assertCambioFuturo(browser)
+    await assertCambioFuturoCenario(browser)
     assert.deepEqual(failures, [], 'conformidade das seis calculadoras nas cinco larguras')
   } finally {
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2))
