@@ -16,7 +16,7 @@ import RollingNumber from './RollingNumber.jsx'
 const MARK = { up: '▲', down: '▼', flat: '■' }
 
 // Faixa corrida sob a barra superior (só no computador). Se os itens não cabem, ela rola devagar e pausa sob o mouse.
-export function Tape({ quotes, rates, oil }) {
+export function Tape({ quotes, rates, oil, showFxFlags = false }) {
   const items = tapeItems(quotes, rates, oil)
   const box = useRef(null)
   const set = useRef(null)
@@ -34,13 +34,16 @@ export function Tape({ quotes, rates, oil }) {
     const ro = new ResizeObserver(check)
     if (box.current) ro.observe(box.current)
     return () => ro.disconnect()
-  }, [sig])
+  }, [sig, showFxFlags])
   if (!items.length) return <div className="tape" aria-hidden="true" />
   const list = (hidden) => (
     <div className="tape-set" ref={hidden ? undefined : set} aria-hidden={hidden || undefined}>
       {items.map((i) => (
         <span key={i.key} className="tape-item">
-          <b>{i.label}</b>
+          <b className={showFxFlags && (i.code === 'USD' || i.code === 'EUR') ? 'tape-fx-label' : undefined}>
+            {showFxFlags && (i.code === 'USD' || i.code === 'EUR') && <Flag code={i.code} width={16} height={11} />}
+            {i.label}
+          </b>
           {i.value}
           {i.text && <em className={i.tone}>{i.text}</em>}
           {i.note && <em className="flat">{i.note}</em>}
