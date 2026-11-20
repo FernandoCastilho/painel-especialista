@@ -544,6 +544,71 @@ async function assertComparatorFamily(browser) {
   }
 }
 
+async function assertCambioFuturo(browser) {
+  // USD 110 mil já com juros: em 360 dias a 10% a.a., o principal é USD 100 mil.
+  // EUR: 88 mil × 6,50 = R$ 572 mil; CNH: (550 mil ÷ 0,75) × 0,80.
+  // TIR anual = (pagamento em reais ÷ R$ 500 mil)^(365/360) − 1.
+  for (const width of [320, 1440]) for (const theme of ['dark', 'light']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    try {
+      await fixtures(page)
+      await page.clock.setFixedTime(new Date('2026-01-02T02:00:00Z'))
+      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      const section = page.locator('section.cf-pattern')
+      await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
+      assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
+      assert.match(await section.innerText(), /Data-base da simulação: 01\/01\/2026/)
+      assert.equal(await section.getByRole('heading', { name: 'Fluxo de caixa por vencimento' }).count(), 0)
+      const operacao = section.locator('article[aria-labelledby="cf-operacao"]')
+      assert.deepEqual(await operacao.locator('input').evaluateAll(items => items.map(x => x.id)), ['cf-valor', 'cf-vencimento', 'cf-cotacao', 'cf-taxa'])
+      const mesa = section.locator('article[aria-labelledby="cf-mesa"]')
+      assert.deepEqual(await mesa.locator('fieldset legend').allTextContents(), ['Yuan (CNH)', 'Euro (EUR)'])
+      assert.equal(await operacao.locator('label[for="cf-valor"] .flag svg').count(), 1)
+      assert.equal(await mesa.locator('legend .flag svg').count(), 2)
+      assert.equal(await section.locator('.cf-resultado-moeda h4 .flag svg').count(), 2)
+      for (const [id, valor] of Object.entries({ valor: '110.000', vencimento: '2026-12-27', cotacao: '5', taxa: '10',
+        'EUR-cotacao': '6,25', 'EUR-futuro': '6,50', 'CNH-cotacao': '0,75', 'CNH-futuro': '0,80' })) {
+        await section.locator('#cf-' + id).fill(valor)
+      }
+      const eur = section.locator('#cf-resultado-EUR').locator('..')
+      const cnh = section.locator('#cf-resultado-CNH').locator('..')
+      assert.match(await eur.innerText(), /27\/12\/2026[\s\S]*88\.000,00[\s\S]*14,61%/)
+      assert.match(await cnh.innerText(), /27\/12\/2026[\s\S]*733\.333,33[\s\S]*17,59%/)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Câmbio futuro parcela única ${width} ${theme}`)
+      const metrics = await section.locator('.cf-resultado-moeda dd').evaluateAll(items => items.map(el => {
+        const range = document.createRange(); range.selectNodeContents(el)
+        const box = el.closest('.cf-resultado-moeda').getBoundingClientRect()
+        const text = range.getBoundingClientRect()
+        return { value: el.textContent, lines: range.getClientRects().length,
+          inside: text.left >= box.left && text.right <= box.right }
+      }))
+      assert.equal(metrics.length, 6)
+      assert.deepEqual(metrics.filter(m => m.lines !== 1 || !m.inside), [], 'datas, valores e TIR cabem inteiros no resultado')
+      await page.screenshot({ path: path.join(out, `cambio-futuro-parcela-${width}-${theme}.png`), fullPage: true })
+      await section.locator('#cf-vencimento').fill('2026-12-28')
+      assert.equal(await section.locator('#cf-EUR-futuro').inputValue(), '')
+      assert.equal(await section.locator('#cf-CNH-futuro').inputValue(), '')
+      assert.equal(await section.locator('#cf-EUR-cotacao').inputValue(), '6,25')
+      assert.doesNotMatch(await eur.innerText(), /14,61%/)
+      await section.locator('#cf-EUR-futuro').fill('6,50')
+      assert.match(await eur.locator('.cf-tir dd').innerText(), /%/)
+      await page.clock.setFixedTime(new Date('2026-01-02T03:00:00Z'))
+      await section.locator('#cf-valor').fill('111.000')
+      assert.match(await section.innerText(), /Data-base da simulação: 02\/01\/2026/)
+      assert.match(await section.innerText(), /Informe novamente as cotações/)
+      for (const id of ['cotacao', 'EUR-cotacao', 'EUR-futuro', 'CNH-cotacao', 'CNH-futuro']) {
+        assert.equal(await section.locator('#cf-' + id).inputValue(), '')
+      }
+      assert.equal(await eur.locator('.cf-tir dd').innerText(), '—')
+      assert.deepEqual(errors, [])
+      console.log(`PASS Câmbio futuro parcela única ${width} ${theme}`)
+    } finally { await page.close() }
+  }
+}
+
 ;(async () => {
   fs.mkdirSync(out, { recursive: true })
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
@@ -584,6 +649,7 @@ async function assertComparatorFamily(browser) {
       }
     }
     await assertComparatorFamily(browser)
+    await assertCambioFuturo(browser)
     assert.deepEqual(failures, [], 'conformidade das seis calculadoras nas cinco larguras')
   } finally {
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2))

@@ -20,25 +20,31 @@
 :root[data-theme] body .cx.cf-pattern .cf-input > .cx-form { padding:14px; }
 :root[data-theme] body .cx.cf-pattern :is(.cf-input,.cf-quote) > .cx-wrap { padding:12px 14px 14px; }
 
-/* Tabelas: mesmas linhas, fundos e números alinhados do restante das calculadoras. */
-:root[data-theme] body .cx.cf-pattern .cf-table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
-:root[data-theme] body .cx.cf-pattern .cf-table :is(td,th) { padding:8px 10px; border-bottom:1px solid var(--bw-line); text-align:right; white-space:nowrap; color:var(--bw-ink); }
-:root[data-theme] body .cx.cf-pattern .cf-table thead th { background:var(--bw-soft); color:var(--bw-mut); font-size:.75rem; font-weight:700; }
-:root[data-theme] body .cx.cf-pattern .cf-table :is(td,th):first-child { text-align:left; }
-:root[data-theme] body .cx.cf-pattern .cf-table tbody th { font-weight:600; }
-:root[data-theme] body .cx.cf-pattern .cf-table td input { width:100%; min-width:70px; min-height:36px; padding:4px 8px; font-size:.875rem; text-align:right; }
-:root[data-theme] body .cx.cf-pattern .cf-mesa td input { min-width:120px; }
-:root[data-theme] body .cx.cf-pattern .cf-total :is(td,th) { background:var(--bw-soft); font-weight:700; }
-:root[data-theme] body .cx.cf-pattern .cf-erro { white-space:normal; font-size:.75rem; color:var(--bw-warn-ink); }
-
-/* Fluxo por vencimento: cada moeda separada por uma linha vertical. */
-:root[data-theme] body .cx.cf-pattern .cf-flow :is(td,th) { padding:8px 5px; }
-:root[data-theme] body .cx.cf-pattern .cf-flow .cf-group { border-left:1px solid var(--bw-line); }
-:root[data-theme] body .cx.cf-pattern .cf-flow thead th.cf-group[colspan] { text-align:center; color:var(--bw-ink); }
-:root[data-theme] body .cx.cf-pattern .cf-flow td small { display:block; color:var(--bw-mut); font-size:.72rem; font-weight:400; }
-:root[data-theme] body .cx.cf-pattern .cf-flow .cf-start :is(td,th) { font-weight:600; }
-
-/* Resultado: menor custo destacado com a faixa laranja à esquerda. */
-:root[data-theme] body .cx.cf-pattern .cf-best :is(td,th) { background:var(--bw-warm-soft); }
-:root[data-theme] body .cx.cf-pattern .cf-best th { box-shadow:inset 4px 0 0 var(--cf-orange); }
-:root[data-theme] body .cx.cf-pattern .cf-best small { color:var(--bw-mut); }
+:root[data-theme] body .cx.cf-pattern .cf-parcela-fields,
+:root[data-theme] body .cx.cf-pattern :is(.cf-mesa-grid,.cf-resultado-grid) {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%, 245px),1fr)); gap:12px; align-items:start;
+}
+:root[data-theme] body .cx.cf-pattern :is(.cf-mesa-grid,.cf-resultado-grid) { padding:0 14px 14px; }
+:root[data-theme] body .cx.cf-pattern :is(.cf-moeda,.cf-resultado-moeda) {
+  min-width:0; margin:0; padding:12px; border:1px solid var(--bw-line); border-radius:8px; color:var(--bw-ink);
+}
+:root[data-theme] body .cx.cf-pattern .cf-moeda { display:grid; gap:12px; }
+:root[data-theme] body .cx.cf-pattern .cf-moeda legend { padding:0 6px; font-weight:700; }
+:root[data-theme] body .cx.cf-pattern .cf-com-bandeira { display:inline-flex; align-items:center; min-width:0; gap:6px; }
+:root[data-theme] body .cx.cf-pattern .cf-com-bandeira .flag { flex:none; }
+:root[data-theme] body .cx.cf-pattern .cx-field { min-width:0; }
+:root[data-theme] body .cx.cf-pattern .cx-field input { width:100%; min-width:0; min-height:44px; box-sizing:border-box; }
+:root[data-theme] body .cx.cf-pattern .cf-resultado-moeda h4 { margin:0 0 10px; }
+:root[data-theme] body .cx.cf-pattern .cf-resultado-moeda dl {
+  margin:0; display:grid; grid-template-columns:minmax(0,1fr); gap:0;
+}
+:root[data-theme] body .cx.cf-pattern .cf-resultado-moeda dl > div {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:baseline;
+  background:var(--bw-soft); padding:8px; border-bottom:1px solid var(--bw-line);
+}
+:root[data-theme] body .cx.cf-pattern .cf-resultado-moeda dd {
+  margin:0; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+:root[data-theme] body .cx.cf-pattern .cf-resultado-moeda .cf-tir { background:var(--bw-warm-soft); align-items:center; }
+:root[data-theme] body .cx.cf-pattern .cf-resultado-moeda .cf-tir dd { font-size:1.22rem; }
+:root[data-theme] body .cx.cf-pattern .cf-resultado-status { margin:8px 0 0; color:var(--bw-mut); font-size:.82rem; }
