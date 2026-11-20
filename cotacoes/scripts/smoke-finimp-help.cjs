@@ -38,10 +38,31 @@ async function smokeConverter(browser, width, base, out) {
       }, expected)
       assert.equal(correct, true, label + ': bandeiras visíveis das duas moedas, na ordem do par')
     }
-    const parLabel = await p.getByRole('button', { name: /^EUR\/USD .*abrir gráfico$/ }).locator('.kpi-name').boundingBox()
-    const helpBox = await trigger.boundingBox()
-    assert.ok(helpBox && helpBox.width >= 44 && helpBox.height >= 44, 'ajuda mantém alvo de pelo menos 44 × 44 px')
-    assert.ok(parLabel && helpBox && parLabel.x + parLabel.width <= helpBox.x + 1, 'bandeiras não invadem o botão de ajuda')
+    await trigger.scrollIntoViewIfNeeded()
+    const geometry = await trigger.evaluate(async element => {
+      const cell = element.closest('.kpi-cell')
+      const label = cell.querySelector('.kpi-name')
+      const animations = []
+      for (let node = element; node; node = node.parentElement) {
+        animations.push(...node.getAnimations().filter(a => Number.isFinite(a.effect?.getComputedTiming().endTime)))
+      }
+      await Promise.allSettled(animations.map(a => a.finished))
+      const helpBox = element.getBoundingClientRect()
+      const labelBox = label.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      const x = (helpBox.left + helpBox.right) / 2
+      const y = (helpBox.top + helpBox.bottom) / 2
+      return {
+        cssW: parseFloat(style.width), cssH: parseFloat(style.height),
+        width: helpBox.width, height: helpBox.height, left: helpBox.left, labelRight: labelBox.right,
+        hittable: element.contains(document.elementFromPoint(x, y)),
+      }
+    })
+    const precision = 0.001 // apenas erro de arredondamento de coordenadas, não uma redução do alvo de 44 px.
+    assert.ok(geometry.cssW >= 44 && geometry.cssH >= 44 && geometry.width >= 44 - precision && geometry.height >= 44 - precision,
+      `ajuda mantém alvo de pelo menos 44 × 44 px (${width}px): ${JSON.stringify(geometry)}`)
+    assert.ok(geometry.labelRight <= geometry.left + 1, 'bandeiras não invadem o botão de ajuda')
+    assert.ok(geometry.hittable, 'o alvo de ajuda recebe clique sem bloqueio de outro elemento')
     const market = p.locator('.kpi-cell').filter({ has: trigger }).locator('.kpi-value')
     assert.equal(await market.innerText(), '1,1172')
     assert.equal(await trigger.getAttribute('aria-haspopup'), 'dialog')
@@ -108,6 +129,13 @@ async function smokeConverter(browser, width, base, out) {
     // Fechamento repetido não reabre o diálogo nem perde o foco.
     await p.keyboard.press('Escape')
     assert.equal(await trigger.evaluate(el => el === document.activeElement), true)
+    // O alvo medido deve abrir a ajuda por toque real no celular ou clique no desktop.
+    if (width <= 390) await trigger.tap()
+    else await trigger.click()
+    await dialog.waitFor()
+    assert.equal(await dialog.evaluate(el => el.matches(':modal')), true)
+    await close.click()
+    await dialog.waitFor({ state: 'hidden' })
     assert.deepEqual(errors, [])
     console.log(`PASS conversor FINIMP: dialog, rádio nativo, Tab, Escape, reabertura, clique externo e margem 0,02 ${width}`)
   } finally { await p.close() }
