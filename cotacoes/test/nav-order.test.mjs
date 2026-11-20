@@ -6,9 +6,9 @@ import { readFileSync } from 'node:fs'
 
 // Nav.jsx importa JSX; lê o texto-fonte para travar a ordem do menu.
 const src = readFileSync(new URL('../src/Nav.jsx', import.meta.url), 'utf8')
-test('menu: Mercado hoje, Juros, Cenários e depois as demais; barra do celular com as 4 primeiras', () => {
+test('catálogo histórico preserva posições dos atalhos ao cadastrar a RPN', () => {
   const ids = APP_SECTIONS.map(section => section.id)
-  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora', 'podcast', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
+  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora', 'podcast', 'rpn', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
   assert.match(src, /desktop \? DESKTOP_PRIMARY : MOBILE_PRIMARY/)
 })
 
@@ -44,8 +44,8 @@ test('Calculadoras aparece no menu e mantém busca e acesso direto', () => {
 
 import { DESKTOP_PRIMARY, MOBILE_PRIMARY, MORE_GROUPS, shortcutTitle } from '../src/navigationPriority.js'
 test('prioridade aprovada separa visual de atalhos históricos', () => {
- assert.deepEqual(DESKTOP_PRIMARY, ['resumo','cenarios','juros','calculadora','setores','noticias','podcast'])
- assert.deepEqual(MOBILE_PRIMARY, ['resumo','cenarios','juros','calculadora','setores'])
+ assert.deepEqual(DESKTOP_PRIMARY, ['resumo','cenarios','juros','calculadora','rpn','setores','noticias','podcast'])
+ assert.deepEqual(MOBILE_PRIMARY, ['resumo','cenarios','juros','calculadora','rpn','setores'])
  assert.deepEqual(MORE_GROUPS, [{label:'Acompanhar',ids:['noticias','podcast']},{label:'Consultar',ids:['bancos','feriados']},{label:'Aprender',ids:['aprender']}])
  assert.deepEqual(APP_SECTIONS.filter(t=>!t.oculto).slice(0,10).map(t=>shortcutTitle(t.id)),['Alt+1','Alt+2','Alt+3','Alt+4','Alt+5','Alt+6','Alt+7','Alt+8','Alt+9','Alt+0'])
  assert.deepEqual(parseCommand('BNDES'), {kind:'tab',id:'bndes',sub:''})
@@ -63,7 +63,18 @@ test('Juros fica imediatamente após Cenários em todas as telas, nunca duplicad
   assert.ok(!secondary.includes('juros'))
   const destinations = [...primary, ...secondary]
   assert.equal(new Set(destinations).size, destinations.length)
-  for (const id of ['resumo','cenarios','juros','calculadora','setores','noticias','podcast','bancos','feriados','aprender']) assert.ok(destinations.includes(id), id)
+  for (const id of ['resumo','cenarios','juros','calculadora','rpn','setores','noticias','podcast','bancos','feriados','aprender']) assert.ok(destinations.includes(id), id)
  }
  assert.equal(shortcutTitle('juros'), 'Alt+2')
+})
+
+test('Calculadora RPN é destino principal distinto e não muda Alt+1 a Alt+0', () => {
+  const rpn = APP_SECTIONS.find(section => section.id === 'rpn')
+  assert.equal(rpn.label, 'Calculadora RPN')
+  assert.equal(rpn.mobileLabel, 'RPN')
+  for (const primary of [DESKTOP_PRIMARY, MOBILE_PRIMARY]) assert.equal(primary[primary.indexOf('calculadora') + 1], 'rpn')
+  assert.ok(!MORE_GROUPS.flatMap(x => x.ids).includes('rpn'))
+  assert.equal(shortcutTitle('rpn'), undefined)
+  assert.deepEqual(parseCommand('RPN'), { kind: 'tab', id: 'rpn', sub: '' })
+  assert.deepEqual(parseCommand('CALCULADORAS'), { kind: 'tab', id: 'calculadora', sub: '' })
 })

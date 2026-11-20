@@ -11,6 +11,7 @@ import { quoteHealth } from './dataHealth.js'
 const MarketContext = lazy(() => import('./MarketContext.jsx'))
 const Outros = lazy(() => import('./Outros.jsx'))
 const Calculadora = lazy(() => import('./Calculadora.jsx'))
+const RpnCalculator = lazy(() => import('./RpnCalculator.jsx'))
 const RecuperacaoJudicial = lazy(() => import('./RecuperacaoJudicial.jsx'))
 const Inadimplencia = lazy(() => import('./Inadimplencia.jsx'))
 const Calendario = lazy(() => import('./Calendario.jsx'))
@@ -353,6 +354,8 @@ export default function App() {
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
       {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} quotes={quotes} />}
+
+      {tab === 'rpn' && <RpnCalculator />}
 
       {tab === 'feriados' && <Feriados hol={hol} />}
 

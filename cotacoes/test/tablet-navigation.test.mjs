@@ -14,8 +14,9 @@ test('tablet navigation reuses More and phone layout preserves existing breakpoi
   assert.match(css, /overflow: visible/)
   assert.match(css, /min-height: 48px/)
   assert.match(css, /@media \(max-width:699px\)/)
-  assert.match(css, /grid-template-columns:minmax\(44px,1fr\) minmax\(44px,1fr\) 44px minmax\(70px,1\.6fr\) minmax\(44px,1fr\) 44px/)
+  assert.match(css, /grid-template-columns:repeat\(3,minmax\(44px,1fr\)\) minmax\(44px,1\.55fr\) repeat\(3,minmax\(44px,1fr\)\)/)
   assert.match(css, /min-height:54px/)
+  assert.match(css, /overflow-wrap:anywhere/)
 })
 test('More destinations and dismissal remain available', () => {
   for (const id of ['cenarios', 'noticias', 'config']) assert.ok(APP_SECTIONS.some(section => section.id === id))
