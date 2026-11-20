@@ -275,12 +275,20 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
     assert.equal(await grade.getByRole('button').count(),39)
     assert.equal((await grade.getAttribute('class')).includes(width===780?'--wide':'--portrait'),true)
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true)
+    if (width === 780 && !native) {
+     for (const part of [panel.locator('.rpn-display'), ...await grade.getByRole('button').all()]) {
+      const box = await part.boundingBox()
+      assert.ok(box && box.x>=0 && box.y>=0 && box.x+box.width<=width+1 && box.y+box.height<=height,
+       'tecla e visor dentro da tela no fallback: '+JSON.stringify(box))
+     }
+    }
     assert.match(await value(),/^5(?:,0+)?$/)
    }
    if (native) await page.evaluate(()=>document.exitFullscreen())
    else await close.press('Escape')
    await open.waitFor()
    assert.equal(await panel.getAttribute('data-screen-mode'),null)
+   if (!native) assert.equal(await open.evaluate(el=>document.activeElement===el),true)
    assert.match(await value(),/^5(?:,0+)?$/)
    assert.equal(await page.locator('.nav-top').isVisible(),true)
    await open.click()
@@ -288,6 +296,32 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await open.waitFor()
    assert.match(await value(),/^5(?:,0+)?$/)
    report.push({fullscreen:behavior,passed:true})
+   await context.close()
+  }
+  {
+   // Chrome sem mocks: comprova o top layer e a aplicação real da regra :fullscreen.
+   const context = await browser.newContext({viewport:{width:1000,height:700},screen:{width:1000,height:700},serviceWorkers:'block'})
+   const page = await context.newPage()
+   await page.goto(base+'/#rpn')
+   const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   await panel.waitFor()
+   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+   await panel.focus()
+   for (const k of ['2','Enter','3','+']) await panel.press(k)
+   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
+   const exit = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
+   assert.equal(await page.evaluate(()=>document.fullscreenEnabled),true,'Chrome da suíte suporta a API')
+   await open.click()
+   await exit.waitFor()
+   assert.equal(await panel.evaluate(el=>document.fullscreenElement===el && el.matches(':fullscreen')),true)
+   assert.equal(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true)
+   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
+   await exit.click()
+   await open.waitFor()
+   assert.equal(await page.evaluate(()=>document.fullscreenElement),null)
+   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
+   report.push({fullscreen:'chrome-real',passed:true})
    await context.close()
   }
  }finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close()}
