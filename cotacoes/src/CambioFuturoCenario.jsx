@@ -12,9 +12,10 @@ import { parseMoneyInput } from './moneyInput.js'
 import { marketDate } from './marketReturns.js'
 import { spotDayPlan } from './cambioFuturoSpot.js'
 import { useCentralDaily } from './useHistory.js'
-import { simularParcelasCambiais } from './cambioFuturoCenario.js'
+import { evaluateCrossCurrencyHedge } from './cambioFuturoMoedaCruzada.mjs'
+import { mostrarBrutoTravaCruzada, simularParcelasCambiais, simularParcelasCambiaisComTravaCruzada } from './cambioFuturoCenario.js'
 
-const MOEDAS = { EUR: 'Euro (EUR)', CNH: 'Yuan offshore (CNH)' }
+const MOEDAS = { USD: 'Dólar americano (USD)', EUR: 'Euro (EUR)', CNH: 'Yuan offshore (CNH)' }
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const quoteFmt = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
@@ -25,7 +26,7 @@ const positive = n => Number.isFinite(n) && n > 0
 const today = () => marketDate(Date.now())
 
 function rowVazia(id, vencimento = '') {
-  return { id, vencimento, valorMoeda: '', taxaTrava: '', taxaCenario: '', custoTravaBrl: '', custoSemTravaBrl: '' }
+  return { id, vencimento, valorMoeda: '', taxaCruzada: '', statusCruzada: 'nao-informada', contratadaBrl: false, taxaTrava: '', taxaCenario: '', custoTravaBrl: '', custoSemTravaBrl: '' }
 }
 
 function parcelasExemplo(inicio) {
@@ -51,7 +52,7 @@ function taxaInformada(text) {
 }
 
 export function historicoCenario(file, code, days, end) {
-  if ((code !== 'EUR' && code !== 'CNH') || file?.source !== 'AwesomeAPI' || file.series?.[code]?.source !== code ||
+  if (!Object.hasOwn(MOEDAS, code) || file?.source !== 'AwesomeAPI' || file.series?.[code]?.source !== code ||
       !Array.isArray(file.series?.[code]?.points)) return []
   const desde = new Date(Date.parse(end + 'T12:00:00Z') - days * 864e5).toISOString().slice(0, 10)
   const byDay = new Map()
@@ -99,7 +100,9 @@ function Input({ id, label, value, change, type = 'text', error, compact, min })
 }
 
 export default function CambioFuturoCenario({ onBack, quotes }) {
-  const [code, setCode] = useState('EUR')
+  const [code, setCode] = useState('USD')
+  const [hedge, setHedge] = useState('USD')
+  const crossed = code !== hedge
   const [inicio, setInicio] = useState(today)
   const [liquido, setLiquido] = useState('')
   const [rows, setRows] = useState(() => [rowVazia('p1')])
@@ -109,6 +112,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
   const alternarExemplo = () => {
     if (rascunho) {
       setCode(rascunho.code)
+      setHedge(rascunho.hedge)
       setInicio(rascunho.inicio)
       setLiquido(rascunho.liquido)
       setRows(rascunho.rows)
@@ -116,8 +120,9 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
       return
     }
     const base = today()
-    setRascunho({ code, inicio, liquido, rows })
-    setCode('EUR')
+    setRascunho({ code, hedge, inicio, liquido, rows })
+    setCode('USD')
+    setHedge('USD')
     setInicio(base)
     setLiquido('')
     setRows(parcelasExemplo(base))
@@ -126,28 +131,73 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
   const vencimentoMin = inicio || undefined
   const escolherMoeda = event => {
     if (event.target.value === code) return
+    if ((liquido || rows.some(row => row.valorMoeda || row.taxaTrava || row.taxaCenario || row.taxaCruzada ||
+      row.custoTravaBrl || row.custoSemTravaBrl)) &&
+      !window.confirm('Trocar a moeda da operação limpa valores e cotações. As datas não mudam. Continuar?')) return
     setCode(event.target.value)
+    setHedge(event.target.value)
     setLiquido('')
     setRows(old => old.map(row => rowVazia(row.id, row.vencimento)))
   }
-  const escolherQuantidade = n => setRows(old => Array.from({ length: n }, (_, i) => old[i] ?? rowVazia('p' + (i + 1))))
-  const mudarLinha = (id, key, value) => setRows(old => old.map(row => {
+  const escolherTrava = event => {
+    const next = event.target.value
+    if (next === hedge) return
+    if (rows.some(row => row.taxaTrava || row.taxaCruzada || row.custoTravaBrl) &&
+      !window.confirm('Trocar a moeda da trava limpa as cotações e custos da trava. Valores da operação e datas não mudam. Continuar?')) return
+    setHedge(next)
+    setRows(old => old.map(row => ({ ...row, taxaTrava: '', taxaCruzada: '',
+      statusCruzada: 'nao-informada', contratadaBrl: false, custoTravaBrl: '' })))
+  }
+  const escolherQuantidade = n => {
+    if (n < rows.length && rows.slice(n).some(row => row.vencimento || row.valorMoeda || row.taxaTrava || row.taxaCenario ||
+      row.taxaCruzada || row.custoTravaBrl || row.custoSemTravaBrl) &&
+      !window.confirm('Diminuir a quantidade descarta as últimas parcelas preenchidas. Continuar?')) return
+    setRows(old => Array.from({ length: n }, (_, i) => old[i] ?? rowVazia('p' + (i + 1))))
+  }
+  const mudarLinha = (id, key, value) => {
+    const current = rows.find(row => row.id === id)
+    if (key === 'vencimento' && current?.vencimento !== value && (current?.taxaTrava || current?.taxaCenario || current?.taxaCruzada) &&
+      !window.confirm('Mudar este vencimento limpa as cotações da parcela. Continuar?')) return
+    setRows(old => old.map(row => {
     if (row.id !== id || row[key] === value) return row
-    return key === 'vencimento' ? { ...row, vencimento: value, taxaTrava: '', taxaCenario: '' } : { ...row, [key]: value }
-  }))
+    return key === 'vencimento' ? { ...row, vencimento: value, taxaTrava: '', taxaCenario: '',
+      taxaCruzada: '', statusCruzada: 'nao-informada', contratadaBrl: false }
+      : key === 'taxaCruzada' ? { ...row, taxaCruzada: value, statusCruzada: 'nao-informada' }
+      : key === 'valorMoeda' ? { ...row, valorMoeda: value, statusCruzada: 'nao-informada', contratadaBrl: false }
+      : key === 'taxaTrava' ? { ...row, taxaTrava: value, contratadaBrl: false }
+      : { ...row, [key]: value }
+    }))
+  }
 
   const validacao = rows.map(row => ({
     id: row.id, vencimento: row.vencimento, valorMoeda: moedaInformada(row.valorMoeda),
-    taxaTrava: taxaInformada(row.taxaTrava), taxaCenario: taxaInformada(row.taxaCenario),
+    taxaTrava: taxaInformada(row.taxaTrava), taxaCruzada: taxaInformada(row.taxaCruzada), taxaCenario: taxaInformada(row.taxaCenario),
     custoTravaBrl: moedaInformada(row.custoTravaBrl, true), custoSemTravaBrl: moedaInformada(row.custoSemTravaBrl, true),
   }))
   const liquidoValidado = moedaInformada(liquido)
-  const result = simularParcelasCambiais({
+  const crossResults = crossed ? rows.map((row, i) => {
+    const v = validacao[i]
+    if (!inicio || !row.vencimento || row.vencimento <= inicio || v.valorMoeda.value == null) return null
+    return evaluateCrossCurrencyHedge({
+      usdAmount: v.valorMoeda.value, maturity: row.vencimento, hedgeCurrency: hedge,
+      scenarioUsdBrl: v.taxaCenario.value,
+      usdToHedge: v.taxaCruzada.value == null || row.statusCruzada !== 'contratada' ? undefined
+        : { rate: v.taxaCruzada.value, maturity: row.vencimento, contracted: true },
+      hedgeToBrl: v.taxaTrava.value == null ? undefined
+        : { rate: v.taxaTrava.value, maturity: row.vencimento, contracted: row.contratadaBrl },
+      hypotheticalUsdToHedge: row.statusCruzada === 'cenario' ? v.taxaCruzada.value ?? undefined : undefined,
+    })
+  }) : []
+  const simular = crossed ? simularParcelasCambiaisComTravaCruzada : simularParcelasCambiais
+  const result = simular({
     inicio, liquidoBrl: liquidoValidado.value,
-    parcelas: validacao.map(row => ({
+    parcelas: validacao.map((row, i) => ({
       id: row.id, vencimento: row.vencimento, valorMoeda: row.valorMoeda.value,
       // Tarifa inválida não pode virar tarifa zero silenciosamente.
-      taxaTrava: row.custoTravaBrl.error ? null : row.taxaTrava.value,
+      taxaTrava: row.custoTravaBrl.error ? null : crossed
+        ? (crossResults[i]?.status === 'locked' ? row.taxaTrava.value : null)
+        : row.taxaTrava.value,
+      ...(crossed ? { taxaParidade: crossResults[i]?.status === 'locked' ? row.taxaCruzada.value : null } : {}),
       taxaCenario: row.custoSemTravaBrl.error ? null : row.taxaCenario.value,
       ...(row.custoTravaBrl.value == null ? {} : { custoTravaBrl: row.custoTravaBrl.value }),
       ...(row.custoSemTravaBrl.value == null ? {} : { custoSemTravaBrl: row.custoSemTravaBrl.value }),
@@ -157,7 +207,6 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
   const tipoDiferenca = !Number.isFinite(diferenca) || diferenca === 0 ? 'Diferença neste cenário'
     : diferenca > 0 ? 'Economia neste cenário' : 'Custo a mais neste cenário'
   const resultados = new Map((result.parcelas ?? []).map(row => [row.id, row]))
-  const temResultado = Number.isFinite(result.totalComTravaBrl) || Number.isFinite(result.totalSemTravaBrl)
   const mostrarCredito = liquido.trim() !== ''
   const equilibrio = rows.length === 1 ? resultados.get(rows[0].id)?.equilibrio : null
   return <section className="cx cf cf-pattern cf-cenario bw calc-standard calc-workspace" aria-labelledby="cf-c-heading">
@@ -179,27 +228,36 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
     {emExemplo && <p className="cf-c-example-note" role="status"><strong>Exemplo fictício.</strong> Valores e cotações das parcelas são hipotéticos. Referência à vista e histórico são separados.</p>}
     <p className="cf-c-secondary"><a href="#calculadora/cambio-futuro/tir-usd">Simular TIR da parcela em USD</a></p>
     <article className="desk-panel cx-panel cf-input" aria-labelledby="cf-c-operacao">
-      <header className="cx-heading"><h3 id="cf-c-operacao">1. Operação</h3></header>
+      <header className="cx-heading cf-c-section-title"><h3 id="cf-c-operacao">1. Operação</h3>
+        <CalculatorHelp title="Moedas e cotação indicativa">
+          <p>A referência de compra à vista vem da AwesomeAPI. Para CNH offshore, é um cruzamento. Não preenche o cenário. Horário de Brasília, só quando comprovado pela fonte.</p>
+          <p>Trocar a moeda da operação limpa valores e cotações. Trocar só a moeda da trava preserva o valor original e o cenário. As datas não mudam. Diminuir a quantidade descarta as últimas parcelas.</p>
+        </CalculatorHelp>
+      </header>
       <div className="cf-c-section-body">
         <div className="cf-c-operation">
           <div className="cx-field">
-            <label htmlFor="cf-c-moeda" className="cf-com-bandeira"><Flag code={code} width={20} height={14} /> Moeda</label>
-            <select id="cf-c-moeda" value={code} onChange={escolherMoeda} aria-describedby="cf-c-moeda-nota">
+            <label htmlFor="cf-c-moeda" className="cf-com-bandeira"><Flag code={code} width={20} height={14} /> Moeda da operação</label>
+            <select id="cf-c-moeda" value={code} onChange={escolherMoeda}>
               {Object.entries(MOEDAS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
           </div>
           <div className="cx-field">
+            <label htmlFor="cf-c-trava-moeda" className="cf-com-bandeira"><Flag code={hedge} width={20} height={14} /> Moeda da trava</label>
+            <select id="cf-c-trava-moeda" value={hedge} onChange={escolherTrava}>
+              {(code === 'USD' ? Object.entries(MOEDAS) : [[code, MOEDAS[code]]]).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+          </div>
+          <div className="cx-field">
             <span id="cf-c-quantidade">Quantidade de parcelas</span>
-            <div className="cf-c-count" role="group" aria-labelledby="cf-c-quantidade" aria-describedby="cf-c-q-nota">
+            <div className="cf-c-count" role="group" aria-labelledby="cf-c-quantidade">
               {[1, 2, 3, 4, 5].map(n => <button type="button" key={n} aria-pressed={rows.length === n}
                 aria-label={n === 1 ? '1 parcela' : `${n} parcelas`} onClick={() => escolherQuantidade(n)}>{n}</button>)}
             </div>
           </div>
           <Input id="cf-c-inicio" label="Data inicial" value={inicio} change={setInicio} type="date" />
         </div>
-        <small id="cf-c-moeda-nota" className="cf-observacao">Trocar a moeda limpa valores e cotações. As datas são mantidas.</small>
-        <small id="cf-c-q-nota" className="cf-observacao">Diminuir a quantidade descarta as últimas parcelas.</small>
-        <small className="cf-observacao"><ReferenciaMesa code={code} quote={quotes?.[code]} plan={spotDayPlan(now)} /> A referência à vista não preenche o cenário.</small>
+        <small className="cf-observacao"><ReferenciaMesa code={hedge} quote={quotes?.[hedge]} plan={spotDayPlan(now)} compact /></small>
         <details className="cf-c-details">
           <summary>Custos e valor líquido (opcionais)</summary>
           <p className="cf-notice">Informe o valor líquido recebido em reais, já descontados os custos iniciais. Ele é usado no custo do período e na TIR.</p>
@@ -217,25 +275,61 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
     </article>
 
     <article className="desk-panel cx-panel cf-input" aria-labelledby="cf-c-parcelas">
-      <header className="cx-heading"><h3 id="cf-c-parcelas">2. Parcelas e cotações</h3></header>
+      <header className="cx-heading cf-c-section-title"><h3 id="cf-c-parcelas">2. Parcelas e cotações</h3>
+        <CalculatorHelp title="Parcelas e cotações">
+          <p>As cotações são de cada vencimento. Alterar a data limpa as cotações da parcela.</p>
+          {crossed ? <p>Para computar uma trava cruzada, confirme as duas pernas para o mesmo vencimento, cobrindo o mesmo valor.</p>
+            : <p>Sem o cenário, o total com trava ainda é calculado quando todas as parcelas estiverem preenchidas.</p>}
+        </CalculatorHelp>
+      </header>
       <div className="cf-c-section-body">
-        <p className="cf-notice">As cotações são para cada vencimento. Ao mudar uma data, as duas cotações daquela parcela são limpas.</p>
-        <p className="cf-notice">Sem o cenário, o total com trava ainda é calculado quando todas as parcelas estiverem preenchidas.</p>
-        <div className="cf-c-columns" aria-hidden="true"><span>Parcela</span><span>Vencimento</span><span>Valor ({code})</span><span>Com trava (R$/{code})</span><span>Sem trava (R$/{code})</span></div>
+        <div className="cf-c-columns" aria-hidden="true"><span>Parcela</span><span>Vencimento</span><span>Valor ({code})</span><span>{crossed ? 'Cotação futura' : 'Cotação contratada'} (R$/{hedge})</span><span>Sem trava (R$/{code})</span></div>
         {rows.map((row, i) => <fieldset key={row.id} className="cf-c-row">
           <legend className="sr-only">Parcela {i + 1}</legend><span aria-hidden="true" className="cf-c-index"><span>Parcela </span>{i + 1}</span>
           <Input compact id={`cf-c-${row.id}-data`} label={`Vencimento da parcela ${i + 1}`} type="date" min={vencimentoMin} value={row.vencimento} change={v => mudarLinha(row.id, 'vencimento', v)}
             error={inicio && row.vencimento && row.vencimento <= inicio ? 'O vencimento deve ser posterior à data inicial.' : undefined} />
           <Input compact id={`cf-c-${row.id}-valor`} label={`Valor da parcela ${i + 1} (${code})`} value={row.valorMoeda} change={v => mudarLinha(row.id, 'valorMoeda', v)} error={validacao[i].valorMoeda.error} />
-          <Input compact id={`cf-c-${row.id}-trava`} label={`Com trava da parcela ${i + 1} (R$/${code})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
+          <Input compact id={`cf-c-${row.id}-trava`} label={`Cotação ${crossed ? 'futura' : 'contratada'} da parcela ${i + 1} (R$/${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
           <Input compact id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava da parcela ${i + 1} (R$/${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
+          {crossed && <div className="cf-c-cross-fields">
+            <Input id={`cf-c-${row.id}-cross`} label={`Conversão no vencimento (${hedge}/USD)`} value={row.taxaCruzada} change={v => mudarLinha(row.id, 'taxaCruzada', v)} error={validacao[i].taxaCruzada.error} />
+            <div className="cx-field">
+              <label htmlFor={`cf-c-${row.id}-cross-status`}>Conversão cruzada</label>
+              <select id={`cf-c-${row.id}-cross-status`} value={row.statusCruzada} onChange={e => mudarLinha(row.id, 'statusCruzada', e.target.value)}>
+                <option value="nao-informada">Não informada</option><option value="cenario">Hipótese de cenário</option>
+                <option value="contratada">Contratada para esta parcela</option>
+              </select>
+            </div>
+            <label className="cf-c-cross-check"><input type="checkbox" checked={row.contratadaBrl}
+              onChange={e => mudarLinha(row.id, 'contratadaBrl', e.target.checked)} /> Trava em reais contratada para esta parcela</label>
+          </div>}
         </fieldset>)}
       </div>
     </article>
 
     <article className="desk-panel cx-panel cf-quote" aria-labelledby="cf-c-resultados">
-      <header className="cx-heading"><h3 id="cf-c-resultados">3. Resultado geral</h3></header>
+      <header className="cx-heading cf-c-section-title"><h3 id="cf-c-resultados">3. Resultado geral</h3>
+        <CalculatorHelp title="Resultado da comparação">
+          {crossed ? <p>Detalhes cruzados mostram valores brutos por parcela. Os totais somam os pagamentos e custos informados, sem trazer a valor presente. Cenário hipotético nunca entra como trava.</p>
+            : <><p>Preencha todas as parcelas para ver o total. Complete o cenário para comparar os totais.</p><p>Soma nominal das parcelas. Só entram os custos informados.</p></>}
+        </CalculatorHelp>
+      </header>
       <div className="cf-c-section-body">
+        {crossed && <>
+          <h4>Conversão cruzada por parcela · valores brutos</h4>
+          {crossResults.map((value, i) => <section className="cf-c-detail-item" key={rows[i].id} aria-label={`Resultado cruzado da parcela ${i + 1}`}>
+            <h4>Parcela {i + 1} · {dateBr(rows[i].vencimento)}</h4>
+            {value?.ok ? <>
+              <p className="cf-notice" role="status">{value.status === 'locked' ? 'Cobertura integral indicada com os dados informados.' : `Exposição residual USD/${hedge}. Não é cobertura integral.`}</p>
+              <dl>
+                <div><dt>Sem trava no cenário USD/BRL</dt><dd>{currencyFmt(value.unhedgedBrl)}</dd></div>
+                {value.status === 'locked' && <div><dt>Pagamento travado</dt><dd>{currencyFmt(mostrarBrutoTravaCruzada(validacao[i].valorMoeda.value, validacao[i].taxaTrava.value, validacao[i].taxaCruzada.value))}</dd></div>}
+                {value.status === 'hypothetical' && <div><dt>Pagamento hipotético</dt><dd>{currencyFmt(mostrarBrutoTravaCruzada(validacao[i].valorMoeda.value, validacao[i].taxaTrava.value, validacao[i].taxaCruzada.value))}</dd></div>}
+                {Number.isFinite(value.notionalHedge) && <div><dt>Valor equivalente em {hedge}</dt><dd>{decimal.format(value.notionalHedge)}</dd></div>}
+              </dl>
+            </> : <p className="cf-notice" role="status">{value?.error || ''}</p>}
+          </section>)}
+        </>}
         <dl className="cf-c-metrics">
           <div><dt>Total com trava</dt><dd id="cf-c-total-trava">{currencyFmt(result.totalComTravaBrl)}</dd></div>
           <div><dt>Total sem trava no cenário</dt><dd id="cf-c-total-cenario">{currencyFmt(result.totalSemTravaBrl)}</dd></div>
@@ -249,9 +343,8 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
           <div><dt>TIR anual com trava</dt><dd>{pct(result.tirComTravaPct)}</dd></div>
           <div><dt>TIR anual sem trava no cenário</dt><dd>{pct(result.tirSemTravaPct)}</dd></div>
         </dl>}
-        <p className="cf-notice" role="status">{result.erro || (!temResultado ? 'Preencha todas as parcelas para ver o total.' : !Number.isFinite(diferenca) ? 'Complete o cenário para comparar os totais.' : '')}</p>
+        {result.erro && inicio && <p className="cf-notice" role="status">{result.erro}</p>}
         <div className="cf-c-result-foot">
-          <p className="cf-notice">Soma nominal das parcelas. Só entram os custos informados.</p>
           <details className="cf-c-details">
             <summary>Ver detalhes por parcela</summary>
             <div className="cf-c-detail-grid">{rows.map((row, i) => {
@@ -271,6 +364,6 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
         <p className="cf-notice">A trava dá previsibilidade, não garante economia.</p>
       </div>
     </article>
-    <Historico code={code} end={marketDate(now)} />
+    <Historico code={hedge} end={marketDate(now)} />
   </section>
 }

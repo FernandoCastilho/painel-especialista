@@ -33,29 +33,32 @@ function ReferenciaIndisponivel({ loading }) {
   return loading ? 'Consultando a referência à vista…' : 'Referência à vista indisponível.'
 }
 
-function EurDiario({ plan, price }) {
+function EurDiario({ plan, price, compact }) {
   const history = useCentralDaily()
   const ref = mesaDailyEur(history.data, plan)
+  if (ref && compact) return <>Compra indicativa · {dataBr(ref.date)}</>
   return ref ? <>Referência diária indicativa (compra): R$ {spotBr(ref.value)}/EUR · {dataBr(ref.date)} (data de Brasília) · AwesomeAPI. {explicacaoPonto(price, ref)}</>
     : <ReferenciaIndisponivel loading={history.status === 'loading'} />
 }
 
-function CnhIntradiario({ plan, price }) {
+function CnhIntradiario({ plan, price, compact }) {
   const history = useIntraday('CNH', fromInput(plan.previous))
   const ref = mesaIntradayCnh(history.data, plan)
+  if (ref && compact) return <>Compra indicativa · {dataBr(ref.date)} às {horaBr.format(ref.t)}</>
   return ref ? <>Yuan offshore à vista, último ponto indicativo de compra: R$ {spotBr(ref.value)}/CNH · {dataBr(ref.date)} às {horaBr.format(ref.t)} (hora de Brasília) · AwesomeAPI (cruzamento). {explicacaoPonto(price, ref)}</>
     : <ReferenciaIndisponivel loading={history.status === 'loading'} />
 }
 
-export function ReferenciaMesa({ code, quote, offer = '', plan }) {
+export function ReferenciaMesa({ code, quote, offer = '', plan, compact = false }) {
   const ref = mesaSpotRange(code, quote, plan)
   const price = parseDecimal(offer)
   if (ref) {
+    if (compact) return <>Compra indicativa · {dataBr(ref.date)} às {horaBr.format(ref.time)}</>
     const confronto = explicacaoFaixa(price, ref)
     return <>{ref.today ? 'À vista hoje' : 'Última faixa à vista'} (compra–venda): R$ {spotBr(ref.bid)} a {spotBr(ref.ask)}/{code} · {dataBr(ref.date)} às {horaBr.format(ref.time)} (hora de Brasília) · {code === 'CNH' ? 'AwesomeAPI (CNH offshore, cruzamento)' : 'AwesomeAPI'}.{confronto && <> {confronto}</>}</>
   }
-  if (plan.open || !plan.previous) return <ReferenciaIndisponivel />
-  return code === 'EUR' ? <EurDiario plan={plan} price={price} /> : <CnhIntradiario plan={plan} price={price} />
+  if (code === 'USD' || plan.open || !plan.previous) return <ReferenciaIndisponivel />
+  return code === 'EUR' ? <EurDiario plan={plan} price={price} compact={compact} /> : <CnhIntradiario plan={plan} price={price} compact={compact} />
 }
 
 function Campo({ id, label, value, onChange, type = 'text', placeholder, erro, observacao }) {

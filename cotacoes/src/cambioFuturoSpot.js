@@ -5,7 +5,7 @@ import { QUOTE_AGE_LIMIT_MS } from './quoteFreshness.js'
 import { cnhQuoteError } from './quoteSafety.js'
 
 const DAY = 864e5
-const codes = new Set(['EUR', 'CNH'])
+const codes = new Set(['USD', 'EUR', 'CNH'])
 const goodValue = value => Number.isFinite(value) && value > 0
 const validTime = (t, now) => goodValue(t) && t <= now && Number.isFinite(new Date(t).getTime())
 
