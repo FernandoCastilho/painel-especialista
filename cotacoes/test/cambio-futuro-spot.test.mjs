@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { explicacaoFaixa, explicacaoPonto, mesaDailyEur, mesaIntradayCnh, mesaSpotRange, spotDayPlan } from '../src/cambioFuturoSpot.js'
+import { explicacaoFaixa, explicacaoPonto, mesaDailyEur, mesaIntradayCnh, mesaSpotRange, mesaUsdReference, spotDayPlan } from '../src/cambioFuturoSpot.js'
 
 const at = time => Date.parse(time + ':00-03:00')
 const eur = (time, extras = {}) => ({ source: 'EUR', bid: 6.491, ask: 6.5, timestamp: at(time), ...extras })
@@ -78,4 +78,40 @@ test('ponto histórico só compara o número exibido, sem % ou mérito de preço
   assert.equal(explicacaoPonto(.8499, reference), 'Partida abaixo do valor indicativo exibido.')
   assert.equal(explicacaoPonto(.8501, reference), 'Partida acima do valor indicativo exibido.')
   assert.equal(explicacaoPonto(.85004, reference), 'Partida igual ao valor indicativo exibido.')
+})
+
+
+test('USD em feriado: usa bid intradiário da última sessão, sem misturar faixa nem outra moeda', () => {
+  const plan = spotDayPlan(at('2026-11-20T12:00'))
+  const point = { t: at('2026-11-19T18:08'), bid: 5.9346 }
+  const holiday = { t: at('2026-11-20T09:55'), bid: 5.9999 }
+  const daily = { source: 'AwesomeAPI', generatedAt: at('2026-11-20T10:20'), series: { USD: {
+    source: 'USD', points: [holiday, { t: at('2026-11-19T17:55'), bid: 5.931 }],
+  } } }
+  const intraday = { source: 'USD', feed: 'AwesomeAPI (coleta central a cada 5 min)', generatedAt: daily.generatedAt, points: [
+    holiday, { t: at('2026-11-19T18:09'), bid: 5.95, stale: true }, { t: at('2026-11-18T18:08'), bid: 5.89 }, point,
+  ] }
+  assert.equal(mesaSpotRange('USD', { source: 'USD', timestamp: holiday.t, bid: 5.99, ask: 6 }, plan), null)
+  assert.deepEqual(mesaUsdReference(intraday, daily, plan), { date: '2026-11-19', t: point.t, value: point.bid })
+  assert.deepEqual(mesaUsdReference(null, daily, plan), { date: '2026-11-19', value: 5.931 })
+  assert.deepEqual(mesaUsdReference({ ...intraday, feed: 'reserva' }, daily, plan), { date: '2026-11-19', value: 5.931 })
+  assert.deepEqual(mesaUsdReference({ ...intraday, source: 'CNH' }, daily, plan), { date: '2026-11-19', value: 5.931 })
+  assert.equal(mesaUsdReference(intraday, daily, spotDayPlan(at('2026-11-19T10:34'))), null)
+  assert.equal(mesaUsdReference(intraday, daily, { ...plan, day: '2026-11-20' }), null)
+  for (const bad of [{ ...daily, fallback: true }, { ...daily, source: 'BCE' }, { ...daily, generatedAt: at('2026-11-20T12:30') },
+    { ...daily, generatedAt: at('2026-11-19T16:00') },
+    { ...daily, series: { USD: { source: 'EUR', points: daily.series.USD.points } } },
+    { ...daily, series: { USD: { source: 'USD', points: [holiday] } } }]) {
+    assert.equal(mesaUsdReference(null, bad, plan), null)
+  }
+})
+
+
+test('USD com pregão já encerrado não prioriza a faixa de ontem sobre a sessão atual', () => {
+  const plan = spotDayPlan(at('2026-11-19T19:00'))
+  assert.equal(plan.day, '2026-11-19')
+  const staleDay = { source: 'USD', timestamp: at('2026-11-18T17:55'), bid: 5.94, ask: 5.95 }
+  assert.equal(mesaSpotRange('USD', staleDay, plan), null)
+  assert.ok(mesaSpotRange('EUR', { ...staleDay, source: 'EUR' }, plan), 'regra EUR anterior preservada')
+  assert.ok(mesaSpotRange('USD', { ...staleDay, timestamp: at('2026-11-19T17:55') }, plan))
 })

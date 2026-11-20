@@ -555,8 +555,13 @@ async function assertCambioFuturoCenario(browser) {
     page.on('dialog', dialog => dialog.accept())
     try {
       await fixtures(page)
+      const holidaySpot = theme === 'dark'
       await page.route('**/quotes.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now, quotes: {
-        USDBRL: { bid: 5.71, ask: 5.72, high: 5.75, low: 5.65, timestamp: Date.parse('2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
+        USDBRL: { bid: 5.71, ask: 5.72, high: 5.75, low: 5.65, timestamp: Date.parse(holidaySpot ? '2026-11-20T14:55:00Z' : '2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
+        EURBRL: { bid: 6.55, ask: 6.56, high: 6.60, low: 6.50, timestamp: Date.parse('2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
+      } } }))
+      await page.route('**/intraday.json*', route => route.fulfill({ json: { source: 'AwesomeAPI (coleta central a cada 5 min)', generatedAt: now - 60000, resolution: '5 min', series: {
+        USD: { points: [[Date.parse('2026-11-19T21:08:00Z'), 5.7051], [Date.parse('2026-11-20T14:55:00Z'), 5.71]] },
       } } }))
       await page.route('**/history.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now - 60000, series: {
         USD: { source: 'USD', points: [{ t: t('2026-08-25'), bid: 5.60 }, { t: t('2026-11-12'), bid: 5.70 }, { t: t('2026-11-19'), bid: 5.71 }] },
@@ -564,6 +569,17 @@ async function assertCambioFuturoCenario(browser) {
         CNH: { source: 'CNY', points: [{ t: t('2026-11-12'), bid: .85 }, { t: t('2026-11-19'), bid: .86 }] },
       } } }))
       await page.clock.setFixedTime(new Date(now))
+      if (width === 1440) {
+        await page.goto(`${base}/#resumo`)
+        const tape = page.getByRole('region', { name: 'Cotações e juros de referência', exact: true })
+        for (const code of ['USD', 'EUR']) {
+          const flag = tape.locator('.tape-set:not([aria-hidden]) .tape-fx-label').filter({ hasText: code + '/BRL' }).locator('.flag')
+          await flag.waitFor({ state: 'visible' })
+          assert.equal(await flag.getAttribute('aria-hidden'), 'true')
+          assert.equal(await flag.locator('svg').count(), 1)
+        }
+        assert.equal(await tape.locator('.tape-set:not([aria-hidden]) .tape-fx-label').count(), 2)
+      }
       await page.goto(`${base}/#calculadora/cambio-futuro`)
       const section = page.locator('section.cf-cenario')
       await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
@@ -572,7 +588,10 @@ async function assertCambioFuturoCenario(browser) {
       assert.equal(await section.locator('#cf-c-p1-cenario').inputValue(), '')
       assert.equal(await section.locator('#cf-c-moeda').inputValue(), 'USD')
       assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'USD')
-      await section.getByText('Compra indicativa · 19/11/2026 às 18:04', { exact: true }).waitFor()
+      await section.getByText(holidaySpot ? 'Compra indicativa · 19/11/2026 às 18:08' : 'Compra indicativa · 19/11/2026 às 18:04', { exact: true }).waitFor()
+      assert.equal(await page.locator('.tape .tape-fx-label').count(), 0, 'bandeiras na faixa só na página inicial')
+      assert.equal(await section.locator('#cf-c-p1-trava').inputValue(), '', 'indicativo não preenche cotação')
+      assert.equal(await section.locator('#cf-c-p1-cenario').inputValue(), '', 'indicativo não preenche cenário')
       for (const [title, words] of [
         ['Moedas e cotação indicativa', /AwesomeAPI.*trocar/is],
         ['Parcelas e cotações', /vencimento.*Sem o cenário/s],
@@ -582,6 +601,11 @@ async function assertCambioFuturoCenario(browser) {
         await help.click()
         const modal = page.getByRole('dialog', { name: title, exact: true })
         assert.match(await modal.innerText(), words)
+        if (title === 'Moedas e cotação indicativa') {
+          const quoteDetail = holidaySpot ? /Compra indicativa: R\$ 5,7051\/USD/i : /Última faixa à vista.*5,7100.*5,7200\/USD/i
+          await modal.getByText(quoteDetail).waitFor()
+          assert.doesNotMatch(await section.innerText(), /5,7051|5,7100/, 'valor fica apenas no ?')
+        }
         await page.keyboard.press('Escape')
         assert.equal(await modal.count(), 0)
       }

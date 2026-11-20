@@ -299,7 +299,7 @@ export default function App() {
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
     <header className="term-head">
       <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
-      <Tape quotes={quotes} rates={rates} oil={oil.data} />
+      <Tape quotes={quotes} rates={rates} oil={oil.data} showFxFlags={tab === 'resumo'} />
     </header>
     <div className="nav-top"><Nav tab={tab} onTab={(id) => goto(id)} /></div>
     {tab === 'resumo' && (
