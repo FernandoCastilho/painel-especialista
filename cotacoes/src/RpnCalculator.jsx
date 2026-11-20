@@ -99,13 +99,19 @@ function RatePanel({ id, open, onClose, onUse, canUse }) {
         aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-issue` : undefined} placeholder="Ex.: 1,00" />
     </label>
     <div className="rpn-rates-periods">
-      <label className="rpn-field"><span>De</span><select value={from} onChange={e => setFrom(e.target.value)}>
-        {options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-      </select></label>
+      <div className="rpn-field">
+        <label htmlFor={`${id}-from`}>De</label>
+        <select id={`${id}-from`} value={from} onChange={e => setFrom(e.target.value)}>
+          {options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </div>
       <button type="button" className="rpn-rates-swap" onClick={swap} aria-label="Inverter origem e destino">⇄</button>
-      <label className="rpn-field"><span>Para</span><select value={to} onChange={e => setTo(e.target.value)}>
-        {options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-      </select></label>
+      <div className="rpn-field">
+        <label htmlFor={`${id}-to`}>Para</label>
+        <select id={`${id}-to`} value={to} onChange={e => setTo(e.target.value)}>
+          {options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </div>
     </div>
     {needsBasis && <label className="rpn-field"><span>Base diária</span><select value={basis} onChange={e => setBasis(e.target.value)} aria-label="Base diária" aria-describedby={`${id}-basis-hint`}>
       <option value="">Escolha a base</option><option value="365">365 dias corridos/ano</option><option value="252">252 dias úteis/ano</option>

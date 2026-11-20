@@ -267,3 +267,19 @@ test('teclado de retrato reserva 44 px por coluna, inclusive na largura útil me
   const existingBorderBox = 5*43.75 + 4*5 + 2*6 + 2
   assert.ok(5*44 + 4*gap + 2*padding + 2 <= existingBorderBox)
 })
+
+test('De e Para têm rótulos nativos próprios sem o texto das opções no rótulo', async t => {
+  const { RatePanel } = resources(null)
+  const ui = hookRenderer(() => RatePanel({id:'taxas-a11y',open:true,onUse(){},onClose(){},canUse:true}))
+  t.after(() => ui.close())
+  await ui.settle()
+  const elements=nodes(ui.value)
+  for(const [name,control,value] of [['De','taxas-a11y-from','month'],['Para','taxas-a11y-to','year']]){
+    const label=elements.find(element=>element.type==='label' && element.props.htmlFor===control)
+    assert.equal(label?.props.children,name)
+    const select=elements.find(element=>element.type==='select' && element.props.id===control)
+    assert.equal(select?.props.value,value)
+    assert.deepEqual(Array.from(select.props.children, option=>option.props.value),['day','month','year'])
+    assert.ok(!nodes(label).includes(select))
+  }
+})

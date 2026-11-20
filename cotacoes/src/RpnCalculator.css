@@ -149,7 +149,7 @@
 .rpn-rates :is(.rpn-rates-close, .rpn-rates-swap) { min-inline-size: 44px; padding: 0; font-size: 19px; }
 .rpn-rates-periods { display: grid; grid-template-columns: minmax(0,1fr) 44px minmax(0,1fr); gap: 7px; align-items: end; }
 .rpn-field { display: grid; gap: 4px; color: inherit; min-inline-size: 0; }
-.rpn-field > span, .rpn-rate-result strong { font-size: 13px; font-weight: 700; }
+.rpn-field > :is(span, label), .rpn-rate-result strong { font-size: 13px; font-weight: 700; }
 .rpn-rate-result { display: grid; gap: 4px; padding: 10px; border: 1px solid #a79160; border-radius: 7px; }
 .rpn-rate-result output { font: 700 clamp(17px,2vw,27px)/1.3 ui-monospace,monospace; overflow-wrap: anywhere; }
 .rpn-rate-result p { margin: 0; color: var(--rpn-muted); font-size: 13px; }
