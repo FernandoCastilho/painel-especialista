@@ -123,6 +123,7 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
     const screen=entry!==null?entry.replace('.',','):toBrazil(number,places,sci||Math.abs(number)>=1e10||(number!==0&&Math.abs(number)<1e-9))
     return { display:!on?'':auxiliaryView??(program?programDisplay():dateView??screen),
       message, x:number, stack:[...stack], shift, begin, program, pc,
+        tapeInput: on && !program && !running && !paused && !message ? entry?.replace('.', ',') ?? null : null,
       indicators:{begin,compound,program,on,dmy,running:running||paused,paused}, memory:{programLines:programCapacity(),registers:dataCapacity()}, finance:{...finance}, registers:{...registers}, cashFlows:flowList(Math.min(cashLength-1,dataCapacity())) }
   }
   function setDisplay(value) {

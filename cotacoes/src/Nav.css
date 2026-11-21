@@ -75,3 +75,6 @@
   .term-head .topbar-tabs.priority-desktop > button,
   .term-head .topbar-tabs.priority-desktop > .more-tab > button { min-width:44px; min-height:44px; flex-shrink:0; }
 }
+
+.topbar-tabs > .nav-rpn-shortcut { min-inline-size: 44px; display: inline-grid; place-items: center; }
+.nav-rpn-icon { display: block; flex: none; }

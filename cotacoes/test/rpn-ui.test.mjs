@@ -412,3 +412,29 @@ test('limpeza do histórico mantém a calculadora e permite recuperar contas ap�
   assert.equal(history().entries.map(e => e.result).join(','), '9,5')
   assert.equal(controller.snapshot().x, 9)
 })
+
+test('fita atualiza a mesma linha durante digitação e só registra o resultado após a operação', async t => {
+  const ui = setup(t, createClassicRpnController)
+  await ui.render.settle()
+  ui.find(node => node.props?.['aria-label'] === 'Histórico de contas').props.onClick()
+  await ui.render.settle()
+  const tape = () => ui.find(node => node.type?.name === 'HistoryPanel').props
+  const keyboard = async (key, draft, count = 0) => {
+    ui.panel().props.onKeyDown(event(key))
+    await ui.render.settle()
+    assert.equal(tape().draft, draft)
+    assert.equal(tape().entries.length, count)
+  }
+  await keyboard('1', '1')
+  await keyboard('2', '12')
+  await keyboard(',', '12,')
+  await keyboard('5', '12,5')
+  await keyboard('Backspace', '12,')
+  await keyboard('5', '12,5')
+  await keyboard('Enter', null)
+  await keyboard('3', '3')
+  await keyboard('+', null, 1)
+  assert.equal(tape().entries[0].result, 15.5)
+  await keyboard('9', '9', 1)
+  await keyboard('Delete', null, 1)
+})

@@ -97,11 +97,11 @@
   padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right))
     max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
 }
-body:has(main[data-tab="rpn"] > .rpn-workspace[data-screen-mode="page"]) :is(.term-head, .nav-top, .mascot-tray, .skip-link) { display: none; }
-main.app[data-tab="rpn"]:has(> .rpn-workspace[data-screen-mode="page"]) {
+body:has(main[data-tab="rpn"] .rpn-workspace[data-screen-mode="page"]) :is(.term-head, .nav-top, .mascot-tray, .skip-link) { display: none; }
+main.app[data-tab="rpn"]:has(.rpn-workspace[data-screen-mode="page"]) {
   max-width: none; padding: 0; min-block-size: 100dvh;
 }
-main[data-tab="rpn"]:has(> .rpn-workspace[data-screen-mode="page"]) > :not(.rpn-workspace) { display: none; }
+main[data-tab="rpn"]:has(.rpn-workspace[data-screen-mode="page"]) > :not(.rpn-inline) { display: none; }
 .rpn-workspace[data-screen-mode="page"] {
   max-inline-size: none; min-block-size: 100dvh; background: var(--rpn-surface);
   padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right))

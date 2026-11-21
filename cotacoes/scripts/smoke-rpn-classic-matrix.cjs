@@ -43,9 +43,8 @@ async function createSuite(browser, variant) {
       if (await notice.isVisible()) await notice.getByRole('button', { name: 'Entendi', exact: true }).click()
       await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected, theme)
     } else {
-      await page.evaluate(()=>{ location.hash='calculadora' })
-      await panel.waitFor({state:'hidden'})
-      await page.evaluate(()=>{ location.hash='rpn' })
+      // A navegação interna mantém a sessão; um recarregamento isola o próximo vetor.
+      await page.reload()
     }
     await keypad.waitFor()
     assert.equal(await keypad.count(),1,'só uma grade acessível')
@@ -212,7 +211,7 @@ async function verifyHistory(browser) {
       await page.screenshot({ path: path.join(out, 'rpn-history-' + width + '-' + theme + '.png') })
       const clear = history.getByRole('button', { name: 'Limpar histórico', exact: true })
       await clear.click()
-      await history.getByText('As contas concluídas nesta sessão aparecem aqui.', { exact: true }).waitFor()
+      await history.getByText('Os valores aparecem aqui enquanto você digita.', { exact: true }).waitFor()
       assert.equal(await clear.isEnabled(), false)
       assert.match((await display.textContent()).trim(), /^5(?:,0+)?$/)
       await history.getByRole('button', { name: 'Desfazer limpeza', exact: true }).click()
@@ -224,7 +223,7 @@ async function verifyHistory(browser) {
       }
       await page.reload()
       if (touch) await open.tap()
-      await history.getByText('As contas concluídas nesta sessão aparecem aqui.', { exact: true }).waitFor()
+      await history.getByText('Os valores aparecem aqui enquanto você digita.', { exact: true }).waitFor()
       console.log('PASS histórico isolado da RPN · ' + width + ' · ' + theme)
     } finally { await context.close() }
   }
