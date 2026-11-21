@@ -8,23 +8,27 @@ import { giroOperation } from './creditComparison.js'
 import { cgToday } from './contaGarantida.js'
 import { addMonths } from './creditModalities.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
+import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
+import ReferenciaMercado from './ReferenciaMercado.jsx'
 import { lmSchedule } from './linhaMestra.js'
 import { resolveCreditIof } from './iofRules.js'
-import { PRACA_AJUDA, pracaCalendars } from './pracaContrato.js'
+import { PRACA_AJUDA, PRACAS_CONTRATO, pracaCalendars } from './pracaContrato.js'
 import './CalculatorStandard.css'
 import './CapitalDeGiro.css'
 import CalcBack from './CalcBack.jsx'
 
+// Nomes padrão dos encargos nas calculadoras (escolha do Fernando, 21/11/2026): Taxa, IOF, Fee, TAC, Outros.
 const EXPENSES = [
   { id: 'iof', label: 'IOF' },
-  { id: 'fee', label: 'Fee de estruturação' },
-  { id: 'tac', label: 'Tarifas' },
-  { id: 'other', label: 'Outras despesas' },
+  { id: 'fee', label: 'Fee' },
+  { id: 'tac', label: 'TAC' },
+  { id: 'other', label: 'Outros' },
 ]
 const GUARANTEES = ['A definir', 'Sem garantia', 'Aval', 'Recebíveis', 'Aplicação financeira', 'Imóvel', 'Outras']
 const formatMoney = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const brl = value => formatMoney.format(value)
 const percent = rate => `${cetPct(rate * 100)}% a.a.`
+const FOOT = 'Estes valores valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 
 function Field({ id, label, issue, children }) {
   return <div className="giro-field">
@@ -34,17 +38,20 @@ function Field({ id, label, issue, children }) {
   </div>
 }
 
+// Roteiro da tela (piloto de 21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado.
+// Só ordem, nomes e apresentação: os números são os mesmos que giroOperation já devolvia.
 export default function CapitalDeGiro({ onBack, apresentacao }) {
   // Valor, prazo, carência, amortização, data e praça vêm da linha mestra comum (19/11/2026); o resto é do produto.
   const [lm, setLm, clearLm] = useLinhaMestra(cgToday())
   const [form, setForm] = useState(() => ({ rate: '2,00', unit: 'am', firstDue: '', profile: 'pj', eligible: false,
     guarantee: GUARANTEES[0], costs: { fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }))
   const [dirty, setDirty] = useState(false)
+  const markDirty = () => { if (!apresentacao) setDirty(true) }
   const change = patch => {
     setForm(previous => ({ ...previous, ...patch }))
-    if (!apresentacao) setDirty(true)
+    markDirty()
   }
-  const changeLm = (key, value) => { setLm(key, value); if (!apresentacao) setDirty(true) }
+  const changeLm = (key, value) => { setLm(key, value); markDirty() }
   const bind = key => ({ value: form[key], onChange: event => change({ [key]: event.target.value }) })
   const principal = parseMoneyInput(lm.value)
   // Regra do Comparador (decisão de 19/11/2026): prazo total e carência em meses; parcelas = prazo − carência;
@@ -62,12 +69,15 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const financedFees = sumExpenses(true)
   const tax = resolveCreditIof({ date: lm.start, profile: form.profile, operationValue: principal.value + financedFees, eligible: form.eligible })
   const isBullet = lm.system === 'bullet'
+  // Aviso de data só quando o problema é de data. Sem prazo ou carência válidos não há vencimento automático a conferir:
+  // quem avisa é o campo do prazo, e a gaveta dos detalhes não abre por isso.
+  const datesOk = firstDue ? lm.start && firstDue > lm.start : !schedule.ok && lm.start
   const errors = {
     value: principal.ok && principal.value > 0 ? null : principal.error || 'Informe um valor maior que zero.',
     n: schedule.ok || /carência/.test(schedule.error) ? null : schedule.error,
     grace: schedule.ok || !/carência/.test(schedule.error) ? null : schedule.error,
     rate: rate !== null && rate <= 1000 ? null : 'Informe uma taxa entre 0% e 1.000%.',
-    dates: firstDue && lm.start && firstDue > lm.start ? null : 'Informe a liberação e o primeiro vencimento posterior à liberação.',
+    dates: datesOk ? null : 'Informe a liberação e o primeiro vencimento posterior à liberação.',
     iof: tax.ok ? null : tax.error,
   }
   for (const item of expenses) errors[item.id] = item.parsed.ok ? null : item.parsed.error
@@ -78,6 +88,46 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const calculation = !dirty && !hasErrors ? giroOperation({ ...params, system: lm.system }) : null
   const result = calculation?.ok ? calculation : null
   const moneyText = value => result ? brl(value) : '—'
+  const first = result?.rows[0], last = result?.rows.at(-1)
+  // Pago na liberação: despesas e IOF à vista (diferença entre o valor solicitado e o líquido).
+  const upfront = result ? Math.round((result.value - result.net) * 100) / 100 : 0
+  // Custo total = juros + IOF + despesas (à vista e financiadas): só reparte o que a conta já devolve.
+  const parts = [
+    { label: 'Juros', value: result?.interest },
+    { label: 'IOF', value: result?.iof },
+    { label: 'Fee, TAC e outros', value: result ? result.fees + result.financedFees : undefined },
+  ]
+  // Carência: a combinada na demanda; com 1º vencimento informado à mão, a que a conta apurou (dias além do primeiro mês).
+  const hasGrace = !!result && (form.firstDue ? result.graceDays > 0 : schedule.grace > 0)
+  let grace = { value: 'Sem carência', note: 'Não há período sem pagamento' }
+  if (hasGrace) grace = {
+    value: form.firstDue ? '1º vencimento informado' : `${schedule.grace} ${schedule.grace === 1 ? 'mês' : 'meses'}`,
+    note: result.capitalizedGrace > 0 ? `Sem pagamento. Juros de ${brl(result.capitalizedGrace)} somados ao saldo` : 'Sem pagamento no período',
+  }
+  const events = result && [
+    { label: 'Liberação', when: dmy(lm.start), value: brl(result.net),
+      note: upfront > 0 ? `${brl(result.value)} menos ${brl(upfront)} pagos na liberação` : 'Valor integral: nada é descontado na liberação' },
+    ...(isBullet ? [
+      { label: 'Vencimento único', when: dmy(last.date), value: brl(last.payment), note: `Principal e juros. Total pago: ${brl(result.total)}` },
+    ] : [
+      { label: 'Carência', empty: !hasGrace, when: `1ª parcela em ${dmy(first.date)}`, ...grace },
+      { label: 'Parcelas', when: result.n === 1 ? dmy(first.date) : `de ${dmy(first.date)} a ${dmy(last.date)}`,
+        value: result.n === 1 ? '1 parcela' : `${result.n} parcelas mensais`,
+        note: first.payment === last.payment ? `1ª de ${brl(first.payment)}` : `1ª de ${brl(first.payment)}, última de ${brl(last.payment)}` },
+      { label: 'Quitação', when: dmy(last.date), value: brl(result.total), note: 'Total pago' },
+    ]),
+  ]
+  let paymentNote = 'Primeira parcela'
+  if (isBullet) paymentNote = 'Pagamento único'
+  else if (result && lm.system === 'sac') paymentNote = `1ª parcela. A última é de ${brl(last.payment)}`
+  else if (result) paymentNote = result.n === 1 ? 'Parcela única' : `1ª de ${result.n} parcelas mensais`
+  const single = isBullet || result?.n === 1 ? 'Pagamento único' : null
+  const totalNote = upfront > 0 ? `${single ?? 'Parcelas'} mais o que é pago na liberação` : single ?? 'Soma das parcelas'
+  const detailsSummary = [`liberação em ${lm.start ? dmy(lm.start) : '—'}`, PRACAS_CONTRATO.find(praca => praca.id === lm.praca)?.label,
+    form.firstDue ? `1º vencimento em ${dmy(form.firstDue)}` : '1º vencimento automático', `garantia: ${form.guarantee.toLowerCase()}`].filter(Boolean).join(' · ')
+  // Aviso do quadro de resultado enquanto não há resultado.
+  const resultAlert = result ? null : { error: !!calculation?.error, warning: !!calculation?.error || hasErrors,
+    text: calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.') }
   const fieldError = (key, id) => ({ 'aria-invalid': !!errors[key], 'aria-describedby': errors[key] ? `${id}-err` : undefined })
 
   return <section className="cx bw calc-standard calc-workspace giro-screen" aria-labelledby="calc-h">
@@ -92,24 +142,37 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
       </Help>
     </div>
 
-    <div className="giro-columns">
+    <div className="giro-flow">
       <form className="giro-form" noValidate onSubmit={event => { event.preventDefault(); setDirty(false) }}>
-        <LinhaMestra prefix="cx" values={lm} onChange={changeLm} onClear={() => { clearLm(); if (!apresentacao) setDirty(true) }}
-          labels={{ value: 'Valor solicitado' }} errors={{ value: errors.value, term: errors.n, grace: errors.grace }} />
+        <LinhaMestra prefix="cx" title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} foot={FOOT}
+          onClear={() => { clearLm(); markDirty() }} fields={['value', 'term', 'grace', 'system']}
+          labels={{ value: 'Valor solicitado' }} errors={{ value: errors.value, term: errors.n, grace: errors.grace }}
+          details={{ fields: ['start', 'praca'], open: !!apresentacao, alert: errors.dates, summary: detailsSummary, children: <>
+            <div className="lm-field">
+              <span className="lm-label"><label htmlFor="cx-firstDue">{isBullet ? 'Vencimento (opcional)' : 'Primeiro vencimento (opcional)'}</label></span>
+              <input id="cx-firstDue" type="date" {...fieldError('dates', 'cx-firstDue')} {...bind('firstDue')} />
+              {errors.dates ? <small id="cx-firstDue-err" className="lm-error" role="alert">{errors.dates}</small>
+                : <small className="giro-hint">{form.firstDue ? 'Data informada à mão.' : autoDue ? `Automático: ${dmy(autoDue)}.` : 'Preencha prazo e carência.'}</small>}
+            </div>
+            <div className="lm-field">
+              <span className="lm-label"><label htmlFor="cx-guarantee">Garantia</label></span>
+              <select id="cx-guarantee" {...bind('guarantee')}>{GUARANTEES.map(label => <option key={label}>{label}</option>)}</select>
+            </div>
+          </> }} />
         <fieldset className="giro-card">
-          <legend>Taxas, tributos e despesas</legend>
-          <div className="giro-rate">
-            <Field id="cx-rate" label="Taxa prefixada" issue={errors.rate}>
-              <div className="giro-input-unit">
+          <legend>{step(2, 'Encargos')}</legend>
+          <div className="giro-costs">
+            <div className="giro-cost-head" aria-hidden="true"><span>Encargo</span><span>Valor</span><span>Como paga</span></div>
+            <div className="giro-cost giro-cost-rate">
+              <label className="giro-cost-label" htmlFor="cx-rate">Taxa de juros <small>prefixada</small></label>
+              <div><div className="giro-input-unit">
                 <input id="cx-rate" inputMode="decimal" {...fieldError('rate', 'cx-rate')} {...bind('rate')} />
                 <select aria-label="Período da taxa" {...bind('unit')}><option value="am">% a.m.</option><option value="aa">% a.a.</option></select>
-              </div>
-            </Field>
-          </div>
-          <div className="giro-costs">
-            <div className="giro-cost-head" aria-hidden="true"><span>Despesa</span><span>Valor</span><span>Forma de pagamento</span></div>
+              </div>{errors.rate && <small id="cx-rate-err" className="giro-error" role="alert">{errors.rate}</small>}</div>
+              <span className="giro-cost-fixed">{isBullet ? 'No vencimento' : 'Nas parcelas'}</span>
+            </div>
             {EXPENSES.map(({ id, label }) => <div className="giro-cost" key={id}>
-              <span className="giro-cost-label">{label}</span>
+              <span className="giro-cost-label">{label}{id === 'iof' && <> <small>calculado</small></>}</span>
               {id === 'iof' ? <output className="giro-readonly" aria-label="Valor do IOF">{moneyText(result?.iof)}</output> :
                 <div><MoneyInput id={`cx-${id}`} aria-label={`Valor de ${label}`} {...fieldError(id, `cx-${id}`)}
                   value={form.costs[id]} onChange={value => change({ costs: { ...form.costs, [id]: value } })} />
@@ -133,52 +196,26 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
             </div>
           </details>
         </fieldset>
-
-        <fieldset className="giro-card">
-          <legend>Condições do produto</legend>
-          <div className="giro-grid giro-grid-pair">
-            <Field id="cx-firstDue" label={isBullet ? 'Vencimento (opcional)' : 'Primeiro vencimento (opcional)'} issue={errors.dates}>
-              <input id="cx-firstDue" type="date" {...fieldError('dates', 'cx-firstDue')} {...bind('firstDue')} />
-              <small className="giro-hint">{form.firstDue ? 'Data informada à mão.' : autoDue ? `Pela linha mestra: ${dmy(autoDue)}.` : 'Preencha prazo e carência.'}</small>
-            </Field>
-            <Field id="cx-frequency" label="Periodicidade">
-              <input id="cx-frequency" readOnly value={isBullet ? 'Pagamento único' : 'Mensal'} />
-              {isBullet && <small className="giro-hint">Principal e juros pagos no vencimento.</small>}
-            </Field>
-          </div>
-          <div className="giro-guarantee"><Field id="cx-guarantee" label="Garantia">
-            <select id="cx-guarantee" {...bind('guarantee')}>{GUARANTEES.map(label => <option key={label}>{label}</option>)}</select>
-          </Field></div>
-        </fieldset>
         <button className="giro-simulate" type="submit">Simular</button>
       </form>
 
-      {/* Resultado: único quadro com borda laranja. Resposta principal no topo (CET e parcela); depois a taxa e os valores
-          em reais, terminando no custo total. Só apresentação: os mesmos valores calculados de antes. */}
-      <aside className="giro-result calc-result-shell" aria-labelledby="giro-result-title" aria-live="polite">
-        <h3 id="giro-result-title">Resultado da simulação</h3>
-        <div className="giro-result-body">
-          {!result && <small className={`giro-result-alert${calculation?.error || hasErrors ? ' is-warning' : ''}`} role={calculation?.error ? 'alert' : undefined}>
-            {calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.')}
-          </small>}
-          <div className="giro-answer">
-            <div className="giro-answer-main"><small>Custo Efetivo Total</small><b>{result ? percent(result.cet) : '—'}</b><span>CET anual do fluxo, em dias corridos</span></div>
-            <div className="giro-answer-side"><small>{isBullet ? 'Pagamento único' : 'Primeira parcela'}</small><b>{moneyText(result?.rows[0].payment)}</b><span>{isBullet ? 'no vencimento' : 'parcelas mensais'}</span></div>
-          </div>
-          <h4 className="giro-result-group">Taxa e custo efetivo</h4>
-          <dl>
-            <div className="giro-cet"><dt>Custo Efetivo Total (CET)</dt><dd>{result ? percent(result.cet) : '—'}</dd></div>
-          </dl>
-          <h4 className="giro-result-group">Valores em reais</h4>
-          <dl>
-            <div><dt>Valor líquido liberado</dt><dd>{moneyText(result?.net)}</dd></div>
-            <div><dt>Saldo financiado</dt><dd>{moneyText(result?.financedBalance)}</dd></div>
-            <div><dt>{isBullet ? 'Pagamento único' : 'Primeira parcela'}</dt><dd>{moneyText(result?.rows[0].payment)}</dd></div>
-            {!isBullet && <div><dt>Última parcela</dt><dd>{moneyText(result?.rows.at(-1).payment)}</dd></div>}
-            <div className="giro-total"><dt>Custo total</dt><dd>{moneyText(result?.cost)}</dd></div>
-          </dl>
-        </div>
-      </aside>
+      {/* Linha do tempo e resultado formam o quadro de resultado (é o que o modo Apresentar mostra em "Resultado"). */}
+      <div className="rt-outcome giro-outcome calc-result-shell" aria-live="polite">
+        <LinhaDoTempo id="giro-timeline-title" className="giro-timeline" events={events}
+          placeholder="Aparece depois de simular: liberação, carência, parcelas e quitação." />
+        <Resultado id="giro-result-title" className="giro-result" alert={resultAlert}>
+          <Respostas items={[
+            { question: 'Quanto entra no caixa', value: moneyText(result?.net), note: result ? `Valor líquido, de ${brl(result.value)} solicitados` : 'Valor líquido liberado' },
+            { question: isBullet ? 'Quanto paga no vencimento' : 'Quanto paga por mês', value: moneyText(first?.payment), note: paymentNote },
+            { question: 'Quanto paga no total', value: moneyText(result?.total), note: totalNote },
+            { question: 'Quanto custa', value: result ? percent(result.cet) : '—', note: 'Custo Efetivo Total (CET), em dias corridos', main: true },
+          ]} />
+          <ComposicaoDoCusto parts={parts} format={moneyText} rows={[
+            { label: 'Custo total', value: moneyText(result?.cost), kind: 'total' },
+            { label: 'Saldo financiado', value: moneyText(result?.financedBalance), kind: 'muted' },
+          ]} />
+        </Resultado>
+      </div>
     </div>
 
     {result ? <details className="giro-installments">
@@ -206,5 +243,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         </div>
       </details>
     </details> : <button className="giro-installments giro-installments-disabled" type="button" disabled>Ver parcelas</button>}
+    {/* Taxa prefixada: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
+    <ReferenciaMercado tipos={['pre']} />
   </section>
 }

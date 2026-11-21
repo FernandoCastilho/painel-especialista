@@ -49,3 +49,11 @@
 :root[data-theme] body .lm .lm-wide { grid-column:1/-1; }
 :root[data-theme] body .lm .credit-check { display:flex; align-items:center; gap:8px; color:var(--bw-ink, var(--fg)); font-size:.8125rem; }
 :root[data-theme] body .credit-shared-wrap { margin:12px 0; }
+/* Gaveta "Detalhes do contrato" (21/11/2026): o que quase nunca muda fica guardado, com o resumo no título. */
+:root[data-theme] body .lm .lm-details { margin: 6px 14px 4px; border-top: 1px solid var(--bw-line, var(--line)); }
+:root[data-theme] body .lm .lm-details > summary { padding: 10px 0; min-height: 44px; color: var(--bw-link, var(--accent)); font-size: .86rem; cursor: pointer; }
+:root[data-theme] body .lm .lm-details > summary small { color: var(--bw-mut, var(--mut)); font-size: .78rem; }
+:root[data-theme] body .lm .lm-details > .lm-grid { padding: 0 0 8px; }
+/* No slide do modo Apresentar a gaveta fica aberta e sem o título clicável. */
+.sl-calc .lm details.lm-details[open] { display: block; }
+.sl-calc .lm .lm-details > summary { display: none; }
