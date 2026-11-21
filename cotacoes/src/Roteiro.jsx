@@ -42,6 +42,7 @@ export function Respostas({ items }) {
 // uma linha discreta explica a diferença. Nenhum valor é ajustado.
 export function ComposicaoDoCusto({ title = 'Do que é feito o custo', parts, total, rows = [], format }) {
   const drawn = parts.map((part, index) => ({ ...part, tone: `rt-tone-${index + 1}` }))
+  const filled = drawn.filter(part => part.value > 0)
   const complete = Number.isFinite(total?.value) && parts.every(part => Number.isFinite(part.value))
   const gap = complete ? sobraDeCentavos(parts.map(part => part.value), total.value) : null
   return <>
