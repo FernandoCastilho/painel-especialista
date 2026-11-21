@@ -405,30 +405,42 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
       <header className="cx-heading cf-c-section-title"><h3 id="cf-c-parcelas">2. Parcelas e cotações</h3>
         <CalculatorHelp title="Parcelas e cotações">
           <p>As cotações são de cada vencimento. Alterar a data limpa as cotações da parcela.</p>
-          {crossed ? <p>Para computar uma trava cruzada, confirme as duas pernas para o mesmo vencimento, cobrindo o mesmo valor.</p>
+          {crossed ? <p>Converta a parcela de USD para {hedge} e depois de {hedge} para reais. Só há valor integralmente travado quando as duas cotações estão contratadas para o mesmo vencimento e cobrirem o valor equivalente da parcela.</p>
             : <p>Sem o cenário, o total com trava ainda é calculado quando todas as parcelas estiverem preenchidas.</p>}
         </CalculatorHelp>
       </header>
       <div className="cf-c-section-body">
-        <div className="cf-c-columns" aria-hidden="true"><span>Parcela</span><span>Vencimento</span><span>Valor ({code})</span><span>{crossed ? 'Cotação futura' : 'Cotação contratada'} (R$/{hedge})</span><span>Sem trava (R$/{code})</span></div>
-        {rows.map((row, i) => <fieldset key={row.id} className="cf-c-row">
+        {!crossed && <div className="cf-c-columns" aria-hidden="true"><span>Parcela</span><span>Vencimento</span><span>Valor ({code})</span><span>Cotação contratada (R$/{hedge})</span><span>Sem trava (R$/{code})</span></div>}
+        {rows.map((row, i) => <fieldset key={row.id} className={`cf-c-row${crossed ? ' cf-c-row--cross' : ''}`}>
           <legend className="sr-only">Parcela {i + 1}</legend><span aria-hidden="true" className="cf-c-index"><span>Parcela </span>{i + 1}</span>
-          <Input compact id={`cf-c-${row.id}-data`} label={`Vencimento da parcela ${i + 1}`} type="date" min={vencimentoMin} value={row.vencimento} change={v => mudarLinha(row.id, 'vencimento', v)}
+          <Input compact={!crossed} id={`cf-c-${row.id}-data`} label={`Vencimento da parcela ${i + 1}`} type="date" min={vencimentoMin} value={row.vencimento} change={v => mudarLinha(row.id, 'vencimento', v)}
             error={inicio && row.vencimento && row.vencimento <= inicio ? 'O vencimento deve ser posterior à data inicial.' : undefined} />
-          <Input compact money id={`cf-c-${row.id}-valor`} label={`Valor da parcela ${i + 1} (${code})`} value={row.valorMoeda} change={v => mudarLinha(row.id, 'valorMoeda', v)} error={validacao[i].valorMoeda.error} />
-          <Input compact id={`cf-c-${row.id}-trava`} label={`Cotação ${crossed ? 'futura' : 'contratada'} da parcela ${i + 1} (R$/${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
-          <Input compact id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava da parcela ${i + 1} (R$/${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
-          {crossed && <div className="cf-c-cross-fields">
-            <Input id={`cf-c-${row.id}-cross`} label={`Conversão no vencimento (${hedge}/USD)`} value={row.taxaCruzada} change={v => mudarLinha(row.id, 'taxaCruzada', v)} error={validacao[i].taxaCruzada.error} />
-            <div className="cx-field">
-              <label htmlFor={`cf-c-${row.id}-cross-status`}>Conversão cruzada</label>
-              <select id={`cf-c-${row.id}-cross-status`} value={row.statusCruzada} onChange={e => mudarLinha(row.id, 'statusCruzada', e.target.value)}>
-                <option value="nao-informada">Não informada</option><option value="cenario">Hipótese de cenário</option>
-                <option value="contratada">Contratada para esta parcela</option>
-              </select>
+          <Input compact={!crossed} money id={`cf-c-${row.id}-valor`} label={`Valor da parcela ${i + 1} (${code})`} value={row.valorMoeda} change={v => mudarLinha(row.id, 'valorMoeda', v)} error={validacao[i].valorMoeda.error} />
+          {!crossed ? <>
+            <Input compact id={`cf-c-${row.id}-trava`} label={`Cotação contratada da parcela ${i + 1} (R$/${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
+            <Input compact id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava da parcela ${i + 1} (R$/${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
+          </> : <div className="cf-c-cross-fields">
+            <div className="cf-c-cross-step">
+              <h4>1. Converter USD em {hedge}</h4>
+              <Input id={`cf-c-${row.id}-cross`} label={`Cotação da conversão (${hedge} por USD)`} value={row.taxaCruzada} change={v => mudarLinha(row.id, 'taxaCruzada', v)} error={validacao[i].taxaCruzada.error} />
+              <div className="cx-field">
+                <label htmlFor={`cf-c-${row.id}-cross-status`}>Status da conversão</label>
+                <select id={`cf-c-${row.id}-cross-status`} value={row.statusCruzada} onChange={e => mudarLinha(row.id, 'statusCruzada', e.target.value)}>
+                  <option value="nao-informada">Não informada</option><option value="cenario">Hipótese de cenário</option>
+                  <option value="contratada">Contratada para esta parcela</option>
+                </select>
+              </div>
             </div>
-            <label className="cf-c-cross-check"><input type="checkbox" checked={row.contratadaBrl}
-              onChange={e => mudarLinha(row.id, 'contratadaBrl', e.target.checked)} /> Trava em reais contratada para esta parcela</label>
+            <div className="cf-c-cross-step">
+              <h4>2. Converter {hedge} em reais</h4>
+              <Input id={`cf-c-${row.id}-trava`} label={`Cotação futura (R$ por ${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
+              <label className="cf-c-cross-check"><input type="checkbox" checked={row.contratadaBrl}
+                onChange={e => mudarLinha(row.id, 'contratadaBrl', e.target.checked)} /> Trava em reais contratada para esta parcela</label>
+            </div>
+            <div className="cf-c-cross-step cf-c-cross-scenario">
+              <h4>Comparação opcional</h4>
+              <Input id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava (R$ por ${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
+            </div>
           </div>}
         </fieldset>)}
       </div>
@@ -442,21 +454,6 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
         </CalculatorHelp>
       </header>
       <div className="cf-c-section-body">
-        {crossed && <>
-          <h4>Conversão cruzada por parcela · valores brutos</h4>
-          {crossResults.map((value, i) => <section className="cf-c-detail-item" key={rows[i].id} aria-label={`Resultado cruzado da parcela ${i + 1}`}>
-            <h4>Parcela {i + 1} · {dateBr(rows[i].vencimento)}</h4>
-            {value?.ok ? <>
-              <p className="cf-notice" role="status">{value.status === 'locked' ? 'Cobertura integral indicada com os dados informados.' : `Exposição residual USD/${hedge}. Não é cobertura integral.`}</p>
-              <dl>
-                <div><dt>Sem trava no cenário USD/BRL</dt><dd>{currencyFmt(value.unhedgedBrl)}</dd></div>
-                {value.status === 'locked' && <div><dt>Pagamento travado</dt><dd>{currencyFmt(mostrarBrutoTravaCruzada(validacao[i].valorMoeda.value, validacao[i].taxaTrava.value, validacao[i].taxaCruzada.value))}</dd></div>}
-                {value.status === 'hypothetical' && <div><dt>Pagamento hipotético</dt><dd>{currencyFmt(mostrarBrutoTravaCruzada(validacao[i].valorMoeda.value, validacao[i].taxaTrava.value, validacao[i].taxaCruzada.value))}</dd></div>}
-                {Number.isFinite(value.notionalHedge) && <div><dt>Valor equivalente em {hedge}</dt><dd>{decimal.format(value.notionalHedge)}</dd></div>}
-              </dl>
-            </> : <p className="cf-notice" role="status">{value?.error || ''}</p>}
-          </section>)}
-        </>}
         <dl className="cf-c-metrics">
           <div><dt>Total com trava</dt><dd id="cf-c-total-trava">{currencyFmt(result.totalComTravaBrl)}</dd></div>
           <div><dt>Total sem trava no cenário</dt><dd id="cf-c-total-cenario">{currencyFmt(result.totalSemTravaBrl)}</dd></div>
@@ -471,9 +468,25 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
           <div><dt>TIR anual sem trava no cenário</dt><dd>{pct(result.tirSemTravaPct)}</dd></div>
         </dl>}
         {result.erro && inicio && <p className="cf-notice" role="status">{result.erro}</p>}
+        {crossed && crossResults.some(value => value?.ok && value.status !== 'locked') &&
+          <p className="cf-notice" role="status">Ainda há parcela sem trava integral. Abra os detalhes para conferir.</p>}
         <div className="cf-c-result-foot">
           <details className="cf-c-details">
             <summary>Ver detalhes por parcela</summary>
+              {crossed && <div className="cf-c-detail-grid">
+              {crossResults.map((value, i) => <section className="cf-c-detail-item" key={rows[i].id} aria-label={`Resultado cruzado da parcela ${i + 1}`}>
+                <h4>Parcela {i + 1} · {dateBr(rows[i].vencimento)}</h4>
+                {value?.ok ? <>
+                  <p className="cf-notice" role="status">{value.status === 'locked' ? 'Cobertura integral indicada com os dados informados.' : `Exposição residual USD/${hedge}. Não é cobertura integral.`}</p>
+                  <dl>
+                    <div><dt>Sem trava no cenário USD/BRL</dt><dd>{currencyFmt(value.unhedgedBrl)}</dd></div>
+                    {value.status === 'locked' && <div><dt>Pagamento travado</dt><dd>{currencyFmt(mostrarBrutoTravaCruzada(validacao[i].valorMoeda.value, validacao[i].taxaTrava.value, validacao[i].taxaCruzada.value))}</dd></div>}
+                    {value.status === 'hypothetical' && <div><dt>Pagamento hipotético</dt><dd>{currencyFmt(mostrarBrutoTravaCruzada(validacao[i].valorMoeda.value, validacao[i].taxaTrava.value, validacao[i].taxaCruzada.value))}</dd></div>}
+                    {Number.isFinite(value.notionalHedge) && <div><dt>Valor equivalente em {hedge}</dt><dd>{decimal.format(value.notionalHedge)}</dd></div>}
+                  </dl>
+                </> : <p className="cf-notice" role="status">{value?.error || ''}</p>}
+              </section>)}
+              </div>}
             <div className="cf-c-detail-grid">{rows.map((row, i) => {
               const values = resultados.get(row.id)
               return <section className="cf-c-detail-item" key={row.id} aria-label={`Detalhes da parcela ${i + 1}`}>
