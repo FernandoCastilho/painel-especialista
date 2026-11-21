@@ -11,6 +11,7 @@ import { IOF_SOURCE } from './iofRules.js'
 import { cgAddDays, cgToday } from './contaGarantida.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
+import ReferenciaMercado from './ReferenciaMercado.jsx'
 import { lmLoad } from './linhaMestra.js'
 import { PRACAS_CONTRATO } from './pracaContrato.js'
 import CalcBack from './CalcBack.jsx'
@@ -162,8 +163,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
             { label: 'IOF', value: operation?.iof },
             { label: 'Tarifa dos títulos', value: operation?.titleFee },
             { label: 'TAC', value: operation?.tac },
-          ]} rows={[
-            { label: 'Custo total completo', value: brl(operation?.cost), kind: 'total' },
+          ]} total={{ label: 'Custo total completo', value: operation?.cost }} rows={[
             { label: 'Subtotal sem tarifa de títulos (TAC + juros + IOF)', value: brl(operation?.costWithoutTitles), kind: 'muted' },
             { label: 'Base do IOF: nominal menos juros antecipados', value: brl(operation?.base), kind: 'muted' },
           ]} />
@@ -281,5 +281,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         <li><a href={IOF_SOURCE} target="_blank" rel="noreferrer">Decreto 6.306/2007: art. 7º, II, VI e §§ 1º, 4º e 15</a>. PJ: 0,0082% ao dia + 0,38%; Simples/MEI confirmado até R$ 30 mil: 0,00274% ao dia + 0,38%. IOF diário limitado a 365 dias por título.</li>
       </ul>
     </CalculatorHelp></div>
+    {/* Desconto com taxa prefixada: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
+    <ReferenciaMercado tipos={['pre']} />
   </section>
 }

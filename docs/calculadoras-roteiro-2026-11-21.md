@@ -102,6 +102,59 @@ Ajustes feitos a partir dos achados dele, sem mexer em conta:
 
 Revisão de excesso dos três registros: o Simplificador da central não está instalado neste ambiente; foram usados o simplificador de código da sessão e a revisão de excesso (ponytail). A revisão não apontou correção obrigatória. Ficam anotados, sem mexer agora: o histórico da moeda reaproveita uma função que mora no arquivo da tela de Câmbio futuro; e os tipos "pós-fixada" e "moeda" do bloco de referência só passam a ser usados quando Necessidade do Cliente, FINIMP e 4131 entrarem no roteiro.
 
-## 7. Próximo passo
+## 7. Conta Garantida, Análise de desconto e FINIMP no roteiro (21/11/2026)
 
-Fernando valida o piloto. Depois, replicar o roteiro nas outras seis calculadoras de crédito (Necessidade do Cliente, BNDES, Conta Garantida, Análise de desconto, FINIMP e 4131) e, por último, ajustar as seis que não são de crédito, com os nomes Situação, Premissas e Resultado.
+Depois do piloto, Fernando respondeu "Aprovado, pode replicar". Estas são as três primeiras telas replicadas. Fotos de antes e depois de cada uma na pasta `docs/calculadoras-roteiro/` (`<tela>-antes-depois-computador.png` e `-celular.png`).
+
+| Tela | 1 Demanda | 2 Encargos | 3 Linha do tempo | 4 Resultado | Depois do resultado |
+|---|---|---|---|---|---|
+| Conta Garantida (só o modo "Utilização única") | valor utilizado, data, prazo | taxa de juros, limite, dias que geram juros, IOF (enquadramento em gaveta) | utilização, período de uso, cobertura | quanto usou, quanto paga para cobrir, taxa efetiva (CET, com limite informado), quanto custa | tabelas, premissas |
+| Análise de desconto | títulos, data da operação (praça em gaveta) | taxa de juros, convenção, tarifa dos títulos, TAC, IOF | operação, prazo, vencimento dos títulos | quanto entra no caixa, quanto é descontado, quanto custa (CET) | comparação com o capital de giro (projeção, premissas, resultado desconto × giro, tabelas) |
+| FINIMP | principal, moeda, prazo | por instituição: taxa de juros e flat; TAC à vista | desembolso, flat, vencimento | quanto recebe, quanto custa em cada instituição, qual a diferença | atingir meta de custo, tabela dos 12 prazos (fechada) |
+
+Referência de mercado no fim de cada uma: curva DI x pré na Conta Garantida e na Análise de desconto; cotação da moeda escolhida no FINIMP (em reais, o bloco não aparece).
+
+### Centavos
+
+Nestas três contas não há arredondamento no meio do caminho: cada parte do custo só é arredondada ao aparecer na tela. Por isso as partes, como aparecem, podem somar 1 centavo a mais ou a menos que o total, como aparece (medido: cerca de 3 em 10 casos no Desconto; 39 em 588 na Conta Garantida; no FINIMP, quando há fração de centavo, como em 30 dias). Isso já existia antes do roteiro. A conta não foi tocada. A lista "Do que é feito o custo" passou a mostrar, só quando a diferença existe, uma linha "Arredondamento: as partes somam R$ X; a diferença vem de arredondar cada parte em centavos". A regra mora na peça comum (`Roteiro.jsx`, com `centavosDaTela.js`) e vale para todas as calculadoras. No Capital de Giro a soma fecha sempre, porque aquela conta já arredonda cada lançamento.
+
+### Decisões tomadas sem consulta (reversíveis)
+
+- **Conta Garantida:** o roteiro entrou só no modo "Utilização única". "Lançamentos por dia" e "Comparar com parcelado" ficaram como eram. Na proposta, "Comparar com parcelado" viraria comparação depois do resultado; isso muda o funcionamento da tela e ficou para uma etapa própria, se Fernando quiser.
+- **Conta Garantida:** a resposta principal é "Quanto custa" em reais. O CET desta conta só existe com limite informado e segue a regra de 30 dias sobre o limite, então fica como resposta ao lado.
+- **Análise de desconto:** a comparação com o giro continua aberta, depois do resultado do desconto. É a razão de ser desta calculadora.
+- **FINIMP:** a mais barata NÃO ficou em destaque. Há decisão anterior de Fernando de não apontar vencedor, protegida por teste; o destaque continua na diferença entre as duas.
+- **FINIMP:** o prazo da demanda acompanha o prazo da meta quando nada foi escolhido, como já era.
+
+### Sugestões dos executores, não aplicadas (dependem de Fernando)
+
+- Conta Garantida: tirar o botão "Ampliar" do resultado (ele já ocupa a largura toda) e a linha "23/11 a 03/12 · 11 fechamentos…" (a linha do tempo já diz quase tudo).
+- Análise de desconto: abrir a comparação com o giro fechada, para a tela ficar mais curta.
+- FINIMP: separar de vez o prazo da demanda do prazo da meta.
+
+### Tamanho das telas (altura em pontos, com o exemplo das fotos)
+
+| Tela | Computador antes → depois | Celular antes → depois | Campos à vista |
+|---|---|---|---|
+| Capital de Giro | 1.097 → 1.814 | 2.334 → 3.177 | 18 → 13 |
+| Conta Garantida | 1.181 → 2.217 | 2.845 → 3.774 | 8 → 7 |
+| Análise de desconto | 2.348 → 2.999 | 5.097 → 6.000 | 19 → 16 |
+| FINIMP | 1.869 → 1.876 | 2.597 → 3.556 | 9 → 10 |
+
+As telas ficaram mais longas. A maior parte do aumento vem do bloco "Referência de mercado" (cerca de 520 pontos no computador e 800 no celular) e da linha do tempo. O preenchimento, que era a queixa original, ficou menor ou igual em campos.
+
+### O que foi conferido
+
+- Testes do painel: 2.427 passando. Novos nesta etapa: os de cada tela (repartições fecham na conta; a linha de arredondamento aparece só quando a diferença existe) e os da peça comum.
+- Conferência de código sem erros; montagem ok.
+- Conferências de tela, com o navegador deste ambiente: Capital de Giro, FINIMP (inclusive os textos de ajuda), Análise de desconto, modo Apresentar, busca e o desenho em cinco larguras (49 de 49).
+- Números iguais aos de antes: cada executor comparou no navegador a versão de antes e a nova com os mesmos dados digitados (3 cenários na Conta Garantida, 3 no Desconto, 5 no FINIMP).
+- Nenhum valor esperado em reais ou percentual foi alterado nas conferências.
+
+### O que não deu para conferir
+
+- Aparelho físico, Windows e uso real.
+
+## 8. Próximo passo
+
+Faltam três calculadoras de crédito: BNDES Finame, Empréstimo 4131 e Necessidade do Cliente. Depois, ajustar as seis que não são de crédito, com os nomes Situação, Premissas e Resultado.

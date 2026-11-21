@@ -210,8 +210,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
             { question: 'Quanto paga no total', value: moneyText(result?.total), note: totalNote },
             { question: 'Quanto custa', value: result ? percent(result.cet) : '—', note: 'Custo Efetivo Total (CET), em dias corridos', main: true },
           ]} />
-          <ComposicaoDoCusto parts={parts} format={moneyText} rows={[
-            { label: 'Custo total', value: moneyText(result?.cost), kind: 'total' },
+          <ComposicaoDoCusto parts={parts} format={moneyText} total={{ label: 'Custo total', value: result?.cost }} rows={[
             { label: 'Saldo financiado', value: moneyText(result?.financedBalance), kind: 'muted' },
           ]} />
         </Resultado>

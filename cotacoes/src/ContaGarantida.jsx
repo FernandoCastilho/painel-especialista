@@ -8,6 +8,7 @@ import ComparativoAlongamento from './ComparativoAlongamento.jsx'
 import { CG_CET_DAYS, CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, cgToday, parseContaGarantidaForm } from './contaGarantida.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
+import ReferenciaMercado from './ReferenciaMercado.jsx'
 import './ContaGarantida.css'
 import './CalcPattern-conta-garantida.css'
 import CalcBack from './CalcBack.jsx'
@@ -124,8 +125,7 @@ export default function ContaGarantida({ onBack }) {
       { label: 'Juros', value: totals?.interest },
       { label: 'IOF diário', value: totals?.dailyIof },
       { label: 'IOF adicional', value: totals?.additionalIof },
-    ]} rows={[
-      { label: 'Custo total', value: reais(totals?.cost), kind: 'total' },
+    ]} total={{ label: 'Custo total', value: totals?.cost }} rows={[
       { label: 'Saldo devedor final', value: reais(result?.balance), kind: 'muted' },
     ]} />
   </>
@@ -264,5 +264,7 @@ export default function ContaGarantida({ onBack }) {
       <li>Valor e data da utilização ficam na demanda do cliente (linha mestra, comum às calculadoras de empréstimo), só nesta aba do navegador; fechar a aba ou clicar em Limpar apaga. Os demais campos ficam somente nesta tela. Nenhum valor informado é enviado a serviços ou incluído na busca.</li>
     </ul><p>Fontes consultadas em 05/11/2026: {CG_SOURCES.map((source, index) => <span key={source.url}>{index > 0 && ' · '}<a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></span>)}.</p></CalculatorHelp></div>
     </>}
+    {/* Taxa prefixada ao mês: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
+    <ReferenciaMercado tipos={['pre']} />
   </section>
 }

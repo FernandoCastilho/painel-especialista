@@ -3,8 +3,8 @@
    Cores pelas variáveis da moldura .bw (BndesWorkspace.css). Só apresentação: nenhuma regra de cálculo mora aqui. */
 .giro-screen *, .giro-screen *::before, .giro-screen *::after { box-sizing: border-box; }
 :root[data-theme] body .giro-screen { font-variant-numeric: tabular-nums; }
-:root[data-theme] body .giro-screen > .giro-flow,
-:root[data-theme] body .giro-screen > .giro-installments { margin-left: 16px; margin-right: 16px; }
+:root[data-theme] body .giro-screen > :is(.giro-flow, .giro-installments, .rm) { margin-left: 16px; margin-right: 16px; }
+:root[data-theme] body .giro-screen > .rm { margin-bottom: 16px; }
 :root[data-theme] body .giro-screen > .giro-flow { margin-top: 16px; }
 :root[data-theme] body .giro-screen > .giro-installments { margin-bottom: 16px; width: auto; }
 

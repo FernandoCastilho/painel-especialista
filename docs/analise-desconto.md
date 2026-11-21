@@ -15,7 +15,7 @@ A tela segue o roteiro aprovado no piloto do Capital de Giro (`docs/calculadoras
 
 Depois do resultado, sem número, vem a "Comparação com o capital de giro": projeção mensal do desconto, premissas do capital de giro, a resposta "Desconto × giro: resultado" e as três tabelas recolhidas. O "valor para o giro comparado" (valor da linha mestra comum) aparece nas premissas do giro quando a opção "Valor da linha mestra" é escolhida em "Principal usado no giro".
 
-Os seis números que ficavam em quadrinhos dentro do formulário (base do IOF, tarifa total, subtotal, custo total, valor líquido e CET) estão agora no bloco 4. Como o motor não arredonda no meio do caminho, a soma das partes já arredondadas pode diferir do total em 1 centavo (em tese, até 2 com tarifa percentual) em cerca de 3 a cada 10 casos; isso já acontecia entre bruto, custo e líquido.
+Os seis números que ficavam em quadrinhos dentro do formulário (base do IOF, tarifa total, subtotal, custo total, valor líquido e CET) estão agora no bloco 4. Como o motor não arredonda no meio do caminho, a soma das partes já arredondadas pode diferir do total em 1 centavo (em tese, até 2 com tarifa percentual) em cerca de 3 a cada 10 casos; isso já acontecia entre bruto, custo e líquido. Quando acontece, a tela não ajusta nenhum valor: mostra, logo abaixo do "Custo total completo", a linha "Arredondamento", com a soma das partes e a diferença (`centavosDaTela.js`, só apresentação). Exemplo: R$ 123.456,78 em títulos, com os demais dados do exemplo vigente, dá juros R$ 2.409,88, IOF R$ 777,61, tarifa R$ 564,00 e TAC R$ 260,00, que somam R$ 4.011,49, contra custo total de R$ 4.011,48.
 
 ## Entradas atuais
 

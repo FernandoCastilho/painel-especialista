@@ -10,6 +10,7 @@ import { FINIMP_CURRENCIES, validateFinimpInputs } from './finimpInputs.js'
 import { parseDecimal } from './emprestimo.js'
 import { formatFinimpRate, formatFinimpPercent as pct, formatFinimpDelta as delta } from './finimpPresentation.js'
 import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
+import ReferenciaMercado from './ReferenciaMercado.jsx'
 import './FinimpComparacao.css'
 import './CalcPattern-finimp.css'
 import CalcBack from './CalcBack.jsx'
@@ -67,7 +68,7 @@ export default function FinimpComparacao({ onBack }) {
   const costParts = (name, cost, bank) => <div key={name}><ComposicaoDoCusto title={`Do que é feito o custo · ${name}`} format={moneyText}
     parts={[{ label: 'Juros', value: cost?.interest }, { label: 'Flat', value: cost?.flat },
       ...(useTac ? [{ label: currency !== 'BRL' && bank.tacBrl > 0 ? `TAC à vista (${moneyBrl(bank.tacBrl)})` : 'TAC à vista', value: cost?.tac }] : [])]}
-    rows={[{ label: 'Custo total', value: moneyText(cost?.cost), kind: 'total' }]} /></div>
+    total={{ label: 'Custo total', value: cost?.cost }} /></div>
   return <section className="cx fi bw calc-standard calc-workspace" aria-labelledby="fi-heading">
     <div className="cx-toolbar">
       <button type="button" className="cx-back" onClick={() => { finimpDraftStore.reset(); setTouched({}); setSelectedDays(null); setFocusedField(null) }}>Nova simulação</button>
@@ -127,5 +128,7 @@ export default function FinimpComparacao({ onBack }) {
         </table>
       </div>
     </ExpandablePanel></details>
+    {/* Operação em moeda: a referência é a cotação da moeda escolhida. Em reais não há câmbio a mostrar. Sempre o último bloco. */}
+    {currency !== 'BRL' && <ReferenciaMercado tipos={['cambio']} moeda={currency} />}
   </section>
 }
