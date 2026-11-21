@@ -43,9 +43,8 @@ async function createSuite(browser, variant) {
       if (await notice.isVisible()) await notice.getByRole('button', { name: 'Entendi', exact: true }).click()
       await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected, theme)
     } else {
-      await page.evaluate(()=>{ location.hash='calculadora' })
-      await panel.waitFor({state:'hidden'})
-      await page.evaluate(()=>{ location.hash='rpn' })
+      // A navegação interna mantém a sessão; um recarregamento isola o próximo vetor.
+      await page.reload()
     }
     await keypad.waitFor()
     assert.equal(await keypad.count(),1,'só uma grade acessível')

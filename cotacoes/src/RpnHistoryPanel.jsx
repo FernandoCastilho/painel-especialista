@@ -38,7 +38,7 @@ function Editor({ entry, onSave, onCancel }) {
   </form>
 }
 
-export default function RpnHistoryPanel({ id, entries, canUndo, hasCleared, onEdit, onRemove, onUndo, onClear, onClose }) {
+export default function RpnHistoryPanel({ id, entries, draft, canUndo, hasCleared, onEdit, onRemove, onUndo, onClear, onClose }) {
   const heading = useRef(null)
   const [editing, setEditing] = useState(null)
   const [copied, setCopied] = useState('')
@@ -64,7 +64,8 @@ export default function RpnHistoryPanel({ id, entries, canUndo, hasCleared, onEd
         {onClose && <button type="button" onClick={onClose} aria-label="Fechar histórico">×</button>}
       </div></header>
     {(copied || canUndo) && <p role="status" className="rpn-history-feedback">{copied} {canUndo && <button type="button" onClick={() => { onUndo(); setCopied(hasCleared ? 'Histórico restaurado.' : 'Conta restaurada.') }}>{hasCleared ? 'Desfazer limpeza' : 'Desfazer exclusão'}</button>}</p>}
-    {entries.length === 0 ? <p>As contas concluídas nesta sessão aparecem aqui.</p> : <ol className="rpn-history-entries">
+    {draft != null && <div className="rpn-tape-draft"><span>Em digitação</span><output aria-label="Valor em digitação" aria-live="off">{draft}</output></div>}
+    {entries.length === 0 && draft == null ? <p>Os valores aparecem aqui enquanto você digita.</p> : <ol className="rpn-history-entries">
       {entries.map(entry => <li key={entry.id}>
         <div className="rpn-history-row"><span>{formatRpnEntry(entry)}</span>
           <div className="rpn-history-actions">
