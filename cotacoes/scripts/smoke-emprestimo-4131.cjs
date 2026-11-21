@@ -1,5 +1,6 @@
 // Conferência de navegador da calculadora Empréstimo externo (4131) (#calculadora/emprestimo-4131).
-// Pagamento único de 6 meses (IOF-câmbio de 3,5%), com swap e NDF, e três parcelas mensais no formato da cotação
+// Roteiro de 21/11/2026 (demanda, encargos, linha do tempo e resultado, nesta ordem) e os números de sempre:
+// pagamento único de 6 meses (IOF-câmbio de 3,5%), com swap e NDF, e três parcelas mensais no formato da cotação
 // (custo efetivo exp/360, economia de IOF e equivalente em giro). Números esperados recalculados aqui, sem o código
 // do painel; dias úteis contados com os feriados nacionais listados à mão. Cotações e curva DI do Painel são simuladas.
 const { chromium } = require('playwright')
@@ -112,17 +113,42 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await page.waitForFunction(() => document.querySelector('#e4-di')?.value === '14,00')
       assert.match(normalize(await section.locator('#e4-protecao-origem').innerText()), /DI: do Painel, curva DI da B3 de 02\/01\/2026.*Cupom cambial: valor de exemplo/)
       assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Parcelas mensais')
-      assert.equal(await section.locator('.fm-operation:not(.e4-opcoes) .cx-field:not(.fm-field-convertido)').count(), 6, 'seis campos para preencher na operação')
+      // Roteiro de 21/11/2026: 1 Demanda, 2 Encargos, 3 Linha do tempo e 4 Resultado, nesta ordem; depois o Atingir meta,
+      // as comparações, as premissas e as parcelas; por último, a referência de mercado com a moeda da tela.
+      // O "?" no fim de um título é o botão de ajuda dele.
+      const ordem = await section.evaluate(el => ['#e4-operation-h', '#e4-encargos-h', '#e4-timeline-h', '#fm-result .cx-heading', '#e4-meta-h', '.e4-comparar > summary', '.fm-premises > summary', '.e4-parcelas > summary', '#rm-titulo']
+        .map(seletor => el.querySelector(seletor)).map((bloco, i, blocos) => ({ texto: bloco.textContent.trim().replace(/\s+/g, ' ').replace(/\?$/, ''), depois: i === 0 || !!(blocos[i - 1].compareDocumentPosition(bloco) & Node.DOCUMENT_POSITION_FOLLOWING) })))
+      assert.ok(ordem.every(bloco => bloco.depois), JSON.stringify(ordem))
+      assert.deepEqual(ordem.map(bloco => bloco.texto), ['1 Demanda do cliente', '2 Encargos', '3 Linha do tempo da operação', '4 Resultado · custo final para o cliente', 'Atingir meta', 'Comparar com swap e sem proteção', 'Premissas e limites da simulação', 'Parcelas', 'Referência de mercado'])
+      assert.match(normalize(await section.locator('.fm-hero').innerText()), /4131 com NDF · Projeção · custo estimado/)
+      assert.equal(normalize(await section.locator('.rm h4').innerText()), 'USD/BRL · cotação diária')
+      assert.equal(await section.locator('.fm-operation > .fm-group-fields > .cx-field:not(.fm-field-convertido)').count(), 5, 'cinco campos para preencher na demanda, com a carência à vista')
       // Ordem pedida: principal em reais, moeda e o valor convertido na sequência.
-      assert.deepEqual((await section.locator('.fm-operation:not(.e4-opcoes) .cx-field label').allInnerTexts()).map(normalize).slice(0, 4), ['Principal (R$)', 'Moeda', 'Valor em dólar', 'Cotação de partida (R$/US$)'])
+      assert.deepEqual((await section.locator('.fm-operation .cx-field label').allInnerTexts()).map(normalize).slice(0, 6), ['Principal (R$)', 'Moeda', 'Valor em dólar', 'Cotação de partida (R$/US$)', 'Parcelas mensais', 'Carência (pagamentos)'])
       assert.equal(await section.locator('#e4-convertido').getAttribute('readonly'), '')
-      assert.equal(await section.locator('.e4-mais').evaluate(el => el.open), false, 'Mais opções começa fechado')
+      assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa de juros all-in (Dólar +)')
+      assert.match(normalize(await section.locator('.fm-field-iof').innerText()), /^IOF-câmbio na entrada \?? ?0,00% · US\$ 0,00 calculado$/)
+      assert.deepEqual(await section.locator('.e4-gaveta').evaluateAll(gavetas => gavetas.map(el => el.open)), [false, false], 'Detalhes do contrato e Mais encargos começam fechados')
       assert.equal(await flow.count(), 37, 'desembolso e 36 parcelas')
+      // A tabela de parcelas abre fechada; a conferência abre para ler.
+      assert.equal(await section.locator('.e4-parcelas').evaluate(el => el.open), false, 'parcelas começam recolhidas')
+      await section.locator('.e4-parcelas > summary').click()
       // No celular a tabela mostra o essencial; no notebook, todas as colunas.
       assert.equal(await section.locator('.fm-tabela thead th:visible').count(), width < 641 ? 4 : 8)
       assert.equal(normalize(await section.locator('#e4-convertido').inputValue()), usd(1e7 / 5.3127))
-      const pills = normalize(await section.locator('.fm-pills').innerText())
-      assert.ok(pills.includes('Principal em parcelas iguais') && pills.includes('Datas a cada 30 dias, em dia útil') && !pills.includes('Pagamentos'), pills)
+      // O título da gaveta mostra o que está valendo nos detalhes do contrato.
+      const detalhes = normalize(await section.locator('.e4-gaveta > summary').first().innerText())
+      assert.equal(normalize(await section.locator('.e4-gaveta > summary').last().innerText()), 'Mais encargos · IR já incluído na taxa all-in · tarifa e fiança pagas a banco no Brasil · acréscimo no NDF 0,00% · spread no swap 0,00% a.a.')
+      assert.ok(detalhes.startsWith('Detalhes do contrato · cotação em ') && detalhes.includes('pagamentos mensais') && detalhes.includes('datas a cada 30 dias, em dia útil') && detalhes.includes('principal em parcelas iguais'), detalhes)
+      // Linha do tempo: desembolso do valor inteiro (sem IOF-câmbio neste prazo), sem carência, 36 parcelas e a quitação pelo total.
+      const momentos = (await section.locator('.rt-timeline li').allInnerTexts()).map(normalize)
+      assert.equal(momentos.length, 4)
+      assert.ok(/^DESEMBOLSO \d{2}\/\d{2}\/\d{4} R\$ 10\.000\.000,00 /i.test(momentos[0]) && momentos[0].endsWith(`Valor líquido: ${usd(1e7 / 5.3127)} a 5,3127. Nada é descontado na entrada`), momentos[0])
+      assert.match(momentos[1], /^CARÊNCIA 1ª parcela em \d{2}\/\d{2}\/\d{4} Sem carência/i)
+      assert.match(momentos[2], /^PARCELAS de \d{2}\/\d{2}\/\d{4} a \d{2}\/\d{2}\/\d{4} 36 parcelas mensais 1ª de R\$ [\d.]+,\d{2}, última de R\$ [\d.]+,\d{2}\. Cada parcela em dólar é convertida pela taxa futura$/i)
+      const totalNaTela = normalize(await section.locator('.e4-answer-side b').innerText())
+      assert.match(momentos[3], /^QUITAÇÃO \d{2}\/\d{2}\/\d{4} R\$ [\d.]+,\d{2} Total das parcelas em reais, com NDF · 36 pagamentos$/i)
+      assert.ok(momentos[3].includes(totalNaTela), 'a quitação é o total das parcelas do resultado')
 
       // Atingir meta: custo efetivo de 1,30% ao mês. A tela calcula a taxa all-in e recalcula o resto.
       const taxaAntes = await section.locator('#e4-rate').inputValue()
@@ -169,8 +195,8 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.match(resumo, /Economia de IOF \(R\$\): [\d.]+,\d{2}/)
       assert.match(resumo, /Taxa equivalente em capital de giro: \d+,\d{2}% a\.m\. \/ \d+,\d{2}% a\.a\. \(exp\/360\)/)
 
-      // O que foge do padrão fica em Mais opções; a comparação com swap e sem proteção, em painel próprio.
-      await section.locator('.e4-mais > summary').click()
+      // O que quase nunca muda fica nas gavetas Detalhes do contrato e Mais encargos; a comparação com swap e sem proteção, em painel próprio.
+      for (const gaveta of await section.locator('.e4-gaveta > summary').all()) await gaveta.click()
       await section.locator('.e4-comparar > summary').click()
       assert.equal(await section.locator('#e4-irrf').isDisabled(), true, 'alíquota do IR só vale quando o IR é somado à taxa')
 
@@ -189,7 +215,16 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.match(normalize(await section.locator('#e4-spot-origem').innerText()), /^Digitado\. Usar o do Painel \(5,3127\)$/)
       assert.equal(await section.locator('#e4-grace').isDisabled(), true)
       assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Prazo total (meses)')
-      assert.match(normalize(await section.locator('.e4-mais > summary').innerText()), /4 itens fora do padrão/)
+      // Os títulos das gavetas passam a mostrar o que saiu do padrão.
+      const foraDoPadrao = (await section.locator('.e4-gaveta > summary').allInnerTexts()).map(normalize)
+      assert.ok(foraDoPadrao[0].includes('cotação em 11/11/2026') && foraDoPadrao[0].includes('pagamentos no vencimento') && foraDoPadrao[0].includes('datas no dia fixo do mês') && foraDoPadrao[0].includes('principal no vencimento'), foraDoPadrao[0])
+      assert.ok(foraDoPadrao[1].startsWith('Mais encargos · IR somado à taxa, alíquota de 15% · tarifa e fiança pagas a banco no Brasil'), foraDoPadrao[1])
+      // Pagamento único: a linha do tempo tem só o desembolso (já sem o IOF-câmbio) e o vencimento.
+      const unico = (await section.locator('.rt-timeline li').allInnerTexts()).map(normalize)
+      assert.equal(unico.length, 2)
+      assert.ok(unico[0].includes(brl(NET_USD * SPOT)) && unico[0].includes(`já sem ${usd(P * IOF)} de tarifa, IOF e IR da entrada`), unico[0])
+      assert.ok(/^VENCIMENTO ÚNICO 11\/05\/2027 /i.test(unico[1]) && unico[1].includes(brl(TOTAL_NDF)) && unico[1].includes(usd(TOTAL_USD)), unico[1])
+      assert.match(normalize(await section.locator('.fm-field-iof').innerText()), new RegExp(`3,50% · ${usd(P * IOF).replace('$', '\\$')} calculado$`))
 
       assert.equal(normalize(await section.locator('#e4-convertido').inputValue()), usd(P))
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), new RegExp(`IOF-câmbio de 3,50% na entrada: prazo médio de ${DC} dias corridos`))
@@ -233,6 +268,11 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(await section.locator('#e4-grace').isDisabled(), false)
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), /IOF-câmbio de 3,50% na entrada: prazo médio de 61 dias corridos/)
       assert.equal(await flow.count(), 4)
+      // Linha do tempo das três parcelas: líquido no desembolso, primeira e última parcela e o total na quitação.
+      const tres = (await section.locator('.rt-timeline li').allInnerTexts()).map(normalize)
+      assert.ok(tres[0].includes(brl(NET_PARCELAS)), tres[0])
+      assert.ok(tres[2].includes('de 11/12/2026 a 11/02/2027') && tres[2].includes('3 parcelas mensais') && tres[2].includes(`1ª de ${brl(PARCELAS[0].brl)}, última de ${brl(PARCELAS[2].brl)}`), tres[2])
+      assert.ok(tres[3].includes('11/02/2027') && tres[3].includes(brl(PARCELAS.reduce((s, f) => s + f.brl, 0))), tres[3])
       for (const [i, f] of PARCELAS.entries()) {
         const row = await linha(i + 1)
         assert.deepEqual(row.slice(0, 6), [String(f.dc), f.date.split('-').reverse().join('/'), usd(P / 3), usd(f.saldo), usd(f.juros / (1 - IR)), usd(f.usdTotal)], `parcela ${i + 1}`)
@@ -265,6 +305,8 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await fill('grace', '1')
       assert.equal((await linha(1))[2], usd(0))
       assert.equal((await linha(2))[2], usd(P / 2))
+      assert.match(normalize(await section.locator('.rt-timeline li').nth(1).innerText()), /^CARÊNCIA até 11\/12\/2026 1 pagamento só de juros/i)
+      assert.match(normalize(await section.locator('.rt-timeline li').nth(2).innerText()), /^PARCELAS de 11\/01\/2027 a 11\/02\/2027 2 parcelas mensais/i)
       await fill('grace', '0')
       // Cada 30 dias, em dia útil: 11/12/2026 (sexta); 10/01/2027 é domingo e vai para segunda; 09/02/2027 é Carnaval e vai para quarta.
       await section.locator('#e4-calendar').selectOption('30d')
@@ -289,7 +331,8 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
 
       // Euro: rótulos trocam e a cotação de partida volta a vir do Painel, agora a do euro.
       await section.locator('#e4-currency').selectOption('EUR')
-      assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa all-in (Euro +)')
+      assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa de juros all-in (Euro +)')
+      assert.equal(normalize(await section.locator('.rm h4').innerText()), 'EUR/BRL · cotação diária')
       assert.equal(normalize(await section.locator('label[for="e4-convertido"]').innerText()), 'Valor em euro')
       assert.equal(normalize(await section.locator('label[for="e4-spot"]').innerText()), 'Cotação de partida (R$/€)')
       assert.match(await section.locator('#e4-convertido').inputValue(), /^€/)

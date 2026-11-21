@@ -536,22 +536,27 @@ async function assertComparatorFamily(browser) {
             `${description} ${JSON.stringify(geometry)}: valor convertido usa a linha inteira no celular`)
         }
         if (width === 1440 && route === 'emprestimo-4131') {
+          // Roteiro de 21/11/2026: demanda e encargos lado a lado; linha do tempo, resultado e atingir meta abaixo, na largura toda.
           const geometry = await page.locator('.e4 .fm-input-panel > .cx-form').evaluate(form => {
-            const { paddingLeft, paddingRight } = getComputedStyle(form)
+            const screen = form.closest('.e4')
+            const box = selector => screen.querySelector(selector).getBoundingClientRect()
+            const [operation, charges, timeline, result, meta] = ['.fm-operation', '.e4-encargos', '.rt-timeline', '#fm-result', '.e4-meta'].map(box)
             return {
-              available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
-              meta:form.querySelector('.e4-meta').getBoundingClientRect().width,
-              operation:form.querySelector('.fm-operation').getBoundingClientRect().width,
-              hedge:form.querySelector('.e4-hedge').getBoundingClientRect().width,
-              options:form.querySelector('.e4-mais').getBoundingClientRect().width,
-              select:form.querySelector('#e4-meta-kind').getBoundingClientRect().width,
-              value:form.querySelector('#e4-meta').getBoundingClientRect().width,
+              available:form.clientWidth,
+              used:charges.right - operation.left,
+              topGap:Math.abs(charges.top - operation.top),
+              operation:operation.width, charges:charges.width, timeline:timeline.width, result:result.width, meta:meta.width,
+              inOrder:timeline.top >= Math.max(operation.bottom, charges.bottom) && result.top >= timeline.bottom && meta.top >= result.bottom,
+              select:box('#e4-meta-kind').width,
+              value:box('#e4-meta').width,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
-          for (const block of ['meta', 'operation', 'hedge', 'options']) {
+          assert.ok(geometry.topGap <= 1 && Math.abs(geometry.used - geometry.available) <= 2 && Math.abs(geometry.operation - geometry.charges) <= 2, details + ': demanda e encargos lado a lado, na largura útil')
+          for (const block of ['timeline', 'result', 'meta']) {
             assert.ok(Math.abs(geometry[block] - geometry.available) <= 2, details + ': ' + block + ' ocupa a largura útil')
           }
+          assert.ok(geometry.inOrder, details + ': linha do tempo, resultado e atingir meta abaixo dos dados, nesta ordem')
           assert.ok(geometry.select >= 160 && geometry.value >= 120, details + ': campos da meta têm largura de leitura')
         }
         if (width === 1440 && route === 'finame-materiais') {

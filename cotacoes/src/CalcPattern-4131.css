@@ -1,6 +1,6 @@
 /* Empréstimo externo (4131) no padrão visual das calculadoras (aprovado em 18/11/2026), o mesmo do BNDES Finame.
-   Quadros de entrada: faixa azul-marinho com linha laranja. Cotação: única com borda laranja, fixa ao lado dos dados
-   no computador (a partir de 1200 px) e logo abaixo deles em telas menores. Só apresentação: nenhuma regra de cálculo mora aqui.
+   Quadros de entrada: faixa azul-marinho com linha laranja. Resultado: único com borda laranja, abaixo dos dados, na
+   largura toda (roteiro de 21/11/2026, no fim deste arquivo). Só apresentação: nenhuma regra de cálculo mora aqui.
    Tudo restrito a .bw.e4; seletores com :root[data-theme] body para vencer as camadas anteriores sem !important. */
 :root {
   --e4-orange:#ff6200;
@@ -12,24 +12,16 @@
 :root[data-theme] body main.app .cx.bw.e4 > .cx-back { position:absolute; left:0; bottom:calc(100% + 4px); margin:0; padding:0 12px 0 0; }
 
 /* Quadros de entrada: faixa azul-marinho, título branco em negrito e uma linha laranja (um destaque só). */
-:root[data-theme] body .bw.e4 .cx-finame :is(.fm-group:not(.e4-opcoes),.e4-meta,.e4-mais) { padding:0; overflow:hidden; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); }
-:root[data-theme] body .bw.e4 .cx-finame :is(.fm-group,.e4-meta) > h3,
-:root[data-theme] body .bw.e4 .cx-finame .e4-mais > summary { display:flex; align-items:center; gap:8px; margin:0; padding:10px 14px; min-height:44px; box-sizing:border-box; background:var(--e4-navy); color:#fff; border:0; border-bottom:3px solid var(--e4-orange); border-radius:0; font-size:.95rem; font-weight:700; font-variant-caps:normal; letter-spacing:0; text-transform:none; line-height:1.3; }
+:root[data-theme] body .bw.e4 .cx-finame :is(.fm-group,.e4-meta) { padding:0; overflow:hidden; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); }
+:root[data-theme] body .bw.e4 .cx-finame :is(.fm-group,.e4-meta) > h3 { display:flex; align-items:center; gap:8px; margin:0; padding:10px 14px; min-height:44px; box-sizing:border-box; background:var(--e4-navy); color:#fff; border:0; border-bottom:3px solid var(--e4-orange); border-radius:0; font-size:.95rem; font-weight:700; font-variant-caps:normal; letter-spacing:0; text-transform:none; line-height:1.3; }
 :root[data-theme] body .bw.e4 .cx-finame .fm-group > h3 svg { display:none; }
 :root[data-theme] body .bw.e4 .cx-finame :is(.fm-group,.e4-meta) > h3::before,
 :root[data-theme] body .bw.e4 .cx-finame :is(.fm-group,.e4-meta) > h3::after { content:none; display:none; }
-:root[data-theme] body .bw.e4 .cx-finame :is(.fm-group,.e4-meta) > h3 .fi-help > button,
-:root[data-theme] body .bw.e4 .cx-finame .e4-mais > summary .fi-help > button { color:#fff; border-color:#ffffff88; }
-:root[data-theme] body .bw.e4 .cx-finame .fm-group:not(.e4-opcoes) > .fm-group-fields { padding:12px 14px 14px; }
+:root[data-theme] body .bw.e4 .cx-finame :is(.fm-group,.e4-meta) > h3 .fi-help > button { color:#fff; border-color:#ffffff88; }
+:root[data-theme] body .bw.e4 .cx-finame .fm-group > .fm-group-fields { padding:12px 14px 14px; }
 :root[data-theme] body .bw.e4 .cx-finame .e4-meta > :not(h3) { margin-left:14px; margin-right:14px; }
 :root[data-theme] body .bw.e4 .cx-finame .e4-meta > .e4-meta-campos { margin-top:12px; margin-bottom:12px; }
 :root[data-theme] body .bw.e4 .cx-finame .e4-meta > .e4-origem:not(:empty) { margin-bottom:12px; }
-/* Mais opções: a faixa é o próprio botão que abre; o seletor ▶ e o contador ficam legíveis sobre o azul. */
-:root[data-theme] body .bw.e4 .cx-finame .e4-mais > summary { cursor:pointer; list-style:none; }
-:root[data-theme] body .bw.e4 .cx-finame .e4-mais > summary small { margin-left:auto; color:#ffd2b3; }
-:root[data-theme] body .bw.e4 .cx-finame .e4-mais:not([open]) > summary { border-bottom-color:transparent; }
-:root[data-theme] body .bw.e4 .cx-finame .e4-mais > .cx-hint { margin:10px 14px 4px; }
-:root[data-theme] body .bw.e4 .cx-finame .e4-mais .e4-opcoes > .fm-group-fields { padding:10px 14px 14px; }
 /* Rótulos em uma linha; campos e valores com a mesma altura e o mesmo corpo de letra; "?" com área de toque de 24px ou mais. */
 :root[data-theme] body .bw.e4 .cx-finame .fm-rotulo { flex-wrap:nowrap; white-space:nowrap; min-width:0; }
 :root[data-theme] body .bw.e4 .cx-finame .fm-rotulo > label { overflow:hidden; text-overflow:ellipsis; }
@@ -41,15 +33,11 @@
 :root[data-theme] body .bw.e4 .e4-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.72rem; font-weight:800; line-height:1; }
 :root[data-theme] body .bw.e4 #fm-result > .e4-alerta { margin:12px 14px 0; }
 
-/* Cotação ao lado dos dados (computador largo); abaixo deles nas telas menores. */
+/* Dados em cima, linha do tempo e resultado abaixo, na largura toda. */
+:root[data-theme] body .bw.e4 .fm-workspace { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
 @media (min-width:1200px) {
-  :root[data-theme] body .bw.e4 .fm-workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,420px); gap:20px; align-items:start; }
-  :root[data-theme] body .bw.e4 .fm-workspace > .fm-results:not(.fm-zoomed) { position:sticky; top:88px; max-height:calc(100vh - 100px); overflow:auto; overscroll-behavior:contain; overflow-anchor:none; }
-  /* Com a cotação sempre à vista, o atalho laranja "Custo · Ver resultado" fica redundante. */
+  /* No computador largo o resultado aparece logo abaixo dos dados: o atalho "Custo · Ver resultado" fica redundante. */
   :root[data-theme] body .bw.e4 .fm-workspace .fm-show-result { display:none; }
-}
-@media (max-width:1199px) {
-  :root[data-theme] body .bw.e4 .fm-workspace { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
 }
 :root[data-theme] body .bw.e4 .fm-results { display:flex; flex-direction:column; gap:10px; min-width:0; }
 :root[data-theme] body .bw.e4 .e4-secondary { display:grid; gap:12px; margin-top:16px; min-width:0; }
@@ -118,7 +106,6 @@
 @media (min-width:1001px) {
   :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-answer-main b { font-size:2.6rem; }
   :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-answer-side b { font-size:1.5rem; }
-  :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-equiv { grid-template-columns:repeat(4,minmax(0,1fr)); }
   :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-equiv dd b { font-size:1.3rem; }
   :root[data-theme] body .bw.e4 #fm-result.fm-zoom .e4-valores { font-size:1rem; }
 }
@@ -133,15 +120,52 @@
   :root[data-theme] body .bw.e4 #fm-result .e4-answer-main b { font-size:1.6rem; }
   :root[data-theme] body .bw.e4 .fm-results > .fm-print-actions { grid-template-columns:1fr; }
 }
-/* Faixa da cotação: título e "ampliar" na primeira linha; a origem da projeção e a ajuda logo abaixo. */
-:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero .cx-heading { flex:1 1 auto; min-width:0; order:0; }
+/* Faixa do resultado: título e "ampliar" na primeira linha; a origem da projeção e a ajuda logo abaixo.
+   O título quebra dentro do próprio espaço, para o botão de ampliar ficar ao lado dele também no celular. */
+:root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero .cx-heading { display:block; flex:1 1 0; min-width:0; order:0; }
 :root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero .fm-zoom-toggle { order:1; }
 :root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero::after { content:''; order:1; flex-basis:100%; height:0; }
 :root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero small { order:2; flex:0 1 auto; margin-left:0; }
 :root[data-theme] body .bw.e4 .fm-results #fm-result > header.fm-hero > .fi-help { order:3; }
 @media (max-width:640px) {
   /* Celular: um campo por linha, para cada rótulo caber em uma linha. */
-  :root[data-theme] body .bw.e4 .cx-finame :is(.fm-operation,.e4-hedge) .fm-group-fields { grid-template-columns:minmax(0,1fr); }
   :root[data-theme] body .bw.e4 .cx-finame :is(.fm-operation,.e4-hedge) .fm-group-fields > .cx-field { grid-column:1/-1; }
   :root[data-theme] body .bw.e4 .cx-finame .fm-operation .fm-group-fields > .cx-field .fm-rotulo { min-height:0; }
+}
+
+/* Roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos, 3 Linha do tempo e 4 Resultado. */
+/* Campos: até três colunas, enquanto cada uma tiver largura de leitura; no celular, um por linha. */
+:root[data-theme] body .bw.e4 .cx-finame :is(.fm-operation,.e4-encargos) .fm-group-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,max(215px,30%)),1fr)); align-items:start; }
+/* Cada campo ocupa uma coluna; notas e a caixa das taxas coladas ocupam a linha inteira. */
+:root[data-theme] body .bw.e4 .cx-finame :is(.fm-operation,.e4-encargos) .fm-group-fields > * { grid-column:auto; }
+:root[data-theme] body .bw.e4 .cx-finame :is(.fm-operation,.e4-encargos) .fm-group-fields > :is(.e4-origem,.e4-colar,.e4-future,.e4-curve-note) { grid-column:1/-1; }
+/* IOF-câmbio: calculado pela tela, mostrado como valor só de leitura. */
+:root[data-theme] body .bw.e4 .cx-finame .fm-field-iof output { border:1px solid var(--bw-line); }
+:root[data-theme] body .bw.e4 .cx-finame .fm-field-iof output span { color:var(--bw-mut); font-size:.75rem; }
+/* Proteção cambial (NDF): subgrupo dentro dos encargos. */
+:root[data-theme] body .bw.e4 .cx-finame .e4-hedge { margin:0 14px; padding:10px 0 12px; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .bw.e4 .cx-finame .e4-hedge > .rt-group { margin:0 0 8px; }
+:root[data-theme] body .bw.e4 .cx-finame .e4-hedge > .fm-group-fields { padding:0; grid-template-columns:repeat(auto-fit,minmax(min(100%,max(170px,30%)),1fr)); }
+/* Gavetas "Detalhes do contrato" e "Mais encargos": o mesmo desenho da gaveta da linha mestra, com o resumo no título. */
+:root[data-theme] body .bw.e4 .cx-finame .e4-gaveta { margin:0 14px 4px; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .bw.e4 .cx-finame .e4-gaveta > summary { padding:10px 0; min-height:44px; box-sizing:border-box; color:var(--bw-link); font-size:.86rem; line-height:1.4; cursor:pointer; }
+:root[data-theme] body .bw.e4 .cx-finame .e4-gaveta > summary small { color:var(--bw-mut); font-size:.78rem; }
+:root[data-theme] body .bw.e4 .cx-finame .e4-gaveta > .fm-group-fields { padding:0 0 10px; }
+/* No slide do modo Apresentar as gavetas ficam abertas e sem o título clicável. */
+.sl-calc .bw.e4 details.e4-gaveta[open] { display:block; }
+.sl-calc .bw.e4 .e4-gaveta > summary { display:none; }
+/* Os quadros de entrada ocupam a mesma largura da linha do tempo e do resultado. */
+:root[data-theme] body .bw.e4 .cx-finame .cx-form { padding:0; gap:16px; }
+/* Linha do tempo e resultado, um abaixo do outro. */
+:root[data-theme] body .bw.e4 .fm-results { gap:16px; }
+:root[data-theme] body .bw.e4 .fm-results > .fm-print-actions { margin-top:-6px; }
+/* Na largura toda, as quatro equivalências cabem lado a lado. */
+@media (min-width:1001px) {
+  :root[data-theme] body .bw.e4 #fm-result .e4-equiv { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+/* Referência de mercado: alinhada aos demais blocos. */
+:root[data-theme] body .bw.e4 .cx-finame .rm { margin:16px 0 0; }
+@media (min-width:1200px) {
+  /* Computador largo: demanda e encargos lado a lado. */
+  :root[data-theme] body .bw.e4 .cx-finame .cx-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:16px; }
 }

@@ -59,7 +59,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'conta-garantida') return <ContaGarantida onBack={() => onView('')} />
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
-  if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} />
+  if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} apresentacao={apresentacao} />
   if (view === 'cambio-futuro') return <CambioFuturoCenario onBack={() => onView('')} quotes={quotes} />
   if (view === 'cambio-futuro/tir-usd') return <CambioFuturo onBack={() => onView('cambio-futuro')} quotes={quotes} />
   if (view === 'cdi-dolar') return <CdiDolar onBack={() => onView('')} quotes={quotes} />
