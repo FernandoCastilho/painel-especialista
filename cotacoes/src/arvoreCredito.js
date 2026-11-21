@@ -5,6 +5,7 @@
 // Regras e fontes: docs/arvore-decisao-credito.md e docs/arvore-credito-regras-produtos.md.
 
 import { parseFaturamento } from './faturamento.js'
+import { estimateNcg } from './alongamento.js'
 
 export const CONSULTA = '18/11/2026' // data em que as regras abaixo foram conferidas
 export const MAX_FOLHA = 3 // decisão de Fernando: no máximo três possibilidades na frente
@@ -70,8 +71,8 @@ export const cnaeCpr = (cnae) => {
 // `avisos(ctx)` devolve as observações que dependem do perfil (regime tributário, prazo, região).
 export const OPERACOES = {
   4131: {
-    nome: 'Empréstimo externo (4131) com NDF',
-    resumo: 'Dinheiro captado no exterior, em dólar ou euro, com proteção cambial (NDF) para a dívida ficar em reais.',
+    nome: 'Empréstimo externo (4131) com proteção cambial',
+    resumo: 'Dinheiro captado no exterior, em dólar ou euro, com proteção cambial (NDF ou swap), total ou parcial, para a dívida ficar em reais.',
     cobre: 'Uso livre: pode cobrir o bem, os impostos e as despesas numa operação só.',
     foraDeCobertura: 'Nada pela norma; o contrato pode restringir.',
     impostos: 'Sem IOF de crédito. IOF de câmbio de 3,5% na entrada se o prazo médio for de até 364 dias; zero acima disso. IR de 15% sobre os juros pagos ao exterior.',
@@ -86,6 +87,7 @@ export const OPERACOES = {
       if (ctx.prazoMeses && ctx.prazoMeses <= 12) a.push('Prazo de até 12 meses: o prazo médio fica em até 364 dias, e a entrada paga 3,5% de IOF de câmbio.')
       else if (ctx.prazoMeses) a.push('Confira o prazo médio na calculadora 4131: até 364 dias, a entrada paga 3,5% de IOF de câmbio.')
       if (ctx.exporta && ctx.importa) a.push('A empresa exporta: a receita em moeda estrangeira pode pagar parte da dívida e reduzir a proteção necessária (proposta a confirmar).')
+      a.push('Proteção parcial (Fernando, 20/11/2026): identifique a parte exposta e teste se o caixa aguenta câmbio desfavorável. Não há percentual mínimo definido.')
       return a
     },
   },
@@ -346,6 +348,8 @@ export const OPERACOES = {
 }
 
 // Folhas: ordem por necessidade. `confirmada` = ordem confirmada por Fernando em 18/11/2026; as demais são proposta.
+// Propostas (decisão de Fernando, 21/11/2026): seguem a nota do Obsidian "Árvore de decisão de crédito PJ" (N02/N18, N09, N10
+// e N11 a N20), não as sugestões anteriores do Claude.
 export const NECESSIDADES = [
   { id: 'gap-caixa', nome: 'Gap de caixa (capital de giro)', confirmada: true, ordem: ['4131', 'finame-materiais', 'cpr', 'giro', 'conta-garantida', 'desconto', 'giro-bndes'] },
   { id: 'maquina-importada', nome: 'Máquina importada', confirmada: true, ordem: ['4131', 'finimp', 'cpr', 'finame-materiais', 'giro', 'carta-credito'], importa: true },
@@ -355,19 +359,29 @@ export const NECESSIDADES = [
   { id: 'dividendos', nome: 'Distribuição de dividendos', confirmada: true, ordem: ['4131', 'giro', 'giro-bndes', 'nota-comercial', 'debenture'] },
   { id: 'compra-empresa', nome: 'Compra de outra empresa', confirmada: true, ordem: ['4131', 'giro', 'nota-comercial', 'debenture'] },
   { id: 'estoque-nacional', nome: 'Estoque nacional por prazo longo', confirmada: true, ordem: ['finame-materiais', '4131', 'cpr', 'giro', 'giro-bndes'] },
-  { id: 'alongar-divida', nome: 'Alongar dívida de curto prazo', confirmada: false, ordem: ['giro', '4131', 'giro-bndes', 'nota-comercial', 'finame-materiais'] },
-  { id: 'obra-ampliacao', nome: 'Obra, ampliação ou planta nova', confirmada: false, ordem: ['bndes-automatico', '4131', 'giro', 'nota-comercial', 'debenture'] },
-  { id: 'garantia-fornecedor', nome: 'Garantia exigida por fornecedor estrangeiro', confirmada: false, ordem: ['carta-credito', 'finimp'], importa: true },
-  { id: 'garantia-contrato', nome: 'Garantia de execução de contrato', confirmada: false, ordem: ['fianca', 'giro'] },
+  { id: 'alongar-divida', nome: 'Alongar dívida de curto prazo ou vencimento concentrado (N02/N18)', confirmada: false, ordem: ['giro', '4131', 'giro-bndes', 'nota-comercial', 'finame-materiais'] },
+  { id: 'garantia-fornecedor', nome: 'Garantia exigida por fornecedor estrangeiro (N09)', confirmada: false, ordem: ['carta-credito', 'finimp'], importa: true },
+  { id: 'garantia-contrato', nome: 'Garantia de execução de contrato (N10)', confirmada: false, ordem: ['fianca', 'giro'] },
+  { id: 'planta-etapas', nome: 'Ampliação de planta por etapas (N11)', confirmada: false, ordem: ['bndes-automatico', '4131', 'giro', 'nota-comercial'] },
+  { id: 'locacao-ou-compra', nome: 'Usar veículo ou equipamento sem precisar comprá-lo (N12)', confirmada: false, ordem: ['finame', 'giro'] },
+  { id: 'maquina-urgente', nome: 'Máquina urgente enquanto o crédito definitivo tramita (N13)', confirmada: false, ordem: ['giro', 'conta-garantida'] },
+  { id: 'safra', nome: 'Insumos da safra (N14)', confirmada: false, ordem: ['cpr', 'giro'] },
+  { id: 'desconto-fornecedor', nome: 'Aproveitar desconto de fornecedor à vista (N15)', confirmada: false, ordem: ['desconto', 'conta-garantida', 'giro'] },
+  { id: 'carteira-concentrada', nome: 'Carteira concentrada ou com atrasos (N16)', confirmada: false, ordem: ['desconto', 'giro'] },
+  { id: 'insumo-importado-recorrente', nome: 'Insumo importado recorrente pago antes da venda local (N17)', confirmada: false, ordem: ['finimp', 'giro', '4131'], importa: true },
+  { id: 'moedas-diferentes', nome: 'Receita e dívida em moedas diferentes (N19)', confirmada: false, ordem: ['4131', 'acc-ace', 'giro'] },
+  { id: 'garantia-exterior', nome: 'Contraparte estrangeira exige garantia, sem faltar caixa (N20)', confirmada: false, ordem: ['fianca', 'carta-credito'] },
 ]
 export const necessidadePorId = (id) => NECESSIDADES.find((n) => n.id === id) ?? null
 
-// Critérios de triagem do alongamento, não parâmetros de crédito ou aprovação.
-export const CRITERIOS_ALONGAMENTO = [
+// Critérios de triagem da 4131, não parâmetros de crédito ou aprovação. Nasceram no alongamento (19 e 20/11/2026) e,
+// por decisão de Fernando de 21/11/2026, valem em todas as necessidades em que a 4131 aparece.
+export const CRITERIOS_4131 = [
   ['caixa', 'O caixa está sem aperto relevante?'],
   ['alavancagem', 'A alavancagem não é excessiva?'],
   ['repagamento', 'A capacidade de pagar a nova dívida foi demonstrada?'],
 ]
+export const CRITERIOS_ALONGAMENTO = CRITERIOS_4131
 
 // Monta o contexto usado pelas regras a partir do que o especialista informou.
 export function contexto(entrada = {}) {
@@ -388,10 +402,9 @@ export function contexto(entrada = {}) {
     importa: Boolean(entrada.importa || nec?.importa),
     notasFiname: Boolean(entrada.notasFiname),
     notasCpr: Boolean(entrada.notasCpr),
-    ...(nec?.id === 'alongar-divida' && {
-      alongamento: Object.fromEntries(CRITERIOS_ALONGAMENTO.map(([id]) => [id, entrada.alongamento?.[id] === true])),
-      notasFiname: entrada.notasFiname === true,
-    }),
+    // Respostas da triagem da 4131 (o nome do campo vem do alongamento, onde a triagem nasceu).
+    alongamento: Object.fromEntries(CRITERIOS_4131.map(([id]) => [id, entrada.alongamento?.[id] === true])),
+    ...(nec?.id === 'alongar-divida' && { notasFiname: entrada.notasFiname === true }),
     maquinaCredenciada: entrada.maquinaCredenciada !== false,
   }
 }
@@ -408,11 +421,11 @@ export function montarFolha(entrada) {
     const op = OPERACOES[id]
     const alongamento = nec.id === 'alongar-divida'
     const finameIndireto = alongamento && id === 'finame-materiais'
-    const externa = alongamento && id === '4131'
+    const externa = id === '4131'
     const motivo = finameIndireto
       // O valor da dívida não é o valor dos gastos reembolsáveis. O agente financeiro valida o limite da despesa.
       ? (!ctx.notasFiname ? 'Faltam notas de compra elegíveis nos últimos 12 meses.' : null)
-      : externa && !CRITERIOS_ALONGAMENTO.every(([criterio]) => ctx.alongamento[criterio] === true)
+      : externa && !CRITERIOS_4131.every(([criterio]) => ctx.alongamento[criterio] === true)
         ? 'Só entra com os três pontos confirmados: sem aperto relevante de caixa, sem alavancagem excessiva e com capacidade de pagamento demonstrada.'
         : op.requisito?.(ctx)
     const item = { id, ...op, avisosPerfil: op.avisos ? op.avisos(ctx) : [] }
@@ -507,6 +520,17 @@ export function analisarFaturamento(texto, { unidade, valorPedido = 0, dividaCur
   }
 }
 export const nomeMes = (mes) => MES_NOME[mes - 1]
+
+// Ciclo de caixa (decisão de Fernando, 21/11/2026): prazos médios opcionais para separar a necessidade permanente do pico.
+// Reaproveita a conta de necessidade de capital de giro da calculadora Conta Garantida (alongamento.js), sem regra nova.
+// Volumes mensais em reais; sem custo e compras, mostra só o ciclo em dias.
+export function cicloDeCaixa({ pmr, pme, pmp, vendas, custo, compras }) {
+  if (![pmr, pme, pmp].every((d) => Number.isFinite(d) && d >= 0 && d <= 3660)) return null
+  const dias = pme + pmr - pmp
+  if (![vendas, custo, compras].every((v) => Number.isFinite(v) && v >= 0)) return { dias }
+  const r = estimateNcg({ mode: 'terms', sales: vendas, cost: custo, purchases: compras, pmr, pme, pmp })
+  return r.ok ? { dias, ncg: r.ncg } : { dias, erro: r.error }
+}
 
 // ---- Consulta pública do CNPJ (BrasilAPI) ----
 

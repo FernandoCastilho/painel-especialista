@@ -4,7 +4,7 @@ import Help from './CalculatorHelp.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import {
-  NECESSIDADES, CRITERIOS_ALONGAMENTO, OPERACOES, MARCAS, CONSULTA, MAX_FOLHA, UNIDADES, PORTE_ROTULO, CNPJ_SERVICO,
+  NECESSIDADES, CRITERIOS_4131, OPERACOES, necessidadePorId, cicloDeCaixa, MARCAS, CONSULTA, MAX_FOLHA, UNIDADES, PORTE_ROTULO, CNPJ_SERVICO,
   montarFolha, analisarFaturamento, consultarCnpj, cnpjValido, formatarCnpj, soDigitos, porteBndes, CONSULTA_CNPJ_ATIVA, RECEITA_CNPJ,
 } from './arvoreCredito.js'
 import './CalculatorStandard.css'
@@ -109,6 +109,7 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
   const [fatTexto, setFatTexto] = useState('')
   const [unidade, setUnidade] = useState('')
   const [curtaTexto, setCurtaTexto] = useState('')
+  const [ciclo, setCiclo] = useState({ pmr: '', pme: '', pmp: '', custo: '', compras: '' })
   const [visaoCliente, setVisaoCliente] = useState(false)
 
   const valor = parseMoneyInput(valorTexto, { optional: true })
@@ -120,15 +121,17 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
   const folha = necessidade ? montarFolha({
     necessidade, valor: valor.ok ? valor.value : 0, prazoMeses: prazo, receitaAnual,
     regime: empresa.regime, tipo: empresa.tipo, uf: empresa.uf, cnae: empresa.cnae, garantias, ...marcas,
-    ...(necessidade === 'alongar-divida' && {
-      alongamento: Object.fromEntries(CRITERIOS_ALONGAMENTO.map(([id]) => [id, alongamento[id] === 'sim'])),
-      notasFiname: notasAlongamento,
-    }),
+    alongamento: Object.fromEntries(CRITERIOS_4131.map(([id]) => [id, alongamento[id] === 'sim'])),
+    ...(necessidade === 'alongar-divida' && { notasFiname: notasAlongamento }),
   }) : null
   const porte = porteBndes(receitaAnual)
+  const tem4131 = Boolean(necessidadePorId(necessidade)?.ordem.includes('4131'))
+  const dias = (k) => (/^\d{1,4}$/.test(ciclo[k].trim()) ? Number(ciclo[k]) : NaN)
+  const reais = (k) => { const r = parseMoneyInput(ciclo[k], { optional: true }); return r.ok && ciclo[k].trim() ? r.value : NaN }
+  const cic = cicloDeCaixa({ pmr: dias('pmr'), pme: dias('pme'), pmp: dias('pmp'), vendas: fat?.ok ? fat.media : NaN, custo: reais('custo'), compras: reais('compras') })
   const marcar = (k) => (e) => setMarcas((m) => ({ ...m, [k]: e.target.checked }))
   const invalidarRepagamento = () => {
-    if (necessidade === 'alongar-divida' && alongamento.repagamento) {
+    if (alongamento.repagamento) {
       setAlongamento((anterior) => ({ ...anterior, repagamento: '' }))
     }
   }
@@ -249,16 +252,18 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
           <label><input type="checkbox" checked={marcas.notasCpr} onChange={marcar('notasCpr')} /> Notas fiscais validadas para a CPR</label>
           {necessidade === 'maquina-nacional' && <label><input type="checkbox" checked={marcas.maquinaCredenciada} onChange={marcar('maquinaCredenciada')} /> Máquina credenciada no Finame</label>}
         </fieldset>
-        {necessidade === 'alongar-divida' && <fieldset className="ac-checks cx-pad">
-          <legend>Triagem do alongamento</legend>
+        {tem4131 && <fieldset className="ac-checks cx-pad">
+          <legend>Triagem da 4131</legend>
           <p className="cx-hint">Para considerar a 4131, confirme os três pontos. Campo sem confirmação não libera a opção. Mudou valor ou prazo? Confirme novamente a capacidade de pagamento.</p>
-          {CRITERIOS_ALONGAMENTO.map(([id, pergunta]) => <Campo key={id} id={`ac-alongar-${id}`} label={pergunta}>
+          {CRITERIOS_4131.map(([id, pergunta]) => <Campo key={id} id={`ac-alongar-${id}`} label={pergunta}>
             <select id={`ac-alongar-${id}`} value={alongamento[id] ?? ''} onChange={(e) => setAlongamento((anterior) => ({ ...anterior, [id]: e.target.value }))}>
               <option value="">Não comprovado</option><option value="sim">Sim</option><option value="nao">Não</option>
             </select>
           </Campo>)}
-          <label><input type="checkbox" checked={notasAlongamento} onChange={(e) => setNotasAlongamento(e.target.checked)} /> Há despesa elegível separada, com notas de compra dos últimos 12 meses, para avaliar reembolso pelo Finame Materiais</label>
-          <p className="cx-hint">Finame Materiais pode aliviar o caixa. Não é quitação direta da dívida.</p>
+          {necessidade === 'alongar-divida' && <>
+            <label><input type="checkbox" checked={notasAlongamento} onChange={(e) => setNotasAlongamento(e.target.checked)} /> Há despesa elegível separada, com notas de compra dos últimos 12 meses, para avaliar reembolso pelo Finame Materiais</label>
+            <p className="cx-hint">Finame Materiais pode aliviar o caixa. Não é quitação direta da dívida.</p>
+          </>}
         </fieldset>}
         <fieldset className="ac-checks cx-pad">
           <legend>Garantias disponíveis</legend>
@@ -278,8 +283,31 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
           </div>
           <Campo id="ac-curta" label="Dívida que vence em 12 meses (opcional)" ajuda="A tabela traz o saldo da dívida, não os vencimentos. Informe quanto vence em 12 meses para ver a concentração no curto prazo."><MoneyInput id="ac-curta" value={curtaTexto} onChange={setCurtaTexto} /></Campo>
           {fat && !fat.ok && <p className="cx-hint" role="alert">{fat.precisaUnidade ? 'Escolha a unidade da tabela (o cabeçalho não diz se é R$, R$ mil ou R$ milhões).' : 'Nenhum mês com faturamento lido.'}</p>}
+          <fieldset className="ac-checks ac-ciclo">
+            <legend>Ciclo de caixa (opcional)</legend>
+            <div className="cx-form">
+              {[['pmr', 'Prazo médio de recebimento (dias)'], ['pme', 'Prazo médio de estoque (dias)'], ['pmp', 'Prazo médio de pagamento a fornecedor (dias)']].map(([k, r]) => (
+                <Campo key={k} id={`ac-${k}`} label={r}><input id={`ac-${k}`} inputMode="numeric" value={ciclo[k]} onChange={(e) => setCiclo((c) => ({ ...c, [k]: e.target.value }))} /></Campo>
+              ))}
+              <Campo id="ac-custo" label="Custo das vendas por mês" ajuda="Com custo e compras, a tela estima a necessidade permanente de capital de giro pela mesma conta da calculadora Conta Garantida. O faturamento mensal vem da média da tabela acima."><MoneyInput id="ac-custo" value={ciclo.custo} onChange={(v) => setCiclo((c) => ({ ...c, custo: v }))} /></Campo>
+              <Campo id="ac-compras" label="Compras por mês"><MoneyInput id="ac-compras" value={ciclo.compras} onChange={(v) => setCiclo((c) => ({ ...c, compras: v }))} /></Campo>
+            </div>
+          </fieldset>
         </div>
       </article>
+
+      {cic && (
+        <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">
+          <ExpandablePanel title="Ciclo de caixa">
+            <ul className="ac-numeros">
+              <li>Ciclo de caixa: <b>{cic.dias} dias</b> (estoque + recebimento − pagamento a fornecedor).</li>
+              {cic.ncg != null && <li>Necessidade permanente de capital de giro estimada: <b>{brl(cic.ncg)}</b>.</li>}
+              {cic.erro && <li>{cic.erro}</li>}
+            </ul>
+            <p className="cx-hint">{cic.ncg != null ? 'A parte permanente pede linha longa; o que passa dela, comparado com a dívida atual e o pedido, tende a ser pico, para linha curta.' : 'Com a tabela de faturamento, o custo das vendas e as compras por mês, a tela estima a necessidade permanente de capital de giro.'} Mesma conta da calculadora Conta Garantida (saldos médios pelos prazos), sem projeção.</p>
+          </ExpandablePanel>
+        </article>
+      )}
 
       {fat?.ok && (
         <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">

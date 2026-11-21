@@ -365,7 +365,7 @@ Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convive
 
 - **21/11/2026 — ciclo de caixa entra como dado opcional** (decisão de Fernando). Três campos opcionais: prazo médio de recebimento, de estoque e de pagamento a fornecedor. Servem para separar a parte permanente da necessidade (linha longa) da parte de pico (linha curta), reaproveitando a conta de necessidade de capital de giro que o Painel já tem na Conta Garantida (`alongamento.js`, `estimateNcg`), sem regra nova. A mudança na tela ainda não foi feita.
 
-**Pendente de decisão de Fernando:** levar estas três decisões à tela (4131 com triagem em todas as folhas, N11 a N20 do Obsidian como propostas, campos do ciclo de caixa). É mudança no Painel publicado; segue com teste, parecer do Auditor e autorização de publicação.
+**Aplicação na tela autorizada por Fernando em 21/11/2026** ("1": aplicar e publicar, com testes e parecer do Auditor). Detalhe em `docs/arvore-credito-tela.md`, seção "Atualização de 21/11/2026".
 
 ### Propostas do Claude ainda não confirmadas
 

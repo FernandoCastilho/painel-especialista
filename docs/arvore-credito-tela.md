@@ -45,3 +45,13 @@ Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECRE
 - **Etapa 2:** números a partir da taxa digitada, com parcela ajustada aos meses fortes e fracos. Conta nova, com revisão independente.
 - **Etapa 3:** imposto do NDF no Lucro Presumido em número, depois de validação de tributarista e autorização de Fernando.
 - Revisão periódica das regras embutidas (data de conferência visível na tela).
+
+## Atualização de 21/11/2026 (perguntas do dia)
+
+Três decisões de Fernando aplicadas na tela:
+- **Triagem da 4131 em todas as necessidades.** A 4131 só entra na folha com os três pontos confirmados (sem aperto relevante de caixa, alavancagem compatível, capacidade de pagamento demonstrada), em qualquer necessidade, não só no alongamento. O cartão passa a se chamar "Empréstimo externo (4131) com proteção cambial" e avisa que a proteção pode ser parcial, testando a parte exposta.
+- **Propostas seguem o Obsidian.** As necessidades em proposta passam a ser N02/N18, N09, N10 e N11 a N20 da nota "Árvore de decisão de crédito PJ". Sai a proposta "Obra, ampliação ou planta nova" (substituída por N11).
+- **Ciclo de caixa opcional.** Prazos médios de recebimento, estoque e pagamento a fornecedor mostram o ciclo em dias; com custo das vendas e compras por mês, a tela estima a necessidade permanente de capital de giro pela mesma conta da calculadora Conta Garantida (`estimateNcg`). Sem regra nova.
+
+Conferências: testes da árvore (19), `npm test`, `npm run lint`, `npm run build` e teste de tela em celular e computador, claro e escuro.
+

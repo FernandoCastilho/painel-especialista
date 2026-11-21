@@ -45,3 +45,4 @@ main.app section.ac .ac-linha a.ac-receita[target="_blank"] { display:inline-fle
 .ac-pedido { margin:0 0 6px; font-size:.95rem; }
 @media (max-width:520px) { .ac-dl { grid-template-columns:1fr; } .ac-dl dt { margin-top:4px; } }
 @media print { .ac-cliente .cx-back { display:none; } }
+.ac-ciclo { margin:6px 0 0; padding:0; border:0; }

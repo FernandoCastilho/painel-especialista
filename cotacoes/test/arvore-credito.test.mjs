@@ -11,6 +11,8 @@ import * as ac from '../src/arvoreCredito.js'
 
 const require = createRequire(import.meta.url)
 const ids = (lista) => lista.map((o) => o.id)
+// Triagem da 4131 confirmada (vale em todas as necessidades desde 21/11/2026).
+const OK4131 = { alongamento: { caixa: true, alavancagem: true, repagamento: true } }
 
 test('as oito folhas confirmadas por Fernando seguem a ordem combinada em 18/11/2026', () => {
   const ordem = Object.fromEntries(ac.NECESSIDADES.filter((n) => n.confirmada).map((n) => [n.id, n.ordem.slice(0, 3)]))
@@ -28,7 +30,7 @@ test('as oito folhas confirmadas por Fernando seguem a ordem combinada em 18/11/
 })
 
 test('mostra no máximo três e explica o que saiu', () => {
-  const f = ac.montarFolha({ necessidade: 'gap-caixa', valor: 2_000_000, prazoMeses: 6, garantias: ['duplicatas'], cnae: '4744001' })
+  const f = ac.montarFolha({ ...OK4131, necessidade: 'gap-caixa', valor: 2_000_000, prazoMeses: 6, garantias: ['duplicatas'], cnae: '4744001' })
   assert.deepEqual(ids(f.frente), ['4131', 'conta-garantida', 'desconto'])
   assert.deepEqual(ids(f.outras), ['giro-bndes'])
   assert.deepEqual(ids(f.sairam), ['finame-materiais', 'cpr', 'giro'])
@@ -37,7 +39,7 @@ test('mostra no máximo três e explica o que saiu', () => {
 })
 
 test('gap de caixa: prazo acima de 12 meses tira Conta Garantida e desconto; notas e CNAE trazem Finame e CPR', () => {
-  const f = ac.montarFolha({ necessidade: 'gap-caixa', valor: 3_000_000, prazoMeses: 36, receitaAnual: 40_000_000, garantias: ['duplicatas'], cnae: '1011201', notasFiname: true, notasCpr: true })
+  const f = ac.montarFolha({ ...OK4131, necessidade: 'gap-caixa', valor: 3_000_000, prazoMeses: 36, receitaAnual: 40_000_000, garantias: ['duplicatas'], cnae: '1011201', notasFiname: true, notasCpr: true })
   assert.deepEqual(ids(f.frente), ['4131', 'finame-materiais', 'cpr'])
   assert.ok(f.sairam.some((o) => o.id === 'conta-garantida' && /12 meses/.test(o.motivo)))
   assert.ok(f.sairam.some((o) => o.id === 'desconto'))
@@ -57,12 +59,12 @@ test('CPR: microempresa sai da folha com motivo neutro, sem expor política inte
 })
 
 test('regime tributário: aviso do NDF no Presumido e no Simples, não no Real', () => {
-  const aviso = (regime) => ac.montarFolha({ necessidade: 'compra-empresa', regime, prazoMeses: 48 }).frente[0].avisosPerfil.join(' ')
+  const aviso = (regime) => ac.montarFolha({ ...OK4131, necessidade: 'compra-empresa', regime, prazoMeses: 48 }).frente[0].avisosPerfil.join(' ')
   assert.match(aviso('presumido'), /Lucro Presumido, o ganho no NDF é tributado/)
   assert.match(aviso('simples'), /Simples Nacional, o ganho no NDF/)
   assert.doesNotMatch(aviso('real'), /ganho no NDF é tributado/)
   assert.match(aviso('real'), /prazo médio/)
-  const curto = ac.montarFolha({ necessidade: 'materia-prima-importada', prazoMeses: 6 }).frente.find((o) => o.id === '4131')
+  const curto = ac.montarFolha({ ...OK4131, necessidade: 'materia-prima-importada', prazoMeses: 6 }).frente.find((o) => o.id === '4131')
   assert.match(curto.avisosPerfil.join(' '), /3,5% de IOF de câmbio/)
 })
 
@@ -71,7 +73,7 @@ test('exportação: sem marcar, a necessidade já indica que exporta; debênture
   assert.deepEqual(ids(exp.frente), ['acc-ace', 'exim-pre', 'nce'])
   const ltda = ac.montarFolha({ necessidade: 'compra-empresa', tipo: 'ltda' })
   assert.ok(ltda.sairam.some((o) => o.id === 'debenture' && /S\.A\./.test(o.motivo)))
-  const sa = ac.montarFolha({ necessidade: 'compra-empresa', tipo: 'sa', receitaAnual: 100_000_000 })
+  const sa = ac.montarFolha({ ...OK4131, necessidade: 'compra-empresa', tipo: 'sa', receitaAnual: 100_000_000 })
   assert.match(sa.outras.find((o) => o.id === 'debenture').avisosPerfil.join(' '), /FÁCIL/)
 })
 
@@ -246,4 +248,33 @@ test('alongamento: só a opção complementar elegível abre a calculadora Finam
   }
   const dividendos = ac.montarFolha({ necessidade: 'dividendos', receitaAnual: 40_000_000 })
   assert.equal(diretas(dividendos).find((op) => op.id === 'giro-bndes').calculadora, 'finame-materiais')
+})
+
+test('21/11/2026: triagem da 4131 vale em todas as necessidades, com proteção total ou parcial', () => {
+  for (const n of ac.NECESSIDADES.filter((x) => x.ordem.includes('4131'))) {
+    const sem = ac.montarFolha({ necessidade: n.id, exporta: true, importa: true })
+    assert.ok(!sem.frente.some((o) => o.id === '4131') && !sem.outras.some((o) => o.id === '4131'), n.id)
+    assert.match(sem.sairam.find((o) => o.id === '4131').motivo, /três pontos confirmados/, n.id)
+    const com = ac.montarFolha({ ...OK4131, necessidade: n.id, exporta: true, importa: true })
+    const op = [...com.frente, ...com.outras].find((o) => o.id === '4131')
+    assert.ok(op, n.id)
+    assert.match(op.avisosPerfil.join(' '), /Proteção parcial/, n.id)
+  }
+  assert.equal(ac.OPERACOES['4131'].nome, 'Empréstimo externo (4131) com proteção cambial')
+  assert.match(ac.OPERACOES['4131'].resumo, /total ou parcial/)
+})
+
+test('21/11/2026: propostas seguem o Obsidian (N02/N18, N09, N10 e N11 a N20)', () => {
+  const propostas = ac.NECESSIDADES.filter((n) => !n.confirmada).map((n) => n.nome.match(/\((N[\d/N]+)\)$/)?.[1])
+  assert.deepEqual(propostas, ['N02/N18', 'N09', 'N10', 'N11', 'N12', 'N13', 'N14', 'N15', 'N16', 'N17', 'N19', 'N20'])
+  assert.equal(ac.necessidadePorId('obra-ampliacao'), null)
+  for (const n of ac.NECESSIDADES) for (const id of n.ordem) assert.ok(ac.OPERACOES[id], `${n.id}: ${id}`)
+})
+
+test('21/11/2026: ciclo de caixa usa a mesma conta da Conta Garantida', () => {
+  assert.equal(ac.cicloDeCaixa({ pmr: NaN, pme: 45, pmp: 30 }), null)
+  assert.deepEqual(ac.cicloDeCaixa({ pmr: 60, pme: 45, pmp: 30 }), { dias: 75 })
+  // 3.000.000/30×60 + 2.000.000/30×45 − 1.800.000/30×30 = 6.000.000 + 3.000.000 − 1.800.000
+  assert.deepEqual(ac.cicloDeCaixa({ pmr: 60, pme: 45, pmp: 30, vendas: 3_000_000, custo: 2_000_000, compras: 1_800_000 }), { dias: 75, ncg: 7_200_000 })
+  assert.equal(ac.cicloDeCaixa({ pmr: 10, pme: 0, pmp: 90 }).dias, -80)
 })
