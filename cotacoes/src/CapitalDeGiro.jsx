@@ -69,12 +69,15 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const financedFees = sumExpenses(true)
   const tax = resolveCreditIof({ date: lm.start, profile: form.profile, operationValue: principal.value + financedFees, eligible: form.eligible })
   const isBullet = lm.system === 'bullet'
+  // Aviso de data só quando o problema é de data. Sem prazo ou carência válidos não há vencimento automático a conferir:
+  // quem avisa é o campo do prazo, e a gaveta dos detalhes não abre por isso.
+  const datesOk = firstDue ? lm.start && firstDue > lm.start : !schedule.ok && lm.start
   const errors = {
     value: principal.ok && principal.value > 0 ? null : principal.error || 'Informe um valor maior que zero.',
     n: schedule.ok || /carência/.test(schedule.error) ? null : schedule.error,
     grace: schedule.ok || !/carência/.test(schedule.error) ? null : schedule.error,
     rate: rate !== null && rate <= 1000 ? null : 'Informe uma taxa entre 0% e 1.000%.',
-    dates: firstDue && lm.start && firstDue > lm.start ? null : 'Informe a liberação e o primeiro vencimento posterior à liberação.',
+    dates: datesOk ? null : 'Informe a liberação e o primeiro vencimento posterior à liberação.',
     iof: tax.ok ? null : tax.error,
   }
   for (const item of expenses) errors[item.id] = item.parsed.ok ? null : item.parsed.error
@@ -117,9 +120,14 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   let paymentNote = 'Primeira parcela'
   if (isBullet) paymentNote = 'Pagamento único'
   else if (result && lm.system === 'sac') paymentNote = `1ª parcela. A última é de ${brl(last.payment)}`
-  else if (result) paymentNote = `1ª de ${result.n} parcelas mensais`
+  else if (result) paymentNote = result.n === 1 ? 'Parcela única' : `1ª de ${result.n} parcelas mensais`
+  const single = isBullet || result?.n === 1 ? 'Pagamento único' : null
+  const totalNote = upfront > 0 ? `${single ?? 'Parcelas'} mais o que é pago na liberação` : single ?? 'Soma das parcelas'
   const detailsSummary = [`liberação em ${lm.start ? dmy(lm.start) : '—'}`, PRACAS_CONTRATO.find(praca => praca.id === lm.praca)?.label,
     form.firstDue ? `1º vencimento em ${dmy(form.firstDue)}` : '1º vencimento automático', `garantia: ${form.guarantee.toLowerCase()}`].filter(Boolean).join(' · ')
+  // Aviso do quadro de resultado enquanto não há resultado.
+  const resultAlert = result ? null : { error: !!calculation?.error, warning: !!calculation?.error || hasErrors,
+    text: calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.') }
   const fieldError = (key, id) => ({ 'aria-invalid': !!errors[key], 'aria-describedby': errors[key] ? `${id}-err` : undefined })
 
   return <section className="cx bw calc-standard calc-workspace giro-screen" aria-labelledby="calc-h">
@@ -195,12 +203,11 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
       <div className="rt-outcome giro-outcome calc-result-shell" aria-live="polite">
         <LinhaDoTempo id="giro-timeline-title" className="giro-timeline" events={events}
           placeholder="Aparece depois de simular: liberação, carência, parcelas e quitação." />
-        <Resultado id="giro-result-title" className="giro-result" alert={result ? null : { error: !!calculation?.error, warning: !!calculation?.error || hasErrors,
-          text: calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.') }}>
+        <Resultado id="giro-result-title" className="giro-result" alert={resultAlert}>
           <Respostas items={[
             { question: 'Quanto entra no caixa', value: moneyText(result?.net), note: result ? `Valor líquido, de ${brl(result.value)} solicitados` : 'Valor líquido liberado' },
             { question: isBullet ? 'Quanto paga no vencimento' : 'Quanto paga por mês', value: moneyText(first?.payment), note: paymentNote },
-            { question: 'Quanto paga no total', value: moneyText(result?.total), note: upfront > 0 ? 'Parcelas mais o que é pago na liberação' : 'Soma das parcelas' },
+            { question: 'Quanto paga no total', value: moneyText(result?.total), note: totalNote },
             { question: 'Quanto custa', value: result ? percent(result.cet) : '—', note: 'Custo Efetivo Total (CET), em dias corridos', main: true },
           ]} />
           <ComposicaoDoCusto parts={parts} format={moneyText} rows={[

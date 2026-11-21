@@ -58,3 +58,12 @@ test('a referência de mercado é o último bloco da tela e mostra a curva prefi
   assert.ok(at > source.indexOf('Ver parcelas'), 'depois das parcelas')
   assert.match(source.slice(at), /^<ReferenciaMercado tipos=\{\['pre'\]\} \/>\s*<\/section>\s*\}\s*$/, 'nada depois dela')
 })
+
+test('textos de borda: parcela única e pagamento único não falam em "parcelas"', async () => {
+  const source = await readFile(new URL('../src/CapitalDeGiro.jsx', import.meta.url), 'utf8')
+  assert.match(source, /result\.n === 1 \? 'Parcela única' : `1ª de \$\{result\.n\} parcelas mensais`/)
+  assert.match(source, /const single = isBullet \|\| result\?\.n === 1 \? 'Pagamento único' : null/)
+  // Com uma parcela só, a conta devolve um único pagamento: a nota não pode dizer "soma das parcelas".
+  const one = giroOperation({ ...base, system: 'price', n: 1 })
+  assert.equal(one.rows.length, 1)
+})

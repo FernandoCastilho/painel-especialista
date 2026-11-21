@@ -54,7 +54,7 @@ export default function LinhaMestra({ prefix, title = 'Linha mestra · necessida
       {children}
     </div>
     {details && <details className="lm-details" ref={drawer} open={details.open}>
-      <summary>Detalhes do contrato{details.summary && <small> · {details.summary}</small>}</summary>
+      <summary>Detalhes do contrato{details.summary && <small> · {details.summary}</small>}{details.alert && <small className="lm-error"> · há um campo a conferir aqui</small>}</summary>
       <div className="lm-grid">{details.fields.map(field)}{details.children}</div>
     </details>}
     <p className="lm-foot">{foot}</p>

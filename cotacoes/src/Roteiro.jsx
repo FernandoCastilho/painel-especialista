@@ -38,9 +38,10 @@ export function Respostas({ items }) {
 // rows: linhas depois das partes, [{ label, value, kind }], com value já formatado e kind 'total' ou 'muted'.
 export function ComposicaoDoCusto({ title = 'Do que é feito o custo', parts, rows = [], format }) {
   const drawn = parts.map((part, index) => ({ ...part, tone: `rt-tone-${index + 1}` }))
+  const filled = drawn.filter(part => part.value > 0)
   return <>
     <h4 className="rt-group">{title}</h4>
-    {drawn.some(part => part.value > 0) && <div className="rt-bar" aria-hidden="true">{drawn.filter(part => part.value > 0).map(part =>
+    {filled.length > 0 && <div className="rt-bar" aria-hidden="true">{filled.map(part =>
       <i key={part.label} className={part.tone} style={{ flexGrow: part.value }} />)}</div>}
     <dl className="rt-parts">
       {drawn.map(part => <div key={part.label}><dt><i className={part.tone} aria-hidden="true" />{part.label}</dt><dd>{format(part.value)}</dd></div>)}

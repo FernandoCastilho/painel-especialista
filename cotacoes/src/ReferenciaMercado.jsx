@@ -39,15 +39,16 @@ function Cambio({ moeda }) {
   const [anchor, width] = useWidth()
   const { status, data } = useCentralDaily()
   const pontos = useMemo(() => historicoCenario(data, moeda, dias, marketDate(Date.now())), [data, moeda, dias])
+  const titulo = `${moeda}/BRL · cotação diária`
   return <article className="rm-cambio">
-    <header><h4>{moeda}/BRL · cotação diária</h4>
+    <header><h4>{titulo}</h4>
       <div className="rm-periodo" role="group" aria-label="Período do histórico">
         {[30, 90, 365].map(n => <button type="button" key={n} aria-pressed={dias === n} onClick={() => setDias(n)}>{n === 365 ? '1 ano' : `${n} dias`}</button>)}
       </div>
     </header>
     <div ref={anchor}>
       {pontos.length >= 2 ? <>
-        <Plot points={pontos} width={width} color="#1683d5" code={moeda} label={`${moeda}/BRL · cotação diária`} intraday={false}
+        <Plot points={pontos} width={width} color="#1683d5" code={moeda} label={titulo} intraday={false}
           fmt={v => 'R$ ' + cotacao.format(v)} dateLabel={t => dataBr(marketDate(t)).slice(0, 5)} compare={false} scales={false} />
         <p className="rm-fonte">Dados de {dataBr(marketDate(pontos[0].t))} a {dataBr(marketDate(pontos.at(-1).t))} (Brasília). Histórico diário da AwesomeAPI.</p>
       </> : <p className="rm-fonte" role="status">{status === 'loading' ? 'Consultando histórico…' : `Histórico ${moeda}/BRL indisponível neste período.`}</p>}

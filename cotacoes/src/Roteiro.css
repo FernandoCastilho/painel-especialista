@@ -44,6 +44,7 @@
 :root[data-theme] body .cx .rt-tone-1 { background: var(--bw-link); }
 :root[data-theme] body .cx .rt-tone-2 { background: var(--cp-orange); }
 :root[data-theme] body .cx .rt-tone-3 { background: var(--bw-mut); }
+:root[data-theme] body .cx .rt-tone-4 { background: var(--bw-strong-line); }
 /* Desfaz as regras gerais de lista do painel (styles.css: dl em duas colunas, dl div em coluna, dt e dd menores e cinza). */
 :root[data-theme] body .cx .rt-parts { display: block; }
 :root[data-theme] body .cx .rt-parts :is(dt, dd) { color: inherit; font-size: inherit; }
@@ -53,7 +54,6 @@
 :root[data-theme] body .cx .rt-parts dd { text-align: right; white-space: nowrap; }
 :root[data-theme] body .cx .rt-parts .rt-total { border-top: 2px solid var(--bw-strong-line); font-weight: 800; }
 :root[data-theme] body .cx .rt-parts .rt-muted { color: var(--bw-mut); }
-:root[data-theme] body .cx .rt-tone-4 { background: var(--bw-strong-line); }
 
 /* O slide do modo Apresentar tem largura fixa: lá vale o desenho de computador, mesmo com a janela estreita. */
 @media (max-width: 870px) {

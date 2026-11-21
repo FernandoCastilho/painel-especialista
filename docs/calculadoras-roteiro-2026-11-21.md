@@ -68,7 +68,7 @@ A linha mestra de 19/11 continua: o que se digita aqui segue para as outras calc
 
 Pedido: pôr sempre embaixo, ao final de tudo, um gráfico só para exemplificar. Taxa prefixada mostra o gráfico de juros do pré; pós-fixada mostra o CDI futuro da B3; operação em moeda mostra a moeda da tela.
 
-Bloco novo, "Referência de mercado", o último de cada calculadora. Reaproveita os gráficos que o painel já tem, com os dados do próprio painel:
+Bloco novo, "Referência de mercado", sempre o último da tela. Nesta publicação ele entra só no Capital de Giro; nas outras calculadoras entra conforme cada uma for para o roteiro. Reaproveita os gráficos que o painel já tem, com os dados do próprio painel:
 
 | Tipo de operação | Gráfico |
 |---|---|
@@ -82,7 +82,25 @@ Bloco novo, "Referência de mercado", o último de cada calculadora. Reaproveita
 - No Capital de Giro (taxa prefixada) entra a curva DI x pré. Fotos: `giro-referencia-computador.png` e `giro-referencia-celular.png`.
 - O BNDES já tem o "Histórico dos indexadores" no fim da tela e fica com ele como referência.
 
-Conferido: os três tipos abertos na tela com os dados públicos do painel de 18/11/2026, nos dois temas; 2.395 testes passando (1 novo, que garante que a referência é o último bloco do Giro); conferências de tela do Giro, do modo Apresentar e da busca.
+Conferido: a curva DI x pré aberta no Capital de Giro com os dados públicos do painel de 18/11/2026, nos dois temas; os outros dois tipos (CDI futuro e moeda) abertos em tela de teste, ainda sem calculadora que os use nesta publicação; 2.395 testes passando (1 novo, que garante que a referência é o último bloco do Giro); conferências de tela do Giro, do modo Apresentar, da busca e do desenho em cinco larguras (49 de 49).
+
+Não conferido: o bloco com os dados do painel no ar (aqui foram dados públicos baixados em 21/11/2026); aparelho físico e Windows. A conferência automática do projeto não tem o arquivo da curva, então lá o bloco aparece com o aviso de dado indisponível, sem desenhar o gráfico.
+
+## 6b. Peças comuns (segundo registro do rascunho)
+
+A numeração dos blocos, a linha do tempo, o quadro de resultado, as respostas e a composição do custo saíram do Capital de Giro para `Roteiro.jsx` e `Roteiro.css`, para as outras calculadoras usarem o mesmo desenho. O estilo da gaveta "Detalhes do contrato" foi para junto da linha mestra. O Capital de Giro ficou idêntico: fotos de antes e depois iguais ponto a ponto, no computador e no celular.
+
+## 6c. Parecer do Auditor Independente e ajustes (21/11/2026)
+
+O Auditor conferiu os três registros do rascunho 553 e não encontrou correção obrigatória: contas intocadas, números idênticos em 16.486 operações sorteadas e em 10 operações digitadas na tela de antes e na nova, outras telas sem diferença. Parecer "Insuficiente para validar" por faltar o registro do ok de Fernando para publicar já com a "Referência de mercado", pedida depois do "Giro agora".
+
+Ajustes feitos a partir dos achados dele, sem mexer em conta:
+
+- **Gaveta abria sozinha com o prazo vazio.** Apagar o prazo para redigitar abria os "Detalhes do contrato" com um aviso de data, e ela não fechava mais. Agora o aviso de data só aparece quando o problema é de data; prazo ou carência inválidos avisam no próprio campo e a gaveta fica como estava.
+- **Gaveta fechada com erro dentro.** O título da gaveta passa a dizer "há um campo a conferir aqui".
+- **Textos de borda.** Com uma parcela só, "Parcela única" (antes "1ª de 1 parcelas mensais"). No Bullet e na parcela única, "Quanto paga no total" fala em "Pagamento único" (antes "Soma das parcelas").
+
+Revisão de excesso dos três registros: o Simplificador da central não está instalado neste ambiente; foram usados o simplificador de código da sessão e a revisão de excesso (ponytail). A revisão não apontou correção obrigatória. Ficam anotados, sem mexer agora: o histórico da moeda reaproveita uma função que mora no arquivo da tela de Câmbio futuro; e os tipos "pós-fixada" e "moeda" do bloco de referência só passam a ser usados quando Necessidade do Cliente, FINIMP e 4131 entrarem no roteiro.
 
 ## 7. Próximo passo
 
