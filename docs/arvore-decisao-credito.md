@@ -363,6 +363,10 @@ Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convive
 
 - **21/11/2026 — lista de necessidades em proposta: vale a do Obsidian** (decisão de Fernando). As situações N11 a N20 da nota "Árvore de decisão de crédito PJ" (planta por etapas, locação, máquina urgente, safra, desconto à vista de fornecedor, carteira concentrada, insumo importado recorrente, vencimento concentrado, moedas diferentes, garantia à contraparte estrangeira) substituem as quatro propostas que a tela mostra hoje, como "proposta, a revisar". As perguntas do dia vão confirmá-las uma a uma. A mudança na tela ainda não foi feita.
 
+- **21/11/2026 — ciclo de caixa entra como dado opcional** (decisão de Fernando). Três campos opcionais: prazo médio de recebimento, de estoque e de pagamento a fornecedor. Servem para separar a parte permanente da necessidade (linha longa) da parte de pico (linha curta), reaproveitando a conta de necessidade de capital de giro que o Painel já tem na Conta Garantida (`alongamento.js`, `estimateNcg`), sem regra nova. A mudança na tela ainda não foi feita.
+
+**Pendente de decisão de Fernando:** levar estas três decisões à tela (4131 com triagem em todas as folhas, N11 a N20 do Obsidian como propostas, campos do ciclo de caixa). É mudança no Painel publicado; segue com teste, parecer do Auditor e autorização de publicação.
+
 ### Propostas do Claude ainda não confirmadas
 
 - Mostrar, por mês, quanto do faturamento vai para pagar a nova operação, sem limite fixo; o ponto de alerta seria definido por Fernando.
