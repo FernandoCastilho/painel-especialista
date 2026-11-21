@@ -21,7 +21,7 @@ import { addDays, busDaysIn, nextBusinessDay } from './holidays.js'
 import { AMORTS, CALENDARIOS, FREQS, IOF_SHORT_TERM, IRRF_OPTIONS, MAX_MONTHS, METAS, MOEDAS, curveFactors, diDoPrazo, fronteiraIof, hedge4131, lerTaxasFuturas, loan4131, metaTaxa4131, moedaOf, unhedged4131 } from './emprestimo4131.js'
 import { E4_FX_SCENARIOS, E4_QUOTE_NOTE, E4_SOURCES, condicoesE4, resumoE4 } from './emprestimo4131Presentation.js'
 import CalcBack from './CalcBack.jsx'
-import { LinhaDoTempo, step } from './Roteiro.jsx'
+import { step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -93,8 +93,8 @@ function useGaveta(erro) {
   return ref
 }
 
-// Empréstimo externo (4131) no roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos, 3 Linha do tempo
-// e 4 Resultado, de cima para baixo; depois, Atingir meta, comparações, premissas e parcelas. Apresentação e PDF congelados.
+// Empréstimo externo (4131) no roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos e 3 Resultado (a linha
+// do tempo saiu em 21/11/2026), de cima para baixo; depois, Atingir meta, comparações, premissas e parcelas. Apresentação e PDF congelados.
 // A tela abre no formato das cotações de banco de 4131 com NDF (principal e juros mensais, parcelas iguais, datas a cada
 // 30 dias em dia útil, sem carência, IR já na taxa). O que quase nunca muda fica nas gavetas "Detalhes do contrato" e
 // "Mais encargos". Só ordem, nomes e apresentação: os números são os mesmos que a conta já devolvia.
@@ -305,23 +305,6 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
   // A tabela de parcelas abre fechada; depois de aberta, continua aberta enquanto os dados são corrigidos.
   const [parcelasAbertas, setParcelasAbertas] = useState(false)
   const entrada = loan ? loan.flatUsd + loan.iofUsd + loan.flatIrUsd : 0
-  // Linha do tempo: só datas e valores que a conta já devolve (os mesmos da tabela de parcelas).
-  const pagamentos = (n) => `${n} ${n === 1 ? 'pagamento' : 'pagamentos'}`
-  const primeira = hedge?.flows[loan.grace]
-  const ultima = hedge?.flows.at(-1)
-  const naTaxaFutura = ultima && `${usd(ultima.usd)} pela taxa futura de ${fx(ultima.ndfRate)}`
-  const events = hedge && [
-    { label: 'Desembolso', when: dm(loan.start), value: brl(loan.netBrl), note: `Valor líquido: ${usd(loan.netUsd)} a ${fx(loan.spot)}${entrada > 0 ? `, já sem ${usd(entrada)} de tarifa, IOF e IR da entrada` : '. Nada é descontado na entrada'}` },
-    ...(loan.flows.length === 1 ? [] : loan.amort === 'parcelas' ? [
-      { label: 'Carência', empty: !loan.grace, when: loan.grace ? `até ${dm(loan.flows[loan.grace - 1].date)}` : `1ª parcela em ${dm(primeira.date)}`, value: loan.grace ? `${pagamentos(loan.grace)} só de juros` : 'Sem carência', note: loan.grace ? 'Juros e encargos pagos no período. O principal começa depois' : 'O principal começa no 1º pagamento' },
-      { label: 'Parcelas', when: parcelas === 1 ? dm(primeira.date) : `de ${dm(primeira.date)} a ${dm(ultima.date)}`, value: parcelas === 1 ? '1 parcela' : `${parcelas} parcelas ${FREQ_PLURAL[loan.freq]}`,
-        note: parcelas === 1 ? naTaxaFutura : `1ª de ${brl(primeira.brl)}, última de ${brl(ultima.brl)}. Cada parcela em ${cur.nome} é convertida pela taxa futura` },
-    ] : [
-      { label: 'Juros', when: `até ${dm(loan.flows.at(-2).date)}`, value: `${pagamentos(loan.flows.length - 1)} só de juros`, note: 'O principal é pago de uma vez, no vencimento' },
-    ]),
-    { label: loan.flows.length === 1 ? 'Vencimento único' : 'Quitação', when: dm(loan.end), value: brl(hedge.ndf.totalBrl),
-      note: loan.flows.length === 1 ? `Principal e juros: ${naTaxaFutura}` : `Total das parcelas em reais, com NDF · ${pagamentos(loan.flows.length)}` },
-  ]
   const ajuda = (label, texto) => (texto ? <Help label={`Ajuda: ${label}`}>{texto}</Help> : null)
   const field = (key, slot, label, control, hint, note) => (
     <div className={`cx-field fm-field-${slot}`}>
@@ -357,7 +340,7 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
         <section className="cx cx-finame" aria-label="Simulação">
           <div className="fm-workspace">
             <article className="desk-panel cx-panel fm-input-panel">
-              <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras conferidas em {CONFERIDO_EM} · IOF relido em {IOF_RELIDO_EM}</small>{ajuda('Regras e fontes', <><p>Regras do Banco Central, da Receita Federal e da B3 lidas nas fontes oficiais, salvo as indicadas em Regras e fontes. As do IOF foram relidas em {IOF_RELIDO_EM}.</p><ul>{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul></>)}</header>
+              <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3>{ajuda('Regras e fontes', <><p>Regras conferidas em {CONFERIDO_EM} · IOF relido em {IOF_RELIDO_EM} · {curveLabel} · A cotação da mesa do banco e o contrato prevalecem.</p><p>Regras do Banco Central, da Receita Federal e da B3 lidas nas fontes oficiais, salvo as indicadas em Regras e fontes. As do IOF foram relidas em {IOF_RELIDO_EM}.</p><ul>{E4_SOURCES.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul></>)}</header>
               <div className="cx-form">
                 <section className="fm-group fm-operation" aria-labelledby="e4-operation-h"><h3 id="e4-operation-h">{step(1, 'Demanda do cliente')}{ajuda('Condições padrão', 'O padrão segue a cotação de banco: principal e juros mensais, parcelas iguais, datas a cada 30 dias em dia útil, sem carência, sem tarifa e IR já dentro da taxa all-in. Mude só o que for diferente na sua operação: o que quase nunca muda fica em Detalhes do contrato e em Mais encargos.')}</h3><div className="fm-group-fields">
                   {field('valor', 'valor', 'Principal (R$)', <MoneyInput prefix="R$" id="e4-valor" aria-invalid={!!errors.valor} aria-describedby="e4-valor-err" value={valorText} onChange={setValorText} />, 'Principal da operação, sempre em reais. O valor na moeda sai dele pela cotação de partida, como na cotação do banco.')}
@@ -422,9 +405,8 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
 
             <div className={ampliada ? 'fm-results fm-zoomed' : 'fm-results'}>
               {ampliada && <div className="fm-zoom-backdrop" onClick={() => setAmpliada(false)} aria-hidden="true" />}
-              <LinhaDoTempo id="e4-timeline-h" events={events} placeholder="Aparece quando os dados estiverem completos: desembolso, carência, parcelas e quitação." />
               <article className={ampliada ? 'desk-panel cx-panel fm-zoom' : 'desk-panel cx-panel'} aria-live="polite" id="fm-result" tabIndex={-1} role={ampliada ? 'dialog' : undefined} aria-modal={ampliada ? 'true' : undefined} aria-label={ampliada ? 'Cotação ampliada' : undefined}>
-                <header className="fm-hero"><h3 className="cx-heading">{step(4, 'Resultado · custo final para o cliente')}</h3><small>4131 com NDF · {hedge?.source === 'mesa' ? 'Com as taxas futuras da mesa' : 'Projeção · custo estimado'}</small>{ajuda('Limites da projeção', colado ? 'Simulação com as taxas futuras coladas da cotação da mesa: as parcelas em reais usam exatamente essas taxas. O equivalente em CDI depende do DI informado. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação confirmada pelo banco e o contrato prevalecem.' : 'Estimativa no formato das cotações de banco. A taxa futura de cada parcela é teórica, com um DI e um juro da moeda iguais para todos os prazos; a mesa do banco fecha uma taxa futura para cada vencimento e acrescenta o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
+                <header className="fm-hero"><h3 className="cx-heading">{step(3, 'Resultado · custo final para o cliente')}</h3><small>4131 com NDF · {hedge?.source === 'mesa' ? 'Com as taxas futuras da mesa' : 'Projeção · custo estimado'}</small>{ajuda('Limites da projeção', colado ? 'Simulação com as taxas futuras coladas da cotação da mesa: as parcelas em reais usam exatamente essas taxas. O equivalente em CDI depende do DI informado. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação confirmada pelo banco e o contrato prevalecem.' : 'Estimativa no formato das cotações de banco. A taxa futura de cada parcela é teórica, com um DI e um juro da moeda iguais para todos os prazos; a mesa do banco fecha uma taxa futura para cada vencimento e acrescenta o spread do derivativo e o risco de crédito. Não inclui IR nem PIS/Cofins sobre ajuste positivo do NDF. A cotação do banco e o contrato prevalecem.')}<button type="button" ref={ampliarRef} className="fm-zoom-toggle" disabled={!loan} aria-pressed={ampliada} aria-label={ampliada ? 'Fechar a cotação ampliada' : 'Ampliar a cotação na tela'} title={ampliada ? 'Fechar (Esc)' : 'Ampliar na tela'} onClick={() => setAmpliada((value) => !value)}><BndesIcon kind={ampliada ? 'collapse' : 'expand'} /></button></header>
                 {/* Padrão de 18/11/2026: falta de dados no topo; resposta principal; equivalências; valores agrupados; notas depois dos números; condições recolhidas. Só apresentação: nenhuma conta nova. */}
                 {pendencia && <p className="e4-alerta" role="status"><span className="e4-alerta-icone" aria-hidden="true">!</span><span>{pendencia}</span></p>}
                 {hedge && <div className="fm-headline e4-answer" aria-label="Custo efetivo total">
@@ -517,8 +499,8 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
             </details>
           )}
           </div>
-          <p className="status">Regras conferidas em {CONFERIDO_EM} · IOF relido em {IOF_RELIDO_EM} · {curveLabel} · A cotação da mesa do banco e o contrato prevalecem.</p>
-          {/* Operação em moeda: a referência é a cotação da moeda escolhida na tela. Sempre o último bloco. */}
+          {/* Operação em moeda: a referência é a cotação da moeda escolhida na tela. Sempre o último bloco: a linha "Regras conferidas…"
+              do rodapé foi para o "?" de Regras e fontes (Auditor, 21/11/2026). */}
           <ReferenciaMercado tipos={['cambio']} moeda={currency} />
         </section>
       </div>

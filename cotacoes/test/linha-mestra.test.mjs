@@ -3,8 +3,9 @@ import assert from 'node:assert/strict'
 import { lmDefaults, lmSanitize, lmSchedule, lmLoad, lmSave, lmClear, LM_KEY } from '../src/linhaMestra.js'
 import { addMonths } from '../src/creditModalities.js'
 
-test('padrão da linha mestra: R$ 1.000.000,00 em 24 meses, sem carência, Price, praça nacional', () => {
-  assert.deepEqual(lmDefaults('2026-11-19'), { value: '1.000.000,00', term: '24', grace: '0', system: 'price', start: '2026-11-19', praca: 'BR' })
+// Valor padrão de R$ 3.000.000,00 desde 21/11/2026 (pedido do Fernando; antes, R$ 1.000.000,00).
+test('padrão da linha mestra: R$ 3.000.000,00 em 24 meses, sem carência, Price, praça nacional', () => {
+  assert.deepEqual(lmDefaults('2026-11-19'), { value: '3.000.000,00', term: '24', grace: '0', system: 'price', start: '2026-11-19', praca: 'BR' })
 })
 
 test('só aceita valores no formato de cada campo; data passada volta para hoje', () => {

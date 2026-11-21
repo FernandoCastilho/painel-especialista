@@ -62,9 +62,11 @@ test('câmbio quebrado e dízima juntos: as partes somam exatamente o custo e, l
 
 test('a tela segue a ordem do roteiro, com os nomes padrão, e não aponta vencedor', async () => {
   const source = await readFile(new URL('../src/FinimpComparacao.jsx', import.meta.url), 'utf8')
-  const order = ["step(1, 'Demanda do cliente')", 'htmlFor="fi-term">Prazo<', "step(2, 'Encargos')", '<LinhaDoTempo ', '<Resultado ', '<span>Atingir meta de custo</span>', 'title="Tabela comparativa FINIMP"'].map(text => source.indexOf(text))
+  const order = ["step(1, 'Demanda do cliente')", 'htmlFor="fi-term">Prazo<', "step(2, 'Encargos')", '<Resultado id="fi-result-title" number={3}', '<span>Atingir meta de custo</span>', 'title="Tabela comparativa FINIMP"'].map(text => source.indexOf(text))
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
-  for (const text of ['Taxa de juros <small>', 'Flat <small>', "'TAC à vista (R$)'", "'Quanto recebe'", "'Quanto custa na Instituição 1'", "'Quanto custa na Instituição 2'", "'Qual a diferença'", 'Do que é feito o custo']) assert.ok(source.includes(text), text)
+  for (const text of ['Taxa de juros <small>', 'Flat <small>', "'TAC à vista (R$)'", "'Quanto recebe (antes do flat)'", "'Quanto custa na Instituição 1'", "'Quanto custa na Instituição 2'", "'Qual a diferença'", 'Do que é feito o custo']) assert.ok(source.includes(text), text)
   assert.doesNotMatch(source, /Resultado da comparação|<span>Condições<\/span>|Taxa anual simples \(%\)|Flat único sobre o principal \(%\)/)
   assert.doesNotMatch(source, /mais barata|menor custo|maior custo|Custos iguais/i)
+  // A linha do tempo saiu em 21/11/2026.
+  assert.doesNotMatch(source, /LinhaDoTempo/)
 })

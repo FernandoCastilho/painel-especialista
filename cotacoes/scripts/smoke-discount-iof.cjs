@@ -19,7 +19,7 @@ const fs = require('node:fs')
   assert.match(await page.locator('.desconto-result-status').innerText(),/Preencha ou corrija/)
   await page.locator('#ad-titleFeeMode').selectOption('percent')
   assert.equal(await page.locator('#ad-iofPaid, #ad-interest, #ad-iofAdditional').count(),0)
-  // Roteiro de 21/11/2026: os números do desconto ficam no bloco "4 Resultado".
+  // Roteiro de 21/11/2026: os números do desconto ficam no bloco "3 Resultado" (a linha do tempo saiu no mesmo dia).
   const before=await page.locator('.rt-result').innerText()
   await page.locator('#ad-operationRate').fill('3,66')
   assert.notEqual(await page.locator('.rt-result').innerText(),before)

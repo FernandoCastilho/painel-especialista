@@ -25,14 +25,13 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     assert.equal(await page.locator('.credit-results').count(), 0, 'resultado só depois de comparar')
     assert.equal(await page.locator('#credit-title').innerText(), 'Necessidade do Cliente')
     // Roteiro de 21/11/2026: 1 Demanda (com a gaveta de detalhes fechada), 2 Encargos, cenários, e só depois de comparar
-    // a linha do tempo e o resultado. A referência de mercado é o último bloco.
-    assert.deepEqual(await page.locator('.lm-head h3, .credit-charges > h3').allInnerTexts().then(list => list.map(text => text.replace(/\s+/g, ' ').trim())), ['1 Demanda do cliente', '2 Encargos o que o banco cobra em cada operação'])
+    // o resultado (3). A linha do tempo saiu em 21/11/2026. A referência de mercado é o último bloco.
+    assert.deepEqual(await page.locator('.lm-head h3, .credit-charges > h3').allInnerTexts().then(list => list.map(text => text.replace(/\s+/g, ' ').trim())), ['1 Demanda do cliente', '2 Encargos'])
     for (const id of ['value', 'term', 'grace', 'system']) assert.equal(await page.locator(`#credit-shared-${id}`).isVisible(), true, id)
     for (const id of ['start', 'praca', 'regime']) assert.equal(await page.locator(`#credit-shared-${id}`).isVisible(), false, id + ' fica na gaveta')
     await page.locator('.lm-details > summary').click()
     for (const id of ['start', 'praca', 'regime']) assert.equal(await page.locator(`#credit-shared-${id}`).isVisible(), true, id)
     await page.locator('.lm-details > summary').click()
-    assert.equal(await page.locator('.rt-timeline').count(), 0, 'linha do tempo só com o resultado')
     assert.equal(await page.locator('section.cx > :last-child').getAttribute('class'), 'rm', 'referência de mercado por último')
     const scenarios = page.locator('details.credit-scenarios')
     assert.equal(await scenarios.evaluate(el => el.open), true, 'cenários abertos com operação pós-CDI')
@@ -46,10 +45,9 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     assert.equal(await scenarios.evaluate(el => el.open), false, 'sem pós-CDI e sem opção marcada, cenários e comparações fecham')
     assert.equal(await page.getByRole('button', { name: 'Comparar modalidades', exact: true }).count(), 0)
     await page.getByRole('button', { name: 'Gerar cotação', exact: true }).click()
-    await page.getByRole('heading', { name: '4 Resultado · custo final para o cliente', exact: true }).waitFor()
+    await page.getByRole('heading', { name: '3 Resultado · custo final para o cliente', exact: true }).waitFor()
     assert.equal(await page.getByRole('heading', { name: 'Comparação financeira das operações', exact: true }).count(), 0)
-    assert.equal(await page.getByRole('heading', { name: '3 Linha do tempo da operação', exact: true }).count(), 1)
-    assert.equal(await page.locator('.rt-timeline li').count(), 4)
+    assert.equal(await page.locator('.rt-timeline').count(), 0, 'sem linha do tempo (21/11/2026)')
     // Uma operação: as quatro respostas em quadros, com o custo em destaque; os números são os da matriz logo abaixo.
     const answer = question => page.locator('.credit-results .rt-answers > div').filter({ has: page.locator('dt', { hasText: question }) }).locator('dd').first().innerText()
     assert.equal(await answer('Quanto entra no caixa'), await row('Valor líquido recebido').locator('td').innerText())

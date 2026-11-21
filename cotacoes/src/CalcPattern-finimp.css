@@ -1,5 +1,5 @@
 /* FINIMP no padrão visual das calculadoras (aprovado em 18/11/2026) e no roteiro de 21/11/2026:
-   1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado (peças comuns em Roteiro.css); depois, a meta e a tabela dos doze prazos.
+   1 Demanda, 2 Encargos, 3 Resultado (peças comuns em Roteiro.css; a linha do tempo saiu em 21/11/2026); depois, a meta e a tabela dos doze prazos.
    Quadros de entrada: faixa azul-marinho com linha laranja. Resultado: único quadro com borda laranja, na largura toda.
    Só apresentação: nenhuma regra de cálculo mora aqui. Tudo restrito a .cx.fi; sem !important. */
 :root {
@@ -39,7 +39,6 @@
 :root[data-theme] body .cx.fi .fi-label label small { margin-left:4px; color:var(--bw-mut); font-size:.75rem; font-weight:400; }
 /* O câmbio da TAC vem logo abaixo da opção de incluir a TAC. */
 :root[data-theme] body .cx.fi .fi-tac-status + .cx-form { padding-top:0; }
-:root[data-theme] body .cx.fi .fi-hint { display:block; margin-top:4px; color:var(--bw-mut); font-size:.75rem; line-height:1.35; }
 
 /* Resultado: valor muito longo quebra a linha em vez de sair do quadro. */
 :root[data-theme] body .cx.fi .rt-answers > .rt-answer-main dd:not(.rt-answer-note) { white-space:normal; }

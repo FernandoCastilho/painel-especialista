@@ -134,7 +134,7 @@
 }
 .cx-cg .cg-tables > .cx-panel { min-width:0; max-width:100%; }
 
-/* ── Roteiro (21/11/2026), só na Utilização única: 1 Demanda e 2 Encargos; abaixo, 3 Linha do tempo e 4 Resultado na largura toda.
+/* ── Roteiro (21/11/2026), só na Utilização única: 1 Demanda e 2 Encargos; abaixo, 3 Resultado na largura toda (a linha do tempo saiu em 21/11/2026).
    Os outros modos seguem com o resultado ao lado. Só apresentação. ── */
 .cx-cg .cg-workspace.cg-roteiro { grid-template-columns:minmax(0,1fr); }
 @media (min-width:1200px) {

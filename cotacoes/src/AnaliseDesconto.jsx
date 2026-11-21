@@ -10,7 +10,7 @@ import './CalcPattern-analise-desconto.css'
 import { IOF_SOURCE } from './iofRules.js'
 import { cgAddDays, cgToday } from './contaGarantida.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
-import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
+import { ComposicaoDoCusto, Respostas, Resultado, step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
 import { lmLoad } from './linhaMestra.js'
 import { PRACAS_CONTRATO } from './pracaContrato.js'
@@ -25,7 +25,6 @@ const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(c
 // Direção da economia em símbolo, além da cor: ▲ giro com menor custo, ▼ giro com maior custo.
 const arrow = (value) => value > 0 ? '▲' : value < 0 ? '▼' : '='
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
-const plural = (count, one, many) => `${number(count)} ${count === 1 ? one : many}`
 const FOOT = 'A data e a praça valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 const CET_HELP = 'CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): nas operações de desconto, o CET usa o prazo de 30 dias e o valor do limite pactuado — aqui, o valor nominal da operação. Líquido = nominal − juros de 30 dias − IOF de 30 dias − TAC − tarifa de títulos; o nominal volta em 30 dias corridos; taxa anual em dias corridos/365. O custo pelo prazo real usa a data de pagamento de cada título e não é o CET da norma.'
 
@@ -33,7 +32,8 @@ export function DescontoIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 11h8M8 15h5M8 18h3" /><path d="m14 17 2 2 4-4" /></svg>
 }
 
-// Roteiro da tela (21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado do desconto; depois, a comparação com o giro.
+// Roteiro da tela (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado do desconto (a linha do tempo saiu em 21/11/2026); depois, a
+// comparação com o giro. Tela limpa (21/11/2026): explicações ficam nos "?".
 // Só ordem, nomes e apresentação: os números são os mesmos que parseDiscountForm já devolvia.
 export default function AnaliseDesconto({ onBack, apresentacao }) {
   // Linha mestra comum (19/11/2026): data da operação e praça vêm dela; o valor pode ser o principal do giro comparado.
@@ -91,32 +91,20 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     { label: 'Parcela Price, sem TAC e IOF', month: first?.giro.installment, value: (row) => row.giro.installment },
     { label: 'Média mensal all-in: principal + custos', month: first?.giro.averageMonthlyOutflow, value: (row) => row.giro.averageMonthlyOutflow },
   ]
-  // Linha do tempo: a operação hoje, o prazo e o vencimento dos títulos. Só datas, dias e valores que a conta já devolve.
-  const due = operation?.rows.map((row) => row.paymentDate).sort() ?? []
-  const days = operation?.rows.map((row) => row.days).sort((a, b) => a - b) ?? []
-  const events = operation && [
-    { label: 'Operação', when: dateBr(lm.start), value: brl(operation.net), note: `${brl(operation.value)} em títulos menos ${brl(operation.cost)} descontados` },
-    { label: 'Prazo', when: 'Da operação ao pagamento dos títulos', note: 'Juros e IOF contam até o pagamento de cada título',
-      value: days[0] === days.at(-1) ? plural(days[0], 'dia corrido', 'dias corridos') : `de ${number(days[0])} a ${number(days.at(-1))} dias corridos` },
-    { label: 'Vencimento dos títulos', when: due[0] === due.at(-1) ? dateBr(due[0]) : `de ${dateBr(due[0])} a ${dateBr(due.at(-1))}`, value: brl(operation.value),
-      note: `${plural(operation.titles, 'título', 'títulos')}${operation.rows.length > 1 ? ` em ${number(operation.rows.length)} grupos` : ''}${operation.rows.some((row) => row.adjusted) ? '. Vencimento em dia não útil passa ao próximo dia útil' : ''}` },
-  ]
   // Sem a operação completa, o resultado do desconto avisa o que falta (o aviso da comparação fica no bloco dela).
   const resultAlert = operation ? null : { warning: flagged, text: flagged ? 'Preencha ou corrija os campos sinalizados para ver o resultado.' : guide('o resultado') }
   return <section className="cx cx-desconto bw calc-standard calc-workspace" aria-labelledby="ad-heading">
-    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="ad-heading" className="cx-title"><span>Análise de desconto</span></h2></div><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p></CalculatorHelp></div>
-    <p className="desconto-notice">Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p>
+    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="ad-heading" className="cx-title"><span>Análise de desconto</span></h2></div><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p><p>Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p></CalculatorHelp></div>
 
     {/* Roteiro de 21/11/2026: primeiro o custo do desconto (blocos 1 a 4); a comparação com o giro vem depois. Só apresentação. */}
     <div className="dsc-flow">
       <div className="dsc-form">
-        <LinhaMestra prefix="ad-lm" title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} onClear={clearLm} foot={FOOT}
+        <LinhaMestra prefix="ad-lm" title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} onClear={clearLm} foot={null} help={{ title: 'Demanda do cliente', children: <p>{FOOT}</p> }}
           fields={['start']} labels={{ start: 'Data da operação' }} errors={{ start: errors.date }}
           details={{ fields: ['praca'], open: !!apresentacao, summary: PRACAS_CONTRATO.find(praca => praca.id === lm.praca)?.label }}>
           <div className="lm-field"><span className="lm-label"><label htmlFor="ad-gross">Valor total dos títulos</label></span><output id="ad-gross" className="dsc-readonly">{brl(operation?.value)}</output></div>
           <div className="desconto-titles lm-wide">
-            <h4>Títulos ou grupos com o mesmo vencimento</h4>
-            <p>Informe o valor nominal total de cada grupo e a quantidade de títulos. Não multiplique o valor pela quantidade. Todos usam a taxa de juros dos encargos.</p>
+            <div className="cx-field-label"><h4>Títulos ou grupos com o mesmo vencimento</h4><CalculatorHelp title="Títulos ou grupos com o mesmo vencimento"><p>Informe o valor nominal total de cada grupo e a quantidade de títulos. Não multiplique o valor pela quantidade. Todos usam a taxa de juros dos encargos.</p></CalculatorHelp></div>
             {form.titleRows.map((row, index) => <fieldset key={index} className="cx-form" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) visit('titleRow' + index) }}><legend>Grupo {index + 1}</legend>
               <label>Valor nominal total do grupo<MoneyInput value={row.value} onChange={value => setRow(index, 'value', value)} /></label>
               <label>Quantidade de títulos<input inputMode="numeric" value={row.count} onChange={event => setRow(index, 'count', event.target.value)} /></label>
@@ -147,11 +135,9 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         </article>
       </div>
 
-      {/* Linha do tempo e resultado do desconto: é o que o modo Apresentar mostra em "Resultado". */}
+      {/* Resultado do desconto: é o que o modo Apresentar mostra em "Resultado". */}
       <div className="rt-outcome calc-result-shell" aria-live="polite">
-        <LinhaDoTempo id="ad-timeline-title" events={events}
-          placeholder="Aparece com a operação completa: quanto entra no caixa, o prazo e o vencimento dos títulos." />
-        <Resultado id="ad-result-title" alert={resultAlert}>
+        <Resultado id="ad-result-title" number={3} alert={resultAlert}>
           <Respostas items={[
             { question: 'Quanto entra no caixa', value: brl(operation?.net), note: 'Valor líquido da operação: bruto menos todos os custos' },
             { question: 'Quanto é descontado', value: brl(operation?.cost), note: 'Custo total completo, com a tarifa de títulos' },
@@ -173,7 +159,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     </div>
 
     {/* Depois do custo do desconto: a comparação com o capital de giro. Blocos sem número, para não confundir com o roteiro. */}
-    <div className="dsc-compare-head"><h3>Comparação com o capital de giro</h3><p>O desconto se repete todo mês; o giro Price é pago em 12, 24, 36 ou 48 meses.</p></div>
+    <div className="dsc-compare-head"><h3>Comparação com o capital de giro</h3><CalculatorHelp title="Comparação com o capital de giro"><p>O desconto se repete todo mês; o giro Price é pago em 12, 24, 36 ou 48 meses.</p></CalculatorHelp></div>
     <div className="dsc-workspace">
     <div className="dsc-inputs">
     <article className="desk-panel cx-panel desconto-input-panel">
@@ -186,7 +172,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     </article>
 
     <article className="desk-panel cx-panel desconto-input-panel">
-      <header className="cx-heading"><h3>Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana, feriado nacional, feriado da praça do contrato ou 31/12 (sem expediente bancário) passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana, feriado nacional, feriado da praça do contrato ou 31/12 (sem expediente bancário) passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p><p>Liberação do giro na data da operação ({dateBr(lm.start) || '—'}), na mesma praça do contrato.</p></CalculatorHelp></header>
       <div className="cx-form">
         {field('giroPrincipalMode', 'Principal usado no giro', <select {...props('giroPrincipalMode')} value={form.giroPrincipalMode} onChange={(event) => set('giroPrincipalMode', event.target.value)}><option value="monthly">Igual ao volume bruto mensal do desconto</option><option value="linha">Valor da linha mestra (R$ {lm.value})</option><option value="manual">Informar outro valor</option></select>, 'Usar o volume mensal é uma hipótese de comparação, não uma necessidade de capital de giro (NCG) apurada.')}
         {fromLine && field('giroPrincipal', 'Valor para o giro comparado', <MoneyInput {...props('giroPrincipal')} value={lm.value} onChange={(value) => changeLm('value', value)} />, 'É o valor da linha mestra: vale também nas outras calculadoras de empréstimo, até você fechar esta aba.')}
@@ -195,7 +181,6 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         {moneyField('giroTac', 'TAC do giro, uma única vez', 'R$ 3.150,00 é o valor inferido para reconciliar a referência. Confirme a proposta; não é uma tarifa padrão.')}
         {taxFields('giroTaxProfile', 'giroEligible')}
       </div>
-      <p className="dsc-note dsc-giro-note">Liberação do giro na data da operação ({dateBr(lm.start) || '—'}), na mesma praça do contrato.</p>
     </article>
     </div>
     <aside className="dsc-result-col" aria-label="Resultado da comparação">
@@ -236,7 +221,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         </div>
         {/* Notas depois dos números */}
         <p className="desconto-result-caption">Principal do giro: <b>{brl(result.principal)}</b> · {number(result.operations)} operações de desconto por mês · Price a {form.giroRate}% a.m.</p>
-        <p className="dsc-note">Economia = custo do desconto − custo do giro. ▲ positivo: giro com menor custo; ▼ negativo: maior custo. Não comprova economia efetiva.</p>
+        <div className="calc-panel-context dsc-note"><span>Como ler a economia</span><CalculatorHelp title="Economia estimada com giro"><p>Economia = custo do desconto − custo do giro. ▲ positivo: giro com menor custo; ▼ negativo: maior custo. Não comprova economia efetiva.</p></CalculatorHelp></div>
       </ExpandablePanel>}
     </article>
     </aside>

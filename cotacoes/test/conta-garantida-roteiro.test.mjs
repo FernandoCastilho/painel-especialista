@@ -1,4 +1,4 @@
-// Conta Garantida no roteiro Demanda, Encargos, Linha do tempo, Resultado (21/11/2026), só no modo Utilização única.
+// Conta Garantida no roteiro Demanda, Encargos, Resultado (21/11/2026; a linha do tempo saiu no mesmo dia), só no modo Utilização única.
 // A tela só reparte e reordena números que a conta já devolve; aqui fica provado que as repartições novas fecham em centavos.
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -31,9 +31,9 @@ test('"Quanto paga para cobrir" fecha em centavos: valor utilizado + custo total
     // Na utilização única a cobertura devolve tudo o que foi utilizado: o saldo final é zero.
     assert.equal(t.payment, t.draw, JSON.stringify(item))
     assert.equal(result.balance, 0, JSON.stringify(item))
-    // Respostas e linha do tempo: "Quanto usou" + "Quanto custa" = "Quanto paga para cobrir".
+    // Respostas: "Quanto usou" + "Quanto custa" = "Quanto paga para cobrir".
     assert.equal(cents(t.draw) + cents(t.cost), cents(t.payment + t.cost), JSON.stringify(item))
-    // Linha do tempo: o período de uso é o prazo digitado, e a cobertura cai na data final que a conta devolve.
+    // O período de uso é o prazo digitado, e a cobertura cai na data final que a conta devolve.
     assert.equal(result.calendarDays, Number(item.duration), JSON.stringify(item))
     assert.equal(params.end, cgAddDays('2026-11-23', Number(item.duration)), JSON.stringify(item))
     assert.ok(t.interestDays <= result.calendarDays, JSON.stringify(item))
@@ -69,10 +69,10 @@ test('o limite contratado só entra no CET: não muda nenhum número do período
 
 test('a tela segue a ordem do roteiro só na utilização única; os outros modos mantêm os nomes de antes', async () => {
   const source = await readFile(new URL('../src/ContaGarantida.jsx', import.meta.url), 'utf8')
-  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<LinhaDoTempo ', '<Resultado '].map(text => source.indexOf(text))
-  assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos na ordem 1 a 4')
+  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<Resultado id="cg-result-title" number={3}'].map(text => source.indexOf(text))
+  assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos na ordem 1 a 3')
+  assert.doesNotMatch(source, /LinhaDoTempo/, 'sem linha do tempo (21/11/2026)')
   for (const question of ['Quanto usou', 'Quanto paga para cobrir', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
-  for (const label of ['Utilização', 'Período de uso', 'Cobertura']) assert.ok(source.includes(`label: '${label}'`), label)
   assert.match(source, /<summary>Enquadramento do IOF/)
   assert.doesNotMatch(source, /Condições do produto/)
   // Lançamentos por dia: mesmos quadros e mesmo resultado ao lado.

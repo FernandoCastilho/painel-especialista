@@ -1,4 +1,4 @@
-// Análise de desconto no roteiro Demanda, Encargos, Linha do tempo, Resultado (21/11/2026).
+// Análise de desconto no roteiro Demanda, Encargos, Resultado (21/11/2026; a linha do tempo saiu no mesmo dia).
 // A tela só reparte e reordena números que a conta já devolve; aqui fica provado que as repartições novas fecham.
 // A conta do desconto não arredonda no meio do caminho (só a tela arredonda, para centavos). Por isso a soma exata fecha
 // sempre, e a soma dos valores já arredondados pode diferir do total em até 2 centavos, como já acontecia com
@@ -91,7 +91,8 @@ test('arredondamento: em 400 operações, a linha aparece só quando não fecha 
 test('a tela usa as peças e os nomes do roteiro, e a comparação com o giro não leva número', async () => {
   // A ordem dos blocos na tela montada é conferida em analise-desconto-view.test.mjs.
   const source = await readFile(new URL('../src/AnaliseDesconto.jsx', import.meta.url), 'utf8')
-  for (const piece of ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<LinhaDoTempo ', '<Resultado ']) assert.ok(source.includes(piece), piece)
+  for (const piece of ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<Resultado id="ad-result-title" number={3}']) assert.ok(source.includes(piece), piece)
+  assert.doesNotMatch(source, /LinhaDoTempo/, 'sem linha do tempo (21/11/2026)')
   for (const question of ['Quanto entra no caixa', 'Quanto é descontado', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
   for (const part of ['Juros', 'IOF', 'Tarifa dos títulos', 'TAC']) assert.ok(source.includes(`{ label: '${part}', value: operation?.`), part)
   assert.doesNotMatch(source, /<h3>\d\. /)

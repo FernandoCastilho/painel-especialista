@@ -130,7 +130,7 @@
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content { padding:0 14px 14px; min-width:0; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content .fm-parcel-scroll { max-height:none; overflow-x:auto; }
 
-/* ── Finame Materiais no roteiro das calculadoras (21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado ── */
+/* ── Finame Materiais no roteiro das calculadoras (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026) ── */
 /* Título numerado dos dois quadros de entrada, com o mesmo espaço entre o número e o nome das outras telas. */
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group > h3 { display:block; }
 /* Gaveta "Detalhes do contrato" (data da liberação e praça): mesmo desenho da gaveta da linha mestra. */
@@ -145,10 +145,3 @@
 .sl-calc .bw:not(.e4) .cx-finame details.fm-contrato[open] { display:block; }
 .sl-calc .bw:not(.e4) .cx-finame .fm-contrato > summary { display:none; }
 :root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-contrato-campos { padding-top:8px; }
-/* O slide é largo e baixo: a linha do tempo fica em pé, ao lado do resultado, para o resultado caber sem encolher. */
-:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-results { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,3.4fr); align-items:start; }
-:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-timeline ol { grid-auto-flow:row; padding:14px; }
-:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-timeline li { padding:0 0 16px 24px; }
-:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-timeline li:last-child { padding-bottom:0; }
-:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-timeline li::before { top:0; bottom:0; left:5px; right:auto; width:2px; height:auto; }
-:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-timeline li:last-child::before { width:2px; height:12px; bottom:auto; }

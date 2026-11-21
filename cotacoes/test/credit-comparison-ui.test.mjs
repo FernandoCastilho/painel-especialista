@@ -58,7 +58,10 @@ test('cada coluna aceita qualquer modalidade e mostra os campos dela', async t =
   }
   await ui.change(1, modalities.newColumn('bndes'))
   const html = renderToStaticMarkup(ui.card(1))
-  for (const label of ['TFB', 'Custo financeiro', 'TAC', 'Porte da empresa', 'Spread do agente', 'Participação do BNDES', 'Garantia FGI', 'exemplos']) assert.ok(html.includes(label), label)
+  for (const label of ['TFB', 'Custo financeiro', 'TAC', 'Porte da empresa', 'Spread do agente', 'Participação do BNDES', 'Garantia FGI']) assert.ok(html.includes(label), label)
+  // Tela limpa (21/11/2026): "Valores iniciais são exemplos" e a descrição da modalidade ficam no "?" do cartão.
+  assert.match(html, /aria-label="Ajuda: BNDES[^"]*"/)
+  assert.doesNotMatch(html, /Valores iniciais são exemplos/)
   await ui.change(1, modalities.newColumn('finimp'))
   const f = renderToStaticMarkup(ui.card(1))
   for (const label of ['Moeda', 'Flat', 'Câmbio', 'Prazo (dias)']) assert.ok(f.includes(label), label)
@@ -107,9 +110,9 @@ test('cinco colunas geram tabela com cinco séries no gráfico', async t => {
 })
 test('cenário do CDI só aparece com coluna indexada e muda só essa coluna', async t => {
   const ui = await setup(t)
-  assert.ok(nodes(ui.render.value).some(n => n.type === 'h3' && text(n) === 'Cenários do CDI'))
+  assert.ok(nodes(ui.render.value).some(n => n.type === 'h3' && text(n).startsWith('Cenários do CDI')))
   await ui.change(2, modalities.newColumn('giro-pre'))
-  assert.ok(!nodes(ui.render.value).some(n => n.type === 'h3' && text(n) === 'Cenários do CDI'))
+  assert.ok(!nodes(ui.render.value).some(n => n.type === 'h3' && text(n).startsWith('Cenários do CDI')))
   await ui.change(2, modalities.newColumn('giro-cdi'))
   const before = ui.cards().map(c => c.props.result.cost)
   nodes(ui.render.value).find(n => n.type === 'button' && text(n) === 'Alta').props.onClick(); await ui.render.settle()
@@ -236,10 +239,13 @@ test('explicações ficam em ajuda clicável e alertas essenciais continuam vis�
   assert.match(html, /Ajuda: Comparar pelo mesmo valor líquido/)
   assert.doesNotMatch(html, /A ordem de menor CET usa o CET da parte fixa/)
   assert.doesNotMatch(html, /Ao reduzir a quantidade, as colunas escondidas/)
-  for (const warning of ['Valores iniciais são exemplos', 'resultados são preliminares', 'não CET certificado do contrato', 'não é CET', 'Projeção, não taxa futura garantida', 'Não há vencedor absoluto']) assert.ok(html.includes(warning), warning)
+  // Tela limpa (21/11/2026): "Valores iniciais são exemplos" foi para o "?" de cada cartão.
+  assert.doesNotMatch(html, /Valores iniciais são exemplos/)
+  for (const warning of ['resultados são preliminares', 'não CET certificado do contrato', 'não é CET', 'Projeção, não taxa futura garantida', 'Não há vencedor absoluto']) assert.ok(html.includes(warning), warning)
   const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
   assert.match(source, /A ordem de menor CET usa o CET da parte fixa/)
   assert.match(source, /Ao reduzir a quantidade, as colunas escondidas/)
+  assert.match(source, /Valores iniciais são exemplos/)
 })
 
 test('cotação individual exibe resultado sem inventar concorrente e preserva cálculo ao alternar quantidade', async t => {
@@ -414,19 +420,11 @@ test('cotação individual responde às quatro perguntas com os números da oper
   assert.match(html, /<div class="rt-answer-main"><dt>Quanto custa<\/dt><dd>[\d,]+% a\.a\.<\/dd>/)
   assert.doesNotMatch(html, /menor CET|menor custo/)
 })
-test('linha do tempo aparece com o resultado, sem valores em reais, e as gavetas guardam o que quase nunca muda', async t => {
+test('sem linha do tempo (21/11/2026); as gavetas guardam o que quase nunca muda', async t => {
   const ui = await setup(t)
-  const timeline = () => nodes(ui.render.value).find(n => n.type?.name === 'LinhaDoTempo')
-  assert.equal(timeline(), undefined)
   await clickCompare(ui)
-  const events = timeline().props.events
-  assert.deepEqual(events.map(e => e.label), ['Liberação', 'Carência', 'Parcelas', 'Quitação'])
-  assert.doesNotMatch(JSON.stringify(events), /R\$/)
-  const first = ui.card(1).props.result
-  assert.equal(events[0].when, '10/11/2026')
-  assert.equal(events[2].value, `${first.rows.length} parcelas mensais`)
-  assert.equal(events[3].when, first.lastDate.split('-').reverse().join('/'))
-  assert.match(text(ui.render.value), /Datas da operação 1 \(Giro prefixado\), que segue a demanda comum/)
+  assert.equal(nodes(ui.render.value).find(n => n.type?.name === 'LinhaDoTempo'), undefined)
+  assert.doesNotMatch(renderToStaticMarkup(ui.render.value), /Linha do tempo/)
   const html = renderToStaticMarkup(ui.render.value)
   const drawer = html.match(/<details class="lm-details"[^>]*>([\s\S]*?)<\/details>/)[1]
   for (const id of ['credit-shared-start', 'credit-shared-praca', 'credit-shared-regime']) assert.ok(drawer.includes(`id="${id}"`), id)
@@ -451,7 +449,7 @@ test('cenários e comparações: um bloco só, antes do botão, aberto quando h�
 test('a tela segue a ordem do roteiro, com os nomes padrão, e termina na referência de mercado', async () => {
   const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
   const screen = source.slice(source.indexOf('export default function CreditComparison'))
-  const order = ['<SharedFields ', "step(2, 'Encargos')", 'className="credit-scenarios"', 'className="credit-compare"', '<LinhaDoTempo ', "step(4, 'Resultado · custo final para o cliente')", 'Premissas, limites e fonte do IOF', '<ReferenciaMercado '].map(piece => screen.indexOf(piece))
+  const order = ['<SharedFields ', "step(2, 'Encargos')", 'className="credit-scenarios"', 'className="credit-compare"', "step(3, 'Resultado · custo final para o cliente')", 'Premissas, limites e fonte do IOF', '<ReferenciaMercado '].map(piece => screen.indexOf(piece))
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
   assert.match(source, /title=\{step\(1, 'Demanda do cliente'\)\}/)
   assert.match(screen, /<ReferenciaMercado tipos=\{\[[^\n]*'pre', usesCdi && 'pos'\]\.filter\(Boolean\)\} \/>\s*<\/section><\/div>\s*\}\s*$/, 'referência de mercado é o último bloco')

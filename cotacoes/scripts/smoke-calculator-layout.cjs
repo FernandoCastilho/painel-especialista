@@ -248,16 +248,20 @@ async function fillScenario(page, section, route) {
     assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
     assert.equal(normalize(await shown('Qual é a taxa efetiva').innerText()), `${pct2(cetAnnual)}% a.a.`)
     assert.match(await kpi.innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
-    assert.ok(await section.getByText('texto oficial conferido em 11/11/2026', { exact: false }).count())
+    // Tela limpa (21/11/2026): a regra do art. 6º fica no "?" de "Como calculamos o CET".
+    await section.getByRole('button', { name: 'Ajuda: Como calculamos o CET', exact: true }).click()
+    await page.getByRole('dialog').getByText('texto oficial conferido em 11/11/2026', { exact: false }).waitFor()
+    await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({ state: 'hidden' })
     // Resposta principal = custo total; "Quanto paga para cobrir" = valor utilizado + custo total.
     assert.match(normalize(await section.locator('.rt-answer-main dd').first().innerText()), /^R\$\s*1\.462,00$/)
     assert.match(normalize(await shown('Quanto paga para cobrir').innerText()), /^R\$\s*101\.462,00$/)
-    // Roteiro de 21/11/2026 (substitui, na utilização única, o resultado ao lado de 18/11/2026): dados, linha do tempo e
-    // resultado de cima para baixo, na largura toda; demanda e encargos lado a lado só no computador largo.
+    // Roteiro de 21/11/2026 (substitui, na utilização única, o resultado ao lado de 18/11/2026): dados e resultado de cima
+    // para baixo, na largura toda (a linha do tempo saiu no mesmo dia); demanda e encargos lado a lado só no computador largo.
     await page.evaluate(() => window.scrollTo(0, 0))
-    const [inputs, timeline, result] = [await section.locator('.cg-inputs').boundingBox(), await section.locator('.rt-timeline').boundingBox(), await section.locator('.rt-result').boundingBox()]
-    assert.ok(timeline.y >= inputs.y + inputs.height && result.y >= timeline.y + timeline.height, 'dados, linha do tempo e resultado nesta ordem')
-    assert.ok(Math.abs(timeline.width - inputs.width) < 2 && Math.abs(result.width - inputs.width) < 2, 'linha do tempo e resultado na largura toda')
+    assert.equal(await section.locator('.rt-timeline').count(), 0, 'sem linha do tempo')
+    const [inputs, result] = [await section.locator('.cg-inputs').boundingBox(), await section.locator('.rt-result').boundingBox()]
+    assert.ok(result.y >= inputs.y + inputs.height, 'dados e resultado nesta ordem')
+    assert.ok(Math.abs(result.width - inputs.width) < 2, 'resultado na largura toda')
     const [demanda, encargos] = [await section.locator('.cg-inputs > .lm').boundingBox(), await section.locator('.cg-inputs > .cx-panel').boundingBox()]
     if (page.viewportSize().width >= 1200) assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
     else assert.ok(encargos.y >= demanda.y + demanda.height, 'encargos abaixo da demanda')
@@ -321,12 +325,13 @@ async function fillScenario(page, section, route) {
     assert.ok(answer.includes(savings12), `resposta principal traz a economia de 12 meses (${savings12})`)
     assert.match(answer, savings12.startsWith('-') ? /▼.*O giro custa mais/ : /▲.*O giro custa menos/)
     // Roteiro de 21/11/2026 (substitui o resultado fixo ao lado, de 18/11/2026): a tela conta a operação de cima para baixo.
-    // Dados, linha do tempo e resultado do desconto; só depois, a comparação com o giro, com a resposta abaixo das premissas.
+    // Dados e resultado do desconto (a linha do tempo saiu em 21/11/2026); só depois, a comparação com o giro, com a resposta abaixo das premissas.
     await page.evaluate(() => window.scrollTo(0, 0))
     const box = async selector => section.locator(selector).boundingBox()
-    const [form, timeline, outcome, compare, premises, answerBox] = [await box('.dsc-form'), await box('.rt-timeline'), await box('.rt-result'), await box('.dsc-compare-head'), await box('.dsc-inputs'), await box('.dsc-result-col')]
-    assert.ok(timeline.y >= form.y + form.height && outcome.y >= timeline.y + timeline.height, 'dados, linha do tempo e resultado nesta ordem')
-    assert.ok(Math.abs(timeline.width - form.width) < 2 && Math.abs(outcome.width - form.width) < 2, 'linha do tempo e resultado na largura toda')
+    assert.equal(await section.locator('.rt-timeline').count(), 0, 'sem linha do tempo')
+    const [form, outcome, compare, premises, answerBox] = [await box('.dsc-form'), await box('.rt-result'), await box('.dsc-compare-head'), await box('.dsc-inputs'), await box('.dsc-result-col')]
+    assert.ok(outcome.y >= form.y + form.height, 'dados e resultado nesta ordem')
+    assert.ok(Math.abs(outcome.width - form.width) < 2, 'resultado na largura toda')
     assert.ok(compare.y >= outcome.y + outcome.height && premises.y >= compare.y + compare.height && answerBox.y >= premises.y + premises.height, 'comparação com o giro depois do resultado do desconto')
     if (page.viewportSize().width >= 1200) {
       const [demanda, encargos] = [await box('.dsc-form > .lm'), await box('.dsc-form > .cx-panel')]
@@ -536,27 +541,27 @@ async function assertComparatorFamily(browser) {
             `${description} ${JSON.stringify(geometry)}: valor convertido usa a linha inteira no celular`)
         }
         if (width === 1440 && route === 'emprestimo-4131') {
-          // Roteiro de 21/11/2026: demanda e encargos lado a lado; linha do tempo, resultado e atingir meta abaixo, na largura toda.
+          // Roteiro de 21/11/2026: demanda e encargos lado a lado; resultado e atingir meta abaixo, na largura toda (sem linha do tempo).
           const geometry = await page.locator('.e4 .fm-input-panel > .cx-form').evaluate(form => {
             const screen = form.closest('.e4')
             const box = selector => screen.querySelector(selector).getBoundingClientRect()
-            const [operation, charges, timeline, result, meta] = ['.fm-operation', '.e4-encargos', '.rt-timeline', '#fm-result', '.e4-meta'].map(box)
+            const [operation, charges, result, meta] = ['.fm-operation', '.e4-encargos', '#fm-result', '.e4-meta'].map(box)
             return {
               available:form.clientWidth,
               used:charges.right - operation.left,
               topGap:Math.abs(charges.top - operation.top),
-              operation:operation.width, charges:charges.width, timeline:timeline.width, result:result.width, meta:meta.width,
-              inOrder:timeline.top >= Math.max(operation.bottom, charges.bottom) && result.top >= timeline.bottom && meta.top >= result.bottom,
+              operation:operation.width, charges:charges.width, result:result.width, meta:meta.width,
+              inOrder:result.top >= Math.max(operation.bottom, charges.bottom) && meta.top >= result.bottom,
               select:box('#e4-meta-kind').width,
               value:box('#e4-meta').width,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
           assert.ok(geometry.topGap <= 1 && Math.abs(geometry.used - geometry.available) <= 2 && Math.abs(geometry.operation - geometry.charges) <= 2, details + ': demanda e encargos lado a lado, na largura útil')
-          for (const block of ['timeline', 'result', 'meta']) {
+          for (const block of ['result', 'meta']) {
             assert.ok(Math.abs(geometry[block] - geometry.available) <= 2, details + ': ' + block + ' ocupa a largura útil')
           }
-          assert.ok(geometry.inOrder, details + ': linha do tempo, resultado e atingir meta abaixo dos dados, nesta ordem')
+          assert.ok(geometry.inOrder, details + ': resultado e atingir meta abaixo dos dados, nesta ordem')
           assert.ok(geometry.select >= 160 && geometry.value >= 120, details + ': campos da meta têm largura de leitura')
         }
         if (width === 1440 && route === 'finame-materiais') {

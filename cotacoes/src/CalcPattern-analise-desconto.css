@@ -6,7 +6,7 @@
   --dscp-navy:linear-gradient(110deg,#052956,#07336b);
 }
 
-/* ── Roteiro (21/11/2026): 1 Demanda e 2 Encargos lado a lado no computador largo; 3 Linha do tempo e 4 Resultado abaixo,
+/* ── Roteiro (21/11/2026): 1 Demanda e 2 Encargos lado a lado no computador largo; 3 Resultado abaixo (a linha do tempo saiu em 21/11/2026),
    na largura toda. Depois, a comparação com o giro: premissas lado a lado e a resposta abaixo. ── */
 .cx-desconto :is(.dsc-flow, .dsc-form, .dsc-workspace, .dsc-inputs) { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; align-items:start; }
 .cx-desconto .dsc-result-col { min-width:0; }
@@ -142,7 +142,7 @@
 :root[data-theme] body .cx-desconto .lm > .lm-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 :root[data-theme] body .cx-desconto .lm .desconto-titles { padding:0; }
 :root[data-theme] body .cx-desconto .lm .desconto-titles h4 { margin:0; }
-:root[data-theme] body .cx-desconto .lm .desconto-titles > p { margin:0 0 4px; }
+:root[data-theme] body .cx-desconto .lm .desconto-titles > .cx-field-label { display:flex; align-items:center; gap:8px; margin:0 0 4px; }
 /* Rótulos dos títulos iguais aos dos outros campos; com o rótulo em duas linhas, os campos continuam alinhados por baixo. */
 :root[data-theme] body .cx-desconto .lm .desconto-titles fieldset label { justify-content:flex-end; gap:6px; color:var(--bw-mut); font-size:.8125rem; font-weight:500; line-height:1.25; }
 /* Os campos dos quadros ficam dois por linha com os quadros lado a lado (regra acima); o grupo de títulos cabe em uma linha. */
@@ -167,8 +167,7 @@
 :root[data-theme] body .cx-desconto .dsc-compare-head { margin:12px 0 0; padding-top:16px; border-top:2px solid var(--bw-strong-line); }
 :root[data-theme] body .cx-desconto .dsc-compare-head h3 { margin:0; padding:0; border:0; color:var(--bw-ink); font-size:1.05rem; font-weight:800; letter-spacing:0; text-transform:none; }
 :root[data-theme] body .cx-desconto .dsc-compare-head h3::after { content:none; }
-:root[data-theme] body .cx-desconto .dsc-compare-head p { margin:4px 0 0; color:var(--bw-mut); font-size:.875rem; }
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-giro-note { margin:0; padding:0 14px 12px; color:var(--bw-mut); font-size:.78rem; }
+:root[data-theme] body .cx-desconto .dsc-compare-head { display:flex; align-items:center; gap:8px; }
 /* Resposta da comparação na largura toda: no computador, a resposta à esquerda e os valores em reais à direita. */
 @media (min-width:1000px) {
   :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .expandable-content { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); align-items:start; gap:12px 16px; }

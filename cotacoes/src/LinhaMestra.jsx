@@ -2,6 +2,8 @@
 // e Análise de desconto (pedido de 19/11/2026). Mostra só os campos que valem para cada produto.
 // Os campos próprios de cada calculadora entram como filhos, no fim do quadro.
 // `details` (piloto do Capital de Giro, 21/11/2026) guarda numa gaveta "Detalhes do contrato" o que quase nunca muda.
+// Tela limpa (21/11/2026): `help` (opcional) põe um "?" ao lado do título com a explicação do quadro; `foot={null}` tira a
+// frase do rodapé (quem usa passa a frase para dentro do `help`). Sem essas propriedades, o quadro fica como era.
 import { useEffect, useRef, useState } from 'react'
 import MoneyInput from './MoneyInput.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
@@ -13,7 +15,7 @@ const SYSTEMS = [['price', 'Price'], ['sac', 'SAC'], ['bullet', 'Bullet capitali
 const LABELS = { value: 'Valor da operação', term: 'Prazo total', grace: 'Carência', system: 'Amortização', start: 'Data da liberação', praca: 'Praça do contrato' }
 const FOOT = 'Os valores da linha mestra valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 
-export default function LinhaMestra({ prefix, title = 'Linha mestra · necessidade do cliente', values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, foot = FOOT, details, children }) {
+export default function LinhaMestra({ prefix, title = 'Linha mestra · necessidade do cliente', values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, foot = FOOT, help, details, children }) {
   const id = key => `${prefix}-${key}`
   const label = key => labels[key] ?? LABELS[key]
   const invalid = key => ({ 'aria-invalid': !!errors[key], ...(errors[key] ? { 'aria-describedby': `${id(key)}-err` } : {}) })
@@ -43,7 +45,8 @@ export default function LinhaMestra({ prefix, title = 'Linha mestra · necessida
   useEffect(() => { if (details?.alert && drawer.current) drawer.current.open = true }, [details?.alert])
   return <section className="lm" aria-labelledby={`${prefix}-lm-title`}>
     <header className="lm-head">
-      <h3 id={`${prefix}-lm-title`}>{title}</h3>
+      {help ? <div className="lm-head-title"><h3 id={`${prefix}-lm-title`}>{title}</h3><CalculatorHelp title={help.title}>{help.children}</CalculatorHelp></div>
+        : <h3 id={`${prefix}-lm-title`}>{title}</h3>}
       <div className="lm-head-side">
         {note && <small>{note}</small>}
         {onClear && <button type="button" className="lm-clear" onClick={onClear}>Limpar</button>}
@@ -57,7 +60,7 @@ export default function LinhaMestra({ prefix, title = 'Linha mestra · necessida
       <summary>Detalhes do contrato{details.summary && <small> · {details.summary}</small>}{details.alert && <small className="lm-error"> · há um campo a conferir aqui</small>}</summary>
       <div className="lm-grid">{details.fields.map(field)}{details.children}</div>
     </details>}
-    <p className="lm-foot">{foot}</p>
+    {foot && <p className="lm-foot">{foot}</p>}
   </section>
 }
 

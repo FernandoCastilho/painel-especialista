@@ -60,16 +60,16 @@ test('a tela segue a ordem do roteiro, com os nomes combinados', async () => {
   const tela = source.slice(source.indexOf('<section className="cx bw e4 calc-standard"'))
   const order = [
     "step(1, 'Demanda do cliente')", 'Detalhes do contrato<small>', "step(2, 'Encargos')", 'Proteção cambial (NDF)</h4>', 'Mais encargos<small>',
-    '<LinhaDoTempo ', "step(4, 'Resultado · custo final para o cliente')", '<Emprestimo4131Presentation ',
+    "step(3, 'Resultado · custo final para o cliente')", '<Emprestimo4131Presentation ',
     'Atingir meta{', '<summary>Condições da operação</summary>', '<summary>Comparar com swap e sem proteção</summary>', '<summary>Composição do custo em ', '<summary>Sem proteção · custo conforme o ',
     '<summary>Premissas e limites da simulação</summary>', '<summary>Parcelas</summary>', '<ReferenciaMercado ',
   ].map(text => tela.indexOf(text))
   // "Condições da operação" continua dentro do quadro do resultado (última linha dele): vem antes dos botões e do Atingir meta.
-  const [condicoes] = order.splice(9, 1)
+  const [condicoes] = order.splice(8, 1)
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
-  assert.ok(condicoes > order[6] && condicoes < order[7], 'condições da operação dentro do quadro do resultado')
-  const pieces = await readFile(new URL('../src/Roteiro.jsx', import.meta.url), 'utf8')
-  assert.match(pieces, /LinhaDoTempo\(\{ id, number = 3, title = 'Linha do tempo da operação'/)
+  assert.ok(condicoes > order[5] && condicoes < order[6], 'condições da operação dentro do quadro do resultado')
+  // A linha do tempo saiu em 21/11/2026.
+  assert.doesNotMatch(source, /LinhaDoTempo/)
   assert.match(tela, /`Taxa de juros all-in \(\$\{cur\.Nome\} \+\)`/, 'taxa de juros com o indexador')
   assert.match(tela, /4131 com NDF · \{hedge\?\.source === 'mesa'/, '4131 com NDF como subtítulo do resultado')
   assert.match(source, /const \[parcelasAbertas, setParcelasAbertas\] = useState\(false\)/, 'a tabela de parcelas abre fechada')

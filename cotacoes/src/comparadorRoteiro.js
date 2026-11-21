@@ -1,4 +1,5 @@
-// Roteiro da Necessidade do Cliente (21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado.
+// Roteiro da Necessidade do Cliente (21/11/2026): era a linha do tempo da demanda comum. A linha do tempo saiu da tela em
+// 21/11/2026 e este arquivo ficou sem uso; fica até a autorização para apagá-lo (apagar arquivo pede o ok do Fernando).
 // Só apresentação: monta a linha do tempo da demanda comum.
 // Nenhuma regra de cálculo mora aqui; prazo, carência e parcelas vêm da regra já usada pela linha mestra (lmSchedule).
 import { lmSchedule } from './linhaMestra.js'

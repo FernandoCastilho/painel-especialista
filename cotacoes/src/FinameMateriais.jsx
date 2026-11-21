@@ -15,7 +15,7 @@ import { GLOSSARY } from './glossary.js'
 import Help from './CalculatorHelp.jsx'
 import ExpandablePanel from './ExpandablePanel.jsx'
 import ComparaSeries from './BndesCompare.jsx'
-import { LinhaDoTempo, step } from './Roteiro.jsx'
+import { step } from './Roteiro.jsx'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -38,8 +38,8 @@ export function FinameIcon() {
 // parcela a parcela. O custo financeiro vem do painel: TFC ou TFB da faixa de prazo (aba BNDES). TLP exigível tem projeção própria.
 // As explicações ficam no "?" ao lado de cada rótulo; na tela só os valores.
 // Valores que já vêm preenchidos (pedido do Fernando, 18/11/2026): operação de R$ 1.000.000,00, 48 meses de prazo e 3 de carência.
-// Roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos, 3 Linha do tempo, 4 Resultado. Só ordem, nomes e
-// apresentação: os números são os mesmos que a conta já devolvia.
+// Roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026).
+// Só ordem, nomes e apresentação: os números são os mesmos que a conta já devolvia. Tela limpa (21/11/2026): explicações no "?".
 export default function FinameMateriais({ onBack, onFundingView, profileControl, apresentacao }) {
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
@@ -267,27 +267,14 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
     { id: 'tfc', name: `TFC · ${tfcCodigo}`, short: 'TFC', unit: '% a.a.', decimals: 2, list: tfcPts.map(([period, value]) => ({ period, value })) },
     { id: 'tfb', name: `TFB · ${keyOf(faixa, liberacao)}`, short: 'TFB', unit: '% a.a.', decimals: 2, list: tfbPts.map(([period, value]) => ({ period, value })) },
   ].filter(item => comparar || item.id === custo)
-  // Linha do tempo (roteiro de 21/11/2026): só datas e valores que a conta já devolve no fluxo; nenhuma conta nova.
+  // Vencimento de cada linha do fluxo: o que a conta devolve ou, sem ele, o dia 15 do mês (ou o próximo dia útil).
   const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx))
-  const eventos = res && (() => {
-    const primeira = res.parcelas.find(p => !p.carencia), ultima = res.parcelas.at(-1), fimCarencia = res.parcelas.findLast(p => p.carencia)
-    const umaSo = res.parcelasAmortizacao === 1
-    const aVista = [res.tac > 0 && `TAC de ${brl(res.tac)}`, res.iof > 0 && `IOF de ${brl(res.iof)}`, res.fgi && !res.fgi.incorporado && res.fgi.ecg > 0 && `ECG do FGI de ${brl(res.fgi.ecg)}`].filter(Boolean)
-    return [
-      { label: 'Liberação', when: data(hoje), value: brl(res.liberado), note: `Valor financiado. ${aVista.length ? `À vista: ${aVista.join(' e ')}` : 'Nada é pago à vista'}` },
-      fimCarencia
-        ? { label: 'Carência', when: `até ${venceEm(fimCarencia)}`, value: `${carencia} ${carencia === 1 ? 'mês' : 'meses'}`, note: `Só juros, com pagamento ${PERIODICIDADES.find(p => p.id === periodicidade).label.toLowerCase()}: ${brl(res.jurosCarencia)} no período` }
-        : { label: 'Carência', empty: true, when: `1ª parcela em ${venceEm(primeira)}`, value: 'Sem carência', note: 'Não há período só de juros' },
-      { label: 'Parcelas', when: umaSo ? venceEm(ultima) : `de ${venceEm(primeira)} a ${venceEm(ultima)}`, value: umaSo ? '1 parcela' : `${res.parcelasAmortizacao} parcelas mensais`,
-        note: `Amortização ${sistema.toUpperCase()}. ${umaSo ? `Parcela de ${brl(res.primeiraParcela)}` : `1ª de ${brl(res.primeiraParcela)}, última de ${brl(res.ultimaParcela)}`}` },
-      { label: 'Quitação', when: venceEm(ultima), value: brl(res.total), note: 'Custo total estimado: tudo o que o cliente paga' },
-    ]
-  })()
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
   const detalhamento = <details className="fm-details"><summary>Detalhamento · {custo.toUpperCase()}</summary><div className="fm-grade">{quadros.map(quadro)}</div></details>
 
   const regrasAjuda = (
     <>
+        <p>Regras do produto conferidas em {dmy(REGRAS.conferidoEm)}. Base de regras: {dmy(REGRAS.conferidoEm)} · Custos: painel BNDES · Fontes em Configurações &gt; Base de dados.</p>
         <ul>
           <li><b>O que financia:</b> {REGRAS.itens}. Fora: {REGRAS.foraDoProduto}. Nacionalização: {REGRAS.nacionalizacao}.</li>
           <li><b>Quem pede:</b> empresas de qualquer porte sediadas no país, empresário individual, MEI, produtor rural pessoa física, administração pública, cooperativas, fundações e associações; operação indireta, por agente financeiro credenciado.</li>
@@ -318,7 +305,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
 
       <div className={`fm-workspace fm-quote-layout${comparar ? ' fm-cmp' : ''}`}>
       <article className="desk-panel cx-panel fm-input-panel">
-        <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3><small>Regras do produto conferidas em {dmy(REGRAS.conferidoEm)}</small>{ajuda('Regras do produto e fontes', regrasAjuda)}</header>
+        <header className="fm-rules"><h3 className="cx-heading sr-only">Dados da operação</h3>{ajuda('Regras do produto e fontes', regrasAjuda)}</header>
         <div className="cx-form">
           <section className="fm-group fm-operation" aria-labelledby="fm-operation-h"><h3 id="fm-operation-h">{step(1, 'Demanda do cliente')}</h3><div className="fm-group-fields">
           {profileControl && <div className="fm-field-linha">{profileControl}</div>}
@@ -366,7 +353,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
             <label htmlFor="fm-compare"><input id="fm-compare" type="checkbox" role="switch" checked={comparar} disabled={!['inline', 'pos'].includes(funding?.mode)} onChange={event => setComparar(event.target.checked)} />Comparar com outro custo</label>
             {comparar && <div className="fm-compare-outro"><label htmlFor="fm-outro">Comparar {custo.toUpperCase()} com</label><select id="fm-outro" value={outro} onChange={event => setOutro(event.target.value)}>{FINAME_FUNDING_OPTIONS.filter(option => option.id !== custo).map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></div>}
             {comparar && erros.comparar && <p className="cx-error" role="alert">{erros.comparar}</p>}
-            {comparar && [custo, outro].every(id => ['tfc', 'tfb'].includes(id)) && <p className="cx-hint">Mesma faixa e data de referência; liberação em até 90 dias.</p>}
+            {comparar && [custo, outro].every(id => ['tfc', 'tfb'].includes(id)) && ajuda('Comparar TFC e TFB', 'Mesma faixa e data de referência; liberação em até 90 dias.')}
           </div>
           {field('bndes', 'Taxa BNDES', <div className="cx-rate">{input('bndes', bndesText, setBndesText, { 'aria-label': 'Taxa do BNDES (% a.a.)' })}<span className="fm-unidade">% a.a.</span></div>, 'Taxa do BNDES conforme porte e região; editável para refletir a proposta da instituição.')}
           {field('agente', 'Spread do agente', <div className="cx-rate">{input('agente', agenteText, setAgenteText)}<span className="fm-unidade">% a.a.</span></div>, 'É a "taxa do agente financeiro" na nomenclatura do BNDES: a remuneração do banco, negociada com o cliente conforme risco, garantias e relacionamento; não há teto público. Compõe a taxa final junto com o custo financeiro e a taxa do BNDES.')}
@@ -384,11 +371,9 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
         </div>
       </article>
 
-      {/* A linha do tempo e o resultado formam o quadro de resultado (é o que o modo Apresentar mostra em "Resultado"). */}
+      {/* O quadro de resultado é o que o modo Apresentar mostra em "Resultado". */}
       <div className="fm-results">
-      <LinhaDoTempo id="fm-timeline-h" className="fm-timeline" events={eventos} title={comparar ? `Linha do tempo da operação · Opção A · ${custo.toUpperCase()}` : undefined}
-        placeholder="Aparece quando a simulação estiver completa: liberação, carência, parcelas e quitação." />
-      <ExpandablePanel title="Resultado · custo final para o cliente" heading={step(4, 'Resultado · custo final para o cliente')} className="fm-result-workspace" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
+      <ExpandablePanel title="Resultado · custo final para o cliente" heading={step(3, 'Resultado · custo final para o cliente')} className="fm-result-workspace" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
       {res && <ExpandablePanel title="Dados básicos da operação"><dl className="fm-operation-summary">{[
         ['Valor financiado', brl(res.liberado)], ['Prazo total', `${prazo} meses`], ['Carência', `${carencia} meses`],
         ['Data da liberação', dmy(liberacaoText)], ['Porte e região', PORTES.find(item => item.id === porte).label], ['Amortização', sistema.toUpperCase()],
@@ -517,10 +502,9 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>TLP, Taxa LCD e TFBD: taxa do painel (J, LD1 ou TFBD) mais a hipótese do índice pelo Focus ano a ano, editável. TLP: IPCA cobrado com os juros, sem corrigir o saldo, dias úteis/252. LCD: Selic capitalizada no saldo (média dos fins de ano do Focus; no ano da liberação, a Selic atual), dias úteis/252. TFBD: saldo pela variação do dólar e juros proporcionais, dias corridos/360; não disponível no Itaú. FGI Tradicional só na TLP (o regulamento veda Selic/LCD capitalizada e TFBD). Projeção, não memória contratual: o contrato usa índices mensais defasados e arredondamentos próprios.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
       </div>
 
-      <p className="status">Base de regras: {dmy(REGRAS.conferidoEm)} · Custos: painel BNDES · Fontes em Configurações &gt; Base de dados.</p>
       {/* Referência de mercado desta tela (TFC e TFB): sempre o último bloco, ao final de tudo (pedido do Fernando, 21/11/2026). */}
       {funding?.mode === 'inline' && <ExpandablePanel title="Histórico dos indexadores" className="fm-indexers-callout">
-        <p className="cx-hint">Histórico, não projeção futura.{ajuda('Histórico dos indexadores', 'Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
+        <p className="cx-hint">{ajuda('Histórico dos indexadores', 'Histórico, não projeção futura. Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
         <ComparaSeries compactHelp items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: chartPreset, setPreset: setChartPreset, custom: chartCustom, setCustom: setChartCustom }} />
       </ExpandablePanel>}

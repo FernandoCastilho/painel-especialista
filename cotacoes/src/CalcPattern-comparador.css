@@ -11,8 +11,6 @@
 /* Sem espaço morto no topo do quadro: o cabeçalho encosta na área de trabalho. */
 :root[data-theme] body .credit-workspace .credit-bw { gap:0; }
 :root[data-theme] body .credit-workspace .credit-bw-body { padding-top:12px; }
-:root[data-theme] body .credit-workspace .credit-intro { margin:0 0 8px; }
-:root[data-theme] body .credit-workspace .credit-intro > .fi-help > button { width:28px; min-width:28px; height:28px; min-height:28px; }
 
 /* Quadros de entrada: faixa azul-marinho, título branco em negrito e linha laranja. Um destaque só: sem contorno azul forte nem barra lateral. */
 :root[data-theme] body .credit-workspace .credit-shared { border:1px solid var(--bw-line); border-radius:10px; }
@@ -121,7 +119,7 @@
 /* Na apresentação ampliada, o mesmo resultado com a mesma organização. */
 :root[data-theme] body .credit-workspace .credit-presentation .credit-answer { margin-bottom:4px; }
 
-/* Roteiro das calculadoras (21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado. Só apresentação. */
+/* Roteiro das calculadoras (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026). Só apresentação. */
 /* 2 Encargos: a faixa do título, o seletor de quantidade e uma coluna por operação. Sem moldura em volta, para as colunas
    usarem a mesma largura de antes (com moldura, quatro operações deixavam de caber lado a lado em 1280 px). */
 :root[data-theme] body .credit-workspace .credit-charges { margin:12px 0 0; }
@@ -136,10 +134,9 @@
 :root[data-theme] body .credit-workspace .credit-scenarios[open] { padding-bottom:2px; }
 :root[data-theme] body .credit-workspace .credit-scenarios > .credit-controls:first-of-type { margin-top:0; }
 
-/* 3 Linha do tempo e 4 Resultado, juntos. */
+/* 3 Resultado. */
 :root[data-theme] body .credit-workspace .credit-outcome { margin:16px 0 0; }
 :root[data-theme] body .credit-workspace .credit-outcome > .credit-result-box { margin:0; }
-:root[data-theme] body .credit-workspace .credit-timeline-note { margin:6px 2px 0; color:var(--bw-mut); font-size:.8125rem; line-height:1.45; }
 
 /* Quadro de respostas: uma coluna por operação, as perguntas nas linhas; "Quanto custa" em azul-marinho, como no Capital de Giro. */
 :root[data-theme] body .credit-workspace .credit-results :is(.rt-answers, .rt-answers dt, .rt-answers dd) { margin:0; }
@@ -179,3 +176,6 @@
 .sl-calc .credit-workspace details.credit-scenarios[open] { display:block; }
 :root[data-theme] body .sl-calc .credit-workspace .credit-scenarios > summary,
 :root[data-theme] body .sl-calc .credit-workspace .credit-result-box :is(.credit-result-status, .credit-result-actions, .credit-email, .credit-reading, .credit-results > .credit-result-panel) { display:none; }
+/* Tela limpa (21/11/2026): "?" claro nas faixas azul-marinho (Cenários do CDI e cabeçalho de cada operação). */
+:root[data-theme] body main.app.app-calculators .cx.credit-bw :is(.credit-controls > h3, .credit-card-head) .fi-help > button { background:transparent; color:#fff; border-color:#ffffff88; }
+:root[data-theme] body .credit-workspace .credit-bw .credit-controls > h3 .fi-help { margin-left:8px; }

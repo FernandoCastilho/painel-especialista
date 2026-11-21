@@ -9,7 +9,7 @@ import { finimpDraftStore } from './calculatorDraft.js'
 import { FINIMP_CURRENCIES, validateFinimpInputs } from './finimpInputs.js'
 import { parseDecimal } from './emprestimo.js'
 import { formatFinimpRate, formatFinimpPercent as pct, formatFinimpDelta as delta } from './finimpPresentation.js'
-import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
+import { ComposicaoDoCusto, Respostas, Resultado, step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
 import './FinimpComparacao.css'
 import './CalcPattern-finimp.css'
@@ -49,19 +49,8 @@ export default function FinimpComparacao({ onBack }) {
   const answer = conditionsReady && answerRow?.ok ? answerRow : null
   // Meta: a taxa atual da Instituição 2 contra a taxa requerida (o custo cresce com a taxa; nenhuma conta nova).
   const goalMet = goal.ok && b.annualRate !== null ? b.annualRate <= goal.annualRate * (1 + 1e-12) + 1e-12 : null
-  // Roteiro (21/11/2026): linha do tempo e resultado só repartem e reordenam o que a conta devolveu para o prazo escolhido.
-  const both = (first, second) => <>Instituição 1: {first}<br />Instituição 2: {second}</>
-  const hasTac = useTac && (a.tacBrl > 0 || b.tacBrl > 0)
-  const noFlat = answer?.competitor.flat === 0 && answer.itau.flat === 0
-  // A conta não devolve datas: a linha do tempo fala em dias. O flat não tem momento fixo (o contrato define).
-  const events = answer && [
-    { label: 'Desembolso', when: 'Início da operação', value: money(principal),
-      note: hasTac ? `TAC paga à vista: ${moneyBrl(a.tacBrl)} na Instituição 1 e ${moneyBrl(b.tacBrl)} na Instituição 2` : 'Principal na moeda escolhida' },
-    { label: 'Flat', empty: noFlat, when: 'Cobrado uma vez, sobre o principal', value: noFlat ? 'Sem flat' : both(money(answer.competitor.flat), money(answer.itau.flat)),
-      note: 'O contrato define o momento da cobrança' },
-    { label: 'Vencimento', when: `em ${answerDays} dias`, value: both(money(principal + answer.competitor.interest), money(principal + answer.itau.interest)),
-      note: `Principal mais juros de ${money(answer.competitor.interest)} na Instituição 1 e de ${money(answer.itau.interest)} na Instituição 2` },
-  ]
+  // Roteiro (21/11/2026): o resultado só reparte e reordena o que a conta devolveu para o prazo escolhido (a linha do tempo saiu
+  // em 21/11/2026). Tela limpa: explicações ficam nos "?".
   const moneyText = value => answer ? money(value) : '—'
   const costNote = cost => answer ? `${pct(cost.periodPercent)} do principal em ${answerDays} dias` : 'Juros, flat e TAC'
   // Do que é feito o custo de cada proposta: juros + flat + TAC (na moeda do principal) = custo.
@@ -75,14 +64,13 @@ export default function FinimpComparacao({ onBack }) {
     </div>
     <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="fi-heading" className="cx-title"><span>FINIMP · comparação de propostas</span></h2></div>{help('simulation')}</div>
     <div className="fi-inputs">
-    <article className="desk-panel cx-panel fi-box"><header><h3 className="cx-heading"><span>{step(1, 'Demanda do cliente')}</span></h3></header>
-    {/* Tela recém-aberta: dica curta do que preencher, sem valores de exemplo. Some quando as condições estão completas. */}
-    {!conditionsReady && <p className="fi-guide fi-alerta"><span className="fi-alerta-icone" aria-hidden="true">!</span><span>Informe o principal e as condições das instituições.</span><FinimpHelp title="Como começar"><p>Para começar, informe o principal e, em cada instituição, a taxa anual e o flat. A tabela e a meta de custo se completam sozinhas.</p></FinimpHelp></p>}
+    <article className="desk-panel cx-panel fi-box"><header><h3 className="cx-heading"><span>{step(1, 'Demanda do cliente')}</span><FinimpHelp title="Como começar"><p>Para começar, informe o principal e, em cada instituição, a taxa anual e o flat. A tabela e a meta de custo se completam sozinhas.</p></FinimpHelp></h3></header>
+    {/* Tela recém-aberta: o que preencher aparece no aviso do resultado; "como começar" fica no "?" do título. */}
     <div className="cx-form">
       {field(`Principal (${currency})`, 'fi-principal', principalText, setPrincipal, true)}
       <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor="fi-currency">Moeda</label>{help('currency')}</div><select id="fi-currency" value={currency} onChange={e => setCurrency(e.target.value)}>{FINIMP_CURRENCIES.map(code => <option key={code}>{code}</option>)}</select></div>
       {/* O prazo que o cliente quer: o mesmo seletor que fica na tabela (os doze prazos fixos), agora também aqui. */}
-      <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor="fi-term">Prazo</label></div><select id="fi-term" value={answerDays} onChange={e => setSelectedDays(Number(e.target.value))}>{FINIMP_TERMS.map(days => <option key={days} value={days}>{days} dias</option>)}</select>{selectedDays == null && <small className="fi-hint">Sem escolha, acompanha o prazo da meta.</small>}</div>
+      <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor="fi-term">Prazo</label><FinimpHelp title="Prazo"><p>Os doze prazos fixos da tabela, de 30 a 360 dias. Sem escolha, acompanha o prazo da meta.</p></FinimpHelp></div><select id="fi-term" value={answerDays} onChange={e => setSelectedDays(Number(e.target.value))}>{FINIMP_TERMS.map(days => <option key={days} value={days}>{days} dias</option>)}</select></div>
     </div></article>
     <article className="desk-panel cx-panel fi-box"><header><h3 className="cx-heading"><span>{step(2, 'Encargos')}</span></h3></header>
     <div className="fi-banks">{bankFields('Instituição 1', competitor, setCompetitor, 'a')}{bankFields('Instituição 2', itau, setItau, 'b')}</div>
@@ -91,14 +79,14 @@ export default function FinimpComparacao({ onBack }) {
     {useTac && currency !== 'BRL' && <div className="cx-form">{field(`Câmbio da TAC (R$ por ${currency})`, 'fi-tac-fx', tacFxText, setTacFx, false, 'tacFx', currency, { raw: true, showError: a.tacBrl > 0 || b.tacBrl > 0 })}</div>}
     </article>
     </div>
-    {/* Linha do tempo e resultado formam o quadro de resultado (é o que o modo Apresentar mostra em "Resultado"). */}
+    {/* O quadro de resultado é o que o modo Apresentar mostra em "Resultado". */}
     <div className="rt-outcome calc-result-shell" aria-live="polite">
-      <LinhaDoTempo id="fi-timeline-title" events={events} placeholder="Aparece quando as condições estiverem completas: desembolso, flat e vencimento." />
-      <Resultado id="fi-result-title" alert={answer ? null : conditionsReady ? { error: true, warning: true, text: answerRow?.error || 'Resultado fora do limite numérico; revise as condições.' }
+      <Resultado id="fi-result-title" number={3} alert={answer ? null : conditionsReady ? { error: true, warning: true, text: answerRow?.error || 'Resultado fora do limite numérico; revise as condições.' }
         : { text: 'Informe o principal e as condições das duas instituições para comparar os prazos.' }}>
         {/* Sem apontar vencedor (decisão do Fernando registrada em docs/finimp-comparacao.md): os dois custos lado a lado e a diferença, com o sinal. */}
         <Respostas items={[
-          { question: 'Quanto recebe', value: moneyText(principal), note: answer ? `Principal, por ${answerDays} dias` : 'Principal desembolsado' },
+          // O principal entra cheio; flat (e TAC) são cobrados à parte, por isso "antes do flat" (Auditor, 21/11/2026).
+          { question: 'Quanto recebe (antes do flat)', value: moneyText(principal), note: answer ? `Principal, por ${answerDays} dias; flat${useTac ? ' e TAC' : ''} à parte` : 'Principal desembolsado' },
           { question: 'Quanto custa na Instituição 1', value: moneyText(answer?.competitor.cost), note: costNote(answer?.competitor) },
           { question: 'Quanto custa na Instituição 2', value: moneyText(answer?.itau.cost), note: costNote(answer?.itau) },
           { question: 'Qual a diferença', value: answer ? differenceAmount(answer.difference) : '—', main: true,

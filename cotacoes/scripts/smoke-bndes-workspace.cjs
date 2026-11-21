@@ -41,10 +41,10 @@ async function proveLastColumn(region, file) {
         await page.locator('#fm-compare').waitFor()
         // Regressão visual aprovada em 13/11: resumo de câmbio fora da calculadora.
         assert.equal(await page.locator('.alerta-variacao').count(), 0)
-        // Roteiro de 21/11/2026: 1 Demanda do cliente, 2 Encargos, 3 Linha do tempo, 4 Resultado; o histórico dos indexadores fecha a tela.
+        // Roteiro de 21/11/2026: 1 Demanda do cliente, 2 Encargos, 3 Resultado (a linha do tempo saiu no mesmo dia); o histórico dos indexadores fecha a tela.
         assert.deepEqual((await page.locator('.cx-finame :is(.fm-group > h3, .rt-timeline > h3, .fm-result-workspace > .expandable-heading h3)').allInnerTexts()).map(text => text.replace(/\s+/g, ' ').trim()),
-          ['1 Demanda do cliente', '2 Encargos', '3 Linha do tempo da operação', '4 Resultado · custo final para o cliente'])
-        assert.deepEqual(await page.locator('.fm-timeline li b').allInnerTexts(), ['LIBERAÇÃO', 'CARÊNCIA', 'PARCELAS', 'QUITAÇÃO'])
+          ['1 Demanda do cliente', '2 Encargos', '3 Resultado · custo final para o cliente'])
+        assert.equal(await page.locator('.fm-timeline, .rt-timeline').count(), 0, 'sem linha do tempo')
         assert.equal(await page.locator('.cx-finame > :last-child').getAttribute('data-painel'), 'Histórico dos indexadores', 'referência de mercado no fim da tela')
         // Data da liberação e praça ficam na gaveta "Detalhes do contrato", fechada, com o resumo no título.
         const drawer = page.locator('.fm-operation .fm-contrato')
@@ -63,10 +63,10 @@ async function proveLastColumn(region, file) {
         await page.locator('#fm-data-lib').evaluate(input => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ''); input.dispatchEvent(new Event('input', { bubbles: true })) })
         await page.locator('#fm-data-lib-err').getByText('Informe a data da liberação').waitFor()
         assert.equal(await drawer.evaluate(el => el.open), true, 'gaveta abre com erro na data')
-        assert.match(await page.locator('.fm-timeline').innerText(), /Aparece quando a simulação estiver completa/)
+        assert.equal(await page.locator('.fm-destaques').count(), 0, 'sem resultado com a data em erro')
         await page.locator('#fm-data-lib').fill(releaseDate)
         await drawer.locator('summary').click()
-        await page.locator('.fm-timeline li').first().waitFor()
+        await page.locator('.fm-destaques').waitFor()
         const singleLayout = await page.locator('.fm-quote-layout').evaluate(layout => {
           const rect = sel => layout.querySelector(sel).getBoundingClientRect()
           const form = rect('.fm-input-panel'), operation = rect('.fm-operation'), costs = rect('.fm-costs'), result = rect('.fm-results')
@@ -83,9 +83,9 @@ async function proveLastColumn(region, file) {
         const enlargeBox = await enlarge.evaluate(el => ({ targetWidth: el.getBoundingClientRect().width, targetHeight:el.getBoundingClientRect().height, icon:el.querySelector('svg').getBoundingClientRect().width }))
         assert.ok(enlargeBox.targetWidth >= 44 && enlargeBox.targetHeight >= 44 && enlargeBox.icon <= 16, JSON.stringify(enlargeBox))
         await enlarge.click()
-        await page.getByRole('dialog', { name:'4 Resultado · custo final para o cliente', exact:true }).waitFor()
+        await page.getByRole('dialog', { name:'3 Resultado · custo final para o cliente', exact:true }).waitFor()
         await page.keyboard.press('Escape')
-        await page.getByRole('dialog', { name:'4 Resultado · custo final para o cliente', exact:true }).waitFor({ state:'hidden' })
+        await page.getByRole('dialog', { name:'3 Resultado · custo final para o cliente', exact:true }).waitFor({ state:'hidden' })
         await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Ampliar: Resultado · custo final para o cliente')
         const parcels = page.locator('#fm-parcelas')
         assert.equal(await parcels.evaluate(el => el.open), false, 'parcelas da operação recolhidas')
@@ -161,7 +161,6 @@ async function proveLastColumn(region, file) {
         await page.locator('.fm-comparison table').waitFor()
         if (width <= 390) await proveLastColumn(page.getByRole('region', { name: 'Resultados TFC e TFB', exact: true }), path.join(out, `${width}-${theme}-comparison-last-column.png`))
         assert.match(await page.locator('.fm-hero h3').innerText(), /Cotação comparativa/)
-        assert.equal(await page.locator('.fm-timeline > h3').innerText(), '3 Linha do tempo da operação · Opção A · TFC', 'na comparação, a linha do tempo diz de qual custo é')
         assert.equal(await highlights.count(), 0, 'comparação substitui tabela simples sem duplicar resultados')
         // Cabeçalho executivo: uma coluna por opção (nome e CET estimado) e a diferença B − A.
         const comparisonHeads = (await page.locator('.fm-comparison thead th').allInnerTexts()).slice(1).map(text => text.replace(/\s+/g, ' ').trim())
@@ -183,7 +182,7 @@ async function proveLastColumn(region, file) {
         assert.equal(await parcels.evaluate(el => el.open), false, 'parcelas podem ser recolhidas')
         const compareExpand = page.getByRole('button', { name: 'Ampliar: Resultado · custo final para o cliente', exact: true })
         await compareExpand.click()
-        const compareDialog = page.getByRole('dialog', { name: '4 Resultado · custo final para o cliente', exact: true })
+        const compareDialog = page.getByRole('dialog', { name: '3 Resultado · custo final para o cliente', exact: true })
         await compareDialog.waitFor()
         assert.equal(await parcels.evaluate(el => el.open), false, 'ampliar não abre as parcelas no fundo')
         await compareDialog.getByRole('button', { name: 'Ver todas as parcelas', exact: true }).press('Enter')

@@ -17,7 +17,7 @@ const panelStub = ({ title, children }) => React.createElement('section', null, 
 
 const CalculatorHelp = ({ title, label }) => React.createElement('button', { type: 'button', 'aria-label': `Ajuda: ${title || label}`, 'aria-expanded': false }, '?')
 // As peças do roteiro (21/11/2026) são funções simples, sem estado: o teste abre cada uma para ler o que ela mostra.
-const ROTEIRO = ['LinhaDoTempo', 'Resultado', 'Respostas', 'ComposicaoDoCusto']
+const ROTEIRO = ['Resultado', 'Respostas', 'ComposicaoDoCusto']
 const open = el => el && typeof el.type === 'function' && ROTEIRO.includes(el.type.name) ? el.type(el.props) : el
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [open(el), ...nodes(open(el).props?.children)] : []
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' && open(el) !== el ? textOf(open(el)) : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : (el.type === panelStub ? el.props.title : '') + textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
@@ -56,15 +56,17 @@ async function setup(t) {
 test('inicia com o valor da linha mestra e sem taxa presumida, taxa vazia impede resultado e não oferece capitalização', async t => {
   const h = await setup(t)
   assert.equal(h.field('rate').props.value, '')
-  // Valor utilizado vem da linha mestra comum: padrão de R$ 1.000.000,00 (pedido de 19/11/2026).
-  assert.equal(h.field('amount').props.value, '1.000.000,00')
+  // Valor utilizado vem da linha mestra comum: padrão de R$ 3.000.000,00 (pedido de 21/11/2026; antes, R$ 1.000.000,00).
+  assert.equal(h.field('amount').props.value, '3.000.000,00')
   assert.equal(h.field('capitalization'), undefined)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
-  assert.match(h.text(), /Estimativa para operação adimplente e rotativa/)
-  assert.match(h.text(), /Não é extrato nem cotação bancária/)
-  assert.match(h.text(), /O CET aparece quando você informa o limite contratado/)
   assert.equal(h.field('limit').props.value, '')
   const help = nodes(h.render.value).find(node => node.type === CalculatorHelp && node.props.title === 'Conta Garantida')
+  // Tela limpa (21/11/2026): o aviso de estimativa foi para o "?" do título.
+  for (const aviso of [/Estimativa para operação adimplente e rotativa/, /Não é extrato nem cotação bancária/, /O CET aparece quando você informa o limite contratado/]) {
+    assert.match(renderToStaticMarkup(help.props.children), aviso)
+    assert.doesNotMatch(h.text(), aviso)
+  }
   assert.match(renderToStaticMarkup(help.props.children), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
   assert.doesNotMatch(h.text(), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
   assert.equal(h.button('Utilização única').props['aria-pressed'], true)
@@ -240,7 +242,8 @@ test('CET do art. 6º: sem limite pede o limite; com limite mostra 30 dias ao an
   assert.ok(h.text().includes(`${pct(expected)}% a.a.`), pct(expected))
   assert.ok(h.text().includes(`${pct(Math.pow(1 + expected, 1 / 12) - 1)}% a.m.`))
   assert.equal(pct(expected), '54,49')
-  assert.match(h.text(), /texto oficial conferido em 11\/11\/2026/)
+  const cetHelp = nodes(h.render.value).find(node => node.type === CalculatorHelp && node.props.title === 'Como calculamos o CET')
+  assert.match(renderToStaticMarkup(cetHelp.props.children), /texto oficial conferido em 11\/11\/2026/)
   // O limite não muda o resultado do período.
   assert.match(h.text(), /1\.462,00/)
   await h.change('limit', '0')

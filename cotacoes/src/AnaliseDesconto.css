@@ -32,7 +32,7 @@
 .desconto-titles fieldset { min-width:0; margin:12px 0; border:1px solid var(--line); }
 .desconto-titles label { min-width:0; display:flex; flex-direction:column; gap:8px; }
 .desconto-titles input { box-sizing:border-box; width:100%; min-width:0; }
-.desconto-titles button { min-height:44px; padding:8px 12px; color:var(--fg); background:var(--surface-2); border:1px solid var(--line); cursor:pointer; }
+.desconto-titles button:not(.fi-help > button) { min-height:44px; padding:8px 12px; color:var(--fg); background:var(--surface-2); border:1px solid var(--line); cursor:pointer; }
 .desconto-titles button:disabled { opacity:.5; cursor:default; }
 .desconto-titles p { font-size:.85rem; line-height:1.5; color:var(--mut); }
 

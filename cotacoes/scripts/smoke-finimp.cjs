@@ -25,10 +25,10 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       await p.waitForURL('**/#calculadora/finimp')
       const section = p.locator('section.fi')
       await section.waitFor()
-      // Roteiro (21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado; depois, a meta e a tabela dos doze prazos, recolhida.
+      // Roteiro (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu no mesmo dia); depois, a meta e a tabela dos doze prazos, recolhida.
       const normalize = text => text.replace(/\s+/g, ' ').trim()
       assert.deepEqual((await section.locator('.fi-box > header h3 > span:first-child, .rt-timeline > h3, .rt-result > h3').allTextContents()).map(normalize),
-        ['1 Demanda do cliente', '2 Encargos', '3 Linha do tempo da operação', '4 Resultado · custo final para o cliente', 'Atingir meta de custo'])
+        ['1 Demanda do cliente', '2 Encargos', '3 Resultado · custo final para o cliente', 'Atingir meta de custo'])
       const drawer = section.locator('details.fi-table-drawer')
       assert.equal(await drawer.evaluate(element => element.open), false, 'tabela dos doze prazos começa recolhida')
       assert.ok(await section.evaluate(element => {
@@ -56,12 +56,12 @@ const { chromium } = require('playwright'), assert = require('node:assert/strict
       assert.match(await answer('Quanto custa na Instituição 1'), /4\.000,00/)
       assert.match(await answer('Quanto custa na Instituição 2'), /4\.500,00/)
       assert.match(await answer('Qual a diferença'), /500,00/)
-      assert.match(normalize(await section.locator('.rt-timeline li').last().innerText()), /em 180 dias/)
+      // "Quanto recebe" mostra o principal cheio: o flat é cobrado à parte (Auditor, 21/11/2026).
+      assert.match(await answer('Quanto recebe (antes do flat)'), /100\.000,00/)
       await p.locator('#fi-term').selectOption('60')
       assert.equal(await rows.nth(1).getByRole('button').getAttribute('aria-pressed'), 'true', 'o Prazo da demanda destaca a linha da tabela')
       assert.match(await answer('Quanto custa na Instituição 1'), /2\.000,00/)
       assert.match(await answer('Quanto custa na Instituição 2'), /1\.833,33/)
-      assert.match(normalize(await section.locator('.rt-timeline li').last().innerText()), /em 60 dias/)
       for (const [i, expected] of [[0, ['1.500,00', '1.166,67']], [1, ['2.000,00', '1.833,33']], [2, ['2.500,00', '2.500,00']], [3, ['3.000,00', '3.166,67']], [4, ['3.500,00', '3.833,33']], [5, ['4.000,00', '4.500,00']], [6, ['4.500,00', '5.166,67']], [7, ['5.000,00', '5.833,33']], [8, ['5.500,00', '6.500,00']], [9, ['6.000,00', '7.166,67']], [10, ['6.500,00', '7.833,33']], [11, ['7.000,00', '8.500,00']]]) {
         for (let col = 0; col < 2; col++) assert.ok((await rows.nth(i).locator('td strong').nth(col).innerText()).includes(expected[col]))
       }

@@ -133,7 +133,7 @@
   :root[data-theme] body .bw.e4 .cx-finame .fm-operation .fm-group-fields > .cx-field .fm-rotulo { min-height:0; }
 }
 
-/* Roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos, 3 Linha do tempo e 4 Resultado. */
+/* Roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos e 3 Resultado (a linha do tempo saiu em 21/11/2026). */
 /* Campos: até três colunas, enquanto cada uma tiver largura de leitura; no celular, um por linha. */
 :root[data-theme] body .bw.e4 .cx-finame :is(.fm-operation,.e4-encargos) .fm-group-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,max(215px,30%)),1fr)); align-items:start; }
 /* Cada campo ocupa uma coluna; notas e a caixa das taxas coladas ocupam a linha inteira. */
@@ -154,9 +154,9 @@
 /* No slide do modo Apresentar as gavetas ficam abertas e sem o título clicável. */
 .sl-calc .bw.e4 details.e4-gaveta[open] { display:block; }
 .sl-calc .bw.e4 .e4-gaveta > summary { display:none; }
-/* Os quadros de entrada ocupam a mesma largura da linha do tempo e do resultado. */
+/* Os quadros de entrada ocupam a mesma largura do resultado. */
 :root[data-theme] body .bw.e4 .cx-finame .cx-form { padding:0; gap:16px; }
-/* Linha do tempo e resultado, um abaixo do outro. */
+/* Resultado e botões de apresentação, um abaixo do outro. */
 :root[data-theme] body .bw.e4 .fm-results { gap:16px; }
 :root[data-theme] body .bw.e4 .fm-results > .fm-print-actions { margin-top:-6px; }
 /* Na largura toda, as quatro equivalências cabem lado a lado. */

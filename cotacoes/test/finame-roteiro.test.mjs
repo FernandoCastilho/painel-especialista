@@ -68,11 +68,11 @@ test('exemplo de abertura da tela: R$ 1 milhão, 48 meses, 3 de carência, TFC d
 
 test('a tela segue a ordem do roteiro e o histórico dos indexadores fecha a tela', async () => {
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
-  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<LinhaDoTempo ', "step(4, 'Resultado · custo final para o cliente')",
+  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", "step(3, 'Resultado · custo final para o cliente')",
     'id="fm-parcelas"', 'title="Memória completa do fluxo"', 'className="fm-premises"', 'title="Histórico dos indexadores"'].map(text => source.indexOf(text))
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
-  const pieces = await readFile(new URL('../src/Roteiro.jsx', import.meta.url), 'utf8')
-  assert.match(pieces, /LinhaDoTempo\(\{ id, number = 3, title = 'Linha do tempo da operação'/)
+  // A linha do tempo saiu em 21/11/2026.
+  assert.doesNotMatch(source, /LinhaDoTempo/)
   // Demanda: data da liberação e praça ficam na gaveta "Detalhes do contrato"; porte e região continua à vista, fora dela.
   const gaveta = source.slice(source.indexOf('<details className="fm-contrato"'), source.indexOf('</details>', source.indexOf('<details className="fm-contrato"')))
   for (const campo of ["field('data-lib'", "field('praca'"]) assert.ok(gaveta.includes(campo), campo)
@@ -81,7 +81,7 @@ test('a tela segue a ordem do roteiro e o histórico dos indexadores fecha a tel
   assert.ok(source.indexOf('<details className="fm-contrato"') < source.indexOf("step(2, 'Encargos')"), 'gaveta dentro da demanda')
   // Encargos mantêm os nomes do produto.
   for (const nome of ["field('custo', 'Custo financeiro'", "field('bndes', 'Taxa BNDES'", "field('agente', 'Spread do agente'", "field('tac', 'TAC (R$)'", "seg('per', 'Juros na carência'", '/>FGI Tradicional</label>', '/>Comparar com outro custo</label>']) {
-    assert.ok(source.indexOf(nome) > source.indexOf("step(2, 'Encargos')") && source.indexOf(nome) < source.indexOf('<LinhaDoTempo '), nome)
+    assert.ok(source.indexOf(nome) > source.indexOf("step(2, 'Encargos')") && source.indexOf(nome) < source.indexOf("step(3, 'Resultado"), nome)
   }
   // O resultado continua respondendo com os nomes que já usava.
   for (const linha of ['Valor financiado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado', 'CET estimado']) assert.ok(source.includes(`<th scope="row">${linha}`), linha)
