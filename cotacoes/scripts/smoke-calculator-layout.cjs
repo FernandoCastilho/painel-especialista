@@ -192,24 +192,30 @@ async function fillScenario(page, section, route) {
     // Linha mestra comum (19/11/2026): o caso de referência é digitado nela (R$ 100.000,00 em 12 meses, sem carência).
     await section.locator('#cx-value').fill('100.000,00'); await section.locator('#cx-term').fill('12'); await section.locator('#cx-grace').fill('0')
     await section.getByLabel('Amortização', { exact: true }).selectOption('price')
+    await section.locator('.lm-details > summary').click() // data e 1º vencimento ficam na gaveta "Detalhes do contrato" (21/11/2026)
     await section.locator('#cx-start').fill('2026-11-06')
     await section.locator('#cx-firstDue').fill('2026-12-06')
     const simulate = () => section.getByRole('button', { name: 'Simular', exact: true }).click()
-    const amount = async label => normalize(await section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').innerText())
+    const amount = async label => normalize(await section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').first().innerText())
     await simulate()
-    assert.equal(await amount('Primeira parcela'), brl(giroOracle('price').first))
+    assert.equal(await amount('Quanto paga por mês'), brl(giroOracle('price').first))
     assert.equal(await amount('Custo total'), brl(giroOracle('price').total - 100000))
     await section.getByLabel('Amortização', { exact: true }).selectOption('sac')
     await simulate()
     assert.equal(await amount('Custo total'), brl(giroOracle('sac').total - 100000))
     const form = await section.locator('.giro-form').boundingBox()
+    const timeline = await section.locator('.giro-timeline').boundingBox()
     const result = await section.locator('.giro-result').boundingBox()
     const installments = await section.getByText('Ver parcelas', { exact: true }).boundingBox()
     assert.ok(installments.y >= Math.max(form.y + form.height, result.y + result.height), 'parcelas abaixo do formulário e resultado')
-    // Padrão de 18/11/2026: a partir de 1200 px o resultado fica fixo ao lado dos dados (acompanha a rolagem, sem subir acima deles).
-    if (page.viewportSize().width >= 1200) assert.ok(result.x >= form.x + form.width && result.y >= form.y - 2 && await section.locator('.giro-result').evaluate(element => getComputedStyle(element).position) === 'sticky', 'resultado fixo ao lado dos dados')
-    else if (page.viewportSize().width > 870) assert.ok(result.x >= form.x + form.width && Math.abs(result.y - form.y) < 2)
-    else assert.ok(result.y >= form.y + form.height)
+    // Roteiro de 21/11/2026 (substitui o resultado fixo ao lado, de 18/11/2026): a tela conta a operação de cima para baixo,
+    // em toda largura. Dados, depois a linha do tempo, depois o resultado, os dois na largura do formulário.
+    assert.ok(timeline.y >= form.y + form.height && result.y >= timeline.y + timeline.height, 'dados, linha do tempo e resultado nesta ordem')
+    assert.ok(Math.abs(timeline.width - form.width) < 2 && Math.abs(result.width - form.width) < 2, 'linha do tempo e resultado na largura toda')
+    if (page.viewportSize().width >= 1200) {
+      const [demanda, encargos] = [await section.locator('.giro-form .lm').boundingBox(), await section.locator('.giro-form .giro-card').boundingBox()]
+      assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
+    }
   } else if (route === 'conta-garantida') {
     assert.equal(await section.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
     assert.equal(await section.getByText('Situação da operação', { exact: true }).count(), 0)
