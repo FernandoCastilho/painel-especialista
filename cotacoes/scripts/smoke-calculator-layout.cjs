@@ -204,14 +204,17 @@ async function fillScenario(page, section, route) {
     await simulate()
     assert.equal(await amount('Custo total'), brl(giroOracle('sac').total - 100000))
     const form = await section.locator('.giro-form').boundingBox()
-    const timeline = await section.locator('.giro-timeline').boundingBox()
     const result = await section.locator('.giro-result').boundingBox()
     const installments = await section.getByText('Ver parcelas', { exact: true }).boundingBox()
     assert.ok(installments.y >= Math.max(form.y + form.height, result.y + result.height), 'parcelas abaixo do formulário e resultado')
     // Roteiro de 21/11/2026 (substitui o resultado fixo ao lado, de 18/11/2026): a tela conta a operação de cima para baixo,
-    // em toda largura. Dados, depois a linha do tempo, depois o resultado, os dois na largura do formulário.
-    assert.ok(timeline.y >= form.y + form.height && result.y >= timeline.y + timeline.height, 'dados, linha do tempo e resultado nesta ordem')
-    assert.ok(Math.abs(timeline.width - form.width) < 2 && Math.abs(result.width - form.width) < 2, 'linha do tempo e resultado na largura toda')
+    // em toda largura. Dados, depois o resultado, na largura do formulário (a linha do tempo saiu nos ajustes de 21/11/2026).
+    assert.equal(await section.locator('.rt-timeline').count(), 0, 'sem linha do tempo')
+    assert.ok(result.y >= form.y + form.height, 'dados e resultado nesta ordem')
+    assert.ok(Math.abs(result.width - form.width) < 2, 'resultado na largura toda')
+    // O envelope de e-mail fica no cabeçalho do resultado, dentro do quadro.
+    const envelope = await section.getByRole('link', { name: 'Preparar e-mail com o resultado' }).boundingBox()
+    assert.ok(envelope.x >= result.x && envelope.x + envelope.width <= result.x + result.width && envelope.y >= result.y && envelope.y + envelope.height <= result.y + 60, 'envelope no cabeçalho do resultado')
     if (page.viewportSize().width >= 1200) {
       const [demanda, encargos] = [await section.locator('.giro-form .lm').boundingBox(), await section.locator('.giro-form .giro-card').boundingBox()]
       assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')

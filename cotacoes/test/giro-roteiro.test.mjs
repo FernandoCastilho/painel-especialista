@@ -41,14 +41,16 @@ test('carência entra na linha do tempo com os juros somados ao saldo', () => {
 
 test('a tela segue a ordem do roteiro e usa os nomes padrão dos encargos', async () => {
   const source = await readFile(new URL('../src/CapitalDeGiro.jsx', import.meta.url), 'utf8')
-  // Os blocos 3 e 4 são as peças comuns do roteiro, que já trazem o número e o título.
-  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<LinhaDoTempo ', '<Resultado '].map(text => source.indexOf(text))
-  assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos na ordem 1 a 4')
+  // Ajustes de 21/11/2026: a linha do tempo saiu; o resultado (peça comum, que traz o título) passa a ser o bloco 3.
+  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<Resultado id="giro-result-title" number={3} '].map(text => source.indexOf(text))
+  assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos na ordem 1 a 3')
+  assert.doesNotMatch(source, /<LinhaDoTempo/)
   const pieces = await readFile(new URL('../src/Roteiro.jsx', import.meta.url), 'utf8')
-  assert.match(pieces, /LinhaDoTempo\(\{ id, number = 3, title = 'Linha do tempo da operação'/)
   assert.match(pieces, /Resultado\(\{ id, number = 4, title = 'Resultado · custo final para o cliente'/)
   assert.deepEqual([...source.matchAll(/\{ id: '(\w+)', label: '([^']+)' \},/g)].map(match => match[2]), ['IOF', 'Fee', 'TAC', 'Outros'])
-  for (const question of ['Quanto entra no caixa', 'Quanto paga por mês', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
+  for (const question of ['Quanto entra no caixa', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
+  // "Quanto paga por mês" (mensal) ou por bimestre, trimestre, quadrimestre, semestre.
+  assert.ok(source.includes('`Quanto paga por ${per}`') && source.includes("1: ['mensais', 'mês']"))
   assert.doesNotMatch(source, /Taxas, tributos e despesas|Condições do produto|Fee de estruturação|Outras despesas/)
 })
 
@@ -61,8 +63,8 @@ test('a referência de mercado é o último bloco da tela e mostra a curva prefi
 
 test('textos de borda: parcela única e pagamento único não falam em "parcelas"', async () => {
   const source = await readFile(new URL('../src/CapitalDeGiro.jsx', import.meta.url), 'utf8')
-  assert.match(source, /result\.n === 1 \? 'Parcela única' : `1ª de \$\{result\.n\} parcelas mensais`/)
-  assert.match(source, /const single = isBullet \|\| result\?\.n === 1 \? 'Pagamento único' : null/)
+  assert.match(source, /installments === 1 \? 'Parcela única' : `1ª de \$\{installments\} parcelas \$\{plural\}`/)
+  assert.match(source, /const single = isBullet \|\| installments === 1 \? 'Pagamento único' : null/)
   // Com uma parcela só, a conta devolve um único pagamento: a nota não pode dizer "soma das parcelas".
   const one = giroOperation({ ...base, system: 'price', n: 1 })
   assert.equal(one.rows.length, 1)
