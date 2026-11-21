@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatRpnEntry, historyValue, parseHistoryValue, replayRpnEntry } from './rpnHistory.mjs'
+import { formatRpnEntry, formatRpnResult, historyValue, parseHistoryValue, replayRpnEntry } from './rpnHistory.mjs'
 import './RpnHistory.css'
 
 const glyph = {
@@ -8,8 +8,8 @@ const glyph = {
   copy: <><rect x="6" y="6" width="9" height="9" rx="1.5"/><path d="M12 6V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2"/></>,
 }
 
-function RowAction({ action, label, onClick }) {
-  return <button className="rpn-history-icon" type="button" title={label} aria-label={label} onClick={onClick}>
+function RowAction({ action, label, onClick, disabled }) {
+  return <button className="rpn-history-icon" type="button" title={label} aria-label={label} onClick={onClick} disabled={disabled}>
     <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">{glyph[action]}</svg>
   </button>
 }
@@ -38,32 +38,39 @@ function Editor({ entry, onSave, onCancel }) {
   </form>
 }
 
-export default function RpnHistoryPanel({ id, entries, canUndo, onEdit, onRemove, onUndo, onClose }) {
+export default function RpnHistoryPanel({ id, entries, canUndo, hasCleared, onEdit, onRemove, onUndo, onClear, onClose }) {
   const heading = useRef(null)
   const [editing, setEditing] = useState(null)
   const [copied, setCopied] = useState('')
   const editButton = useRef(null)
-  useEffect(() => { heading.current?.focus() }, [])
+  const compact = Boolean(onClose)
+  useEffect(() => { if (compact) heading.current?.focus() }, [compact])
   const stopEditing = () => { const trigger = editButton.current; setEditing(null); requestAnimationFrame(() => trigger?.focus()); editButton.current = null }
-  const copy = async entry => {
+  const copy = async (entry, resultOnly) => {
     try {
-      await navigator.clipboard.writeText(formatRpnEntry(entry))
-      setCopied('Conta copiada.')
+      await navigator.clipboard.writeText(resultOnly ? formatRpnResult(entry) : formatRpnEntry(entry))
+      setCopied(resultOnly ? 'Resultado copiado.' : 'Conta copiada.')
     } catch { setCopied('Não foi possível copiar. Selecione o texto da conta e copie manualmente.') }
   }
   return <section id={id} className="rpn-history" aria-labelledby={id + '-title'} onKeyDown={event => {
-    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose() }
+    if (event.key === 'Escape' && onClose) { event.preventDefault(); event.stopPropagation(); onClose() }
   }}>
     <header><div><h2 ref={heading} id={id + '-title'} tabIndex={-1}>Histórico de contas</h2>
-      <p>Operações aritméticas desta sessão. As contas não são enviadas nem sincronizadas.</p></div>
-      <button type="button" onClick={onClose} aria-label="Fechar histórico">×</button></header>
-    {(copied || canUndo) && <p role="status" className="rpn-history-feedback">{copied} {canUndo && <button type="button" onClick={() => { onUndo(); setCopied('Conta restaurada.') }}>Desfazer exclusão</button>}</p>}
-    {entries.length === 0 ? <p>As operações aritméticas concluídas nesta sessão aparecem aqui.</p> : <ol className="rpn-history-entries">
+      <p>Contas desta sessão, sem sincronização.</p></div>
+      <div className="rpn-history-header-actions">
+        <RowAction action="remove" label="Limpar histórico" disabled={!entries.length} onClick={() => {
+          setEditing(null); onClear(); setCopied('Histórico limpo.'); heading.current?.focus()
+        }} />
+        {onClose && <button type="button" onClick={onClose} aria-label="Fechar histórico">×</button>}
+      </div></header>
+    {(copied || canUndo) && <p role="status" className="rpn-history-feedback">{copied} {canUndo && <button type="button" onClick={() => { onUndo(); setCopied(hasCleared ? 'Histórico restaurado.' : 'Conta restaurada.') }}>{hasCleared ? 'Desfazer limpeza' : 'Desfazer exclusão'}</button>}</p>}
+    {entries.length === 0 ? <p>As contas concluídas nesta sessão aparecem aqui.</p> : <ol className="rpn-history-entries">
       {entries.map(entry => <li key={entry.id}>
         <div className="rpn-history-row"><span>{formatRpnEntry(entry)}</span>
           <div className="rpn-history-actions">
-            <RowAction action="edit" label="Editar conta" onClick={event => { editButton.current = event.currentTarget; setEditing(entry.id) }} />
-            <RowAction action="copy" label="Copiar conta" onClick={() => { void copy(entry) }} />
+            {!entry.label && <RowAction action="edit" label="Editar conta" onClick={event => { editButton.current = event.currentTarget; setEditing(entry.id) }} />}
+            <RowAction action="copy" label="Copiar resultado" onClick={() => { void copy(entry, true) }} />
+            <button type="button" className="rpn-history-copy-line" title="Copiar conta" aria-label="Copiar conta" onClick={() => { void copy(entry, false) }}>Conta</button>
             <RowAction action="remove" label="Excluir conta" onClick={() => {
               if (editing === entry.id) setEditing(null)
               onRemove(entry.id); setCopied('Conta excluída.'); heading.current?.focus()

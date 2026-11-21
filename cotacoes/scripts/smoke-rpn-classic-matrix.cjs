@@ -153,7 +153,7 @@ async function createSuite(browser, variant) {
 }
 
 async function verifyHistory(browser) {
-  for (const [width, height, theme, touch] of [[390, 844, 'dark', true], [1440, 844, 'light', false], [844, 390, 'light', true]]) {
+  for (const [width, height, theme, touch] of [[390, 844, 'dark', true], [1440, 844, 'light', false], [1120, 750, 'dark', false], [844, 390, 'light', true]]) {
     const context = await browser.newContext({ viewport: { width, height }, isMobile: touch, hasTouch: touch, colorScheme: theme, serviceWorkers: 'block' })
     try {
       await context.route('**/*', route => new URL(route.request().url()).origin === base.origin ? route.continue() : route.abort())
@@ -169,8 +169,16 @@ async function verifyHistory(browser) {
       const display = panel.getByLabel('Resultado da calculadora', { exact: true })
       assert.match((await display.textContent()).trim(), /^5(?:,0+)?$/)
       const open = panel.getByRole('button', { name: 'Histórico de contas', exact: true })
-      await (touch ? open.tap() : open.click())
       const history = panel.getByRole('region', { name: 'Histórico de contas', exact: true })
+      if (touch) {
+        assert.equal(await history.isVisible(), false)
+        await open.tap()
+      } else {
+        assert.equal(await open.isVisible(), false)
+        const calc = await panel.locator('.rpn-console').boundingBox()
+        const log = await history.boundingBox()
+        assert.ok(calc && log && log.x >= calc.x + calc.width + 8 && Math.abs(log.y - calc.y) < 4)
+      }
       await history.getByText('2 + 3 = 5', { exact: true }).waitFor()
       assert.equal(await history.getByRole('listitem').count(), 1)
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true)
@@ -189,20 +197,34 @@ async function verifyHistory(browser) {
         await history.getByRole('button', { name: 'Copiar conta', exact: true }).click()
         await history.getByText('Conta copiada.', { exact: true }).waitFor()
         assert.equal(await page.evaluate(() => navigator.clipboard.readText()), '2 + 9 = 11')
+        await history.getByRole('button', { name: 'Copiar resultado', exact: true }).click()
+        await history.getByText('Resultado copiado.', { exact: true }).waitFor()
+        assert.equal(await page.evaluate(() => navigator.clipboard.readText()), '11')
       }
       await history.getByRole('button', { name: 'Excluir conta', exact: true }).click()
       await updated.waitFor({ state: 'hidden' })
-      await history.getByRole('button', { name: 'Fechar histórico', exact: true }).click()
-      await open.click()
+      if (touch) {
+        await history.getByRole('button', { name: 'Fechar histórico', exact: true }).click()
+        await open.tap()
+      }
       await history.getByRole('button', { name: 'Desfazer exclusão', exact: true }).click()
       await updated.waitFor()
       await page.screenshot({ path: path.join(out, 'rpn-history-' + width + '-' + theme + '.png') })
-      await history.getByRole('button', { name: 'Fechar histórico', exact: true }).click()
-      await open.click()
+      const clear = history.getByRole('button', { name: 'Limpar histórico', exact: true })
+      await clear.click()
+      await history.getByText('As contas concluídas nesta sessão aparecem aqui.', { exact: true }).waitFor()
+      assert.equal(await clear.isEnabled(), false)
+      assert.match((await display.textContent()).trim(), /^5(?:,0+)?$/)
+      await history.getByRole('button', { name: 'Desfazer limpeza', exact: true }).click()
       await updated.waitFor()
+      if (touch) {
+        await history.getByRole('button', { name: 'Fechar histórico', exact: true }).click()
+        await open.tap()
+        await updated.waitFor()
+      }
       await page.reload()
-      await open.click()
-      await history.getByText('As operações aritméticas concluídas nesta sessão aparecem aqui.', { exact: true }).waitFor()
+      if (touch) await open.tap()
+      await history.getByText('As contas concluídas nesta sessão aparecem aqui.', { exact: true }).waitFor()
       console.log('PASS histórico isolado da RPN · ' + width + ' · ' + theme)
     } finally { await context.close() }
   }

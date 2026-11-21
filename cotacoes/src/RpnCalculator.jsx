@@ -1,11 +1,11 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createClassicRpnController } from './rpnClassicController.mjs'
 import { convertEquivalentRate } from './rpnRateConversion.mjs'
 import { classicKeyRows, getClassicKeyState, portraitKeyRows } from './rpnClassicLayout.mjs'
 import { rpnKeyFromEvent } from './rpnKeyboard.mjs'
 import './RpnCalculator.css'
 import RpnHistoryPanel from './RpnHistoryPanel.jsx'
-import { createRpnHistoryCapture, HISTORY_LIMIT } from './rpnHistory.mjs'
+import { captureReportedRpnResult, createRpnHistoryCapture } from './rpnHistory.mjs'
 
 const registers = [
   ['n', 'n', 'Número de períodos'], ['i', 'i', 'Taxa por período (%)'], ['pv', 'PV', 'Valor presente'],
@@ -139,7 +139,7 @@ function RatePanel({ id, open, onClose, onUse, canUse }) {
       {basis && <small>Taxa ao dia: base {basis === '252' ? '252 dias úteis' : '365 dias corridos'} por ano.</small>}
       <p>As taxas têm o mesmo efeito acumulado sob juros compostos. “Usar no visor” usa só a taxa escolhida em Para.</p>
     </section>}
-    <button type="button" className="rpn-use-rate" disabled={!result?.ok || !canUse} onClick={() => onUse(result.value)}>Usar no visor</button>
+    <button type="button" className="rpn-use-rate" disabled={!result?.ok || !canUse} onClick={() => onUse(result.value, { from, to, basis: needsBasis ? basis : null })}>Usar no visor</button>
     <small>Não altera o registro i. O visor usa suas casas decimais configuradas.</small>
   </section>
 }
@@ -191,19 +191,35 @@ export default function RpnCalculator() {
   const [ratesOpen, setRatesOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const historyId = useId(), historyTrigger = useRef(null), nextHistoryId = useRef(0)
+  const [historyAside, setHistoryAside] = useState(() =>
+    typeof window !== 'undefined' && Boolean(window.matchMedia?.('(min-width: 1120px) and (min-height: 540px)').matches))
+  useEffect(() => {
+    const media = typeof window !== 'undefined' && window.matchMedia?.('(min-width: 1120px) and (min-height: 540px)')
+    if (!media?.addEventListener) return
+    const update = event => setHistoryAside(event.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
   const [historyOpen, setHistoryOpen] = useState(false)
   const [history, setHistory] = useState({ entries: [], removed: null })
   const [captureHistory] = useState(() => createRpnHistoryCapture())
+  const appendHistory = useCallback(item => {
+    if (!item) return
+    const row = { ...item, id: String(++nextHistoryId.current) }
+    setHistory(s => ({ ...s, entries: [row, ...s.entries] }))
+  }, [])
   const closeHistory = () => { setHistoryOpen(false); historyTrigger.current?.focus() }
   const editHistory = edited => setHistory(s => ({ ...s, entries: s.entries.map(e => e.id === edited.id ? edited : e) }))
   const removeHistory = id => setHistory(s => {
     const index = s.entries.findIndex(e => e.id === id)
-    return index < 0 ? s : { entries: s.entries.filter(e => e.id !== id), removed: { entry: s.entries[index], index } }
+    return index < 0 ? s : { entries: s.entries.filter(e => e.id !== id), removed: { entry: s.entries[index] } }
   })
+  const clearHistory = () => setHistory(s => s.entries.length
+    ? { entries: [], removed: { all: s.entries } } : s)
   const undoHistory = () => setHistory(s => {
     if (!s.removed) return s
-    const { entry, index } = s.removed
-    return { entries: [...s.entries.slice(0, index), entry, ...s.entries.slice(index)].slice(0, HISTORY_LIMIT), removed: null }
+    if (s.removed.all) return { entries: [...s.entries, ...s.removed.all], removed: null }
+    return { entries: [...s.entries, s.removed.entry].sort((a, b) => Number(b.id) - Number(a.id)), removed: null }
   })
   const [mobileCompact, setMobileCompact] = useState(() =>
     typeof window !== 'undefined' && Boolean(window.matchMedia?.(mobileLandscape).matches))
@@ -247,12 +263,16 @@ export default function RpnCalculator() {
   useEffect(() => {
     if (!controller?.subscribe) return
     let mounted = true
-    const unsubscribe = controller.subscribe(snapshot => { if (mounted) setView(snapshot) })
+    const unsubscribe = controller.subscribe(snapshot => {
+      if (!mounted) return
+      setView(snapshot)
+      appendHistory(captureReportedRpnResult(snapshot))
+    })
     return () => {
       mounted = false
       try { unsubscribe() } finally { controller.dispose() }
     }
-  }, [controller])
+  }, [controller, appendHistory])
   const act = command => {
     if (failed) return
     try {
@@ -264,12 +284,8 @@ export default function RpnCalculator() {
     }
   }
   const press = id => act(c => {
-    const before = c.snapshot(), next = c.press(id) ?? c.snapshot()
-    const item = captureHistory(id, before, next)
-    if (item) {
-      const row = { ...item, id: String(++nextHistoryId.current) }
-      setHistory(s => ({ ...s, entries: [row, ...s.entries].slice(0, HISTORY_LIMIT) }))
-    }
+    const before = c.snapshot(), next = c.press(id, { captureResult: true }) ?? c.snapshot()
+    appendHistory(captureHistory(id, before, next))
     return next
   })
   const onKeyDown = event => {
@@ -296,6 +312,7 @@ export default function RpnCalculator() {
       <span>Calculadora financeira</span>
       <h1 id={headingId}>Calculadora RPN</h1>
     </header>
+    <div className={`rpn-layout${historyAside ? ' rpn-layout--history' : ''}`}>
     <div className={`rpn-desk${ratesOpen ? ' rpn-desk--rates' : ''}`}>
       <div className="rpn-console" data-shift={shift ?? ''}>
         <div className="rpn-bezel">
@@ -322,7 +339,7 @@ export default function RpnCalculator() {
               aria-expanded={ratesOpen} aria-controls={ratesId}>
               <span aria-hidden="true">⇄ </span>Taxas
             </button>
-            <button type="button" className="rpn-history-trigger" ref={historyTrigger} aria-label="Histórico de contas"
+            <button type="button" className="rpn-history-trigger" hidden={historyAside} ref={historyTrigger} aria-label="Histórico de contas"
               aria-expanded={historyOpen} aria-controls={historyId}
               onClick={() => historyOpen ? closeHistory() : setHistoryOpen(true)}>
               <span className="rpn-history-trigger-long" aria-hidden="true">Histórico</span>
@@ -345,14 +362,23 @@ export default function RpnCalculator() {
         <p className="rpn-legend"><span>Branco: ação direta</span><span><b>f</b>: dourada</span><span><b>g</b>: azul</span></p>
       </div>
       <RatePanel id={ratesId} open={ratesOpen} onClose={closeRates} canUse={!failed && powered && !view.indicators?.program && !view.indicators?.running}
-        onUse={value => { act(c => {
+        onUse={(value, units) => { act(c => {
           const old = c.snapshot(), next = c.setDisplay(value) ?? c.snapshot()
           captureHistory('cancel', old, next)
+          const item = captureReportedRpnResult({ ...next, resultOperation: 'equivalentRate' })
+          const period = { day: 'a.d.', month: 'a.m.', year: 'a.a.' }
+          if (item && units) {
+            item.label = `Taxa equivalente (${period[units.from]} → ${period[units.to]}${units.basis ? `, base ${units.basis}` : ''})`
+            item.text = `${String(item.result).replace('.', ',')}% ${period[units.to]}`
+          }
+          appendHistory(item)
           return next
         }); closeRates() }} />
     </div>
-    {historyOpen && <RpnHistoryPanel id={historyId} entries={history.entries} canUndo={Boolean(history.removed)} onEdit={editHistory}
-      onRemove={removeHistory} onUndo={undoHistory} onClose={closeHistory} />}
+    {(historyAside || historyOpen) && <RpnHistoryPanel id={historyId} entries={history.entries} hasCleared={Boolean(history.removed?.all)}
+      canUndo={Boolean(history.removed)} onEdit={editHistory} onRemove={removeHistory} onUndo={undoHistory}
+      onClear={clearHistory} onClose={historyAside ? undefined : closeHistory} />}
+    </div>
     <div hidden={!helpOpen} ref={helpPanel} tabIndex={-1} role="region" className="rpn-help" id={helpId}
       aria-labelledby={helpId + '-heading'} onKeyDown={event => {
         if (event.key === 'Escape') { event.preventDefault(); closeHelp() }
