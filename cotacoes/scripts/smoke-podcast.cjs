@@ -11,6 +11,8 @@ wav.write('RIFF'); wav.writeUInt32LE(wav.length - 8, 4); wav.write('WAVEfmt ', 8
 wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22)
 wav.writeUInt32LE(8000, 24); wav.writeUInt32LE(16000, 28); wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34)
 wav.write('data', 36); wav.writeUInt32LE(wav.length - 44, 40)
+const artHost = 'https://d3t3ozftmdmh3i.cloudfront.net'
+const artPixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPI3P8fAAO8AihqTpd6AAAAAElFTkSuQmCC', 'base64')
 const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; no media API mocks', cases: [] }
 ;(async () => {
   fs.mkdirSync(out, { recursive: true })
@@ -20,8 +22,17 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
     for (const width of [390, 1440]) for (const theme of ['light', 'dark']) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
       await context.route('https://anchor.fm/**', route => {
-        const id = route.request().url().includes('f84d76fc') ? 'morning' : 'views'
-        return route.fulfill({ contentType: 'application/rss+xml', headers: { 'access-control-allow-origin': '*' }, body: '<rss><channel><item><title>Teste ' + id + '</title><pubDate>Tue, 17 Nov 2026 12:00:00 GMT</pubDate><enclosure url="https://podcast-fixture.invalid/' + id + '.wav" type="audio/wav"/></item></channel></rss>' })
+        const id = new URL(route.request().url()).pathname.split('/')[2]
+        const program = { f84d76fc: 'morning', e0ddef4c: 'views', f9f69e70: 'daily-fin' }[id]
+        if (!program) return route.abort()
+        const art = suffix => '<itunes:image href="' + artHost + '/fixture/' + program + '-' + suffix + '.png"/>'
+
+        return route.fulfill({ contentType: 'application/rss+xml', headers: { 'access-control-allow-origin': '*' }, body: '<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>' + art('cover') + '<item>' + art('episode') + '<title>Teste ' + program + '</title><pubDate>Tue, 17 Nov 2026 12:00:00 GMT</pubDate><enclosure url="https://podcast-fixture.invalid/' + program + '.wav" type="audio/wav"/></item></channel></rss>' })
+      })
+      await context.route(artHost + '/**', route => {
+        const path = new URL(route.request().url()).pathname
+        if (path.endsWith('/morning-episode.png') || path.endsWith('/daily-fin-cover.png') || path.endsWith('/daily-fin-episode.png') || path.includes('/41836892/')) return route.fulfill({ status: 404, body: '' })
+        return route.fulfill({ contentType: 'image/png', body: artPixel })
       })
       await context.route('https://podcast-fixture.invalid/**', route => {
         // Media seeking requires byte ranges, like the producer's audio server.
@@ -41,7 +52,7 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       if (await notice.isVisible()) await notice.getByRole('button', { name: 'Entendi', exact: true }).click()
       await page.locator('audio').waitFor({ state: 'attached' })
       await page.waitForFunction(expected => document.documentElement.dataset.theme === expected, theme)
-      assert.equal(await page.locator('.podcast-program').count(), 2)
+      assert.equal(await page.locator('.podcast-program').count(), 3)
       assert.equal(await page.locator('audio').evaluate(a => a.paused), true, 'no autoplay')
       const geometry = await page.evaluate(() => {
         const a = document.querySelector('.podcast-listening').getBoundingClientRect(), b = document.querySelector('.podcast-programs').getBoundingClientRect()
@@ -50,15 +61,29 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       assert.ok(geometry.scroll <= width + 1, 'no horizontal clipping')
       if (width < 800) assert.ok(geometry.programs.y >= geometry.player.bottom - 1, 'programs below player')
       else assert.ok(geometry.programs.x >= geometry.player.right - 1, 'programs alongside player')
-      const link = page.locator('.podcast-external a')
+      const link = page.locator('.podcast-external a').first()
       const linkColor = await link.evaluate(a => getComputedStyle(a).color)
       assert.equal(linkColor, 'rgb(105, 191, 255)', 'navy card link remains readable')
       await link.hover()
       assert.equal(await link.evaluate(a => getComputedStyle(a).color), linkColor, 'hover contrast preserved')
       const played = []
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < 3; i++) {
         await page.locator('.podcast-program').nth(i).click()
         assert.equal(await page.locator('audio').count(), 1)
+        if (i < 2) {
+          const expected = i === 0 ? 'morning-cover.png' : 'views-episode.png'
+          await page.waitForFunction(name => {
+            const img = document.querySelector('.podcast-art img')
+            return img?.src.endsWith(name) && img.complete && img.naturalWidth > 0
+          }, expected)
+        } else {
+          await page.locator('.podcast-art svg').waitFor()
+          assert.equal(await page.getByRole('link', { name: /Abrir no Podcast Addict/ }).getAttribute('href'), 'https://podcastaddict.com/podcast/daily-fin-podcast/5848272')
+        }
+        assert.equal(await page.locator('audio').evaluate(a => a.paused), true, 'changing program does not autoplay')
+        const panel = await page.locator('.podcast-listening').boundingBox()
+        const cover = await page.locator('.podcast-art').boundingBox()
+        assert.ok(cover.width < panel.width && cover.width === cover.height, 'cover stays square within the player')
         await page.getByRole('button', { name:'Reproduzir episódio', exact:true }).click()
         await page.waitForFunction(() => { const a=document.querySelector('audio'); return a && !a.paused && a.currentTime > .2 && a.readyState >= 2 })
         played.push(await page.locator('audio').evaluate(a => ({src:a.currentSrc,time:a.currentTime,duration:a.duration})))
@@ -84,6 +109,33 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       await page.screenshot({path:path.join(out, width + '-' + theme + '.png'), fullPage:true})
       report.cases.push({width,theme,geometry,linkColor,played})
       await context.close()
+    }
+    // Delivery check for this integration only. Later deploys keep the deterministic fixture smoke.
+    if (process.env.PODCAST_REAL_DAILY_FIN === '1' ||
+        (process.env.GITHUB_EVENT_NAME === 'pull_request' && process.env.GITHUB_HEAD_REF === 'nexo/daily-fin-capas-podcast')) {
+      const live = await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'})
+      page = await live.newPage()
+      await page.goto(base + '/#podcast', {waitUntil:'domcontentloaded'})
+      await page.getByRole('button',{name:/Daily Fin Podcast/}).waitFor({timeout:15000})
+      const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+      if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+      await page.getByRole('button',{name:/Daily Fin Podcast/}).click()
+      await page.waitForFunction(() => {
+        const audio=document.querySelector('audio')
+        if (!audio?.src) return false
+        const u=new URL(audio.src)
+        return u.protocol==='https:' && !u.hostname.endsWith('.invalid')
+      },null,{timeout:35000})
+      await page.getByRole('button',{name:'Reproduzir episódio',exact:true}).click()
+      await page.waitForFunction(() => {
+        const a=document.querySelector('audio')
+        return a && !a.paused && a.currentTime>=1 && a.readyState>=2 && !a.error
+      },null,{timeout:45000})
+      report.realDailyFin = await page.locator('audio').evaluate(a=>({origin:new URL(a.currentSrc).hostname,time:a.currentTime,duration:a.duration,readyState:a.readyState}))
+      await page.getByRole('button',{name:'Pausar episódio',exact:true}).click()
+      assert.equal(await page.locator('audio').evaluate(a=>a.paused),true)
+      console.log('PASS Daily Fin: episódio verdadeiro reproduzido sem interceptar áudio',JSON.stringify(report.realDailyFin))
+      await live.close()
     }
     report.passed = true
   } catch (error) {
