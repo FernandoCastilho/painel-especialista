@@ -14,3 +14,9 @@ test('vigia das cotações: só no pregão, dispara com mais de 15 min sem colet
   assert.equal(at('2026-11-07T15:00:00Z', 300).run, false) // sábado
   assert.equal(quotesWatchDecision({ generatedAt: NaN, now: Date.parse('2026-11-03T15:00:00Z') }).run, true) // arquivo ilegível
 })
+
+test('vigia das cotações: feriado da B3 não religa a coleta', () => {
+  const d = quotesWatchDecision({ generatedAt: Date.parse('2026-11-20T12:00:00Z'), now: Date.parse('2026-11-20T15:00:00Z') })
+  assert.equal(d.run, false)
+  assert.match(d.reason, /feriado/)
+})

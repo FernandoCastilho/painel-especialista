@@ -330,7 +330,7 @@ async function fillScenario(page, section, route) {
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
-    await section.locator('.fm-fluxo-panel > summary').click()
+    await section.locator('summary').filter({ hasText: /^Cronograma ilustrativo ·/ }).click()
     assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 48) // prazo padrão de 48 meses (18/11/2026)
     assert.match(await section.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
   }
@@ -350,6 +350,77 @@ const workspaceRoutes = {
   'finimp': '#fi-currency',
   'giro': '#cx-value',
   'analise-desconto': '#ad-lm-start',
+}
+
+// Prova do catálogo agrupado nos dois temas, usando o mesmo artifact das calculadoras.
+async function assertGroupedCatalog(browser, report, failures) {
+  const expected = [
+    ['Crédito e capital de giro', ['BNDES', 'Necessidade do Cliente', 'Capital de Giro', 'Conta Garantida', 'Análise de desconto']],
+    ['Crédito internacional', ['FINIMP', 'Empréstimo externo (4131)', 'Câmbio futuro']],
+    ['Taxas e câmbio', ['Operação x DI', 'CDI x Dólar']],
+    ['Planejamento e análise', ['Faturamento', 'Dividendos via empréstimo', 'Reforma tributária · caixa']],
+  ]
+  for (const width of widths) for (const theme of ['light', 'dark']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    const label = `catálogo agrupado ${width}px ${theme}`
+    const screenshot = path.join(out, `catalogo-grupos-${width}-${theme}.png`)
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    try {
+      await fixtures(page)
+      await page.goto(base + '/#calculadora')
+      const catalog = page.locator('.calc-catalog')
+      await catalog.locator('.calc-catalog-group').first().waitFor()
+      await settleLayout(page)
+      const state = await catalog.evaluate(element => {
+        const rect = element.getBoundingClientRect()
+        return {
+          theme: document.documentElement.dataset.theme,
+          viewport: document.documentElement.clientWidth,
+          document: document.documentElement.scrollWidth,
+          left: rect.left, right: rect.right,
+          groups: [...element.querySelectorAll('.calc-catalog-group')].map(group => {
+            const heading = group.querySelector('h3')
+            return {
+              title: heading.textContent.trim(),
+              labelled: group.getAttribute('aria-labelledby') === heading.id,
+              headingBottom: heading.getBoundingClientRect().bottom,
+              cards: [...group.querySelectorAll('.cx-tile')].map(button => {
+                const r = button.getBoundingClientRect()
+                return { title: button.querySelector('b').textContent.trim(), left:r.left, right:r.right, top:r.top, width:r.width, height:r.height,
+                  clipped: button.scrollWidth > button.clientWidth + 1 }
+              }),
+            }
+          }),
+        }
+      })
+      assert.equal(state.theme, theme, label + ': tema aplicado')
+      assert.deepEqual(state.groups.map(g => [g.title, g.cards.map(c => c.title)]), expected, label + ': itens, ordem e agrupamentos completos')
+      assert.ok(state.document <= state.viewport + 1 && state.left >= -1 && state.right <= state.viewport + 1, label + ': catálogo sem corte horizontal')
+      for (const group of state.groups) {
+        assert.ok(group.labelled, label + ': título acessível')
+        for (const card of group.cards) {
+          assert.ok(card.left >= state.left - 1 && card.right <= state.right + 1 && !card.clipped, label + ': cartão legível ' + card.title)
+          assert.ok(card.width >= 44 && card.height >= 44, label + ': alvo de toque ' + card.title)
+          assert.ok(card.top >= group.headingBottom, label + ': título antes dos cartões')
+        }
+        if (width === 320 || width === 390) {
+          assert.equal(new Set(group.cards.map(c => Math.round(c.left))).size, 1, label + ': coluna única no celular')
+        }
+      }
+      assert.equal(await catalog.getByRole('link', { name: 'Taxas BNDES · consultar séries e históricos', exact:true }).getAttribute('href'), '#bndes')
+      await catalog.getByRole('button', { name:'BNDES: abrir calculadora', exact:true }).focus()
+      assert.equal(await catalog.getByRole('button', { name:'BNDES: abrir calculadora', exact:true }).evaluate(el => el === document.activeElement), true, label + ': foco por teclado')
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.screenshot({ path:screenshot, fullPage:true })
+      assert.deepEqual(errors, [], label + ': sem erros do navegador')
+      report.push({ route:'catalogo-grupos', width, theme, status:'pass', screenshot:path.basename(screenshot) })
+    } catch (error) {
+      await page.screenshot({ path:screenshot, fullPage:true }).catch(() => {})
+      report.push({ route:'catalogo-grupos', width, theme, status:'fail', message:error.message })
+      failures.push(label + ': ' + error.message)
+    } finally { await page.close() }
+  }
 }
 
 async function assertComparatorFamily(browser) {
@@ -454,16 +525,16 @@ async function assertComparatorFamily(browser) {
               available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
               used:costs.right - operation.left,
               topGap:Math.abs(costs.top - operation.top),
-              formTop:form.getBoundingClientRect().top,
-              formRight:form.getBoundingClientRect().right,
+              formBottom:form.getBoundingClientRect().bottom,
+              formLeft:form.getBoundingClientRect().left,
+              resultWidth:results.width,
               resultsTop:results.top,
               resultsLeft:results.left,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
           assert.ok(Math.abs(geometry.used - geometry.available) <= 2 && geometry.topGap <= 2, details + ': Operação e Custos preenchem a mesma linha')
-          // Padrão de 18/11/2026: no computador, a cotação fica ao lado dos dados, alinhada pelo topo.
-          assert.ok(geometry.resultsLeft >= geometry.formRight && Math.abs(geometry.resultsTop - geometry.formTop) <= 48, details + ': cotação ao lado dos dados')
+          assert.ok(geometry.resultsTop >= geometry.formBottom - 1 && Math.abs(geometry.resultsLeft - geometry.formLeft) <= 2 && Math.abs(geometry.resultWidth - geometry.available) <= 2, details + ': cotação abaixo e em largura total')
         }
       }
       console.log(`PASS família visual do Comparador · ${width}px · ${theme}`)
@@ -473,11 +544,295 @@ async function assertComparatorFamily(browser) {
   }
 }
 
+async function assertCambioFuturoCenario(browser) {
+  const now = Date.parse('2026-11-20T15:00:00Z')
+  const t = iso => Date.parse(iso + 'T19:00:00Z')
+  const normalizeMoney = value => value.replace(/\s/g, '')
+  for (const width of [320, 1440]) for (const theme of ['dark', 'light']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    page.on('dialog', dialog => dialog.accept())
+    try {
+      await fixtures(page)
+      const holidaySpot = theme === 'dark'
+      await page.route('**/quotes.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now, quotes: {
+        USDBRL: { bid: 5.71, ask: 5.72, high: 5.75, low: 5.65, timestamp: Date.parse(holidaySpot ? '2026-11-20T14:55:00Z' : '2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
+        EURBRL: { bid: 6.55, ask: 6.56, high: 6.60, low: 6.50, timestamp: Date.parse('2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
+      } } }))
+      await page.route('**/intraday.json*', route => route.fulfill({ json: { source: 'AwesomeAPI (coleta central a cada 5 min)', generatedAt: now - 60000, resolution: '5 min', series: {
+        USD: { points: [[Date.parse('2026-11-19T21:08:00Z'), 5.7051], [Date.parse('2026-11-20T14:55:00Z'), 5.71]] },
+      } } }))
+      await page.route('**/history.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now - 60000, series: {
+        USD: { source: 'USD', points: [{ t: t('2026-08-25'), bid: 5.60 }, { t: t('2026-11-12'), bid: 5.70 }, { t: t('2026-11-19'), bid: 5.71 }] },
+        EUR: { source: 'EUR', points: [{ t: t('2026-08-25'), bid: 6.42 }, { t: t('2026-11-12'), bid: 6.65 }, { t: t('2026-11-19'), bid: 6.55 }] },
+        CNH: { source: 'CNY', points: [{ t: t('2026-11-12'), bid: .85 }, { t: t('2026-11-19'), bid: .86 }] },
+      } } }))
+      await page.clock.setFixedTime(new Date(now))
+      if (width === 1440) {
+        await page.goto(`${base}/#resumo`)
+        const tape = page.getByRole('region', { name: 'Cotações e juros de referência', exact: true })
+        for (const code of ['USD', 'EUR']) {
+          const flag = tape.locator('.tape-set:not([aria-hidden]) .tape-fx-label').filter({ hasText: code + '/BRL' }).locator('.flag')
+          await flag.waitFor({ state: 'visible' })
+          assert.equal(await flag.getAttribute('aria-hidden'), 'true')
+          assert.equal(await flag.locator('svg').count(), 1)
+        }
+        assert.equal(await tape.locator('.tape-set:not([aria-hidden]) .tape-fx-label').count(), 2)
+      }
+      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      const section = page.locator('section.cf-cenario')
+      await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
+      assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
+      assert.equal(await section.locator('#cf-c-inicio').inputValue(), '2026-11-20')
+      assert.equal(await section.locator('#cf-c-p1-cenario').inputValue(), '')
+      assert.equal(await section.locator('#cf-c-moeda').inputValue(), 'USD')
+      assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'USD')
+      await section.getByText(holidaySpot ? 'Compra indicativa · 19/11/2026 às 18:08' : 'Compra indicativa · 19/11/2026 às 18:04', { exact: true }).waitFor()
+      assert.equal(await page.locator('.tape .tape-fx-label').count(), 0, 'bandeiras na faixa só na página inicial')
+      assert.equal(await section.locator('#cf-c-p1-trava').inputValue(), '', 'indicativo não preenche cotação')
+      assert.equal(await section.locator('#cf-c-p1-cenario').inputValue(), '', 'indicativo não preenche cenário')
+      for (const [title, words] of [
+        ['Moedas e cotação indicativa', /AwesomeAPI.*trocar/is],
+        ['Parcelas e cotações', /vencimento.*Sem o cenário/s],
+        ['Resultado da comparação', /Preencha todas as parcelas.*Soma nominal/s],
+      ]) {
+        const help = section.getByRole('button', { name: 'Ajuda: ' + title, exact: true })
+        await help.click()
+        const modal = page.getByRole('dialog', { name: title, exact: true })
+        assert.match(await modal.innerText(), words)
+        if (title === 'Moedas e cotação indicativa') {
+          const quoteDetail = holidaySpot ? /Compra indicativa: R\$ 5,7051\/USD/i : /Última faixa à vista.*5,7100.*5,7200\/USD/i
+          await modal.getByText(quoteDetail).waitFor()
+          assert.doesNotMatch(await section.innerText(), /5,7051|5,7100/, 'valor fica apenas no ?')
+        }
+        await page.keyboard.press('Escape')
+        assert.equal(await modal.count(), 0)
+      }
+      assert.doesNotMatch(await section.innerText(), /Preencha todas as parcelas|Soma nominal das parcelas|As cotações são de cada vencimento/)
+      const previous = section.getByRole('link', { name: 'Simular TIR da parcela em USD', exact: true })
+      assert.equal(await previous.isVisible(), true)
+      assert.equal(await previous.getAttribute('href'), '#calculadora/cambio-futuro/tir-usd')
+      const costs = section.locator('.cf-c-details').first()
+      await costs.locator('summary').click()
+      assert.match(await costs.innerText(), /descontados os custos iniciais.*Custos de parcela são pagos no vencimento.*não estão na cotação nem no valor líquido/s)
+      await costs.locator('summary').click()
+      await section.getByRole('button', { name: '3 parcelas', exact: true }).click()
+      assert.equal(await section.locator('.cf-c-row').count(), 3)
+      for (const [i, date, locked] of [[1, '2027-05-20', '6,55'], [2, '2027-08-20', '6,60'], [3, '2027-11-20', '6,65']]) {
+        await section.locator(`#cf-c-p${i}-data`).fill(date)
+        await section.locator(`#cf-c-p${i}-valor`).fill('10.000')
+        await section.locator(`#cf-c-p${i}-trava`).fill(locked)
+      }
+      assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), 'R$198.000,00')
+      assert.equal(await section.locator('#cf-c-total-cenario').innerText(), '—')
+      assert.equal(await section.locator('#cf-c-diferenca').innerText(), '—')
+      for (const [i, scenario] of [[1, '6,70'], [2, '6,80'], [3, '6,75']]) await section.locator(`#cf-c-p${i}-cenario`).fill(scenario)
+      assert.equal(normalizeMoney(await section.locator('#cf-c-total-cenario').innerText()), 'R$202.500,00')
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      assert.match(await section.locator('#cf-c-diferenca').locator('..').innerText(), /Economia neste cenário/)
+      const details = section.locator('.cf-c-result-foot details')
+      assert.equal(await details.getAttribute('open'), null)
+      await details.locator('summary').click()
+      assert.equal(await details.locator('section').count(), 3)
+      assert.match(await details.locator('section').first().innerText(), /Cotação de equilíbrio.*6,5500/s)
+      await details.locator('summary').click()
+      const graph = section.locator('.cf-c-graph')
+      await graph.getByRole('img', { name: /USD\/BRL/ }).waitFor()
+      assert.match(await graph.getByRole('img', { name: /USD\/BRL/ }).getAttribute('aria-label'), /12\/11/)
+      await section.getByRole('button', { name: '90 dias' }).click()
+      assert.match(await graph.getByRole('img', { name: /USD\/BRL/ }).getAttribute('aria-label'), /25\/08/)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Câmbio futuro, 3 parcelas ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-tres-parcelas-${width}-${theme}.png`), fullPage: true })
+      await section.locator('#cf-c-p2-data').fill('2027-08-21')
+      assert.equal(await section.locator('#cf-c-p2-trava').inputValue(), '')
+      assert.equal(await section.locator('#cf-c-p2-cenario').inputValue(), '')
+      assert.equal(await section.locator('#cf-c-p3-cenario').inputValue(), '6,75')
+      await section.getByRole('button', { name: '2 parcelas', exact: true }).click()
+      await section.getByRole('button', { name: '5 parcelas', exact: true }).click()
+      assert.equal(await section.locator('.cf-c-row').count(), 5)
+      assert.equal(await section.locator('#cf-c-p3-cenario').inputValue(), '')
+      await section.getByRole('button', { name: '1 parcela', exact: true }).click()
+      for (const { code, conversion, forward, gross, total } of [
+        { code: 'EUR', conversion: '0,9', forward: '7', gross: 'R$63.000,00', total: 'R$63.090,00' },
+        { code: 'CNH', conversion: '7,5', forward: '0,8', gross: 'R$60.000,00', total: 'R$60.090,00' },
+      ]) {
+        await section.locator('#cf-c-trava-moeda').selectOption(code)
+        assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '10.000')
+        await section.locator('#cf-c-p1-trava').fill(forward)
+        await section.locator('#cf-c-p1-cross').fill(conversion)
+        await section.locator('#cf-c-p1-cross-status').selectOption('cenario')
+        await section.getByText(`Exposição residual USD/${code}. Não é cobertura integral.`, { exact: true }).waitFor()
+        assert.equal(await section.locator('#cf-c-total-trava').innerText(), '—')
+        const result = section.getByRole('region', { name: 'Resultado cruzado da parcela 1' })
+        assert.ok(normalizeMoney(await result.innerText()).includes(gross))
+        await section.locator('#cf-c-p1-cross-status').selectOption('contratada')
+        assert.equal(await section.locator('#cf-c-total-trava').innerText(), '—')
+        await section.getByRole('checkbox', { name: 'Trava em reais contratada para esta parcela' }).check()
+        assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), gross)
+        await costs.locator('summary').click()
+        await section.locator('#cf-c-p1-tarifa-trava').fill('90')
+        assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), total)
+        await costs.locator('summary').click()
+        await settleLayout(page)
+        await assertWorkspace(page, section, `Câmbio futuro USD/${code} ${width} ${theme}`)
+      }
+      const approvedTotal = normalizeMoney(await section.locator('#cf-c-total-trava').innerText())
+      await section.getByRole('button', { name: 'Gerar exemplo fictício', exact: true }).click()
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      await section.getByRole('button', { name: 'Sair do exemplo fictício', exact: true }).click()
+      assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'CNH')
+      assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), approvedTotal)
+      await section.getByRole('button', { name: '5 parcelas', exact: true }).click()
+      await section.locator('#cf-c-moeda').selectOption('CNH')
+      assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '')
+      assert.equal(await graph.getByRole('img').count(), 0, 'histórico CNY não substitui CNH offshore')
+      await graph.getByText('Histórico indisponível neste período.').waitFor()
+      const example = section.getByRole('button', { name: 'Gerar exemplo fictício', exact: true })
+      const help = section.getByRole('button', { name: 'Ajuda: Câmbio futuro', exact: true })
+      assert.ok(await example.evaluate(el => el.parentElement === el.closest('.cf-c-heading-actions') &&
+        !!el.parentElement.querySelector('.fi-help')), 'atalho fica no mesmo grupo do botão de ajuda')
+      assert.equal(await help.isVisible(), true)
+      assert.equal(await example.getAttribute('aria-pressed'), 'false')
+      await section.locator('#cf-c-p1-valor').fill('123,45')
+      await example.click()
+      const quit = section.getByRole('button', { name: 'Sair do exemplo fictício', exact: true })
+      assert.equal(await quit.getAttribute('aria-pressed'), 'true')
+      assert.equal(await section.getByText('Exemplo fictício.', { exact: true }).isVisible(), true)
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      assert.equal(await section.locator('.cf-c-row').count(), 3)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Exemplo de câmbio futuro ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-exemplo-${width}-${theme}.png`), fullPage: true })
+      await quit.click()
+      assert.equal(await section.locator('#cf-c-moeda').inputValue(), 'CNH')
+      assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '123,45')
+      assert.equal(await section.locator('.cf-c-row').count(), 5)
+      assert.equal(await section.getByText('Exemplo fictício.', { exact: true }).count(), 0)
+      await previous.click()
+      await page.waitForURL('**/#calculadora/cambio-futuro/tir-usd')
+      await page.locator('#cf-valor').waitFor()
+      assert.deepEqual(errors, [])
+      console.log(`PASS Câmbio futuro até cinco parcelas ${width} ${theme}`)
+    } finally { await page.close() }
+  }
+}
+
+async function assertCambioFuturo(browser) {
+  // USD 110 mil já com juros: em 360 dias a 10% a.a., o principal é USD 100 mil.
+  // EUR: 88 mil × 6,50 = R$ 572 mil; CNH: (550 mil ÷ 0,75) × 0,80.
+  // TIR anual = (pagamento em reais ÷ R$ 500 mil)^(365/360) − 1.
+  for (const width of [320, 1440]) for (const theme of ['dark', 'light']) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    try {
+      await fixtures(page)
+      let clock = Date.parse('2026-01-02T02:00:00Z') // 01/01 23h de Brasília, sem pregão.
+      const prev = Date.parse('2025-12-31T20:57:00Z')
+      const raw = (bid, ask, high, low, timestamp) => ({ bid, ask, high, low, timestamp: timestamp / 1000, pctChange: 0 })
+      await page.route('**/quotes.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: clock,
+        quotes: { EURBRL: raw(6.51, 6.52, 6.6, 6.4, clock - 120000), USDBRL: raw(5.7, 5.71, 5.75, 5.65, clock - 120000),
+          USDCNH: raw(6.7, 6.71, 6.8, 6.6, clock - 120000) },
+      } }))
+      await page.route('**/history.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: prev + 60000,
+        series: { EUR: { source: 'EUR', points: [{ t: prev, bid: 6.48 }] } },
+      } }))
+      await page.route('**/intraday.json*', route => route.fulfill({ json: { source: 'AwesomeAPI (coleta central a cada 5 min)', generatedAt: prev + 60000,
+        series: { CNH: { points: [[prev, .85]] } },
+      } }))
+      await page.clock.setFixedTime(new Date(clock))
+      await page.goto(`${base}/#calculadora/cambio-futuro/tir-usd`)
+      const section = page.locator('section.cf-pattern')
+      await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
+      assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
+      assert.match(await section.innerText(), /Data-base da simulação: 01\/01\/2026/)
+      assert.equal(await section.getByRole('heading', { name: 'Fluxo de caixa por vencimento' }).count(), 0)
+      const operacao = section.locator('article[aria-labelledby="cf-operacao"]')
+      assert.deepEqual(await operacao.locator('input').evaluateAll(items => items.map(x => x.id)), ['cf-valor', 'cf-vencimento', 'cf-cotacao', 'cf-taxa'])
+      const mesa = section.locator('article[aria-labelledby="cf-mesa"]')
+      assert.deepEqual(await mesa.locator('fieldset legend').allTextContents(), ['Yuan (CNH)', 'Euro (EUR)'])
+      assert.equal(await operacao.locator('label[for="cf-valor"] .flag svg').count(), 1)
+      assert.equal(await mesa.locator('legend .flag svg').count(), 2)
+      assert.equal(await section.locator('.cf-resultado-moeda h4 .flag svg').count(), 2)
+      const eurNote = mesa.locator('#cf-EUR-cotacao-obs')
+      const cnhNote = mesa.locator('#cf-CNH-cotacao-obs')
+      await eurNote.filter({ hasText: /Referência diária indicativa/ }).waitFor()
+      await cnhNote.filter({ hasText: /último ponto indicativo/ }).waitFor()
+      assert.match(await eurNote.innerText(), /6,4800.*31\/12\/2025.*AwesomeAPI/i)
+      assert.match(await cnhNote.innerText(), /0,8500.*31\/12\/2025 às 17:57.*AwesomeAPI/i)
+      assert.match(await mesa.locator('#cf-EUR-futuro-obs').innerText(), /Não é cotação à vista/)
+      assert.equal(await mesa.locator('#cf-EUR-cotacao').inputValue(), '', 'referência não preenche o campo')
+      assert.equal(await mesa.locator('#cf-CNH-cotacao').inputValue(), '', 'referência não preenche o campo')
+      assert.doesNotMatch(await eurNote.innerText(), /Partida /)
+      assert.doesNotMatch(await cnhNote.innerText(), /Partida /)
+      for (const [id, valor] of Object.entries({ valor: '110.000', vencimento: '2026-12-27', cotacao: '5', taxa: '10',
+        'EUR-cotacao': '6,25', 'EUR-futuro': '6,50', 'CNH-cotacao': '0,75', 'CNH-futuro': '0,80' })) {
+        await section.locator('#cf-' + id).fill(valor)
+      }
+      const eur = section.locator('#cf-resultado-EUR').locator('..')
+      const cnh = section.locator('#cf-resultado-CNH').locator('..')
+      assert.match(await eur.innerText(), /27\/12\/2026[\s\S]*88\.000,00[\s\S]*14,61%/)
+      assert.match(await cnh.innerText(), /27\/12\/2026[\s\S]*733\.333,33[\s\S]*17,59%/)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Câmbio futuro parcela única ${width} ${theme}`)
+      const metrics = await section.locator('.cf-resultado-moeda dd').evaluateAll(items => items.map(el => {
+        const range = document.createRange(); range.selectNodeContents(el)
+        const box = el.closest('.cf-resultado-moeda').getBoundingClientRect()
+        const text = range.getBoundingClientRect()
+        return { value: el.textContent, lines: range.getClientRects().length,
+          inside: text.left >= box.left && text.right <= box.right }
+      }))
+      assert.equal(metrics.length, 6)
+      assert.deepEqual(metrics.filter(m => m.lines !== 1 || !m.inside), [], 'datas, valores e TIR cabem inteiros no resultado')
+      assert.match(await mesa.locator('#cf-EUR-futuro-obs').innerText(), /Taxa para 27\/12\/2026.*Não é cotação à vista/)
+      assert.match(await eurNote.innerText(), /Partida abaixo do valor indicativo exibido/)
+      assert.match(await cnhNote.innerText(), /Partida abaixo do valor indicativo exibido/)
+      assert.doesNotMatch(await eurNote.innerText(), /da faixa|%/)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-parcela-${width}-${theme}.png`), fullPage: true })
+      await section.locator('#cf-vencimento').fill('2026-12-28')
+      assert.equal(await section.locator('#cf-EUR-futuro').inputValue(), '')
+      assert.equal(await section.locator('#cf-CNH-futuro').inputValue(), '')
+      assert.equal(await section.locator('#cf-EUR-cotacao').inputValue(), '6,25')
+      assert.doesNotMatch(await eur.innerText(), /14,61%/)
+      await section.locator('#cf-EUR-futuro').fill('6,50')
+      assert.match(await eur.locator('.cf-tir dd').innerText(), /%/)
+      await page.clock.setFixedTime(new Date('2026-01-02T03:00:00Z'))
+      await section.locator('#cf-valor').fill('111.000')
+      assert.match(await section.innerText(), /Data-base da simulação: 02\/01\/2026/)
+      assert.match(await section.innerText(), /Informe novamente as cotações/)
+      for (const id of ['cotacao', 'EUR-cotacao', 'EUR-futuro', 'CNH-cotacao', 'CNH-futuro']) {
+        assert.equal(await section.locator('#cf-' + id).inputValue(), '')
+      }
+      assert.equal(await eur.locator('.cf-tir dd').innerText(), '—')
+      clock = Date.parse('2026-01-02T13:00:00Z')
+      await page.clock.setFixedTime(new Date(clock))
+      await page.reload()
+      await eurNote.filter({ hasText: /À vista hoje/ }).waitFor()
+      await cnhNote.filter({ hasText: /À vista hoje/ }).waitFor()
+      assert.match(await eurNote.innerText(), /compra–venda.*6,5100 a 6,5200\/EUR.*02\/01\/2026 às 09:58.*AwesomeAPI/)
+      assert.match(await cnhNote.innerText(), /compra–venda.*\/CNH.*02\/01\/2026 às 09:58.*CNH offshore/)
+      for (const [valor, state] of [['6,51', 'dentro'], ['6,59', 'acima'], ['6,4', 'abaixo']]) {
+        await mesa.locator('#cf-EUR-cotacao').fill(valor)
+        assert.match(await eurNote.innerText(), new RegExp('Partida ' + state + ' da faixa'))
+      }
+      assert.doesNotMatch(await cnhNote.innerText(), /Partida (dentro|acima|abaixo)/)
+      await settleLayout(page)
+      await assertWorkspace(page, section, `Referência à vista ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-spot-${width}-${theme}.png`), fullPage: true })
+      assert.deepEqual(errors, [])
+      console.log(`PASS Câmbio futuro parcela única ${width} ${theme}`)
+    } finally { await page.close() }
+  }
+}
+
 ;(async () => {
   fs.mkdirSync(out, { recursive: true })
   const browser = await chromium.launch(require('./smoke-launch.cjs')())
   const report = [], failures = []
   try {
+    await assertGroupedCatalog(browser, report, failures)
     for (const width of widths) {
       const directory = path.join(out, String(width)); fs.mkdirSync(directory, { recursive: true })
       for (const route of routes) {
@@ -512,6 +867,8 @@ async function assertComparatorFamily(browser) {
       }
     }
     await assertComparatorFamily(browser)
+    await assertCambioFuturo(browser)
+    await assertCambioFuturoCenario(browser)
     assert.deepEqual(failures, [], 'conformidade das seis calculadoras nas cinco larguras')
   } finally {
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2))

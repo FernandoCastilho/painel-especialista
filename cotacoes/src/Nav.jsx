@@ -13,7 +13,7 @@ import { APP_SECTIONS as TABS } from './appSections.js'
 import { MOBILE_PRIMARY, DESKTOP_PRIMARY, MORE_GROUPS, shortcutTitle } from './navigationPriority.js'
 const DOTS = ['M5 12h.01M12 12h.01M19 12h.01']
 
-// Desktop mostra sete destinos; celular/tablet cinco. Mais preserva os demais em grupos.
+// Desktop mostra oito destinos; celular/tablet seis. Mais preserva os demais em grupos.
 export default function Nav({ tab, onTab, desktop = false }) {
   const PRIMARY = desktop ? DESKTOP_PRIMARY : MOBILE_PRIMARY
   const [more, setMore] = useState(false)
@@ -71,9 +71,10 @@ export default function Nav({ tab, onTab, desktop = false }) {
   return (
     <nav className={desktop ? "topbar-tabs priority-desktop" : "tabs"} aria-label={desktop ? "Navegação principal" : "Seções"} ref={ref}>
       {PRIMARY.map(id => visiveis.find(t => t.id === id)).map((t) => (
-        <button key={t.id} type="button" className={`${t.id === tab ? 'on' : ''}${PRIMARY.includes(t.id) ? '' : ' sec'}`} aria-current={t.id === tab ? 'page' : undefined} title={shortcutTitle(t.id)} onClick={() => { setMore(false); onTab(t.id) }}>
+        <button key={t.id} type="button" className={`${t.id === tab ? 'on' : ''}${PRIMARY.includes(t.id) ? '' : ' sec'}`} aria-current={t.id === tab ? 'page' : undefined} aria-label={!desktop && (t.mobileLabel || t.compactLabel) ? (t.terminalLabel || t.label) : undefined} title={shortcutTitle(t.id)} onClick={() => { setMore(false); onTab(t.id) }}>
           {!desktop && <Icon d={t.icon} />}
-          <span>{t.terminalLabel || t.label}</span>
+          <span className={!desktop && t.compactLabel ? 'nav-label-full' : undefined}>{(!desktop && t.mobileLabel) || t.terminalLabel || t.label}</span>
+          {!desktop && t.compactLabel && <span className="nav-label-compact" aria-hidden="true">{t.compactLabel}</span>}
         </button>
       ))}
       <div className="more-tab">

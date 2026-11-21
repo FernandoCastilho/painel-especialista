@@ -1,0 +1,285 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { runInNewContext } from 'node:vm'
+import { transform } from 'esbuild'
+import React from 'react'
+import { hookRenderer } from './helpers/hooks.mjs'
+import { classicKeyRows, getClassicKeyState, portraitKeyRows } from '../src/rpnClassicLayout.mjs'
+import { rpnKeyFromEvent } from '../src/rpnKeyboard.mjs'
+import { CLASSIC_KEYS, createClassicRpnController } from '../src/rpnClassicController.mjs'
+import { convertEquivalentRate } from '../src/rpnRateConversion.mjs'
+
+const require = createRequire(import.meta.url)
+const source = await readFile(new URL('../src/RpnCalculator.jsx', import.meta.url), 'utf8')
+const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof node === 'object' ? [node, ...nodes(node.props?.children)] : []
+
+function resources(create) {
+  const module = { exports: {} }
+  let sequence = 0
+  const deps = { react: { ...React, useId: () => 'rpn-test-' + ++sequence },
+    './RpnCalculator.css': {}, './rpnClassicController.mjs': { createClassicRpnController: create },
+    './rpnClassicLayout.mjs': { classicKeyRows, portraitKeyRows, getClassicKeyState },
+    './rpnRateConversion.mjs': { convertEquivalentRate }, './rpnKeyboard.mjs': { rpnKeyFromEvent } }
+  runInNewContext(code + '\nmodule.testComponents = { RatePanel, KeyGrid, LcdValue }', {
+    module, exports: module.exports, require: path => deps[path] ?? require(path),
+  })
+  return { Calculator: module.exports.default, ...module.testComponents }
+}
+function setup(t, create, autoClose = true) {
+  const { Calculator, KeyGrid, LcdValue, RatePanel } = resources(create)
+  const render = hookRenderer(() => Calculator())
+  if (autoClose) t.after(() => render.close())
+  const all = () => nodes(render.value)
+  return { render, panel: () => render.value, find: pred => all().find(pred),
+    keys: () => nodes(KeyGrid(all().find(el => el.type === KeyGrid).props)).filter(el => el.type === 'button'),
+    display: () => nodes(LcdValue(all().find(el => el.type === LcdValue).props)).filter(el => el.type === 'span').find(el => el.props.className === 'rpn-sr-only')?.props.children
+      ?? LcdValue(all().find(el => el.type === LcdValue).props).props.children,
+    rates: () => all().find(el => el.type === RatePanel).props }
+}
+const event = (key, extra = {}) => ({ key, prevented: false, preventDefault() { this.prevented = true }, ...extra })
+
+test('grade física clássica tem 39 teclas nas posições exatas e Enter único em cada modo', () => {
+  const expected = [
+    'n i pv pmt fv chs 7 8 9 divide',
+    'power reciprocal pctTotal pctDiff percent eex 4 5 6 multiply',
+    'runStop sst roll swap clx enter 1 2 3 subtract',
+    'on f g sto rcl _ 0 decimal sum add',
+  ]
+  assert.deepEqual(classicKeyRows.map(row => row.map(k => k?.id ?? '_').join(' ')), expected)
+  const ids = rows => rows.flat().filter(Boolean).map(k => k.id).sort()
+  assert.deepEqual(ids(portraitKeyRows), ids(classicKeyRows))
+  assert.equal(new Set(ids(portraitKeyRows)).size, 39)
+})
+
+test('teclado físico respeita região, conversor, atalhos do navegador, composição e ativação nativa', () => {
+  for (const [key, id] of [['0','0'],[',','decimal'],['.','decimal'],['Enter','enter'],['=','enter'],
+    ['+','add'],['-','subtract'],['*','multiply'],['/','divide'],['%','percent'],['^','power'],
+    ['Backspace','backspace'],['Delete','clx'],['Escape','cancel'],['f','f'],['g','g']]) assert.equal(rpnKeyFromEvent(event(key)),id)
+  for (const e of [event('Tab'),event(' '),event('1',{altKey:true}),event('+',{ctrlKey:true}),
+    event('-', {metaKey:true}),event('7',{nativeEvent:{isComposing:true}}),
+    event('8',{target:{closest:()=>({})}}),event('Enter',{target:{closest:s=>s==='button'?{}:null}})])
+    assert.equal(rpnKeyFromEvent(e),null)
+})
+
+test('toque e teclado enviam IDs físicos; LCD, estados e indisponibilidade vêm do controlador', async t => {
+  const calls = []
+  let view = { display:'0,00', indicators:{on:true} }
+  const ui = setup(t, () => ({
+    snapshot: () => view, isSupported: key => key !== 'sst',
+    press: key => { calls.push(key); view = {display:'120,50',shift:'g',indicators:{begin:true,program:true,on:true},message:'Teste local'} },
+    setDisplay: value => { calls.push(value); view = {...view,display:'12,6825'} },
+  }))
+  await ui.render.settle()
+  const physical = event('2')
+  ui.panel().props.onKeyDown(physical)
+  await ui.render.settle()
+  assert.ok(physical.prevented)
+  assert.equal(ui.display(), '120,50')
+  assert.equal(ui.find(n => n.props?.role === 'status').props.children, 'Teste local')
+  const key = id => ui.keys().find(k => k.props['data-key'] === id)
+  assert.ok(key('g').props['aria-pressed'])
+  assert.match(key('sst').props['aria-label'],/indisponível/)
+  assert.ok(key('sst').props.disabled)
+  assert.equal(key('pv').props['aria-label'],'g · CF₀')
+  key('pv').props.onClick()
+  await ui.render.settle()
+  assert.deepEqual(calls,['2','pv'])
+  const trigger = ui.find(n => n.props?.className === 'rpn-rates-trigger')
+  trigger.props.onClick()
+  await ui.render.settle()
+  assert.ok(ui.rates().open)
+  ui.rates().onUse(12.6825)
+  await ui.render.settle()
+  assert.deepEqual(calls,['2','pv',12.6825])
+  assert.equal(ui.display(),'12,6825')
+  assert.ok(!ui.rates().open)
+})
+
+test('conversor abre sem valor, exige base diária e envia somente uma taxa calculada', async t => {
+  const { RatePanel } = resources(null)
+  const used = []
+  let open = true
+  const ui = hookRenderer(() => RatePanel({id:'test-rates',open,onUse:value=>used.push(value),onClose:()=>{open=false},canUse:true}))
+  t.after(() => ui.close())
+  const nodesOf = tag => nodes(ui.value).filter(n=>n.type===tag)
+  const set = async (node,value) => { node.props.onChange({target:{value}}); await ui.settle() }
+  const use = () => nodesOf('button').find(b=>b.props.className==='rpn-use-rate')
+  await ui.settle()
+  assert.ok(use().props.disabled)
+  await set(nodesOf('input')[0],'1,00')
+  assert.match(nodesOf('output')[0].props.children.join(''),/^12,682503.+% a.a.$/)
+  await set(nodesOf('select')[1],'day')
+  assert.equal(nodesOf('select').length,3)
+  assert.ok(use().props.disabled)
+  await set(nodesOf('select')[2],'252')
+  assert.ok(!use().props.disabled)
+  use().props.onClick()
+  assert.equal(used.length,1)
+  assert.ok(Math.abs(used[0]-convertEquivalentRate({rate:1,from:'month',to:'day',dayBasis:252}).value)<1e-13)
+  assert.equal(nodesOf('input')[0].props.value,'1,00')
+})
+
+test('falha inesperada limpa visor e desliga as operações sem impedir ajuda ou conversão independente', async t => {
+  let calls = 0
+  const ui = setup(t,()=>({snapshot:()=>({display:'99'}),isSupported:()=>true,press:()=>{calls++;throw new Error('fixture')}}))
+  await ui.render.settle()
+  ui.panel().props.onKeyDown(event('1'))
+  await ui.render.settle()
+  assert.equal(ui.display(),'—')
+  assert.match(ui.find(n=>n.props?.role==='status').props.children,/Não foi possível/)
+  assert.ok(ui.keys().every(k=>k.props.disabled))
+  const extra = event('2')
+  ui.panel().props.onKeyDown(extra)
+  assert.ok(!extra.prevented)
+  assert.equal(calls,1)
+})
+
+
+test('interface e controlador reais compartilham o mapa, preservam fluxo e não gravam a conversão em i', async t => {
+  assert.deepEqual(classicKeyRows.flat().filter(Boolean).map(key=>key.id),CLASSIC_KEYS)
+  const controller = createClassicRpnController()
+  const ui = setup(t,()=>controller)
+  const keyboard = async key => { ui.panel().props.onKeyDown(event(key)); await ui.render.settle() }
+  const click = async id => {
+    const button = ui.keys().find(key=>key.props['data-key']===id)
+    assert.ok(button && !button.props.disabled,`tecla disponível: ${id}`)
+    button.props.onClick()
+    await ui.render.settle()
+  }
+  await ui.render.settle()
+  for (const key of ['2','Enter','3','+']) await keyboard(key)
+  assert.match(ui.display(),/^5(?:,0+)?$/)
+  for (const id of ['clx','1','0','0','chs','g','pv','clx','8','0','g','pmt','f','fv']) await click(id)
+  assert.match(ui.display(),/^[-−]20(?:,0+)?$/)
+  const before = controller.snapshot()
+  const rate = convertEquivalentRate({rate:1,from:'month',to:'year'}).value
+  ui.rates().onUse(rate)
+  await ui.render.settle()
+  assert.equal(controller.snapshot().x,rate)
+  assert.deepEqual(controller.snapshot().finance,before.finance)
+  assert.deepEqual(controller.snapshot().stack.slice(1),before.stack.slice(1))
+})
+
+
+test('UI reflete pausa e retomada emitidas, remove assinatura e ignora entrega já enfileirada', async t => {
+  let notify
+  let routeExited = false, disposed = false
+  let view = {display:'1,00',indicators:{on:true}}
+  const controller = {
+    press: () => (view={display:'2,00',indicators:{on:true,running:true,paused:true}}),
+    snapshot: () => view,
+    isSupported: () => true,
+    subscribe: listener => { notify=listener; return () => { routeExited=true } },
+    dispose: () => { disposed=true },
+  }
+  const ui = setup(t,()=>controller,false)
+  await ui.render.settle()
+  ui.keys().find(key=>key.props['data-key']==='runStop').props.onClick()
+  await ui.render.settle()
+  assert.equal(ui.display(),'2,00')
+  assert.ok(ui.find(node=>node.props?.children==='PAUSA'))
+  notify({display:'3,00',indicators:{on:true}})
+  await ui.render.settle()
+  assert.equal(ui.display(),'3,00')
+  assert.ok(!ui.find(node=>node.props?.children==='PAUSA'))
+  const count = ui.render.updates
+  ui.render.close()
+  assert.ok(routeExited && disposed)
+  notify({display:'4,00',indicators:{on:true}})
+  assert.equal(ui.render.updates,count)
+})
+
+test('programa real com PSE atualiza o React ao retomar; desmontagem cancela a próxima pausa', async t => {
+  let seq = 0
+  const pending = new Map()
+  const controller = createClassicRpnController({
+    schedule(callback, ms) {
+      assert.equal(ms,1000)
+      pending.set(++seq,callback)
+      return seq
+    },
+    cancelScheduled(id) { pending.delete(id) },
+  })
+  const ui = setup(t,()=>controller,false)
+  const tap = async (...ids) => {
+    for (const id of ids) {
+      const button = ui.keys().find(key=>key.props['data-key']===id)
+      assert.ok(button && !button.props.disabled,`tecla disponível no modo atual: ${id}`)
+      button.props.onClick()
+      await ui.render.settle()
+    }
+  }
+  await ui.render.settle()
+  await tap('f','runStop','2','enter','g','runStop','3','add','f','runStop','g','roll','0','0','runStop')
+  assert.equal(ui.display(),'2,00')
+  assert.ok(ui.find(n=>n.props?.children==='PAUSA'))
+  assert.ok(!ui.rates().canUse)
+  assert.equal(pending.size,1)
+  const [id, resume] = pending.entries().next().value
+  pending.delete(id)
+  resume()
+  await ui.render.settle()
+  assert.equal(ui.display(),'5,00')
+  assert.ok(!ui.find(n=>n.props?.children==='PAUSA'))
+  assert.ok(ui.rates().canUse)
+  await tap('g','roll','0','0','runStop')
+  assert.equal(pending.size,1)
+  ui.render.close()
+  assert.equal(pending.size,0)
+  assert.equal(controller.snapshot().indicators.paused,false)
+})
+
+
+test('visor exibe o indicador C com descrição acessível somente enquanto ativo', async t => {
+  const controller = createClassicRpnController()
+  const ui = setup(t,()=>controller)
+  const tap = async id => {
+    const button = ui.keys().find(key=>key.props['data-key']===id)
+    assert.ok(button && !button.props.disabled,`tecla disponível: ${id}`)
+    button.props.onClick()
+    await ui.render.settle()
+  }
+  const compoundBadge = () => ui.find(node=>node.props?.title==='Juros compostos na fração de período')
+  await ui.render.settle()
+  assert.equal(compoundBadge(),undefined)
+  await tap('sto')
+  await tap('eex')
+  const badge = compoundBadge()
+  assert.ok(badge)
+  assert.equal(badge.props.children[0].props.children,'C')
+  assert.equal(badge.props.children[0].props['aria-hidden'],'true')
+  assert.equal(badge.props.children[1].props.children,'Juros compostos na fração de período')
+  await tap('sto')
+  await tap('eex')
+  assert.equal(compoundBadge(),undefined)
+})
+
+test('teclado de retrato reserva 44 px por coluna, inclusive na largura útil medida a 320 px', async () => {
+  const css = await readFile(new URL('../src/RpnCalculator.css',import.meta.url),'utf8')
+  assert.match(css,/\.rpn-keypad--portrait \{ grid-template-columns: repeat\(5,minmax\(44px,1fr\)\)/)
+  const compact = css.split('@container (max-width: 330px) {')[1]?.match(/\.rpn-keypad--portrait \{ gap: (\d+)px; padding: (\d+)px; \}/)
+  assert.ok(compact)
+  const [,gap,padding]=compact.map(Number)
+  // CI mediu 43,75 px por coluna com gap 5, padding 6 e borda 1 de cada lado.
+  const existingBorderBox = 5*43.75 + 4*5 + 2*6 + 2
+  assert.ok(5*44 + 4*gap + 2*padding + 2 <= existingBorderBox)
+})
+
+test('De e Para têm rótulos nativos próprios sem o texto das opções no rótulo', async t => {
+  const { RatePanel } = resources(null)
+  const ui = hookRenderer(() => RatePanel({id:'taxas-a11y',open:true,onUse(){},onClose(){},canUse:true}))
+  t.after(() => ui.close())
+  await ui.settle()
+  const elements=nodes(ui.value)
+  for(const [name,control,value] of [['De','taxas-a11y-from','month'],['Para','taxas-a11y-to','year']]){
+    const label=elements.find(element=>element.type==='label' && element.props.htmlFor===control)
+    assert.equal(label?.props.children,name)
+    const select=elements.find(element=>element.type==='select' && element.props.id===control)
+    assert.equal(select?.props.value,value)
+    assert.deepEqual(Array.from(select.props.children, option=>option.props.value),['day','month','year'])
+    assert.ok(!nodes(label).includes(select))
+  }
+})

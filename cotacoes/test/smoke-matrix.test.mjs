@@ -4,6 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRequire } from 'node:module'
+import { spawnSync } from 'node:child_process'
 const require = createRequire(import.meta.url)
 const { widths, layoutRoutes, profileRoutes, calculatorMatrix, headerMatrix } = require('../scripts/smoke-calculator-matrix.cjs')
 const { verifySmokeMatrix } = require('../scripts/verify-smoke-matrix.cjs')
@@ -67,8 +68,45 @@ test('CI connects browser loops, alongamento, reports and always-uploaded matrix
   assert.match(theme, /geometry\.document <= geometry\.viewport \+ 1/)
   for (const script of ['smoke-calculator-layout', 'smoke-theme', 'smoke-bndes-profiles', 'smoke-tic-animation']) assert.ok(workflow.includes(script), script)
   assert.match(workflow, /node scripts\/verify-smoke-matrix\.cjs "\$RUNNER_TEMP\/qa-universal"/)
-  assert.match(workflow, /Capturas de tela dos smokes\n\s+if: always\(\)[\s\S]*?\$\{\{ runner\.temp \}\}\/qa-universal/)
+  const upload = workflow.split('      - name: Capturas de tela dos smokes\n')[1]?.split('\n      - name: ')[0] ?? ''
+  assert.match(upload, /if: always\(\)/)
+  assert.match(upload, /uses: actions\/upload-artifact@v4/)
+  assert.match(upload, /name: smoke-capturas\b/)
+  assert.match(upload, /\$\{\{ runner\.temp \}\}\/smoke-consolidado\/qa-universal/)
   assert.ok(workflow.indexOf('verify-smoke-matrix.cjs') < workflow.indexOf('name: Capturas de tela dos smokes'))
+})
+
+test('consolidated smoke keeps prior passing groups on rerun and fails closed on corrupt evidence', t => {
+  const workflow = source('../../.github/workflows/cotacoes-ci.yml')
+  const aggregate = workflow.split('      - name: Validar origem e consolidar evidências sem sobrescrever\n')[1]
+    ?.split('      - name: Capturas de tela dos smokes')[0] ?? ''
+  const script = aggregate.split("node --input-type=module - <<'JS'\n")[1]?.split('\n          JS')[0]
+  assert.ok(script, 'execute the actual GitHub consolidation step')
+  const sha = 'a'.repeat(40), run = '90'
+  const groups = ['secoes', 'calculadoras', 'navegacao']
+  for (const [scenario, expected] of [['mixed-attempts', 0], ['collision', 1], ['missing-group', 1], ['foreign-sha', 1]]) {
+    const dir = mkdtempSync(join(tmpdir(), 'smoke-consolidation-'))
+    t.after(() => rmSync(dir, { recursive: true, force: true }))
+    for (const group of groups) {
+      if (scenario === 'missing-group' && group === 'secoes') continue
+      const base = join(dir, 'smoke-grupos', 'smoke-transfer-' + group)
+      const qa = join(base, 'qa-universal')
+      mkdirSync(qa, { recursive: true })
+      const actualSha = scenario === 'foreign-sha' && group === 'secoes' ? 'b'.repeat(40) : sha
+      const attempt = group === 'secoes' ? 1 : 2
+      writeFileSync(join(base, 'manifest.txt'), `${actualSha} ${run} ${attempt} ${group}\n`)
+      writeFileSync(join(qa, scenario === 'collision' ? 'shared.png' : group + '.png'), group)
+    }
+    const results = Object.fromEntries(groups.map(group => ['smoke-' + group, { result: 'success' }]))
+    const result = spawnSync(process.execPath, ['--input-type=module', '-'], {
+      input: script, encoding: 'utf8',
+      env: { ...process.env, RUNNER_TEMP: dir, GITHUB_SHA: sha, GITHUB_RUN_ID: run, GITHUB_RUN_ATTEMPT: '2', CI_RESULTS: JSON.stringify(results) },
+    })
+    assert.equal(result.status, expected, `${scenario}: ${result.stderr}`)
+    if (!expected) for (const group of groups) {
+      assert.equal(readFileSync(join(dir, 'smoke-consolidado', 'qa-universal', group + '.png'), 'utf8'), group)
+    }
+  }
 })
 
 test('browser assertions wait for shared portals and select the intended help preview', () => {

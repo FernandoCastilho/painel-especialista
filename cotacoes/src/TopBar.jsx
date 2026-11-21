@@ -28,8 +28,8 @@ function Clocks() {
   return (
     <div className="topbar-clocks" role="timer" aria-label="Horários de São Paulo, Nova York, Londres e Tóquio">
       {CLOCKS.map(([code, short], i) => (
-        <span key={code} className={`topbar-clock${i === 2 ? ' opt' : ''}`} title={ZONES[code].city}>
-          <Flag code={code} width={18} height={12} />
+        <span key={code} className={i === 2 ? 'topbar-clock opt' : 'topbar-clock'} title={ZONES[code].city}>
+          <Flag code={ZONES[code].flag} width={13} height={9} className="topbar-clock-flag" />
           <b>{short}</b>
           {part(now, ZONES[code].tz, { hour: '2-digit', minute: '2-digit', ...(code === 'BRL' ? { second: '2-digit' } : {}) })}
         </span>

@@ -64,8 +64,11 @@
 /* Resultado: o único quadro com borda laranja; faixa azul-marinho sem linha laranja.
    Fica abaixo dos dados, em largura total: compara de 2 a 5 modalidades lado a lado e não cabe numa coluna de 400 px. */
 :root[data-theme] body .credit-workspace .credit-result-box { margin:16px 0 0; border:2px solid var(--cp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); color:var(--bw-ink); }
-:root[data-theme] body .credit-workspace .credit-result-head { padding:12px 16px; background:var(--cp-navy); color:#fff; }
+:root[data-theme] body .credit-workspace .credit-result-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; background:var(--cp-navy); color:#fff; }
 :root[data-theme] body .credit-workspace .credit-result-head h3 { margin:0; color:#fff; font-size:1.05rem; font-weight:700; }
+:root[data-theme] body .credit-workspace a.credit-email { flex:none; color:#fff; }
+:root[data-theme] body .credit-workspace a.credit-email:focus-visible { outline:2px solid var(--cp-orange); outline-offset:2px; }
+:root[data-theme] body .credit-workspace a.credit-email[aria-disabled="true"] { opacity:.55; cursor:default; }
 :root[data-theme] body .credit-workspace .credit-result-body { display:flex; flex-direction:column; gap:12px; padding:14px; min-width:0; }
 :root[data-theme] body .credit-workspace .credit-result-status { margin:0; color:var(--bw-mut); font-size:.8rem; line-height:1.45; }
 :root[data-theme] body .credit-workspace .credit-result-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; padding-top:12px; border-top:1px solid var(--bw-line); }
@@ -97,7 +100,11 @@
 :root[data-theme] body .credit-workspace .credit-results > .credit-notice { margin:10px 0 0; padding:8px 12px; border:1px solid var(--bw-line); border-radius:8px; background:transparent; color:var(--bw-mut); font-size:.85rem; line-height:1.45; }
 
 /* c. Quadro agrupado: rótulo à esquerda, valor à direita, números alinhados, terminando no total */
-:root[data-theme] body .credit-workspace .credit-matrix tr.credit-grp > th { padding:12px 12px 4px; background:var(--bw-card); color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-left:0; border-right:0; }
+:root[data-theme] body .credit-workspace .credit-matrix tr.credit-grp > th { padding:10px 12px; background:var(--bw-soft); color:var(--bw-ink); font-size:.78rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-left:4px solid #ff6a00; border-right:0; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .credit-workspace .credit-matrix .credit-invest-col { border-left:2px solid #1d8a5a; background:var(--bw-good-soft); }
+:root[data-theme] body .credit-workspace .credit-matrix thead .credit-invest-col small { display:block; font-weight:500; opacity:.85; }
+:root[data-theme] body .credit-workspace .credit-matrix tr.credit-grp > th { box-shadow:none; }
+:root[data-theme] body .credit-workspace .credit-link { margin-left:8px; padding:2px 10px; min-height:0; border:1px solid var(--bw-line); border-radius:6px; background:transparent; color:inherit; font:inherit; font-weight:700; cursor:pointer; }
 :root[data-theme] body .credit-workspace .credit-matrix tr.credit-num > td { text-align:right; font-variant-numeric:tabular-nums; }
 :root[data-theme] body .credit-workspace .credit-matrix tr.credit-total-row > * { font-weight:800; border-top:2px solid var(--bw-strong-line); }
 :root[data-theme] body .credit-workspace .credit-matrix thead th:first-child { background:#0b2e63; color:#fff; }

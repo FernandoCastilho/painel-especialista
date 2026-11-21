@@ -212,7 +212,7 @@ const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency
       await fm.getByText(/Prazo de 1 a 84 meses/).waitFor()
       await fm.getByLabel('Prazo total (meses)', { exact: true }).fill('60')
       // Fluxo TFB: liberação + 60 linhas, das quais 12 são carência.
-      if (!(await fm.locator('.fm-fluxo').isVisible())) await fm.locator('.fm-fluxo-panel > summary').click()
+      if (!(await fm.locator('.fm-fluxo').isVisible())) await fm.locator('summary').filter({ hasText: /^Cronograma ilustrativo ·/ }).click()
       await fm.locator('.fm-fluxo').waitFor()
       assert.equal(await fm.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 60)
       assert.equal(await fm.locator('.fm-tabela tbody tr.fm-carencia').count(), 12)

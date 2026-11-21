@@ -22,7 +22,7 @@ test('weekly Focus cron at 08:30 Brazil on Monday and Tuesday (Monday holiday); 
  assert.match(y,/if: github.event.schedule == '30 11 \* \* 1,2'/)
  const deploy=y.split('\n  deploy:\n')[1];assert.ok(deploy)
  const regular=deploy.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,37);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
- assert.match(deploy,/Consumir snapshot institucional confirmado[^\n]*\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\)\n\s+run: node scripts\/sector-news-live\.mjs --snapshot/)
+ assert.match(deploy,/Consumir snapshot institucional confirmado[^\n]*\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\) && env\.PAGES_REFRESH_DATA == 'true'\n\s+run: node scripts\/sector-news-live\.mjs --snapshot/)
  const institutional=y.split('\n  institutional-news:\n')[1].split('\n  deploy:')[0]
  assert.match(institutional,/needs\.approve-source\.result == 'success'/)
  for(const cron of ['0 11,18 * * *','30 11 * * 1,2'])assert.ok(institutional.includes(`github.event.schedule != '${cron}'`))
@@ -110,4 +110,16 @@ test('Focus: data de publicação vem da página do boletim no Banco Central, nu
  const src=await readFile(new URL('../src/Projecoes.jsx',import.meta.url),'utf8')
  assert.match(src,/const publicado = Boolean\(focus\?\.link && idadeProjecao\(focus\?\.release\)\)/)
  assert.match(src,/boletim publicado em \{date\(focus\.release\)\}/)
+})
+
+test('câmbio aberto só em dia de pregão da B3, das 9h05 às 18h de Brasília', async () => {
+  const { fxSessionOpen } = await import('../scripts/data-schedules.mjs')
+  const at = (iso) => fxSessionOpen(Date.parse(iso))
+  assert.equal(at('2026-11-19T12:04:00Z'), false) // 9h04, antes da abertura
+  assert.equal(at('2026-11-19T12:05:00Z'), true) // 9h05
+  assert.equal(at('2026-11-19T21:00:00Z'), true) // 18h00
+  assert.equal(at('2026-11-19T21:01:00Z'), false) // 18h01
+  assert.equal(at('2026-11-20T15:00:00Z'), false) // Consciência Negra: feriado da B3
+  assert.equal(at('2026-11-21T15:00:00Z'), false) // sábado
+  assert.equal(at('2027-03-10T15:00:00Z'), true) // ano sem calendário conferido: dia útil segue aberto
 })
