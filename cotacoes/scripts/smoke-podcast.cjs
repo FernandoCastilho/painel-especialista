@@ -23,11 +23,12 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
       await context.route('https://anchor.fm/**', route => {
         const id = new URL(route.request().url()).pathname.split('/')[2]
-        const program = { f84d76fc: 'morning', e0ddef4c: 'views', f9f69e70: 'daily-fin' }[id]
+        const program = { f84d76fc: 'morning', e0ddef4c: 'views', f9f69e70: 'daily-fin', e80cf13c: 'the-news' }[id]
         if (!program) return route.abort()
         const art = suffix => '<itunes:image href="' + artHost + '/fixture/' + program + '-' + suffix + '.png"/>'
+        const time = {morning:10,views:8,'daily-fin':9,'the-news':11}[program]
 
-        return route.fulfill({ contentType: 'application/rss+xml', headers: { 'access-control-allow-origin': '*' }, body: '<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>' + art('cover') + '<item>' + art('episode') + '<title>Teste ' + program + '</title><pubDate>Tue, 17 Nov 2026 12:00:00 GMT</pubDate><enclosure url="https://podcast-fixture.invalid/' + program + '.wav" type="audio/wav"/></item></channel></rss>' })
+        return route.fulfill({ contentType: 'application/rss+xml', headers: { 'access-control-allow-origin': '*' }, body: '<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>' + art('cover') + '<item>' + art('episode') + '<title>Teste ' + program + '</title><pubDate>Tue, 17 Nov 2026 ' + String(time).padStart(2, '0') + ':00:00 GMT</pubDate><enclosure url="https://podcast-fixture.invalid/' + program + '.wav" type="audio/wav"/></item></channel></rss>' })
       })
       await context.route(artHost + '/**', route => {
         const path = new URL(route.request().url()).pathname
@@ -52,7 +53,9 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       if (await notice.isVisible()) await notice.getByRole('button', { name: 'Entendi', exact: true }).click()
       await page.locator('audio').waitFor({ state: 'attached' })
       await page.waitForFunction(expected => document.documentElement.dataset.theme === expected, theme)
-      assert.equal(await page.locator('.podcast-program').count(), 3)
+      await page.getByRole('heading', {name:'Teste morning',exact:true}).waitFor()
+      await page.waitForFunction(() => [...document.querySelectorAll('.podcast-program strong')].map(e=>e.textContent).join('|') === 'the news|Itaú Views Morning Call|Daily Fin Podcast|Itaú Views')
+      assert.equal(await page.locator('.podcast-program').count(), 4)
       assert.equal(await page.locator('audio').evaluate(a => a.paused), true, 'no autoplay')
       const geometry = await page.evaluate(() => {
         const a = document.querySelector('.podcast-listening').getBoundingClientRect(), b = document.querySelector('.podcast-programs').getBoundingClientRect()
@@ -67,8 +70,8 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       await link.hover()
       assert.equal(await link.evaluate(a => getComputedStyle(a).color), linkColor, 'hover contrast preserved')
       const played = []
-      for (let i = 0; i < 3; i++) {
-        await page.locator('.podcast-program').nth(i).click()
+      for (const [i, title] of ['Itaú Views Morning Call', 'Itaú Views', 'Daily Fin Podcast', 'the news'].entries()) {
+        await page.locator('.podcast-program').filter({has:page.getByText(title,{exact:true})}).click()
         assert.equal(await page.locator('audio').count(), 1)
         if (i < 2) {
           const expected = i === 0 ? 'morning-cover.png' : 'views-episode.png'
@@ -76,9 +79,12 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
             const img = document.querySelector('.podcast-art img')
             return img?.src.endsWith(name) && img.complete && img.naturalWidth > 0
           }, expected)
-        } else {
+        } else if (i === 2) {
           await page.locator('.podcast-art svg').waitFor()
           assert.equal(await page.getByRole('link', { name: /Abrir no Podcast Addict/ }).getAttribute('href'), 'https://podcastaddict.com/podcast/daily-fin-podcast/5848272')
+        } else {
+          await page.locator('.podcast-art img').waitFor()
+          assert.equal(await page.getByRole('link', { name: /Abrir no Podcast Addict/ }).getAttribute('href'), 'https://podcastaddict.com/podcast/the-news/4841898')
         }
         assert.equal(await page.locator('audio').evaluate(a => a.paused), true, 'changing program does not autoplay')
         const panel = await page.locator('.podcast-listening').boundingBox()
@@ -111,15 +117,17 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       await context.close()
     }
     // Delivery check for this integration only. Later deploys keep the deterministic fixture smoke.
-    if (process.env.PODCAST_REAL_DAILY_FIN === '1' ||
-        (process.env.GITHUB_EVENT_NAME === 'pull_request' && process.env.GITHUB_HEAD_REF === 'nexo/daily-fin-capas-podcast')) {
+    const liveDate = process.env.GITHUB_EVENT_NAME === 'pull_request' ? process.env.GITHUB_HEAD_REF : ''
+    const liveProgram = process.env.PODCAST_REAL_THE_NEWS === '1' || liveDate === 'nexo/the-news-e-podcasts-recentes' ? 'the news'
+      : process.env.PODCAST_REAL_DAILY_FIN === '1' || liveDate === 'nexo/daily-fin-capas-podcast' ? 'Daily Fin Podcast' : null
+    if (liveProgram) {
       const live = await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'})
       page = await live.newPage()
       await page.goto(base + '/#podcast', {waitUntil:'domcontentloaded'})
-      await page.getByRole('button',{name:/Daily Fin Podcast/}).waitFor({timeout:15000})
+      await page.locator('.podcast-program').filter({has:page.getByText(liveProgram,{exact:true})}).waitFor({timeout:15000})
       const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
       if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
-      await page.getByRole('button',{name:/Daily Fin Podcast/}).click()
+      await page.locator('.podcast-program').filter({has:page.getByText(liveProgram,{exact:true})}).click()
       await page.waitForFunction(() => {
         const audio=document.querySelector('audio')
         if (!audio?.src) return false
@@ -131,10 +139,10 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
         const a=document.querySelector('audio')
         return a && !a.paused && a.currentTime>=1 && a.readyState>=2 && !a.error
       },null,{timeout:45000})
-      report.realDailyFin = await page.locator('audio').evaluate(a=>({origin:new URL(a.currentSrc).hostname,time:a.currentTime,duration:a.duration,readyState:a.readyState}))
+      report.livePodcast = await page.locator('audio').evaluate(a=>({origin:new URL(a.currentSrc).hostname,time:a.currentTime,duration:a.duration,readyState:a.readyState}))
       await page.getByRole('button',{name:'Pausar episódio',exact:true}).click()
       assert.equal(await page.locator('audio').evaluate(a=>a.paused),true)
-      console.log('PASS Daily Fin: episódio verdadeiro reproduzido sem interceptar áudio',JSON.stringify(report.realDailyFin))
+      console.log('PASS ' + liveProgram + ': episódio verdadeiro reproduzido sem interceptar áudio', JSON.stringify(report.livePodcast))
       await live.close()
     }
     report.passed = true
