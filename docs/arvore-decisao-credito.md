@@ -355,6 +355,12 @@ Entrevista conduzida com Fernando para cruzar necessidade, operação, risco e r
 - **Fim da rodada de folhas (18/11/2026):** oito necessidades principais confirmadas por Fernando — máquina importada, máquina nacional, gap de caixa, matéria-prima importada, exportação, dividendos, compra de outra empresa e estoque nacional. As demais necessidades da árvore seguem como proposta do Claude, marcadas para revisão.
 - **Giro do BNDES nos dividendos (decisão de Fernando):** entra com aviso. A página do BNDES diz que a linha é para "fortalecimento do capital de giro, visando à manutenção e/ou à geração de empregos" e "necessidades do dia a dia"; não exige comprovar o uso, mas o banco repassador pode pedir informações sobre a utilização. O aviso na folha diz isso. Recomendação do Claude era não incluir; registrada a divergência. Fonte: [BNDES Crédito Pequenas e Médias Empresas](https://www.bndes.gov.br/wps/portal/site/home/financiamento/produto/bndes-credito-pequenas-e-medias-empresas), consulta em 18/11/2026.
 
+### Perguntas do dia (rotina autorizada em 21/11/2026)
+
+Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convivendo com a pergunta diária do ChatGPT (decisão de Fernando em 21/11/2026: manter as duas). Base: este documento e a nota do Obsidian "Árvore de decisão de crédito PJ".
+
+- **21/11/2026 — triagem da 4131 vale para todas as necessidades** (decisão de Fernando). A triagem definida em 19/11 e 20/11 para o alongamento de dívida (sem aperto relevante de caixa, alavancagem compatível e capacidade de pagamento demonstrada; proteção cambial pode ser parcial) passa a valer também no gap de caixa, dividendos, compra de empresa, máquina importada e nas demais folhas em que a 4131 aparece. Hoje a tela aplica a triagem só no alongamento; a mudança na tela ainda não foi feita.
+
 ### Propostas do Claude ainda não confirmadas
 
 - Mostrar, por mês, quanto do faturamento vai para pagar a nova operação, sem limite fixo; o ponto de alerta seria definido por Fernando.
