@@ -19,3 +19,5 @@
 :root main.app:not(.app-calculators) .podcast-page .podcast-external a,
 :root main.app:not(.app-calculators) .podcast-page .podcast-external a:visited,
 :root main.app:not(.app-calculators) .podcast-page .podcast-external a:hover{color:var(--pc-accent)}
+
+.podcast-art,.podcast-program-art{overflow:hidden;min-inline-size:0;grid-template: minmax(0,1fr) / minmax(0,1fr)}.podcast-art img,.podcast-program-art img{display:block;width:100%;height:100%;object-fit:contain}.podcast-program-art{flex:0 0 44px;aspect-ratio:1;display:grid;place-items:center;border-radius:7px;background:#103878;color:#a7dcff}
