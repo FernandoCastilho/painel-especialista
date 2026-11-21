@@ -155,6 +155,44 @@ As telas ficaram mais longas. A maior parte do aumento vem do bloco "Referência
 
 - Aparelho físico, Windows e uso real.
 
-## 8. Próximo passo
+## 8. BNDES Finame, Necessidade do Cliente e Empréstimo 4131 no roteiro (21/11/2026)
 
-Faltam três calculadoras de crédito: BNDES Finame, Empréstimo 4131 e Necessidade do Cliente. Depois, ajustar as seis que não são de crédito, com os nomes Situação, Premissas e Resultado.
+Com estas três, as sete calculadoras de crédito estão no roteiro. Fotos de antes e depois na pasta `docs/calculadoras-roteiro/` (`finame-materiais-…`, `comparador-credito-…`, `emprestimo-4131-…`).
+
+| Tela | 1 Demanda | 2 Encargos | 3 Linha do tempo | 4 Resultado | Fim da tela |
+|---|---|---|---|---|---|
+| BNDES · Finame Materiais | linha, valor, % financiado, prazo, carência, porte e região (data e praça em gaveta) | custo financeiro, taxa do BNDES, spread do agente, TAC, juros na carência, FGI | liberação, carência, parcelas SAC, quitação | a tabela de indicadores de antes (já respondia quanto financia, quanto paga e quanto custa) | Histórico dos indexadores (TFC, TFB), que já era a referência desta tela |
+| Necessidade do Cliente | valor, prazo, carência, amortização (data, praça, regime e IRPJ em gaveta) | 1 a 5 operações; garantia foi para "Mais condições" | liberação, carência, parcelas, quitação (datas, sem valores) | quadro com as quatro perguntas, uma coluna por operação, antes do resultado de sempre | curva DI x pré e CDI futuro, conforme as operações |
+| Empréstimo 4131 | principal, moeda, cotação, parcelas, carência (data e regras de pagamento em gaveta) | taxa all-in, IOF-câmbio, flat, fiança, proteção cambial (NDF); IR e raros em "Mais encargos" | desembolso, carência, parcelas, quitação | o quadro "Cotação · 4131 com NDF" de antes, abaixo dos dados | cotação diária da moeda (dólar ou euro) |
+
+Campos à vista: Finame 16 → 14; Necessidade do Cliente 25 → 17; 4131 12 → 14 (subiram carência, flat e fiança; a data desceu para a gaveta).
+
+### Decisões tomadas sem consulta (reversíveis)
+
+- **Necessidade do Cliente:** o destaque de menor custo já existia e continua com a mesma regra (decisão de 11/11/2026: o CET só compara o mesmo tipo de taxa, sem vencedor absoluto). No pós-CDI, "Quanto custa" mostra o CET da parte fixa, como a conta devolve, com o custo com CDI projetado e o custo em reais ao lado.
+- **Necessidade do Cliente:** "Cenários e comparações" (CDI, aplicação financeira, mesmo valor líquido) virou um bloco que abre e fecha antes do botão de comparar; abre sozinho quando há operação pós-CDI.
+- **Finame:** a liberação na linha do tempo mostra o valor financiado e cita à parte o que é pago à vista (TAC, ECG), sem soma nova.
+- **4131:** "Condições da operação" ficou dentro do quadro do resultado, para não sumir da cotação ampliada. A tabela de parcelas abre fechada.
+- **Aviso de erro na gaveta:** sugestão do Auditor no parecer do Giro; o aviso "há um campo a conferir aqui" passa a sair na cor de erro.
+
+### Sugestões dos executores, não aplicadas (dependem de Fernando)
+
+- Finame: com custo pós-fixado (TLP, LCD, TFBD) o Histórico dos indexadores não aparece e a tela fica sem referência no fim. Já era assim. Mostrar a referência pós-fixada nesses casos.
+- Necessidade do Cliente: coluna FINIMP em moeda poderia trazer também o gráfico da moeda.
+- 4131: mandar flat e fiança para "Mais encargos" voltaria a 12 campos à vista.
+
+### O que foi conferido
+
+- As sete telas juntas, sobre a versão publicada do Capital de Giro: 2.468 testes passando, conferência de código sem erros, montagem ok.
+- Cada executor rodou as conferências de tela da sua calculadora (Finame: BNDES, perfis, central BNDES e falhas de fonte; Necessidade do Cliente: comparador de crédito; 4131: a dele) e o desenho em cinco larguras (49 de 49), modo Apresentar e busca.
+- Números iguais aos de antes, comparados no navegador com os mesmos dados: Finame em 14 cenários (5.472 valores), Necessidade do Cliente em 5 cenários, 4131 em 9 cenários (360 leituras, inclusive resumo copiado e PDF). Nenhum valor esperado em reais ou percentual foi alterado nas conferências.
+
+### O que não deu para conferir
+
+- Aparelho físico, Windows e uso real.
+- Necessidade do Cliente: "Comparar com aplicação financeira" só coberta pelos testes (a versão de antes não tinha a curva para comparar no navegador).
+- Defeito antigo no modo Apresentar, fora destas telas: ao trocar de "Dados" para "Resultado" com o slide rolado, o resultado aparece cortado. Registrado como tarefa à parte.
+
+## 9. Próximo passo
+
+As sete calculadoras de crédito estão no roteiro. Falta ajustar as seis que não são de crédito (Câmbio futuro, Operação x DI, CDI x Dólar, Dividendos, Faturamento, Reforma tributária), com os nomes Situação, Premissas e Resultado.
