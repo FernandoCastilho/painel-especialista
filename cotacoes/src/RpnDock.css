@@ -53,9 +53,9 @@
   right: auto; left: max(8px, env(safe-area-inset-left));
   bottom: max(20px, env(safe-area-inset-bottom));
 }
-@media (max-width: 760px) {
-  .rpn-float-launcher { bottom: calc(68px + env(safe-area-inset-bottom)); }
-}
-@media (max-width: 760px) {
-  .rpn-float { bottom: calc(68px + env(safe-area-inset-bottom)); max-block-size: min(68dvh, calc(100dvh - 80px)); }
+/* The bottom navigation is fixed throughout the phone and tablet breakpoint. */
+@media (width < 1000px) {
+  .rpn-float-launcher, .rpn-float { bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .rpn-float-launcher { z-index: 29; }
+  .rpn-float { max-block-size: min(68dvh, calc(100dvh - 88px - env(safe-area-inset-bottom))); }
 }
