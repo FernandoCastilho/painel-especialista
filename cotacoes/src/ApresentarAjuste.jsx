@@ -33,5 +33,7 @@ export default function Ajuste({ children, min = 0.45, max = 2.4, rolar = false 
     ro.observe(m); ro.observe(c)
     return () => { ro.disconnect(); cancelAnimationFrame(quadro); clearTimeout(pausa) }
   }, [min, max])
+  // Ao deixar de rolar (saída do modo Dados), volta ao topo: a caixa sem rolagem guardaria a posição e cortaria o conteúdo.
+  useLayoutEffect(() => { if (!rolar && caixa.current) caixa.current.scrollTop = caixa.current.scrollLeft = 0 }, [rolar])
   return <div className={`sl-ajuste${rolar ? ' sl-ajuste-rolar' : ''}`} ref={caixa}><div className="sl-miolo" ref={miolo}>{children}</div></div>
 }
