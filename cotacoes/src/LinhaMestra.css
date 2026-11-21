@@ -53,6 +53,8 @@
 :root[data-theme] body .lm .lm-details { margin: 6px 14px 4px; border-top: 1px solid var(--bw-line, var(--line)); }
 :root[data-theme] body .lm .lm-details > summary { padding: 10px 0; min-height: 44px; color: var(--bw-link, var(--accent)); font-size: .86rem; cursor: pointer; }
 :root[data-theme] body .lm .lm-details > summary small { color: var(--bw-mut, var(--mut)); font-size: .78rem; }
+/* Aviso de campo com erro dentro da gaveta: na cor de erro, não na cor do resumo (achado do Auditor, 21/11/2026). */
+:root[data-theme] body .lm .lm-details > summary small.lm-error { color: var(--bw-bad-ink, var(--down)); font-weight: 600; }
 :root[data-theme] body .lm .lm-details > .lm-grid { padding: 0 0 8px; }
 /* No slide do modo Apresentar a gaveta fica aberta e sem o título clicável. */
 .sl-calc .lm details.lm-details[open] { display: block; }
