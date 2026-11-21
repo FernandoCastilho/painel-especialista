@@ -20,6 +20,7 @@ const REGIMES = [['', 'Escolha'], ['real', 'Lucro Real'], ['presumido', 'Lucro P
 const GARANTIAS = [['duplicatas', 'Duplicatas ou recebíveis'], ['bem', 'O próprio bem'], ['imovel', 'Imóvel'], ['aplicacao', 'Aplicação financeira'], ['aval', 'Aval dos sócios']]
 const ROTULO_TIPO = Object.fromEntries(TIPOS)
 const ROTULO_REGIME = Object.fromEntries(REGIMES)
+const PRAZOS_CICLO = [['pmr', 'Prazo médio de recebimento (dias)'], ['pme', 'Prazo médio de estoque (dias)'], ['pmp', 'Prazo médio de pagamento a fornecedor (dias)']]
 
 // Ícone: árvore com três galhos (as três possibilidades da folha).
 export function ArvoreCreditoIcon() {
@@ -128,7 +129,8 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
   const tem4131 = Boolean(necessidadePorId(necessidade)?.ordem.includes('4131'))
   const dias = (k) => (/^\d{1,4}$/.test(ciclo[k].trim()) ? Number(ciclo[k]) : NaN)
   const reais = (k) => { const r = parseMoneyInput(ciclo[k], { optional: true }); return r.ok && ciclo[k].trim() ? r.value : NaN }
-  const cic = cicloDeCaixa({ pmr: dias('pmr'), pme: dias('pme'), pmp: dias('pmp'), vendas: fat?.ok ? fat.media : NaN, custo: reais('custo'), compras: reais('compras') })
+  const resultadoCiclo = cicloDeCaixa({ pmr: dias('pmr'), pme: dias('pme'), pmp: dias('pmp'), vendas: fat?.ok ? fat.media : NaN, custo: reais('custo'), compras: reais('compras') })
+  const mudarCiclo = (k, v) => setCiclo((c) => ({ ...c, [k]: v }))
   const marcar = (k) => (e) => setMarcas((m) => ({ ...m, [k]: e.target.checked }))
   const invalidarRepagamento = () => {
     if (alongamento.repagamento) {
@@ -286,25 +288,25 @@ export default function ArvoreCredito({ onBack, onView = () => {} }) {
           <fieldset className="ac-checks ac-ciclo">
             <legend>Ciclo de caixa (opcional)</legend>
             <div className="cx-form">
-              {[['pmr', 'Prazo médio de recebimento (dias)'], ['pme', 'Prazo médio de estoque (dias)'], ['pmp', 'Prazo médio de pagamento a fornecedor (dias)']].map(([k, r]) => (
-                <Campo key={k} id={`ac-${k}`} label={r}><input id={`ac-${k}`} inputMode="numeric" value={ciclo[k]} onChange={(e) => setCiclo((c) => ({ ...c, [k]: e.target.value }))} /></Campo>
+              {PRAZOS_CICLO.map(([k, rotulo]) => (
+                <Campo key={k} id={`ac-${k}`} label={rotulo}><input id={`ac-${k}`} inputMode="numeric" value={ciclo[k]} onChange={(e) => mudarCiclo(k, e.target.value)} /></Campo>
               ))}
-              <Campo id="ac-custo" label="Custo das vendas por mês" ajuda="Com custo e compras, a tela estima a necessidade permanente de capital de giro pela mesma conta da calculadora Conta Garantida. O faturamento mensal vem da média da tabela acima."><MoneyInput id="ac-custo" value={ciclo.custo} onChange={(v) => setCiclo((c) => ({ ...c, custo: v }))} /></Campo>
-              <Campo id="ac-compras" label="Compras por mês"><MoneyInput id="ac-compras" value={ciclo.compras} onChange={(v) => setCiclo((c) => ({ ...c, compras: v }))} /></Campo>
+              <Campo id="ac-custo" label="Custo das vendas por mês" ajuda="Com custo e compras, a tela estima a necessidade permanente de capital de giro pela mesma conta da calculadora Conta Garantida. O faturamento mensal vem da média da tabela acima."><MoneyInput id="ac-custo" value={ciclo.custo} onChange={(v) => mudarCiclo('custo', v)} /></Campo>
+              <Campo id="ac-compras" label="Compras por mês"><MoneyInput id="ac-compras" value={ciclo.compras} onChange={(v) => mudarCiclo('compras', v)} /></Campo>
             </div>
           </fieldset>
         </div>
       </article>
 
-      {cic && (
+      {resultadoCiclo && (
         <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">
           <ExpandablePanel title="Ciclo de caixa">
             <ul className="ac-numeros">
-              <li>Ciclo de caixa: <b>{cic.dias} dias</b> (estoque + recebimento − pagamento a fornecedor).</li>
-              {cic.ncg != null && <li>Necessidade permanente de capital de giro estimada: <b>{brl(cic.ncg)}</b>.</li>}
-              {cic.erro && <li>{cic.erro}</li>}
+              <li>Ciclo de caixa: <b>{resultadoCiclo.dias} dias</b> (estoque + recebimento − pagamento a fornecedor).</li>
+              {resultadoCiclo.ncg != null && <li>Necessidade permanente de capital de giro estimada: <b>{brl(resultadoCiclo.ncg)}</b>.</li>}
+              {resultadoCiclo.erro && <li>{resultadoCiclo.erro}</li>}
             </ul>
-            <p className="cx-hint">{cic.ncg != null ? 'A parte permanente pede linha longa; o que passa dela, comparado com a dívida atual e o pedido, tende a ser pico, para linha curta.' : 'Com a tabela de faturamento, o custo das vendas e as compras por mês, a tela estima a necessidade permanente de capital de giro.'} Mesma conta da calculadora Conta Garantida (saldos médios pelos prazos), sem projeção.</p>
+            <p className="cx-hint">{resultadoCiclo.ncg != null ? 'A parte permanente pede linha longa; o que passa dela, comparado com a dívida atual e o pedido, tende a ser pico, para linha curta.' : 'Com a tabela de faturamento, o custo das vendas e as compras por mês, a tela estima a necessidade permanente de capital de giro.'} Mesma conta da calculadora Conta Garantida (saldos médios pelos prazos), sem projeção.</p>
           </ExpandablePanel>
         </article>
       )}
