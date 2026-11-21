@@ -711,6 +711,18 @@ async function assertCambioFuturoCenario(browser) {
       assert.equal(await section.locator('#cf-c-moeda').inputValue(), 'USD')
       assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'CNH')
       for (const i of [1, 2, 3]) assert.equal(await section.locator(`#cf-c-p${i}-valor`).inputValue(), '100.000,00')
+      if (width === 1440 && theme === 'light') {
+        const firstRow = section.locator('.cf-c-row--cross').first()
+        for (const checkWidth of [390, 414, 620, 621, 820, 1120, 1121]) {
+          await page.setViewportSize({ width: checkWidth, height: 900 })
+          await settleLayout(page)
+          await assertWorkspace(page, section, `Trava cruzada, largura ${checkWidth}`)
+          assert.equal(await firstRow.getByText('Vencimento da parcela 1', { exact: true }).isVisible(), true)
+          assert.equal(await firstRow.getByText('Valor da parcela 1 (USD)', { exact: true }).isVisible(), true)
+        }
+        await page.setViewportSize({ width, height: 900 })
+        await settleLayout(page)
+      }
       if (cnhSource === 'CNH') {
         const compare = graph.getByRole('img', { name: 'Comparação USD/BRL e CNH/BRL em base 100', exact: true })
         await compare.waitFor()

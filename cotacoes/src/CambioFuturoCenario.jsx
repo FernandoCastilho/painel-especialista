@@ -405,7 +405,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
       <header className="cx-heading cf-c-section-title"><h3 id="cf-c-parcelas">2. Parcelas e cotações</h3>
         <CalculatorHelp title="Parcelas e cotações">
           <p>As cotações são de cada vencimento. Alterar a data limpa as cotações da parcela.</p>
-          {crossed ? <p>Converta a parcela de USD para {hedge} e depois de {hedge} para reais. Só há valor integralmente travado quando as duas cotações estão contratadas para o mesmo vencimento e o mesmo valor.</p>
+          {crossed ? <p>Converta a parcela de USD para {hedge} e depois de {hedge} para reais. Só há valor integralmente travado quando as duas cotações estão contratadas para o mesmo vencimento e cobrirem o valor equivalente da parcela.</p>
             : <p>Sem o cenário, o total com trava ainda é calculado quando todas as parcelas estiverem preenchidas.</p>}
         </CalculatorHelp>
       </header>
@@ -422,7 +422,7 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
           </> : <div className="cf-c-cross-fields">
             <div className="cf-c-cross-step">
               <h4>1. Converter USD em {hedge}</h4>
-              <Input id={`cf-c-${row.id}-cross`} label={`Cotação no vencimento (${hedge} por USD)`} value={row.taxaCruzada} change={v => mudarLinha(row.id, 'taxaCruzada', v)} error={validacao[i].taxaCruzada.error} />
+              <Input id={`cf-c-${row.id}-cross`} label={`Cotação da conversão (${hedge} por USD)`} value={row.taxaCruzada} change={v => mudarLinha(row.id, 'taxaCruzada', v)} error={validacao[i].taxaCruzada.error} />
               <div className="cx-field">
                 <label htmlFor={`cf-c-${row.id}-cross-status`}>Status da conversão</label>
                 <select id={`cf-c-${row.id}-cross-status`} value={row.statusCruzada} onChange={e => mudarLinha(row.id, 'statusCruzada', e.target.value)}>
