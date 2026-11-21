@@ -150,10 +150,20 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
       assert.equal(await destination.inputValue(),'year','rótulo semântico exato Para')
       await rateField.fill('1,00')
       assert.match(await rates.getByLabel('Taxa equivalente',{exact:true}).innerText(),/^12,6825/)
+      const equivalences=rates.getByRole('region',{name:'Equivalências por período',exact:true})
+      const daily=equivalences.getByText('Ao dia',{exact:true}).locator('..').locator('dd')
+      await equivalences.getByText('1% a.m.',{exact:true}).waitFor()
+      assert.match(await equivalences.getByText('Ao ano',{exact:true}).locator('..').locator('dd').innerText(),/^12,6825.*% a\.a\.$/)
+      assert.equal(await daily.innerText(),'Escolha a base diária')
       await rates.getByLabel('Para',{exact:true}).selectOption('day')
       assert.ok(await use.isDisabled(),'base diária deve ser explícita')
-      await rates.getByLabel('Base diária',{exact:true}).selectOption('365')
-      assert.ok(await use.isEnabled())
+      for(const basis of [365,252]){
+       await rates.getByLabel('Base diária',{exact:true}).selectOption(String(basis))
+       assert.ok(await use.isEnabled())
+       const expected=100*(1.01**(12/basis)-1)
+       const displayed=Number((await daily.innerText()).split('%')[0].replace(',','.'))
+       assert.ok(Math.abs(displayed-expected)<1e-10,'diária respeita a base selecionada')
+      }
       await rates.getByLabel('Para',{exact:true}).selectOption('year')
       await page.screenshot({path:path.join(out,'rpn-taxas-'+width+'-'+theme+'.png'),fullPage:true})
       await rateField.press('Escape')
@@ -253,6 +263,105 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await back.tap()
    await page.waitForURL('**/#resumo')
    await page.getByRole('navigation',{name:'Seções',exact:true}).waitFor()
+   await context.close()
+  }
+  for (const behavior of ['unavailable', 'rejected', 'native', 'desktop-fallback']) {
+   const desktopShort=behavior === 'desktop-fallback'
+   const mobile=behavior === 'unavailable' || behavior === 'rejected'
+   const viewport=desktopShort ? {width:780,height:390} : {width:390,height:844}
+   const context = await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,serviceWorkers:'block'})
+   const page = await context.newPage()
+   await page.addInitScript(behavior => {
+    let fullscreen = null
+    Object.defineProperty(document,'fullscreenEnabled',{ configurable:true, get:()=>behavior !== 'unavailable' && behavior !== 'desktop-fallback' })
+    Object.defineProperty(document,'fullscreenElement',{ configurable:true, get:()=>fullscreen })
+    HTMLElement.prototype.requestFullscreen = async function() {
+     if (behavior === 'rejected') throw new Error('fullscreen indisponível')
+     fullscreen = this
+     document.dispatchEvent(new Event('fullscreenchange'))
+    }
+    document.exitFullscreen = async () => { fullscreen = null; document.dispatchEvent(new Event('fullscreenchange')) }
+   },behavior)
+   await page.goto(base+'/#rpn')
+   const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   await panel.waitFor()
+   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+   await panel.focus()
+   for (const k of ['2','Enter','3','+']) await panel.press(k)
+   const value = async () => (await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim()
+   assert.match(await value(),/^5(?:,0+)?$/)
+   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
+   const close = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
+   const normalNav = page.getByRole('navigation',{name:'Seções',exact:true})
+   await normalNav.waitFor({state:'visible'})
+   if (desktopShort) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false)
+   await open.click()
+   await close.waitFor()
+   const native = behavior === 'native'
+   assert.equal(await panel.getAttribute('data-screen-mode'),native?'native':'page')
+   if (native) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false,'paisagem também funciona com ponteiro fino')
+   if (!native) await normalNav.waitFor({state:'hidden'})
+   for (const [width,height] of [[780,390],[320,760]]) {
+    await page.setViewportSize({width,height})
+    const grade = panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
+    assert.equal(await grade.getByRole('button').count(),39)
+    assert.equal((await grade.getAttribute('class')).includes(width===780?'--wide':'--portrait'),true)
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true)
+    if (width === 780 && !native) {
+     for (const part of [panel.locator('.rpn-display'), ...await grade.getByRole('button').all()]) {
+      const box = await part.boundingBox()
+      assert.ok(box && box.x>=0 && box.y>=0 && box.x+box.width<=width+1 && box.y+box.height<=height,
+       'tecla e visor dentro da tela no fallback: '+JSON.stringify(box))
+     }
+    }
+    assert.match(await value(),/^5(?:,0+)?$/)
+   }
+   // Volte à geometria inicial antes de sair, para provar a restauração sem efeito de um resize após a saída.
+   await page.setViewportSize(viewport)
+   const landscape=viewport.width>viewport.height
+   await page.waitForFunction(wide=>matchMedia(wide?'(orientation: landscape)':'(orientation: portrait)').matches,landscape)
+   const restoredViewport=await page.evaluate(()=>[innerWidth,innerHeight])
+   if (native) await page.evaluate(()=>document.exitFullscreen())
+   else await close.press('Escape')
+   await open.waitFor()
+   assert.equal(await panel.getAttribute('data-screen-mode'),null)
+   if (!native) assert.equal(await open.evaluate(el=>document.activeElement===el),true)
+   assert.match(await value(),/^5(?:,0+)?$/)
+   await normalNav.waitFor({state:'visible'})
+   assert.deepEqual(await page.evaluate(()=>[innerWidth,innerHeight]),restoredViewport)
+   await open.click()
+   await close.click()
+   await open.waitFor()
+   await normalNav.waitFor({state:'visible'})
+   assert.match(await value(),/^5(?:,0+)?$/)
+   report.push({fullscreen:behavior,passed:true})
+   await context.close()
+  }
+  {
+   // Chrome sem mocks: comprova o top layer e a aplicação real da regra :fullscreen.
+   const context = await browser.newContext({viewport:{width:1000,height:700},screen:{width:1000,height:700},serviceWorkers:'block'})
+   const page = await context.newPage()
+   await page.goto(base+'/#rpn')
+   const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   await panel.waitFor()
+   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+   await panel.focus()
+   for (const k of ['2','Enter','3','+']) await panel.press(k)
+   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
+   const exit = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
+   assert.equal(await page.evaluate(()=>document.fullscreenEnabled),true,'Chrome da suíte suporta a API')
+   await open.click()
+   await exit.waitFor()
+   assert.equal(await panel.evaluate(el=>document.fullscreenElement===el && el.matches(':fullscreen')),true)
+   assert.equal(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true)
+   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
+   await exit.click()
+   await open.waitFor()
+   assert.equal(await page.evaluate(()=>document.fullscreenElement),null)
+   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
+   report.push({fullscreen:'chrome-real',passed:true})
    await context.close()
   }
  }finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close()}
