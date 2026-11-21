@@ -48,6 +48,8 @@ Rota: `#calculadora/arvore-credito` (atalhos do terminal: `ARVORE`, `ARVOREDECRE
 
 ## Atualização de 21/11/2026 (perguntas do dia)
 
+**Ainda não publicada:** Fernando pediu para esperar mais respostas das perguntas do dia antes de publicar (21/11/2026).
+
 Três decisões de Fernando aplicadas na tela:
 - **Triagem da 4131 em todas as necessidades.** A 4131 só entra na folha com os três pontos confirmados (sem aperto relevante de caixa, alavancagem compatível, capacidade de pagamento demonstrada), em qualquer necessidade, não só no alongamento. O cartão passa a se chamar "Empréstimo externo (4131) com proteção cambial" e avisa que a proteção pode ser parcial, testando a parte exposta.
 - **Propostas seguem o Obsidian.** As necessidades em proposta passam a ser N02/N18, N09, N10 e N11 a N20 da nota "Árvore de decisão de crédito PJ". Sai a proposta "Obra, ampliação ou planta nova" (substituída por N11).
