@@ -69,7 +69,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
   // Árvore de Crédito: fora do menu e da busca (decisão de Fernando, 18/11/2026); abre só pelo endereço #calculadora/arvore-credito ou pelo atalho ARVORE.
   if (view === 'arvore-credito') return <ArvoreCredito onBack={() => onView('')} onView={onView} />
-  if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
+  if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} apresentacao={apresentacao} />
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
       <a className="calc-bndes-rates" href="#bndes">Taxas BNDES · consultar séries e históricos</a>
