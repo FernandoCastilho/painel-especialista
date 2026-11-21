@@ -110,6 +110,33 @@ const report = { fixture: 'RSS + 90-second silent WAV, actual HTMLAudioElement; 
       report.cases.push({width,theme,geometry,linkColor,played})
       await context.close()
     }
+    // Delivery check for this integration only. Later deploys keep the deterministic fixture smoke.
+    if (process.env.PODCAST_REAL_DAILY_FIN === '1' ||
+        (process.env.GITHUB_EVENT_NAME === 'pull_request' && process.env.GITHUB_HEAD_REF === 'nexo/daily-fin-capas-podcast')) {
+      const live = await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'})
+      page = await live.newPage()
+      await page.goto(base + '/#podcast', {waitUntil:'domcontentloaded'})
+      await page.getByRole('button',{name:/Daily Fin Podcast/}).waitFor({timeout:15000})
+      const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+      if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+      await page.getByRole('button',{name:/Daily Fin Podcast/}).click()
+      await page.waitForFunction(() => {
+        const audio=document.querySelector('audio')
+        if (!audio?.src) return false
+        const u=new URL(audio.src)
+        return u.protocol==='https:' && !u.hostname.endsWith('.invalid')
+      },null,{timeout:35000})
+      await page.getByRole('button',{name:'Reproduzir episódio',exact:true}).click()
+      await page.waitForFunction(() => {
+        const a=document.querySelector('audio')
+        return a && !a.paused && a.currentTime>=1 && a.readyState>=2 && !a.error
+      },null,{timeout:45000})
+      report.realDailyFin = await page.locator('audio').evaluate(a=>({origin:new URL(a.currentSrc).hostname,time:a.currentTime,duration:a.duration,readyState:a.readyState}))
+      await page.getByRole('button',{name:'Pausar episódio',exact:true}).click()
+      assert.equal(await page.locator('audio').evaluate(a=>a.paused),true)
+      console.log('PASS Daily Fin: episódio verdadeiro reproduzido sem interceptar áudio',JSON.stringify(report.realDailyFin))
+      await live.close()
+    }
     report.passed = true
   } catch (error) {
     report.error = error.stack
