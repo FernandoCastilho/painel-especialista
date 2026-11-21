@@ -361,6 +361,8 @@ Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convive
 
 - **21/11/2026 — triagem da 4131 vale para todas as necessidades** (decisão de Fernando). A triagem definida em 19/11 e 20/11 para o alongamento de dívida (sem aperto relevante de caixa, alavancagem compatível e capacidade de pagamento demonstrada; proteção cambial pode ser parcial) passa a valer também no gap de caixa, dividendos, compra de empresa, máquina importada e nas demais folhas em que a 4131 aparece. Hoje a tela aplica a triagem só no alongamento; a mudança na tela ainda não foi feita.
 
+- **21/11/2026 — lista de necessidades em proposta: vale a do Obsidian** (decisão de Fernando). As situações N11 a N20 da nota "Árvore de decisão de crédito PJ" (planta por etapas, locação, máquina urgente, safra, desconto à vista de fornecedor, carteira concentrada, insumo importado recorrente, vencimento concentrado, moedas diferentes, garantia à contraparte estrangeira) substituem as quatro propostas que a tela mostra hoje, como "proposta, a revisar". As perguntas do dia vão confirmá-las uma a uma. A mudança na tela ainda não foi feita.
+
 ### Propostas do Claude ainda não confirmadas
 
 - Mostrar, por mês, quanto do faturamento vai para pagar a nova operação, sem limite fixo; o ponto de alerta seria definido por Fernando.
