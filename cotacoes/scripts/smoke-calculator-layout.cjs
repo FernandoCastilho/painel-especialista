@@ -333,6 +333,8 @@ async function fillScenario(page, section, route) {
       assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
     }
   } else if (route === 'finimp') {
+    // Roteiro (21/11/2026): a tabela dos doze prazos fica recolhida depois do resultado.
+    await section.locator('details.fi-table-drawer > summary').click()
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)
     assert.match(await row.locator('.fi-cost').first().innerText(), /4\.000,00/)
