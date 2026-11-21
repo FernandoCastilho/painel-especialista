@@ -556,6 +556,8 @@ async function assertCambioFuturoCenario(browser) {
     try {
       await fixtures(page)
       const holidaySpot = theme === 'dark'
+      // Exerce as duas condições: CNH offshore aceito e CNY onshore rejeitado.
+      const cnhSource = theme === 'dark' ? 'CNH' : 'CNY'
       await page.route('**/quotes.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now, quotes: {
         USDBRL: { bid: 5.71, ask: 5.72, high: 5.75, low: 5.65, timestamp: Date.parse(holidaySpot ? '2026-11-20T14:55:00Z' : '2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
         EURBRL: { bid: 6.55, ask: 6.56, high: 6.60, low: 6.50, timestamp: Date.parse('2026-11-19T21:04:00Z') / 1000, pctChange: 0 },
@@ -566,7 +568,7 @@ async function assertCambioFuturoCenario(browser) {
       await page.route('**/history.json*', route => route.fulfill({ json: { source: 'AwesomeAPI', generatedAt: now - 60000, series: {
         USD: { source: 'USD', points: [{ t: t('2026-08-25'), bid: 5.60 }, { t: t('2026-11-12'), bid: 5.70 }, { t: t('2026-11-19'), bid: 5.71 }] },
         EUR: { source: 'EUR', points: [{ t: t('2026-08-25'), bid: 6.42 }, { t: t('2026-11-12'), bid: 6.65 }, { t: t('2026-11-19'), bid: 6.55 }] },
-        CNH: { source: 'CNY', points: [{ t: t('2026-11-12'), bid: .85 }, { t: t('2026-11-19'), bid: .86 }] },
+        CNH: { source: cnhSource, points: [{ t: t('2026-11-12'), bid: .85 }, { t: t('2026-11-19'), bid: .86 }] },
       } } }))
       await page.clock.setFixedTime(new Date(now))
       if (width === 1440) {
@@ -695,15 +697,29 @@ async function assertCambioFuturoCenario(browser) {
       }
       const approvedTotal = normalizeMoney(await section.locator('#cf-c-total-trava').innerText())
       await section.getByRole('button', { name: 'Gerar exemplo fictício', exact: true }).click()
-      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$37.800,00')
+      assert.equal(await section.locator('#cf-c-moeda').inputValue(), 'USD')
+      assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'CNH')
+      for (const i of [1, 2, 3]) assert.equal(await section.locator(`#cf-c-p${i}-valor`).inputValue(), '100.000,00')
+      if (cnhSource === 'CNH') {
+        const compare = graph.getByRole('img', { name: 'Comparação USD/BRL e CNH/BRL em base 100', exact: true })
+        await compare.waitFor()
+        assert.equal(await compare.locator('polyline').count(), 2)
+        assert.match(await graph.innerText(), /USD\/BRL · Operação: R\$ 5,7100.*CNH\/BRL · Trava: R\$ 0,8600/s)
+      } else {
+        await graph.getByText('Histórico CNH/BRL indisponível neste período.', { exact: true }).waitFor()
+        await graph.getByRole('img', { name: /USD\/BRL · cotação diária/ }).waitFor()
+      }
       await section.getByRole('button', { name: 'Sair do exemplo fictício', exact: true }).click()
       assert.equal(await section.locator('#cf-c-trava-moeda').inputValue(), 'CNH')
       assert.equal(normalizeMoney(await section.locator('#cf-c-total-trava').innerText()), approvedTotal)
       await section.getByRole('button', { name: '5 parcelas', exact: true }).click()
       await section.locator('#cf-c-moeda').selectOption('CNH')
       assert.equal(await section.locator('#cf-c-p1-valor').inputValue(), '')
-      assert.equal(await graph.getByRole('img').count(), 0, 'histórico CNY não substitui CNH offshore')
-      await graph.getByText('Histórico indisponível neste período.').waitFor()
+      if (cnhSource === 'CNY') {
+        await graph.getByText('Histórico indisponível neste período.').waitFor()
+        assert.equal(await graph.getByRole('img').count(), 0, 'histórico CNY não substitui CNH offshore')
+      } else await graph.getByRole('img', { name: /CNH\/BRL · cotação diária/ }).waitFor()
       const example = section.getByRole('button', { name: 'Gerar exemplo fictício', exact: true })
       const help = section.getByRole('button', { name: 'Ajuda: Câmbio futuro', exact: true })
       assert.ok(await example.evaluate(el => el.parentElement === el.closest('.cf-c-heading-actions') &&
@@ -715,7 +731,7 @@ async function assertCambioFuturoCenario(browser) {
       const quit = section.getByRole('button', { name: 'Sair do exemplo fictício', exact: true })
       assert.equal(await quit.getAttribute('aria-pressed'), 'true')
       assert.equal(await section.getByText('Exemplo fictício.', { exact: true }).isVisible(), true)
-      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$4.500,00')
+      assert.equal(normalizeMoney(await section.locator('#cf-c-diferenca').innerText()), 'R$37.800,00')
       assert.equal(await section.locator('.cf-c-row').count(), 3)
       await settleLayout(page)
       await assertWorkspace(page, section, `Exemplo de câmbio futuro ${width} ${theme}`)

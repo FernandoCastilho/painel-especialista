@@ -37,7 +37,7 @@ async function setup(t, quote = {}, navigator) {
   const change = async (id, value) => { field(id).change(value); await ui.settle() }
   const clickCount = async count => { find(n => n.type === 'button' && n.props.children === count).props.onClick(); await ui.settle() }
   const total = id => text(find(n => n.props.id === 'cf-c-' + id))
-  return { ui, find, field, change, clickCount, total, calls, historico: module.exports.historicoCenario, components: module.exports }
+  return { ui, find, field, change, clickCount, total, calls, historico: module.exports.historicoCenario, components: module.exports, comparado: module.exports.historicoComparado }
 }
 
 test('três parcelas independentes e totais nominais, sem preencher cenário com referência do mercado', async t => {
@@ -127,7 +127,12 @@ test('exemplo só entra por ação explícita, fica rotulado e restaura rascunho
   assert.equal(action('Sair do exemplo fictício').props['aria-pressed'], true)
   assert.match(text(ui.ui.value), /Exemplo fictício.*hipotéticos/)
   assert.equal(ui.field('p1-data').value, '2027-05-18')
-  assert.match(ui.total('diferenca'), /4\.500,00/)
+  assert.equal(ui.find(n => n.type === 'select' && n.props.id === 'cf-c-moeda').props.value, 'USD')
+  assert.equal(ui.find(n => n.type === 'select' && n.props.id === 'cf-c-trava-moeda').props.value, 'CNH')
+  for (const i of [1, 2, 3]) assert.equal(ui.field(`p${i}-valor`).value, '100.000,00')
+  assert.match(ui.total('total-trava'), /1\.987\.200,00/)
+  assert.match(ui.total('total-cenario'), /2\.025\.000,00/)
+  assert.match(ui.total('diferenca'), /37\.800,00/)
   await ui.change('p1-valor', '9.000')
   action('Sair do exemplo fictício').props.onClick(); await ui.ui.settle()
   assert.equal(ui.field('p1-data').value, '2028-02-10')
@@ -179,6 +184,10 @@ test('valores monetários formatam ao sair do campo sem alterar o dado usado no 
   input().onBlur(); await view.settle()
   assert.equal(input().value, '100.000,00')
   assert.deepEqual(observed, [], 'formatar não dispara mudança de valor nem reconfirmações')
+  const grande = render('90000000000000,01')
+  t.after(() => grande.close())
+  await grande.settle()
+  assert.equal(nodes(grande.value).find(n => n.type === 'input').props.value, '90.000.000.000.000,01', 'o texto não arredonda os centavos digitados')
   const invalid = render('10,001')
   t.after(() => invalid.close())
   await invalid.settle()
@@ -205,7 +214,7 @@ test('resumo ao cliente descreve economia, custo, empate e falta de cotação se
   assert.match(make(666, 666, 0).texto, /seriam iguais/)
   assert.match(make(666, null, null).texto, /Falta completar o cenário sem trava/)
   const cruzado = make(null, 666, null, { hedge: 'CNH' })
-  assert.match(cruzado.texto, /confirmar as duas cotações/)
+  assert.match(cruzado.texto, /revise os dados da trava e confirme as duas cotações/)
   assert.match(cruzado.texto, /Total com trava: não calculado/)
   assert.doesNotMatch(cruzado.texto, /a trava reduziria/)
   assert.equal(make(null, null, null), null)
@@ -231,4 +240,19 @@ test('copiar leva a explicação e os totais juntos; falha deixa texto selecion�
   const field = nodes(view.value).find(n => n.type === 'textarea').props
   assert.equal(field.readOnly, true)
   assert.equal(field.value, resumo.texto)
+})
+
+test('comparação parte de 100 nas duas curvas e usa apenas datas em comum em Brasília', async t => {
+  const ui = await setup(t)
+  const p = (day, bid) => ({ t: Date.parse(day), bid })
+  const usd = [p('2026-11-10T19:00Z', 5), p('2026-11-11T19:00Z', 5.50), p('2026-11-13T19:00Z', 5.75)]
+  const cnh = [p('2026-11-11T22:00Z', 0.80), p('2026-11-12T22:00Z', 0.81), p('2026-11-14T01:00Z', 0.84)]
+  const result = Array.from(ui.comparado(usd, cnh))
+  assert.deepEqual(result.map(p => p.data), ['2026-11-11', '2026-11-13'])
+  assert.equal(result[0].operacaoIndice, 100)
+  assert.equal(result[0].travaIndice, 100)
+  assert.ok(Math.abs(result[1].operacaoIndice - 104.5454545454) < 1e-8)
+  assert.ok(Math.abs(result[1].travaIndice - 105) < 1e-8)
+  assert.equal(result[1].trava, 0.84)
+  assert.equal(ui.comparado(usd, cnh.slice(1)).length, 0, 'uma data em comum não cria comparação')
 })
