@@ -99,10 +99,11 @@ const out = process.env.SMOKE_OUT || '/tmp'
         await p.waitForTimeout(700)
         const m = await p.evaluate(() => {
           const sl = document.querySelector('.apz-atual .sl'), r = sl.getBoundingClientRect(), c = sl.querySelector('.sl-ajuste:not(.sl-ajuste-rolar)'), mi = c?.querySelector('.sl-miolo')
-          return { fundo: getComputedStyle(sl).backgroundColor, dentro: r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1, sobra: c ? mi.getBoundingClientRect().height - c.getBoundingClientRect().height : 0 }
+          return { fundo: getComputedStyle(sl).backgroundColor, dentro: r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1, sobra: c ? mi.getBoundingClientRect().height - c.getBoundingClientRect().height : 0, rolado: c ? [c.scrollLeft, c.scrollTop] : [0, 0] }
         })
         assert.ok(m.dentro, 'o slide cabe inteiro na tela')
         assert.ok(m.sobra <= 2, `conteúdo cortado em ${m.sobra}px`)
+        assert.deepEqual(m.rolado, [0, 0], 'o slide que não rola não pode guardar a rolagem de antes (conteúdo cortado no topo)')
         return m
       }
       await p.keyboard.press('ArrowRight')
@@ -141,6 +142,9 @@ const out = process.env.SMOKE_OUT || '/tmp'
       // dentro de um campo, as setas e o espaço são do campo: o slide não troca
       await valor.focus(); await p.keyboard.press('ArrowLeft')
       assert.equal(await contador.innerText(), '5 / 5')
+      // rola os campos até o fim antes de voltar ao resultado: o resultado tem de aparecer inteiro, a partir do topo
+      const rolagem = await atual.locator('.sl-ajuste').evaluate((c) => { c.scrollTop = c.scrollHeight; return c.scrollTop })
+      assert.ok(rolagem > 0, 'os campos precisam passar da área do slide para o teste provar a volta da rolagem')
       await modos.getByRole('button', { name: 'Resultado' }).click()
       await atual.locator('.calc-result-shell').waitFor()
       const depois = await atual.locator('.calc-result-shell').innerText()
