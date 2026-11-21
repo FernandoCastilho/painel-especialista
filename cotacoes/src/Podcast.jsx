@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { PODCASTS, podcastUrl, loadLatestPodcast, podcastDate, episodeLabel, podcastArtworkCandidates } from './podcasts.js'
+import { PODCASTS, podcastUrl, loadLatestPodcast, podcastDate, episodeLabel, podcastArtworkCandidates, podcastsByLatestEpisode } from './podcasts.js'
 import './Podcast.css'
 
 const clock = seconds => {
@@ -99,14 +99,14 @@ export default function Podcast() {
           {selected && <p className="podcast-external"><a href={podcastUrl(selected)} target="_blank" rel="noopener noreferrer">Abrir {selected.title} no Apple Podcasts ↗<span className="podcast-sr"> (nova aba)</span></a>{selected.podcastAddictUrl && <><br /><a href={selected.podcastAddictUrl} target="_blank" rel="noopener noreferrer">Abrir no Podcast Addict ↗<span className="podcast-sr"> (nova aba)</span></a></>}</p>}
         </div>
       </article>
-      <aside className="podcast-programs" aria-label="Programas de podcast"><h2 className="podcast-panel-title">Programas</h2><div className="podcast-program-list">{PODCASTS.map(podcast => {
+      <aside className="podcast-programs" aria-label="Programas de podcast"><h2 className="podcast-panel-title">Programas</h2><div className="podcast-program-list">{podcastsByLatestEpisode(PODCASTS, results).map(podcast => {
         const next = results[podcast.id]
         return <button type="button" className={`podcast-program${active === podcast.id ? ' is-selected' : ''}`} key={podcast.id} aria-pressed={active === podcast.id} onClick={() => { if (active !== podcast.id) { reset(); setActive(podcast.id) } }}>
           <PodcastArtwork small playing={active === podcast.id && playing} artwork={podcastArtworkCandidates(next?.channelArtworkUrl, podcast.artworkUrl)} /><span><strong>{podcast.title}</strong><small>{!next ? 'Consultando episódios…' : next.error ? 'Fonte indisponível' : active === podcast.id ? playing ? 'Em reprodução' : 'Selecionado' : podcast.cadence}</small>{next?.episode && <small>{podcastDate(next.episode.publishedAt)}</small>}</span>
         </button>
       })}</div><button className="podcast-refresh" type="button" onClick={() => { reset(); setRefresh(value => value + 1) }}>Atualizar episódios</button></aside>
     </div>
-    <p className="podcast-note">O Painel consulta os feeds dos produtores ao abrir a seção. Trailers identificados são excluídos. Nem todo programa publica diariamente. “Hoje” usa o horário de Brasília no momento da consulta. A reprodução só começa ao pressionar play.</p>
+    <p className="podcast-note">Programas em ordem do episódio mais recente. O Painel consulta os feeds ao abrir a seção. Trailers identificados são excluídos. Nem todo programa publica diariamente. “Hoje” usa o horário de Brasília no momento da consulta. A reprodução só começa ao pressionar play.</p>
     {result?.checkedAt && <p className="podcast-note">Consulta em {new Date(result.checkedAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} (Brasília).</p>}
     <p className="podcast-note">Conteúdo e disponibilidade são dos produtores. As opiniões dos episódios não substituem uma análise própria. Em aparelhos que controlam o volume pelo sistema, use também os botões do dispositivo.</p>
   </section>

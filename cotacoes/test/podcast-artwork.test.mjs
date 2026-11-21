@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import { runInNewContext } from 'node:vm'
 import { transform } from 'esbuild'
 import { hookRenderer } from './helpers/hooks.mjs'
-import { PODCASTS, loadLatestPodcast, podcastArtworkCandidates, safePodcastArtwork } from '../src/podcasts.js'
+import { PODCASTS, podcastsByLatestEpisode, loadLatestPodcast, podcastArtworkCandidates, safePodcastArtwork } from '../src/podcasts.js'
 
 const NOW = Date.parse('2026-11-20T21:00:00Z')
 const ns = 'http://www.itunes.com/dtds/podcast-1.0.dtd'
@@ -52,7 +52,7 @@ const list = n => Array.isArray(n) ? n.flatMap(list) : n?.props ? [n,...list(n.p
 
 test('trocar mantém áudio/capa associados, repõe a cadeia e falha para ícone', async t => {
   const dependencies = {'./Podcast.css':{},'./podcasts.js':{
-    PODCASTS,podcastArtworkCandidates,podcastDate:()=>'',episodeLabel:()=>'',podcastUrl:()=>'',loadLatestPodcast:p=>parse(p,makeFeed(p,image(p.artworkUrl),image(p===PODCASTS[0]?p.artworkUrl:episodeArt)))
+    PODCASTS,podcastsByLatestEpisode,podcastArtworkCandidates,podcastDate:()=>'',episodeLabel:()=>'',podcastUrl:()=>'',loadLatestPodcast:p=>parse(p,makeFeed(p,image(p.artworkUrl),image(p===PODCASTS[0]?p.artworkUrl:episodeArt)))
   }}
   const mod={exports:{}}
   runInNewContext(code,{module:mod,exports:mod.exports,AbortController,setTimeout,clearTimeout,require:k=>dependencies[k]??require(k)})

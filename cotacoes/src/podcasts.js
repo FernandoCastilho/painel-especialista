@@ -3,7 +3,18 @@ export const PODCASTS = [
   { id: 'morning-call', title: 'Itaú Views Morning Call', cadence: 'Diário', description: 'Uma leitura rápida das notícias políticas e econômicas para começar o dia.', feedUrl: 'https://anchor.fm/s/f84d76fc/podcast/rss', artworkUrl: 'https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/41558263/41558263-1736207492157-d3ad646cf5305.jpg', appleId: '1495352313', slug: 'ita%C3%BA-views-morning-call' },
   { id: 'itau-views', title: 'Itaú Views', cadence: 'Análises e entrevistas', description: 'Conversas sobre economia, setores, investimentos e tecnologia com especialistas e convidados.', feedUrl: 'https://anchor.fm/s/e0ddef4c/podcast/rss', artworkUrl: 'https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/37626411/37626411-1736278886384-c6920dc0ab923.jpg', appleId: '1464605101', slug: 'ita%C3%BA-views' },
   { id: 'daily-fin', title: 'Daily Fin Podcast', cadence: 'Notícias e análises', description: 'Notícias de economia, política e negócios comentadas pela RadarFin.', feedUrl: 'https://anchor.fm/s/f9f69e70/podcast/rss', artworkUrl: 'https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/41836892/41836892-1776453323117-468022a4428b9.jpg', appleId: '1781425869', slug: 'daily-fin-podcast', podcastAddictUrl: 'https://podcastaddict.com/podcast/daily-fin-podcast/5848272' },
+  { id: 'the-news', title: 'the news', cadence: 'Notícias diárias', description: 'Resumo das principais notícias do Brasil e do mundo, produzido por tns.', feedUrl: 'https://anchor.fm/s/e80cf13c/podcast/rss', artworkUrl: 'https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/38831623/38831623-1770675789248-532ff220eded6.jpg', appleId: '1728539426', slug: 'the-news', podcastAddictUrl: 'https://podcastaddict.com/podcast/the-news/4841898' },
 ]
+export function podcastsByLatestEpisode(podcasts, results) {
+  const stamp = podcast => {
+    const date = Date.parse(results[podcast.id]?.episode?.publishedAt)
+    return Number.isFinite(date) ? date : -Infinity
+  }
+  return [...podcasts].sort((left, right) => {
+    const a = stamp(left), b = stamp(right)
+    return a === b ? 0 : a > b ? -1 : 1
+  })
+}
 export const podcastUrl = podcast => `https://podcasts.apple.com/br/podcast/${podcast.slug}/id${podcast.appleId}`
 const textOf = (node, tag) => node.getElementsByTagName(tag)[0]?.textContent?.trim() || ''
 const itunesNs = 'http://www.itunes.com/dtds/podcast-1.0.dtd'
