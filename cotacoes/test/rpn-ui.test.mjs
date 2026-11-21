@@ -57,11 +57,39 @@ test('grade física clássica tem 39 teclas nas posições exatas e Enter único
 test('teclado físico respeita região, conversor, atalhos do navegador, composição e ativação nativa', () => {
   for (const [key, id] of [['0','0'],[',','decimal'],['.','decimal'],['Enter','enter'],['=','enter'],
     ['+','add'],['-','subtract'],['*','multiply'],['/','divide'],['%','percent'],['^','power'],
-    ['Backspace','backspace'],['Delete','clx'],['Escape','cancel'],['f','f'],['g','g']]) assert.equal(rpnKeyFromEvent(event(key)),id)
+    ['Backspace','backspace'],['Delete','clx'],['Escape','cancel'],['f','f'],['F','f'],['g','g'],['G','g'],['c','clx'],['C','clx'],['N','n'],['I','i']]) assert.equal(rpnKeyFromEvent(event(key)),id)
   for (const e of [event('Tab'),event(' '),event('1',{altKey:true}),event('+',{ctrlKey:true}),
-    event('-', {metaKey:true}),event('7',{nativeEvent:{isComposing:true}}),
+    event('-', {metaKey:true}),event('C',{ctrlKey:true}),event('G',{altKey:true}),event('7',{nativeEvent:{isComposing:true}}),
     event('8',{target:{closest:()=>({})}}),event('Enter',{target:{closest:s=>s==='button'?{}:null}})])
     assert.equal(rpnKeyFromEvent(e),null)
+})
+
+test('atalhos f, g e c enviam as mesmas teclas que os botões clássicos', () => {
+  const mock = (calc, keys) => keys.forEach(key => {
+    const id = rpnKeyFromEvent(event(key))
+    assert.ok(id && calc.isSupported(id))
+    calc.press(id)
+  })
+  const viaKeys = createClassicRpnController()
+  const reference = createClassicRpnController()
+  try {
+    mock(viaKeys, ['2', 'N', 'C'])
+    for (const id of ['2', 'n', 'clx']) reference.press(id)
+    assert.equal(viaKeys.snapshot().finance.n, 2, 'C sozinho não limpa registros financeiros')
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+    mock(viaKeys, ['F', 'C'])
+    for (const id of ['f', 'clx']) reference.press(id)
+    assert.equal(viaKeys.snapshot().finance.n, 0, 'F + C aciona CLEAR REG')
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+    mock(viaKeys, ['G', '7'])
+    for (const id of ['g', '7']) reference.press(id)
+    assert.equal(viaKeys.snapshot().indicators.begin, true, 'G + 7 equivale a BEG')
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+    mock(viaKeys, ['g', '8', 'g', 'c'])
+    for (const id of ['g', '8', 'g', 'clx']) reference.press(id)
+    assert.equal(viaKeys.snapshot().indicators.begin, false)
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+  } finally { viaKeys.dispose(); reference.dispose() }
 })
 
 test('toque e teclado enviam IDs físicos; LCD, estados e indisponibilidade vêm do controlador', async t => {
