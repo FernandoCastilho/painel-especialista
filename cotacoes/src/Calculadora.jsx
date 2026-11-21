@@ -57,7 +57,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'bndes-selic-lcd') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'finimp') return <FinimpComparacao onBack={() => onView('')} />
   if (view === 'conta-garantida') return <ContaGarantida onBack={() => onView('')} />
-  if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} />
+  if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
   if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} />
   if (view === 'cambio-futuro') return <CambioFuturoCenario onBack={() => onView('')} quotes={quotes} />
