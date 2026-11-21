@@ -8,6 +8,7 @@ import { giroOperation } from './creditComparison.js'
 import { cgToday } from './contaGarantida.js'
 import { addMonths } from './creditModalities.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
+import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
 import { lmSchedule } from './linhaMestra.js'
 import { resolveCreditIof } from './iofRules.js'
 import { PRACA_AJUDA, PRACAS_CONTRATO, pracaCalendars } from './pracaContrato.js'
@@ -26,7 +27,6 @@ const GUARANTEES = ['A definir', 'Sem garantia', 'Aval', 'Recebíveis', 'Aplica�
 const formatMoney = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const brl = value => formatMoney.format(value)
 const percent = rate => `${cetPct(rate * 100)}% a.a.`
-const step = (number, text) => <><span className="giro-step">{number}</span> {text}</>
 const FOOT = 'Estes valores valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 
 function Field({ id, label, issue, children }) {
@@ -89,9 +89,9 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const upfront = result ? Math.round((result.value - result.net) * 100) / 100 : 0
   // Custo total = juros + IOF + despesas (à vista e financiadas): só reparte o que a conta já devolve.
   const parts = [
-    { id: 'interest', label: 'Juros', value: result?.interest },
-    { id: 'iof', label: 'IOF', value: result?.iof },
-    { id: 'fees', label: 'Fee, TAC e outros', value: result ? result.fees + result.financedFees : undefined },
+    { label: 'Juros', value: result?.interest },
+    { label: 'IOF', value: result?.iof },
+    { label: 'Fee, TAC e outros', value: result ? result.fees + result.financedFees : undefined },
   ]
   // Carência: a combinada na demanda; com 1º vencimento informado à mão, a que a conta apurou (dias além do primeiro mês).
   const hasGrace = !!result && (form.firstDue ? result.graceDays > 0 : schedule.grace > 0)
@@ -191,40 +191,22 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
       </form>
 
       {/* Linha do tempo e resultado formam o quadro de resultado (é o que o modo Apresentar mostra em "Resultado"). */}
-      <div className="giro-outcome calc-result-shell" aria-live="polite">
-        <section className="giro-timeline" aria-labelledby="giro-timeline-title">
-          <h3 id="giro-timeline-title">{step(3, 'Linha do tempo da operação')}</h3>
-          {events ? <ol>{events.map(event => <li key={event.label} className={event.empty ? 'is-empty' : undefined}>
-            <b>{event.label}</b><span>{event.when}</span><strong>{event.value}</strong><small>{event.note}</small>
-          </li>)}</ol> : <p className="giro-timeline-empty">Aparece depois de simular: liberação, carência, parcelas e quitação.</p>}
-        </section>
-
-        <aside className="giro-result" aria-labelledby="giro-result-title">
-          <h3 id="giro-result-title">{step(4, 'Resultado · custo final para o cliente')}</h3>
-          <div className="giro-result-body">
-            {!result && <small className={`giro-result-alert${calculation?.error || hasErrors ? ' is-warning' : ''}`} role={calculation?.error ? 'alert' : undefined}>
-              {calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.')}
-            </small>}
-            <dl className="giro-answers">
-              <div><dt>Quanto entra no caixa</dt><dd>{moneyText(result?.net)}</dd>
-                <dd className="giro-answer-note">{result ? `Valor líquido, de ${brl(result.value)} solicitados` : 'Valor líquido liberado'}</dd></div>
-              <div><dt>{isBullet ? 'Quanto paga no vencimento' : 'Quanto paga por mês'}</dt><dd>{moneyText(first?.payment)}</dd>
-                <dd className="giro-answer-note">{paymentNote}</dd></div>
-              <div><dt>Quanto paga no total</dt><dd>{moneyText(result?.total)}</dd>
-                <dd className="giro-answer-note">{upfront > 0 ? 'Parcelas mais o que é pago na liberação' : 'Soma das parcelas'}</dd></div>
-              <div className="giro-answer-main"><dt>Quanto custa</dt><dd>{result ? percent(result.cet) : '—'}</dd>
-                <dd className="giro-answer-note">Custo Efetivo Total (CET), em dias corridos</dd></div>
-            </dl>
-            <h4 className="giro-result-group">Do que é feito o custo</h4>
-            {result && <div className="giro-bar" aria-hidden="true">{parts.filter(part => part.value > 0).map(part =>
-              <i key={part.id} className={`giro-bar-${part.id}`} style={{ flexGrow: part.value }} />)}</div>}
-            <dl className="giro-parts">
-              {parts.map(part => <div key={part.id}><dt><i className={`giro-bar-${part.id}`} aria-hidden="true" />{part.label}</dt><dd>{moneyText(part.value)}</dd></div>)}
-              <div className="giro-total"><dt>Custo total</dt><dd>{moneyText(result?.cost)}</dd></div>
-              <div className="giro-balance"><dt>Saldo financiado</dt><dd>{moneyText(result?.financedBalance)}</dd></div>
-            </dl>
-          </div>
-        </aside>
+      <div className="rt-outcome giro-outcome calc-result-shell" aria-live="polite">
+        <LinhaDoTempo id="giro-timeline-title" className="giro-timeline" events={events}
+          placeholder="Aparece depois de simular: liberação, carência, parcelas e quitação." />
+        <Resultado id="giro-result-title" className="giro-result" alert={result ? null : { error: !!calculation?.error, warning: !!calculation?.error || hasErrors,
+          text: calculation?.error || (hasErrors ? 'Confira os campos indicados.' : 'Clique em Simular para atualizar o resultado.') }}>
+          <Respostas items={[
+            { question: 'Quanto entra no caixa', value: moneyText(result?.net), note: result ? `Valor líquido, de ${brl(result.value)} solicitados` : 'Valor líquido liberado' },
+            { question: isBullet ? 'Quanto paga no vencimento' : 'Quanto paga por mês', value: moneyText(first?.payment), note: paymentNote },
+            { question: 'Quanto paga no total', value: moneyText(result?.total), note: upfront > 0 ? 'Parcelas mais o que é pago na liberação' : 'Soma das parcelas' },
+            { question: 'Quanto custa', value: result ? percent(result.cet) : '—', note: 'Custo Efetivo Total (CET), em dias corridos', main: true },
+          ]} />
+          <ComposicaoDoCusto parts={parts} format={moneyText} rows={[
+            { label: 'Custo total', value: moneyText(result?.cost), kind: 'total' },
+            { label: 'Saldo financiado', value: moneyText(result?.financedBalance), kind: 'muted' },
+          ]} />
+        </Resultado>
       </div>
     </div>
 

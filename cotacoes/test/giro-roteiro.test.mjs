@@ -41,9 +41,13 @@ test('carência entra na linha do tempo com os juros somados ao saldo', () => {
 
 test('a tela segue a ordem do roteiro e usa os nomes padrão dos encargos', async () => {
   const source = await readFile(new URL('../src/CapitalDeGiro.jsx', import.meta.url), 'utf8')
-  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", "step(3, 'Linha do tempo da operação')", "step(4, 'Resultado · custo final para o cliente')"].map(text => source.indexOf(text))
-  assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos numerados na ordem 1 a 4')
+  // Os blocos 3 e 4 são as peças comuns do roteiro, que já trazem o número e o título.
+  const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<LinhaDoTempo ', '<Resultado '].map(text => source.indexOf(text))
+  assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos na ordem 1 a 4')
+  const pieces = await readFile(new URL('../src/Roteiro.jsx', import.meta.url), 'utf8')
+  assert.match(pieces, /LinhaDoTempo\(\{ id, number = 3, title = 'Linha do tempo da operação'/)
+  assert.match(pieces, /Resultado\(\{ id, number = 4, title = 'Resultado · custo final para o cliente'/)
   assert.deepEqual([...source.matchAll(/\{ id: '(\w+)', label: '([^']+)' \},/g)].map(match => match[2]), ['IOF', 'Fee', 'TAC', 'Outros'])
-  for (const question of ['Quanto entra no caixa', 'Quanto paga por mês', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`<dt>${question}</dt>`) || source.includes(`'${question}'`), question)
+  for (const question of ['Quanto entra no caixa', 'Quanto paga por mês', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
   assert.doesNotMatch(source, /Taxas, tributos e despesas|Condições do produto|Fee de estruturação|Outras despesas/)
 })

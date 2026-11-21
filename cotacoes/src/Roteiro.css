@@ -1,0 +1,69 @@
+/* Peças comuns do roteiro das calculadoras de crédito (21/11/2026): numeração dos blocos, linha do tempo e resultado.
+   Nasceram no piloto do Capital de Giro. Cores pelas variáveis da moldura das calculadoras (.bw), nos dois temas.
+   Só apresentação: nenhuma regra de cálculo mora aqui. */
+.rt-step { display: inline-block; margin-right: 3px; color: var(--cp-orange, #ff6200); font-family: var(--mono, ui-monospace, monospace); font-weight: 800; }
+.rt-outcome { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+
+/* Linha do tempo e resultado: mesmo cabeçalho dos quadros de entrada. O resultado é o único com borda laranja. */
+:root[data-theme] body main.app .cx .rt-outcome.calc-result-shell { padding: 0; border: 0; background: transparent; }
+:root[data-theme] body .cx :is(.rt-timeline, .rt-result) { min-width: 0; overflow: hidden; border: 1px solid var(--bw-line); border-radius: 10px; background: var(--bw-card); color: var(--bw-ink); }
+:root[data-theme] body .cx .rt-result { border: 2px solid var(--cp-orange); border-radius: 12px; }
+:root[data-theme] body .cx :is(.rt-timeline, .rt-result) > h3 { margin: 0; padding: 10px 14px; background: var(--cp-navy); color: #fff; border-bottom: 3px solid var(--cp-orange); font-size: .95rem; font-weight: 700; line-height: 1.3; letter-spacing: 0; text-transform: none; }
+:root[data-theme] body .cx :is(.rt-timeline, .rt-result) > h3::after { content: none; }
+:root[data-theme] body .cx .rt-result > h3 { border-bottom: 0; padding: 12px 16px; }
+
+/* Linha do tempo: uma coluna por momento no computador; de cima para baixo no celular. */
+:root[data-theme] body .cx .rt-timeline ol { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin: 0; padding: 16px 14px; list-style: none; }
+:root[data-theme] body .cx .rt-timeline li { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 22px 12px 0 0; }
+:root[data-theme] body .cx .rt-timeline li::before { content: ''; position: absolute; top: 5px; left: 0; right: 0; height: 2px; background: var(--bw-line); }
+:root[data-theme] body .cx .rt-timeline li:last-child::before { right: auto; width: 12px; }
+:root[data-theme] body .cx .rt-timeline li::after { content: ''; position: absolute; top: 0; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--cp-orange); }
+:root[data-theme] body .cx .rt-timeline li.is-empty::after { background: var(--bw-card); border: 2px solid var(--bw-mut); }
+:root[data-theme] body .cx .rt-timeline li b { color: var(--bw-mut); font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+:root[data-theme] body .cx .rt-timeline li :is(span, small) { color: var(--bw-mut); font-size: .8125rem; line-height: 1.35; }
+:root[data-theme] body .cx .rt-timeline li strong { font-size: 1.05rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+:root[data-theme] body .cx .rt-timeline-empty { margin: 0; padding: 14px; color: var(--bw-mut); font-size: .875rem; }
+
+/* Resultado: quatro respostas, depois a composição do custo. */
+:root[data-theme] body .cx .rt-result-body { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px; }
+:root[data-theme] body .cx .rt-result .rt-alert { position: relative; display: block; margin: 0; padding: 10px 12px; border-left: 4px solid var(--bw-link); border-radius: 6px; background: var(--bw-soft); color: var(--bw-ink); font-size: .875rem; line-height: 1.4; }
+:root[data-theme] body .cx .rt-result .rt-alert.is-warning { padding-left: 40px; border-left-color: #b86e00; background: var(--bw-warm-soft); color: var(--bw-warn-ink); }
+:root[data-theme] body .cx .rt-result .rt-alert.is-warning::before { content: '!'; position: absolute; left: 12px; top: 10px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #b86e00; color: #fff; font-weight: 800; font-size: .8rem; line-height: 1; }
+:root[data-theme] body .cx .rt-result :is(dl, dt, dd) { margin: 0; }
+:root[data-theme] body .cx .rt-answers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+:root[data-theme] body .cx .rt-answers > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 12px; border: 1px solid var(--bw-line); border-radius: 10px; background: var(--bw-soft); }
+:root[data-theme] body .cx .rt-answers dt { color: var(--bw-mut); font-size: .8125rem; font-weight: 600; }
+:root[data-theme] body .cx .rt-answers dd { font-size: 1.2rem; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+:root[data-theme] body .cx .rt-answers dd.rt-answer-note { color: var(--bw-mut); font-size: .75rem; font-weight: 400; line-height: 1.35; }
+:root[data-theme] body .cx .rt-answers > .rt-answer-main { background: var(--cp-navy); border-color: #34507f; color: #fff; }
+:root[data-theme] body .cx .rt-answers > .rt-answer-main :is(dt, dd.rt-answer-note) { color: #c9d6ee; }
+:root[data-theme] body .cx .rt-answers > .rt-answer-main dd:not(.rt-answer-note) { font-size: 1.6rem; line-height: 1.1; white-space: nowrap; }
+:root[data-theme] body .cx .rt-group { margin: 6px 0 0; color: var(--bw-mut); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+:root[data-theme] body .cx .rt-bar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; }
+:root[data-theme] body .cx .rt-bar i { min-width: 3px; }
+:root[data-theme] body .cx .rt-tone-1 { background: var(--bw-link); }
+:root[data-theme] body .cx .rt-tone-2 { background: var(--cp-orange); }
+:root[data-theme] body .cx .rt-tone-3 { background: var(--bw-mut); }
+/* Desfaz as regras gerais de lista do painel (styles.css: dl em duas colunas, dl div em coluna, dt e dd menores e cinza). */
+:root[data-theme] body .cx .rt-parts { display: block; }
+:root[data-theme] body .cx .rt-parts :is(dt, dd) { color: inherit; font-size: inherit; }
+:root[data-theme] body .cx .rt-parts > div { display: flex; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 6px 10px; padding: 7px 0; border-top: 1px solid var(--bw-line); font-size: .9rem; }
+:root[data-theme] body .cx .rt-parts > div:first-child { border-top: 0; }
+:root[data-theme] body .cx .rt-parts dt i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 2px; }
+:root[data-theme] body .cx .rt-parts dd { text-align: right; white-space: nowrap; }
+:root[data-theme] body .cx .rt-parts .rt-total { border-top: 2px solid var(--bw-strong-line); font-weight: 800; }
+:root[data-theme] body .cx .rt-parts .rt-muted { color: var(--bw-mut); }
+:root[data-theme] body .cx .rt-tone-4 { background: var(--bw-strong-line); }
+
+/* O slide do modo Apresentar tem largura fixa: lá vale o desenho de computador, mesmo com a janela estreita. */
+@media (max-width: 870px) {
+  :root[data-theme] body .cx:not(.sl-calc *) .rt-answers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  :root[data-theme] body .cx:not(.sl-calc *) .rt-timeline ol { grid-auto-flow: row; padding: 14px; }
+  :root[data-theme] body .cx:not(.sl-calc *) .rt-timeline li { padding: 0 0 16px 24px; }
+  :root[data-theme] body .cx:not(.sl-calc *) .rt-timeline li:last-child { padding-bottom: 0; }
+  :root[data-theme] body .cx:not(.sl-calc *) .rt-timeline li::before { top: 0; bottom: 0; left: 5px; right: auto; width: 2px; height: auto; }
+  :root[data-theme] body .cx:not(.sl-calc *) .rt-timeline li:last-child::before { width: 2px; height: 12px; bottom: auto; }
+}
+@media (max-width: 540px) {
+  :root[data-theme] body .cx:not(.sl-calc *) .rt-answers { grid-template-columns: minmax(0, 1fr); }
+}

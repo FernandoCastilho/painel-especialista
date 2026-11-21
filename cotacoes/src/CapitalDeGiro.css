@@ -9,9 +9,8 @@
 :root[data-theme] body .giro-screen > .giro-installments { margin-bottom: 16px; width: auto; }
 
 /* Roteiro (21/11/2026): 1 Demanda e 2 Encargos lado a lado no computador largo; 3 Linha do tempo e 4 Resultado abaixo, na largura toda. */
-.giro-flow, .giro-outcome { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.giro-flow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .giro-form { display: grid; gap: 14px; min-width: 0; align-items: start; }
-.giro-step { display: inline-block; margin-right: 3px; color: var(--cp-orange); font-family: var(--mono, ui-monospace, monospace); font-weight: 800; }
 
 /* Quadros de entrada: faixa azul-marinho, título branco e linha laranja (igual ao BNDES e à linha mestra). */
 :root[data-theme] body .giro-screen .giro-card {
@@ -67,62 +66,6 @@
 
 /* Demanda: valor na linha de cima; prazo e carência lado a lado; amortização abaixo. No computador, dois a dois. */
 :root[data-theme] body .giro-screen .giro-form .lm > .lm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-/* Gaveta "Detalhes do contrato", dentro da demanda. */
-:root[data-theme] body .giro-screen .lm-details { margin: 6px 14px 4px; border-top: 1px solid var(--bw-line); }
-:root[data-theme] body .giro-screen .lm-details > summary { padding: 10px 0; min-height: 44px; color: var(--bw-link); font-size: .86rem; cursor: pointer; }
-:root[data-theme] body .giro-screen .lm-details > summary small { color: var(--bw-mut); font-size: .78rem; }
-:root[data-theme] body .giro-screen .lm-details > .lm-grid { padding: 0 0 8px; }
-
-/* Linha do tempo e resultado: mesmo cabeçalho dos quadros de entrada. O resultado é o único com borda laranja. */
-:root[data-theme] body main.app .giro-screen .giro-outcome.calc-result-shell { padding: 0; border: 0; background: transparent; }
-:root[data-theme] body .giro-screen :is(.giro-timeline, .giro-result) { min-width: 0; overflow: hidden; border: 1px solid var(--bw-line); border-radius: 10px; background: var(--bw-card); color: var(--bw-ink); }
-:root[data-theme] body .giro-screen .giro-result { border: 2px solid var(--cp-orange); border-radius: 12px; }
-:root[data-theme] body .giro-screen :is(.giro-timeline, .giro-result) > h3 { margin: 0; padding: 10px 14px; background: var(--cp-navy); color: #fff; border-bottom: 3px solid var(--cp-orange); font-size: .95rem; font-weight: 700; line-height: 1.3; letter-spacing: 0; text-transform: none; }
-:root[data-theme] body .giro-screen :is(.giro-timeline, .giro-result) > h3::after { content: none; }
-:root[data-theme] body .giro-screen .giro-result > h3 { border-bottom: 0; padding: 12px 16px; }
-
-/* Linha do tempo: uma coluna por momento no computador; de cima para baixo no celular. */
-:root[data-theme] body .giro-screen .giro-timeline ol { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin: 0; padding: 16px 14px; list-style: none; }
-:root[data-theme] body .giro-screen .giro-timeline li { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 22px 12px 0 0; }
-:root[data-theme] body .giro-screen .giro-timeline li::before { content: ''; position: absolute; top: 5px; left: 0; right: 0; height: 2px; background: var(--bw-line); }
-:root[data-theme] body .giro-screen .giro-timeline li:last-child::before { right: auto; width: 12px; }
-:root[data-theme] body .giro-screen .giro-timeline li::after { content: ''; position: absolute; top: 0; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--cp-orange); }
-:root[data-theme] body .giro-screen .giro-timeline li.is-empty::after { background: var(--bw-card); border: 2px solid var(--bw-mut); }
-:root[data-theme] body .giro-screen .giro-timeline li b { color: var(--bw-mut); font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-:root[data-theme] body .giro-screen .giro-timeline li :is(span, small) { color: var(--bw-mut); font-size: .8125rem; line-height: 1.35; }
-:root[data-theme] body .giro-screen .giro-timeline li strong { font-size: 1.05rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
-:root[data-theme] body .giro-screen .giro-timeline-empty { margin: 0; padding: 14px; color: var(--bw-mut); font-size: .875rem; }
-
-/* Resultado: quatro respostas, depois a composição do custo. */
-:root[data-theme] body .giro-screen .giro-result-body { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px; }
-:root[data-theme] body .giro-screen .giro-result small.giro-result-alert { position: relative; display: block; margin: 0; padding: 10px 12px; border-left: 4px solid var(--bw-link); border-radius: 6px; background: var(--bw-soft); color: var(--bw-ink); font-size: .875rem; line-height: 1.4; }
-:root[data-theme] body .giro-screen .giro-result small.giro-result-alert.is-warning { padding-left: 40px; border-left-color: #b86e00; background: var(--bw-warm-soft); color: var(--bw-warn-ink); }
-:root[data-theme] body .giro-screen .giro-result small.giro-result-alert.is-warning::before { content: '!'; position: absolute; left: 12px; top: 10px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #b86e00; color: #fff; font-weight: 800; font-size: .8rem; line-height: 1; }
-:root[data-theme] body .giro-screen .giro-result :is(dl, dt, dd) { margin: 0; }
-:root[data-theme] body .giro-screen .giro-answers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-:root[data-theme] body .giro-screen .giro-answers > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 12px; border: 1px solid var(--bw-line); border-radius: 10px; background: var(--bw-soft); }
-:root[data-theme] body .giro-screen .giro-answers dt { color: var(--bw-mut); font-size: .8125rem; font-weight: 600; }
-:root[data-theme] body .giro-screen .giro-answers dd { font-size: 1.2rem; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
-:root[data-theme] body .giro-screen .giro-answers dd.giro-answer-note { color: var(--bw-mut); font-size: .75rem; font-weight: 400; line-height: 1.35; }
-:root[data-theme] body .giro-screen .giro-answers > .giro-answer-main { background: var(--cp-navy); border-color: #34507f; color: #fff; }
-:root[data-theme] body .giro-screen .giro-answers > .giro-answer-main :is(dt, dd.giro-answer-note) { color: #c9d6ee; }
-:root[data-theme] body .giro-screen .giro-answers > .giro-answer-main dd:not(.giro-answer-note) { font-size: 1.6rem; line-height: 1.1; white-space: nowrap; }
-:root[data-theme] body .giro-screen .giro-result-group { margin: 6px 0 0; color: var(--bw-mut); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-:root[data-theme] body .giro-screen .giro-bar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; }
-:root[data-theme] body .giro-screen .giro-bar i { min-width: 3px; }
-:root[data-theme] body .giro-screen .giro-bar-interest { background: var(--bw-link); }
-:root[data-theme] body .giro-screen .giro-bar-iof { background: var(--cp-orange); }
-:root[data-theme] body .giro-screen .giro-bar-fees { background: var(--bw-mut); }
-/* Desfaz as regras gerais de lista do painel (styles.css: dl em duas colunas, dl div em coluna, dt e dd menores e cinza). */
-:root[data-theme] body .giro-screen .giro-parts { display: block; }
-:root[data-theme] body .giro-screen .giro-parts :is(dt, dd) { color: inherit; font-size: inherit; }
-:root[data-theme] body .giro-screen .giro-parts > div { display: flex; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 6px 10px; padding: 7px 0; border-top: 1px solid var(--bw-line); font-size: .9rem; }
-:root[data-theme] body .giro-screen .giro-parts > div:first-child { border-top: 0; }
-:root[data-theme] body .giro-screen .giro-parts dt i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 2px; }
-:root[data-theme] body .giro-screen .giro-parts dd { text-align: right; white-space: nowrap; }
-:root[data-theme] body .giro-screen .giro-parts .giro-total { border-top: 2px solid var(--bw-strong-line); font-weight: 800; }
-:root[data-theme] body .giro-screen .giro-parts .giro-balance { color: var(--bw-mut); }
-
 /* Parcelas e comparação de amortizações, recolhidas. */
 :root[data-theme] body .giro-screen .giro-installments { display: block; margin-top: 16px; border: 1px solid var(--bw-line); border-radius: 10px; background: var(--bw-card); color: var(--bw-ink); text-align: left; }
 .giro-installments > summary, .giro-installments-disabled { min-height: 44px; padding: 10px 14px; font: inherit; font-weight: 700; }
@@ -138,10 +81,8 @@
 :root[data-theme] body .giro-screen .giro-rounding { margin: 0 12px; color: var(--bw-mut); font-size: .82rem; }
 .giro-comparison { margin: 4px 12px 8px; }
 
-/* Dentro do modo Apresentar (sl-calc-giro): sem botões de navegação; a gaveta de detalhes fica aberta e sem o título clicável. */
+/* Dentro do modo Apresentar (sl-calc-giro): sem botões de navegação. */
 .sl-calc-giro .giro-form details.giro-settings { display: block; }
-.sl-calc-giro .giro-form .lm details.lm-details[open] { display: block; }
-.sl-calc-giro .giro-form .lm-details > summary { display: none; }
 .sl-calc-giro :is(.giro-back, .giro-header, .giro-simulate, .giro-installments) { display: none; }
 
 /* Computador largo: demanda e encargos lado a lado; o botão Simular fica abaixo dos dois.
@@ -149,15 +90,6 @@
 @media (min-width: 1200px) {
   .giro-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .giro-form > .giro-simulate { grid-column: 1 / -1; }
-}
-/* O slide do modo Apresentar tem largura fixa: lá vale o desenho de computador, mesmo com a janela estreita. */
-@media (max-width: 870px) {
-  :root[data-theme] body .giro-screen:not(.sl-calc-giro *) .giro-answers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  :root[data-theme] body .giro-screen:not(.sl-calc-giro *) .giro-timeline ol { grid-auto-flow: row; padding: 14px; }
-  :root[data-theme] body .giro-screen:not(.sl-calc-giro *) .giro-timeline li { padding: 0 0 16px 24px; }
-  :root[data-theme] body .giro-screen:not(.sl-calc-giro *) .giro-timeline li:last-child { padding-bottom: 0; }
-  :root[data-theme] body .giro-screen:not(.sl-calc-giro *) .giro-timeline li::before { top: 0; bottom: 0; left: 5px; right: auto; width: 2px; height: auto; }
-  :root[data-theme] body .giro-screen:not(.sl-calc-giro *) .giro-timeline li:last-child::before { width: 2px; height: 12px; bottom: auto; }
 }
 @media (max-width: 540px) {
   /* Nomes curtos (IOF, Fee, TAC): a coluna do valor fica com mais espaço. */
@@ -168,7 +100,6 @@
   .giro-cost.giro-cost-rate { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); }
   .giro-cost-rate > .giro-cost-label { grid-column: 1 / -1; }
   :root[data-theme] body .giro-screen .giro-cost-rate > .giro-cost-label { min-height: 0; padding-bottom: 0; }
-  :root[data-theme] body .giro-screen:not(.sl-calc-giro *) .giro-answers { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 360px) {
   .giro-cost-head { display: none; }
