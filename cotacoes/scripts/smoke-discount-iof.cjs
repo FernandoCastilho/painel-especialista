@@ -19,9 +19,10 @@ const fs = require('node:fs')
   assert.match(await page.locator('.desconto-result-status').innerText(),/Preencha ou corrija/)
   await page.locator('#ad-titleFeeMode').selectOption('percent')
   assert.equal(await page.locator('#ad-iofPaid, #ad-interest, #ad-iofAdditional').count(),0)
-  const before=await page.locator('.desconto-kpis').innerText()
+  // Roteiro de 21/11/2026: os números do desconto ficam no bloco "4 Resultado".
+  const before=await page.locator('.rt-result').innerText()
   await page.locator('#ad-operationRate').fill('3,66')
-  assert.notEqual(await page.locator('.desconto-kpis').innerText(),before)
+  assert.notEqual(await page.locator('.rt-result').innerText(),before)
   // Padrão de 18/11/2026: as tabelas completas ficam recolhidas; abre para conferir os totais.
   await page.locator('details.dsc-tables > summary').click()
   const totals=await page.locator('.desconto-summary-panel').innerText()

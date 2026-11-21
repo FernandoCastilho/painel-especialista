@@ -10,7 +10,9 @@ import './CalcPattern-analise-desconto.css'
 import { IOF_SOURCE } from './iofRules.js'
 import { cgAddDays, cgToday } from './contaGarantida.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
+import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
 import { lmLoad } from './linhaMestra.js'
+import { PRACAS_CONTRATO } from './pracaContrato.js'
 import CalcBack from './CalcBack.jsx'
 
 const brl = (value) => value == null ? '—' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -22,13 +24,17 @@ const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(c
 // Direção da economia em símbolo, além da cor: ▲ giro com menor custo, ▼ giro com maior custo.
 const arrow = (value) => value > 0 ? '▲' : value < 0 ? '▼' : '='
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
+const plural = (count, one, many) => `${number(count)} ${count === 1 ? one : many}`
+const FOOT = 'A data e a praça valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 const CET_HELP = 'CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): nas operações de desconto, o CET usa o prazo de 30 dias e o valor do limite pactuado — aqui, o valor nominal da operação. Líquido = nominal − juros de 30 dias − IOF de 30 dias − TAC − tarifa de títulos; o nominal volta em 30 dias corridos; taxa anual em dias corridos/365. O custo pelo prazo real usa a data de pagamento de cada título e não é o CET da norma.'
 
 export function DescontoIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 11h8M8 15h5M8 18h3" /><path d="m14 17 2 2 4-4" /></svg>
 }
 
-export default function AnaliseDesconto({ onBack }) {
+// Roteiro da tela (21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado do desconto; depois, a comparação com o giro.
+// Só ordem, nomes e apresentação: os números são os mesmos que parseDiscountForm já devolvia.
+export default function AnaliseDesconto({ onBack, apresentacao }) {
   // Linha mestra comum (19/11/2026): data da operação e praça vêm dela; o valor pode ser o principal do giro comparado.
   const [lm, setLm, clearLm] = useLinhaMestra(cgToday())
   // O exemplo de títulos vence 30 dias depois da data da operação, como no exemplo de referência (05/11 → 05/12).
@@ -46,7 +52,7 @@ export default function AnaliseDesconto({ onBack }) {
   const unseen = Object.keys(found).filter((key) => key !== 'operation' && !seen(key))
   const errors = Object.fromEntries(Object.entries(found).filter(([key]) => key === 'operation' ? unseen.length === 0 : seen(key)))
   const pending = Object.keys(found).length > 0, flagged = Object.keys(errors).length > 0
-  const guide = unseen.length === 1 && unseen[0] === 'titleFeeMode' ? 'Escolha como a tarifa dos títulos é cobrada para ver a comparação.' : 'Preencha os campos que faltam para ver a comparação.'
+  const guide = (what) => unseen.length === 1 && unseen[0] === 'titleFeeMode' ? `Escolha como a tarifa dos títulos é cobrada para ver ${what}.` : `Preencha os campos que faltam para ver ${what}.`
   const set = (key, value) => setForm((old) => ({ ...old, [key]: value }))
   const changeLm = (key, value) => { setLm(key, value); visit(key === 'start' ? 'date' : key === 'value' ? 'giroPrincipal' : key) }
   const props = (key) => ({ id: `ad-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `ad-${key}-err ad-${key}-hint`, onBlur: () => visit(key) })
@@ -84,54 +90,94 @@ export default function AnaliseDesconto({ onBack }) {
     { label: 'Parcela Price, sem TAC e IOF', month: first?.giro.installment, value: (row) => row.giro.installment },
     { label: 'Média mensal all-in: principal + custos', month: first?.giro.averageMonthlyOutflow, value: (row) => row.giro.averageMonthlyOutflow },
   ]
+  // Linha do tempo: a operação hoje, o prazo e o vencimento dos títulos. Só datas, dias e valores que a conta já devolve.
+  const due = operation?.rows.map((row) => row.paymentDate).sort() ?? []
+  const days = operation?.rows.map((row) => row.days).sort((a, b) => a - b) ?? []
+  const events = operation && [
+    { label: 'Operação', when: dateBr(lm.start), value: brl(operation.net), note: `${brl(operation.value)} em títulos menos ${brl(operation.cost)} descontados` },
+    { label: 'Prazo', when: 'Da operação ao pagamento dos títulos', note: 'Juros e IOF contam até o pagamento de cada título',
+      value: days[0] === days.at(-1) ? plural(days[0], 'dia corrido', 'dias corridos') : `de ${number(days[0])} a ${number(days.at(-1))} dias corridos` },
+    { label: 'Vencimento dos títulos', when: due[0] === due.at(-1) ? dateBr(due[0]) : `de ${dateBr(due[0])} a ${dateBr(due.at(-1))}`, value: brl(operation.value),
+      note: `${plural(operation.titles, 'título', 'títulos')}${operation.rows.length > 1 ? ` em ${number(operation.rows.length)} grupos` : ''}${operation.rows.some((row) => row.adjusted) ? '. Vencimento em dia não útil passa ao próximo dia útil' : ''}` },
+  ]
+  // Sem a operação completa, o resultado do desconto avisa o que falta (o aviso da comparação fica no bloco dela).
+  const resultAlert = operation ? null : { warning: flagged, text: flagged ? 'Preencha ou corrija os campos sinalizados para ver o resultado.' : guide('o resultado') }
   return <section className="cx cx-desconto bw calc-standard calc-workspace" aria-labelledby="ad-heading">
     <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="ad-heading" className="cx-title"><span>Análise de desconto</span></h2></div><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p></CalculatorHelp></div>
     <p className="desconto-notice">Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p>
 
-    {/* Padrão visual de 18/11/2026: dados à esquerda e resultado ao lado (computador largo) ou abaixo (telas menores). Só apresentação. */}
+    {/* Roteiro de 21/11/2026: primeiro o custo do desconto (blocos 1 a 4); a comparação com o giro vem depois. Só apresentação. */}
+    <div className="dsc-flow">
+      <div className="dsc-form">
+        <LinhaMestra prefix="ad-lm" title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} onClear={clearLm} foot={FOOT}
+          fields={['start']} labels={{ start: 'Data da operação' }} errors={{ start: errors.date }}
+          details={{ fields: ['praca'], open: !!apresentacao, summary: PRACAS_CONTRATO.find(praca => praca.id === lm.praca)?.label }}>
+          <div className="lm-field"><span className="lm-label"><label htmlFor="ad-gross">Valor total dos títulos</label></span><output id="ad-gross" className="dsc-readonly">{brl(operation?.value)}</output></div>
+          <div className="desconto-titles lm-wide">
+            <h4>Títulos ou grupos com o mesmo vencimento</h4>
+            <p>Informe o valor nominal total de cada grupo e a quantidade de títulos. Não multiplique o valor pela quantidade. Todos usam a taxa de juros dos encargos.</p>
+            {form.titleRows.map((row, index) => <fieldset key={index} className="cx-form" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) visit('titleRow' + index) }}><legend>Grupo {index + 1}</legend>
+              <label>Valor nominal total do grupo<MoneyInput value={row.value} onChange={value => setRow(index, 'value', value)} /></label>
+              <label>Quantidade de títulos<input inputMode="numeric" value={row.count} onChange={event => setRow(index, 'count', event.target.value)} /></label>
+              <label>Vencimento contratual<input type="date" value={row.dueDate} onChange={event => setRow(index, 'dueDate', event.target.value)} /></label>
+              {operation?.rows[index]?.adjusted && <p className="desconto-paydate">Pago em {dateBr(operation.rows[index].paymentDate)}, próximo dia útil.</p>}
+              <button type="button" disabled={form.titleRows.length === 1} onClick={() => { set('titleRows', form.titleRows.filter((_, i) => i !== index)); setVisited((old) => Object.fromEntries(Object.entries(old).filter(([key]) => !key.startsWith('titleRow')))) }}>Remover grupo {index + 1}</button>
+              {errors['titleRow' + index] && <p role="alert">{errors['titleRow' + index]}</p>}
+            </fieldset>)}
+            <button type="button" disabled={form.titleRows.length >= 500} onClick={() => set('titleRows', [...form.titleRows, { value: '', count: '1', dueDate: '' }])}>Adicionar grupo de títulos</button>
+            {errors.operation && <p role="alert" className="cx-error">{errors.operation}</p>}
+          </div>
+        </LinhaMestra>
+
+        <article className="desk-panel cx-panel desconto-input-panel">
+          <header className="cx-heading"><h3>{step(2, 'Encargos')}</h3><CalculatorHelp title="Encargos do desconto"><p>O custo completo inclui juros, IOF, TAC e tarifa dos títulos. Os valores iniciais são um exemplo ilustrativo: substitua pelos títulos e condições do contrato.</p></CalculatorHelp></header>
+          <div className="cx-form">
+            {textField('operationRate', 'Taxa de juros (% a.m.)', 'Aplicada a cada grupo de títulos pelos dias corridos até o vencimento informado, conforme a convenção selecionada.')}
+            {field('convention', 'Convenção contratual de desconto', <select {...props('convention')} value={form.convention} onChange={event => set('convention', event.target.value)}><option value="commercial30">Comercial simples (por fora), mês de 30 dias</option><option value="rational30">Racional simples (por dentro), mês de 30 dias</option></select>, 'Selecione a convenção efetiva do contrato. Vencimento em fim de semana, feriado nacional ou feriado da praça do contrato passa para o próximo dia útil; juros e IOF contam até essa data.')}
+            {field('titleFeeMode', 'Tarifa dos títulos: como é cobrada', <select {...props('titleFeeMode')} value={form.titleFeeMode} onChange={(event) => set('titleFeeMode', event.target.value)}><option value="">Selecione a forma de cobrança</option>{TITLE_FEE_MODES.map((mode) => <option key={mode.id} value={mode.id}>{mode.label}</option>)}</select>, 'A referência mostra R$ 564,00 como “unitário”, mas os totais o tratam como tarifa da operação. Escolha a interpretação correta.')}
+            {feeField}
+            {moneyField('tac', 'TAC', 'Tarifa de contratação, cobrada a cada operação de desconto.')}
+            <div className="cx-field"><div className="cx-field-label"><label htmlFor="ad-iof">IOF <small>calculado</small></label></div><output id="ad-iof" className="dsc-readonly">{brl(operation?.iof)}</output></div>
+          </div>
+          <details className="dsc-drawer" open={!!apresentacao}>
+            <summary>Enquadramento do IOF<small> · {form.taxProfile === 'simples' ? `Simples Nacional / MEI${form.eligible ? ', opção confirmada' : ', opção a confirmar'}` : 'pessoa jurídica, regra geral'}</small></summary>
+            <div className="cx-form">{taxFields('taxProfile', 'eligible')}</div>
+          </details>
+        </article>
+      </div>
+
+      {/* Linha do tempo e resultado do desconto: é o que o modo Apresentar mostra em "Resultado". */}
+      <div className="rt-outcome calc-result-shell" aria-live="polite">
+        <LinhaDoTempo id="ad-timeline-title" events={events}
+          placeholder="Aparece com a operação completa: quanto entra no caixa, o prazo e o vencimento dos títulos." />
+        <Resultado id="ad-result-title" alert={resultAlert}>
+          <Respostas items={[
+            { question: 'Quanto entra no caixa', value: brl(operation?.net), note: 'Valor líquido da operação: bruto menos todos os custos' },
+            { question: 'Quanto é descontado', value: brl(operation?.cost), note: 'Custo total completo, com a tarifa de títulos' },
+            { question: 'Quanto custa', value: operation ? cetText(operation.cet) : '—', main: true,
+              note: `CET do desconto (art. 6º · 30 dias)${operation ? ` · ${cetMonthly(operation.cet)} · prazo real: ${cetText(operation.termCost)}` : ''}` },
+          ]} />
+          <ComposicaoDoCusto format={brl} parts={[
+            { label: 'Juros', value: operation?.interest },
+            { label: 'IOF', value: operation?.iof },
+            { label: 'Tarifa dos títulos', value: operation?.titleFee },
+            { label: 'TAC', value: operation?.tac },
+          ]} rows={[
+            { label: 'Custo total completo', value: brl(operation?.cost), kind: 'total' },
+            { label: 'Subtotal sem tarifa de títulos (TAC + juros + IOF)', value: brl(operation?.costWithoutTitles), kind: 'muted' },
+            { label: 'Base do IOF: nominal menos juros antecipados', value: brl(operation?.base), kind: 'muted' },
+          ]} />
+          <div className="dsc-result-foot"><span>Como o CET do desconto é calculado</span><CalculatorHelp title="CET do desconto"><p>{CET_HELP}</p></CalculatorHelp></div>
+        </Resultado>
+      </div>
+    </div>
+
+    {/* Depois do custo do desconto: a comparação com o capital de giro. Blocos sem número, para não confundir com o roteiro. */}
+    <div className="dsc-compare-head"><h3>Comparação com o capital de giro</h3><p>O desconto se repete todo mês; o giro Price é pago em 12, 24, 36 ou 48 meses.</p></div>
     <div className="dsc-workspace">
     <div className="dsc-inputs">
-    <LinhaMestra prefix="ad-lm" values={lm} onChange={changeLm} onClear={clearLm} fields={['start', 'praca', 'value']}
-      labels={{ start: 'Data da operação e liberação do giro', value: 'Valor para o giro comparado' }} errors={{ start: errors.date }} />
     <article className="desk-panel cx-panel desconto-input-panel">
-      <header className="cx-heading"><h3>1. Operação simulada de desconto</h3><CalculatorHelp title="Operação simulada de desconto"><p>Os valores iniciais são um exemplo ilustrativo. Substitua pelos títulos e condições do contrato. O custo completo inclui juros, IOF, TAC e tarifa dos títulos.</p></CalculatorHelp></header>
-      <div className="cx-form">
-        <div><span>Valor bruto dos títulos</span><b>{brl(operation?.value)}</b></div>
-        {textField('operationRate', 'Taxa da operação (% a.m.)', 'Aplicada a cada grupo de títulos pelos dias corridos até o vencimento informado, conforme a convenção selecionada.')}
-        {field('convention', 'Convenção contratual de desconto', <select {...props('convention')} value={form.convention} onChange={event => set('convention', event.target.value)}><option value="commercial30">Comercial simples (por fora), mês de 30 dias</option><option value="rational30">Racional simples (por dentro), mês de 30 dias</option></select>, 'Selecione a convenção efetiva do contrato. Vencimento em fim de semana, feriado nacional ou feriado da praça do contrato passa para o próximo dia útil; juros e IOF contam até essa data.')}
-        {taxFields('taxProfile', 'eligible')}
-        {field('titleFeeMode', 'Como calcular a tarifa dos títulos?', <select {...props('titleFeeMode')} value={form.titleFeeMode} onChange={(event) => set('titleFeeMode', event.target.value)}><option value="">Selecione a forma de cobrança</option>{TITLE_FEE_MODES.map((mode) => <option key={mode.id} value={mode.id}>{mode.label}</option>)}</select>, 'A referência mostra R$ 564,00 como “unitário”, mas os totais o tratam como tarifa da operação. Escolha a interpretação correta.')}
-        {feeField}
-        {moneyField('tac', 'Tarifa de contratação por operação (TAC)')}
-        <div><span>Juros calculados</span><b>{brl(operation?.interest)}</b></div>
-        <div><span>IOF automático</span><b>{brl(operation?.iof)}</b></div>
-      </div>
-      <div className="desconto-titles">
-        <h4>Títulos ou grupos com o mesmo vencimento</h4>
-        <p>Informe o valor nominal total de cada grupo e a quantidade de títulos. Não multiplique o valor pela quantidade. Todos usam a taxa contratual acima.</p>
-        {form.titleRows.map((row, index) => <fieldset key={index} className="cx-form" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) visit('titleRow' + index) }}><legend>Grupo {index + 1}</legend>
-          <label>Valor nominal total do grupo<MoneyInput value={row.value} onChange={value => setRow(index, 'value', value)} /></label>
-          <label>Quantidade de títulos<input inputMode="numeric" value={row.count} onChange={event => setRow(index, 'count', event.target.value)} /></label>
-          <label>Vencimento contratual<input type="date" value={row.dueDate} onChange={event => setRow(index, 'dueDate', event.target.value)} /></label>
-          {operation?.rows[index]?.adjusted && <p className="desconto-paydate">Pago em {dateBr(operation.rows[index].paymentDate)}, próximo dia útil.</p>}
-          <button type="button" disabled={form.titleRows.length === 1} onClick={() => { set('titleRows', form.titleRows.filter((_, i) => i !== index)); setVisited((old) => Object.fromEntries(Object.entries(old).filter(([key]) => !key.startsWith('titleRow')))) }}>Remover grupo {index + 1}</button>
-          {errors['titleRow' + index] && <p role="alert">{errors['titleRow' + index]}</p>}
-        </fieldset>)}
-        <button type="button" disabled={form.titleRows.length >= 500} onClick={() => set('titleRows', [...form.titleRows, { value: '', count: '1', dueDate: '' }])}>Adicionar grupo de títulos</button>
-        {errors.operation && <p role="alert" className="cx-error">{errors.operation}</p>}
-      </div>
-      <div className="desconto-kpis" aria-live="polite">
-        <div><span>Base do IOF: nominal menos juros antecipados</span><b>{brl(operation?.base)}</b></div>
-        <div><span>Tarifa total de títulos</span><b>{brl(operation?.titleFee)}</b></div>
-        <div><div className="cx-field-label"><span>Subtotal sem tarifa de títulos</span><CalculatorHelp title="Subtotal sem tarifa de títulos"><p>TAC + juros + IOF.</p></CalculatorHelp></div><b>{brl(operation?.costWithoutTitles)}</b></div>
-        <div><div className="cx-field-label"><span>Custo total completo</span><CalculatorHelp title="Custo total completo"><p>Inclui a tarifa de títulos.</p></CalculatorHelp></div><b>{brl(operation?.cost)}</b></div>
-        <div><div className="cx-field-label"><span>Valor líquido da operação</span><CalculatorHelp title="Valor líquido da operação"><p>Bruto menos todos os custos.</p></CalculatorHelp></div><b>{brl(operation?.net)}</b></div>
-        <div><div className="cx-field-label"><span>CET do desconto (art. 6º · 30 dias)</span><CalculatorHelp title="CET do desconto"><p>{CET_HELP}</p></CalculatorHelp></div><b>{cetText(operation?.cet)}</b><small>{operation ? `${cetMonthly(operation.cet)} · prazo real: ${cetText(operation.termCost)}` : ''}</small></div>
-      </div>
-    </article>
-
-    <article className="desk-panel cx-panel desconto-input-panel">
-      <header className="cx-heading"><h3>2. Projeção mensal do desconto</h3><CalculatorHelp title="Projeção mensal do desconto"><p>A projeção mantém vencimentos e quantidade dos títulos, escalona proporcionalmente seus valores nominais para o valor médio e recalcula juros e IOF com a taxa projetada. A TAC e tarifas fixas permanecem por operação. O limite do Simples é conferido novamente para cada operação projetada.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>Projeção mensal do desconto</h3><CalculatorHelp title="Projeção mensal do desconto"><p>A projeção mantém vencimentos e quantidade dos títulos, escalona proporcionalmente seus valores nominais para o valor médio e recalcula juros e IOF com a taxa projetada. A TAC e tarifas fixas permanecem por operação. O limite do Simples é conferido novamente para cada operação projetada.</p></CalculatorHelp></header>
       <div className="cx-form">
         {textField('operations', 'Quantidade de operações por mês', 'A primeira referência tem 6 e a comparação tem 7. Vale exclusivamente o número deste campo.', 'numeric')}
         {moneyField('averageValue', 'Valor médio bruto por operação', 'Volume mensal = valor médio × quantidade de operações.')}
@@ -140,25 +186,26 @@ export default function AnaliseDesconto({ onBack }) {
     </article>
 
     <article className="desk-panel cx-panel desconto-input-panel">
-      <header className="cx-heading"><h3>3. Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana, feriado nacional, feriado da praça do contrato ou 31/12 (sem expediente bancário) passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>Premissas do capital de giro</h3><CalculatorHelp title="Premissas do capital de giro"><p>Mesmo cálculo do Capital de Giro. Juros pelos dias corridos entre vencimentos: (1 + taxa a.m.) elevado a dias/30. Vencimento em fim de semana, feriado nacional, feriado da praça do contrato ou 31/12 (sem expediente bancário) passa para o próximo dia útil. TAC e IOF são descontados na liberação: o principal é financiado inteiro e o líquido recebido é menor. Alíquotas legais automáticas por enquadramento e valor total da operação.</p></CalculatorHelp></header>
       <div className="cx-form">
         {field('giroPrincipalMode', 'Principal usado no giro', <select {...props('giroPrincipalMode')} value={form.giroPrincipalMode} onChange={(event) => set('giroPrincipalMode', event.target.value)}><option value="monthly">Igual ao volume bruto mensal do desconto</option><option value="linha">Valor da linha mestra (R$ {lm.value})</option><option value="manual">Informar outro valor</option></select>, 'Usar o volume mensal é uma hipótese de comparação, não uma necessidade de capital de giro (NCG) apurada.')}
+        {fromLine && field('giroPrincipal', 'Valor para o giro comparado', <MoneyInput {...props('giroPrincipal')} value={lm.value} onChange={(value) => changeLm('value', value)} />, 'É o valor da linha mestra: vale também nas outras calculadoras de empréstimo, até você fechar esta aba.')}
         {form.giroPrincipalMode === 'manual' && moneyField('giroPrincipal', 'Valor financiado no giro', 'Ao informar outro principal, os montantes comparados também ficam diferentes.')}
         {textField('giroRate', 'Taxa do giro Price (% a.m.)', 'Taxa mensal efetiva, com parcelas mensais. Se o primeiro vencimento passar de 30 dias, os dias extras de juros entram no saldo.')}
         {moneyField('giroTac', 'TAC do giro, uma única vez', 'R$ 3.150,00 é o valor inferido para reconciliar a referência. Confirme a proposta; não é uma tarifa padrão.')}
         {taxFields('giroTaxProfile', 'giroEligible')}
       </div>
+      <p className="dsc-note dsc-giro-note">Liberação do giro na data da operação ({dateBr(lm.start) || '—'}), na mesma praça do contrato.</p>
     </article>
-
     </div>
     <aside className="dsc-result-col" aria-label="Resultado da comparação">
     <article className="desk-panel cx-panel dsc-result-box">
-      {!result && <header className="dsc-result-head"><h3>Resultado</h3></header>}
+      {!result && <header className="dsc-result-head"><h3>Desconto × giro: resultado</h3></header>}
       {/* Falta de dados: faixa no topo do quadro do resultado. */}
       <div aria-live="polite" className="desconto-result-status">
         {pending && (flagged
           ? <p className="desconto-notice">Preencha ou corrija os campos sinalizados para liberar a comparação.</p>
-          : <p className="desconto-notice desconto-guide">{guide}</p>)}
+          : <p className="desconto-notice desconto-guide">{guide('a comparação')}</p>)}
         {calculated && !calculated.ok && <p role="alert" className="cx-error">{calculated.error}</p>}
       </div>
       {result && <ExpandablePanel title="Desconto × giro: resultado">

@@ -6,27 +6,26 @@
   --dscp-navy:linear-gradient(110deg,#052956,#07336b);
 }
 
-/* ── Dados à esquerda, resultado ao lado (computador largo) ou abaixo ── */
-.cx-desconto .dsc-workspace { display:grid; gap:20px; min-width:0; }
-.cx-desconto .dsc-inputs { display:grid; gap:20px; min-width:0; }
+/* ── Roteiro (21/11/2026): 1 Demanda e 2 Encargos lado a lado no computador largo; 3 Linha do tempo e 4 Resultado abaixo,
+   na largura toda. Depois, a comparação com o giro: premissas lado a lado e a resposta abaixo. ── */
+.cx-desconto :is(.dsc-flow, .dsc-form, .dsc-workspace, .dsc-inputs) { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; align-items:start; }
 .cx-desconto .dsc-result-col { min-width:0; }
 @media (min-width:1200px) {
-  .cx-desconto .dsc-workspace { grid-template-columns:minmax(0,1fr) minmax(360px,400px); align-items:start; }
-  .cx-desconto .dsc-result-col { position:sticky; top:88px; max-height:calc(100vh - 100px); overflow:auto; overscroll-behavior:contain; border-radius:12px; }
+  .cx-desconto :is(.dsc-form, .dsc-inputs) { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
 }
 
 /* ── Quadros de entrada: faixa azul-marinho, título branco, linha laranja; um destaque só (sem barra laranja à esquerda) ── */
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel { overflow:hidden; border-radius:10px; }
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel > header { flex-wrap:nowrap; min-height:46px; margin:0; padding:2px 14px; background:var(--dscp-navy); color:#fff; border:0; border-bottom:3px solid var(--dscp-orange); border-radius:0; }
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel > header h3 { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; letter-spacing:0; text-transform:none; }
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs > .cx-panel > header .fi-help > button { color:#fff; border-color:#ffffff66; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) > .cx-panel { overflow:hidden; border-radius:10px; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) > .cx-panel > header { flex-wrap:nowrap; min-height:46px; margin:0; padding:2px 14px; background:var(--dscp-navy); color:#fff; border:0; border-bottom:3px solid var(--dscp-orange); border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) > .cx-panel > header h3 { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; letter-spacing:0; text-transform:none; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) > .cx-panel > header .fi-help > button { color:#fff; border-color:#ffffff66; }
 /* Rótulos em uma linha; campos com a mesma altura e o mesmo tamanho de valor. */
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label > label:not(.dsc-check) { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label { flex-wrap:nowrap; }
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs :is(.cx-field input:not([type=checkbox]), .cx-field select) { height:44px; min-height:44px; font-size:.9375rem; }
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) .cx-field-label > label:not(.dsc-check) { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) .cx-field-label { flex-wrap:nowrap; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) :is(.cx-field input:not([type=checkbox]), .cx-field select) { height:44px; min-height:44px; font-size:.9375rem; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); }
 /* Linha do rótulo com a altura do "?" (44px), com ou sem ajuda: campos alinhados. */
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label { min-height:44px; align-items:center; }
+:root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) .cx-field-label { min-height:44px; align-items:center; }
 
 /* ── Quadro do resultado: o único com borda laranja; faixa azul sem linha laranja ── */
 :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box { display:flex; flex-direction:column; padding:0; border:2px solid var(--dscp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); }
@@ -128,6 +127,58 @@
 
 /* Celular: rótulos longos quebram linha em vez de serem cortados (nenhum texto escondido). */
 @media (max-width:480px) {
-  :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-inputs .cx-field-label > label:not(.dsc-check) { overflow:visible; white-space:normal; text-overflow:clip; }
+  :root[data-theme] body main.app.app-calculators .cx-desconto :is(.dsc-inputs, .dsc-form) .cx-field-label > label:not(.dsc-check) { overflow:visible; white-space:normal; text-overflow:clip; }
 }
 .cx-desconto .dsc-tables > .cx-panel { min-width:0; max-width:100%; }
+
+/* ── Roteiro (21/11/2026): peças próprias desta tela ── */
+/* Valor só de leitura (total dos títulos, IOF calculado): caixa com a altura de um campo, sem parecer editável. */
+:root[data-theme] body .cx-desconto .dsc-readonly { display:flex; align-items:center; box-sizing:border-box; min-width:0; min-height:44px; padding:8px 10px; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-soft); color:var(--bw-ink); font-size:.9375rem; font-weight:700; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cx-desconto .cx-field-label > label > small { margin-left:6px; color:var(--bw-mut); font-size:.75rem; font-weight:400; }
+@media (min-width:1001px) {
+  :root[data-theme] body .cx-desconto .dsc-readonly { min-height:36px; padding-top:4px; padding-bottom:4px; }
+}
+/* Demanda: data e total dos títulos na primeira linha; os grupos de títulos na largura toda. */
+:root[data-theme] body .cx-desconto .lm > .lm-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+:root[data-theme] body .cx-desconto .lm .desconto-titles { padding:0; }
+:root[data-theme] body .cx-desconto .lm .desconto-titles h4 { margin:0; }
+:root[data-theme] body .cx-desconto .lm .desconto-titles > p { margin:0 0 4px; }
+/* Rótulos dos títulos iguais aos dos outros campos; com o rótulo em duas linhas, os campos continuam alinhados por baixo. */
+:root[data-theme] body .cx-desconto .lm .desconto-titles fieldset label { justify-content:flex-end; gap:6px; color:var(--bw-mut); font-size:.8125rem; font-weight:500; line-height:1.25; }
+/* Os campos dos quadros ficam dois por linha com os quadros lado a lado (regra acima); o grupo de títulos cabe em uma linha. */
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-form .desconto-titles fieldset.cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); }
+@media (max-width:480px) {
+  /* Celular: TAC e IOF, que são curtos, ficam lado a lado. */
+  :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-form .desconto-input-panel > .cx-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-form .desconto-input-panel > .cx-form > .cx-field:not(:has(#ad-tac, #ad-iof)) { grid-column:1 / -1; }
+}
+/* Gaveta do enquadramento do IOF, como a "Detalhes do contrato" da demanda. */
+:root[data-theme] body .cx-desconto .dsc-drawer { margin:0 14px 8px; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .cx-desconto .dsc-drawer > summary { min-height:44px; padding:10px 0; color:var(--bw-link); font-size:.86rem; cursor:pointer; }
+:root[data-theme] body .cx-desconto .dsc-drawer > summary small { color:var(--bw-mut); font-size:.78rem; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-drawer > .cx-form { padding:0 0 8px; }
+/* Resultado: três respostas no computador (entra no caixa, é descontado, quanto custa). */
+@media (min-width:871px) {
+  :root[data-theme] body .cx.cx-desconto .rt-answers { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+:root[data-theme] body .sl-calc .cx.cx-desconto .rt-answers { grid-template-columns:repeat(3,minmax(0,1fr)); }
+:root[data-theme] body .cx-desconto .dsc-result-foot { display:flex; align-items:center; gap:4px; color:var(--bw-mut); font-size:.8125rem; }
+/* Comparação com o giro: título de seção sem número. */
+:root[data-theme] body .cx-desconto .dsc-compare-head { margin:12px 0 0; padding-top:16px; border-top:2px solid var(--bw-strong-line); }
+:root[data-theme] body .cx-desconto .dsc-compare-head h3 { margin:0; padding:0; border:0; color:var(--bw-ink); font-size:1.05rem; font-weight:800; letter-spacing:0; text-transform:none; }
+:root[data-theme] body .cx-desconto .dsc-compare-head h3::after { content:none; }
+:root[data-theme] body .cx-desconto .dsc-compare-head p { margin:4px 0 0; color:var(--bw-mut); font-size:.875rem; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-giro-note { margin:0; padding:0 14px 12px; color:var(--bw-mut); font-size:.78rem; }
+/* Resposta da comparação na largura toda: no computador, a resposta à esquerda e os valores em reais à direita. */
+@media (min-width:1000px) {
+  :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .expandable-content { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); align-items:start; gap:12px 16px; }
+  :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .expandable-content > * { grid-column:1; }
+  :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box .expandable-content > .dsc-values { grid-column:2; grid-row:1 / span 5; }
+  /* Valores em reais em duas colunas: o desconto por mês à esquerda; a economia por prazo e o total de 12 meses à direita. */
+  .cx-desconto .dsc-result-box .dsc-values { display:block; columns:2; column-gap:0; column-rule:1px solid var(--bw-line); }
+  .cx-desconto .dsc-result-box .dsc-values > * { break-inside:avoid; }
+  .cx-desconto .dsc-result-box .dsc-values > .dsc-grp:nth-of-type(2) { break-before:column; }
+}
+/* No slide do modo Apresentar as gavetas ficam abertas e sem o título clicável. */
+.sl-calc .cx-desconto details.dsc-drawer[open] { display:block; }
+.sl-calc .cx-desconto .dsc-drawer > summary { display:none; }

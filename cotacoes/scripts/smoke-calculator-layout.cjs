@@ -278,6 +278,7 @@ async function fillScenario(page, section, route) {
     await nominal.fill('225.600,43')
     assert.equal(await nominal.inputValue(), '225.600,43')
     await page.locator('#ad-operationRate').fill('1,83')
+    await section.locator('details.dsc-drawer > summary').click() // o enquadramento fica na gaveta "Enquadramento do IOF" (21/11/2026)
     await page.locator('#ad-taxProfile').selectOption('pj')
     await page.locator('#ad-convention').selectOption('commercial30')
     await page.locator('#ad-titleFeeTotal').fill('564,00')
@@ -288,7 +289,8 @@ async function fillScenario(page, section, route) {
     // Regra de 11/11/2026: 05/12/2026 é sábado, pago em 07/12 (32 dias corridos). Desconto comercial; IOF sobre nominal menos juros.
     const gross = 225600.43, days = 32, interest = gross * 0.0183 * days / 30
     const cost = interest + (gross - interest) * (0.0038 + days * 0.000082) + 564 + 260
-    const kpis = section.locator('.desconto-kpis')
+    // Roteiro de 21/11/2026: custo, líquido e CET do desconto ficam no bloco "4 Resultado" (antes, nos quadrinhos do formulário).
+    const kpis = section.locator('.rt-result')
     assert.ok(normalize(await kpis.innerText()).includes(brl(cost)))
     assert.ok(normalize(await kpis.innerText()).includes(brl(gross - cost)))
     // CET pelo art. 6º da Res. CMN 4.881 (texto oficial): 30 dias sobre o nominal; o prazo real (32 dias) aparece à parte.
@@ -318,7 +320,18 @@ async function fillScenario(page, section, route) {
     const answer = normalize(await section.locator('.dsc-answer-main').innerText())
     assert.ok(answer.includes(savings12), `resposta principal traz a economia de 12 meses (${savings12})`)
     assert.match(answer, savings12.startsWith('-') ? /▼.*O giro custa mais/ : /▲.*O giro custa menos/)
-    await assertResultBeside(page, section, '.dsc-inputs', '.dsc-result-col')
+    // Roteiro de 21/11/2026 (substitui o resultado fixo ao lado, de 18/11/2026): a tela conta a operação de cima para baixo.
+    // Dados, linha do tempo e resultado do desconto; só depois, a comparação com o giro, com a resposta abaixo das premissas.
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const box = async selector => section.locator(selector).boundingBox()
+    const [form, timeline, outcome, compare, premises, answerBox] = [await box('.dsc-form'), await box('.rt-timeline'), await box('.rt-result'), await box('.dsc-compare-head'), await box('.dsc-inputs'), await box('.dsc-result-col')]
+    assert.ok(timeline.y >= form.y + form.height && outcome.y >= timeline.y + timeline.height, 'dados, linha do tempo e resultado nesta ordem')
+    assert.ok(Math.abs(timeline.width - form.width) < 2 && Math.abs(outcome.width - form.width) < 2, 'linha do tempo e resultado na largura toda')
+    assert.ok(compare.y >= outcome.y + outcome.height && premises.y >= compare.y + compare.height && answerBox.y >= premises.y + premises.height, 'comparação com o giro depois do resultado do desconto')
+    if (page.viewportSize().width >= 1200) {
+      const [demanda, encargos] = [await box('.dsc-form > .lm'), await box('.dsc-form > .cx-panel')]
+      assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
+    }
   } else if (route === 'finimp') {
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)

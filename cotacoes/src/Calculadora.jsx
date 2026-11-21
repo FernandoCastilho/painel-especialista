@@ -65,7 +65,7 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   if (view === 'cdi-dolar') return <CdiDolar onBack={() => onView('')} quotes={quotes} />
   if (view === 'dividendos-emprestimo') return <DividendosEmprestimo onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} apresentacao={apresentacao} />
-  if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} />
+  if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
   // Árvore de Crédito: fora do menu e da busca (decisão de Fernando, 18/11/2026); abre só pelo endereço #calculadora/arvore-credito ou pelo atalho ARVORE.
   if (view === 'arvore-credito') return <ArvoreCredito onBack={() => onView('')} onView={onView} />

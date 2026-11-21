@@ -2,10 +2,6 @@
 .desconto-intro { margin:0; color:var(--mut); font-size:.9rem; line-height:1.5; }
 .desconto-notice { margin:0; padding:12px 14px; border:1px solid var(--line); border-left:3px solid var(--amber, #ffb000); background:var(--surface-2); color:var(--fg); font-size:.8rem; line-height:1.5; }
 .desconto-inset { margin:8px 12px; }
-.desconto-kpis { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; padding:12px; }
-.desconto-kpis > div { display:flex; flex-direction:column; gap:5px; padding:12px; border:1px solid var(--line); background:var(--surface-2); min-width:0; }
-.desconto-kpis span, .desconto-kpis small { color:var(--mut); font-size:.75rem; }
-.desconto-kpis b { font-size:1.15rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .desconto-paydate { margin:0; align-self:end; color:var(--mut); font-size:.75rem; }
 .cx-desconto .cx-field select { width:100%; min-width:0; min-height:44px; padding:8px 10px; color:var(--fg); background:var(--bg); border:1px solid var(--line); font:inherit; font-size:.9rem; }
 .cx-desconto .cx-field select:focus-visible { outline:2px solid var(--amber, #ffb000); outline-offset:0; }
@@ -28,9 +24,6 @@
 .desconto-method summary { min-height:44px; cursor:pointer; padding:10px 0; color:var(--fg); }
 .desconto-method ul { padding-left:20px; margin:4px 0 12px; display:grid; gap:8px; line-height:1.5; }
 @media (max-width:639px) {
-  .desconto-kpis { gap:8px; padding:8px; }
-  .desconto-kpis > div { padding:10px 8px; }
-  .desconto-kpis b { font-size:1rem; }
   .desconto-table tbody th { min-width:140px; max-width:160px; font-size:.75rem; }
   .desconto-table td { font-size:.85rem; }
 }
@@ -44,6 +37,5 @@
 .desconto-titles p { font-size:.85rem; line-height:1.5; color:var(--mut); }
 
 /* Clareza dos grupos de títulos após revisão visual. */
-.cx-desconto .cx-form > div:has(> b) { display:flex; flex-direction:column; gap:8px; }
 .desconto-titles input { min-height:44px; padding:8px 10px; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:8px; font:inherit; }
 .desconto-titles .money-wrap > input { padding-left:42px; }
