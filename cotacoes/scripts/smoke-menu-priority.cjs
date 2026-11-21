@@ -5,7 +5,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
  fs.mkdirSync(out,{recursive:true})
  const browser=await chromium.launch(require('./smoke-launch.cjs')()), report=[]
  try{
-  for(const width of [320,390,820,1024,1440,1920]) for(const theme of ['light','dark']){
+  for(const width of [320,390,820,1024,1440,1660,1920]) for(const theme of ['light','dark']){
    const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<=390,colorScheme:theme,serviceWorkers:'block'})
    const page=await context.newPage()
    await page.goto(base+'/#calculadora')
@@ -19,7 +19,8 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.evaluate(()=>document.fonts.ready)
    if(width>=1400){
     const {flagSvg}=await import('../src/flags.js')
-    const expectedClocks=width>=1800?[['São Paulo','BRT','BRL'],['Nova York','NYC','USD'],['Londres','LDN','GBP'],['Tóquio','TYO','JPY']]:[['São Paulo','BRT','BRL']]
+    const expectedClocks=[['São Paulo','BRT','BRL'],['Nova York','NYC','USD'],['Londres','LDN','GBP'],['Tóquio','TYO','JPY']].slice(0,width>=1800?4:width>=1600?2:1)
+    assert.equal(await page.locator('.topbar-clocks > .topbar-clock:visible').count(),expectedClocks.length)
     for(const [city,short,code] of expectedClocks){
       const clock=page.locator('.topbar-clocks > .topbar-clock').and(page.getByTitle(city,{exact:true}))
       assert.equal((await clock.locator('b').innerText()).trim(),short)
