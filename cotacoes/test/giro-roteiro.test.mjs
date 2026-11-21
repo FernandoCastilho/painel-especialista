@@ -51,3 +51,10 @@ test('a tela segue a ordem do roteiro e usa os nomes padrão dos encargos', asyn
   for (const question of ['Quanto entra no caixa', 'Quanto paga por mês', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
   assert.doesNotMatch(source, /Taxas, tributos e despesas|Condições do produto|Fee de estruturação|Outras despesas/)
 })
+
+test('a referência de mercado é o último bloco da tela e mostra a curva prefixada', async () => {
+  const source = await readFile(new URL('../src/CapitalDeGiro.jsx', import.meta.url), 'utf8')
+  const at = source.indexOf("<ReferenciaMercado tipos={['pre']} />")
+  assert.ok(at > source.indexOf('Ver parcelas'), 'depois das parcelas')
+  assert.match(source.slice(at), /^<ReferenciaMercado tipos=\{\['pre'\]\} \/>\s*<\/section>\s*\}\s*$/, 'nada depois dela')
+})

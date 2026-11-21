@@ -9,6 +9,7 @@ import { cgToday } from './contaGarantida.js'
 import { addMonths } from './creditModalities.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, LinhaDoTempo, Respostas, Resultado, step } from './Roteiro.jsx'
+import ReferenciaMercado from './ReferenciaMercado.jsx'
 import { lmSchedule } from './linhaMestra.js'
 import { resolveCreditIof } from './iofRules.js'
 import { PRACA_AJUDA, PRACAS_CONTRATO, pracaCalendars } from './pracaContrato.js'
@@ -235,5 +236,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         </div>
       </details>
     </details> : <button className="giro-installments giro-installments-disabled" type="button" disabled>Ver parcelas</button>}
+    {/* Taxa prefixada: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
+    <ReferenciaMercado tipos={['pre']} />
   </section>
 }

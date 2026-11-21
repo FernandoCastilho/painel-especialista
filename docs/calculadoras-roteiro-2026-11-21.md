@@ -64,6 +64,26 @@ A linha mestra de 19/11 continua: o que se digita aqui segue para as outras calc
 - Aparelho físico (iPhone, Android) e Windows.
 - Uso real com cliente.
 
-## 6. Próximo passo
+## 6. Referência de mercado no fim da tela (pedido do Fernando, 21/11/2026)
+
+Pedido: pôr sempre embaixo, ao final de tudo, um gráfico só para exemplificar. Taxa prefixada mostra o gráfico de juros do pré; pós-fixada mostra o CDI futuro da B3; operação em moeda mostra a moeda da tela.
+
+Bloco novo, "Referência de mercado", o último de cada calculadora. Reaproveita os gráficos que o painel já tem, com os dados do próprio painel:
+
+| Tipo de operação | Gráfico |
+|---|---|
+| Taxa prefixada | Curva DI x pré da B3 |
+| Pós-fixada (% do CDI ou CDI + spread) | CDI futuro (taxa a termo dos futuros de DI da B3) |
+| Em moeda estrangeira | Cotação diária da moeda escolhida na tela, com 30 dias, 90 dias ou 1 ano |
+
+- O bloco avisa que é só para ilustrar: não entra na conta da simulação e não é previsão.
+- Moedas com histórico no painel hoje: dólar, euro e yuan. Em outra moeda, o bloco diz que o histórico não está disponível.
+- No modo Apresentar o bloco não entra no slide.
+- No Capital de Giro (taxa prefixada) entra a curva DI x pré. Fotos: `giro-referencia-computador.png` e `giro-referencia-celular.png`.
+- O BNDES já tem o "Histórico dos indexadores" no fim da tela e fica com ele como referência.
+
+Conferido: os três tipos abertos na tela com os dados públicos do painel de 18/11/2026, nos dois temas; 2.395 testes passando (1 novo, que garante que a referência é o último bloco do Giro); conferências de tela do Giro, do modo Apresentar e da busca.
+
+## 7. Próximo passo
 
 Fernando valida o piloto. Depois, replicar o roteiro nas outras seis calculadoras de crédito (Necessidade do Cliente, BNDES, Conta Garantida, Análise de desconto, FINIMP e 4131) e, por último, ajustar as seis que não são de crédito, com os nomes Situação, Premissas e Resultado.
