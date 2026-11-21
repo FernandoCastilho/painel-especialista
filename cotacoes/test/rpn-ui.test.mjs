@@ -8,6 +8,7 @@ import React from 'react'
 import { hookRenderer } from './helpers/hooks.mjs'
 import { classicKeyRows, getClassicKeyState, portraitKeyRows } from '../src/rpnClassicLayout.mjs'
 import { rpnKeyFromEvent } from '../src/rpnKeyboard.mjs'
+import { createRpnHistoryCapture, HISTORY_LIMIT, replayRpnEntry } from '../src/rpnHistory.mjs'
 import { CLASSIC_KEYS, createClassicRpnController } from '../src/rpnClassicController.mjs'
 import { convertEquivalentRate } from '../src/rpnRateConversion.mjs'
 
@@ -22,7 +23,8 @@ function resources(create) {
   const deps = { react: { ...React, useId: () => 'rpn-test-' + ++sequence },
     './RpnCalculator.css': {}, './rpnClassicController.mjs': { createClassicRpnController: create },
     './rpnClassicLayout.mjs': { classicKeyRows, portraitKeyRows, getClassicKeyState },
-    './rpnRateConversion.mjs': { convertEquivalentRate }, './rpnKeyboard.mjs': { rpnKeyFromEvent } }
+    './rpnRateConversion.mjs': { convertEquivalentRate }, './rpnKeyboard.mjs': { rpnKeyFromEvent },
+    './rpnHistory.mjs': { createRpnHistoryCapture, HISTORY_LIMIT }, './RpnHistoryPanel.jsx': { __esModule: true, default: function HistoryPanel() {} } }
   runInNewContext(code + '\nmodule.testComponents = { RatePanel, KeyGrid, LcdValue }', {
     module, exports: module.exports, require: path => deps[path] ?? require(path),
   })
@@ -57,11 +59,39 @@ test('grade física clássica tem 39 teclas nas posições exatas e Enter único
 test('teclado físico respeita região, conversor, atalhos do navegador, composição e ativação nativa', () => {
   for (const [key, id] of [['0','0'],[',','decimal'],['.','decimal'],['Enter','enter'],['=','enter'],
     ['+','add'],['-','subtract'],['*','multiply'],['/','divide'],['%','percent'],['^','power'],
-    ['Backspace','backspace'],['Delete','clx'],['Escape','cancel'],['f','f'],['g','g']]) assert.equal(rpnKeyFromEvent(event(key)),id)
+    ['Backspace','backspace'],['Delete','clx'],['Escape','cancel'],['f','f'],['F','f'],['g','g'],['G','g'],['c','clx'],['C','clx'],['N','n'],['I','i']]) assert.equal(rpnKeyFromEvent(event(key)),id)
   for (const e of [event('Tab'),event(' '),event('1',{altKey:true}),event('+',{ctrlKey:true}),
-    event('-', {metaKey:true}),event('7',{nativeEvent:{isComposing:true}}),
+    event('-', {metaKey:true}),event('C',{ctrlKey:true}),event('G',{altKey:true}),event('7',{nativeEvent:{isComposing:true}}),
     event('8',{target:{closest:()=>({})}}),event('Enter',{target:{closest:s=>s==='button'?{}:null}})])
     assert.equal(rpnKeyFromEvent(e),null)
+})
+
+test('atalhos f, g e c enviam as mesmas teclas que os botões clássicos', () => {
+  const mock = (calc, keys) => keys.forEach(key => {
+    const id = rpnKeyFromEvent(event(key))
+    assert.ok(id && calc.isSupported(id))
+    calc.press(id)
+  })
+  const viaKeys = createClassicRpnController()
+  const reference = createClassicRpnController()
+  try {
+    mock(viaKeys, ['2', 'N', 'C'])
+    for (const id of ['2', 'n', 'clx']) reference.press(id)
+    assert.equal(viaKeys.snapshot().finance.n, 2, 'C sozinho não limpa registros financeiros')
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+    mock(viaKeys, ['F', 'C'])
+    for (const id of ['f', 'clx']) reference.press(id)
+    assert.equal(viaKeys.snapshot().finance.n, 0, 'F + C aciona CLEAR REG')
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+    mock(viaKeys, ['G', '7'])
+    for (const id of ['g', '7']) reference.press(id)
+    assert.equal(viaKeys.snapshot().indicators.begin, true, 'G + 7 equivale a BEG')
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+    mock(viaKeys, ['g', '8', 'g', 'c'])
+    for (const id of ['g', '8', 'g', 'clx']) reference.press(id)
+    assert.equal(viaKeys.snapshot().indicators.begin, false)
+    assert.deepEqual(viaKeys.snapshot(), reference.snapshot())
+  } finally { viaKeys.dispose(); reference.dispose() }
 })
 
 test('toque e teclado enviam IDs físicos; LCD, estados e indisponibilidade vêm do controlador', async t => {
@@ -282,4 +312,80 @@ test('De e Para têm rótulos nativos próprios sem o texto das opções no rót
     assert.deepEqual(Array.from(select.props.children, option=>option.props.value),['day','month','year'])
     assert.ok(!nodes(label).includes(select))
   }
+})
+
+test('resumo simultâneo da taxa não supõe base diária e o visor recebe somente o destino', async t => {
+  const { RatePanel } = resources(null)
+  const used = []
+  const ui = hookRenderer(() => RatePanel({id:'taxas-resumo', open:true, onUse:value=>used.push(value), onClose(){}, canUse:true}))
+  t.after(() => ui.close())
+  const find = f => nodes(ui.value).find(f)
+  const set = async (control, value) => { find(control).props.onChange({target:{value}}); await ui.settle() }
+  const field = id => el => el.type === 'select' && el.props.id === 'taxas-resumo-' + id
+  const basis = el => el.type === 'select' && el.props['aria-label'] === 'Base diária'
+  const summary = period => {
+    const area = find(el => el.props?.['aria-label'] === 'Equivalências por período')
+    return nodes(area).find(el => el.type === 'div' && nodes(el).some(ch => ch.type === 'dt' && ch.props.children === period))
+      ?.props.children.find(ch => ch.type === 'dd').props.children
+  }
+  await ui.settle()
+  await set(el => el.type === 'input', '2')
+  assert.equal(summary('Ao mês'), '2% a.m.')
+  assert.match(summary('Ao ano'), /^26,8241794563% a\.a\.$/)
+  assert.equal(summary('Ao dia'), 'Escolha a base diária')
+  for (const b of ['365', '252']) {
+    await set(basis, b)
+    const expected = convertEquivalentRate({rate:2,from:'month',to:'day',dayBasis:Number(b)}).value
+    const display = Number(summary('Ao dia').split('%')[0].replace(',','.'))
+    assert.ok(Math.abs(display - expected) < 1e-12)
+  }
+  const use = () => find(el => el.props?.className === 'rpn-use-rate')
+  use().props.onClick()
+  assert.deepEqual(used, [convertEquivalentRate({rate:2,from:'month',to:'year'}).value])
+  await set(basis, '')
+  await set(field('to'), 'day')
+  assert.equal(use().props.disabled, true)
+  assert.equal(summary('Ao mês'), '2% a.m.')
+  await set(field('from'), 'day')
+  assert.equal(summary('Ao ano'), 'Escolha a base diária')
+  assert.equal(use().props.disabled, true)
+})
+
+
+test('histórico, atalhos e conversão convivem sem reescrever pilha ou registradores alheios', async t => {
+  const controller = createClassicRpnController()
+  const ui = setup(t, () => controller)
+  const keyboard = async key => { ui.panel().props.onKeyDown(event(key)); await ui.render.settle() }
+  await ui.render.settle()
+  for (const key of ['2','N','C','F','C','2','Enter','3','+']) await keyboard(key)
+  assert.equal(controller.snapshot().finance.n, 0)
+  assert.equal(controller.snapshot().x, 5)
+  ui.find(node => node.props?.['aria-label'] === 'Histórico de contas').props.onClick()
+  await ui.render.settle()
+  const history = () => ui.find(node => node.type?.name === 'HistoryPanel').props
+  assert.equal(history().entries.length, 1)
+  const recorded = history().entries[0]
+  assert.equal(recorded.result, 5)
+  history().onEdit({ ...replayRpnEntry('add', 2, 9), id: recorded.id })
+  await ui.render.settle()
+  assert.equal(controller.snapshot().x, 5)
+  assert.equal(history().entries[0].result, 11)
+  history().onRemove(recorded.id)
+  await ui.render.settle()
+  history().onClose()
+  await ui.render.settle()
+  ui.find(node => node.props?.['aria-label'] === 'Histórico de contas').props.onClick()
+  await ui.render.settle()
+  assert.equal(history().canUndo, true)
+  history().onUndo()
+  await ui.render.settle()
+  const before = controller.snapshot()
+  const rate = convertEquivalentRate({ rate: 1, from: 'month', to: 'year' }).value
+  ui.rates().onUse(rate)
+  await ui.render.settle()
+  assert.equal(controller.snapshot().x, rate)
+  assert.deepEqual(controller.snapshot().finance, before.finance)
+  assert.deepEqual(controller.snapshot().stack.slice(1), before.stack.slice(1))
+  assert.equal(history().entries.length, 1)
+  assert.equal(history().entries[0].result, 11)
 })

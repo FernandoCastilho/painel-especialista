@@ -46,6 +46,13 @@ check('Estado ON e retenção','on',entry(4),key('on'),txt('visor',''),flag('DES
 check('Prefixos f/g e Escape','f g',key('f'),flag('f',true),key('g'),flag('f',false),flag('g',true),
   physical('Escape'),flag('g',false))
 check('Backspace físico preserva os demais dígitos','',key('1','2','3'),physical('Backspace'),x(12))
+check('Teclado físico C e F → C respeitam CLx e CLEAR REG','',
+  physical('2'),physical('N'),physical('C'),x(0),reg('n',2),
+  physical('F'),flag('f',true),physical('C'),flag('f',false),reg('n',0))
+check('Teclado físico G ativa a função azul da próxima tecla','',
+  physical('G'),flag('g',true),physical('7'),flag('BEGIN',true),
+  physical('g'),physical('8'),flag('END',true),
+  physical('g'),physical('c'),flag('g',false))
 check('PREFIX mostra X completo','f:enter',entry(1.2345),key('f','enter'),has('status',/1\.2345/))
 check('Modo científico e RND','f:decimal f:pmt',entry(1.236,'f','decimal'),has('visor',/E/),key('f','pmt'),x(1.24))
 check('f FIN limpa registros financeiros','f:swap',entry(6,'i'),key('f','swap'),reg('i',0))

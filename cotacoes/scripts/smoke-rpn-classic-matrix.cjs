@@ -152,6 +152,62 @@ async function createSuite(browser, variant) {
   } finally { await context.close() }
 }
 
+async function verifyHistory(browser) {
+  for (const [width, height, theme, touch] of [[390, 844, 'dark', true], [1440, 844, 'light', false], [844, 390, 'light', true]]) {
+    const context = await browser.newContext({ viewport: { width, height }, isMobile: touch, hasTouch: touch, colorScheme: theme, serviceWorkers: 'block' })
+    try {
+      await context.route('**/*', route => new URL(route.request().url()).origin === base.origin ? route.continue() : route.abort())
+      const page = await context.newPage()
+      page.setDefaultTimeout(5000)
+      await page.goto(new URL('#rpn', base).href)
+      const panel = page.getByRole('region', { name: 'Calculadora RPN', exact: true })
+      await panel.waitFor()
+      const notice = page.getByRole('dialog', { name: 'Aviso', exact: true })
+      if (await notice.isVisible()) await notice.getByRole('button', { name: 'Entendi', exact: true }).click()
+      await panel.focus()
+      for (const key of ['2', 'Enter', '3', '+']) await panel.press(key)
+      const display = panel.getByLabel('Resultado da calculadora', { exact: true })
+      assert.match((await display.textContent()).trim(), /^5(?:,0+)?$/)
+      const open = panel.getByRole('button', { name: 'Histórico de contas', exact: true })
+      await (touch ? open.tap() : open.click())
+      const history = panel.getByRole('region', { name: 'Histórico de contas', exact: true })
+      await history.getByText('2 + 3 = 5', { exact: true }).waitFor()
+      assert.equal(await history.getByRole('listitem').count(), 1)
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true)
+      await history.getByRole('button', { name: 'Editar conta', exact: true }).click()
+      await history.getByLabel('Segundo valor', { exact: true }).fill('1e-999')
+      await history.getByRole('button', { name: 'Salvar edição', exact: true }).click()
+      await history.getByRole('alert').waitFor()
+      await history.getByText('2 + 3 = 5', { exact: true }).waitFor()
+      await history.getByLabel('Segundo valor', { exact: true }).fill('9')
+      await history.getByRole('button', { name: 'Salvar edição', exact: true }).click()
+      const updated = history.getByText('2 + 9 = 11', { exact: true })
+      await updated.waitFor()
+      assert.match((await display.textContent()).trim(), /^5(?:,0+)?$/,'edição não mexe no visor original')
+      if (!touch) {
+        await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base.origin })
+        await history.getByRole('button', { name: 'Copiar conta', exact: true }).click()
+        await history.getByText('Conta copiada.', { exact: true }).waitFor()
+        assert.equal(await page.evaluate(() => navigator.clipboard.readText()), '2 + 9 = 11')
+      }
+      await history.getByRole('button', { name: 'Excluir conta', exact: true }).click()
+      await updated.waitFor({ state: 'hidden' })
+      await history.getByRole('button', { name: 'Fechar histórico', exact: true }).click()
+      await open.click()
+      await history.getByRole('button', { name: 'Desfazer exclusão', exact: true }).click()
+      await updated.waitFor()
+      await page.screenshot({ path: path.join(out, 'rpn-history-' + width + '-' + theme + '.png') })
+      await history.getByRole('button', { name: 'Fechar histórico', exact: true }).click()
+      await open.click()
+      await updated.waitFor()
+      await page.reload()
+      await open.click()
+      await history.getByText('As operações aritméticas concluídas nesta sessão aparecem aqui.', { exact: true }).waitFor()
+      console.log('PASS histórico isolado da RPN · ' + width + ' · ' + theme)
+    } finally { await context.close() }
+  }
+}
+
 async function main() {
   assert.ok(['127.0.0.1','localhost','[::1]'].includes(base.hostname),'a matriz usa apenas prévia local')
   fs.mkdirSync(out,{recursive:true})
@@ -163,6 +219,7 @@ async function main() {
   try {
     browser=await chromium.launch(launchOptions())
     reports=await Promise.all(variants.map(variant=>createSuite(browser,variant)))
+    await verifyHistory(browser)
   } catch (error) {
     writeReport({...baseReport,state:'setup-error',setupError:String(error?.message??error)})
     throw error

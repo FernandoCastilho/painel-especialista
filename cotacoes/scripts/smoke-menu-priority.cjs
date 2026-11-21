@@ -5,7 +5,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
  fs.mkdirSync(out,{recursive:true})
  const browser=await chromium.launch(require('./smoke-launch.cjs')()), report=[]
  try{
-  for(const width of [320,390,820,1024,1440]) for(const theme of ['light','dark']){
+  for(const width of [320,390,820,1024,1440,1660,1920]) for(const theme of ['light','dark']){
    const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<=390,colorScheme:theme,serviceWorkers:'block'})
    const page=await context.newPage()
    await page.goto(base+'/#calculadora')
@@ -17,6 +17,23 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    const expected=width>=1000?['Mercado','Cenários','Juros','Calculadoras','Calculadora RPN','Setores','Notícias','Podcast','Mais']
     :width<=359?['Merc.','Cen.','Juros','Calc.','RPN','Setores','Mais']:['Mercado','Cenários','Juros','Calculadoras','RPN','Setores','Mais']
    await page.evaluate(()=>document.fonts.ready)
+   if(width>=1400){
+    const {flagSvg}=await import('../src/flags.js')
+    const expectedClocks=[['São Paulo','BRT','BRL'],['Nova York','NYC','USD'],['Londres','LDN','GBP'],['Tóquio','TYO','JPY']].slice(0,width>=1800?4:width>=1600?2:1)
+    assert.equal(await page.locator('.topbar-clocks > .topbar-clock:visible').count(),expectedClocks.length)
+    for(const [city,short,code] of expectedClocks){
+      const clock=page.locator('.topbar-clocks > .topbar-clock').and(page.getByTitle(city,{exact:true}))
+      assert.equal((await clock.locator('b').innerText()).trim(),short)
+      assert.match(await clock.innerText(),/\d{2}:\d{2}/)
+      const flag=clock.locator('.topbar-clock-flag')
+      assert.equal(await flag.isVisible(),true)
+      assert.equal(await flag.getAttribute('aria-hidden'),'true')
+      assert.ok(await flag.locator('svg').evaluate((svg,expected)=>{
+        const sample=document.createElement('template'); sample.innerHTML=expected
+        return svg.isEqualNode(sample.content.firstElementChild)
+      },flagSvg(code,'width="13" height="9"')))
+    }
+   }
    assert.deepEqual((await nav.locator(':scope > button, :scope > .more-tab > button').allInnerTexts()).map(s=>s.trim()),expected)
    for(const button of await nav.locator(':scope > button, :scope > .more-tab > button').all()) {
     const bounds=await button.boundingBox()
@@ -133,10 +150,20 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
       assert.equal(await destination.inputValue(),'year','rótulo semântico exato Para')
       await rateField.fill('1,00')
       assert.match(await rates.getByLabel('Taxa equivalente',{exact:true}).innerText(),/^12,6825/)
+      const equivalences=rates.getByRole('region',{name:'Equivalências por período',exact:true})
+      const daily=equivalences.getByText('Ao dia',{exact:true}).locator('..').locator('dd')
+      await equivalences.getByText('1% a.m.',{exact:true}).waitFor()
+      assert.match(await equivalences.getByText('Ao ano',{exact:true}).locator('..').locator('dd').innerText(),/^12,6825.*% a\.a\.$/)
+      assert.equal(await daily.innerText(),'Escolha a base diária')
       await rates.getByLabel('Para',{exact:true}).selectOption('day')
       assert.ok(await use.isDisabled(),'base diária deve ser explícita')
-      await rates.getByLabel('Base diária',{exact:true}).selectOption('365')
-      assert.ok(await use.isEnabled())
+      for(const basis of [365,252]){
+       await rates.getByLabel('Base diária',{exact:true}).selectOption(String(basis))
+       assert.ok(await use.isEnabled())
+       const expected=100*(1.01**(12/basis)-1)
+       const displayed=Number((await daily.innerText()).split('%')[0].replace(',','.'))
+       assert.ok(Math.abs(displayed-expected)<1e-10,'diária respeita a base selecionada')
+      }
       await rates.getByLabel('Para',{exact:true}).selectOption('year')
       await page.screenshot({path:path.join(out,'rpn-taxas-'+width+'-'+theme+'.png'),fullPage:true})
       await rateField.press('Escape')
@@ -238,12 +265,15 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.getByRole('navigation',{name:'Seções',exact:true}).waitFor()
    await context.close()
   }
-  for (const behavior of ['unavailable', 'rejected', 'native']) {
-   const context = await browser.newContext({viewport:{width:390,height:844},isMobile:behavior !== 'native',hasTouch:behavior !== 'native',serviceWorkers:'block'})
+  for (const behavior of ['unavailable', 'rejected', 'native', 'desktop-fallback']) {
+   const desktopShort=behavior === 'desktop-fallback'
+   const mobile=behavior === 'unavailable' || behavior === 'rejected'
+   const viewport=desktopShort ? {width:780,height:390} : {width:390,height:844}
+   const context = await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,serviceWorkers:'block'})
    const page = await context.newPage()
    await page.addInitScript(behavior => {
     let fullscreen = null
-    Object.defineProperty(document,'fullscreenEnabled',{ configurable:true, get:()=>behavior !== 'unavailable' })
+    Object.defineProperty(document,'fullscreenEnabled',{ configurable:true, get:()=>behavior !== 'unavailable' && behavior !== 'desktop-fallback' })
     Object.defineProperty(document,'fullscreenElement',{ configurable:true, get:()=>fullscreen })
     HTMLElement.prototype.requestFullscreen = async function() {
      if (behavior === 'rejected') throw new Error('fullscreen indisponível')
@@ -263,12 +293,15 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.match(await value(),/^5(?:,0+)?$/)
    const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
    const close = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
+   const normalNav = page.getByRole('navigation',{name:'Seções',exact:true})
+   await normalNav.waitFor({state:'visible'})
+   if (desktopShort) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false)
    await open.click()
    await close.waitFor()
    const native = behavior === 'native'
    assert.equal(await panel.getAttribute('data-screen-mode'),native?'native':'page')
    if (native) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false,'paisagem também funciona com ponteiro fino')
-   if (!native) assert.equal(await page.locator('.nav-top').isVisible(),false)
+   if (!native) await normalNav.waitFor({state:'hidden'})
    for (const [width,height] of [[780,390],[320,760]]) {
     await page.setViewportSize({width,height})
     const grade = panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
@@ -284,16 +317,23 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
     }
     assert.match(await value(),/^5(?:,0+)?$/)
    }
+   // Volte à geometria inicial antes de sair, para provar a restauração sem efeito de um resize após a saída.
+   await page.setViewportSize(viewport)
+   const landscape=viewport.width>viewport.height
+   await page.waitForFunction(wide=>matchMedia(wide?'(orientation: landscape)':'(orientation: portrait)').matches,landscape)
+   const restoredViewport=await page.evaluate(()=>[innerWidth,innerHeight])
    if (native) await page.evaluate(()=>document.exitFullscreen())
    else await close.press('Escape')
    await open.waitFor()
    assert.equal(await panel.getAttribute('data-screen-mode'),null)
    if (!native) assert.equal(await open.evaluate(el=>document.activeElement===el),true)
    assert.match(await value(),/^5(?:,0+)?$/)
-   assert.equal(await page.locator('.nav-top').isVisible(),true)
+   await normalNav.waitFor({state:'visible'})
+   assert.deepEqual(await page.evaluate(()=>[innerWidth,innerHeight]),restoredViewport)
    await open.click()
    await close.click()
    await open.waitFor()
+   await normalNav.waitFor({state:'visible'})
    assert.match(await value(),/^5(?:,0+)?$/)
    report.push({fullscreen:behavior,passed:true})
    await context.close()

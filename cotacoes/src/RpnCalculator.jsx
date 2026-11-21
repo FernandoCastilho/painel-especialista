@@ -4,12 +4,15 @@ import { convertEquivalentRate } from './rpnRateConversion.mjs'
 import { classicKeyRows, getClassicKeyState, portraitKeyRows } from './rpnClassicLayout.mjs'
 import { rpnKeyFromEvent } from './rpnKeyboard.mjs'
 import './RpnCalculator.css'
+import RpnHistoryPanel from './RpnHistoryPanel.jsx'
+import { createRpnHistoryCapture, HISTORY_LIMIT } from './rpnHistory.mjs'
 
 const registers = [
   ['n', 'n', 'Número de períodos'], ['i', 'i', 'Taxa por período (%)'], ['pv', 'PV', 'Valor presente'],
   ['pmt', 'PMT', 'Pagamento periódico'], ['fv', 'FV', 'Valor futuro'],
 ]
-const compactLandscape = '(orientation: landscape) and (min-width: 500px) and (max-width: 1100px) and (max-height: 560px)'
+const mobileLandscape = '(orientation: landscape) and (pointer: coarse) and (min-width: 500px) and (max-height: 520px)'
+const fullLandscape = '(orientation: landscape) and (min-width: 500px) and (max-height: 560px)'
 const options = [['day', 'Ao dia'], ['month', 'Ao mês'], ['year', 'Ao ano']]
 const suffix = { day: 'a.d.', month: 'a.m.', year: 'a.a.' }
 const fmt = new Intl.NumberFormat('pt-BR', { maximumSignificantDigits: 12 })
@@ -81,8 +84,11 @@ function RatePanel({ id, open, onClose, onUse, canUse }) {
   const needsBasis = from === 'day' || to === 'day'
   const parsed = /^[+−-]?(?:\d+(?:[,.]\d+)?|[,.]\d+)$/.test(raw.trim())
     ? Number(raw.trim().replace('−', '-').replace(',', '.')) : NaN
-  const pending = raw.trim() === '' || (needsBasis && !basis)
-  const result = !pending && Number.isFinite(parsed) ? convertEquivalentRate({ rate: parsed, from, to, dayBasis: basis ? Number(basis) : undefined }) : null
+  const converted = target => Number.isFinite(parsed) && ((from !== 'day' && target !== 'day') || basis)
+    ? convertEquivalentRate({ rate: parsed, from, to: target, dayBasis: basis ? Number(basis) : undefined }) : null
+  const result = converted(to)
+  const equivalences = Number.isFinite(parsed) && parsed > -100
+    ? ['month', 'year', 'day'].map(unit => [unit, unit === to ? result : converted(unit)]) : []
   const error = raw.trim() !== '' && !Number.isFinite(parsed) ? 'Digite uma taxa válida, sem separador de milhar.'
     : result && !result.ok ? result.error : ''
   const swap = () => { setFrom(to); setTo(from) }
@@ -114,15 +120,25 @@ function RatePanel({ id, open, onClose, onUse, canUse }) {
         </select>
       </div>
     </div>
-    {needsBasis && <label className="rpn-field"><span>Base diária</span><select value={basis} onChange={e => setBasis(e.target.value)} aria-label="Base diária" aria-describedby={`${id}-basis-hint`}>
+    <label className="rpn-field"><span>Base diária{!needsBasis && " (opcional)"}</span><select value={basis} onChange={e => setBasis(e.target.value)} aria-label="Base diária" aria-describedby={`${id}-basis-hint`}>
       <option value="">Escolha a base</option><option value="365">365 dias corridos/ano</option><option value="252">252 dias úteis/ano</option>
-    </select><small id={`${id}-basis-hint`}>Mês médio: a base anual dividida por 12.</small></label>}
+    </select><small id={`${id}-basis-hint`}>Escolha a base para calcular taxas ao dia. Mês médio: base anual dividida por 12.</small></label>
     <div className="rpn-rate-result" aria-live="polite" aria-atomic="true">
       <strong>Taxa equivalente</strong>
       {error ? <p id={`${id}-issue`} className="rpn-rate-error">{error}</p>
         : result?.ok ? <output aria-label="Taxa equivalente">{show(result.value)}% {suffix[to]}</output>
           : <p>{needsBasis && !basis ? 'Escolha a base diária para converter.' : 'Digite a taxa de origem.'}</p>}
     </div>
+    {equivalences.length > 0 && <section className="rpn-rate-equivalences" aria-label="Equivalências por período" aria-live="polite" aria-atomic="true">
+      <strong>Equivalências por período</strong>
+      <dl>{equivalences.map(([unit, value]) => <div key={unit}>
+        <dt>{options.find(([key]) => key === unit)[1]}</dt>
+        <dd>{value?.ok ? `${show(value.value)}% ${suffix[unit]}`
+          : value ? 'Fora da precisão disponível' : 'Escolha a base diária'}</dd>
+      </div>)}</dl>
+      {basis && <small>Taxa ao dia: base {basis === '252' ? '252 dias úteis' : '365 dias corridos'} por ano.</small>}
+      <p>As taxas têm o mesmo efeito acumulado sob juros compostos. “Usar no visor” usa só a taxa escolhida em Para.</p>
+    </section>}
     <button type="button" className="rpn-use-rate" disabled={!result?.ok || !canUse} onClick={() => onUse(result.value)}>Usar no visor</button>
     <small>Não altera o registro i. O visor usa suas casas decimais configuradas.</small>
   </section>
@@ -174,24 +190,48 @@ export default function RpnCalculator() {
   }
   const [ratesOpen, setRatesOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const historyId = useId(), historyTrigger = useRef(null), nextHistoryId = useRef(0)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [history, setHistory] = useState({ entries: [], removed: null })
+  const [captureHistory] = useState(() => createRpnHistoryCapture())
+  const closeHistory = () => { setHistoryOpen(false); historyTrigger.current?.focus() }
+  const editHistory = edited => setHistory(s => ({ ...s, entries: s.entries.map(e => e.id === edited.id ? edited : e) }))
+  const removeHistory = id => setHistory(s => {
+    const index = s.entries.findIndex(e => e.id === id)
+    return index < 0 ? s : { entries: s.entries.filter(e => e.id !== id), removed: { entry: s.entries[index], index } }
+  })
+  const undoHistory = () => setHistory(s => {
+    if (!s.removed) return s
+    const { entry, index } = s.removed
+    return { entries: [...s.entries.slice(0, index), entry, ...s.entries.slice(index)].slice(0, HISTORY_LIMIT), removed: null }
+  })
+  const [mobileCompact, setMobileCompact] = useState(() =>
+    typeof window !== 'undefined' && Boolean(window.matchMedia?.(mobileLandscape).matches))
+  useEffect(() => {
+    const viewport = typeof window !== 'undefined' && window.matchMedia?.(mobileLandscape)
+    if (!viewport?.addEventListener) return
+    const update = event => setMobileCompact(event.matches)
+    viewport.addEventListener('change', update)
+    return () => viewport.removeEventListener('change', update)
+  }, [])
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const viewport = window.matchMedia?.(compactLandscape)
+    const viewport = window.matchMedia?.(screenMode ? fullLandscape : mobileLandscape)
     if (!viewport?.addEventListener) return
     let frame = 0
     const onRotate = event => {
       cancelAnimationFrame(frame)
-      if (event.matches && !ratesOpen && !helpOpen) frame = requestAnimationFrame(() => window.scrollTo(0, 0))
+      if (event.matches && !ratesOpen && !helpOpen && !historyOpen) frame = requestAnimationFrame(() => window.scrollTo(0, 0))
     }
     viewport.addEventListener('change', onRotate)
     return () => {
       viewport.removeEventListener('change', onRotate)
       cancelAnimationFrame(frame)
     }
-  }, [ratesOpen, helpOpen])
+  }, [ratesOpen, helpOpen, historyOpen, screenMode])
   useEffect(() => {
-    if (helpOpen && typeof window !== 'undefined' && window.matchMedia?.(compactLandscape).matches) helpPanel.current?.focus()
-  }, [helpOpen])
+    if (helpOpen && typeof window !== 'undefined' && window.matchMedia?.(screenMode ? fullLandscape : mobileLandscape).matches) helpPanel.current?.focus()
+  }, [helpOpen, screenMode])
   const closeHelp = () => { setHelpOpen(false); helpTrigger.current?.focus() }
   const [session] = useState(() => {
     try {
@@ -223,10 +263,18 @@ export default function RpnCalculator() {
       setFailed(true)
     }
   }
-  const press = id => act(c => c.press(id))
+  const press = id => act(c => {
+    const before = c.snapshot(), next = c.press(id) ?? c.snapshot()
+    const item = captureHistory(id, before, next)
+    if (item) {
+      const row = { ...item, id: String(++nextHistoryId.current) }
+      setHistory(s => ({ ...s, entries: [row, ...s.entries].slice(0, HISTORY_LIMIT) }))
+    }
+    return next
+  })
   const onKeyDown = event => {
-    if (event.defaultPrevented) return
-    if (event.key === 'Escape' && screenMode === 'page' && !helpOpen && !ratesOpen && !event.target.closest?.('input, select, textarea, [contenteditable="true"]')) {
+    if (event.defaultPrevented || event.target?.closest?.('.rpn-history')) return
+    if (event.key === 'Escape' && screenMode === 'page' && !helpOpen && !ratesOpen && !historyOpen && !event.target?.closest?.('input, select, textarea, [contenteditable="true"]')) {
       event.preventDefault()
       setScreenMode(null)
       screenButton.current?.focus()
@@ -243,7 +291,7 @@ export default function RpnCalculator() {
   const powered = view.indicators?.on !== false
   const display = powered ? view.display : ''
 
-  return <section ref={workspace} className="rpn-workspace" data-screen-mode={screenMode || undefined} aria-labelledby={headingId} tabIndex={0} onKeyDown={onKeyDown}>
+  return <section ref={workspace} className="rpn-workspace" data-screen-mode={screenMode || undefined} data-rpn-mobile-compact={mobileCompact || undefined} aria-labelledby={headingId} tabIndex={0} onKeyDown={onKeyDown}>
     <header className="rpn-heading">
       <span>Calculadora financeira</span>
       <h1 id={headingId}>Calculadora RPN</h1>
@@ -274,6 +322,12 @@ export default function RpnCalculator() {
               aria-expanded={ratesOpen} aria-controls={ratesId}>
               <span aria-hidden="true">⇄ </span>Taxas
             </button>
+            <button type="button" className="rpn-history-trigger" ref={historyTrigger} aria-label="Histórico de contas"
+              aria-expanded={historyOpen} aria-controls={historyId}
+              onClick={() => historyOpen ? closeHistory() : setHistoryOpen(true)}>
+              <span className="rpn-history-trigger-long" aria-hidden="true">Histórico</span>
+              <span className="rpn-history-trigger-short" aria-hidden="true">Hist.</span>
+            </button>
             <button type="button" aria-label="Ajuda da calculadora" className="rpn-help-trigger" ref={helpTrigger} aria-expanded={helpOpen}
               aria-controls={helpId} onClick={() => helpOpen ? closeHelp() : setHelpOpen(true)}>?</button>
             <button type="button" ref={screenButton} className="rpn-screen-trigger"
@@ -291,8 +345,14 @@ export default function RpnCalculator() {
         <p className="rpn-legend"><span>Branco: ação direta</span><span><b>f</b>: dourada</span><span><b>g</b>: azul</span></p>
       </div>
       <RatePanel id={ratesId} open={ratesOpen} onClose={closeRates} canUse={!failed && powered && !view.indicators?.program && !view.indicators?.running}
-        onUse={value => { act(c => c.setDisplay(value)); closeRates() }} />
+        onUse={value => { act(c => {
+          const old = c.snapshot(), next = c.setDisplay(value) ?? c.snapshot()
+          captureHistory('cancel', old, next)
+          return next
+        }); closeRates() }} />
     </div>
+    {historyOpen && <RpnHistoryPanel id={historyId} entries={history.entries} canUndo={Boolean(history.removed)} onEdit={editHistory}
+      onRemove={removeHistory} onUndo={undoHistory} onClose={closeHistory} />}
     <div hidden={!helpOpen} ref={helpPanel} tabIndex={-1} role="region" className="rpn-help" id={helpId}
       aria-labelledby={helpId + '-heading'} onKeyDown={event => {
         if (event.key === 'Escape') { event.preventDefault(); closeHelp() }
