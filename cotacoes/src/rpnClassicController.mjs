@@ -27,6 +27,9 @@ const gOps = { n:'months', i:'monthlyRate', pv:'cf0', pmt:'cfj', fv:'nj', chs:'d
   runStop:'pause',sst:'backStep',roll:'goto',swap:'xleY',clx:'xeq0',enter:'last',
   '0':'mean',decimal:'stdev',sum:'removeStats','1':'linearX','2':'linearY','3':'factorial',
 }
+// Reporting only: tag successful operations without changing the computation.
+const historyOpcodes = new Set(['amort','int','npv','irr','price','ytm','sl','soyd','db','rnd',
+  'months','monthlyRate','date','days','mean','stdev','weighted','linearX','linearY','factorial','sqrt','exp','ln','integer','frac'])
 const finite = (x) => {
   if (!Number.isFinite(x)) throw Error('Resultado fora do domínio numérico.')
   return Object.is(x,-0) ? 0 : x
@@ -62,6 +65,7 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
   let stack=[0,0,0,0], last=0, entry=null, lift=false, tvmArmed=false, shift=null
   let memory=null, memoryDot=false, memoryOperation=null, places=2, sci=false, prefixDisplay=false, begin=false, compound=false, dmy=false
   let dateView=null, auxiliaryView=null, pauseTimer=null, paused=false, remainingSteps=1000
+  let reportProgramResult=false, programCalculated=false
   const subscribers=new Set()
   let on=true, program=false, programMemory=[], pc=0, jumpDigits=null, running=false, message='', finance=emptyFinance(), cashLength=0, repetitions=[]
   function push(x) { stack=[x,stack[0],stack[1],stack[2]] }
@@ -128,7 +132,8 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
     return snapshot()
   }
   function financeKey(key) {
-    if (tvmArmed) {
+    const solved = tvmArmed
+    if (solved) {
       const value=solveClassicTvm(key,finance,{begin,compound})
       finance[key]=value
       stack=[value,stack[1],stack[2],stack[3]]; lift=true
@@ -136,6 +141,7 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
       finance[key]=stack[0]; lift=false
     }
     tvmArmed=true; entry=null
+    return solved ? key : null
   }
   function memoryAccess(key) {
     if(memory==='sto'&&key==='eex'&&!memoryDot&&!memoryOperation){
@@ -197,22 +203,30 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
     pauseTimer=schedule(()=>{
       pauseTimer=null;paused=false;message='';dateView=null;auxiliaryView=null
       try { runFromStep(false,true) } catch (e) { message=e.message }
-      notify()
+      const operation=reportProgramResult&&programCalculated&&!paused&&!message?'programResult':null
+      if (!paused) { reportProgramResult=false; programCalculated=false }
+      notify(operation)
     },1000)
   }
-  function notify() { for (const fn of subscribers) fn(snapshot()) }
+  function notify(resultOperation) {
+    for (const fn of subscribers) {
+      const view=snapshot()
+      if (resultOperation) view.resultOperation=resultOperation
+      fn(view)
+    }
+  }
   function subscribe(fn) {
     subscribers.add(fn)
     return ()=>subscribers.delete(fn)
   }
   function stopPause() {
     if(pauseTimer!==null)cancelScheduled(pauseTimer)
-    pauseTimer=null;paused=false
+    pauseTimer=null;paused=false;reportProgramResult=false;programCalculated=false
   }
   function dispose() { stopPause(); subscribers.clear() }
   function runFromStep(single=false, resume=false) {
     if (running||!programMemory.length) return
-    if(!resume)remainingSteps=1000
+    if(!resume){remainingSteps=1000;programCalculated=false}
     running=true
     try {
       while (remainingSteps-->0) {
@@ -231,7 +245,7 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
           if(single)return
           pauseProgram();return
         }
-        for (const key of instr) dispatch(key)
+        for (const key of instr) if (dispatch(key)) programCalculated=true
         if (single) return
         if(instr[0]==='g'&&instr[1]==='chs') { pauseProgram();return }
       }
@@ -431,9 +445,9 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
       if(opcode==='cfj'&&j>0)finance.n=j-1
       return
     }
-    if(layer){if(opcode!=='begin'&&opcode!=='end')tvmArmed=false;memory=null;layerAction(opcode);return}
+    if(layer){if(opcode!=='begin'&&opcode!=='end')tvmArmed=false;memory=null;layerAction(opcode);return historyOpcodes.has(opcode) ? opcode : null}
     if(memory){memoryAccess(key);return}
-    if(financial.includes(key)){financeKey(key);return}
+    if(financial.includes(key))return financeKey(key)
     tvmArmed=false
     if(isDigit(key)){enterDigit(key);return}
     if(key==='decimal'){startEntry();if(!entry.includes('.')&&!entry.includes('e'))entry+='.';return}
@@ -443,12 +457,12 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
         if(entry.includes('e')){const [m,e]=entry.split('e');entry=m+'e'+(e.startsWith('-')?e.slice(1):'-'+e)}
         else entry=entry.startsWith('-')?entry.slice(1):'-'+entry
         refreshEntry()
-      }else stack[0]=finite(-stack[0])
+      }else { stack[0]=finite(-stack[0]); return 'changeSign' }
       return
     }
-    if(Object.hasOwn(arithmetic,key)){binary(arithmetic[key]);return}
-    if(key==='power'){binary((y,x)=>y**x);return}
-    if(key==='reciprocal'){unary(x=>1/x);return}
+    if(Object.hasOwn(arithmetic,key)){binary(arithmetic[key]);return key}
+    if(key==='power'){binary((y,x)=>y**x);return key}
+    if(key==='reciprocal'){unary(x=>1/x);return key}
     if(key==='percent'||key==='pctTotal'||key==='pctDiff'){
       const [x,y]=stack
       unary(()=>key==='percent'?y*(x/100):key==='pctTotal'?(x/y)*100:((x-y)/y)*100);return
@@ -459,16 +473,24 @@ export function createClassicRpnController({ schedule = globalThis.setTimeout, c
     if(key==='roll'){entry=null;stack=[stack[1],stack[2],stack[3],stack[0]];lift=true;return}
     if(key==='sto'||key==='rcl'){memory=key;memoryOperation=null;memoryDot=false;entry=null;return}
     if(key==='sum'){sumStats();return}
-    if(key==='runStop'||key==='sst'){if(key==='runStop')entry=null;runFromStep(key==='sst');return}
+    if(key==='runStop'||key==='sst'){
+      if(key==='runStop')entry=null
+      const executed=Boolean(programMemory.length)&&key==='runStop'
+      runFromStep(key==='sst')
+      return executed&&(paused||programCalculated)?'programResult':null
+    }
   }
-  function press(key) {
+  function press(key, { captureResult = false } = {}) {
     message='';dateView=null;auxiliaryView=null
+    let resultOperation
     try {
       if(paused){stopPause();message='Programa interrompido.'}
-      else dispatch(key)
+      else resultOperation=dispatch(key)
     }
     catch(e) {message=e.message}
     const view=snapshot()
+    if (captureResult&&resultOperation==='programResult'&&paused) reportProgramResult=true
+    if(captureResult&&resultOperation&&!view.message&&!view.program&&!view.indicators.running) view.resultOperation=resultOperation
     if(prefixDisplay){prefixDisplay=false;view.message=Number(stack[0]).toPrecision(10)}
     return view
   }

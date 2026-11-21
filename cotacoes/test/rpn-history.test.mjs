@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createClassicRpnController } from '../src/rpnClassicController.mjs'
-import { createRpnHistoryCapture, formatRpnEntry, parseHistoryValue, replayRpnEntry } from '../src/rpnHistory.mjs'
+import { createRpnHistoryCapture, formatRpnEntry, formatRpnResult, parseHistoryValue, replayRpnEntry } from '../src/rpnHistory.mjs'
 
 test('captura operações concluídas reproduzíveis e não digitação', () => {
   const calculator = createClassicRpnController(), capture = createRpnHistoryCapture()
@@ -64,4 +64,70 @@ test('edição recusa uma mantissa não nula que viraria zero silenciosamente', 
   assert.equal(parseHistoryValue('0e-999'), 0)
   assert.equal(parseHistoryValue('0,00'), 0)
   assert.equal(parseHistoryValue('1e-100'), 1e-100)
+})
+
+test('histórico registra resultado científico e financeiro, mas não a gravação de parâmetro', () => {
+  const c = createClassicRpnController(), capture = createRpnHistoryCapture()
+  const hit = key => {
+    const before = c.snapshot()
+    return capture(key, before, c.press(key, { captureResult: true }))
+  }
+  try {
+    const steps = ['1','2','n','1','i','1','0','0','0','chs','pv','0','pmt','fv']
+    const rows = steps.map(hit).filter(Boolean)
+    assert.equal(rows.length, 1)
+    assert.equal(rows[0].key, 'fv')
+    assert.ok(Math.abs(rows[0].result - 1126.82503013197) < 1e-8)
+    assert.match(formatRpnEntry(rows[0]), /^Valor futuro \(FV\) = /)
+    assert.equal(formatRpnResult(rows[0]), String(rows[0].result).replace('.', ','))
+    assert.equal(hit('g'), null)
+    c.setDisplay(9)
+    assert.equal(hit('g'), null)
+    assert.equal(formatRpnEntry(hit('power')), 'Raiz quadrada = 3')
+    c.setDisplay(-1)
+    assert.equal(hit('g'), null)
+    assert.equal(hit('power'), null, 'erros não entram no histórico')
+    assert.equal(hit('rcl'), null)
+    assert.equal(hit('fv'), null, 'consulta não entra no histórico')
+  } finally { c.dispose() }
+})
+
+test('programa com pausa registra só um resultado quando termina', () => {
+  let callback
+  const c = createClassicRpnController({ schedule: fn => { callback = fn; return 1 }, cancelScheduled() {} })
+  const capture = createRpnHistoryCapture()
+  const reported = []
+  const hit = key => {
+    const before = c.snapshot()
+    return capture(key, before, c.press(key, { captureResult: true }))
+  }
+  try {
+    c.subscribe(view => { if (view.resultOperation) reported.push(view) })
+    for (const key of ['f','runStop','2','enter','3','g','runStop','add','f','runStop'])
+      assert.equal(hit(key), null)
+    assert.equal(hit('runStop'), null)
+    assert.equal(c.snapshot().indicators.paused, true)
+    assert.equal(reported.length, 0)
+    callback()
+    assert.equal(c.snapshot().x, 5)
+    assert.equal(reported.length, 1)
+    assert.equal(reported[0].resultOperation, 'programResult')
+    assert.equal(reported[0].x, 5)
+  } finally { c.dispose() }
+})
+
+
+test('programas que só param, pausam ou guardam dados não inventam contas', () => {
+  for (const keys of [['runStop'], ['g','runStop'], ['sto','0']]) {
+    let resume
+    const c = createClassicRpnController({ schedule: fn => { resume = fn; return 1 }, cancelScheduled() {} })
+    const reports = []
+    c.subscribe(view => reports.push(view))
+    for (const key of ['f','runStop',...keys,'f','runStop']) c.press(key)
+    c.setDisplay(42)
+    assert.equal(c.press('runStop', { captureResult: true }).resultOperation, undefined)
+    resume?.()
+    assert.ok(reports.every(view => !view.resultOperation))
+    c.dispose()
+  }
 })

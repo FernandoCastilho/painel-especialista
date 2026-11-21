@@ -8,7 +8,7 @@ import React from 'react'
 import { hookRenderer } from './helpers/hooks.mjs'
 import { classicKeyRows, getClassicKeyState, portraitKeyRows } from '../src/rpnClassicLayout.mjs'
 import { rpnKeyFromEvent } from '../src/rpnKeyboard.mjs'
-import { createRpnHistoryCapture, HISTORY_LIMIT, replayRpnEntry } from '../src/rpnHistory.mjs'
+import { captureReportedRpnResult, createRpnHistoryCapture, replayRpnEntry } from '../src/rpnHistory.mjs'
 import { CLASSIC_KEYS, createClassicRpnController } from '../src/rpnClassicController.mjs'
 import { convertEquivalentRate } from '../src/rpnRateConversion.mjs'
 
@@ -24,7 +24,7 @@ function resources(create) {
     './RpnCalculator.css': {}, './rpnClassicController.mjs': { createClassicRpnController: create },
     './rpnClassicLayout.mjs': { classicKeyRows, portraitKeyRows, getClassicKeyState },
     './rpnRateConversion.mjs': { convertEquivalentRate }, './rpnKeyboard.mjs': { rpnKeyFromEvent },
-    './rpnHistory.mjs': { createRpnHistoryCapture, HISTORY_LIMIT }, './RpnHistoryPanel.jsx': { __esModule: true, default: function HistoryPanel() {} } }
+    './rpnHistory.mjs': { captureReportedRpnResult, createRpnHistoryCapture }, './RpnHistoryPanel.jsx': { __esModule: true, default: function HistoryPanel() {} } }
   runInNewContext(code + '\nmodule.testComponents = { RatePanel, KeyGrid, LcdValue }', {
     module, exports: module.exports, require: path => deps[path] ?? require(path),
   })
@@ -386,6 +386,29 @@ test('histórico, atalhos e conversão convivem sem reescrever pilha ou registra
   assert.equal(controller.snapshot().x, rate)
   assert.deepEqual(controller.snapshot().finance, before.finance)
   assert.deepEqual(controller.snapshot().stack.slice(1), before.stack.slice(1))
-  assert.equal(history().entries.length, 1)
-  assert.equal(history().entries[0].result, 11)
+  assert.equal(history().entries.length, 2)
+  assert.equal(history().entries[0].result, rate)
+  assert.equal(history().entries[1].result, 11)
+})
+
+test('limpeza do histórico mantém a calculadora e permite recuperar contas após novo cálculo', async t => {
+  const controller = createClassicRpnController()
+  const ui = setup(t, () => controller)
+  const keyboard = async key => { ui.panel().props.onKeyDown(event(key)); await ui.render.settle() }
+  await ui.render.settle()
+  for (const key of ['2', 'Enter', '3', '+']) await keyboard(key)
+  ui.find(node => node.props?.['aria-label'] === 'Histórico de contas').props.onClick()
+  await ui.render.settle()
+  const history = () => ui.find(node => node.type?.name === 'HistoryPanel').props
+  const before = controller.snapshot()
+  history().onClear()
+  await ui.render.settle()
+  assert.equal(history().entries.length, 0)
+  assert.equal(history().hasCleared, true)
+  assert.deepEqual(controller.snapshot(), before)
+  for (const key of ['4', '+']) await keyboard(key)
+  history().onUndo()
+  await ui.render.settle()
+  assert.equal(history().entries.map(e => e.result).join(','), '9,5')
+  assert.equal(controller.snapshot().x, 9)
 })
