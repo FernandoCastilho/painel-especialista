@@ -416,7 +416,7 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
         </div>
       </div>
     </details>
-    <details className="rpn-readouts rpn-guide">
+    <details className="rpn-reference-panel rpn-guide">
       <summary>Guia rápido da HP 12C</summary>
       <ol>
         <li><strong>Faça uma conta:</strong> digite 200, toque em ENTER, digite 30 e toque em −. O resultado é 170. Não há tecla de igual no modo RPN.</li>
@@ -424,7 +424,7 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
         <li><strong>Use as funções financeiras:</strong> n é o número de períodos; i, a taxa por período; PV, o valor presente; PMT, a parcela; FV, o saldo futuro. Use a mesma unidade em n, i e PMT. Na visão de quem toma o crédito, recebido é positivo e pago é negativo.</li>
         <li><strong>Confira a fita:</strong> ela acompanha a digitação e registra as operações. As teclas f e g dão acesso às funções douradas e azuis.</li>
       </ol>
-      <p><a href="https://h20331.www2.hp.com/Hpsub/downloads/HP12CRPNstack.pdf" target="_blank" rel="noreferrer">Leia o guia oficial da pilha RPN da HP</a>.</p>
+      <p>O manual oficial da HP está em Configurações → Base de dados.</p>
     </details>
   </section>
 }

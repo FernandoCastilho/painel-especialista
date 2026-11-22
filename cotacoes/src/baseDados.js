@@ -117,6 +117,8 @@ export const ARQUIVOS_COBERTOS = [...new Set(BASE_DADOS.flatMap((g) => g.itens.m
 
 // Atribuição e termos de uso exigidos por fontes específicas (saem dos painéis e ficam aqui).
 export const ATRIBUICOES = [
+  { fonte: 'Calculadora HP 12C', texto: 'Manual oficial para entender a pilha e a ordem das operações em RPN.', links: [['Guia da pilha RPN', 'https://h20331.www2.hp.com/Hpsub/downloads/HP12CRPNstack.pdf']] },
+  { fonte: 'Custo Efetivo Total (CET)', texto: 'Resolução CMN 4.881, arts. 3 a 5: fluxo financeiro e dias corridos. O simulador não substitui o demonstrativo da instituição.', links: [['Resolução CMN 4.881', 'https://www.bcb.gov.br/content/estabilidadefinanceira/especialnor/Resolu%C3%A7%C3%A3o4881.pdf']] },
   { fonte: 'U.S. Bureau of Labor Statistics (BLS)', texto: 'BLS.gov não pode atestar os dados ou análises derivados após a extração dos dados de BLS.gov.', links: [['Domínio público e crédito', 'https://www.bls.gov/bls/linksite.htm'], ['Condições de uso', 'https://www.bls.gov/developers/termsOfService.htm']] },
   { fonte: 'BIS (juros de política monetária do Japão)', texto: 'Série compilada pelo BIS a partir das decisões do Banco do Japão, em tradução não oficial do BIS; aparece com "≈" e traz a data da primeira observação daquele nível.', links: [['Termos de uso', 'https://data.bis.org/help/legal'], ['Documentação CBPOL', 'https://www.bis.org/statistics/cbpol/cbpol_doc.pdf']] },
   { fonte: 'Câmbio e cotações', texto: 'A cotação é a última referência recebida, não um feed em tempo real. O yuan é a CNH (offshore); o valor em reais sai do cruzamento USD/BRL ÷ USD/CNH.', links: [] },

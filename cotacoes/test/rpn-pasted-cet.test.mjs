@@ -44,3 +44,14 @@ test('não arredonda dias de calendário nem inclui juros e tarifas de novo', ()
   assert.equal(result.ok, true)
   assert.ok(Math.abs(result.annualRate - Math.expm1(Math.log(1.01) * 365 / 30)) < 1e-10)
 })
+
+test('encargo inicial equivale a uma liberação líquida menor sem descontá-lo duas vezes', () => {
+  const flow = { releaseDate: '2025-01-01', payments: '01/01/2026\t1.050,00' }
+  const full = calculatePastedCet({ ...flow, net: '1.000,00' })
+  const charged = calculatePastedCet({ ...flow, net: '1.000,00', costs: '50,00' })
+  const netOnly = calculatePastedCet({ ...flow, net: '950,00' })
+  assert.ok(full.ok && charged.ok && netOnly.ok)
+  assert.ok(Math.abs(full.annualRate - .05) < 1e-10)
+  assert.ok(Math.abs(charged.annualRate - (1050 / 950 - 1)) < 1e-10)
+  assert.equal(charged.annualRate, netOnly.annualRate)
+})

@@ -13,7 +13,7 @@ export default function RpnCetPanel() {
   const [payments, setPayments] = useState('')
   const result = payments.trim() ? calculatePastedCet({ releaseDate, net, costs, payments }) : null
 
-  return <details className="rpn-readouts rpn-cet">
+  return <details className="rpn-reference-panel rpn-cet">
     <summary>CET · Cole os vencimentos do Excel</summary>
     <p id={id + '-scope'}>Simulação em reais, com uma liberação e pagamentos informados. Cole duas colunas: vencimento e valor a pagar. O resultado muda automaticamente.</p>
     <div className="rpn-cet-fields">
@@ -29,6 +29,6 @@ export default function RpnCetPanel() {
       {result?.ok ? <><strong>{percent.format(result.annualRate)} a.a.</strong>
         <span>{result.count} pagamentos · Total a pagar {currency.format(result.total)} · Líquido após custos {currency.format(result.netAfterCosts)}</span></> : <span>{result?.error ?? 'O CET aparece aqui quando os dados estiverem completos.'}</span>}
     </div>
-    <p>O cálculo usa dias corridos, base de 365 dias e somente os valores informados. Não projeta CDI, variação cambial ou outros indexadores. Não substitui o demonstrativo da instituição. <a href="https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?numero=4881&amp;tipo=Resolu%C3%A7%C3%A3o+CMN" target="_blank" rel="noreferrer">Referência: Resolução CMN 4.881</a>.</p>
+    <p>O cálculo usa dias corridos, base de 365 dias e somente os valores informados. Não projeta CDI, variação cambial ou outros indexadores. Não substitui o demonstrativo da instituição. Consulte a Resolução CMN 4.881 em Configurações → Base de dados.</p>
   </details>
 }

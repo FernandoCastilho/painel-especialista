@@ -145,7 +145,7 @@ main[data-tab="rpn"]:has(.rpn-workspace[data-screen-mode="page"]) > :not(.rpn-in
 .rpn-legend { display: flex; flex-wrap: wrap; gap: 3px 11px; margin: 10px 2px 0; color: #dce3e8; font-size: 11px; }
 .rpn-legend b { color: #ffd088; }
 .rpn-legend :last-child b { color: #9fe1fc; }
-.rpn-rates, .rpn-help, .rpn-readouts {
+.rpn-rates, .rpn-help, :is(.rpn-readouts, .rpn-reference-panel) {
   min-inline-size: 0;
   padding: clamp(12px, 2.5vw, 22px);
   border: 1px solid var(--rpn-edge);
@@ -153,10 +153,10 @@ main[data-tab="rpn"]:has(.rpn-workspace[data-screen-mode="page"]) > :not(.rpn-in
   background: var(--rpn-surface);
   color: var(--rpn-ink);
 }
-.rpn-help, .rpn-readouts { margin-top: 22px; }
+.rpn-help, :is(.rpn-readouts, .rpn-reference-panel) { margin-top: 22px; }
 .rpn-rates { display: grid; gap: 14px; }
 .rpn-rates header { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
-.rpn-rates h2, .rpn-help h2, .rpn-readouts h2 { color: inherit; margin: 0; font-size: 17px; line-height: 1.25; }
+.rpn-rates h2, .rpn-help h2, :is(.rpn-readouts, .rpn-reference-panel) h2 { color: inherit; margin: 0; font-size: 17px; line-height: 1.25; }
 .rpn-rates header p, .rpn-help p, .rpn-rates small { margin: 4px 0 0; color: var(--rpn-muted); font-size: 13px; line-height: 1.4; }
 .rpn-help p { margin-top: 8px; }
 .rpn-rates :is(button, input, select) {
@@ -181,7 +181,7 @@ main[data-tab="rpn"]:has(.rpn-workspace[data-screen-mode="page"]) > :not(.rpn-in
 :root[data-theme="dark"] .rpn-rate-error { color: #ff9da6; }
 .rpn-rates .rpn-use-rate { background: #f1d09a; color: #2b2215; border-color: #a78a52; font-weight: 750; padding-inline: 7px; }
 .rpn-rates .rpn-use-rate:disabled { opacity: .58; }
-.rpn-readouts summary { font-weight: 650; min-block-size: 44px; padding: 9px 0; }
+:is(.rpn-readouts, .rpn-reference-panel) summary { font-weight: 650; min-block-size: 44px; padding: 9px 0; }
 .rpn-readout-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(min(100%,175px),1fr)); }
 .rpn-readout-grid dl { margin: 4px 0 0; }
 .rpn-readout-grid dl div { display: flex; gap: 8px; justify-content: space-between; }
@@ -268,7 +268,7 @@ main[data-tab="rpn"]:has(.rpn-workspace[data-screen-mode="page"]) > :not(.rpn-in
   :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) .rpn-keypad--wide .rpn-key-alternate--blue { font-size: clamp(8px, 1.62cqi, 11px); }
   :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) .rpn-keypad--wide .rpn-enter { gap: 1px; }
   :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) .rpn-legend { display: none; }
-  :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) .rpn-readouts, :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) .rpn-help { margin-block-start: 12px; }
+  :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) :is(.rpn-readouts, .rpn-reference-panel), :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) .rpn-help { margin-block-start: 12px; }
   :where(.rpn-workspace:is([data-rpn-mobile-compact], [data-screen-mode])) .rpn-help-close {
     display: inline-block; min-block-size: 44px; padding: 0 10px; margin-block-start: 6px;
     border: 1px solid var(--rpn-edge); border-radius: 6px;
