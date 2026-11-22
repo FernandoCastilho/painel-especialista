@@ -137,6 +137,18 @@ const normalize = text => text.replace(/\s+/g, ' ').trim()
       // Valores escritos nas barras (22/11/2026): com 12 barras há espaço para o total de cada uma, igual ao balão em mil reais.
       assert.equal(await fluxo.locator('text.fp-rotulo-total').count(), 12)
       assert.equal(await fluxo.locator('text.fp-rotulo-total').first().textContent(), `${Math.round(expectedPrice.first / 1000)} mil`)
+      // Seleção por arrasto (22/11/2026): arrastar de lado marca o trecho com linhas pontilhadas e o balão soma parcela, juros e
+      // principal (a soma é testada em giro-fluxo.test.mjs). Clique sem arrastar limpa.
+      const grafico = fluxo.locator('svg'); await grafico.scrollIntoViewIfNeeded(); const caixa = await grafico.boundingBox()
+      const yArrasto = caixa.y + caixa.height * 0.7
+      await p.mouse.move(caixa.x + 60, yArrasto); await p.mouse.down()
+      for (let k = 1; k <= 8; k++) await p.mouse.move(caixa.x + 60 + (caixa.width - 70) * k / 8, yArrasto)
+      await p.mouse.up()
+      assert.equal(await fluxo.locator('.fp-selecao line').count(), 2, 'duas linhas pontilhadas')
+      const balao = normalize(await fluxo.locator('.tip').innerText())
+      assert.match(balao, /12 meses 12 pagamentos Parcelas: R\$ [\d.,]+ Juros: R\$ [\d.,]+ Principal: R\$ [\d.,]+/)
+      await p.mouse.click(caixa.x + 60, yArrasto)
+      assert.equal(await fluxo.locator('.fp-selecao').count(), 0, 'clique sem arrastar limpa a seleção')
       const footer = sec.getByText('Ver parcelas', { exact: true })
       assert.ok((await footer.boundingBox()).y > (await sec.locator('.giro-result').boundingBox()).y)
       await footer.click()

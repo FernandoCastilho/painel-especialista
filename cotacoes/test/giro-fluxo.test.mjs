@@ -70,3 +70,17 @@ test('mês da operação pelos dias corridos: vencimento empurrado para o dia ú
   const curto = fluxoMensal(['2027-02-15', '2027-03-15', '2027-04-15', '2027-05-17'].map(linha), '2027-01-31')
   assert.deepEqual(curto.filter(m => m.linhas.length).map(m => [m.mes, m.rotulo]), [[1, 'fev/27'], [2, 'mar/27'], [3, 'abr/27'], [4, 'mai/27']])
 })
+
+test('seleção por arrasto: soma parcela, juros e principal do trecho, em qualquer sentido', async () => {
+  const { somaDoTrecho } = await import('../src/fluxoPagamentos.js')
+  const result = giroConta({ ...base, n: 24, periodicidade: 2, system: 'price', firstDue: '2027-01-22' })
+  const meses = fluxoMensal(result.rows, base.start)
+  const trecho = somaDoTrecho(meses, 6, 1)
+  assert.deepEqual([trecho.de.rotulo, trecho.ate.rotulo, trecho.meses, trecho.pagamentos], ['jan/27', 'jun/27', 6, 3])
+  const linhas = result.rows.slice(0, 3)
+  assert.equal(Math.round(trecho.pago * 100), Math.round(linhas.reduce((t, r) => t + r.payment, 0) * 100))
+  assert.equal(Math.round(trecho.juros * 100), Math.round(linhas.reduce((t, r) => t + r.interest, 0) * 100))
+  assert.ok(Math.abs(trecho.principal - linhas.reduce((t, r) => t + r.amortization, 0)) < 0.01)
+  const tudo = somaDoTrecho(meses, 0, meses.length - 1)
+  assert.equal(Math.round(tudo.pago * 100), Math.round(result.paid * 100), 'o trecho inteiro soma o total das parcelas')
+})

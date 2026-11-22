@@ -35,3 +35,12 @@ export function fluxoMensal(rows, inicio) {
     return { mes: i + 1, rotulo: rotuloDoMes(inicio, i + 1), linhas, pagamento: soma('payment'), juros: soma('interest') }
   })
 }
+
+// Soma de um trecho de meses (índices de..ate, em qualquer ordem), para a seleção por arrasto no gráfico (22/11/2026).
+// Só soma o que o cronograma já tem: parcela (valor pago), juros e principal (amortização = pago − juros).
+export function somaDoTrecho(meses, de, ate) {
+  const [a, b] = de <= ate ? [de, ate] : [ate, de]
+  const trecho = meses.slice(a, b + 1)
+  const pago = trecho.reduce((t, m) => t + m.pagamento, 0), juros = trecho.reduce((t, m) => t + m.juros, 0)
+  return { de: trecho[0], ate: trecho.at(-1), meses: trecho.length, pagamentos: trecho.reduce((t, m) => t + m.linhas.length, 0), pago, juros, principal: pago - juros }
+}

@@ -1,11 +1,11 @@
 // Quadro "Fluxo de pagamentos" do Capital de Giro (pedido do Fernando em 22/11/2026): uma barra por mês da operação.
 // Altura = quanto é pago no mês; dentro da barra, a parte de juros. Mês sem pagamento fica vazio, para mostrar a periodicidade.
 // Só apresentação: os números são os do cronograma da simulação.
-import { useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import { useWidth } from './HistoryChart.jsx'
 import { focoPorTeclado, limitarBalao, margemEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
-import { fluxoMensal } from './fluxoPagamentos.js'
+import { fluxoMensal, somaDoTrecho } from './fluxoPagamentos.js'
 import './FluxoPagamentos.css'
 
 const H = 300
@@ -38,8 +38,13 @@ export default function FluxoPagamentos({ rows, inicio }) {
   const meses = useMemo(() => fluxoMensal(rows, inicio), [rows, inicio])
   const [ref, width] = useWidth()
   const [hover, setHover] = useState(null)
+  // Seleção por arrasto (pedido do Fernando, 22/11/2026), no padrão dos outros gráficos do painel: arrastar na horizontal marca
+  // um trecho com faixa e linhas pontilhadas, e o balão soma parcela, juros e principal. Clique sem arrastar ou Escape limpa.
+  const [sel, setSel] = useState(null)
+  const gesto = useRef(null)
+  useEffect(() => { setSel(null) }, [rows]) // simulação nova, trecho novo
   const plotRef = useTocarFora(hover != null, setHover)
-  const [tipRef, tipW] = useLarguraBalao(hover)
+  const [tipRef, tipW] = useLarguraBalao(sel ? `${sel[0]}-${sel[1]}` : hover)
   const id = useId()
   if (!meses.length) return null
 
@@ -68,39 +73,61 @@ export default function FluxoPagamentos({ rows, inicio }) {
   if (!rotulados.has(fim) && slot * (fim - [...rotulados].at(-1)) >= espaco / 2) { rotulados.delete([...rotulados].at(-1)); rotulados.add(fim) }
   const totalPago = meses.reduce((t, m) => t + m.pagamento, 0), totalJuros = meses.reduce((t, m) => t + m.juros, 0)
 
-  const onMove = e => {
+  const mesNoPonto = e => {
     const box = e.currentTarget.getBoundingClientRect()
-    const i = Math.floor(((e.clientX - box.left) * (width / box.width) - L) / slot)
-    setHover(meses[i]?.linhas.length ? i : null)
+    return Math.floor(((e.clientX - box.left) * (width / box.width) - L) / slot)
   }
+  const onMove = e => {
+    const i = mesNoPonto(e)
+    setHover(meses[i]?.linhas.length ? i : null)
+    const g = gesto.current
+    // Só vira seleção o movimento horizontal (o vertical continua rolando a página no celular), como nos outros gráficos.
+    if (!g || Math.abs(e.clientX - g.x) < 6 || Math.abs(e.clientX - g.x) < Math.abs(e.clientY - g.y)) return
+    g.moveu = true
+    setSel([g.mes, Math.min(meses.length - 1, Math.max(0, i))])
+  }
+  const onDown = e => {
+    if (e.button != null && e.button !== 0) return
+    onMove(e)
+    gesto.current = { x: e.clientX, y: e.clientY, mes: Math.min(meses.length - 1, Math.max(0, mesNoPonto(e))), moveu: false }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* sem captura, a seleção acaba ao sair do gráfico */ }
+  }
+  const onUp = () => { if (gesto.current && !gesto.current.moveu) setSel(null); gesto.current = null }
   const onKey = e => {
+    if (e.key === 'Escape' && sel) { e.preventDefault(); setSel(null); return }
     const pos = comPagamento.indexOf(hover)
     const next = { ArrowRight: pos + 1, ArrowLeft: pos - 1, Home: 0, End: comPagamento.length - 1 }[e.key]
     if (next == null) return
     e.preventDefault()
-    setHover(comPagamento[Math.min(Math.max(next, 0), comPagamento.length - 1)])
+    const destino = comPagamento[Math.min(Math.max(next, 0), comPagamento.length - 1)]
+    // Shift com as setas estende a seleção pelo teclado, a partir do mês em foco.
+    if (e.shiftKey) setSel([sel ? sel[0] : hover ?? destino, destino]); else setSel(null)
+    setHover(destino)
   }
+  const trecho = sel && sel[0] !== sel[1] ? somaDoTrecho(meses, sel[0], sel[1]) : null
+  const [s0, s1] = trecho ? [Math.min(...sel), Math.max(...sel)] : [0, 0]
 
   return <section className="rm fp" aria-labelledby={`${id}-t`}>
     <div className="rm-titulo-linha"><h3 id={`${id}-t`}>Fluxo de pagamentos</h3>
       <CalculatorHelp title="Fluxo de pagamentos">
         <p>Uma barra por mês da operação, contado da liberação. A altura é o valor pago no mês: em laranja, a parte de juros; em azul, a amortização. Mês sem barra não tem pagamento: no bimestral, por exemplo, há barra a cada dois meses.</p>
         <p>No alto do gráfico, o resumo: quantos pagamentos, o total pago nas barras e quanto disso é juros. Em cada barra, o valor pago no mês e, dentro dela, os juros e a amortização, em mil ou milhões de reais. Quando não há espaço para todas, os valores aparecem em barras alternadas; tocando ou passando o mouse, o balão mostra os valores exatos.</p>
+        <p>Arraste na horizontal sobre o gráfico (clique, segure e arraste; no celular, deslize o dedo de lado) para marcar um trecho: o balão soma as parcelas, os juros e o principal desse trecho. Clique sem arrastar ou Escape limpa. Pelo teclado, Shift com as setas.</p>
         <p>Os valores são os do cronograma da simulação (Ver parcelas), com carência, pagamentos só de juros e ajustes. IOF e encargos pagos na liberação não entram nas barras.</p>
       </CalculatorHelp>
     </div>
     <ul className="fp-legenda" aria-hidden="true"><li><i className="fp-juros" />Juros</li><li><i className="fp-amort" />Amortização</li></ul>
     <div ref={ref}>
       <div ref={plotRef} className="plot" onPointerLeave={e => { if (!saidaDeToque(e)) setHover(null) }}>
-        <span id={`${id}-h`} className="chart-access-text">Use as setas para percorrer os pagamentos; Home e End vão ao primeiro e ao último. A tabela completa está em Ver parcelas.</span>
-        <span className="chart-access-text" role="status" aria-live="polite">{atual ? `${atual.rotulo}: pagamento ${brl(atual.pagamento)}, juros ${brl(atual.juros)}` : ''}</span>
+        <span id={`${id}-h`} className="chart-access-text">Use as setas para percorrer os pagamentos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho e soma os valores; Escape limpa. A tabela completa está em Ver parcelas.</span>
+        <span className="chart-access-text" role="status" aria-live="polite">{trecho ? `Trecho de ${trecho.de.rotulo} a ${trecho.ate.rotulo}: parcelas ${brl(trecho.pago)}, juros ${brl(trecho.juros)}, principal ${brl(trecho.principal)}` : atual ? `${atual.rotulo}: pagamento ${brl(atual.pagamento)}, juros ${brl(atual.juros)}` : ''}</span>
         <ul className="fp-resumo" aria-label="Resumo do fluxo">
           <li><span>Pagamentos </span>{comPagamento.length}</li>
           <li><span>Total pago </span>{compacto(totalPago, 2)}</li>
           <li><span>Juros </span>{compacto(totalJuros, 2)} ({(totalJuros / totalPago * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)</li>
         </ul>
         <svg tabIndex={0} role="img" aria-label={`Fluxo de pagamentos: ${comPagamento.length} pagamentos em ${meses.length} meses`} aria-describedby={`${id}-h`}
-          viewBox={`0 0 ${width} ${H}`} width="100%" height={H} onPointerMove={onMove} onPointerDown={onMove}
+          viewBox={`0 0 ${width} ${H}`} width="100%" height={H} onPointerMove={onMove} onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { gesto.current = null }}
           onFocus={e => { if (focoPorTeclado(e)) setHover(comPagamento[0]) }} onBlur={() => setHover(null)} onKeyDown={onKey}>
           {ticks.map(v => <g key={v}>
             <line x1={L} x2={width - M.r} y1={Y(v)} y2={Y(v)} className="gridline" />
@@ -131,8 +158,19 @@ export default function FluxoPagamentos({ rows, inicio }) {
             </g>
           })}
           <line x1={L} x2={width - M.r} y1={Y(0)} y2={Y(0)} className="fp-base" />
+          {trecho && <g className="fp-selecao" pointerEvents="none">
+            <rect x={L + slot * s0} y={M.t} width={slot * (s1 - s0 + 1)} height={ih} />
+            <line x1={L + slot * s0} x2={L + slot * s0} y1={M.t} y2={M.t + ih} />
+            <line x1={L + slot * (s1 + 1)} x2={L + slot * (s1 + 1)} y1={M.t} y2={M.t + ih} />
+          </g>}
         </svg>
-        {atual && <div ref={tipRef} className="tip" style={{ left: limitarBalao(L + slot * (hover + 0.5), tipW, width) }}>
+        {trecho ? <div ref={tipRef} className="tip fp-tip-trecho" style={{ left: limitarBalao(L + slot * (s0 + s1 + 1) / 2, tipW, width) }}>
+          <strong>{trecho.de.rotulo} a {trecho.ate.rotulo} · {trecho.meses} {trecho.meses === 1 ? 'mês' : 'meses'}</strong>
+          <span>{trecho.pagamentos} {trecho.pagamentos === 1 ? 'pagamento' : 'pagamentos'}</span>
+          <span>Parcelas: {brl(trecho.pago)}</span>
+          <span>Juros: {brl(trecho.juros)}</span>
+          <span>Principal: {brl(trecho.principal)}</span>
+        </div> : atual && <div ref={tipRef} className="tip" style={{ left: limitarBalao(L + slot * (hover + 0.5), tipW, width) }}>
           <strong>{atual.rotulo} · mês {atual.mes}</strong>
           {atual.linhas.map(row => <span key={row.number}>{row.juros ? `Pagamento ${row.number}, só juros` : `Parcela ${row.number}`}{row.fixed ? ' (ajustada)' : ''} · {dmy(row.date)}</span>)}
           <span>Pagamento: {brl(atual.pagamento)}</span>
