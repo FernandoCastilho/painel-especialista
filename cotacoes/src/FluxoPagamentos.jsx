@@ -107,7 +107,8 @@ export default function FluxoPagamentos({ rows, inicio }) {
             <text x={L - 8} y={Y(v)} dy="0.32em" textAnchor="end" className="tick">{compacto(v)}</text>
           </g>)}
           {meses.map((m, i) => (i === meses.length - 1 || (i % passo === 0 && meses.length - 1 - i >= passo)) // o último mês sempre; sem encavalar
-            && <text key={m.mes} x={L + slot * (i + 0.5)} y={H - 8} textAnchor="middle" className="tick">{m.rotulo}</text>)}
+            // o último fica alinhado pela direita, dentro do quadro (no celular, centralizado, saía cortado)
+            && <text key={m.mes} x={i === meses.length - 1 ? Math.min(L + slot * (i + 0.5) + m.rotulo.length * 3.5, width - 2) : L + slot * (i + 0.5)} y={H - 8} textAnchor={i === meses.length - 1 ? 'end' : 'middle'} className="tick">{m.rotulo}</text>)}
           {meses.map((m, i) => {
             if (!m.linhas.length) return null
             const yTopo = Y(m.pagamento), yJuros = Y(m.pagamento - m.juros)
