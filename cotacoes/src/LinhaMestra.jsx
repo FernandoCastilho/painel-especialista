@@ -15,7 +15,7 @@ const SYSTEMS = [['price', 'Price'], ['sac', 'SAC'], ['bullet', 'Bullet capitali
 const LABELS = { value: 'Valor da operação', term: 'Prazo total', grace: 'Carência', system: 'Amortização', start: 'Data da liberação', praca: 'Praça do contrato' }
 const FOOT = 'Os valores da linha mestra valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 
-export default function LinhaMestra({ prefix, title = 'Linha mestra · necessidade do cliente', values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, foot = FOOT, help, details, children }) {
+export default function LinhaMestra({ prefix, title = 'Linha mestra · necessidade do cliente', values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, foot = FOOT, help, details, pracaControl: PracaControl, children }) {
   const id = key => `${prefix}-${key}`
   const label = key => labels[key] ?? LABELS[key]
   const invalid = key => ({ 'aria-invalid': !!errors[key], ...(errors[key] ? { 'aria-describedby': `${id(key)}-err` } : {}) })
@@ -30,7 +30,9 @@ export default function LinhaMestra({ prefix, title = 'Linha mestra · necessida
       : months('grace'),
     system: () => <select id={id('system')} value={values.system ?? 'price'} onChange={e => onChange('system', e.target.value)}>{SYSTEMS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select>,
     start: () => <input id={id('start')} type="date" max="9999-12-31" value={values.start ?? ''} {...invalid('start')} onChange={e => onChange('start', e.target.value)} />,
-    praca: () => <select id={id('praca')} value={values.praca ?? PRACA_PADRAO} onChange={e => onChange('praca', e.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>,
+    praca: () => PracaControl
+      ? <PracaControl id={id('praca')} value={values.praca ?? PRACA_PADRAO} onChange={value => onChange('praca', value)} />
+      : <select id={id('praca')} value={values.praca ?? PRACA_PADRAO} onChange={e => onChange('praca', e.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>,
   }
   const field = key => <div className="lm-field" key={key}>
     <span className="lm-label"><label htmlFor={id(key)}>{label(key)}</label>
