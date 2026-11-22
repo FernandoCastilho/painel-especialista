@@ -130,7 +130,7 @@ main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-
 
 .giro-outcome { position: relative; }
 :root[data-theme] body .giro-screen .giro-result > h3 { padding-right: 64px; }
-:root[data-theme] body .giro-screen .giro-outcome > a.giro-email { position: absolute; top: 7px; right: 12px; color: #fff; }
+:root[data-theme] body .giro-screen .giro-outcome > a.giro-email { position: absolute; top: 7px; right: 12px; color: var(--bw-link); } /* o título do resultado tem fundo claro */
 :root[data-theme] body .giro-screen .giro-outcome > a.giro-email:focus-visible { outline: 2px solid var(--cp-orange); outline-offset: 2px; }
 :root[data-theme] body .giro-screen .giro-outcome > a.giro-email[aria-disabled="true"] { opacity: .55; cursor: default; }
 @media (max-width: 999px), (pointer: coarse) {
