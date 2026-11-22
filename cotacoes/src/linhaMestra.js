@@ -7,14 +7,15 @@ import { PRACA_PADRAO, PRACAS_CONTRATO } from './pracaContrato.js'
 export const LM_KEY = 'painel-linha-mestra'
 export const LM_SYSTEMS = Object.freeze(['price', 'sac', 'bullet'])
 // Padrão: 24 meses, sem carência (19/11/2026); valor de R$ 3.000.000,00 (pedido do Fernando em 21/11/2026; antes, R$ 1 milhão).
-export const lmDefaults = today => ({ value: '3.000.000,00', term: '24', grace: '0', system: 'price', start: today, praca: PRACA_PADRAO })
+// `proprios` (opcional): padrão próprio de uma calculadora, quando nada foi digitado nesta aba. Capital de Giro: 36 meses (22/11/2026).
+export const lmDefaults = (today, proprios) => ({ value: '3.000.000,00', term: '24', grace: '0', system: 'price', start: today, praca: PRACA_PADRAO, ...proprios })
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/
 const text = (v, max = 40) => typeof v === 'string' && v.length <= max
 
 // Aceita só o que tem o formato de cada campo. Data guardada anterior a hoje volta para hoje: a simulação é sempre de agora em diante.
-export function lmSanitize(raw, today) {
-  const base = lmDefaults(today)
+export function lmSanitize(raw, today, proprios) {
+  const base = lmDefaults(today, proprios)
   if (!raw || typeof raw !== 'object') return base
   const out = { ...base }
   if (text(raw.value) && /^[\d.,\s]*$/.test(raw.value)) out.value = raw.value
@@ -28,8 +29,8 @@ export function lmSanitize(raw, today) {
 
 const store = () => { try { return globalThis.sessionStorage ?? null } catch { return null } }
 
-export function lmLoad(today) {
-  try { return lmSanitize(JSON.parse(store()?.getItem(LM_KEY) ?? 'null'), today) } catch { return lmDefaults(today) }
+export function lmLoad(today, proprios) {
+  try { return lmSanitize(JSON.parse(store()?.getItem(LM_KEY) ?? 'null'), today, proprios) } catch { return lmDefaults(today, proprios) }
 }
 
 export function lmSave(values) {

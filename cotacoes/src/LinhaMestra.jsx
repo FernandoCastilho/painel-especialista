@@ -65,9 +65,10 @@ export default function LinhaMestra({ prefix, title = 'Linha mestra · necessida
 }
 
 // Estado da linha mestra numa tela: lê o que já foi digitado nesta aba e grava a cada mudança. "Limpar" volta ao padrão.
-export function useLinhaMestra(today) {
-  const [values, setValues] = useState(() => lmLoad(today))
+// `proprios` (opcional): padrão próprio da calculadora para o que ainda não foi digitado (ver lmDefaults).
+export function useLinhaMestra(today, proprios) {
+  const [values, setValues] = useState(() => lmLoad(today, proprios))
   const change = (key, value) => setValues(old => { const next = { ...old, [key]: value }; lmSave(next); return next })
-  const reset = () => { lmClear(); setValues(lmLoad(today)) }
+  const reset = () => { lmClear(); setValues(lmLoad(today, proprios)) }
   return [values, change, reset]
 }

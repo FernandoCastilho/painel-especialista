@@ -1,0 +1,26 @@
+/* Fluxo de pagamentos do Capital de Giro (22/11/2026). Moldura igual à da Referência de mercado (.rm).
+   Duas cores conferidas com o validador de paleta (faixa de luminosidade, distinção para daltonismo e contraste 3:1 com o
+   fundo), nas cores do painel (pedido do Fernando, 22/11/2026): juros no laranja, amortização no azul. No escuro, os mesmos
+   tons ajustados para o fundo escuro. */
+:root[data-theme] body .cx .fp { --fp-juros: #ff6200; --fp-amort: #1f4e9a; }
+@media screen { :root[data-theme="dark"] body .cx .fp { --fp-juros: #f06000; --fp-amort: #4f8ff0; } }
+:root[data-theme] body .cx .fp .fp-juros { fill: var(--fp-juros); }
+:root[data-theme] body .cx .fp .fp-amort { fill: var(--fp-amort); }
+:root[data-theme] body .cx .fp .fp-ativa path { stroke: var(--bw-ink); stroke-width: 1; }
+:root[data-theme] body .cx .fp .fp-base { stroke: var(--bw-strong-line, var(--line)); stroke-width: 1; }
+:root[data-theme] body .cx .fp-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 4px; padding: 0; list-style: none; color: var(--bw-mut); font-size: .8125rem; }
+:root[data-theme] body .cx .fp-legenda li { display: flex; align-items: center; gap: 6px; }
+:root[data-theme] body .cx .fp-legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+:root[data-theme] body .cx .fp-legenda i.fp-juros { background: var(--fp-juros); }
+:root[data-theme] body .cx .fp-legenda i.fp-amort { background: var(--fp-amort); }
+/* Valores escritos nas barras: total acima, juros e amortização dentro, com contraste sobre cada cor. */
+:root[data-theme] body .cx .fp .fp-rotulo-total { fill: var(--bw-ink); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+:root[data-theme] body .cx .fp :is(.fp-rotulo-juros, .fp-rotulo-amort) { font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
+:root[data-theme] body .cx .fp .fp-rotulo-juros { fill: #0b1f44; }
+:root[data-theme] body .cx .fp .fp-rotulo-amort { fill: #fff; }
+@media screen { :root[data-theme="dark"] body .cx .fp .fp-rotulo-amort { fill: #071122; } }
+/* Resumo dentro do gráfico, no alto da área das barras (o espaço é reservado em M.t). */
+:root[data-theme] body .cx .fp-resumo { position: absolute; top: 2px; right: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 14px; margin: 0; padding: 0; list-style: none; color: var(--bw-ink); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; }
+:root[data-theme] body .cx .fp-resumo span { color: var(--bw-mut); }
+/* No slide do modo Apresentar o quadro não entra, como a Referência de mercado. */
+.sl-calc .fp { display: none; }

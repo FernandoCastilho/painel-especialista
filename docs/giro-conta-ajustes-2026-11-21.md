@@ -107,3 +107,18 @@ Estes cinco casos ainda não passaram pela revisão independente (a nova rodada 
 - Nas opções de antes (mensal, Bullet com pagamento único), a conta nova é idêntica à antiga em 3.000 operações sorteadas.
 - Registro: no mensal com juros pagos na carência, as datas dos juros agora são contadas para trás a partir do fim da carência (decisão 2 vale para todas as periodicidades). Ex.: liberação 31/01/2027 e 1º vencimento 15/05/2027 pagam juros em 15/02, 15/03 e 15/04, com 1º período curto. Essa opção não estava publicada, então ninguém foi afetado.
 - Não conferido pela revisão: feriados de praça (SP, PR, MG) só pela comparação com a conta antiga; contrato real do banco.
+
+## Ajustes de 22/11/2026 (tarde), pedidos por Fernando depois da publicação
+
+- **Prazo padrão de 36 meses só no Capital de Giro.** A linha mestra continua comum às calculadoras de empréstimo; o padrão
+  de 36 meses vale quando nada foi digitado nesta aba. As outras seguem em 24. Se o prazo já foi digitado em outra calculadora,
+  vale o digitado (a linha mestra é compartilhada).
+- **Gráfico de juros até o prazo digitado.** A curva DI x pré vai de 12 meses até o prazo total da demanda; com prazo de até
+  12 meses, vai do início da curva até o prazo. Sem prazo válido, volta aos 12 a 48 meses.
+- **E-mail.** Com o cronograma inteiro, o endereço do rascunho passava de 4 mil caracteres (24 parcelas) e o login da
+  Microsoft recusava: "AADSTS90015: Requested query string is too long". Agora o endereço fica em até 2 mil caracteres: quando
+  o cronograma não cabe, o rascunho leva o resumo das parcelas (quantidade, datas, 1ª e última, total) e o clique no envelope
+  copia o cronograma completo para colar no e-mail (Ctrl+V).
+- **Fluxo de pagamentos.** Quadro novo depois da referência de mercado: uma barra por mês da operação, contado da liberação;
+  altura = valor pago no mês, nas cores do painel: juros em laranja e amortização em azul (pedido de Fernando ao autorizar a publicação). No alto do gráfico, um resumo: número de pagamentos, total pago e juros (com o percentual). Em cada barra, o valor pago no mês e, dentro dela, juros e amortização, em mil ou milhões de reais; sem espaço para todas (celular, prazos longos), em barras alternadas. Mês sem pagamento fica vazio (no
+  bimestral, barra a cada dois meses). Só apresentação: os valores são os do cronograma; nenhuma conta mudou.

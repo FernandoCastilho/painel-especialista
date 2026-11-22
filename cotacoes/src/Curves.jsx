@@ -6,6 +6,7 @@ import { Aviso } from './Avisos.jsx'
 import { useId, useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
 import { marcasRedondas } from './chartEixo.js'
+import { mesesDoEixo } from './faixaCurva.js'
 import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { isWeekendBR } from './market.js'
@@ -70,7 +71,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
     const xTicks = labels
       ? labels.filter((_, i) => i % (width < 520 ? 3 : 2) === 0 || i === labels.length - 1).map((l) => ({ x: X([l[0]]), t: l[1] }))
       : meses
-        ? [12, 18, 24, 30, 36, 42, 48].map((m) => m * 21 / 252).filter((y) => y >= x0 - 0.01 && y <= x1 + 0.01).map((y) => ({ x: M.l + ((y - x0) / (x1 - x0 || 1)) * iw, t: `${Math.round(y * 12)}m` }))
+        ? mesesDoEixo(prazo.de / 21, prazo.ate / 21).map((m) => ({ x: M.l + ((m / 12 - x0) / (x1 - x0 || 1)) * iw, t: `${m}m` }))
             .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), [])
         : [0, 1, 2, 3, 5, 7, 10, 15, 20, 30].filter((y) => y <= x1 + 0.01).map((y) => ({ x: M.l + (y / (x1 || 1)) * iw, t: `${y}a` }))
           .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), []) // pelo menos 30 px entre rótulos: sem encavalar
