@@ -19,6 +19,10 @@ import BndesIcon from './BndesIcon.jsx'
 import ExpandablePanel from './ExpandablePanel.jsx'
 import ComparaSeries from './BndesCompare.jsx'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
+import FluxoPagamentos from './FluxoPagamentos.jsx'
+import EmailEnvelope from './EmailEnvelope.jsx'
+import ReferenciaMercado from './ReferenciaMercado.jsx'
+import './BndesPecas.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const pct = (v, d = 2) => `${nf(nbr5891(v, d), d)}%` // NBR 5891 (Res. CMN 4.881, art. 4º, par. único)
@@ -55,6 +59,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
   const [trajetoriaManual, setTrajetoriaManual] = useState({}) // { tlp: { 2027: '5,00' }, ... }: projeção editada por ano
   const [cambioManual, setCambioManual] = useState(null) // dólar do dia da liberação editado (TFBD)
   const [parcelasAbertas, setParcelasAbertas] = useState(false)
+  const [fluxoOpcao, setFluxoOpcao] = useState(0)
   // Cotação ampliada: o mesmo quadro do resultado vira uma janela sobre a tela (sem duplicar conteúdo). Esc ou o fundo fecham.
   const [ampliada, setAmpliada] = useState(false)
   const [chartPreset, setChartPreset] = useState(12)
@@ -212,6 +217,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
     { id: 'total', rotulo: 'Pagamento final', ajuda: 'Valor financiado + juros totais + IOF + TAC + ECG do FGI (quando marcado): tudo o que o cliente paga nesta projeção, sem outras tarifas ou seguros. Em LCD e TFBD inclui também a correção do saldo pela Selic ou pelo dólar.', valor: brl(res.total), nota: null },
   ].filter(Boolean) : []
   const alternatives = comparison?.ok ? comparison.alternatives : res ? [{ custo, result: res }] : []
+  const fluxoAlternatives = alternatives.map(item => ({ ...item.result, custo: item.custo }))
+  const fluxoResult = fluxoAlternatives[fluxoOpcao] || fluxoAlternatives[0]
+  const referenciaTipos = [...new Set(alternatives.map(item => CUSTOS_FIXOS.has(item.custo) ? 'pre' : 'pos'))]
+  const emailAlternatives = fluxoAlternatives.map(item => ({ ...item, valor: item.liberado, prazo, carencia, periodicidade: PERIODICIDADES.find(p => p.id === periodicidade)?.label, amortizacao: sistema, liberacao: dmy(liberacaoText), cet: finameCet(item, hoje, holidayCtx, calendarios)?.anual }))
   // Tabelas de opções ocupam só o necessário e crescem a cada alternativa comparada (largura em FinameComparisonLayout.css).
   const fitStyle = { '--fm-opcoes': Math.max(1, alternatives.length) }
   // Comparação executiva: só apresenta os resultados já calculados (nenhuma conta nova além da diferença entre as colunas).
@@ -346,7 +355,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
         ['Data da liberação', dmy(liberacaoText)], ['Porte e região', conditions.porte], ['Amortização', sistema.toUpperCase()],
       ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></ExpandablePanel>}
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header className={comparar ? 'fm-hero' : undefined}><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small>{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}</header>
+        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}</header>
 
         {!resumida && <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>}
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
@@ -437,6 +446,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
 
       <div className="fm-print-actions"><BndesPresentation result={res} comparison={comparison} conditions={conditions} /><BndesPrint result={res} comparison={comparison} conditions={conditions} compareRequested={comparar} releaseDate={hoje} holidayCtx={holidayCtx} /></div>
       </ExpandablePanel>
+      {res && <section className="bndes-flow-wrap" aria-label="Fluxo de pagamentos da cotação">
+        {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
+        <FluxoPagamentos rows={fluxoResult?.parcelas} inicio={liberacaoText} />
+      </section>}
       </div>
       </div>
 
@@ -470,6 +483,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl 
           </div>
         </details></ExpandablePanel>
       )}
+
+      {res && <ReferenciaMercado tipos={referenciaTipos} prazoMeses={prazo} />}
 
       <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>TLP, Taxa LCD e TFBD: taxa do painel (J, LD1 ou TFBD) mais a hipótese do índice pelo Focus ano a ano, editável. TLP: IPCA cobrado com os juros, sem corrigir o saldo, dias úteis/252. LCD: Selic capitalizada no saldo (média dos fins de ano do Focus; no ano da liberação, a Selic atual), dias úteis/252. TFBD: saldo pela variação do dólar e juros proporcionais, dias corridos/360; não disponível no Itaú. FGI Tradicional só na TLP (o regulamento veda Selic/LCD capitalizada e TFBD). Projeção, não memória contratual: o contrato usa índices mensais defasados e arredondamentos próprios.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
       </div>
