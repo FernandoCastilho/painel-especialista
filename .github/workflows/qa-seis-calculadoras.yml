@@ -1,0 +1,112 @@
+name: Validar roteiro das seis calculadoras
+on:
+  push:
+    branches: [codex/qa-seis-calculadoras-roteiro]
+permissions:
+  contents: read
+jobs:
+  suite:
+    name: Suíte completa, lint e build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Selecionar o commit exato da candidata
+        run: |
+          git switch --detach "$(git rev-parse HEAD^)"
+          git log -1 --format='%H %s'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+        working-directory: cotacoes
+      - run: npm test
+        working-directory: cotacoes
+      - run: npm run lint
+        working-directory: cotacoes
+      - run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+        working-directory: cotacoes
+      - run: git diff --exit-code -- cotacoes/src/searchContent.generated.json
+  telas:
+    name: Conferências de tela (${{ matrix.grupo }})
+    needs: suite
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - grupo: crédito
+            scripts: smoke-calculadora smoke-credit-comparison smoke-emprestimo-4131 smoke-calculator-layout
+          - grupo: FINIMP e BNDES
+            scripts: smoke-finimp smoke-finimp-help smoke-bndes smoke-bndes-profiles smoke-bndes-workspace
+          - grupo: navegação e tema
+            scripts: smoke-discount-iof smoke-apresentar smoke-global-search smoke-published smoke-theme
+    env:
+      VITE_DATA_BASE: http://127.0.0.1:8768
+      SMOKE_BASE_URL: http://127.0.0.1:8768
+      SMOKE_CHANNEL: chromium
+      CHROMIUM_PATH: /usr/bin/google-chrome
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Selecionar o commit exato da candidata
+        working-directory: .
+        run: git switch --detach "$(git rev-parse HEAD^)"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm install --no-save --package-lock=false playwright@1.63.0
+      - name: Servir o build
+        run: |
+          nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/servidor.log" 2>&1 &
+          for tentativa in {1..20}; do
+            if curl -fs "$SMOKE_BASE_URL/" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/servidor.log"
+          exit 1
+      - name: Rodar conferências e registrar cada resultado
+        env:
+          SCRIPTS: ${{ matrix.scripts }}
+        run: |
+          set -o pipefail
+          saida="$RUNNER_TEMP/conferencias"
+          mkdir -p "$saida"
+          printf '%s\n' '| Conferência | Resultado |' '| --- | --- |' >> "$GITHUB_STEP_SUMMARY"
+          falhou=0
+          for script in $SCRIPTS; do
+            destino="$saida/$script"
+            mkdir -p "$destino"
+            if SMOKE_OUT="$destino" CALCULATOR_QA_OUTPUT="$destino" CREDIT_QA_OUTPUT="$destino" \
+              EMPRESTIMO_4131_QA_OUTPUT="$destino" FINIMP_QA_OUTPUT="$destino" FINIMP_HELP_QA_OUTPUT="$destino" \
+              BNDES_QA_OUTPUT="$destino" BNDES_PROFILES_QA_OUTPUT="$destino" BNDES_WORKSPACE_QA_OUTPUT="$destino" \
+              SEARCH_QA_OUTPUT="$destino" PUBLISHED_QA_OUTPUT="$destino" THEME_QA_OUTPUT="$destino" \
+              node "scripts/$script.cjs" 2>&1 | tee "$destino/resultado.log"; then
+              printf '| %s | Passou |\n' "$script" >> "$GITHUB_STEP_SUMMARY"
+            else
+              printf '| %s | Falhou |\n' "$script" >> "$GITHUB_STEP_SUMMARY"
+              falhou=1
+            fi
+          done
+          exit "$falhou"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: telas-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/conferencias
+          retention-days: 7
