@@ -227,7 +227,8 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
   const parado = scenarios.find((s) => s.fxChange === 0) ?? null
   const juro = cur.juro.toLowerCase()
   const origemDi = diDoPainel ? `DI da curva B3 de ${dm(diCurve.date)}` : diOwn ? 'DI digitado' : 'DI de exemplo'
-  const curveLabel = usingCurve ? `Curvas do Painel (B3) de ${dm(curveBase)}` : mesa ? `Taxas futuras da mesa, coladas; ${origemDi} para o equivalente em CDI` : `${origemDi} e ${juro} ${cupomOwn ? 'digitado' : 'de exemplo'}, iguais para todos os prazos`
+  const curveSource = usingCurve ? `Curvas do Painel (B3) de ${dm(curveBase)}` : mesa ? `Taxas futuras da mesa, coladas · ${origemDi}` : `${origemDi} e ${juro} ${cupomOwn ? 'digitado' : 'de exemplo'}`
+  const curveLabel = usingCurve ? curveSource : `${curveSource}${mesa ? ' para o equivalente em CDI' : ', iguais para todos os prazos'}`
   const parcelas = loan ? loan.flows.filter((f) => f.principal > 0).length : 0
   const amortLabel = loan?.amort === 'parcelas' ? `Em ${parcelas} parcelas iguais${loan.grace ? `, depois de ${loan.grace} ${loan.grace === 1 ? 'pagamento' : 'pagamentos'} só de juros` : ''}` : 'No vencimento'
   const datesLabel = calendar === '30d' ? 'A cada 30 dias corridos, no próximo dia útil' : 'Mesmo dia do mês, sem ajuste para dia útil'
@@ -247,7 +248,7 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
     ndfMarkup > 0 && `Há um acréscimo do banco de ${pct(ndfMarkup)} por cima das taxas coladas (em Mais encargos). Se elas já são as taxas fechadas, deixe o acréscimo em zero.`,
   ].filter(Boolean) : []
   const avisos = loan ? [
-    loan.iofRate > 0 && loan.avgTermExact >= 355 && `Prazo médio de ${dec(loan.avgTermExact, 1)} dias corridos, dentro do limite de ${IOF_SHORT_TERM.maxDays}: a tela aplica o IOF-câmbio de ${pct(IOF_SHORT_TERM.rate)}.${calendar === '30d' ? ' Na regra de 30 dias, 12 meses somam 360 dias.' : ''} Poucos dias a mais levam o IOF a zero: confirme o prazo médio com o câmbio do banco.`,
+    loan.iofRate > 0 && loan.avgTermExact >= 355 && `Prazo médio de ${dec(loan.avgTermExact, 1)} dias corridos, dentro do limite de ${IOF_SHORT_TERM.maxDays}: a tela aplica o IOF-câmbio de ${pct(IOF_SHORT_TERM.rate)}. Poucos dias a mais levam o IOF a zero: confirme o prazo médio com o câmbio do banco.`,
     fronteiraIof(loan) && `Prazo médio de ${dec(loan.avgTermExact, 2)} dias corridos, entre ${IOF_SHORT_TERM.maxDays} e ${IOF_SHORT_TERM.maxDays + 1}: a tela usa o prazo exato, mostra ${loan.avgTermDays} (arredondado para cima) e aplica IOF-câmbio zero. Não localizamos regra oficial de arredondamento: se o banco ou a Receita desprezarem a fração, o IOF é de ${pct(IOF_SHORT_TERM.rate)} do valor. Confirme com o câmbio do banco antes de fechar.`,
     loan.amort === 'parcelas' && months % passo !== 0 && `O prazo de ${months} meses não é múltiplo do período dos pagamentos: a última parcela vence em intervalo mais curto que as demais.`,
     loan.start < '2025-07-17' && 'Desembolso anterior a 17/07/2025: o IOF-câmbio e a economia de IOF usam as alíquotas atuais, que não valiam nessa data.',
@@ -373,7 +374,7 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
                 <section className="fm-group e4-encargos" aria-labelledby="e4-encargos-h"><h3 id="e4-encargos-h">{step(2, 'Encargos')}</h3><div className="fm-group-fields">
                   {field('rate', 'part', `Taxa de juros all-in (${cur.Nome} +)`, rateInput('rate', rateText, setRateText), 'Taxa ao ano sobre a moeda, como vem na cotação, já com IR e comissões. Juros lineares sobre o saldo: saldo × taxa × dias corridos ÷ 360. Se a sua taxa ainda não tem o IR, abra Mais encargos e escolha somar o IR à taxa.', meta && !meta.erro && meta.rateText === rateText ? 'Calculada pela meta.' : null)}
                   <div className="cx-field fm-field-iof">
-                    <span className="fm-rotulo"><label htmlFor="e4-iof">IOF-câmbio na entrada</label>{ajuda('IOF-câmbio na entrada', `Calculado pela tela, pelo prazo médio da operação em dias corridos: ${pct(IOF_SHORT_TERM.rate)} até ${IOF_SHORT_TERM.maxDays} dias e zero acima (Decreto 6.306/2007, art. 15-B). Sai do valor recebido na entrada.`)}</span>
+                    <span className="fm-rotulo"><label htmlFor="e4-iof">IOF-câmbio na entrada</label>{ajuda('IOF-câmbio na entrada', `Calculado pela tela, pelo prazo médio da operação em dias corridos: ${pct(IOF_SHORT_TERM.rate)} até ${IOF_SHORT_TERM.maxDays} dias e zero acima (Decreto 6.306/2007, art. 15-B). Sai do valor recebido na entrada. Na regra de 30 dias, 12 meses somam 360 dias.`)}</span>
                     <output id="e4-iof" className="fm-financed"><b>{loan ? `${pct(loan.iofRate)} · ${usd(loan.iofUsd)}` : 'automático'}</b><span>calculado</span></output>
                   </div>
                   {field('flat', 'bndes', 'Tarifa · flat', rateInput('flat', flatText, setFlatText, '%'), 'Comissão cobrada na entrada, em % do principal. Sai do valor recebido. Use zero se não houver.')}
@@ -435,7 +436,7 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
                   <tr><th scope="row">Economia de IOF{ajuda('Economia de IOF', <><p>IOF de crédito que um capital de giro em reais, com o mesmo valor e as mesmas datas de principal, pagaria: 0,38% do valor mais 0,0082% ao dia sobre cada parcela, limitado a 365 dias (pessoa jurídica fora do Simples). O empréstimo externo não paga esse IOF. O IOF-câmbio da entrada, quando houver, é outro imposto: não é descontado aqui e já está no custo.</p>{loan.iofRate > 0 && <p>IOF-câmbio desta operação: {pct(loan.iofRate)} na entrada, já incluído no custo.</p>}</>)}</th><td>{brl(hedge.ndf.iofGiro)}</td></tr>
                   <tr className="e4-total-row"><th scope="row">Total das parcelas</th><td>{brl(hedge.ndf.totalBrl)}</td></tr>
                 </tbody></table>}
-                <p className="fm-iof-premise">{loan ? `IOF-câmbio de ${pct(loan.iofRate)} na entrada: prazo médio de ${loan.avgTermDays} dias corridos. Liquidar antes do prazo pode gerar o IOF com multa e juros.` : `IOF-câmbio na entrada: ${pct(IOF_SHORT_TERM.rate)} com prazo médio até ${IOF_SHORT_TERM.maxDays} dias; zero acima.`}</p>
+                {loan && <p className="fm-iof-premise">{`IOF-câmbio de ${pct(loan.iofRate)} na entrada: prazo médio de ${loan.avgTermDays} dias corridos. Liquidar antes do prazo pode gerar o IOF com multa e juros.`}</p>}
                 {avisos.map((texto) => <p className="cx-hint cx-pad e4-aviso" role="status" key={texto}>{texto}</p>)}
                 {loan && <details className="e4-condicoes-box"><summary>Condições da operação</summary><section className="e4-condicoes" aria-label="Condições da operação">
                   <dl>{condicoesE4(loan, hedge).map(([rotulo, valor]) => <div key={rotulo}><dt>{rotulo}</dt><dd>{valor}</dd></div>)}</dl>
@@ -469,7 +470,7 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
                       <tr className="fm-total-row"><th scope="row">Total a pagar em reais</th><td>{parado ? brl(parado.totalBrl) : '—'}</td><td>Segue o CDI</td><td>{hedge ? brl(hedge.ndf.totalBrl) : '—'}</td></tr>
                     </tbody></table></div>
                     {hedge && <p className="fm-difference">O NDF compensa se o {cur.nome} subir mais de <b>{pct(hedge.ndf.breakeven)} ao ano</b>. Abaixo disso, ficar sem proteção sai mais barato, com o risco do câmbio.</p>}
-                    <div className="fm-reference-sources">Custo all-in em {cur.nome}: {pct(loan.allIn)} a.a. · {hedge ? <>DI {pct(hedge.di)} a.a. e {juro}{colado ? ' implícito' : ''} {pct(hedge.cupom)} a.a. até o vencimento · {curveLabel}. </> : null}{ajuda('Comparação da proteção cambial', <p>{colado ? 'Com as taxas da mesa coladas, a coluna Com swap é o mesmo fluxo do NDF lido em CDI: não é cotação de swap. ' : ''}Sem proteção considera o {cur.nome} parado, em dias corridos/365; swap e NDF em base 252 dias úteis. O custo total em CDI inclui tarifa e IOF da entrada diluídos no prazo; o spread do swap, não.</p>)}</div>
+                    <div className="fm-reference-sources">Custo all-in em {cur.nome}: {pct(loan.allIn)} a.a. · {hedge ? <>DI {pct(hedge.di)} a.a. e {juro}{colado ? ' implícito' : ''} {pct(hedge.cupom)} a.a. até o vencimento · {curveSource}. </> : null}{ajuda('Comparação da proteção cambial', <><p>{curveLabel}.</p><p>{colado ? 'Com as taxas da mesa coladas, a coluna Com swap é o mesmo fluxo do NDF lido em CDI: não é cotação de swap. ' : ''}Sem proteção considera o {cur.nome} parado, em dias corridos/365; swap e NDF em base 252 dias úteis. O custo total em CDI inclui tarifa e IOF da entrada diluídos no prazo; o spread do swap, não.</p></>)}</div>
                   </div>
                   <details className="fm-details"><summary>Composição do custo em {cur.nome}</summary>
                     <div className="fm-grade">{quadros.map(([rotulo, valor, nota, texto]) => <div className="fm-kpi" key={rotulo}><span className="fm-rotulo">{rotulo}{ajuda(rotulo, texto)}</span><b>{valor}</b>{nota && <small>{nota}</small>}</div>)}</div>

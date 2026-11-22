@@ -89,7 +89,7 @@ export default function FinimpComparacao({ onBack }) {
         {/* Sem apontar vencedor (decisão do Fernando registrada em docs/finimp-comparacao.md): os dois custos lado a lado e a diferença, com o sinal. */}
         <Respostas items={[
           // O principal entra cheio; flat (e TAC) são cobrados à parte, por isso "antes do flat" (Auditor, 21/11/2026).
-          { question: 'Quanto recebe (antes do flat)', value: moneyText(principal), note: answer ? `Principal, por ${answerDays} dias; flat${useTac ? ' e TAC' : ''} à parte` : 'Principal desembolsado' },
+          { question: 'Quanto recebe (antes do flat)', value: moneyText(principal), note: answer ? `Principal · ${answerDays} dias` : 'Principal desembolsado' },
           { question: 'Quanto custa na Instituição 1', value: moneyText(answer?.competitor.cost), note: costNote(answer?.competitor) },
           { question: 'Quanto custa na Instituição 2', value: moneyText(answer?.itau.cost), note: costNote(answer?.itau) },
           { question: 'Qual a diferença', value: answer ? differenceAmount(answer.difference) : '—', main: true,

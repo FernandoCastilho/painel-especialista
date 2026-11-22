@@ -488,7 +488,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </ExpandablePanel>
       {res && <section className="bndes-flow-wrap" aria-label="Fluxo de pagamentos da cotação">
         {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
-        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota="Nos custos pós-fixados, o principal exibido inclui a correção do saldo quando aplicável." inicio={liberacaoText} />
+        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota={<>Como ler o principal{ajuda('Principal no fluxo de pagamentos', 'Nos custos pós-fixados, o principal exibido inclui a correção do saldo quando aplicável.')}</>} inicio={liberacaoText} />
       </section>}
       </div>
       </div>
@@ -498,7 +498,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       {res && <details id="fm-parcelas" ref={parcelasRef} className="desk-panel cx-panel fm-parcels-callout fm-fluxo-panel">
         <summary>{resumida ? 'Parcelas · opções lado a lado' : 'Parcelas da operação'}</summary>
         <div className="fm-installments-content">
-        <p className="cx-hint">Datas projetadas · inclui juros na carência.{ajuda('Leitura das parcelas', 'Despesas à vista permanecem na composição e na memória completa. Traço significa ausência de parcela nessa data. Os valores A e B estão alinhados pelo vencimento para comparação.')}</p>
+        <p className="cx-hint">Datas projetadas{ajuda('Leitura das parcelas', 'A tabela inclui juros na carência. Despesas à vista permanecem na composição e na memória completa. Traço significa ausência de parcela nessa data. Os valores A e B estão alinhados pelo vencimento para comparação.')}</p>
         <div className="fm-parcel-scroll" role="region" tabIndex={0} aria-label="Datas e parcelas das alternativas"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Data</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{parcelDates.map(date => <tr key={date}><th scope="row">{dmy(date)}</th>{alternatives.map(item => { const row = item.result.parcelas.find(p => p.vencimento === date); return <td key={item.custo}>{row ? brl(row.parcela) : '—'}</td> })}</tr>)}</tbody></table></div>
         </div>
       </details>}

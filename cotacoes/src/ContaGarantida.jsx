@@ -35,6 +35,7 @@ export default function ContaGarantida({ onBack }) {
   const nextId = useRef(0)
   const [visited, setVisited] = useState({})
   const { errors: found, warnings, params, result: calculation, cet } = parseContaGarantidaForm({ ...filled, rateBase: '30', conversion: 'proportional', status: 'performing' })
+  const avisosVisiveis = warnings.map(aviso => aviso.startsWith('Dias úteis =') ? 'Informe os feriados locais do contrato.' : aviso)
   const result = calculation?.ok ? calculation : null
   // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
   // Erros que dependem de outros campos (IOF, data final, data do lançamento) aparecem quando um desses campos já foi visitado.
@@ -70,19 +71,19 @@ export default function ContaGarantida({ onBack }) {
   const rateFields = <>
     {input('rate', single ? 'Taxa de juros (% a.m.)' : 'Taxa do contrato (% a.m.)', 'Taxa mensal em percentual, apurada proporcionalmente com base 30 e sem capitalização. Obrigatória. 0 significa sem juros; vazio não significa zero.')}
     {money('limit', 'Limite contratado (R$)', 'Opcional. Usado só para o CET: pela Resolução CMN 4.881/2020, art. 6º, o rotativo calcula o CET com prazo de 30 dias sobre o limite pactuado. Não muda o resultado do período.')}
-    {select('dayCount', 'Dias que geram juros', [['calendar', 'Todos os dias corridos'], ['business', 'Dias úteis: segunda a sexta, menos feriados nacionais e extras']], 'Dias úteis descontam sábados, domingos e os feriados nacionais do calendário do painel (inclusive Carnaval, Sexta-feira Santa e Corpus Christi), além dos feriados extras que você informar. O IOF diário sempre considera dias corridos, inclusive fins de semana.')}
+    {select('dayCount', 'Dias que geram juros', [['calendar', 'Todos os dias corridos'], ['business', 'Dias úteis']], 'Dias úteis descontam sábados, domingos e os feriados nacionais do calendário do painel (inclusive Carnaval, Sexta-feira Santa e Corpus Christi), além dos feriados extras que você informar. O IOF diário sempre considera dias corridos, inclusive fins de semana.')}
     {form.dayCount === 'business' && field('holidays', 'Feriados extras do contrato (AAAA-MM-DD)', <textarea {...control('holidays')} rows={3} value={form.holidays} onChange={e => set('holidays', e.target.value)} placeholder="2026-01-25, 2026-07-09" />, 'Opcional. Os feriados nacionais já são descontados pelo calendário do painel. Informe aqui só os feriados locais ou outros dias sem expediente previstos no contrato.')}
   </>
-  const iofHelp = <CalculatorHelp title="Referência de IOF"><p>Juros e IOF são pagos à parte, sem capitalização ou financiamento no saldo utilizado. Operação rotativa por saldos diários: não se aplica um teto genérico de 365 dias. Os dois modos mantêm a mesma natureza rotativa, mesmo quando há apenas um saque.</p><p>Alíquotas consultadas em 05/11/2026; sem atualização automática.</p></CalculatorHelp>
+  const iofHelp = <CalculatorHelp title="Referência de IOF"><p>Juros e IOF são pagos à parte, sem capitalização ou financiamento no saldo utilizado. Operação rotativa por saldos diários: não se aplica um teto genérico de 365 dias. Os dois modos mantêm a mesma natureza rotativa, mesmo quando há apenas um saque.</p><p>O IOF adicional incide sobre os acréscimos diários no saldo. Alíquotas consultadas em 05/11/2026; sem atualização automática.</p></CalculatorHelp>
   const iofProfile = select('taxProfile', 'Enquadramento da operação', CG_TAX_PROFILES.map(p => [p.id, p.label]), 'Referências consultadas em 05/11/2026. Não há atualização automática nem tratamento de mudanças de alíquota dentro do período.')
-  const iofRates = <div className="cg-tax-reference"><span>IOF diário automático</span><b>{params.iofDaily == null ? '—' : `${String(params.iofDaily).replace('.', ',')}% ao dia`}</b><span>IOF adicional automático</span><b>{params.iofAdditional == null ? '—' : `${String(params.iofAdditional).replace('.', ',')}% sobre acréscimos diários`}</b></div>
+  const iofRates = <div className="cg-tax-reference"><span>IOF diário automático</span><b>{params.iofDaily == null ? '—' : `${String(params.iofDaily).replace('.', ',')}% ao dia`}</b><span>IOF adicional automático</span><b>{params.iofAdditional == null ? '—' : `${String(params.iofAdditional).replace('.', ',')}%`}</b></div>
   const iofSimples = form.taxProfile === 'simples' && <>
     {money('operationValue', 'Valor da operação confirmado no contrato', 'Redução até R$ 30 mil; acima, alíquota geral automática. Informe o valor total contratado, não o saldo momentâneo nem apenas um saque.')}
     <div className="cx-field"><div className="cx-field-label"><label className="cg-check" htmlFor="cg-eligible"><input {...control('eligible')} type="checkbox" checked={form.eligible} onChange={e => set('eligible', e.target.checked)} />Confirmo o enquadramento do Simples/MEI e a documentação com a instituição.</label><CalculatorHelp title="Confirmação do enquadramento"><p>Confirmo que o tomador é optante do Simples/MEI e que a operação e a documentação atendem ao art. 7º, VI, e ao art. 45, II, com a instituição financeira.</p><p>A seleção não comprova o enquadramento tributário.</p></CalculatorHelp></div><p id="cg-eligible-hint" className="sr-only">A seleção não comprova o enquadramento tributário.</p><p id="cg-eligible-error" className="cx-error" role={errors.eligible ? 'alert' : undefined}>{errors.eligible}</p></div>
   </>
   // Avisos da conta; com resultado, também o aviso do CET.
-  const alerts = (warnings.length > 0 || (result && !cet?.ok)) && <div className="cg-alerts">
-    {warnings.map(warning => <p className="cg-notice" key={warning}>{warning}</p>)}
+  const alerts = (avisosVisiveis.length > 0 || (result && !cet?.ok)) && <div className="cg-alerts">
+    {avisosVisiveis.map(warning => <p className="cg-notice" key={warning}>{warning}</p>)}
     {result && (cet && !cet.ok ? <p className="cg-notice" role="alert">CET não calculado: {cet.error}</p>
       : !cet?.ok && <p className="cg-notice">Sem CET: informe o limite contratado para ver o CET de 30 dias (art. 6º).</p>)}
   </div>
@@ -93,7 +94,7 @@ export default function ContaGarantida({ onBack }) {
   </div>
   // Notas depois dos números; detalhes do CET recolhidos (na utilização única, as equivalências do CET ficam dentro da gaveta).
   const notes = result && <>
-    <div className="calc-panel-context cg-note"><span>Como ler o resultado</span><CalculatorHelp title="Resultado estimado do período"><p>{dateLabel(params.start)} a {dateLabel(params.end)} · {result.rows.length} fechamentos apurados · {result.totals.interestDays} dias com saldo e contagem de juros · taxa do contrato: {form.rate}% a.m.</p><p>Custo total = juros + IOF diário + IOF adicional, todos pagos à parte. Não inclui a devolução do principal nem outras tarifas. Saldo devedor final é exclusivamente o valor utilizado ainda não amortizado. O pagamento dos custos não gera novas utilizações.</p></CalculatorHelp></div>
+    <div className="calc-panel-context cg-note"><span>Como ler o resultado</span><CalculatorHelp title="Resultado estimado do período"><p>{dateLabel(params.start)} a {dateLabel(params.end)} · {result.rows.length} fechamentos apurados · {result.totals.interestDays} dias com saldo e contagem de juros · taxa do contrato: {form.rate}% a.m.</p><p>Para cobrir a conta, devolva o valor utilizado e pague juros e IOF do período. O custo total soma juros, IOF diário e IOF adicional, todos pagos à parte. Não inclui a devolução do principal nem outras tarifas. Saldo devedor final é exclusivamente o valor utilizado ainda não amortizado. O pagamento dos custos não gera novas utilizações.</p></CalculatorHelp></div>
     {cet?.ok && <details className="cg-more"><summary>Como calculamos o CET</summary>
       {single && equiv}
       <div className="cx-heading"><span>Fluxo e regra do CET</span><CalculatorHelp title="Como calculamos o CET"><p>Fluxo do CET: {brl(cet.net)} líquidos em {dateLabel(cet.start)}; {brl(cet.payment)} em {dateLabel(cet.end)}.</p><p>Limite de {brl(cet.limit)} liberado em {dateLabel(cet.start)}, menos o IOF adicional ({brl(cet.additionalIof)}), cobrado na utilização: líquido de {brl(cet.net)}. Em {dateLabel(cet.end)}, devolução do limite + juros de {CG_CET_DAYS} dias ({brl(cet.interest)}) + IOF diário ({brl(cet.dailyIof)}), pela taxa, contagem de dias e IOF desta tela.</p><p>O CET é a taxa anual que iguala o valor liberado ao valor presente do pagamento, em dias corridos/365 (Resolução CMN 4.881/2020, arts. 4º e 6º). Ao mês: equivalente composta. Não há tarifas neste simulador.</p><p>Regra do art. 6º da Resolução CMN 4.881/2020 (texto oficial conferido em 11/11/2026): prazo de 30 dias e limite pactuado. Obrigatória para pessoa física, ME e EPP (art. 1º); para as demais empresas, estimativa. Taxa e IOF do contrato prevalecem.</p></CalculatorHelp></div>
@@ -104,14 +105,14 @@ export default function ContaGarantida({ onBack }) {
   const totals = result?.totals
   // Para cobrir a conta: devolve o valor utilizado (amortização na data da quitação) e paga juros e IOF, cobrados à parte.
   const cover = totals && totals.payment + totals.cost
-  const rateAnswer = cet?.ok ? { question: 'Qual é a taxa efetiva', value: `${pct(cet.annual)} a.a.`, note: `CET: ${pct(cet.monthly)} a.m. · 30 dias sobre o limite` }
+  const rateAnswer = cet?.ok ? { question: 'Qual é a taxa efetiva', value: `${pct(cet.annual)} a.a.`, note: `CET: ${pct(cet.monthly)} a.m. · 30 dias` }
     : { question: 'Qual é a taxa', value: result ? `${form.rate}% a.m.` : '—', note: `Taxa do contrato. ${cet ? 'CET não calculado' : 'CET: informe o limite'}` }
   const answers = <>
     <Respostas items={[
       { question: 'Quanto usou', value: reais(totals?.draw), note: result ? `Utilização em ${dateLabel(params.start)}` : 'Valor utilizado do limite' },
-      { question: 'Quanto paga para cobrir', value: reais(cover), note: 'Valor utilizado mais juros e IOF do período' },
+      { question: 'Quanto paga para cobrir', value: reais(cover) },
       rateAnswer,
-      { question: 'Quanto custa', value: reais(totals?.cost), note: 'Juros + IOF diário + IOF adicional, pagos à parte', main: true },
+      { question: 'Quanto custa', value: reais(totals?.cost), main: true },
     ]} />
     <ComposicaoDoCusto format={reais} parts={[
       { label: 'Juros', value: totals?.interest },
@@ -201,13 +202,13 @@ export default function ContaGarantida({ onBack }) {
           : <p className="cg-notice cg-guide">{guide}</p>)}
         {calculation && !calculation.ok && <p role="alert" className="cg-notice">{calculation.error}</p>}
       </div>
-      {!result && warnings.map(warning => <p className="cg-notice" key={warning}>{warning}</p>)}
+      {!result && avisosVisiveis.map(warning => <p className="cg-notice" key={warning}>{warning}</p>)}
       {result && <ExpandablePanel title="Resultado estimado do período">
         {alerts}
         {/* a. Resposta principal: custo de juros + IOF sobre os saldos e a taxa efetiva. Só reorganiza números já calculados. */}
         <div className="cg-answer">
-          <div className="cg-answer-main"><small>Custo total do período</small><b>{brl(result.totals.cost)}</b><span>Juros + IOF diário + IOF adicional, pagos à parte</span></div>
-          {cet?.ok ? <div className="cg-answer-side"><small>CET · taxa efetiva</small><b>{pct(cet.annual)} a.a.</b><span>{pct(cet.monthly)} a.m. · 30 dias sobre o limite</span></div>
+          <div className="cg-answer-main"><small>Custo total do período</small><b>{brl(result.totals.cost)}</b></div>
+          {cet?.ok ? <div className="cg-answer-side"><small>CET · taxa efetiva</small><b>{pct(cet.annual)} a.a.</b><span>{pct(cet.monthly)} a.m. · 30 dias</span></div>
             : <div className="cg-answer-side"><small>Taxa do contrato</small><b>{form.rate}% a.m.</b><span>{cet ? 'CET não calculado' : 'CET: informe o limite'}</span></div>}
         </div>
         {/* b. Equivalências */}

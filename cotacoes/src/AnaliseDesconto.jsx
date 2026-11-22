@@ -89,7 +89,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     { label: 'Giro: juros + TAC + IOF', month: first ? first.giro.cost / 12 : null, value: (row) => row.giro.cost },
     { label: 'Economia estimada com giro', month: first ? first.savings / 12 : null, value: (row) => row.savings, savings: true },
     { label: 'Parcela Price, sem TAC e IOF', month: first?.giro.installment, value: (row) => row.giro.installment },
-    { label: 'Média mensal all-in: principal + custos', month: first?.giro.averageMonthlyOutflow, value: (row) => row.giro.averageMonthlyOutflow },
+    { label: 'Média mensal all-in', month: first?.giro.averageMonthlyOutflow, value: (row) => row.giro.averageMonthlyOutflow },
   ]
   // Sem a operação completa, o resultado do desconto avisa o que falta (o aviso da comparação fica no bloco dela).
   const resultAlert = operation ? null : { warning: flagged, text: flagged ? 'Preencha ou corrija os campos sinalizados para ver o resultado.' : guide('o resultado') }
@@ -139,8 +139,8 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
       <div className="rt-outcome calc-result-shell" aria-live="polite">
         <Resultado id="ad-result-title" number={3} alert={resultAlert}>
           <Respostas items={[
-            { question: 'Quanto entra no caixa', value: brl(operation?.net), note: 'Valor líquido da operação: bruto menos todos os custos' },
-            { question: 'Quanto é descontado', value: brl(operation?.cost), note: 'Custo total completo, com a tarifa de títulos' },
+            { question: 'Quanto entra no caixa', value: brl(operation?.net), note: 'Valor líquido da operação' },
+            { question: 'Quanto é descontado', value: brl(operation?.cost), note: 'Custo total completo' },
             { question: 'Quanto custa', value: operation ? cetText(operation.cet) : '—', main: true,
               note: `CET do desconto (art. 6º · 30 dias)${operation ? ` · ${cetMonthly(operation.cet)} · prazo real: ${cetText(operation.termCost)}` : ''}` },
           ]} />
@@ -152,10 +152,10 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
           ].map(part => operation?.cost > 0
             ? { ...part, label: `${part.label} · ${pct(part.value / operation.cost)}` }
             : part)} total={{ label: 'Custo total completo', value: operation?.cost }} rows={[
-            { label: 'Subtotal sem tarifa de títulos (TAC + juros + IOF)', value: brl(operation?.costWithoutTitles), kind: 'muted' },
-            { label: 'Base do IOF: nominal menos juros antecipados', value: brl(operation?.base), kind: 'muted' },
+            { label: 'Subtotal sem tarifa de títulos', value: brl(operation?.costWithoutTitles), kind: 'muted' },
+            { label: 'Base do IOF', value: brl(operation?.base), kind: 'muted' },
           ]} />
-          <div className="dsc-result-foot"><span>Como o CET do desconto é calculado</span><CalculatorHelp title="CET do desconto"><p>{CET_HELP}</p></CalculatorHelp></div>
+          <div className="dsc-result-foot"><span>Como o CET do desconto é calculado</span><CalculatorHelp title="CET do desconto"><p>{CET_HELP}</p><p>O líquido é o valor bruto menos todos os custos. O subtotal sem a tarifa de títulos soma TAC, juros e IOF. A base do IOF é o nominal menos os juros antecipados.</p></CalculatorHelp></div>
         </Resultado>
       </div>
     </div>

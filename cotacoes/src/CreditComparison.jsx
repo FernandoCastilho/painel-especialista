@@ -346,7 +346,17 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
       <ResultPanel title="Gráficos dos fluxos"><CreditChart results={results} /></ResultPanel>
     </div>
     </details>
-    {results.some(r => r.notes.length) && <details className="credit-notes"><summary>Premissas de cada coluna</summary><ul>{results.map((r, i) => r.notes.length > 0 && <li key={i}><b>{head(i)}</b><ul>{r.notes.map(n => <li key={n}>{n}</li>)}</ul></li>)}</ul></details>}
+    {results.some(r => r.notes.length) && <details className="credit-notes"><summary>Premissas de cada coluna</summary><ul>{results.map((r, i) => {
+      if (r.notes.length === 0) return null
+      // No BNDES, a última nota descreve o calendário. As anteriores são avisos da operação.
+      const warnings = r.modality === 'bndes' ? r.notes.slice(0, -1) : []
+      const premises = r.notes.slice(warnings.length)
+      const exchange = r.modality === 'finimp' ? r.notes[0].split(', constante até o vencimento.')[0] : null
+      return <li key={i}><b>{head(i)}</b><CalculatorHelp title={`Premissas · ${head(i)}`}><ul>{premises.map(note => <li key={note}>{note}</li>)}</ul></CalculatorHelp>
+        {exchange && <p>{exchange}</p>}
+        {warnings.length > 0 && <ul>{warnings.map(warning => <li key={warning}>{warning}</li>)}</ul>}
+      </li>
+    })}</ul></details>}
     <details><summary>Fluxos completos e memória do cálculo</summary><div className="credit-help-line"><span>Como ler a memória do cálculo</span><CalculatorHelp title="Memória do cálculo"><p>CET estimado desconta cada pagamento em dias corridos/365 a partir da liberação. Valores exibidos arredondados; cálculo usa precisão integral.</p></CalculatorHelp></div>{results.map((r, i) => <div className="credit-scroll" key={i}><table><caption>{head(i)} · pagamentos em reais</caption><thead><tr>{['Nº', 'Data', 'Amortização', 'Juros', 'Pagamento', 'Saldo'].map(h => <th key={h} scope="col">{h}</th>)}</tr></thead><tbody>{r.rows.map(row => <tr key={row.number}><td>{row.number}</td><td>{day(row.date)}</td><td>{brl(row.amortization)}</td><td>{brl(row.interest)}</td><td>{brl(row.payment)}</td><td>{brl(row.balance)}</td></tr>)}</tbody></table></div>)}</details>
   </div>
 }
@@ -356,11 +366,11 @@ function CreditChart({ results }) {
   const max = Math.max(...results.map(r => r.paid), 1)
   const points = r => [{ date: r.start, cumulative: 0 }, ...r.rows].map(row => `${40 + (new Date(row.date).getTime() - start) / (end - start) * 620},${210 - row.cumulative / max * 180}`).join(' ')
   const names = results.map((r, i) => `${i + 1} ${r.label}`)
-  return <figure className="credit-chart"><figcaption>Pagamentos acumulados · {names.map((n, i) => `${n} (${['azul', 'laranja', 'verde', 'roxo', 'rosa'][i]})`).join(', ')}</figcaption>
+  return <figure className="credit-chart"><figcaption>Pagamentos acumulados · {names.map((n, i) => `${n} (${['azul', 'laranja', 'verde', 'roxo', 'rosa'][i]})`).join(', ')}<CalculatorHelp title="Gráfico dos fluxos"><p>Somente pagamentos futuros, sem descontos na liberação. Linhas ligam vencimentos e não representam cobranças diárias. O gráfico usa datas reais, inclusive prazos diferentes.</p></CalculatorHelp></figcaption>
     <ChartFullscreen><svg viewBox="0 0 700 250" role="img" aria-label={`Pagamentos acumulados até o fim de cada operação: ${results.map((r, i) => `${i + 1} ${brl(r.paid)}`).join(', ')}. Datas e valores completos na memória.`}><path d="M40 25V210H670" fill="none" stroke="currentColor" />
       {results.map((r, i) => <polyline key={i} points={points(r)} fill="none" stroke={COLUMN_COLORS[i]} strokeWidth="3" strokeDasharray={COLUMN_DASH[i] || undefined} />)}
       <text x="40" y="240">Liberação</text><text x="510" y="240">Último vencimento</text></svg></ChartFullscreen>
-    <p>Somente pagamentos futuros, sem descontos na liberação. Linhas ligam vencimentos e não representam cobranças diárias. O gráfico usa datas reais, inclusive prazos diferentes.</p></figure>
+  </figure>
 }
 const INVEST_INITIAL = { on: false, product: 'cdb-pos', rate: '100', adminFee: '0,50' }
 const pctRate = v => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
@@ -372,12 +382,12 @@ function InvestmentFields({ invest, set, curveBase }) {
   return <section className="desk-panel credit-controls credit-invest" aria-labelledby="credit-invest-title">
     <h3 id="credit-invest-title"><label><input type="checkbox" checked={invest.on} onChange={e => update('on', e.target.checked)} /> Comparar com aplicação financeira</label></h3>
     {invest.on && !curveBase && <p className="credit-alert" role="status">Curva DI indisponível agora: a aplicação não pode ser calculada.</p>}
-    <div className="credit-help-line"><span>Comparação conforme o regime tributário escolhido.</span><CalculatorHelp title="Comparar com aplicação financeira"><p>Mostra quanto a empresa ganharia deixando o dinheiro aplicado e, em cada operação, se compensa tomar o crédito e manter o caixa aplicado ou usar o caixa próprio. Tributação pelo regime escolhido nos detalhes do contrato (bloco 1).</p></CalculatorHelp></div>
+    <div className="credit-help-line"><span>Tributação e projeção</span><CalculatorHelp title="Comparar com aplicação financeira"><p>Mostra quanto a empresa ganharia deixando o dinheiro aplicado e, em cada operação, se compensa tomar o crédito e manter o caixa aplicado ou usar o caixa próprio. Tributação pelo regime escolhido nos detalhes do contrato (bloco 1).</p>{curveBase && <p>Nos cenários de alta ou queda, a curva sobe ou desce na mesma variação.</p>}</CalculatorHelp></div>
     {invest.on && <>
       <label className="credit-field" htmlFor="credit-invest-product"><span>Aplicação</span><select id="credit-invest-product" value={invest.product} onChange={e => update('product', e.target.value)}>{PRODUCTS.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}</select></label>
       <label className="credit-field" htmlFor="credit-invest-rate"><span>{pre ? 'Taxa (% a.a., 252 dias úteis)' : 'Remuneração (% do CDI)'}</span><input id="credit-invest-rate" inputMode="decimal" value={invest.rate} onChange={e => update('rate', e.target.value)} /></label>
       {invest.product.startsWith('fundo') && <label className="credit-field" htmlFor="credit-invest-fee"><span>Taxa de administração (% a.a.)</span><input id="credit-invest-fee" inputMode="decimal" value={invest.adminFee} onChange={e => update('adminFee', e.target.value)} /></label>}
-      {curveBase && <p className="credit-hint">{`CDI projetado pela curva DI x pré da B3 de ${day(curveBase)}; nos cenários de alta ou queda, a curva sobe ou desce na mesma variação.`}</p>}
+      {curveBase && <p className="credit-hint">CDI projetado pela curva DI x pré da B3 de {day(curveBase)}.</p>}
     </>}
   </section>
 }
