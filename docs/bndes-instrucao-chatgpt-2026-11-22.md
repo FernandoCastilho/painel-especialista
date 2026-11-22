@@ -19,8 +19,10 @@ Não mude nenhuma regra de cálculo. Taxa, IOF, CET, cronograma, carência e TAC
 
 ## Como trabalhar (obrigatório)
 
-- Parta da versão publicada, o ramo `claude/obsidian-plugin-analysis-bagjz3`. Crie um ramo próprio chamado `codex/bndes-pecas-do-giro`.
-- Abra o pedido (PR) **em rascunho** contra `claude/obsidian-plugin-analysis-bagjz3`.
+- Faça esta tarefa **depois** da instrução das seis calculadoras (`docs/seis-calculadoras-instrucao-chatgpt-2026-11-22.md`).
+- Parta do ramo dela, `codex/seis-calculadoras-roteiro`, que já traz o roteiro novo do BNDES Finame, e crie `codex/bndes-pecas-do-giro`.
+- Abra o pedido (PR) **em rascunho** contra `codex/seis-calculadoras-roteiro`, para a revisão mostrar só as peças do BNDES.
+- Se a tarefa das seis não existir, parta da versão publicada `claude/obsidian-plugin-analysis-bagjz3` e abra o PR contra ela.
 - **NÃO junte e NÃO publique.** A conferência será feita por outro agente às 6h02 de 23/11/2026, e a publicação depende do Fernando.
 - Mude o mínimo em `FinameMateriais.jsx`: acrescente blocos e não reorganize o que já existe. Amanhã cedo outra entrega mexe no roteiro visual (blocos 1 · 2 · 3) das calculadoras, inclusive dessa. Mudanças pequenas e localizadas evitam conflito.
 - Antes de abrir o PR, rode dentro de `cotacoes/` e deixe tudo passando:
@@ -58,6 +60,7 @@ export const linhasDoFluxoBndes = parcelas => parcelas
 
 Onde mostrar:
 - Logo **depois** do painel "Cotação da operação" / "Cotação comparativa" (o `ExpandablePanel` com `className="fm-result-workspace"`) e **antes** de "Parcelas da operação".
+- Com o roteiro novo, vindo do ramo das seis, o lugar é logo depois do bloco "3 Resultado". A ordem fica: Resultado → Fluxo de pagamentos → parcelas e detalhes → Referência de mercado por último.
 - Só quando houver resultado (`res`).
 - Com "Comparar com outro custo" ligado (`comparar`), mostre acima do gráfico uma escolha simples entre as alternativas (Opção A · TFC, Opção B · TLP etc.). Use `alternatives[i].result.parcelas`. Abre na opção A.
 
