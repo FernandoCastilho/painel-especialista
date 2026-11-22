@@ -34,7 +34,7 @@ const barra = (x, y, w, h, raio) => {
   return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`
 }
 
-export default function FluxoPagamentos({ rows, inicio }) {
+export default function FluxoPagamentos({ rows, inicio, nota }) {
   const meses = useMemo(() => fluxoMensal(rows, inicio), [rows, inicio])
   const [ref, width] = useWidth()
   const [hover, setHover] = useState(null)
@@ -114,6 +114,7 @@ export default function FluxoPagamentos({ rows, inicio }) {
         <p>No alto do gráfico, o resumo: quantos pagamentos, o total pago nas barras e quanto disso é juros. Em cada barra, o valor pago no mês e, dentro dela, os juros e a amortização, em mil ou milhões de reais. Quando não há espaço para todas, os valores aparecem em barras alternadas; tocando ou passando o mouse, o balão mostra os valores exatos.</p>
         <p>Arraste na horizontal sobre o gráfico (clique, segure e arraste; no celular, deslize o dedo de lado) para marcar um trecho: o balão soma as parcelas, os juros e o principal desse trecho. Clique sem arrastar ou Escape limpa. Pelo teclado, Shift com as setas.</p>
         <p>Os valores são os do cronograma da simulação (Ver parcelas), com carência, pagamentos só de juros e ajustes. IOF e encargos pagos na liberação não entram nas barras.</p>
+        {nota && <p>{nota}</p>}
       </CalculatorHelp>
     </div>
     <ul className="fp-legenda" aria-hidden="true"><li><i className="fp-juros" />Juros</li><li><i className="fp-amort" />Amortização</li></ul>
