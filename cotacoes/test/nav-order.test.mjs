@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 
 // Nav.jsx importa JSX; lê o texto-fonte para travar a ordem do menu.
 const src = readFileSync(new URL('../src/Nav.jsx', import.meta.url), 'utf8')
-test('menu: Mercado hoje, Juros, Cenários e depois as demais; barra do celular com as 4 primeiras', () => {
+test('catálogo histórico preserva posições dos atalhos', () => {
   const ids = APP_SECTIONS.map(section => section.id)
   assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora', 'podcast', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
   assert.match(src, /desktop \? DESKTOP_PRIMARY : MOBILE_PRIMARY/)
@@ -66,4 +66,11 @@ test('Juros fica imediatamente após Cenários em todas as telas, nunca duplicad
   for (const id of ['resumo','cenarios','juros','calculadora','setores','noticias','podcast','bancos','feriados','aprender']) assert.ok(destinations.includes(id), id)
  }
  assert.equal(shortcutTitle('juros'), 'Alt+2')
+})
+
+test('rótulos compactos mantêm os nomes acessíveis completos', () => {
+  assert.deepEqual(Object.fromEntries(APP_SECTIONS.filter(t => t.compactLabel).map(t => [t.id, t.compactLabel])),
+    { resumo: 'Merc.', cenarios: 'Cen.', calculadora: 'Calc.' })
+  assert.match(src, /aria-label=\{!desktop &&/)
+  assert.match(src, /nav-label-compact" aria-hidden="true"/)
 })

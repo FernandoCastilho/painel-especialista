@@ -68,7 +68,8 @@ test('coleta de 5 em 5 minutos só entre 9h05 e 18h de Brasília (12h05 a 21h00 
   assert.ok(Math.min(...starts) === 12 * 60 + 5, 'primeira partida até a abertura (9h05)')
   assert.ok(Math.max(...starts) < 21 * 60)
   // janela do laço e cadência de 5 min no próprio script
-  assert.match(yml, /\[ "\$hm" -ge 1205 \] && \[ "\$hm" -le 2100 \]/)
+  // janela (9h05 às 18h, dia de pregão da B3) vem da regra única em scripts/data-schedules.mjs
+  assert.match(yml, /in_session\(\) \{ node cotacoes\/scripts\/fx-session\.mjs; \}/)
   assert.match(yml, /sleep \$\(\(300 - \$\(date \+%s\) % 300 \+ 5\)\)/)
   const deadline = Number(yml.match(/deadline=\$\(\(start \+ (\d+) \* 60\)\)/)[1])
   const timeout = Number(yml.match(/timeout-minutes: (\d+)/)[1])

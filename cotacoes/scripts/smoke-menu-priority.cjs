@@ -5,8 +5,8 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
  fs.mkdirSync(out,{recursive:true})
  const browser=await chromium.launch(require('./smoke-launch.cjs')()), report=[]
  try{
-  for(const width of [320,390,820,1024,1440]) for(const theme of ['light','dark']){
-   const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme,serviceWorkers:'block'})
+  for(const width of [320,390,820,1024,1440,1660,1920]) for(const theme of ['light','dark']){
+   const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<=390,colorScheme:theme,serviceWorkers:'block'})
    const page=await context.newPage()
    await page.goto(base+'/#calculadora')
    await page.locator('.calc-catalog').waitFor()
@@ -14,13 +14,39 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    if(await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
    await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,theme)
    const nav=page.getByRole('navigation',{name:width>=1000?'Navegação principal':'Seções',exact:true})
-   const expected=width>=1000?['Mercado','Cenários','Juros','Calculadoras','Setores','Notícias','Podcast','Mais']:['Mercado','Cenários','Juros','Calculadoras','Setores','Mais']
-   assert.deepEqual((await nav.locator(':scope > button, :scope > .more-tab > button').allTextContents()).map(s=>s.trim()),expected)
+   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','Notícias','Podcast','Mais']
+    :width<=359?['Merc.','Cen.','Juros','Calc.','RPN','Setores','Mais']:['Mercado','Cenários','Juros','Calculadoras','RPN','Setores','Mais']
+   await page.evaluate(()=>document.fonts.ready)
+   if(width>=1400){
+    const {flagSvg}=await import('../src/flags.js')
+    const expectedClocks=[['São Paulo','BRT','BRL'],['Nova York','NYC','USD'],['Londres','LDN','GBP'],['Tóquio','TYO','JPY']].slice(0,width>=1800?4:width>=1600?2:1)
+    assert.equal(await page.locator('.topbar-clocks > .topbar-clock:visible').count(),expectedClocks.length)
+    for(const [city,short,code] of expectedClocks){
+      const clock=page.locator('.topbar-clocks > .topbar-clock').and(page.getByTitle(city,{exact:true}))
+      assert.equal((await clock.locator('b').innerText()).trim(),short)
+      assert.match(await clock.innerText(),/\d{2}:\d{2}/)
+      const flag=clock.locator('.topbar-clock-flag')
+      assert.equal(await flag.isVisible(),true)
+      assert.equal(await flag.getAttribute('aria-hidden'),'true')
+      assert.ok(await flag.locator('svg').evaluate((svg,expected)=>{
+        const sample=document.createElement('template'); sample.innerHTML=expected
+        return svg.isEqualNode(sample.content.firstElementChild)
+      },flagSvg(code,'width="13" height="9"')))
+    }
+   }
+   assert.deepEqual((await nav.locator(':scope > button, :scope > .more-tab > button').allInnerTexts()).map(s=>s.trim()),expected)
    for(const button of await nav.locator(':scope > button, :scope > .more-tab > button').all()) {
     const bounds=await button.boundingBox()
     assert.ok(bounds.width>=44&&bounds.height>=44,`${width}/${theme}: ${await button.innerText()} touch target ${bounds.width}×${bounds.height}, expected at least 44px`)
     assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1,'primary button within viewport')
     assert.equal(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true,'primary label not clipped')
+    if(width<=390) assert.ok(await button.evaluate(el=>{
+     const label=[...el.querySelectorAll(':scope > span')].find(span=>span.getClientRects().length)
+     if(!label) return false
+     const text=document.createRange();text.selectNodeContents(label)
+     const lines=[...text.getClientRects()],target=el.getBoundingClientRect()
+     return lines.length===1&&lines[0].left>=target.left-1&&lines[0].right<=target.right+1
+    }),`${width}/${theme}: rótulo ${await button.innerText()} em uma linha e dentro do alvo`)
    }
    await nav.getByRole('button',{name:'Mais',exact:true}).click()
    const menu=nav.getByRole('menu')
@@ -50,12 +76,111 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.keyboard.press('Tab')
    assert.equal(await more.getAttribute('aria-expanded'),'false','Tab closes menu')
    // Every primary destination is a real clickable route.
-   const destinations=[['Mercado','resumo'],['Cenários','cenarios'],['Juros','juros'],['Calculadoras','calculadora'],['Setores','setores']]
+   const destinations=[['Mercado','resumo'],['Cenários','cenarios'],['Juros','juros'],['Calculadoras','calculadora'],['Calculadora RPN','rpn'],['Setores','setores']]
    if(width>=1000) destinations.push(['Notícias','noticias'],['Podcast','podcast'])
    for(const [label,id] of destinations){
     await nav.getByRole('button',{name:label,exact:true}).click()
     await page.waitForURL('**/#'+id)
     assert.equal(await nav.getByRole('button',{name:label,exact:true}).getAttribute('aria-current'),'page')
+    if(id==='rpn'){
+     const panel=page.getByRole('region',{name:'Calculadora RPN',exact:true})
+     const display=panel.getByLabel('Resultado da calculadora',{exact:true})
+     const visibleText=async()=> (await display.textContent()).trim()
+     await panel.waitFor()
+     assert.equal(await page.locator('#conteudo h1').count(),1,'a RPN tem um único título principal')
+     const heading=panel.getByRole('heading',{name:'Calculadora RPN',level:1,exact:true})
+     if(width<=390){
+      assert.ok(await heading.evaluate(el=>{
+       const text=document.createRange();text.selectNodeContents(el)
+       const lines=[...text.getClientRects()],box=el.parentElement.getBoundingClientRect()
+       return lines.length===1&&lines[0].left>=box.left&&lines[0].right<=box.right
+      }),`${width}/${theme}: título completo em uma linha`)
+      await page.screenshot({path:path.join(out,'rpn-top-'+width+'-'+theme+'.png')})
+     }
+     const keypad=panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
+     assert.equal(await keypad.count(),1,'uma grade acessível por largura')
+     const keys=keypad.getByRole('button')
+     assert.equal(await keys.count(),39)
+     for(const button of await keys.all()){
+      const box=await button.boundingBox()
+      assert.ok(box.width>=44&&box.height>=44,`${width}/${theme}: ${await button.getAttribute('data-key')} alvo ${box.width}×${box.height}`)
+      assert.ok(box.x>=0&&box.x+box.width<=width+1,'tecla dentro da tela')
+      assert.ok(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'tecla sem corte horizontal')
+     }
+     const initial=await visibleText()
+     await page.keyboard.press('7')
+     assert.equal(await visibleText(),initial,'teclado fora da região não altera o visor')
+     await panel.focus()
+     for(const key of ['2','Enter','3','+']) await panel.press(key)
+     assert.match(await visibleText(),/^5(?:,0+)?$/)
+     const enter=panel.getByRole('button',{name:'Enter: separar os números',exact:true})
+     await enter.focus()
+     await page.keyboard.press('Enter')
+     await panel.getByText('Pilha, registros e fluxo de caixa',{exact:true}).click()
+     const stack=panel.getByRole('complementary',{name:'Pilha de valores'})
+     const register=name=>stack.getByText(name,{exact:true}).locator('..').locator('dd')
+     assert.match(await register('Y').innerText(),/^5(?:,0+)?$/)
+     assert.match(await register('Z').innerText(),/^0(?:,0+)?$/,'Enter nativo não duplica o empilhamento')
+     assert.ok(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'quadro RPN cabe no viewport')
+     if(width<=390||width===1440){
+      const trigger=button=>width<=390?button.tap():button.click()
+      const key=id=>keypad.locator('button[data-key="'+id+'"]')
+      const action=id=>trigger(key(id))
+      const input=async digits=>{await panel.focus(); await panel.press('Delete'); for(const digit of digits) await panel.press(digit)}
+      await input('100')
+      await action('chs')
+      await action('g'); await action('pv')
+      await input('80')
+      await action('g'); await action('pmt')
+      await action('f'); await action('fv')
+      assert.match(await visibleText(),/^[-−]20(?:,0+)?$/)
+      const cash=panel.getByRole('group',{name:'Fluxo de caixa'})
+      assert.match(await cash.innerText(),/2 registros/)
+      const interest=panel.getByRole('group',{name:'Registros financeiros',exact:true}).getByText('i',{exact:true}).locator('..').locator('dd')
+      const rateBefore=await interest.innerText()
+      const ratesButton=panel.getByRole('button',{name:'Taxas',exact:true})
+      const rates=panel.getByRole('region',{name:'Converter taxas',exact:true})
+      const rateField=rates.getByRole('textbox',{name:'Taxa de origem (%)',exact:true})
+      const use=rates.getByRole('button',{name:'Usar no visor',exact:true})
+      await trigger(ratesButton)
+      assert.equal(await rateField.evaluate(n=>n===document.activeElement),true,'foco inicial no campo')
+      const origin=rates.getByRole('combobox',{name:'De',exact:true})
+      const destination=rates.getByRole('combobox',{name:'Para',exact:true})
+      assert.equal(await origin.inputValue(),'month','rótulo semântico exato De')
+      assert.equal(await destination.inputValue(),'year','rótulo semântico exato Para')
+      await rateField.fill('1,00')
+      assert.match(await rates.getByLabel('Taxa equivalente',{exact:true}).innerText(),/^12,6825/)
+      const equivalences=rates.getByRole('region',{name:'Equivalências por período',exact:true})
+      const daily=equivalences.getByText('Ao dia',{exact:true}).locator('..').locator('dd')
+      await equivalences.getByText('1% a.m.',{exact:true}).waitFor()
+      assert.match(await equivalences.getByText('Ao ano',{exact:true}).locator('..').locator('dd').innerText(),/^12,6825.*% a\.a\.$/)
+      assert.equal(await daily.innerText(),'Escolha a base diária')
+      await rates.getByLabel('Para',{exact:true}).selectOption('day')
+      assert.ok(await use.isDisabled(),'base diária deve ser explícita')
+      for(const basis of [365,252]){
+       await rates.getByLabel('Base diária',{exact:true}).selectOption(String(basis))
+       assert.ok(await use.isEnabled())
+       const expected=100*(1.01**(12/basis)-1)
+       const displayed=Number((await daily.innerText()).split('%')[0].replace(',','.'))
+       assert.ok(Math.abs(displayed-expected)<1e-10,'diária respeita a base selecionada')
+      }
+      await rates.getByLabel('Para',{exact:true}).selectOption('year')
+      await page.screenshot({path:path.join(out,'rpn-taxas-'+width+'-'+theme+'.png'),fullPage:true})
+      await rateField.press('Escape')
+      assert.ok(await rates.isHidden())
+      assert.equal(await ratesButton.evaluate(n=>n===document.activeElement),true,'Escape devolve foco')
+      await trigger(ratesButton)
+      assert.equal(await rateField.inputValue(),'1,00','rascunho preservado ao reabrir')
+      assert.match(await visibleText(),/^[-−]20(?:,0+)?$/,'até confirmar o conversor não altera o visor')
+      await trigger(use)
+      assert.ok(await rates.isHidden())
+      assert.match(await visibleText(),/^12,68(?:0+)?$/,'visor respeita suas casas configuradas')
+      await action('f'); await action('6')
+      assert.match(await visibleText(),/^12,682503$/,'cálculo não perdeu precisão no envio ao visor')
+      assert.equal(await interest.innerText(),rateBefore,'sem gravar taxa convertida em i')
+     }
+     await page.screenshot({path:path.join(out,'rpn-'+width+'-'+theme+'.png'),fullPage:true})
+    }
    }
    const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Aprender','aprender']]
    for(const [label,id] of extra){
@@ -78,6 +203,166 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.locator('.calc-catalog button').first().click()
    await page.waitForURL('**/#calculadora/finame-materiais')
    report.push({width,theme,passed:true});await context.close()
+  }
+  for(const theme of ['light','dark']) {
+   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,colorScheme:theme,serviceWorkers:'block'})
+   const page=await context.newPage()
+   await page.goto(base+'/#rpn')
+   const panel=page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   const key=id=>panel.getByRole('group',{name:'Teclado da calculadora',exact:true}).locator('button[data-key="'+id+'"]')
+   const result=()=>panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()
+   await panel.waitFor()
+   await key('2').tap()
+   await key('enter').tap()
+   for(const [width,height] of [[844,390],[640,320],[568,280]]) {
+    await page.setViewportSize({width,height})
+    await page.waitForFunction(()=>{
+     const wide=document.querySelector('.rpn-keypad--wide'), display=document.querySelector('.rpn-display')
+     return wide?.getClientRects().length && display?.getBoundingClientRect().top>=0
+    })
+    const keyboard=panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
+    assert.equal(await keyboard.count(),1)
+    assert.equal(await keyboard.getByRole('button').count(),39)
+    for(const loc of [panel.getByLabel('Resultado da calculadora',{exact:true}), ...await keyboard.getByRole('button').all()]) {
+     const rect=await loc.boundingBox()
+     assert.ok(rect && rect.x>=0 && rect.y>=0 && rect.x+rect.width<=width+1 && rect.y+rect.height<=height,
+      `${width}×${height}/${theme}: visor/tecla dentro da altura útil ${JSON.stringify(rect)}`)
+     if(await loc.getAttribute('data-key')) assert.ok(rect.width>=44 && rect.height>=44,
+      `${width}×${height}/${theme}: alvo ${rect.width}×${rect.height}`)
+    }
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'sem rolagem horizontal')
+    await page.screenshot({path:path.join(out,`rpn-landscape-${width}-${height}-${theme}.png`)})
+    report.push({width,height,theme,orientation:'landscape',passed:true})
+   }
+   await key('3').tap()
+   await key('add').tap()
+   assert.match((await result()).trim(),/^5(?:,0+)?$/,'giro preserva pilha e cálculo')
+   await panel.getByRole('button',{name:'Taxas',exact:true}).tap()
+   const rates=panel.getByRole('region',{name:'Converter taxas',exact:true})
+   const source=rates.getByLabel('Taxa de origem (%)',{exact:true})
+   assert.ok(await source.evaluate(el=>el===document.activeElement && el.getBoundingClientRect().top>=0 &&
+    el.getBoundingClientRect().bottom<=innerHeight),'abertura de Taxas visível e com foco antes de digitar')
+   await source.fill('1')
+   assert.match(await rates.getByLabel('Taxa equivalente',{exact:true}).innerText(),/^12,6825/)
+   await rates.getByRole('button',{name:'Fechar conversor',exact:true}).tap()
+   assert.match((await result()).trim(),/^5(?:,0+)?$/,'conversor não altera o estado sem ação')
+   const helpButton=panel.getByRole('button',{name:'Ajuda da calculadora',exact:true})
+   await helpButton.tap()
+   const help=panel.getByRole('region',{name:'Como usar',exact:true})
+   await help.waitFor()
+   assert.ok(await help.evaluate(el=>el===document.activeElement && el.getBoundingClientRect().top>=0 &&
+    el.getBoundingClientRect().top<innerHeight),'ajuda visível e com foco')
+   await help.getByRole('button',{name:'Fechar ajuda',exact:true}).tap()
+   assert.ok(await help.isHidden())
+   assert.ok(await helpButton.evaluate(el=>el===document.activeElement),'fechar ajuda devolve foco')
+   await page.setViewportSize({width:390,height:844})
+   const back=panel.getByRole('link',{name:'Voltar ao Mercado',exact:true})
+   assert.equal(await back.count(),0,'atalho extra só na paisagem')
+   assert.match((await result()).trim(),/^5(?:,0+)?$/,'voltar ao retrato preserva o visor')
+   await page.setViewportSize({width:844,height:390})
+   await back.tap()
+   await page.waitForURL('**/#resumo')
+   await page.getByRole('navigation',{name:'Seções',exact:true}).waitFor()
+   await context.close()
+  }
+  for (const behavior of ['unavailable', 'rejected', 'native', 'desktop-fallback']) {
+   const desktopShort=behavior === 'desktop-fallback'
+   const mobile=behavior === 'unavailable' || behavior === 'rejected'
+   const viewport=desktopShort ? {width:780,height:390} : {width:390,height:844}
+   const context = await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,serviceWorkers:'block'})
+   const page = await context.newPage()
+   await page.addInitScript(behavior => {
+    let fullscreen = null
+    Object.defineProperty(document,'fullscreenEnabled',{ configurable:true, get:()=>behavior !== 'unavailable' && behavior !== 'desktop-fallback' })
+    Object.defineProperty(document,'fullscreenElement',{ configurable:true, get:()=>fullscreen })
+    HTMLElement.prototype.requestFullscreen = async function() {
+     if (behavior === 'rejected') throw new Error('fullscreen indisponível')
+     fullscreen = this
+     document.dispatchEvent(new Event('fullscreenchange'))
+    }
+    document.exitFullscreen = async () => { fullscreen = null; document.dispatchEvent(new Event('fullscreenchange')) }
+   },behavior)
+   await page.goto(base+'/#rpn')
+   const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   await panel.waitFor()
+   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+   await panel.focus()
+   for (const k of ['2','Enter','3','+']) await panel.press(k)
+   const value = async () => (await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim()
+   assert.match(await value(),/^5(?:,0+)?$/)
+   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
+   const close = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
+   const normalNav = page.getByRole('navigation',{name:'Seções',exact:true})
+   await normalNav.waitFor({state:'visible'})
+   if (desktopShort) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false)
+   await open.click()
+   await close.waitFor()
+   const native = behavior === 'native'
+   assert.equal(await panel.getAttribute('data-screen-mode'),native?'native':'page')
+   if (native) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false,'paisagem também funciona com ponteiro fino')
+   if (!native) await normalNav.waitFor({state:'hidden'})
+   for (const [width,height] of [[780,390],[320,760]]) {
+    await page.setViewportSize({width,height})
+    const grade = panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
+    assert.equal(await grade.getByRole('button').count(),39)
+    assert.equal((await grade.getAttribute('class')).includes(width===780?'--wide':'--portrait'),true)
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true)
+    if (width === 780 && !native) {
+     for (const part of [panel.locator('.rpn-display'), ...await grade.getByRole('button').all()]) {
+      const box = await part.boundingBox()
+      assert.ok(box && box.x>=0 && box.y>=0 && box.x+box.width<=width+1 && box.y+box.height<=height,
+       'tecla e visor dentro da tela no fallback: '+JSON.stringify(box))
+     }
+    }
+    assert.match(await value(),/^5(?:,0+)?$/)
+   }
+   // Volte à geometria inicial antes de sair, para provar a restauração sem efeito de um resize após a saída.
+   await page.setViewportSize(viewport)
+   const landscape=viewport.width>viewport.height
+   await page.waitForFunction(wide=>matchMedia(wide?'(orientation: landscape)':'(orientation: portrait)').matches,landscape)
+   const restoredViewport=await page.evaluate(()=>[innerWidth,innerHeight])
+   if (native) await page.evaluate(()=>document.exitFullscreen())
+   else await close.press('Escape')
+   await open.waitFor()
+   assert.equal(await panel.getAttribute('data-screen-mode'),null)
+   if (!native) assert.equal(await open.evaluate(el=>document.activeElement===el),true)
+   assert.match(await value(),/^5(?:,0+)?$/)
+   await normalNav.waitFor({state:'visible'})
+   assert.deepEqual(await page.evaluate(()=>[innerWidth,innerHeight]),restoredViewport)
+   await open.click()
+   await close.click()
+   await open.waitFor()
+   await normalNav.waitFor({state:'visible'})
+   assert.match(await value(),/^5(?:,0+)?$/)
+   report.push({fullscreen:behavior,passed:true})
+   await context.close()
+  }
+  {
+   // Chrome sem mocks: comprova o top layer e a aplicação real da regra :fullscreen.
+   const context = await browser.newContext({viewport:{width:1000,height:700},screen:{width:1000,height:700},serviceWorkers:'block'})
+   const page = await context.newPage()
+   await page.goto(base+'/#rpn')
+   const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
+   await panel.waitFor()
+   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
+   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+   await panel.focus()
+   for (const k of ['2','Enter','3','+']) await panel.press(k)
+   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
+   const exit = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
+   assert.equal(await page.evaluate(()=>document.fullscreenEnabled),true,'Chrome da suíte suporta a API')
+   await open.click()
+   await exit.waitFor()
+   assert.equal(await panel.evaluate(el=>document.fullscreenElement===el && el.matches(':fullscreen')),true)
+   assert.equal(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true)
+   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
+   await exit.click()
+   await open.waitFor()
+   assert.equal(await page.evaluate(()=>document.fullscreenElement),null)
+   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
+   report.push({fullscreen:'chrome-real',passed:true})
+   await context.close()
   }
  }finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1})

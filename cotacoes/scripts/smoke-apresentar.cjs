@@ -132,10 +132,9 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.equal(await atual.locator('.calc-result-shell:visible').count(), 0)
       // Data da liberação fica à vista, na linha mestra (19/11/2026).
       assert.equal(await atual.getByLabel('Data da liberação', { exact: true }).isVisible(), true)
-      const iof = atual.getByText('Enquadramento do IOF', { exact: true })
-      await iof.click()
+      // Perfil tributário compacto nos encargos (21/11/2026), sem a gaveta "Enquadramento do IOF".
       assert.equal(await atual.getByLabel('Perfil tributário', { exact: true }).isVisible(), true)
-      await iof.click()
+      assert.equal(await atual.locator('.rt-timeline').count(), 0, 'sem linha do tempo no Capital de Giro')
       const valor = atual.getByLabel('Valor solicitado', { exact: true })
       await valor.fill('250.000,00'); await valor.blur()
       // dentro de um campo, as setas e o espaço são do campo: o slide não troca

@@ -6,6 +6,7 @@ import { Aviso } from './Avisos.jsx'
 import { useId, useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
 import { marcasRedondas } from './chartEixo.js'
+import { mesesDoEixo } from './faixaCurva.js'
 import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { isWeekendBR } from './market.js'
@@ -27,9 +28,12 @@ const day = (iso) => iso.split('-').reverse().join('/')
 
 // Eixo X: BR em anos úteis (day252 / 252), EUA em posições iguais por vencimento.
 // `escalaDesde`: prazo mínimo (dias úteis) que entra na escala vertical; vértices mais curtos ficam fora do quadro (cortados), só no desenho.
-function CurveChart({ title, subtitle, data, mode, source, help, bare = false, escalaDesde = 0 }) {
+// `prazo` (opcional, só no eixo BR): { de, ate } em dias úteis; o gráfico mostra só os vértices nesse intervalo, com o eixo em meses
+// (21 dias úteis por mês, a mesma conta do balão). `soUltimo` (opcional): abre só com a curva do último dia ligada; as outras
+// datas seguem na legenda para ligar. Sem essas propriedades, nada muda (página Juros).
+function CurveChart({ title, subtitle, data, mode, source, help, bare = false, escalaDesde = 0, prazo, soUltimo = false }) {
   const [ref, width] = useWidth()
-  const [off, setOff] = useState(() => new Set())
+  const [off, setOff] = useState(() => new Set(soUltimo ? (data?.compare ?? []).slice(1).map((c) => c.date) : []))
   const [hover, setHover] = useState(null)
   const plotRef = useTocarFora(hover != null, setHover)
   const [announcement, setAnnouncement] = useState('')
@@ -41,11 +45,14 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
 
   const g = useMemo(() => {
     if (!shown.length) return null
-    const series = shown.map((c) => ({ ...c, pts: data.curves[c.date] }))
+    const corte = prazo && mode !== 'us' ? (pts) => pts.filter((p) => p[0] >= prazo.de && p[0] <= prazo.ate) : (pts) => pts
+    const series = shown.map((c) => ({ ...c, pts: corte(data.curves[c.date]) })).filter((s) => s.pts.length)
+    if (!series.length) return null
     const labels = mode === 'us' ? [...new Map(series.flatMap((s) => s.pts.map((p) => [p[0], p[2]]))).entries()].sort((a, b) => a[0] - b[0]) : null
     const xv = (yrs) => (labels ? labels.findIndex((l) => l[0] === yrs) : yrs)
-    const x0 = 0
-    const x1 = labels ? labels.length - 1 : Math.max(...series.flatMap((s) => s.pts.map((p) => p[0] / 252)))
+    const meses = prazo && !labels
+    const x0 = meses ? prazo.de / 252 : 0
+    const x1 = labels ? labels.length - 1 : meses ? prazo.ate / 252 : Math.max(...series.flatMap((s) => s.pts.map((p) => p[0] / 252)))
     const todos = series.flatMap((s) => s.pts)
     const naEscala = todos.filter((p) => p[0] >= escalaDesde)
     const vals = (naEscala.length ? naEscala : todos).map((p) => p[1])
@@ -63,10 +70,13 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
     const yTicks = eixo.ticks
     const xTicks = labels
       ? labels.filter((_, i) => i % (width < 520 ? 3 : 2) === 0 || i === labels.length - 1).map((l) => ({ x: X([l[0]]), t: l[1] }))
-      : [0, 1, 2, 3, 5, 7, 10, 15, 20, 30].filter((y) => y <= x1 + 0.01).map((y) => ({ x: M.l + (y / (x1 || 1)) * iw, t: `${y}a` }))
+      : meses
+        ? mesesDoEixo(prazo.de / 21, prazo.ate / 21).map((m) => ({ x: M.l + ((m / 12 - x0) / (x1 - x0 || 1)) * iw, t: `${m}m` }))
+            .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), [])
+        : [0, 1, 2, 3, 5, 7, 10, 15, 20, 30].filter((y) => y <= x1 + 0.01).map((y) => ({ x: M.l + (y / (x1 || 1)) * iw, t: `${y}a` }))
           .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), []) // pelo menos 30 px entre rótulos: sem encavalar
     return { series, X, Y, yTicks, xTicks, casas: eixo.casas, iw, ih }
-  }, [shown.map((s) => s.date).join(), width, data, mode, escalaDesde])
+  }, [shown.map((s) => s.date).join(), width, data, mode, escalaDesde, prazo?.de, prazo?.ate])
 
   const onMove = (e) => {
     if (!g) return
@@ -109,7 +119,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
         </header>
       )}
       {/* uma linha curta só; o detalhe das datas de comparação fica no "?" da legenda */}
-      <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data.{escalaDesde > 0 && ' Vencimentos com menos de 3 meses ficam fora da escala; seguem na tabela.'}</p>
+      {!prazo && <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data.{escalaDesde > 0 && ' Vencimentos com menos de 3 meses ficam fora da escala; seguem na tabela.'}</p>}
       <div className="curve-legend">
         {periodHelp && <span className="curve-legend-title">Curvas de comparação <Explain id={periodHelp} /></span>}
         {compare.map((c, i) => (
@@ -179,16 +189,16 @@ export const CURVAS = {
   us: { help: 'treasuries', title: 'EUA · Treasuries', subtitle: 'Par yield curve, % a.a. por vencimento', mode: 'us', nome: 'Treasuries', source: 'Curva de títulos públicos (par yield), não de futuros; fechamento do dia anterior ou do dia, conforme a divulgação.' },
   eu: { help: 'curvaEuro', title: 'Área do euro · Curva soberana AAA', subtitle: 'taxa spot % a.a. por vencimento', mode: 'us', nome: 'curva do euro', source: 'Títulos soberanos da área do euro com classificação AAA, taxa spot estimada pelo modelo de Svensson. Não é o rendimento de um título específico, como o Bund alemão, e a taxa spot difere da par yield usada nas Treasuries, então a comparação com a curva dos EUA é de formato e não de nível exato.' },
 }
-const grafico = (id, data, bare = false) => { const c = CURVAS[id]; return <CurveChart bare={bare} escalaDesde={c.escalaDesde} help={c.help} title={c.title} subtitle={c.subtitle} data={data} mode={c.mode} source={c.source} /> }
+const grafico = (id, data, bare = false, extra = {}) => { const c = CURVAS[id]; return <CurveChart bare={bare} escalaDesde={c.escalaDesde} help={c.help} title={c.title} subtitle={c.subtitle} data={data} mode={c.mode} source={c.source} {...extra} /> }
 
-// Curva DI x pré sozinha, para o painel do Mercado.
-export function CurvePanel({ curves: c }) {
+// Curva DI x pré sozinha, para o painel do Mercado. `prazo` e `soUltimo` (opcionais) seguem para o gráfico: ver CurveChart.
+export function CurvePanel({ curves: c, prazo, soUltimo }) {
   if (!c || c.status === 'loading') return <div className="placeholder">Carregando curvas…</div>
   if (c.status === 'error') return <Estado tipo="erro" erro={c.error}>Curvas de juros indisponíveis agora.</Estado>
   return (
     <>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
-      {c.data?.br ? grafico('br', c.data.br, true) : <p className="status">Curva DI indisponível nesta atualização.</p>}
+      {c.data?.br ? grafico('br', c.data.br, true, { prazo, soUltimo }) : <p className="status">Curva DI indisponível nesta atualização.</p>}
     </>
   )
 }

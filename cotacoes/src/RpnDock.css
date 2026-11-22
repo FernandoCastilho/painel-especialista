@@ -1,0 +1,56 @@
+.rpn-float {
+  position: fixed;
+  inset: auto max(8px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) auto;
+  z-index: 75;
+}
+.rpn-float-action, .rpn-float-bar button {
+  border: 1px solid #57718d; border-radius: 8px;
+  min-block-size: 44px; padding-inline: 12px; font: inherit; cursor: pointer;
+}
+.rpn-float-bar {
+  background: #183453; color: #fff;
+}
+.rpn-float-action { margin-block-start: 8px; background: var(--rpn-surface); color: var(--rpn-ink); }
+.rpn-float {
+  inline-size: min(680px, calc(100vw - 16px));
+  max-block-size: calc(100dvh - 24px);
+  overflow: auto; overscroll-behavior: contain;
+  border: 1px solid #57718d; border-radius: 12px;
+  box-shadow: 0 10px 30px #08152c45;
+  background: #fff;
+}
+:root[data-theme="dark"] .rpn-float { background: #1a222c; }
+.rpn-float-bar {
+  position: sticky; inset-block-start: 0; z-index: 1;
+  display: flex; justify-content: space-between; align-items: stretch;
+}
+.rpn-float-bar span {
+  display: flex; align-items: center; flex: 1; padding-inline: 12px; font-weight: 700;
+  cursor: grab; touch-action: none; user-select: none;
+}
+.rpn-float-bar button { color: inherit; background: transparent; min-inline-size: 44px; border-radius: 0; font-size: 22px; }
+.rpn-float .rpn-workspace { padding: 8px 8px 14px; }
+.rpn-float .rpn-heading { margin: 0; }
+.rpn-float .rpn-console { padding: 8px; }
+.rpn-float .rpn-bezel { grid-template-columns: 1fr; padding: 6px; }
+.rpn-float .rpn-bezel-tools { flex-wrap: wrap; }
+.rpn-float :is(.rpn-console-brand, .rpn-landscape-back, .rpn-keypad--wide) { display: none; }
+.rpn-float .rpn-keypad--portrait { display: grid; grid-template-rows: repeat(8, minmax(54px, auto)); }
+.rpn-float .rpn-help { position: static; }
+.rpn-float .rpn-layout { display: grid; align-items: start; gap: 8px; }
+.rpn-float .rpn-desk--rates { grid-template-columns: minmax(0, 1fr); }
+.rpn-float .rpn-history { margin: 0; }
+.rpn-float .rpn-history-entries { overflow: auto; max-block-size: 44vh; }
+@media (min-width: 750px) {
+  .rpn-float .rpn-layout { grid-template-columns: minmax(0, 1fr) minmax(220px, 36%); }
+}
+.rpn-tape-draft {
+  display: flex; justify-content: space-between; gap: 8px; margin-block: 8px; padding: 8px;
+  border-block: 1px dashed var(--rpn-edge); color: var(--rpn-muted);
+}
+.rpn-tape-draft output { color: var(--rpn-ink); font: 700 .95rem/1.25 ui-monospace, monospace; overflow-wrap: anywhere; }
+/* The bottom navigation is fixed throughout the phone and tablet breakpoint. */
+@media (width < 1000px) {
+  .rpn-float { bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .rpn-float { max-block-size: min(68dvh, calc(100dvh - 88px - env(safe-area-inset-bottom))); }
+}

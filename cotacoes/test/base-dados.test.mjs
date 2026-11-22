@@ -6,6 +6,20 @@ import { FONTES } from '../src/governanca.js'
 
 const src = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8')
 
+// Estes caminhos são insumos do empacotamento, não arquivos servidos pelo painel.
+const metadadosInternos = new Set(['$RUNNER_TEMP/pages-release-data.json', 'HEAD:cotacoes/src/ibgeCbsSnapshot.json'])
+function workflowJsonFiles(text) {
+  return [...text.matchAll(/(?:[a-zA-Z0-9_$:{}.-]+\/)*([a-zA-Z0-9_-]+\.json)\b/g)]
+    .filter(([reference]) => !metadadosInternos.has(reference))
+    .map(([, file]) => file)
+}
+
+test('base de dados: distingue caminhos internos dos mesmos nomes publicados, sem truncar maiúsculas', () => {
+  assert.deepEqual(workflowJsonFiles('"$RUNNER_TEMP/pages-release-data.json" HEAD:cotacoes/src/ibgeCbsSnapshot.json'), [])
+  assert.deepEqual(workflowJsonFiles('public/pages-release-data.json cotacoes/public/ibgeCbsSnapshot.json public/outro.json'),
+    ['pages-release-data.json', 'ibgeCbsSnapshot.json', 'outro.json'])
+})
+
 test('base de dados: toda referência traz quem publica, endereço, série, arquivo e coleta', () => {
   assert.ok(BASE_DADOS.length >= 6)
   const nomes = new Set()
@@ -20,7 +34,7 @@ test('base de dados: toda referência traz quem publica, endereço, série, arqu
 })
 test('base de dados: todo arquivo de dados publicado ou lido pelo app tem referência', () => {
   const publicados = new Set()
-  for (const f of ['pages.yml', 'quotes.yml']) for (const m of readFileSync(new URL(`../../.github/workflows/${f}`, import.meta.url), 'utf8').matchAll(/([a-z-]+\.json)/g)) publicados.add(m[1])
+  for (const f of ['pages.yml', 'quotes.yml']) for (const file of workflowJsonFiles(readFileSync(new URL(`../../.github/workflows/${f}`, import.meta.url), 'utf8'))) publicados.add(file)
   for (const f of readdirSync(new URL('../scripts/', import.meta.url)).filter((x) => /^fetch-.*\.mjs$/.test(x))) for (const m of readFileSync(new URL(`../scripts/${f}`, import.meta.url), 'utf8').matchAll(/public\/([a-z-]+\.json)/g)) publicados.add(m[1])
   for (const f of readdirSync(new URL('../src/', import.meta.url)).filter((x) => /\.(js|jsx)$/.test(x))) for (const m of src(f).matchAll(/(?:useDataFile|loadDataFile)\('([a-z-]+\.json)'/g)) publicados.add(m[1])
   const faltam = [...publicados].filter((a) => !ARQUIVOS_COBERTOS.includes(a) && !['package.json', 'package-lock.json', 'manifest.json', 'tsconfig.json', 'stale.json', 'validation.json', 'weekly-data-snapshot.json'].includes(a))

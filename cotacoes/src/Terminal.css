@@ -37,6 +37,7 @@ body { background: var(--bg); }
 .tape { height: 30px; align-items: center; overflow: hidden; white-space: nowrap; background: #090909; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .76rem; }
 .tape-item { display: inline-flex; align-items: baseline; gap: 8px; padding: 0 16px; border-right: 1px solid #1a1813; }
 .tape-item b { color: var(--mut); font: 600 .75rem/1 var(--sans); letter-spacing: .02em; }
+.tape-item .tape-fx-label { display: inline-flex; align-items: center; gap: 5px; }
 .tape-item em { font-style: normal; }
 
 @media (min-width: 1000px) {
@@ -55,7 +56,9 @@ body { background: var(--bg); }
   .topbar-tabs button.on { background: var(--amber); color: #000; }
   .topbar-tabs button.on i { color: #0009; }
   .topbar-clocks { display: flex; align-items: center; gap: 14px; padding: 0 14px; border-left: 1px solid var(--line); font: .75rem var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .topbar-clocks b { margin-right: 6px; color: var(--mut); font: 600 .75rem var(--sans); }
+  .topbar-clock { display: inline-flex; align-items: center; gap: 4px; }
+  .topbar-clock-flag { flex: none; }
+  .topbar-clocks b { color: var(--mut); font: 600 .75rem var(--sans); }
   .topbar-feed { display: flex; align-items: center; gap: 7px; padding: 0 14px; border-left: 1px solid var(--line); font: 700 .75rem var(--sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--mut); }
   .topbar-feed span { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
   .topbar-feed b { font: 500 .75rem var(--mono); letter-spacing: 0; color: var(--fg); }
@@ -426,10 +429,10 @@ main.app .scenario-table caption { white-space: normal; }
   .topbar-clocks { display: none; }
 }
 @media (min-width: 1400px) and (max-width: 1599px) {
-  .topbar-clocks span:nth-child(n+2) { display: none; }
+  .topbar-clocks > .topbar-clock:nth-child(n+2) { display: none; }
 }
 @media (min-width: 1400px) and (max-width: 1799px) {
-  .topbar-clocks span:nth-child(n+3) { display: none; }
+  .topbar-clocks > .topbar-clock:nth-child(n+3) { display: none; }
   .topbar-tabs button { padding: 0 8px; }
 }
 @media (min-width: 1000px) and (max-width: 1299px) {

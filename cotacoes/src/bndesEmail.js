@@ -1,7 +1,7 @@
 export const LIMITE_LINK = 2000
 
 const money = value => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const pct = value => `${(Number(value || 0) * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
+const pct = value => `${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 const rowText = row => `${row.mes ?? row.number} · ${row.vencimento ?? row.date} · ${money(row.parcela ?? row.payment)}`
 
 const optionLabel = (item, index) => `Opção ${String.fromCharCode(65 + index)} · ${(item.custo || '').toUpperCase()}`
@@ -35,7 +35,7 @@ export const bndesEmailText = ({ result, alternatives, completo = false } = {}) 
   return blocks.join('\n\n')
 }
 
-const mailto = (subject, body) => `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+const mailto = (subject, body) => `https://outlook.office.com/mail/deeplink/compose?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 
 export const bndesEmailLink = ({ result, alternatives } = {}) => {
   const items = alternatives?.length ? alternatives : [result]
@@ -43,7 +43,13 @@ export const bndesEmailLink = ({ result, alternatives } = {}) => {
   const fullText = bndesEmailText({ result, alternatives, completo: true })
   const compact = bndesEmailText({ result, alternatives })
   let text = compact
-  while (text.length > 1 && mailto(subject, text).length > LIMITE_LINK) text = text.slice(0, -20).trimEnd() + '…'
-  if (mailto(subject, text).length > LIMITE_LINK) text = ''
+  if (mailto(subject, text).length > LIMITE_LINK) {
+    const aviso = 'Estimativas sujeitas à confirmação das condições contratuais. A proposta do agente financeiro prevalece.'
+    const parcelas = 'PARCELAS\nCronograma completo copiado para colar no e-mail (Ctrl+V).'
+    text = [compact.split('\n\nPARCELAS')[0], parcelas, aviso].join('\n\n')
+    if (mailto(subject, text).length > LIMITE_LINK) {
+      text = ['RESUMO', items.map(optionLabel).join(' / '), 'TAXAS E ENCARGOS\nDetalhes na cópia completa.', parcelas, aviso].join('\n\n')
+    }
+  }
   return { href: mailto(subject, text), text, fullText, requiresCopy: fullText !== text }
 }

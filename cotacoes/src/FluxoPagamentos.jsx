@@ -1,23 +1,184 @@
-import { useState } from 'react'
-import { linhasDoFluxoBndes } from './bndesFluxo.js'
-import Help from './CalculatorHelp.jsx'
-import './BndesPecas.css'
+// Quadro "Fluxo de pagamentos" do Capital de Giro (pedido do Fernando em 22/11/2026): uma barra por mês da operação.
+// Altura = quanto é pago no mês; dentro da barra, a parte de juros. Mês sem pagamento fica vazio, para mostrar a periodicidade.
+// Só apresentação: os números são os do cronograma da simulação.
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import CalculatorHelp from './CalculatorHelp.jsx'
+import { useWidth } from './HistoryChart.jsx'
+import { focoPorTeclado, limitarBalao, margemEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
+import { fluxoMensal, somaDoTrecho } from './fluxoPagamentos.js'
+import './FluxoPagamentos.css'
 
-const brl = value => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+const H = 300
+const M = { t: 48, r: 12, b: 28 } // no alto, o resumo dentro do gráfico
+const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const dmy = iso => iso.split('-').reverse().join('/')
+// Eixo em reais, curto: "R$ 160 mil", "R$ 1,2 mi".
+const compacto = (v, casas = 1) => v >= 1e6 ? `R$ ${(v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: casas })} mi`
+  : v >= 1e3 ? `R$ ${Math.round(v / 1e3).toLocaleString('pt-BR')} mil` : `R$ ${Math.round(v)}`
 
-export default function FluxoPagamentos({ rows = [], inicio }) {
-  const [selection, setSelection] = useState(null)
-  const items = linhasDoFluxoBndes(rows)
-  const max = Math.max(1, ...items.map(row => row.payment))
-  const selected = selection ? items.slice(Math.min(selection[0], selection[1]), Math.max(selection[0], selection[1]) + 1) : []
-  const begin = index => setSelection([index, index])
-  const extend = index => setSelection(current => current ? [current[0], index] : current)
-  const total = key => selected.reduce((sum, row) => sum + row[key], 0)
-  return <section className="bndes-flow" aria-labelledby="bndes-flow-title">
-    <header><h3 id="bndes-flow-title">Fluxo de pagamentos <Help label="Fluxo de pagamentos"><p>Selecione um trecho arrastando pelas barras. O principal é parcela menos juros; em TLP, LCD e TFBD ele inclui a correção do saldo. Data de início: {inicio || 'data da liberação'}.</p></Help></h3><span className="bndes-flow-legend"><i /> Juros <i /> Amortização</span></header>
-    <div className="bndes-flow-chart" role="list" aria-label="Parcelas mensais">
-      {items.map((row, index) => <button type="button" role="listitem" key={`${row.date}-${index}`} className={`bndes-flow-bar${row.juros ? ' is-interest-only' : ''}`} aria-label={`Parcela ${row.number}, ${brl(row.payment)}`} onPointerDown={() => begin(index)} onPointerEnter={() => extend(index)} style={{ '--payment-height': `${Math.max(2, row.payment / max * 100)}%` }}><span className="bndes-flow-stack"><i style={{ height: `${row.amortization / row.payment * 100}%` }} /><i style={{ height: `${row.interest / row.payment * 100}%` }} /></span><small>{row.number}</small></button>)}
+// Valor curto escrito nas barras: "118 mil", "1,06 mi".
+const curto = v => v >= 1e6 ? `${(v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} mi` : v >= 1e3 ? `${Math.round(v / 1e3)} mil` : `${Math.round(v)}`
+const LETRA = 6 // largura média de um caractere a 10 px, para saber se o rótulo cabe
+
+// Até 4 divisões "redondas" (1, 2, 2,5 ou 5 vezes uma potência de 10) de zero ao maior pagamento.
+function divisoes(max) {
+  if (!(max > 0)) return [0]
+  const bruto = max / 4, base = 10 ** Math.floor(Math.log10(bruto))
+  const passo = [1, 2, 2.5, 5, 10].map(f => f * base).find(p => p >= bruto)
+  return Array.from({ length: Math.ceil(max / passo) + 1 }, (_, i) => i * passo)
+}
+
+// Topo arredondado (4 px) e base reta, presa ao eixo.
+const barra = (x, y, w, h, raio) => {
+  const r = Math.min(raio, w / 2, h)
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`
+}
+
+export default function FluxoPagamentos({ rows, inicio, nota }) {
+  const meses = useMemo(() => fluxoMensal(rows, inicio), [rows, inicio])
+  const [ref, width] = useWidth()
+  const [hover, setHover] = useState(null)
+  // Seleção por arrasto (pedido do Fernando, 22/11/2026), no padrão dos outros gráficos do painel: arrastar na horizontal marca
+  // um trecho com faixa e linhas pontilhadas, e o balão soma parcela, juros e principal. Clique sem arrastar ou Escape limpa.
+  const [sel, setSel] = useState(null)
+  const gesto = useRef(null)
+  useEffect(() => { setSel(null) }, [rows]) // simulação nova, trecho novo
+  const plotRef = useTocarFora(hover != null, setHover)
+  const [tipRef, tipW] = useLarguraBalao(sel ? `${sel[0]}-${sel[1]}` : hover)
+  const id = useId()
+  if (!meses.length) return null
+
+  const maior = Math.max(...meses.map(m => m.pagamento))
+  const L0 = margemEixo([compacto(maior)], 52)
+  const iw = width - L0 - M.r, ih = H - M.t - M.b
+  const slot = iw / meses.length
+  const w = Math.max(1, Math.min(28, slot * 0.7))
+  // Valor de cada barra escrito nela (pedido do Fernando, 22/11/2026): o total no alto da barra (deitado se couber, senão em pé)
+  // e, dentro, os juros e a amortização quando a parte comporta o texto. Sem espaço para todas, uma barra sim e outra não.
+  const deitado = slot >= curto(maior).length * LETRA + 6
+  const folga = deitado ? 16 : curto(maior).length * LETRA + 10
+  const ticks = divisoes(maior * ih / (ih - folga))
+  const topo = ticks.at(-1)
+  const L = L0
+  const X = i => L + slot * i + (slot - w) / 2
+  const Y = v => M.t + ih - (v / topo) * ih
+  const passo = Math.max(1, Math.ceil(meses.length / Math.max(2, Math.floor(iw / 56))))
+  const comPagamento = meses.filter(m => m.linhas.length).map(m => m.mes - 1)
+  const atual = hover != null ? meses[hover] : null
+  // Barras que levam rótulo: da primeira em diante, só quando há espaço desde a última rotulada; a última sempre que couber.
+  const espaco = deitado ? curto(maior).length * LETRA + 6 : 13
+  const rotulados = new Set()
+  for (const i of comPagamento) if (!rotulados.size || slot * (i - [...rotulados].at(-1)) >= espaco) rotulados.add(i)
+  const fim = comPagamento.at(-1)
+  if (!rotulados.has(fim) && slot * (fim - [...rotulados].at(-1)) >= espaco / 2) { rotulados.delete([...rotulados].at(-1)); rotulados.add(fim) }
+  const totalPago = meses.reduce((t, m) => t + m.pagamento, 0), totalJuros = meses.reduce((t, m) => t + m.juros, 0)
+
+  const mesNoPonto = e => {
+    const box = e.currentTarget.getBoundingClientRect()
+    return Math.floor(((e.clientX - box.left) * (width / box.width) - L) / slot)
+  }
+  const onMove = e => {
+    const i = mesNoPonto(e)
+    setHover(meses[i]?.linhas.length ? i : null)
+    const g = gesto.current
+    // Só vira seleção o movimento horizontal (o vertical continua rolando a página no celular), como nos outros gráficos.
+    if (!g || Math.abs(e.clientX - g.x) < 6 || Math.abs(e.clientX - g.x) < Math.abs(e.clientY - g.y)) return
+    g.moveu = true
+    setSel([g.mes, Math.min(meses.length - 1, Math.max(0, i))])
+  }
+  const onDown = e => {
+    if (e.button != null && e.button !== 0) return
+    onMove(e)
+    gesto.current = { x: e.clientX, y: e.clientY, mes: Math.min(meses.length - 1, Math.max(0, mesNoPonto(e))), moveu: false }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* sem captura, a seleção acaba ao sair do gráfico */ }
+  }
+  const onUp = () => { if (gesto.current && !gesto.current.moveu) setSel(null); gesto.current = null }
+  const onKey = e => {
+    if (e.key === 'Escape' && sel) { e.preventDefault(); setSel(null); return }
+    const pos = comPagamento.indexOf(hover)
+    const next = { ArrowRight: pos + 1, ArrowLeft: pos - 1, Home: 0, End: comPagamento.length - 1 }[e.key]
+    if (next == null) return
+    e.preventDefault()
+    const destino = comPagamento[Math.min(Math.max(next, 0), comPagamento.length - 1)]
+    // Shift com as setas estende a seleção pelo teclado, a partir do mês em foco.
+    if (e.shiftKey) setSel([sel ? sel[0] : hover ?? destino, destino]); else setSel(null)
+    setHover(destino)
+  }
+  const trecho = sel && sel[0] !== sel[1] ? somaDoTrecho(meses, sel[0], sel[1]) : null
+  const [s0, s1] = trecho ? [Math.min(...sel), Math.max(...sel)] : [0, 0]
+
+  return <section className="rm fp" aria-labelledby={`${id}-t`}>
+    <div className="rm-titulo-linha"><h3 id={`${id}-t`}>Fluxo de pagamentos</h3>
+      <CalculatorHelp title="Fluxo de pagamentos">
+        <p>Uma barra por mês da operação, contado da liberação. A altura é o valor pago no mês: em laranja, a parte de juros; em azul, a amortização. Mês sem barra não tem pagamento: no bimestral, por exemplo, há barra a cada dois meses.</p>
+        <p>No alto do gráfico, o resumo: quantos pagamentos, o total pago nas barras e quanto disso é juros. Em cada barra, o valor pago no mês e, dentro dela, os juros e a amortização, em mil ou milhões de reais. Quando não há espaço para todas, os valores aparecem em barras alternadas; tocando ou passando o mouse, o balão mostra os valores exatos.</p>
+        <p>Arraste na horizontal sobre o gráfico (clique, segure e arraste; no celular, deslize o dedo de lado) para marcar um trecho: o balão soma as parcelas, os juros e o principal desse trecho. Clique sem arrastar ou Escape limpa. Pelo teclado, Shift com as setas.</p>
+        <p>Os valores são os do cronograma da simulação (Ver parcelas), com carência, pagamentos só de juros e ajustes. IOF e encargos pagos na liberação não entram nas barras.</p>
+        {nota && <p>{nota}</p>}
+      </CalculatorHelp>
     </div>
-    {selected.length > 0 && <aside className="bndes-flow-tip" role="status"><b>{selected.length} parcelas</b><span>Parcelas {brl(total('payment'))}</span><span>Juros {brl(total('interest'))}</span><span>Principal {brl(total('amortization'))}</span></aside>}
+    <ul className="fp-legenda" aria-hidden="true"><li><i className="fp-juros" />Juros</li><li><i className="fp-amort" />Amortização</li></ul>
+    <div ref={ref}>
+      <div ref={plotRef} className="plot" onPointerLeave={e => { if (!saidaDeToque(e)) setHover(null) }}>
+        <span id={`${id}-h`} className="chart-access-text">Use as setas para percorrer os pagamentos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho e soma os valores; Escape limpa. A tabela completa está em Ver parcelas.</span>
+        <span className="chart-access-text" role="status" aria-live="polite">{trecho ? `Trecho de ${trecho.de.rotulo} a ${trecho.ate.rotulo}: parcelas ${brl(trecho.pago)}, juros ${brl(trecho.juros)}, principal ${brl(trecho.principal)}` : atual ? `${atual.rotulo}: pagamento ${brl(atual.pagamento)}, juros ${brl(atual.juros)}` : ''}</span>
+        <ul className="fp-resumo" aria-label="Resumo do fluxo">
+          <li><span>Pagamentos </span>{comPagamento.length}</li>
+          <li><span>Total pago </span>{compacto(totalPago, 2)}</li>
+          <li><span>Juros </span>{compacto(totalJuros, 2)} ({(totalJuros / totalPago * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)</li>
+        </ul>
+        <svg tabIndex={0} role="img" aria-label={`Fluxo de pagamentos: ${comPagamento.length} pagamentos em ${meses.length} meses`} aria-describedby={`${id}-h`}
+          viewBox={`0 0 ${width} ${H}`} width="100%" height={H} onPointerMove={onMove} onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { gesto.current = null }}
+          onFocus={e => { if (focoPorTeclado(e)) setHover(comPagamento[0]) }} onBlur={() => setHover(null)} onKeyDown={onKey}>
+          {ticks.map(v => <g key={v}>
+            <line x1={L} x2={width - M.r} y1={Y(v)} y2={Y(v)} className="gridline" />
+            <text x={L - 8} y={Y(v)} dy="0.32em" textAnchor="end" className="tick">{compacto(v)}</text>
+          </g>)}
+          {meses.map((m, i) => (i === meses.length - 1 || (i % passo === 0 && meses.length - 1 - i >= passo)) // o último mês sempre; sem encavalar
+            // o último fica alinhado pela direita, dentro do quadro (no celular, centralizado, saía cortado)
+            && <text key={m.mes} x={i === meses.length - 1 ? Math.min(L + slot * (i + 0.5) + m.rotulo.length * 3.5, width - 2) : L + slot * (i + 0.5)} y={H - 8} textAnchor={i === meses.length - 1 ? 'end' : 'middle'} className="tick">{m.rotulo}</text>)}
+          {meses.map((m, i) => {
+            if (!m.linhas.length) return null
+            const yTopo = Y(m.pagamento), yJuros = Y(m.pagamento - m.juros)
+            const gap = w >= 4 && yJuros - yTopo >= 4 && Y(0) - yJuros >= 4 ? 2 : 0 // 2 px de fundo entre juros e amortização
+            const cx = X(i) + w / 2
+            // Texto em pé dentro de uma parte da barra, se couber na largura e na altura.
+            const dentro = (valor, y0, y1, classe) => {
+              const t = curto(valor)
+              return rotulados.has(i) && w >= 12 && y1 - y0 >= t.length * LETRA + 6
+                && <text className={classe} transform={`translate(${cx},${(y0 + y1) / 2}) rotate(-90)`} textAnchor="middle" dy="0.35em">{t}</text>
+            }
+            return <g key={m.mes} className={hover === i ? 'fp-ativa' : undefined}>
+              {m.pagamento - m.juros > 0 && <path className="fp-amort" d={barra(X(i), yJuros + gap, w, Y(0) - yJuros - gap, m.juros > 0 ? 0 : 4)} />}
+              {m.juros > 0 && <path className="fp-juros" d={barra(X(i), yTopo, w, yJuros - yTopo - gap, 4)} />}
+              {m.juros > 0 && dentro(m.juros, yTopo, yJuros - gap, 'fp-rotulo-juros')}
+              {m.pagamento - m.juros > 0 && dentro(m.pagamento - m.juros, yJuros + gap, Y(0), 'fp-rotulo-amort')}
+              {rotulados.has(i) && (deitado
+                ? <text className="fp-rotulo-total" x={cx} y={yTopo - 4} textAnchor="middle">{curto(m.pagamento)}</text>
+                : <text className="fp-rotulo-total" transform={`translate(${cx},${yTopo - 4}) rotate(-90)`} dy="0.35em">{curto(m.pagamento)}</text>)}
+            </g>
+          })}
+          <line x1={L} x2={width - M.r} y1={Y(0)} y2={Y(0)} className="fp-base" />
+          {trecho && <g className="fp-selecao" pointerEvents="none">
+            <rect x={L + slot * s0} y={M.t} width={slot * (s1 - s0 + 1)} height={ih} />
+            <line x1={L + slot * s0} x2={L + slot * s0} y1={M.t} y2={M.t + ih} />
+            <line x1={L + slot * (s1 + 1)} x2={L + slot * (s1 + 1)} y1={M.t} y2={M.t + ih} />
+          </g>}
+        </svg>
+        {trecho ? <div ref={tipRef} className="tip fp-tip-trecho" style={{ left: limitarBalao(L + slot * (s0 + s1 + 1) / 2, tipW, width) }}>
+          <strong>{trecho.de.rotulo} a {trecho.ate.rotulo} · {trecho.meses} {trecho.meses === 1 ? 'mês' : 'meses'}</strong>
+          <span>{trecho.pagamentos} {trecho.pagamentos === 1 ? 'pagamento' : 'pagamentos'}</span>
+          <span>Parcelas: {brl(trecho.pago)}</span>
+          <span>Juros: {brl(trecho.juros)}</span>
+          <span>Principal: {brl(trecho.principal)}</span>
+        </div> : atual && <div ref={tipRef} className="tip" style={{ left: limitarBalao(L + slot * (hover + 0.5), tipW, width) }}>
+          <strong>{atual.rotulo} · mês {atual.mes}</strong>
+          {atual.linhas.map(row => <span key={row.number}>{row.juros ? `Pagamento ${row.number}, só juros` : `Parcela ${row.number}`}{row.fixed ? ' (ajustada)' : ''} · {dmy(row.date)}</span>)}
+          <span>Pagamento: {brl(atual.pagamento)}</span>
+          <span>Juros: {brl(atual.juros)}</span>
+          <span>Amortização: {brl(atual.pagamento - atual.juros)}</span>
+        </div>}
+      </div>
+    </div>
   </section>
 }
