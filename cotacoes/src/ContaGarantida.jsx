@@ -117,7 +117,9 @@ export default function ContaGarantida({ onBack }) {
       { label: 'Juros', value: totals?.interest },
       { label: 'IOF diário', value: totals?.dailyIof },
       { label: 'IOF adicional', value: totals?.additionalIof },
-    ]} total={{ label: 'Custo total', value: totals?.cost }} rows={[
+    ].map(part => totals?.cost > 0
+      ? { ...part, label: `${part.label} · ${pct(part.value / totals.cost)}` }
+      : part)} total={{ label: 'Custo total', value: totals?.cost }} rows={[
       { label: 'Saldo devedor final', value: reais(result?.balance), kind: 'muted' },
     ]} />
   </>

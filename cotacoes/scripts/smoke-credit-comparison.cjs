@@ -18,6 +18,23 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     })
     await page.goto(`${base}/#calculadora/comparador-credito`)
     await page.locator('#credit-title').waitFor()
+    await page.getByRole('button', { name: 'Premissas e fontes', exact: true }).click()
+    for (const [title, opening] of [
+      ['Premissas, limites e fonte do IOF', 'Giro e Outra modalidade: prefixado em juros compostos'],
+      ['Aplicação financeira e tributação da empresa', 'Simples Nacional: o IR retido pelo banco'],
+    ]) {
+      const help = page.getByRole('button', { name: 'Ajuda: ' + title, exact: true })
+      assert.equal(await page.getByRole('heading', { name: title, exact: true }).isVisible(), true)
+      assert.equal(await page.getByText(opening, { exact: false }).count(), 0)
+      await help.click()
+      const dialog = page.getByRole('dialog', { name: title, exact: true })
+      await dialog.getByText(opening, { exact: false }).waitFor()
+      if (title.includes('IOF')) await dialog.getByRole('link', { name: 'Fonte legal do IOF' }).waitFor()
+      await page.keyboard.press('Escape')
+      await dialog.waitFor({ state: 'hidden' })
+      assert.equal(await help.evaluate(el => el === document.activeElement), true)
+    }
+    await page.getByRole('button', { name: 'Comparar operações', exact: true }).click()
     const compare = () => page.getByRole('button', { name: /Comparar modalidades/ }).click()
     const row = label => page.locator('.credit-results').first().locator('tr').filter({ has: page.getByRole('rowheader', { name: label, exact: true }) })
     // Duas operações no início; o usuário escolhe de 1 a 5.

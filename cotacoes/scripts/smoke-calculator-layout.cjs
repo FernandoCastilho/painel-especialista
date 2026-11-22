@@ -249,7 +249,9 @@ async function fillScenario(page, section, route) {
     const shown = label => section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').first()
     const kpi = shown('Custo total')
     assert.match(await kpi.innerText(), /^R\$\s*1\.462,00$/)
-    assert.match(await shown('Juros').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
+    assert.match(await shown('Juros · 68,40%').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
+    assert.match(await shown('IOF diário · 5,61%').innerText(), /^R\$\s*82,00$/)
+    assert.match(await shown('IOF adicional · 25,99%').innerText(), /^R\$\s*380,00$/)
     // CET do art. 6º (Res. CMN 4.881/2020): sem limite, só o pedido; com limite, 30 dias sobre o limite em dias corridos/365.
     assert.equal(await section.getByText('Sem CET: informe o limite contratado', { exact: false }).count(), 1)
     assert.equal(await page.locator('#cg-limit').inputValue(), '', 'limite começa vazio')
@@ -311,6 +313,9 @@ async function fillScenario(page, section, route) {
     const kpis = section.locator('.rt-result')
     assert.ok(normalize(await kpis.innerText()).includes(brl(cost)))
     assert.ok(normalize(await kpis.innerText()).includes(brl(gross - cost)))
+    assert.deepEqual((await kpis.locator('.rt-parts dt').allInnerTexts()).slice(0, 4), [
+      'Juros · 66,23%', 'IOF · 21,37%', 'Tarifa dos títulos · 8,48%', 'TAC · 3,91%',
+    ])
     // CET pelo art. 6º da Res. CMN 4.881 (texto oficial): 30 dias sobre o nominal; o prazo real (32 dias) aparece à parte.
     const pct = value => `${(value * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
     const cet30 = (rate, fees) => { const i = gross * rate; const net = gross - i - (gross - i) * (0.0038 + 30 * 0.000082) - fees; return (gross / net) ** (365 / 30) - 1 }
@@ -357,11 +362,17 @@ async function fillScenario(page, section, route) {
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)
     assert.match(await row.locator('.fi-cost').first().innerText(), /4\.000,00/)
+    await page.locator('#fi-term').selectOption('180')
+    const firstCost = section.locator('.rt-parts').first()
+    assert.deepEqual(await firstCost.locator('dt').allInnerTexts(), ['Juros · 75,00%', 'Flat · 25,00%', 'Custo total'])
     await section.getByRole('checkbox', { name: 'Incluir TAC à vista' }).check()
     await page.locator('#fi-a-tac').fill('1000'); await page.locator('#fi-b-tac').fill('1500')
     await page.locator('#fi-tac-fx').fill('5')
     assert.match(await row.locator('.fi-cost').first().innerText(), /4\.200,00/)
     assert.match(await row.locator('td').nth(2).innerText(), /^R\$\s*1\.000,00$/)
+    assert.deepEqual(await firstCost.locator('dt').allInnerTexts().then(labels => labels.map(normalize)), [
+      'Juros · 71,43%', 'Flat · 23,81%', 'TAC à vista (R$ 1.000,00) · 4,76%', 'Custo total',
+    ])
   } else if (route === 'bndes-selic-lcd') {
     for (const [id, value] of [['principal', '100000'], ['contract', '2026-11-04'], ['release', '2026-11-05'], ['selic', '14'], ['ld1', '0,5'], ['fixing', '2026-11-04'], ['source', 'Contrato de teste QA'], ['bndes', '1'], ['intermediation', '0'], ['agent', '2'], ['schedule', '2026-12-07; 21; C\n2027-01-05; 20; A\n2027-02-05; 23; A'], ['schedule-source', 'Cronograma sintético QA, vencimentos úteis ajustados']]) await page.locator(`#lcd-${id}`).fill(value)
     for (const checkbox of await section.getByRole('checkbox').all()) await checkbox.check()

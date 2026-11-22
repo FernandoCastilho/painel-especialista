@@ -149,7 +149,9 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
             { label: 'IOF', value: operation?.iof },
             { label: 'Tarifa dos títulos', value: operation?.titleFee },
             { label: 'TAC', value: operation?.tac },
-          ]} total={{ label: 'Custo total completo', value: operation?.cost }} rows={[
+          ].map(part => operation?.cost > 0
+            ? { ...part, label: `${part.label} · ${pct(part.value / operation.cost)}` }
+            : part)} total={{ label: 'Custo total completo', value: operation?.cost }} rows={[
             { label: 'Subtotal sem tarifa de títulos (TAC + juros + IOF)', value: brl(operation?.costWithoutTitles), kind: 'muted' },
             { label: 'Base do IOF: nominal menos juros antecipados', value: brl(operation?.base), kind: 'muted' },
           ]} />

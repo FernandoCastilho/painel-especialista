@@ -56,7 +56,10 @@ export default function FinimpComparacao({ onBack }) {
   // Do que é feito o custo de cada proposta: juros + flat + TAC (na moeda do principal) = custo.
   const costParts = (name, cost, bank) => <div key={name}><ComposicaoDoCusto title={`Do que é feito o custo · ${name}`} format={moneyText}
     parts={[{ label: 'Juros', value: cost?.interest }, { label: 'Flat', value: cost?.flat },
-      ...(useTac ? [{ label: currency !== 'BRL' && bank.tacBrl > 0 ? `TAC à vista (${moneyBrl(bank.tacBrl)})` : 'TAC à vista', value: cost?.tac }] : [])]}
+      ...(useTac ? [{ label: currency !== 'BRL' && bank.tacBrl > 0 ? `TAC à vista (${moneyBrl(bank.tacBrl)})` : 'TAC à vista', value: cost?.tac }] : []),
+    ].map(part => cost?.cost > 0
+      ? { ...part, label: `${part.label} · ${pct(100 * part.value / cost.cost)}` }
+      : part)}
     total={{ label: 'Custo total', value: cost?.cost }} /></div>
   return <section className="cx fi bw calc-standard calc-workspace" aria-labelledby="fi-heading">
     <div className="cx-toolbar">

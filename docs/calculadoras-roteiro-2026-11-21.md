@@ -1,12 +1,20 @@
-# Calculadoras no roteiro Demanda, Encargos, Linha do tempo, Resultado (21/11/2026)
+# Roteiro das calculadoras de crédito
+
+O roteiro das seis telas tem três blocos: **1. Demanda do cliente**, **2. Encargos** e **3. Resultado · custo final para o cliente**. O fluxo existente pode aparecer dentro do resultado. As explicações ficam nos botões de ajuda (?) e os erros, avisos de dados e diferenças de arredondamento aparecem na tela.
+
+Em Conta Garantida, Análise de desconto e FINIMP, cada encargo mostra o valor e sua participação percentual no custo total quando esse custo é positivo. Os valores usados pelo cálculo permanecem os mesmos.
+
+As capturas da versão atual e a validação em Ubuntu estão vinculadas no [PR #569](https://github.com/FernandoCastilho/painel-especialista/pull/569).
+
+## Histórico do piloto e dos ajustes de 21/11/2026
 
 Pedido do Fernando em 21/11/2026: as calculadoras estão complexas no preenchimento e na apresentação e não contam a história da operação. Ideia dele: **Demanda** (valor, prazo, carência), **Encargos** (taxa, indexador, IOF, fee, TAC, outros) e **Resultado** (CET, valor total pago, custo final para o cliente), com as especificidades de cada produto.
 
 Depois da análise das 13 calculadoras, Fernando escolheu começar por um **piloto no Capital de Giro**, para validar o desenho em uma tela antes de replicar.
 
-Fotos de antes e depois: pasta `docs/calculadoras-roteiro/`.
+Capturas históricas do piloto: pasta `docs/calculadoras-roteiro/`.
 
-## 1. O roteiro
+## 1. Proposta inicial do piloto
 
 Quatro blocos numerados, sempre nesta ordem:
 
