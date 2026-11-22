@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Help from './CalculatorHelp.jsx'
+import PracaContratoBusca from './PracaContratoBusca.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import { formatMoneyText, parseMoneyInput } from './moneyInput.js'
 import { SYSTEMS, parseDecimal } from './emprestimo.js'
@@ -220,7 +221,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
 
     <div className="giro-flow">
       <form className="giro-form" noValidate onSubmit={event => { event.preventDefault(); setDirty(false) }}>
-        <LinhaMestra prefix="cx" searchPraca title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} foot=""
+        <LinhaMestra prefix="cx" pracaControl={PracaContratoBusca} title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} foot=""
           onClear={() => { clearLm(); markDirty() }} fields={['value', 'term', 'grace', 'system']}
           labels={{ value: 'Valor solicitado' }} errors={{ value: errors.value, term: errors.n, grace: errors.grace }}
           details={{ fields: ['start', 'praca'], open: !!apresentacao, alert: errors.dates, summary: detailsSummary, children: <>
