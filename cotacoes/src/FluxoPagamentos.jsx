@@ -8,12 +8,12 @@ import { focoPorTeclado, limitarBalao, margemEixo, saidaDeToque, useLarguraBalao
 import { fluxoMensal } from './fluxoPagamentos.js'
 import './FluxoPagamentos.css'
 
-const H = 220
-const M = { t: 12, r: 12, b: 28 }
+const H = 256
+const M = { t: 48, r: 12, b: 28 } // no alto, o resumo dentro do gráfico
 const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const dmy = iso => iso.split('-').reverse().join('/')
 // Eixo em reais, curto: "R$ 160 mil", "R$ 1,2 mi".
-const compacto = v => v >= 1e6 ? `R$ ${(v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`
+const compacto = (v, casas = 1) => v >= 1e6 ? `R$ ${(v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: casas })} mi`
   : v >= 1e3 ? `R$ ${Math.round(v / 1e3).toLocaleString('pt-BR')} mil` : `R$ ${Math.round(v)}`
 
 // Até 4 divisões "redondas" (1, 2, 2,5 ou 5 vezes uma potência de 10) de zero ao maior pagamento.
@@ -41,7 +41,7 @@ export default function FluxoPagamentos({ rows, inicio }) {
 
   const ticks = divisoes(Math.max(...meses.map(m => m.pagamento)))
   const topo = ticks.at(-1)
-  const L = margemEixo(ticks.map(compacto), 52)
+  const L = margemEixo(ticks.map(v => compacto(v)), 52)
   const iw = width - L - M.r, ih = H - M.t - M.b
   const slot = iw / meses.length
   const w = Math.max(1, Math.min(28, slot * 0.7))
@@ -50,6 +50,7 @@ export default function FluxoPagamentos({ rows, inicio }) {
   const passo = Math.max(1, Math.ceil(meses.length / Math.max(2, Math.floor(iw / 56))))
   const comPagamento = meses.filter(m => m.linhas.length).map(m => m.mes - 1)
   const atual = hover != null ? meses[hover] : null
+  const totalPago = meses.reduce((t, m) => t + m.pagamento, 0), totalJuros = meses.reduce((t, m) => t + m.juros, 0)
 
   const onMove = e => {
     const box = e.currentTarget.getBoundingClientRect()
@@ -67,7 +68,8 @@ export default function FluxoPagamentos({ rows, inicio }) {
   return <section className="rm fp" aria-labelledby={`${id}-t`}>
     <div className="rm-titulo-linha"><h3 id={`${id}-t`}>Fluxo de pagamentos</h3>
       <CalculatorHelp title="Fluxo de pagamentos">
-        <p>Uma barra por mês da operação, contado da liberação. A altura é o valor pago no mês: em azul, a parte de juros; em verde, a amortização. Mês sem barra não tem pagamento: no bimestral, por exemplo, há barra a cada dois meses.</p>
+        <p>Uma barra por mês da operação, contado da liberação. A altura é o valor pago no mês: em laranja, a parte de juros; em azul, a amortização. Mês sem barra não tem pagamento: no bimestral, por exemplo, há barra a cada dois meses.</p>
+        <p>No alto do gráfico, o resumo: quantos pagamentos, o total pago nas barras e quanto disso é juros.</p>
         <p>Os valores são os do cronograma da simulação (Ver parcelas), com carência, pagamentos só de juros e ajustes. IOF e encargos pagos na liberação não entram nas barras.</p>
       </CalculatorHelp>
     </div>
@@ -76,6 +78,11 @@ export default function FluxoPagamentos({ rows, inicio }) {
       <div ref={plotRef} className="plot" onPointerLeave={e => { if (!saidaDeToque(e)) setHover(null) }}>
         <span id={`${id}-h`} className="chart-access-text">Use as setas para percorrer os pagamentos; Home e End vão ao primeiro e ao último. A tabela completa está em Ver parcelas.</span>
         <span className="chart-access-text" role="status" aria-live="polite">{atual ? `${atual.rotulo}: pagamento ${brl(atual.pagamento)}, juros ${brl(atual.juros)}` : ''}</span>
+        <ul className="fp-resumo" aria-label="Resumo do fluxo">
+          <li><span>Pagamentos </span>{comPagamento.length}</li>
+          <li><span>Total pago </span>{compacto(totalPago, 2)}</li>
+          <li><span>Juros </span>{compacto(totalJuros, 2)} ({(totalJuros / totalPago * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)</li>
+        </ul>
         <svg tabIndex={0} role="img" aria-label={`Fluxo de pagamentos: ${comPagamento.length} pagamentos em ${meses.length} meses`} aria-describedby={`${id}-h`}
           viewBox={`0 0 ${width} ${H}`} width="100%" height={H} onPointerMove={onMove} onPointerDown={onMove}
           onFocus={e => { if (focoPorTeclado(e)) setHover(comPagamento[0]) }} onBlur={() => setHover(null)} onKeyDown={onKey}>

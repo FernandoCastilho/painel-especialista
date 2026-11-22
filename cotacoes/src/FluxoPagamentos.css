@@ -1,8 +1,9 @@
 /* Fluxo de pagamentos do Capital de Giro (22/11/2026). Moldura igual à da Referência de mercado (.rm).
    Duas cores conferidas com o validador de paleta (faixa de luminosidade, distinção para daltonismo e contraste 3:1 com o
-   fundo), uma escolha por tema: juros em azul, amortização em verde-azulado. */
-:root[data-theme] body .cx .fp { --fp-juros: #006bdc; --fp-amort: #1d9a8a; }
-@media screen { :root[data-theme="dark"] body .cx .fp { --fp-juros: #4f8ff0; --fp-amort: #27a593; } }
+   fundo), nas cores do painel (pedido do Fernando, 22/11/2026): juros no laranja, amortização no azul. No escuro, os mesmos
+   tons ajustados para o fundo escuro. */
+:root[data-theme] body .cx .fp { --fp-juros: #ff6200; --fp-amort: #1f4e9a; }
+@media screen { :root[data-theme="dark"] body .cx .fp { --fp-juros: #f06000; --fp-amort: #4f8ff0; } }
 :root[data-theme] body .cx .fp .fp-juros { fill: var(--fp-juros); }
 :root[data-theme] body .cx .fp .fp-amort { fill: var(--fp-amort); }
 :root[data-theme] body .cx .fp .fp-ativa path { stroke: var(--bw-ink); stroke-width: 1; }
@@ -12,5 +13,8 @@
 :root[data-theme] body .cx .fp-legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
 :root[data-theme] body .cx .fp-legenda i.fp-juros { background: var(--fp-juros); }
 :root[data-theme] body .cx .fp-legenda i.fp-amort { background: var(--fp-amort); }
+/* Resumo dentro do gráfico, no alto da área das barras (o espaço é reservado em M.t). */
+:root[data-theme] body .cx .fp-resumo { position: absolute; top: 2px; right: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 14px; margin: 0; padding: 0; list-style: none; color: var(--bw-ink); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; }
+:root[data-theme] body .cx .fp-resumo span { color: var(--bw-mut); }
 /* No slide do modo Apresentar o quadro não entra, como a Referência de mercado. */
 .sl-calc .fp { display: none; }
