@@ -35,7 +35,7 @@ export default function LinhaMestra({ prefix, title = 'Linha mestra · necessida
   const field = key => <div className="lm-field" key={key}>
     <span className="lm-label"><label htmlFor={id(key)}>{label(key)}</label>
       {key === 'praca' && <CalculatorHelp title="Praça do contrato (feriados)"><p>{PRACA_AJUDA}</p><p>{PRACA_RESSALVA}</p></CalculatorHelp>}
-      {key === 'grace' && <CalculatorHelp title="Carência"><p>Meses sem amortização, dentro do prazo total. Exemplo: 24 meses com 6 de carência = 18 parcelas, e a primeira vence 7 meses depois da liberação. Os juros da carência são somados ao saldo.</p></CalculatorHelp>}
+      {key === 'grace' && <CalculatorHelp title="Carência"><p>Meses sem amortização, dentro do prazo total. Exemplo: 24 meses com 6 de carência = 18 parcelas, e a primeira vence 7 meses depois da liberação. Os juros da carência são somados ao saldo, salvo onde a calculadora tiver a opção de pagá-los no período.</p></CalculatorHelp>}
     </span>
     {control[key]()}
     {issue(key)}

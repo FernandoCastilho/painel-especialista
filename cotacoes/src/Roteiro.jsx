@@ -1,4 +1,5 @@
-// Peças comuns do roteiro das calculadoras de crédito (21/11/2026): 1 Demanda, 2 Encargos, 3 Linha do tempo, 4 Resultado.
+// Peças comuns do roteiro das calculadoras de crédito (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado.
+// A linha do tempo saiu das sete calculadoras a pedido do Fernando (21/11/2026).
 // Nasceram no piloto do Capital de Giro. Só apresentação: quem faz a conta é cada calculadora, e aqui chega o número pronto.
 import { sobraDeCentavos } from './centavosDaTela.js'
 import './Roteiro.css'
@@ -6,19 +7,8 @@ import './Roteiro.css'
 // Título numerado de um bloco do roteiro.
 export const step = (number, text) => <><span className="rt-step">{number}</span> {text}</>
 
-// Linha do tempo da operação. events: [{ label, when, value, note, empty }], em ordem; `empty` marca um momento que não existe
-// nesta operação (por exemplo, sem carência). Sem events, mostra o aviso `placeholder`.
-export function LinhaDoTempo({ id, number = 3, title = 'Linha do tempo da operação', events, placeholder, className }) {
-  return <section className={['rt-timeline', className].filter(Boolean).join(' ')} aria-labelledby={id}>
-    <h3 id={id}>{step(number, title)}</h3>
-    {events ? <ol>{events.map(event => <li key={event.label} className={event.empty ? 'is-empty' : undefined}>
-      <b>{event.label}</b><span>{event.when}</span><strong>{event.value}</strong><small>{event.note}</small>
-    </li>)}</ol> : <p className="rt-timeline-empty">{placeholder}</p>}
-  </section>
-}
-
 // Quadro do resultado: o único com borda laranja. `alert` é o aviso de quando ainda não há resultado.
-export function Resultado({ id, number = 4, title = 'Resultado · custo final para o cliente', alert, className, children }) {
+export function Resultado({ id, number = 3, title = 'Resultado · custo final para o cliente', alert, className, children }) {
   return <aside className={['rt-result', className].filter(Boolean).join(' ')} aria-labelledby={id}>
     <h3 id={id}>{step(number, title)}</h3>
     <div className="rt-result-body">

@@ -46,7 +46,9 @@ test('a tela segue a ordem do roteiro e usa os nomes padrão dos encargos', asyn
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos na ordem 1 a 3')
   assert.doesNotMatch(source, /<LinhaDoTempo/)
   const pieces = await readFile(new URL('../src/Roteiro.jsx', import.meta.url), 'utf8')
-  assert.match(pieces, /Resultado\(\{ id, number = 4, title = 'Resultado · custo final para o cliente'/)
+  // Sem a linha do tempo nas sete calculadoras, a peça comum numera o resultado como bloco 3 e não tem mais a LinhaDoTempo.
+  assert.match(pieces, /Resultado\(\{ id, number = 3, title = 'Resultado · custo final para o cliente'/)
+  assert.doesNotMatch(pieces, /LinhaDoTempo/)
   assert.deepEqual([...source.matchAll(/\{ id: '(\w+)', label: '([^']+)' \},/g)].map(match => match[2]), ['IOF', 'Fee', 'TAC', 'Outros'])
   for (const question of ['Quanto entra no caixa', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
   // "Quanto paga por mês" (mensal) ou por bimestre, trimestre, quadrimestre, semestre.
