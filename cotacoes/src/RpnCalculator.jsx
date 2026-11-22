@@ -11,8 +11,7 @@ const registers = [
   ['n', 'n', 'Número de períodos'], ['i', 'i', 'Taxa por período (%)'], ['pv', 'PV', 'Valor presente'],
   ['pmt', 'PMT', 'Pagamento periódico'], ['fv', 'FV', 'Valor futuro'],
 ]
-const mobileLandscape = '(orientation: landscape) and (pointer: coarse) and (min-width: 500px) and (max-height: 520px)'
-const fullLandscape = '(orientation: landscape) and (min-width: 500px) and (max-height: 560px)'
+const mobileLandscape = '(orientation: landscape) and (pointer: coarse) and (hover: none) and (min-width: 500px) and (max-width: 1000px) and (max-height: 520px)'
 const options = [['day', 'Ao dia'], ['month', 'Ao mês'], ['year', 'Ao ano']]
 const suffix = { day: 'a.d.', month: 'a.m.', year: 'a.a.' }
 const fmt = new Intl.NumberFormat('pt-BR', { maximumSignificantDigits: 12 })
@@ -152,45 +151,9 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
   const helpTrigger = useRef(null)
   const helpPanel = useRef(null)
   const workspace = useRef(null)
-  const screenButton = useRef(null)
-  const tryingFullscreen = useRef(false)
-  const [screenMode, setScreenMode] = useState(null)
-  useEffect(() => {
-    const element = workspace.current
-    const doc = element?.ownerDocument
-    if (!doc) return
-    const onChange = () => {
-      const native = doc.fullscreenElement === element
-      setScreenMode(mode => native ? 'native' : mode === 'native' ? null : mode)
-    }
-    doc.addEventListener('fullscreenchange', onChange)
-    return () => doc.removeEventListener('fullscreenchange', onChange)
-  }, [])
   useEffect(() => {
     if (floating) workspace.current?.focus({ preventScroll: true })
   }, [floating])
-  const toggleScreen = async () => {
-    const element = workspace.current
-    if (!element || tryingFullscreen.current) return
-    const doc = element.ownerDocument
-    if (doc.fullscreenElement === element) {
-      try { await doc.exitFullscreen() } catch { /* O navegador mantém o controle da saída nativa. */ }
-      return
-    }
-    if (screenMode) { setScreenMode(null); return }
-    if (doc.fullscreenEnabled && typeof element.requestFullscreen === 'function') {
-      tryingFullscreen.current = true
-      try {
-        await element.requestFullscreen()
-        if (doc.fullscreenElement === element) { setScreenMode('native'); return }
-      } catch { /* Em visualizadores sem acesso à tela cheia, amplia dentro da página. */ }
-      finally { tryingFullscreen.current = false }
-    }
-    if (workspace.current === element) {
-      setScreenMode('page')
-      doc.defaultView?.scrollTo(0, 0)
-    }
-  }
   const [ratesOpen, setRatesOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const historyId = useId(), historyTrigger = useRef(null), nextHistoryId = useRef(0)
@@ -236,22 +199,25 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
   }, [])
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const viewport = window.matchMedia?.(screenMode ? fullLandscape : mobileLandscape)
+    const viewport = window.matchMedia?.(mobileLandscape)
     if (floating || !viewport?.addEventListener) return
     let frame = 0
     const onRotate = event => {
       cancelAnimationFrame(frame)
-      if (event.matches && !ratesOpen && !helpOpen && !historyOpen) frame = requestAnimationFrame(() => window.scrollTo(0, 0))
+      if (event.matches && !ratesOpen && !helpOpen &&
+          !document.activeElement?.matches('input, select, textarea, [contenteditable="true"]')) {
+        frame = requestAnimationFrame(() => window.scrollTo(0, 0))
+      }
     }
     viewport.addEventListener('change', onRotate)
     return () => {
       viewport.removeEventListener('change', onRotate)
       cancelAnimationFrame(frame)
     }
-  }, [ratesOpen, helpOpen, historyOpen, screenMode, floating])
+  }, [ratesOpen, helpOpen, floating])
   useEffect(() => {
-    if (helpOpen && typeof window !== 'undefined' && window.matchMedia?.(screenMode ? fullLandscape : mobileLandscape).matches) helpPanel.current?.focus()
-  }, [helpOpen, screenMode])
+    if (helpOpen && typeof window !== 'undefined' && window.matchMedia?.(mobileLandscape).matches) helpPanel.current?.focus()
+  }, [helpOpen])
   const closeHelp = () => { setHelpOpen(false); helpTrigger.current?.focus() }
   const [session] = useState(() => {
     try {
@@ -295,12 +261,6 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
   const onKeyDown = event => {
     if (event.defaultPrevented || event.target?.closest?.('.rpn-history')) return
     if (floating && event.key === 'Escape') return
-    if (event.key === 'Escape' && screenMode === 'page' && !helpOpen && !ratesOpen && !historyOpen && !event.target?.closest?.('input, select, textarea, [contenteditable="true"]')) {
-      event.preventDefault()
-      setScreenMode(null)
-      screenButton.current?.focus()
-      return
-    }
     if (failed) return
     const key = rpnKeyFromEvent(event)
     if (!key || (view.indicators?.on === false && key !== 'on') || !controller.isSupported(key)) return
@@ -312,12 +272,12 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
   const powered = view.indicators?.on !== false
   const display = powered ? view.display : ''
 
-  return <section ref={workspace} className="rpn-workspace" data-screen-mode={screenMode || undefined} data-rpn-mobile-compact={mobileCompact || undefined} aria-labelledby={headingId} tabIndex={0} onKeyDown={onKeyDown}>
+  return <section ref={workspace} className="rpn-workspace" data-rpn-mobile-compact={(!floating && mobileCompact) || undefined} aria-labelledby={headingId} tabIndex={0} onKeyDown={onKeyDown}>
     <header className="rpn-heading">
       {floating ? <h2 id={headingId} className="rpn-sr-only">Calculadora RPN</h2> : <>
         <span>Calculadora financeira</span>
         <h1 id={headingId}>Calculadora RPN</h1>
-        {!screenMode && <button type="button" className="rpn-float-action" onClick={onFloat}>Fixar como janela flutuante</button>}
+        {!mobileCompact && <button type="button" className="rpn-float-action" onClick={onFloat}>Fixar como janela flutuante</button>}
       </>}
     </header>
     <div className={`rpn-layout${showHistoryAside ? ' rpn-layout--history' : ''}`}>
@@ -355,13 +315,6 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
             </button>
             <button type="button" aria-label="Ajuda da calculadora" className="rpn-help-trigger" ref={helpTrigger} aria-expanded={helpOpen}
               aria-controls={helpId} onClick={() => helpOpen ? closeHelp() : setHelpOpen(true)}>?</button>
-            {!floating && <button type="button" ref={screenButton} className="rpn-screen-trigger"
-              aria-label={screenMode ? 'Sair da tela cheia' : 'Tela cheia'} title={screenMode ? 'Sair da tela cheia' : 'Tela cheia'}
-              aria-pressed={!!screenMode} onClick={() => { void toggleScreen() }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d={screenMode ? 'M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5' : 'M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5'} />
-              </svg>
-            </button>}
           </div>
         </div>
         <p className="rpn-message" role="status">{view.message || (view.indicators?.paused ? <span className="rpn-sr-only">Programa em pausa.</span> : '')}</p>

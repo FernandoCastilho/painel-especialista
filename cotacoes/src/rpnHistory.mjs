@@ -87,14 +87,30 @@ export function formatRpnResult(entry) {
   return isValid(entry?.result) ? (entry.text || historyValue(entry.result)) : ''
 }
 
-export function formatRpnEntry(entry) {
+const monetaryHistory = new Set(['pv', 'pmt', 'fv', 'npv', 'amort', 'int', 'price', 'sl', 'soyd', 'db'])
+const moneyFormat = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const numberFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 10 })
+const scientificFormat = new Intl.NumberFormat('pt-BR', { notation: 'scientific', maximumFractionDigits: 8 })
+
+function presentedHistoryValue(value, monetary = false) {
+  const n = Object.is(value, -0) ? 0 : value
+  if (n !== 0 && (Math.abs(n) < (monetary ? 0.005 : 1e-10) || Math.abs(n) >= 1e15)) {
+    return scientificFormat.format(n)
+  }
+  return (monetary ? moneyFormat : numberFormat).format(n)
+}
+
+export function formatRpnEntry(entry, { presentation = false } = {}) {
+  const money = monetaryHistory.has(entry?.key)
+  const f = presentation ? n => presentedHistoryValue(n) : historyValue
+  const resultText = presentation && isValid(entry?.result) && !entry.text
+    ? presentedHistoryValue(entry.result, money) : formatRpnResult(entry)
   if (entry?.label) return [
-    `${entry.label} = ${formatRpnResult(entry)}`,
-    ...(entry.details ?? []).map(d => `${d.label} = ${historyValue(d.value)}`),
+    `${entry.label} = ${resultText}`,
+    ...(entry.details ?? []).map(d => `${d.label} = ${presentation ? presentedHistoryValue(d.value, money) : historyValue(d.value)}`),
   ].join(' · ')
   const { key, left, right, result } = entry ?? {}
   if (!hasOperation(key) || ![left, right, result].every(isValid)) return ''
-  const f = historyValue
   const expression = key === 'percent' ? `${f(right)}% de ${f(left)}`
     : key === 'pctTotal' ? `${f(right)} como % de ${f(left)}`
       : key === 'pctDiff' ? `Variação de ${f(left)} para ${f(right)} (%)`

@@ -13,7 +13,7 @@ function insideViewport(x, y, panel) {
 }
 
 export default function RpnDock({ active }) {
-  const inline = useRef(null), panel = useRef(null), launcher = useRef(null), move = useRef(null)
+  const inline = useRef(null), panel = useRef(null), move = useRef(null)
   const previousFloating = useRef(false)
   const [host] = useState(() => document.createElement('div'))
   const [started, setStarted] = useState(active)
@@ -40,7 +40,7 @@ export default function RpnDock({ active }) {
     if (previousFloating.current) {
       previousFloating.current = false
       if (active) host.querySelector('.rpn-float-action')?.focus()
-      else launcher.current?.focus()
+      else document.querySelector('nav [aria-label="Calculadora RPN"]')?.focus()
     }
   }, [active, floating, host])
 
@@ -58,8 +58,6 @@ export default function RpnDock({ active }) {
   }
   return <>
     <div className="rpn-inline" ref={inline} hidden={!active || floating} />
-    {!active && !floating && createPortal(
-      <button type="button" className="rpn-float-launcher" aria-label="Abrir calculadora flutuante" ref={launcher} onClick={open}>Calculadora RPN</button>, document.body)}
     {(started || active) && createPortal(
       <div ref={panel} className={floating ? 'rpn-float' : undefined} style={floating ? position ?? undefined : undefined}
         role={floating ? 'dialog' : undefined} aria-label={floating ? 'Calculadora RPN flutuante' : undefined}
