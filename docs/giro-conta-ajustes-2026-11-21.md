@@ -122,3 +122,6 @@ Estes cinco casos ainda não passaram pela revisão independente (a nova rodada 
 - **Fluxo de pagamentos.** Quadro novo depois da referência de mercado: uma barra por mês da operação, contado da liberação;
   altura = valor pago no mês, nas cores do painel: juros em laranja e amortização em azul (pedido de Fernando ao autorizar a publicação). No alto do gráfico, um resumo: número de pagamentos, total pago e juros (com o percentual). Em cada barra, o valor pago no mês e, dentro dela, juros e amortização, em mil ou milhões de reais; sem espaço para todas (celular, prazos longos), em barras alternadas. Mês sem pagamento fica vazio (no
   bimestral, barra a cada dois meses). Só apresentação: os valores são os do cronograma; nenhuma conta mudou.
+- **Seleção por arrasto no fluxo (22/11/2026, noite).** Arrastar de lado sobre o gráfico marca um trecho com faixa e linhas
+  pontilhadas (o mesmo padrão dos outros gráficos do painel) e o balão soma parcelas, juros e principal do trecho. Clique sem
+  arrastar ou Escape limpa; pelo teclado, Shift com as setas.
