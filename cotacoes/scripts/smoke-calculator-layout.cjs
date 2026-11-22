@@ -215,6 +215,17 @@ async function fillScenario(page, section, route) {
     // O envelope de e-mail fica no cabeçalho do resultado, dentro do quadro.
     const envelope = await section.getByRole('link', { name: 'Preparar e-mail com o resultado' }).boundingBox()
     assert.ok(envelope.x >= result.x && envelope.x + envelope.width <= result.x + result.width && envelope.y >= result.y && envelope.y + envelope.height <= result.y + 60, 'envelope no cabeçalho do resultado')
+    // O envelope precisa aparecer (22/11/2026: saiu branco no fundo claro). Contraste mínimo de 3:1 entre o ícone e o que está
+    // debaixo dele na tela (o quadro do resultado é irmão do envelope, não pai).
+    const contraste = await section.evaluate(el => {
+      const a = el.querySelector('a.giro-email'), r = a.getBoundingClientRect()
+      const fundo = document.elementsFromPoint(r.x + r.width / 2, r.y + r.height / 2).filter(n => !a.contains(n))
+        .map(n => getComputedStyle(n).backgroundColor).find(c => !/rgba\(.*, 0\)$/.test(c))
+      const lum = c => { const [rr, g, b] = c.match(/[\d.]+/g).slice(0, 3).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }); return 0.2126 * rr + 0.7152 * g + 0.0722 * b }
+      const [l1, l2] = [lum(getComputedStyle(a).color), lum(fundo)].sort((x, y) => y - x)
+      return (l1 + 0.05) / (l2 + 0.05)
+    })
+    assert.ok(contraste >= 3, `envelope visível: contraste ${contraste.toFixed(2)} (mínimo 3)`)
     if (page.viewportSize().width >= 1200) {
       const [demanda, encargos] = [await section.locator('.giro-form .lm').boundingBox(), await section.locator('.giro-form .giro-card').boundingBox()]
       assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
