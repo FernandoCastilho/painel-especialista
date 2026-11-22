@@ -40,7 +40,7 @@
   :root[data-theme] body .bw.e4 .fm-workspace .fm-show-result { display:none; }
 }
 :root[data-theme] body .bw.e4 .fm-results { display:flex; flex-direction:column; gap:10px; min-width:0; }
-:root[data-theme] body .bw.e4 .e4-secondary { display:grid; gap:12px; margin-top:16px; min-width:0; }
+:root[data-theme] body .bw.e4 .e4-secondary { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; margin-top:16px; min-width:0; }
 :root[data-theme] body .bw.e4 .e4-secondary > .e4-parcelas { margin-top:0; }
 
 /* Quadro da cotação: o único com borda laranja; faixa azul-marinho sem linha laranja. */

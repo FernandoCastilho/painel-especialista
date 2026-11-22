@@ -44,7 +44,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 .bw.e4 .e4-condicoes dl > div { display:flex; flex-direction:row; align-items:baseline; justify-content:space-between; gap:10px; padding:4px 0; border-bottom:1px solid var(--bw-line); }
 .bw.e4 .e4-condicoes dt { flex:0 1 auto; min-width:0; }
 .bw.e4 .e4-condicoes dt { font-size:.74rem; color:var(--bw-mut); }
-.bw.e4 .e4-condicoes dd { flex:0 0 auto; margin:0; font-size:.78rem; font-weight:600; color:var(--bw-ink); text-align:right; white-space:nowrap; overflow-wrap:normal; }
+.bw.e4 .e4-condicoes dd { flex:0 1 auto; min-width:0; margin:0; font-size:.78rem; font-weight:600; color:var(--bw-ink); text-align:right; overflow-wrap:anywhere; }
 @media (min-width:1600px) { .bw.e4 .e4-condicoes dl { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-flow:column; grid-template-rows:repeat(9,auto); column-gap:24px; } }
 /* Atingir meta: o custo desejado; a tela devolve a taxa all-in. */
 .bw.e4 .e4-meta { padding:10px 12px; border:1px solid var(--bw-line); border-radius:12px; background:var(--bw-soft); }

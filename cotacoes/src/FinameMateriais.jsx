@@ -476,7 +476,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
             {resumida ? detalhamento : <ExpandablePanel title="Composição do resultado">
               <div className="fm-parcel-scroll fm-composicao" role="region" tabIndex={0} aria-label="Composição das alternativas"><table className="cx-matrix fm-fit" style={fitStyle}><thead><tr><th scope="col">Indicador</th>{alternatives.map((item, index) => <th key={item.custo} scope="col">Opção {index === 0 ? 'A' : 'B'} · {item.custo.toUpperCase()}</th>)}</tr></thead><tbody>{[
                 ['Juros totais', 'juros'], ...(alternatives.some(item => item.result.correcao) ? [['Correção do saldo', 'correcao']] : []), ['IOF', 'iof'], ['TAC à vista', 'tac'], ['ECG à vista', 'ecg'], ['Total projetado', 'total'],
-              ].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{alternatives.map(item => <td key={item.custo}>{brl(key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])}</td>)}</tr>)}</tbody></table></div>
+              ].map(([label, key]) => <tr key={key}><th scope="row">{label}</th>{alternatives.map(({ custo, result }) => <td key={custo}>{key === 'total' ? brl(result.total) : parcelaDoCusto(key === 'ecg' ? result.fgi?.ecg ?? 0 : result[key], result)}</td>)}</tr>)}</tbody></table></div>
               {detalhamento}
             </ExpandablePanel>}
             {comparar && spread != null && <p className="cx-hint cx-pad fm-rotulo">Equivale a <b>CDI + {pct(spread, 2)} a.a.</b>{ajuda('Equivale a CDI +', `Spread capitalizado sobre o CDI de hoje (${pct(cdi, 2)}) que dá a mesma taxa nominal: serve para comparar com o capital de giro.`)}</p>}

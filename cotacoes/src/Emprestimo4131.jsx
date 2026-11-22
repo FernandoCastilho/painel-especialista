@@ -318,7 +318,8 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
   const rateInput = (key, value, onChange, unit = '% a.a.') => <div className="cx-rate">{input(key, value, onChange)}<span className="fm-unidade">{unit}</span></div>
   const select = (key, value, onChange, options, disabled = false) => <select id={`e4-${key}`} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>{options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}</select>
   const custoNaMoeda = loan ? loan.totals.usd - loan.netUsd : 0
-  const fatiaDoCusto = (valor, nota) => custoNaMoeda > 0
+  const custoVisivel = Math.abs(custoNaMoeda) >= 0.005 ? custoNaMoeda : 0
+  const fatiaDoCusto = (valor, nota) => custoVisivel > 0
     ? `${pct(100 * valor / custoNaMoeda)} do custo${nota ? ` · ${nota}` : ''}`
     : nota
   const quadros = loan ? [
@@ -330,7 +331,7 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
     ['IR pago pelo tomador', usd(loan.totals.irrf + loan.flatIrUsd), fatiaDoCusto(loan.totals.irrf + loan.flatIrUsd, loan.grossUp ? `${pct(loan.irrf, 0)} sobre a base reajustada` : 'imposto suportado pelo credor'), 'Com gross-up, o IR é a alíquota sobre o valor reajustado: valor × alíquota ÷ (1 − alíquota). Incide sobre os juros e, quando flat e fiança são pagos ao exterior, também sobre essas comissões.'],
     ['Juros totais', usd(loan.totals.interest), fatiaDoCusto(loan.totals.interest, `prazo médio de ${loan.avgTermDays} dias`)],
     ['Fiança / SBLC', usd(loan.totals.guarantee), fatiaDoCusto(loan.totals.guarantee)],
-    ['Custo na moeda', usd(custoNaMoeda), null, 'Total das parcelas menos o valor líquido recebido, ambos na moeda da operação.'],
+    ['Custo na moeda', usd(custoVisivel), null, 'Total das parcelas menos o valor líquido recebido, ambos na moeda da operação.'],
     ['Total a pagar', usd(loan.totals.usd), `em ${cur.nome}`],
   ] : []
 
@@ -491,7 +492,7 @@ export default function Emprestimo4131({ onBack, quotes, apresentacao = false })
             <details className="desk-panel cx-panel fm-fluxo-panel e4-parcelas" open={parcelasAbertas} onToggle={(e) => setParcelasAbertas(e.currentTarget.open)}>
               <summary>Parcelas</summary>
               <header><h3 className="cx-heading">Parcela a parcela{ajuda('Parcela a parcela', `Desembolso em ${dm(loan.start)}. Saldo devedor: saldo antes do pagamento da linha, base dos juros. Juros e encargos: juros pelos dias corridos desde o pagamento anterior, sobre 360, mais IR do tomador e fiança, quando houver. A taxa futura é a colada da mesa ou, na estimativa, a calculada com o DI e o juro da moeda informados; o acréscimo do banco, se houver, entra por cima. A parcela em reais é a parcela na moeda vezes a taxa futura.`)}</h3></header>
-              <p className="cx-hint cx-pad fm-rotulo" id="e4-calendario">Calendário estimado. Não use como memória contratual.{ajuda('Como ler as parcelas', <>
+              <p className="cx-hint cx-pad" id="e4-calendario">Calendário estimado. Não use como memória contratual.{ajuda('Como ler as parcelas', <>
                 <p>{calendar === '30d' ? 'Datas a cada 30 dias corridos, no próximo dia útil (feriados nacionais).' : 'Datas pelo dia do desembolso, sem ajuste para dia útil.'} {hedge?.source === 'mesa' ? 'Taxas futuras coladas da cotação da mesa.' : 'Taxa futura teórica; a da mesa do banco prevalece.'}</p>
                 <p>Prazo em dias corridos desde o desembolso. Na linha do desembolso, a última coluna é o valor líquido recebido{entrada > 0 ? ' e a coluna de encargos soma tarifa, IOF e IR da entrada, descontados desse valor' : ''}.</p>
               </>)}</p>

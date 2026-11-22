@@ -1,5 +1,5 @@
 // Conferência de navegador da calculadora Empréstimo externo (4131) (#calculadora/emprestimo-4131).
-// Roteiro de 21/11/2026 (demanda, encargos, linha do tempo e resultado, nesta ordem) e os números de sempre:
+// Roteiro de 21/11/2026 (demanda, encargos e resultado, nesta ordem) e os números de sempre:
 // pagamento único de 6 meses (IOF-câmbio de 3,5%), com swap e NDF, e três parcelas mensais no formato da cotação
 // (custo efetivo exp/360, economia de IOF e equivalente em giro). Números esperados recalculados aqui, sem o código
 // do painel; dias úteis contados com os feriados nacionais listados à mão. Cotações e curva DI do Painel são simuladas.
@@ -98,6 +98,21 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await page.goto(`${base}/#calculadora/emprestimo-4131`)
       const section = page.locator('main.app section.bw.e4')
       await section.waitFor()
+      const assertFitsViewport = async state => {
+        const { overflow, elements } = await section.evaluate(root => {
+          const width = document.documentElement.clientWidth
+          const overflow = document.documentElement.scrollWidth - width
+          const elements = overflow <= 1 ? [] : [root, ...root.querySelectorAll('*')].filter(el => {
+            const rect = el.getBoundingClientRect()
+            return rect.width > 0 && (rect.right > width + 1 || rect.x + el.scrollWidth > width + 1)
+          }).slice(0, 20).map(el => [
+            el.tagName, el.id || el.getAttribute('class'), el.parentElement.getAttribute('class'),
+            Math.round(el.getBoundingClientRect().right), el.scrollWidth, el.clientWidth,
+          ])
+          return { overflow, elements }
+        })
+        assert.ok(overflow <= 1, [width, state, overflow, JSON.stringify(elements)].join(' · '))
+      }
       const fill = (id, value) => section.locator(`#e4-${id}`).fill(value)
       const cell = (label, column) => section.locator('.fm-comparison .cx-matrix tbody tr').filter({ has: page.getByRole('rowheader', { name: label }) }).first().locator('td').nth(column)
       const flow = section.locator('.fm-tabela tbody tr')
@@ -195,7 +210,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.ok(condicoes.includes('Produto 4131 com NDF') && condicoes.includes('Valor de principal R$ 10.000.000,00') && condicoes.includes('Prazo 36 meses') && condicoes.includes('Principal Mensal · 36 parcelas') && condicoes.includes('Juros Mensal'), condicoes)
       await section.getByRole('button', { name: 'Copiar resumo' }).click()
       await section.getByRole('button', { name: 'Resumo copiado' }).waitFor()
-      const resumo = await page.evaluate(() => navigator.clipboard.readText())
+      const resumo = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')
       assert.ok(resumo.startsWith('4131 com NDF · Condições da operação\n'), resumo)
       assert.match(resumo, /Custo efetivo total: taxa de juros prefixada em reais de 1,30% a\.m\. \/ \d+,\d{2}% a\.a\. \(exp\/360\), equivalente a CDI \+ \d+,\d{2}%/)
       assert.match(resumo, /Economia de IOF \(R\$\): [\d.]+,\d{2}/)
@@ -262,6 +277,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal((await linha(1))[4], usd(JUROS + FIANCA + IR_FEES))
       await section.locator('#e4-fees').selectOption('nao')
       assert.equal((await linha(1))[4], usd(JUROS + FIANCA + IR_USD))
+      await assertFitsViewport('simulação com encargos, comparativo e parcelas abertos')
       await page.screenshot({ path: path.join(out, `simulacao-${width}.png`), fullPage: true })
 
       // Principal em três parcelas mensais: saldo, juros sobre o saldo e leitura no formato da cotação.
@@ -348,6 +364,19 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await section.locator('#e4-currency').selectOption('USD')
       assert.equal(await section.locator('#e4-spot').inputValue(), '5,3127')
 
+      // Sem juros, IOF ou tarifas, sobra aritmética abaixo de um centavo não vira participação no custo.
+      await fill('valor', '5.000,00')
+      await fill('spot', '5,0000')
+      await fill('rate', '0,00')
+      await fill('flat', '0,00')
+      await fill('guarantee', '0,00')
+      await fill('months', '36')
+      await section.locator('#e4-freq').selectOption('6')
+      await section.locator('#e4-amort').selectOption('parcelas')
+      if (!await breakdown.evaluate(el => el.open)) await breakdown.locator('summary').click()
+      assert.equal(normalize(await breakdown.locator('.fm-kpi').filter({ hasText: 'Custo na moeda' }).locator('b').innerText()), usd(0))
+      assert.doesNotMatch(await breakdown.innerText(), /% do custo/)
+
       // Aba de regras.
       await section.getByRole('button', { name: 'Regras e fontes', exact: true }).click()
       const rules = section.locator('.e4-rules')
@@ -356,8 +385,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await page.getByRole('dialog').locator('p').first().waitFor()
       await page.keyboard.press('Escape')
 
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-      assert.ok(overflow <= 1, `${width}: rolagem horizontal de ${overflow}px`)
+      await assertFitsViewport('regras e fontes')
       await page.close()
       console.log(`PASS emprestimo-4131 ${width} (du=${DU})`)
     }

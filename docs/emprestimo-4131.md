@@ -176,16 +176,15 @@ A descrição de 11/11/2026 (grupos Operação, Custos e tributos e Proteção c
 - A aba Regras e fontes mostra as regras da tabela do início desta nota, com a fonte de cada uma, mais a regra do IOF do capital de giro, a mesma das calculadoras de crédito do Painel.
 
 ## Tela no roteiro das calculadoras (21/11/2026)
-Pedido do Fernando: as calculadoras contam a história da operação em quatro blocos (nota geral em `docs/calculadoras-roteiro-2026-11-21.md`). Nesta tela mudaram só a ordem, os nomes e a apresentação. Nenhuma conta mudou: com os mesmos dados, todos os números são os de antes.
+Pedido do Fernando: as calculadoras seguem três blocos, Demanda, Encargos e Resultado (nota geral em `docs/calculadoras-roteiro-2026-11-21.md`). Nesta tela mudaram só a ordem, os nomes e a apresentação. Nenhuma conta mudou: com os mesmos dados, todos os números são os de antes.
 
 | Bloco | O que tem |
 |---|---|
 | 1 Demanda do cliente (antes "Operação") | principal em reais, moeda, valor na moeda, cotação de partida, parcelas e carência (subiu de "Mais opções"). Gaveta "Detalhes do contrato": data da cotação, pagamentos, regra das datas e amortização |
 | 2 Encargos | taxa de juros all-in (Dólar + ou Euro +), IOF-câmbio na entrada (calculado), tarifa flat, fiança ou SBLC. Subgrupo "Proteção cambial (NDF)": taxa futura, DI pré do prazo e cupom cambial. Gaveta "Mais encargos": IR na fonte e alíquota, a quem são pagas tarifa e fiança, acréscimo do banco no NDF e spread do banco no swap |
-| 3 Linha do tempo da operação (nova) | desembolso, carência, parcelas e quitação, com as datas e os valores da tabela de parcelas |
-| 4 Resultado · custo final para o cliente (antes "Cotação · 4131 com NDF") | o mesmo quadro, na mesma ordem, agora abaixo dos dados, na largura toda. "4131 com NDF" virou subtítulo |
+| 3 Resultado · custo final para o cliente (antes "Cotação · 4131 com NDF") | o mesmo quadro, na mesma ordem, agora abaixo dos dados, na largura toda. "4131 com NDF" virou subtítulo |
 
-Depois do resultado: Apresentar, Imprimir e Copiar resumo; Atingir meta (desceu do topo, funciona igual); Comparar com swap e sem proteção; Premissas e limites; Parcelas (a tabela abre fechada); e, por último, a referência de mercado com a cotação diária da moeda escolhida.
+Depois do resultado: Apresentar, Imprimir e Copiar resumo; Atingir meta (desceu do topo, funciona igual); Comparar com swap e sem proteção; Premissas e limites no botão de ajuda; Parcelas (a tabela abre fechada); e, por último, a referência de mercado com a cotação diária da moeda escolhida. A seção de comparação inclui o valor e a participação dos encargos no custo na moeda contratada.
 
 - O título de cada gaveta mostra o que está valendo. A gaveta abre sozinha se um campo de dentro tiver erro. No modo Apresentar as gavetas ficam abertas.
 - "Mais opções" e o contador "itens fora do padrão" deixaram de existir: o que estava lá foi para a demanda, para os encargos ou para as duas gavetas.
