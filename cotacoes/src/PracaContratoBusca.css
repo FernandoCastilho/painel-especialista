@@ -1,0 +1,15 @@
+.praca-busca { display: grid; gap: 4px; min-width: 0; }
+.praca-busca-ajuda { color: var(--bw-mut, var(--mut)); font-size: .75rem; line-height: 1.35; }
+.praca-busca-opcoes {
+  list-style: none; margin: 0; padding: 3px; max-height: 185px; overflow-y: auto;
+  border: 1px solid var(--bw-field-line, var(--line)); border-radius: 8px;
+  background: var(--cx-field-bg, var(--bg)); color: var(--bw-ink, var(--fg));
+}
+.praca-busca-opcoes li {
+  display: flex; align-items: center; min-height: 44px; padding: 5px 8px;
+  border-radius: 5px; font-size: .875rem; cursor: pointer;
+}
+.praca-busca-opcoes li[aria-selected="true"] { font-weight: 700; }
+.praca-busca-opcoes li:is(:hover, [data-active="true"]) {
+  outline: 2px solid var(--bw-link, var(--accent)); outline-offset: -2px;
+}
