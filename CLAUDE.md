@@ -55,3 +55,4 @@ Escolher o caminho mais seguro e registrar. Parar só se bater num limite da lis
 - `.github/workflows/`: rotinas automáticas (coleta de dados, publicação, alertas).
 - Texto de tela, commits e comentários em português do Brasil.
 - Extratos e dados reais de cliente nunca vão para o git.
+- Campos de busca (cidade, praça, produto e afins): sempre permitir digitar para filtrar e achar, como na busca de cidade da praça do contrato. Premissa de Fernando (22/11/2026).
