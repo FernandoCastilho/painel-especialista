@@ -6,8 +6,8 @@ import { PRACA_PADRAO, PRACAS_CONTRATO } from './pracaContrato.js'
 
 export const LM_KEY = 'painel-linha-mestra'
 export const LM_SYSTEMS = Object.freeze(['price', 'sac', 'bullet'])
-// Padrão pedido em 19/11/2026: R$ 1.000.000,00 em 24 meses, sem carência.
-export const lmDefaults = today => ({ value: '1.000.000,00', term: '24', grace: '0', system: 'price', start: today, praca: PRACA_PADRAO })
+// Padrão: 24 meses, sem carência (19/11/2026); valor de R$ 3.000.000,00 (pedido do Fernando em 21/11/2026; antes, R$ 1 milhão).
+export const lmDefaults = today => ({ value: '3.000.000,00', term: '24', grace: '0', system: 'price', start: today, praca: PRACA_PADRAO })
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/
 const text = (v, max = 40) => typeof v === 'string' && v.length <= max

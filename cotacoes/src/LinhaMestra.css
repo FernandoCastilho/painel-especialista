@@ -11,6 +11,9 @@
 }
 :root[data-theme] body .lm .lm-head h3 { margin:0; padding:0; border:0; background:none; color:#fff; font-size:.95rem; font-weight:700; line-height:1.3; letter-spacing:0; text-transform:none; }
 :root[data-theme] body .lm .lm-head h3::after { content:none; }
+:root[data-theme] body .lm .lm-head-title { display:flex; align-items:center; gap:8px; min-width:0; }
+/* "?" do título (tela limpa, 21/11/2026): claro sobre a faixa azul-marinho, como nos outros quadros de entrada. */
+:root[data-theme] body main.app.app-calculators .lm .lm-head-title .fi-help > button { color:#fff; border-color:#ffffff88; }
 :root[data-theme] body .lm .lm-head-side { display:flex; align-items:center; gap:10px; }
 :root[data-theme] body .lm .lm-head small { color:#c9d6ee; font-size:.78rem; }
 :root[data-theme] body .lm .lm-clear {
@@ -53,6 +56,8 @@
 :root[data-theme] body .lm .lm-details { margin: 6px 14px 4px; border-top: 1px solid var(--bw-line, var(--line)); }
 :root[data-theme] body .lm .lm-details > summary { padding: 10px 0; min-height: 44px; color: var(--bw-link, var(--accent)); font-size: .86rem; cursor: pointer; }
 :root[data-theme] body .lm .lm-details > summary small { color: var(--bw-mut, var(--mut)); font-size: .78rem; }
+/* Aviso de campo com erro dentro da gaveta: na cor de erro, não na cor do resumo (achado do Auditor, 21/11/2026). */
+:root[data-theme] body .lm .lm-details > summary small.lm-error { color: var(--bw-bad-ink, var(--down)); font-weight: 600; }
 :root[data-theme] body .lm .lm-details > .lm-grid { padding: 0 0 8px; }
 /* No slide do modo Apresentar a gaveta fica aberta e sem o título clicável. */
 .sl-calc .lm details.lm-details[open] { display: block; }

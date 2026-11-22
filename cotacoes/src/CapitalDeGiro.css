@@ -3,12 +3,13 @@
    Cores pelas variáveis da moldura .bw (BndesWorkspace.css). Só apresentação: nenhuma regra de cálculo mora aqui. */
 .giro-screen *, .giro-screen *::before, .giro-screen *::after { box-sizing: border-box; }
 :root[data-theme] body .giro-screen { font-variant-numeric: tabular-nums; }
-:root[data-theme] body .giro-screen > .giro-flow,
-:root[data-theme] body .giro-screen > .giro-installments { margin-left: 16px; margin-right: 16px; }
+:root[data-theme] body .giro-screen > :is(.giro-flow, .giro-installments, .rm) { margin-left: 16px; margin-right: 16px; }
+:root[data-theme] body .giro-screen > .rm { margin-bottom: 16px; }
 :root[data-theme] body .giro-screen > .giro-flow { margin-top: 16px; }
 :root[data-theme] body .giro-screen > .giro-installments { margin-bottom: 16px; width: auto; }
 
-/* Roteiro (21/11/2026): 1 Demanda e 2 Encargos lado a lado no computador largo; 3 Linha do tempo e 4 Resultado abaixo, na largura toda. */
+/* Roteiro (21/11/2026): 1 Demanda e 2 Encargos lado a lado no computador largo; 3 Resultado abaixo, na largura toda.
+   A linha do tempo saiu a pedido de Fernando (21/11/2026). */
 .giro-flow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .giro-form { display: grid; gap: 14px; min-width: 0; align-items: start; }
 
@@ -52,9 +53,7 @@
 :root[data-theme] body .giro-screen .giro-cost-label { padding: 9px 0; min-height: 36px; overflow-wrap: anywhere; }
 :root[data-theme] body .giro-screen .giro-settings { margin-top: 4px; font-size: .86rem; }
 :root[data-theme] body .giro-screen .giro-settings summary { width: fit-content; max-width: 100%; padding: 7px 0; color: var(--bw-link); cursor: pointer; }
-:root[data-theme] body .giro-screen :is(.giro-settings p, .giro-hint) { display: block; margin: 6px 0 0; color: var(--bw-mut); font-size: .78rem; }
-.giro-iof { display: grid; gap: 8px; }
-.giro-iof > label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.giro-eligible { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 6px; font-size: .86rem; }
 :root[data-theme] body .giro-screen .giro-error { display: block; margin-top: 4px; color: var(--bw-bad-ink); font-size: .78rem; }
 
 /* Botão principal: o mesmo das outras calculadoras (regra comum em CalcUnificado.css). */
@@ -78,12 +77,10 @@
 .giro-table-scroll table { width: 100%; border-collapse: collapse; }
 :root[data-theme] body .giro-screen .giro-table-scroll :is(th, td) { padding: 8px; border-bottom: 1px solid var(--bw-line); text-align: right; white-space: nowrap; }
 .giro-table-scroll th:first-child { text-align: left; }
-:root[data-theme] body .giro-screen .giro-rounding { margin: 0 12px; color: var(--bw-mut); font-size: .82rem; }
 .giro-comparison { margin: 4px 12px 8px; }
 
 /* Dentro do modo Apresentar (sl-calc-giro): sem botões de navegação. */
-.sl-calc-giro .giro-form details.giro-settings { display: block; }
-.sl-calc-giro :is(.giro-back, .giro-header, .giro-simulate, .giro-installments) { display: none; }
+.sl-calc-giro :is(.giro-back, .giro-header, .giro-simulate, .giro-installments, .giro-email) { display: none; }
 
 /* Computador largo: demanda e encargos lado a lado; o botão Simular fica abaixo dos dois.
    Abaixo de 1200 px ficam um sobre o outro, para o campo da taxa não ficar estreito. */
@@ -119,4 +116,76 @@ main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-
 }
 @media (max-width: 540px) {
   :root[data-theme] body .giro-screen .giro-cost .giro-readonly { padding-left: 6px; padding-right: 4px; font-size: .8rem; }
+}
+
+/* Ajustes de 21/11/2026: periodicidade e juros na carência na demanda; Fee em R$ ou %; perfil tributário compacto nos encargos;
+   envelope de e-mail no cabeçalho do resultado; parcelas ajustáveis (flex). Toda explicação fica dentro dos "?". */
+:root[data-theme] body .giro-screen .lm-foot:empty { display: none; }
+:root[data-theme] body .giro-screen .giro-grace-interest { align-self: end; }
+:root[data-theme] body .giro-screen .giro-grace-interest > label { display: flex; align-items: center; gap: 8px; min-height: 44px; color: var(--bw-ink); font-size: .875rem; cursor: pointer; }
+:root[data-theme] body .giro-screen .giro-grace-interest:has(input:disabled) > label { color: var(--bw-mut); cursor: default; }
+.giro-cost-profile > div { grid-column: 2 / -1; }
+.giro-cost-profile, .giro-cost-profile + .giro-eligible { margin-top: 6px; }
+:root[data-theme] body .giro-screen .giro-cost-label .fi-help { vertical-align: middle; }
+
+.giro-outcome { position: relative; }
+:root[data-theme] body .giro-screen .giro-result > h3 { padding-right: 64px; }
+:root[data-theme] body .giro-screen .giro-outcome > a.giro-email { position: absolute; top: 7px; right: 12px; color: #fff; }
+:root[data-theme] body .giro-screen .giro-outcome > a.giro-email:focus-visible { outline: 2px solid var(--cp-orange); outline-offset: 2px; }
+:root[data-theme] body .giro-screen .giro-outcome > a.giro-email[aria-disabled="true"] { opacity: .55; cursor: default; }
+@media (max-width: 999px), (pointer: coarse) {
+  :root[data-theme] body .giro-screen .giro-outcome > a.giro-email { top: 2px; right: 8px; }
+}
+
+.giro-installments > summary small { margin-left: 8px; margin-right: auto; color: var(--bw-warm-ink); font-weight: 600; }
+.giro-table-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 12px 8px; }
+:root[data-theme] body .giro-screen .giro-link { min-height: 36px; padding: 4px 6px; border: 0; background: transparent; color: var(--bw-link); font: inherit; font-size: .86rem; text-decoration: underline; cursor: pointer; box-shadow: none; }
+:root[data-theme] body .giro-screen .giro-notice { margin: 0 12px 8px; padding: 8px 12px; border-left: 4px solid #b86e00; border-radius: 6px; background: var(--bw-warm-soft); color: var(--bw-warn-ink); font-size: .86rem; }
+:root[data-theme] body .giro-screen .giro-table-scroll tr.is-fixed > * { background: var(--bw-warm-soft); }
+:root[data-theme] body .giro-screen .giro-table-scroll th small { margin-left: 6px; color: var(--bw-mut); font-size: .72rem; font-weight: 600; }
+:root[data-theme] body .giro-screen .giro-table-scroll tr.giro-flex-edit > td { text-align: left; white-space: normal; background: var(--bw-soft); }
+.giro-flex-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px; }
+:root[data-theme] body .giro-screen .giro-flex-form > label { display: flex; flex-direction: column; gap: 4px; color: var(--bw-mut); font-size: .8125rem; }
+:root[data-theme] body .giro-screen .giro-flex-form :is(input[type=date], .money-wrap) {
+  min-height: 44px; padding: 0 10px; border: 1px solid var(--bw-field-line); border-radius: 8px; background: var(--cx-field-bg); color: var(--bw-ink); font: inherit; font-size: .875rem;
+}
+:root[data-theme] body .giro-screen .giro-flex-form .money-wrap { display: flex; align-items: center; gap: 6px; }
+:root[data-theme] body .giro-screen .giro-flex-form .money-wrap > i { position: static; transform: none; color: var(--bw-mut); font-style: normal; }
+:root[data-theme] body .giro-screen .giro-flex-form .money-wrap input { min-height: 42px; width: 150px; padding: 0; border: 0; background: transparent; color: var(--bw-ink); font: inherit; }
+:root[data-theme] body .giro-screen .giro-flex-form > button:not(.giro-link) { min-height: 44px; padding: 0 18px; }
+.giro-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 540px) {
+  :root[data-theme] body .giro-screen .giro-form .lm > .lm-grid > :nth-child(n+5) { grid-column: 1 / -1; }
+}
+@media (max-width: 360px) {
+  .giro-cost-profile > div { grid-column: 1 / -1; }
+}
+@media (max-width: 360px) {
+  /* Fee com seletor R$ / %: o valor ocupa a linha toda para o número caber. */
+  .giro-cost-fee > div { grid-column: 1 / -1; }
+}
+/* A marcação "Pagar juros na carência" não herda a largura toda dos campos da linha mestra. */
+main.app.app-calculators:not(#u) .giro-screen .giro-grace-interest input[type=checkbox] { flex: none; width: 20px; min-width: 20px; height: 20px; min-height: 20px; margin: 0; padding: 0; }
+:root[data-theme] body .giro-screen .giro-cost:has(.fi-help) > .giro-cost-label { display: flex; align-items: center; gap: 4px; padding: 0; }
+@media (max-width: 540px) {
+  /* IOF com "?": o nome e o "?" na primeira linha, "calculado" embaixo. */
+  :root[data-theme] body .giro-screen .giro-cost:has(.fi-help) > .giro-cost-label { flex-wrap: wrap; }
+  :root[data-theme] body .giro-screen .giro-cost:has(.fi-help) > .giro-cost-label small { order: 2; flex-basis: 100%; }
+}
+@media (max-width: 540px) {
+  /* IOF com "?": o nome sobe para uma linha própria; o valor e a forma de pagamento ficam nas colunas de sempre. */
+  :root[data-theme] body .giro-screen .giro-cost:has(.fi-help) > .giro-cost-label { grid-column: 1 / -1; min-height: 0; }
+  :root[data-theme] body .giro-screen .giro-cost:has(.fi-help) > .giro-cost-label small { order: 0; flex-basis: auto; }
+  .giro-cost:has(.fi-help) > output { grid-column: 2; }
+  .giro-cost:has(.fi-help) > select { grid-column: 3; }
+}
+@media (max-width: 360px) {
+  .giro-cost:has(.fi-help) > output { grid-column: 1; }
+  .giro-cost:has(.fi-help) > select { grid-column: 2; }
+}
+@media (max-width: 540px) and (min-width: 361px) {
+  /* Fee com seletor R$ / %: como a taxa, o nome sobe para uma linha própria e o valor ganha espaço. */
+  .giro-cost.giro-cost-fee { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); }
+  .giro-cost-fee > .giro-cost-label { grid-column: 1 / -1; }
+  :root[data-theme] body .giro-screen .giro-cost-fee > .giro-cost-label { min-height: 0; padding-bottom: 0; }
 }

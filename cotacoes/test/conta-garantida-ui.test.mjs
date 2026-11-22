@@ -53,8 +53,8 @@ async function setup(t) {
 test('inicia com o valor da linha mestra e sem taxa presumida, taxa vazia impede resultado e não oferece capitalização', async t => {
   const h = await setup(t)
   assert.equal(h.field('rate').props.value, '')
-  // Valor utilizado vem da linha mestra comum: padrão de R$ 1.000.000,00 (pedido de 19/11/2026).
-  assert.equal(h.field('amount').props.value, '1.000.000,00')
+  // Valor utilizado vem da linha mestra comum: padrão de R$ 3.000.000,00 (pedido de 21/11/2026; antes, R$ 1.000.000,00).
+  assert.equal(h.field('amount').props.value, '3.000.000,00')
   assert.equal(h.field('capitalization'), undefined)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
   assert.match(h.text(), /Estimativa para operação adimplente e rotativa/)
