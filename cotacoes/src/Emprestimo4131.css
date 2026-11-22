@@ -6,13 +6,11 @@
 .bw.e4 .fm-costs .fm-field-bndes, .bw.e4 .fm-costs .fm-field-agente { grid-column:span 1; grid-row:auto; }
 .bw.e4 .fm-comparison .cx-matrix td { white-space:normal; }
 .bw.e4 .e4-rules { display:grid; gap:8px; margin:12px 0 0; }
-.bw.e4 .e4-rules > div { display:grid; grid-template-columns:minmax(140px,220px) minmax(0,1fr); gap:6px 16px; padding:12px 14px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); }
+.bw.e4 .e4-rules > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px 16px; padding:12px 14px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); }
 .bw.e4 .e4-rules dt { font-size:.8rem; font-weight:700; color:var(--bw-ink); }
-.bw.e4 .e4-rules dd { margin:0; font-size:.85rem; line-height:1.5; color:var(--bw-ink); }
-.bw.e4 .e4-rules dd small { display:block; margin-top:4px; font-size:.72rem; color:var(--bw-mut); }
+.bw.e4 .e4-rules dd { margin:0; }
 .bw.e4 .e4-sources { display:flex; flex-wrap:wrap; gap:6px 16px; list-style:none; margin:14px 0 0; padding:0; font-size:.78rem; }
 .bw.e4 .e4-sources a { color:var(--bw-link); }
-@media (max-width:600px) { .bw.e4 .e4-rules > div { grid-template-columns:minmax(0,1fr); } }
 /* Origem da cotação do campo (Painel, digitado ou exemplo) e o caminho de volta para a do Painel. */
 .bw.e4 .e4-origem { grid-column:1/-1; margin:2px 0 0; font-size:.72rem; line-height:1.35; color:var(--bw-mut); }
 .bw.e4 .e4-origem b { font-weight:600; color:var(--bw-mut); }

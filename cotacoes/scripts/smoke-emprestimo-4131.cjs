@@ -116,10 +116,22 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       // Roteiro de 21/11/2026: 1 Demanda, 2 Encargos e 3 Resultado (a linha do tempo saiu no mesmo dia), nesta ordem; depois o Atingir meta,
       // as comparações, as premissas e as parcelas; por último, a referência de mercado com a moeda da tela.
       // O "?" no fim de um título é o botão de ajuda dele.
-      const ordem = await section.evaluate(el => ['#e4-operation-h', '#e4-encargos-h', '#fm-result .cx-heading', '#e4-meta-h', '.e4-comparar > summary', '.fm-premises > summary', '.e4-parcelas > summary', '#rm-titulo']
+      const ordem = await section.evaluate(el => ['#e4-operation-h', '#e4-encargos-h', '#fm-result .cx-heading', '#e4-meta-h', '.e4-comparar > summary', '.fm-premises > .fm-rotulo', '.e4-parcelas > summary', '#rm-titulo']
         .map(seletor => el.querySelector(seletor)).map((bloco, i, blocos) => ({ texto: bloco.textContent.trim().replace(/\s+/g, ' ').replace(/\?$/, ''), depois: i === 0 || !!(blocos[i - 1].compareDocumentPosition(bloco) & Node.DOCUMENT_POSITION_FOLLOWING) })))
       assert.ok(ordem.every(bloco => bloco.depois), JSON.stringify(ordem))
       assert.deepEqual(ordem.map(bloco => bloco.texto), ['1 Demanda do cliente', '2 Encargos', '3 Resultado · custo final para o cliente', 'Atingir meta', 'Comparar com swap e sem proteção', 'Premissas e limites da simulação', 'Parcelas', 'Referência de mercado'])
+      const premises = section.getByRole('button', { name: 'Ajuda: Premissas e limites da simulação', exact: true })
+      assert.equal(await page.getByText('juros lineares sobre o saldo, por dias corridos/360', { exact: false }).count(), 0)
+      await premises.click()
+      await page.getByRole('dialog').getByText('juros lineares sobre o saldo, por dias corridos/360', { exact: false }).waitFor()
+      await page.keyboard.press('Escape')
+      await page.getByRole('dialog').waitFor({ state: 'hidden' })
+      await section.locator('.e4-comparar > summary').click()
+      const breakdown = section.locator('details.fm-details').filter({ has: page.getByText('Composição do custo em dólar', { exact: true }) })
+      await breakdown.locator('summary').click()
+      assert.match(await breakdown.locator('.fm-kpi').filter({ hasText: 'Juros totais' }).locator('small').innerText(), /^100,00% do custo/)
+      assert.match(await breakdown.locator('.fm-kpi').filter({ hasText: 'Fiança / SBLC' }).locator('small').innerText(), /^0,00% do custo$/)
+      await section.locator('.e4-comparar > summary').click()
       assert.match(normalize(await section.locator('.fm-hero').innerText()), /4131 com NDF · Projeção · custo estimado/)
       assert.equal(normalize(await section.locator('.rm h4').innerText()), 'USD/BRL · cotação diária')
       assert.equal(await section.locator('.fm-operation > .fm-group-fields > .cx-field:not(.fm-field-convertido)').count(), 5, 'cinco campos para preencher na demanda, com a carência à vista')
@@ -338,7 +350,11 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
 
       // Aba de regras.
       await section.getByRole('button', { name: 'Regras e fontes', exact: true }).click()
-      assert.ok(await section.locator('.e4-rules > div').count() >= 8)
+      const rules = section.locator('.e4-rules')
+      assert.ok(await rules.locator('div').count() >= 8)
+      await rules.getByRole('button', { name: /^Ajuda:/ }).first().click()
+      await page.getByRole('dialog').locator('p').first().waitFor()
+      await page.keyboard.press('Escape')
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
       assert.ok(overflow <= 1, `${width}: rolagem horizontal de ${overflow}px`)

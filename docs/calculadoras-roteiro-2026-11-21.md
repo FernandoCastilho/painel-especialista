@@ -2,7 +2,7 @@
 
 O roteiro das seis telas tem três blocos: **1. Demanda do cliente**, **2. Encargos** e **3. Resultado · custo final para o cliente**. O fluxo existente pode aparecer dentro do resultado. As explicações ficam nos botões de ajuda (?) e os erros, avisos de dados e diferenças de arredondamento aparecem na tela.
 
-Em Conta Garantida, Análise de desconto e FINIMP, cada encargo mostra o valor e sua participação percentual no custo total quando esse custo é positivo. Os valores usados pelo cálculo permanecem os mesmos.
+As seis telas mostram o valor de cada encargo e sua participação percentual quando o custo é positivo. O percentual usa o custo da própria operação, sem o principal devolvido. No 4131 a composição usa a moeda contratada e o valor líquido recebido, incluindo os encargos descontados na entrada. Os valores usados pelo cálculo permanecem os mesmos.
 
 As capturas da versão atual e a validação em Ubuntu estão vinculadas no [PR #569](https://github.com/FernandoCastilho/painel-especialista/pull/569).
 

@@ -62,7 +62,7 @@ test('a tela segue a ordem do roteiro, com os nomes combinados', async () => {
     "step(1, 'Demanda do cliente')", 'Detalhes do contrato<small>', "step(2, 'Encargos')", 'Proteção cambial (NDF)</h4>', 'Mais encargos<small>',
     "step(3, 'Resultado · custo final para o cliente')", '<Emprestimo4131Presentation ',
     'Atingir meta{', '<summary>Condições da operação</summary>', '<summary>Comparar com swap e sem proteção</summary>', '<summary>Composição do custo em ', '<summary>Sem proteção · custo conforme o ',
-    '<summary>Premissas e limites da simulação</summary>', '<summary>Parcelas</summary>', '<ReferenciaMercado ',
+    '<span className="fm-rotulo">Premissas e limites da simulação', '<summary>Parcelas</summary>', '<ReferenciaMercado ',
   ].map(text => tela.indexOf(text))
   // "Condições da operação" continua dentro do quadro do resultado (última linha dele): vem antes dos botões e do Atingir meta.
   const [condicoes] = order.splice(8, 1)

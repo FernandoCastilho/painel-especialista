@@ -25,6 +25,10 @@ import './BndesPecas.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const pct = (v, d = 2) => `${nf(nbr5891(v, d), d)}%` // NBR 5891 (Res. CMN 4.881, art. 4º, par. único)
+const parcelaDoCusto = (valor, resultado) => {
+  const custo = resultado.total - resultado.liberado
+  return <><span>{brl(valor)}</span>{custo > 0 && <><br /><small>{pct(100 * valor / custo)} do custo</small></>}</>
+}
 const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 const data = (d) => d.toLocaleDateString('pt-BR')
 // Exemplos da ajuda do ECG: [valor liberado em R$, % garantido, prazo total em meses], calculados pela fórmula do Anexo V.
@@ -416,11 +420,11 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
                 <tr><th scope="row">Valor financiado</th><td>{brl(res.liberado)}</td></tr>
                 <tr className="fm-summary-row"><th scope="row">Primeira parcela após carência{ajuda('Primeira parcela', 'Primeira parcela com amortização. Quando houver carência com juros, podem existir cobranças anteriores conforme a periodicidade informada.')}</th><td>{brl(res.primeiraParcela)}</td></tr>
                 <tr><th scope="row">Última parcela</th><td>{brl(res.ultimaParcela)}</td></tr>
-                <tr><th scope="row">Juros totais</th><td>{brl(res.juros)}</td></tr>
-                {res.correcao !== 0 && Number.isFinite(res.correcao) && <tr><th scope="row">Correção do saldo</th><td>{brl(res.correcao)}</td></tr>}
-                <tr><th scope="row">TAC à vista</th><td>{brl(res.tac)}</td></tr>
-                <tr><th scope="row">IOF</th><td>{brl(res.iof)}</td></tr>
-                {res.fgi && <tr><th scope="row">ECG à vista</th><td>{brl(res.fgi.ecg)}</td></tr>}
+                <tr><th scope="row">Juros totais</th><td>{parcelaDoCusto(res.juros, res)}</td></tr>
+                {res.correcao !== 0 && Number.isFinite(res.correcao) && <tr><th scope="row">Correção do saldo</th><td>{parcelaDoCusto(res.correcao, res)}</td></tr>}
+                <tr><th scope="row">TAC à vista</th><td>{parcelaDoCusto(res.tac, res)}</td></tr>
+                <tr><th scope="row">IOF</th><td>{parcelaDoCusto(res.iof, res)}</td></tr>
+                {res.fgi && <tr><th scope="row">ECG à vista</th><td>{parcelaDoCusto(res.fgi.ecg, res)}</td></tr>}
                 <tr className="fm-total-row"><th scope="row">Custo total estimado{ajuda('Custo total estimado', quadros.find(item => item.id === 'total')?.ajuda)}</th><td>{brl(res.total)}</td></tr>
               </tbody></table></div>
             </section>}
@@ -442,7 +446,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
                     {grupoComparado('Parcelas')}
                     {[['Primeira parcela após carência', 'primeiraParcela'], ['Última parcela', 'ultimaParcela']].map(([label, key]) => linhaComparada(label, alternatives.map(item => item.result[key]), 'brl'))}
                     {grupoComparado('Composição do custo')}
-                    {[['Juros totais', 'juros'], ...(alternatives.some(item => item.result.correcao) ? [['Correção do saldo', 'correcao']] : []), ['TAC à vista', 'tac'], ['IOF', 'iof'], ['ECG à vista', 'ecg']].map(([label, key]) => linhaComparada(label, alternatives.map(item => key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key]), 'brl'))}
+                    {[['Juros totais', 'juros'], ...(alternatives.some(item => item.result.correcao) ? [['Correção do saldo', 'correcao']] : []), ['TAC à vista', 'tac'], ['IOF', 'iof'], ['ECG à vista', 'ecg']].map(([label, key]) => {
+                      const valores = alternatives.map(item => key === 'ecg' ? item.result.fgi?.ecg ?? 0 : item.result[key])
+                      return linhaComparada(label, valores, 'brl', { textos: alternatives.map((item, index) => parcelaDoCusto(valores[index], item.result)) })
+                    })}
                     {linhaComparada('Custo total estimado', alternatives.map(item => item.result.total), 'brl', { className: 'fm-total-row' })}
                   </tbody></table></div>
                   <div className="fm-exec-side">
@@ -514,7 +521,14 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       )}
 
 
-      <details className="fm-premises"><summary>Premissas e limites da simulação</summary><p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p><p>TLP, Taxa LCD e TFBD: taxa do painel (J, LD1 ou TFBD) mais a hipótese do índice pelo Focus ano a ano, editável. TLP: IPCA cobrado com os juros, sem corrigir o saldo, dias úteis/252. LCD: Selic capitalizada no saldo (média dos fins de ano do Focus; no ano da liberação, a Selic atual), dias úteis/252. TFBD: saldo pela variação do dólar e juros proporcionais, dias corridos/360; não disponível no Itaú. FGI Tradicional só na TLP (o regulamento veda Selic/LCD capitalizada e TFBD). Projeção, não memória contratual: o contrato usa índices mensais defasados e arredondamentos próprios.</p><p>Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p><p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p></details>
+      <details className="fm-premises"><summary>Premissas e limites da simulação</summary>
+        <p role="status">Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p>
+        <div className="fm-rotulo">Método da projeção{ajuda('Método da projeção', <>
+          <p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p>
+          <p>TLP, Taxa LCD e TFBD: taxa do painel (J, LD1 ou TFBD) mais a hipótese do índice pelo Focus ano a ano, editável. TLP: IPCA cobrado com os juros, sem corrigir o saldo, dias úteis/252. LCD: Selic capitalizada no saldo (média dos fins de ano do Focus; no ano da liberação, a Selic atual), dias úteis/252. TFBD: saldo pela variação do dólar e juros proporcionais, dias corridos/360; não disponível no Itaú. FGI Tradicional só na TLP (o regulamento veda Selic/LCD capitalizada e TFBD). Projeção, não memória contratual: o contrato usa índices mensais defasados e arredondamentos próprios.</p>
+          <p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p>
+        </>)}</div>
+      </details>
       </div>
 
       {funding?.mode === 'inline' && <ExpandablePanel title="Histórico dos indexadores" className="fm-indexers-callout">
