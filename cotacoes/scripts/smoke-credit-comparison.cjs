@@ -12,8 +12,14 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
   try {
     page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
     page.on('pageerror', e => errors.push(e.message))
+    const curveDate = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10)
     await page.route('**/*', route => {
-      if (new URL(route.request().url()).pathname.endsWith('/macro.json')) return route.fulfill({ json: { generatedAt: Date.now(), cdi: [[Date.now() - 86400000, 12]] } })
+      const pathname = new URL(route.request().url()).pathname
+      if (pathname.endsWith('/macro.json')) return route.fulfill({ json: { generatedAt: Date.now(), cdi: [[Date.now() - 86400000, 12]] } })
+      if (pathname.endsWith('/curves.json')) return route.fulfill({ json: {
+        generatedAt: Date.now(),
+        br: { compare: [{ id: 'hoje', date: curveDate }], curves: { [curveDate]: [[21, 12], [252, 12], [2520, 12]] } },
+      } })
       return route.request().url().startsWith(base + '/') ? route.continue() : route.abort()
     })
     await page.goto(`${base}/#calculadora/comparador-credito`)
@@ -86,6 +92,19 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     assert.equal(await row('Diferença de custo para a comparação 1').count(), 0)
     assert.equal(await page.getByRole('button', { name: 'Apresentar cotação', exact: true }).count(), 1)
     assert.match(new URL(await envelope(1).getAttribute('href')).searchParams.get('body'), /Giro prefixado/)
+    await page.locator('details.credit-scenarios > summary').click()
+    const invest = page.getByRole('checkbox', { name: 'Comparar com aplicação financeira', exact: true })
+    await invest.check()
+    await page.getByRole('button', { name: 'Gerar cotação', exact: true }).click()
+    const application = page.locator('.credit-invest-block')
+    await application.getByRole('rowheader', { name: 'Rendimento líquido', exact: true }).waitFor()
+    const fgc = 'CDB tem garantia do FGC'
+    assert.equal(await page.getByText(fgc, { exact: false }).count(), 0)
+    await application.getByRole('button', { name: 'Ajuda: Tributação e garantia da aplicação', exact: true }).click()
+    await page.getByRole('dialog', { name: 'Tributação e garantia da aplicação', exact: true }).getByText(fgc, { exact: false }).waitFor()
+    await page.keyboard.press('Escape')
+    await invest.uncheck()
+    await page.getByRole('button', { name: 'Gerar cotação', exact: true }).click()
     const singleQuote = await page.locator('.credit-results').first().innerText()
     for (const width of [390, 820, 1440]) {
       await page.setViewportSize({ width, height: 1000 })

@@ -248,6 +248,13 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
 
       assert.equal(normalize(await section.locator('#e4-convertido').inputValue()), usd(P))
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), new RegExp(`IOF-câmbio de 3,50% na entrada: prazo médio de ${DC} dias corridos`))
+      const iofMethod = 'IOF-câmbio desta operação: 3,50% na entrada'
+      const iofSavings = section.locator('.e4-valores tbody tr').filter({ has: page.getByRole('rowheader', { name: /Economia de IOF/ }) })
+      assert.match(normalize(await iofSavings.locator('td').innerText()), /^R\$\s*[\d.,]+$/)
+      assert.equal(await page.getByText(iofMethod, { exact: false }).count(), 0)
+      await iofSavings.getByRole('button', { name: 'Ajuda: Economia de IOF', exact: true }).click()
+      await page.getByRole('dialog', { name: 'Economia de IOF', exact: true }).getByText(iofMethod, { exact: false }).waitFor()
+      await page.keyboard.press('Escape')
       const headline = await resposta()
       assert.ok(headline.includes(`${pct(mes(Y_UNICO))} a.m.`) && headline.includes(`${pct(ano(Y_UNICO))} a.a. · exp/360`), headline)
       assert.ok(headline.includes(`CDI + ${pct(SPREAD)}`), headline)
@@ -303,7 +310,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       const cotacao = normalize((await section.locator('#fm-result .e4-equiv, #fm-result .e4-valores').allInnerTexts()).join(' '))
       assert.ok(cotacao.includes(brl(IOF_GIRO)), cotacao)
       assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. · exp/360`), cotacao)
-      assert.match(cotacao, /Não desconta o IOF-câmbio de 3,50% desta operação/)
+      assert.doesNotMatch(cotacao, /IOF-câmbio desta operação:/)
       assert.ok(GIRO < CET, 'com o IOF do giro a favor, a taxa equivalente fica abaixo do custo efetivo')
       // Taxas futuras da mesa coladas: cada parcela em reais passa a ser a parcela na moeda vezes a taxa colada.
       await section.locator('#e4-fwdMode').selectOption('mesa')

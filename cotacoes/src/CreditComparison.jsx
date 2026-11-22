@@ -296,7 +296,7 @@ function Results({ results, columns, scenario, cdi, source, equivalent, investme
   const cetCard = best.lowestCet !== null
     ? <div><small>Menor CET estimado · parte fixa</small><b>{head(best.lowestCet)}</b><span><strong>{cetText(best.lowestCet)}</strong>{cetOrder.length > 1 && <>, contra {cetText(cetOrder[1])} em {head(cetOrder[1])}</>}</span></div>
     : best.mixed
-      ? <div><small>CET · tipos diferentes de taxa</small>{Object.entries(best.lowestCetByGroup).map(([g, i]) => <span key={g}>Menor CET entre {CET_GROUPS[g]}: <strong>{head(i)}</strong> · {cetText(i)}</span>)}<span>O CET só compara colunas do mesmo tipo de taxa. Entre tipos diferentes, compare pelo custo em reais.</span></div>
+      ? <div><small>CET · tipos diferentes de taxa</small>{Object.entries(best.lowestCetByGroup).map(([g, i]) => <span key={g}>Menor CET entre {CET_GROUPS[g]}: <strong>{head(i)}</strong> · {cetText(i)}</span>)}<div className="credit-help-line"><span>Compare o custo em reais.</span><CalculatorHelp title="CET com tipos diferentes de taxa"><p>O CET só compara colunas do mesmo tipo de taxa.</p></CalculatorHelp></div></div>
       : <div><small>CET</small><span>O CET não pôde ser comparado entre as colunas.</span></div>
   const [mainCard, sideCard] = best.lowestCet !== null ? [cetCard, costCard] : [costCard, cetCard]
   return <div className="credit-results">
@@ -396,9 +396,8 @@ function InvestmentBlock({ alone, regime, adicional, product }) {
     ['Rendimento líquido', brl(alone.net)],
     ['Taxa líquida ao ano', alone.netRate == null ? '—' : pctRate(alone.netRate)],
   ]
-  return <section className="credit-invest-block"><h3>Aplicação financeira · {PRODUCTS.find(x => x.id === product)?.label} · {regimeLabel(regime)}</h3>
+  return <section className="credit-invest-block"><h3>Aplicação financeira · {PRODUCTS.find(x => x.id === product)?.label} · {regimeLabel(regime)}<CalculatorHelp title="Tributação e garantia da aplicação"><p>{simples ? `No Simples, o IR retido pelo banco é o imposto final: ${product === 'fundo-cp' ? '22,5% até 180 dias e 20% acima' : '22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima'}${product.startsWith('fundo') ? ', com come-cotas em maio e novembro' : ''}.` : real ? 'No Lucro Real, o rendimento entra no lucro pelo regime de competência; o IR retido pelo banco só antecipa o imposto. A partir de 2027, sem PIS/Cofins sobre o rendimento (a CBS não incide).' : 'No Lucro Presumido, o rendimento entra inteiro na base do IRPJ e da CSLL no resgate; o IR retido pelo banco só antecipa o imposto. Não há PIS/Cofins sobre o rendimento.'} LCI e LCA não são isentas para empresa. CDB tem garantia do FGC até R$ 250 mil por CNPJ em cada banco.</p></CalculatorHelp></h3>
     <div className="credit-scroll"><table><tbody>{rows.map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{v}</td></tr>)}</tbody></table></div>
-    <p className="credit-hint">{simples ? `No Simples, o IR retido pelo banco é o imposto final: ${product === 'fundo-cp' ? '22,5% até 180 dias e 20% acima' : '22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima'}${product.startsWith('fundo') ? ', com come-cotas em maio e novembro' : ''}.` : real ? 'No Lucro Real, o rendimento entra no lucro pelo regime de competência; o IR retido pelo banco só antecipa o imposto. A partir de 2027, sem PIS/Cofins sobre o rendimento (a CBS não incide).' : 'No Lucro Presumido, o rendimento entra inteiro na base do IRPJ e da CSLL no resgate; o IR retido pelo banco só antecipa o imposto. Não há PIS/Cofins sobre o rendimento.'} LCI e LCA não são isentas para empresa. CDB tem garantia do FGC até R$ 250 mil por CNPJ em cada banco.</p>
   </section>
 }
 
