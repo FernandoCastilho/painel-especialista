@@ -54,7 +54,7 @@ export function giroEmailText({ result, request }) {
       `${pagas.length} parcelas, de ${dmy(pagas[0].date)} a ${dmy(ultima.date)}`,
       `1ª parcela: ${brl(pagas[0].payment)} · última: ${brl(ultima.payment)}`]),
     `Total das parcelas: ${brl(r.paid)}`,
-    'O cronograma completo foi copiado ao abrir este rascunho: cole aqui (Ctrl+V).',
+    'Cronograma completo: cole aqui (Ctrl+V); se nada colar, copie de "Ver parcelas" na calculadora.',
   ]
   const titulo = `PARCELAS${r.rows.some(row => row.fixed) ? ' (com ajustes)' : ''}`
   const montar = parcelas => [

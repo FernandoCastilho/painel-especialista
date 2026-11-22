@@ -189,3 +189,5 @@ main.app.app-calculators:not(#u) .giro-screen .giro-grace-interest input[type=ch
   .giro-cost-fee > .giro-cost-label { grid-column: 1 / -1; }
   :root[data-theme] body .giro-screen .giro-cost-fee > .giro-cost-label { min-height: 0; padding-bottom: 0; }
 }
+/* Aviso de cópia do cronograma que falhou (22/11/2026): logo abaixo do resultado, no tom de alerta do roteiro. */
+:root[data-theme] body .giro-screen .giro-outcome > .giro-copia { display: block; margin: 8px 0 0; padding: 8px 12px; border-left: 4px solid #b86e00; border-radius: 6px; background: var(--bw-warm-soft); color: var(--bw-warn-ink); font-size: .875rem; line-height: 1.4; }

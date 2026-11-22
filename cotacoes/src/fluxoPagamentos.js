@@ -19,10 +19,14 @@ export function rotuloDoMes(inicio, mes) {
 // pagamento; mês sem pagamento (ex.: bimestral) vem com `linhas` vazio e valores zero.
 export function fluxoMensal(rows, inicio) {
   if (!rows?.length || !inicio) return []
+  // Um vencimento por mês, sempre depois do anterior: com o 1º período curto (ex.: liberação em 31/01 e vencimentos no dia 15),
+  // o arredondamento poria dois pagamentos no mesmo mês; aqui cada um avança ao menos um mês, como no calendário.
   const porMes = new Map()
-  for (const row of rows) {
-    const mes = mesDaOperacao(inicio, row.date)
+  let anterior = 0
+  for (const row of [...rows].sort((a, b) => a.date.localeCompare(b.date))) {
+    const mes = Math.max(anterior + 1, mesDaOperacao(inicio, row.date))
     porMes.set(mes, [...(porMes.get(mes) ?? []), row])
+    anterior = mes
   }
   const ultimo = Math.max(...porMes.keys())
   return Array.from({ length: ultimo }, (_, i) => {

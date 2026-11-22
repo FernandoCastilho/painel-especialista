@@ -65,4 +65,8 @@ test('mês da operação pelos dias corridos: vencimento empurrado para o dia ú
   assert.equal(mesDaOperacao('2026-11-22', '2028-11-22'), 24)
   assert.equal(rotuloDoMes('2026-11-22', 2), 'jan/27')
   assert.deepEqual(fluxoMensal([], '2026-11-22'), [])
+  // 1º período curto (achado do Auditor, 22/11/2026): liberação em 31/01/2027, vencimentos em 15/02, 15/03, 15/04 e 17/05.
+  const linha = date => ({ date, payment: 1, interest: 0, amortization: 1 })
+  const curto = fluxoMensal(['2027-02-15', '2027-03-15', '2027-04-15', '2027-05-17'].map(linha), '2027-01-31')
+  assert.deepEqual(curto.filter(m => m.linhas.length).map(m => [m.mes, m.rotulo]), [[1, 'fev/27'], [2, 'mar/27'], [3, 'abr/27'], [4, 'mai/27']])
 })

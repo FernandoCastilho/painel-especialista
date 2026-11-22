@@ -40,9 +40,13 @@ const FOOT = 'Valor, prazo, carência, amortização, data e praça valem també
 const GIRO_PADRAO = Object.freeze({ term: '36' })
 
 // `copiar`: cronograma completo que não coube no rascunho; vai para a área de transferência no clique, para colar no e-mail.
-function EmailEnvelope({ href, copiar }) {
+// Se a cópia falhar, `onFalha` avisa na tela (o rascunho abre mesmo assim, com o resumo das parcelas).
+function EmailEnvelope({ href, copiar, onFalha }) {
   const label = 'Preparar e-mail com o resultado'
-  const onClick = copiar ? () => { navigator.clipboard?.writeText(copiar).catch(() => {}) } : undefined
+  const onClick = copiar ? () => {
+    const copia = navigator.clipboard?.writeText(copiar)
+    if (copia) copia.then(() => onFalha(false), () => onFalha(true)); else onFalha(true)
+  } : undefined
   return <a className="credit-email giro-email" role="link" href={href} target="_blank" rel="noopener noreferrer" onClick={onClick}
     aria-label={label} aria-disabled={href ? undefined : true} title={href ? label : 'Gere um resultado válido para preparar o e-mail'}>
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -79,6 +83,7 @@ function FlexEditor({ row, onApply, onCancel, error }) {
 export default function CapitalDeGiro({ onBack, apresentacao }) {
   // Valor, prazo, carência, amortização, data e praça vêm da linha mestra comum (19/11/2026); o resto é do produto.
   const [lm, setLm, clearLm] = useLinhaMestra(cgToday(), GIRO_PADRAO)
+  const [copiaFalhou, setCopiaFalhou] = useState(false)
   const [form, setForm] = useState(() => ({ rate: '2,00', unit: 'am', firstDue: '', profile: 'pj', eligible: false, period: 1, bulletPeriod: 0, graceInterest: false,
     feeUnit: 'brl', guarantee: GUARANTEES[0], costs: { fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }))
   const [dirty, setDirty] = useState(false)
@@ -306,7 +311,8 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
             ...(result?.capitalizedGrace > 0 ? [{ label: 'Juros da carência somados ao saldo', value: brl(result.capitalizedGrace), kind: 'muted' }] : []),
           ]} />
         </Resultado>
-        <EmailEnvelope href={email?.href} copiar={email?.copiar} />
+        <EmailEnvelope href={email?.href} copiar={email?.copiar} onFalha={setCopiaFalhou} />
+        {copiaFalhou && email?.copiar && <small className="giro-copia" role="alert">O navegador não deixou copiar o cronograma para o e-mail. Copie de "Ver parcelas".</small>}
       </div>
     </div>
 
