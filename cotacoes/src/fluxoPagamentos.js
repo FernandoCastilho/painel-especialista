@@ -28,6 +28,6 @@ export function fluxoMensal(rows, inicio) {
   return Array.from({ length: ultimo }, (_, i) => {
     const linhas = porMes.get(i + 1) ?? []
     const soma = key => linhas.reduce((total, row) => total + row[key], 0)
-    return { mes: i + 1, rotulo: rotuloDoMes(inicio, i + 1), linhas, pagamento: soma('payment'), juros: soma('interest'), amortizacao: soma('amortization') }
+    return { mes: i + 1, rotulo: rotuloDoMes(inicio, i + 1), linhas, pagamento: soma('payment'), juros: soma('interest') }
   })
 }

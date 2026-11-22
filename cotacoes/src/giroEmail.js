@@ -46,10 +46,10 @@ export function giroEmailText({ result, request }) {
     `Total das parcelas: ${brl(r.paid)}`,
   ]
   // Resumo das parcelas, para quando o cronograma não cabe no endereço do rascunho.
-  const so = r.rows.filter(row => row.juros), pagas = r.rows.filter(row => !row.juros)
+  const soJuros = r.rows.filter(row => row.juros), pagas = r.rows.filter(row => !row.juros)
   const ultima = pagas.at(-1)
   const resumoParcelas = [
-    ...(so.length ? [`${so.length} ${so.length === 1 ? 'pagamento' : 'pagamentos'} só de juros na carência, de ${dmy(so[0].date)} a ${dmy(so.at(-1).date)}`] : []),
+    ...(soJuros.length ? [`${soJuros.length} ${soJuros.length === 1 ? 'pagamento' : 'pagamentos'} só de juros na carência, de ${dmy(soJuros[0].date)} a ${dmy(soJuros.at(-1).date)}`] : []),
     ...(pagas.length === 1 ? [`1 parcela, em ${dmy(ultima.date)}: ${brl(ultima.payment)}`] : [
       `${pagas.length} parcelas, de ${dmy(pagas[0].date)} a ${dmy(ultima.date)}`,
       `1ª parcela: ${brl(pagas[0].payment)} · última: ${brl(ultima.payment)}`]),

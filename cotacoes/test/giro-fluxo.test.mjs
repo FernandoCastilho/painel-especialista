@@ -53,7 +53,8 @@ test('cada barra: pagamento = juros + amortização, em Price, SAC, carência co
     if (extra.jurosNaCarencia || extra.system === 'bullet') assert.ok(result.rows.some(row => row.juros), 'tem pagamentos só de juros')
     for (const m of fluxoMensal(result.rows, base.start)) {
       if (!m.linhas.length) continue
-      assert.ok(Math.abs(m.pagamento - m.juros - m.amortizacao) < 0.005, `${JSON.stringify(extra)} mês ${m.mes}`)
+      const amortizacao = m.linhas.reduce((t, row) => t + row.amortization, 0)
+      assert.ok(Math.abs(m.pagamento - m.juros - amortizacao) < 0.005, `${JSON.stringify(extra)} mês ${m.mes}`)
     }
   }
 })
