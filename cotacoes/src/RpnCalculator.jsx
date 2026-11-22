@@ -5,6 +5,7 @@ import { classicKeyRows, getClassicKeyState, portraitKeyRows } from './rpnClassi
 import { rpnKeyFromEvent } from './rpnKeyboard.mjs'
 import './RpnCalculator.css'
 import RpnHistoryPanel from './RpnHistoryPanel.jsx'
+import RpnCetPanel from './RpnCetPanel.jsx'
 import { captureReportedRpnResult, createRpnHistoryCapture } from './rpnHistory.mjs'
 
 const registers = [
@@ -293,7 +294,7 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
     return next
   })
   const onKeyDown = event => {
-    if (event.defaultPrevented || event.target?.closest?.('.rpn-history')) return
+    if (event.defaultPrevented || event.target?.closest?.('.rpn-history, .rpn-cet, .rpn-guide')) return
     if (floating && event.key === 'Escape') return
     if (event.key === 'Escape' && screenMode === 'page' && !helpOpen && !ratesOpen && !historyOpen && !event.target?.closest?.('input, select, textarea, [contenteditable="true"]')) {
       event.preventDefault()
@@ -383,9 +384,9 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
           return next
         }); closeRates() }} />
     </div>
-    {(showHistoryAside || historyOpen || floating) && <RpnHistoryPanel id={historyId} entries={history.entries} draft={view.tapeInput} hasCleared={Boolean(history.removed?.all)}
+    {(showHistoryAside || historyOpen || floating) && <div className="rpn-side-tools"><RpnHistoryPanel id={historyId} entries={history.entries} draft={view.tapeInput} hasCleared={Boolean(history.removed?.all)}
       canUndo={Boolean(history.removed)} onEdit={editHistory} onRemove={removeHistory} onUndo={undoHistory}
-      onClear={clearHistory} onClose={showHistoryAside || floating ? undefined : closeHistory} />}
+      onClear={clearHistory} onClose={showHistoryAside || floating ? undefined : closeHistory} /><RpnCetPanel /></div>}
     </div>
     <div hidden={!helpOpen} ref={helpPanel} tabIndex={-1} role="region" className="rpn-help" id={helpId}
       aria-labelledby={helpId + '-heading'} onKeyDown={event => {
@@ -414,6 +415,16 @@ export default function RpnCalculator({ floating = false, onFloat } = {}) {
           {!!view.cashFlows?.length && <ol start={0}>{view.cashFlows.map((value, index) => <li key={index}>{show(typeof value === 'number' ? value : value?.value)}</li>)}</ol>}
         </div>
       </div>
+    </details>
+    <details className="rpn-readouts rpn-guide">
+      <summary>Guia rápido da HP 12C</summary>
+      <ol>
+        <li><strong>Faça uma conta:</strong> digite 200, toque em ENTER, digite 30 e toque em −. O resultado é 170. Não há tecla de igual no modo RPN.</li>
+        <li><strong>Leia a pilha:</strong> X é o visor; Y é o valor logo abaixo na pilha. A tecla x↔y troca os dois. Para subtração e divisão, a ordem é Y − X ou Y ÷ X.</li>
+        <li><strong>Use as funções financeiras:</strong> n é o número de períodos; i, a taxa por período; PV, o valor presente; PMT, a parcela; FV, o saldo futuro. Use a mesma unidade em n, i e PMT. Na visão de quem toma o crédito, recebido é positivo e pago é negativo.</li>
+        <li><strong>Confira a fita:</strong> ela acompanha a digitação e registra as operações. As teclas f e g dão acesso às funções douradas e azuis.</li>
+      </ol>
+      <p><a href="https://h20331.www2.hp.com/Hpsub/downloads/HP12CRPNstack.pdf" target="_blank" rel="noreferrer">Leia o guia oficial da pilha RPN da HP</a>.</p>
     </details>
   </section>
 }

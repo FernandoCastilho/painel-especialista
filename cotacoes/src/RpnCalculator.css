@@ -275,3 +275,15 @@ main[data-tab="rpn"]:has(.rpn-workspace[data-screen-mode="page"]) > :not(.rpn-in
     color: var(--rpn-ink); background: var(--rpn-surface);
   }
 }
+
+.rpn-side-tools { display: grid; min-inline-size: 0; gap: 12px; }
+.rpn-side-tools .rpn-cet { margin: 0; }
+.rpn-cet :is(p, .rpn-cet-result) { font-size: .88rem; line-height: 1.45; }
+.rpn-cet p { margin: 8px 0 12px; }
+.rpn-cet-fields { display: grid; gap: 9px; }
+.rpn-cet :is(input, textarea) { box-sizing: border-box; display: block; width: 100%; max-width: 100%; min-height: 44px; margin-top: 4px; color: inherit; background: var(--rpn-bg, transparent); border: 1px solid var(--rpn-edge); border-radius: 8px; padding: 8px; font: inherit; }
+.rpn-cet textarea { resize: vertical; }
+.rpn-cet label { display: block; font-weight: 650; font-size: .88rem; min-width: 0; }
+.rpn-cet-result { display: grid; gap: 4px; padding: 10px 0; }
+.rpn-cet-result strong { font-size: 1.45rem; }
+.rpn-guide li { margin-block: 7px; line-height: 1.45; }
