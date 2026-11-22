@@ -120,5 +120,5 @@ Estes cinco casos ainda não passaram pela revisão independente (a nova rodada 
   o cronograma não cabe, o rascunho leva o resumo das parcelas (quantidade, datas, 1ª e última, total) e o clique no envelope
   copia o cronograma completo para colar no e-mail (Ctrl+V).
 - **Fluxo de pagamentos.** Quadro novo depois da referência de mercado: uma barra por mês da operação, contado da liberação;
-  altura = valor pago no mês, nas cores do painel: juros em laranja e amortização em azul (pedido de Fernando ao autorizar a publicação). No alto do gráfico, um resumo: número de pagamentos, total pago e juros (com o percentual). Mês sem pagamento fica vazio (no
+  altura = valor pago no mês, nas cores do painel: juros em laranja e amortização em azul (pedido de Fernando ao autorizar a publicação). No alto do gráfico, um resumo: número de pagamentos, total pago e juros (com o percentual). Em cada barra, o valor pago no mês e, dentro dela, juros e amortização, em mil ou milhões de reais; sem espaço para todas (celular, prazos longos), em barras alternadas. Mês sem pagamento fica vazio (no
   bimestral, barra a cada dois meses). Só apresentação: os valores são os do cronograma; nenhuma conta mudou.
