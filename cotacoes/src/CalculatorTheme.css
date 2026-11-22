@@ -52,7 +52,7 @@ main.app.app-calculators .cx :is(.cg-modes button, .cbs-month-buttons button) { 
 main.app.app-calculators .cx :is(.cg-modes button, .cbs-month-buttons button):not([aria-pressed=true]) { background: transparent; color: var(--mut); }
 
 /* Botões secundários: iguais em todas. A ação principal (laranja) é só uma por tela. */
-main.app.app-calculators .cx :is(.cx-action, .cg-button, .desconto-titles button, .fi-goal button, .cx-lcd .cx-field button:not(.fi-help > button), .credit-comparison > button:not(.cx-back), .credit-controls button, .fi-help-close) {
+main.app.app-calculators .cx :is(.cx-action, .cg-button, .desconto-titles button:not(.fi-help > button), .fi-goal button, .cx-lcd .cx-field button:not(.fi-help > button), .credit-comparison > button:not(.cx-back), .credit-controls button, .fi-help-close) {
   background: var(--surface-2);
   color: var(--fg);
   border: 1px solid var(--cx-line-strong);
@@ -78,7 +78,7 @@ main.app.app-calculators .cx .fm-hero {
 }
 
 /* Avisos: mesma caixa, mesma barra, em todas. */
-main.app.app-calculators .cx :is(.cg-notice, .desconto-notice, .credit-notice, .cbs-message, .fi-guide) {
+main.app.app-calculators .cx :is(.cg-notice, .desconto-notice, .credit-notice, .cbs-message) {
   margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--line);
@@ -91,7 +91,7 @@ main.app.app-calculators .cx :is(.cg-notice, .desconto-notice, .credit-notice, .
 }
 
 /* Orientação neutra (tela aberta, nada preenchido): mesma caixa, com barra cinza no lugar da barra de aviso. */
-main.app.app-calculators .cx :is(.cg-guide, .desconto-guide, .fi-guide) { border-left-color: var(--mut); }
+main.app.app-calculators .cx :is(.cg-guide, .desconto-guide) { border-left-color: var(--mut); }
 
 /* Comparador de Crédito: mesmo painel com cabeçalho cinza das outras calculadoras. */
 main.app.app-calculators .credit-comparison { max-width: none; margin: 0; display: flex; flex-direction: column; gap: 24px; }

@@ -100,7 +100,8 @@ const links = {
       await visit('calculadora/conta-garantida', '#cg-rate')
       assert.equal(await page.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
       assert.equal(await page.locator('#cg-taxProfile').count(), 1)
-      assert.equal(await page.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
+      // Roteiro de 21/11/2026: na utilização única o encargo se chama "Taxa de juros" (nome padrão dos encargos).
+      assert.equal(await page.getByLabel('Taxa de juros (% a.m.)', { exact: true }).count(), 1)
       await contained('Conta Garantida')
 
       await visit('aprender', '.knowledge-map')

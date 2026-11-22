@@ -2,6 +2,20 @@
 
 Descrição da interface e do motor vigentes, revisada em 11/11/2026. Acesso: Calculadoras → Análise de desconto, rota `#calculadora/analise-desconto`, comandos `DESCONTO` e `Análise de desconto`. Motor: `cotacoes/src/analiseDesconto.js`; tela: `AnaliseDesconto.jsx`.
 
+## Roteiro da tela (21/11/2026)
+
+A tela segue o roteiro aprovado no piloto do Capital de Giro (`docs/calculadoras-roteiro-2026-11-21.md`). Primeiro o custo do desconto, depois a comparação com o giro. Nenhuma conta mudou: a tela só reordena e renomeia números que o motor já devolvia.
+
+| Bloco | O que mostra |
+|---|---|
+| 1 Demanda do cliente | data da operação, valor total dos títulos e os grupos de títulos (valor nominal, quantidade, vencimento). A praça do contrato fica na gaveta "Detalhes do contrato" |
+| 2 Encargos | taxa de juros, convenção de desconto, tarifa dos títulos (forma de cobrança e valor), TAC e IOF calculado. O enquadramento tributário fica na gaveta "Enquadramento do IOF" |
+| 3 Resultado · custo final para o cliente | quanto entra no caixa (valor líquido), quanto é descontado (custo total completo) e quanto custa (CET do desconto, com o equivalente mensal e o custo pelo prazo real). "Do que é feito o custo": juros, IOF, tarifa dos títulos e TAC, com seus percentuais, mais o subtotal sem tarifa e a base do IOF |
+
+Depois do resultado, sem número, vem a "Comparação com o capital de giro": projeção mensal do desconto, premissas do capital de giro, a resposta "Desconto × giro: resultado" e as três tabelas recolhidas. O "valor para o giro comparado" (valor da linha mestra comum) aparece nas premissas do giro quando a opção "Valor da linha mestra" é escolhida em "Principal usado no giro".
+
+Os seis números que ficavam em quadrinhos dentro do formulário (base do IOF, tarifa total, subtotal, custo total, valor líquido e CET) estão agora no bloco 3. Como o motor não arredonda no meio do caminho, a soma das partes já arredondadas pode diferir do total em 1 centavo (em tese, até 2 com tarifa percentual) em cerca de 3 a cada 10 casos; isso já acontecia entre bruto, custo e líquido. Quando acontece, a tela não ajusta nenhum valor: mostra, logo abaixo do "Custo total completo", a linha "Arredondamento", com a soma das partes e a diferença (`centavosDaTela.js`, só apresentação). Exemplo: R$ 123.456,78 em títulos, com os demais dados do exemplo vigente, dá juros R$ 2.409,88, IOF R$ 777,61, tarifa R$ 564,00 e TAC R$ 260,00, que somam R$ 4.011,49, contra custo total de R$ 4.011,48.
+
 ## Entradas atuais
 
 - Informe data da operação, taxa mensal, convenção comercial simples (por fora) ou racional simples (por dentro), e os títulos agrupados por vencimento.

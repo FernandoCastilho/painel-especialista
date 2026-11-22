@@ -22,7 +22,7 @@ const ALIASES = { 'finame-veiculos': 'Finame Veículos', 'bndes-giro': 'BNDES Gi
 
 // Uma entrada, com os motores e as condições de cada modalidade preservados.
 // As rotas anteriores continuam válidas; abrir taxas não desmonta o formulário.
-export default function BndesWorkspace({ profile = 'finame-materiais', onView, onBack }) {
+export default function BndesWorkspace({ profile = 'finame-materiais', onView, onBack, apresentacao }) {
   const [area, setArea] = useState('simulate')
   const [quotesView, setQuotesView] = useState('')
   // "Finame Veículos" e "BNDES Giro" são só opções de apresentação: usam a mesma calculadora e os mesmos cálculos do Finame Materiais.
@@ -46,7 +46,7 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
     </nav></div>
     <div hidden={area !== 'simulate'} className="bw-simulation">
       {!historical && profile !== 'finame-materiais' && profileControl}
-      <div hidden={profile !== 'finame-materiais'}><FinameMateriais onBack={onBack} onFundingView={navigate} profileControl={profile === 'finame-materiais' ? profileControl : null} /></div>
+      <div hidden={profile !== 'finame-materiais'}><FinameMateriais onBack={onBack} onFundingView={navigate} profileControl={profile === 'finame-materiais' ? profileControl : null} apresentacao={apresentacao} /></div>
       {profile === 'bndes-tlp-exigivel' && <BndesTlpExigivel onBack={onBack} />}
       {profile === 'bndes-selic-lcd' && <BndesLcdCap onBack={onBack} />}
       {historical && <BndesCreditoTfb onBack={onBack} />}
