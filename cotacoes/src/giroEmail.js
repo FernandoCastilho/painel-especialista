@@ -21,7 +21,7 @@ export function giroEmailText({ result, request }) {
     `Valor solicitado: ${brl(r.value)}`,
     `Prazo: ${months(q.term)}`,
     `Carência: ${grace}`,
-    `Periodicidade: ${bullet ? 'Pagamento único no fim' : q.periodLabel}`,
+    `Periodicidade: ${q.periodLabel}`,
     `Amortização: ${q.systemLabel}`,
     `Liberação: ${dmy(q.start)}`,
     `Quanto entra no caixa: ${brl(r.net)}`,

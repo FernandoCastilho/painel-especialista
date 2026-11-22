@@ -77,23 +77,26 @@ function periodDates(start, firstDue, n, p) {
   return dates
 }
 
-// Mesma entrada do giroOperation, mais: periodicidade (1, 2, 3, 4 ou 6 meses), jurosNaCarencia (true: juros pagos na
-// carência) e flex ({ [nº da parcela]: { date?, payment? } }: parcelas ajustadas pelo usuário).
+// Mesma entrada do giroOperation, mais: periodicidade (1, 2, 3, 4 ou 6 meses; no Bullet, 0 = pagamento único, o padrão, e
+// 1 a 6 = juros pagos a cada p meses com o principal no fim), jurosNaCarencia (true: juros pagos na carência) e flex
+// ({ [nº da parcela]: { date?, payment? } }: parcelas ajustadas pelo usuário).
 export function giroConta({ value, n, rate, unit = 'am', system, start, firstDue, profile = 'pj', eligible = false, fees = 0,
-  financedFees = 0, financeIof = false, calendars = ['BR'], periodicidade = 1, jurosNaCarencia = false, flex = null }) {
+  financedFees = 0, financeIof = false, calendars = ['BR'], periodicidade, jurosNaCarencia = false, flex = null }) {
   if (!['price', 'sac', 'bullet'].includes(system)) return fail('Escolha o sistema de amortização.')
   if (!money(value) || value <= 0 || !money(fees) || !money(financedFees)) return fail('Confira o valor solicitado e as despesas.')
   const bullet = system === 'bullet'
-  // No Bullet a periodicidade não se aplica: pagamento único no fim.
-  const p = bullet ? 1 : periodicidade
-  if (!PERIODICIDADES.some(item => item.id === p)) return fail('Escolha a periodicidade: mensal, bimestral, trimestral, quadrimestral ou semestral.')
+  // Bullet: pagamento único (0, padrão) ou juros a cada p meses (decisão de Fernando, 22/11/2026). Demais: mensal por padrão.
+  const chosen = periodicidade ?? (bullet ? 0 : 1)
+  const bulletInterest = bullet && chosen !== 0
+  if (!PERIODICIDADES.some(item => item.id === chosen) && !(bullet && chosen === 0)) return fail('Escolha a periodicidade: mensal, bimestral, trimestral, quadrimestral ou semestral.')
+  const p = bullet && !bulletInterest ? 1 : chosen
   const adjusted = flex && Object.keys(flex).length > 0 ? flex : null
-  if (adjusted && bullet) return fail('No Bullet o pagamento é único: não há parcelas para ajustar.')
+  if (adjusted && bullet) return fail('No Bullet não há parcelas para ajustar.')
   const due = bullet ? periodDates(start, firstDue, n, 1)?.at(-1)?.date : firstDue
   if (!due) return fail('Informe a liberação e o primeiro vencimento mensal posterior à liberação.')
   const principal = value + financedFees
   const r = simulate({ value: principal, n, rate, unit, system, start, firstDue: due, profile, eligible, fees, calendars,
-    p, graceInterest: !!jurosNaCarencia && !bullet, flex: adjusted }, { requested: value, financeIof })
+    p, interestOnly: bulletInterest || (!!jurosNaCarencia && !bullet), flex: adjusted }, { requested: value, financeIof })
   if (!r.ok) return r
   const firstInstallment = r.rows.find(row => !row.juros)
   return { ...r, value, financedBalance: roundReais(principal + (financeIof ? r.iof : 0)), financedFees, financeIof, system, n,
@@ -103,7 +106,7 @@ export function giroConta({ value, n, rate, unit = 'am', system, start, firstDue
 // Cópia do simulateCredit de creditComparison.js no caminho do Giro (prefixado, centavos, sem tarifa mensal nem feriados
 // extras), generalizada para a periodicidade, os juros na carência e o flex.
 function simulate(q, { requested, financeIof }) {
-  const { value, n, rate, unit, system, start, firstDue, profile, eligible, fees, calendars, p, graceInterest, flex } = q
+  const { value, n, rate, unit, system, start, firstDue, profile, eligible, fees, calendars, p, interestOnly, flex } = q
   if (!money(value) || value <= 0 || !Number.isInteger(n) || n < 1 || n > 600) return fail('Informe valor positivo e de 1 a 600 parcelas.')
   if (!['am', 'aa'].includes(unit)) return fail('Confira sistema e tipo de taxa.')
   if (!(Number.isFinite(rate) && rate >= 0 && rate <= 1000) || !money(fees)) return fail('Confira taxas e encargos: valores vazios, negativos ou acima do limite não são aceitos.')
@@ -112,21 +115,20 @@ function simulate(q, { requested, financeIof }) {
   // Vencimento em dia não útil passa para o próximo dia útil (fins de semana, feriados nacionais e da praça).
   const payCals = paymentCalendars(cals)
   const nextUseful = day => nextBusinessDay(day, payCals)
-  const raw = periodDates(start, firstDue, system === 'bullet' ? 1 : n, p)
+  const raw = periodDates(start, firstDue, system === 'bullet' ? 1 : n, system === 'bullet' ? 1 : p)
   const dates = raw && raw.map(d => { const date = nextUseful(d.date); return { date, days: days(start, date) } })
   if (!dates || dates.at(-1).days > 22000) return fail('Informe datas reais, primeiro pagamento posterior à liberação e horizonte de até 60 anos.')
-  // Juros pagos na carência: a cada p meses desde a liberação, e um último no fim da carência (um período antes do 1º vencimento).
+  // Pagamentos só de juros, contados para trás a partir do 1º vencimento com amortização, a cada p meses, enquanto forem
+  // depois da liberação (como o BNDES, Anexo I, item 5.3: o período curto fica no começo; decisão de Fernando, 22/11/2026).
+  // Na carência com juros pagos, o primeiro contado é o fim da carência (1º vencimento − p meses). No Bullet com juros
+  // periódicos, contam a partir do vencimento único.
   let graceDates = []
-  if (graceInterest) {
-    const end = shiftMonths(raw[0].date, -p)
-    if (end && end > start) {
-      const list = []
-      for (let j = 1; j <= 600; j++) { const d = shiftMonths(start, j * p); if (!d || d >= end) break; list.push(d) }
-      list.push(end)
-      for (const d of list) {
-        const date = nextUseful(d)
-        if (date < dates[0].date && date !== graceDates.at(-1)?.date) graceDates.push({ date, days: days(start, date), juros: true })
-      }
+  if (interestOnly) {
+    const list = []
+    for (let k = 1; k <= 600; k++) { const d = shiftMonths(raw[0].date, -k * p); if (!d || d <= start) break; list.unshift(d) }
+    for (const d of list) {
+      const date = nextUseful(d)
+      if (date < dates[0].date && date !== graceDates.at(-1)?.date) graceDates.push({ date, days: days(start, date), juros: true })
     }
   }
   const resolveTax = operationValue => resolveCreditIof({ date: start, profile, operationValue, eligible })
@@ -134,9 +136,15 @@ function simulate(q, { requested, financeIof }) {
   if (!tax.ok) return fail(tax.error)
   const monthly = monthlyRate(rate, unit)
   const logFactor = (from, to) => Math.log1p(monthly) * days(from, to) / 30
-  // Carência capitalizada: dias do 1º período além de 30 × p (no mensal, além de 30, como hoje). Com juros pagos na carência
-  // não há capitalização: os juros de cada período são pagos nas linhas de juros.
-  const graceDays = system === 'bullet' || graceDates.length ? 0 : Math.max(0, Math.min(raw[0].days, dates[0].days) - 30 * p)
+  // Carência capitalizada (juros somados ao saldo). Mensal: dias do 1º período além de 30, exatamente como hoje. Periodicidade
+  // maior que mensal (decisão de Fernando, 22/11/2026): pelo calendário, da liberação até o fim da carência contratual
+  // (1º vencimento − p meses), só se ele for depois da liberação; os juros do 1º período entram na 1ª parcela.
+  // Com pagamentos só de juros não há capitalização.
+  let graceDays = 0
+  if (system !== 'bullet' && !graceDates.length) {
+    if (p === 1) graceDays = Math.max(0, Math.min(raw[0].days, dates[0].days) - 30)
+    else { const end = shiftMonths(raw[0].date, -p); graceDays = end && end > start ? days(start, end) : 0 }
+  }
   const graceEnd = cgAddDays(start, graceDays)
   let prior = graceDates.length ? graceDates.at(-1).date : graceEnd
   const logs = dates.map(d => { const log = logFactor(prior, d.date); prior = d.date; return log })

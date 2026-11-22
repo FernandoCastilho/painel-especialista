@@ -73,7 +73,7 @@ function FlexEditor({ row, onApply, onCancel, error }) {
 export default function CapitalDeGiro({ onBack, apresentacao }) {
   // Valor, prazo, carência, amortização, data e praça vêm da linha mestra comum (19/11/2026); o resto é do produto.
   const [lm, setLm, clearLm] = useLinhaMestra(cgToday())
-  const [form, setForm] = useState(() => ({ rate: '2,00', unit: 'am', firstDue: '', profile: 'pj', eligible: false, period: 1, graceInterest: false,
+  const [form, setForm] = useState(() => ({ rate: '2,00', unit: 'am', firstDue: '', profile: 'pj', eligible: false, period: 1, bulletPeriod: 0, graceInterest: false,
     feeUnit: 'brl', guarantee: GUARANTEES[0], costs: { fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }))
   const [dirty, setDirty] = useState(false)
   // Parcelas ajustadas (flex): { [nº]: { date?, payment? } }. Qualquer mudança na demanda ou nos encargos desfaz os ajustes.
@@ -91,7 +91,9 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const principal = parseMoneyInput(lm.value)
   const schedule = lmSchedule(lm)
   const isBullet = lm.system === 'bullet'
-  const period = isBullet ? 1 : form.period
+  // No Bullet a periodicidade é dos juros: 0 = pagamento único (padrão, como hoje); 1 a 6 = juros a cada p meses, principal no fim.
+  const period = isBullet ? form.bulletPeriod : form.period
+  const periodOptions = isBullet ? [{ id: 0, label: 'Pagamento único' }, ...PERIODICIDADES] : PERIODICIDADES
   // Parcelas = (prazo − carência) / periodicidade; 1º vencimento = liberação + carência + periodicidade (bullet: no fim do prazo).
   // O 1º vencimento informado à mão prevalece.
   const parcels = schedule.ok && !isBullet ? giroParcelas(schedule.term, schedule.grace, period) : null
@@ -136,7 +138,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const adjusted = result ? result.rows.filter(row => row.fixed).length : 0
   const graceRows = result ? result.rows.filter(row => row.juros).length : 0
   const installments = result ? result.rows.length - graceRows : 0
-  const [plural, per] = PERIOD_WORDS[period]
+  const [plural, per] = PERIOD_WORDS[period] ?? PERIOD_WORDS[1]
   // Custo total = juros + IOF + despesas (à vista e financiadas): só reparte o que a conta já devolve.
   // O percentual de cada parte sobre o custo total é só apresentação, com uma casa (não precisa somar 100).
   const parts = [
@@ -145,7 +147,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
     { label: 'Fee, TAC e outros', value: result ? result.fees + result.financedFees : undefined },
   ].map(part => result && result.cost > 0 ? { ...part, label: `${part.label} · ${share(part.value, result.cost)}` } : part)
   let paymentNote = 'Primeira parcela'
-  if (isBullet) paymentNote = 'Pagamento único'
+  if (isBullet) paymentNote = graceRows ? `Principal e juros do último período. Antes, ${graceRows} ${graceRows === 1 ? 'pagamento' : 'pagamentos'} só de juros` : 'Pagamento único'
   else if (result) {
     paymentNote = installments === 1 ? 'Parcela única' : `1ª de ${installments} parcelas ${plural}`
     if (lm.system === 'sac' && installments > 1) paymentNote = `1ª parcela. A última é de ${brl(last.payment)}`
@@ -169,7 +171,8 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
   const email = result ? giroEmailLink({ result, request: {
     term: schedule.term, grace: isBullet ? 0 : schedule.grace, start: lm.start, graceInterest,
     systemLabel: SYSTEMS.find(system => system.id === lm.system)?.label ?? lm.system,
-    periodLabel: PERIODICIDADES.find(item => item.id === period).label, paymentLabel: isBullet ? 'Quanto paga no vencimento' : `Quanto paga por ${per} (1ª parcela)`,
+    periodLabel: isBullet ? (period ? `Juros ${PERIOD_WORDS[period][0]}, principal no fim` : 'Pagamento único no fim')
+      : PERIODICIDADES.find(item => item.id === period).label, paymentLabel: isBullet ? 'Quanto paga no vencimento' : `Quanto paga por ${per} (1ª parcela)`,
     rate, unit: form.unit, profileLabel: PROFILES[form.profile],
     charges: [
       { label: 'IOF', value: result.iof, timing: form.timings.iof ? 'financiado' : 'à vista, na liberação' },
@@ -194,7 +197,8 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
       <Help title="Capital de Giro: cálculo e premissas">
         <p>Operação prefixada com juros por dias corridos na base de 30 dias. Todo vencimento que cai em fim de semana ou feriado passa para o próximo dia útil da praça do contrato. No Bullet, o pagamento é único, no fim do prazo.</p>
         <p>Prazo total e carência em meses, como na seção Necessidade do Cliente. Parcelas = (prazo − carência) ÷ periodicidade: mensal 1, bimestral 2, trimestral 3, quadrimestral 4, semestral 6 meses. A primeira vence uma periodicidade depois do fim da carência e as seguintes a cada periodicidade. Os juros são pagos junto com o principal, na mesma periodicidade.</p>
-        <p>Carência: sem marcar “Pagar juros na carência”, os juros da carência são somados ao saldo. Marcando, há pagamentos só de juros na mesma periodicidade, contados da liberação, e um último no fim da carência; o saldo fica igual ao valor financiado.</p>
+        <p>Carência: sem marcar “Pagar juros na carência”, os juros da carência (da liberação até liberação + carência) são somados ao saldo. Sem carência, os juros do 1º período entram na 1ª parcela. Marcando, há pagamentos só de juros na mesma periodicidade, contados para trás a partir do fim da carência (como no BNDES: o período mais curto fica no começo); o saldo fica igual ao valor financiado.</p>
+        <p>Bullet: o principal é pago no fim do prazo. Em Periodicidade, “Pagamento único” paga também todos os juros no fim (somados ao saldo); escolhendo mensal, trimestral etc., os juros são pagos a cada período, contados para trás a partir do vencimento, e no fim paga o principal com os juros do último período.</p>
         <p>Os custos à vista são abatidos na liberação. Custos financiados compõem o saldo e as parcelas. O Fee pode ser em R$ ou em % do valor solicitado (arredondado a centavos). O CET é anual, calculado sobre o fluxo em dias corridos na base de 365 dias. O CET do contrato prevalece.</p>
         <p>Em “Do que é feito o custo”, o percentual de cada parte é sobre o custo total, com uma casa; por arredondamento, a soma pode não dar exatamente 100%.</p>
         <p>O envelope ao lado do resultado prepara um e-mail no Outlook com o resumo, as taxas e encargos e as parcelas.</p>
@@ -221,9 +225,9 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
           </> }}>
           <div className="lm-field">
             <span className="lm-label"><label htmlFor="cx-period">Periodicidade</label></span>
-            <select id="cx-period" disabled={isBullet} value={period} {...fieldError('period', 'cx-period')}
-              onChange={event => change({ period: Number(event.target.value) })}>
-              {PERIODICIDADES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+            <select id="cx-period" value={period} {...fieldError('period', 'cx-period')}
+              onChange={event => change({ [isBullet ? 'bulletPeriod' : 'period']: Number(event.target.value) })}>
+              {periodOptions.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
             {errors.period && <small id="cx-period-err" className="lm-error" role="alert">{errors.period}</small>}
           </div>
@@ -306,9 +310,11 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         <Help title="Parcelas e ajustes (flex)">
           <p>O CET usa o valor líquido e as parcelas deste cronograma, em centavos. Nas tabelas Price e SAC, o arredondamento pode gerar diferenças de centavos entre parcelas ou amortizações.</p>
           <p>Ajustar uma parcela: mude a data e/ou o valor do pagamento. A parcela ajustada fica fixa. As anteriores à primeira ajustada não mudam; as seguintes, não ajustadas, são recalculadas juntas para quitar o saldo no último vencimento: no Price com um mesmo pagamento, no SAC com uma mesma amortização. Pode ajustar várias.</p>
-          <p>Data ajustada: passa para o próximo dia útil se cair em fim de semana ou feriado e precisa ficar entre a parcela anterior e a seguinte. Ajustada só na data, a parcela mantém a amortização e muda só os juros por dias dela e da seguinte.</p>
-          <p>Valor ajustado: não pode ser menor que os juros do período. Se as parcelas ajustadas quitarem o saldo antes do fim, as restantes saem e a operação termina antes. A última parcela fecha o saldo e absorve os centavos de arredondamento.</p>
-          <p>O IOF, o total pago, o custo e o CET usam o fluxo ajustado. Qualquer mudança na demanda ou nos encargos desfaz os ajustes.</p>
+          <p>Data ajustada: passa para o próximo dia útil se cair em fim de semana ou feriado e precisa ficar entre a parcela anterior e a seguinte. Ajustada só na data, a parcela mantém a amortização: adiada, ela sobe (mais dias de juros) e as seguintes caem um pouco; antecipada, o contrário.</p>
+          <p>Valor ajustado: não pode ser menor que os juros do período. Se as parcelas ajustadas quitarem o saldo antes do fim, as restantes saem e a operação termina antes.</p>
+          <p>A última parcela sempre fecha o saldo: por arredondamento, ela pode ficar alguns centavos diferente do valor digitado, mesmo quando foi ajustada.</p>
+          <p>O IOF, o total pago, o custo e o CET usam o fluxo ajustado. O IOF é calculado sobre esse fluxo; numa quitação antecipada de um contrato já assinado, o IOF já pago não é devolvido.</p>
+          <p>Qualquer mudança na demanda ou nos encargos desfaz os ajustes.</p>
         </Help>
         {Object.keys(flex).length > 0 && <button type="button" className="giro-link" onClick={resetFlex}>Desfazer ajustes</button>}
       </div>

@@ -40,7 +40,7 @@ test('opções de hoje: idêntico ao giroOperation, centavo a centavo, em 600 op
     }
     const old = giroOperation(p)
     assert.deepStrictEqual(giroConta(p), old, JSON.stringify(p))
-    assert.deepStrictEqual(giroConta({ ...p, periodicidade: 1, jurosNaCarencia: false, flex: {} }), old, JSON.stringify(p))
+    assert.deepStrictEqual(giroConta({ ...p, periodicidade: system === 'bullet' ? 0 : 1, jurosNaCarencia: false, flex: {} }), old, JSON.stringify(p))
     if (old.ok) ok++
   }
   assert.ok(ok > 400, `operações válidas comparadas: ${ok}`)
@@ -114,10 +114,15 @@ test('juros na carência: trimestral com 6 meses de carência paga só juros a c
   assert.ok(capitalized.capitalizedGrace > 0 && capitalized.interest > r.interest && capitalized.installment > r.installment)
   // IOF: só sobre as amortizações e seus prazos. No SAC o principal amortizado é o mesmo nas mesmas datas: IOF igual.
   assert.equal(giroConta({ ...p, system: 'sac' }).iof, giroConta({ ...p, system: 'sac', jurosNaCarencia: false }).iof)
-  // Carência que não é múltipla da periodicidade: juros a cada 3 meses e um último no fim da carência.
+  // Carência que não é múltipla da periodicidade (decisão de 22/11/2026, como o BNDES): conta para trás a partir do fim da
+  // carência; o período curto fica no começo. Carência de 4 meses, trimestral: juros nos meses 1 e 4.
   const odd = giroConta({ ...base, n: 6, periodicidade: 3, firstDue: addMonths(base.start, 7), jurosNaCarencia: true })
   confereSomas(odd, 'carência de 4 meses')
-  assert.deepEqual(odd.rows.filter(row => row.juros).map(row => row.date), ['2027-02-22', '2027-03-22'])
+  assert.deepEqual(odd.rows.filter(row => row.juros).map(row => row.date), ['2026-12-21', '2027-03-22']) // 21/03/2027 é domingo
+  // Carência de 5 meses, trimestral: meses 2 e 5, como no Finame (finameMateriais.js, cronograma).
+  const five = giroConta({ ...base, n: 6, periodicidade: 3, firstDue: addMonths(base.start, 8), jurosNaCarencia: true })
+  confereSomas(five, 'carência de 5 meses')
+  assert.deepEqual(five.rows.filter(row => row.juros).map(row => row.date), ['2027-01-21', '2027-04-22']) // 21/04/2027 é feriado
   // Sem carência, a opção não muda nada.
   assert.deepStrictEqual(giroConta({ ...base, jurosNaCarencia: true }), giroOperation(base))
 })
@@ -196,9 +201,46 @@ test('flex com periodicidade trimestral e juros na carência', () => {
   assert.notEqual(r.cet, plain.cet); assert.notEqual(r.iof, plain.iof)
 })
 
-test('Bullet: periodicidade e juros na carência não se aplicam', () => {
+test('Bullet: pagamento único é o de hoje; com periodicidade, juros a cada p meses e principal no fim', () => {
   const p = { ...base, system: 'bullet', n: 1, firstDue: '2028-11-21' }
-  assert.deepStrictEqual(giroConta({ ...p, periodicidade: 3, jurosNaCarencia: true }), giroOperation(p))
+  // Padrão e "pagamento único" (0): idêntico ao de hoje. Juros na carência não se aplicam.
+  assert.deepStrictEqual(giroConta(p), giroOperation(p))
+  assert.deepStrictEqual(giroConta({ ...p, periodicidade: 0, jurosNaCarencia: true }), giroOperation(p))
+  // Trimestral em 24 meses: 7 pagamentos só de juros e o principal com os juros do último trimestre no fim.
+  const q = giroConta({ ...p, periodicidade: 3 })
+  confereSomas(q, 'Bullet trimestral')
+  assert.equal(q.rows.length, 8)
+  assert.ok(q.rows.slice(0, 7).every(row => row.juros && row.amortization === 0 && row.balance === 1000000))
+  assert.equal(q.rows[7].date, '2028-11-21'); assert.equal(q.rows[7].amortization, 1000000)
+  // IOF igual ao de hoje: o principal vence no mesmo prazo.
+  assert.equal(q.iof, giroOperation(p).iof)
+  assert.ok(q.interest < giroOperation(p).interest, 'juros pagos ao longo do prazo não capitalizam')
+  // Prazo não múltiplo (25 meses, trimestral): período curto no começo, contado para trás a partir do vencimento.
+  const odd = giroConta({ ...p, firstDue: '2028-12-21', periodicidade: 3 })
+  confereSomas(odd, 'Bullet 25 meses trimestral')
+  assert.equal(odd.rows[0].date, '2026-12-21')
+  // Flex continua desligado no Bullet.
+  assert.match(giroConta({ ...p, periodicidade: 3, flex: { 1: { payment: 30000 } } }).error, /Bullet/)
+})
+
+test('carência pelo calendário quando a periodicidade é maior que mensal (decisão de 22/11/2026)', () => {
+  // Trimestral sem carência: o 1º período (21/11/2026 a 22/02/2027) vai inteiro na 1ª parcela; nada somado ao saldo.
+  const q = giroConta({ ...base, n: 8, periodicidade: 3, firstDue: '2027-02-21' })
+  confereSomas(q, 'trimestral sem carência')
+  assert.equal(q.capitalizedGrace, 0); assert.equal(q.graceDays, 0)
+  assert.equal(q.rows[0].interest, Math.round(1000000 * (1.02 ** (93 / 30) - 1) * 100) / 100)
+  // Trimestral com carência de 6 meses: juros somados ao saldo da liberação até 21/05/2027 (liberação + 6 meses).
+  const g = giroConta({ ...base, n: 6, periodicidade: 3, firstDue: '2027-08-21' })
+  confereSomas(g, 'trimestral com carência')
+  assert.equal(g.graceDays, 181)
+  assert.equal(g.capitalizedGrace, Math.round(1000000 * (1.02 ** (181 / 30) - 1) * 100) / 100)
+  // 1º vencimento à mão: carência = do 1º vencimento menos p meses; se isso não passa da liberação, não há carência.
+  assert.equal(giroConta({ ...base, n: 8, periodicidade: 3, firstDue: '2027-01-29' }).capitalizedGrace, 0)
+  assert.equal(giroConta({ ...base, n: 8, periodicidade: 3, firstDue: '2027-04-15' }).graceDays, 55) // até 15/01/2027
+  // Mensal: continua a regra de hoje (dias além de 30), inclusive o mês de 31 dias.
+  const m = { ...base, start: '2027-01-01', firstDue: '2027-02-01' }
+  assert.deepStrictEqual(giroConta(m), giroOperation(m))
+  assert.equal(giroConta(m).graceDays, 1)
 })
 
 test('opções novas sorteadas: quando há resultado, as somas fecham; quando não há, a mensagem é clara', () => {

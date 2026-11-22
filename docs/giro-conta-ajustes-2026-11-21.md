@@ -77,3 +77,25 @@ Detalhes úteis para recalcular:
 
 - Na parcela flex, quando a última parcela é fixa no valor e há parcelas livres antes dela, a última pode diferir do valor digitado em alguns centavos (ela fecha o saldo).
 - O "?" da Carência na linha mestra (peça comum, `LinhaMestra.jsx`) ainda diz que os juros da carência são somados ao saldo; com "Pagar juros na carência" marcado isso não vale. A explicação correta está no "?" do Capital de Giro.
+
+## Decisões de Fernando depois da revisão independente (22/11/2026)
+
+A revisão independente recalculou 26 casos à parte e a conta conferiu sem diferença. Ela levantou três pontos de regra, que Fernando decidiu:
+
+1. **Carência pelo calendário quando a periodicidade é maior que mensal.** Antes, os dias do 1º período além de 30 × p iam para o saldo como "juros da carência", mesmo sem carência (trimestral sem carência mostrava R$ 1.321,05). Agora, com p > 1, só há juros somados ao saldo quando há carência de verdade: da liberação até o fim da carência contratual (1º vencimento − p meses), se ele for depois da liberação. Os juros do 1º período entram na 1ª parcela. No mensal nada muda (dias além de 30, como hoje).
+2. **Período curto no início, como o BNDES.** Com juros pagos na carência, os pagamentos só de juros são contados para trás a partir do fim da carência, a cada p meses, enquanto forem depois da liberação. Carência de 5 meses no trimestral paga juros nos meses 2 e 5.
+3. **Bullet com juros periódicos.** No Bullet, a Periodicidade ganha "Pagamento único" (padrão, idêntico ao de antes). Escolhendo mensal, trimestral etc., os juros são pagos a cada p meses, contados para trás a partir do vencimento, e o principal (com os juros do último período) no fim. O IOF continua sobre o principal no prazo dele. "Pagar juros na carência" e o flex não se aplicam ao Bullet.
+
+Textos acrescentados ao "?" da tabela de parcelas: parcela adiada só na data sobe e as seguintes caem um pouco; a última parcela fecha o saldo e pode diferir alguns centavos do valor digitado; o IOF é calculado sobre o fluxo ajustado e, numa quitação antecipada de contrato já assinado, o IOF já pago não é devolvido.
+
+### Casos de referência das decisões (R$ 1.000.000,00, 2% a.m., liberação em 21/11/2026, praça Nacional, sem despesas)
+
+| Caso | Linhas | Pagamentos só de juros | 1ª | Última | Juros somados ao saldo | Juros | IOF | Custo | Total pago | CET a.a. |
+|---|---|---|---|---|---|---|---|---|---|---|
+| A Trimestral Price, sem carência | 8 | — | 162.433,36 | 162.433,36 | 0,00 | 299.466,86 | 29.056,88 | 328.523,74 | 1.328.523,74 | 30,8908% |
+| B Trimestral Price, carência 5, juros pagos | 10 | 21/01/2027, 22/04/2027 | 41.086,98 | 162.457,37 | 0,00 | 402.654,65 | 32.438,87 | 435.093,52 | 1.435.093,52 | 30,3908% |
+| C Trimestral Price, carência 6, juros somados | 6 | — | 231.025,45 | 231.025,46 | 126.906,03 | 386.152,74 | 32.689,46 | 418.842,20 | 1.418.842,20 | 30,4603% |
+| D Bullet 12 meses, juros trimestrais | 4 | 22/02/2027, 21/05/2027, 23/08/2027 | 63.311,55 | 1.061.908,72 | 0,00 | 249.041,87 | 33.730,00 | 282.771,87 | 1.282.771,87 | 32,0938% |
+| E Bullet 12 meses, pagamento único | 1 | — | 1.273.274,66 | 1.273.274,66 | 0,00 | 273.274,66 | 33.730,00 | 307.004,66 | 1.307.004,66 | 31,6728% |
+
+Estes cinco casos ainda não passaram pela revisão independente (a nova rodada ficou para quando o limite de uso da conta liberar).
