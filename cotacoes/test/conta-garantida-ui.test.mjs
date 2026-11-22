@@ -16,11 +16,14 @@ const require = createRequire(import.meta.url)
 const panelStub = ({ title, children }) => React.createElement('section', null, React.createElement('h3', null, title), children)
 
 const CalculatorHelp = ({ title, label }) => React.createElement('button', { type: 'button', 'aria-label': `Ajuda: ${title || label}`, 'aria-expanded': false }, '?')
-const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
-const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : (el.type === panelStub ? el.props.title : '') + textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
+// As peças do roteiro (21/11/2026) são funções simples, sem estado: o teste abre cada uma para ler o que ela mostra.
+const ROTEIRO = ['Resultado', 'Respostas', 'ComposicaoDoCusto']
+const open = el => el && typeof el.type === 'function' && ROTEIRO.includes(el.type.name) ? el.type(el.props) : el
+const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [open(el), ...nodes(open(el).props?.children)] : []
+const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' && open(el) !== el ? textOf(open(el)) : el && typeof el === 'object' ? el.type === CalculatorHelp || String(el.props?.className ?? '').split(/\s+/).includes('sr-only') ? '' : (el.type === panelStub ? el.props.title : '') + textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalcPattern-conta-garantida.css': {}, './LinhaMestra.css': {}, './linhaMestra.js': { ...lm, lmLoad: () => lm.lmDefaults('2026-11-05') }, './pracaContrato.js': await import('../src/pracaContrato.js'), './CalculatorHelp.jsx': CalculatorHelp }
-  for (const file of ['MoneyInput.jsx', 'LinhaMestra.jsx', 'ContaGarantida.jsx']) {
+  const deps = { react: React, './format.js': await import('../src/format.js'), './ComparativoAlongamento.jsx': () => null, './contaGarantida.js': { ...model, cgInitialForm: () => model.cgInitialForm('2026-11-05') }, './ContaGarantida.css': {}, './CalcPattern-conta-garantida.css': {}, './LinhaMestra.css': {}, './Roteiro.css': {}, './centavosDaTela.js': await import('../src/centavosDaTela.js'), './ReferenciaMercado.jsx': () => null, './linhaMestra.js': { ...lm, lmLoad: () => lm.lmDefaults('2026-11-05') }, './pracaContrato.js': await import('../src/pracaContrato.js'), './CalculatorHelp.jsx': CalculatorHelp }
+  for (const file of ['MoneyInput.jsx', 'LinhaMestra.jsx', 'Roteiro.jsx', 'ContaGarantida.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
@@ -57,11 +60,13 @@ test('inicia com o valor da linha mestra e sem taxa presumida, taxa vazia impede
   assert.equal(h.field('amount').props.value, '3.000.000,00')
   assert.equal(h.field('capitalization'), undefined)
   assert.doesNotMatch(h.text(), /Resultado estimado do período/)
-  assert.match(h.text(), /Estimativa para operação adimplente e rotativa/)
-  assert.match(h.text(), /Não é extrato nem cotação bancária/)
-  assert.match(h.text(), /O CET aparece quando você informa o limite contratado/)
   assert.equal(h.field('limit').props.value, '')
   const help = nodes(h.render.value).find(node => node.type === CalculatorHelp && node.props.title === 'Conta Garantida')
+  // Tela limpa (21/11/2026): o aviso de estimativa foi para o "?" do título.
+  for (const aviso of [/Estimativa para operação adimplente e rotativa/, /Não é extrato nem cotação bancária/, /O CET aparece quando você informa o limite contratado/]) {
+    assert.match(renderToStaticMarkup(help.props.children), aviso)
+    assert.doesNotMatch(h.text(), aviso)
+  }
   assert.match(renderToStaticMarkup(help.props.children), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
   assert.doesNotMatch(h.text(), /Juros e IOF são pagos à parte, nunca incorporados ao saldo/)
   assert.equal(h.button('Utilização única').props['aria-pressed'], true)
@@ -159,7 +164,7 @@ test('taxa mensal simplificada preserva os encargos de 2% por 10 dias e o enquad
   const h = await setup(t)
   for (const id of ['status', 'rateBase', 'conversion']) assert.equal(h.field(id), undefined, id)
   const rateLabel = nodes(h.render.value).find(node => node.type === 'label' && node.props.htmlFor === 'cg-rate')
-  assert.equal(textOf(rateLabel), 'Taxa do contrato (% a.m.)')
+  assert.equal(textOf(rateLabel), 'Taxa de juros (% a.m.)') // nome padrão dos encargos no roteiro (21/11/2026)
   assert.equal(h.field('taxProfile').props.value, 'pj')
   assert.equal(h.field('taxProfile').props.children.length, model.CG_TAX_PROFILES.length)
   await h.change('amount', '100.000')
@@ -168,17 +173,20 @@ test('taxa mensal simplificada preserva os encargos de 2% por 10 dias e o enquad
   assert.equal(h.field('rate').props.value, '2')
   const original = model.parseContaGarantidaForm({ ...model.cgInitialForm('2026-11-05'), amount: '100.000', rate: '2', duration: '10', rateBase: '30', conversion: 'proportional', status: 'performing' })
   assert.equal(original.result.ok, true)
-  // Padrão visual de 18/11/2026: valores em reais agrupados (utilização, depois custo), terminando no custo total.
-  const kpis = nodes(h.render.value).find(node => node.props?.className === 'cg-values')
-  const actual = nodes(kpis).filter(node => node.type === 'b').map(textOf)
+  // Roteiro de 21/11/2026: "Quanto usou" e "Quanto paga para cobrir" nas respostas; juros, IOF diário, IOF adicional,
+  // custo total e saldo devedor final em "Do que é feito o custo". Os valores são os mesmos do quadro antigo.
+  const shown = className => nodes(nodes(h.render.value).find(node => node.props?.className === className)).filter(node => node.type === 'dd').map(textOf)
   const brl = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const actual = [shown('rt-answers')[0], shown('rt-parts')[4], ...shown('rt-parts').slice(0, 4)]
   assert.deepEqual(actual, [original.result.totals.draw, original.result.balance, original.result.totals.interest, original.result.totals.dailyIof, original.result.totals.additionalIof, original.result.totals.cost].map(brl))
   assert.equal(actual[2], brl(666.67))
   assert.equal(actual[3], brl(82))
   assert.equal(actual[4], brl(380))
   assert.equal(actual[5], brl(1128.67))
+  // "Quanto paga para cobrir" = valor utilizado + custo total, sem conta nova.
+  assert.equal(shown('rt-answers')[2], brl(101128.67))
   // A resposta principal repete o custo total, sem conta nova.
-  const answer = nodes(h.render.value).find(node => node.props?.className === 'cg-answer-main')
+  const answer = nodes(h.render.value).find(node => node.props?.className === 'rt-answer-main')
   assert.match(textOf(answer), new RegExp(brl(1128.67).replace(/[.$]/g, '\\$&')))
   await h.change('taxProfile', 'simples')
   assert.ok(h.field('operationValue'))
@@ -234,7 +242,8 @@ test('CET do art. 6º: sem limite pede o limite; com limite mostra 30 dias ao an
   assert.ok(h.text().includes(`${pct(expected)}% a.a.`), pct(expected))
   assert.ok(h.text().includes(`${pct(Math.pow(1 + expected, 1 / 12) - 1)}% a.m.`))
   assert.equal(pct(expected), '54,49')
-  assert.match(h.text(), /texto oficial conferido em 11\/11\/2026/)
+  const cetHelp = nodes(h.render.value).find(node => node.type === CalculatorHelp && node.props.title === 'Como calculamos o CET')
+  assert.match(renderToStaticMarkup(cetHelp.props.children), /texto oficial conferido em 11\/11\/2026/)
   // O limite não muda o resultado do período.
   assert.match(h.text(), /1\.462,00/)
   await h.change('limit', '0')

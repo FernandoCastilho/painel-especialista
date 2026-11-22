@@ -24,16 +24,36 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     assert.equal(await page.locator('.credit-card').count(), 2)
     assert.equal(await page.locator('.credit-results').count(), 0, 'resultado só depois de comparar')
     assert.equal(await page.locator('#credit-title').innerText(), 'Necessidade do Cliente')
+    // Roteiro de 21/11/2026: 1 Demanda (com a gaveta de detalhes fechada), 2 Encargos, cenários, e só depois de comparar
+    // o resultado (3). A linha do tempo saiu em 21/11/2026. A referência de mercado é o último bloco.
+    assert.deepEqual(await page.locator('.lm-head h3, .credit-charges > h3').allInnerTexts().then(list => list.map(text => text.replace(/\s+/g, ' ').trim())), ['1 Demanda do cliente', '2 Encargos'])
+    for (const id of ['value', 'term', 'grace', 'system']) assert.equal(await page.locator(`#credit-shared-${id}`).isVisible(), true, id)
+    for (const id of ['start', 'praca', 'regime']) assert.equal(await page.locator(`#credit-shared-${id}`).isVisible(), false, id + ' fica na gaveta')
+    await page.locator('.lm-details > summary').click()
+    for (const id of ['start', 'praca', 'regime']) assert.equal(await page.locator(`#credit-shared-${id}`).isVisible(), true, id)
+    await page.locator('.lm-details > summary').click()
+    assert.equal(await page.locator('section.cx > :last-child').getAttribute('class'), 'rm', 'referência de mercado por último')
+    const scenarios = page.locator('details.credit-scenarios')
+    assert.equal(await scenarios.evaluate(el => el.open), true, 'cenários abertos com operação pós-CDI')
+    const openScenarios = async () => { if (!await scenarios.evaluate(el => el.open)) await scenarios.locator('> summary').click() }
     const envelope = i => page.getByRole('link', { name: `Preparar e-mail da cotação ${i}`, exact: true })
     const summaryEnvelope = n => page.getByRole('link', { name: `Preparar e-mail com as ${n} cotações da comparação`, exact: true })
     assert.equal(await envelope(1).getAttribute('href'), null)
     assert.equal(await envelope(1).innerText(), '')
     await page.getByRole('button', { name: '1', exact: true }).click()
     assert.equal(await page.locator('.credit-card').count(), 1)
+    assert.equal(await scenarios.evaluate(el => el.open), false, 'sem pós-CDI e sem opção marcada, cenários e comparações fecham')
     assert.equal(await page.getByRole('button', { name: 'Comparar modalidades', exact: true }).count(), 0)
     await page.getByRole('button', { name: 'Gerar cotação', exact: true }).click()
-    await page.getByRole('heading', { name: 'Resultado da cotação', exact: true }).waitFor()
-    assert.equal(await page.getByRole('heading', { name: 'Resultado da comparação', exact: true }).count(), 0)
+    await page.getByRole('heading', { name: '3 Resultado · custo final para o cliente', exact: true }).waitFor()
+    assert.equal(await page.getByRole('heading', { name: 'Comparação financeira das operações', exact: true }).count(), 0)
+    assert.equal(await page.locator('.rt-timeline').count(), 0, 'sem linha do tempo (21/11/2026)')
+    // Uma operação: as quatro respostas em quadros, com o custo em destaque; os números são os da matriz logo abaixo.
+    const answer = question => page.locator('.credit-results .rt-answers > div').filter({ has: page.locator('dt', { hasText: question }) }).locator('dd').first().innerText()
+    assert.equal(await answer('Quanto entra no caixa'), await row('Valor líquido recebido').locator('td').innerText())
+    assert.equal(await answer('Quanto paga por mês'), await row('Parcela estimada (1ª)').locator('td').innerText())
+    assert.equal(await answer('Quanto paga no total'), await row('Total desembolsado').locator('td').innerText())
+    assert.equal(await page.locator('.credit-results .rt-answer-main dt').innerText(), 'Quanto custa')
     assert.equal(await row('Valor contratado').locator('td').count(), 1)
     assert.equal(await row('Diferença de custo para a comparação 1').count(), 0)
     assert.equal(await page.getByRole('button', { name: 'Apresentar cotação', exact: true }).count(), 1)
@@ -53,6 +73,11 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     assert.equal(await page.locator('.credit-card').count(), 5)
     await compare()
     assert.equal(await row('Valor contratado').locator('td').count(), 5)
+    // Várias operações: uma coluna por operação no quadro de respostas, com os mesmos números da matriz.
+    assert.equal(await page.locator('.credit-answers thead th').count(), 6)
+    for (const [question, label] of [['Quanto entra no caixa', 'Valor líquido recebido'], ['Quanto paga no total', 'Total desembolsado']]) {
+      assert.deepEqual(await row(question).locator('td > b').allInnerTexts(), await row(label).locator('td').allInnerTexts(), question)
+    }
     await page.getByRole('button', { name: '1', exact: true }).click()
     await page.getByRole('button', { name: 'Gerar cotação', exact: true }).click()
     assert.equal(await page.locator('.credit-results').first().innerText(), singleQuote, 'cotação preservada após 1 → 5 → 1')
@@ -101,6 +126,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     }
     await page.getByRole('button', { name: '4', exact: true }).click()
     // Mesmo valor líquido.
+    await openScenarios()
     await page.getByLabel('Comparar pelo mesmo valor líquido', { exact: true }).check()
     await compare()
     const nets = await row('Valor líquido recebido').locator('td').allTextContents()
@@ -156,7 +182,7 @@ const out = process.env.CREDIT_QA_OUTPUT || 'workspace-qa/credit'
     await page.goBack(); await page.locator('#credit-title').waitFor()
     await page.goForward(); await page.locator('#calc-title').waitFor()
     assert.deepEqual(errors, [])
-    fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['1 a 5 operações', 'cotação individual e retorno 1 → 5 → 1', 'cotação individual 390/820/1440', 'modalidade por coluna', 'invalid outputs hidden', 'rascunhos individuais e consolidado', 'net equivalence', 'CDI scenarios', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
+    fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ passed: true, checks: ['roteiro: demanda, encargos, linha do tempo e resultado', '1 a 5 operações', 'cotação individual e retorno 1 → 5 → 1', 'cotação individual 390/820/1440', 'modalidade por coluna', 'invalid outputs hidden', 'rascunhos individuais e consolidado', 'net equivalence', 'CDI scenarios', '390/820/1440 light/dark', 'presentation Escape/close/focus/history'], errors }, null, 2))
     console.log('Credit comparator browser checks passed')
   } catch (error) {
     if (page) { await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true }).catch(() => {}); fs.writeFileSync(path.join(out, 'failure.txt'), String(error)) }

@@ -240,29 +240,51 @@ async function fillScenario(page, section, route) {
     assert.equal(await page.locator('#cg-rate').getAttribute('aria-invalid'), 'true', 'erro aparece ao sair do campo vazio')
     assert.equal(await page.locator('#cg-value').getAttribute('aria-invalid'), 'false', 'campo ainda não visitado segue sem erro')
     assert.equal(await section.getByText('Preencha ou corrija os campos sinalizados', { exact: false }).count(), 1)
-    await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).fill('3')
+    await section.getByLabel('Taxa de juros (% a.m.)', { exact: true }).fill('3') // nome padrão dos encargos no roteiro (21/11/2026)
     await page.locator('#cg-start').fill('2026-11-05')
     await page.locator('#cg-duration').fill('10')
     await page.locator('#cg-value').fill('100000')
     assert.ok(await page.locator('#cg-taxProfile').count(), 'enquadramento do IOF preservado')
-    // Padrão de 18/11/2026: valores em reais agrupados no quadro do resultado, terminando no custo total.
-    const kpi = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Custo total$/ }) })
-    assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/)
-    const interest = section.locator('.cg-values > div', { has: page.locator('span', { hasText: /^Juros apurados$/ }) })
-    assert.match(await interest.locator('b').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
+    // Roteiro de 21/11/2026 (utilização única): respostas e "Do que é feito o custo", terminando no custo total.
+    const shown = label => section.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd').first()
+    const kpi = shown('Custo total')
+    assert.match(await kpi.innerText(), /^R\$\s*1\.462,00$/)
+    assert.match(await shown('Juros').innerText(), /^R\$\s*1\.000,00$/, '3% mensal proporcional a 10 dias')
     // CET do art. 6º (Res. CMN 4.881/2020): sem limite, só o pedido; com limite, 30 dias sobre o limite em dias corridos/365.
     assert.equal(await section.getByText('Sem CET: informe o limite contratado', { exact: false }).count(), 1)
     assert.equal(await page.locator('#cg-limit').inputValue(), '', 'limite começa vazio')
     await page.locator('#cg-limit').fill('100000')
+    // O CET aparece uma vez à vista, na resposta da taxa; as equivalências ficam na gaveta "Como calculamos o CET".
+    await section.locator('.cg-more > summary').click()
     const cetKpi = section.locator('.cg-equiv > div', { has: page.locator('span', { hasText: /^CET \(art\. 6º · 30 dias sobre o limite\)$/ }) })
     const cetAnnual = Math.pow((100000 + 3000 + 100000 * 0.000082 * 30) / (100000 - 380), 365 / 30) - 1 // IOF adicional na liberação
     const pct2 = n => (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     assert.equal(normalize(await cetKpi.locator('b').innerText()), `${pct2(cetAnnual)}% a.a.`)
-    assert.match(await kpi.locator('b').innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
-    assert.ok(await section.getByText('texto oficial conferido em 11/11/2026', { exact: false }).count())
-    // Padrão de 18/11/2026: resposta principal = custo total; resultado ao lado dos dados a partir de 1200px, abaixo antes disso.
-    assert.match(normalize(await section.locator('.cg-answer-main b').innerText()), /^R\$\s*1\.462,00$/)
+    assert.equal(normalize(await shown('Qual é a taxa efetiva').innerText()), `${pct2(cetAnnual)}% a.a.`)
+    assert.match(await kpi.innerText(), /^R\$\s*1\.462,00$/, 'limite não muda o custo do período')
+    // Tela limpa (21/11/2026): a regra do art. 6º fica no "?" de "Como calculamos o CET".
+    await section.getByRole('button', { name: 'Ajuda: Como calculamos o CET', exact: true }).click()
+    await page.getByRole('dialog').getByText('texto oficial conferido em 11/11/2026', { exact: false }).waitFor()
+    await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({ state: 'hidden' })
+    // Resposta principal = custo total; "Quanto paga para cobrir" = valor utilizado + custo total.
+    assert.match(normalize(await section.locator('.rt-answer-main dd').first().innerText()), /^R\$\s*1\.462,00$/)
+    assert.match(normalize(await shown('Quanto paga para cobrir').innerText()), /^R\$\s*101\.462,00$/)
+    // Roteiro de 21/11/2026 (substitui, na utilização única, o resultado ao lado de 18/11/2026): dados e resultado de cima
+    // para baixo, na largura toda (a linha do tempo saiu no mesmo dia); demanda e encargos lado a lado só no computador largo.
+    await page.evaluate(() => window.scrollTo(0, 0))
+    assert.equal(await section.locator('.rt-timeline').count(), 0, 'sem linha do tempo')
+    const [inputs, result] = [await section.locator('.cg-inputs').boundingBox(), await section.locator('.rt-result').boundingBox()]
+    assert.ok(result.y >= inputs.y + inputs.height, 'dados e resultado nesta ordem')
+    assert.ok(Math.abs(result.width - inputs.width) < 2, 'resultado na largura toda')
+    const [demanda, encargos] = [await section.locator('.cg-inputs > .lm').boundingBox(), await section.locator('.cg-inputs > .cx-panel').boundingBox()]
+    if (page.viewportSize().width >= 1200) assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
+    else assert.ok(encargos.y >= demanda.y + demanda.height, 'encargos abaixo da demanda')
+    // Lançamentos por dia segue como era: resultado ao lado dos dados a partir de 1200px, abaixo antes disso.
+    await section.getByRole('button', { name: 'Lançamentos por dia', exact: true }).click()
+    assert.equal(await section.locator('.rt-timeline, .rt-result').count(), 0, 'roteiro só na utilização única')
+    assert.equal(await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
     await assertResultBeside(page, section, '.cg-inputs', '.cg-result-col')
+    await section.getByRole('button', { name: 'Utilização única', exact: true }).click()
   } else if (route === 'analise-desconto') {
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
@@ -274,6 +296,7 @@ async function fillScenario(page, section, route) {
     await nominal.fill('225.600,43')
     assert.equal(await nominal.inputValue(), '225.600,43')
     await page.locator('#ad-operationRate').fill('1,83')
+    await section.locator('details.dsc-drawer > summary').click() // o enquadramento fica na gaveta "Enquadramento do IOF" (21/11/2026)
     await page.locator('#ad-taxProfile').selectOption('pj')
     await page.locator('#ad-convention').selectOption('commercial30')
     await page.locator('#ad-titleFeeTotal').fill('564,00')
@@ -284,7 +307,8 @@ async function fillScenario(page, section, route) {
     // Regra de 11/11/2026: 05/12/2026 é sábado, pago em 07/12 (32 dias corridos). Desconto comercial; IOF sobre nominal menos juros.
     const gross = 225600.43, days = 32, interest = gross * 0.0183 * days / 30
     const cost = interest + (gross - interest) * (0.0038 + days * 0.000082) + 564 + 260
-    const kpis = section.locator('.desconto-kpis')
+    // Roteiro de 21/11/2026: custo, líquido e CET do desconto ficam no bloco "4 Resultado" (antes, nos quadrinhos do formulário).
+    const kpis = section.locator('.rt-result')
     assert.ok(normalize(await kpis.innerText()).includes(brl(cost)))
     assert.ok(normalize(await kpis.innerText()).includes(brl(gross - cost)))
     // CET pelo art. 6º da Res. CMN 4.881 (texto oficial): 30 dias sobre o nominal; o prazo real (32 dias) aparece à parte.
@@ -314,8 +338,22 @@ async function fillScenario(page, section, route) {
     const answer = normalize(await section.locator('.dsc-answer-main').innerText())
     assert.ok(answer.includes(savings12), `resposta principal traz a economia de 12 meses (${savings12})`)
     assert.match(answer, savings12.startsWith('-') ? /▼.*O giro custa mais/ : /▲.*O giro custa menos/)
-    await assertResultBeside(page, section, '.dsc-inputs', '.dsc-result-col')
+    // Roteiro de 21/11/2026 (substitui o resultado fixo ao lado, de 18/11/2026): a tela conta a operação de cima para baixo.
+    // Dados e resultado do desconto (a linha do tempo saiu em 21/11/2026); só depois, a comparação com o giro, com a resposta abaixo das premissas.
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const box = async selector => section.locator(selector).boundingBox()
+    assert.equal(await section.locator('.rt-timeline').count(), 0, 'sem linha do tempo')
+    const [form, outcome, compare, premises, answerBox] = [await box('.dsc-form'), await box('.rt-result'), await box('.dsc-compare-head'), await box('.dsc-inputs'), await box('.dsc-result-col')]
+    assert.ok(outcome.y >= form.y + form.height, 'dados e resultado nesta ordem')
+    assert.ok(Math.abs(outcome.width - form.width) < 2, 'resultado na largura toda')
+    assert.ok(compare.y >= outcome.y + outcome.height && premises.y >= compare.y + compare.height && answerBox.y >= premises.y + premises.height, 'comparação com o giro depois do resultado do desconto')
+    if (page.viewportSize().width >= 1200) {
+      const [demanda, encargos] = [await box('.dsc-form > .lm'), await box('.dsc-form > .cx-panel')]
+      assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
+    }
   } else if (route === 'finimp') {
+    // Roteiro (21/11/2026): a tabela dos doze prazos fica recolhida depois do resultado.
+    await section.locator('details.fi-table-drawer > summary').click()
     for (const [id, value] of [['fi-principal', '100000'], ['fi-a-rate', '6'], ['fi-a-flat', '1'], ['fi-b-rate', '8'], ['fi-b-flat', '0,5']]) await page.locator(`#${id}`).fill(value)
     const row = section.locator('tbody tr').nth(5)
     assert.match(await row.locator('.fi-cost').first().innerText(), /4\.000,00/)
@@ -517,22 +555,27 @@ async function assertComparatorFamily(browser) {
             `${description} ${JSON.stringify(geometry)}: valor convertido usa a linha inteira no celular`)
         }
         if (width === 1440 && route === 'emprestimo-4131') {
+          // Roteiro de 21/11/2026: demanda e encargos lado a lado; resultado e atingir meta abaixo, na largura toda (sem linha do tempo).
           const geometry = await page.locator('.e4 .fm-input-panel > .cx-form').evaluate(form => {
-            const { paddingLeft, paddingRight } = getComputedStyle(form)
+            const screen = form.closest('.e4')
+            const box = selector => screen.querySelector(selector).getBoundingClientRect()
+            const [operation, charges, result, meta] = ['.fm-operation', '.e4-encargos', '#fm-result', '.e4-meta'].map(box)
             return {
-              available:form.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight),
-              meta:form.querySelector('.e4-meta').getBoundingClientRect().width,
-              operation:form.querySelector('.fm-operation').getBoundingClientRect().width,
-              hedge:form.querySelector('.e4-hedge').getBoundingClientRect().width,
-              options:form.querySelector('.e4-mais').getBoundingClientRect().width,
-              select:form.querySelector('#e4-meta-kind').getBoundingClientRect().width,
-              value:form.querySelector('#e4-meta').getBoundingClientRect().width,
+              available:form.clientWidth,
+              used:charges.right - operation.left,
+              topGap:Math.abs(charges.top - operation.top),
+              operation:operation.width, charges:charges.width, result:result.width, meta:meta.width,
+              inOrder:result.top >= Math.max(operation.bottom, charges.bottom) && meta.top >= result.bottom,
+              select:box('#e4-meta-kind').width,
+              value:box('#e4-meta').width,
             }
           })
           const details = `${description} ${JSON.stringify(geometry)}`
-          for (const block of ['meta', 'operation', 'hedge', 'options']) {
+          assert.ok(geometry.topGap <= 1 && Math.abs(geometry.used - geometry.available) <= 2 && Math.abs(geometry.operation - geometry.charges) <= 2, details + ': demanda e encargos lado a lado, na largura útil')
+          for (const block of ['result', 'meta']) {
             assert.ok(Math.abs(geometry[block] - geometry.available) <= 2, details + ': ' + block + ' ocupa a largura útil')
           }
+          assert.ok(geometry.inOrder, details + ': resultado e atingir meta abaixo dos dados, nesta ordem')
           assert.ok(geometry.select >= 160 && geometry.value >= 120, details + ': campos da meta têm largura de leitura')
         }
         if (width === 1440 && route === 'finame-materiais') {

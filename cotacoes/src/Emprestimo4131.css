@@ -1,5 +1,4 @@
 /* Empréstimo externo (4131): usa o padrão visual do BNDES (BndesWorkspace.css). Aqui só o que é próprio desta tela. */
-.bw.e4 .e4-hedge .fm-group-fields { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); align-items:end; }
 .bw.e4 .e4-hedge .fm-group-fields > * { grid-column:span 1; }
 .bw.e4 .e4-hedge .e4-curve { grid-column:span 2; }
 .bw.e4 .e4-hedge .e4-curve-note { grid-column:1/-1; }
@@ -13,7 +12,6 @@
 .bw.e4 .e4-rules dd small { display:block; margin-top:4px; font-size:.72rem; color:var(--bw-mut); }
 .bw.e4 .e4-sources { display:flex; flex-wrap:wrap; gap:6px 16px; list-style:none; margin:14px 0 0; padding:0; font-size:.78rem; }
 .bw.e4 .e4-sources a { color:var(--bw-link); }
-@media (max-width:1100px) { .bw.e4 .e4-hedge .fm-group-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:600px) { .bw.e4 .e4-rules > div { grid-template-columns:minmax(0,1fr); } }
 /* Origem da cotação do campo (Painel, digitado ou exemplo) e o caminho de volta para a do Painel. */
 .bw.e4 .e4-origem { grid-column:1/-1; margin:2px 0 0; font-size:.72rem; line-height:1.35; color:var(--bw-mut); }
@@ -22,26 +20,16 @@
 .bw.e4 .e4-link { padding:6px 0; margin:-6px 0; border:0; background:none; font:inherit; color:var(--bw-link); text-decoration:underline; cursor:pointer; }
 .bw.e4 .e4-link:focus-visible { outline:2px solid var(--bw-link); outline-offset:2px; border-radius:2px; }
 .bw.e4 .e4-hedge .fm-group-fields > .e4-origem { grid-column:1/-1; margin:0; }
-/* Formato da cotação de banco: Operação com seis campos em três colunas; o que foge do padrão fica em "Mais opções". */
+/* Formato da cotação de banco: poucos campos à vista; o que quase nunca muda fica nas gavetas (desenho em CalcPattern-4131.css). */
 .bw.e4 .cx-finame .cx-form { grid-template-columns:minmax(0,1fr); }
-.bw.e4 .cx-finame .cx-form > :is(.e4-meta,.fm-operation) { grid-column:1/-1; }
-.bw.e4 .cx-finame .fm-operation .fm-group-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; }
 .bw.e4 .cx-finame .fm-operation .fm-group-fields > .cx-field { grid-column:span 1; grid-row:auto; }
 .bw.e4 .cx-finame .fm-operation .fm-group-fields > .cx-field .fm-rotulo { min-height:0; align-items:center; }
-.bw.e4 .cx-finame .e4-hedge .fm-group-fields { grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; }
 main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabled, main.app.app-calculators .cx.bw.e4 .fm-operation select:disabled { background:var(--bw-soft); border-color:var(--bw-line); color:var(--bw-mut); -webkit-text-fill-color:var(--bw-mut); opacity:1; cursor:not-allowed; }
-.bw.e4 .e4-mais { border:1px solid var(--bw-line); border-radius:12px; background:var(--bw-card); }
-.bw.e4 .e4-mais > summary { display:flex; align-items:center; gap:8px; min-height:44px; padding:0 14px; font-size:.85rem; font-weight:700; color:var(--bw-link); cursor:pointer; list-style:none; }
-.bw.e4 .e4-mais > summary small { margin-left:auto; font-size:.72rem; font-weight:600; color:var(--bw-warm-ink); }
-.bw.e4 .e4-mais > summary::-webkit-details-marker, .bw.e4 .e4-comparar > summary::-webkit-details-marker { display:none; }
-.bw.e4 .e4-mais > summary::before, .bw.e4 .e4-comparar > summary::before { content:'▶'; font-size:.6rem; transition:transform .15s; }
-.bw.e4 .e4-mais[open] > summary::before, .bw.e4 .e4-comparar[open] > summary::before { transform:rotate(90deg); }
-@media (prefers-reduced-motion:reduce) { .bw.e4 .e4-mais > summary::before, .bw.e4 .e4-comparar > summary::before { transition:none; } }
-.bw.e4 .e4-mais > .cx-hint { margin:0 14px 8px; }
-.bw.e4 .e4-mais .e4-opcoes { border:0; border-top:1px solid var(--bw-line); border-radius:0; box-shadow:none; background:none; }
+.bw.e4 .e4-comparar > summary::-webkit-details-marker { display:none; }
+.bw.e4 .e4-comparar > summary::before { content:'▶'; font-size:.6rem; transition:transform .15s; }
+.bw.e4 .e4-comparar[open] > summary::before { transform:rotate(90deg); }
+@media (prefers-reduced-motion:reduce) { .bw.e4 .e4-comparar > summary::before { transition:none; } }
 @media (max-width:640px) {
-  .bw.e4 .cx-finame .fm-operation .fm-group-fields, .bw.e4 .cx-finame .e4-hedge .fm-group-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .bw.e4 .cx-finame .fm-operation .fm-group-fields > :is(.fm-field-valor,.fm-field-convertido) { grid-column:1/-1; }
   .bw.e4 .e4-link { padding:10px 0; margin:-10px 0; }
   .bw.e4 .e4-origem { margin-bottom:6px; }
 }
@@ -60,7 +48,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 .bw.e4 .e4-condicoes dt { font-size:.74rem; color:var(--bw-mut); }
 .bw.e4 .e4-condicoes dd { flex:0 0 auto; margin:0; font-size:.78rem; font-weight:600; color:var(--bw-ink); text-align:right; white-space:nowrap; overflow-wrap:normal; }
 @media (min-width:1600px) { .bw.e4 .e4-condicoes dl { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-flow:column; grid-template-rows:repeat(9,auto); column-gap:24px; } }
-/* Atingir meta: o custo desejado no topo; a tela devolve a taxa all-in. */
+/* Atingir meta: o custo desejado; a tela devolve a taxa all-in. */
 .bw.e4 .e4-meta { padding:10px 12px; border:1px solid var(--bw-line); border-radius:12px; background:var(--bw-soft); }
 .bw.e4 .e4-meta h3 { display:flex; align-items:center; gap:4px; margin:0 0 6px; font-size:.8rem; font-weight:700; color:var(--bw-ink); }
 .bw.e4 .e4-meta-campos { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto; gap:8px; align-items:center; max-width:600px; }

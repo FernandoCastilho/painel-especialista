@@ -61,7 +61,7 @@
 .credit-bw{color-scheme:var(--bw-scheme,light);color:var(--bw-ink);padding:0;border:1px solid var(--bw-line);border-radius:10px;overflow:hidden;background:var(--bw-page)}
 .credit-bw>.cx-back{margin:12px 16px}
 .credit-bw-body{padding:18px 12px}
-.credit-intro{margin:0 0 12px;color:var(--bw-mut);font-size:.875rem;line-height:1.5}
+
 .credit-count>.credit-hint{flex-basis:100%;opacity:1;color:var(--bw-mut)}
 .credit-bw .credit-shared{border:2px solid var(--bw-strong-line);border-radius:10px;background:var(--bw-card);color:var(--bw-ink)}
 .credit-bw .credit-shared-title{background:linear-gradient(110deg,#052956,#07336b);border-bottom:4px solid #ff7900}
