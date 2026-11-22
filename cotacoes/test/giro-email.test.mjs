@@ -2,7 +2,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { giroConta } from '../src/giroConta.js'
-import { giroEmailLink, giroEmailText } from '../src/giroEmail.js'
+import { LIMITE_LINK, giroEmailLink, giroEmailText } from '../src/giroEmail.js'
 
 const base = { value: 1000000, n: 24, rate: 2, unit: 'am', system: 'price', start: '2026-11-21', firstDue: '2026-12-21', calendars: ['BR'], fees: 15000 }
 const request = (extra = {}) => ({ term: 24, grace: 0, start: base.start, graceInterest: false, systemLabel: 'Price', periodLabel: 'Mensal',
@@ -24,11 +24,24 @@ test('corpo com Resumo, Taxas e encargos e Parcelas, nesta ordem, e os números 
   assert.equal(body.split('\r\n').filter(line => /^\d+( \(|\s\|)/.test(line)).length, result.rows.length, 'uma linha por parcela')
 })
 
-test('60 parcelas: o link inclui todas; tamanho registrado para o relato', () => {
-  const result = giroConta({ ...base, n: 60, firstDue: '2026-12-21' })
-  const link = giroEmailLink({ result, request: request({ term: 60 }) })
-  const body = decodeURIComponent(link.split('&body=')[1])
-  assert.equal(body.split('\r\n').filter(line => /^\d+ \|/.test(line)).length, 60)
-  assert.ok(link.startsWith('https://outlook.office.com/mail/deeplink/compose?subject='))
-  console.log(`tamanho do link com 60 parcelas: ${link.length} caracteres; com 24: ${giroEmailLink({ result: giroConta(base), request: request() }).length}`)
+test('cronograma longo: o rascunho leva o resumo das parcelas e o cronograma completo vai para copiar (22/11/2026)', () => {
+  // Com 24 parcelas o endereço passava de 4 mil caracteres e o login da Microsoft recusava (AADSTS90015).
+  for (const n of [24, 60]) {
+    const result = giroConta({ ...base, n })
+    const { href, copiar } = giroEmailLink({ result, request: request({ term: n }) })
+    assert.ok(href.length <= LIMITE_LINK, `${n} parcelas: ${href.length} caracteres`)
+    assert.ok(href.startsWith('https://outlook.office.com/mail/deeplink/compose?subject='))
+    const body = decodeURIComponent(href.split('&body=')[1])
+    assert.match(body, /RESUMO[\s\S]*TAXAS E ENCARGOS[\s\S]*PARCELAS/)
+    assert.ok(body.includes(`${n} parcelas, de `) && body.includes('cole aqui (Ctrl+V)'))
+    assert.ok(body.replace(/\u00a0/g, ' ').includes(`Total das parcelas: ${result.paid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\u00a0/g, ' ')}`))
+    assert.equal(copiar.split('\r\n').filter(line => /^\d+ \|/.test(line)).length, n, 'o cronograma copiado tem todas as parcelas')
+  }
+})
+
+test('cronograma curto cabe inteiro: nada a copiar', () => {
+  const result = giroConta({ ...base, system: 'bullet', n: 1, firstDue: '2027-11-22' })
+  const { href, copiar } = giroEmailLink({ result, request: request({ term: 12, systemLabel: 'Bullet' }) })
+  assert.equal(copiar, null)
+  assert.ok(decodeURIComponent(href).includes('Nº | Vencimento'))
 })

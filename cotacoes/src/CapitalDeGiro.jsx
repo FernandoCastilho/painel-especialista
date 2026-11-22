@@ -11,6 +11,7 @@ import { addMonths } from './creditModalities.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, Respostas, Resultado, step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
+import FluxoPagamentos from './FluxoPagamentos.jsx'
 import { lmSchedule } from './linhaMestra.js'
 import { resolveCreditIof } from './iofRules.js'
 import { PRACA_AJUDA, PRACAS_CONTRATO, pracaCalendars } from './pracaContrato.js'
@@ -35,9 +36,14 @@ const percent = rate => `${cetPct(rate * 100)}% a.a.`
 const share = (part, whole) => `${(part / whole * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
 const FOOT = 'Valor, prazo, carência, amortização, data e praça valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 
-function EmailEnvelope({ href }) {
+// Padrão próprio do Capital de Giro na linha mestra: 36 meses (pedido do Fernando em 22/11/2026; as outras seguem em 24).
+const GIRO_PADRAO = Object.freeze({ term: '36' })
+
+// `copiar`: cronograma completo que não coube no rascunho; vai para a área de transferência no clique, para colar no e-mail.
+function EmailEnvelope({ href, copiar }) {
   const label = 'Preparar e-mail com o resultado'
-  return <a className="credit-email giro-email" role="link" href={href} target="_blank" rel="noopener noreferrer"
+  const onClick = copiar ? () => { navigator.clipboard?.writeText(copiar).catch(() => {}) } : undefined
+  return <a className="credit-email giro-email" role="link" href={href} target="_blank" rel="noopener noreferrer" onClick={onClick}
     aria-label={label} aria-disabled={href ? undefined : true} title={href ? label : 'Gere um resultado válido para preparar o e-mail'}>
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" />
@@ -72,7 +78,7 @@ function FlexEditor({ row, onApply, onCancel, error }) {
 // estão em docs/giro-conta-ajustes-2026-11-21.md.
 export default function CapitalDeGiro({ onBack, apresentacao }) {
   // Valor, prazo, carência, amortização, data e praça vêm da linha mestra comum (19/11/2026); o resto é do produto.
-  const [lm, setLm, clearLm] = useLinhaMestra(cgToday())
+  const [lm, setLm, clearLm] = useLinhaMestra(cgToday(), GIRO_PADRAO)
   const [form, setForm] = useState(() => ({ rate: '2,00', unit: 'am', firstDue: '', profile: 'pj', eligible: false, period: 1, bulletPeriod: 0, graceInterest: false,
     feeUnit: 'brl', guarantee: GUARANTEES[0], costs: { fee: '0,00', tac: '0,00', other: '0,00' }, timings: {} }))
   const [dirty, setDirty] = useState(false)
@@ -201,7 +207,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         <p>Bullet: o principal é pago no fim do prazo. Em Periodicidade, “Pagamento único” paga também todos os juros no fim (somados ao saldo); escolhendo mensal, trimestral etc., os juros são pagos a cada período, contados para trás a partir do vencimento, e no fim paga o principal com os juros do último período.</p>
         <p>Os custos à vista são abatidos na liberação. Custos financiados compõem o saldo e as parcelas. O Fee pode ser em R$ ou em % do valor solicitado (arredondado a centavos). O CET é anual, calculado sobre o fluxo em dias corridos na base de 365 dias. O CET do contrato prevalece.</p>
         <p>Em “Do que é feito o custo”, o percentual de cada parte é sobre o custo total, com uma casa; por arredondamento, a soma pode não dar exatamente 100%.</p>
-        <p>O envelope ao lado do resultado prepara um e-mail no Outlook com o resumo, as taxas e encargos e as parcelas.</p>
+        <p>O envelope ao lado do resultado prepara um e-mail no Outlook com o resumo, as taxas e encargos e as parcelas. Quando o cronograma não cabe no endereço do rascunho (o Outlook recusa endereços longos), o e-mail leva o resumo das parcelas e o cronograma completo é copiado no clique: é só colar no e-mail (Ctrl+V).</p>
         <p>{FOOT}</p>
         <p>{PRACA_AJUDA}</p>
       </Help>
@@ -300,7 +306,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
             ...(result?.capitalizedGrace > 0 ? [{ label: 'Juros da carência somados ao saldo', value: brl(result.capitalizedGrace), kind: 'muted' }] : []),
           ]} />
         </Resultado>
-        <EmailEnvelope href={email} />
+        <EmailEnvelope href={email?.href} copiar={email?.copiar} />
       </div>
     </div>
 
@@ -344,7 +350,9 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         </div>
       </details>
     </details> : <button className="giro-installments giro-installments-disabled" type="button" disabled>Ver parcelas</button>}
-    {/* Taxa prefixada: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
-    <ReferenciaMercado tipos={['pre']} />
+    {/* Taxa prefixada: a referência é a curva DI x pré da B3. */}
+    <ReferenciaMercado tipos={['pre']} prazoMeses={schedule.ok ? schedule.term : undefined} />
+    {/* Depois da referência de mercado, o fluxo de pagamentos da simulação em barras, mês a mês (22/11/2026). */}
+    {result && <FluxoPagamentos rows={result.rows} inicio={lm.start} />}
   </section>
 }

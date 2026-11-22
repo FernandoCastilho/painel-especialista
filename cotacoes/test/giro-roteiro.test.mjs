@@ -56,11 +56,12 @@ test('a tela segue a ordem do roteiro e usa os nomes padrão dos encargos', asyn
   assert.doesNotMatch(source, /Taxas, tributos e despesas|Condições do produto|Fee de estruturação|Outras despesas/)
 })
 
-test('a referência de mercado é o último bloco da tela e mostra a curva prefixada', async () => {
+test('a referência de mercado vem depois das parcelas, termina no prazo digitado e é seguida só pelo fluxo de pagamentos', async () => {
+  // Pedido do Fernando em 22/11/2026: o gráfico termina no prazo total da demanda e, depois dele, o quadro do fluxo de pagamentos.
   const source = await readFile(new URL('../src/CapitalDeGiro.jsx', import.meta.url), 'utf8')
-  const at = source.indexOf("<ReferenciaMercado tipos={['pre']} />")
+  const at = source.indexOf("<ReferenciaMercado tipos={['pre']} prazoMeses={schedule.ok ? schedule.term : undefined} />")
   assert.ok(at > source.indexOf('Ver parcelas'), 'depois das parcelas')
-  assert.match(source.slice(at), /^<ReferenciaMercado tipos=\{\['pre'\]\} \/>\s*<\/section>\s*\}\s*$/, 'nada depois dela')
+  assert.match(source.slice(at), /^<ReferenciaMercado [^\n]*\/>\s*\{\/\*[^\n]*\*\/\}\s*\{result && <FluxoPagamentos rows=\{result\.rows\} inicio=\{lm\.start\} \/>\}\s*<\/section>\s*\}\s*$/, 'só o fluxo depois dela')
 })
 
 test('textos de borda: parcela única e pagamento único não falam em "parcelas"', async () => {

@@ -68,6 +68,10 @@ const normalize = text => text.replace(/\s+/g, ' ').trim()
       // Tela limpa: nenhuma nota de explicação à vista (vão para os "?").
       assert.equal(await sec.locator('.lm-foot:visible, .giro-hint, .giro-rounding').count(), 0)
       assert.equal(await sec.locator('#cx-start').isVisible(), false, 'detalhes do contrato começam fechados')
+      // Padrão próprio do Capital de Giro: 36 meses (22/11/2026), e o gráfico de juros termina no prazo digitado.
+      assert.equal(await sec.locator('#cx-term').inputValue(), '36')
+      assert.equal(normalize(await sec.locator('.rm h4').first().innerText()), 'Curva DI x pré (B3) · de 12 a 36 meses')
+      assert.equal(await sec.locator('section.fp path.fp-juros').count(), 36, 'fluxo de pagamentos da simulação inicial: 36 parcelas mensais')
       // Prazo vazio é erro do prazo, não de data: quem avisa é o campo do prazo, e a gaveta dos detalhes continua fechada.
       await sec.locator('#cx-term').fill('')
       assert.match(await sec.locator('#cx-term-err').innerText(), /prazo em meses/)
@@ -109,13 +113,27 @@ const normalize = text => text.replace(/\s+/g, ' ').trim()
       const custo = expectedPrice.total - 100000
       assert.deepEqual(shares, [`Juros · ${(expectedPrice.interest / custo * 100).toFixed(1).replace('.', ',')}%`,
         `IOF · ${(expectedPrice.iof / custo * 100).toFixed(1).replace('.', ',')}%`, 'Fee, TAC e outros · 0,0%'])
-      // Envelope de e-mail no cabeçalho do resultado: rascunho no Outlook com resumo, taxas e parcelas.
+      // Envelope de e-mail no cabeçalho do resultado: rascunho no Outlook com resumo, taxas e parcelas. Endereço curto
+      // (22/11/2026: com o cronograma inteiro o login da Microsoft recusava, AADSTS90015): o rascunho leva o resumo das
+      // 12 parcelas e o clique copia o cronograma completo para colar.
       const envelope = sec.getByRole('link', { name: 'Preparar e-mail com o resultado' })
-      const mail = decodeURIComponent(await envelope.getAttribute('href'))
+      const href = await envelope.getAttribute('href')
+      assert.ok(href.length <= 2000, `endereço do rascunho com ${href.length} caracteres`)
+      const mail = decodeURIComponent(href)
       assert.match(mail, /^https:\/\/outlook\.office\.com\/mail\/deeplink\/compose\?subject=Capital de Giro/)
-      assert.match(mail, /RESUMO[\s\S]*TAXAS E ENCARGOS[\s\S]*PARCELAS[\s\S]*\n12 \| /)
+      assert.match(mail, /RESUMO[\s\S]*TAXAS E ENCARGOS[\s\S]*PARCELAS[\s\S]*12 parcelas, de [\s\S]*cole aqui \(Ctrl\+V\)/)
+      await p.context().grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {})
+      const [aba] = await Promise.all([p.context().waitForEvent('page'), envelope.click()])
+      await aba.close()
+      const copiado = await p.evaluate(() => navigator.clipboard.readText()).catch(() => null)
+      if (copiado !== null) assert.equal(copiado.split('\r\n').filter(line => /^\d+ \|/.test(line)).length, 12, 'cronograma completo copiado')
       assert.ok(mail.replace(/\u00a0/g, ' ').includes(`Total pago: ${brl(expectedPrice.total)}`))
       assert.match(await amount('Quanto custa'), /^\d+,\d{2}% a\.a\.$/)
+      // Fluxo de pagamentos depois da referência de mercado: 12 barras mensais, uma por parcela; e o gráfico de juros até 12 meses.
+      assert.equal(normalize(await sec.locator('.rm h4').first().innerText()), 'Curva DI x pré (B3) · até 12 meses')
+      const fluxo = sec.locator('section.fp')
+      assert.equal(await fluxo.evaluate(el => el.previousElementSibling?.matches('.rm:not(.fp)')), true, 'logo depois da referência de mercado')
+      assert.equal(await fluxo.locator('path.fp-juros').count(), 12)
       const footer = sec.getByText('Ver parcelas', { exact: true })
       assert.ok((await footer.boundingBox()).y > (await sec.locator('.giro-result').boundingBox()).y)
       await footer.click()
