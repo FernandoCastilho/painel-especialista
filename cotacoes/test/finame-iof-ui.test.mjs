@@ -13,6 +13,9 @@ const text = el => Array.isArray(el) ? el.map(text).join(' ') : el && typeof el 
 async function setup(t, overrides = {}) {
   const series = { C01: { points: [['2026-11-06', 11]] }, C02: { points: [['2026-11-06', 11.5]] }, C03: { points: [['2026-11-06', 10]] }, C04: { points: [['2026-11-06', 10.5]] }, TFB_36_90: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] }, TFB_84_90: { points: [['2026-11-06', 13]] }, ...overrides }
   const deps = { './ExpandablePanel.jsx': { __esModule: true, default: () => null }, './BndesCompare.jsx': { __esModule: true, default: () => null }, './FinameComparisonLayout.css': {}, './BndesIcon.jsx': { __esModule: true, default: () => null }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
+  for (const component of ['FluxoPagamentos', 'ReferenciaMercado', 'EmailEnvelope']) deps[`./${component}.jsx`] = { __esModule: true, default: () => null }
+  deps['./BndesPecas.css'] = {}
+  deps['./bndesFluxo.js'] = await import('../src/bndesFluxo.js')
   for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
@@ -223,6 +226,4 @@ test('cotação destaca taxa final e CET anual e mensal, reutilizando resultados
   }
   assert.equal((text(row('CET estimado')).match(/a\.m\./g) || []).length, 2)
 })
-  for (const component of ['FluxoPagamentos', 'ReferenciaMercado', 'EmailEnvelope']) deps[`./${component}.jsx`] = { __esModule: true, default: () => null }
-  deps['./BndesPecas.css'] = {}
-  deps['./bndesFluxo.js'] = await import('../src/bndesFluxo.js')
+
