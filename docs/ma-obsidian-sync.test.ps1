@@ -11,9 +11,14 @@ $partialPath=Join-Path $testRoot $partial
 & (Join-Path $PSScriptRoot 'ma-obsidian-sync.ps1') -Apply -TestDirectory $testRoot
 if(@(Get-ChildItem -LiteralPath $testRoot -Recurse -Filter '*.md' -File).Count -ne 8){throw 'Quantidade incorreta após retomada parcial'}
 $indexHash=(Get-FileHash -LiteralPath (Join-Path $testRoot 'index.md')).Hash
+if(([regex]::Matches([IO.File]::ReadAllText((Join-Path $testRoot 'index.md')),'\[\[30\. Recursos/LLM Wiki/queries/ma/')).Count -ne 5){throw 'O índice deve ligar diretamente as cinco operações'}
 $logHash=(Get-FileHash -LiteralPath (Join-Path $testRoot 'log.md')).Hash
 & (Join-Path $PSScriptRoot 'ma-obsidian-sync.ps1') -Apply -TestDirectory $testRoot
 if((Get-FileHash -LiteralPath (Join-Path $testRoot 'index.md')).Hash -ne $indexHash -or (Get-FileHash -LiteralPath (Join-Path $testRoot 'log.md')).Hash -ne $logHash){throw 'Reaplicação duplicou conteúdo'}
+$oldIndex=[IO.File]::ReadAllText((Join-Path $testRoot 'index.md')) -replace '(?m)^- \[\[30\. Recursos/LLM Wiki/queries/ma/[^\r\n]+\r?\n',''
+[IO.File]::WriteAllText((Join-Path $testRoot 'index.md'),$oldIndex)
+& (Join-Path $PSScriptRoot 'ma-obsidian-sync.ps1') -Apply -TestDirectory $testRoot
+if((Get-FileHash -LiteralPath (Join-Path $testRoot 'index.md')).Hash -ne $indexHash){throw 'Migração do índice sem links diretos não confere'}
 [IO.File]::AppendAllText($partialPath,"`nAlteração concorrente que deve ser preservada.`n")
 $changedHash=(Get-FileHash -LiteralPath $partialPath).Hash
 $rejected=$false

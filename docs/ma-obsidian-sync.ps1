@@ -27,9 +27,15 @@ try{
   $logPath=Join-Path $wiki 'log.md'
   $indexBefore=[IO.File]::ReadAllText($indexPath)
   $logBefore=[IO.File]::ReadAllText($logPath)
-  $indexEntry="`n`n## Fusões e aquisições`n- [[30. Recursos/LLM Wiki/concepts/ma-panorama|Panorama e histórico de M&A]] — cinco transações de dezembro de 2025; cobertura parcial, com fontes e histórico por operação.`n"
+  $indexEntryOld="`n`n## Fusões e aquisições`n- [[30. Recursos/LLM Wiki/concepts/ma-panorama|Panorama e histórico de M&A]] — cinco transações de dezembro de 2025; cobertura parcial, com fontes e histórico por operação.`n"
+  $directLinks=@($manifest.files | Where-Object {$_.relative -like 'queries/ma/*'} | ForEach-Object {
+    $source=Join-Path $repo ('wiki/'+$_.relative)
+    $title=([IO.File]::ReadAllLines($source) | Where-Object {$_ -match '^# '} | Select-Object -First 1).Substring(2)
+    '- [[30. Recursos/LLM Wiki/'+($_.relative -replace '\.md$','')+'|'+$title+']]'
+  }) -join "`n"
+  $indexEntry=$indexEntryOld+$directLinks+"`n"
   $logEntry="`n`n## 2026-11-23 — M&A — acervo inicial`nCodex criou seis notas (panorama e cinco operações) autorizadas na implementação de M&A, com fontes públicas, datas distintas, cobertura parcial e histórico. Índice atualizado. Notas brutas e demais registros preservados. Referência [[30. Recursos/LLM Wiki/concepts/ma-panorama]].`n"
-  if($indexBefore -match '(?i)fusões e aquisições|ma-panorama|queries/ma/' -and -not $indexBefore.Contains($indexEntry)){throw 'Referência anterior divergente de M&A no índice; preservar'}
+  if($indexBefore -match '(?i)fusões e aquisições|ma-panorama|queries/ma/' -and -not $indexBefore.Contains($indexEntry) -and -not $indexBefore.Contains($indexEntryOld)){throw 'Referência anterior divergente de M&A no índice; preservar'}
   foreach($entry in $manifest.files){
     $destination=Join-Path $wiki $entry.relative
     $absolute=[IO.Path]::GetFullPath($destination)
@@ -48,7 +54,7 @@ try{
     $receipt+=@{relative=$entry.relative;sha256=$entry.sha256;verified=$true}
   }
   if([IO.File]::ReadAllText($indexPath) -cne $indexBefore -or [IO.File]::ReadAllText($logPath) -cne $logBefore){throw 'Índice ou log mudou durante a operação; preservar alteração concorrente'}
-  $indexAfter=if($indexBefore.Contains($indexEntry)){$indexBefore}else{($indexBefore -replace '(?m)^updated: .+$','updated: 2026-11-23')+$indexEntry}
+  $indexAfter=if($indexBefore.Contains($indexEntry)){$indexBefore}elseif($indexBefore.Contains($indexEntryOld)){$indexBefore.Replace($indexEntryOld,$indexEntry)}else{($indexBefore -replace '(?m)^updated: .+$','updated: 2026-11-23')+$indexEntry}
   [IO.File]::WriteAllText($indexPath,$indexAfter,[Text.UTF8Encoding]::new($false))
   if([IO.File]::ReadAllText($indexPath) -cne $indexAfter){throw 'Índice não confere após gravação'}
   if([IO.File]::ReadAllText($logPath) -cne $logBefore){throw 'Log alterado por outro processo'}
