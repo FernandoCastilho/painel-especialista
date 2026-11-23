@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import './AvisoInicial.css'
-import { ENTRIES } from './Novidades.jsx'
+import { NOVIDADES_RECENTES } from './novidadesRecentes.js'
 import { novidadesDaSemana } from './novidadesSemana.js'
 import { AVISO_FONTES, AVISO_RESUMO } from './avisoInicial.js'
 
@@ -23,7 +23,7 @@ export default function AvisoInicial({ open, onClose }) {
     }
   }, [open])
   if (!open) return null
-  const semana = novidadesDaSemana(ENTRIES)
+  const semana = novidadesDaSemana(NOVIDADES_RECENTES)
   return (
     <dialog ref={ref} className="aviso-inicial" aria-labelledby="aviso-inicial-title" aria-describedby="aviso-inicial-text" onCancel={(e) => { e.preventDefault(); onClose() }}>
       <h2 id="aviso-inicial-title">Aviso</h2>
@@ -33,12 +33,11 @@ export default function AvisoInicial({ open, onClose }) {
           {AVISO_FONTES.map(([rotulo, texto]) => <li key={rotulo}><b>{rotulo}:</b> {texto}</li>)}
         </ul>
       </div>
-      {semana.length > 0 && (
-        <div className="aviso-novidades">
-          <h3>Novidades da semana</h3>
-          <ul>{semana.map((r) => <li key={r}>{r}</li>)}</ul>
-        </div>
-      )}
+      <div className="aviso-novidades">
+        <h3>Novidades da semana</h3>
+        {semana.length > 0 && <ul>{semana.map(r => <li key={r}>{r}</li>)}</ul>}
+        <a href="#novidades" onClick={onClose}>Ver todas as atualizações</a>
+      </div>
       <button type="button" className="btn" autoFocus onClick={onClose}>Entendi</button>
     </dialog>
   )

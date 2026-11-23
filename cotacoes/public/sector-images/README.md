@@ -6,4 +6,4 @@ Cada JPG tem 1536 × 1024 pixels e nove células em grade 3 × 3, lidas da esque
 
 Os nomes dos arquivos correspondem aos IDs dos quinze setores. O componente `SectorImage` recorta cada célula em 16:9 sem deformar a imagem. As fotos são decorativas: nome, contagem e ação permanecem no texto acessível do cartão. O carregamento é adiado até perto da área visível; falhas de imagem ou tópicos ainda sem vínculo mostram um símbolo neutro e preservam o cartão e sua navegação.
 
-Origem e ordem dos ativos revisadas pelo Diretor de Arte. Somente os JPGs são publicados; PNGs e dados intermediários da geração ficam fora do aplicativo.
+Origem e ordem dos ativos revisadas pelo Diretor de Arte. O navegador escolhe entre mosaicos WebP de 960 × 640 e 1536 × 1024 conforme a largura do cartão e a densidade da tela. O JPG original atende navegadores sem suporte ao formato.

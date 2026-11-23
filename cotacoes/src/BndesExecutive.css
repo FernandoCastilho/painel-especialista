@@ -67,7 +67,6 @@
   .bw .fm-result-workspace > .expandable-heading { flex-wrap:wrap; gap:10px; }
   .bw .fm-result-workspace > .expandable-heading > div { flex:1 1 100%; }
   .bw .bndes-profile > form > .desk-panel .cx-form { grid-template-columns:1fr; }
-  .bw .bw-heading { gap:10px; }
   .bw .bndes-details > .expandable-content { padding:10px; }
 }
 @media print { .be-grid { grid-template-columns:1.2fr 1fr; padding:0; } .expandable-presentation-toggle { display:none; } }

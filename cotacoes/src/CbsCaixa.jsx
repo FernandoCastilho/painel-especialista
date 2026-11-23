@@ -34,10 +34,6 @@ const initial = { kind: 'comercio', group: 'comercio-83319', regime: 'presumido'
   receiveDays: '60', payDays: '30', stockDays: '45', monthlyCmv: '2.100.000,00', monthlyPurchases: '1.500.000,00', spendingPct: '', eligibleShare: '70',
   ...ratesFor(initialYear), reduction: '', isRate: '0', simplesCbs: '2,75', simplesIbs: '1,25', simplesTipo: '1',
   currentNetRate: '3,65', splitShare: '50', currentDueDays: '40', futureDueDays: '40', creditDelayDays: '30' }
-export function CbsIcon() {
-  return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 5h18v14H3zM3 10h18M8 5v14M13 14h5M16 12l2 2-2 2" /></svg>
-}
-
 export default function CbsCaixa({ onBack }) {
   const [form, setForm] = useState(initial)
   const [searchReset, setSearchReset] = useState(0)

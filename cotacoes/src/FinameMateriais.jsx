@@ -1,3 +1,4 @@
+import { FinameIcon } from './CalculatorIcons.jsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useHolidays } from './useHolidays.js'
 import MoneyInput from './MoneyInput.jsx'
@@ -36,15 +37,6 @@ const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 const data = (d) => d.toLocaleDateString('pt-BR')
 // Exemplos da ajuda do ECG: [valor liberado em R$, % garantido, prazo total em meses], calculados pela fórmula do Anexo V.
 const ECG_EXEMPLOS = [[500000, 80, 60], [1000000, 80, 84], [300000, 50, 36]]
-
-// Ícone: caixa de materiais com a marca do BNDES (barras) ao lado.
-export function FinameIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 8l9-4 9 4-9 4-9-4z" /><path d="M3 8v8l9 4 9-4V8" /><path d="M12 12v8" />
-    </svg>
-  )
-}
 
 // Calculadoras › BNDES Finame Materiais: condições do produto (prazo, carência, custo financeiro, taxas), resultado e fluxo
 // parcela a parcela. O custo financeiro vem do painel: TFC ou TFB da faixa de prazo (aba BNDES). TLP exigível tem projeção própria.
@@ -392,7 +384,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       <div className="fm-results">
       <ExpandablePanel title="Resultado · custo final para o cliente" heading={step(3, 'Resultado · custo final para o cliente')} className="fm-result-workspace" toggleLabel="Modo apresentação" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece.')}</header>
+        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar.')}</header>
 
         {!resumida && <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>}
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
@@ -405,7 +397,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
               total={brl(res.total)} tax={taxaResumo(res)} help={ajuda('CET estimado', cetAjuda)}
               totalHelp={ajuda('Custo total estimado', quadros.find(item => item.id === 'total')?.ajuda)}
               equivalent={spread != null ? `CDI + ${pct(spread, 2)} a.a.` : null}
-              cdiReference={cdi != null ? `CDI de ${pct(cdi, 2)} a.a. em ${dmy(macro.data?.cdi?.at(-1)?.[0])}` : null}
+              cdiReference={cdi != null ? `CDI de ${pct(cdi, 2)} a.a. em ${new Date(macro.data.cdi.at(-1)[0]).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}` : null}
               reference={{ name: custo.toUpperCase(), code: quotes[custo]?.codigo,
                 rate: `${pct(custoFinanceiro, 4)} a.a.`, date: quotes[custo]?.data ? dmy(quotes[custo].data) : null,
                 source: 'Painel BNDES', manual: rates[custo].manual, retained: referenceRetained }}

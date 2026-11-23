@@ -68,6 +68,14 @@ test('pastas, seletor compacto e rotas antigas preservam a hierarquia', async ()
     assert.equal(asset[0], 0xff)
     assert.equal(asset[1], 0xd8, `${group.id}: ativo JPEG local válido`)
     assert.ok(asset.length < 768 * 1024, `${group.id}: imagem dentro do orçamento`)
+    const full = readFileSync(`public/sector-images/${group.id}.webp`)
+    const small = readFileSync(`public/sector-images/${group.id}-960.webp`)
+    for (const webp of [full, small]) {
+      assert.equal(webp.toString('ascii', 0, 4), 'RIFF')
+      assert.equal(webp.toString('ascii', 8, 12), 'WEBP')
+    }
+    assert.ok(full.length < asset.length && small.length < full.length, group.id)
+    assert.ok(sector.includes(`${group.id}-960.webp 960w, ./sector-images/${group.id}.webp 1536w`))
     imageBytes += asset.length
   }
   assert.ok(imageBytes < 6 * 1024 * 1024, 'quinze atlas somam menos de 6 MiB')

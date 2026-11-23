@@ -22,6 +22,7 @@ const TAB = {
   MA: ['ma'], 'M&A': ['ma'], FUSOESEAQUISICOES: ['ma'],
   RPN: ['rpn'], CALCULADORARPN: ['rpn'],
   PODCAST: ['podcast'], PODCASTS: ['podcast'],
+  NOVIDADES: ['novidades'], NOVIDADESDASEMANA: ['novidades'], ATUALIZACOES: ['novidades'],
   MERCADO: ['resumo'], RESUMO: ['resumo'], HOME: ['resumo'],
   JUROS: ['juros'], DI: ['juros'], SELIC: ['juros'], CDI: ['juros'], CURVA: ['juros'], CURVAS: ['juros'], SOFR: ['juros'], TREASURY: ['juros'], UST: ['juros'],
   CENARIOS: ['cenarios'], FOCUS: ['cenarios', 'projecoes'], PROJECOES: ['cenarios', 'projecoes'],

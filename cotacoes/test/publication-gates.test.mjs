@@ -18,6 +18,27 @@ test('code releases require reusable actual CI; hourly schedules avoid the brows
   assert.ok(pages.indexOf('id: deployment') < pages.indexOf('name: Conferir a interface no endereço publicado'))
 })
 
+test('os seis grupos de navegador usam o pacote local da revisão, inclusive nas reexecuções parciais', () => {
+  const job = id => ci.split('\n  ' + id + ':\n')[1].split(/\n {2}[\w-]+:\n/)[0]
+  const build = 'VITE_DATA_BASE=http://127.0.0.1:8768 npm run build'
+  const producer = job('build-qa')
+  assert.equal(ci.split(build).length - 1, 1)
+  assert.ok(producer.includes(build))
+  assert.match(producer, /actions\/upload-artifact@v4[\s\S]*name: &nome-pacote-qa pacote-qa-local-\$\{\{ github\.sha \}\}\n/)
+  assert.match(producer, /overwrite: true/)
+  assert.match(producer, /path: cotacoes\/dist/)
+  const groups = ['smoke-secoes', 'smoke-calculadoras', 'smoke-navegacao', 'bndes-workspace', 'sector-graph', 'intraday-state']
+  for (const group of groups) {
+    const steps = job(group)
+    assert.match(steps, /needs: [^\n]*build-qa/, group)
+    assert.match(steps, /- [&*]baixar-pacote-qa/, group)
+  }
+  assert.match(job('smoke-secoes'), /&baixar-pacote-qa[\s\S]*?actions\/download-artifact@v4\n\s+with:\n\s+name: \*nome-pacote-qa\n\s+path: cotacoes\/dist\n/)
+  assert.match(job('bndes-workspace'), /needs: \[test-build, build-qa\]/)
+  assert.match(job('test-build'), /weekly-package\.mjs[\s\S]*run: npm run build[\s\S]*weekly-data\.mjs/)
+  assert.match(pages, /run: npm run build\n\s+env:\n\s+VITE_DATA_BASE: https:\/\/raw\.githubusercontent\.com\//)
+})
+
 test('actual failure notification distinguishes before, uncertain and after deployment', async () => {
   const section = pages.split('name: Avisar falha do deploy')[1].split('      - name:')[0]
   const script = section.split('          script: |\n')[1].split('\n').map(line => line.replace(/^ {12}/, '')).join('\n')

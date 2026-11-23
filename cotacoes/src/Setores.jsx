@@ -122,6 +122,8 @@ export default function Setores({ view = '', onView = () => {}, quotes, goto }) 
     const frame = window.requestAnimationFrame(() => {
       if (focusIntent.current !== intent) return
       focusIntent.current = null
+      // A seção pode terminar de carregar depois que a pessoa já abriu o menu Mais.
+      if (document.activeElement?.closest('nav [role="menu"]')) return
       const surface = surfaceRef.current
       if (!surface) return
       const target = remembered?.focusId ? document.getElementById(remembered.focusId) : surface

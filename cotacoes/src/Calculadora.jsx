@@ -1,37 +1,29 @@
+import { lazy, Suspense } from 'react'
 import { CALCULATOR_GROUPS } from './calculatorGroups.js'
-import CapitalDeGiro from './CapitalDeGiro.jsx'
+import { FinameIcon, CreditIcon, OperacaoDiIcon, CbsIcon, ContaGarantidaIcon, CdiDolarIcon,
+  DividendosEmprestimoIcon, Emprestimo4131Icon, CambioFuturoIcon, FinimpIcon, GiroIcon, DescontoIcon, FaturamentoIcon } from './CalculatorIcons.jsx'
 import './CalculatorStandard.css'
 import './Calculadora.css'
-import FinimpComparacao, { FinimpIcon } from './FinimpComparacao.jsx'
-import { FinameIcon } from './FinameMateriais.jsx'
-import BndesWorkspace from './BndesWorkspace.jsx'
-import ContaGarantida, { ContaGarantidaIcon } from './ContaGarantida.jsx'
-import AnaliseDesconto, { DescontoIcon } from './AnaliseDesconto.jsx'
+import './CalculatorWorkspace.css'
 import './CalculatorLayout.css'
-import CreditComparison, { CreditIcon } from './CreditComparison.jsx'
-import CbsCaixa, { CbsIcon } from './CbsCaixa.jsx'
-import OperacaoDi, { OperacaoDiIcon } from './OperacaoDi.jsx'
-import Emprestimo4131, { Emprestimo4131Icon } from './Emprestimo4131.jsx'
-import Faturamento, { FaturamentoIcon } from './Faturamento.jsx'
-import ArvoreCredito from './ArvoreCredito.jsx'
-import CdiDolar, { CdiDolarIcon } from './CdiDolar.jsx'
-import CambioFuturo, { CambioFuturoIcon } from './CambioFuturo.jsx'
-import CambioFuturoCenario from './CambioFuturoCenario.jsx'
-import DividendosEmprestimo, { DividendosEmprestimoIcon } from './DividendosEmprestimo.jsx'
 import './CalculatorTheme.css'
+import './CalcUnificado.css'
 
-// Ícone do Capital de Giro: pilha de moedas com a seta de retorno do caixa.
-function GiroIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <ellipse cx="9" cy="6.5" rx="5.5" ry="2.5" />
-      <path d="M3.5 6.5v4c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5v-4" />
-      <path d="M3.5 10.5v4c0 1.4 2.5 2.5 5.5 2.5 1 0 1.9-.1 2.7-.4" />
-      <path d="M21 13.5a4.5 4.5 0 10-1.3 3.2" />
-      <path d="M21 10.5v3h-3" />
-    </svg>
-  )
-}
+const CapitalDeGiro = lazy(() => import('./CapitalDeGiro.jsx'))
+const FinimpComparacao = lazy(() => import('./FinimpComparacao.jsx'))
+const BndesWorkspace = lazy(() => import('./BndesWorkspace.jsx'))
+const ContaGarantida = lazy(() => import('./ContaGarantida.jsx'))
+const AnaliseDesconto = lazy(() => import('./AnaliseDesconto.jsx'))
+const CreditComparison = lazy(() => import('./CreditComparison.jsx'))
+const CbsCaixa = lazy(() => import('./CbsCaixa.jsx'))
+const OperacaoDi = lazy(() => import('./OperacaoDi.jsx'))
+const Emprestimo4131 = lazy(() => import('./Emprestimo4131.jsx'))
+const Faturamento = lazy(() => import('./Faturamento.jsx'))
+const ArvoreCredito = lazy(() => import('./ArvoreCredito.jsx'))
+const CdiDolar = lazy(() => import('./CdiDolar.jsx'))
+const CambioFuturo = lazy(() => import('./CambioFuturo.jsx'))
+const CambioFuturoCenario = lazy(() => import('./CambioFuturoCenario.jsx'))
+const DividendosEmprestimo = lazy(() => import('./DividendosEmprestimo.jsx'))
 
 const CALCS = [
   { id: 'finame-materiais', title: 'BNDES', sub: 'Simular Finame, comparar custos e consultar taxas', Icon: FinameIcon },
@@ -50,7 +42,7 @@ const CALCS = [
 ]
 
 // Aba Calculadoras: lista de calculadoras (ícones) e a calculadora aberta, com endereço próprio (#calculadora/giro).
-export default function Calculadora({ view, onView, quotes, apresentacao = false }) {
+function formulario({ view, onView, quotes, apresentacao = false }) {
   if (view === 'cbs-caixa') return <CbsCaixa onBack={() => onView('')} />
   if (view === 'bndes-tlp-exigivel') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'bndes-credito-tfb') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
@@ -70,6 +62,13 @@ export default function Calculadora({ view, onView, quotes, apresentacao = false
   // Árvore de Crédito: fora do menu e da busca (decisão de Fernando, 18/11/2026); abre só pelo endereço #calculadora/arvore-credito ou pelo atalho ARVORE.
   if (view === 'arvore-credito') return <ArvoreCredito onBack={() => onView('')} onView={onView} />
   if (view === 'finame-materiais') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} apresentacao={apresentacao} />
+  return null
+}
+
+export default function Calculadora(props) {
+  const form = formulario(props)
+  if (form) return <Suspense fallback={<p className="status" role="status">Carregando calculadora…</p>}>{form}</Suspense>
+  const { onView } = props
   return (
     <section className="cx bw calc-workspace calc-catalog" aria-labelledby="calc-title">
       <a className="calc-bndes-rates" href="#bndes">Taxas BNDES · consultar séries e históricos</a>

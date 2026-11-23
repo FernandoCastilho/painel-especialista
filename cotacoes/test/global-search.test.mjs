@@ -55,6 +55,7 @@ test('static index extracts visible text and literals, never classes, code, URLs
  const result=extractSearchText(`import X from './private.js'; const label = 'Indicador de crédito'; export default () => <p className="hidden private" title="Explicação completa">Texto visível<Explain id="credito"/><a href="https://private.test">Saiba mais</a></p>`)
  assert.ok(result.text.includes('Texto visível'));assert.ok(result.text.includes('Indicador de crédito'));assert.ok(!result.text.includes('hidden private'));assert.ok(!result.text.includes('private.test'));assert.deepEqual(result.explain,['credito'])
  const index=await buildSearchIndex();assert.ok(index.documents.length>=30);assert.ok(index.documents.some(d=>d.route==='cenarios/inadimplencia'));assert.ok(!index.documents.some(d=>d.route==='apresentar'))
+ assert.match(index.documents.find(d=>d.id==='page:CambioFuturo.jsx').body,/Compra indicativa/)
 })
 
 test('credit, BNDES and Focus results retain exact portfolio, series and forecast-year context',()=>{
