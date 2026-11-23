@@ -93,7 +93,6 @@
 .bcp-search-results button { min-height:44px; text-align:left; border:1px solid var(--line); background:var(--bw-soft,var(--surface-2)); color:var(--fg); border-radius:6px; padding:8px 12px; cursor:pointer; }
 .bw .bn-workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:24px; align-items:start; margin:16px 0; }
 .bn-workspace > section { min-width:0; }
-.bw .bn-pick .bn-reference-date { display:none; }
 .bw .bn-history { position:sticky; top:100px; padding:16px; border:1px solid var(--bw-line,var(--line)); border-radius:9px; background:var(--bw-card,var(--card)); }
 .bw .bn-reference-table > .bn-scroll { max-height:440px; overflow:auto; margin-top:14px; }
 .bw .bn-reference-table .bn-table thead { position:sticky; top:0; z-index:1; background:var(--bw-card,var(--card)); }
