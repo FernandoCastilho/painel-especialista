@@ -9,6 +9,7 @@ export const NOVIDADES_RECENTES = [
       'A busca reaproveita as fontes já consultadas ao reabrir. Em Configurações, o botão Consultar estado das fontes abre o diagnóstico e mostra os horários de cada coleta.',
       'Os cartões de Setores carregam fotos adaptadas à largura da tela.',
       'Na HP 12C, dá para colar o fluxo do Excel para calcular o CET, consultar o guia e copiar a fita em formato brasileiro. O teclado também aproveita a largura da tela na horizontal.',
+      'O Câmbio Futuro separa dados da operação, taxas da mesa e resultado por vencimento. Cote em Bullet ou Parcelado e veja os pagamentos em reais sem redigitar os dados.',
       'No Câmbio Futuro, a TIR em reais passou a contemplar operações de prazo curto em que o cálculo anterior deixava o resultado em branco.',
       'Quando as duas cotações usadas para converter yuan em reais chegam defasadas, o Painel tenta buscá-las separadamente. A última referência válida continua na tela até haver dados compatíveis.',
       'O resultado executivo do BNDES mostra a data correspondente à taxa CDI usada na comparação.',

@@ -66,7 +66,7 @@ test('catálogo e endereços diretos carregam somente o formulário escolhido', 
   assert.deepEqual(imported, [])
   for (const [view, component] of [
     ['giro', 'CapitalDeGiro'], ['finame-materiais', 'BndesWorkspace'],
-    ['bndes-tlp-exigivel', 'BndesWorkspace'], ['cambio-futuro', 'CambioFuturoCenario'],
+    ['bndes-tlp-exigivel', 'BndesWorkspace'], ['cambio-futuro', 'CambioFuturoJornada'], ['cambio-futuro/cenarios', 'CambioFuturoCenario'],
     ['cambio-futuro/tir-usd', 'CambioFuturo'], ['arvore-credito', 'ArvoreCredito'],
   ]) {
     const form = render(view)
