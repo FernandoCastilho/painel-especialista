@@ -109,7 +109,12 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const nov = aviso.locator('.aviso-novidades'); if (await nov.count()) { assert.match(await nov.innerText(), /NOVIDADES DA SEMANA|Novidades da semana/i); assert.ok((await nov.locator('li').count()) <= 4) }
       const box = await aviso.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800, 'aviso cabe na tela')
       assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), null, 'só marca como lido ao fechar')
-      await aviso.getByRole('button', { name: 'Entendi' }).click(); await aviso.waitFor({ state: 'hidden' })
+      await aviso.getByRole('link', { name: 'Ver todas as atualizações' }).click()
+      await aviso.waitFor({ state: 'hidden' })
+      await p.waitForURL('**/#novidades')
+      await p.getByRole('heading', { level: 1, name: 'Novidades da semana' }).waitFor()
+      await p.getByText('Novidades anteriores', { exact: true }).click()
+      await p.locator('.novidades-antigas time').first().waitFor()
       const marca = await p.evaluate(() => localStorage.getItem('aviso-inicial-visto'))
       assert.match(marca, /^v1-[0-9a-f]{8}$/, 'marca tirada do texto do aviso')
       await p.goto(base + '/#juros'); assert.equal(await aviso.count(), 0, 'não reaparece ao trocar de aba')

@@ -41,7 +41,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
         }
         await more.focus(); await page.keyboard.press('ArrowDown')
         await focused('Notícias')
-        assert.deepEqual(await menu.getByRole('menuitem').allTextContents(), ['Notícias', 'Podcast', 'Bancos', 'Feriados', 'Aprender'])
+        assert.deepEqual(await menu.getByRole('menuitem').allTextContents(), ['Notícias', 'Podcast', 'Bancos', 'Feriados', 'Novidades da semana', 'Aprender'])
         await page.keyboard.press('ArrowUp'); await focused('Aprender')
         await page.keyboard.press('ArrowDown'); await focused('Notícias')
         await page.keyboard.press('Home'); await focused('Notícias')

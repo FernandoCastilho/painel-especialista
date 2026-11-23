@@ -15,7 +15,8 @@ const nodes = node => Array.isArray(node) ? node.flatMap(nodes) : node && typeof
 async function setup(t) {
   const listeners = new Map(), destinations = []
   const document = { activeElement: null, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) }
-  const targets = Array.from({ length: 5 }, (_, i) => ({ id: i, focus() { document.activeElement = this } }))
+  const destinos = navigationPriority.MORE_GROUPS.flatMap(g => g.ids).filter(id => !navigationPriority.MOBILE_PRIMARY.includes(id))
+  const targets = destinos.map(id => ({ id, focus() { document.activeElement = this } }))
   const triggerTarget = { focus() { document.activeElement = this } }
   const container = { contains: target => target === triggerTarget || targets.includes(target) }
   const menuTarget = { querySelectorAll: () => targets }
@@ -52,13 +53,13 @@ test('mobile More names its menu, focuses first item and supports arrow/Home/End
   assert.equal(a.document.activeElement, a.targets[0], 'opening menu must focus its first item')
   assert.equal(a.trigger().props['aria-controls'], a.menu().props.id)
   assert.equal(a.menu().props['aria-labelledby'], a.trigger().props.id)
-  assert.equal(a.menuItems().length, 5)
+  assert.equal(a.menuItems().length, a.targets.length)
   assert.ok(a.menuItems().every(n => n.props.tabIndex === -1))
   assert.equal(a.menuItems().filter(n => n.props['aria-current'] === 'page').length, 1)
-  for (const [value, target] of [['ArrowDown', 1], ['End', 4], ['ArrowDown', 0], ['ArrowUp', 4], ['Home', 0]]) {
+  for (const [value, target] of [['ArrowDown', 1], ['End', -1], ['ArrowDown', 0], ['ArrowUp', -1], ['Home', 0]]) {
     const event = key(value); a.menu().props.onKeyDown(event)
     assert.equal(event.prevented, true)
-    assert.equal(a.document.activeElement, a.targets[target])
+    assert.equal(a.document.activeElement, a.targets.at(target))
   }
   const escape = key('Escape'); a.listeners.get('keydown')(escape); await a.render.settle()
   assert.ok(escape.prevented && escape.stopped)
@@ -70,10 +71,10 @@ test('mobile More names its menu, focuses first item and supports arrow/Home/End
 
 test('mobile More supports repeated keyboard opening, Tab exit and selecting a destination', async t => {
   const a = await setup(t)
-  for (const [value, target] of [['ArrowUp', 4], ['ArrowDown', 0]]) {
+  for (const [value, target] of [['ArrowUp', -1], ['ArrowDown', 0]]) {
     const event = key(value); a.trigger().props.onKeyDown(event); await a.render.settle()
     assert.equal(event.prevented, true)
-    assert.equal(a.document.activeElement, a.targets[target])
+    assert.equal(a.document.activeElement, a.targets.at(target))
     const tab = key('Tab', { shiftKey: value === 'ArrowUp' }); a.menu().props.onKeyDown(tab); await a.render.settle()
     assert.equal(tab.prevented, false, 'browser keeps native forward/backward tab traversal')
     assert.equal(a.document.activeElement, a.triggerTarget)
