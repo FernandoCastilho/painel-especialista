@@ -57,3 +57,4 @@ Escolher o caminho mais seguro e registrar. Parar só se bater num limite da lis
 - Extratos e dados reais de cliente nunca vão para o git.
 - Campos de busca (cidade, praça, produto e afins): sempre permitir digitar para filtrar e achar, como na busca de cidade da praça do contrato. Premissa de Fernando (22/11/2026).
 - Gráficos de juros das calculadoras: sempre terminam no prazo da operação que o usuário digitou (se é 48, é 48; se é 12, é 12). Premissa de Fernando (23/11/2026).
+- Percentuais nas calculadoras: sempre com duas casas decimais após a vírgula (ex.: 90,72%). Premissa de Fernando (23/11/2026).
