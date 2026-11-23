@@ -18,7 +18,7 @@ async function setup(t, quote = {}, navigator) {
     './CalculatorStandard.css': {}, './CambioFuturo.css': {}, './CambioFuturoCenario.css': {},
     './CalcBack.jsx': () => null, './CalculatorHelp.jsx': () => null, './Flag.jsx': () => null,
     './HistoryChart.jsx': { Plot: () => null, useWidth: () => [null, 320] },
-    './CambioFuturo.jsx': { ReferenciaMesa: () => null },
+    './ReferenciaMesa.jsx': () => null,
     './cdiDolar.js': await import('../src/cdiDolar.js'), './moneyInput.js': await import('../src/moneyInput.js'),
     './marketReturns.js': await import('../src/marketReturns.js'),
     './cambioFuturoSpot.js': { spotDayPlan: now => ({ now }) },

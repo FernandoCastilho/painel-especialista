@@ -92,6 +92,7 @@ const out = process.env.BNDES_EXECUTIVE_QA_OUTPUT || 'docs/bndes-executivo-qa'
       assert.equal(await page.getByLabel('Dias úteis 1',{exact:true}).inputValue(),'21')
       if(width===1440||width===390)await page.locator('.bw').screenshot({path:path.join(out,`tlp-${width}-${theme}.png`)})
       await page.locator('#bw-profile').selectOption('bndes-selic-lcd')
+      await page.locator('.cx-lcd').waitFor({ state:'visible' })
       for(const id of ['lcd-contract','lcd-intermediation','lcd-fixing','lcd-source'])assert.equal(await page.locator('#'+id).count(),1,id)
       await page.getByLabel('Vencimento 1',{exact:true}).fill('2027-02-15')
       if(width===1440||width===390)await page.locator('.bw').screenshot({path:path.join(out,`lcd-${width}-${theme}.png`)})

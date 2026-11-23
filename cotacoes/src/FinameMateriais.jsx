@@ -1,3 +1,4 @@
+import { FinameIcon } from './CalculatorIcons.jsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useHolidays } from './useHolidays.js'
 import MoneyInput from './MoneyInput.jsx'
@@ -36,15 +37,6 @@ const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 const data = (d) => d.toLocaleDateString('pt-BR')
 // Exemplos da ajuda do ECG: [valor liberado em R$, % garantido, prazo total em meses], calculados pela fórmula do Anexo V.
 const ECG_EXEMPLOS = [[500000, 80, 60], [1000000, 80, 84], [300000, 50, 36]]
-
-// Ícone: caixa de materiais com a marca do BNDES (barras) ao lado.
-export function FinameIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 8l9-4 9 4-9 4-9-4z" /><path d="M3 8v8l9 4 9-4V8" /><path d="M12 12v8" />
-    </svg>
-  )
-}
 
 // Calculadoras › BNDES Finame Materiais: condições do produto (prazo, carência, custo financeiro, taxas), resultado e fluxo
 // parcela a parcela. O custo financeiro vem do painel: TFC ou TFB da faixa de prazo (aba BNDES). TLP exigível tem projeção própria.

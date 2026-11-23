@@ -28,8 +28,35 @@ jobs:
       - run: npm run build
       - name: Conferir preservação no build real
         run: node scripts/weekly-data.mjs dist "$RUNNER_TEMP/weekly-package-test.json"
+  build-qa:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - name: Compilar o painel com os dados na própria origem
+        run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - name: Guardar o pacote de teste desta revisão
+        uses: actions/upload-artifact@v4
+        with:
+          # O download busca só nesta execução. O nome estável atende reexecuções parciais.
+          name: &nome-pacote-qa pacote-qa-local-${{ github.sha }}
+          overwrite: true
+          path: cotacoes/dist
+          include-hidden-files: true
+          if-no-files-found: error
+          compression-level: 1
+          retention-days: 30
   smoke-secoes:
     runs-on: ubuntu-24.04
+    needs: build-qa
     timeout-minutes: 25
     defaults:
       run:
@@ -46,8 +73,12 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - name: Build com os dados na própria origem
-        run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - &baixar-pacote-qa
+        name: Baixar o pacote de teste desta revisão
+        uses: actions/download-artifact@v4
+        with:
+          name: *nome-pacote-qa
+          path: cotacoes/dist
       - name: Preparar Playwright com o Chrome do ambiente de testes
         timeout-minutes: 3
         run: |
@@ -177,6 +208,7 @@ jobs:
           retention-days: 7
   smoke-calculadoras:
     runs-on: ubuntu-24.04
+    needs: build-qa
     timeout-minutes: 25
     defaults:
       run:
@@ -193,8 +225,7 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - name: Build com os dados na própria origem
-        run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - *baixar-pacote-qa
       - name: Preparar Playwright com o Chrome do ambiente de testes
         timeout-minutes: 3
         run: |
@@ -362,6 +393,7 @@ jobs:
           retention-days: 7
   smoke-navegacao:
     runs-on: ubuntu-24.04
+    needs: build-qa
     timeout-minutes: 25
     defaults:
       run:
@@ -378,8 +410,7 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - name: Build com os dados na própria origem
-        run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - *baixar-pacote-qa
       - name: Preparar Playwright com o Chrome do ambiente de testes
         timeout-minutes: 3
         run: |
@@ -522,6 +553,7 @@ jobs:
           JS
   bndes-workspace:
     runs-on: ubuntu-24.04
+    needs: [test-build, build-qa]
     timeout-minutes: 12
     defaults:
       run:
@@ -539,9 +571,7 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - *baixar-pacote-qa
       - run: npm install --no-save playwright@1.63.0
       - name: Servir e conferir a central BNDES
         run: |
@@ -570,7 +600,7 @@ jobs:
 
   sector-graph:
     runs-on: ubuntu-24.04
-    needs: test-build
+    needs: [test-build, build-qa]
     timeout-minutes: 8
     defaults:
       run:
@@ -587,7 +617,7 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - *baixar-pacote-qa
       - run: npm install --no-save playwright@1.63.0
       - name: Conferir grafo contextual sem bloquear outros smokes
         run: |
@@ -605,7 +635,7 @@ jobs:
 
   intraday-state:
     runs-on: ubuntu-24.04
-    needs: test-build
+    needs: [test-build, build-qa]
     timeout-minutes: 8
     defaults:
       run:
@@ -622,7 +652,7 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
+      - *baixar-pacote-qa
       - run: npm install --no-save playwright@1.63.0
       - name: Servir e conferir amostras e atraso do intraday
         run: |

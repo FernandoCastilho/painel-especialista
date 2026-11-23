@@ -16,6 +16,12 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       await context.route('**/*', route => new URL(route.request().url()).origin === new URL(base).origin ? route.continue() : route.abort())
       await context.route('**/recado.json*', route => route.fulfill({ json: { ativo: false } }))
       const page = await context.newPage()
+      const waitForPhotos = selector => page.waitForFunction(selector => {
+        const images = [...document.querySelectorAll(selector)]
+        return images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0
+          && Math.abs(image.naturalWidth - image.naturalHeight * 1.5) <= 2
+          && new URL(image.currentSrc).pathname.endsWith('.webp'))
+      }, selector)
       activePage = page
       activeScenario = `${width}-${theme}`
       page.on('pageerror', error => report.errors.push(error.message))
@@ -30,7 +36,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       assert.equal(await folders.count(), 15)
       await folders.last().scrollIntoViewIfNeeded()
       await folders.first().scrollIntoViewIfNeeded()
-      await page.waitForFunction(() => [...document.querySelectorAll('.central-folder img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
+      await waitForPhotos('.central-folder img')
       if (width < 1000) {
         const navigation = page.getByRole('navigation', { name: 'Seções', exact: true })
         const more = navigation.getByRole('button', { name: 'Mais', exact: true })
@@ -75,7 +81,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       assert.equal(await page.locator('.central-topics .central-topic').count(), 6)
       await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
       await page.locator('.central-subsector').first().scrollIntoViewIfNeeded()
-      await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
+      await waitForPhotos('.central-subsector img')
       await page.screenshot({ path: path.join(out, `${width}-${theme}-subsetores.png`), fullPage: true })
       await page.getByRole('button', { name: 'Compensados', exact: true }).click()
       await page.waitForURL('**/#setores/topico/base-florestal/3')
@@ -164,7 +170,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
           topicImages += await topics.count()
           await topics.last().scrollIntoViewIfNeeded()
           await topics.first().scrollIntoViewIfNeeded()
-          await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
+          await waitForPhotos('.central-subsector img')
           await overflow()
           await page.screenshot({ path: path.join(out, `${id}-subsetores.png`), fullPage: true })
           await page.getByRole('button', { name: 'Todos os setores', exact: true }).click()
@@ -198,7 +204,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
         await page.locator('#central-folder-tic').click()
         await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
         await page.locator('.central-subsector').first().scrollIntoViewIfNeeded()
-        await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536))
+        await waitForPhotos('.central-subsector img')
         await page.keyboard.press('Tab')
         await page.locator('.central-subsector').first().focus()
         assert.equal(await page.locator('.central-subsector').first().evaluate(element => element.matches(':focus-visible') && getComputedStyle(element).outlineStyle !== 'none' && parseFloat(getComputedStyle(element).outlineWidth) >= 2), true, 'subsetor tem foco de teclado visível')

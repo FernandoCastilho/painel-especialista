@@ -2,9 +2,12 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '23/11/2026',
-    resumo: 'Volta da tela de novidades, CET do Excel na HP 12C e ajustes no câmbio e no BNDES',
+    resumo: 'Tela de novidades, carregamento mais leve, CET na HP 12C e ajustes no câmbio e no BNDES',
     items: [
       'A tela Novidades da semana voltou ao menu Mais e reúne as mudanças do Painel por dia. O menu continua aberto quando Setores termina de carregar.',
+      'Mercado reaproveita o cálculo do câmbio acumulado. As notícias por tema e cada calculadora carregam quando você as abre.',
+      'A busca reaproveita as fontes já consultadas ao reabrir. Em Configurações, o botão Consultar estado das fontes abre o diagnóstico e mostra os horários de cada coleta.',
+      'Os cartões de Setores carregam fotos adaptadas à largura da tela.',
       'Na HP 12C, dá para colar o fluxo do Excel para calcular o CET, consultar o guia e copiar a fita em formato brasileiro. O teclado também aproveita a largura da tela na horizontal.',
       'No Câmbio Futuro, a TIR em reais passou a contemplar operações de prazo curto em que o cálculo anterior deixava o resultado em branco.',
       'Quando as duas cotações usadas para converter yuan em reais chegam defasadas, o Painel tenta buscá-las separadamente. A última referência válida continua na tela até haver dados compatíveis.',

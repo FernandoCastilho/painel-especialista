@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import InstallApp from './InstallApp.jsx'
 import BaseDados from './BaseDados.jsx'
 import Novidades from './Novidades.jsx'
@@ -15,8 +16,7 @@ import { AcessosPanel } from './Acessos.jsx'
 const H = 3600e3
 const TONE = { ok: 'up', old: 'down', retained: 'down', partial: 'down', reserve: 'flat', missing: 'flat', loading: 'flat', offhours: 'flat' }
 
-// Configurações: atalhos, estado de cada fonte de dados, aparência, instalação e histórico de mudanças.
-export default function Config({ quotesAt, quotesVia, quotes, quotesHealth, fx, setFx }) {
+function DiagnosticoFontes({ quotesAt, quotesVia, quotes, quotesHealth }) {
   const macro = useMacro()
   const curves = useCurves()
   const news = useNews()
@@ -82,37 +82,45 @@ export default function Config({ quotesAt, quotesVia, quotes, quotesHealth, fx, 
     const checked = mine.map(r => r.checkedAt).filter(Boolean)
     return { ...f, ...worst, state: worst?.state ?? 'missing', statusLabel: worst?.statusLabel ?? 'Indisponível', checkedAt: checked.length === mine.length ? Math.min(...checked) : null, parts: mine }
   })
+  return <>
+    <div className="config-scroll" role="region" aria-label="Estado, origem e frequência de cada fonte" tabIndex={0}><table className="config-table config-gov">
+      <thead><tr><th scope="col">Fonte</th><th scope="col">Estado</th><th scope="col">Horários</th><th scope="col">Origem</th><th scope="col">Coleta</th><th scope="col">Quando o dado muda</th><th scope="col">Atrasado após</th></tr></thead>
+      <tbody>
+        {fontes.map((f) => (
+          <tr key={f.id}>
+            <th scope="row">{f.nome}</th>
+            <td data-label="Estado"><span className={`chip ${TONE[f.state]}`} title={f.detail}>{f.statusLabel}</span></td>
+            <td data-label="Horários">
+              <div>Conferido no painel: {f.checkedAt ? dataTimestamp(f.checkedAt) : 'ainda não conferido'}</div>
+              {f.id === 'cambio' && quotesHealth?.observedAt && <div>Referência mais antiga: {dataTimestamp(quotesHealth.observedAt)}</div>}
+              <details className="config-times"><summary>Ver datas e estado</summary>
+                {f.parts.map(part => <div key={part.key}><b>{part.label}</b><p>{part.detail}</p><p>{part.key === 'quotes' && quotesVia !== 'central' ? 'Resposta recebida' : 'Arquivo gerado'}: {part.generatedAt ? dataTimestamp(part.generatedAt) : 'data não disponível'}<br />Última leitura bem-sucedida no painel: {part.lastSuccessAt ? dataTimestamp(part.lastSuccessAt) : 'data não disponível'}</p></div>)}
+                {f.id === 'cambio' ? <ul>{['USD', 'EUR', 'JPY', 'CNH'].map(code => <li key={code}>{code}/BRL: {quotes?.[code]?.timestamp ? dataTimestamp(quotes[code].timestamp) : 'referência indisponível'}</li>)}</ul> : <p>A referência e o período de cada dado aparecem no indicador correspondente. Uma taxa vigente pode permanecer igual entre divulgações.</p>}
+              </details>
+            </td>
+            <td data-label="Origem">{f.origem}</td>
+            <td data-label="Coleta">{f.coleta}</td>
+            <td data-label="Quando o dado muda">{f.muda}</td>
+            <td data-label="Atrasado após">{f.atraso}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table></div>
+    <p className="config-note">Conferido no painel é a última tentativa de ler os dados neste navegador. Arquivo gerado é o horário da coleta publicada; não é o horário de cada observação. “Sem alerta” indica arquivo dentro do prazo e sem falha informada, sem certificar o número. No fim de semana, a pausa das coletas de dias úteis preserva os atrasos e as falhas anteriores. Horários em Brasília.</p>
+  </>
+}
+
+// Configurações: atalhos, estado de cada fonte de dados, aparência, instalação e histórico de mudanças.
+export default function Config({ quotesAt, quotesVia, quotes, quotesHealth, fx, setFx }) {
+  const [fontesAbertas, setFontesAbertas] = useState(false)
   return (
     <div className="config-desk">
       <AcessosPanel />
-      <Panel title="Governança dos dados" note="estado, origem e frequência de cada fonte" className="config-wide" refresh={['trends.json', 'macro.json', 'curves.json', 'news.json', 'reforma-tributaria.json', 'temas.json', 'insumos-precos.json', 'indices.json', 'policy-rates.json', 'estr.json', 'euro-curve.json', 'indexadores.json', 'bndes.json', 'moedas.json', 'oil.json', 'commodities.json', 'commodities-brl.json', 'fuels.json', 'freight.json', 'freight-jp.json', 'ipca.json', 'divida.json', 'ipca-groups.json', 'calendar.json']}>
+      <Panel title="Governança dos dados" note="estado, origem e frequência de cada fonte" className="config-wide" refresh={fontesAbertas && ['trends.json', 'macro.json', 'curves.json', 'news.json', 'reforma-tributaria.json', 'temas.json', 'insumos-precos.json', 'indices.json', 'policy-rates.json', 'estr.json', 'euro-curve.json', 'indexadores.json', 'bndes.json', 'moedas.json', 'oil.json', 'commodities.json', 'commodities-brl.json', 'fuels.json', 'freight.json', 'freight-jp.json', 'ipca.json', 'divida.json', 'ipca-groups.json', 'calendar.json']}>
         <h3 className="config-sub">Em resumo</h3>
         <ul className="config-list config-resumo">{RESUMO.map((t) => <li key={t}>{t}</li>)}</ul>
-        <h3 className="config-sub">Fonte por fonte</h3>
-        <div className="config-scroll" role="region" aria-label="Estado, origem e frequência de cada fonte" tabIndex={0}><table className="config-table config-gov">
-          <thead><tr><th scope="col">Fonte</th><th scope="col">Estado</th><th scope="col">Horários</th><th scope="col">Origem</th><th scope="col">Coleta</th><th scope="col">Quando o dado muda</th><th scope="col">Atrasado após</th></tr></thead>
-          <tbody>
-            {fontes.map((f) => (
-              <tr key={f.id}>
-                <th scope="row">{f.nome}</th>
-                <td data-label="Estado"><span className={`chip ${TONE[f.state]}`} title={f.detail}>{f.statusLabel}</span></td>
-                <td data-label="Horários">
-                  <div>Conferido no painel: {f.checkedAt ? dataTimestamp(f.checkedAt) : 'ainda não conferido'}</div>
-                  {f.id === 'cambio' && quotesHealth?.observedAt && <div>Referência mais antiga: {dataTimestamp(quotesHealth.observedAt)}</div>}
-                  <details className="config-times"><summary>Ver datas e estado</summary>
-                    {f.parts.map(part => <div key={part.key}><b>{part.label}</b><p>{part.detail}</p><p>{part.key === 'quotes' && quotesVia !== 'central' ? 'Resposta recebida' : 'Arquivo gerado'}: {part.generatedAt ? dataTimestamp(part.generatedAt) : 'data não disponível'}<br />Última leitura bem-sucedida no painel: {part.lastSuccessAt ? dataTimestamp(part.lastSuccessAt) : 'data não disponível'}</p></div>)}
-                    {f.id === 'cambio' ? <ul>{['USD', 'EUR', 'JPY', 'CNH'].map(code => <li key={code}>{code}/BRL: {quotes?.[code]?.timestamp ? dataTimestamp(quotes[code].timestamp) : 'referência indisponível'}</li>)}</ul> : <p>A referência e o período de cada dado aparecem no indicador correspondente. Uma taxa vigente pode permanecer igual entre divulgações.</p>}
-                  </details>
-                </td>
-                <td data-label="Origem">{f.origem}</td>
-                <td data-label="Coleta">{f.coleta}</td>
-                <td data-label="Quando o dado muda">{f.muda}</td>
-                <td data-label="Atrasado após">{f.atraso}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table></div>
-        <p className="config-note">Conferido no painel é a última tentativa de ler os dados neste navegador. Arquivo gerado é o horário da coleta publicada; não é o horário de cada observação. “Sem alerta” indica arquivo dentro do prazo e sem falha informada, sem certificar o número. No fim de semana, a pausa das coletas de dias úteis preserva os atrasos e as falhas anteriores. Horários em Brasília.</p>
+        <h3 className="config-sub"><button type="button" className="fx-toggle" aria-expanded={fontesAbertas} aria-controls="config-fontes" onClick={() => setFontesAbertas(aberta => !aberta)}>Consultar estado das fontes</button></h3>
+        <div id="config-fontes">{fontesAbertas && <DiagnosticoFontes quotesAt={quotesAt} quotesVia={quotesVia} quotes={quotes} quotesHealth={quotesHealth} />}</div>
         <h3 className="config-sub">No seu navegador</h3>
         <ul className="config-list">{NAVEGADOR.map((t) => <li key={t}>{t}</li>)}</ul>
         <h3 className="config-sub">Regras</h3>
