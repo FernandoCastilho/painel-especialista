@@ -45,6 +45,8 @@ export function bndesEmlConteudo({ itens, linha = 'Finame Materiais Industrializ
     linhaDe('Taxa final', item => taxa(item.taxa), { forte: true }),
     linhaDe('TAC (à vista, na liberação)', item => brl(item.tac)),
     linhaDe('IOF', item => brl(item.iof)),
+    // Garantia FGI (ECG): entra no total quando a garantia está marcada; sem a linha, quem lê não fecha a conta.
+    ...(itens.some(item => item.fgi?.ecg > 0) ? [linhaDe('Garantia FGI · ECG', item => item.fgi?.ecg > 0 ? `${brl(item.fgi.ecg)}${item.fgi.incorporar ? ' (no saldo)' : ' (à vista)'}` : '—')] : []),
     linhaDe('Juros totais', item => brl(item.juros)),
   ])
 

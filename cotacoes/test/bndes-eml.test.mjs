@@ -47,3 +47,10 @@ test('peças do arquivo: base64 em UTF-8 e nome seguro', () => {
   assert.equal(nomeDeArquivo('Simulação Opção'), 'Simulacao Opcao.eml')
   assert.match(montarEml({ assunto: 'x', texto: 'y', html: '<p>z</p>', fronteira: 'F' }), /--F--\r\n$/)
 })
+
+test('com a garantia FGI marcada, o ECG aparece em Taxas e encargos (achado do Auditor, 23/11/2026)', () => {
+  const sem = bndesEmlConteudo({ itens: [a] }).html
+  assert.ok(!sem.includes('Garantia FGI'))
+  const com = bndesEmlConteudo({ itens: [{ ...a, fgi: { ecg: 51234.56, incorporar: false } }] }).html.replace(/\u00a0/g, ' ')
+  assert.ok(com.includes('Garantia FGI · ECG') && com.includes('R$ 51.234,56 (à vista)'))
+})
