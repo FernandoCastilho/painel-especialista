@@ -12,7 +12,7 @@
 }
 .rpn-float-action { margin-block-start: 8px; background: var(--rpn-surface); color: var(--rpn-ink); }
 .rpn-float {
-  inline-size: min(680px, calc(100vw - 16px));
+  inline-size: min(980px, calc(100vw - 16px));
   max-block-size: calc(100dvh - 24px);
   overflow: auto; overscroll-behavior: contain;
   border: 1px solid #57718d; border-radius: 12px;
@@ -34,14 +34,13 @@
 .rpn-float .rpn-console { padding: 8px; }
 .rpn-float .rpn-bezel { grid-template-columns: 1fr; padding: 6px; }
 .rpn-float .rpn-bezel-tools { flex-wrap: wrap; }
-.rpn-float :is(.rpn-console-brand, .rpn-landscape-back, .rpn-keypad--wide) { display: none; }
-.rpn-float .rpn-keypad--portrait { display: grid; grid-template-rows: repeat(8, minmax(54px, auto)); }
+.rpn-float :is(.rpn-console-brand, .rpn-landscape-back) { display: none; }
 .rpn-float .rpn-help { position: static; }
 .rpn-float .rpn-layout { display: grid; align-items: start; gap: 8px; }
 .rpn-float .rpn-desk--rates { grid-template-columns: minmax(0, 1fr); }
 .rpn-float .rpn-history { margin: 0; }
 .rpn-float .rpn-history-entries { overflow: auto; max-block-size: 44vh; }
-@media (min-width: 750px) {
+@media (min-width: 850px) {
   .rpn-float .rpn-layout { grid-template-columns: minmax(0, 1fr) minmax(220px, 36%); }
 }
 .rpn-tape-draft {

@@ -40,6 +40,7 @@ export default function RpnDock({ active }) {
     if (previousFloating.current) {
       previousFloating.current = false
       if (active) host.querySelector('.rpn-float-action')?.focus()
+      else document.querySelector('nav [aria-label="Calculadora RPN"]')?.focus()
     }
   }, [active, floating, host])
 

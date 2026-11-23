@@ -67,7 +67,7 @@ export default function RpnHistoryPanel({ id, entries, draft, canUndo, hasCleare
     {draft != null && <div className="rpn-tape-draft"><span>Em digitação</span><output aria-label="Valor em digitação" aria-live="off">{draft}</output></div>}
     {entries.length === 0 && draft == null ? <p>Os valores aparecem aqui enquanto você digita.</p> : <ol className="rpn-history-entries">
       {entries.map(entry => <li key={entry.id}>
-        <div className="rpn-history-row"><span>{formatRpnEntry(entry)}</span>
+        <div className="rpn-history-row"><span>{formatRpnEntry(entry, { presentation: true })}</span>
           <div className="rpn-history-actions">
             {!entry.label && <RowAction action="edit" label="Editar conta" onClick={event => { editButton.current = event.currentTarget; setEditing(entry.id) }} />}
             <RowAction action="copy" label="Copiar resultado" onClick={() => { void copy(entry, true) }} />
