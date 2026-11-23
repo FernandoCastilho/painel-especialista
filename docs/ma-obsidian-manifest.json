@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "relative": "concepts/ma-panorama.md",
+      "sha256": "130A91BDDB88A046912FA7254487342B7B99597FED398AC31C5D90E719CE29E2"
+    },
+    {
+      "relative": "queries/ma/2025/2025-bionexo-tasy.md",
+      "sha256": "10DD4B117924ABF5E77D83CC99CB68AD9C8BCB135F037841F9A00ACB358EC488"
+    },
+    {
+      "relative": "queries/ma/2025/2025-dasa-sao-domingos.md",
+      "sha256": "3C7487CB31FA2A9A1365B41C47F3135B2A3587BD41F292B8F0626F1FA152D48A"
+    },
+    {
+      "relative": "queries/ma/2025/2025-hindiana-neogrid.md",
+      "sha256": "694C7EE7FF7B787A7238C48BC44BDF9DD29AB08B1F2A195439493D1DF4ED85C5"
+    },
+    {
+      "relative": "queries/ma/2025/2025-savencia-quata.md",
+      "sha256": "9EFB6298C2B3AD97A4B5EC7AA116F271A808113B10CF2A5B4DB84474E7B750C9"
+    },
+    {
+      "relative": "queries/ma/2025/2025-vtal-um-telecom.md",
+      "sha256": "BE2569E391F7D3F2EBF6533E48B129215AA458458DCB16FA5EA1D71D3E4F4681"
+    }
+  ]
+}

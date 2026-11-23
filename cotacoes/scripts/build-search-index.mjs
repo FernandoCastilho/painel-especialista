@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 // Explicit routes prevent indexing hidden prototypes and private/transient forms.
 export const SEARCH_PAGES = {
+  'Ma.jsx':['ma','Fusões e aquisições — panorama e transações'],
   'BndesTlpExigivel.jsx':['calculadora/bndes-tlp-exigivel','BNDES TLP exigível: projeção e cronograma'],
   'BndesCreditoTfb.jsx':['calculadora/bndes-credito-tfb','BNDES Crédito TFB: conferência do exemplo de 34 parcelas'],
   'FinameMateriais.jsx':['calculadora/finame-materiais','BNDES Finame Materiais: taxas, carência e parcelas'],

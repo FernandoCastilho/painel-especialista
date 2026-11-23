@@ -14,7 +14,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    if(await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
    await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,theme)
    const nav=page.getByRole('navigation',{name:width>=1000?'Navegação principal':'Seções',exact:true})
-   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','Notícias','Podcast','Mais']
+   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','M&A','Notícias','Podcast','Mais']
     :width<=359?['Merc.','Cen.','Juros','Calc.','RPN','Setores','Mais']:['Mercado','Cenários','Juros','Calculadoras','RPN','Setores','Mais']
    await page.evaluate(()=>document.fonts.ready)
    if(width>=1400){
