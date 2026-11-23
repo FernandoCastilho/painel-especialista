@@ -38,7 +38,7 @@ function Detail({ row, goto }) {
     {row.supportingSource && <a href={row.supportingSource} target="_blank" rel="noreferrer">Fonte primária ↗</a>}
     {row.locationSource && <a href={row.locationSource} target="_blank" rel="noreferrer">Fonte da localização ↗</a>}
     <details><summary>Histórico da transação</summary><ol className="ma-timeline">{row.history.map((event,index) => <li key={index}><time dateTime={event.date}>{maDateLabel(event.date)}</time><p>{event.text}</p></li>)}</ol></details>
-    <button type="button" className="ma-text-button" onClick={() => goto('setores',row.sectorRoute)}>Ver em Setores → {row.sector}</button>
+    {row.sectorRoute && <button type="button" className="ma-text-button" onClick={() => goto('setores',row.sectorRoute)}>Ver em Setores → {row.sector}</button>}
   </aside>
 }
 
