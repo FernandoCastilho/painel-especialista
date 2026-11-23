@@ -45,7 +45,7 @@ export const bndesEmailLink = ({ result, alternatives } = {}) => {
   let text = compact
   if (mailto(subject, text).length > LIMITE_LINK) {
     const aviso = 'Estimativas sujeitas à confirmação das condições contratuais. A proposta do agente financeiro prevalece.'
-    const parcelas = 'PARCELAS\nCronograma completo copiado para colar no e-mail (Ctrl+V).'
+    const parcelas = 'PARCELAS\nCronograma completo: cole aqui (Ctrl+V); se nada colar, copie de "Parcelas da operação" na calculadora.'
     text = [compact.split('\n\nPARCELAS')[0], parcelas, aviso].join('\n\n')
     if (mailto(subject, text).length > LIMITE_LINK) {
       text = ['RESUMO', items.map(optionLabel).join(' / '), 'TAXAS E ENCARGOS\nDetalhes na cópia completa.', parcelas, aviso].join('\n\n')
