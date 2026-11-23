@@ -31,7 +31,7 @@ const text = node => Array.isArray(node) ? node.map(text).join('') : node && typ
 async function setup(t, initial = 'central', state = { unrelatedFeature: { preserved: true } }) {
   let entries = [{ view: initial, state }], index = 0, view = initial, renderer, rafId = 0
   const frames = new Map(), elements = new Map(), calls = []
-  const body = { id: '', key: 'body' }, document = { activeElement: body, getElementById: id => elements.get(id) || null }
+  const body = { id: '', key: 'body', closest: () => null }, document = { activeElement: body, getElementById: id => elements.get(id) || null }
   const window = {
     history: { get state() { return entries[index].state }, replaceState(state) { entries[index].state = structuredClone(state) } },
     scrollY: 200,
@@ -52,7 +52,7 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
     const previous = new Map(elements)
     elements.clear()
     for (const node of nodes(renderer.value).filter(node => typeof node.type === 'string')) {
-      const k = key(node), dom = previous.get(k) || { id: node.props?.id || '', key: k }
+      const k = key(node), dom = previous.get(k) || { id: node.props?.id || '', key: k, closest: () => null }
       dom.focus = () => { document.activeElement = dom; calls.push({ focus: k }) }
       dom.scrollIntoView = () => calls.push({ scrollIntoView: k })
       elements.set(k, dom)
