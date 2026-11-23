@@ -54,6 +54,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.equal(await menu.getByRole('group',{name:'Consultar',exact:true}).count(),1)
    assert.equal(await menu.getByRole('menuitem',{name:'Juros',exact:true}).count(),0)
    assert.equal(await menu.getByRole('menuitem',{name:'Notícias',exact:true}).count(),width<1000?1:0)
+   assert.equal(await menu.getByRole('menuitem',{name:'Novidades da semana',exact:true}).count(),1)
    const bounds=await menu.boundingBox()
    assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1&&bounds.y>=0&&bounds.y+bounds.height<=1001)
    await page.screenshot({path:path.join(out,width+'-'+theme+'.png'),fullPage:true})

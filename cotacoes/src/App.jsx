@@ -35,6 +35,7 @@ import MascotSlot from './MascotSlot.jsx'
 const Feriados = lazy(() => import('./Feriados.jsx'))
 import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
+const Novidades = lazy(() => import('./Novidades.jsx'))
 const Podcast = lazy(() => import('./Podcast.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
@@ -368,6 +369,7 @@ export default function App() {
       )}
 
       {tab === 'podcast' && <Podcast />}
+      {tab === 'novidades' && <Novidades />}
       {tab === 'aprender' && <Aprender view={sub} goto={goto} />}
 
       {tab === 'apresentar' && <Apresentar quotes={quotes} macro={macro} curves={curves} hol={hol} colors={COLORS} />}

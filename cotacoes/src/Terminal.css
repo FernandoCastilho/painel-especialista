@@ -299,7 +299,6 @@ main.app .fer-month h2 { text-transform: uppercase; }
 .config-scroll { overflow-x: auto; max-width: 100%; }
 .config-scroll:focus-visible { outline: 2px solid var(--amber); }
 @media (max-width: 699px) { .config-table th, .config-table td { padding: 8px; } .config-table { min-width: 460px; } }
-.config-wide .novidades > summary { display: none; }
 .base-grupo { border-bottom: 1px solid var(--line); }
 .base-grupo > summary { display: flex; align-items: baseline; gap: 10px; min-height: 44px; padding: 8px 0; cursor: pointer; list-style-position: inside; }
 .base-grupo > summary h3 { display: inline; margin: 0; }
