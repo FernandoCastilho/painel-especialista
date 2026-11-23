@@ -369,6 +369,8 @@ Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convive
 
 - **23/11/2026 — N17 segue a folha de matéria-prima importada** (decisão de Fernando). Insumo importado recorrente, pago antes da venda local, usa a mesma ordem confirmada para matéria-prima importada: FINIMP com proteção cambial, 4131 com proteção cambial (com a triagem dos três pontos) e capital de giro para impostos e gastos locais. Na tela, N17 passa a ser tratada junto com essa folha confirmada. A mudança na tela ainda não foi feita.
 
+- **23/11/2026 — N13: Conta Garantida primeiro como ponte** (decisão de Fernando; recomendação do Claude era giro curto). Máquina urgente enquanto o crédito definitivo tramita: a tela sugere primeiro a Conta Garantida como ponte e, em segundo, o capital de giro curto. Mantém-se a ressalva da nota do Obsidian: a ponte só entra se houver fonte de pagamento independente e data defensável, sem pressupor aprovação do crédito definitivo. Na tela, a regra que tira a Conta Garantida quando o prazo passa de 12 meses continua valendo. A mudança na tela ainda não foi feita.
+
 **Publicação em espera** (Fernando, 21/11/2026: "vamos esperar juntar mais respostas"). As três decisões já estão aplicadas na tela no ramo da sessão, com testes passando, mas não serão publicadas agora: entram junto com as próximas respostas das perguntas do dia, com novo teste, parecer do Auditor e autorização de publicação. Detalhe em `docs/arvore-credito-tela.md`, seção "Atualização de 21/11/2026".
 
 ### Propostas do Claude ainda não confirmadas
