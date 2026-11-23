@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-23",
+  "coverage": "Acervo inicial de dezembro de 2025. Cobertura parcial: os totais representam apenas as transações catalogadas. Situações conforme as fontes datadas; não representam confirmação atual de fechamento.",
+  "sourceUrl": "https://fusoesaquisicoes.com/transacoes-no-brasil/",
+  "pauseUrl": "https://fusoesaquisicoes.com/hr/um-legado-de-transparencia-o-encerramento-de-um-ciclo-e-a-perenidade-da-informacao-missao-cumprida/",
+  "transactions": [
+    {
+      "id": "2025-bionexo-tasy",
+      "buyer": "Bionexo",
+      "target": "Tasy",
+      "seller": "Philips",
+      "sector": "Tecnologia",
+      "sectorId": "tic",
+      "sectorRoute": "pasta/tic",
+      "segment": "Software de gestão hospitalar",
+      "announcementDate": "2025-12-30",
+      "publicationDate": "2025-12-31",
+      "completionDate": null,
+      "updatedDate": "2026-01-19",
+      "dateBasis": "announcement",
+      "status": "Anunciada",
+      "value": 161000000,
+      "currency": "EUR",
+      "stake": null,
+      "uf": null,
+      "locationNote": "A matéria não identifica uma UF única para a empresa adquirida. Não usar a sede da compradora.",
+      "summary": "Bionexo anunciou a compra da operação de software hospitalar Tasy da Philips. O valor é mantido na moeda original divulgada, sem conversão própria.",
+      "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/bionexo-compra-tasy-da-philips-por-r-1-bi/",
+      "history": [
+        {
+          "date": "2025-12-30",
+          "text": "Fato relevante da Bionexo divulga a assinatura do contrato."
+        },
+        {
+          "date": "2025-12-31",
+          "text": "Publicação do negócio; data exata de anúncio e conclusão não confirmadas nesta matéria."
+        },
+        {
+          "date": "2026-01-19",
+          "text": "Segunda data exibida pelo portal, sem reclassificar o negócio como operação de 2026."
+        }
+      ],
+      "supportingSource": "https://www-api-prod-institucionais-bionexo.azurewebsites.net/files/3d643458-6d78-4543-b859-d006eed17948.pdf"
+    },
+    {
+      "id": "2025-dasa-sao-domingos",
+      "buyer": "Mederi Participações e Venire Participações",
+      "target": "Hospital São Domingos, Neuro Imagens e São Domingos Real Estate",
+      "seller": "Dasa",
+      "sector": "Saúde",
+      "sectorId": "saude",
+      "sectorRoute": "pasta/saude",
+      "segment": "Hospitais e diagnósticos",
+      "announcementDate": "2025-12-30",
+      "publicationDate": "2025-12-31",
+      "completionDate": "2025-12-30",
+      "updatedDate": "2026-01-19",
+      "dateBasis": "announcement",
+      "status": "Concluída",
+      "value": 1200000000,
+      "currency": "BRL",
+      "stake": "100%",
+      "uf": "MA",
+      "locationNote": "Ativos em São Luís (MA), conforme a matéria.",
+      "summary": "Dasa vendeu os ativos hospitalares e imobiliários em São Luís. A fonte informa pagamento inicial de R$ 1,1 bilhão e saldo parcelado.",
+      "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/dasa-dasa3-vende-100-do-hsd-neuro-imagens-e-sao-domingos-re-por-r-1-2-bi/",
+      "history": [
+        {
+          "date": "2025-12-30",
+          "text": "Assinatura e conclusão informadas pela fonte."
+        },
+        {
+          "date": "2026-01-19",
+          "text": "Segunda data exibida pelo portal; não altera a data da operação."
+        }
+      ]
+    },
+    {
+      "id": "2025-vtal-um-telecom",
+      "buyer": "V.tal",
+      "target": "Um Telecom",
+      "seller": null,
+      "sector": "Tecnologia",
+      "sectorId": "tic",
+      "sectorRoute": "pasta/tic",
+      "segment": "Telecomunicações e infraestrutura digital",
+      "announcementDate": "2025-12-29",
+      "publicationDate": "2025-12-29",
+      "completionDate": null,
+      "updatedDate": "2026-01-19",
+      "dateBasis": "announcement",
+      "status": "Em aprovação",
+      "value": null,
+      "currency": null,
+      "stake": null,
+      "uf": "PE",
+      "locationNote": "Sede administrativa da adquirida em Recife (PE). Rede de atuação em vários estados do Nordeste.",
+      "locationSource": "https://umtelecom.com.br/",
+      "summary": "V.tal anunciou a aquisição da Um Telecom, com infraestrutura de fibra e contratos corporativos e de atacado. A operação estava sujeita a aprovações regulatórias e concorrenciais, condição confirmada pela apresentação de resultados de 2025 da V.tal.",
+      "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/v-tal-adquire-a-um-telecom/",
+      "history": [
+        {
+          "date": "2025-12-29",
+          "text": "Notícia registra aquisição sujeita a aprovações regulatórias."
+        },
+        {
+          "date": "2025-12-29",
+          "text": "Teletime noticia o anúncio e informa, citando a V.tal, que a operação passaria por aprovações."
+        }
+      ],
+      "supportingSource": "https://api.mziq.com/mzfilemanager/v2/d/a379b0ec-46e1-430a-97e4-7b74422808d2/db9c216a-ddf3-c411-6a07-a9e5f374dd0e?origin=2"
+    },
+    {
+      "id": "2025-savencia-quata",
+      "buyer": "Savencia",
+      "target": "Quatá Alimentos",
+      "seller": null,
+      "sector": "Alimentos e agroindústria",
+      "sectorId": "alimentos-agroindustria",
+      "sectorRoute": "pasta/alimentos-agroindustria",
+      "segment": "Laticínios",
+      "announcementDate": "2025-12-23",
+      "publicationDate": "2025-12-24",
+      "completionDate": null,
+      "updatedDate": null,
+      "dateBasis": "announcement",
+      "status": "Em aprovação",
+      "value": null,
+      "currency": null,
+      "stake": null,
+      "uf": null,
+      "locationNote": "Localização única da adquirida não confirmada no cadastro inicial.",
+      "summary": "Savencia anunciou a aquisição da Quatá Alimentos. A matéria não divulga o preço e informa que o negócio depende de aprovação do Cade.",
+      "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/savencia-dona-da-polenghi-anuncia-compra-da-quata-alimentos/",
+      "history": [
+        {
+          "date": "2025-12-23",
+          "text": "Comunicado da Savencia anuncia a assinatura de acordo para adquirir a Quatá."
+        },
+        {
+          "date": "2025-12-24",
+          "text": "Publicação informa operação sujeita à aprovação do Cade."
+        }
+      ],
+      "supportingSource": "https://savencia.com/wp-content/uploads/2025/12/CP_SFD_Accord_acquisition_Quata_Alimentos.pdf"
+    },
+    {
+      "id": "2025-hindiana-neogrid",
+      "buyer": "Grupo Hindiana / Dalpe",
+      "target": "Neogrid",
+      "seller": "Yafo",
+      "sector": "Tecnologia",
+      "sectorId": "tic",
+      "sectorRoute": "pasta/tic",
+      "segment": "Software para cadeia de suprimentos",
+      "announcementDate": "2025-12-22",
+      "publicationDate": "2025-12-23",
+      "completionDate": null,
+      "updatedDate": null,
+      "dateBasis": "announcement",
+      "status": "Em aprovação",
+      "value": 150000000,
+      "currency": "BRL",
+      "stake": "Controle acionário",
+      "uf": "SC",
+      "locationNote": "Sede em Joinville (SC), conforme formulário cadastral de 2025.",
+      "locationSource": "https://api.mziq.com/mzfilemanager/v2/d/af0b07a8-e6ab-4a8b-9a06-2330d4bf7d1f/d6db0e16-f61e-3878-eb33-ea7c874d62f0?origin=1",
+      "summary": "Grupo Hindiana, por meio da Dalpe, firmou acordo com a Yafo que poderá resultar na aquisição do controle da Neogrid. A operação depende de condições da OPA e aprovações regulatórias.",
+      "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/grupo-hindiana-assina-acordo-de-r-150-milhoes-para-aquisicao-do-controle-acionario-da-neogrid/",
+      "history": [
+        {
+          "date": "2025-12-22",
+          "text": "Comunicado da Neogrid anuncia o acordo de aquisição do controle."
+        },
+        {
+          "date": "2025-12-23",
+          "text": "Publicação de acordo condicionado à OPA e às aprovações regulatórias."
+        }
+      ],
+      "supportingSource": "https://neogrid.com/noticias/grupo-hindiana-assina-acordo-para-a-aquisicao-do-controle-acionario-da-neogrid/"
+    }
+  ]
+}
