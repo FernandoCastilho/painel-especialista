@@ -206,7 +206,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
      await page.screenshot({path:path.join(out,'rpn-'+width+'-'+theme+'.png'),fullPage:true})
     }
    }
-   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Aprender','aprender']]
+   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Novidades da semana','novidades'],['Aprender','aprender']]
    for(const [label,id] of extra){
     await more.click()
     await menu.getByRole('menuitem',{name:label,exact:true}).click()
