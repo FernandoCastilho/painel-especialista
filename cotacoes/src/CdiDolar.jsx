@@ -21,17 +21,6 @@ const rateText = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, ma
 const dateLabel = (d) => (d ? d.split('-').reverse().join('/') : '—')
 const todayIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10) }
 
-export function CdiDolarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 20h18" />
-      <path d="M4 16l5-5 3 3 6-7" />
-      <path d="M15 7h3v3" />
-      <path d="M7 3.5v5M8.6 4.5H6.4a1 1 0 000 2h1.2a1 1 0 010 2H5.4" />
-    </svg>
-  )
-}
-
 // Frase pronta para o cliente, no mesmo roteiro da planilha.
 export function clientPhrase(r, f) {
   if (r.already) return `Considerando BRL/USD de ${fx(f.spot)} até ${fx(f.target)}, o dólar alvo não está acima do atual: a aplicação a ${pctShort(f.pct)} do CDI já supera o câmbio, sem prazo mínimo.`

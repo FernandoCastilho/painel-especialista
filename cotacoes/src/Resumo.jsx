@@ -1,14 +1,12 @@
 import { observeMarketNewsHeight } from './marketNewsHeight.js'
 import { useNewsClock } from './useNewsClock.js'
 import { NEWS_WINDOW_DAYS, newsCollectionStale } from './newsWindow.js'
-import HeavyVehicles from './HeavyVehicles.jsx'
-import SectorNews from './SectorNews.jsx'
 import ChartComparison from './ChartComparison.jsx'
 import { Aviso } from './Avisos.jsx'
 import { buildFeed } from './feed.js'
 import './MarketTable.css'
 import './MarketTerminal.css'
-import { accumulatedReturns, cnhPtaxCross, compatiblePtax, destaquesMes, marketDate, ptaxLabel } from './marketReturns.js'
+import { accumulatedReturnsForDay, cnhPtaxCross, compatiblePtax, destaquesMes, marketDate, ptaxLabel } from './marketReturns.js'
 import { offHoursReference as offHours, quoteAgeLabel, quoteAgeState } from './quoteFreshness.js'
 import { nextChartIndex } from './chartNavigation.js'
 import { focoPorTeclado, saidaDeToque, useTocarFora } from './chartToque.js'
@@ -24,8 +22,6 @@ import { normalizeIpca } from './ipca.js'
 import Explain from './Explain.jsx'
 import NoticiasPorDia from './NoticiasPorDia.jsx'
 import { MoedasNoticias, TemaNoticias } from './ReformaTributaria.jsx'
-import CuradoriaNoticias from './CuradoriaNoticias.jsx'
-import GoogleTrends from './GoogleTrends.jsx'
 import { moedasDaManchete, nomeDaMoeda } from './moedasNoTexto.js'
 import { CURRENCIES, seriesName } from './useQuotes.js'
 import { centralFull, fullWindow, fromInput, toInput, useHistory, useIntraday, useCentralDaily } from './useHistory.js'
@@ -40,6 +36,10 @@ import Sparkline from './Sparkline.jsx'
 import { Plot, useWidth, fmtTime } from './HistoryChart.jsx'
 import { KpiRow, Panel } from './TerminalDesk.jsx'
 import { useDataFile } from './useDataFile.js'
+const HeavyVehicles = lazy(() => import('./HeavyVehicles.jsx'))
+const SectorNews = lazy(() => import('./SectorNews.jsx'))
+const CuradoriaNoticias = lazy(() => import('./CuradoriaNoticias.jsx'))
+const GoogleTrends = lazy(() => import('./GoogleTrends.jsx'))
 const RateModal = lazy(() => import('./RateModal.jsx'))
 
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}`
@@ -405,10 +405,18 @@ export function ResumoChart({ colors, spark, selection: sel, onSelection: setSel
 // Acumulados do mês e do ano e PTAX compatível de cada moeda: a mesma conta para o quadro do Mercado e para a aba Apresentar.
 export function useCambio(quotes, ptax) {
   const daily = useCentralDaily()
-  const returns = Object.fromEntries(CURRENCIES.map(c => [c.code, quotes?.[c.code]?.source && quotes[c.code].source !== c.code ? { month: null, year: null } : accumulatedReturns(daily.data, c.code)]))
+  const today = marketDate(Date.now())
+  const history = daily.data
+  const historicalReturns = useMemo(() => Object.fromEntries(
+    CURRENCIES.map(({ code }) => [code, accumulatedReturnsForDay(history, code, today)])
+  ), [history, today])
+  const returns = Object.fromEntries(CURRENCIES.map(({ code }) => {
+    const source = quotes?.[code]?.source
+    return [code, source && source !== code ? { month: null, year: null } : historicalReturns[code]]
+  }))
   const ptaxes = Object.fromEntries(CURRENCIES.map(c => [c.code, compatiblePtax(c.code, quotes?.[c.code], ptax?.[c.code])]))
   // Yuan: sem PTAX oficial; referência cruzada com o intraday do dia do boletim do dólar.
-  const ptaxDay = fromInput(ptaxes.USD?.date ?? marketDate(Date.now()))
+  const ptaxDay = fromInput(ptaxes.USD?.date ?? today)
   const usdTicks = useIntraday('USD', ptaxDay, !ptaxes.USD), cnhTicks = useIntraday('CNH', ptaxDay, !ptaxes.USD)
   if (ptaxes.USD && quotes?.CNH && !quotes.CNH.fallback && usdTicks.status === 'ok' && cnhTicks.status === 'ok') ptaxes.CNH = cnhPtaxCross(ptaxes.USD, usdTicks.data.points, cnhTicks.data.points)
   return { daily, returns, ptaxes }
@@ -460,7 +468,11 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         </div>
         </div>
         <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
-        <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>{newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'eleicoes' ? <TemaNoticias id="eleicoes-eua" simples /> : newsTab === 'trends' ? <GoogleTrends /> : newsTab === 'veiculos-pesados' ? <><HeavyVehicles compact/><SectorNews id="veiculos-pesados" label="Veículos pesados" /></> : <MarketNews bare />}</Panel>
+        <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>
+          <Suspense fallback={<p className="status" role="status">Carregando notícias…</p>}>
+            {newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'eleicoes' ? <TemaNoticias id="eleicoes-eua" simples /> : newsTab === 'trends' ? <GoogleTrends /> : newsTab === 'veiculos-pesados' ? <><HeavyVehicles compact/><SectorNews id="veiculos-pesados" label="Veículos pesados" /></> : <MarketNews bare />}
+          </Suspense>
+        </Panel>
         </div>
         </div>
 
