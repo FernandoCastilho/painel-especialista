@@ -285,21 +285,20 @@ const normalize = text => text.replace(/\s+/g, ' ').trim()
       // padrão: TFC da série MPME (porte padrão MPME nas demais regiões), faixa até 60 meses
       await fm.locator('.fm-custo-valor', { hasText: 'TFC_MPME_60.90 (C03)' }).waitFor()
       assert.match(await fm.locator('.fm-custo-valor').innerText(), /14,1743% a\.a\. em 04\/11\/2026.*TFC_MPME_60\.90 \(C03\).*faixa até 60 meses/)
-      await fm.locator('.fm-destaques').waitFor() // Resultado imediato com premissas fixas.
+      await fm.locator('.be-grid').waitFor() // Resultado imediato com premissas fixas.
       if (!(await fm.locator('.fm-grade').isVisible())) await fm.locator('.fm-details > summary').click()
       await fm.locator('.fm-grade').waitFor()
       // Os quadros completos ficam em "Composição do resultado"; os principais se repetem, idênticos, no topo do resultado.
-      const composicao = fm.locator('.fm-details'), destaques = fm.locator('.fm-destaques')
+      const composicao = fm.locator('.fm-details'), destaques = fm.locator('.be-grid')
       const kpiBox = (nome, area = composicao) => area.locator('.fm-kpi', { has: p.locator('span.fm-rotulo', { hasText: new RegExp(`^${nome}\\s*\\??$`) }) })
       const kpi = async (nome) => (await kpiBox(nome).locator('b').innerText())
       assert.equal(await fm.locator('.fm-hero').count(), 0, 'sem comparação não há faixa "Cotação comparativa" vazia')
-      for (const [label, detail] of [['Primeira parcela após carência', 'Parcelas'], ['Custo total estimado', 'Pagamento final']]) {
-        const row = destaques.getByRole('row').filter({ has: p.getByRole('rowheader', { name: new RegExp('^' + label) }) })
-        assert.ok((await row.locator('td').innerText()).includes(await kpi(detail)), `tabela e composição: ${label}`)
-      }
-      assert.equal(await destaques.locator('tbody tr:not(.fm-grp)').count(), 10) // taxas e CET; valores em reais (financiado, parcelas, juros, TAC, IOF) e custo total
-      const lastPayment = await destaques.getByRole('row').filter({ has: p.getByRole('rowheader', { name: 'Última parcela', exact: true }) }).locator('td').innerText()
+      const firstPayment = await destaques.locator('.be-installments dd').first().innerText()
+      assert.ok(firstPayment.includes(await kpi('Parcelas')))
+      assert.ok((await destaques.locator('.be-total strong').innerText()).includes(await kpi('Pagamento final')))
+      const lastPayment = await destaques.locator('.be-installments dd').last().innerText()
       assert.ok((await kpiBox('Parcelas').innerText()).includes(lastPayment), 'última parcela idêntica à composição')
+      assert.equal(await destaques.locator('.be-reference').isVisible(), true)
       await help('Custo total estimado', /Valor financiado \+ juros totais \+ IOF \+ TAC \+ ECG/, destaques)
       await help('Taxa final', /14,17% TFC \+ 1,25% BNDES \+ 3,00% spread da instituição/, composicao)
       assert.match(await kpiBox('Spread da instituição').innerText(), /3,00% a\.a\.\s+\+3,4\d p\.p\./)
@@ -345,7 +344,7 @@ const normalize = text => text.replace(/\s+/g, ' ').trim()
       await fm.getByText(/Prazo de 1 a 84 meses/).waitFor()
       await fm.getByLabel('Prazo total (meses)', { exact: true }).fill('60')
       // Fluxo TFB: liberação + 60 linhas, das quais 12 são carência.
-      if (!(await fm.locator('.fm-fluxo').isVisible())) await fm.locator('summary').filter({ hasText: /^Cronograma ilustrativo ·/ }).click()
+      if (!(await fm.locator('.fm-fluxo').isVisible())) await fm.locator('summary').filter({ hasText: /^Memória completa do fluxo$/ }).click()
       await fm.locator('.fm-fluxo').waitFor()
       assert.equal(await fm.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 60)
       assert.equal(await fm.locator('.fm-tabela tbody tr.fm-carencia').count(), 12)

@@ -1,0 +1,42 @@
+[
+  {
+    "width": 320,
+    "theme": "light",
+    "status": "pass"
+  },
+  {
+    "width": 320,
+    "theme": "dark",
+    "status": "pass"
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "status": "pass"
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "status": "pass"
+  },
+  {
+    "width": 768,
+    "theme": "light",
+    "status": "pass"
+  },
+  {
+    "width": 768,
+    "theme": "dark",
+    "status": "pass"
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "status": "pass"
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "status": "pass"
+  }
+]

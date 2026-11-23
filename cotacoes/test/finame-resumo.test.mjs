@@ -26,7 +26,7 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   // Todo destaque existe na lista de quadros da tela.
   for (const id of FINAME_DESTAQUES) assert.match(source, new RegExp(`\\{ id: '${id}', rotulo: '`))
   // A mesma função desenha o topo e a composição: rótulo, valor e nota não podem divergir.
-  assert.match(source, /className="fm-summary-row"/)
+  assert.match(source, /<BndesExecutiveResult/)
   for (const key of ['total', 'primeiraParcela', 'ultimaParcela']) assert.match(source, new RegExp(`brl\\(res.${key}\\)`))
   assert.match(source, /Taxa de referência/)
   assert.match(source, /Primeira parcela após carência/)
