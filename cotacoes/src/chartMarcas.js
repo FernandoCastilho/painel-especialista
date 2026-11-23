@@ -60,3 +60,21 @@ export function ancoraRotulo(i, n) {
   if (i === n - 1) return 'end'
   return 'middle'
 }
+
+// Formato de um rótulo copiado do valor já mostrado no quadro: mesmas casas decimais e "%" quando houver ("5,9657", "4,63%", "166.376").
+export function formatoComo(texto) {
+  const s = String(texto ?? '')
+  const casas = s.match(/\d,(\d+)/)?.[1].length ?? 0
+  const pct = s.includes('%') ? '%' : ''
+  return (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas })}${pct}`
+}
+
+// Pico e vale de um minigráfico (índices da máxima e da mínima). Sem rótulo se a linha for reta ou os dois ficarem colados (menos de 25% da largura).
+export function picoEVale(vals, xs, largura) {
+  const hi = vals.indexOf(Math.max(...vals))
+  const lo = vals.indexOf(Math.min(...vals))
+  if (!vals.length || vals[hi] === vals[lo]) return []
+  const marcas = [{ i: hi, vale: false }]
+  if (Math.abs(xs[hi] - xs[lo]) >= largura * 0.25) marcas.push({ i: lo, vale: true })
+  return marcas
+}

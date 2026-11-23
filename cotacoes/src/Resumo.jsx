@@ -33,6 +33,7 @@ import { shareQuotesImage } from './shareImage.js'
 import { rateTiles } from './snapshot.js'
 import { useNews } from './useNews.js'
 import Sparkline from './Sparkline.jsx'
+import { formatoComo, picoEVale } from './chartMarcas.js'
 import { Plot, useWidth, fmtTime } from './HistoryChart.jsx'
 import { KpiRow, Panel } from './TerminalDesk.jsx'
 import { useDataFile } from './useDataFile.js'
@@ -153,7 +154,7 @@ function ParityTile({ quotes, spark, onOpen, color }) {
           <small className="muted">{NAMES[quote]} por 1 {NAMES[base].toLowerCase()}{(a.stale || b.stale) && ' · última série disponível'}</small>
         </span>
         {pts.length > 0 && <span className="tile-spark expandable" role="button" tabIndex={0} title="Ampliar" onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && pts.length > 1) { e.preventDefault(); setBig(true) } }} onClick={() => pts.length > 1 && setBig(true)}>
-          <Sparkline points={pts} tone={change != null ? toneOf(change) : trend} />
+          <Sparkline points={pts} tone={change != null ? toneOf(change) : trend} fmt={formatoComo('0,0000')} />
         </span>}
       </span>
           <small className="muted tile-period">
@@ -179,6 +180,20 @@ function endLabels(norm, y) {
   const items = norm.map((s) => ({ code: s.code, color: s.color, y: y(s.pts.at(-1).v), text: pct(s.pts.at(-1).v) })).sort((a, b) => a.y - b.y)
   for (let i = 1; i < items.length; i++) if (items[i].y - items[i - 1].y < 13) items[i].y = items[i - 1].y + 13
   return items
+}
+
+// Pico e vale de cada linha (em % do período), sem encostar no rótulo final nem em outro rótulo já posto.
+function picosEVales(norm, x, y, limite) {
+  const out = []
+  for (const s of norm) {
+    const xs = s.pts.map((p) => x(p.t))
+    for (const { i, vale } of picoEVale(s.pts.map((p) => p.v), xs, limite)) {
+      const px = xs[i], py = y(s.pts[i].v) + (vale ? 16 : -8)
+      if (px > limite || out.some((o) => Math.abs(o.x - px) < 56 && Math.abs(o.y - py) < 14)) continue
+      out.push({ key: `${s.code}-${i}`, x: px, y: py, color: s.color, text: pct(s.pts[i].v) })
+    }
+  }
+  return out
 }
 
 // Linhas sobrepostas em variação % desde o início do período (escalas diferentes ficam comparáveis).
@@ -230,6 +245,9 @@ function MultiPlot({ series, width, intraday, history = series }) {
       ))}
       {norm.map((s) => (
         <path key={s.code} d={s.pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join('')} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" />
+      ))}
+      {picosEVales(norm, x, y, width - M.r - 56).map((l) => (
+        <text key={l.key} x={l.x} y={l.y} textAnchor="middle" className="vlabel" fill={l.color} pointerEvents="none">{l.text}</text>
       ))}
       {endLabels(norm, y).map((l) => (
         <text key={l.code} x={width - M.r + 6} y={l.y} dy="0.32em" fontSize="11" fontWeight="700" fill={l.color} pointerEvents="none">{l.text}</text>

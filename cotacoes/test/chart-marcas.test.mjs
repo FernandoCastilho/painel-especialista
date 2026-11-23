@@ -30,3 +30,17 @@ test('rótulos não encavalam nem repetem valor', () => {
   assert.deepEqual(marcasValor([], []), [])
   assert.deepEqual(marcasValor([5, 5, 5], xs(3)).map((k) => k.i), [2])
 })
+
+test('formato do rótulo copia casas e % do valor mostrado', async () => {
+  const { formatoComo } = await import('../src/chartMarcas.js')
+  assert.equal(formatoComo('5,9657')(5.94181), '5,9418')
+  assert.equal(formatoComo('4,63%')(3.8123), '3,81%')
+  assert.equal(formatoComo('166.376')(165529.4), '165.529')
+})
+
+test('minigráfico rotula pico e vale; colados ou linha reta, menos rótulos', async () => {
+  const { picoEVale } = await import('../src/chartMarcas.js')
+  assert.deepEqual(picoEVale([1, 3, 2, 0, 2], [0, 25, 50, 75, 100], 100), [{ i: 1, vale: false }, { i: 3, vale: true }])
+  assert.deepEqual(picoEVale([1, 3, 0, 2], [0, 10, 20, 100], 100), [{ i: 1, vale: false }])
+  assert.deepEqual(picoEVale([2, 2, 2], [0, 50, 100], 100), [])
+})
