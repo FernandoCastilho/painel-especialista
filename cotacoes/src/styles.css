@@ -687,3 +687,9 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .fx-news time { color:var(--mut); font-variant-numeric:tabular-nums; }
 .fx-news small { color:var(--mut); }
 .fx-news-note { margin:6px 0 0; font-size:.75rem; }
+/* Rótulos de pico e vale nos minigráficos (RotulosMini.jsx). */
+.mini-box { position:relative; display:block; }
+.mini-rotulo { position:absolute; transform:translate(-50%, calc(-100% - 2px)); font:600 10px/1 var(--mono, monospace); color:var(--fg); white-space:nowrap; pointer-events:none; text-shadow:0 0 3px var(--card), 0 0 3px var(--card); }
+.mini-rotulo.vale { transform:translate(-50%, 3px); }
+.mini-rotulo.ini { transform:translate(0, calc(-100% - 2px)); } .mini-rotulo.ini.vale { transform:translate(0, 3px); }
+.mini-rotulo.fim { transform:translate(-100%, calc(-100% - 2px)); } .mini-rotulo.fim.vale { transform:translate(-100%, 3px); }
