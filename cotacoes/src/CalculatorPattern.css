@@ -9,7 +9,9 @@
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group .fm-group-fields { padding:12px 14px 14px; }
 @media (max-width:359px) {
   /* O maior rótulo do porte/região precisa caber junto da seta do seletor. */
+  .bndes-page .bw > .bw-simulation { padding-inline:3px; }
   :root[data-theme] body .bw:not(.e4) .cx-finame .fm-operation .fm-group-fields { padding-inline:3px; }
+  .bw .cx-finame #fm-porte { padding-inline:6px; }
 }
 
 /* Cotação ao lado dos dados (computador largo) */
