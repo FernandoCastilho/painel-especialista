@@ -151,13 +151,16 @@ const links = {
       await contained('BNDES')
       await page.screenshot({ path: path.join(out, width + '-bndes.png') })
 
-      // Dados reais: a data do CDI vem como timestamp, diferente das séries BNDES.
-      await visit('calculadora/finame-materiais', '.be-grid')
-      assert.match(await page.locator('.be-equivalent').innerText(), /CDI de [\d,]+% a\.a\. em \d{2}\/\d{2}\/\d{4}/)
-      assert.match(await page.locator('.be-reference').innerText(), /Indexador utilizado[\s\S]*TFC/)
-      assert.equal(await page.locator('.fm-result-workspace .expandable-toggle').count(), 1)
-      await contained('BNDES executivo')
-      await page.locator('.be-grid').screenshot({ path: path.join(out, width + '-bndes-executivo.png') })
+      // Pages fornece a URL e as bases coletadas; o build local de CI não as contém.
+      // O CI cobre o timestamp em smoke-bndes-executivo, sem depender de coleta externa.
+      if (process.env.SMOKE_PUBLISHED_URL) {
+        await visit('calculadora/finame-materiais', '.be-grid')
+        assert.match(await page.locator('.be-equivalent').innerText(), /CDI de [\d,]+% a\.a\. em \d{2}\/\d{2}\/\d{4}/)
+        assert.match(await page.locator('.be-reference').innerText(), /Indexador utilizado[\s\S]*TFC/)
+        assert.equal(await page.locator('.fm-result-workspace .expandable-toggle').count(), 1)
+        await contained('BNDES executivo')
+        await page.locator('.be-grid').screenshot({ path: path.join(out, width + '-bndes-executivo.png') })
+      }
 
       await visit('resumo', '#r-moedas')
       await page.getByRole('tab', { name: 'Google Trends', exact: true }).click()
