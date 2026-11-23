@@ -1,0 +1,52 @@
+[
+  {
+    "route": "bndes-credito-tfb",
+    "width": 320,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-tlp-exigivel",
+    "width": 320,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-credito-tfb",
+    "width": 390,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-tlp-exigivel",
+    "width": 390,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-credito-tfb",
+    "width": 768,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-tlp-exigivel",
+    "width": 768,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-credito-tfb",
+    "width": 1024,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-tlp-exigivel",
+    "width": 1024,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-credito-tfb",
+    "width": 1440,
+    "status": "pass"
+  },
+  {
+    "route": "bndes-tlp-exigivel",
+    "width": 1440,
+    "status": "pass"
+  }
+]

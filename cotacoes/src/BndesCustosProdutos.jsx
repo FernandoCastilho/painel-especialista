@@ -7,6 +7,7 @@ const GRUPOS = [['pre', 'Custo prefixado'], ['pos', 'Custo pós-fixado']]
 
 // Premissas de custo: o que cada produto ou programa do BNDES aceita. Só consulta; não muda nenhuma conta.
 export default function BndesCustosProdutos() {
+  const [query, setQuery] = useState('')
   const [produtoId, setProdutoId] = useState(PRODUTOS_BNDES[0].id)
   const produto = PRODUTOS_BNDES.find(item => item.id === produtoId)
   const aceitos = custosPermitidos(produtoId)
@@ -14,6 +15,8 @@ export default function BndesCustosProdutos() {
   return <section className="bcp" aria-labelledby="bcp-title">
     <h3 id="bcp-title" className="cx-heading">Custos permitidos por produto</h3>
     <p className="status">Premissas da calculadora do BNDES, registradas em {dmy(CUSTOS_PREMISSAS_FONTE.registradoEm)}. Mostram qual custo financeiro cada linha aceita; o agente financeiro confirma as condições de cada operação.</p>
+    <label className="bcp-search">Buscar produto ou programa<input type="search" value={query} onChange={event => setQuery(event.target.value)} /></label>
+    {query.trim() && <div className="bcp-search-results" aria-label="Produtos encontrados">{PRODUTOS_BNDES.filter(item => item.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(query.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase())).map(item => <button key={item.id} type="button" onClick={() => { setProdutoId(item.id); setQuery('') }}>{item.nome}</button>)}</div>}
     <div className="bcp-pick">
       <label htmlFor="bcp-produto">Produto ou programa</label>
       <select id="bcp-produto" value={produtoId} onChange={event => setProdutoId(event.target.value)}>

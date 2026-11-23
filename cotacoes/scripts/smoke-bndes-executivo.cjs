@@ -1,0 +1,108 @@
+const { chromium } = require('playwright')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8771'
+const out = process.env.BNDES_EXECUTIVE_QA_OUTPUT || 'docs/bndes-executivo-qa'
+;(async () => {
+  fs.mkdirSync(out, { recursive:true })
+  const browser = await chromium.launch(require('./smoke-launch.cjs')())
+  const report=[]
+  try {
+    for(const width of [320,390,768,1440]) for(const theme of ['dark','light']) {
+      const page=await browser.newPage({viewport:{width,height:1000},colorScheme:theme,serviceWorkers:'block'})
+      const errors=[]; page.on('pageerror',e=>errors.push(e.message))
+      await page.addInitScript(() => {
+        localStorage.setItem('theme', 'dark')
+        Object.defineProperty(navigator,'webdriver',{get:()=>false})
+      })
+      await page.route('**/recado.json*',r=>r.fulfill({json:{ativo:false}}))
+      await page.route('**/bndes.json*',r=>r.fulfill({json:{schemaVersion:1,generatedAt:Date.now(),series:{TFB_60_90:{points:[['2026-11-19',16.48]]}},tlp:{points:[['2026-11-01',7]]},errors:[],stale:{}}}))
+      await page.route('**/moedas.json*',r=>r.fulfill({json:{schemaVersion:1,generatedAt:Date.now(),series:{C03:{points:[['2026-11-19',14.1453]]},C01:{points:[['2026-11-19',14.1453]]},LD1:{points:[['2026-10-01',-0.11]]},TD1:{points:[['2026-11-19',6]]},'604':{points:[['2026-11-19',5.4]]}},errors:[],stale:{}}}))
+      await page.route('**/macro.json*',r=>r.fulfill({json:{schemaVersion:1,generatedAt:Date.now(),cdi:[['2026-11-19',13.65]],selic:[['2026-11-19',13.75]],focus:{date:'2026-11-19'},errors:[],stale:{}}}))
+      await page.goto(base+'/#calculadora/finame-materiais')
+      const notice=page.locator('dialog.aviso-inicial:not(.recado)')
+      if(await notice.isVisible())await notice.getByRole('button',{name:'Entendi',exact:true}).click()
+      await page.locator('.be-grid').waitFor()
+      await page.locator('.fm-contrato > summary').click()
+      await page.locator('#fm-data-lib').fill('2026-11-22')
+      await page.locator('.fm-contrato > summary').click()
+      await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme)
+      assert.equal(await page.locator('.be-reference').getByText('TFC',{exact:true}).count(),1)
+      assert.match(await page.locator('.be-reference').innerText(),/C03/)
+      assert.match(await page.locator('.be-equivalent').innerText(),/13,65%.*19\/11\/2026/)
+      const resultBefore=await page.locator('.be-total strong').innerText()
+      assert.equal(await page.locator('.be-conditions .be-facts').last().evaluate(el=>getComputedStyle(el).display),'block','condições em linhas completas')
+      assert.equal(await page.locator('.be-financial > .be-facts').last().evaluate(el=>getComputedStyle(el).display),'block','despesas em linhas completas')
+      assert.equal(await page.locator('.fm-result-workspace .expandable-toggle').count(),1,'um único controle no resultado')
+      await page.getByRole('button',{name:'Modo apresentação',exact:true}).click()
+      const dialog=page.locator('dialog.fm-result-workspace[open]')
+      await dialog.waitFor()
+      const buttonContrast=await dialog.getByRole('button',{name:'Fechar apresentação',exact:true}).evaluate(el=>{
+        const luminance=color=>{
+          const values=color.match(/[\d.]+/g).slice(0,3).map(Number).map(value=>{const s=value/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4})
+          return values[0]*.2126+values[1]*.7152+values[2]*.0722
+        }
+        const style=getComputedStyle(el),fg=luminance(style.color)
+        let node=el,bg=style.backgroundColor
+        while((bg==='transparent'||bg==='rgba(0, 0, 0, 0)')&&node.parentElement){node=node.parentElement;bg=getComputedStyle(node).backgroundColor}
+        const background=luminance(bg)
+        return {foreground:style.color,background:bg,ratio:(Math.max(fg,background)+.05)/(Math.min(fg,background)+.05)}
+      })
+      assert.ok(buttonContrast.ratio>=4.5,JSON.stringify(buttonContrast))
+      assert.equal(await dialog.locator('.be-total strong').innerText(),resultBefore)
+      if(width===1440)await dialog.screenshot({path:path.join(out,`apresentacao-${theme}.png`)})
+      await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'})
+      await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Modo apresentação')
+      await page.locator('#fm-compare').check()
+      await page.locator('.fm-verdict').waitFor()
+      assert.match(await page.locator('.be-comparison-context').innerText(),/Valor financiado.*Prazo total.*Carência.*Liberação.*Porte e região.*Amortização/s)
+      await page.locator('#fm-compare').uncheck()
+      assert.equal(await page.locator('.be-total strong').innerText(),resultBefore)
+      await page.getByRole('button',{name:'Taxas e históricos',exact:true}).click()
+      await page.locator('.bn-series-search input').fill('TFB')
+      assert.ok(await page.locator('.bn-reference-table tbody tr').count()>0)
+      if(width===1440||width===390)await page.locator('.bw').screenshot({path:path.join(out,`taxas-${width}-${theme}.png`)})
+      await page.getByRole('button',{name:'Custos por produto',exact:true}).click()
+      await page.locator('.bcp-search input').fill('Fundo Clima')
+      await page.locator('.bcp-search-results').getByRole('button',{name:'BNDES - Fundo Clima Automático',exact:true}).click()
+      assert.match(await page.locator('.bcp-ok').innerText(),/Custo Fixo|Custo fixo|Fixo/i)
+      if(width===1440||width===390)await page.locator('.bw').screenshot({path:path.join(out,`custos-${width}-${theme}.png`)})
+      await page.getByRole('button',{name:'Simular financiamento',exact:true}).click()
+      assert.equal(await page.locator('.be-total strong').innerText(),resultBefore,'alternar áreas mantém o resultado')
+      const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)
+      assert.equal(overflow,false,'sem rolagem horizontal da página')
+      if(width===1440||width===390) {
+        await page.locator('.be-grid').screenshot({path:path.join(out,`resultado-${width}-${theme}.png`)})
+        await page.locator('.bw').screenshot({path:path.join(out,`simulacao-${width}-${theme}.png`)})
+      }
+      await page.locator('#bw-profile').selectOption('bndes-tlp-exigivel')
+      await page.getByLabel('Vencimento 1',{exact:true}).fill('2027-02-15')
+      await page.getByLabel('Dias úteis 1',{exact:true}).fill('21')
+      await page.getByLabel('Fase 1',{exact:true}).selectOption('A')
+      if(width<=390) {
+        await page.getByLabel('Fase 1',{exact:true}).scrollIntoViewIfNeeded()
+        const phaseBox=await page.getByLabel('Fase 1',{exact:true}).boundingBox()
+        assert.ok(phaseBox.x>=0 && phaseBox.x+phaseBox.width<=width,'fase visível sem rolagem horizontal')
+        await page.screenshot({path:path.join(out,`tlp-viewport-${width}-${theme}.png`)})
+      }
+      await page.getByRole('button',{name:'Colar cronograma em texto',exact:true}).click()
+      assert.match(await page.locator('#tlp-schedule').inputValue(),/2027-02-15; 21; A/)
+      await page.getByRole('button',{name:'Editar cronograma em tabela',exact:true}).click()
+      assert.equal(await page.getByLabel('Dias úteis 1',{exact:true}).inputValue(),'21')
+      if(width===1440||width===390)await page.locator('.bw').screenshot({path:path.join(out,`tlp-${width}-${theme}.png`)})
+      await page.locator('#bw-profile').selectOption('bndes-selic-lcd')
+      for(const id of ['lcd-contract','lcd-intermediation','lcd-fixing','lcd-source'])assert.equal(await page.locator('#'+id).count(),1,id)
+      await page.getByLabel('Vencimento 1',{exact:true}).fill('2027-02-15')
+      if(width===1440||width===390)await page.locator('.bw').screenshot({path:path.join(out,`lcd-${width}-${theme}.png`)})
+      const lcdOverflow=await page.evaluate(()=>({width:innerWidth,total:document.documentElement.scrollWidth,items:[...document.querySelectorAll('.bw *')].map(el=>({tag:el.tagName,cls:el.className,x:el.getBoundingClientRect().x,w:el.getBoundingClientRect().width})).filter(el=>el.x+el.w>innerWidth+2).slice(0,15)}))
+      if(lcdOverflow.total>lcdOverflow.width+1)await page.screenshot({path:path.join(out,`debug-overflow-${width}-${theme}.png`),fullPage:true})
+      assert.ok(lcdOverflow.total<=lcdOverflow.width+1,JSON.stringify(lcdOverflow))
+      assert.deepEqual(errors,[])
+      report.push({width,theme,result:resultBefore,passed:true})
+      await page.close()
+    }
+    fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2))
+    console.log(JSON.stringify(report,null,2))
+  }finally{await browser.close()}
+})().catch(e=>{console.error(e);process.exitCode=1})

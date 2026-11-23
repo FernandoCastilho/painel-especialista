@@ -374,8 +374,10 @@ async function fillScenario(page, section, route) {
       'Juros · 71,43%', 'Flat · 23,81%', 'TAC à vista (R$ 1.000,00) · 4,76%', 'Custo total',
     ])
   } else if (route === 'bndes-selic-lcd') {
+    await section.getByRole('button', {name:'Colar cronograma em texto',exact:true}).click()
     for (const [id, value] of [['principal', '100000'], ['contract', '2026-11-04'], ['release', '2026-11-05'], ['selic', '14'], ['ld1', '0,5'], ['fixing', '2026-11-04'], ['source', 'Contrato de teste QA'], ['bndes', '1'], ['intermediation', '0'], ['agent', '2'], ['schedule', '2026-12-07; 21; C\n2027-01-05; 20; A\n2027-02-05; 23; A'], ['schedule-source', 'Cronograma sintético QA, vencimentos úteis ajustados']]) await page.locator(`#lcd-${id}`).fill(value)
     for (const checkbox of await section.getByRole('checkbox').all()) await checkbox.check()
+    if (await section.locator('details[data-painel="Memória de cálculo"]').count()) await section.locator('details[data-painel="Memória de cálculo"] > summary').click()
     try { await section.locator('.lcd-table').waitFor({ timeout: 5000 }) } catch (error) {
       throw new Error(`Cenário LCD não calculou: ${(await section.locator('[role=status], [role=alert]').allInnerTexts()).map(normalize).join(' | ')}`, { cause: error })
     }
@@ -390,16 +392,17 @@ async function fillScenario(page, section, route) {
     assert.match(cet, /CET · parte fixa \(regra do BC\)[\s?]*8,61% a\.a\. LD1 \+ remunerações, sem Selic · líquido R\$\s*98\.992,70/i)
     assert.match(cet, /Custo com Selic projetada[\s?]*23,72% a\.a\./i)
   } else if (route === 'finame-materiais') {
-    await section.locator('.fm-destaques').waitFor()
+    await section.locator('.be-grid').waitFor()
     assert.equal(await section.locator('#fm-finame-eligible, #fm-sis, #fm-comp, #fm-lib, #fm-fgi-inc').count(), 0)
     const eligibilityWarning = section.locator('.fm-iof-premise')
     assert.equal(await eligibilityWarning.isVisible(), true, 'aviso tributário obrigatório permanece visível')
     assert.match(await eligibilityWarning.innerText(), /FINAME|Finame/)
-    assert.equal(await section.locator('.fm-destaques tbody tr:not(.fm-grp)').count(), 10, 'números principais à vista, sem abrir a composição: taxas, CET e valores em reais até o custo total')
+    assert.match(await section.locator('.be-cet > span').innerText(), /CET estimado/)
+    for (const label of ['Taxa final', 'Valor financiado', 'Primeira parcela após carência', 'Última parcela', 'Juros totais', 'TAC à vista', 'IOF']) assert.equal(await section.locator('.be-grid').getByText(label, {exact:true}).first().isVisible(), true, label)
     assert.equal(await section.locator('.fm-hero').count(), 0, 'sem comparação não há faixa vazia')
     await section.locator('.fm-details > summary').click()
     await section.locator('.fm-grade').waitFor()
-    await section.locator('summary').filter({ hasText: /^Cronograma ilustrativo ·/ }).click()
+    await section.locator('summary').filter({ hasText: /^Memória completa do fluxo$/ }).click()
     assert.equal(await section.locator('.fm-tabela tbody tr:not(.fm-liberacao)').count(), 48) // prazo padrão de 48 meses (18/11/2026)
     assert.match(await section.locator('.fm-tabela tbody tr').last().locator('td').last().innerText(), /^R\$\s*0,00$/)
   }
@@ -969,7 +972,7 @@ async function assertCambioFuturo(browser) {
           await fixtures(page)
           await page.goto(`${base}/#calculadora/${route}`)
           const section = page.locator(route === 'giro' ? '.giro-screen' : 'main.app section.cx').first(); await section.waitFor()
-          if (route === 'finame-materiais') await section.locator('.fm-destaques').waitFor()
+          if (route === 'finame-materiais') await section.locator('.be-grid').waitFor()
           await settleLayout(page)
           await assertWorkspace(page, section, `${route} ${width}`)
           await page.screenshot({ path: path.join(directory, `${route}-initial.png`), fullPage: true })

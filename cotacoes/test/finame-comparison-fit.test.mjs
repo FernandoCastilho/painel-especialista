@@ -10,7 +10,7 @@ test('tabelas de opções do Finame têm largura pelo número de colunas', () =>
   assert.match(jsx, /const fitStyle = \{ '--fm-opcoes': Math\.max\(1, alternatives\.length\) \}/)
   assert.match(jsx, /const matrizStyle = \{ '--fm-opcoes': alternatives\.length \+ \(comDiferenca \? 1 : 0\) \}/)
   assert.match(jsx, /aria-label=\{`Resultados \$\{custo\.toUpperCase\(\)\} e \$\{outro\.toUpperCase\(\)\}`\}><table className="cx-matrix fm-fit fm-exec-matrix" style=\{matrizStyle\}>/)
-  for (const rotulo of ['Composição das alternativas', 'Datas e parcelas das alternativas']) {
+  for (const rotulo of ['Datas e parcelas das alternativas']) {
     assert.match(jsx, new RegExp(`aria-label="${rotulo}"><table className="cx-matrix fm-fit" style=\\{fitStyle\\}>`), rotulo)
   }
   assert.match(css, /table\.cx-matrix\.fm-fit[^{]*\{[^}]*width:min\(100%,calc\(var\(--fm-rotulo\) \+ var\(--fm-opcoes,2\) \* var\(--fm-coluna\)\)\) !important;[^}]*table-layout:fixed;/)
@@ -25,10 +25,10 @@ test('comparação executiva: conclusão primeiro, uma tabela só e sem barra de
   // A diferença só aparece com duas opções e, em reais, usa os valores já arredondados para centavos.
   assert.match(jsx, /const comDiferenca = resumida && alternatives\.length === 2/)
   assert.match(jsx, /\(Math\.round\(valores\[1\] \* 100\) - Math\.round\(valores\[0\] \* 100\)\) \/ 100/)
-  // Na comparação, a composição não se repete em outro quadro; sem comparar, o quadro continua e não tem rolagem.
-  assert.match(jsx, /\{resumida \? detalhamento : <ExpandablePanel title="Composição do resultado">/)
-  assert.match(jsx, /className="fm-parcel-scroll fm-composicao"/)
-  assert.match(css, /\.bw \.fm-composicao \{ max-height:none; overflow:visible; \}/)
+  // Composição consolidada: o resumo executivo substitui o segundo quadro duplicado.
+  assert.doesNotMatch(jsx, /title="Composição do resultado"/)
+  assert.match(jsx, /BndesExecutiveResult/)
+  assert.match(jsx, /\{detalhamento\}/)
   // A lista completa só abre a pedido, pelo sumário ou comando dos marcos.
   assert.match(jsx, /className="fm-marcos-todas" onClick=\{abrirParcelas\} aria-controls="fm-parcelas"/)
   assert.match(jsx, /<details id="fm-parcelas" ref=\{parcelasRef\}[^>]*>/)

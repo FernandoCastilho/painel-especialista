@@ -84,7 +84,7 @@ test('a tela segue a ordem do roteiro e termina na referência de mercado', asyn
     assert.ok(source.indexOf(nome) > source.indexOf("step(2, 'Encargos')") && source.indexOf(nome) < source.indexOf("step(3, 'Resultado"), nome)
   }
   // O resultado continua respondendo com os nomes que já usava.
-  for (const linha of ['Valor financiado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado', 'CET estimado']) assert.ok(source.includes(`<th scope="row">${linha}`), linha)
+  for (const linha of ['Valor financiado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado', 'CET estimado']) assert.ok(source.includes(linha), linha)
   // O histórico vem antes da referência de mercado, que usa a faixa padrão.
-  assert.match(source.slice(source.indexOf('title="Histórico dos indexadores"')), /<\/ExpandablePanel>\}\s*\{res && <ReferenciaMercado tipos=\{referenciaTipos\} \/>\}\s*<\/section>\s*\)\s*\}\s*$/)
+  assert.match(source.slice(source.indexOf('title="Histórico dos indexadores"')), /<\/BndesDetails>\}\s*\{res && <ReferenciaMercado tipos=\{referenciaTipos\} \/>\}\s*<\/section>\s*\)\s*\}\s*$/)
 })
