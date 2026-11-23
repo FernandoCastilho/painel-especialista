@@ -476,7 +476,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </ExpandablePanel>
       {res && <section className="bndes-flow-wrap" aria-label="Fluxo de pagamentos da cotação">
         {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
-        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota={<>Como ler o principal{ajuda('Principal no fluxo de pagamentos', 'Nos custos pós-fixados, o principal exibido inclui a correção do saldo quando aplicável.')}</>} inicio={liberacaoText} />
+        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota="Nos custos pós-fixados (TLP, LCD, TFBD), o principal de cada parcela inclui a correção do saldo." inicio={liberacaoText} />
       </section>}
       </div>
       </div>
