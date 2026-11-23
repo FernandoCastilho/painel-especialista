@@ -1,6 +1,9 @@
 .ma-module{--ma-orange:#c65300;--ma-orange-text:#ac4200;--ma-tint:color-mix(in srgb,var(--ma-orange) 10%,var(--card));color:var(--fg);min-width:0;scroll-margin-top:160px}
 .ma-detail{scroll-margin-top:160px}.ma-map .ma-bubble-target{fill:transparent;stroke:none}
 :root:not([data-theme="light"]) .ma-module{--ma-orange-text:#ffab6b}
+/* Tema escuro: estados em cinza-azulado mais claro que o cartão e divisas visíveis (antes o mapa sumia no fundo). */
+:root:not([data-theme="light"]) .ma-state{fill:#2a3442;stroke:#56657a}
+:root:not([data-theme="light"]) .ma-bar-track{background:#232b36}
 .ma-intro h2{margin:0 0 6px;font-size:clamp(1.5rem,3vw,2.1rem);letter-spacing:-.025em}.ma-intro p{margin:0;color:var(--mut)}
 .ma-tabs{display:flex;gap:24px;border-bottom:1px solid var(--line);margin:24px 0 20px}.ma-tabs button{padding:12px 4px;border:0;border-bottom:3px solid transparent;background:none;color:var(--mut);font:600 .95rem var(--sans);cursor:pointer}.ma-tabs button[aria-current]{color:var(--fg);border-bottom-color:var(--ma-orange)}
 .ma-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.ma-filter,.ma-search{display:flex;flex-direction:column;gap:6px;color:var(--mut);font-size:.8rem;min-width:0}.ma-filters input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);padding:10px 12px;font:inherit;font-size:.9rem}.ma-search{grid-column:1/-1}
