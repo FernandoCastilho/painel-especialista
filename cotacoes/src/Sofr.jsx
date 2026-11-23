@@ -1,5 +1,6 @@
 import { nextChartIndex } from './chartNavigation.js'
 import { marcasRedondas, rotuloData } from './chartEixo.js'
+import { ancoraRotulo, marcasValor, yRotulo } from './chartMarcas.js'
 import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import ChartComparison from './ChartComparison.jsx'
 import Flag from './Flag.jsx'
@@ -99,6 +100,9 @@ export default function SofrChart({ macro, range }) {
     setHover(best)
   }
   const onKey = e => { const next=nextChartIndex(e.key,hover,rows.length); if(next!=null){e.preventDefault();setHover(next)} }
+  // rótulos de valor na SOFR do dia: último, primeiro, máximo, mínimo e os picos e vales mais marcados
+  const brutos = useMemo(() => rows.filter((r) => r.raw != null), [rows])
+  const marcas = useMemo(() => (g ? marcasValor(brutos.map((r) => r.raw), brutos.map((r) => g.X(r.t))) : []), [g, brutos])
   const hp = g && hover != null ? rows[hover] : null
   const [tipRef, tipW] = useLarguraBalao(hp)
   const last = macro.sofr[macro.sofr.length - 1]
@@ -137,6 +141,10 @@ export default function SofrChart({ macro, range }) {
               {on.band && g.band && <path d={g.band} fill={SERIES[4].color} opacity="0.16" />}
               {['m180', 'm90', 'm30'].map((k) => on[k] && <path key={k} d={g.path(k)} fill="none" stroke={SERIES.find((s) => s.id === k).color} strokeWidth="1.6" strokeLinejoin="round" />)}
               <path d={g.path('raw')} fill="none" stroke={SERIES[0].color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              {marcas.map(({ i, vale }) => {
+                const r = brutos[i]
+                return <text key={r.t} x={g.X(r.t)} y={yRotulo(g.Y(r.raw), vale, M.t, H - M.b)} textAnchor={ancoraRotulo(i, brutos.length)} className="vlabel" pointerEvents="none">{pct(r.raw)}</text>
+              })}
               {hp && <line x1={g.X(hp.t)} x2={g.X(hp.t)} y1={M.t} y2={H - M.b} className="cross" pointerEvents="none" />}
             </svg></ChartComparison>
             {hp && (
