@@ -31,7 +31,7 @@ const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL
 const pct = (v, d = 2) => `${nf(nbr5891(v, d), d)}%` // NBR 5891 (Res. CMN 4.881, art. 4º, par. único)
 const parcelaDoCusto = (valor, resultado) => {
   const custo = resultado.total - resultado.liberado
-  return <><span>{brl(valor)}</span>{custo > 0 && <><br /><small>{pct(100 * valor / custo)} do custo</small></>}</>
+  return <><span>{brl(valor)}</span>{custo > 0 && <><br /><small>{pct(100 * valor / custo, 1)} do custo</small></>}</>
 }
 const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 const data = (d) => d.toLocaleDateString('pt-BR')
