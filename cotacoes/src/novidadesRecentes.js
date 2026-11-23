@@ -12,6 +12,7 @@ export const NOVIDADES_RECENTES = [
       'No Câmbio Futuro, a TIR em reais passou a contemplar operações de prazo curto em que o cálculo anterior deixava o resultado em branco.',
       'Quando as duas cotações usadas para converter yuan em reais chegam defasadas, o Painel tenta buscá-las separadamente. A última referência válida continua na tela até haver dados compatíveis.',
       'O resultado executivo do BNDES mostra a data correspondente à taxa CDI usada na comparação.',
+      'Em Recuperação Judicial, a data da última edição fica visível acima do filtro e o recorte de novembro inclui as edições conferidas até 23/11.',
     ],
   },
   {
