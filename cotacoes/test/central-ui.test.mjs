@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url)
 async function getComponent() {
   const result = await build({ entryPoints:['src/Setores.jsx'], bundle:true, write:false, jsx:'automatic', format:'cjs', platform:'node', external:['react','react-dom'], loader:{'.css':'empty'} })
   const module = {exports:{}}
-  runInNewContext(result.outputFiles[0].text, {module,exports:module.exports,require,URL,console,Date,Intl, setTimeout,clearTimeout})
+  runInNewContext(result.outputFiles[0].text, {module,exports:module.exports,require,URL,URLSearchParams,console,Date,Intl, setTimeout,clearTimeout})
   return module.exports.default
 }
 test('catálogo, detalhes, rota antiga B3 e insumos aparecem sem classificação separada', async () => {

@@ -44,7 +44,7 @@ export function RateChart({ id, title, subtitle, color, points, history, step, s
       {actions && <div className="chart-actions">{actions}</div>}
       <div ref={ref}>
         {ok ? (
-          <Plot points={points} history={history} step={step} scales={scales} width={width} color={color} code={id} fmt={fmt} label={label} nice />
+          <Plot points={points} history={history} step={step} scales={scales} width={width} color={color} code={id} fmt={fmt} label={label} nice labels />
         ) : (
           <div className="placeholder" style={{ height: 120 }}>Sem dados no período.</div>
         )}

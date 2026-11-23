@@ -42,6 +42,7 @@ const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
 const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
+const Ma = lazy(() => import('./Ma.jsx'))
 const Apresentar = lazy(() => import('./Apresentar.jsx'))
 import { useDataFile } from './useDataFile.js'
 import Nav, { TABS } from './Nav.jsx'
@@ -224,7 +225,7 @@ export default function App() {
     } catch {
       /* sem histórico (ex.: arquivo local) */
     }
-    if (!(id === 'bndes' && tab === 'bndes')) window.scrollTo({ top: 0 }) // escolher série e período na aba BNDES não leva ao topo
+    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
   }
   useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
     if (tab !== 'cenarios' || !CEN_OLD[sub]) return
@@ -354,6 +355,7 @@ export default function App() {
       {tab === 'bndes' && <Bndes view={sub} onView={(v, replace) => goto('bndes', v, replace)} />}
 
       {tab === 'bancos' && <Bancos />}
+      {tab === 'ma' && <Ma goto={goto} view={sub} onView={(v, replace) => goto('ma', v, replace)} />}
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
       {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} quotes={quotes} />}
