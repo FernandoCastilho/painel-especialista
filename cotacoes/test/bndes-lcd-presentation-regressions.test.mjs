@@ -66,7 +66,7 @@ const nullComponent = { __esModule: true, default: () => null }
 const FixedDate = class extends Date { static now() { return NOW } }
 function html(family, moedas, bndes = { status: 'error', error: 'bndes indisponível' }) {
   const imports = {
-    react: { ...React, useMemo: fn => fn() },
+    react: { ...React, useMemo: fn => fn(), useState: initial => [initial, () => {}] },
     './Avisos.jsx': { Aviso: children },
     './Estado.jsx': { __esModule: true, default: ({ tipo, erro, children }) => React.createElement('section', { 'data-state': tipo }, erro, children) },
     './ChartFilters.jsx': { FilterScope: children },
@@ -102,7 +102,9 @@ test('Moedas conserva snapshot, aviso de falha e mudança LD1 com ambas as datas
   assert.match(result, /as colunas Dia, Mês e Ano não se aplicam/)
   const row = result.match(/<tr class="bn-on">([\s\S]*?)<\/tr>/)?.[1]
   assert.ok(row)
-  assert.equal((row.match(/<span class="muted">—<\/span>/g) || []).length, 3)
+  const variationCells = row.slice(row.indexOf('</th>') + 5)
+  assert.equal((variationCells.match(/<span class="muted">—<\/span>/g) || []).length, 3)
+  assert.match(row, /bn-reference-date/)
   assert.doesNotMatch(row, /bn-delta|0,020000/)
 })
 

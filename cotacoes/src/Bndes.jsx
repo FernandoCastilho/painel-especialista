@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Aviso } from './Avisos.jsx'
 import Estado from './Estado.jsx'
 import { FilterScope } from './ChartFilters.jsx'
@@ -30,6 +30,7 @@ const CARDS = [['tfb', 'TFB_60_90', 'TFB 60 meses · 90 dias', 'day'], ['tlp', '
 // do gráfico; o período (atalhos e datas) é único e vale para todas as séries; as observações ficam recolhidas. Tudo mora no endereço
 // (#bndes/<família>/<série>?p=<período>), então dá para copiar o link e abrir igual em outro lugar.
 export default function Bndes({ view = '', onView = () => {}, embedded = false }) {
+  const [seriesQuery, setSeriesQuery] = useState('')
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
   const moedasData = useMemo(() => withOfficialLcdSnapshot(moedas.data), [moedas.data])
@@ -42,6 +43,7 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
   const go = (patch, replace = false) => onView(buildRoute({ ...route, ...patch }), replace)
   const fam = FAMILIES.find((f) => f.id === family)
   const rows = rowsByFamily[family]
+  const visibleRows = rows.filter(row => `${row.name} ${row.id} ${row.sub ?? ''}`.toLocaleLowerCase('pt-BR').includes(seriesQuery.trim().toLocaleLowerCase('pt-BR')))
   const series = useMemo(() => seriesFor(family, id, bndes.data, moedasData), [family, id, bndes.data, moedasData])
   const own = family === 'tfb' || family === 'tlp' ? bndes : moedas
   const loading = own.status === 'loading'
@@ -93,7 +95,9 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
         <div className="seg bn-fam" role="group" aria-label="Família de séries">
           {FAMILIES.map((f) => <button key={f.id} type="button" aria-pressed={family === f.id} onClick={() => go({ family: f.id, id: undefined })}>{f.label}</button>)}
         </div>
-        <h3 className="bn-sub">{fam.title}</h3>
+        <div className="bn-workspace"><section className="bn-reference-table" aria-label="Referências disponíveis"><h3 className="bn-sub">{fam.title}</h3>
+        <label className="bn-series-search">Buscar série ou código<input type="search" value={seriesQuery} onChange={event => setSeriesQuery(event.target.value)} /></label>
+        {!visibleRows.length && <p role="status">Nenhuma série encontrada nesta família.</p>}
         {(family === 'tfb' || family === 'tlp') && bndes.stale && <p className="status stale" role="status">Não foi possível atualizar as séries {fam.label}. Os dados anteriores exibidos podem estar desatualizados.</p>}
         {family === 'moedas' && (moedas.status === 'error' || moedas.stale) && <p className="status stale" role="status">Não foi possível atualizar as moedas contratuais. LD1 permanece no snapshot oficial datado; demais dados anteriores, quando disponíveis, podem estar desatualizados.</p>}
         {family === 'tfc' && moedas.stale && <p className="status stale" role="status">Não foi possível atualizar as séries TFC. Os dados anteriores exibidos podem estar desatualizados.</p>}
@@ -110,9 +114,9 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
             <table className="bn-table bn-main">
               <thead><tr><th scope="col">Série</th><th scope="col">Valor</th><th scope="col">Dia</th><th scope="col" className="bn-wide">Mês</th><th scope="col" className="bn-wide">Ano</th>{hasSpread && <th scope="col" className="bn-wide" title="TFB menos a taxa DI x pré (B3) do mesmo prazo e do mesmo dia da curva">Spread DI</th>}<th scope="col">Data</th></tr></thead>
               <tbody>
-                {rows.flatMap((r) => [
+                {visibleRows.flatMap((r) => [
                   <tr key={r.id} className={r.id === id ? 'bn-on' : undefined}>
-                    <th scope="row">{<label className="bn-cmp"><input type="checkbox" checked={compare.includes(r.id)} disabled={r.missing} onChange={() => toggleCompare(r.id)} /><span className="sr-only">Comparar {r.name}</span></label>}<button type="button" className="bn-pick" aria-pressed={r.id === id} aria-label={`Ver histórico: ${r.name} (${r.id})`} onClick={() => go({ id: r.id })}>{r.name}<small>{r.sub}</small></button></th>
+                    <th scope="row">{<label className="bn-cmp"><input type="checkbox" checked={compare.includes(r.id)} disabled={r.missing} onChange={() => toggleCompare(r.id)} /><span className="sr-only">Comparar {r.name}</span></label>}<button type="button" className="bn-pick" aria-pressed={r.id === id} aria-label={`Ver histórico: ${r.name} (${r.id})`} onClick={() => go({ id: r.id })}>{r.name}<small>{r.sub}</small><small className="bn-reference-date">{r.date && <>Data {dmy(r.date)}</>}{!r.missing && <span>Dia <Delta c={r.day} /></span>}</small></button></th>
                     {r.missing ? <td colSpan={hasSpread ? 6 : 5} className="muted">{loading ? 'carregando' : 'indisponível'}</td> : (
                       <>
                         <td className="num">{r.text}{r.stale && <em className="old"> · dado anterior ({stamp(r.stale)})</em>}</td>
@@ -168,7 +172,7 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
           </>}
           </div>
         )}
-        <FilterScope>
+        </section><section className="bn-history" aria-label="Histórico da seleção"><FilterScope>
           {compareItems.length >= 2 ? (
             <>
               <h3 className="bn-sub">Comparação · {compareItems.length} séries · {[...new Set(compare.map((cid) => FAMILIES.find((x) => x.id === familyOf[cid])?.label).filter(Boolean))].join(' + ')}</h3>
@@ -180,7 +184,7 @@ export default function Bndes({ view = '', onView = () => {}, embedded = false }
               <SeriesChart list={series.list} name={series.name} code={series.code} label="série" kind={series.kind} loading={loading} decimals={series.decimals} unit={series.unit} stepped={series.stepped} period={period} />
             </>
           )}
-        </FilterScope>
+        </FilterScope></section></div>
 
 
         <details className="bn-src">

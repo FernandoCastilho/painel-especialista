@@ -8,6 +8,7 @@ import BndesCustosProdutos from './BndesCustosProdutos.jsx'
 import './BndesWorkspace.css'
 import './FinameComparisonLayout.css'
 import './CalculatorPattern.css'
+import './BndesExecutive.css'
 import CalcBack from './CalcBack.jsx'
 
 const PROFILES = [

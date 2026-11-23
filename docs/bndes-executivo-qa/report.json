@@ -1,0 +1,50 @@
+[
+  {
+    "width": 320,
+    "theme": "dark",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  },
+  {
+    "width": 320,
+    "theme": "light",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "theme": "dark",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "theme": "light",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "result": "R$ 1.380.139,34",
+    "passed": true
+  }
+]
