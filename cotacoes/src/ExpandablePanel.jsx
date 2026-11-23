@@ -7,7 +7,9 @@ let originalOverflow = ''
 
 // O conteúdo aparece uma única vez. O dialog nativo isola foco e fundo inclusive
 // quando um quadro é expandido dentro de outra comparação já ampliada.
-export default function ExpandablePanel({ title, brand, help, children, className = '', open, onOpenChange }) {
+// `heading` (roteiro das calculadoras, 21/11/2026): o título como aparece na faixa, quando leva o número do bloco.
+// `title` continua sendo o nome em texto (botão Ampliar e data-painel).
+export default function ExpandablePanel({ title, heading, brand, help, toggleLabel, children, className = '', open, onOpenChange }) {
   const [localOpen, setLocalOpen] = useState(false)
   const expanded = open ?? localOpen
   const setOpen = useCallback(value => { if (onOpenChange) onOpenChange(value); else setLocalOpen(value) }, [onOpenChange])
@@ -32,7 +34,7 @@ export default function ExpandablePanel({ title, brand, help, children, classNam
       queueMicrotask(restoreFocus)
     }
   }, [expanded, setOpen, restoreFocus])
-  const content = <><header className="expandable-heading"><div>{brand}<h3 id={titleId}>{title}</h3>{help}</div><button type="button" ref={expanded ? undefined : trigger} className="expandable-toggle" onClick={() => setOpen(!expanded)} aria-label={`${expanded ? 'Recolher' : 'Ampliar'}: ${title}`} title={expanded ? 'Recolher (Esc)' : 'Ampliar na tela'} aria-expanded={expanded}><BndesIcon kind={expanded ? 'collapse' : 'expand'} /></button></header><div className="expandable-content">{children}</div></>
+  const content = <><header className="expandable-heading"><div>{brand}<h3 id={titleId}>{heading ?? title}</h3>{help}</div><button type="button" ref={expanded ? undefined : trigger} className={`expandable-toggle${toggleLabel ? ' expandable-presentation-toggle' : ''}`} onClick={() => setOpen(!expanded)} aria-label={toggleLabel ? (expanded ? 'Fechar apresentação' : toggleLabel) : `${expanded ? 'Recolher' : 'Ampliar'}: ${title}`} title={expanded ? 'Recolher (Esc)' : 'Ampliar na tela'} aria-expanded={expanded}>{toggleLabel ? (expanded ? 'Fechar apresentação' : toggleLabel) : <BndesIcon kind={expanded ? 'collapse' : 'expand'} />}</button></header><div className="expandable-content">{children}</div></>
   // data-painel: nome do quadro, para a aba Apresentar esconder as memórias de cálculo e tabelas longas nos slides.
   return <section className={`expandable-panel ${className}`} data-painel={title}>
     {!expanded && content}

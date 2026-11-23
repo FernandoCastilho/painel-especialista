@@ -7,6 +7,7 @@
 //   A planilha mostrava o retorno do período (sem anualizar); aqui ele aparece separado, como "no período".
 // - Atingir meta: câmbio futuro único (o mesmo em todos os vencimentos) que faz a TIR ao ano igual à meta.
 import { irr } from './emprestimo4131.js'
+import { tirarTirCambialPct } from './cambioFuturoCenario.js'
 
 const DAY = 864e5
 const ms = (iso) => Date.parse(`${iso}T12:00:00Z`)
@@ -56,8 +57,9 @@ export function fluxoMoeda({ valor, cotacao, taxa, tac = 0, start, dates, futuro
   const out = { ok: true, valor, cotacao, taxa, tac, brl, liquido, linhas, juros, totalMoeda: valor + juros }
   if (linhas.some((l) => !l.futuro)) return { ...out, completo: false }
   const totalBrl = linhas.reduce((s, l) => s + l.parcelaBrl, 0)
-  const y = irr([{ v: liquido, t: 0 }, ...linhas.map((l) => ({ v: -l.parcelaBrl, t: l.prazo / 365 }))])
-  return { ...out, completo: true, totalBrl, periodo: (totalBrl / liquido - 1) * 100, tir: y == null ? null : y * 100 }
+  const taxaAnual = irr([{ v: liquido, t: 0 }, ...linhas.map(l => ({ v: -l.parcelaBrl, t: l.prazo / 365 }))])
+  const tir = taxaAnual == null ? tirarTirCambialPct(liquido, linhas.map(l => ({ pago: l.parcelaBrl, dias: l.prazo }))) : taxaAnual * 100
+  return { ...out, completo: true, totalBrl, periodo: (totalBrl / liquido - 1) * 100, tir }
 }
 
 // Câmbio futuro único que leva a TIR ao ano (dias corridos/365) à meta: valor presente das parcelas = valor líquido.

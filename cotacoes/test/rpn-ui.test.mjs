@@ -21,7 +21,7 @@ function resources(create) {
   const module = { exports: {} }
   let sequence = 0
   const deps = { react: { ...React, useId: () => 'rpn-test-' + ++sequence },
-    './RpnCalculator.css': {}, './rpnClassicController.mjs': { createClassicRpnController: create },
+    './RpnCalculator.css': {}, './RpnCetPanel.jsx': { __esModule: true, default: function CetPanel() {} }, './rpnClassicController.mjs': { createClassicRpnController: create },
     './rpnClassicLayout.mjs': { classicKeyRows, portraitKeyRows, getClassicKeyState },
     './rpnRateConversion.mjs': { convertEquivalentRate }, './rpnKeyboard.mjs': { rpnKeyFromEvent },
     './rpnHistory.mjs': { captureReportedRpnResult, createRpnHistoryCapture }, './RpnHistoryPanel.jsx': { __esModule: true, default: function HistoryPanel() {} } }
@@ -411,4 +411,66 @@ test('limpeza do histórico mantém a calculadora e permite recuperar contas ap�
   await ui.render.settle()
   assert.equal(history().entries.map(e => e.result).join(','), '9,5')
   assert.equal(controller.snapshot().x, 9)
+})
+
+test('fita atualiza a mesma linha durante digitação e só registra o resultado após a operação', async t => {
+  const ui = setup(t, createClassicRpnController)
+  await ui.render.settle()
+  ui.find(node => node.props?.['aria-label'] === 'Histórico de contas').props.onClick()
+  await ui.render.settle()
+  const tape = () => ui.find(node => node.type?.name === 'HistoryPanel').props
+  const keyboard = async (key, draft, count = 0) => {
+    ui.panel().props.onKeyDown(event(key))
+    await ui.render.settle()
+    assert.equal(tape().draft, draft)
+    assert.equal(tape().entries.length, count)
+  }
+  await keyboard('1', '1')
+  await keyboard('2', '12')
+  await keyboard(',', '12,')
+  await keyboard('5', '12,5')
+  await keyboard('Backspace', '12,')
+  await keyboard('5', '12,5')
+  await keyboard('Enter', null)
+  await keyboard('3', '3')
+  await keyboard('+', null, 1)
+  assert.equal(tape().entries[0].result, 15.5)
+  await keyboard('9', '9', 1)
+  await keyboard('Delete', null, 1)
+})
+
+
+const cetSource = await readFile(new URL('../src/RpnCetPanel.jsx', import.meta.url), 'utf8')
+const cetCode = (await transform(cetSource, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })).code
+test('CET atualiza após colagem e recalcula ao digitar encargos', async t => {
+  const { calculatePastedCet } = await import('../src/rpnPastedCet.mjs')
+  const module = { exports: {} }
+  runInNewContext(cetCode, { module, exports: module.exports, require: p =>
+    p === './rpnPastedCet.mjs' ? { calculatePastedCet } : p === 'react' ? { ...React, useId: () => 'cet-test' } : require(p) })
+  const ui = hookRenderer(() => module.exports.default())
+  t.after(() => ui.close())
+  ui.render()
+  const fill = (name, index, value) => {
+    nodes(ui.value).filter(el => el.type === name)[index].props.onChange({ target: { value } })
+    ui.render()
+  }
+  fill('input', 0, '2025-01-01')
+  fill('input', 1, '1000')
+  fill('textarea', 0, '01/01/2026\t1100')
+  assert.match(nodes(ui.value).find(el => el.type === 'strong').props.children.join(''), /10,00\s*% a\.a\./)
+  fill('input', 2, '100')
+  assert.match(nodes(ui.value).find(el => el.type === 'strong').props.children.join(''), /22,22\s*% a\.a\./)
+})
+
+test('CET fica disponível no celular sem abrir o histórico e permanece ao recolhê-lo', async t => {
+  const ui = setup(t, createClassicRpnController)
+  await ui.render.settle()
+  const cet = () => ui.find(n => n.type?.name === 'CetPanel')
+  assert.ok(cet(), 'CET deve existir mesmo com histórico fechado')
+  const history = ui.find(n => n.props?.className === 'rpn-history-trigger')
+  history.props.onClick()
+  await ui.render.settle()
+  ui.find(n => n.props?.className === 'rpn-history-trigger').props.onClick()
+  await ui.render.settle()
+  assert.ok(cet(), 'recolher o histórico não desmonta o CET')
 })

@@ -138,7 +138,7 @@ export default function Config({ quotesAt, quotesVia, quotes, quotesHealth, fx, 
           <div className="config-row"><InstallApp /></div>
         </Panel>
       </div>
-      <Panel title="O que há de novo" className="config-wide"><Novidades open /></Panel>
+      <Novidades title="O que há de novo" />
     </div>
   )
 }

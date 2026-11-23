@@ -1,7 +1,28 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { novidadesDaSemana } from '../src/novidadesSemana.js'
+import { novidadesDaSemana, organizarNovidades } from '../src/novidadesSemana.js'
+
+test('a tela reúne todos os itens por dia civil de Brasília, inclusive na virada do ano', () => {
+  const entradas = [
+    { date: '26/12/2026', items: ['Anterior'] },
+    { date: '02/01/2027', items: ['1', '2', '3', '4', '5'] },
+    { date: '27/12/2026', items: ['Primeiro dia'] },
+    { date: '02/01/2027', items: ['Outro ajuste do dia'] },
+    { date: '03/01/2027', resumo: 'Amanhã', items: ['Futura'] },
+  ]
+  const agora = Date.parse('2027-01-03T02:59:59Z')
+  assert.deepEqual(organizarNovidades(entradas, agora), {
+    recentes: [
+      { date: '02/01/2027', items: ['1', '2', '3', '4', '5', 'Outro ajuste do dia'] },
+      { date: '27/12/2026', items: ['Primeiro dia'] },
+    ],
+    anteriores: [{ date: '26/12/2026', items: ['Anterior'] }],
+  })
+  assert.deepEqual(novidadesDaSemana(entradas, agora), [])
+  assert.deepEqual(novidadesDaSemana(entradas, agora + 1000), ['Amanhã'])
+  assert.deepEqual(organizarNovidades(entradas, Date.parse('2027-01-10T03:00:00Z')).recentes, [])
+})
 
 test('novidades da semana: só entradas com resumo dos últimos 7 dias, mais recente primeiro, no máximo 4', () => {
   const e = [

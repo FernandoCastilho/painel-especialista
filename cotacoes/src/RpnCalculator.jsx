@@ -5,14 +5,14 @@ import { classicKeyRows, getClassicKeyState, portraitKeyRows } from './rpnClassi
 import { rpnKeyFromEvent } from './rpnKeyboard.mjs'
 import './RpnCalculator.css'
 import RpnHistoryPanel from './RpnHistoryPanel.jsx'
+import RpnCetPanel from './RpnCetPanel.jsx'
 import { captureReportedRpnResult, createRpnHistoryCapture } from './rpnHistory.mjs'
 
 const registers = [
   ['n', 'n', 'Número de períodos'], ['i', 'i', 'Taxa por período (%)'], ['pv', 'PV', 'Valor presente'],
   ['pmt', 'PMT', 'Pagamento periódico'], ['fv', 'FV', 'Valor futuro'],
 ]
-const mobileLandscape = '(orientation: landscape) and (pointer: coarse) and (min-width: 500px) and (max-height: 520px)'
-const fullLandscape = '(orientation: landscape) and (min-width: 500px) and (max-height: 560px)'
+const mobileLandscape = '(orientation: landscape) and (pointer: coarse) and (hover: none) and (min-width: 500px) and (max-width: 1000px) and (max-height: 520px)'
 const options = [['day', 'Ao dia'], ['month', 'Ao mês'], ['year', 'Ao ano']]
 const suffix = { day: 'a.d.', month: 'a.m.', year: 'a.a.' }
 const fmt = new Intl.NumberFormat('pt-BR', { maximumSignificantDigits: 12 })
@@ -144,7 +144,7 @@ function RatePanel({ id, open, onClose, onUse, canUse }) {
   </section>
 }
 
-export default function RpnCalculator() {
+export default function RpnCalculator({ floating = false, onFloat } = {}) {
   const helpId = useId()
   const headingId = useId()
   const ratesId = useId()
@@ -152,42 +152,9 @@ export default function RpnCalculator() {
   const helpTrigger = useRef(null)
   const helpPanel = useRef(null)
   const workspace = useRef(null)
-  const screenButton = useRef(null)
-  const tryingFullscreen = useRef(false)
-  const [screenMode, setScreenMode] = useState(null)
   useEffect(() => {
-    const element = workspace.current
-    const doc = element?.ownerDocument
-    if (!doc) return
-    const onChange = () => {
-      const native = doc.fullscreenElement === element
-      setScreenMode(mode => native ? 'native' : mode === 'native' ? null : mode)
-    }
-    doc.addEventListener('fullscreenchange', onChange)
-    return () => doc.removeEventListener('fullscreenchange', onChange)
-  }, [])
-  const toggleScreen = async () => {
-    const element = workspace.current
-    if (!element || tryingFullscreen.current) return
-    const doc = element.ownerDocument
-    if (doc.fullscreenElement === element) {
-      try { await doc.exitFullscreen() } catch { /* O navegador mantém o controle da saída nativa. */ }
-      return
-    }
-    if (screenMode) { setScreenMode(null); return }
-    if (doc.fullscreenEnabled && typeof element.requestFullscreen === 'function') {
-      tryingFullscreen.current = true
-      try {
-        await element.requestFullscreen()
-        if (doc.fullscreenElement === element) { setScreenMode('native'); return }
-      } catch { /* Em visualizadores sem acesso à tela cheia, amplia dentro da página. */ }
-      finally { tryingFullscreen.current = false }
-    }
-    if (workspace.current === element) {
-      setScreenMode('page')
-      doc.defaultView?.scrollTo(0, 0)
-    }
-  }
+    if (floating) workspace.current?.focus({ preventScroll: true })
+  }, [floating])
   const [ratesOpen, setRatesOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const historyId = useId(), historyTrigger = useRef(null), nextHistoryId = useRef(0)
@@ -201,6 +168,7 @@ export default function RpnCalculator() {
     return () => media.removeEventListener('change', update)
   }, [])
   const [historyOpen, setHistoryOpen] = useState(false)
+  const showHistoryAside = historyAside && !floating
   const [history, setHistory] = useState({ entries: [], removed: null })
   const [captureHistory] = useState(() => createRpnHistoryCapture())
   const appendHistory = useCallback(item => {
@@ -232,22 +200,25 @@ export default function RpnCalculator() {
   }, [])
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const viewport = window.matchMedia?.(screenMode ? fullLandscape : mobileLandscape)
-    if (!viewport?.addEventListener) return
+    const viewport = window.matchMedia?.(mobileLandscape)
+    if (floating || !viewport?.addEventListener) return
     let frame = 0
     const onRotate = event => {
       cancelAnimationFrame(frame)
-      if (event.matches && !ratesOpen && !helpOpen && !historyOpen) frame = requestAnimationFrame(() => window.scrollTo(0, 0))
+      if (event.matches && !ratesOpen && !helpOpen &&
+          !document.activeElement?.matches('input, select, textarea, [contenteditable="true"]')) {
+        frame = requestAnimationFrame(() => window.scrollTo(0, 0))
+      }
     }
     viewport.addEventListener('change', onRotate)
     return () => {
       viewport.removeEventListener('change', onRotate)
       cancelAnimationFrame(frame)
     }
-  }, [ratesOpen, helpOpen, historyOpen, screenMode])
+  }, [ratesOpen, helpOpen, floating])
   useEffect(() => {
-    if (helpOpen && typeof window !== 'undefined' && window.matchMedia?.(screenMode ? fullLandscape : mobileLandscape).matches) helpPanel.current?.focus()
-  }, [helpOpen, screenMode])
+    if (helpOpen && typeof window !== 'undefined' && window.matchMedia?.(mobileLandscape).matches) helpPanel.current?.focus()
+  }, [helpOpen])
   const closeHelp = () => { setHelpOpen(false); helpTrigger.current?.focus() }
   const [session] = useState(() => {
     try {
@@ -289,13 +260,8 @@ export default function RpnCalculator() {
     return next
   })
   const onKeyDown = event => {
-    if (event.defaultPrevented || event.target?.closest?.('.rpn-history')) return
-    if (event.key === 'Escape' && screenMode === 'page' && !helpOpen && !ratesOpen && !historyOpen && !event.target?.closest?.('input, select, textarea, [contenteditable="true"]')) {
-      event.preventDefault()
-      setScreenMode(null)
-      screenButton.current?.focus()
-      return
-    }
+    if (event.defaultPrevented || event.target?.closest?.('.rpn-history, .rpn-cet, .rpn-guide')) return
+    if (floating && event.key === 'Escape') return
     if (failed) return
     const key = rpnKeyFromEvent(event)
     if (!key || (view.indicators?.on === false && key !== 'on') || !controller.isSupported(key)) return
@@ -307,12 +273,15 @@ export default function RpnCalculator() {
   const powered = view.indicators?.on !== false
   const display = powered ? view.display : ''
 
-  return <section ref={workspace} className="rpn-workspace" data-screen-mode={screenMode || undefined} data-rpn-mobile-compact={mobileCompact || undefined} aria-labelledby={headingId} tabIndex={0} onKeyDown={onKeyDown}>
+  return <section ref={workspace} className="rpn-workspace" data-rpn-mobile-compact={(!floating && mobileCompact) || undefined} aria-labelledby={headingId} tabIndex={0} onKeyDown={onKeyDown}>
     <header className="rpn-heading">
-      <span>Calculadora financeira</span>
-      <h1 id={headingId}>Calculadora RPN</h1>
+      {floating ? <h2 id={headingId} className="rpn-sr-only">Calculadora RPN</h2> : <>
+        <span>Calculadora financeira</span>
+        <h1 id={headingId}>Calculadora RPN</h1>
+        {!mobileCompact && <button type="button" className="rpn-float-action" onClick={onFloat}>Fixar como janela flutuante</button>}
+      </>}
     </header>
-    <div className={`rpn-layout${historyAside ? ' rpn-layout--history' : ''}`}>
+    <div className={`rpn-layout${showHistoryAside ? ' rpn-layout--history' : ''}`}>
     <div className={`rpn-desk${ratesOpen ? ' rpn-desk--rates' : ''}`}>
       <div className="rpn-console" data-shift={shift ?? ''}>
         <div className="rpn-bezel">
@@ -339,7 +308,7 @@ export default function RpnCalculator() {
               aria-expanded={ratesOpen} aria-controls={ratesId}>
               <span aria-hidden="true">⇄ </span>Taxas
             </button>
-            <button type="button" className="rpn-history-trigger" hidden={historyAside} ref={historyTrigger} aria-label="Histórico de contas"
+            <button type="button" className="rpn-history-trigger" hidden={showHistoryAside || floating} ref={historyTrigger} aria-label="Histórico de contas"
               aria-expanded={historyOpen} aria-controls={historyId}
               onClick={() => historyOpen ? closeHistory() : setHistoryOpen(true)}>
               <span className="rpn-history-trigger-long" aria-hidden="true">Histórico</span>
@@ -347,13 +316,6 @@ export default function RpnCalculator() {
             </button>
             <button type="button" aria-label="Ajuda da calculadora" className="rpn-help-trigger" ref={helpTrigger} aria-expanded={helpOpen}
               aria-controls={helpId} onClick={() => helpOpen ? closeHelp() : setHelpOpen(true)}>?</button>
-            <button type="button" ref={screenButton} className="rpn-screen-trigger"
-              aria-label={screenMode ? 'Sair da tela cheia' : 'Tela cheia'} title={screenMode ? 'Sair da tela cheia' : 'Tela cheia'}
-              aria-pressed={!!screenMode} onClick={() => { void toggleScreen() }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d={screenMode ? 'M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5' : 'M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5'} />
-              </svg>
-            </button>
           </div>
         </div>
         <p className="rpn-message" role="status">{view.message || (view.indicators?.paused ? <span className="rpn-sr-only">Programa em pausa.</span> : '')}</p>
@@ -375,9 +337,9 @@ export default function RpnCalculator() {
           return next
         }); closeRates() }} />
     </div>
-    {(historyAside || historyOpen) && <RpnHistoryPanel id={historyId} entries={history.entries} hasCleared={Boolean(history.removed?.all)}
+    <div className="rpn-side-tools">{(showHistoryAside || historyOpen || floating) && <RpnHistoryPanel id={historyId} entries={history.entries} draft={view.tapeInput} hasCleared={Boolean(history.removed?.all)}
       canUndo={Boolean(history.removed)} onEdit={editHistory} onRemove={removeHistory} onUndo={undoHistory}
-      onClear={clearHistory} onClose={historyAside ? undefined : closeHistory} />}
+      onClear={clearHistory} onClose={showHistoryAside || floating ? undefined : closeHistory} />}<RpnCetPanel /></div>
     </div>
     <div hidden={!helpOpen} ref={helpPanel} tabIndex={-1} role="region" className="rpn-help" id={helpId}
       aria-labelledby={helpId + '-heading'} onKeyDown={event => {
@@ -406,6 +368,16 @@ export default function RpnCalculator() {
           {!!view.cashFlows?.length && <ol start={0}>{view.cashFlows.map((value, index) => <li key={index}>{show(typeof value === 'number' ? value : value?.value)}</li>)}</ol>}
         </div>
       </div>
+    </details>
+    <details className="rpn-reference-panel rpn-guide">
+      <summary>Guia rápido da HP 12C</summary>
+      <ol>
+        <li><strong>Faça uma conta:</strong> digite 200, toque em ENTER, digite 30 e toque em −. O resultado é 170. Não há tecla de igual no modo RPN.</li>
+        <li><strong>Leia a pilha:</strong> X é o visor; Y é o valor logo abaixo na pilha. A tecla x↔y troca os dois. Para subtração e divisão, a ordem é Y − X ou Y ÷ X.</li>
+        <li><strong>Use as funções financeiras:</strong> n é o número de períodos; i, a taxa por período; PV, o valor presente; PMT, a parcela; FV, o saldo futuro. Use a mesma unidade em n, i e PMT. Na visão de quem toma o crédito, recebido é positivo e pago é negativo.</li>
+        <li><strong>Confira a fita:</strong> ela acompanha a digitação e registra as operações. As teclas f e g dão acesso às funções douradas e azuis.</li>
+      </ol>
+      <p>O manual oficial da HP está em Configurações → Base de dados.</p>
     </details>
   </section>
 }

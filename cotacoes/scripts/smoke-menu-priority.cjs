@@ -5,6 +5,26 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
  fs.mkdirSync(out,{recursive:true})
  const browser=await chromium.launch(require('./smoke-launch.cjs')()), report=[]
  try{
+  // Setores pode ficar pronto depois de a pessoa já ter escolhido abrir Mais.
+  const slowPage=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block'})
+  await slowPage.goto(base+'/#calculadora')
+  await slowPage.locator('.calc-catalog').waitFor()
+  const slowNav=slowPage.getByRole('navigation',{name:'Seções',exact:true})
+  const pendingChunk=slowPage.waitForRequest('**/Setores-*.js')
+  let release
+  const loading=new Promise(resolve=>{release=resolve})
+  await slowPage.route('**/Setores-*.js',async route=>{await loading;await route.continue()})
+  await slowNav.getByRole('button',{name:'Setores',exact:true}).click()
+  await pendingChunk
+  await slowNav.getByRole('button',{name:'Mais',exact:true}).click()
+  const novidades=slowNav.getByRole('menuitem',{name:'Novidades da semana'})
+  await novidades.waitFor()
+  release()
+  await slowPage.locator('.central-surface').waitFor()
+  await slowPage.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))))
+  await novidades.click()
+  await slowPage.getByRole('heading',{name:'Novidades da semana',level:1}).waitFor()
+  await slowPage.close()
   for(const width of [320,390,820,1024,1440,1660,1920]) for(const theme of ['light','dark']){
    const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<=390,colorScheme:theme,serviceWorkers:'block'})
    const page=await context.newPage()
@@ -14,7 +34,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    if(await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
    await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,theme)
    const nav=page.getByRole('navigation',{name:width>=1000?'Navegação principal':'Seções',exact:true})
-   const expected=width>=1000?['Mercado','Cenários','Juros','Calculadoras','Calculadora RPN','Setores','Notícias','Podcast','Mais']
+   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','Notícias','Podcast','Mais']
     :width<=359?['Merc.','Cen.','Juros','Calc.','RPN','Setores','Mais']:['Mercado','Cenários','Juros','Calculadoras','RPN','Setores','Mais']
    await page.evaluate(()=>document.fonts.ready)
    if(width>=1400){
@@ -54,6 +74,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.equal(await menu.getByRole('group',{name:'Consultar',exact:true}).count(),1)
    assert.equal(await menu.getByRole('menuitem',{name:'Juros',exact:true}).count(),0)
    assert.equal(await menu.getByRole('menuitem',{name:'Notícias',exact:true}).count(),width<1000?1:0)
+   assert.equal(await menu.getByRole('menuitem',{name:'Novidades da semana',exact:true}).count(),1)
    const bounds=await menu.boundingBox()
    assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1&&bounds.y>=0&&bounds.y+bounds.height<=1001)
    await page.screenshot({path:path.join(out,width+'-'+theme+'.png'),fullPage:true})
@@ -179,10 +200,33 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
       assert.match(await visibleText(),/^12,682503$/,'cálculo não perdeu precisão no envio ao visor')
       assert.equal(await interest.innerText(),rateBefore,'sem gravar taxa convertida em i')
      }
+     if(width<=390||width===1440){
+      const guide=panel.locator('.rpn-guide')
+      await guide.locator('summary').click()
+      assert.match(await guide.innerText(),/O resultado é 170/)
+      await guide.screenshot({path:path.join(out,'rpn-guia-'+width+'-'+theme+'.png')})
+      await guide.locator('summary').click()
+      const history=panel.getByRole('button',{name:'Histórico de contas',exact:true})
+      if(width<1120 && await history.getAttribute('aria-expanded')!=='true') await history.click()
+      const cet=panel.locator('.rpn-cet')
+      await cet.locator('summary').click()
+      const before=await visibleText()
+      await cet.getByLabel('Data da liberação',{exact:true}).fill('2025-01-01')
+      await cet.getByLabel('Valor líquido liberado (R$)',{exact:true}).fill('1.000,00')
+      await cet.getByLabel('Vencimentos e valores (R$)',{exact:true}).fill([['Vencimento','Valor'],['01/01/2026','1.100,00']].map(row=>row.join(String.fromCharCode(9))).join(String.fromCharCode(10)))
+      assert.match(await cet.locator('.rpn-cet-result strong').innerText(),/10,00% a\.a\./)
+      await cet.getByLabel('Outros custos na liberação (R$)',{exact:true}).fill('50,00')
+      assert.match(await cet.locator('.rpn-cet-result strong').innerText(),/15,79% a\.a\./)
+      assert.equal(await visibleText(),before,'digitar no CET não altera o visor ou a pilha')
+      if(width<1120){await history.click(); assert.equal(await cet.getByLabel('Outros custos na liberação (R$)',{exact:true}).inputValue(),'50,00','recolher o histórico preserva os dados do CET')}
+      assert.ok(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'CET cabe na largura da HP')
+      await cet.screenshot({path:path.join(out,'rpn-cet-'+width+'-'+theme+'.png')})
+      await cet.locator('summary').click()
+     }
      await page.screenshot({path:path.join(out,'rpn-'+width+'-'+theme+'.png'),fullPage:true})
     }
    }
-   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Aprender','aprender']]
+   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Novidades da semana','novidades'],['Aprender','aprender']]
    for(const [label,id] of extra){
     await more.click()
     await menu.getByRole('menuitem',{name:label,exact:true}).click()
@@ -220,6 +264,8 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
      const wide=document.querySelector('.rpn-keypad--wide'), display=document.querySelector('.rpn-display')
      return wide?.getClientRects().length && display?.getBoundingClientRect().top>=0
     })
+    await page.getByRole('navigation',{name:/^Seções$/}).waitFor({state:'hidden'})
+    assert.equal(await panel.getAttribute('data-rpn-mobile-compact'),'true')
     const keyboard=panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
     assert.equal(await keyboard.count(),1)
     assert.equal(await keyboard.getByRole('button').count(),39)
@@ -265,103 +311,19 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await page.getByRole('navigation',{name:'Seções',exact:true}).waitFor()
    await context.close()
   }
-  for (const behavior of ['unavailable', 'rejected', 'native', 'desktop-fallback']) {
-   const desktopShort=behavior === 'desktop-fallback'
-   const mobile=behavior === 'unavailable' || behavior === 'rejected'
-   const viewport=desktopShort ? {width:780,height:390} : {width:390,height:844}
-   const context = await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,serviceWorkers:'block'})
-   const page = await context.newPage()
-   await page.addInitScript(behavior => {
-    let fullscreen = null
-    Object.defineProperty(document,'fullscreenEnabled',{ configurable:true, get:()=>behavior !== 'unavailable' && behavior !== 'desktop-fallback' })
-    Object.defineProperty(document,'fullscreenElement',{ configurable:true, get:()=>fullscreen })
-    HTMLElement.prototype.requestFullscreen = async function() {
-     if (behavior === 'rejected') throw new Error('fullscreen indisponível')
-     fullscreen = this
-     document.dispatchEvent(new Event('fullscreenchange'))
-    }
-    document.exitFullscreen = async () => { fullscreen = null; document.dispatchEvent(new Event('fullscreenchange')) }
-   },behavior)
-   await page.goto(base+'/#rpn')
-   const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
-   await panel.waitFor()
-   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
-   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
-   await panel.focus()
-   for (const k of ['2','Enter','3','+']) await panel.press(k)
-   const value = async () => (await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim()
-   assert.match(await value(),/^5(?:,0+)?$/)
-   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
-   const close = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
-   const normalNav = page.getByRole('navigation',{name:'Seções',exact:true})
-   await normalNav.waitFor({state:'visible'})
-   if (desktopShort) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false)
-   await open.click()
-   await close.waitFor()
-   const native = behavior === 'native'
-   assert.equal(await panel.getAttribute('data-screen-mode'),native?'native':'page')
-   if (native) assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),false,'paisagem também funciona com ponteiro fino')
-   if (!native) await normalNav.waitFor({state:'hidden'})
-   for (const [width,height] of [[780,390],[320,760]]) {
-    await page.setViewportSize({width,height})
-    const grade = panel.getByRole('group',{name:'Teclado da calculadora',exact:true})
-    assert.equal(await grade.getByRole('button').count(),39)
-    assert.equal((await grade.getAttribute('class')).includes(width===780?'--wide':'--portrait'),true)
-    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true)
-    if (width === 780 && !native) {
-     for (const part of [panel.locator('.rpn-display'), ...await grade.getByRole('button').all()]) {
-      const box = await part.boundingBox()
-      assert.ok(box && box.x>=0 && box.y>=0 && box.x+box.width<=width+1 && box.y+box.height<=height,
-       'tecla e visor dentro da tela no fallback: '+JSON.stringify(box))
-     }
-    }
-    assert.match(await value(),/^5(?:,0+)?$/)
-   }
-   // Volte à geometria inicial antes de sair, para provar a restauração sem efeito de um resize após a saída.
-   await page.setViewportSize(viewport)
-   const landscape=viewport.width>viewport.height
-   await page.waitForFunction(wide=>matchMedia(wide?'(orientation: landscape)':'(orientation: portrait)').matches,landscape)
-   const restoredViewport=await page.evaluate(()=>[innerWidth,innerHeight])
-   if (native) await page.evaluate(()=>document.exitFullscreen())
-   else await close.press('Escape')
-   await open.waitFor()
-   assert.equal(await panel.getAttribute('data-screen-mode'),null)
-   if (!native) assert.equal(await open.evaluate(el=>document.activeElement===el),true)
-   assert.match(await value(),/^5(?:,0+)?$/)
-   await normalNav.waitFor({state:'visible'})
-   assert.deepEqual(await page.evaluate(()=>[innerWidth,innerHeight]),restoredViewport)
-   await open.click()
-   await close.click()
-   await open.waitFor()
-   await normalNav.waitFor({state:'visible'})
-   assert.match(await value(),/^5(?:,0+)?$/)
-   report.push({fullscreen:behavior,passed:true})
-   await context.close()
-  }
-  {
-   // Chrome sem mocks: comprova o top layer e a aplicação real da regra :fullscreen.
-   const context = await browser.newContext({viewport:{width:1000,height:700},screen:{width:1000,height:700},serviceWorkers:'block'})
+  for (const viewport of [{width:1440,height:900}, {width:844,height:390}]) {
+   const context = await browser.newContext({viewport,serviceWorkers:'block'})
    const page = await context.newPage()
    await page.goto(base+'/#rpn')
    const panel = page.getByRole('region',{name:'Calculadora RPN',exact:true})
    await panel.waitFor()
-   const notice = page.getByRole('dialog',{name:'Aviso',exact:true})
-   if (await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
-   await panel.focus()
-   for (const k of ['2','Enter','3','+']) await panel.press(k)
-   const open = panel.getByRole('button',{name:'Tela cheia',exact:true})
-   const exit = panel.getByRole('button',{name:'Sair da tela cheia',exact:true})
-   assert.equal(await page.evaluate(()=>document.fullscreenEnabled),true,'Chrome da suíte suporta a API')
-   await open.click()
-   await exit.waitFor()
-   assert.equal(await panel.evaluate(el=>document.fullscreenElement===el && el.matches(':fullscreen')),true)
-   assert.equal(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true)
-   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
-   await exit.click()
-   await open.waitFor()
+   const navigation = page.getByRole('navigation',{name:viewport.width >= 1000 ? 'Navegação principal' : 'Seções', exact:true})
+   await navigation.waitFor({state:'visible'})
+   assert.equal(await panel.getByRole('button',{name:'Tela cheia',exact:true}).count(),0)
+   assert.equal(await panel.getAttribute('data-rpn-mobile-compact'),null)
    assert.equal(await page.evaluate(()=>document.fullscreenElement),null)
-   assert.match((await panel.getByLabel('Resultado da calculadora',{exact:true}).textContent()).trim(),/^5(?:,0+)?$/)
-   report.push({fullscreen:'chrome-real',passed:true})
+   await page.screenshot({path:path.join(out,'rpn-desktop-'+viewport.width+'.png')})
+   report.push({viewport,mode:'desktop-inline',passed:true})
    await context.close()
   }
  }finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close()}

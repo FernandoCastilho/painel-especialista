@@ -167,11 +167,29 @@ Também foram vistas as ementas dos atos e decisões da Receita de 2025 e 2026 s
 - Fórmulas oficiais de swap da B3 e norma de registro obrigatório de derivativos: páginas não abriram.
 
 ## Tela (padrão da calculadora BNDES)
+A disposição dos blocos descrita aqui valeu até 20/11/2026. A atual está na seção "Tela no roteiro das calculadoras (21/11/2026)", logo abaixo.
+
 A descrição de 11/11/2026 (grupos Operação, Custos e tributos e Proteção cambial; cotação comparativa em destaque; cronograma recolhido) foi substituída em 14/11/2026 pelo desenho no formato da cotação. O desenho atual está na seção "Desenho da tela (formato da cotação)". Em resumo:
 - `src/Emprestimo4131.jsx` usa a estrutura e o estilo do BNDES (`BndesWorkspace.css`): cartão claro e título com abas (Simular · Regras e fontes). À esquerda: Atingir meta, Operação (seis campos e o valor convertido), Proteção cambial (NDF) e Mais opções, recolhido. À direita: botões Apresentar simulação e Imprimir PDF; cotação com o custo efetivo e o equivalente em CDI em destaque, com ampliação na tela; economia de IOF e equivalente em giro; condições da operação com Copiar resumo; comparação com swap e sem proteção e premissas, recolhidas. Abaixo, em largura inteira, o quadro parcela a parcela, aberto.
 - Apresentação (`Emprestimo4131Presentation.jsx`) e PDF (`Emprestimo4131Print.jsx`) trabalham sobre uma cópia congelada (`emprestimo4131Presentation.js`): não recalculam nem buscam taxa nova.
 - Estilo próprio só em `Emprestimo4131.css`, sempre com escopo `.e4`.
 - A aba Regras e fontes mostra as regras da tabela do início desta nota, com a fonte de cada uma, mais a regra do IOF do capital de giro, a mesma das calculadoras de crédito do Painel.
+
+## Tela no roteiro das calculadoras (21/11/2026)
+Pedido do Fernando: as calculadoras seguem três blocos, Demanda, Encargos e Resultado (nota geral em `docs/calculadoras-roteiro-2026-11-21.md`). Nesta tela mudaram só a ordem, os nomes e a apresentação. Nenhuma conta mudou: com os mesmos dados, todos os números são os de antes.
+
+| Bloco | O que tem |
+|---|---|
+| 1 Demanda do cliente (antes "Operação") | principal em reais, moeda, valor na moeda, cotação de partida, parcelas e carência (subiu de "Mais opções"). Gaveta "Detalhes do contrato": data da cotação, pagamentos, regra das datas e amortização |
+| 2 Encargos | taxa de juros all-in (Dólar + ou Euro +), IOF-câmbio na entrada (calculado), tarifa flat, fiança ou SBLC. Subgrupo "Proteção cambial (NDF)": taxa futura, DI pré do prazo e cupom cambial. Gaveta "Mais encargos": IR na fonte e alíquota, a quem são pagas tarifa e fiança, acréscimo do banco no NDF e spread do banco no swap |
+| 3 Resultado · custo final para o cliente (antes "Cotação · 4131 com NDF") | o mesmo quadro, na mesma ordem, agora abaixo dos dados, na largura toda. "4131 com NDF" virou subtítulo |
+
+Depois do resultado: Apresentar, Imprimir e Copiar resumo; Atingir meta (desceu do topo, funciona igual); Comparar com swap e sem proteção; Premissas e limites no botão de ajuda; Parcelas (a tabela abre fechada); e, por último, a referência de mercado com a cotação diária da moeda escolhida. A seção de comparação inclui o valor e a participação dos encargos no custo na moeda contratada.
+
+- O título de cada gaveta mostra o que está valendo. A gaveta abre sozinha se um campo de dentro tiver erro. No modo Apresentar as gavetas ficam abertas.
+- "Mais opções" e o contador "itens fora do padrão" deixaram de existir: o que estava lá foi para a demanda, para os encargos ou para as duas gavetas.
+- "Condições da operação" continua dentro do quadro do resultado, para seguir aparecendo na cotação ampliada.
+- Teste novo: `test/emprestimo-4131-roteiro.test.mjs`. Fotos de antes e depois: `docs/calculadoras-roteiro/emprestimo-4131-antes-depois-computador.png` e `emprestimo-4131-antes-depois-celular.png`.
 
 ## Verificações
 `node --test test/emprestimo-4131*.test.mjs`: 43 testes (20 anteriores e 23 de `test/emprestimo-4131-parcelas.test.mjs`: parcelas, prazo médio, IOF por prazo médio, carência, datas a cada 30 dias, custo exp/360, economia de IOF, equivalente em giro, euro, regressão do principal no vencimento com números gravados da versão anterior, prazo médio na fronteira de 364 dias, regra de 30 dias no semestral, prazo não múltiplo do período, DI do prazo, atingir meta (inclusive contra conta fechada), resumo no formato de e-mail e taxas futuras da mesa coladas). Conta com resultado em fórmula fechada (juros, gross-up, IOF por prazo, custo all-in, relação com a variação do dólar, câmbio a termo, leitura em CDI, ponto de equilíbrio, entradas inválidas), IR sobre comissões ao exterior, spread do swap sem custos de entrada, fatores por curva e cópia congelada da apresentação e do PDF.

@@ -155,6 +155,8 @@ async function smokeConverter(browser, width, base, out) {
       await Promise.all(el.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})))
     })
     assert.equal(await p.getByRole('dialog').count(),0)
+    // Roteiro (21/11/2026): a tabela dos doze prazos fica recolhida depois do resultado; as ajudas dela aparecem ao abrir.
+    await section.locator('details.fi-table-drawer > summary').click()
     assert.doesNotMatch(await section.innerText(),/A moeda apenas identifica|Flat cobrado|As mesmas condições|Calcula a taxa anual/)
     assert.equal(await section.locator('.fi-tac-status').innerText(),'TAC excluída.')
     for(const title of ['Moeda','Prazo e base de cálculo','Flat · Instituição 1','Flat · Instituição 2','TAC','Custo total · Instituição 1','Atingir meta']){

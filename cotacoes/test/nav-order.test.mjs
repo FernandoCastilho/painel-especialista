@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 const src = readFileSync(new URL('../src/Nav.jsx', import.meta.url), 'utf8')
 test('catálogo histórico preserva posições dos atalhos ao cadastrar a RPN', () => {
   const ids = APP_SECTIONS.map(section => section.id)
-  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora', 'podcast', 'rpn', 'apresentar', 'config']) // mesma ordem da barra do computador (DESK_TABS)
+  assert.deepEqual(ids, ['resumo', 'juros', 'cenarios', 'noticias', 'bndes', 'setores', 'bancos', 'feriados', 'aprender', 'calculadora', 'podcast', 'rpn', 'novidades', 'apresentar', 'config'])
   assert.match(src, /desktop \? DESKTOP_PRIMARY : MOBILE_PRIMARY/)
 })
 
@@ -44,9 +44,10 @@ test('Calculadoras aparece no menu e mantém busca e acesso direto', () => {
 
 import { DESKTOP_PRIMARY, MOBILE_PRIMARY, MORE_GROUPS, shortcutTitle } from '../src/navigationPriority.js'
 test('prioridade aprovada separa visual de atalhos históricos', () => {
- assert.deepEqual(DESKTOP_PRIMARY, ['resumo','cenarios','juros','calculadora','rpn','setores','noticias','podcast'])
+ assert.deepEqual(DESKTOP_PRIMARY, ['rpn','resumo','cenarios','juros','calculadora','setores','noticias','podcast'])
  assert.deepEqual(MOBILE_PRIMARY, ['resumo','cenarios','juros','calculadora','rpn','setores'])
- assert.deepEqual(MORE_GROUPS, [{label:'Acompanhar',ids:['noticias','podcast']},{label:'Consultar',ids:['bancos','feriados']},{label:'Aprender',ids:['aprender']}])
+ assert.deepEqual(MORE_GROUPS, [{label:'Acompanhar',ids:['noticias','podcast']},{label:'Consultar',ids:['bancos','feriados','novidades']},{label:'Aprender',ids:['aprender']}])
+ assert.deepEqual(parseCommand('Novidades da semana'), {kind:'tab',id:'novidades',sub:''})
  assert.deepEqual(APP_SECTIONS.filter(t=>!t.oculto).slice(0,10).map(t=>shortcutTitle(t.id)),['Alt+1','Alt+2','Alt+3','Alt+4','Alt+5','Alt+6','Alt+7','Alt+8','Alt+9','Alt+0'])
  assert.deepEqual(parseCommand('BNDES'), {kind:'tab',id:'bndes',sub:''})
  assert.deepEqual(parseCommand('FINAME'), {kind:'tab',id:'calculadora',sub:'finame-materiais'})
@@ -72,7 +73,8 @@ test('Calculadora RPN é destino principal distinto e não muda Alt+1 a Alt+0', 
   const rpn = APP_SECTIONS.find(section => section.id === 'rpn')
   assert.equal(rpn.label, 'Calculadora RPN')
   assert.equal(rpn.mobileLabel, 'RPN')
-  for (const primary of [DESKTOP_PRIMARY, MOBILE_PRIMARY]) assert.equal(primary[primary.indexOf('calculadora') + 1], 'rpn')
+  assert.equal(DESKTOP_PRIMARY[0], 'rpn')
+ assert.equal(MOBILE_PRIMARY[MOBILE_PRIMARY.indexOf('calculadora') + 1], 'rpn')
   assert.ok(!MORE_GROUPS.flatMap(x => x.ids).includes('rpn'))
   assert.equal(shortcutTitle('rpn'), undefined)
   assert.deepEqual(parseCommand('RPN'), { kind: 'tab', id: 'rpn', sub: '' })
@@ -82,6 +84,6 @@ test('Calculadora RPN é destino principal distinto e não muda Alt+1 a Alt+0', 
 test('rótulos compactos mantêm os nomes acessíveis completos e a RPN como destino próprio', () => {
   assert.deepEqual(Object.fromEntries(APP_SECTIONS.filter(t => t.compactLabel).map(t => [t.id, t.compactLabel])),
     { resumo: 'Merc.', cenarios: 'Cen.', calculadora: 'Calc.' })
-  assert.match(src, /aria-label=\{!desktop && \(t\.mobileLabel \|\| t\.compactLabel\) \? \(t\.terminalLabel \|\| t\.label\) : undefined\}/)
+  assert.match(src, /aria-label=\{t\.id === 'rpn' \|\| \(!desktop && \(t\.mobileLabel \|\| t\.compactLabel\)\) \? \(t\.terminalLabel \|\| t\.label\) : undefined\}/)
   assert.match(src, /nav-label-compact" aria-hidden="true"/)
 })
