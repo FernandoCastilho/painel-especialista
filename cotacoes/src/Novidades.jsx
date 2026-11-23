@@ -1,8 +1,12 @@
-// Registro de mudanças para a equipe. Acrescente as novas entradas no topo.
-// `resumo` (opcional, poucas palavras): vai para "Novidades da semana" no aviso inicial. Só para mudança estruturante ou
-// função nova (aba, dado, cálculo, fonte); ajuste de design, texto ou correção visual fica sem `resumo`.
-export const ENTRIES = [
-  { date: '18/11/2026', items: [
+import { useState } from 'react'
+import { Panel } from './TerminalDesk.jsx'
+import { organizarNovidades } from './novidadesSemana.js'
+import { NOVIDADES_RECENTES } from './novidadesRecentes.js'
+
+// As próximas entregas entram em novidadesRecentes.js. Este acervo preserva os registros originais.
+const ENTRIES = [
+  ...NOVIDADES_RECENTES,
+  { date: '19/11/2026', items: [
     'Calculadoras > BNDES Finame Materiais, Regras e fontes: o teto de R$ 20 milhões por operação passa a citar a norma oficial (Circular BNDES 14/2022, item 6.2.2, com a redação da Circular 64/2023), no lugar de materiais de terceiros. O aviso acima desse valor continua só aviso; a conta não mudou.',
     'Saiu a palavra "novos" da descrição dos itens: a norma do BNDES fala em bens industrializados de fabricação nacional, sem exigir que sejam novos.',
     'Entrou o que a nota fiscal precisa ter no reembolso: eletrônica, ativa, de saída, para o CNPJ do cliente (matriz e filiais), nunca usada em outro financiamento do BNDES, de venda (venda para entrega futura não serve; vale a nota de remessa) e com itens de NCM e CST/CSOSN aceitos. Valor financiável = produto + IPI + ICMS-ST − descontos. Fontes: validações de notas do BNDES (2026) e Anexo I da Circular 13.',
@@ -103,26 +107,25 @@ export const ENTRIES = [
   { date: '09/10/2026', items: ['SOFR com médias de 30/90/180 dias e faixa de percentis.', 'Relógio do país acima de cada cotação.', 'Cotação do CNH por cruzamento quando a direta está defasada.', 'Curvas de juros: DI x pré (B3) e Treasuries (EUA), com comparação entre datas.'] },
 ]
 
-// As mais recentes ficam à vista; as anteriores abrem por clique (a lista inteira passava de 10 telas no celular).
-const RECENTES = 6
-const entrada = (e, i) => (
-  <div key={`${e.date}-${i}`}>
-    <h3>{e.date}</h3>
-    <ul>{e.items.map((item) => <li key={item}>{item}</li>)}</ul>
-  </div>
-)
+function mostrarDia({ date, items }) {
+  return <section key={date}>
+    <h3><time dateTime={date.split('/').reverse().join('-')}>{date}</time></h3>
+    <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
+  </section>
+}
 
-export default function Novidades({ open = false }) {
+export default function Novidades({ title = 'Últimos sete dias' }) {
+  const [historicoAberto, setHistoricoAberto] = useState(false)
+  const { recentes, anteriores } = organizarNovidades(ENTRIES)
   return (
-    <details className="novidades" open={open}>
-      <summary>O que há de novo</summary>
-      {ENTRIES.slice(0, RECENTES).map(entrada)}
-      {ENTRIES.length > RECENTES && (
-        <details className="novidades-antigas">
-          <summary>Novidades anteriores ({ENTRIES.length - RECENTES})</summary>
-          {ENTRIES.slice(RECENTES).map((e, i) => entrada(e, i + RECENTES))}
-        </details>
-      )}
-    </details>
+    <Panel title={title} className="config-wide">
+      <div className="novidades">
+        {recentes.length ? recentes.map(mostrarDia) : <p>Nenhuma novidade registrada nos últimos sete dias.</p>}
+        {anteriores.length > 0 && <details className="novidades-antigas" onToggle={e => setHistoricoAberto(e.currentTarget.open)}>
+          <summary>Novidades anteriores</summary>
+          {historicoAberto && anteriores.map(mostrarDia)}
+        </details>}
+      </div>
+    </Panel>
   )
 }

@@ -22,8 +22,10 @@ const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:
  }
  try{for(const width of [390,820,1440]){
   const ctx=await browser.newContext({viewport:{width,height:1000},serviceWorkers:'block'}),p=await ctx.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:now})
+  let freightReads = 0
   await ctx.route('**/*',route=>{
    const u=new URL(route.request().url()),file=u.pathname.split('/').pop()
+   if(file==='freight-jp.json')freightReads++
    if(file==='quotes.json')return route.fulfill({json:{generatedAt:now,source:'AwesomeAPI',quotes}})
    if(file==='macro.json')return route.fulfill({json:macro})
    if(file==='curves.json')return route.fulfill({json:{generatedAt:now,br:null,cc:null,us:null}})
@@ -34,7 +36,8 @@ const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:
   try{
    await p.goto(base+'/#config');const notice=p.getByRole('button',{name:'Entendi',exact:true});if(await notice.count())await notice.click()
    const feed=p.locator('.topbar-feed');await feed.filter({hasText:'Dado antigo'}).waitFor({state:'attached'});assert.match(await feed.textContent(),/10:00/);assert.doesNotMatch(await feed.textContent(),/14:00/)
-   const rows=p.locator('.config-gov tbody tr'),fx=rows.filter({hasText:'Câmbio (USD, EUR, JPY, CNH e EUR/USD)'});await fx.waitFor();assert.equal(await fx.count(),1)
+   const toggle=p.getByRole('button',{name:'Consultar estado das fontes'});await toggle.waitFor();assert.equal(await toggle.getAttribute('aria-expanded'),'false');assert.equal(freightReads,0);await Promise.all([p.waitForRequest(r=>new URL(r.url()).pathname.endsWith('/freight-jp.json')),toggle.click()]);assert.equal(await toggle.getAttribute('aria-expanded'),'true')
+   const rows=p.locator('#config-fontes tbody tr'),fx=rows.filter({hasText:'Câmbio (USD, EUR, JPY, CNH e EUR/USD)'});await fx.waitFor();assert.equal(await fx.count(),1)
    for(const text of [/Dado antigo/i,/Conferido no painel/,/Referência mais antiga/,/10:00/,/14:00/])assert.match(await fx.innerText(),text)
    const summary=fx.locator('summary');await summary.scrollIntoViewIfNeeded();const bounds=await summary.boundingBox();assert.ok(bounds&&bounds.height>=44);await summary.click()
    for(const text of [/Arquivo gerado/,/Última leitura bem-sucedida/,/USD\/BRL:/])assert.match(await fx.innerText(),text)

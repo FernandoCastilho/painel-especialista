@@ -69,9 +69,6 @@ function EmailEnvelope({ label, href }) {
   </a>
 }
 
-export function CreditIcon() {
-  return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 4h7v16H3zM14 4h7v16h-7zM5 8h3M16 8h3M5 12h3M16 12h3M5 16h3M16 16h3" /></svg>
-}
 function ModalityIcon({ id }) {
   const paths = {
     'giro-pre': 'M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 7v5c0 1.7 3.6 3 8 3s8-1.3 8-3V7',

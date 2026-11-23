@@ -5,6 +5,26 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
  fs.mkdirSync(out,{recursive:true})
  const browser=await chromium.launch(require('./smoke-launch.cjs')()), report=[]
  try{
+  // Setores pode ficar pronto depois de a pessoa já ter escolhido abrir Mais.
+  const slowPage=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block'})
+  await slowPage.goto(base+'/#calculadora')
+  await slowPage.locator('.calc-catalog').waitFor()
+  const slowNav=slowPage.getByRole('navigation',{name:'Seções',exact:true})
+  const pendingChunk=slowPage.waitForRequest('**/Setores-*.js')
+  let release
+  const loading=new Promise(resolve=>{release=resolve})
+  await slowPage.route('**/Setores-*.js',async route=>{await loading;await route.continue()})
+  await slowNav.getByRole('button',{name:'Setores',exact:true}).click()
+  await pendingChunk
+  await slowNav.getByRole('button',{name:'Mais',exact:true}).click()
+  const novidades=slowNav.getByRole('menuitem',{name:'Novidades da semana'})
+  await novidades.waitFor()
+  release()
+  await slowPage.locator('.central-surface').waitFor()
+  await slowPage.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))))
+  await novidades.click()
+  await slowPage.getByRole('heading',{name:'Novidades da semana',level:1}).waitFor()
+  await slowPage.close()
   for(const width of [320,390,820,1024,1440,1660,1920]) for(const theme of ['light','dark']){
    const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<=390,colorScheme:theme,serviceWorkers:'block'})
    const page=await context.newPage()
@@ -54,6 +74,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.equal(await menu.getByRole('group',{name:'Consultar',exact:true}).count(),1)
    assert.equal(await menu.getByRole('menuitem',{name:'Juros',exact:true}).count(),0)
    assert.equal(await menu.getByRole('menuitem',{name:'Notícias',exact:true}).count(),width<1000?1:0)
+   assert.equal(await menu.getByRole('menuitem',{name:'Novidades da semana',exact:true}).count(),1)
    const bounds=await menu.boundingBox()
    assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1&&bounds.y>=0&&bounds.y+bounds.height<=1001)
    await page.screenshot({path:path.join(out,width+'-'+theme+'.png'),fullPage:true})
@@ -205,7 +226,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
      await page.screenshot({path:path.join(out,'rpn-'+width+'-'+theme+'.png'),fullPage:true})
     }
    }
-   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Aprender','aprender']]
+   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Novidades da semana','novidades'],['Aprender','aprender']]
    for(const [label,id] of extra){
     await more.click()
     await menu.getByRole('menuitem',{name:label,exact:true}).click()

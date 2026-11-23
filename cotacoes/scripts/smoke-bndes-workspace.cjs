@@ -104,7 +104,7 @@ async function proveLastColumn(region, file) {
           const sizeGeometry = await businessSize.evaluate(element => {
             const style = getComputedStyle(element)
             const context = document.createElement('canvas').getContext('2d')
-            context.font = style.font
+            context.font = [style.fontStyle, style.fontWeight, style.fontSize, style.fontFamily].join(' ')
             const label = element.selectedOptions[0].textContent
             const box = element.getBoundingClientRect()
             const unobscured = [-1, 1].every(direction => document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2 + direction * 8) === element)
