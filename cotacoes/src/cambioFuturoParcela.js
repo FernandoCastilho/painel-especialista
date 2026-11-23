@@ -1,5 +1,6 @@
 import { daysBetween } from './cambioFuturo.js'
 import { irr } from './emprestimo4131.js'
+import { tirarTirCambialPct } from './cambioFuturoCenario.js'
 
 const dataValida = iso => {
   if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false
@@ -29,5 +30,6 @@ export function simularParcelaCambial({ parcelaUsd, spotUsd, taxaPct, start, ven
   if (!positivo(pagamentoBrl)) return falha('A cotação futura excede a faixa da simulação.')
   // Mesma raiz de VPL e convenção dias/365 do motor compartilhado, na visão do tomador.
   const taxa = irr([{ v: recebidoBrl, t: 0 }, { v: -pagamentoBrl, t: dias / 365 }])
-  return { ...resumo, pagamentoBrl, tir: taxa == null ? null : taxa * 100 }
+  const tir = taxa == null ? tirarTirCambialPct(recebidoBrl, [{ pago: pagamentoBrl, dias }]) : taxa * 100
+  return { ...resumo, pagamentoBrl, tir }
 }

@@ -131,3 +131,13 @@ test('programas que só param, pausam ou guardam dados não inventam contas', ()
     c.dispose()
   }
 })
+
+test('fita mostra PMT em pt-BR sem arredondar a copia', () => {
+  const entry = { key: 'pmt', label: 'Pagamento (PMT)', result: 39232.85259779815 }
+  assert.equal(formatRpnEntry(entry, { presentation: true }), 'Pagamento (PMT) = 39.232,85')
+  assert.equal(formatRpnResult(entry), '39232,85259779815')
+  assert.equal(formatRpnEntry({ ...entry, result: 0 }, { presentation: true }), 'Pagamento (PMT) = 0,00')
+  assert.equal(formatRpnEntry({ key: 'divide', left: 1, right: 3, result: 1 / 3 }, { presentation: true }), '1 ÷ 3 = 0,3333333333')
+  assert.match(formatRpnEntry({ ...entry, key: 'sqrt', result: 1e-14 }, { presentation: true }), /= 1E-14$/)
+  assert.equal(formatRpnEntry({ key: 'date', label: 'Data calculada', result: 3, text: '22.11.2026' }, { presentation: true }), 'Data calculada = 22.11.2026')
+})
