@@ -556,6 +556,8 @@ export default function CreditComparison({ onBack, apresentacao }) {
     </div>
     {present && <Presentation onClose={close}>{present}</Presentation>}
     {/* Referência de mercado: curva prefixada para operação de taxa fixa, CDI futuro para pós-CDI. Sempre o último bloco da tela. */}
-    <ReferenciaMercado tipos={[!visible.every(isCdi) && 'pre', usesCdi && 'pos'].filter(Boolean)} />
+    {/* O gráfico termina no prazo da operação mais longa da comparação (regra de 23/11/2026). */}
+    <ReferenciaMercado tipos={[!visible.every(isCdi) && 'pre', usesCdi && 'pos'].filter(Boolean)}
+      prazoMeses={Math.max(0, ...visible.map(col => Number.parseInt(col.term || shared.term, 10)).filter(Number.isFinite)) || undefined} />
   </section></div>
 }

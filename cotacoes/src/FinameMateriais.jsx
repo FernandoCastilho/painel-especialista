@@ -531,7 +531,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
         <ComparaSeries compactHelp items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: chartPreset, setPreset: setChartPreset, custom: chartCustom, setCustom: setChartCustom }} />
       </BndesDetails>}
-      {res && <ReferenciaMercado tipos={referenciaTipos} />}
+      {res && <ReferenciaMercado tipos={referenciaTipos} prazoMeses={prazo ?? undefined} />}
     </section>
   )
 }

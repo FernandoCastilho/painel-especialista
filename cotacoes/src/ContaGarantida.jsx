@@ -9,6 +9,7 @@ import { CG_CET_DAYS, CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, cgT
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, Respostas, Resultado, step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
+import { mesesDoPrazoEmDias } from './faixaCurva.js'
 import './ContaGarantida.css'
 import './CalcPattern-conta-garantida.css'
 import CalcBack from './CalcBack.jsx'
@@ -255,6 +256,7 @@ export default function ContaGarantida({ onBack }) {
     </ul><p>Fontes consultadas em 05/11/2026: {CG_SOURCES.map((source, index) => <span key={source.url}>{index > 0 && ' · '}<a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></span>)}.</p></CalculatorHelp></div>
     </>}
     {/* Taxa prefixada ao mês: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
-    <ReferenciaMercado tipos={['pre']} />
+    {/* O gráfico termina no prazo de uso, em meses arredondados para cima (regra de 23/11/2026). */}
+    <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias((Date.parse(params.end) - Date.parse(params.start)) / 86400000)} />
   </section>
 }
