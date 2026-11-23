@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react'
 import Explain from './Explain.jsx'
 import { Plot, useWidth } from './HistoryChart.jsx'
 import { busDaysIn } from './holidays.js'
-import { forwardBetween, forwardSeries, horizonTable } from './cdiFuturo.js'
+import { diasDoHorizonte, forwardBetween, forwardSeries, horizonTable } from './cdiFuturo.js'
 import IndicatorTable from './IndicatorTable.jsx'
 
 const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
@@ -28,7 +28,7 @@ export default function CdiFuturo({ curves, macro, hol, preview = false, prazoMe
   const [pick, setPick] = useState({ from: '', to: '' })
   const clamp = (v) => (v < base ? base : v > maxIso ? maxIso : v)
   const rawFrom = pick.from || base
-  const diasAte = Number.isFinite(prazoMeses) && prazoMeses > 0 ? Math.round(prazoMeses * 365 / 12) : 365
+  const diasAte = diasDoHorizonte(prazoMeses)
   const rawTo = pick.to || (base ? (isoPlus(diasAte) < maxIso ? isoPlus(diasAte) : maxIso) : '')
   // a curva vale a partir da data-base: datas fora do intervalo são ajustadas e o aviso aparece na tela
   const from = base ? clamp(rawFrom) : rawFrom
