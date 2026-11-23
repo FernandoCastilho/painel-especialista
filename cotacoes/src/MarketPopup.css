@@ -94,6 +94,7 @@ dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}
     text-align: center;
   }
   .market-popup .mp-summary { margin-top: 8px; padding-block: 6px; }
+  .market-popup .mini-rotulo { display: none; } /* gráfico com ~30 px de altura: não cabe o valor do pico e do vale sem rolar o Panorama */
 }
 
 /* Compact toolbar keeps the five-card panorama height unchanged. */
