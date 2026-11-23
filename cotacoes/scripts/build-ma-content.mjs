@@ -16,7 +16,7 @@ atualizado_por: codex
 type: query
 tipo: transacao-ma
 tags: [estrategia, setor, monitoramento]
-sources: ${JSON.stringify([row.sourceUrl,...(row.locationSource ? [row.locationSource] : [])])}
+sources: ${JSON.stringify([row.sourceUrl,row.supportingSource,row.locationSource].filter(Boolean))}
 confidence: medium
 ---
 # ${title}
@@ -41,7 +41,7 @@ ${row.history.map(event => `- ${event.date}: ${event.text}`).join('\n')}
 
 ## Fontes e limites
 - [Notícia original](${row.sourceUrl})
-${row.locationSource ? `- [Fonte da localização](${row.locationSource})\n` : ''}- Registro histórico; não presume situação atual nem cobertura integral do mercado.
+${row.supportingSource ? `- [Fonte primária do negócio](${row.supportingSource})\n` : ''}${row.locationSource ? `- [Fonte da localização](${row.locationSource})\n` : ''}- Registro histórico; não presume situação atual nem cobertura integral do mercado.
 - Data secundária de atualização não constitui uma nova operação.
 - Setor é classificação editorial pelo negócio da adquirida; ausências não foram estimadas.
 

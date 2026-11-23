@@ -436,6 +436,9 @@ jobs:
             echo "::error::Smokes com falha: ${failures[*]}"
             exit 1
           fi
+      - name: Panorama, filtros, transações e navegação de M&A
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: MA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/ma" node scripts/smoke-ma.cjs
       - name: Seleção temporal com mouse e toque nos componentes
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: |

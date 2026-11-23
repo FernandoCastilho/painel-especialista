@@ -14,11 +14,11 @@
       "sectorId": "tic",
       "sectorRoute": "pasta/tic",
       "segment": "Software de gestão hospitalar",
-      "announcementDate": null,
+      "announcementDate": "2025-12-30",
       "publicationDate": "2025-12-31",
       "completionDate": null,
       "updatedDate": "2026-01-19",
-      "dateBasis": "publication",
+      "dateBasis": "announcement",
       "status": "Anunciada",
       "value": 161000000,
       "currency": "EUR",
@@ -29,6 +29,10 @@
       "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/bionexo-compra-tasy-da-philips-por-r-1-bi/",
       "history": [
         {
+          "date": "2025-12-30",
+          "text": "Fato relevante da Bionexo divulga a assinatura do contrato."
+        },
+        {
           "date": "2025-12-31",
           "text": "Publicação do negócio; data exata de anúncio e conclusão não confirmadas nesta matéria."
         },
@@ -36,7 +40,8 @@
           "date": "2026-01-19",
           "text": "Segunda data exibida pelo portal, sem reclassificar o negócio como operação de 2026."
         }
-      ]
+      ],
+      "supportingSource": "https://www-api-prod-institucionais-bionexo.azurewebsites.net/files/3d643458-6d78-4543-b859-d006eed17948.pdf"
     },
     {
       "id": "2025-dasa-sao-domingos",
@@ -80,11 +85,11 @@
       "sectorId": "tic",
       "sectorRoute": "pasta/tic",
       "segment": "Telecomunicações e infraestrutura digital",
-      "announcementDate": null,
+      "announcementDate": "2025-12-29",
       "publicationDate": "2025-12-29",
       "completionDate": null,
       "updatedDate": "2026-01-19",
-      "dateBasis": "publication",
+      "dateBasis": "announcement",
       "status": "Em aprovação",
       "value": null,
       "currency": null,
@@ -92,14 +97,19 @@
       "uf": "PE",
       "locationNote": "Sede administrativa da adquirida em Recife (PE). Rede de atuação em vários estados do Nordeste.",
       "locationSource": "https://umtelecom.com.br/",
-      "summary": "V.tal anunciou a aquisição da Um Telecom, com infraestrutura de fibra e contratos corporativos e de atacado. A notícia informa necessidade de aprovações regulatórias.",
+      "summary": "V.tal anunciou a aquisição da Um Telecom, com infraestrutura de fibra e contratos corporativos e de atacado. A operação estava sujeita a aprovações regulatórias e concorrenciais, condição confirmada pela apresentação de resultados de 2025 da V.tal.",
       "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/v-tal-adquire-a-um-telecom/",
       "history": [
         {
           "date": "2025-12-29",
           "text": "Notícia registra aquisição sujeita a aprovações regulatórias."
+        },
+        {
+          "date": "2025-12-29",
+          "text": "Teletime noticia o anúncio e informa, citando a V.tal, que a operação passaria por aprovações."
         }
-      ]
+      ],
+      "supportingSource": "https://api.mziq.com/mzfilemanager/v2/d/a379b0ec-46e1-430a-97e4-7b74422808d2/db9c216a-ddf3-c411-6a07-a9e5f374dd0e?origin=2"
     },
     {
       "id": "2025-savencia-quata",
@@ -110,11 +120,11 @@
       "sectorId": "alimentos-agroindustria",
       "sectorRoute": "pasta/alimentos-agroindustria",
       "segment": "Laticínios",
-      "announcementDate": null,
+      "announcementDate": "2025-12-23",
       "publicationDate": "2025-12-24",
       "completionDate": null,
       "updatedDate": null,
-      "dateBasis": "publication",
+      "dateBasis": "announcement",
       "status": "Em aprovação",
       "value": null,
       "currency": null,
@@ -125,10 +135,15 @@
       "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/savencia-dona-da-polenghi-anuncia-compra-da-quata-alimentos/",
       "history": [
         {
+          "date": "2025-12-23",
+          "text": "Comunicado da Savencia anuncia a assinatura de acordo para adquirir a Quatá."
+        },
+        {
           "date": "2025-12-24",
           "text": "Publicação informa operação sujeita à aprovação do Cade."
         }
-      ]
+      ],
+      "supportingSource": "https://savencia.com/wp-content/uploads/2025/12/CP_SFD_Accord_acquisition_Quata_Alimentos.pdf"
     },
     {
       "id": "2025-hindiana-neogrid",
@@ -139,11 +154,11 @@
       "sectorId": "tic",
       "sectorRoute": "pasta/tic",
       "segment": "Software para cadeia de suprimentos",
-      "announcementDate": null,
+      "announcementDate": "2025-12-22",
       "publicationDate": "2025-12-23",
       "completionDate": null,
       "updatedDate": null,
-      "dateBasis": "publication",
+      "dateBasis": "announcement",
       "status": "Em aprovação",
       "value": 150000000,
       "currency": "BRL",
@@ -155,10 +170,15 @@
       "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/grupo-hindiana-assina-acordo-de-r-150-milhoes-para-aquisicao-do-controle-acionario-da-neogrid/",
       "history": [
         {
+          "date": "2025-12-22",
+          "text": "Comunicado da Neogrid anuncia o acordo de aquisição do controle."
+        },
+        {
           "date": "2025-12-23",
           "text": "Publicação de acordo condicionado à OPA e às aprovações regulatórias."
         }
-      ]
+      ],
+      "supportingSource": "https://neogrid.com/noticias/grupo-hindiana-assina-acordo-para-a-aquisicao-do-controle-acionario-da-neogrid/"
     }
   ]
 }

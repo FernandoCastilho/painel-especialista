@@ -16,7 +16,7 @@ export function validateMa(rows) {
     for (const key of ['publicationDate','announcementDate','completionDate','updatedDate']) if ((key === 'publicationDate' || row[key] !== null) && !validDate(row[key])) throw new Error(`Data inválida: ${key}`)
     if (!['announcement','publication'].includes(row.dateBasis) || (row.dateBasis === 'announcement') !== Boolean(row.announcementDate)) throw new Error('Referência da data inconsistente')
     if (row.value !== null && (!Number.isFinite(row.value) || row.value < 0 || !['BRL','USD','EUR'].includes(row.currency))) throw new Error('Valor inválido')
-    if (!/^https:\/\//.test(row.sourceUrl) || (row.locationSource && !/^https:\/\//.test(row.locationSource))) throw new Error('Fonte inválida')
+    if (!/^https:\/\//.test(row.sourceUrl) || [row.locationSource,row.supportingSource].some(url => url && !/^https:\/\//.test(url))) throw new Error('Fonte inválida')
     if (!Array.isArray(row.history) || !row.history.length || row.history.some(event => !validDate(event.date) || !event.text?.trim())) throw new Error('Histórico inválido')
     if (row.completionDate && row.announcementDate && row.completionDate < row.announcementDate) throw new Error('Conclusão anterior ao anúncio')
   }

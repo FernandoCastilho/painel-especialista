@@ -8,7 +8,7 @@ atualizado_por: codex
 type: query
 tipo: transacao-ma
 tags: [estrategia, setor, monitoramento]
-sources: ["https://fusoesaquisicoes.com/acontece-no-setor/bionexo-compra-tasy-da-philips-por-r-1-bi/"]
+sources: ["https://fusoesaquisicoes.com/acontece-no-setor/bionexo-compra-tasy-da-philips-por-r-1-bi/","https://www-api-prod-institucionais-bionexo.azurewebsites.net/files/3d643458-6d78-4543-b859-d006eed17948.pdf"]
 confidence: medium
 ---
 # Bionexo → Tasy
@@ -19,7 +19,7 @@ confidence: medium
 - Vendedor: Philips
 - Setor: Tecnologia; segmento: Software de gestão hospitalar
 - Publicação: 31/12/2025
-- Anúncio: Não informada
+- Anúncio: 30/12/2025
 - Conclusão: Não informada
 - Situação informada na notícia: Anunciada
 - Valor: EUR 161000000
@@ -29,11 +29,13 @@ confidence: medium
 Bionexo anunciou a compra da operação de software hospitalar Tasy da Philips. O valor é mantido na moeda original divulgada, sem conversão própria.
 
 ## Histórico
+- 2025-12-30: Fato relevante da Bionexo divulga a assinatura do contrato.
 - 2025-12-31: Publicação do negócio; data exata de anúncio e conclusão não confirmadas nesta matéria.
 - 2026-01-19: Segunda data exibida pelo portal, sem reclassificar o negócio como operação de 2026.
 
 ## Fontes e limites
 - [Notícia original](https://fusoesaquisicoes.com/acontece-no-setor/bionexo-compra-tasy-da-philips-por-r-1-bi/)
+- [Fonte primária do negócio](https://www-api-prod-institucionais-bionexo.azurewebsites.net/files/3d643458-6d78-4543-b859-d006eed17948.pdf)
 - Registro histórico; não presume situação atual nem cobertura integral do mercado.
 - Data secundária de atualização não constitui uma nova operação.
 - Setor é classificação editorial pelo negócio da adquirida; ausências não foram estimadas.
@@ -54,11 +56,11 @@ O registro abaixo acompanha os fatos acima e permite preparar a consulta no pain
   "sectorId": "tic",
   "sectorRoute": "pasta/tic",
   "segment": "Software de gestão hospitalar",
-  "announcementDate": null,
+  "announcementDate": "2025-12-30",
   "publicationDate": "2025-12-31",
   "completionDate": null,
   "updatedDate": "2026-01-19",
-  "dateBasis": "publication",
+  "dateBasis": "announcement",
   "status": "Anunciada",
   "value": 161000000,
   "currency": "EUR",
@@ -69,6 +71,10 @@ O registro abaixo acompanha os fatos acima e permite preparar a consulta no pain
   "sourceUrl": "https://fusoesaquisicoes.com/acontece-no-setor/bionexo-compra-tasy-da-philips-por-r-1-bi/",
   "history": [
     {
+      "date": "2025-12-30",
+      "text": "Fato relevante da Bionexo divulga a assinatura do contrato."
+    },
+    {
       "date": "2025-12-31",
       "text": "Publicação do negócio; data exata de anúncio e conclusão não confirmadas nesta matéria."
     },
@@ -76,6 +82,7 @@ O registro abaixo acompanha os fatos acima e permite preparar a consulta no pain
       "date": "2026-01-19",
       "text": "Segunda data exibida pelo portal, sem reclassificar o negócio como operação de 2026."
     }
-  ]
+  ],
+  "supportingSource": "https://www-api-prod-institucionais-bionexo.azurewebsites.net/files/3d643458-6d78-4543-b859-d006eed17948.pdf"
 }
 ```

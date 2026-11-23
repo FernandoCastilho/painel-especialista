@@ -10,7 +10,7 @@ Cinco operações reais publicadas em dezembro de 2025: Dasa/São Domingos, Bion
 
 Seis notas salvas e conferidas no Obsidian em `30. Recursos/LLM Wiki`: panorama em `concepts/ma-panorama.md`, operações em `queries/ma/2025/`. Índice e log atualizados. Manifesto e recibo em `ma-obsidian-manifest.json` e `ma-obsidian-receipt.json`. Script recusa divergências, usa trava e permite retomar execuções incompletas; testes usam pasta temporária separada.
 
-O código versiona uma cópia conferida das notas. `build-ma-content.mjs` prepara o catálogo do painel a partir dessas notas. Alterações futuras no vault precisam ser reconciliadas com a cópia versionada antes do build; não existe sincronização automática nem coleta agendada nova. O painel não mostra detalhes de armazenamento.
+O código versiona uma cópia das notas. O recibo registra a gravação inicial. Quatro fichas foram revisadas no repositório após a auditoria; o manifesto contém os hashes novos e diverge do recibo histórico. Essas correções não foram gravadas no vault. `build-ma-content.mjs` prepara o catálogo do painel a partir dessas notas. Alterações futuras no vault precisam ser reconciliadas com a cópia versionada antes do build; não existe sincronização automática nem coleta agendada nova. O painel não mostra detalhes de armazenamento.
 
 ## Verificações
 - 69 testes direcionados de M&A, menu, comandos e Setores: passaram.

@@ -4,7 +4,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const http = require('node:http')
 const root = path.resolve(__dirname,'../dist')
-const output = path.resolve(__dirname,'../../docs/ma-qa')
+const output = process.env.MA_QA_OUTPUT || path.resolve(__dirname,'../../docs/ma-qa')
 const types = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.woff2':'font/woff2','.webp':'image/webp'}
 const server = http.createServer((req,res) => {
   const requestPath = decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname).replace(/^\/painel-especialista/,'')

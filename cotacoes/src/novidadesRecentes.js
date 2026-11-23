@@ -2,8 +2,9 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '23/11/2026',
-    resumo: 'Tela de novidades, carregamento mais leve, CET na HP 12C e ajustes no câmbio e no BNDES',
+    resumo: 'Panorama de M&A, tela de novidades, carregamento mais leve, CET na HP 12C e ajustes no câmbio e no BNDES',
     items: [
+      'A seção M&A traz mapa do Brasil, filtros e detalhes com fontes de cinco operações de dezembro de 2025. A cobertura é histórica e parcial. No computador, fica depois de Setores. No celular, fica em Mais.',
       'A tela Novidades da semana voltou ao menu Mais e reúne as mudanças do Painel por dia. O menu continua aberto quando Setores termina de carregar.',
       'Mercado reaproveita o cálculo do câmbio acumulado. As notícias por tema e cada calculadora carregam quando você as abre.',
       'A busca reaproveita as fontes já consultadas ao reabrir. Em Configurações, o botão Consultar estado das fontes abre o diagnóstico e mostra os horários de cada coleta.',

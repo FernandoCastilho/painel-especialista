@@ -35,6 +35,7 @@ function Detail({ row, goto }) {
     <h4>Resumo da operação</h4><p>{row.summary}</p><p className="ma-caption">{row.locationNote}</p>
     <p className="ma-caption">Situação conforme a notícia de {maDateLabel(row.publicationDate)}. Não equivale a confirmação atual de fechamento.</p>
     <a href={row.sourceUrl} target="_blank" rel="noreferrer">Consultar fonte ↗</a>
+    {row.supportingSource && <a href={row.supportingSource} target="_blank" rel="noreferrer">Fonte primária ↗</a>}
     {row.locationSource && <a href={row.locationSource} target="_blank" rel="noreferrer">Fonte da localização ↗</a>}
     <details><summary>Histórico da transação</summary><ol className="ma-timeline">{row.history.map((event,index) => <li key={index}><time dateTime={event.date}>{maDateLabel(event.date)}</time><p>{event.text}</p></li>)}</ol></details>
     <button type="button" className="ma-text-button" onClick={() => goto('setores',row.sectorRoute)}>Ver em Setores → {row.sector}</button>

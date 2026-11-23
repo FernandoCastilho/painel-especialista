@@ -16,3 +16,20 @@ test('M&A: catálogo compilado equivale às notas e não sobrescreve fontes brut
   const result=await buildMaCatalog({write:false})
   assert.deepEqual(result,catalog)
 })
+test('M&A: datas confirmadas no lançamento têm apoio primário e preservam o recorte histórico',()=>{
+  const verified = new Map([
+    ['2025-bionexo-tasy','2025-12-30'],
+    ['2025-hindiana-neogrid','2025-12-22'],
+    ['2025-savencia-quata','2025-12-23'],
+    ['2025-vtal-um-telecom','2025-12-29'],
+  ])
+  for (const [id,date] of verified) {
+    const row = catalog.transactions.find(item => item.id === id)
+    assert.equal(row.announcementDate,date)
+    assert.equal(row.dateBasis,'announcement')
+    assert.match(row.supportingSource,/^https:\/\//)
+    assert.ok(maNote(row,'2026-11-23').includes(`[Fonte primária do negócio](${row.supportingSource})`))
+    assert.equal(row.completionDate,null)
+  }
+  assert.equal(catalog.transactions.find(row => row.id === '2025-vtal-um-telecom').status,'Em aprovação')
+})
