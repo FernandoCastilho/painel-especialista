@@ -149,7 +149,7 @@ async function proveLastColumn(region, file) {
         assert.equal(shares.length, 3)
         // Uma casa decimal, igual ao Capital de Giro (decisão de Fernando, 23/11/2026).
         for (const share of shares) assert.match(share, /^\d+,\d% do custo$/)
-        assert.ok(Math.abs(shares.reduce((total, share) => total + parseFloat(share.replace(',', '.')), 0) - 100) <= 0.15) // três partes arredondadas em 0,1 ponto: até 0,15 de diferença
+        assert.ok(Math.abs(shares.reduce((total, share) => total + parseFloat(share.replace(',', '.')), 0) - 100) <= 0.02)
         assert.equal(await page.getByRole('button', { name: 'Ampliar: Composição do resultado', exact:true }).count(), 0)
         for (const item of await highlights.all()) assert.equal(await item.isVisible(), true)
         assert.equal(await page.locator('.fm-details:not(.fm-comparison-details)').evaluate(element => element.open), false)
