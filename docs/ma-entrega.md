@@ -17,6 +17,7 @@ O código versiona uma cópia conferida das notas. `build-ma-content.mjs` prepar
 - Lint: sem erros, cinco avisos anteriores fora do módulo.
 - Build: passou; aviso anterior de tamanho do pacote de Calculadoras permanece.
 - Conferência visual/funcional: 320, 390, 820, 1024, 1440 e 1920 px, claro/escuro; 12 casos passaram. Inclui alvos do menu, mapa via teclado, busca, detalhe visível no celular, volta por Setores, filtros, vazio de 2026 e histórico de navegação.
+- Regressão das pastas de Setores: oito cenários de teclado, histórico, recarga e estudos passaram localmente. Os roteiros antigos foram atualizados para incluir M&A no menu, sem mudar o comportamento das pastas.
 - Sincronização do histórico: retomada parcial, segunda aplicação sem duplicações e preservação de divergências passaram em diretório temporário. Gravação real conferida por SHA-256.
 - Suíte geral no Windows: 2.527 testes, 2.496 passaram e 31 falharam. Referência anterior à implementação: 2.516 testes, 2.484 passaram e 32 falharam. Comparação de nomes não encontrou falhas novas; não chamar a suíte local de verde. Ver `ma-qa/verification.json`. A maioria envolve suporte anterior de caminhos/Python/Git no Windows.
 
