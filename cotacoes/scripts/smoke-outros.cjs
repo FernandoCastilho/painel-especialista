@@ -490,7 +490,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       // menu na ordem pedida
       const names = await p.getByRole('navigation', { name: /Navegação principal|Seções/ }).getByRole('button').allInnerTexts()
       assert.deepEqual(names.map((t) => t.trim()), width >= 1000
-        ? ['', 'Mercado', 'Cenários', 'Juros', 'Calculadoras', 'Setores', 'Notícias', 'Podcast', 'Mais']
+        ? ['', 'Mercado', 'Cenários', 'Juros', 'Calculadoras', 'Setores', 'M&A', 'Notícias', 'Podcast', 'Mais']
         : ['Mercado', 'Cenários', 'Juros', 'Calculadoras', 'RPN', 'Setores', 'Mais'], 'ordem completa dos destinos prioritários em cada tela')
       // card do topo do Mercado: IPCA 12m no lugar do Brent; clique leva a Cenários › Inflação
       await p.route('**/indices.json*', (r) => r.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), stale: false, errors: [], series: { ibov: { symbol: '^BVSP', unit: 'pontos', points: Array.from({ length: 10 }, (_, i) => [Date.now() - (10 - i) * 864e5, 130000 - (i === 9 ? 2600 : 0)]), stale: false } } } }))
