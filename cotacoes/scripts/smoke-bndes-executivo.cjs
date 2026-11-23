@@ -19,7 +19,7 @@ const out = process.env.BNDES_EXECUTIVE_QA_OUTPUT || 'docs/bndes-executivo-qa'
       await page.route('**/recado.json*',r=>r.fulfill({json:{ativo:false}}))
       await page.route('**/bndes.json*',r=>r.fulfill({json:{schemaVersion:1,generatedAt:Date.now(),series:{TFB_60_90:{points:[['2026-11-19',16.48]]}},tlp:{points:[['2026-11-01',7]]},errors:[],stale:{}}}))
       await page.route('**/moedas.json*',r=>r.fulfill({json:{schemaVersion:1,generatedAt:Date.now(),series:{C03:{points:[['2026-11-19',14.1453]]},C01:{points:[['2026-11-19',14.1453]]},LD1:{points:[['2026-10-01',-0.11]]},TD1:{points:[['2026-11-19',6]]},'604':{points:[['2026-11-19',5.4]]}},errors:[],stale:{}}}))
-      await page.route('**/macro.json*',r=>r.fulfill({json:{schemaVersion:1,generatedAt:Date.now(),cdi:[['2026-11-19',13.65]],selic:[['2026-11-19',13.75]],focus:{date:'2026-11-19'},errors:[],stale:{}}}))
+      await page.route('**/macro.json*',r=>r.fulfill({json:{schemaVersion:1,generatedAt:Date.now(),cdi:[[Date.UTC(2026,10,19,12),13.65]],selic:[[Date.UTC(2026,10,19,12),13.75]],focus:{date:'2026-11-19'},errors:[],stale:{}}}))
       await page.goto(base+'/#calculadora/finame-materiais')
       const notice=page.locator('dialog.aviso-inicial:not(.recado)')
       if(await notice.isVisible())await notice.getByRole('button',{name:'Entendi',exact:true}).click()

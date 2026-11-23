@@ -405,7 +405,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
               total={brl(res.total)} tax={taxaResumo(res)} help={ajuda('CET estimado', cetAjuda)}
               totalHelp={ajuda('Custo total estimado', quadros.find(item => item.id === 'total')?.ajuda)}
               equivalent={spread != null ? `CDI + ${pct(spread, 2)} a.a.` : null}
-              cdiReference={cdi != null ? `CDI de ${pct(cdi, 2)} a.a. em ${dmy(macro.data?.cdi?.at(-1)?.[0])}` : null}
+              cdiReference={cdi != null ? `CDI de ${pct(cdi, 2)} a.a. em ${new Date(macro.data.cdi.at(-1)[0]).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}` : null}
               reference={{ name: custo.toUpperCase(), code: quotes[custo]?.codigo,
                 rate: `${pct(custoFinanceiro, 4)} a.a.`, date: quotes[custo]?.data ? dmy(quotes[custo].data) : null,
                 source: 'Painel BNDES', manual: rates[custo].manual, retained: referenceRetained }}
