@@ -16,3 +16,4 @@
 .fredix-anti-robo{margin-top:8px}
 .fredix-nova{display:block;margin:10px auto 0}
 @media(max-width:380px){.fredix-form{grid-template-columns:1fr}.fredix-form .feedback-submit{width:100%}}
+.mascot-dock .feedback-trigger{justify-content:center}
