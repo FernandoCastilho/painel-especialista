@@ -296,7 +296,7 @@ export default function App() {
       </>}>
     <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conteúdo</a>
     <AvisoInicial open={avisoAberto} onClose={fecharAviso} />
-    <MarketPopup open={panorama.aberto && !focusMode} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
+    <MarketPopup open={panorama.aberto} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
     <Recado />
     <Laser />
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
