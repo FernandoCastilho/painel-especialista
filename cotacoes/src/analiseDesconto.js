@@ -58,24 +58,26 @@ export function titleFee({ value, titles, feeMode, fee }) {
 
 // Borderô hipotético (premissas de Fernando, 24/11/2026): com valor total, prazo médio e ticket médio, monta um borderô
 // plausível para a mesma conta título a título. Só gera a entrada: juros, IOF e CET continuam em discountOperation.
-// - Quantidade de boletos = valor total ÷ ticket médio, arredondada; o ticket efetivo é valor total ÷ quantidade.
+// - Quantidade de boletos = valor total ÷ ticket médio, arredondada (em centavos, para o meio exato subir sempre); o ticket
+//   efetivo é valor total ÷ quantidade e só é igual ao digitado quando a divisão é exata.
 // - Vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio (30 dias → de 15 a 45 dias).
 // - Valores diferentes, de metade a uma vez e meia do ticket efetivo, em padrão fixo (sem sorteio: a mesma entrada dá
 //   sempre o mesmo resultado).
-// Dias e valores são espelhados em torno do meio da lista; por isso o total, o ticket e o prazo médio ponderado pelo
-// valor fecham no que foi digitado. O ajuste de dia útil vem depois, na conta, e pode alongar um pouco o prazo médio.
-export const HYPOTHETICAL_MAX_DAYS = 365
+// Dias e valores são espelhados em torno do meio da lista; por isso o total e o prazo médio ponderado pelo valor
+// fecham no que foi digitado. O ajuste de dia útil vem depois, na conta, e pode alongar um pouco o prazo médio.
+// firstDays e lastDays devolvem os vencimentos de fato usados (com um boleto só, é o próprio prazo médio).
+const HYPOTHETICAL_MAX_DAYS = 365
 const HYPOTHETICAL_VALUE_PATTERN = [-1, 1, -0.5, 0.5, 0]
 export function hypotheticalTitles({ value, averageDays, ticket, date }) {
   const release = parseDiscountDate(date)
   if (!release || !money(value, true) || !money(ticket, true) || !integer(averageDays, HYPOTHETICAL_MAX_DAYS)) return invalid('Confira a data, o valor total, o prazo médio e o ticket médio.')
   if (ticket > value) return invalid('O ticket médio não pode ser maior que o valor total.')
-  const count = Math.round(value / ticket)
+  const count = Math.round(Math.round(value * 100) / Math.round(ticket * 100))
   if (!integer(count, 1_000_000)) return invalid('O ticket médio gera mais de 1.000.000 de boletos. Informe um ticket maior.')
-  const firstDays = Math.max(1, Math.round(averageDays / 2)), lastDays = 2 * averageDays - firstDays
+  const from = Math.max(1, Math.round(averageDays / 2)), to = 2 * averageDays - from
   const mirror = index => Math.min(index, count - 1 - index)
   const dayOf = index => {
-    const near = mirror(index), days = near * 2 === count - 1 ? averageDays : Math.round(firstDays + (lastDays - firstDays) * near / (count - 1))
+    const near = mirror(index), days = near * 2 === count - 1 ? averageDays : Math.round(from + (to - from) * near / (count - 1))
     return index === near ? days : 2 * averageDays - days
   }
   const raw = index => HYPOTHETICAL_VALUE_PATTERN[mirror(index) % HYPOTHETICAL_VALUE_PATTERN.length]
@@ -91,7 +93,8 @@ export function hypotheticalTitles({ value, averageDays, ticket, date }) {
     minValue = Math.min(minValue, nominal); maxValue = Math.max(maxValue, nominal)
   }
   const titleRows = [...groups].sort(([a], [b]) => a - b).map(([days, group]) => ({ ...group, dueDate: new Date(release.getTime() + days * 86400000).toISOString().slice(0, 10) }))
-  return { ok: true, titleRows, titles: count, ticket: unit, minValue, maxValue, firstDays, lastDays }
+  const allDays = [...groups.keys()]
+  return { ok: true, titleRows, titles: count, ticket: unit, minValue, maxValue, firstDays: Math.min(...allDays), lastDays: Math.max(...allDays) }
 }
 
 // Regras de 11/11/2026: título que vence em fim de semana, feriado nacional ou feriado da praça do contrato (`calendars`,
@@ -197,7 +200,7 @@ export function parseDiscountForm(form) {
   }
   for (const [key, max] of [['operations', 100_000], ...(average ? [['averageDays', HYPOTHETICAL_MAX_DAYS]] : [])]) {
     const text = String(form[key] ?? '').trim(), value = /^\d+$/.test(text) ? Number(text) : null
-    if (!integer(value, max)) errors[key] = `Informe um inteiro de 1 a ${max.toLocaleString('pt-BR')}.`
+    if (!integer(value, max)) errors[key] = key === 'averageDays' ? `Informe de 1 a ${max} dias.` : `Informe um inteiro de 1 a ${max.toLocaleString('pt-BR')}.`
     else parsed[key] = value
   }
   if (!parseDiscountDate(form.date)) errors.date = 'Informe uma data válida entre 1900 e 9995.'

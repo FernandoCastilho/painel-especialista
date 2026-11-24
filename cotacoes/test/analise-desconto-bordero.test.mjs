@@ -30,9 +30,16 @@ test('vencimentos vão da metade a uma vez e meia do prazo médio, sempre depois
   assert.equal(h.lastDays, 45)
   assert.deepEqual([daysOf(h.titleRows[0]), daysOf(h.titleRows.at(-1))], [15, 45])
   assert.ok(h.titleRows.every((row, index) => daysOf(row) >= 1 && (index === 0 || row.dueDate > h.titleRows[index - 1].dueDate)))
+  // Um boleto só vence no próprio prazo médio, e é isso que a tela informa.
+  const single = hypotheticalTitles({ value: 225600.43, averageDays: 30, ticket: 225600.43, date })
+  assert.deepEqual([single.firstDays, single.lastDays, daysOf(single.titleRows[0])], [30, 30, 30])
   const short = hypotheticalTitles({ value: 9000, averageDays: 1, ticket: 3000, date })
   assert.deepEqual(short.titleRows.map(daysOf), [1])
   assert.equal(short.titleRows[0].count, 3)
+})
+
+test('quantidade de boletos arredonda o meio exato sempre para cima, sem ruído de ponto flutuante', () => {
+  for (const [value, ticket, count] of [[0.35, 0.1, 4], [1.89, 0.54, 4], [35000, 10000, 4], [25000, 10000, 3], [24999.99, 10000, 2], [14999.99, 10000, 1]]) assert.equal(hypotheticalTitles({ value, averageDays: 30, ticket, date }).titles, count, `${value} ÷ ${ticket}`)
 })
 
 test('boletos têm valores diferentes, de metade a uma vez e meia do ticket médio, em padrão fixo', () => {
@@ -109,6 +116,10 @@ test('Simples até R$ 30 mil e projeção mensal continuam valendo sobre o borde
   const simples = form({ taxProfile: 'simples', eligible: true, totalValue: '30.000,00', averageTicket: '1.000,00', averageValue: '31.000,00' })
   near(simples.operation.tax.daily, 0.00274)
   near(simples.result.projected.tax.daily, 0.0082)
+  // R$ 30.000,00 exatos em 9 boletos: a soma dos boletos passa de 30.000 por fração de centavo e o Simples continua valendo.
+  const edge = form({ taxProfile: 'simples', eligible: true, totalValue: '30.000,00', averageDays: '7', averageTicket: '3.333,33' })
+  assert.equal(edge.operation.titles, 9)
+  near(edge.operation.tax.daily, 0.00274)
   const doubled = form({ averageValue: '451.200,86', discountRate: '1,83' })
   near(doubled.result.projected.interest, 2 * doubled.operation.interest)
   near(doubled.result.projected.iof, 2 * doubled.operation.iof)

@@ -42,14 +42,15 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
   const [visited, setVisited] = useState({})
   const fromLine = form.giroPrincipalMode === 'linha'
   const filled = { ...form, date: lm.start, praca: lm.praca, giroPrincipalMode: fromLine ? 'manual' : form.giroPrincipalMode, giroPrincipal: fromLine ? lm.value : form.giroPrincipal }
-  const { errors: found, operation, hypothetical, result: calculated } = parseDiscountForm(filled)
+  const { errors: found, parsed, operation, hypothetical, result: calculated } = parseDiscountForm(filled)
   const average = form.titleMode === 'average'
   const result = calculated?.ok ? calculated : null
   // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
   // O erro de um grupo de títulos também aparece ao mexer na data da operação; o aviso geral da operação só
   // aparece quando não resta campo pendente ainda não visitado. A validação usa sempre a lista completa (found).
   const visit = (key) => setVisited((old) => old[key] ? old : { ...old, [key]: true })
-  const seen = (key) => !!visited[key] || (key.startsWith('titleRow') && !!visited.date)
+  // O aviso do ticket (maior que o total, boletos demais) também aparece ao mexer no valor total.
+  const seen = (key) => !!visited[key] || (key.startsWith('titleRow') && !!visited.date) || (key === 'averageTicket' && !!visited.totalValue)
   const unseen = Object.keys(found).filter((key) => key !== 'operation' && !seen(key))
   const errors = Object.fromEntries(Object.entries(found).filter(([key]) => key === 'operation' ? unseen.length === 0 : seen(key)))
   const pending = Object.keys(found).length > 0, flagged = Object.keys(errors).length > 0
@@ -120,12 +121,12 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
             'Prazo médio: informe valor total, prazo médio e ticket médio; a calculadora monta um borderô hipotético e faz a conta título a título. É uma estimativa: o IOF real depende da data de cada boleto. Título a título: informe os grupos do borderô real.', 'Como informar os títulos')}
           {average ? <>
             {demandField('totalValue', 'Valor total da operação', demandMoney('totalValue'))}
-            {demandField('averageDays', 'Prazo médio', <div className="lm-unit"><input {...demandProps('averageDays')} inputMode="numeric" autoComplete="off" value={form.averageDays} onChange={event => set('averageDays', event.target.value.replace(/\D/g, '').slice(0, 3))} onFocus={event => event.target.select()} /><span aria-hidden="true">dias</span></div>,
+            {demandField('averageDays', <>Prazo médio<span className="sr-only"> em dias</span></>, <div className="lm-unit"><input {...demandProps('averageDays')} inputMode="numeric" autoComplete="off" value={form.averageDays} onChange={event => set('averageDays', event.target.value.replace(/\D/g, '').slice(0, 3))} onFocus={event => event.target.select()} /><span aria-hidden="true">dias</span></div>,
               'Dias corridos da operação até o vencimento, na média ponderada pelo valor dos títulos. É o que mais pesa nos juros e no IOF.', 'Prazo médio dos títulos')}
             {demandField('averageTicket', 'Ticket médio', demandMoney('averageTicket'),
-              'Define a quantidade de boletos (valor total ÷ ticket médio). Pesa na tarifa cobrada por título; não muda juros nem IOF.', 'Ticket médio por boleto')}
+              'Define a quantidade de boletos (valor total ÷ ticket médio, arredondada). Pesa na tarifa cobrada por título. Em juros e IOF o efeito é pequeno: muda quais vencimentos caem em fim de semana ou feriado.', 'Ticket médio por boleto')}
             {hypothetical && operation && <div className="dsc-bordero lm-wide">
-              <p><b>Estimativa:</b> {boletos} de {hypothetical.maxValue - hypothetical.minValue < 0.005 ? brl(hypothetical.ticket) : `${brl(hypothetical.minValue)} a ${brl(hypothetical.maxValue)}`}, vencendo em {hypothetical.firstDays === hypothetical.lastDays ? '' : `${hypothetical.firstDays} a `}{daysText(hypothetical.lastDays)}. Prazo médio até o pagamento, já no dia útil: <b>{daysText(operation.averageDays)}</b>.</p>
+              <p><b>Estimativa:</b> {boletos} de {hypothetical.maxValue - hypothetical.minValue < 0.005 ? brl(hypothetical.ticket) : `${brl(hypothetical.minValue)} a ${brl(hypothetical.maxValue)}`}, vencendo em {hypothetical.firstDays === hypothetical.lastDays ? '' : `${hypothetical.firstDays} a `}{daysText(hypothetical.lastDays)}. Prazo médio até o pagamento, já no dia útil: <b>{daysText(operation.averageDays)}</b>.{Math.abs(hypothetical.ticket - parsed.averageTicket) > parsed.averageTicket / 1000 && <> Ticket médio efetivo: {brl(hypothetical.ticket)}.</>}{operation.rows.some(row => row.days > 365) && <> Há boletos com mais de 365 dias: neles, o IOF diário para no teto de 365 dias.</>}</p>
               <details className="dsc-drawer"><summary>Ver o borderô hipotético<small> · {boletos}</small></summary>
                 <div className="cx-wrap" role="region" aria-label="Borderô hipotético por data de pagamento; role para ver todas as colunas" tabIndex={0}>
                   <table className="cx-matrix desconto-table"><caption className="sr-only">Boletos hipotéticos por data de pagamento, com dias, quantidade, valor, juros e IOF</caption><thead><tr><th scope="col">Pagamento</th><th scope="col">Dias</th><th scope="col">Boletos</th><th scope="col">Valor (R$)</th><th scope="col">Juros (R$)</th><th scope="col">IOF (R$)</th></tr></thead>
@@ -149,7 +150,6 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
             </fieldset>)}
             <button type="button" disabled={form.titleRows.length >= 500} onClick={() => set('titleRows', [...form.titleRows, { value: '', count: '1', dueDate: '' }])}>Adicionar grupo de títulos</button>
             {errors.operation && <p role="alert" className="cx-error">{errors.operation}</p>}
-            {operation && <p>Prazo médio até o pagamento: {daysText(operation.averageDays)} · ticket médio: {brl(operation.value / operation.titles)}.</p>}
           </div>
           </>}
         </LinhaMestra>
@@ -175,7 +175,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
       <div className="rt-outcome calc-result-shell" aria-live="polite">
         <Resultado id="ad-result-title" number={3} alert={resultAlert}>
           <Respostas items={[
-            { question: 'Quanto entra no caixa', value: brl(operation?.net), note: 'Valor líquido da operação' },
+            { question: 'Quanto entra no caixa', value: brl(operation?.net), note: average ? 'Valor líquido estimado · borderô hipotético' : 'Valor líquido da operação' },
             { question: 'Quanto é descontado', value: brl(operation?.cost), note: 'Custo total completo' },
             { question: 'Quanto custa', value: operation ? cetText(operation.cet) : '—', main: true,
               note: `CET do desconto (art. 6º · 30 dias)${operation ? ` · ${cetMonthly(operation.cet)} · prazo real: ${cetText(operation.termCost)}` : ''}` },
@@ -295,7 +295,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         <li>Tarifa por operação: total informado, custo unitário × títulos ou valor bruto × percentual. Sem arredondamento intermediário; os valores exibidos são arredondados para centavos.</li>
         <li>Desconto mensal = operações × (tarifa de títulos + TAC + juros pagos + IOF pago). Custo do prazo = custo mensal × meses.</li>
         <li>Desconto: juros e IOF de cada título contam da operação até a data de pagamento (vencimento ou próximo dia útil, se cair em fim de semana, feriado nacional, feriado da praça do contrato ou 31/12, sem expediente bancário).</li>
-        <li>Por prazo médio, a conta usa um borderô hipotético: quantidade de boletos = valor total ÷ ticket médio; vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio; valores de metade a uma vez e meia do ticket, em padrão fixo. Total, ticket e prazo médio fecham no que foi digitado; o ajuste de dia útil pode alongar um pouco o prazo. É estimativa: o IOF real depende da data de cada boleto.</li>
+        <li>Por prazo médio, a conta usa um borderô hipotético: quantidade de boletos = valor total ÷ ticket médio; vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio; valores de metade a uma vez e meia do ticket, em padrão fixo. Valor total e prazo médio fecham no que foi digitado; o ticket fecha quando o total divide certo pela quantidade. O ajuste de dia útil pode alongar um pouco o prazo. É estimativa: o IOF real depende da data de cada boleto.</li>
         <li>Giro Price: juros de cada parcela = saldo × ((1 + i) elevado a dias/30 − 1), pelos dias corridos entre vencimentos; parcela fixa que quita o saldo nessas datas. Vencimentos no próximo dia útil.</li>
         <li>IOF do giro = adicional × principal + diária × soma de cada amortização multiplicada por seus dias corridos, limitados a 365. Percentuais são divididos por 100.</li>
         <li>CET (Resolução CMN 4.881/2020, texto oficial): taxa anual que iguala o líquido liberado aos pagamentos, em dias corridos/365. Desconto (art. 6º): prazo de 30 dias sobre o limite (aqui, o nominal): nominal − juros e IOF de 30 dias − TAC − tarifa de títulos, contra o nominal em 30 dias; o custo pelo prazo real usa o nominal de cada título na data de pagamento e não é CET. Giro (art. 4º): principal − TAC − IOF, contra as parcelas.</li>
@@ -306,7 +306,8 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
       </ul>
     </CalculatorHelp></div>
     {/* Desconto com taxa prefixada: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
-    {/* O gráfico termina no prazo do título mais longo, em meses arredondados para cima (regra de 23/11/2026). */}
-    <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias(Math.max(0, ...(operation?.rows ?? []).map(row => row.days)))} />
+    {/* O gráfico termina no prazo digitado (regra de 23/11/2026), em meses arredondados para cima: por prazo médio, o próprio */}
+    {/* prazo médio (o boleto mais longo é hipotético); título a título, o título mais longo. */}
+    <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias(average ? parsed.averageDays ?? 0 : Math.max(0, ...(operation?.rows ?? []).map(row => row.days)))} />
   </section>
 }

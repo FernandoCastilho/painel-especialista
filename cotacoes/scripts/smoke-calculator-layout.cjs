@@ -288,7 +288,8 @@ async function fillScenario(page, section, route) {
     await assertResultBeside(page, section, '.cg-inputs', '.cg-result-col')
     await section.getByRole('button', { name: 'Utilização única', exact: true }).click()
   } else if (route === 'analise-desconto') {
-    // A tela abre pelo prazo médio (24/11/2026); o cenário fixo abaixo é do borderô título a título.
+    // A tela abre pelo prazo médio (24/11/2026): confere a largura como ela abre; o cenário fixo abaixo é do borderô título a título.
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'prazo médio sem rolagem lateral')
     await page.locator('#ad-titleMode').selectOption('titles')
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
