@@ -51,7 +51,7 @@ const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8787/'
       assert.equal(await nav.isVisible(), true)
       assert.equal(page.url(), originalPage)
       await page.close()
-      console.log(`OK ${width}px: entrada, navega��o oculta, Esc n�o sai, sa�da pelo mesmo bot�o`)
+      console.log(`OK ${width}px: entrada, navegação oculta, Esc não sai, saída pelo mesmo botão`)
     }
   } finally { await browser.close() }
 })().catch((error) => { console.error(error); process.exitCode = 1 })

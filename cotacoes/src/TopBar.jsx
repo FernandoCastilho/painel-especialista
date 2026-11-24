@@ -15,7 +15,7 @@ const CLOCKS = [
   ['GBP', 'LDN'],
   ['JPY', 'TYO'],
 ]
-const STATE_TEXT = { ok: 'Dados', delayed: 'Dado antigo', idle: 'Fora do hor�rio de coleta', err: 'Sem atualiza��o', loading: 'Carregando' }
+const STATE_TEXT = { ok: 'Dados', delayed: 'Dado antigo', idle: 'Fora do horário de coleta', err: 'Sem atualização', loading: 'Carregando' }
 
 const part = (now, tz, opts) => new Intl.DateTimeFormat('pt-BR', { timeZone: tz, hourCycle: 'h23', ...opts }).format(now)
 
@@ -26,7 +26,7 @@ function Clocks() {
     return () => clearInterval(id)
   }, [])
   return (
-    <div className="topbar-clocks" role="timer" aria-label="Hor�rios de S�o Paulo, Nova York, Londres e T�quio">
+    <div className="topbar-clocks" role="timer" aria-label="Horários de São Paulo, Nova York, Londres e Tóquio">
       {CLOCKS.map(([code, short], i) => (
         <span key={code} className={i === 2 ? 'topbar-clock opt' : 'topbar-clock'} title={ZONES[code].city}>
           <Flag code={ZONES[code].flag} width={13} height={9} className="topbar-clock-flag" />
@@ -38,8 +38,8 @@ function Clocks() {
   )
 }
 
-// Barra superior do terminal (computador): marca, se��es, rel�gios e estado dos dados.
-// Atalho: Alt+1 a Alt+9 (e Alt+0 para a 10�) trocam de se��o (as teclas F1 a F12 ficam com o navegador).
+// Barra superior do terminal (computador): marca, seções, relógios e estado dos dados.
+// Atalho: Alt+1 a Alt+9 (e Alt+0 para a 10ª) trocam de seção (as teclas F1 a F12 ficam com o navegador).
 export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle, focusMode, onToggleFocus }) {
   useEffect(() => {
     if (focusMode) return undefined
@@ -63,7 +63,7 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle,
       <Nav desktop tab={tab} onTab={onTab} />
       <Clocks />
       <OnlineBadge />
-      <div className={`topbar-feed ${feed}`} role="status" title={feedTitle || 'Estado das refer�ncias de c�mbio'}>
+      <div className={`topbar-feed ${feed}`} role="status" title={feedTitle || 'Estado das referências de câmbio'}>
         <span aria-hidden="true" />
         {feedLabel || STATE_TEXT[feed]}
         {feedAt && feed !== 'loading' && <b>{feedAt}</b>}

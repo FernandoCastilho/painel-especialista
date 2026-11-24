@@ -1,4 +1,4 @@
-name: Cota��es CI
+name: Cotações CI
 on:
   workflow_call:
   push:
@@ -26,7 +26,7 @@ jobs:
       - name: Preparar ensaio semanal com dados simulados
         run: node test/helpers/weekly-package.mjs "$RUNNER_TEMP/weekly-package-test.json"
       - run: npm run build
-      - name: Conferir preserva��o no build real
+      - name: Conferir preservação no build real
         run: node scripts/weekly-data.mjs dist "$RUNNER_TEMP/weekly-package-test.json"
   build-qa:
     runs-on: ubuntu-24.04
@@ -41,12 +41,12 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
-      - name: Compilar o painel com os dados na pr�pria origem
+      - name: Compilar o painel com os dados na própria origem
         run: VITE_DATA_BASE=http://127.0.0.1:8768 npm run build
-      - name: Guardar o pacote de teste desta revis�o
+      - name: Guardar o pacote de teste desta revisão
         uses: actions/upload-artifact@v4
         with:
-          # O download busca s� nesta execu��o. O nome est�vel atende reexecu��es parciais.
+          # O download busca só nesta execução. O nome estável atende reexecuções parciais.
           name: &nome-pacote-qa pacote-qa-local-${{ github.sha }}
           overwrite: true
           path: cotacoes/dist
@@ -74,7 +74,7 @@ jobs:
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
       - &baixar-pacote-qa
-        name: Baixar o pacote de teste desta revis�o
+        name: Baixar o pacote de teste desta revisão
         uses: actions/download-artifact@v4
         with:
           name: *nome-pacote-qa
@@ -89,9 +89,9 @@ jobs:
         run: |
           nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
-      - name: Conferir mapas de recupera��o judicial, tooltips e r�tulos
+      - name: Conferir mapas de recuperação judicial, tooltips e rótulos
         run: SEARCH_QA_OUTPUT="$RUNNER_TEMP/qa-universal/recovery" node scripts/smoke-recuperacao.cjs
-      - name: Capturas dos mapas de recupera��o judicial
+      - name: Capturas dos mapas de recuperação judicial
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -100,15 +100,15 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/recovery
           if-no-files-found: error
           retention-days: 7
-      - name: Conferir Comparador de Cr�dito, cen�rios e apresenta��o
+      - name: Conferir Comparador de Crédito, cenários e apresentação
         run: CREDIT_QA_OUTPUT="$RUNNER_TEMP/qa-universal/credit" node scripts/smoke-credit-comparison.cjs
-      - name: Conferir Opera��o x DI (CET, IOF e vencimento em dia �til)
+      - name: Conferir Operação x DI (CET, IOF e vencimento em dia útil)
         run: OPERACAO_DI_QA_OUTPUT="$RUNNER_TEMP/qa-universal/operacao-di" node scripts/smoke-operacao-di.cjs
-      - name: Conferir Empr�stimo externo 4131 (IOF, gross-up, swap, NDF, apresenta��o e PDF)
+      - name: Conferir Empréstimo externo 4131 (IOF, gross-up, swap, NDF, apresentação e PDF)
         run: EMPRESTIMO_4131_QA_OUTPUT="$RUNNER_TEMP/qa-universal/emprestimo-4131" node scripts/smoke-emprestimo-4131.cjs
-      - name: Conferir �rvore de Cr�dito (folha, CNPJ simulado e vis�o do cliente)
+      - name: Conferir Árvore de Crédito (folha, CNPJ simulado e visão do cliente)
         run: ARVORE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/arvore" node scripts/smoke-arvore-credito.cjs
-      - name: Capturas e resultado do Comparador de Cr�dito
+      - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -119,7 +119,7 @@ jobs:
           retention-days: 7
       - name: Conferir Bancos em celular, tablet e desktop nos dois temas
         run: BANKS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/bancos" node scripts/smoke-bancos.cjs
-      - name: Capturas e relat�rio da se��o Bancos
+      - name: Capturas e relatório da seção Bancos
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -130,10 +130,10 @@ jobs:
           retention-days: 7
       - name: Conferir curadorias de tributos e escala 6x1
         run: CURADORIA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/curadoria" node scripts/smoke-curadoria.cjs
-      - name: Conferir coleta institucional publicada e falhas de confirma��o
+      - name: Conferir coleta institucional publicada e falhas de confirmação
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: INSTITUTIONAL_NEWS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/institutional-news" node scripts/smoke-institutional-news.cjs
-      - name: Capturas e relat�rio da coleta institucional
+      - name: Capturas e relatório da coleta institucional
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -153,10 +153,10 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/cbs
           if-no-files-found: error
           retention-days: 7
-      - name: Conferir mapa do conhecimento em quatro cen�rios
+      - name: Conferir mapa do conhecimento em quatro cenários
         timeout-minutes: 3
         run: KNOWLEDGE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/knowledge-map" node scripts/smoke-knowledge-map.cjs
-      - name: Capturas e relat�rio imediatos do mapa do conhecimento
+      - name: Capturas e relatório imediatos do mapa do conhecimento
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -165,11 +165,11 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/knowledge-map
           if-no-files-found: error
           retention-days: 7
-      - name: Conferir panorama hor�rio em celular, tablet e desktop nos dois temas
+      - name: Conferir panorama horário em celular, tablet e desktop nos dois temas
         run: POPUP_QA_OUTPUT="$RUNNER_TEMP/qa-universal/market-popup" node scripts/smoke-market-popup.cjs
       - name: Conferir ICMS-ST, motion e movimento reduzido
         run: ICMS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/icms-st" node scripts/smoke-icms-st.cjs
-      - name: Capturas e relat�rio do diagrama ICMS-ST
+      - name: Capturas e relatório do diagrama ICMS-ST
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -178,9 +178,9 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/icms-st
           if-no-files-found: error
           retention-days: 7
-      - name: Conferir estudo hist�rico de controle de juros em tr�s larguras
+      - name: Conferir estudo histórico de controle de juros em três larguras
         run: JUROS_QA_OUTPUT="$RUNNER_TEMP/qa-juros" node scripts/smoke-aprender-juros.cjs
-      - name: Capturas e relat�rio do estudo de juros
+      - name: Capturas e relatório do estudo de juros
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -189,7 +189,7 @@ jobs:
           path: ${{ runner.temp }}/qa-juros
           if-no-files-found: error
           retention-days: 7
-      - name: Preparar evid�ncias para o artefato consolidado
+      - name: Preparar evidências para o artefato consolidado
         if: ${{ !cancelled() }}
         run: |
           mkdir -p "$RUNNER_TEMP/smoke-transfer"
@@ -197,7 +197,7 @@ jobs:
             if test -d "$RUNNER_TEMP/$dir"; then cp -a "$RUNNER_TEMP/$dir" "$RUNNER_TEMP/smoke-transfer/"; fi
           done
           printf '%s\n' "$GITHUB_SHA $GITHUB_RUN_ID $GITHUB_RUN_ATTEMPT secoes" > "$RUNNER_TEMP/smoke-transfer/manifest.txt"
-      - name: Transferir evid�ncias do grupo secoes
+      - name: Transferir evidências do grupo secoes
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
@@ -236,16 +236,16 @@ jobs:
         run: |
           nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
-      - name: Preparar relat�rio da matriz RPN
+      - name: Preparar relatório da matriz RPN
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/qa-universal/rpn-classic-matrix"
-          printf '%s\n' '{"state":"not-started","message":"A pr�via precisa iniciar antes do smoke."}' > "$RUNNER_TEMP/qa-universal/rpn-classic-matrix/report.json"
-      - name: Testar fun��es da RPN cl�ssica em Chrome
+          printf '%s\n' '{"state":"not-started","message":"A prévia precisa iniciar antes do smoke."}' > "$RUNNER_TEMP/qa-universal/rpn-classic-matrix/report.json"
+      - name: Testar funções da RPN clássica em Chrome
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         timeout-minutes: 7
         run: RPN_CLASSIC_QA_OUTPUT="$RUNNER_TEMP/qa-universal/rpn-classic-matrix" node scripts/smoke-rpn-classic-matrix.cjs
-      - name: Evid�ncias da matriz da RPN cl�ssica
+      - name: Evidências da matriz da RPN clássica
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -257,16 +257,16 @@ jobs:
       - name: Conferir seis calculadoras e alongamento em cinco larguras
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: CALCULATOR_QA_OUTPUT="$RUNNER_TEMP/qa-universal/calculators" node scripts/smoke-calculator-layout.cjs
-      - name: Conferir estudos inclu�dos, recortes pendentes, apresenta��o e �udio
+      - name: Conferir estudos incluídos, recortes pendentes, apresentação e áudio
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: RESEARCHED_SECTORS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/researched-sectors" node scripts/smoke-researched-sectors.cjs
-      - name: Conferir pastas, hist�rico e recarga em oito cen�rios
+      - name: Conferir pastas, histórico e recarga em oito cenários
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: FOLDERS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/folders" node scripts/smoke-sector-folders.cjs
       - name: Verificar matriz de pastas e capturas completas
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: node scripts/verify-sector-folders.cjs "$RUNNER_TEMP/qa-universal/folders"
-      - name: Capturas e relat�rio das pastas
+      - name: Capturas e relatório das pastas
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -275,7 +275,7 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/folders
           if-no-files-found: error
           retention-days: 7
-      - name: Capturas e relat�rio dos estudos setoriais
+      - name: Capturas e relatório dos estudos setoriais
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -284,7 +284,7 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/researched-sectors
           if-no-files-found: error
           retention-days: 7
-      - name: Capturas da revis�o das calculadoras
+      - name: Capturas da revisão das calculadoras
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -310,13 +310,13 @@ jobs:
             echo "::endgroup::"
           done
           if (( ${#failures[@]} )); then
-            echo "::error::Cen�rios corrigidos com falha: ${failures[*]}"
+            echo "::error::Cenários corrigidos com falha: ${failures[*]}"
             exit 1
           fi
-      - name: Conferir player Podcast, controles e disposi��o m�vel
+      - name: Conferir player Podcast, controles e disposição móvel
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: PODCAST_QA_OUTPUT="$RUNNER_TEMP/qa-universal/podcast" node scripts/smoke-podcast.cjs
-      - name: Capturas e relat�rio do player Podcast
+      - name: Capturas e relatório do player Podcast
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -325,7 +325,7 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/podcast
           if-no-files-found: error
           retention-days: 7
-      - name: Conferir prioridade dos menus e navega��o por teclado
+      - name: Conferir prioridade dos menus e navegação por teclado
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: MENU_QA_OUTPUT="$RUNNER_TEMP/qa-menu-priority" node scripts/smoke-menu-priority.cjs
       - name: Conferir tela cheia do painel no computador, tablet e celular
@@ -340,10 +340,10 @@ jobs:
           path: ${{ runner.temp }}/qa-menu-priority
           if-no-files-found: error
           retention-days: 7
-      - name: Conferir hist�ria dos juros, busca e navega��o em Aprender
+      - name: Conferir história dos juros, busca e navegação em Aprender
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: INTEREST_HISTORY_QA_OUTPUT="$RUNNER_TEMP/qa-universal/interest-history" node scripts/smoke-interest-history.cjs
-      - name: Capturas da hist�ria dos juros em Aprender
+      - name: Capturas da história dos juros em Aprender
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -374,10 +374,10 @@ jobs:
             echo "::error::Fluxos alterados com falha: ${failures[*]}"
             exit 1
           fi
-      - name: Verificar matriz de oito calculadoras e cabe�alho Setores320
+      - name: Verificar matriz de oito calculadoras e cabeçalho Setores320
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: node scripts/verify-smoke-matrix.cjs "$RUNNER_TEMP/qa-universal"
-      - name: Preparar evid�ncias para o artefato consolidado
+      - name: Preparar evidências para o artefato consolidado
         if: ${{ !cancelled() }}
         run: |
           mkdir -p "$RUNNER_TEMP/smoke-transfer"
@@ -385,7 +385,7 @@ jobs:
             if test -d "$RUNNER_TEMP/$dir"; then cp -a "$RUNNER_TEMP/$dir" "$RUNNER_TEMP/smoke-transfer/"; fi
           done
           printf '%s\n' "$GITHUB_SHA $GITHUB_RUN_ID $GITHUB_RUN_ATTEMPT calculadoras" > "$RUNNER_TEMP/smoke-transfer/manifest.txt"
-      - name: Transferir evid�ncias do grupo calculadoras
+      - name: Transferir evidências do grupo calculadoras
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
@@ -424,7 +424,7 @@ jobs:
         run: |
           nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
-      - name: Smokes de navegador (abas, mercado, calend�rio e controles de 44 px)
+      - name: Smokes de navegador (abas, mercado, calendário e controles de 44 px)
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: |
           failures=()
@@ -439,16 +439,16 @@ jobs:
             echo "::error::Smokes com falha: ${failures[*]}"
             exit 1
           fi
-      - name: Panorama, filtros, transa��es e navega��o de M&A
+      - name: Panorama, filtros, transações e navegação de M&A
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: MA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/ma" node scripts/smoke-ma.cjs
-      - name: Sele��o temporal com mouse e toque nos componentes
+      - name: Seleção temporal com mouse e toque nos componentes
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: |
           npm run dev -- --host 127.0.0.1 --port 8770 > "$RUNNER_TEMP/comparison-vite.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8770/test/fixtures/chart-comparison.html > /dev/null && break; sleep 1; done
           SMOKE_BASE_URL=http://127.0.0.1:8770 COMPARISON_QA_OUTPUT="$RUNNER_TEMP/qa-universal" node scripts/smoke-chart-comparison.cjs
-      - name: Preparar evid�ncias para o artefato consolidado
+      - name: Preparar evidências para o artefato consolidado
         if: ${{ !cancelled() }}
         run: |
           mkdir -p "$RUNNER_TEMP/smoke-transfer"
@@ -456,7 +456,7 @@ jobs:
             if test -d "$RUNNER_TEMP/$dir"; then cp -a "$RUNNER_TEMP/$dir" "$RUNNER_TEMP/smoke-transfer/"; fi
           done
           printf '%s\n' "$GITHUB_SHA $GITHUB_RUN_ID $GITHUB_RUN_ATTEMPT navegacao" > "$RUNNER_TEMP/smoke-transfer/manifest.txt"
-      - name: Transferir evid�ncias do grupo navegacao
+      - name: Transferir evidências do grupo navegacao
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
@@ -465,19 +465,19 @@ jobs:
           path: ${{ runner.temp }}/smoke-transfer/
           if-no-files-found: ignore
           retention-days: 7
-  # Mant�m o nome consumido pelo gate de publica��o agendada e pelos checks existentes.
+  # Mantém o nome consumido pelo gate de publicação agendada e pelos checks existentes.
   smoke:
     runs-on: ubuntu-latest
     needs: [test-build, smoke-secoes, smoke-calculadoras, smoke-navegacao]
     if: ${{ !cancelled() }}
     timeout-minutes: 5
     steps:
-      - name: Reunir evid�ncias dos grupos de navegador
+      - name: Reunir evidências dos grupos de navegador
         uses: actions/download-artifact@v4
         with:
           pattern: smoke-transfer-*
           path: ${{ runner.temp }}/smoke-grupos
-      - name: Validar origem e consolidar evid�ncias sem sobrescrever
+      - name: Validar origem e consolidar evidências sem sobrescrever
         if: ${{ !cancelled() }}
         env:
           CI_RESULTS: ${{ toJSON(needs) }}
@@ -498,7 +498,7 @@ jobs:
               if (item.isDirectory()) { merge(src, dst); continue }
               if (!item.isFile()) throw new Error(`Arquivo inesperado: ${item.name}`)
               if (existsSync(dst)) {
-                if (!readFileSync(src).equals(readFileSync(dst))) failures.push(`Colis�o de evid�ncia: ${dst}`)
+                if (!readFileSync(src).equals(readFileSync(dst))) failures.push(`Colisão de evidência: ${dst}`)
                 continue
               }
               mkdirSync(dirname(dst), { recursive: true })
@@ -510,15 +510,15 @@ jobs:
             const manifest = join(dir, 'manifest.txt')
             const success = results[`smoke-${group}`]?.result === 'success'
             if (!existsSync(manifest)) {
-              if (success) failures.push(`Evid�ncia ausente: ${group}`)
+              if (success) failures.push(`Evidência ausente: ${group}`)
               continue
             }
             const [sha, run, attempt, name] = readFileSync(manifest, 'utf8').trim().split(' ')
             if (sha !== GITHUB_SHA || run !== GITHUB_RUN_ID || name !== group || !/^\d+$/.test(attempt) || Number(attempt) < 1 || Number(attempt) > Number(GITHUB_RUN_ATTEMPT)) {
-              failures.push(`Origem inv�lida: ${group}`)
+              failures.push(`Origem inválida: ${group}`)
               continue
             }
-            console.log(`Evid�ncias: ${group}, tentativa ${attempt}`)
+            console.log(`Evidências: ${group}, tentativa ${attempt}`)
             const existing = roots.filter(root => existsSync(join(dir, root)))
             if (success && !existing.length) failures.push(`Grupo sem capturas: ${group}`)
             for (const root of existing) merge(join(dir, root), join(output, root))
@@ -553,7 +553,7 @@ jobs:
           const expected = ['test-build', 'smoke-secoes', 'smoke-calculadoras', 'smoke-navegacao']
           const failed = expected.filter(id => results[id]?.result !== 'success')
           if (failed.length) {
-            console.error('Falha, cancelamento ou aus�ncia de checks: ' + failed.join(', '))
+            console.error('Falha, cancelamento ou ausência de checks: ' + failed.join(', '))
             process.exitCode = 1
           }
           JS
@@ -584,7 +584,7 @@ jobs:
           python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/bndes-server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
           node scripts/smoke-bndes-workspace.cjs
-      - name: Conferir regress�es das calculadoras e do BNDES
+      - name: Conferir regressões das calculadoras e do BNDES
         env:
           CALCULATOR_QA_OUTPUT: /tmp/bndes-workspace/calculators
           BNDES_QA_OUTPUT: /tmp/bndes-workspace/bndes
