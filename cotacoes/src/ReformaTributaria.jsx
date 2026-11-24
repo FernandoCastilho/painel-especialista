@@ -23,21 +23,6 @@ export default function ReformaTributaria({ simples = false }) {
   )
 }
 
-// Resumo › "Eleições EUA" (e outros temas de temas.json): matérias dos últimos cinco dias, por dia, com busca.
-export function TemaNoticias({ id, simples = false }) {
-  const now = useNewsClock()
-  const file = useDataFile('temas.json')
-  const tema = useMemo(() => { try { return file.data ? normalizeTemas(file.data, now)[id] ?? null : null } catch { return null } }, [file.data, id, now])
-  return (
-    <>
-      {file.status === 'loading' && <Estado>Carregando as matérias…</Estado>}
-      {file.status === 'error' && !tema && <Estado tipo="erro" erro={file.error}>Matérias indisponíveis no momento.</Estado>}
-      {file.data && !tema && file.status !== 'loading' && <Estado>Nenhum registro disponível para este assunto. Não foi possível confirmar a cobertura atual.</Estado>}
-      {tema && <NoticiasPorDia key={id} data={{ ...tema, stale: tema.stale || file.stale || file.status === 'error' }} simples={simples} ariaLabel={`${tema.label}: matérias dos últimos cinco dias`} />}
-    </>
-  )
-}
-
 // Resumo › "Moedas": as matérias dos últimos cinco dias sobre dólar, euro, iene e yuan numa só linha do tempo, com a bandeira da moeda.
 export function MoedasNoticias() {
   const now = useNewsClock()
