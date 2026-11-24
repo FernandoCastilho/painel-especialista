@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-11-16",
+  "reviewedAt": "2026-11-23",
   "institutions": [
     {
       "name": "Itaú BBA",
@@ -43,19 +43,19 @@
     },
     {
       "name": "Santander",
-      "date": "2026-09-25",
-      "url": "https://assets.santandermedia.com/adobe/assets/urn:aaid:aem:deb0d3f7-f0e6-45e9-937a-66588a2b4f79/original/as/BR_PF_PDF_Br_Cenario_Macro_250926_20261009.pdf",
-      "note": "PDF, p. 6 · câmbio no fim do período",
+      "date": "2026-10-30",
+      "url": "https://assets.santandermedia.com/adobe/assets/urn:aaid:aem:d4ec8f04-550b-4fdb-b772-6c9247c12aaa/original/as/BR_PDF_PF_guia_mensal_perfil_arrojado_20261103.pdf",
+      "note": "Guia mensal de novembro, PDF, p. 12 · data-base 30/10 · a tabela não diz o período do dólar",
       "years": {
         "2026": {
           "pib": 1.8,
-          "ipca": 5,
+          "ipca": 4.9,
           "selic": 13.5,
           "usd": 5.3
         },
         "2027": {
           "pib": 1.3,
-          "ipca": 4,
+          "ipca": 4.1,
           "selic": 12.5,
           "usd": 5.4
         }
@@ -63,7 +63,7 @@
     },
     {
       "name": "BB",
-      "date": "2026-11-13",
+      "date": "2026-11-19",
       "url": "https://www.bb.com.br/docs/portal/utg/CenarioEconomico.pdf",
       "note": "PDF, p. 1 · câmbio no fim do período, publicado com uma casa decimal",
       "years": {
@@ -83,20 +83,20 @@
     },
     {
       "name": "BTG",
-      "date": "2026-10-19",
-      "url": "https://content.btgpactual.com/research/files/file/pt-BR/2026-10-19T101654.297_Spoiler_Macro_19out26_BTGPactual.pdf",
+      "date": "2026-11-09",
+      "url": "https://content.btgpactual.com/research/files/file/pt-BR/2026-11-09T100833.382_Spoiler_Macro_09nov26_BTGPactual_ENG.pdf",
       "note": "PDF, p. 6 · câmbio no fim do período",
       "years": {
         "2026": {
-          "pib": 1.8,
-          "ipca": 5.3,
+          "pib": 1.7,
+          "ipca": 5.4,
           "selic": 13.75,
           "usd": 5.4
         },
         "2027": {
-          "pib": 1.1,
-          "ipca": 4.8,
-          "selic": 12.5,
+          "pib": 0.6,
+          "ipca": 5.9,
+          "selic": 13.75,
           "usd": 5.5
         }
       }
