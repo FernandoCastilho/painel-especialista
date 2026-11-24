@@ -26,3 +26,30 @@ Revisor em contexto separado identificou retomada de gravação, rolagem/detalhe
 
 ## Publicação
 Entrega em ramo separado para PR e CI. Não houve merge nem publicação. Os checks remotos da revisão candidata devem passar antes de solicitar autorização final de publicação, conforme AGENTS.md e CLAUDE.md.
+
+# Atualização de 2026-11-23: transações de 2026
+
+## Entrega
+305 transações anunciadas entre 01/01 e 23/11/2026, uma nota por operação em `wiki/queries/ma/2026/` e o catálogo do painel refeito por `build-ma-content.mjs` (310 registros com o acervo de 2025). Mapa e barras do M&A passaram a ser legíveis no tema escuro (#583). Setores sem pasta em Setores (energia, financeiro, saneamento, educação, petróleo, mineração, imobiliário, agronegócio, serviços) entram sem o botão "Ver em Setores".
+
+## Regra de inclusão
+Empresa ou ativo operacional adquirido no Brasil; anúncio (ou, sem anúncio, publicação) entre 01/01 e 23/11/2026; negócio assinado. Ficam de fora: anúncios de 2025 concluídos em 2026, rumores e memorandos, reorganizações do mesmo grupo, recompras, OPA do controlador para fechar capital, compra de imóveis ou frações de imóveis/shoppings/galpões sem compra de empresa, empresa nova criada em sociedade, adquirida no exterior.
+
+## Fontes da base (ordem de uso)
+1. Descobrir operações: [CVM — Dados Abertos, fatos relevantes e comunicados (IPE)](https://dados.cvm.gov.br/dataset/cia_aberta-doc-ipe); [Cade](https://www.gov.br/cade/pt-br) e despachos da Superintendência-Geral no [Diário Oficial](https://pesquisa.in.gov.br).
+2. Confirmar termos e fechamento: comunicados das empresas (RI e documento na CVM) e [B3 — Empresas Listadas](https://sistemaswebb3-listados.b3.com.br/listedCompaniesPage/?language=pt-br). Aprovação do Cade não prova conclusão.
+3. Completar a cobertura: NeoFeed, Brazil Journal, Money Times, InfoMoney, Forbes Brasil, Finance News; por setor Baguete (TI), Teletime (telecom), Mercado & Consumo (varejo). [Pesquisa trimestral da KPMG](https://kpmg.com/br/pt/insights/2026/08/pesquisa-trimestral-m-a-2-trimestre-2026.html) só para comparar o tamanho do mercado.
+4. Acervo histórico: [Portal Fusões & Aquisições](https://fusoesaquisicoes.com/transacoes-no-brasil/) até dez/2025; [pausa anunciada em 31/12/2025](https://fusoesaquisicoes.com/hr/um-legado-de-transparencia-o-encerramento-de-um-ciclo-e-a-perenidade-da-informacao-missao-cumprida/). Conferir em cada atualização se voltou a publicar.
+
+Descartadas: acionista.com.br (textos gerados por IA, bloqueia robôs), Visno Invest (recusa acesso), M&A Community (bloqueia leitura automática).
+
+## Verificações
+- Levantamento em duas rodadas (por bimestre a partir da CVM; por setor na imprensa) e varredura parcial do Cade: 364 registros brutos, 9 duplicatas.
+- Conferência registro a registro das 350 operações contra a fonte (6 lotes + amostra independente de 45): 48 removidas, 242 campos corrigidos, situação atualizada até 23/11/2026.
+- Comparação: KPMG contou 610 transações no 1º semestre de 2026; a base tem 170 (cerca de 28%).
+
+## Limites
+- Cobertura parcial, indicada no painel. O Cade foi lido só em parte: o SEI bloqueia acesso automático e o Diário Oficial recusa consultas em sequência (cerca de 1.480 despachos da Superintendência-Geral em 2026). Próxima etapa: varredura do Diário Oficial com leitura lenta ou pelo navegador de Fernando.
+- Vários registros foram conferidos por resumo de busca quando a página da fonte não abria nesta sessão; a fonte gravada é a que foi vista.
+- Situação conforme a fonte mais recente encontrada; não garante o estado atual. Sem rotina de atualização automática.
+- As notas de 2026 estão no repositório; a gravação no vault do Obsidian fica pendente (script `ma-obsidian-sync.ps1`).

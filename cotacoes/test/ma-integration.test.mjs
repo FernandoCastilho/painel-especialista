@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { APP_SECTIONS } from '../src/appSections.js'
 import { DESKTOP_PRIMARY, MOBILE_PRIMARY, MORE_GROUPS, shortcutTitle } from '../src/navigationPriority.js'
 import { parseCommand } from '../src/terminal.js'
-import { validateMa, summarizeMa } from '../src/ma.js'
+import { validateMa, summarizeMa, maDate } from '../src/ma.js'
 const read = path => readFileSync(new URL(path,import.meta.url),'utf8')
 
 test('M&A: fica após Setores no desktop, acessível em Mais no celular, preservando atalhos', () => {
@@ -19,7 +19,10 @@ test('M&A: catálogo real validado, sem exemplos fictícios ou atualização pro
   const catalog = JSON.parse(read('../src/ma/transactions.json'))
   assert.equal(validateMa(catalog.transactions),true)
   assert.match(catalog.coverage,/parcial/)
-  assert.ok(catalog.transactions.every(row => row.publicationDate.startsWith('2025')))
+  // acervo de 2025 continua em 2025 (data secundária de atualização não vira anúncio novo); 2026 só com anúncio ou publicação no ano
+  assert.ok(catalog.transactions.filter(row => row.id.startsWith('2025-')).every(row => row.publicationDate.startsWith('2025') && maDate(row).startsWith('2025')))
+  assert.ok(catalog.transactions.filter(row => row.id.startsWith('2026-')).every(row => maDate(row) >= '2026-01-01' && maDate(row) <= '2026-11-23'))
+  assert.ok(catalog.transactions.every(row => /^202[56]-/.test(row.id)))
   assert.equal(summarizeMa(catalog.transactions).total,catalog.transactions.length)
   assert.ok(!JSON.stringify(catalog).includes('Clínica Aurora'))
 })
