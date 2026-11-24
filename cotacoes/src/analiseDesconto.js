@@ -20,6 +20,8 @@ export const DISCOUNT_INITIAL_FORM = Object.freeze({
   giroPrincipalMode: 'monthly', giroPrincipal: '', giroRate: '1,83', giroTac: '3.150,00',
   taxProfile: 'pj', eligible: false, giroTaxProfile: 'pj', giroEligible: false,
   convention: 'commercial30', praca: PRACA_PADRAO,
+  // A tela abre pelo prazo médio (24/11/2026); 'titles' é o borderô título a título, com os grupos abaixo.
+  titleMode: 'average', totalValue: '225.600,43', averageDays: '30', averageTicket: '7.520,00',
   titleRows: [{ value: '225.600,43', count: '30', dueDate: '2026-12-05' }],
 })
 
@@ -52,6 +54,44 @@ export function titleFee({ value, titles, feeMode, fee }) {
   if (feeMode === 'percent' && fee > 100) return invalid('A tarifa percentual deve ficar entre 0 e 100%.')
   const total = feeMode === 'total' ? fee : feeMode === 'unit' ? titles * fee : value * fee / 100
   return money(total) ? { ok: true, total } : invalid('A tarifa de títulos excede o limite de cálculo.')
+}
+
+// Borderô hipotético (premissas de Fernando, 24/11/2026): com valor total, prazo médio e ticket médio, monta um borderô
+// plausível para a mesma conta título a título. Só gera a entrada: juros, IOF e CET continuam em discountOperation.
+// - Quantidade de boletos = valor total ÷ ticket médio, arredondada; o ticket efetivo é valor total ÷ quantidade.
+// - Vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio (30 dias → de 15 a 45 dias).
+// - Valores diferentes, de metade a uma vez e meia do ticket efetivo, em padrão fixo (sem sorteio: a mesma entrada dá
+//   sempre o mesmo resultado).
+// Dias e valores são espelhados em torno do meio da lista; por isso o total, o ticket e o prazo médio ponderado pelo
+// valor fecham no que foi digitado. O ajuste de dia útil vem depois, na conta, e pode alongar um pouco o prazo médio.
+export const HYPOTHETICAL_MAX_DAYS = 365
+const HYPOTHETICAL_VALUE_PATTERN = [-1, 1, -0.5, 0.5, 0]
+export function hypotheticalTitles({ value, averageDays, ticket, date }) {
+  const release = parseDiscountDate(date)
+  if (!release || !money(value, true) || !money(ticket, true) || !integer(averageDays, HYPOTHETICAL_MAX_DAYS)) return invalid('Confira a data, o valor total, o prazo médio e o ticket médio.')
+  if (ticket > value) return invalid('O ticket médio não pode ser maior que o valor total.')
+  const count = Math.round(value / ticket)
+  if (!integer(count, 1_000_000)) return invalid('O ticket médio gera mais de 1.000.000 de boletos. Informe um ticket maior.')
+  const firstDays = Math.max(1, Math.round(averageDays / 2)), lastDays = 2 * averageDays - firstDays
+  const mirror = index => Math.min(index, count - 1 - index)
+  const dayOf = index => {
+    const near = mirror(index), days = near * 2 === count - 1 ? averageDays : Math.round(firstDays + (lastDays - firstDays) * near / (count - 1))
+    return index === near ? days : 2 * averageDays - days
+  }
+  const raw = index => HYPOTHETICAL_VALUE_PATTERN[mirror(index) % HYPOTHETICAL_VALUE_PATTERN.length]
+  let mean = 0, spread = 0
+  for (let index = 0; index < count; index++) mean += raw(index) / count
+  for (let index = 0; index < count; index++) spread = Math.max(spread, Math.abs(raw(index) - mean))
+  const weight = index => spread ? 1 + 0.5 * (raw(index) - mean) / spread : 1
+  const unit = value / count, groups = new Map()
+  let minValue = Infinity, maxValue = 0
+  for (let index = 0; index < count; index++) {
+    const days = dayOf(index), nominal = unit * weight(index), group = groups.get(days) ?? { value: 0, count: 0 }
+    groups.set(days, { value: group.value + nominal, count: group.count + 1 })
+    minValue = Math.min(minValue, nominal); maxValue = Math.max(maxValue, nominal)
+  }
+  const titleRows = [...groups].sort(([a], [b]) => a - b).map(([days, group]) => ({ ...group, dueDate: new Date(release.getTime() + days * 86400000).toISOString().slice(0, 10) }))
+  return { ok: true, titleRows, titles: count, ticket: unit, minValue, maxValue, firstDays, lastDays }
 }
 
 // Regras de 11/11/2026: título que vence em fim de semana, feriado nacional ou feriado da praça do contrato (`calendars`,
@@ -98,7 +138,9 @@ export function discountOperation({ titleRows, date, rate, convention = 'commerc
   const net30 = value - interest30 - iof30 - tariff.total - tac
   const cet = net30 > 0 ? creditCet(net30, [{ days: 30, payment: value }]) : null
   // CET não mensurável (ex.: tarifas quase iguais ao líquido, acima de 1.000% a.a.) não invalida a operação: a tela mostra "Não mensurável".
-  return { ok: true, value, titles, titleFee: tariff.total, tac, interest, iof: iofPaid, base, rows, tax, costWithoutTitles, cost, net, cet, termCost, cet30: { days: 30, interest: interest30, iof: iof30, net: net30 } }
+  // Prazo médio ponderado pelo valor, em dias corridos até a data de pagamento. Só informativo.
+  const averageDays = rows.reduce((sum, row) => sum + row.value * row.days, 0) / value
+  return { ok: true, value, titles, averageDays, titleFee: tariff.total, tac, interest, iof: iofPaid, base, rows, tax, costWithoutTitles, cost, net, cet, termCost, cet30: { days: 30, interest: interest30, iof: iof30, net: net30 } }
 }
 
 // Giro Price no motor do Capital de Giro (giroOperation): juros por dias corridos entre vencimentos, (1 + i)^(dias/30);
@@ -142,9 +184,10 @@ export function compareDiscount({ operation, averageValue, projectionRate, opera
 // Parser único compartilhado pela tela e pelos testes de edição. Vazio não vira zero.
 export function parseDiscountForm(form) {
   const errors = {}, parsed = {}
-  for (const key of ['averageValue', 'tac', 'giroTac']) {
+  const average = form.titleMode === 'average'
+  for (const key of ['averageValue', 'tac', 'giroTac', ...(average ? ['totalValue', 'averageTicket'] : [])]) {
     const result = parseMoneyInput(form[key])
-    if (!result.ok || (['value', 'averageValue'].includes(key) && result.value <= 0)) errors[key] = result.error || 'Informe um valor maior que zero.'
+    if (!result.ok || (['averageValue', 'totalValue', 'averageTicket'].includes(key) && result.value <= 0)) errors[key] = result.error || 'Informe um valor maior que zero.'
     else parsed[key] = result.value
   }
   for (const [key, max] of [['operationRate', 1000], ['discountRate', 1000], ['giroRate', 1000]]) {
@@ -152,7 +195,7 @@ export function parseDiscountForm(form) {
     if (value === null || value > max) errors[key] = `Informe uma taxa de 0 a ${max}%.`
     else parsed[key] = value
   }
-  for (const [key, max] of [['operations', 100_000]]) {
+  for (const [key, max] of [['operations', 100_000], ...(average ? [['averageDays', HYPOTHETICAL_MAX_DAYS]] : [])]) {
     const text = String(form[key] ?? '').trim(), value = /^\d+$/.test(text) ? Number(text) : null
     if (!integer(value, max)) errors[key] = `Informe um inteiro de 1 a ${max.toLocaleString('pt-BR')}.`
     else parsed[key] = value
@@ -175,7 +218,11 @@ export function parseDiscountForm(form) {
     if (!result.ok || result.value <= 0) errors.giroPrincipal = result.error || 'Informe um principal maior que zero.'
     else parsed.giroPrincipal = result.value
   }
-  const titleRows = (form.titleRows || []).map((row, index) => {
+  // Por prazo médio, os títulos vêm do borderô hipotético; título a título, dos grupos digitados.
+  const typed = ['totalValue', 'averageDays', 'averageTicket'].every(key => key in parsed)
+  const hypothetical = average && typed ? hypotheticalTitles({ value: parsed.totalValue, averageDays: parsed.averageDays, ticket: parsed.averageTicket, date: form.date }) : null
+  if (hypothetical && !hypothetical.ok && parseDiscountDate(form.date)) errors.averageTicket = hypothetical.error
+  const titleRows = average ? hypothetical?.titleRows ?? [] : (form.titleRows || []).map((row, index) => {
     const value = parseMoneyInput(row.value)
     const count = /^\d+$/.test(String(row.count)) ? Number(row.count) : NaN
     if (!value.ok || value.value <= 0 || !integer(count, 1000000) || !parseDiscountDate(row.dueDate) || row.dueDate <= form.date) errors['titleRow' + index] = 'Preencha valor nominal total, quantidade inteira e vencimento posterior à operação.'
@@ -187,8 +234,9 @@ export function parseDiscountForm(form) {
   const calendars = praca ? praca.calendars : ['BR']
   const operation = { titleRows, date: form.date, rate: parsed.operationRate, convention: form.convention, taxProfile: form.taxProfile, eligible: form.eligible, feeMode: form.titleFeeMode, fee: parsed.fee, tac: parsed.tac, calendars }
   const actual = discountOperation(operation)
-  if (!actual.ok) errors.operation = actual.error
+  // Sem borderô hipotético, o aviso já está no campo que falta.
+  if (!actual.ok && (!average || hypothetical?.ok)) errors.operation = actual.error
   const params = { operation, averageValue: parsed.averageValue, projectionRate: parsed.discountRate, operations: parsed.operations, giro: { principalMode: form.giroPrincipalMode, principal: parsed.giroPrincipal, rate: parsed.giroRate, tac: parsed.giroTac, date: form.date, taxProfile: form.giroTaxProfile, eligible: form.giroEligible, calendars } }
   const result = Object.keys(errors).length ? null : compareDiscount(params)
-  return { errors, parsed, params, operation: actual.ok ? actual : null, result }
+  return { errors, parsed, params, operation: actual.ok ? actual : null, hypothetical: hypothetical?.ok ? hypothetical : null, result }
 }

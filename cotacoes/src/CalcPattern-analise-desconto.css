@@ -157,6 +157,12 @@
 :root[data-theme] body .cx-desconto .dsc-drawer > summary { min-height:44px; padding:10px 0; color:var(--bw-link); font-size:.86rem; cursor:pointer; }
 :root[data-theme] body .cx-desconto .dsc-drawer > summary small { color:var(--bw-mut); font-size:.78rem; }
 :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-drawer > .cx-form { padding:0 0 8px; }
+/* Borderô hipotético (24/11/2026): resumo da estimativa e, recolhida, a lista por data de pagamento. */
+:root[data-theme] body .cx-desconto .lm .dsc-bordero { min-width:0; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero > p { margin:0; color:var(--bw-mut); font-size:.8125rem; line-height:1.5; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero > p b { color:var(--bw-ink); }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero > .dsc-drawer { margin:8px 0 0; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero .cx-wrap { max-height:320px; overflow:auto; }
 /* Resultado: três respostas no computador (entra no caixa, é descontado, quanto custa). */
 @media (min-width:871px) {
   :root[data-theme] body .cx.cx-desconto .rt-answers { grid-template-columns:repeat(3,minmax(0,1fr)); }

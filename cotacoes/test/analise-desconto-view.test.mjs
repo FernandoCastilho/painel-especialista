@@ -40,7 +40,8 @@ function nodes(node) {
   return [node, ...nodes(node.props?.children)]
 }
 export const textOf = node => Array.isArray(node) ? node.map(textOf).join('') : node && typeof node === 'object' ? textOf(node.props?.children) : typeof node === 'string' || typeof node === 'number' ? String(node) : ''
-async function setup(t) {
+// A tela abre pelo prazo médio (24/11/2026). Os testes do borderô real passam para "Título a título" logo ao abrir.
+async function setup(t, titleMode = 'titles') {
   const back = []
   const render = hookRenderer(() => component.default({ onBack: () => back.push(true) }))
   t.after(() => render.close()); await render.settle()
@@ -54,6 +55,7 @@ async function setup(t) {
   // Sair do campo: é quando o erro dele passa a aparecer.
   const blur = async (id) => { const element = find(id); assert.ok(element, id); element.props.onBlur({ target: {} }); await render.settle() }
   const html = () => renderToStaticMarkup(render.value)
+  if (titleMode !== 'average') await set('titleMode', titleMode)
   const ready = async () => { await set('titleFeeMode', 'percent'); await set('operations', '7') }
   return { render, find, set, blur, html, ready, back }
 }
@@ -70,3 +72,51 @@ test('roteiro: sem a tarifa escolhida, o resultado do desconto avisa o que falta
 test('valor da linha mestra continua como opção do principal usado no giro',async t=>{const h=await setup(t);await h.ready();assert.equal(h.find('giroPrincipal'),undefined);await h.set('giroPrincipalMode','linha');assert.equal(h.find('giroPrincipal').props.value,'3.000.000,00');await h.set('giroPrincipal','1.000.000,00');assert.equal(h.find('giroPrincipal').props.value,'1.000.000,00');assert.match(h.html(),/Valor para o giro comparado/);assert.match(h.html().replace(/\u00a0/g,' '),/Principal do giro: <b>R\$ 1\.000\.000,00<\/b>/);await h.set('giroPrincipalMode','manual');assert.equal(h.find('giroPrincipal').props.value,'')})
 // A conta não arredonda no meio do caminho: quando as partes mostradas não somam o custo total mostrado, a tela explica a diferença.
 test('arredondamento: a linha só aparece quando a soma das partes mostradas não fecha, e nenhum valor muda',async t=>{const h=await setup(t);await h.set('titleFeeMode','total');const html=()=>h.html().replace(/\u00a0/g,' ');assert.doesNotMatch(html(),/Arredondamento/);const nominal=nodes(h.render.value).find(n=>n.type===MoneyInput.default&&!n.props.id);nominal.props.onChange('123.456,78');await h.render.settle();const shown=html();for(const value of ['R$ 2.409,88','R$ 777,61','R$ 564,00','R$ 260,00','<dt>Custo total completo</dt><dd>R$ 4.011,48</dd>','<dt>Arredondamento: as partes somam R$ 4.011,49; a diferença vem de arredondar cada parte em centavos</dt><dd>-R$ 0,01</dd>'])assert.ok(shown.includes(value),value)})
+
+// Entrada por prazo médio (24/11/2026): a tela abre nela; o borderô real fica a uma escolha de distância.
+test('abre pelo prazo médio, sem vermelho, com o borderô hipotético e a lista recolhida', async t => {
+  const h = await setup(t, 'average')
+  assert.equal(h.find('titleMode').props.value, 'average')
+  for (const [id, value] of [['totalValue', '225.600,43'], ['averageDays', '30'], ['averageTicket', '7.520,00']]) assert.equal(h.find(id).props.value, value)
+  assert.doesNotMatch(h.html(), /role="alert"|aria-invalid="true"|Vencimento contratual|Adicionar grupo de títulos/)
+  await h.set('titleFeeMode', 'total')
+  const html = h.html().replace(/\u00a0/g, ' ')
+  assert.match(html, /<b>Borderô hipotético:<\/b> 30 boletos, de R\$ 3\.760,01 a R\$ 11\.280,02 \(ticket médio de R\$ 7\.520,01\), com vencimentos de 15 a 45 dias\./)
+  assert.match(html, /Prazo médio até o pagamento, já no dia útil: <b>\d+(,\d)? dias<\/b>/)
+  assert.match(html, /É uma estimativa: o IOF real depende da data de cada boleto\./)
+  assert.match(html, /<details class="dsc-drawer"><summary>Ver o borderô hipotético<\/summary>/)
+  assert.equal(nodes(h.render.value).filter(n => n.type === 'table').length, 4)
+  assert.doesNotMatch(html, /NaN|Infinity/)
+})
+test('prazo médio: mudar prazo ou valor muda o resultado; erro aparece ao sair do campo e some ao corrigir', async t => {
+  const h = await setup(t, 'average')
+  await h.set('titleFeeMode', 'total')
+  const result = () => h.html().match(/Quanto entra no caixa[\s\S]*?Custo total completo/)[0]
+  const a = result()
+  await h.set('averageDays', '60')
+  assert.notEqual(result(), a)
+  await h.set('averageDays', '30')
+  assert.equal(result(), a)
+  await h.set('totalValue', '451.200,86')
+  assert.match(h.html(), /60 boletos/)
+  await h.set('averageDays', '')
+  assert.doesNotMatch(h.html(), /role="alert"/)
+  await h.blur('averageDays')
+  assert.equal(h.find('averageDays').props['aria-invalid'], true)
+  assert.match(h.html(), /role="alert">Informe um inteiro de 1 a 365\.</)
+  assert.doesNotMatch(h.html(), /Borderô hipotético:/)
+  await h.set('averageDays', '45')
+  assert.doesNotMatch(h.html(), /role="alert"|aria-invalid="true"/)
+  assert.match(h.html(), /vencimentos de 23 a 67 dias/)
+})
+test('trocar para título a título mostra os grupos e guarda o que foi digitado no prazo médio', async t => {
+  const h = await setup(t, 'average')
+  await h.set('titleFeeMode', 'total')
+  await h.set('averageDays', '45')
+  await h.set('titleMode', 'titles')
+  assert.match(h.html(), /Vencimento contratual/)
+  assert.match(h.html().replace(/\u00a0/g, ' '), /Prazo médio até o pagamento: 32 dias · ticket médio: R\$ 7\.520,01\./)
+  assert.equal(h.find('averageDays'), undefined)
+  await h.set('titleMode', 'average')
+  assert.equal(h.find('averageDays').props.value, '45')
+})

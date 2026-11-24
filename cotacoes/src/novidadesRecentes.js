@@ -3,6 +3,15 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '24/11/2026',
+    destaques: [
+      'Análise de desconto calcula por prazo médio e ticket médio',
+    ],
+    items: [
+      'Na Análise de desconto, informe valor total, prazo médio e ticket médio por boleto. A calculadora monta um borderô hipotético, com boletos de valores e vencimentos diferentes, e calcula juros, IOF e CET título a título. A tela mostra o prazo médio já ajustado para dias úteis e a lista dos boletos. É uma estimativa: o IOF real depende da data de cada boleto. A entrada título a título continua disponível para o borderô real, e as regras de juros, IOF e CET não mudaram.',
+    ],
+  },
+  {
     date: '23/11/2026',
     destaques: [
       'Nova seção M&A, com mapa do Brasil e operações com fonte',

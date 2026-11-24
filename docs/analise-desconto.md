@@ -1,6 +1,6 @@
 # Análise de desconto
 
-Descrição da interface e do motor vigentes, revisada em 11/11/2026. Acesso: Calculadoras → Análise de desconto, rota `#calculadora/analise-desconto`, comandos `DESCONTO` e `Análise de desconto`. Motor: `cotacoes/src/analiseDesconto.js`; tela: `AnaliseDesconto.jsx`.
+Descrição da interface e do motor vigentes, revisada em 24/11/2026. Acesso: Calculadoras → Análise de desconto, rota `#calculadora/analise-desconto`, comandos `DESCONTO` e `Análise de desconto`. Motor: `cotacoes/src/analiseDesconto.js`; tela: `AnaliseDesconto.jsx`.
 
 ## Roteiro da tela (21/11/2026)
 
@@ -8,13 +8,36 @@ A tela segue o roteiro aprovado no piloto do Capital de Giro (`docs/calculadoras
 
 | Bloco | O que mostra |
 |---|---|
-| 1 Demanda do cliente | data da operação, valor total dos títulos e os grupos de títulos (valor nominal, quantidade, vencimento). A praça do contrato fica na gaveta "Detalhes do contrato" |
+| 1 Demanda do cliente | data da operação e como informar os títulos: por prazo médio (valor total, prazo médio, ticket médio e o resumo do borderô hipotético) ou título a título (valor total dos títulos e os grupos, com valor nominal, quantidade e vencimento). A praça do contrato fica na gaveta "Detalhes do contrato" |
 | 2 Encargos | taxa de juros, convenção de desconto, tarifa dos títulos (forma de cobrança e valor), TAC e IOF calculado. O enquadramento tributário fica na gaveta "Enquadramento do IOF" |
 | 3 Resultado · custo final para o cliente | quanto entra no caixa (valor líquido), quanto é descontado (custo total completo) e quanto custa (CET do desconto, com o equivalente mensal e o custo pelo prazo real). "Do que é feito o custo": juros, IOF, tarifa dos títulos e TAC, com seus percentuais, mais o subtotal sem tarifa e a base do IOF |
 
 Depois do resultado, sem número, vem a "Comparação com o capital de giro": projeção mensal do desconto, premissas do capital de giro, a resposta "Desconto × giro: resultado" e as três tabelas recolhidas. O "valor para o giro comparado" (valor da linha mestra comum) aparece nas premissas do giro quando a opção "Valor da linha mestra" é escolhida em "Principal usado no giro".
 
 Os seis números que ficavam em quadrinhos dentro do formulário (base do IOF, tarifa total, subtotal, custo total, valor líquido e CET) estão agora no bloco 3. Como o motor não arredonda no meio do caminho, a soma das partes já arredondadas pode diferir do total em 1 centavo (em tese, até 2 com tarifa percentual) em cerca de 3 a cada 10 casos; isso já acontecia entre bruto, custo e líquido. Quando acontece, a tela não ajusta nenhum valor: mostra, logo abaixo do "Custo total completo", a linha "Arredondamento", com a soma das partes e a diferença (`centavosDaTela.js`, só apresentação). Exemplo: R$ 123.456,78 em títulos, com os demais dados do exemplo vigente, dá juros R$ 2.409,88, IOF R$ 777,61, tarifa R$ 564,00 e TAC R$ 260,00, que somam R$ 4.011,49, contra custo total de R$ 4.011,48.
+
+## Entrada por prazo médio (24/11/2026)
+
+Pedido de Fernando em 24/11/2026: aproximar a calculadora da conversa com o cliente, em que se conhece o valor total, o prazo médio e o ticket médio, e não cada boleto. A tela abre nessa entrada; "Título a título" continua disponível para o borderô real (campo "Como informar os títulos").
+
+A entrada só monta os títulos. **Juros, IOF, CET, alíquotas, teto de 365 dias, base do IOF e ajuste de dia útil são os mesmos** de `discountOperation`; nenhuma regra de cálculo mudou. Função: `hypotheticalTitles` em `cotacoes/src/analiseDesconto.js`.
+
+Premissas do borderô hipotético, aprovadas por Fernando:
+
+- Quantidade de boletos = valor total ÷ ticket médio, arredondada para inteiro. O ticket efetivo é valor total ÷ quantidade e aparece na tela.
+- Vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio. Ex.: prazo médio de 30 dias → vencimentos de 15 a 45 dias corridos.
+- Valores diferentes por boleto, de metade a uma vez e meia do ticket efetivo, em padrão fixo. Não há sorteio: a mesma entrada devolve sempre o mesmo borderô.
+- Dias e valores são espelhados em torno do meio da lista. Por isso o valor total, o ticket médio e o prazo médio ponderado pelo valor fecham exatamente no que foi digitado.
+- Com um ou dois boletos não há como variar o valor sem sair do ticket: ficam iguais.
+- Limites: prazo médio de 1 a 365 dias; ticket médio maior que zero e até o valor total; até 1.000.000 de boletos.
+
+Depois de montado o borderô, a conta aplica o ajuste de dia útil a cada vencimento. Isso pode alongar um pouco o prazo: a tela mostra o "prazo médio até o pagamento, já no dia útil" (no exemplo de 30 dias, cerca de 30,8).
+
+O que cada campo move: o prazo médio é o que mais pesa em juros e IOF; o ticket médio define a quantidade de boletos e só pesa na tarifa cobrada por título; a forma de espalhar vencimentos e valores muda o IOF em poucos reais (na simulação de 24/11/2026, até cerca de R$ 40 em R$ 225,6 mil).
+
+Limite da estimativa: o IOF real depende da data de cada boleto. Com o borderô em mãos, usar "Título a título".
+
+Testes: `test/analise-desconto-bordero.test.mjs` (borderô fecha no digitado, conta igual à título a título, conferência boleto a boleto, limites) e `test/analise-desconto-view.test.mjs` (tela).
 
 ## Entradas atuais
 
@@ -63,7 +86,7 @@ IOF diário do giro = soma de cada amortização × min(dias corridos desde a li
 
 ## Exemplo vigente e testes
 
-Exemplo sintético: operação em 05/11/2026; 30 títulos com nominal total de R$ 225.600,43, vencimento em 05/12/2026 (sábado, pago em 07/12/2026, 32 dias), comercial simples a 1,83% a.m.; tarifa total R$ 564 e TAC R$ 260; PJ geral.
+Exemplo sintético da entrada **título a título**: operação em 05/11/2026; 30 títulos com nominal total de R$ 225.600,43, vencimento em 05/12/2026 (sábado, pago em 07/12/2026, 32 dias), comercial simples a 1,83% a.m.; tarifa total R$ 564 e TAC R$ 260; PJ geral.
 
 - Juros: R$ 4.403,72.
 - Base do IOF: R$ 221.196,71.

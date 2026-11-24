@@ -26,6 +26,7 @@ const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(c
 // Direção da economia em símbolo, além da cor: ▲ giro com menor custo, ▼ giro com maior custo.
 const arrow = (value) => value > 0 ? '▲' : value < 0 ? '▼' : '='
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
+const daysText = (value) => `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${value === 1 ? 'dia' : 'dias'}`
 const FOOT = 'A data e a praça valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 const CET_HELP = 'CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): nas operações de desconto, o CET usa o prazo de 30 dias e o valor do limite pactuado — aqui, o valor nominal da operação. Líquido = nominal − juros de 30 dias − IOF de 30 dias − TAC − tarifa de títulos; o nominal volta em 30 dias corridos; taxa anual em dias corridos/365. O custo pelo prazo real usa a data de pagamento de cada título e não é o CET da norma.'
 
@@ -40,7 +41,8 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
   const [visited, setVisited] = useState({})
   const fromLine = form.giroPrincipalMode === 'linha'
   const filled = { ...form, date: lm.start, praca: lm.praca, giroPrincipalMode: fromLine ? 'manual' : form.giroPrincipalMode, giroPrincipal: fromLine ? lm.value : form.giroPrincipal }
-  const { errors: found, operation, result: calculated } = parseDiscountForm(filled)
+  const { errors: found, operation, hypothetical, result: calculated } = parseDiscountForm(filled)
+  const average = form.titleMode === 'average'
   const result = calculated?.ok ? calculated : null
   // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
   // O erro de um grupo de títulos também aparece ao mexer na data da operação; o aviso geral da operação só
@@ -65,6 +67,14 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     {field(key, 'Enquadramento tributário', <select {...props(key)} value={form[key]} onChange={event => set(key, event.target.value)}><option value="pj">Pessoa jurídica: regra geral</option><option value="simples">Optante do Simples Nacional / MEI</option></select>, 'Alíquotas automáticas. Simples confirmado: diária reduzida apenas para operação total até R$ 30 mil; acima, regra geral.')}
     {form[key] === 'simples' && <label><input type="checkbox" checked={form[eligibleKey]} onChange={event => set(eligibleKey, event.target.checked)} /> Confirmo opção pelo Simples Nacional/MEI para esta operação.</label>}
   </>
+  // Campos da demanda (quadro da linha mestra): mesmo desenho dos campos comuns, com o erro logo abaixo.
+  const demandField = (key, label, control, hint) => <div className="lm-field" key={key}>
+    <span className="lm-label"><label htmlFor={`ad-${key}`}>{label}</label>{hint && <CalculatorHelp title={label}><p>{hint}</p></CalculatorHelp>}</span>
+    {control}
+    {errors[key] && <small id={`ad-${key}-err`} className="lm-error" role="alert">{errors[key]}</small>}
+  </div>
+  const demandProps = (key) => ({ id: `ad-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': errors[key] ? `ad-${key}-err` : undefined, onBlur: () => visit(key) })
+  const demandMoney = (key) => <MoneyInput {...demandProps(key)} value={form[key]} onChange={value => set(key, value)} />
   const setRow = (index, key, value) => set('titleRows', form.titleRows.map((row, i) => i === index ? { ...row, [key]: value } : row))
   const feeField = form.titleFeeMode === 'total' ? moneyField('titleFeeTotal', 'Tarifa total de títulos por operação', 'Total cobrado pelo conjunto de títulos. Não multiplica pela quantidade.')
     : form.titleFeeMode === 'unit' ? moneyField('titleFeeUnit', 'Custo unitário por título', 'Multiplicado pela quantidade de títulos em cada operação.')
@@ -91,7 +101,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
   // Sem a operação completa, o resultado do desconto avisa o que falta (o aviso da comparação fica no bloco dela).
   const resultAlert = operation ? null : { warning: flagged, text: flagged ? 'Preencha ou corrija os campos sinalizados para ver o resultado.' : guide('o resultado') }
   return <section className="cx cx-desconto bw calc-standard calc-workspace" aria-labelledby="ad-heading">
-    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="ad-heading" className="cx-title"><span>Análise de desconto</span></h2></div><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe os títulos, a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p><p>Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p></CalculatorHelp></div>
+    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="ad-heading" className="cx-title"><span>Análise de desconto</span></h2></div><CalculatorHelp title="Análise de desconto"><p>Compare o custo recorrente de antecipar títulos com um capital de giro Price em 12, 24, 36 e 48 meses.</p><p>Exemplo editável. Informe o valor total, o prazo médio e o ticket médio (ou os títulos, um a um), a convenção contratual e o enquadramento. Juros, IOF e CET são calculados automaticamente. A quantidade de operações informada abaixo controla todos os resultados.</p><p>Simulação estimada, com CET pela Resolução CMN 4.881. Não é proposta nem recomendação de contratação.</p></CalculatorHelp></div>
 
     {/* Roteiro de 21/11/2026: primeiro o custo do desconto (blocos 1 a 4); a comparação com o giro vem depois. Só apresentação. */}
     <div className="dsc-flow">
@@ -99,6 +109,25 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         <LinhaMestra prefix="ad-lm" title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} onClear={clearLm} foot={null} help={{ title: 'Demanda do cliente', children: <p>{FOOT}</p> }}
           fields={['start']} labels={{ start: 'Data da operação' }} errors={{ start: errors.date }}
           details={{ fields: ['praca'], open: !!apresentacao, summary: PRACAS_CONTRATO.find(praca => praca.id === lm.praca)?.label }}>
+          {demandField('titleMode', 'Como informar os títulos', <select id="ad-titleMode" value={form.titleMode} onChange={event => set('titleMode', event.target.value)}><option value="average">Prazo médio</option><option value="titles">Título a título</option></select>,
+            'Prazo médio: informe valor total, prazo médio e ticket médio; a calculadora monta um borderô hipotético e faz a conta título a título. É uma estimativa. Título a título: informe os grupos do borderô real.')}
+          {average ? <>
+            {demandField('totalValue', 'Valor total da operação', demandMoney('totalValue'))}
+            {demandField('averageDays', 'Prazo médio dos títulos', <div className="lm-unit"><input {...demandProps('averageDays')} inputMode="numeric" autoComplete="off" value={form.averageDays} onChange={event => set('averageDays', event.target.value.replace(/\D/g, '').slice(0, 3))} onFocus={event => event.target.select()} /><span aria-hidden="true">dias</span></div>,
+              'Dias corridos da operação até o vencimento, na média ponderada pelo valor dos títulos. É o que mais pesa nos juros e no IOF.')}
+            {demandField('averageTicket', 'Ticket médio por boleto', demandMoney('averageTicket'),
+              'Define a quantidade de boletos (valor total ÷ ticket médio). Pesa na tarifa cobrada por título; não muda juros nem IOF.')}
+            {hypothetical && operation && <div className="dsc-bordero lm-wide">
+              <p><b>Borderô hipotético:</b> {number(hypothetical.titles)} {hypothetical.titles === 1 ? 'boleto' : 'boletos'}{hypothetical.titles > 1 && <>, de {brl(hypothetical.minValue)} a {brl(hypothetical.maxValue)}</>} (ticket médio de {brl(hypothetical.ticket)}), com {hypothetical.firstDays === hypothetical.lastDays ? `vencimento em ${daysText(hypothetical.firstDays)}` : `vencimentos de ${hypothetical.firstDays} a ${daysText(hypothetical.lastDays)}`}. Prazo médio até o pagamento, já no dia útil: <b>{daysText(operation.averageDays)}</b>. É uma estimativa: o IOF real depende da data de cada boleto.</p>
+              <details className="dsc-drawer"><summary>Ver o borderô hipotético</summary>
+                <div className="cx-wrap" role="region" aria-label="Borderô hipotético por data de pagamento; role para ver todas as colunas" tabIndex={0}>
+                  <table className="cx-matrix desconto-table"><caption className="sr-only">Boletos hipotéticos por data de pagamento, com dias, valor, juros e IOF</caption><thead><tr><th scope="col">Pagamento</th><th scope="col">Dias</th><th scope="col">Boletos</th><th scope="col">Valor</th><th scope="col">Juros</th><th scope="col">IOF</th></tr></thead>
+                    <tbody>{operation.rows.map(row => <tr key={row.dueDate}><th scope="row">{dateBr(row.paymentDate)}</th><td>{number(row.days)}</td><td>{number(row.count)}</td><td>{brl(row.value)}</td><td>{brl(row.interest)}</td><td>{brl(row.iof)}</td></tr>)}</tbody></table>
+                </div>
+              </details>
+            </div>}
+            {errors.operation && <p role="alert" className="cx-error lm-wide">{errors.operation}</p>}
+          </> : <>
           <div className="lm-field"><span className="lm-label"><label htmlFor="ad-gross">Valor total dos títulos</label></span><output id="ad-gross" className="dsc-readonly">{brl(operation?.value)}</output></div>
           <div className="desconto-titles lm-wide">
             <div className="cx-field-label"><h4>Títulos ou grupos com o mesmo vencimento</h4><CalculatorHelp title="Títulos ou grupos com o mesmo vencimento"><p>Informe o valor nominal total de cada grupo e a quantidade de títulos. Não multiplique o valor pela quantidade. Todos usam a taxa de juros dos encargos.</p></CalculatorHelp></div>
@@ -112,7 +141,9 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
             </fieldset>)}
             <button type="button" disabled={form.titleRows.length >= 500} onClick={() => set('titleRows', [...form.titleRows, { value: '', count: '1', dueDate: '' }])}>Adicionar grupo de títulos</button>
             {errors.operation && <p role="alert" className="cx-error">{errors.operation}</p>}
+            {operation && <p>Prazo médio até o pagamento: {daysText(operation.averageDays)} · ticket médio: {brl(operation.value / operation.titles)}.</p>}
           </div>
+          </>}
         </LinhaMestra>
 
         <article className="desk-panel cx-panel desconto-input-panel">
@@ -162,7 +193,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     <div className="dsc-workspace">
     <div className="dsc-inputs">
     <article className="desk-panel cx-panel desconto-input-panel">
-      <header className="cx-heading"><h3>Projeção mensal do desconto</h3><CalculatorHelp title="Projeção mensal do desconto"><p>A projeção mantém vencimentos e quantidade dos títulos, escalona proporcionalmente seus valores nominais para o valor médio e recalcula juros e IOF com a taxa projetada. A TAC e tarifas fixas permanecem por operação. O limite do Simples é conferido novamente para cada operação projetada.</p></CalculatorHelp></header>
+      <header className="cx-heading"><h3>Projeção mensal do desconto</h3><CalculatorHelp title="Projeção mensal do desconto"><p>A projeção mantém vencimentos e quantidade dos títulos (reais ou do borderô hipotético), escalona proporcionalmente seus valores nominais para o valor médio e recalcula juros e IOF com a taxa projetada. A TAC e tarifas fixas permanecem por operação. O limite do Simples é conferido novamente para cada operação projetada.</p></CalculatorHelp></header>
       <div className="cx-form">
         {textField('operations', 'Quantidade de operações por mês', 'A primeira referência tem 6 e a comparação tem 7. Vale exclusivamente o número deste campo.', 'numeric')}
         {moneyField('averageValue', 'Valor médio bruto por operação', 'Volume mensal = valor médio × quantidade de operações.')}
@@ -256,6 +287,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         <li>Tarifa por operação: total informado, custo unitário × títulos ou valor bruto × percentual. Sem arredondamento intermediário; os valores exibidos são arredondados para centavos.</li>
         <li>Desconto mensal = operações × (tarifa de títulos + TAC + juros pagos + IOF pago). Custo do prazo = custo mensal × meses.</li>
         <li>Desconto: juros e IOF de cada título contam da operação até a data de pagamento (vencimento ou próximo dia útil, se cair em fim de semana, feriado nacional, feriado da praça do contrato ou 31/12, sem expediente bancário).</li>
+        <li>Por prazo médio, a conta usa um borderô hipotético: quantidade de boletos = valor total ÷ ticket médio; vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio; valores de metade a uma vez e meia do ticket, em padrão fixo. Total, ticket e prazo médio fecham no que foi digitado; o ajuste de dia útil pode alongar um pouco o prazo. É estimativa: o IOF real depende da data de cada boleto.</li>
         <li>Giro Price: juros de cada parcela = saldo × ((1 + i) elevado a dias/30 − 1), pelos dias corridos entre vencimentos; parcela fixa que quita o saldo nessas datas. Vencimentos no próximo dia útil.</li>
         <li>IOF do giro = adicional × principal + diária × soma de cada amortização multiplicada por seus dias corridos, limitados a 365. Percentuais são divididos por 100.</li>
         <li>CET (Resolução CMN 4.881/2020, texto oficial): taxa anual que iguala o líquido liberado aos pagamentos, em dias corridos/365. Desconto (art. 6º): prazo de 30 dias sobre o limite (aqui, o nominal): nominal − juros e IOF de 30 dias − TAC − tarifa de títulos, contra o nominal em 30 dias; o custo pelo prazo real usa o nominal de cada título na data de pagamento e não é CET. Giro (art. 4º): principal − TAC − IOF, contra as parcelas.</li>
