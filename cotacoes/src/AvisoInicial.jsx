@@ -2,27 +2,41 @@ import { useEffect, useRef } from 'react'
 import './AvisoInicial.css'
 import { NOVIDADES_RECENTES } from './novidadesRecentes.js'
 import { novidadesDaSemana } from './novidadesSemana.js'
-import { AVISO_FONTES, AVISO_RESUMO } from './avisoInicial.js'
+import { AVISO_FONTES, AVISO_RESUMO, exibirAvisoAutomatico, marcarAvisoVisto } from './avisoInicial.js'
 
-// Aviso de entrada. Quem decide quando abrir é o App: sozinho, só na primeira vez neste aparelho ou quando o texto mudar
+// Aviso de entrada. Quem decide quando abrir é o App: sozinho, na primeira entrada do dia em Brasília
 // (avisoInicial.js); depois disso, pelo botão "Ver o aviso de entrada" na janela do "i". Navegador automatizado (testes) não o
 // recebe sozinho, para não cobrir a tela dos smokes; os smokes do aviso desligam essa exceção.
-export default function AvisoInicial({ open, onClose }) {
+export default function AvisoInicial({ modo, onClose }) {
   const ref = useRef(null)
   useEffect(() => {
     const el = ref.current
-    if (!open || !el) return undefined
-    const origem = document.activeElement
-    el.showModal()
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      el.close()
-      document.body.style.overflow = previous
-      if (origem?.isConnected && origem !== document.body && origem.getClientRects().length) origem.focus({ preventScroll: true })
+    if (!modo || !el) return undefined
+    let cancelado = false
+    let restaurar
+    const abrir = () => {
+      if (cancelado) return false
+      const origem = document.activeElement
+      el.showModal()
+      const previous = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      restaurar = () => {
+        el.close()
+        document.body.style.overflow = previous
+        if (origem?.isConnected && origem !== document.body && origem.getClientRects().length) origem.focus({ preventScroll: true })
+      }
+      return true
     }
-  }, [open])
-  if (!open) return null
+    if (modo === 'automatico') {
+      exibirAvisoAutomatico(abrir).then((abriu) => {
+        if (!abriu && !cancelado) onClose()
+      }).catch(() => {
+        if (!cancelado && !el.open) onClose()
+      })
+    } else if (abrir()) marcarAvisoVisto()
+    return () => { cancelado = true; restaurar?.() }
+  }, [modo, onClose])
+  if (!modo) return null
   const semana = novidadesDaSemana(NOVIDADES_RECENTES).slice(0, 5)
   return (
     <dialog ref={ref} className="aviso-inicial aviso-inicial-compacto" aria-labelledby="aviso-inicial-title" aria-describedby="aviso-inicial-text" onCancel={(e) => { e.preventDefault(); onClose() }}>
