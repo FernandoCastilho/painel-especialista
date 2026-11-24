@@ -28,6 +28,13 @@ test('a marca é estável para o mesmo texto e muda quando o texto muda', () => 
   assert.equal(marcaDoAviso(`  ${textoDoAviso().replace(/\n/g, '\n\n  ')} `), marca)
 })
 
+test('entrega nova nas novidades reabre o aviso', () => {
+  const atual = [{ date: '23/11/2026', destaques: ['Nova seção M&A'] }]
+  const nova = [{ date: '24/11/2026', destaques: ['Nova calculadora'] }, ...atual]
+  assert.match(textoDoAviso(atual), /23\/11\/2026 \| Nova seção M&A$/)
+  assert.notEqual(marcaDoAviso(textoDoAviso(nova)), marcaDoAviso(textoDoAviso(atual)))
+})
+
 test('devo mostrar o aviso? primeira vez e texto novo sim; mesmo texto não', () => {
   const marca = marcaDoAviso()
   assert.equal(deveMostrarAviso(marca, null), true, 'nunca visto neste aparelho')
