@@ -1,5 +1,73 @@
 /* Let every destination remain visible as the catalogue grows. The sticky
    header stays in normal flow, so a second row does not cover the content. */
+.focus-mode-toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+.focus-mode-toggle:hover { background: var(--surface-2); color: var(--accent); }
+.focus-mode-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+@media (max-width: 999px) {
+  .term-head:has(.focus-mode-toggle) {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    flex-direction: row-reverse;
+    align-items: center;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .term-head:has(.focus-mode-toggle) .topbar { display: flex; flex: none; }
+  .term-head:has(.focus-mode-toggle) .topbar > :not(.focus-mode-toggle, .fullscreen-status) { display: none; }
+  .term-head:has(.focus-mode-toggle) .tape { flex: 1; min-width: 0; border-bottom: 0; }
+}
+
+.focus-mode-toggle:disabled { opacity: .55; cursor: default; }
+.fullscreen-status {
+  position: absolute;
+  inset: 100% 8px auto auto;
+  padding: 6px 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.panel-header { display: contents; }
+@media (max-width: 999px) {
+  :root:fullscreen .panel-header {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    background: var(--bg);
+  }
+  :root:fullscreen .panel-header > .term-head { position: static; }
+  :root:fullscreen .panel-header > .nav-top {
+    position: static;
+    border-top: 0;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0;
+  }
+  :root:fullscreen .panel-header > .nav-top .tabs {
+    position: static;
+    border-top: 0;
+    padding-bottom: 4px;
+  }
+  :root:fullscreen .panel-header > .nav-top .more-sheet {
+    inset: calc(100% + 6px) 0 auto auto;
+  }
+}
+@media print {
+  .focus-mode-toggle, .fullscreen-status { display: none; }
+}
+
 @media (min-width: 1000px) {
   .term-head .topbar,
   .term-head .topbar:has(.theme-control) { height: auto; min-height: 44px; }
