@@ -130,16 +130,6 @@ const sinal = (v) => (v == null || Math.abs(v) < 0.0005 ? '' : v > 0 ? 'ft-up' :
 const seta = (v) => (v == null ? '' : sinal(v) === 'ft-up' ? '▲ ' : sinal(v) === 'ft-down' ? '▼ ' : '')
 const sentido = (v) => (v == null ? '' : sinal(v) === 'ft-up' ? 'Alta de ' : sinal(v) === 'ft-down' ? 'Queda de ' : 'Estável: ')
 
-export function FaturamentoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 21h18" />
-      <path d="M5 21v-6M9 21v-9M13 21v-7M17 21v-11" />
-      <path d="M4 10l5-4 4 3 7-6" />
-    </svg>
-  )
-}
-
 // Geometria do gráfico (unidades do desenho; o SVG se ajusta à largura da tela).
 const SLOT = 56, TOPO = 84, BASE = 28, ALT = 338, BARRA = 20
 // Faixa de cima: seta da variação (y 10-24), total de cada período (y 40) e topo dos quadros (y 48).

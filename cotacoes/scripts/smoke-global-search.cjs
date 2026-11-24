@@ -7,7 +7,9 @@ const base=process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5220';
  // Publication dates are compared with the UI clock captured before fetching.
  // Keep both clocks aligned; generatedAt must not revive expired/undated news.
  const now=Date.now(), headline='Manchete de teste sobre crédito e inadimplência';
- await p.clock.setFixedTime(now);
+ await p.clock.install({time:now});
+ const windowItems = [2, 4].map(minutes => ({title:'Manchete temporária '+minutes, t:now-120*3600000+minutes*60000, source:'Ensaio'}));
+ let calendarReady = false;
  const newsFixture={generatedAt:now,news:{USD:[
    {title:headline,link:'https://example.test/current',source:'Ensaio',t:now-3600000},
    {title:'Notícia expirada de teste sobre inadimplência',link:'https://example.test/expired',source:'Ensaio',t:now-121*3600000},
@@ -16,9 +18,9 @@ const base=process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5220';
  ]}};
  p.on('pageerror',e=>errors.push(e.message));p.on('request',r=>requests.push(r.url()));
  await p.route('**/*',r=>{const url=new URL(r.request().url());if(url.origin!==new URL(base).origin)return r.fulfill({status:503,body:'offline'});const file=path.basename(url.pathname);if(!url.pathname.startsWith('/src/') && /\.json$/.test(file)){
-   if(file==='calendar.json')return r.fulfill({status:503,body:'offline'});
+   if(file==='calendar.json')return calendarReady ? r.fulfill({json:{generatedAt:now,items:[{title:'Agenda recuperada'}]}}) : r.fulfill({status:503,body:'offline'});
    if(file==='inadimplencia.json')return r.fulfill({path:path.join(__dirname,'../public/inadimplencia.json')});
-   if(file==='news.json')return r.fulfill({json:newsFixture});
+   if(file==='news.json')return r.fulfill({json:{...newsFixture,news:{USD:[...newsFixture.news.USD,...windowItems]}}});
    return r.fulfill({json:{generatedAt:now}});
  }return r.continue()});
  await p.goto(base+'/');await p.locator('.expandable-panel[open]').first().waitFor();assert.equal(await p.locator('.expandable-panel:modal').count(),0,'painel de mercado está no modo normal');
@@ -37,6 +39,26 @@ const base=process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5220';
  for(const title of newsFixture.news.USD.slice(1).map(item=>item.title))assert.equal(await dialog.getByText(title,{exact:true}).count(),0,`${title}: publicação inválida não aparece pela data de geração do arquivo`);
  await dialog.screenshot({path:path.join(output,`search-dialog-${width}.png`)});assert.ok(await dialog.locator('mark').count()>0);
  await dialog.locator('.search-coverage summary').click();assert.match(await dialog.locator('.search-coverage').innerText(),/Calendário econômico/);
+ const goodReads=()=>requests.filter(address=>new URL(address).pathname.endsWith('/inadimplencia.json')).length;
+ const beforeRetry=goodReads();
+ calendarReady=true;
+ await dialog.getByRole('button',{name:'Tentar novamente'}).click();
+ await input.fill('Agenda recuperada');
+ await dialog.getByRole('button',{name:/^Agenda recuperada/}).waitFor();
+ await dialog.locator('.global-search-results[aria-busy="false"]').waitFor({state:'attached'});
+ assert.equal(goodReads(),beforeRetry,'repetir lê as fontes que falharam e reaproveita as disponíveis');
+ await input.fill('Manchete temporária');
+ const temporaryResults=()=>dialog.locator('.global-search-result > strong').allTextContents();
+ await dialog.locator('.global-search-results[aria-busy="false"]').waitFor({state:'attached'});
+ assert.ok((await temporaryResults()).includes('Manchete temporária 2'));
+ await p.clock.fastForward(2*60000+1000);
+ await p.waitForFunction(()=>!document.querySelector('.global-search-results').textContent.includes('Manchete temporária 2'));
+ assert.ok((await temporaryResults()).includes('Manchete temporária 4'));
+ await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+ await p.clock.fastForward(2*60000+1000);await trigger.click();await dialog.waitFor();
+ await dialog.locator('.global-search-results[aria-busy="false"]').waitFor({state:'attached'});
+ assert.equal((await temporaryResults()).length,0,'ao reabrir, a janela já exclui a manchete vencida e o texto agregado');
+ assert.equal(goodReads(),beforeRetry);
  for(let i=0;i<12;i++)await p.keyboard.press('Tab');assert.ok(await p.evaluate(()=>document.querySelector('.global-search-dialog').contains(document.activeElement)));
  await input.fill('inadimplência');await learn.getByRole('button',{name:/^FIDC/}).first().click();await p.locator('.learn-card').waitFor();assert.match(p.url(),/#aprender\/fidc$/);assert.match(await p.locator('.learn-card').innerText(),/FIDC/);assert.ok(await p.locator('.search-destination mark').count()>0);
  await trigger.click();for(const term of ['Configurações','Acessos agregados ao app','Base de dados','Novidades']){await input.fill(term);await dialog.locator('.global-search-results[aria-busy="false"]').waitFor({state:'attached'});assert.equal(await dialog.getByRole('region',{name:'Resultados em Configurações'}).count(),0);assert.equal(await dialog.locator('.global-search-result').filter({hasText:/Abrir em Configurações/}).count(),0)}await input.fill('FEE ESTRUTURACAO');await dialog.getByRole('button',{name:/^Fee de estruturação/}).first().click();assert.match(p.url(),/#aprender\/fee-de-estruturacao$/);const fee=p.locator('.learn-card');await fee.waitFor();await openCallouts(p);assert.match(await fee.innerText(),/9\.900\.000/);assert.match(await fee.innerText(),/Hipotético/i);await fee.getByText('Fontes',{exact:true}).click();assert.equal(await fee.locator('a[href^="https://"]').count(),2);

@@ -23,9 +23,7 @@
 .juros-grafico .chart > header { padding-right:40px; }
 .juros-grafico .chart-fullscreen:not(.is-expanded) .chart-fullscreen-toolbar { display:none; }
 @media (max-width:999px) { .juros-grafico .chart > header { padding-right:52px; } }
-/* Quadros do mesmo tamanho: no computador, cada quadro ocupa a altura do mais alto da grade e o gráfico fica no pé,
-   para os eixos se alinharem lado a lado. No celular (uma coluna), cada um fica com a altura do próprio conteúdo. */
+/* Quadros lado a lado com a mesma altura (a grade iguala cada linha). O gráfico fica logo abaixo do cabeçalho, sem vão:
+   pedido de 23/11/2026, no notebook o gráfico ficava longe do título. */
 .juros-grafico { display:flex; flex-direction:column; }
 .juros-grafico > .chart, .juros-grafico > .macro, .juros-grafico > .macro > .chart { display:flex; flex-direction:column; flex:1; margin:0; }
-.juros-grafico .chart > :has(.chart-fullscreen), .juros-grafico .chart > .chart-fullscreen { margin-top:auto; }
-@media (min-width:900px) { .juros-charts { grid-auto-rows:minmax(var(--juros-card-h, 0), 1fr); } }

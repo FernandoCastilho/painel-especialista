@@ -9,3 +9,8 @@ cotacoes/juros-qa/
 cotacoes/workspace-qa/
 cotacoes/intraday-qa/
 cotacoes/qa-output/
+cotacoes/baseline-tests.log
+cotacoes/ma-*.log
+docs/ma-qa/*.png
+!docs/ma-qa/ma-desktop.png
+!docs/ma-qa/visao-geral-390-light.png

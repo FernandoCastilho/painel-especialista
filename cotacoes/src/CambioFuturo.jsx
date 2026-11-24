@@ -7,71 +7,15 @@ import Flag from './Flag.jsx'
 import { parseDecimal } from './cdiDolar.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { marketDate } from './marketReturns.js'
-import { fromInput, useCentralDaily, useIntraday } from './useHistory.js'
-import { explicacaoFaixa, explicacaoPonto, mesaDailyEur, mesaIntradayCnh, mesaSpotRange, mesaUsdReference, spotDayPlan } from './cambioFuturoSpot.js'
+import ReferenciaMesa from './ReferenciaMesa.jsx'
+import { spotDayPlan } from './cambioFuturoSpot.js'
 import { simularParcelaCambial } from './cambioFuturoParcela.js'
-
-export function CambioFuturoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="15" rx="2" />
-      <path d="M3 9.5h18M8 3v4M16 3v4" />
-      <path d="M8 14.5h7M13 12.5l2 2-2 2" />
-    </svg>
-  )
-}
 
 const dataBr = iso => iso ? iso.split('-').reverse().join('/') : '—'
 const decimalBr = n => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const spotBr = n => n.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
-const horaBr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 const MOEDAS_MESA = [{ id: 'CNH', nome: 'Yuan (CNH)' }, { id: 'EUR', nome: 'Euro (EUR)' }]
 const mesaVazia = () => Object.fromEntries(MOEDAS_MESA.map(({ id }) => [id, { cotacao: '', futuro: '' }]))
 const comBandeira = (id, nome) => <span className="cf-com-bandeira"><Flag code={id} width={20} height={14} />{nome}</span>
-
-function ReferenciaIndisponivel({ loading }) {
-  return loading ? 'Consultando a referência à vista…' : 'Referência à vista indisponível.'
-}
-
-function EurDiario({ plan, price, compact }) {
-  const history = useCentralDaily()
-  const ref = mesaDailyEur(history.data, plan)
-  if (ref && compact) return <>Compra indicativa · {dataBr(ref.date)}</>
-  return ref ? <>Referência diária indicativa (compra): R$ {spotBr(ref.value)}/EUR · {dataBr(ref.date)} (data de Brasília) · AwesomeAPI. {explicacaoPonto(price, ref)}</>
-    : <ReferenciaIndisponivel loading={history.status === 'loading'} />
-}
-
-function UsdIndicativo({ plan, price, compact }) {
-  const intraday = useIntraday('USD', fromInput(plan.day))
-  const daily = useCentralDaily()
-  if (intraday.status === 'loading') return <ReferenciaIndisponivel loading />
-  const ref = mesaUsdReference(intraday.stale ? null : intraday.data, daily.data, plan)
-  if (!ref) return <ReferenciaIndisponivel loading={daily.status === 'loading'} />
-  const momento = <>{dataBr(ref.date)}{ref.t && <> às {horaBr.format(ref.t)}</>}</>
-  if (compact) return <>Compra indicativa · {momento}</>
-  return <>Compra indicativa: R$ {spotBr(ref.value)}/USD · {momento} (Brasília) · AwesomeAPI. {explicacaoPonto(price, ref)}</>
-}
-
-function CnhIntradiario({ plan, price, compact }) {
-  const history = useIntraday('CNH', fromInput(plan.previous))
-  const ref = mesaIntradayCnh(history.data, plan)
-  if (ref && compact) return <>Compra indicativa · {dataBr(ref.date)} às {horaBr.format(ref.t)}</>
-  return ref ? <>Yuan offshore à vista, último ponto indicativo de compra: R$ {spotBr(ref.value)}/CNH · {dataBr(ref.date)} às {horaBr.format(ref.t)} (hora de Brasília) · AwesomeAPI (cruzamento). {explicacaoPonto(price, ref)}</>
-    : <ReferenciaIndisponivel loading={history.status === 'loading'} />
-}
-
-export function ReferenciaMesa({ code, quote, offer = '', plan, compact = false }) {
-  const ref = mesaSpotRange(code, quote, plan)
-  const price = parseDecimal(offer)
-  if (ref) {
-    if (compact) return <>Compra indicativa · {dataBr(ref.date)} às {horaBr.format(ref.time)}</>
-    const confronto = explicacaoFaixa(price, ref)
-    return <>{ref.today ? 'À vista hoje' : 'Última faixa à vista'} (compra–venda): R$ {spotBr(ref.bid)} a {spotBr(ref.ask)}/{code} · {dataBr(ref.date)} às {horaBr.format(ref.time)} (hora de Brasília) · {code === 'CNH' ? 'AwesomeAPI (CNH offshore, cruzamento)' : 'AwesomeAPI'}.{confronto && <> {confronto}</>}</>
-  }
-  if (plan.open || !plan.previous) return <ReferenciaIndisponivel />
-  if (code === 'USD') return <UsdIndicativo plan={plan} price={price} compact={compact} />
-  return code === 'EUR' ? <EurDiario plan={plan} price={price} compact={compact} /> : <CnhIntradiario plan={plan} price={price} compact={compact} />
-}
 
 function Campo({ id, label, value, onChange, type = 'text', placeholder, erro, observacao }) {
   return <div className="cx-field">

@@ -107,12 +107,12 @@ const normalize = text => text.replace(/\s+/g, ' ').trim()
       assert.equal(await amount('Custo total'), brl(expectedPrice.total - 100000))
       assert.equal(await amount('Quanto paga no total'), brl(expectedPrice.total))
       assert.equal(await amount('Quanto entra no caixa'), brl(100000 - expectedPrice.iof))
-      // As partes do custo trazem o percentual sobre o custo total no rótulo (21/11/2026), com uma casa: "IOF · 9,3%".
-      assert.equal(await amount(/^IOF · \d+,\d%$/), brl(expectedPrice.iof), 'composição do custo repete o IOF dos encargos')
+      // As partes do custo trazem o percentual sobre o custo total no rótulo (21/11/2026), com duas casas (23/11/2026): "IOF · 9,32%".
+      assert.equal(await amount(/^IOF · \d+,\d{2}%$/), brl(expectedPrice.iof), 'composição do custo repete o IOF dos encargos')
       const shares = (await sec.locator('.rt-parts dt').allInnerTexts()).map(normalize).slice(0, 3)
       const custo = expectedPrice.total - 100000
-      assert.deepEqual(shares, [`Juros · ${(expectedPrice.interest / custo * 100).toFixed(1).replace('.', ',')}%`,
-        `IOF · ${(expectedPrice.iof / custo * 100).toFixed(1).replace('.', ',')}%`, 'Fee, TAC e outros · 0,0%'])
+      assert.deepEqual(shares, [`Juros · ${(expectedPrice.interest / custo * 100).toFixed(2).replace('.', ',')}%`,
+        `IOF · ${(expectedPrice.iof / custo * 100).toFixed(2).replace('.', ',')}%`, 'Fee, TAC e outros · 0,00%'])
       // Envelope de e-mail no cabeçalho do resultado: rascunho no Outlook com resumo, taxas e parcelas. Endereço curto
       // (22/11/2026: com o cronograma inteiro o login da Microsoft recusava, AADSTS90015): o rascunho leva o resumo das
       // 12 parcelas e o clique copia o cronograma completo para colar.

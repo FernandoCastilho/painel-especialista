@@ -1,0 +1,55 @@
+/* Moldura das calculadoras, também usada pelo catálogo e pelo modo Apresentar. */
+:root {
+  --cp-orange:#ff6200;
+  --cp-navy:linear-gradient(110deg,#052956,#07336b);
+}
+:root[data-theme] body .bw, :root[data-theme] body .bw .cx, :root[data-theme] body .bw :is(.bnp-dialog, .credit-presentation) {
+  --cx-field-bg:#fff; --cx-line-strong:#7a8fac; --cx-select-bg:#ffb000; --cx-select-fg:#000; --cx-primary-bg:#ff7900; --cx-primary-fg:#10284c; --cx-result-bg:#062a5c; --cx-result-line:#ff7900; --bg:#fff; --card:#fff; --surface-2:#f1f6fd; --fg:#10284c; --mut:#455c7a; --line:#c9d7e9; --amber:#b94700; --down:#a92727;
+  --bw-scheme:light; --bw-page:#f7faff; --bw-card:#fff; --bw-soft:#f4f7fb; --bw-tint:#d3e3f9; --bw-good-soft:#f3faf6; --bw-warm-soft:#fff6ee; --bw-warm-tint:#ffe1c3; --bw-bad-soft:#fff7f6;
+  --bw-ink:#10284c; --bw-mut:#455c7a; --bw-link:#006bdc; --bw-warm-ink:#8d3900; --bw-warn-ink:#4a3300; --bw-bad-ink:#9b2c20;
+  --bw-line:#c6d5e9; --bw-field-line:#7a8fac; --bw-strong-line:#0b2e63;
+  --bw-g1:linear-gradient(#fff,#e5f0fd); --bw-g2:linear-gradient(110deg,#fff,#f9fbff); --bw-g3:linear-gradient(100deg,#e3f1ff,#ccdef8); --bw-g4:linear-gradient(110deg,#fff,#fcfdff);
+  --bw-g5:linear-gradient(100deg,#edf3fc,#dde7f4); --bw-g6:linear-gradient(110deg,#f0f5fc,#e7eef8); --bw-g7:linear-gradient(110deg,#fff,#f5f8fd);
+}
+@media screen {
+  :root[data-theme="dark"] body .bw, :root[data-theme="dark"] body .bw .cx {
+    --cx-field-bg:#071122; --cx-line-strong:#6b7f9e; --bg:#071122; --card:#101b2e; --surface-2:#18263c; --fg:#f3f6ff; --mut:#bbc5d6; --line:#33435b; --down:#ff9b9b; --amber:#ff7900;
+    --bw-scheme:dark; --bw-page:#071122; --bw-card:#101b2e; --bw-soft:#18263c; --bw-tint:#22334f; --bw-good-soft:#0f2a21; --bw-warm-soft:#2b1c0e; --bw-warm-tint:#3d2812; --bw-bad-soft:#2d1416;
+    --bw-ink:#f3f6ff; --bw-mut:#bbc5d6; --bw-link:#8eb5ff; --bw-warm-ink:#ffb36b; --bw-warn-ink:#ffd9a6; --bw-bad-ink:#ff9b9b;
+    --bw-line:#33435b; --bw-field-line:#6b7f9e; --bw-strong-line:#5b78e8;
+    --bw-g1:#18263c; --bw-g2:#101b2e; --bw-g3:#22334f; --bw-g4:#101b2e; --bw-g5:#18263c; --bw-g6:#18263c; --bw-g7:#101b2e;
+  }
+}
+
+:root[data-theme] body .bw {
+  width:100%; max-width:none; margin-inline:auto; color:var(--fg); background:var(--bw-soft);
+  border:1px solid var(--bw-line); border-radius:12px; gap:0; overflow:clip; font-family:'Segoe UI',system-ui,Arial,sans-serif;
+}
+.bw [hidden] { display:none !important; }
+.bw-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.bw-heading h2 { margin:0; font-size:1.75rem; letter-spacing:-.03em; }
+.bw-heading p, .bw-profile p { margin:6px 0 0; color:var(--mut); font-size:.8125rem; line-height:1.5; }
+.bw-badge { padding:8px 12px; border:1px solid var(--line); border-radius:20px; color:var(--mut); font-size:.75rem; }
+.bw button:focus-visible, .bw select:focus-visible, .bw summary:focus-visible { outline:2px solid var(--amber, #ff6200); outline-offset:3px; }
+.bw .cx-iof label { display:flex; gap:10px; align-items:flex-start; font-size:.85rem; line-height:1.5; min-height:44px; }
+.bw input[type=checkbox] { accent-color:var(--bw-link); width:22px; height:22px; flex:none; }
+
+.bw > .cx-back { margin:12px 20px 0; }
+.bw .bw-heading {
+  position:relative; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px 16px;
+  padding:6px 20px 12px; color:var(--bw-ink); border-bottom:1px solid var(--bw-line);
+}
+.bw .bw-heading h2 { display:flex; align-items:baseline; gap:10px; margin:0; font-size:1.05rem; font-weight:600; color:var(--bw-ink); letter-spacing:0; }
+.bw .bw-heading h2 strong { font-size:1.45rem; font-style:italic; font-weight:800; color:var(--bw-ink); border:0; padding:0; }
+.bw .bw-badge { color:white; border:0; font-size:.72rem; padding:0 34px 0 0; font-weight:400; }
+.bw .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+@media(max-width:640px) {
+  .bw > .cx-back { margin:10px 12px 0; }
+  .bw .bw-heading { padding:6px 12px 10px; }
+}
+@media(max-width:600px) {
+  .bw .bw-heading h2 { flex-wrap:wrap; }
+}
+@media(max-width:550px) {
+  .bw .bw-heading { gap:10px; }
+}

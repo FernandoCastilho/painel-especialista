@@ -66,3 +66,19 @@ test('nomes curtos de setor: setores que ficariam iguais ganham o trecho que os 
   assert.equal(new Set(names).size, labels.length)
   assert.ok(names.every(name => !/, exceto/i.test(name) || labels.includes(name)))
 })
+
+test('November 23 refresh preserves the prior cutoff and includes only verified additional RJ requests', () => {
+  const dates = ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-23']
+  const snapshot = {...published, editions: published.editions.filter(date => date <= '2026-11-23'),
+    records: published.records.filter(row => row.date <= '2026-11-23')}
+  assert.deepEqual(snapshot.editions.filter(date => date > '2026-11-13'), dates)
+  const additions = snapshot.records.filter(row => row.date > '2026-11-13')
+  assert.deepEqual(additions.map(row => [row.date, row.uf, row.sector]), [
+    ['2026-11-16', null, null],
+    ['2026-11-23', 'PA', null],
+  ])
+  const period = recoveryPeriod(snapshot, 2026, 1, 11)
+  assert.equal(period.end, '2026-11-23')
+  assert.equal(period.previousEnd, '2025-11-23')
+  assert.equal(period.editionCount, 218)
+})

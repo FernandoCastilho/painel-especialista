@@ -84,3 +84,7 @@ export function forwardSeries(pts, d1, d2, windows = 24) {
   }
   return out
 }
+
+// Horizonte padrão do gráfico de CDI futuro, em dias corridos: o prazo da operação (calculadoras de crédito, regra de
+// 23/11/2026) ou 12 meses quando não há prazo.
+export const diasDoHorizonte = prazoMeses => Number.isFinite(prazoMeses) && prazoMeses > 0 ? Math.round(prazoMeses * 365 / 12) : 365

@@ -269,6 +269,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         const q = sl.closest('.apz-quadro')
         return { sobra: mi.getBoundingClientRect().height - r.height, graficoDentro: g.left >= r.left - 1 && g.right <= r.right + 1, anos: sl.querySelectorAll('.ft-year').length, rolagem: q ? [q.scrollLeft, q.scrollTop] : [0, 0], caixas: sl.querySelectorAll('.ft-box').length }
       })
+      assert.equal(await fat.locator('.ft-kpis:visible').count(), 0, 'o slide mostra o resultado sem repetir os indicadores anuais da calculadora')
       assert.ok(encaixe.sobra <= 2, `Faturamento cortado em ${encaixe.sobra}px`)
       assert.ok(encaixe.graficoDentro, 'o gráfico do Faturamento cabe na largura do slide')
       assert.ok(encaixe.anos >= 2, 'o resumo por ano aparece')

@@ -42,6 +42,7 @@ async function smoke(browser, width, colorScheme) {
   assert.doesNotMatch(await panel.locator('.rj-kpis').innerText(), /Participação na base|Menções no recorte/)
   assert.match(await panel.locator('.rj-kpis').innerText(), /mesmo período do ano anterior, na mesma base parcial\. Não mede o total de pedidos do país\./)
   // As ressalvas longas ficam em "Como ler estes números", fechado até a pessoa abrir.
+  await panel.getByText(/Última edição disponível: 09\/11\/2026/).waitFor()
   const read = panel.locator('details.rj-read')
   assert.equal(await read.evaluate(element => element.open), false)
   assert.match(await read.evaluate(element => element.textContent), /Como ler estes números.*Cobertura parcial das edições analisadas, não um total nacional\. Uma mesma ação pode envolver várias empresas; menções não equivalem a processos únicos\. Datas indicam publicação, não protocolo\..*Última edição na base: 09\/11\/2026/s)

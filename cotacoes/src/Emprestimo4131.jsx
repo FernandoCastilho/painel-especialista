@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import './Calculadora.css'
 import './CalculatorLayout.css'
 import './CalculatorTheme.css'
-import './BndesWorkspace.css'
+import './BndesSimulation.css'
 import './Emprestimo4131.css'
 import './CalcPattern-4131.css'
 import MoneyInput from './MoneyInput.jsx'
@@ -74,17 +74,6 @@ const REGRAS = [
   ['Perdas no hedge', 'Dedutíveis sem o limite dos ganhos quando a operação protege obrigação da empresa.', 'Lei 8.981/1995, art. 77; IN RFB 1.585, art. 71'],
   ['IOF do capital de giro (comparação)', 'Empréstimo em reais para pessoa jurídica: 0,38% sobre o valor mais 0,0082% ao dia sobre cada parcela de principal, limitado a 365 dias. É o imposto que a tela mostra como economia de IOF; o empréstimo externo não paga esse IOF. A alíquota diária tem a redação de 2025, que depende da mesma decisão provisória do STF.', 'Decreto 6.306/2007, art. 7º, I, b, e § 15 (redação do Decreto 12.499/2025), e § 1º · mesma regra das calculadoras de crédito do Painel'],
 ]
-
-// Ícone: globo (recurso de fora) com a seta de entrada no país.
-export function Emprestimo4131Icon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="10" cy="10" r="7" />
-      <path d="M3 10h14M10 3c2.2 2 2.2 12 0 14M10 3c-2.2 2-2.2 12 0 14" />
-      <path d="M14.5 14.5 21 21M21 16.5V21h-4.5" />
-    </svg>
-  )
-}
 
 // Gaveta que abre sozinha quando um campo de dentro tem erro, para o aviso não ficar escondido.
 function useGaveta(erro) {

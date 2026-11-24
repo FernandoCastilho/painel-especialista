@@ -582,7 +582,7 @@ jobs:
             const body = [
               prazo,
               `**O que acontece se nada for feito:** a partir de 01/01/${c.nextYear}, as curvas de juros da B3 (DI x pré e cupom cambial) param de atualizar e ficam com o último dado disponível. É de propósito: o painel não inventa feriado.`,
-              `**O que fazer quando a B3 publicar o calendário de ${c.nextYear}:**\n1. Incluir os dias sem pregão de ${c.nextYear} em \`cotacoes/scripts/data-schedules.mjs\` (coleta das curvas).\n2. Incluir o mesmo calendário em \`cotacoes/src/holidays.js\` (dias úteis das calculadoras).\n3. Conferir as datas na publicação oficial da B3 e registrar a fonte, como em \`docs/publicacao-e-calendario.md\`.`,
+              `**O que fazer quando a B3 publicar o calendário de ${c.nextYear}:**\n1. Incluir os dias sem pregão de ${c.nextYear} em \`cotacoes/scripts/data-schedules.mjs\` (coleta das curvas).\n2. Atualizar apenas a visão B3 em Feriados, distinguindo pregão listado de Balcão e liquidação. Não copiar esse calendário para os dias úteis contratuais das calculadoras.\n3. Conferir as datas na publicação oficial da B3 e registrar a fonte, como em \`docs/publicacao-e-calendario.md\`.`,
               `Esta pendência é aberta uma vez só e fecha sozinha quando o calendário novo entrar. Se for fechada à mão antes disso, o lembrete não volta.\n\nExecução: ${run}`,
             ].join('\n\n')
             await github.rest.issues.create({ ...context.repo, title, body })

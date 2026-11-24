@@ -106,7 +106,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const texto = /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não é recomendação de crédito[\s\S]*Quase ao vivo[\s\S]*Diário[\s\S]*Manual/i
       assert.match(await aviso.innerText(), texto)
       // linha das novidades da semana logo abaixo do aviso, antes do botão (o conteúdo depende da data; só confere a estrutura)
-      const nov = aviso.locator('.aviso-novidades'); if (await nov.count()) { assert.match(await nov.innerText(), /NOVIDADES DA SEMANA|Novidades da semana/i); assert.ok((await nov.locator('li').count()) <= 4) }
+      const nov = aviso.locator('.aviso-novidades'); if (await nov.count()) { assert.match(await nov.innerText(), /NOVIDADES DA SEMANA|Novidades da semana/i); assert.ok((await nov.locator('li').count()) >= 1, 'aviso lista os destaques da semana') }
       const box = await aviso.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800, 'aviso cabe na tela')
       assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), null, 'só marca como lido ao fechar')
       await aviso.getByRole('link', { name: 'Ver todas as atualizações' }).click()
@@ -238,6 +238,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const p = await openPage({ viewport: { width, height: 900 }, serviceWorkers: 'block' })
       await p.goto(base + '/#config')
       const gov = p.locator('.desk-panel', { has: p.getByRole('heading', { name: 'Governança dos dados' }) }); await gov.waitFor()
+      assert.equal(await gov.locator('.config-gov').count(), 0)
+      await gov.getByRole('button', { name: 'Consultar estado das fontes' }).click()
+      await gov.locator('.config-gov').waitFor()
       const sourceNames = (await gov.locator('.config-gov tbody tr > th[scope="row"]').allTextContents()).map((name) => name.trim())
       assert.deepEqual(sourceNames, expectedSources, 'uma linha para cada fonte do catálogo, sem omissões ou duplicatas')
       assert.equal(new Set(sourceNames).size, sourceNames.length, 'cada fonte aparece uma única vez na tabela')
@@ -495,7 +498,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       // menu na ordem pedida
       const names = await p.getByRole('navigation', { name: /Navegação principal|Seções/ }).getByRole('button').allInnerTexts()
       assert.deepEqual(names.map((t) => t.trim()), width >= 1000
-        ? ['', 'Mercado', 'Cenários', 'Juros', 'Calculadoras', 'Setores', 'Notícias', 'Podcast', 'Mais']
+        ? ['', 'Mercado', 'Cenários', 'Juros', 'Calculadoras', 'Setores', 'M&A', 'Notícias', 'Podcast', 'Mais']
         : ['Mercado', 'Cenários', 'Juros', 'Calculadoras', 'RPN', 'Setores', 'Mais'], 'ordem completa dos destinos prioritários em cada tela')
       // card do topo do Mercado: IPCA 12m no lugar do Brent; clique leva a Cenários › Inflação
       await p.route('**/indices.json*', (r) => r.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), stale: false, errors: [], series: { ibov: { symbol: '^BVSP', unit: 'pontos', points: Array.from({ length: 10 }, (_, i) => [Date.now() - (10 - i) * 864e5, 130000 - (i === 9 ? 2600 : 0)]), stale: false } } } }))
@@ -667,6 +670,18 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await p.locator('.feriados [role="status"]').textContent(), /Cobertura parcial: Estado do Paraná \(2026, 2027\) sem calendário completo verificado nesta base\. A ausência de registros não permite afirmar que não haverá feriados ou suspensões\./)
       assert.match(await p.locator('.feriados').innerText(), /Não há datas cadastradas nesta seleção\. Consulte a fonte oficial: a cobertura incompleta não indica ausência de feriados\./)
       assert.doesNotMatch(await p.locator('.feriados').innerText(), /Emancipação Política do Paraná/, '19 de dezembro não volta a ser apresentado como feriado civil estadual')
+      // B3 2027: a sessão especial é informativa, não uma linha de fechamento.
+      await p.clock.setFixedTime(Date.parse('2027-01-05T15:00:00Z'))
+      await p.reload(); await p.locator('.fer-filter select').waitFor()
+      await p.locator('.fer-filter select').selectOption('B3')
+      assert.match(await p.locator('.fer-months').innerText(), /08\/02\/27[\s\S]*09\/02\/27/)
+      assert.doesNotMatch(await p.locator('.fer-months').innerText(), /10\/02\/27/)
+      const horarios = p.locator('details', { has: p.locator('summary', { hasText: 'Horários especiais da B3 em 2027' }) })
+      await horarios.locator('summary').click()
+      assert.match(await horarios.innerText(), /Cinzas:[\s\S]*derivativos listados a partir das 13h/)
+      assert.match(await horarios.innerText(), /24 e 31\/12:[\s\S]*sem pregão listado[\s\S]*sem contraparte central[\s\S]*13h30/)
+      assert.equal(await horarios.getByRole('link', { name: 'Ofício 057/2026-VNC da B3' }).count(), 1)
+      await p.clock.setFixedTime(Date.parse('2026-11-05T15:00:00Z'))
       // aprender: lista de conceitos de um lado, explicação do outro, sem texto sobre o método
       await p.goto(base + '/#aprender/conceitos')
       await p.locator('.learn-list').waitFor()

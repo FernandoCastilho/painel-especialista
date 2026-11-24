@@ -34,7 +34,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    if(await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
    await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,theme)
    const nav=page.getByRole('navigation',{name:width>=1000?'Navegação principal':'Seções',exact:true})
-   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','Notícias','Podcast','Mais']
+   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','M&A','Notícias','Podcast','Mais']
     :width<=359?['Merc.','Cen.','Juros','Calc.','RPN','Setores','Mais']:['Mercado','Cenários','Juros','Calculadoras','RPN','Setores','Mais']
    await page.evaluate(()=>document.fonts.ready)
    if(width>=1400){
@@ -98,7 +98,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.equal(await more.getAttribute('aria-expanded'),'false','Tab closes menu')
    // Every primary destination is a real clickable route.
    const destinations=[['Mercado','resumo'],['Cenários','cenarios'],['Juros','juros'],['Calculadoras','calculadora'],['Calculadora RPN','rpn'],['Setores','setores']]
-   if(width>=1000) destinations.push(['Notícias','noticias'],['Podcast','podcast'])
+   if(width>=1000) destinations.push(['M&A','ma'],['Notícias','noticias'],['Podcast','podcast'])
    for(const [label,id] of destinations){
     await nav.getByRole('button',{name:label,exact:true}).click()
     await page.waitForURL('**/#'+id)
@@ -226,7 +226,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
      await page.screenshot({path:path.join(out,'rpn-'+width+'-'+theme+'.png'),fullPage:true})
     }
    }
-   const extra=[...(width<1000?[['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Novidades da semana','novidades'],['Aprender','aprender']]
+   const extra=[...(width<1000?[['M&A','ma'],['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Novidades da semana','novidades'],['Aprender','aprender']]
    for(const [label,id] of extra){
     await more.click()
     await menu.getByRole('menuitem',{name:label,exact:true}).click()

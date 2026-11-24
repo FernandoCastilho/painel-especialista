@@ -125,7 +125,7 @@ export default function FluxoPagamentos({ rows, inicio, nota }) {
         <ul className="fp-resumo" aria-label="Resumo do fluxo">
           <li><span>Pagamentos </span>{comPagamento.length}</li>
           <li><span>Total pago </span>{compacto(totalPago, 2)}</li>
-          <li><span>Juros </span>{compacto(totalJuros, 2)} ({(totalJuros / totalPago * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)</li>
+          <li><span>Juros </span>{compacto(totalJuros, 2)} ({(totalJuros / totalPago * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)</li>
         </ul>
         <svg tabIndex={0} role="img" aria-label={`Fluxo de pagamentos: ${comPagamento.length} pagamentos em ${meses.length} meses`} aria-describedby={`${id}-h`}
           viewBox={`0 0 ${width} ${H}`} width="100%" height={H} onPointerMove={onMove} onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { gesto.current = null }}

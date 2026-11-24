@@ -23,18 +23,6 @@ const signed = (v, f) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${f(Math.abs(v))}`
 const dm = (iso) => (iso ? iso.split('-').reverse().join('/') : '')
 const isoPlus = (iso, days) => new Date(Date.parse(`${iso}T12:00:00Z`) + days * 864e5).toISOString().slice(0, 10)
 
-// Ícone: duas barras lado a lado (operação e DI) com a linha da curva.
-export function OperacaoDiIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 20h16" />
-      <rect x="6" y="11" width="4" height="9" rx="1" />
-      <rect x="14" y="8" width="4" height="12" rx="1" />
-      <path d="M3 8c4-1 7-3 9-5 2 2 5 3 9 3" />
-    </svg>
-  )
-}
-
 // Operação x DI: custo ou rendimento de uma operação contra aplicar o mesmo valor no DI pelo mesmo prazo.
 export default function OperacaoDi({ onBack }) {
   const curves = useCurves()

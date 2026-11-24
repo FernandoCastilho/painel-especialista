@@ -1,6 +1,7 @@
 // Faixa de prazos da curva DI x pré nas calculadoras de crédito. Só apresentação do gráfico; nenhuma conta financeira.
 
-// Com `prazoMeses` (Capital de Giro, 22/11/2026), o fim do gráfico é o prazo total digitado; o começo segue em 12 meses,
+// Regra do Fernando (23/11/2026): em todas as calculadoras, o gráfico termina no prazo da operação digitado ("se é 48, é 48;
+// se é 12, é 12"). Com `prazoMeses`, o fim do gráfico é esse prazo; o começo segue em 12 meses,
 // ou no início da curva quando o prazo é de até 12 meses.
 export function faixaDaCurva(prazoMeses) {
   const propria = Number.isInteger(prazoMeses) && prazoMeses > 0
@@ -16,3 +17,6 @@ export function mesesDoEixo(de, ate) {
   if (meses.length && ate - meses.at(-1) < passo / 2) meses.pop()
   return [...meses, ate]
 }
+
+// Prazo em dias (Conta Garantida, títulos do desconto) em meses do gráfico, arredondado para cima; no mínimo 1 mês.
+export const mesesDoPrazoEmDias = dias => Number.isFinite(dias) && dias > 0 ? Math.max(1, Math.ceil(dias / 30)) : undefined

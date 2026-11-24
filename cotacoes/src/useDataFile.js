@@ -4,7 +4,8 @@ import { onRefresh } from './refreshBus.js'
 
 // Um snapshot por arquivo: telas diferentes compartilham leitura, data e falhas.
 const resources = new Map()
-const TTL = 10 * 60000
+export const DATA_FILE_TTL = 10 * 60000
+export const cachedDataFile = file => resources.get(file)?.state
 function resource(file) {
   if (!resources.has(file)) {
     resources.set(file, { state: { status: 'loading', checkedAt: null, lastSuccessAt: null }, at: 0, pending: null, listeners: new Set() })
@@ -16,13 +17,13 @@ function resource(file) {
 export function loadDataFile(file, now = Date.now(), force = false) {
   const r = resource(file)
   if (r.pending) return r.pending
-  if (!force && r.at && now - r.at < TTL) return Promise.resolve(r.state)
+  if (!force && r.at && now - r.at < DATA_FILE_TTL) return Promise.resolve(r.state)
   const ctrl = new AbortController()
   const timeout = setTimeout(() => ctrl.abort(), 20000)
   const checkedAt = Date.now()
   r.pending = (async () => {
     try {
-      const response = await fetch(`./${file}?t=${force ? now : Math.floor(now / TTL)}`, { signal: ctrl.signal, ...(force ? { cache: 'no-store' } : {}) })
+      const response = await fetch(`./${file}?t=${force ? now : Math.floor(now / DATA_FILE_TTL)}`, { signal: ctrl.signal, ...(force ? { cache: 'no-store' } : {}) })
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const data = await response.json()
       if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Arquivo de dados inválido')

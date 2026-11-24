@@ -1,12 +1,18 @@
 // Calendar boundaries are civil dates in São Paulo, independent of the device zone.
-export const marketDate = t => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t))
+const marketDateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' })
+export const marketDate = t => marketDateFormatter.format(new Date(t))
 const dayNumber = d => Date.parse(d + 'T12:00:00Z') / 864e5
 
 export function accumulatedReturns(file, code, now = Date.now()) {
+  if (!Number.isFinite(new Date(now).getTime())) return { month: null, year: null }
+  return accumulatedReturnsForDay(file, code, marketDate(now))
+}
+
+export function accumulatedReturnsForDay(file, code, today) {
   const empty = { month: null, year: null }
   const series = file?.series?.[code]
-  if (file?.source !== 'AwesomeAPI' || series?.source !== code || !Number.isFinite(new Date(now).getTime()) || !Array.isArray(series.points)) return empty
-  const today = marketDate(now), monthStart = today.slice(0, 7) + '-01', yearStart = today.slice(0, 4) + '-01-01'
+  if (file?.source !== 'AwesomeAPI' || series?.source !== code || !Array.isArray(series.points)) return empty
+  const monthStart = today.slice(0, 7) + '-01', yearStart = today.slice(0, 4) + '-01-01'
   const daily = new Map()
   const valid = series.points.filter(p => Number.isFinite(p?.t) && Number.isFinite(new Date(p.t).getTime()) && Number.isFinite(p.bid) && p.bid > 0)
   for (const p of valid.sort((a, b) => a.t - b.t)) {

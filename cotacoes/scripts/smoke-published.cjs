@@ -168,7 +168,9 @@ const links = {
       assert.match(await page.locator('.google-trends').innerText(), /8h e 15h/)
       await contained('Google Trends')
 
-      await visit('config', '.config-gov')
+      await visit('config', '.config-desk')
+      await page.getByRole('button', { name: 'Consultar estado das fontes' }).click()
+      await page.locator('#config-fontes table').waitFor()
       await page.waitForFunction(() => document.documentElement.dataset.theme === 'light')
       await page.emulateMedia({ colorScheme: 'dark' })
       await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark')

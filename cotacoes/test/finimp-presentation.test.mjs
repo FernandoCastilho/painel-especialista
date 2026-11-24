@@ -33,7 +33,7 @@ const dependencies = {
   './FinimpHelp.jsx': () => null,
   // Peças do roteiro (linha do tempo e resultado): a apresentação delas tem conferência própria na tela.
   './Roteiro.jsx': { step: (number, text) => `${number} ${text}`, Resultado: ({ children }) => children, Respostas: () => null, ComposicaoDoCusto: () => null },
-  './ReferenciaMercado.jsx': () => null,
+  './ReferenciaMercado.jsx': () => null, './faixaCurva.js': await import('../src/faixaCurva.js'),
   './FinimpComparacao.css': {},
   './CalcPattern-finimp.css': {},
 }

@@ -17,7 +17,7 @@ Implementação candidata de 05/11/2026, ainda sem publicação. Derivada do can
 |---|---|
 | Aba Notícias, por moeda e mercado | `feed.js`, `News.jsx`, relógio e avisos de atualização |
 | Mercado → Manchetes | `Resumo.jsx`, feed comum e `NoticiasPorDia.jsx` |
-| Moedas, Reforma tributária, Eleições EUA, Veículos pesados | `reforma.js`, `ReformaTributaria.jsx`, `NoticiasPorDia.jsx` |
+| Moedas, Reforma tributária (Eleições EUA e Veículos pesados saíram de Mercado hoje em 24/11/2026) | `reforma.js`, `ReformaTributaria.jsx`, `NoticiasPorDia.jsx` |
 | Temas e insumos legados | Mesmos normalizadores, merge e componente comum |
 | 37 setores + 5 insumos institucionais | `sectorNews.js`, `SectorNews.jsx`, `sector-news-lib.mjs` |
 | Apresentações | Seleção em `apresentacao.js` e nova filtragem no slide aberto, em `Apresentacao.jsx` |

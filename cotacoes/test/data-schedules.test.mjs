@@ -7,7 +7,7 @@ test('B3 closes listed derivatives on official holidays, not Sao Paulo or US-onl
  for(const d of ['2026-02-16','2026-02-17','2026-11-02','2026-11-20','2026-12-24','2026-12-31'])assert.equal(b3CollectionDecision(d+'T15:00:00Z').run,false)
  for(const d of ['2026-07-09','2026-07-03','2026-11-26','2026-02-18'])assert.equal(b3CollectionDecision(d+'T15:00:00Z').run,true)
  assert.equal(b3CollectionDecision('2026-10-25T15:00:00Z').run,false)
- assert.equal(b3CollectionDecision('2027-01-04T15:00:00Z').run,false)
+ assert.equal(b3CollectionDecision('2028-01-04T15:00:00Z').run,false)
 })
 test('B3 respects Brazil civil date and deduplicates only completed same-hour checks',()=>{
  assert.equal(saoPauloParts('2026-10-27T01:30:00Z').date,'2026-10-26')

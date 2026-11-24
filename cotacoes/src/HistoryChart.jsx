@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { useFilterSlot } from './ChartFilters.jsx'
 import { nextChartIndex } from './chartNavigation.js'
 import { marcasRedondas, rotuloData } from './chartEixo.js'
+import { ancoraRotulo, marcasValor, yRotulo } from './chartMarcas.js'
 import { focoPorTeclado, limitarBalao, margemEixo, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { useMacro } from './useMacro.js'
@@ -171,15 +172,8 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   }
 
   const last = points[points.length - 1]
-  // rótulos de valor: ver abaixo
-  // rótulos de valor só onde importam: último, primeiro, máximo e mínimo, sem encavalar (mínimo de 64 px entre eles)
-  const marks = useMemo(() => {
-    const vals = points.map((p) => p.bid)
-    const cand = [points.length - 1, 0, vals.indexOf(Math.max(...vals)), vals.indexOf(Math.min(...vals))]
-    const kept = []
-    for (const i of cand) if (!kept.some((k) => Math.abs(g.x(points[k].t) - g.x(points[i].t)) < 64 || points[k].bid === points[i].bid)) kept.push(i) // sem repetir o mesmo valor
-    return kept.sort((a, b) => a - b)
-  }, [points, g])
+  // rótulos de valor: último, primeiro, máximo, mínimo e os picos e vales mais marcados, sem encavalar
+  const marks = useMemo(() => marcasValor(points.map((p) => p.bid), points.map((p) => g.x(p.t))), [points, g])
   const hp = hover != null ? points[hover] : null
   const [tipRef, tipW] = useLarguraBalao(hp)
   const gid = `a-${plotId.replaceAll(':', '')}`
@@ -249,13 +243,13 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
         <path d={g.area} fill={`url(#${gid})`} />
         <path className="line" style={{ color }} d={g.line} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
         <circle cx={g.x(last.t)} cy={g.y(last.bid)} r="4" fill={color} className="ring" />
-        {labels && (vfmt ?? fmt) && marks.map((i) => {
+        {labels && (vfmt ?? fmt) && marks.map(({ i, vale }) => {
           const p = points[i]
-          const anchor = i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'
+          const y = g.y(p.bid)
           return (
             <g key={p.t} pointerEvents="none">
-              <circle cx={g.x(p.t)} cy={g.y(p.bid)} r="2.5" fill={color} />
-              <text x={g.x(p.t)} y={g.y(p.bid) - 9} textAnchor={anchor} className="vlabel">{(vfmt ?? fmt)(p.bid)}</text>
+              <circle cx={g.x(p.t)} cy={y} r="2.5" fill={color} />
+              <text x={g.x(p.t)} y={yRotulo(y, vale, M.t, g.base)} textAnchor={ancoraRotulo(i, points.length)} className="vlabel">{(vfmt ?? fmt)(p.bid)}</text>
             </g>
           )
         })}

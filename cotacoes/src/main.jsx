@@ -10,7 +10,6 @@ import './Terminal.css'
 import './Abas.css'
 import './Theme.css'
 import './Direcao.css'
-import './CalcUnificado.css'
 import { iniciarContagem } from './acessos.js'
 
 createRoot(document.getElementById('root')).render(

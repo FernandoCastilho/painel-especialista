@@ -9,6 +9,7 @@ import { CG_CET_DAYS, CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, cgT
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, Respostas, Resultado, step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
+import { mesesDoPrazoEmDias } from './faixaCurva.js'
 import './ContaGarantida.css'
 import './CalcPattern-conta-garantida.css'
 import CalcBack from './CalcBack.jsx'
@@ -17,9 +18,6 @@ const brl = n => n == null ? '—' : n.toLocaleString('pt-BR', { style: 'currenc
 const pct = n => `${nbr5891(n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const dateLabel = d => d ? d.split('-').reverse().join('/') : '—'
 const FOOT = 'Valor e data valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
-export function ContaGarantidaIcon() {
-  return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18v15H3zM3 10h18M7 3v4M17 3v4M7 14h4M9 12v4M14 15h4" /></svg>
-}
 // Roteiro de 21/11/2026, só no modo Utilização única: 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026).
 // Tela limpa (21/11/2026): explicações ficam nos "?"; na tela, campos, valores, respostas e avisos.
 // Só ordem, nomes e apresentação: os números são os que parseContaGarantidaForm já devolvia.
@@ -255,6 +253,7 @@ export default function ContaGarantida({ onBack }) {
     </ul><p>Fontes consultadas em 05/11/2026: {CG_SOURCES.map((source, index) => <span key={source.url}>{index > 0 && ' · '}<a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></span>)}.</p></CalculatorHelp></div>
     </>}
     {/* Taxa prefixada ao mês: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
-    <ReferenciaMercado tipos={['pre']} />
+    {/* O gráfico termina no prazo de uso, em meses arredondados para cima (regra de 23/11/2026). */}
+    <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias((Date.parse(params.end) - Date.parse(params.start)) / 86400000)} />
   </section>
 }

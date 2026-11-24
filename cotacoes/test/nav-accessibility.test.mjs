@@ -81,8 +81,8 @@ test('mobile More supports repeated keyboard opening, Tab exit and selecting a d
     assert.equal(a.menu(), undefined)
   }
   a.trigger().props.onClick(); await a.render.settle()
-  a.menuItems()[1].props.onClick(); await a.render.settle()
-  assert.deepEqual(a.destinations, ['podcast'])
+  a.menuItems()[0].props.onClick(); await a.render.settle()
+  assert.deepEqual(a.destinations, ['ma'])
   assert.equal(a.document.activeElement, a.triggerTarget)
   assert.equal(a.menu(), undefined)
 })

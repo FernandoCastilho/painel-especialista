@@ -5,6 +5,7 @@ import { marketDate } from './marketReturns.js'
 import { marketPreviews } from './marketPreviews.js'
 import { upcoming } from './agenda.js'
 import Sparkline from './Sparkline.jsx'
+import { formatoComo } from './chartMarcas.js'
 import { FINIMP_MARGEM, FINIMP_MODOS, SPARK_NOTE, finimpConverte, finimpParidade, ibovSpark, kpiItems, kpiSparks, sparkTone, tapeItems } from './terminal.js'
 import HelpDialog from './HelpDialog.jsx'
 import MoneyInput from './MoneyInput.jsx'
@@ -106,7 +107,7 @@ export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRat
             <span className={`kpi-change ${i.tone}`}>
               {i.text ? <><span aria-hidden="true">{MARK[i.tone]}</span> {i.text}</> : <span className="muted" title={i.reason || undefined}>var. indisponível</span>}
             </span>
-            {points?.length > 1 && <span className="kpi-spark" {...(note ? { role: 'img', 'aria-label': note, title: note } : {})}><Sparkline points={points} label={i.label} rate={!!i.rate || i.key==='IPCA'} tone={preview || note ? sparkTone(points) : i.tone} height={30} /></span>}
+            {points?.length > 1 && <span className="kpi-spark" {...(note ? { role: 'img', 'aria-label': note, title: note } : {})}><Sparkline points={points} label={i.label} rate={!!i.rate || i.key==='IPCA'} tone={preview || note ? sparkTone(points) : i.tone} height={44} fmt={formatoComo(i.value)} /></span>}
             {['USD', 'EUR', 'PAR'].includes(i.code) && <span className="kpi-chart-date" title={preview ? `${preview.source} · amostras observadas; a cor indica a variação do gráfico` : undefined}>{preview ? `Gráfico: ${preview.day.split('-').reverse().join('/')}${i.code === 'PAR' ? ' · cruzado' : ''}` : 'Gráfico sem amostras suficientes'}</span>}
           </button>
         )

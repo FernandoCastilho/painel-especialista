@@ -15,7 +15,6 @@ import './FinimpComparacao.css'
 import './CalcPattern-finimp.css'
 import CalcBack from './CalcBack.jsx'
 
-export function FinimpIcon() { return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 7h18M17 3l4 4-4 4M21 17H3m4-4-4 4 4 4" /></svg> }
 export default function FinimpComparacao({ onBack }) {
   const draft = useSyncExternalStore(finimpDraftStore.subscribe, finimpDraftStore.getSnapshot, finimpDraftStore.getSnapshot)
   const { principalText, currency, competitor, itau, useTac, tacFxText, goalMode, goalTerm, targetText } = draft

@@ -20,18 +20,6 @@ const nomeFormato = (id) => FORMATOS.find((f) => f.id === id)?.label ?? id
 const resultadoDo = (linha, id) => linha?.formatos.find((x) => x.formato === id)
 const iofDiaText = IOF_PJ.daily.toLocaleString('pt-BR', { maximumFractionDigits: 4 })
 
-export function DividendosEmprestimoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 21V10l5-4 5 4v11" />
-      <path d="M6.5 21v-4h3v4" />
-      <path d="M15 8h4.5a1.5 1.5 0 010 3h-3a1.5 1.5 0 000 3H21" />
-      <path d="M18 6.5V8M18 14v1.5" />
-      <path d="M3 21h18" />
-    </svg>
-  )
-}
-
 export default function DividendosEmprestimo({ onBack }) {
   const [form, setForm] = useState({ valor: '10.000.000,00', taxa: '1,31', cdi: '', pctCdi: '100', aliquotaPj: '34', aliquotaDiv: '10' })
   const [comIof, setComIof] = useState(true)

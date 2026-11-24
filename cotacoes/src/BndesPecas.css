@@ -3,3 +3,4 @@
 .cx-finame .bndes-email .credit-email:focus-visible { outline: 2px solid var(--cp-orange); outline-offset: 2px; }
 .cx-finame .bndes-email small { display: block; color: var(--bw-warn-ink); }
 .cx-finame .bndes-flow-wrap { min-width: 0; }
+.cx-finame .bndes-whatsapp small { color: var(--bw-mut, var(--mut)); }

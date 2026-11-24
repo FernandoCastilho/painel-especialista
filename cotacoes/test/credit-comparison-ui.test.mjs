@@ -453,7 +453,8 @@ test('a tela segue a ordem do roteiro, com os nomes padrão, e termina na refer�
   const order = ['<SharedFields ', "step(2, 'Encargos')", 'className="credit-scenarios"', 'className="credit-compare"', "step(3, 'Resultado · custo final para o cliente')", 'Premissas, limites e fonte do IOF', '<ReferenciaMercado '].map(piece => screen.indexOf(piece))
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
   assert.match(source, /title=\{step\(1, 'Demanda do cliente'\)\}/)
-  assert.match(screen, /<ReferenciaMercado tipos=\{\[[^\n]*'pre', usesCdi && 'pos'\]\.filter\(Boolean\)\} \/>\s*<\/section><\/div>\s*\}\s*$/, 'referência de mercado é o último bloco')
+  // Regra de 23/11/2026: o gráfico termina no prazo da operação mais longa da comparação.
+  assert.match(screen, /<ReferenciaMercado tipos=\{\[[^\n]*'pre', usesCdi && 'pos'\]\.filter\(Boolean\)\}\s*prazoMeses=\{Math\.max\(0, \.\.\.visible\.map\(col => Number\.parseInt\(col\.term \|\| shared\.term, 10\)\)[^\n]*\} \/>\s*<\/section><\/div>\s*\}\s*$/, 'referência de mercado é o último bloco e termina no prazo')
   for (const label of ['TAC e fee na liberação', 'Outros, em cada pagamento', 'Quanto entra no caixa', 'Quanto paga por mês', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`'${label}'`), label)
   assert.doesNotMatch(source, /Tarifas na liberação \(sem IOF\)|Tarifas em cada pagamento|Dados comuns da necessidade do cliente|Resultado da comparação|Resultado da cotação/)
 })

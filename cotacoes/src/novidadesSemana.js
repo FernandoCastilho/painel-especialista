@@ -16,13 +16,18 @@ function separarSemana(entries, now) {
   return { recentes, anteriores }
 }
 
+// O que é estruturante na entrega. Registros antigos só têm o resumo.
+const destaquesDe = e => e.destaques ?? (e.resumo ? [e.resumo] : [])
+
 function agruparPorDia(entradas) {
   const dias = new Map()
-  for (const { date, items } of entradas) {
-    if (!dias.has(date)) dias.set(date, [])
-    dias.get(date).push(...items)
+  for (const e of entradas) {
+    if (!dias.has(e.date)) dias.set(e.date, { date: e.date, destaques: [], items: [] })
+    const dia = dias.get(e.date)
+    dia.destaques.push(...destaquesDe(e))
+    dia.items.push(...(e.items ?? []))
   }
-  return Array.from(dias, ([date, items]) => ({ date, items }))
+  return [...dias.values()]
 }
 
 export function organizarNovidades(entries, now = Date.now()) {
@@ -30,7 +35,7 @@ export function organizarNovidades(entries, now = Date.now()) {
   return { recentes: agruparPorDia(recentes), anteriores: agruparPorDia(anteriores) }
 }
 
-// O aviso de entrada continua curto. A tela completa inclui todos os itens, inclusive correções.
-export function novidadesDaSemana(entries, now = Date.now(), max = 4) {
-  return separarSemana(entries, now).recentes.map(e => e.resumo).filter(Boolean).slice(0, max)
+// O aviso de entrada lista todos os destaques dos últimos sete dias, o mais recente primeiro.
+export function novidadesDaSemana(entries, now = Date.now()) {
+  return separarSemana(entries, now).recentes.flatMap(destaquesDe)
 }

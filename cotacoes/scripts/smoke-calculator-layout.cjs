@@ -621,6 +621,44 @@ async function assertComparatorFamily(browser) {
   }
 }
 
+async function assertCambioFuturoJornada(browser) {
+  for (const [width, theme] of [[320, 'dark'], [1440, 'light']]) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, serviceWorkers: 'block' })
+    try {
+      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      const jornada = page.locator('.cf-j')
+      await jornada.getByRole('heading', { name: '3. Resultado · Bullet' }).waitFor()
+      assert.equal(await jornada.locator('#cf-j-quantidade').count(), 0, 'bullet não mostra quantidade')
+      assert.equal(await jornada.locator('.cf-quote input').count(), 0, 'resultado é somente leitura')
+      const preencher = (id, value) => jornada.locator('#cf-j-' + id).fill(value)
+      await preencher('inicio', '2026-11-16')
+      await preencher('1-venc', '2027-11-16')
+      await preencher('1-principal', '100.000,00')
+      await preencher('1-juros', '11.229,01')
+      assert.equal(await jornada.locator('#cf-j-total-usd').innerText(), '—')
+      for (const [id, value] of Object.entries({ '1-spot-USD': '5,9160', '1-futuro-USD': '6,5027', '1-spot-EUR': '6,4933', '1-futuro-EUR': '7,2529' })) await preencher(id, value)
+      assert.equal(normalize(await jornada.locator('#cf-j-total-usd').innerText()), 'R$ 723.288,88')
+      assert.equal(normalize(await jornada.locator('#cf-j-total-alvo').innerText()), 'R$ 735.008,66')
+      await settleLayout(page)
+      await assertWorkspace(page, jornada, `Cotação bullet ${width} ${theme}`)
+      await jornada.locator('#cf-j-modalidade').selectOption('parcelado')
+      assert.equal(await jornada.locator('#cf-j-quantidade').inputValue(), '1')
+      assert.equal(await jornada.locator('.cf-j-results > section').count(), 1)
+      await jornada.locator('#cf-j-quantidade').selectOption('5')
+      assert.equal(await jornada.locator('.cf-j-results > section').count(), 5)
+      assert.equal(await jornada.locator('#cf-j-total-usd').innerText(), '—')
+      assert.equal(await jornada.locator('#cf-j-1-futuro-USD').inputValue(), '', 'a troca de modalidade invalida a cotação')
+      await preencher('1-futuro-USD', '6,51')
+      await preencher('1-venc', '2027-11-17')
+      assert.equal(await jornada.locator('#cf-j-1-futuro-USD').inputValue(), '', 'mudança de vencimento limpa a cotação')
+      await assertWorkspace(page, jornada, `Cotação parcelada ${width} ${theme}`)
+      await jornada.getByRole('link', { name: 'Comparar cenários com e sem trava' }).click()
+      await page.locator('.cf-cenario').waitFor()
+      console.log(`PASS Jornada de cotação do câmbio futuro ${width} ${theme}`)
+    } finally { await page.close() }
+  }
+}
+
 async function assertCambioFuturoCenario(browser) {
   const now = Date.parse('2026-11-20T15:00:00Z')
   const t = iso => Date.parse(iso + 'T19:00:00Z')
@@ -659,7 +697,7 @@ async function assertCambioFuturoCenario(browser) {
         }
         assert.equal(await tape.locator('.tape-set:not([aria-hidden]) .tape-fx-label').count(), 2)
       }
-      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      await page.goto(`${base}/#calculadora/cambio-futuro/cenarios`)
       const section = page.locator('section.cf-cenario')
       await section.getByRole('heading', { name: 'Câmbio futuro', exact: true }).waitFor()
       assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
@@ -999,6 +1037,7 @@ async function assertCambioFuturo(browser) {
     await assertComparatorFamily(browser)
     await assertCambioFuturo(browser)
     await assertCambioFuturoCenario(browser)
+    await assertCambioFuturoJornada(browser)
     assert.deepEqual(failures, [], 'conformidade das seis calculadoras nas cinco larguras')
   } finally {
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2))

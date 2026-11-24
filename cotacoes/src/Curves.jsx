@@ -1,4 +1,5 @@
 import ChartFullscreen from './ChartFullscreen.jsx'
+import { ancoraRotulo, marcasValor, yRotulo } from './chartMarcas.js'
 import Flag from './Flag.jsx'
 import { bandeiraDe } from './paises.js'
 import RefreshButton from './RefreshButton.jsx'
@@ -147,14 +148,17 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
               {g.series.map((s) => {
                 const color = SHADES[compare.findIndex((c) => c.date === s.date) % SHADES.length]
                 const d = s.pts.map((p, i) => `${i ? 'L' : 'M'}${g.X(p).toFixed(1)},${g.Y(p[1]).toFixed(1)}`).join('')
-                const lastP = s.pts[s.pts.length - 1]
+                // rótulos de valor só na curva do último dia, e só nos vencimentos dentro da escala
+                const vis = s.id === 'hoje' ? s.pts.filter((p) => p[0] >= escalaDesde) : []
+                const marcas = marcasValor(vis.map((p) => p[1]), vis.map((p) => g.X(p)))
                 return (
                   <g key={s.date}>
                     <path clipPath={`url(#${clipId})`} d={d} fill="none" stroke={color} strokeWidth={s.id === 'hoje' ? 2.5 : 1.6} strokeLinejoin="round" strokeLinecap="round" opacity={s.id === 'hoje' ? 1 : 0.85} />
                     {s.id === 'hoje' && s.pts.map((p) => <circle clipPath={`url(#${clipId})`} key={p[0]} cx={g.X(p)} cy={g.Y(p[1])} r="2.6" fill={color} />)}
-                    {s.id === 'hoje' && lastP && (
-                      <text x={g.X(lastP)} y={g.Y(lastP[1]) - 9} textAnchor="end" className="vlabel">{pct(lastP[1])}</text>
-                    )}
+                    {marcas.map(({ i, vale }) => {
+                      const p = vis[i]
+                      return <text key={p[0]} x={g.X(p)} y={yRotulo(g.Y(p[1]), vale, M.t, H - M.b)} textAnchor={ancoraRotulo(i, vis.length)} className="vlabel" pointerEvents="none">{pct(p[1])}</text>
+                    })}
                   </g>
                 )
               })}

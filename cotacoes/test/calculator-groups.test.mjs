@@ -44,3 +44,34 @@ test('grupos têm títulos acessíveis e todos os botões preservam destino ao c
   assert.equal(all.find(n=>n.type==='a').props.href,'#bndes')
   assert.ok(React.isValidElement(tree))
 })
+
+test('catálogo e endereços diretos carregam somente o formulário escolhido', async () => {
+  const source = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
+  const { code } = await transform(source, {
+    loader: 'jsx', format: 'cjs', jsx: 'automatic', supported: { 'dynamic-import': false },
+  })
+  const require = createRequire(import.meta.url)
+  const imported = []
+  const module = { exports: {} }
+  runInNewContext(code, { exports: module.exports, module, require(name) {
+    if (name === 'react') return { ...React, lazy: load => Object.assign(() => null, { load }) }
+    if (name === './calculatorGroups.js') return { CALCULATOR_GROUPS }
+    if (name === './CalculatorIcons.jsx') return new Proxy({}, { get: () => () => null })
+    if (name.endsWith('.css')) return {}
+    if (name.startsWith('./')) { imported.push(name); return {} }
+    return require(name)
+  } })
+  const render = view => module.exports.default({ view, onView() {} })
+  assert.equal(render('').props.className.includes('calc-catalog'), true)
+  assert.deepEqual(imported, [])
+  for (const [view, component] of [
+    ['giro', 'CapitalDeGiro'], ['finame-materiais', 'BndesWorkspace'],
+    ['bndes-tlp-exigivel', 'BndesWorkspace'], ['cambio-futuro', 'CambioFuturoJornada'], ['cambio-futuro/cenarios', 'CambioFuturoCenario'],
+    ['cambio-futuro/tir-usd', 'CambioFuturo'], ['arvore-credito', 'ArvoreCredito'],
+  ]) {
+    const form = render(view)
+    assert.equal(form.type, React.Suspense)
+    await form.props.children.type.load()
+    assert.deepEqual(imported.splice(0), [`./${component}.jsx`])
+  }
+})

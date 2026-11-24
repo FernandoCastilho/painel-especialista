@@ -8,6 +8,7 @@ import { CATALOGO_SETORIAL, ESTUDOS_RELACIONADOS_AS_PAUTAS, PAUTAS_SETORIAIS, no
 import { readCentralHistory, withCentralHistory } from './centralHistory.js'
 import { SECTOR_HIGHLIGHTS } from './sectorHighlights.js'
 import './CentralSetorial.css'
+import MaSectorLink from './MaSectorLink.jsx'
 
 function EstudoRelacionado({ study, navigate }) {
   const [groupId, index] = study
@@ -154,6 +155,8 @@ export default function Setores({ view = '', onView = () => {}, quotes, goto }) 
         : <section aria-labelledby="central-sectors-title"><div className="central-section-heading"><h3 id="central-sectors-title">Setores e subsetores</h3></div><ul className="central-folders">{CATALOGO_SETORIAL.map(group => <li key={group.id}><button type="button" id={`central-folder-${group.id}`} className="central-folder" onClick={() => navigate(`pasta/${group.id}`)} aria-label={`Explorar ${group.label}, ${group.topics.length} subsetores`}><SectorImage groupId={group.id} /><span className="central-folder-content"><span className="central-folder-arrow" aria-hidden="true">→</span><strong>{group.label}</strong><span className="central-folder-count">{group.topics.length} subsetores</span></span></button></li>)}</ul></section>}
         {(!folder || term) && researchGroups.length > 0 && <PautasSetoriais groups={researchGroups} navigate={navigate} showRelated={!term}/>}
         {!term && !folder && <section className="central-inputs" aria-labelledby="central-inputs-title"><div><h3 id="central-inputs-title">Insumos e Indicadores</h3><p className="central-note">Referências para complementar sua análise</p></div><ul>{INSUMOS.map(item => <li key={item.id}><button type="button" onClick={() => navigate(item.id)}>{item.label}<span aria-hidden="true">→</span></button></li>)}</ul></section>}
+        {/* M&A no fim da página: o conteúdo do setor vem primeiro e a lista de transações não empurra as fotos dos subsetores para baixo */}
+        {!term && <MaSectorLink sectorId={folder?.id || ''}/>}
       </div>}
       {researchTopic && !term && <section className="central-detail" aria-labelledby="central-research-topic-title">
         <h3 id="central-research-topic-title">{researchTopic.title}</h3>

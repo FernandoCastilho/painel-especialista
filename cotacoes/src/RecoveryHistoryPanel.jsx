@@ -196,6 +196,7 @@ export default function RecoveryHistoryPanel() {
   return <section className="rj-history" aria-labelledby="rj-history-heading">
     <div className="history-head"><h2 id="rj-history-heading">Recuperação judicial</h2><RefreshButton files={['recuperacao-historico.json']}/></div>
     <p className="rj-intro">Empresas citadas em pedidos de recuperação judicial. Cobertura parcial: não é o total do país.</p>
+    {data && <p className="rj-card-note">Última edição disponível: {dateLabel(data.editions.at(-1))}. Se o mês ainda estiver em aberto, selecione-o no campo Até para ver o recorte parcial.</p>}
     <details className="rj-read">
       <summary>Como ler estes números</summary>
       <p>Menções empresariais em pedidos de recuperação judicial · Base histórica do painel</p>

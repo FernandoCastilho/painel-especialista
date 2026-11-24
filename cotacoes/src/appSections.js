@@ -15,4 +15,5 @@ export const APP_SECTIONS = [
   { id: 'novidades', label: 'Novidades da semana', icon: ['M4 6h16v15H4z', 'M4 10h16', 'M8 3v5m8-5v5', 'M8 14h8m-8 3h5'] },
   { id: 'apresentar', label: 'Apresentar', oculto: true, icon: ['M3 5h18v12H3z', 'M8 21h8', 'M12 17v4', 'M8 12l3-3 2 2 3-4'] }, // monta uma apresentação clara com os blocos do painel; fora do menu desde 18/11/2026 (pedido do Fernando), segue aberta pelo endereço #apresentar
   { id: 'config', label: 'Configurações', terminalLabel: 'Config', oculto: true, icon: ['M12 9a3 3 0 100 6 3 3 0 000-6z', 'M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z'] },
+  { id: 'ma', label: 'M&A', icon: ['M3 5h7v6H3z', 'M14 13h7v6h-7z', 'M10 8h7v5', 'M14 10l3 3 3-3'] },
 ]

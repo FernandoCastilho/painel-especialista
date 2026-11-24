@@ -2,16 +2,17 @@
    Quadros de entrada: faixa azul-marinho com linha laranja. Cotação: única com borda laranja,
    fixa ao lado dos dados no computador e logo abaixo deles no celular. Só apresentação: nenhuma regra de cálculo mora aqui.
    Seletores com :root[data-theme] body para vencer as camadas anteriores sem !important. */
-:root {
-  --cp-orange:#ff6200;
-  --cp-navy:linear-gradient(110deg,#052956,#07336b);
-}
-
 /* ── BNDES · Finame ── */
 /* Quadros de entrada */
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group { padding:0; overflow:hidden; border-radius:10px; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group > h3 { display:flex; align-items:center; gap:8px; margin:0; padding:10px 14px; background:var(--cp-navy); color:#fff; border-bottom:3px solid var(--cp-orange); border-radius:0; font-size:.95rem; font-weight:700; font-variant-caps:normal; letter-spacing:0; text-transform:none; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group .fm-group-fields { padding:12px 14px 14px; }
+@media (max-width:359px) {
+  /* O maior rótulo do porte/região precisa caber junto da seta do seletor. */
+  .bndes-page .bw > .bw-simulation { padding-inline:3px; }
+  :root[data-theme] body .bw:not(.e4) .cx-finame .fm-operation .fm-group-fields { padding-inline:3px; }
+  .bw .cx-finame #fm-porte { padding-inline:6px; }
+}
 
 /* Cotação ao lado dos dados (computador largo) */
 @media (min-width:1200px) {

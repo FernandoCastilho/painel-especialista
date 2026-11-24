@@ -12,6 +12,7 @@ import { cgAddDays, cgToday } from './contaGarantida.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, Respostas, Resultado, step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
+import { mesesDoPrazoEmDias } from './faixaCurva.js'
 import { lmLoad } from './linhaMestra.js'
 import { PRACAS_CONTRATO } from './pracaContrato.js'
 import CalcBack from './CalcBack.jsx'
@@ -27,10 +28,6 @@ const arrow = (value) => value > 0 ? '▲' : value < 0 ? '▼' : '='
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
 const FOOT = 'A data e a praça valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 const CET_HELP = 'CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): nas operações de desconto, o CET usa o prazo de 30 dias e o valor do limite pactuado — aqui, o valor nominal da operação. Líquido = nominal − juros de 30 dias − IOF de 30 dias − TAC − tarifa de títulos; o nominal volta em 30 dias corridos; taxa anual em dias corridos/365. O custo pelo prazo real usa a data de pagamento de cada título e não é o CET da norma.'
-
-export function DescontoIcon() {
-  return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 11h8M8 15h5M8 18h3" /><path d="m14 17 2 2 4-4" /></svg>
-}
 
 // Roteiro da tela (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado do desconto (a linha do tempo saiu em 21/11/2026); depois, a
 // comparação com o giro. Tela limpa (21/11/2026): explicações ficam nos "?".
@@ -269,6 +266,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
       </ul>
     </CalculatorHelp></div>
     {/* Desconto com taxa prefixada: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
-    <ReferenciaMercado tipos={['pre']} />
+    {/* O gráfico termina no prazo do título mais longo, em meses arredondados para cima (regra de 23/11/2026). */}
+    <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias(Math.max(0, ...(operation?.rows ?? []).map(row => row.days)))} />
   </section>
 }

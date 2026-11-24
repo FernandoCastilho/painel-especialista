@@ -2,7 +2,7 @@
 
 ## Escopo e posição
 
-Setores > Produção e consumo > Veículos pesados. Mercado hoje > quadro Notícias > última aba, após Eleições EUA. O setor inclui todos os caminhões das classes ANFAVEA e ônibus; caminhões pesados são apenas uma subcategoria. Não inclui comerciais leves, máquinas nem implementos. Não modifica o conceito Boletim Focus publicado na PR 288.
+Setores > Produção e consumo > Veículos pesados. A aba em Mercado hoje > Notícias foi retirada em 24/11/2026, a pedido de Fernando, junto com Eleições EUA. O setor inclui todos os caminhões das classes ANFAVEA e ônibus; caminhões pesados são apenas uma subcategoria. Não inclui comerciais leves, máquinas nem implementos. Não modifica o conceito Boletim Focus publicado na PR 288.
 
 ## Indicadores e fonte
 

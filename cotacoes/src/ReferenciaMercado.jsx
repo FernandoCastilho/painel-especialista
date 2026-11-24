@@ -4,6 +4,7 @@
 //   'pos'    → CDI futuro: taxa a termo implícita nos futuros de DI da B3
 //   'cambio' → histórico diário da moeda escolhida na tela (prop `moeda`: USD, EUR ou CNH)
 import { useMemo, useState } from 'react'
+import BndesDetails from './BndesDetails.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import CdiFuturo from './CdiFuturo.jsx'
 import { CurvePanel } from './Curves.jsx'
@@ -22,8 +23,8 @@ const dataBr = iso => iso.split('-').reverse().join('/')
 // Tela limpa (21/11/2026): as explicações de cada gráfico ficam no "?" do bloco; na tela, só o gráfico e os avisos.
 const SO_PARA_ILUSTRAR = 'Só para ilustrar. Não entra na conta desta simulação e não é previsão.'
 const AJUDA = {
-  pre: faixa => `Curva DI x pré (B3): o juro prefixado que o mercado negocia para cada prazo, em % a.a. A taxa prefixada de uma operação parte daqui, mais o spread do banco. O gráfico mostra os vencimentos ${rotuloFaixa(faixa)}${faixa.propria ? ', terminando no prazo total digitado na demanda' : ''} (eixo em meses de 21 dias úteis). Abre só com a curva do último dia; as outras datas de comparação podem ser ligadas na legenda.`,
-  pos: () => 'O CDI que o mercado projeta nos futuros de DI da B3. É a referência de uma taxa pós-fixada (% do CDI ou CDI + spread).',
+  pre: faixa => `Curva DI x pré (B3): o juro prefixado que o mercado negocia para cada prazo, em % a.a. A taxa prefixada de uma operação parte daqui, mais o spread do banco. O gráfico mostra os vencimentos ${rotuloFaixa(faixa)}${faixa.propria ? ', terminando no prazo da operação' : ''} (eixo em meses de 21 dias úteis). Abre só com a curva do último dia; as outras datas de comparação podem ser ligadas na legenda.`,
+  pos: faixa => `O CDI que o mercado projeta nos futuros de DI da B3. É a referência de uma taxa pós-fixada (% do CDI ou CDI + spread). O gráfico vai da data da curva até ${faixa.propria ? 'o prazo da operação' : '12 meses'}; se o prazo passar do último vencimento negociado, termina nele.`,
   cambio: () => 'Histórico diário da cotação da moeda escolhida na tela, em reais (AwesomeAPI, data de Brasília).',
 }
 // Curva pré nas calculadoras de crédito (pedido do Fernando, 21/11/2026): só os vértices de 12 a 48 meses, ou até o prazo
@@ -37,9 +38,9 @@ function Pre({ faixa }) {
   </>
 }
 
-function Pos() {
+function Pos({ faixa }) {
   const curves = useCurves(), macro = useMacro(), hol = useHolidays()
-  return <CdiFuturo preview curves={curves} macro={macro?.data} hol={hol} />
+  return <CdiFuturo preview curves={curves} macro={macro?.data} hol={hol} prazoMeses={faixa.propria ? faixa.ate : undefined} />
 }
 
 function Cambio({ moeda }) {
@@ -67,10 +68,14 @@ const GRAFICOS = { pre: Pre, pos: Pos, cambio: Cambio }
 
 // `tipos`: quais gráficos mostrar, na ordem. Sempre o último bloco da calculadora.
 // `prazoMeses` (opcional, só na curva pré): o prazo total da demanda, em meses; o gráfico termina nele.
-export default function ReferenciaMercado({ tipos, moeda, prazoMeses }) {
+// `callout` (calculadora BNDES, 24/11/2026): o bloco vem recolhido, no mesmo formato do histórico dos indexadores.
+export default function ReferenciaMercado({ tipos, moeda, prazoMeses, callout = false }) {
   const faixa = faixaDaCurva(prazoMeses)
+  const ajuda = <CalculatorHelp title="Referência de mercado"><p>{SO_PARA_ILUSTRAR}</p>{tipos.map(tipo => <p key={tipo}>{AJUDA[tipo](faixa)}</p>)}</CalculatorHelp>
+  const graficos = <div className="rm-graficos">{tipos.map(tipo => { const Grafico = GRAFICOS[tipo]; return <div className="rm-grafico" key={tipo}><Grafico moeda={moeda} faixa={faixa} /></div> })}</div>
+  if (callout) return <BndesDetails title="Referência de mercado" className="rm-callout"><div className="rm rm-dentro"><p className="rm-fonte">Só para ilustrar{ajuda}</p>{graficos}</div></BndesDetails>
   return <section className="rm" aria-labelledby="rm-titulo">
-    <div className="rm-titulo-linha"><h3 id="rm-titulo">Referência de mercado</h3><CalculatorHelp title="Referência de mercado"><p>{SO_PARA_ILUSTRAR}</p>{tipos.map(tipo => <p key={tipo}>{AJUDA[tipo](faixa)}</p>)}</CalculatorHelp></div>
-    <div className="rm-graficos">{tipos.map(tipo => { const Grafico = GRAFICOS[tipo]; return <div className="rm-grafico" key={tipo}><Grafico moeda={moeda} faixa={faixa} /></div> })}</div>
+    <div className="rm-titulo-linha"><h3 id="rm-titulo">Referência de mercado</h3>{ajuda}</div>
+    {graficos}
   </section>
 }
