@@ -14,5 +14,9 @@
 :root[data-theme] body .cx .rm-periodo button { min-height: 36px; padding: 4px 12px; border: 1px solid var(--bw-field-line, var(--line)); border-radius: 8px; background: var(--bw-card, var(--card)); color: var(--bw-ink, var(--fg)); font: inherit; font-size: .8125rem; cursor: pointer; }
 :root[data-theme] body .cx .rm-periodo button[aria-pressed=true] { border-color: var(--cp-orange, #ff6200); background: var(--cp-orange, #ff6200); color: #0b1f44; font-weight: 700; }
 @media (max-width: 1000px) { :root[data-theme] body .cx .rm-periodo button { min-height: 44px; } }
+/* Versão recolhida (BNDES): a moldura é a do bloco recolhível; o conteúdo fica sem segunda borda. */
+:root[data-theme] body .cx .rm.rm-dentro { margin: 0; padding: 0; border: 0; background: none; }
+:root[data-theme] body .cx .rm.rm-dentro > .rm-fonte { display: flex; align-items: center; gap: 6px; margin: 0; }
+.sl-calc .rm-callout { display: none; }
 /* No slide do modo Apresentar a referência não entra: o slide mostra dados ou resultado. */
 .sl-calc .rm { display: none; }
