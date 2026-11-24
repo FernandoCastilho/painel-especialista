@@ -8,7 +8,6 @@ export const SEARCH_PAGES = {
   'BndesTlpExigivel.jsx':['calculadora/bndes-tlp-exigivel','BNDES TLP exigível: projeção e cronograma'],
   'BndesCreditoTfb.jsx':['calculadora/bndes-credito-tfb','BNDES Crédito TFB: conferência do exemplo de 34 parcelas'],
   'FinameMateriais.jsx':['calculadora/finame-materiais','BNDES Finame Materiais: taxas, carência e parcelas'],
-  'GoogleTrends.jsx':['resumo','Google Trends: interesse de busca, crédito, BNDES, Selic, custos e reforma tributária'],
   'ContaGarantida.jsx':['calculadora/conta-garantida','Conta Garantida: utilização, amortização, juros e IOF'],
   'OperacaoDi.jsx':['calculadora/operacao-di','Operação x DI: pré, % do CDI ou CDI + spread contra a curva DI'],
   'Emprestimo4131.jsx':['calculadora/emprestimo-4131','Empréstimo externo (4131): custo em dólar, swap para CDI e NDF'],
@@ -66,7 +65,7 @@ export async function buildSearchIndex() {
         const referencia = await readFile(new URL('../src/ReferenciaMesa.jsx', import.meta.url), 'utf8')
         body = [extractSearchText(referencia).text, text].join(' · ')
       }
-      documents.push({id:'page:'+file,title,body,route,kind:'Área do painel',...(file==='GoogleTrends.jsx'?{context:{newsTab:'trends'}}:{})})
+      documents.push({id:'page:'+file,title,body,route,kind:'Área do painel'})
     }
     for(const id of explain)glossaryRoutes[id]??=explainRoutes[id] || route
     if(file==='FinameMateriais.jsx')glossaryRoutes.fgi??=route // texto do glossário exibido dentro da ajuda modal, sem "?" aninhado
