@@ -21,6 +21,7 @@ const Emprestimo4131 = lazy(() => import('./Emprestimo4131.jsx'))
 const Faturamento = lazy(() => import('./Faturamento.jsx'))
 const ArvoreCredito = lazy(() => import('./ArvoreCredito.jsx'))
 const CdiDolar = lazy(() => import('./CdiDolar.jsx'))
+const CambioFuturoJornada = lazy(() => import('./CambioFuturoJornada.jsx'))
 const CambioFuturo = lazy(() => import('./CambioFuturo.jsx'))
 const CambioFuturoCenario = lazy(() => import('./CambioFuturoCenario.jsx'))
 const DividendosEmprestimo = lazy(() => import('./DividendosEmprestimo.jsx'))
@@ -34,7 +35,7 @@ const CALCS = [
   { id: 'cdi-dolar', title: 'CDI x Dólar', sub: 'Em quanto tempo o CDI líquido alcança a alta do dólar', Icon: CdiDolarIcon },
   { id: 'dividendos-emprestimo', title: 'Dividendos via empréstimo', sub: 'Lucro real: eficiência de pagar o dividendo com crédito na empresa', Icon: DividendosEmprestimoIcon },
   { id: 'emprestimo-4131', title: 'Empréstimo externo (4131)', sub: 'No formato da cotação: dólar ou euro, parcelas e NDF', Icon: Emprestimo4131Icon },
-  { id: 'cambio-futuro', title: 'Câmbio futuro', sub: 'Compare com e sem trava até 5 parcelas em euro ou yuan', Icon: CambioFuturoIcon },
+  { id: 'cambio-futuro', title: 'Câmbio futuro', sub: 'Cote bullet ou até 5 parcelas com taxas da mesa', Icon: CambioFuturoIcon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
@@ -52,7 +53,8 @@ function formulario({ view, onView, quotes, apresentacao = false }) {
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />
   if (view === 'emprestimo-4131') return <Emprestimo4131 onBack={() => onView('')} quotes={quotes} apresentacao={apresentacao} />
-  if (view === 'cambio-futuro') return <CambioFuturoCenario onBack={() => onView('')} quotes={quotes} />
+  if (view === 'cambio-futuro') return <CambioFuturoJornada onBack={() => onView('')} quotes={quotes} />
+  if (view === 'cambio-futuro/cenarios') return <CambioFuturoCenario onBack={() => onView('cambio-futuro')} quotes={quotes} />
   if (view === 'cambio-futuro/tir-usd') return <CambioFuturo onBack={() => onView('cambio-futuro')} quotes={quotes} />
   if (view === 'cdi-dolar') return <CdiDolar onBack={() => onView('')} quotes={quotes} />
   if (view === 'dividendos-emprestimo') return <DividendosEmprestimo onBack={() => onView('')} />

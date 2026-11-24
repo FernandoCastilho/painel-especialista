@@ -1,0 +1,17 @@
+.cf-j .cf-j-links { display: flex; flex-wrap: wrap; gap: .65rem 1.1rem; margin: .5rem 0 1rem; }
+.cf-j .cf-j-azul { border-inline-start: 4px solid #2872c5; background-image: linear-gradient(110deg, #2872c51a, transparent 75%); }
+.cf-j .cf-j-amarelo { border-inline-start: 4px solid #b78608; background-image: linear-gradient(110deg, #d9a20926, transparent 75%); }
+.cf-j-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: .8rem; align-items: start; }
+.cf-j-box { min-width: 0; margin: .85rem 0 0; padding: .7rem; border: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 22%, transparent); border-radius: .5rem; }
+.cf-j-box legend { padding-inline: .3rem; font-weight: 650; }
+.cf-j-box h4 { margin: .1rem 0 .65rem; }
+.cf-j-mesa-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: .5rem .8rem; align-items: start; }
+.cf-j-mesa-row + .cf-j-mesa-row { margin-top: .8rem; padding-top: .8rem; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+.cf-j-mesa-row h4 { align-self: center; }
+.cf-j-mesa-row > small { grid-column: 1 / -1; }
+.cf-j .cf-j-totais, .cf-j .cf-j-box dl, .cf-j .cf-j-sum { margin: 0; }
+.cf-j .cf-j-totais { padding: .7rem; border-radius: .5rem; background: color-mix(in srgb, currentColor 7%, transparent); }
+.cf-j dt { font-size: .83rem; font-weight: 550; }
+.cf-j dd { margin: .25rem 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.cf-j .cf-j-error, .cf-j .cf-j-notice:not(:empty) { font-weight: 650; }
+.cf-j-notice:empty { margin: 0; }
