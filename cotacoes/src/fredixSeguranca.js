@@ -1,7 +1,7 @@
 // Regras do Fredix compartilhadas pelo painel e pelo servidor intermediário.
 // O painel avisa antes de enviar; o servidor repete a checagem e é quem decide.
 
-export const FREDIX_LIMITES = { pergunta: 600, mensagens: 8, totalCaracteres: 6000 }
+export const FREDIX_LIMITES = { pergunta: 600, resposta: 2000, mensagens: 8, totalCaracteres: 6000 }
 
 // CPF, CNPJ, e-mail e telefone: dados de pessoa ou cliente que não devem ir para a IA.
 const PADROES_SENSIVEIS = [
@@ -28,7 +28,9 @@ export function validarConversa(mensagens) {
     if (!m || typeof m.content !== 'string' || !m.content.trim()) return 'Mensagem vazia.'
     if (m.role !== (i % 2 === 0 ? 'user' : 'assistant')) return 'Conversa em formato inválido.'
     if (m.role === 'user' && m.content.length > FREDIX_LIMITES.pergunta) return `A pergunta deve ter até ${FREDIX_LIMITES.pergunta} caracteres.`
-    if (m.role === 'user' && temDadoSensivel(m.content)) return AVISO_DADO_SENSIVEL
+    if (m.role === 'assistant' && m.content.length > FREDIX_LIMITES.resposta) return 'Conversa em formato inválido.'
+    // Vale para todas as mensagens: uma resposta anterior forjada também não pode levar dado de cliente.
+    if (temDadoSensivel(m.content)) return AVISO_DADO_SENSIVEL
     total += m.content.length
   }
   if (mensagens.at(-1).role !== 'user') return 'Conversa em formato inválido.'

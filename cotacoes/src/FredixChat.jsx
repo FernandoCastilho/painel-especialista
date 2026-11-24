@@ -68,9 +68,13 @@ export default function FredixChat({ configuration = config, icone }) {
     if (temDadoSensivel(pergunta)) { setErro(AVISO_DADO_SENSIVEL); return }
     if (chavePublica && !token.current) { setErro('Aguarde a checagem anti-robô terminar e envie de novo.'); return }
     // Guarda só as últimas trocas, dentro do limite do servidor.
-    const mensagens = [...conversa, { role: 'user', content: pergunta }].slice(-(FREDIX_LIMITES.mensagens - 1))
+    // Respostas antigas vão encurtadas e sem dado sensível, como o servidor exige.
+    const anteriores = conversa.map(m => m.role === 'assistant'
+      ? { ...m, content: temDadoSensivel(m.content) ? '(resposta anterior omitida)' : m.content.slice(0, FREDIX_LIMITES.resposta) }
+      : m)
+    const mensagens = [...anteriores, { role: 'user', content: pergunta }].slice(-(FREDIX_LIMITES.mensagens - 1))
     if (mensagens[0].role !== 'user') mensagens.shift()
-    setConversa(mensagens); setRascunho(''); setErro(''); setEnviando(true)
+    setConversa(atual => [...atual, { role: 'user', content: pergunta }]); setRascunho(''); setErro(''); setEnviando(true)
     const abortar = new AbortController()
     controle.current = abortar
     const prazo = setTimeout(() => abortar.abort(), 60000)

@@ -142,26 +142,29 @@ export function custoDaChamada(uso = {}) {
 }
 
 // Laço do agente: a IA pede dados, o servidor lê e devolve, até a resposta final.
-export async function conversar({ cliente, mensagens, buscarArquivo, hoje, tetoPorPergunta = 0.03 }) {
+// Pior caso de uma pergunta, reservado antes de chamar a IA e acertado depois.
+export const RESERVA_POR_PERGUNTA = 0.05
+
+// `gasto.custo` acumula a cada rodada, para o servidor contar o gasto mesmo se a IA falhar no meio.
+export async function conversar({ cliente, mensagens, buscarArquivo, hoje, tetoPorPergunta = 0.03, gasto = { custo: 0 } }) {
   const historico = mensagens.map(m => ({ role: m.role, content: m.content }))
-  let custo = 0
   for (let rodada = 0; rodada < MAX_RODADAS; rodada++) {
-    const ultima = rodada === MAX_RODADAS - 1 || custo > tetoPorPergunta
+    const ultima = rodada === MAX_RODADAS - 1 || gasto.custo > tetoPorPergunta
     const resposta = await cliente.messages.create({
       model: MODELO,
       max_tokens: MAX_TOKENS,
       system: [{ type: 'text', text: sistema(hoje), cache_control: { type: 'ephemeral' } }],
       tools: FERRAMENTAS,
-      tool_choice: { type: ultima ? 'none' : 'auto' },
+      tool_choice: ultima ? { type: 'none' } : { type: 'auto', disable_parallel_tool_use: true },
       output_config: { effort: 'low' },
       messages: historico,
     })
-    custo += custoDaChamada(resposta.usage)
-    if (resposta.stop_reason === 'refusal') return { texto: 'Não posso ajudar com essa pergunta. Posso falar sobre mercado e os dados do painel.', custo }
+    gasto.custo += custoDaChamada(resposta.usage)
+    if (resposta.stop_reason === 'refusal') return { texto: 'Não posso ajudar com essa pergunta. Posso falar sobre mercado e os dados do painel.', custo: gasto.custo }
     const pedidos = resposta.content.filter(b => b.type === 'tool_use')
     if (resposta.stop_reason !== 'tool_use' || !pedidos.length) {
       const texto = resposta.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim()
-      return { texto: texto || 'Não consegui montar uma resposta agora. Tente perguntar de outro jeito.', custo }
+      return { texto: texto || 'Não consegui montar uma resposta agora. Tente perguntar de outro jeito.', custo: gasto.custo }
     }
     historico.push({ role: 'assistant', content: resposta.content })
     const resultados = await Promise.all(pedidos.map(async pedido => {
@@ -170,7 +173,7 @@ export async function conversar({ cliente, mensagens, buscarArquivo, hoje, tetoP
     }))
     historico.push({ role: 'user', content: resultados })
   }
-  return { texto: 'Não consegui concluir a pesquisa. Tente uma pergunta mais específica.', custo }
+  return { texto: 'Não consegui concluir a pesquisa. Tente uma pergunta mais específica.', custo: gasto.custo }
 }
 
 // ---- Limites de uso ----

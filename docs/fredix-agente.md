@@ -19,12 +19,12 @@ Navegador (painel)  →  Servidor Fredix (Cloudflare Workers)  →  IA (Anthropi
                        site do painel (GitHub Pages) e cotações (ramo data)
 ```
 
-- O **painel** está em `cotacoes/src/FredixChat.jsx`, `fredix.js` e `fredixSeguranca.js`. O endereço do servidor e a chave pública do anti-robô ficam em `cotacoes/src/fredixConfig.json`. Enquanto o endereço estiver vazio, a janela mostra "em configuração" e não envia nada.
+- O **painel** está em `cotacoes/src/FredixChat.jsx`, `fredix.js` e `fredixSeguranca.js`. O endereço do servidor e a chave pública do anti-robô ficam em `cotacoes/src/fredixConfig.json`. Enquanto o endereço estiver vazio, o botão "Pergunte" nem aparece.
 - O **servidor** está em `cotacoes/worker/`:
   - `fredix.mjs` cuida de origem permitida, anti-robô, limites e chamada à IA.
   - `fredix-core.mjs` traz as regras, o laço do agente, a leitura dos dados e as contagens.
   - `wrangler.toml` guarda a configuração da Cloudflare.
-- O **agente** usa uma única ferramenta, `ler_dados_do_painel`, que só aceita os arquivos de `ARQUIVOS`. As séries longas vêm resumidas, com os primeiros e os últimos pontos. Cada pergunta tem no máximo 4 rodadas de consulta. Se o gasto de uma pergunta passar de US$ 0,03, ele encerra e responde.
+- O **agente** usa uma única ferramenta, `ler_dados_do_painel`, que só aceita os arquivos de `ARQUIVOS`. As séries longas vêm resumidas, com os primeiros e os últimos pontos. Cada pergunta tem no máximo 4 rodadas, com uma consulta por rodada. Se o gasto de uma pergunta passar de US$ 0,03, ele encerra e responde.
 
 ## Limites (em `wrangler.toml`, ajustáveis sem mexer no código)
 
@@ -36,16 +36,20 @@ Navegador (painel)  →  Servidor Fredix (Cloudflare Workers)  →  IA (Anthropi
 | Por visitante | 10 por hora e 30 por dia | Contra abuso |
 | Teto na conta da Anthropic | US$ 8 por mês (Fernando define no console) | Trava final, fora do nosso código |
 
-O gasto é estimado pelo preço do modelo, de US$ 0,10 por milhão de tokens de entrada e US$ 0,50 por milhão de saída, arredondando para cima. Ressalva: duas perguntas ao mesmo tempo podem passar um pouco do teto, porque o caderno de contagens da Cloudflare não trava a gravação. A trava da conta da Anthropic cobre essa folga.
+O gasto é estimado pelo preço do modelo, de US$ 0,10 por milhão de tokens de entrada e US$ 0,50 por milhão de saída, arredondando para cima.
 
-O visitante é identificado por um resumo criptográfico do IP, que muda todo dia. O IP não é gravado.
+Antes de chamar a IA, o servidor **reserva** o pior caso de uma pergunta (US$ 0,05) e soma a pergunta nas contagens. Depois, troca a reserva pelo gasto real. Por isso, pergunta que falha ou visitante que fecha a página também contam. Se a reserva não puder ser gravada, a IA não é chamada.
+
+Ressalva: duas perguntas ao mesmo tempo podem passar um pouco do teto, porque o caderno de contagens da Cloudflare não trava a gravação. A trava da conta da Anthropic cobre essa folga.
+
+O visitante é identificado por um resumo criptográfico do IP, misturado com um valor secreto sorteado a cada publicação (`SAL_VISITANTE`) e com a data. Esse resumo muda todo dia. O IP não é gravado.
 
 ## Publicação (cada passo depende do Sim de Fernando)
 
 1. Fernando cria, na Cloudflare, o caderno KV `fredix-limites` e o anti-robô (Turnstile). Na Anthropic, cria a conta, coloca o teto e cria a chave. No GitHub, cadastra os segredos `CLOUDFLARE_API_TOKEN`, `ANTHROPIC_API_KEY` e `TURNSTILE_SECRET_KEY`.
-2. Em `cotacoes/worker/wrangler.toml`, preencher `account_id` e o `id` do KV. Esses dados não são segredo.
+2. Em `cotacoes/worker/wrangler.toml`, `account_id` e o `id` do KV já estão preenchidos. Esses dados não são segredo.
 3. Rodar à mão a rotina **"Fredix — publicar servidor"** (`.github/workflows/fredix-publicar.yml`). Ela confere o código, publica o servidor e grava as chaves nele.
-4. Em `cotacoes/src/fredixConfig.json`, colocar o endereço do servidor (`https://fredix.<conta>.workers.dev`) e a Site Key do anti-robô. Depois, juntar ao ramo principal, o que coloca o botão no ar.
+4. Em `cotacoes/src/fredixConfig.json`, colocar o endereço do servidor (`https://fredix.<conta>.workers.dev`). A Site Key do anti-robô já está lá. Depois, juntar ao ramo principal, o que coloca o botão no ar.
 5. Testar no site com 3 perguntas e conferir o gasto no console da Anthropic.
 
 Para desligar: apagar o endereço em `fredixConfig.json`, ou reduzir `TETO_MENSAL_USD` para um valor mínimo e publicar de novo.
@@ -61,3 +65,14 @@ Para desligar: apagar o endereço em `fredixConfig.json`, ou reduzir `TETO_MENSA
   - servidor: origem, anti-robô, configuração faltando, limite estourado, 11ª pergunta na hora e nada de conversa gravada.
 - `cotacoes/test/fredix-ui.test.mjs` cobre a janela: envio, bloqueio de CPF, falha que preserva a pergunta, clique duplo e servidor não configurado.
 - Ainda não foi testado com a IA de verdade, porque depende da chave. A primeira pergunta real fica para o passo 5.
+
+## Auditoria independente (24/11/2026)
+
+Primeiro parecer: **requer correção** (nota 76,0). As correções feitas:
+- **A1 (alto):** o uso e o gasto só eram contados quando a resposta dava certo. Agora a pergunta é reservada antes de chamar a IA e acertada depois.
+- **A2 (médio):** uma resposta anterior forjada podia levar dado de cliente. Agora o filtro e o teto de tamanho valem para todas as mensagens.
+- **A3 (médio):** Fernando confirmou o teto de US$ 8 por mês no espaço "Fredix" da Anthropic.
+- **A4 (baixo):** o agente agora faz uma consulta por rodada.
+- **A5 (baixo):** este documento foi atualizado.
+- **A6 (baixo):** o sal do visitante passou a ser sorteado na publicação.
+- **A7 (baixo, opcional):** a conferência do domínio devolvido pelo anti-robô ficou de fora. A chave secreta já está presa aos domínios cadastrados no Turnstile.

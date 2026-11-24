@@ -1,6 +1,7 @@
 name: Fredix — publicar servidor
 # Publica o servidor intermediário do Fredix na Cloudflare. Só roda quando alguém aciona à mão.
 # Segredos usados: CLOUDFLARE_API_TOKEN, ANTHROPIC_API_KEY, TURNSTILE_SECRET_KEY (cadastrados no GitHub, nunca no código).
+# SAL_VISITANTE é sorteado a cada publicação: embaralha o resumo do IP de quem pergunta.
 on:
   workflow_dispatch:
 permissions:
@@ -48,7 +49,7 @@ jobs:
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
         run: |
           arquivo="$RUNNER_TEMP/segredos.json"
-          node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY }), { mode: 0o600 })' "$arquivo"
+          node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY, SAL_VISITANTE: require("crypto").randomBytes(16).toString("hex") }), { mode: 0o600 })' "$arquivo"
           npx --yes wrangler@4.167.0 secret bulk "$arquivo"
           rm -f "$arquivo"
       - name: Conferir se o servidor responde

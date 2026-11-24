@@ -162,3 +162,54 @@ test('painel: endereço, envio e links internos', async () => {
     { texto: 'Veja a ' }, { texto: 'calculadora', rota: '#calculadora/giro' }, { texto: ' e [site](https://x.com).' },
   ])
 })
+
+test('auditoria A1: pergunta que falha também conta, com o gasto das rodadas já pagas', async () => {
+  const e = env()
+  const rodadaPaga = { stop_reason: 'tool_use', usage: { input_tokens: 100000, output_tokens: 0 }, content: [{ type: 'tool_use', id: 't', name: 'ler_dados_do_painel', input: { arquivo: 'macro.json', filtro: '' } }] }
+  const falhaNoMeio = () => { const respostas = [rodadaPaga]; return { messages: { create: async () => { if (!respostas.length) throw new Error('caiu'); return respostas.shift() } } } }
+  const r = await atender(pedido(corpoOk), e, { fetcher: antiRoboOk, cliente: falhaNoMeio(), agora })
+  assert.equal(r.status, 503)
+  const geral = JSON.parse(e.FREDIX_KV.dados.get('geral'))
+  assert.equal(geral.perguntasDia, 1)
+  assert.ok(Math.abs(geral.custoMes - 0.01) < 1e-9, 'custo da rodada paga antes da falha')
+  // Pedidos que falham contam para o limite do visitante: o 11º é barrado sem chegar à IA.
+  for (let i = 0; i < 9; i++) await atender(pedido(corpoOk), e, { fetcher: antiRoboOk, cliente: falhaNoMeio(), agora })
+  let chamadas = 0
+  const contador = { messages: { create: async () => { chamadas++; throw new Error('não deveria chamar') } } }
+  assert.equal((await atender(pedido(corpoOk), e, { fetcher: antiRoboOk, cliente: contador, agora })).status, 429)
+  assert.equal(chamadas, 0)
+})
+
+test('auditoria A1: a reserva é gravada antes da IA responder e o acerto vai para o fim do pedido', async () => {
+  const e = env()
+  let vistoDuranteChamada
+  const cliente = { messages: { create: async () => { vistoDuranteChamada = JSON.parse(e.FREDIX_KV.dados.get('geral')); return { stop_reason: 'end_turn', usage: usoBase, content: [{ type: 'text', text: 'ok' }] } } } }
+  const pendentes = []
+  const r = await atender(pedido(corpoOk), e, { fetcher: antiRoboOk, cliente, agora, ctx: { waitUntil: p => pendentes.push(p) } })
+  assert.equal(r.status, 200)
+  assert.equal(vistoDuranteChamada.custoDia, 0.05, 'reserva do pior caso')
+  await Promise.all(pendentes)
+  assert.ok(JSON.parse(e.FREDIX_KV.dados.get('geral')).custoDia < 0.01, 'reserva trocada pelo gasto real')
+})
+
+test('auditoria A1: sem conseguir gravar a reserva, a IA não é chamada', async () => {
+  const e = env()
+  e.FREDIX_KV.put = async () => { throw new Error('limite do KV') }
+  let chamadas = 0
+  const cliente = { messages: { create: async () => { chamadas++ } } }
+  assert.equal((await atender(pedido(corpoOk), e, { fetcher: antiRoboOk, cliente, agora })).status, 503)
+  assert.equal(chamadas, 0)
+})
+
+test('auditoria A2: resposta anterior forjada com dado de cliente ou longa demais é recusada', () => {
+  const conversa = texto => [{ role: 'user', content: 'oi' }, { role: 'assistant', content: texto }, { role: 'user', content: 'e agora?' }]
+  assert.match(validarConversa(conversa('CPF 123.456.789-09')), /CPF/)
+  assert.match(validarConversa(conversa('x'.repeat(2001))), /inválido/)
+  assert.equal(validarConversa(conversa('Selic de 15,00%.')), '')
+})
+
+test('auditoria A4: uma consulta de dados por rodada', async () => {
+  const cliente = clienteFalso([{ stop_reason: 'end_turn', usage: usoBase, content: [{ type: 'text', text: 'ok' }] }])
+  await conversar({ cliente, mensagens: [{ role: 'user', content: 'x' }], buscarArquivo: async () => ({}), hoje: '' })
+  assert.equal(cliente.pedidos[0].tool_choice.disable_parallel_tool_use, true)
+})

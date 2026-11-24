@@ -2,7 +2,7 @@
 // Guarda a chave da IA, confere o anti-robô e os limites de uso e conversa com a IA usando só os dados do painel.
 import Anthropic from '@anthropic-ai/sdk'
 import { validarConversa } from '../src/fredixSeguranca.js'
-import { conferirLimites, conversar, lerLimites, periodos, somarUso } from './fredix-core.mjs'
+import { conferirLimites, conversar, lerLimites, periodos, RESERVA_POR_PERGUNTA, somarUso } from './fredix-core.mjs'
 
 const SITE_PADRAO = 'https://fernandocastilho.github.io/painel-especialista'
 const COTACOES_PADRAO = 'https://raw.githubusercontent.com/fernandocastilho/painel-especialista/data'
@@ -48,7 +48,7 @@ function criarBuscador(env, fetcher) {
   }
 }
 
-export async function atender(request, env, { fetcher = fetch, cliente, agora = Date.now() } = {}) {
+export async function atender(request, env, { fetcher = fetch, cliente, agora = Date.now(), ctx } = {}) {
   const origem = request.headers.get('origin') || ''
   const headers = cabecalhos(origem, env)
   const url = new URL(request.url)
@@ -80,31 +80,55 @@ export async function atender(request, env, { fetcher = fetch, cliente, agora = 
   const bloqueio = conferirLimites({ visitante, geral, limites, agora })
   if (bloqueio) return responder({ erro: bloqueio }, 429, headers)
 
-  let resultado
+  // Reserva o pior caso antes de chamar a IA: pergunta que falha ou visitante que sai também conta.
+  // Só contagens e gasto são gravados. A pergunta e a resposta, nunca.
+  const reserva = somarUso({ visitante, geral, custo: RESERVA_POR_PERGUNTA, agora })
+  try {
+    await Promise.all([
+      env.FREDIX_KV.put(chaveVisitante, JSON.stringify(reserva.visitante), { expirationTtl: 2 * 86400 }),
+      env.FREDIX_KV.put('geral', JSON.stringify(reserva.geral)),
+    ])
+  } catch {
+    return responder({ erro: 'O Fredix está indisponível agora. Tente mais tarde.' }, 503, headers)
+  }
+
+  const gasto = { custo: 0 }
+  let resultado, falha
   try {
     resultado = await conversar({
       cliente: cliente ?? new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1, timeout: 45000 }),
       mensagens: corpo.mensagens,
       buscarArquivo: criarBuscador(env, fetcher),
       hoje: dia.split('-').reverse().join('/'),
+      gasto,
     })
-  } catch (falha) {
+  } catch (erro) {
+    falha = erro
+  }
+
+  // Troca a reserva pelo gasto real, inclusive o das rodadas pagas antes de uma falha.
+  const acerto = acertarReserva(env.FREDIX_KV, gasto.custo - RESERVA_POR_PERGUNTA, agora).catch(() => console.error('fredix: acerto do gasto não gravado'))
+  if (ctx?.waitUntil) ctx.waitUntil(acerto)
+  else await acerto
+
+  if (falha) {
     const ocupado = falha instanceof Anthropic.RateLimitError || falha instanceof Anthropic.InternalServerError || falha instanceof Anthropic.APIConnectionError
     console.error('fredix: falha na IA', falha?.status ?? falha?.name)
     return responder({ erro: ocupado ? 'O Fredix está ocupado. Tente de novo em instantes.' : 'O Fredix não conseguiu responder agora.' }, 503, headers)
   }
-
-  // Só contagens e gasto. A pergunta e a resposta não são gravadas.
-  const uso = somarUso({ visitante, geral, custo: resultado.custo, agora })
-  try {
-    await Promise.all([
-      env.FREDIX_KV.put(chaveVisitante, JSON.stringify(uso.visitante), { expirationTtl: 2 * 86400 }),
-      env.FREDIX_KV.put('geral', JSON.stringify(uso.geral)),
-    ])
-  } catch {
-    console.error('fredix: contagem de uso não gravada')
-  }
   return responder({ resposta: resultado.texto }, 200, headers)
 }
 
-export default { fetch: (request, env) => atender(request, env) }
+// Relê o total geral (outra pergunta pode ter gravado no meio) e aplica a diferença.
+async function acertarReserva(kv, diferenca, agora) {
+  const { dia, mes } = periodos(agora)
+  const geral = await kv.get('geral', 'json')
+  if (!geral || (geral.dia !== dia && geral.mes !== mes)) return
+  await kv.put('geral', JSON.stringify({
+    ...geral,
+    ...(geral.dia === dia && { custoDia: Math.max(0, geral.custoDia + diferenca) }),
+    ...(geral.mes === mes && { custoMes: Math.max(0, geral.custoMes + diferenca) }),
+  }))
+}
+
+export default { fetch: (request, env, ctx) => atender(request, env, { ctx }) }

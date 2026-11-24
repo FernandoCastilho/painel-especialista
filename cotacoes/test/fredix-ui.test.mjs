@@ -96,3 +96,13 @@ test('Fredix: mudar de tela fecha a conversa', async t => {
   s.ouvintes.get('hashchange')(); await s.r.settle()
   assert.equal(s.dialogo.open, false)
 })
+
+test('Fredix: resposta antiga com dado sensível vai omitida ao servidor, mas continua na tela', async t => {
+  const respostas = ['Contato da fonte: (11) 98765-4321.', 'ok']
+  const s = await montar(t, { perguntar: async () => respostas.shift() })
+  await s.abrir()
+  await s.escrever('Fonte?'); await s.enviar()
+  await s.escrever('E o dólar?'); await s.enviar()
+  assert.equal(s.enviados[1][1].content, '(resposta anterior omitida)')
+  assert.equal(s.mensagens().length, 4)
+})
