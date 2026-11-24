@@ -1,5 +1,6 @@
 // Conferência de navegador da calculadora Empréstimo externo (4131) (#calculadora/emprestimo-4131).
-// Pagamento único de 6 meses (IOF-câmbio de 3,5%), com swap e NDF, e três parcelas mensais no formato da cotação
+// Roteiro de 21/11/2026 (demanda, encargos e resultado, nesta ordem) e os números de sempre:
+// pagamento único de 6 meses (IOF-câmbio de 3,5%), com swap e NDF, e três parcelas mensais no formato da cotação
 // (custo efetivo exp/360, economia de IOF e equivalente em giro). Números esperados recalculados aqui, sem o código
 // do painel; dias úteis contados com os feriados nacionais listados à mão. Cotações e curva DI do Painel são simuladas.
 const { chromium } = require('playwright')
@@ -97,6 +98,21 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await page.goto(`${base}/#calculadora/emprestimo-4131`)
       const section = page.locator('main.app section.bw.e4')
       await section.waitFor()
+      const assertFitsViewport = async state => {
+        const { overflow, elements } = await section.evaluate(root => {
+          const width = document.documentElement.clientWidth
+          const overflow = document.documentElement.scrollWidth - width
+          const elements = overflow <= 1 ? [] : [root, ...root.querySelectorAll('*')].filter(el => {
+            const rect = el.getBoundingClientRect()
+            return rect.width > 0 && (rect.right > width + 1 || rect.x + el.scrollWidth > width + 1)
+          }).slice(0, 20).map(el => [
+            el.tagName, el.id || el.getAttribute('class'), el.parentElement.getAttribute('class'),
+            Math.round(el.getBoundingClientRect().right), el.scrollWidth, el.clientWidth,
+          ])
+          return { overflow, elements }
+        })
+        assert.ok(overflow <= 1, [width, state, overflow, JSON.stringify(elements)].join(' · '))
+      }
       const fill = (id, value) => section.locator(`#e4-${id}`).fill(value)
       const cell = (label, column) => section.locator('.fm-comparison .cx-matrix tbody tr').filter({ has: page.getByRole('rowheader', { name: label }) }).first().locator('td').nth(column)
       const flow = section.locator('.fm-tabela tbody tr')
@@ -112,17 +128,48 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await page.waitForFunction(() => document.querySelector('#e4-di')?.value === '14,00')
       assert.match(normalize(await section.locator('#e4-protecao-origem').innerText()), /DI: do Painel, curva DI da B3 de 02\/01\/2026.*Cupom cambial: valor de exemplo/)
       assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Parcelas mensais')
-      assert.equal(await section.locator('.fm-operation:not(.e4-opcoes) .cx-field:not(.fm-field-convertido)').count(), 6, 'seis campos para preencher na operação')
+      // Roteiro de 21/11/2026: 1 Demanda, 2 Encargos e 3 Resultado (a linha do tempo saiu no mesmo dia), nesta ordem; depois o Atingir meta,
+      // as comparações, as premissas e as parcelas; por último, a referência de mercado com a moeda da tela.
+      // O "?" no fim de um título é o botão de ajuda dele.
+      const ordem = await section.evaluate(el => ['#e4-operation-h', '#e4-encargos-h', '#fm-result .cx-heading', '#e4-meta-h', '.e4-comparar > summary', '.fm-premises > .fm-rotulo', '.e4-parcelas > summary', '#rm-titulo']
+        .map(seletor => el.querySelector(seletor)).map((bloco, i, blocos) => ({ texto: bloco.textContent.trim().replace(/\s+/g, ' ').replace(/\?$/, ''), depois: i === 0 || !!(blocos[i - 1].compareDocumentPosition(bloco) & Node.DOCUMENT_POSITION_FOLLOWING) })))
+      assert.ok(ordem.every(bloco => bloco.depois), JSON.stringify(ordem))
+      assert.deepEqual(ordem.map(bloco => bloco.texto), ['1 Demanda do cliente', '2 Encargos', '3 Resultado · custo final para o cliente', 'Atingir meta', 'Comparar com swap e sem proteção', 'Premissas e limites da simulação', 'Parcelas', 'Referência de mercado'])
+      const premises = section.getByRole('button', { name: 'Ajuda: Premissas e limites da simulação', exact: true })
+      assert.equal(await page.getByText('juros lineares sobre o saldo, por dias corridos/360', { exact: false }).count(), 0)
+      await premises.click()
+      await page.getByRole('dialog').getByText('juros lineares sobre o saldo, por dias corridos/360', { exact: false }).waitFor()
+      await page.keyboard.press('Escape')
+      await page.getByRole('dialog').waitFor({ state: 'hidden' })
+      await section.locator('.e4-comparar > summary').click()
+      const breakdown = section.locator('details.fm-details').filter({ has: page.getByText('Composição do custo em dólar', { exact: true }) })
+      await breakdown.locator('summary').click()
+      assert.match(await breakdown.locator('.fm-kpi').filter({ hasText: 'Juros totais' }).locator('small').innerText(), /^100,00% do custo/)
+      assert.match(await breakdown.locator('.fm-kpi').filter({ hasText: 'Fiança / SBLC' }).locator('small').innerText(), /^0,00% do custo$/)
+      await section.locator('.e4-comparar > summary').click()
+      assert.match(normalize(await section.locator('.fm-hero').innerText()), /4131 com NDF · Projeção · custo estimado/)
+      assert.equal(normalize(await section.locator('.rm h4').innerText()), 'USD/BRL · cotação diária')
+      assert.equal(await section.locator('.fm-operation > .fm-group-fields > .cx-field:not(.fm-field-convertido)').count(), 5, 'cinco campos para preencher na demanda, com a carência à vista')
       // Ordem pedida: principal em reais, moeda e o valor convertido na sequência.
-      assert.deepEqual((await section.locator('.fm-operation:not(.e4-opcoes) .cx-field label').allInnerTexts()).map(normalize).slice(0, 4), ['Principal (R$)', 'Moeda', 'Valor em dólar', 'Cotação de partida (R$/US$)'])
+      assert.deepEqual((await section.locator('.fm-operation .cx-field label').allInnerTexts()).map(normalize).slice(0, 6), ['Principal (R$)', 'Moeda', 'Valor em dólar', 'Cotação de partida (R$/US$)', 'Parcelas mensais', 'Carência (pagamentos)'])
       assert.equal(await section.locator('#e4-convertido').getAttribute('readonly'), '')
-      assert.equal(await section.locator('.e4-mais').evaluate(el => el.open), false, 'Mais opções começa fechado')
+      assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa de juros all-in (Dólar +)')
+      assert.match(normalize(await section.locator('.fm-field-iof').innerText()), /^IOF-câmbio na entrada \?? ?0,00% · US\$ 0,00 calculado$/)
+      assert.deepEqual(await section.locator('.e4-gaveta').evaluateAll(gavetas => gavetas.map(el => el.open)), [false, false], 'Detalhes do contrato e Mais encargos começam fechados')
       assert.equal(await flow.count(), 37, 'desembolso e 36 parcelas')
+      // A tabela de parcelas abre fechada; a conferência abre para ler.
+      assert.equal(await section.locator('.e4-parcelas').evaluate(el => el.open), false, 'parcelas começam recolhidas')
+      await section.locator('.e4-parcelas > summary').click()
       // No celular a tabela mostra o essencial; no notebook, todas as colunas.
       assert.equal(await section.locator('.fm-tabela thead th:visible').count(), width < 641 ? 4 : 8)
       assert.equal(normalize(await section.locator('#e4-convertido').inputValue()), usd(1e7 / 5.3127))
-      const pills = normalize(await section.locator('.fm-pills').innerText())
-      assert.ok(pills.includes('Principal em parcelas iguais') && pills.includes('Datas a cada 30 dias, em dia útil') && !pills.includes('Pagamentos'), pills)
+      // O título da gaveta mostra o que está valendo nos detalhes do contrato.
+      const detalhes = normalize(await section.locator('.e4-gaveta > summary').first().innerText())
+      assert.equal(normalize(await section.locator('.e4-gaveta > summary').last().innerText()), 'Mais encargos · IR já incluído na taxa all-in · tarifa e fiança pagas a banco no Brasil · acréscimo no NDF 0,00% · spread no swap 0,00% a.a.')
+      assert.ok(detalhes.startsWith('Detalhes do contrato · cotação em ') && detalhes.includes('pagamentos mensais') && detalhes.includes('datas a cada 30 dias, em dia útil') && detalhes.includes('principal em parcelas iguais'), detalhes)
+      // A linha do tempo saiu em 21/11/2026; o gráfico de referência é o último bloco da simulação (Auditor, 21/11/2026).
+      assert.equal(await section.locator('.rt-timeline').count(), 0, 'sem linha do tempo')
+      assert.equal(await section.locator('.bw-simulation > section.cx-finame > :last-child').getAttribute('class'), 'rm', 'referência de mercado por último')
 
       // Atingir meta: custo efetivo de 1,30% ao mês. A tela calcula a taxa all-in e recalcula o resto.
       const taxaAntes = await section.locator('#e4-rate').inputValue()
@@ -163,14 +210,14 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.ok(condicoes.includes('Produto 4131 com NDF') && condicoes.includes('Valor de principal R$ 10.000.000,00') && condicoes.includes('Prazo 36 meses') && condicoes.includes('Principal Mensal · 36 parcelas') && condicoes.includes('Juros Mensal'), condicoes)
       await section.getByRole('button', { name: 'Copiar resumo' }).click()
       await section.getByRole('button', { name: 'Resumo copiado' }).waitFor()
-      const resumo = await page.evaluate(() => navigator.clipboard.readText())
+      const resumo = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')
       assert.ok(resumo.startsWith('4131 com NDF · Condições da operação\n'), resumo)
       assert.match(resumo, /Custo efetivo total: taxa de juros prefixada em reais de 1,30% a\.m\. \/ \d+,\d{2}% a\.a\. \(exp\/360\), equivalente a CDI \+ \d+,\d{2}%/)
       assert.match(resumo, /Economia de IOF \(R\$\): [\d.]+,\d{2}/)
       assert.match(resumo, /Taxa equivalente em capital de giro: \d+,\d{2}% a\.m\. \/ \d+,\d{2}% a\.a\. \(exp\/360\)/)
 
-      // O que foge do padrão fica em Mais opções; a comparação com swap e sem proteção, em painel próprio.
-      await section.locator('.e4-mais > summary').click()
+      // O que quase nunca muda fica nas gavetas Detalhes do contrato e Mais encargos; a comparação com swap e sem proteção, em painel próprio.
+      for (const gaveta of await section.locator('.e4-gaveta > summary').all()) await gaveta.click()
       await section.locator('.e4-comparar > summary').click()
       assert.equal(await section.locator('#e4-irrf').isDisabled(), true, 'alíquota do IR só vale quando o IR é somado à taxa')
 
@@ -189,10 +236,25 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.match(normalize(await section.locator('#e4-spot-origem').innerText()), /^Digitado\. Usar o do Painel \(5,3127\)$/)
       assert.equal(await section.locator('#e4-grace').isDisabled(), true)
       assert.equal(normalize(await section.locator('label[for="e4-months"]').innerText()), 'Prazo total (meses)')
-      assert.match(normalize(await section.locator('.e4-mais > summary').innerText()), /4 itens fora do padrão/)
+      // Os títulos das gavetas passam a mostrar o que saiu do padrão.
+      const foraDoPadrao = (await section.locator('.e4-gaveta > summary').allInnerTexts()).map(normalize)
+      assert.ok(foraDoPadrao[0].includes('cotação em 11/11/2026') && foraDoPadrao[0].includes('pagamentos no vencimento') && foraDoPadrao[0].includes('datas no dia fixo do mês') && foraDoPadrao[0].includes('principal no vencimento'), foraDoPadrao[0])
+      assert.ok(foraDoPadrao[1].startsWith('Mais encargos · IR somado à taxa, alíquota de 15% · tarifa e fiança pagas a banco no Brasil'), foraDoPadrao[1])
+      // Pagamento único: o líquido (já sem o IOF-câmbio), o total em reais e o total na moeda, lidos no resultado
+      // (antes, na linha do tempo, que saiu em 21/11/2026).
+      const unico = normalize(await section.locator('#fm-result .e4-valores').innerText())
+      assert.ok(unico.includes(brl(NET_USD * SPOT)) && unico.includes(brl(TOTAL_NDF)) && unico.includes(usd(TOTAL_USD)), unico)
+      assert.match(normalize(await section.locator('.fm-field-iof').innerText()), new RegExp(`3,50% · ${usd(P * IOF).replace('$', '\\$')} calculado$`))
 
       assert.equal(normalize(await section.locator('#e4-convertido').inputValue()), usd(P))
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), new RegExp(`IOF-câmbio de 3,50% na entrada: prazo médio de ${DC} dias corridos`))
+      const iofMethod = 'IOF-câmbio desta operação: 3,50% na entrada'
+      const iofSavings = section.locator('.e4-valores tbody tr').filter({ has: page.getByRole('rowheader', { name: /Economia de IOF/ }) })
+      assert.match(normalize(await iofSavings.locator('td').innerText()), /^R\$\s*[\d.,]+$/)
+      assert.equal(await page.getByText(iofMethod, { exact: false }).count(), 0)
+      await iofSavings.getByRole('button', { name: 'Ajuda: Economia de IOF', exact: true }).click()
+      await page.getByRole('dialog', { name: 'Economia de IOF', exact: true }).getByText(iofMethod, { exact: false }).waitFor()
+      await page.keyboard.press('Escape')
       const headline = await resposta()
       assert.ok(headline.includes(`${pct(mes(Y_UNICO))} a.m.`) && headline.includes(`${pct(ano(Y_UNICO))} a.a. · exp/360`), headline)
       assert.ok(headline.includes(`CDI + ${pct(SPREAD)}`), headline)
@@ -222,6 +284,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal((await linha(1))[4], usd(JUROS + FIANCA + IR_FEES))
       await section.locator('#e4-fees').selectOption('nao')
       assert.equal((await linha(1))[4], usd(JUROS + FIANCA + IR_USD))
+      await assertFitsViewport('simulação com encargos, comparativo e parcelas abertos')
       await page.screenshot({ path: path.join(out, `simulacao-${width}.png`), fullPage: true })
 
       // Principal em três parcelas mensais: saldo, juros sobre o saldo e leitura no formato da cotação.
@@ -233,6 +296,9 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       assert.equal(await section.locator('#e4-grace').isDisabled(), false)
       assert.match(normalize(await section.locator('.fm-iof-premise').innerText()), /IOF-câmbio de 3,50% na entrada: prazo médio de 61 dias corridos/)
       assert.equal(await flow.count(), 4)
+      // Três parcelas: o líquido e o total das parcelas no resultado (antes, na linha do tempo); cada parcela, na tabela abaixo.
+      const tres = normalize(await section.locator('#fm-result .e4-valores').innerText())
+      assert.ok(tres.includes(brl(NET_PARCELAS)) && tres.includes(brl(PARCELAS.reduce((s, f) => s + f.brl, 0))), tres)
       for (const [i, f] of PARCELAS.entries()) {
         const row = await linha(i + 1)
         assert.deepEqual(row.slice(0, 6), [String(f.dc), f.date.split('-').reverse().join('/'), usd(P / 3), usd(f.saldo), usd(f.juros / (1 - IR)), usd(f.usdTotal)], `parcela ${i + 1}`)
@@ -244,7 +310,7 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       const cotacao = normalize((await section.locator('#fm-result .e4-equiv, #fm-result .e4-valores').allInnerTexts()).join(' '))
       assert.ok(cotacao.includes(brl(IOF_GIRO)), cotacao)
       assert.ok(cotacao.includes(`${pct(mes(GIRO))} a.m.`) && cotacao.includes(`${pct(ano(GIRO))} a.a. · exp/360`), cotacao)
-      assert.match(cotacao, /Não desconta o IOF-câmbio de 3,50% desta operação/)
+      assert.doesNotMatch(cotacao, /IOF-câmbio desta operação:/)
       assert.ok(GIRO < CET, 'com o IOF do giro a favor, a taxa equivalente fica abaixo do custo efetivo')
       // Taxas futuras da mesa coladas: cada parcela em reais passa a ser a parcela na moeda vezes a taxa colada.
       await section.locator('#e4-fwdMode').selectOption('mesa')
@@ -289,7 +355,8 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
 
       // Euro: rótulos trocam e a cotação de partida volta a vir do Painel, agora a do euro.
       await section.locator('#e4-currency').selectOption('EUR')
-      assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa all-in (Euro +)')
+      assert.equal(normalize(await section.locator('label[for="e4-rate"]').innerText()), 'Taxa de juros all-in (Euro +)')
+      assert.equal(normalize(await section.locator('.rm h4').innerText()), 'EUR/BRL · cotação diária')
       assert.equal(normalize(await section.locator('label[for="e4-convertido"]').innerText()), 'Valor em euro')
       assert.equal(normalize(await section.locator('label[for="e4-spot"]').innerText()), 'Cotação de partida (R$/€)')
       assert.match(await section.locator('#e4-convertido').inputValue(), /^€/)
@@ -304,12 +371,28 @@ const CURVES = { generatedAt: Date.now() - 60000, br: { compare: [{ id: 'hoje', 
       await section.locator('#e4-currency').selectOption('USD')
       assert.equal(await section.locator('#e4-spot').inputValue(), '5,3127')
 
+      // Sem juros, IOF ou tarifas, sobra aritmética abaixo de um centavo não vira participação no custo.
+      await fill('valor', '5.000,00')
+      await fill('spot', '5,0000')
+      await fill('rate', '0,00')
+      await fill('flat', '0,00')
+      await fill('guarantee', '0,00')
+      await fill('months', '36')
+      await section.locator('#e4-freq').selectOption('6')
+      await section.locator('#e4-amort').selectOption('parcelas')
+      if (!await breakdown.evaluate(el => el.open)) await breakdown.locator('summary').click()
+      assert.equal(normalize(await breakdown.locator('.fm-kpi').filter({ hasText: 'Custo na moeda' }).locator('b').innerText()), usd(0))
+      assert.doesNotMatch(await breakdown.innerText(), /% do custo/)
+
       // Aba de regras.
       await section.getByRole('button', { name: 'Regras e fontes', exact: true }).click()
-      assert.ok(await section.locator('.e4-rules > div').count() >= 8)
+      const rules = section.locator('.e4-rules')
+      assert.ok(await rules.locator('div').count() >= 8)
+      await rules.getByRole('button', { name: /^Ajuda:/ }).first().click()
+      await page.getByRole('dialog').locator('p').first().waitFor()
+      await page.keyboard.press('Escape')
 
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-      assert.ok(overflow <= 1, `${width}: rolagem horizontal de ${overflow}px`)
+      await assertFitsViewport('regras e fontes')
       await page.close()
       console.log(`PASS emprestimo-4131 ${width} (du=${DU})`)
     }

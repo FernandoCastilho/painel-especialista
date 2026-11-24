@@ -6,14 +6,16 @@ import { useMemo, useState } from 'react'
 import Explain from './Explain.jsx'
 import { Plot, useWidth } from './HistoryChart.jsx'
 import { busDaysIn } from './holidays.js'
-import { forwardBetween, forwardSeries, horizonTable } from './cdiFuturo.js'
+import { diasDoHorizonte, forwardBetween, forwardSeries, horizonTable } from './cdiFuturo.js'
 import IndicatorTable from './IndicatorTable.jsx'
 
 const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const dm = (iso) => iso.split('-').reverse().join('/')
 
 // CDI futuro: taxa a termo implícita nos futuros de DI (curva DI x pré da B3), em % a.a., por data.
-export default function CdiFuturo({ curves, macro, hol, preview = false }) {
+// `prazoMeses` (opcional, calculadoras de crédito): o gráfico vai da data-base até o prazo da operação (regra de 23/11/2026).
+// Sem ele, até 12 meses, como antes.
+export default function CdiFuturo({ curves, macro, hol, preview = false, prazoMeses }) {
   const [ref, width] = useWidth()
   const br = curves.data?.br
   const today = br?.compare?.find((c) => c.id === 'hoje')
@@ -26,7 +28,8 @@ export default function CdiFuturo({ curves, macro, hol, preview = false }) {
   const [pick, setPick] = useState({ from: '', to: '' })
   const clamp = (v) => (v < base ? base : v > maxIso ? maxIso : v)
   const rawFrom = pick.from || base
-  const rawTo = pick.to || (base ? (isoPlus(365) < maxIso ? isoPlus(365) : maxIso) : '')
+  const diasAte = diasDoHorizonte(prazoMeses)
+  const rawTo = pick.to || (base ? (isoPlus(diasAte) < maxIso ? isoPlus(diasAte) : maxIso) : '')
   // a curva vale a partir da data-base: datas fora do intervalo são ajustadas e o aviso aparece na tela
   const from = base ? clamp(rawFrom) : rawFrom
   const to = base ? clamp(rawTo) : rawTo

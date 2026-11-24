@@ -2,6 +2,18 @@
 
 Descrição da interface e do motor vigentes, revisada em 06/11/2026. Os exemplos são sintéticos, não valores de cliente nem ofertas comerciais. Entrada em Calculadoras, endereço `#calculadora/finimp` e comando FINIMP. Os campos do formulário não são enviados nem indexados pela busca. O rascunho segue a política de sessão descrita abaixo.
 
+## Roteiro da tela (21/11/2026)
+
+A tela segue o roteiro das calculadoras de crédito (`docs/calculadoras-roteiro-2026-11-21.md`). Nenhuma conta mudou: só a ordem, os nomes e a apresentação.
+
+1. **Demanda do cliente:** principal, moeda e prazo. O prazo é o mesmo seletor dos doze prazos fixos que fica na tabela; escolher em um muda o outro. Sem escolha, vale o prazo da meta, como antes.
+2. **Encargos:** uma coluna por instituição, com taxa de juros (anual simples) e flat; a TAC à vista continua opcional, com o câmbio logo abaixo.
+3. **Resultado · custo final para o cliente:** quanto recebe, quanto custa em cada instituição e a diferença (Instituição 2 menos Instituição 1), no prazo escolhido. Abaixo, do que é feito o custo de cada uma: juros, flat e TAC, com seus percentuais. A tela continua sem apontar vencedor.
+
+Depois do resultado ficam "Atingir meta de custo" (campos e taxa requerida juntos) e a tabela dos doze prazos, recolhida em "Ver todos os prazos". No modo Apresentar, o slide de resultado mostra os resultados do prazo selecionado.
+
+Cada valor é arredondado sozinho na tela, como na tabela. Quando há fração de centavo (dízima dos juros em prazos como 30 dias), a soma das linhas pode diferir em um centavo do total; a conta não é arredondada. `test/finimp-roteiro.test.mjs` confere isso.
+
 ## Premissas explícitas
 
 - Principal e resultados na moeda selecionada: USD, EUR, JPY, CNH ou BRL. Trocar a moeda muda a unidade, não converte automaticamente o principal. A troca limpa o câmbio da TAC para exigir nova conferência.

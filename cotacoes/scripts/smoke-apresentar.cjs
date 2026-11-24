@@ -132,10 +132,9 @@ const out = process.env.SMOKE_OUT || '/tmp'
       assert.equal(await atual.locator('.calc-result-shell:visible').count(), 0)
       // Data da liberação fica à vista, na linha mestra (19/11/2026).
       assert.equal(await atual.getByLabel('Data da liberação', { exact: true }).isVisible(), true)
-      const iof = atual.getByText('Enquadramento do IOF', { exact: true })
-      await iof.click()
+      // Perfil tributário compacto nos encargos (21/11/2026), sem a gaveta "Enquadramento do IOF".
       assert.equal(await atual.getByLabel('Perfil tributário', { exact: true }).isVisible(), true)
-      await iof.click()
+      assert.equal(await atual.locator('.rt-timeline').count(), 0, 'sem linha do tempo no Capital de Giro')
       const valor = atual.getByLabel('Valor solicitado', { exact: true })
       await valor.fill('250.000,00'); await valor.blur()
       // dentro de um campo, as setas e o espaço são do campo: o slide não troca
@@ -270,6 +269,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         const q = sl.closest('.apz-quadro')
         return { sobra: mi.getBoundingClientRect().height - r.height, graficoDentro: g.left >= r.left - 1 && g.right <= r.right + 1, anos: sl.querySelectorAll('.ft-year').length, rolagem: q ? [q.scrollLeft, q.scrollTop] : [0, 0], caixas: sl.querySelectorAll('.ft-box').length }
       })
+      assert.equal(await fat.locator('.ft-kpis:visible').count(), 0, 'o slide mostra o resultado sem repetir os indicadores anuais da calculadora')
       assert.ok(encaixe.sobra <= 2, `Faturamento cortado em ${encaixe.sobra}px`)
       assert.ok(encaixe.graficoDentro, 'o gráfico do Faturamento cabe na largura do slide')
       assert.ok(encaixe.anos >= 2, 'o resumo por ano aparece')

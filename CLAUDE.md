@@ -42,7 +42,8 @@ Escolher o caminho mais seguro e registrar. Parar só se bater num limite da lis
 - Começar cada resposta dizendo de qual assunto se trata e manter o contexto do pedido correspondente. Se a ferramenta tiver resposta vinculada, usar; se não tiver, nomear o assunto com clareza.
 - Deixar claro o estado de cada assunto: proposta, em andamento, aguardando Fernando, bloqueio ou conclusão verificada.
 - Ao apresentar alternativas ou sugestões, dizer qual é a recomendação e por quê, em poucas palavras. Sem evidência suficiente, dizer qual informação falta.
-- Uma decisão relevante por vez. Antes da pergunta, explicar onde a escolha será usada e o que muda. Usar as opções selecionáveis da própria ferramenta quando existirem e couberem, sempre aceitando resposta livre; se não existirem, opções numeradas. Não simular botões nem substituir os controles obrigatórios de autorização.
+- Uma decisão relevante por vez. Antes da pergunta, explicar onde a escolha será usada e o que muda.
+- Toda pergunta a Fernando vem em cartão de opções da própria ferramenta (decisão dele em 2026-11-22): contexto e recomendação no enunciado, de 2 a 4 opções com a recomendada em primeiro, e sempre o campo de resposta livre. Vale também quando a resposta for um dado como data, valor ou e-mail: as opções trazem as respostas mais prováveis. Sem a ferramenta, opções numeradas. Não simular botões nem substituir os controles obrigatórios de autorização.
 - A entrevista da regra 3 continua valendo para caso crítico ou pedido grande: ali as perguntas essenciais vão juntas, em uma rodada.
 - Quando Fernando responder, dar andamento ao que está autorizado e já trazer a próxima decisão real que depende dele, sem esperar ele pedir "próximo". Não inventar pendência, não reabrir o que foi concluído e respeitar pausas.
 - Leitura rápida no celular: título curto, conclusão primeiro, parágrafos curtos. Manter detalhes essenciais, fontes e limitações.
@@ -54,3 +55,6 @@ Escolher o caminho mais seguro e registrar. Parar só se bater num limite da lis
 - `.github/workflows/`: rotinas automáticas (coleta de dados, publicação, alertas).
 - Texto de tela, commits e comentários em português do Brasil.
 - Extratos e dados reais de cliente nunca vão para o git.
+- Campos de busca (cidade, praça, produto e afins): sempre permitir digitar para filtrar e achar, como na busca de cidade da praça do contrato. Premissa de Fernando (22/11/2026).
+- Gráficos de juros das calculadoras: sempre terminam no prazo da operação que o usuário digitou (se é 48, é 48; se é 12, é 12). Premissa de Fernando (23/11/2026).
+- Percentuais nas calculadoras: sempre com duas casas decimais após a vírgula (ex.: 90,72%). Premissa de Fernando (23/11/2026).

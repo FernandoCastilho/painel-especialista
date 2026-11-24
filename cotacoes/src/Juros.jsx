@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { MacroStatus, CdiChart, rangeFor } from './Macro.jsx'
 import SofrChart from './Sofr.jsx'
 import CdiFuturo from './CdiFuturo.jsx'
@@ -47,39 +47,12 @@ function Graficos({ region, macro, curves, hol, onOpen }) {
 
 // Aba Juros: só gráficos na página (pedido de 17/11/2026). As tabelas e a escolha de período ficam no detalhe,
 // que abre no centro da tela ao clicar em um gráfico.
-// Quadros do mesmo tamanho também entre os blocos Brasil e Outros países: cada grade já iguala as próprias linhas (CSS);
-// aqui a altura do maior quadro da página vira o mínimo das duas grades. Refaz a conta quando a largura ou o conteúdo muda.
-function useMesmaAltura(ref) {
-  useLayoutEffect(() => {
-    const page = ref.current?.parentElement
-    if (!page || typeof ResizeObserver !== 'function') return undefined
-    let frame = 0, ultima = ''
-    const medir = () => {
-      const grades = [...page.querySelectorAll('.juros-charts')]
-      const duasColunas = grades.some((g) => getComputedStyle(g).gridTemplateColumns.split(' ').length > 1)
-      grades.forEach((g) => g.style.removeProperty('--juros-card-h'))
-      if (!duasColunas) { ultima = ''; return }
-      const maior = Math.max(0, ...[...page.querySelectorAll('.juros-grafico')].map((c) => c.getBoundingClientRect().height))
-      ultima = `${Math.ceil(maior)}px`
-      grades.forEach((g) => g.style.setProperty('--juros-card-h', ultima))
-    }
-    const agendar = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(medir) }
-    const watch = new ResizeObserver(agendar)
-    watch.observe(page)
-    page.querySelectorAll('.juros-grafico').forEach((c) => watch.observe(c))
-    agendar()
-    return () => { cancelAnimationFrame(frame); watch.disconnect() }
-  }, [ref])
-}
-
 export default function Juros({ macro, curves, hol }) {
   const [open, setOpen] = useState(null)
   const abrir = (id) => setOpen(id)
-  const topo = useRef(null)
-  useMesmaAltura(topo)
   return (
     <>
-      <nav ref={topo} className="learn-nav cen-nav juros-nav" aria-label="Atalhos da aba Juros">
+      <nav className="learn-nav cen-nav juros-nav" aria-label="Atalhos da aba Juros">
         {ATALHOS.map(([id, label]) => <button key={id} type="button" onClick={() => irPara(id)}>{label}</button>)}
       </nav>
       <p className="ind-note juros-dica">Clique em um gráfico para ampliar, escolher o período e ver as tabelas.</p>

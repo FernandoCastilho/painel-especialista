@@ -1,0 +1,5 @@
+.cx-finame .bndes-email .credit-email { color: var(--bw-link); border: 0; background: transparent; cursor: pointer; display: inline-grid; place-items: center; }
+.cx-finame .bndes-email .credit-email:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.cx-finame .bndes-email .credit-email:focus-visible { outline: 2px solid var(--cp-orange); outline-offset: 2px; }
+.cx-finame .bndes-email small { display: block; color: var(--bw-warn-ink); }
+.cx-finame .bndes-flow-wrap { min-width: 0; }

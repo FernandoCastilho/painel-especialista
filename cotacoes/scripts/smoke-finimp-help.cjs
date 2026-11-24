@@ -18,6 +18,51 @@ async function smokeConverter(browser, width, base, out) {
     await p.goto(base + '/#resumo')
     const trigger = p.getByRole('button', { name: 'Paridade para a Finimp', exact: true })
     await trigger.waitFor()
+    const { flagSvg } = await import('../src/flags.js')
+    for (const [label, codes] of [['USD/BRL', ['USD', 'BRL']], ['EUR/BRL', ['EUR', 'BRL']], ['EUR/USD', ['EUR', 'USD']]]) {
+      const card = p.getByRole('button', { name: new RegExp('^' + label + ' .*abrir gráfico$') })
+      const name = card.locator('.kpi-name')
+      await name.waitFor()
+      assert.equal((await name.textContent()).trim(), '', label + ': sem siglas visíveis')
+      assert.equal(await name.getAttribute('title'), label, label + ': par identificável ao passar o mouse')
+      const expected = codes.map(code => flagSvg(code, 'width="16" height="11"'))
+      const correct = await name.evaluate((element, flags) => {
+        const rendered = [...element.querySelectorAll(':scope > .flag[aria-hidden="true"]')]
+        return rendered.length === flags.length && rendered.every((item, i) => {
+          const sample = document.createElement('template')
+          sample.innerHTML = flags[i]
+          const svg = item.querySelector('svg')
+          const box = svg?.getBoundingClientRect()
+          return !!box?.width && !!box.height && svg.isEqualNode(sample.content.firstElementChild)
+        })
+      }, expected)
+      assert.equal(correct, true, label + ': bandeiras visíveis das duas moedas, na ordem do par')
+    }
+    await trigger.scrollIntoViewIfNeeded()
+    const geometry = await trigger.evaluate(async element => {
+      const cell = element.closest('.kpi-cell')
+      const label = cell.querySelector('.kpi-name')
+      const animations = []
+      for (let node = element; node; node = node.parentElement) {
+        animations.push(...node.getAnimations().filter(a => Number.isFinite(a.effect?.getComputedTiming().endTime)))
+      }
+      await Promise.allSettled(animations.map(a => a.finished))
+      const helpBox = element.getBoundingClientRect()
+      const labelBox = label.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      const x = (helpBox.left + helpBox.right) / 2
+      const y = (helpBox.top + helpBox.bottom) / 2
+      return {
+        cssW: parseFloat(style.width), cssH: parseFloat(style.height),
+        width: helpBox.width, height: helpBox.height, left: helpBox.left, labelRight: labelBox.right,
+        hittable: element.contains(document.elementFromPoint(x, y)),
+      }
+    })
+    const precision = 0.001 // apenas erro de arredondamento de coordenadas, não uma redução do alvo de 44 px.
+    assert.ok(geometry.cssW >= 44 && geometry.cssH >= 44 && geometry.width >= 44 - precision && geometry.height >= 44 - precision,
+      `ajuda mantém alvo de pelo menos 44 × 44 px (${width}px): ${JSON.stringify(geometry)}`)
+    assert.ok(geometry.labelRight <= geometry.left + 1, 'bandeiras não invadem o botão de ajuda')
+    assert.ok(geometry.hittable, 'o alvo de ajuda recebe clique sem bloqueio de outro elemento')
     const market = p.locator('.kpi-cell').filter({ has: trigger }).locator('.kpi-value')
     assert.equal(await market.innerText(), '1,1172')
     assert.equal(await trigger.getAttribute('aria-haspopup'), 'dialog')
@@ -84,6 +129,13 @@ async function smokeConverter(browser, width, base, out) {
     // Fechamento repetido não reabre o diálogo nem perde o foco.
     await p.keyboard.press('Escape')
     assert.equal(await trigger.evaluate(el => el === document.activeElement), true)
+    // O alvo medido deve abrir a ajuda por toque real no celular ou clique no desktop.
+    if (width <= 390) await trigger.tap()
+    else await trigger.click()
+    await dialog.waitFor()
+    assert.equal(await dialog.evaluate(el => el.matches(':modal')), true)
+    await close.click()
+    await dialog.waitFor({ state: 'hidden' })
     assert.deepEqual(errors, [])
     console.log(`PASS conversor FINIMP: dialog, rádio nativo, Tab, Escape, reabertura, clique externo e margem 0,02 ${width}`)
   } finally { await p.close() }
@@ -103,6 +155,8 @@ async function smokeConverter(browser, width, base, out) {
       await Promise.all(el.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})))
     })
     assert.equal(await p.getByRole('dialog').count(),0)
+    // Roteiro (21/11/2026): a tabela dos doze prazos fica recolhida depois do resultado; as ajudas dela aparecem ao abrir.
+    await section.locator('details.fi-table-drawer > summary').click()
     assert.doesNotMatch(await section.innerText(),/A moeda apenas identifica|Flat cobrado|As mesmas condições|Calcula a taxa anual/)
     assert.equal(await section.locator('.fi-tac-status').innerText(),'TAC excluída.')
     for(const title of ['Moeda','Prazo e base de cálculo','Flat · Instituição 1','Flat · Instituição 2','TAC','Custo total · Instituição 1','Atingir meta']){
@@ -167,5 +221,7 @@ async function smokeConverter(browser, width, base, out) {
     await p.screenshot({path:`${out}/page-${width}.png`,fullPage:true})
     await p.close();console.log(`PASS ajudas e flat editável nas duas instituições ${width}`)
     await smokeConverter(browser,width,base,out)
-  }}finally{await browser.close()}
+  }
+    await smokeConverter(browser,320,base,out)
+  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exit(1)})

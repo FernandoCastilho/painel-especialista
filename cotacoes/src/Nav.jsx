@@ -7,6 +7,18 @@ const Icon = ({ d }) => (
   </svg>
 )
 
+function CalculatorIcon() {
+  return <svg className="nav-rpn-icon" viewBox="0 0 36 22" width="34" height="21" aria-hidden="true" focusable="false">
+    <rect x="1" y="1" width="34" height="20" rx="3" fill="#292b2b" stroke="#a18452" strokeWidth="1.4" />
+    <path d="M4 4h28v6H4z" fill="#d7c39b" />
+    <rect x="6" y="5" width="19" height="4" rx=".6" fill="#a8b693" />
+    <path d="M27 7h3" stroke="#716348" strokeWidth="1.2" />
+    <path d="M7 13h2m3 0h2m3 0h2m3 0h2m3 0h2M7 17h2m3 0h2m3 0h2m3 0h2m3 0h2" stroke="#eee9dc" strokeWidth="1.7" strokeLinecap="round" />
+    <path d="M7 17h2" stroke="#e7ad54" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M12 17h2" stroke="#86bded" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+}
+
 export { APP_SECTIONS as TABS } from './appSections.js'
 import { APP_SECTIONS as TABS } from './appSections.js'
 
@@ -71,9 +83,9 @@ export default function Nav({ tab, onTab, desktop = false }) {
   return (
     <nav className={desktop ? "topbar-tabs priority-desktop" : "tabs"} aria-label={desktop ? "Navegação principal" : "Seções"} ref={ref}>
       {PRIMARY.map(id => visiveis.find(t => t.id === id)).map((t) => (
-        <button key={t.id} type="button" className={`${t.id === tab ? 'on' : ''}${PRIMARY.includes(t.id) ? '' : ' sec'}`} aria-current={t.id === tab ? 'page' : undefined} aria-label={!desktop && (t.mobileLabel || t.compactLabel) ? (t.terminalLabel || t.label) : undefined} title={shortcutTitle(t.id)} onClick={() => { setMore(false); onTab(t.id) }}>
+        <button key={t.id} type="button" className={`${t.id === tab ? 'on' : ''}${desktop && t.id === 'rpn' ? ' nav-rpn-shortcut' : ''}`} aria-current={t.id === tab ? 'page' : undefined} aria-label={t.id === 'rpn' || (!desktop && (t.mobileLabel || t.compactLabel)) ? (t.terminalLabel || t.label) : undefined} title={desktop && t.id === 'rpn' ? 'Calculadora RPN' : shortcutTitle(t.id)} onClick={() => { setMore(false); onTab(t.id) }}>
           {!desktop && <Icon d={t.icon} />}
-          <span className={!desktop && t.compactLabel ? 'nav-label-full' : undefined}>{(!desktop && t.mobileLabel) || t.terminalLabel || t.label}</span>
+          {desktop && t.id === 'rpn' ? <CalculatorIcon /> : <span className={!desktop && t.compactLabel ? 'nav-label-full' : undefined}>{(!desktop && t.mobileLabel) || t.terminalLabel || t.label}</span>}
           {!desktop && t.compactLabel && <span className="nav-label-compact" aria-hidden="true">{t.compactLabel}</span>}
         </button>
       ))}

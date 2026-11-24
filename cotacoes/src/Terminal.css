@@ -37,6 +37,7 @@ body { background: var(--bg); }
 .tape { height: 30px; align-items: center; overflow: hidden; white-space: nowrap; background: #090909; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .76rem; }
 .tape-item { display: inline-flex; align-items: baseline; gap: 8px; padding: 0 16px; border-right: 1px solid #1a1813; }
 .tape-item b { color: var(--mut); font: 600 .75rem/1 var(--sans); letter-spacing: .02em; }
+.tape-item .tape-fx-label { display: inline-flex; align-items: center; gap: 5px; }
 .tape-item em { font-style: normal; }
 
 @media (min-width: 1000px) {
@@ -55,7 +56,9 @@ body { background: var(--bg); }
   .topbar-tabs button.on { background: var(--amber); color: #000; }
   .topbar-tabs button.on i { color: #0009; }
   .topbar-clocks { display: flex; align-items: center; gap: 14px; padding: 0 14px; border-left: 1px solid var(--line); font: .75rem var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .topbar-clocks b { margin-right: 6px; color: var(--mut); font: 600 .75rem var(--sans); }
+  .topbar-clock { display: inline-flex; align-items: center; gap: 4px; }
+  .topbar-clock-flag { flex: none; }
+  .topbar-clocks b { color: var(--mut); font: 600 .75rem var(--sans); }
   .topbar-feed { display: flex; align-items: center; gap: 7px; padding: 0 14px; border-left: 1px solid var(--line); font: 700 .75rem var(--sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--mut); }
   .topbar-feed span { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
   .topbar-feed b { font: 500 .75rem var(--mono); letter-spacing: 0; color: var(--fg); }
@@ -95,8 +98,8 @@ body { background: var(--bg); }
 .kpi-label small { font-weight: 500; letter-spacing: .02em; text-transform: none; color: var(--mut); font-size:.75rem; }
 .kpi-value { grid-column: 1 / -1; margin: 3px 0 1px; font: 700 1.5rem/1.1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .kpi-change { font: .75rem var(--mono); }
-.kpi-spark { grid-column: 2; grid-row: 3; align-self: end; width: 84px; height: 30px; }
-.kpi-spark .spark { width: 100%; height: 100%; display: block; }
+.kpi-spark { grid-column: 2; grid-row: 3; align-self: end; width: 84px; height: 44px; }
+.kpi-spark .spark, .kpi-spark .mini-box { width: 100%; height: 100%; display: block; }
 @media (min-width: 1000px) { .kpis { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); } .kpi-value { font-size: 1.65rem; } }
 
 /* painel genérico */
@@ -296,7 +299,6 @@ main.app .fer-month h2 { text-transform: uppercase; }
 .config-scroll { overflow-x: auto; max-width: 100%; }
 .config-scroll:focus-visible { outline: 2px solid var(--amber); }
 @media (max-width: 699px) { .config-table th, .config-table td { padding: 8px; } .config-table { min-width: 460px; } }
-.config-wide .novidades > summary { display: none; }
 .base-grupo { border-bottom: 1px solid var(--line); }
 .base-grupo > summary { display: flex; align-items: baseline; gap: 10px; min-height: 44px; padding: 8px 0; cursor: pointer; list-style-position: inside; }
 .base-grupo > summary h3 { display: inline; margin: 0; }
@@ -426,10 +428,10 @@ main.app .scenario-table caption { white-space: normal; }
   .topbar-clocks { display: none; }
 }
 @media (min-width: 1400px) and (max-width: 1599px) {
-  .topbar-clocks span:nth-child(n+2) { display: none; }
+  .topbar-clocks > .topbar-clock:nth-child(n+2) { display: none; }
 }
 @media (min-width: 1400px) and (max-width: 1799px) {
-  .topbar-clocks span:nth-child(n+3) { display: none; }
+  .topbar-clocks > .topbar-clock:nth-child(n+3) { display: none; }
   .topbar-tabs button { padding: 0 8px; }
 }
 @media (min-width: 1000px) and (max-width: 1299px) {
@@ -628,7 +630,7 @@ main.app .idx-table .idx-rel small { display: block; color: var(--muted, #8a8a8a
 /* Miniatures have their own row: prices and daily changes never squeeze the plot. */
 .kpi { min-width: 0; }
 .kpi-change { grid-column: 1 / -1; min-width: 0; }
-.kpi-spark { grid-column: 1 / -1; grid-row: 4; width: 100%; height: 30px; margin-top: 6px; }
+.kpi-spark { grid-column: 1 / -1; grid-row: 4; width: 100%; height: 44px; margin-top: 2px; } /* 44 px: cabe o valor do pico e do vale */
 .kpi-chart-date { grid-column: 1 / -1; color: var(--mut); font: .75rem/1.4 var(--sans); margin-top: 3px; }
 
 .skip-link { position: absolute; left: 8px; top: -100px; z-index: 1000; padding: 10px 16px; background: var(--accent); color: #0d1117; font-weight: 700; font-size: 14px; border-radius: 6px; text-decoration: none; }

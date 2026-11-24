@@ -1,14 +1,12 @@
 import { observeMarketNewsHeight } from './marketNewsHeight.js'
 import { useNewsClock } from './useNewsClock.js'
 import { NEWS_WINDOW_DAYS, newsCollectionStale } from './newsWindow.js'
-import HeavyVehicles from './HeavyVehicles.jsx'
-import SectorNews from './SectorNews.jsx'
 import ChartComparison from './ChartComparison.jsx'
 import { Aviso } from './Avisos.jsx'
 import { buildFeed } from './feed.js'
 import './MarketTable.css'
 import './MarketTerminal.css'
-import { accumulatedReturns, cnhPtaxCross, compatiblePtax, destaquesMes, marketDate, ptaxLabel } from './marketReturns.js'
+import { accumulatedReturnsForDay, cnhPtaxCross, compatiblePtax, destaquesMes, marketDate, ptaxLabel } from './marketReturns.js'
 import { offHoursReference as offHours, quoteAgeLabel, quoteAgeState } from './quoteFreshness.js'
 import { nextChartIndex } from './chartNavigation.js'
 import { focoPorTeclado, saidaDeToque, useTocarFora } from './chartToque.js'
@@ -24,8 +22,6 @@ import { normalizeIpca } from './ipca.js'
 import Explain from './Explain.jsx'
 import NoticiasPorDia from './NoticiasPorDia.jsx'
 import { MoedasNoticias, TemaNoticias } from './ReformaTributaria.jsx'
-import CuradoriaNoticias from './CuradoriaNoticias.jsx'
-import GoogleTrends from './GoogleTrends.jsx'
 import { moedasDaManchete, nomeDaMoeda } from './moedasNoTexto.js'
 import { CURRENCIES, seriesName } from './useQuotes.js'
 import { centralFull, fullWindow, fromInput, toInput, useHistory, useIntraday, useCentralDaily } from './useHistory.js'
@@ -37,9 +33,14 @@ import { shareQuotesImage } from './shareImage.js'
 import { rateTiles } from './snapshot.js'
 import { useNews } from './useNews.js'
 import Sparkline from './Sparkline.jsx'
+import { formatoComo, picoEVale } from './chartMarcas.js'
 import { Plot, useWidth, fmtTime } from './HistoryChart.jsx'
 import { KpiRow, Panel } from './TerminalDesk.jsx'
 import { useDataFile } from './useDataFile.js'
+const HeavyVehicles = lazy(() => import('./HeavyVehicles.jsx'))
+const SectorNews = lazy(() => import('./SectorNews.jsx'))
+const CuradoriaNoticias = lazy(() => import('./CuradoriaNoticias.jsx'))
+const GoogleTrends = lazy(() => import('./GoogleTrends.jsx'))
 const RateModal = lazy(() => import('./RateModal.jsx'))
 
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}`
@@ -153,7 +154,7 @@ function ParityTile({ quotes, spark, onOpen, color }) {
           <small className="muted">{NAMES[quote]} por 1 {NAMES[base].toLowerCase()}{(a.stale || b.stale) && ' · última série disponível'}</small>
         </span>
         {pts.length > 0 && <span className="tile-spark expandable" role="button" tabIndex={0} title="Ampliar" onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && pts.length > 1) { e.preventDefault(); setBig(true) } }} onClick={() => pts.length > 1 && setBig(true)}>
-          <Sparkline points={pts} tone={change != null ? toneOf(change) : trend} />
+          <Sparkline points={pts} tone={change != null ? toneOf(change) : trend} fmt={formatoComo('0,0000')} />
         </span>}
       </span>
           <small className="muted tile-period">
@@ -179,6 +180,20 @@ function endLabels(norm, y) {
   const items = norm.map((s) => ({ code: s.code, color: s.color, y: y(s.pts.at(-1).v), text: pct(s.pts.at(-1).v) })).sort((a, b) => a.y - b.y)
   for (let i = 1; i < items.length; i++) if (items[i].y - items[i - 1].y < 13) items[i].y = items[i - 1].y + 13
   return items
+}
+
+// Pico e vale de cada linha (em % do período), sem encostar no rótulo final nem em outro rótulo já posto.
+function picosEVales(norm, x, y, limite) {
+  const out = []
+  for (const s of norm) {
+    const xs = s.pts.map((p) => x(p.t))
+    for (const { i, vale } of picoEVale(s.pts.map((p) => p.v), xs, limite)) {
+      const px = xs[i], py = y(s.pts[i].v) + (vale ? 16 : -8)
+      if (px > limite || out.some((o) => Math.abs(o.x - px) < 56 && Math.abs(o.y - py) < 14)) continue
+      out.push({ key: `${s.code}-${i}`, x: px, y: py, color: s.color, text: pct(s.pts[i].v) })
+    }
+  }
+  return out
 }
 
 // Linhas sobrepostas em variação % desde o início do período (escalas diferentes ficam comparáveis).
@@ -230,6 +245,9 @@ function MultiPlot({ series, width, intraday, history = series }) {
       ))}
       {norm.map((s) => (
         <path key={s.code} d={s.pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join('')} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" />
+      ))}
+      {picosEVales(norm, x, y, width - M.r - 56).map((l) => (
+        <text key={l.key} x={l.x} y={l.y} textAnchor="middle" className="vlabel" fill={l.color} pointerEvents="none">{l.text}</text>
       ))}
       {endLabels(norm, y).map((l) => (
         <text key={l.code} x={width - M.r + 6} y={l.y} dy="0.32em" fontSize="11" fontWeight="700" fill={l.color} pointerEvents="none">{l.text}</text>
@@ -405,10 +423,18 @@ export function ResumoChart({ colors, spark, selection: sel, onSelection: setSel
 // Acumulados do mês e do ano e PTAX compatível de cada moeda: a mesma conta para o quadro do Mercado e para a aba Apresentar.
 export function useCambio(quotes, ptax) {
   const daily = useCentralDaily()
-  const returns = Object.fromEntries(CURRENCIES.map(c => [c.code, quotes?.[c.code]?.source && quotes[c.code].source !== c.code ? { month: null, year: null } : accumulatedReturns(daily.data, c.code)]))
+  const today = marketDate(Date.now())
+  const history = daily.data
+  const historicalReturns = useMemo(() => Object.fromEntries(
+    CURRENCIES.map(({ code }) => [code, accumulatedReturnsForDay(history, code, today)])
+  ), [history, today])
+  const returns = Object.fromEntries(CURRENCIES.map(({ code }) => {
+    const source = quotes?.[code]?.source
+    return [code, source && source !== code ? { month: null, year: null } : historicalReturns[code]]
+  }))
   const ptaxes = Object.fromEntries(CURRENCIES.map(c => [c.code, compatiblePtax(c.code, quotes?.[c.code], ptax?.[c.code])]))
   // Yuan: sem PTAX oficial; referência cruzada com o intraday do dia do boletim do dólar.
-  const ptaxDay = fromInput(ptaxes.USD?.date ?? marketDate(Date.now()))
+  const ptaxDay = fromInput(ptaxes.USD?.date ?? today)
   const usdTicks = useIntraday('USD', ptaxDay, !ptaxes.USD), cnhTicks = useIntraday('CNH', ptaxDay, !ptaxes.USD)
   if (ptaxes.USD && quotes?.CNH && !quotes.CNH.fallback && usdTicks.status === 'ok' && cnhTicks.status === 'ok') ptaxes.CNH = cnhPtaxCross(ptaxes.USD, usdTicks.data.points, cnhTicks.data.points)
   return { daily, returns, ptaxes }
@@ -460,7 +486,11 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         </div>
         </div>
         <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
-        <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>{newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'eleicoes' ? <TemaNoticias id="eleicoes-eua" simples /> : newsTab === 'trends' ? <GoogleTrends /> : newsTab === 'veiculos-pesados' ? <><HeavyVehicles compact/><SectorNews id="veiculos-pesados" label="Veículos pesados" /></> : <MarketNews bare />}</Panel>
+        <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>
+          <Suspense fallback={<p className="status" role="status">Carregando notícias…</p>}>
+            {newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'eleicoes' ? <TemaNoticias id="eleicoes-eua" simples /> : newsTab === 'trends' ? <GoogleTrends /> : newsTab === 'veiculos-pesados' ? <><HeavyVehicles compact/><SectorNews id="veiculos-pesados" label="Veículos pesados" /></> : <MarketNews bare />}
+          </Suspense>
+        </Panel>
         </div>
         </div>
 

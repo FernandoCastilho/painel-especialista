@@ -1,14 +1,13 @@
-import { useState } from 'react'
-import FinameMateriais from './FinameMateriais.jsx'
-import BndesTlpExigivel from './BndesTlpExigivel.jsx'
-import BndesLcdCap from './BndesLcdCap.jsx'
-import BndesCreditoTfb from './BndesCreditoTfb.jsx'
-import Bndes from './Bndes.jsx'
-import BndesCustosProdutos from './BndesCustosProdutos.jsx'
-import './BndesWorkspace.css'
-import './FinameComparisonLayout.css'
-import './CalculatorPattern.css'
+import { lazy, useState } from 'react'
+import './BndesSimulation.css'
 import CalcBack from './CalcBack.jsx'
+
+const FinameMateriais = lazy(() => import('./FinameMateriais.jsx'))
+const BndesTlpExigivel = lazy(() => import('./BndesTlpExigivel.jsx'))
+const BndesLcdCap = lazy(() => import('./BndesLcdCap.jsx'))
+const BndesCreditoTfb = lazy(() => import('./BndesCreditoTfb.jsx'))
+const Bndes = lazy(() => import('./Bndes.jsx'))
+const BndesCustosProdutos = lazy(() => import('./BndesCustosProdutos.jsx'))
 
 const PROFILES = [
   ['finame-materiais', 'Finame Materiais Industrializados'],
@@ -20,9 +19,16 @@ const PROFILES = [
 
 const ALIASES = { 'finame-veiculos': 'Finame Veículos', 'bndes-giro': 'BNDES Giro' }
 
+// Depois da primeira visita, os campos e o período consultado continuam montados.
+function PainelVisitado({ aberto, className, children }) {
+  const [visitado, setVisitado] = useState(aberto)
+  if (aberto && !visitado) setVisitado(true)
+  return <div hidden={!aberto} className={className}>{(aberto || visitado) && children}</div>
+}
+
 // Uma entrada, com os motores e as condições de cada modalidade preservados.
 // As rotas anteriores continuam válidas; abrir taxas não desmonta o formulário.
-export default function BndesWorkspace({ profile = 'finame-materiais', onView, onBack }) {
+export default function BndesWorkspace({ profile = 'finame-materiais', onView, onBack, apresentacao }) {
   const [area, setArea] = useState('simulate')
   const [quotesView, setQuotesView] = useState('')
   // "Finame Veículos" e "BNDES Giro" são só opções de apresentação: usam a mesma calculadora e os mesmos cálculos do Finame Materiais.
@@ -46,15 +52,15 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
     </nav></div>
     <div hidden={area !== 'simulate'} className="bw-simulation">
       {!historical && profile !== 'finame-materiais' && profileControl}
-      <div hidden={profile !== 'finame-materiais'}><FinameMateriais onBack={onBack} onFundingView={navigate} profileControl={profile === 'finame-materiais' ? profileControl : null} /></div>
+      <PainelVisitado aberto={profile === 'finame-materiais'}><FinameMateriais onBack={onBack} onFundingView={navigate} profileControl={profile === 'finame-materiais' ? profileControl : null} apresentacao={apresentacao} /></PainelVisitado>
       {profile === 'bndes-tlp-exigivel' && <BndesTlpExigivel onBack={onBack} />}
       {profile === 'bndes-selic-lcd' && <BndesLcdCap onBack={onBack} />}
       {historical && <BndesCreditoTfb onBack={onBack} />}
     </div>
     {area === 'costs' && <div className="bw-costs"><BndesCustosProdutos /></div>}
-    <div hidden={area !== 'quotes'} className="bw-quotes">
+    <PainelVisitado aberto={area === 'quotes'} className="bw-quotes">
       <p className="status">Todas as famílias disponíveis no painel: TFB, TFC, TLP e moedas contratuais. Cada referência conserva data, unidade, fonte e avisos; não significa cotação ao vivo.</p>
       <Bndes embedded view={quotesView} onView={setQuotesView} />
-    </div>
+    </PainelVisitado>
   </section></div>
 }

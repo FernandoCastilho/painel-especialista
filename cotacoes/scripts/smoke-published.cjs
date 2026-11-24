@@ -100,7 +100,8 @@ const links = {
       await visit('calculadora/conta-garantida', '#cg-rate')
       assert.equal(await page.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
       assert.equal(await page.locator('#cg-taxProfile').count(), 1)
-      assert.equal(await page.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
+      // Roteiro de 21/11/2026: na utilização única o encargo se chama "Taxa de juros" (nome padrão dos encargos).
+      assert.equal(await page.getByLabel('Taxa de juros (% a.m.)', { exact: true }).count(), 1)
       await contained('Conta Garantida')
 
       await visit('aprender', '.knowledge-map')
@@ -150,13 +151,26 @@ const links = {
       await contained('BNDES')
       await page.screenshot({ path: path.join(out, width + '-bndes.png') })
 
+      // Pages fornece a URL e as bases coletadas; o build local de CI não as contém.
+      // O CI cobre o timestamp em smoke-bndes-executivo, sem depender de coleta externa.
+      if (process.env.SMOKE_PUBLISHED_URL) {
+        await visit('calculadora/finame-materiais', '.be-grid')
+        assert.match(await page.locator('.be-equivalent').innerText(), /CDI de [\d,]+% a\.a\. em \d{2}\/\d{2}\/\d{4}/)
+        assert.match(await page.locator('.be-reference').innerText(), /Indexador utilizado[\s\S]*TFC/)
+        assert.equal(await page.locator('.fm-result-workspace .expandable-toggle').count(), 1)
+        await contained('BNDES executivo')
+        await page.locator('.be-grid').screenshot({ path: path.join(out, width + '-bndes-executivo.png') })
+      }
+
       await visit('resumo', '#r-moedas')
       await page.getByRole('tab', { name: 'Google Trends', exact: true }).click()
       await page.locator('.google-trends').waitFor()
       assert.match(await page.locator('.google-trends').innerText(), /8h e 15h/)
       await contained('Google Trends')
 
-      await visit('config', '.config-gov')
+      await visit('config', '.config-desk')
+      await page.getByRole('button', { name: 'Consultar estado das fontes' }).click()
+      await page.locator('#config-fontes table').waitFor()
       await page.waitForFunction(() => document.documentElement.dataset.theme === 'light')
       await page.emulateMedia({ colorScheme: 'dark' })
       await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark')

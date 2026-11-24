@@ -48,11 +48,13 @@ test('datas inválidas, iguais ou passadas e entradas determinantes inválidas s
   }
 })
 
-test('preserva sinalização do limite da busca legada para fluxos muito curtos', () => {
+test('calcula a TIR datada de prazo curto sem o limite artificial de 1000% a.a.', () => {
   const r = simularParcelaCambial({ ...op, taxaPct: 0, vencimento: '2026-01-02' })
   assert.equal(r.ok, true)
-  assert.ok(r.pagamentoBrl > 0)
-  assert.equal(r.tir, null)
+  assert.ok(Number.isFinite(r.tir) && r.tir > 1000)
+  const expected = Math.expm1(Math.log(r.pagamentoBrl / r.recebidoBrl) * 365) * 100
+  assert.ok(Math.abs(r.tir / expected - 1) < 1e-10)
+  close(r.recebidoBrl - r.pagamentoBrl / (1 + r.tir / 100) ** (1 / 365), 0)
 })
 
 test('hoje respeita São Paulo na troca do dia UTC', () => {

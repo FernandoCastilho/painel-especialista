@@ -2,16 +2,17 @@
    Quadros de entrada: faixa azul-marinho com linha laranja. Cotação: única com borda laranja,
    fixa ao lado dos dados no computador e logo abaixo deles no celular. Só apresentação: nenhuma regra de cálculo mora aqui.
    Seletores com :root[data-theme] body para vencer as camadas anteriores sem !important. */
-:root {
-  --cp-orange:#ff6200;
-  --cp-navy:linear-gradient(110deg,#052956,#07336b);
-}
-
 /* ── BNDES · Finame ── */
 /* Quadros de entrada */
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group { padding:0; overflow:hidden; border-radius:10px; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group > h3 { display:flex; align-items:center; gap:8px; margin:0; padding:10px 14px; background:var(--cp-navy); color:#fff; border-bottom:3px solid var(--cp-orange); border-radius:0; font-size:.95rem; font-weight:700; font-variant-caps:normal; letter-spacing:0; text-transform:none; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-group .fm-group-fields { padding:12px 14px 14px; }
+@media (max-width:359px) {
+  /* O maior rótulo do porte/região precisa caber junto da seta do seletor. */
+  .bndes-page .bw > .bw-simulation { padding-inline:3px; }
+  :root[data-theme] body .bw:not(.e4) .cx-finame .fm-operation .fm-group-fields { padding-inline:3px; }
+  .bw .cx-finame #fm-porte { padding-inline:6px; }
+}
 
 /* Cotação ao lado dos dados (computador largo) */
 @media (min-width:1200px) {
@@ -129,3 +130,19 @@
 :root[data-theme] body .bw:not(.e4) .cx-finame #fm-parcelas { scroll-margin-top:120px; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content { padding:0 14px 14px; min-width:0; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content .fm-parcel-scroll { max-height:none; overflow-x:auto; }
+
+/* ── Finame Materiais no roteiro das calculadoras (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026) ── */
+/* Título numerado dos dois quadros de entrada, com o mesmo espaço entre o número e o nome das outras telas. */
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-group > h3 { display:block; }
+/* Gaveta "Detalhes do contrato" (data da liberação e praça): mesmo desenho da gaveta da linha mestra. */
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato { margin-top:2px; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato > summary { padding:10px 0; min-height:44px; color:var(--bw-link); font-size:.86rem; cursor:pointer; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato > summary small { color:var(--bw-mut); font-size:.78rem; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato-campos { display:grid; grid-template-columns:minmax(0,1fr); gap:6px 10px; padding:0 0 4px; }
+@media (min-width:1001px) {
+  :root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato-campos { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+/* No slide do modo Apresentar a gaveta fica aberta e sem o título clicável (como na linha mestra). */
+.sl-calc .bw:not(.e4) .cx-finame details.fm-contrato[open] { display:block; }
+.sl-calc .bw:not(.e4) .cx-finame .fm-contrato > summary { display:none; }
+:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-contrato-campos { padding-top:8px; }

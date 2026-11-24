@@ -1,13 +1,7 @@
-.bw [hidden] { display:none !important; }
-.bw-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-.bw-heading h2 { margin:0; font-size:1.75rem; letter-spacing:-.03em; }
-.bw-heading p, .bw-profile p { margin:6px 0 0; color:var(--mut); font-size:.8125rem; line-height:1.5; }
-.bw-badge { padding:8px 12px; border:1px solid var(--line); border-radius:20px; color:var(--mut); font-size:.75rem; }
 .bw-nav { display:flex; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:10px; }
 .bw-nav button { min-height:44px; padding:10px 16px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--mut); font:inherit; font-size:.875rem; cursor:pointer; }
 .bw-nav button[aria-pressed=true] { background:var(--surface-2); color:var(--fg); border-color:var(--line); box-shadow:inset 0 -3px #0131ff; }
 :root[data-theme] body .bw .seg.bn-fam button[aria-pressed=true] { background:#000d3c; color:#fff; border-color:#000d3c; }
-.bw button:focus-visible, .bw select:focus-visible, .bw summary:focus-visible { outline:2px solid var(--amber, #ff6200); outline-offset:3px; }
 .bw-profile { display:grid; grid-template-columns:auto minmax(200px, 360px) 1fr; gap:8px 16px; align-items:center; margin-bottom:20px; }
 .bw-profile label { font-size:.8125rem; }
 .bw-profile select { min-height:44px; max-width:100%; padding:8px 12px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; font:inherit; font-size:.875rem; }
@@ -50,43 +44,12 @@
 .bw .cx-finame .fm-fgi > label > input[type=checkbox] { flex:none; width:20px; height:20px; }
 .bw .cx-finame .fm-fgi .cx-hint { margin:0; }
 
-/* Telas BNDES (Finame), Empréstimo 4131 e Comparador de Crédito: cores por variáveis, no escopo da tela.
-   Decisão de 13/11/2026 (pedido do Fernando): estas telas acompanham o tema escuro, com a mesma paleta escura
-   das outras calculadoras (CalculatorLayout.css). Antes eram uma identidade clara fixa, independente do tema.
-   Bloco claro (vale também para "Apresentar simulação", que continua clara) e, logo abaixo, bloco escuro.
-   A impressão/PDF sai em outra camada (BndesPrint.css) e o bloco escuro só vale na tela (@media screen).
-   Faixas azul-marinho, botões laranja e textos brancos sobre elas são iguais nos dois temas. */
-:root[data-theme] body .bw, :root[data-theme] body .bw .cx, :root[data-theme] body .bw :is(.bnp-dialog, .credit-presentation) {
-  --cx-field-bg:#fff; --cx-line-strong:#7a8fac; --cx-select-bg:#ffb000; --cx-select-fg:#000; --cx-primary-bg:#ff7900; --cx-primary-fg:#10284c; --cx-result-bg:#062a5c; --cx-result-line:#ff7900; --bg:#fff; --card:#fff; --surface-2:#f1f6fd; --fg:#10284c; --mut:#455c7a; --line:#c9d7e9; --amber:#b94700; --down:#a92727;
-  --bw-scheme:light; --bw-page:#f7faff; --bw-card:#fff; --bw-soft:#f4f7fb; --bw-tint:#d3e3f9; --bw-good-soft:#f3faf6; --bw-warm-soft:#fff6ee; --bw-warm-tint:#ffe1c3; --bw-bad-soft:#fff7f6;
-  --bw-ink:#10284c; --bw-mut:#455c7a; --bw-link:#006bdc; --bw-warm-ink:#8d3900; --bw-warn-ink:#4a3300; --bw-bad-ink:#9b2c20;
-  --bw-line:#c6d5e9; --bw-field-line:#7a8fac; --bw-strong-line:#0b2e63;
-  --bw-g1:linear-gradient(#fff,#e5f0fd); --bw-g2:linear-gradient(110deg,#fff,#f9fbff); --bw-g3:linear-gradient(100deg,#e3f1ff,#ccdef8); --bw-g4:linear-gradient(110deg,#fff,#fcfdff);
-  --bw-g5:linear-gradient(100deg,#edf3fc,#dde7f4); --bw-g6:linear-gradient(110deg,#f0f5fc,#e7eef8); --bw-g7:linear-gradient(110deg,#fff,#f5f8fd);
-}
-@media screen {
-  :root[data-theme="dark"] body .bw, :root[data-theme="dark"] body .bw .cx {
-    --cx-field-bg:#071122; --cx-line-strong:#6b7f9e; --bg:#071122; --card:#101b2e; --surface-2:#18263c; --fg:#f3f6ff; --mut:#bbc5d6; --line:#33435b; --down:#ff9b9b; --amber:#ff7900;
-    --bw-scheme:dark; --bw-page:#071122; --bw-card:#101b2e; --bw-soft:#18263c; --bw-tint:#22334f; --bw-good-soft:#0f2a21; --bw-warm-soft:#2b1c0e; --bw-warm-tint:#3d2812; --bw-bad-soft:#2d1416;
-    --bw-ink:#f3f6ff; --bw-mut:#bbc5d6; --bw-link:#8eb5ff; --bw-warm-ink:#ffb36b; --bw-warn-ink:#ffd9a6; --bw-bad-ink:#ff9b9b;
-    --bw-line:#33435b; --bw-field-line:#6b7f9e; --bw-strong-line:#5b78e8;
-    --bw-g1:#18263c; --bw-g2:#101b2e; --bw-g3:#22334f; --bw-g4:#101b2e; --bw-g5:#18263c; --bw-g6:#18263c; --bw-g7:#101b2e;
-  }
-}
-:root[data-theme] body .bw {
-  color:var(--fg); background:var(--bw-page); border:1px solid var(--bw-line); border-radius:12px; gap:0; overflow:clip; font-family:Arial,Helvetica,sans-serif;
-}
-.bw > .cx-back { margin:0 16px; }
-.bw .bw-heading { padding:22px 24px; background:linear-gradient(115deg,#0b2446,#073572 78%,#052856); color:white; }
-.bw .bw-heading h2 { display:flex; align-items:center; gap:22px; font-size:clamp(1.4rem,2.7vw,2.6rem); letter-spacing:-.02em; color:white; }
-.bw .bw-heading h2 strong { font-size:1.15em; border-right:2px solid #b9cce7; padding-right:22px; }
-.bw .bw-badge { color:white; border:0; font-weight:700; font-size:1rem; padding:0; }
 .bw .bw-nav { gap:5px; background:#0b3062; padding:8px 16px 0; border-bottom:4px solid #cbdcf4; }
 .bw .bw-nav button { border:1px solid var(--bw-line); border-radius:10px 10px 0 0; color:var(--bw-ink); background:var(--bw-g1); font-size:1rem; font-weight:700; min-height:50px; padding:12px 24px; position:relative; }
 .bw .bw-nav button[aria-pressed=true] { color:var(--bw-link); background:var(--bw-card); box-shadow:none; }
 .bw .bw-nav button[aria-pressed=true]::after { content:''; position:absolute; bottom:-6px; height:5px; background:#ff7900; left:18px; right:18px; border-radius:5px; }
 .bw .bw-simulation,.bw .bw-quotes { padding:18px 12px; }
-.bw .cx-finame { gap:12px; }
+.bw :where(.cx-finame) { gap:12px; }
 .bw .cx-finame > .cx-title { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .bw .fm-workspace { grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr); gap:16px; }
 .bw .fm-workspace .cx-panel { background:var(--bw-card); color:var(--bw-ink); border:1px solid var(--bw-line); border-radius:12px; box-shadow:0 2px 3px #15305c18; overflow:visible; }
@@ -125,8 +88,6 @@
 .bw .cx-finame .fm-fgi { order:1; }
 .bw .cx-finame .cx-iof { order:2; }
 .bw .cx-finame .fm-show-result { order:3; }
-.bw .cx-iof label { display:flex; gap:10px; align-items:flex-start; font-size:.85rem; line-height:1.5; min-height:44px; }
-.bw input[type=checkbox] { accent-color:var(--bw-link); width:22px; height:22px; flex:none; }
 .bw .fm-results { gap:12px; }
 .bw #fm-result > header { margin:12px; padding:12px 16px; background:linear-gradient(110deg,#08356c,#032758); border-left:6px solid #ff7900; border-radius:6px; color:white; }
 .bw #fm-result > header h3 { color:white; font-size:1.3rem; }
@@ -150,11 +111,10 @@
 .bw .fm-kpi:last-child { background:var(--bw-warm-tint); }
 .bw > .bw-simulation > .bw-profile { margin:0 0 16px; }
 .bw .cx-finame > .status { text-align:center; font-size:.78rem; color:var(--bw-mut); }
-@media(max-width:1100px) { .bw .fm-workspace { grid-template-columns:1fr; } .bw .bw-heading { padding:18px; } }
+@media(max-width:1100px) { .bw .fm-workspace { grid-template-columns:1fr; } }
 @media(max-width:600px) {
   .bw .bw-simulation,.bw .bw-quotes { padding:12px 6px; }
-  .bw .bw-heading { gap:12px; } .bw .bw-heading h2 { gap:10px; flex-wrap:wrap; } .bw .bw-heading h2 strong { padding-right:10px; }
-  .bw .bw-badge { font-size:.8rem; } .bw .bw-nav { padding:8px 6px 0; gap:3px; flex-wrap:nowrap; }
+  .bw .bw-nav { padding:8px 6px 0; gap:3px; flex-wrap:nowrap; }
   .bw .bw-nav button { padding:8px 5px; font-size:.75rem; flex:1; min-width:0; }
   .bw .fm-toolbar,.bw .bw-profile { flex-direction:column; align-items:stretch; width:100%; }
   .bw .fm-toolbar { padding:12px; } .bw .fm-operation .fm-group-fields,.bw .fm-payment .fm-group-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -192,9 +152,6 @@
 .bw .fm-comparison td small { display:block; white-space:normal; margin-top:4px; font-size:.75rem; color:var(--mut); }
 
 /* Proposta minimalista aprovada: três quadros, comparação abaixo e impressão sem rodapé repetido. */
-.bw .bw-heading { position:relative; padding:17px 24px; background:linear-gradient(110deg,#052956,#07336b); overflow:hidden; }
-.bw .bw-heading::after { content:''; position:absolute; right:0; bottom:0; width:64px; height:64px; background:linear-gradient(135deg,#ff8c12,#f47700); clip-path:polygon(100% 0,100% 100%,0 100%); }
-.bw .bw-heading h2 { font-size:1.4rem; }.bw .bw-heading h2 strong { font-size:1.8em; font-style:italic; }.bw .bw-badge { font-size:.72rem; padding-right:34px; font-weight:400; }
 .bw .bw-nav { background:var(--bw-card); border-bottom:1px solid var(--bw-line); padding:7px 12px; gap:6px; }
 .bw .bw-nav button { min-height:44px; padding:8px 14px; border:0; border-radius:6px; background:var(--bw-soft); font-size:.82rem; }
 .bw .bw-nav button[aria-pressed=true] { background:var(--bw-warm-soft); color:var(--bw-warm-ink); }.bw .bw-nav button[aria-pressed=true]::after { display:none; }
@@ -241,19 +198,12 @@
 /* Redesenho compacto (11/11/2026, versão combinada aprovada): área de até 1.120 px, cabeçalho em uma linha,
    Operação e Custos lado a lado, Pagamento embaixo, resultado à direita acompanhando a rolagem com o CET em destaque.
    Campos de 36 px no computador e 44 px no celular; ajuda em ícone de 16 px com área de toque de 24 px (WCAG 2.2, 2.5.8). */
-:root[data-theme] body .bw { max-width:1120px; margin-inline:auto; width:100%; background:var(--bw-soft); font-family:'Segoe UI',system-ui,Arial,sans-serif; }
-.bw > .cx-back { margin:12px 20px 0; }
-.bw .bw-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px 16px; padding:6px 20px 12px; background:none; color:var(--bw-ink); overflow:visible; border-bottom:1px solid var(--bw-line); }
-.bw .bw-heading::after { display:none; }
-.bw .bw-heading h2 { display:flex; align-items:baseline; gap:10px; margin:0; font-size:1.05rem; font-weight:600; color:var(--bw-ink); letter-spacing:0; }
-.bw .bw-heading h2 strong { font-size:1.45rem; font-style:italic; font-weight:800; color:var(--bw-ink); border:0; padding:0; }
 .bw .bw-nav { display:inline-flex; gap:2px; padding:3px; background:var(--bw-soft); border:0; border-radius:9px; }
 .bw .bw-nav button { min-height:32px; padding:6px 12px; border:0; border-radius:7px; background:none; color:var(--bw-mut); font-size:.8rem; font-weight:600; }
 .bw .bw-nav button[aria-pressed=true] { background:var(--bw-card); color:var(--bw-ink); box-shadow:0 1px 2px #062a5c26; }
 .bw .bw-simulation,.bw .bw-quotes { padding:16px 20px 20px; }
-.bw .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 
-.bw .cx-finame { gap:10px; }
+.bw :where(.cx-finame) { gap:10px; }
 .bw .fm-workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,360px); gap:16px; align-items:start; }
 .bw .fm-workspace .fm-input-panel { background:none; border:0; box-shadow:none; padding:0; }
 .bw .fm-input-panel > header.fm-rules { display:flex; align-items:center; justify-content:flex-end; gap:0; min-height:0; margin:-6px 0 4px; padding:0; }
@@ -361,8 +311,6 @@
   .bw .fm-results { position:static; }
 }
 @media (max-width:640px) {
-  .bw > .cx-back { margin:10px 12px 0; }
-  .bw .bw-heading { padding:6px 12px 10px; }
   .bw .bw-nav { display:flex; width:100%; }
   .bw .bw-nav button { flex:1; min-height:40px; padding:6px 4px; font-size:.75rem; }
   .bw .bw-simulation,.bw .bw-quotes { padding:12px; }
@@ -419,7 +367,6 @@
 
 /* Padrão do painel (UX-VALIDATION): campos e ajudas com alvo real de 44 × 44 px em todas as larguras,
    marca visual da ajuda pequena, e calculadora ocupando toda a área útil. A compactação vem do layout. */
-:root[data-theme] body .bw { max-width:none; }
 .bw .cx-finame .fm-group select,.bw .cx-finame .fm-group .cx-field select,.bw .fm-group .bw-profile select,
 .bw .cx-finame .cx-field input:not([type=checkbox]),.bw .cx-finame select,.bw .bw-profile select,.bw .fm-rate-row input { height:44px; min-height:44px; }
 .bw .fm-financed { min-height:44px; }

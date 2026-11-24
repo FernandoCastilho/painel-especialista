@@ -1,11 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
-import { PODCASTS, podcastUrl, loadLatestPodcast, podcastDate, episodeLabel } from './podcasts.js'
+import { PODCASTS, podcastUrl, loadLatestPodcast, podcastDate, episodeLabel, podcastArtworkCandidates, podcastsByLatestEpisode } from './podcasts.js'
 import './Podcast.css'
 
 const clock = seconds => {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
   const value = Math.floor(seconds)
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
+}
+function ArtworkImage({ urls, fallback }) {
+  const [index, setIndex] = useState(0)
+  return urls[index]
+    ? <img key={urls[index]} src={urls[index]} alt="" referrerPolicy="no-referrer" decoding="async" onError={() => setIndex(current => current === index ? index + 1 : current)} />
+    : fallback
+}
+function PodcastArtwork({ artwork, small = false, playing = false }) {
+  const fallback = small ? (playing ? 'Ⅱ' : '▶') : (<svg viewBox="0 0 120 120"><path d="M20 52v16m10-28v40m10-35v30m10-48v66m10-56v46m10-62v78m10-54v30m10-39v48m10-32v16" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" /></svg>)
+  return <span className={small ? 'podcast-program-art' : 'podcast-art'} aria-hidden="true">
+    <ArtworkImage key={JSON.stringify(artwork)} urls={artwork} fallback={fallback} />
+  </span>
 }
 export default function Podcast() {
   const [active, setActive] = useState(PODCASTS[0]?.id ?? null)
@@ -58,7 +70,7 @@ export default function Podcast() {
         <h2 className="podcast-panel-title">{playing ? 'Ouvindo agora' : 'Pronto para ouvir'}</h2>
         <div className="podcast-player-body">
           <div className="podcast-episode-heading">
-            <div className="podcast-art" aria-hidden="true"><svg viewBox="0 0 120 120"><path d="M20 52v16m10-28v40m10-35v30m10-48v66m10-56v46m10-62v78m10-54v30m10-39v48m10-32v16" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" /></svg></div>
+            <PodcastArtwork artwork={podcastArtworkCandidates(episode?.artworkUrl, result?.channelArtworkUrl, selected?.artworkUrl)} />
             <div><h3>{selected?.title ?? 'Selecione um programa'}</h3><p className="podcast-note">{selected?.description}</p>
               {episode && <><p className="podcast-kicker">{episodeLabel(episode, result.checkedAt)} · <time dateTime={new Date(episode.publishedAt).toISOString()}>{podcastDate(episode.publishedAt)}</time></p><h4>{episode.title}</h4></>}
             </div>
@@ -84,17 +96,17 @@ export default function Podcast() {
             {waiting && <p role="status">Carregando áudio…</p>}
             {audioError === active && <p role="status">O áudio não carregou. Tente reproduzir novamente ou use o link do programa abaixo.</p>}
           </>}
-          {selected && <p className="podcast-external"><a href={podcastUrl(selected)} target="_blank" rel="noopener noreferrer">Abrir {selected.title} no Apple Podcasts ↗<span className="podcast-sr"> (nova aba)</span></a></p>}
+          {selected && <p className="podcast-external"><a href={podcastUrl(selected)} target="_blank" rel="noopener noreferrer">Abrir {selected.title} no Apple Podcasts ↗<span className="podcast-sr"> (nova aba)</span></a>{selected.podcastAddictUrl && <><br /><a href={selected.podcastAddictUrl} target="_blank" rel="noopener noreferrer">Abrir no Podcast Addict ↗<span className="podcast-sr"> (nova aba)</span></a></>}</p>}
         </div>
       </article>
-      <aside className="podcast-programs" aria-label="Programas de podcast"><h2 className="podcast-panel-title">Programas</h2><div className="podcast-program-list">{PODCASTS.map(podcast => {
+      <aside className="podcast-programs" aria-label="Programas de podcast"><h2 className="podcast-panel-title">Programas</h2><div className="podcast-program-list">{podcastsByLatestEpisode(PODCASTS, results).map(podcast => {
         const next = results[podcast.id]
         return <button type="button" className={`podcast-program${active === podcast.id ? ' is-selected' : ''}`} key={podcast.id} aria-pressed={active === podcast.id} onClick={() => { if (active !== podcast.id) { reset(); setActive(podcast.id) } }}>
-          <span aria-hidden="true">{active === podcast.id && playing ? 'Ⅱ' : '▶'}</span><span><strong>{podcast.title}</strong><small>{!next ? 'Consultando episódios…' : next.error ? 'Fonte indisponível' : active === podcast.id ? playing ? 'Em reprodução' : 'Selecionado' : podcast.cadence}</small>{next?.episode && <small>{podcastDate(next.episode.publishedAt)}</small>}</span>
+          <PodcastArtwork small playing={active === podcast.id && playing} artwork={podcastArtworkCandidates(next?.channelArtworkUrl, podcast.artworkUrl)} /><span><strong>{podcast.title}</strong><small>{!next ? 'Consultando episódios…' : next.error ? 'Fonte indisponível' : active === podcast.id ? playing ? 'Em reprodução' : 'Selecionado' : podcast.cadence}</small>{next?.episode && <small>{podcastDate(next.episode.publishedAt)}</small>}</span>
         </button>
       })}</div><button className="podcast-refresh" type="button" onClick={() => { reset(); setRefresh(value => value + 1) }}>Atualizar episódios</button></aside>
     </div>
-    <p className="podcast-note">O Painel consulta os feeds dos produtores ao abrir a seção. Trailers identificados são excluídos. Nem todo programa publica diariamente. “Hoje” usa o horário de Brasília no momento da consulta. A reprodução só começa ao pressionar play.</p>
+    <p className="podcast-note">Programas em ordem do episódio mais recente. O Painel consulta os feeds ao abrir a seção. Trailers identificados são excluídos. Nem todo programa publica diariamente. “Hoje” usa o horário de Brasília no momento da consulta. A reprodução só começa ao pressionar play.</p>
     {result?.checkedAt && <p className="podcast-note">Consulta em {new Date(result.checkedAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} (Brasília).</p>}
     <p className="podcast-note">Conteúdo e disponibilidade são dos produtores. As opiniões dos episódios não substituem uma análise própria. Em aparelhos que controlam o volume pelo sistema, use também os botões do dispositivo.</p>
   </section>

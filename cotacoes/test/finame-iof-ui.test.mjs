@@ -12,7 +12,11 @@ const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 
 const text = el => Array.isArray(el) ? el.map(text).join(' ') : el && typeof el === 'object' ? text(el.props?.children) : el == null || typeof el === 'boolean' ? '' : String(el)
 async function setup(t, overrides = {}) {
   const series = { C01: { points: [['2026-11-06', 11]] }, C02: { points: [['2026-11-06', 11.5]] }, C03: { points: [['2026-11-06', 10]] }, C04: { points: [['2026-11-06', 10.5]] }, TFB_36_90: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] }, TFB_84_90: { points: [['2026-11-06', 13]] }, ...overrides }
-  const deps = { './ExpandablePanel.jsx': { __esModule: true, default: () => null }, './BndesCompare.jsx': { __esModule: true, default: () => null }, './FinameComparisonLayout.css': {}, './BndesIcon.jsx': { __esModule: true, default: () => null }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
+  const deps = { './ExpandablePanel.jsx': { __esModule: true, default: () => null }, './BndesCompare.jsx': { __esModule: true, default: () => null }, './FinameComparisonLayout.css': {}, './CalculatorIcons.jsx': { FinameIcon: () => null }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
+  deps['./Roteiro.jsx'] = { step: (number, text) => `${number} ${text}` }
+  for (const component of ['FluxoPagamentos', 'ReferenciaMercado', 'EmailEnvelope', 'BndesDetails', 'BndesExecutiveResult', 'PracaContratoBusca']) deps[`./${component}.jsx`] = { __esModule: true, default: () => null }
+  deps['./BndesPecas.css'] = {}
+  deps['./bndesFluxo.js'] = await import('../src/bndesFluxo.js')
   for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
@@ -197,7 +201,8 @@ test('parcelas compactas comparam A e B pela mesma data sem recalcular valores',
     assert.equal(cells.length, 2)
     alternatives.forEach((item, column) => assert.equal(text(cells[column]), brl(item.result.parcelas.find(p => p.vencimento === dates[index]).parcela)))
   })
-  for (const title of ['Dados básicos da operação', 'Histórico dos indexadores', 'Memória completa do fluxo']) assert.ok(nodes(render.value).some(node => node.props?.title === title), title)
+  for (const title of ['Histórico dos indexadores', 'Memória completa do fluxo']) assert.ok(nodes(render.value).some(node => node.props?.title === title), title)
+  assert.ok(nodes(render.value).some(node => node.props?.['aria-label'] === 'Condições da operação comparada'))
   // Na comparação, a composição do custo fica na tabela principal: o quadro separado não se repete.
   assert.equal(nodes(render.value).some(node => node.props?.title === 'Composição do resultado'), false)
 })
@@ -208,14 +213,13 @@ test('cotação destaca taxa final e CET anual e mensal, reutilizando resultados
   const pct = (value, decimals) => `${nf(nbr5891(value, decimals), decimals)}%`
   const row = label => nodes(render.value).find(node => node.type === 'tr' && nodes(node).some(child => child.type === 'th' && text(child).trim().startsWith(label)))
   const initial = simulation().result
-  assert.ok(text(row('Taxa final')).includes(pct(initial.taxa, 2) + ' a.a.'))
-  assert.ok(text(row('Taxa final')).includes(pct(initial.taxaMensal, 3) + ' a.m.'))
-  const cetRow = text(row('CET estimado'))
-  assert.match(cetRow, /a\.a\. · .*a\.m\./)
-  // Mesmos valores mensais já presentes no detalhamento, agora no resumo.
+  const executive = nodes(render.value).find(node => node.props?.annualCet !== undefined)
+  assert.ok(text(executive.props.tax).includes(pct(initial.taxa, 2) + ' a.a.'))
+  assert.ok(text(executive.props.tax).includes(pct(initial.taxaMensal, 3) + ' a.m.'))
+  assert.match(executive.props.annualCet, /a\.a\./)
+  assert.match(executive.props.monthlyCet, /a\.m\./)
   const cetDetail = nodes(render.value).find(node => node.props?.className === 'fm-kpi' && text(node).startsWith('CET estimado'))
-  const monthly = cetRow.match(/· (.+? a\.m\.)/)[1]
-  assert.ok(text(cetDetail).includes(monthly))
+  assert.ok(text(cetDetail).includes(executive.props.monthlyCet))
   await change('fm-compare', true)
   for (const alternative of simulation().comparison.alternatives) {
     assert.ok(text(row('Taxa final')).includes(pct(alternative.result.taxaMensal, 3) + ' a.m.'))

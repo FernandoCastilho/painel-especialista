@@ -1,5 +1,17 @@
 # Comparador de Crédito
 
+## Roteiro Demanda, Encargos e Resultado (21/11/2026)
+
+A tela (hoje "Necessidade do Cliente") passou a seguir o roteiro aprovado no piloto do Capital de Giro (`docs/calculadoras-roteiro-2026-11-21.md`). Nenhuma conta mudou: com os mesmos dados, os números são os mesmos. Fotos de antes e depois em `docs/calculadoras-roteiro/comparador-credito-antes-depois-*.png`.
+
+- **1 Demanda do cliente** (antes "Dados comuns da necessidade do cliente"): valor, prazo total, carência e amortização à vista. Data da liberação, praça, regime tributário e adicional de IRPJ ficam na gaveta "Detalhes do contrato", com o resumo no título. A gaveta abre sozinha se a data ficar vazia.
+- **2 Encargos**: o seletor de 1 a 5 operações e as colunas. "Taxa efetiva" virou "Taxa de juros efetiva", "Tarifas na liberação (sem IOF)" virou "TAC e fee na liberação" e "Tarifas em cada pagamento" virou "Outros, em cada pagamento"; o significado é o mesmo. Garantia e valor da garantia foram para "Mais condições desta modalidade", junto do enquadramento do IOF; essa gaveta abre sozinha se o erro for na garantia.
+- **Cenários e comparações** (sem número, antes do botão): cenários do CDI, aplicação financeira e mesmo valor líquido num bloco só. Abre sozinho com operação pós-CDI ou opção marcada e fecha quando a última operação pós-CDI sai sem nada marcado.
+- **3 Resultado · custo final para o cliente**: no topo, as perguntas do piloto ("Quanto entra no caixa", "Quanto paga por mês", "Quanto paga no total", "Quanto custa"), uma coluna por operação; com uma operação só, quatro quadros como no Capital de Giro. "Quanto custa" mostra o CET com o nome que a conta dá (parte fixa no pós-CDI, art. 6º na conta garantida e no desconto), o custo projetado quando existe e o custo em reais sobre o líquido. Os selos "menor CET" e "menor custo" seguem a regra que a matriz já usava (decisão de 11/11/2026: CET só compara o mesmo tipo de taxa; sem vencedor absoluto). A composição informa o valor e a participação de juros, IOF e tarifas no custo sobre o líquido.
+- **Referência de mercado**, último bloco: curva DI x pré quando há operação de taxa fixa e CDI futuro quando há pós-CDI.
+- **Modo Apresentar**: o slide de dados mostra as gavetas abertas; o de resultado mostra as respostas para as operações cotadas. Leitura consultiva, dados básicos e a matriz longa (que o slide já retirava) não entram no slide; na tela continuam.
+- Código: `src/CreditComparison.jsx`, `src/CalcPattern-comparador.css` e `src/comparadorRoteiro.js`. Provas: `test/comparador-roteiro.test.mjs` e `test/credit-comparison-ui.test.mjs`.
+
 ## Versão por modalidade (10/11/2026)
 
 A tela passou a seguir o modelo "Simulador de empréstimo · Compare modalidades". Rota igual: `#calculadora/comparador-credito`.

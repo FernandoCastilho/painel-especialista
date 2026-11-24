@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { setImmediate } from 'node:timers/promises'
 import { collectTrends, parseTrends, TRENDS_RSS } from '../scripts/trends-lib.mjs'
 import { preserveForTrends } from '../scripts/preserve-for-trends.mjs'
 import { RETAIN_FILES, createWeeklySnapshot } from '../scripts/weekly-data.mjs'
@@ -72,7 +73,25 @@ test('atualização exclusiva de Trends conserva cada outra base byte a byte, ap
   const fixture = weeklyFixture()
   const trends = JSON.stringify({ generatedAt: 600, items: [], stale: false })
   const loaded = [], saved = {}
-  const retained = await preserveForTrends({ readTrends: async () => trends, load: async file => { loaded.push(file); return fixture[file] }, save: async (file, text) => { assert.equal(loaded.length, RETAIN_FILES.length - 1); saved[file] = text } })
+  let active = 0, peak = 0
+  const retained = await preserveForTrends({
+    readTrends: async () => trends,
+    load: async file => {
+      active++
+      peak = Math.max(peak, active)
+      await setImmediate()
+      loaded.push(file)
+      active--
+      return fixture[file]
+    },
+    save: async (file, text) => {
+      assert.equal(active, 0)
+      assert.equal(loaded.length, RETAIN_FILES.length - 1)
+      saved[file] = text
+    },
+  })
+  assert.ok(peak > 1 && peak <= 6, `leituras simultâneas: ${peak}`)
+  assert.deepEqual(loaded.toSorted(), RETAIN_FILES.filter(file => file !== 'trends.json').toSorted())
   assert.equal(saved['trends.json'], trends)
   for (const file of RETAIN_FILES.filter(file => file !== 'trends.json')) assert.equal(saved[file], fixture[file], file)
   assert.deepEqual(saved, retained)
@@ -81,6 +100,15 @@ test('atualização exclusiva de Trends conserva cada outra base byte a byte, ap
 test('falha isolada ao preservar outra base aborta antes de escrever em qualquer arquivo', async () => {
   const fixture = weeklyFixture(), saved = []
   await assert.rejects(preserveForTrends({ readTrends: async () => fixture['trends.json'], load: async file => file === 'news.json' ? '<html>offline</html>' : fixture[file], save: async file => saved.push(file) }), /news.json/)
+  const last = RETAIN_FILES.at(-1)
+  await assert.rejects(preserveForTrends({
+    readTrends: async () => fixture['trends.json'],
+    load: async file => {
+      if (file === last) throw Error('download interrompido')
+      return fixture[file]
+    },
+    save: async file => saved.push(file),
+  }), /download interrompido/)
   assert.deepEqual(saved, [])
 })
 test('subaba Trends mantém Moedas e Veículos pesados e documenta os limites do histórico', async () => {

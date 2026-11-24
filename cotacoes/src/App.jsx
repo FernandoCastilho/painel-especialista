@@ -11,7 +11,6 @@ import { quoteHealth } from './dataHealth.js'
 const MarketContext = lazy(() => import('./MarketContext.jsx'))
 const Outros = lazy(() => import('./Outros.jsx'))
 const Calculadora = lazy(() => import('./Calculadora.jsx'))
-const RpnCalculator = lazy(() => import('./RpnCalculator.jsx'))
 const RecuperacaoJudicial = lazy(() => import('./RecuperacaoJudicial.jsx'))
 const Inadimplencia = lazy(() => import('./Inadimplencia.jsx'))
 const Calendario = lazy(() => import('./Calendario.jsx'))
@@ -19,6 +18,7 @@ import Expandable from './Expandable.jsx'
 import ChartFilters from './ChartFilters.jsx'
 import DateRangePicker from './DateRangePicker.jsx'
 import { fadeIn } from './motion.js'
+import RpnDock from './RpnDock.jsx'
 import { CURRENCIES, REFRESH_DAILY_MAX, useQuotes } from './useQuotes.js'
 import HistoryChart from './HistoryChart.jsx'
 const Juros = lazy(() => import('./Juros.jsx'))
@@ -35,12 +35,14 @@ import MascotSlot from './MascotSlot.jsx'
 const Feriados = lazy(() => import('./Feriados.jsx'))
 import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
+const Novidades = lazy(() => import('./Novidades.jsx'))
 const Podcast = lazy(() => import('./Podcast.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
 const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
+const Ma = lazy(() => import('./Ma.jsx'))
 const Apresentar = lazy(() => import('./Apresentar.jsx'))
 import { useDataFile } from './useDataFile.js'
 import Nav, { TABS } from './Nav.jsx'
@@ -223,7 +225,7 @@ export default function App() {
     } catch {
       /* sem histórico (ex.: arquivo local) */
     }
-    if (!(id === 'bndes' && tab === 'bndes')) window.scrollTo({ top: 0 }) // escolher série e período na aba BNDES não leva ao topo
+    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
   }
   useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
     if (tab !== 'cenarios' || !CEN_OLD[sub]) return
@@ -299,7 +301,7 @@ export default function App() {
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
     <header className="term-head">
       <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
-      <Tape quotes={quotes} rates={rates} oil={oil.data} />
+      <Tape quotes={quotes} rates={rates} oil={oil.data} showFxFlags={tab === 'resumo'} />
     </header>
     <div className="nav-top"><Nav tab={tab} onTab={(id) => goto(id)} /></div>
     {tab === 'resumo' && (
@@ -353,11 +355,10 @@ export default function App() {
       {tab === 'bndes' && <Bndes view={sub} onView={(v, replace) => goto('bndes', v, replace)} />}
 
       {tab === 'bancos' && <Bancos />}
+      {tab === 'ma' && <Ma goto={goto} view={sub} onView={(v, replace) => goto('ma', v, replace)} />}
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
       {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} quotes={quotes} />}
-
-      {tab === 'rpn' && <RpnCalculator />}
 
       {tab === 'feriados' && <Feriados hol={hol} />}
 
@@ -370,6 +371,7 @@ export default function App() {
       )}
 
       {tab === 'podcast' && <Podcast />}
+      {tab === 'novidades' && <Novidades />}
       {tab === 'aprender' && <Aprender view={sub} goto={goto} />}
 
       {tab === 'apresentar' && <Apresentar quotes={quotes} macro={macro} curves={curves} hol={hol} colors={COLORS} />}
@@ -390,6 +392,7 @@ export default function App() {
         </Sheet>
       )}
       </Suspense>
+      <RpnDock active={tab === 'rpn'} />
     </main>
     </AvisosProvider>
   )
