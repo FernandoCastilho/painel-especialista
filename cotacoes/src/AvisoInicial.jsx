@@ -23,7 +23,7 @@ export default function AvisoInicial({ open, onClose }) {
     }
   }, [open])
   if (!open) return null
-  const semana = novidadesDaSemana(NOVIDADES_RECENTES).slice(0, 3)
+  const semana = novidadesDaSemana(NOVIDADES_RECENTES).slice(0, 5)
   return (
     <dialog ref={ref} className="aviso-inicial aviso-inicial-compacto" aria-labelledby="aviso-inicial-title" aria-describedby="aviso-inicial-text" onCancel={(e) => { e.preventDefault(); onClose() }}>
       <h2 id="aviso-inicial-title">Aviso</h2>
