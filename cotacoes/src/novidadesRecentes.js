@@ -3,6 +3,13 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '24/11/2026',
+    destaques: ['Notícias do Mercado sem as abas Veículos pesados e Eleições EUA'],
+    items: [
+      'Mercado hoje > Notícias: saíram as abas Veículos pesados e Eleições EUA. Veículos pesados continua em Setores > Produção e consumo, com os indicadores da ANFAVEA e as notícias; as duas seguem disponíveis em Apresentar. A busca do Painel deixa de trazer matérias de Eleições EUA. As abas de Notícias ficam sempre todas à vista, sem barra de rolagem.',
+    ],
+  },
+  {
     date: '23/11/2026',
     destaques: [
       'Nova seção M&A, com mapa do Brasil e operações com fonte',
