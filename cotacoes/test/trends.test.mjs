@@ -111,10 +111,10 @@ test('falha isolada ao preservar outra base aborta antes de escrever em qualquer
   }), /download interrompido/)
   assert.deepEqual(saved, [])
 })
-test('subaba Trends mantém Moedas e Veículos pesados e documenta os limites do histórico', async () => {
+test('subaba Trends mantém Moedas e Reforma e documenta os limites do histórico', async () => {
   const resumo = await readFile(new URL('../src/Resumo.jsx', import.meta.url), 'utf8')
   assert.match(resumo, /newsTab === 'trends' \? <GoogleTrends \/>/)
-  for (const id of ['moedas', 'reforma', 'eleicoes', 'trends', 'veiculos-pesados']) assert.ok(resumo.includes(`id: '${id}'`))
+  for (const id of ['moedas', 'reforma', 'trends']) assert.ok(resumo.includes(`id: '${id}'`))
   const ui = await readFile(new URL('../src/GoogleTrends.jsx', import.meta.url), 'utf8')
   assert.match(ui, /Não atualiza automaticamente/)
   assert.match(ui, /não é coletado nem armazenado pelo painel/)

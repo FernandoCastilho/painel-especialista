@@ -13,5 +13,6 @@ export default [
     rules: { 'react/jsx-uses-vars': 'error', 'react/jsx-uses-react': 'off', ...reactHooks.configs.recommended.rules, 'no-unused-vars': ['error', { args: 'none', caughtErrors: 'none', varsIgnorePattern: '^_|^React$' }] },
   },
   { files: ['scripts/**/*.mjs', 'test/**/*.mjs', 'vite.config.js', 'eslint.config.js'], languageOptions: { ecmaVersion: 2023, sourceType: 'module', globals: globals.node } },
+  { files: ['worker/**/*.mjs'], languageOptions: { ecmaVersion: 2023, sourceType: 'module', globals: { ...globals.serviceworker, console: 'readonly' } } },
   { files: ['scripts/**/*.cjs'], languageOptions: { ecmaVersion: 2023, sourceType: 'commonjs', globals: { ...globals.node, ...globals.browser } } },
 ]

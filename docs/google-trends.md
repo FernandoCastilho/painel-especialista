@@ -1,6 +1,6 @@
 # Google Trends em Mercado hoje
 
-Subaba de Notícias após Eleições EUA. Feed oficial https://trends.google.com/trending/rss?geo=BR, separado dos termos selecionados no Explore. Até três destaques classificados pelo título; a ausência de correspondência aparece como ausência, sem completar com assuntos aleatórios. Classificação por palavras pode exigir revisão contextual.
+Subaba de Notícias, a última do quadro (Eleições EUA e Veículos pesados saíram em 24/11/2026). Feed oficial https://trends.google.com/trending/rss?geo=BR, separado dos termos selecionados no Explore. Até três destaques classificados pelo título; a ausência de correspondência aparece como ausência, sem completar com assuntos aleatórios. Classificação por palavras pode exigir revisão contextual.
 
 ## Atualização
 
@@ -28,7 +28,7 @@ Custos e reforma não têm arquivo local. Todos os grupos incluem termos sugerid
 
 ## Integração e testes
 
-A integração preserva as atuais subabas Moedas e Veículos pesados. A busca local indexa a descrição estática e abre Notícias › Google Trends; o RSS não é tratado como manchete jornalística da janela de 120 horas. Configurações registra o estado e a data do RSS, inclusive nos fins de semana. O painel considera a coleta atrasada após 25 horas e distingue a ausência de assuntos relacionados da ausência de coleta válida.
+A integração preserva as demais subabas de Notícias. A busca local indexa a descrição estática e abre Notícias › Google Trends; o RSS não é tratado como manchete jornalística da janela de 120 horas. Configurações registra o estado e a data do RSS, inclusive nos fins de semana. O painel considera a coleta atrasada após 25 horas e distingue a ausência de assuntos relacionados da ausência de coleta válida.
 
 `node --test test/trends.test.mjs test/trends-ui.test.mjs test/weekly-data.test.mjs` cobre classificação, datas, retenção, ausência de dados inventados, preservação integral e falha isolada de outra fonte antes de qualquer escrita. Confere as dez combinações de grupo/período, os termos codificados, a substituição de um único iframe, cliques repetidos e fallback visível mesmo sem RSS. `scripts/smoke-trends.cjs` usa RSS e iframe simulados somente no teste, em 390, 1280 e 1440 px, cobrindo grupos, períodos, arquivo recolhido, estados vazio/atrasado/indisponível e largura. Seu sucesso não comprova disponibilidade ao vivo do Google.
 
