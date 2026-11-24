@@ -26,21 +26,21 @@ Premissas do borderô hipotético, aprovadas por Fernando:
 
 - Quantidade de boletos = valor total ÷ ticket médio, arredondada para inteiro (meio exato sobe; a conta é feita em centavos). O ticket efetivo é valor total ÷ quantidade: só é igual ao digitado quando a divisão é exata, e a tela o mostra quando difere em mais de 0,1%. Com n boletos, o desvio é de até 1/(2n−1): cerca de 1,7% com 30.
 - Vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio. Ex.: prazo médio de 30 dias → vencimentos de 15 a 45 dias corridos.
-- Valores diferentes por boleto, de metade a uma vez e meia do ticket **efetivo**, em padrão fixo. Não há sorteio: a mesma entrada devolve sempre o mesmo borderô.
+- Valores diferentes por boleto, de metade a uma vez e meia do ticket **efetivo**, em sequência fixa bem espalhada (passo da razão áurea). Não há sorteio: a mesma entrada devolve sempre o mesmo borderô. Cada valor aparece em dois boletos, um que vence antes e outro depois do prazo médio: 30 boletos têm 15 valores diferentes. Até 24/11/2026 de manhã, o padrão tinha só cinco faixas de valor; foi ampliado porque Fernando pediu "valores totalmente diferentes".
 - Dias e valores são espelhados em torno do meio da lista. Por isso o valor total e o prazo médio ponderado pelo valor fecham no que foi digitado (o ticket, só quando a divisão é exata).
 - Com um ou dois boletos não há como variar o valor sem sair do ticket: ficam iguais. Um boleto só vence no próprio prazo médio.
 - Limites: prazo médio de 1 a 365 dias; ticket médio maior que zero e até o valor total; até 1.000.000 de boletos.
 
 Depois de montado o borderô, a conta aplica o ajuste de dia útil a cada vencimento. Isso pode alongar um pouco o prazo: a tela mostra o "prazo médio até o pagamento, já no dia útil" (no exemplo de 30 dias, cerca de 30,8).
 
-O que cada campo move: o prazo médio é o que mais pesa em juros e IOF. O ticket médio define a quantidade de boletos e pesa na tarifa cobrada por título; em juros e IOF o efeito é pequeno, porque muda quais vencimentos caem em fim de semana ou feriado (na revisão independente de 24/11/2026, em R$ 225,6 mil a 1,83% a.m.: até R$ 327 de juros e R$ 42 de IOF entre 1, 5 e 30 boletos).
+O que cada campo move: o prazo médio é o que mais pesa em juros e IOF. O ticket médio define a quantidade de boletos e pesa na tarifa cobrada por título; em juros e IOF o efeito é pequeno, porque muda quais vencimentos caem em fim de semana ou feriado (medido em 24/11/2026, em R$ 225,6 mil a 1,83% a.m., entre 1, 5 e 30 boletos, em 365 datas de operação e prazos de 30, 60 e 90 dias: em média R$ 97 de juros e R$ 12 de IOF; no pior caso, R$ 490 de juros e R$ 63 de IOF, com operação em 08/12/2026 e prazo de 60 dias, perto do Carnaval).
 
-Limites da estimativa, medidos na revisão independente de 24/11/2026 (R$ 225,6 mil a 1,83% a.m., convenção comercial):
+Limites da estimativa, medidos em 24/11/2026 com os roteiros da revisão independente, já no padrão de valores atual (R$ 225,6 mil a 1,83% a.m., convenção comercial):
 
 - O IOF real depende da data de cada boleto. Com o borderô em mãos, usar "Título a título".
 - Frente a um título único em exatos N dias corridos, a estimativa sai um pouco mais cara: líquido cerca de R$ 70 menor (0,03% do nominal), em média, para 30, 60 e 90 dias. A causa é o adiamento para o dia útil, cerca de meio dia a mais.
-- Espalhar os vencimentos, sozinho, muda pouco o IOF em prazos curtos: R$ 0,90 a menos em 30 dias, R$ 3,53 em 60 e R$ 7,89 em 90.
-- Prazo médio acima de cerca de 243 dias: parte dos boletos passa de 365 dias, onde o IOF diário para no teto. A estimativa de IOF fica menor que a de um título único no prazo médio: R$ 260 a menos em 300 dias e R$ 727 (12,3%) em 365. A tela avisa quando há boletos acima de 365 dias.
+- Espalhar os vencimentos, sozinho, muda pouco o IOF em prazos curtos: R$ 0,96 a menos em 30 dias, R$ 3,78 em 60 e R$ 8,41 em 90.
+- Prazo médio acima de cerca de 243 dias: parte dos boletos passa de 365 dias, onde o IOF diário para no teto. A estimativa de IOF fica menor que a de um título único no prazo médio: R$ 278 a menos em 300 dias e R$ 764 (12,9%) em 365. A tela avisa quando há boletos acima de 365 dias.
 - Taxa alta com prazo longo pode bloquear a conta mesmo com prazo médio aceitável, porque o boleto mais longo vai a uma vez e meia do prazo médio.
 
 Testes: `test/analise-desconto-bordero.test.mjs` (borderô fecha no digitado, conta igual à título a título, conferência boleto a boleto, limites) e `test/analise-desconto-view.test.mjs` (tela).

@@ -81,7 +81,7 @@ test('abre pelo prazo médio, sem vermelho, com o borderô hipotético e a lista
   assert.doesNotMatch(h.html(), /role="alert"|aria-invalid="true"|Vencimento contratual|Adicionar grupo de títulos/)
   await h.set('titleFeeMode', 'total')
   const html = h.html().replace(/\u00a0/g, ' ')
-  assert.match(html, /<b>Estimativa:<\/b> 30 boletos de R\$ 3\.760,01 a R\$ 11\.280,02, vencendo em 15 a 45 dias\./)
+  assert.match(html, /<b>Estimativa:<\/b> 30 boletos de R\$ 3\.949,38 a R\$ 11\.280,02, vencendo em 15 a 45 dias\./)
   assert.match(html, /Prazo médio até o pagamento, já no dia útil: <b>\d+(,\d)? dias<\/b>/)
   assert.match(html, /<details class="dsc-drawer"><summary>Ver o borderô hipotético<small> · 30 boletos<\/small><\/summary>/)
   assert.equal(nodes(h.render.value).filter(n => n.type === 'table').length, 4)

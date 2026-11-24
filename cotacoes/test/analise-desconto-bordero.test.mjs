@@ -42,14 +42,17 @@ test('quantidade de boletos arredonda o meio exato sempre para cima, sem ruído 
   for (const [value, ticket, count] of [[0.35, 0.1, 4], [1.89, 0.54, 4], [35000, 10000, 4], [25000, 10000, 3], [24999.99, 10000, 2], [14999.99, 10000, 1]]) assert.equal(hypotheticalTitles({ value, averageDays: 30, ticket, date }).titles, count, `${value} ÷ ${ticket}`)
 })
 
-test('boletos têm valores diferentes, de metade a uma vez e meia do ticket médio, em padrão fixo', () => {
+test('boletos têm valores bem variados, de metade a uma vez e meia do ticket médio, em sequência fixa', () => {
   const input = { value: 225600.43, averageDays: 30, ticket: 7520, date }
   const h = hypotheticalTitles(input)
-  near(h.minValue, 0.5 * h.ticket)
-  near(h.maxValue, 1.5 * h.ticket)
+  // A faixa vai de metade a uma vez e meia do ticket, e uma das pontas é sempre alcançada.
+  assert.ok(h.minValue >= 0.5 * h.ticket - 1e-9 && h.maxValue <= 1.5 * h.ticket + 1e-9)
+  assert.ok(Math.abs(h.minValue - 0.5 * h.ticket) < 1e-9 || Math.abs(h.maxValue - 1.5 * h.ticket) < 1e-9)
   const values = h.titleRows.map(row => row.value)
-  assert.ok(new Set(values.map(value => value.toFixed(2))).size >= 4, 'há boletos maiores e menores')
   assert.ok(values.every(value => value >= h.minValue - 1e-9 && value <= h.maxValue + 1e-9))
+  // 30 boletos, 15 valores diferentes: cada valor aparece em dois boletos, um antes e outro depois do prazo médio.
+  assert.equal(new Set(values.map(value => value.toFixed(2))).size, 15)
+  assert.deepEqual(values.map(value => value.toFixed(6)), [...values].reverse().map(value => value.toFixed(6)))
   // Sem sorteio: a mesma entrada devolve sempre o mesmo borderô.
   assert.deepEqual(hypotheticalTitles(input), h)
   // Um boleto só, ou dois: não há como variar sem sair do ticket; ficam no ticket médio.

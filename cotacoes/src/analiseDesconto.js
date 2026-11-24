@@ -61,13 +61,15 @@ export function titleFee({ value, titles, feeMode, fee }) {
 // - Quantidade de boletos = valor total ÷ ticket médio, arredondada (em centavos, para o meio exato subir sempre); o ticket
 //   efetivo é valor total ÷ quantidade e só é igual ao digitado quando a divisão é exata.
 // - Vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio (30 dias → de 15 a 45 dias).
-// - Valores diferentes, de metade a uma vez e meia do ticket efetivo, em padrão fixo (sem sorteio: a mesma entrada dá
-//   sempre o mesmo resultado).
+// - Valores diferentes, de metade a uma vez e meia do ticket efetivo, em sequência fixa bem espalhada (sem sorteio: a
+//   mesma entrada dá sempre o mesmo resultado). Cada valor aparece em dois boletos, um que vence antes e outro depois
+//   do prazo médio: é esse espelho que faz o prazo médio fechar.
 // Dias e valores são espelhados em torno do meio da lista; por isso o total e o prazo médio ponderado pelo valor
 // fecham no que foi digitado. O ajuste de dia útil vem depois, na conta, e pode alongar um pouco o prazo médio.
 // firstDays e lastDays devolvem os vencimentos de fato usados (com um boleto só, é o próprio prazo médio).
 const HYPOTHETICAL_MAX_DAYS = 365
-const HYPOTHETICAL_VALUE_PATTERN = [-1, 1, -0.5, 0.5, 0]
+// Passo da sequência de valores: a razão áurea espalha os pontos entre −1 e 1 sem repetir nem formar faixas.
+const HYPOTHETICAL_VALUE_STEP = (Math.sqrt(5) - 1) / 2
 export function hypotheticalTitles({ value, averageDays, ticket, date }) {
   const release = parseDiscountDate(date)
   if (!release || !money(value, true) || !money(ticket, true) || !integer(averageDays, HYPOTHETICAL_MAX_DAYS)) return invalid('Confira a data, o valor total, o prazo médio e o ticket médio.')
@@ -80,7 +82,7 @@ export function hypotheticalTitles({ value, averageDays, ticket, date }) {
     const near = mirror(index), days = near * 2 === count - 1 ? averageDays : Math.round(from + (to - from) * near / (count - 1))
     return index === near ? days : 2 * averageDays - days
   }
-  const raw = index => HYPOTHETICAL_VALUE_PATTERN[mirror(index) % HYPOTHETICAL_VALUE_PATTERN.length]
+  const raw = index => 2 * ((mirror(index) + 1) * HYPOTHETICAL_VALUE_STEP % 1) - 1
   let mean = 0, spread = 0
   for (let index = 0; index < count; index++) mean += raw(index) / count
   for (let index = 0; index < count; index++) spread = Math.max(spread, Math.abs(raw(index) - mean))
