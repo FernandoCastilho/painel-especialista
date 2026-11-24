@@ -61,7 +61,7 @@ test('sem praça escolhida os resultados são os mesmos de antes (só feriados n
   const finame = { valor: 100000, participacao: 100, prazo: 24, carencia: 6, custo: 'tfc', custoFinanceiro: 8, taxaBndes: 1.25, taxaAgente: 3, dataLiberacao: new Date(2028, 6, 20, 12) }
   assert.deepEqual(simular(finame), simular({ ...finame, calendarios: ['BR'] }))
   assert.equal(+vencimentoDia15(new Date(2028, 6, 20, 12), 1), +vencimentoDia15(new Date(2028, 6, 20, 12), 1, {}, ['BR']))
-  const form = { ...DISCOUNT_INITIAL_FORM, titleFeeMode: 'total' }
+  const form = { ...DISCOUNT_INITIAL_FORM, titleMode: 'titles', titleFeeMode: 'total' }
   const semPraca = { ...form }
   delete semPraca.praca
   assert.deepEqual(parseDiscountForm(semPraca).result, parseDiscountForm(form).result)
@@ -151,7 +151,7 @@ test('Análise de desconto: título de 25/01/2027 com praça SP é pago em 26/01
   assert.equal(discountGiro(giro).schedule[0].dueDate, '2027-01-25')
   assert.equal(discountGiro({ ...giro, calendars: ['BR', 'SP'] }).schedule[0].dueDate, '2027-01-26')
   // Formulário: a praça escolhida chega aos títulos.
-  const form = { ...DISCOUNT_INITIAL_FORM, titleFeeMode: 'total', date: '2026-12-28', titleRows: [{ value: '100.000,00', count: '1', dueDate: '2027-01-25' }] }
+  const form = { ...DISCOUNT_INITIAL_FORM, titleMode: 'titles', titleFeeMode: 'total', date: '2026-12-28', titleRows: [{ value: '100.000,00', count: '1', dueDate: '2027-01-25' }] }
   assert.equal(parseDiscountForm({ ...form, praca: 'SP' }).operation.rows[0].paymentDate, '2027-01-26')
   assert.equal(parseDiscountForm({ ...form, praca: 'BR' }).operation.rows[0].paymentDate, '2027-01-25')
   assert.ok(parseDiscountForm({ ...form, praca: 'XX' }).errors.praca)
