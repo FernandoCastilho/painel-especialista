@@ -1,0 +1,24 @@
+# Fredix: servidor intermediário do agente do painel (Cloudflare Workers, plano gratuito).
+# Segredos (ANTHROPIC_API_KEY, TURNSTILE_SECRET_KEY) não ficam aqui: vêm dos segredos do GitHub na publicação.
+name = "fredix"
+main = "fredix.mjs"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+account_id = "PREENCHER_ID_DA_CONTA"
+
+[vars]
+ORIGENS_PERMITIDAS = "https://fernandocastilho.github.io"
+TETO_MENSAL_USD = "8"
+TETO_DIARIO_USD = "0.27"
+LIMITE_POR_HORA = "10"
+LIMITE_POR_DIA = "30"
+LIMITE_PERGUNTAS_DIA = "300"
+
+# Caderno de contagens de uso (sem conversas). Trocar pelo ID criado na Cloudflare.
+[[kv_namespaces]]
+binding = "FREDIX_KV"
+id = "PREENCHER_ID_DO_KV"
+
+[observability]
+enabled = false

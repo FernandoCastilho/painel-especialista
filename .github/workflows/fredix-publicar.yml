@@ -1,0 +1,58 @@
+name: Fredix — publicar servidor
+# Publica o servidor intermediário do Fredix na Cloudflare. Só roda quando alguém aciona à mão.
+# Segredos usados: CLOUDFLARE_API_TOKEN, ANTHROPIC_API_KEY, TURNSTILE_SECRET_KEY (cadastrados no GitHub, nunca no código).
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fredix-publicar
+  cancel-in-progress: false
+jobs:
+  publicar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: cotacoes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cotacoes/package-lock.json
+      - run: npm ci
+      - name: Conferir o Fredix antes de publicar
+        run: node --test test/fredix.test.mjs test/fredix-ui.test.mjs
+      - name: Conferir a configuração
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+        run: |
+          falta=""
+          for nome in CLOUDFLARE_API_TOKEN ANTHROPIC_API_KEY TURNSTILE_SECRET_KEY; do [ -n "${!nome}" ] || falta="$falta $nome"; done
+          grep -q 'PREENCHER_' worker/wrangler.toml && falta="$falta (IDs da Cloudflare no wrangler.toml)"
+          if [ -n "$falta" ]; then echo "::error::Falta configurar:$falta"; exit 1; fi
+      - name: Publicar o servidor
+        working-directory: cotacoes/worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx --yes wrangler@4.167.0 deploy
+      - name: Guardar as chaves no servidor
+        working-directory: cotacoes/worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+        run: |
+          arquivo="$RUNNER_TEMP/segredos.json"
+          node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY }), { mode: 0o600 })' "$arquivo"
+          npx --yes wrangler@4.167.0 secret bulk "$arquivo"
+          rm -f "$arquivo"
+      - name: Conferir se o servidor responde
+        run: |
+          endereco=$(node -p 'require("./src/fredixConfig.json").endpoint')
+          if [ -z "$endereco" ]; then echo "::warning::Endereço do Fredix ainda não está no painel (src/fredixConfig.json)."; exit 0; fi
+          curl -fsS --retry 5 --retry-delay 5 "$endereco/saude"
