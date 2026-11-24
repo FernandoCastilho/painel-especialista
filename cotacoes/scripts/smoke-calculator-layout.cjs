@@ -133,15 +133,6 @@ async function assertWorkspace(page, section, label) {
   assert.deepEqual(explanations, [], `${label}: explicações extensas ficam nas ajudas`)
 }
 
-// Padrão de 18/11/2026: resultado ao lado dos dados a partir de 1200px; abaixo deles nas telas menores.
-async function assertResultBeside(page, section, inputs, results) {
-  await page.evaluate(() => window.scrollTo(0, 0))
-  const box = await section.locator(inputs).boundingBox(), result = await section.locator(results).boundingBox()
-  const details = JSON.stringify({ box, result })
-  if (page.viewportSize().width >= 1200) assert.ok(result.x >= box.x + box.width && Math.abs(result.y - box.y) <= 2, 'resultado ao lado dos dados ' + details)
-  else assert.ok(result.y >= box.y + box.height - 1, 'resultado abaixo dos dados ' + details)
-}
-
 async function assertHelp(page, section, label, directory) {
   const help = section.getByRole('button', { name: /^Ajuda: / }).first()
   assert.ok(await help.count(), `${label}: ajuda disponível`)
@@ -281,11 +272,19 @@ async function fillScenario(page, section, route) {
     const [demanda, encargos] = [await section.locator('.cg-inputs > .lm').boundingBox(), await section.locator('.cg-inputs > .cx-panel').boundingBox()]
     if (page.viewportSize().width >= 1200) assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
     else assert.ok(encargos.y >= demanda.y + demanda.height, 'encargos abaixo da demanda')
-    // Lançamentos por dia segue como era: resultado ao lado dos dados a partir de 1200px, abaixo antes disso.
+    const curva = section.locator('h3#rm-titulo')
+    assert.equal(await curva.count(), 1, 'utilização única tem apenas uma referência de mercado')
+    await section.getByRole('button', { name: 'Comparar com parcelado', exact: true }).click()
+    assert.equal(await curva.count(), 1, 'comparativo tem apenas uma referência de mercado')
+    await curva.waitFor({ state: 'visible' })
+    // Lançamentos por dia no roteiro (24/11/2026): dados e resultado de cima para baixo, como na utilização única.
     await section.getByRole('button', { name: 'Lançamentos por dia', exact: true }).click()
-    assert.equal(await section.locator('.rt-timeline, .rt-result').count(), 0, 'roteiro só na utilização única')
+    assert.equal(await curva.count(), 1, 'lançamentos têm apenas uma referência de mercado')
+    assert.equal(await section.locator('.rt-result').count(), 1, 'roteiro também nos lançamentos')
+    assert.equal(await section.locator('.cg-result-col').count(), 0, 'sem o resultado ao lado')
     assert.equal(await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
-    await assertResultBeside(page, section, '.cg-inputs', '.cg-result-col')
+    const [dadosL, resultadoL] = [await section.locator('.cg-inputs').boundingBox(), await section.locator('.rt-result').boundingBox()]
+    assert.ok(resultadoL.y >= dadosL.y + dadosL.height, 'lançamentos: dados e resultado nesta ordem')
     await section.getByRole('button', { name: 'Utilização única', exact: true }).click()
   } else if (route === 'analise-desconto') {
     // A tela abre pelo prazo médio (24/11/2026): confere a largura como ela abre; o cenário fixo abaixo é do borderô título a título.

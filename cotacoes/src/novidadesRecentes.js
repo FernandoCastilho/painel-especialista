@@ -12,6 +12,7 @@ export const NOVIDADES_RECENTES = [
       'Pergunte ao Fredix: a coruja responde com os dados do Painel',
     ],
     items: [
+      'Conta Garantida: lançamentos por dia passam a seguir o mesmo roteiro da utilização única. O comparativo mostra o fluxo das parcelas e a curva até o fim da operação. O resultado pode ser baixado como rascunho do Outlook, sem enviar e-mail.',
       'Em Mais > Histórias, um mapa liga iFood, Netflix e Blockbuster por temas em comum. Cada caso traz a fundação, uma linha do tempo e links para as fontes.',
       'Clique na coruja Fredix e em "💬 Pergunte" para tirar dúvidas sobre cotações, juros, Focus, setores e notícias. Ele responde só com os dados do Painel e diz a fonte e a data. Não faz contas de taxa, CET ou IOF: indica a calculadora certa. Não digite dados de clientes, CPF, CNPJ, telefone ou e-mail. A conversa não fica gravada, e há limite de perguntas por pessoa.',
       'O ícone no topo ativa a tela cheia do navegador sem ocultar os menus, as cotações ou os controles do Painel. Use o mesmo ícone para voltar.',
