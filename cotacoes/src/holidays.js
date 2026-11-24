@@ -1,3 +1,5 @@
+import { B3_CALENDAR_2027_SOURCE, B3_LISTED_2027_CLOSED } from './b3Calendar2027.mjs'
+
 // Calendários de feriados por praça. Brasil, Nova York (Federal Reserve), Londres e Japão são calculados por regra;
 // a China vem de dados oficiais (ato do Conselho de Estado, via holiday-cn), porque muda todo ano e tem dias de compensação.
 // Datas em 'AAAA-MM-DD'. Nenhum feriado é inventado: sem dado para um ano da China, o app avisa em vez de supor.
@@ -68,7 +70,7 @@ const b3Trading = y => y === 2026 ? sortMap([
   ...[...brazil(y)].filter(([d]) => !isWeekend(d)),
   [iso(y, 12, 24), 'B3 · sem sessão de negociação (véspera de Natal)'],
   [iso(y, 12, 31), 'B3 · sem sessão de negociação (véspera de Ano Novo)'],
-]) : new Map()
+]) : y === 2027 ? sortMap(Object.entries(B3_LISTED_2027_CLOSED).map(([day, name]) => [`${y}-${day}`, name])) : new Map()
 
 const saoPaulo = (y) => sortMap([[iso(y, 1, 25), 'Aniversário da cidade de São Paulo'], [iso(y, 7, 9), 'Revolução Constitucionalista (estadual SP)']])
 // Minas Gerais: o feriado estadual (21/04) já é nacional; entram os municipais de Belo Horizonte.
@@ -249,7 +251,7 @@ export const cnMissingYears = (years, ctx = {}) => [...new Set(years)].filter((y
 
 export function calendarYearCovered(cal, year, ctx = {}) {
   if (cal === 'CN') return !!ctx.cn?.[year]
-  if (cal === 'B3') return year === 2026
+  if (cal === 'B3') return year === 2026 || year === 2027
   if (cal === 'PRE') return false // ausência de inventário estadual completo não é ausência de feriado
   return CALENDARS.some(c => c.id === cal)
 }
@@ -261,6 +263,7 @@ export const HOLIDAY_SOURCES = [
   { label: 'Consciência Negra · Lei 14.759/2023', url: 'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/l14759.htm' },
   { label: 'Curitiba · Decreto 2.385/2025 e Lei Municipal 3.015/1967', url: 'https://legisladocexterno.curitiba.pr.gov.br/VisualizarHTML.aspx?id=458542' },
   { label: 'Paraná · 19 de dezembro não é feriado civil (TRT9)', url: 'https://www.trt9.jus.br/portal/noticias.xhtml?id=5243491' },
+  { label: 'B3 · calendário de negociação de 2027 (Ofício 057/2026-VNC)', url: B3_CALENDAR_2027_SOURCE },
   { label: 'B3 · calendário de negociação de 2026', url: 'https://www.b3.com.br/pt_br/noticias/calendario-de-negociacao-da-b3-confira-o-funcionamento-da-bolsa-em-2026.htm' },
 ]
 

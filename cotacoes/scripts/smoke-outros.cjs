@@ -670,6 +670,18 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await p.locator('.feriados [role="status"]').textContent(), /Cobertura parcial: Estado do Paraná \(2026, 2027\) sem calendário completo verificado nesta base\. A ausência de registros não permite afirmar que não haverá feriados ou suspensões\./)
       assert.match(await p.locator('.feriados').innerText(), /Não há datas cadastradas nesta seleção\. Consulte a fonte oficial: a cobertura incompleta não indica ausência de feriados\./)
       assert.doesNotMatch(await p.locator('.feriados').innerText(), /Emancipação Política do Paraná/, '19 de dezembro não volta a ser apresentado como feriado civil estadual')
+      // B3 2027: a sessão especial é informativa, não uma linha de fechamento.
+      await p.clock.setFixedTime(Date.parse('2027-01-05T15:00:00Z'))
+      await p.reload(); await p.locator('.fer-filter select').waitFor()
+      await p.locator('.fer-filter select').selectOption('B3')
+      assert.match(await p.locator('.fer-months').innerText(), /08\/02\/27[\s\S]*09\/02\/27/)
+      assert.doesNotMatch(await p.locator('.fer-months').innerText(), /10\/02\/27/)
+      const horarios = p.locator('details', { has: p.locator('summary', { hasText: 'Horários especiais da B3 em 2027' }) })
+      await horarios.locator('summary').click()
+      assert.match(await horarios.innerText(), /Cinzas:[\s\S]*derivativos listados a partir das 13h/)
+      assert.match(await horarios.innerText(), /24 e 31\/12:[\s\S]*sem pregão listado[\s\S]*sem contraparte central[\s\S]*13h30/)
+      assert.equal(await horarios.getByRole('link', { name: 'Ofício 057/2026-VNC da B3' }).count(), 1)
+      await p.clock.setFixedTime(Date.parse('2026-11-05T15:00:00Z'))
       // aprender: lista de conceitos de um lado, explicação do outro, sem texto sobre o método
       await p.goto(base + '/#aprender/conceitos')
       await p.locator('.learn-list').waitFor()
