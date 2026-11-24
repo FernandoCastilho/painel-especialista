@@ -79,11 +79,20 @@ test('Fredix: clique duplo envia uma vez só', async t => {
   assert.equal(s.enviados.length, 1)
 })
 
-test('Fredix: sem servidor configurado não envia e avisa', async t => {
-  const s = await montar(t, { endpoint: '' })
+test('Fredix: sem servidor configurado, o botão não aparece', async t => {
+  const deps = { react: React, 'react-dom': { createPortal: el => el }, './fredixConfig.json': {}, './fredix.js': fredix, './fredixSeguranca.js': seguranca, './FredixChat.css': {} }
+  const { code } = await transform(await readFile(new URL('../src/FredixChat.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+  const module = { exports: {} }
+  runInNewContext(code, { module, exports: module.exports, window: {}, document: { body: {} }, require: nome => deps[nome] ?? require(nome), AbortController, setTimeout, clearTimeout })
+  const r = hookRenderer(() => module.exports.default({ configuration: { endpoint: '' } }))
+  t.after(() => r.close())
+  await r.settle()
+  assert.equal(r.value, null)
+})
+
+test('Fredix: mudar de tela fecha a conversa', async t => {
+  const s = await montar(t)
   await s.abrir()
-  assert.match(s.achar(n => n.props?.className === 'feedback-notice').props.children, /configuração/)
-  assert.equal(s.porId('fredix-pergunta').props.disabled, true)
   s.ouvintes.get('hashchange')(); await s.r.settle()
   assert.equal(s.dialogo.open, false)
 })
