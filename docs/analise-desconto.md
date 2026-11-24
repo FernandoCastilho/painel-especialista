@@ -1,6 +1,6 @@
 # Análise de desconto
 
-Descrição da interface e do motor vigentes, revisada em 11/11/2026. Acesso: Calculadoras → Análise de desconto, rota `#calculadora/analise-desconto`, comandos `DESCONTO` e `Análise de desconto`. Motor: `cotacoes/src/analiseDesconto.js`; tela: `AnaliseDesconto.jsx`.
+Descrição da interface e do motor vigentes, revisada em 24/11/2026. Acesso: Calculadoras → Análise de desconto, rota `#calculadora/analise-desconto`, comandos `DESCONTO` e `Análise de desconto`. Motor: `cotacoes/src/analiseDesconto.js`; tela: `AnaliseDesconto.jsx`.
 
 ## Roteiro da tela (21/11/2026)
 
@@ -8,13 +8,52 @@ A tela segue o roteiro aprovado no piloto do Capital de Giro (`docs/calculadoras
 
 | Bloco | O que mostra |
 |---|---|
-| 1 Demanda do cliente | data da operação, valor total dos títulos e os grupos de títulos (valor nominal, quantidade, vencimento). A praça do contrato fica na gaveta "Detalhes do contrato" |
+| 1 Demanda do cliente | data da operação e como informar os títulos: por prazo médio (valor total, prazo médio, ticket médio e o resumo do borderô hipotético) ou título a título (valor total dos títulos e os grupos, com valor nominal, quantidade e vencimento). A praça do contrato fica na gaveta "Detalhes do contrato" |
 | 2 Encargos | taxa de juros, convenção de desconto, tarifa dos títulos (forma de cobrança e valor), TAC e IOF calculado. O enquadramento tributário fica na gaveta "Enquadramento do IOF" |
 | 3 Resultado · custo final para o cliente | quanto entra no caixa (valor líquido), quanto é descontado (custo total completo) e quanto custa (CET do desconto, com o equivalente mensal e o custo pelo prazo real). "Do que é feito o custo": juros, IOF, tarifa dos títulos e TAC, com seus percentuais, mais o subtotal sem tarifa e a base do IOF |
 
 Depois do resultado, sem número, vem a "Comparação com o capital de giro": projeção mensal do desconto, premissas do capital de giro, a resposta "Desconto × giro: resultado" e as três tabelas recolhidas. O "valor para o giro comparado" (valor da linha mestra comum) aparece nas premissas do giro quando a opção "Valor da linha mestra" é escolhida em "Principal usado no giro".
 
 Os seis números que ficavam em quadrinhos dentro do formulário (base do IOF, tarifa total, subtotal, custo total, valor líquido e CET) estão agora no bloco 3. Como o motor não arredonda no meio do caminho, a soma das partes já arredondadas pode diferir do total em 1 centavo (em tese, até 2 com tarifa percentual) em cerca de 3 a cada 10 casos; isso já acontecia entre bruto, custo e líquido. Quando acontece, a tela não ajusta nenhum valor: mostra, logo abaixo do "Custo total completo", a linha "Arredondamento", com a soma das partes e a diferença (`centavosDaTela.js`, só apresentação). Exemplo: R$ 123.456,78 em títulos, com os demais dados do exemplo vigente, dá juros R$ 2.409,88, IOF R$ 777,61, tarifa R$ 564,00 e TAC R$ 260,00, que somam R$ 4.011,49, contra custo total de R$ 4.011,48.
+
+## Entrada por prazo médio (24/11/2026)
+
+Pedido de Fernando em 24/11/2026: aproximar a calculadora da conversa com o cliente, em que se conhece o valor total, o prazo médio e o ticket médio, e não cada boleto. A tela abre nessa entrada; "Título a título" continua disponível para o borderô real (campo "Informar por").
+
+A entrada só monta os títulos. **Juros, IOF, CET, alíquotas, teto de 365 dias, base do IOF e ajuste de dia útil são os mesmos** de `discountOperation`; nenhuma regra de cálculo mudou. Função: `hypotheticalTitles` em `cotacoes/src/analiseDesconto.js`.
+
+Premissas do borderô hipotético, aprovadas por Fernando:
+
+- Quantidade de boletos = valor total ÷ ticket médio, arredondada para inteiro (meio exato sobe; a conta é feita em centavos). O ticket efetivo é valor total ÷ quantidade: só é igual ao digitado quando a divisão é exata, e a tela o mostra quando difere em mais de 0,1%. Com n boletos, o desvio é de até 1/(2n−1): cerca de 1,7% com 30.
+- Vencimentos espalhados por igual entre a metade e uma vez e meia do prazo médio. Ex.: prazo médio de 30 dias → vencimentos de 15 a 45 dias corridos.
+- Valores diferentes por boleto, de metade a uma vez e meia do ticket **efetivo**, em sequência fixa bem espalhada (passo da razão áurea). Não há sorteio: a mesma entrada devolve sempre o mesmo borderô. Cada valor aparece em dois boletos, um que vence antes e outro depois do prazo médio: 30 boletos têm 15 valores diferentes. Até 24/11/2026 de manhã, o padrão tinha só cinco faixas de valor; foi ampliado porque Fernando pediu "valores totalmente diferentes".
+- Dias e valores são espelhados em torno do meio da lista. Por isso o valor total e o prazo médio ponderado pelo valor fecham no que foi digitado (o ticket, só quando a divisão é exata).
+- Com um ou dois boletos não há como variar o valor sem sair do ticket: ficam iguais. Um boleto só vence no próprio prazo médio.
+- Limites: prazo médio de 1 a 365 dias; ticket médio maior que zero e até o valor total; até 1.000.000 de boletos.
+
+Depois de montado o borderô, a conta aplica o ajuste de dia útil a cada vencimento. Isso pode alongar um pouco o prazo: a tela mostra o "prazo médio até o pagamento, já no dia útil" (no exemplo de 30 dias, cerca de 30,8).
+
+O que cada campo move: o prazo médio é o que mais pesa em juros e IOF. O ticket médio define a quantidade de boletos e pesa na tarifa cobrada por título; em juros e IOF o efeito é pequeno, porque muda quais vencimentos caem em fim de semana ou feriado (medido em 24/11/2026, em R$ 225,6 mil a 1,83% a.m., entre 1, 5 e 30 boletos, em 365 datas de operação e prazos de 30, 60 e 90 dias: em média R$ 97 de juros e R$ 12 de IOF; no pior caso, R$ 490 de juros e R$ 63 de IOF, com operação em 08/12/2026 e prazo de 60 dias, perto do Carnaval).
+
+Limites da estimativa, medidos em 24/11/2026 com os roteiros da revisão independente, já no padrão de valores atual (R$ 225,6 mil a 1,83% a.m., convenção comercial):
+
+- O IOF real depende da data de cada boleto. Com o borderô em mãos, usar "Título a título".
+- Frente a um título único em exatos N dias corridos, a estimativa sai um pouco mais cara: líquido cerca de R$ 70 menor (0,03% do nominal), em média, para 30, 60 e 90 dias. A causa é o adiamento para o dia útil, cerca de meio dia a mais.
+- Espalhar os vencimentos, sozinho, muda pouco o IOF em prazos curtos: R$ 0,96 a menos em 30 dias, R$ 3,78 em 60 e R$ 8,41 em 90.
+- Prazo médio acima de cerca de 243 dias: parte dos boletos passa de 365 dias, onde o IOF diário para no teto. A estimativa de IOF fica menor que a de um título único no prazo médio: R$ 278 a menos em 300 dias e R$ 764 (12,9%) em 365, medidos sem o ajuste de dia útil. Na tela, que aplica o dia útil também ao título único, o valor muda com a data da operação: em 365 datas a partir de 24/11/2026, de R$ 272 a R$ 320 em 300 dias e de R$ 743 a R$ 764 em 365 dias (em 24/11/2026: R$ 274,33 e R$ 763,78). A diferença mostrada soma dois efeitos, o teto de 365 dias e o espalhamento dos vencimentos; em 24/11/2026 o teto explica R$ 184,85 dos R$ 274,33 em 300 dias e R$ 631,47 dos R$ 763,78 em 365 (medição do Auditor Independente). A tela avisa quando há boletos acima de 365 dias e mostra, em reais, quanto o IOF estimado fica abaixo do de um título único no prazo médio digitado (ajuste de 24/11/2026, depois da publicação).
+- Taxa alta com prazo longo pode bloquear a conta mesmo com prazo médio aceitável, porque o boleto mais longo vai a uma vez e meia do prazo médio.
+
+Testes: `test/analise-desconto-bordero.test.mjs` (borderô fecha no digitado, conta igual à título a título, conferência boleto a boleto, limites) e `test/analise-desconto-view.test.mjs` (tela).
+
+## Conferência de regras e custos (24/11/2026)
+
+Revisão independente pedida por Fernando ("garanta que os juros, IOF e demais custos estejam corretos"). Resultado: correto, com ressalvas de vigência e de premissas.
+
+- Conta: 51 cenários recalculados em implementação própria (juros, base, IOF diário e adicional, tarifa nas três formas, TAC, custo total, líquido, CET e custo pelo prazo real), com diferença zero em centavos nos custos do desconto; a calculadora publicada deu os mesmos números. Na comparação com o giro, a diferença chegou a R$ 0,04 no custo total, por arredondamento da parcela em centavos.
+- Regras conferidas no texto oficial: IOF de 0,0082% ao dia e adicional de 0,38% para pessoa jurídica, base = nominal menos juros antecipados (tarifa e TAC não entram), teto de 365 dias por título e Simples/MEI a 0,00274% ao dia até R$ 30 mil ([Decreto 6.306/2007, art. 7º](https://www2.camara.leg.br/legin/fed/decret/2007/decreto-6306-14-dezembro-2007-566561-normaatualizada-pe.html)); CET com prazo de 30 dias sobre o limite e base de 365 dias ([Resolução CMN 4.881/2020](https://www.bcb.gov.br/api/conteudo/app/normativos/exibenormativo?p1=Resolu%C3%A7%C3%A3o%20CMN&p2=4881)); prorrogação do vencimento para o dia útil seguinte ([Código Civil, art. 132, § 1º](https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm)).
+- Não confirmado na fonte: a decisão do STF de julho de 2025 que sustenta a alíquota de 0,0082% (site bloqueado na sessão; a [nota da Receita de 17/07/2025](https://www.gov.br/fazenda/pt-br/canais_atendimento/imprensa/notas-a-imprensa/2025/julho/receita-federal-do-brasil-explica-como-ficam-os-pagamentos-do-iof-diante-do-novo-entendimento/) confirma a retomada). Com a alíquota antiga (0,0041%), o IOF diário do exemplo cairia pela metade.
+- Premissas do produto, que dependem de contrato ou de prática do banco: juros e IOF contados até o dia útil de pagamento (no exemplo título a título, 32 dias em vez de 30 somam R$ 275,23 de juros e R$ 34,55 de IOF); limite do Simples testado sobre o nominal total do borderô; "limite" do CET igual ao nominal da operação; base de 30 dias e taxa linear nos juros.
+- CET: a norma vale para pessoa física e micro e pequena empresa; para média empresa o número é informativo. O "% a.m." mostrado é o CET anual convertido por 12 meses.
 
 ## Entradas atuais
 
@@ -63,7 +102,7 @@ IOF diário do giro = soma de cada amortização × min(dias corridos desde a li
 
 ## Exemplo vigente e testes
 
-Exemplo sintético: operação em 05/11/2026; 30 títulos com nominal total de R$ 225.600,43, vencimento em 05/12/2026 (sábado, pago em 07/12/2026, 32 dias), comercial simples a 1,83% a.m.; tarifa total R$ 564 e TAC R$ 260; PJ geral.
+Exemplo sintético da entrada **título a título**: operação em 05/11/2026; 30 títulos com nominal total de R$ 225.600,43, vencimento em 05/12/2026 (sábado, pago em 07/12/2026, 32 dias), comercial simples a 1,83% a.m.; tarifa total R$ 564 e TAC R$ 260; PJ geral.
 
 - Juros: R$ 4.403,72.
 - Base do IOF: R$ 221.196,71.

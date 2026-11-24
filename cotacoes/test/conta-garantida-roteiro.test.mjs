@@ -81,5 +81,5 @@ test('utilização única e lançamentos por dia seguem a ordem do roteiro 1 · 
   for (const old of ['cg-result-col', '3. Referência de IOF', '2. Juros e convenções do contrato']) assert.ok(!source.includes(old), `sem o desenho antigo: ${old}`)
   assert.ok(source.includes("'Taxa do contrato (% a.m.)'"), 'rótulo da taxa nos lançamentos')
   assert.ok(source.includes("'Quanto amortizou'"), 'resposta dos lançamentos')
-  assert.match(source, /<div hidden=\{!comparing\}><ComparativoAlongamento \/><\/div>/)
+  assert.match(source, /<div hidden=\{!comparing\}><ComparativoAlongamento ativo=\{comparing\} \/><\/div>/)
 })

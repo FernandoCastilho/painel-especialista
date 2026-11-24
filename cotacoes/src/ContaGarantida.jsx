@@ -145,7 +145,7 @@ export default function ContaGarantida({ onBack }) {
       <button type="button" aria-pressed={comparing} onClick={() => setComparing(true)}>Comparar com parcelado</button>
     </div>
     {/* Tela recém-aberta: o que preencher aparece no aviso do resultado; "como começar" fica no "?" do título (tela limpa, 21/11/2026). */}
-    <div hidden={!comparing}><ComparativoAlongamento /></div>
+    <div hidden={!comparing}><ComparativoAlongamento ativo={comparing} /></div>
     {!comparing && <>
     {/* Os dois modos no roteiro de cima para baixo: 1 dados, 2 encargos, 3 resultado. Só apresentação. */}
     <div className={single ? 'cg-workspace cg-roteiro' : 'cg-workspace cg-roteiro cg-lancamentos'}>

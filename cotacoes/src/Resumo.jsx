@@ -38,7 +38,6 @@ import { Plot, useWidth, fmtTime } from './HistoryChart.jsx'
 import { KpiRow, Panel } from './TerminalDesk.jsx'
 import { useDataFile } from './useDataFile.js'
 const CuradoriaNoticias = lazy(() => import('./CuradoriaNoticias.jsx'))
-const GoogleTrends = lazy(() => import('./GoogleTrends.jsx'))
 const RateModal = lazy(() => import('./RateModal.jsx'))
 
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}`
@@ -486,7 +485,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
         <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>
           <Suspense fallback={<p className="status" role="status">Carregando notícias…</p>}>
-            {newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'trends' ? <GoogleTrends /> : <MarketNews bare />}
+            {newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : <MarketNews bare />}
           </Suspense>
         </Panel>
         </div>
@@ -557,7 +556,6 @@ const NEWS_TABS = [
   { id: 'split-payment', label: 'Split payment', refresh: ['curadoria-noticias.json'] },
   { id: 'reforma', label: 'Reforma tributária', refresh: ['curadoria-noticias.json'] },
   { id: 'escala-6x1', label: 'Escala 6x1', refresh: ['curadoria-noticias.json'] },
-  { id: 'trends', label: 'Google Trends', refresh: ['trends.json'] },
 ]
 // Bandeira das moedas de que a manchete provavelmente fala (as da busca e as citadas no título).
 function MoedasCitadas({ item }) {

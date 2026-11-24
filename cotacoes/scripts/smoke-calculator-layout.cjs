@@ -272,8 +272,14 @@ async function fillScenario(page, section, route) {
     const [demanda, encargos] = [await section.locator('.cg-inputs > .lm').boundingBox(), await section.locator('.cg-inputs > .cx-panel').boundingBox()]
     if (page.viewportSize().width >= 1200) assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
     else assert.ok(encargos.y >= demanda.y + demanda.height, 'encargos abaixo da demanda')
+    const curva = section.locator('h3#rm-titulo')
+    assert.equal(await curva.count(), 1, 'utilização única tem apenas uma referência de mercado')
+    await section.getByRole('button', { name: 'Comparar com parcelado', exact: true }).click()
+    assert.equal(await curva.count(), 1, 'comparativo tem apenas uma referência de mercado')
+    await curva.waitFor({ state: 'visible' })
     // Lançamentos por dia no roteiro (24/11/2026): dados e resultado de cima para baixo, como na utilização única.
     await section.getByRole('button', { name: 'Lançamentos por dia', exact: true }).click()
+    assert.equal(await curva.count(), 1, 'lançamentos têm apenas uma referência de mercado')
     assert.equal(await section.locator('.rt-result').count(), 1, 'roteiro também nos lançamentos')
     assert.equal(await section.locator('.cg-result-col').count(), 0, 'sem o resultado ao lado')
     assert.equal(await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
@@ -281,6 +287,9 @@ async function fillScenario(page, section, route) {
     assert.ok(resultadoL.y >= dadosL.y + dadosL.height, 'lançamentos: dados e resultado nesta ordem')
     await section.getByRole('button', { name: 'Utilização única', exact: true }).click()
   } else if (route === 'analise-desconto') {
+    // A tela abre pelo prazo médio (24/11/2026): confere a largura como ela abre; o cenário fixo abaixo é do borderô título a título.
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'prazo médio sem rolagem lateral')
+    await page.locator('#ad-titleMode').selectOption('titles')
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
     await page.locator('#ad-lm-start').fill('2026-11-05')

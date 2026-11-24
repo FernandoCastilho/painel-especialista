@@ -4,8 +4,21 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '24/11/2026',
-    destaques: ['Notícias do Mercado sem as abas Veículos pesados e Eleições EUA'],
+    destaques: [
+      'Histórias de empresas: iFood, Netflix e Blockbuster em um mapa interativo',
+      'Análise de desconto calcula por prazo médio e ticket médio',
+      'Aviso inicial compacto, com cinco destaques',
+      'Notícias do Mercado sem Google Trends, Veículos pesados e Eleições EUA',
+      'Pergunte ao Fredix: a coruja responde com os dados do Painel',
+    ],
     items: [
+      'Conta Garantida: lançamentos por dia passam a seguir o mesmo roteiro da utilização única. O comparativo mostra o fluxo das parcelas e a curva até o fim da operação. O resultado pode ser baixado como rascunho do Outlook, sem enviar e-mail.',
+      'Em Mais > Histórias, um mapa liga iFood, Netflix e Blockbuster por temas em comum. Cada caso traz a fundação, uma linha do tempo e links para as fontes.',
+      'Clique na coruja Fredix e em "💬 Pergunte" para tirar dúvidas sobre cotações, juros, Focus, setores e notícias. Ele responde só com os dados do Painel e diz a fonte e a data. Não faz contas de taxa, CET ou IOF: indica a calculadora certa. Não digite dados de clientes, CPF, CNPJ, telefone ou e-mail. A conversa não fica gravada, e há limite de perguntas por pessoa.',
+      'O ícone no topo ativa a tela cheia do navegador sem ocultar os menus, as cotações ou os controles do Painel. Use o mesmo ícone para voltar.',
+      'Na Análise de desconto, informe valor total, prazo médio e ticket médio por boleto. A calculadora monta um borderô hipotético, com boletos de valores e vencimentos diferentes, e calcula juros e IOF boleto a boleto; o CET continua na regra de 30 dias da norma. A tela mostra o prazo médio já ajustado para dias úteis e a lista dos boletos. É uma estimativa: o IOF real depende da data de cada boleto. A entrada título a título continua disponível para o borderô real, e as regras de juros, IOF e CET não mudaram.',
+      'O aviso inicial mostra até cinco destaques da semana. O histórico completo e a frequência das fontes ficam a um clique.',
+      'Mercado hoje > Notícias: Google Trends saiu da tela; a fonte continua identificada em Configurações.',
       'Mercado hoje > Notícias: saíram as abas Veículos pesados e Eleições EUA. Veículos pesados continua em Setores > Produção e consumo, com os indicadores da ANFAVEA e as notícias; as duas seguem disponíveis em Apresentar. A busca do Painel deixa de trazer matérias de Eleições EUA. As abas de Notícias ficam sempre todas à vista, sem barra de rolagem.',
     ],
   },

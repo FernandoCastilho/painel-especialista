@@ -16,7 +16,7 @@ const dateLabel = value => value.split('-').reverse().join('/')
 const signed = value => `${value > 0 ? '+' : ''}${brl(value)}`
 const ncgInitial = { mode: 'balances', receivables: '', inventory: '', payables: '', sales: '', cost: '', purchases: '', pmr: '', pme: '', pmp: '' }
 
-export default function ComparativoAlongamento() {
+export default function ComparativoAlongamento({ ativo = true } = {}) {
   const [form, setForm] = useState(() => initialAlongamentoForm(cgToday()))
   const [ncg, setNcg] = useState(ncgInitial)
   const [page, setPage] = useState(0)
@@ -118,6 +118,6 @@ export default function ComparativoAlongamento() {
     </details>
     <div className="cx-heading along-method"><span>Premissas, IOF e limites</span><CalculatorHelp title="Premissas, IOF e limites do alongamento"><p>Estimativa de crédito novo em reais para PJ, adimplente. Não simula renegociação, portabilidade, isenção especial, inadimplência, indexador variável ou reutilização do rotativo. Não calcula CET. Confira a proposta e custos não previstos antes de contratar.</p><p>IOF automático: no giro, adicional sobre o principal liberado e parcela diária sobre amortizações do principal original, pelos dias reais até o vencimento, limitados a 365 dias por parcela. Na conta garantida, diária sobre saldo constante e sem teto genérico de 365 dias; não há adicional futuro sem acréscimo de saldo. Juros e IOF da CG são pagos à parte.</p><p>Juros do giro seguem períodos mensais; dias reais são usados no IOF e na apuração proporcional da CG. A data de vencimento é ajustada ao último dia quando o mês não tiver o dia original, sem calendário de feriados. IOF e tarifa do giro são pagos à vista. Em carência, juros são capitalizados; sua amortização não vira novo principal liberado para o IOF.</p><p>Referências consultadas: {ALONGAMENTO_SOURCES.map((source, index) => <span key={source.url}>{index > 0 && ' · '}<a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></span>)}. Conferidas em 06/11/2026; projeções mantêm as alíquotas vigentes consultadas.</p><p>Dados somente na memória desta tela, sem envio a serviços externos ou gravação automática.</p></CalculatorHelp></div>
     {/* Curva DI x pré até o prazo do giro (carência + parcelas), regra de 23/11/2026. Último bloco da tela. */}
-    <ReferenciaMercado tipos={['pre']} prazoMeses={prazoDoGiro(form.n, form.graceMonths)} />
+    {ativo && <ReferenciaMercado tipos={['pre']} prazoMeses={prazoDoGiro(form.n, form.graceMonths)} />}
   </div>
 }
