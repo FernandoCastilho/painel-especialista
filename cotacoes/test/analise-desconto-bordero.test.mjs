@@ -127,3 +127,16 @@ test('Simples até R$ 30 mil e projeção mensal continuam valendo sobre o borde
   near(doubled.result.projected.interest, 2 * doubled.operation.interest)
   near(doubled.result.projected.iof, 2 * doubled.operation.iof)
 })
+
+test('prazo longo: a tela recebe o IOF de um título único no prazo médio para dizer o tamanho do efeito do teto', () => {
+  assert.equal(form().singleTitleIof, null)
+  assert.equal(form({ averageDays: '240' }).singleTitleIof, null)
+  // 24/11/2026 + 365 dias = 24/11/2027, quarta-feira: 365 dias corridos, sem ajuste de dia útil.
+  const long = form({ averageDays: '365' })
+  assert.ok(long.operation.rows.some(row => row.days > 365))
+  const gross = 225600.43, interest = gross * 0.0183 * 365 / 30
+  near(long.singleTitleIof, (gross - interest) * (0.0038 + 0.000082 * 365))
+  // A estimativa fica abaixo do título único, porque os boletos além de 365 dias param no teto.
+  const gap = long.singleTitleIof - long.operation.iof
+  assert.ok(gap > 700 && gap < 800, String(gap))
+})
