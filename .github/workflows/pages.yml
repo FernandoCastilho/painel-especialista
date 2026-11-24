@@ -2,8 +2,7 @@ name: Deploy do PEME (GitHub Pages)
 
 on:
   push:
-    branches: [main, claude/obsidian-plugin-analysis-bagjz3]
-    paths: ['cotacoes/**', '.github/workflows/pages.yml', '.github/workflows/cotacoes-ci.yml']
+    branches: [claude/obsidian-plugin-analysis-bagjz3]
   schedule:
     - cron: '0 11,18 * * *' # Trends: 08h e 15h de Brasília; demais fontes preservadas
     # Só de segunda a sexta no horário de Brasília (UTC-3): segunda 00h a sexta 23h. Sem coleta no sábado e no domingo.
@@ -11,6 +10,17 @@ on:
     - cron: '17 0-2 * * 2-6' # terça a sábado UTC = segunda a sexta, 21h a 23h de Brasília
     - cron: '30 11 * * 1,2' # Cenários/Focus: segunda 08:30 Brasília e repete terça 08:30 (Focus sai na terça quando segunda é feriado)
   workflow_dispatch:
+    inputs:
+      refresh_data:
+        description: 'Recolher as bases neste release manual (recuperação explícita)'
+        type: boolean
+        required: false
+        default: false
+      focus_retry:
+        description: 'Recuperar coleta do Focus (usado pelo vigia; não consulta IBGE CBS)'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   actions: read
@@ -19,37 +29,52 @@ permissions:
   id-token: write
   issues: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: false # A consulta semanal aguarda o deploy ativo; não o cancela.
+# A fila de publicação fica só no passo que publica (deploy, abaixo). Antes ela valia para a execução inteira: uma
+# atualização de hora em hora que chegava enquanto uma publicação de código esperava na fila tomava o lugar dela (o GitHub
+# guarda só uma execução em espera por fila), a publicação era cancelada e as agendas seguintes ficavam bloqueadas por falta
+# de código aprovado (17/11 e 18/11/2026). Agora a agenda que encontra publicação de código em andamento não entra na fila.
 
 jobs:
   verify-source:
     # The complete browser suite gates code releases, not hourly data refreshes.
-    if: github.event_name != 'schedule'
+    if: github.ref == 'refs/heads/claude/obsidian-plugin-analysis-bagjz3' && github.event_name != 'schedule'
     uses: ./.github/workflows/cotacoes-ci.yml
     permissions:
       contents: read
   approve-source:
     needs: verify-source
-    if: ${{ always() && !cancelled() }}
+    if: ${{ always() && !cancelled() && github.ref == 'refs/heads/claude/obsidian-plugin-analysis-bagjz3' }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
+    outputs:
+      pular: ${{ steps.fila.outputs.pular }}
     steps:
       - name: Exigir verificações antes de publicar código
         if: github.event_name != 'schedule' && needs.verify-source.result != 'success'
         uses: actions/github-script@v7
         with:
           script: core.setFailed('Verificações de código ou interface não passaram. Publicação bloqueada.')
-      - name: Exigir código já aprovado nas agendas de dados
+      - name: Agenda espera a publicação de código em andamento
+        id: fila
         if: github.event_name == 'schedule'
         uses: actions/github-script@v7
         with:
           script: |
+            const branch = context.ref.replace('refs/heads/', '')
+            const { data } = await github.rest.actions.listWorkflowRuns({ ...context.repo, workflow_id: 'pages.yml', branch, per_page: 50 })
+            const emCurso = data.workflow_runs.find(run => run.id !== context.runId && run.status !== 'completed' && ['push', 'workflow_dispatch'].includes(run.event))
+            if (!emCurso) return core.setOutput('pular', 'false')
+            core.setOutput('pular', 'true')
+            core.notice(`Publicação de código em andamento (execução ${emCurso.id}); esta agenda não entra na fila para não cancelá-la. Não houve coleta neste disparo; uma agenda futura poderá coletar após a publicação de código aprovada.`)
+      - name: Exigir código já aprovado nas agendas de dados
+        if: github.event_name == 'schedule' && steps.fila.outputs.pular != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
             const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-              ...context.repo, workflow_id: 'pages.yml', head_sha: context.sha,
+              ...context.repo, workflow_id: 'pages.yml', branch: context.ref.slice(11), head_sha: context.sha,
               status: 'completed', per_page: 100,
             })
             const required = ['test-build', 'smoke', 'bndes-workspace']
@@ -65,14 +90,18 @@ jobs:
             core.setFailed(`Agenda bloqueada: o código ${context.sha} ainda não possui publicação aprovada com todos os testes de código e interface. Execute a publicação manual ou corrija a falha do push; nenhum código será publicado por esta agenda.`)
   institutional-news:
     needs: approve-source
-    if: ${{ !cancelled() && needs.approve-source.result == 'success' && github.event.schedule != '0 11,18 * * *' && github.event.schedule != '30 11 * * 1,2' }}
+    if: ${{ !cancelled() && needs.approve-source.result == 'success' && needs.approve-source.outputs.pular != 'true' && github.event.schedule != '0 11,18 * * *' && github.event.schedule != '30 11 * * 1,2' && (github.event_name == 'schedule' || inputs.refresh_data == true || inputs.focus_retry == true) }}
     uses: ./.github/workflows/institutional-news.yml
     permissions:
       contents: write
   deploy:
     needs: [approve-source, institutional-news]
-    if: ${{ always() && !cancelled() }}
+    if: ${{ always() && !cancelled() && github.ref == 'refs/heads/claude/obsidian-plugin-analysis-bagjz3' && needs.approve-source.outputs.pular != 'true' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      queue: max # A fila não substitui outro release por uma coleta concorrente.
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -80,6 +109,7 @@ jobs:
       # Declaração de uso dos dados do Banco do Japão (decisão do responsável pelo projeto, 27/10/2026): uso não comercial.
       # Hoje só habilita o leitor opcional de comunicados em PDF; a taxa do BoJ vem do BIS e não depende desta variável.
       POLICY_BOJ_USE: noncommercial
+      PAGES_REFRESH_DATA: ${{ github.event_name == 'schedule' || inputs.refresh_data == true || inputs.focus_retry == true }}
       # Saída de emergência (variável do repositório, normalmente ausente): com "true", um arquivo publicado ilegível volta a ser
       # tratado como inexistente em macro, curvas e histórico do Focus. Ver docs/publicacao-e-calendario.md.
       PREV_IGNORAR_ILEGIVEL: ${{ vars.PREV_IGNORAR_ILEGIVEL }}
@@ -99,15 +129,31 @@ jobs:
           cache: npm
           cache-dependency-path: cotacoes/package-lock.json
       - run: npm ci
+      - name: Confirmar SHA atual sob o lock de Pages
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.ref !== 'refs/heads/claude/obsidian-plugin-analysis-bagjz3') return core.setFailed('A publicação exige o ramo canônico.')
+            const { data } = await github.rest.git.getRef({ ...context.repo, ref: context.ref.slice(5) })
+            if (data.object.sha !== context.sha) core.setFailed('SHA obsoleto: o ramo avançou antes da publicação.')
+      - name: Preparar snapshot IBGE CBS e conferir código ativo no cron
+        run: |
+          export CBS_BLOB="$(git rev-parse HEAD:cotacoes/src/ibgeCbsSnapshot.json)"
+          node scripts/pages-release-data.mjs preparar-cbs
+      - name: Preservar bases publicadas no release sem coleta
+        if: env.PAGES_REFRESH_DATA != 'true'
+        timeout-minutes: 8
+        run: node scripts/pages-release-data.mjs capturar "$RUNNER_TEMP/pages-release-data.json"
       - name: Conferir referências setoriais do IBGE para CBS (preserva base em falha)
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && inputs.refresh_data == true
         run: python3 scripts/fetch-ibge-cbs.py
         timeout-minutes: 2
       - name: Google Trends (08h e 15h; preserva nas demais execuções)
+        if: env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-trends.mjs
         timeout-minutes: 2
         env:
-          TRENDS_COLLECT: ${{ github.event.schedule == '0 11,18 * * *' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+          TRENDS_COLLECT: ${{ github.event.schedule == '0 11,18 * * *' || inputs.refresh_data == true || inputs.focus_retry == true }}
       - name: Preservar as demais bases na atualização exclusiva de Trends
         if: github.event.schedule == '0 11,18 * * *'
         run: node scripts/preserve-for-trends.mjs "$RUNNER_TEMP/weekly-data-snapshot.json"
@@ -120,7 +166,7 @@ jobs:
         run: node scripts/refresh-scenarios.mjs "$RUNNER_TEMP/weekly-data-snapshot.json"
         timeout-minutes: 5
       - name: Histórico do Focus (52 semanas; de hora em hora só preserva o publicado)
-        if: github.event.schedule != '0 11,18 * * *'
+        if: github.event.schedule != '0 11,18 * * *' && env.PAGES_REFRESH_DATA == 'true'
         # Sem "continuar em caso de erro": o arquivo não está no git. Se o passo falhasse e a publicação seguisse, o histórico sumiria do site.
         run: node scripts/fetch-focus-history.mjs
         timeout-minutes: 5
@@ -130,160 +176,179 @@ jobs:
         if: github.event.schedule == '30 11 * * 1,2'
         run: node scripts/accept-focus-history.mjs "$RUNNER_TEMP/weekly-data-snapshot.json"
       - name: Coletar notícias
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-news.mjs
         env:
           NEWS_STRICT: ${{ github.event_name == 'schedule' }}
+      - name: Coletar manchetes por dia para as bolinhas dos gráficos de câmbio (acumula no arquivo publicado)
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
+        # Sem "continuar em caso de erro": o acumulado só existe no site. Se o arquivo publicado não puder ser lido, a rodada para
+        # e o site fica como está; publicar só a base do git apagaria os dias acumulados depois dela.
+        run: node scripts/fetch-fx-noticias.mjs
+        timeout-minutes: 8
+      - name: Preservar as manchetes de câmbio nas rodadas de Trends e Focus (sem nova busca)
+        if: github.event.schedule == '0 11,18 * * *' || github.event.schedule == '30 11 * * 1,2'
+        run: node scripts/preserve-fx-noticias.mjs
+        timeout-minutes: 2
       - name: Coletar dados do Banco Central (CDI, Selic, Focus, PTAX)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-macro.mjs
         timeout-minutes: 15
         env:
           MACRO_STRICT: ${{ github.event_name == 'schedule' }}
       - name: Coletar curvas de juros (DI x pré e Treasuries)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-curves.mjs
         env:
           CURVES_STRICT: ${{ github.event_name == 'schedule' }}
       - uses: actions/setup-python@v5
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2' || env.POLICY_BOJ_USE == 'noncommercial' || env.POLICY_BOJ_USE == 'permission-confirmed')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2' || env.POLICY_BOJ_USE == 'noncommercial' || env.POLICY_BOJ_USE == 'permission-confirmed') && env.PAGES_REFRESH_DATA == 'true'
         continue-on-error: true
         with:
           python-version: '3.12'
       - name: Preparar leitura dos comunicados oficiais em PDF
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2' || env.POLICY_BOJ_USE == 'noncommercial' || env.POLICY_BOJ_USE == 'permission-confirmed')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2' || env.POLICY_BOJ_USE == 'noncommercial' || env.POLICY_BOJ_USE == 'permission-confirmed') && env.PAGES_REFRESH_DATA == 'true'
         continue-on-error: true
         run: python -m pip install -r scripts/requirements-policy.txt
       - name: Coletar juros de política monetária (Fed, BCE, BoE e BoJ)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-policy-rates.mjs
         timeout-minutes: 5
       - name: Coletar €STR (Banco Central Europeu)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-estr.mjs
         timeout-minutes: 2
       - name: Coletar curva de juros do euro (Banco Central Europeu)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-euro-curve.mjs
         timeout-minutes: 3
       - name: Coletar indexadores TR, TBF e TLP (Banco Central)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-indexadores.mjs
         continue-on-error: true
         timeout-minutes: 5
       - name: Coletar Taxa Fixa do BNDES (TFB, 4 prazos, liberação em 30 e 90 dias)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-bndes.mjs
         continue-on-error: true
         timeout-minutes: 5
       - name: Coletar TFC e moedas contratuais do BNDES
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-moedas.mjs
         continue-on-error: true
         timeout-minutes: 8
+      - name: Recuperar somente séries TFC ausentes com snapshot oficial validado
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
+        run: node scripts/recover-tfc.mjs
+        timeout-minutes: 2
+      - name: Recuperar nove moedas ausentes sem alterar TFC ou LD1
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
+        run: node scripts/recover-nine-moedas.mjs
+        timeout-minutes: 2
       - name: Gerar CSV das séries do BNDES (Power Query)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
+        # Bloqueia publicação se não houver CSV atual nem cópia publicada válida.
         run: node scripts/export-csv.mjs
-        continue-on-error: true
         timeout-minutes: 2
       - name: Coletar feriados da China (dados oficiais)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-holidays.mjs
         continue-on-error: true
       - name: Curadoria de tributos e escala 6x1 (últimos sete dias)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-curadoria.mjs
         timeout-minutes: 2
         continue-on-error: true
       - name: Coletar matérias da semana sobre a reforma tributária (Google Notícias)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-reforma.mjs
         timeout-minutes: 3
         continue-on-error: true
       - name: Coletar matérias da semana por setor e insumo (Google Notícias)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-temas.mjs
         timeout-minutes: 4
         continue-on-error: true
       - name: Reter matérias do mapa por sete dias sem nova coleta
+        if: env.PAGES_REFRESH_DATA == 'true'
         # Também roda nos pacotes de Trends/Focus sem alterar dados preservados.
         # Antecede a poda setorial de cinco dias para guardar itens ainda válidos.
         run: node scripts/refresh-knowledge-news.mjs
         timeout-minutes: 2
       - name: Consumir snapshot institucional confirmado (preserva anterior em falha)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/sector-news-live.mjs --snapshot
         timeout-minutes: 2
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Coletar acessos ao app (Umami, link de compartilhamento)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-acessos.mjs
         timeout-minutes: 2
         continue-on-error: true
       - name: Coletar preço diário aproximado do cobre (COMEX via Yahoo)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-insumos-precos.mjs
         timeout-minutes: 2
         continue-on-error: true
       - name: Coletar fechamento diário do Ibovespa (Yahoo)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-indices.mjs
         timeout-minutes: 2
         continue-on-error: true
       - name: Coletar referência diária de petróleo Brent (EIA)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-oil.mjs
         timeout-minutes: 2
       - name: Coletar commodities diárias e mensais (EIA e Banco Mundial)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-commodities.mjs
         timeout-minutes: 3
       - name: Coletar commodities em reais (IC-Br e soja em R$/saca)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-commodities-brl.mjs
         timeout-minutes: 3
       - name: Coletar preços de combustíveis ao consumidor (ANP)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-fuels.mjs
         timeout-minutes: 8
       - name: Coletar referência mensal de transporte marítimo (BLS, EUA)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-freight.mjs
       - name: Coletar referência mensal de transporte marítimo do Japão (Banco do Japão)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-freight-jp.mjs
         timeout-minutes: 2
       - name: Coletar IPCA oficial e histórico (IBGE)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-ipca.mjs
         timeout-minutes: 2
       - name: Coletar dívida bruta do governo geral (Banco Central)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-divida.mjs
         timeout-minutes: 4
       - name: Coletar IPCA por grupos (IBGE)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-ipca-groups.mjs
         timeout-minutes: 2
       - name: Coletar calendário econômico (Forex Factory, BLS, BEA e Fed)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-calendar.mjs
         timeout-minutes: 3
       - name: Coletar veículos pesados (Carta mensal da ANFAVEA)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-heavy-vehicles.mjs
       - name: Coletar inadimplência PF e PJ (Banco Central)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-inadimplencia.mjs
         timeout-minutes: 10
       - name: Coletar balanços e carteiras dos bancos (IF.data)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-bancos.mjs
         timeout-minutes: 8
       - name: Conferir referências de recuperação judicial (semanal, sem contagens)
-        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2')
+        if: github.event.schedule != '0 11,18 * * *' && (github.event.schedule != '30 11 * * 1,2') && env.PAGES_REFRESH_DATA == 'true'
         run: node scripts/fetch-recuperacao.mjs
         timeout-minutes: 2
       - name: Verificar dados desatualizados
@@ -299,14 +364,33 @@ jobs:
       - name: Conferir todas as bases preservadas no pacote semanal
         if: github.event.schedule == '30 11 * * 1,2' || github.event.schedule == '0 11,18 * * *'
         run: node scripts/weekly-data.mjs dist "$RUNNER_TEMP/weekly-data-snapshot.json"
+      - name: Conferir integridade das bases preservadas no pacote de código
+        if: env.PAGES_REFRESH_DATA != 'true'
+        run: node scripts/pages-release-data.mjs conferir "$RUNNER_TEMP/pages-release-data.json" dist
+      - name: Empacotar snapshot IBGE CBS e identificar o código publicado
+        run: |
+          export CBS_BLOB="$(git rev-parse HEAD:cotacoes/src/ibgeCbsSnapshot.json)"
+          node scripts/pages-release-data.mjs empacotar-cbs dist
       - uses: actions/upload-pages-artifact@v3
         with:
           path: cotacoes/dist
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Confirmar SHA atual imediatamente antes de publicar
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.ref !== 'refs/heads/claude/obsidian-plugin-analysis-bagjz3') return core.setFailed('A publicação exige o ramo canônico.')
+            const { data } = await github.rest.git.getRef({ ...context.repo, ref: context.ref.slice(5) })
+            if (data.object.sha !== context.sha) core.setFailed('SHA obsoleto: o ramo avançou antes da publicação.')
       - id: deployment
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Confirmar marcador servido no endereço publicado
+        timeout-minutes: 4
+        env:
+          SMOKE_PUBLISHED_URL: ${{ steps.deployment.outputs.page_url }}
+        run: node scripts/pages-release-data.mjs conferir-publicado dist
       - name: Conferir a interface no endereço publicado
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         timeout-minutes: 5

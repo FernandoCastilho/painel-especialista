@@ -38,10 +38,11 @@ function ImpactMark({ impact }) {
 }
 
 // Cenários › Calendário econômico: eventos do mundo (Forex Factory, BLS, BEA, Fed) e do Brasil (agenda curada), por dia, em horário de Brasília.
-export default function Calendario() {
+// `impactoInicial` (aba Apresentar): impactos já marcados ao abrir; padrão alto e médio.
+export default function Calendario({ impactoInicial = ['high', 'medium'] }) {
   const file = useDataFile('calendar.json')
   const [period, setPeriod] = useState('semana')
-  const [impacts, setImpacts] = useState(['high', 'medium'])
+  const [impacts, setImpacts] = useState(impactoInicial)
   const [country, setCountry] = useState('all')
   const now = Date.now()
   const today = dayKey(now)

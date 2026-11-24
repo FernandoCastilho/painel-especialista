@@ -6,14 +6,16 @@ import { useMemo, useState } from 'react'
 import Explain from './Explain.jsx'
 import { Plot, useWidth } from './HistoryChart.jsx'
 import { busDaysIn } from './holidays.js'
-import { forwardBetween, forwardSeries, horizonTable } from './cdiFuturo.js'
+import { diasDoHorizonte, forwardBetween, forwardSeries, horizonTable } from './cdiFuturo.js'
 import IndicatorTable from './IndicatorTable.jsx'
 
 const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const dm = (iso) => iso.split('-').reverse().join('/')
 
 // CDI futuro: taxa a termo implícita nos futuros de DI (curva DI x pré da B3), em % a.a., por data.
-export default function CdiFuturo({ curves, macro, hol }) {
+// `prazoMeses` (opcional, calculadoras de crédito): o gráfico vai da data-base até o prazo da operação (regra de 23/11/2026).
+// Sem ele, até 12 meses, como antes.
+export default function CdiFuturo({ curves, macro, hol, preview = false, prazoMeses }) {
   const [ref, width] = useWidth()
   const br = curves.data?.br
   const today = br?.compare?.find((c) => c.id === 'hoje')
@@ -26,7 +28,8 @@ export default function CdiFuturo({ curves, macro, hol }) {
   const [pick, setPick] = useState({ from: '', to: '' })
   const clamp = (v) => (v < base ? base : v > maxIso ? maxIso : v)
   const rawFrom = pick.from || base
-  const rawTo = pick.to || (base ? (isoPlus(365) < maxIso ? isoPlus(365) : maxIso) : '')
+  const diasAte = diasDoHorizonte(prazoMeses)
+  const rawTo = pick.to || (base ? (isoPlus(diasAte) < maxIso ? isoPlus(diasAte) : maxIso) : '')
   // a curva vale a partir da data-base: datas fora do intervalo são ajustadas e o aviso aparece na tela
   const from = base ? clamp(rawFrom) : rawFrom
   const to = base ? clamp(rawTo) : rawTo
@@ -44,8 +47,9 @@ export default function CdiFuturo({ curves, macro, hol }) {
   const rows = useMemo(() => horizonTable(pts), [pts])
 
   return (
-    <section className="macro" aria-labelledby="cdif-h">
-      <h2 id="cdif-h">CDI futuro</h2>
+    <section className="macro" aria-labelledby={preview ? 'cdif-preview-h' : 'cdif-h'}>
+      <h2 id={preview ? 'cdif-preview-h' : 'cdif-h'}>CDI futuro</h2>
+      {(curves.stale || curves.data?.stale?.br) && <p className="status stale" role="status">Atualização pendente; curva da última coleta disponível.</p>}
       {curves.status === 'loading' && <div className="placeholder">Carregando curva DI…</div>}
       {curves.status !== 'loading' && !pts && <p className="status">CDI futuro indisponível: depende da curva DI x pré, que não veio na última atualização.</p>}
       {pts && (
@@ -61,9 +65,9 @@ export default function CdiFuturo({ curves, macro, hol }) {
               {light ? '☾' : '☀'}
             </button>
           </header>
-          <div className="period">
+          {!preview && <div className="period">
             <DateRangePicker label="Período do CDI futuro" start={rawFrom} end={rawTo} min={base} max={maxIso} onChange={(from, to) => setPick({ from, to })} />
-          </div>
+          </div>}
           {adjusted && <p className="status stale">Datas ajustadas: a curva vale de {dm(base)} (data-base) a {dm(maxIso)} (último vértice). Mostrando {dm(from)} a {dm(to)}.</p>}
           {term != null ? (
             <p className="cdif-result">
@@ -75,7 +79,7 @@ export default function CdiFuturo({ curves, macro, hol }) {
             <p className="status stale">Escolha um intervalo dentro da curva (até {dm(maxIso)}), com “Até” depois de “De”.</p>
           )}
           <div ref={ref}>{series && <Plot points={series} width={width} color="var(--chart-teal)" code="cdif" fmt={pct} label="CDI a termo" compare={false} compareReason="a curva a termo projeta taxas por horizonte, sem série histórica anual equivalente nesta visão." scales={false} nice labels light={light} />}</div>
-          <details className="table" open>
+          {!preview && <details className="table" open>
             <summary>Tabela por horizonte</summary>
             <div className="scroll">
             <table>
@@ -93,7 +97,7 @@ export default function CdiFuturo({ curves, macro, hol }) {
               </tbody>
             </table>
             </div>
-          </details>
+          </details>}
           <Aviso title="CDI futuro · método"><p className="status">
             DI x pré de {dm(today.date)}. É o CDI que o mercado precifica, com prêmio de risco embutido, não uma projeção oficial. "CDI médio até lá" é a taxa composta do DI até o vértice; "a termo no trecho" é a taxa implícita entre o horizonte anterior e este. Para a visão de analistas, veja o Boletim Focus (Selic).
           </p></Aviso>
@@ -103,14 +107,14 @@ export default function CdiFuturo({ curves, macro, hol }) {
   )
 }
 
-// Aba Juros: os números do CDI futuro por horizonte; a linha abre o gráfico e a escolha de datas em tela própria.
-export function CdiFuturoTable({ curves, onOpen }) {
+// Números do CDI futuro por horizonte. Fica dentro do detalhe, abaixo do gráfico; com `onOpen`, a linha abre o gráfico.
+export function CdiFuturoTable({ curves, onOpen, id = 'juros-detail-cdif' }) {
   const br = curves.data?.br
   const today = br?.compare?.find((c) => c.id === 'hoje')
   const pts = today ? br.curves[today.date] : null
   const rows = useMemo(() => horizonTable(pts), [pts])
   return (
-    <section id="juros-cdif" className="macro executive-rates cdif-table juros-tabela" aria-labelledby="cdif-table-h">
+    <section id={id} className="macro executive-rates cdif-table juros-tabela" aria-labelledby="cdif-table-h">
       <header className="executive-rates__heading">
         <h2 id="cdif-table-h"><Flag code="BRL" width={18} height={12} />CDI futuro <small>taxa a termo implícita nos futuros de DI</small></h2>
         <Explain id="cdiFuturo" />
@@ -128,7 +132,7 @@ export function CdiFuturoTable({ curves, onOpen }) {
               onOpen={onOpen}
             />
           </div>
-          <p className="ind-note">Taxa que o mercado precifica nos futuros de DI, em % a.a., com base em {dm(today.date)}. Toque em uma linha para abrir o gráfico e escolher as datas.</p>
+          <p className="ind-note">Taxa que o mercado precifica nos futuros de DI, em % a.a., com base em {dm(today.date)}.{onOpen ? ' Toque em uma linha para abrir o gráfico e escolher as datas.' : ''}</p>
         </>
       )}
     </section>

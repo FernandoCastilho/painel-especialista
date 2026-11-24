@@ -78,7 +78,7 @@ function FreightTable({entries, onOpen}) {
 }
 // Commodities no mesmo formato da tabela do Mercado: último, anterior, variação, 12 meses e ano; a linha abre o histórico quando há série.
 // Brent e WTI: observações diárias; demais: médias mensais. Sem série, a linha mostra só o que a fonte divulgou e não abre gráfico.
-function CommodityTable({items, failed, onOpen, caption = 'Referências internacionais em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
+function CommodityTable({items, failed, onOpen, caption = 'Commodities em dólar', ariaLabel = 'Tabela de commodities; role para ver todas as colunas'}) {
   const pct = v => v == null ? {text:'—'} : {text:fsgn(v, 2, '%'), tone:ftone(v)}
   const rows = items.map(item => {
     const stats = seriesStats(item.history)
@@ -151,7 +151,8 @@ function ActivityTable({items, series, failed, historyFailed, historyLoading, on
 function Cards({state, children}) {
   return <>{!state.data && <Estado tipo={state.failed ? 'erro' : 'info'}>{state.failed ? 'Não foi possível carregar os dados.' : 'Carregando dados…'}</Estado>}{children}</>
 }
-export default function MarketContext({ part = '' }) {
+// `so` (opcional, usado pela aba Apresentar): mostra só um quadro de Commodities: 'usd', 'brl', 'combustiveis' ou 'frete'.
+export default function MarketContext({ part = '', so = '' }) {
   const [open,setOpen] = useState(null)
   const [openCommodity,setOpenCommodity] = useState(null)
   const history = useContextFile('indicator-history.json', normalizeIndicatorHistory)
@@ -174,27 +175,29 @@ export default function MarketContext({ part = '' }) {
       {market.data && market.data.length < MARKET_IDS.length && <Estado tipo="aviso">Cobertura parcial: alguns indicadores não puderam ser carregados.</Estado>}
       <Aviso title="Atividade e emprego · método"><p className="context-method">Leituras conferidas manualmente; não há atualização automática destes indicadores. PMI ISM em pontos: acima de 50 indica expansão; abaixo de 50, contração. Saldos de emprego podem ser negativos e sujeitos a revisão.</p></Aviso>
     </section>}
-    {(!part || part === 'commodities') && <section aria-labelledby="commodities-context-heading"><div className="ctx-head"><h2 id="commodities-context-heading">Commodities</h2><RefreshButton files={['commodities.json', 'oil.json', 'commodities-brl.json', 'fuels.json']} label="Commodities" /></div>
-      <Aviso title="Commodities"><p className="context-intro">Referências internacionais em dólar. Petróleo spot diário e demais produtos em médias mensais, não preços em tempo real nem contratos futuros.</p></Aviso>
+    {(!part || part === 'commodities') && so !== 'frete' && <section aria-labelledby="commodities-context-heading"><div className="ctx-head"><h2 id="commodities-context-heading">Commodities</h2><RefreshButton files={['commodities.json', 'oil.json', 'commodities-brl.json', 'fuels.json']} label="Commodities" /></div>
+      <Aviso title="Commodities"><p className="context-intro">Referências em dólar, incluindo exportações brasileiras de celulose. Petróleo spot diário e demais produtos em médias mensais, não preços em tempo real nem contratos futuros.</p></Aviso>
+      {(!so || so === 'usd') && <>
       {!all.length && <Estado tipo={commodities.failed || brent.failed ? 'erro' : 'info'}>{commodities.failed || brent.failed ? 'Não foi possível carregar as referências.' : 'Carregando referências…'}</Estado>}
       {all.length > 0 && <CommodityTable items={all} failed={commodities.failed || brent.failed} onOpen={id => setOpenCommodity(all.find(i => i.id === id))} />}
       {all.length > 0 && (!brent.data || !commodities.data || commodities.data.length < COMMODITY_IDS.length) && <Estado tipo="aviso">Cobertura parcial: uma das fontes ainda não está disponível.</Estado>}
-      <Aviso title="Commodities · método"><p className="context-method">Em falhas, o painel preserva a última referência. A data da atualização não é a data do preço. Frequência de publicação e unidades variam; valores ausentes nunca são convertidos em zero. Petróleo, gás natural, diesel e gasolina de Nova York: spot diário (gás em US$/MMBtu; derivados em US$/galão, na costa leste dos EUA, antes de impostos, margens e frete). Açúcar e café: média mensal convertida de US$/kg para US¢/libra-peso, a unidade de mercado.</p></Aviso>
-      {brl.data && <>
+      <Aviso title="Commodities · método"><p className="context-method">Em falhas, o painel preserva a última referência. A data da atualização não é a data do preço. Frequência de publicação e unidades variam; valores ausentes nunca são convertidos em zero. Petróleo, gás natural, diesel e gasolina de Nova York: spot diário (gás em US$/MMBtu; derivados em US$/galão, na costa leste dos EUA, antes de impostos, margens e frete). Açúcar e café: média mensal convertida de US$/kg para US¢/libra-peso, a unidade de mercado. Celulose: preço médio FOB mensal das exportações brasileiras (MDIC/SECEX), em US$/tonelada; não é cotação spot, preço de tabela ou referência exclusiva de fibra curta ou longa. Calculado como valor FOB total dividido pelo peso líquido total, convertido de kg para tonelada (SH4 4701 a 4706; exclui aparas 4707). A coleta preserva a última referência em caso de falha.</p></Aviso>
+      </>}
+      {brl.data && (!so || so === 'brl') && <>
         <CommodityTable items={brl.data} failed={brl.failed} onOpen={id => setOpenCommodity(brl.data.find(i => i.id === id))} caption="Em reais · IC-Br e soja" ariaLabel="Tabela de commodities em reais; role para ver todas as colunas" />
         {brl.data.length < BRL_IDS.length && <Estado tipo="aviso">Cobertura parcial: parte dos índices em reais não está disponível.</Estado>}
         <Aviso title="Em reais · método"><p className="context-method">IC-Br: índice de commodities calculado em reais a partir das cotações internacionais e do câmbio; mensal. Soja em R$/saca: estimativa própria, igual à soja FOB Golfo EUA (US$/tonelada) × 0,06 (saca de 60 kg) × dólar médio do mês. É uma referência de nível e de tendência: não é o preço pago ao produtor, que varia com prêmio de porto, frete e região.</p></Aviso>
       </>}
-      {!brl.data && brl.failed && <Estado tipo="erro">Não foi possível carregar as commodities em reais.</Estado>}
-      {fuels.data && <>
+      {!brl.data && brl.failed && (!so || so === 'brl') && <Estado tipo="erro">Não foi possível carregar as commodities em reais.</Estado>}
+      {fuels.data && (!so || so === 'combustiveis') && <>
         <CommodityTable items={fuels.data} failed={fuels.failed} onOpen={id => setOpenCommodity(fuels.data.find(i => i.id === id))} caption="Combustíveis ao consumidor" ariaLabel="Tabela de combustíveis ao consumidor; role para ver todas as colunas" />
         {fuels.data.length < FUEL_IDS.length && <Estado tipo="aviso">Cobertura parcial: algum combustível não está disponível.</Estado>}
         <Aviso title="Combustíveis · método"><p className="context-method">Média semanal de revenda nos postos pesquisados no Brasil (domingo a sábado), já com impostos e margens. A semana mostrada é a última divulgada, com defasagem de alguns dias. Diesel: tipo S10. O histórico começa na primeira coleta do painel e cresce a cada semana.</p></Aviso>
       </>}
-      {!fuels.data && fuels.failed && <Estado tipo="erro">Não foi possível carregar os preços de combustíveis.</Estado>}
+      {!fuels.data && fuels.failed && (!so || so === 'combustiveis') && <Estado tipo="erro">Não foi possível carregar os preços de combustíveis.</Estado>}
     </section>}
     {/* Frete marítimo fica dentro da tela de Commodities; #cenarios/commodities/frete abre já nesta seção */}
-    {(!part || part === 'commodities') && <section id="cen-frete" className="cen-section" aria-labelledby="freight-heading"><div className="ctx-head"><h2 id="freight-heading">Frete marítimo · referência de preços</h2><RefreshButton files={['freight.json', 'freight-jp.json']} label="Transporte marítimo" /></div>
+    {(!part || part === 'commodities') && (!so || so === 'frete') && <section id="cen-frete" className="cen-section" aria-labelledby="freight-heading"><div className="ctx-head"><h2 id="freight-heading">Frete marítimo · referência de preços</h2><RefreshButton files={['freight.json', 'freight-jp.json']} label="Transporte marítimo" /></div>
       <Aviso title="Transporte marítimo"><p className="context-intro">Índices de preços do transporte marítimo dos EUA e do Japão, em bases diferentes: compare as variações, não os níveis. Não medem fretes por rota (China–Brasil, Europa–Brasil); não substituem orçamento de transportadora.</p></Aviso>
       <Cards state={freight.data || freightJp.data ? {data:true} : freight.failed && freightJp.failed ? {failed:true} : {}}><FreightTable entries={[{state:freight},{state:freightJp}]} onOpen={id => setOpen(freightStates[id].data.item)} /></Cards>
       <Aviso title="Transporte marítimo · método"><p className="context-method">Japão: índice de preços de serviços (SPPI, base 2020), item transporte marítimo de carga, mensal desde 1985. EUA: índice de preços ao produtor do transporte marítimo; mensal, não dessazonalizado, jun/1988=100. Meses não são transformados em cotações diárias.</p></Aviso>

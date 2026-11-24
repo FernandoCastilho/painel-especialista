@@ -14,6 +14,7 @@ import { browserClock, hookRenderer, json } from './helpers/hooks.mjs'
 import { marketDate } from '../src/marketReturns.js'
 import * as chartToque from '../src/chartToque.js'
 import * as chartEixo from '../src/chartEixo.js'
+import * as chartMarcas from '../src/chartMarcas.js'
 
 const now = Date.parse('2026-11-09T14:40:00Z'), day = '2026-11-09'
 const first = { t: Date.parse('2026-11-09T10:00:16Z'), bid: 5.5031 }
@@ -22,13 +23,13 @@ const require = createRequire(import.meta.url)
 function render(points, overrides = {}) {
   const state = { status: points.length ? 'ok' : 'empty', generatedAt: now, data: points.length ? { source: 'USD', points, generatedAt: now, resolution: '5 min' } : null, ...overrides }
   const module = { exports: {} }
-  const stubs = {
+  const stubs = { './ChartFullscreen.jsx': ({ children }) => children,
     './useHistory.js': { useIntraday: () => state, useHistory: () => state, useCentralDaily: () => ({}), centralFull: () => [] },
     './useMacro.js': { useMacro: () => ({}) }, './useQuotes.js': { seriesName: () => 'Dólar' },
     './dataTimestamp.js': { dataTimestamp }, './stats.js': { periodChange }, './chartLinePath.js': { chartLinePath },
-    './storage.js': { readStorage: () => null }, './flags.js': { flagSvg: () => '' },
+    './storage.js': { readStorage: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'loading' }) }, './fxNoticias.js': { eventosDiarios: () => [], eventosDoDia: () => [] }, './flags.js': { flagSvg: () => '' },
     './resample.js': { scaleOptions: () => [] }, './ChartFilters.jsx': { useFilterSlot: () => null },
-    './rangeCompare.js': {}, './chartNavigation.js': {}, './chartToque.js': chartToque, './chartEixo.js': chartEixo, './Explain.jsx': () => null, './ChartAccess.css': {},
+    './rangeCompare.js': {}, './chartNavigation.js': {}, './chartToque.js': chartToque, './chartEixo.js': chartEixo, './chartMarcas.js': chartMarcas, './Explain.jsx': () => null, './ChartAccess.css': {},
   }
   runInNewContext(code, { module, exports: module.exports, require: path => path in stubs ? stubs[path] : require(path) })
   return renderToStaticMarkup(createElement(module.exports.default, { currency: { code: 'USD' }, day: new Date(now), color: '#123456' }))

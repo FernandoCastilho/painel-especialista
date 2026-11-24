@@ -63,3 +63,9 @@
 .focus-hist .ml-legend i { width:10px; height:10px; border-radius:2px; }
 .focus-hist .chart-access-text { min-height:1em; font-size:.8rem; color:var(--mut); }
 @media (max-width:759px) { .focus-hist-grade { grid-template-columns:1fr; } }
+
+/* Marca de cada instituição antes do nome (bandeira no Focus, logotipo nos bancos); data e idade alinhadas com o nome. */
+.scenarios .sc-inst { display:inline-flex; align-items:center; gap:8px; }
+.scenarios .sc-logo { flex:none; width:20px; height:20px; border-radius:5px; object-fit:contain; background:#fff; }
+.scenarios .sc-flag { display:inline-flex; height:auto; border-radius:2px; background:none; line-height:0; }
+.scenarios .scenario-table tbody th small { padding-left:28px; }

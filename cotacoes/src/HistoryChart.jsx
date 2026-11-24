@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { dataTimestamp } from './dataTimestamp.js'
 import { periodChange } from './stats.js'
 import { chartLinePath } from './chartLinePath.js'
@@ -6,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { useFilterSlot } from './ChartFilters.jsx'
 import { nextChartIndex } from './chartNavigation.js'
 import { marcasRedondas, rotuloData } from './chartEixo.js'
+import { ancoraRotulo, marcasValor, yRotulo } from './chartMarcas.js'
 import { focoPorTeclado, limitarBalao, margemEixo, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { useMacro } from './useMacro.js'
@@ -16,6 +18,8 @@ import { readStorage } from './storage.js'
 import { priorYear, rangeBetween } from './rangeCompare.js'
 import { resample, scaleOptions } from './resample.js'
 import { flagSvg } from './flags.js'
+import { useDataFile } from './useDataFile.js'
+import { eventosDiarios, eventosDoDia } from './fxNoticias.js'
 
 const H = 240
 const M = { t: 12, r: 16, b: 28, l: 58 }
@@ -62,20 +66,21 @@ export function Plot({ points, scales = true, ...props }) {
   return (
     <>
       {picker && (slot ? createPortal(picker, slot) : picker)}
-      <PlotView {...props} points={view} history={props.history ?? points} intraday={active ? active.id === 'hora' : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
+      <PlotView {...props} points={view} history={props.history ?? points} eventos={active ? undefined : props.eventos} intraday={active ? active.id === 'hora' : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
     </>
   )
 }
 
 // `history`: série completa para achar o mesmo trecho um ano antes (padrão: os próprios pontos). `step`: série em degraus.
-function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.' }) {
+function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos }) {
   const [hover, setHover] = useState(null)
+  const [aberto, setAberto] = useState(null)
   const [sel, setSel] = useState(null)
   const [dragging, setDragging] = useState(false)
   const drag = useRef(null)
   const plotRef = useTocarFora(hover != null, setHover)
   const sig = `${base.length}:${base[0]?.t}:${base[base.length - 1]?.t}`
-  useEffect(() => { setSel(null) }, [sig])
+  useEffect(() => { setSel(null); setAberto(null) }, [sig])
   // seleção guardada como dois pontos (tempo e valor): vale mesmo quando o gráfico se estende ao ano anterior
   const range = useMemo(() => (sel ? rangeBetween(sel.a, sel.b) : null), [sel])
   const prior = useMemo(() => (range && compare ? priorYear(history ?? base, range.t0, range.t1, step) : null), [range, compare, history, base, step])
@@ -167,15 +172,8 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   }
 
   const last = points[points.length - 1]
-  // rótulos de valor: ver abaixo
-  // rótulos de valor só onde importam: último, primeiro, máximo e mínimo, sem encavalar (mínimo de 64 px entre eles)
-  const marks = useMemo(() => {
-    const vals = points.map((p) => p.bid)
-    const cand = [points.length - 1, 0, vals.indexOf(Math.max(...vals)), vals.indexOf(Math.min(...vals))]
-    const kept = []
-    for (const i of cand) if (!kept.some((k) => Math.abs(g.x(points[k].t) - g.x(points[i].t)) < 64 || points[k].bid === points[i].bid)) kept.push(i) // sem repetir o mesmo valor
-    return kept.sort((a, b) => a - b)
-  }, [points, g])
+  // rótulos de valor: último, primeiro, máximo, mínimo e os picos e vales mais marcados, sem encavalar
+  const marks = useMemo(() => marcasValor(points.map((p) => p.bid), points.map((p) => g.x(p.t))), [points, g])
   const hp = hover != null ? points[hover] : null
   const [tipRef, tipW] = useLarguraBalao(hp)
   const gid = `a-${plotId.replaceAll(':', '')}`
@@ -197,7 +195,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const tone = (v) => (v > 0 ? 'up' : v < 0 ? 'down' : 'flat')
 
   return (
-    <div ref={plotRef} className={`plot${light ? ' light' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
+    <ChartFullscreen><div ref={plotRef} className={`plot${light ? ' light' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
       <span id={`${plotId}-hint`} className="chart-access-text">Use as setas para percorrer os pontos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho; Escape limpa. Com o mouse ou o dedo, arraste sobre o gráfico para selecionar um trecho.</span>
       <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
       <svg
@@ -245,13 +243,13 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
         <path d={g.area} fill={`url(#${gid})`} />
         <path className="line" style={{ color }} d={g.line} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
         <circle cx={g.x(last.t)} cy={g.y(last.bid)} r="4" fill={color} className="ring" />
-        {labels && (vfmt ?? fmt) && marks.map((i) => {
+        {labels && (vfmt ?? fmt) && marks.map(({ i, vale }) => {
           const p = points[i]
-          const anchor = i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'
+          const y = g.y(p.bid)
           return (
             <g key={p.t} pointerEvents="none">
-              <circle cx={g.x(p.t)} cy={g.y(p.bid)} r="2.5" fill={color} />
-              <text x={g.x(p.t)} y={g.y(p.bid) - 9} textAnchor={anchor} className="vlabel">{(vfmt ?? fmt)(p.bid)}</text>
+              <circle cx={g.x(p.t)} cy={y} r="2.5" fill={color} />
+              <text x={g.x(p.t)} y={yRotulo(y, vale, M.t, g.base)} textAnchor={ancoraRotulo(i, points.length)} className="vlabel">{(vfmt ?? fmt)(p.bid)}</text>
             </g>
           )
         })}
@@ -271,6 +269,39 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           </g>
         )}
       </svg>
+      {eventos?.length > 0 && !range && (
+        <div className="fx-dots">
+          {eventos.filter((ev) => ev.t >= g.t0 && ev.t <= g.t1).map((ev) => (
+            <button
+              type="button"
+              key={`${ev.t}-${ev.itens[0]?.link}`}
+              className={`fx-dot ${ev.tom}${aberto?.t === ev.t ? ' on' : ''}`}
+              style={{ left: g.x(ev.t), top: g.y(ev.bid) }}
+              aria-expanded={aberto?.t === ev.t}
+              aria-label={`${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `${code} ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
+              onClick={() => setAberto(aberto?.t === ev.t ? null : ev)}
+            />
+          ))}
+        </div>
+      )}
+      {aberto && !range && (
+        <div className="fx-news" role="region" aria-label="Manchetes do dia">
+          <p className="fx-news-head">
+            <b>{fmtDate(aberto.t, true)}</b>
+            {aberto.pct != null && <em className={aberto.tom}>{aberto.pct > 0 ? '▲' : '▼'} {signed(aberto.pct, 2)}% no dia</em>}
+            <button type="button" className="sel-clear" onClick={() => setAberto(null)}>Fechar</button>
+          </p>
+          <ul>
+            {aberto.itens.map((n) => (
+              <li key={n.link}>
+                {n.semHora ? null : <><time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}</>}
+                <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}{n.geral ? ' · mercado do dia' : ''}</small>
+              </li>
+            ))}
+          </ul>
+          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa). Primeiro as que falam da moeda; "mercado do dia" são manchetes gerais que podem ajudar a explicar o movimento. Mostram o que saiu na imprensa, não comprovam a causa.</p>
+        </div>
+      )}
       {range && (
         <div className="sel-panel" role="status">
           <span><b>Trecho</b> {when(range.t0)} → {when(range.t1)}: <em className={tone(range.delta)}>{fmtPct(range.pct)}{rate && ' rel.'} · {abs(range.delta)}</em></span>
@@ -297,7 +328,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           )}
         </div>
       )}
-    </div>
+    </div></ChartFullscreen>
   )
 }
 
@@ -322,6 +353,11 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
   useEffect(() => { try { localStorage.setItem('tabelaAberta', tableOpen ? '1' : '0') } catch { /* sem armazenamento */ } }, [tableOpen])
   const macroH = useMacro()
   const ptaxH = macroH.data?.ptaxHist?.[currency.code]
+  const fx = useDataFile('fx-noticias.json')
+  const eventos = useMemo(() => {
+    if (!pts || fx.status !== 'ok') return undefined
+    return intraday ? eventosDoDia(pts, fx.data, currency.code, day) : eventosDiarios(pts, fx.data, currency.code)
+  }, [pts, fx.status, fx.data, currency.code, intraday, day])
   const td = currency.code === 'JPY' ? 4 : 2 // iene vale centavos: precisa de mais casas
   const pct = periodChange(pts)
   const trend = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat'
@@ -353,7 +389,10 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
             <small>{h.error}</small>
           </div>
         )}
-        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} />}
+        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} />}
+        {eventos?.length > 0 && (intraday
+          ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre a moeda e o mercado publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
+          : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas da moeda no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bolinha para ver as manchetes.</p>)}
       </div>
       {pts && h.warning && <p className="status stale" role="status">{h.warning}</p>}
       {pts?.length === 1 && <p className="status stale" role="status">Uma única amostra disponível; aguardando outra para calcular a variação.</p>}

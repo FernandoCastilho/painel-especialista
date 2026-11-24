@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { FilterScope } from './ChartFilters.jsx'
 import { reduceMotion } from './motion.js'
+import ExpandIcon from './ExpandIcon.jsx'
 
 // O mesmo conteúdo permanece montado ao ampliar: filtros e seleções são preservados.
 // O diálogo nativo mantém foco e Escape dentro da vista ampliada, inclusive no celular.
@@ -23,7 +24,7 @@ export default function Expandable({ children, label, modal = false, onClose }) 
     el.setAttribute('open', '')
   }, [active])
   const restore = () => setFull(false)
-  // Detalhe (modal) abre como gaveta lateral em cortina; ao fechar, a cortina recolhe (0,25 s) antes de sair.
+  // Detalhe (modal) abre como janela no centro da tela; ao fechar, ela esmaece (0,25 s) antes de sair.
   const [closing, setClosing] = useState(false)
   const close = () => {
     if (!modal || closing) return
@@ -44,13 +45,13 @@ export default function Expandable({ children, label, modal = false, onClose }) 
       onCancel={(e) => { e.preventDefault(); full ? restore() : close() }}
       onClick={(e) => {
         if (!modal || e.target !== e.currentTarget) return
-        const r = e.currentTarget.getBoundingClientRect() // só fecha no clique fora da gaveta (no fundo escurecido)
+        const r = e.currentTarget.getBoundingClientRect() // só fecha no clique fora da janela (no fundo escurecido)
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close()
       }}>
       <div className="expandable-controls">
         {modal
           ? <button type="button" className="btn" onClick={close} aria-label="Fechar detalhes">Fechar ×</button>
-          : <button type="button" className="btn" aria-label={`${full ? 'Restaurar' : 'Maximizar'} ${label}`} aria-pressed={full} onClick={() => setFull((v) => !v)}>{full ? '↙ Restaurar' : '⛶ Tela cheia'}</button>}
+          : <button type="button" className={full ? 'btn' : 'btn btn-expand'} aria-label={`${full ? 'Restaurar' : 'Maximizar'} ${label}`} aria-pressed={full} title={full ? undefined : 'Ampliar'} onClick={() => setFull((v) => !v)}>{full ? '↙ Restaurar' : <ExpandIcon />}</button>}
       </div>
       {modal ? <FilterScope><div className="expandable-body">{children}</div></FilterScope> : children}
     </dialog>

@@ -7,7 +7,6 @@ import { mergeItems } from '../scripts/reforma-lib.mjs'
 import { normalizeReforma, normalizeTemas, juntarMoedas } from '../src/reforma.js'
 import { buildFeed } from '../src/feed.js'
 import { topHeadlines, rateTiles } from '../src/snapshot.js'
-import { manchetes } from '../src/apresentacao.js'
 import { SECTOR_NEWS_SOURCES, SECTOR_NEWS_WINDOW_MS, normalizeSectorNews, validateSectorNewsItem, publicationBounds } from '../src/sectorNews.js'
 import { makeSectorNewsFile } from '../scripts/sector-news-lib.mjs'
 
@@ -48,11 +47,10 @@ test('fallback filtra novas e anteriores, conserva aviso mesmo se todas expirare
   assert.deepEqual(previous, original)
 })
 
-test('feeds, destaques e apresentação filtram antes da seleção e limite', () => {
+test('feeds e destaques filtram antes da seleção e limite', () => {
   const data = { USD: [...fixtures].reverse(), MERCADO: [...fixtures].reverse() }
   assert.deepEqual(buildFeed(data, 'ALL', 2, NOW).map(i => i.title), ['Recente', 'Limite'])
   assert.ok(topHeadlines({ news: data }, ['USD'], 2, NOW).every(i => inNewsWindow(i.t, NOW)))
-  assert.deepEqual(manchetes({ aco: { items: [...fixtures].reverse() } }, 'aco', 2, NOW).map(i => i.title), ['Recente', 'Limite'])
 })
 
 test('legados de sete dias são revalidados na leitura e no merge, inclusive temas/moedas', () => {

@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { collectFocus, preserveFocus } from './focus-collector.mjs'
+import { collectFocus, keepPublication, preserveFocus } from './focus-collector.mjs'
 import { RETAIN_FILES, loadPublishedFile, validatePublishedFile, createWeeklySnapshot } from './weekly-data.mjs'
 export { RETAIN_FILES } from './weekly-data.mjs'
 
@@ -24,7 +24,7 @@ export async function refreshScenarios({ load = loadPublishedFile, collect = col
   try {
     macro = {
       ...previous,
-      focus: await collect({ now }),
+      focus: keepPublication(await collect({ now }), previous.focus),
       focusCheckedAt: now,
       focusSchedule: { cadence: 'segunda 08:30 America/Sao_Paulo (repete terça 08:30)', skipped: false, error: null },
       stale: { ...previous.stale },

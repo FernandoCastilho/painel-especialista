@@ -1,0 +1,11 @@
+{
+  "baselineFailures": 32,
+  "finalFailures": 31,
+  "newFailures": [],
+  "noLongerFailing": [
+    "resume requires both exact text and file hashes, matching voice, and valid duration"
+  ],
+  "targetedTests": 69,
+  "visualCases": 12,
+  "obsidianNotes": 6
+}

@@ -16,6 +16,12 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       await context.route('**/*', route => new URL(route.request().url()).origin === new URL(base).origin ? route.continue() : route.abort())
       await context.route('**/recado.json*', route => route.fulfill({ json: { ativo: false } }))
       const page = await context.newPage()
+      const waitForPhotos = selector => page.waitForFunction(selector => {
+        const images = [...document.querySelectorAll(selector)]
+        return images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0
+          && Math.abs(image.naturalWidth - image.naturalHeight * 1.5) <= 2
+          && new URL(image.currentSrc).pathname.endsWith('.webp'))
+      }, selector)
       activePage = page
       activeScenario = `${width}-${theme}`
       page.on('pageerror', error => report.errors.push(error.message))
@@ -30,18 +36,21 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       assert.equal(await folders.count(), 15)
       await folders.last().scrollIntoViewIfNeeded()
       await folders.first().scrollIntoViewIfNeeded()
-      await page.waitForFunction(() => [...document.querySelectorAll('.central-folder img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
+      await waitForPhotos('.central-folder img')
       if (width < 1000) {
-        const more = page.getByRole('button', { name: 'Mais', exact: true })
+        const navigation = page.getByRole('navigation', { name: 'Seções', exact: true })
+        const more = navigation.getByRole('button', { name: 'Mais', exact: true })
         const menu = page.getByRole('menu', { name: 'Mais', exact: true })
         const focused = async name => {
           await page.waitForFunction(expected => document.activeElement?.matches('[role="menuitem"]') && document.activeElement.textContent.trim() === expected, name)
           assert.equal(await menu.getByRole('menuitem', { name, exact: true }).evaluate(element => element === document.activeElement), true)
         }
         await more.focus(); await page.keyboard.press('ArrowDown')
-        await focused('BNDES')
+        await focused('M&A')
+        assert.deepEqual(await menu.getByRole('menuitem').allTextContents(), ['M&A', 'Notícias', 'Podcast', 'Bancos', 'Feriados', 'Novidades da semana', 'Aprender'])
         await page.keyboard.press('ArrowUp'); await focused('Aprender')
-        await page.keyboard.press('Home'); await focused('BNDES')
+        await page.keyboard.press('ArrowDown'); await focused('M&A')
+        await page.keyboard.press('Home'); await focused('M&A')
         await page.keyboard.press('End'); await focused('Aprender')
         await page.keyboard.press('Escape')
         assert.equal(await menu.count(), 0)
@@ -50,10 +59,16 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
         await page.keyboard.press('Tab')
         assert.equal(await menu.count(), 0)
         assert.equal(await page.evaluate(() => document.activeElement === document.body), false, 'Tab must not lose focus to body')
-        await more.click(); await focused('BNDES')
-        await page.keyboard.press('ArrowDown'); await focused('Setores')
+        await more.click(); await focused('M&A')
+        await page.keyboard.press('ArrowDown'); await focused('Notícias')
+        await page.keyboard.press('ArrowDown'); await focused('Podcast')
         await page.keyboard.press('Enter')
         assert.equal(await menu.count(), 0)
+        await page.waitForURL('**/#podcast')
+        assert.equal(await more.evaluate(element => element === document.activeElement), true)
+        // Setores moved to the primary navigation; still prove user navigation back to folders.
+        await navigation.getByRole('button', { name: 'Setores', exact: true }).click()
+        await page.waitForURL('**/#setores')
         await folders.first().waitFor()
       }
       await overflow()
@@ -67,7 +82,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
       assert.equal(await page.locator('.central-topics .central-topic').count(), 6)
       await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
       await page.locator('.central-subsector').first().scrollIntoViewIfNeeded()
-      await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
+      await waitForPhotos('.central-subsector img')
       await page.screenshot({ path: path.join(out, `${width}-${theme}-subsetores.png`), fullPage: true })
       await page.getByRole('button', { name: 'Compensados', exact: true }).click()
       await page.waitForURL('**/#setores/topico/base-florestal/3')
@@ -156,7 +171,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
           topicImages += await topics.count()
           await topics.last().scrollIntoViewIfNeeded()
           await topics.first().scrollIntoViewIfNeeded()
-          await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536 && image.naturalHeight === 1024))
+          await waitForPhotos('.central-subsector img')
           await overflow()
           await page.screenshot({ path: path.join(out, `${id}-subsetores.png`), fullPage: true })
           await page.getByRole('button', { name: 'Todos os setores', exact: true }).click()
@@ -169,7 +184,15 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
           const highlight = page.locator('.central-highlight')
           const cards = page.locator('.central-subsectors')
           await highlight.waitFor()
+          await cards.waitFor()
           assert.equal(await highlight.getByText('O que acompanhar', { exact: true }).count(), 1)
+          // Mede só com a tela parada: letras próprias carregadas, imagens prontas e sem animação de entrada. Antes, a medida
+          // às vezes saía no meio da troca de tela e o teste falhava sem defeito na tela (18/11/2026, 1440 px).
+          await page.evaluate(() => document.fonts.ready)
+          await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img, .central-highlight img')].every(image => image.complete)
+            && document.getAnimations().every(animation => animation.playState !== 'running' || animation.effect?.getComputedTiming?.().iterations === Infinity))
+          const posicao = async () => JSON.stringify([await highlight.boundingBox(), await cards.boundingBox()])
+          for (let anterior = '', atual = await posicao(), tentativas = 0; anterior !== atual && tentativas < 20; tentativas++) { await page.waitForTimeout(100); anterior = atual; atual = await posicao() }
           const bounds = await highlight.boundingBox(), cardBounds = await cards.boundingBox()
           assert.ok(bounds && cardBounds && bounds.y + bounds.height <= cardBounds.y, `${group}: resumo vem antes dos cards`)
           await overflow()
@@ -182,7 +205,7 @@ const report = { schemaVersion: 1, passed: false, results: [], errors: [] }
         await page.locator('#central-folder-tic').click()
         await page.locator('.central-subsector').last().scrollIntoViewIfNeeded()
         await page.locator('.central-subsector').first().scrollIntoViewIfNeeded()
-        await page.waitForFunction(() => [...document.querySelectorAll('.central-subsector img')].every(image => image.complete && image.naturalWidth === 1536))
+        await waitForPhotos('.central-subsector img')
         await page.keyboard.press('Tab')
         await page.locator('.central-subsector').first().focus()
         assert.equal(await page.locator('.central-subsector').first().evaluate(element => element.matches(':focus-visible') && getComputedStyle(element).outlineStyle !== 'none' && parseFloat(getComputedStyle(element).outlineWidth) >= 2), true, 'subsetor tem foco de teclado visível')

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { ZONES } from './Clock.jsx'
+import Flag from './Flag.jsx'
 import { OnlineBadge } from './Acessos.jsx'
 import { DESK_TABS } from './terminal.js'
 import ThemeControl from './ThemeControl.jsx'
 import { AvisosButton } from './Avisos.jsx'
 import MascotSlot from './MascotSlot.jsx'
 import './TopBar.css'
+import Nav from './Nav.jsx'
 
 const CLOCKS = [
   ['BRL', 'BRT'],
@@ -26,7 +28,8 @@ function Clocks() {
   return (
     <div className="topbar-clocks" role="timer" aria-label="Horários de São Paulo, Nova York, Londres e Tóquio">
       {CLOCKS.map(([code, short], i) => (
-        <span key={code} className={i === 2 ? 'opt' : undefined} title={ZONES[code].city}>
+        <span key={code} className={i === 2 ? 'topbar-clock opt' : 'topbar-clock'} title={ZONES[code].city}>
+          <Flag code={ZONES[code].flag} width={13} height={9} className="topbar-clock-flag" />
           <b>{short}</b>
           {part(now, ZONES[code].tz, { hour: '2-digit', minute: '2-digit', ...(code === 'BRL' ? { second: '2-digit' } : {}) })}
         </span>
@@ -54,14 +57,7 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
       <div className="topbar-brand" title="Painel Especializado no Mercado">
         <abbr title="Painel Especializado no Mercado" style={{ textDecoration: 'none', cursor: 'help' }}>PME</abbr>
       </div>
-      <nav className="topbar-tabs" aria-label="Navegação principal">
-        {DESK_TABS.filter((t) => !t.oculto).map((t, i) => (
-          <button key={t.id} type="button" className={t.id === tab ? 'on' : ''} aria-current={t.id === tab ? 'page' : undefined} onClick={() => onTab(t.id)} title={`Alt+${(i + 1) % 10}`}>
-            <i aria-hidden="true">{i + 1}</i>
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <Nav desktop tab={tab} onTab={onTab} />
       <Clocks />
       <OnlineBadge />
       <div className={`topbar-feed ${feed}`} role="status" title={feedTitle || 'Estado das referências de câmbio'}>

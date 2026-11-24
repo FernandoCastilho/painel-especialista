@@ -21,8 +21,8 @@ test('weekly Focus cron at 08:30 Brazil on Monday and Tuesday (Monday holiday); 
  const crons=[...y.matchAll(/- cron: '([^']+)'/g)].map(m=>m[1]);assert.deepEqual(crons,['0 11,18 * * *','17 3-23 * * 1-5','17 0-2 * * 2-6','30 11 * * 1,2']);assert.equal(new Set(crons).size,4)
  assert.match(y,/if: github.event.schedule == '30 11 \* \* 1,2'/)
  const deploy=y.split('\n  deploy:\n')[1];assert.ok(deploy)
- const regular=deploy.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,34);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
- assert.match(deploy,/Consumir snapshot institucional confirmado[^\n]*\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\)\n\s+run: node scripts\/sector-news-live\.mjs --snapshot/)
+ const regular=deploy.split('\n').filter(l=>l.includes("github.event.schedule != '30 11 * * 1,2'"));assert.equal(regular.length,37);assert.ok(regular.every(l=>l.includes("github.event.schedule != '0 11,18 * * *'")))
+ assert.match(deploy,/Consumir snapshot institucional confirmado[^\n]*\n\s+if: github.event.schedule != '0 11,18 \* \* \*' && \(github.event.schedule != '30 11 \* \* 1,2'\) && env\.PAGES_REFRESH_DATA == 'true'\n\s+run: node scripts\/sector-news-live\.mjs --snapshot/)
  const institutional=y.split('\n  institutional-news:\n')[1].split('\n  deploy:')[0]
  assert.match(institutional,/needs\.approve-source\.result == 'success'/)
  for(const cron of ['0 11,18 * * *','30 11 * * 1,2'])assert.ok(institutional.includes(`github.event.schedule != '${cron}'`))
@@ -68,4 +68,58 @@ test('Focus watch: tries 2 to 10 every 30 min (09:00–13:00 Brasília) on Monda
  assert.equal(at('2026-11-09T12:00:00Z','2026-11-06').run,false) // já publicado
  assert.equal(at('2026-11-03T12:30:00Z','2026-10-23').run,true) // terça após segunda feriado
  assert.equal(at('2026-11-11T12:00:00Z','2026-10-30').run,false) // quarta: fora
+})
+
+test('Focus em atraso: atualização automática depois da divulgação busca o boletim, sem esperar o disparo semanal', async () => {
+  const { focusDue, expectedFocusDate } = await import('../scripts/focus-collector.mjs')
+  const at = iso => Date.parse(iso)
+  // Segunda 16/11/2026: o boletim esperado é o de sexta 13/11. Antes das 08h25 de Brasília ainda não saiu.
+  assert.equal(expectedFocusDate(at('2026-11-16T14:30:00Z')), '2026-11-13')
+  assert.equal(focusDue('2026-11-06', at('2026-11-16T11:20:00Z')), false, 'segunda 08h20: ainda não divulgado')
+  assert.equal(focusDue('2026-11-06', at('2026-11-16T11:33:00Z')), true, 'segunda 08h33: já divulgado e o painel está na semana anterior')
+  assert.equal(focusDue('2026-11-13', at('2026-11-16T11:33:00Z')), false, 'boletim da semana já no painel')
+  // Se segunda e terça passarem sem disparo, quarta em diante ainda busca.
+  assert.equal(focusDue('2026-11-06', at('2026-11-18T15:00:00Z')), true)
+  assert.equal(focusDue('2026-11-13', at('2026-11-20T15:00:00Z')), false)
+  assert.equal(focusDue(null, at('2026-11-18T15:00:00Z')), true, 'sem Focus publicado')
+  const macro = await readFile(new URL('../scripts/fetch-macro.mjs', import.meta.url), 'utf8')
+  assert.match(macro, /const focusAtrasado = scheduled && focusDue\(previous\?\.focus\?\.date, now\.getTime\(\)\)/)
+  assert.match(macro, /const coletaFocus = !scheduled \|\| focusAtrasado/)
+  assert.match(macro, /if \(!coletaFocus\) \{ delete out\.stale\.focus; preserveFocus\(out, previous, \{ skipped: true \}\) \}/)
+  const history = await readFile(new URL('../scripts/fetch-focus-history.mjs', import.meta.url), 'utf8')
+  assert.match(history, /const atrasado = scheduled && !weekly && focusDue\(ultimaData\(previous\?\.series\), now\)/)
+  assert.match(history, /if \(scheduled && !weekly && !atrasado\) \{/)
+})
+test('Focus: data de publicação vem da página do boletim no Banco Central, nunca presumida',async()=>{
+ const {focusPublication,keepPublication}=await import('../scripts/focus-collector.mjs')
+ const page=(item)=>async(url)=>{assert.match(String(url),/sitebcb\/focus\/principal\?filtro=IdentificadorUrl%20eq%20'13112026'/);return {ok:true,json:async()=>({conteudo:item?[item]:[]})}}
+ const item={data:'2026-11-16T11:25:00Z',DataReferencia:'2026-11-13T03:00:00Z'}
+ assert.deepEqual(await focusPublication('2026-11-13',{fetchImpl:page(item)}),{release:'2026-11-16',link:'https://www.bcb.gov.br/publicacoes/focus/13112026'})
+ // Publicado às 23h de Brasília: vale o dia de Brasília, não o dia UTC.
+ assert.equal((await focusPublication('2026-11-13',{fetchImpl:page({...item,data:'2026-11-18T02:00:00Z'})})).release,'2026-11-17')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page(null)}),null)
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page({...item,DataReferencia:'2026-11-06T03:00:00Z'})}),null,'boletim de outra semana')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page({...item,data:'2026-11-12T11:25:00Z'})}),null,'publicação antes da coleta')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:page({...item,data:'2026-12-20T11:25:00Z'})}),null,'publicação distante demais')
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:async()=>({ok:false,status:503})}),null)
+ assert.equal(await focusPublication('2026-11-13',{fetchImpl:async()=>{throw new Error('rede')}}),null)
+ const ok={date:'2026-11-13',release:'2026-11-16',link:'https://www.bcb.gov.br/publicacoes/focus/13112026'}
+ assert.deepEqual(keepPublication({date:'2026-11-13',rows:[]},ok),{date:'2026-11-13',rows:[],release:ok.release,link:ok.link})
+ assert.deepEqual(keepPublication({date:'2026-11-20',rows:[]},ok),{date:'2026-11-20',rows:[]},'semana nova não herda a data antiga')
+ assert.deepEqual(keepPublication({date:'2026-11-13',rows:[]},{date:'2026-11-13',release:'2026-11-16'}),{date:'2026-11-13',rows:[]},'data presumida antiga (sem link) não é herdada')
+ const src=await readFile(new URL('../src/Projecoes.jsx',import.meta.url),'utf8')
+ assert.match(src,/const publicado = Boolean\(focus\?\.link && idadeProjecao\(focus\?\.release\)\)/)
+ assert.match(src,/boletim publicado em \{date\(focus\.release\)\}/)
+})
+
+test('câmbio aberto só em dia de pregão da B3, das 9h05 às 18h de Brasília', async () => {
+  const { fxSessionOpen } = await import('../scripts/data-schedules.mjs')
+  const at = (iso) => fxSessionOpen(Date.parse(iso))
+  assert.equal(at('2026-11-19T12:04:00Z'), false) // 9h04, antes da abertura
+  assert.equal(at('2026-11-19T12:05:00Z'), true) // 9h05
+  assert.equal(at('2026-11-19T21:00:00Z'), true) // 18h00
+  assert.equal(at('2026-11-19T21:01:00Z'), false) // 18h01
+  assert.equal(at('2026-11-20T15:00:00Z'), false) // Consciência Negra: feriado da B3
+  assert.equal(at('2026-11-21T15:00:00Z'), false) // sábado
+  assert.equal(at('2027-03-10T15:00:00Z'), true) // ano sem calendário conferido: dia útil segue aberto
 })

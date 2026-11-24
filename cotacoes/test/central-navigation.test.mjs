@@ -15,6 +15,12 @@ const catalog = await import(pathToFileURL(root + 'src/centralSetorial.js'))
 const history = await import(pathToFileURL(root + 'src/centralHistory.js'))
 const insumos = await import(pathToFileURL(root + 'src/insumos.js'))
 const { code } = await transform(readFileSync(root + 'src/Setores.jsx', 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+// Load the extracted image component through the same JSX transform as Setores.
+// Keep the real implementation; navigation assertions and hook behavior stay unchanged.
+const imageAssets = await import(pathToFileURL(root + 'src/sectorImages.js'))
+const { code: imageCode } = await transform(readFileSync(root + 'src/SectorImage.jsx', 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
+const imageModule = { exports: {} }
+runInNewContext(imageCode, { module: imageModule, exports: imageModule.exports, require: name => name === './sectorImages.js' ? imageAssets : require(name) })
 function children(node) {
   if (['PautasSetoriais', 'EstudoRelacionado'].includes(node.type?.name)) return node.type(node.props)
   return node.props?.children
@@ -25,7 +31,7 @@ const text = node => Array.isArray(node) ? node.map(text).join('') : node && typ
 async function setup(t, initial = 'central', state = { unrelatedFeature: { preserved: true } }) {
   let entries = [{ view: initial, state }], index = 0, view = initial, renderer, rafId = 0
   const frames = new Map(), elements = new Map(), calls = []
-  const body = { id: '', key: 'body' }, document = { activeElement: body, getElementById: id => elements.get(id) || null }
+  const body = { id: '', key: 'body', closest: () => null }, document = { activeElement: body, getElementById: id => elements.get(id) || null }
   const window = {
     history: { get state() { return entries[index].state }, replaceState(state) { entries[index].state = structuredClone(state) } },
     scrollY: 200,
@@ -33,7 +39,7 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
     cancelAnimationFrame(id) { frames.delete(id) },
     scrollTo(options) { calls.push({ scroll: options.top }); window.scrollY = options.top },
   }
-  const deps = { './sectorHighlights.js': highlights, react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
+  const deps = { './MaSectorLink.jsx': () => null, './SectorImage.jsx': imageModule.exports, './sectorHighlights.js': highlights, react: { ...React, useId: () => 'search-review' }, './insumos.js': insumos, './centralSetorial.js': catalog, './centralHistory.js': history, './SetoresLegado.jsx': () => null, './SectorStudy.jsx': () => null, './SectorStudyLoader.jsx': () => null, './CentralSetorial.css': {} }
   const module = { exports: {} }
   runInNewContext(code, { module, exports: module.exports, window, document, require: name => deps[name] ?? require(name) })
   const render = () => {
@@ -46,7 +52,7 @@ async function setup(t, initial = 'central', state = { unrelatedFeature: { prese
     const previous = new Map(elements)
     elements.clear()
     for (const node of nodes(renderer.value).filter(node => typeof node.type === 'string')) {
-      const k = key(node), dom = previous.get(k) || { id: node.props?.id || '', key: k }
+      const k = key(node), dom = previous.get(k) || { id: node.props?.id || '', key: k, closest: () => null }
       dom.focus = () => { document.activeElement = dom; calls.push({ focus: k }) }
       dom.scrollIntoView = () => calls.push({ scrollIntoView: k })
       elements.set(k, dom)

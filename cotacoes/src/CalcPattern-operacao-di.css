@@ -1,0 +1,104 @@
+/* Operação x DI · padrão visual das calculadoras (aprovado em 18/11/2026; mesma família do Finame).
+   Tudo preso a .od-pattern: outras calculadoras usam .cx, .bw e .calc-standard e não podem mudar.
+   Só apresentação: nenhuma regra de cálculo mora aqui. */
+:root[data-theme] body .cx.od-pattern {
+  --od-orange:#ff6200;
+  --od-navy:linear-gradient(110deg,#052956,#07336b);
+  --od-amber:#f5a524;
+}
+
+/* Cotação ao lado dos dados no computador largo; abaixo deles nas telas menores. */
+:root[data-theme] body .cx.od-pattern .od-layout { display:grid; gap:20px; min-width:0; }
+@media (min-width:1200px) {
+  :root[data-theme] body .cx.od-pattern .od-layout { grid-template-columns:minmax(0,1fr) minmax(360px,400px); align-items:start; }
+  :root[data-theme] body .cx.od-pattern .od-results { position:sticky; top:88px; }
+  /* A cotação rola por dentro, com a borda laranja e o título sempre à vista. */
+  :root[data-theme] body .cx.od-pattern .od-quote { max-height:calc(100vh - 140px); overflow:auto; overscroll-behavior:contain; }
+  :root[data-theme] body .cx.od-pattern .od-quote .expandable-heading { position:sticky; top:0; z-index:1; }
+}
+:root[data-theme] body .cx.od-pattern .od-results { display:grid; gap:8px; min-width:0; }
+
+/* Quadro de entrada: faixa azul-marinho, título branco e uma linha laranja (sem barra laranja à esquerda). */
+:root[data-theme] body .cx.od-pattern .od-input { overflow:hidden; }
+:root[data-theme] body .cx.od-pattern .od-input > header { background:var(--od-navy); color:#fff; border-bottom:4px solid var(--od-orange); border-radius:0; }
+:root[data-theme] body .cx.od-pattern .od-input > header h3 { border-left:0; padding-left:0; color:#fff; font-weight:700; }
+
+/* Aviso de dado que falta: faixa no topo do quadro. */
+:root[data-theme] body .cx.od-pattern .od-alert { display:flex; gap:10px; align-items:flex-start; margin:12px 16px 0; padding:10px 12px; border:1px solid var(--bw-line); border-left:4px solid var(--od-amber); border-radius:8px; background:var(--bw-warm-soft); color:var(--bw-ink); font-size:.85rem; line-height:1.45; }
+:root[data-theme] body .cx.od-pattern .od-alert > span:first-child { flex:none; display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--od-amber); color:#000; font-weight:700; font-size:.75rem; }
+:root[data-theme] body .cx.od-pattern .od-alert b { color:var(--bw-ink); }
+
+/* Rótulos em uma linha. */
+:root[data-theme] body .cx.od-pattern .od-input .cx-field-label { flex-wrap:nowrap; white-space:nowrap; }
+:root[data-theme] body .cx.od-pattern .od-input .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); }
+/* Computador e tablet: quatro colunas; escolhas, valor e taxa ocupam duas. */
+@media (min-width:700px) {
+  :root[data-theme] body .cx.od-pattern .od-input .cx-form { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  :root[data-theme] body .cx.od-pattern .od-input :is(.od-choice,.od-wide) { grid-column:span 2; }
+}
+:root[data-theme] body .cx.od-pattern .od-input .od-curve-hint { grid-column:1/-1; margin:0; }
+@media (max-width:480px) {
+  :root[data-theme] body .cx.od-pattern .od-input .cx-form { grid-template-columns:1fr; }
+}
+
+/* Escolhas excludentes: uma barra segmentada por grupo; só a opção escolhida em amarelo. */
+:root[data-theme] body .cx.od-pattern .seg { display:inline-flex; flex-wrap:nowrap; gap:0; width:fit-content; max-width:100%; min-height:44px; padding:0; border:1px solid var(--cx-line-strong, var(--bw-field-line)); border-radius:10px; overflow:hidden; background:transparent; }
+:root[data-theme] body .cx.od-pattern .seg button { flex:0 0 auto; min-height:44px; margin:0; padding:8px 14px; border:0; border-radius:0; white-space:nowrap; line-height:1.2; }
+:root[data-theme] body .cx.od-pattern .seg button + button { border-left:1px solid var(--cx-line-strong, var(--bw-field-line)); }
+:root[data-theme] body .cx.od-pattern .cx-rate { align-items:stretch; flex-wrap:nowrap; }
+:root[data-theme] body .cx.od-pattern .cx-rate > input { flex:1 1 0; min-width:72px; }
+:root[data-theme] body .cx.od-pattern .cx-rate > .seg { flex:none; }
+@media (max-width:699px) {
+  :root[data-theme] body .cx.od-pattern .od-choice .seg { display:flex; width:100%; }
+  :root[data-theme] body .cx.od-pattern .od-choice .seg button { flex:1 1 0; min-width:0; white-space:normal; padding:6px 8px; }
+  :root[data-theme] body .cx.od-pattern .cx-rate > .seg button { padding:6px 10px; }
+}
+
+/* Cotação: o único quadro com borda laranja; faixa azul-marinho, sem linha laranja embaixo. */
+:root[data-theme] body .cx.od-pattern .od-quote { padding:0; border:2px solid var(--od-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body .cx.od-pattern .od-quote .expandable-panel { border:0; border-radius:0; background:transparent; }
+:root[data-theme] body .cx.od-pattern .od-quote .expandable-heading { background:var(--od-navy); color:#fff; border-bottom:0; }
+:root[data-theme] body .cx.od-pattern .od-quote .expandable-heading h3 { color:#fff; border-left:0; padding-left:0; }
+:root[data-theme] body .cx.od-pattern .od-quote .expandable-heading .expandable-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
+:root[data-theme] body .cx.od-pattern .od-quote .expandable-content { display:grid; gap:12px; padding:12px; }
+:root[data-theme] body .cx.od-pattern .od-quote .calc-panel-context { justify-content:flex-end; margin:0 0 -8px; }
+
+/* 1. Resposta principal */
+:root[data-theme] body .cx.od-pattern .od-answer { display:flex; flex-direction:column; gap:4px; padding:12px 14px; border:1px solid #34507f; border-radius:10px; background:var(--od-navy); color:#fff; }
+:root[data-theme] body .cx.od-pattern .od-answer small { color:#c9d6ee; font-size:.75rem; }
+:root[data-theme] body .cx.od-pattern .od-answer > b { display:flex; align-items:baseline; gap:8px; color:#fff; font-size:1.9rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+:root[data-theme] body .cx.od-pattern .od-answer > b i { font-style:normal; font-size:1.1rem; }
+:root[data-theme] body .cx.od-pattern .od-answer.od-good > b i { color:#6fe0a8; }
+:root[data-theme] body .cx.od-pattern .od-answer.od-bad > b i { color:#ffb08a; }
+:root[data-theme] body .cx.od-pattern .od-answer > span { color:#e3ebf8; font-size:.85rem; }
+:root[data-theme] body .cx.od-pattern .od-answer > span b { color:#fff; }
+
+/* 2. Equivalências e CET */
+:root[data-theme] body .cx.od-pattern .od-equiv { display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0; list-style:none; font-size:.85rem; }
+:root[data-theme] body .cx.od-pattern .od-equiv li { padding:6px 10px; border:1px solid var(--bw-line); border-radius:8px; color:var(--bw-mut); }
+:root[data-theme] body .cx.od-pattern .od-equiv li b { color:var(--bw-ink); }
+:root[data-theme] body .cx.od-pattern .od-quote .od-cet { margin:0; padding:10px 12px; border:1px solid var(--bw-line); border-radius:8px; gap:10px 24px; }
+:root[data-theme] body .cx.od-pattern .od-quote .od-cet dt { color:var(--bw-mut); }
+:root[data-theme] body .cx.od-pattern .od-quote .od-cet dd b { color:var(--bw-ink); font-size:1.1rem; }
+:root[data-theme] body .cx.od-pattern .od-quote .od-cet dd small { display:block; color:var(--bw-mut); }
+
+/* 3. Taxas e valores em reais, agrupados, terminando no valor no vencimento. */
+:root[data-theme] body .cx.od-pattern .od-grouped { width:100%; }
+:root[data-theme] body .cx.od-pattern .od-grouped tr.od-grp > th { padding:10px 10px 4px; background:none; color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body .cx.od-pattern .od-grouped td { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+:root[data-theme] body .cx.od-pattern .od-grouped tbody th[scope=row] { width:40%; min-width:110px; text-align:left; font-weight:400; white-space:normal; }
+:root[data-theme] body .cx.od-pattern .od-grouped tr.od-total > * { font-weight:700; border-top:2px solid var(--bw-strong-line, var(--bw-line)); }
+@media (min-width:1200px) {
+  :root[data-theme] body .cx.od-pattern .od-quote .od-grouped :is(td,th) { padding:8px 8px; font-size:.8125rem; }
+}
+
+/* Notas depois dos números. */
+:root[data-theme] body .cx.od-pattern .od-results > .status { margin:0; font-size:.75rem; }
+@media (max-width:480px) {
+  :root[data-theme] body .cx.od-pattern .od-answer > b { font-size:1.6rem; }
+  /* Celular: as três colunas cabem sem rolar para o lado. */
+  :root[data-theme] body .cx.od-pattern .od-quote .expandable-content { padding:10px 8px; }
+  :root[data-theme] body .cx.od-pattern .od-grouped :is(td,th) { padding:7px 5px; font-size:.75rem; }
+  :root[data-theme] body .cx.od-pattern .od-grouped tbody th[scope=row] { width:auto; min-width:0; }
+}
+:root[data-theme] body .cx.od-pattern .od-grouped tr.od-total > th[scope=row] { font-weight:700; }

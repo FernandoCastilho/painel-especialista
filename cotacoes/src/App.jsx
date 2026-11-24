@@ -1,3 +1,4 @@
+import EconomiaContexto from './EconomiaContexto.jsx'
 import GlobalSearch, { SearchDestination } from './GlobalSearch.jsx'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { dataTimestamp } from './dataTimestamp.js'
@@ -17,6 +18,7 @@ import Expandable from './Expandable.jsx'
 import ChartFilters from './ChartFilters.jsx'
 import DateRangePicker from './DateRangePicker.jsx'
 import { fadeIn } from './motion.js'
+import RpnDock from './RpnDock.jsx'
 import { CURRENCIES, REFRESH_DAILY_MAX, useQuotes } from './useQuotes.js'
 import HistoryChart from './HistoryChart.jsx'
 const Juros = lazy(() => import('./Juros.jsx'))
@@ -33,12 +35,15 @@ import MascotSlot from './MascotSlot.jsx'
 const Feriados = lazy(() => import('./Feriados.jsx'))
 import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
+const Novidades = lazy(() => import('./Novidades.jsx'))
+const Podcast = lazy(() => import('./Podcast.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
 const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
-const Apresentacao = lazy(() => import('./Apresentacao.jsx'))
+const Ma = lazy(() => import('./Ma.jsx'))
+const Apresentar = lazy(() => import('./Apresentar.jsx'))
 import { useDataFile } from './useDataFile.js'
 import Nav, { TABS } from './Nav.jsx'
 import Resumo from './Resumo.jsx'
@@ -220,7 +225,7 @@ export default function App() {
     } catch {
       /* sem histórico (ex.: arquivo local) */
     }
-    if (!(id === 'bndes' && tab === 'bndes')) window.scrollTo({ top: 0 }) // escolher série e período na aba BNDES não leva ao topo
+    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
   }
   useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
     if (tab !== 'cenarios' || !CEN_OLD[sub]) return
@@ -235,6 +240,8 @@ export default function App() {
     const t2 = setTimeout(() => { if (feito !== null && Math.abs(window.scrollY - feito) < 2) ir() }, 1200) // só se a pessoa não rolou
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [cenAnchor])
+  // Estas seções têm título próprio ou intencionalmente não exibem título na faixa de controles.
+  const compactHeader = ['calculadora', 'rpn', 'noticias', 'feriados'].includes(tab)
   // Troca de tela preservada da atualização publicada em paralelo.
   const viewKey = ['cenarios', 'setores', 'calculadora', 'aprender'].includes(tab) ? `${tab}/${tab !== 'cenarios' ? sub.split('/')[0] : cenView}` : tab
   const mainRef = useRef(null)
@@ -257,7 +264,7 @@ export default function App() {
   const feedAt = health.observedAt ? new Date(health.observedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : null
   const quoteStatus = (
     <p className="status src">
-          <span className={`dot ${feed}`} aria-label={health.detail} />
+          <span className={`dot ${feed}`} role="img" aria-label={health.detail} />
           {error
             ? `Falha ao atualizar as cotações de câmbio (${error}). Tentando novamente…`
             : `Câmbio — ${health.label}`}
@@ -294,7 +301,7 @@ export default function App() {
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
     <header className="term-head">
       <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
-      <Tape quotes={quotes} rates={rates} oil={oil.data} />
+      <Tape quotes={quotes} rates={rates} oil={oil.data} showFxFlags={tab === 'resumo'} />
     </header>
     <div className="nav-top"><Nav tab={tab} onTab={(id) => goto(id)} /></div>
     {tab === 'resumo' && (
@@ -304,7 +311,7 @@ export default function App() {
       </div>
     )}
     <FeedbackMascot onSearch={setMascotSearch} section={tab} />
-    <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} ref={mainRef}>
+    <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} data-tab={tab} ref={mainRef}>
       {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
       <Suspense fallback={<p className="status" role="status">Carregando seção…</p>}>
@@ -317,16 +324,15 @@ export default function App() {
       <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
       {tab !== 'resumo' && (
-        <header className={`top${['calculadora', 'noticias', 'feriados'].includes(tab) ? ' top-min' : ''}`}>
-          {!['calculadora', 'noticias', 'feriados'].includes(tab) && <h1>{tab === 'setores' ? 'Central de setores' : TABS.find((t) => t.id === tab).label}</h1>}
+        <header className={`top${compactHeader ? ' top-min' : ''}`}>
+          {!compactHeader && <h1>{tab === 'setores' ? 'Central de setores' : TABS.find((t) => t.id === tab).label}</h1>}
           <AvisosButton className="clocks-info" /><span className="laser-slot laser-slot-m" /><ThemeControl className="theme-mobile" /><MascotSlot className="mascot-slot-m" />
         </header>
       )}
 
       {tab === 'resumo' && (
         <>
-          <HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />
-          <Resumo searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} panorama={panorama} />
+          <Resumo aviso={<HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />} loading={feed === 'loading'} searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} panorama={panorama} />
 
         </>
       )}
@@ -349,6 +355,7 @@ export default function App() {
       {tab === 'bndes' && <Bndes view={sub} onView={(v, replace) => goto('bndes', v, replace)} />}
 
       {tab === 'bancos' && <Bancos />}
+      {tab === 'ma' && <Ma goto={goto} view={sub} onView={(v, replace) => goto('ma', v, replace)} />}
       {tab === 'setores' && <Setores goto={goto} view={sub} onView={(v) => goto('setores', v)} quotes={quotes} />}
 
       {tab === 'calculadora' && <Calculadora view={sub} onView={(v) => goto('calculadora', v)} quotes={quotes} />}
@@ -358,13 +365,16 @@ export default function App() {
       {tab === 'noticias' && (
         <>
           <News colors={COLORS} />
+          <EconomiaContexto />
           <p className="noticias-agenda">Agenda da semana (Copom, IPCA, payroll…) em <button type="button" className="linklike" onClick={() => goto('cenarios', 'calendario')}>Cenários › Calendário econômico</button>.</p>
         </>
       )}
 
+      {tab === 'podcast' && <Podcast />}
+      {tab === 'novidades' && <Novidades />}
       {tab === 'aprender' && <Aprender view={sub} goto={goto} />}
 
-      {tab === 'apresentar' && <Apresentacao quotes={quotes} macro={macro} />}
+      {tab === 'apresentar' && <Apresentar quotes={quotes} macro={macro} curves={curves} hol={hol} colors={COLORS} />}
 
       {tab === 'config' && <Config quotesAt={updatedAt} quotesVia={via} quotes={quotes} quotesHealth={health} fx={fx} setFx={setFx} />}
 
@@ -382,6 +392,7 @@ export default function App() {
         </Sheet>
       )}
       </Suspense>
+      <RpnDock active={tab === 'rpn'} />
     </main>
     </AvisosProvider>
   )

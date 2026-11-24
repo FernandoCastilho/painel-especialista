@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react'
 import Expandable from './Expandable.jsx'
 import ChartFilters from './ChartFilters.jsx'
-import { CdiChart, EstrChart, PolicyChart, RateChart, RatesPeriod, SelicChart, fromInput, rangeFor } from './Macro.jsx'
+import { MacroStatus, CdiChart, EstrChart, PolicyChart, RateChart, RatesPeriod, SelicChart, fromInput, rangeFor } from './Macro.jsx'
 import SofrChart from './Sofr.jsx'
-import CdiFuturo from './CdiFuturo.jsx'
+import CdiFuturo, { CdiFuturoTable } from './CdiFuturo.jsx'
 import { CURVAS, CurveDetail } from './Curves.jsx'
 import { useDataFile } from './useDataFile.js'
 import { normalizeEstr } from './estr.js'
 import Estado from './Estado.jsx'
+import RatesSnapshot from './RatesSnapshot.jsx'
+import Curves from './Curves.jsx'
+import RateTrend from './RateTrend.jsx'
 
 const rate = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 const TITLES = {
@@ -34,14 +37,14 @@ function di1Points(curves) {
     .filter((p, i, a) => i === 0 || p.t !== a[i - 1].t)
 }
 
-function Estr({ range }) {
+export function Estr({ range }) {
   const f = useDataFile('estr.json')
   let series = null
   try { series = f.data ? normalizeEstr(f.data) : null } catch { /* arquivo inválido: o gráfico não aparece */ }
-  return series?.points.length ? <EstrChart series={series} range={range} /> : <Estado tipo={f.status === 'loading' ? 'info' : 'erro'}>{f.status === 'loading' ? 'Carregando €STR…' : '€STR indisponível no momento.'}</Estado>
+  return series?.points.length ? <EstrChart series={series} range={range} stale={!!(f.stale || f.status === 'error')} /> : <Estado tipo={f.status === 'loading' ? 'info' : 'erro'}>{f.status === 'loading' ? 'Carregando €STR…' : '€STR indisponível no momento.'}</Estado>
 }
 
-function Policy({ kind, range }) {
+export function Policy({ kind, range }) {
   const f = useDataFile('policy-rates.json')
   const series = f.data?.series?.[kind.toUpperCase()]
   if (!series?.points?.length || series.usagePending) return <Estado tipo={f.status === 'loading' ? 'info' : 'erro'}>{f.status === 'loading' ? 'Carregando fonte oficial…' : 'Série indisponível no momento.'}</Estado>
@@ -53,7 +56,8 @@ function Policy({ kind, range }) {
   )
 }
 
-// Tela de detalhe dos juros: o gráfico de um indicador, do CDI futuro ou de uma curva, aberto pela linha da tabela.
+// Tela de detalhe dos juros: o gráfico de um indicador, do CDI futuro ou de uma curva, aberto pelo gráfico da aba Juros,
+// com as tabelas logo abaixo.
 // Período e datas ficam aqui dentro, como no gráfico das moedas.
 export default function RateModal({ kind, macro, curves, hol, onClose }) {
   const [preset, setPreset] = useState('365')
@@ -67,11 +71,13 @@ export default function RateModal({ kind, macro, curves, hol, onClose }) {
   const data = macro?.data
   const di = useMemo(() => (kind === 'di1' ? di1Points(curves?.data) : []), [kind, curves?.data])
   const title = TITLES[kind] ?? kind
-  if (kind === 'cdif') return <Expandable modal label={`detalhes: ${title}`} onClose={onClose}><CdiFuturo curves={curves} macro={data} hol={hol} /></Expandable>
+  if (kind === 'cdif') return <Expandable modal label={`detalhes: ${title}`} onClose={onClose}><CdiFuturo curves={curves} macro={data} hol={hol} /><CdiFuturoTable curves={curves} /></Expandable>
   return (
     <Expandable modal label={`detalhes: ${title}`} onClose={onClose}>
       <section className="macro rate-modal">
+        <MacroStatus macro={macro} region={['selic', 'cdi'].includes(kind) ? 'brasil' : 'exterior'} />
         {!kind.startsWith('curva-') && <h2>{title}</h2>}{/* a curva já traz o mesmo título no gráfico */}
+        {SERIES.includes(kind) && <RateTrend kind={kind} macro={macro} range={range} />}
         {SERIES.includes(kind) && <ChartFilters><RatesPeriod range={range} preset={preset} onPreset={onPreset} onDates={onDates} /></ChartFilters>}
         {kind === 'cdi' && (data?.cdi?.length ? <CdiChart macro={data} range={range} /> : <p className="status">CDI indisponível no momento.</p>)}
         {kind === 'selic' && (data?.selic?.length ? <SelicChart macro={data} range={range} /> : <p className="status">Selic indisponível no momento.</p>)}
@@ -83,6 +89,9 @@ export default function RateModal({ kind, macro, curves, hol, onClose }) {
           <RateChart id="DI1" title="Brasil · DI 1 ano" subtitle="vértice de 252 dias úteis" color="var(--chart-di)" points={di} fmt={rate} label="DI 1 ano" scales={false}
             refresh={['curves.json']} note="Cada ponto é o vértice de 1 ano da curva DI x pré em uma data de comparação (hoje, 1 dia, 1 semana, 1 mês, 3 e 6 meses, 1 ano); não é uma série diária." />
         )}
+        {SERIES.includes(kind) && <p className="ind-note">A tabela abaixo compara datas fixas (última disponível, 1 mês, 180 dias e 1 ano). O filtro acima altera apenas o gráfico e a leitura descritiva.</p>}
+        {SERIES.includes(kind) && <RatesSnapshot macro={macro} region={['selic', 'cdi'].includes(kind) ? 'brasil' : 'exterior'} onlyIds={[kind.toUpperCase()]} />}
+        {kind.startsWith('curva-') && <Curves curves={curves} onlyId={kind.slice(6)} />}
       </section>
     </Expandable>
   )

@@ -1,20 +1,29 @@
 import { runSearchQueue } from './searchQueue.js'
-import { newsCollectionStale } from './newsWindow.js'
+import { SearchSession } from './searchSession.js'
 import { useNewsClock } from './useNewsClock.js'
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { SEARCH_SECTIONS, SEARCH_SOURCES, currentSearchDocument, highlightParts, indexSearchData, isNewsSearchFile, isSearchShortcut, searchDocuments, searchSnippet } from './globalSearch.js'
+import { SEARCH_SOURCES, currentSearchDocument, groupSearchResults, highlightParts, isSearchShortcut, searchDocuments, searchSnippet } from './globalSearch.js'
 import { DATA_BASE } from './useQuotes.js'
-import { loadDataFile } from './useDataFile.js'
+import { cachedDataFile, DATA_FILE_TTL, loadDataFile } from './useDataFile.js'
 import './GlobalSearch.css'
+
+const session = new SearchSession()
+const externalFile = file => DATA_BASE && ['quotes.json', 'history.json', 'intraday.json'].includes(file)
+const emptyView = { docs: [], sources: [], nextChange: Infinity }
 export function SearchHighlight({ text, query }) {
   return highlightParts(String(text || ''),query).map((p,i)=>p.match ? <mark key={i}>{p.text}</mark> : <span key={i}>{p.text}</span>)
 }
 const stamp = t => t ? new Date(t).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}) : 'referência não informada'
 export default function GlobalSearch({ onNavigate, request }) {
-  const [open,setOpen]=useState(false), [query,setQuery]=useState(''), [docs,setDocs]=useState([]), [sources,setSources]=useState([]), [pending,setPending]=useState(false), [attempt,setAttempt]=useState(0), [limit,setLimit]=useState(60), [staticError,setStaticError]=useState(false)
-  const now = useNewsClock()
-  const [newsSnapshots, setNewsSnapshots] = useState([])
+  const [open,setOpen]=useState(false), [query,setQuery]=useState(''), [pending,setPending]=useState(false), [attempt,setAttempt]=useState(0), [limit,setLimit]=useState(60), [staticError,setStaticError]=useState(false)
+  const [view, setView] = useState(emptyView)
+  const { docs, sources } = view
+  const enter = useCallback(() => {
+    setView(session.snapshot(Date.now()))
+    setAttempt(0)
+    setOpen(true)
+  }, [])
   const dialog=useRef(null), input=useRef(null), previousFocus=useRef(null)
   const deferred=useDeferredValue(query)
   const [anchor, setAnchor] = useState(null)
@@ -25,8 +34,8 @@ export default function GlobalSearch({ onNavigate, request }) {
     if (document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]:not(dialog)')) return
     previousFocus.current = request.opener
     setAnchor(request.anchor)
-    setOpen(true)
-  }, [request])
+    enter()
+  }, [request, enter])
   useEffect(() => {
     if (!open || !anchor) return
     const place = () => {
@@ -48,41 +57,77 @@ export default function GlobalSearch({ onNavigate, request }) {
     return () => { window.removeEventListener('resize', place); window.removeEventListener('scroll', place, true) }
   }, [open, anchor])
   useEffect(()=>{
-    const key=e=>{if(isSearchShortcut(e) && (!document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]:not(dialog)') || dialog.current?.open)){e.preventDefault();if(dialog.current?.open)input.current?.focus();else{previousFocus.current=document.activeElement;setAnchor(null);setOpen(true)}}}
+    const key=e=>{if(isSearchShortcut(e) && (!document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]:not(dialog)') || dialog.current?.open)){e.preventDefault();if(dialog.current?.open)input.current?.focus();else{previousFocus.current=document.activeElement;setAnchor(null);enter()}}}
     document.addEventListener('keydown',key)
     return()=>document.removeEventListener('keydown',key)
-  },[])
+  },[enter])
   useEffect(()=>{
     const el=dialog.current
     if(!open){if(el.open)el.close();return}
     el.showModal();input.current?.focus();const overflow=document.body.style.overflow;document.body.style.overflow='hidden'
     return()=>{if(el.open)el.close();document.body.style.overflow=overflow;const back=previousFocus.current?.isConnected ? previousFocus.current : null;back?.focus({preventScroll:true})}
   },[open])
-  useEffect(()=>{
-    if(!open)return
-    let active=true
-    const controller=new AbortController()
-    setDocs([]);setNewsSnapshots([]);setSources([]);setStaticError(false);setPending(true)
-    const loadStatic=import('./searchCatalog.js').then(m=>{if(active)setDocs(d=>[...d,...m.staticSearchDocuments()])}).catch(()=>{if(active)setStaticError(true)})
-    const queue=runSearchQueue(SEARCH_SOURCES, {
-      signal:controller.signal,
-      load:async ([file], signal)=>{
-        const external = ['quotes.json','history.json','intraday.json'].includes(file) && DATA_BASE
-        const result = external ? await fetch(`${DATA_BASE}/${file}`, {signal:AbortSignal.any([signal, AbortSignal.timeout(20000)])}).then(async response=>{if(!response.ok)throw new Error('Indisponível');return {data:await response.json()}}) : await loadDataFile(file,Date.now(),attempt>0)
-        if(!result.data)throw new Error('Dados indisponíveis')
+  useEffect(() => {
+    if (!open) return
+    const controller = new AbortController()
+    const now = Date.now(), retry = attempt > 0
+    const due = SEARCH_SOURCES.filter(([file]) => session.needsLoad(file, externalFile(file) ? null : cachedDataFile(file), now, DATA_FILE_TTL, retry))
+    if (session.catalog && !due.length) { setPending(false); return }
+    setPending(true)
+    let frame = null
+    const publish = () => {
+      cancelAnimationFrame(frame)
+      frame = null
+      setView(session.snapshot(Date.now()))
+    }
+    // O catálogo aparece assim que chega. Fontes que terminam no mesmo quadro aparecem juntas.
+    const schedule = () => { if (frame === null) frame = requestAnimationFrame(publish) }
+    const loadStatic = session.catalog || import('./searchCatalog.js').then(module => {
+      if (controller.signal.aborted) return
+      session.setCatalog(module.staticSearchDocuments())
+      setStaticError(false)
+      publish()
+    }).catch(() => { if (!controller.signal.aborted) setStaticError(true) })
+    const queue = runSearchQueue(due, {
+      signal: controller.signal,
+      load: async ([file], signal) => {
+        if (externalFile(file)) {
+          const response = await fetch(`${DATA_BASE}/${file}`, { signal: AbortSignal.any([signal, AbortSignal.timeout(20000)]), cache: 'no-cache' })
+          if (!response.ok) throw new Error('Indisponível')
+          return { data: await response.json() }
+        }
+        const entry = session.entries.get(file)
+        const shared = cachedDataFile(file)
+        const force = retry || shared?.stale || (entry && (!entry.ok || entry.stale))
+        const result = await loadDataFile(file, Date.now(), force)
+        if (!result.data) throw new Error('Dados indisponíveis')
         return result
       },
-      accept:([file,route,label],result)=>{
-        const indexed=indexSearchData(file,result.data,route,label)
-        if(isNewsSearchFile(file))setNewsSnapshots(s=>[...s,{file,data:result.data,route,label}]);else setDocs(d=>[...d,...indexed.docs])
-        setSources(s=>[...s,{file,label,limited:indexed.limited,stale:!!result.stale,ok:true,stamp:result.data.generatedAt || result.data.updatedAt}])
-      },
-      fail:([,,label])=>setSources(s=>[...s,{label,ok:false}]),
+      accept: (source, result) => { session.accept(source, result, Date.now()); schedule() },
+      fail: source => { session.fail(source); schedule() },
     })
-    Promise.allSettled([loadStatic,queue]).then(()=>{if(active)setPending(false)})
-    return()=>{active=false;controller.abort()}
-
-  },[open,attempt])
+    Promise.allSettled([loadStatic, queue]).then(() => {
+      if (controller.signal.aborted) return
+      publish()
+      setPending(false)
+    })
+    return () => { controller.abort(); cancelAnimationFrame(frame) }
+  }, [open, attempt])
+  useEffect(() => {
+    if (!open) return
+    const refresh = () => { if (!document.hidden) setView(session.snapshot(Date.now())) }
+    const interval = setInterval(refresh, 60000)
+    const delay = view.nextChange - Date.now()
+    const boundary = Number.isFinite(delay) && delay < 2147483647 ? setTimeout(refresh, Math.max(0, delay)) : null
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      clearInterval(interval)
+      clearTimeout(boundary)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [open, view.nextChange])
   useEffect(() => {
     if (!open) return
     const navigate = () => { previousFocus.current = null; setOpen(false) }
@@ -90,16 +135,10 @@ export default function GlobalSearch({ onNavigate, request }) {
     window.addEventListener('popstate', navigate)
     return () => { window.removeEventListener('hashchange', navigate); window.removeEventListener('popstate', navigate) }
   }, [open])
-  // Reindex cached news on the clock tick without refetching any source.
-  const currentDocs = useMemo(() => [...docs, ...newsSnapshots.flatMap(({ file, data, route, label }) => indexSearchData(file, data, route, label, now).docs)], [docs, newsSnapshots, now])
-  const results=useMemo(()=>searchDocuments(currentDocs,deferred),[currentDocs,deferred])
+  const results=useMemo(()=>open ? searchDocuments(docs,deferred) : [],[open,docs,deferred])
   const shown=results.slice(0,limit)
-  const groups=Object.values(SEARCH_SECTIONS).map(section=>({section,items:shown.filter(d=>d.section===section)})).filter(g=>g.items.length)
-  const currentSources = sources.map(source => {
-    const snapshot = newsSnapshots.find(snapshot => snapshot.file === source.file)
-    return snapshot ? { ...source, stale: source.stale || newsCollectionStale(snapshot.data, now) } : source
-  })
-  const failed=currentSources.filter(s=>!s.ok), stale=currentSources.filter(s=>s.stale), limited=currentSources.filter(s=>s.limited)
+  const groups=groupSearchResults(shown)
+  const failed=sources.filter(s=>!s.ok), stale=sources.filter(s=>s.stale), limited=sources.filter(s=>s.limited)
   const choose=d=>{previousFocus.current=null;setOpen(false);onNavigate(d,query)}
   return <>
 

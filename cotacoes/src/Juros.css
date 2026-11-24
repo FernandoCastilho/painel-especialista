@@ -1,0 +1,29 @@
+.juros-graph-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:16px; align-items:start; }
+.juros-graph-card { min-width:0; border:1px solid var(--line,#36506a); border-radius:12px; padding:12px; scroll-margin-top:90px; }
+.juros-graph-open { display:flex; justify-content:space-between; width:100%; text-align:left; font-weight:700; font-size:1rem; min-height:44px; }
+.juros-graph-preview { cursor:zoom-in; min-width:0; }
+.juros-graph-preview .chart { margin:8px 0; }
+.juros-graph-preview .chart header { flex-wrap:wrap; }
+.juros-graph-preview .macro { padding:0; }
+.juros-graph-detail { min-height:44px; margin-top:8px; width:100%; }
+.juros-graph-card :is(svg,.chart) { max-width:100%; }
+.rate-trend { border-left:3px solid var(--accent,#0131ff); padding:8px 12px; margin:12px 0; }
+@media(min-width:1300px){.juros-graph-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+
+/* Indicadores em gráfico: dois por linha no computador; um gráfico sozinho ocupa a linha inteira. */
+.juros-charts { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; margin:0 0 12px; }
+@media (min-width:900px) { .juros-charts { grid-template-columns:repeat(2,minmax(0,1fr)); } .juros-charts:has(> .juros-grafico:only-child) { grid-template-columns:minmax(0,1fr); } }
+.juros-grafico { position:relative; min-width:0; cursor:pointer; scroll-margin-top:12px; }
+.juros-grafico :is(button, a, input, select, summary) { cursor:revert; }
+.juros-grafico .macro > h2 { display:none !important; } /* o CDI futuro já traz o título no próprio gráfico */
+.juros-dica { margin:0 0 4px; }
+/* Ampliar: ícone no canto de cima à direita, ao lado do atualizar e do sol (modo claro do gráfico). O cabeçalho do gráfico
+   reserva o espaço dele. O "Maximizar" de dentro do gráfico sai daqui: um clique no quadro já abre o detalhe. */
+.juros-grafico > .juros-ampliar { position:absolute; top:12px; right:12px; z-index:3; }
+.juros-grafico .chart > header { padding-right:40px; }
+.juros-grafico .chart-fullscreen:not(.is-expanded) .chart-fullscreen-toolbar { display:none; }
+@media (max-width:999px) { .juros-grafico .chart > header { padding-right:52px; } }
+/* Quadros lado a lado com a mesma altura (a grade iguala cada linha). O gráfico fica logo abaixo do cabeçalho, sem vão:
+   pedido de 23/11/2026, no notebook o gráfico ficava longe do título. */
+.juros-grafico { display:flex; flex-direction:column; }
+.juros-grafico > .chart, .juros-grafico > .macro, .juros-grafico > .macro > .chart { display:flex; flex-direction:column; flex:1; margin:0; }

@@ -10,8 +10,24 @@ export async function collectFocus({fetchImpl=fetch,now=Date.now()}={}) {
   if(!f || !/^\d{4}-\d{2}-\d{2}$/.test(f.date) || Date.parse(f.date+'T12:00:00Z')>now || !Object.keys(f.values).length || Object.entries(f.values).some(([year,v])=>!/^\d{4}$/.test(year)||!Number.isFinite(v.median)) || (date && f.date!==date))throw new Error('Focus incompleto ou datas de coleta divergentes')
   date=f.date;rows.push({label,indicator,values:f.values})
  }
- return {date,rows}
+ return {date,rows,...(await focusPublication(date,{fetchImpl}) ?? {})}
 }
+// Data de publicação do boletim, lida na página do próprio boletim no site do Banco Central (campo "data"), e o link dessa página.
+// A coleta vai até a sexta; o boletim sai na segunda (ou depois, em feriado). Sem resposta válida devolve null: a tela mostra só a data da coleta, nunca uma data presumida.
+export async function focusPublication(date,{fetchImpl=fetch}={}) {
+ try {
+  const id=date.split('-').reverse().join('')
+  const response=await fetchImpl(`https://www.bcb.gov.br/api/servico/sitebcb/focus/principal?filtro=${encodeURIComponent(`IdentificadorUrl eq '${id}'`)}`,{signal:AbortSignal.timeout(20000)})
+  if(!response.ok)return null
+  const item=(await response.json())?.conteudo?.[0],at=Date.parse(item?.data)
+  if(!item || String(item.DataReferencia).slice(0,10)!==date || !Number.isFinite(at))return null
+  const release=new Date(at).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'})
+  if(release<date || Date.parse(release)-Date.parse(date)>10*864e5)return null
+  return {release,link:`https://www.bcb.gov.br/publicacoes/focus/${id}`}
+ } catch { return null }
+}
+// Mesma semana e publicação já confirmada antes: mantém a data e o link quando o site do Banco Central não responde.
+export const keepPublication=(focus,previous)=>focus && !focus.link && previous?.link && previous.date===focus.date ? {...focus,release:previous.release,link:previous.link} : focus
 export function preserveFocus(out,previous,{checkedAt,error,skipped=false}={}) {
  out.focus=previous?.focus ?? null
  out.focusCheckedAt=skipped ? previous?.focusCheckedAt ?? null : checkedAt
@@ -26,6 +42,16 @@ export function expectedFocusDate(now = Date.now()) {
  const day = new Date(`${p.year}-${p.month}-${p.day}T12:00:00Z`), dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday)
  day.setUTCDate(day.getUTCDate() - ((dow + 6) % 7) - 3) // segunda desta semana − 3 dias = sexta anterior
  return day.toISOString().slice(0, 10)
+}
+
+// Boletim da semana em atraso: o painel ainda mostra uma coleta anterior à esperada e o boletim já deveria ter saído
+// (segunda a partir das 08h25 de Brasília). Serve de rede de segurança: o GitHub nem sempre dispara a coleta semanal
+// nem o vigia no horário (em 16/11/2026 nenhum dos dois rodou), então qualquer atualização automática que aconteça
+// depois da divulgação busca o Focus, em vez de esperar o próximo disparo semanal.
+export function focusDue(publishedDate, now = Date.now()) {
+ const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' }).formatToParts(new Date(now)).map((x) => [x.type, x.value]))
+ if (p.weekday === 'Mon' && Number(p.hour) * 60 + Number(p.minute) < 8 * 60 + 25) return false
+ return !publishedDate || publishedDate < expectedFocusDate(now)
 }
 
 // Vigia do Focus (focus.yml): segunda (e terça, para segunda feriado), de 30 em 30 min. A tentativa 1 é a coleta semanal

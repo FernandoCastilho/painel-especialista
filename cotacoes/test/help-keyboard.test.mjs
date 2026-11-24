@@ -87,6 +87,8 @@ function mountHelp(props = {}, mobile = false) {
     button: () => find(node => node.type === 'button' && node.props['aria-label']),
     tooltip: () => find(node => node.props?.role === 'tooltip'),
     wrapper: () => find(node => node.props?.className === 'help'),
+    closeButton: () => find(node => node.props?.className === 'pop-close'),
+    backdrop: () => find(node => node.props?.className === 'pop-backdrop'),
     act(callback) { callback(); render() },
     key(key) { document.dispatchEvent({ type: 'keydown', key, preventDefault() {}, stopPropagation() {} }); render() },
     openOther() { window.dispatchEvent({ type: 'help-open', detail: 'other-help' }); render() },
@@ -177,3 +179,40 @@ test('Help: abrir outra ajuda continua fechando a anterior e limpando listener',
   assert.equal(help.listenerCount('pointerdown'), 0)
   help.unmount()
 })
+
+test('Help: folha móvel não abre com hover incidental durante rolagem', () => {
+ const help = mountHelp({ wide: true }, true)
+ help.act(() => help.wrapper().props.onPointerEnter({ pointerType: 'mouse' }))
+ assert.equal(help.expanded(), false)
+ help.act(() => help.button().props.onFocus())
+ assert.equal(help.expanded(), true, 'teclado continua disponível')
+ help.key('Escape')
+ help.act(() => help.button().props.onClick())
+ assert.equal(help.expanded(), true, 'clique continua disponível')
+ help.unmount()
+})
+
+for (const control of ['closeButton', 'backdrop']) {
+  test(`Help: ${control} fecha folha móvel e limpa foco, hover e timer`, () => {
+    const help = mountHelp({ wide: true }, true)
+    help.act(() => help.button().props.onFocus())
+    help.act(() => help.button().props.onClick())
+    help.act(() => help.tooltip().props.onFocus())
+    help.act(() => help.wrapper().props.onPointerLeave())
+    assert.equal(help.expanded(), true)
+    assert.equal(help.pendingTimers(), 1)
+    assert.ok(help[control](), 'controle de fechamento presente')
+    help.act(() => help[control]().props.onClick())
+    assert.equal(help.expanded(), false)
+    assert.equal(help.tooltip(), undefined)
+    assert.equal(help.backdrop(), undefined)
+    assert.equal(help.pendingTimers(), 0)
+    assert.equal(help.listenerCount('keydown'), 0)
+    assert.equal(help.listenerCount('pointerdown'), 0)
+    help.act(() => help.wrapper().props.onPointerEnter({ pointerType: 'mouse' }))
+    assert.equal(help.expanded(), false, 'hover incidental não reabre')
+    help.act(() => help.button().props.onClick())
+    assert.equal(help.expanded(), true, 'clique explícito pode reabrir')
+    help.unmount()
+  })
+}

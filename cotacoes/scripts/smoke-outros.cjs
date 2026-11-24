@@ -34,10 +34,64 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
   const topicCount = porTopico(CONCEITOS).length
   const b = await chromium.launch(require('./smoke-launch.cjs')()), base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5216'
   const out = process.env.SMOKE_OUT
+  // A matriz de navegador fornece SEARCH_QA_OUTPUT, não SMOKE_OUT.
+  const economiaOut = out || path.join(process.env.SEARCH_QA_OUTPUT || 'workspace-qa', 'economia-contexto')
+  await mkdir(economiaOut, { recursive: true })
   if (out) await mkdir(out, { recursive: true })
   const offline = async (p) => { await p.route('**/*', (r) => r.request().url().startsWith(base) ? r.continue() : r.abort()); return p }
   const openPage = async (options) => offline(await b.newPage(options))
   try {
+    // Economia em contexto: links locais verificados; nenhuma navegação aos veículos.
+    for (const width of [320, 390, 820, 1280]) for (const theme of ['light', 'dark']) {
+      const p = await openPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
+      const label = `Economia em contexto ${width}px ${theme}`
+      const shot = path.join(economiaOut, `economia-contexto-${width}-${theme}.png`)
+      try {
+        const now = Date.now()
+        await p.route('**/news.json*', r => r.fulfill({ json: {
+          generatedAt: now, stale: {}, news: { USD: [{ title:'Manchete sintética para conferir a ordem', source:'Fixture local', link:'https://example.invalid/manchete', t:now - 60000 }] },
+        } }))
+        await p.goto(base + '/#noticias')
+        const section = p.getByRole('region', { name:'Economia em contexto', exact:true })
+        await section.waitFor()
+        await p.locator('.news .feed li').first().waitFor()
+        await p.evaluate(() => document.fonts.ready)
+        const links = await section.locator('h3 a').evaluateAll(anchors => anchors.map(a => ({ href:a.href, target:a.target, rel:a.rel })))
+        assert.deepEqual(links.map(a => a.href), [
+          'https://braziljournal.com/como-acabar-com-a-jabuticaba-dos-juros-sem-truque',
+          'https://braziljournal.com/custo-brasil-chega-a-27-5-do-pib-ainda-maior-do-que-se-imaginava',
+          'https://braziljournal.com/o-split-payment-pode-acabar-com-a-sonegacao-mas-vai-ser-bem-confuso',
+        ], label + ': três destinos corretos sem duplicidade')
+        assert.ok(links.every(a => a.target === '_blank' && a.rel.includes('noopener') && a.rel.includes('noreferrer')), label + ': links externos seguros')
+        const geometry = await section.evaluate(el => {
+          const prior = el.previousElementSibling, r = el.getBoundingClientRect()
+          return { theme:document.documentElement.dataset.theme, viewport:document.documentElement.clientWidth, document:document.documentElement.scrollWidth,
+            priorIsNews:prior?.matches('.news'), below:prior && r.top >= prior.getBoundingClientRect().bottom - 1,
+            left:r.left, right:r.right, cards:[...el.querySelectorAll('li')].map(li => {
+              const b=li.getBoundingClientRect(), a=li.querySelector('a').getBoundingClientRect()
+              return {left:b.left,right:b.right,top:b.top,clipped:li.scrollWidth > li.clientWidth + 1,touch:a.width >= 44 && a.height >= 44}
+            }) }
+        })
+        assert.equal(geometry.theme,theme,label + ': tema aplicado')
+        assert.ok(geometry.priorIsNews && geometry.below,label + ': imediatamente abaixo de Manchetes carregadas')
+        assert.ok(geometry.document <= geometry.viewport + 1 && geometry.left >= -1 && geometry.right <= geometry.viewport + 1,label + ': sem rolagem horizontal')
+        assert.equal(geometry.cards.length,3)
+        assert.ok(geometry.cards.every(c => !c.clipped && c.touch && c.left >= geometry.left - 1 && c.right <= geometry.right + 1),label + ': cartões legíveis e links tocáveis')
+        assert.equal(new Set(geometry.cards.map(c => Math.round(width < 1000 ? c.left : c.top))).size,1,label + ': coluna móvel/tablet ou linha desktop')
+        const text = await section.innerText()
+        assert.match(text,/opiniões do entrevistado/)
+        assert.match(text,/27\/07\/2026/)
+        assert.match(text,/Não use como cronograma vigente/)
+        assert.match(text,/Não é um feed em tempo real/)
+        await section.locator('h3 a').first().focus()
+        assert.equal(await section.locator('h3 a').first().evaluate(el => el === document.activeElement),true,label + ': foco disponível')
+        if (shot) await p.screenshot({path:shot,fullPage:true})
+        console.log('PASS ' + label)
+      } catch (error) {
+        if (shot) await p.screenshot({path:shot,fullPage:true}).catch(()=>{})
+        throw error
+      } finally { await p.close() }
+    }
     const { FONTES } = await import('../src/governanca.js')
     assert.equal(new Set(FONTES.map((fonte) => fonte.id)).size, FONTES.length, 'catálogo não duplica fonte por id')
     const expectedSources = FONTES.map((fonte) => fonte.nome)
@@ -55,7 +109,12 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const nov = aviso.locator('.aviso-novidades'); if (await nov.count()) { assert.match(await nov.innerText(), /NOVIDADES DA SEMANA|Novidades da semana/i); assert.ok((await nov.locator('li').count()) <= 4) }
       const box = await aviso.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800, 'aviso cabe na tela')
       assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), null, 'só marca como lido ao fechar')
-      await aviso.getByRole('button', { name: 'Entendi' }).click(); await aviso.waitFor({ state: 'hidden' })
+      await aviso.getByRole('link', { name: 'Ver todas as atualizações' }).click()
+      await aviso.waitFor({ state: 'hidden' })
+      await p.waitForURL('**/#novidades')
+      await p.getByRole('heading', { level: 1, name: 'Novidades da semana' }).waitFor()
+      await p.getByText('Novidades anteriores', { exact: true }).click()
+      await p.locator('.novidades-antigas time').first().waitFor()
       const marca = await p.evaluate(() => localStorage.getItem('aviso-inicial-visto'))
       assert.match(marca, /^v1-[0-9a-f]{8}$/, 'marca tirada do texto do aviso')
       await p.goto(base + '/#juros'); assert.equal(await aviso.count(), 0, 'não reaparece ao trocar de aba')
@@ -101,55 +160,70 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const euroCurve = { schemaVersion: 1, generatedAt: new Date().toISOString(), curve: { id: 'euro-curve', sourceName: 'BCE (fixture de teste)', sourceUrl: 'https://www.ecb.europa.eu/', checkedAt: new Date().toISOString(), stale: false, sourceDate: datas[0].date, compare: datas,
         curves: Object.fromEntries(datas.map((d, k) => [d.date, prazos.map(([anos, rot], j) => [anos, +(2.5 + j * 0.12 - k * 0.1).toFixed(4), rot])])) } }
       await p.route('**/euro-curve.json*', (r) => r.fulfill({ json: euroCurve }))
-      await p.goto(base + '/#juros'); await p.locator('.executive-rates__table tbody tr').first().waitFor()
-      const linhas = p.locator('.executive-rates__table tbody tr .executive-rates__name')
-      const n = await linhas.count()
-      assert.ok(n >= 7, 'Selic, CDI, SOFR, Fed, €STR, BCE e BoJ')
-      await p.locator('.executive-rates__table tbody tr', { hasText: '€STR' }).filter({ hasText: /\d,\d{3}%/ }).first().waitFor() // o arquivo simulado chega depois da primeira renderização
-      assert.match(await p.locator('.executive-rates__table tbody tr', { hasText: '€STR' }).first().innerText(), /Área do euro · €STR overnight[\s\S]*\d,\d{3}%/)
-      assert.equal(await p.locator('.executive-rates__table tbody tr .executive-rates__name .flag').count(), n, 'bandeira em cada linha')
-      // tooltips: toda linha do quadro tem o "?" e o balão abre inteiro (não cortado pela rolagem da tabela)
-      const helps = p.locator('.executive-rates__table tbody tr .executive-rates__name .help button')
-      assert.equal(await helps.count(), n, 'tooltip em cada linha do quadro')
-      for (const [rot, rx] of [['Selic meta', /meta é definida pelo Copom/], ['CDI overnight', /B3 calcula a média/], ['SOFR overnight', /mediana, ponderada pelo volume/], ['Fed', /faixa/], ['€STR', /sem os 25% menores/], ['BCE', /piso do juro/], ['Japão', /Banco do Japão/]]) {
-        const btn = p.locator('.executive-rates__table tbody tr', { hasText: rot }).first().locator('.help button')
-        await btn.hover(); const tip = p.locator('[role="tooltip"]'); await tip.waitFor()
+      // Juros de referência voltaram ao formato de gráfico (pedido de 17/11/2026); a Selic meta saiu da aba.
+      await p.goto(base + '/#juros'); await p.locator('.juros-grafico .chart h3').first().waitFor()
+      await p.locator('.juros-grafico .chart h3', { hasText: '€STR' }).waitFor() // o arquivo simulado chega depois da primeira renderização
+      // indicadores de referência: os seis gráficos de série no tempo (CDI futuro e curvas são conferidos no smoke-cupom)
+      const REF = '.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"])'
+      const titulos = (await p.locator(`${REF} .chart h3`).allInnerTexts()).map((t) => t.replace(/\s+/g, ' '))
+      const n = titulos.length
+      assert.equal(n, 6, `CDI, SOFR, Fed, €STR, BCE e BoJ em gráfico (${titulos.join(' | ')})`)
+      assert.equal(await p.locator('main table').count(), 0, 'nenhuma tabela na página de Juros')
+      for (const rot of ['Brasil · CDI', 'SOFR', 'Fed (faixa-alvo)', '€STR', 'BCE (depósito)', 'Japão']) assert.ok(titulos.some((t) => t.includes(rot)), `gráfico de ${rot}`)
+      assert.doesNotMatch(await p.locator('main').innerText(), /Selic meta/i, 'Selic meta fora da aba Juros')
+      assert.equal(await p.getByRole('button', { name: /Ampliar gráfico: Selic/ }).count(), 0)
+      assert.equal(await p.locator(`${REF} .chart h3 .flag`).count(), n, 'bandeira em cada gráfico')
+      assert.equal(await p.locator(`${REF} .plot svg[role=img]`).count(), n, 'um gráfico por indicador na página')
+      // tooltips: todo gráfico tem o "?" e o balão abre inteiro
+      const helps = p.locator(`${REF} .chart h3 .help button`)
+      assert.equal(await helps.count(), n, 'tooltip em cada gráfico')
+      for (const [rot, rx] of [['Brasil · CDI', /B3 calcula a média/], ['SOFR', /mediana, ponderada pelo volume/], ['Fed', /faixa/], ['€STR', /sem os 25% menores/], ['BCE (depósito)', /piso do juro/], ['Japão', /Banco do Japão/]]) {
+        const btn = p.locator(`${REF} .chart h3`, { hasText: rot }).first().locator('.help button')
+        await btn.scrollIntoViewIfNeeded()
+        // A folha móvel abre por acionamento explícito; hover é o contrato desktop.
+        if (width <= 560) await btn.click()
+        else await btn.hover()
+        const tip = p.locator('[role="tooltip"]'); await tip.waitFor()
         assert.match(await tip.innerText(), rx, rot)
         const box = await tip.boundingBox()
         assert.ok(box.x >= 0 && box.x + box.width <= width + 1 && box.y >= 0, `balão de ${rot} dentro da tela`)
         const topo = await tip.evaluate((el) => { const r = el.getBoundingClientRect(); const e = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 30)); return !!e?.closest('[role="tooltip"]') })
         assert.ok(topo, `balão de ${rot} visível por inteiro, sem ficar atrás ou cortado`)
-        if (width < 700) { await tip.locator('.pop-close').click(); assert.equal(await p.locator('[role="tooltip"]').count(), 0, `no celular o balão de ${rot} fecha pelo botão Fechar`) }
+        // O "?" do gráfico não tem botão Fechar: no celular, o balão fecha com Esc ou ao tocar fora.
+        if (width < 700) { await p.keyboard.press('Escape'); await p.locator('[role="tooltip"]').waitFor({ state: 'detached' }) }
         await p.mouse.move(2, 2)
       }
       const corpo = await p.locator('main').innerText()
       assert.doesNotMatch(corpo, /Reino Unido|Bank Rate|Bank of England|BoE/, 'sem Reino Unido em Juros')
-      assert.match(await p.locator('#juros-ref-exterior .executive-rates__table tbody').innerText(), /Área do euro · BCE[\s\S]*Japão/)
-      // os gráficos abrem pela linha da tabela, em tela própria (a página não traz gráfico solto)
-      assert.equal(await p.locator('main .plot svg[role=img]').count(), 0, 'sem gráfico na página de Juros')
+      assert.match(await p.locator('section[aria-labelledby="juros-exterior"]').innerText(), /Área do euro · BCE[\s\S]*Japão/)
+      // cada gráfico amplia no centro da tela, com período, leitura e comparação por datas fixas
       const abrir = async (botao, titulo) => {
-        await p.getByRole('button', { name: botao }).first().click()
+        await p.getByRole('button', { name: botao, exact: true }).click()
         const d = p.locator('dialog.is-modal'); await d.locator('.chart h3', { hasText: titulo }).first().waitFor()
         return d
       }
       const fechar = async (d) => { await d.getByRole('button', { name: 'Fechar detalhes' }).click(); await d.waitFor({ state: 'detached' }) }
-      for (const [botao, titulo] of [['Área do euro · €STR overnight: abrir gráfico', 'Área do euro · €STR'], ['Brasil · CDI overnight: abrir gráfico', 'Brasil · CDI'], ['Brasil · Selic meta: abrir gráfico', 'Brasil · Selic meta'], ['EUA · SOFR overnight: abrir gráfico', 'SOFR']]) {
+      for (const [botao, titulo] of [['Ampliar gráfico: €STR', 'Área do euro · €STR'], ['Ampliar gráfico: CDI', 'Brasil · CDI'], ['Ampliar gráfico: SOFR', 'SOFR']]) {
         const d = await abrir(botao, titulo)
         assert.equal(await d.locator('.chart h3 .flag').count(), 1, `bandeira no título do gráfico: ${titulo}`)
         assert.ok(await d.locator('.chart-filters').count() === 1, `período dentro da tela: ${titulo}`)
+        assert.equal(await d.locator('.executive-rates__table tbody tr').count(), 1, `comparação por datas fixas no detalhe: ${titulo}`)
+        if (width >= 900) {
+          const box = await d.boundingBox()
+          assert.ok(Math.abs((box.x + box.width / 2) - width / 2) <= 2 && box.width < width - 40, `janela no centro, sem ocupar a tela toda (${JSON.stringify(box)})`)
+        }
         await fechar(d)
       }
       // juros de política do exterior: linha em degraus a partir da série oficial; o Fed mostra o limite superior da faixa
-      const fed = await abrir('EUA · Fed (faixa-alvo): abrir gráfico', 'EUA · Fed (faixa-alvo)')
+      const fed = await abrir('Ampliar gráfico: Fed (faixa-alvo)', 'EUA · Fed (faixa-alvo)')
       await fed.locator('.plot svg').first().waitFor(); await fechar(fed)
-      // o valor da linha também abre o gráfico; o "?" não
-      await p.locator('.executive-rates__table tbody tr', { hasText: 'BCE (depósito)' }).locator('td').first().click()
-      const bce = p.locator('dialog.is-modal'); await bce.locator('.chart h3', { hasText: 'Área do euro · BCE (depósito)' }).waitFor(); await fechar(bce)
-      // curva do euro: números na tabela e gráfico em tela própria
-      const tabEuro = p.locator('.curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
+      const bce = await abrir('Ampliar gráfico: BCE (depósito)', 'Área do euro · BCE (depósito)'); await fechar(bce)
+      // curva do euro: gráfico na página; no detalhe, o gráfico e, abaixo, a tabela com uma coluna por data de comparação
+      await p.locator('#juros-curva-eu .plot svg').first().waitFor()
+      await p.getByRole('button', { name: 'Ampliar gráfico: Curva do euro', exact: true }).click()
+      const tabEuro = p.locator('dialog.is-modal .curve-table', { hasText: 'Área do euro · Curva soberana AAA' }); await tabEuro.waitFor()
       assert.equal(await tabEuro.locator('h2 .flag').count(), 1, 'bandeira da zona do euro na tabela da curva')
       assert.equal(await tabEuro.locator('thead th').count(), 1 + 3, 'uma coluna por data de comparação')
-      await tabEuro.locator('tbody tr').first().click()
       const curvaEuro = p.locator('dialog.is-modal .chart', { has: p.locator('h3', { hasText: 'Área do euro · Curva soberana AAA' }) })
       await curvaEuro.waitFor()
       assert.ok(await curvaEuro.locator('h3 .flag').count() === 1, 'bandeira da zona do euro na curva')
@@ -164,6 +238,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const p = await openPage({ viewport: { width, height: 900 }, serviceWorkers: 'block' })
       await p.goto(base + '/#config')
       const gov = p.locator('.desk-panel', { has: p.getByRole('heading', { name: 'Governança dos dados' }) }); await gov.waitFor()
+      assert.equal(await gov.locator('.config-gov').count(), 0)
+      await gov.getByRole('button', { name: 'Consultar estado das fontes' }).click()
+      await gov.locator('.config-gov').waitFor()
       const sourceNames = (await gov.locator('.config-gov tbody tr > th[scope="row"]').allTextContents()).map((name) => name.trim())
       assert.deepEqual(sourceNames, expectedSources, 'uma linha para cada fonte do catálogo, sem omissões ou duplicatas')
       assert.equal(new Set(sourceNames).size, sourceNames.length, 'cada fonte aparece uma única vez na tabela')
@@ -342,6 +419,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
         await p.route('**/macro.json*', (r) => r.fulfill({ json: macro }))
         await p.goto(base + '/#resumo')
         const cards = p.locator('.kpis .kpi'); await cards.first().waitFor()
+        // FX cards can render before the independent macro fixture. Wait for its
+        // observed Selic value in both cases before checking presence or absence.
+        await p.waitForFunction(() => [...document.querySelectorAll('.kpis .kpi')].some(card => card.querySelector('.kpi-name')?.textContent.includes('Selic') && /14,50/.test(card.querySelector('.kpi-value')?.textContent || '')))
         const spark = (name) => cards.filter({ hasText: name }).first().locator('.kpi-spark[role="img"]')
         for (const name of ['Selic', 'CDI']) assert.equal(await spark(name).count(), expected ? 1 : 0, `${name} ${label}`)
         assert.equal(await spark('IPCA 12m').count(), 1, 'IPCA sempre tem 12 meses divulgados')
@@ -417,7 +497,9 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       }
       // menu na ordem pedida
       const names = await p.getByRole('navigation', { name: /Navegação principal|Seções/ }).getByRole('button').allInnerTexts()
-      if (width >= 700) assert.deepEqual(names.slice(0, 3).map((t) => t.trim().toLowerCase().split(' ')[0]), ['mercado', 'juros', 'cenários'])
+      assert.deepEqual(names.map((t) => t.trim()), width >= 1000
+        ? ['', 'Mercado', 'Cenários', 'Juros', 'Calculadoras', 'Setores', 'M&A', 'Notícias', 'Podcast', 'Mais']
+        : ['Mercado', 'Cenários', 'Juros', 'Calculadoras', 'RPN', 'Setores', 'Mais'], 'ordem completa dos destinos prioritários em cada tela')
       // card do topo do Mercado: IPCA 12m no lugar do Brent; clique leva a Cenários › Inflação
       await p.route('**/indices.json*', (r) => r.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), stale: false, errors: [], series: { ibov: { symbol: '^BVSP', unit: 'pontos', points: Array.from({ length: 10 }, (_, i) => [Date.now() - (10 - i) * 864e5, 130000 - (i === 9 ? 2600 : 0)]), stale: false } } } }))
       await p.goto(base + '/#resumo')
@@ -612,7 +694,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await openCallouts(p)
       assert.match(await p.locator('.learn-detail').innerText(), /9,62%[\s\S]*R\$ 5,48/)
       // tópicos e busca
-      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições'])
+      assert.deepEqual((await p.locator('.learn-topic > span').allTextContents()).map((t) => t.trim()), ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições', 'Gestão e estratégia'])
       const busca = p.getByRole('searchbox', { name: 'Buscar conceito' })
       await busca.fill('FIDC')
       assert.equal(await p.locator('.learn-list li').count(), 2) // FIDC e CRA (que cita a subordinação como num FIDC)

@@ -1,0 +1,80 @@
+/* FINIMP no padrão visual das calculadoras (aprovado em 18/11/2026) e no roteiro de 21/11/2026:
+   1 Demanda, 2 Encargos, 3 Resultado (peças comuns em Roteiro.css; a linha do tempo saiu em 21/11/2026); depois, a meta e a tabela dos doze prazos.
+   Quadros de entrada: faixa azul-marinho com linha laranja. Resultado: único quadro com borda laranja, na largura toda.
+   Só apresentação: nenhuma regra de cálculo mora aqui. Tudo restrito a .cx.fi; sem !important. */
+:root {
+  --fi-orange:#ff6200;
+  --fi-navy:linear-gradient(110deg,#052956,#07336b);
+}
+
+/* "‹ Calculadoras" e "Nova simulação" fora do quadro, acima dele (continuam na seção, para a ordem do teclado). */
+:root[data-theme] body main.app.app-calculators .cx.fi { position:relative; margin-top:52px; overflow:visible; }
+:root[data-theme] body main.app.app-calculators .cx.fi > .cx-toolbar { position:absolute; left:0; bottom:calc(100% + 4px); margin:0; padding:0; display:flex; gap:8px; }
+:root[data-theme] body main.app.app-calculators .cx.fi > .cx-toolbar + .calc-workspace-heading { margin-top:0; }
+
+/* Dados: demanda e encargos, um sobre o outro; lado a lado no computador largo (regra no fim do arquivo). */
+:root[data-theme] body .cx.fi .fi-inputs { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; align-items:start; }
+
+/* Quadros de entrada: faixa azul-marinho, título branco em negrito e uma linha laranja (sem a barra laranja à esquerda). */
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box { overflow:hidden; border:1px solid var(--bw-line); border-radius:10px; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header { min-height:44px; padding:10px 14px; background:var(--fi-navy); color:#fff; border:0; border-bottom:3px solid var(--fi-orange); border-radius:0; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header h3 { display:flex; align-items:center; gap:6px; margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header h3::before { content:none; display:none; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-box > header .fi-help > button { color:#fff; border-color:#ffffff88; }
+/* Rótulos em uma linha; "?" com área de toque de 24px ou mais. */
+:root[data-theme] body .cx.fi .fi-box .cx-field-label { flex-wrap:nowrap; white-space:nowrap; min-width:0; }
+:root[data-theme] body .cx.fi .fi-help > button { min-width:24px; min-height:24px; }
+:root[data-theme] body .cx.fi .fi-box :is(input:not([type=checkbox]),select) { font-size:.95rem; }
+
+/* Aviso de dado faltando: faixa âmbar no topo do quadro, com "!". */
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-alerta { display:flex; align-items:center; gap:8px; margin:12px var(--cx-space, 20px) 0; padding:8px 10px; border:0; border-left:4px solid #e08a00; border-radius:6px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.82rem; line-height:1.4; }
+:root[data-theme] body .cx.fi .fi-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.72rem; font-weight:800; line-height:1; }
+
+/* Encargos: uma coluna por instituição, com os encargos um abaixo do outro. A unidade vai em letra menor, ao lado do nome. */
+:root[data-theme] body .cx.fi .fi-banks { padding-top:14px; }
+:root[data-theme] body .cx.fi .fi-bank { grid-template-columns:minmax(0,1fr); }
+/* Nomes dos campos na mesma altura, com ou sem "?" ao lado, para os campos de uma linha ficarem alinhados. */
+:root[data-theme] body .cx.fi .fi-box .cx-field-label { min-height:44px; }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-bank .cx-field-label label { font-size:.85rem; }
+:root[data-theme] body .cx.fi .fi-label label small { margin-left:4px; color:var(--bw-mut); font-size:.75rem; font-weight:400; }
+/* O câmbio da TAC vem logo abaixo da opção de incluir a TAC. */
+:root[data-theme] body .cx.fi .fi-tac-status + .cx-form { padding-top:0; }
+
+/* Resultado: valor muito longo quebra a linha em vez de sair do quadro. */
+:root[data-theme] body .cx.fi .rt-answers > .rt-answer-main dd:not(.rt-answer-note) { white-space:normal; }
+/* Do que é feito o custo: uma lista por instituição, lado a lado. */
+:root[data-theme] body .cx.fi .fi-parts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 28px; }
+:root[data-theme] body .cx.fi .fi-parts > div { display:flex; flex-direction:column; gap:10px; min-width:0; }
+
+/* Depois do resultado: a meta, com os campos à esquerda e a taxa requerida à direita. */
+:root[data-theme] body .cx.fi .fi-goal-body { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); align-items:start; }
+:root[data-theme] body .cx.fi .fi-goal-result { display:flex; flex-direction:column; gap:4px; min-width:0; margin:var(--cx-space, 20px) var(--cx-space, 20px) var(--cx-space, 20px) 0; padding:12px 14px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-soft); color:var(--bw-ink); }
+:root[data-theme] body .cx.fi .fi-goal-result > small { font-size:.75rem; color:var(--bw-mut); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-goal-result .fi-goal { padding:0; display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+:root[data-theme] body .cx.fi .fi-goal-result .fi-goal strong { font-size:1.05rem; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .cx.fi .fi-goal-result .fi-goal p { margin:0; font-size:.8rem; line-height:1.45; }
+:root[data-theme] body .cx.fi .fi-goal-result .fi-goal-met { font-weight:600; color:var(--bw-warn-ink); }
+:root[data-theme] body .cx.fi .fi-goal-result .fi-goal-met.is-met { color:#0a6b3d; }
+:root[data-theme] body .cx.fi .fi-goal-result .fi-goal button { margin-top:4px; }
+:root[data-theme="dark"] body .cx.fi .fi-goal-result .fi-goal-met.is-met { color:#7fe0a8; }
+
+/* Tabela dos doze prazos: recolhida, abre com um toque. Dentro, a tabela não tem moldura própria. */
+:root[data-theme] body .cx.fi .fi-table-drawer { overflow:hidden; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); color:var(--bw-ink); }
+:root[data-theme] body .cx.fi .fi-table-drawer > summary { display:flex; align-items:center; gap:8px; min-height:44px; padding:10px 14px; font-weight:700; cursor:pointer; list-style:none; }
+:root[data-theme] body .cx.fi .fi-table-drawer > summary::-webkit-details-marker { display:none; }
+:root[data-theme] body .cx.fi .fi-table-drawer > summary small { color:var(--bw-mut); font-size:.8rem; font-weight:400; }
+:root[data-theme] body .cx.fi .fi-table-drawer > summary::after { content:'›'; margin-left:auto; font-size:1.55em; line-height:1; }
+:root[data-theme] body .cx.fi .fi-table-drawer[open] > summary::after { transform:rotate(90deg); }
+:root[data-theme] body main.app.app-calculators .cx.fi .fi-table-drawer > .expandable-panel { margin:0; border:0; border-top:1px solid var(--bw-line); border-radius:0; box-shadow:none; }
+
+/* Computador largo: demanda e encargos lado a lado. Abaixo de 1200 px (e no slide do modo Apresentar) ficam um sobre o outro,
+   para os campos não ficarem estreitos. */
+@media (min-width:1200px) {
+  :root[data-theme] body .cx.fi:not(.sl-calc *) .fi-inputs { grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); }
+}
+/* O slide do modo Apresentar tem largura fixa: lá vale o desenho de computador, mesmo com a janela estreita. */
+@media (max-width:870px) {
+  :root[data-theme] body .cx.fi:not(.sl-calc *) .fi-parts { grid-template-columns:minmax(0,1fr); }
+  :root[data-theme] body .cx.fi:not(.sl-calc *) .fi-goal-body { grid-template-columns:minmax(0,1fr); }
+  :root[data-theme] body .cx.fi:not(.sl-calc *) .fi-goal-result { margin:0 12px 12px; }
+}

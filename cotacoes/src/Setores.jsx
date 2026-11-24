@@ -2,20 +2,13 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { INSUMOS } from './insumos.js'
 import SetoresLegado from './SetoresLegado.jsx'
 import SectorStudy from './SectorStudy.jsx'
+import SectorImage from './SectorImage.jsx'
 import SectorStudyLoader from './SectorStudyLoader.jsx'
 import { CATALOGO_SETORIAL, ESTUDOS_RELACIONADOS_AS_PAUTAS, PAUTAS_SETORIAIS, normalizeSector, rotaPautaSetorial } from './centralSetorial.js'
 import { readCentralHistory, withCentralHistory } from './centralHistory.js'
 import { SECTOR_HIGHLIGHTS } from './sectorHighlights.js'
 import './CentralSetorial.css'
-
-// Each local atlas has a 3 x 3 grid: group cover, then topics in catalog order.
-function SectorImage({ groupId, index = 0 }) {
-  const symbols = { turismo: 'M3 11l7 1 8-8 2 2-8 8 1 7-2 1-3-6-6-3z', varejo: 'M4 9h16v12H4z M3 9l2-6h14l2 6 M9 21v-7h6v7', saude: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', pet: 'M7 14c2-5 8-5 10 0 4 7-14 7-10 0z M5 7v2 M10 4v2 M15 4v2 M20 7v2' }
-  if (symbols[groupId]) return <span className="central-card-photo central-sector-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={symbols[groupId]} /></svg></span>
-  const column = index % 3
-  const row = Math.floor(index / 3)
-  return <span className="central-card-photo" aria-hidden="true"><img src={`./sector-images/${groupId}.jpg`} alt="" width="1536" height="1024" loading="lazy" decoding="async" style={{ left: `-${column * 100}%`, transform: `translateY(-${(row + .5) / 3 * 100}%)` }} onError={event => { event.currentTarget.hidden = true }} /></span>
-}
+import MaSectorLink from './MaSectorLink.jsx'
 
 function EstudoRelacionado({ study, navigate }) {
   const [groupId, index] = study
@@ -50,7 +43,9 @@ function SectorHighlight({ group }) {
     <p className="central-kicker">LEITURA EXECUTIVA</p>
     <h4>O essencial sobre {group.label}</h4>
     <p>{highlight.summary}</p>
-    <dl><div><dt>O que acompanhar</dt><dd>{highlight.drivers}</dd></div><div><dt>Ponto de atenção</dt><dd>{highlight.attention}</dd></div></dl>
+    <h5>O que acompanhar</h5>
+    <dl><div><dt>Como ganha dinheiro</dt><dd>{highlight.margin}</dd></div><div><dt>Onde o dinheiro fica preso</dt><dd>{highlight.cash}</dd></div><div><dt>O que pode dar errado</dt><dd>{highlight.attention}</dd></div></dl>
+    <details><summary>Para conversar sobre crédito</summary><p>{highlight.credit}</p><p className="central-note">Roteiro educativo, não é aprovação de crédito. A conclusão depende dos dados da empresa, dos contratos e da análise de capacidade de pagamento.</p></details>
     <p className="central-note">Síntese analítica. Veja fontes, datas, indicadores e particularidades nos estudos abaixo.</p>
   </section>
 }
@@ -127,6 +122,8 @@ export default function Setores({ view = '', onView = () => {}, quotes, goto }) 
     const frame = window.requestAnimationFrame(() => {
       if (focusIntent.current !== intent) return
       focusIntent.current = null
+      // A seção pode terminar de carregar depois que a pessoa já abriu o menu Mais.
+      if (document.activeElement?.closest('nav [role="menu"]')) return
       const surface = surfaceRef.current
       if (!surface) return
       const target = remembered?.focusId ? document.getElementById(remembered.focusId) : surface
@@ -139,10 +136,11 @@ export default function Setores({ view = '', onView = () => {}, quotes, goto }) 
     return () => window.cancelAnimationFrame(frame)
   }, [view, query, hasDetail, folder])
   const openTopic = (group, index) => navigate(`topico/${group.id}/${index}`)
-  const topicButton = (group, topic, withImage = false) => <button type="button" id={`central-topic-${group.id}-${group.topics.indexOf(topic)}`} className={`central-topic${withImage ? ' central-subsector' : ''}`} aria-current={routeTopic === topic && routeGroup?.id === group.id ? 'page' : undefined} onClick={() => openTopic(group, group.topics.indexOf(topic))}>{withImage ? <><SectorImage groupId={group.id} index={group.topics.indexOf(topic) + 1} /><span className="central-card-caption"><strong>{topic}</strong><span className="central-topic-arrow" aria-hidden="true">→</span></span></> : <><span className="central-document-icon" aria-hidden="true"/><span>{topic}</span><span className="central-topic-arrow" aria-hidden="true">→</span></>}</button>
+  const topicButton = (group, topic, withImage = false) => <button type="button" id={`central-topic-${group.id}-${group.topics.indexOf(topic)}`} className={`central-topic${withImage ? ' central-subsector' : ''}`} aria-current={routeTopic === topic && routeGroup?.id === group.id ? 'page' : undefined} onClick={() => openTopic(group, group.topics.indexOf(topic))}>{withImage ? <><SectorImage groupId={group.id} topic={topic} /><span className="central-card-caption"><strong>{topic}</strong><span className="central-topic-arrow" aria-hidden="true">→</span></span></> : <><span className="central-document-icon" aria-hidden="true"/><span>{topic}</span><span className="central-topic-arrow" aria-hidden="true">→</span></>}</button>
 
   return <div className={`central-setorial${hasDetail ? ' central-reading' : ''}`}>
     <header className="central-intro"><div><h2>Explore por setor</h2><p>Entenda como cada negócio funciona e onde estão as oportunidades.</p></div><span className="central-library-count">{CATALOGO_SETORIAL.length} setores <span aria-hidden="true">·</span> {CATALOGO_SETORIAL.reduce((count, group) => count + group.topics.length, 0)} subsetores</span></header>
+    <p className="central-note">Imagens ilustrativas geradas por IA.</p>
     <div className="central-toolbar">
       <div className="central-search"><label htmlFor={searchId}>Buscar setor ou subsetor</label><div className="central-search-field"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id={searchId} type="search" value={query} onChange={event => changeQuery(event.target.value)} placeholder="Ex.: compensados, autopeças ou logística"/>{query && <button type="button" onClick={clearQuery} aria-label="Limpar busca">×</button>}</div></div>
       {hasDetail && !researchTopic && <label className="central-switcher">Trocar subsetor<select aria-label="Trocar subsetor" value={routeTopic ? view : ''} onChange={event => navigate(event.target.value)}><option value="" disabled>Escolha um subsetor</option>{CATALOGO_SETORIAL.map(group => <optgroup key={group.id} label={group.label}>{group.topics.map((topic, index) => <option key={topic} value={`topico/${group.id}/${index}`}>{topic}</option>)}</optgroup>)}</select></label>}
@@ -157,6 +155,8 @@ export default function Setores({ view = '', onView = () => {}, quotes, goto }) 
         : <section aria-labelledby="central-sectors-title"><div className="central-section-heading"><h3 id="central-sectors-title">Setores e subsetores</h3></div><ul className="central-folders">{CATALOGO_SETORIAL.map(group => <li key={group.id}><button type="button" id={`central-folder-${group.id}`} className="central-folder" onClick={() => navigate(`pasta/${group.id}`)} aria-label={`Explorar ${group.label}, ${group.topics.length} subsetores`}><SectorImage groupId={group.id} /><span className="central-folder-content"><span className="central-folder-arrow" aria-hidden="true">→</span><strong>{group.label}</strong><span className="central-folder-count">{group.topics.length} subsetores</span></span></button></li>)}</ul></section>}
         {(!folder || term) && researchGroups.length > 0 && <PautasSetoriais groups={researchGroups} navigate={navigate} showRelated={!term}/>}
         {!term && !folder && <section className="central-inputs" aria-labelledby="central-inputs-title"><div><h3 id="central-inputs-title">Insumos e Indicadores</h3><p className="central-note">Referências para complementar sua análise</p></div><ul>{INSUMOS.map(item => <li key={item.id}><button type="button" onClick={() => navigate(item.id)}>{item.label}<span aria-hidden="true">→</span></button></li>)}</ul></section>}
+        {/* M&A no fim da página: o conteúdo do setor vem primeiro e a lista de transações não empurra as fotos dos subsetores para baixo */}
+        {!term && <MaSectorLink sectorId={folder?.id || ''}/>}
       </div>}
       {researchTopic && !term && <section className="central-detail" aria-labelledby="central-research-topic-title">
         <h3 id="central-research-topic-title">{researchTopic.title}</h3>
@@ -172,3 +172,4 @@ export default function Setores({ view = '', onView = () => {}, quotes, goto }) 
     </div>
   </div>
 }
+

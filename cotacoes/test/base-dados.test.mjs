@@ -6,6 +6,20 @@ import { FONTES } from '../src/governanca.js'
 
 const src = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8')
 
+// Estes caminhos são insumos do empacotamento, não arquivos servidos pelo painel.
+const metadadosInternos = new Set(['$RUNNER_TEMP/pages-release-data.json', 'HEAD:cotacoes/src/ibgeCbsSnapshot.json'])
+function workflowJsonFiles(text) {
+  return [...text.matchAll(/(?:[a-zA-Z0-9_$:{}.-]+\/)*([a-zA-Z0-9_-]+\.json)\b/g)]
+    .filter(([reference]) => !metadadosInternos.has(reference))
+    .map(([, file]) => file)
+}
+
+test('base de dados: distingue caminhos internos dos mesmos nomes publicados, sem truncar maiúsculas', () => {
+  assert.deepEqual(workflowJsonFiles('"$RUNNER_TEMP/pages-release-data.json" HEAD:cotacoes/src/ibgeCbsSnapshot.json'), [])
+  assert.deepEqual(workflowJsonFiles('public/pages-release-data.json cotacoes/public/ibgeCbsSnapshot.json public/outro.json'),
+    ['pages-release-data.json', 'ibgeCbsSnapshot.json', 'outro.json'])
+})
+
 test('base de dados: toda referência traz quem publica, endereço, série, arquivo e coleta', () => {
   assert.ok(BASE_DADOS.length >= 6)
   const nomes = new Set()
@@ -20,7 +34,7 @@ test('base de dados: toda referência traz quem publica, endereço, série, arqu
 })
 test('base de dados: todo arquivo de dados publicado ou lido pelo app tem referência', () => {
   const publicados = new Set()
-  for (const f of ['pages.yml', 'quotes.yml']) for (const m of readFileSync(new URL(`../../.github/workflows/${f}`, import.meta.url), 'utf8').matchAll(/([a-z-]+\.json)/g)) publicados.add(m[1])
+  for (const f of ['pages.yml', 'quotes.yml']) for (const file of workflowJsonFiles(readFileSync(new URL(`../../.github/workflows/${f}`, import.meta.url), 'utf8'))) publicados.add(file)
   for (const f of readdirSync(new URL('../scripts/', import.meta.url)).filter((x) => /^fetch-.*\.mjs$/.test(x))) for (const m of readFileSync(new URL(`../scripts/${f}`, import.meta.url), 'utf8').matchAll(/public\/([a-z-]+\.json)/g)) publicados.add(m[1])
   for (const f of readdirSync(new URL('../src/', import.meta.url)).filter((x) => /\.(js|jsx)$/.test(x))) for (const m of src(f).matchAll(/(?:useDataFile|loadDataFile)\('([a-z-]+\.json)'/g)) publicados.add(m[1])
   const faltam = [...publicados].filter((a) => !ARQUIVOS_COBERTOS.includes(a) && !['package.json', 'package-lock.json', 'manifest.json', 'tsconfig.json', 'stale.json', 'validation.json', 'weekly-data-snapshot.json'].includes(a))
@@ -51,6 +65,9 @@ test('fontes detalhadas ficam na Base de dados, com exceções contextuais de At
     // A apresentação para cliente preserva as referências do cálculo apenas
     // no slide obrigatório de premissas, sem liberar catálogo no restante da UI.
     if (f === 'BndesPresentation.jsx') t = t.replace(/<section className="bnp-references">[\s\S]*?<\/section>/, '')
+    // Os slides da aba Apresentar saem do painel para a visita ao cliente: cada um leva,
+    // no rodapé, o nome curto da fonte. Só o rodapé do slide é liberado, não o resto da tela.
+    if (f === 'Apresentar.jsx') t = t.replace(/<footer className="sl-rodape">[\s\S]*?<\/footer>/g, '')
     // O PDF autônomo solicitado precisa levar consigo as referências do cálculo.
     if (f === 'BndesPrint.jsx') t = t.replace(/<p className="bnprint-sources">[\s\S]*?<\/p>/, '')
     assert.doesNotMatch(t, /Fontes?: /, `${f}: texto "Fonte:" em painel`)

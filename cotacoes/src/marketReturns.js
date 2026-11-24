@@ -1,12 +1,18 @@
 // Calendar boundaries are civil dates in São Paulo, independent of the device zone.
-export const marketDate = t => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t))
+const marketDateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' })
+export const marketDate = t => marketDateFormatter.format(new Date(t))
 const dayNumber = d => Date.parse(d + 'T12:00:00Z') / 864e5
 
 export function accumulatedReturns(file, code, now = Date.now()) {
+  if (!Number.isFinite(new Date(now).getTime())) return { month: null, year: null }
+  return accumulatedReturnsForDay(file, code, marketDate(now))
+}
+
+export function accumulatedReturnsForDay(file, code, today) {
   const empty = { month: null, year: null }
   const series = file?.series?.[code]
-  if (file?.source !== 'AwesomeAPI' || series?.source !== code || !Number.isFinite(new Date(now).getTime()) || !Array.isArray(series.points)) return empty
-  const today = marketDate(now), monthStart = today.slice(0, 7) + '-01', yearStart = today.slice(0, 4) + '-01-01'
+  if (file?.source !== 'AwesomeAPI' || series?.source !== code || !Array.isArray(series.points)) return empty
+  const monthStart = today.slice(0, 7) + '-01', yearStart = today.slice(0, 4) + '-01-01'
   const daily = new Map()
   const valid = series.points.filter(p => Number.isFinite(p?.t) && Number.isFinite(new Date(p.t).getTime()) && Number.isFinite(p.bid) && p.bid > 0)
   for (const p of valid.sort((a, b) => a.t - b.t)) {
@@ -49,4 +55,14 @@ export function cnhPtaxCross(ptaxUsd, usdPoints, cnhPoints, maxGapMs = 15 * 6000
   const usd = nearest(usdPoints ?? [], at), cnh = nearest(cnhPoints ?? [], at)
   if (!usd || !cnh || Math.abs(usd.t - at) > maxGapMs || Math.abs(cnh.t - at) > maxGapMs || !(usd.bid > 0) || !(cnh.bid > 0)) return null
   return { ...ptaxUsd, sell: ptaxUsd.sell / (usd.bid / cnh.bid), cross: true }
+}
+
+// Destaques da tabela de câmbio: 🔥 na moeda que mais subiu no mês e 🛡️ na que menos subiu.
+// Só marca com duas ou mais moedas com acumulado do mês e quando a maior e a menor são diferentes.
+export function destaquesMes(returns) {
+  const vals = Object.entries(returns ?? {}).filter(([, r]) => Number.isFinite(r?.month?.value)).map(([code, r]) => [code, r.month.value])
+  if (vals.length < 2) return {}
+  const max = Math.max(...vals.map(v => v[1])), min = Math.min(...vals.map(v => v[1]))
+  if (max === min) return {}
+  return { maior: vals.find(v => v[1] === max)[0], menor: vals.find(v => v[1] === min)[0] }
 }

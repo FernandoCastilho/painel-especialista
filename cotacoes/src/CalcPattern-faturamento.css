@@ -1,0 +1,62 @@
+/* Faturamento: padrão visual das calculadoras (aprovado em 18/11/2026).
+   Tudo preso à raiz .ft. Só apresentação: nenhuma regra de cálculo mora aqui.
+   O resultado é largo (gráfico mês a mês e comparação), por isso fica abaixo dos dados em largura total. */
+.ft { --ft-orange:#ff6200; --ft-navy:linear-gradient(110deg,#052956,#07336b); }
+
+/* Resposta principal, equivalência e valores agrupados (base, vale também no slide da aba Apresentar). */
+.ft .ft-kpis { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:10px 16px; align-items:start; margin-bottom:12px; }
+.ft .ft-kpis > div, .ft .ft-kpis > p, .ft .ft-kpis > dl { padding:0; border:0; border-radius:0; }
+.ft .ft-answer { grid-column:1; display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:10px; }
+.ft .ft-answer > div { display:flex; flex-direction:column; gap:2px; min-width:0; padding:12px 14px; border-radius:10px; }
+.ft .ft-answer-main { background:var(--ft-navy); color:#fff; border:1px solid #34507f; }
+.ft .ft-answer-main small, .ft .ft-answer-main span { color:#c9d6ee; }
+.ft .ft-answer-main b { font-size:1.9rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:#fff; }
+.ft .ft-answer-side { border:1px solid var(--bw-line, var(--line)); background:var(--bw-soft, transparent); }
+.ft .ft-answer-side b { font-size:1.15rem; font-variant-numeric:tabular-nums; }
+.ft .ft-answer small, .ft .ft-answer span { font-size:.75rem; }
+.ft .ft-answer-side span { color:var(--bw-mut, var(--mut)); }
+.ft .ft-kpis .ft-equiv { grid-column:1; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0; padding:8px 12px; border:1px solid var(--bw-line, var(--line)); border-radius:8px; font-size:.85rem; color:var(--bw-mut, var(--mut)); }
+.ft .ft-equiv > span { display:inline-flex; align-items:center; gap:4px; }
+.ft .ft-equiv b { color:var(--bw-ink, var(--fg)); font-variant-numeric:tabular-nums; }
+.ft .ft-equiv small { font-size:.75rem; }
+.ft .ft-kpis > .ft-values-box { grid-column:2; grid-row:1 / span 2; min-width:0; }
+.ft .ft-values-grp { margin:0; padding:0 0 4px; font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--bw-mut, var(--mut)); border-bottom:1px solid var(--bw-line, var(--line)); }
+.ft .ft-values { display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:0; }
+.ft .ft-values > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:baseline; padding:6px 0; border-bottom:1px solid var(--bw-line, var(--line)); }
+.ft .ft-values dt { font-size:.85rem; color:var(--bw-ink, var(--fg)); }
+.ft .ft-values dt small { display:block; font-size:.72rem; color:var(--bw-mut, var(--mut)); }
+.ft .ft-values dd { margin:0; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; font-weight:600; }
+.ft .ft-values > .ft-values-total { border-top:2px solid var(--bw-line, var(--line)); border-bottom:0; }
+.ft .ft-values > .ft-values-total :is(dt,dd) { font-weight:700; }
+@media (max-width:900px) {
+  .ft .ft-kpis { grid-template-columns:1fr; }
+  .ft .ft-answer, .ft .ft-kpis .ft-equiv, .ft .ft-kpis > .ft-values-box { grid-column:1; grid-row:auto; }
+}
+@media (max-width:480px) {
+  .ft .ft-answer { grid-template-columns:1fr; }
+  .ft .ft-answer-main b { font-size:1.6rem; }
+}
+
+/* Atalhos de período: uma barra só, opções encostadas. */
+.ft .ft-seg { display:inline-flex; flex-wrap:nowrap; border:1px solid var(--cx-line-strong, #77725f); border-radius:8px; overflow:hidden; }
+.ft .ft-atalhos .ft-seg > button { min-height:40px; margin:0; padding:6px 12px; border:0; border-radius:0; background:transparent; color:inherit; cursor:pointer; }
+.ft .ft-atalhos .ft-seg > button + button { border-left:1px solid var(--cx-line-strong, #77725f); }
+@media (max-width:640px) {
+  .ft .ft-atalhos .ft-seg { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); width:100%; }
+  .ft .ft-atalhos .ft-seg > button { padding:6px 4px; font-size:.8rem; line-height:1.2; }
+}
+
+/* Aviso de linhas ignoradas: faixa no topo do quadro de dados. */
+.ft .ft-input > .ft-avisos { position:relative; margin:0 0 4px; padding:10px 12px 10px 40px; list-style:none; border:1px solid var(--line); border-left:4px solid var(--amber, #ffb000); border-radius:8px; background:var(--surface-2, transparent); color:var(--fg); font-size:.8125rem; }
+.ft .ft-input > .ft-avisos::before { content:"!"; position:absolute; left:12px; top:10px; width:18px; height:18px; border-radius:50%; background:var(--amber, #ffb000); color:#000; font-weight:800; font-size:.75rem; line-height:18px; text-align:center; }
+
+/* Tela da calculadora (fora do slide): quadros e resultado. */
+:root[data-theme] body main.app.app-calculators .ft > .ft-dados > header { background:var(--ft-navy); color:#fff; border-bottom:4px solid var(--ft-orange); }
+:root[data-theme] body main.app.app-calculators .ft > .cx-panel > header h3 { border-left:0; padding-left:0; color:inherit; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .ft > .ft-dados > header h3 { color:#fff; }
+:root[data-theme] body main.app.app-calculators .ft > .ft-result > .expandable-panel { border:2px solid var(--ft-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body main.app.app-calculators .ft > .ft-result > .expandable-panel > .expandable-heading { background:var(--ft-navy); color:#fff; border-bottom:1px solid #2f4a78; }
+:root[data-theme] body main.app.app-calculators .ft > .ft-result > .expandable-panel > .expandable-heading h3 { color:#fff; border-left:0; padding-left:0; }
+:root[data-theme] body main.app.app-calculators .ft > .ft-result > .expandable-panel > .expandable-heading .expandable-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
+/* Ajuda "?": área de toque de pelo menos 24 px. */
+:root[data-theme] body main.app.app-calculators .ft .fi-help > button { min-width:24px; min-height:24px; }

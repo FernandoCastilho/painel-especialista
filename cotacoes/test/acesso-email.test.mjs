@@ -202,3 +202,33 @@ test('script: inválido e bloqueado não contam; cota esgotada é tentativa, nã
   assert.equal(s.linhas[0][2], 'solicitacao')
   assert.equal(s.emails.length, 0)
 })
+
+test('script: validar sessão não grava acesso, e Bloqueados prevalece sem esperar outro dia', () => {
+ const s=criarScript({diretos:['direto@x.com']})
+ const acesso=s.chamarScript({acao:'pedir',email:'direto@x.com'})
+ const antes=s.linhas.length
+ for(let i=0;i<3;i++) assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:acesso.token}).ok,true)
+ assert.equal(s.linhas.length,antes)
+ s.bloq.appendRow([' DIRETO@X.COM '])
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:acesso.token}).ok,false)
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:acesso.token}).revogado,true)
+ assert.equal(s.linhas.length,antes)
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:'invalido'}).ok,false)
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:'invalido'}).revogado,true)
+})
+
+test('timeout limita validação pendente e permite uma nova chamada', async () => {
+ const {validarAcesso}=await import('../src/acessoEmail.js')
+ let signal
+ const r=await validarAcesso({email:'teste@example.com',token:'fixture'},{url:'https://fixture.invalid',timeoutMs:10,fetchFn:async(_,opts)=>{signal=opts.signal;return new Promise(()=>{})}})
+ assert.equal(r.ok,false);assert.equal(r.rede,true);assert.equal(signal.aborted,true)
+ const retry=await validarAcesso({}, {url:'https://fixture.invalid',timeoutMs:10,fetchFn:async()=>({json:async()=>({ok:true})})})
+ assert.equal(retry.ok,true)
+})
+test('timeout cobre também corpo JSON pendente; HTTP inválido não autoriza', async () => {
+ const {validarAcesso}=await import('../src/acessoEmail.js')
+ const r=await validarAcesso({}, {url:'https://fixture.invalid',timeoutMs:10,fetchFn:async()=>({json:()=>new Promise(()=>{})})})
+ assert.equal(r.rede,true)
+ const http=await validarAcesso({}, {url:'https://fixture.invalid',fetchFn:async()=>({ok:false,json:async()=>({ok:true})})})
+ assert.equal(http.ok,false);assert.equal(http.rede,true)
+})

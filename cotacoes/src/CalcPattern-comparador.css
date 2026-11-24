@@ -1,0 +1,181 @@
+/* Comparador de Crédito no padrão visual das calculadoras (aprovado em 18/11/2026; referência: CalculatorPattern.css do BNDES).
+   Só apresentação: nenhuma regra de cálculo mora aqui. Tudo preso a .credit-workspace, a raiz desta tela,
+   para não vazar para outras calculadoras que usam .bw, .cx ou .seg. O prefixo :root[data-theme] body vence as camadas anteriores. */
+.credit-workspace {
+  --cp-orange:#ff6200;
+  --cp-navy:linear-gradient(110deg,#052956,#07336b);
+  --cp-alert-bg:#fff6e5; --cp-alert-line:#b86e00; --cp-alert-ink:#4a3300;
+}
+:root[data-theme="dark"] .credit-workspace { --cp-alert-bg:#2b1f0b; --cp-alert-line:#ffb000; --cp-alert-ink:#ffd9a6; }
+
+/* Sem espaço morto no topo do quadro: o cabeçalho encosta na área de trabalho. */
+:root[data-theme] body .credit-workspace .credit-bw { gap:0; }
+:root[data-theme] body .credit-workspace .credit-bw-body { padding-top:12px; }
+
+/* Quadros de entrada: faixa azul-marinho, título branco em negrito e linha laranja. Um destaque só: sem contorno azul forte nem barra lateral. */
+:root[data-theme] body .credit-workspace .credit-shared { border:1px solid var(--bw-line); border-radius:10px; }
+:root[data-theme] body .credit-workspace .credit-shared-title,
+:root[data-theme] body .credit-workspace .credit-card-head,
+:root[data-theme] body .credit-workspace .credit-bw .credit-controls > h3 { background:var(--cp-navy); color:#fff; border-bottom:4px solid var(--cp-orange); font-weight:700; }
+:root[data-theme] body .credit-workspace .credit-bw .credit-controls > h3 { min-height:0; margin-bottom:14px; }
+:root[data-theme] body .credit-workspace .credit-shared-title small { color:#c9d6ee; opacity:1; }
+:root[data-theme] body .credit-workspace .credit-card-head .credit-card-number { color:#c9d6ee; opacity:1; }
+:root[data-theme] body .credit-workspace .credit-card-head select { background:var(--bw-card); color:var(--bw-ink); border:1px solid #ffffff66; }
+:root[data-theme] body .credit-workspace .credit-bw .credit-controls > h3 label { color:#fff; min-height:24px; }
+:root[data-theme] body .credit-workspace .credit-invest { border-left:1px solid var(--bw-line); }
+
+/* Rótulos em uma linha, para os campos alinharem; o "?" tem área de toque de 24 px sem alterar a altura da linha. */
+:root[data-theme] body .credit-workspace .credit-shared .credit-field > span:first-child,
+:root[data-theme] body .credit-workspace .credit-label { display:flex; align-items:center; gap:4px; min-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+:root[data-theme] body .credit-workspace .credit-label > label { overflow:hidden; text-overflow:ellipsis; }
+:root[data-theme] body .credit-workspace .credit-label .fi-help > button { width:24px; min-width:24px; height:24px; min-height:24px; margin:0; }
+
+/* Campos com a mesma altura e o mesmo tamanho de letra (o valor em reais estava em 13 px). */
+:root[data-theme] body .credit-workspace .credit-field :is(input, select, textarea) { min-height:44px; font-size:1rem; }
+:root[data-theme] body .credit-workspace .credit-field .money-wrap > input { font-size:1rem; }
+:root[data-theme] body .credit-workspace .credit-field .money-wrap > i { font-size:.85rem; }
+
+/* Campos dos cartões alinhados pela base, mesmo quando um rótulo longo quebra (ex.: "Tarifas na liberação (sem IOF)"). */
+:root[data-theme] body .credit-workspace .credit-fields { align-items:end; }
+
+/* Escolhas exclusivas: uma barra segmentada por grupo, só a escolhida em amarelo. */
+:root[data-theme] body .credit-workspace .seg { display:inline-flex; flex-wrap:nowrap; gap:0; min-height:44px; padding:0; border:1px solid var(--bw-field-line); border-radius:8px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body .credit-workspace .seg button,
+:root[data-theme] body .credit-workspace .credit-bw.credit-comparison .credit-controls .seg button { flex:1 1 0; min-width:48px; min-height:44px; margin:0; padding:6px 16px; border:0; border-radius:0; background:transparent; color:var(--bw-ink); font:inherit; font-size:.9rem; font-weight:600; box-shadow:none; }
+:root[data-theme] body .credit-workspace .seg button + button,
+:root[data-theme] body .credit-workspace .credit-bw.credit-comparison .credit-controls .seg button + button { border-left:1px solid var(--bw-field-line); }
+:root[data-theme] body .credit-workspace .seg button[aria-pressed="true"],
+:root[data-theme] body .credit-workspace .credit-bw.credit-comparison .credit-controls .seg button[aria-pressed="true"] { background:#ffb000; color:#000; font-weight:700; }
+@media (max-width:760px) {
+  :root[data-theme] body .credit-workspace .seg { display:flex; width:100%; }
+  :root[data-theme] body .credit-workspace .credit-count > span:first-child { flex-basis:100%; }
+  :root[data-theme] body .credit-workspace .credit-count > .seg { flex:1 1 0; min-width:0; }
+  :root[data-theme] body .credit-workspace .credit-count > .fi-help { flex:0 0 auto; width:auto; }
+}
+
+/* Aviso de dado faltante: faixa âmbar no topo do quadro. */
+:root[data-theme] body .credit-workspace .credit-alert { position:relative; margin:0; padding:10px 12px 10px 40px; border:0; border-left:4px solid var(--cp-alert-line); border-radius:6px; background:var(--cp-alert-bg); color:var(--cp-alert-ink); font-size:.875rem; line-height:1.45; }
+:root[data-theme] body .credit-workspace .credit-alert::before { content:'!'; position:absolute; left:12px; top:10px; display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--cp-alert-line); color:var(--bw-card); font-weight:800; font-size:.8rem; line-height:1; }
+:root[data-theme] body .credit-workspace .credit-bw .credit-controls > .credit-alert { flex:0 0 calc(100% - 2 * var(--cx-space, 20px)); box-sizing:border-box; margin-top:0; }
+:root[data-theme] body .credit-workspace .credit-card-body > .credit-alert { margin:0 0 2px; }
+
+/* Resultado: o único quadro com borda laranja; faixa azul-marinho sem linha laranja.
+   Fica abaixo dos dados, em largura total: compara de 2 a 5 modalidades lado a lado e não cabe numa coluna de 400 px. */
+:root[data-theme] body .credit-workspace .credit-result-box { margin:16px 0 0; border:2px solid var(--cp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); color:var(--bw-ink); }
+:root[data-theme] body .credit-workspace .credit-result-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; background:var(--cp-navy); color:#fff; }
+:root[data-theme] body .credit-workspace .credit-result-head h3 { margin:0; color:#fff; font-size:1.05rem; font-weight:700; }
+:root[data-theme] body .credit-workspace a.credit-email { flex:none; color:#fff; }
+:root[data-theme] body .credit-workspace a.credit-email:focus-visible { outline:2px solid var(--cp-orange); outline-offset:2px; }
+:root[data-theme] body .credit-workspace a.credit-email[aria-disabled="true"] { opacity:.55; cursor:default; }
+:root[data-theme] body .credit-workspace .credit-result-body { display:flex; flex-direction:column; gap:12px; padding:14px; min-width:0; }
+:root[data-theme] body .credit-workspace .credit-result-status { margin:0; color:var(--bw-mut); font-size:.8rem; line-height:1.45; }
+:root[data-theme] body .credit-workspace .credit-result-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; padding-top:12px; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .credit-workspace .credit-result-actions .credit-confirm { display:flex; align-items:center; gap:8px; min-height:44px; margin:0; }
+:root[data-theme] body .credit-workspace .credit-results { min-width:0; }
+:root[data-theme] body .credit-workspace .credit-results > .credit-result-panel,
+:root[data-theme] body .credit-workspace .credit-results > .credit-analysis,
+:root[data-theme] body .credit-workspace .credit-results > .credit-invest-block { margin:12px 0 0; }
+/* Dentro do quadro do resultado, os painéis internos ficam sem segunda moldura forte. */
+:root[data-theme] body .credit-workspace .credit-result-box .credit-result-panel { border-color:var(--bw-line); }
+
+/* a. Resposta principal */
+:root[data-theme] body .credit-workspace .credit-answer { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:10px; }
+:root[data-theme] body .credit-workspace .credit-answer > div > div { display:flex; flex-direction:column; gap:4px; min-width:0; height:100%; box-sizing:border-box; padding:12px 14px; border-radius:10px; }
+:root[data-theme] body .credit-workspace .credit-answer-main > div { background:var(--cp-navy); color:#fff; border:1px solid #34507f; }
+:root[data-theme] body .credit-workspace .credit-answer-main small,
+:root[data-theme] body .credit-workspace .credit-answer-main span { color:#dbe5f5; }
+:root[data-theme] body .credit-workspace .credit-answer-main b { color:#fff; font-size:1.6rem; line-height:1.15; font-weight:800; }
+:root[data-theme] body .credit-workspace .credit-answer-main strong { color:#fff; }
+:root[data-theme] body .credit-workspace .credit-answer-side > div { border:1px solid var(--bw-line); background:var(--bw-soft); color:var(--bw-ink); }
+:root[data-theme] body .credit-workspace .credit-answer-side b { font-size:1.15rem; line-height:1.2; }
+:root[data-theme] body .credit-workspace .credit-answer-side span { color:var(--bw-mut); }
+:root[data-theme] body .credit-workspace .credit-answer-side strong { color:var(--bw-ink); }
+:root[data-theme] body .credit-workspace .credit-answer small { font-size:.75rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+:root[data-theme] body .credit-workspace .credit-answer span { font-size:.875rem; line-height:1.45; font-variant-numeric:tabular-nums; }
+@media (max-width:640px) { :root[data-theme] body .credit-workspace .credit-answer { grid-template-columns:1fr; } :root[data-theme] body .credit-workspace .credit-answer-main b { font-size:1.35rem; } }
+
+/* b. Equivalência e premissa do CDI, logo abaixo da resposta */
+:root[data-theme] body .credit-workspace .credit-results > .credit-notice { margin:10px 0 0; padding:8px 12px; border:1px solid var(--bw-line); border-radius:8px; background:transparent; color:var(--bw-mut); font-size:.85rem; line-height:1.45; }
+
+/* c. Quadro agrupado: rótulo à esquerda, valor à direita, números alinhados, terminando no total */
+:root[data-theme] body .credit-workspace .credit-matrix tr.credit-grp > th { padding:10px 12px; background:var(--bw-soft); color:var(--bw-ink); font-size:.78rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-left:4px solid #ff6a00; border-right:0; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .credit-workspace .credit-matrix .credit-invest-col { border-left:2px solid #1d8a5a; background:var(--bw-good-soft); }
+:root[data-theme] body .credit-workspace .credit-matrix thead .credit-invest-col small { display:block; font-weight:500; opacity:.85; }
+:root[data-theme] body .credit-workspace .credit-matrix tr.credit-grp > th { box-shadow:none; }
+:root[data-theme] body .credit-workspace .credit-link { margin-left:8px; padding:2px 10px; min-height:0; border:1px solid var(--bw-line); border-radius:6px; background:transparent; color:inherit; font:inherit; font-weight:700; cursor:pointer; }
+:root[data-theme] body .credit-workspace .credit-matrix tr.credit-num > td { text-align:right; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .credit-workspace .credit-matrix tr.credit-total-row > * { font-weight:800; border-top:2px solid var(--bw-strong-line); }
+:root[data-theme] body .credit-workspace .credit-matrix thead th:first-child { background:#0b2e63; color:#fff; }
+
+/* d. Detalhes recolhidos: parcelas, gráfico, premissas e memória do cálculo */
+:root[data-theme] body .credit-workspace .credit-results > details { margin:12px 0 0; padding:0 12px; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-soft); }
+:root[data-theme] body .credit-workspace .credit-results > details > summary { min-height:44px; box-sizing:border-box; padding:12px 0; color:var(--bw-ink); font-weight:700; }
+:root[data-theme] body .credit-workspace .credit-results > details[open] { padding-bottom:12px; }
+:root[data-theme] body .credit-workspace .credit-results > details.credit-notes { margin:12px 0 0; }
+
+/* Dados básicos compactos, como lembrete do que foi comparado (duas colunas no celular). */
+:root[data-theme] body .credit-workspace .credit-operation-summary { grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr)); gap:8px 12px; }
+
+/* Na apresentação ampliada, o mesmo resultado com a mesma organização. */
+:root[data-theme] body .credit-workspace .credit-presentation .credit-answer { margin-bottom:4px; }
+
+/* Roteiro das calculadoras (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026). Só apresentação. */
+/* 2 Encargos: a faixa do título, o seletor de quantidade e uma coluna por operação. Sem moldura em volta, para as colunas
+   usarem a mesma largura de antes (com moldura, quatro operações deixavam de caber lado a lado em 1280 px). */
+:root[data-theme] body .credit-workspace .credit-charges { margin:12px 0 0; }
+:root[data-theme] body .credit-workspace .credit-charges > h3 { margin:0 0 12px; padding:10px 14px; border-radius:10px; background:var(--cp-navy); color:#fff; border-bottom:3px solid var(--cp-orange); font-size:.95rem; font-weight:700; line-height:1.3; letter-spacing:0; text-transform:none; }
+:root[data-theme] body .credit-workspace .credit-charges > h3::after { content:none; }
+:root[data-theme] body .credit-workspace .credit-charges > h3 small { margin-left:6px; color:#c9d6ee; font-size:.78rem; font-weight:400; }
+
+/* Cenários e comparações: opções que mudam o resultado, num bloco que abre e fecha. */
+:root[data-theme] body .credit-workspace .credit-scenarios { margin:12px 0; padding:0 14px; border:1px solid var(--bw-line); border-radius:10px; background:var(--bw-card); color:var(--bw-ink); }
+:root[data-theme] body .credit-workspace .credit-scenarios > summary { min-height:44px; box-sizing:border-box; padding:12px 0; color:var(--bw-ink); font-weight:700; cursor:pointer; }
+:root[data-theme] body .credit-workspace .credit-scenarios > summary small { color:var(--bw-mut); font-size:.8125rem; font-weight:400; }
+:root[data-theme] body .credit-workspace .credit-scenarios[open] { padding-bottom:2px; }
+:root[data-theme] body .credit-workspace .credit-scenarios > .credit-controls:first-of-type { margin-top:0; }
+
+/* 3 Resultado. */
+:root[data-theme] body .credit-workspace .credit-outcome { margin:16px 0 0; }
+:root[data-theme] body .credit-workspace .credit-outcome > .credit-result-box { margin:0; }
+
+/* Quadro de respostas: uma coluna por operação, as perguntas nas linhas; "Quanto custa" em azul-marinho, como no Capital de Giro. */
+:root[data-theme] body .credit-workspace .credit-results :is(.rt-answers, .rt-answers dt, .rt-answers dd) { margin:0; }
+:root[data-theme] body .credit-workspace .credit-answers { width:100%; margin:0; border-collapse:separate; border-spacing:0; table-layout:fixed; border:1px solid var(--bw-line); border-radius:10px; overflow:hidden; background:var(--bw-card); color:var(--bw-ink); }
+:root[data-theme] body .credit-workspace .credit-answers caption { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+:root[data-theme] body .credit-workspace .credit-answers :is(th, td) { padding:10px 12px; border:0; border-top:1px solid var(--bw-line); text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+:root[data-theme] body .credit-workspace .credit-answers thead th { border-top:0; background:var(--bw-tint); color:var(--bw-ink); font-size:.875rem; font-weight:700; }
+:root[data-theme] body .credit-workspace .credit-answers th:first-child { width:22%; }
+:root[data-theme] body .credit-workspace .credit-answers tbody th { background:var(--bw-soft); color:var(--bw-mut); font-size:.8125rem; font-weight:600; }
+:root[data-theme] body .credit-workspace .credit-answers td > b { display:block; font-size:1.15rem; font-weight:800; line-height:1.2; font-variant-numeric:tabular-nums; }
+:root[data-theme] body .credit-workspace .credit-answers td > small { display:block; margin-top:3px; color:var(--bw-mut); font-size:.75rem; line-height:1.4; }
+:root[data-theme] body .credit-workspace .credit-answers .credit-answers-op { display:none; }
+:root[data-theme] body .credit-workspace .credit-answers tr.credit-answers-main > * { background:#062e61; color:#fff; border-top-color:#34507f; }
+:root[data-theme] body .credit-workspace .credit-answers tr.credit-answers-main :is(th, td > small) { color:#c9d6ee; }
+:root[data-theme] body .credit-workspace .credit-answers tr.credit-answers-main td > b { font-size:1.35rem; }
+/* O custo em reais é o que compara operações de tipos diferentes de taxa: fica em destaque dentro de "Quanto custa". */
+:root[data-theme] body .credit-workspace .credit-results :is(.credit-answers-main, .rt-answer-main) strong { color:#fff; font-size:.875rem; font-weight:700; }
+:root[data-theme] body .credit-workspace .credit-results > :is(.credit-answers, .rt-answers) + .credit-answer { margin-top:12px; }
+/* Celular: cada pergunta vira um quadro, com as operações uma embaixo da outra (cabem as cinco, sem esconder nenhuma).
+   O slide do modo Apresentar tem largura fixa: lá vale o desenho de computador. */
+@media (max-width:760px) {
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers,
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers :is(tbody, tr, th, td) { display:block; width:auto; }
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers thead { display:none; }
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers tbody th { border-top:0; }
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers tbody tr + tr > th { border-top:1px solid var(--bw-line); }
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers td { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0 10px; align-items:baseline; }
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers .credit-answers-op { display:block; font-size:.8125rem; font-weight:600; }
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers td > b { text-align:right; font-size:1.05rem; }
+  :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-answers td > small { grid-column:1 / -1; }
+}
+@media (max-width:760px) { :root[data-theme] body .credit-workspace:not(.sl-calc *) .credit-scenarios { padding:0 8px; } }
+
+/* Modo Apresentar: as gavetas ficam abertas e sem o título clicável. O slide de resultado mostra a linha do tempo, as respostas
+   e a resposta principal: saem a conferência, os botões, a leitura em texto e os quadros que o slide já esvaziava ou repetia
+   (a matriz longa, que o modo Apresentar retira, e os dados básicos, que a linha do tempo já conta). Na tela nada disso muda. */
+.sl-calc .credit-workspace details.credit-scenarios[open] { display:block; }
+:root[data-theme] body .sl-calc .credit-workspace .credit-scenarios > summary,
+:root[data-theme] body .sl-calc .credit-workspace .credit-result-box :is(.credit-result-status, .credit-result-actions, .credit-email, .credit-reading, .credit-results > .credit-result-panel) { display:none; }
+/* Tela limpa (21/11/2026): "?" claro nas faixas azul-marinho (Cenários do CDI e cabeçalho de cada operação). */
+:root[data-theme] body main.app.app-calculators .cx.credit-bw :is(.credit-controls > h3, .credit-card-head) .fi-help > button { background:transparent; color:#fff; border-color:#ffffff88; }
+:root[data-theme] body .credit-workspace .credit-bw .credit-controls > h3 .fi-help { margin-left:8px; }

@@ -1,0 +1,148 @@
+/* Padrão visual das calculadoras (aprovado em 18/11/2026).
+   Quadros de entrada: faixa azul-marinho com linha laranja. Cotação: única com borda laranja,
+   fixa ao lado dos dados no computador e logo abaixo deles no celular. Só apresentação: nenhuma regra de cálculo mora aqui.
+   Seletores com :root[data-theme] body para vencer as camadas anteriores sem !important. */
+/* ── BNDES · Finame ── */
+/* Quadros de entrada */
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-group { padding:0; overflow:hidden; border-radius:10px; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-group > h3 { display:flex; align-items:center; gap:8px; margin:0; padding:10px 14px; background:var(--cp-navy); color:#fff; border-bottom:3px solid var(--cp-orange); border-radius:0; font-size:.95rem; font-weight:700; font-variant-caps:normal; letter-spacing:0; text-transform:none; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-group .fm-group-fields { padding:12px 14px 14px; }
+@media (max-width:359px) {
+  /* O maior rótulo do porte/região precisa caber junto da seta do seletor. */
+  .bndes-page .bw > .bw-simulation { padding-inline:3px; }
+  :root[data-theme] body .bw:not(.e4) .cx-finame .fm-operation .fm-group-fields { padding-inline:3px; }
+  .bw .cx-finame #fm-porte { padding-inline:6px; }
+}
+
+/* Cotação ao lado dos dados (computador largo) */
+@media (min-width:1200px) {
+  :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,400px); gap:20px; align-items:start; }
+  /* Cotação inteira, sem rolagem interna nem corte: cresce com o conteúdo e acompanha a rolagem da página (pedido de 18/11/2026). */
+  :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) > .fm-results { position:static; max-height:none; overflow:visible; }
+  /* Com a cotação ao lado, os dois quadros de entrada ficam um sobre o outro só quando a coluna é estreita. */
+  :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .cx-finame .cx-form,
+  :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr)); }
+}
+:root[data-theme] body .bw:not(.e4) .fm-secondary { display:grid; gap:16px; margin-top:16px; min-width:0; }
+
+/* Quadro da cotação: o único com borda laranja na tela */
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace { border:2px solid var(--cp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-heading { background:var(--cp-navy); color:#fff; border-bottom:1px solid #2f4a78; }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-heading h3 { color:#fff; }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-heading .bndes-official-logo { width:120px; padding:6px; margin:0 0 6px; }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-heading .expandable-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content { gap:12px; padding:12px; }
+/* O título já está na faixa do quadro: dentro do resultado fica só para leitores de tela. */
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result { border:0; border-radius:0; background:transparent; }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > header:not(.fm-hero) { padding:0 0 4px; background:none; color:var(--bw-mut); }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > header:not(.fm-hero) .cx-heading { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > header:not(.fm-hero) small { margin:0; color:var(--bw-mut); }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > header:not(.fm-hero) > .fi-help > button { color:var(--bw-mut); }
+
+/* Resposta principal */
+.bw:not(.e4) .fm-answer { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:10px; margin:8px 0 10px; }
+.bw:not(.e4) .fm-answer > div { display:flex; flex-direction:column; gap:2px; min-width:0; padding:12px 14px; border-radius:10px; }
+.bw:not(.e4) .fm-answer-main { background:var(--cp-navy); color:#fff; border:1px solid #34507f; }
+.bw:not(.e4) .fm-answer-main small,.bw:not(.e4) .fm-answer-main span { color:#c9d6ee; }
+.bw:not(.e4) .fm-answer-main b { font-size:1.9rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:#fff; }
+.bw:not(.e4) .fm-answer-side { border:1px solid var(--bw-line); background:var(--bw-soft); }
+.bw:not(.e4) .fm-answer-side b { font-size:1.15rem; font-variant-numeric:tabular-nums; color:var(--bw-ink); overflow-wrap:anywhere; }
+.bw:not(.e4) .fm-answer small { font-size:.75rem; }
+.bw:not(.e4) .fm-answer span { font-size:.75rem; color:var(--bw-mut); }
+:root[data-theme] body .bw:not(.e4) .fm-equiv { display:flex; align-items:center; gap:6px; margin:0 0 10px; padding:8px 12px; border:1px solid var(--bw-line); border-radius:8px; font-size:.85rem; color:var(--bw-mut); }
+:root[data-theme] body .bw:not(.e4) .fm-equiv b { color:var(--bw-ink); }
+/* Taxas e valores em reais, agrupados */
+:root[data-theme] body .bw:not(.e4) .fm-grouped tr.fm-grp > th { padding:10px 16px 4px !important; background:none !important; color:var(--bw-mut) !important; font-size:.7rem !important; font-weight:700 !important; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body .bw:not(.e4) .fm-grouped td { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+:root[data-theme] body .bw:not(.e4) .fm-grouped tr.fm-total-row > * { font-size:.9rem !important; border-top:2px solid var(--bw-strong-line, var(--bw-line)); }
+@media (max-width:480px) {
+  .bw:not(.e4) .fm-answer { grid-template-columns:1fr; }
+  .bw:not(.e4) .fm-answer-main b { font-size:1.6rem; }
+}
+
+/* Ordem dentro da cotação: resposta primeiro; dados básicos e avisos depois (só ordem visual; o conteúdo não muda). */
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content { display:flex; flex-direction:column; }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content > #fm-result { order:1; }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content > .fm-print-actions { order:2; }
+:root[data-theme] body .bw:not(.e4) .fm-results > .fm-result-workspace > .expandable-content > .expandable-panel { order:3; }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result { display:flex; flex-direction:column; }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > * { order:2; }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > header,
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-destaques,
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-comparison { order:1; }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-iof-premise,
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .status,
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-reference-sources { margin:8px 0 0; font-size:.72rem; }
+/* Dados básicos: compactos, como lembrete do que foi cotado. */
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-result-workspace .expandable-panel .expandable-heading { padding:8px 12px !important; }
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-result-workspace .expandable-panel .expandable-heading h3 { font-size:.8rem; color:var(--bw-mut); }
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px 12px; padding:10px 12px; }
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary dt { font-size:.68rem; }
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary dd { margin-top:1px; font-size:.78rem; }
+.bw:not(.e4) .fm-answer-side b { font-size:1rem; white-space:nowrap; }
+@media (min-width:1200px) {
+  /* Com a cotação sempre à vista, o atalho laranja "CET estimado · abrir" fica redundante. */
+  :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .fm-show-result { display:none; }
+}
+.bw:not(.e4) .fm-answer .fm-answer-main small,.bw:not(.e4) .fm-answer .fm-answer-main span { color:#c9d6ee; }
+/* Um destaque só: o CET já está em evidência no topo; na tabela a linha fica neutra. */
+:root[data-theme] body .bw:not(.e4) .fm-grouped tr.fm-cet-row { background:none !important; }
+:root[data-theme] body .bw:not(.e4) .fm-grouped tr.fm-cet-row > * { color:var(--bw-ink) !important; font-weight:600 !important; }
+/* Taxa ao ano em cima, ao mês embaixo. */
+:root[data-theme] body .bw:not(.e4) .fm-grouped .fm-rate-pair { display:inline-flex; flex-direction:column; align-items:flex-end; }
+:root[data-theme] body .bw:not(.e4) .fm-grouped .fm-rate-pair > [aria-hidden] { display:none; }
+:root[data-theme] body .bw:not(.e4) .fm-grouped .fm-rate-pair > span:last-child { font-size:.72rem; color:var(--bw-mut); }
+@media (max-width:640px) {
+  :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+/* Quadro da cotação e parcelas sem corte (pedido de 18/11/2026): o quadro não encolhe dentro da coluna,
+   a tabela da composição ocupa a largura do quadro e as parcelas aparecem todas, na largura do painel. */
+:root[data-theme] body .bw:not(.e4) .fm-results > * { flex-shrink:0; }
+:root[data-theme] body .bw:not(.e4) .fm-results table.cx-matrix.fm-fit { width:100% !important; table-layout:auto; }
+:root[data-theme] body .bw:not(.e4) .fm-results table.cx-matrix.fm-fit > thead > tr > th:first-child { width:auto; }
+:root[data-theme] body .bw:not(.e4) .fm-results table.cx-matrix.fm-fit :is(th,td) { white-space:nowrap; width:auto; }
+:root[data-theme] body .bw:not(.e4) .fm-cmp .fm-results table.cx-matrix.fm-fit { max-width:960px; }
+:root[data-theme] body .bw:not(.e4) .fm-parcels-callout .fm-parcel-scroll { max-height:none; overflow:visible; }
+:root[data-theme] body .bw:not(.e4) .fm-parcels-callout .fm-parcel-scroll table.cx-matrix.fm-fit { width:min(100%, calc(240px + var(--fm-opcoes,2) * 280px)) !important; }
+@media (min-width:1200px) { :root[data-theme] body .bw:not(.e4) .fm-workspace:not(.fm-cmp) .fm-results .fm-operation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/* Projeção do índice dos pós-fixados (TLP, LCD, TFBD): um campo por ano, do Focus, editável (19/11/2026). */
+.bw .fm-projecao { grid-column:1/-1; display:grid; gap:6px; }
+.bw .fm-proj-anos { display:grid; grid-template-columns:repeat(auto-fill,minmax(78px,1fr)); gap:8px; }
+.bw .fm-proj-ano { display:grid; gap:2px; font-size:.75rem; color:var(--bw-mut, var(--mut)); }
+.bw .fm-proj-ano input { width:100%; min-width:0; min-height:40px; box-sizing:border-box; padding:6px 8px; border:1px solid var(--bw-line, var(--line)); border-radius:8px; background:var(--cx-field-bg, #fff); color:var(--bw-ink, var(--fg)); font:inherit; font-size:.875rem; font-variant-numeric:tabular-nums; }
+.bw .fm-proj-manual input { border-color:var(--cp-orange); }
+.bw .fm-projecao .fm-rate-reset { justify-self:start; }
+.bw .fm-compare-outro { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; align-items:center; margin-top:8px; font-size:.875rem; }
+.bw .fm-compare-outro select { min-height:40px; max-width:100%; }
+
+/* Finame Materiais: entradas primeiro (Custos ao lado), cotação em toda a largura abaixo. */
+:root[data-theme] body .bw:not(.e4) .fm-workspace.fm-quote-layout { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; }
+:root[data-theme] body .bw:not(.e4) .fm-quote-layout > .fm-results { position:static; }
+:root[data-theme] body .bw:not(.e4) .fm-quote-layout .cx-form { display:grid; grid-template-columns:minmax(0,1fr); }
+@media (min-width:1101px) {
+  :root[data-theme] body .bw:not(.e4) .fm-quote-layout .cx-form { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
+}
+:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle { width:44px; min-width:44px; height:44px; min-height:44px; padding:0; margin:-5px -4px -5px 0; border:0; background:none; }
+:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle > svg { width:16px; height:16px; }
+:root[data-theme] body main.app.app-calculators:not(#u) .fm-quote-layout .fm-result-workspace > .expandable-heading > .expandable-toggle:hover { background:var(--bw-soft); color:var(--bw-ink); }
+:root[data-theme] body .bw:not(.e4) .cx-finame #fm-parcelas { scroll-margin-top:120px; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content { padding:0 14px 14px; min-width:0; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-installments-content .fm-parcel-scroll { max-height:none; overflow-x:auto; }
+
+/* ── Finame Materiais no roteiro das calculadoras (21/11/2026): 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026) ── */
+/* Título numerado dos dois quadros de entrada, com o mesmo espaço entre o número e o nome das outras telas. */
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-group > h3 { display:block; }
+/* Gaveta "Detalhes do contrato" (data da liberação e praça): mesmo desenho da gaveta da linha mestra. */
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato { margin-top:2px; border-top:1px solid var(--bw-line); }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato > summary { padding:10px 0; min-height:44px; color:var(--bw-link); font-size:.86rem; cursor:pointer; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato > summary small { color:var(--bw-mut); font-size:.78rem; }
+:root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato-campos { display:grid; grid-template-columns:minmax(0,1fr); gap:6px 10px; padding:0 0 4px; }
+@media (min-width:1001px) {
+  :root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato-campos { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+/* No slide do modo Apresentar a gaveta fica aberta e sem o título clicável (como na linha mestra). */
+.sl-calc .bw:not(.e4) .cx-finame details.fm-contrato[open] { display:block; }
+.sl-calc .bw:not(.e4) .cx-finame .fm-contrato > summary { display:none; }
+:root[data-theme] body .sl-calc .bw:not(.e4) .cx-finame .fm-contrato-campos { padding-top:8px; }

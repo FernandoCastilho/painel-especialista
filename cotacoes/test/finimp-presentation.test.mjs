@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -14,6 +15,9 @@ import * as loan from '../src/emprestimo.js'
 import * as help from '../src/finimpHelpContent.js'
 
 const require = createRequire(import.meta.url)
+// Isolate product state tests from the expansion shell; dialog behavior has separate tests.
+const panelStub = ({ title, children }) => React.createElement('section', null, React.createElement('h3', null, title), children)
+
 const source = await readFile(new URL('../src/FinimpComparacao.jsx', import.meta.url), 'utf8')
 const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
 const module = { exports: {} }
@@ -27,10 +31,13 @@ const dependencies = {
   './finimpHelpContent.js': help,
   './MoneyInput.jsx': () => null,
   './FinimpHelp.jsx': () => null,
+  // Peças do roteiro (linha do tempo e resultado): a apresentação delas tem conferência própria na tela.
+  './Roteiro.jsx': { step: (number, text) => `${number} ${text}`, Resultado: ({ children }) => children, Respostas: () => null, ComposicaoDoCusto: () => null },
+  './ReferenciaMercado.jsx': () => null, './faixaCurva.js': await import('../src/faixaCurva.js'),
   './FinimpComparacao.css': {},
+  './CalcPattern-finimp.css': {},
 }
-runInNewContext(code, { module, exports: module.exports, require: name => dependencies[name] ?? require(name) })
-
+runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => (name === './ExpandablePanel.jsx' ? panelStub : name === './CalculatorStandard.css' ? {} : dependencies[name]) ?? require(name)) })
 const nodes = node => !node || typeof node !== 'object' ? [] : Array.isArray(node) ? node.flatMap(nodes) : [node, ...nodes(node.props?.children)]
 const findAll = (tree, predicate) => nodes(tree).filter(predicate)
 const find = (tree, predicate) => findAll(tree, predicate)[0]

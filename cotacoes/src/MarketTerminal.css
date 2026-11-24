@@ -150,3 +150,9 @@
 .other-market .oil-eia-table .oil-spot-value { background:transparent; border:0; color:var(--fg); width:100%; text-align:right; padding:6px 0; }
 .market-open:disabled { cursor:default; }
 .market-ptax small.ptax-kind { display:block; color:var(--mut); font-size:.75rem; font-weight:400; }
+
+/* Independent viewport budget: news no longer inherits the currency table height. */
+@media(min-width:1000px){
+  .market-terminal .terminal-main > .terminal-news.market-news-adaptive{height:var(--market-news-height,auto);min-height:0;align-self:start;overflow-y:auto}
+  .market-terminal .market-news-adaptive .market-news ul,.market-terminal .market-news-adaptive .reforma-list{max-height:none;overflow-y:visible}
+}

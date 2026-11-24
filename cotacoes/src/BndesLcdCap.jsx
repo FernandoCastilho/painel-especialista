@@ -1,5 +1,10 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
+import ExpandablePanel from './ExpandablePanel.jsx'
+import BndesDetails from './BndesDetails.jsx'
+import './CalculatorStandard.css'
 import { useMemo, useState } from 'react'
 import MoneyInput from './MoneyInput.jsx'
+import BndesScheduleEditor from './BndesScheduleEditor.jsx'
 import Help from './CalculatorHelp.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import { useDataFile } from './useDataFile.js'
@@ -19,7 +24,7 @@ function BalanceChart({ result }) {
   const points = [{ date: result.rows[0].from, value: result.totals.principalCents }, ...result.rows.map(row => ({ date: row.date, value: row.closingCents }))]
   const max = Math.max(...points.map(point => point.value)), from = Date.parse(points[0].date), duration = Date.parse(points.at(-1).date) - from
   const line = points.map(point => `${40 + (Date.parse(point.date) - from) / duration * 920},${160 - point.value / max * 140}`).join(' ')
-  return <figure className="lcd-chart"><figcaption>Saldo após cada cobrança · projeção informada</figcaption><svg viewBox="0 0 1000 190" role="img" aria-label="Evolução projetada do saldo, da liberação à quitação. Valores disponíveis no cronograma abaixo."><path d="M40 20V160H960" fill="none" stroke="currentColor" opacity="0.3" /><polyline points={line} fill="none" stroke="var(--amber, #ffb000)" strokeWidth="3" /><text x="40" y="184">{dmy(points[0].date)}</text><text x="960" y="184" textAnchor="end">{dmy(points.at(-1).date)}</text><text x="45" y="16">Máximo {brl(max)}</text></svg></figure>
+  return <figure className="lcd-chart"><figcaption>Saldo após cada cobrança · projeção informada</figcaption><ChartFullscreen><svg viewBox="0 0 1000 190" role="img" aria-label="Evolução projetada do saldo, da liberação à quitação. Valores disponíveis no cronograma abaixo."><path d="M40 20V160H960" fill="none" stroke="currentColor" opacity="0.3" /><polyline points={line} fill="none" stroke="var(--amber, #ffb000)" strokeWidth="3" /><text x="40" y="184">{dmy(points[0].date)}</text><text x="960" y="184" textAnchor="end">{dmy(points.at(-1).date)}</text><text x="45" y="16">Máximo {brl(max)}</text></svg></ChartFullscreen></figure>
 }
 
 export default function BndesLcdCap({ onBack }) {
@@ -44,10 +49,10 @@ export default function BndesLcdCap({ onBack }) {
   const selicPoints = moedasData?.series?.['143']?.points?.filter(point => point[0] <= today) ?? []
   const lastSelic = selicPoints.at(-1)
   const methodology = <><p>Fator Selic do cenário = (1 + Selic anual / 100) elevado a (DU / 252). Saldo corrigido = saldo inicial × fator Selic. Fator de juros = (1 + (BNDES + intermediação + agente + LD1) / 100) elevado a (DU / 252). Juros exigíveis = saldo corrigido × (fator de juros − 1). A amortização reduz o saldo corrigido.</p><p>O cálculo contratual exige a trajetória diária da Selic com a defasagem D-2. O histórico 143 de seis casas não é convertido em taxa anual nem usado como fator contratual exato. Esta versão calcula apenas o cenário informado, com arredondamentos de projeção, e não certifica elegibilidade nem condições comerciais.</p><p>CET (Res. CMN 4.881/2020, art. 4º): taxa anual que iguala o valor líquido liberado ao valor presente das parcelas, em dias corridos/365 desde a liberação. Pelo art. 5º, a Selic fica fora: as parcelas são recalculadas com Selic zero, só com LD1 e remunerações, fixadas no contrato. Mesmas datas e mesma base de juros (dias úteis/252). Valor líquido = valor liberado menos a tarifa informada e o IOF escolhido, ambos cobrados na liberação. IOF diário sobre o principal de cada amortização, sem a Selic capitalizada, em dias corridos até o vencimento e com teto de 365 dias; adicional de 0,38% sobre o valor.</p><p><a href={LCDCAP_SOURCE} target="_blank" rel="noreferrer">BNDES · Anexo IV, seção 5 (LCDCAP)</a>. Perfil separado do Finame/TFC e da TLP exigível.</p></>
-  return <section className="cx cx-lcd" aria-labelledby="lcd-title">
-    <button type="button" className="cx-back" onClick={onBack}><span aria-hidden="true">‹</span> Calculadoras</button>
+  return <section className="cx cx-lcd calc-standard" aria-labelledby="lcd-title">
     <h2 id="lcd-title" className="cx-title"><span className="cx-icon"><LcdIcon /></span>BNDES · Selic capitalizada + LCD</h2>
     <p className="status">Projeção · CET pela regra do BC, sem Selic</p>
+    <div className="bndes-projection-workspace">
     <article className="desk-panel cx-panel">
       <header><h3 className="cx-heading">Condições da operação<Help title="Modalidade LCDCAP">Projeção da modalidade LCDCAP para operações indiretas. A Selic aumenta o saldo; LD1 e remunerações são cobradas nos vencimentos. TLP exigível é uma modalidade diferente e não usa este motor.</Help></h3></header>
       <div className="cx-form">
@@ -77,13 +82,14 @@ export default function BndesLcdCap({ onBack }) {
     <article className="desk-panel cx-panel">
       <header><h3 className="cx-heading">Cronograma informado<Help title="Cronograma completo">Use datas de vencimento já ajustadas. Os dias úteis são contados desde a liberação ou cobrança anterior. C cobra somente juros fixos; A também amortiza o saldo corrigido dividido pelas amortizações restantes. A carência vem antes de todas as amortizações. Inclua o vencimento final.</Help></h3></header>
       <div className="cx-form">
-        <div className="cx-field lcd-full"><div className="cx-field-label"><label htmlFor="lcd-schedule">Cobranças</label><Help title="Formato das cobranças">Uma cobrança por linha: data; dias úteis; C ou A. Use C para carência e A para amortização.</Help></div><textarea id="lcd-schedule" value={scheduleText} onChange={event => { setScheduleText(event.target.value); setScheduleConfirmed(false) }} rows="7" spellCheck="false" placeholder="AAAA-MM-DD; dias úteis; C (carência) ou A (amortização)" />{scheduleText && !schedule.ok && <p className="cx-error" role="alert">{schedule.error.message}</p>}</div>
+        <div className="cx-field lcd-full"><div className="cx-field-label"><label htmlFor="lcd-schedule">Cobranças</label><Help title="Formato das cobranças">Uma cobrança por linha: data; dias úteis; C ou A. Use C para carência e A para amortização.</Help></div><BndesScheduleEditor id="lcd-schedule" value={scheduleText} onChange={value => { setScheduleText(value); setScheduleConfirmed(false) }} />{scheduleText && !schedule.ok && <p className="cx-error" role="alert">{schedule.error.message}</p>}</div>
         {field('schedule-source', 'Origem das datas e dias úteis', scheduleSource, value => { setScheduleSource(value); setScheduleConfirmed(false) }, 'text', 'Registre a origem das datas e das contagens de dias úteis de cada período.')}
         <div className="cx-field-label lcd-full"><label className="lcd-check"><input type="checkbox" checked={scheduleConfirmed} onChange={event => setScheduleConfirmed(event.target.checked)} />Conferi datas, dias úteis e periodicidades.</label><Help title="Confirmação do cronograma">Conferi o cronograma, as periodicidades contratuais, datas ajustadas e dias úteis de cada período.</Help></div>
       </div>
     </article>
-    <article className="desk-panel cx-panel" aria-live="polite">
-      <header><h3 className="cx-heading">Projeção do fluxo<Help title="Memória de cálculo e limites">{methodology}</Help></h3><small>Projeção · CET sem Selic</small></header>
+    </div>
+    <article className="desk-panel cx-panel calc-result-shell" aria-live="polite">
+      <ExpandablePanel title="Projeção do fluxo" toggleLabel="Modo apresentação"><div className="calc-panel-context"><Help title="Memória de cálculo e limites">{methodology}</Help><small>Projeção · CET sem Selic</small></div>
       {!result.ok ? <p className="status cx-pad" role="status">{!principalText.trim() ? 'Preencha o valor liberado e as condições da operação para projetar o fluxo.' : <>Resultado indisponível: {scheduleText && !schedule.ok ? schedule.error.message : !fee.ok ? `Tarifa na liberação: ${fee.error}` : result.error.message} Dados ausentes não são tratados como zero.</>}</p> : <>
         <div className="fm-grade">
           <div className="fm-kpi"><span className="cx-field-label">Remunerações + LD1<Help title="Remunerações + LD1">Componente exigível, convertido pela base de 252 dias úteis.</Help></span><b>{number(result.fixedAnnualPct)}% a.a.</b></div>
@@ -96,10 +102,12 @@ export default function BndesLcdCap({ onBack }) {
           <div className="fm-kpi"><span className="cx-field-label">Custo com Selic projetada<Help title="Custo com Selic projetada">Mesmo método do CET, aplicado às parcelas projetadas completas, com a Selic do cenário. Não é o CET regulatório: depende da hipótese de Selic.</Help></span><b>{result.cet.projectedAnnualRate == null ? 'Indisponível' : percent(result.cet.projectedAnnualRate)}</b><small>{result.cet.projectedAnnualRate == null ? 'Sem solução para este fluxo.' : `Selic de ${number(result.annualSelicScenarioPct)}% a.a. no cenário`}</small></div>
           <div className="fm-kpi"><span className="cx-field-label">IOF na liberação<Help title="IOF na liberação">Adicional sobre o valor mais o diário sobre o principal de cada amortização, em dias corridos até o vencimento, com teto de 365 dias. Cobrado na liberação e descontado do valor líquido nas duas linhas de custo. Alíquota zero só vale com enquadramento confirmado (ex.: recursos FINAME, art. 8º, IX); o painel não verifica.</Help></span><b>{brl(result.iof.totalCents)}</b><small>{result.iof.profile === 'zero' ? 'Alíquota zero · enquadramento não verificado' : `${brl(result.iof.additionalCents)} adicional + ${brl(result.iof.dailyCents)} diário`}</small></div>
         </div>
-        <BalanceChart result={result} />
-        <div className="cx-wrap" role="region" tabIndex="0" aria-label="Cronograma da projeção LCDCAP"><table className="cx-matrix lcd-table"><caption>Projeção · Selic constante de {number(result.annualSelicScenarioPct)}% a.a.</caption><thead><tr><th>Data</th><th>DU</th><th>Saldo inicial</th><th>Selic no saldo</th><th>Saldo corrigido</th><th>Juros exigíveis</th><th>Amortização</th><th>Pagamento</th><th>Saldo final</th></tr></thead><tbody>{result.rows.map(row => <tr key={row.date}><th scope="row">{dmy(row.date)}{row.phase === 'grace' && ' · carência'}</th><td>{row.businessDays}</td>{['openingCents', 'capitalizedSelicCents', 'correctedCents', 'interestCents', 'amortizationCents', 'paymentCents', 'closingCents'].map(key => <td key={key}>{brl(row[key])}</td>)}</tr>)}</tbody></table></div>
+        <BndesDetails title="Evolução do saldo projetado"><BalanceChart result={result} /></BndesDetails>
+        <BndesDetails title="Parcelas · data e valor"><div className="cx-wrap"><table className="cx-matrix"><thead><tr><th>Data</th><th>Parcela</th></tr></thead><tbody>{result.rows.map(row => <tr key={row.date}><th scope="row">{dmy(row.date)}</th><td>{brl(row.paymentCents)}</td></tr>)}</tbody></table></div></BndesDetails>
+        <BndesDetails title="Memória de cálculo"><div className="cx-wrap" role="region" tabIndex="0" aria-label="Cronograma da projeção LCDCAP"><table className="cx-matrix lcd-table"><caption>Projeção · Selic constante de {number(result.annualSelicScenarioPct)}% a.a.</caption><thead><tr><th>Data</th><th>DU</th><th>Saldo inicial</th><th>Selic no saldo</th><th>Saldo corrigido</th><th>Juros exigíveis</th><th>Amortização</th><th>Pagamento</th><th>Saldo final</th></tr></thead><tbody>{result.rows.map(row => <tr key={row.date}><th scope="row">{dmy(row.date)}{row.phase === 'grace' && ' · carência'}</th><td>{row.businessDays}</td>{['openingCents', 'capitalizedSelicCents', 'correctedCents', 'interestCents', 'amortizationCents', 'paymentCents', 'closingCents'].map(key => <td key={key}>{brl(row[key])}</td>)}</tr>)}</tbody></table></div></BndesDetails>
         <ul className="lcd-warnings">{result.warnings.map(warning => <li key={warning}>{warning}</li>)}</ul>
       </>}
+      </ExpandablePanel>
     </article>
   </section>
 }

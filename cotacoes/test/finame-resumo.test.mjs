@@ -26,12 +26,12 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   // Todo destaque existe na lista de quadros da tela.
   for (const id of FINAME_DESTAQUES) assert.match(source, new RegExp(`\\{ id: '${id}', rotulo: '`))
   // A mesma função desenha o topo e a composição: rótulo, valor e nota não podem divergir.
-  assert.match(source, /className="fm-summary-row"/)
+  assert.match(source, /<BndesExecutiveResult/)
   for (const key of ['total', 'primeiraParcela', 'ultimaParcela']) assert.match(source, new RegExp(`brl\\(res.${key}\\)`))
   assert.match(source, /Taxa de referência/)
   assert.match(source, /Primeira parcela após carência/)
   assert.match(source, /brl\(res.total\)/)
-  assert.match(source, /<details className="fm-details"><summary>Composição do resultado · \{custo\.toUpperCase\(\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
+  assert.match(source, /<details className="fm-details"><summary>Detalhamento · \{custo\.toUpperCase\(\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
   assert.doesNotMatch(source, /<details className="fm-details" open/)
   // A faixa azul não aparece sozinha: só junto da comparação.
   assert.match(source, /className=\{comparar \? 'fm-hero' : undefined\}/)
@@ -47,7 +47,8 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
 
 test('comparação mantém cabeçalho limpo e resultados usam a taxa adotada com origem visível', () => {
   const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
-  assert.match(source, /Com \{item\.custo\.toUpperCase\(\)\}<\/th>/)
+  // Cabeçalho da opção: nome, CET estimado e, na de menor custo, o selo (desenho aprovado em 16/11/2026).
+  assert.match(source, /<span className="fm-opt-name">\{opcao\(index\)\}<\/span><b>\{cetsOk \? pct\(cets\[index\]\.anual, 2\) : '—'\}<\/b>/)
   assert.doesNotMatch(source, /scope="col">\{item\.custo\.toUpperCase\(\)\}<small>/)
   assert.match(source, /pct\(item\.rate\.value, 4\)/)
   assert.match(source, /item\.rate\.manual \? ' \(taxa manual\)' : ''/)

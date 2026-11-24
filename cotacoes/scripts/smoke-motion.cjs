@@ -1,4 +1,4 @@
-// Movimento: barras em cascata, gaveta em cortina e troca de tela suave; com "reduzir movimento", nada anima.
+// Movimento: barras em cascata, janela central do detalhe e troca de tela suave; com "reduzir movimento", nada anima.
 const { chromium } = require('playwright'), assert = require('node:assert/strict')
 const dates = ['2026-10-26', '2026-10-23', '2026-10-19', '2026-09-25', '2026-07-27', '2026-04-27', '2025-10-24']
 const labels = ['Último dia', '1 dia', '1 semana', '1 mês', '3 meses', '6 meses', '1 ano']
@@ -21,7 +21,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         await p.route('**/curves.json*', (r) => r.fulfill({ json: curves }))
         await p.goto(base + '/#juros')
         // 1) barras da variação do cupom: crescem do zero em cascata curta, cada uma < 1 s, sem loop
-        await p.locator('.curve-table', { hasText: 'Brasil · Cupom cambial' }).getByRole('button', { name: /1 ano: abrir gráfico da curva/ }).click() // a leitura do cupom fica na tela da curva
+        await p.getByRole('button', { name: 'Ampliar gráfico: Cupom cambial', exact: true }).click() // a leitura do cupom fica na tela da curva
         const s = p.locator('.cupom-leitura'); await s.waitFor(); await s.scrollIntoViewIfNeeded()
         await s.getByRole('button', { name: 'Variação por vértice' }).click()
         const bars = s.locator('.cl-bar-track i'); await bars.first().waitFor()
@@ -35,7 +35,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         // valores já no final, sem contagem
         assert.match(await s.locator('.cl-bar-val').first().innerText(), /bps$/)
         // balão do "?": surge curto (< 0,2 s); com reduzir movimento, aparece direto
-        await p.getByRole('button', { name: /^O que é: Curvas de comparação/ }).click()
+        await p.locator('dialog.is-modal').getByRole('button', { name: /^O que é: Curvas de comparação/ }).click()
         const tip = p.locator('[role=tooltip]').filter({ hasText: 'Curvas de comparação' }).first(); await tip.waitFor()
         const ta = (await anims(tip)).find((a) => a.name === 'pop-in')
         if (calm) assert.ok(!ta, 'reduzir movimento: balão sem animação')
@@ -43,8 +43,8 @@ const out = process.env.SMOKE_OUT || '/tmp'
         await p.keyboard.press('Escape'); if (width < 700) await p.locator('.pop-close:visible').first().click().catch(() => {})
         await p.getByRole('button', { name: 'Fechar detalhes' }).click(); await p.locator('dialog.is-modal').waitFor({ state: 'detached' })
         if (width < 700) {
-          // celular: balão da tabela de juros fica na frente das colunas fixas das linhas de baixo (nada o cobre)
-          const ajudas = p.locator('.executive-rates__name .help > button'); await ajudas.first().waitFor()
+          // celular: balão do "?" de um gráfico de juros fica na frente do que vem abaixo (nada o cobre)
+          const ajudas = p.locator('.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"]) .chart h3 .help > button'); await ajudas.first().waitFor()
           await ajudas.nth(2).scrollIntoViewIfNeeded(); await ajudas.nth(2).click()
           const pop = p.locator('.pop').first(); await pop.waitFor(); await p.waitForTimeout(250)
           const bb = await pop.boundingBox()
@@ -54,20 +54,20 @@ const out = process.env.SMOKE_OUT || '/tmp'
           }, { x: bb.x, y: bb.y, w: bb.width, h: bb.height })
           assert.equal(tapado, 0, 'nada cobre o balão no celular')
           await p.screenshot({ path: `${out}/motion-390-balao-juros.png` })
-          await pop.getByRole('button', { name: 'Fechar' }).click(); await pop.waitFor({ state: 'hidden' })
+          await p.keyboard.press('Escape'); await pop.waitFor({ state: 'hidden' })
         }
         await p.waitForTimeout(1000)
-        // 2) detalhe do indicador: gaveta em cortina (lateral no computador, tela toda no celular)
+        // 2) detalhe do indicador: janela que surge no centro (no computador) ou em tela toda (no celular)
         await p.goto(base + '/#cenarios/commodities')
         const tr0 = Date.now()
         await p.getByRole('button', { name: 'Petróleo Brent: abrir gráfico e histórico' }).click()
         const d = p.getByRole('dialog', { name: /histórico de Petróleo Brent/i }); await d.waitFor()
-        const da = (await anims(d)).find((a) => a.name === 'curtain-in')
-        if (calm) assert.ok(!da, 'reduzir movimento: gaveta sem cortina')
-        else { assert.ok(da && da.dur < 1000 && da.iter === 1, 'cortina < 1 s'); await p.waitForTimeout(150); await p.screenshot({ path: `${out}/motion-${width}-cortina.png` }) }
+        const da = (await anims(d)).find((a) => a.name === 'modal-in')
+        if (calm) assert.ok(!da, 'reduzir movimento: janela sem animação')
+        else { assert.ok(da && da.dur < 1000 && da.iter === 1, 'abertura < 1 s'); await p.waitForTimeout(150); await p.screenshot({ path: `${out}/motion-${width}-cortina.png` }) }
         await p.waitForTimeout(600)
-        const box = await d.boundingBox(), dw = width >= 900 ? Math.min(860, width) : width
-        assert.ok(Math.abs(box.width - dw) <= 1 && Math.abs(box.x + box.width - width) <= 1, `gaveta à direita (${JSON.stringify(box)})`)
+        const box = await d.boundingBox(), dw = width >= 900 ? Math.min(1120, width - 64) : width
+        assert.ok(Math.abs(box.width - dw) <= 1 && Math.abs((box.x + box.width / 2) - width / 2) <= 1, `janela no centro (${JSON.stringify(box)})`)
         if (!calm) await p.screenshot({ path: `${out}/motion-${width}-gaveta.png` })
         const trigger = p.getByRole('button', { name: 'Petróleo Brent: abrir gráfico e histórico' })
         await p.keyboard.press('Escape'); await d.waitFor({ state: 'hidden', timeout: 1000 })
@@ -83,7 +83,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         assert.deepEqual(errors, [])
         await ctx.close()
       }
-      console.log(width, 'PASS movimento: cascata, gaveta, troca de tela e reduzir movimento')
+      console.log(width, 'PASS movimento: cascata, janela central, troca de tela e reduzir movimento')
     }
   } finally { await b.close() }
 })().catch((e) => { console.error(e); process.exit(1) })

@@ -1,3 +1,4 @@
+import CalculatorHelp from './CalculatorHelp.jsx'
 import { useMemo, useState } from 'react'
 import ChartFilters from './ChartFilters.jsx'
 import DateRangePicker from './DateRangePicker.jsx'
@@ -11,7 +12,7 @@ const nfOf = (d) => (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: d,
 
 // Comparação: várias séries da mesma família no mesmo gráfico. Mesma unidade → nível (taxas em % a.a.); unidades diferentes → variação %
 // desde o início do período. O período é o mesmo da aba (atalhos e datas).
-export default function ComparaSeries({ items, loading, period }) {
+export default function ComparaSeries({ items, loading, period, compactHelp = false }) {
   const { preset, setPreset, custom, setCustom } = period
   const [ref, width] = useWidth()
   const same = sameUnit(items)
@@ -45,7 +46,9 @@ export default function ComparaSeries({ items, loading, period }) {
           <button type="button" aria-pressed={modo === 'pct'} onClick={() => setModo('pct')}>Variação % no período</button>
         </div>
       )}
+      {compactHelp ? <div className="bn-def">{items.length} séries · {range ? `${dmy(range.start)} a ${dmy(range.end)}` : ''} · {pct ? 'Variação % no período' : `Nível em ${unit}`}<CalculatorHelp title="Como ler o histórico dos indexadores"><p>{pct ? (same ? 'Variação percentual sobre o primeiro valor de cada série no período.' : 'Unidades diferentes: cada série aparece em variação percentual sobre o seu primeiro valor no período.') : `Nível em ${unit}.`} Passe o mouse (ou use as setas) para ver todas as séries na mesma data. Ao selecionar um trecho, taxas são comparadas em pontos percentuais e níveis em retorno percentual.</p></CalculatorHelp></div> : (
       <p className="bn-def">{items.length} séries · {range ? `${dmy(range.start)} a ${dmy(range.end)}` : ''} · {pct ? (same ? 'variação percentual sobre o primeiro valor de cada série no período' : 'unidades diferentes: cada série aparece em variação percentual sobre o seu primeiro valor no período') : `nível em ${unit}`} Passe o mouse (ou use as setas) para ver todas as séries na mesma data. Ao selecionar um trecho, taxas são comparadas em pontos percentuais e níveis em retorno percentual.</p>
+      )}
       {shown.length > 0 && width > 0
         ? <div ref={ref}><MultiLinhas series={shown} history={items.map(it=>{const base=shown.find(s=>s.key===it.id)?.level[0]?.v;return {key:it.id,points:toPoints(it.list).map(p=>pct && base ? {...p,v:(p.v/base-1)*100}:p)}})} comparisonSeries={shown.map(s=>({...s,points:s.level}))} comparisonHistory={items.map(it=>({key:it.id,points:toPoints(it.list)}))} rate={!pct && !!unit?.startsWith('%')} width={width} fmt={fmt} ariaLabel={`Comparação de ${items.length} séries: ${items.map((i) => i.name).join(', ')}`} /></div>
         : <div ref={ref}><p role="status">{bad ? 'Ajuste o período.' : 'Sem observações no período escolhido; escolha um intervalo maior.'}</p></div>}

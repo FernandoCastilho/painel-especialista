@@ -1,3 +1,4 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { comparisonRows } from './chartComparison.js'
@@ -75,7 +76,7 @@ export default function ChartComparison({ children, series = [], history = serie
   const change = (r, row) => r ? compound ? `${signed(r.accumulated)}% acumulado composto` : `${signed(r.delta)}${rate || row?.unit?.startsWith('%') ? ' p.p.' : row?.unit ? ' ' + row.unit : ''}${!rate && !row?.unit?.startsWith('%') && r.pct != null ? ` (${signed(r.pct)}%)` : ''}` : 'Indisponível: faltam observações comparáveis'
   const priorRanges = (unavailable ? [] : rows).map(r=>r.prior).filter((r,i,a)=>r && r.t0>=times[0] && r.t1<=times.at(-1) && (!categorical || (times.includes(r.t0) && times.includes(r.t1))) && a.findIndex(p=>p?.t0===r.t0 && p?.t1===r.t1)===i)
   const Tag = compact ? 'span' : 'div'
-  return <Tag ref={box} className={`chart-comparison${compact ? ' chart-comparison-compact' : ''}`}>
+  return <ChartFullscreen disabled={compact}><Tag ref={box} className={`chart-comparison${compact ? ' chart-comparison-compact' : ''}`}>
     {children}
     <span id={`${id}-hint`} className="chart-access-text">Arraste horizontalmente para selecionar. Shift com setas seleciona pelo teclado; Escape limpa. {unavailable || 'Comparação com o mesmo período do ano anterior quando houver histórico.'}</span>
     {rows.length > 0 && svg && !html && createPortal(<g className="comparison-band" pointerEvents="none">{priorRanges.map(r=><rect key={r.t0} className="comparison-prior-band" x={x(r.t0)} y={margin.t} width={Math.max(0,x(r.t1)-x(r.t0))} height={Math.max(0,h-margin.t-margin.b)} fill="var(--currency-eur)" fillOpacity="0.08" stroke="var(--currency-eur)" strokeDasharray="4 3" />)}<rect x={Math.min(x(range[0]), x(range[1]))} y={margin.t} width={Math.abs(x(range[1]) - x(range[0]))} height={Math.max(0, h - margin.t - margin.b)} fill="var(--accent)" opacity="0.14" /><line x1={x(range[0])} x2={x(range[0])} y1={margin.t} y2={h-margin.b} stroke="var(--accent)" strokeDasharray="4 3" /><line x1={x(range[1])} x2={x(range[1])} y1={margin.t} y2={h-margin.b} stroke="var(--accent)" strokeDasharray="4 3" /></g>, svg)}
@@ -87,5 +88,5 @@ export default function ChartComparison({ children, series = [], history = serie
       {!compact && <button type="button" onClick={() => { setRange(null); onRangeChange?.(null); anchor.current = null }}>Limpar seleção</button>}
       {compact && <span>Escape limpa a seleção.</span>}
     </Tag>}
-  </Tag>
+  </Tag></ChartFullscreen>
 }

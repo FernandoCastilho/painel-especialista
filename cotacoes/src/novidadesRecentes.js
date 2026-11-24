@@ -1,0 +1,101 @@
+// Uma entrada por dia de entrega. Agrupe no mesmo item as mudanças de um mesmo fluxo.
+export const NOVIDADES_RECENTES = [
+  {
+    date: '23/11/2026',
+    resumo: 'Panorama de M&A, tela de novidades, carregamento mais leve, CET na HP 12C e ajustes no câmbio e no BNDES',
+    items: [
+      'A seção M&A traz mapa do Brasil, filtros e detalhes com fontes de cinco operações de dezembro de 2025. A cobertura é histórica e parcial. No computador, fica depois de Setores. No celular, fica em Mais.',
+      'A tela Novidades da semana voltou ao menu Mais e reúne as mudanças do Painel por dia. O menu continua aberto quando Setores termina de carregar.',
+      'Mercado reaproveita o cálculo do câmbio acumulado. As notícias por tema e cada calculadora carregam quando você as abre.',
+      'A busca reaproveita as fontes já consultadas ao reabrir. Em Configurações, o botão Consultar estado das fontes abre o diagnóstico e mostra os horários de cada coleta.',
+      'Os cartões de Setores carregam fotos adaptadas à largura da tela.',
+      'Na HP 12C, dá para colar o fluxo do Excel para calcular o CET, consultar o guia e copiar a fita em formato brasileiro. O teclado também aproveita a largura da tela na horizontal.',
+      'O Câmbio Futuro separa dados da operação, taxas da mesa e resultado por vencimento. Cote em Bullet ou Parcelado e veja os pagamentos em reais sem redigitar os dados.',
+      'No Câmbio Futuro, a TIR em reais passou a contemplar operações de prazo curto em que o cálculo anterior deixava o resultado em branco.',
+      'Quando as duas cotações usadas para converter yuan em reais chegam defasadas, o Painel tenta buscá-las separadamente. A última referência válida continua na tela até haver dados compatíveis.',
+      'O resultado executivo do BNDES mostra a data correspondente à taxa CDI usada na comparação.',
+      'Em Recuperação Judicial, a data da última edição fica visível acima do filtro e o recorte de novembro inclui as edições conferidas até 23/11.',
+    ],
+  },
+  {
+    date: '22/11/2026',
+    resumo: 'Seis calculadoras com roteiro comum, seleção de parcelas no gráfico e nova apresentação do BNDES',
+    items: [
+      'Comparador de Crédito, Conta Garantida, Análise de Desconto, Finame Materiais, FINIMP e Empréstimo Externo (4131) passaram a seguir três etapas. Demanda reúne o que o cliente precisa, Encargos detalha o custo e Resultado mostra quanto entra e quanto se paga.',
+      'Na central BNDES, o resumo separa resultado financeiro e condições da operação. É possível pesquisar produtos, séries e praças, editar o cronograma em grade ou texto e consultar as parcelas em cartões no celular.',
+      'O Finame ganhou gráfico de pagamentos, resumo para e-mail e referência de mercado. No gráfico de fluxo, arrastar sobre as parcelas soma o principal, os juros e o total do trecho. O último mês também fica visível no celular.',
+      'No Capital de Giro, o prazo inicial passou a 36 meses e o gráfico de juros acompanha o prazo informado. Dá para buscar a praça pela cidade, escolher a frequência dos pagamentos, pagar juros na carência, usar parcelas flexíveis e informar o fee em reais ou em percentual. O envelope no resultado abre o resumo curto para e-mail.',
+      'A HP 12C continua acessível pelo menu. O botão flutuante permanente saiu da tela.',
+    ],
+  },
+  {
+    date: '21/11/2026',
+    resumo: 'Fita da HP 12C, resumo da trava cambial e novos programas de podcast',
+    items: [
+      'A calculadora RPN ganhou fita de operações ao vivo, janela flutuante e modo de tela cheia. No computador, o histórico aparece ao lado do teclado.',
+      'No Câmbio Futuro, a trava cruzada separa as cotações de cada moeda. Os valores das parcelas ficaram formatados para leitura e o resumo da operação pode ser copiado.',
+      'O Capital de Giro passou a mostrar a demanda, os encargos e a composição do custo no resultado. Ao fim da simulação, o gráfico da curva DI serve de referência de mercado.',
+      'O catálogo de podcasts recebeu Daily Fin e the news, capas oficiais e ordenação pelo episódio mais recente.',
+      'Os relógios no computador ganharam bandeiras. No modo Apresentar, voltar de Dados para Resultado leva o slide de volta ao topo.',
+    ],
+  },
+  {
+    date: '20/11/2026',
+    resumo: 'Calculadora RPN no menu e comparação de até cinco parcelas no Câmbio Futuro',
+    items: [
+      'O menu ganhou a calculadora financeira RPN, com teclado clássico, conversor de taxas e disposição horizontal para o celular deitado.',
+      'No Câmbio Futuro, dá para comparar até cinco parcelas, consultar a referência à vista junto à cotação da mesa e abrir um exemplo para apresentação. A operação em dólar fica separada da escolha de trava em euro ou yuan. Quando muda a data em São Paulo, é preciso informar as cotações da mesa para o novo dia.',
+      'Bandeiras passaram a identificar moedas na página inicial e pares no Mapa de Variação. O Câmbio Futuro também passou a exibir a referência indicativa em dólar.',
+      'Ao entrar uma nova versão do app, a publicação preserva os dados já coletados no site. A coleta segue nos horários habituais.',
+    ],
+  },
+  {
+    date: '19/11/2026',
+    resumo: 'Câmbio Futuro, simulador de caixa da reforma tributária e cotações de crédito por e-mail',
+    items: [
+      'A calculadora Câmbio Futuro passou a comparar dólar, euro e yuan por vencimento, mostrar o fluxo de caixa e calcular a TIR em reais e o câmbio necessário para uma meta.',
+      'Em Reforma Tributária, o simulador estima o efeito de CBS, IBS e Imposto Seletivo no caixa. Há exemplo completo para o Simples, reserva mês a mês e hipóteses editáveis para os anos seguintes.',
+      'As calculadoras foram agrupadas por finalidade. Os dados da necessidade do cliente podem ser reaproveitados entre telas, e o Comparador aceita de uma a cinco operações, inclusive uma cotação individual para enviar por e-mail.',
+      'O Comparador organiza operações por categoria, ajusta o CDI automático ao prazo na curva DI e coloca a aplicação financeira ao lado das alternativas de crédito.',
+      'Dividendos via Empréstimo passou a comparar a eficiência de quatro formas de pagamento e a destacar a mais favorável para os parâmetros da simulação.',
+      'No Finame Materiais, custos, cotação e parcelas ficaram agrupados. Na Árvore de Crédito, a triagem de alongamento passou a reavaliar a capacidade de pagamento ao mudar prazo ou valor e a distinguir as opções de reembolso.',
+      'A consulta automática de câmbio acompanha o pregão brasileiro, inclusive os feriados da B3. A seção Notícias ganhou curadoria de economia e Aprender passou a explicar ambidestria em gestão.',
+      'O menu passou a manter Juros ao lado de Cenários e a organizar Mais em três grupos: Acompanhar, Consultar e Aprender. Mercado Hoje se adapta à largura da tela e o gráfico de Faturamento preserva os rótulos da borda direita.',
+      'Ao reabrir o app com a sessão lembrada, o acesso por e-mail volta a conferir a situação atual do usuário.',
+    ],
+  },
+  {
+    date: '18/11/2026',
+    resumo: 'Podcast no Painel, simuladores de dividendos e CDI x Dólar e novas opções de Finame',
+    items: [
+      'A seção Podcast ganhou catálogo e reprodutor para ouvir os programas dentro do Painel.',
+      'Entraram as calculadoras Dividendos via Empréstimo, para empresas no lucro real, e CDI x Dólar, com CDI preenchido pelo Painel, gráfico comparativo e aviso quando uma taxa parece ter sido digitada como fração.',
+      'No BNDES, Finame Veículos e BNDES Giro ganharam opções de apresentação. A calculadora Finame reuniu TLP, Taxa LCD e TFBD, passou a mostrar taxas mensais e organizou a cotação e a lista de parcelas. Também é possível consultar os custos admitidos por produto e programa.',
+      'Faturamento passou a comparar receita e endividamento no período, mostrar 12 meses e alavancagem e gerar uma análise automática. A imagem exportada reúne gráfico e quadros de 12 meses em 1920 × 1080.',
+      'Na Árvore de Crédito, o endereço direto abre a triagem por necessidade do cliente e oferece até três possibilidades. O botão do CNPJ leva ao comprovante oficial da Receita.',
+      'Mercado, Juros, Cenários, BNDES, Setores, Bancos, Aprender, Notícias, Feriados e calculadoras ganharam um padrão visual comum nos temas claro e escuro. O cabeçalho concentra navegação, pessoas online e situação dos dados. As calculadoras ganharam seta para voltar e as projeções identificam os bancos pelos logotipos.',
+      'A página inicial abre pelos indicadores de mercado, com destaques para a maior e a menor alta mensal. Nas notícias, os filtros passaram a reconhecer mais termos de setores e insumos, ampliar a cobertura de madeira e eliminar repetições.',
+      'O modo Apresentar saiu do menu principal. A fila de publicação também mudou para evitar que uma coleta agendada cancele a chegada de uma nova versão.',
+    ],
+  },
+  {
+    date: '17/11/2026',
+    resumo: 'Faturamento, notícias nos gráficos de câmbio, celulose e melhorias no Capital de Giro',
+    items: [
+      'A nova seção Faturamento aceita a tabela do DAC, inclusive com barras, e marca os meses do período com total e variação.',
+      'Nos gráficos de dólar, euro, iene e yuan, os marcadores das maiores altas e baixas mostram manchetes do dia. No dólar, o filtro elimina matérias que apenas mencionam a moeda. Uma fonte lenta de manchetes deixou de travar a atualização do Painel.',
+      'Juros passou a abrir pelos gráficos, com o detalhe no centro da tela. Os gráficos ganharam opção de ampliar e as projeções passaram a incluir Banco do Brasil e Bradesco. O Focus passou a mostrar a data de publicação do boletim.',
+      'Setores ganhou explicações e imagens por atividade. Celulose entrou na lista de commodities com dados de exportação do Comex Stat.',
+      'No modo Apresentar, é possível montar slides por seleção e incluir Faturamento e notícias sobre madeira.',
+      'Capital de Giro ganhou IOF automático, CET e operação Bullet, com pagamento único no vencimento. A página inicial das calculadoras passou a exibir o aviso de que a área está em construção.',
+    ],
+  },
+  {
+    date: '16/11/2026',
+    resumo: 'Comparação executiva no Finame e recuperação do boletim Focus',
+    items: [
+      'A comparação executiva do Finame passou a abrir pela conclusão e a caber na tela sem barra de rolagem interna.',
+      'Se a coleta semanal do Focus deixar de disparar, o Painel volta a procurar o boletim automaticamente.',
+    ],
+  },
+]

@@ -33,6 +33,15 @@ test('São Paulo civil boundaries, first day, duplicate bars and invalid values'
   const leap = accumulatedReturns(file([point('2028-02-29',5),point('2028-03-01',5.5)]),'USD',Date.parse('2028-03-02T15:00Z'))
   assert.equal(leap.month.baseDate,'2028-02-29')
 })
+test('a meia-noite de São Paulo muda o período e exclui o dia ainda em curso', () => {
+  const history = file([point('2025-12-31', 4), point('2026-09-30', 5), point('2026-10-30', 6), point('2026-10-31', 7)])
+  const before = accumulatedReturns(history, 'USD', '2026-11-01T02:59:59Z')
+  const after = accumulatedReturns(history, 'USD', '2026-11-01T03:00:00Z')
+  assert.equal(before.month.endDate, '2026-10-30')
+  assert.equal(after.month, null)
+  assert.equal(after.year.endDate, '2026-10-31')
+})
+
 test('PTAX accepts official closing sell unit only for compatible USD/EUR/JPY', () => {
   const p = { sell: .03491, date: '2026-10-23', kind: 'Fechamento' }
   assert.equal(compatiblePtax('JPY',{source:'JPY'},p),p)
@@ -66,4 +75,14 @@ test('PTAX do CNH: referência cruzada só com as duas pontas a até 15 min do b
   assert.equal(cnhPtaxCross(ptax, usd, [{ t: at + 20 * 60000, bid: 0.8 }]), null)
   assert.equal(cnhPtaxCross(ptax, [], cnh), null)
   assert.equal(cnhPtaxCross({ ...ptax, at: 'x' }, usd, cnh), null)
+})
+
+test('destaques do mês: maior e menor alta, sem marca com dado insuficiente ou empate', async () => {
+  const { destaquesMes } = await import('../src/marketReturns.js')
+  const r = v => ({ month: v == null ? null : { value: v }, year: null })
+  assert.deepEqual(destaquesMes({ USD: r(6.22), EUR: r(4.39), JPY: r(4.97), CNH: r(5.99) }), { maior: 'USD', menor: 'EUR' })
+  assert.deepEqual(destaquesMes({ USD: r(-1), EUR: r(-3) }), { maior: 'USD', menor: 'EUR' })
+  assert.deepEqual(destaquesMes({ USD: r(2), EUR: r(null) }), {})
+  assert.deepEqual(destaquesMes({ USD: r(2), EUR: r(2) }), {})
+  assert.deepEqual(destaquesMes(undefined), {})
 })

@@ -1,3 +1,5 @@
+import ChartFullscreen from './ChartFullscreen.jsx'
+import { ancoraRotulo, marcasValor, yRotulo } from './chartMarcas.js'
 import Flag from './Flag.jsx'
 import { bandeiraDe } from './paises.js'
 import RefreshButton from './RefreshButton.jsx'
@@ -5,6 +7,7 @@ import { Aviso } from './Avisos.jsx'
 import { useId, useMemo, useState } from 'react'
 import { nextChartIndex } from './chartNavigation.js'
 import { marcasRedondas } from './chartEixo.js'
+import { mesesDoEixo } from './faixaCurva.js'
 import { focoPorTeclado, limitarBalao, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { isWeekendBR } from './market.js'
@@ -26,9 +29,12 @@ const day = (iso) => iso.split('-').reverse().join('/')
 
 // Eixo X: BR em anos úteis (day252 / 252), EUA em posições iguais por vencimento.
 // `escalaDesde`: prazo mínimo (dias úteis) que entra na escala vertical; vértices mais curtos ficam fora do quadro (cortados), só no desenho.
-function CurveChart({ title, subtitle, data, mode, source, help, bare = false, escalaDesde = 0 }) {
+// `prazo` (opcional, só no eixo BR): { de, ate } em dias úteis; o gráfico mostra só os vértices nesse intervalo, com o eixo em meses
+// (21 dias úteis por mês, a mesma conta do balão). `soUltimo` (opcional): abre só com a curva do último dia ligada; as outras
+// datas seguem na legenda para ligar. Sem essas propriedades, nada muda (página Juros).
+function CurveChart({ title, subtitle, data, mode, source, help, bare = false, escalaDesde = 0, prazo, soUltimo = false }) {
   const [ref, width] = useWidth()
-  const [off, setOff] = useState(() => new Set())
+  const [off, setOff] = useState(() => new Set(soUltimo ? (data?.compare ?? []).slice(1).map((c) => c.date) : []))
   const [hover, setHover] = useState(null)
   const plotRef = useTocarFora(hover != null, setHover)
   const [announcement, setAnnouncement] = useState('')
@@ -40,11 +46,14 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
 
   const g = useMemo(() => {
     if (!shown.length) return null
-    const series = shown.map((c) => ({ ...c, pts: data.curves[c.date] }))
+    const corte = prazo && mode !== 'us' ? (pts) => pts.filter((p) => p[0] >= prazo.de && p[0] <= prazo.ate) : (pts) => pts
+    const series = shown.map((c) => ({ ...c, pts: corte(data.curves[c.date]) })).filter((s) => s.pts.length)
+    if (!series.length) return null
     const labels = mode === 'us' ? [...new Map(series.flatMap((s) => s.pts.map((p) => [p[0], p[2]]))).entries()].sort((a, b) => a[0] - b[0]) : null
     const xv = (yrs) => (labels ? labels.findIndex((l) => l[0] === yrs) : yrs)
-    const x0 = 0
-    const x1 = labels ? labels.length - 1 : Math.max(...series.flatMap((s) => s.pts.map((p) => p[0] / 252)))
+    const meses = prazo && !labels
+    const x0 = meses ? prazo.de / 252 : 0
+    const x1 = labels ? labels.length - 1 : meses ? prazo.ate / 252 : Math.max(...series.flatMap((s) => s.pts.map((p) => p[0] / 252)))
     const todos = series.flatMap((s) => s.pts)
     const naEscala = todos.filter((p) => p[0] >= escalaDesde)
     const vals = (naEscala.length ? naEscala : todos).map((p) => p[1])
@@ -62,10 +71,13 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
     const yTicks = eixo.ticks
     const xTicks = labels
       ? labels.filter((_, i) => i % (width < 520 ? 3 : 2) === 0 || i === labels.length - 1).map((l) => ({ x: X([l[0]]), t: l[1] }))
-      : [0, 1, 2, 3, 5, 7, 10, 15, 20, 30].filter((y) => y <= x1 + 0.01).map((y) => ({ x: M.l + (y / (x1 || 1)) * iw, t: `${y}a` }))
+      : meses
+        ? mesesDoEixo(prazo.de / 21, prazo.ate / 21).map((m) => ({ x: M.l + ((m / 12 - x0) / (x1 - x0 || 1)) * iw, t: `${m}m` }))
+            .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), [])
+        : [0, 1, 2, 3, 5, 7, 10, 15, 20, 30].filter((y) => y <= x1 + 0.01).map((y) => ({ x: M.l + (y / (x1 || 1)) * iw, t: `${y}a` }))
           .reduce((acc, t) => (!acc.length || t.x - acc.at(-1).x >= 30 ? [...acc, t] : acc), []) // pelo menos 30 px entre rótulos: sem encavalar
     return { series, X, Y, yTicks, xTicks, casas: eixo.casas, iw, ih }
-  }, [shown.map((s) => s.date).join(), width, data, mode, escalaDesde])
+  }, [shown.map((s) => s.date).join(), width, data, mode, escalaDesde, prazo?.de, prazo?.ate])
 
   const onMove = (e) => {
     if (!g) return
@@ -108,7 +120,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
         </header>
       )}
       {/* uma linha curta só; o detalhe das datas de comparação fica no "?" da legenda */}
-      <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data.{escalaDesde > 0 && ' Vencimentos com menos de 3 meses ficam fora da escala; seguem na tabela.'}</p>
+      {!prazo && <p className="chart-comparison-note">Eixo por prazo de vencimento, não por data.{escalaDesde > 0 && ' Vencimentos com menos de 3 meses ficam fora da escala; seguem na tabela.'}</p>}
       <div className="curve-legend">
         {periodHelp && <span className="curve-legend-title">Curvas de comparação <Explain id={periodHelp} /></span>}
         {compare.map((c, i) => (
@@ -119,7 +131,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
       </div>
       <div ref={ref}>
         {g ? (
-          <div ref={plotRef} className="plot" onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
+          <ChartFullscreen><div ref={plotRef} className="plot" onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
             <span id={`${chartId}-hint`} className="chart-access-text">Use as setas para percorrer os prazos; Home e End vão ao primeiro e ao último.</span>
             <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
             <svg tabIndex={0} aria-describedby={`${chartId}-hint`} onFocus={(e) => { if (focoPorTeclado(e)) setHover(0) }} onBlur={() => setHover(null)} onKeyDown={onKey} viewBox={`0 0 ${width} ${H}`} width="100%" height={H} role="img" aria-label={`Curva de juros: ${title}`} onPointerMove={onMove} onPointerDown={onMove}>
@@ -136,14 +148,17 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
               {g.series.map((s) => {
                 const color = SHADES[compare.findIndex((c) => c.date === s.date) % SHADES.length]
                 const d = s.pts.map((p, i) => `${i ? 'L' : 'M'}${g.X(p).toFixed(1)},${g.Y(p[1]).toFixed(1)}`).join('')
-                const lastP = s.pts[s.pts.length - 1]
+                // rótulos de valor só na curva do último dia, e só nos vencimentos dentro da escala
+                const vis = s.id === 'hoje' ? s.pts.filter((p) => p[0] >= escalaDesde) : []
+                const marcas = marcasValor(vis.map((p) => p[1]), vis.map((p) => g.X(p)))
                 return (
                   <g key={s.date}>
                     <path clipPath={`url(#${clipId})`} d={d} fill="none" stroke={color} strokeWidth={s.id === 'hoje' ? 2.5 : 1.6} strokeLinejoin="round" strokeLinecap="round" opacity={s.id === 'hoje' ? 1 : 0.85} />
                     {s.id === 'hoje' && s.pts.map((p) => <circle clipPath={`url(#${clipId})`} key={p[0]} cx={g.X(p)} cy={g.Y(p[1])} r="2.6" fill={color} />)}
-                    {s.id === 'hoje' && lastP && (
-                      <text x={g.X(lastP)} y={g.Y(lastP[1]) - 9} textAnchor="end" className="vlabel">{pct(lastP[1])}</text>
-                    )}
+                    {marcas.map(({ i, vale }) => {
+                      const p = vis[i]
+                      return <text key={p[0]} x={g.X(p)} y={yRotulo(g.Y(p[1]), vale, M.t, H - M.b)} textAnchor={ancoraRotulo(i, vis.length)} className="vlabel" pointerEvents="none">{pct(p[1])}</text>
+                    })}
                   </g>
                 )
               })}
@@ -158,7 +173,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
                 })}
               </div>
             )}
-          </div>
+          </div></ChartFullscreen>
         ) : (
           <div className="placeholder" style={{ height: H }}>Selecione ao menos uma data.</div>
         )}
@@ -178,16 +193,16 @@ export const CURVAS = {
   us: { help: 'treasuries', title: 'EUA · Treasuries', subtitle: 'Par yield curve, % a.a. por vencimento', mode: 'us', nome: 'Treasuries', source: 'Curva de títulos públicos (par yield), não de futuros; fechamento do dia anterior ou do dia, conforme a divulgação.' },
   eu: { help: 'curvaEuro', title: 'Área do euro · Curva soberana AAA', subtitle: 'taxa spot % a.a. por vencimento', mode: 'us', nome: 'curva do euro', source: 'Títulos soberanos da área do euro com classificação AAA, taxa spot estimada pelo modelo de Svensson. Não é o rendimento de um título específico, como o Bund alemão, e a taxa spot difere da par yield usada nas Treasuries, então a comparação com a curva dos EUA é de formato e não de nível exato.' },
 }
-const grafico = (id, data, bare = false) => { const c = CURVAS[id]; return <CurveChart bare={bare} escalaDesde={c.escalaDesde} help={c.help} title={c.title} subtitle={c.subtitle} data={data} mode={c.mode} source={c.source} /> }
+const grafico = (id, data, bare = false, extra = {}) => { const c = CURVAS[id]; return <CurveChart bare={bare} escalaDesde={c.escalaDesde} help={c.help} title={c.title} subtitle={c.subtitle} data={data} mode={c.mode} source={c.source} {...extra} /> }
 
-// Curva DI x pré sozinha, para o painel do Mercado.
-export function CurvePanel({ curves: c }) {
+// Curva DI x pré sozinha, para o painel do Mercado. `prazo` e `soUltimo` (opcionais) seguem para o gráfico: ver CurveChart.
+export function CurvePanel({ curves: c, prazo, soUltimo }) {
   if (!c || c.status === 'loading') return <div className="placeholder">Carregando curvas…</div>
   if (c.status === 'error') return <Estado tipo="erro" erro={c.error}>Curvas de juros indisponíveis agora.</Estado>
   return (
     <>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
-      {c.data?.br ? grafico('br', c.data.br, true) : <p className="status">Curva DI indisponível nesta atualização.</p>}
+      {c.data?.br ? grafico('br', c.data.br, true, { prazo, soUltimo }) : <p className="status">Curva DI indisponível nesta atualização.</p>}
     </>
   )
 }
@@ -200,8 +215,20 @@ export function useEuroCurve() {
   return { data, loading: f.status === 'loading', stale: !!(data?.stale || f.stale) }
 }
 
-// Gráfico de uma curva na tela de detalhe (aberta pela tabela da aba Juros). O cupom leva junto a leitura de cenário.
-export function CurveDetail({ id, curves: c }) {
+// Gráfico de uma curva: na aba Juros (`preview`, sem os avisos gerais da coleta, que a página dá uma vez só) e na tela
+// de detalhe. No detalhe, o cupom leva junto a leitura de cenário.
+// Avisos gerais da coleta das curvas, uma vez por página (os gráficos em `preview` não os repetem).
+export function CurvesStatus({ curves: c }) {
+  const d = c?.data
+  return (
+    <>
+      {c?.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
+      {d?.generatedAt && Date.now() - d.generatedAt > 3 * 3600e3 && !isWeekendBR() && <p className="status stale" role="status">Curvas coletadas há mais de 3 horas; atualização pode estar pendente.</p>}
+    </>
+  )
+}
+
+export function CurveDetail({ id, curves: c, preview = false }) {
   const euro = useEuroCurve()
   if (id === 'eu') {
     if (!euro.data) return <p className="status">{euro.loading ? 'Carregando curva do euro…' : 'Curva do euro indisponível nesta atualização.'}</p>
@@ -217,9 +244,11 @@ export function CurveDetail({ id, curves: c }) {
   const d = c.data
   return (
     <>
-      {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
+      {!preview && c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível.</p>}
+      {d?.stale?.[id] && <p className="status stale" role="status">Atualização pendente desta curva; última coleta: {new Date(d.stale[id]).toLocaleString('pt-BR')}.</p>}
+      {!preview && d?.generatedAt && Date.now() - d.generatedAt > 3 * 3600e3 && !isWeekendBR() && <p className="status stale" role="status">Curvas coletadas há mais de 3 horas; atualização pode estar pendente.</p>}
       {d?.[id] ? grafico(id, d[id]) : <p className="status">Curva indisponível nesta atualização.</p>}
-      {id === 'cc' && d?.cc && d?.br && <CupomLeitura curves={d} />}
+      {!preview && id === 'cc' && d?.cc && d?.br && <CupomLeitura curves={d} />}
     </>
   )
 }
@@ -227,15 +256,15 @@ export function CurveDetail({ id, curves: c }) {
 const TABELAS = ['br', 'cc', 'us', 'eu']
 
 // Aba Juros: cada curva vira uma tabela (prazo × data de comparação); a linha abre o gráfico em tela própria.
-export default function Curves({ curves: c, onOpen, region }) {
-  const tables = TABELAS.filter(id => region === 'brasil' ? ['br', 'cc'].includes(id) : region === 'exterior' ? ['us', 'eu'].includes(id) : true)
+export default function Curves({ curves: c, onOpen, region, onlyId }) {
+  const tables = TABELAS.filter(id => !onlyId || id === onlyId).filter(id => region === 'brasil' ? ['br', 'cc'].includes(id) : region === 'exterior' ? ['us', 'eu'].includes(id) : true)
   const stale = Object.entries(c.data?.stale ?? {}).filter(([id]) => tables.includes(id))
   const d = c.data
   const euro = useEuroCurve()
   const dados = { br: d?.br, cc: d?.cc, us: d?.us, eu: euro.data }
   return (
     <section className="macro curve-tables" aria-label="Curvas de juros">
-      <p className="ind-note">Curvas de juros: taxas em % a.a. por prazo, na última data e nas datas de comparação. Toque em uma linha para abrir o gráfico da curva.</p>
+      <p className="ind-note">Curvas de juros: taxas em % a.a. por prazo, na última data e nas datas de comparação.{onOpen ? ' Toque em uma linha para abrir o gráfico da curva.' : ''}</p>
       {c.stale && <p className="status stale" role="status">Não foi possível atualizar as curvas. Mantida a última coleta disponível. {c.error}</p>}
       {c.status === 'loading' && <div className="placeholder">Carregando curvas…</div>}
       {c.status === 'ok' && c.data.generatedAt && (Date.now() - c.data.generatedAt > 3 * 3600e3) && !isWeekendBR() && (
@@ -253,7 +282,7 @@ export default function Curves({ curves: c, onOpen, region }) {
         const pronto = id === 'eu' ? !euro.loading : c.status === 'ok'
         const t = pronto && dados[id] ? curveTable(dados[id], def.mode) : { columns: [], rows: [] }
         return (
-          <div key={id} id={`juros-curva-${id}`} className="executive-rates curve-table juros-tabela">
+          <div key={id} id={`${onlyId ? 'juros-detail-curva' : 'juros-curva'}-${id}`} className="executive-rates curve-table juros-tabela">
             <header className="executive-rates__heading">
               <h2><Flag code={bandeiraDe(def.title)} width={18} height={12} />{def.title} <small>{def.subtitle}</small></h2>
               <Explain id={def.help} />

@@ -1,3 +1,5 @@
+import { CONCEITO_AMBIDESTRIA } from './ambidestria.js'
+import { CONCEITO_GROSS_UP } from './grossUp.js'
 import { CONCEITO_ACC } from './acc.js'
 import { CONCEITO_FASCISMO } from './fascismo.js'
 import { nf } from './format.js'
@@ -97,6 +99,7 @@ const pct = (f, d = 2) => `${nf(f * 100, d)}%`
 
 export const feeEstruturacao = (base, taxaFlat) => base * taxaFlat
 export const CONCEITOS = [
+  CONCEITO_GROSS_UP,
   CONCEITO_JUROS_FORCADOS,
   {
     id: 'marcacao-a-mercado',
@@ -800,6 +803,7 @@ export const CONCEITOS = [
   CONCEITO_ACC,
   CONCEITO_MAQUILA,
   CONCEITO_FASCISMO,
+  CONCEITO_AMBIDESTRIA,
   CONCEITO_IMPOSTO_SELETIVO,
   {
     id: 'inflacao',
@@ -1065,7 +1069,7 @@ export const CONCEITOS = [
       passos: ['Admita R$ 100 de débito nas vendas e R$ 40 de crédito válido nas compras.', 'Compensação ilustrativa: R$ 100 − R$ 40 = R$ 60.'],
       resultado: 'O saldo seria R$ 60, se todos os créditos fossem admitidos. Os valores não representam uma alíquota oficial nem o cálculo de 2026.',
     },
-    noApp: { texto: 'Na calculadora Reforma tributária · caixa, simule a CBS e o dinheiro necessário para cobrir mudanças de prazo. É uma estimativa educativa, sem apuração fiscal de CBS ou IBS.', tab: 'calculadora', view: 'cbs-caixa' },
+    noApp: { texto: 'Na calculadora Reforma tributária · caixa, simule CBS e IBS com as regras da calculadora oficial e o dinheiro necessário para cobrir mudanças de prazo. É uma estimativa educativa, sem apuração fiscal de CBS ou IBS.', tab: 'calculadora', view: 'cbs-caixa' },
     teste: { pergunta: 'Somar 0,9% de CBS e 0,1% de IBS em 2026 revela a alíquota definitiva de toda empresa?', resposta: 'Não. São alíquotas de teste, com regras de dispensa. A carga final depende do regime, da operação, das alíquotas aplicáveis e dos créditos admitidos.' },
   },
   {
@@ -1137,7 +1141,7 @@ export const CONCEITOS = [
   },
 ]
 
-export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições']
+export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições', 'Gestão e estratégia']
 
 // Busca por palavras (todas precisam aparecer), sem diferenciar acento nem maiúscula, no conteúdo inteiro do conceito.
 const plain = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -1153,6 +1157,9 @@ export const porTopico = (lista) => TOPICOS.map((topico) => ({ topico, itens: li
 // outros conceitos (LIGACOES). Os testes recusam conceito sem papel, sem ligação ou com ligação para conceito que não existe.
 // LIGACOES é a fonte única: cada par vale nos dois sentidos e aparece em "Conecta com" de ambos os conceitos e no quadro geral.
 export const LIGACOES = [
+  ['ambidestria-organizacional', 'cet', 'Quando uma iniciativa exige crédito, o CET ajuda a entender seu custo; a expectativa de crescimento não substitui a capacidade de pagamento.'],
+  ['gross-up', 'cet', 'O gross-up pode elevar o desembolso; o CET considera o fluxo completo e os demais encargos aplicáveis.'],
+  ['gross-up', 'custo-de-funding', 'Custo de captação e tributos assumidos contratualmente são componentes diferentes.'],
   ['acc', 'drawback', 'Os dois aliviam o caixa do exportador: o drawback suspende tributos dos insumos; o ACC antecipa a receita da venda.'],
   ['acc', 'cupom-cambial', 'O juro do ACC é em dólar; o cupom cambial mostra quanto custa o dinheiro em dólar no Brasil.'],
   ['acc', 'sofr', 'O custo do ACC parte do funding do banco em dólar, que acompanha referências externas como a SOFR.'],
@@ -1224,6 +1231,8 @@ export const LIGACOES = [
 export const CONEXAO = {
   titulo: 'Como as peças se encaixam',
   itens: [
+    { id: 'ambidestria-organizacional', texto: 'coordena eficiência no negócio atual e experimentação, distinguindo caixa recorrente de hipóteses de crescimento.' },
+    { id: 'gross-up', texto: 'distingue o valor líquido combinado do pagamento bruto sujeito a retenção.' },
     { id: 'fascismo', texto: 'distingue uma ideologia autoritária histórica de medidas econômicas isoladas e ajuda a ler o contexto institucional.' },
     { id: 'marcacao-a-mercado', texto: 'separa o valor atual da posição do fluxo contratado e ajuda a avaliar liquidez e risco de mercado.' },
     { id: 'substituicao-tributaria', texto: 'antecipa o ICMS das revendas em um ponto da cadeia; a mudança paulista exige conferir mercadoria, estoque, créditos e caixa.' },

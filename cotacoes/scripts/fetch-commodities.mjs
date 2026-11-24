@@ -2,6 +2,7 @@
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import { collectPulpApi } from './pulp-lib.mjs'
 import { loadPrevious } from './prev-lib.mjs'
 import { COMMODITIES, EIA_DAILY, PINK_PAGE_URL, discoverPinkSheetUrl, buildEiaDaily, parsePinkRows, commodityFallback } from './commodities-lib.mjs'
 
@@ -24,7 +25,7 @@ async function collectDaily(id) {
   try { return buildEiaDaily(id, await (await get(COMMODITIES.find(c => c.id === id).sourceUrl)).text(), now) }
   catch (error) { console.warn(`${id}: ${error.message}`); return commodityFallback(id, await previous(id), error) }
 }
-const monthly = COMMODITIES.filter(c => !(c.id in EIA_DAILY))
+const monthly = COMMODITIES.filter(c => !(c.id in EIA_DAILY) && c.id !== 'pulp-br')
 async function collectMonthly() {
   try {
     // Resolve the current workbook from the official landing page, not a frozen monthly URL.
@@ -42,7 +43,17 @@ async function collectMonthly() {
     return Promise.all(monthly.map(async c => commodityFallback(c.id, await previous(c.id), error)))
   }
 }
-const commodities = (await Promise.all([...Object.keys(EIA_DAILY).map(collectDaily), collectMonthly()])).flat()
+async function collectPulp() {
+  try {
+    return await collectPulpApi(async (url, body) => {
+      const response = await fetch(url, { signal: AbortSignal.timeout(30000), ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) })
+      if (!response.ok) throw new Error(`Comex Stat: HTTP ${response.status}`)
+      return response.json()
+    }, now)
+  }
+  catch (error) { console.warn(`Celulose: ${error.message}`); return commodityFallback('pulp-br', await previous('pulp-br'), error) }
+}
+const commodities = (await Promise.all([...Object.keys(EIA_DAILY).map(collectDaily), collectMonthly(), collectPulp()])).flat()
 const data = { schemaVersion: 1, generatedAt: now.toISOString(), commodities }
 await mkdir(new URL('../public/', import.meta.url), { recursive: true })
 const temporary = new URL('../public/commodities.json.tmp', import.meta.url)

@@ -36,12 +36,23 @@ const links = {
       }
 
       await visit('calculadora/cbs-caixa', '#cbs-revenue')
-      assert.equal(await page.locator('.cbs-result').count(), 0, 'sem premissas confirmadas não há comparação tributária')
+      // Padrão de 19/11/2026: o exemplo inicial é completo e já mostra a comparação, sem alertas.
+      assert.equal(await page.locator('.cbs-result').count(), 1, 'exemplo inicial completo mostra a comparação tributária')
+      assert.equal(await page.locator('.cbs-alerts').count(), 0, 'exemplo inicial sem alertas')
+      // Premissa obrigatória: sem os tributos atuais informados, não há comparação tributária.
+      await page.locator('#cbs-currentNetRate').fill('')
+      assert.equal(await page.locator('.cbs-result').count(), 0, 'sem tributos atuais informados não há comparação tributária')
+      assert.match(await page.locator('.cbs-alerts').innerText(), /Informe os tributos atuais/)
       await page.locator('#cbs-group').fill('46.3')
       await page.locator('#cbs-group').press('ArrowDown')
       await page.locator('#cbs-group').press('Enter')
       await page.locator('#cbs-currentNetRate').fill('3,65')
-      await page.locator('.cbs-annual-chart').waitFor()
+      // Padrão de 18/11/2026: o mês a mês fica recolhido dentro do resultado; abre para conferir os 12 meses.
+      await page.locator('.cbs-annual-details > summary').click()
+      // Meses iguais: uma linha de texto no lugar do gráfico reto.
+      await page.locator('.cbs-annual .cbs-series-flat').waitFor()
+      assert.match(await page.locator('.cbs-annual .cbs-series-flat').innerText(), /em todos os meses/)
+      assert.equal(await page.locator('.cbs-annual-chart').count(), 0)
       // Nome do painel no ar: aba do navegador em toda largura; marca do topo onde a barra aparece.
       assert.equal(await page.title(), 'PME · Painel Especializado no Mercado', 'nome na aba do navegador')
       if (width >= 1000) {
@@ -49,26 +60,33 @@ const links = {
         assert.equal(await page.locator('.topbar-brand').getAttribute('title'), 'Painel Especializado no Mercado', 'nome completo ao passar o mouse')
       }
       const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      // Um só editor de meses, no quadro de giro; o bloco Reserva só aponta para ele.
+      assert.equal(await page.locator('.cbs-month-editor').count(), 1)
+      assert.equal(await page.locator('.cbs-annual input').count(), 0)
+      assert.match(await page.locator('.cbs-annual').innerText(), /Editar meses e ver valores/)
+      await page.locator('.cbs-month-editor > summary').click()
+      const initialJan = await page.locator('#cbs-month-result-0').innerText()
+      await page.locator('#cbs-month-1').fill('2.000.000,00')
+      // Meses diferentes: gráfico com os 12 meses, sem rolagem lateral.
       assert.equal(await page.locator('.cbs-annual-chart').isVisible(), true)
       assert.deepEqual(await page.locator('.cbs-annual-chart text').allTextContents(), months)
       assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 12)
-      const initialReading = await page.locator('.cbs-month-reading').innerText()
-      await page.locator('.cbs-month-editor > summary').click()
-      await page.locator('#cbs-month-1').fill('2.000.000,00')
       await page.getByRole('button', { name: 'Fev', exact: true }).click()
       assert.match(await page.locator('.cbs-month-reading').innerText(), /2\.000\.000,00/)
       await page.getByRole('button', { name: 'Jan', exact: true }).click()
-      assert.equal(await page.locator('.cbs-month-reading').innerText(), initialReading)
+      assert.match(await page.locator('.cbs-month-reading').innerText(), /3\.000\.000,00/)
+      assert.equal(await page.locator('#cbs-month-result-0').innerText(), initialJan, 'editar fevereiro preserva janeiro')
       await page.locator('#cbs-month-1').fill('0')
       assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 11)
       await page.getByRole('button', { name: 'Fev', exact: true }).click()
       assert.match(await page.locator('.cbs-month-reading').innerText(), /Faturamento inv/)
-      await page.locator('.cbs-month-editor button').click()
-      assert.equal(await page.locator('.cbs-annual-chart .cbs-chart-dot').count(), 12)
+      await page.getByRole('button', { name: 'Usar faturamento principal em todos os meses', exact: true }).click()
+      assert.equal(await page.locator('.cbs-annual-chart').count(), 0, 'restaurar volta aos 12 meses iguais')
+      assert.match(await page.locator('.cbs-annual .cbs-series-flat').innerText(), /em todos os meses/)
       await page.locator('.cbs-month-editor > summary').click()
       await contained('CBS Jan-Dez')
       await page.screenshot({ path: path.join(out, width + '-cbs-jan-dez.png'), fullPage: true })
-      report.push({ width, feature: 'CBS Jan-Dez', passed: true, checks: ['12 meses abertos', 'editar fevereiro preserva janeiro', 'mes invalido deixa lacuna', 'restaurar 12 pontos', 'sem overflow'] })
+      report.push({ width, feature: 'CBS Jan-Dez', passed: true, checks: ['exemplo inicial calcula', 'sem tributos atuais nao compara', 'meses iguais em texto', '12 meses no grafico', 'editar fevereiro preserva janeiro', 'mes invalido deixa lacuna', 'restaurar meses iguais', 'sem overflow'] })
 
       await visit('calculadora/finimp', '#fi-currency')
       assert.deepEqual(await page.locator('#fi-currency option').allTextContents(), ['USD', 'EUR', 'JPY', 'CNH', 'BRL'])
@@ -82,7 +100,8 @@ const links = {
       await visit('calculadora/conta-garantida', '#cg-rate')
       assert.equal(await page.locator('#cg-status, #cg-rateBase, #cg-conversion').count(), 0)
       assert.equal(await page.locator('#cg-taxProfile').count(), 1)
-      assert.equal(await page.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
+      // Roteiro de 21/11/2026: na utilização única o encargo se chama "Taxa de juros" (nome padrão dos encargos).
+      assert.equal(await page.getByLabel('Taxa de juros (% a.m.)', { exact: true }).count(), 1)
       await contained('Conta Garantida')
 
       await visit('aprender', '.knowledge-map')
@@ -132,13 +151,26 @@ const links = {
       await contained('BNDES')
       await page.screenshot({ path: path.join(out, width + '-bndes.png') })
 
+      // Pages fornece a URL e as bases coletadas; o build local de CI não as contém.
+      // O CI cobre o timestamp em smoke-bndes-executivo, sem depender de coleta externa.
+      if (process.env.SMOKE_PUBLISHED_URL) {
+        await visit('calculadora/finame-materiais', '.be-grid')
+        assert.match(await page.locator('.be-equivalent').innerText(), /CDI de [\d,]+% a\.a\. em \d{2}\/\d{2}\/\d{4}/)
+        assert.match(await page.locator('.be-reference').innerText(), /Indexador utilizado[\s\S]*TFC/)
+        assert.equal(await page.locator('.fm-result-workspace .expandable-toggle').count(), 1)
+        await contained('BNDES executivo')
+        await page.locator('.be-grid').screenshot({ path: path.join(out, width + '-bndes-executivo.png') })
+      }
+
       await visit('resumo', '#r-moedas')
       await page.getByRole('tab', { name: 'Google Trends', exact: true }).click()
       await page.locator('.google-trends').waitFor()
       assert.match(await page.locator('.google-trends').innerText(), /8h e 15h/)
       await contained('Google Trends')
 
-      await visit('config', '.config-gov')
+      await visit('config', '.config-desk')
+      await page.getByRole('button', { name: 'Consultar estado das fontes' }).click()
+      await page.locator('#config-fontes table').waitFor()
       await page.waitForFunction(() => document.documentElement.dataset.theme === 'light')
       await page.emulateMedia({ colorScheme: 'dark' })
       await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark')

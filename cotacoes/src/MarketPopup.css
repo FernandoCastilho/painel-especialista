@@ -84,8 +84,8 @@ dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}
     column-gap: 10px;
     align-content: start;
   }
-  .market-popup :is(.mp-brent,.mp-cnh) > :not(svg,.mp-no-chart) { grid-column: 1; }
-  .market-popup :is(.mp-brent,.mp-cnh) > :is(svg,.mp-no-chart) {
+  .market-popup :is(.mp-brent,.mp-cnh) > :not(svg,.mp-no-chart,.chart-fullscreen-compact) { grid-column: 1; }
+  .market-popup :is(.mp-brent,.mp-cnh) > :is(svg,.mp-no-chart,.chart-fullscreen-compact) {
     grid-column: 2;
     grid-row: 1 / span 5;
     align-self: center;
@@ -94,4 +94,13 @@ dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}
     text-align: center;
   }
   .market-popup .mp-summary { margin-top: 8px; padding-block: 6px; }
+  .market-popup .mini-rotulo { display: none; } /* gráfico com ~30 px de altura: não cabe o valor do pico e do vale sem rolar o Panorama */
 }
+
+/* Compact toolbar keeps the five-card panorama height unchanged. */
+.market-popup .chart-fullscreen-compact{position:relative}
+.market-popup .chart-fullscreen-compact .chart-fullscreen-toolbar{position:absolute;right:0;bottom:0;margin:0;z-index:1}
+.market-popup .chart-fullscreen-compact .chart-fullscreen-toolbar button{width:44px;min-height:44px;padding:0;background:#fff;color:#081035;border-color:#cad1e1;font-size:22px}
+.market-popup .chart-fullscreen-compact .chart-fullscreen-content{padding-right:48px}
+/* Panorama tem fundo claro em qualquer tema: rótulos de pico e vale em azul-escuro com contorno branco. */
+.market-popup .mini-rotulo{color:#09154b;text-shadow:0 0 3px #fff,0 0 3px #fff}

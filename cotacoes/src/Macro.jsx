@@ -44,7 +44,7 @@ export function RateChart({ id, title, subtitle, color, points, history, step, s
       {actions && <div className="chart-actions">{actions}</div>}
       <div ref={ref}>
         {ok ? (
-          <Plot points={points} history={history} step={step} scales={scales} width={width} color={color} code={id} fmt={fmt} label={label} nice />
+          <Plot points={points} history={history} step={step} scales={scales} width={width} color={color} code={id} fmt={fmt} label={label} nice labels />
         ) : (
           <div className="placeholder" style={{ height: 120 }}>Sem dados no período.</div>
         )}
@@ -158,13 +158,15 @@ export function SelicChart({ macro, range }) {
 }
 
 // €STR (BCE): taxa overnight da zona do euro, no mesmo formato do CDI e da SOFR.
-export function EstrChart({ series, range }) {
+export function EstrChart({ series, range, stale = false }) {
   const all = useMemo(() => estrChartPoints(series), [series])
   const from = range.start.getTime()
   const to = range.end.getTime() + DAY
   const points = useMemo(() => all.filter((p) => p.t >= from && p.t <= to), [all, from, to])
   const last = series.points.at(-1)
   return (
+    <>
+    {(stale || series.stale) && <p className="status stale" role="status">Atualização do €STR pendente; mantida a última observação disponível.</p>}
     <RateChart
       id="ESTR"
       title="Área do euro · €STR"
@@ -178,6 +180,7 @@ export function EstrChart({ series, range }) {
       refresh={['estr.json']}
       note={`${last ? `Último: ${rate(last.value)} em ${last.date.split('-').reverse().join('/')} · ` : ''}Série desde ${series.points[0].date.split('-').reverse().join('/')} · Média ponderada aparada das operações overnight não garantidas em euro.`}
     />
+    </>
   )
 }
 

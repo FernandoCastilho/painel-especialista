@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { withCalcBack } from './helpers/calcBack.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
@@ -19,12 +20,13 @@ import * as praca from '../src/pracaContrato.js'
 const require = createRequire(import.meta.url)
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
-async function setup(t) {
-  const deps = { react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
-  for (const file of ['MoneyInput.jsx', 'CreditComparison.jsx']) {
+async function setup(t, options = {}) {
+  try { globalThis.sessionStorage?.removeItem('painel-linha-mestra') } catch { /* ambiente sem armazenamento */ }
+  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './Roteiro.css': {}, './centavosDaTela.js': await import('../src/centavosDaTela.js'), './ReferenciaMercado.jsx': function ReferenciaMercado() { return null }, './comparadorRoteiro.js': await import('../src/comparadorRoteiro.js'), './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './cdiFuturo.js': await import('../src/cdiFuturo.js'), './holidays.js': await import('../src/holidays.js'), './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => options.curves ? options.curves() : ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
+  for (const file of ['ExpandIcon.jsx', 'MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'LinhaMestra.jsx', 'Roteiro.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
-    runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
+    runInNewContext(code, { module, exports: module.exports, require: withCalcBack(name => deps[name] ?? require(name)) })
     deps['./' + file] = module.exports
   }
   const render = hookRenderer(() => deps['./CreditComparison.jsx'].default({ onBack: () => {} }))
@@ -35,14 +37,14 @@ async function setup(t) {
   const find = name => nodes(render.value).find(n => n.type?.name === name)
   return { render, cards, card, button, find, async change(i, values) { const c = card(i); c.props.set({ ...c.props.col, ...values }); await render.settle() } }
 }
-const clickCompare = async ui => { ui.button('Comparar modalidades').props.onClick(); await ui.render.settle() }
+const clickCompare = async ui => { (ui.button('Comparar modalidades') ?? ui.button('Gerar cotação')).props.onClick(); await ui.render.settle() }
 
-test('começa com duas comparações e deixa escolher de 2 a 5', async t => {
+test('começa com duas operações e permite cotação individual até cinco', async t => {
   const ui = await setup(t)
   assert.equal(ui.cards().length, 2)
-  const counts = nodes(ui.render.value).filter(n => n.type === 'button' && /^[2-5]$/.test(text(n)))
-  assert.deepEqual(counts.map(text), ['2', '3', '4', '5'])
-  for (const n of [5, 3, 2]) { counts.find(b => text(b) === String(n)).props.onClick(); await ui.render.settle(); assert.equal(ui.cards().length, n) }
+  const counts = nodes(ui.render.value).filter(n => n.type === 'button' && /^[1-5]$/.test(text(n)))
+  assert.deepEqual(counts.map(text), ['1', '2', '3', '4', '5'])
+  for (const n of [1, 5, 3, 2]) { counts.find(b => text(b) === String(n)).props.onClick(); await ui.render.settle(); assert.equal(ui.cards().length, n) }
 })
 test('cada coluna aceita qualquer modalidade e mostra os campos dela', async t => {
   const ui = await setup(t)
@@ -57,7 +59,10 @@ test('cada coluna aceita qualquer modalidade e mostra os campos dela', async t =
   }
   await ui.change(1, modalities.newColumn('bndes'))
   const html = renderToStaticMarkup(ui.card(1))
-  for (const label of ['TFB', 'Custo financeiro', 'TAC', 'Porte da empresa', 'Spread do agente', 'Participação do BNDES', 'Garantia FGI', 'exemplos']) assert.ok(html.includes(label), label)
+  for (const label of ['TFB', 'Custo financeiro', 'TAC', 'Porte da empresa', 'Spread do agente', 'Participação do BNDES', 'Garantia FGI']) assert.ok(html.includes(label), label)
+  // Tela limpa (21/11/2026): "Valores iniciais são exemplos" e a descrição da modalidade ficam no "?" do cartão.
+  assert.match(html, /aria-label="Ajuda: BNDES[^"]*"/)
+  assert.doesNotMatch(html, /Valores iniciais são exemplos/)
   await ui.change(1, modalities.newColumn('finimp'))
   const f = renderToStaticMarkup(ui.card(1))
   for (const label of ['Moeda', 'Flat', 'Câmbio', 'Prazo (dias)']) assert.ok(f.includes(label), label)
@@ -80,7 +85,7 @@ test('o resultado só aparece ao comparar e some quando uma condição muda', as
   assert.equal(ui.find('Results'), undefined)
   await clickCompare(ui)
   const html = renderToStaticMarkup(ui.find('Results'))
-  for (const label of ['Valor líquido recebido', 'CET estimado · parte fixa (regra do BC)', 'Custo com CDI projetado · a.a. (não é CET)', 'art. 5º', 'Juros totais', 'IOF', 'Total desembolsado', 'Cobertura nominal', '1. Giro prefixado', '2. Giro pós-CDI']) assert.ok(html.includes(label), label)
+  for (const label of ['Valor líquido recebido', 'CET estimado · parte fixa (regra do BC)', 'Custo com CDI projetado · a.a. (não é CET)', 'Juros totais', 'IOF', 'Total desembolsado', 'Cobertura nominal', '1. Giro prefixado', '2. Giro pós-CDI']) assert.ok(html.includes(label), label)
   await ui.change(2, { cdiPercent: '110' })
   assert.equal(ui.find('Results'), undefined)
   assert.match(text(ui.render.value), /As condições mudaram/)
@@ -101,14 +106,14 @@ test('cinco colunas geram tabela com cinco séries no gráfico', async t => {
   await clickCompare(ui)
   const html = renderToStaticMarkup(ui.find('Results'))
   assert.equal([...html.matchAll(/<polyline /g)].length, 5)
-  assert.equal([...html.matchAll(/<th scope="col">\d\. /g)].length, 5)
+  assert.equal([...html.match(/<table class="credit-table credit-matrix">([\s\S]*?)<\/table>/)[1].matchAll(/<th scope="col" class="[^"]*">\d\. /g)].length, 5)
   assert.match(html, /menor CET/)
 })
 test('cenário do CDI só aparece com coluna indexada e muda só essa coluna', async t => {
   const ui = await setup(t)
-  assert.ok(nodes(ui.render.value).some(n => n.type === 'h3' && text(n) === 'Cenários do CDI'))
+  assert.ok(nodes(ui.render.value).some(n => n.type === 'h3' && text(n).startsWith('Cenários do CDI')))
   await ui.change(2, modalities.newColumn('giro-pre'))
-  assert.ok(!nodes(ui.render.value).some(n => n.type === 'h3' && text(n) === 'Cenários do CDI'))
+  assert.ok(!nodes(ui.render.value).some(n => n.type === 'h3' && text(n).startsWith('Cenários do CDI')))
   await ui.change(2, modalities.newColumn('giro-cdi'))
   const before = ui.cards().map(c => c.props.result.cost)
   nodes(ui.render.value).find(n => n.type === 'button' && text(n) === 'Alta').props.onClick(); await ui.render.settle()
@@ -153,4 +158,303 @@ test('aplicação financeira: regime na linha mestra, bloco da aplicação e cr�
   const html = renderToStaticMarkup(ui.render.value)
   for (const label of ['Regime tributário da empresa', 'Comparar com aplicação financeira', 'Rendimento líquido', 'IR retido na fonte (imposto final)', 'Tomar o crédito e manter o caixa aplicado', 'Crédito ou caixa próprio?']) assert.ok(html.includes(label), label)
   assert.ok(/compensa|melhor usar o caixa/.test(html))
+})
+
+
+test('resultado usa matriz única, resumo e parcelas com data e valor', async t => {
+  const ui = await setup(t)
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.find('Results'))
+  assert.match(html, /Dados básicos da operação/)
+  assert.match(html, /Indicadores em linhas · modalidades em colunas/)
+  assert.match(html, /Parcelas · data e valor/)
+  assert.match(html, /Ampliar Comparação financeira das operações/)
+  assert.match(html, /Fluxos completos e memória do cálculo/)
+  assert.equal([...html.matchAll(/class="credit-table credit-matrix"/g)].length, 1)
+  const parcels = html.match(/<table class="credit-table credit-matrix credit-payment-matrix">([\s\S]*?)<\/table>/)?.[1] ?? ''
+  assert.match(parcels, /Valor da parcela/)
+  assert.doesNotMatch(parcels, /Amortização|Saldo|Juros totais/)
+})
+test('cinco modalidades mantêm todos os valores e oferecem duas visíveis no compacto', async t => {
+  const ui = await setup(t)
+  nodes(ui.render.value).find(n => n.type === 'button' && text(n) === '5').props.onClick(); await ui.render.settle()
+  await ui.change(4, { fDays: '180' })
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.find('Results'))
+  assert.match(html, /Modalidades visíveis em telas estreitas/)
+  const matrix = html.match(/<table class="credit-table credit-matrix">([\s\S]*?)<\/table>/)[1]
+  const headers = [...matrix.matchAll(/<th scope="col" class="([^"]*)">\d\. /g)]
+  assert.equal(headers.length, 5)
+  assert.equal(headers.filter(x => x[1] === '').length, 2)
+  assert.equal(headers.filter(x => x[1] === 'credit-extra-column').length, 3)
+})
+
+
+test('parcelas em matriz unem datas diferentes sem deslocar nem recalcular pagamentos', async t => {
+  const ui = await setup(t)
+  await clickCompare(ui)
+  const result = ui.find('Results')
+  const results = result.props.results.map((r, i) => ({ ...r, rows: i === 0 ? [
+    { number: 1, date: '2026-12-15', payment: 100, cumulative: 100 },
+    { number: 2, date: '2027-01-15', payment: 0, cumulative: 100 },
+    { number: 3, date: '2027-01-15', payment: 25, cumulative: 125 },
+  ] : [
+    { number: 1, date: '2026-12-20', payment: 200, cumulative: 200 },
+    { number: 2, date: '2027-01-15', payment: 300, cumulative: 500 },
+  ] }))
+  const before = JSON.stringify(results)
+  const html = renderToStaticMarkup(React.cloneElement(result, { results }))
+  const matrix = html.match(/<table class="credit-table credit-matrix credit-payment-matrix">([\s\S]*?)<\/table>/)[1]
+  assert.equal([...matrix.matchAll(/<th scope="col">Data<\/th>/g)].length, 1)
+  const body = matrix.match(/<tbody>([\s\S]*?)<\/tbody>/)[1]
+  const rows = [...body.matchAll(/<tr><th scope="row">([^<]+)<\/th>([\s\S]*?)<\/tr>/g)]
+  assert.deepEqual(rows.map(r => r[1]), ['15/12/2026', '20/12/2026', '15/01/2027'])
+  const cells = row => [...row[2].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => c[1])
+  assert.match(cells(rows[0])[0], /100,00/)
+  assert.match(cells(rows[0])[1], /Sem pagamento nesta data/)
+  assert.match(cells(rows[1])[0], /Sem pagamento nesta data/)
+  assert.match(cells(rows[1])[1], /200,00/)
+  assert.equal([...cells(rows[2])[0].matchAll(/credit-payment-value/g)].length, 2)
+  assert.match(cells(rows[2])[0], /0,00/)
+  assert.match(cells(rows[2])[0], /25,00/)
+  assert.match(cells(rows[2])[1], /300,00/)
+  assert.equal(JSON.stringify(results), before)
+  assert.doesNotMatch(matrix, /Amortização|Saldo|Juros totais/)
+})
+
+
+test('parcelas ampliadas não mantêm o limite de altura do quadro compacto', async () => {
+  const css = await readFile(new URL('../src/CreditComparison.css', import.meta.url), 'utf8')
+  assert.match(css, /\.credit-payment-scroll\{max-height:320px;overflow:auto\}/)
+  assert.match(css, /\.credit-presentation>\.credit-payment-scroll\{max-height:none\}/)
+  assert.ok(css.indexOf('.credit-presentation>.credit-payment-scroll{max-height:none}') > css.indexOf('.credit-payment-scroll{max-height:320px;overflow:auto}'))
+})
+
+
+test('explicações ficam em ajuda clicável e alertas essenciais continuam visíveis', async t => {
+  const ui = await setup(t)
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.render.value)
+  assert.match(html, /Ajuda: Como usar o comparador/)
+  assert.match(html, /Ajuda: Como ler CET e custo projetado/)
+  assert.match(html, /Ajuda: Comparar pelo mesmo valor líquido/)
+  assert.doesNotMatch(html, /A ordem de menor CET usa o CET da parte fixa/)
+  assert.doesNotMatch(html, /Ao reduzir a quantidade, as colunas escondidas/)
+  // Tela limpa (21/11/2026): "Valores iniciais são exemplos" foi para o "?" de cada cartão.
+  assert.doesNotMatch(html, /Valores iniciais são exemplos/)
+  for (const warning of ['resultados são preliminares', 'não CET certificado do contrato', 'não é CET', 'Projeção, não taxa futura garantida', 'Não há vencedor absoluto']) assert.ok(html.includes(warning), warning)
+  const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
+  assert.match(source, /A ordem de menor CET usa o CET da parte fixa/)
+  assert.match(source, /Ao reduzir a quantidade, as colunas escondidas/)
+  assert.match(source, /Valores iniciais são exemplos/)
+})
+
+test('cotação individual exibe resultado sem inventar concorrente e preserva cálculo ao alternar quantidade', async t => {
+  const ui = await setup(t)
+  const choose = async n => {
+    nodes(ui.render.value).find(x => x.type === 'button' && text(x) === String(n)).props.onClick()
+    await ui.render.settle()
+  }
+  await choose(1)
+  assert.ok(ui.button('Gerar cotação'))
+  assert.equal(ui.button('Comparar modalidades'), undefined)
+  await clickCompare(ui)
+  // Roteiro de 21/11/2026: o quadro do resultado tem o mesmo título com uma ou com várias operações.
+  assert.match(renderToStaticMarkup(ui.render.value), /Resultado · custo final para o cliente/)
+  const single = ui.find('Results')
+  assert.equal(single.props.results.length, 1)
+  const baseline = JSON.stringify(single.props.results[0])
+  const html = renderToStaticMarkup(single)
+  assert.match(html, /credit-single-matrix/)
+  assert.ok(ui.button('Apresentar cotação'))
+  assert.equal(ui.button('Apresentar comparação'), undefined)
+  assert.match(renderToStaticMarkup(ui.card(1)), /Operação<!-- --> 1|Operação 1/)
+  assert.match(html, /Cotação individual/)
+  assert.match(html, /Cotação da operação/)
+  assert.doesNotMatch(html, /segunda mais barata|a menos.*que|O CET não pôde ser comparado|Diferença de custo para a comparação 1|Não há vencedor absoluto/)
+  assert.match(html, /Necessidade do Cliente|Custo sobre o líquido/)
+  for (const n of [5, 2, 1]) {
+    await choose(n)
+    await clickCompare(ui)
+    assert.equal(ui.find('Results').props.results.length, n)
+    assert.equal(JSON.stringify(ui.find('Results').props.results[0]), baseline)
+  }
+})
+
+test('nome aprovado identifica a tela, apresentação, navegação e busca sem remover envelopes', async t => {
+  const ui = await setup(t)
+  const heading = nodes(ui.render.value).find(n => n.props?.id === 'credit-title')
+  assert.equal(text(heading), 'Necessidade do Cliente')
+  const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
+  assert.match(source, /title = 'Necessidade do Cliente'/)
+  assert.match(source, /aria-label="Área da necessidade do cliente"/)
+  assert.doesNotMatch(source, /title = 'Demanda'|<span>Demanda<\/span>/)
+  assert.match(source, /Preparar e-mail da cotação/)
+  assert.match(source, /Preparar e-mail com as/)
+  const search = await readFile(new URL('../scripts/build-search-index.mjs', import.meta.url), 'utf8')
+  assert.match(search, /Necessidade do Cliente: comparação de propostas/)
+  const menu = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
+  assert.match(menu, /id: 'comparador-credito', title: 'Necessidade do Cliente'/)
+  const { buildSearchIndex } = await import('../scripts/build-search-index.mjs')
+  const index = await buildSearchIndex()
+  const entry = index.documents.find(d => d.route === 'calculadora/comparador-credito')
+  assert.equal(entry.title, 'Necessidade do Cliente: comparação de propostas, CET e garantias')
+})
+
+test('aplicação financeira vira a última coluna do quadro, com o saldo final no total', async t => {
+  const ui = await setup(t)
+  const fields = ui.find('InvestmentFields'); fields.props.set({ ...fields.props.invest, on: true }); await ui.render.settle()
+  await clickCompare(ui)
+  const html = renderToStaticMarkup(ui.find('Results'))
+  const table = html.match(/<table class="credit-table credit-matrix">([\s\S]*?)<\/table>/)[1]
+  const head = table.match(/<thead>([\s\S]*?)<\/thead>/)[1]
+  assert.ok(head.lastIndexOf('Aplicação financeira') > head.lastIndexOf('2. '), 'aplicação depois das operações')
+  for (const group of ['Taxas e custo efetivo', 'Valor e parcelas', 'Custos da operação', 'Prazo e fluxo', 'Caixa próprio', 'Garantia']) assert.ok(table.includes(group), group)
+  assert.match(table, /saldo final líquido/)
+  assert.match(table, /credit-invest-col/)
+})
+
+test('CDI base manual vem preenchido com a média da curva DI no prazo da linha mestra', async t => {
+  const ui = await setup(t)
+  await ui.change(2, modalities.newColumn('giro-cdi'))
+  const shared = ui.find('SharedFields'); shared.props.set({ ...shared.props.shared, term: '36' }); await ui.render.settle()
+  const manual = nodes(ui.render.value).find(n => n.type === 'label' && text(n).includes('Informar referência manual')).props.children[0]
+  manual.props.onChange({ target: { checked: true } }); await ui.render.settle()
+  const field = nodes(ui.render.value).find(n => n.type === 'input' && n.props.inputMode === 'decimal' && /^\d+,\d\d$/.test(n.props.value ?? ''))
+  assert.ok(field, 'campo preenchido')
+  const avg = Number(field.props.value.replace(',', '.'))
+  assert.ok(avg > 13 && avg < 15, `média ${avg}`)
+  assert.match(text(ui.render.value), /em 36 meses/)
+})
+
+
+test('CDI automático acompanha 12→36; edição manual é preservada; Usar a média retoma acompanhamento', async t => {
+  const ui = await setup(t)
+  await ui.change(2, modalities.newColumn('giro-cdi'))
+  const setTerm = async term => { const f = ui.find('SharedFields'); f.props.set({ ...f.props.shared, term }); await ui.render.settle() }
+  const field = () => nodes(ui.render.value).find(n => n.type === 'label' && text(n).startsWith('CDI base (% a.a.)')).props.children.find(n => n?.type === 'input')
+  const toggle = async checked => { nodes(ui.render.value).find(n => n.type === 'label' && text(n).includes('Informar referência manual')).props.children[0].props.onChange({ target: { checked } }); await ui.render.settle() }
+  await setTerm('12'); await toggle(true)
+  const rate12 = field().props.value
+  assert.equal(rate12, '14,20')
+  await setTerm('36')
+  assert.equal(field().props.value, '13,50')
+  await clickCompare(ui); assert.equal(ui.find('Results').props.cdi, 13.5)
+  field().props.onChange({ target: { value: '11,77' } }); await ui.render.settle()
+  await setTerm('12'); assert.equal(field().props.value, '11,77')
+  await setTerm('36'); assert.equal(field().props.value, '11,77')
+  await toggle(false); await toggle(true); assert.equal(field().props.value, '11,77')
+  ui.button('Usar a média').props.onClick(); await ui.render.settle()
+  assert.equal(field().props.value, '13,50')
+  await setTerm('12'); assert.equal(field().props.value, rate12)
+  await setTerm('36'); assert.equal(field().props.value, '13,50')
+  field().props.onChange({ target: { value: '' } }); await ui.render.settle()
+  await setTerm('12'); assert.equal(field().props.value, '', 'campo apagado é edição manual, não autorização para repor taxa')
+})
+
+
+test('curva assíncrona preenche automático, não sobrescreve manual nem taxa própria da operação', async t => {
+  let curve = { status: 'loading', data: null }
+  const ui = await setup(t, { curves: () => curve })
+  const field = () => nodes(ui.render.value).find(n => n.type === 'label' && text(n).startsWith('CDI base (% a.a.)')).props.children.find(n => n?.type === 'input')
+  const manual = nodes(ui.render.value).find(n => n.type === 'label' && text(n).includes('Informar referência manual')).props.children[0]
+  manual.props.onChange({ target: { checked: true } }); await ui.render.settle()
+  assert.equal(field().props.value, '')
+  const shared = ui.find('SharedFields'); shared.props.set({ ...shared.props.shared, term: '12' }); await ui.render.settle()
+  curve = { status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [756, 13.5]] } } } }
+  ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '14,20')
+  const loadedCurve = curve
+  curve = { status: 'loading', data: null }; ui.render.render(); await ui.render.settle()
+  assert.equal(field().props.value, '', 'automático não conserva taxa velha sem curva disponível')
+  curve = loadedCurve; ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '14,20')
+  field().props.onChange({ target: { value: '11,77' } }); await ui.render.settle()
+  curve = { status: 'loading', data: null }; ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '11,77')
+  curve = { status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 15], [252, 14], [756, 13]] } } } }
+  ui.render.render(); await ui.render.settle(); assert.equal(field().props.value, '11,77')
+  await ui.change(1, { rate: '2,13', profile: 'pj' })
+  await ui.change(1, { profile: 'pf' })
+  assert.equal(ui.card(1).props.col.rate, '2,13')
+  assert.equal(field().props.value, '11,77')
+  ui.button('Usar a média').props.onClick(); await ui.render.settle(); assert.equal(field().props.value, '14,00')
+  assert.equal(ui.card(1).props.col.rate, '2,13')
+})
+
+// Roteiro de 21/11/2026: o quadro de respostas no topo do resultado só repete números que a conta devolve e que a matriz mostra.
+const reais = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const cells = (html, table, label) => {
+  const body = html.match(new RegExp(`<table class="${table}">([\\s\\S]*?)</table>`))[1]
+  const row = body.match(new RegExp(`<tr[^>]*><th scope="row">${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</th>([\\s\\S]*?)</tr>`))[1]
+  return [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => c[1])
+}
+test('quadro de respostas: uma coluna por operação, com os mesmos números da matriz', async t => {
+  const ui = await setup(t)
+  nodes(ui.render.value).find(n => n.type === 'button' && text(n) === '5').props.onClick(); await ui.render.settle()
+  await ui.change(4, { fDays: '180' })
+  await clickCompare(ui)
+  const results = ui.find('Results').props.results
+  const html = renderToStaticMarkup(ui.find('Results'))
+  assert.ok(html.indexOf('class="credit-answers"') < html.indexOf('aria-label="Resposta principal"'), 'quadro no topo do resultado')
+  for (const [question, row, value] of [['Quanto entra no caixa', 'Valor líquido recebido', r => reais(r.net)], ['Quanto paga por mês', 'Parcela estimada (1ª)', r => reais(r.firstPayment)], ['Quanto paga no total', 'Total desembolsado', r => reais(r.total)]]) {
+    const board = cells(html, 'credit-answers', question), matrix = cells(html, 'credit-table credit-matrix', row)
+    assert.equal(board.length, 5, question)
+    results.forEach((r, i) => { assert.ok(board[i].includes(`<b>${value(r)}</b>`), `${question} ${i + 1}`); assert.equal(matrix[i], value(r), `${row} ${i + 1}`) })
+  }
+  const cost = cells(html, 'credit-answers', 'Quanto custa'), cet = cells(html, 'credit-table credit-matrix', 'CET estimado · parte fixa (regra do BC) · a.a.')
+  const costs = cells(html, 'credit-table credit-matrix', 'Custo sobre o líquido')
+  results.forEach((r, i) => {
+    const shown = cet[i].split(' · ')[0]
+    assert.ok(cost[i].includes(`<b>${shown} a.a.</b>`), `CET ${i + 1}: ${shown}`)
+    assert.ok(cost[i].includes(`Custo sobre o líquido: ${reais(r.cost)}`), `custo ${i + 1}`)
+    // O selo de menor CET e o de menor custo seguem a regra da matriz: aparecem na mesma operação, ou em nenhuma.
+    for (const [tag, source] of [['menor CET', cet[i]], ['menor custo', costs[i]]]) assert.equal(cost[i].includes(tag), source.includes(tag), `${tag} ${i + 1}`)
+  })
+  assert.equal(cost.filter(c => c.includes('menor custo')).length, 1)
+})
+test('cotação individual responde às quatro perguntas com os números da operação', async t => {
+  const ui = await setup(t)
+  nodes(ui.render.value).find(n => n.type === 'button' && text(n) === '1').props.onClick(); await ui.render.settle()
+  await clickCompare(ui)
+  const [r] = ui.find('Results').props.results
+  const html = renderToStaticMarkup(ui.find('Results'))
+  assert.doesNotMatch(html, /class="credit-answers"/)
+  for (const [question, value] of [['Quanto entra no caixa', reais(r.net)], ['Quanto paga por mês', reais(r.firstPayment)], ['Quanto paga no total', reais(r.total)]]) assert.ok(html.includes(`<dt>${question}</dt><dd>${value}</dd>`), question)
+  assert.match(html, /<div class="rt-answer-main"><dt>Quanto custa<\/dt><dd>[\d,]+% a\.a\.<\/dd>/)
+  assert.doesNotMatch(html, /menor CET|menor custo/)
+})
+test('sem linha do tempo (21/11/2026); as gavetas guardam o que quase nunca muda', async t => {
+  const ui = await setup(t)
+  await clickCompare(ui)
+  assert.equal(nodes(ui.render.value).find(n => n.type?.name === 'LinhaDoTempo'), undefined)
+  assert.doesNotMatch(renderToStaticMarkup(ui.render.value), /Linha do tempo/)
+  const html = renderToStaticMarkup(ui.render.value)
+  const drawer = html.match(/<details class="lm-details"[^>]*>([\s\S]*?)<\/details>/)[1]
+  for (const id of ['credit-shared-start', 'credit-shared-praca', 'credit-shared-regime']) assert.ok(drawer.includes(`id="${id}"`), id)
+  assert.match(drawer, /Paga o adicional de 10% do IRPJ/)
+  assert.match(drawer, /liberação em 10\/11\/2026 · Nacional \(BR\) · Lucro Presumido · com adicional de IRPJ/)
+  for (const id of ['credit-shared-value', 'credit-shared-term', 'credit-shared-grace', 'credit-shared-system']) assert.ok(!drawer.includes(`id="${id}"`) && html.includes(`id="${id}"`), id)
+  const more = renderToStaticMarkup(ui.card(1)).match(/<summary>Mais condições desta modalidade<\/summary>([\s\S]*?)<\/details>/)[1]
+  for (const label of ['Garantia', 'Valor da garantia (opcional)', 'Enquadramento IOF', 'Outros, em cada pagamento']) assert.ok(more.includes(label), label)
+})
+test('cenários e comparações: um bloco só, antes do botão, aberto quando há pós-CDI ou opção marcada', async t => {
+  const ui = await setup(t)
+  const block = () => nodes(ui.render.value).find(n => n.type === 'details' && n.props.className === 'credit-scenarios')
+  assert.equal(block().props.open, true, 'a tela abre com uma operação pós-CDI')
+  for (const label of ['Cenários do CDI', 'Comparar com aplicação financeira', 'Comparar pelo mesmo valor líquido']) assert.ok(renderToStaticMarkup(block()).includes(label), label)
+  assert.match(text(block().props.children[0]), /Cenários e comparações · cenário do CDI: Base/)
+  const html = renderToStaticMarkup(ui.render.value)
+  assert.ok(html.indexOf('credit-scenarios') > html.indexOf('credit-grid') && html.indexOf('credit-scenarios') < html.indexOf('credit-compare'))
+  const fixed = await setup(t)
+  await fixed.change(2, modalities.newColumn('giro-pre'))
+  assert.match(text(nodes(fixed.render.value).find(n => n.type === 'details' && n.props.className === 'credit-scenarios').props.children[0]), /nenhuma opção marcada/)
+})
+test('a tela segue a ordem do roteiro, com os nomes padrão, e termina na referência de mercado', async () => {
+  const source = await readFile(new URL('../src/CreditComparison.jsx', import.meta.url), 'utf8')
+  const screen = source.slice(source.indexOf('export default function CreditComparison'))
+  const order = ['<SharedFields ', "step(2, 'Encargos')", 'className="credit-scenarios"', 'className="credit-compare"', "step(3, 'Resultado · custo final para o cliente')", 'Premissas, limites e fonte do IOF', '<ReferenciaMercado '].map(piece => screen.indexOf(piece))
+  assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
+  assert.match(source, /title=\{step\(1, 'Demanda do cliente'\)\}/)
+  // Regra de 23/11/2026: o gráfico termina no prazo da operação mais longa da comparação.
+  assert.match(screen, /<ReferenciaMercado tipos=\{\[[^\n]*'pre', usesCdi && 'pos'\]\.filter\(Boolean\)\}\s*prazoMeses=\{Math\.max\(0, \.\.\.visible\.map\(col => Number\.parseInt\(col\.term \|\| shared\.term, 10\)\)[^\n]*\} \/>\s*<\/section><\/div>\s*\}\s*$/, 'referência de mercado é o último bloco e termina no prazo')
+  for (const label of ['TAC e fee na liberação', 'Outros, em cada pagamento', 'Quanto entra no caixa', 'Quanto paga por mês', 'Quanto paga no total', 'Quanto custa']) assert.ok(source.includes(`'${label}'`), label)
+  assert.doesNotMatch(source, /Tarifas na liberação \(sem IOF\)|Tarifas em cada pagamento|Dados comuns da necessidade do cliente|Resultado da comparação|Resultado da cotação/)
 })

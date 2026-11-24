@@ -1,0 +1,84 @@
+/* CDI x Dólar · padrão visual das calculadoras (aprovado em 18/11/2026; mesma família do Finame).
+   Tudo preso a .cd-pattern: outras calculadoras usam .cx, .bw e .calc-standard e não podem mudar.
+   Só apresentação: nenhuma regra de cálculo mora aqui. */
+:root[data-theme] body .cx.cd-pattern {
+  --cd-orange:#ff6200;
+  --cd-navy:linear-gradient(110deg,#052956,#07336b);
+  --cd-amber:#f5a524;
+}
+
+/* Resultado abaixo dos quadros de entrada, centralizado (pedido de Fernando, 18/11/2026): na coluna lateral com rolagem
+   própria, a tela do notebook (1366 × 768) escondia parte do resultado. Referência de conferência: notebook. */
+:root[data-theme] body .cx.cd-pattern .cd-layout { display:grid; gap:20px; min-width:0; }
+:root[data-theme] body .cx.cd-pattern .cd-results { min-width:0; width:100%; max-width:1040px; margin:0 auto; }
+
+/* Quadros de entrada: faixa azul-marinho, título branco e uma linha laranja (sem barra laranja à esquerda). */
+:root[data-theme] body .cx.cd-pattern .cd-input { overflow:hidden; }
+:root[data-theme] body .cx.cd-pattern :is(.cd-input,.cd-quote) > header { background:var(--cd-navy); color:#fff; border-radius:0; }
+:root[data-theme] body .cx.cd-pattern .cd-input > header { border-bottom:4px solid var(--cd-orange); }
+:root[data-theme] body .cx.cd-pattern :is(.cd-input,.cd-quote) > header h3 { border-left:0; padding-left:0; color:#fff; font-weight:700; }
+:root[data-theme] body .cx.cd-pattern :is(.cd-input,.cd-quote) > header .fi-help > button { color:#fff; border-color:#ffffff88; }
+
+/* Rótulos em uma linha: um campo por linha quando o quadro é estreito. */
+:root[data-theme] body .cx.cd-pattern .cd-input .cx-form { grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); }
+:root[data-theme] body .cx.cd-pattern .cd-input .cx-field-label { flex-wrap:nowrap; white-space:nowrap; }
+@media (max-width:480px) {
+  :root[data-theme] body .cx.cd-pattern .cd-input .cx-field-label { font-size:.875rem; }
+}
+
+/* Aviso de dado que falta: faixa no topo do quadro. */
+:root[data-theme] body .cx.cd-pattern .cd-alert { display:flex; gap:10px; align-items:flex-start; margin:12px 16px 0; padding:10px 12px; border:1px solid var(--bw-line); border-left:4px solid var(--cd-amber); border-radius:8px; background:var(--bw-warm-soft); color:var(--bw-ink); font-size:.85rem; line-height:1.45; }
+:root[data-theme] body .cx.cd-pattern .cd-alert > span:first-child { flex:none; display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:var(--cd-amber); color:#000; font-weight:700; font-size:.75rem; }
+:root[data-theme] body .cx.cd-pattern .cd-alert b { color:var(--bw-ink); }
+
+/* Cotação: o único quadro com borda laranja; faixa azul-marinho sem linha laranja embaixo. */
+:root[data-theme] body .cx.cd-pattern .cd-quote { margin:0; border:2px solid var(--cd-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); }
+:root[data-theme] body .cx.cd-pattern .cd-quote > header { border-bottom:0; }
+:root[data-theme] body .cx.cd-pattern .cd-status:empty { display:none; }
+:root[data-theme] body .cx.cd-pattern .cd-status > .cd-notice { margin:12px; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-result { display:flex; flex-direction:column; gap:12px; padding:16px; }
+
+/* a. Resposta principal */
+:root[data-theme] body .cx.cd-pattern .cd-answer-main { display:flex; flex-direction:column; gap:2px; padding:12px 14px; border:1px solid #34507f; border-radius:10px; background:var(--cd-navy); color:#fff; }
+:root[data-theme] body .cx.cd-pattern .cd-answer-main small,
+:root[data-theme] body .cx.cd-pattern .cd-answer-main span { color:#c9d6ee; font-size:.75rem; }
+:root[data-theme] body .cx.cd-pattern .cd-answer-main b { color:#fff; font-size:1.9rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-highlight { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:0; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-kpis > div { border-radius:10px; border-color:var(--bw-line); background:var(--bw-soft); gap:2px; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-kpis b { font-size:1.05rem; white-space:nowrap; color:var(--bw-ink); }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-answer { padding:10px 12px; border-radius:8px; font-size:.85rem; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-answer > span:first-child { width:24px; height:24px; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-warn { border-left:4px solid var(--cd-amber); border-radius:8px; }
+
+/* b/c. Equivalências e valores em reais */
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-card { border-color:var(--bw-line); border-radius:10px; overflow:hidden; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-card h4 { padding:8px 12px; background:none; color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; border-bottom-color:var(--bw-line); }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-vs { padding:12px; gap:10px; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-steps :is(th,td) { padding:8px 10px; font-size:.85rem; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-steps .cd-op { width:14px; padding-right:0; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-steps .cd-rate { font-size:.75rem; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-steps .cd-total :is(th,td) { border-top-color:var(--bw-strong-line, currentColor); }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-memory { border-color:var(--bw-line); border-radius:8px; }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-memory summary { display:flex; align-items:center; min-height:32px; font-size:.85rem; }
+
+/* Frase para o cliente: depois dos números. */
+:root[data-theme] body .cx.cd-pattern .cd-phrase-box { margin:0 16px 16px; border:1px solid var(--bw-line); border-radius:10px; }
+:root[data-theme] body .cx.cd-pattern .cd-phrase-box h4 { margin:0; padding:8px 12px; color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body .cx.cd-pattern .cd-phrase-box .cd-phrase { padding:10px 12px; font-size:.85rem; line-height:1.55; }
+
+@media (max-width:480px) {
+  :root[data-theme] body .cx.cd-pattern .cd-answer-main b { font-size:1.6rem; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-highlight { grid-template-columns:1fr 1fr; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-kpis b { font-size:.95rem; }
+}
+
+/* Resultado centralizado, abaixo dos quadros (vem por último para valer sobre as regras de coluna única acima). */
+@media (min-width:900px) {
+  /* Resposta e números lado a lado; os dois quadros de detalhe lado a lado; memória e frase na largura toda. */
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; align-items:start; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > :is(.cd-answer, .cd-warn, .cd-memory) { grid-column:1 / -1; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-answer-main { align-self:stretch; justify-content:center; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > .cd-card { align-self:stretch; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > .cd-highlight { align-self:stretch; }
+  :root[data-theme] body .cx.cd-pattern .cd-quote .cd-result > .cd-highlight > div { justify-content:center; }
+}

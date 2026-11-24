@@ -18,6 +18,26 @@ async function readJson(file) {
   }
 }
 
+// O endpoint em lote pode reter um par enquanto outro já avançou. Tenta uma vez
+// cada endpoint individual; só substitui o lote por duas pontas válidas e alinhadas.
+async function refreshCnhLegs(incoming, { key, fetchFn, now, previous }) {
+  if (!cnhTimingError(incoming.USDBRL, incoming.USDCNH) ||
+      rawQuoteError(incoming.USDBRL, 'USDBRL', now) || rawQuoteError(incoming.USDCNH, 'USDCNH', now)) return incoming
+  const pairs = [['USD-BRL', 'USDBRL'], ['USD-CNH', 'USDCNH']]
+  const fresh = await Promise.all(pairs.map(async ([path, pair]) => {
+    try {
+      const res = await fetchFn(`https://economia.awesomeapi.com.br/json/last/${path}${key ? `?token=${encodeURIComponent(key)}` : ''}`, {
+        headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-coleta)' }, signal: AbortSignal.timeout(15000),
+      })
+      const quote = res.ok ? (await res.json())?.[pair] : null
+      const old = previous?.quotes?.[pair]
+      const oldest = Math.max(Number(incoming[pair].timestamp), old && !rawQuoteError(old, pair, now) ? Number(old.timestamp) : 0)
+      return !rawQuoteError(quote, pair, now) && Number(quote.timestamp) >= oldest ? quote : null
+    } catch { return null }
+  }))
+  return fresh.every(Boolean) && cnhCross(fresh[0], fresh[1], now)
+    ? { ...incoming, USDBRL: fresh[0], USDCNH: fresh[1] } : incoming
+}
 export async function collect({ dir, key, fetchFn = fetch, now = Date.now(), tries = 3 }) {
   const url = `https://economia.awesomeapi.com.br/json/last/${ALL}${key ? `?token=${encodeURIComponent(key)}` : ''}`
   let quotes = null
@@ -40,7 +60,7 @@ export async function collect({ dir, key, fetchFn = fetch, now = Date.now(), tri
   const previous = await readJson(join(dir, 'quotes.json'))
   const accepted = {}
   const rejected = {}
-  const incoming = quotes
+  const incoming = await refreshCnhLegs(quotes, { key, fetchFn, now, previous })
   quotes = {}
   for (const pair of RAW_PAIRS) {
     const old = previous?.quotes?.[pair]
