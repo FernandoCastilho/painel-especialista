@@ -101,14 +101,15 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
       await ctx.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }))
       const p = await offline(await ctx.newPage())
+      await p.clock.setFixedTime(new Date('2026-11-24T15:00:00Z'))
       await p.goto(base + '/#resumo')
       const aviso = p.getByRole('dialog', { name: 'Aviso', exact: true }); await aviso.waitFor()
       const texto = /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não é recomendação de crédito/i
       assert.match(await aviso.innerText(), texto)
-      // O resumo tem no máximo três destaques e os detalhes técnicos abrem sob demanda.
+      // O resumo tem cinco destaques e os detalhes técnicos abrem sob demanda.
       const nov = aviso.locator('.aviso-novidades')
       assert.match(await nov.innerText(), /Novidades da semana/i)
-      assert.ok(await nov.locator('li').count() <= 3, 'aviso mostra até três destaques')
+      assert.equal(await nov.locator('li').count(), 5, 'aviso lista cinco destaques quando ha conteudo suficiente')
       const box = await aviso.boundingBox()
       assert.ok(box && box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800 && box.height <= 401, 'aviso compacto, sem tomar a tela')
       const fontes = aviso.locator('.aviso-fontes-detalhes')
