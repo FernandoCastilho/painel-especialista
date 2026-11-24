@@ -42,7 +42,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
   const [visited, setVisited] = useState({})
   const fromLine = form.giroPrincipalMode === 'linha'
   const filled = { ...form, date: lm.start, praca: lm.praca, giroPrincipalMode: fromLine ? 'manual' : form.giroPrincipalMode, giroPrincipal: fromLine ? lm.value : form.giroPrincipal }
-  const { errors: found, parsed, operation, hypothetical, result: calculated } = parseDiscountForm(filled)
+  const { errors: found, parsed, operation, hypothetical, singleTitleIof, result: calculated } = parseDiscountForm(filled)
   const average = form.titleMode === 'average'
   const result = calculated?.ok ? calculated : null
   // A tela abre sem vermelho: o erro de um campo só aparece depois que a pessoa passa por ele e sai.
@@ -126,7 +126,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
             {demandField('averageTicket', 'Ticket médio', demandMoney('averageTicket'),
               'Define a quantidade de boletos (valor total ÷ ticket médio, arredondada). Pesa na tarifa cobrada por título. Em juros e IOF o efeito é pequeno: muda quais vencimentos caem em fim de semana ou feriado.', 'Ticket médio por boleto')}
             {hypothetical && operation && <div className="dsc-bordero lm-wide">
-              <p><b>Estimativa:</b> {boletos} de {hypothetical.maxValue - hypothetical.minValue < 0.005 ? brl(hypothetical.ticket) : `${brl(hypothetical.minValue)} a ${brl(hypothetical.maxValue)}`}, vencendo em {hypothetical.firstDays === hypothetical.lastDays ? '' : `${hypothetical.firstDays} a `}{daysText(hypothetical.lastDays)}. Prazo médio até o pagamento, já no dia útil: <b>{daysText(operation.averageDays)}</b>.{Math.abs(hypothetical.ticket - parsed.averageTicket) > parsed.averageTicket / 1000 && <> Ticket médio efetivo: {brl(hypothetical.ticket)}.</>}{operation.rows.some(row => row.days > 365) && <> Há boletos com mais de 365 dias: neles, o IOF diário para no teto de 365 dias.</>}</p>
+              <p><b>Estimativa:</b> {boletos} de {hypothetical.maxValue - hypothetical.minValue < 0.005 ? brl(hypothetical.ticket) : `${brl(hypothetical.minValue)} a ${brl(hypothetical.maxValue)}`}, vencendo em {hypothetical.firstDays === hypothetical.lastDays ? '' : `${hypothetical.firstDays} a `}{daysText(hypothetical.lastDays)}. Prazo médio até o pagamento, já no dia útil: <b>{daysText(operation.averageDays)}</b>.{Math.abs(hypothetical.ticket - parsed.averageTicket) > parsed.averageTicket / 1000 && <> Ticket médio efetivo: {brl(hypothetical.ticket)}.</>}{operation.rows.some(row => row.days > 365) && <> Há boletos com mais de 365 dias: neles, o IOF diário para no teto de 365 dias.{singleTitleIof - operation.iof >= 0.005 && <> Por isso o IOF estimado fica <b>{brl(singleTitleIof - operation.iof)} abaixo</b> do de um título único em {daysText(parsed.averageDays)}.</>}</>}</p>
               <details className="dsc-drawer"><summary>Ver o borderô hipotético<small> · {boletos}</small></summary>
                 <div className="cx-wrap" role="region" aria-label="Borderô hipotético por data de pagamento; role para ver todas as colunas" tabIndex={0}>
                   <table className="cx-matrix desconto-table"><caption className="sr-only">Boletos hipotéticos por data de pagamento, com dias, quantidade, valor, juros e IOF</caption><thead><tr><th scope="col">Pagamento</th><th scope="col">Dias</th><th scope="col">Boletos</th><th scope="col">Valor (R$)</th><th scope="col">Juros (R$)</th><th scope="col">IOF (R$)</th></tr></thead>

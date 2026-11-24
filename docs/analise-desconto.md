@@ -40,7 +40,7 @@ Limites da estimativa, medidos em 24/11/2026 com os roteiros da revisão indepen
 - O IOF real depende da data de cada boleto. Com o borderô em mãos, usar "Título a título".
 - Frente a um título único em exatos N dias corridos, a estimativa sai um pouco mais cara: líquido cerca de R$ 70 menor (0,03% do nominal), em média, para 30, 60 e 90 dias. A causa é o adiamento para o dia útil, cerca de meio dia a mais.
 - Espalhar os vencimentos, sozinho, muda pouco o IOF em prazos curtos: R$ 0,96 a menos em 30 dias, R$ 3,78 em 60 e R$ 8,41 em 90.
-- Prazo médio acima de cerca de 243 dias: parte dos boletos passa de 365 dias, onde o IOF diário para no teto. A estimativa de IOF fica menor que a de um título único no prazo médio: R$ 278 a menos em 300 dias e R$ 764 (12,9%) em 365. A tela avisa quando há boletos acima de 365 dias.
+- Prazo médio acima de cerca de 243 dias: parte dos boletos passa de 365 dias, onde o IOF diário para no teto. A estimativa de IOF fica menor que a de um título único no prazo médio: R$ 278 a menos em 300 dias e R$ 764 (12,9%) em 365. A tela avisa quando há boletos acima de 365 dias e mostra, em reais, quanto o IOF estimado fica abaixo do de um título único no prazo médio digitado (ajuste de 24/11/2026, depois da publicação).
 - Taxa alta com prazo longo pode bloquear a conta mesmo com prazo médio aceitável, porque o boleto mais longo vai a uma vez e meia do prazo médio.
 
 Testes: `test/analise-desconto-bordero.test.mjs` (borderô fecha no digitado, conta igual à título a título, conferência boleto a boleto, limites) e `test/analise-desconto-view.test.mjs` (tela).

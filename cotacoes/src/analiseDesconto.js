@@ -243,5 +243,9 @@ export function parseDiscountForm(form) {
   if (!actual.ok && (!average || hypothetical?.ok)) errors.operation = actual.error
   const params = { operation, averageValue: parsed.averageValue, projectionRate: parsed.discountRate, operations: parsed.operations, giro: { principalMode: form.giroPrincipalMode, principal: parsed.giroPrincipal, rate: parsed.giroRate, tac: parsed.giroTac, date: form.date, taxProfile: form.giroTaxProfile, eligible: form.giroEligible, calendars } }
   const result = Object.keys(errors).length ? null : compareDiscount(params)
-  return { errors, parsed, params, operation: actual.ok ? actual : null, hypothetical: hypothetical?.ok ? hypothetical : null, result }
+  // Aviso de prazo longo (24/11/2026): com boleto hipotético acima de 365 dias, o IOF diário para no teto e a estimativa
+  // fica abaixo do IOF do mesmo valor em um título único no prazo médio digitado. A tela mostra essa diferença.
+  const capped = hypothetical?.ok && actual.ok && actual.rows.some(row => row.days > 365)
+  const single = capped ? discountOperation({ ...operation, titleRows: hypotheticalTitles({ value: parsed.totalValue, averageDays: parsed.averageDays, ticket: parsed.totalValue, date: form.date }).titleRows }) : null
+  return { errors, parsed, params, operation: actual.ok ? actual : null, hypothetical: hypothetical?.ok ? hypothetical : null, singleTitleIof: single?.ok ? single.iof : null, result }
 }

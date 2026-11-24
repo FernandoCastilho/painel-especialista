@@ -119,7 +119,7 @@ test('prazo médio: mudar prazo ou valor muda o resultado; erro aparece ao sair 
   await h.set('averageTicket', '7.000,00')
   assert.match(text(), /64 boletos[\s\S]*Ticket médio efetivo: R\$ 7\.050,01\./)
   await h.set('averageDays', '300')
-  assert.match(text(), /Há boletos com mais de 365 dias: neles, o IOF diário para no teto de 365 dias\./)
+  assert.match(text(), /Há boletos com mais de 365 dias: neles, o IOF diário para no teto de 365 dias\. Por isso o IOF estimado fica <b>R\$ \d+,\d\d abaixo<\/b> do de um título único em 300 dias\./)
   await h.set('averageTicket', '451.200,86')
   assert.match(text(), /<b>Estimativa:<\/b> 1 boleto de R\$ 451\.200,86, vencendo em 300 dias\./)
   // Ticket maior que o total: o aviso aparece no ticket ao sair do campo do valor total, sem a pessoa passar pelo ticket.
