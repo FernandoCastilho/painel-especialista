@@ -26,6 +26,7 @@ const cetMonthly = (cet) => cet == null ? '—' : `${pct(Math.expm1(Math.log1p(c
 // Direção da economia em símbolo, além da cor: ▲ giro com menor custo, ▼ giro com maior custo.
 const arrow = (value) => value > 0 ? '▲' : value < 0 ? '▼' : '='
 const dateBr = (iso) => iso ? iso.split('-').reverse().join('/') : ''
+const plain = (value) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const daysText = (value) => `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${value === 1 ? 'dia' : 'dias'}`
 const FOOT = 'A data e a praça valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 const CET_HELP = 'CET (Resolução CMN 4.881/2020, arts. 4º e 6º, texto oficial): nas operações de desconto, o CET usa o prazo de 30 dias e o valor do limite pactuado — aqui, o valor nominal da operação. Líquido = nominal − juros de 30 dias − IOF de 30 dias − TAC − tarifa de títulos; o nominal volta em 30 dias corridos; taxa anual em dias corridos/365. O custo pelo prazo real usa a data de pagamento de cada título e não é o CET da norma.'
@@ -68,13 +69,19 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     {form[key] === 'simples' && <label><input type="checkbox" checked={form[eligibleKey]} onChange={event => set(eligibleKey, event.target.checked)} /> Confirmo opção pelo Simples Nacional/MEI para esta operação.</label>}
   </>
   // Campos da demanda (quadro da linha mestra): mesmo desenho dos campos comuns, com o erro logo abaixo.
-  const demandField = (key, label, control, hint) => <div className="lm-field" key={key}>
-    <span className="lm-label"><label htmlFor={`ad-${key}`}>{label}</label>{hint && <CalculatorHelp title={label}><p>{hint}</p></CalculatorHelp>}</span>
+  const demandField = (key, label, control, hint, title = label) => <div className="lm-field" key={key}>
+    <span className="lm-label"><label htmlFor={`ad-${key}`}>{label}</label>{hint && <CalculatorHelp title={title}><p>{hint}</p></CalculatorHelp>}</span>
     {control}
     {errors[key] && <small id={`ad-${key}-err`} className="lm-error" role="alert">{errors[key]}</small>}
   </div>
   const demandProps = (key) => ({ id: `ad-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': errors[key] ? `ad-${key}-err` : undefined, onBlur: () => visit(key) })
   const demandMoney = (key) => <MoneyInput {...demandProps(key)} value={form[key]} onChange={value => set(key, value)} />
+  // Borderô hipotético na tela: uma linha por data de pagamento (vencimentos de fim de semana caem no mesmo dia útil).
+  const payments = Object.values((hypothetical && operation ? operation.rows : []).reduce((byDate, row) => {
+    const sum = byDate[row.paymentDate] ?? { paymentDate: row.paymentDate, days: row.days, count: 0, value: 0, interest: 0, iof: 0 }
+    return { ...byDate, [row.paymentDate]: { ...sum, count: sum.count + row.count, value: sum.value + row.value, interest: sum.interest + row.interest, iof: sum.iof + row.iof } }
+  }, {}))
+  const boletos = hypothetical && `${number(hypothetical.titles)} ${hypothetical.titles === 1 ? 'boleto' : 'boletos'}`
   const setRow = (index, key, value) => set('titleRows', form.titleRows.map((row, i) => i === index ? { ...row, [key]: value } : row))
   const feeField = form.titleFeeMode === 'total' ? moneyField('titleFeeTotal', 'Tarifa total de títulos por operação', 'Total cobrado pelo conjunto de títulos. Não multiplica pela quantidade.')
     : form.titleFeeMode === 'unit' ? moneyField('titleFeeUnit', 'Custo unitário por título', 'Multiplicado pela quantidade de títulos em cada operação.')
@@ -109,20 +116,21 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
         <LinhaMestra prefix="ad-lm" title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} onClear={clearLm} foot={null} help={{ title: 'Demanda do cliente', children: <p>{FOOT}</p> }}
           fields={['start']} labels={{ start: 'Data da operação' }} errors={{ start: errors.date }}
           details={{ fields: ['praca'], open: !!apresentacao, summary: PRACAS_CONTRATO.find(praca => praca.id === lm.praca)?.label }}>
-          {demandField('titleMode', 'Como informar os títulos', <select id="ad-titleMode" value={form.titleMode} onChange={event => set('titleMode', event.target.value)}><option value="average">Prazo médio</option><option value="titles">Título a título</option></select>,
-            'Prazo médio: informe valor total, prazo médio e ticket médio; a calculadora monta um borderô hipotético e faz a conta título a título. É uma estimativa. Título a título: informe os grupos do borderô real.')}
+          {demandField('titleMode', 'Informar por', <select id="ad-titleMode" value={form.titleMode} onChange={event => set('titleMode', event.target.value)}><option value="average">Prazo médio</option><option value="titles">Título a título</option></select>,
+            'Prazo médio: informe valor total, prazo médio e ticket médio; a calculadora monta um borderô hipotético e faz a conta título a título. É uma estimativa: o IOF real depende da data de cada boleto. Título a título: informe os grupos do borderô real.', 'Como informar os títulos')}
           {average ? <>
             {demandField('totalValue', 'Valor total da operação', demandMoney('totalValue'))}
-            {demandField('averageDays', 'Prazo médio dos títulos', <div className="lm-unit"><input {...demandProps('averageDays')} inputMode="numeric" autoComplete="off" value={form.averageDays} onChange={event => set('averageDays', event.target.value.replace(/\D/g, '').slice(0, 3))} onFocus={event => event.target.select()} /><span aria-hidden="true">dias</span></div>,
-              'Dias corridos da operação até o vencimento, na média ponderada pelo valor dos títulos. É o que mais pesa nos juros e no IOF.')}
-            {demandField('averageTicket', 'Ticket médio por boleto', demandMoney('averageTicket'),
-              'Define a quantidade de boletos (valor total ÷ ticket médio). Pesa na tarifa cobrada por título; não muda juros nem IOF.')}
+            {demandField('averageDays', 'Prazo médio', <div className="lm-unit"><input {...demandProps('averageDays')} inputMode="numeric" autoComplete="off" value={form.averageDays} onChange={event => set('averageDays', event.target.value.replace(/\D/g, '').slice(0, 3))} onFocus={event => event.target.select()} /><span aria-hidden="true">dias</span></div>,
+              'Dias corridos da operação até o vencimento, na média ponderada pelo valor dos títulos. É o que mais pesa nos juros e no IOF.', 'Prazo médio dos títulos')}
+            {demandField('averageTicket', 'Ticket médio', demandMoney('averageTicket'),
+              'Define a quantidade de boletos (valor total ÷ ticket médio). Pesa na tarifa cobrada por título; não muda juros nem IOF.', 'Ticket médio por boleto')}
             {hypothetical && operation && <div className="dsc-bordero lm-wide">
-              <p><b>Borderô hipotético:</b> {number(hypothetical.titles)} {hypothetical.titles === 1 ? 'boleto' : 'boletos'}{hypothetical.titles > 1 && <>, de {brl(hypothetical.minValue)} a {brl(hypothetical.maxValue)}</>} (ticket médio de {brl(hypothetical.ticket)}), com {hypothetical.firstDays === hypothetical.lastDays ? `vencimento em ${daysText(hypothetical.firstDays)}` : `vencimentos de ${hypothetical.firstDays} a ${daysText(hypothetical.lastDays)}`}. Prazo médio até o pagamento, já no dia útil: <b>{daysText(operation.averageDays)}</b>. É uma estimativa: o IOF real depende da data de cada boleto.</p>
-              <details className="dsc-drawer"><summary>Ver o borderô hipotético</summary>
+              <p><b>Estimativa:</b> {boletos} de {hypothetical.maxValue - hypothetical.minValue < 0.005 ? brl(hypothetical.ticket) : `${brl(hypothetical.minValue)} a ${brl(hypothetical.maxValue)}`}, vencendo em {hypothetical.firstDays === hypothetical.lastDays ? '' : `${hypothetical.firstDays} a `}{daysText(hypothetical.lastDays)}. Prazo médio até o pagamento, já no dia útil: <b>{daysText(operation.averageDays)}</b>.</p>
+              <details className="dsc-drawer"><summary>Ver o borderô hipotético<small> · {boletos}</small></summary>
                 <div className="cx-wrap" role="region" aria-label="Borderô hipotético por data de pagamento; role para ver todas as colunas" tabIndex={0}>
-                  <table className="cx-matrix desconto-table"><caption className="sr-only">Boletos hipotéticos por data de pagamento, com dias, valor, juros e IOF</caption><thead><tr><th scope="col">Pagamento</th><th scope="col">Dias</th><th scope="col">Boletos</th><th scope="col">Valor</th><th scope="col">Juros</th><th scope="col">IOF</th></tr></thead>
-                    <tbody>{operation.rows.map(row => <tr key={row.dueDate}><th scope="row">{dateBr(row.paymentDate)}</th><td>{number(row.days)}</td><td>{number(row.count)}</td><td>{brl(row.value)}</td><td>{brl(row.interest)}</td><td>{brl(row.iof)}</td></tr>)}</tbody></table>
+                  <table className="cx-matrix desconto-table"><caption className="sr-only">Boletos hipotéticos por data de pagamento, com dias, quantidade, valor, juros e IOF</caption><thead><tr><th scope="col">Pagamento</th><th scope="col">Dias</th><th scope="col">Boletos</th><th scope="col">Valor (R$)</th><th scope="col">Juros (R$)</th><th scope="col">IOF (R$)</th></tr></thead>
+                    <tbody>{payments.map(row => <tr key={row.paymentDate}><th scope="row">{dateBr(row.paymentDate)}</th><td>{number(row.days)}</td><td>{number(row.count)}</td><td>{plain(row.value)}</td><td>{plain(row.interest)}</td><td>{plain(row.iof)}</td></tr>)}</tbody>
+                    <tfoot><tr><th scope="row">Total</th><td></td><td>{number(operation.titles)}</td><td>{plain(operation.value)}</td><td>{plain(operation.interest)}</td><td>{plain(operation.iof)}</td></tr></tfoot></table>
                 </div>
               </details>
             </div>}

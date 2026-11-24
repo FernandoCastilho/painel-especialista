@@ -81,11 +81,15 @@ test('abre pelo prazo médio, sem vermelho, com o borderô hipotético e a lista
   assert.doesNotMatch(h.html(), /role="alert"|aria-invalid="true"|Vencimento contratual|Adicionar grupo de títulos/)
   await h.set('titleFeeMode', 'total')
   const html = h.html().replace(/\u00a0/g, ' ')
-  assert.match(html, /<b>Borderô hipotético:<\/b> 30 boletos, de R\$ 3\.760,01 a R\$ 11\.280,02 \(ticket médio de R\$ 7\.520,01\), com vencimentos de 15 a 45 dias\./)
+  assert.match(html, /<b>Estimativa:<\/b> 30 boletos de R\$ 3\.760,01 a R\$ 11\.280,02, vencendo em 15 a 45 dias\./)
   assert.match(html, /Prazo médio até o pagamento, já no dia útil: <b>\d+(,\d)? dias<\/b>/)
-  assert.match(html, /É uma estimativa: o IOF real depende da data de cada boleto\./)
-  assert.match(html, /<details class="dsc-drawer"><summary>Ver o borderô hipotético<\/summary>/)
+  assert.match(html, /<details class="dsc-drawer"><summary>Ver o borderô hipotético<small> · 30 boletos<\/small><\/summary>/)
   assert.equal(nodes(h.render.value).filter(n => n.type === 'table').length, 4)
+  // Lista por data de pagamento: nenhuma data repetida (fim de semana cai no mesmo dia útil) e o total fecha com a operação.
+  const bordero = html.match(/<caption class="sr-only">Boletos hipotéticos[\s\S]*?<\/table>/)[0]
+  const dates = [...bordero.matchAll(/<th scope="row">(\d\d\/\d\d\/\d{4})<\/th>/g)].map(m => m[1])
+  assert.ok(dates.length > 1 && new Set(dates).size === dates.length, dates.join(' '))
+  assert.match(bordero, /<tfoot><tr><th scope="row">Total<\/th><td><\/td><td>30<\/td><td>225\.600,43<\/td>/)
   assert.doesNotMatch(html, /NaN|Infinity/)
 })
 test('prazo médio: mudar prazo ou valor muda o resultado; erro aparece ao sair do campo e some ao corrigir', async t => {
@@ -104,10 +108,10 @@ test('prazo médio: mudar prazo ou valor muda o resultado; erro aparece ao sair 
   await h.blur('averageDays')
   assert.equal(h.find('averageDays').props['aria-invalid'], true)
   assert.match(h.html(), /role="alert">Informe um inteiro de 1 a 365\.</)
-  assert.doesNotMatch(h.html(), /Borderô hipotético:/)
+  assert.doesNotMatch(h.html(), /Estimativa:/)
   await h.set('averageDays', '45')
   assert.doesNotMatch(h.html(), /role="alert"|aria-invalid="true"/)
-  assert.match(h.html(), /vencimentos de 23 a 67 dias/)
+  assert.match(h.html(), /vencendo em 23 a 67 dias/)
 })
 test('trocar para título a título mostra os grupos e guarda o que foi digitado no prazo médio', async t => {
   const h = await setup(t, 'average')

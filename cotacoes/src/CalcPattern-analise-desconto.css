@@ -162,7 +162,16 @@
 :root[data-theme] body .cx-desconto .lm .dsc-bordero > p { margin:0; color:var(--bw-mut); font-size:.8125rem; line-height:1.5; }
 :root[data-theme] body .cx-desconto .lm .dsc-bordero > p b { color:var(--bw-ink); }
 :root[data-theme] body .cx-desconto .lm .dsc-bordero > .dsc-drawer { margin:8px 0 0; }
-:root[data-theme] body .cx-desconto .lm .dsc-bordero .cx-wrap { max-height:320px; overflow:auto; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero .cx-wrap { max-height:320px; overflow:auto; padding:0; }
+/* A tabela do borderô é estreita: sem a largura mínima das tabelas de comparação e com a data em uma linha só. */
+:root[data-theme] body .cx-desconto .lm .dsc-bordero .desconto-table { min-width:0; width:100%; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero .desconto-table :is(tbody, tfoot) th { min-width:0; max-width:none; white-space:nowrap; background:inherit; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero .desconto-table thead th { position:sticky; top:0; z-index:2; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero .desconto-table thead th:first-child { z-index:3; }
+:root[data-theme] body .cx-desconto .lm .dsc-bordero .desconto-table tfoot :is(th, td) { font-weight:700; border-top:2px solid var(--bw-strong-line); }
+@media (max-width:480px) {
+  :root[data-theme] body main.app.app-calculators .cx-desconto .lm .dsc-bordero .cx-matrix :is(td, th) { padding:9px 6px; }
+}
 /* Resultado: três respostas no computador (entra no caixa, é descontado, quanto custa). */
 @media (min-width:871px) {
   :root[data-theme] body .cx.cx-desconto .rt-answers { grid-template-columns:repeat(3,minmax(0,1fr)); }
