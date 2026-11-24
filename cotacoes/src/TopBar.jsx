@@ -40,8 +40,9 @@ function Clocks() {
 
 // Barra superior do terminal (computador): marca, seções, relógios e estado dos dados.
 // Atalho: Alt+1 a Alt+9 (e Alt+0 para a 10ª) trocam de seção (as teclas F1 a F12 ficam com o navegador).
-export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle }) {
+export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle, focusMode, onToggleFocus }) {
   useEffect(() => {
+    if (focusMode) return undefined
     const onKey = (e) => {
       if (e.altKey && !e.ctrlKey && !e.metaKey && /^[0-9]$/.test(e.key)) {
         e.preventDefault()
@@ -50,7 +51,9 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onTab])
+  }, [onTab, focusMode])
+
+  const focusLabel = focusMode ? 'Sair da tela cheia' : 'Ativar tela cheia'
 
   return (
     <div className="topbar">
@@ -69,6 +72,11 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle 
       <AvisosButton className="topbar-info" />
       <span className="laser-slot laser-slot-top" />
       <MascotSlot className="mascot-slot-top" />
+      <button type="button" className="focus-mode-toggle" aria-controls="conteudo" aria-label={focusLabel} aria-pressed={focusMode} title={focusLabel} onClick={onToggleFocus}>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d={focusMode ? 'M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5' : 'M4 9V4h5m11 5V4h-5M4 15v5h5m11-5v5h-5'} />
+        </svg>
+      </button>
     </div>
   )
 }

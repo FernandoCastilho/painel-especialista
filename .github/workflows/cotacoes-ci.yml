@@ -328,6 +328,9 @@ jobs:
       - name: Conferir prioridade dos menus e navegação por teclado
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: MENU_QA_OUTPUT="$RUNNER_TEMP/qa-menu-priority" node scripts/smoke-menu-priority.cjs
+      - name: Conferir tela cheia do painel no computador, tablet e celular
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: node scripts/smoke-focus-mode.cjs
       - name: Capturas dos menus desktop, tablet e celular
         if: always()
         uses: actions/upload-artifact@v4

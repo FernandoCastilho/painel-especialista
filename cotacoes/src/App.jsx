@@ -146,6 +146,7 @@ function Sheet({ onClose, children }) {
 }
 
 export default function App() {
+  const [focusMode, setFocusMode] = useState(false)
   useEffect(() => connectSystemTheme(), [])
   const { quotes, error, updatedAt, checkedAt, lastSuccessAt, via, refresh, refreshing, limits } = useQuotes(POLL_MS)
   const health = quoteHealth(quotes, { error, checkedAt, lastSuccessAt, collectedAt: updatedAt })
@@ -299,8 +300,8 @@ export default function App() {
     <Recado />
     <Laser />
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
-    <header className="term-head">
-      <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
+    <header className="term-head" data-focus-mode={focusMode ? '' : undefined}>
+      <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} focusMode={focusMode} onToggleFocus={() => setFocusMode((active) => !active)} />
       <Tape quotes={quotes} rates={rates} oil={oil.data} showFxFlags={tab === 'resumo'} />
     </header>
     <div className="nav-top"><Nav tab={tab} onTab={(id) => goto(id)} /></div>
