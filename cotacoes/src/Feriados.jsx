@@ -1,3 +1,4 @@
+import { B3_BALCAO_2027_EXCEPTIONS, B3_CALENDAR_2027_SOURCE, B3_LISTED_2027_SPECIAL } from './b3Calendar2027.mjs'
 import { useState } from 'react'
 import './Feriados.css'
 import { groupHolidayRows } from './holidayView.js'
@@ -68,6 +69,10 @@ export default function Feriados({ hol }) {
   const selected = LIST.filter(c => !ids || ids.includes(c.id))
   const missing = selected.map(c => ({ ...c, years: [y, y + 1].filter(year => !calendarYearCovered(c.id, year, hol?.ctx)) })).filter(c => c.years.length)
   const count = groups.reduce((total, group) => total + group.rows.length, 0)
+  const dentroDaJanela = (date) => date >= today && ms(date) - ms(today) <= 366 * 864e5
+  const mostraB3 = !ids || ids.includes('B3')
+  const avisoCinzas = mostraB3 && dentroDaJanela(B3_LISTED_2027_SPECIAL.date)
+  const avisoBalcao = mostraB3 && B3_BALCAO_2027_EXCEPTIONS.some(dentroDaJanela)
   const financial = ['B3', 'NY', 'UK', 'JP', 'CN'].includes(place)
   return (
     <section className="macro feriados" aria-labelledby="feriados-title">
@@ -85,6 +90,12 @@ export default function Feriados({ hol }) {
         </label>
       </div>
       <p className="status">{place === PADRAO ? 'Feriados nacionais previstos em lei e dias sem pregão na B3. Para estados, cidades e praças de fora, escolha outro calendário.' : place === 'all' ? 'A lista reúne feriados previstos em lei e datas sem funcionamento em calendários financeiros. Uma data pode valer apenas para o calendário indicado.' : financial ? place === 'B3' ? 'Suspensão de sessões de negociação da B3; não indica feriado civil, expediente bancário ou todas as regras de registro e liquidação. Em 24/12/2026 há exceção para alocação de registros de Balcão sem contraparte central.' : 'Calendário financeiro de referência da praça; não representa todas as bolsas ou modalidades de liquidação.' : place === 'CIVBR' ? 'Feriados nacionais de data fixa previstos em lei. Feriados religiosos, como Sexta-feira Santa e Corpus Christi, dependem da legislação municipal. Pontos facultativos e recessos administrativos não estão incluídos.' : 'Somente registros específicos desta cidade, estado ou região. Não inclui automaticamente os feriados nacionais nem os demais calendários aplicáveis; consulte também Brasil · feriados nacionais por lei.'}</p>
+      {(avisoCinzas || avisoBalcao) && <details className="fer-partial">
+        <summary>Horários especiais da B3 em 2027</summary>
+        {avisoCinzas && <p><b>10/02 · Quarta-feira de Cinzas:</b> derivativos listados a partir das 13h (Brasília). Não é fechamento integral nem horário do câmbio à vista.</p>}
+        {avisoBalcao && <p><b>24 e 31/12:</b> sem pregão listado. Balcão B3 sem contraparte central encerra às 13h, com alocação na Câmara B3 até 13h30. Derivativos de Balcão com contraparte central não funcionam. Registro e liquidação seguem regras próprias.</p>}
+        <p><a href={B3_CALENDAR_2027_SOURCE} target="_blank" rel="noreferrer">Ofício 057/2026-VNC da B3</a></p>
+      </details>}
       {missing.length > 0 && <details className="fer-partial" role="status"><summary>Cobertura parcial em {missing.length} {missing.length === 1 ? 'calendário' : 'calendários'}</summary><p>Cobertura parcial: {missing.map(c => `${c.where} (${c.years.join(', ')})`).join('; ')} sem calendário completo verificado nesta base. A ausência de registros não permite afirmar que não haverá feriados ou suspensões.</p></details>}
       <div aria-live="polite" aria-atomic="true" className="fer-count">
         {count} {count === 1 ? 'data cadastrada' : 'datas cadastradas'} nesta seleção{missing.length > 0 ? ' · cobertura parcial' : ''}
