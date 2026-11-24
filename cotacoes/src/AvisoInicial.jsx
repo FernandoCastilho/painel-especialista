@@ -23,21 +23,24 @@ export default function AvisoInicial({ open, onClose }) {
     }
   }, [open])
   if (!open) return null
-  const semana = novidadesDaSemana(NOVIDADES_RECENTES)
+  const semana = novidadesDaSemana(NOVIDADES_RECENTES).slice(0, 3)
   return (
-    <dialog ref={ref} className="aviso-inicial" aria-labelledby="aviso-inicial-title" aria-describedby="aviso-inicial-text" onCancel={(e) => { e.preventDefault(); onClose() }}>
+    <dialog ref={ref} className="aviso-inicial aviso-inicial-compacto" aria-labelledby="aviso-inicial-title" aria-describedby="aviso-inicial-text" onCancel={(e) => { e.preventDefault(); onClose() }}>
       <h2 id="aviso-inicial-title">Aviso</h2>
       <div id="aviso-inicial-text">
         <p>{AVISO_RESUMO}</p>
-        <ul className="aviso-fontes">
-          {AVISO_FONTES.map(([rotulo, texto]) => <li key={rotulo}><b>{rotulo}:</b> {texto}</li>)}
-        </ul>
       </div>
       <div className="aviso-novidades">
         <h3>Novidades da semana</h3>
         {semana.length > 0 && <ul>{semana.map(r => <li key={r}>{r}</li>)}</ul>}
         <a href="#novidades" onClick={onClose}>Ver todas as atualizações</a>
       </div>
+      <details className="aviso-fontes-detalhes">
+        <summary>Fontes e atualização dos dados</summary>
+        <ul className="aviso-fontes">
+          {AVISO_FONTES.map(([rotulo, texto]) => <li key={rotulo}><b>{rotulo}:</b> {texto}</li>)}
+        </ul>
+      </details>
       <button type="button" className="btn" autoFocus onClick={onClose}>Entendi</button>
     </dialog>
   )
