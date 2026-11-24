@@ -107,10 +107,16 @@ const ENTRIES = [
   { date: '09/10/2026', items: ['SOFR com médias de 30/90/180 dias e faixa de percentis.', 'Relógio do país acima de cada cotação.', 'Cotação do CNH por cruzamento quando a direta está defasada.', 'Curvas de juros: DI x pré (B3) e Treasuries (EUA), com comparação entre datas.'] },
 ]
 
-function mostrarDia({ date, items }) {
+const lista = itens => <ul>{itens.map(item => <li key={item}>{item}</li>)}</ul>
+
+// Cada dia mostra só os destaques; o detalhe fica recolhido.
+function mostrarDia({ date, destaques, items }) {
   return <section key={date}>
     <h3><time dateTime={date.split('/').reverse().join('-')}>{date}</time></h3>
-    <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>
+    {destaques.length ? <>
+      {lista(destaques)}
+      {items.length > 0 && <details className="novidades-detalhe"><summary>Ver detalhes</summary>{lista(items)}</details>}
+    </> : lista(items)}
   </section>
 }
 

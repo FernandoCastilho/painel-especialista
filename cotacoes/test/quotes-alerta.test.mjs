@@ -36,7 +36,7 @@ test('cotação parada: sem alarme falso fora do pregão, no fim de semana e em 
   assert.equal(em('2026-12-24T15:00:00Z', 900).alert, null) // véspera de Natal: sem sessão na B3
   assert.equal(b3ClosedDay(Date.parse('2026-11-20T15:00:00Z')), true)
   assert.equal(b3ClosedDay(Date.parse('2026-11-19T15:00:00Z')), false)
-  assert.equal(b3ClosedDay(Date.parse('2027-01-04T15:00:00Z')), null) // ano sem calendário conferido: não dá para saber
+  assert.equal(b3ClosedDay(Date.parse('2028-01-04T15:00:00Z')), null) // ano sem calendário conferido: não dá para saber
 })
 
 test('cotação parada: o tempo só conta a partir da abertura do pregão', () => {

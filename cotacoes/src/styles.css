@@ -160,6 +160,8 @@ dd .muted { color:var(--mut); font-size:.75rem; }
 .novidades ul { padding-inline-start: 1.35em; }
 .novidades li + li { margin-top:.45em; }
 .novidades summary { cursor:pointer; }
+.novidades-detalhe { margin:2px 0 8px; color:var(--mut); font-size:.86rem; }
+.novidades-detalhe summary { min-height:44px; display:flex; align-items:center; color:var(--accent); }
 .novidades h3 { font-size:.85rem; margin:12px 0 4px; color:var(--fg); }
 @media (max-width: 699px) {
   .fold { border-top:1px solid var(--line); margin-top:16px; }

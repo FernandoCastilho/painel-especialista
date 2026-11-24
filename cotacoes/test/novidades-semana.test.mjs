@@ -14,27 +14,34 @@ test('a tela reúne todos os itens por dia civil de Brasília, inclusive na vira
   const agora = Date.parse('2027-01-03T02:59:59Z')
   assert.deepEqual(organizarNovidades(entradas, agora), {
     recentes: [
-      { date: '02/01/2027', items: ['1', '2', '3', '4', '5', 'Outro ajuste do dia'] },
-      { date: '27/12/2026', items: ['Primeiro dia'] },
+      { date: '02/01/2027', destaques: [], items: ['1', '2', '3', '4', '5', 'Outro ajuste do dia'] },
+      { date: '27/12/2026', destaques: [], items: ['Primeiro dia'] },
     ],
-    anteriores: [{ date: '26/12/2026', items: ['Anterior'] }],
+    anteriores: [{ date: '26/12/2026', destaques: [], items: ['Anterior'] }],
   })
   assert.deepEqual(novidadesDaSemana(entradas, agora), [])
   assert.deepEqual(novidadesDaSemana(entradas, agora + 1000), ['Amanhã'])
   assert.deepEqual(organizarNovidades(entradas, Date.parse('2027-01-10T03:00:00Z')).recentes, [])
 })
 
-test('novidades da semana: só entradas com resumo dos últimos 7 dias, mais recente primeiro, no máximo 4', () => {
+test('novidades da semana: todos os destaques dos últimos 7 dias, mais recente primeiro; registro antigo usa o resumo', () => {
   const e = [
-    { date: '03/11/2026', resumo: 'A' }, { date: '02/11/2026', resumo: 'B' }, { date: '02/11/2026' }, { date: '01/11/2026', resumo: 'C' },
-    { date: '31/10/2026', resumo: 'D' }, { date: '28/10/2026', resumo: 'E' }, { date: '20/10/2026', resumo: 'F' },
+    { date: '03/11/2026', destaques: ['A1', 'A2'] }, { date: '02/11/2026', resumo: 'B' }, { date: '02/11/2026' }, { date: '01/11/2026', resumo: 'C' },
+    { date: '31/10/2026', resumo: 'D' }, { date: '28/10/2026', destaques: ['E'] }, { date: '20/10/2026', resumo: 'F' },
   ]
   const now = Date.parse('2026-11-03T15:00:00Z')
-  assert.deepEqual(novidadesDaSemana(e, now), ['A', 'B', 'C', 'D'])
-  assert.deepEqual(novidadesDaSemana(e, now, 10), ['A', 'B', 'C', 'D', 'E'])
+  assert.deepEqual(novidadesDaSemana(e, now), ['A1', 'A2', 'B', 'C', 'D', 'E'])
+  assert.deepEqual(organizarNovidades(e, now).recentes[0], { date: '03/11/2026', destaques: ['A1', 'A2'], items: [] })
   assert.deepEqual(novidadesDaSemana(e, Date.parse('2026-11-20T15:00:00Z')), [])
 })
 
+test('destaques das entregas recentes são curtos', async () => {
+  const { NOVIDADES_RECENTES } = await import('../src/novidadesRecentes.js')
+  for (const { date, destaques } of NOVIDADES_RECENTES) {
+    assert.ok(destaques?.length >= 1 && destaques.length <= 5, `${date}: de 1 a 5 destaques`)
+    for (const d of destaques) assert.ok(d.length <= 80, `${date}: destaque longo: ${d}`)
+  }
+})
 
 test('resumo Finame distingue os fluxos TFC/TFB e TLP exigível e condiciona IOF zero', () => {
   const source = readFileSync(new URL('../src/Novidades.jsx', import.meta.url), 'utf8')
