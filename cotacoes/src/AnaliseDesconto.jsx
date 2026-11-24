@@ -12,6 +12,7 @@ import { cgAddDays, cgToday } from './contaGarantida.js'
 import LinhaMestra, { useLinhaMestra } from './LinhaMestra.jsx'
 import { ComposicaoDoCusto, Respostas, Resultado, step } from './Roteiro.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
+import { mesesDoPrazoEmDias } from './faixaCurva.js'
 import { lmLoad } from './linhaMestra.js'
 import { PRACAS_CONTRATO } from './pracaContrato.js'
 import CalcBack from './CalcBack.jsx'
@@ -265,6 +266,7 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
       </ul>
     </CalculatorHelp></div>
     {/* Desconto com taxa prefixada: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
-    <ReferenciaMercado tipos={['pre']} />
+    {/* O gráfico termina no prazo do título mais longo, em meses arredondados para cima (regra de 23/11/2026). */}
+    <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias(Math.max(0, ...(operation?.rows ?? []).map(row => row.days)))} />
   </section>
 }

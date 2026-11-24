@@ -27,7 +27,8 @@ import './CalcPattern-comparador.css'
 import CalcBack from './CalcBack.jsx'
 
 const brl = v => Number.isFinite(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
-const pct = v => Number.isFinite(v) ? `${nbr5891(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%` : 'Não mensurável'
+// Duas casas decimais em todas as calculadoras (decisão de Fernando, 23/11/2026).
+const pct = v => Number.isFinite(v) ? `${nbr5891(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%` : 'Não mensurável'
 const day = d => d.split('-').reverse().join('/')
 const GUARANTEES = ['', 'Aval', 'Recebíveis', 'Alienação fiduciária', 'Fundo garantidor (FGI)', 'Outra garantia']
 const COLUMN_COLORS = ['#0075bf', '#c76d00', '#2a8a4a', '#8a3ffc', '#c2185b']
@@ -553,6 +554,8 @@ export default function CreditComparison({ onBack, apresentacao }) {
     </div>
     {present && <Presentation onClose={close}>{present}</Presentation>}
     {/* Referência de mercado: curva prefixada para operação de taxa fixa, CDI futuro para pós-CDI. Sempre o último bloco da tela. */}
-    <ReferenciaMercado tipos={[!visible.every(isCdi) && 'pre', usesCdi && 'pos'].filter(Boolean)} />
+    {/* O gráfico termina no prazo da operação mais longa da comparação (regra de 23/11/2026). */}
+    <ReferenciaMercado tipos={[!visible.every(isCdi) && 'pre', usesCdi && 'pos'].filter(Boolean)}
+      prazoMeses={Math.max(0, ...visible.map(col => Number.parseInt(col.term || shared.term, 10)).filter(Number.isFinite)) || undefined} />
   </section></div>
 }

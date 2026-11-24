@@ -34,7 +34,8 @@ const PERIOD_WORDS = { 1: ['mensais', 'mês'], 2: ['bimestrais', 'bimestre'], 3:
 const formatMoney = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const brl = value => formatMoney.format(value)
 const percent = rate => `${cetPct(rate * 100)}% a.a.`
-const share = (part, whole) => `${(part / whole * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+// Duas casas decimais em todas as calculadoras (decisão de Fernando, 23/11/2026).
+const share = (part, whole) => `${(part / whole * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const FOOT = 'Valor, prazo, carência, amortização, data e praça valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 
 // Padrão próprio do Capital de Giro na linha mestra: 36 meses (pedido do Fernando em 22/11/2026; as outras seguem em 24).
