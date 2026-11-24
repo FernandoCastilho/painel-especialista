@@ -297,7 +297,7 @@ export default function App() {
     <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conteúdo</a>
     <AvisoInicial modo={avisoModo} onClose={fecharAviso} />
     <MarketPopup open={panorama.aberto} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
-    <Recado />
+    <Recado aguardarAviso={avisoModo !== null} />
     <Laser />
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
     <header className="term-head" data-focus-mode={focusMode ? '' : undefined}>

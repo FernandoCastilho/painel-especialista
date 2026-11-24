@@ -64,6 +64,8 @@ test('App: aviso sozinho só quando pendente e fora de navegador automatizado; c
   const app = read('App.jsx')
   assert.match(app, /useState\(\(\) => !navigator\.webdriver && avisoPendente\(\) \? 'automatico' : null\)/)
   assert.match(app, /const fecharAviso = useCallback\(\(\) => setAvisoModo\(null\), \[\]\)/)
+  assert.match(app, /<Recado aguardarAviso=\{avisoModo !== null\} \/>/)
+  assert.match(read('Recado.jsx'), /!recado \|\| aberto \|\| aguardarAviso/)
   assert.match(app, /<AvisoInicial modo=\{avisoModo\} onClose=\{fecharAviso\} \/>/)
   // O conteúdo do aviso continua a um clique, na janela do "i", presente em todas as telas.
   assert.match(app, /onClick=\{\(\) => setAvisoModo\('manual'\)\}>Ver o aviso de entrada<\/button>/)

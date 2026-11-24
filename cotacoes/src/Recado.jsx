@@ -6,7 +6,7 @@ import './AvisoInicial.css'
 // Pop-up com o recado da administração (public/recado.json). Chega a quem está com o app aberto em poucos minutos
 // e a quem abrir depois; cada pessoa vê cada recado uma vez. Espera outro diálogo aberto (ex.: o aviso inicial) fechar.
 // Navegador automatizado (testes) não recebe, para um recado ligado não cobrir a tela dos smokes; o smoke próprio desliga essa exceção.
-export default function Recado() {
+export default function Recado({ aguardarAviso }) {
   const [recado, setRecado] = useState(null)
   const [aberto, setAberto] = useState(false)
   const ref = useRef(null)
@@ -24,21 +24,21 @@ export default function Recado() {
 
   // abre quando não houver outro diálogo modal na frente
   useEffect(() => {
-    if (!recado || aberto) return undefined
+    if (!recado || aberto || aguardarAviso) return undefined
     const modalAberto = () => { try { return !!document.querySelector('dialog:modal') } catch { return !!document.querySelector('dialog.aviso-inicial[open]') } } // painéis não modais (ex.: expandir gráfico) não contam
     const tentar = () => { if (!modalAberto()) setAberto(true) }
     tentar()
     const t = setInterval(tentar, 1000)
     return () => clearInterval(t)
-  }, [recado, aberto])
+  }, [recado, aberto, aguardarAviso])
 
   useEffect(() => {
     const el = ref.current
     if (!aberto || !el) return undefined
-    if (document.querySelector('dialog:modal')) { setAberto(false); return undefined }
+    if (aguardarAviso || document.querySelector('dialog:modal')) { setAberto(false); return undefined }
     if (!el.open) el.showModal()
     return () => { if (el.open) el.close() }
-  }, [aberto, recado])
+  }, [aberto, recado, aguardarAviso])
 
   if (!recado || !aberto) return null
   const fechar = () => { marcarVisto(recado.id); setAberto(false); setRecado(null) }
