@@ -5,7 +5,7 @@ export const MOBILE_PRIMARY = ['resumo', 'cenarios', 'juros', 'calculadora', 'rp
 export const MORE_GROUPS = [
   { label: 'Acompanhar', ids: ['ma', 'noticias', 'podcast'] },
   { label: 'Consultar', ids: ['bancos', 'feriados', 'novidades'] },
-  { label: 'Aprender', ids: ['aprender'] },
+  { label: 'Aprender', ids: ['aprender', 'historias'] },
 ]
 export const shortcutTitle = id => {
   const index = APP_SECTIONS.filter(t => !t.oculto).findIndex(t => t.id === id)

@@ -37,6 +37,7 @@ import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
 const Novidades = lazy(() => import('./Novidades.jsx'))
 const Podcast = lazy(() => import('./Podcast.jsx'))
+const Historias = lazy(() => import('./Historias.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
@@ -225,7 +226,7 @@ export default function App() {
     } catch {
       /* sem histórico (ex.: arquivo local) */
     }
-    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
+    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma') || (id === 'historias' && tab === 'historias'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
   }
   useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
     if (tab !== 'cenarios' || !CEN_OLD[sub]) return
@@ -374,6 +375,7 @@ export default function App() {
 
       {tab === 'podcast' && <Podcast />}
       {tab === 'novidades' && <Novidades />}
+      {tab === 'historias' && <Historias view={sub} onView={v => goto('historias', v)} />}
       {tab === 'aprender' && <Aprender view={sub} goto={goto} />}
 
       {tab === 'apresentar' && <Apresentar quotes={quotes} macro={macro} curves={curves} hol={hol} colors={COLORS} />}

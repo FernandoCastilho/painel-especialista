@@ -10,6 +10,7 @@ export const NOVIDADES_RECENTES = [
       'Notícias do Mercado sem Google Trends, Veículos pesados e Eleições EUA',
     ],
     items: [
+      'Em Mais > Histórias, um mapa liga iFood, Netflix e Blockbuster por temas em comum. Cada caso traz a fundação, uma linha do tempo e links para as fontes.',
       'O ícone no topo ativa a tela cheia do navegador sem ocultar os menus, as cotações ou os controles do Painel. Use o mesmo ícone para voltar.',
       'Na Análise de desconto, informe valor total, prazo médio e ticket médio por boleto. A calculadora monta um borderô hipotético, com boletos de valores e vencimentos diferentes, e calcula juros e IOF boleto a boleto; o CET continua na regra de 30 dias da norma. A tela mostra o prazo médio já ajustado para dias úteis e a lista dos boletos. É uma estimativa: o IOF real depende da data de cada boleto. A entrada título a título continua disponível para o borderô real, e as regras de juros, IOF e CET não mudaram.',
       'O aviso inicial mostra até cinco destaques da semana. O histórico completo e a frequência das fontes ficam a um clique.',
