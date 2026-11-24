@@ -168,8 +168,6 @@ async function assertSectorHeader(page, initial) {
         if (fixtures[name]) return route.fulfill({json:fixtures[name]})
         if (url.hostname === 'economia.awesomeapi.com.br') return route.fulfill({json:quotes})
         if (url.hostname === 'widgets.tradingview-widget.com') return route.fulfill({contentType:'text/javascript',body:''})
-        // Conteúdo externo simulado; o teste de tema cobre o painel e seu arquivo local.
-        if (url.origin === 'https://trends.google.com' && url.pathname === '/trends/embed/explore/TIMESERIES') return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><html lang="pt-BR"><body><p>Gráfico simulado somente para teste de integração.</p></body></html>'})
         return url.origin === new URL(base).origin ? route.continue() : route.abort()
       })
       const page = await context.newPage(), errors = []
@@ -212,13 +210,10 @@ async function assertSectorHeader(page, initial) {
         await page.screenshot({path:path.join(out, `${label}.png`), fullPage:true})
         if (route === 'calculadora/giro') await page.keyboard.press('Escape')
         if (route === 'resumo') {
-          await page.getByRole('tab', {name:'Google Trends',exact:true}).click()
-          await page.locator('.google-trends').waitFor()
-          await page.locator('.google-trends iframe.trends-live-chart').waitFor()
-          await page.locator('.google-trends .trends-archive > summary').click()
-          await page.getByRole('img', {name:/Interesse em capital de giro/}).waitFor()
-          await assertTheme(page, initial, `${label} trends`)
-          await page.screenshot({path:path.join(out, `${initial}-${width}-trends.png`),fullPage:true})
+          const noticias = page.locator('.market-terminal .terminal-news')
+          await noticias.getByRole('tab', {name:'Moedas',exact:true}).waitFor()
+          assert.equal(await noticias.getByRole('tab', {name:'Google Trends',exact:true}).count(), 0)
+          await assertTheme(page, initial, `${label} mercado`)
         }
       }
       await page.goto(widgetUrl)
