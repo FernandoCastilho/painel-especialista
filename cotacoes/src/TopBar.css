@@ -1,5 +1,55 @@
 /* Let every destination remain visible as the catalogue grows. The sticky
    header stays in normal flow, so a second row does not cover the content. */
+.focus-mode-toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+.focus-mode-toggle:hover { background: var(--surface-2); color: var(--accent); }
+.focus-mode-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+@media (max-width: 999px) {
+  .term-head:has(.focus-mode-toggle) {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    flex-direction: row-reverse;
+    align-items: center;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .term-head:has(.focus-mode-toggle) .topbar { display: flex; flex: none; }
+  .term-head:has(.focus-mode-toggle) .topbar > :not(.focus-mode-toggle) { display: none; }
+  .term-head:has(.focus-mode-toggle) .tape { flex: 1; min-width: 0; border-bottom: 0; }
+}
+
+/* This is an in-page mode, not browser fullscreen: browser Esc remains
+   available to widgets and dialogs, but never changes the mode. */
+#root > .term-head[data-focus-mode] {
+  display: block;
+  position: fixed;
+  inset: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) auto auto;
+  width: max-content;
+  z-index: 75;
+  background: transparent;
+  border: 0;
+}
+#root > .term-head[data-focus-mode] .topbar { display: flex; min-height: 0; height: auto; border: 0; background: transparent; }
+.term-head[data-focus-mode] :is(.tape, .topbar > :not(.focus-mode-toggle)) { display: none; }
+.term-head[data-focus-mode] .focus-mode-toggle { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-ctl); color: var(--accent); }
+#root:has(> .term-head[data-focus-mode]) :is(.nav-top, .clocks-top, .mascot-tray, .laser-canvas, .laser-hint, .rpn-float, main.app > .top) { display: none; }
+#root:has(> .term-head[data-focus-mode]) > main.app { max-width: none; padding-block-start: calc(max(6px, env(safe-area-inset-top)) + 46px); padding-block-end: max(24px, env(safe-area-inset-bottom)); }
+@media print {
+  #root > .term-head[data-focus-mode], .focus-mode-toggle { display: none; }
+}
+
 @media (min-width: 1000px) {
   .term-head .topbar,
   .term-head .topbar:has(.theme-control) { height: auto; min-height: 44px; }
@@ -10,9 +60,9 @@
 @media (min-width:1400px) and (max-width:1599px) {
   .term-head .topbar-tabs > button { padding-inline:5px; letter-spacing:.025em; }
 }
-/* Onze destinos (Apresentar no menu desde 18/11/2026). No computador, para o menu caber em uma linha também com o contador
-   de pessoas online (que só aparece no site publicado): o contador mostra só o ponto e o número (o texto completo continua no
-   nome do botão, para leitor de tela, e no balão), e, nas telas menores, os rótulos das abas ficam mais juntos. */
+/* Onze destinos (Apresentar no menu desde 18/11/2026). No computador, para o menu caber em uma linha tamb�m com o contador
+   de pessoas online (que s� aparece no site publicado): o contador mostra s� o ponto e o n�mero (o texto completo continua no
+   nome do bot�o, para leitor de tela, e no bal�o), e, nas telas menores, os r�tulos das abas ficam mais juntos. */
 @media (min-width:1000px) {
   .term-head .online-txt { display:none; }
   .term-head .online-badge { padding:0 8px; gap:5px; min-width:44px; justify-content:center; }
@@ -25,7 +75,7 @@
 @media (min-width:1100px) and (max-width:1199px) {
   :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:3px; letter-spacing:0; }
 }
-/* Com o estado dos dados em erro ("Indisponível", texto mais longo), o tema claro também cabe em uma linha de 1200 a 1399 px. */
+/* Com o estado dos dados em erro ("Indispon�vel", texto mais longo), o tema claro tamb�m cabe em uma linha de 1200 a 1399 px. */
 @media (min-width:1200px) and (max-width:1299px) {
   :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:4px; }
 }
@@ -35,16 +85,16 @@
 @media (min-width:1600px) and (max-width:1699px) {
   :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:6px; }
 }
-/* Estado dos dados no computador: só o ponto e a hora, em todas as larguras (antes, só de 1300 a 1599 px; ver Direcao.css).
-   O texto completo ("Fora do horário de coleta", "Referência recente"…) fica na dica e na linha de consulta do Mercado.
-   Com os rótulos longos e os relógios extras de 1800 px em diante, o menu de onze abas ia para duas linhas no tema claro.
-   "Indisponível" (erro) continua escrito. */
+/* Estado dos dados no computador: s� o ponto e a hora, em todas as larguras (antes, s� de 1300 a 1599 px; ver Direcao.css).
+   O texto completo ("Fora do hor�rio de coleta", "Refer�ncia recente".) fica na dica e na linha de consulta do Mercado.
+   Com os r�tulos longos e os rel�gios extras de 1800 px em diante, o menu de onze abas ia para duas linhas no tema claro.
+   "Indispon�vel" (erro) continua escrito. */
 @media (min-width:1000px) {
   .topbar-feed:not(.err) { font-size:0; }
   .topbar-feed b { font-size:.75rem; }
   .topbar-feed span { margin-right:7px; }
 }
-/* Com o estado em erro ("Indisponível" escrito) e contador de até três dígitos: rótulos um pouco mais juntos nas faixas em
+/* Com o estado em erro ("Indispon�vel" escrito) e contador de at� tr�s d�gitos: r�tulos um pouco mais juntos nas faixas em
    que ainda faltavam alguns pixels. */
 @media (min-width:1200px) and (max-width:1299px) {
   :root[data-theme="light"] .term-head .topbar-tabs > button { padding-inline:2px; letter-spacing:0; }

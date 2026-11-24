@@ -60,22 +60,22 @@ import { DISCLAIMER } from './whatsapp.js'
 import { MAX_DAYS, fromInput, fullWindow, historyRangeError, toInput } from './useHistory.js'
 
 // Mesma identidade por moeda; os tons acompanham o contraste do tema do sistema.
-const POLL_MS = 60000 // relê a coleta central a cada 1 min (o arquivo é renovado a cada 5 min; não gasta a cota da API)
+const POLL_MS = 60000 // rel� a coleta central a cada 1 min (o arquivo � renovado a cada 5 min; n�o gasta a cota da API)
 const COLORS = { USD: 'var(--currency-usd)', EUR: 'var(--currency-eur)', JPY: 'var(--currency-jpy)', CNH: 'var(--currency-cnh)', PAR: 'var(--currency-par)' }
-// Assuntos da aba Cenários (cada um com seu endereço: #cenarios/commodities etc.).
+// Assuntos da aba Cen�rios (cada um com seu endere�o: #cenarios/commodities etc.).
 const CEN_VIEWS = [
-  { id: 'projecoes', label: 'Projeções' },
-  { id: 'calendario', label: 'Calendário econômico' },
-  { id: 'inadimplencia', label: 'Inadimplência' },
-  { id: 'recuperacao', label: 'Recuperação judicial' },
+  { id: 'projecoes', label: 'Proje��es' },
+  { id: 'calendario', label: 'Calend�rio econ�mico' },
+  { id: 'inadimplencia', label: 'Inadimpl�ncia' },
+  { id: 'recuperacao', label: 'Recupera��o judicial' },
   { id: 'atividade', label: 'Atividade e emprego' },
   { id: 'commodities', label: 'Commodities' },
   { id: 'indexadores', label: 'Indexadores' },
-  { id: 'inflacao', label: 'Inflação' },
+  { id: 'inflacao', label: 'Infla��o' },
 ]
-// Seções dentro de um assunto (#cenarios/assunto/secao): a tela abre já rolada até a seção.
+// Se��es dentro de um assunto (#cenarios/assunto/secao): a tela abre j� rolada at� a se��o.
 const CEN_SECTIONS = { 'inflacao/fiscal': 'cen-fiscal', 'commodities/frete': 'cen-frete' }
-// Endereços antigos continuam valendo e viram o novo sem nova entrada no histórico.
+// Endere�os antigos continuam valendo e viram o novo sem nova entrada no hist�rico.
 const CEN_OLD = { outros: 'inflacao', fiscal: 'inflacao/fiscal', frete: 'commodities/frete' }
 const PRESETS = [
   { id: 'day', label: 'Dia (intraday)', days: 0 },
@@ -97,7 +97,7 @@ function Period({ range, preset, onPreset, onDates, day, onDay }) {
   const today = toInput(new Date())
   return (
     <div className="period">
-      <div className="seg" role="group" aria-label="Período">
+      <div className="seg" role="group" aria-label="Per�odo">
         {PRESETS.map((p) => (
           <button key={p.id} type="button" aria-pressed={preset === p.id} onClick={() => onPreset(p)}>
             {p.label}
@@ -111,14 +111,14 @@ function Period({ range, preset, onPreset, onDates, day, onDay }) {
           <input type="date" id="dia" max={today} value={toInput(day)} onChange={(e) => e.target.value && onDay(e.target.value)} />
         </label>
       ) : (
-      <DateRangePicker label="Período do gráfico" start={toInput(range.start)} end={toInput(range.end)} max={today} min={toInput(fullWindow().start)} onChange={onDates} />
+      <DateRangePicker label="Per�odo do gr�fico" start={toInput(range.start)} end={toInput(range.end)} max={today} min={toInput(fullWindow().start)} onChange={onDates} />
       )}
       </div>
     </div>
   )
 }
 
-// Efeitos visuais opcionais (brilho discreto nas linhas): desligados por padrão; a escolha fica só neste navegador.
+// Efeitos visuais opcionais (brilho discreto nas linhas): desligados por padr�o; a escolha fica s� neste navegador.
 const FX_KEY = 'cotacoes-fx'
 function useFx() {
   const [fx, setFx] = useState(() => {
@@ -134,18 +134,19 @@ function useFx() {
     try {
       localStorage.setItem(FX_KEY, fx)
     } catch {
-      /* sem armazenamento: vale só nesta sessão */
+      /* sem armazenamento: vale s� nesta sess�o */
     }
   }, [fx])
   return [fx, setFx]
 }
 
-// Detalhes de uma moeda (toque no quadro do resumo): o card completo, com compra/venda, máx./mín., PTAX e variações.
+// Detalhes de uma moeda (toque no quadro do resumo): o card completo, com compra/venda, m�x./m�n., PTAX e varia��es.
 function Sheet({ onClose, children }) {
   return <Expandable modal label="detalhes da moeda" onClose={onClose}>{children}</Expandable>
 }
 
 export default function App() {
+  const [focusMode, setFocusMode] = useState(false)
   useEffect(() => connectSystemTheme(), [])
   const { quotes, error, updatedAt, checkedAt, lastSuccessAt, via, refresh, refreshing, limits } = useQuotes(POLL_MS)
   const health = quoteHealth(quotes, { error, checkedAt, lastSuccessAt, collectedAt: updatedAt })
@@ -179,16 +180,16 @@ export default function App() {
     min.setDate(min.getDate() - MAX_DAYS)
     if (start < min) {
       start = min
-      setNotice(`Período limitado a ${MAX_DAYS} dias.`)
+      setNotice(`Per�odo limitado a ${MAX_DAYS} dias.`)
     } else setNotice('')
     setPreset('custom')
     setRange({ start, end })
   }
-  // Endereço da tela: #aba ou #aba/assunto (ex.: #cenarios/calendario), que dá para favoritar e enviar.
+  // Endere�o da tela: #aba ou #aba/assunto (ex.: #cenarios/calendario), que d� para favoritar e enviar.
   const readHash = () => {
     const raw = window.location.hash.replace('#', '')
     const i = raw.indexOf('/')
-    const h = i < 0 ? raw : raw.slice(0, i), sub = i < 0 ? '' : raw.slice(i + 1) // o BNDES guarda série e período depois da primeira barra
+    const h = i < 0 ? raw : raw.slice(0, i), sub = i < 0 ? '' : raw.slice(i + 1) // o BNDES guarda s�rie e per�odo depois da primeira barra
     return { tab: TABS.some((t) => t.id === h) ? h : 'resumo', sub }
   }
   const [mascotSearch, setMascotSearch] = useState(null)
@@ -208,8 +209,8 @@ export default function App() {
       window.removeEventListener('popstate', onHash)
     }
   }, [])
-  const [open, setOpen] = useState(null) // código da moeda (ou 'PAR') com o detalhe aberto
-  // Aviso de entrada: sozinho, só na primeira vez neste aparelho ou quando o texto mudar; navegador automatizado (smokes) não o recebe.
+  const [open, setOpen] = useState(null) // c�digo da moeda (ou 'PAR') com o detalhe aberto
+  // Aviso de entrada: sozinho, s� na primeira vez neste aparelho ou quando o texto mudar; navegador automatizado (smokes) n�o o recebe.
   const [avisoAberto, setAvisoAberto] = useState(() => !navigator.webdriver && avisoPendente())
   const fecharAviso = () => { marcarAvisoVisto(); setAvisoAberto(false) }
   const panorama = usePanorama()
@@ -223,29 +224,29 @@ export default function App() {
       const hash = `#${id}${to ? `/${to}` : ''}`
       if (window.location.hash !== hash) window.history[replace ? 'replaceState' : 'pushState'](null, '', hash)
     } catch {
-      /* sem histórico (ex.: arquivo local) */
+      /* sem hist�rico (ex.: arquivo local) */
     }
-    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
+    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma'))) window.scrollTo({ top: 0 }) // preservar posi��o durante filtros e busca
   }
-  useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
+  useEffect(() => { // endere�o antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no hist�rico
     if (tab !== 'cenarios' || !CEN_OLD[sub]) return
     setSub(CEN_OLD[sub])
-    try { window.history.replaceState(null, '', `#cenarios/${CEN_OLD[sub]}`) } catch { /* sem histórico */ }
+    try { window.history.replaceState(null, '', `#cenarios/${CEN_OLD[sub]}`) } catch { /* sem hist�rico */ }
   }, [tab, sub])
-  useEffect(() => { // seção dentro do assunto: rola até ela; repete uma vez se os quadros de cima terminarem de carregar e a empurrarem
+  useEffect(() => { // se��o dentro do assunto: rola at� ela; repete uma vez se os quadros de cima terminarem de carregar e a empurrarem
     if (!cenAnchor) return
     let feito = null
     const ir = () => { const el = document.getElementById(cenAnchor); if (!el) return false; el.scrollIntoView({ block: 'start' }); feito = window.scrollY; return true }
     const t1 = setTimeout(() => { if (!ir()) setTimeout(ir, 300) }, 0)
-    const t2 = setTimeout(() => { if (feito !== null && Math.abs(window.scrollY - feito) < 2) ir() }, 1200) // só se a pessoa não rolou
+    const t2 = setTimeout(() => { if (feito !== null && Math.abs(window.scrollY - feito) < 2) ir() }, 1200) // s� se a pessoa n�o rolou
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [cenAnchor])
-  // Estas seções têm título próprio ou intencionalmente não exibem título na faixa de controles.
+  // Estas se��es t�m t�tulo pr�prio ou intencionalmente n�o exibem t�tulo na faixa de controles.
   const compactHeader = ['calculadora', 'rpn', 'noticias', 'feriados'].includes(tab)
-  // Troca de tela preservada da atualização publicada em paralelo.
+  // Troca de tela preservada da atualiza��o publicada em paralelo.
   const viewKey = ['cenarios', 'setores', 'calculadora', 'aprender'].includes(tab) ? `${tab}/${tab !== 'cenarios' ? sub.split('/')[0] : cenView}` : tab
   const mainRef = useRef(null)
-  // Celular: a faixa de assuntos de Cenários desliza para o lado; o assunto aberto fica sempre à vista.
+  // Celular: a faixa de assuntos de Cen�rios desliza para o lado; o assunto aberto fica sempre � vista.
   const cenNav = useRef(null)
   useEffect(() => {
     const nav = cenNav.current, on = nav?.querySelector('[aria-current="true"]')
@@ -257,7 +258,7 @@ export default function App() {
   useLayoutEffect(() => { viewAnim.current = fadeIn(mainRef.current, viewAnim.current) }, [viewKey])
   const openCurrency = CURRENCIES.find((c) => c.code === open)
   const wait = limits.wait > 0 ? ` (${limits.wait}s)` : ''
-  const quoteRefresh = { run: refresh, busy: refreshing, disabled: refreshing || limits.wait > 0 || limits.left <= 0, title: limits.left <= 0 ? 'Limite diário de atualizações manuais atingido neste navegador' : `Consulta a cotação agora, direto na fonte. Limite: 1 por minuto e ${REFRESH_DAILY_MAX} por dia (restam ${limits.left}).${wait}` }
+  const quoteRefresh = { run: refresh, busy: refreshing, disabled: refreshing || limits.wait > 0 || limits.left <= 0, title: limits.left <= 0 ? 'Limite di�rio de atualiza��es manuais atingido neste navegador' : `Consulta a cota��o agora, direto na fonte. Limite: 1 por minuto e ${REFRESH_DAILY_MAX} por dia (restam ${limits.left}).${wait}` }
   const rates = rateTiles(macro.data, curves.data)
   const oil = useDataFile('oil.json')
   const feed = health.feed
@@ -266,18 +267,18 @@ export default function App() {
     <p className="status src">
           <span className={`dot ${feed}`} role="img" aria-label={health.detail} />
           {error
-            ? `Falha ao atualizar as cotações de câmbio (${error}). Tentando novamente…`
-            : `Câmbio — ${health.label}`}
-          {health.observedAt && <> · Referência mais antiga: {dataTimestamp(health.observedAt)}</>}
-          {health.checkedAt && <> · Conferido no painel: {dataTimestamp(health.checkedAt)}</>}
+            ? `Falha ao atualizar as cota��es de c�mbio (${error}). Tentando novamente.`
+            : `C�mbio - ${health.label}`}
+          {health.observedAt && <> � Refer�ncia mais antiga: {dataTimestamp(health.observedAt)}</>}
+          {health.checkedAt && <> � Conferido no painel: {dataTimestamp(health.checkedAt)}</>}
             <button
               type="button"
               className="refresh-mini"
               style={{ background: "none", border: "none", padding: 10, minWidth: 44, minHeight: 44, marginLeft: 6, verticalAlign: "middle", cursor: "pointer", color: "inherit" }}
               onClick={refresh}
               disabled={refreshing || limits.wait > 0 || limits.left <= 0}
-              aria-label={`Atualizar cotações agora${wait}`}
-              title={limits.left <= 0 ? 'Limite diário de atualizações manuais atingido neste navegador' : `Atualizar agora. Limite: 1 por minuto e ${REFRESH_DAILY_MAX} por dia (restam ${limits.left}).`}
+              aria-label={`Atualizar cota��es agora${wait}`}
+              title={limits.left <= 0 ? 'Limite di�rio de atualiza��es manuais atingido neste navegador' : `Atualizar agora. Limite: 1 por minuto e ${REFRESH_DAILY_MAX} por dia (restam ${limits.left}).`}
             >
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? 'spin' : ''} aria-hidden="true">
                 <path d="M20 11a8 8 0 00-14.5-4.6M4 4v4h4" />
@@ -288,19 +289,19 @@ export default function App() {
   )
   return (
     <AvisosProvider general={<>
-        <p><strong>Aviso:</strong> Conteúdo meramente informativo e ilustrativo, baseado em fontes públicas. As simulações são hipotéticas e não constituem recomendação, oferta ou garantia de resultado. Os dados podem apresentar defasagens ou imprecisões e devem ser conferidos nas fontes oficiais antes de qualquer decisão. O uso é de responsabilidade do usuário, observadas as responsabilidades previstas na legislação aplicável.</p>
-        <p>Yuan: CNH (offshore), por cruzamento USD/BRL ÷ USD/CNH. Origem, API e frequência de cada dado: Configurações › Base de dados.</p>
+        <p><strong>Aviso:</strong> Conte�do meramente informativo e ilustrativo, baseado em fontes p�blicas. As simula��es s�o hipot�ticas e n�o constituem recomenda��o, oferta ou garantia de resultado. Os dados podem apresentar defasagens ou imprecis�es e devem ser conferidos nas fontes oficiais antes de qualquer decis�o. O uso � de responsabilidade do usu�rio, observadas as responsabilidades previstas na legisla��o aplic�vel.</p>
+        <p>Yuan: CNH (offshore), por cruzamento USD/BRL � USD/CNH. Origem, API e frequ�ncia de cada dado: Configura��es > Base de dados.</p>
         <p><i>{DISCLAIMER}</i></p>
         <p><button type="button" className="linklike aviso-rever" aria-haspopup="dialog" onClick={() => setAvisoAberto(true)}>Ver o aviso de entrada</button></p>
       </>}>
-    <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conteúdo</a>
+    <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conte�do</a>
     <AvisoInicial open={avisoAberto} onClose={fecharAviso} />
-    <MarketPopup open={panorama.aberto} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
+    <MarketPopup open={panorama.aberto && !focusMode} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
     <Recado />
     <Laser />
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
-    <header className="term-head">
-      <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
+    <header className="term-head" data-focus-mode={focusMode ? '' : undefined}>
+      <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' � Refer�ncia mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} focusMode={focusMode} onToggleFocus={() => setFocusMode((active) => !active)} />
       <Tape quotes={quotes} rates={rates} oil={oil.data} showFxFlags={tab === 'resumo'} />
     </header>
     <div className="nav-top"><Nav tab={tab} onTab={(id) => goto(id)} /></div>
@@ -314,10 +315,10 @@ export default function App() {
     <main id="conteudo" tabIndex={-1} className={`app${tab === 'calculadora' ? ' app-calculators' : ''}`} data-tab={tab} ref={mainRef}>
       {['resumo', 'calculadora', 'noticias'].includes(tab) && <h1 className="sr-only">{TABS.find((t) => t.id === tab)?.label}</h1>}
 
-      <Suspense fallback={<p className="status" role="status">Carregando seção…</p>}>
+      <Suspense fallback={<p className="status" role="status">Carregando se��o.</p>}>
       {update && (
         <div className="update-notice" role="status">
-          Nova versão disponível.{' '}
+          Nova vers�o dispon�vel.{' '}
           <button type="button" onClick={() => window.location.reload()}>Recarregar</button>
         </div>
       )}
@@ -343,7 +344,7 @@ export default function App() {
 
       {tab === 'cenarios' && (
         <>
-          <nav className="learn-nav cen-nav" aria-label="Assuntos de Cenários" ref={cenNav}>
+          <nav className="learn-nav cen-nav" aria-label="Assuntos de Cen�rios" ref={cenNav}>
             {CEN_VIEWS.map((v) => (
               <button key={v.id} type="button" className={cenView === v.id ? 'on' : ''} aria-current={cenView === v.id ? 'true' : undefined} onClick={() => goto('cenarios', v.id)}>{v.label}</button>
             ))}
@@ -366,7 +367,7 @@ export default function App() {
         <>
           <News colors={COLORS} />
           <EconomiaContexto />
-          <p className="noticias-agenda">Agenda da semana (Copom, IPCA, payroll…) em <button type="button" className="linklike" onClick={() => goto('cenarios', 'calendario')}>Cenários › Calendário econômico</button>.</p>
+          <p className="noticias-agenda">Agenda da semana (Copom, IPCA, payroll.) em <button type="button" className="linklike" onClick={() => goto('cenarios', 'calendario')}>Cen�rios > Calend�rio econ�mico</button>.</p>
         </>
       )}
 
