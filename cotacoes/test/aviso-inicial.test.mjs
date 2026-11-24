@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { AVISO_FONTES, AVISO_KEY, AVISO_RESUMO, avisoPendente, marcarAvisoVisto } from '../src/avisoInicial.js'
+import { AVISO_FONTES, AVISO_KEY, AVISO_RESUMO, avisoPendente, exibirAvisoAutomatico, marcarAvisoVisto } from '../src/avisoInicial.js'
 
 const read = (name) => readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8')
 const memoria = () => { const map = new Map(); return { map, getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) } }
@@ -31,10 +31,25 @@ test('exibe automaticamente uma vez por data de Brasília e volta na primeira vi
   assert.equal(avisoPendente(storage, depoisDaVirada), false)
 })
 
-test('a marca antiga por versão não é confundida com uma data de exibição', () => {
+test('duas abas concorrentes exibem o aviso uma vez', async () => {
+  const storage = memoria()
+  const hoje = new Date('2026-11-24T15:00:00Z')
+  let exibicoes = 0
+  let fila = Promise.resolve()
+  const locks = { request: (_nome, fn) => (fila = fila.then(fn)) }
+  const abrir = () => { exibicoes++; return true }
+  await Promise.all([exibirAvisoAutomatico(abrir, storage, hoje, locks), exibirAvisoAutomatico(abrir, storage, hoje, locks)])
+  assert.equal(exibicoes, 1)
+  assert.equal(storage.map.get(AVISO_KEY), '2026-11-24')
+})
+
+test('a marca antiga sem data não repete o aviso no dia da migração', async () => {
   const storage = memoria()
   storage.setItem(AVISO_KEY, 'v1-00000000')
-  assert.equal(avisoPendente(storage, new Date('2026-11-24T15:00:00Z')), true)
+  const hoje = new Date('2026-11-24T15:00:00Z')
+  await exibirAvisoAutomatico(() => assert.fail('não abre na migração'), storage, hoje, null)
+  assert.equal(storage.map.get(AVISO_KEY), '2026-11-24')
+  assert.equal(avisoPendente(storage, new Date('2026-11-25T15:00:00Z')), true)
 })
 
 test('armazenamento bloqueado ou ausente: o aviso aparece e nada quebra', () => {
@@ -47,15 +62,15 @@ test('armazenamento bloqueado ou ausente: o aviso aparece e nada quebra', () => 
 
 test('App: aviso sozinho só quando pendente e fora de navegador automatizado; conceito e panorama não abrem sozinhos', () => {
   const app = read('App.jsx')
-  assert.match(app, /useState\(\(\) => !navigator\.webdriver && avisoPendente\(\)\)/)
-  assert.match(app, /const fecharAviso = \(\) => setAvisoAberto\(false\)/)
-  assert.match(app, /<AvisoInicial open=\{avisoAberto\} onClose=\{fecharAviso\} onShow=\{marcarAvisoVisto\} \/>/)
+  assert.match(app, /useState\(\(\) => !navigator\.webdriver && avisoPendente\(\) \? 'automatico' : null\)/)
+  assert.match(app, /const fecharAviso = useCallback\(\(\) => setAvisoModo\(null\), \[\]\)/)
+  assert.match(app, /<AvisoInicial modo=\{avisoModo\} onClose=\{fecharAviso\} \/>/)
   // O conteúdo do aviso continua a um clique, na janela do "i", presente em todas as telas.
-  assert.match(app, /onClick=\{\(\) => setAvisoAberto\(true\)\}>Ver o aviso de entrada<\/button>/)
+  assert.match(app, /onClick=\{\(\) => setAvisoModo\('manual'\)\}>Ver o aviso de entrada<\/button>/)
   assert.doesNotMatch(app, /<ConceitoDiario/)
   assert.match(app, /<MarketPopup open=\{panorama\.aberto\} slot=\{panorama\.momento\} onClose=\{panorama\.fechar\}/)
   const aviso = read('AvisoInicial.jsx')
-  assert.match(aviso, /el\.showModal\(\)\s+onShow\(\)/)
+  assert.match(aviso, /exibirAvisoAutomatico\(abrir\)/)
   assert.match(aviso, /<p>\{AVISO_RESUMO\}<\/p>/)
   assert.match(aviso, /AVISO_FONTES\.map\(\(\[rotulo, texto\]\) => <li key=\{rotulo\}><b>\{rotulo\}:<\/b> \{texto\}<\/li>\)/)
   // Nenhum dos três componentes agenda abertura por tempo.

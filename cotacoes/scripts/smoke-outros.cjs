@@ -151,6 +151,15 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), '2026-11-25')
       await p.reload(); await p.locator('main#conteudo').waitFor()
       assert.equal(await aviso.count(), 0, 'já exibido hoje, mesmo sem fechar')
+      // Duas abas que entram juntas na próxima data dividem a mesma marca.
+      const outra = await offline(await ctx.newPage())
+      await Promise.all([p, outra].map(page => page.clock.setFixedTime(new Date('2026-11-26T03:00:00Z'))))
+      await Promise.all([p.reload(), outra.goto(base + '/#resumo')])
+      await Promise.all([p, outra].map(page => page.locator('main#conteudo').waitFor()))
+      await Promise.any([p, outra].map(page => page.getByRole('dialog', { name: 'Aviso', exact: true }).waitFor()))
+      await Promise.all([p, outra].map(page => page.evaluate(() => navigator.locks.request('aviso-inicial-visto', () => {}))))
+      const visiveis = await Promise.all([p, outra].map(page => page.getByRole('dialog', { name: 'Aviso', exact: true }).isVisible()))
+      assert.equal(visiveis.filter(Boolean).length, 1, 'duas abas abertas juntas exibem um aviso só')
       await ctx.close()
     }
     // Juros: sem Reino Unido e com a bandeira de cada país nas linhas e nos títulos dos gráficos

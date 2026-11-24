@@ -21,3 +21,22 @@ export function avisoPendente(storage = guardado(), agora = new Date()) {
 export function marcarAvisoVisto(storage = guardado(), agora = new Date()) {
   try { storage?.setItem(AVISO_KEY, dataBrasilia.format(agora)) } catch { /* vale só para esta entrada */ }
 }
+
+export function exibirAvisoAutomatico(abrir, storage = guardado(), agora, locks = globalThis.navigator?.locks) {
+  const tentar = () => {
+    const data = agora ?? new Date()
+    let marca
+    try { marca = storage?.getItem(AVISO_KEY) } catch { /* sem armazenamento */ }
+    if (marca === dataBrasilia.format(data)) return false
+    // A marca antiga não tem data. Na migração, evite uma possível repetição no mesmo dia.
+    if (/^v1-[0-9a-f]{8}$/.test(marca ?? '')) {
+      marcarAvisoVisto(storage, data)
+      return false
+    }
+    if (!abrir()) return false
+    marcarAvisoVisto(storage, data)
+    return true
+  }
+  // Compartilha a decisão entre abas. Sem Web Locks, revalida imediatamente antes de abrir.
+  return locks ? locks.request(AVISO_KEY, tentar) : Promise.resolve().then(tentar)
+}
