@@ -26,28 +26,46 @@
     border-bottom: 1px solid var(--line);
   }
   .term-head:has(.focus-mode-toggle) .topbar { display: flex; flex: none; }
-  .term-head:has(.focus-mode-toggle) .topbar > :not(.focus-mode-toggle) { display: none; }
+  .term-head:has(.focus-mode-toggle) .topbar > :not(.focus-mode-toggle, .fullscreen-status) { display: none; }
   .term-head:has(.focus-mode-toggle) .tape { flex: 1; min-width: 0; border-bottom: 0; }
 }
 
-/* This is an in-page mode, not browser fullscreen: browser Esc remains
-   available to widgets and dialogs, but never changes the mode. */
-#root > .term-head[data-focus-mode] {
-  display: block;
-  position: fixed;
-  inset: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) auto auto;
-  width: max-content;
-  z-index: 75;
-  background: transparent;
-  border: 0;
+.focus-mode-toggle:disabled { opacity: .55; cursor: default; }
+.fullscreen-status {
+  position: absolute;
+  inset: 100% 8px auto auto;
+  padding: 6px 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
 }
-#root > .term-head[data-focus-mode] .topbar { display: flex; min-height: 0; height: auto; border: 0; background: transparent; }
-.term-head[data-focus-mode] :is(.tape, .topbar > :not(.focus-mode-toggle)) { display: none; }
-.term-head[data-focus-mode] .focus-mode-toggle { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-ctl); color: var(--accent); }
-#root:has(> .term-head[data-focus-mode]) :is(.nav-top, .clocks-top, .mascot-tray, .laser-canvas, .laser-hint, .rpn-float, main.app > .top) { display: none; }
-#root:has(> .term-head[data-focus-mode]) > main.app { max-width: none; padding-block-start: calc(max(6px, env(safe-area-inset-top)) + 46px); padding-block-end: max(24px, env(safe-area-inset-bottom)); }
+.panel-header { display: contents; }
+@media (max-width: 999px) {
+  :root:fullscreen .panel-header {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    background: var(--bg);
+  }
+  :root:fullscreen .panel-header > .term-head { position: static; }
+  :root:fullscreen .panel-header > .nav-top {
+    position: static;
+    border-top: 0;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0;
+  }
+  :root:fullscreen .panel-header > .nav-top .tabs {
+    position: static;
+    border-top: 0;
+    padding-bottom: 4px;
+  }
+  :root:fullscreen .panel-header > .nav-top .more-sheet {
+    inset: calc(100% + 6px) 0 auto auto;
+  }
+}
 @media print {
-  #root > .term-head[data-focus-mode], .focus-mode-toggle { display: none; }
+  .focus-mode-toggle, .fullscreen-status { display: none; }
 }
 
 @media (min-width: 1000px) {
