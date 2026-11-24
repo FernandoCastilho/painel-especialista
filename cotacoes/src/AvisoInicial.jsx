@@ -4,16 +4,17 @@ import { NOVIDADES_RECENTES } from './novidadesRecentes.js'
 import { novidadesDaSemana } from './novidadesSemana.js'
 import { AVISO_FONTES, AVISO_RESUMO } from './avisoInicial.js'
 
-// Aviso de entrada. Quem decide quando abrir é o App: sozinho, só na primeira vez neste aparelho ou quando o texto mudar
+// Aviso de entrada. Quem decide quando abrir é o App: sozinho, na primeira entrada do dia em Brasília
 // (avisoInicial.js); depois disso, pelo botão "Ver o aviso de entrada" na janela do "i". Navegador automatizado (testes) não o
 // recebe sozinho, para não cobrir a tela dos smokes; os smokes do aviso desligam essa exceção.
-export default function AvisoInicial({ open, onClose }) {
+export default function AvisoInicial({ open, onClose, onShow }) {
   const ref = useRef(null)
   useEffect(() => {
     const el = ref.current
     if (!open || !el) return undefined
     const origem = document.activeElement
     el.showModal()
+    onShow()
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
@@ -21,7 +22,7 @@ export default function AvisoInicial({ open, onClose }) {
       document.body.style.overflow = previous
       if (origem?.isConnected && origem !== document.body && origem.getClientRects().length) origem.focus({ preventScroll: true })
     }
-  }, [open])
+  }, [open, onShow])
   if (!open) return null
   const semana = novidadesDaSemana(NOVIDADES_RECENTES).slice(0, 5)
   return (

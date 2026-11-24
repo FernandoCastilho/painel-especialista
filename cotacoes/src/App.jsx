@@ -210,9 +210,9 @@ export default function App() {
     }
   }, [])
   const [open, setOpen] = useState(null) // código da moeda (ou 'PAR') com o detalhe aberto
-  // Aviso de entrada: sozinho, só na primeira vez neste aparelho ou quando o texto mudar; navegador automatizado (smokes) não o recebe.
+  // Aviso de entrada: sozinho, na primeira entrada de cada dia em Brasília; navegador automatizado (smokes) não o recebe.
   const [avisoAberto, setAvisoAberto] = useState(() => !navigator.webdriver && avisoPendente())
-  const fecharAviso = () => { marcarAvisoVisto(); setAvisoAberto(false) }
+  const fecharAviso = () => setAvisoAberto(false)
   const panorama = usePanorama()
   const cenSub = CEN_OLD[sub] ?? sub
   const cenView = CEN_VIEWS.some((v) => v.id === cenSub.split('/')[0]) ? cenSub.split('/')[0] : 'projecoes'
@@ -295,7 +295,7 @@ export default function App() {
         <p><button type="button" className="linklike aviso-rever" aria-haspopup="dialog" onClick={() => setAvisoAberto(true)}>Ver o aviso de entrada</button></p>
       </>}>
     <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conteúdo</a>
-    <AvisoInicial open={avisoAberto} onClose={fecharAviso} />
+    <AvisoInicial open={avisoAberto} onClose={fecharAviso} onShow={marcarAvisoVisto} />
     <MarketPopup open={panorama.aberto} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
     <Recado />
     <Laser />

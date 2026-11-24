@@ -96,7 +96,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
     assert.equal(new Set(FONTES.map((fonte) => fonte.id)).size, FONTES.length, 'catálogo não duplica fonte por id')
     const expectedSources = FONTES.map((fonte) => fonte.nome)
     assert.equal(new Set(expectedSources).size, expectedSources.length, 'catálogo não duplica nome de fonte')
-    // aviso de entrada: aparece na primeira visita, não volta nas seguintes, volta se o texto mudar e continua acessível pelo "i"
+    // aviso de entrada: aparece na primeira entrada do dia, não repete e volta no dia seguinte e continua acessível pelo "i"
     for (const width of [390, 1280]) {
       const ctx = await b.newContext({ viewport: { width, height: 800 }, serviceWorkers: 'block' })
       await ctx.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }))
@@ -118,15 +118,13 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await fontes.locator('summary').click()
       assert.match(await fontes.locator('ul').innerText(), /Quase ao vivo[\s\S]*Diário[\s\S]*Semanal[\s\S]*Manual/)
       await fontes.locator('summary').click()
-      assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), null, 'só marca como lido ao fechar')
+      assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), '2026-11-24', 'marca a exibição antes de fechar')
       await aviso.getByRole('link', { name: 'Ver todas as atualizações' }).click()
       await aviso.waitFor({ state: 'hidden' })
       await p.waitForURL('**/#novidades')
       await p.getByRole('heading', { level: 1, name: 'Novidades da semana' }).waitFor()
       await p.getByText('Novidades anteriores', { exact: true }).click()
       await p.locator('.novidades-antigas time').first().waitFor()
-      const marca = await p.evaluate(() => localStorage.getItem('aviso-inicial-visto'))
-      assert.match(marca, /^v1-[0-9a-f]{8}$/, 'marca tirada do texto do aviso')
       await p.goto(base + '/#juros'); assert.equal(await aviso.count(), 0, 'não reaparece ao trocar de aba')
       // segunda visita: nenhum pop-up
       await p.reload(); await p.locator('main#conteudo').waitFor(); await p.waitForTimeout(1500)
@@ -143,13 +141,16 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.keyboard.press('Escape'); await aviso.waitFor({ state: 'hidden' })
       assert.equal(await info.isVisible(), true, 'volta para a janela de avisos')
       await info.getByRole('button', { name: 'Fechar' }).click(); await info.waitFor({ state: 'hidden' })
-      // marca de outro texto (o aviso mudou desde a última visita): volta uma vez e regrava a marca atual
-      await p.evaluate(() => localStorage.setItem('aviso-inicial-visto', 'v1-00000000'))
+      // Em UTC já é dia 25; em Brasília ainda é dia 24.
+      await p.clock.setFixedTime(new Date('2026-11-25T02:59:59Z'))
+      await p.reload(); await p.locator('main#conteudo').waitFor()
+      assert.equal(await aviso.count(), 0, 'não volta antes da meia-noite em Brasília')
+      // A primeira entrada do dia seguinte mostra, mas o reload sem clicar em Entendi não repete.
+      await p.clock.setFixedTime(new Date('2026-11-25T03:00:00Z'))
       await p.reload(); await aviso.waitFor()
-      await p.keyboard.press('Escape'); await aviso.waitFor({ state: 'hidden' })
-      assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), marca)
-      await p.reload(); await p.locator('main#conteudo').waitFor(); await p.waitForTimeout(1500)
-      assert.equal(await p.locator('dialog:modal').count(), 0, 'lido de novo, não volta')
+      assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), '2026-11-25')
+      await p.reload(); await p.locator('main#conteudo').waitFor()
+      assert.equal(await aviso.count(), 0, 'já exibido hoje, mesmo sem fechar')
       await ctx.close()
     }
     // Juros: sem Reino Unido e com a bandeira de cada país nas linhas e nos títulos dos gráficos

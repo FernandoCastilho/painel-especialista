@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { AVISO_FONTES, AVISO_KEY, AVISO_RESUMO, avisoPendente, deveMostrarAviso, marcaDoAviso, marcarAvisoVisto, textoDoAviso } from '../src/avisoInicial.js'
+import { AVISO_FONTES, AVISO_KEY, AVISO_RESUMO, avisoPendente, marcarAvisoVisto } from '../src/avisoInicial.js'
 
 const read = (name) => readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8')
 const memoria = () => { const map = new Map(); return { map, getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) } }
@@ -14,47 +14,27 @@ test('o texto do aviso de entrada não mudou', () => {
     ['Semanal', 'Focus, às segundas.'],
     ['Manual', 'projeções dos bancos, conferidas à mão; cada uma mostra a sua data.'],
   ])
-  assert.match(textoDoAviso(), /^Aplicativo educacional[\s\S]*Quase ao vivo: câmbio[\s\S]*Manual: projeções dos bancos/)
 })
 
-test('a marca é estável para o mesmo texto e muda quando o texto muda', () => {
-  const marca = marcaDoAviso()
-  assert.match(marca, /^v1-[0-9a-f]{8}$/)
-  assert.equal(marcaDoAviso(), marca)
-  assert.equal(marcaDoAviso(textoDoAviso()), marca)
-  assert.notEqual(marcaDoAviso(textoDoAviso() + ' Nova ressalva.'), marca)
-  assert.notEqual(marcaDoAviso(textoDoAviso().replace('Não é', 'Nao é')), marca)
-  // Espaço ou quebra de linha a mais não conta como texto novo.
-  assert.equal(marcaDoAviso(`  ${textoDoAviso().replace(/\n/g, '\n\n  ')} `), marca)
-})
-
-test('entrega nova nas novidades reabre o aviso', () => {
-  const atual = [{ date: '23/11/2026', destaques: ['Nova seção M&A'] }]
-  const nova = [{ date: '24/11/2026', destaques: ['Nova calculadora'] }, ...atual]
-  assert.match(textoDoAviso(atual), /23\/11\/2026 \| Nova seção M&A$/)
-  assert.notEqual(marcaDoAviso(textoDoAviso(nova)), marcaDoAviso(textoDoAviso(atual)))
-})
-
-test('devo mostrar o aviso? primeira vez e texto novo sim; mesmo texto não', () => {
-  const marca = marcaDoAviso()
-  assert.equal(deveMostrarAviso(marca, null), true, 'nunca visto neste aparelho')
-  assert.equal(deveMostrarAviso(marca, undefined), true)
-  assert.equal(deveMostrarAviso(marca, ''), true)
-  assert.equal(deveMostrarAviso(marca, marca), false, 'mesmo texto já visto')
-  assert.equal(deveMostrarAviso(marca, marcaDoAviso('texto antigo')), true, 'texto mudou')
-})
-
-test('primeira visita mostra, visitas seguintes não, e texto novo volta a mostrar', () => {
+test('exibe automaticamente uma vez por data de Brasília e volta na primeira visita do dia seguinte', () => {
   const storage = memoria()
-  assert.equal(avisoPendente(storage), true)
-  marcarAvisoVisto(storage)
-  assert.equal(storage.map.get(AVISO_KEY), marcaDoAviso())
-  assert.equal(avisoPendente(storage), false)
-  assert.equal(avisoPendente(storage), false, 'não volta a cada entrada')
-  assert.equal(avisoPendente(storage, textoDoAviso() + ' Trecho novo.'), true)
-  marcarAvisoVisto(storage, textoDoAviso() + ' Trecho novo.')
-  assert.equal(avisoPendente(storage, textoDoAviso() + ' Trecho novo.'), false)
-  assert.equal(avisoPendente(storage), true, 'a marca guardada é de outro texto')
+  const primeiroAcesso = new Date('2026-11-24T15:00:00Z')
+  const antesDaVirada = new Date('2026-11-25T02:59:59Z')
+  const depoisDaVirada = new Date('2026-11-25T03:00:00Z')
+  assert.equal(avisoPendente(storage, primeiroAcesso), true)
+  marcarAvisoVisto(storage, primeiroAcesso)
+  assert.equal(storage.map.get(AVISO_KEY), '2026-11-24')
+  assert.equal(avisoPendente(storage, primeiroAcesso), false)
+  assert.equal(avisoPendente(storage, antesDaVirada), false, 'meia-noite em UTC não altera o dia de Brasília')
+  assert.equal(avisoPendente(storage, depoisDaVirada), true)
+  marcarAvisoVisto(storage, depoisDaVirada)
+  assert.equal(avisoPendente(storage, depoisDaVirada), false)
+})
+
+test('a marca antiga por versão não é confundida com uma data de exibição', () => {
+  const storage = memoria()
+  storage.setItem(AVISO_KEY, 'v1-00000000')
+  assert.equal(avisoPendente(storage, new Date('2026-11-24T15:00:00Z')), true)
 })
 
 test('armazenamento bloqueado ou ausente: o aviso aparece e nada quebra', () => {
@@ -68,13 +48,14 @@ test('armazenamento bloqueado ou ausente: o aviso aparece e nada quebra', () => 
 test('App: aviso sozinho só quando pendente e fora de navegador automatizado; conceito e panorama não abrem sozinhos', () => {
   const app = read('App.jsx')
   assert.match(app, /useState\(\(\) => !navigator\.webdriver && avisoPendente\(\)\)/)
-  assert.match(app, /const fecharAviso = \(\) => \{ marcarAvisoVisto\(\); setAvisoAberto\(false\) \}/)
-  assert.match(app, /<AvisoInicial open=\{avisoAberto\} onClose=\{fecharAviso\} \/>/)
+  assert.match(app, /const fecharAviso = \(\) => setAvisoAberto\(false\)/)
+  assert.match(app, /<AvisoInicial open=\{avisoAberto\} onClose=\{fecharAviso\} onShow=\{marcarAvisoVisto\} \/>/)
   // O conteúdo do aviso continua a um clique, na janela do "i", presente em todas as telas.
   assert.match(app, /onClick=\{\(\) => setAvisoAberto\(true\)\}>Ver o aviso de entrada<\/button>/)
   assert.doesNotMatch(app, /<ConceitoDiario/)
   assert.match(app, /<MarketPopup open=\{panorama\.aberto\} slot=\{panorama\.momento\} onClose=\{panorama\.fechar\}/)
   const aviso = read('AvisoInicial.jsx')
+  assert.match(aviso, /el\.showModal\(\)\s+onShow\(\)/)
   assert.match(aviso, /<p>\{AVISO_RESUMO\}<\/p>/)
   assert.match(aviso, /AVISO_FONTES\.map\(\(\[rotulo, texto\]\) => <li key=\{rotulo\}><b>\{rotulo\}:<\/b> \{texto\}<\/li>\)/)
   // Nenhum dos três componentes agenda abertura por tempo.
