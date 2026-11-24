@@ -6,7 +6,7 @@ const near = (a,b) => assert.ok(Math.abs(a-b)<1e-6, `${a} != ${b}`)
 // Regra de 11/11/2026: vencimento em fim de semana ou feriado nacional vai ao próximo dia útil. A base usa 04/11 (qua)
 // → 04/12/2026 (sex), 30 dias corridos e dia útil, para manter os valores redondos das convenções.
 const base = { date:'2026-11-04', titleRows:[{value:10000,count:1,dueDate:'2026-12-04'}],rate:2,feeMode:'total',fee:10,tac:20 }
-const fixture = changes => parseDiscountForm({...DISCOUNT_INITIAL_FORM,titleFeeMode:'percent',...changes})
+const fixture = changes => parseDiscountForm({...DISCOUNT_INITIAL_FORM,titleMode:'titles',titleFeeMode:'percent',...changes})
 test('desconto comercial por título: base desconta só juros, líquido deduz todos encargos',()=>{const r=discountOperation(base);assert.equal(r.ok,true);near(r.interest,200);near(r.base,9800);near(r.iof,61.348);near(r.net,9708.652)})
 test('racional simples por dentro usa taxa e prazo',()=>{const r=discountOperation({...base,convention:'rational30'});near(r.base,10000/1.02);near(r.interest,10000-10000/1.02)})
 test('vencimentos diferentes calculados individualmente, teto diário por título',()=>{const r=discountOperation({...base,rate:0,titleRows:[...base.titleRows,{value:20000,count:2,dueDate:'2028-11-06'}]});near(r.iof,10000*(.0038+.000082*30)+20000*(.0038+.000082*365));assert.equal(r.titles,3)})

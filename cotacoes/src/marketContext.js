@@ -1,4 +1,4 @@
-export const MARKET_IDS = ['ism-manufacturing', 'ism-services', 'caged', 'unemployment-br', 'payroll-us']
+export const MARKET_IDS = ['ism-manufacturing', 'ism-services', 'caged', 'unemployment-br', 'consumer-confidence-br', 'payroll-us']
 export const ACTIVITY_REVIEW_DAYS = 7
 export function activityNeedsReview(item, now = Date.now()) {
   const checked = typeof item?.checkedAt === 'number' ? item.checkedAt : Date.parse(item?.checkedAt)

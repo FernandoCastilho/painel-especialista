@@ -21,7 +21,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { normalizeIpca } from './ipca.js'
 import Explain from './Explain.jsx'
 import NoticiasPorDia from './NoticiasPorDia.jsx'
-import { MoedasNoticias, TemaNoticias } from './ReformaTributaria.jsx'
+import { MoedasNoticias } from './ReformaTributaria.jsx'
 import { moedasDaManchete, nomeDaMoeda } from './moedasNoTexto.js'
 import { CURRENCIES, seriesName } from './useQuotes.js'
 import { centralFull, fullWindow, fromInput, toInput, useHistory, useIntraday, useCentralDaily } from './useHistory.js'
@@ -37,10 +37,7 @@ import { formatoComo, picoEVale } from './chartMarcas.js'
 import { Plot, useWidth, fmtTime } from './HistoryChart.jsx'
 import { KpiRow, Panel } from './TerminalDesk.jsx'
 import { useDataFile } from './useDataFile.js'
-const HeavyVehicles = lazy(() => import('./HeavyVehicles.jsx'))
-const SectorNews = lazy(() => import('./SectorNews.jsx'))
 const CuradoriaNoticias = lazy(() => import('./CuradoriaNoticias.jsx'))
-const GoogleTrends = lazy(() => import('./GoogleTrends.jsx'))
 const RateModal = lazy(() => import('./RateModal.jsx'))
 
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}`
@@ -488,7 +485,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
         <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>
           <Suspense fallback={<p className="status" role="status">Carregando notícias…</p>}>
-            {newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : newsTab === 'eleicoes' ? <TemaNoticias id="eleicoes-eua" simples /> : newsTab === 'trends' ? <GoogleTrends /> : newsTab === 'veiculos-pesados' ? <><HeavyVehicles compact/><SectorNews id="veiculos-pesados" label="Veículos pesados" /></> : <MarketNews bare />}
+            {newsTab === 'moedas' ? <MoedasNoticias /> : ['imposto', 'split-payment', 'reforma', 'escala-6x1'].includes(newsTab) ? <CuradoriaNoticias id={newsTab} /> : <MarketNews bare />}
           </Suspense>
         </Panel>
         </div>
@@ -559,9 +556,6 @@ const NEWS_TABS = [
   { id: 'split-payment', label: 'Split payment', refresh: ['curadoria-noticias.json'] },
   { id: 'reforma', label: 'Reforma tributária', refresh: ['curadoria-noticias.json'] },
   { id: 'escala-6x1', label: 'Escala 6x1', refresh: ['curadoria-noticias.json'] },
-  { id: 'eleicoes', label: 'Eleições EUA', refresh: ['temas.json'] },
-  { id: 'trends', label: 'Google Trends', refresh: ['trends.json'] },
-  { id: 'veiculos-pesados', label: 'Veículos pesados', refresh: ['sector-news.json','heavy-vehicles.json'] },
 ]
 // Bandeira das moedas de que a manchete provavelmente fala (as da busca e as citadas no título).
 function MoedasCitadas({ item }) {

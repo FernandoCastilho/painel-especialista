@@ -1,8 +1,3 @@
-import { NOVIDADES_RECENTES } from './novidadesRecentes.js'
-
-// Aviso de entrada: aparece na primeira vez neste aparelho e volta quando o texto mudar ou entrar uma entrega nova
-// em novidadesRecentes.js (a mais recente fica no topo e entra na marca).
-// O texto fica aqui para que a marca guardada seja tirada do próprio conteúdo: mudou uma palavra, a marca muda e o aviso reaparece.
 export const AVISO_KEY = 'aviso-inicial-visto'
 export const AVISO_RESUMO = 'Aplicativo educacional, com informação ilustrativa. Não é recomendação de crédito.'
 export const AVISO_FONTES = [
@@ -12,30 +7,36 @@ export const AVISO_FONTES = [
   ['Manual', 'projeções dos bancos, conferidas à mão; cada uma mostra a sua data.'],
 ]
 
-const ultimaEntrega = ({ date, destaques = [] } = {}) => [date, ...destaques].filter(Boolean).join(' | ')
-
-export const textoDoAviso = (novidades = NOVIDADES_RECENTES) => [AVISO_RESUMO, ...AVISO_FONTES.map(([rotulo, texto]) => `${rotulo}: ${texto}`), ultimaEntrega(novidades[0])].join('\n')
-
-// Marca curta e estável do texto (FNV-1a de 32 bits). Espaços a mais ou a menos não contam como mudança.
-export function marcaDoAviso(texto = textoDoAviso()) {
-  const limpo = String(texto ?? '').replace(/\s+/g, ' ').trim()
-  let h = 0x811c9dc5
-  for (let i = 0; i < limpo.length; i++) { h ^= limpo.charCodeAt(i); h = Math.imul(h, 0x01000193) }
-  return `v1-${(h >>> 0).toString(16).padStart(8, '0')}`
-}
-
-// Devo mostrar o aviso? Sim se nunca foi visto neste aparelho ou se a marca guardada é de outro texto.
-export const deveMostrarAviso = (marcaAtual, marcaGuardada) => !marcaGuardada || marcaGuardada !== marcaAtual
+const dataBrasilia = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+})
 
 const guardado = () => { try { return globalThis.localStorage } catch { return null } }
 
-// Sem armazenamento (bloqueado ou indisponível), o aviso aparece a cada entrada: melhor repetir a ressalva do que escondê-la.
-export function avisoPendente(storage = guardado(), texto = textoDoAviso()) {
-  let marca = null
-  try { marca = storage?.getItem(AVISO_KEY) ?? null } catch { marca = null }
-  return deveMostrarAviso(marcaDoAviso(texto), marca)
+// Sem armazenamento, mantenha a ressalva visível em vez de suprimi-la.
+export function avisoPendente(storage = guardado(), agora = new Date()) {
+  try { return storage?.getItem(AVISO_KEY) !== dataBrasilia.format(agora) } catch { return true }
 }
 
-export function marcarAvisoVisto(storage = guardado(), texto = textoDoAviso()) {
-  try { storage?.setItem(AVISO_KEY, marcaDoAviso(texto)) } catch { /* sem armazenamento: vale só para esta entrada */ }
+export function marcarAvisoVisto(storage = guardado(), agora = new Date()) {
+  try { storage?.setItem(AVISO_KEY, dataBrasilia.format(agora)) } catch { /* vale só para esta entrada */ }
+}
+
+export function exibirAvisoAutomatico(abrir, storage = guardado(), agora, locks = globalThis.navigator?.locks) {
+  const tentar = () => {
+    const data = agora ?? new Date()
+    let marca
+    try { marca = storage?.getItem(AVISO_KEY) } catch { /* sem armazenamento */ }
+    if (marca === dataBrasilia.format(data)) return false
+    // A marca antiga não tem data. Na migração, evite uma possível repetição no mesmo dia.
+    if (/^v1-[0-9a-f]{8}$/.test(marca ?? '')) {
+      marcarAvisoVisto(storage, data)
+      return false
+    }
+    if (!abrir()) return false
+    marcarAvisoVisto(storage, data)
+    return true
+  }
+  // Compartilha a decisão entre abas. Sem Web Locks, revalida imediatamente antes de abrir.
+  return locks ? locks.request(AVISO_KEY, tentar) : Promise.resolve().then(tentar)
 }

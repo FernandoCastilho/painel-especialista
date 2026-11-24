@@ -5,7 +5,7 @@ import {normalizeIndicatorHistory,indicatorWindow,filterIndicatorPoints,monthLab
 const raw=JSON.parse(await readFile(new URL('../public/indicator-history.json',import.meta.url)))
 const all=normalizeIndicatorHistory(raw)
 test('three official real series preserve units and verified latest values, ISM remains unlicensed',()=>{
- assert.equal(all.length,5)
+ assert.equal(all.length,6)
  for(const [id,count,value] of [['unemployment-br',25,5.2],['payroll-us',32,29000],['caged',14,121305]]) {
   const s=all.find(s=>s.id===id);assert.equal(s.points.length,count);assert.equal(s.points.at(-1).value,value);assert.ok(s.sourceUrl.startsWith('https://'));assert.ok(s.revisionNote)
  }
@@ -29,4 +29,21 @@ test('invalid/missing/duplicate history is never coerced into zero',()=>{
  assert.equal(normalizeIndicatorHistory({series:[s]})[0].points[0].value,-100)
  assert.throws(()=>normalizeIndicatorHistory({series:[{...s,points:[{period:'2026-01',value:null}]}]}))
  assert.throws(()=>normalizeIndicatorHistory({series:[{...s,points:[s.points[0],s.points[0]]}]}))
+})
+
+test('ICC Brasil mantém fonte, mês, unidade e variação verificados na mesma série', async () => {
+ const { activityNeedsReview, contextItems, contextValue, MARKET_IDS } = await import('../src/marketContext.js')
+ const indicators = JSON.parse(await readFile(new URL('../public/market-indicators.json', import.meta.url)))
+ const item = contextItems(indicators, 'indicators', MARKET_IDS).find(i => i.id === 'consumer-confidence-br')
+ const history = all.find(s => s.id === item.id)
+ const [previous, last] = history.points.slice(-2)
+ assert.equal(history.seasonallyAdjusted, true)
+ assert.equal(item.unit, 'pontos')
+ assert.equal(last.value, item.value)
+ assert.equal(last.period, item.period)
+ assert.equal(last.sourceUrl, item.sourceUrl)
+ assert.equal(previous.period, '2026-10')
+ assert.equal(contextValue({ ...item, value: last.value - previous.value }), '-1,2')
+ assert.equal(activityNeedsReview(item, Date.parse('2026-11-24T11:12:01Z')), false)
+ assert.equal(activityNeedsReview(item, Date.parse('2026-12-01T11:12:00Z')), true)
 })

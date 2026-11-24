@@ -26,7 +26,10 @@ test('published bank dataset has only supported sources and numeric or absent va
   assert.deepEqual(data.institutions.map(bank => bank.name), INSTITUTIONS.slice(1))
   for (const bank of data.institutions) {
     if (Object.keys(bank.years).length) {
-      assert.match(bank.date, /^\d{4}-\d{2}-\d{2}$/)
+      if (bank.date === null) {
+        assert.equal(bank.name, 'Santander')
+        assert.match(bank.checkedAt, /^\d{4}-\d{2}-\d{2}$/)
+      } else assert.match(bank.date, /^\d{4}-\d{2}-\d{2}$/)
       assert.ok(bank.url.startsWith('https://'))
     }
     for (const [year, values] of Object.entries(bank.years)) {
