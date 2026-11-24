@@ -13,15 +13,17 @@ import { mesesDoPrazoEmDias } from './faixaCurva.js'
 import './ContaGarantida.css'
 import './CalcPattern-conta-garantida.css'
 import CalcBack from './CalcBack.jsx'
+import { EnvelopeEml } from './EmailEnvelope.jsx'
+import { contaGarantidaEml } from './contaGarantidaEml.js'
 
 const brl = n => n == null ? '—' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const pct = n => `${nbr5891(n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const dateLabel = d => d ? d.split('-').reverse().join('/') : '—'
 const FOOT = 'Valor e data valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
-// Roteiro de 21/11/2026, só no modo Utilização única: 1 Demanda, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026).
+// Roteiro de 21/11/2026: 1 Demanda (ou Período e lançamentos), 2 Encargos, 3 Resultado. Lançamentos por dia entrou no
+// roteiro em 24/11/2026, a pedido do Fernando, com o mesmo resultado em destaque da utilização única.
 // Tela limpa (21/11/2026): explicações ficam nos "?"; na tela, campos, valores, respostas e avisos.
 // Só ordem, nomes e apresentação: os números são os que parseContaGarantidaForm já devolvia.
-// Lançamentos por dia e Comparar com parcelado seguem como eram.
 export default function ContaGarantida({ onBack }) {
   const [form, setForm] = useState(cgInitialForm)
   // Linha mestra comum (19/11/2026): na utilização única, o valor e a data vêm dela e passam para as outras calculadoras.
@@ -94,7 +96,7 @@ export default function ContaGarantida({ onBack }) {
   const notes = result && <>
     <div className="calc-panel-context cg-note"><span>Como ler o resultado</span><CalculatorHelp title="Resultado estimado do período"><p>{dateLabel(params.start)} a {dateLabel(params.end)} · {result.rows.length} fechamentos apurados · {result.totals.interestDays} dias com saldo e contagem de juros · taxa do contrato: {form.rate}% a.m.</p><p>Para cobrir a conta, devolva o valor utilizado e pague juros e IOF do período. O custo total soma juros, IOF diário e IOF adicional, todos pagos à parte. Não inclui a devolução do principal nem outras tarifas. Saldo devedor final é exclusivamente o valor utilizado ainda não amortizado. O pagamento dos custos não gera novas utilizações.</p></CalculatorHelp></div>
     {cet?.ok && <details className="cg-more"><summary>Como calculamos o CET</summary>
-      {single && equiv}
+      {equiv}
       <div className="cx-heading"><span>Fluxo e regra do CET</span><CalculatorHelp title="Como calculamos o CET"><p>Fluxo do CET: {brl(cet.net)} líquidos em {dateLabel(cet.start)}; {brl(cet.payment)} em {dateLabel(cet.end)}.</p><p>Limite de {brl(cet.limit)} liberado em {dateLabel(cet.start)}, menos o IOF adicional ({brl(cet.additionalIof)}), cobrado na utilização: líquido de {brl(cet.net)}. Em {dateLabel(cet.end)}, devolução do limite + juros de {CG_CET_DAYS} dias ({brl(cet.interest)}) + IOF diário ({brl(cet.dailyIof)}), pela taxa, contagem de dias e IOF desta tela.</p><p>O CET é a taxa anual que iguala o valor liberado ao valor presente do pagamento, em dias corridos/365 (Resolução CMN 4.881/2020, arts. 4º e 6º). Ao mês: equivalente composta. Não há tarifas neste simulador.</p><p>Regra do art. 6º da Resolução CMN 4.881/2020 (texto oficial conferido em 11/11/2026): prazo de 30 dias e limite pactuado. Obrigatória para pessoa física, ME e EPP (art. 1º); para as demais empresas, estimativa. Taxa e IOF do contrato prevalecem.</p></CalculatorHelp></div>
     </details>}
   </>
@@ -107,8 +109,9 @@ export default function ContaGarantida({ onBack }) {
     : { question: 'Qual é a taxa', value: result ? `${form.rate}% a.m.` : '—', note: `Taxa do contrato. ${cet ? 'CET não calculado' : 'CET: informe o limite'}` }
   const answers = <>
     <Respostas items={[
-      { question: 'Quanto usou', value: reais(totals?.draw), note: result ? `Utilização em ${dateLabel(params.start)}` : 'Valor utilizado do limite' },
-      { question: 'Quanto paga para cobrir', value: reais(cover) },
+      single ? { question: 'Quanto usou', value: reais(totals?.draw), note: result ? `Utilização em ${dateLabel(params.start)}` : 'Valor utilizado do limite' }
+        : { question: 'Quanto usou', value: reais(totals?.draw), note: result ? `${dateLabel(params.start)} a ${dateLabel(params.end)}` : 'Soma das utilizações' },
+      single ? { question: 'Quanto paga para cobrir', value: reais(cover) } : { question: 'Quanto amortizou', value: reais(totals?.payment) },
       rateAnswer,
       { question: 'Quanto custa', value: reais(totals?.cost), main: true },
     ]} />
@@ -122,6 +125,14 @@ export default function ContaGarantida({ onBack }) {
       { label: 'Saldo devedor final', value: reais(result?.balance), kind: 'muted' },
     ]} />
   </>
+  const perfilLabel = CG_TAX_PROFILES.find(p => p.id === form.taxProfile)?.label
+  // Envelope (24/11/2026): baixa o e-mail executivo do Outlook com o resultado da simulação.
+  const envelope = result && <EnvelopeEml label="Baixar e-mail da simulação para o Outlook" gerar={() => contaGarantidaEml({
+    modo: form.mode, params, result, cet, taxa: form.rate,
+    diasLabel: form.dayCount === 'business' ? 'Dias úteis' : 'Todos os dias corridos',
+    perfilLabel,
+    lancamentos: result.rows,
+  })} />
   // Aviso de quando ainda não há resultado: o que falta preencher, o que corrigir ou o erro da conta.
   let status = null
   if (pending) status = flagged ? { warning: true, text: 'Preencha ou corrija os campos sinalizados para calcular. Nenhum resultado anterior é mantido quando há erro.' } : { text: guide }
@@ -136,31 +147,16 @@ export default function ContaGarantida({ onBack }) {
     {/* Tela recém-aberta: o que preencher aparece no aviso do resultado; "como começar" fica no "?" do título (tela limpa, 21/11/2026). */}
     <div hidden={!comparing}><ComparativoAlongamento /></div>
     {!comparing && <>
-    {/* Utilização única: roteiro de cima para baixo (21/11/2026). Lançamentos por dia: padrão de 18/11/2026, com dados à esquerda
-        e resultado ao lado (computador largo) ou abaixo (telas menores). Só apresentação. */}
-    <div className={single ? 'cg-workspace cg-roteiro' : 'cg-workspace'}>
+    {/* Os dois modos no roteiro de cima para baixo: 1 dados, 2 encargos, 3 resultado. Só apresentação. */}
+    <div className={single ? 'cg-workspace cg-roteiro' : 'cg-workspace cg-roteiro cg-lancamentos'}>
     <div className="cg-inputs">
-    {single ? <><LinhaMestra prefix="cg" title={step(1, 'Demanda do cliente')} foot={null} help={{ title: 'Demanda do cliente', children: <p>{FOOT}</p> }} values={lm} onChange={changeLm} onClear={clearLm} fields={['value', 'start']}
+    {single ? <LinhaMestra prefix="cg" title={step(1, 'Demanda do cliente')} foot={null} help={{ title: 'Demanda do cliente', children: <p>{FOOT}</p> }} values={lm} onChange={changeLm} onClear={clearLm} fields={['value', 'start']}
       labels={{ value: 'Valor utilizado', start: 'Data da utilização' }} errors={{ value: errors.amount, start: errors.start }}>
       {select('dateMode', 'Como informar o prazo?', [['duration', 'Quantidade de dias corridos'], ['end', 'Data da quitação']], 'A quitação é simulada no início da data final, antes dos encargos desse dia. O saldo inicial anterior à utilização é zero.')}
       {form.dateMode === 'duration' ? input('duration', 'Dias corridos de uso', 'Exemplo: 10 dias = data inicial + 10. A quitação ocorre antes da apuração do dia final.', 'text', `Quitação: ${dateLabel(params.end)}.`) : input('end', 'Data da quitação', 'O saldo é liquidado antes da apuração do dia.', 'date')}
       {errors.end && form.dateMode === 'duration' && <p className="cx-error lm-wide">{errors.end}</p>}
-    </LinhaMestra>
-    <article className="desk-panel cx-panel cg-narrow">
-      <header className="cx-heading"><h3>{step(2, 'Encargos')}</h3>{rateHelp}</header>
-      <div className="cx-form">{rateFields}</div>
-      <div className="cg-iof">
-        <div className="cx-field-label"><span>IOF</span>{iofHelp}</div>
-        {iofRates}
-        <details className="cg-iof-drawer" ref={iofDrawer}>
-          <summary>Enquadramento do IOF<small> · {CG_TAX_PROFILES.find(p => p.id === form.taxProfile)?.label}</small></summary>
-          <div className="cx-form">{iofProfile}{iofSimples}</div>
-        </details>
-      </div>
-    </article></> : <>
-    <article className="desk-panel cx-panel">
-      <header className="cx-heading"><h3>1. Período e lançamentos</h3><CalculatorHelp title="Período e lançamentos"><p>Valores em branco na tabela valem zero. Várias linhas da mesma data são somadas antes do cálculo, sem ordem intradia. Amortização reduz somente o valor utilizado; os pagamentos de juros e IOF ficam fora desta tabela. Para ver o IOF correto de uma conta existente, traga o histórico, não trate o saldo antigo como novo saque.</p></CalculatorHelp></header>
-
+    </LinhaMestra> : <article className="desk-panel cx-panel">
+      <header className="cx-heading"><h3>{step(1, 'Período e lançamentos')}</h3><CalculatorHelp title="Período e lançamentos"><p>Valores em branco na tabela valem zero. Várias linhas da mesma data são somadas antes do cálculo, sem ordem intradia. Amortização reduz somente o valor utilizado; os pagamentos de juros e IOF ficam fora desta tabela. Para ver o IOF correto de uma conta existente, traga o histórico, não trate o saldo antigo como novo saque.</p></CalculatorHelp></header>
         <div className="cx-form">{input('start', 'Primeiro dia apurado', 'Saldo anterior: zero. Para saldo já utilizado, inclua o histórico desde a utilização original.', 'date')}{input('end', 'Último dia apurado, inclusive', 'Não gera amortização automática. O saldo final pode continuar em aberto.', 'date')}</div>
         <div className="cx-wrap cg-entry-wrap" role="region" aria-label="Tabela editável de utilizações e amortizações" tabIndex={0}>
           <table className="cx-matrix cg-entry"><caption className="sr-only">Lançamentos da conta garantida; valores em reais</caption><thead><tr><th scope="col">Data</th><th scope="col">Utilização</th><th scope="col">Amortização</th><th scope="col">Ação</th></tr></thead><tbody>{form.rows.map((row, index) => <tr key={row.id}>
@@ -172,60 +168,26 @@ export default function ContaGarantida({ onBack }) {
           </tr>)}</tbody></table>
         </div>
         <div className="cg-actions"><button type="button" className="cg-button" disabled={form.rows.length >= 500} onClick={addRow}>+ Adicionar lançamento</button><span className="cx-hint">{form.rows.length} de 500 linhas</span><CalculatorHelp title="Adicionar lançamentos"><p>Até 500 linhas. Lance somente utilização e amortização do principal. Juros e IOF são calculados separadamente.</p></CalculatorHelp></div>
-    </article>
-
+    </article>}
     <article className="desk-panel cx-panel cg-narrow">
-      <header className="cx-heading"><h3>2. Juros e convenções do contrato</h3>{rateHelp}</header>
+      <header className="cx-heading"><h3>{step(2, 'Encargos')}</h3>{rateHelp}</header>
       <div className="cx-form">{rateFields}</div>
+      <div className="cg-iof">
+        <div className="cx-field-label"><span>IOF</span>{iofHelp}</div>
+        {iofRates}
+        <details className="cg-iof-drawer" ref={iofDrawer}>
+          <summary>Enquadramento do IOF<small> · {perfilLabel}</small></summary>
+          <div className="cx-form">{iofProfile}{iofSimples}</div>
+        </details>
+      </div>
     </article>
-
-    <article className="desk-panel cx-panel cg-narrow">
-      <header className="cx-heading"><h3>3. Referência de IOF</h3>{iofHelp}</header>
-      <div className="cx-form">{iofProfile}{iofRates}{iofSimples}</div>
-    </article></>}
-
     </div>
     {/* O quadro de resultado é o que o modo Apresentar mostra em "Resultado". */}
-    {single ? <div className="rt-outcome calc-result-shell" aria-live="polite">
+    <div className="rt-outcome calc-result-shell" aria-live="polite">
       <Resultado id="cg-result-title" number={3} alert={status}>
-        {result ? <ExpandablePanel title="Resultado estimado do período">{alerts}{answers}{notes}</ExpandablePanel> : <>{alerts}{answers}</>}
+        {result ? <ExpandablePanel title="Resultado estimado do período" help={envelope}>{alerts}{answers}{notes}</ExpandablePanel> : <>{alerts}{answers}</>}
       </Resultado>
-    </div> : <aside className="cg-result-col" aria-label="Resultado da simulação">
-    <article className="desk-panel cx-panel cg-result-box">
-      {!result && <header className="cg-result-head"><h3>Resultado</h3></header>}
-      {/* Falta de dados e avisos: faixa no topo do quadro do resultado. */}
-      <div aria-live="polite" className="cg-result-status">
-        {pending && (flagged
-          ? <p className="cg-notice">Preencha ou corrija os campos sinalizados para calcular. Nenhum resultado anterior é mantido quando há erro.</p>
-          : <p className="cg-notice cg-guide">{guide}</p>)}
-        {calculation && !calculation.ok && <p role="alert" className="cg-notice">{calculation.error}</p>}
-      </div>
-      {!result && avisosVisiveis.map(warning => <p className="cg-notice" key={warning}>{warning}</p>)}
-      {result && <ExpandablePanel title="Resultado estimado do período">
-        {alerts}
-        {/* a. Resposta principal: custo de juros + IOF sobre os saldos e a taxa efetiva. Só reorganiza números já calculados. */}
-        <div className="cg-answer">
-          <div className="cg-answer-main"><small>Custo total do período</small><b>{brl(result.totals.cost)}</b></div>
-          {cet?.ok ? <div className="cg-answer-side"><small>CET · taxa efetiva</small><b>{pct(cet.annual)} a.a.</b><span>{pct(cet.monthly)} a.m. · 30 dias</span></div>
-            : <div className="cg-answer-side"><small>Taxa do contrato</small><b>{form.rate}% a.m.</b><span>{cet ? 'CET não calculado' : 'CET: informe o limite'}</span></div>}
-        </div>
-        {/* b. Equivalências */}
-        {equiv}
-        {/* c. Valores em reais, agrupados, terminando no total */}
-        <div className="cg-values" role="group" aria-label="Valores em reais">
-          <h4 className="cg-grp">Utilização</h4>
-          <div><span>Total de utilizações</span><b>{brl(result.totals.draw)}</b></div>
-          <div><span>Saldo devedor final</span><b>{brl(result.balance)}</b></div>
-          <h4 className="cg-grp">Custo do período</h4>
-          <div><span>Juros apurados</span><b>{brl(result.totals.interest)}</b></div>
-          <div><span>IOF diário</span><b>{brl(result.totals.dailyIof)}</b></div>
-          <div><span>IOF adicional</span><b>{brl(result.totals.additionalIof)}</b></div>
-          <div className="cg-total"><span>Custo total</span><b>{brl(result.totals.cost)}</b></div>
-        </div>
-        {notes}
-      </ExpandablePanel>}
-    </article>
-    </aside>}
+    </div>
     </div>
 
     {/* d. Tabelas longas em largura total, recolhidas: nada foi apagado. */}
@@ -253,7 +215,8 @@ export default function ContaGarantida({ onBack }) {
     </ul><p>Fontes consultadas em 05/11/2026: {CG_SOURCES.map((source, index) => <span key={source.url}>{index > 0 && ' · '}<a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></span>)}.</p></CalculatorHelp></div>
     </>}
     {/* Taxa prefixada ao mês: a referência é a curva DI x pré da B3. Sempre o último bloco da tela. */}
-    {/* O gráfico termina no prazo de uso, em meses arredondados para cima (regra de 23/11/2026). */}
-    <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias((Date.parse(params.end) - Date.parse(params.start)) / 86400000)} />
+    {/* O gráfico termina no prazo de uso, em meses arredondados para cima (regra de 23/11/2026). No comparar, a curva
+        fica dentro do comparativo e vai até o prazo do giro parcelado. */}
+    {!comparing && <ReferenciaMercado tipos={['pre']} prazoMeses={mesesDoPrazoEmDias((Date.parse(params.end) - Date.parse(params.start)) / 86400000)} />}
   </section>
 }

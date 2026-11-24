@@ -23,7 +23,6 @@
 .cg-tax-reference span { color:var(--mut); font-size:.75rem; }
 .cx-cg .cg-check { display:flex; gap:8px; line-height:1.5; color:var(--fg); }
 .cx-cg .cg-check input { width:20px; height:20px; min-height:20px; flex:none; margin-top:3px; }
-.cg-result-status:empty { display:none; }
 .cg-kpis { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; padding:12px; }
 .cg-kpis > div { display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--line); background:var(--surface-2); min-width:0; }
 .cg-kpis span { color:var(--mut); font-size:.75rem; }
@@ -46,3 +45,11 @@
   .cg-entry-single, .cg-entry-single tbody, .cg-entry-single tr, .cg-entry-single td { display:block; width:100%; }
   .cg-entry-single td, .cg-entry-single td:last-child { min-width:0; }
 }
+
+/* Envelope do e-mail (24/11/2026): mesmo visual do BNDES, visível no claro e no escuro (contraste com var(--bw-link)),
+   na mesma linha do título do quadro. */
+.cx-cg .rt-result .expandable-heading > div { display:flex; align-items:center; gap:8px; }
+.cx-cg .bndes-email .credit-email { color: var(--bw-link); border: 0; background: transparent; cursor: pointer; display: inline-grid; place-items: center; }
+.cx-cg .bndes-email .credit-email:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.cx-cg .bndes-email .credit-email:focus-visible { outline: 2px solid var(--cp-orange); outline-offset: 2px; }
+.cx-cg .bndes-email small { display: block; color: var(--bw-warn-ink); }
