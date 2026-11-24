@@ -1,0 +1,18 @@
+/* Conversa com o Fredix: reaproveita a janela da caixa de sugestões e acrescenta só o necessário. */
+.mascot-dock .fredix-trigger{margin-bottom:4px}
+.fredix-dialog{width:min(520px,calc(100vw - 24px))}
+.fredix-conversa{display:flex;flex-direction:column;gap:8px;min-height:120px;max-height:45dvh;overflow-y:auto;overscroll-behavior:contain;margin:4px 0 12px;padding:2px}
+.fredix-msg{margin:0;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;max-width:88%}
+.fredix-voce{align-self:flex-end;background:var(--surface-2,#191914);border:1px solid var(--line,#484739)}
+.fredix-fredix{align-self:flex-start;border:1px solid var(--amber,#ffb000)}
+.fredix-fredix a{color:var(--amber,#ffb000);text-decoration:underline}
+.fredix-pensando{opacity:.75;font-style:italic}
+.fredix-sugestoes{display:flex;flex-wrap:wrap;gap:6px}
+.fredix-sugestoes button,.fredix-nova{min-height:36px;padding:6px 12px;border:1px solid var(--line,#484739);border-radius:999px;background:transparent;color:inherit;font:inherit;font-size:12px;cursor:pointer}
+.fredix-form{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.fredix-dialog .fredix-form textarea{min-height:48px;max-height:30dvh;resize:vertical}
+.fredix-form .feedback-submit{width:auto;min-width:92px}
+.fredix-anti-robo:empty{display:none}
+.fredix-anti-robo{margin-top:8px}
+.fredix-nova{display:block;margin:10px auto 0}
+@media(max-width:380px){.fredix-form{grid-template-columns:1fr}.fredix-form .feedback-submit{width:100%}}

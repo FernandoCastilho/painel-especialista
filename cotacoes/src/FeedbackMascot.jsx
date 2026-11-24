@@ -4,6 +4,7 @@ import config from './feedbackConfig.json'
 import { EMPTY_FEEDBACK, FEEDBACK_LIMITS, FEEDBACK_TYPES, feedbackEndpoint, sendFeedback, validateFeedback } from './feedback.js'
 import './FeedbackMascot.css'
 import MascotDock from './MascotDock.jsx'
+import FredixChat from './FredixChat.jsx'
 import owl from './assets/mascot-owl.webp'
 import owlWing from './assets/mascot-owl-wing.webp'
 
@@ -71,6 +72,7 @@ export default function FeedbackMascot({ configuration = config, onSearch, secti
   return <>
     <MascotDock section={section} onSearch={onSearch} icon={<MascotIcon />}>
       <span className="mascot-greeting">Prazer, sou Fredix</span>
+      <FredixChat icone={<MascotIcon />} />
       <button className="feedback-trigger" type="button" ref={trigger} aria-label="Abrir caixa de sugestões" title="Fredix — abrir caixa de sugestões" aria-haspopup="dialog" aria-expanded={open} aria-controls="feedback-dialog" onClick={() => { restoreFocus.current = true; setOpen(true) }}>💡 Sugestão</button>
     </MascotDock>
     {createPortal(<dialog id="feedback-dialog" className="feedback-dialog" ref={dialog} aria-labelledby="feedback-title" aria-describedby="feedback-privacy" onCancel={event => { event.preventDefault(); setOpen(false) }} onClose={() => { if (!dialog.current?.open) setOpen(false) }}>
