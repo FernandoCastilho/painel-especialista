@@ -69,7 +69,7 @@ test('exemplo de abertura da tela: R$ 1 milhão, 48 meses, 3 de carência, TFC d
 test('a tela segue a ordem do roteiro e termina na referência de mercado', async () => {
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", "step(3, 'Resultado · custo final para o cliente')",
-    'id="fm-parcelas"', 'title="Memória completa do fluxo"', 'className="fm-premises"', 'title="Histórico dos indexadores"'].map(text => source.indexOf(text))
+    'id="fm-parcelas"', 'title="Memória completa do fluxo"', 'title="Premissas e limites da simulação"', 'title="Histórico dos indexadores"'].map(text => source.indexOf(text))
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
   // A linha do tempo saiu em 21/11/2026.
   assert.doesNotMatch(source, /LinhaDoTempo/)
@@ -86,5 +86,5 @@ test('a tela segue a ordem do roteiro e termina na referência de mercado', asyn
   // O resultado continua respondendo com os nomes que já usava.
   for (const linha of ['Valor financiado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado', 'CET estimado']) assert.ok(source.includes(linha), linha)
   // O histórico vem antes da referência de mercado, que termina no prazo digitado (regra de 23/11/2026).
-  assert.match(source.slice(source.indexOf('title="Histórico dos indexadores"')), /<\/BndesDetails>\}\s*\{res && <ReferenciaMercado tipos=\{referenciaTipos\} prazoMeses=\{prazo \?\? undefined\} \/>\}\s*<\/section>\s*\)\s*\}\s*$/)
+  assert.match(source.slice(source.indexOf('title="Histórico dos indexadores"')), /<\/BndesDetails>\}\s*\{res && <ReferenciaMercado callout tipos=\{referenciaTipos\} prazoMeses=\{prazo \?\? undefined\} \/>\}\s*<\/section>\s*\)\s*\}\s*$/)
 })

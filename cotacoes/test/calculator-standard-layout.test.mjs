@@ -56,7 +56,7 @@ test('standard inputs retain the currency prefix gutter and section spacing', as
   assert.match(css, /gap:20px;/)
 })
 test('Finame history keeps instructions available through help', async () => {
-  assert.match(await source('FinameMateriais.jsx'), /<ComparaSeries compactHelp items=/)
+  assert.match(await source('FinameMateriais.jsx'), /<ComparaSeries compactHelp fixo items=/)
   const comparison = await source('BndesCompare.jsx')
   assert.match(comparison, /compactHelp = false/)
   assert.match(comparison, /<CalculatorHelp title="Como ler o histórico dos indexadores">/)

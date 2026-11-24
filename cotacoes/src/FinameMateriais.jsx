@@ -24,6 +24,7 @@ import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalend
 import { linhasDoFluxoBndes } from './bndesFluxo.js'
 import FluxoPagamentos from './FluxoPagamentos.jsx'
 import EmailEnvelope from './EmailEnvelope.jsx'
+import WhatsAppCotacao from './WhatsAppCotacao.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
 import './BndesPecas.css'
 
@@ -33,6 +34,7 @@ const parcelaDoCusto = (valor, resultado) => {
   const custo = resultado.total - resultado.liberado
   return <><span>{brl(valor)}</span>{custo > 0 && <><br /><small>{pct(100 * valor / custo)} do custo</small></>}</>
 }
+const notaDoCusto = (valor, resultado) => { const custo = resultado.total - resultado.liberado; return custo > 0 ? `${pct(100 * valor / custo)} do custo` : null }
 const dmy = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 const data = (d) => d.toLocaleDateString('pt-BR')
 // Exemplos da ajuda do ECG: [valor liberado em R$, % garantido, prazo total em meses], calculados pela fórmula do Anexo V.
@@ -83,8 +85,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
     })
     return () => cancelAnimationFrame(frame)
   }, [cotacaoAmpliada, mostrarParcelas])
-  const [chartPreset, setChartPreset] = useState(12)
-  const [chartCustom, setChartCustom] = useState(null)
   const { sistema, composicao, liberacao } = FINAME_PREMISES
   const [manualRates, setManualRates] = useState({})
   const [porte, setPorte] = useState('mpme')
@@ -272,6 +272,26 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
     return [juros && ['1º pagamento de juros', juros.vencimento], amort && ['1ª parcela após carência', amort.vencimento], ultima && ultima !== amort && ['Última parcela', ultima.vencimento]].filter(Boolean)
   })() : []
   const parcelDates = [...new Set(alternatives.flatMap(item => item.result.parcelas.map(row => row.vencimento)))].filter(Boolean).sort()
+  // Imagem para o WhatsApp: os mesmos textos do quadro executivo (só cotação única; o comparativo segue no e-mail).
+  const imagemDados = res && !comparar ? {
+    titulo: `Cotação BNDES Finame · ${custo.toUpperCase()}`,
+    subtitulo: `Simulação de ${new Date().toLocaleDateString('pt-BR')} · CET estimado · valores em R$`,
+    cet: { rotulo: res.indice ? 'Custo com índice projetado' : 'CET estimado', anual: cetTexto(cet), mensal: cet ? cetTexto(cet, 'mensal') : null },
+    total: brl(res.total),
+    fatos: [['Taxa final', `${pct(res.taxa, 2)} a.a. · ${pct(res.taxaMensal, 3)} a.m.`],
+      res.indice && [`${res.indice.rotulo} projetado`, quadros.find(item => item.id === 'indice')?.valor],
+      res.cetFixo !== undefined && ['CET · parte fixa', cetTexto(res.cetFixo)]].filter(Boolean),
+    equivalencia: spread != null ? { valor: `CDI + ${pct(spread, 2)} a.a.`, nota: cdi != null ? `CDI de ${pct(cdi, 2)} a.a. em ${new Date(macro.data.cdi.at(-1)[0]).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}` : null } : null,
+    parcelas: [['Primeira parcela após carência', brl(res.primeiraParcela)], ['Última parcela', brl(res.ultimaParcela)]],
+    despesas: [['Juros totais', res.juros], res.correcao !== 0 && Number.isFinite(res.correcao) && ['Correção do saldo', res.correcao],
+      ['TAC à vista', res.tac], ['IOF', res.iof], res.fgi && ['ECG à vista', res.fgi.ecg]].filter(Boolean).map(([rotulo, valor]) => [rotulo, brl(valor), notaDoCusto(valor, res)]),
+    referencia: { nome: custo.toUpperCase(), serie: quotes[custo]?.codigo ? `Série ${quotes[custo].codigo}` : null, taxa: `${pct(custoFinanceiro, 4)} a.a.`,
+      nota: `${rates[custo].manual ? 'Taxa manual' : 'Painel BNDES'}${quotes[custo]?.data ? ` · referência do painel em ${dmy(quotes[custo].data)}` : ''}` },
+    condicoes: [['Valor financiado', brl(res.liberado)], ['Prazo total', `${prazo} meses`], ['Carência', `${carencia} meses`],
+      ['Amortização', sistema.toUpperCase()], ['Parcelas com amortização', String(res.parcelasAmortizacao)],
+      ['Porte e região', PORTES.find(item => item.id === porte).label], ['Liberação', dmy(liberacaoText)]],
+    rodape: 'Simulação indicativa, sujeita à análise e aprovação. CET estimado; o CET e a proposta da instituição financeira prevalecem.',
+  } : null
   const historyItems = [
     { id: 'tfc', name: `TFC · ${tfcCodigo}`, short: 'TFC', unit: '% a.a.', decimals: 2, list: tfcPts.map(([period, value]) => ({ period, value })) },
     { id: 'tfb', name: `TFB · ${keyOf(faixa, liberacao)}`, short: 'TFB', unit: '% a.a.', decimals: 2, list: tfbPts.map(([period, value]) => ({ period, value })) },
@@ -384,7 +404,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       <div className="fm-results">
       <ExpandablePanel title="Resultado · custo final para o cliente" heading={step(3, 'Resultado · custo final para o cliente')} className="fm-result-workspace" toggleLabel="Modo apresentação" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar.')}</header>
+        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />}{res && !comparar && <WhatsAppCotacao dados={imagemDados} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar.')}</header>
 
         {!resumida && <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>}
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
@@ -508,22 +528,22 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       )}
 
 
-      <details className="fm-premises"><summary>Premissas e limites da simulação</summary>
+      <BndesDetails title="Premissas e limites da simulação" className="fm-premises-callout">
         <p role="status">Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p>
         <div className="fm-rotulo">Método da projeção{ajuda('Método da projeção', <>
           <p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p>
           <p>TLP, Taxa LCD e TFBD: taxa do painel (J, LD1 ou TFBD) mais a hipótese do índice pelo Focus ano a ano, editável. TLP: IPCA cobrado com os juros, sem corrigir o saldo, dias úteis/252. LCD: Selic capitalizada no saldo (média dos fins de ano do Focus; no ano da liberação, a Selic atual), dias úteis/252. TFBD: saldo pela variação do dólar e juros proporcionais, dias corridos/360; não disponível no Itaú. FGI Tradicional só na TLP (o regulamento veda Selic/LCD capitalizada e TFBD). Projeção, não memória contratual: o contrato usa índices mensais defasados e arredondamentos próprios.</p>
           <p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p>
         </>)}</div>
-      </details>
+      </BndesDetails>
       </div>
 
       {funding?.mode === 'inline' && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
         <p className="cx-hint">{ajuda('Histórico dos indexadores', 'Histórico, não projeção futura. Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
-        <ComparaSeries compactHelp items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: chartPreset, setPreset: setChartPreset, custom: chartCustom, setCustom: setChartCustom }} />
+        <ComparaSeries compactHelp fixo items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: 12, custom: null }} />
       </BndesDetails>}
-      {res && <ReferenciaMercado tipos={referenciaTipos} prazoMeses={prazo ?? undefined} />}
+      {res && <ReferenciaMercado callout tipos={referenciaTipos} prazoMeses={prazo ?? undefined} />}
     </section>
   )
 }

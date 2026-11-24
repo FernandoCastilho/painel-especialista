@@ -4,6 +4,7 @@
 //   'pos'    → CDI futuro: taxa a termo implícita nos futuros de DI da B3
 //   'cambio' → histórico diário da moeda escolhida na tela (prop `moeda`: USD, EUR ou CNH)
 import { useMemo, useState } from 'react'
+import BndesDetails from './BndesDetails.jsx'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import CdiFuturo from './CdiFuturo.jsx'
 import { CurvePanel } from './Curves.jsx'
@@ -67,10 +68,14 @@ const GRAFICOS = { pre: Pre, pos: Pos, cambio: Cambio }
 
 // `tipos`: quais gráficos mostrar, na ordem. Sempre o último bloco da calculadora.
 // `prazoMeses` (opcional, só na curva pré): o prazo total da demanda, em meses; o gráfico termina nele.
-export default function ReferenciaMercado({ tipos, moeda, prazoMeses }) {
+// `callout` (calculadora BNDES, 24/11/2026): o bloco vem recolhido, no mesmo formato do histórico dos indexadores.
+export default function ReferenciaMercado({ tipos, moeda, prazoMeses, callout = false }) {
   const faixa = faixaDaCurva(prazoMeses)
+  const ajuda = <CalculatorHelp title="Referência de mercado"><p>{SO_PARA_ILUSTRAR}</p>{tipos.map(tipo => <p key={tipo}>{AJUDA[tipo](faixa)}</p>)}</CalculatorHelp>
+  const graficos = <div className="rm-graficos">{tipos.map(tipo => { const Grafico = GRAFICOS[tipo]; return <div className="rm-grafico" key={tipo}><Grafico moeda={moeda} faixa={faixa} /></div> })}</div>
+  if (callout) return <BndesDetails title="Referência de mercado" className="rm-callout"><div className="rm rm-dentro"><p className="rm-fonte">Só para ilustrar{ajuda}</p>{graficos}</div></BndesDetails>
   return <section className="rm" aria-labelledby="rm-titulo">
-    <div className="rm-titulo-linha"><h3 id="rm-titulo">Referência de mercado</h3><CalculatorHelp title="Referência de mercado"><p>{SO_PARA_ILUSTRAR}</p>{tipos.map(tipo => <p key={tipo}>{AJUDA[tipo](faixa)}</p>)}</CalculatorHelp></div>
-    <div className="rm-graficos">{tipos.map(tipo => { const Grafico = GRAFICOS[tipo]; return <div className="rm-grafico" key={tipo}><Grafico moeda={moeda} faixa={faixa} /></div> })}</div>
+    <div className="rm-titulo-linha"><h3 id="rm-titulo">Referência de mercado</h3>{ajuda}</div>
+    {graficos}
   </section>
 }
