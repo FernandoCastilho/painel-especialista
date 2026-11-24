@@ -40,9 +40,8 @@ function Clocks() {
 
 // Barra superior do terminal (computador): marca, seções, relógios e estado dos dados.
 // Atalho: Alt+1 a Alt+9 (e Alt+0 para a 10ª) trocam de seção (as teclas F1 a F12 ficam com o navegador).
-export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle, focusMode, onToggleFocus }) {
+export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle }) {
   useEffect(() => {
-    if (focusMode) return undefined
     const onKey = (e) => {
       if (e.altKey && !e.ctrlKey && !e.metaKey && /^[0-9]$/.test(e.key)) {
         e.preventDefault()
@@ -51,9 +50,26 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle,
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onTab, focusMode])
+  }, [onTab])
 
-  const focusLabel = focusMode ? 'Sair da tela cheia' : 'Ativar tela cheia'
+  const [telaCheia, setTelaCheia] = useState(() => document.fullscreenElement === document.documentElement)
+  const [erroTelaCheia, setErroTelaCheia] = useState(false)
+  useEffect(() => {
+    const sincronizar = () => setTelaCheia(document.fullscreenElement === document.documentElement)
+    document.addEventListener('fullscreenchange', sincronizar)
+    return () => document.removeEventListener('fullscreenchange', sincronizar)
+  }, [])
+  const telaCheiaDisponivel = telaCheia || Boolean(document.fullscreenEnabled && document.documentElement.requestFullscreen)
+  const alternarTelaCheia = async () => {
+    setErroTelaCheia(false)
+    try {
+      if (document.fullscreenElement === document.documentElement) await document.exitFullscreen()
+      else await document.documentElement.requestFullscreen()
+    } catch {
+      setErroTelaCheia(true)
+    }
+  }
+  const focusLabel = telaCheia ? 'Sair da tela cheia' : 'Ativar tela cheia'
 
   return (
     <div className="topbar">
@@ -72,11 +88,12 @@ export default function TopBar({ tab, onTab, feed, feedAt, feedLabel, feedTitle,
       <AvisosButton className="topbar-info" />
       <span className="laser-slot laser-slot-top" />
       <MascotSlot className="mascot-slot-top" />
-      <button type="button" className="focus-mode-toggle" aria-controls="conteudo" aria-label={focusLabel} aria-pressed={focusMode} title={focusLabel} onClick={onToggleFocus}>
+      <button type="button" className="focus-mode-toggle" aria-label={focusLabel} aria-pressed={telaCheia} title={telaCheiaDisponivel ? focusLabel : 'Tela cheia indisponível neste navegador'} disabled={!telaCheiaDisponivel} onClick={alternarTelaCheia}>
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-          <path d={focusMode ? 'M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5' : 'M4 9V4h5m11 5V4h-5M4 15v5h5m11-5v5h-5'} />
+          <path d={telaCheia ? 'M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5' : 'M4 9V4h5m11 5V4h-5M4 15v5h5m11-5v5h-5'} />
         </svg>
       </button>
+      {erroTelaCheia && <span className="fullscreen-status" role="status">O navegador não permitiu a tela cheia.</span>}
     </div>
   )
 }
