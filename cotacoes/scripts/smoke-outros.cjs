@@ -103,11 +103,20 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const p = await offline(await ctx.newPage())
       await p.goto(base + '/#resumo')
       const aviso = p.getByRole('dialog', { name: 'Aviso', exact: true }); await aviso.waitFor()
-      const texto = /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não é recomendação de crédito[\s\S]*Quase ao vivo[\s\S]*Diário[\s\S]*Manual/i
+      const texto = /aplicativo educacional[\s\S]*informação ilustrativa[\s\S]*Não é recomendação de crédito/i
       assert.match(await aviso.innerText(), texto)
-      // linha das novidades da semana logo abaixo do aviso, antes do botão (o conteúdo depende da data; só confere a estrutura)
-      const nov = aviso.locator('.aviso-novidades'); if (await nov.count()) { assert.match(await nov.innerText(), /NOVIDADES DA SEMANA|Novidades da semana/i); assert.ok((await nov.locator('li').count()) >= 1, 'aviso lista os destaques da semana') }
-      const box = await aviso.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800, 'aviso cabe na tela')
+      // O resumo tem no máximo três destaques e os detalhes técnicos abrem sob demanda.
+      const nov = aviso.locator('.aviso-novidades')
+      assert.match(await nov.innerText(), /Novidades da semana/i)
+      assert.ok(await nov.locator('li').count() <= 3, 'aviso mostra até três destaques')
+      const box = await aviso.boundingBox()
+      assert.ok(box && box.x >= 0 && box.x + box.width <= width && box.y >= 0 && box.y + box.height <= 800 && box.height <= 401, 'aviso compacto, sem tomar a tela')
+      const fontes = aviso.locator('.aviso-fontes-detalhes')
+      assert.equal(await fontes.evaluate(el => el.open), false)
+      assert.equal(await fontes.locator('li').first().isVisible(), false)
+      await fontes.locator('summary').click()
+      assert.match(await fontes.locator('ul').innerText(), /Quase ao vivo[\s\S]*Diário[\s\S]*Semanal[\s\S]*Manual/)
+      await fontes.locator('summary').click()
       assert.equal(await p.evaluate(() => localStorage.getItem('aviso-inicial-visto')), null, 'só marca como lido ao fechar')
       await aviso.getByRole('link', { name: 'Ver todas as atualizações' }).click()
       await aviso.waitFor({ state: 'hidden' })

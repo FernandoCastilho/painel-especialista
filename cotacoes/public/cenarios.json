@@ -24,8 +24,8 @@
     {
       "name": "Bradesco",
       "date": "2026-11-06",
-      "url": "https://www.economiaemdia.com.br/home/projecoes/longo-prazo",
-      "note": "câmbio no fim do período",
+      "url": "https://www.economiaemdia.com.br/home/projecoes/curto-prazo",
+      "note": "Pesquisa Econômica Bradesco · Selic e câmbio no fim do período",
       "years": {
         "2026": {
           "pib": 1.5,
@@ -39,27 +39,29 @@
           "selic": 12.75,
           "usd": 5.5
         }
-      }
+      },
+      "checkedAt": "2026-11-24"
     },
     {
       "name": "Santander",
-      "date": "2026-10-30",
-      "url": "https://assets.santandermedia.com/adobe/assets/urn:aaid:aem:d4ec8f04-550b-4fdb-b772-6c9247c12aaa/original/as/BR_PDF_PF_guia_mensal_perfil_arrojado_20261103.pdf",
-      "note": "Guia mensal de novembro, PDF, p. 12 · data-base 30/10 · a tabela não diz o período do dólar",
+      "date": null,
+      "url": "https://www.santander.com.br/investimentos/analise-economica/",
+      "note": "Análise Econômica Santander · Selic e câmbio no fim do período",
       "years": {
         "2026": {
-          "pib": 1.8,
-          "ipca": 4.9,
-          "selic": 13.5,
+          "pib": 1.6,
+          "ipca": 5.3,
+          "selic": 13.75,
           "usd": 5.3
         },
         "2027": {
-          "pib": 1.3,
-          "ipca": 4.1,
+          "pib": 0.8,
+          "ipca": 5,
           "selic": 12.5,
           "usd": 5.4
         }
-      }
+      },
+      "checkedAt": "2026-11-24"
     },
     {
       "name": "BB",
@@ -83,9 +85,9 @@
     },
     {
       "name": "BTG",
-      "date": "2026-11-09",
-      "url": "https://content.btgpactual.com/research/files/file/pt-BR/2026-11-09T100833.382_Spoiler_Macro_09nov26_BTGPactual_ENG.pdf",
-      "note": "PDF, p. 6 · câmbio no fim do período",
+      "date": "2026-11-16",
+      "url": "https://content.btgpactual.com/research/files/file/pt-BR/2026-11-16T111042.549_Spoiler_Macro_16nov26_BTGPactual.pdf",
+      "note": "Spoiler Macro, PDF, p. 6 · Selic e câmbio no fim do período",
       "years": {
         "2026": {
           "pib": 1.7,
@@ -99,7 +101,9 @@
           "selic": 13.75,
           "usd": 5.5
         }
-      }
+      },
+      "portalUrl": "https://content.btgpactual.com/research/home/macro-e-estrategia",
+      "checkedAt": "2026-11-24"
     }
   ]
 }

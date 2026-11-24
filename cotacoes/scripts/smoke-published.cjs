@@ -163,10 +163,11 @@ const links = {
       }
 
       await visit('resumo', '#r-moedas')
-      await page.getByRole('tab', { name: 'Google Trends', exact: true }).click()
-      await page.locator('.google-trends').waitFor()
-      assert.match(await page.locator('.google-trends').innerText(), /8h e 15h/)
-      await contained('Google Trends')
+      const mercadoTabs = page.locator('.market-terminal .terminal-news').getByRole('tab')
+      await mercadoTabs.first().waitFor()
+      assert.deepEqual((await mercadoTabs.allTextContents()).map(label => label.trim()), ['Moedas', 'Manchetes', 'Imposto', 'Split payment', 'Reforma tributária', 'Escala 6x1'])
+      assert.equal(await page.locator('.market-terminal .google-trends').count(), 0)
+      await contained('Notícias do Mercado')
 
       await visit('config', '.config-desk')
       await page.getByRole('button', { name: 'Consultar estado das fontes' }).click()
@@ -181,7 +182,7 @@ const links = {
       assert.ok(box && box.width >= 44 && box.height >= 44 && box.x >= 0 && box.x + box.width <= width + 1, 'Governança: botão inteiro dentro da tela')
       await page.screenshot({ path: path.join(out, width + '-config.png') })
       assert.deepEqual(errors, [])
-      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender abre mapa com pontos, filtros e retorno à matriz', `Aprender ${CONCEITOS.length}/${topicCount}, CET, história dos juros e categorias`, 'dois links BNDES', 'Google Trends', 'tema automático', 'Governança sem overflow'], errors })
+      report.push({ width, passed: true, checks: ['FINIMP JPY/CNH', 'Conta Garantida % a.m. e IOF', 'Aprender abre mapa com pontos, filtros e retorno à matriz', `Aprender ${CONCEITOS.length}/${topicCount}, CET, história dos juros e categorias`, 'dois links BNDES', 'Notícias sem Google Trends', 'tema automático', 'Governança sem overflow'], errors })
       await context.close()
       page = null
     }
