@@ -35,12 +35,15 @@ async function fixtures(page) {
 }
 
 async function selecionarFundo(region) {
-  await region.locator('summary:visible').filter({ hasText: /^Buscar fundos na CVM$/ }).click()
   const busca = region.getByRole('searchbox', { name: 'Nome do fundo, classe ou CNPJ' })
+  await busca.waitFor()
   await busca.fill('Itaú Of Funds Orion Mult CP IE FIF DA CIC RL')
   if (!real) await region.getByRole('button', { name: 'Tentar novamente', exact: true }).click()
   await region.getByRole('button', { name: /23\.731\.495\/0001-24 · Classe$/ }).waitFor()
   if (!real) {
+    await busca.fill('')
+    await busca.pressSequentially('At')
+    await region.getByRole('button', { name: /10\.000\.000\/0001-00 · Classe$/ }).waitFor()
     await busca.fill('')
     await busca.pressSequentially('Atlantico FIC')
     await region.getByRole('button', { name: /10\.000\.000\/0001-00 · Classe$/ }).waitFor()
@@ -61,11 +64,14 @@ async function main() {
       const page = await browser.newPage({ viewport: { width, height: 900 }, serviceWorkers: 'block' })
       page.setDefaultTimeout(15000)
       await fixtures(page)
-      await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos?ativos=')
+      await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos')
       const region = page.getByRole('region', { name: 'Investimentos', exact: true })
+      await region.getByRole('button', { name: 'Consultar fundos', exact: true, pressed: true }).waitFor()
       await selecionarFundo(region)
+      assert.ok(page.workers().some(worker => worker.url().includes('buscaFundosCvm.worker')), 'a busca roda em segundo plano')
       const ativos = region.getByRole('region', { name: 'Ativos em comparação' })
-      const ficha = ativos.getByRole('region', { name: 'Ficha do fundo', exact: true })
+      const ficha = region.getByRole('region', { name: 'Ficha do fundo', exact: true })
+      assert.equal(await ativos.count(), 0, 'a ficha abre em Consultar fundos')
       const umMes = ficha.getByRole('row', { name: /^1 mês/ })
       await umMes.waitFor()
       if (real) {
@@ -78,10 +84,14 @@ async function main() {
       assert.equal(await remover.count(), 0)
       await ficha.getByRole('button', { name: 'Adicionar à comparação', exact: true }).click()
       await remover.waitFor()
+      for (const referencia of [/^Remover CDI$/, /^Remover IPCA$/, /^Remover Dólar PTAX venda$/]) {
+        await ativos.getByRole('button', { name: referencia }).click()
+      }
       const tabela = region.getByRole('region', { name: 'Retorno e risco' })
       await tabela.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
       if (!real) assert.match(normalizar(await tabela.innerText()), /10,00%/)
-      await region.getByRole('button', { name: 'Simular carteira', exact: true }).first().click()
+      await region.getByRole('button', { name: 'Consultar fundos', exact: true }).click()
+      await ficha.getByRole('button', { name: 'Simular carteira', exact: true }).click()
       const aplicacao = region.getByRole('textbox', { name: /00\.017\.024\/0001-53 · Classe$/ })
       await aplicacao.fill('2000')
       assert.match(normalizar(await region.innerText()), /Valor inicial R\$ 2\.000,00/)
