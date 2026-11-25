@@ -26,12 +26,19 @@ export function historicoIndexadores(ids, { ipca, selic, dolar }) {
   ]
 }
 
-// Taxa DI de cada dia útil (CDI anualizado, SGS 4389, % a.a.). A curva DI por prazo guardada pelo painel tem só
-// algumas semanas de histórico; para os 12 meses do gráfico, a linha do DI usa a taxa do dia (pedido de 25/11/2026).
-export const serieDi = cdi => bndesSerie('di', 'DI · taxa do dia (CDI)', Array.isArray(cdi) ? cdi : [])
+// Linha do DI no gráfico (pedido do Fernando, 25/11/2026): só a última curva DI x pré publicada pela B3, sem os dias
+// anteriores. É a taxa da curva no prazo da operação, desenhada reta nos 12 meses do gráfico, até a data da curva.
+export function serieDiPre(di, prazo) {
+  if (!di) return bndesSerie('di', 'DI x pré', [])
+  const inicio = new Date(`${di.data}T12:00:00Z`)
+  inicio.setUTCMonth(inicio.getUTCMonth() - 12)
+  const dataBr = di.data.split('-').reverse().join('/')
+  // semMedia: é uma curva só, então a média dos 12 meses não se aplica (nem na tela nem no PDF).
+  return { ...bndesSerie('di', `DI x pré em ${prazo} meses · curva B3 de ${dataBr}`, [[inicio.toISOString().slice(0, 10), di.taxa], [di.data, di.taxa]]), semMedia: true }
+}
 
 // O mesmo recorte do gráfico da tela, pronto para o PDF: [data, valor] de cada série no período.
 export function historicoParaPdf(items, range) {
   if (!range) return null
-  return { inicio: range.start, fim: range.end, series: items.map(item => ({ nome: item.name, pontos: item.list.filter(p => p.period >= range.start && p.period <= range.end).map(p => [p.period, p.value]) })) }
+  return { inicio: range.start, fim: range.end, series: items.map(item => ({ nome: item.name, ...(item.semMedia && { semMedia: true }), pontos: item.list.filter(p => p.period >= range.start && p.period <= range.end).map(p => [p.period, p.value]) })) }
 }

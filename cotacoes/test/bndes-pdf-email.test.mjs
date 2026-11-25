@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { bndesPdfEml } from '../src/bndesPdfEml.js'
-import { bndesDiNoPrazo, historicoIndexadores, historicoParaPdf, serieDi } from '../src/bndesHistorico.js'
+import { bndesDiNoPrazo, historicoIndexadores, historicoParaPdf, serieDiPre } from '../src/bndesHistorico.js'
 import { AVISOS_CDC } from '../src/cdcEmail.js'
 
 const item = { custo: 'tfb', valor: 100000, prazo: 48, carencia: 3, custoFinanceiro: 12, taxaBndes: 1.15, taxaAgente: 3.1, tac: 1000, cet: 18.42, taxa: 17, total: 122000, parcelas: Array.from({ length: 48 }, (_, i) => ({ mes: i + 1, vencimento: '2027-01-15', parcela: 2500, juros: 500, amortizacao: 2000, saldo: 45000 })) }
@@ -48,7 +48,7 @@ const hexDe = texto => Buffer.from(texto, 'latin1').toString('hex')
 
 test('PDF organizado: resumo em grupos, cronograma e, por último, gráfico do DI com o indexador e os avisos do CDC', () => {
   const dias = ['2026-01-05', '2026-06-05', '2026-11-25']
-  const historico = { inicio: dias[0], fim: dias[2], series: [{ nome: 'DI · taxa do dia (CDI)', pontos: dias.map(d => [d, 14.9]) }, { nome: 'TFC · C26', pontos: dias.map((d, i) => [d, 11 + i / 2]) }] }
+  const historico = { inicio: dias[0], fim: dias[2], series: [{ nome: 'DI x pré em 60 meses · curva B3 de 25/11/2026', semMedia: true, pontos: [[dias[0], 13.64], [dias[2], 13.64]] }, { nome: 'TFC · C26', pontos: dias.map((d, i) => [d, 11 + i / 2]) }] }
   const pdf = pdfDe(bndesPdfEml({ itens: [{ ...item, custo: 'tfc' }], historico }).conteudo)
   const posicao = trecho => pdf.indexOf(hexDe(trecho))
   const ordem = ['Operação', 'Taxas', 'Custo para o cliente', 'Cronograma de pagamentos', 'Histórico do DI e do indexador', 'Avisos importantes'].map(posicao)
@@ -58,7 +58,8 @@ test('PDF organizado: resumo em grupos, cronograma e, por último, gráfico do D
   assert.ok(pdf.includes(hexDe('gera obrigação para nenhuma das partes.')))
   // Duas linhas no gráfico, cada uma traçada com as próprias datas.
   assert.equal((pdf.match(/ RG 1\.4 w 1 j /g) || []).length, 2)
-  assert.ok(pdf.includes(hexDe('DI · taxa do dia (CDI) | último 14,90%')))
+  assert.ok(pdf.includes(hexDe('DI x pré em 60 meses · curva B3 de 25/11/2026 | 13,64%')), 'DI x pré: uma curva só, sem média')
+  assert.ok(pdf.includes(hexDe('TFC · C26 | último 12,00% em 25/11/2026 | média 11,50%')))
   assert.ok(pdf.includes(hexDe('\x95 Simulação de caráter')), 'marcador em WinAnsi, sem ponto de interrogação')
 })
 
@@ -69,11 +70,12 @@ test('sem histórico, o PDF ainda termina nos avisos e não desenha gráfico vaz
   assert.equal((pdf.match(/ RG 1\.4 w 1 j /g) || []).length, 0)
 })
 
-test('linha do DI usa a taxa do dia (CDI) e o PDF recebe o mesmo recorte da tela', () => {
-  const di = serieDi([[Date.UTC(2025, 10, 24), 15], [Date.UTC(2026, 0, 2), 14.9], [Date.UTC(2026, 10, 25), 14.9]])
-  assert.deepEqual([di.id, di.short, di.unit, di.list.length], ['di', 'DI', '% a.a.', 3])
-  assert.deepEqual(serieDi(undefined).list, [])
+test('linha do DI usa só a última curva DI x pré da B3, reta nos 12 meses, e o PDF recebe o mesmo recorte da tela', () => {
+  const di = serieDiPre({ data: '2026-11-25', taxa: 13.64 }, 60)
+  assert.deepEqual([di.id, di.name, di.short, di.unit], ['di', 'DI x pré em 60 meses · curva B3 de 25/11/2026', 'DI x pré em 60 meses', '% a.a.'])
+  assert.deepEqual(di.list, [{ period: '2025-11-25', value: 13.64 }, { period: '2026-11-25', value: 13.64 }])
+  assert.deepEqual(serieDiPre(null, 60).list, [])
   const recorte = historicoParaPdf([di], { start: '2025-11-25', end: '2026-11-25' })
-  assert.deepEqual(recorte, { inicio: '2025-11-25', fim: '2026-11-25', series: [{ nome: 'DI · taxa do dia (CDI)', pontos: [['2026-01-02', 14.9], ['2026-11-25', 14.9]] }] })
+  assert.deepEqual(recorte, { inicio: '2025-11-25', fim: '2026-11-25', series: [{ nome: di.name, semMedia: true, pontos: [['2025-11-25', 13.64], ['2026-11-25', 13.64]] }] })
   assert.equal(historicoParaPdf([di], null), null)
 })

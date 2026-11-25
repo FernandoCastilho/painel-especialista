@@ -54,7 +54,10 @@ async function check(page) {
     assert.ok(await linha.evaluate(el => el.getTotalLength() > 0 && getComputedStyle(el).stroke !== 'none'), key)
   }
   assert.equal(await curva.locator('line[data-referencia=mercado]').count(), 0)
-  assert.match(await history.locator('.ml-legend').innerText(), /DI · taxa do dia \(CDI\)[\s\S]*TFC/)
+  assert.match(await history.locator('.ml-legend').innerText(), /DI x pré em \d+ meses · curva B3 de 25\/11\/2026[\s\S]*TFC/)
+  const mediaTexto = await history.locator('.bn-media').innerText()
+  assert.match(mediaTexto, /TFC/)
+  assert.doesNotMatch(mediaTexto, /DI x pré/, 'DI x pré é uma curva só: fica fora da média dos 12 meses')
   if (qa) await history.screenshot({ path: `${qa}/historico-di-indexador-${qaNome(page)}.png` })
   assert.match(await history.innerText(), /TFC:[\s\S]*diferença de −1,50 p.p. frente ao DI/)
   await page.locator('#fm-compare').check()

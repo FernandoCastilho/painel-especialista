@@ -10,7 +10,7 @@ const imagem = readFileSync(new URL('../src/cotacaoImagem.js', import.meta.url),
 
 test('histórico dos indexadores fica em 12 meses, sem filtros, com média no rodapé', () => {
   assert.match(finame, /<ComparaSeries compactHelp fixo items=\{historyChart\}[^>]*period=\{\{ preset: 12, custom: null \}\}/)
-  assert.match(finame, /const historyChart = \[serieDi\(macro\.data\?\.cdi\), \.\.\.historyRates\]/)
+  assert.match(finame, /const historyChart = \[serieDiPre\(res \? diNoPrazo : null, prazo\), \.\.\.historyRates\]/)
   assert.match(compara, /\{!fixo && <ChartFilters/)
   assert.match(compara, /Média dos últimos 12 meses/)
 })

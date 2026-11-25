@@ -16,7 +16,7 @@ const resumo = item => [
   ['TAC', brl(item.tac)], [item.indice ? 'CET estimado com índice' : 'CET estimado', taxa(item.cet)],
 ]
 const emLinha = ([rotulo, valor]) => rotulo + ': ' + valor
-const NOTA_HISTORICO = 'DI: taxa DI de cada dia útil (CDI, % a.a., base 252). Indexador: referência pública publicada pelo BNDES em cada data. Cada linha usa as datas da própria fonte, no mesmo eixo de tempo. Histórico, não projeção: a simulação usa a taxa de referência em vigor.'
+const NOTA_HISTORICO = 'DI x pré: taxa da última curva publicada pela B3 no prazo da operação, reta no período porque usa só a curva mais recente. Indexador: referência pública publicada pelo BNDES em cada data. Histórico, não projeção: a simulação usa a taxa de referência em vigor.'
 
 // PDF em texto, local e pesquisável, com fontes básicas e codificação para acentos PT-BR.
 // Fora do Latin-1, só os sinais que existem na codificação WinAnsi das fontes básicas (marcador e aspas).
@@ -116,13 +116,13 @@ export function graficoHistorico(historico, topo) {
   const yy = v => base + (v - lo) / (hi - lo || 1) * (alto - base)
   const f = n => n.toFixed(1)
   const ops = []
-  // Legenda: cor, nome, último valor e média do período.
+  // Legenda: cor, nome, último valor e média do período (a linha do DI x pré é uma curva só: sem média).
   series.forEach((s, i) => {
     const ly = topo - 10 - 13 * i
     const media = s.pontos.reduce((soma, [, v]) => soma + v, 0) / s.pontos.length
     const ultimo = s.pontos[s.pontos.length - 1]
     ops.push(CORES[i % CORES.length] + ' rg ' + esq + ' ' + (ly - 1) + ' 14 6 re f', '0.1 0.15 0.23 rg',
-      txt(s.nome + ' | último ' + nfPct(ultimo[1]) + '% em ' + dmy(ultimo[0]) + ' | média ' + nfPct(media) + '%', esq + 20, ly, 8))
+      txt(s.nome + (s.semMedia ? ' | ' + nfPct(ultimo[1]) + '%' : ' | último ' + nfPct(ultimo[1]) + '% em ' + dmy(ultimo[0]) + ' | média ' + nfPct(media) + '%'), esq + 20, ly, 8))
   })
   ticks.forEach(v => ops.push('0.88 0.9 0.94 RG 0.5 w ' + esq + ' ' + f(yy(v)) + ' m ' + dir + ' ' + f(yy(v)) + ' l S', '0.3 0.35 0.43 rg',
     txt(nfPct(v, casas) + '%', 42, yy(v) - 3, 7)))

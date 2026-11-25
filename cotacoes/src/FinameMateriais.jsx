@@ -27,7 +27,7 @@ import EmailEnvelope, { EmailEnvelopePdf } from './EmailEnvelope.jsx'
 import WhatsAppCotacao from './WhatsAppCotacao.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
 import { useCurves } from './useCurves.js'
-import { bndesDiNoPrazo, bndesSerie, historicoIndexadores, historicoParaPdf, serieDi } from './bndesHistorico.js'
+import { bndesDiNoPrazo, bndesSerie, historicoIndexadores, historicoParaPdf, serieDiPre } from './bndesHistorico.js'
 import { viewRange } from './multiSeries.js'
 import './BndesPecas.css'
 
@@ -308,10 +308,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const seriesIndices = historicoIndexadores(emUso, { ipca: ipca.data, selic: macro.data?.selic, dolar: dolarPts })
   const historyRates = [...historyItems, ...seriesIndices.filter(serie => serie.unit === '% a.a.')]
   const historyCurrency = seriesIndices.filter(serie => serie.unit === 'R$')
-  // Um gráfico só, com a taxa DI do dia e o indexador da operação, nos mesmos 12 meses e em % a.a. (pedido de 25/11/2026).
-  const historyChart = [serieDi(macro.data?.cdi), ...historyRates]
-  const historicoPdf = historyItems.length ? historicoParaPdf(historyChart, viewRange(historyChart.map(item => item.list), 12, null)) : null
   const diNoPrazo = bndesDiNoPrazo(curvas.data?.br, prazo)
+  // Um gráfico só, com o DI x pré no prazo (última curva da B3) e o indexador da operação, em % a.a. (pedido de 25/11/2026).
+  const historyChart = [serieDiPre(res ? diNoPrazo : null, prazo), ...historyRates]
+  const historicoPdf = historyItems.length ? historicoParaPdf(historyChart, viewRange(historyChart.map(item => item.list), 12, null)) : null
   // Vencimento de cada linha do fluxo: o que a conta devolve ou, sem ele, o dia 15 do mês (ou o próximo dia útil).
   const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx))
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
@@ -541,9 +541,9 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </div>
 
       {historyItems.length > 0 && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
-        <p className="cx-hint">DI e indexador da operação no mesmo gráfico, nos últimos 12 meses, em % a.a.{ajuda('Histórico dos indexadores', 'Uma linha é a taxa DI de cada dia útil (CDI, % a.a., base 252); a outra é a referência pública do indexador escolhido, publicada pelo BNDES. As duas cobrem o mesmo período e usam a mesma escala. Cada linha usa as datas da própria fonte; ao passar o mouse, cada uma mostra o último valor publicado até aquela data. A curva DI por prazo que o painel guarda ainda não tem 12 meses; por isso a linha do DI usa a taxa do dia. Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, entram também a parte fixa e o indexador observado: IPCA em 12 meses ou meta Selic. O dólar tem gráfico separado porque não é uma taxa. A curva por vencimento aparece logo abaixo.')}</p>
+        <p className="cx-hint">DI x pré no prazo da operação e indexador no mesmo gráfico, nos últimos 12 meses, em % a.a.{ajuda('Histórico dos indexadores', 'A linha do DI é a taxa DI x pré da última curva publicada pela B3, no prazo desta operação (21 dias úteis por mês). Ela fica reta porque usa só a curva mais recente: é a referência de mercado de hoje, não o histórico do DI. A outra linha é a referência pública do indexador escolhido, publicada pelo BNDES em cada data. As duas usam a mesma escala; ao passar o mouse, cada uma mostra o último valor até aquela data. Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, entram também a parte fixa e o indexador observado: IPCA em 12 meses ou meta Selic. O dólar tem gráfico separado porque não é uma taxa. A curva por vencimento aparece logo abaixo.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
-        <ComparaSeries compactHelp fixo items={historyChart} loading={bndes.status === 'loading' || moedas.status === 'loading' || ipca.status === 'loading' || macro.status === 'loading'} period={{ preset: 12, custom: null }} />
+        <ComparaSeries compactHelp fixo items={historyChart} loading={bndes.status === 'loading' || moedas.status === 'loading' || ipca.status === 'loading' || macro.status === 'loading' || curvas.status === 'loading'} period={{ preset: 12, custom: null }} />
         {historyCurrency.length > 0 && <><h4>Dólar · R$ por US$</h4><ComparaSeries compactHelp fixo items={historyCurrency} loading={moedas.status === 'loading'} period={{ preset: 12, custom: null }} /></>}
         {res && <><div className="fm-di-resumo">
           {diNoPrazo ? <>
