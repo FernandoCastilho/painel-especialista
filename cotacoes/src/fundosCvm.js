@@ -29,6 +29,10 @@ function indexarNome(item) {
   return registro
 }
 
+export function prepararBuscaCvm(catalogo) {
+  catalogo.forEach(indexarNome)
+}
+
 function prioridadeNome({ nome, pai, texto }, consulta, termos) {
   if (nome === consulta) return 0
   if (nome.startsWith(consulta) || pai.startsWith(consulta)) return 1
@@ -55,7 +59,7 @@ function correspondeSiglas(registro, termos, posiveisSiglas) {
 export function buscarFundos(catalogo, busca, excluidos = []) {
   const consulta = normalizar(busca).replace(/\boff funds\b/g, 'of funds')
   const termos = consulta.split(' ')
-  if (termos.join('').length < 3) return []
+  if (termos.join('').length < 2) return []
   const possiveisSiglas = new Set(termos.filter(termo => /^[a-z]{2,5}$/.test(termo)))
   const cnpj = busca.replace(/[./\s-]/g, '').toUpperCase()
   const buscaCnpj = /\d/.test(cnpj) && /^[A-Z0-9]+$/.test(cnpj)

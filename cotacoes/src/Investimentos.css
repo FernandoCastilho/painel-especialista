@@ -69,6 +69,12 @@
 .inv-workspace .inv-cvm-matches li { padding:0; border:0; }
 .inv-workspace .inv-cvm-matches button { width:100%; text-align:left; overflow-wrap:anywhere; }
 .inv-workspace :is(.inv-legend li, .inv-allocations label, .inv-resultado) { overflow-wrap:anywhere; }
-.inv-workspace .inv-ficha { display:grid; gap:8px; margin-block:12px; padding:12px; border:1px solid var(--bw-line); border-radius:10px; overflow-wrap:anywhere; }
-.inv-workspace .inv-ficha h4 { margin:0; }
+.inv-workspace .inv-busca-principal { display:grid; gap:10px; }
+.inv-workspace .inv-busca-principal input { min-height:50px; padding-inline:12px; background:var(--bw-card,var(--bw-soft)); }
+.inv-workspace .inv-busca-principal ul { margin:0; }
+.inv-workspace .inv-buscar-fundo { margin-top:12px; }
+.inv-workspace .inv-ficha { display:grid; gap:14px; overflow-wrap:anywhere; }
+.inv-workspace .inv-ficha-cabecalho { display:grid; gap:12px; }
+.inv-workspace .inv-ficha h3 { margin:0 0 4px; font-size:clamp(1.14rem,2vw,1.5rem); }
+.inv-workspace .inv-ficha small { display:block; color:var(--mut); font-weight:400; }
 .inv-workspace .inv-ficha td { white-space:nowrap; }

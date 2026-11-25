@@ -153,12 +153,27 @@ function SeriesPicker({ remaining, add, importSeries }) {
   </details>
 }
 
-function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, add, jaAdicionado, lotado }) {
+function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simular, jaAdicionado, lotado }) {
   const resumo = resumoFundo(fundo.rows, cdi)
-  return <section className="inv-ficha" aria-labelledby="inv-ficha-titulo">
-    <h4 id="inv-ficha-titulo">Ficha do fundo</h4>
-    <p><strong>{fundo.name}</strong></p>
-    <p className="inv-nota">Cotas de {dateText(fundo.rows[0][0])} a {dateText(fundo.rows.at(-1)[0])} · CVM</p>
+  const bloqueado = lotado && !jaAdicionado
+  const titulo = useRef(null)
+  useEffect(() => {
+    if (document.activeElement === document.body) titulo.current?.focus({ preventScroll: true })
+  }, [fundo.id])
+  return <section className="inv-panel inv-ficha" aria-label="Ficha do fundo">
+    <header className="inv-ficha-cabecalho">
+      <div>
+        <h3 ref={titulo} tabIndex={-1}>{fundo.name}</h3>
+        <p className="inv-nota">Cotas de {dateText(fundo.rows[0][0])} a {dateText(fundo.rows.at(-1)[0])} · CVM</p>
+      </div>
+      <div className="inv-flex">
+        <button className="inv-primary" type="button" disabled={bloqueado} onClick={comparar}>
+          {jaAdicionado ? 'Ver comparação' : 'Adicionar à comparação'}
+        </button>
+        <button type="button" disabled={bloqueado} onClick={simular}>Simular carteira</button>
+      </div>
+    </header>
+    {bloqueado && <p className="inv-nota" role="status">Remova um ativo da comparação para incluir este fundo. O limite é de seis.</p>}
     <div className="inv-table"><table aria-label="Rentabilidade do fundo e do CDI">
       <thead><tr><th scope="col">Período</th><th scope="col">Fundo</th><th scope="col">CDI</th></tr></thead>
       <tbody>{resumo.map(linha => <tr key={linha.meses}>
@@ -173,9 +188,6 @@ function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, add, jaAdicion
     <p className="inv-nota">Variação da cota, sem distribuições nem tributos do cotista.
       A cota inicial pode recuar até sete dias corridos. O CDI acumula da data inicial até a véspera da final.
       O traço indica dado indisponível.</p>
-    <button type="button" disabled={jaAdicionado || lotado} onClick={() => add(fundo.id)}>
-      {jaAdicionado ? 'Já está na comparação' : lotado ? 'Limite de seis ativos atingido' : 'Adicionar à comparação'}
-    </button>
   </section>
 }
 
@@ -203,7 +215,7 @@ function Portfolio({ comparison, currency }) {
   </>
 }
 
-export default function InvestmentWorkspace({ mode, link, showPortfolio, visible }) {
+export default function InvestmentWorkspace({ mode, link, showFunds, showComparison, showPortfolio, visible }) {
   const [local] = useState(readLocal)
   const [config, setConfig] = useState(() => initialConfig(link, local.favorites?.[0]?.config))
   const [custom, setCustom] = useState(() => Array.isArray(local.series) ? local.series : [])
@@ -289,6 +301,17 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
     anchor.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
+  if (mode === 'fundos') return <div className="inv-study">
+    <FundoCvmPicker inline onSelect={setFichaId} selecionado={fichaId} />
+    {fichaId && (fundoFicha
+      ? <FichaFundo fundo={fundoFicha} cdi={source.data.cdi} cdiLoading={source.loading} cdiFalhou={source.errors.includes('cdi')}
+          repetir={() => setRetry(n => n + 1)}
+          comparar={() => { add(fichaId); showComparison() }} simular={() => { add(fichaId); showPortfolio() }}
+          jaAdicionado={config.ids.includes(fichaId)} lotado={selected.length >= MAX_SERIES} />
+      : fundos.erros.includes(fichaId)
+        ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
+        : <p role="status">Carregando a ficha do fundo…</p>)}
+  </div>
   return <div hidden={!visible} className="inv-study">
     <div className="inv-controls">
       <div className="inv-flex" role="group" aria-label="Período">
@@ -339,13 +362,7 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
             <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
           </li>
         })}</ul>
-        <FundoCvmPicker onSelect={setFichaId} selecionado={fichaId} />
-        {fichaId && (fundoFicha
-          ? <FichaFundo fundo={fundoFicha} cdi={source.data.cdi} cdiLoading={source.loading} cdiFalhou={source.errors.includes('cdi')}
-              repetir={() => setRetry(n => n + 1)} add={add} jaAdicionado={config.ids.includes(fichaId)} lotado={selected.length >= MAX_SERIES} />
-          : fundos.erros.includes(fichaId)
-            ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
-            : <p role="status">Carregando a ficha do fundo…</p>)}
+        <button className="inv-buscar-fundo" type="button" onClick={showFunds}>Buscar fundo</button>
         {selected.length < MAX_SERIES
           ? <SeriesPicker remaining={catalog.filter(item => !config.ids.includes(item.id))} add={add} importSeries={importSeries} />
           : <p className="inv-nota">Até {MAX_SERIES} séries por comparação.</p>}

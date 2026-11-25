@@ -5,6 +5,10 @@ import { buscarFundos, carregarCatalogoCvm, cotasDoFundo, isFundoCvm } from '../
 
 const classe = ['cvm-c-00017024000153', 'Classe Crédito Privado', '00017024000153']
 const subclasse = ['cvm-c-00017024000153-A1', 'Classe Crédito Privado — Varejo', '00017024000153']
+
+test('a busca começa com duas letras do nome', () => {
+  assert.deepEqual(buscarFundos([classe, subclasse], 'Cl'), [classe, subclasse])
+})
 const rows = [['2026-09-30', 100], ['2026-10-15', 102], ['2026-10-30', 105], ['2026-11-20', 110]]
 
 test('a busca gera siglas a partir dos nomes e prioriza a grafia literal', () => {
