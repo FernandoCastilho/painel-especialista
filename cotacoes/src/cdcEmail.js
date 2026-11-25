@@ -19,13 +19,13 @@ export const AVISOS_CDC = [
 ]
 
 // Resumo comum ao e-mail e à imagem: [rótulo, valor].
-export function cdcResumo(r, { categoria, carenciaDias, dataSimulacao }) {
+export function cdcResumo(r, { carenciaDias, dataSimulacao, praca }) {
   const taxaAa = ((1 + r.taxa / 100) ** 12 - 1) * 100
   return {
     parcela: brl(r.parcela),
     prazo: `${r.rows.length} parcelas mensais`,
     fatos: [
-      ['Produto', `CDC · veículo ${categoria.toLowerCase()}`],
+      ['Produto', 'CDC · financiamento de veículo'],
       ['Valor do bem', brl(r.valorBem)],
       ['Valor liberado', brl(r.valorLiberado)],
       ['Entrada', `${brl(r.entrada)} (${pct(r.pctEntrada * 100)})`],
@@ -33,6 +33,7 @@ export function cdcResumo(r, { categoria, carenciaDias, dataSimulacao }) {
       ['Carência até a 1ª parcela', `${carenciaDias} dias`],
       ['Taxa de juros', `${pct(r.taxa)} a.m. (${pct(taxaAa)} a.a.)`],
       ['1ª e última parcela', `${dmy(r.primeira)} a ${dmy(r.ultima)}`],
+      ...(praca ? [['Praça do contrato', praca]] : []),
       ['Tarifa de cadastro (financiada)', brl(r.tarifas)],
       ['IOF total (financiado)', brl(r.iof)],
       ['Valor financiado', brl(r.principal)],
