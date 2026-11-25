@@ -73,7 +73,8 @@ export default function Cdc({ onBack }) {
   const vencida = vig?.fim && hoje > vig.fim
   const futura = vig && hoje < vig.inicio
   const digitado = parseDecimal(form.modo === 'taxa' ? form.taxa : form.spread)
-  const taxa = form.modo === 'taxa' ? digitado : digitado !== null && funding ? taxaDoSpread(digitado, funding.taxa) : null
+  // Pelo spread, a taxa é arredondada a duas casas antes da conta (decisão de Fernando, 25/11/2026): o cliente vê a taxa usada.
+  const taxa = form.modo === 'taxa' ? digitado : digitado !== null && funding ? Math.round(taxaDoSpread(digitado, funding.taxa) * 100) / 100 : null
   const spread = form.modo === 'taxa' && digitado !== null && funding ? spreadDaTaxa(digitado, funding.taxa) : null
   const erroTaxa = form.modo === 'spread' && !funding ? 'Para simular pelo spread, cole a tabela de funding no "!" lá em cima.' : null
   const calc = dirty ? null : erroValor ? { ok: false, error: erroValor.error } : erroTaxa ? { ok: false, error: erroTaxa } : cdcConta({
@@ -85,7 +86,7 @@ export default function Cdc({ onBack }) {
   const fundingNota = funding ? `funding de ${pct(funding.taxa)} a.a.${funding.nota ? ` (${funding.nota})` : ''}${vencida ? ` · tabela vencida em ${dmy(vig.fim)}` : ''}${futura ? ` · tabela só vale a partir de ${dmy(vig.inicio)}` : ''}` : null
   const derivado = form.modo === 'taxa'
     ? (spread !== null ? `Spread: ${pct(spread)} a.a. sobre ${fundingNota}` : tabela ? '' : 'Para ver o spread, cole a tabela de funding no "!".')
-    : (taxa !== null ? `Taxa: ${pct(taxa)} a.m. (${pct(((1 + taxa / 100) ** 12 - 1) * 100)} a.a.) com ${fundingNota}` : '')
+    : (taxa !== null ? `Taxa: ${pct(taxa)} a.m. (${pct(((1 + taxa / 100) ** 12 - 1) * 100)} a.a.) · spread efetivo de ${pct(spreadDaTaxa(taxa, funding.taxa))} a.a. com a taxa arredondada · ${fundingNota}` : '')
   const campo = (key, label, input, nota) => <div className="lm-field" key={key}>
     <span className="lm-label"><label htmlFor={`cdc-${key}`}>{label}</label></span>{input}{nota && <small className="cdc-nota">{nota}</small>}</div>
   const texto = (key, label, mode = 'numeric', nota) => campo(key, label, <input id={`cdc-${key}`} inputMode={mode} value={form[key]} onChange={e => set(key, e.target.value)} />, nota)
@@ -101,7 +102,7 @@ export default function Cdc({ onBack }) {
           <p>Juros de cada parcela = saldo × ((1 + taxa ao mês) elevado a dias corridos do período ÷ 30, menos 1). Parcela fixa, que zera o saldo na última; a última acerta os centavos.</p>
           <p>Coeficiente = parcela ÷ (valor liberado + tarifa). % de entrada = (valor do bem − valor liberado) ÷ valor do bem.</p>
           <p>IOF (Decreto 6.306/2007, art. 7º), sempre pessoa jurídica geral e sempre financiado: adicional de 0,38% sobre o valor financiado, já com o próprio IOF; diário de 0,0082% sobre a amortização de cada parcela, pelos dias até o vencimento, com limite de 365 dias.</p>
-          <p>Taxa ou spread: escolha qual informar. Spread composto: (1 + taxa ao ano) = (1 + funding ao ano) × (1 + spread ao ano), com a taxa ao ano = (1 + taxa ao mês)^12 − 1; a conta se inverte exatamente. O funding vem da tabela colada no "!", pelo prazo; entre dois prazos, em linha reta; fora da tabela, o da ponta.</p>
+          <p>Taxa ou spread: escolha qual informar. Spread composto: (1 + taxa ao ano) = (1 + funding ao ano) × (1 + spread ao ano), com a taxa ao ano = (1 + taxa ao mês)^12 − 1; informando o spread, a taxa é arredondada a duas casas antes da conta e a tela mostra o spread efetivo com essa taxa. O funding vem da tabela colada no "!", pelo prazo; entre dois prazos, em linha reta; fora da tabela, o da ponta.</p>
           <p>A categoria não muda a conta: vai só para o e-mail e a imagem. O spread não vai para o cliente.</p>
           <p>O envelope baixa um arquivo de e-mail do Outlook (.eml), com o resumo, as parcelas e os avisos de cotação indicativa. O ícone do WhatsApp copia o resultado como imagem, com os mesmos avisos.</p>
         </Help>
