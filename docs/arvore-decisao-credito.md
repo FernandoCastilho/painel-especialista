@@ -377,6 +377,8 @@ Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convive
 
 - **25/11/2026 — atraso do comprador: terceira pergunta na tela** (decisão de Fernando). Base: complemento dele de 24/11/2026, registrado pelo ChatGPT no Obsidian: a Conta Garantida só vale como ponte sazonal se houver caixa para liquidá-la mesmo que o comprador atrase. Quando o uso for marcado como sazonal, a tela pergunta "Se o principal comprador atrasar, a empresa tem caixa para zerar a Conta Garantida?". Se não, a Conta Garantida deixa de ser ponte e o capital de giro com carência ajustada ao fluxo de caixa sobe para primeiro, desde que o caixa projetado pague as parcelas depois da carência. A mudança na tela ainda não foi feita.
 
+- **25/11/2026 — N16 (carteira concentrada ou com atrasos): desconto seletivo, depois capital de giro** (decisão de Fernando). Antecipar só os títulos de compradores sem atraso e sem disputa; o capital de giro cobre o restante, se houver outras entradas para pagá-lo. Título em atraso ou contestado não conta como dinheiro certo. Segue a linha da nota do Obsidian. Na tela, a ordem proposta de N16 (desconto, giro) passa a ser confirmada, com esse aviso. A mudança na tela ainda não foi feita.
+
 **Publicação em espera** (Fernando, 21/11/2026: "vamos esperar juntar mais respostas"). As três decisões já estão aplicadas na tela no ramo da sessão, com testes passando, mas não serão publicadas agora: entram junto com as próximas respostas das perguntas do dia, com novo teste, parecer do Auditor e autorização de publicação. Detalhe em `docs/arvore-credito-tela.md`, seção "Atualização de 21/11/2026".
 
 ### Propostas do Claude ainda não confirmadas
