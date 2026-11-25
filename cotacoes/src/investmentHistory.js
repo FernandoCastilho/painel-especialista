@@ -1,3 +1,4 @@
+import { addDays } from './holidays.js'
 import { numeroPt } from './investimentos.js'
 
 export const PUBLIC_SERIES = [
@@ -77,7 +78,12 @@ export async function loadBcb(item, today, signal, fetcher = fetch) {
 
 export function resumoFundo(cotas, cdi = []) {
   const [fim, cotaFinal] = cotas.at(-1)
-  const referencia = new Map(cdi)
+  // A razão entre os níveis anteriores a cada data inclui a taxa do início e exclui a do fim.
+  const referencia = new Map(cdi.map(([dia], i) => [dia, cdi[i - 1]?.[1]]))
+  const ultimoCdi = cdi.at(-1)
+  // A data final pode vir antes da divulgação da sua própria taxa. Pule apenas o fim de semana.
+  const limiteCdi = ultimoCdi && addDays(ultimoCdi[0], new Date(ultimoCdi[0]).getUTCDay() === 5 ? 3 : 1)
+  const cdiFinal = ultimoCdi && fim > ultimoCdi[0] && fim <= limiteCdi ? ultimoCdi[1] : referencia.get(fim)
   const dataFinal = new Date(fim)
   return [1, 3, 6, 12].map(meses => {
     const alvo = new Date(Date.UTC(dataFinal.getUTCFullYear(), dataFinal.getUTCMonth() - meses, 1))
@@ -90,7 +96,6 @@ export function resumoFundo(cotas, cdi = []) {
     if (!ponto) return { meses, fim, inicio: null, fundo: null, cdi: null }
     const [inicio, cotaInicial] = ponto
     const cdiInicial = referencia.get(inicio)
-    const cdiFinal = referencia.get(fim)
     return {
       meses, inicio, fim,
       fundo: cotaFinal / cotaInicial - 1,

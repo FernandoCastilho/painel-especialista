@@ -171,7 +171,8 @@ function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, add, jaAdicion
     {cdiLoading && <p className="inv-nota" role="status">Carregando CDI…</p>}
     {cdiFalhou && <button type="button" onClick={repetir}>Tentar carregar CDI novamente</button>}
     <p className="inv-nota">Variação da cota, sem distribuições nem tributos do cotista.
-      A cota inicial pode recuar até sete dias corridos. O CDI usa as mesmas datas. O traço indica dado indisponível.</p>
+      A cota inicial pode recuar até sete dias corridos. O CDI acumula da data inicial até a véspera da final.
+      O traço indica dado indisponível.</p>
     <button type="button" disabled={jaAdicionado || lotado} onClick={() => add(fundo.id)}>
       {jaAdicionado ? 'Já está na comparação' : lotado ? 'Limite de seis ativos atingido' : 'Adicionar à comparação'}
     </button>

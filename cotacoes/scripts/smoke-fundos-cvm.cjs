@@ -59,8 +59,8 @@ async function main() {
       if (real) {
         await umMes.getByRole('cell', { name: /%$/ }).nth(1).waitFor()
       } else {
-        await umMes.getByRole('cell', { name: '1,02%', exact: true }).waitFor()
-        assert.match(normalizar(await umMes.innerText()), /28\/10\/2025 a 28\/11\/2025.*7,84%.*1,02%/)
+        await umMes.getByRole('cell', { name: '1,01%', exact: true }).waitFor()
+        assert.match(normalizar(await umMes.innerText()), /28\/10\/2025 a 28\/11\/2025.*7,84%.*1,01%/)
       }
       const remover = ativos.getByRole('button', { name: /^Remover .*00\.017\.024\/0001-53 · Classe$/ })
       assert.equal(await remover.count(), 0)
