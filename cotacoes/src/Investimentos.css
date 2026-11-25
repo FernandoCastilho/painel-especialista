@@ -1,0 +1,14 @@
+.inv-workspace .inv-corpo { display:grid; gap:14px; padding:clamp(12px,2.5vw,24px); }
+.inv-workspace .inv-corpo p { margin:0; line-height:1.55; }
+.inv-workspace .inv-modos { display:flex; flex-wrap:wrap; gap:8px; }
+.inv-workspace button:not(.calc-back) { min-height:44px; padding:8px 13px; border-radius:8px; border:1px solid var(--bw-line); background:var(--bw-soft); color:var(--fg); cursor:pointer; }
+.inv-workspace button[aria-pressed="true"] { border-color:var(--bw-link); color:var(--bw-link); font-weight:700; }
+.inv-workspace .inv-grade, .inv-workspace dl { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr)); }
+.inv-workspace label { display:grid; min-width:0; gap:5px; align-content:start; }
+.inv-workspace input,.inv-workspace select { min-width:0; width:100%; min-height:44px; padding:8px; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-soft); color:var(--fg); font:inherit; }
+.inv-workspace .inv-import,.inv-workspace .inv-resultado { margin-block:12px; padding:14px; border:1px solid var(--bw-line); border-radius:10px; }
+.inv-workspace .inv-import summary { display:list-item; min-height:44px; cursor:pointer; font-weight:700; }
+.inv-workspace .inv-import[open] > * + * { margin-bottom:12px; }
+.inv-workspace .inv-resultado h3 { margin:0 0 5px; }
+.inv-workspace dd { margin:2px 0 0; font-weight:700; overflow-wrap:anywhere; }
+.inv-workspace .inv-nota { color:var(--mut); font-size:.875rem; }

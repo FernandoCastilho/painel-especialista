@@ -7,16 +7,16 @@ import { transform } from 'esbuild'
 import React from 'react'
 import { CALCULATOR_GROUPS } from '../src/calculatorGroups.js'
 const nodes = n => Array.isArray(n) ? n.flatMap(nodes) : n && typeof n === 'object' ? [n, ...nodes(n.props?.children)] : []
-test('catálogo agrupa os 13 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
+test('catálogo agrupa os 14 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
   const source = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
   const original = [...source.slice(source.indexOf('const CALCS'),source.indexOf('// Aba Calculadoras')).matchAll(/id: '([^']+)'/g)].map(m=>m[1])
   const grouped = CALCULATOR_GROUPS.flatMap(g=>g.calculators)
-  assert.equal(grouped.length,13)
-  assert.equal(new Set(grouped).size,13)
+  assert.equal(grouped.length,14)
+  assert.equal(new Set(grouped).size,14)
   assert.deepEqual([...grouped].sort(),original.sort())
   assert.equal(grouped[0],'finame-materiais')
   assert.ok(!grouped.includes('arvore-credito'))
-  assert.deepEqual(CALCULATOR_GROUPS.map(g=>g.title),['Crédito e capital de giro','Crédito internacional','Taxas e câmbio','Planejamento e análise'])
+  assert.deepEqual(CALCULATOR_GROUPS.map(g=>g.title),['Crédito e capital de giro','Crédito internacional','Taxas e câmbio','Planejamento e análise','Investimentos'])
 })
 test('grupos têm títulos acessíveis e todos os botões preservam destino ao clicar', async () => {
   const source = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
@@ -33,7 +33,7 @@ test('grupos têm títulos acessíveis e todos os botões preservam destino ao c
   const tree=module.exports.default({view:'',onView:id=>clicks.push(id)})
   const all=nodes(tree)
   const groups=all.filter(n=>n.props?.className==='calc-catalog-group')
-  assert.equal(groups.length,4)
+  assert.equal(groups.length,5)
   for(const group of groups){
     const heading=nodes(group).find(n=>n.type==='h3')
     assert.equal(group.props['aria-labelledby'],heading.props.id)
@@ -65,7 +65,7 @@ test('catálogo e endereços diretos carregam somente o formulário escolhido', 
   assert.equal(render('').props.className.includes('calc-catalog'), true)
   assert.deepEqual(imported, [])
   for (const [view, component] of [
-    ['giro', 'CapitalDeGiro'], ['finame-materiais', 'BndesWorkspace'],
+    ['investimentos', 'Investimentos'], ['giro', 'CapitalDeGiro'], ['finame-materiais', 'BndesWorkspace'],
     ['bndes-tlp-exigivel', 'BndesWorkspace'], ['cambio-futuro', 'CambioFuturoJornada'], ['cambio-futuro/cenarios', 'CambioFuturoCenario'],
     ['cambio-futuro/tir-usd', 'CambioFuturo'], ['arvore-credito', 'ArvoreCredito'],
   ]) {

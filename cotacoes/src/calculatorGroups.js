@@ -20,4 +20,9 @@ export const CALCULATOR_GROUPS = [
     description: 'Analise faturamento, distribuição de lucros e impactos tributários no caixa.',
     calculators: ['faturamento', 'dividendos-emprestimo', 'cbs-caixa'],
   },
+  {
+    id: 'investimentos', title: 'Investimentos',
+    description: 'Projete um CDB ou simule o retorno de fundos e ações.',
+    calculators: ['investimentos'],
+  },
 ]
