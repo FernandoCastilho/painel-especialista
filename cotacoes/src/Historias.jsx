@@ -2,14 +2,19 @@ import './Historias.css'
 import logoIfood from './assets/historias/ifood.svg'
 import logoNetflix from './assets/historias/netflix.svg'
 import logoBlockbuster from './assets/historias/blockbuster.svg'
+import logoSpotify from './assets/historias/spotify.svg'
+import logoUber from './assets/historias/uber.svg'
+import logoApple from './assets/historias/apple.svg'
 import { HISTORIAS, TEMAS_HISTORIAS, casosDoTema } from './historias.js'
 
-const logos = { ifood: logoIfood, netflix: logoNetflix, blockbuster: logoBlockbuster }
+const logos = { ifood: logoIfood, netflix: logoNetflix, blockbuster: logoBlockbuster, spotify: logoSpotify, uber: logoUber, 'apple-iphone': logoApple }
 const centro = [50, 50]
 // Mantenha um ponto no mapa para cada marca e tema cadastrados em historias.js.
 const pontos = {
-  ifood: [50, 13], netflix: [19, 70], blockbuster: [81, 70],
-  'origem-fisica': [19, 28], logistica: [81, 28], 'locacao-video': [50, 90],
+  ifood: [18, 10], netflix: [50, 10], blockbuster: [82, 10],
+  uber: [18, 90], 'apple-iphone': [50, 90], spotify: [82, 90],
+  'origem-fisica': [18, 30], 'locacao-video': [50, 30], logistica: [82, 30],
+  'plataformas-locais': [18, 70], 'ecossistema-mobile': [50, 70], streaming: [82, 70],
 }
 const posicao = ([x, y]) => ({ left: x + '%', top: y + '%' })
 const linha = (key, [x1, y1], [x2, y2], className) => (
@@ -19,7 +24,7 @@ const linha = (key, [x1, y1], [x2, y2], className) => (
 function Historia({ caso }) {
   return (
     <article className="historia-detalhe">
-      <p className="historia-eyebrow">{caso.local} · {caso.setor} · Fundação: {caso.fundacao}</p>
+      <p className="historia-eyebrow">{caso.local} · {caso.setor} · {caso.rotuloData ?? 'Fundação'}: {caso.anoLancamento ?? caso.fundacao}</p>
       <h2>{caso.nome}: {caso.titulo}</h2>
       <h3>Como começou</h3>
       <p>{caso.origem}</p>
