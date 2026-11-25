@@ -9,9 +9,10 @@ export const NOVIDADES_RECENTES = [
       'Em Calculadoras > CDC, simule o financiamento de veículo: parcela, taxa ou spread sobre o funding, IOF financiado e cronograma, com e-mail do Outlook e imagem para o WhatsApp. Escolha a praça do contrato: vencimento em fim de semana, feriado nacional ou da cidade passa para o próximo dia útil, e juros e IOF contam até essa data. Os campos ficam lado a lado, na largura da tela. Saíram a categoria e o coeficiente. Algumas combinações de valor, taxa e carência mostravam "Não foi possível fechar o IOF financiado" e agora calculam normalmente.',
       'Em Calculadoras > BNDES, baixe um rascunho do Outlook com a simulação em PDF. O histórico dos indexadores reúne as referências da cotação e a curva DI. O gráfico de pagamentos fica recolhido no fim.',
       'Em Mais > Histórias, Spotify, Uber e Apple/iPhone entram no mapa com linha do tempo, leitura de negócios e fontes.',
-      'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
+      'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e fundos. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
       'Em Investimentos, busque fundos por nome ou CNPJ e use as cotas da CVM na calculadora, na comparação de ativos e na simulação de carteira.',
       'Investimentos abre com o CDI. Adicione fundos ou outros ativos pelo campo de busca. Ao passar o mouse ou tocar no gráfico, veja a data exata, a variação do dia e a rentabilidade acumulada de cada ativo.',
+      'Investimentos: os avisos das quatro telas ficam na interrogação do topo, e a opção de importar série em CSV saiu. A busca de fundos passa a funcionar também em computadores que bloqueiam a busca em segundo plano, e avisa com clareza quando a base de fundos não baixa.',
     ],
   },
   {

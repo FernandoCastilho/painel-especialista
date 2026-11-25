@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { buscarFundos, carregarCatalogoCvm, carregarFundoCvm, FONTE_CVM, LICENCA_CVM, nomeFundo } from './fundosCvm.js'
+import { buscarFundos, carregarCatalogoCvm, carregarFundoCvm, nomeFundo } from './fundosCvm.js'
 
 const dateText = date => date.split('-').reverse().join('/')
 const minimo = 2
@@ -61,6 +61,13 @@ function useBusca(catalogo, busca) {
   useEffect(() => {
     if (pronta) worker.current?.postMessage({ busca })
   }, [pronta, busca, catalogo])
+  // Alguns computadores (antivírus, política da empresa) carregam a busca em segundo plano mas ela nunca responde.
+  // Sem resposta em 3 segundos, a busca passa a rodar na própria tela.
+  useEffect(() => {
+    if (!pronta || !catalogo || fallback || resposta?.busca === busca) return
+    const espera = setTimeout(() => setFallback(true), 3000)
+    return () => clearTimeout(espera)
+  }, [pronta, catalogo, fallback, resposta, busca])
   const locais = useMemo(() => fallback && catalogo ? buscarFundos(catalogo.items, buscaAdiada) : [],
     [fallback, catalogo, buscaAdiada])
   if (!pronta || !catalogo) return { matches: [], atualizando: false }
@@ -103,8 +110,7 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
         <input ref={campo} type="search" maxLength={120} placeholder="Nome do fundo, CNPJ, CDI, IPCA ou dólar"
           value={busca} onChange={e => setBusca(e.target.value)} />
       </label>
-      <p className="inv-nota">{lotado ? 'Limite de seis ativos. Remova um para adicionar outro.'
-        : 'Digite pelo menos dois caracteres e selecione um resultado para adicionar.'}</p>
+      {lotado && <p className="inv-nota">Limite de seis ativos. Remova um para adicionar outro.</p>}
       {pronta && <>
         {resultados.length > 0 &&
           <ul className="inv-cvm-matches" aria-label="Ativos encontrados">
@@ -117,7 +123,7 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
             })}
           </ul>}
         {estado === 'error' ? <div className="inv-flex">
-          <p role="status">Não foi possível carregar o catálogo de fundos.</p>
+          <p role="status">Não foi possível baixar a base de fundos da CVM neste aparelho. Se estiver na rede da empresa, ela pode estar bloqueando o arquivo.</p>
           <button type="button" onClick={() => setTentativa(n => n + 1)}>Tentar novamente</button>
         </div> : estado === 'loading' || atualizando ? <p role="status">Buscando fundos…</p>
           : catalogo && !resultados.length && <p role="status">Nenhum ativo encontrado.</p>}
@@ -130,7 +136,7 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
     </label>
     {estado === 'loading' && <p role="status">Carregando o catálogo de fundos…</p>}
     {estado === 'error' && <>
-      <p role="status">Não foi possível carregar o catálogo de fundos.</p>
+      <p role="status">Não foi possível baixar a base de fundos da CVM neste aparelho. Se estiver na rede da empresa, ela pode estar bloqueando o arquivo.</p>
       <button type="button" onClick={() => setTentativa(n => n + 1)}>Tentar novamente</button>
     </>}
     {catalogo && <>
@@ -140,11 +146,8 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
             disabled={atualizando}
             onClick={() => escolher(item[0])}>{nomeFundo(item)}</button></li>)}</ul>
         : !atualizando && busca.trim().length >= minimo && <p role="status">Nenhum fundo encontrado.</p>}
-      <p className="inv-nota">Base geral de {dateText(catalogo.manifest.first)} a {dateText(catalogo.manifest.last)}.
-        A cobertura varia por fundo.</p>
+      <p className="inv-nota">Base geral de {dateText(catalogo.manifest.first)} a {dateText(catalogo.manifest.last)}.</p>
     </>}
-    <p className="inv-nota">Dados adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a>,
-      sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>
   </>
   return inline ? <section className="inv-panel inv-busca-principal" aria-label="Buscar fundos na CVM">{conteudo}</section>
     : <details className="inv-import" onToggle={e => { if (e.currentTarget.open) setAtivado(true) }}>
