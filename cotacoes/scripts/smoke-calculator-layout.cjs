@@ -492,6 +492,8 @@ async function assertGroupedCatalog(browser, report, failures) {
       if (width === 390 || width === 1440) {
         await catalog.getByRole('button', { name: 'CDB, Fundos e Ações: abrir calculadora', exact: true }).click()
         const investimentos = page.getByRole('region', { name: 'Investimentos', exact: true })
+        await investimentos.getByRole('button', { name: 'Comparar ativos', exact: true }).waitFor()
+        await investimentos.getByRole('button', { name: 'CDB, fundos e ações', exact: true }).click()
         await investimentos.getByRole('button', { name: 'CDB', exact: true }).waitFor()
         await investimentos.getByRole('textbox', { name: 'Valor aplicado (R$)', exact: true }).fill('10.000,00')
         await investimentos.getByLabel('Taxa anual bruta (% a.a.)', { exact: true }).fill('12')
@@ -508,7 +510,7 @@ async function assertGroupedCatalog(browser, report, failures) {
         await investimentos.getByLabel('Cota inicial', { exact: true }).fill('1,250')
         const fundo = investimentos.getByRole('region', { name: 'Variação da cota', exact: true })
         await fundo.getByText('4,00%', { exact: true }).waitFor()
-        await investimentos.locator('summary').click()
+        await investimentos.getByText('Importar Informe Diário da CVM', { exact: true }).click()
         await investimentos.getByLabel('CNPJ do fundo ou classe', { exact: true }).fill('00017024000153')
         await investimentos.getByLabel('Arquivos CSV da CVM', { exact: true }).setInputFiles({
           name: 'informe-teste.csv', mimeType: 'text/csv',

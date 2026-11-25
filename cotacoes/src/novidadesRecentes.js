@@ -3,6 +3,11 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '25/11/2026',
+    destaques: ['Investimentos ganha comparador histórico e simulador de carteira'],
+    items: ['Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.'],
+  },
+  {
     date: '24/11/2026',
     destaques: [
       'Histórias de empresas: iFood, Netflix e Blockbuster em um mapa interativo',

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import CalcBack from './CalcBack.jsx'
+import InvestmentWorkspace from './InvestmentWorkspace.jsx'
 import { numeroPt, cdb, fundo, acoes, cotasCvm } from './investimentos.js'
 import './Investimentos.css'
 
@@ -110,21 +111,30 @@ function Acoes({ v, set }) {
   </>
 }
 
-export default function Investimentos({onBack}) {
+export default function Investimentos({ onBack, comparisonLink }) {
+  const [aba, setAba] = useState('comparar')
   const [modo,setModo] = useState('cdb')
   const [valores,setValores] = useState({cdb:{},fundos:{},acoes:{}})
   const props = id => ({v:valores[id],set:(k,x) => setValores(all => ({ ...all,[id]:{...all[id],[k]:x} }))})
   return <section className="cx bw calc-workspace inv-workspace" aria-labelledby="inv-titulo">
     <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack}/><h2 id="inv-titulo">Investimentos</h2></div></div>
     <div className="inv-corpo">
-      <div className="inv-modos" role="group" aria-label="Tipo de investimento">
-        {[['cdb','CDB'],['fundos','Fundos'],['acoes','Ações']].map(([id,l]) => <button key={id} type="button" aria-pressed={modo===id} onClick={() => setModo(id)}>{l}</button>)}
+      <div className="inv-modos inv-tabs" role="group" aria-label="Investimentos">
+        {[['comparar', 'Comparar ativos'], ['simular', 'Simular carteira'], ['calculadoras', 'CDB, fundos e ações']].map(([id, label]) =>
+          <button key={id} type="button" aria-pressed={aba === id} onClick={() => setAba(id)}>{label}</button>)}
       </div>
-      <p className="inv-nota" id="inv-formato">Use vírgula para decimais: 1,234 para uma cota fracionária ou 1234 para mil duzentos e trinta e quatro. Não use ponto sozinho.</p>
-      {modo==='cdb' && <Cdb {...props('cdb')}/>}
-      <div hidden={modo!=='fundos'}><Fundos {...props('fundos')}/></div>
-      {modo==='acoes' && <Acoes {...props('acoes')}/>}
-      <p className="inv-nota">Para estudo. Rentabilidade passada e projeções não garantem resultados futuros. Não é recomendação de investimento.</p>
+      <InvestmentWorkspace link={comparisonLink} mode={aba} visible={aba !== 'calculadoras'}
+        showPortfolio={() => setAba('simular')} />
+      <div className="inv-manual" hidden={aba !== 'calculadoras'}>
+        <div className="inv-modos" role="group" aria-label="Tipo de investimento">
+          {[['cdb','CDB'],['fundos','Fundos'],['acoes','Ações']].map(([id,l]) => <button key={id} type="button" aria-pressed={modo===id} onClick={() => setModo(id)}>{l}</button>)}
+        </div>
+        <p className="inv-nota" id="inv-formato">Use vírgula para decimais: 1,234 para uma cota fracionária ou 1234 para mil duzentos e trinta e quatro. Não use ponto sozinho.</p>
+        {modo==='cdb' && <Cdb {...props('cdb')}/>}
+        <div hidden={modo!=='fundos'}><Fundos {...props('fundos')}/></div>
+        {modo==='acoes' && <Acoes {...props('acoes')}/>}
+        <p className="inv-nota">Para estudo. Rentabilidade passada e projeções não garantem resultados futuros. Não é recomendação de investimento.</p>
+      </div>
     </div>
   </section>
 }
