@@ -7,6 +7,20 @@ const classe = ['cvm-c-00017024000153', 'Classe Crédito Privado', '000170240001
 const subclasse = ['cvm-c-00017024000153-A1', 'Classe Crédito Privado — Varejo', '00017024000153']
 const rows = [['2026-09-30', 100], ['2026-10-15', 102], ['2026-10-30', 105], ['2026-11-20', 110]]
 
+test('a busca gera siglas a partir dos nomes e prioriza a grafia literal', () => {
+  const porSigla = ['cvm-c-00017024000153', 'Atlântico Fundo de Investimento em Cotas', '00017024000153']
+  const literal = ['cvm-c-23731495000124', 'Atlântico FIC', '23731495000124']
+  assert.deepEqual(buscarFundos([porSigla, literal], 'atlântico fic'), [literal, porSigla])
+  assert.deepEqual(buscarFundos([porSigla], 'atlântico fzc'), [])
+})
+
+test('o CNPJ da própria classe tem prioridade sobre o CNPJ do fundo pai', () => {
+  const cnpj = '23731495000124'
+  const propria = ['cvm-c-' + cnpj, 'Classe principal', cnpj]
+  const outra = ['cvm-c-00017024000153', 'Outra classe', '00017024000153', 'Fundo principal', cnpj]
+  assert.deepEqual(buscarFundos([outra, propria], '23.731.495/0001-24'), [propria, outra])
+})
+
 test('a busca do Orion aceita o nome abreviado do Mais Retorno, a grafia do cadastro e o CNPJ', () => {
   const orion = ['cvm-c-23731495000124',
     'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA',

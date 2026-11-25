@@ -4,11 +4,9 @@ export const LICENCA_CVM = 'https://opendatacommons.org/licenses/odbl/1-0/'
 const idPattern = /^cvm-[fc]-([A-Z0-9]{12}\d{2})(?:-([A-Za-z0-9_-]{1,64}))?$/
 export const isFundoCvm = id => idPattern.test(id) && (!id.startsWith('cvm-f-') || id.length === 20)
 const normalizar = s => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-const abreviacoes = new Map([
-  ['cp', /\b(?:cp|cred(?:ito)?\.?\s+priv(?:ado)?)\b/],
-  ['ie', /\b(?:ie|invest(?:imento)?\.?\s+no\s+exterior)\b/],
-  ['rl', /\b(?:rl|resp(?:onsabilidade)?\.?\s+(?:limitada|ltda))\b/],
-])
+  .replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
+const conectivos = new Set('a as com da das de do dos e em na nas no nos o os para por'.split(' '))
+const indiceNomes = new WeakMap()
 
 export function nomeFundo([id, nome, cnpj]) {
   const formatado = cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5')
@@ -17,20 +15,49 @@ export function nomeFundo([id, nome, cnpj]) {
   return nome + ' · ' + formatado + ' · ' + tipo
 }
 
+function indexarNome(item) {
+  let registro = indiceNomes.get(item)
+  if (!registro) {
+    const nome = normalizar(item[1])
+    const pai = normalizar(item[3] ?? '')
+    const iniciais = [...new Set([nome, pai].filter(Boolean))].flatMap(denominacao => {
+      const palavras = denominacao.split(' ')
+      const juntar = lista => lista.map(palavra => palavra[0]).join('')
+      return [juntar(palavras), juntar(palavras.filter(palavra => !conectivos.has(palavra)))]
+    })
+    registro = { nome, texto: normalizar(nomeFundo(item) + ' ' + pai), iniciais }
+    indiceNomes.set(item, registro)
+  }
+  return registro
+}
+
+function prioridadeNome(item, consulta, termos) {
+  const { nome, texto, iniciais } = indexarNome(item)
+  if (nome === consulta) return 0
+  if (texto.includes(consulta)) return 1
+  const faltantes = termos.filter(termo => !texto.includes(termo))
+  if (!faltantes.length) return 2
+  if (faltantes.every(termo => /^[a-z]{2,5}$/.test(termo) && iniciais.some(sigla => sigla.includes(termo)))) return 3
+  return -1
+}
+
 export function buscarFundos(catalogo, busca, excluidos = []) {
-  const termos = normalizar(busca.trim()).replace(/\boff\s+funds\b/g, 'of funds').split(/\s+/)
+  const consulta = normalizar(busca).replace(/\boff funds\b/g, 'of funds')
+  const termos = consulta.split(' ')
   if (termos.join('').length < 3) return []
   const cnpj = busca.replace(/[./\s-]/g, '').toUpperCase()
   const buscaCnpj = /\d/.test(cnpj) && /^[A-Z0-9]+$/.test(cnpj)
-  const matches = []
+  const resultados = [[], [], [], []]
   for (const item of catalogo) {
     if (excluidos.includes(item[0])) continue
-    const nome = normalizar(nomeFundo(item) + ' ' + (item[3] ?? ''))
-    if ((buscaCnpj && (item[2].includes(cnpj) || item[4]?.includes(cnpj))) ||
-        termos.every(termo => abreviacoes.get(termo)?.test(nome) ?? nome.includes(termo))) matches.push(item)
-    if (matches.length === 20) break
+    let prioridade
+    if (buscaCnpj && item[2] === cnpj) prioridade = 0
+    else if (buscaCnpj && (item[2].includes(cnpj) || item[4]?.includes(cnpj))) prioridade = 1
+    else prioridade = prioridadeNome(item, consulta, termos)
+    if (prioridade >= 0 && resultados[prioridade].length < 20) resultados[prioridade].push(item)
+    if (resultados[0].length === 20) break
   }
-  return matches
+  return resultados.flat().slice(0, 20)
 }
 
 export function cotasDoFundo(grupo, item) {
