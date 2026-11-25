@@ -134,7 +134,7 @@ function Acoes({ v, set }) {
 }
 
 export default function Investimentos({ onBack, comparisonLink }) {
-  const [aba, setAba] = useState(comparisonLink ? 'comparar' : 'fundos')
+  const [aba, setAba] = useState('comparar')
   const [modo,setModo] = useState('cdb')
   const [valores,setValores] = useState({cdb:{},fundos:{},acoes:{}})
   const props = id => ({v:valores[id],set:(k,x) => setValores(all => ({ ...all,[id]:{...all[id],[k]:x} }))})
@@ -142,11 +142,11 @@ export default function Investimentos({ onBack, comparisonLink }) {
     <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack}/><h2 id="inv-titulo">Investimentos</h2></div></div>
     <div className="inv-corpo">
       <div className="inv-modos inv-tabs" role="group" aria-label="Investimentos">
-        {[['fundos', 'Consultar fundos'], ['comparar', 'Comparar ativos'], ['simular', 'Simular carteira'], ['calculadoras', 'CDB, fundos e ações']].map(([id, label]) =>
+        {[['comparar', 'Comparar ativos'], ['fundos', 'Consultar fundos'], ['simular', 'Simular carteira'], ['calculadoras', 'CDB, fundos e ações']].map(([id, label]) =>
           <button key={id} type="button" aria-pressed={aba === id} onClick={() => setAba(id)}>{label}</button>)}
       </div>
       <InvestmentWorkspace link={comparisonLink} mode={aba} visible={aba !== 'calculadoras'}
-        showFunds={() => setAba('fundos')} showComparison={() => setAba('comparar')} showPortfolio={() => setAba('simular')} />
+        showComparison={() => setAba('comparar')} showPortfolio={() => setAba('simular')} />
       <div className="inv-manual" hidden={aba !== 'calculadoras'}>
         <div className="inv-modos" role="group" aria-label="Tipo de investimento">
           {[['cdb','CDB'],['fundos','Fundos'],['acoes','Ações']].map(([id,l]) => <button key={id} type="button" aria-pressed={modo===id} onClick={() => setModo(id)}>{l}</button>)}
