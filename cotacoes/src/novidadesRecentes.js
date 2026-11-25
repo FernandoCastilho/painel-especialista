@@ -9,7 +9,7 @@ export const NOVIDADES_RECENTES = [
       'Em Mais > Histórias, Spotify, Uber e Apple/iPhone entram no mapa com linha do tempo, leitura de negócios e fontes.',
       'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
       'Em Investimentos, busque fundos por nome ou CNPJ e use as cotas da CVM na calculadora, na comparação de ativos e na simulação de carteira.',
-      'Em Investimentos, adicione fundos, CDI, IPCA ou dólar pelo campo de busca acima dos ativos. O gráfico abaixo mostra a rentabilidade de todos no mesmo mês ao passar o mouse ou tocar. A ficha de cada fundo continua na aba Consultar fundos.',
+      'Investimentos abre com o CDI. Adicione fundos ou outros ativos pelo campo de busca. Ao passar o mouse ou tocar no gráfico, veja a data exata, a variação do dia e a rentabilidade acumulada de cada ativo.',
     ],
   },
   {

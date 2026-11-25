@@ -68,6 +68,8 @@
 .inv-workspace .inv-legend { grid-template-columns:repeat(auto-fit,minmax(min(100%,275px),1fr)); }
 .inv-workspace :is(.inv-legend, .inv-chart-tooltip) li { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
 .inv-workspace :is(.inv-legend, .inv-chart-tooltip) li strong { flex:none; font-variant-numeric:tabular-nums; }
+.inv-workspace .inv-chart-values { flex:none; text-align:right; }
+.inv-workspace .inv-chart-values small { display:block; color:var(--mut); }
 .inv-workspace .inv-month { font-size:.83rem; color:var(--mut); }
 .inv-workspace .inv-month input { padding:0; accent-color:#0131ff; }
 .inv-workspace .inv-table { overflow:auto; }
