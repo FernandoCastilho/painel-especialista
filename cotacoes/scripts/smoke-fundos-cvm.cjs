@@ -56,6 +56,8 @@ async function verificarComparador(region, page, width) {
   await region.getByRole('button', { name: 'Comparar ativos', exact: true, pressed: true }).waitFor()
   const busca = region.getByRole('searchbox', { name: 'Buscar ativo' })
   const ativos = region.getByRole('region', { name: 'Ativos em comparação' })
+  await ativos.getByRole('button', { name: 'Remover CDI', exact: true }).waitFor()
+  assert.equal(await ativos.getByRole('listitem').count(), 1, 'a abertura tem somente CDI, mesmo com favoritos')
   await busca.pressSequentially('It')
   if (!real) await region.getByRole('button', { name: 'Tentar novamente', exact: true }).click()
   await region.getByRole('list', { name: 'Ativos encontrados' }).waitFor()
@@ -66,33 +68,41 @@ async function verificarComparador(region, page, width) {
   assert.equal(await busca.inputValue(), '')
   const remover = ativos.getByRole('button', { name: /^Remover .*00\.017\.024\/0001-53 · Classe$/ })
   await remover.waitFor()
-  for (const name of ['CDI', 'IPCA', 'Dólar PTAX venda']) {
-    await ativos.getByRole('button', { name: 'Remover ' + name, exact: true }).click()
-  }
+  await busca.fill(cnpj)
+  const incluido = region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe · Já na comparação$/ })
+  await incluido.waitFor()
+  assert.equal(await incluido.isDisabled(), true, 'a pesquisa encontra o ativo selecionado sem duplicá-lo')
+  await ativos.getByRole('button', { name: 'Remover CDI', exact: true }).click()
+  await busca.clear()
   await busca.pressSequentially('CD')
   await region.getByRole('list', { name: 'Ativos encontrados' }).getByRole('button', { name: 'CDI', exact: true }).click()
   const chart = region.getByRole('region', { name: 'Rentabilidade acumulada', exact: true })
-  const svg = chart.getByRole('img', { name: 'Gráfico da variação acumulada por mês' })
+  const svg = chart.getByRole('img', { name: 'Gráfico da rentabilidade acumulada por dia' })
   await svg.scrollIntoViewIfNeeded()
   const positions = await Promise.all([busca.boundingBox(), ativos.boundingBox(), svg.boundingBox()])
   assert.ok(positions[0].y < positions[1].y && positions[1].y < positions[2].y, 'busca, ativos e gráfico em ordem')
   const box = positions[2]
   const slider = chart.getByRole('slider')
   const latest = await slider.getAttribute('aria-valuetext')
-  const x = box.x + box.width * 0.58
+  const x = box.x + await svg.evaluate((node, real) => {
+    const [grid] = node.querySelectorAll('.inv-gridline')
+    const left = Number(grid.getAttribute('x1'))
+    const right = Number(grid.getAttribute('x2'))
+    return (left + (right - left) * (real ? 0.5 : 28 / 59)) * node.clientWidth / node.viewBox.baseVal.width
+  }, real)
   const y = box.y + box.height * 0.52
   if (width > 560) {
     await page.mouse.move(x, y)
     const tip = chart.locator('.inv-chart-tooltip')
     await tip.waitFor({ state: 'visible' })
     const texto = normalizar(await tip.innerText())
-    assert.match(texto, /\d{2}\/\d{4}.*00\.017\.024\/0001-53 · Classe.*%.*CDI.*%/)
-    if (!real) assert.match(texto, /10\/2025.*5,00%.*CDI.*1,01%/)
+    assert.match(texto, /\d{2}\/\d{2}\/\d{4}.*00\.017\.024\/0001-53 · Classe.*CDI/)
+    if (!real) assert.match(texto, /28\/10\/2025.*2,00%.*2,00% no dia.*CDI.*1,01%.*1,01% no dia/)
   } else {
     await page.touchscreen.tap(x, y)
   }
   assert.notEqual(await slider.getAttribute('aria-valuetext'), latest, 'o ponto muda com o mouse ou toque')
-  const legend = chart.getByRole('list', { name: 'Rentabilidade dos ativos no mês selecionado' })
+  const legend = chart.getByRole('list', { name: 'Rentabilidade dos ativos na data selecionada' })
   assert.equal(await legend.getByRole('listitem').count(), 2)
   await slider.press('Home')
   assert.equal(await legend.getByText('0,00%', { exact: true }).count(), 2, 'o teclado também move a referência')
@@ -111,6 +121,9 @@ async function main() {
     for (const width of [390, 1280]) {
       const page = await browser.newPage({ viewport: { width, height: 900 }, hasTouch: width < 560, serviceWorkers: 'block' })
       page.setDefaultTimeout(15000)
+      await page.addInitScript(() => localStorage.setItem('peme-investimentos-v1', JSON.stringify({
+        favorites: [{ config: 'ativos=ipca&periodo=6&moeda=BRL', label: 'Comparação salva' }],
+      })))
       await fixtures(page)
       await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos')
       const region = page.getByRole('region', { name: 'Investimentos', exact: true })

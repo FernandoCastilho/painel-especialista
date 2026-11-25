@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  bcbSeries, parseSeriesCsv, compareHistory, metrics, simulateHistory, comparisonCsv, loadBcb,
+  bcbSeries, parseSeriesCsv, compareHistory, compareDailyHistory, metrics, simulateHistory, comparisonCsv, loadBcb,
 } from '../src/investmentHistory.js'
 
 const rows = values => values.map((value, i) => ['2025-0' + (i + 1) + '-28', value])
@@ -58,6 +58,41 @@ test('risco e carteira: usa posições iniciais fixas, volatilidade mensal anual
   assert.equal(simulateHistory([{ values: [1, 2] }], [NaN]), null)
   assert.equal(simulateHistory([{ values: [1, 2] }], [0]), null)
   assert.equal(simulateHistory([{ values: [1, 2] }], [1e308]), null)
+})
+
+test('gráfico diário usa a data exata, inclui o mês em curso e deixa a cota ausente em branco', () => {
+  const cdi = { id: 'cdi', name: 'CDI', currency: 'BRL', rows: [
+    ['2025-10-31', 100], ['2025-11-03', 101], ['2025-11-04', 102], ['2025-11-05', 103],
+  ] }
+  const fundo = { id: 'fundo', name: 'Fundo', currency: 'BRL', rows: [
+    ['2025-11-03', 50], ['2025-11-04', 55],
+  ] }
+  const result = compareDailyHistory([cdi, fundo], 6, 'BRL', {})
+  assert.equal(result.start, '2025-11-03')
+  assert.deepEqual(result.timeline, ['2025-11-03', '2025-11-04', '2025-11-05'])
+  closeTo(result.tracks[0].changes[0], 0.01)
+  closeTo(result.tracks[1].changes[1], 0.1)
+  closeTo(result.tracks[1].values[1], 1.1)
+  assert.equal(result.tracks[1].values[2], null)
+  assert.equal(result.tracks[1].changes[2], null)
+  assert.match(comparisonCsv(result, 'BRL'), /^"Data";.*\r\n[\s\S]*"2025-11-05";"BRL";[^;]+;$/)
+})
+
+test('gráfico usa referência mensal sem inventar IPCA diário e exige câmbio na data do ponto', () => {
+  const base = { id: 'dolar', name: 'Dólar', currency: 'USD', rows: [
+    ['2025-10-31', 10], ['2025-11-03', 11], ['2025-11-04', 12], ['2025-11-05', 13], ['2025-11-28', 14],
+  ] }
+  const ipca = { id: 'ipca', name: 'IPCA', kind: 'monthly-rate', currency: 'BRL', rows: [
+    ['2025-10-31', 100], ['2025-11-30', 101],
+  ] }
+  const result = compareDailyHistory([base, ipca], 6, 'BRL', { USD: [
+    ['2025-10-31', 5], ['2025-11-03', 6], ['2025-11-05', 7], ['2025-11-28', 7],
+  ] })
+  assert.deepEqual(result.timeline, ['2025-10-31', '2025-11-03', '2025-11-05', '2025-11-28', '2025-11-30'])
+  closeTo(result.tracks[0].values[1], 1.32)
+  assert.equal(result.tracks[0].changes[2], null)
+  closeTo(result.tracks[1].values.at(-1), 1.01)
+  assert.ok(result.tracks[1].changes.every(change => change === null))
 })
 
 test('CSV exportado protege nomes de fórmulas e preserva sinais dos retornos', () => {

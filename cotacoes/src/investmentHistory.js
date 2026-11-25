@@ -76,6 +76,14 @@ export async function loadBcb(item, today, signal, fetcher = fetch) {
   return rows
 }
 
+function monthsBefore(date, count) {
+  const [year, month, day] = date.split('-').map(Number)
+  const target = new Date(Date.UTC(year, month - 1 - count, 1))
+  const lastDay = Number(endOfMonth(months(target.toISOString())).slice(-2))
+  target.setUTCDate(Math.min(day, lastDay))
+  return target.toISOString().slice(0, 10)
+}
+
 export function resumoFundo(cotas, cdi = []) {
   const [fim, cotaFinal] = cotas.at(-1)
   // A razão entre os níveis anteriores a cada data inclui a taxa do início e exclui a do fim.
@@ -84,14 +92,9 @@ export function resumoFundo(cotas, cdi = []) {
   // A data final pode vir antes da divulgação da sua própria taxa. Pule apenas o fim de semana.
   const limiteCdi = ultimoCdi && addDays(ultimoCdi[0], new Date(ultimoCdi[0]).getUTCDay() === 5 ? 3 : 1)
   const cdiFinal = ultimoCdi && fim > ultimoCdi[0] && fim <= limiteCdi ? ultimoCdi[1] : referencia.get(fim)
-  const dataFinal = new Date(fim)
   return [1, 3, 6, 12].map(meses => {
-    const alvo = new Date(Date.UTC(dataFinal.getUTCFullYear(), dataFinal.getUTCMonth() - meses, 1))
-    const ultimoDia = Number(endOfMonth(alvo.toISOString().slice(0, 7)).slice(-2))
-    alvo.setUTCDate(Math.min(dataFinal.getUTCDate(), ultimoDia))
-    const dataAlvo = alvo.toISOString().slice(0, 10)
-    alvo.setUTCDate(alvo.getUTCDate() - 7)
-    const limite = alvo.toISOString().slice(0, 10)
+    const dataAlvo = monthsBefore(fim, meses)
+    const limite = addDays(dataAlvo, -7)
     const ponto = cotas.findLast(([dia]) => dia <= dataAlvo && dia >= limite)
     if (!ponto) return { meses, fim, inicio: null, fundo: null, cdi: null }
     const [inicio, cotaInicial] = ponto
@@ -122,6 +125,45 @@ function monthNumber(month) {
 const currencyRates = (from, to, fx) => {
   if (from === to) return []
   return [...new Set([from, to].filter(code => code !== 'BRL'))].map(code => fx[code])
+}
+
+export function compareDailyHistory(series, period, currency, fx) {
+  if (!series.length || series.some(item => !item.rows?.length)) return null
+  const rates = Object.fromEntries(Object.entries(fx).map(([code, rows]) => [code, new Map(rows)]))
+  const selections = series.map(item => {
+    let previous = null
+    const points = new Map()
+    for (const [date, price] of item.rows) {
+      let level = price
+      if (item.currency !== currency) {
+        const from = item.currency === 'BRL' ? 1 : rates[item.currency]?.get(date)
+        const to = currency === 'BRL' ? 1 : rates[currency]?.get(date)
+        level = price * from / to
+      }
+      const current = Number.isFinite(level) && level > 0 ? level : null
+      if (current !== null) points.set(date, {
+        level: current,
+        change: previous !== null && item.kind !== 'monthly-rate' ? current / previous - 1 : null,
+      })
+      previous = current
+    }
+    return { item, points, dates: [...points.keys()] }
+  })
+  if (selections.some(({ dates }) => !dates.length)) return null
+  const first = selections.map(({ dates }) => dates[0]).sort().at(-1)
+  const end = selections.map(({ dates }) => dates.at(-1)).sort().at(-1)
+  const target = monthsBefore(end, period)
+  const start = first > target ? first : target
+  const timeline = [...new Set(selections.flatMap(({ dates }) => dates.filter(date => date >= start)))].sort()
+  if (timeline.length < 2) return null
+  const tracks = selections.map(({ item, points, dates }) => {
+    const base = points.get(dates.findLast(date => date <= start)).level
+    return { ...item,
+      values: timeline.map(date => points.has(date) ? points.get(date).level / base : null),
+      changes: timeline.map(date => points.get(date)?.change ?? null),
+    }
+  })
+  return { daily: true, timeline, tracks, start, fullPeriod: start === target }
 }
 
 export function compareHistory(series, period, currency, fx, currentMonth) {
@@ -187,9 +229,9 @@ export function comparisonCsv(comparison, currency) {
     return '"' + ( /^[=+\-@]/.test(cell.trimStart()) || /^[\t\r\n]/.test(cell) ? "'" + cell : cell ).replaceAll('"', '""') + '"'
   }
   return [
-    ['Mês', 'Moeda', ...comparison.tracks.map(track => track.name + ' (%)')],
+    [comparison.daily ? 'Data' : 'Mês', 'Moeda', ...comparison.tracks.map(track => track.name + ' (%)')],
     ...comparison.timeline.map((month, index) => [month, currency, ...comparison.tracks.map(track =>
-      ((track.values[index] - 1) * 100).toFixed(6).replace('.', ','))]),
+      track.values[index] === null ? '' : ((track.values[index] - 1) * 100).toFixed(6).replace('.', ','))]),
   ].map(([month, currencyCode, ...cells], index) =>
     [safeCell(month), safeCell(currencyCode), ...cells.map(value => index === 0 ? safeCell(value) : value)].join(';')).join('\r\n')
 }

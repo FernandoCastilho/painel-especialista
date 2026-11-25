@@ -27,7 +27,7 @@ O pacote de Pages inclui os valores diários de cota divulgados no [Informe Diá
 
 - No primeiro release, o coletor prepara a base inicial. A janela tem até 13 meses fechados mais o mês em curso. O catálogo inclui séries com duas ou mais cotas válidas. O tipo informado pela CVM distingue fundo, classe e subclasse, inclusive quando a migração reaproveita o CNPJ. Quando o nome está ausente, o catálogo identifica a série pelo CNPJ e pelo tipo disponível.
 - As rodadas de dados após as 08h de Brasília renovam a base uma vez por dia. Releases normais preservam a base. O cache do GitHub evita baixar todos os arquivos da CVM a cada rodada. Se o cache estiver ausente, o coletor restaura os arquivos publicados e confere seus hashes pelo manifesto. Se a CVM falhar e houver uma base anterior válida, a rotina preserva essa base e registra um aviso.
-- A calculadora usa as duas cotas diárias escolhidas. A comparação e a carteira usam a última cota disponível de cada mês fechado em comum. A interface mostra a janela efetiva e avisa quando o histórico cobre menos que o período pedido. A variação das cotas não incorpora distribuições ou tributos do cotista.
+- A calculadora usa as duas cotas diárias escolhidas. O gráfico de comparação e sua exportação usam as datas exatas das observações. A tabela de retorno e risco e a carteira usam a última cota disponível de cada mês fechado em comum. A interface mostra a cobertura disponível. A variação das cotas não incorpora distribuições ou tributos do cotista.
 
 ## Calendário B3
 
