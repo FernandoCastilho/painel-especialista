@@ -1,0 +1,30 @@
+/* Primeira tela das Calculadoras (revisão visual de 25/11/2026): busca, "Mais usadas" em destaque e grupos compactos. */
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-head { display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:14px 0 6px; }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-head h2 { flex:1 1 auto; margin:0; font-size:1.5rem; line-height:1.2; color:var(--bw-ink); }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-search {
+  flex:0 1 420px; min-width:0; height:44px; padding:0 14px; border:1px solid var(--bw-field-line); border-radius:8px;
+  background:var(--bw-card); color:var(--bw-ink); font:inherit; font-size:.95rem;
+}
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-search:focus-visible { outline:2px solid var(--bw-link); outline-offset:1px; }
+main.app.app-calculators .calc-catalog-v2 .cx-construcao { margin:4px 0 18px; padding:0; border:0; background:none; color:var(--bw-mut); font-size:.85rem; }
+main.app.app-calculators .calc-catalog-v2 .cx-construcao strong { color:var(--bw-warm-ink); }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-groups { gap:22px; }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-group { border-top:0; padding-top:0; }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-group h3 { margin:0 0 10px; font-size:.8125rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--bw-mut); }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-group-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+main.app.app-calculators .calc-catalog-v2 .calc-bndes-rates { display:inline; margin:0; padding:0; border:0; font-size:.85rem; color:var(--bw-link); }
+main.app.app-calculators .calc-catalog-v2 .cx-tiles { grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+main.app.app-calculators .calc-catalog-v2 .cx-tile { min-width:0; min-height:64px; padding:10px 14px; }
+main.app.app-calculators .calc-catalog-v2 .cx-tile-text small { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-top .cx-tiles { gap:16px; }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-top .cx-tile { min-height:120px; padding:20px; border-color:var(--bw-strong-line); }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-top .cx-tile-text b { font-size:1.2rem; }
+main.app.app-calculators .calc-catalog-v2 .calc-catalog-top .cx-tile-text small { white-space:normal; }
+@media (max-width: 900px) {
+  main.app.app-calculators .calc-catalog-v2 .cx-tiles { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  main.app.app-calculators .calc-catalog-v2 .cx-tiles { grid-template-columns:1fr; }
+  main.app.app-calculators .calc-catalog-v2 .calc-catalog-search { flex-basis:100%; }
+  main.app.app-calculators .calc-catalog-v2 .calc-catalog-top .cx-tile { min-height:88px; padding:16px; }
+}

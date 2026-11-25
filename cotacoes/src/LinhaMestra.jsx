@@ -15,7 +15,9 @@ const SYSTEMS = [['price', 'Price'], ['sac', 'SAC'], ['bullet', 'Bullet capitali
 const LABELS = { value: 'Valor da operação', term: 'Prazo total', grace: 'Carência', system: 'Amortização', start: 'Data da liberação', praca: 'Praça do contrato' }
 const FOOT = 'Os valores da linha mestra valem também nas outras calculadoras de empréstimo, até você fechar esta aba. Ficam só neste navegador.'
 
-export default function LinhaMestra({ prefix, title = 'Linha mestra · necessidade do cliente', values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, foot = FOOT, help, details, pracaControl: PracaControl, children }) {
+const GRACE_HELP = <p>Meses sem amortização, dentro do prazo total. Exemplo: 24 meses com 6 de carência = 18 parcelas, e a primeira vence 7 meses depois da liberação. Os juros da carência são somados ao saldo, salvo onde a calculadora tiver a opção de pagá-los no período.</p>
+
+export default function LinhaMestra({ prefix, title = 'Linha mestra · necessidade do cliente', values, onChange, fields = ['value', 'term', 'grace', 'system', 'start', 'praca'], labels = {}, errors = {}, note, onClear, foot = FOOT, help, details, pracaControl: PracaControl, helpOnLabel = false, children }) {
   const id = key => `${prefix}-${key}`
   const label = key => labels[key] ?? LABELS[key]
   const invalid = key => ({ 'aria-invalid': !!errors[key], ...(errors[key] ? { 'aria-describedby': `${id(key)}-err` } : {}) })
@@ -35,9 +37,11 @@ export default function LinhaMestra({ prefix, title = 'Linha mestra · necessida
       : <select id={id('praca')} value={values.praca ?? PRACA_PADRAO} onChange={e => onChange('praca', e.target.value)}>{PRACAS_CONTRATO.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>,
   }
   const field = key => <div className="lm-field" key={key}>
-    <span className="lm-label"><label htmlFor={id(key)}>{label(key)}</label>
+    <span className="lm-label">{helpOnLabel && key === 'grace'
+      ? <><label htmlFor={id(key)} className="sr-only">{label(key)}</label><CalculatorHelp title="Carência" trigger={label(key)}>{GRACE_HELP}</CalculatorHelp></>
+      : <label htmlFor={id(key)}>{label(key)}</label>}
       {key === 'praca' && <CalculatorHelp title="Praça do contrato (feriados)"><p>{PRACA_AJUDA}</p><p>{PRACA_RESSALVA}</p></CalculatorHelp>}
-      {key === 'grace' && <CalculatorHelp title="Carência"><p>Meses sem amortização, dentro do prazo total. Exemplo: 24 meses com 6 de carência = 18 parcelas, e a primeira vence 7 meses depois da liberação. Os juros da carência são somados ao saldo, salvo onde a calculadora tiver a opção de pagá-los no período.</p></CalculatorHelp>}
+      {key === 'grace' && !helpOnLabel && <CalculatorHelp title="Carência">{GRACE_HELP}</CalculatorHelp>}
     </span>
     {control[key]()}
     {issue(key)}
