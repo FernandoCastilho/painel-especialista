@@ -5,11 +5,11 @@ import { dataTimestamp } from './dataTimestamp.js'
 import './HeavyVehicles.css'
 const count=n=>(n.rounding?'≈ ':'')+n.value.toLocaleString('pt-BR')
 const pct=n=>(n>0?'+':'')+n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'
-export default function HeavyVehicles({compact=false}){
+export default function HeavyVehicles(){
  const file=useDataFile('heavy-vehicles.json')
  const data=useMemo(()=>{try{return normalizeHeavy(file.data)}catch{return null}},[file.data])
  const period=data ? new Date(data.period+'-01T12:00:00Z').toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}) : ''
- return <section className={'heavy-vehicles'+(compact?' heavy-vehicles--compact':'')} aria-label="Indicadores de veículos pesados" tabIndex={compact?0:undefined}>
+ return <section className="heavy-vehicles" aria-label="Indicadores de veículos pesados">
   <h3>Veículos pesados · ANFAVEA</h3>
   {!data ? <p role="status">{file.status==='loading'?'Carregando indicadores mensais…':'Indicadores indisponíveis. Consulte a publicação oficial.'}</p> : <>
    <p className="muted">Referência: <strong>{period}</strong> · publicação mensal · Carta {data.editionLabel}, edição {data.edition}</p>

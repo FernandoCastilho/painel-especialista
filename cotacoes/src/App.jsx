@@ -1,6 +1,6 @@
 import EconomiaContexto from './EconomiaContexto.jsx'
 import GlobalSearch, { SearchDestination } from './GlobalSearch.jsx'
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { dataTimestamp } from './dataTimestamp.js'
 import ThemeControl from './ThemeControl.jsx'
 import FeedbackMascot from './FeedbackMascot.jsx'
@@ -26,7 +26,7 @@ import HolidayNotice from './HolidayNotice.jsx'
 import AvisoInicial from './AvisoInicial.jsx'
 import MarketPopup from './MarketPopup.jsx'
 import { usePanorama } from './usePanorama.js'
-import { avisoPendente, marcarAvisoVisto } from './avisoInicial.js'
+import { avisoPendente } from './avisoInicial.js'
 import Recado from './Recado.jsx'
 import AlertaVariacao from './AlertaVariacao.jsx'
 import { OnlineBadge } from './Acessos.jsx'
@@ -37,6 +37,7 @@ import { useHolidays } from './useHolidays.js'
 const Config = lazy(() => import('./Config.jsx'))
 const Novidades = lazy(() => import('./Novidades.jsx'))
 const Podcast = lazy(() => import('./Podcast.jsx'))
+const Historias = lazy(() => import('./Historias.jsx'))
 const Aprender = lazy(() => import('./Aprender.jsx'))
 const Indexadores = lazy(() => import('./Indexadores.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
@@ -209,9 +210,9 @@ export default function App() {
     }
   }, [])
   const [open, setOpen] = useState(null) // código da moeda (ou 'PAR') com o detalhe aberto
-  // Aviso de entrada: sozinho, só na primeira vez neste aparelho ou quando o texto mudar; navegador automatizado (smokes) não o recebe.
-  const [avisoAberto, setAvisoAberto] = useState(() => !navigator.webdriver && avisoPendente())
-  const fecharAviso = () => { marcarAvisoVisto(); setAvisoAberto(false) }
+  // Aviso de entrada: sozinho, na primeira entrada de cada dia em Brasília; navegador automatizado (smokes) não o recebe.
+  const [avisoModo, setAvisoModo] = useState(() => !navigator.webdriver && avisoPendente() ? 'automatico' : null)
+  const fecharAviso = useCallback(() => setAvisoModo(null), [])
   const panorama = usePanorama()
   const cenSub = CEN_OLD[sub] ?? sub
   const cenView = CEN_VIEWS.some((v) => v.id === cenSub.split('/')[0]) ? cenSub.split('/')[0] : 'projecoes'
@@ -225,7 +226,7 @@ export default function App() {
     } catch {
       /* sem histórico (ex.: arquivo local) */
     }
-    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
+    if (!((id === 'bndes' && tab === 'bndes') || (id === 'ma' && tab === 'ma') || (id === 'historias' && tab === 'historias'))) window.scrollTo({ top: 0 }) // preservar posição durante filtros e busca
   }
   useEffect(() => { // endereço antigo (#cenarios/outros, /fiscal, /frete) vira o novo, sem nova entrada no histórico
     if (tab !== 'cenarios' || !CEN_OLD[sub]) return
@@ -291,19 +292,21 @@ export default function App() {
         <p><strong>Aviso:</strong> Conteúdo meramente informativo e ilustrativo, baseado em fontes públicas. As simulações são hipotéticas e não constituem recomendação, oferta ou garantia de resultado. Os dados podem apresentar defasagens ou imprecisões e devem ser conferidos nas fontes oficiais antes de qualquer decisão. O uso é de responsabilidade do usuário, observadas as responsabilidades previstas na legislação aplicável.</p>
         <p>Yuan: CNH (offshore), por cruzamento USD/BRL ÷ USD/CNH. Origem, API e frequência de cada dado: Configurações › Base de dados.</p>
         <p><i>{DISCLAIMER}</i></p>
-        <p><button type="button" className="linklike aviso-rever" aria-haspopup="dialog" onClick={() => setAvisoAberto(true)}>Ver o aviso de entrada</button></p>
+        <p><button type="button" className="linklike aviso-rever" aria-haspopup="dialog" onClick={() => setAvisoModo('manual')}>Ver o aviso de entrada</button></p>
       </>}>
     <a className="skip-link" href="#conteudo" onClick={(e) => { e.preventDefault(); mainRef.current?.focus() }}>Pular para o conteúdo</a>
-    <AvisoInicial open={avisoAberto} onClose={fecharAviso} />
+    <AvisoInicial modo={avisoModo} onClose={fecharAviso} />
     <MarketPopup open={panorama.aberto} slot={panorama.momento} onClose={panorama.fechar} quotes={quotes} curves={curves.data} oil={oil.data} />
-    <Recado />
+    <Recado aguardarAviso={avisoModo !== null} />
     <Laser />
     <GlobalSearch request={mascotSearch} onNavigate={(doc, query) => { const [id,...rest]=doc.route.split('/'); goto(id,rest.join('/')); setSearchSelection({doc,query}) }} />
-    <header className="term-head">
-      <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
-      <Tape quotes={quotes} rates={rates} oil={oil.data} showFxFlags={tab === 'resumo'} />
-    </header>
-    <div className="nav-top"><Nav tab={tab} onTab={(id) => goto(id)} /></div>
+    <div className="panel-header">
+      <header className="term-head">
+        <TopBar tab={tab} onTab={(id) => goto(id)} feed={feed} feedAt={feedAt} feedLabel={health.label} feedTitle={health.observedAt ? health.label + ' · Referência mais antiga: ' + dataTimestamp(health.observedAt) : health.detail} />
+        <Tape quotes={quotes} rates={rates} oil={oil.data} showFxFlags={tab === 'resumo'} />
+      </header>
+      <div className="nav-top"><Nav tab={tab} onTab={(id) => goto(id)} /></div>
+    </div>
     {tab === 'resumo' && (
       <div className="clocks-top">
         <Clock codes={['BRL', 'USD', 'GBP', 'JPY', 'CNH']} />
@@ -372,6 +375,7 @@ export default function App() {
 
       {tab === 'podcast' && <Podcast />}
       {tab === 'novidades' && <Novidades />}
+      {tab === 'historias' && <Historias view={sub} onView={v => goto('historias', v)} />}
       {tab === 'aprender' && <Aprender view={sub} goto={goto} />}
 
       {tab === 'apresentar' && <Apresentar quotes={quotes} macro={macro} curves={curves} hol={hol} colors={COLORS} />}

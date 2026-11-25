@@ -32,7 +32,7 @@ for (const script of ['smoke-calculadora.cjs', 'smoke-calculator-layout.cjs']) {
 }
 
 test('discount smoke independently reconciles operation, CET, monthly and annual totals', () => {
-  const { operation, result, errors } = parseDiscountForm({ ...DISCOUNT_INITIAL_FORM, titleFeeMode: 'total' })
+  const { operation, result, errors } = parseDiscountForm({ ...DISCOUNT_INITIAL_FORM, titleMode: 'titles', titleFeeMode: 'total' })
   assert.deepEqual(errors, {})
   assert.equal(result.ok, true)
   // Regra de 11/11/2026: 05/12/2026 é sábado, o título é pago em 07/12 e juros e IOF contam 32 dias.

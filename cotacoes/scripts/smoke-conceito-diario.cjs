@@ -59,7 +59,7 @@ const fs = require('node:fs')
       // Segunda visita no mesmo dia: nem aviso, nem conceito, nem ponto.
       await p.reload(); await button.waitFor()
       await idle('retorno no mesmo dia sem pop-up')
-      assert.equal(await aviso.count(), 0, 'aviso de entrada não volta com o mesmo texto')
+      assert.equal(await aviso.count(), 0, 'aviso de entrada não volta no mesmo dia')
       assert.equal(await button.locator('.sinal-novo').count(), 0)
       // Virada em São Paulo, com navegador deliberadamente em outro fuso: nada abre; ao pedir, vem o conceito do novo dia.
       await p.clock.fastForward(61000)
@@ -83,6 +83,9 @@ const fs = require('node:fs')
       await ctx.route('**/recado.json*', r => r.fulfill({ json: { ativo: true, id: 'qa', titulo: 'Recado de teste', texto: 'Teste de fila.' } }))
       await p.evaluate(() => localStorage.removeItem('aprender-conceito-dia'))
       await p.reload()
+      // É a primeira entrada no dia novo. O recado espera o aviso inicial.
+      await aviso.waitFor()
+      await aviso.getByRole('button', { name: 'Entendi' }).click()
       await p.getByRole('dialog', { name: 'Recado de teste' }).waitFor()
       assert.equal(await p.locator('dialog:modal').count(), 1)
       await p.keyboard.press('Escape')

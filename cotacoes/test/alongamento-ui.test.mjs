@@ -16,7 +16,7 @@ const Help = ({ title }) => React.createElement('button', { type: 'button', 'ari
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
 const textOf = el => Array.isArray(el) ? el.map(textOf).join('') : el && typeof el === 'object' ? el.type === Help ? '' : textOf(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t) {
-  const deps = { react: React, './alongamento.js': model, './contaGarantida.js': { ...cgModel, cgToday: () => '2026-11-06' }, './moneyInput.js': moneyModel, './ComparativoAlongamento.css': {}, './CalculatorHelp.jsx': Help }
+  const deps = { react: React, './alongamento.js': model, './contaGarantida.js': { ...cgModel, cgToday: () => '2026-11-06' }, './moneyInput.js': moneyModel, './ComparativoAlongamento.css': {}, './CalculatorHelp.jsx': Help, './FluxoPagamentos.jsx': () => null, './ReferenciaMercado.jsx': () => null, './EmailEnvelope.jsx': { EnvelopeEml: () => null }, './contaGarantidaEml.js': await import('../src/contaGarantidaEml.js'), './alongamentoFluxo.js': await import('../src/alongamentoFluxo.js') }
   for (const file of ['MoneyInput.jsx', 'ComparativoAlongamento.jsx']) {
     const source = await readFile(new URL('../src/' + file, import.meta.url), 'utf8')
     const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })

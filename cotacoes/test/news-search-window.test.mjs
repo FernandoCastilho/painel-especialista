@@ -123,3 +123,12 @@ for (const [source, first, revision] of [
   assert.strictEqual(session.snapshot(now + 2 * ttl).docs[0], docs[0])
   assert.equal(session.needsLoad(source[0], identical, now + 2 * ttl + 1, ttl, false), false)
 })
+
+// Eleições EUA saiu das Notícias do Mercado em 24/11/2026: a busca não leva a um assunto que o painel não mostra mais.
+test('a busca não indexa Eleições EUA e leva as moedas para a aba Moedas', () => {
+  const now = Date.parse('2026-11-24T15:00:00Z'), item = title => [{ title, link: 'https://example.com/' + title, t: now }]
+  const { docs } = indexSearchData('temas.json', { generatedAt: now, temas: { 'eleicoes-eua': { label: 'Eleições nos EUA', items: item('urnaexclusiva') }, 'moeda-usd': { label: 'Dólar', items: item('dolarexclusivo') } } }, 'resumo', 'Temas', now)
+  assert.equal(searchDocuments(docs, 'urnaexclusiva').length, 0)
+  const [moeda] = searchDocuments(docs, 'dolarexclusivo')
+  assert.deepEqual(moeda.context, { newsTab: 'moedas' })
+})

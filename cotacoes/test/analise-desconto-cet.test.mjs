@@ -14,7 +14,7 @@ function cetOracle(net, flows) {
 }
 
 test('exemplo padrão: 05/12/2026 é sábado, paga em 07/12 e juros, IOF e CET contam 32 dias', () => {
-  const { operation: r } = parseDiscountForm({ ...DISCOUNT_INITIAL_FORM, titleFeeMode: 'total' })
+  const { operation: r } = parseDiscountForm({ ...DISCOUNT_INITIAL_FORM, titleMode: 'titles', titleFeeMode: 'total' })
   const gross = 225600.43, days = dayCount('2026-11-05', '2026-12-07')
   assert.equal(days, 32)
   assert.equal(r.rows[0].paymentDate, '2026-12-07')
@@ -99,7 +99,7 @@ test('giro: saldo por dias reais zera, IOF e TAC na liberação e CET recalculad
 })
 
 test('comparação mostra CET dos dois lados e mantém a economia em reais', () => {
-  const { result } = parseDiscountForm({ ...DISCOUNT_INITIAL_FORM, titleFeeMode: 'total' })
+  const { result } = parseDiscountForm({ ...DISCOUNT_INITIAL_FORM, titleMode: 'titles', titleFeeMode: 'total' })
   assert.equal(result.ok, true)
   // CET do desconto vem da projeção (taxa 1,75%), que é a base dos custos comparados.
   const gross = 225600.43, days = 32, interest = gross * 0.0175 * days / 30

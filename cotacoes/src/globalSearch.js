@@ -58,7 +58,7 @@ export function currentSearchDocument(doc, now = Date.now()) {
 // Prune before recursive indexing: parent bodies must not retain expired headlines.
 function currentSearchNews(file, data, now) {
   if (file === 'news.json') return { generatedAt: data.generatedAt, news: Object.fromEntries(Object.entries(data.news ?? {}).map(([code, items]) => [code, recentNews(items, now)])) }
-  if (file === 'temas.json') return { generatedAt: data.generatedAt, temas: Object.fromEntries(Object.entries(data.temas ?? {}).filter(([, topic]) => topic && typeof topic === 'object').map(([id, topic]) => [id, { label: topic.label, grupo: topic.grupo, items: recentNews(topic.items, now) }])) }
+  if (file === 'temas.json') return { generatedAt: data.generatedAt, temas: Object.fromEntries(Object.entries(data.temas ?? {}).filter(([id, topic]) => id !== 'eleicoes-eua' && topic && typeof topic === 'object').map(([id, topic]) => [id, { label: topic.label, grupo: topic.grupo, items: recentNews(topic.items, now) }])) }
   return { generatedAt: data.generatedAt, items: recentNews(data.items, now) }
 }
 // Named records retain their own context, route and snapshot. No HTML is interpreted.
@@ -98,7 +98,7 @@ export function indexSearchData(file, data, route, label, now = Date.now()) {
     if (typeof title === 'string' && title.trim()) {
       const newsNode = isNewsSearchFile(file) ? currentNewsNode(node, now) : null
       const body = isNewsSearchFile(file) ? (newsNode ? plainContent(newsNode) : '') : plainContent(node)
-      if (body) docs.push(makeSearchDoc({ id:file+':'+path.join('/'), title:title.slice(0,200), body, route:target, file, stamp, kind:'Dado publicado', ...(newsNode ? { newsNode } : {}), context:file==='reforma-tributaria.json'?{newsTab:'reforma'}:file==='temas.json' && target==='resumo'?{newsTab:path.includes('eleicoes-eua')?'eleicoes':'moedas'}:undefined }))
+      if (body) docs.push(makeSearchDoc({ id:file+':'+path.join('/'), title:title.slice(0,200), body, route:target, file, stamp, kind:'Dado publicado', ...(newsNode ? { newsNode } : {}), context:file==='reforma-tributaria.json'?{newsTab:'reforma'}:file==='temas.json' && target==='resumo'?{newsTab:'moedas'}:undefined }))
       if(Array.isArray(node.points))return
     }
     const entries = Array.isArray(node) ? node.map((v,i)=>[String(i),v]) : Object.entries(node)

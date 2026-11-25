@@ -3,7 +3,7 @@ export const CALCULATOR_GROUPS = [
   {
     id: 'credito-giro', title: 'Crédito e capital de giro',
     description: 'Simule financiamentos, necessidades de caixa e antecipação de recebíveis.',
-    calculators: ['finame-materiais', 'comparador-credito', 'giro', 'conta-garantida', 'analise-desconto'],
+    calculators: ['finame-materiais', 'comparador-credito', 'giro', 'cdc', 'conta-garantida', 'analise-desconto'],
   },
   {
     id: 'internacional', title: 'Crédito internacional',
@@ -19,5 +19,10 @@ export const CALCULATOR_GROUPS = [
     id: 'planejamento', title: 'Planejamento e análise',
     description: 'Analise faturamento, distribuição de lucros e impactos tributários no caixa.',
     calculators: ['faturamento', 'dividendos-emprestimo', 'cbs-caixa'],
+  },
+  {
+    id: 'investimentos', title: 'Investimentos',
+    description: 'Projete um CDB ou simule o retorno de fundos e ações.',
+    calculators: ['investimentos'],
   },
 ]

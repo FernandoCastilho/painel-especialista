@@ -16,7 +16,7 @@
 
 .mascot-tray{font-family:inherit;color:var(--fg)}
 /* Coruja solta na tela: sem caixa, só o desenho. Os botões pequenos aparecem com o mouse ou o foco. */
-.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:272px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 8px 0;background:transparent;border:0;pointer-events:none}
+.mascot-dock{box-sizing:border-box;position:fixed;z-index:55;width:144px;height:316px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 8px 0;background:transparent;border:0;pointer-events:none}
 .mascot-dock>*{pointer-events:auto}
 .mascot-dock .feedback-mascot-icon{width:112px;height:119px;filter:drop-shadow(0 10px 8px #0005)}
 .mascot-dock .feedback-trigger{min-height:36px;width:112px;padding:0;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:700;background:var(--bg);box-shadow:0 2px 8px #0004}

@@ -191,3 +191,22 @@ main.app.app-calculators:not(#u) .giro-screen .giro-grace-interest input[type=ch
 }
 /* Aviso de cópia do cronograma que falhou (22/11/2026): logo abaixo do resultado, no tom de alerta do roteiro. */
 :root[data-theme] body .giro-screen .giro-outcome > .giro-copia { display: block; margin: 8px 0 0; padding: 8px 12px; border-left: 4px solid #b86e00; border-radius: 6px; background: var(--bw-warm-soft); color: var(--bw-warn-ink); font-size: .875rem; line-height: 1.4; }
+
+/* Revisão visual de 25/11/2026: laranja só no botão e no resultado, botão na largura toda,
+   CET primeiro e a mesma cor para juros no custo e no fluxo de pagamentos. */
+main.app.app-calculators:not(#u) .giro-screen :is(.lm-head, legend) .rt-step { color:#9fc0ff; }
+main.app.app-calculators:not(#u) .giro-screen .rt-result .rt-step { color:var(--bw-link); }
+main.app.app-calculators:not(#u) .giro-screen :is(.lm .lm-head, .giro-card legend) { border-bottom-color:rgba(255, 255, 255, .14); }
+main.app.app-calculators:not(#u) .giro-screen .giro-form > .giro-simulate { grid-column:1 / -1; justify-self:stretch; width:100%; min-height:48px; font-size:1rem; }
+main.app.app-calculators:not(#u) .giro-screen .rt-answers { grid-template-columns:1.4fr repeat(3, minmax(0, 1fr)); }
+main.app.app-calculators:not(#u) .giro-screen .rt-answers .rt-answer-main dd:not(.rt-answer-note) { font-size:2.1rem; }
+:root[data-theme] body .giro-screen .rt-tone-1 { background:var(--cp-orange, #ff6200); }
+:root[data-theme] body .giro-screen .rt-tone-2 { background:var(--bw-mut); }
+:root[data-theme] body .giro-screen .rt-tone-3 { background:var(--bw-line); }
+@media (max-width: 760px) {
+  main.app.app-calculators:not(#u) .giro-screen .rt-answers { grid-template-columns:1fr; }
+  /* Com mudança ainda não simulada, o botão fica preso acima da barra de baixo. */
+  main.app.app-calculators:not(#u) .giro-screen .giro-form > .giro-simulate.is-pending {
+    position:sticky; bottom:calc(84px + env(safe-area-inset-bottom, 0px)); z-index:5; box-shadow:0 6px 20px rgba(0, 0, 0, .45);
+  }
+}

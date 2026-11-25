@@ -103,3 +103,13 @@ export function FaturamentoIcon() {
     </svg>
   )
 }
+
+// CDC: caminhão (financiamento de veículo).
+export function CdcIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 6.5h11v9h-11z" /><path d="M13.5 9.5h4l3 3.5v2.5h-7" />
+      <circle cx="6.5" cy="17" r="1.8" /><circle cx="17" cy="17" r="1.8" />
+    </svg>
+  )
+}

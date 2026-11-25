@@ -226,7 +226,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
      await page.screenshot({path:path.join(out,'rpn-'+width+'-'+theme+'.png'),fullPage:true})
     }
    }
-   const extra=[...(width<1000?[['M&A','ma'],['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Novidades da semana','novidades'],['Aprender','aprender']]
+   const extra=[...(width<1000?[['M&A','ma'],['Notícias','noticias'],['Podcast','podcast']]:[]),['Bancos','bancos'],['Feriados','feriados'],['Novidades da semana','novidades'],['Aprender','aprender'],['Histórias','historias']]
    for(const [label,id] of extra){
     await more.click()
     await menu.getByRole('menuitem',{name:label,exact:true}).click()
@@ -234,6 +234,37 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
     assert.equal(await more.getAttribute('aria-expanded'),'false')
     assert.equal(await more.evaluate(n=>n===document.activeElement),true,'selection restores trigger focus')
    }
+   const mapa=page.locator('.historia-mapa')
+   await mapa.waitFor()
+   await page.waitForFunction(() => {
+    const logos=[...document.querySelectorAll('.historia-marca img')]
+    return logos.length===6 && logos.every(img=>img.complete && img.naturalWidth>0)
+   })
+   assert.ok(await mapa.evaluate(el=>{
+    const h=el.getBoundingClientRect(), b=[...el.querySelectorAll('button')].map(n=>n.getBoundingClientRect())
+    return b.every((x,i)=>x.width>=44 && x.height>=44 && x.left>=h.left && x.right<=h.right && x.top>=h.top && x.bottom<=h.bottom
+     && b.every((y,j)=>i===j || x.right<=y.left || y.right<=x.left || x.bottom<=y.top || y.bottom<=x.top))
+   }),'marcas e temas do mapa cabem sem sobrepor')
+   const bloco=mapa.getByRole('button',{name:'Blockbuster',exact:true})
+   await bloco.focus()
+   await page.keyboard.press('Enter')
+   await page.waitForURL('**/#historias/blockbuster')
+   await page.getByRole('heading',{name:'Como começou',exact:true}).waitFor()
+   await mapa.getByRole('button',{name:'Locação de vídeo',exact:true}).click()
+   await page.getByRole('heading',{name:'Locação de vídeo',exact:true}).waitFor()
+   assert.deepEqual(await page.locator('.historia-comparacao button').allInnerTexts(),['Netflix','Blockbuster'])
+   assert.equal(await mapa.locator('.historia-ligacao.is-active').count(),2)
+   await page.goBack()
+   await page.waitForURL('**/#historias/blockbuster')
+   for (const [nome,id] of [['Spotify','spotify'],['Uber','uber'],['Apple / iPhone','apple-iphone']]) {
+    await mapa.getByRole('button',{name:nome,exact:true}).click()
+    await page.waitForURL('**/#historias/'+id)
+    await page.getByRole('heading',{name:'Linha do tempo',exact:true}).waitFor()
+    assert.ok(await page.locator('.historia-fontes a').count()>=2)
+   }
+   await page.getByText(/Lançamento do iPhone: 2007/).waitFor()
+   await mapa.getByRole('button',{name:'Plataformas locais',exact:true}).click()
+   assert.deepEqual(await page.locator('.historia-comparacao button').allInnerTexts(),['iFood','Uber'])
    await page.keyboard.press('Alt+5')
    await page.waitForURL('**/#bndes')
    await page.keyboard.press('Alt+0')

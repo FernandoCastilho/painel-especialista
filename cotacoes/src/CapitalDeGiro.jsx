@@ -19,6 +19,7 @@ import { PRACA_AJUDA, PRACAS_CONTRATO, pracaCalendars } from './pracaContrato.js
 import './CalculatorStandard.css'
 import './CapitalDeGiro.css'
 import CalcBack from './CalcBack.jsx'
+import EmailEnvelope from './OutlookEnvelope.jsx'
 
 // Nomes padrão dos encargos nas calculadoras (escolha do Fernando, 21/11/2026): Taxa, IOF, Fee, TAC, Outros.
 const EXPENSES = [
@@ -40,22 +41,6 @@ const FOOT = 'Valor, prazo, carência, amortização, data e praça valem també
 
 // Padrão próprio do Capital de Giro na linha mestra: 36 meses (pedido do Fernando em 22/11/2026; as outras seguem em 24).
 const GIRO_PADRAO = Object.freeze({ term: '36' })
-
-// `copiar`: cronograma completo que não coube no rascunho; vai para a área de transferência no clique, para colar no e-mail.
-// Se a cópia falhar, `onFalha` avisa na tela (o rascunho abre mesmo assim, com o resumo das parcelas).
-function EmailEnvelope({ href, copiar, onFalha }) {
-  const label = 'Preparar e-mail com o resultado'
-  const onClick = copiar ? () => {
-    const copia = navigator.clipboard?.writeText(copiar)
-    if (copia) copia.then(() => onFalha(false), () => onFalha(true)); else onFalha(true)
-  } : undefined
-  return <a className="credit-email giro-email" role="link" href={href} target="_blank" rel="noopener noreferrer" onClick={onClick}
-    aria-label={label} aria-disabled={href ? undefined : true} title={href ? label : 'Gere um resultado válido para preparar o e-mail'}>
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" />
-    </svg>
-  </a>
-}
 
 // Ajuste de uma parcela (flex): data e/ou valor do pagamento. Só vale se a conta aceitar; senão, o erro aparece aqui.
 function FlexEditor({ row, onApply, onCancel, error }) {
@@ -204,6 +189,12 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
     setFlex(next); setEditing(null); setFlexError(null)
   }
 
+  // Depois de simular pelo botão preso embaixo (celular), leva a tela até o resultado se ele estiver fora de vista.
+  const mostrarResultado = () => requestAnimationFrame(() => {
+    const alvo = document.getElementById('giro-result-title'), r = alvo?.getBoundingClientRect()
+    if (r && (r.top < 0 || r.bottom > window.innerHeight)) alvo.scrollIntoView({ block: 'start' })
+  })
+
   return <section className="cx bw calc-standard calc-workspace giro-screen" aria-labelledby="calc-h">
     <div className="bw-heading calc-workspace-heading giro-header">
       <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="calc-h" className="cx-title"><span>Capital de giro</span></h2></div>
@@ -221,8 +212,8 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
     </div>
 
     <div className="giro-flow">
-      <form className="giro-form" noValidate onSubmit={event => { event.preventDefault(); setDirty(false) }}>
-        <LinhaMestra prefix="cx" pracaControl={PracaContratoBusca} title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} foot=""
+      <form className="giro-form" noValidate onSubmit={event => { event.preventDefault(); setDirty(false); mostrarResultado() }}>
+        <LinhaMestra prefix="cx" helpOnLabel pracaControl={PracaContratoBusca} title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} foot=""
           onClear={() => { clearLm(); markDirty() }} fields={['value', 'term', 'grace', 'system']}
           labels={{ value: 'Valor solicitado' }} errors={{ value: errors.value, term: errors.n, grace: errors.grace }}
           details={{ fields: ['start', 'praca'], open: !!apresentacao, alert: errors.dates, summary: detailsSummary, children: <>
@@ -262,13 +253,13 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
               <span className="giro-cost-fixed">{isBullet ? 'No vencimento' : 'Nas parcelas'}</span>
             </div>
             {EXPENSES.map(({ id, label }) => <div className={`giro-cost${id === 'fee' ? ' giro-cost-fee' : ''}`} key={id}>
-              <span className="giro-cost-label">{label}{id === 'iof' && <> <small>calculado</small> <Help title="IOF: como é calculado">
+              <span className="giro-cost-label">{id === 'iof' ? <><Help title="IOF: como é calculado" trigger={label}>
                 <p>IOF da operação de crédito (Decreto 6.306/2007, art. 7º): alíquota adicional de 0,38% sobre o valor da operação, mais a alíquota diária sobre o principal de cada parcela, pelos dias corridos até o vencimento, com limite de 365 dias.</p>
                 <p>Pessoa jurídica geral: diária de 0,0082%. Simples Nacional ou MEI, em operação de até R$ 30 mil: diária de 0,00274%, desde que o enquadramento e a documentação da operação sejam confirmados.</p>
                 <p>À vista, o IOF é abatido na liberação. Financiado (incorporado ao principal da mesma operação), integra o saldo financiado e o valor total para o limite do Simples Nacional.</p>
                 <p>O IOF incide sobre as amortizações e seus prazos: pagamentos só de juros, na carência, não pagam IOF.</p>
                 {tax.ok && <p><a href={tax.source} target="_blank" rel="noreferrer">Base legal do IOF automático</a></p>}
-              </Help></>}</span>
+              </Help> <small>calculado</small></> : label}</span>
               {id === 'iof' ? <output className="giro-readonly" aria-label="Valor do IOF">{moneyText(result?.iof)}</output>
                 : id === 'fee' ? <div><div className="giro-input-unit">
                   <input id="cx-fee" inputMode="decimal" autoComplete="off" aria-label="Valor de Fee" {...fieldError('fee', 'cx-fee')} value={form.costs.fee}
@@ -295,7 +286,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
             {form.profile === 'simples' && <label className="giro-eligible"><input type="checkbox" checked={form.eligible} onChange={event => change({ eligible: event.target.checked })} /> Confirmo o enquadramento e a documentação da operação.</label>}
           </div>
         </fieldset>
-        <button className="giro-simulate" type="submit">Simular</button>
+        <button className={`giro-simulate${dirty ? ' is-pending' : ''}`} type="submit">Simular</button>
       </form>
 
       {/* O quadro de resultado é o que o modo Apresentar mostra em "Resultado". */}
@@ -303,10 +294,10 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
         <Resultado id="giro-result-title" number={3} className="giro-result" alert={resultAlert}>
           {flexNotice && <small className="rt-alert">{flexNotice}</small>}
           <Respostas items={[
+            { question: 'Quanto custa', value: result ? percent(result.cet) : '—', note: 'Custo Efetivo Total (CET), em dias corridos', main: true },
             { question: 'Quanto entra no caixa', value: moneyText(result?.net), note: result ? `Valor líquido, de ${brl(result.value)} solicitados` : 'Valor líquido liberado' },
             { question: paymentQuestion, value: moneyText(isBullet ? last?.payment : result?.installment), note: paymentNote },
             { question: 'Quanto paga no total', value: moneyText(result?.total), note: totalNote },
-            { question: 'Quanto custa', value: result ? percent(result.cet) : '—', note: 'Custo Efetivo Total (CET), em dias corridos', main: true },
           ]} />
           <ComposicaoDoCusto parts={parts} format={moneyText} total={{ label: 'Custo total', value: result?.cost }} rows={[
             { label: 'Saldo financiado', value: moneyText(result?.financedBalance), kind: 'muted' },

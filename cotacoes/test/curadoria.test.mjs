@@ -59,11 +59,11 @@ test('normalizer rejects malformed file and considers original success age, not 
   data.generatedAt = now + 4 * 3600000
   assert.equal(normalizeCuradoria(data, 'imposto', now + 4 * 3600000).stale, true)
 })
-test('four tabs follow Manchetes, existing groups remain, default window remains 5 days', async () => {
+test('four curadoria tabs follow Manchetes, Trends is absent, default window remains 5 days', async () => {
   const src = await readFile(new URL('../src/Resumo.jsx', import.meta.url), 'utf8')
   const index = src.indexOf('const NEWS_TABS')
-  const tabs = src.slice(index).match(/label: '[^']+'/g).slice(0, 9)
-  assert.deepEqual(tabs, ["label: 'Moedas'", "label: 'Manchetes'", "label: 'Imposto'", "label: 'Split payment'", "label: 'Reforma tributária'", "label: 'Escala 6x1'", "label: 'Eleições EUA'", "label: 'Google Trends'", "label: 'Veículos pesados'"])
+  const tabs = src.slice(index, src.indexOf('\n]', index)).match(/label: '[^']+'/g)
+  assert.deepEqual(tabs, ["label: 'Moedas'", "label: 'Manchetes'", "label: 'Imposto'", "label: 'Split payment'", "label: 'Reforma tributária'", "label: 'Escala 6x1'"])
   assert.match(await readFile(new URL('../src/newsWindow.js', import.meta.url), 'utf8'), /NEWS_WINDOW_DAYS = 5/)
 })
 
