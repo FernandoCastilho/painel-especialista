@@ -7,7 +7,7 @@ import {
   metrics, simulateHistory, comparisonCsv, resumoFundo,
 } from './investmentHistory.js'
 
-const COLORS = ['#0131ff', '#ff6200', '#00847e', '#9668bd', '#8e5400', '#396c9b']
+const COLORS = ['#4671ee', '#e56b23', '#00958d', '#9668bd', '#aa6a16', '#4b7eac']
 const DEFAULT_IDS = ['cdi', 'dolar', 'ipca']
 const STORAGE = 'peme-investimentos-v1'
 const SERIES_URL = 'https://www3.bcb.gov.br/sgspub/'
@@ -17,6 +17,7 @@ const value = n => n === null ? '—' : n.toLocaleString('pt-BR', {
 })
 const money = (n, currency) => n.toLocaleString('pt-BR', { style: 'currency', currency })
 const dateText = date => date?.split('-').reverse().join('/') ?? '—'
+const monthText = month => month.split('-').reverse().join('/')
 const publicSeries = PUBLIC_SERIES.map(item => ({ ...item, currency: 'BRL', source: 'SGS ' + item.code }))
 
 function readLocal() {
@@ -66,8 +67,9 @@ function useBcbHistory(retry) {
   return [state, today]
 }
 
-function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabilidade acumulada' }) {
-  const [hover, setHover] = useState(null)
+function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabilidade acumulada', controls }) {
+  const [point, setPoint] = useState(null)
+  const [pointer, setPointer] = useState(null)
   const [width, setWidth] = useState(750)
   const chart = useRef(null)
   useEffect(() => {
@@ -77,36 +79,63 @@ function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabi
     observer.observe(chart.current)
     return () => observer.disconnect()
   }, [])
-  const chartRight = width - 15
-  const chartLeft = 72
-  const index = hover === null ? comparison.timeline.length - 1 : Math.min(hover, comparison.timeline.length - 1)
+  const chartRight = width - 16
+  const chartLeft = width < 420 ? 62 : 78
+  const height = controls ? (width < 560 ? 260 : 338) : 220
+  const bottom = height - 31
+  const top = 22
+  const last = comparison.timeline.length - 1
+  const index = Math.min(pointer ?? point ?? last, last)
+  const tooltipWidth = Math.min(310, width)
   const totals = tracks.flatMap(track => track.values.map(level => level - 1))
   const min = Math.min(0, ...totals)
   const span = (Math.max(0, ...totals) - min) || 0.01
-  const x = i => chartLeft + i * (chartRight - chartLeft) / (comparison.timeline.length - 1)
-  const y = level => 183 - (level - min) / span * 160
-  const ticks = [...new Set([0, Math.floor(comparison.timeline.length / 2), comparison.timeline.length - 1])]
+  const x = i => chartLeft + i * (chartRight - chartLeft) / last
+  const y = level => bottom - (level - min) / span * (bottom - top)
+  const divisions = width < 560 ? 2 : 4
+  const ticks = [...new Set(Array.from({ length: divisions + 1 }, (_, i) => Math.round(last * i / divisions)))]
+  function locate(event) {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const position = (event.clientX - bounds.left) * width / bounds.width
+    return Math.max(0, Math.min(last, Math.round((position - chartLeft) * last / (chartRight - chartLeft))))
+  }
+  function valuesAt(i) {
+    return tracks.map(track => <li key={track.id}><span><Dot color={track.color} />{track.name}</span>
+      <strong>{value(track.values[i] - 1)}</strong></li>)
+  }
   return <section className="inv-panel inv-chart" aria-label={title}>
-    <h3>{title}</h3>
-    <svg ref={chart} viewBox={`0 0 ${width} 220`} role="img" aria-label="Gráfico da variação acumulada por mês">
-      {[0, 1, 2, 3, 4].map(i => {
-        const level = min + i * span / 4
-        return <g key={i}><line className="inv-gridline" x1={chartLeft} x2={chartRight} y1={y(level)} y2={y(level)} />
-          <text x={chartLeft - 6} y={y(level) + 4} textAnchor="end">{value(level)}</text></g>
-      })}
-      {tracks.map(track => <polyline key={track.id} fill="none" stroke={track.color} strokeWidth="2.6"
-        points={track.values.map((level, i) => x(i) + ',' + y(level - 1)).join(' ')} />)}
-      <line className="inv-guide" x1={x(index)} x2={x(index)} y1="23" y2="183" />
-      {tracks.map(track => <circle key={track.id} cx={x(index)} cy={y(track.values[index] - 1)} r="4" fill={track.color} />)}
-      {ticks.map((i, position) => <text key={i} x={x(i)} y="208"
-        textAnchor={position === 0 ? 'start' : position === ticks.length - 1 ? 'end' : 'middle'}>
-        {comparison.timeline[i].split('-').reverse().join('/')}
-      </text>)}
-    </svg>
-    <label className="inv-month">Mês de referência · {comparison.timeline[index].split('-').reverse().join('/')}
-      <input type="range" min="0" max={comparison.timeline.length - 1} value={index} onChange={e => setHover(Number(e.target.value))} />
+    <header className="inv-chart-header"><h3>{title}</h3>{controls}</header>
+    <div className="inv-plot">
+      <svg ref={chart} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Gráfico da variação acumulada por mês"
+        onPointerMove={event => { if (event.pointerType !== 'touch') setPointer(locate(event)) }}
+        onPointerLeave={() => setPointer(null)}
+        onPointerDown={event => { if (event.pointerType === 'touch') setPoint(locate(event)) }}>
+        {[0, 1, 2, 3, 4].map(i => {
+          const level = min + i * span / 4
+          return <g key={i}><line className="inv-gridline" x1={chartLeft} x2={chartRight} y1={y(level)} y2={y(level)} />
+            <text x={chartLeft - 6} y={y(level) + 4} textAnchor="end">{value(level)}</text></g>
+        })}
+        {tracks.map(track => <polyline key={track.id} fill="none" stroke={track.color} strokeWidth="2.6"
+          points={track.values.map((level, i) => x(i) + ',' + y(level - 1)).join(' ')} />)}
+        <line className="inv-guide" x1={x(index)} x2={x(index)} y1={top} y2={bottom} />
+        {tracks.map(track => <circle key={track.id} cx={x(index)} cy={y(track.values[index] - 1)} r="4" fill={track.color} />)}
+        {ticks.map((i, position) => <text key={i} x={x(i)} y={height - 8}
+          textAnchor={position === 0 ? 'start' : position === ticks.length - 1 ? 'end' : 'middle'}>
+          {monthText(comparison.timeline[i])}
+        </text>)}
+      </svg>
+      {pointer !== null && <div className="inv-chart-tooltip" aria-hidden="true" style={{
+        width: tooltipWidth, left: x(index) + tooltipWidth + 16 <= width ? x(index) + 12 : Math.max(0, x(index) - tooltipWidth - 12),
+      }}>
+        <strong>{monthText(comparison.timeline[index])}</strong>
+        <ul>{valuesAt(index)}</ul>
+      </div>}
+    </div>
+    <label className="inv-month">Mês de referência · {monthText(comparison.timeline[index])}
+      <input type="range" min="0" max={last} value={index} aria-valuetext={monthText(comparison.timeline[index])}
+        onChange={e => { setPointer(null); setPoint(Number(e.target.value)) }} />
     </label>
-    <ul className="inv-legend">{tracks.map(track => <li key={track.id}><Dot color={track.color} />{track.name} <strong>{value(track.values[index] - 1)}</strong></li>)}</ul>
+    <ul className="inv-legend" aria-label="Rentabilidade dos ativos no mês selecionado">{valuesAt(index)}</ul>
   </section>
 }
 
@@ -129,16 +158,11 @@ function Results({ tracks }) {
   </section>
 }
 
-function SeriesPicker({ remaining, add, importSeries }) {
-  const [search, setSearch] = useState('')
+function SeriesImport({ importSeries }) {
   const [name, setName] = useState('')
   const [currency, setCurrency] = useState('BRL')
-  const matches = remaining.filter(item => item.name.toLowerCase().includes(search.trim().toLowerCase()))
   return <details className="inv-import">
-    <summary>Adicionar ativo</summary>
-    <label>Buscar referência pública<input type="search" value={search} onChange={e => setSearch(e.target.value)} /></label>
-    <div className="inv-flex">{matches.map(item => <button type="button" key={item.id} onClick={() => add(item.id)}>{item.name}</button>)}</div>
-    {!matches.length && <p>Nenhuma referência disponível para esta busca.</p>}
+    <summary>Importar série em CSV</summary>
     <div className="inv-grade">
       <label>Nome da série<input maxLength="60" value={name} onChange={e => setName(e.target.value)} /></label>
       <label>Moeda da série<select value={currency} onChange={e => setCurrency(e.target.value)}>
@@ -215,7 +239,7 @@ function Portfolio({ comparison, currency }) {
   </>
 }
 
-export default function InvestmentWorkspace({ mode, link, showFunds, showComparison, showPortfolio, visible }) {
+export default function InvestmentWorkspace({ mode, link, showComparison, showPortfolio, visible }) {
   const [local] = useState(readLocal)
   const [config, setConfig] = useState(() => initialConfig(link, local.favorites?.[0]?.config))
   const [custom, setCustom] = useState(() => Array.isArray(local.series) ? local.series : [])
@@ -224,6 +248,7 @@ export default function InvestmentWorkspace({ mode, link, showFunds, showCompari
   const [status, setStatus] = useState('')
   const [retry, setRetry] = useState(0)
   const [fichaId, setFichaId] = useState('')
+  const [nomes, setNomes] = useState({})
   const [source, today] = useBcbHistory(retry)
   const fundosIds = config.ids.filter(isFundoCvm)
   const fundos = useCotasCvm(fichaId && !fundosIds.includes(fichaId) ? [...fundosIds, fichaId] : fundosIds, retry)
@@ -232,7 +257,7 @@ export default function InvestmentWorkspace({ mode, link, showFunds, showCompari
   const selected = config.ids.map((id, index) => {
     const fundo = isFundoCvm(id)
     const item = fundo ? fundos.dados[id] : catalog.find(entry => entry.id === id)
-    return { ...(item ?? { id, name: fundo ? 'Fundo CVM · ' + id.slice(6) : 'Série importada indisponível' }),
+    return { ...(item ?? { id, name: nomes[id] ?? (fundo ? 'Fundo CVM · ' + id.slice(6) : 'Série importada indisponível') }),
       rows: item?.rows ?? source.data[id], color: COLORS[index] }
   })
   const conversion = [...new Set(selected.flatMap(item => item.currency && item.currency !== config.currency
@@ -248,7 +273,8 @@ export default function InvestmentWorkspace({ mode, link, showFunds, showCompari
     setActiveFavorite('')
     setStatus('')
   }
-  const add = id => {
+  const add = (id, nome) => {
+    if (nome && isFundoCvm(id)) setNomes(current => ({ ...current, [id]: nome }))
     if (!config.ids.includes(id) && config.ids.length < MAX_SERIES) change({ ...config, ids: [...config.ids, id] })
   }
   async function importSeries(file, name, currency) {
@@ -306,84 +332,85 @@ export default function InvestmentWorkspace({ mode, link, showFunds, showCompari
     {fichaId && (fundoFicha
       ? <FichaFundo fundo={fundoFicha} cdi={source.data.cdi} cdiLoading={source.loading} cdiFalhou={source.errors.includes('cdi')}
           repetir={() => setRetry(n => n + 1)}
-          comparar={() => { add(fichaId); showComparison() }} simular={() => { add(fichaId); showPortfolio() }}
+          comparar={() => { add(fichaId, fundoFicha.name); showComparison() }}
+          simular={() => { add(fichaId, fundoFicha.name); showPortfolio() }}
           jaAdicionado={config.ids.includes(fichaId)} lotado={selected.length >= MAX_SERIES} />
       : fundos.erros.includes(fichaId)
         ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
         : <p role="status">Carregando a ficha do fundo…</p>)}
   </div>
+  const comparando = mode === 'comparar'
+  const controls = <div className="inv-controls">
+    <div className="inv-flex" role="group" aria-label="Período">
+      {PERIODS.map(period => <button type="button" key={period} aria-pressed={config.period === period}
+        onClick={() => change({ ...config, period })}>{period === 6 ? '6M' : period / 12 + 'A'}</button>)}
+    </div>
+    <label className="inv-currency">Moeda<select value={config.currency} onChange={e => change({ ...config, currency: e.target.value })}>
+      {CURRENCIES.map(code => <option key={code}>{code}</option>)}
+    </select></label>
+  </div>
   return <div hidden={!visible} className="inv-study">
-    <div className="inv-controls">
-      <div className="inv-flex" role="group" aria-label="Período">
-        {PERIODS.map(period => <button type="button" key={period} aria-pressed={config.period === period}
-          onClick={() => change({ ...config, period })}>{period === 6 ? '6M' : period / 12 + 'A'}</button>)}
-      </div>
-      <label className="inv-currency">Moeda<select value={config.currency} onChange={e => change({ ...config, currency: e.target.value })}>
-        {CURRENCIES.map(code => <option key={code}>{code}</option>)}
-      </select></label>
-      {mode === 'comparar' && <div className="inv-actions inv-flex">
-        <button type="button" onClick={save} disabled={!config.ids.length || !!missing.length}>Salvar</button>
-        {favorites.length > 0 && <label className="inv-favorites">Comparações salvas
-          <select value={activeFavorite} onChange={event => {
-            const next = event.target.value
-            if (next) change(initialConfig(next))
-            setActiveFavorite(next)
-          }}><option value="">Escolher comparação</option>
-            {favorites.map(item => <option key={item.config} value={item.config}>{item.label}</option>)}
-          </select>
-        </label>}
-        <button type="button" onClick={copy} disabled={!config.ids.length}>Copiar link</button>
-        <button type="button" onClick={download} disabled={!comparison}>Exportar CSV</button>
-      </div>}
-    </div>
-    {status && <p role="status">{status}</p>}
-    <div className="inv-dashboard">
-      {mode === 'comparar' && comparison
-        ? <HistoryChart comparison={comparison} />
-        : <section className="inv-panel inv-state" aria-live="polite">
-          <h3>{mode === 'simular' ? 'Base histórica da simulação' : 'Rentabilidade acumulada'}</h3>
-          {comparison ? <p>{comparison.timeline[0]} a {comparison.timeline.at(-1)} · {config.currency}</p>
-            : <p>{!selected.length ? 'Adicione uma série para começar.' : cvmLoading ? 'Carregando cotas da CVM…'
-              : source.loading ? 'Carregando dados do Banco Central…'
-              : missing.length || fxError ? 'Há séries indisponíveis. Atualize os dados ou ajuste a seleção.'
-              : 'Não há dois meses consecutivos em comum, ou existem lacunas no período selecionado.'}</p>}
-          {retryNeeded &&
-            <button type="button" onClick={() => setRetry(count => count + 1)}>Atualizar dados</button>}
-        </section>}
-      <section className="inv-panel inv-assets" aria-labelledby="inv-assets">
+    {visible && <FundoCvmPicker key={mode} inline referencias={catalog} ativos={config.ids}
+      lotado={selected.length >= MAX_SERIES} onSelect={add} />}
+    <section className="inv-panel inv-assets" aria-labelledby="inv-assets">
+      <header className="inv-assets-header">
         <h3 id="inv-assets">Ativos em comparação</h3>
-        <ul>{selected.map(item => {
-          const track = comparison?.tracks.find(entry => entry.id === item.id)
-          return <li key={item.id}>
-            <div><strong><Dot color={item.color} />{item.name}</strong>
-              <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
-              {track ? <small>Base {dateText(track.start)} · Último ponto {dateText(track.end)}</small>
-                : source.loading && item.source?.startsWith('SGS') ? null : <small>Última observação {dateText(item.rows?.at(-1)?.[0])}</small>}</div>
-            <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
-          </li>
-        })}</ul>
-        <button className="inv-buscar-fundo" type="button" onClick={showFunds}>Buscar fundo</button>
-        {selected.length < MAX_SERIES
-          ? <SeriesPicker remaining={catalog.filter(item => !config.ids.includes(item.id))} add={add} importSeries={importSeries} />
-          : <p className="inv-nota">Até {MAX_SERIES} séries por comparação.</p>}
-        {mode === 'comparar' && <button className="inv-primary" type="button" onClick={showPortfolio}>Simular carteira</button>}
-      </section>
-    </div>
+        <span className="inv-nota" role="status">{selected.length} de {MAX_SERIES} ativos</span>
+      </header>
+      {selected.length > 0 && <ul>{selected.map(item => <li key={item.id}>
+        <div><strong><Dot color={item.color} />{item.name}</strong>
+          <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
+          {item.rows?.length > 0 && <small>{dateText(item.rows[0][0])} a {dateText(item.rows.at(-1)[0])}</small>}</div>
+        <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
+      </li>)}</ul>}
+    </section>
+    {comparando && comparison
+      ? <HistoryChart comparison={comparison} controls={controls} />
+      : <section className="inv-panel inv-state" aria-live="polite">
+        <header className="inv-chart-header">
+          <h3>{comparando ? 'Rentabilidade acumulada' : 'Base histórica da simulação'}</h3>
+          {controls}
+        </header>
+        {comparison ? <p>{monthText(comparison.timeline[0])} a {monthText(comparison.timeline.at(-1))} · {config.currency}</p>
+          : <p>{!selected.length ? 'Adicione um ativo para ver o gráfico.' : cvmLoading ? 'Carregando cotas da CVM…'
+            : source.loading ? 'Carregando dados do Banco Central…'
+            : missing.length || fxError ? 'Há séries indisponíveis. Atualize os dados ou ajuste a seleção.'
+            : 'Não há dois meses consecutivos em comum, ou existem lacunas no período selecionado.'}</p>}
+        {retryNeeded &&
+          <button type="button" onClick={() => setRetry(count => count + 1)}>Atualizar dados</button>}
+      </section>}
     {comparison && <p className="inv-nota">
       Janela efetiva {comparison.timeline[0].split('-').reverse().join('/')} a {comparison.timeline.at(-1).split('-').reverse().join('/')} · {config.currency}.
       {comparison.endsEarly ? ' A última observação mensal em comum é anterior ao último mês fechado.' : ''}
     </p>}
     {comparison && !comparison.fullPeriod && <p className="inv-nota" role="status">
       O histórico em comum cobre {comparison.timeline.length - 1} dos {config.period} meses solicitados.</p>}
-    {comparison && (mode === 'comparar'
+    {comparando && <div className="inv-flex">
+      <button type="button" onClick={save} disabled={!config.ids.length || !!missing.length}>Salvar</button>
+      <button type="button" onClick={copy} disabled={!config.ids.length}>Copiar link</button>
+      <button type="button" onClick={download} disabled={!comparison}>Exportar CSV</button>
+      <button className="inv-primary" type="button" onClick={showPortfolio}>Simular carteira</button>
+      {favorites.length > 0 && <label className="inv-favorites">Comparações salvas
+        <select value={activeFavorite} onChange={event => {
+          const next = event.target.value
+          if (next) change(initialConfig(next))
+          setActiveFavorite(next)
+        }}><option value="">Escolher comparação</option>
+          {favorites.map(item => <option key={item.config} value={item.config}>{item.label}</option>)}
+        </select>
+      </label>}
+    </div>}
+    {status && <p role="status">{status}</p>}
+    {comparison && (comparando
       ? <Results tracks={comparison.tracks} />
       : <Portfolio comparison={comparison} currency={config.currency} />)}
+    {selected.length < MAX_SERIES && <SeriesImport importSeries={importSeries} />}
     <p className="inv-nota">Base comum por mês fechado, com a última observação disponível de cada série. As datas podem diferir. Em CSV, prefira valores de fechamento.
       Volatilidade anualizada usa retornos mensais. Maior queda é medida nos fechamentos mensais.
       Conversão por PTAX venda do último dia disponível no mês.
       {' '}<a href={SERIES_URL} target="_blank" rel="noreferrer">Consultar fontes no Banco Central</a>.</p>
-    {fundosIds.length > 0 && <p className="inv-nota">A variação das cotas não inclui distribuições nem impostos do cotista.
-      Dados adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a>,
-      sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>}
+    <p className="inv-nota">{fundosIds.length > 0 && 'A variação das cotas não inclui distribuições nem impostos do cotista. '}
+      Dados dos fundos adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a>,
+      sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>
   </div>
 }

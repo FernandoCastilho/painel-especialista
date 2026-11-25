@@ -38,7 +38,6 @@ async function selecionarFundo(region) {
   const busca = region.getByRole('searchbox', { name: 'Nome do fundo, classe ou CNPJ' })
   await busca.waitFor()
   await busca.fill('Itaú Of Funds Orion Mult CP IE FIF DA CIC RL')
-  if (!real) await region.getByRole('button', { name: 'Tentar novamente', exact: true }).click()
   await region.getByRole('button', { name: /23\.731\.495\/0001-24 · Classe$/ }).waitFor()
   if (!real) {
     await busca.fill('')
@@ -53,6 +52,55 @@ async function selecionarFundo(region) {
   await region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ }).click()
 }
 
+async function verificarComparador(region, page, width) {
+  await region.getByRole('button', { name: 'Comparar ativos', exact: true, pressed: true }).waitFor()
+  const busca = region.getByRole('searchbox', { name: 'Buscar ativo' })
+  const ativos = region.getByRole('region', { name: 'Ativos em comparação' })
+  await busca.pressSequentially('It')
+  if (!real) await region.getByRole('button', { name: 'Tentar novamente', exact: true }).click()
+  await region.getByRole('list', { name: 'Ativos encontrados' }).waitFor()
+  await busca.fill('Itaú Of Funds Orion Mult CP IE FIF DA CIC RL')
+  await region.getByRole('button', { name: /23\.731\.495\/0001-24 · Classe$/ }).waitFor()
+  await busca.fill(real ? 'renda fixa exponencial' : 'credito privado')
+  await region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ }).click()
+  assert.equal(await busca.inputValue(), '')
+  const remover = ativos.getByRole('button', { name: /^Remover .*00\.017\.024\/0001-53 · Classe$/ })
+  await remover.waitFor()
+  for (const name of ['CDI', 'IPCA', 'Dólar PTAX venda']) {
+    await ativos.getByRole('button', { name: 'Remover ' + name, exact: true }).click()
+  }
+  await busca.pressSequentially('CD')
+  await region.getByRole('list', { name: 'Ativos encontrados' }).getByRole('button', { name: 'CDI', exact: true }).click()
+  const chart = region.getByRole('region', { name: 'Rentabilidade acumulada', exact: true })
+  const svg = chart.getByRole('img', { name: 'Gráfico da variação acumulada por mês' })
+  await svg.scrollIntoViewIfNeeded()
+  const positions = await Promise.all([busca.boundingBox(), ativos.boundingBox(), svg.boundingBox()])
+  assert.ok(positions[0].y < positions[1].y && positions[1].y < positions[2].y, 'busca, ativos e gráfico em ordem')
+  const box = positions[2]
+  const slider = chart.getByRole('slider')
+  const latest = await slider.getAttribute('aria-valuetext')
+  const x = box.x + box.width * 0.58
+  const y = box.y + box.height * 0.52
+  if (width > 560) {
+    await page.mouse.move(x, y)
+    const tip = chart.locator('.inv-chart-tooltip')
+    await tip.waitFor({ state: 'visible' })
+    const texto = normalizar(await tip.innerText())
+    assert.match(texto, /\d{2}\/\d{4}.*00\.017\.024\/0001-53 · Classe.*%.*CDI.*%/)
+    if (!real) assert.match(texto, /10\/2025.*5,00%.*CDI.*1,01%/)
+  } else {
+    await page.touchscreen.tap(x, y)
+  }
+  assert.notEqual(await slider.getAttribute('aria-valuetext'), latest, 'o ponto muda com o mouse ou toque')
+  const legend = chart.getByRole('list', { name: 'Rentabilidade dos ativos no mês selecionado' })
+  assert.equal(await legend.getByRole('listitem').count(), 2)
+  await slider.press('Home')
+  assert.equal(await legend.getByText('0,00%', { exact: true }).count(), 2, 'o teclado também move a referência')
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'comparador sem rolagem lateral')
+  await remover.click()
+  await ativos.getByRole('button', { name: 'Remover CDI', exact: true }).click()
+}
+
 async function main() {
   const browser = await chromium.launch({
     channel: process.env.SMOKE_CHANNEL || 'chrome',
@@ -61,11 +109,13 @@ async function main() {
   })
   try {
     for (const width of [390, 1280]) {
-      const page = await browser.newPage({ viewport: { width, height: 900 }, serviceWorkers: 'block' })
+      const page = await browser.newPage({ viewport: { width, height: 900 }, hasTouch: width < 560, serviceWorkers: 'block' })
       page.setDefaultTimeout(15000)
       await fixtures(page)
       await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos')
       const region = page.getByRole('region', { name: 'Investimentos', exact: true })
+      await verificarComparador(region, page, width)
+      await region.getByRole('button', { name: 'Consultar fundos', exact: true }).click()
       await region.getByRole('button', { name: 'Consultar fundos', exact: true, pressed: true }).waitFor()
       await selecionarFundo(region)
       assert.ok(page.workers().some(worker => worker.url().includes('buscaFundosCvm.worker')), 'a busca roda em segundo plano')
@@ -84,9 +134,6 @@ async function main() {
       assert.equal(await remover.count(), 0)
       await ficha.getByRole('button', { name: 'Adicionar à comparação', exact: true }).click()
       await remover.waitFor()
-      for (const referencia of [/^Remover CDI$/, /^Remover IPCA$/, /^Remover Dólar PTAX venda$/]) {
-        await ativos.getByRole('button', { name: referencia }).click()
-      }
       const tabela = region.getByRole('region', { name: 'Retorno e risco' })
       await tabela.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
       if (!real) assert.match(normalizar(await tabela.innerText()), /10,00%/)
@@ -114,7 +161,7 @@ async function main() {
       await tabela.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
       await page.close()
     }
-    console.log('Fundos CVM: busca por nome, ficha, cálculo, comparação, carteira e reabertura em 390 e 1280 px aprovados.')
+    console.log('Fundos CVM: busca, ordem dos blocos, gráfico por mouse, toque e teclado, ficha e carteira aprovados em 390 e 1280 px.')
   } finally {
     await browser.close()
   }

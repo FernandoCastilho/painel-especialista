@@ -10,6 +10,6 @@ self.onmessage = ({ data }) => {
     return
   }
   clearTimeout(timer)
-  const { busca } = data
-  timer = setTimeout(() => self.postMessage({ busca, itens: buscarFundos(catalogo, busca) }), 0)
+  const { busca, ids } = data
+  timer = setTimeout(() => self.postMessage({ busca, ids, itens: buscarFundos(catalogo, busca, ids.split(',')) }), 0)
 }
