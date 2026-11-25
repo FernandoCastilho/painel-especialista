@@ -371,6 +371,36 @@ jobs:
         run: |
           export CBS_BLOB="$(git rev-parse HEAD:cotacoes/src/ibgeCbsSnapshot.json)"
           node scripts/pages-release-data.mjs empacotar-cbs dist
+      - name: Definir competência da coleta de fundos
+        id: cvm-dia
+        run: |
+          echo "data=$(TZ=America/Sao_Paulo date +%F)" >> "$GITHUB_OUTPUT"
+          echo "hora=$(TZ=America/Sao_Paulo date +%H)" >> "$GITHUB_OUTPUT"
+      - name: Restaurar base de fundos da CVM
+        uses: actions/cache/restore@v4
+        id: cvm-cache
+        with:
+          path: ${{ runner.temp }}/cvm-cache
+          key: fundos-cvm-v1-${{ steps.cvm-dia.outputs.data }}
+          restore-keys: fundos-cvm-v1-
+      - name: Preparar cotas da CVM para publicação
+        id: cvm-dados
+        timeout-minutes: 10
+        env:
+          CVM_DATA: ${{ steps.cvm-dia.outputs.data }}
+          CVM_HORA: ${{ steps.cvm-dia.outputs.hora }}
+        run: |
+          origem="https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}"
+          args=()
+          if [[ "$PAGES_REFRESH_DATA" == "true" ]] && (( 10#$CVM_HORA >= 8 )); then args+=(--atualizar); fi
+          python3 scripts/coletar-fundos-cvm.py dist/cvm --cache "$RUNNER_TEMP/cvm-cache" --origem "$origem" --hoje "$CVM_DATA" "${args[@]}"
+          echo "data=$(python3 -c 'import json; print(json.load(open("dist/cvm/manifest.json"))["collected"])')" >> "$GITHUB_OUTPUT"
+      - name: Guardar a coleta válida da CVM
+        if: steps.cvm-cache.outputs.cache-hit != 'true' && steps.cvm-dados.outputs.data == steps.cvm-dia.outputs.data
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/cvm-cache
+          key: fundos-cvm-v1-${{ steps.cvm-dia.outputs.data }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: cotacoes/dist
