@@ -32,7 +32,12 @@ async function check(page) {
   assert.equal(await flow.evaluate(el => el.open), false)
   await history.locator('summary').click()
   await history.getByText(/DI no prazo de 48 meses/).waitFor()
-  await history.locator('svg.ml-svg line[data-referencia=mercado]').waitFor()
+  const curva = history.locator('svg.ml-svg')
+  await curva.waitFor()
+  const linhaDI = curva.locator('line[data-referencia=mercado]')
+  await linhaDI.waitFor({ state: 'attached' }) // Uma linha horizontal tem caixa de geometria com altura zero.
+  assert.equal(await linhaDI.getAttribute('stroke-dasharray'), '6 4')
+  assert.ok(await linhaDI.evaluate(el => el.getTotalLength() > 0 && getComputedStyle(el).stroke !== 'none'))
   assert.match(await history.innerText(), /TFC:[\s\S]*diferença de −1,50 p.p. frente ao DI/)
   await page.locator('#fm-compare').check()
   assert.match(await history.innerText(), /TFB:[\s\S]*diferença de −0,50 p.p. frente ao DI/)
