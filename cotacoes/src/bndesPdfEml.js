@@ -145,13 +145,10 @@ export function bndesPdfEml({ itens, historico = null }) {
   if (!itens?.length) throw new Error('Cotação sem resultado')
   const corpo = ['Olá,', '', 'Segue a simulação BNDES Finame em anexo.', '',
     ...itens.flatMap((item, i) => [nomeOpcao(item, i, itens.length), ...resumo(item).map(linha => '• ' + emLinha(linha)), '']), nota].join('\r\n')
-  const paginas = []
-  itens.forEach((item, i) => {
+  const paginas = itens.flatMap((item, i) => {
     const corrige = item.parcelas?.some(p => Number.isFinite(p.correcao) && p.correcao !== 0)
-    const linhas = cronograma(item, corrige)
     const cabecalhoTabela = ['Nº e vencimento', ...(corrige ? ['Correção'] : []), 'Juros', 'Amortização', 'Parcela', 'Saldo']
     const nome = nomeOpcao(item, i, itens.length)
-    const primeiras = []
     let { ops, y } = blocosResumo(item, 745)
     if (item.indice) {
       const indice = [item.indice.rotulo + ' (cenário da simulação)', ...item.indice.trajetoria.reduce((lines, { ano, valor }, j) => {
@@ -164,21 +161,22 @@ export function bndesPdfEml({ itens, historico = null }) {
       y -= indice.length * 11 + 10
     }
     // Cronograma: no primeiro quadro, as linhas que cabem abaixo do resumo; depois, páginas cheias.
-    let resto = linhas
+    const partes = []
+    let resto = cronograma(item, corrige)
     let topo = y
     do {
       const cabe = Math.max(1, Math.floor((topo - 26 - LIMITE_TABELA) / ALTURA_LINHA))
-      primeiras.push({ ops, topo, linhas: resto.slice(0, cabe) })
+      partes.push({ ops, topo, linhas: resto.slice(0, cabe) })
       resto = resto.slice(cabe)
       ops = []
       topo = 745
     } while (resto.length)
-    primeiras.forEach((parte, p) => paginas.push([...cabecalho(nome), ...parte.ops,
-      ...secao('Cronograma de pagamentos | ' + (p + 1) + '/' + primeiras.length, parte.topo),
-      ...tabelaLinhas([cabecalhoTabela, ...parte.linhas], parte.topo - 26), ...rodape].join('\n')))
+    return partes.map((parte, p) => [...cabecalho(nome), ...parte.ops,
+      ...secao('Cronograma de pagamentos | ' + (p + 1) + '/' + partes.length, parte.topo),
+      ...tabelaLinhas([cabecalhoTabela, ...parte.linhas], parte.topo - 26), ...rodape].join('\n'))
   })
   // Por último: histórico do indexador ao lado do DI e os avisos (os mesmos do CDC).
-  const final = [...cabecalho('')]
+  const final = cabecalho()
   let y = 765
   const grafico = graficoHistorico(historico, y - 20)
   if (grafico) {
