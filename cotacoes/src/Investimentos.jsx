@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import CalcBack from './CalcBack.jsx'
-import { useCurves } from './useCurves.js'
 import { numeroPt, cdb, fundo, acoes, cotasCvm } from './investimentos.js'
 import './Investimentos.css'
 
@@ -25,23 +24,19 @@ function Saida({ resultado, titulo, nota }) {
 }
 
 function Cdb({ v, set }) {
-  const curva = useCurves()
-  const br = curva.data?.br
-  const base = br?.compare?.find(x => x.id === 'hoje')?.date
-  const vertices = base ? br.curves?.[base] : null
-  const percentual = v.percentual ?? '100'
-  const r = v.principal && percentual && v.vencimento && vertices?.length ? cdb({
-    principal: numeroPt(v.principal), percentual: numeroPt(percentual),
-    dataBase: base, vencimento: v.vencimento, vertices,
+  const r = v.principal && v.taxa && v.dataBase && v.vencimento ? cdb({
+    principal: numeroPt(v.principal), taxaAnual: numeroPt(v.taxa),
+    dataBase: v.dataBase, vencimento: v.vencimento,
   }) : null
   return <>
-    <p>Simule um CDB pós-fixado. A curva DI × Pré é um cenário de mercado, não uma previsão do CDI realizado.</p>
+    <p>Informe a taxa anual bruta do CDB. Se o título for pós-fixado, use uma taxa anual estimada para simular um cenário, não o percentual do CDI.</p>
     <div className="inv-grade">
       <Campo label="Valor aplicado (R$)" value={v.principal} onChange={x => set('principal', x)} />
-      <Campo label="Percentual do CDI (%)" value={percentual} onChange={x => set('percentual', x)} />
+      <Campo label="Taxa anual bruta (% a.a.)" value={v.taxa} onChange={x => set('taxa', x)} />
+      <Campo label="Data da aplicação (dia útil)" value={v.dataBase} onChange={x => set('dataBase', x)} tipo="date" />
       <Campo label="Vencimento (dia útil)" value={v.vencimento} onChange={x => set('vencimento', x)} tipo="date" />
     </div>
-    <p className="inv-nota">{vertices?.length ? 'Data-base e início da projeção: ' + data(base) + '. ' + (curva.stale ? 'Última curva disponível; houve falha na atualização. ' : '') : curva.status === 'loading' ? 'Carregando a curva… ' : 'Curva indisponível; sem projeção. '}Dias úteis brasileiros, base 252. O simulador não altera o vencimento nem extrapola a curva.</p>
+    <p className="inv-nota">Taxa constante informada por você. O cálculo capitaliza em 252 dias úteis por ano, sem consultar curvas ou taxas de mercado.</p>
     <Saida resultado={r} titulo="Projeção bruta de CDB" nota={r?.ok ? r.dias + ' dias úteis, antes de IR, IOF e taxas.' : ''} />
   </>
 }

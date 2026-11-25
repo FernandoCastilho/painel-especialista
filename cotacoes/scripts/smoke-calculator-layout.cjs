@@ -443,9 +443,7 @@ async function assertGroupedCatalog(browser, report, failures) {
     page.on('pageerror', error => errors.push(error.message))
     try {
       await fixtures(page)
-      await page.route('**/curves.json*', route => route.fulfill({ json: {
-        generatedAt: Date.now(), br: { compare: [{ id: 'hoje', date: '2026-11-23' }], curves: { '2026-11-23': [[2, 12], [60, 12]] } },
-      } }))
+      await page.route('**/curves.json*', route => route.abort())
       await page.goto(base + '/#calculadora')
       const catalog = page.locator('.calc-catalog')
       await catalog.locator('.calc-catalog-group').first().waitFor()
@@ -496,6 +494,8 @@ async function assertGroupedCatalog(browser, report, failures) {
         const investimentos = page.getByRole('region', { name: 'Investimentos', exact: true })
         await investimentos.getByRole('button', { name: 'CDB', exact: true }).waitFor()
         await investimentos.getByRole('textbox', { name: 'Valor aplicado (R$)', exact: true }).fill('10.000,00')
+        await investimentos.getByLabel('Taxa anual bruta (% a.a.)', { exact: true }).fill('12')
+        await investimentos.getByLabel('Data da aplicação (dia útil)', { exact: true }).fill('2026-11-23')
         await investimentos.getByLabel('Vencimento (dia útil)', { exact: true }).fill('2026-11-25')
         const cdb = investimentos.getByRole('region', { name: 'Projeção bruta de CDB', exact: true })
         await cdb.getByText('2 dias úteis', { exact: false }).waitFor()

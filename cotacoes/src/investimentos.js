@@ -1,5 +1,4 @@
 import { busDaysIn, isBusinessDay } from './holidays.js'
-import { compareWithDi } from './operacaoDi.js'
 
 const falha = erro => ({ ok: false, erro })
 const positivo = x => Number.isFinite(x) && x > 0
@@ -23,15 +22,12 @@ function resultado(inicial, final) {
     ? { ok: true, final, ganho, retorno } : falha('O valor calculado está fora do intervalo válido.')
 }
 
-export function cdb({ principal, percentual, dataBase, vencimento, vertices }) {
-  if (!positivo(principal) || !positivo(percentual)) return falha('Informe o valor e um percentual do CDI maior que zero.')
-  if (!dataValida(dataBase) || !dataValida(vencimento) || vencimento <= dataBase) return falha('Escolha um vencimento posterior à data-base.')
-  if (!isBusinessDay(vencimento, 'BR')) return falha('Escolha um vencimento em dia útil no calendário brasileiro.')
-  if (!Array.isArray(vertices) || !vertices.length || vertices.some(v => !Array.isArray(v) || !Number.isInteger(v[0]) || !positivo(v[0]) || !Number.isFinite(v[1]) || v[1] <= -100) || new Set(vertices.map(v => v[0])).size !== vertices.length)
-    return falha('Curva DI inválida ou incompleta.')
+export function cdb({ principal, taxaAnual, dataBase, vencimento }) {
+  if (!positivo(principal) || !naoNegativo(taxaAnual)) return falha('Informe um valor positivo e uma taxa anual maior ou igual a zero.')
+  if (!dataValida(dataBase) || !dataValida(vencimento) || vencimento <= dataBase) return falha('Escolha um vencimento posterior à data da aplicação.')
+  if (![dataBase, vencimento].every(d => isBusinessDay(d, 'BR'))) return falha('Escolha datas de aplicação e vencimento em dias úteis no calendário brasileiro.')
   const dias = busDaysIn(dataBase, vencimento, ['BR'])
-  const r = compareWithDi({ value: principal, kind: 'pct', rate: percentual, pts: vertices, d1: 0, d2: dias })
-  return r.ok ? { ...resultado(principal, r.finalOp), dias } : falha(r.error)
+  return { ...resultado(principal, principal * (1 + taxaAnual / 100) ** (dias / 252)), dias }
 }
 
 export function fundo(valor, cotaInicial, cotaFinal) {
