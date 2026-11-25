@@ -109,6 +109,13 @@ test('CDI diário acumula da data inicial inclusiva até a final exclusiva, como
   closeTo(cdi.changes[2], 0.0003)
 })
 
+test('a variação diária em reais pula feriado financeiro e fim de semana', () => {
+  const rows = [['2026-11-19', 100], ['2026-11-23', 101], ['2026-11-25', 102]]
+  const { tracks: [fundo] } = compareDailyHistory([{ id: 'fundo', currency: 'BRL', rows }], 6, 'BRL', {})
+  closeTo(fundo.changes[1], 0.01)
+  assert.equal(fundo.changes[2], null, 'houve um dia útil sem observação')
+})
+
 test('CSV exportado protege nomes de fórmulas e preserva sinais dos retornos', () => {
   const csv = comparisonCsv({ timeline: ['2025-01', '2025-02'], tracks: [{ name: '=2+2', values: [1, 0.9] }] }, 'BRL')
   assert.match(csv, /"'=2\+2 \(%\)"/)

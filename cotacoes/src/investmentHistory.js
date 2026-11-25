@@ -77,10 +77,12 @@ export async function loadBcb(item, today, signal, fetcher = fetch) {
 }
 
 function monthsBefore(date, count) {
-  const [year, month, day] = date.split('-').map(Number)
-  const target = new Date(Date.UTC(year, month - 1 - count, 1))
-  const lastDay = Number(endOfMonth(months(target.toISOString())).slice(-2))
-  target.setUTCDate(Math.min(day, lastDay))
+  const target = new Date(date)
+  const day = target.getUTCDate()
+  target.setUTCMonth(target.getUTCMonth() - count, 1)
+  const end = new Date(target)
+  end.setUTCMonth(end.getUTCMonth() + 1, 0)
+  target.setUTCDate(Math.min(day, end.getUTCDate()))
   return target.toISOString().slice(0, 10)
 }
 
@@ -145,7 +147,7 @@ export function compareDailyHistory(series, period, currency, fx) {
       }
       const current = Number.isFinite(level) && level > 0 ? level : null
       const tomorrow = previousDate && addDays(previousDate, 1)
-      const daily = tomorrow === date || (tomorrow && item.currency === 'BRL' && nextBusinessDay(tomorrow, ['BANCO']) === date)
+      const daily = tomorrow === date || (tomorrow && item.currency === 'BRL' && nextBusinessDay(tomorrow, ['BR']) === date)
       if (current !== null) points.set(date, {
         level: current,
         change: previous !== null && daily && item.kind !== 'monthly-rate' ? current / previous - 1 : null,
