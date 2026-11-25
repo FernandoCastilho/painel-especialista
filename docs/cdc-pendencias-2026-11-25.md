@@ -2,7 +2,9 @@
 
 Calculadora CDC (`#calculadora/cdc`) reconstruída da planilha de CDC de Fernando. Estado: primeira versão.
 
-## 1. Diferença no IOF sobre parcelas (em aberto)
+## 1. Diferença no IOF sobre parcelas
+Decisão de Fernando (25/11/2026): vale a regra legal (Decreto 6.306/2007, art. 7º), conferida na compilação da Câmara; IOF sempre financiado; taxa digitada. Entrou também o Simples/MEI até R$ 30 mil (0,00274% ao dia). A isenção do art. 9º, VI (automóvel até 127 HP) ficou de fora: vale só para táxi e pessoa com deficiência (art. 72 da Lei 8.383/1991).
+- Base do IOF adicional: liberado + tarifas + seguros, sem o IOF financiado (como a planilha). Se incluísse o IOF, seriam cerca de R$ 61 a mais no exemplo. A lei lida não define; decisão pendente de Fernando.
 - Caso da planilha: 500.000,00 liberado, tarifa de cadastro 2.523,00, 48x, carência 30 dias, 1,55% a.m., liberação 25/11/2026.
 - Planilha: IOF sobre PMT R$ 14.341,35 · IOF total R$ 16.250,94 · parcela R$ 15.473,20.
 - Painel (regra legal já usada no Capital de Giro: 0,0082% ao dia sobre a amortização, limite 365 dias):
@@ -35,5 +37,6 @@ Estrutura: prazo em meses (linhas) × taxa a.a. e taxa a.m. (colunas), por seman
 | SELIC | 14,75% | 14,75% | 1,15% | 1,15% |
 
 - Taxa a.m. = taxa a.a. convertida por juros compostos (13,68% a.a. → 1,07% a.m.).
-- Hipótese a confirmar: taxa do cliente = funding do prazo + spread (o campo "Spread 4,00" da planilha). Não aplicada.
+- Em uso desde 25/11/2026 para o spread da operação: (1 + taxa a.a.) = (1 + funding a.a.) × (1 + spread a.a.). Entre prazos, interpolação linear; fora da tabela, a ponta. Valores de exemplo (Fernando: "hipotética"). Arquivo: `cotacoes/src/cdcFunding.js`.
+- Exemplo: 1,55% a.m. (20,27% a.a.), 48 meses, funding 15,58% → spread 4,06% a.a. (a planilha mostrava "Spread 4,00"; somando em vez de compor daria 4,69%).
 - Fernando vai mandar outras partes à medida que a calculadora for evoluindo.

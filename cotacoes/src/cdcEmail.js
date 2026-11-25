@@ -10,7 +10,7 @@ const dmy = iso => iso.split('-').reverse().join('/')
 const line = '----------------------------------------'
 
 // d: { result, info: { categoria, anoModelo, zeroKm, carenciaDias, inicio, cadastro, avaliacao, registro, spf, seguroAuto, socorro } }
-export function cdcEmailText({ result: r, info: q }) {
+export function cdcEmailText({ result: r, spread: sp, info: q }) {
   const entrada = [
     `Produto: CDC · ${q.categoria} · ano modelo ${q.anoModelo} · zero km: ${q.zeroKm ? 'sim' : 'não'}`,
     `Valor do bem: ${brl(r.valorBem)}`,
@@ -23,6 +23,7 @@ export function cdcEmailText({ result: r, info: q }) {
   const saida = [
     `Valor da parcela: ${brl(r.parcela)}`,
     `Taxa: ${pct(r.taxa / 100)} a.m.`,
+    ...(sp ? [`Spread: ${pct(sp.spreadAa)} a.a. sobre funding de ${pct(sp.fundingAa)} a.a. (vigência ${q.vigenciaLabel ?? '—'})`] : []),
     `% de entrada: ${pct(r.pctEntrada)}`,
     `Coeficiente: ${r.coeficiente.toLocaleString('pt-BR', { minimumFractionDigits: 5, maximumFractionDigits: 5 })}`,
     `1ª parcela: ${dmy(r.primeira)} · última: ${dmy(r.ultima)}`,

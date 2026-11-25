@@ -8,7 +8,11 @@
 // - IOF adicional = 0,38% de (valor liberado + tarifas + seguros), como na planilha.
 // - IOF diário = 0,0082% × dias até o vencimento (limite 365) sobre a amortização de cada parcela, com o IOF financiado
 //   (o saldo inclui o próprio IOF; repete até fechar em centavos). Mesmas alíquotas do resolveCreditIof do painel.
-//   Ressalva: no caso de referência a planilha mostra IOF diário de R$ 14.341,35 e esta regra dá cerca de R$ 95 a menos.
+//   Regra conferida no Decreto 6.306/2007, art. 7º (I, b; § 1º; § 15; VI), em 25/11/2026: PJ 0,0082% ao dia, limite de
+//   365 dias, adicional de 0,38%; Simples Nacional/MEI até R$ 30 mil, 0,00274% ao dia. O IOF é sempre financiado (decisão de
+//   Fernando, 25/11/2026). A isenção do art. 9º, VI (automóvel até 127 HP) não entra: vale só para os beneficiários do
+//   art. 72 da Lei 8.383/1991 (táxi e pessoa com deficiência), não para o CDC de empresa.
+//   Ressalva: no caso de referência a planilha mostra IOF diário de R$ 14.341,35 e esta regra dá R$ 97,75 a menos.
 import { resolveCreditIof } from './iofRules.js'
 import { cgAddDays, cgDate } from './contaGarantida.js'
 
@@ -52,7 +56,7 @@ export function cdcCronograma(principal, i, start, dues) {
   return { pmt, rows }
 }
 
-export function cdcConta({ valorBem, valorLiberado, tarifas = 0, seguros = 0, taxa, prazo, carenciaDias, inicio }) {
+export function cdcConta({ valorBem, valorLiberado, tarifas = 0, seguros = 0, taxa, prazo, carenciaDias, inicio, perfil = 'pj' }) {
   if (!(valorLiberado > 0)) return fail('Informe o valor liberado.')
   if (!(valorBem >= valorLiberado)) return fail('O valor do bem precisa ser igual ou maior que o valor liberado.')
   if (!(tarifas >= 0) || !(seguros >= 0)) return fail('Confira tarifas e seguros.')
@@ -62,7 +66,7 @@ export function cdcConta({ valorBem, valorLiberado, tarifas = 0, seguros = 0, ta
   const firstDue = cgAddDays(inicio, carenciaDias)
   if (!firstDue) return fail('Informe a data de liberação.')
   const base = cents(valorLiberado + tarifas + seguros)
-  const tax = resolveCreditIof({ date: inicio, profile: 'pj', operationValue: base })
+  const tax = resolveCreditIof({ date: inicio, profile: perfil, operationValue: base, eligible: perfil === 'simples' })
   if (!tax.ok) return fail(tax.error)
   const dues = cdcVencimentos(firstDue, prazo)
   const i = taxa / 100
@@ -77,10 +81,11 @@ export function cdcConta({ valorBem, valorLiberado, tarifas = 0, seguros = 0, ta
     principal = next
   }
   const { pmt, rows } = flow
+  if (rows[0].amortization < 0) return fail('A 1ª parcela não cobre os juros da carência: reduza a carência ou aumente o prazo.')
   const paid = cents(rows.reduce((s, r) => s + r.payment, 0))
   return {
     ok: true, valorBem, valorLiberado, tarifas, seguros, base, principal, taxa,
-    entrada: valorBem - valorLiberado, pctEntrada: (valorBem - valorLiberado) / valorBem,
+    entrada: cents(valorBem - valorLiberado), pctEntrada: (valorBem - valorLiberado) / valorBem,
     parcela: pmt, coeficiente: pmt / base, primeira: dues[0], ultima: dues.at(-1),
     iofAdicional, iofDiario, iof: cents(iofAdicional + iofDiario), tax,
     rows, paid, juros: cents(rows.reduce((s, r) => s + r.interest, 0)),
