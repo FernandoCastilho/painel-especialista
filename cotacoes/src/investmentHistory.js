@@ -1,4 +1,4 @@
-import { addDays } from './holidays.js'
+import { addDays, nextBusinessDay } from './holidays.js'
 import { numeroPt } from './investimentos.js'
 
 export const PUBLIC_SERIES = [
@@ -132,8 +132,11 @@ export function compareDailyHistory(series, period, currency, fx) {
   const rates = Object.fromEntries(Object.entries(fx).map(([code, rows]) => [code, new Map(rows)]))
   const selections = series.map(item => {
     let previous = null
+    let previousDate
     const points = new Map()
-    for (const [date, price] of item.rows) {
+    for (const [index, [date, observed]] of item.rows.entries()) {
+      // O índice DI valoriza na data pela taxa do dia útil anterior.
+      const price = item.kind === 'daily-rate' ? (item.rows[index - 1]?.[1] ?? 1) : observed
       let level = price
       if (item.currency !== currency) {
         const from = item.currency === 'BRL' ? 1 : rates[item.currency]?.get(date)
@@ -141,11 +144,14 @@ export function compareDailyHistory(series, period, currency, fx) {
         level = price * from / to
       }
       const current = Number.isFinite(level) && level > 0 ? level : null
+      const tomorrow = previousDate && addDays(previousDate, 1)
+      const daily = tomorrow === date || (tomorrow && item.currency === 'BRL' && nextBusinessDay(tomorrow, ['BANCO']) === date)
       if (current !== null) points.set(date, {
         level: current,
-        change: previous !== null && item.kind !== 'monthly-rate' ? current / previous - 1 : null,
+        change: previous !== null && daily && item.kind !== 'monthly-rate' ? current / previous - 1 : null,
       })
       previous = current
+      previousDate = date
     }
     return { item, points, dates: [...points.keys()] }
   })

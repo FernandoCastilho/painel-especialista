@@ -11,13 +11,14 @@ const hash = 'a'.repeat(64)
 const grupo = [...cnpj].reduce((total, char) => (total * 31 + char.charCodeAt(0)) % 128, 0)
 const arquivo = 'cotas-' + grupo + '-' + hash + '.json.gz'
 const catalogo = 'catalogo-' + hash + '.json.gz'
-const rows = [['2025-09-30', 100], ['2025-10-28', 102], ['2025-10-31', 105], ['2025-11-28', 110]]
+const rows = [['2025-09-30', 100], ['2025-10-27', 100], ['2025-10-28', 102], ['2025-10-31', 105], ['2025-11-28', 110]]
 const normalizar = str => str.replace(/\s+/g, ' ').trim()
 
 async function fixtures(page) {
   if (real) return
   await page.route('**/dados/serie/bcdata.sgs.*/dados?**', route => route.fulfill({ json: [
-    { data: '30/09/2025', valor: '1' }, { data: '28/10/2025', valor: '1.01' }, { data: '28/11/2025', valor: '1.02' },
+    { data: '30/09/2025', valor: '1' }, { data: '27/10/2025', valor: '1.25' },
+    { data: '28/10/2025', valor: '1.01' }, { data: '28/11/2025', valor: '1.02' },
   ] }))
   let tentativas = 0
   await page.route('**/cvm/manifest.json*', route => {
@@ -97,7 +98,11 @@ async function verificarComparador(region, page, width) {
     await tip.waitFor({ state: 'visible' })
     const texto = normalizar(await tip.innerText())
     assert.match(texto, /\d{2}\/\d{2}\/\d{4}.*00\.017\.024\/0001-53 · Classe.*CDI/)
-    if (!real) assert.match(texto, /28\/10\/2025.*2,00%.*2,00% no dia.*CDI.*1,01%.*1,01% no dia/)
+    if (!real) {
+      assert.match(texto, /28\/10\/2025.*2,00%.*2,00% no dia.*CDI.*2,26%.*1,25% no dia/)
+      const linha = await svg.locator('path').first().getAttribute('d')
+      assert.equal((linha.match(/M/g) ?? []).length, 4, 'as datas sem observação interrompem a linha')
+    }
   } else {
     await page.touchscreen.tap(x, y)
   }

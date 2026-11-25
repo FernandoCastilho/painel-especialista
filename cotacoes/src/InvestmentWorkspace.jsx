@@ -96,10 +96,13 @@ function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabi
     const span = (Math.max(0, ...totals) - min) || 0.01
     const x = i => chartLeft + (axis[i] - axis[0]) * (chartRight - chartLeft) / (axis[last] - axis[0])
     const y = level => bottom - (level - min) / span * (bottom - top)
-    const lines = tracks.map(track => track.values.flatMap((level, i) =>
-      level === null ? [] : [x(i) + ',' + y(level - 1)]).join(' '))
+    const lines = daily && tracks.map(track => track.values.flatMap((level, i) => {
+      if (level === null) return []
+      const point = x(i) + ',' + y(level - 1)
+      return [i > 0 && track.values[i - 1] !== null && track.changes[i] !== null ? 'L' + point : 'M' + point + 'h0.01']
+    }).join(' '))
     return { x, y, min, span, lines }
-  }, [axis, tracks, last, chartLeft, chartRight, bottom, top])
+  }, [axis, daily, tracks, last, chartLeft, chartRight, bottom, top])
   const divisions = width < 560 ? 2 : 4
   function nearest(position) {
     const target = axis[0] + (position - chartLeft) / (chartRight - chartLeft) * (axis[last] - axis[0])
@@ -134,7 +137,10 @@ function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabi
           return <g key={i}><line className="inv-gridline" x1={chartLeft} x2={chartRight} y1={y(level)} y2={y(level)} />
             <text x={chartLeft - 6} y={y(level) + 4} textAnchor="end">{value(level)}</text></g>
         })}
-        {tracks.map((track, i) => <polyline key={track.id} fill="none" stroke={track.color} strokeWidth="2.6" points={lines[i]} />)}
+        {tracks.map((track, i) => daily
+          ? <path key={track.id} fill="none" stroke={track.color} strokeWidth="2.6" strokeLinecap="round" d={lines[i]} />
+          : <polyline key={track.id} fill="none" stroke={track.color} strokeWidth="2.6"
+            points={track.values.map((level, i) => x(i) + ',' + y(level - 1)).join(' ')} />)}
         <line className="inv-guide" x1={x(index)} x2={x(index)} y1={top} y2={bottom} />
         {tracks.filter(track => track.values[index] !== null).map(track =>
           <circle key={track.id} cx={x(index)} cy={y(track.values[index] - 1)} r="4" fill={track.color} />)}
@@ -429,9 +435,9 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
     {comparando ? monthly && <Results tracks={monthly.tracks} /> : comparison &&
       <Portfolio comparison={comparison} currency={config.currency} />}
     {selected.length < MAX_SERIES && <SeriesImport importSeries={importSeries} />}
-    {comparando && <p className="inv-nota">O gráfico usa as observações de cada dia e a última observação disponível até a data-base.
-      O retorno no dia compara com a observação anterior. O traço indica valor indisponível.
-      O IPCA tem observações mensais.</p>}
+    {comparando && <p className="inv-nota">O gráfico usa a última observação disponível até a data-base.
+      A variação do dia exige observações consecutivas. O CDI da data é valorizado pela taxa do dia útil anterior e
+      o IPCA tem observações mensais. O traço indica valor indisponível.</p>}
     <p className="inv-nota">A tabela de retorno e risco e a carteira usam os meses fechados em comum. As datas de fechamento podem diferir. Em CSV, prefira valores de fechamento.
       Volatilidade anualizada usa retornos mensais. Maior queda é medida nos fechamentos mensais.
       Conversão por PTAX venda da data do gráfico ou do último dia disponível no mês para a tabela e a carteira.

@@ -91,8 +91,22 @@ test('gráfico usa referência mensal sem inventar IPCA diário e exige câmbio 
   assert.deepEqual(result.timeline, ['2025-10-31', '2025-11-03', '2025-11-05', '2025-11-28', '2025-11-30'])
   closeTo(result.tracks[0].values[1], 1.32)
   assert.equal(result.tracks[0].changes[2], null)
+  assert.equal(result.tracks[0].changes[3], null, 'uma variação de várias semanas não é diária')
   closeTo(result.tracks[1].values.at(-1), 1.01)
   assert.ok(result.tracks[1].changes.every(change => change === null))
+})
+
+test('CDI diário acumula da data inicial inclusiva até a final exclusiva, como o índice DI', () => {
+  const rows = bcbSeries([
+    { data: '03/10/2025', valor: '0.06' },
+    { data: '06/10/2025', valor: '0.03' },
+    { data: '07/10/2025', valor: '0.02' },
+  ], 'daily-rate', '2025-10-07')
+  const { tracks: [cdi] } = compareDailyHistory([{ id: 'cdi', kind: 'daily-rate', currency: 'BRL', rows }], 6, 'BRL', {})
+  closeTo(cdi.values[1], 1.0006)
+  closeTo(cdi.changes[1], 0.0006)
+  closeTo(cdi.values[2], 1.0006 * 1.0003)
+  closeTo(cdi.changes[2], 0.0003)
 })
 
 test('CSV exportado protege nomes de fórmulas e preserva sinais dos retornos', () => {
