@@ -4,7 +4,7 @@ import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
 import { isFundoCvm } from './fundosCvm.js'
 import {
   PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, loadBcb, compareHistory, compareDailyHistory,
-  metrics, simulateHistory, comparisonCsv, resumoFundo, ultimoValor,
+  metrics, simulateHistory, comparisonCsv, resumoFundo, ultimoValor, valorAplicado,
 } from './investmentHistory.js'
 
 const COLORS = ['#4671ee', '#e56b23', '#00958d', '#9668bd', '#aa6a16', '#4b7eac']
@@ -344,8 +344,8 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
         ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
         : <p role="status">Carregando a ficha do fundo…</p>)}
   </div>
-  const aplicadoNumero = numeroPt(aplicadoTexto, true)
-  const aplicado = Number.isFinite(aplicadoNumero) && aplicadoNumero > 0 ? aplicadoNumero : null
+  const aplicadoNumero = valorAplicado(aplicadoTexto)
+  const aplicado = Number.isFinite(aplicadoNumero) ? aplicadoNumero : null
   const controls = <div className="inv-controls">
     <div className="inv-flex" role="group" aria-label="Período">
       {PERIODS.map(period => <button type="button" key={period} aria-pressed={config.period === period}
@@ -396,7 +396,7 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
     </p>}
     {comparando && <p className="inv-nota" id="inv-aplicado-nota">{aplicado
       ? <>Valores brutos de {money(aplicado, config.currency)} aplicados em {comparison ? dateText(comparison.start) : 'cada ativo'}, antes de impostos e custos.</>
-      : Number.isNaN(aplicadoNumero) ? 'Valor aplicado inválido. Use só números, como 10.000 ou 2.500,50.'
+      : Number.isNaN(aplicadoNumero) ? 'Valor aplicado inválido. Use, por exemplo, 10.000 ou 2.500,50.'
         : 'Informe um valor aplicado para ver quanto cada ativo renderia, bruto, antes de impostos e custos.'}</p>}
     {comparando && comparison && !comparison.fullPeriod && <p className="inv-nota">
       A cobertura disponível é menor que os {config.period} meses selecionados.</p>}

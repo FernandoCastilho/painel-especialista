@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  bcbSeries, parseSeriesCsv, compareHistory, compareDailyHistory, metrics, simulateHistory, comparisonCsv, loadBcb, ultimoValor,
+  bcbSeries, parseSeriesCsv, compareHistory, compareDailyHistory, metrics, simulateHistory, comparisonCsv, loadBcb, ultimoValor, valorAplicado,
 } from '../src/investmentHistory.js'
 
 const rows = values => values.map((value, i) => ['2025-0' + (i + 1) + '-28', value])
@@ -130,4 +130,14 @@ test('na data escolhida vale a última observação do ativo, sem pular para dep
   assert.equal(ultimoValor({ values: [null, null, 1] }, 1), -1)
   // Valor bruto = valor aplicado × nível acumulado: R$ 10.000 a 1,03 vira R$ 10.300.
   assert.equal(10000 * track.values[ultimoValor(track, 5)], 10300)
+})
+
+test('valor aplicado aceita milhar com ponto e centavos com vírgula', () => {
+  assert.equal(valorAplicado('10.000'), 10000)
+  assert.equal(valorAplicado('R$ 2.500,50'), 2500.5)
+  assert.equal(valorAplicado('1000'), 1000)
+  assert.equal(valorAplicado(''), null)
+  assert.ok(Number.isNaN(valorAplicado('10.00')))
+  assert.ok(Number.isNaN(valorAplicado('0')))
+  assert.ok(Number.isNaN(valorAplicado('abc')))
 })

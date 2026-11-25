@@ -129,6 +129,15 @@ const currencyRates = (from, to, fx) => {
   return [...new Set([from, to].filter(code => code !== 'BRL'))].map(code => fx[code])
 }
 
+// Valor em dinheiro: aceita milhar com ponto (10.000 ou 2.500,50), diferente das cotas, que não aceitam ponto sozinho.
+export function valorAplicado(texto) {
+  const v = String(texto ?? '').trim().replace(/^R\$\s*/i, '')
+  if (!v) return null
+  if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(v)) return NaN
+  const n = Number(v.replaceAll('.', '').replace(',', '.'))
+  return n > 0 ? n : NaN
+}
+
 // Fundos e índices nem sempre têm dado no último dia: vale a última observação até a data escolhida.
 export function ultimoValor(track, index) {
   for (let i = index; i >= 0; i--) if (track.values[i] !== null) return i
