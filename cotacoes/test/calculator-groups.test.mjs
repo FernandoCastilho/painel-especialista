@@ -6,12 +6,12 @@ import { runInNewContext } from 'node:vm'
 import { transform } from 'esbuild'
 import React from 'react'
 import { CALCULATOR_GROUPS } from '../src/calculatorGroups.js'
-test('catálogo agrupa os 14 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
+test('catálogo agrupa os 15 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
   const source = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
   const original = [...source.slice(source.indexOf('const CALCS'),source.indexOf('// Aba Calculadoras')).matchAll(/id: '([^']+)'/g)].map(m=>m[1])
   const grouped = CALCULATOR_GROUPS.flatMap(g=>g.calculators)
-  assert.equal(grouped.length,14)
-  assert.equal(new Set(grouped).size,14)
+  assert.equal(grouped.length,15)
+  assert.equal(new Set(grouped).size,15)
   assert.deepEqual([...grouped].sort(),original.sort())
   assert.equal(grouped[0],'finame-materiais')
   assert.ok(!grouped.includes('arvore-credito'))
@@ -42,7 +42,7 @@ test('grupos têm títulos acessíveis e todos os botões preservam destino ao c
   }
   const buttons=all.filter(n=>n.type==='button')
   for(const button of buttons){assert.match(button.props['aria-label'],/: abrir calculadora$/);button.props.onClick()}
-  assert.equal(clicks.length,14)
+  assert.equal(clicks.length,15)
   assert.deepEqual([...clicks].sort(),CALCULATOR_GROUPS.flatMap(g=>g.calculators).sort())
   assert.deepEqual(clicks.slice(0,3),[...MAIS_USADAS])
   const busca = query => expand(CatalogoLista({query,onView(){}})).filter(n=>n.type==='button').map(n=>n.props['aria-label'])

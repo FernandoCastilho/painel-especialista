@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { CALCULATOR_GROUPS } from './calculatorGroups.js'
 import { FinameIcon, CreditIcon, OperacaoDiIcon, CbsIcon, ContaGarantidaIcon, CdiDolarIcon,
-  DividendosEmprestimoIcon, Emprestimo4131Icon, CambioFuturoIcon, FinimpIcon, GiroIcon, DescontoIcon, FaturamentoIcon } from './CalculatorIcons.jsx'
+  DividendosEmprestimoIcon, Emprestimo4131Icon, CambioFuturoIcon, FinimpIcon, GiroIcon, CdcIcon, DescontoIcon, FaturamentoIcon } from './CalculatorIcons.jsx'
 import './CalculatorStandard.css'
 import './Calculadora.css'
 import './CalculatorWorkspace.css'
@@ -11,6 +11,7 @@ import './CalcUnificado.css'
 import './CalcCatalogo.css'
 
 const CapitalDeGiro = lazy(() => import('./CapitalDeGiro.jsx'))
+const Cdc = lazy(() => import('./Cdc.jsx'))
 const FinimpComparacao = lazy(() => import('./FinimpComparacao.jsx'))
 const BndesWorkspace = lazy(() => import('./BndesWorkspace.jsx'))
 const Investimentos = lazy(() => import('./Investimentos.jsx'))
@@ -40,6 +41,7 @@ const CALCS = [
   { id: 'cambio-futuro', title: 'Câmbio futuro', sub: 'Cote bullet ou até 5 parcelas com taxas da mesa', Icon: CambioFuturoIcon },
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
+  { id: 'cdc', title: 'CDC', sub: 'Financiamento de veículo: parcela, IOF e cronograma', Icon: CdcIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
   { id: 'investimentos', title: 'CDB, Fundos e Ações', sub: 'Comparar ativos, simular carteiras e calcular rentabilidade', Icon: OperacaoDiIcon },
   { id: 'faturamento', title: 'Faturamento', sub: 'Cole o faturamento e o endividamento e compare com o ano anterior', Icon: FaturamentoIcon },
@@ -65,6 +67,7 @@ function formulario({ view, onView, quotes, apresentacao = false }) {
   if (view === 'cdi-dolar') return <CdiDolar onBack={() => onView('')} quotes={quotes} />
   if (view === 'dividendos-emprestimo') return <DividendosEmprestimo onBack={() => onView('')} />
   if (view === 'giro') return <CapitalDeGiro onBack={() => onView('')} apresentacao={apresentacao} />
+  if (view === 'cdc') return <Cdc onBack={() => onView('')} />
   if (view === 'analise-desconto') return <AnaliseDesconto onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'faturamento') return <Faturamento onBack={() => onView('')} />
   // Árvore de Crédito: fora do menu e da busca (decisão de Fernando, 18/11/2026); abre só pelo endereço #calculadora/arvore-credito ou pelo atalho ARVORE.

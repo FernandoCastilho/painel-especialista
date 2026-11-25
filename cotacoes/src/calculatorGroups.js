@@ -3,7 +3,7 @@ export const CALCULATOR_GROUPS = [
   {
     id: 'credito-giro', title: 'Crédito e capital de giro',
     description: 'Simule financiamentos, necessidades de caixa e antecipação de recebíveis.',
-    calculators: ['finame-materiais', 'comparador-credito', 'giro', 'conta-garantida', 'analise-desconto'],
+    calculators: ['finame-materiais', 'comparador-credito', 'giro', 'cdc', 'conta-garantida', 'analise-desconto'],
   },
   {
     id: 'internacional', title: 'Crédito internacional',
