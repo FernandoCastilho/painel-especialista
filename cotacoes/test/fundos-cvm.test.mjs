@@ -1,21 +1,46 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { compareHistory, simulateHistory } from '../src/investmentHistory.js'
-import { buscarFundos, cotasDoFundo, isFundoCvm } from '../src/fundosCvm.js'
+import { buscarFundos, carregarCatalogoCvm, cotasDoFundo, isFundoCvm } from '../src/fundosCvm.js'
 
 const classe = ['cvm-c-00017024000153', 'Classe Crédito Privado', '00017024000153']
 const subclasse = ['cvm-c-00017024000153-A1', 'Classe Crédito Privado — Varejo', '00017024000153']
 const rows = [['2026-09-30', 100], ['2026-10-15', 102], ['2026-10-30', 105], ['2026-11-20', 110]]
 
-test('a busca do Orion aceita Off Funds, a grafia do cadastro e o CNPJ', () => {
+test('a busca do Orion aceita o nome abreviado do Mais Retorno, a grafia do cadastro e o CNPJ', () => {
   const orion = ['cvm-c-23731495000124',
     'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA',
     '23731495000124']
   const semelhante = ['cvm-c-53671189000100', 'ITAÚ FOF PREMIUM ORION FIC MULT', '53671189000100']
   const catalogo = [semelhante, orion]
-  for (const busca of ['Itaú Off Funds Orion', 'Itaú Fund of Funds Orion', '23.731.495/0001-24', '23731495000124']) {
+  for (const busca of ['Itaú Of Funds Orion Mult CP IE FIF DA CIC RL', 'Itaú Off Funds Orion',
+    'Itaú Fund of Funds Orion', '23.731.495/0001-24', '23731495000124']) {
     assert.deepEqual(buscarFundos(catalogo, busca), [orion])
   }
+})
+
+test('o catálogo se recupera de um manifesto que aponta para um arquivo ausente', async t => {
+  const antigo = 'catalogo-' + 'a'.repeat(64) + '.json.gz'
+  const atual = 'catalogo-' + 'b'.repeat(64) + '.json.gz'
+  const requisicoes = []
+  globalThis.document = { baseURI: 'https://painel.example/cotacoes/' }
+  t.after(() => { delete globalThis.document })
+  t.mock.method(globalThis, 'fetch', async (url, opcoes) => {
+    requisicoes.push({ url, cache: opcoes.cache })
+    if (url.pathname.endsWith('/manifest.json')) {
+      return Response.json({
+        version: 1, first: '2026-09-30', last: '2026-11-20',
+        files: { catalogo: url.search ? atual : antigo },
+      })
+    }
+    if (url.pathname.endsWith(atual)) return Response.json([classe])
+    return new Response(null, { status: 404 })
+  })
+  assert.deepEqual((await carregarCatalogoCvm()).items, [classe])
+  assert.equal(requisicoes.length, 4)
+  assert.ok(requisicoes[2].url.search)
+  assert.equal(requisicoes[2].url.search, requisicoes[3].url.search)
+  assert.equal(requisicoes[3].cache, 'no-store')
 })
 
 test('a busca encontra nome sem acentos e CNPJ formatado, distinguindo subclasses', () => {
