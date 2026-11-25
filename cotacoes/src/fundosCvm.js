@@ -13,7 +13,7 @@ export function nomeFundo([id, nome, cnpj]) {
 }
 
 export function buscarFundos(catalogo, busca, excluidos = []) {
-  const termos = normalizar(busca.trim()).split(/\s+/)
+  const termos = normalizar(busca.trim()).replace(/\boff\s+funds\b/g, 'of funds').split(/\s+/)
   if (termos.join('').length < 3) return []
   const cnpj = busca.replace(/[./\s-]/g, '').toUpperCase()
   const buscaCnpj = /\d/.test(cnpj) && /^[A-Z0-9]+$/.test(cnpj)
