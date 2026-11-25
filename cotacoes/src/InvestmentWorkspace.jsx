@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { numeroPt } from './investimentos.js'
 import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
-import { FONTE_CVM, isFundoCvm, LICENCA_CVM } from './fundosCvm.js'
+import { isFundoCvm } from './fundosCvm.js'
 import {
-  PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, parseSeriesCsv, loadBcb, compareHistory, compareDailyHistory,
+  PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, loadBcb, compareHistory, compareDailyHistory,
   metrics, simulateHistory, comparisonCsv, resumoFundo,
 } from './investmentHistory.js'
 
 const COLORS = ['#4671ee', '#e56b23', '#00958d', '#9668bd', '#aa6a16', '#4b7eac']
 const DEFAULT_IDS = ['cdi']
 const STORAGE = 'peme-investimentos-v1'
-const SERIES_URL = 'https://www3.bcb.gov.br/sgspub/'
 const EUR = { id: 'eur', code: 21619, kind: 'level' }
 const value = n => n === null ? '—' : n.toLocaleString('pt-BR', {
   style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2,
@@ -184,25 +183,6 @@ function Results({ tracks }) {
   </section>
 }
 
-function SeriesImport({ importSeries }) {
-  const [name, setName] = useState('')
-  const [currency, setCurrency] = useState('BRL')
-  return <details className="inv-import">
-    <summary>Importar série em CSV</summary>
-    <div className="inv-grade">
-      <label>Nome da série<input maxLength="60" value={name} onChange={e => setName(e.target.value)} /></label>
-      <label>Moeda da série<select value={currency} onChange={e => setCurrency(e.target.value)}>
-        {CURRENCIES.map(code => <option key={code}>{code}</option>)}</select></label>
-      <label>Importar CSV<input type="file" accept=".csv,text/csv" onChange={e => {
-        const file = e.target.files?.[0]
-        e.target.value = ''
-        if (file) void importSeries(file, name, currency)
-      }} /></label>
-    </div>
-    <p className="inv-nota">Use data;valor, com datas AAAA-MM-DD e valores positivos de preço, cota ou índice. Informe a moeda original. Para ações ou ETFs, prefira uma série ajustada. O arquivo é lido neste navegador.</p>
-  </details>
-}
-
 function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simular, jaAdicionado, lotado }) {
   const resumo = resumoFundo(fundo.rows, cdi)
   const bloqueado = lotado && !jaAdicionado
@@ -235,9 +215,6 @@ function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simu
     </table></div>
     {cdiLoading && <p className="inv-nota" role="status">Carregando CDI…</p>}
     {cdiFalhou && <button type="button" onClick={repetir}>Tentar carregar CDI novamente</button>}
-    <p className="inv-nota">Variação da cota, sem distribuições nem tributos do cotista.
-      A cota inicial pode recuar até sete dias corridos. O CDI acumula da data inicial até a véspera da final.
-      O traço indica dado indisponível.</p>
   </section>
 }
 
@@ -259,7 +236,6 @@ function Portfolio({ comparison, currency }) {
         <div><dt>Valor final</dt><dd>{money(principal * result.at(-1), currency)}</dd></div>
         <div><dt>Retorno no período</dt><dd>{value(result.at(-1) - 1)}</dd></div>
       </dl> : <p role="status">Informe um total inicial positivo. Cada valor deve ficar entre zero e 1 trilhão.</p>}
-      <p className="inv-nota">Valores históricos, com aplicação única no início e sem rebalanceamento, impostos ou custos. CDI e IPCA servem como referências teóricas.</p>
     </section>
     {result && <><HistoryChart comparison={comparison} tracks={tracks} title="Evolução da carteira" /><Results tracks={tracks} /></>}
   </>
@@ -268,7 +244,8 @@ function Portfolio({ comparison, currency }) {
 export default function InvestmentWorkspace({ mode, link, showComparison, showPortfolio, visible }) {
   const [local] = useState(readLocal)
   const [config, setConfig] = useState(() => initialConfig(link))
-  const [custom, setCustom] = useState(() => Array.isArray(local.series) ? local.series : [])
+  // Séries CSV salvas antes de a importação sair continuam abrindo nas comparações guardadas.
+  const [custom] = useState(() => Array.isArray(local.series) ? local.series : [])
   const [favorites, setFavorites] = useState(() => Array.isArray(local.favorites) ? local.favorites : [])
   const [activeFavorite, setActiveFavorite] = useState('')
   const [status, setStatus] = useState('')
@@ -304,19 +281,6 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
   const add = (id, nome) => {
     if (nome && isFundoCvm(id)) setNomes(current => ({ ...current, [id]: nome }))
     if (!config.ids.includes(id) && config.ids.length < MAX_SERIES) change({ ...config, ids: [...config.ids, id] })
-  }
-  async function importSeries(file, name, currency) {
-    if (file.size > 1024 * 1024) return setStatus('Use um CSV de até 1 MB.')
-    try {
-      const rows = parseSeriesCsv(await file.text())
-      const id = 'csv-' + crypto.randomUUID()
-      const item = { id, name: name.trim() || file.name.replace(/\.csv$/i, '').trim().slice(0, 60) || 'Série importada', currency, rows, source: 'CSV local' }
-      setCustom(current => [...current, item])
-      setConfig(current => current.ids.length < MAX_SERIES ? { ...current, ids: [...current.ids, id] } : current)
-      setStatus('CSV importado. Use Salvar para guardar a seleção neste navegador.')
-    } catch (error) {
-      setStatus(error.message)
-    }
   }
   function save() {
     try {
@@ -434,16 +398,5 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
     {status && <p role="status">{status}</p>}
     {comparando ? monthly && <Results tracks={monthly.tracks} /> : comparison &&
       <Portfolio comparison={comparison} currency={config.currency} />}
-    {selected.length < MAX_SERIES && <SeriesImport importSeries={importSeries} />}
-    {comparando && <p className="inv-nota">O gráfico usa a última observação disponível até a data-base.
-      A variação do dia exige observações consecutivas. O CDI da data é valorizado pela taxa do dia útil anterior e
-      o IPCA tem observações mensais. O traço indica valor indisponível.</p>}
-    <p className="inv-nota">A tabela de retorno e risco e a carteira usam os meses fechados em comum. As datas de fechamento podem diferir. Em CSV, prefira valores de fechamento.
-      Volatilidade anualizada usa retornos mensais. Maior queda é medida nos fechamentos mensais.
-      Conversão por PTAX venda da data do gráfico ou do último dia disponível no mês para a tabela e a carteira.
-      {' '}<a href={SERIES_URL} target="_blank" rel="noreferrer">Consultar fontes no Banco Central</a>.</p>
-    <p className="inv-nota">{fundosIds.length > 0 && 'A variação das cotas não inclui distribuições nem impostos do cotista. '}
-      Dados dos fundos adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a>,
-      sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>
   </div>
 }
