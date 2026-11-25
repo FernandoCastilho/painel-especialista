@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { cdcConta, cdcCronograma, cdcVencimentos } from '../src/cdcConta.js'
-import { cdcEmailLink, cdcEmailText } from '../src/cdcEmail.js'
+import { AVISOS_CDC, cdcEmlConteudo } from '../src/cdcEmail.js'
+import { fundingDoPrazo, lerFunding, spreadDaTaxa, taxaDoSpread } from '../src/cdcFunding.js'
 
 // Caso de referência: planilha de CDC enviada por Fernando em 25/11/2026 (sem dados de identificação do cliente).
 // Liberação 25/11/2026, carência 30 dias, 48 parcelas, valor liberado R$ 500.000,00, tarifa de cadastro R$ 2.523,00.
@@ -51,39 +52,56 @@ test('erros de entrada', () => {
   assert.equal(cdcConta({ ...base, inicio: '' }).ok, false)
 })
 
-test('e-mail leva entrada, saída e parcelas; cronograma longo vai para a área de transferência', () => {
+test('e-mail em arquivo: resumo, parcelas e avisos de cotação indicativa, sem spread', () => {
   const result = cdcConta({ valorBem: 500000, valorLiberado: 500000, tarifas: 2523, taxa: 1.55, prazo: 48, carenciaDias: 30, inicio: '2026-11-25' })
-  const info = { categoria: 'Pesado', anoModelo: '2026', zeroKm: true, carenciaDias: 30, inicio: '2026-11-25', cadastro: 2523, avaliacao: 0, registro: 0, spf: 0, seguroAuto: 0, socorro: 0 }
-  const { body, subject } = cdcEmailText({ result, info })
-  assert.match(subject, /^CDC/)
-  for (const parte of ['ENTRADA', 'SAÍDA', 'PARCELAS', 'IOF total', 'Coeficiente', '48 | 25/11/2030']) assert.ok(body.includes(parte), parte)
-  const link = cdcEmailLink({ result, info })
-  assert.ok(link.href.startsWith('https://outlook.office.com/'))
-  assert.ok(link.copiar.includes('25/11/2030'))
+  const c = cdcEmlConteudo({ result, info: { categoria: 'Pesado', carenciaDias: 30, dataSimulacao: '2026-11-25' } })
+  assert.match(c.assunto, /^CDC · cotação indicativa/)
+  assert.ok(c.nome.endsWith('.eml'))
+  for (const parte of ['Valor da parcela', 'IOF total', '48 | 25/11/2030', 'AVISOS IMPORTANTES', 'Não constitui proposta']) assert.ok(c.texto.includes(parte), parte)
+  for (const aviso of AVISOS_CDC) assert.ok(c.texto.includes(aviso))
+  assert.ok(!/spread/i.test(c.texto + c.html), 'spread é interno')
 })
 
-test('IOF pela lei: Simples até R$ 30 mil usa 0,00274% ao dia; acima, 0,0082%', () => {
-  const base = { valorBem: 25000, valorLiberado: 25000, taxa: 2, prazo: 24, carenciaDias: 30, inicio: '2026-11-25' }
-  const pj = cdcConta(base), simples = cdcConta({ ...base, perfil: 'simples' })
-  assert.equal(cdcConta({ ...base, valorBem: 40000, valorLiberado: 40000, perfil: 'simples' }).tax.daily, 0.0082)
-  assert.equal(pj.tax.daily, 0.0082)
-  assert.equal(simples.tax.daily, 0.00274)
-  assert.ok(simples.iofDiario < pj.iofDiario)
+// Tabela fictícia no formato da planilha FUNDING (cabeçalho com vigências ao ano e ao mês, linha SELIC no fim).
+const COLADA = [
+  'FUNDING', '\tTaxas a.a.\t\tTaxa a.m.',
+  '\t01/12 até 07/12\t24/11 até 30/11\t01/12 até 07/12\t24/11 até 30/11',
+  '6\t10,00%\t9,50%\t0,80%\t0,76%',
+  '12\t11,00%\t10,50%\t0,87%\t0,83%',
+  '48\t12,00%\t11,50%\t0,95%\t0,91%',
+  'SELIC\t10,00%\t10,00%\t0,80%\t0,80%',
+].join('\n')
+
+test('tabela de funding colada do Excel: usa só as colunas ao ano, a vigência mais recente primeiro', () => {
+  const lido = lerFunding(COLADA, '2026-11-25')
+  assert.ok(lido.ok)
+  assert.equal(lido.tabela.length, 2)
+  assert.equal(lido.tabela[0].label, '01/12 até 07/12')
+  assert.equal(lido.tabela[0].fim, '2026-12-07')
+  assert.deepEqual(lido.tabela[0].taxas, { 6: 10, 12: 11, 48: 12 })
+  assert.deepEqual(lido.tabela[1].taxas, { 6: 9.5, 12: 10.5, 48: 11.5 })
+  assert.equal(lido.tabela[0].taxas.SELIC, undefined)
+  // Sem cabeçalho: uma coluna só.
+  const solta = lerFunding('6\t10,00%\n12\t11,00%', '2026-11-25')
+  assert.deepEqual(solta.tabela[0].taxas, { 6: 10, 12: 11 })
+  assert.equal(lerFunding('qualquer coisa', '2026-11-25').ok, false)
+  assert.equal(lerFunding('6\t10,00%\n12\tabc', '2026-11-25').ok, false)
+  // Vigência que vira o ano.
+  assert.equal(lerFunding('\t29/12 até 04/01\n6\t10%\n12\t11%', '2026-12-29').tabela[0].fim, '2027-01-04')
 })
 
-test('spread composto sobre o funding do prazo', async () => {
-  const { fundingDoPrazo, spreadDaOperacao, FUNDING } = await import('../src/cdcFunding.js')
-  assert.equal(FUNDING[0].label, '19/11 até 25/11')
-  assert.equal(fundingDoPrazo('2026-11-19', 48).taxa, 15.58)
-  assert.equal(fundingDoPrazo('2026-11-11', 48).taxa, 15.44)
-  assert.ok(Math.abs(fundingDoPrazo('2026-11-19', 54).taxa - 15.655) < 1e-9)
-  assert.equal(fundingDoPrazo('2026-11-19', 3).taxa, 13.80)
-  assert.equal(fundingDoPrazo('2026-11-19', 96).taxa, 15.84)
-  const s = spreadDaOperacao({ taxaAm: 1.55, prazo: 48, vigenciaId: '2026-11-19' })
-  // 1,55% a.m. = 20,27% a.a.; (1,202692 / 1,1558) − 1 = 4,06% a.a.
-  assert.equal((s.taxaAa * 100).toFixed(2), '20.27')
-  assert.equal((s.spreadAa * 100).toFixed(2), '4.06')
-  assert.ok(Math.abs((1 + s.fundingAa) * (1 + s.spreadAa) - (1 + s.taxaAa)) < 1e-12)
+test('spread composto sobre o funding do prazo, e a conta reversa devolve a mesma taxa', () => {
+  const vig = lerFunding(COLADA, '2026-11-25').tabela[0]
+  assert.equal(fundingDoPrazo(vig, 12).taxa, 11)
+  assert.equal(fundingDoPrazo(vig, 30).taxa, 11.5)
+  assert.match(fundingDoPrazo(vig, 30).nota, /interpolado/)
+  assert.equal(fundingDoPrazo(vig, 3).taxa, 10)
+  assert.equal(fundingDoPrazo(vig, 72).taxa, 12)
+  // 1,55% a.m. = 20,27% a.a.; sobre 12% a.a.: 1,202692 / 1,12 − 1 = 7,38% a.a.
+  const s = spreadDaTaxa(1.55, 12)
+  assert.equal(s.toFixed(2), '7.38')
+  assert.ok(Math.abs(taxaDoSpread(s, 12) - 1.55) < 1e-12)
+  assert.ok(Math.abs(spreadDaTaxa(taxaDoSpread(4, 15.58), 15.58) - 4) < 1e-12)
 })
 
 test('bordas: fim de mês, limite de 365 dias do IOF e carência que não cabe na 1ª parcela', () => {
@@ -96,4 +114,25 @@ test('bordas: fim de mês, limite de 365 dias do IOF e carência que não cabe n
   assert.ok(Math.abs(ano.iofDiario - esperado) < 0.01)
   assert.equal(cdcConta({ valorBem: 1e5, valorLiberado: 1e5, taxa: 3, prazo: 120, carenciaDias: 180, inicio: '2026-11-25' }).ok, false)
   assert.equal(cdcConta({ valorBem: 100000.1, valorLiberado: 80000.05, taxa: 2, prazo: 12, carenciaDias: 30, inicio: '2026-11-25' }).entrada, 20000.05)
+})
+
+test('tabela colada: célula vazia não desloca colunas, sem a linha "Taxa a.m." e virada de ano', async () => {
+  const { vigenciaDeHoje } = await import('../src/cdcFunding.js')
+  // Coluna separadora vazia (oculta no Excel) e prazo de 72 sem taxa na 1ª vigência.
+  const vazio = ['\t01/12 até 07/12\t24/11 até 30/11\t\t01/12 até 07/12\t24/11 até 30/11',
+    '6\t10,00%\t9,50%\t\t0,80%\t0,76%', '48\t12,00%\t11,50%\t\t0,95%\t0,91%', '72\t\t13,10%\t\t1,05%\t1,04%'].join('\n')
+  const a = lerFunding(vazio, '2026-11-25')
+  assert.ok(a.ok)
+  assert.equal(a.tabela.length, 2, 'rótulos repetidos: só as colunas ao ano')
+  assert.deepEqual(a.tabela.find(v => v.label === '01/12 até 07/12').taxas, { 6: 10, 48: 12 })
+  assert.deepEqual(a.tabela.find(v => v.label === '24/11 até 30/11').taxas, { 6: 9.5, 48: 11.5, 72: 13.1 })
+  // Padrão: a vigência que vale hoje, não a mais recente (futura).
+  assert.equal(vigenciaDeHoje(a.tabela, '2026-11-25').label, '24/11 até 30/11')
+  // Virada de ano: em 05/01/2027, "29/12 até 04/01" é a semana passada.
+  const b = lerFunding('\t29/12 até 04/01\t05/01 até 11/01\n6\t10%\t11%\n12\t10,5%\t11,5%', '2027-01-05').tabela
+  assert.deepEqual(b.map(v => [v.inicio, v.fim]), [['2027-01-05', '2027-01-11'], ['2026-12-29', '2027-01-04']])
+  assert.equal(vigenciaDeHoje(b, '2027-01-05').inicio, '2027-01-05')
+  // Data inválida e linha SELIC com número não viram prazo.
+  assert.equal(lerFunding('\t11/24 - 11/30\n6\t10%\n12\t11%', '2026-11-25').ok, false)
+  assert.deepEqual(lerFunding('6\t10%\n12\t11%\nSELIC\t15\t15%', '2026-11-25').tabela[0].taxas, { 6: 10, 12: 11 })
 })

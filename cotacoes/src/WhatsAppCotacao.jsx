@@ -3,12 +3,13 @@ import { imagemCotacao } from './cotacaoImagem.js'
 
 // Ícone do WhatsApp ao lado do envelope (pedido do Fernando em 24/11/2026): copia o quadro da cotação como imagem, pronto
 // para colar na conversa. Sem área de transferência no navegador: abre o compartilhar do celular ou baixa o PNG.
-export default function WhatsAppCotacao({ dados }) {
+// `gerar` e `arquivo` permitem outra imagem (CDC, 25/11/2026); o padrão continua sendo a cotação do BNDES.
+export default function WhatsAppCotacao({ dados, gerar = imagemCotacao, arquivo = 'cotacao-bndes.png', titulo = 'Cotação BNDES' }) {
   const [aviso, setAviso] = useState('')
   useEffect(() => { if (!aviso) return undefined; const t = setTimeout(() => setAviso(''), 5000); return () => clearTimeout(t) }, [aviso])
   const label = 'Copiar a cotação como imagem para o WhatsApp'
   const copiar = async () => {
-    const blob = imagemCotacao(dados)
+    const blob = gerar(dados)
     try {
       if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('sem área de transferência')
       // A promessa vai direto para o ClipboardItem: o Safari só aceita a cópia dentro do clique.
@@ -17,13 +18,13 @@ export default function WhatsAppCotacao({ dados }) {
       return
     } catch { /* tenta compartilhar ou baixar */ }
     try {
-      const arquivo = new File([await blob], 'cotacao-bndes.png', { type: 'image/png' })
-      if (navigator.canShare?.({ files: [arquivo] })) {
-        try { await navigator.share({ files: [arquivo], title: 'Cotação BNDES' }) } catch { /* cancelado */ }
+      const arquivoPng = new File([await blob], arquivo, { type: 'image/png' })
+      if (navigator.canShare?.({ files: [arquivoPng] })) {
+        try { await navigator.share({ files: [arquivoPng], title: titulo }) } catch { /* cancelado */ }
         return
       }
-      const url = URL.createObjectURL(arquivo)
-      const a = document.createElement('a'); a.href = url; a.download = arquivo.name; a.click()
+      const url = URL.createObjectURL(arquivoPng)
+      const a = document.createElement('a'); a.href = url; a.download = arquivoPng.name; a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
       setAviso('Não deu para copiar neste navegador; a imagem foi baixada.')
     } catch { setAviso('Não foi possível gerar a imagem. Tente de novo.') }
