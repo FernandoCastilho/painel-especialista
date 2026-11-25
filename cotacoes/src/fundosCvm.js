@@ -19,45 +19,66 @@ function indexarNome(item) {
   let registro = indiceNomes.get(item)
   if (!registro) {
     const nome = normalizar(item[1])
-    const pai = normalizar(item[3] ?? '')
-    const iniciais = [...new Set([nome, pai].filter(Boolean))].flatMap(denominacao => {
-      const palavras = denominacao.split(' ')
-      const juntar = lista => lista.map(palavra => palavra[0]).join('')
-      return [juntar(palavras), juntar(palavras.filter(palavra => !conectivos.has(palavra)))]
-    })
-    registro = { nome, texto: normalizar(nomeFundo(item) + ' ' + pai), iniciais }
+    const pai = item[3] && item[3] !== item[1] ? normalizar(item[3]) : ''
+    const [id] = item
+    const subclasse = idPattern.exec(id)?.[2]
+    const tipo = subclasse ? 'subclasse ' + normalizar(subclasse) : id.startsWith('cvm-f-') ? 'fundo cadastro anterior' : 'classe'
+    registro = { nome, pai, texto: nome + ' ' + pai + ' ' + tipo }
     indiceNomes.set(item, registro)
   }
   return registro
 }
 
-function prioridadeNome(item, consulta, termos) {
-  const { nome, texto, iniciais } = indexarNome(item)
+function prioridadeNome({ nome, pai, texto }, consulta, termos) {
   if (nome === consulta) return 0
-  if (texto.includes(consulta)) return 1
-  const faltantes = termos.filter(termo => !texto.includes(termo))
-  if (!faltantes.length) return 2
-  if (faltantes.every(termo => /^[a-z]{2,5}$/.test(termo) && iniciais.some(sigla => sigla.includes(termo)))) return 3
+  if (nome.startsWith(consulta) || pai.startsWith(consulta)) return 1
+  if (texto.includes(consulta)) return 2
+  if (termos.every(termo => texto.includes(termo))) return 3
   return -1
+}
+
+function correspondeSiglas(registro, termos, posiveisSiglas) {
+  const faltantes = []
+  for (const termo of termos) {
+    if (registro.texto.includes(termo)) continue
+    if (!posiveisSiglas.has(termo)) return false
+    faltantes.push(termo)
+  }
+  registro.iniciais ??= [registro.nome, registro.pai].filter(Boolean).flatMap(denominacao => {
+    const palavras = denominacao.split(' ')
+    const juntar = lista => lista.map(palavra => palavra[0]).join('')
+    return [juntar(palavras), juntar(palavras.filter(palavra => !conectivos.has(palavra)))]
+  })
+  return faltantes.every(termo => registro.iniciais.some(sigla => sigla.includes(termo)))
 }
 
 export function buscarFundos(catalogo, busca, excluidos = []) {
   const consulta = normalizar(busca).replace(/\boff funds\b/g, 'of funds')
   const termos = consulta.split(' ')
   if (termos.join('').length < 3) return []
+  const possiveisSiglas = new Set(termos.filter(termo => /^[a-z]{2,5}$/.test(termo)))
   const cnpj = busca.replace(/[./\s-]/g, '').toUpperCase()
   const buscaCnpj = /\d/.test(cnpj) && /^[A-Z0-9]+$/.test(cnpj)
+  const cnpjCompleto = buscaCnpj && /^[A-Z0-9]{12}\d{2}$/.test(cnpj)
   const resultados = [[], [], [], []]
+  const candidatosSigla = []
   for (const item of catalogo) {
     if (excluidos.includes(item[0])) continue
     let prioridade
     if (buscaCnpj && item[2] === cnpj) prioridade = 0
     else if (buscaCnpj && (item[2].includes(cnpj) || item[4]?.includes(cnpj))) prioridade = 1
-    else prioridade = prioridadeNome(item, consulta, termos)
+    else if (cnpjCompleto) continue
+    else prioridade = prioridadeNome(indexarNome(item), consulta, termos)
     if (prioridade >= 0 && resultados[prioridade].length < 20) resultados[prioridade].push(item)
+    if (prioridade === -1 && possiveisSiglas.size) candidatosSigla.push(item)
     if (resultados[0].length === 20) break
   }
-  return resultados.flat().slice(0, 20)
+  const matches = resultados.flat().slice(0, 20)
+  for (const item of candidatosSigla) {
+    if (matches.length === 20) break
+    if (correspondeSiglas(indexarNome(item), termos, possiveisSiglas)) matches.push(item)
+  }
+  return matches
 }
 
 export function cotasDoFundo(grupo, item) {

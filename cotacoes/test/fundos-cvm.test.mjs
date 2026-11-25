@@ -14,6 +14,12 @@ test('a busca gera siglas a partir dos nomes e prioriza a grafia literal', () =>
   assert.deepEqual(buscarFundos([porSigla], 'atlântico fzc'), [])
 })
 
+test('um prefixo do nome vem antes de ocorrências no meio de palavras', () => {
+  const noMeio = ['cvm-c-00017024000153', 'Atlântico Responsabilidade Limitada', '00017024000153']
+  const prefixo = ['cvm-c-23731495000124', 'Itaú Fundo de Investimento', '23731495000124']
+  assert.deepEqual(buscarFundos([noMeio, prefixo], 'ita'), [prefixo, noMeio])
+})
+
 test('o CNPJ da própria classe tem prioridade sobre o CNPJ do fundo pai', () => {
   const cnpj = '23731495000124'
   const propria = ['cvm-c-' + cnpj, 'Classe principal', cnpj]

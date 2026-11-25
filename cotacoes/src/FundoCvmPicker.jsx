@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { buscarFundos, carregarCatalogoCvm, carregarFundoCvm, FONTE_CVM, LICENCA_CVM, nomeFundo } from './fundosCvm.js'
 
 const dateText = date => date.split('-').reverse().join('/')
@@ -29,10 +29,11 @@ export function useCotasCvm(ids, retry = 0) {
 
 export default function FundoCvmPicker({ onSelect, excluidos = vazio, selecionado }) {
   const [busca, setBusca] = useState('')
+  const buscaAdiada = useDeferredValue(busca)
   const [catalogo, setCatalogo] = useState(null)
   const [estado, setEstado] = useState('')
-  const matches = useMemo(() => catalogo ? buscarFundos(catalogo.items, busca, excluidos) : [],
-    [catalogo, busca, excluidos])
+  const matches = useMemo(() => catalogo ? buscarFundos(catalogo.items, buscaAdiada, excluidos) : [],
+    [catalogo, buscaAdiada, excluidos])
   async function carregar() {
     if (catalogo || estado === 'loading') return
     setEstado('loading')
@@ -55,10 +56,10 @@ export default function FundoCvmPicker({ onSelect, excluidos = vazio, selecionad
     </>}
     {catalogo && <>
       {matches.length > 0
-        ? <ul className="inv-cvm-matches" aria-label="Fundos encontrados">{matches.map(item =>
+        ? <ul className="inv-cvm-matches" aria-label="Fundos encontrados" aria-busy={busca !== buscaAdiada}>{matches.map(item =>
           <li key={item[0]}><button type="button" aria-pressed={selecionado === item[0] || undefined}
             onClick={() => { onSelect(item[0]); setBusca('') }}>{nomeFundo(item)}</button></li>)}</ul>
-        : <p role="status">{busca.trim().length < 3 ? 'Digite ao menos três caracteres.' : 'Nenhum fundo encontrado.'}</p>}
+        : <p role="status">{buscaAdiada.trim().length < 3 ? 'Digite ao menos três caracteres.' : 'Nenhum fundo encontrado.'}</p>}
       <p className="inv-nota">Base geral de {dateText(catalogo.manifest.first)} a {dateText(catalogo.manifest.last)}.
         A cobertura varia por fundo.</p>
     </>}
