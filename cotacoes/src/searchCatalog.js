@@ -16,7 +16,7 @@ export function staticSearchDocuments() {
       id: 'historia:' + caso.id, title: caso.nome + ': ' + caso.titulo,
       body: plainContent(caso), route: 'historias/' + caso.id, kind: 'História de empresa',
     })),
-    makeSearchDoc({id:'calculator:investimentos',title:'Investimentos: CDB, Fundos e Ações',body:'Projeção de CDB pelo DI futuro, simulação por cotas de fundos CVM e cenários de preço e proventos de ações.',route:'calculadora/investimentos',kind:'Calculadora'}),
+    makeSearchDoc({id:'calculator:investimentos',title:'Investimentos: CDB, Fundos e Ações',body:'Simulação de CDB com taxa anual informada, simulação por cotas de fundos CVM e cenários de preço e proventos de ações.',route:'calculadora/investimentos',kind:'Calculadora'}),
     makeSearchDoc({id:'calculator:cbs-caixa',title:'Reforma tributária: CBS e impacto no caixa',body:'Simulador indicativo de capital de giro, split payment, créditos tributários e gastos setoriais do IBGE. Faturamento, recebimento, pagamento e estoque.',route:'calculadora/cbs-caixa',kind:'Calculadora'}),
     makeSearchDoc({id:'learning:map',title:'Mapa do conhecimento',body:'Grafo interativo de setores, subsetores, conceitos e notícias dos últimos 7 dias. Explorar conexões com zoom e arraste.',route:'aprender/mapa',kind:'Área do painel'}),
     ...CURADORIA_TOPICS.map(topic => makeSearchDoc({ id: 'curadoria:' + topic.id, title: topic.label + ': notícias dos últimos sete dias', body: 'Curadoria automática de notícias em fontes oficiais e imprensa selecionada. Janela de 7 dias, 168 horas de publicação.', route: 'resumo', context: { newsTab: topic.id }, kind: 'Área do painel' })),
