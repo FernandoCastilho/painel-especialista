@@ -4,7 +4,7 @@ Calculadora CDC (`#calculadora/cdc`) reconstruída da planilha de CDC de Fernand
 
 ## 1. Diferença no IOF sobre parcelas
 Decisão de Fernando (25/11/2026): vale a regra legal (Decreto 6.306/2007, art. 7º), conferida na compilação da Câmara; IOF sempre financiado; taxa digitada. Entrou também o Simples/MEI até R$ 30 mil (0,00274% ao dia). A isenção do art. 9º, VI (automóvel até 127 HP) ficou de fora: vale só para táxi e pessoa com deficiência (art. 72 da Lei 8.383/1991).
-- Base do IOF adicional: liberado + tarifas + seguros, sem o IOF financiado (como a planilha). Se incluísse o IOF, seriam cerca de R$ 61 a mais no exemplo. A lei lida não define; decisão pendente de Fernando.
+- Base do IOF adicional (decisão de Fernando, 25/11/2026): 0,38% sobre o valor financiado já com o próprio IOF. No exemplo: R$ 1.971,21 (a planilha, sem o IOF, dá R$ 1.909,59). Resultado do exemplo: IOF total R$ 16.216,55, parcela R$ 15.472,03 (planilha: R$ 16.250,94 e R$ 15.473,20).
 - Caso da planilha: 500.000,00 liberado, tarifa de cadastro 2.523,00, 48x, carência 30 dias, 1,55% a.m., liberação 25/11/2026.
 - Planilha: IOF sobre PMT R$ 14.341,35 · IOF total R$ 16.250,94 · parcela R$ 15.473,20.
 - Painel (regra legal já usada no Capital de Giro: 0,0082% ao dia sobre a amortização, limite 365 dias):

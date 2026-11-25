@@ -60,7 +60,7 @@ export default function Cdc({ onBack }) {
         <p>A 1ª parcela vence na liberação + carência (em dias); as seguintes no mesmo dia dos meses seguintes, sem mudar para dia útil.</p>
         <p>Juros de cada parcela = saldo × ((1 + taxa ao mês) elevado a dias corridos do período ÷ 30, menos 1). Parcela fixa, que zera o saldo na última; a última acerta os centavos.</p>
         <p>Coeficiente = parcela ÷ (valor liberado + tarifas + seguros). % de entrada = (valor do bem − valor liberado) ÷ valor do bem.</p>
-        <p>IOF (Decreto 6.306/2007, art. 7º): adicional de 0,38% sobre valor liberado + tarifas + seguros; diário de 0,0082% (pessoa jurídica) sobre a amortização de cada parcela, pelos dias até o vencimento, com limite de 365 dias. Simples Nacional ou MEI, em operação de até R$ 30 mil: diário de 0,00274%. O IOF é sempre financiado e entra no próprio saldo.</p>
+        <p>IOF (Decreto 6.306/2007, art. 7º): adicional de 0,38% sobre o valor financiado, já com o próprio IOF; diário de 0,0082% (pessoa jurídica) sobre a amortização de cada parcela, pelos dias até o vencimento, com limite de 365 dias. Simples Nacional ou MEI, em operação de até R$ 30 mil: diário de 0,00274%. O IOF é sempre financiado e entra no próprio saldo.</p>
         <p>A isenção do art. 9º, VI (automóvel nacional até 127 HP) não entra: vale só para táxi e pessoa com deficiência (art. 72 da Lei 8.383/1991).</p>
         <p>Categoria, ano modelo e zero km não mudam a conta: vão só para o e-mail.</p>
         <p>Spread: (1 + taxa ao ano) = (1 + funding ao ano) × (1 + spread ao ano), com a taxa ao ano = (1 + taxa ao mês)^12 − 1. O funding vem da tabela pelo prazo; entre dois prazos da tabela, interpolado em linha reta; fora dela, o da ponta.</p>

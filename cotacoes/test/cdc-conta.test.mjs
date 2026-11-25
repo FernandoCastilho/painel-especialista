@@ -26,7 +26,9 @@ test('cronograma igual ao da planilha: datas, juros por dias corridos e parcela 
 test('saída da planilha: IOF adicional, coeficiente, datas e entrada', () => {
   const r = cdcConta({ valorBem: 500000, valorLiberado: 500000, tarifas: 2523, taxa: 1.55, prazo: 48, carenciaDias: 30, inicio: '2026-11-25' })
   assert.ok(r.ok)
-  assert.equal(r.iofAdicional, 1909.59)
+  // 0,38% sobre o valor financiado com o próprio IOF (decisão de Fernando, 25/11/2026); a planilha dá 1.909,59, sem o IOF.
+  assert.equal(r.iofAdicional, Math.round(r.principal * 0.38) / 100)
+  assert.equal(r.iofAdicional, 1971.21)
   assert.equal(r.primeira, '2026-12-25')
   assert.equal(r.ultima, '2030-11-25')
   assert.equal(r.pctEntrada, 0)
@@ -34,8 +36,8 @@ test('saída da planilha: IOF adicional, coeficiente, datas e entrada', () => {
   // Fechamento do IOF financiado: saldo = base + IOF, em centavos.
   assert.equal(r.principal, Math.round((502523 + r.iof) * 100) / 100)
   // Regra legal do painel (0,0082% ao dia, limite 365): R$ 14.243,60; a planilha mostra R$ 14.341,35 (diferença em aberto).
-  assert.equal(r.iofDiario, 14243.6)
-  assert.equal(r.parcela, 15470.14)
+  assert.equal(r.iofDiario, 14245.34)
+  assert.equal(r.parcela, 15472.03)
   assert.equal(r.rows.length, 48)
 })
 
@@ -67,7 +69,6 @@ test('IOF pela lei: Simples até R$ 30 mil usa 0,00274% ao dia; acima, 0,0082%',
   assert.equal(pj.tax.daily, 0.0082)
   assert.equal(simples.tax.daily, 0.00274)
   assert.ok(simples.iofDiario < pj.iofDiario)
-  assert.equal(simples.iofAdicional, pj.iofAdicional)
 })
 
 test('spread composto sobre o funding do prazo', async () => {

@@ -5,7 +5,7 @@
 // - Juros de cada parcela = saldo × ((1 + taxa a.m.)^(dias corridos do período / 30) − 1), em centavos.
 // - Parcela fixa (Price em dias corridos): a que zera o saldo na última; a última fecha os centavos.
 // - Coeficiente = parcela ÷ (valor liberado + tarifas + seguros).
-// - IOF adicional = 0,38% de (valor liberado + tarifas + seguros), como na planilha.
+// - IOF adicional = 0,38% do valor financiado com o próprio IOF (decisão de Fernando, 25/11/2026; a planilha usa a base sem o IOF).
 // - IOF diário = 0,0082% × dias até o vencimento (limite 365) sobre a amortização de cada parcela, com o IOF financiado
 //   (o saldo inclui o próprio IOF; repete até fechar em centavos). Mesmas alíquotas do resolveCreditIof do painel.
 //   Regra conferida no Decreto 6.306/2007, art. 7º (I, b; § 1º; § 15; VI), em 25/11/2026: PJ 0,0082% ao dia, limite de
@@ -70,10 +70,10 @@ export function cdcConta({ valorBem, valorLiberado, tarifas = 0, seguros = 0, ta
   if (!tax.ok) return fail(tax.error)
   const dues = cdcVencimentos(firstDue, prazo)
   const i = taxa / 100
-  const iofAdicional = cents(base * tax.additional / 100)
-  let principal = base, flow, iofDiario
+  let principal = base, flow, iofDiario, iofAdicional
   for (let step = 0; step < 30; step++) {
     flow = cdcCronograma(principal, i, inicio, dues)
+    iofAdicional = cents(principal * tax.additional / 100)
     iofDiario = cents(flow.rows.reduce((s, r) => s + r.amortization * Math.min(r.days, tax.maxDays) * tax.daily / 100, 0))
     const next = cents(base + iofAdicional + iofDiario)
     if (next === principal) break
