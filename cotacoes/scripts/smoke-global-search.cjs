@@ -65,6 +65,7 @@ const base=process.env.SMOKE_BASE_URL || 'http://127.0.0.1:5220';
  await trigger.click();await input.fill('CDB taxa anual');
  const investmentResult=dialog.getByRole('button',{name:/^Investimentos: CDB, Fundos e Ações/});
  await investmentResult.click();await dialog.waitFor({state:'hidden'});assert.match(p.url(),/#calculadora\/investimentos$/);
+ await p.getByRole('button',{name:'CDB, fundos e ações',exact:true}).click();
  await p.getByLabel('Taxa anual bruta (% a.a.)',{exact:true}).waitFor();
  // Closing search never remounts the current calculator or changes its values.
  await p.goto(base+'/#calculadora/giro');const field=p.locator('#cx-value');await field.fill('123456');await field.blur();const saved=await field.inputValue();await trigger.click();await input.fill('zzq-inexistente');await p.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});assert.equal(await field.inputValue(),saved);assert.match(p.url(),/#calculadora\/giro$/);
