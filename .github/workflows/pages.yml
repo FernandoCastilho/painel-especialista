@@ -401,8 +401,8 @@ jobs:
         with:
           path: ${{ runner.temp }}/cvm-cache
           key: fundos-cvm-v1-${{ steps.cvm-dia.outputs.data }}
-      - id: pages-package
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
+        id: pages-package
         with:
           path: cotacoes/dist
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
