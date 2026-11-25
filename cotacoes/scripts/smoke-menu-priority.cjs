@@ -238,7 +238,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    await mapa.waitFor()
    await page.waitForFunction(() => {
     const logos=[...document.querySelectorAll('.historia-marca img')]
-    return logos.length===3 && logos.every(img=>img.complete && img.naturalWidth>0)
+    return logos.length===6 && logos.every(img=>img.complete && img.naturalWidth>0)
    })
    assert.ok(await mapa.evaluate(el=>{
     const h=el.getBoundingClientRect(), b=[...el.querySelectorAll('button')].map(n=>n.getBoundingClientRect())
@@ -256,6 +256,15 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.equal(await mapa.locator('.historia-ligacao.is-active').count(),2)
    await page.goBack()
    await page.waitForURL('**/#historias/blockbuster')
+   for (const [nome,id] of [['Spotify','spotify'],['Uber','uber'],['Apple / iPhone','apple-iphone']]) {
+    await mapa.getByRole('button',{name:nome,exact:true}).click()
+    await page.waitForURL('**/#historias/'+id)
+    await page.getByRole('heading',{name:'Linha do tempo',exact:true}).waitFor()
+    assert.ok(await page.locator('.historia-fontes a').count()>=2)
+   }
+   await page.getByText(/Lançamento do iPhone: 2007/).waitFor()
+   await mapa.getByRole('button',{name:'Plataformas locais',exact:true}).click()
+   assert.deepEqual(await page.locator('.historia-comparacao button').allInnerTexts(),['iFood','Uber'])
    await page.keyboard.press('Alt+5')
    await page.waitForURL('**/#bndes')
    await page.keyboard.press('Alt+0')

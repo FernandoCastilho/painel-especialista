@@ -14,6 +14,21 @@ export const TEMAS_HISTORIAS = [
     titulo: 'Locação de vídeo',
     leitura: 'A Netflix levou o aluguel à casa do cliente pelo correio e depois pela internet. A Blockbuster também ofereceu aluguel online e entrega por correio, mas tentou aproveitar a própria rede de lojas. A comparação não é entre uma empresa que inovou e outra que não tentou: é entre modelos com custos e incentivos diferentes.',
   },
+  {
+    id: 'streaming',
+    titulo: 'Do arquivo ao streaming',
+    leitura: 'Netflix e Spotify transformaram a entrega de mídia em acesso sob demanda. A Netflix começou com DVDs e assinatura; o Spotify já estreou em streaming e combinou acesso gratuito com anúncios e uma opção paga. Licenças e retenção importam nos dois casos, ainda que os catálogos e os custos sejam diferentes.',
+  },
+  {
+    id: 'plataformas-locais',
+    titulo: 'Plataformas locais',
+    leitura: 'Uber e iFood coordenam serviços que precisam acontecer perto do consumidor. A demanda total não basta: oferta de motoristas ou entregadores, tempo de espera, distância e condições locais pesam na qualidade e na economia de cada operação.',
+  },
+  {
+    id: 'ecossistema-mobile',
+    titulo: 'Ecossistema móvel',
+    leitura: 'O iPhone e a App Store ajudaram a criar um canal de distribuição de aplicativos. Uber e iFood usam o celular para encontrar clientes, coordenar um serviço e acompanhar sua execução. A Apple opera uma camada diferente: o aparelho e a distribuição do software.',
+  },
 ]
 
 export const HISTORIAS = [
@@ -37,6 +52,8 @@ export const HISTORIAS = [
     ],
     conexoes: {
       'origem-fisica': 'O guia e o telefone validaram a demanda antes do site e do aplicativo.',
+      'plataformas-locais': 'Restaurantes, clientes e entregadores precisam estar próximos para o pedido chegar no prazo.',
+      'ecossistema-mobile': 'No aplicativo, o cliente encontra restaurantes, pede e acompanha a entrega sem ligar para a central.',
       logistica: 'A empresa passou da intermediação de pedidos também à coordenação de entregas, mantendo ambos os modelos.',
     },
     fontes: [
@@ -67,6 +84,7 @@ export const HISTORIAS = [
     conexoes: {
       'origem-fisica': 'A compra do serviço já era online, mas os filmes ainda chegavam em discos antes do streaming.',
       'locacao-video': 'A assinatura e a entrega em casa disputaram o mesmo público que alugava filmes nas lojas.',
+      streaming: 'O streaming passou a entregar o filme pela internet, sobre um modelo de assinatura que já existia nos DVDs.',
       logistica: 'O streaming substituiu o transporte dos discos pela distribuição pela internet, sem desativar a operação postal de um dia para o outro.',
     },
     fontes: [
@@ -104,6 +122,83 @@ export const HISTORIAS = [
       { titulo: 'Blockbuster: relatório anual arquivado na SEC', url: 'https://www.sec.gov/Archives/edgar/data/1085734/000119312511186981/d10k.htm' },
       { titulo: 'Blockbuster: comunicado do pedido de Chapter 11', url: 'https://www.sec.gov/Archives/edgar/data/1085734/000119312510215765/d8k.htm' },
       { titulo: 'Blockbuster: conclusão da venda de ativos à DISH', url: 'https://www.sec.gov/Archives/edgar/data/1085734/000119312511132032/d8k.htm' },
+    ],
+  },
+  {
+    id: 'spotify',
+    nome: 'Spotify',
+    fundacao: '2006',
+    local: 'Suécia',
+    setor: 'Áudio e streaming',
+    titulo: 'Do download ao acesso sob demanda',
+    origem: 'Fundado na Suécia em 2006, o Spotify lançou seu serviço em 2008. A proposta era oferecer uma forma legal e prática de ouvir música pela internet, num momento em que a distribuição digital convivia com a pirataria.',
+    virada: 'Em vez de cobrar por faixa, a empresa ofereceu acesso gratuito com anúncios e uma opção Premium por assinatura. O modelo deu aos ouvintes uma forma de experimentar o serviço antes de pagar, apoiado em acordos com titulares dos direitos musicais.',
+    leitura: 'Número de ouvintes não equivale a margem. Para avaliar o modelo, vale acompanhar conversão para o plano pago, permanência dos assinantes e custo dos direitos sobre o catálogo.',
+    marcos: [
+      ['2006', 'Fundação do Spotify na Suécia.'],
+      ['2008', 'Lançamento do serviço de streaming.'],
+      ['2011', 'O serviço chega aos Estados Unidos.'],
+      ['2018', 'A companhia estreia na Bolsa de Nova York por listagem direta.'],
+    ],
+    conexoes: {
+      streaming: 'A música chega sob demanda. O plano gratuito com anúncios convive com a assinatura Premium.',
+    },
+    fontes: [
+      { titulo: 'Spotify: fundação e lançamento nos Estados Unidos', url: 'https://newsroom.spotify.com/2026-03-03/spotify-20th-anniversary-sxsw/' },
+      { titulo: 'Spotify: histórico institucional e estreia em 2008', url: 'https://newsroom.spotify.com/company-info/' },
+      { titulo: 'SEC: modelo de negócios e listagem direta', url: 'https://www.sec.gov/Archives/edgar/data/1639920/000156459019002688/R7.htm' },
+    ],
+  },
+  {
+    id: 'uber',
+    nome: 'Uber',
+    fundacao: '2009',
+    local: 'Estados Unidos',
+    setor: 'Mobilidade',
+    titulo: 'De carros executivos a corridas mais acessíveis',
+    origem: 'A Uber começou em 2009 com a proposta de chamar carros executivos pelo celular. Após testes no início de 2010, lançou o serviço em São Francisco naquele ano.',
+    virada: 'A UberX ofereceu uma alternativa mais barata em 2012. A mudança ampliou o público e tornou ainda mais importante coordenar a disponibilidade de motoristas e a demanda em cada região.',
+    leitura: 'Um aplicativo pode se espalhar entre cidades, mas a corrida continua local. Vale analisar tempo de espera, distância até o embarque e disponibilidade de motoristas, além de preço e volume de corridas.',
+    marcos: [
+      ['2009', 'Fundação e desenvolvimento do protótipo.'],
+      ['2010', 'Testes iniciais, lançamento em São Francisco e constituição como UberCab.'],
+      ['2011', 'A empresa passa a se chamar Uber Technologies.'],
+      ['2012', 'Estreia da UberX, opção de menor preço.'],
+    ],
+    conexoes: {
+      'plataformas-locais': 'A espera pelo carro depende do equilíbrio entre passageiros e motoristas na mesma região.',
+      'ecossistema-mobile': 'O aplicativo concentra a solicitação, o encontro com o motorista e o acompanhamento da corrida.',
+    },
+    fontes: [
+      { titulo: 'Uber: relato de fundação e testes', url: 'https://www.uber.com/us/en/newsroom/ubers-founding/' },
+      { titulo: 'SEC: fundação e mudanças societárias', url: 'https://www.sec.gov/Archives/edgar/data/1543151/000155278125000283/e25324_uber-424b2.htm' },
+      { titulo: 'Uber: lançamento da UberX', url: 'https://www.uber.com/us/en/newsroom/choice-is-a-beautiful-thing/' },
+    ],
+  },
+  {
+    id: 'apple-iphone',
+    nome: 'Apple / iPhone',
+    anoLancamento: '2007',
+    rotuloData: 'Lançamento do iPhone',
+    local: 'Estados Unidos',
+    setor: 'Tecnologia e distribuição de software',
+    titulo: 'De aparelho a plataforma',
+    origem: 'A Apple apresentou o primeiro iPhone em janeiro de 2007, reunindo telefone, iPod e acesso à internet num único aparelho com tela sensível ao toque. As vendas nos Estados Unidos começaram em junho.',
+    virada: 'Em julho de 2008, a App Store abriu com 500 aplicativos. Desenvolvedores passaram a poder distribuir software para o iPhone por um canal da Apple. O valor do aparelho passou a depender também do que outras empresas criavam para ele.',
+    leitura: 'O ecossistema ganha valor quando os dois lados crescem: mais usuários atraem desenvolvedores e mais aplicativos úteis fazem o aparelho valer mais para quem o usa. O ponto de atenção é a dependência de um canal de distribuição com regras próprias.',
+    marcos: [
+      ['Jan. 2007', 'A Apple apresenta o primeiro iPhone.'],
+      ['Jun. 2007', 'Começam as vendas nos Estados Unidos.'],
+      ['Jul. 2008', 'A App Store abre com 500 aplicativos.'],
+      ['Jul. 2018', 'A Apple publica o balanço dos primeiros dez anos da App Store.'],
+    ],
+    conexoes: {
+      'ecossistema-mobile': 'A loja tornou o iPhone um canal de distribuição para aplicativos de terceiros, além de um produto de hardware.',
+    },
+    fontes: [
+      { titulo: 'Apple: apresentação do primeiro iPhone', url: 'https://www.apple.com/newsroom/2007/01/09Apple-Reinvents-the-Phone-with-iPhone/' },
+      { titulo: 'Apple: os primeiros dez anos do iPhone', url: 'https://www.apple.com/newsroom/2017/01/iphone-at-ten-the-revolution-continues/' },
+      { titulo: 'Apple: lançamento e dez anos da App Store', url: 'https://www.apple.com/newsroom/2018/07/app-store-turns-10/' },
     ],
   },
 ]
