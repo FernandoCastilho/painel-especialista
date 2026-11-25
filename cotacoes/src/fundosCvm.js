@@ -4,11 +4,9 @@ export const LICENCA_CVM = 'https://opendatacommons.org/licenses/odbl/1-0/'
 const idPattern = /^cvm-[fc]-([A-Z0-9]{12}\d{2})(?:-([A-Za-z0-9_-]{1,64}))?$/
 export const isFundoCvm = id => idPattern.test(id) && (!id.startsWith('cvm-f-') || id.length === 20)
 const normalizar = s => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-const abreviacoes = new Map([
-  ['cp', /\b(?:cp|cred(?:ito)?\.?\s+priv(?:ado)?)\b/],
-  ['ie', /\b(?:ie|invest(?:imento)?\.?\s+no\s+exterior)\b/],
-  ['rl', /\b(?:rl|resp(?:onsabilidade)?\.?\s+(?:limitada|ltda))\b/],
-])
+  .replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
+const conectivos = new Set('a as com da das de do dos e em na nas no nos o os para por'.split(' '))
+const indiceNomes = new WeakMap()
 
 export function nomeFundo([id, nome, cnpj]) {
   const formatado = cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5')
@@ -17,18 +15,68 @@ export function nomeFundo([id, nome, cnpj]) {
   return nome + ' · ' + formatado + ' · ' + tipo
 }
 
+function indexarNome(item) {
+  let registro = indiceNomes.get(item)
+  if (!registro) {
+    const nome = normalizar(item[1])
+    const pai = item[3] && item[3] !== item[1] ? normalizar(item[3]) : ''
+    const [id] = item
+    const subclasse = idPattern.exec(id)?.[2]
+    const tipo = subclasse ? 'subclasse ' + normalizar(subclasse) : id.startsWith('cvm-f-') ? 'fundo cadastro anterior' : 'classe'
+    registro = { nome, pai, texto: nome + ' ' + pai + ' ' + tipo }
+    indiceNomes.set(item, registro)
+  }
+  return registro
+}
+
+function prioridadeNome({ nome, pai, texto }, consulta, termos) {
+  if (nome === consulta) return 0
+  if (nome.startsWith(consulta) || pai.startsWith(consulta)) return 1
+  if (texto.includes(consulta)) return 2
+  if (termos.every(termo => texto.includes(termo))) return 3
+  return -1
+}
+
+function correspondeSiglas(registro, termos, posiveisSiglas) {
+  const faltantes = []
+  for (const termo of termos) {
+    if (registro.texto.includes(termo)) continue
+    if (!posiveisSiglas.has(termo)) return false
+    faltantes.push(termo)
+  }
+  registro.iniciais ??= [registro.nome, registro.pai].filter(Boolean).flatMap(denominacao => {
+    const palavras = denominacao.split(' ')
+    const juntar = lista => lista.map(palavra => palavra[0]).join('')
+    return [juntar(palavras), juntar(palavras.filter(palavra => !conectivos.has(palavra)))]
+  })
+  return faltantes.every(termo => registro.iniciais.some(sigla => sigla.includes(termo)))
+}
+
 export function buscarFundos(catalogo, busca, excluidos = []) {
-  const termos = normalizar(busca.trim()).replace(/\boff\s+funds\b/g, 'of funds').split(/\s+/)
+  const consulta = normalizar(busca).replace(/\boff funds\b/g, 'of funds')
+  const termos = consulta.split(' ')
   if (termos.join('').length < 3) return []
+  const possiveisSiglas = new Set(termos.filter(termo => /^[a-z]{2,5}$/.test(termo)))
   const cnpj = busca.replace(/[./\s-]/g, '').toUpperCase()
   const buscaCnpj = /\d/.test(cnpj) && /^[A-Z0-9]+$/.test(cnpj)
-  const matches = []
+  const cnpjCompleto = buscaCnpj && /^[A-Z0-9]{12}\d{2}$/.test(cnpj)
+  const resultados = [[], [], [], []]
+  const candidatosSigla = []
   for (const item of catalogo) {
     if (excluidos.includes(item[0])) continue
-    const nome = normalizar(nomeFundo(item) + ' ' + (item[3] ?? ''))
-    if ((buscaCnpj && (item[2].includes(cnpj) || item[4]?.includes(cnpj))) ||
-        termos.every(termo => abreviacoes.get(termo)?.test(nome) ?? nome.includes(termo))) matches.push(item)
+    let prioridade
+    if (buscaCnpj && item[2] === cnpj) prioridade = 0
+    else if (buscaCnpj && (item[2].includes(cnpj) || item[4]?.includes(cnpj))) prioridade = 1
+    else if (cnpjCompleto) continue
+    else prioridade = prioridadeNome(indexarNome(item), consulta, termos)
+    if (prioridade >= 0 && resultados[prioridade].length < 20) resultados[prioridade].push(item)
+    if (prioridade === -1 && possiveisSiglas.size) candidatosSigla.push(item)
+    if (resultados[0].length === 20) break
+  }
+  const matches = resultados.flat().slice(0, 20)
+  for (const item of candidatosSigla) {
     if (matches.length === 20) break
+    if (correspondeSiglas(indexarNome(item), termos, possiveisSiglas)) matches.push(item)
   }
   return matches
 }

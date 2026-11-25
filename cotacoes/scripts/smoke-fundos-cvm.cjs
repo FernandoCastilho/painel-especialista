@@ -29,6 +29,7 @@ async function fixtures(page) {
   await page.route('**/cvm/' + catalogo, route => route.fulfill({ body: gzipSync(JSON.stringify([
     [id, nome, cnpj],
     ['cvm-c-23731495000124', 'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA', '23731495000124'],
+    ['cvm-c-10000000000100', 'Atlântico Fundo de Investimento em Cotas', '10000000000100'],
   ])) }))
   await page.route('**/cvm/' + arquivo, route => route.fulfill({ json: { [id]: rows } }))
 }
@@ -39,6 +40,12 @@ async function selecionarFundo(region) {
   await busca.fill('Itaú Of Funds Orion Mult CP IE FIF DA CIC RL')
   if (!real) await region.getByRole('button', { name: 'Tentar novamente', exact: true }).click()
   await region.getByRole('button', { name: /23\.731\.495\/0001-24 · Classe$/ }).waitFor()
+  if (!real) {
+    await busca.fill('')
+    await busca.pressSequentially('Atlantico FIC')
+    await region.getByRole('button', { name: /10\.000\.000\/0001-00 · Classe$/ }).waitFor()
+    assert.equal(await region.getByRole('button', { name: /23\.731\.495\/0001-24 · Classe$/ }).count(), 0)
+  }
   await busca.fill(real ? 'renda fixa exponencial' : 'credito privado')
   await region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ }).click()
 }
