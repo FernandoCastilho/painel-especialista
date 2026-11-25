@@ -29,3 +29,11 @@ Decisão de Fernando (25/11/2026): vale a regra legal (Decreto 6.306/2007, art. 
 - Saíram: ano modelo, zero km, perfil de IOF (sempre PJ geral), liberação (agora "Data da simulação", sempre hoje), tarifa de avaliação, registro de contrato e os três seguros.
 - Resultado: "Resultado Simulação", só com o IOF total.
 - E-mail em arquivo do Outlook (.eml) e imagem para o WhatsApp, os dois com avisos de cotação indicativa.
+
+## 6. Ajustes de 25/11/2026, noite (pedido de Fernando)
+- Praça do contrato (mesma busca e calendários das outras calculadoras de crédito): vencimento em fim de semana, feriado nacional, feriado da praça ou 31/12 passa para o próximo dia útil; juros e IOF contam até essa data. A planilha não ajusta.
+  Caso de referência (500.000,00, tarifa 2.523,00, 48x, 1,55% a.m., carência 30 dias, 25/11/2026): sem ajuste, parcela R$ 15.472,03 e IOF R$ 16.216,55; com dia útil, parcela R$ 15.476,47 e IOF R$ 16.225,61 (16 vencimentos mudam de dia, o primeiro de 25/12 para 28/12).
+- Saíram da tela a categoria (só aparecia no e-mail) e o coeficiente (a conta continua).
+- Campos em grade horizontal: 4 colunas no computador, 2 no tablet, 1 no celular. Caminhão ao lado do título.
+- Correção: o IOF financiado às vezes alternava entre dois centavos e a tela dava erro (cerca de 1% das simulações). Agora fica o maior valor e o centavo vai no IOF diário.
+- Em aberto: carência longa com prazo longo é bloqueada quando a 1ª parcela não cobre os juros da carência (ex.: 1,55% a.m. em 48x aceita até 58 dias); CET não é calculado.

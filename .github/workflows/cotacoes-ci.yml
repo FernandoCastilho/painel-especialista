@@ -113,6 +113,17 @@ jobs:
         run: EMPRESTIMO_4131_QA_OUTPUT="$RUNNER_TEMP/qa-universal/emprestimo-4131" node scripts/smoke-emprestimo-4131.cjs
       - name: Conferir Árvore de Crédito (folha, CNPJ simulado e visão do cliente)
         run: ARVORE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/arvore" node scripts/smoke-arvore-credito.cjs
+      - name: Conferir CDC (campos na horizontal, praça do contrato, sem categoria e sem coeficiente)
+        run: CDC_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cdc" node scripts/smoke-cdc.cjs
+      - name: Capturas do CDC
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdc-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/cdc
+          if-no-files-found: warn
+          retention-days: 7
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4

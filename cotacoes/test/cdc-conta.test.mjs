@@ -29,16 +29,18 @@ test('saída da planilha: IOF adicional, coeficiente, datas e entrada', () => {
   assert.ok(r.ok)
   // 0,38% sobre o valor financiado com o próprio IOF (decisão de Fernando, 25/11/2026); a planilha dá 1.909,59, sem o IOF.
   assert.equal(r.iofAdicional, Math.round(r.principal * 0.38) / 100)
-  assert.equal(r.iofAdicional, 1971.21)
-  assert.equal(r.primeira, '2026-12-25')
+  // Vencimentos em dia útil (pedido de Fernando, 25/11/2026): 25/12/2026 (Natal) passa para 28/12; a planilha não ajusta.
+  // Sem o ajuste: adicional 1.971,21, IOF diário 14.245,34, parcela 15.472,03.
+  assert.equal(r.iofAdicional, 1971.24)
+  assert.equal(r.primeira, '2026-12-28')
   assert.equal(r.ultima, '2030-11-25')
   assert.equal(r.pctEntrada, 0)
   assert.equal(r.coeficiente.toFixed(5), (r.parcela / 502523).toFixed(5))
   // Fechamento do IOF financiado: saldo = base + IOF, em centavos.
   assert.equal(r.principal, Math.round((502523 + r.iof) * 100) / 100)
   // Regra legal do painel (0,0082% ao dia, limite 365): R$ 14.245,34 (com o adicional sobre o valor já com IOF); a planilha mostra R$ 14.341,35 (diferença em aberto).
-  assert.equal(r.iofDiario, 14245.34)
-  assert.equal(r.parcela, 15472.03)
+  assert.equal(r.iofDiario, 14254.37)
+  assert.equal(r.parcela, 15476.47)
   assert.equal(r.rows.length, 48)
 })
 
@@ -54,10 +56,10 @@ test('erros de entrada', () => {
 
 test('e-mail em arquivo: resumo, parcelas e avisos de cotação indicativa, sem spread', () => {
   const result = cdcConta({ valorBem: 500000, valorLiberado: 500000, tarifas: 2523, taxa: 1.55, prazo: 48, carenciaDias: 30, inicio: '2026-11-25' })
-  const c = cdcEmlConteudo({ result, info: { categoria: 'Pesado', carenciaDias: 30, dataSimulacao: '2026-11-25' } })
+  const c = cdcEmlConteudo({ result, info: { carenciaDias: 30, dataSimulacao: '2026-11-25', praca: 'Sorocaba (SP)' } })
   assert.match(c.assunto, /^CDC · cotação indicativa/)
   assert.ok(c.nome.endsWith('.eml'))
-  for (const parte of ['Valor da parcela', 'IOF total', '48 | 25/11/2030', 'AVISOS IMPORTANTES', 'Não constitui proposta']) assert.ok(c.texto.includes(parte), parte)
+  for (const parte of ['Valor da parcela', 'IOF total', 'Sorocaba (SP)', '48 | 25/11/2030', 'AVISOS IMPORTANTES', 'Não constitui proposta']) assert.ok(c.texto.includes(parte), parte)
   for (const aviso of AVISOS_CDC) assert.ok(c.texto.includes(aviso))
   assert.ok(!/spread/i.test(c.texto + c.html), 'spread é interno')
 })
@@ -105,8 +107,10 @@ test('spread composto sobre o funding do prazo, e a conta reversa devolve a mesm
 })
 
 test('bordas: fim de mês, limite de 365 dias do IOF e carência que não cabe na 1ª parcela', () => {
+  assert.deepEqual(cdcVencimentos('2027-01-31', 3), ['2027-01-31', '2027-02-28', '2027-03-31'])
+  // 31/01 e 28/02/2027 caem no domingo: passam para segunda.
   const r = cdcConta({ valorBem: 100000, valorLiberado: 100000, taxa: 1, prazo: 3, carenciaDias: 30, inicio: '2027-01-01' })
-  assert.deepEqual(r.rows.map(x => x.date), ['2027-01-31', '2027-02-28', '2027-03-31'])
+  assert.deepEqual(r.rows.map(x => x.date), ['2027-02-01', '2027-03-01', '2027-03-31'])
   const longo = cdcConta({ valorBem: 100000, valorLiberado: 100000, taxa: 1, prazo: 1, carenciaDias: 180, inicio: '2026-11-25' })
   assert.equal(longo.iofDiario, Math.round(longo.principal * 0.000082 * 180 * 100) / 100)
   const ano = cdcConta({ valorBem: 100000, valorLiberado: 100000, taxa: 0, prazo: 24, carenciaDias: 30, inicio: '2026-11-25' })
@@ -150,4 +154,20 @@ test('IOF financiado fecha mesmo quando o centavo alterna (2% a.m., 36x, carênc
     if (!x.ok && /centavos/.test(x.error)) falhas++
   }
   assert.equal(falhas, 0)
+})
+
+test('praça do contrato: feriado local adia o vencimento e os juros e o IOF contam até o dia útil', () => {
+  // 15/08/2028 (terça) é feriado em Sorocaba (aniversário da cidade), não no calendário nacional.
+  const base = { valorBem: 200000, valorLiberado: 200000, tarifas: 2523, taxa: 1.55, prazo: 12, carenciaDias: 30, inicio: '2028-07-16' }
+  const br = cdcConta(base), sor = cdcConta({ ...base, calendars: ['BR', 'SPE', 'SOR'] })
+  assert.equal(br.primeira, '2028-08-15')
+  assert.equal(sor.primeira, '2028-08-16')
+  assert.equal(sor.rows[0].days, br.rows[0].days + 1)
+  assert.ok(sor.rows[0].interest > br.rows[0].interest)
+  assert.deepEqual(sor.rows.slice(1).map(x => x.date), br.rows.slice(1).map(x => x.date))
+  assert.equal(cdcConta({ ...base, calendars: ['XX'] }).ok, false)
+  // Todos os vencimentos em dia útil da praça (nem fim de semana, nem 31/12).
+  for (const x of cdcConta({ ...base, prazo: 60, inicio: '2026-11-30', calendars: ['BR', 'SPE', 'SOR'] }).rows) {
+    assert.ok(![0, 6].includes(new Date(x.date + 'T00:00:00Z').getUTCDay()) && !x.date.endsWith('-12-31') && !x.date.endsWith('-08-15'), x.date)
+  }
 })
