@@ -11,7 +11,7 @@ const nota = 'Simulação indicativa, sujeita à análise e aprovação. O CET e
 const resumo = item => [
   ['Valor financiado', brl(item.valor)], ['Prazo', meses(item.prazo)], ['Carência', meses(item.carencia)],
   [rotulos[item.custo], taxa(item.custoFinanceiro)], ['Taxa do BNDES', taxa(item.taxaBndes)], ['Spread do agente financeiro', taxa(item.taxaAgente)],
-  ['TAC', brl(item.tac)], ['CET estimado', taxa(item.cet)],
+  ['TAC', brl(item.tac)], [item.indice ? 'CET estimado com índice' : 'CET estimado', taxa(item.cet)],
 ]
 const emLinha = ([rotulo, valor]) => rotulo + ': ' + valor
 
@@ -24,11 +24,11 @@ const txt = (s, x, y, size = 10, fonte = 'R') => 'BT /' + fonte + ' ' + size + '
 const pagina = (titulo, nome, detalhes, indice, linhas) => [
   '0.06 0.18 0.38 rg', txt('BNDES Finame | Simulação de financiamento', 42, 796, 17, 'B'),
   txt(nome, 42, 771, 12, 'B'), '0.1 0.15 0.23 rg',
-  ...detalhes.map((s, i) => txt(s, i % 2 ? 308 : 42, 736 - 19 * Math.floor(i / 2), 9)),
+  ...detalhes.map((s, i) => txt(s, i % 2 ? 308 : 42, 736 - 16 * Math.floor(i / 2), 9)),
   ...indice.map((s, i) => txt(s, 42, 607 - i * 11, 8)),
   txt(titulo, 42, 575, 10, 'B'),
   '0.8 0.85 0.91 RG 42 565 m 553 565 l S',
-  ...linhas.map((s, i) => txt(s, 42, 549 - 17 * i, 9, 'M')),
+  ...tabelaLinhas(linhas),
   '0.3 0.35 0.43 rg', txt(nota, 42, 46, 9),
 ].join('\n')
 
@@ -53,10 +53,19 @@ function pdfDasPaginas(paginas) {
     + 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + pdf.length + '\n%%EOF\n'
 }
 
-const celulas = (v, valores) => v.padEnd(19) + valores.map(s => s.padStart(14)).join('')
-const cronograma = (item, corrige) => (item.parcelas || []).map((p, i) => celulas((p.mes ?? i + 1) + '  ' + dmy(p.vencimento), [
-  ...corrige ? [brl(p.correcao)] : [], brl(p.juros), brl(p.amortizacao), brl(p.parcela), brl(p.saldo),
-]))
+const cronograma = (item, corrige) => (item.parcelas || []).map((p, i) => [(p.mes ?? i + 1) + '  ' + dmy(p.vencimento),
+  ...(corrige ? [brl(p.correcao)] : []), brl(p.juros), brl(p.amortizacao), brl(p.parcela), brl(p.saldo),
+])
+function tabelaLinhas(linhas) {
+  const numericas = linhas[0].length - 1
+  const largura = 418 / numericas
+  const max = Math.max(...linhas.flatMap(r => r.slice(1).map(s => s.length)))
+  const fonte = Math.min(9, (largura - 6) / (max * .6))
+  return linhas.flatMap(([data, ...numeros], i) => {
+    const y = 549 - 17 * i
+    return [txt(data, 42, y, 9, 'M'), ...numeros.map((s, k) => txt(s, 553 - largura * (numericas - k - 1) - s.length * fonte * .6, y, fonte, 'M'))]
+  })
+}
 
 export function bndesPdfEml({ itens }) {
   if (!itens?.length) throw new Error('Cotação sem resultado')
@@ -75,12 +84,13 @@ export function bndesPdfEml({ itens }) {
       }, []),
     ] : []
     const detalhes = [...resumo(item), ['Condições', (item.amortizacao || 'SAC') + ' · juros ' + (item.periodicidade || '—')], ['Liberação', item.liberacao || '—'],
-      ['Taxa final', taxa(item.taxa)], ['Total estimado', brl(item.total)], ['IOF', brl(item.iof)], ['Garantia FGI (ECG)', brl(item.fgi?.ecg)],
+      ['Taxa final', taxa(item.taxa)], ['Total estimado', brl(item.total)], ['IOF', brl(item.iof)], ['Garantia FGI (ECG)', brl(item.fgi?.ecg ?? 0)],
+      ...(item.indice ? [['CET da parte fixa (sem índice)', taxa(item.cetFixo?.anual)]] : []),
     ].map(emLinha)
     const tamanho = 28
     return Array.from({ length: Math.max(1, Math.ceil(linhas.length / tamanho)) }, (_, p) =>
       pagina('Cronograma de pagamentos | ' + (p + 1) + '/' + Math.max(1, Math.ceil(linhas.length / tamanho)), nomeOpcao(item, i, itens.length),
-        p === 0 ? detalhes : [], p === 0 ? indice : [], [celulas('Nº e vencimento', [...corrige ? ['Correção'] : [], 'Juros', 'Amortização', 'Parcela', 'Saldo']), ...linhas.slice(p * tamanho, (p + 1) * tamanho)]))
+        p === 0 ? detalhes : [], p === 0 ? indice : [], [['Nº e vencimento', ...(corrige ? ['Correção'] : []), 'Juros', 'Amortização', 'Parcela', 'Saldo'], ...linhas.slice(p * tamanho, (p + 1) * tamanho)]))
   })
   const fronteira = 'painel-pdf-' + Math.random().toString(36).slice(2)
   const assunto = 'BNDES Finame | Simulação de ' + brl(itens[0].valor) + ' | ' + meses(itens[0].prazo)

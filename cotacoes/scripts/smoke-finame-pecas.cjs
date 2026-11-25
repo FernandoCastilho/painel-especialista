@@ -32,6 +32,7 @@ async function check(page) {
   assert.equal(await flow.evaluate(el => el.open), false)
   await history.locator('summary').click()
   await history.getByText(/DI no prazo de 48 meses/).waitFor()
+  await history.locator('svg.ml-svg line[data-referencia=mercado]').waitFor()
   assert.match(await history.innerText(), /TFC:[\s\S]*diferença de −1,50 p.p. frente ao DI/)
   await page.locator('#fm-compare').check()
   assert.match(await history.innerText(), /TFB:[\s\S]*diferença de −0,50 p.p. frente ao DI/)

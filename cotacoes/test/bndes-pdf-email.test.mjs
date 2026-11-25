@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { bndesPdfEml } from '../src/bndesPdfEml.js'
-import { bndesDiNoPrazo } from '../src/bndesHistorico.js'
+import { bndesDiNoPrazo, historicoIndexadores } from '../src/bndesHistorico.js'
 
 const item = { custo: 'tfb', valor: 100000, prazo: 48, carencia: 3, custoFinanceiro: 12, taxaBndes: 1.15, taxaAgente: 3.1, tac: 1000, cet: 18.42, taxa: 17, total: 122000, parcelas: Array.from({ length: 48 }, (_, i) => ({ mes: i + 1, vencimento: '2027-01-15', parcela: 2500, juros: 500, amortizacao: 2000, saldo: 45000 })) }
 
@@ -29,4 +29,14 @@ test('DI no prazo da operação usa a curva mais recente e não extrapola', () =
   assert.deepEqual(bndesDiNoPrazo(br, 3), { data: '2026-11-25', taxa: 14 })
   assert.equal(bndesDiNoPrazo(br, 4), null)
   assert.equal(bndesDiNoPrazo(null, 4), null)
+})
+
+test('cada pós-fixado traz o histórico do índice observado sem misturar unidades', () => {
+  const data = { ipca: { series: { points: [{ period: '2026-10', y12: 4.7 }] } }, selic: [[Date.UTC(2026, 10, 25), 14]], dolar: [['2026-11-25', 5.4]] }
+  assert.deepEqual(historicoIndexadores(['tfc', 'tfb'], data), [])
+  const series = historicoIndexadores(['tlp', 'lcd', 'tfbd'], data)
+  assert.deepEqual(series.map(s => [s.id, s.unit, s.list[0]?.period, s.list[0]?.value]), [
+    ['ipca', '% a.a.', '2026-10-01', 4.7], ['selic', '% a.a.', '2026-11-25', 14], ['usd', 'R$', '2026-11-25', 5.4],
+  ])
+  assert.deepEqual(historicoIndexadores(['tfbd'], {})[0].list, [])
 })

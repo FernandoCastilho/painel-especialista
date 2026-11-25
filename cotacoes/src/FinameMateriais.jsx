@@ -27,7 +27,7 @@ import EmailEnvelope, { EmailEnvelopePdf } from './EmailEnvelope.jsx'
 import WhatsAppCotacao from './WhatsAppCotacao.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
 import { useCurves } from './useCurves.js'
-import { bndesDiNoPrazo } from './bndesHistorico.js'
+import { bndesDiNoPrazo, bndesSerie, historicoIndexadores } from './bndesHistorico.js'
 import './BndesPecas.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -142,6 +142,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const quotes = { tfc, tfb, tlp: validPosQuote(rawTlp) ? rawTlp : null, lcd: validPosQuote(rawLcd) ? rawLcd : null, tfbd: validPosQuote(rawTfbd) ? rawTfbd : null }
   const rates = Object.fromEntries(['tfc', 'tfb', ...CUSTOS_POS].map(id => [id, isFinamePos(id) ? resolvePosRate(id, quotes[id], manualRates[id] ?? null) : resolveFinameRate(id, quotes[id], manualRates[id] ?? null)]))
   const emUso = comparar ? [custo, outro] : [custo]
+  const ipca = useDataFile('ipca.json')
   // Projeção do índice (Focus ano a ano, editável): do ano da liberação até o último ano do Focus.
   const anoLib = hoje ? hoje.getFullYear() : new Date().getFullYear()
   const projecoes = Object.fromEntries(CUSTOS_POS.map(id => {
@@ -301,8 +302,11 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   }
   const historyItems = emUso.filter(id => taxasHistoricas[id]).map(id => {
     const [name, points] = taxasHistoricas[id]
-    return { id, name, short: name.split(' · ')[0], unit: '% a.a.', decimals: 2, list: points.map(([period, value]) => ({ period, value })) }
+    return bndesSerie(id, name, points)
   })
+  const seriesIndices = historicoIndexadores(emUso, { ipca: ipca.data, selic: macro.data?.selic, dolar: dolarPts })
+  const historyRates = [...historyItems, ...seriesIndices.filter(serie => serie.unit === '% a.a.')]
+  const historyCurrency = seriesIndices.filter(serie => serie.unit === 'R$')
   const diNoPrazo = bndesDiNoPrazo(curvas.data?.br, prazo)
   // Vencimento de cada linha do fluxo: o que a conta devolve ou, sem ele, o dia 15 do mês (ou o próximo dia útil).
   const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx))
@@ -543,9 +547,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </div>
 
       {historyItems.length > 0 && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
-        <p className="cx-hint">Histórico da referência pública de cada opção dos últimos 12 meses.{ajuda('Histórico dos indexadores', 'Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, o gráfico mostra a parte fixa, sem IPCA, Selic ou dólar. A curva DI é uma referência de mercado por prazo, não uma série histórica nem uma projeção do indexador.')}</p>
+        <p className="cx-hint">Histórico da referência pública de cada opção dos últimos 12 meses.{ajuda('Histórico dos indexadores', 'Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, mostramos a parte fixa e o indexador observado: IPCA em 12 meses, meta Selic ou dólar em reais. O dólar tem eixo separado porque não é uma taxa. A linha tracejada marca a taxa DI no prazo desta operação, na data indicada. Ela não é o histórico da DI. A curva por vencimento aparece logo abaixo.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
-        <ComparaSeries compactHelp fixo items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: 12, custom: null }} />
+        <ComparaSeries compactHelp fixo items={historyRates} referencia={res && diNoPrazo ? { valor: diNoPrazo.taxa, rotulo: `DI em ${prazo} meses · curva de ${dmy(diNoPrazo.data)}` } : null} loading={bndes.status === 'loading' || moedas.status === 'loading' || ipca.status === 'loading' || macro.status === 'loading'} period={{ preset: 12, custom: null }} />
+        {historyCurrency.length > 0 && <><h4>Dólar · R$ por US$</h4><ComparaSeries compactHelp fixo items={historyCurrency} loading={moedas.status === 'loading'} period={{ preset: 12, custom: null }} /></>}
         {res && <><div className="fm-di-resumo">
           {diNoPrazo ? <>
             <p><b>DI no prazo de {prazo} meses:</b> {pct(diNoPrazo.taxa)} a.a. · curva de {dmy(diNoPrazo.data)}.{ajuda('Comparação com o DI', 'Referência DI x pré no prazo final da operação (21 dias úteis por mês), interpolada entre vértices, quando necessário. Compara somente as taxas anuais brutas de referência, sem encargos ou diferenças no fluxo. Não equivale ao CET nem entra no cálculo.')}</p>
