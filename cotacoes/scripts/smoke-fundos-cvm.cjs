@@ -116,6 +116,27 @@ async function verificarComparador(region, page, width) {
   await ativos.getByRole('button', { name: 'Remover CDI', exact: true }).click()
 }
 
+// Computador que carrega a busca em segundo plano mas nunca recebe resposta (antivírus ou política da empresa):
+// a lista precisa aparecer mesmo assim, nas telas de Comparar e de Consultar.
+async function buscaSemSegundoPlano(browser) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' })
+  page.setDefaultTimeout(15000)
+  await fixtures(page)
+  await page.route('**/buscaFundosCvm.worker*.js', route => route.fulfill({ contentType: 'text/javascript', body: 'self.onmessage = () => {}' }))
+  await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos')
+  const region = page.getByRole('region', { name: 'Investimentos', exact: true })
+  const busca = region.getByRole('searchbox', { name: 'Buscar ativo' })
+  await busca.pressSequentially('credito privado')
+  const tentar = region.getByRole('button', { name: 'Tentar novamente', exact: true })
+  await Promise.race([tentar.waitFor(), region.getByRole('list', { name: 'Ativos encontrados' }).waitFor()])
+  if (await tentar.count()) await tentar.click()
+  await region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ }).waitFor()
+  await region.getByRole('button', { name: 'Consultar fundos', exact: true }).click()
+  await region.getByRole('searchbox', { name: 'Nome do fundo, classe ou CNPJ' }).fill('Atlantico FIC')
+  await region.getByRole('button', { name: /10\.000\.000\/0001-00 · Classe$/ }).waitFor()
+  await page.close()
+}
+
 async function main() {
   const browser = await chromium.launch({
     channel: process.env.SMOKE_CHANNEL || 'chrome',
@@ -179,6 +200,7 @@ async function main() {
       await tabela.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
       await page.close()
     }
+    if (!real) await buscaSemSegundoPlano(browser)
     console.log('Fundos CVM: busca, ordem dos blocos, gráfico por mouse, toque e teclado, ficha e carteira aprovados em 390 e 1280 px.')
   } finally {
     await browser.close()
