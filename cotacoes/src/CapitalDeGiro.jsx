@@ -204,6 +204,12 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
     setFlex(next); setEditing(null); setFlexError(null)
   }
 
+  // Depois de simular pelo botão preso embaixo (celular), leva a tela até o resultado se ele estiver fora de vista.
+  const mostrarResultado = () => requestAnimationFrame(() => {
+    const alvo = document.getElementById('giro-result-title'), r = alvo?.getBoundingClientRect()
+    if (r && (r.top < 0 || r.bottom > window.innerHeight)) alvo.scrollIntoView({ block: 'start' })
+  })
+
   return <section className="cx bw calc-standard calc-workspace giro-screen" aria-labelledby="calc-h">
     <div className="bw-heading calc-workspace-heading giro-header">
       <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="calc-h" className="cx-title"><span>Capital de giro</span></h2></div>
@@ -221,7 +227,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
     </div>
 
     <div className="giro-flow">
-      <form className="giro-form" noValidate onSubmit={event => { event.preventDefault(); setDirty(false) }}>
+      <form className="giro-form" noValidate onSubmit={event => { event.preventDefault(); setDirty(false); mostrarResultado() }}>
         <LinhaMestra prefix="cx" helpOnLabel pracaControl={PracaContratoBusca} title={step(1, 'Demanda do cliente')} values={lm} onChange={changeLm} foot=""
           onClear={() => { clearLm(); markDirty() }} fields={['value', 'term', 'grace', 'system']}
           labels={{ value: 'Valor solicitado' }} errors={{ value: errors.value, term: errors.n, grace: errors.grace }}

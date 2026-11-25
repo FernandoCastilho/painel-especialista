@@ -88,7 +88,7 @@ main.app.app-calculators:not(#u) :is(.cx-field-label > label, .cx-field > label,
 
 /* ── Ajuda pelo nome do campo (revisão de 25/11/2026): sem "?", o próprio nome abre a explicação ── */
 main.app.app-calculators:not(#u) .fi-help > button.fi-help-label {
-  width:auto; min-width:0; height:auto; min-height:24px; margin:0; padding:0; border:0; border-radius:0; background:none;
+  display:inline-flex; align-items:center; width:auto; min-width:44px; height:auto; min-height:44px; margin:-10px 0; padding:0; border:0; border-radius:0; background:none;
   color:inherit; font:inherit; font-weight:inherit; text-decoration:underline dotted 1.5px; text-underline-offset:4px; cursor:help;
 }
 main.app.app-calculators:not(#u) .fi-help > button.fi-help-label::before { content:none; display:none; }

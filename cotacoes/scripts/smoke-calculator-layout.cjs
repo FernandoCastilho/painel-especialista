@@ -429,7 +429,9 @@ const workspaceRoutes = {
 // Prova do catálogo agrupado nos dois temas, usando o mesmo artifact das calculadoras.
 async function assertGroupedCatalog(browser, report, failures) {
   const expected = [
-    ['Crédito e capital de giro', ['BNDES', 'Necessidade do Cliente', 'Capital de Giro', 'Conta Garantida', 'Análise de desconto']],
+    // Desde 25/11/2026 as três mais usadas ficam em destaque no topo e saem dos grupos.
+    ['Mais usadas', ['BNDES', 'Necessidade do Cliente', 'Capital de Giro']],
+    ['Crédito e capital de giro', ['Conta Garantida', 'Análise de desconto']],
     ['Crédito internacional', ['FINIMP', 'Empréstimo externo (4131)', 'Câmbio futuro']],
     ['Taxas e câmbio', ['Operação x DI', 'CDI x Dólar']],
     ['Planejamento e análise', ['Faturamento', 'Dividendos via empréstimo', 'Reforma tributária · caixa']],

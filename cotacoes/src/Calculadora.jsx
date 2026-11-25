@@ -94,7 +94,7 @@ export function CatalogoLista({ query = '', onQuery = () => {}, onView }) {
   const found = term ? CALCS.filter(calc => semAcento(`${calc.title} ${calc.sub}`).includes(term)) : []
   return (
     <section className="cx bw calc-workspace calc-catalog calc-catalog-v2" aria-labelledby="calc-title">
-      <div className="calc-catalog-head">
+      <div className="bw-heading calc-workspace-heading calc-catalog-head">
         <h2 id="calc-title">Calculadoras</h2>
         <input className="calc-catalog-search" type="search" value={query} onChange={event => onQuery(event.target.value)}
           placeholder="Buscar calculadora (ex.: giro, 4131, CDI)" aria-label="Buscar calculadora" autoComplete="off" />
@@ -105,7 +105,7 @@ export function CatalogoLista({ query = '', onQuery = () => {}, onView }) {
         <div className="cx-tiles">{found.map(calc => <Tile key={calc.id} calc={calc} onView={onView} />)}</div>
       </section> : <div className="calc-catalog-groups">
         <section className="calc-catalog-group calc-catalog-top" aria-labelledby="calc-group-mais-usadas">
-          <div className="calc-catalog-group-head"><h3 id="calc-group-mais-usadas">Mais usadas</h3><a className="calc-bndes-rates" href="#bndes">Taxas BNDES ›</a></div>
+          <div className="calc-catalog-group-head"><h3 id="calc-group-mais-usadas">Mais usadas</h3><a className="calc-bndes-rates" aria-label="Taxas BNDES · consultar séries e históricos" href="#bndes">Taxas BNDES ›</a></div>
           <div className="cx-tiles">{MAIS_USADAS.map(id => <Tile key={id} calc={byId(id)} onView={onView} />)}</div>
         </section>
         {GRUPOS_SEM_DESTAQUE.map(group => (
