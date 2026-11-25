@@ -5,7 +5,8 @@ const helpText = node => Array.isArray(node) ? node.map(helpText).join(' ') : no
 
 // Ajuda modal nativa: foco contido pelo navegador, Escape e retorno ao acionador.
 // Compartilhada pelas calculadoras, sem alterar a ajuda das demais abas.
-export default function FinimpHelp({ title, children }) {
+// Com `trigger`, o próprio nome do campo abre a ajuda (sublinhado pontilhado), sem o ícone "?".
+export default function FinimpHelp({ title, trigger, children }) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
   const [dismissed, setDismissed] = useState(false)
@@ -47,7 +48,7 @@ export default function FinimpHelp({ title, children }) {
     window.addEventListener('resize',place)
     return () => {window.removeEventListener('resize',place);if(popup.open)popup.close()}
   },[open])
-  return <span className="fi-help" onPointerEnter={event=>{if(event.pointerType==='mouse')enter()}} onPointerLeave={leave}><button ref={button} type="button" aria-label={'Ajuda: '+title} aria-haspopup="dialog" aria-expanded={open} aria-controls={open?id:undefined} aria-describedby={showPreview?id+'-preview':undefined} onFocus={()=>{if(restoringFocus.current)return;setDismissed(false);enter()}} onBlur={()=>setHover(false)} onClick={()=>{clearTimeout(leaveTimer.current);setHover(false);setOpen(true)}}>?</button>
+  return <span className="fi-help" onPointerEnter={event=>{if(event.pointerType==='mouse')enter()}} onPointerLeave={leave}><button ref={button} type="button" className={trigger?'fi-help-label':undefined} aria-label={trigger?`${trigger} (ajuda: ${title})`:'Ajuda: '+title} aria-haspopup="dialog" aria-expanded={open} aria-controls={open?id:undefined} aria-describedby={showPreview?id+'-preview':undefined} onFocus={()=>{if(restoringFocus.current)return;setDismissed(false);enter()}} onBlur={()=>setHover(false)} onClick={()=>{clearTimeout(leaveTimer.current);setHover(false);setOpen(true)}}>{trigger??'?'}</button>
     {showPreview && createPortal(<span ref={preview} id={id+'-preview'} role="tooltip" className="cx-help-preview" onPointerEnter={enter} onPointerLeave={leave}><strong>{title}</strong><span>{excerpt}</span><small>Clique ou pressione Enter para abrir a explicação completa.</small></span>,document.body)}
     {open && createPortal(<dialog ref={dialog} id={id} className="fi-help-dialog" aria-labelledby={id+'-title'} aria-describedby={id+'-body'} onCancel={event=>{event.preventDefault();close()}}>
       <h3 id={id+'-title'}>{title}</h3><div id={id+'-body'}>{children}</div><button type="button" className="fi-help-close" onClick={close}>Fechar ajuda</button>
