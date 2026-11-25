@@ -36,7 +36,7 @@ test('saída da planilha: IOF adicional, coeficiente, datas e entrada', () => {
   assert.equal(r.coeficiente.toFixed(5), (r.parcela / 502523).toFixed(5))
   // Fechamento do IOF financiado: saldo = base + IOF, em centavos.
   assert.equal(r.principal, Math.round((502523 + r.iof) * 100) / 100)
-  // Regra legal do painel (0,0082% ao dia, limite 365): R$ 14.243,60; a planilha mostra R$ 14.341,35 (diferença em aberto).
+  // Regra legal do painel (0,0082% ao dia, limite 365): R$ 14.245,34 (com o adicional sobre o valor já com IOF); a planilha mostra R$ 14.341,35 (diferença em aberto).
   assert.equal(r.iofDiario, 14245.34)
   assert.equal(r.parcela, 15472.03)
   assert.equal(r.rows.length, 48)
