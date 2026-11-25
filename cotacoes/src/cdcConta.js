@@ -70,13 +70,25 @@ export function cdcConta({ valorBem, valorLiberado, tarifas = 0, taxa, prazo, ca
   const dues = cdcVencimentos(firstDue, prazo)
   const i = taxa / 100
   let principal = base, flow, iofDiario, iofAdicional
+  const vistos = []
   for (let step = 0; step < 30; step++) {
     flow = cdcCronograma(principal, i, inicio, dues)
     iofAdicional = cents(principal * tax.additional / 100)
     iofDiario = cents(flow.rows.reduce((s, r) => s + r.amortization * Math.min(r.days, tax.maxDays) * tax.daily / 100, 0))
     const next = cents(base + iofAdicional + iofDiario)
     if (next === principal) break
+    // O arredondamento em centavos às vezes alterna entre dois valores sem fechar (cerca de 1% das simulações). Fica o
+    // maior (o IOF fica todo coberto) e o centavo de diferença vai no IOF diário, para valer financiado = base + IOF.
+    const volta = vistos.indexOf(next)
+    if (volta >= 0) {
+      principal = Math.max(principal, ...vistos.slice(volta))
+      flow = cdcCronograma(principal, i, inicio, dues)
+      iofAdicional = cents(principal * tax.additional / 100)
+      iofDiario = cents(principal - base - iofAdicional)
+      break
+    }
     if (step === 29) return fail('Não foi possível fechar o IOF financiado em centavos.')
+    vistos.push(principal)
     principal = next
   }
   const { pmt, rows } = flow

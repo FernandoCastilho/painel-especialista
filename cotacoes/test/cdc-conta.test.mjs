@@ -136,3 +136,18 @@ test('tabela colada: célula vazia não desloca colunas, sem a linha "Taxa a.m."
   assert.equal(lerFunding('\t11/24 - 11/30\n6\t10%\n12\t11%', '2026-11-25').ok, false)
   assert.deepEqual(lerFunding('6\t10%\n12\t11%\nSELIC\t15\t15%', '2026-11-25').tabela[0].taxas, { 6: 10, 12: 11 })
 })
+
+test('IOF financiado fecha mesmo quando o centavo alterna (2% a.m., 36x, carência de 20 dias)', () => {
+  const r = cdcConta({ valorBem: 500000, valorLiberado: 500000, tarifas: 2523, taxa: 2, prazo: 36, carenciaDias: 20, inicio: '2026-11-25' })
+  assert.ok(r.ok, r.error)
+  assert.equal(r.principal, Math.round((r.base + r.iof) * 100) / 100)
+  const diario = r.rows.reduce((s, x) => s + x.amortization * Math.min(x.days, 365) * 0.000082, 0)
+  assert.ok(Math.abs(r.iofDiario - diario) <= 0.015, `${r.iofDiario} x ${diario}`)
+  assert.equal(r.iofAdicional, Math.round(r.principal * 0.38) / 100)
+  let falhas = 0
+  for (const valor of [50000, 287500, 500000]) for (const taxa of [1.2, 1.39, 1.55, 2]) for (const prazo of [12, 24, 36, 48, 60]) for (const carenciaDias of [15, 20, 30, 45]) {
+    const x = cdcConta({ valorBem: valor, valorLiberado: valor, tarifas: 2523, taxa, prazo, carenciaDias, inicio: '2026-11-25' })
+    if (!x.ok && /centavos/.test(x.error)) falhas++
+  }
+  assert.equal(falhas, 0)
+})
