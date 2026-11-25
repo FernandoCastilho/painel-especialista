@@ -16,7 +16,7 @@ test('market context distinguishes monthly periods and oil contracts', () => {
 })
 test('verified indicators have provenance and no invented release date', async () => {
  const data=JSON.parse(await readFile(new URL('../public/market-indicators.json',import.meta.url))); const items=contextItems(data,'indicators',MARKET_IDS)
- assert.equal(items.length,5);for(const item of items){assert.ok(item.period);assert.ok(item.checkedAt);assert.ok(item.sourceUrl.startsWith('https://'))}
+ assert.equal(items.length,6);for(const item of items){assert.ok(item.period);assert.ok(item.checkedAt);assert.ok(item.sourceUrl.startsWith('https://'))}
  assert.equal(items[0].releaseDate,null); assert.equal(items.find(i=>i.id==='caged').value,121305)
 })
 

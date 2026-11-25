@@ -12,6 +12,7 @@ import './CalcUnificado.css'
 const CapitalDeGiro = lazy(() => import('./CapitalDeGiro.jsx'))
 const FinimpComparacao = lazy(() => import('./FinimpComparacao.jsx'))
 const BndesWorkspace = lazy(() => import('./BndesWorkspace.jsx'))
+const Investimentos = lazy(() => import('./Investimentos.jsx'))
 const ContaGarantida = lazy(() => import('./ContaGarantida.jsx'))
 const AnaliseDesconto = lazy(() => import('./AnaliseDesconto.jsx'))
 const CreditComparison = lazy(() => import('./CreditComparison.jsx'))
@@ -39,6 +40,7 @@ const CALCS = [
   { id: 'finimp', title: 'FINIMP', sub: 'Compare propostas e atinja sua meta', Icon: FinimpIcon },
   { id: 'giro', title: 'Capital de Giro', sub: 'Parcelas, juros e total a pagar', Icon: GiroIcon },
   { id: 'analise-desconto', title: 'Análise de desconto', sub: 'Compare títulos com giro Price', Icon: DescontoIcon },
+  { id: 'investimentos', title: 'CDB, Fundos e Ações', sub: 'Comparar ativos, simular carteiras e calcular rentabilidade', Icon: OperacaoDiIcon },
   { id: 'faturamento', title: 'Faturamento', sub: 'Cole o faturamento e o endividamento e compare com o ano anterior', Icon: FaturamentoIcon },
 ]
 
@@ -49,6 +51,9 @@ function formulario({ view, onView, quotes, apresentacao = false }) {
   if (view === 'bndes-credito-tfb') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'bndes-selic-lcd') return <BndesWorkspace profile={view} onView={onView} onBack={() => onView('')} />
   if (view === 'finimp') return <FinimpComparacao onBack={() => onView('')} />
+  if (view === 'investimentos' || view?.startsWith('investimentos?')) {
+    return <Investimentos key={view} comparisonLink={view.slice('investimentos?'.length)} onBack={() => onView('')} />
+  }
   if (view === 'conta-garantida') return <ContaGarantida onBack={() => onView('')} />
   if (view === 'comparador-credito') return <CreditComparison onBack={() => onView('')} apresentacao={apresentacao} />
   if (view === 'operacao-di') return <OperacaoDi onBack={() => onView('')} />

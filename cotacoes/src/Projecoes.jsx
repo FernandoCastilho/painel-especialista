@@ -37,7 +37,8 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
     return () => { off(); ctrl.abort() }
   }, [])
   const focus = macro?.data?.focus
-  const idades = Object.fromEntries(INSTITUTIONS.slice(1).map((name) => [name, idadeProjecao(banks?.institutions?.find((item) => item.name === name)?.date)]))
+  const bancoPorNome = Object.fromEntries((banks?.institutions ?? []).map((bank) => [bank.name, bank]))
+  const idades = Object.fromEntries(INSTITUTIONS.slice(1).map((name) => [name, idadeProjecao(bancoPorNome[name]?.date)]))
   // Referência do Focus: data de publicação do boletim (lida na página do Banco Central). Sem ela, vale a data da coleta ("até").
   const publicado = Boolean(focus?.link && idadeProjecao(focus?.release))
   const refFocus = idadeProjecao(publicado ? focus.release : focus?.date)?.data // dd/mm; sem data válida, a linha do Focus não mostra data
@@ -66,7 +67,7 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
                 <th scope="row"><span className="sc-inst"><Marca name={name} />{ref ? 'Focus' : name}</span>
                   {ref
                     ? <small>mediana<span className="sc-wide"> do mercado</span>{refFocus && <><span className="sc-sep"> · </span><span className="sc-age">{publicado ? '' : 'até '}{refFocus}</span></>}</small>
-                    : banks && <small>{idade?.antiga && <span className="sc-warn" aria-hidden="true">⚠ </span>}{idade ? <>{idade.data}<span className="sc-sep"> · </span><span className="sc-age">{textoHaDias(idade)}</span></> : 'fonte pendente'}{idade?.antiga && <span className="sc-sr"> · pode estar desatualizada</span>}</small>}
+                    : banks && <small>{idade?.antiga && <span className="sc-warn" aria-hidden="true">⚠ </span>}{idade ? <>{idade.data}<span className="sc-sep"> · </span><span className="sc-age">{textoHaDias(idade)}</span></> : bancoPorNome[name]?.checkedAt ? `conferido em ${date(bancoPorNome[name].checkedAt).slice(0, 5)}` : 'fonte pendente'}{idade?.antiga && <span className="sc-sr"> · pode estar desatualizada</span>}</small>}
                 </th>
                 {YEARS.map((y) => INDICATORS.map((indicator, i) => {
                   const value = scenarioValue(name, indicator, y, focus, banks)
@@ -84,8 +85,8 @@ export default function Projecoes({ macro, searchTarget, semHistorico = false })
         <div className="scenario-sources">
           <p>Focus: {!focus ? 'indisponível' : publicado ? <><a href={focus.link} target="_blank" rel="noopener noreferrer">boletim publicado em {date(focus.release)}</a> · coleta até {date(focus.date)}</> : `coleta até ${date(focus.date)}`}{macro?.data?.stale?.focus ? ' · dado de reserva' : ''}.</p>
           {INSTITUTIONS.slice(1).map((name) => {
-            const bank = banks?.institutions?.find((item) => item.name === name)
-            return <p key={name}>{name}: {bank?.date ? date(bank.date) : 'fonte pendente'}{bank?.note ? ` · ${bank.note}` : ''}.</p>
+            const bank = bancoPorNome[name]
+            return <p key={name}>{name}: {bank?.date ? date(bank.date) : bank?.checkedAt ? 'data-base não informada' : 'fonte pendente'}{bank?.checkedAt && ` · conferido em ${date(bank.checkedAt)}`}{bank?.note ? ` · ${bank.note}` : ''}{bank?.url?.startsWith('https://') && <> · <a href={bank.url} target="_blank" rel="noopener noreferrer">Fonte dos números de {name}</a></>}{bank?.portalUrl?.startsWith('https://') && <> · <a href={bank.portalUrl} target="_blank" rel="noopener noreferrer">Portal {name}</a></>}.</p>
           })}
           <p>Projeções dos bancos são revisadas manualmente; datas e metodologias podem diferir.{banks?.reviewedAt ? ` Conferidas em ${date(banks.reviewedAt)}.` : ''} Sujeitas a revisão, não constituem recomendação.</p>
         </div>

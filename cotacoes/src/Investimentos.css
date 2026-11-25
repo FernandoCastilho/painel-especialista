@@ -1,0 +1,71 @@
+.inv-workspace .inv-corpo { display:grid; gap:14px; padding:clamp(12px,2.5vw,24px); }
+.inv-workspace .inv-corpo p { margin:0; line-height:1.55; }
+.inv-workspace .inv-modos { display:flex; flex-wrap:wrap; gap:8px; }
+.inv-workspace button:not(.calc-back) { min-height:44px; padding:8px 13px; border-radius:8px; border:1px solid var(--bw-line); background:var(--bw-soft); color:var(--fg); cursor:pointer; }
+.inv-workspace button[aria-pressed="true"] { border-color:var(--bw-link); color:var(--bw-link); font-weight:700; }
+.inv-workspace .inv-grade, .inv-workspace dl { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr)); }
+.inv-workspace label { display:grid; min-width:0; gap:5px; align-content:start; }
+.inv-workspace input,.inv-workspace select { min-width:0; width:100%; min-height:44px; padding:8px; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-soft); color:var(--fg); font:inherit; }
+.inv-workspace .inv-import,.inv-workspace .inv-resultado { margin-block:12px; padding:14px; border:1px solid var(--bw-line); border-radius:10px; }
+.inv-workspace .inv-import summary { display:list-item; min-height:44px; cursor:pointer; font-weight:700; }
+.inv-workspace .inv-import[open] > * + * { margin-bottom:12px; }
+.inv-workspace .inv-resultado h3 { margin:0 0 5px; }
+.inv-workspace dd { margin:2px 0 0; font-weight:700; overflow-wrap:anywhere; }
+.inv-workspace .inv-nota { color:var(--mut); font-size:.875rem; }
+
+.inv-workspace .inv-study:not([hidden]), .inv-workspace .inv-manual:not([hidden]) {
+  display:grid;
+  gap:16px;
+}
+.inv-workspace .inv-tabs { padding-bottom:12px; border-bottom:1px solid var(--bw-line); }
+.inv-workspace .inv-tabs button[aria-pressed="true"],
+.inv-workspace button.inv-primary {
+  background:#0131ff;
+  color:#fff;
+  border-color:#0131ff;
+  font-weight:700;
+}
+.inv-workspace button:disabled { opacity:.6; cursor:default; }
+.inv-workspace .inv-controls, .inv-workspace .inv-flex { display:flex; align-items:end; flex-wrap:wrap; gap:8px; }
+.inv-workspace .inv-controls { gap:12px; }
+.inv-workspace .inv-actions { margin-inline-start:auto; }
+.inv-workspace .inv-currency { font-size:.875rem; }
+.inv-workspace .inv-dashboard { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:16px; }
+.inv-workspace .inv-panel {
+  min-width:0;
+  padding:clamp(12px,2vw,20px);
+  border:1px solid var(--bw-line);
+  border-radius:12px;
+  background:var(--bw-soft);
+}
+.inv-workspace .inv-panel h3 { margin:0 0 12px; font-size:1.15rem; }
+.inv-workspace .inv-state button { margin-top:12px; }
+.inv-workspace .inv-assets ul, .inv-workspace .inv-legend { padding:0; margin:0; list-style:none; }
+.inv-workspace .inv-assets li { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bw-line); }
+.inv-workspace .inv-assets li strong { overflow-wrap:anywhere; }
+.inv-workspace .inv-assets small { display:block; color:var(--mut); }
+.inv-workspace .inv-assets .inv-primary { width:100%; }
+.inv-workspace .inv-assets label, .inv-workspace .inv-assets .inv-flex { margin-bottom:8px; }
+.inv-workspace .inv-dot { display:inline-block; width:10px; height:10px; margin-inline-end:7px; border-radius:50%; }
+.inv-workspace .inv-chart svg { display:block; width:100%; min-height:160px; overflow:visible; }
+.inv-workspace .inv-chart svg text { fill:var(--mut); font-size:11px; }
+.inv-workspace .inv-gridline { stroke:var(--bw-line); }
+.inv-workspace .inv-guide { stroke:var(--mut); stroke-dasharray:3 4; }
+.inv-workspace .inv-legend { display:flex; flex-wrap:wrap; gap:8px 16px; }
+.inv-workspace .inv-month { font-size:.83rem; color:var(--mut); }
+.inv-workspace .inv-month input { padding:0; accent-color:#0131ff; }
+.inv-workspace .inv-table { overflow:auto; }
+.inv-workspace .inv-table table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.inv-workspace .inv-table :is(th,td) { padding:9px; border-bottom:1px solid var(--bw-line); text-align:right; }
+.inv-workspace .inv-table th:first-child { text-align:left; overflow-wrap:anywhere; }
+.inv-workspace .inv-allocations { margin-bottom:12px; }
+@media (max-width:740px) {
+  .inv-workspace .inv-dashboard { grid-template-columns:minmax(0,1fr); }
+  .inv-workspace .inv-actions { margin-inline-start:0; }
+  .inv-workspace .inv-table :is(th,td) { padding:6px; font-size:.83rem; }
+}
+.inv-workspace .inv-favorites { max-width:min(100%,270px); font-size:.875rem; }
+.inv-workspace .inv-cvm-matches { display:grid; gap:6px; max-height:300px; overflow:auto; list-style:none; padding:0; }
+.inv-workspace .inv-cvm-matches li { padding:0; border:0; }
+.inv-workspace .inv-cvm-matches button { width:100%; text-align:left; overflow-wrap:anywhere; }
+.inv-workspace :is(.inv-legend li, .inv-allocations label, .inv-resultado) { overflow-wrap:anywhere; }

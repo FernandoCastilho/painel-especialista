@@ -67,7 +67,7 @@ test('o limite contratado só entra no CET: não muda nenhum número do período
   assert.equal(sem.cet, null)
 })
 
-test('a tela segue a ordem do roteiro só na utilização única; os outros modos mantêm os nomes de antes', async () => {
+test('utilização única e lançamentos por dia seguem a ordem do roteiro 1 · 2 · 3; o comparar fica no seu componente', async () => {
   const source = await readFile(new URL('../src/ContaGarantida.jsx', import.meta.url), 'utf8')
   const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", '<Resultado id="cg-result-title" number={3}'].map(text => source.indexOf(text))
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), 'blocos na ordem 1 a 3')
@@ -75,7 +75,11 @@ test('a tela segue a ordem do roteiro só na utilização única; os outros modo
   for (const question of ['Quanto usou', 'Quanto paga para cobrir', 'Quanto custa']) assert.ok(source.includes(`'${question}'`), question)
   assert.match(source, /<summary>Enquadramento do IOF/)
   assert.doesNotMatch(source, /Condições do produto/)
-  // Lançamentos por dia: mesmos quadros e mesmo resultado ao lado.
-  for (const text of ['1. Período e lançamentos', '2. Juros e convenções do contrato', '3. Referência de IOF', 'className="cg-result-col"', "'Taxa do contrato (% a.m.)'"]) assert.ok(source.includes(text), text)
-  assert.match(source, /<div hidden=\{!comparing\}><ComparativoAlongamento \/><\/div>/)
+  // Lançamentos por dia no roteiro (pedido do Fernando, 24/11/2026): período e lançamentos, os mesmos encargos e o mesmo resultado.
+  assert.ok(source.includes("step(1, 'Período e lançamentos')"), 'bloco 1 dos lançamentos')
+  assert.equal(source.match(/<Resultado id="cg-result-title"/g).length, 1, 'um só resultado para os dois modos')
+  for (const old of ['cg-result-col', '3. Referência de IOF', '2. Juros e convenções do contrato']) assert.ok(!source.includes(old), `sem o desenho antigo: ${old}`)
+  assert.ok(source.includes("'Taxa do contrato (% a.m.)'"), 'rótulo da taxa nos lançamentos')
+  assert.ok(source.includes("'Quanto amortizou'"), 'resposta dos lançamentos')
+  assert.match(source, /<div hidden=\{!comparing\}><ComparativoAlongamento ativo=\{comparing\} \/><\/div>/)
 })

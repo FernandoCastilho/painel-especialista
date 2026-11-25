@@ -50,6 +50,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url)
   // APIs de cotação e outros domínios: sempre direto da rede, nunca do cache.
   if (url.origin !== self.location.origin) return
+  // Cada coleta troca os hashes dos arquivos CVM. O cache HTTP pode descartá-los naturalmente.
+  if (url.pathname.startsWith(new URL('cvm/', self.registration.scope).pathname)) return
   if (url.pathname === new URL('movimento-falimentar.json', self.registration.scope).pathname) {
     event.respondWith(new Response(null, { status: 410 }))
     return

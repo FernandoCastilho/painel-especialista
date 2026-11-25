@@ -19,6 +19,14 @@ Não há rollback automático homologado: não existe neste fluxo um artefato an
 - O snapshot IBGE CBS validado acompanha o release como dados públicos agregados e é preservado no próximo build; mudança explícita do arquivo versionado pode substituí-lo. No primeiro rollout, sem marcador anterior (HTTP 404), usa o snapshot versionado. Depois disso, arquivo ausente ou incompatível não é substituído silenciosamente. Antes do primeiro rollout, compare o snapshot versionado com o dado efetivo exibido.
 - Para voltar ao código anterior, faça uma reversão no ramo atual e passe pelo CI. Não publique um SHA antigo por uma reexecução; a proteção de SHA recusa código obsoleto.
 
+## Fundos de investimento
+
+O pacote de Pages inclui os valores diários de cota divulgados no [Informe Diário da CVM](https://dados.cvm.gov.br/dataset/fi-doc-inf_diario), com nomes do [cadastro de fundos, classes e subclasses](https://dados.cvm.gov.br/dataset/fi-cad). A adaptação em \`cvm/manifest.json\` e nos arquivos compactados que ele lista é distribuída sob a [licença ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). O coletor \`cotacoes/scripts/coletar-fundos-cvm.py\` reproduz esse pacote a partir das fontes oficiais.
+
+- No primeiro release, o coletor prepara a base inicial. A janela tem até 13 meses fechados mais o mês em curso. O catálogo inclui séries com duas ou mais cotas válidas. O tipo informado pela CVM distingue fundo, classe e subclasse, inclusive quando a migração reaproveita o CNPJ. Quando o nome está ausente, o catálogo identifica a série pelo CNPJ e pelo tipo disponível.
+- As rodadas de dados após as 08h de Brasília renovam a base uma vez por dia. Releases normais preservam a base. O cache do GitHub evita baixar todos os arquivos da CVM a cada rodada. Se o cache estiver ausente, o coletor restaura os arquivos publicados e confere seus hashes pelo manifesto. Se a CVM falhar e houver uma base anterior válida, a rotina preserva essa base e registra um aviso.
+- A calculadora usa as duas cotas diárias escolhidas. A comparação e a carteira usam a última cota disponível de cada mês fechado em comum. A interface mostra a janela efetiva e avisa quando o histórico cobre menos que o período pedido. A variação das cotas não incorpora distribuições ou tributos do cotista.
+
 ## Calendário B3
 
 Fonte primária de 2026: [calendário oficial da B3](https://www.b3.com.br/pt_br/noticias/calendario-de-negociacao-da-b3-confira-o-funcionamento-da-bolsa-em-2026.htm), publicado em 09/01/2026; a coleta usa a errata oficial de 2026 indicada em `B3_CALENDAR_SOURCE`, em `cotacoes/scripts/data-schedules.mjs`.

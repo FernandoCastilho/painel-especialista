@@ -133,15 +133,6 @@ async function assertWorkspace(page, section, label) {
   assert.deepEqual(explanations, [], `${label}: explicações extensas ficam nas ajudas`)
 }
 
-// Padrão de 18/11/2026: resultado ao lado dos dados a partir de 1200px; abaixo deles nas telas menores.
-async function assertResultBeside(page, section, inputs, results) {
-  await page.evaluate(() => window.scrollTo(0, 0))
-  const box = await section.locator(inputs).boundingBox(), result = await section.locator(results).boundingBox()
-  const details = JSON.stringify({ box, result })
-  if (page.viewportSize().width >= 1200) assert.ok(result.x >= box.x + box.width && Math.abs(result.y - box.y) <= 2, 'resultado ao lado dos dados ' + details)
-  else assert.ok(result.y >= box.y + box.height - 1, 'resultado abaixo dos dados ' + details)
-}
-
 async function assertHelp(page, section, label, directory) {
   const help = section.getByRole('button', { name: /^Ajuda: / }).first()
   assert.ok(await help.count(), `${label}: ajuda disponível`)
@@ -281,13 +272,24 @@ async function fillScenario(page, section, route) {
     const [demanda, encargos] = [await section.locator('.cg-inputs > .lm').boundingBox(), await section.locator('.cg-inputs > .cx-panel').boundingBox()]
     if (page.viewportSize().width >= 1200) assert.ok(encargos.x >= demanda.x + demanda.width && Math.abs(encargos.y - demanda.y) < 2, 'demanda e encargos lado a lado no computador largo')
     else assert.ok(encargos.y >= demanda.y + demanda.height, 'encargos abaixo da demanda')
-    // Lançamentos por dia segue como era: resultado ao lado dos dados a partir de 1200px, abaixo antes disso.
+    const curva = section.locator('h3#rm-titulo')
+    assert.equal(await curva.count(), 1, 'utilização única tem apenas uma referência de mercado')
+    await section.getByRole('button', { name: 'Comparar com parcelado', exact: true }).click()
+    assert.equal(await curva.count(), 1, 'comparativo tem apenas uma referência de mercado')
+    await curva.waitFor({ state: 'visible' })
+    // Lançamentos por dia no roteiro (24/11/2026): dados e resultado de cima para baixo, como na utilização única.
     await section.getByRole('button', { name: 'Lançamentos por dia', exact: true }).click()
-    assert.equal(await section.locator('.rt-timeline, .rt-result').count(), 0, 'roteiro só na utilização única')
+    assert.equal(await curva.count(), 1, 'lançamentos têm apenas uma referência de mercado')
+    assert.equal(await section.locator('.rt-result').count(), 1, 'roteiro também nos lançamentos')
+    assert.equal(await section.locator('.cg-result-col').count(), 0, 'sem o resultado ao lado')
     assert.equal(await section.getByLabel('Taxa do contrato (% a.m.)', { exact: true }).count(), 1)
-    await assertResultBeside(page, section, '.cg-inputs', '.cg-result-col')
+    const [dadosL, resultadoL] = [await section.locator('.cg-inputs').boundingBox(), await section.locator('.rt-result').boundingBox()]
+    assert.ok(resultadoL.y >= dadosL.y + dadosL.height, 'lançamentos: dados e resultado nesta ordem')
     await section.getByRole('button', { name: 'Utilização única', exact: true }).click()
   } else if (route === 'analise-desconto') {
+    // A tela abre pelo prazo médio (24/11/2026): confere a largura como ela abre; o cenário fixo abaixo é do borderô título a título.
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'prazo médio sem rolagem lateral')
+    await page.locator('#ad-titleMode').selectOption('titles')
     await page.locator('#ad-titleFeeMode').selectOption('total')
     assert.equal(await page.locator('#ad-iofAdditional, #ad-iofPaid, #ad-interest').count(), 0)
     await page.locator('#ad-lm-start').fill('2026-11-05')
@@ -431,6 +433,7 @@ async function assertGroupedCatalog(browser, report, failures) {
     ['Crédito internacional', ['FINIMP', 'Empréstimo externo (4131)', 'Câmbio futuro']],
     ['Taxas e câmbio', ['Operação x DI', 'CDI x Dólar']],
     ['Planejamento e análise', ['Faturamento', 'Dividendos via empréstimo', 'Reforma tributária · caixa']],
+    ['Investimentos', ['CDB, Fundos e Ações']],
   ]
   for (const width of widths) for (const theme of ['light', 'dark']) {
     const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
@@ -440,6 +443,7 @@ async function assertGroupedCatalog(browser, report, failures) {
     page.on('pageerror', error => errors.push(error.message))
     try {
       await fixtures(page)
+      await page.route('**/curves.json*', route => route.abort())
       await page.goto(base + '/#calculadora')
       const catalog = page.locator('.calc-catalog')
       await catalog.locator('.calc-catalog-group').first().waitFor()
@@ -485,6 +489,44 @@ async function assertGroupedCatalog(browser, report, failures) {
       assert.equal(await catalog.getByRole('button', { name:'BNDES: abrir calculadora', exact:true }).evaluate(el => el === document.activeElement), true, label + ': foco por teclado')
       await page.evaluate(() => window.scrollTo(0, 0))
       await page.screenshot({ path:screenshot, fullPage:true })
+      if (width === 390 || width === 1440) {
+        await catalog.getByRole('button', { name: 'CDB, Fundos e Ações: abrir calculadora', exact: true }).click()
+        const investimentos = page.getByRole('region', { name: 'Investimentos', exact: true })
+        await investimentos.getByRole('button', { name: 'Comparar ativos', exact: true }).waitFor()
+        await investimentos.getByRole('button', { name: 'CDB, fundos e ações', exact: true }).click()
+        await investimentos.getByRole('button', { name: 'CDB', exact: true }).waitFor()
+        await investimentos.getByRole('textbox', { name: 'Valor aplicado (R$)', exact: true }).fill('10.000,00')
+        await investimentos.getByLabel('Taxa anual bruta (% a.a.)', { exact: true }).fill('12')
+        await investimentos.getByLabel('Data da aplicação (dia útil)', { exact: true }).fill('2026-11-23')
+        await investimentos.getByLabel('Vencimento (dia útil)', { exact: true }).fill('2026-11-25')
+        const cdb = investimentos.getByRole('region', { name: 'Projeção bruta de CDB', exact: true })
+        await cdb.getByText('2 dias úteis', { exact: false }).waitFor()
+        assert.equal((await cdb.locator('dd').first().innerText()).replace(/\s/g, ''), 'R$10.009,00')
+        await investimentos.getByRole('button', { name: 'Fundos', exact: true }).click()
+        await investimentos.getByRole('textbox', { name: 'Valor aplicado (R$)', exact: true }).fill('10.000,00')
+        await investimentos.getByLabel('Cota inicial', { exact: true }).fill('1.234')
+        await investimentos.getByLabel('Cota final', { exact: true }).fill('1,300')
+        await investimentos.getByRole('alert').waitFor()
+        await investimentos.getByLabel('Cota inicial', { exact: true }).fill('1,250')
+        const fundo = investimentos.getByRole('region', { name: 'Variação da cota', exact: true })
+        await fundo.getByText('4,00%', { exact: true }).waitFor()
+        await investimentos.getByText('Importar Informe Diário da CVM', { exact: true }).click()
+        await investimentos.getByLabel('CNPJ do fundo ou classe', { exact: true }).fill('00017024000153')
+        await investimentos.getByLabel('Arquivos CSV da CVM', { exact: true }).setInputFiles({
+          name: 'informe-teste.csv', mimeType: 'text/csv',
+          buffer: Buffer.from('CNPJ_FUNDO_CLASSE;ID_SUBCLASSE;DT_COMPTC;VL_QUOTA\n00017024000153;;2026-11-03;40\n00017024000153;;2026-11-19;42'),
+        })
+        await fundo.getByText('5,00%', { exact: true }).waitFor()
+
+        await investimentos.getByRole('button', { name: 'Ações', exact: true }).click()
+        await investimentos.getByLabel('Quantidade de ações', { exact: true }).fill('10')
+        await investimentos.getByLabel('Preço de compra por ação (R$)', { exact: true }).fill('10')
+        await investimentos.getByLabel('Preço final por ação (R$)', { exact: true }).fill('11')
+        const acoes = investimentos.getByRole('region', { name: 'Simulação de ações', exact: true })
+        await acoes.getByText('10,00%', { exact: true }).waitFor()
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), label + ': investimentos sem rolagem lateral')
+        await page.screenshot({ path: path.join(out, `investimentos-${width}-${theme}.png`), fullPage: true })
+      }
       assert.deepEqual(errors, [], label + ': sem erros do navegador')
       report.push({ route:'catalogo-grupos', width, theme, status:'pass', screenshot:path.basename(screenshot) })
     } catch (error) {
