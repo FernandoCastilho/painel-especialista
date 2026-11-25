@@ -20,21 +20,26 @@ async function fixtures(page) {
     { data: '30/09/2025', valor: '1' }, { data: '28/10/2025', valor: '1.01' }, { data: '28/11/2025', valor: '1.02' },
   ] }))
   let tentativas = 0
-  await page.route('**/cvm/manifest.json', route => {
-    if (tentativas++ === 0) return route.fulfill({ status: 503 })
+  await page.route('**/cvm/manifest.json*', route => {
+    if (tentativas++ < 2) return route.fulfill({ status: 503 })
     return route.fulfill({ json: {
       version: 1, first: rows[0][0], last: rows.at(-1)[0], files: { catalogo, [grupo]: arquivo },
     } })
   })
-  await page.route('**/cvm/' + catalogo, route => route.fulfill({ body: gzipSync(JSON.stringify([[id, nome, cnpj]])) }))
+  await page.route('**/cvm/' + catalogo, route => route.fulfill({ body: gzipSync(JSON.stringify([
+    [id, nome, cnpj],
+    ['cvm-c-23731495000124', 'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA', '23731495000124'],
+  ])) }))
   await page.route('**/cvm/' + arquivo, route => route.fulfill({ json: { [id]: rows } }))
 }
 
 async function selecionarFundo(region) {
   await region.locator('summary:visible').filter({ hasText: /^Buscar fundos na CVM$/ }).click()
   const busca = region.getByRole('searchbox', { name: 'Nome do fundo, classe ou CNPJ' })
-  await busca.fill(real ? 'renda fixa exponencial' : 'credito privado')
+  await busca.fill('Itaú Of Funds Orion Mult CP IE FIF DA CIC RL')
   if (!real) await region.getByRole('button', { name: 'Tentar novamente', exact: true }).click()
+  await region.getByRole('button', { name: /23\.731\.495\/0001-24 · Classe$/ }).waitFor()
+  await busca.fill(real ? 'renda fixa exponencial' : 'credito privado')
   await region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ }).click()
 }
 

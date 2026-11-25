@@ -50,7 +50,7 @@ export default function FundoCvmPicker({ onSelect, excluidos = vazio, selecionad
     </label>
     {estado === 'loading' && <p role="status">Carregando o catálogo de fundos…</p>}
     {estado === 'error' && <>
-      <p role="status">O catálogo da CVM está indisponível agora.</p>
+      <p role="status">Não foi possível carregar o catálogo de fundos.</p>
       <button type="button" onClick={carregar}>Tentar novamente</button>
     </>}
     {catalogo && <>
