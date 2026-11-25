@@ -140,7 +140,7 @@ export default function SofrChart({ macro, range }) {
               ))}
               {on.band && g.band && <path d={g.band} fill={SERIES[4].color} opacity="0.16" />}
               {['m180', 'm90', 'm30'].map((k) => on[k] && <path key={k} d={g.path(k)} fill="none" stroke={SERIES.find((s) => s.id === k).color} strokeWidth="1.6" strokeLinejoin="round" />)}
-              <path d={g.path('raw')} fill="none" stroke={SERIES[0].color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              <path className="linha-destaque" style={{ color: SERIES[0].color }} d={g.path('raw')} fill="none" stroke={SERIES[0].color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
               {marcas.map(({ i, vale }) => {
                 const r = brutos[i]
                 return <text key={r.t} x={g.X(r.t)} y={yRotulo(g.Y(r.raw), vale, M.t, H - M.b)} textAnchor={ancoraRotulo(i, brutos.length)} className="vlabel" pointerEvents="none">{pct(r.raw)}</text>

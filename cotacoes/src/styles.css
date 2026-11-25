@@ -356,9 +356,11 @@ main.app { max-width: 1200px; margin: 0 auto; padding: 16px 16px 96px; }
 .resumo-chart h3 { margin:0; font-size:1rem; }
 .resumo-chart .chips button { min-height:32px; padding:3px 10px; }
 /* efeitos opcionais: desligados por padrão (chave "Efeitos" no rodapé) */
-:root[data-fx="neon"] .spark path.line, :root[data-fx="neon"] .plot path.line { filter:drop-shadow(0 0 4px currentColor); }
-@media (prefers-reduced-motion: reduce) { :root[data-fx="neon"] .spark path.line, :root[data-fx="neon"] .plot path.line { filter:none; } }
-@media print { :root[data-fx="neon"] .spark path.line, :root[data-fx="neon"] .plot path.line { filter:none; } }
+:root[data-fx="neon"] .spark path.line, :root[data-fx="neon"] .plot path.line, :root[data-fx="neon"] .linha-destaque { filter:drop-shadow(0 0 4px currentColor); }
+/* brilho só no modo escuro: no fundo claro ele borra a linha (Diretor de Arte, 25/11/2026) */
+:root[data-theme="light"][data-fx="neon"] .spark path.line, :root[data-theme="light"][data-fx="neon"] .plot path.line, :root[data-theme="light"][data-fx="neon"] .linha-destaque { filter:none; }
+@media (prefers-reduced-motion: reduce) { :root[data-fx="neon"] .spark path.line, :root[data-fx="neon"] .plot path.line, :root[data-fx="neon"] .linha-destaque { filter:none; } }
+@media print { :root[data-fx="neon"] .spark path.line, :root[data-fx="neon"] .plot path.line, :root[data-fx="neon"] .linha-destaque { filter:none; } }
 .fx-toggle { background:none; border:1px solid var(--line); color:var(--mut); border-radius:999px; padding:6px 12px; font:inherit; font-size:.8rem; cursor:pointer; min-height:32px; }
 .fx-toggle[aria-pressed="true"] { color:var(--fg); border-color:var(--accent); }
 /* faixa de juros: pausa e rótulo mais legível */

@@ -1,4 +1,5 @@
 import ChartFullscreen from './ChartFullscreen.jsx'
+import AreaDegrade from './AreaDegrade.jsx'
 import { useId, useState } from 'react'
 import { BANK_METRICS, bankNumber, quarterLabel, latestBankPoint } from './bancos.js'
 import { bankMetricHistory, bankMetricAnalysis } from './bancosHistory.js'
@@ -17,7 +18,8 @@ function HistoryPlot({ points, metric, name }) {
     <div className="bank-history-plot" role="region" aria-label="Gráfico histórico trimestral" tabIndex={0}><ChartFullscreen><svg viewBox="0 0 640 275" role="img" aria-labelledby={`${id}-title ${id}-desc`}>
       <title id={`${id}-title`}>{BANK_METRICS[metric][0]} de {name}</title><desc id={`${id}-desc`}>Trimestres sem dados aparecem como lacunas, sem ligação entre os pontos. Valores e fontes estão na tabela abaixo. Eixo vertical ajustado à série.</desc>
       {eixo.ticks.map((tick, i) => { const value = tick * divisor; return <g key={i}><line x1="100" x2="600" y1={y(value)} y2={y(value)} className="bank-history-grid" /><text x="90" y={y(value) + 4} textAnchor="end">{bankNumber(value, unit)}</text></g> })}
-      <path d={line} className="bank-history-line" />
+      {available.length === points.length && <AreaDegrade pontos={points.map((point, i) => [x(i), y(point.item.value)])} base={210} cor="var(--accent, var(--fg))" />}
+      <path d={line} className="bank-history-line linha-destaque" />
       {points.map((point, i) => <g key={point.period}><text x={x(i)} y="239" textAnchor="middle">{quarterLabel(point.period)}</text>{point.item ? <circle cx={x(i)} cy={y(point.item.value)} r="5" className="bank-history-point"><title>{quarterLabel(point.period)}: {bankNumber(point.item.value, unit)}</title></circle> : <text x={x(i)} y="260" textAnchor="middle">sem dado</text>}</g>)}
     </svg></ChartFullscreen></div><p className="muted">Deslize o gráfico para ver todos os trimestres. Eixo vertical ajustado à série. Lacunas indicam trimestres sem dado equivalente; não foram estimados.</p>
   </figure>

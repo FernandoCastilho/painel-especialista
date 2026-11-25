@@ -1,4 +1,5 @@
 import ChartFullscreen from './ChartFullscreen.jsx'
+import AreaDegrade from './AreaDegrade.jsx'
 import { useState } from 'react'
 import { useDataFile } from './useDataFile.js'
 import { TREND_GROUPS, exploreUrl, trendEmbedUrl, validTrendData, trendsOld, trendStamp } from './trends.js'
@@ -9,11 +10,13 @@ function HistoricalSnapshot({ group }) {
   const series = TREND_SNAPSHOT[group]
   if (!series) return <p role="status">Série histórica local ainda indisponível para este tema. Consulte o gráfico na fonte.</p>
   const date = i => new Date(Date.parse(SNAPSHOT_START) + i * 86400000).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
-  const points = series.values.map((v, i) => `${36 + i / (series.values.length - 1) * 548},${174 - v * 1.5}`).join(' ')
+  const pontos = series.values.map((v, i) => [36 + i / (series.values.length - 1) * 548, 174 - v * 1.5])
+  const points = pontos.map(([x, y]) => `${x},${y}`).join(' ')
   return <figure className="trends-snapshot"><figcaption><strong>{series.term}</strong> · Brasil · interesse relativo (0–100)</figcaption>
     <ChartFullscreen><svg viewBox="0 0 600 205" role="img" aria-label={`Interesse em ${series.term}, de 03/08 a 02/11/2026. Valores na tabela abaixo.`}>
       {[0,50,100].map(v => <g key={v}><line x1="36" x2="584" y1={174-v*1.5} y2={174-v*1.5} stroke="currentColor" opacity=".15" /><text x="3" y={179-v*1.5} fill="currentColor" fontSize="12">{v}</text></g>)}
-      <polyline points={points} fill="none" stroke="var(--amber)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+      <AreaDegrade pontos={pontos} base={174} cor="var(--amber)" />
+      <polyline className="linha-destaque" style={{ color: 'var(--amber)' }} points={points} fill="none" stroke="var(--amber)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
       <text x="36" y="199" fill="currentColor" fontSize="12">03/08/2026</text><text x="584" y="199" textAnchor="end" fill="currentColor" fontSize="12">02/11/2026</text>
     </svg></ChartFullscreen>
     <p className="trends-status">Snapshot histórico consultado em {stamp(SNAPSHOT_AT)} (Brasília). Não atualiza automaticamente. Último dia parcial excluído. Escalas independentes entre termos; zero pode indicar volume insuficiente.</p>
