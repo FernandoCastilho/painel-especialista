@@ -115,3 +115,24 @@ test('bordas: fim de mês, limite de 365 dias do IOF e carência que não cabe n
   assert.equal(cdcConta({ valorBem: 1e5, valorLiberado: 1e5, taxa: 3, prazo: 120, carenciaDias: 180, inicio: '2026-11-25' }).ok, false)
   assert.equal(cdcConta({ valorBem: 100000.1, valorLiberado: 80000.05, taxa: 2, prazo: 12, carenciaDias: 30, inicio: '2026-11-25' }).entrada, 20000.05)
 })
+
+test('tabela colada: célula vazia não desloca colunas, sem a linha "Taxa a.m." e virada de ano', async () => {
+  const { vigenciaDeHoje } = await import('../src/cdcFunding.js')
+  // Coluna separadora vazia (oculta no Excel) e prazo de 72 sem taxa na 1ª vigência.
+  const vazio = ['\t01/12 até 07/12\t24/11 até 30/11\t\t01/12 até 07/12\t24/11 até 30/11',
+    '6\t10,00%\t9,50%\t\t0,80%\t0,76%', '48\t12,00%\t11,50%\t\t0,95%\t0,91%', '72\t\t13,10%\t\t1,05%\t1,04%'].join('\n')
+  const a = lerFunding(vazio, '2026-11-25')
+  assert.ok(a.ok)
+  assert.equal(a.tabela.length, 2, 'rótulos repetidos: só as colunas ao ano')
+  assert.deepEqual(a.tabela.find(v => v.label === '01/12 até 07/12').taxas, { 6: 10, 48: 12 })
+  assert.deepEqual(a.tabela.find(v => v.label === '24/11 até 30/11').taxas, { 6: 9.5, 48: 11.5, 72: 13.1 })
+  // Padrão: a vigência que vale hoje, não a mais recente (futura).
+  assert.equal(vigenciaDeHoje(a.tabela, '2026-11-25').label, '24/11 até 30/11')
+  // Virada de ano: em 05/01/2027, "29/12 até 04/01" é a semana passada.
+  const b = lerFunding('\t29/12 até 04/01\t05/01 até 11/01\n6\t10%\t11%\n12\t10,5%\t11,5%', '2027-01-05').tabela
+  assert.deepEqual(b.map(v => [v.inicio, v.fim]), [['2027-01-05', '2027-01-11'], ['2026-12-29', '2027-01-04']])
+  assert.equal(vigenciaDeHoje(b, '2027-01-05').inicio, '2027-01-05')
+  // Data inválida e linha SELIC com número não viram prazo.
+  assert.equal(lerFunding('\t11/24 - 11/30\n6\t10%\n12\t11%', '2026-11-25').ok, false)
+  assert.deepEqual(lerFunding('6\t10%\n12\t11%\nSELIC\t15\t15%', '2026-11-25').tabela[0].taxas, { 6: 10, 12: 11 })
+})

@@ -10,7 +10,7 @@ import { cgToday } from './contaGarantida.js'
 import { cdcConta } from './cdcConta.js'
 import { cdcEml, cdcResumo } from './cdcEmail.js'
 import { cdcImagem } from './cdcImagem.js'
-import { carregarFunding, fundingDoPrazo, guardarFunding, lerFunding, spreadDaTaxa, taxaDoSpread } from './cdcFunding.js'
+import { carregarFunding, fundingDoPrazo, guardarFunding, lerFunding, spreadDaTaxa, taxaDoSpread, vigenciaDeHoje } from './cdcFunding.js'
 import { Respostas, Resultado, step } from './Roteiro.jsx'
 import './CalculatorStandard.css'
 import './LinhaMestra.css'
@@ -60,17 +60,18 @@ export default function Cdc({ onBack }) {
   const [form, setForm] = useState(INICIAL)
   const [dirty, setDirty] = useState(false)
   const [tabela, setTabela] = useState(carregarFunding)
-  const [vigencia, setVigencia] = useState(() => carregarFunding()?.[0]?.id ?? '')
+  const [vigencia, setVigencia] = useState(() => { const t = carregarFunding(); return t ? vigenciaDeHoje(t, cgToday()).id : '' })
   const hoje = cgToday()
   const set = (key, value) => { setForm(old => ({ ...old, [key]: value })); setDirty(true) }
-  const trocarTabela = t => { setTabela(t); setVigencia(t?.[0]?.id ?? ''); setDirty(true) }
+  const trocarTabela = t => { setTabela(t); setVigencia(t ? vigenciaDeHoje(t, cgToday()).id : ''); setDirty(true) }
   const int = key => /^\d+$/.test(String(form[key]).trim()) ? Number(form[key]) : NaN
   const valores = { valorBem: parseMoneyInput(form.valorBem), valorLiberado: parseMoneyInput(form.valorLiberado), cadastro: parseMoneyInput(form.cadastro, { optional: true }) }
   const erroValor = Object.values(valores).find(v => !v.ok)
   // Taxa ou spread: um vem digitado e o outro sai do funding do prazo (conta reversa direta).
-  const vig = tabela?.find(v => v.id === vigencia) ?? tabela?.[0]
+  const vig = tabela ? tabela.find(v => v.id === vigencia) ?? vigenciaDeHoje(tabela, hoje) : null
   const funding = vig && int('prazo') > 0 ? fundingDoPrazo(vig, int('prazo')) : null
   const vencida = vig?.fim && hoje > vig.fim
+  const futura = vig && hoje < vig.inicio
   const digitado = parseDecimal(form.modo === 'taxa' ? form.taxa : form.spread)
   const taxa = form.modo === 'taxa' ? digitado : digitado !== null && funding ? taxaDoSpread(digitado, funding.taxa) : null
   const spread = form.modo === 'taxa' && digitado !== null && funding ? spreadDaTaxa(digitado, funding.taxa) : null
@@ -81,7 +82,7 @@ export default function Cdc({ onBack }) {
   const r = calc?.ok ? calc : null
   const alerta = r ? null : { error: !!calc?.error, warning: !!calc?.error, text: calc?.error || 'Clique em Simular para atualizar o resultado.' }
   const info = { categoria: form.categoria, carenciaDias: int('carencia'), dataSimulacao: hoje }
-  const fundingNota = funding ? `funding de ${pct(funding.taxa)} a.a.${funding.nota ? ` (${funding.nota})` : ''}${vencida ? ` · tabela vencida em ${dmy(vig.fim)}` : ''}` : null
+  const fundingNota = funding ? `funding de ${pct(funding.taxa)} a.a.${funding.nota ? ` (${funding.nota})` : ''}${vencida ? ` · tabela vencida em ${dmy(vig.fim)}` : ''}${futura ? ` · tabela só vale a partir de ${dmy(vig.inicio)}` : ''}` : null
   const derivado = form.modo === 'taxa'
     ? (spread !== null ? `Spread: ${pct(spread)} a.a. sobre ${fundingNota}` : tabela ? '' : 'Para ver o spread, cole a tabela de funding no "!".')
     : (taxa !== null ? `Taxa: ${pct(taxa)} a.m. (${pct(((1 + taxa / 100) ** 12 - 1) * 100)} a.a.) com ${fundingNota}` : '')
