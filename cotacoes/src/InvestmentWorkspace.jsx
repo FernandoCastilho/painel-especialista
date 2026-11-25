@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { numeroPt } from './investimentos.js'
 import {
   PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, parseSeriesCsv, loadBcb, compareHistory,
@@ -65,20 +65,31 @@ function useBcbHistory(retry) {
 
 function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabilidade acumulada' }) {
   const [hover, setHover] = useState(null)
+  const [width, setWidth] = useState(750)
+  const chart = useRef(null)
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width > 0) setWidth(Math.max(230, Math.round(entry.contentRect.width)))
+    })
+    observer.observe(chart.current)
+    return () => observer.disconnect()
+  }, [])
+  const chartRight = width - 15
+  const chartLeft = 72
   const index = hover === null ? comparison.timeline.length - 1 : Math.min(hover, comparison.timeline.length - 1)
   const totals = tracks.flatMap(track => track.values.map(level => level - 1))
   const min = Math.min(0, ...totals)
   const span = (Math.max(0, ...totals) - min) || 0.01
-  const x = i => 60 + i * 668 / (comparison.timeline.length - 1)
+  const x = i => chartLeft + i * (chartRight - chartLeft) / (comparison.timeline.length - 1)
   const y = level => 183 - (level - min) / span * 160
   const ticks = [...new Set([0, Math.floor(comparison.timeline.length / 2), comparison.timeline.length - 1])]
   return <section className="inv-panel inv-chart" aria-label={title}>
     <h3>{title}</h3>
-    <svg viewBox="0 0 750 220" role="img" aria-label="Gráfico da variação acumulada por mês">
+    <svg ref={chart} viewBox={`0 0 ${width} 220`} role="img" aria-label="Gráfico da variação acumulada por mês">
       {[0, 1, 2, 3, 4].map(i => {
         const level = min + i * span / 4
-        return <g key={i}><line className="inv-gridline" x1="60" x2="728" y1={y(level)} y2={y(level)} />
-          <text x="54" y={y(level) + 4} textAnchor="end">{value(level)}</text></g>
+        return <g key={i}><line className="inv-gridline" x1={chartLeft} x2={chartRight} y1={y(level)} y2={y(level)} />
+          <text x={chartLeft - 6} y={y(level) + 4} textAnchor="end">{value(level)}</text></g>
       })}
       {tracks.map(track => <polyline key={track.id} fill="none" stroke={track.color} strokeWidth="2.6"
         points={track.values.map((level, i) => x(i) + ',' + y(level - 1)).join(' ')} />)}
