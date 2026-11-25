@@ -7,6 +7,17 @@ const classe = ['cvm-c-00017024000153', 'Classe Crédito Privado', '000170240001
 const subclasse = ['cvm-c-00017024000153-A1', 'Classe Crédito Privado — Varejo', '00017024000153']
 const rows = [['2026-09-30', 100], ['2026-10-15', 102], ['2026-10-30', 105], ['2026-11-20', 110]]
 
+test('a busca do Orion aceita Off Funds, a grafia do cadastro e o CNPJ', () => {
+  const orion = ['cvm-c-23731495000124',
+    'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA',
+    '23731495000124']
+  const semelhante = ['cvm-c-53671189000100', 'ITAÚ FOF PREMIUM ORION FIC MULT', '53671189000100']
+  const catalogo = [semelhante, orion]
+  for (const busca of ['Itaú Off Funds Orion', 'Itaú Fund of Funds Orion', '23.731.495/0001-24', '23731495000124']) {
+    assert.deepEqual(buscarFundos(catalogo, busca), [orion])
+  }
+})
+
 test('a busca encontra nome sem acentos e CNPJ formatado, distinguindo subclasses', () => {
   assert.deepEqual(buscarFundos([classe, subclasse], 'credito  privado'), [classe, subclasse])
   assert.deepEqual(buscarFundos([classe, subclasse], '00.017.024/0001-53'), [classe, subclasse])

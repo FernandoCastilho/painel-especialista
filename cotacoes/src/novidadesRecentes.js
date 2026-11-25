@@ -10,6 +10,7 @@ export const NOVIDADES_RECENTES = [
       'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
       'Em Investimentos, busque fundos por nome ou CNPJ e use as cotas da CVM na calculadora, na comparação de ativos e na simulação de carteira.',
       'Ao escolher um fundo pelo nome ou CNPJ em Comparar ativos, a ficha mostra o retorno em 1, 3, 6 e 12 meses ao lado do CDI nas mesmas datas e permite adicionar o fundo à comparação.',
+      'A busca de fundos aceita a grafia “Off Funds” em nomes como Itaú Fund of Funds Orion.',
     ],
   },
   {
