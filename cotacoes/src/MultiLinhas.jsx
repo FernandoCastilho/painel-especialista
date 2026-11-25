@@ -13,7 +13,7 @@ const dmy = (t) => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', mon
 
 // Várias séries no mesmo gráfico. series: [{ key, name, color, points: [{ t, v }] }] (v já no modo escolhido).
 // A legenda mostra o valor de cada série na data sob o cursor; com até 8 séries também há um balão no gráfico.
-export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel, history = baseSeries, frequency = 'auto', rate = true, compareUnavailable = '', comparisonSeries = baseSeries, comparisonHistory = history }) {
+export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel, history = baseSeries, frequency = 'auto', rate = true, compareUnavailable = '', comparisonSeries = baseSeries, comparisonHistory = history, referencia = null }) {
   const [hover, setHover] = useState(null)
   const [selection, setSelection] = useState(null)
   const baseTimes=baseSeries.flatMap(s=>s.points.map(p=>p.t))
@@ -25,11 +25,13 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
   const comparisonView=from<baseStart ? comparisonSeries.map(s=>({...s,points:(comparisonHistory.find(h=>h.key===s.key)?.points || s.points).filter(p=>p.t>=from && p.t<=baseEnd)})) : comparisonSeries
   const resetKey=baseSeries.map(s=>`${s.key}:${s.points.length}:${s.points[0]?.t}:${s.points.at(-1)?.t}:${s.points[0]?.v}:${s.points.at(-1)?.v}`).join('|')
   const all = useMemo(() => series.flatMap((s) => s.points), [series])
+  const referenciaValor = Number.isFinite(referencia?.valor) ? referencia.valor : null
   const dom = useMemo(() => {
     const ts = all.map((p) => p.t), vs = all.map((p) => p.v)
+    if (referenciaValor != null) vs.push(referenciaValor)
     const lo = Math.min(...vs), hi = Math.max(...vs), pad = (hi - lo || Math.abs(hi) || 1) * 0.08
     return { t0: Math.min(...ts), t1: Math.max(...ts), ...niceTicks(lo - pad, hi + pad) }
-  }, [all])
+  }, [all, referenciaValor])
   if (!all.length || width <= 0) return null
   const { t0, t1, ticks, lo, hi } = dom
   const iw = width - M.l - M.r, ih = H - M.t - M.b
@@ -52,7 +54,7 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
   const bx = hx + 12 + bw > width - 4 ? hx - 12 - bw : hx + 12
   return (
     <ChartComparison resetKey={resetKey} onRangeChange={setSelection} series={comparisonView} history={comparisonHistory} frequency={frequency} rate={rate} unavailable={compareUnavailable}><div className="ml">
-      <svg className="hist-svg ml-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} aria-label={ariaLabel} onKeyDown={onKey} onFocus={(e) => { if (focoPorTeclado(e)) setHover(t0) }} onBlur={() => setHover(null)}
+      <svg className="hist-svg ml-svg" viewBox={`0 0 ${width} ${H}`} width="100%" role="img" tabIndex={0} aria-label={referenciaValor != null ? ariaLabel + '. ' + referencia.rotulo + ': ' + fmt(referenciaValor) : ariaLabel} onKeyDown={onKey} onFocus={(e) => { if (focoPorTeclado(e)) setHover(t0) }} onBlur={() => setHover(null)}
         onMouseMove={onMove} onMouseLeave={() => setHover(null)} onTouchMove={(e) => onMove(e.touches[0] && { currentTarget: e.currentTarget, clientX: e.touches[0].clientX })}>
         {ticks.map((v) => (
           <g key={v}>
@@ -61,6 +63,7 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
           </g>
         ))}
         {xTicks.map((t, i) => <text key={i} x={x(t)} y={H - 8} textAnchor={i === 0 ? 'start' : i === nx - 1 ? 'end' : 'middle'} fontSize="11" fill="var(--mut)">{rotuloData(t, { de: t0, ate: t1, timeZone: 'UTC' })}</text>)}
+        {referenciaValor != null && <line data-referencia="mercado" x1={M.l} x2={width - M.r} y1={y(referenciaValor)} y2={y(referenciaValor)} stroke="var(--chart-gold)" strokeDasharray="6 4" strokeWidth="2" />}
         {series.map((s) => s.points.length > 0 && <path key={s.key} className="ml-line" data-key={s.key} d={chartLinePath(s.points, x, y, 'v', s.stepped)} fill="none" stroke={s.color} strokeWidth={series.length > 10 ? 1.4 : 2} strokeLinejoin="round" />)}
         {hoverAt != null && (
           <g pointerEvents="none">
@@ -84,6 +87,7 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
         {series.map((s) => { const p = at(s); return (
           <li key={s.key} data-key={s.key}><i style={{ background: s.color }} aria-hidden="true" /><span className="ml-name" title={s.name}>{s.name}</span><b className="ml-val">{hoverAt == null ? fmt(s.points.at(-1)?.v ?? NaN) : p ? fmt(p.v) : '—'}</b></li>
         ) })}
+        {referenciaValor != null && <li><i style={{ background: 'transparent', borderTop: '2px dashed var(--chart-gold)' }} aria-hidden="true" /><span className="ml-name" title={referencia.rotulo}>{referencia.rotulo}</span><b className="ml-val">{fmt(referenciaValor)}</b></li>}
       </ul>
       <p className="chart-access-text" role="status" aria-live="polite">{hoverAt != null && `${dmy(hoverAt)} · ${series.map((s) => `${s.name}: ${at(s) ? fmt(at(s).v) : '—'}`).join(' · ')}`}</p>
     </div></ChartComparison>

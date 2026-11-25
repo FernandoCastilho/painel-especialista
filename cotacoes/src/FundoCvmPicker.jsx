@@ -29,7 +29,7 @@ export function useCotasCvm(ids, retry = 0) {
   return state
 }
 
-function useBusca(catalogo, busca, ids) {
+function useBusca(catalogo, busca) {
   const worker = useRef(null)
   const [resposta, setResposta] = useState(null)
   const [fallback, setFallback] = useState(false)
@@ -59,14 +59,14 @@ function useBusca(catalogo, busca, ids) {
     }
   }, [catalogo])
   useEffect(() => {
-    if (pronta) worker.current?.postMessage({ busca, ids })
-  }, [pronta, busca, catalogo, ids])
-  const locais = useMemo(() => fallback && catalogo ? buscarFundos(catalogo.items, buscaAdiada, ids.split(',')) : [],
-    [fallback, catalogo, buscaAdiada, ids])
+    if (pronta) worker.current?.postMessage({ busca })
+  }, [pronta, busca, catalogo])
+  const locais = useMemo(() => fallback && catalogo ? buscarFundos(catalogo.items, buscaAdiada) : [],
+    [fallback, catalogo, buscaAdiada])
   if (!pronta || !catalogo) return { matches: [], atualizando: false }
   return fallback
     ? { matches: locais, atualizando: busca !== buscaAdiada }
-    : { matches: resposta?.itens ?? [], atualizando: resposta?.busca !== busca || resposta?.ids !== ids }
+    : { matches: resposta?.itens ?? [], atualizando: resposta?.busca !== busca }
 }
 
 export default function FundoCvmPicker({ onSelect, selecionado, inline = false, referencias, ativos = semSelecao, lotado = false }) {
@@ -76,7 +76,7 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
   const [tentativa, setTentativa] = useState(0)
   const [estado, setEstado] = useState('')
   const campo = useRef(null)
-  const { matches, atualizando } = useBusca(catalogo, busca, ativos.join(','))
+  const { matches, atualizando } = useBusca(catalogo, busca)
   useEffect(() => {
     if (!ativado) return
     let vigente = true
@@ -95,28 +95,32 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
   }
   if (referencias) {
     const consulta = termoBusca(busca)
-    const pronta = consulta.length >= minimo && !lotado
-    const encontrados = referencias.filter(item => !ativos.includes(item.id) && termoBusca(item.name).includes(consulta))
+    const pronta = consulta.length >= minimo
+    const encontrados = referencias.filter(item => termoBusca(item.name).includes(consulta))
+    const resultados = atualizando ? encontrados : [...encontrados, ...matches.map(item => ({ id: item[0], name: nomeFundo(item) }))]
     return <section className="inv-panel inv-busca-principal" aria-label="Adicionar ativo à comparação">
       <label>Buscar ativo
         <input ref={campo} type="search" maxLength={120} placeholder="Nome do fundo, CNPJ, CDI, IPCA ou dólar"
-          value={busca} disabled={lotado} onChange={e => setBusca(e.target.value)} />
+          value={busca} onChange={e => setBusca(e.target.value)} />
       </label>
       <p className="inv-nota">{lotado ? 'Limite de seis ativos. Remova um para adicionar outro.'
         : 'Digite pelo menos dois caracteres e selecione um resultado para adicionar.'}</p>
       {pronta && <>
-        {(encontrados.length > 0 || (!atualizando && matches.length > 0)) &&
+        {resultados.length > 0 &&
           <ul className="inv-cvm-matches" aria-label="Ativos encontrados">
-            {encontrados.map(item => <li key={item.id}><button type="button" onClick={() => escolher(item.id, item.name)}>
-              {item.name}</button></li>)}
-            {!atualizando && matches.map(item => <li key={item[0]}><button type="button" onClick={() => escolher(item[0], nomeFundo(item))}>
-              {nomeFundo(item)}</button></li>)}
+            {resultados.map(item => {
+              const incluido = ativos.includes(item.id)
+              return <li key={item.id}><button type="button" disabled={incluido || lotado}
+                onClick={() => escolher(item.id, item.name)}>
+                {item.name}{incluido && <small className="inv-nota"> · Já na comparação</small>}
+              </button></li>
+            })}
           </ul>}
         {estado === 'error' ? <div className="inv-flex">
           <p role="status">Não foi possível carregar o catálogo de fundos.</p>
           <button type="button" onClick={() => setTentativa(n => n + 1)}>Tentar novamente</button>
         </div> : estado === 'loading' || atualizando ? <p role="status">Buscando fundos…</p>
-          : catalogo && !matches.length && !encontrados.length && <p role="status">Nenhum ativo encontrado.</p>}
+          : catalogo && !resultados.length && <p role="status">Nenhum ativo encontrado.</p>}
       </>}
     </section>
   }

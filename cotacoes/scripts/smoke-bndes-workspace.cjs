@@ -45,8 +45,11 @@ async function proveLastColumn(region, file) {
         assert.deepEqual((await page.locator('.cx-finame :is(.fm-group > h3, .rt-timeline > h3, .fm-result-workspace > .expandable-heading h3)').allInnerTexts()).map(text => text.replace(/\s+/g, ' ').trim()),
           ['1 Demanda do cliente', '2 Encargos', '3 Resultado · custo final para o cliente'])
         assert.equal(await page.locator('.fm-timeline, .rt-timeline').count(), 0, 'sem linha do tempo')
-        // Referência de mercado recolhida, no fim da tela (24/11/2026).
-        await page.locator('.cx-finame > details.rm-callout:last-child > summary', { hasText: 'Referência de mercado' }).waitFor()
+        const flow = page.locator('.cx-finame > details.bndes-flow-callout:last-child')
+        await flow.locator('summary', { hasText: 'Fluxo de pagamentos da cotação' }).waitFor()
+        assert.equal(await flow.evaluate(el => el.open), false)
+        const history = page.locator('.cx-finame > details.fm-indexers-callout')
+        assert.equal(await history.evaluate(el => el.open), false)
         // Data da liberação e praça ficam na gaveta "Detalhes do contrato", fechada, com o resumo no título.
         const drawer = page.locator('.fm-operation .fm-contrato')
         assert.equal(await drawer.evaluate(el => el.open), false, 'detalhes do contrato recolhidos')
