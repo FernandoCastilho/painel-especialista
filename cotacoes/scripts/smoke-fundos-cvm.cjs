@@ -27,12 +27,53 @@ async function fixtures(page) {
       version: 1, first: rows[0][0], last: rows.at(-1)[0], files: { catalogo, [grupo]: arquivo },
     } })
   })
-  await page.route('**/cvm/' + catalogo, route => route.fulfill({ body: gzipSync(JSON.stringify([
+  // A base sai em JSON comum e em .gz (plano B); as duas cópias trazem o mesmo conteúdo.
+  const itens = [
     [id, nome, cnpj],
     ['cvm-c-23731495000124', 'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA', '23731495000124'],
     ['cvm-c-10000000000100', 'Atlântico Fundo de Investimento em Cotas', '10000000000100'],
-  ])) }))
-  await page.route('**/cvm/' + arquivo, route => route.fulfill({ json: { [id]: rows } }))
+  ]
+  for (const [nomeArquivo, conteudo] of [[catalogo, itens], [arquivo, { [id]: rows }]]) {
+    await page.route(url => url.pathname.endsWith('/cvm/' + nomeArquivo.replace(/\.gz$/, '')), route => route.fulfill({ json: conteudo }))
+    await page.route(url => url.pathname.endsWith('/cvm/' + nomeArquivo), route => route.fulfill({ body: gzipSync(JSON.stringify(conteudo)) }))
+  }
+}
+
+// Rede de empresa que barra download de .gz (erro 403 MediaTypeBlockedDownload): a busca e a ficha
+// precisam funcionar com a cópia em JSON comum. Se nada baixar, a tela explica o bloqueio.
+async function redeQueBarraGz(browser) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' })
+  page.setDefaultTimeout(15000)
+  await fixtures(page)
+  const pedidosGz = []
+  await page.route(url => url.pathname.endsWith('.gz'), route => {
+    pedidosGz.push(route.request().url())
+    return route.fulfill({ status: 403, body: 'MediaTypeBlockedDownload' })
+  })
+  await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos')
+  const region = page.getByRole('region', { name: 'Investimentos', exact: true })
+  await region.getByRole('button', { name: 'Consultar fundos', exact: true }).click()
+  const busca = region.getByRole('searchbox', { name: 'Nome do fundo, classe ou CNPJ' })
+  await busca.fill('credito privado')
+  const tentar = region.getByRole('button', { name: 'Tentar novamente', exact: true })
+  const fundo = region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ })
+  await Promise.race([tentar.waitFor(), fundo.waitFor()])
+  if (await tentar.count()) await tentar.click()
+  await fundo.click()
+  await region.getByRole('region', { name: 'Ficha do fundo', exact: true }).getByRole('cell', { name: '1,01%', exact: true }).waitFor()
+  assert.deepEqual(pedidosGz, [], 'a base vem em JSON comum, sem pedir .gz')
+
+  // Nem JSON comum nem .gz: mensagem clara em vez de lista vazia.
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+  await page.route(url => /\/cvm\/(catalogo|cotas)-/.test(url.pathname), route => route.fulfill({ status: 403 }))
+  await page.route('**/cvm/manifest.json*', route => route.fulfill({ json: {
+    version: 1, first: rows[0][0], last: rows.at(-1)[0], files: { catalogo, [grupo]: arquivo },
+  } }))
+  await page.reload()
+  await region.getByRole('button', { name: 'Consultar fundos', exact: true }).click()
+  await busca.fill('credito privado')
+  await region.getByText(/Não foi possível baixar a base de fundos da CVM neste aparelho/).waitFor()
+  await page.close()
 }
 
 async function selecionarFundo(region) {
@@ -116,6 +157,29 @@ async function verificarComparador(region, page, width) {
   await ativos.getByRole('button', { name: 'Remover CDI', exact: true }).click()
 }
 
+// Computador que carrega a busca em segundo plano mas nunca recebe resposta (antivírus ou política da empresa):
+// a lista precisa aparecer mesmo assim, nas telas de Comparar e de Consultar.
+async function buscaSemSegundoPlano(browser) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' })
+  page.setDefaultTimeout(15000)
+  await fixtures(page)
+  // Site publicado antes da cópia em JSON comum: o .gz continua servindo.
+  await page.route(url => /\/cvm\/(catalogo|cotas)-.*\.json$/.test(url.pathname), route => route.fulfill({ status: 404 }))
+  await page.route('**/buscaFundosCvm.worker*.js', route => route.fulfill({ contentType: 'text/javascript', body: 'self.onmessage = () => {}' }))
+  await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos')
+  const region = page.getByRole('region', { name: 'Investimentos', exact: true })
+  const busca = region.getByRole('searchbox', { name: 'Buscar ativo' })
+  await busca.pressSequentially('credito privado')
+  const tentar = region.getByRole('button', { name: 'Tentar novamente', exact: true })
+  await Promise.race([tentar.waitFor(), region.getByRole('list', { name: 'Ativos encontrados' }).waitFor()])
+  if (await tentar.count()) await tentar.click()
+  await region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ }).waitFor()
+  await region.getByRole('button', { name: 'Consultar fundos', exact: true }).click()
+  await region.getByRole('searchbox', { name: 'Nome do fundo, classe ou CNPJ' }).fill('Atlantico FIC')
+  await region.getByRole('button', { name: /10\.000\.000\/0001-00 · Classe$/ }).waitFor()
+  await page.close()
+}
+
 async function main() {
   const browser = await chromium.launch({
     channel: process.env.SMOKE_CHANNEL || 'chrome',
@@ -179,7 +243,9 @@ async function main() {
       await tabela.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
       await page.close()
     }
-    console.log('Fundos CVM: busca, ordem dos blocos, gráfico por mouse, toque e teclado, ficha e carteira aprovados em 390 e 1280 px.')
+    if (!real) await buscaSemSegundoPlano(browser)
+    if (!real) await redeQueBarraGz(browser)
+    console.log('Fundos CVM: busca, ordem dos blocos, gráfico por mouse, toque e teclado, ficha e carteira aprovados em 390 e 1280 px, também sem .gz.')
   } finally {
     await browser.close()
   }

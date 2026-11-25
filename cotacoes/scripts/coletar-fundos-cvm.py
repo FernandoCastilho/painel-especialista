@@ -279,6 +279,8 @@ def main():
             if hashlib.sha256(dado).hexdigest() != arquivo.split('-')[-1].split('.')[0]:
                 raise ValueError(f'Arquivo da CVM diverge do manifesto: {arquivo}')
             (args.destino / arquivo).write_bytes(dado)
+            # Cópia em JSON comum: redes de empresa que barram download de .gz ainda leem a base.
+            (args.destino / arquivo.removesuffix('.gz')).write_bytes(gzip.decompress(dado))
         shutil.copyfile(manifest, args.destino / manifest.name)
 
 

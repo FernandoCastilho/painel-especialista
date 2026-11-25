@@ -115,6 +115,16 @@ async function carregar(arquivo, compactado = false, revalidacao) {
   return new Response(stream).json()
 }
 
+// Redes de empresa podem barrar download de .gz (erro 403). A base sai também em JSON comum,
+// que o próprio servidor comprime no envio; o .gz fica como plano B.
+async function carregarBase(arquivo, revalidacao) {
+  try {
+    return await carregar(arquivo.replace(/\.gz$/, ''), true, revalidacao)
+  } catch {
+    return carregar(arquivo, true, revalidacao)
+  }
+}
+
 async function lerCatalogo(revalidacao) {
   const manifest = await carregar('manifest.json', false, revalidacao)
   const arquivo = manifest.files?.catalogo
@@ -122,7 +132,7 @@ async function lerCatalogo(revalidacao) {
       || !/^\d{4}-\d{2}-\d{2}$/.test(manifest.first) || !/^\d{4}-\d{2}-\d{2}$/.test(manifest.last)) {
     throw new Error('Catálogo da CVM indisponível.')
   }
-  const items = await carregar(arquivo, true, revalidacao)
+  const items = await carregarBase(arquivo, revalidacao)
   if (!Array.isArray(items) || !items.length) throw new Error('Catálogo da CVM indisponível.')
   return { manifest, items }
 }
@@ -149,7 +159,7 @@ export async function carregarFundoCvm(id) {
   }
   if (!grupos.has(arquivo)) {
     if (grupos.size >= 8) grupos.delete(grupos.keys().next().value)
-    grupos.set(arquivo, carregar(arquivo, true).catch(error => {
+    grupos.set(arquivo, carregarBase(arquivo).catch(error => {
       grupos.delete(arquivo)
       catalogo = undefined
       throw error
