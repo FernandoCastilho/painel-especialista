@@ -19,24 +19,13 @@ Decisão de Fernando (25/11/2026): vale a regra legal (Decreto 6.306/2007, art. 
 - Retorno, Vl Retorno, Spread, Taxa net, Score revenda, Plataforma, F5 (dependem de tabelas do sistema).
 - Nº proposta, CNPJ raiz, gerente (dado de cliente: não entram no painel).
 
-## 4. Tabela FUNDING (guardada para depois, ainda sem uso na conta)
-Estrutura: prazo em meses (linhas) × taxa a.a. e taxa a.m. (colunas), por semana de vigência. Mais a linha SELIC.
+## 4. Tabela FUNDING (decisão de Fernando, 25/11/2026)
+- Não fica no código nem no repositório. O usuário cola as células do Excel no "!" ao lado do "?" da calculadora; a tabela fica só na aba do navegador (sessionStorage) e some ao fechar.
+- Formato: prazo em meses | taxas a.a. por vigência ("dd/mm até dd/mm") | taxas a.m. | linha SELIC (ignorada). Só as colunas ao ano entram na conta.
+- Spread composto: (1 + taxa a.a.) = (1 + funding a.a.) × (1 + spread a.a.). Entre prazos, interpolação linear; fora da tabela, a ponta. A tela aceita a taxa (mostra o spread) ou o spread (mostra a taxa); a conta se inverte exatamente.
+- O spread não vai para o e-mail nem para a imagem do WhatsApp.
 
-| Prazo | a.a. 11/11–18/11 | a.a. 19/11–25/11 | a.m. 11/11–18/11 | a.m. 19/11–25/11 |
-|---|---|---|---|---|
-| 6 | 13,68% (célula: 13,6779%) | 13,80% | 1,07% | 1,08% |
-| 9 | 13,96% | 14,12% | 1,09% | 1,11% |
-| 12 | 14,20% | 14,37% | 1,11% | 1,13% |
-| 18 | 14,58% | 14,77% | 1,14% | 1,15% |
-| 24 | 14,85% | 15,04% | 1,16% | 1,17% |
-| 36 | 15,19% | 15,35% | 1,19% | 1,20% |
-| 42 | 15,28% | 15,44% | 1,19% | 1,20% |
-| 48 | 15,44% | 15,58% | 1,20% | 1,21% |
-| 60 | 15,60% | 15,73% | 1,22% | 1,22% |
-| 72 | 15,72% | 15,84% | 1,22% | 1,23% |
-| SELIC | 14,75% | 14,75% | 1,15% | 1,15% |
-
-- Taxa a.m. = taxa a.a. convertida por juros compostos (13,68% a.a. → 1,07% a.m.).
-- Em uso desde 25/11/2026 para o spread da operação: (1 + taxa a.a.) = (1 + funding a.a.) × (1 + spread a.a.). Entre prazos, interpolação linear; fora da tabela, a ponta. Valores de exemplo (Fernando: "hipotética"). Arquivo: `cotacoes/src/cdcFunding.js`.
-- Exemplo: 1,55% a.m. (20,27% a.a.), 48 meses, funding 15,58% → spread 4,06% a.a. (a planilha mostrava "Spread 4,00"; somando em vez de compor daria 4,69%).
-- Fernando vai mandar outras partes à medida que a calculadora for evoluindo.
+## 5. Ajustes de 25/11/2026 (pedido de Fernando)
+- Saíram: ano modelo, zero km, perfil de IOF (sempre PJ geral), liberação (agora "Data da simulação", sempre hoje), tarifa de avaliação, registro de contrato e os três seguros.
+- Resultado: "Resultado Simulação", só com o IOF total.
+- E-mail em arquivo do Outlook (.eml) e imagem para o WhatsApp, os dois com avisos de cotação indicativa.
