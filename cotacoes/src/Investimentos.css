@@ -69,3 +69,6 @@
 .inv-workspace .inv-cvm-matches li { padding:0; border:0; }
 .inv-workspace .inv-cvm-matches button { width:100%; text-align:left; overflow-wrap:anywhere; }
 .inv-workspace :is(.inv-legend li, .inv-allocations label, .inv-resultado) { overflow-wrap:anywhere; }
+.inv-workspace .inv-ficha { display:grid; gap:8px; margin-block:12px; padding:12px; border:1px solid var(--bw-line); border-radius:10px; overflow-wrap:anywhere; }
+.inv-workspace .inv-ficha h4 { margin:0; }
+.inv-workspace .inv-ficha td { white-space:nowrap; }

@@ -75,6 +75,30 @@ export async function loadBcb(item, today, signal, fetcher = fetch) {
   return rows
 }
 
+export function resumoFundo(cotas, cdi = []) {
+  const [fim, cotaFinal] = cotas.at(-1)
+  const referencia = new Map(cdi)
+  const dataFinal = new Date(fim)
+  return [1, 3, 6, 12].map(meses => {
+    const alvo = new Date(Date.UTC(dataFinal.getUTCFullYear(), dataFinal.getUTCMonth() - meses, 1))
+    const ultimoDia = Number(endOfMonth(alvo.toISOString().slice(0, 7)).slice(-2))
+    alvo.setUTCDate(Math.min(dataFinal.getUTCDate(), ultimoDia))
+    const dataAlvo = alvo.toISOString().slice(0, 10)
+    alvo.setUTCDate(alvo.getUTCDate() - 7)
+    const limite = alvo.toISOString().slice(0, 10)
+    const ponto = cotas.findLast(([dia]) => dia <= dataAlvo && dia >= limite)
+    if (!ponto) return { meses, fim, inicio: null, fundo: null, cdi: null }
+    const [inicio, cotaInicial] = ponto
+    const cdiInicial = referencia.get(inicio)
+    const cdiFinal = referencia.get(fim)
+    return {
+      meses, inicio, fim,
+      fundo: cotaFinal / cotaInicial - 1,
+      cdi: usableLevel(cdiInicial) && usableLevel(cdiFinal) ? cdiFinal / cdiInicial - 1 : null,
+    }
+  })
+}
+
 function monthValues(rows, currentMonth) {
   const values = new Map()
   for (const row of rows) {
