@@ -64,9 +64,11 @@
 :root[data-theme] body .credit-workspace .credit-result-box { margin:16px 0 0; border:2px solid var(--cp-orange); border-radius:12px; overflow:hidden; background:var(--bw-card); color:var(--bw-ink); }
 :root[data-theme] body .credit-workspace .credit-result-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; background:var(--cp-navy); color:#fff; }
 :root[data-theme] body .credit-workspace .credit-result-head h3 { margin:0; color:#fff; font-size:1.05rem; font-weight:700; }
-:root[data-theme] body .credit-workspace a.credit-email { flex:none; color:#fff; }
-:root[data-theme] body .credit-workspace a.credit-email:focus-visible { outline:2px solid var(--cp-orange); outline-offset:2px; }
-:root[data-theme] body .credit-workspace a.credit-email[aria-disabled="true"] { opacity:.55; cursor:default; }
+:root[data-theme] body .credit-workspace .credit-email { flex:none; color:#fff; border:0; background:transparent; cursor:pointer; display:inline-grid; place-items:center; } /* botão que baixa o e-mail do Outlook (23/11/2026) */
+:root[data-theme] body .credit-workspace .credit-email:focus-visible { outline:2px solid var(--cp-orange); outline-offset:2px; }
+:root[data-theme] body .credit-workspace .credit-email:disabled { opacity:.55; cursor:default; }
+:root[data-theme] body .credit-workspace .credit-result-head .credit-email { color:var(--bw-link); } /* cabeçalho do resultado é claro: branco sumia (contraste 1,00) */
+:root[data-theme] body .credit-workspace .credit-email-wrap small { display:block; color:var(--bw-warn-ink); }
 :root[data-theme] body .credit-workspace .credit-result-body { display:flex; flex-direction:column; gap:12px; padding:14px; min-width:0; }
 :root[data-theme] body .credit-workspace .credit-result-status { margin:0; color:var(--bw-mut); font-size:.8rem; line-height:1.45; }
 :root[data-theme] body .credit-workspace .credit-result-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; padding-top:12px; border-top:1px solid var(--bw-line); }
