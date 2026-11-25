@@ -57,14 +57,46 @@ test('o catálogo se recupera de um manifesto que aponta para um arquivo ausente
         files: { catalogo: url.search ? atual : antigo },
       })
     }
-    if (url.pathname.endsWith(atual)) return Response.json([classe])
+    if (url.pathname.endsWith(atual.replace(/\.gz$/, ''))) return Response.json([classe])
     return new Response(null, { status: 404 })
   })
   assert.deepEqual((await carregarCatalogoCvm()).items, [classe])
-  assert.equal(requisicoes.length, 4)
-  assert.ok(requisicoes[2].url.search)
-  assert.equal(requisicoes[2].url.search, requisicoes[3].url.search)
-  assert.equal(requisicoes[3].cache, 'no-store')
+  // Manifesto antigo, JSON comum e .gz ausentes; manifesto revalidado, JSON comum atual.
+  assert.deepEqual(requisicoes.map(({ url }) => url.pathname.split('/').at(-1)),
+    ['manifest.json', antigo.replace(/\.gz$/, ''), antigo, 'manifest.json', atual.replace(/\.gz$/, '')])
+  assert.ok(requisicoes[3].url.search)
+  assert.equal(requisicoes[3].url.search, requisicoes[4].url.search)
+  assert.equal(requisicoes[4].cache, 'no-store')
+})
+
+test('a base de fundos abre em rede que barra .gz e, sem a cópia comum, usa o .gz', async t => {
+  const catalogo = 'catalogo-' + 'c'.repeat(64) + '.json.gz'
+  const bucket = [...classe[2]].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 128, 0)
+  const cotas = 'cotas-' + bucket + '-' + 'd'.repeat(64) + '.json.gz'
+  const comprimir = async objeto => new Uint8Array(await new Response(
+    new Blob([JSON.stringify(objeto)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())
+  const pedidos = []
+  globalThis.document = { baseURI: 'https://painel.example/cotacoes/' }
+  t.after(() => { delete globalThis.document })
+  t.mock.method(globalThis, 'fetch', async url => {
+    const nome = url.pathname.split('/').at(-1)
+    pedidos.push(nome)
+    if (nome === 'manifest.json') {
+      return Response.json({ version: 1, first: '2026-09-30', last: '2026-11-20', files: { catalogo, [bucket]: cotas } })
+    }
+    // Proxy da empresa: 403 MediaTypeBlockedDownload em todo .gz.
+    if (nome === catalogo.replace(/\.gz$/, '')) return Response.json([classe])
+    if (nome.endsWith('.gz') && nome.startsWith('catalogo')) return new Response('bloqueado', { status: 403 })
+    // Site publicado antes da cópia comum: só o .gz das cotas existe.
+    if (nome === cotas) return new Response(await comprimir({ [classe[0]]: rows }))
+    return new Response(null, { status: 404 })
+  })
+  // Módulo novo: o catálogo do teste anterior fica guardado no módulo já carregado.
+  const cvm = await import('../src/fundosCvm.js?rede-que-barra-gz')
+  assert.deepEqual((await cvm.carregarCatalogoCvm()).items, [classe])
+  assert.deepEqual(pedidos, ['manifest.json', catalogo.replace(/\.gz$/, '')])
+  assert.deepEqual((await cvm.carregarFundoCvm(classe[0])).rows, rows)
+  assert.deepEqual(pedidos.slice(2), [cotas.replace(/\.gz$/, ''), cotas])
 })
 
 test('a busca encontra nome sem acentos e CNPJ formatado, distinguindo subclasses', () => {
