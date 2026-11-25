@@ -4,7 +4,7 @@ import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
 import { FONTE_CVM, isFundoCvm, LICENCA_CVM } from './fundosCvm.js'
 import {
   PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, parseSeriesCsv, loadBcb, compareHistory,
-  metrics, simulateHistory, comparisonCsv,
+  metrics, simulateHistory, comparisonCsv, resumoFundo,
 } from './investmentHistory.js'
 
 const COLORS = ['#0131ff', '#ff6200', '#00847e', '#9668bd', '#8e5400', '#396c9b']
@@ -153,6 +153,32 @@ function SeriesPicker({ remaining, add, importSeries }) {
   </details>
 }
 
+function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, add, jaAdicionado, lotado }) {
+  const resumo = resumoFundo(fundo.rows, cdi)
+  return <section className="inv-ficha" aria-labelledby="inv-ficha-titulo">
+    <h4 id="inv-ficha-titulo">Ficha do fundo</h4>
+    <p><strong>{fundo.name}</strong></p>
+    <p className="inv-nota">Cotas de {dateText(fundo.rows[0][0])} a {dateText(fundo.rows.at(-1)[0])} · CVM</p>
+    <div className="inv-table"><table aria-label="Rentabilidade do fundo e do CDI">
+      <thead><tr><th scope="col">Período</th><th scope="col">Fundo</th><th scope="col">CDI</th></tr></thead>
+      <tbody>{resumo.map(linha => <tr key={linha.meses}>
+        <th scope="row">{linha.meses} {linha.meses === 1 ? 'mês' : 'meses'}
+          {linha.inicio && <small>{dateText(linha.inicio)} a {dateText(linha.fim)}</small>}
+        </th>
+        <td>{value(linha.fundo)}</td><td>{value(linha.cdi)}</td>
+      </tr>)}</tbody>
+    </table></div>
+    {cdiLoading && <p className="inv-nota" role="status">Carregando CDI…</p>}
+    {cdiFalhou && <button type="button" onClick={repetir}>Tentar carregar CDI novamente</button>}
+    <p className="inv-nota">Variação da cota, sem distribuições nem tributos do cotista.
+      A cota inicial pode recuar até sete dias corridos. O CDI acumula da data inicial até a véspera da final.
+      O traço indica dado indisponível.</p>
+    <button type="button" disabled={jaAdicionado || lotado} onClick={() => add(fundo.id)}>
+      {jaAdicionado ? 'Já está na comparação' : lotado ? 'Limite de seis ativos atingido' : 'Adicionar à comparação'}
+    </button>
+  </section>
+}
+
 function Portfolio({ comparison, currency }) {
   const [inputs, setInputs] = useState({})
   const allocation = track => inputs[track.id] ?? '1000'
@@ -185,9 +211,11 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
   const [activeFavorite, setActiveFavorite] = useState('')
   const [status, setStatus] = useState('')
   const [retry, setRetry] = useState(0)
+  const [fichaId, setFichaId] = useState('')
   const [source, today] = useBcbHistory(retry)
   const fundosIds = config.ids.filter(isFundoCvm)
-  const fundos = useCotasCvm(fundosIds, retry)
+  const fundos = useCotasCvm(fichaId && !fundosIds.includes(fichaId) ? [...fundosIds, fichaId] : fundosIds, retry)
+  const fundoFicha = fundos.dados[fichaId]
   const catalog = [...publicSeries, ...custom]
   const selected = config.ids.map((id, index) => {
     const fundo = isFundoCvm(id)
@@ -311,11 +339,15 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
             <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
           </li>
         })}</ul>
+        <FundoCvmPicker onSelect={setFichaId} selecionado={fichaId} />
+        {fichaId && (fundoFicha
+          ? <FichaFundo fundo={fundoFicha} cdi={source.data.cdi} cdiLoading={source.loading} cdiFalhou={source.errors.includes('cdi')}
+              repetir={() => setRetry(n => n + 1)} add={add} jaAdicionado={config.ids.includes(fichaId)} lotado={selected.length >= MAX_SERIES} />
+          : fundos.erros.includes(fichaId)
+            ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
+            : <p role="status">Carregando a ficha do fundo…</p>)}
         {selected.length < MAX_SERIES
-          ? <>
-            <FundoCvmPicker onSelect={add} excluidos={config.ids} />
-            <SeriesPicker remaining={catalog.filter(item => !config.ids.includes(item.id))} add={add} importSeries={importSeries} />
-          </>
+          ? <SeriesPicker remaining={catalog.filter(item => !config.ids.includes(item.id))} add={add} importSeries={importSeries} />
           : <p className="inv-nota">Até {MAX_SERIES} séries por comparação.</p>}
         {mode === 'comparar' && <button className="inv-primary" type="button" onClick={showPortfolio}>Simular carteira</button>}
       </section>

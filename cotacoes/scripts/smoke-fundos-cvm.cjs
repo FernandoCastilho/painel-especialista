@@ -11,14 +11,14 @@ const hash = 'a'.repeat(64)
 const grupo = [...cnpj].reduce((total, char) => (total * 31 + char.charCodeAt(0)) % 128, 0)
 const arquivo = 'cotas-' + grupo + '-' + hash + '.json.gz'
 const catalogo = 'catalogo-' + hash + '.json.gz'
-const rows = [['2025-09-30', 100], ['2025-10-15', 102], ['2025-10-31', 105], ['2025-11-28', 110]]
+const rows = [['2025-09-30', 100], ['2025-10-28', 102], ['2025-10-31', 105], ['2025-11-28', 110]]
 const normalizar = str => str.replace(/\s+/g, ' ').trim()
 
 async function fixtures(page) {
-  await page.route('**/dados/serie/bcdata.sgs.*/dados?**', route => route.fulfill({ json: [
-    { data: '30/09/2025', valor: '1' }, { data: '31/10/2025', valor: '1.01' }, { data: '28/11/2025', valor: '1.02' },
-  ] }))
   if (real) return
+  await page.route('**/dados/serie/bcdata.sgs.*/dados?**', route => route.fulfill({ json: [
+    { data: '30/09/2025', valor: '1' }, { data: '28/10/2025', valor: '1.01' }, { data: '28/11/2025', valor: '1.02' },
+  ] }))
   let tentativas = 0
   await page.route('**/cvm/manifest.json', route => {
     if (tentativas++ === 0) return route.fulfill({ status: 503 })
@@ -33,7 +33,7 @@ async function fixtures(page) {
 async function selecionarFundo(region) {
   await region.locator('summary:visible').filter({ hasText: /^Buscar fundos na CVM$/ }).click()
   const busca = region.getByRole('searchbox', { name: 'Nome do fundo, classe ou CNPJ' })
-  await busca.fill(real ? '00.017.024/0001-53' : 'credito privado')
+  await busca.fill(real ? 'renda fixa exponencial' : 'credito privado')
   if (!real) await region.getByRole('button', { name: 'Tentar novamente', exact: true }).click()
   await region.getByRole('button', { name: /00\.017\.024\/0001-53 · Classe$/ }).click()
 }
@@ -53,7 +53,19 @@ async function main() {
       const region = page.getByRole('region', { name: 'Investimentos', exact: true })
       await selecionarFundo(region)
       const ativos = region.getByRole('region', { name: 'Ativos em comparação' })
-      await ativos.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
+      const ficha = ativos.getByRole('region', { name: 'Ficha do fundo', exact: true })
+      const umMes = ficha.getByRole('row', { name: /^1 mês/ })
+      await umMes.waitFor()
+      if (real) {
+        await umMes.getByRole('cell', { name: /%$/ }).nth(1).waitFor()
+      } else {
+        await umMes.getByRole('cell', { name: '1,01%', exact: true }).waitFor()
+        assert.match(normalizar(await umMes.innerText()), /28\/10\/2025 a 28\/11\/2025.*7,84%.*1,01%/)
+      }
+      const remover = ativos.getByRole('button', { name: /^Remover .*00\.017\.024\/0001-53 · Classe$/ })
+      assert.equal(await remover.count(), 0)
+      await ficha.getByRole('button', { name: 'Adicionar à comparação', exact: true }).click()
+      await remover.waitFor()
       const tabela = region.getByRole('region', { name: 'Retorno e risco' })
       await tabela.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
       if (!real) assert.match(normalizar(await tabela.innerText()), /10,00%/)
@@ -75,12 +87,12 @@ async function main() {
         assert.match(normalizar(await saida.innerText()), /Valor final R\$ 1\.047,62/)
       }
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'sem rolagem lateral')
+      await page.goto('about:blank')
       await page.goto(base.replace(/\/$/, '') + '/#calculadora/investimentos?ativos=' + id)
-      await page.reload()
       await tabela.getByText(/00\.017\.024\/0001-53 · Classe$/).waitFor()
       await page.close()
     }
-    console.log('Fundos CVM: busca, cálculo, comparação, carteira e reabertura em 390 e 1280 px aprovados.')
+    console.log('Fundos CVM: busca por nome, ficha, cálculo, comparação, carteira e reabertura em 390 e 1280 px aprovados.')
   } finally {
     await browser.close()
   }

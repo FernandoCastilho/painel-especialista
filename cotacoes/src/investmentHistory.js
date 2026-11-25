@@ -1,3 +1,4 @@
+import { addDays } from './holidays.js'
 import { numeroPt } from './investimentos.js'
 
 export const PUBLIC_SERIES = [
@@ -73,6 +74,34 @@ export async function loadBcb(item, today, signal, fetcher = fetch) {
   const rows = bcbSeries(await response.json(), item.kind, today)
   if (rows.length < 2) throw new Error('Série insuficiente.')
   return rows
+}
+
+export function resumoFundo(cotas, cdi = []) {
+  const [fim, cotaFinal] = cotas.at(-1)
+  // A razão entre os níveis anteriores a cada data inclui a taxa do início e exclui a do fim.
+  const referencia = new Map(cdi.map(([dia], i) => [dia, cdi[i - 1]?.[1]]))
+  const ultimoCdi = cdi.at(-1)
+  // A data final pode vir antes da divulgação da sua própria taxa. Pule apenas o fim de semana.
+  const limiteCdi = ultimoCdi && addDays(ultimoCdi[0], new Date(ultimoCdi[0]).getUTCDay() === 5 ? 3 : 1)
+  const cdiFinal = ultimoCdi && fim > ultimoCdi[0] && fim <= limiteCdi ? ultimoCdi[1] : referencia.get(fim)
+  const dataFinal = new Date(fim)
+  return [1, 3, 6, 12].map(meses => {
+    const alvo = new Date(Date.UTC(dataFinal.getUTCFullYear(), dataFinal.getUTCMonth() - meses, 1))
+    const ultimoDia = Number(endOfMonth(alvo.toISOString().slice(0, 7)).slice(-2))
+    alvo.setUTCDate(Math.min(dataFinal.getUTCDate(), ultimoDia))
+    const dataAlvo = alvo.toISOString().slice(0, 10)
+    alvo.setUTCDate(alvo.getUTCDate() - 7)
+    const limite = alvo.toISOString().slice(0, 10)
+    const ponto = cotas.findLast(([dia]) => dia <= dataAlvo && dia >= limite)
+    if (!ponto) return { meses, fim, inicio: null, fundo: null, cdi: null }
+    const [inicio, cotaInicial] = ponto
+    const cdiInicial = referencia.get(inicio)
+    return {
+      meses, inicio, fim,
+      fundo: cotaFinal / cotaInicial - 1,
+      cdi: usableLevel(cdiInicial) && usableLevel(cdiFinal) ? cdiFinal / cdiInicial - 1 : null,
+    }
+  })
 }
 
 function monthValues(rows, currentMonth) {
