@@ -66,10 +66,10 @@ test('exemplo de abertura da tela: R$ 1 milhão, 48 meses, 3 de carência, TFC d
   assert.deepEqual(r.parcelas.slice(0, 3).map(p => p.parcela > 0), [false, false, true])
 })
 
-test('a tela segue a ordem do roteiro e termina no fluxo de pagamentos', async () => {
+test('a tela segue a ordem do roteiro e termina nas premissas, depois do fluxo de pagamentos', async () => {
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const order = ["step(1, 'Demanda do cliente')", "step(2, 'Encargos')", "step(3, 'Resultado · custo final para o cliente')",
-    'id="fm-parcelas"', 'title="Memória completa do fluxo"', 'title="Premissas e limites da simulação"', 'title="Histórico dos indexadores"', 'title="Fluxo de pagamentos da cotação"'].map(text => source.indexOf(text))
+    'id="fm-parcelas"', 'title="Memória completa do fluxo"', 'title="Histórico dos indexadores"', 'title="Fluxo de pagamentos da cotação"', 'title="Premissas e limites da simulação"'].map(text => source.indexOf(text))
   assert.ok(order.every((at, k) => at > 0 && (k === 0 || at > order[k - 1])), `blocos na ordem do roteiro: ${order}`)
   // A linha do tempo saiu em 21/11/2026.
   assert.doesNotMatch(source, /LinhaDoTempo/)
@@ -86,6 +86,6 @@ test('a tela segue a ordem do roteiro e termina no fluxo de pagamentos', async (
   // O resultado continua respondendo com os nomes que já usava.
   for (const linha of ['Valor financiado', 'Primeira parcela após carência', 'Última parcela', 'Custo total estimado', 'CET estimado']) assert.ok(source.includes(linha), linha)
   // A curva de mercado usa o prazo digitado dentro do mesmo callout do histórico.
-  assert.match(source.slice(order.at(-2), order.at(-1)), /<ReferenciaMercado .*prazoMeses=\{prazo \?\? undefined\}/)
-  assert.match(source.slice(order.at(-1)), /<\/BndesDetails>\}\s*<\/section>\s*\)\s*\}\s*$/)
+  assert.match(source.slice(order.at(-3), order.at(-2)), /<ReferenciaMercado .*prazoMeses=\{prazo \?\? undefined\}/)
+  assert.match(source.slice(order.at(-1)), /<\/BndesDetails>\s*<\/section>\s*\)\s*\}\s*$/)
 })

@@ -25,3 +25,13 @@ export function historicoIndexadores(ids, { ipca, selic, dolar }) {
     ...(ids.includes('tfbd') ? [bndesSerie('usd', 'Dólar · R$ por US$', dolar ?? [], 'R$')] : []),
   ]
 }
+
+// Taxa DI de cada dia útil (CDI anualizado, SGS 4389, % a.a.). A curva DI por prazo guardada pelo painel tem só
+// algumas semanas de histórico; para os 12 meses do gráfico, a linha do DI usa a taxa do dia (pedido de 25/11/2026).
+export const serieDi = cdi => bndesSerie('di', 'DI · taxa do dia (CDI)', Array.isArray(cdi) ? cdi : [])
+
+// O mesmo recorte do gráfico da tela, pronto para o PDF: [data, valor] de cada série no período.
+export function historicoParaPdf(items, range) {
+  if (!range) return null
+  return { inicio: range.start, fim: range.end, series: items.map(item => ({ nome: item.name, pontos: item.list.filter(p => p.period >= range.start && p.period <= range.end).map(p => [p.period, p.value]) })) }
+}
