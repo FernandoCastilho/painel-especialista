@@ -23,6 +23,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      - name: Conferir identidade e preservação da base da CVM
+        run: python3 -B test/fundos-cvm-coleta.py
       - name: Preparar ensaio semanal com dados simulados
         run: node test/helpers/weekly-package.mjs "$RUNNER_TEMP/weekly-package-test.json"
       - run: npm run build
@@ -91,6 +93,9 @@ jobs:
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
       - name: Conferir mapas de recuperação judicial, tooltips e rótulos
         run: SEARCH_QA_OUTPUT="$RUNNER_TEMP/qa-universal/recovery" node scripts/smoke-recuperacao.cjs
+      - name: Conferir fundos da CVM nas três funções de Investimentos
+        timeout-minutes: 2
+        run: node scripts/smoke-fundos-cvm.cjs
       - name: Capturas dos mapas de recuperação judicial
         if: always()
         uses: actions/upload-artifact@v4

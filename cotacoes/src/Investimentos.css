@@ -65,3 +65,7 @@
   .inv-workspace .inv-table :is(th,td) { padding:6px; font-size:.83rem; }
 }
 .inv-workspace .inv-favorites { max-width:min(100%,270px); font-size:.875rem; }
+.inv-workspace .inv-cvm-matches { display:grid; gap:6px; max-height:300px; overflow:auto; list-style:none; padding:0; }
+.inv-workspace .inv-cvm-matches li { padding:0; border:0; }
+.inv-workspace .inv-cvm-matches button { width:100%; text-align:left; overflow-wrap:anywhere; }
+.inv-workspace :is(.inv-legend li, .inv-allocations label, .inv-resultado) { overflow-wrap:anywhere; }

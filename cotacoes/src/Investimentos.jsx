@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import CalcBack from './CalcBack.jsx'
 import InvestmentWorkspace from './InvestmentWorkspace.jsx'
+import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
+import { FONTE_CVM } from './fundosCvm.js'
 import { numeroPt, cdb, fundo, acoes, cotasCvm } from './investimentos.js'
 import './Investimentos.css'
 
 const brl = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const pct = n => n.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const data = d => d?.split('-').reverse().join('/')
-const fonte = 'https://dados.cvm.gov.br/dataset/fi-doc-inf_diario'
 
 function Campo({ label, value = '', onChange, tipo = 'text', modo = 'decimal' }) {
   return <label>{label}<input type={tipo} value={value} inputMode={tipo === 'text' ? modo : undefined} onChange={e => onChange(e.target.value)} /></label>
@@ -45,14 +46,20 @@ function Cdb({ v, set }) {
 function Fundos({ v, set }) {
   const [arquivo, setArquivo] = useState(null)
   const [mensagem, setMensagem] = useState('')
+  const [fundoId, setFundoId] = useState('')
+  const [retry, setRetry] = useState(0)
+  const cvm = useCotasCvm(fundoId ? [fundoId] : [], retry)
+  const fundoCvm = cvm.dados[fundoId]
   const tipo = v.tipo ?? 'classe', cnpj = v.cnpj ?? '', sub = tipo === 'classe' ? (v.sub ?? '').trim() : ''
   const chave = JSON.stringify([tipo, cnpj, sub])
-  const pontos = arquivo?.chave === chave ? arquivo.pontos : null
+  const pontos = fundoId ? fundoCvm?.rows : arquivo?.chave === chave ? arquivo.pontos : null
   const fontes = pontos && new Map(pontos)
-  const preenchido = pontos ? v.data1 && v.data2 : v.cota1 && v.cota2
-  const r = v.valor && preenchido ? pontos && v.data1 >= v.data2
+  const data1 = fontes?.has(v.data1) ? v.data1 : pontos?.[0][0]
+  const data2 = fontes?.has(v.data2) ? v.data2 : pontos?.at(-1)[0]
+  const preenchido = pontos ? data1 && data2 : !fundoId && v.cota1 && v.cota2
+  const r = v.valor && preenchido ? pontos && data1 >= data2
     ? { ok: false, erro: 'A data final precisa ser posterior à inicial.' }
-    : fundo(numeroPt(v.valor), fontes ? fontes.get(v.data1) : numeroPt(v.cota1), fontes ? fontes.get(v.data2) : numeroPt(v.cota2))
+    : fundo(numeroPt(v.valor), fontes ? fontes.get(data1) : numeroPt(v.cota1), fontes ? fontes.get(data2) : numeroPt(v.cota2))
     : null
   async function importar(e) {
     const files = Array.from(e.target.files ?? [])
@@ -67,6 +74,7 @@ function Fundos({ v, set }) {
       const lista = cotasCvm(await Promise.all(files.map(f => f.text())), { tipo, cnpj, sub })
       if (lista.length < 2) { setMensagem('Não encontrei duas cotas para esse identificador. Confira o CNPJ, a subclasse e os arquivos.'); return }
       setArquivo({ chave, pontos: lista })
+      setFundoId('')
       set('data1', lista[0][0]); set('data2', lista.at(-1)[0])
       setMensagem(lista.length + ' cotas encontradas para a série selecionada.')
     } catch (erro) { setMensagem(erro.message) }
@@ -74,9 +82,23 @@ function Fundos({ v, set }) {
   return <>
     <p>Veja como o valor teria variado com as cotas informadas. Sem aportes ou resgates intermediários, distribuições ou impostos do cotista.</p>
     <div className="inv-grade"><Campo label="Valor aplicado (R$)" value={v.valor} onChange={x => set('valor',x)} /></div>
+    <FundoCvmPicker selecionado={fundoId} onSelect={id => {
+      setFundoId(id)
+      setArquivo(null)
+      set('data1', '')
+      set('data2', '')
+    }} />
+    {fundoId && <>
+      {fundoCvm ? <p><strong>{fundoCvm.name}</strong> · cotas da CVM</p>
+        : cvm.erros.includes(fundoId) ? <>
+          <p role="status">Não foi possível carregar as cotas deste fundo.</p>
+          <button type="button" onClick={() => setRetry(x => x + 1)}>Tentar carregar cotas novamente</button>
+        </> : <p role="status">Carregando cotas da CVM…</p>}
+      <button type="button" onClick={() => setFundoId('')}>Usar cotas manuais</button>
+    </>}
     <details className="inv-import">
       <summary>Importar Informe Diário da CVM</summary>
-      <p>Baixe o ZIP pelo <a href={fonte} target="_blank" rel="noreferrer">portal da CVM</a> e extraia o CSV. Nada é enviado: a leitura ocorre neste navegador.</p>
+      <p>Baixe o ZIP pelo <a href={FONTE_CVM} target="_blank" rel="noreferrer">portal da CVM</a> e extraia o CSV. Nada é enviado: a leitura ocorre neste navegador.</p>
       <div className="inv-grade">
         <label>Tipo de registro<select value={tipo} onChange={e => set('tipo', e.target.value)}><option value="classe">Classe (CVM 175)</option><option value="fundo">Fundo (cadastro anterior)</option></select></label>
         <Campo label="CNPJ do fundo ou classe" value={v.cnpj} onChange={x => set('cnpj',x)} modo="numeric" />
@@ -84,15 +106,15 @@ function Fundos({ v, set }) {
       </div>
       <label>Arquivos CSV da CVM<input type="file" accept=".csv,text/csv" multiple onChange={importar} /></label>
       <p role="status">{mensagem}</p>
-      {pontos && <button type="button" onClick={() => { setArquivo(null); setMensagem('Cotas manuais selecionadas.') }}>Usar cotas manuais</button>}
+      {pontos && !fundoId && <button type="button" onClick={() => { setArquivo(null); setMensagem('Cotas manuais selecionadas.') }}>Usar cotas manuais</button>}
     </details>
     <div className="inv-grade">{pontos
-      ? [['data1','Data da cota inicial'], ['data2','Data da cota final']].map(([id,l]) =>
-        <label key={id}>{l}<select value={v[id]} onChange={e => set(id,e.target.value)}>{pontos.map(([d]) => <option key={d} value={d}>{data(d)}</option>)}</select></label>)
-      : ['Cota inicial','Cota final'].map((l,i) =>
+      ? [['data1','Data da cota inicial', data1], ['data2','Data da cota final', data2]].map(([id,l,valor]) =>
+        <label key={id}>{l}<select aria-label={l} value={valor} onChange={e => set(id,e.target.value)}>{pontos.map(([d]) => <option key={d} value={d}>{data(d)}</option>)}</select></label>)
+      : !fundoId && ['Cota inicial','Cota final'].map((l,i) =>
         <Campo key={l} label={l} value={v['cota'+(i+1)]} onChange={x => set('cota'+(i+1),x)} />)}
     </div>
-    <Saida resultado={r} titulo="Variação da cota" nota={pontos ? 'CVM: de ' + data(v.data1) + ' a ' + data(v.data2) + '.' : 'Cotas informadas pelo usuário.'} />
+    <Saida resultado={r} titulo="Variação da cota" nota={pontos ? 'CVM · ' + data(data1) + ' a ' + data(data2) + '.' : 'Cotas informadas pelo usuário.'} />
   </>
 }
 

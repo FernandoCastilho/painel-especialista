@@ -5,7 +5,10 @@ export const NOVIDADES_RECENTES = [
   {
     date: '25/11/2026',
     destaques: ['Investimentos ganha comparador histórico e simulador de carteira'],
-    items: ['Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.'],
+    items: [
+      'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
+      'Em Investimentos, busque fundos por nome ou CNPJ e use as cotas da CVM na calculadora, na comparação de ativos e na simulação de carteira.',
+    ],
   },
   {
     date: '24/11/2026',

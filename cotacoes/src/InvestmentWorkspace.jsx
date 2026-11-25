@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { numeroPt } from './investimentos.js'
+import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
+import { FONTE_CVM, isFundoCvm, LICENCA_CVM } from './fundosCvm.js'
 import {
   PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, parseSeriesCsv, loadBcb, compareHistory,
   metrics, simulateHistory, comparisonCsv,
@@ -33,7 +35,8 @@ function initialConfig(link, saved) {
   const params = new URLSearchParams(link || saved || '')
   const period = Number(params.get('periodo'))
   const currency = params.get('moeda')
-  const ids = [...new Set((params.get('ativos') ?? '').split(',').filter(id => /^(cdi|ipca|dolar|csv-[\da-f-]{36})$/.test(id)))]
+  const ids = [...new Set((params.get('ativos') ?? '').split(',').filter(id =>
+    /^(cdi|ipca|dolar|csv-[\da-f-]{36})$/.test(id) || isFundoCvm(id)))]
   return {
     ids: params.has('ativos') ? ids.slice(0, MAX_SERIES) : DEFAULT_IDS,
     period: PERIODS.includes(period) ? period : 12,
@@ -183,15 +186,21 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
   const [status, setStatus] = useState('')
   const [retry, setRetry] = useState(0)
   const [source, today] = useBcbHistory(retry)
+  const fundosIds = config.ids.filter(isFundoCvm)
+  const fundos = useCotasCvm(fundosIds, retry)
   const catalog = [...publicSeries, ...custom]
   const selected = config.ids.map((id, index) => {
-    const item = catalog.find(entry => entry.id === id)
-    return { ...(item ?? { id, name: 'Série importada indisponível' }), rows: item?.rows ?? source.data[id], color: COLORS[index] }
+    const fundo = isFundoCvm(id)
+    const item = fundo ? fundos.dados[id] : catalog.find(entry => entry.id === id)
+    return { ...(item ?? { id, name: fundo ? 'Fundo CVM · ' + id.slice(6) : 'Série importada indisponível' }),
+      rows: item?.rows ?? source.data[id], color: COLORS[index] }
   })
   const conversion = [...new Set(selected.flatMap(item => item.currency && item.currency !== config.currency
     ? [item.currency, config.currency].filter(code => code !== 'BRL') : []))]
   const missing = selected.filter(item => !item.rows)
+  const cvmLoading = missing.some(item => isFundoCvm(item.id) && !fundos.erros.includes(item.id))
   const fxError = conversion.some(code => source.errors.includes(code === 'USD' ? 'dolar' : 'eur'))
+  const retryNeeded = fxError || missing.some(item => source.errors.includes(item.id) || fundos.erros.includes(item.id))
   const comparison = compareHistory(selected, config.period, config.currency,
     { USD: source.data.dolar, EUR: source.data.eur }, today.slice(0, 7))
   const change = next => {
@@ -283,10 +292,11 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
         : <section className="inv-panel inv-state" aria-live="polite">
           <h3>{mode === 'simular' ? 'Base histórica da simulação' : 'Rentabilidade acumulada'}</h3>
           {comparison ? <p>{comparison.timeline[0]} a {comparison.timeline.at(-1)} · {config.currency}</p>
-            : <p>{!selected.length ? 'Adicione uma série para começar.' : source.loading ? 'Carregando dados do Banco Central…'
+            : <p>{!selected.length ? 'Adicione uma série para começar.' : cvmLoading ? 'Carregando cotas da CVM…'
+              : source.loading ? 'Carregando dados do Banco Central…'
               : missing.length || fxError ? 'Há séries indisponíveis. Atualize os dados ou ajuste a seleção.'
               : 'Não há dois meses consecutivos em comum, ou existem lacunas no período selecionado.'}</p>}
-          {!source.loading && (fxError || missing.some(item => source.errors.includes(item.id))) &&
+          {retryNeeded &&
             <button type="button" onClick={() => setRetry(count => count + 1)}>Atualizar dados</button>}
         </section>}
       <section className="inv-panel inv-assets" aria-labelledby="inv-assets">
@@ -294,14 +304,18 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
         <ul>{selected.map(item => {
           const track = comparison?.tracks.find(entry => entry.id === item.id)
           return <li key={item.id}>
-            <div><strong><Dot color={item.color} />{item.name}</strong><small>{item.currency ?? '—'} · {item.source ?? 'CSV deste navegador'}</small>
+            <div><strong><Dot color={item.color} />{item.name}</strong>
+              <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
               {track ? <small>Base {dateText(track.start)} · Último ponto {dateText(track.end)}</small>
                 : source.loading && item.source?.startsWith('SGS') ? null : <small>Última observação {dateText(item.rows?.at(-1)?.[0])}</small>}</div>
             <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
           </li>
         })}</ul>
         {selected.length < MAX_SERIES
-          ? <SeriesPicker remaining={catalog.filter(item => !config.ids.includes(item.id))} add={add} importSeries={importSeries} />
+          ? <>
+            <FundoCvmPicker onSelect={add} excluidos={config.ids} />
+            <SeriesPicker remaining={catalog.filter(item => !config.ids.includes(item.id))} add={add} importSeries={importSeries} />
+          </>
           : <p className="inv-nota">Até {MAX_SERIES} séries por comparação.</p>}
         {mode === 'comparar' && <button className="inv-primary" type="button" onClick={showPortfolio}>Simular carteira</button>}
       </section>
@@ -319,5 +333,8 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
       Volatilidade anualizada usa retornos mensais. Maior queda é medida nos fechamentos mensais.
       Conversão por PTAX venda do último dia disponível no mês.
       {' '}<a href={SERIES_URL} target="_blank" rel="noreferrer">Consultar fontes no Banco Central</a>.</p>
+    {fundosIds.length > 0 && <p className="inv-nota">A variação das cotas não inclui distribuições nem impostos do cotista.
+      Dados adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a>,
+      sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>}
   </div>
 }
