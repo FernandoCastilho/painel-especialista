@@ -23,9 +23,11 @@ import { step } from './Roteiro.jsx'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 import { linhasDoFluxoBndes } from './bndesFluxo.js'
 import FluxoPagamentos from './FluxoPagamentos.jsx'
-import EmailEnvelope from './EmailEnvelope.jsx'
+import EmailEnvelope, { EmailEnvelopePdf } from './EmailEnvelope.jsx'
 import WhatsAppCotacao from './WhatsAppCotacao.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
+import { useCurves } from './useCurves.js'
+import { bndesDiNoPrazo } from './bndesHistorico.js'
 import './BndesPecas.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -50,6 +52,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
   const macro = useMacro()
+  const curvas = useCurves()
   const { ctx: holidayCtx } = useHolidays()
   const [valorText, setValorText] = useState('1.000.000,00')
   const [partText, setPartText] = useState('100')
@@ -292,10 +295,15 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       ['Porte e região', PORTES.find(item => item.id === porte).label], ['Liberação', dmy(liberacaoText)]],
     rodape: 'Simulação indicativa, sujeita à análise e aprovação. CET estimado; o CET e a proposta da instituição financeira prevalecem.',
   } : null
-  const historyItems = [
-    { id: 'tfc', name: `TFC · ${tfcCodigo}`, short: 'TFC', unit: '% a.a.', decimals: 2, list: tfcPts.map(([period, value]) => ({ period, value })) },
-    { id: 'tfb', name: `TFB · ${keyOf(faixa, liberacao)}`, short: 'TFB', unit: '% a.a.', decimals: 2, list: tfbPts.map(([period, value]) => ({ period, value })) },
-  ].filter(item => comparar || item.id === custo)
+  const taxasHistoricas = {
+    tfc: [`TFC · ${tfcCodigo}`, tfcPts], tfb: [`TFB · ${keyOf(faixa, liberacao)}`, tfbPts],
+    tlp: ['TLP · parte fixa J (777)', tlpPts], lcd: ['LCD · sobretaxa (LD1)', ld1Pts], tfbd: [`TFBD · taxa fixa (${tdCodigo})`, tdPts],
+  }
+  const historyItems = emUso.filter(id => taxasHistoricas[id]).map(id => {
+    const [name, points] = taxasHistoricas[id]
+    return { id, name, short: name.split(' · ')[0], unit: '% a.a.', decimals: 2, list: points.map(([period, value]) => ({ period, value })) }
+  })
+  const diNoPrazo = bndesDiNoPrazo(curvas.data?.br, prazo)
   // Vencimento de cada linha do fluxo: o que a conta devolve ou, sem ele, o dia 15 do mês (ou o próximo dia útil).
   const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx))
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
@@ -404,7 +412,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       <div className="fm-results">
       <ExpandablePanel title="Resultado · custo final para o cliente" heading={step(3, 'Resultado · custo final para o cliente')} className="fm-result-workspace" toggleLabel="Modo apresentação" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />}{res && !comparar && <WhatsAppCotacao dados={imagemDados} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar.')}</header>
+        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <><EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />{(!comparar || comparison?.ok) && <EmailEnvelopePdf itens={emailAlternatives} />}</>}{res && !comparar && <WhatsAppCotacao dados={imagemDados} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar. O envelope PDF baixa outro rascunho: resumo no corpo e cronograma no PDF anexo.')}</header>
 
         {!resumida && <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>}
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
@@ -494,10 +502,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </article>
 
       </ExpandablePanel>
-      {res && <section className="bndes-flow-wrap" aria-label="Fluxo de pagamentos da cotação">
-        {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
-        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota="Nos custos pós-fixados (TLP, LCD, TFBD), o principal de cada parcela inclui a correção do saldo." inicio={liberacaoText} />
-      </section>}
       </div>
       </div>
 
@@ -538,12 +542,25 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </BndesDetails>
       </div>
 
-      {funding?.mode === 'inline' && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
-        <p className="cx-hint">{ajuda('Histórico dos indexadores', 'Histórico, não projeção futura. Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
+      {historyItems.length > 0 && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
+        <p className="cx-hint">Histórico da referência pública de cada opção dos últimos 12 meses.{ajuda('Histórico dos indexadores', 'Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, o gráfico mostra a parte fixa, sem IPCA, Selic ou dólar. A curva DI é uma referência de mercado por prazo, não uma série histórica nem uma projeção do indexador.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
         <ComparaSeries compactHelp fixo items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: 12, custom: null }} />
+        {res && <><div className="fm-di-resumo">
+          {diNoPrazo ? <>
+            <p><b>DI no prazo de {prazo} meses:</b> {pct(diNoPrazo.taxa)} a.a. · curva de {dmy(diNoPrazo.data)}.{ajuda('Comparação com o DI', 'Referência DI x pré no prazo final da operação (21 dias úteis por mês), interpolada entre vértices, quando necessário. Compara somente as taxas anuais brutas de referência, sem encargos ou diferenças no fluxo. Não equivale ao CET nem entra no cálculo.')}</p>
+            <ul>{emailAlternatives.map(item => {
+              const fixa = CUSTOS_FIXOS.has(item.custo)
+              const dif = item.custoFinanceiro - diNoPrazo.taxa
+              return <li key={item.custo}><b>{item.custo.toUpperCase()}:</b> {pct(item.custoFinanceiro)} a.a.{fixa ? ` · diferença de ${Math.abs(dif) < .005 ? '' : dif > 0 ? '+' : '−'}${nf(Math.abs(dif), 2)} p.p. frente ao DI` : ' · componente fixo, sem comparação direta ao DI'}</li>
+            })}</ul>
+          </> : <p role="status">DI indisponível para o prazo informado. A taxa não é estimada fora da curva.</p>}
+        </div><ReferenciaMercado tipos={['pre', ...referenciaTipos.filter(tipo => tipo !== 'pre')]} prazoMeses={prazo ?? undefined} /></>}
       </BndesDetails>}
-      {res && <ReferenciaMercado callout tipos={referenciaTipos} prazoMeses={prazo ?? undefined} />}
+      {res && <BndesDetails title="Fluxo de pagamentos da cotação" className="bndes-flow-callout">
+        {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
+        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota="Nos custos pós-fixados (TLP, LCD, TFBD), o principal de cada parcela inclui a correção do saldo." inicio={liberacaoText} />
+      </BndesDetails>}
     </section>
   )
 }
