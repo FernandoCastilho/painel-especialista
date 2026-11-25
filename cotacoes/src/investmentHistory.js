@@ -129,6 +129,12 @@ const currencyRates = (from, to, fx) => {
   return [...new Set([from, to].filter(code => code !== 'BRL'))].map(code => fx[code])
 }
 
+// Fundos e índices nem sempre têm dado no último dia: vale a última observação até a data escolhida.
+export function ultimoValor(track, index) {
+  for (let i = index; i >= 0; i--) if (track.values[i] !== null) return i
+  return -1
+}
+
 export function compareDailyHistory(series, period, currency, fx) {
   if (!series.length || series.some(item => !item.rows?.length)) return null
   const rates = Object.fromEntries(Object.entries(fx).map(([code, rows]) => [code, new Map(rows)]))

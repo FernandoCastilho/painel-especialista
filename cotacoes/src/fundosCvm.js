@@ -8,11 +8,56 @@ const normalizar = s => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowe
 const conectivos = new Set('a as com da das de do dos e em na nas no nos o os para por'.split(' '))
 const indiceNomes = new WeakMap()
 
+// Siglas de mercado (CVM 175, ANBIMA e plataformas): o nome completo continua valendo na busca.
+const A = '[AÁÀÃÂ]', E = '[EÉÊ]', I = '[IÍ]', O = '[OÓÔÕ]', C = '[CÇ]'
+const termo = texto => texto.replace(/ /g, '\\s+')
+const SIGLAS = [
+  [`FIF EM COTAS DE FUNDOS INCENTIVADOS DE INVESTIMENTO EM INFRA(?:ESTRUTURA)?`, 'FIC FI-INFRA'],
+  [`FIC DE FUNDOS? DE INVESTIMENTO(?: FINANCEIRO)?`, 'FIC'],
+  [`(?:FUNDO DE INVESTIMENTO|FI)(?: FINANCEIRO)? EM COTAS DE FUNDOS? DE INVESTIMENTO(?: FINANCEIRO)?`, 'FIC'],
+  [`FI FINANCEIRO EM COTAS DE FUNDOS?`, 'FIC'],
+  [`CLASSE DE INVESTIMENTO EM COTAS DE CLASSES? DE INVESTIMENTO`, 'CIC'],
+  [`CIC DE CLASSES? DE INVESTIMENTO`, 'CIC'],
+  [`CLASSE DE INVESTIMENTO EM COTAS(?: DE)?`, 'CIC'],
+  [`CLASSE DE INVESTIMENTO`, 'CI'],
+  [`FUNDO DE INVESTIMENTO FINANCEIRO`, 'FIF'],
+  [`FI FINANCEIRO`, 'FIF'],
+  [`FUNDO INCENTIVADO DE INVESTIMENTO(?: FINANCEIRO)? EM INFRAESTRUTURA`, 'FI-INFRA'],
+  [`FUNDO INCENTIVADO EM INVESTIMENTO EM DEB${E}NTURES DE INFRA(?:ESTRUTURA)?`, 'FI-INFRA'],
+  [`FUNDO DE INVESTIMENTO`, 'FI'],
+  [`FI EM COTAS`, 'FIC'],
+  [`FI EM ${A}${C}${O}ES`, 'FIA'],
+  [`FIC EM ${A}${C}${O}ES`, 'FIC FIA'],
+  [`EM ${A}${C}${O}ES`, 'AÇÕES'],
+  [`MULTIMERCADO`, 'MULT'],
+  [`RENDA FIXA`, 'RF'],
+  [`REFERENCIADO`, 'REF'],
+  [`CR${E}DITO PRIVADO|CR${E}D\\.? PRIV\\.?`, 'CP'],
+  [`LONGO PRAZO`, 'LP'],
+  [`INVESTIMENTO NO EXTERIOR`, 'IE'],
+  [`RESPONSABILIDADE LIMITADA|RESPONSAB\\.? LIMITADA|RESP\\.? LIMITADA`, 'RL'],
+  [`PREVID${E}N${C}${I}${A}RIO|PREVID${E}N${C}IA`, 'PREV'],
+  [`INFRAESTRUTURA`, 'INFRA'],
+  [`DEB${E}NTURES`, 'DEB'],
+  [`INCENTIVADO`, 'INC'],
+  [`INVESTIMENTO`, 'INV'],
+].map(([padrao, sigla]) => [new RegExp(`(?<![\\p{L}\\p{N}])(?:${termo(padrao)})(?![\\p{L}\\p{N}])`, 'giu'), sigla])
+
+export function abreviarNomeFundo(nome) {
+  // "X · SUBCLASSE I DA CLASSE X": o nome da classe já está no começo.
+  let curto = nome.replace(/(\s·\s+SUBCLASSE\s+\S+)\s+DA\s+CLASSE\s.*$/iu, '$1')
+  for (const [padrao, sigla] of SIGLAS) curto = curto.replace(padrao, sigla)
+  return curto
+    .replace(/\s+-(?=\s|$)/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 export function nomeFundo([id, nome, cnpj]) {
   const formatado = cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5')
   const subclasse = idPattern.exec(id)?.[2]
-  const tipo = subclasse ? 'Subclasse ' + subclasse : id.startsWith('cvm-f-') ? 'Fundo (cadastro anterior)' : 'Classe'
-  return nome + ' · ' + formatado + ' · ' + tipo
+  const tipo = subclasse ? ' · Subclasse ' + subclasse : id.startsWith('cvm-f-') ? ' · Fundo (cadastro anterior)' : ''
+  return abreviarNomeFundo(nome) + ' · ' + formatado + tipo
 }
 
 function indexarNome(item) {
@@ -165,5 +210,6 @@ export async function carregarFundoCvm(id) {
       throw error
     }))
   }
-  return cotasDoFundo(await grupos.get(arquivo), item)
+  const fundo = cotasDoFundo(await grupos.get(arquivo), item)
+  return /^\d{4}-\d{2}-\d{2}$/.test(manifest.collected) ? { ...fundo, atualizado: manifest.collected } : fundo
 }

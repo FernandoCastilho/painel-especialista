@@ -17,7 +17,9 @@ function AjudaInvestimentos() {
   return <CalculatorHelp title="Investimentos">
     <p>Para estudo. Rentabilidade passada e projeções não garantem resultados futuros. Não é recomendação de investimento.</p>
     <p>Comparar ativos: o gráfico usa a última observação disponível até a data-base. A variação do dia exige observações consecutivas.
-      O CDI da data é valorizado pela taxa do dia útil anterior e o IPCA tem observações mensais. O traço indica valor indisponível.</p>
+      O CDI da data é valorizado pela taxa do dia útil anterior e o IPCA tem observações mensais. O traço indica valor indisponível.
+      Se um ativo não tem dado na data escolhida, aparece o último valor disponível, com a data dele.
+      O valor aplicado mostra o resultado bruto (valor aplicado × rentabilidade acumulada), antes de impostos, taxas e custos.</p>
     <p>Retorno e risco e Simular carteira: usam os meses fechados em comum, e as datas de fechamento podem diferir.
       Volatilidade anualizada usa retornos mensais. Maior queda é medida nos fechamentos mensais.
       Conversão por PTAX venda da data do gráfico ou do último dia disponível no mês.

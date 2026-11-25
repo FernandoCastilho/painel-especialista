@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { compareHistory, simulateHistory } from '../src/investmentHistory.js'
-import { buscarFundos, carregarCatalogoCvm, cotasDoFundo, isFundoCvm } from '../src/fundosCvm.js'
+import { abreviarNomeFundo, buscarFundos, carregarCatalogoCvm, cotasDoFundo, isFundoCvm, nomeFundo } from '../src/fundosCvm.js'
 
 const classe = ['cvm-c-00017024000153', 'Classe Crédito Privado', '00017024000153']
 const subclasse = ['cvm-c-00017024000153-A1', 'Classe Crédito Privado — Varejo', '00017024000153']
@@ -121,4 +121,23 @@ test('cotas inválidas, duplicadas ou indisponíveis não viram série de invest
   assert.throws(() => cotasDoFundo({}, classe), /cotas/)
   assert.throws(() => cotasDoFundo({ [classe[0]]: [...rows, rows.at(-1)] }, classe), /cotas/)
   assert.throws(() => cotasDoFundo({ [classe[0]]: [...rows, ['2026-11-31', 5]] }, classe), /cotas/)
+})
+
+test('nomes de fundos usam as siglas de mercado e a busca continua pelo nome completo', () => {
+  const casos = {
+    'SANTANDER CASH RED CLASSE DE INVESTIMENTO RENDA FIXA REFERENCIADO DI - RESP LIMITADA': 'SANTANDER CASH RED CI RF REF DI RL',
+    'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA': 'ITAÚ FUND OF FUNDS ORION MULT CP IE FIF DA CIC RL',
+    '051 ANGA CREDITO ESTRUTURADO FI FINANCEIRO EM COTAS DE FUNDOS DE INVESTIMENTO MULTIMERCADO': '051 ANGA CREDITO ESTRUTURADO FIC MULT',
+    '1818 FUNDO DE INVESTIMENTO EM COTAS DE FUNDOS DE INVESTIMENTO EM AÇÕES - RESPONSABILIDADE LIMITADA': '1818 FIC FIA RL',
+    '2PX - Fundo de Investimento Multimercado Credito Privado': '2PX FI MULT CP',
+    '1960 PREVIDÊNCIA FIF - CLASSE DE INVESTIMENTO MULT CRED PRIV - RESP LIMITADA': '1960 PREV FIF CI MULT CP RL',
+    '3AXB FUNDO INCENTIVADO DE INVESTIMENTO FINANCEIRO EM INFRAESTRUTURA RENDA FIXA': '3AXB FI-INFRA RF',
+    '3 ILHAS FUNDO DE INVESTIMENTO FINANCEIRO EM AÇÕES - RESPONSABILIDADE LIMITADA · SUBCLASSE I DA CLASSE 3 ILHAS FUNDO DE INVESTIMENTO FINANCEIRO EM AÇÕES': '3 ILHAS FIF AÇÕES RL · SUBCLASSE I',
+    '42-CAPITAL FUNDO DE INVESTIMENTO MULTIMERCADO': '42-CAPITAL FI MULT',
+  }
+  for (const [nome, curto] of Object.entries(casos)) assert.equal(abreviarNomeFundo(nome), curto)
+  assert.equal(nomeFundo(classe), 'Classe CP · 00.017.024/0001-53')
+  assert.equal(nomeFundo(subclasse), 'Classe CP — Varejo · 00.017.024/0001-53 · Subclasse A1')
+  const longo = ['cvm-c-10565542000165', 'SANTANDER CASH RED CLASSE DE INVESTIMENTO RENDA FIXA REFERENCIADO DI - RESP LIMITADA', '10565542000165']
+  assert.deepEqual(buscarFundos([longo], 'santander renda fixa referenciado'), [longo])
 })

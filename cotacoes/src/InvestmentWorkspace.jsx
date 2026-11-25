@@ -4,7 +4,7 @@ import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
 import { isFundoCvm } from './fundosCvm.js'
 import {
   PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, loadBcb, compareHistory, compareDailyHistory,
-  metrics, simulateHistory, comparisonCsv, resumoFundo,
+  metrics, simulateHistory, comparisonCsv, resumoFundo, ultimoValor,
 } from './investmentHistory.js'
 
 const COLORS = ['#4671ee', '#e56b23', '#00958d', '#9668bd', '#aa6a16', '#4b7eac']
@@ -17,6 +17,11 @@ const value = n => n === null ? '—' : n.toLocaleString('pt-BR', {
 const money = (n, currency) => n.toLocaleString('pt-BR', { style: 'currency', currency })
 const dateText = date => date?.split('-').reverse().join('/') ?? '—'
 const monthText = month => month.split('-').reverse().join('/')
+const signedMoney = (n, currency) => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n), currency)
+function datasDaSerie(item) {
+  const atualizado = item.atualizado ? ' · base CVM atualizada em ' + dateText(item.atualizado) : ''
+  return 'Último dado em ' + dateText(item.rows.at(-1)[0]) + ' · histórico desde ' + dateText(item.rows[0][0]) + atualizado
+}
 const publicSeries = PUBLIC_SERIES.map(item => ({ ...item, currency: 'BRL', source: 'SGS ' + item.code }))
 
 function readLocal() {
@@ -66,7 +71,7 @@ function useBcbHistory(retry) {
   return [state, today]
 }
 
-function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabilidade acumulada', controls }) {
+function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabilidade acumulada', controls, aplicado = null, currency = 'BRL' }) {
   const [point, setPoint] = useState(null)
   const [pointer, setPointer] = useState(null)
   const [width, setWidth] = useState(750)
@@ -117,11 +122,18 @@ function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabi
     return nearest(position)
   }
   function valuesAt(i) {
-    return tracks.map(track => <li key={track.id}><span><Dot color={track.color} />{track.name}</span>
-      <span className="inv-chart-values">
-        <strong>{value(track.values[i] === null ? null : track.values[i] - 1)}</strong>
-        {daily && <small>{track.changes[i] === null ? 'Sem dado no dia' : value(track.changes[i]) + ' no dia'}</small>}
-      </span></li>)
+    return tracks.map(track => {
+      const j = daily ? ultimoValor(track, i) : i
+      const nivel = j < 0 ? null : track.values[j]
+      return <li key={track.id}><span><Dot color={track.color} />{track.name}</span>
+        <span className="inv-chart-values">
+          <strong>{value(nivel === null ? null : nivel - 1)}</strong>
+          {daily && <small>{j < 0 ? 'Sem dado no período' : j !== i ? 'Último dado em ' + dateText(comparison.timeline[j])
+            : track.changes[i] === null ? 'Sem variação diária' : value(track.changes[i]) + ' no dia'}</small>}
+          {aplicado > 0 && nivel !== null && <small className="inv-bruto">
+            {money(aplicado * nivel, currency)} · {signedMoney(aplicado * (nivel - 1), currency)} bruto</small>}
+        </span></li>
+    })
   }
   return <section className="inv-panel inv-chart" aria-label={title}>
     <header className="inv-chart-header"><h3>{title}</h3>{controls}</header>
@@ -194,7 +206,7 @@ function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simu
     <header className="inv-ficha-cabecalho">
       <div>
         <h3 ref={titulo} tabIndex={-1}>{fundo.name}</h3>
-        <p className="inv-nota">Cotas de {dateText(fundo.rows[0][0])} a {dateText(fundo.rows.at(-1)[0])} · CVM</p>
+        <p className="inv-nota">{datasDaSerie(fundo)}</p>
       </div>
       <div className="inv-flex">
         <button className="inv-primary" type="button" disabled={bloqueado} onClick={comparar}>
@@ -252,6 +264,7 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
   const [retry, setRetry] = useState(0)
   const [fichaId, setFichaId] = useState('')
   const [nomes, setNomes] = useState({})
+  const [aplicadoTexto, setAplicadoTexto] = useState('')
   const [source, today] = useBcbHistory(retry)
   const fundosIds = config.ids.filter(isFundoCvm)
   const fundos = useCotasCvm(fichaId && !fundosIds.includes(fichaId) ? [...fundosIds, fichaId] : fundosIds, retry)
@@ -331,6 +344,8 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
         ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
         : <p role="status">Carregando a ficha do fundo…</p>)}
   </div>
+  const aplicadoNumero = numeroPt(aplicadoTexto, true)
+  const aplicado = Number.isFinite(aplicadoNumero) && aplicadoNumero > 0 ? aplicadoNumero : null
   const controls = <div className="inv-controls">
     <div className="inv-flex" role="group" aria-label="Período">
       {PERIODS.map(period => <button type="button" key={period} aria-pressed={config.period === period}
@@ -339,6 +354,9 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
     <label className="inv-currency">Moeda<select value={config.currency} onChange={e => change({ ...config, currency: e.target.value })}>
       {CURRENCIES.map(code => <option key={code}>{code}</option>)}
     </select></label>
+    {comparando && <label className="inv-aplicado">Valor aplicado
+      <input inputMode="decimal" placeholder="Ex.: 10.000" value={aplicadoTexto} aria-describedby="inv-aplicado-nota"
+        onChange={e => setAplicadoTexto(e.target.value)} /></label>}
   </div>
   return <div hidden={!visible} className="inv-study">
     {visible && <FundoCvmPicker key={mode} inline referencias={catalog} ativos={config.ids}
@@ -351,12 +369,12 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
       {selected.length > 0 && <ul>{selected.map(item => <li key={item.id}>
         <div><strong><Dot color={item.color} />{item.name}</strong>
           <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
-          {item.rows?.length > 0 && <small>{dateText(item.rows[0][0])} a {dateText(item.rows.at(-1)[0])}</small>}</div>
+          {item.rows?.length > 0 && <small>{datasDaSerie(item)}</small>}</div>
         <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
       </li>)}</ul>}
     </section>
     {comparando && comparison
-      ? <HistoryChart comparison={comparison} controls={controls} />
+      ? <HistoryChart comparison={comparison} controls={controls} aplicado={aplicado} currency={config.currency} />
       : <section className="inv-panel inv-state" aria-live="polite">
         <header className="inv-chart-header">
           <h3>{comparando ? 'Rentabilidade acumulada' : 'Base histórica da simulação'}</h3>
@@ -372,10 +390,14 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
           <button type="button" onClick={() => setRetry(count => count + 1)}>Atualizar dados</button>}
       </section>}
     {comparison && <p className="inv-nota">
-      {comparando ? <>Base em {dateText(comparison.start)} · Última data disponível {dateText(comparison.timeline.at(-1))}</>
+      {comparando ? <>Base em {dateText(comparison.start)} · Dados até {dateText(comparison.timeline.at(-1))}</>
         : <>Janela efetiva {monthText(comparison.timeline[0])} a {monthText(comparison.timeline.at(-1))}</>} · {config.currency}.
       {comparison.endsEarly ? ' A última observação mensal em comum é anterior ao último mês fechado.' : ''}
     </p>}
+    {comparando && <p className="inv-nota" id="inv-aplicado-nota">{aplicado
+      ? <>Valores brutos de {money(aplicado, config.currency)} aplicados em {comparison ? dateText(comparison.start) : 'cada ativo'}, antes de impostos e custos.</>
+      : Number.isNaN(aplicadoNumero) ? 'Valor aplicado inválido. Use só números, como 10.000 ou 2.500,50.'
+        : 'Informe um valor aplicado para ver quanto cada ativo renderia, bruto, antes de impostos e custos.'}</p>}
     {comparando && comparison && !comparison.fullPeriod && <p className="inv-nota">
       A cobertura disponível é menor que os {config.period} meses selecionados.</p>}
     {!comparando && comparison && !comparison.fullPeriod && <p className="inv-nota" role="status">

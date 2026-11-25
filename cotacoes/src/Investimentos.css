@@ -29,6 +29,9 @@
 .inv-workspace .inv-controls, .inv-workspace .inv-flex { display:flex; align-items:end; flex-wrap:wrap; gap:8px; }
 .inv-workspace .inv-controls { gap:12px; }
 .inv-workspace .inv-currency { font-size:.875rem; }
+.inv-workspace .inv-aplicado { font-size:.875rem; }
+.inv-workspace .inv-aplicado input { width:9.5em; }
+.inv-workspace .inv-chart-values small.inv-bruto { color:inherit; font-weight:600; }
 .inv-workspace .inv-panel {
   min-width:0;
   padding:clamp(12px,2vw,20px);
