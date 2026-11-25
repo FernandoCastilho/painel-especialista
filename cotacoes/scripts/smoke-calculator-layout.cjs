@@ -433,6 +433,7 @@ async function assertGroupedCatalog(browser, report, failures) {
     ['Crédito internacional', ['FINIMP', 'Empréstimo externo (4131)', 'Câmbio futuro']],
     ['Taxas e câmbio', ['Operação x DI', 'CDI x Dólar']],
     ['Planejamento e análise', ['Faturamento', 'Dividendos via empréstimo', 'Reforma tributária · caixa']],
+    ['Investimentos', ['CDB, Fundos e Ações']],
   ]
   for (const width of widths) for (const theme of ['light', 'dark']) {
     const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, reducedMotion: 'reduce', serviceWorkers: 'block' })
@@ -442,6 +443,7 @@ async function assertGroupedCatalog(browser, report, failures) {
     page.on('pageerror', error => errors.push(error.message))
     try {
       await fixtures(page)
+      await page.route('**/curves.json*', route => route.abort())
       await page.goto(base + '/#calculadora')
       const catalog = page.locator('.calc-catalog')
       await catalog.locator('.calc-catalog-group').first().waitFor()
@@ -487,6 +489,42 @@ async function assertGroupedCatalog(browser, report, failures) {
       assert.equal(await catalog.getByRole('button', { name:'BNDES: abrir calculadora', exact:true }).evaluate(el => el === document.activeElement), true, label + ': foco por teclado')
       await page.evaluate(() => window.scrollTo(0, 0))
       await page.screenshot({ path:screenshot, fullPage:true })
+      if (width === 390 || width === 1440) {
+        await catalog.getByRole('button', { name: 'CDB, Fundos e Ações: abrir calculadora', exact: true }).click()
+        const investimentos = page.getByRole('region', { name: 'Investimentos', exact: true })
+        await investimentos.getByRole('button', { name: 'CDB', exact: true }).waitFor()
+        await investimentos.getByRole('textbox', { name: 'Valor aplicado (R$)', exact: true }).fill('10.000,00')
+        await investimentos.getByLabel('Taxa anual bruta (% a.a.)', { exact: true }).fill('12')
+        await investimentos.getByLabel('Data da aplicação (dia útil)', { exact: true }).fill('2026-11-23')
+        await investimentos.getByLabel('Vencimento (dia útil)', { exact: true }).fill('2026-11-25')
+        const cdb = investimentos.getByRole('region', { name: 'Projeção bruta de CDB', exact: true })
+        await cdb.getByText('2 dias úteis', { exact: false }).waitFor()
+        assert.equal((await cdb.locator('dd').first().innerText()).replace(/\s/g, ''), 'R$10.009,00')
+        await investimentos.getByRole('button', { name: 'Fundos', exact: true }).click()
+        await investimentos.getByRole('textbox', { name: 'Valor aplicado (R$)', exact: true }).fill('10.000,00')
+        await investimentos.getByLabel('Cota inicial', { exact: true }).fill('1.234')
+        await investimentos.getByLabel('Cota final', { exact: true }).fill('1,300')
+        await investimentos.getByRole('alert').waitFor()
+        await investimentos.getByLabel('Cota inicial', { exact: true }).fill('1,250')
+        const fundo = investimentos.getByRole('region', { name: 'Variação da cota', exact: true })
+        await fundo.getByText('4,00%', { exact: true }).waitFor()
+        await investimentos.locator('summary').click()
+        await investimentos.getByLabel('CNPJ do fundo ou classe', { exact: true }).fill('00017024000153')
+        await investimentos.getByLabel('Arquivos CSV da CVM', { exact: true }).setInputFiles({
+          name: 'informe-teste.csv', mimeType: 'text/csv',
+          buffer: Buffer.from('CNPJ_FUNDO_CLASSE;ID_SUBCLASSE;DT_COMPTC;VL_QUOTA\n00017024000153;;2026-11-03;40\n00017024000153;;2026-11-19;42'),
+        })
+        await fundo.getByText('5,00%', { exact: true }).waitFor()
+
+        await investimentos.getByRole('button', { name: 'Ações', exact: true }).click()
+        await investimentos.getByLabel('Quantidade de ações', { exact: true }).fill('10')
+        await investimentos.getByLabel('Preço de compra por ação (R$)', { exact: true }).fill('10')
+        await investimentos.getByLabel('Preço final por ação (R$)', { exact: true }).fill('11')
+        const acoes = investimentos.getByRole('region', { name: 'Simulação de ações', exact: true })
+        await acoes.getByText('10,00%', { exact: true }).waitFor()
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), label + ': investimentos sem rolagem lateral')
+        await page.screenshot({ path: path.join(out, `investimentos-${width}-${theme}.png`), fullPage: true })
+      }
       assert.deepEqual(errors, [], label + ': sem erros do navegador')
       report.push({ route:'catalogo-grupos', width, theme, status:'pass', screenshot:path.basename(screenshot) })
     } catch (error) {
