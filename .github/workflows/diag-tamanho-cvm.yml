@@ -1,0 +1,27 @@
+name: Diagnóstico tamanho base CVM (temporário)
+on:
+  push:
+    branches: ['diag-tamanho-cvm']
+permissions:
+  contents: read
+jobs:
+  medir:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - run: |
+          python3 - <<'PY'
+          import json, gzip, urllib.request, concurrent.futures
+          base = 'https://fernandocastilho.github.io/painel-especialista/cvm/'
+          m = json.load(urllib.request.urlopen(base + 'manifest.json'))
+          def tam(nome):
+              d = urllib.request.urlopen(base + nome).read()
+              return nome, len(d), len(gzip.decompress(d))
+          with concurrent.futures.ThreadPoolExecutor(12) as ex:
+              res = list(ex.map(tam, m['files'].values()))
+          gz = sum(r[1] for r in res); js = sum(r[2] for r in res)
+          print('fundos', m['funds'], m['first'], m['last'])
+          print('total gz MB', round(gz/1e6,1), 'total json MB', round(js/1e6,1))
+          for r in sorted(res, key=lambda r: -r[2])[:3]: print(r)
+          cat = [r for r in res if r[0].startswith('catalogo')][0]; print('catalogo', cat)
+          PY
