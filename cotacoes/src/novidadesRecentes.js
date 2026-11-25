@@ -4,8 +4,9 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '25/11/2026',
-    destaques: ['Investimentos ganha comparador histórico e simulador de carteira'],
+    destaques: ['Investimentos ganha comparador histórico e simulador de carteira', 'Nova calculadora de CDC para financiamento de veículo'],
     items: [
+      'Em Calculadoras > CDC, simule o financiamento de veículo: parcela, taxa ou spread sobre o funding, IOF financiado e cronograma, com e-mail do Outlook e imagem para o WhatsApp. Algumas combinações de valor, taxa e carência mostravam "Não foi possível fechar o IOF financiado" e agora calculam normalmente.',
       'Em Calculadoras > BNDES, baixe um rascunho do Outlook com a simulação em PDF. O histórico dos indexadores reúne as referências da cotação e a curva DI. O gráfico de pagamentos fica recolhido no fim.',
       'Em Mais > Histórias, Spotify, Uber e Apple/iPhone entram no mapa com linha do tempo, leitura de negócios e fontes.',
       'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
