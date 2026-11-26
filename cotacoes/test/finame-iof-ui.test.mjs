@@ -20,7 +20,7 @@ async function setup(t, overrides = {}) {
   deps['./EmailEnvelope.jsx'].EmailEnvelopePdf = () => null
   deps['./BndesPecas.css'] = {}
   deps['./bndesFluxo.js'] = await import('../src/bndesFluxo.js')
-  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
+  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato', 'multiSeries']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
@@ -231,12 +231,14 @@ test('cotação destaca taxa final e CET anual e mensal, reutilizando resultados
   assert.equal((text(row('CET estimado')).match(/a\.m\./g) || []).length, 2)
 })
 
-test('histórico usa apenas os indexadores escolhidos e o fluxo é o último bloco', async t => {
+test('histórico junta o DI e os indexadores escolhidos num gráfico; premissas fecham a página', async t => {
   const { render, change } = await setup(t)
   const ids = () => nodes(render.value).find(node => node.props?.compactHelp)?.props.items.map(item => item.id).join(',')
-  assert.equal(ids(), 'tfc')
+  assert.equal(ids(), 'di,tfc')
+  assert.equal(nodes(render.value).filter(node => node.props?.compactHelp).length, 1, 'um gráfico só')
+  assert.equal(nodes(render.value).find(node => node.props?.compactHelp).props.referencia, undefined, 'sem linha tracejada')
   await change('fm-compare', true)
-  assert.equal(ids(), 'tfc,tfb')
+  assert.equal(ids(), 'di,tfc,tfb')
   assert.match(text(render.value).replace(/\s+/g, ' '), /DI no prazo de 48 meses.*TFC\s*:.*TFB\s*:/)
-  assert.equal(render.value.props.children.at(-1).props.title, 'Fluxo de pagamentos da cotação')
+  assert.equal(render.value.props.children.slice(-2).map(node => node?.props?.title).join(' | '), 'Fluxo de pagamentos da cotação | Premissas e limites da simulação')
 })

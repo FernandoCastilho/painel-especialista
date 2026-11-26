@@ -26,6 +26,6 @@ export default function EmailEnvelope({ result, alternatives }) {
   return <EnvelopeEml label="Baixar e-mail da cotação para o Outlook" gerar={() => bndesEml({ itens: alternatives?.length ? alternatives : [result] })} />
 }
 
-export function EmailEnvelopePdf({ itens }) {
-  return <EnvelopeEml label="Baixar e-mail com PDF em anexo para o Outlook" pdf gerar={() => bndesPdfEml({ itens })} />
+export function EmailEnvelopePdf({ itens, historico = null }) {
+  return <EnvelopeEml label="Baixar e-mail com PDF em anexo para o Outlook" pdf gerar={() => bndesPdfEml({ itens, historico })} />
 }
