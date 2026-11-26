@@ -24,6 +24,7 @@ const somar = values => {
 
 export const REGRAS = {
   conferidoEm: '2026-11-04',
+  nome: 'Finame Materiais',
   prazoMaxMeses: 84, // até 7 anos
   carenciaMaxMeses: 24, // até 2 anos
   carenciaMaxTfbMeses: 12, // com TFB, Taxa Fixa Composta ou Taxa Fixa Composta MPME, carência de até 1 ano
@@ -47,6 +48,29 @@ export const REGRAS = {
   // vale o IOF de crédito PJ: 0,38% + 0,0082% ao dia sobre o principal de cada parcela, até 365 dias (Decreto 12.499/2025).
   iof: 'Sem IOF: a operação é feita com recursos da FINAME e tem alíquota zero (Decreto 6.306/2007, art. 8º, IX, vigente), sem o adicional de 0,38% do § 5º, que só alcança os incisos que ele lista. É assim que o mercado contrata (informativo da Abimaq de janeiro de 2026 sobre as condições do produto: sem incidência de IOF); a revogação da alíquota zero geral do BNDES (art. 8º, XXX, pelo Decreto 8.511/2015) não afeta o inciso IX. Risco residual: o § 4º do art. 8º cobra o imposto se houver desvio de finalidade ou descumprimento de condição. Só se o agente cobrar, por funding diverso, vale o IOF de crédito de pessoa jurídica: 0,38% sobre o valor, uma vez, mais 0,0082% ao dia sobre o principal de cada parcela, até 365 dias (Decreto 12.499/2025, com eficácia restabelecida pelo STF em julho de 2025; optante do Simples Nacional até R$ 30 mil: 0,00274% ao dia)',
 }
+
+// Finame Veículos · Ônibus e caminhões (pedido de 26/11/2026): produto BNDES Finame BK Aquisição e Comercialização, mesma conta da
+// operação indireta. Muda só o que a página do produto diz de diferente: prazo de até 10 anos, sem o teto por operação e sem o
+// reembolso de notas do Finame Materiais. Custos aceitos para ônibus e caminhões: TFB, TFBD, TLP, Taxa LCD, TFC ou TFC MPME (Selic
+// suspensa); a linha do painel oferece os que a sugestão de 23/11/2026 vinculou (sem TFBD, que não está disponível no Itaú).
+// Taxa do BNDES: 0,95% a.a. (MPME N/NE) ou 1,25% a.a. (MPME nas demais regiões e grandes), a mesma do Finame Materiais.
+export const REGRAS_VEICULOS = Object.freeze({
+  ...REGRAS,
+  conferidoEm: '2026-11-26',
+  nome: 'Finame Veículos · Ônibus e caminhões',
+  prazoMaxMeses: 120, // até 10 anos
+  tetoOperacao: null, // a página do produto não traz teto por operação
+  tetoCliente12m: null,
+  reembolsoMeses: null,
+  itens: 'ônibus, chassis e carrocerias para ônibus; caminhonetes, caminhões, caminhões-tratores, cavalos-mecânicos, reboques e semirreboques, de fabricação nacional e credenciados no CFI do BNDES; capital de giro associado para MPME (até 30% do valor financiado)',
+  foraDoProduto: null,
+  nacionalizacao: 'item credenciado no CFI (Credenciamento de Fornecedores Informatizado) do BNDES, que confere o índice de nacionalização',
+  notaReembolso: null,
+})
+// Perfis da calculadora Finame: 'materiais' (padrão) e 'veiculos-onibus'.
+export const regrasFiname = produto => (produto === 'veiculos-onibus' ? REGRAS_VEICULOS : REGRAS)
+// Limite técnico do motor (maior prazo entre os perfis); o limite de cada produto é conferido em `conferir`.
+const PRAZO_MAX_MOTOR = Math.max(REGRAS.prazoMaxMeses, REGRAS_VEICULOS.prazoMaxMeses)
 // Base legal e fontes de cada regra (o que foi confirmado e como). "indexada": trecho da página oficial lido pelo buscador; a página em si não abriu nesta rede.
 export const FONTES = [
   { regra: 'FGI Tradicional: custo da garantia (ECG = %G × K × VL × P, com fator K pelo prazo total); o índice de garantia contratada varia de 10% a 80% e o produto atende micro, pequenas e médias empresas', fonte: 'BNDES, Anexo V ao Regulamento do FGI Tradicional (Circular SUP/ADIG nº 65/2026) e páginas do BNDES FGI (ECG, informações a empresas e a instituições financeiras), lidas em 09/11/2026', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/bndes-fgi/informacoes-a-instituicoes-financeiras/encargo-concessao-garantia-ecg' },
@@ -105,14 +129,15 @@ export const taxaFinal = (custo, bndes, agente, composicao = 'capitalizada') => 
 export const tlpNominal = (tlp, ipca) => Math.expm1(Math.log1p(tlp / 100) + Math.log1p(ipca / 100)) * 100
 
 // Conferência das regras do produto. Devolve { erros: [...], avisos: [...] }: erro impede a conta; aviso só alerta.
-export function conferir({ valor, participacao, prazo, carencia, custo }) {
+export function conferir({ valor, participacao, prazo, carencia, custo, produto = 'materiais' }) {
+  const REGRAS = regrasFiname(produto)
   const erros = [], avisos = []
   if (!Number.isFinite(valor) || !(valor > 0)) erros.push('Informe um valor finito e positivo dos materiais.')
   else if (!dentroDoLimite(valor)) erros.push(erroNumerico)
   if (!Number.isFinite(participacao) || !(participacao >= REGRAS.participacaoMinPct && participacao <= REGRAS.participacaoMaxPct)) erros.push(`A participação do BNDES vai de ${REGRAS.participacaoMinPct}% a ${REGRAS.participacaoMaxPct}% dos itens financiáveis.`)
   if (!CUSTOS.some(option => option.id === custo)) erros.push('Escolha um custo financeiro suportado: TFC, TFB ou TLPCAP explícita.')
   if (!Number.isInteger(prazo) || prazo < 1) erros.push('Informe o prazo total em meses.')
-  else if (prazo > REGRAS.prazoMaxMeses) erros.push(`Prazo total acima do máximo do produto: ${REGRAS.prazoMaxMeses} meses (7 anos).`)
+  else if (prazo > REGRAS.prazoMaxMeses) erros.push(`Prazo total acima do máximo do produto: ${REGRAS.prazoMaxMeses} meses (${REGRAS.prazoMaxMeses / 12} anos).`)
   if (!Number.isInteger(carencia) || carencia < 0) erros.push('Informe a carência em meses (0 se não houver).')
   else {
     const fixa = CUSTOS_FIXOS.has(custo)
@@ -121,8 +146,8 @@ export function conferir({ valor, participacao, prazo, carencia, custo }) {
     if (Number.isInteger(prazo) && prazo >= 1 && carencia >= prazo) erros.push('A carência precisa ser menor que o prazo total.')
   }
   const financiado = Number.isFinite(valor) && valor > 0 && Number.isFinite(participacao) && participacao > 0 ? valor * (participacao / 100) : 0
-  if (financiado > REGRAS.tetoOperacao) avisos.push(`Valor financiado acima de R$ 20 milhões, o teto por operação do Finame Materiais (Circular BNDES 14/2022, item 6.2.2, com a redação da Circular 64/2023). A calculadora só avisa; confirme com o agente como enquadrar a operação.`)
-  if (financiado > REGRAS.tetoCliente12m) avisos.push(`Valor acima do limite por cliente em 12 meses (R$ 150 milhões).`)
+  if (REGRAS.tetoOperacao && financiado > REGRAS.tetoOperacao) avisos.push(`Valor financiado acima de R$ 20 milhões, o teto por operação do Finame Materiais (Circular BNDES 14/2022, item 6.2.2, com a redação da Circular 64/2023). A calculadora só avisa; confirme com o agente como enquadrar a operação.`)
+  if (REGRAS.tetoCliente12m && financiado > REGRAS.tetoCliente12m) avisos.push(`Valor acima do limite por cliente em 12 meses (R$ 150 milhões).`)
   return { erros, avisos, financiado }
 }
 
@@ -139,7 +164,7 @@ const taxaValida = t => Number.isFinite(t) && t >= 0 && t <= 700
 // e cada vencimento real. Com ela, os juros de cada período são (1 + taxa anual)^(fração) − 1: juros pelos dias reais entre vencimentos.
 // Sem ela, vale o modelo legado de meses iguais (1/12 do ano), usado só em chamadas programáticas e testes antigos.
 export function cronograma({ financiado, prazo, carencia, taxaAnual, sistema, periodicidade = 1, ipcaAnual = 0, anos = null }) {
-  if (!dentroDoLimite(financiado) || financiado <= 0 || !Number.isInteger(prazo) || prazo < 1 || prazo > REGRAS.prazoMaxMeses
+  if (!dentroDoLimite(financiado) || financiado <= 0 || !Number.isInteger(prazo) || prazo < 1 || prazo > PRAZO_MAX_MOTOR
     || !Number.isInteger(carencia) || carencia < 0 || carencia >= prazo || carencia > REGRAS.carenciaMaxMeses
     || !(Array.isArray(taxaAnual) ? taxaAnual.length === prazo && taxaAnual.every(taxaValida) : taxaValida(taxaAnual)) || !validIpcaProjection(ipcaAnual)
     || !SISTEMAS.some(option => option.id === sistema) || !PERIODICIDADES.some(option => option.id === periodicidade)
@@ -214,6 +239,8 @@ const FATOR_K = [[3, 1.42], [6, 0.62], [9, 0.42], [12, 0.31], [15, 0.27], [18, 0
 export const erroPercentualFgi = (percentual) => (Number.isFinite(percentual) && percentual >= FGI.percentualMin && percentual <= FGI.percentualMax && percentual % FGI.percentualMultiplo === 0
   ? null : `Informe o percentual garantido pelo FGI de ${FGI.percentualMin} a ${FGI.percentualMax}%, em múltiplos de ${FGI.percentualMultiplo}.`)
 export const fatorKFgi = (prazoMeses) => (FATOR_K.find(([max]) => prazoMeses <= max)?.[1] ?? 0.05)
+// Acima de 102 meses (só no Finame Veículos, até 120) o painel usa o último degrau, 0,05%; esse valor ainda não foi conferido no Anexo V.
+export const avisoFatorKFgi = (prazoMeses) => (prazoMeses > FATOR_K.at(-1)[0] ? 'Com FGI e prazo acima de 102 meses, o ECG usa fator K de 0,05% por período de 30 dias, valor ainda não conferido no Anexo V do FGI. Confirme o fator com o agente.' : null)
 // Períodos de 30 dias completos entre a liberação e o vencimento ordinário (P). Sem datas, usa meses de 365/12 dias.
 export const periodos30 = (prazoMeses) => Math.floor((prazoMeses * 365) / 12 / 30)
 // P pelas datas: períodos de 30 dias completos entre a liberação e o último vencimento (Date ou número em ms).
@@ -242,7 +269,7 @@ export function vencimentoDia15(liberacao, mes, ctx = {}, calendarios = ['BR']) 
 // (dias corridos sobre 365 ou 366, separados por ano civil), base dos juros de cada parcela.
 const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 export function calendarioFiname(liberacao, prazo, ctx = {}, calendarios = ['BR']) {
-  if (Object.prototype.toString.call(liberacao) !== '[object Date]' || Number.isNaN(+liberacao) || !Number.isInteger(prazo) || prazo < 1 || prazo > REGRAS.prazoMaxMeses || !contractCalendars(calendarios)) return null
+  if (Object.prototype.toString.call(liberacao) !== '[object Date]' || Number.isNaN(+liberacao) || !Number.isInteger(prazo) || prazo < 1 || prazo > PRAZO_MAX_MOTOR || !contractCalendars(calendarios)) return null
   const inicio = isoLocal(liberacao)
   const datas = Array.from({ length: prazo }, (_, k) => isoLocal(vencimentoDia15(liberacao, k + 1, ctx, calendarios)))
   const civil = t => Date.parse(`${t}T00:00:00Z`) / 86400000
@@ -269,8 +296,8 @@ export function parseIpcaProjection(text) {
   const parsed = parseDecimal(negative ? value.slice(1) : value)
   return parsed === null ? null : negative ? -parsed : parsed
 }
-export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, feriados = {}, calendarios = ['BR'] }) {
-  const check = conferir({ valor, participacao, prazo, carencia, custo })
+export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, feriados = {}, calendarios = ['BR'], produto = 'materiais' }) {
+  const check = conferir({ valor, participacao, prazo, carencia, custo, produto })
   const iofOk = iof && [iof.fixed, iof.daily].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
     && (iof.maxDays == null || (Number.isInteger(iof.maxDays) && iof.maxDays >= 0 && iof.maxDays <= IOF_PJ.maxDays))
   const ipcaOk = custo !== 'tlp' || validIpcaProjection(ipca)
@@ -298,6 +325,8 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const liberado = check.financiado
   const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos, incorporar: !!fgi.incorporar }) : null
   const ecg = ecgCalc?.ecg ?? 0
+  const avisoK = fgi ? avisoFatorKFgi(prazo) : null
+  if (avisoK) check.avisos.push(avisoK)
   const ecgIncorporado = !!(fgi && fgi.incorporar)
   const financiado = liberado + (ecgIncorporado ? ecg : 0) // principal do cronograma: valor liberado mais o ECG financiado
   if (fgi && financiado > FGI.limiteCredito) return { ok: false, ...check, erros: [`Com garantia do FGI, o crédito é limitado a ${FGI.limiteCredito.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por cliente em cada agente financeiro, somadas as outras operações garantidas. Reduza o valor ou retire a garantia.`] }

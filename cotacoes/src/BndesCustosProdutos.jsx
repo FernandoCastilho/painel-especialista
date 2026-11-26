@@ -33,6 +33,7 @@ export default function BndesCustosProdutos() {
         <p className="bcp-no">{recusados.map(custo => custo.sigla).join(' · ')}</p>
       </div>
     </div>
+    {produto?.fonte && <p className="cx-hint">{produto.fonte}</p>}
     <details className="bcp-table">
       <summary>Tabela completa</summary>
       <div className="bcp-scroll" tabIndex={0} role="region" aria-label="Tabela de custos por produto">

@@ -11,13 +11,15 @@ const BndesCustosProdutos = lazy(() => import('./BndesCustosProdutos.jsx'))
 
 const PROFILES = [
   ['finame-materiais', 'Finame Materiais Industrializados'],
-  ['finame-veiculos', 'Finame Veículos'],
+  ['finame-veiculos', 'Finame Veículos · Ônibus e caminhões'],
   ['bndes-giro', 'BNDES Giro'],
   ['bndes-tlp-exigivel', 'TLP exigível · projeção própria'],
   ['bndes-selic-lcd', 'Selic + LCD · projeção própria'],
 ]
 
 const ALIASES = { 'finame-veiculos': 'Finame Veículos', 'bndes-giro': 'BNDES Giro' }
+// Finame Veículos usa o mesmo motor, com as regras próprias de ônibus e caminhões (prazo até 120 meses, sem TFBD).
+const PRODUTO_DA_VARIANTE = { 'finame-veiculos': 'veiculos-onibus' }
 
 // Depois da primeira visita, os campos e o período consultado continuam montados.
 function PainelVisitado({ aberto, className, children }) {
@@ -31,7 +33,7 @@ function PainelVisitado({ aberto, className, children }) {
 export default function BndesWorkspace({ profile = 'finame-materiais', onView, onBack, apresentacao }) {
   const [area, setArea] = useState('simulate')
   const [quotesView, setQuotesView] = useState('')
-  // "Finame Veículos" e "BNDES Giro" são só opções de apresentação: usam a mesma calculadora e os mesmos cálculos do Finame Materiais.
+  // "BNDES Giro" é só opção de apresentação. "Finame Veículos" usa a mesma calculadora com as regras de ônibus e caminhões.
   const [variante, setVariante] = useState('')
   const historical = profile === 'bndes-credito-tfb'
   const navigate = next => {
@@ -52,7 +54,7 @@ export default function BndesWorkspace({ profile = 'finame-materiais', onView, o
     </nav></div>
     <div hidden={area !== 'simulate'} className="bw-simulation">
       {!historical && profile !== 'finame-materiais' && profileControl}
-      <PainelVisitado aberto={profile === 'finame-materiais'}><FinameMateriais onBack={onBack} onFundingView={navigate} profileControl={profile === 'finame-materiais' ? profileControl : null} apresentacao={apresentacao} /></PainelVisitado>
+      <PainelVisitado aberto={profile === 'finame-materiais'}><FinameMateriais onBack={onBack} onFundingView={navigate} profileControl={profile === 'finame-materiais' ? profileControl : null} apresentacao={apresentacao} produto={PRODUTO_DA_VARIANTE[variante] ?? 'materiais'} /></PainelVisitado>
       {profile === 'bndes-tlp-exigivel' && <BndesTlpExigivel onBack={onBack} />}
       {profile === 'bndes-selic-lcd' && <BndesLcdCap onBack={onBack} />}
       {historical && <BndesCreditoTfb onBack={onBack} />}
