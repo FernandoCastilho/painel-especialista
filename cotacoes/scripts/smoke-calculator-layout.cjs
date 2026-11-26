@@ -669,7 +669,7 @@ async function assertCambioFuturoJornada(browser) {
   for (const [width, theme] of [[320, 'dark'], [1440, 'light']]) {
     const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, serviceWorkers: 'block' })
     try {
-      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      await page.goto(`${base}/#calculadora/cambio-futuro/euro-yuan`)
       const jornada = page.locator('.cf-j')
       await jornada.getByRole('heading', { name: '3. Resultado · Bullet' }).waitFor()
       assert.equal(await jornada.locator('#cf-j-quantidade').count(), 0, 'bullet não mostra quantidade')
@@ -706,6 +706,36 @@ async function assertCambioFuturoJornada(browser) {
       await jornada.getByRole('link', { name: 'Comparar cenários com e sem trava' }).click()
       await page.locator('.cf-cenario').waitFor()
       console.log(`PASS Jornada de cotação do câmbio futuro ${width} ${theme}`)
+    } finally { await page.close() }
+  }
+}
+
+async function assertCambioFuturoFluxo(browser) {
+  for (const [width, theme] of [[320, 'dark'], [1440, 'light']]) {
+    const page = await browser.newPage({ viewport: { width, height: 950 }, colorScheme: theme, serviceWorkers: 'block' })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    try {
+      await page.goto(`${base}/#calculadora/cambio-futuro`)
+      const fluxo = page.locator('.cf-f')
+      await fluxo.getByRole('heading', { name: '3. Parcelas e fluxo em R$' }).waitFor()
+      const preencher = (id, value) => fluxo.locator('#cf-f-' + id).fill(value)
+      // Bullet da planilha de Fernando (26/11/2026).
+      for (const [id, value] of Object.entries({ inicio: '2026-11-13', valor: '100.000,00', allin: '11,20', externa: '6,6581', ir: '2,2194', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await preencher(id, value)
+      assert.equal(normalize(await fluxo.locator('#cf-f-1-fc').innerText()), 'R$ 723.288,88')
+      assert.equal(await fluxo.locator('#cf-f-tir').innerText(), '22,86%')
+      assert.equal(await fluxo.locator('#cf-f-periodo').innerText(), '22,26%')
+      await settleLayout(page)
+      await assertWorkspace(page, fluxo, `Câmbio futuro bullet ${width} ${theme}`)
+      await fluxo.locator('#cf-f-parcelas').selectOption('4')
+      assert.equal(await fluxo.locator('.cf-f-matriz tbody tr').count(), 5, 'início e quatro parcelas')
+      assert.equal(await fluxo.locator('#cf-f-tir').innerText(), '—')
+      await assertWorkspace(page, fluxo, `Câmbio futuro quatro parcelas ${width} ${theme}`)
+      await page.screenshot({ path: path.join(out, `cambio-futuro-fluxo-${width}-${theme}.png`), fullPage: true })
+      await fluxo.getByRole('link', { name: 'Cotar via euro ou yuan' }).click()
+      await page.locator('#cf-j-modalidade').waitFor()
+      assert.deepEqual(errors, [])
+      console.log(`PASS Câmbio futuro com fluxo e TIR base 252 ${width} ${theme}`)
     } finally { await page.close() }
   }
 }
@@ -1089,6 +1119,7 @@ async function assertCambioFuturo(browser) {
     await assertCambioFuturo(browser)
     await assertCambioFuturoCenario(browser)
     await assertCambioFuturoJornada(browser)
+    await assertCambioFuturoFluxo(browser)
     assert.deepEqual(failures, [], 'conformidade das seis calculadoras nas cinco larguras')
   } finally {
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2))
