@@ -8,8 +8,8 @@ import { parseDecimal } from './emprestimo.js'
 import { useDataFile } from './useDataFile.js'
 import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
-import { CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, REGRAS, ecgFgi, erroPercentualFgi, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
-import { FINAME_FUNDING_OPTIONS, FINAME_FUNDING_SOURCES, finameFundingOption, compareFinamePair, FINAME_PREMISES, resolveFinameRate, resolvePosRate, isFinamePos, parseSignedDecimal, finameSimulationParams, validFinameQuote, validPosQuote, finameCet } from './finameFunding.js'
+import { CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, ecgFgi, erroPercentualFgi, fatorKFgi, TFC_SERIES_ONIBUS, codigoTfcSerie, nomeTfc, faixaTfb, faixaTfc, periodos30Datas, regrasFiname, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
+import { finameFundingOptionsDo, FINAME_FUNDING_SOURCES, finameFundingOption, compareFinamePair, FINAME_PREMISES, resolveFinameRate, resolvePosRate, isFinamePos, parseSignedDecimal, finameSimulationParams, validFinameQuote, validPosQuote, finameCet } from './finameFunding.js'
 import { CUSTOS_POS, INDICE_POS, codigoTfbd, simularPos, trajetoriaFocus, trajetoriaSelicMedia } from './finamePosFixado.js'
 import { nf, nbr5891 } from './format.js'
 import Estado from './Estado.jsx'
@@ -23,9 +23,12 @@ import { step } from './Roteiro.jsx'
 import { PRACAS_CONTRATO, PRACA_AJUDA, PRACA_PADRAO, PRACA_RESSALVA, pracaCalendars } from './pracaContrato.js'
 import { linhasDoFluxoBndes } from './bndesFluxo.js'
 import FluxoPagamentos from './FluxoPagamentos.jsx'
-import EmailEnvelope from './EmailEnvelope.jsx'
+import EmailEnvelope, { EmailEnvelopePdf } from './EmailEnvelope.jsx'
 import WhatsAppCotacao from './WhatsAppCotacao.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
+import { useCurves } from './useCurves.js'
+import { bndesDiNoPrazo, bndesSerie, historicoIndexadores, historicoParaPdf, serieDiPre } from './bndesHistorico.js'
+import { viewRange } from './multiSeries.js'
 import './BndesPecas.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -46,10 +49,16 @@ const ECG_EXEMPLOS = [[500000, 80, 60], [1000000, 80, 84], [300000, 50, 36]]
 // Valores que já vêm preenchidos (pedido do Fernando, 18/11/2026): operação de R$ 1.000.000,00, 48 meses de prazo e 3 de carência.
 // Roteiro das calculadoras (21/11/2026): 1 Demanda do cliente, 2 Encargos, 3 Resultado (a linha do tempo saiu em 21/11/2026).
 // Só ordem, nomes e apresentação: os números são os mesmos que a conta já devolvia. Tela limpa (21/11/2026): explicações no "?".
-export default function FinameMateriais({ onBack, onFundingView, profileControl, apresentacao }) {
+// `produto`: 'materiais' (padrão) ou 'veiculos-onibus' (Finame Veículos · Ônibus e caminhões, pedido de 26/11/2026): mesma conta,
+// com o prazo, os limites, o texto de regras e os custos de cada produto.
+export default function FinameMateriais({ onBack, onFundingView, profileControl, apresentacao, produto = 'materiais' }) {
+  const REGRAS = regrasFiname(produto)
+  const veiculos = produto === 'veiculos-onibus'
+  const FINAME_FUNDING_OPTIONS = finameFundingOptionsDo(produto)
   const bndes = useDataFile('bndes.json')
   const moedas = useDataFile('moedas.json')
   const macro = useMacro()
+  const curvas = useCurves()
   const { ctx: holidayCtx } = useHolidays()
   const [valorText, setValorText] = useState('1.000.000,00')
   const [partText, setPartText] = useState('100')
@@ -87,6 +96,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   }, [cotacaoAmpliada, mostrarParcelas])
   const { sistema, composicao, liberacao } = FINAME_PREMISES
   const [manualRates, setManualRates] = useState({})
+  const [serieTfc, setSerieTfc] = useState('geral') // só Finame Veículos
   const [porte, setPorte] = useState('mpme')
   const [bndesText, setBndesText] = useState(String(REGRAS.taxaBndes.mpme).replace('.', ','))
   const [agenteText, setAgenteText] = useState('3,00')
@@ -115,9 +125,9 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const faixa = prazo ? faixaTfb(prazo) : 60
   const tfbPts = pointsOf(bndes.data, keyOf(faixa, liberacao))
   const rawTfb = tfbPts.length ? { data: tfbPts.at(-1)[0], valor: tfbPts.at(-1)[1], codigo: keyOf(faixa, liberacao) } : null
-  const tfcCodigo = codigoTfc(porte, prazo ?? 60)
+  const tfcCodigo = codigoTfcSerie(porte, prazo ?? 60, veiculos ? serieTfc : 'geral')
   const tfcPts = Array.isArray(moedas.data?.series?.[tfcCodigo]?.points) ? moedas.data.series[tfcCodigo].points : []
-  const rawTfc = tfcPts.length ? { data: tfcPts.at(-1)[0], valor: tfcPts.at(-1)[1], codigo: tfcCodigo, nome: TFC_NOMES[tfcCodigo], faixa: faixaTfc(prazo ?? 60) } : null
+  const rawTfc = tfcPts.length ? { data: tfcPts.at(-1)[0], valor: tfcPts.at(-1)[1], codigo: tfcCodigo, nome: nomeTfc(tfcCodigo), faixa: faixaTfc(prazo ?? 60) } : null
   const tfc = validFinameQuote(rawTfc) ? rawTfc : null
   const tfb = validFinameQuote(rawTfb) ? rawTfb : null
   // Pós-fixados: J da TLP (moeda 777, mensal), LD1 (sobretaxa LCD, trimestral) e TFBD (TD1/TD2/TD3 pela faixa de prazo).
@@ -136,9 +146,19 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const cdi = Array.isArray(macro.data?.cdi) && macro.data.cdi.length ? macro.data.cdi.at(-1)[1] : null
   // Na TFB, o custo financeiro é a própria TFB (nominal). A TLP exigível usa motor próprio, sem correção capitalizada do saldo.
   const funding = finameFundingOption(custo)
+  // Ao trocar de linha, a TFC digitada à mão não passa de uma linha para a outra (a série pode ser outra).
+  useEffect(() => { setManualRates(previous => (previous.tfc == null ? previous : { ...previous, tfc: null })) }, [veiculos])
+  // Ao trocar de linha, um custo que a linha não oferece (TFBD em Veículos) volta para a TFC.
+  useEffect(() => {
+    const oferece = id => FINAME_FUNDING_OPTIONS.some(option => option.id === id)
+    const novoCusto = oferece(custo) ? custo : 'tfc'
+    if (novoCusto !== custo) setCusto(novoCusto)
+    if (!oferece(outro) || outro === novoCusto) setOutro(novoCusto === 'tfb' ? 'tfc' : 'tfb')
+  }, [FINAME_FUNDING_OPTIONS, custo, outro])
   const quotes = { tfc, tfb, tlp: validPosQuote(rawTlp) ? rawTlp : null, lcd: validPosQuote(rawLcd) ? rawLcd : null, tfbd: validPosQuote(rawTfbd) ? rawTfbd : null }
   const rates = Object.fromEntries(['tfc', 'tfb', ...CUSTOS_POS].map(id => [id, isFinamePos(id) ? resolvePosRate(id, quotes[id], manualRates[id] ?? null) : resolveFinameRate(id, quotes[id], manualRates[id] ?? null)]))
   const emUso = comparar ? [custo, outro] : [custo]
+  const ipca = useDataFile('ipca.json')
   // Projeção do índice (Focus ano a ano, editável): do ano da liberação até o último ano do Focus.
   const anoLib = hoje ? hoje.getFullYear() : new Date().getFullYear()
   const projecoes = Object.fromEntries(CUSTOS_POS.map(id => {
@@ -159,7 +179,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const erros = {
     valor: money.ok && money.value > 0 ? null : money.error || 'Informe um valor maior que zero.',
     part: participacao !== null && participacao >= REGRAS.participacaoMinPct && participacao <= 100 ? null : 'Participação de 1 a 100%.',
-    prazo: prazo !== null && prazo >= 1 && prazo <= REGRAS.prazoMaxMeses ? null : `Prazo de 1 a ${REGRAS.prazoMaxMeses} meses (7 anos).`,
+    prazo: prazo !== null && prazo >= 1 && prazo <= REGRAS.prazoMaxMeses ? null : `Prazo de 1 a ${REGRAS.prazoMaxMeses} meses (${REGRAS.prazoMaxMeses / 12} anos).`,
     car: carencia !== null && carencia >= 0 && carencia <= (fixa ? REGRAS.carenciaMaxTfbMeses : REGRAS.carenciaMaxMeses) && (prazo === null || carencia < prazo) ? null : `Carência de 0 a ${fixa ? REGRAS.carenciaMaxTfbMeses : REGRAS.carenciaMaxMeses} meses${fixa ? ` com ${(comparar ? [custo, outro] : [custo]).filter(id => CUSTOS_FIXOS.has(id)).map(id => id.toUpperCase()).join(' e ')}` : ''}, menor que o prazo.`,
     bndes: taxaBndes !== null && taxaBndes <= 100 ? null : 'Informe a taxa do BNDES em % a.a.',
     agente: taxaAgente !== null && taxaAgente <= 100 ? null : 'Informe o spread da instituição em % a.a.',
@@ -177,10 +197,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const garantiaFgi = fgiOn && !erros.fgi ? { percentual: fgiPct, incorporar: false, periodos: fgiPeriodos } : null
   const custosExtras = { tac: tac.ok ? tac.value : 0, fgi: garantiaFgi }
   const pronto = ['inline', 'pos'].includes(funding?.mode) && !Object.values(erros).some(Boolean) && Number.isFinite(custoFinanceiro)
-  const params = finameSimulationParams({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, periodicidade, dataLiberacao: hoje, feriados: holidayCtx, calendarios, ...custosExtras })
+  const params = finameSimulationParams({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, periodicidade, dataLiberacao: hoje, feriados: holidayCtx, calendarios, produto, ...custosExtras })
   // Pós-fixados: mesmo cronograma (dia 15, praça do contrato, SAC, periodicidade da carência) com o motor de finamePosFixado.js.
   const simularPara = (id, taxa) => isFinamePos(id)
-    ? simularPos({ custo: id, valor: params.valor, participacao, prazo, carencia, taxaFixa: taxa, taxaBndes, taxaAgente, trajetoria: trajetoriaDe(id), cambioInicial, periodicidade, composicao, tac: params.tac, fgi: params.fgi, dataLiberacao: hoje, feriados: holidayCtx, calendarios })
+    ? simularPos({ custo: id, valor: params.valor, participacao, prazo, carencia, taxaFixa: taxa, taxaBndes, taxaAgente, trajetoria: trajetoriaDe(id), cambioInicial, periodicidade, composicao, tac: params.tac, fgi: params.fgi, dataLiberacao: hoje, feriados: holidayCtx, calendarios, produto })
     : simular({ ...params, custo: id, custoFinanceiro: taxa })
   const r = pronto ? simularPara(custo, custoFinanceiro) : null
   const res = r?.ok ? r : null
@@ -292,10 +312,21 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       ['Porte e região', PORTES.find(item => item.id === porte).label], ['Liberação', dmy(liberacaoText)]],
     rodape: 'Simulação indicativa, sujeita à análise e aprovação. CET estimado; o CET e a proposta da instituição financeira prevalecem.',
   } : null
-  const historyItems = [
-    { id: 'tfc', name: `TFC · ${tfcCodigo}`, short: 'TFC', unit: '% a.a.', decimals: 2, list: tfcPts.map(([period, value]) => ({ period, value })) },
-    { id: 'tfb', name: `TFB · ${keyOf(faixa, liberacao)}`, short: 'TFB', unit: '% a.a.', decimals: 2, list: tfbPts.map(([period, value]) => ({ period, value })) },
-  ].filter(item => comparar || item.id === custo)
+  const taxasHistoricas = {
+    tfc: [`TFC · ${tfcCodigo}`, tfcPts], tfb: [`TFB · ${keyOf(faixa, liberacao)}`, tfbPts],
+    tlp: ['TLP · parte fixa J (777)', tlpPts], lcd: ['LCD · sobretaxa (LD1)', ld1Pts], tfbd: [`TFBD · taxa fixa (${tdCodigo})`, tdPts],
+  }
+  const historyItems = emUso.filter(id => taxasHistoricas[id]).map(id => {
+    const [name, points] = taxasHistoricas[id]
+    return bndesSerie(id, name, points)
+  })
+  const seriesIndices = historicoIndexadores(emUso, { ipca: ipca.data, selic: macro.data?.selic, dolar: dolarPts })
+  const historyRates = [...historyItems, ...seriesIndices.filter(serie => serie.unit === '% a.a.')]
+  const historyCurrency = seriesIndices.filter(serie => serie.unit === 'R$')
+  const diNoPrazo = bndesDiNoPrazo(curvas.data?.br, prazo)
+  // Um gráfico só, com o DI x pré no prazo (última curva da B3) e o indexador da operação, em % a.a. (pedido de 25/11/2026).
+  const historyChart = [serieDiPre(res ? diNoPrazo : null, prazo), ...historyRates]
+  const historicoPdf = historyItems.length ? historicoParaPdf(historyChart, viewRange(historyChart.map(item => item.list), 12, null)) : null
   // Vencimento de cada linha do fluxo: o que a conta devolve ou, sem ele, o dia 15 do mês (ou o próximo dia útil).
   const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx))
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
@@ -305,12 +336,16 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
     <>
         <p>Regras do produto conferidas em {dmy(REGRAS.conferidoEm)}. Base de regras: {dmy(REGRAS.conferidoEm)} · Custos: painel BNDES · Fontes em Configurações &gt; Base de dados.</p>
         <ul>
-          <li><b>O que financia:</b> {REGRAS.itens}. Fora: {REGRAS.foraDoProduto}. Nacionalização: {REGRAS.nacionalizacao}.</li>
+          <li><b>O que financia:</b> {REGRAS.itens}.{REGRAS.foraDoProduto ? ` Fora: ${REGRAS.foraDoProduto}.` : ''} Nacionalização: {REGRAS.nacionalizacao}.</li>
           <li><b>Quem pede:</b> empresas de qualquer porte sediadas no país, empresário individual, MEI, produtor rural pessoa física, administração pública, cooperativas, fundações e associações; operação indireta, por agente financeiro credenciado.</li>
-          <li><b>Limites:</b> até {REGRAS.participacaoMaxPct}% dos itens; {brl(REGRAS.tetoCliente12m)} por cliente a cada 12 meses (da homologação); reembolso de notas emitidas até {REGRAS.reembolsoMeses} meses antes do protocolo. Teto de {brl(REGRAS.tetoOperacao)} por operação, pela Circular BNDES 14/2022 (item 6.2.2, com a redação da Circular 64/2023); a página do produto não repete esse teto. Acima dele, a calculadora só avisa; confirme com o agente.</li>
-          <li><b>Nota fiscal no reembolso:</b> {REGRAS.notaReembolso}.</li>
+          {veiculos
+            ? <li><b>Limites:</b> até {REGRAS.participacaoMaxPct}% dos itens. A página do produto (lida em 26/11/2026) não traz teto por operação nem por cliente; confirme com o agente.</li>
+            : <li><b>Limites:</b> até {REGRAS.participacaoMaxPct}% dos itens; {brl(REGRAS.tetoCliente12m)} por cliente a cada 12 meses (da homologação); reembolso de notas emitidas até {REGRAS.reembolsoMeses} meses antes do protocolo. Teto de {brl(REGRAS.tetoOperacao)} por operação, pela Circular BNDES 14/2022 (item 6.2.2, com a redação da Circular 64/2023); a página do produto não repete esse teto. Acima dele, a calculadora só avisa; confirme com o agente.</li>}
+          {REGRAS.notaReembolso && <li><b>Nota fiscal no reembolso:</b> {REGRAS.notaReembolso}.</li>}
           <li><b>Prazo:</b> até {REGRAS.prazoMaxMeses} meses, com até {REGRAS.carenciaMaxMeses} de carência ({REGRAS.carenciaMaxTfbMeses} com TFB, TFC ou TFC MPME). Juros exigíveis na carência; depois, SAC mensal com juros junto do principal.</li>
-          <li><b>Taxa:</b> custo financeiro (TFB, TFBD, TLP, Taxa LCD, Taxa Fixa Composta ou Taxa Fixa Composta MPME; Selic suspensa pela {REGRAS.selicSuspensa}) + taxa do BNDES ({pct(REGRAS.taxaBndes['mpme-nne'])} MPME N/NE; {pct(REGRAS.taxaBndes.mpme)} MPME nas demais regiões e grandes) + spread da instituição financeira (a "taxa do agente financeiro" do BNDES), negociado. Todos usam este cronograma: TFC e TFB com a taxa do painel; TLP, Taxa LCD e TFBD com a taxa do painel mais o índice projetado pelo Focus (editável). As telas próprias de TLP exigível e Selic + LCD continuam disponíveis para cronogramas informados à mão.</li>
+          {veiculos
+            ? <li><b>Taxa:</b> custo financeiro + taxa do BNDES ({pct(REGRAS.taxaBndes['mpme-nne'])} MPME N/NE; {pct(REGRAS.taxaBndes.mpme)} MPME nas demais regiões e grandes) + spread da instituição financeira, negociado. Para ônibus e caminhões o BNDES aceita TFB, TFBD, TLP, Taxa LCD, Taxa Fixa Composta ou Taxa Fixa Composta MPME (Selic suspensa pela {REGRAS.selicSuspensa}); esta linha oferece os custos vinculados na sugestão de 23/11/2026 (TFB, TFC, TFC MPME pelo porte, TLP e Taxa LCD), sem a TFBD, que não está disponível no Itaú. TFC e TFB com a taxa do painel (séries gerais C01 a C04 da TFC); TLP e Taxa LCD com a taxa do painel mais o índice projetado pelo Focus (editável). Página do produto BNDES Finame BK Aquisição e Comercialização, lida em 26/11/2026.</li>
+            : <li><b>Taxa:</b> custo financeiro (TFB, TFBD, TLP, Taxa LCD, Taxa Fixa Composta ou Taxa Fixa Composta MPME; Selic suspensa pela {REGRAS.selicSuspensa}) + taxa do BNDES ({pct(REGRAS.taxaBndes['mpme-nne'])} MPME N/NE; {pct(REGRAS.taxaBndes.mpme)} MPME nas demais regiões e grandes) + spread da instituição financeira (a "taxa do agente financeiro" do BNDES), negociado. Todos usam este cronograma: TFC e TFB com a taxa do painel; TLP, Taxa LCD e TFBD com a taxa do painel mais o índice projetado pelo Focus (editável). As telas próprias de TLP exigível e Selic + LCD continuam disponíveis para cronogramas informados à mão.</li>}
           <li><b>IOF:</b> Premissa de recursos FINAME elegíveis e alíquota zero (art. 8º, IX); confirmar o enquadramento na contratação.</li>
           <li><b>Garantias:</b> livre negociação entre o agente e o cliente, observadas as normas do Banco Central; admitida a garantia do FGI (Tradicional ou PEAC) ou do FG BNDES-SEBRAE. Seguro conforme a política do agente.</li>
           <li><b>Conta:</b> taxa composta das três parcelas (capitalizada, padrão do BNDES: o exemplo oficial da página "Taxa de juros" é 1,07 × 1,015 × 1,03 − 1 = 11,86%); juros de cada período por dias corridos entre vencimentos reais (dia 15 ou próximo dia útil, feriados nacionais), em juros compostos sobre os dias do ano civil (365 ou 366); a taxa mensal exibida é só a equivalente de 1/12 do ano. O contrato do agente prevalece: diferenças de dias podem alterar os juros totais mesmo que a soma anual de dias úteis coincida, pois o saldo muda; juros da carência capitalizados dentro do período e pagos no fim dele; a parte dos juros que remunera cada um é apurada em camadas, no mesmo cronograma: custo financeiro = juros só com o custo; BNDES = juros com custo + BNDES menos juros só com o custo; spread da instituição = juros com a taxa completa menos juros com custo + BNDES; SAC mensal apenas em TFC/TFB nesta tela. TLP exigível tem perfil próprio, sem capitalizar IPCA positivo no principal. Esta tela presume recursos FINAME elegíveis e IOF zero; confirme o enquadramento na contratação.</li>
@@ -330,7 +365,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
 
   return (
     <section className="cx cx-finame" aria-labelledby="calc-h">
-      <h2 id="calc-h" className="cx-title"><span className="cx-icon" aria-hidden="true"><FinameIcon /></span>BNDES Finame Materiais</h2>
+      <h2 id="calc-h" className="cx-title"><span className="cx-icon" aria-hidden="true"><FinameIcon /></span>BNDES {REGRAS.nome}</h2>
 
       <div className={`fm-workspace fm-quote-layout${comparar ? ' fm-cmp' : ''}`}>
       <article className="desk-panel cx-panel fm-input-panel">
@@ -338,10 +373,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
         <div className="cx-form">
           <section className="fm-group fm-operation" aria-labelledby="fm-operation-h"><h3 id="fm-operation-h">{step(1, 'Demanda do cliente')}</h3><div className="fm-group-fields">
           {profileControl && <div className="fm-field-linha">{profileControl}</div>}
-          {field('valor', 'Valor dos materiais', <MoneyInput id="fm-valor" aria-invalid={!!erros.valor} aria-describedby="fm-valor-err" value={valorText} onChange={setValorText} />, 'Bens industrializados nacionais, enquadrados na lista NCM e nos critérios CST/CSOSN do Finame Materiais; não se trata do credenciamento CFI do Finame tradicional. Notas de até 12 meses antes do protocolo.')}
+          {field('valor', veiculos ? 'Valor dos veículos' : 'Valor dos materiais', <MoneyInput id="fm-valor" aria-invalid={!!erros.valor} aria-describedby="fm-valor-err" value={valorText} onChange={setValorText} />, veiculos ? 'Ônibus, caminhões, chassis, carrocerias, reboques e semirreboques nacionais, credenciados no CFI do BNDES.' : 'Bens industrializados nacionais, enquadrados na lista NCM e nos critérios CST/CSOSN do Finame Materiais; não se trata do credenciamento CFI do Finame tradicional. Notas de até 12 meses antes do protocolo.')}
           {field('part', 'BNDES financia (%)', input('part', partText, setPartText), 'Até 100% dos itens financiáveis.')}
           <p className="fm-financed" aria-live="polite"><span>Valor financiado</span><b>{financiadoTela === null ? '—' : brl(financiadoTela)}</b></p>
-          {field('prazo', 'Prazo total (meses)', input('prazo', prazoText, value => { setPrazoText(value); setManualRates({}) }, { inputMode: 'numeric' }), 'Até 84 meses (7 anos).')}
+          {field('prazo', 'Prazo total (meses)', input('prazo', prazoText, value => { setPrazoText(value); setManualRates({}) }, { inputMode: 'numeric' }), `Até ${REGRAS.prazoMaxMeses} meses (${REGRAS.prazoMaxMeses / 12} anos).`)}
           {field('car', 'Carência (meses)', input('car', carText, setCarText, { inputMode: 'numeric' }), fixa ? `Até 12 meses com ${custo.toUpperCase()}; juros exigíveis durante a carência.` : 'Até 24 meses; juros exigíveis durante a carência.')}
           {seg('porte' , 'Porte e região', '0,95% a.a. para MPMEs no Norte e Nordeste; 1,25% a.a. para MPMEs nas demais regiões e para grandes empresas (página do produto em 04/11/2026; a mudança de 1,15% para 1,25% em 22/01/2026 é informada pela Abimaq). O porte também escolhe a série da TFC. Editável.',
             PORTES.map((p) => <button key={p.id} type="button" aria-pressed={porte === p.id} onClick={() => { setPorte(p.id); setManualRates({}); setBndesText(String(p.taxa).replace('.', ',')) }}>{p.label}</button>))}
@@ -364,6 +399,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
             {ajuda(`Taxa ${id.toUpperCase()}`, <><p>Taxa de referência usada na simulação, em % a.a. Você pode digitar outra para refletir uma proposta: ela vale só nesta simulação e não altera a cotação do painel. Ao mudar prazo ou porte e região, a taxa volta à referência do painel.</p><p>{quotes[id] ? <>Cotação do painel: {pct(quotes[id].valor, 4)} a.a. em {dmy(quotes[id].data)} · {quotes[id].nome || 'TFB'} ({quotes[id].codigo}){isFinamePos(id) ? '' : <> · faixa {id === 'tfc' ? (quotes[id].faixa === 60 ? 'até 60' : '61 a 120') : faixa} meses</>}.</> : 'Cotação do painel indisponível: informe a taxa manualmente ou aguarde a referência.'}</p></>)}
             <p className="sr-only fm-custo-valor">{quotes[id] ? <>Painel: {pct(quotes[id].valor, 4)} a.a. em {dmy(quotes[id].data)} · {quotes[id].nome || 'TFB'} ({quotes[id].codigo}){isFinamePos(id) ? '' : <> · faixa {id === 'tfc' ? (quotes[id].faixa === 60 ? 'até 60' : '61 a 120') : faixa} meses</>}</> : 'Cotação do painel indisponível.'}</p>
             <p className="cx-error" id={`fm-rate-${id}-err`} role={erros[`rate-${id}`] ? 'alert' : undefined}>{erros[`rate-${id}`] ?? ''}</p>
+            {id === 'tfc' && veiculos && <div className="fm-serie-tfc"><label htmlFor="fm-serie-tfc">Série da TFC</label><select id="fm-serie-tfc" value={serieTfc} onChange={event => { setSerieTfc(event.target.value); setManualRates(previous => ({ ...previous, tfc: null })) }}>
+              <option value="geral">Geral · C01 a C04, pelo porte e prazo (padrão)</option>
+              {Object.entries(TFC_SERIES_ONIBUS).map(([codigo, nome]) => <option key={codigo} value={codigo} disabled={prazo !== null && prazo <= 60}>Ônibus · {codigo} ({nome})</option>)}
+            </select>{ajuda('Série da TFC', 'A série geral (C01 a C04) é o padrão desta linha. As séries de ônibus C25 e C26 são publicadas pelo BNDES nas Moedas Contratuais só para 120 meses, por isso valem com prazo acima de 60 meses. Não há fonte oficial que ligue a série ao produto Finame BK, e a sigla delas não traz o prazo de liberação (as gerais são de até 90 dias): confirme com o agente qual vale na operação.')}{prazo !== null && serieTfc !== 'geral' && tfcCodigo !== serieTfc && <p className="cx-hint">Com prazo de até 60 meses vale a série geral ({tfcCodigo}).</p>}</div>}
           </div>)}</div>
           {emUso.filter((id, k, all) => isFinamePos(id) && all.indexOf(id) === k).map(id => <div className="cx-field fm-projecao" key={`proj-${id}`}>
             <span className="fm-rotulo"><span className="cx-label" id={`fm-proj-${id}-l`}>{id === 'tfbd' ? 'Dólar projetado (fim de ano)' : `${INDICE_POS[id].rotulo} projetado`} · {id.toUpperCase()}</span>{ajuda(`Projeção ${INDICE_POS[id].rotulo}`, <><p>{id === 'tfbd' ? 'Dólar de fim de cada ano, em R$ por US$: mediana do Focus (Banco Central). A trajetória parte do dólar do dia (moeda 604 do BNDES) e passa por esses valores; depois do último ano, fica constante.' : id === 'lcd' ? 'Selic média de cada ano, em % a.a.: no ano da liberação, a Selic atual; nos seguintes, a média entre a Selic de fim do ano anterior e a de fim do ano (mediana do Focus), porque o BNDES capitaliza a média diária. Depois do último ano, vale o último valor.' : `${INDICE_POS[id].rotulo} de cada ano, em % a.a.: mediana do Focus (Banco Central). Depois do último ano, vale o último valor.`}</p><p>É hipótese de projeção: edite para testar outro cenário. Não altera o Focus do painel. O CET da parte fixa tira o índice, como pede a Res. CMN 4.881/2020 (art. 5º).</p>{macro.data?.focus?.date && <p>Focus de {dmy(macro.data.focus.date)}.</p>}</>)}</span>
@@ -404,7 +443,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       <div className="fm-results">
       <ExpandablePanel title="Resultado · custo final para o cliente" heading={step(3, 'Resultado · custo final para o cliente')} className="fm-result-workspace" toggleLabel="Modo apresentação" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />}{res && !comparar && <WhatsAppCotacao dados={imagemDados} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar.')}</header>
+        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <><EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} linha={veiculos ? REGRAS.nome : undefined} />{(!comparar || comparison?.ok) && <EmailEnvelopePdf itens={emailAlternatives} historico={historicoPdf} />}</>}{res && !comparar && <WhatsAppCotacao dados={imagemDados} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar. O envelope PDF baixa outro rascunho: resumo no corpo e cronograma no PDF anexo.')}</header>
 
         {!resumida && <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>}
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
@@ -494,14 +533,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </article>
 
       </ExpandablePanel>
-      {res && <section className="bndes-flow-wrap" aria-label="Fluxo de pagamentos da cotação">
-        {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
-        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota="Nos custos pós-fixados (TLP, LCD, TFBD), o principal de cada parcela inclui a correção do saldo." inicio={liberacaoText} />
-      </section>}
       </div>
       </div>
 
-      {/* Depois do resultado, em largura total: parcelas, memória do fluxo e premissas (recolhidos). */}
+      {/* Depois do resultado, em largura total: parcelas e memória do fluxo (recolhidos). Premissas e limites fecham a página. */}
       <div className="fm-secondary">
       {res && <details id="fm-parcelas" ref={parcelasRef} className="desk-panel cx-panel fm-parcels-callout fm-fluxo-panel">
         <summary>{resumida ? 'Parcelas · opções lado a lado' : 'Parcelas da operação'}</summary>
@@ -526,8 +561,29 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
           </div>
         </div></BndesDetails>
       )}
+      </div>
 
-
+      {historyItems.length > 0 && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
+        <p className="cx-hint">DI x pré no prazo da operação e indexador no mesmo gráfico, nos últimos 12 meses, em % a.a.{ajuda('Histórico dos indexadores', 'A linha do DI é a taxa DI x pré da última curva publicada pela B3, no prazo desta operação (21 dias úteis por mês). Ela fica reta porque usa só a curva mais recente: é a referência de mercado de hoje, não o histórico do DI. A outra linha é a referência pública do indexador escolhido, publicada pelo BNDES em cada data. As duas usam a mesma escala; ao passar o mouse, cada uma mostra o último valor até aquela data. Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, entram também a parte fixa e o indexador observado: IPCA em 12 meses ou meta Selic. O dólar tem gráfico separado porque não é uma taxa. A curva por vencimento aparece logo abaixo.')}</p>
+        {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
+        <ComparaSeries compactHelp fixo items={historyChart} destaque={historyItems[0]?.id} loading={bndes.status === 'loading' || moedas.status === 'loading' || ipca.status === 'loading' || macro.status === 'loading' || curvas.status === 'loading'} period={{ preset: 12, custom: null }} />
+        {historyCurrency.length > 0 && <><h4>Dólar · R$ por US$</h4><ComparaSeries compactHelp fixo items={historyCurrency} loading={moedas.status === 'loading'} period={{ preset: 12, custom: null }} /></>}
+        {res && <><div className="fm-di-resumo">
+          {diNoPrazo ? <>
+            <p><b>DI no prazo de {prazo} meses:</b> {pct(diNoPrazo.taxa)} a.a. · curva de {dmy(diNoPrazo.data)}.{ajuda('Comparação com o DI', 'Referência DI x pré no prazo final da operação (21 dias úteis por mês), interpolada entre vértices, quando necessário. Compara somente as taxas anuais brutas de referência, sem encargos ou diferenças no fluxo. Não equivale ao CET nem entra no cálculo.')}</p>
+            <ul>{emailAlternatives.map(item => {
+              const fixa = CUSTOS_FIXOS.has(item.custo)
+              const dif = item.custoFinanceiro - diNoPrazo.taxa
+              return <li key={item.custo}><b>{item.custo.toUpperCase()}:</b> {pct(item.custoFinanceiro)} a.a.{fixa ? ` · diferença de ${Math.abs(dif) < .005 ? '' : dif > 0 ? '+' : '−'}${nf(Math.abs(dif), 2)} p.p. frente ao DI` : ' · componente fixo, sem comparação direta ao DI'}</li>
+            })}</ul>
+          </> : <p role="status">DI indisponível para o prazo informado. A taxa não é estimada fora da curva.</p>}
+        </div><ReferenciaMercado tipos={['pre', ...referenciaTipos.filter(tipo => tipo !== 'pre')]} prazoMeses={prazo ?? undefined} /></>}
+      </BndesDetails>}
+      {res && <BndesDetails title="Fluxo de pagamentos da cotação" className="bndes-flow-callout">
+        {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
+        <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota="Nos custos pós-fixados (TLP, LCD, TFBD), o principal de cada parcela inclui a correção do saldo." inicio={liberacaoText} />
+      </BndesDetails>}
+      {/* Premissas e limites por último, depois do fluxo de pagamentos (pedido do Fernando em 25/11/2026). */}
       <BndesDetails title="Premissas e limites da simulação" className="fm-premises-callout">
         <p role="status">Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p>
         <div className="fm-rotulo">Método da projeção{ajuda('Método da projeção', <>
@@ -536,14 +592,6 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
           <p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p>
         </>)}</div>
       </BndesDetails>
-      </div>
-
-      {funding?.mode === 'inline' && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
-        <p className="cx-hint">{ajuda('Histórico dos indexadores', 'Histórico, não projeção futura. Referências TFC/TFB carregadas no painel. Taxas manuais informadas na simulação não alteram estes históricos.')}</p>
-        {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
-        <ComparaSeries compactHelp fixo items={historyItems} loading={bndes.status === 'loading' || moedas.status === 'loading'} period={{ preset: 12, custom: null }} />
-      </BndesDetails>}
-      {res && <ReferenciaMercado callout tipos={referenciaTipos} prazoMeses={prazo ?? undefined} />}
     </section>
   )
 }

@@ -17,7 +17,7 @@ const nfOf = (d) => (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: d,
 // desde o início do período. O período é o mesmo da aba (atalhos e datas).
 // `fixo` (calculadora BNDES, pedido do Fernando em 24/11/2026): período travado nos últimos 12 meses, sem filtros, e a média
 // simples de cada série no rodapé. Só apresentação: nenhuma taxa da simulação usa essa média.
-export default function ComparaSeries({ items, loading, period, compactHelp = false, fixo = false }) {
+export default function ComparaSeries({ items, loading, period, compactHelp = false, fixo = false, referencia = null, destaque = null }) {
   const { preset, setPreset, custom, setCustom } = period
   const [ref, width] = useWidth()
   const same = sameUnit(items)
@@ -30,6 +30,8 @@ export default function ComparaSeries({ items, loading, period, compactHelp = fa
     return { key: it.id, name: it.name, short: it.short, unit: it.unit, stepped: it.stepped, color: colorOf(i), level: raw, points: pct ? normalize(raw) : raw, decimals: it.decimals }
   }), [items, range, bad, pct])
   const shown = series.filter((s) => s.points.length > 0)
+  // Série de uma curva só (DI x pré da B3, pedido de 25/11/2026) fica fora da média dos 12 meses.
+  const comMedia = shown.filter((s) => !items.find((it) => it.id === s.key)?.semMedia)
   const unit = same ? items[0].unit : null
   const dec = Math.max(...items.map((i) => i.decimals ?? 2))
   const nf = nfOf(pct ? 2 : dec)
@@ -55,9 +57,9 @@ export default function ComparaSeries({ items, loading, period, compactHelp = fa
       <p className="bn-def">{items.length} séries · {range ? `${dmy(range.start)} a ${dmy(range.end)}` : ''} · {pct ? (same ? 'variação percentual sobre o primeiro valor de cada série no período' : 'unidades diferentes: cada série aparece em variação percentual sobre o seu primeiro valor no período') : `nível em ${unit}`} Passe o mouse (ou use as setas) para ver todas as séries na mesma data. Ao selecionar um trecho, taxas são comparadas em pontos percentuais e níveis em retorno percentual.</p>
       )}
       {shown.length > 0 && width > 0
-        ? <div ref={ref}><MultiLinhas series={shown} history={items.map(it=>{const base=shown.find(s=>s.key===it.id)?.level[0]?.v;return {key:it.id,points:toPoints(it.list).map(p=>pct && base ? {...p,v:(p.v/base-1)*100}:p)}})} comparisonSeries={shown.map(s=>({...s,points:s.level}))} comparisonHistory={items.map(it=>({key:it.id,points:toPoints(it.list)}))} rate={!pct && !!unit?.startsWith('%')} width={width} fmt={fmt} ariaLabel={`Comparação de ${items.length} séries: ${items.map((i) => i.name).join(', ')}`} /></div>
+        ? <div ref={ref}><MultiLinhas referencia={pct ? null : referencia} destaque={destaque} series={shown} history={items.map(it=>{const base=shown.find(s=>s.key===it.id)?.level[0]?.v;return {key:it.id,points:toPoints(it.list).map(p=>pct && base ? {...p,v:(p.v/base-1)*100}:p)}})} comparisonSeries={shown.map(s=>({...s,points:s.level}))} comparisonHistory={items.map(it=>({key:it.id,points:toPoints(it.list)}))} rate={!pct && !!unit?.startsWith('%')} width={width} fmt={fmt} ariaLabel={`Comparação de ${items.length} séries: ${items.map((i) => i.name).join(', ')}`} /></div>
         : <div ref={ref}><p role="status">{bad ? 'Ajuste o período.' : 'Sem observações no período escolhido; escolha um intervalo maior.'}</p></div>}
-      {fixo && shown.length > 0 && <p className="bn-media">Média dos últimos 12 meses: {shown.map((s, i) => <span key={s.key}>{i > 0 && ' · '}{s.short || s.name} <b>{fmtNivel(media(s.level, range ? tOf(range.start) : -Infinity), s.unit, dec)}</b></span>)}<CalculatorHelp title="Média do período"><p>Média simples das referências publicadas entre {range ? `${dmy(range.start)} e ${dmy(range.end)}` : 'o início e o fim do período'}. Histórico, não projeção: a simulação usa a taxa de referência em vigor, não esta média.</p></CalculatorHelp></p>}
+      {fixo && comMedia.length > 0 && <p className="bn-media">Média dos últimos 12 meses: {comMedia.map((s, i) => <span key={s.key}>{i > 0 && ' · '}{s.short || s.name} <b>{fmtNivel(media(s.level, range ? tOf(range.start) : -Infinity), s.unit, dec)}</b></span>)}<CalculatorHelp title="Média do período"><p>Média simples das referências publicadas entre {range ? `${dmy(range.start)} e ${dmy(range.end)}` : 'o início e o fim do período'}. Histórico, não projeção: a simulação usa a taxa de referência em vigor, não esta média.</p></CalculatorHelp></p>}
       {shown.length < items.length && !bad && <p className="status stale" role="status">Sem dado no período para: {series.filter((s) => !s.points.length).map((s) => s.name).join(', ')}.</p>}
     </>
   )

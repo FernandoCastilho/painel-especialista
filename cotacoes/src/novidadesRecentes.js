@@ -3,11 +3,29 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
-    date: '25/11/2026',
-    destaques: ['Investimentos ganha comparador histórico e simulador de carteira'],
+    date: '26/11/2026',
+    destaques: ['BNDES: Finame Veículos para ônibus e caminhões, até 10 anos', 'Investimentos: ativos em comparação em mosaico', 'Investimentos: fundos GARB destacados na busca', 'Investimentos: lâmina da CVM na página do fundo'],
     items: [
-      'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e séries importadas. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
+      'Notícias > Manchetes inclui a análise do Itaú de 25/11 sobre a inflação do consumo nos EUA e a perspectiva para os juros americanos em dezembro.',
+      'Em Calculadoras > BNDES, a linha Finame Veículos · Ônibus e caminhões tem regras próprias: prazo de até 120 meses (10 anos), sem os tetos e o reembolso de notas do Finame Materiais, e os custos TFB, TFC, TFC MPME, TLP e Taxa LCD, sem TFBD. A TFC usa a série geral (C01 a C04) por padrão; em Série da TFC dá para trocar para as séries de ônibus C25 ou C26, com prazo acima de 60 meses. O e-mail da cotação leva o nome da linha. Em Custos por produto, a linha aparece com a fonte. Com FGI e prazo acima de 102 meses, a tela avisa que o fator K usado ainda não foi conferido.',
+      'Investimentos: os cartões dos ativos em comparação ficam lado a lado, em mosaico, com tamanho limitado. Nomes longos ocupam até três linhas e o nome inteiro aparece ao passar o mouse.',
+      'Investimentos: os fundos GARB levam a marca no fim do nome, aparecem primeiro e destacados na busca e mostram o código CVM. Digite GARB para listá-los ou busque pelo código CVM.',
+      'Em Investimentos > Consultar fundos, a lâmina da CVM aparece abaixo da ficha do fundo: patrimônio, risco, taxas, prazos de resgate, rentabilidade por ano e dos últimos meses e composição da carteira. Quando a CVM não publica a lâmina, uma ficha mostra o cadastro e o extrato anual.',
+    ],
+  },
+  {
+    date: '25/11/2026',
+    destaques: ['Investimentos ganha comparador histórico e simulador de carteira', 'Nova calculadora de CDC para financiamento de veículo'],
+    items: [
+      'Em Calculadoras > CDC, simule o financiamento de veículo: parcela, taxa ou spread sobre o funding, IOF financiado e cronograma, com e-mail do Outlook e imagem para o WhatsApp. Escolha a praça do contrato: vencimento em fim de semana, feriado nacional ou da cidade passa para o próximo dia útil, e juros e IOF contam até essa data. Os campos ficam lado a lado, na largura da tela. Saíram a categoria e o coeficiente. Algumas combinações de valor, taxa e carência mostravam "Não foi possível fechar o IOF financiado" e agora calculam normalmente.',
+      'Em Calculadoras > BNDES, baixe um rascunho do Outlook com a simulação em PDF. O histórico dos indexadores reúne as referências da cotação e a curva DI. O gráfico de pagamentos fica recolhido no fim.',
+      'No BNDES, o histórico dos indexadores virou um gráfico só, com duas linhas nos mesmos 12 meses: a taxa DI x pré da última curva da B3, no prazo da operação, e o indexador da operação (por exemplo, a TFC). Premissas e limites passam para o fim da página. O PDF agora traz a operação em grupos, o cronograma e, por último, o gráfico e os avisos de que a simulação não gera compromisso entre as partes.',
+      'Em Mais > Histórias, Spotify, Uber e Apple/iPhone entram no mapa com linha do tempo, leitura de negócios e fontes.',
+      'Em Calculadoras > Investimentos, compare CDI, IPCA, dólar e fundos. Veja retorno e risco na mesma moeda, simule uma carteira histórica e exporte os dados do gráfico em CSV. As calculadoras de CDB, fundos e ações seguem na terceira aba.',
       'Em Investimentos, busque fundos por nome ou CNPJ e use as cotas da CVM na calculadora, na comparação de ativos e na simulação de carteira.',
+      'Investimentos abre com o CDI. Adicione fundos ou outros ativos pelo campo de busca. Ao passar o mouse ou tocar no gráfico, veja a data exata, a variação do dia e a rentabilidade acumulada de cada ativo.',
+      'Investimentos: os avisos das quatro telas ficam na interrogação do topo, e a opção de importar série em CSV saiu. A busca de fundos passa a funcionar também em redes de empresa que barram arquivos compactados e em computadores que bloqueiam a busca em segundo plano, e avisa com clareza quando a base de fundos não baixa.',
+      'Investimentos: os nomes dos fundos ficam mais curtos, com as siglas de mercado (RF, MULT, CP, FIC, FIF, RL e outras), e a busca continua aceitando o nome completo. Cada ativo mostra a data do último dado e desde quando há histórico, e a busca diz quando a base da CVM foi atualizada. No gráfico, quem não tem dado no último dia mostra o último valor disponível com a data dele. Informe um valor aplicado para ver, em cada ativo, quanto ele renderia bruto, antes de impostos e custos.',
     ],
   },
   {

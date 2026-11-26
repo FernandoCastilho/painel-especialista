@@ -1,0 +1,29 @@
+/* CDC (25/11/2026): "?" e "!" lado a lado no cabeçalho, envelope e WhatsApp no canto do resultado, caixa da tabela de funding. */
+.cdc-header-tools { display: inline-flex; align-items: center; gap: 6px; }
+:root[data-theme] body .cdc-screen .cdc-funding > button { font-weight: 700; opacity: .75; }
+:root[data-theme] body .cdc-screen .giro-result > h3 { padding-right: 104px; }
+:root[data-theme] body .cdc-screen .cdc-share { position: absolute; top: 4px; right: 10px; display: flex; gap: 2px; align-items: flex-start; }
+:root[data-theme] body .cdc-screen .cdc-share .credit-email { color: var(--bw-link); border: 0; background: transparent; cursor: pointer; display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; }
+:root[data-theme] body .cdc-screen .cdc-share .credit-email:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+:root[data-theme] body .cdc-screen .cdc-share .credit-email:focus-visible { outline: 2px solid var(--cp-orange); outline-offset: 2px; }
+.cdc-share small { position: absolute; right: 0; top: 46px; width: max-content; max-width: 240px; font-size: .75rem; color: var(--bw-mut); background: var(--bw-surface, var(--surface)); padding: 4px 6px; border-radius: 4px; }
+.cdc-nota { display: block; margin-top: 4px; font-size: .75rem; color: var(--bw-mut); }
+.cdc-funding-dialog textarea { width: 100%; box-sizing: border-box; font: 12px/1.4 var(--mono, monospace); margin: 8px 0; }
+.cdc-funding-dialog p { font-size: .8125rem; }
+.cdc-funding-status { color: var(--bw-mut); }
+.cdc-funding-acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.cdc-funding-acoes > button:first-child { min-height: 40px; padding: 0 14px; }
+
+/* Largura e grade (pedido de Fernando, 25/11/2026): o quadro de entrada ocupa toda a largura (o Capital de Giro divide em duas
+   colunas a partir de 1200 px; o CDC tem um quadro só) e os campos ficam na horizontal: 4 colunas no computador, 2 no tablet,
+   1 no celular. A praça ocupa duas colunas, por causa da busca. */
+:root[data-theme] body .cdc-screen .cdc-icon { color: var(--cp-orange, #ff6200); }
+:root[data-theme] body .cdc-screen.giro-screen .giro-form { grid-template-columns: minmax(0, 1fr); }
+:root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid > * { grid-column: auto; }
+@media (min-width: 1000px) {
+  :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid > .cdc-praca { grid-column: span 2; }
+}
+@media (max-width: 540px) {
+  :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,11 +1,103 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { compareHistory, simulateHistory } from '../src/investmentHistory.js'
-import { buscarFundos, cotasDoFundo, isFundoCvm } from '../src/fundosCvm.js'
+import { abreviarNomeFundo, buscarFundos, carregarCatalogoCvm, codigoGarb, codigoGarbDoId, cotasDoFundo, isFundoCvm, nomeFundo } from '../src/fundosCvm.js'
 
 const classe = ['cvm-c-00017024000153', 'Classe Crédito Privado', '00017024000153']
 const subclasse = ['cvm-c-00017024000153-A1', 'Classe Crédito Privado — Varejo', '00017024000153']
+
+test('a busca começa com duas letras do nome', () => {
+  assert.deepEqual(buscarFundos([classe, subclasse], 'Cl'), [classe, subclasse])
+})
 const rows = [['2026-09-30', 100], ['2026-10-15', 102], ['2026-10-30', 105], ['2026-11-20', 110]]
+
+test('a busca gera siglas a partir dos nomes e prioriza a grafia literal', () => {
+  const porSigla = ['cvm-c-00017024000153', 'Atlântico Fundo de Investimento em Cotas', '00017024000153']
+  const literal = ['cvm-c-23731495000124', 'Atlântico FIC', '23731495000124']
+  assert.deepEqual(buscarFundos([porSigla, literal], 'atlântico fic'), [literal, porSigla])
+  assert.deepEqual(buscarFundos([porSigla], 'atlântico fzc'), [])
+})
+
+test('um prefixo do nome vem antes de ocorrências no meio de palavras', () => {
+  const noMeio = ['cvm-c-00017024000153', 'Atlântico Responsabilidade Limitada', '00017024000153']
+  const prefixo = ['cvm-c-23731495000124', 'Itaú Fundo de Investimento', '23731495000124']
+  assert.deepEqual(buscarFundos([noMeio, prefixo], 'ita'), [prefixo, noMeio])
+})
+
+test('o CNPJ da própria classe tem prioridade sobre o CNPJ do fundo pai', () => {
+  const cnpj = '23731495000124'
+  const propria = ['cvm-c-' + cnpj, 'Classe principal', cnpj]
+  const outra = ['cvm-c-00017024000153', 'Outra classe', '00017024000153', 'Fundo principal', cnpj]
+  assert.deepEqual(buscarFundos([outra, propria], '23.731.495/0001-24'), [propria, outra])
+})
+
+test('a busca do Orion aceita o nome abreviado do Mais Retorno, a grafia do cadastro e o CNPJ', () => {
+  const orion = ['cvm-c-23731495000124',
+    'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA',
+    '23731495000124']
+  const semelhante = ['cvm-c-53671189000100', 'ITAÚ FOF PREMIUM ORION FIC MULT', '53671189000100']
+  const catalogo = [semelhante, orion]
+  for (const busca of ['Itaú Of Funds Orion Mult CP IE FIF DA CIC RL', 'Itaú Off Funds Orion',
+    'Itaú Fund of Funds Orion', '23.731.495/0001-24', '23731495000124']) {
+    assert.deepEqual(buscarFundos(catalogo, busca), [orion])
+  }
+})
+
+test('o catálogo se recupera de um manifesto que aponta para um arquivo ausente', async t => {
+  const antigo = 'catalogo-' + 'a'.repeat(64) + '.json.gz'
+  const atual = 'catalogo-' + 'b'.repeat(64) + '.json.gz'
+  const requisicoes = []
+  globalThis.document = { baseURI: 'https://painel.example/cotacoes/' }
+  t.after(() => { delete globalThis.document })
+  t.mock.method(globalThis, 'fetch', async (url, opcoes) => {
+    requisicoes.push({ url, cache: opcoes.cache })
+    if (url.pathname.endsWith('/manifest.json')) {
+      return Response.json({
+        version: 1, first: '2026-09-30', last: '2026-11-20',
+        files: { catalogo: url.search ? atual : antigo },
+      })
+    }
+    if (url.pathname.endsWith(atual.replace(/\.gz$/, ''))) return Response.json([classe])
+    return new Response(null, { status: 404 })
+  })
+  assert.deepEqual((await carregarCatalogoCvm()).items, [classe])
+  // Manifesto antigo, JSON comum e .gz ausentes; manifesto revalidado, JSON comum atual.
+  assert.deepEqual(requisicoes.map(({ url }) => url.pathname.split('/').at(-1)),
+    ['manifest.json', antigo.replace(/\.gz$/, ''), antigo, 'manifest.json', atual.replace(/\.gz$/, '')])
+  assert.ok(requisicoes[3].url.search)
+  assert.equal(requisicoes[3].url.search, requisicoes[4].url.search)
+  assert.equal(requisicoes[4].cache, 'no-store')
+})
+
+test('a base de fundos abre em rede que barra .gz e, sem a cópia comum, usa o .gz', async t => {
+  const catalogo = 'catalogo-' + 'c'.repeat(64) + '.json.gz'
+  const bucket = [...classe[2]].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 128, 0)
+  const cotas = 'cotas-' + bucket + '-' + 'd'.repeat(64) + '.json.gz'
+  const comprimir = async objeto => new Uint8Array(await new Response(
+    new Blob([JSON.stringify(objeto)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())
+  const pedidos = []
+  globalThis.document = { baseURI: 'https://painel.example/cotacoes/' }
+  t.after(() => { delete globalThis.document })
+  t.mock.method(globalThis, 'fetch', async url => {
+    const nome = url.pathname.split('/').at(-1)
+    pedidos.push(nome)
+    if (nome === 'manifest.json') {
+      return Response.json({ version: 1, first: '2026-09-30', last: '2026-11-20', files: { catalogo, [bucket]: cotas } })
+    }
+    // Proxy da empresa: 403 MediaTypeBlockedDownload em todo .gz.
+    if (nome === catalogo.replace(/\.gz$/, '')) return Response.json([classe])
+    if (nome.endsWith('.gz') && nome.startsWith('catalogo')) return new Response('bloqueado', { status: 403 })
+    // Site publicado antes da cópia comum: só o .gz das cotas existe.
+    if (nome === cotas) return new Response(await comprimir({ [classe[0]]: rows }))
+    return new Response(null, { status: 404 })
+  })
+  // Módulo novo: o catálogo do teste anterior fica guardado no módulo já carregado.
+  const cvm = await import('../src/fundosCvm.js?rede-que-barra-gz')
+  assert.deepEqual((await cvm.carregarCatalogoCvm()).items, [classe])
+  assert.deepEqual(pedidos, ['manifest.json', catalogo.replace(/\.gz$/, '')])
+  assert.deepEqual((await cvm.carregarFundoCvm(classe[0])).rows, rows)
+  assert.deepEqual(pedidos.slice(2), [cotas.replace(/\.gz$/, ''), cotas])
+})
 
 test('a busca encontra nome sem acentos e CNPJ formatado, distinguindo subclasses', () => {
   assert.deepEqual(buscarFundos([classe, subclasse], 'credito  privado'), [classe, subclasse])
@@ -29,4 +121,40 @@ test('cotas inválidas, duplicadas ou indisponíveis não viram série de invest
   assert.throws(() => cotasDoFundo({}, classe), /cotas/)
   assert.throws(() => cotasDoFundo({ [classe[0]]: [...rows, rows.at(-1)] }, classe), /cotas/)
   assert.throws(() => cotasDoFundo({ [classe[0]]: [...rows, ['2026-11-31', 5]] }, classe), /cotas/)
+})
+
+test('nomes de fundos usam as siglas de mercado e a busca continua pelo nome completo', () => {
+  const casos = {
+    'SANTANDER CASH RED CLASSE DE INVESTIMENTO RENDA FIXA REFERENCIADO DI - RESP LIMITADA': 'SANTANDER CASH RED CI RF REF DI RL',
+    'ITAÚ FUND OF FUNDS ORION MULT CRÉDITO PRIVADO INVESTIMENTO NO EXTERIOR FIF DA CIC RESP LIMITADA': 'ITAÚ FUND OF FUNDS ORION MULT CP IE FIF DA CIC RL',
+    '051 ANGA CREDITO ESTRUTURADO FI FINANCEIRO EM COTAS DE FUNDOS DE INVESTIMENTO MULTIMERCADO': '051 ANGA CREDITO ESTRUTURADO FIC MULT',
+    '1818 FUNDO DE INVESTIMENTO EM COTAS DE FUNDOS DE INVESTIMENTO EM AÇÕES - RESPONSABILIDADE LIMITADA': '1818 FIC FIA RL',
+    '2PX - Fundo de Investimento Multimercado Credito Privado': '2PX FI MULT CP',
+    '1960 PREVIDÊNCIA FIF - CLASSE DE INVESTIMENTO MULT CRED PRIV - RESP LIMITADA': '1960 PREV FIF CI MULT CP RL',
+    '3AXB FUNDO INCENTIVADO DE INVESTIMENTO FINANCEIRO EM INFRAESTRUTURA RENDA FIXA': '3AXB FI-INFRA RF',
+    '3 ILHAS FUNDO DE INVESTIMENTO FINANCEIRO EM AÇÕES - RESPONSABILIDADE LIMITADA · SUBCLASSE I DA CLASSE 3 ILHAS FUNDO DE INVESTIMENTO FINANCEIRO EM AÇÕES': '3 ILHAS FIF AÇÕES RL · SUBCLASSE I',
+    '42-CAPITAL FUNDO DE INVESTIMENTO MULTIMERCADO': '42-CAPITAL FI MULT',
+  }
+  for (const [nome, curto] of Object.entries(casos)) assert.equal(abreviarNomeFundo(nome), curto)
+  assert.equal(nomeFundo(classe), 'Classe CP · 00.017.024/0001-53')
+  assert.equal(nomeFundo(subclasse), 'Classe CP — Varejo · 00.017.024/0001-53 · Subclasse A1')
+  const longo = ['cvm-c-10565542000165', 'SANTANDER CASH RED CLASSE DE INVESTIMENTO RENDA FIXA REFERENCIADO DI - RESP LIMITADA', '10565542000165']
+  assert.deepEqual(buscarFundos([longo], 'santander renda fixa referenciado'), [longo])
+})
+
+test('fundos GARB levam a marca no nome, aparecem primeiro e são achados pela marca e pelo código CVM', () => {
+  const catalogo = [
+    ['cvm-c-11111111000111', 'ALFA RENDA FIXA FUNDO DE INVESTIMENTO', '11111111000111'],
+    ['cvm-c-00828941000118', 'BETA RENDA FIXA FUNDO DE INVESTIMENTO', '00828941000118'],
+    ['cvm-c-22222222000122', 'GARBO RENDA FIXA FUNDO DE INVESTIMENTO', '22222222000122'],
+  ]
+  assert.equal(codigoGarb('00828941000118'), '120880')
+  assert.equal(codigoGarbDoId('cvm-c-00828941000118'), '120880')
+  assert.equal(codigoGarb('11111111000111'), undefined)
+  assert.match(nomeFundo(catalogo[1]), /^BETA RF FI GARB · /)
+  assert.doesNotMatch(nomeFundo(catalogo[0]), /GARB/)
+  assert.deepEqual(buscarFundos(catalogo, 'renda fixa').map(item => item[0]),
+    ['cvm-c-00828941000118', 'cvm-c-11111111000111', 'cvm-c-22222222000122'])
+  assert.deepEqual(buscarFundos(catalogo, 'GARB').map(item => item[0]), ['cvm-c-00828941000118', 'cvm-c-22222222000122'])
+  assert.deepEqual(buscarFundos(catalogo, '120880').map(item => item[0]), ['cvm-c-00828941000118'])
 })

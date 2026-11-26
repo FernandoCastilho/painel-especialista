@@ -1,3 +1,4 @@
+import { addDays, nextBusinessDay } from './holidays.js'
 import { numeroPt } from './investimentos.js'
 
 export const PUBLIC_SERIES = [
@@ -75,6 +76,39 @@ export async function loadBcb(item, today, signal, fetcher = fetch) {
   return rows
 }
 
+function monthsBefore(date, count) {
+  const target = new Date(date)
+  const day = target.getUTCDate()
+  target.setUTCMonth(target.getUTCMonth() - count, 1)
+  const end = new Date(target)
+  end.setUTCMonth(end.getUTCMonth() + 1, 0)
+  target.setUTCDate(Math.min(day, end.getUTCDate()))
+  return target.toISOString().slice(0, 10)
+}
+
+export function resumoFundo(cotas, cdi = []) {
+  const [fim, cotaFinal] = cotas.at(-1)
+  // A razão entre os níveis anteriores a cada data inclui a taxa do início e exclui a do fim.
+  const referencia = new Map(cdi.map(([dia], i) => [dia, cdi[i - 1]?.[1]]))
+  const ultimoCdi = cdi.at(-1)
+  // A data final pode vir antes da divulgação da sua própria taxa. Pule apenas o fim de semana.
+  const limiteCdi = ultimoCdi && addDays(ultimoCdi[0], new Date(ultimoCdi[0]).getUTCDay() === 5 ? 3 : 1)
+  const cdiFinal = ultimoCdi && fim > ultimoCdi[0] && fim <= limiteCdi ? ultimoCdi[1] : referencia.get(fim)
+  return [1, 3, 6, 12].map(meses => {
+    const dataAlvo = monthsBefore(fim, meses)
+    const limite = addDays(dataAlvo, -7)
+    const ponto = cotas.findLast(([dia]) => dia <= dataAlvo && dia >= limite)
+    if (!ponto) return { meses, fim, inicio: null, fundo: null, cdi: null }
+    const [inicio, cotaInicial] = ponto
+    const cdiInicial = referencia.get(inicio)
+    return {
+      meses, inicio, fim,
+      fundo: cotaFinal / cotaInicial - 1,
+      cdi: usableLevel(cdiInicial) && usableLevel(cdiFinal) ? cdiFinal / cdiInicial - 1 : null,
+    }
+  })
+}
+
 function monthValues(rows, currentMonth) {
   const values = new Map()
   for (const row of rows) {
@@ -93,6 +127,66 @@ function monthNumber(month) {
 const currencyRates = (from, to, fx) => {
   if (from === to) return []
   return [...new Set([from, to].filter(code => code !== 'BRL'))].map(code => fx[code])
+}
+
+// Valor em dinheiro: aceita milhar com ponto (10.000 ou 2.500,50), diferente das cotas, que não aceitam ponto sozinho.
+export function valorAplicado(texto) {
+  const v = String(texto ?? '').trim().replace(/^R\$\s*/i, '')
+  if (!v) return null
+  if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(v)) return NaN
+  const n = Number(v.replaceAll('.', '').replace(',', '.'))
+  return n > 0 ? n : NaN
+}
+
+// Fundos e índices nem sempre têm dado no último dia: vale a última observação até a data escolhida.
+export function ultimoValor(track, index) {
+  for (let i = index; i >= 0; i--) if (track.values[i] !== null) return i
+  return -1
+}
+
+export function compareDailyHistory(series, period, currency, fx) {
+  if (!series.length || series.some(item => !item.rows?.length)) return null
+  const rates = Object.fromEntries(Object.entries(fx).map(([code, rows]) => [code, new Map(rows)]))
+  const selections = series.map(item => {
+    let previous = null
+    let previousDate
+    const points = new Map()
+    for (const [index, [date, observed]] of item.rows.entries()) {
+      // O índice DI valoriza na data pela taxa do dia útil anterior.
+      const price = item.kind === 'daily-rate' ? (item.rows[index - 1]?.[1] ?? 1) : observed
+      let level = price
+      if (item.currency !== currency) {
+        const from = item.currency === 'BRL' ? 1 : rates[item.currency]?.get(date)
+        const to = currency === 'BRL' ? 1 : rates[currency]?.get(date)
+        level = price * from / to
+      }
+      const current = Number.isFinite(level) && level > 0 ? level : null
+      const tomorrow = previousDate && addDays(previousDate, 1)
+      const daily = tomorrow === date || (tomorrow && item.currency === 'BRL' && nextBusinessDay(tomorrow, ['BR']) === date)
+      if (current !== null) points.set(date, {
+        level: current,
+        change: previous !== null && daily && item.kind !== 'monthly-rate' ? current / previous - 1 : null,
+      })
+      previous = current
+      previousDate = date
+    }
+    return { item, points, dates: [...points.keys()] }
+  })
+  if (selections.some(({ dates }) => !dates.length)) return null
+  const first = selections.map(({ dates }) => dates[0]).sort().at(-1)
+  const end = selections.map(({ dates }) => dates.at(-1)).sort().at(-1)
+  const target = monthsBefore(end, period)
+  const start = first > target ? first : target
+  const timeline = [...new Set(selections.flatMap(({ dates }) => dates.filter(date => date >= start)))].sort()
+  if (timeline.length < 2) return null
+  const tracks = selections.map(({ item, points, dates }) => {
+    const base = points.get(dates.findLast(date => date <= start)).level
+    return { ...item,
+      values: timeline.map(date => points.has(date) ? points.get(date).level / base : null),
+      changes: timeline.map(date => points.get(date)?.change ?? null),
+    }
+  })
+  return { daily: true, timeline, tracks, start, fullPeriod: start === target }
 }
 
 export function compareHistory(series, period, currency, fx, currentMonth) {
@@ -158,9 +252,9 @@ export function comparisonCsv(comparison, currency) {
     return '"' + ( /^[=+\-@]/.test(cell.trimStart()) || /^[\t\r\n]/.test(cell) ? "'" + cell : cell ).replaceAll('"', '""') + '"'
   }
   return [
-    ['Mês', 'Moeda', ...comparison.tracks.map(track => track.name + ' (%)')],
+    [comparison.daily ? 'Data' : 'Mês', 'Moeda', ...comparison.tracks.map(track => track.name + ' (%)')],
     ...comparison.timeline.map((month, index) => [month, currency, ...comparison.tracks.map(track =>
-      ((track.values[index] - 1) * 100).toFixed(6).replace('.', ','))]),
+      track.values[index] === null ? '' : ((track.values[index] - 1) * 100).toFixed(6).replace('.', ','))]),
   ].map(([month, currencyCode, ...cells], index) =>
     [safeCell(month), safeCell(currencyCode), ...cells.map(value => index === 0 ? safeCell(value) : value)].join(';')).join('\r\n')
 }

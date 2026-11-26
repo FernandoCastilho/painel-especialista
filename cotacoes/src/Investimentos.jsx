@@ -1,14 +1,41 @@
 import { useState } from 'react'
 import CalcBack from './CalcBack.jsx'
+import CalculatorHelp from './CalculatorHelp.jsx'
 import InvestmentWorkspace from './InvestmentWorkspace.jsx'
 import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
-import { FONTE_CVM } from './fundosCvm.js'
+import { FONTE_CVM, LICENCA_CVM } from './fundosCvm.js'
 import { numeroPt, cdb, fundo, acoes, cotasCvm } from './investimentos.js'
 import './Investimentos.css'
 
 const brl = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const pct = n => n.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const data = d => d?.split('-').reverse().join('/')
+const SERIES_URL = 'https://www3.bcb.gov.br/sgspub/'
+
+// Avisos das telas de Investimentos: ficam na interrogação do topo, como nas outras calculadoras.
+function AjudaInvestimentos() {
+  return <CalculatorHelp title="Investimentos">
+    <p>Para estudo. Rentabilidade passada e projeções não garantem resultados futuros. Não é recomendação de investimento.</p>
+    <p>Comparar ativos: o gráfico usa a última observação disponível até a data-base. A variação do dia exige observações consecutivas.
+      O CDI da data é valorizado pela taxa do dia útil anterior e o IPCA tem observações mensais. O traço indica valor indisponível.
+      Se um ativo não tem dado na data escolhida, aparece o último valor disponível, com a data dele.
+      O valor aplicado mostra o resultado bruto (valor aplicado × rentabilidade acumulada), antes de impostos, taxas e custos.</p>
+    <p>Retorno e risco e Simular carteira: usam os meses fechados em comum, e as datas de fechamento podem diferir.
+      Volatilidade anualizada usa retornos mensais. Maior queda é medida nos fechamentos mensais.
+      Conversão por PTAX venda da data do gráfico ou do último dia disponível no mês.
+      A carteira considera aplicação única no início, sem rebalanceamento, impostos ou custos. CDI e IPCA servem como referências teóricas.</p>
+    <p>Fundos: a variação da cota não inclui distribuições, aportes, resgates nem impostos do cotista.
+      Na ficha, a cota inicial pode recuar até sete dias corridos e o CDI acumula da data inicial até a véspera da final. A cobertura varia por fundo.</p>
+    <p>CDB: informe a taxa anual bruta. Se o título for pós-fixado, use uma taxa anual estimada, não o percentual do CDI.
+      A taxa fica constante e o cálculo capitaliza em 252 dias úteis por ano, sem consultar curvas de mercado.</p>
+    <p>Ações: informe preços e proventos de um período passado ou de um cenário. A cotação não é automática.
+      O resultado inclui os proventos informados, sem reinvestimento, tributos ou custos de venda.</p>
+    <p>Use vírgula para decimais: 1,234 para uma cota fracionária ou 1234 para mil duzentos e trinta e quatro. Não use ponto sozinho.</p>
+    <p>CDI, IPCA e câmbio vêm das <a href={SERIES_URL} target="_blank" rel="noreferrer">séries do Banco Central</a>.
+      Dados dos fundos adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a> e, na lâmina, das lâminas, do cadastro e do extrato anual da CVM,
+      sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>
+  </CalculatorHelp>
+}
 
 function Campo({ label, value = '', onChange, tipo = 'text', modo = 'decimal' }) {
   return <label>{label}<input type={tipo} value={value} inputMode={tipo === 'text' ? modo : undefined} onChange={e => onChange(e.target.value)} /></label>
@@ -18,7 +45,7 @@ function Saida({ resultado, titulo, nota }) {
   if (!resultado) return null
   if (!resultado.ok) return <p role="alert">{resultado.erro}</p>
   return <section className="inv-resultado" aria-label={titulo} aria-live="polite">
-    <h3>{titulo}</h3><p>{nota}</p>
+    <h3>{titulo}</h3>{nota && <p>{nota}</p>}
     <dl><div><dt>Valor final</dt><dd>{brl(resultado.final)}</dd></div>
       <div><dt>Ganho ou perda</dt><dd>{brl(resultado.ganho)}</dd></div>
       <div><dt>Retorno no período</dt><dd>{pct(resultado.retorno)}</dd></div></dl>
@@ -31,14 +58,12 @@ function Cdb({ v, set }) {
     dataBase: v.dataBase, vencimento: v.vencimento,
   }) : null
   return <>
-    <p>Informe a taxa anual bruta do CDB. Se o título for pós-fixado, use uma taxa anual estimada para simular um cenário, não o percentual do CDI.</p>
     <div className="inv-grade">
       <Campo label="Valor aplicado (R$)" value={v.principal} onChange={x => set('principal', x)} />
       <Campo label="Taxa anual bruta (% a.a.)" value={v.taxa} onChange={x => set('taxa', x)} />
       <Campo label="Data da aplicação (dia útil)" value={v.dataBase} onChange={x => set('dataBase', x)} tipo="date" />
       <Campo label="Vencimento (dia útil)" value={v.vencimento} onChange={x => set('vencimento', x)} tipo="date" />
     </div>
-    <p className="inv-nota">Taxa constante informada por você. O cálculo capitaliza em 252 dias úteis por ano, sem consultar curvas ou taxas de mercado.</p>
     <Saida resultado={r} titulo="Projeção bruta de CDB" nota={r?.ok ? r.dias + ' dias úteis, antes de IR, IOF e taxas.' : ''} />
   </>
 }
@@ -80,7 +105,6 @@ function Fundos({ v, set }) {
     } catch (erro) { setMensagem(erro.message) }
   }
   return <>
-    <p>Veja como o valor teria variado com as cotas informadas. Sem aportes ou resgates intermediários, distribuições ou impostos do cotista.</p>
     <div className="inv-grade"><Campo label="Valor aplicado (R$)" value={v.valor} onChange={x => set('valor',x)} /></div>
     <FundoCvmPicker selecionado={fundoId} onSelect={id => {
       setFundoId(id)
@@ -124,12 +148,11 @@ function Acoes({ v, set }) {
     proventos: numeroPt(v.proventos, true), custos: numeroPt(v.custos,true),
   }) : null
   return <>
-    <p>Informe preços e proventos para avaliar um período passado ou um cenário. A cotação não é automática.</p>
     <div className="inv-grade">{[
       ['quantidade','Quantidade de ações'], ['compra','Preço de compra por ação (R$)'], ['venda','Preço final por ação (R$)'],
       ['proventos','Proventos por ação no período (R$, opcional)'], ['custos','Custos iniciais totais (R$, opcional)'],
     ].map(([id,l]) => <Campo key={id} label={l} value={v[id]} onChange={x => set(id,x)} modo={id === 'quantidade' ? 'numeric' : 'decimal'} />)}</div>
-    <Saida resultado={r} titulo="Simulação de ações" nota="Inclui proventos informados, sem reinvestimento, tributos ou custos de venda." />
+    <Saida resultado={r} titulo="Simulação de ações" />
   </>
 }
 
@@ -139,23 +162,21 @@ export default function Investimentos({ onBack, comparisonLink }) {
   const [valores,setValores] = useState({cdb:{},fundos:{},acoes:{}})
   const props = id => ({v:valores[id],set:(k,x) => setValores(all => ({ ...all,[id]:{...all[id],[k]:x} }))})
   return <section className="cx bw calc-workspace inv-workspace" aria-labelledby="inv-titulo">
-    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack}/><h2 id="inv-titulo">Investimentos</h2></div></div>
+    <div className="bw-heading calc-workspace-heading"><div className="calc-title-row"><CalcBack onBack={onBack}/><h2 id="inv-titulo">Investimentos</h2></div><AjudaInvestimentos /></div>
     <div className="inv-corpo">
       <div className="inv-modos inv-tabs" role="group" aria-label="Investimentos">
-        {[['comparar', 'Comparar ativos'], ['simular', 'Simular carteira'], ['calculadoras', 'CDB, fundos e ações']].map(([id, label]) =>
+        {[['comparar', 'Comparar ativos'], ['fundos', 'Consultar fundos'], ['simular', 'Simular carteira'], ['calculadoras', 'CDB, fundos e ações']].map(([id, label]) =>
           <button key={id} type="button" aria-pressed={aba === id} onClick={() => setAba(id)}>{label}</button>)}
       </div>
       <InvestmentWorkspace link={comparisonLink} mode={aba} visible={aba !== 'calculadoras'}
-        showPortfolio={() => setAba('simular')} />
+        showComparison={() => setAba('comparar')} showPortfolio={() => setAba('simular')} />
       <div className="inv-manual" hidden={aba !== 'calculadoras'}>
         <div className="inv-modos" role="group" aria-label="Tipo de investimento">
           {[['cdb','CDB'],['fundos','Fundos'],['acoes','Ações']].map(([id,l]) => <button key={id} type="button" aria-pressed={modo===id} onClick={() => setModo(id)}>{l}</button>)}
         </div>
-        <p className="inv-nota" id="inv-formato">Use vírgula para decimais: 1,234 para uma cota fracionária ou 1234 para mil duzentos e trinta e quatro. Não use ponto sozinho.</p>
         {modo==='cdb' && <Cdb {...props('cdb')}/>}
         <div hidden={modo!=='fundos'}><Fundos {...props('fundos')}/></div>
         {modo==='acoes' && <Acoes {...props('acoes')}/>}
-        <p className="inv-nota">Para estudo. Rentabilidade passada e projeções não garantem resultados futuros. Não é recomendação de investimento.</p>
       </div>
     </div>
   </section>

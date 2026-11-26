@@ -429,7 +429,9 @@ const workspaceRoutes = {
 // Prova do catálogo agrupado nos dois temas, usando o mesmo artifact das calculadoras.
 async function assertGroupedCatalog(browser, report, failures) {
   const expected = [
-    ['Crédito e capital de giro', ['BNDES', 'Necessidade do Cliente', 'Capital de Giro', 'Conta Garantida', 'Análise de desconto']],
+    // Desde 25/11/2026 as três mais usadas ficam em destaque no topo e saem dos grupos.
+    ['Mais usadas', ['BNDES', 'Necessidade do Cliente', 'Capital de Giro']],
+    ['Crédito e capital de giro', ['CDC', 'Conta Garantida', 'Análise de desconto']],
     ['Crédito internacional', ['FINIMP', 'Empréstimo externo (4131)', 'Câmbio futuro']],
     ['Taxas e câmbio', ['Operação x DI', 'CDI x Dólar']],
     ['Planejamento e análise', ['Faturamento', 'Dividendos via empréstimo', 'Reforma tributária · caixa']],
@@ -681,13 +683,20 @@ async function assertCambioFuturoJornada(browser) {
       for (const [id, value] of Object.entries({ '1-spot-USD': '5,9160', '1-futuro-USD': '6,5027', '1-spot-EUR': '6,4933', '1-futuro-EUR': '7,2529' })) await preencher(id, value)
       assert.equal(normalize(await jornada.locator('#cf-j-total-usd').innerText()), 'R$ 723.288,88')
       assert.equal(normalize(await jornada.locator('#cf-j-total-alvo').innerText()), 'R$ 735.008,66')
+      assert.equal(await jornada.locator('#cf-j-cet-usd-anual').innerText(), '—')
+      await preencher('liquido', '586.600,00')
+      assert.equal(await jornada.locator('#cf-j-cet-usd-anual').innerText(), '23,30%')
+      assert.equal(await jornada.locator('#cf-j-cet-usd-mensal').innerText(), '1,76%')
       await settleLayout(page)
       await assertWorkspace(page, jornada, `Cotação bullet ${width} ${theme}`)
       await jornada.locator('#cf-j-modalidade').selectOption('parcelado')
       assert.equal(await jornada.locator('#cf-j-quantidade').inputValue(), '1')
-      assert.equal(await jornada.locator('.cf-j-results > section').count(), 1)
+      assert.equal(await jornada.locator('.cf-quote thead th').count(), 2)
       await jornada.locator('#cf-j-quantidade').selectOption('5')
-      assert.equal(await jornada.locator('.cf-j-results > section').count(), 5)
+      for (const matriz of await jornada.locator('.cf-j-matriz').all()) {
+        assert.equal(await matriz.locator('thead th').count(), 6, 'cinco parcelas em colunas')
+        assert.ok(await matriz.locator('thead th').last().evaluate(el => el.offsetLeft > el.parentElement.firstElementChild.offsetLeft))
+      }
       assert.equal(await jornada.locator('#cf-j-total-usd').innerText(), '—')
       assert.equal(await jornada.locator('#cf-j-1-futuro-USD').inputValue(), '', 'a troca de modalidade invalida a cotação')
       await preencher('1-futuro-USD', '6,51')

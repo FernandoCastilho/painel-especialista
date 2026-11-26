@@ -62,7 +62,7 @@ main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-t
   display:inline-grid; place-items:center; width:32px; min-width:32px; height:32px; min-height:32px; padding:0;
   border:1px solid color-mix(in srgb, currentColor 45%, transparent); border-radius:8px; background:transparent; box-shadow:none;
 }
-main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle, .credit-email[href]):hover { background:color-mix(in srgb, currentColor 12%, transparent); }
+main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle, .credit-email[href], .credit-email:enabled):hover { background:color-mix(in srgb, currentColor 12%, transparent); }
 @media (max-width:999px), (pointer:coarse) {
   main.app.app-calculators:not(#u) :is(.expandable-toggle, .btn-expand, .fm-zoom-toggle, .credit-email) { width:44px; min-width:44px; height:44px; min-height:44px; }
 }
@@ -85,3 +85,11 @@ main.app.app-calculators:not(#u) :is(.cx-field-label > label, .cx-field > label,
   main.app.app-calculators:not(#u) :is(.seg, .cg-modes, .de-prazos) > button,
   main.app.app-calculators:not(#u) :is(.cx-action, .bnp-launch, .bnprint-launch, .e4-copiar, .cg-button, .desconto-titles > button, fieldset.cx-form > button, .ft-actions > button, .ac-linha > button, .cx-field > button, .bw-nav > button) { min-height:44px; }
 }
+
+/* ── Ajuda pelo nome do campo (revisão de 25/11/2026): sem "?", o próprio nome abre a explicação ── */
+main.app.app-calculators:not(#u) .fi-help > button.fi-help-label {
+  display:inline-flex; align-items:center; width:auto; min-width:44px; height:auto; min-height:44px; margin:-10px 0; padding:0; border:0; border-radius:0; background:none;
+  color:inherit; font:inherit; font-weight:inherit; text-decoration:underline dotted 1.5px; text-underline-offset:4px; cursor:help;
+}
+main.app.app-calculators:not(#u) .fi-help > button.fi-help-label::before { content:none; display:none; }
+main.app.app-calculators:not(#u) .fi-help > button.fi-help-label:focus-visible { outline:2px solid var(--bw-link); outline-offset:2px; }

@@ -1,22 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { numeroPt } from './investimentos.js'
 import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
-import { FONTE_CVM, isFundoCvm, LICENCA_CVM } from './fundosCvm.js'
+import LaminaFundoCvm from './LaminaFundoCvm.jsx'
+import { codigoGarbDoId, isFundoCvm } from './fundosCvm.js'
 import {
-  PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, parseSeriesCsv, loadBcb, compareHistory,
-  metrics, simulateHistory, comparisonCsv,
+  PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, loadBcb, compareHistory, compareDailyHistory,
+  metrics, simulateHistory, comparisonCsv, resumoFundo, ultimoValor, valorAplicado,
 } from './investmentHistory.js'
 
-const COLORS = ['#0131ff', '#ff6200', '#00847e', '#9668bd', '#8e5400', '#396c9b']
-const DEFAULT_IDS = ['cdi', 'dolar', 'ipca']
+const COLORS = ['#4671ee', '#e56b23', '#00958d', '#9668bd', '#aa6a16', '#4b7eac']
+const DEFAULT_IDS = ['cdi']
 const STORAGE = 'peme-investimentos-v1'
-const SERIES_URL = 'https://www3.bcb.gov.br/sgspub/'
 const EUR = { id: 'eur', code: 21619, kind: 'level' }
 const value = n => n === null ? '—' : n.toLocaleString('pt-BR', {
   style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2,
 })
 const money = (n, currency) => n.toLocaleString('pt-BR', { style: 'currency', currency })
 const dateText = date => date?.split('-').reverse().join('/') ?? '—'
+const monthText = month => month.split('-').reverse().join('/')
+const signedMoney = (n, currency) => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n), currency)
+function datasDaSerie(item) {
+  const atualizado = item.atualizado ? ' · base CVM atualizada em ' + dateText(item.atualizado) : ''
+  return 'Último dado em ' + dateText(item.rows.at(-1)[0]) + ' · histórico desde ' + dateText(item.rows[0][0]) + atualizado
+}
 const publicSeries = PUBLIC_SERIES.map(item => ({ ...item, currency: 'BRL', source: 'SGS ' + item.code }))
 
 function readLocal() {
@@ -31,8 +37,8 @@ function writeLocal(state) {
   localStorage.setItem(STORAGE, JSON.stringify(state))
 }
 
-function initialConfig(link, saved) {
-  const params = new URLSearchParams(link || saved || '')
+function initialConfig(link) {
+  const params = new URLSearchParams(link || '')
   const period = Number(params.get('periodo'))
   const currency = params.get('moeda')
   const ids = [...new Set((params.get('ativos') ?? '').split(',').filter(id =>
@@ -66,8 +72,9 @@ function useBcbHistory(retry) {
   return [state, today]
 }
 
-function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabilidade acumulada' }) {
-  const [hover, setHover] = useState(null)
+function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabilidade acumulada', controls, aplicado = null, currency = 'BRL' }) {
+  const [point, setPoint] = useState(null)
+  const [pointer, setPointer] = useState(null)
   const [width, setWidth] = useState(750)
   const chart = useRef(null)
   useEffect(() => {
@@ -77,36 +84,96 @@ function HistoryChart({ comparison, tracks = comparison.tracks, title = 'Rentabi
     observer.observe(chart.current)
     return () => observer.disconnect()
   }, [])
-  const chartRight = width - 15
-  const chartLeft = 72
-  const index = hover === null ? comparison.timeline.length - 1 : Math.min(hover, comparison.timeline.length - 1)
-  const totals = tracks.flatMap(track => track.values.map(level => level - 1))
-  const min = Math.min(0, ...totals)
-  const span = (Math.max(0, ...totals) - min) || 0.01
-  const x = i => chartLeft + i * (chartRight - chartLeft) / (comparison.timeline.length - 1)
-  const y = level => 183 - (level - min) / span * 160
-  const ticks = [...new Set([0, Math.floor(comparison.timeline.length / 2), comparison.timeline.length - 1])]
+  const chartRight = width - 16
+  const chartLeft = width < 420 ? 62 : 78
+  const height = controls ? (width < 560 ? 260 : 338) : 220
+  const bottom = height - 31
+  const top = 22
+  const last = comparison.timeline.length - 1
+  const index = Math.min(pointer ?? point ?? last, last)
+  const tooltipWidth = Math.min(310, width)
+  const daily = comparison.daily
+  const formatDate = daily ? dateText : monthText
+  const axis = useMemo(() => comparison.timeline.map((date, i) => daily ? Date.parse(date) : i), [comparison.timeline, daily])
+  const { x, y, min, span, lines } = useMemo(() => {
+    const totals = tracks.flatMap(track => track.values.filter(level => level !== null).map(level => level - 1))
+    const min = Math.min(0, ...totals)
+    const span = (Math.max(0, ...totals) - min) || 0.01
+    const x = i => chartLeft + (axis[i] - axis[0]) * (chartRight - chartLeft) / (axis[last] - axis[0])
+    const y = level => bottom - (level - min) / span * (bottom - top)
+    const lines = daily && tracks.map(track => track.values.flatMap((level, i) => {
+      if (level === null) return []
+      const point = x(i) + ',' + y(level - 1)
+      return [i > 0 && track.values[i - 1] !== null && track.changes[i] !== null ? 'L' + point : 'M' + point + 'h0.01']
+    }).join(' '))
+    return { x, y, min, span, lines }
+  }, [axis, daily, tracks, last, chartLeft, chartRight, bottom, top])
+  const divisions = width < 560 ? 2 : 4
+  function nearest(position) {
+    const target = axis[0] + (position - chartLeft) / (chartRight - chartLeft) * (axis[last] - axis[0])
+    const next = axis.findIndex(point => point >= target)
+    if (next < 0) return last
+    return next > 0 && target - axis[next - 1] <= axis[next] - target ? next - 1 : next
+  }
+  const ticks = [...new Set(Array.from({ length: divisions + 1 }, (_, i) =>
+    nearest(chartLeft + i * (chartRight - chartLeft) / divisions)))]
+  function locate(event) {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const position = (event.clientX - bounds.left) * width / bounds.width
+    return nearest(position)
+  }
+  function valuesAt(i) {
+    return tracks.map(track => {
+      const j = daily ? ultimoValor(track, i) : i
+      const nivel = j < 0 ? null : track.values[j]
+      return <li key={track.id}><span><Dot color={track.color} />{track.name}</span>
+        <span className="inv-chart-values">
+          <strong>{value(nivel === null ? null : nivel - 1)}</strong>
+          {daily && <small>{j < 0 ? 'Sem dado no período' : j !== i ? 'Último dado em ' + dateText(comparison.timeline[j])
+            : track.changes[i] === null ? 'Sem variação diária' : value(track.changes[i]) + ' no dia'}</small>}
+          {aplicado > 0 && nivel !== null && <small className="inv-bruto">
+            {money(aplicado * nivel, currency)} · {signedMoney(aplicado * (nivel - 1), currency)} bruto</small>}
+        </span></li>
+    })
+  }
   return <section className="inv-panel inv-chart" aria-label={title}>
-    <h3>{title}</h3>
-    <svg ref={chart} viewBox={`0 0 ${width} 220`} role="img" aria-label="Gráfico da variação acumulada por mês">
-      {[0, 1, 2, 3, 4].map(i => {
-        const level = min + i * span / 4
-        return <g key={i}><line className="inv-gridline" x1={chartLeft} x2={chartRight} y1={y(level)} y2={y(level)} />
-          <text x={chartLeft - 6} y={y(level) + 4} textAnchor="end">{value(level)}</text></g>
-      })}
-      {tracks.map(track => <polyline key={track.id} fill="none" stroke={track.color} strokeWidth="2.6"
-        points={track.values.map((level, i) => x(i) + ',' + y(level - 1)).join(' ')} />)}
-      <line className="inv-guide" x1={x(index)} x2={x(index)} y1="23" y2="183" />
-      {tracks.map(track => <circle key={track.id} cx={x(index)} cy={y(track.values[index] - 1)} r="4" fill={track.color} />)}
-      {ticks.map((i, position) => <text key={i} x={x(i)} y="208"
-        textAnchor={position === 0 ? 'start' : position === ticks.length - 1 ? 'end' : 'middle'}>
-        {comparison.timeline[i].split('-').reverse().join('/')}
-      </text>)}
-    </svg>
-    <label className="inv-month">Mês de referência · {comparison.timeline[index].split('-').reverse().join('/')}
-      <input type="range" min="0" max={comparison.timeline.length - 1} value={index} onChange={e => setHover(Number(e.target.value))} />
+    <header className="inv-chart-header"><h3>{title}</h3>{controls}</header>
+    <div className="inv-plot">
+      <svg ref={chart} viewBox={`0 0 ${width} ${height}`} role="img"
+        aria-label={daily ? 'Gráfico da rentabilidade acumulada por dia' : 'Gráfico da variação acumulada por mês'}
+        onPointerMove={event => { if (event.pointerType !== 'touch') setPointer(locate(event)) }}
+        onPointerLeave={() => setPointer(null)}
+        onPointerDown={event => { if (event.pointerType === 'touch') setPoint(locate(event)) }}>
+        {[0, 1, 2, 3, 4].map(i => {
+          const level = min + i * span / 4
+          return <g key={i}><line className="inv-gridline" x1={chartLeft} x2={chartRight} y1={y(level)} y2={y(level)} />
+            <text x={chartLeft - 6} y={y(level) + 4} textAnchor="end">{value(level)}</text></g>
+        })}
+        {tracks.map((track, i) => daily
+          ? <path key={track.id} fill="none" stroke={track.color} strokeWidth="2.6" strokeLinecap="round" d={lines[i]} />
+          : <polyline key={track.id} fill="none" stroke={track.color} strokeWidth="2.6"
+            points={track.values.map((level, i) => x(i) + ',' + y(level - 1)).join(' ')} />)}
+        <line className="inv-guide" x1={x(index)} x2={x(index)} y1={top} y2={bottom} />
+        {tracks.filter(track => track.values[index] !== null).map(track =>
+          <circle key={track.id} cx={x(index)} cy={y(track.values[index] - 1)} r="4" fill={track.color} />)}
+        {ticks.map((i, position) => <text key={i} x={x(i)} y={height - 8}
+          textAnchor={position === 0 ? 'start' : position === ticks.length - 1 ? 'end' : 'middle'}>
+          {formatDate(comparison.timeline[i])}
+        </text>)}
+      </svg>
+      {pointer !== null && <div className="inv-chart-tooltip" aria-hidden="true" style={{
+        width: tooltipWidth, left: x(index) + tooltipWidth + 16 <= width ? x(index) + 12 : Math.max(0, x(index) - tooltipWidth - 12),
+      }}>
+        <strong>{formatDate(comparison.timeline[index])}</strong>
+        <ul>{valuesAt(index)}</ul>
+      </div>}
+    </div>
+    <label className="inv-month">{daily ? 'Data' : 'Mês de referência'} · {formatDate(comparison.timeline[index])}
+      <input type="range" min="0" max={last} value={index} aria-valuetext={formatDate(comparison.timeline[index])}
+        onChange={e => { setPointer(null); setPoint(Number(e.target.value)) }} />
     </label>
-    <ul className="inv-legend">{tracks.map(track => <li key={track.id}><Dot color={track.color} />{track.name} <strong>{value(track.values[index] - 1)}</strong></li>)}</ul>
+    <ul className="inv-legend" aria-label={daily ? 'Rentabilidade dos ativos na data selecionada'
+      : 'Rentabilidade dos ativos no mês selecionado'}>{valuesAt(index)}</ul>
   </section>
 }
 
@@ -129,28 +196,40 @@ function Results({ tracks }) {
   </section>
 }
 
-function SeriesPicker({ remaining, add, importSeries }) {
-  const [search, setSearch] = useState('')
-  const [name, setName] = useState('')
-  const [currency, setCurrency] = useState('BRL')
-  const matches = remaining.filter(item => item.name.toLowerCase().includes(search.trim().toLowerCase()))
-  return <details className="inv-import">
-    <summary>Adicionar ativo</summary>
-    <label>Buscar referência pública<input type="search" value={search} onChange={e => setSearch(e.target.value)} /></label>
-    <div className="inv-flex">{matches.map(item => <button type="button" key={item.id} onClick={() => add(item.id)}>{item.name}</button>)}</div>
-    {!matches.length && <p>Nenhuma referência disponível para esta busca.</p>}
-    <div className="inv-grade">
-      <label>Nome da série<input maxLength="60" value={name} onChange={e => setName(e.target.value)} /></label>
-      <label>Moeda da série<select value={currency} onChange={e => setCurrency(e.target.value)}>
-        {CURRENCIES.map(code => <option key={code}>{code}</option>)}</select></label>
-      <label>Importar CSV<input type="file" accept=".csv,text/csv" onChange={e => {
-        const file = e.target.files?.[0]
-        e.target.value = ''
-        if (file) void importSeries(file, name, currency)
-      }} /></label>
-    </div>
-    <p className="inv-nota">Use data;valor, com datas AAAA-MM-DD e valores positivos de preço, cota ou índice. Informe a moeda original. Para ações ou ETFs, prefira uma série ajustada. O arquivo é lido neste navegador.</p>
-  </details>
+function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simular, jaAdicionado, lotado, verLamina }) {
+  const resumo = resumoFundo(fundo.rows, cdi)
+  const bloqueado = lotado && !jaAdicionado
+  const titulo = useRef(null)
+  useEffect(() => {
+    if (document.activeElement === document.body) titulo.current?.focus({ preventScroll: true })
+  }, [fundo.id])
+  return <section className="inv-panel inv-ficha" aria-label="Ficha do fundo">
+    <header className="inv-ficha-cabecalho">
+      <div>
+        <h3 ref={titulo} tabIndex={-1}>{fundo.name}</h3>
+        <p className="inv-nota">{datasDaSerie(fundo)}</p>
+      </div>
+      <div className="inv-flex">
+        <button className="inv-primary" type="button" disabled={bloqueado} onClick={comparar}>
+          {jaAdicionado ? 'Ver comparação' : 'Adicionar à comparação'}
+        </button>
+        <button type="button" disabled={bloqueado} onClick={simular}>Simular carteira</button>
+        {verLamina && <button type="button" onClick={verLamina}>Ver lâmina</button>}
+      </div>
+    </header>
+    {bloqueado && <p className="inv-nota" role="status">Remova um ativo da comparação para incluir este fundo. O limite é de seis.</p>}
+    <div className="inv-table"><table aria-label="Rentabilidade do fundo e do CDI">
+      <thead><tr><th scope="col">Período</th><th scope="col">Fundo</th><th scope="col">CDI</th></tr></thead>
+      <tbody>{resumo.map(linha => <tr key={linha.meses}>
+        <th scope="row">{linha.meses} {linha.meses === 1 ? 'mês' : 'meses'}
+          {linha.inicio && <small>{dateText(linha.inicio)} a {dateText(linha.fim)}</small>}
+        </th>
+        <td>{value(linha.fundo)}</td><td>{value(linha.cdi)}</td>
+      </tr>)}</tbody>
+    </table></div>
+    {cdiLoading && <p className="inv-nota" role="status">Carregando CDI…</p>}
+    {cdiFalhou && <button type="button" onClick={repetir}>Tentar carregar CDI novamente</button>}
+  </section>
 }
 
 function Portfolio({ comparison, currency }) {
@@ -171,28 +250,33 @@ function Portfolio({ comparison, currency }) {
         <div><dt>Valor final</dt><dd>{money(principal * result.at(-1), currency)}</dd></div>
         <div><dt>Retorno no período</dt><dd>{value(result.at(-1) - 1)}</dd></div>
       </dl> : <p role="status">Informe um total inicial positivo. Cada valor deve ficar entre zero e 1 trilhão.</p>}
-      <p className="inv-nota">Valores históricos, com aplicação única no início e sem rebalanceamento, impostos ou custos. CDI e IPCA servem como referências teóricas.</p>
     </section>
     {result && <><HistoryChart comparison={comparison} tracks={tracks} title="Evolução da carteira" /><Results tracks={tracks} /></>}
   </>
 }
 
-export default function InvestmentWorkspace({ mode, link, showPortfolio, visible }) {
+export default function InvestmentWorkspace({ mode, link, showComparison, showPortfolio, visible }) {
   const [local] = useState(readLocal)
-  const [config, setConfig] = useState(() => initialConfig(link, local.favorites?.[0]?.config))
-  const [custom, setCustom] = useState(() => Array.isArray(local.series) ? local.series : [])
+  const [config, setConfig] = useState(() => initialConfig(link))
+  // Séries CSV salvas antes de a importação sair continuam abrindo nas comparações guardadas.
+  const [custom] = useState(() => Array.isArray(local.series) ? local.series : [])
   const [favorites, setFavorites] = useState(() => Array.isArray(local.favorites) ? local.favorites : [])
   const [activeFavorite, setActiveFavorite] = useState('')
   const [status, setStatus] = useState('')
   const [retry, setRetry] = useState(0)
+  const [fichaId, setFichaId] = useState('')
+  const [laminaFechada, setLaminaFechada] = useState('')
+  const [nomes, setNomes] = useState({})
+  const [aplicadoTexto, setAplicadoTexto] = useState('')
   const [source, today] = useBcbHistory(retry)
   const fundosIds = config.ids.filter(isFundoCvm)
-  const fundos = useCotasCvm(fundosIds, retry)
+  const fundos = useCotasCvm(fichaId && !fundosIds.includes(fichaId) ? [...fundosIds, fichaId] : fundosIds, retry)
+  const fundoFicha = fundos.dados[fichaId]
   const catalog = [...publicSeries, ...custom]
   const selected = config.ids.map((id, index) => {
     const fundo = isFundoCvm(id)
     const item = fundo ? fundos.dados[id] : catalog.find(entry => entry.id === id)
-    return { ...(item ?? { id, name: fundo ? 'Fundo CVM · ' + id.slice(6) : 'Série importada indisponível' }),
+    return { ...(item ?? { id, name: nomes[id] ?? (fundo ? 'Fundo CVM · ' + id.slice(6) : 'Série importada indisponível') }),
       rows: item?.rows ?? source.data[id], color: COLORS[index] }
   })
   const conversion = [...new Set(selected.flatMap(item => item.currency && item.currency !== config.currency
@@ -201,28 +285,18 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
   const cvmLoading = missing.some(item => isFundoCvm(item.id) && !fundos.erros.includes(item.id))
   const fxError = conversion.some(code => source.errors.includes(code === 'USD' ? 'dolar' : 'eur'))
   const retryNeeded = fxError || missing.some(item => source.errors.includes(item.id) || fundos.erros.includes(item.id))
-  const comparison = compareHistory(selected, config.period, config.currency,
-    { USD: source.data.dolar, EUR: source.data.eur }, today.slice(0, 7))
+  const fx = { USD: source.data.dolar, EUR: source.data.eur }
+  const monthly = compareHistory(selected, config.period, config.currency, fx, today.slice(0, 7))
+  const comparando = mode === 'comparar'
+  const comparison = comparando ? compareDailyHistory(selected, config.period, config.currency, fx) : monthly
   const change = next => {
     setConfig(next)
     setActiveFavorite('')
     setStatus('')
   }
-  const add = id => {
+  const add = (id, nome) => {
+    if (nome && isFundoCvm(id)) setNomes(current => ({ ...current, [id]: nome }))
     if (!config.ids.includes(id) && config.ids.length < MAX_SERIES) change({ ...config, ids: [...config.ids, id] })
-  }
-  async function importSeries(file, name, currency) {
-    if (file.size > 1024 * 1024) return setStatus('Use um CSV de até 1 MB.')
-    try {
-      const rows = parseSeriesCsv(await file.text())
-      const id = 'csv-' + crypto.randomUUID()
-      const item = { id, name: name.trim() || file.name.replace(/\.csv$/i, '').trim().slice(0, 60) || 'Série importada', currency, rows, source: 'CSV local' }
-      setCustom(current => [...current, item])
-      setConfig(current => current.ids.length < MAX_SERIES ? { ...current, ids: [...current.ids, id] } : current)
-      setStatus('CSV importado. Use Salvar para guardar a seleção neste navegador.')
-    } catch (error) {
-      setStatus(error.message)
-    }
   }
   function save() {
     try {
@@ -261,80 +335,96 @@ export default function InvestmentWorkspace({ mode, link, showPortfolio, visible
     anchor.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
+  if (mode === 'fundos') return <div className="inv-study">
+    <FundoCvmPicker inline onSelect={setFichaId} selecionado={fichaId} />
+    {fichaId && (fundoFicha
+      ? <FichaFundo fundo={fundoFicha} cdi={source.data.cdi} cdiLoading={source.loading} cdiFalhou={source.errors.includes('cdi')}
+          repetir={() => setRetry(n => n + 1)} verLamina={laminaFechada === fichaId ? () => setLaminaFechada('') : undefined}
+          comparar={() => { add(fichaId, fundoFicha.name); showComparison() }}
+          simular={() => { add(fichaId, fundoFicha.name); showPortfolio() }}
+          jaAdicionado={config.ids.includes(fichaId)} lotado={selected.length >= MAX_SERIES} />
+      : fundos.erros.includes(fichaId)
+        ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
+        : <p role="status">Carregando a ficha do fundo…</p>)}
+    {fichaId && laminaFechada !== fichaId &&
+      <LaminaFundoCvm id={fichaId} nome={fundoFicha?.name ?? nomes[fichaId]} fechar={() => setLaminaFechada(fichaId)} />}
+  </div>
+  const aplicadoNumero = valorAplicado(aplicadoTexto)
+  const aplicado = Number.isFinite(aplicadoNumero) ? aplicadoNumero : null
+  const controls = <div className="inv-controls">
+    <div className="inv-flex" role="group" aria-label="Período">
+      {PERIODS.map(period => <button type="button" key={period} aria-pressed={config.period === period}
+        onClick={() => change({ ...config, period })}>{period === 6 ? '6M' : period / 12 + 'A'}</button>)}
+    </div>
+    <label className="inv-currency">Moeda<select value={config.currency} onChange={e => change({ ...config, currency: e.target.value })}>
+      {CURRENCIES.map(code => <option key={code}>{code}</option>)}
+    </select></label>
+    {comparando && <label className="inv-aplicado">Valor aplicado
+      <input inputMode="decimal" placeholder="Ex.: 10.000" value={aplicadoTexto} aria-describedby="inv-aplicado-nota"
+        onChange={e => setAplicadoTexto(e.target.value)} /></label>}
+  </div>
   return <div hidden={!visible} className="inv-study">
-    <div className="inv-controls">
-      <div className="inv-flex" role="group" aria-label="Período">
-        {PERIODS.map(period => <button type="button" key={period} aria-pressed={config.period === period}
-          onClick={() => change({ ...config, period })}>{period === 6 ? '6M' : period / 12 + 'A'}</button>)}
-      </div>
-      <label className="inv-currency">Moeda<select value={config.currency} onChange={e => change({ ...config, currency: e.target.value })}>
-        {CURRENCIES.map(code => <option key={code}>{code}</option>)}
-      </select></label>
-      {mode === 'comparar' && <div className="inv-actions inv-flex">
-        <button type="button" onClick={save} disabled={!config.ids.length || !!missing.length}>Salvar</button>
-        {favorites.length > 0 && <label className="inv-favorites">Comparações salvas
-          <select value={activeFavorite} onChange={event => {
-            const next = event.target.value
-            if (next) change(initialConfig(next))
-            setActiveFavorite(next)
-          }}><option value="">Escolher comparação</option>
-            {favorites.map(item => <option key={item.config} value={item.config}>{item.label}</option>)}
-          </select>
-        </label>}
-        <button type="button" onClick={copy} disabled={!config.ids.length}>Copiar link</button>
-        <button type="button" onClick={download} disabled={!comparison}>Exportar CSV</button>
-      </div>}
-    </div>
-    {status && <p role="status">{status}</p>}
-    <div className="inv-dashboard">
-      {mode === 'comparar' && comparison
-        ? <HistoryChart comparison={comparison} />
-        : <section className="inv-panel inv-state" aria-live="polite">
-          <h3>{mode === 'simular' ? 'Base histórica da simulação' : 'Rentabilidade acumulada'}</h3>
-          {comparison ? <p>{comparison.timeline[0]} a {comparison.timeline.at(-1)} · {config.currency}</p>
-            : <p>{!selected.length ? 'Adicione uma série para começar.' : cvmLoading ? 'Carregando cotas da CVM…'
-              : source.loading ? 'Carregando dados do Banco Central…'
-              : missing.length || fxError ? 'Há séries indisponíveis. Atualize os dados ou ajuste a seleção.'
-              : 'Não há dois meses consecutivos em comum, ou existem lacunas no período selecionado.'}</p>}
-          {retryNeeded &&
-            <button type="button" onClick={() => setRetry(count => count + 1)}>Atualizar dados</button>}
-        </section>}
-      <section className="inv-panel inv-assets" aria-labelledby="inv-assets">
+    {visible && <FundoCvmPicker key={mode} inline referencias={catalog} ativos={config.ids}
+      lotado={selected.length >= MAX_SERIES} onSelect={add} />}
+    <section className="inv-panel inv-assets" aria-labelledby="inv-assets">
+      <header className="inv-assets-header">
         <h3 id="inv-assets">Ativos em comparação</h3>
-        <ul>{selected.map(item => {
-          const track = comparison?.tracks.find(entry => entry.id === item.id)
-          return <li key={item.id}>
-            <div><strong><Dot color={item.color} />{item.name}</strong>
-              <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
-              {track ? <small>Base {dateText(track.start)} · Último ponto {dateText(track.end)}</small>
-                : source.loading && item.source?.startsWith('SGS') ? null : <small>Última observação {dateText(item.rows?.at(-1)?.[0])}</small>}</div>
-            <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
-          </li>
-        })}</ul>
-        {selected.length < MAX_SERIES
-          ? <>
-            <FundoCvmPicker onSelect={add} excluidos={config.ids} />
-            <SeriesPicker remaining={catalog.filter(item => !config.ids.includes(item.id))} add={add} importSeries={importSeries} />
-          </>
-          : <p className="inv-nota">Até {MAX_SERIES} séries por comparação.</p>}
-        {mode === 'comparar' && <button className="inv-primary" type="button" onClick={showPortfolio}>Simular carteira</button>}
-      </section>
-    </div>
+        <span className="inv-nota" role="status">{selected.length} de {MAX_SERIES} ativos</span>
+      </header>
+      {selected.length > 0 && <ul>{selected.map(item => <li key={item.id} className={codigoGarbDoId(item.id) ? 'inv-garb' : undefined}>
+        <div><strong title={item.name}><Dot color={item.color} />{item.name}</strong>
+          <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
+          {codigoGarbDoId(item.id) && <small>Código CVM {codigoGarbDoId(item.id)}</small>}
+          {item.rows?.length > 0 && <small>{datasDaSerie(item)}</small>}</div>
+        <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
+      </li>)}</ul>}
+    </section>
+    {comparando && comparison
+      ? <HistoryChart comparison={comparison} controls={controls} aplicado={aplicado} currency={config.currency} />
+      : <section className="inv-panel inv-state" aria-live="polite">
+        <header className="inv-chart-header">
+          <h3>{comparando ? 'Rentabilidade acumulada' : 'Base histórica da simulação'}</h3>
+          {controls}
+        </header>
+        {comparison ? <p>{monthText(comparison.timeline[0])} a {monthText(comparison.timeline.at(-1))} · {config.currency}</p>
+          : <p>{!selected.length ? 'Adicione um ativo para ver o gráfico.' : cvmLoading ? 'Carregando cotas da CVM…'
+            : source.loading ? 'Carregando dados do Banco Central…'
+            : missing.length || fxError ? 'Há séries indisponíveis. Atualize os dados ou ajuste a seleção.'
+            : comparando ? 'Não há duas observações diárias para o período selecionado.'
+              : 'Não há dois meses consecutivos em comum, ou existem lacunas no período selecionado.'}</p>}
+        {retryNeeded &&
+          <button type="button" onClick={() => setRetry(count => count + 1)}>Atualizar dados</button>}
+      </section>}
     {comparison && <p className="inv-nota">
-      Janela efetiva {comparison.timeline[0].split('-').reverse().join('/')} a {comparison.timeline.at(-1).split('-').reverse().join('/')} · {config.currency}.
+      {comparando ? <>Base em {dateText(comparison.start)} · Dados até {dateText(comparison.timeline.at(-1))}</>
+        : <>Janela efetiva {monthText(comparison.timeline[0])} a {monthText(comparison.timeline.at(-1))}</>} · {config.currency}.
       {comparison.endsEarly ? ' A última observação mensal em comum é anterior ao último mês fechado.' : ''}
     </p>}
-    {comparison && !comparison.fullPeriod && <p className="inv-nota" role="status">
+    {comparando && <p className="inv-nota" id="inv-aplicado-nota">{aplicado
+      ? <>Valores brutos de {money(aplicado, config.currency)} aplicados em {comparison ? dateText(comparison.start) : 'cada ativo'}, antes de impostos e custos.</>
+      : Number.isNaN(aplicadoNumero) ? 'Valor aplicado inválido. Use, por exemplo, 10.000 ou 2.500,50.'
+        : 'Informe um valor aplicado para ver quanto cada ativo renderia, bruto, antes de impostos e custos.'}</p>}
+    {comparando && comparison && !comparison.fullPeriod && <p className="inv-nota">
+      A cobertura disponível é menor que os {config.period} meses selecionados.</p>}
+    {!comparando && comparison && !comparison.fullPeriod && <p className="inv-nota" role="status">
       O histórico em comum cobre {comparison.timeline.length - 1} dos {config.period} meses solicitados.</p>}
-    {comparison && (mode === 'comparar'
-      ? <Results tracks={comparison.tracks} />
-      : <Portfolio comparison={comparison} currency={config.currency} />)}
-    <p className="inv-nota">Base comum por mês fechado, com a última observação disponível de cada série. As datas podem diferir. Em CSV, prefira valores de fechamento.
-      Volatilidade anualizada usa retornos mensais. Maior queda é medida nos fechamentos mensais.
-      Conversão por PTAX venda do último dia disponível no mês.
-      {' '}<a href={SERIES_URL} target="_blank" rel="noreferrer">Consultar fontes no Banco Central</a>.</p>
-    {fundosIds.length > 0 && <p className="inv-nota">A variação das cotas não inclui distribuições nem impostos do cotista.
-      Dados adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a>,
-      sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>}
+    {comparando && <div className="inv-flex">
+      <button type="button" onClick={save} disabled={!config.ids.length || !!missing.length}>Salvar</button>
+      <button type="button" onClick={copy} disabled={!config.ids.length}>Copiar link</button>
+      <button type="button" onClick={download} disabled={!comparison}>Exportar CSV</button>
+      <button className="inv-primary" type="button" onClick={showPortfolio}>Simular carteira</button>
+      {favorites.length > 0 && <label className="inv-favorites">Comparações salvas
+        <select value={activeFavorite} onChange={event => {
+          const next = event.target.value
+          if (next) change(initialConfig(next))
+          setActiveFavorite(next)
+        }}><option value="">Escolher comparação</option>
+          {favorites.map(item => <option key={item.config} value={item.config}>{item.label}</option>)}
+        </select>
+      </label>}
+    </div>}
+    {status && <p role="status">{status}</p>}
+    {comparando ? monthly && <Results tracks={monthly.tracks} /> : comparison &&
+      <Portfolio comparison={comparison} currency={config.currency} />}
   </div>
 }

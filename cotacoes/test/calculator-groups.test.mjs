@@ -6,13 +6,12 @@ import { runInNewContext } from 'node:vm'
 import { transform } from 'esbuild'
 import React from 'react'
 import { CALCULATOR_GROUPS } from '../src/calculatorGroups.js'
-const nodes = n => Array.isArray(n) ? n.flatMap(nodes) : n && typeof n === 'object' ? [n, ...nodes(n.props?.children)] : []
-test('catálogo agrupa os 14 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
+test('catálogo agrupa os 15 destinos uma vez, com BNDES primeiro e sem expor árvore', async () => {
   const source = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')
   const original = [...source.slice(source.indexOf('const CALCS'),source.indexOf('// Aba Calculadoras')).matchAll(/id: '([^']+)'/g)].map(m=>m[1])
   const grouped = CALCULATOR_GROUPS.flatMap(g=>g.calculators)
-  assert.equal(grouped.length,14)
-  assert.equal(new Set(grouped).size,14)
+  assert.equal(grouped.length,15)
+  assert.equal(new Set(grouped).size,15)
   assert.deepEqual([...grouped].sort(),original.sort())
   assert.equal(grouped[0],'finame-materiais')
   assert.ok(!grouped.includes('arvore-credito'))
@@ -30,17 +29,26 @@ test('grupos têm títulos acessíveis e todos os botões preservam destino ao c
     return require(n)
   }})
   const clicks=[]
-  const tree=module.exports.default({view:'',onView:id=>clicks.push(id)})
-  const all=nodes(tree)
-  const groups=all.filter(n=>n.props?.className==='calc-catalog-group')
-  assert.equal(groups.length,5)
+  // Busca e destaque (revisão de 25/11/2026): a lista sem estado é testada direto; "Mais usadas" + 5 grupos.
+  const { CatalogoLista, MAIS_USADAS } = module.exports
+  const expand = n => Array.isArray(n) ? n.flatMap(expand) : n && typeof n === 'object' ? (typeof n.type === 'function' && n.type.name === 'Tile' ? expand(n.type(n.props)) : [n, ...expand(n.props?.children)]) : []
+  const tree=CatalogoLista({onView:id=>clicks.push(id)})
+  const all=expand(tree)
+  const groups=all.filter(n=>String(n.props?.className).split(' ').includes('calc-catalog-group'))
+  assert.equal(groups.length,6)
   for(const group of groups){
-    const heading=nodes(group).find(n=>n.type==='h3')
+    const heading=expand(group).find(n=>n.type==='h3')
     assert.equal(group.props['aria-labelledby'],heading.props.id)
   }
   const buttons=all.filter(n=>n.type==='button')
   for(const button of buttons){assert.match(button.props['aria-label'],/: abrir calculadora$/);button.props.onClick()}
-  assert.deepEqual(clicks,CALCULATOR_GROUPS.flatMap(g=>g.calculators))
+  assert.equal(clicks.length,15)
+  assert.deepEqual([...clicks].sort(),CALCULATOR_GROUPS.flatMap(g=>g.calculators).sort())
+  assert.deepEqual(clicks.slice(0,3),[...MAIS_USADAS])
+  const busca = query => expand(CatalogoLista({query,onView(){}})).filter(n=>n.type==='button').map(n=>n.props['aria-label'])
+  assert.deepEqual([...busca('4131')],['Empréstimo externo (4131): abrir calculadora'])
+  assert.ok(busca('cambio').includes('Câmbio futuro: abrir calculadora'),'busca sem acento')
+  assert.equal(busca('xyz').length,0)
   assert.equal(all.find(n=>n.type==='a').props.href,'#bndes')
   assert.ok(React.isValidElement(tree))
 })
@@ -62,7 +70,7 @@ test('catálogo e endereços diretos carregam somente o formulário escolhido', 
     return require(name)
   } })
   const render = view => module.exports.default({ view, onView() {} })
-  assert.equal(render('').props.className.includes('calc-catalog'), true)
+  assert.equal(render('').type.name, 'Catalogo')
   assert.deepEqual(imported, [])
   for (const [view, component] of [
     ['investimentos', 'Investimentos'], ['giro', 'CapitalDeGiro'], ['finame-materiais', 'BndesWorkspace'],

@@ -1,3 +1,4 @@
+import AreaDegrade from './AreaDegrade.jsx'
 import ChartFullscreen from './ChartFullscreen.jsx'
 import { ancoraRotulo, marcasValor, yRotulo } from './chartMarcas.js'
 import Flag from './Flag.jsx'
@@ -153,7 +154,9 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
                 const marcas = marcasValor(vis.map((p) => p[1]), vis.map((p) => g.X(p)))
                 return (
                   <g key={s.date}>
-                    <path clipPath={`url(#${clipId})`} d={d} fill="none" stroke={color} strokeWidth={s.id === 'hoje' ? 2.5 : 1.6} strokeLinejoin="round" strokeLinecap="round" opacity={s.id === 'hoje' ? 1 : 0.85} />
+                    {/* degradê e brilho só na curva de hoje: nas outras, embolaria a leitura (Diretor de Arte, 25/11/2026) */}
+                    {s.id === 'hoje' && <g clipPath={`url(#${clipId})`}><AreaDegrade pontos={s.pts.map((p) => [+g.X(p).toFixed(1), +g.Y(p[1]).toFixed(1)])} base={M.t + g.ih} cor={color} /></g>}
+                    <path clipPath={`url(#${clipId})`} className={s.id === 'hoje' ? 'linha-destaque' : undefined} style={{ color }} d={d} fill="none" stroke={color} strokeWidth={s.id === 'hoje' ? 2.5 : 1.6} strokeLinejoin="round" strokeLinecap="round" opacity={s.id === 'hoje' ? 1 : 0.85} />
                     {s.id === 'hoje' && s.pts.map((p) => <circle clipPath={`url(#${clipId})`} key={p[0]} cx={g.X(p)} cy={g.Y(p[1])} r="2.6" fill={color} />)}
                     {marcas.map(({ i, vale }) => {
                       const p = vis[i]

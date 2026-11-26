@@ -1,5 +1,6 @@
 import datetime as dt
 import importlib.util
+import gzip
 import io
 import json
 from pathlib import Path
@@ -78,6 +79,9 @@ class ColetaCvm(unittest.TestCase):
                     self.assertEqual((pasta / 'site' / 'manifest.json').read_text(), anterior)
                     for arquivo in arquivos.values():
                         self.assertEqual((pasta / 'site' / arquivo).read_bytes(), (cache / arquivo).read_bytes())
+                        # A rede do banco barra .gz; a mesma base sai também em JSON comum.
+                        comum = (pasta / 'site' / arquivo.removesuffix('.gz')).read_bytes()
+                        self.assertEqual(json.loads(comum), json.loads(gzip.decompress((cache / arquivo).read_bytes())))
 
 
 if __name__ == '__main__':

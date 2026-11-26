@@ -22,7 +22,7 @@ const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 
 const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el === 'object' ? text(el.props?.children) : typeof el === 'string' || typeof el === 'number' ? String(el) : ''
 async function setup(t, options = {}) {
   try { globalThis.sessionStorage?.removeItem('painel-linha-mestra') } catch { /* ambiente sem armazenamento */ }
-  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './Roteiro.css': {}, './centavosDaTela.js': await import('../src/centavosDaTela.js'), './ReferenciaMercado.jsx': function ReferenciaMercado() { return null }, './comparadorRoteiro.js': await import('../src/comparadorRoteiro.js'), './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './cdiFuturo.js': await import('../src/cdiFuturo.js'), './holidays.js': await import('../src/holidays.js'), './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => options.curves ? options.curves() : ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
+  const deps = { './ChartFullscreen.jsx': ({ children }) => children, react: React, './format.js': await import('../src/format.js'), './pracaContrato.js': praca, './CreditComparison.css': {}, './CalcPattern-comparador.css': {}, './LinhaMestra.css': {}, './Roteiro.css': {}, './centavosDaTela.js': await import('../src/centavosDaTela.js'), './ReferenciaMercado.jsx': function ReferenciaMercado() { return null }, './FluxoPagamentos.jsx': function FluxoPagamentos() { return null }, './creditEml.js': await import('../src/creditEml.js'), './emlOutlook.js': await import('../src/emlOutlook.js'), './comparadorRoteiro.js': await import('../src/comparadorRoteiro.js'), './linhaMestra.js': await import('../src/linhaMestra.js'), './creditComparison.js': model, './creditModalities.js': modalities, './finimpComparison.js': finimp, './moneyInput.js': money, './emprestimo.js': loan, './iofRules.js': iof, './contaGarantida.js': { ...dates, cgToday: () => '2026-11-10' }, './useDataFile.js': { useDataFile: () => ({ data: { cdi: [[Date.now() - 86400000, 12]] }, status: 'ready' }) }, './aplicacaoPj.js': aplicacao, './cdiFuturo.js': await import('../src/cdiFuturo.js'), './holidays.js': await import('../src/holidays.js'), './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './useCurves.js': { useCurves: () => options.curves ? options.curves() : ({ status: 'ok', data: { br: { compare: [{ id: 'hoje', date: '2026-11-10' }], curves: { '2026-11-10': [[21, 14.9], [252, 14.2], [504, 13.6], [756, 13.5], [1260, 13.7]] } } } }) } }
   for (const file of ['ExpandIcon.jsx', 'MoneyInput.jsx', 'FinimpHelp.jsx', 'CalculatorHelp.jsx', 'LinhaMestra.jsx', 'Roteiro.jsx', 'CreditComparison.jsx']) {
     const { code } = await transform(await readFile(new URL('../src/' + file, import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
     const module = { exports: {} }
@@ -281,7 +281,7 @@ test('cotação individual exibe resultado sem inventar concorrente e preserva c
   }
 })
 
-test('nome aprovado identifica a tela, apresentação, navegação e busca sem remover envelopes', async t => {
+test('nome aprovado identifica a tela, apresentação, navegação e busca, com um envelope no resultado', async t => {
   const ui = await setup(t)
   const heading = nodes(ui.render.value).find(n => n.props?.id === 'credit-title')
   assert.equal(text(heading), 'Necessidade do Cliente')
@@ -289,8 +289,10 @@ test('nome aprovado identifica a tela, apresentação, navegação e busca sem r
   assert.match(source, /title = 'Necessidade do Cliente'/)
   assert.match(source, /aria-label="Área da necessidade do cliente"/)
   assert.doesNotMatch(source, /title = 'Demanda'|<span>Demanda<\/span>/)
-  assert.match(source, /Preparar e-mail da cotação/)
-  assert.match(source, /Preparar e-mail com as/)
+  // Decisão de Fernando (23/11/2026): um envelope só, no resultado, que baixa um e-mail do Outlook (.eml) com todas as operações.
+  assert.match(source, /Baixar e-mail do Outlook com as \$\{count\} operações da comparação/)
+  assert.match(source, /Baixar e-mail do Outlook com a cotação/)
+  assert.doesNotMatch(source, /Preparar e-mail da cotação/, 'sem envelope em cada coluna')
   const search = await readFile(new URL('../scripts/build-search-index.mjs', import.meta.url), 'utf8')
   assert.match(search, /Necessidade do Cliente: comparação de propostas/)
   const menu = await readFile(new URL('../src/Calculadora.jsx', import.meta.url), 'utf8')

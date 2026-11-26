@@ -11,5 +11,5 @@ test('ajuda compartilhada abre por clique e mantém fechamento explícito', asyn
   assert.doesNotMatch(source, /event\.clientX/)
   assert.match(source, /button\.current\?\.focus\(\)/)
   const adapter = await readFile(new URL('../src/CalculatorHelp.jsx', import.meta.url), 'utf8')
-  assert.match(adapter, /<FinimpHelp title=\{heading\}>\{children\}<\/FinimpHelp>/)
+  assert.match(adapter, /<FinimpHelp title=\{heading\} trigger=\{trigger\}>\{children\}<\/FinimpHelp>/)
 })

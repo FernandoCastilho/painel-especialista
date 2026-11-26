@@ -72,7 +72,7 @@ test('scheduled deployment executes exact-SHA approval guard before checkout and
   const section = pages.split(marker)[1].split('\n  institutional-news:')[0]
   assert.match(section, /if: github.event_name == 'schedule'/)
   const script = section.split('          script: |\n')[1].split('\n').map(line => line.replace(/^ {12}/, '')).join('\n')
-  const approved = { id: 20, head_sha: 'approved-sha', conclusion: 'success', event: 'push' }
+  const approved = { id: 20, head_sha: 'approved-sha', head_branch: 'claude/obsidian-plugin-analysis-bagjz3', status: 'completed', conclusion: 'success', event: 'push' }
   const complete = ['test-build', 'smoke', 'bndes-workspace'].map(id => ({ name: `verify-source / ${id}`, conclusion: 'success' }))
   const scenarios = [
     { runs: [], jobs: [], allowed: false },

@@ -13,11 +13,14 @@ const text = el => Array.isArray(el) ? el.map(text).join(' ') : el && typeof el 
 async function setup(t, overrides = {}) {
   const series = { C01: { points: [['2026-11-06', 11]] }, C02: { points: [['2026-11-06', 11.5]] }, C03: { points: [['2026-11-06', 10]] }, C04: { points: [['2026-11-06', 10.5]] }, TFB_36_90: { points: [['2026-11-06', 11]] }, TFB_60_90: { points: [['2026-11-06', 12]] }, TFB_84_90: { points: [['2026-11-06', 13]] }, ...overrides }
   const deps = { './ExpandablePanel.jsx': { __esModule: true, default: () => null }, './BndesCompare.jsx': { __esModule: true, default: () => null }, './FinameComparisonLayout.css': {}, './CalculatorIcons.jsx': { FinameIcon: () => null }, react: React, './MoneyInput.jsx': { __esModule: true, default: () => null }, './Estado.jsx': { __esModule: true, default: () => null }, './useHolidays.js': { useHolidays: () => ({ ctx: {} }) }, './glossary.js': await import('../src/glossary.js'), './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'ready', data: { series } }) }, './useMacro.js': { useMacro: () => ({ data: {} }) } }
+  deps['./useCurves.js'] = { useCurves: () => ({ data: { br: { sourceDate: '2026-11-06', curves: { '2026-11-06': [[21, 11], [1008, 13], [2520, 15]] } } } }) }
+  deps['./bndesHistorico.js'] = await import('../src/bndesHistorico.js')
   deps['./Roteiro.jsx'] = { step: (number, text) => `${number} ${text}` }
   for (const component of ['FluxoPagamentos', 'ReferenciaMercado', 'EmailEnvelope', 'WhatsAppCotacao', 'BndesDetails', 'BndesExecutiveResult', 'PracaContratoBusca']) deps[`./${component}.jsx`] = { __esModule: true, default: () => null }
+  deps['./EmailEnvelope.jsx'].EmailEnvelopePdf = () => null
   deps['./BndesPecas.css'] = {}
   deps['./bndesFluxo.js'] = await import('../src/bndesFluxo.js')
-  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
+  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato', 'multiSeries']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
@@ -226,4 +229,16 @@ test('cotação destaca taxa final e CET anual e mensal, reutilizando resultados
     assert.ok(text(row('Taxa final')).includes(pct(alternative.result.taxa, 2) + ' a.a.'))
   }
   assert.equal((text(row('CET estimado')).match(/a\.m\./g) || []).length, 2)
+})
+
+test('histórico junta o DI e os indexadores escolhidos num gráfico; premissas fecham a página', async t => {
+  const { render, change } = await setup(t)
+  const ids = () => nodes(render.value).find(node => node.props?.compactHelp)?.props.items.map(item => item.id).join(',')
+  assert.equal(ids(), 'di,tfc')
+  assert.equal(nodes(render.value).filter(node => node.props?.compactHelp).length, 1, 'um gráfico só')
+  assert.equal(nodes(render.value).find(node => node.props?.compactHelp).props.referencia, undefined, 'sem linha tracejada')
+  await change('fm-compare', true)
+  assert.equal(ids(), 'di,tfc,tfb')
+  assert.match(text(render.value).replace(/\s+/g, ' '), /DI no prazo de 48 meses.*TFC\s*:.*TFB\s*:/)
+  assert.equal(render.value.props.children.slice(-2).map(node => node?.props?.title).join(' | '), 'Fluxo de pagamentos da cotação | Premissas e limites da simulação')
 })

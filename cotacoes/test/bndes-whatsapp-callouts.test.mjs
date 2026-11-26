@@ -9,18 +9,22 @@ const compara = readFileSync(new URL('../src/BndesCompare.jsx', import.meta.url)
 const imagem = readFileSync(new URL('../src/cotacaoImagem.js', import.meta.url), 'utf8')
 
 test('histórico dos indexadores fica em 12 meses, sem filtros, com média no rodapé', () => {
-  assert.match(finame, /<ComparaSeries compactHelp fixo items=\{historyItems\}[^>]*period=\{\{ preset: 12, custom: null \}\}/)
+  assert.match(finame, /<ComparaSeries compactHelp fixo items=\{historyChart\}[^>]*period=\{\{ preset: 12, custom: null \}\}/)
+  assert.match(finame, /const historyChart = \[serieDiPre\(res \? diNoPrazo : null, prazo\), \.\.\.historyRates\]/)
   assert.match(compara, /\{!fixo && <ChartFilters/)
   assert.match(compara, /Média dos últimos 12 meses/)
 })
 
 test('referência de mercado e premissas viram blocos recolhíveis', () => {
-  assert.match(finame, /<ReferenciaMercado callout /)
+  const history = finame.slice(finame.indexOf('title="Histórico dos indexadores"'), finame.indexOf('title="Fluxo de pagamentos da cotação"'))
+  assert.match(history, /<ReferenciaMercado tipos=/)
+  assert.doesNotMatch(history, /referencia=/)
+  assert.match(finame, /<BndesDetails title="Fluxo de pagamentos da cotação"/)
   assert.match(finame, /<BndesDetails title="Premissas e limites da simulação"/)
 })
 
 test('WhatsApp fica ao lado do envelope e só na cotação única', () => {
-  assert.match(finame, /emailAlternatives : undefined} \/>\}\{res && !comparar && <WhatsAppCotacao dados=\{imagemDados\} \/>\}/)
+  assert.match(finame, /<EmailEnvelope .*<EmailEnvelopePdf .*\{res && !comparar && <WhatsAppCotacao dados=\{imagemDados\} \/>\}/)
 })
 
 test('a imagem só desenha textos prontos, sem conta nova', () => {

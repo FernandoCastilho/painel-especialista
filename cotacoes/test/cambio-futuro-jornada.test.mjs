@@ -8,6 +8,20 @@ const linha = (id = 1, vencimento = '2027-11-16') => ({
   spotUsd: 5.916, futuroUsd: 6.5027, spotAlvo: 6.4933, futuroAlvo: 7.2529,
 })
 
+test('CET anual e mensal equivalentes usam o líquido informado, sem alterar TIR ou pagamentos', () => {
+  const semLiquido = calcularCotacaoMesa(inicio, [linha()])
+  assert.equal(semLiquido.cet.usd.anual, null)
+  const r = calcularCotacaoMesa(inicio, [linha()], 586600)
+  const esperado = 723288.88 / 586600
+  assert.ok(Math.abs(r.cet.usd.anual - (esperado - 1) * 100) < 1e-6)
+  assert.ok(Math.abs(r.cet.usd.mensal - (esperado ** (1 / 12) - 1) * 100) < 1e-6)
+  assert.equal(r.usd.tirComTravaPct, semLiquido.usd.tirComTravaPct)
+  assert.equal(r.usd.totalComTravaBrl, semLiquido.usd.totalComTravaBrl)
+  assert.equal(calcularCotacaoMesa(inicio, [linha()], 0).cet.usd.anual, null)
+  assert.equal(calcularCotacaoMesa(inicio, [linha(), { ...linha(2), futuroUsd: null }], 1170000).cet.usd.mensal, null)
+  assert.ok(calcularCotacaoMesa(inicio, [linha()], 586600).cet.alvo.anual > r.cet.usd.anual)
+})
+
 test('reconcilia principal, juros e liquidação USD da planilha; cruzamento é indicativo', () => {
   const r = calcularCotacaoMesa(inicio, [linha()])
   assert.equal(r.desembolso, 591600)

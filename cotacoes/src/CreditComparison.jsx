@@ -25,6 +25,9 @@ import { REGIMES, PRODUCTS, investmentAlone, creditVsCash, expenseShield } from 
 import './CreditComparison.css'
 import './CalcPattern-comparador.css'
 import CalcBack from './CalcBack.jsx'
+import FluxoPagamentos from './FluxoPagamentos.jsx'
+import { creditEml } from './creditEml.js'
+import { baixarEml } from './emlOutlook.js'
 
 const brl = v => Number.isFinite(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'
 // Duas casas decimais em todas as calculadoras (decisão de Fernando, 23/11/2026).
@@ -34,40 +37,33 @@ const GUARANTEES = ['', 'Aval', 'Recebíveis', 'Alienação fiduciária', 'Fundo
 const COLUMN_COLORS = ['#0075bf', '#c76d00', '#2a8a4a', '#8a3ffc', '#c2185b']
 const COLUMN_DASH = ['', '8 4', '2 4', '10 3 2 3', '4 4']
 
-function emailDraft(entries, { equivalent, scenario, cdi, complete }) {
-  const multiple = entries.length > 1
-  const subject = multiple ? 'Resumo da comparação de crédito' : 'Resumo da cotação de crédito'
-  const basis = equivalent
-    ? (multiple ? 'Comparação pelo mesmo valor líquido.' : 'Simulação pelo valor líquido desejado.')
-    : 'Simulação nas condições informadas.'
-  const items = entries.map(({ result, index }) => [
-    `${multiple ? `${index + 1}. ` : ''}${result.label.replace(/\s+/g, ' ').trim()}`,
-    `Valor contratado: ${brl(result.value)} · Valor líquido: ${brl(result.net)}`,
-    `Prazo e fluxo: ${result.systemLabel} · Último vencimento: ${day(result.lastDate)}`,
-    `Primeiro pagamento estimado: ${brl(result.firstPayment)}`,
-    `${result.cetLabel.replace('CET', 'CET estimado')}: ${result.cet === null ? 'Não mensurável' : `${pct(result.cet * 100)} a.a.`}`,
-    ...(result.floating && result.projectedCost !== null
-      ? [`${result.projectedLabel}: ${pct(result.projectedCost * 100)} a.a. (não é CET)`]
-      : []),
-    `Custo sobre o valor líquido: ${brl(result.cost)}`,
-  ].join('\r\n'))
-  const notes = [
-    ...(entries.some(({ result }) => result.modality === 'giro-cdi' || (result.modality === 'outra' && result.floating))
-      ? [`Cenário CDI ${scenario}: ${pct(cdi)} a.a. O indexador pode variar.`]
-      : []),
-    complete ? 'Estimativas sujeitas à confirmação das condições contratuais.' : 'Simulação preliminar. Encargos e condições contratuais sujeitos à confirmação.',
-  ]
-  const body = ['Olá,', `Segue o resumo da ${multiple ? 'comparação de crédito' : 'cotação de crédito'}. ${basis}`, ...items, notes.join('\r\n'), 'Fico à disposição para conversar sobre as condições.'].join('\r\n\r\n')
-  return `https://outlook.office.com/mail/deeplink/compose?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+// Fluxo de pagamentos de uma operação da comparação, à escolha (com uma só, direto). Só apresenta o cronograma já calculado.
+function FluxoDaComparacao({ results, inicio }) {
+  const validas = results.map((r, i) => ({ r, i })).filter(({ r }) => r.ok && r.rows?.length)
+  const [escolha, setEscolha] = useState(0)
+  const atual = validas.find(v => v.i === escolha) ?? validas[0]
+  if (!atual) return null
+  const rows = atual.r.rows.filter(p => p.payment > 0).map((p, k) => ({ number: p.number ?? k + 1, date: p.date, payment: p.payment,
+    interest: p.interest ?? 0, amortization: p.payment - (p.interest ?? 0), juros: !(p.amortization > 0), fixed: false }))
+  return <div className="credit-fluxo">
+    {validas.length > 1 && <label className="credit-field credit-fluxo-escolha">Fluxo exibido <select value={atual.i} onChange={e => setEscolha(Number(e.target.value))}>
+      {validas.map(({ r, i }) => <option key={i} value={i}>{i + 1}. {String(r.label || 'Operação').replace(/\s+/g, ' ').trim()}</option>)}</select></label>}
+    <FluxoPagamentos rows={rows} inicio={inicio} />
+  </div>
 }
 
-function EmailEnvelope({ label, href }) {
-  return <a className="credit-email" role="link" href={href} target="_blank" rel="noopener noreferrer"
-    aria-label={label} aria-disabled={href ? undefined : true} title={href ? label : 'Gere um resultado válido para preparar o e-mail'}>
+// Envelope (pedido do Fernando, 23/11/2026): um só, no resultado, que baixa um e-mail do Outlook (.eml) executivo com todas as
+// operações lado a lado e o cronograma de cada uma; aberto, vira rascunho pronto para enviar. Mesmo ícone do Capital de Giro.
+function EmailEnvelope({ label, dados }) {
+  const [erro, setErro] = useState('')
+  const baixar = () => {
+    try { const { nome, conteudo } = creditEml(dados); baixarEml(nome, conteudo); setErro('') } catch { setErro('Não foi possível gerar o arquivo do e-mail. Tente de novo.') }
+  }
+  return <span className="credit-email-wrap"><button type="button" className="credit-email" onClick={baixar} disabled={!dados} aria-label={label} title={dados ? label : 'Gere um resultado válido para preparar o e-mail'}>
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" />
     </svg>
-  </a>
+  </button>{erro && <small role="alert">{erro}</small>}</span>
 }
 
 function ModalityIcon({ id }) {
@@ -104,7 +100,7 @@ function SharedFields({ shared, set, onClear, apresentacao }) {
     </> }} /></div>
 }
 
-function ColumnCard({ index, col, set, result, shared, individual, email }) {
+function ColumnCard({ index, col, set, result, shared, individual }) {
   const prefix = `credit-c${index + 1}`
   const update = (key, value) => set({ ...col, [key]: value })
   const text = (key, label, opts = {}) => <label className="credit-field" htmlFor={`${prefix}-${key}`}><span>{label}</span><input id={`${prefix}-${key}`} type={opts.type ?? 'text'} inputMode={opts.type || opts.numeric === false ? undefined : 'decimal'} placeholder={opts.placeholder} value={col[key]} onChange={e => update(key, e.target.value)} /></label>
@@ -120,7 +116,7 @@ function ColumnCard({ index, col, set, result, shared, individual, email }) {
     {m === 'outra' && <>{text('name', 'Nome da modalidade', { numeric: false, placeholder: 'Ex.: Cédula de crédito' })}{select('rateType', 'Indexador', [['fixed', 'Prefixado'], ['cdi', 'CDI + spread']])}</>}
     {m !== 'outra' && <p className="credit-static"><b>Indexador:</b> {m === 'giro-cdi' ? 'CDI + spread' : 'Prefixado'}</p>}
     {cdi && text('cdiPercent', 'Percentual do CDI (%)')}
-    {text('rate', cdi ? 'Spread efetivo (%)' : 'Taxa de juros efetiva (%)')}{unitSelect}
+    {text('rate', cdi ? 'Spread efetivo (%)' : 'Taxa de juros (%)')}{unitSelect}
     {amount('fees', 'TAC e fee na liberação')}
   </> : m === 'bndes' ? <>
     {select('bLine', 'Indexador / linha', [['tfb', 'TFB (prefixada)'], ['tfc', 'TFC (prefixada)'], ['tlp', 'TLPCAP (IPCA capitalizado)']])}
@@ -177,7 +173,6 @@ function ColumnCard({ index, col, set, result, shared, individual, email }) {
       <label htmlFor={`${prefix}-modality`}><span className="credit-card-number">{individual ? 'Operação' : 'Comparação'} {index + 1}</span>
         <select id={`${prefix}-modality`} value={m} onChange={e => set({ ...newColumn(e.target.value), value: col.value, term: col.term, grace: col.grace, system: col.system, guarantee: col.guarantee, guaranteeValue: col.guaranteeValue })}>{MODALITIES.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}</select></label>
       <CalculatorHelp title={MODALITIES.find(x => x.id === m)?.label ?? 'Modalidade'}><p>{MODALITIES.find(x => x.id === m)?.hint}</p><p><b>Valores iniciais são exemplos.</b> Troque pelos dados da proposta antes de {individual ? 'gerar a cotação' : 'comparar'}.</p><p>Condições próprias desta coluna: campo vazio segue as condições comuns do topo.</p></CalculatorHelp>
-      <EmailEnvelope label={`Preparar e-mail da cotação ${index + 1}`} href={email} />
     </header>
     <div className="credit-card-body">
       {result && !result.ok && <p className="credit-card-error credit-alert" role="status">{result.error ?? '—'}</p>}
@@ -483,9 +478,7 @@ export default function CreditComparison({ onBack, apresentacao }) {
   const setColumn = i => invalidate(col => setColumns(list => list.map((c, k) => k === i ? col : c)))
   const content = <Results results={results} columns={visible} scenario={scenario} cdi={cdi} source={source} equivalent={equivalent} investment={investment} shared={shared} />
   const allOk = results.every(r => r.ok)
-  const emailContext = { equivalent, scenario, cdi, complete }
-  const combinedEmail = showResults && allOk && count > 1
-    ? emailDraft(results.map((result, index) => ({ result, index })), emailContext) : undefined
+  const emailDados = showResults && allOk ? { results, contexto: { equivalent, scenario, cdi, complete } } : null
   return <div className="credit-workspace"><section className="cx bw credit-comparison credit-bw" aria-labelledby="credit-title">
     <div className="bw-heading"><div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="credit-title"><span>Necessidade do Cliente</span></h2><CalculatorHelp title={count === 1 ? 'Como gerar a cotação' : 'Como usar o comparador'}><p>{count === 1 ? 'Preencha a operação e gere a cotação.' : 'Preencha a operação e compare as modalidades.'}</p><p>{count === 1 ? 'Preencha a demanda do cliente, escolha a modalidade e os encargos e confira custo, CET e fluxo.' : 'Preencha a demanda do cliente uma vez, escolha as modalidades e os encargos de cada uma e compare custo, CET e fluxo.'} Opcional: contra deixar o dinheiro aplicado, com a tributação da empresa.</p></CalculatorHelp></div>
     <nav className="bw-nav" aria-label="Área da necessidade do cliente">
@@ -499,8 +492,7 @@ export default function CreditComparison({ onBack, apresentacao }) {
     <div className="credit-count" role="group" aria-label="Quantidade de operações"><span id="credit-count-label">Quantas operações?</span>
       <div className="seg">{Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, k) => k + MIN_COLUMNS).map(n => <button type="button" key={n} aria-pressed={n === count} onClick={() => invalidate(setCount)(n)}>{n}</button>)}</div>
       <CalculatorHelp title="Quantidade de operações"><p>Encargos: o que o banco cobra em cada operação.</p><p>Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado.</p></CalculatorHelp></div>
-    <div className="credit-grid" style={{ '--credit-cols': count }}>{visible.map((col, i) => <ColumnCard individual={count === 1} key={i} index={i} col={col} set={setColumn(i)} result={results[i]} shared={shared}
-      email={showResults && results[i].ok ? emailDraft([{ result: results[i], index: i }], emailContext) : undefined} />)}</div>
+    <div className="credit-grid" style={{ '--credit-cols': count }}>{visible.map((col, i) => <ColumnCard individual={count === 1} key={i} index={i} col={col} set={setColumn(i)} result={results[i]} shared={shared} />)}</div>
     </section>
     {/* Opções que mudam o resultado, num bloco só, antes do botão de comparar. */}
     <details className="credit-scenarios" ref={scenariosDrawer} open={scenariosStartOpen}>
@@ -517,7 +509,7 @@ export default function CreditComparison({ onBack, apresentacao }) {
     <section className="credit-result-box" aria-labelledby="credit-result-title">
       <header className="credit-result-head">
         <h3 id="credit-result-title">{step(3, 'Resultado · custo final para o cliente')}</h3>
-        {count > 1 && <EmailEnvelope label={`Preparar e-mail com as ${count} cotações da comparação`} href={combinedEmail} />}
+        <EmailEnvelope label={count > 1 ? `Baixar e-mail do Outlook com as ${count} operações da comparação` : 'Baixar e-mail do Outlook com a cotação'} dados={emailDados} />
       </header>
       <div className="credit-result-body">
         <p className="credit-result-status">CET estimado do fluxo informado, não CET certificado do contrato. {complete ? 'Conferência declarada pelo usuário; não é auditoria contratual.' : 'Encargos ainda não conferidos: resultados são preliminares.'}</p>
@@ -529,6 +521,8 @@ export default function CreditComparison({ onBack, apresentacao }) {
       </div>
     </section>
     </div>}
+    {/* Fluxo de pagamentos depois do resultado (pedido do Fernando, 23/11/2026), como no Capital de Giro e no BNDES. */}
+    {showResults && <FluxoDaComparacao results={results} inicio={shared.start} />}
     </div>
     <div className="credit-bw-body" hidden={area !== 'rules'}>
     <section className="credit-method">

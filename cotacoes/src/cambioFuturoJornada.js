@@ -10,7 +10,7 @@ export const quantidadeCotacao = (modalidade, quantidade) => modalidade === 'bul
 export const cotacaoVazia = () => ({ spotUsd: '', futuroUsd: '', spotAlvo: '', futuroAlvo: '', produtoUsd: '', produtoAlvo: '' })
 export const alterarVencimento = (linha, vencimento) => linha.vencimento === vencimento ? linha : { ...linha, ...cotacaoVazia(), vencimento }
 
-export function calcularCotacaoMesa(inicio, parcelas) {
+export function calcularCotacaoMesa(inicio, parcelas, liquidoBrl = null) {
   const linhas = parcelas.map(linha => {
     const apta = dataValida(inicio) && dataValida(linha.vencimento) && linha.vencimento > inicio &&
       valido(linha.principal) && Number.isFinite(linha.juros) && linha.juros >= 0
@@ -22,12 +22,17 @@ export function calcularCotacaoMesa(inicio, parcelas) {
   })
   const desembolso = linhas.length && linhas.every(linha => valido(linha.valorInicial))
     ? linhas.reduce((acc, linha) => acc + Math.round(linha.valorInicial * 100), 0) / 100 : null
-  const cotar = (campoValor, campoTaxa) => simularParcelasCambiais({
-    inicio, liquidoBrl: desembolso,
+  const cotar = (campoValor, campoTaxa, liquido = desembolso) => simularParcelasCambiais({
+    inicio, liquidoBrl: liquido,
     parcelas: linhas.map(l => ({
       id: String(l.id), vencimento: l.vencimento, valorMoeda: l[campoValor],
       taxaTrava: valido(l[campoTaxa]) ? l[campoTaxa] : null,
     })),
   })
-  return { linhas, desembolso, usd: cotar('comJuros', 'futuroUsd'), alvo: cotar('equivalente', 'futuroAlvo') }
+  const cet = (valor, taxa) => {
+    const anual = valido(liquidoBrl) ? cotar(valor, taxa, liquidoBrl).tirComTravaPct : null
+    return { anual, mensal: Number.isFinite(anual) ? Math.expm1(Math.log1p(anual / 100) / 12) * 100 : null }
+  }
+  return { linhas, desembolso, usd: cotar('comJuros', 'futuroUsd'), alvo: cotar('equivalente', 'futuroAlvo'),
+    cet: { usd: cet('comJuros', 'futuroUsd'), alvo: cet('equivalente', 'futuroAlvo') } }
 }

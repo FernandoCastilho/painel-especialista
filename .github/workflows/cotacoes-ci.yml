@@ -25,6 +25,8 @@ jobs:
       - run: npm test
       - name: Conferir identidade e preservação da base da CVM
         run: python3 -B test/fundos-cvm-coleta.py
+      - name: Conferir lâminas e fichas da CVM
+        run: python3 -B test/fichas-cvm-coleta.py
       - name: Preparar ensaio semanal com dados simulados
         run: node test/helpers/weekly-package.mjs "$RUNNER_TEMP/weekly-package-test.json"
       - run: npm run build
@@ -113,6 +115,17 @@ jobs:
         run: EMPRESTIMO_4131_QA_OUTPUT="$RUNNER_TEMP/qa-universal/emprestimo-4131" node scripts/smoke-emprestimo-4131.cjs
       - name: Conferir Árvore de Crédito (folha, CNPJ simulado e visão do cliente)
         run: ARVORE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/arvore" node scripts/smoke-arvore-credito.cjs
+      - name: Conferir CDC (campos na horizontal, praça do contrato, sem categoria e sem coeficiente)
+        run: CDC_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cdc" node scripts/smoke-cdc.cjs
+      - name: Capturas do CDC
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdc-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/cdc
+          if-no-files-found: warn
+          retention-days: 7
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4
@@ -589,6 +602,7 @@ jobs:
           python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/bndes-server.log" 2>&1 &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
           node scripts/smoke-bndes-workspace.cjs
+          node scripts/smoke-finame-pecas.cjs
       - name: Conferir regressões das calculadoras e do BNDES
         env:
           CALCULATOR_QA_OUTPUT: /tmp/bndes-workspace/calculators

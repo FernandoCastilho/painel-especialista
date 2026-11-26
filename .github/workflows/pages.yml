@@ -73,13 +73,13 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const branch = context.ref.slice(11)
             const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-              ...context.repo, workflow_id: 'pages.yml', branch: context.ref.slice(11), head_sha: context.sha,
-              status: 'completed', per_page: 100,
+              ...context.repo, workflow_id: 'pages.yml', branch, head_sha: context.sha, per_page: 100,
             })
             const required = ['test-build', 'smoke', 'bndes-workspace']
             for (const run of runs) {
-              if (run.id === context.runId || run.head_sha !== context.sha || run.conclusion !== 'success' || !['push', 'workflow_dispatch'].includes(run.event)) continue
+              if (run.id === context.runId || run.head_branch !== branch || run.head_sha !== context.sha || run.status !== 'completed' || run.conclusion !== 'success' || !['push', 'workflow_dispatch'].includes(run.event)) continue
               const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
                 ...context.repo, run_id: run.id, filter: 'latest', per_page: 100,
               })
@@ -401,10 +401,60 @@ jobs:
         with:
           path: ${{ runner.temp }}/cvm-cache
           key: fundos-cvm-v1-${{ steps.cvm-dia.outputs.data }}
+      - name: Restaurar lâminas e fichas da CVM
+        uses: actions/cache/restore@v4
+        id: fichas-cache
+        with:
+          path: ${{ runner.temp }}/fichas-cache
+          key: fichas-cvm-v1-${{ steps.cvm-dia.outputs.data }}
+          restore-keys: fichas-cvm-v1-
+      - name: Preparar lâminas e fichas da CVM
+        id: fichas-dados
+        timeout-minutes: 10
+        env:
+          CVM_DATA: ${{ steps.cvm-dia.outputs.data }}
+          CVM_HORA: ${{ steps.cvm-dia.outputs.hora }}
+        run: |
+          origem="https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}"
+          args=()
+          if [[ "$PAGES_REFRESH_DATA" == "true" ]] && (( 10#$CVM_HORA >= 8 )); then args+=(--atualizar); fi
+          # A lâmina é complemento: se a coleta travar ou quebrar, o site sai sem ela.
+          if ! timeout 480 python3 scripts/coletar-fichas-cvm.py dist/cvm/fichas --catalogo dist/cvm --cache "$RUNNER_TEMP/fichas-cache" --origem "$origem" --hoje "$CVM_DATA" "${args[@]}"; then
+            echo "::warning::Lâminas da CVM fora desta publicação: a coleta falhou ou passou do tempo."
+            rm -rf dist/cvm/fichas
+          fi
+          if [[ -f dist/cvm/fichas/manifest.json ]]; then
+            echo "data=$(python3 -c 'import json; print(json.load(open("dist/cvm/fichas/manifest.json"))["collected"])')" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Guardar a coleta válida das fichas
+        if: steps.fichas-cache.outputs.cache-hit != 'true' && steps.fichas-dados.outputs.data == steps.cvm-dia.outputs.data
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/fichas-cache
+          key: fichas-cvm-v1-${{ steps.cvm-dia.outputs.data }}
       - uses: actions/upload-pages-artifact@v3
+        id: pages-package
         with:
           path: cotacoes/dist
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Confirmar disponibilidade do pacote desta tentativa
+        timeout-minutes: 2
+        uses: actions/github-script@v7
+        env:
+          PAGES_ARTIFACT_ID: ${{ steps.pages-package.outputs.artifact_id }}
+          PAGES_ARTIFACT_NAME: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+        with:
+          script: |
+            const { waitForPagesArtifact } = require('./cotacoes/scripts/wait-pages-artifact.cjs')
+            const artifact = await waitForPagesArtifact({
+              id: process.env.PAGES_ARTIFACT_ID,
+              name: process.env.PAGES_ARTIFACT_NAME,
+              list: async name => {
+                const { data } = await github.rest.actions.listWorkflowRunArtifacts({ ...context.repo, run_id: context.runId, name })
+                return data.artifacts
+              },
+            })
+            core.info(`Pacote da tentativa confirmado: ${artifact.name} (ID ${artifact.id}).`)
       - name: Confirmar SHA atual imediatamente antes de publicar
         uses: actions/github-script@v7
         with:
