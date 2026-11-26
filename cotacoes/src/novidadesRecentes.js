@@ -14,6 +14,7 @@ export const NOVIDADES_RECENTES = [
       'Em Investimentos, busque fundos por nome ou CNPJ e use as cotas da CVM na calculadora, na comparação de ativos e na simulação de carteira.',
       'Investimentos abre com o CDI. Adicione fundos ou outros ativos pelo campo de busca. Ao passar o mouse ou tocar no gráfico, veja a data exata, a variação do dia e a rentabilidade acumulada de cada ativo.',
       'Investimentos: os avisos das quatro telas ficam na interrogação do topo, e a opção de importar série em CSV saiu. A busca de fundos passa a funcionar também em redes de empresa que barram arquivos compactados e em computadores que bloqueiam a busca em segundo plano, e avisa com clareza quando a base de fundos não baixa.',
+      'Investimentos: os nomes dos fundos ficam mais curtos, com as siglas de mercado (RF, MULT, CP, FIC, FIF, RL e outras), e a busca continua aceitando o nome completo. Cada ativo mostra a data do último dado e desde quando há histórico, e a busca diz quando a base da CVM foi atualizada. No gráfico, quem não tem dado no último dia mostra o último valor disponível com a data dele. Informe um valor aplicado para ver, em cada ativo, quanto ele renderia bruto, antes de impostos e custos.',
     ],
   },
   {

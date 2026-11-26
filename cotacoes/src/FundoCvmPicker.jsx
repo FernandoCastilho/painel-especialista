@@ -146,7 +146,7 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
             disabled={atualizando}
             onClick={() => escolher(item[0])}>{nomeFundo(item)}</button></li>)}</ul>
         : !atualizando && busca.trim().length >= minimo && <p role="status">Nenhum fundo encontrado.</p>}
-      <p className="inv-nota">Base geral de {dateText(catalogo.manifest.first)} a {dateText(catalogo.manifest.last)}.</p>
+      <p className="inv-nota">{/^\d{4}-\d{2}-\d{2}$/.test(catalogo.manifest.collected ?? '') && <>Base da CVM atualizada em {dateText(catalogo.manifest.collected)}, </>}com cotas de {dateText(catalogo.manifest.first)} a {dateText(catalogo.manifest.last)}.</p>
     </>}
   </>
   return inline ? <section className="inv-panel inv-busca-principal" aria-label="Buscar fundos na CVM">{conteudo}</section>

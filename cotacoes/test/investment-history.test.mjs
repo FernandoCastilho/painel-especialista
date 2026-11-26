@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  bcbSeries, parseSeriesCsv, compareHistory, compareDailyHistory, metrics, simulateHistory, comparisonCsv, loadBcb,
+  bcbSeries, parseSeriesCsv, compareHistory, compareDailyHistory, metrics, simulateHistory, comparisonCsv, loadBcb, ultimoValor, valorAplicado,
 } from '../src/investmentHistory.js'
 
 const rows = values => values.map((value, i) => ['2025-0' + (i + 1) + '-28', value])
@@ -120,4 +120,24 @@ test('CSV exportado protege nomes de fórmulas e preserva sinais dos retornos', 
   const csv = comparisonCsv({ timeline: ['2025-01', '2025-02'], tracks: [{ name: '=2+2', values: [1, 0.9] }] }, 'BRL')
   assert.match(csv, /"'=2\+2 \(%\)"/)
   assert.match(csv, /-10,000000$/)
+})
+
+test('na data escolhida vale a última observação do ativo, sem pular para depois', () => {
+  const track = { values: [1, 1.01, null, 1.03, null, null] }
+  assert.equal(ultimoValor(track, 5), 3)
+  assert.equal(ultimoValor(track, 2), 1)
+  assert.equal(ultimoValor(track, 0), 0)
+  assert.equal(ultimoValor({ values: [null, null, 1] }, 1), -1)
+  // Valor bruto = valor aplicado × nível acumulado: R$ 10.000 a 1,03 vira R$ 10.300.
+  assert.equal(10000 * track.values[ultimoValor(track, 5)], 10300)
+})
+
+test('valor aplicado aceita milhar com ponto e centavos com vírgula', () => {
+  assert.equal(valorAplicado('10.000'), 10000)
+  assert.equal(valorAplicado('R$ 2.500,50'), 2500.5)
+  assert.equal(valorAplicado('1000'), 1000)
+  assert.equal(valorAplicado(''), null)
+  assert.ok(Number.isNaN(valorAplicado('10.00')))
+  assert.ok(Number.isNaN(valorAplicado('0')))
+  assert.ok(Number.isNaN(valorAplicado('abc')))
 })
