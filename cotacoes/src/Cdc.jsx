@@ -92,7 +92,7 @@ export default function Cdc({ onBack }) {
   const info = { carenciaDias: int('carencia'), dataSimulacao: hoje, praca: pracaContrato(praca)?.label }
   const fundingNota = funding ? `funding de ${pct(funding.taxa)} a.a.${funding.nota ? ` (${funding.nota})` : ''}${vencida ? ` · tabela vencida em ${dmy(vig.fim)}` : ''}${futura ? ` · tabela só vale a partir de ${dmy(vig.inicio)}` : ''}` : null
   const derivado = form.modo === 'taxa'
-    ? (spread !== null ? `Spread: ${pct(spread)} a.a. sobre ${fundingNota}` : tabela ? '' : 'Para ver o spread, cole a tabela de funding no "!".')
+    ? (spread !== null ? `Spread: ${pct(spread)} a.a. sobre ${fundingNota}` : '')
     : (taxa !== null ? `Taxa: ${pct(taxa)} a.m. (${pct(((1 + taxa / 100) ** 12 - 1) * 100)} a.a.) · spread efetivo de ${pct(spreadDaTaxa(taxa, funding.taxa))} a.a. com a taxa arredondada · ${fundingNota}` : '')
   const campo = (key, label, input, nota) => <div className={`lm-field cdc-${key}`} key={key}>
     <span className="lm-label"><label htmlFor={`cdc-${key}`}>{label}</label></span>{input}{nota && <small className="cdc-nota">{nota}</small>}</div>

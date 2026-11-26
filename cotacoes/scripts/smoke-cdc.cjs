@@ -22,6 +22,7 @@ const out = process.env.CDC_QA_OUTPUT || 'workspace-qa/cdc'
         await page.getByRole('heading', { name: 'CDC', exact: true }).waitFor()
         assert.equal(await page.locator('.cdc-screen .cdc-icon svg').count(), 1, 'caminhão ao lado do título')
         assert.equal(await page.locator('#cdc-categoria').count(), 0, 'sem o campo categoria')
+        assert.equal(await page.getByText('Para ver o spread').count(), 0, 'sem o aviso do spread embaixo da taxa')
         // Grade: colunas conforme a largura da tela, e o quadro de entrada ocupa a largura toda.
         const grade = page.locator('.cdc-screen .giro-form .lm > .lm-grid')
         const n = await grade.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length)
