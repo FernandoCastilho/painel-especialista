@@ -15,6 +15,7 @@ Pedido de Fernando em 18/11/2026, com foto da tabela de premissas de custo da ca
 | Produto | BNDES - Automático Projetos de Investimentos | | X | | X | X | | | | X | X | X | |
 | Produto | BNDES - Automático Emergencial | | X | | | | X | X | | X | X | X | |
 | Programa | BNDES - Fundo Clima Automático | X | | | | | | | | | | | |
+| Programa | BNDES - Brasil Soberano · Bens de capital (indireto, incluída em 26/11/2026) | X | | | | | | | | | | | |
 | Programa | BNDES - Mais Inovação - Difusão Tecnológica | | | | | | | | X | | | | |
 | Programa | BNDES - Mais Inovação - Investimento | | | X | | | | | | | | | |
 | Programa | BNDES - Finame Funttel | | | X | | | | | | | | | |
@@ -22,6 +23,8 @@ Pedido de Fernando em 18/11/2026, com foto da tabela de premissas de custo da ca
 | Programa | BNDES - EXIM Pré-Embarque | | | | | | | | | | X | | X |
 
 A linha Finame - Veículos · Ônibus e caminhões não está na foto de 18/11. Os custos são os que a sugestão do Painel de 23/11/2026 vinculou, conferidos na página do BNDES Finame BK Aquisição e Comercialização (lida em 26/11/2026). A página também aceita TFBD, que não está disponível no Itaú.
+
+O Brasil Soberano · Bens de capital (indireto) também não está na foto de 18/11. Ele usa só Custo Fixo do programa: 8,00% a.a., ou 3,00% a.a. para minerais críticos (Perguntas e Respostas do BNDES, lidas em 26/11/2026). Na calculadora, o perfil Finame BK usa a linha Finame - Demais BKs, sem TFBD (não disponível no Itaú).
 
 Prefixados: Custo Fixo a TFC TR. Pós-fixados: TFBD, TLP, SELIC_LCD, SOFR.
 

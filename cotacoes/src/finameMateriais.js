@@ -67,10 +67,60 @@ export const REGRAS_VEICULOS = Object.freeze({
   nacionalizacao: 'item credenciado no CFI (Credenciamento de Fornecedores Informatizado) do BNDES, que confere o índice de nacionalização',
   notaReembolso: null,
 })
-// Perfis da calculadora Finame: 'materiais' (padrão) e 'veiculos-onibus'.
-export const regrasFiname = produto => (produto === 'veiculos-onibus' ? REGRAS_VEICULOS : REGRAS)
+// Finame BK · Máquinas e equipamentos (pedido de 23/11/2026, feito em 26/11/2026): produto BNDES Finame BK Aquisição e Comercialização,
+// mesma conta da operação indireta. Página do produto lida em 26/11/2026: custos TFB, TFBD, TLP, Taxa LCD, Taxa Pré FAT ou Taxa Pré FAT
+// MPME (sem TFC, que a sugestão pedia); taxa do BNDES de 0,75% a.a. para investimento no Norte ou Nordeste e 0,95% a.a. nas demais
+// regiões, sem diferença por porte; prazo de até 10 anos, carência de até 2 anos (1 com TFB; até 24 meses com Taxa LCD); até 100%.
+export const REGRAS_BK = Object.freeze({
+  ...REGRAS,
+  conferidoEm: '2026-11-26',
+  nome: 'Finame BK · Máquinas e equipamentos',
+  prazoMaxMeses: 120, // até 10 anos
+  carenciaMaxTfbMeses: 12, // com TFB, carência de até 1 ano
+  tetoOperacao: null, // a página do produto não traz teto por operação
+  tetoCliente12m: null,
+  reembolsoMeses: null,
+  // A página não separa por porte: grande empresa com investimento no Norte ou Nordeste também paga 0,75% (campo editável).
+  taxaBndes: Object.freeze({ 'mpme-nne': 0.75, mpme: 0.95, grande: 0.95 }),
+  custosMotor: Object.freeze(['tfb', 'pre5', 'pre3', 'tlp']),
+  itens: 'máquinas e equipamentos, sistemas industriais, componentes e bens de informática e automação, de fabricação nacional e credenciados no CFI do BNDES; capital de giro associado para MPME (até 30% do valor financiado)',
+  foraDoProduto: null,
+  nacionalizacao: 'item credenciado no CFI (Credenciamento de Fornecedores Informatizado) do BNDES, que confere o índice de nacionalização',
+  notaReembolso: null,
+})
+// Brasil Soberano · Bens de capital (apoio indireto), pedido de 23/11/2026, feito em 26/11/2026. Perguntas e Respostas do Plano Brasil
+// Soberano Competitividade, lidas em 26/11/2026: custo fixo de 8% a.a. (3% a.a. para empresas de minerais críticos, AIT), taxa do BNDES
+// de 1,5% a.a., taxa do agente prefixada com teto de 5% a.a. (Resolução CMN nº 5.336/2026), até R$ 50 milhões por cliente final, todos
+// os portes, sem capitalização de juros na carência (juros trimestrais, semestrais ou anuais na carência; depois, com o principal).
+// Prazo de até 60 meses com até 12 de carência: página da modalidade, lida pelo buscador em 26/11/2026 (a página não abriu nesta rede).
+export const REGRAS_SOBERANO = Object.freeze({
+  ...REGRAS,
+  conferidoEm: '2026-11-26',
+  nome: 'Brasil Soberano · Bens de capital',
+  prazoMaxMeses: 60,
+  carenciaMaxMeses: 12,
+  carenciaMaxTfbMeses: 12,
+  tetoOperacao: null,
+  tetoCliente12m: null,
+  tetoClienteFinal: 50_000_000, // por cliente final, todos os portes
+  reembolsoMeses: null,
+  taxaBndes: Object.freeze({ 'mpme-nne': 1.5, mpme: 1.5, grande: 1.5 }),
+  taxaAgenteMax: 5, // Resolução CMN nº 5.336/2026
+  custoFixo: Object.freeze({ demais: 8, ait: 3 }), // % a.a.
+  custosMotor: Object.freeze(['cf']),
+  periodicidadesCarencia: Object.freeze([3, 6]), // trimestral ou semestral (o programa também aceita anual, fora deste cronograma)
+  selicSuspensa: null,
+  protocolo: 'O BNDES informou o fechamento do protocolo de novas operações indiretas em 11/11/2026 (até 17/11/2026 sem documentação adicional), nas Perguntas e Respostas lidas em 26/11/2026; outra página do programa fala em 30/12/2026, sujeito a recursos. Confirme com o agente se ainda há protocolo.',
+  itens: 'bens de capital novos, de fabricação nacional e credenciados no CFI do BNDES, nas regras do produto BNDES Finame; não financia itens adquiridos antes de 24/03/2026',
+  foraDoProduto: null,
+  nacionalizacao: 'item credenciado no CFI (Credenciamento de Fornecedores Informatizado) do BNDES, que confere o índice de nacionalização',
+  notaReembolso: null,
+})
+// Perfis da calculadora Finame: 'materiais' (padrão), 'veiculos-onibus', 'bk-maquinas' e 'brasil-soberano-bk'.
+const REGRAS_DO_PRODUTO = { 'veiculos-onibus': REGRAS_VEICULOS, 'bk-maquinas': REGRAS_BK, 'brasil-soberano-bk': REGRAS_SOBERANO }
+export const regrasFiname = produto => REGRAS_DO_PRODUTO[produto] ?? REGRAS
 // Limite técnico do motor (maior prazo entre os perfis); o limite de cada produto é conferido em `conferir`.
-const PRAZO_MAX_MOTOR = Math.max(REGRAS.prazoMaxMeses, REGRAS_VEICULOS.prazoMaxMeses)
+const PRAZO_MAX_MOTOR = Math.max(REGRAS.prazoMaxMeses, ...Object.values(REGRAS_DO_PRODUTO).map(regras => regras.prazoMaxMeses))
 // Base legal e fontes de cada regra (o que foi confirmado e como). "indexada": trecho da página oficial lido pelo buscador; a página em si não abriu nesta rede.
 export const FONTES = [
   { regra: 'FGI Tradicional: custo da garantia (ECG = %G × K × VL × P, com fator K pelo prazo total); o índice de garantia contratada varia de 10% a 80% e o produto atende micro, pequenas e médias empresas', fonte: 'BNDES, Anexo V ao Regulamento do FGI Tradicional (Circular SUP/ADIG nº 65/2026) e páginas do BNDES FGI (ECG, informações a empresas e a instituições financeiras), lidas em 09/11/2026', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/garantias/bndes-fgi/informacoes-a-instituicoes-financeiras/encargo-concessao-garantia-ecg' },
@@ -127,6 +177,13 @@ export const TFC_SERIES_ONIBUS = Object.freeze({ C25: 'TFC_MOB_ONIB_REC_120', C2
 export const codigoTfcSerie = (porte, prazoMeses, serie = 'geral') => (TFC_SERIES_ONIBUS[serie] && faixaTfc(prazoMeses) === 120 ? serie : codigoTfc(porte, prazoMeses))
 export const nomeTfc = codigo => TFC_NOMES[codigo] ?? TFC_SERIES_ONIBUS[codigo] ?? codigo
 export const CUSTOS_FIXOS = new Set(['tfb', 'tfc'])
+// Custos prefixados das linhas Finame BK e Brasil Soberano (26/11/2026). Ficam fora de CUSTOS, que é o catálogo do Finame Materiais.
+// O painel ainda não coleta as Taxas Prefixadas FAT: a taxa vem da proposta do agente. O custo fixo é o do programa.
+export const CUSTOS_EXTRAS = Object.freeze([
+  Object.freeze({ id: 'pre5', label: 'Pré 5 · Taxa Prefixada FAT', sigla: 'Pré 5', hint: 'Taxa Prefixada FAT (FA5, código TAXA.PRE.FAT.5A): prefixada, baseada na estrutura a termo das LTN e NTN-F para 5 anos (Lei 13.483/2017). O painel ainda não coleta essa taxa: informe a da proposta do agente. Carência de até 24 meses.' }),
+  Object.freeze({ id: 'pre3', label: 'Pré 3 · Taxa Prefixada FAT MPME', sigla: 'Pré 3', soMpme: true, hint: 'Taxa Prefixada FAT MPME (FA3, código TAXA.PRE.FAT.MPME.3A): prefixada, baseada nas LTN e NTN-F para 3 anos, só para micro, pequenas e médias empresas (receita bruta de até R$ 300 milhões). O painel ainda não coleta essa taxa: informe a da proposta do agente. Carência de até 24 meses.' }),
+  Object.freeze({ id: 'cf', label: 'Custo fixo do programa', sigla: 'Custo fixo', hint: 'Custo financeiro fixo do Brasil Soberano: 8% a.a. (3% a.a. para empresas de minerais críticos, AIT), definido pelo programa, não por cotação de mercado.' }),
+])
 
 // Taxa final da operação indireta (todas em % a.a.).
 export const taxaFinal = (custo, bndes, agente, composicao = 'capitalizada') => (composicao === 'somada' ? custo + bndes + agente : Math.expm1(Math.log1p(custo / 100) + Math.log1p(bndes / 100) + Math.log1p(agente / 100)) * 100)
@@ -141,19 +198,23 @@ export function conferir({ valor, participacao, prazo, carencia, custo, produto 
   if (!Number.isFinite(valor) || !(valor > 0)) erros.push('Informe um valor finito e positivo dos materiais.')
   else if (!dentroDoLimite(valor)) erros.push(erroNumerico)
   if (!Number.isFinite(participacao) || !(participacao >= REGRAS.participacaoMinPct && participacao <= REGRAS.participacaoMaxPct)) erros.push(`A participação do BNDES vai de ${REGRAS.participacaoMinPct}% a ${REGRAS.participacaoMaxPct}% dos itens financiáveis.`)
-  if (!CUSTOS.some(option => option.id === custo)) erros.push('Escolha um custo financeiro suportado: TFC, TFB ou TLPCAP explícita.')
+  if (REGRAS.custosMotor) {
+    if (!REGRAS.custosMotor.includes(custo)) erros.push(`Escolha um custo financeiro aceito em ${REGRAS.nome}.`)
+  } else if (!CUSTOS.some(option => option.id === custo)) erros.push('Escolha um custo financeiro suportado: TFC, TFB ou TLPCAP explícita.')
   if (!Number.isInteger(prazo) || prazo < 1) erros.push('Informe o prazo total em meses.')
   else if (prazo > REGRAS.prazoMaxMeses) erros.push(`Prazo total acima do máximo do produto: ${REGRAS.prazoMaxMeses} meses (${REGRAS.prazoMaxMeses / 12} anos).`)
   if (!Number.isInteger(carencia) || carencia < 0) erros.push('Informe a carência em meses (0 se não houver).')
   else {
     const fixa = CUSTOS_FIXOS.has(custo)
     const max = fixa ? REGRAS.carenciaMaxTfbMeses : REGRAS.carenciaMaxMeses
-    if (carencia > max) erros.push(`Carência acima do máximo: ${max} meses${fixa ? ` com ${custo.toUpperCase()} (1 ano)` : ' (2 anos)'}.`)
+    if (carencia > max) erros.push(`Carência acima do máximo: ${max} meses${fixa ? ` com ${custo.toUpperCase()}` : ''} (${max / 12 === 1 ? '1 ano' : `${max / 12} anos`}).`)
     if (Number.isInteger(prazo) && prazo >= 1 && carencia >= prazo) erros.push('A carência precisa ser menor que o prazo total.')
   }
   const financiado = Number.isFinite(valor) && valor > 0 && Number.isFinite(participacao) && participacao > 0 ? valor * (participacao / 100) : 0
   if (REGRAS.tetoOperacao && financiado > REGRAS.tetoOperacao) avisos.push(`Valor financiado acima de R$ 20 milhões, o teto por operação do Finame Materiais (Circular BNDES 14/2022, item 6.2.2, com a redação da Circular 64/2023). A calculadora só avisa; confirme com o agente como enquadrar a operação.`)
   if (REGRAS.tetoCliente12m && financiado > REGRAS.tetoCliente12m) avisos.push(`Valor acima do limite por cliente em 12 meses (R$ 150 milhões).`)
+  if (REGRAS.tetoClienteFinal && financiado > REGRAS.tetoClienteFinal) avisos.push('Valor financiado acima de R$ 50 milhões, o teto por cliente final do Brasil Soberano. A calculadora só avisa; confirme com o agente.')
+  if (REGRAS.protocolo) avisos.push(REGRAS.protocolo)
   return { erros, avisos, financiado }
 }
 
@@ -304,6 +365,10 @@ export function parseIpcaProjection(text) {
 }
 export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, feriados = {}, calendarios = ['BR'], produto = 'materiais' }) {
   const check = conferir({ valor, participacao, prazo, carencia, custo, produto })
+  const regras = regrasFiname(produto)
+  if (regras.taxaAgenteMax != null && Number.isFinite(taxaAgente) && taxaAgente > regras.taxaAgenteMax) check.erros.push(`Taxa do agente acima de ${String(regras.taxaAgenteMax).replace('.', ',')}% a.a., o teto do programa (Resolução CMN nº 5.336/2026).`)
+  if (regras.periodicidadesCarencia && Number.isInteger(carencia) && carencia > 0 && !regras.periodicidadesCarencia.includes(periodicidade)) check.erros.push('Neste programa os juros da carência são trimestrais ou semestrais.')
+  if (regras.custoFixo && custo === 'cf' && Number.isFinite(custoFinanceiro) && !Object.values(regras.custoFixo).includes(custoFinanceiro)) check.avisos.push('Custo fixo diferente do programa (8% a.a., ou 3% a.a. para minerais críticos). Confira a proposta do agente.')
   const iofOk = iof && [iof.fixed, iof.daily].every((v) => Number.isFinite(v) && v >= 0 && v <= 100)
     && (iof.maxDays == null || (Number.isInteger(iof.maxDays) && iof.maxDays >= 0 && iof.maxDays <= IOF_PJ.maxDays))
   const ipcaOk = custo !== 'tlp' || validIpcaProjection(ipca)

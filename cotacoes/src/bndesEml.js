@@ -6,7 +6,9 @@ const brl = v => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', cur
 const taxa = v => Number.isFinite(v) ? `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.` : '—'
 const dmy = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso || '') ? iso.split('-').reverse().join('/') : (iso || '—')
 const meses = n => `${n} ${n === 1 ? 'mês' : 'meses'}`
-const opcao = (item, i, varias) => varias ? `Opção ${String.fromCharCode(65 + i)} · ${String(item.custo || '').toUpperCase()}` : String(item.custo || '').toUpperCase()
+const SIGLAS = { pre5: 'Pré 5', pre3: 'Pré 3', cf: 'Custo fixo' }
+const sigla = custo => SIGLAS[custo] ?? String(custo || '').toUpperCase()
+const opcao = (item, i, varias) => varias ? `Opção ${String.fromCharCode(65 + i)} · ${sigla(item.custo)}` : sigla(item.custo)
 
 // Cores do painel: azul-marinho, laranja e cinzas neutros. Estilos em linha, que é o que o Outlook respeita.
 const AZUL = '#0b2e63', LARANJA = '#ff6200', TINTA = '#10284c', CINZA = '#5b6b82', LINHA = '#d5dfec', FUNDO = '#f4f7fb'
@@ -39,7 +41,7 @@ export function bndesEmlConteudo({ itens, linha = 'Finame Materiais Industrializ
     ...(varias ? [linhaDe('CET estimado', item => taxa(item.cet), { forte: true }), linhaDe('Total estimado a pagar', item => brl(item.total), { forte: true }), linhaDe('1ª parcela após a carência', item => brl(item.primeiraParcela))] : []),
   ])
   const taxas = tabela(varias ? cab('Taxa ou encargo') : '', [
-    linhaDe('Custo financeiro', item => `${String(item.custo || '').toUpperCase()} · ${taxa(item.custoFinanceiro)}`),
+    linhaDe('Custo financeiro', item => `${sigla(item.custo)} · ${taxa(item.custoFinanceiro)}`),
     linhaDe('Taxa BNDES', item => taxa(item.taxaBndes)),
     linhaDe('Spread do agente financeiro', item => taxa(item.taxaAgente)),
     linhaDe('Taxa final', item => taxa(item.taxa), { forte: true }),
