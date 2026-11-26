@@ -192,3 +192,37 @@ test('custo digitado por prazo: 12 a 72 meses, ao ano ou ao mês, mesma reta da 
   assert.equal(fundingDigitado({ am: { 12: '14' } }, '2026-11-26').ok, false)
   assert.equal(fundingDigitado({ aa: { 99: '15' } }, '2026-11-26').ok, false)
 })
+
+// Validade do funding (pedido de Fernando, 26/11/2026): vale até o fim do dia "válido até"; no dia seguinte, apaga e avisa.
+test('funding com validade: vencida apaga e avisa, no dia e futura continuam valendo', async () => {
+  const mem = () => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) } }
+  globalThis.localStorage = mem(); globalThis.sessionStorage = mem()
+  const { carregarFunding, guardarFunding, fundingVencido } = await import('../src/cdcFunding.js')
+  const { tabela } = fundingDigitado({ aa: { 12: '14,52', 72: '15,99' } }, '2026-11-26')
+  assert.equal(fundingVencido('2026-12-02', '2026-12-02'), false)
+  assert.equal(fundingVencido('2026-12-02', '2026-12-03'), true)
+  guardarFunding(tabela, '2026-12-02')
+  assert.deepEqual(carregarFunding('2026-11-26'), { tabela, validoAte: '2026-12-02' }) // validade futura
+  assert.deepEqual(carregarFunding('2026-12-02'), { tabela, validoAte: '2026-12-02' }) // no próprio dia ainda vale
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null, vencidoEm: '2026-12-02' }) // vencida: apaga e avisa
+  assert.equal(localStorage.getItem('cdc-funding'), null)
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null, vencidoEm: '2026-12-02' }) // tela montada de novo: aviso continua
+  guardarFunding(tabela, '2026-12-09') // salvou outra: some o aviso
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela, validoAte: '2026-12-09' })
+  guardarFunding(null)
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null })
+  localStorage.setItem('cdc-funding', JSON.stringify(tabela)) // formato antigo, sem validade: ignorado
+  assert.deepEqual(carregarFunding('2026-11-26'), { tabela: null })
+})
+
+test('validade do funding: obrigatória, não pode estar no passado, e a tabela colada sugere o fim da última vigência', async () => {
+  const { lerValidade, validadePadrao } = await import('../src/cdcFunding.js')
+  assert.equal(lerValidade('', '2026-11-26').ok, false)
+  assert.equal(lerValidade('2026-11-25', '2026-11-26').ok, false)
+  assert.equal(lerValidade('2026-13-40', '2026-11-26').ok, false)
+  assert.deepEqual(lerValidade('2026-11-26', '2026-11-26'), { ok: true, validoAte: '2026-11-26' })
+  const colada = lerFunding('\t19/11 até 25/11\t26/11 até 02/12\n12\t14,37%\t14,52%\n72\t15,84%\t15,99%', '2026-11-26')
+  assert.ok(colada.ok)
+  assert.equal(validadePadrao(colada.tabela), '2026-12-02')
+  assert.equal(validadePadrao(fundingDigitado({ aa: { 12: '14,52' } }, '2026-11-26').tabela), '')
+})
