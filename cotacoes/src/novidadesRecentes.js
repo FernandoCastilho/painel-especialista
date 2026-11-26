@@ -6,6 +6,7 @@ export const NOVIDADES_RECENTES = [
     date: '26/11/2026',
     destaques: ['BNDES: Finame Veículos para ônibus e caminhões, até 10 anos', 'Investimentos: ativos em comparação em mosaico', 'Investimentos: fundos GARB destacados na busca', 'Investimentos: lâmina da CVM na página do fundo'],
     items: [
+      'Notícias > Manchetes inclui a análise do Itaú de 25/11 sobre a inflação do consumo nos EUA e a perspectiva para os juros americanos em dezembro.',
       'Em Calculadoras > BNDES, a linha Finame Veículos · Ônibus e caminhões tem regras próprias: prazo de até 120 meses (10 anos), sem os tetos e o reembolso de notas do Finame Materiais, e os custos TFB, TFC, TFC MPME, TLP e Taxa LCD, sem TFBD. A TFC usa a série geral (C01 a C04) por padrão; em Série da TFC dá para trocar para as séries de ônibus C25 ou C26, com prazo acima de 60 meses. O e-mail da cotação leva o nome da linha. Em Custos por produto, a linha aparece com a fonte. Com FGI e prazo acima de 102 meses, a tela avisa que o fator K usado ainda não foi conferido.',
       'Investimentos: os cartões dos ativos em comparação ficam lado a lado, em mosaico, com tamanho limitado. Nomes longos ocupam até três linhas e o nome inteiro aparece ao passar o mouse.',
       'Investimentos: os fundos GARB levam a marca no fim do nome, aparecem primeiro e destacados na busca e mostram o código CVM. Digite GARB para listá-los ou busque pelo código CVM.',
