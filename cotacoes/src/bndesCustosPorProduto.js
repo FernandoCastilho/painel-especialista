@@ -31,6 +31,8 @@ const PADRAO_TFC = Object.freeze(['tfb', 'tfc', 'tfcMpme', 'tfbd', 'tlp', 'selic
 export const PRODUTOS_BNDES = Object.freeze([
   { id: 'finame-demais-bks', tipo: 'Produto', nome: 'Finame - Demais BKs', custos: PADRAO_FINAME },
   { id: 'finame-materiais', tipo: 'Produto', nome: 'Finame - Materiais Industrializados', custos: PADRAO_TFC },
+  // Fora da foto de 18/11: custos vinculados na sugestão do Painel de 23/11/2026 e conferidos na página do Finame BK (26/11/2026).
+  { id: 'finame-veiculos-onibus', tipo: 'Produto', nome: 'Finame - Veículos · Ônibus e caminhões', custos: Object.freeze(['tfb', 'tfc', 'tfcMpme', 'tlp', 'selicLcd']), fonte: 'Incluída em 26/11/2026: custos vinculados na sugestão do Painel de 23/11/2026 e aceitos para ônibus e caminhões na página do BNDES Finame BK Aquisição e Comercialização, lida em 26/11/2026. A página também aceita TFBD, que não está disponível no Itaú.' },
   { id: 'finame-baixo-carbono', tipo: 'Produto', nome: 'Finame - Baixo Carbono', custos: PADRAO_FINAME },
   { id: 'finame-maquinas-40', tipo: 'Produto', nome: 'Finame - Máquinas 4.0', custos: PADRAO_FINAME },
   { id: 'credito-pme', tipo: 'Produto', nome: 'BNDES - Crédito Pequenas e Médias Empresas', custos: PADRAO_TFC },
@@ -68,6 +70,7 @@ export function avaliarCusto(produtoId, custoId, { mpme = null } = {}) {
 // Os custos oferecidos precisam estar entre os permitidos (conferido nos testes).
 export const PERFIS_PAINEL = Object.freeze([
   { perfil: 'finame-materiais', produtos: ['finame-materiais'], custos: ['tfc', 'tfcMpme', 'tfb', 'tlp', 'selicLcd', 'tfbd'], nota: 'A TFC usa a série MPME quando o porte é MPME. Desde 19/11/2026, TLP (exigível), Taxa LCD e TFBD calculam na mesma tela, com o índice projetado pelo Focus.' },
+  { perfil: 'finame-veiculos', produtos: ['finame-veiculos-onibus'], custos: ['tfc', 'tfcMpme', 'tfb', 'tlp', 'selicLcd'], nota: 'Mesma calculadora do Finame Materiais, com prazo de até 10 anos e sem TFBD.' },
   { perfil: 'bndes-tlp-exigivel', produtos: PRODUTOS_BNDES.filter(p => p.custos.includes('tlp')).map(p => p.id), custos: ['tlp'], nota: 'Vale para os produtos que aceitam TLP.' },
   { perfil: 'bndes-selic-lcd', produtos: PRODUTOS_BNDES.filter(p => p.custos.includes('selicLcd')).map(p => p.id), custos: ['selicLcd'], nota: 'Vale para os produtos que aceitam SELIC_LCD.' },
   { perfil: 'bndes-credito-tfb', produtos: ['credito-pme'], custos: ['tfb'], nota: 'Cenário de conferência com TFB.' },

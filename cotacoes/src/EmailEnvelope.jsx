@@ -22,8 +22,8 @@ export function EnvelopeEml({ label, gerar, pdf = false }) {
 }
 
 // BNDES: a cotação, com as alternativas lado a lado quando houver comparação.
-export default function EmailEnvelope({ result, alternatives }) {
-  return <EnvelopeEml label="Baixar e-mail da cotação para o Outlook" gerar={() => bndesEml({ itens: alternatives?.length ? alternatives : [result] })} />
+export default function EmailEnvelope({ result, alternatives, linha }) {
+  return <EnvelopeEml label="Baixar e-mail da cotação para o Outlook" gerar={() => bndesEml({ itens: alternatives?.length ? alternatives : [result], linha })} />
 }
 
 export function EmailEnvelopePdf({ itens, historico = null }) {

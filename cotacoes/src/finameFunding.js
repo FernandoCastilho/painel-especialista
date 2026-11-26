@@ -45,6 +45,10 @@ export const FINAME_FUNDING_OPTIONS = Object.freeze([
   }),
 ])
 
+// Custos que cada perfil da calculadora oferece. Finame Veículos · Ônibus e caminhões: os que a sugestão de 23/11/2026 vinculou à linha
+// (TFB, TFC, TFC MPME pelo porte, TLP e Taxa LCD); a TFBD fica fora (não disponível no Itaú).
+const FINAME_FUNDING_OPTIONS_VEICULOS = Object.freeze(FINAME_FUNDING_OPTIONS.filter(option => option.id !== 'tfbd'))
+export const finameFundingOptionsDo = produto => (produto === 'veiculos-onibus' ? FINAME_FUNDING_OPTIONS_VEICULOS : FINAME_FUNDING_OPTIONS)
 export const finameFundingOption = id => FINAME_FUNDING_OPTIONS.find(option => option.id === id) ?? null
 export const isFinamePos = id => finameFundingOption(id)?.mode === 'pos'
 

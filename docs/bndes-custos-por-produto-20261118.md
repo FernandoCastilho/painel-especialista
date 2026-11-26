@@ -8,6 +8,7 @@ Pedido de Fernando em 18/11/2026, com foto da tabela de premissas de custo da ca
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Produto | Finame - Demais BKs | | X | | X | X | | | | X | X | X | |
 | Produto | Finame - Materiais Industrializados | | X | | | | X | X | | X | X | X | |
+| Produto | Finame - Veículos · Ônibus e caminhões (incluída em 26/11/2026) | | X | | | | X | X | | | X | X | |
 | Produto | Finame - Baixo Carbono | | X | | X | X | | | | X | X | X | |
 | Produto | Finame - Máquinas 4.0 | | X | | X | X | | | | X | X | X | |
 | Produto | BNDES - Crédito Pequenas e Médias Empresas | | X | | | | X | X | | X | X | X | |
@@ -19,6 +20,8 @@ Pedido de Fernando em 18/11/2026, com foto da tabela de premissas de custo da ca
 | Programa | BNDES - Finame Funttel | | | X | | | | | | | | | |
 | Programa | BNDES - Finame FUST Automático | | | X | | | | | | | | | |
 | Programa | BNDES - EXIM Pré-Embarque | | | | | | | | | | X | | X |
+
+A linha Finame - Veículos · Ônibus e caminhões não está na foto de 18/11. Os custos são os que a sugestão do Painel de 23/11/2026 vinculou, conferidos na página do BNDES Finame BK Aquisição e Comercialização (lida em 26/11/2026). A página também aceita TFBD, que não está disponível no Itaú.
 
 Prefixados: Custo Fixo a TFC TR. Pós-fixados: TFBD, TLP, SELIC_LCD, SOFR.
 

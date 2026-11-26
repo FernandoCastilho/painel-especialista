@@ -11,6 +11,7 @@ import { FINAME_FUNDING_OPTIONS } from '../src/finameFunding.js'
 const TABELA = {
   'Finame - Demais BKs':                          '.X.XX...XXX.',
   'Finame - Materiais Industrializados':          '.X...XX.XXX.',
+  'Finame - Veículos · Ônibus e caminhões':       '.X...XX..XX.', // incluída em 26/11/2026, fora da foto (sem TFBD)
   'Finame - Baixo Carbono':                       '.X.XX...XXX.',
   'Finame - Máquinas 4.0':                        '.X.XX...XXX.',
   'BNDES - Crédito Pequenas e Médias Empresas':   '.X...XX.XXX.',
@@ -31,7 +32,9 @@ test('matriz confere com a tabela original, linha a linha', () => {
     const linha = CUSTOS_BNDES.map(c => (produto.custos.includes(c.id) ? 'X' : '.')).join('')
     assert.equal(linha, TABELA[produto.nome], produto.nome)
   }
-  assert.equal(PRODUTOS_BNDES.filter(p => p.tipo === 'Produto').length, 7)
+  assert.equal(PRODUTOS_BNDES.filter(p => p.tipo === 'Produto').length, 8)
+  // Só a linha incluída depois da foto traz fonte própria.
+  assert.deepEqual(PRODUTOS_BNDES.filter(p => p.fonte).map(p => p.id), ['finame-veiculos-onibus'])
   assert.equal(PRODUTOS_BNDES.filter(p => p.tipo === 'Programa').length, 6)
 })
 
