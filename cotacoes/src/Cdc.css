@@ -32,3 +32,8 @@
 .cdc-funding-linha { display: contents; }
 .cdc-funding-grade input { width: 100%; box-sizing: border-box; min-height: 34px; font-size: .875rem; }
 .cdc-funding-grade input:disabled { opacity: .45; }
+
+.cdc-funding-validade { display: grid; gap: 4px; font-size: .8125rem; margin: 4px 0 8px; }
+.cdc-funding-validade input { max-width: 12rem; min-height: 36px; }
+.cdc-funding-validade small { color: var(--bw-mut); font-size: .75rem; }
+.cdc-funding-aviso { margin: 8px 0 0; font-size: .8125rem; color: var(--bw-warn-ink); }

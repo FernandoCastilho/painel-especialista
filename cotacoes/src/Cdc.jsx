@@ -11,7 +11,7 @@ import { CdcIcon } from './CalculatorIcons.jsx'
 import { cdcConta } from './cdcConta.js'
 import { cdcEml, cdcResumo } from './cdcEmail.js'
 import { cdcImagem } from './cdcImagem.js'
-import { PRAZOS_DIGITADOS, carregarFunding, fundingDigitado, fundingDoPrazo, guardarFunding, lerFunding, spreadDaTaxa, taxaDoSpread, vigenciaDeHoje } from './cdcFunding.js'
+import { PRAZOS_DIGITADOS, carregarFunding, fundingDigitado, fundingDoPrazo, fundingVencido, guardarFunding, lerFunding, lerValidade, spreadDaTaxa, taxaDoSpread, validadePadrao, vigenciaDeHoje } from './cdcFunding.js'
 import { Respostas, Resultado, step } from './Roteiro.jsx'
 import './CalculatorStandard.css'
 import './LinhaMestra.css'
@@ -28,12 +28,13 @@ const dmy = iso => iso.split('-').reverse().join('/')
 const INICIAL = { valorBem: '500.000,00', valorLiberado: '500.000,00', carencia: '30', prazo: '48',
   modo: 'taxa', taxa: '1,55', spread: '4,00', cadastro: '2.523,00' }
 
-// "!" discreto ao lado do "?": caixa para colar a tabela de funding copiada do Excel. Fica só nesta aba do navegador.
-function FundingColar({ tabela, onTabela }) {
+// "!" discreto ao lado do "?": caixa para colar a tabela de funding copiada do Excel. Fica salva neste navegador até a validade.
+function FundingColar({ tabela, validoAte, onTabela }) {
   const dialogo = useRef(null)
   const [texto, setTexto] = useState('')
   const [manual, setManual] = useState({ aa: {}, am: {} })
   const [erro, setErro] = useState('')
+  const [validade, setValidade] = useState('')
   const digitou = [...Object.values(manual.aa), ...Object.values(manual.am)].some(v => String(v).trim())
   const digitar = (col, p, v) => setManual(old => ({ ...old, [col]: { ...old[col], [p]: v } }))
   const abrir = () => { setErro(''); dialogo.current?.showModal() }
@@ -43,14 +44,18 @@ function FundingColar({ tabela, onTabela }) {
     if (texto.trim() && digitou) { setErro('Use a tabela colada ou o custo digitado, não os dois. Apague um deles.'); return }
     const lido = texto.trim() ? lerFunding(texto, cgToday()) : fundingDigitado(manual, cgToday())
     if (!lido.ok) { setErro(lido.error); return }
-    guardarFunding(lido.tabela); onTabela(lido.tabela); setTexto(''); setManual({ aa: {}, am: {} }); setErro(''); fechar()
+    // Validade em branco na tabela colada: vale até o fim da última vigência dela (ex.: "26/11 até 02/12" → 02/12).
+    const val = lerValidade(validade || validadePadrao(lido.tabela), cgToday())
+    if (!val.ok) { setErro(val.error); return }
+    guardarFunding(lido.tabela, val.validoAte); onTabela(lido.tabela, val.validoAte); limpar(); fechar()
   }
-  const apagar = () => { guardarFunding(null); onTabela(null); setTexto(''); setManual({ aa: {}, am: {} }); setErro('') }
+  const limpar = () => { setTexto(''); setManual({ aa: {}, am: {} }); setValidade(''); setErro('') }
+  const apagar = () => { guardarFunding(null); onTabela(null, null); limpar() }
   return <span className="fi-help cdc-funding">
     <button type="button" onClick={abrir} aria-haspopup="dialog" aria-label="Tabela de funding: colar ou atualizar" title="Tabela de funding">!</button>
     <dialog ref={dialogo} className="fi-help-dialog cdc-funding-dialog" aria-labelledby="cdc-funding-title" onCancel={e => { e.preventDefault(); fechar() }}>
       <h3 id="cdc-funding-title">Tabela de funding</h3>
-      <p>No Excel, selecione a tabela FUNDING (dos prazos até as taxas), copie e cole aqui, ou digite o custo embaixo. Fica só nesta aba do navegador: fechou, apagou.</p>
+      <p>No Excel, selecione a tabela FUNDING (dos prazos até as taxas), copie e cole aqui, ou digite o custo embaixo. Fica salvo neste navegador até a data de validade; no dia seguinte, apaga sozinho. Cada computador ou celular guarda o seu.</p>
       <textarea value={texto} onChange={e => setTexto(e.target.value)} rows={8} aria-label="Colar a tabela de funding" placeholder={'6\t13,68%\t13,80%\t1,07%\t1,08%\n9\t13,96%\t14,12%\t1,09%\t1,11%'} />
       <fieldset className="cdc-funding-manual">
         <legend>Ou digite o custo por prazo, ao ano ou ao mês (preencha só os que quiser)</legend>
@@ -62,8 +67,12 @@ function FundingColar({ tabela, onTabela }) {
           </div>)}
         </div>
       </fieldset>
+      <label className="cdc-funding-validade">Válido até
+        <input type="date" value={validade} min={cgToday()} onChange={e => setValidade(e.target.value)} aria-describedby="cdc-funding-validade-nota" />
+        <small id="cdc-funding-validade-nota">Vale até o fim desse dia. Na tabela colada, em branco usa o fim da última vigência.</small>
+      </label>
       {erro && <small className="giro-error" role="alert">{erro}</small>}
-      {tabela && <p className="cdc-funding-status">Em uso: {tabela.map(v => v.label).join(' · ')} · {Object.keys(tabela[0].taxas).length} prazos.</p>}
+      {tabela && <p className="cdc-funding-status">Em uso: {tabela.map(v => v.label).join(' · ')} · {Object.keys(tabela[0].taxas).length} prazos{validoAte ? ` · válido até ${dmy(validoAte)}` : ''}.</p>}
       <div className="cdc-funding-acoes">
         <button type="button" onClick={usar} disabled={!texto.trim() && !digitou}>Usar esta tabela</button>
         {tabela && <button type="button" className="giro-link" onClick={apagar}>Apagar tabela</button>}
@@ -76,11 +85,18 @@ function FundingColar({ tabela, onTabela }) {
 export default function Cdc({ onBack }) {
   const [form, setForm] = useState(INICIAL)
   const [dirty, setDirty] = useState(false)
-  const [tabela, setTabela] = useState(carregarFunding)
-  const [vigencia, setVigencia] = useState(() => { const t = carregarFunding(); return t ? vigenciaDeHoje(t, cgToday()).id : '' })
+  // Funding salvo: ao abrir, se a validade passou, ele já vem apagado e fica a data em que venceu, para o aviso.
+  const [salvo, setSalvo] = useState(() => carregarFunding(cgToday()))
+  const { tabela, validoAte, vencidoEm } = salvo
+  const [vigencia, setVigencia] = useState(() => salvo.tabela ? vigenciaDeHoje(salvo.tabela, cgToday()).id : '')
   const hoje = cgToday()
   const set = (key, value) => { setForm(old => ({ ...old, [key]: value })); setDirty(true) }
-  const trocarTabela = t => { setTabela(t); setVigencia(t ? vigenciaDeHoje(t, cgToday()).id : ''); setDirty(true) }
+  const trocarTabela = (t, validade) => { setSalvo({ tabela: t, validoAte: validade }); setVigencia(t ? vigenciaDeHoje(t, cgToday()).id : ''); setDirty(true) }
+  // Tela aberta de um dia para o outro: confere a validade de novo a cada Simular.
+  const simular = () => {
+    if (validoAte && fundingVencido(validoAte, cgToday())) { guardarFunding(null); setSalvo({ tabela: null, vencidoEm: validoAte }); setVigencia('') }
+    setDirty(false)
+  }
   const int = key => /^\d+$/.test(String(form[key]).trim()) ? Number(form[key]) : NaN
   const valores = { valorBem: parseMoneyInput(form.valorBem), valorLiberado: parseMoneyInput(form.valorLiberado), cadastro: parseMoneyInput(form.cadastro, { optional: true }) }
   const erroValor = Object.values(valores).find(v => !v.ok)
@@ -93,7 +109,8 @@ export default function Cdc({ onBack }) {
   // Pelo spread, a taxa é arredondada a duas casas antes da conta (decisão de Fernando, 25/11/2026): o cliente vê a taxa usada.
   const taxa = form.modo === 'taxa' ? digitado : digitado !== null && funding ? Math.round(taxaDoSpread(digitado, funding.taxa) * 100) / 100 : null
   const spread = form.modo === 'taxa' && digitado !== null && funding ? spreadDaTaxa(digitado, funding.taxa) : null
-  const erroTaxa = form.modo === 'spread' && !funding ? 'Para simular pelo spread, cole a tabela de funding no "!" lá em cima.' : null
+  // Sem funding, só o cálculo pelo spread para; pela taxa segue normal.
+  const erroTaxa = form.modo === 'spread' && !funding ? `${vencidoEm ? `O funding venceu em ${dmy(vencidoEm)} e foi apagado.` : 'Não há funding cadastrado.'} Para simular pelo spread, cadastre a tabela de funding no "!" lá em cima. Pela taxa, a simulação segue normal.` : null
   const calc = dirty ? null : erroValor ? { ok: false, error: erroValor.error } : erroTaxa ? { ok: false, error: erroTaxa } : cdcConta({
     valorBem: valores.valorBem.value, valorLiberado: valores.valorLiberado.value, tarifas: valores.cadastro.value,
     taxa: taxa ?? NaN, prazo: int('prazo'), carenciaDias: int('carencia'), inicio: hoje })
@@ -119,16 +136,16 @@ export default function Cdc({ onBack }) {
           <p>Juros de cada parcela = saldo × ((1 + taxa ao mês) elevado a dias corridos do período ÷ 30, menos 1). Parcela fixa, que zera o saldo na última; a última acerta os centavos.</p>
           <p>% de entrada = (valor do bem − valor liberado) ÷ valor do bem.</p>
           <p>IOF (Decreto 6.306/2007, art. 7º), sempre pessoa jurídica geral e sempre financiado: adicional de 0,38% sobre o valor financiado, já com o próprio IOF; diário de 0,0082% sobre a amortização de cada parcela, pelos dias até o vencimento, com limite de 365 dias.</p>
-          <p>Taxa ou spread: escolha qual informar. Spread composto: (1 + taxa ao ano) = (1 + funding ao ano) × (1 + spread ao ano), com a taxa ao ano = (1 + taxa ao mês)^12 − 1; informando o spread, a taxa é arredondada a duas casas antes da conta e a tela mostra o spread efetivo com essa taxa. O funding vem da tabela colada no "!", pelo prazo; entre dois prazos, em linha reta; fora da tabela, o da ponta.</p>
+          <p>Taxa ou spread: escolha qual informar. Spread composto: (1 + taxa ao ano) = (1 + funding ao ano) × (1 + spread ao ano), com a taxa ao ano = (1 + taxa ao mês)^12 − 1; informando o spread, a taxa é arredondada a duas casas antes da conta e a tela mostra o spread efetivo com essa taxa. O funding vem da tabela colada no "!", pelo prazo; entre dois prazos, em linha reta; fora da tabela, o da ponta. Ele fica salvo neste navegador até a data "válido até" e se apaga sozinho no dia seguinte; sem funding, só a simulação pelo spread fica bloqueada.</p>
           <p>O spread não vai para o cliente.</p>
           <p>O envelope baixa um arquivo de e-mail do Outlook (.eml), com o resumo, as parcelas e os avisos de cotação indicativa. O ícone do WhatsApp copia o resultado como imagem, com os mesmos avisos.</p>
         </Help>
-        <FundingColar tabela={tabela} onTabela={trocarTabela} />
+        <FundingColar tabela={tabela} validoAte={validoAte} onTabela={trocarTabela} />
       </span>
     </div>
 
     <div className="giro-flow">
-      <form className="giro-form" noValidate onSubmit={e => { e.preventDefault(); setDirty(false) }}>
+      <form className="giro-form" noValidate onSubmit={e => { e.preventDefault(); simular() }}>
         <section className="lm" aria-labelledby="cdc-op">
           <header className="lm-head"><h3 id="cdc-op">{step(1, 'Entrada')}</h3>
             <div className="lm-head-side"><button type="button" className="lm-clear" onClick={() => { setForm(INICIAL); setDirty(true) }}>Limpar</button></div>
@@ -146,6 +163,7 @@ export default function Cdc({ onBack }) {
             {tabela?.length > 1 && campo('vigencia', 'Funding (vigência)', <select id="cdc-vigencia" value={vig.id} onChange={e => { setVigencia(e.target.value); setDirty(true) }}>
               {tabela.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}</select>)}
           </div>
+          {vencidoEm && <p className="cdc-funding-aviso" role="status">A tabela de funding venceu em {dmy(vencidoEm)} e foi apagada. Cadastre a nova no &quot;!&quot; lá em cima para simular pelo spread; pela taxa, segue normal.</p>}
         </section>
         <button className={`giro-simulate${dirty ? ' is-pending' : ''}`} type="submit">Simular</button>
       </form>
