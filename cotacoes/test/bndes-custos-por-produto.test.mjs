@@ -18,6 +18,7 @@ const TABELA = {
   'BNDES - Automático Projetos de Investimentos': '.X.XX...XXX.',
   'BNDES - Automático Emergencial':               '.X...XX.XXX.',
   'BNDES - Fundo Clima Automático':               'X...........',
+  'BNDES - Brasil Soberano · Bens de capital (indireto)': 'X...........', // incluída em 26/11/2026, fora da foto
   'BNDES - Mais Inovação - Difusão Tecnológica':  '.......X....',
   'BNDES - Mais Inovação - Investimento':         '..X.........',
   'BNDES - Finame Funttel':                       '..X.........',
@@ -33,9 +34,9 @@ test('matriz confere com a tabela original, linha a linha', () => {
     assert.equal(linha, TABELA[produto.nome], produto.nome)
   }
   assert.equal(PRODUTOS_BNDES.filter(p => p.tipo === 'Produto').length, 8)
-  // Só a linha incluída depois da foto traz fonte própria.
-  assert.deepEqual(PRODUTOS_BNDES.filter(p => p.fonte).map(p => p.id), ['finame-veiculos-onibus'])
-  assert.equal(PRODUTOS_BNDES.filter(p => p.tipo === 'Programa').length, 6)
+  // Só as linhas incluídas depois da foto trazem fonte própria.
+  assert.deepEqual(PRODUTOS_BNDES.filter(p => p.fonte).map(p => p.id), ['finame-veiculos-onibus', 'brasil-soberano-bk'])
+  assert.equal(PRODUTOS_BNDES.filter(p => p.tipo === 'Programa').length, 7)
 })
 
 test('grupos e bases de cálculo da descrição dos custos', () => {

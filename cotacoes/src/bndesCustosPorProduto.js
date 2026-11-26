@@ -39,6 +39,8 @@ export const PRODUTOS_BNDES = Object.freeze([
   { id: 'automatico-projetos', tipo: 'Produto', nome: 'BNDES - Automático Projetos de Investimentos', custos: PADRAO_FINAME },
   { id: 'automatico-emergencial', tipo: 'Produto', nome: 'BNDES - Automático Emergencial', custos: PADRAO_TFC },
   { id: 'fundo-clima-automatico', tipo: 'Programa', nome: 'BNDES - Fundo Clima Automático', custos: Object.freeze(['custoFixo']) },
+  // Fora da foto de 18/11: programa pedido na sugestão do Painel de 23/11/2026 (Custo Fixo), conferido nas Perguntas e Respostas de 26/11/2026.
+  { id: 'brasil-soberano-bk', tipo: 'Programa', nome: 'BNDES - Brasil Soberano · Bens de capital (indireto)', custos: Object.freeze(['custoFixo']), fonte: 'Incluída em 26/11/2026: custo fixo de 8% a.a. (3% a.a. para minerais críticos), vinculado na sugestão do Painel de 23/11/2026 e conferido nas Perguntas e Respostas do Plano Brasil Soberano Competitividade, lidas em 26/11/2026.' },
   { id: 'mais-inovacao-difusao', tipo: 'Programa', nome: 'BNDES - Mais Inovação - Difusão Tecnológica', custos: Object.freeze(['tfcTr']) },
   { id: 'mais-inovacao-investimento', tipo: 'Programa', nome: 'BNDES - Mais Inovação - Investimento', custos: Object.freeze(['tfbTr']) },
   { id: 'finame-funttel', tipo: 'Programa', nome: 'BNDES - Finame Funttel', custos: Object.freeze(['tfbTr']) },
@@ -71,6 +73,8 @@ export function avaliarCusto(produtoId, custoId, { mpme = null } = {}) {
 export const PERFIS_PAINEL = Object.freeze([
   { perfil: 'finame-materiais', produtos: ['finame-materiais'], custos: ['tfc', 'tfcMpme', 'tfb', 'tlp', 'selicLcd', 'tfbd'], nota: 'A TFC usa a série MPME quando o porte é MPME. Desde 19/11/2026, TLP (exigível), Taxa LCD e TFBD calculam na mesma tela, com o índice projetado pelo Focus.' },
   { perfil: 'finame-veiculos', produtos: ['finame-veiculos-onibus'], custos: ['tfc', 'tfcMpme', 'tfb', 'tlp', 'selicLcd'], nota: 'Mesma calculadora do Finame Materiais, com prazo de até 10 anos e sem TFBD.' },
+  { perfil: 'finame-bk', produtos: ['finame-demais-bks'], custos: ['tfb', 'pre5', 'pre3', 'tlp', 'selicLcd'], nota: 'Mesma calculadora do Finame Materiais, com as regras do Finame BK para máquinas e equipamentos (prazo de até 10 anos, sem TFBD). Pré 5 e Pré 3 com a taxa da proposta: o painel ainda não coleta a Pré FAT.' },
+  { perfil: 'brasil-soberano-bk', produtos: ['brasil-soberano-bk'], custos: ['custoFixo'], nota: 'Mesma calculadora do Finame Materiais, com as regras do programa (até 60 meses, juros pagos na carência, taxa do agente até 5% a.a.).' },
   { perfil: 'bndes-tlp-exigivel', produtos: PRODUTOS_BNDES.filter(p => p.custos.includes('tlp')).map(p => p.id), custos: ['tlp'], nota: 'Vale para os produtos que aceitam TLP.' },
   { perfil: 'bndes-selic-lcd', produtos: PRODUTOS_BNDES.filter(p => p.custos.includes('selicLcd')).map(p => p.id), custos: ['selicLcd'], nota: 'Vale para os produtos que aceitam SELIC_LCD.' },
   { perfil: 'bndes-credito-tfb', produtos: ['credito-pme'], custos: ['tfb'], nota: 'Cenário de conferência com TFB.' },
