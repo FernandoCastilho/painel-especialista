@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AreaDegrade from './AreaDegrade.jsx'
 import { buildCbsAnnual } from './cbsAnnual.js'
 
 const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -21,8 +22,9 @@ export default function CbsAnnualScenario({ revenue, inputs, overrides }) {
       <title id="cbs-chart-title">Reserva estimada de janeiro a dezembro</title>
       <desc id="cbs-chart-description">{max === 0 && valid.length === 12 ? 'Todos os meses têm reserva adicional de zero reais.' : 'Linha da reserva estimada. Use os botões dos meses ou a tabela para consultar valores exatos.'}</desc>
       {(valid.length === 0 ? [] : max === 0 ? [0] : [0, 0.5, 1]).map(fraction => <g key={fraction}><line x1="10" x2="776" y1={y(top * fraction)} y2={y(top * fraction)} vectorEffect="non-scaling-stroke" className="cbs-chart-grid"/></g>)}
+      {valid.length === months.length && max > 0 && <AreaDegrade pontos={months.map((month, index) => [x(index), y(month.result.reserveDelayed)])} base={y(0)} cor="var(--accent)" />}
       {months.map((month, index) => <g key={month.month}>
-        {index > 0 && month.result.ok && months[index - 1].result.ok && <line x1={x(index - 1)} x2={x(index)} y1={y(months[index - 1].result.reserveDelayed)} y2={y(month.result.reserveDelayed)} vectorEffect="non-scaling-stroke" className="cbs-chart-line"/>}
+        {index > 0 && month.result.ok && months[index - 1].result.ok && <line x1={x(index - 1)} x2={x(index)} y1={y(months[index - 1].result.reserveDelayed)} y2={y(month.result.reserveDelayed)} vectorEffect="non-scaling-stroke" className="cbs-chart-line linha-destaque"/>}
         {month.result.ok && <circle cx={x(index)} cy={y(month.result.reserveDelayed)} r={selected === index ? 6 : 4} className="cbs-chart-dot"/>}
         <text x={x(index)} y="207" textAnchor="middle">{month.month}</text>
       </g>)}

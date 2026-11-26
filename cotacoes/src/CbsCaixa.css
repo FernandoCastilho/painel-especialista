@@ -73,7 +73,7 @@
 .cbs-chart-heading p,.cbs-annual>p { color:var(--mut); font-size:.95rem; }
 .cbs-annual-chart { display:block; width:100%; height:auto; overflow:visible; }
 .cbs-chart-grid { stroke:var(--line); stroke-width:1; }
-.cbs-chart-line { stroke:var(--accent); stroke-width:3; }
+.cbs-chart-line { stroke:var(--accent); stroke-width:3; color:var(--accent); }
 .cbs-chart-dot { fill:var(--accent); }
 .cbs-month-buttons { display:flex; gap:4px; flex-wrap:wrap; margin:0 0 12px; }
 .cbs-month-buttons button { flex:1; min-width:44px; min-height:44px; font:inherit; font-size:.95rem; color:var(--mut); background:var(--bg); border:1px solid var(--line); border-radius:5px; cursor:pointer; }
