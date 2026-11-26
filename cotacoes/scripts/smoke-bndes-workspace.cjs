@@ -281,6 +281,11 @@ async function proveLastColumn(region, file) {
         assert.match(await page.locator('.fm-field-rate-tfc .fm-custo-valor').textContent(), /TFC_MOB_ONIB_NV_120 \(C26\)/)
         await page.locator('.fm-serie-tfc').screenshot({ path: path.join(out, `${width}-${theme}-veiculos-serie.png`) })
         await page.screenshot({ path: path.join(out, `${width}-${theme}-veiculos-c26.png`), fullPage: true })
+        // PDF da simulação pelo WhatsApp (26/11/2026): no computador, baixa o mesmo PDF do envelope.
+        const [pdfWhats] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Enviar a simulação em PDF pelo WhatsApp' }).click()])
+        assert.equal(pdfWhats.suggestedFilename(), 'BNDES-Finame-Simulacao.pdf')
+        assert.match(fs.readFileSync(await pdfWhats.path(), 'latin1'), /^%PDF-1\.4/)
+        await page.getByText('PDF baixado. Anexe na conversa do WhatsApp.').waitFor()
         // Finame BK (26/11/2026): sem TFC, Pré 5 digitada da proposta do agente.
         await page.locator('#bw-profile').selectOption('finame-bk')
         await page.locator('#calc-h', { hasText: 'Finame BK' }).waitFor()
