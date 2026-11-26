@@ -32,7 +32,7 @@ function AjudaInvestimentos() {
       O resultado inclui os proventos informados, sem reinvestimento, tributos ou custos de venda.</p>
     <p>Use vírgula para decimais: 1,234 para uma cota fracionária ou 1234 para mil duzentos e trinta e quatro. Não use ponto sozinho.</p>
     <p>CDI, IPCA e câmbio vêm das <a href={SERIES_URL} target="_blank" rel="noreferrer">séries do Banco Central</a>.
-      Dados dos fundos adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a>,
+      Dados dos fundos adaptados do <a href={FONTE_CVM} target="_blank" rel="noreferrer">Informe Diário da CVM</a> e, na lâmina, das lâminas, do cadastro e do extrato anual da CVM,
       sob <a href={LICENCA_CVM} target="_blank" rel="noreferrer">licença ODbL</a>.</p>
   </CalculatorHelp>
 }

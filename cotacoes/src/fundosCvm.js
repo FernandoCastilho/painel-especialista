@@ -4,6 +4,7 @@ export const FONTE_CVM = 'https://dados.cvm.gov.br/dataset/fi-doc-inf_diario'
 export const LICENCA_CVM = 'https://opendatacommons.org/licenses/odbl/1-0/'
 
 const idPattern = /^cvm-[fc]-([A-Z0-9]{12}\d{2})(?:-([A-Za-z0-9_-]{1,64}))?$/
+export const cnpjDoId = id => idPattern.exec(id)?.[1]
 export const isFundoCvm = id => idPattern.test(id) && (!id.startsWith('cvm-f-') || id.length === 20)
 // Fundos da marca GARB, pelo CNPJ: código CVM da classe (ou do fundo, se não houver classe).
 export const codigoGarb = cnpj => Object.hasOwn(garb, cnpj ?? '') ? garb[cnpj] : undefined
@@ -207,7 +208,7 @@ export async function carregarFundoCvm(id) {
   const { manifest, items } = await carregarCatalogoCvm()
   const item = items.find(registro => registro[0] === id)
   if (!item) throw new Error('Série ausente no período coberto pela CVM.')
-  const bucket = [...item[2]].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 128, 0)
+  const bucket = grupoDoCnpj(item[2])
   const arquivo = manifest.files?.[bucket]
   if (!new RegExp('^cotas-' + bucket + '-[a-f0-9]{64}\\.json\\.gz$').test(arquivo)) {
     throw new Error('Arquivo de cotas indisponível.')
@@ -222,4 +223,33 @@ export async function carregarFundoCvm(id) {
   }
   const fundo = cotasDoFundo(await grupos.get(arquivo), item)
   return /^\d{4}-\d{2}-\d{2}$/.test(manifest.collected) ? { ...fundo, atualizado: manifest.collected } : fundo
+}
+
+const grupoDoCnpj = documento => [...documento].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 128, 0)
+let fichasManifest
+const fichas = new Map()
+
+// Lâmina e ficha cadastral ficam em arquivos à parte: só baixam quando alguém abre a lâmina de um fundo.
+export async function carregarFichaCvm(documento) {
+  fichasManifest ??= carregar('fichas/manifest.json').then(manifest => {
+    if (manifest.version !== 1 || typeof manifest.files !== 'object') throw new Error('Lâminas da CVM indisponíveis.')
+    return manifest
+  }).catch(error => {
+    fichasManifest = undefined
+    throw error
+  })
+  const manifest = await fichasManifest
+  const bucket = grupoDoCnpj(documento)
+  const arquivo = manifest.files[bucket]
+  if (!new RegExp('^fichas-' + bucket + '-[a-f0-9]{64}\\.json\\.gz$').test(arquivo)) throw new Error('Lâminas da CVM indisponíveis.')
+  if (!fichas.has(arquivo)) {
+    if (fichas.size >= 8) fichas.delete(fichas.keys().next().value)
+    fichas.set(arquivo, carregarBase('fichas/' + arquivo).catch(error => {
+      fichas.delete(arquivo)
+      fichasManifest = undefined
+      throw error
+    }))
+  }
+  const grupo = await fichas.get(arquivo)
+  return { ficha: grupo?.[documento] ?? null, coletado: manifest.collected }
 }

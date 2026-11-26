@@ -401,6 +401,37 @@ jobs:
         with:
           path: ${{ runner.temp }}/cvm-cache
           key: fundos-cvm-v1-${{ steps.cvm-dia.outputs.data }}
+      - name: Restaurar lâminas e fichas da CVM
+        uses: actions/cache/restore@v4
+        id: fichas-cache
+        with:
+          path: ${{ runner.temp }}/fichas-cache
+          key: fichas-cvm-v1-${{ steps.cvm-dia.outputs.data }}
+          restore-keys: fichas-cvm-v1-
+      - name: Preparar lâminas e fichas da CVM
+        id: fichas-dados
+        timeout-minutes: 10
+        env:
+          CVM_DATA: ${{ steps.cvm-dia.outputs.data }}
+          CVM_HORA: ${{ steps.cvm-dia.outputs.hora }}
+        run: |
+          origem="https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}"
+          args=()
+          if [[ "$PAGES_REFRESH_DATA" == "true" ]] && (( 10#$CVM_HORA >= 8 )); then args+=(--atualizar); fi
+          # A lâmina é complemento: se a coleta travar ou quebrar, o site sai sem ela.
+          if ! timeout 480 python3 scripts/coletar-fichas-cvm.py dist/cvm/fichas --catalogo dist/cvm --cache "$RUNNER_TEMP/fichas-cache" --origem "$origem" --hoje "$CVM_DATA" "${args[@]}"; then
+            echo "::warning::Lâminas da CVM fora desta publicação: a coleta falhou ou passou do tempo."
+            rm -rf dist/cvm/fichas
+          fi
+          if [[ -f dist/cvm/fichas/manifest.json ]]; then
+            echo "data=$(python3 -c 'import json; print(json.load(open("dist/cvm/fichas/manifest.json"))["collected"])')" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Guardar a coleta válida das fichas
+        if: steps.fichas-cache.outputs.cache-hit != 'true' && steps.fichas-dados.outputs.data == steps.cvm-dia.outputs.data
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/fichas-cache
+          key: fichas-cvm-v1-${{ steps.cvm-dia.outputs.data }}
       - uses: actions/upload-pages-artifact@v3
         id: pages-package
         with:
