@@ -141,10 +141,9 @@ export function graficoHistorico(historico, topo) {
   return { ops, y: base - 30 }
 }
 
-export function bndesPdfEml({ itens, historico = null }) {
+// O PDF da simulação, em texto ASCII (acentos em escapes WinAnsi): anexo do e-mail e arquivo do WhatsApp (26/11/2026).
+export function bndesPdf({ itens, historico = null }) {
   if (!itens?.length) throw new Error('Cotação sem resultado')
-  const corpo = ['Olá,', '', 'Segue a simulação BNDES Finame em anexo.', '',
-    ...itens.flatMap((item, i) => [nomeOpcao(item, i, itens.length), ...resumo(item).map(linha => '• ' + emLinha(linha)), '']), nota].join('\r\n')
   const paginas = itens.flatMap((item, i) => {
     const corrige = item.parcelas?.some(p => Number.isFinite(p.correcao) && p.correcao !== 0)
     const cabecalhoTabela = ['Nº e vencimento', ...(corrige ? ['Correção'] : []), 'Juros', 'Amortização', 'Parcela', 'Saldo']
@@ -192,6 +191,13 @@ export function bndesPdfEml({ itens, historico = null }) {
     y -= 3
   }
   paginas.push([...final, ...rodape].join('\n'))
+  return pdfDasPaginas(paginas)
+}
+
+export function bndesPdfEml({ itens, historico = null }) {
+  const pdf = bndesPdf({ itens, historico })
+  const corpo = ['Olá,', '', 'Segue a simulação BNDES Finame em anexo.', '',
+    ...itens.flatMap((item, i) => [nomeOpcao(item, i, itens.length), ...resumo(item).map(linha => '• ' + emLinha(linha)), '']), nota].join('\r\n')
   const fronteira = 'painel-pdf-' + Math.random().toString(36).slice(2)
   const assunto = 'BNDES Finame | Simulação de ' + brl(itens[0].valor) + ' | ' + meses(itens[0].prazo)
   const nome = nomeDeArquivo('BNDES Finame - Simulacao com PDF')
@@ -201,7 +207,7 @@ export function bndesPdfEml({ itens, historico = null }) {
     'Content-Type: multipart/mixed; boundary="' + fronteira + '"', '', '--' + fronteira,
     'Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64', '', base64Utf8(corpo),
     '--' + fronteira, 'Content-Type: application/pdf; name="BNDES-Finame-Simulacao.pdf"', 'Content-Transfer-Encoding: base64',
-    'Content-Disposition: attachment; filename="BNDES-Finame-Simulacao.pdf"', '', base64Utf8(pdfDasPaginas(paginas)),
+    'Content-Disposition: attachment; filename="BNDES-Finame-Simulacao.pdf"', '', base64Utf8(pdf),
     '--' + fronteira + '--', '',
   ].join('\r\n') }
 }
