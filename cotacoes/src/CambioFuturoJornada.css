@@ -2,16 +2,26 @@
 .cf-j .cf-j-azul { border-inline-start: 4px solid #2872c5; background-image: linear-gradient(110deg, #2872c51a, transparent 75%); }
 .cf-j .cf-j-amarelo { border-inline-start: 4px solid #b78608; background-image: linear-gradient(110deg, #d9a20926, transparent 75%); }
 .cf-j-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: .8rem; align-items: start; }
-.cf-j-box { min-width: 0; margin: .85rem 0 0; padding: .7rem; border: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 22%, transparent); border-radius: .5rem; }
-.cf-j-box legend { padding-inline: .3rem; font-weight: 650; }
-.cf-j-box h4 { margin: .1rem 0 .65rem; }
-.cf-j-mesa-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: .5rem .8rem; align-items: start; }
-.cf-j-mesa-row + .cf-j-mesa-row { margin-top: .8rem; padding-top: .8rem; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
-.cf-j-mesa-row h4 { align-self: center; }
-.cf-j-mesa-row > small { grid-column: 1 / -1; }
-.cf-j .cf-j-totais, .cf-j .cf-j-box dl, .cf-j .cf-j-sum { margin: 0; }
+.cf-j .cf-j-totais, .cf-j .cf-j-cet dl { margin: 0; }
 .cf-j .cf-j-totais { padding: .7rem; border-radius: .5rem; background: color-mix(in srgb, currentColor 7%, transparent); }
 .cf-j dt { font-size: .83rem; font-weight: 550; }
 .cf-j dd { margin: .25rem 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .cf-j .cf-j-error, .cf-j .cf-j-notice:not(:empty) { font-weight: 650; }
 .cf-j-notice:empty { margin: 0; }
+.cf-j-liquido { margin-top: .8rem; max-width: 24rem; }
+.cf-j-scroll { max-width: 100%; overflow-x: auto; margin-block: .85rem; border-radius: .5rem; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.cf-j-matriz { width: 100%; border-collapse: collapse; }
+.cf-j-matriz :is(th, td) { padding: .45rem .6rem; border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent); vertical-align: middle; }
+.cf-j-matriz th { text-align: start; }
+.cf-j-matriz td, .cf-j-matriz thead th:not(:first-child) { min-width: 10rem; width: 15rem; font-variant-numeric: tabular-nums; }
+.cf-j-matriz tr > th:first-child { min-width: 8rem; }
+.cf-j-matriz :is(thead, .cf-j-grupo) { background: color-mix(in srgb, currentColor 9%, transparent); }
+.cf-j-azul .cf-j-matriz thead { color: white; background: #133663; }
+.cf-j-amarelo .cf-j-matriz thead { color: #211805; background: #ffe69a; }
+.cf-j-matriz .cx-field > label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.cf-j .cf-j-matriz .cx-field { min-width: 0; }
+.cf-j .cf-j-matriz input { width: 100%; min-width: 0; box-sizing: border-box; }
+.cf-j-cet { border: 1px solid #b78608; padding: .8rem; border-radius: .5rem; background: color-mix(in srgb, #d9a209 13%, transparent); }
+.cf-j-cet h4 { margin: 0 0 .6rem; }
+.cf-j-cet dl { margin-top: .35rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cf-j-cet dd { font-size: 1.1rem; }
