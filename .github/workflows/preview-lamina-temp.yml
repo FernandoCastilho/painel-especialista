@@ -2,7 +2,7 @@ name: Capturas temporárias da lâmina
 on:
   push:
     branches: [lamina-fundos]
-    paths: [.github/workflows/preview-lamina-temp.yml, cotacoes/scripts/preview-lamina-temp.cjs]
+    paths: [.github/workflows/preview-lamina-temp.yml, cotacoes/scripts/preview-lamina-temp.cjs, cotacoes/src/**]
 permissions:
   contents: write
 jobs:

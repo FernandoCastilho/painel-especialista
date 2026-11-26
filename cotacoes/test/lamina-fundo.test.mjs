@@ -69,7 +69,7 @@ async function montar(t, resposta) {
 test('a lâmina mostra o nome do fundo no cabeçalho, condições, anos, meses e carteira', async t => {
   const lamina = {
     data: '2026-10-31', pl: 1690000000, risco: 3, taxaAdm: 0, despesas: 0.04, cotaResgate: 0, pagamento: 0,
-    objetivo: 'Buscar retorno.', publico: 'Investidores em geral.', exterior: 0, credito: 100, perdaAlemDoAplicado: false,
+    objetivo: 'Buscar retorno. ' + 'palavra '.repeat(60), publico: 'Investidores em geral.', exterior: 0, credito: 100, perdaAlemDoAplicado: false,
     aplicInicial: 0, horario: '16:00', carencia: 0, tipoPagamento: 'Dias Úteis', indice: 'CDI',
     anos: [[2025, 14.95, 14.31, 104.4], [2026, 8.39, 11.7, 71.8]], rentab5: 73.64, indice5: 79.84, anosPerda: 0,
     meses: [['2025-11', 0.7, 1], ['2026-03', -0.2, 1]], carteira: [['Títulos de crédito privado', 86.31], ['Derivativos', -3.78]],
@@ -80,6 +80,8 @@ test('a lâmina mostra o nome do fundo no cabeçalho, condições, anos, meses e
   assert.match(texto, /<h3[^>]*>Alfa RF GARB<\/h3>/)
   assert.match(texto, /CVM · lâmina de out\/2026 · CNPJ 44\.315\.864\/0001-78/)
   assert.match(texto, /R\$ 1,69 bi/)
+  assert.match(texto, /…\s*<button[^>]*aria-expanded="false"[^>]*>Ler mais<\/button>/)
+  assert.ok(!texto.includes('palavra '.repeat(40)), 'objetivo longo começa resumido')
   assert.match(texto, /aria-label="Risco 3 de 5"/)
   assert.match(texto, /Sem mínimo/)
   assert.match(texto, /D\+0 dias úteis/)

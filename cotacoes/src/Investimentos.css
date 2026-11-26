@@ -128,13 +128,14 @@
 .inv-workspace .inv-lamina-bloco h4 { margin:0 0 6px; font-size:.92rem; }
 .inv-workspace .inv-lamina-bloco h4 ~ h4 { margin-top:14px; }
 .inv-workspace .inv-lamina-bloco p { margin:0; }
-.inv-workspace .inv-lamina-linhas { display:grid; margin:0; }
+.inv-workspace .inv-lamina-linhas { display:grid; grid-template-columns:1fr; gap:0; margin:0; }
+.inv-workspace .inv-lamina-mais { min-height:0; padding:0; border:0; background:none; color:var(--bw-link,#003cff); text-decoration:underline; font:inherit; cursor:pointer; }
 .inv-workspace .inv-lamina-linhas div { display:grid; grid-template-columns:1fr auto; gap:12px; padding:4px 0; border-bottom:1px dashed var(--bw-line); }
 .inv-workspace .inv-lamina-linhas dt { font-size:.82rem; color:var(--mut); }
 .inv-workspace .inv-lamina-linhas dd { margin:0; font-weight:700; text-align:right; }
 .inv-workspace .inv-lamina-bloco td { white-space:nowrap; }
-.inv-workspace .inv-lamina-meses { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:6px; height:170px; overflow-x:auto; }
-.inv-workspace .inv-lamina-meses > div { display:grid; grid-template-rows:1fr auto auto; justify-items:center; min-width:34px; font-size:.72rem; }
+.inv-workspace .inv-lamina-meses { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(40px,1fr); gap:6px; height:170px; overflow-x:auto; }
+.inv-workspace .inv-lamina-meses > div { display:grid; grid-template-rows:1fr auto auto; justify-items:center; min-width:40px; font-size:.72rem; white-space:nowrap; }
 .inv-workspace .inv-lamina-meses i { align-self:end; width:70%; border-radius:2px 2px 0 0; background:var(--bw-link,#003cff); }
 .inv-workspace .inv-lamina-meses small { color:var(--mut); }
 .inv-workspace .inv-lamina :is(.inv-lamina-meses i, .inv-lamina-carteira b).neg { background:var(--down,#b42318); }

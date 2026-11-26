@@ -9,6 +9,16 @@ const taxa = valor => valor === undefined ? undefined : pct(valor) + ' a.a.'
 const taxaSeExiste = (existe, valor) => existe === false ? 'Não tem' : existe ? (valor ? pct(valor) : 'Tem') : undefined
 const ate = valor => valor === undefined ? undefined : 'até ' + pct(valor, 0)
 
+// Textos da CVM podem ter mil caracteres: a lâmina mostra o começo e abre o resto a pedido.
+function Texto({ children, limite = 280 }) {
+  const [aberto, setAberto] = useState(false)
+  if (!children || children.length <= limite) return <p>{children}</p>
+  const curto = children.slice(0, limite).replace(/\s+\S*$/, '') + '…'
+  return <p>{aberto ? children : curto}{' '}
+    <button type="button" className="inv-lamina-mais" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>
+      {aberto ? 'Ler menos' : 'Ler mais'}</button></p>
+}
+
 function Linhas({ linhas }) {
   const visiveis = linhas.filter(([, valor]) => valor !== undefined && valor !== null && valor !== '—')
   return visiveis.length ? <dl className="inv-lamina-linhas">{visiveis.map(([rotulo, valor]) =>
@@ -44,9 +54,9 @@ function Lamina({ lamina }) {
     ]} />
     <div className="inv-lamina-colunas">
       {(lamina.objetivo || lamina.publico || lamina.exterior !== undefined) && <div className="inv-lamina-bloco">
-        {lamina.objetivo && <><h4>Objetivo</h4><p>{lamina.objetivo}</p></>}
-        {lamina.publico && <><h4>Público-alvo</h4><p>{lamina.publico}</p></>}
-        {lamina.restricao && <><h4>Restrições</h4><p>{lamina.restricao}</p></>}
+        {lamina.objetivo && <><h4>Objetivo</h4><Texto>{lamina.objetivo}</Texto></>}
+        {lamina.publico && <><h4>Público-alvo</h4><Texto>{lamina.publico}</Texto></>}
+        {lamina.restricao && <><h4>Restrições</h4><Texto>{lamina.restricao}</Texto></>}
         <h4>Limites da política</h4>
         <Linhas linhas={[['Ativos no exterior', ate(lamina.exterior)], ['Crédito privado', ate(lamina.credito)],
           ['Alavancagem', ate(lamina.alavancagem)], ['Pode perder mais que o aplicado', simNao(lamina.perdaAlemDoAplicado)]]} />
@@ -66,7 +76,7 @@ function Lamina({ lamina }) {
           ['Taxa de saída', lamina.taxaSaida !== undefined ? pct(lamina.taxaSaida) : undefined],
           ['Taxa de performance', lamina.taxaPerf ?? (lamina.data ? 'Não tem' : undefined)],
         ]} />
-        {lamina.taxaAdmObs && <p className="inv-nota">{lamina.taxaAdmObs}</p>}
+        {lamina.taxaAdmObs && <div className="inv-nota"><Texto limite={140}>{lamina.taxaAdmObs}</Texto></div>}
       </div>
       {lamina.anos?.length > 0 && <div className="inv-lamina-bloco">
         <h4>Rentabilidade por ano</h4>
@@ -142,7 +152,7 @@ function Ficha({ cadastro = {}, extrato = {} }) {
     </div>
     {extrato.politica && <div className="inv-lamina-bloco">
       <h4>Política de investimento</h4>
-      <p>{extrato.politica}</p>
+      <Texto>{extrato.politica}</Texto>
     </div>}
     <p className="inv-nota">Dados abertos da CVM (cadastro e extrato anual). A rentabilidade do fundo aparece acima, pela cota diária da CVM.</p>
   </>
