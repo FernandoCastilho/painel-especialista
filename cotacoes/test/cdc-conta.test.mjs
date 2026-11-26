@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { cdcConta, cdcCronograma, cdcVencimentos } from '../src/cdcConta.js'
 import { AVISOS_CDC, cdcEmlConteudo } from '../src/cdcEmail.js'
-import { fundingDoPrazo, lerFunding, spreadDaTaxa, taxaDoSpread } from '../src/cdcFunding.js'
+import { PRAZOS_DIGITADOS, fundingDigitado, fundingDoPrazo, lerFunding, spreadDaTaxa, taxaDoSpread } from '../src/cdcFunding.js'
 
 // Caso de referência: planilha de CDC enviada por Fernando em 25/11/2026 (sem dados de identificação do cliente).
 // Liberação 25/11/2026, carência 30 dias, 48 parcelas, valor liberado R$ 500.000,00, tarifa de cadastro R$ 2.523,00.
@@ -170,4 +170,21 @@ test('praça do contrato: feriado local adia o vencimento e os juros e o IOF con
   for (const x of cdcConta({ ...base, prazo: 60, inicio: '2026-11-30', calendars: ['BR', 'SPE', 'SOR'] }).rows) {
     assert.ok(![0, 6].includes(new Date(x.date + 'T00:00:00Z').getUTCDay()) && !x.date.endsWith('-12-31') && !x.date.endsWith('-08-15'), x.date)
   }
+})
+
+test('custo digitado por prazo: 12 a 72 meses, um ou mais prazos, mesma reta da tabela colada', () => {
+  assert.deepEqual([...PRAZOS_DIGITADOS], [12, 18, 24, 36, 42, 48, 60, 72])
+  const d = fundingDigitado({ 12: '14,37', 24: '15,04%', 48: '' }, '2026-11-26')
+  assert.equal(d.ok, true)
+  assert.deepEqual(d.tabela[0].taxas, { 12: 14.37, 24: 15.04 })
+  assert.equal(d.tabela[0].fim, null)
+  assert.ok(Math.abs(fundingDoPrazo(d.tabela[0], 18).taxa - 14.705) < 1e-9)
+  assert.equal(fundingDoPrazo(d.tabela[0], 36).taxa, 15.04)
+  const um = fundingDigitado({ 48: '15,58' }, '2026-11-26')
+  assert.equal(fundingDoPrazo(um.tabela[0], 48).taxa, 15.58)
+  assert.equal(fundingDoPrazo(um.tabela[0], 48).nota, null)
+  assert.equal(fundingDigitado({}, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({ 12: 'abc' }, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({ 12: '0' }, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({ 99: '15' }, '2026-11-26').ok, false)
 })

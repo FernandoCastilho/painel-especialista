@@ -14,7 +14,7 @@ import { CdcIcon } from './CalculatorIcons.jsx'
 import { cdcConta } from './cdcConta.js'
 import { cdcEml, cdcResumo } from './cdcEmail.js'
 import { cdcImagem } from './cdcImagem.js'
-import { carregarFunding, fundingDoPrazo, guardarFunding, lerFunding, spreadDaTaxa, taxaDoSpread, vigenciaDeHoje } from './cdcFunding.js'
+import { PRAZOS_DIGITADOS, carregarFunding, fundingDigitado, fundingDoPrazo, guardarFunding, lerFunding, spreadDaTaxa, taxaDoSpread, vigenciaDeHoje } from './cdcFunding.js'
 import { Respostas, Resultado, step } from './Roteiro.jsx'
 import './CalculatorStandard.css'
 import './LinhaMestra.css'
@@ -35,25 +35,37 @@ const INICIAL = { valorBem: '500.000,00', valorLiberado: '500.000,00', carencia:
 function FundingColar({ tabela, onTabela }) {
   const dialogo = useRef(null)
   const [texto, setTexto] = useState('')
+  const [manual, setManual] = useState({})
   const [erro, setErro] = useState('')
+  const digitou = Object.values(manual).some(v => String(v).trim())
   const abrir = () => { setErro(''); dialogo.current?.showModal() }
   const fechar = () => dialogo.current?.close()
+  // Um ou o outro: a tabela colada ou o custo digitado por prazo.
   const usar = () => {
-    const lido = lerFunding(texto, cgToday())
+    if (texto.trim() && digitou) { setErro('Use a tabela colada ou o custo digitado, não os dois. Apague um deles.'); return }
+    const lido = texto.trim() ? lerFunding(texto, cgToday()) : fundingDigitado(manual, cgToday())
     if (!lido.ok) { setErro(lido.error); return }
-    guardarFunding(lido.tabela); onTabela(lido.tabela); setTexto(''); fechar()
+    guardarFunding(lido.tabela); onTabela(lido.tabela); setTexto(''); setManual({}); setErro(''); fechar()
   }
-  const apagar = () => { guardarFunding(null); onTabela(null); setTexto(''); setErro('') }
+  const apagar = () => { guardarFunding(null); onTabela(null); setTexto(''); setManual({}); setErro('') }
   return <span className="fi-help cdc-funding">
     <button type="button" onClick={abrir} aria-haspopup="dialog" aria-label="Tabela de funding: colar ou atualizar" title="Tabela de funding">!</button>
     <dialog ref={dialogo} className="fi-help-dialog cdc-funding-dialog" aria-labelledby="cdc-funding-title" onCancel={e => { e.preventDefault(); fechar() }}>
       <h3 id="cdc-funding-title">Tabela de funding</h3>
-      <p>No Excel, selecione a tabela FUNDING (dos prazos até as taxas), copie e cole aqui. Ela fica só nesta aba do navegador: fechou, apagou.</p>
+      <p>No Excel, selecione a tabela FUNDING (dos prazos até as taxas), copie e cole aqui, ou digite o custo embaixo. Fica só nesta aba do navegador: fechou, apagou.</p>
       <textarea value={texto} onChange={e => setTexto(e.target.value)} rows={8} aria-label="Colar a tabela de funding" placeholder={'6\t13,68%\t13,80%\t1,07%\t1,08%\n9\t13,96%\t14,12%\t1,09%\t1,11%'} />
+      <fieldset className="cdc-funding-manual">
+        <legend>Ou digite o custo ao ano, prazo a prazo (preencha só os que quiser)</legend>
+        <div className="cdc-funding-grade">
+          {PRAZOS_DIGITADOS.map(p => <label key={p}><span>{p} meses</span>
+            <input inputMode="decimal" value={manual[p] ?? ''} onChange={e => setManual(old => ({ ...old, [p]: e.target.value }))}
+              aria-label={`Custo ao ano em ${p} meses`} placeholder="% a.a." /></label>)}
+        </div>
+      </fieldset>
       {erro && <small className="giro-error" role="alert">{erro}</small>}
       {tabela && <p className="cdc-funding-status">Em uso: {tabela.map(v => v.label).join(' · ')} · {Object.keys(tabela[0].taxas).length} prazos.</p>}
       <div className="cdc-funding-acoes">
-        <button type="button" onClick={usar} disabled={!texto.trim()}>Usar esta tabela</button>
+        <button type="button" onClick={usar} disabled={!texto.trim() && !digitou}>Usar esta tabela</button>
         {tabela && <button type="button" className="giro-link" onClick={apagar}>Apagar tabela</button>}
         <button type="button" className="fi-help-close" onClick={fechar}>Fechar</button>
       </div>

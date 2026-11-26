@@ -62,12 +62,28 @@ export function lerFunding(texto, hoje) {
   return { ok: true, tabela }
 }
 
+// Custo digitado à mão, prazo a prazo, no lugar da tabela colada (pedido de Fernando, 26/11/2026): os prazos da foto da
+// tabela FUNDING, de 12 até 72 meses. Taxas ao ano em %; prazo em branco fica de fora (entre os preenchidos, a mesma reta).
+export const PRAZOS_DIGITADOS = Object.freeze([12, 18, 24, 36, 42, 48, 60, 72])
+export function fundingDigitado(valores, hoje) {
+  const taxas = {}
+  for (const prazo of PRAZOS_DIGITADOS) {
+    const celula = String(valores?.[prazo] ?? '').trim()
+    if (!celula) continue
+    const v = num(celula)
+    if (v === null || v <= 0 || v >= 100) return { ok: false, error: `Custo inválido no prazo de ${prazo} meses. Use o formato 15,58.` }
+    taxas[prazo] = v
+  }
+  if (!Object.keys(taxas).length) return { ok: false, error: 'Preencha o custo de pelo menos um prazo.' }
+  return { ok: true, tabela: [{ id: `digitada-${hoje}`, label: 'Custo digitado', inicio: hoje, fim: null, taxas }] }
+}
+
 // Vigência padrão: a que vale hoje; senão a mais recente já iniciada; senão a primeira.
 export const vigenciaDeHoje = (tabela, hoje) => tabela.find(v => v.inicio <= hoje && (!v.fim || hoje <= v.fim))
   ?? tabela.find(v => v.inicio <= hoje) ?? tabela[0]
 
 const valida = t => Array.isArray(t) && t.length > 0 && t.every(v => v && typeof v.id === 'string' && typeof v.label === 'string'
-  && typeof v.inicio === 'string' && v.taxas && Object.keys(v.taxas).length >= 2 && Object.values(v.taxas).every(Number.isFinite))
+  && typeof v.inicio === 'string' && v.taxas && Object.keys(v.taxas).length >= 1 && Object.values(v.taxas).every(Number.isFinite))
 export function carregarFunding() {
   try { const t = JSON.parse(sessionStorage.getItem(CHAVE) ?? 'null'); return valida(t) ? t : null } catch { return null }
 }
