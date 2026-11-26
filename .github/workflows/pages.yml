@@ -411,8 +411,6 @@ jobs:
       - name: Preparar lâminas e fichas da CVM
         id: fichas-dados
         timeout-minutes: 10
-        # A lâmina é complemento: se a coleta travar ou quebrar, o site sai sem ela (o manifesto é o último arquivo copiado).
-        continue-on-error: true
         env:
           CVM_DATA: ${{ steps.cvm-dia.outputs.data }}
           CVM_HORA: ${{ steps.cvm-dia.outputs.hora }}
@@ -420,7 +418,11 @@ jobs:
           origem="https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}"
           args=()
           if [[ "$PAGES_REFRESH_DATA" == "true" ]] && (( 10#$CVM_HORA >= 8 )); then args+=(--atualizar); fi
-          python3 scripts/coletar-fichas-cvm.py dist/cvm/fichas --catalogo dist/cvm --cache "$RUNNER_TEMP/fichas-cache" --origem "$origem" --hoje "$CVM_DATA" "${args[@]}"
+          # A lâmina é complemento: se a coleta travar ou quebrar, o site sai sem ela.
+          if ! timeout 480 python3 scripts/coletar-fichas-cvm.py dist/cvm/fichas --catalogo dist/cvm --cache "$RUNNER_TEMP/fichas-cache" --origem "$origem" --hoje "$CVM_DATA" "${args[@]}"; then
+            echo "::warning::Lâminas da CVM fora desta publicação: a coleta falhou ou passou do tempo."
+            rm -rf dist/cvm/fichas
+          fi
           if [[ -f dist/cvm/fichas/manifest.json ]]; then
             echo "data=$(python3 -c 'import json; print(json.load(open("dist/cvm/fichas/manifest.json"))["collected"])')" >> "$GITHUB_OUTPUT"
           fi
