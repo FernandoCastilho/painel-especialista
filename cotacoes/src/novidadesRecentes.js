@@ -4,10 +4,11 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '26/11/2026',
-    destaques: ['Investimentos: ativos em comparação em mosaico', 'Investimentos: fundos GARB destacados na busca'],
+    destaques: ['Investimentos: ativos em comparação em mosaico', 'Investimentos: fundos GARB destacados na busca', 'Investimentos: lâmina da CVM na página do fundo'],
     items: [
       'Investimentos: os cartões dos ativos em comparação ficam lado a lado, em mosaico, com tamanho limitado. Nomes longos ocupam até três linhas e o nome inteiro aparece ao passar o mouse.',
       'Investimentos: os fundos GARB levam a marca no fim do nome, aparecem primeiro e destacados na busca e mostram o código CVM. Digite GARB para listá-los ou busque pelo código CVM.',
+      'Em Investimentos > Consultar fundos, a lâmina da CVM aparece abaixo da ficha do fundo: patrimônio, risco, taxas, prazos de resgate, rentabilidade por ano e dos últimos meses e composição da carteira. Quando a CVM não publica a lâmina, uma ficha mostra o cadastro e o extrato anual.',
     ],
   },
   {
