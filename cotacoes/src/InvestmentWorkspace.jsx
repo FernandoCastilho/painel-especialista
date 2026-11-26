@@ -367,7 +367,7 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
         <span className="inv-nota" role="status">{selected.length} de {MAX_SERIES} ativos</span>
       </header>
       {selected.length > 0 && <ul>{selected.map(item => <li key={item.id} className={codigoGarbDoId(item.id) ? 'inv-garb' : undefined}>
-        <div><strong><Dot color={item.color} />{item.name}</strong>
+        <div><strong title={item.name}><Dot color={item.color} />{item.name}</strong>
           <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
           {codigoGarbDoId(item.id) && <small>Código CVM {codigoGarbDoId(item.id)}</small>}
           {item.rows?.length > 0 && <small>{datasDaSerie(item)}</small>}</div>

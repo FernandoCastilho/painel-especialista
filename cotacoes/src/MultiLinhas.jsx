@@ -6,6 +6,7 @@ import { nextChartIndex } from './chartNavigation.js'
 import { focoPorTeclado } from './chartToque.js'
 import { rotuloData } from './chartEixo.js'
 import { niceTicks, valueAt } from './multiSeries.js'
+import AreaDegrade from './AreaDegrade.jsx'
 
 const H = 260
 const M = { t: 12, r: 18, b: 28, l: 56 }
@@ -13,7 +14,8 @@ const dmy = (t) => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', mon
 
 // Várias séries no mesmo gráfico. series: [{ key, name, color, points: [{ t, v }] }] (v já no modo escolhido).
 // A legenda mostra o valor de cada série na data sob o cursor; com até 8 séries também há um balão no gráfico.
-export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel, history = baseSeries, frequency = 'auto', rate = true, compareUnavailable = '', comparisonSeries = baseSeries, comparisonHistory = history, referencia = null }) {
+// destaque: key da série principal, que ganha o degradê e o brilho do gráfico do dólar (as outras ficam lisas).
+export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel, history = baseSeries, frequency = 'auto', rate = true, compareUnavailable = '', comparisonSeries = baseSeries, comparisonHistory = history, referencia = null, destaque = null }) {
   const [hover, setHover] = useState(null)
   const [selection, setSelection] = useState(null)
   const baseTimes=baseSeries.flatMap(s=>s.points.map(p=>p.t))
@@ -64,7 +66,8 @@ export default function MultiLinhas({ series: baseSeries, width, fmt, ariaLabel,
         ))}
         {xTicks.map((t, i) => <text key={i} x={x(t)} y={H - 8} textAnchor={i === 0 ? 'start' : i === nx - 1 ? 'end' : 'middle'} fontSize="11" fill="var(--mut)">{rotuloData(t, { de: t0, ate: t1, timeZone: 'UTC' })}</text>)}
         {referenciaValor != null && <line data-referencia="mercado" x1={M.l} x2={width - M.r} y1={y(referenciaValor)} y2={y(referenciaValor)} stroke="var(--chart-gold)" strokeDasharray="6 4" strokeWidth="2" />}
-        {series.map((s) => s.points.length > 0 && <path key={s.key} className="ml-line" data-key={s.key} d={chartLinePath(s.points, x, y, 'v', s.stepped)} fill="none" stroke={s.color} strokeWidth={series.length > 10 ? 1.4 : 2} strokeLinejoin="round" />)}
+        {series.map((s) => s.key === destaque && s.points.length > 1 && <g key={`area-${s.key}`} data-area={s.key}><AreaDegrade linha={{ d: chartLinePath(s.points, x, y, 'v', s.stepped), x0: x(s.points[0].t), x1: x(s.points.at(-1).t) }} base={H - M.b} cor={s.color} /></g>)}
+        {series.map((s) => s.points.length > 0 && <path key={s.key} className={s.key === destaque ? 'ml-line linha-destaque' : 'ml-line'} data-key={s.key} d={chartLinePath(s.points, x, y, 'v', s.stepped)} fill="none" stroke={s.color} style={s.key === destaque ? { color: s.color } : undefined} strokeWidth={series.length > 10 ? 1.4 : 2} strokeLinejoin="round" />)}
         {hoverAt != null && (
           <g pointerEvents="none">
             <line x1={hx} x2={hx} y1={M.t} y2={H - M.b} stroke="var(--mut)" />
