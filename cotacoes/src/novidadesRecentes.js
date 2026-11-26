@@ -3,6 +3,13 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '26/11/2026',
+    destaques: ['Investimentos: ativos em comparação em mosaico'],
+    items: [
+      'Investimentos: os cartões dos ativos em comparação ficam lado a lado, em mosaico, com tamanho limitado. Nomes longos ocupam até três linhas e o nome inteiro aparece ao passar o mouse.',
+    ],
+  },
+  {
     date: '25/11/2026',
     destaques: ['Investimentos ganha comparador histórico e simulador de carteira', 'Nova calculadora de CDC para financiamento de veículo'],
     items: [
