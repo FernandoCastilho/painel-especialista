@@ -40,7 +40,14 @@ const out = process.env.CDC_QA_OUTPUT || 'workspace-qa/cdc'
         await dialogo.getByRole('textbox', { name: 'Custo ao mês em 12 meses' }).fill('1,13')
         assert.equal(await dialogo.getByRole('textbox', { name: 'Custo ao ano em 12 meses' }).isDisabled(), true, 'ao mês preenchido trava o ao ano do mesmo prazo')
         await page.screenshot({ path: path.join(out, `cdc-funding-${nome}-${tema}.png`) })
+        // Validade obrigatória no custo digitado (pedido de Fernando, 26/11/2026): sem ela, não salva e avisa.
         await dialogo.getByRole('button', { name: 'Usar esta tabela' }).click()
+        await dialogo.getByText('Informe até quando vale o funding').waitFor()
+        await dialogo.getByLabel('Válido até').fill('2999-12-31')
+        await dialogo.getByRole('button', { name: 'Usar esta tabela' }).click()
+        await page.getByText('sobre funding de 15,58% a.a.').waitFor()
+        // Fica salvo no navegador: recarregando a página, o funding continua até a validade.
+        await page.reload()
         await page.getByText('sobre funding de 15,58% a.a.').waitFor()
         await page.getByRole('button', { name: 'Simular' }).click()
         const resultado = page.locator('.cdc-screen .giro-result')
@@ -51,6 +58,14 @@ const out = process.env.CDC_QA_OUTPUT || 'workspace-qa/cdc'
         const largura = await page.evaluate(() => document.documentElement.scrollWidth)
         assert.ok(largura <= viewport.width + 1, `rolagem lateral em ${nome}: ${largura}px`)
         await page.screenshot({ path: path.join(out, `cdc-${nome}-${tema}.png`), fullPage: true })
+        // Validade vencida: ao abrir, o funding se apaga e a tela avisa; pelo spread não calcula.
+        await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('cdc-funding')); localStorage.setItem('cdc-funding', JSON.stringify({ ...s, validoAte: '2020-01-01' })) })
+        await page.reload()
+        await page.getByText('A tabela de funding venceu em 01/01/2020 e foi apagada').waitFor()
+        assert.equal(await page.evaluate(() => localStorage.getItem('cdc-funding')), null, 'funding vencido apagado')
+        await page.locator('#cdc-modo').selectOption('spread')
+        await page.getByRole('button', { name: 'Simular' }).click()
+        await resultado.getByText('O funding venceu em 01/01/2020').waitFor()
         await page.close()
       }
     }
