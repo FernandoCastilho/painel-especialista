@@ -27,7 +27,8 @@ import EmailEnvelope, { EmailEnvelopePdf } from './EmailEnvelope.jsx'
 import WhatsAppCotacao from './WhatsAppCotacao.jsx'
 import ReferenciaMercado from './ReferenciaMercado.jsx'
 import { useCurves } from './useCurves.js'
-import { bndesDiNoPrazo, bndesSerie, historicoIndexadores } from './bndesHistorico.js'
+import { bndesDiNoPrazo, bndesSerie, historicoIndexadores, historicoParaPdf, serieDiPre } from './bndesHistorico.js'
+import { viewRange } from './multiSeries.js'
 import './BndesPecas.css'
 
 const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -308,6 +309,9 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const historyRates = [...historyItems, ...seriesIndices.filter(serie => serie.unit === '% a.a.')]
   const historyCurrency = seriesIndices.filter(serie => serie.unit === 'R$')
   const diNoPrazo = bndesDiNoPrazo(curvas.data?.br, prazo)
+  // Um gráfico só, com o DI x pré no prazo (última curva da B3) e o indexador da operação, em % a.a. (pedido de 25/11/2026).
+  const historyChart = [serieDiPre(res ? diNoPrazo : null, prazo), ...historyRates]
+  const historicoPdf = historyItems.length ? historicoParaPdf(historyChart, viewRange(historyChart.map(item => item.list), 12, null)) : null
   // Vencimento de cada linha do fluxo: o que a conta devolve ou, sem ele, o dia 15 do mês (ou o próximo dia útil).
   const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx))
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
@@ -416,7 +420,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       <div className="fm-results">
       <ExpandablePanel title="Resultado · custo final para o cliente" heading={step(3, 'Resultado · custo final para o cliente')} className="fm-result-workspace" toggleLabel="Modo apresentação" open={cotacaoAmpliada} onOpenChange={setCotacaoAmpliada}>
       <article className="desk-panel cx-panel" aria-live="polite" id="fm-result" tabIndex={-1}>
-        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <><EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />{(!comparar || comparison?.ok) && <EmailEnvelopePdf itens={emailAlternatives} />}</>}{res && !comparar && <WhatsAppCotacao dados={imagemDados} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar. O envelope PDF baixa outro rascunho: resumo no corpo e cronograma no PDF anexo.')}</header>
+        <header className={comparar ? 'fm-hero' : undefined}><div><h3 className="cx-heading">{comparar ? 'Cotação comparativa' : 'Cotação da operação'}</h3><small>Projeção · CET estimado</small></div>{res && <><EmailEnvelope result={emailAlternatives[0]} alternatives={comparar ? emailAlternatives : undefined} />{(!comparar || comparison?.ok) && <EmailEnvelopePdf itens={emailAlternatives} historico={historicoPdf} />}</>}{res && !comparar && <WhatsAppCotacao dados={imagemDados} />}{ajuda('Limites da projeção', 'Estimativa com as regras do produto e os custos financeiros do painel. Inclui a TAC e o custo da garantia FGI quando informados; sem outras tarifas ou seguros. O CET mostrado é estimado a partir deste fluxo e não substitui o CET do contrato. A proposta do agente financeiro prevalece. O envelope baixa um arquivo de e-mail do Outlook (.eml), já formatado e com o cronograma completo: aberto, vira um rascunho pronto para enviar. O envelope PDF baixa outro rascunho: resumo no corpo e cronograma no PDF anexo.')}</header>
 
         {!resumida && <p className="fm-iof-premise">IOF zero presume recursos FINAME elegíveis. Confirme o enquadramento com a instituição.</p>}
         {!res && <div className="fm-quote-empty cx-wrap"><table className="cx-matrix"><thead><tr><th scope="col">Indicador</th><th scope="col">TFC</th><th scope="col">TFB</th></tr></thead><tbody>{['Taxa de referência', 'Taxa final', 'CET estimado', 'Primeira parcela', 'Última parcela', 'Custo total estimado'].map(label => <tr key={label}><th scope="row">{label}</th><td>—</td><td>—</td></tr>)}</tbody></table></div>}
@@ -509,7 +513,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </div>
       </div>
 
-      {/* Depois do resultado, em largura total: parcelas, memória do fluxo e premissas (recolhidos). */}
+      {/* Depois do resultado, em largura total: parcelas e memória do fluxo (recolhidos). Premissas e limites fecham a página. */}
       <div className="fm-secondary">
       {res && <details id="fm-parcelas" ref={parcelasRef} className="desk-panel cx-panel fm-parcels-callout fm-fluxo-panel">
         <summary>{resumida ? 'Parcelas · opções lado a lado' : 'Parcelas da operação'}</summary>
@@ -534,22 +538,12 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
           </div>
         </div></BndesDetails>
       )}
-
-
-      <BndesDetails title="Premissas e limites da simulação" className="fm-premises-callout">
-        <p role="status">Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p>
-        <div className="fm-rotulo">Método da projeção{ajuda('Método da projeção', <>
-          <p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p>
-          <p>TLP, Taxa LCD e TFBD: taxa do painel (J, LD1 ou TFBD) mais a hipótese do índice pelo Focus ano a ano, editável. TLP: IPCA cobrado com os juros, sem corrigir o saldo, dias úteis/252. LCD: Selic capitalizada no saldo (média dos fins de ano do Focus; no ano da liberação, a Selic atual), dias úteis/252. TFBD: saldo pela variação do dólar e juros proporcionais, dias corridos/360; não disponível no Itaú. FGI Tradicional só na TLP (o regulamento veda Selic/LCD capitalizada e TFBD). Projeção, não memória contratual: o contrato usa índices mensais defasados e arredondamentos próprios.</p>
-          <p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p>
-        </>)}</div>
-      </BndesDetails>
       </div>
 
       {historyItems.length > 0 && <BndesDetails title="Histórico dos indexadores" className="fm-indexers-callout">
-        <p className="cx-hint">Histórico da referência pública de cada opção dos últimos 12 meses.{ajuda('Histórico dos indexadores', 'Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, mostramos a parte fixa e o indexador observado: IPCA em 12 meses, meta Selic ou dólar em reais. O dólar tem eixo separado porque não é uma taxa. A linha tracejada marca a taxa DI no prazo desta operação, na data indicada. Ela não é o histórico da DI. A curva por vencimento aparece logo abaixo.')}</p>
+        <p className="cx-hint">DI x pré no prazo da operação e indexador no mesmo gráfico, nos últimos 12 meses, em % a.a.{ajuda('Histórico dos indexadores', 'A linha do DI é a taxa DI x pré da última curva publicada pela B3, no prazo desta operação (21 dias úteis por mês). Ela fica reta porque usa só a curva mais recente: é a referência de mercado de hoje, não o histórico do DI. A outra linha é a referência pública do indexador escolhido, publicada pelo BNDES em cada data. As duas usam a mesma escala; ao passar o mouse, cada uma mostra o último valor até aquela data. Taxas manuais não mudam o histórico. Para TLP, LCD e TFBD, entram também a parte fixa e o indexador observado: IPCA em 12 meses ou meta Selic. O dólar tem gráfico separado porque não é uma taxa. A curva por vencimento aparece logo abaixo.')}</p>
         {referenceRetained && <p className="status stale">Referência retida ou atualização indisponível; confira as datas abaixo.</p>}
-        <ComparaSeries compactHelp fixo items={historyRates} referencia={res && diNoPrazo ? { valor: diNoPrazo.taxa, rotulo: `DI em ${prazo} meses · curva de ${dmy(diNoPrazo.data)}` } : null} loading={bndes.status === 'loading' || moedas.status === 'loading' || ipca.status === 'loading' || macro.status === 'loading'} period={{ preset: 12, custom: null }} />
+        <ComparaSeries compactHelp fixo items={historyChart} loading={bndes.status === 'loading' || moedas.status === 'loading' || ipca.status === 'loading' || macro.status === 'loading' || curvas.status === 'loading'} period={{ preset: 12, custom: null }} />
         {historyCurrency.length > 0 && <><h4>Dólar · R$ por US$</h4><ComparaSeries compactHelp fixo items={historyCurrency} loading={moedas.status === 'loading'} period={{ preset: 12, custom: null }} /></>}
         {res && <><div className="fm-di-resumo">
           {diNoPrazo ? <>
@@ -566,6 +560,15 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
         {comparar && <label className="bndes-choice">Fluxo exibido <select value={fluxoOpcao} onChange={event => setFluxoOpcao(Number(event.target.value))}>{alternatives.map((item, index) => <option key={item.custo} value={index}>{opcao(index)}</option>)}</select></label>}
         <FluxoPagamentos rows={linhasDoFluxoBndes(fluxoResult?.parcelas)} nota="Nos custos pós-fixados (TLP, LCD, TFBD), o principal de cada parcela inclui a correção do saldo." inicio={liberacaoText} />
       </BndesDetails>}
+      {/* Premissas e limites por último, depois do fluxo de pagamentos (pedido do Fernando em 25/11/2026). */}
+      <BndesDetails title="Premissas e limites da simulação" className="fm-premises-callout">
+        <p role="status">Recursos FINAME elegíveis e IOF zero (Decreto 6.306/2007, art. 8º, IX). Confirme o enquadramento com a instituição na contratação; outras origens de recursos exigem análise tributária.</p>
+        <div className="fm-rotulo">Método da projeção{ajuda('Método da projeção', <>
+          <p>SAC · taxa capitalizada · liberação em até 90 dias para TFC e TFB · ECG à vista, quando houver FGI.</p>
+          <p>TLP, Taxa LCD e TFBD: taxa do painel (J, LD1 ou TFBD) mais a hipótese do índice pelo Focus ano a ano, editável. TLP: IPCA cobrado com os juros, sem corrigir o saldo, dias úteis/252. LCD: Selic capitalizada no saldo (média dos fins de ano do Focus; no ano da liberação, a Selic atual), dias úteis/252. TFBD: saldo pela variação do dólar e juros proporcionais, dias corridos/360; não disponível no Itaú. FGI Tradicional só na TLP (o regulamento veda Selic/LCD capitalizada e TFBD). Projeção, não memória contratual: o contrato usa índices mensais defasados e arredondamentos próprios.</p>
+          <p>Simulação indicativa, sujeita à análise e aprovação. Não constitui proposta ou compromisso de crédito.</p>
+        </>)}</div>
+      </BndesDetails>
     </section>
   )
 }

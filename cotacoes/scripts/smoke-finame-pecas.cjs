@@ -1,5 +1,8 @@
 const { chromium } = require('playwright')
-const { readFile } = require('node:fs/promises')
+const { mkdir, readFile, writeFile } = require('node:fs/promises')
+// Com BNDES_WORKSPACE_QA_OUTPUT, guarda as imagens do gráfico, do fim da página e o PDF da cotação para conferência.
+const qa = process.env.BNDES_WORKSPACE_QA_OUTPUT
+const qaNome = page => `${page.viewportSize().width}`
 const assert = require('node:assert/strict')
 const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8768'
 const launch = require('./smoke-launch.cjs')
@@ -8,6 +11,8 @@ async function check(page) {
   await page.route('**/bndes.json*', route => route.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { TFB_60_90: { points: [['2026-11-05', 13], ['2026-11-25', 13.5]] } } } }))
   await page.route('**/moedas.json*', route => route.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { C03: { points: [['2026-11-05', 12], ['2026-11-25', 12.5]] }, C01: { points: [['2026-11-05', 12], ['2026-11-25', 12.5]] } } } }))
   await page.route('**/curves.json*', route => route.fulfill({ json: { br: { sourceDate: '2026-11-25', compare: [{ date: '2026-11-25', label: 'Hoje' }], curves: { '2026-11-25': [[21, 12], [252, 12], [504, 13], [1008, 14], [1260, 14.5]] } } } }))
+  // Taxa DI do dia (CDI) nos mesmos 12 meses: a linha do DI do gráfico único com o indexador.
+  await page.route('**/macro.json*', route => route.fulfill({ json: { generatedAt: Date.now(), cdi: [[Date.UTC(2026, 10, 5), 14.9], [Date.UTC(2026, 10, 25), 14.9]], selic: [[Date.UTC(2026, 10, 5), 15]], focus: null, ptax: {} } }))
   await page.route('**/recado.json*', route => route.fulfill({ json: { ativo: false } }))
   await page.goto(base + '/#calculadora')
   const btn = page.locator('dialog.aviso-inicial:not(.recado)').getByRole('button', { name: 'Entendi' })
@@ -22,22 +27,38 @@ async function check(page) {
     if (type === 'mixed') {
       const att = /filename="[^"]+\.pdf"\r\n\r\n([\s\S]*?)\r\n--/.exec(raw)
       assert.ok(att)
-      assert.match(Buffer.from(att[1], 'base64').toString('ascii'), /^%PDF-1\.4/)
+      const pdfText = Buffer.from(att[1], 'base64').toString('ascii')
+      assert.match(pdfText, /^%PDF-1\.4/)
+      if (qa) { await mkdir(qa, { recursive: true }); await writeFile(`${qa}/amostra-pdf-bndes-${qaNome(page)}.pdf`, Buffer.from(att[1], 'base64')) }
+      // Por último no PDF: o gráfico do DI com o indexador e os avisos do CDC.
+      for (const trecho of ['Histórico do DI e do indexador', 'Avisos importantes', 'gera obrigação para nenhuma das partes'])
+        assert.ok(pdfText.includes(Buffer.from(trecho, 'latin1').toString('hex')), trecho)
       if (process.env.BNDES_QA_EML) await file.saveAs(process.env.BNDES_QA_EML)
     }
   }
   const history = page.locator('.cx-finame > details.fm-indexers-callout')
-  const flow = page.locator('.cx-finame > details.bndes-flow-callout:last-child')
+  const flow = page.locator('.cx-finame > details.bndes-flow-callout')
+  // Premissas e limites fecham a página, depois do fluxo de pagamentos (pedido de 25/11/2026).
+  await page.locator('.cx-finame > details.bndes-flow-callout + details.fm-premises-callout:last-child').waitFor({ state: 'attached' })
   assert.equal(await history.evaluate(el => el.open), false)
   assert.equal(await flow.evaluate(el => el.open), false)
   await history.locator('summary').click()
   await history.getByText(/DI no prazo de 48 meses/).waitFor()
   const curva = history.locator('svg.ml-svg')
   await curva.waitFor()
-  const linhaDI = curva.locator('line[data-referencia=mercado]')
-  await linhaDI.waitFor({ state: 'attached' }) // Uma linha horizontal tem caixa de geometria com altura zero.
-  assert.equal(await linhaDI.getAttribute('stroke-dasharray'), '6 4')
-  assert.ok(await linhaDI.evaluate(el => el.getTotalLength() > 0 && getComputedStyle(el).stroke !== 'none'))
+  // Um gráfico só, com duas linhas: DI e o indexador da operação. Linha reta tem caixa de altura zero: conferir o traçado.
+  assert.equal(await history.locator('svg.ml-svg').count(), 1)
+  for (const key of ['di', 'tfc']) {
+    const linha = curva.locator(`path.ml-line[data-key=${key}]`)
+    await linha.waitFor({ state: 'attached' })
+    assert.ok(await linha.evaluate(el => el.getTotalLength() > 0 && getComputedStyle(el).stroke !== 'none'), key)
+  }
+  assert.equal(await curva.locator('line[data-referencia=mercado]').count(), 0)
+  assert.match(await history.locator('.ml-legend').innerText(), /DI x pré em \d+ meses · curva B3 de 25\/11\/2026[\s\S]*TFC/)
+  const mediaTexto = await history.locator('.bn-media').innerText()
+  assert.match(mediaTexto, /TFC/)
+  assert.doesNotMatch(mediaTexto, /DI x pré/, 'DI x pré é uma curva só: fica fora da média dos 12 meses')
+  if (qa) await history.screenshot({ path: `${qa}/historico-di-indexador-${qaNome(page)}.png` })
   assert.match(await history.innerText(), /TFC:[\s\S]*diferença de −1,50 p.p. frente ao DI/)
   await page.locator('#fm-compare').check()
   assert.match(await history.innerText(), /TFB:[\s\S]*diferença de −0,50 p.p. frente ao DI/)
@@ -45,6 +66,11 @@ async function check(page) {
   await flow.getByRole('img', { name: /Fluxo de pagamentos/ }).waitFor()
   await flow.getByRole('combobox', { name: 'Fluxo exibido' }).selectOption('1')
   await flow.getByRole('img', { name: /Fluxo de pagamentos/ }).waitFor()
+  if (qa) {
+    const premissas = page.locator('.cx-finame > details.fm-premises-callout')
+    await premissas.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `${qa}/fim-da-pagina-premissas-${qaNome(page)}.png` })
+  }
 }
 
 ;(async () => {
