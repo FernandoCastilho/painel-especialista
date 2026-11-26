@@ -22,7 +22,6 @@
 :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid > * { grid-column: auto; }
 @media (min-width: 1000px) {
   :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid > .cdc-praca { grid-column: span 2; }
 }
 @media (max-width: 540px) {
   :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid { grid-template-columns: minmax(0, 1fr); }
