@@ -206,7 +206,11 @@ test('funding com validade: vencida apaga e avisa, no dia e futura continuam val
   assert.deepEqual(carregarFunding('2026-12-02'), { tabela, validoAte: '2026-12-02' }) // no próprio dia ainda vale
   assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null, vencidoEm: '2026-12-02' }) // vencida: apaga e avisa
   assert.equal(localStorage.getItem('cdc-funding'), null)
-  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null }) // já apagada: sem aviso repetido
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null, vencidoEm: '2026-12-02' }) // tela montada de novo: aviso continua
+  guardarFunding(tabela, '2026-12-09') // salvou outra: some o aviso
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela, validoAte: '2026-12-09' })
+  guardarFunding(null)
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null })
   localStorage.setItem('cdc-funding', JSON.stringify(tabela)) // formato antigo, sem validade: ignorado
   assert.deepEqual(carregarFunding('2026-11-26'), { tabela: null })
 })

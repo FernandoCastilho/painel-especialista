@@ -31,7 +31,7 @@ const text = el => Array.isArray(el) ? el.map(text).join('') : el && typeof el =
 const TABELA = [{ id: 'digitada', label: 'Custo digitado', inicio: '2026-11-26', fim: null, taxas: { 12: 14.52, 72: 15.99 } }]
 
 async function setup(t, validoAte) {
-  localStorage.removeItem('cdc-funding')
+  deps['./cdcFunding.js'].guardarFunding(TABELA, '2999-12-31'); deps['./cdcFunding.js'].guardarFunding(null) // zera o aviso lembrado
   if (validoAte) localStorage.setItem('cdc-funding', JSON.stringify({ validoAte, tabela: TABELA }))
   const render = hookRenderer(() => module.exports.default({ onBack() {} }))
   t.after(() => render.close()); await render.settle()

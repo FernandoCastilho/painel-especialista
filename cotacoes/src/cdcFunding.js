@@ -107,14 +107,17 @@ export function lerValidade(valor, hoje) {
 export const fundingVencido = (validoAte, hoje) => hoje > validoAte
 
 // Salvo → { tabela, validoAte } se ainda vale; vencido → apaga e devolve { tabela: null, vencidoEm }; nada → { tabela: null }.
+// A data do vencido fica lembrada enquanto a página estiver aberta (a tela pode montar mais de uma vez), até salvar outro.
+let vencidoEm = null
 export function carregarFunding(hoje) {
   let salvo = null
   try { salvo = JSON.parse(localStorage.getItem(CHAVE) ?? 'null') } catch { /* sem armazenamento ou dado estragado */ }
-  if (!salvo || !valida(salvo.tabela) || typeof salvo.validoAte !== 'string' || !ISO.test(salvo.validoAte)) return { tabela: null }
-  if (fundingVencido(salvo.validoAte, hoje)) { guardarFunding(null); return { tabela: null, vencidoEm: salvo.validoAte } }
+  if (!salvo || !valida(salvo.tabela) || typeof salvo.validoAte !== 'string' || !ISO.test(salvo.validoAte)) return vencidoEm ? { tabela: null, vencidoEm } : { tabela: null }
+  if (fundingVencido(salvo.validoAte, hoje)) { guardarFunding(null); vencidoEm = salvo.validoAte; return { tabela: null, vencidoEm } }
   return { tabela: salvo.tabela, validoAte: salvo.validoAte }
 }
 export function guardarFunding(tabela, validoAte) {
+  if (tabela) vencidoEm = null
   try {
     if (tabela) localStorage.setItem(CHAVE, JSON.stringify({ validoAte, tabela })); else localStorage.removeItem(CHAVE)
     sessionStorage.removeItem(CHAVE) // a versão anterior guardava só na aba, sem validade
