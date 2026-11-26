@@ -46,14 +46,20 @@
 .inv-workspace :is(.inv-chart-header, .inv-assets-header) h3 { margin:0; }
 .inv-workspace .inv-state > button { margin-top:12px; }
 .inv-workspace .inv-assets ul {
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:8px;
+  /* Mosaico: cada cartão tem largura limitada; novos ativos ocupam a próxima vaga da linha. */
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr)); gap:8px;
   padding:0; margin:0; list-style:none;
 }
 .inv-workspace .inv-assets li {
   display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
   padding:10px; border:1px solid var(--bw-line); border-radius:8px; background:var(--bw-card,var(--bw-soft));
 }
-.inv-workspace .inv-assets li strong { overflow-wrap:anywhere; }
+.inv-workspace .inv-assets li { min-width:0; }
+.inv-workspace .inv-assets li > div { min-width:0; }
+.inv-workspace .inv-assets li strong {
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; overflow-wrap:anywhere; font-size:.95rem;
+}
+.inv-workspace .inv-assets li button { flex:none; min-width:32px; min-height:32px; padding:0; }
 .inv-workspace .inv-assets small { display:block; margin-top:3px; color:var(--mut); }
 .inv-workspace .inv-dot { display:inline-block; width:10px; height:10px; margin-inline-end:7px; border-radius:50%; }
 .inv-workspace .inv-plot { position:relative; }
@@ -83,6 +89,10 @@
 .inv-workspace .inv-allocations { margin-bottom:12px; }
 @media (max-width:740px) {
   .inv-workspace .inv-table :is(th,td) { padding:6px; font-size:.83rem; }
+  .inv-workspace .inv-assets ul { grid-template-columns:repeat(auto-fill,minmax(min(100%,145px),1fr)); }
+  .inv-workspace .inv-assets li { padding:8px; gap:6px; }
+  .inv-workspace .inv-assets li strong { font-size:.875rem; }
+  .inv-workspace .inv-assets small { font-size:.75rem; }
 }
 .inv-workspace .inv-favorites { max-width:min(100%,270px); font-size:.875rem; }
 .inv-workspace .inv-cvm-matches { display:grid; gap:6px; max-height:300px; overflow:auto; list-style:none; padding:0; }
