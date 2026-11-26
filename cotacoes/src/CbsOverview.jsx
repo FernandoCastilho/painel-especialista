@@ -1,3 +1,4 @@
+import AreaDegrade from './AreaDegrade.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import { buildCbsAnnual, operatingWorkingCapital, CBS_MONTHS } from './cbsAnnual.js'
 
@@ -16,8 +17,9 @@ function Series({ title, values }) {
     <p>Escala: {money(low)} a {money(high)}. Consulte os valores exatos em “Editar meses e ver valores”.</p>
     <svg className="cbs-series-chart" viewBox="0 0 850 140" role="img" aria-label={`${title} por mês, valores em “Editar meses e ver valores”`}>
       <line x1="15" x2="835" y1={y(0)} y2={y(0)} className="cbs-chart-grid" />
+      {available.length === values.length && low === 0 && <AreaDegrade pontos={values.map((v, i) => [x(i), y(v)])} base={y(0)} cor="var(--accent)" />}
       {values.map((v, i) => Number.isFinite(v) ? <g key={i}>
-        {i > 0 && Number.isFinite(values[i - 1]) && <line x1={x(i - 1)} x2={x(i)} y1={y(values[i - 1])} y2={y(v)} className="cbs-chart-line" />}
+        {i > 0 && Number.isFinite(values[i - 1]) && <line x1={x(i - 1)} x2={x(i)} y1={y(values[i - 1])} y2={y(v)} className="cbs-chart-line linha-destaque" />}
         <circle cx={x(i)} cy={y(v)} r="4" className="cbs-chart-dot" />
       </g> : null)}
     </svg>
