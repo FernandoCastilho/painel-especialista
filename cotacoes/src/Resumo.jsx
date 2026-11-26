@@ -563,11 +563,20 @@ function MoedasCitadas({ item }) {
   if (!codes.length) return null
   return <span className="news-flags" role="img" aria-label={`Moedas citadas: ${codes.map(nomeDaMoeda).join(', ')}`} title={`Moedas citadas: ${codes.map(nomeDaMoeda).join(', ')}`}>{codes.map(c => <Flag key={c} code={c} width={18} height={12} />)}</span>
 }
+const MANCHETES_ITAU = [{
+  title: 'Inflação do consumo nos EUA chega a 3,8% em 12 meses e reforça expectativa de alta dos juros em dezembro',
+  source: 'Itaú Investimentos',
+  link: 'https://www.itau.com.br/investimentos/noticias/pce-eua-25-11-26/',
+  t: Date.parse('2026-11-25T14:00:00Z'),
+}]
+
 // Manchetes: a semana de hoje para trás, com a quebra por dia na própria lista e a bandeira das moedas citadas.
 function MarketNews({ bare = false }) {
   const news = useNews()
   const now = useNewsClock()
-  const headlines = buildFeed(news.data?.news, 'ALL', 200, now)
+  const coleta = news.data?.news
+  const usd = Array.isArray(coleta?.USD) ? coleta.USD : []
+  const headlines = buildFeed({ ...coleta, USD: [...MANCHETES_ITAU, ...usd] }, 'ALL', 200, now)
   const stale = news.error || news.stale || newsCollectionStale(news.data, now)
   return <aside className="market-news" aria-labelledby="market-news-title"><h2 id="market-news-title" className={bare ? 'sr-only' : undefined}>Notícia</h2>
     {news.error && <p role="status">Não foi possível atualizar as notícias. {headlines.length ? 'Só são mantidas publicações ainda dentro das últimas 120 horas.' : ''}</p>}
