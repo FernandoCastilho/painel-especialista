@@ -19,7 +19,7 @@
 .cf-j-azul .cf-j-matriz thead { color: white; background: #133663; }
 .cf-j-amarelo .cf-j-matriz thead { color: #211805; background: #ffe69a; }
 .cf-j-matriz .cx-field > label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.cf-j .cf-j-matriz .cx-field { min-width: 0; }
+.cf-j .cf-j-matriz .cx-field { min-width: 0; position: relative; }
 .cf-j .cf-j-matriz input { width: 100%; min-width: 0; box-sizing: border-box; }
 .cf-j-cet { border: 1px solid #b78608; padding: .8rem; border-radius: .5rem; background: color-mix(in srgb, #d9a209 13%, transparent); }
 .cf-j-cet h4 { margin: 0 0 .6rem; }
