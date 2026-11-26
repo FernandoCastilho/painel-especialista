@@ -88,6 +88,9 @@
 .inv-workspace .inv-cvm-matches { display:grid; gap:6px; max-height:300px; overflow:auto; list-style:none; padding:0; }
 .inv-workspace .inv-cvm-matches li { padding:0; border:0; }
 .inv-workspace .inv-cvm-matches button { width:100%; text-align:left; overflow-wrap:anywhere; }
+.inv-workspace .inv-cvm-matches li.inv-garb button, .inv-workspace .inv-assets li.inv-garb { border-left:4px solid var(--amber, #b94700); background:color-mix(in srgb, var(--amber, #b94700) 9%, var(--card, #fff)); }
+.inv-workspace .inv-cvm-matches li.inv-garb button { font-weight:600; }
+.inv-workspace .inv-garb-codigo { font-weight:400; color:var(--mut); }
 .inv-workspace :is(.inv-legend li, .inv-chart-tooltip li, .inv-allocations label, .inv-resultado) { overflow-wrap:anywhere; }
 .inv-workspace .inv-busca-principal { display:grid; gap:10px; }
 .inv-workspace .inv-busca-principal input { min-height:50px; padding-inline:12px; background:var(--bw-card,var(--bw-soft)); }

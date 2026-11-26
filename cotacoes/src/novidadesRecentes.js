@@ -3,6 +3,13 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '26/11/2026',
+    destaques: ['Investimentos: fundos GARB destacados na busca'],
+    items: [
+      'Investimentos: os fundos GARB levam a marca no fim do nome, aparecem primeiro e destacados na busca e mostram o código CVM. Digite GARB para listá-los ou busque pelo código CVM.',
+    ],
+  },
+  {
     date: '25/11/2026',
     destaques: ['Investimentos ganha comparador histórico e simulador de carteira', 'Nova calculadora de CDC para financiamento de veículo'],
     items: [

@@ -1,9 +1,11 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { buscarFundos, carregarCatalogoCvm, carregarFundoCvm, nomeFundo } from './fundosCvm.js'
+import { buscarFundos, carregarCatalogoCvm, carregarFundoCvm, codigoGarb, nomeFundo } from './fundosCvm.js'
 
 const dateText = date => date.split('-').reverse().join('/')
 const minimo = 2
 const semSelecao = []
+const limite = 20
+const codigoCvm = codigo => codigo && <small className="inv-garb-codigo"> · Código CVM {codigo}</small>
 const termoBusca = texto => texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').trim().toLowerCase()
 
 export function useCotasCvm(ids, retry = 0) {
@@ -104,7 +106,7 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
     const consulta = termoBusca(busca)
     const pronta = consulta.length >= minimo
     const encontrados = referencias.filter(item => termoBusca(item.name).includes(consulta))
-    const resultados = atualizando ? encontrados : [...encontrados, ...matches.map(item => ({ id: item[0], name: nomeFundo(item) }))]
+    const resultados = atualizando ? encontrados : [...encontrados, ...matches.map(item => ({ id: item[0], name: nomeFundo(item), garb: codigoGarb(item[2]) }))]
     return <section className="inv-panel inv-busca-principal" aria-label="Adicionar ativo à comparação">
       <label>Buscar ativo
         <input ref={campo} type="search" maxLength={120} placeholder="Nome do fundo, CNPJ, CDI, IPCA ou dólar"
@@ -116,12 +118,13 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
           <ul className="inv-cvm-matches" aria-label="Ativos encontrados">
             {resultados.map(item => {
               const incluido = ativos.includes(item.id)
-              return <li key={item.id}><button type="button" disabled={incluido || lotado}
+              return <li key={item.id} className={item.garb ? 'inv-garb' : undefined}><button type="button" disabled={incluido || lotado}
                 onClick={() => escolher(item.id, item.name)}>
-                {item.name}{incluido && <small className="inv-nota"> · Já na comparação</small>}
+                {item.name}{codigoCvm(item.garb)}{incluido && <small className="inv-nota"> · Já na comparação</small>}
               </button></li>
             })}
           </ul>}
+        {!atualizando && matches.length === limite && <p className="inv-nota">Mostrando os {limite} primeiros fundos. Digite mais palavras para refinar.</p>}
         {estado === 'error' ? <div className="inv-flex">
           <p role="status">Não foi possível baixar a base de fundos da CVM neste aparelho. Se estiver na rede da empresa, ela pode estar bloqueando o arquivo.</p>
           <button type="button" onClick={() => setTentativa(n => n + 1)}>Tentar novamente</button>
@@ -142,9 +145,9 @@ export default function FundoCvmPicker({ onSelect, selecionado, inline = false, 
     {catalogo && <>
       {matches.length > 0
         ? <ul className="inv-cvm-matches" aria-label="Fundos encontrados" aria-busy={atualizando}>{matches.map(item =>
-          <li key={item[0]}><button type="button" aria-pressed={selecionado === item[0] || undefined}
+          <li key={item[0]} className={codigoGarb(item[2]) ? 'inv-garb' : undefined}><button type="button" aria-pressed={selecionado === item[0] || undefined}
             disabled={atualizando}
-            onClick={() => escolher(item[0])}>{nomeFundo(item)}</button></li>)}</ul>
+            onClick={() => escolher(item[0])}>{nomeFundo(item)}{codigoCvm(codigoGarb(item[2]))}</button></li>)}</ul>
         : !atualizando && busca.trim().length >= minimo && <p role="status">Nenhum fundo encontrado.</p>}
       <p className="inv-nota">{/^\d{4}-\d{2}-\d{2}$/.test(catalogo.manifest.collected ?? '') && <>Base da CVM atualizada em {dateText(catalogo.manifest.collected)}, </>}com cotas de {dateText(catalogo.manifest.first)} a {dateText(catalogo.manifest.last)}.</p>
     </>}
