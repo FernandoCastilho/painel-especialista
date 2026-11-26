@@ -31,4 +31,4 @@
 .cf-f .cf-f-matriz td:has(input) { min-width: 8.5rem; }
 .cf-f .cf-f-matriz .cf-f-fc { background: color-mix(in srgb, #2872c5 16%, transparent); font-weight: 700; }
 .cf-f .cf-f-matriz thead .cf-f-fc { background: #2872c5; color: white; }
-.cf-f .cf-j-totais input { width: 100%; box-sizing: border-box; }
+.cf-f .cf-f-mesa { margin-top: .8rem; }

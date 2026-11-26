@@ -97,9 +97,9 @@ export default function CambioFuturoFluxo({ onBack }) {
     <article className="desk-panel cx-panel cf-input cf-j-amarelo" aria-labelledby="cf-f-mesa">
       <header className="cx-heading"><h3 id="cf-f-mesa">2. Cotação da mesa</h3></header>
       <p className="cf-notice">O spot vale para a operação toda. O câmbio futuro de cada vencimento vai na tabela abaixo.</p>
-      <dl className="cf-j-grid cf-j-totais">
-        <div><dt><label htmlFor="cf-f-spot">Spot (R$/USD)</label></dt>
-          <dd><input id="cf-f-spot" type="text" inputMode="decimal" autoComplete="off" value={op.spot} onChange={e => mudar('spot')(e.target.value)} placeholder="ex.: 5,916" /></dd></div>
+      <div className="cf-j-grid"><Campo id="cf-f-spot" label="Spot (R$/USD)" value={op.spot} change={mudar('spot')} placeholder="ex.: 5,916"
+        error={op.spot && !(numero(op.spot) > 0) ? 'Cotação inválida.' : null} /></div>
+      <dl className="cf-j-grid cf-j-totais cf-f-mesa">
         <div><dt>Valor em R$</dt><dd id="cf-f-valor-brl">{fmt(r.valorBrl, brl)}</dd></div>
         <div><dt>Valor recebido (menos a TAC)</dt><dd id="cf-f-liquido">{fmt(r.liquidoBrl, brl)}</dd></div>
       </dl>
