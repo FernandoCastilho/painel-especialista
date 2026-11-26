@@ -63,16 +63,20 @@ export function lerFunding(texto, hoje) {
 }
 
 // Custo digitado à mão, prazo a prazo, no lugar da tabela colada (pedido de Fernando, 26/11/2026): os prazos da foto da
-// tabela FUNDING, de 12 até 72 meses. Taxas ao ano em %; prazo em branco fica de fora (entre os preenchidos, a mesma reta).
+// tabela FUNDING, de 12 até 72 meses, com as duas colunas da foto: ao ano (a.a.) e ao mês (a.m.). Em cada prazo vale uma ou a
+// outra. O ao mês vira ao ano pela mesma regra da tela: (1 + a.m.)^12 − 1. Prazo em branco fica de fora.
 export const PRAZOS_DIGITADOS = Object.freeze([12, 18, 24, 36, 42, 48, 60, 72])
+export const anoDoMes = am => ((1 + am / 100) ** 12 - 1) * 100
 export function fundingDigitado(valores, hoje) {
   const taxas = {}
   for (const prazo of PRAZOS_DIGITADOS) {
-    const celula = String(valores?.[prazo] ?? '').trim()
-    if (!celula) continue
-    const v = num(celula)
-    if (v === null || v <= 0 || v >= 100) return { ok: false, error: `Custo inválido no prazo de ${prazo} meses. Use o formato 15,58.` }
-    taxas[prazo] = v
+    const aa = String(valores?.aa?.[prazo] ?? '').trim(), am = String(valores?.am?.[prazo] ?? '').trim()
+    if (aa && am) return { ok: false, error: `No prazo de ${prazo} meses, preencha o custo ao ano ou ao mês, não os dois.` }
+    if (!aa && !am) continue
+    const v = num(aa || am)
+    const limite = aa ? 100 : 10
+    if (v === null || v <= 0 || v >= limite) return { ok: false, error: `Custo inválido no prazo de ${prazo} meses. Use o formato ${aa ? '15,58' : '1,21'}.` }
+    taxas[prazo] = aa ? v : anoDoMes(v)
   }
   if (!Object.keys(taxas).length) return { ok: false, error: 'Preencha o custo de pelo menos um prazo.' }
   return { ok: true, tabela: [{ id: `digitada-${hoje}`, label: 'Custo digitado', inicio: hoje, fim: null, taxas }] }

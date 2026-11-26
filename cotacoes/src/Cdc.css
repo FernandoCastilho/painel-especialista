@@ -29,7 +29,7 @@
 }
 .cdc-funding-manual { border: 1px solid var(--bw-line, rgba(127,127,127,.3)); border-radius: 8px; padding: 8px 10px 10px; margin: 4px 0 8px; }
 .cdc-funding-manual legend { font-size: .8125rem; padding: 0 4px; }
-.cdc-funding-grade { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.cdc-funding-grade label { display: flex; flex-direction: column; gap: 2px; font-size: .75rem; color: var(--bw-mut); }
-.cdc-funding-grade input { width: 100%; box-sizing: border-box; min-height: 36px; font-size: .875rem; }
-@media (max-width: 480px) { .cdc-funding-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cdc-funding-grade { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px 10px; align-items: center; font-size: .75rem; color: var(--bw-mut); }
+.cdc-funding-linha { display: contents; }
+.cdc-funding-grade input { width: 100%; box-sizing: border-box; min-height: 34px; font-size: .875rem; }
+.cdc-funding-grade input:disabled { opacity: .45; }
