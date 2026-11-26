@@ -25,3 +25,10 @@
 .cf-j-cet h4 { margin: 0 0 .6rem; }
 .cf-j-cet dl { margin-top: .35rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .cf-j-cet dd { font-size: 1.1rem; }
+.cf-f .cf-f-taxas { margin-top: .8rem; }
+.cf-f .cf-f-matriz td, .cf-f .cf-f-matriz thead th { min-width: 7.5rem; width: auto; white-space: nowrap; }
+.cf-f .cf-f-matriz thead th { white-space: normal; }
+.cf-f .cf-f-matriz td:has(input) { min-width: 8.5rem; }
+.cf-f .cf-f-matriz .cf-f-fc { background: color-mix(in srgb, #2872c5 16%, transparent); font-weight: 700; }
+.cf-f .cf-f-matriz thead .cf-f-fc { background: #2872c5; color: white; }
+.cf-f .cf-j-totais input { width: 100%; box-sizing: border-box; }
