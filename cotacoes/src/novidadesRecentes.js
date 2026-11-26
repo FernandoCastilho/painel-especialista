@@ -4,9 +4,10 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '26/11/2026',
-    destaques: ['Investimentos: ativos em comparação em mosaico'],
+    destaques: ['Investimentos: ativos em comparação em mosaico', 'Investimentos: fundos GARB destacados na busca'],
     items: [
       'Investimentos: os cartões dos ativos em comparação ficam lado a lado, em mosaico, com tamanho limitado. Nomes longos ocupam até três linhas e o nome inteiro aparece ao passar o mouse.',
+      'Investimentos: os fundos GARB levam a marca no fim do nome, aparecem primeiro e destacados na busca e mostram o código CVM. Digite GARB para listá-los ou busque pelo código CVM.',
     ],
   },
   {

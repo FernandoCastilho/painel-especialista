@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { compareHistory, simulateHistory } from '../src/investmentHistory.js'
-import { abreviarNomeFundo, buscarFundos, carregarCatalogoCvm, cotasDoFundo, isFundoCvm, nomeFundo } from '../src/fundosCvm.js'
+import { abreviarNomeFundo, buscarFundos, carregarCatalogoCvm, codigoGarb, codigoGarbDoId, cotasDoFundo, isFundoCvm, nomeFundo } from '../src/fundosCvm.js'
 
 const classe = ['cvm-c-00017024000153', 'Classe Crédito Privado', '00017024000153']
 const subclasse = ['cvm-c-00017024000153-A1', 'Classe Crédito Privado — Varejo', '00017024000153']
@@ -140,4 +140,21 @@ test('nomes de fundos usam as siglas de mercado e a busca continua pelo nome com
   assert.equal(nomeFundo(subclasse), 'Classe CP — Varejo · 00.017.024/0001-53 · Subclasse A1')
   const longo = ['cvm-c-10565542000165', 'SANTANDER CASH RED CLASSE DE INVESTIMENTO RENDA FIXA REFERENCIADO DI - RESP LIMITADA', '10565542000165']
   assert.deepEqual(buscarFundos([longo], 'santander renda fixa referenciado'), [longo])
+})
+
+test('fundos GARB levam a marca no nome, aparecem primeiro e são achados pela marca e pelo código CVM', () => {
+  const catalogo = [
+    ['cvm-c-11111111000111', 'ALFA RENDA FIXA FUNDO DE INVESTIMENTO', '11111111000111'],
+    ['cvm-c-00828941000118', 'BETA RENDA FIXA FUNDO DE INVESTIMENTO', '00828941000118'],
+    ['cvm-c-22222222000122', 'GARBO RENDA FIXA FUNDO DE INVESTIMENTO', '22222222000122'],
+  ]
+  assert.equal(codigoGarb('00828941000118'), '120880')
+  assert.equal(codigoGarbDoId('cvm-c-00828941000118'), '120880')
+  assert.equal(codigoGarb('11111111000111'), undefined)
+  assert.match(nomeFundo(catalogo[1]), /^BETA RF FI GARB · /)
+  assert.doesNotMatch(nomeFundo(catalogo[0]), /GARB/)
+  assert.deepEqual(buscarFundos(catalogo, 'renda fixa').map(item => item[0]),
+    ['cvm-c-00828941000118', 'cvm-c-11111111000111', 'cvm-c-22222222000122'])
+  assert.deepEqual(buscarFundos(catalogo, 'GARB').map(item => item[0]), ['cvm-c-00828941000118', 'cvm-c-22222222000122'])
+  assert.deepEqual(buscarFundos(catalogo, '120880').map(item => item[0]), ['cvm-c-00828941000118'])
 })

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { numeroPt } from './investimentos.js'
 import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
-import { isFundoCvm } from './fundosCvm.js'
+import { codigoGarbDoId, isFundoCvm } from './fundosCvm.js'
 import {
   PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, loadBcb, compareHistory, compareDailyHistory,
   metrics, simulateHistory, comparisonCsv, resumoFundo, ultimoValor, valorAplicado,
@@ -366,9 +366,10 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
         <h3 id="inv-assets">Ativos em comparação</h3>
         <span className="inv-nota" role="status">{selected.length} de {MAX_SERIES} ativos</span>
       </header>
-      {selected.length > 0 && <ul>{selected.map(item => <li key={item.id}>
+      {selected.length > 0 && <ul>{selected.map(item => <li key={item.id} className={codigoGarbDoId(item.id) ? 'inv-garb' : undefined}>
         <div><strong title={item.name}><Dot color={item.color} />{item.name}</strong>
           <small>{item.currency ?? '—'} · {item.source ?? (isFundoCvm(item.id) ? 'CVM · Informe Diário' : 'CSV deste navegador')}</small>
+          {codigoGarbDoId(item.id) && <small>Código CVM {codigoGarbDoId(item.id)}</small>}
           {item.rows?.length > 0 && <small>{datasDaSerie(item)}</small>}</div>
         <button type="button" aria-label={'Remover ' + item.name} onClick={() => change({ ...config, ids: config.ids.filter(id => id !== item.id) })}>×</button>
       </li>)}</ul>}

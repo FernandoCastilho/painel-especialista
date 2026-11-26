@@ -1,8 +1,13 @@
+import garb from './fundosGarb.js'
+
 export const FONTE_CVM = 'https://dados.cvm.gov.br/dataset/fi-doc-inf_diario'
 export const LICENCA_CVM = 'https://opendatacommons.org/licenses/odbl/1-0/'
 
 const idPattern = /^cvm-[fc]-([A-Z0-9]{12}\d{2})(?:-([A-Za-z0-9_-]{1,64}))?$/
 export const isFundoCvm = id => idPattern.test(id) && (!id.startsWith('cvm-f-') || id.length === 20)
+// Fundos da marca GARB, pelo CNPJ: código CVM da classe (ou do fundo, se não houver classe).
+export const codigoGarb = cnpj => Object.hasOwn(garb, cnpj ?? '') ? garb[cnpj] : undefined
+export const codigoGarbDoId = id => codigoGarb(idPattern.exec(id)?.[1])
 const normalizar = s => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
   .replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
 const conectivos = new Set('a as com da das de do dos e em na nas no nos o os para por'.split(' '))
@@ -57,7 +62,7 @@ export function nomeFundo([id, nome, cnpj]) {
   const formatado = cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5')
   const subclasse = idPattern.exec(id)?.[2]
   const tipo = subclasse ? ' · Subclasse ' + subclasse : id.startsWith('cvm-f-') ? ' · Fundo (cadastro anterior)' : ''
-  return abreviarNomeFundo(nome) + ' · ' + formatado + tipo
+  return abreviarNomeFundo(nome) + (codigoGarb(cnpj) ? ' GARB' : '') + ' · ' + formatado + tipo
 }
 
 function indexarNome(item) {
@@ -68,7 +73,8 @@ function indexarNome(item) {
     const [id] = item
     const subclasse = idPattern.exec(id)?.[2]
     const tipo = subclasse ? 'subclasse ' + normalizar(subclasse) : id.startsWith('cvm-f-') ? 'fundo cadastro anterior' : 'classe'
-    registro = { nome, pai, texto: nome + ' ' + pai + ' ' + tipo }
+    const codigo = codigoGarb(item[2])
+    registro = { nome, pai, texto: nome + ' ' + pai + ' ' + tipo + (codigo ? ' garb ' + codigo : ''), garb: Boolean(codigo) }
     indiceNomes.set(item, registro)
   }
   return registro
@@ -109,20 +115,24 @@ export function buscarFundos(catalogo, busca, excluidos = []) {
   const cnpj = busca.replace(/[./\s-]/g, '').toUpperCase()
   const buscaCnpj = /\d/.test(cnpj) && /^[A-Z0-9]+$/.test(cnpj)
   const cnpjCompleto = buscaCnpj && /^[A-Z0-9]{12}\d{2}$/.test(cnpj)
+  // Fundos GARB vêm antes dos demais, cada grupo na sua ordem de prioridade.
   const resultados = [[], [], [], []]
+  const garbs = [[], [], [], []]
   const candidatosSigla = []
   for (const item of catalogo) {
     if (excluidos.includes(item[0])) continue
     let prioridade
-    if (buscaCnpj && item[2] === cnpj) prioridade = 0
+    const codigo = codigoGarb(item[2])
+    if (buscaCnpj && (item[2] === cnpj || codigo === cnpj)) prioridade = 0
     else if (buscaCnpj && (item[2].includes(cnpj) || item[4]?.includes(cnpj))) prioridade = 1
     else if (cnpjCompleto) continue
     else prioridade = prioridadeNome(indexarNome(item), consulta, termos)
-    if (prioridade >= 0 && resultados[prioridade].length < 20) resultados[prioridade].push(item)
+    const destino = codigo ? garbs : resultados
+    if (prioridade >= 0 && destino[prioridade].length < 20) destino[prioridade].push(item)
     if (prioridade === -1 && possiveisSiglas.size) candidatosSigla.push(item)
-    if (resultados[0].length === 20) break
+    if (resultados[0].length + garbs[0].length >= 20) break
   }
-  const matches = resultados.flat().slice(0, 20)
+  const matches = [...garbs.flat(), ...resultados.flat()].slice(0, 20)
   for (const item of candidatosSigla) {
     if (matches.length === 20) break
     if (correspondeSiglas(indexarNome(item), termos, possiveisSiglas)) matches.push(item)
