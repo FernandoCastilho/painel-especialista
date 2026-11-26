@@ -1,5 +1,5 @@
 // Teste de tela do CDC (pedido de Fernando, 25/11/2026): campos na horizontal e ocupando a largura no computador, empilhados
-// no celular; sem categoria e sem coeficiente; caminhão ao lado do título; praça do contrato com feriados locais.
+// no celular; sem categoria e sem coeficiente; caminhão ao lado do título; vencimento no dia do contrato, sem praça.
 // Gera as capturas que vão como artefato da conferência.
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
@@ -29,10 +29,8 @@ const out = process.env.CDC_QA_OUTPUT || 'workspace-qa/cdc'
         assert.equal(n, colunas, `colunas em ${nome}: ${n}`)
         const [quadro, fluxo] = await Promise.all([page.locator('.cdc-screen .giro-form .lm').boundingBox(), page.locator('.cdc-screen .giro-flow').boundingBox()])
         assert.ok(quadro.width >= fluxo.width * 0.95, `quadro estreito em ${nome}: ${quadro.width} de ${fluxo.width}`)
-        // Praça: busca por texto, como nas outras calculadoras; 15/08/2028 é feriado em Sorocaba.
-        await page.fill('#cdc-praca', 'Soro')
-        await page.getByRole('option', { name: 'Sorocaba (SP)' }).click()
-        assert.equal(await page.inputValue('#cdc-praca'), 'Sorocaba (SP)')
+        // Sem praça do contrato: o vencimento fica no dia do contrato (decisão de Fernando, 26/11/2026).
+        assert.equal(await page.locator('#cdc-praca').count(), 0, 'sem o campo de praça no CDC')
         // Custo digitado no "!" (um ou outro com a tabela colada): 48 meses a 15,58% a.a. vira o funding do prazo de 48.
         await page.getByRole('button', { name: 'Tabela de funding: colar ou atualizar' }).click()
         const dialogo = page.locator('.cdc-funding-dialog')
