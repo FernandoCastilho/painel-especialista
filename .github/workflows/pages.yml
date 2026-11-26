@@ -411,6 +411,8 @@ jobs:
       - name: Preparar lâminas e fichas da CVM
         id: fichas-dados
         timeout-minutes: 10
+        # A lâmina é complemento: se a coleta travar ou quebrar, o site sai sem ela (o manifesto é o último arquivo copiado).
+        continue-on-error: true
         env:
           CVM_DATA: ${{ steps.cvm-dia.outputs.data }}
           CVM_HORA: ${{ steps.cvm-dia.outputs.hora }}
