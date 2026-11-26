@@ -41,12 +41,27 @@ function CampoCotacao({ id, label, value, change, type = 'text', mode = 'decimal
   </div>
 }
 
+function matrizParcelas(linhas, nome, rotulo, prefixo, grupos) {
+  return <div className="cf-j-scroll" tabIndex={0} role="region" aria-label={rotulo}>
+    <table className="cf-j-matriz">
+      <thead><tr><th scope="col">Campo</th>{linhas.map(l => <th scope="col" key={l.id} id={prefixo + l.id}>{nome(l.id)}</th>)}</tr></thead>
+      {grupos.map(([grupo, rows]) => <tbody key={grupo || 'dados'}>
+        {grupo && <tr className="cf-j-grupo"><th scope="rowgroup" colSpan={linhas.length + 1}>{grupo}</th></tr>}
+        {rows.map(([titulo, render]) => <tr key={titulo}>
+          <th scope="row">{titulo}</th>{linhas.map((l, i) => <td key={l.id}>{render(l, i)}</td>)}
+        </tr>)}
+      </tbody>)}
+    </table>
+  </div>
+}
+
 export default function CambioFuturoJornada({ onBack, quotes }) {
   const [inicio, setInicio] = useState(() => marketDate(Date.now()))
   const [modalidade, setModalidade] = useState('bullet')
   const [quantidade, setQuantidade] = useState(1)
   const [moeda, setMoeda] = useState('EUR')
   const [linhas, setLinhas] = useState(() => Array.from({ length: 5 }, (_, i) => linhaVazia(i + 1)))
+  const [liquido, setLiquido] = useState('')
   const [aviso, setAviso] = useState('')
   const bullet = modalidade === 'bullet'
   const plan = spotDayPlan(Date.now())
@@ -56,8 +71,8 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
     spotUsd: cotacao(l.spotUsd), futuroUsd: cotacao(l.futuroUsd),
     spotAlvo: cotacao(l.spotAlvo), futuroAlvo: cotacao(l.futuroAlvo),
   }))
-  const r = calcularCotacaoMesa(inicio, itens)
-  const nome = id => bullet ? 'Liquidação bullet' : 'Parcela ' + String(id).padStart(2, '0')
+  const r = calcularCotacaoMesa(inicio, itens, dinheiro(liquido))
+  const nome = id => bullet ? 'Liquidação bullet' : 'Parcela ' + String(id)
   const tinhaCotacao = l => Object.keys(cotacaoVazia()).some(k => l[k])
   const limpar = (atualizar, mensagem) => {
     if (linhas.some(tinhaCotacao)) setAviso(mensagem)
@@ -79,7 +94,7 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
     <p className="cf-notice cf-j-links"><a href="#calculadora/cambio-futuro/cenarios">Comparar cenários com e sem trava</a><a href="#calculadora/cambio-futuro/tir-usd">Simular TIR pela taxa all-in</a></p>
 
     <article className="desk-panel cx-panel cf-input cf-j-azul" aria-labelledby="cf-j-op">
-      <header className="cx-heading"><h3 id="cf-j-op">1. Dados da operação</h3></header>
+      <header className="cx-heading"><h3 id="cf-j-op">1. Dados para a mesa</h3></header>
       <p className="cf-notice">Preencha os dados para pedir a cotação. Informe os juros em USD de cada vencimento (digite 0 se não houver).</p>
       <div className="cf-j-grid">
         <div className="cx-field"><label htmlFor="cf-j-modalidade">Forma de pagamento</label>
@@ -100,41 +115,45 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
           }}>{['EUR', 'CNH'].map(code => <option key={code} value={code}>{moedas[code]} ({code})</option>)}</select>
         </div>
       </div>
+      <div className="cf-j-liquido"><CampoCotacao id="cf-j-liquido" label="Valor líquido recebido para o CET (R$)" value={liquido} change={setLiquido}
+        placeholder="Após custos e tributos no desembolso" error={liquido && !(dinheiro(liquido) > 0) ? 'Informe um valor líquido maior que zero.' : null} /></div>
       {bullet && <p className="cf-notice">Bullet: nesta cotação, principal e juros são liquidados no vencimento final. A opção Parcelado tem sua própria quantidade, inclusive 1 parcela.</p>}
-      {ativas.map((l, i) => <fieldset key={l.id} className="cf-j-box">
-        <legend>{nome(l.id)}</legend>
-        <div className="cf-j-grid">
-          <CampoCotacao id={`cf-j-${l.id}-venc`} label={bullet ? 'Vencimento final' : `Vencimento da parcela ${l.id}`} type="date"
-            value={l.vencimento} change={v => mudar(l.id, 'vencimento', v, true)}
-            error={inicio && l.vencimento && l.vencimento <= inicio ? 'O vencimento deve ser posterior à data-base.' : null} />
-          <CampoCotacao id={`cf-j-${l.id}-principal`} label="Principal (USD)" value={l.principal} change={v => mudar(l.id, 'principal', v, true)}
-            placeholder="ex.: 100.000,00" error={l.principal && !(itens[i].principal > 0) ? 'Informe um principal maior que zero.' : null} />
-          <CampoCotacao id={`cf-j-${l.id}-juros`} label="Juros (USD)" value={l.juros} change={v => mudar(l.id, 'juros', v, true)}
-            placeholder="ex.: 11.229,01" error={l.juros && !(itens[i].juros >= 0 && itens[i].juros !== null) ? 'Informe juros válidos ou zero.' : null} />
-          <dl className="cf-j-sum"><div><dt>Total com juros (USD)</dt><dd>{fmt(r.linhas[i].comJuros)}</dd></div></dl>
-        </div>
-      </fieldset>)}
+      {matrizParcelas(ativas, nome, 'Dados para a mesa por parcela', 'cf-j-op-', [['', [
+        ['Principal / valor da parcela (USD)', (l, i) => <CampoCotacao id={`cf-j-${l.id}-principal`} label={`Principal (USD) · ${nome(l.id)}`} value={l.principal} change={v => mudar(l.id, 'principal', v, true)}
+          placeholder="ex.: 100.000,00" error={l.principal && !(itens[i].principal > 0) ? 'Informe um principal maior que zero.' : null} />],
+        ['Vencimento', l => <CampoCotacao id={`cf-j-${l.id}-venc`} label={bullet ? 'Vencimento final' : `Vencimento da parcela ${l.id}`} type="date"
+          value={l.vencimento} change={v => mudar(l.id, 'vencimento', v, true)}
+          error={inicio && l.vencimento && l.vencimento <= inicio ? 'O vencimento deve ser posterior à data-base.' : null} />],
+        ['Moeda da trava', () => bandeira(moeda)],
+        ['Total com juros (USD)', (_, i) => fmt(r.linhas[i].comJuros)],
+        ['Juros (USD)', (l, i) => <CampoCotacao id={`cf-j-${l.id}-juros`} label={`Juros (USD) · ${nome(l.id)}`} value={l.juros} change={v => mudar(l.id, 'juros', v, true)}
+          placeholder="ex.: 11.229,01" error={l.juros && !(itens[i].juros >= 0 && itens[i].juros !== null) ? 'Informe juros válidos ou zero.' : null} />],
+      ]]])}
+
     </article>
 
     <article className="desk-panel cx-panel cf-input cf-j-amarelo" aria-labelledby="cf-j-mesa">
-      <header className="cx-heading"><h3 id="cf-j-mesa">2. Retorno da mesa</h3></header>
+      <header className="cx-heading"><h3 id="cf-j-mesa">2. Cotação da mesa</h3></header>
       <p className="cf-notice">Transcreva o produto, o spot e o futuro recebidos da mesa para cada moeda e vencimento. A referência do Painel é só para consulta.</p>
       <p role="status" className="cf-j-notice">{aviso}</p>
-      {ativas.map(l => <fieldset key={l.id} className="cf-j-box">
-        <legend>{nome(l.id)} · {dataBrasil(l.vencimento)}</legend>
-        {[['USD', 'Usd'], [moeda, 'Alvo']].map(([code, sufixo]) => <div className="cf-j-mesa-row" key={code}>
-          <h4>{bandeira(code)}</h4>
-          <CampoCotacao id={`cf-j-${l.id}-produto-${code}`} label="Produto da mesa" mode="text"
-            value={l['produto' + sufixo]} placeholder="ex.: Venda s/caixa" change={v => mudar(l.id, 'produto' + sufixo, v)} />
-          {['spot', 'futuro'].map(k => {
+      {matrizParcelas(ativas, nome, 'Cotação da mesa por parcela', 'cf-j-mesa-', [
+        ['', [['Vencimento da cotação', l => dataBrasil(l.vencimento)]]],
+        ...[[moeda, 'Alvo'], ['USD', 'Usd']].map(([code, sufixo]) => [code, [
+          ['Referência do Painel', l => l.id === 1
+            ? <small className="cf-observacao">{bandeira(code)} <ReferenciaMesa code={code} quote={quotes?.[code]} offer={l['spot' + sufixo]} plan={plan} /></small>
+            : null],
+          ['Produto da mesa', l => <CampoCotacao id={`cf-j-${l.id}-produto-${code}`} label={`Produto da mesa · ${code} · ${nome(l.id)}`} mode="text"
+            value={l['produto' + sufixo]} placeholder="ex.: Venda s/caixa" change={v => mudar(l.id, 'produto' + sufixo, v)} />],
+          ...['spot', 'futuro'].map(k => {
             const field = k + sufixo
-            return <CampoCotacao key={field} id={`cf-j-${l.id}-${k}-${code}`}
-              label={`${k === 'spot' ? 'Spot' : 'Futuro'} (R$/${code})`} value={l[field]}
-              change={v => mudar(l.id, field, v)} error={l[field] && cotacao(l[field]) == null ? 'Informe uma cotação maior que zero.' : null} />
-          })}
-          {l.id === 1 && <small className="cf-observacao"><ReferenciaMesa code={code} quote={quotes?.[code]} offer={l['spot' + sufixo]} plan={plan} /></small>}
-        </div>)}
-      </fieldset>)}
+            const label = `${k === 'spot' ? 'Spot' : 'Futuro'} (R$/${code})`
+            return [label, l => <CampoCotacao id={`cf-j-${l.id}-${k}-${code}`}
+              label={`${label} · ${nome(l.id)}`} value={l[field]} change={v => mudar(l.id, field, v)}
+              error={l[field] && cotacao(l[field]) == null ? 'Informe uma cotação maior que zero.' : null} />]
+          }),
+        ]]),
+      ])}
+
     </article>
 
     <article className="desk-panel cx-panel cf-quote" aria-labelledby="cf-j-resultado">
@@ -150,22 +169,37 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
       <p className="cf-notice">A TIR anual usa as datas dos pagamentos (dias corridos/365). Sem tarifas ou tributos além dos valores informados, não representa o CET contratual.</p>
       {(!r.usd.ok || !r.alvo.ok) && <p className="cf-notice" role="status">{r.usd.erro || r.alvo.erro}</p>}
       {(r.usd.totalComTravaBrl == null || r.alvo.totalComTravaBrl == null) && <p className="cf-notice">Cada total aparece quando a respectiva cotação estiver completa para todos os vencimentos.</p>}
-      <div className="cf-j-results">
-        {r.linhas.map((l, i) => <section key={l.id} className="cf-j-box" aria-labelledby={`cf-j-out-${l.id}`}>
-          <h4 id={`cf-j-out-${l.id}`}>{nome(l.id)} · {dataBrasil(l.vencimento)}</h4>
-          <dl className="cf-j-grid">
-            <div><dt>Principal (USD)</dt><dd>{fmt(l.principal)}</dd></div>
-            <div><dt>Juros (USD)</dt><dd>{fmt(l.juros)}</dd></div>
-            <div><dt>Total (USD)</dt><dd>{fmt(l.comJuros)}</dd></div>
-            <div><dt>Spot / Futuro (R$/USD)</dt><dd>{fmt(l.spotUsd, taxa)} / {fmt(l.futuroUsd, taxa)}</dd></div>
-            <div><dt>Principal convertido no spot</dt><dd>{fmt(l.valorInicial, brl)}</dd></div>
-            <div><dt>Pagamento direto em reais</dt><dd>{fmt(r.usd.parcelas[i]?.comTravaBrl, brl)}</dd></div>
-            <div><dt>Equivalente indicativo ({moeda})</dt><dd>{fmt(l.equivalente)}</dd></div>
-            <div><dt>Spot / Futuro (R$/{moeda})</dt><dd>{fmt(l.spotAlvo, taxa)} / {fmt(l.futuroAlvo, taxa)}</dd></div>
-            <div><dt>Pagamento indicativo em reais</dt><dd>{fmt(r.alvo.parcelas[i]?.comTravaBrl, brl)}</dd></div>
-          </dl>
-        </section>)}
-      </div>
+      {matrizParcelas(r.linhas, nome, 'Resultado da cotação por parcela', 'cf-j-out-', [
+        ['', [
+          ['Vencimento', l => dataBrasil(l.vencimento)],
+          ['Principal (USD)', l => fmt(l.principal)],
+          ['Valor com juros (USD)', l => fmt(l.comJuros)],
+          ['Juros (USD)', l => fmt(l.juros)],
+          ['USD futuro (R$/USD)', l => fmt(l.futuroUsd, taxa)],
+          ['USD à vista (R$/USD)', l => fmt(l.spotUsd, taxa)],
+          [`Equivalente indicativo (${moeda})`, l => fmt(l.equivalente)],
+          [`Spot / Futuro (R$/${moeda})`, l => <>{fmt(l.spotAlvo, taxa)} / {fmt(l.futuroAlvo, taxa)}</>],
+        ]],
+        ['Fluxo de caixa', [
+          ['Principal convertido no spot', l => fmt(l.valorInicial, brl)],
+          ['Parcela em reais · USD direto', (_, i) => fmt(r.usd.parcelas[i]?.comTravaBrl, brl)],
+          [`Parcela em reais · via ${moeda}`, (_, i) => fmt(r.alvo.parcelas[i]?.comTravaBrl, brl)],
+        ]],
+      ])}
+      <section className="cf-j-cet" aria-labelledby="cf-j-cet-titulo">
+        <h4 id="cf-j-cet-titulo">Custo Efetivo Total (CET) estimado</h4>
+        <div className="cf-j-grid">
+          {[['usd', 'USD direto'], ['alvo', `Via ${moeda} · indicativo`]].map(([key, titulo]) => <div key={key}>
+            <strong>{titulo}</strong>
+            <dl className="cf-j-grid">
+              <div><dt>CET anual (% a.a.)</dt><dd id={`cf-j-cet-${key}-anual`}>{pct(r.cet[key].anual)}</dd></div>
+              <div><dt>CET mensal (% a.m.)</dt><dd id={`cf-j-cet-${key}-mensal`}>{pct(r.cet[key].mensal)}</dd></div>
+            </dl>
+          </div>)}
+        </div>
+        <p className="cf-notice">Informe o valor líquido após os custos e preencha todas as cotações. Não substitui o CET contratual.</p>
+      </section>
+
     </article>
   </section>
 }
