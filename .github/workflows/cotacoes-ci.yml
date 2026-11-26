@@ -25,6 +25,8 @@ jobs:
       - run: npm test
       - name: Conferir identidade e preservação da base da CVM
         run: python3 -B test/fundos-cvm-coleta.py
+      - name: Conferir lâminas e fichas da CVM
+        run: python3 -B test/fichas-cvm-coleta.py
       - name: Preparar ensaio semanal com dados simulados
         run: node test/helpers/weekly-package.mjs "$RUNNER_TEMP/weekly-package-test.json"
       - run: npm run build

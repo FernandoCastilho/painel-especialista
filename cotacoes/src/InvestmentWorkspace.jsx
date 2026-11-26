@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { numeroPt } from './investimentos.js'
 import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
+import LaminaFundoCvm from './LaminaFundoCvm.jsx'
 import { codigoGarbDoId, isFundoCvm } from './fundosCvm.js'
 import {
   PUBLIC_SERIES, PERIODS, CURRENCIES, MAX_SERIES, loadBcb, compareHistory, compareDailyHistory,
@@ -195,7 +196,7 @@ function Results({ tracks }) {
   </section>
 }
 
-function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simular, jaAdicionado, lotado }) {
+function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simular, jaAdicionado, lotado, verLamina }) {
   const resumo = resumoFundo(fundo.rows, cdi)
   const bloqueado = lotado && !jaAdicionado
   const titulo = useRef(null)
@@ -213,6 +214,7 @@ function FichaFundo({ fundo, cdi, cdiLoading, cdiFalhou, repetir, comparar, simu
           {jaAdicionado ? 'Ver comparação' : 'Adicionar à comparação'}
         </button>
         <button type="button" disabled={bloqueado} onClick={simular}>Simular carteira</button>
+        {verLamina && <button type="button" onClick={verLamina}>Ver lâmina</button>}
       </div>
     </header>
     {bloqueado && <p className="inv-nota" role="status">Remova um ativo da comparação para incluir este fundo. O limite é de seis.</p>}
@@ -263,6 +265,7 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
   const [status, setStatus] = useState('')
   const [retry, setRetry] = useState(0)
   const [fichaId, setFichaId] = useState('')
+  const [laminaFechada, setLaminaFechada] = useState('')
   const [nomes, setNomes] = useState({})
   const [aplicadoTexto, setAplicadoTexto] = useState('')
   const [source, today] = useBcbHistory(retry)
@@ -336,13 +339,15 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
     <FundoCvmPicker inline onSelect={setFichaId} selecionado={fichaId} />
     {fichaId && (fundoFicha
       ? <FichaFundo fundo={fundoFicha} cdi={source.data.cdi} cdiLoading={source.loading} cdiFalhou={source.errors.includes('cdi')}
-          repetir={() => setRetry(n => n + 1)}
+          repetir={() => setRetry(n => n + 1)} verLamina={laminaFechada === fichaId ? () => setLaminaFechada('') : undefined}
           comparar={() => { add(fichaId, fundoFicha.name); showComparison() }}
           simular={() => { add(fichaId, fundoFicha.name); showPortfolio() }}
           jaAdicionado={config.ids.includes(fichaId)} lotado={selected.length >= MAX_SERIES} />
       : fundos.erros.includes(fichaId)
         ? <p role="status">Cotas indisponíveis. <button type="button" onClick={() => setRetry(n => n + 1)}>Tentar novamente</button></p>
         : <p role="status">Carregando a ficha do fundo…</p>)}
+    {fichaId && laminaFechada !== fichaId &&
+      <LaminaFundoCvm id={fichaId} nome={fundoFicha?.name ?? nomes[fichaId]} fechar={() => setLaminaFechada(fichaId)} />}
   </div>
   const aplicadoNumero = valorAplicado(aplicadoTexto)
   const aplicado = Number.isFinite(aplicadoNumero) ? aplicadoNumero : null

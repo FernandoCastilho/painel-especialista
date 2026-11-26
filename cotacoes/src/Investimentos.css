@@ -110,3 +110,40 @@
 .inv-workspace .inv-ficha h3 { margin:0 0 4px; font-size:clamp(1.14rem,2vw,1.5rem); }
 .inv-workspace .inv-ficha small { display:block; color:var(--mut); font-weight:400; }
 .inv-workspace .inv-ficha td { white-space:nowrap; }
+.inv-workspace .inv-lamina { display:grid; gap:14px; overflow-wrap:anywhere; }
+.inv-workspace .inv-lamina-cabecalho { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.inv-workspace .inv-lamina-cabecalho h3 { margin:2px 0 4px; font-size:clamp(1.08rem,1.8vw,1.35rem); }
+.inv-workspace .inv-lamina-cabecalho p { margin:0; }
+.inv-workspace .inv-lamina-cabecalho > button { flex:none; min-width:44px; min-height:44px; }
+.inv-workspace .inv-lamina-tipo { font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); }
+.inv-workspace .inv-lamina-aviso { margin:0; padding:10px 12px; border-left:4px solid var(--amber,#b94700); background:color-mix(in srgb,var(--amber,#b94700) 10%,transparent); }
+.inv-workspace .inv-lamina-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+.inv-workspace .inv-lamina-kpis > div { display:grid; gap:6px; align-content:start; padding:10px; border:1px solid var(--bw-line); border-radius:6px; }
+.inv-workspace .inv-lamina-kpis span { font-size:.78rem; color:var(--mut); }
+.inv-workspace .inv-lamina-risco { display:flex; gap:4px; }
+.inv-workspace .inv-lamina-risco i { flex:1; min-width:24px; padding:3px 0; border-radius:3px; text-align:center; font-style:normal; font-size:.75rem; color:var(--mut); background:var(--bw-soft); }
+.inv-workspace .inv-lamina-risco i.ativo { color:#fff; background:var(--bw-link,#003cff); }
+.inv-workspace .inv-lamina-colunas { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; align-items:start; }
+.inv-workspace .inv-lamina-bloco { min-width:0; padding:12px; border:1px solid var(--bw-line); border-radius:6px; }
+.inv-workspace .inv-lamina-bloco h4 { margin:0 0 6px; font-size:.92rem; }
+.inv-workspace .inv-lamina-bloco h4 ~ h4 { margin-top:14px; }
+.inv-workspace .inv-lamina-bloco p { margin:0; }
+.inv-workspace .inv-lamina-linhas { display:grid; margin:0; }
+.inv-workspace .inv-lamina-linhas div { display:grid; grid-template-columns:1fr auto; gap:12px; padding:4px 0; border-bottom:1px dashed var(--bw-line); }
+.inv-workspace .inv-lamina-linhas dt { font-size:.82rem; color:var(--mut); }
+.inv-workspace .inv-lamina-linhas dd { margin:0; font-weight:700; text-align:right; }
+.inv-workspace .inv-lamina-bloco td { white-space:nowrap; }
+.inv-workspace .inv-lamina-meses { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:6px; height:170px; overflow-x:auto; }
+.inv-workspace .inv-lamina-meses > div { display:grid; grid-template-rows:1fr auto auto; justify-items:center; min-width:34px; font-size:.72rem; }
+.inv-workspace .inv-lamina-meses i { align-self:end; width:70%; border-radius:2px 2px 0 0; background:var(--bw-link,#003cff); }
+.inv-workspace .inv-lamina-meses small { color:var(--mut); }
+.inv-workspace .inv-lamina :is(.inv-lamina-meses i, .inv-lamina-carteira b).neg { background:var(--down,#b42318); }
+.inv-workspace .inv-lamina-carteira { display:grid; gap:4px; margin:0; padding:0; list-style:none; }
+.inv-workspace .inv-lamina-carteira li { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(60px,1fr) auto; align-items:center; gap:10px; padding:0; border:0; font-size:.88rem; }
+.inv-workspace .inv-lamina-carteira i { display:block; height:10px; }
+.inv-workspace .inv-lamina-carteira b { display:block; height:100%; border-radius:5px; background:var(--bw-link,#003cff); }
+.inv-workspace .inv-lamina-carteira strong { font-weight:400; text-align:right; }
+@media (max-width:560px) {
+  .inv-workspace .inv-lamina-carteira li { grid-template-columns:1fr auto; }
+  .inv-workspace .inv-lamina-carteira i { grid-column:1 / -1; grid-row:2; }
+}
