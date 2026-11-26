@@ -379,6 +379,8 @@ Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convive
 
 - **25/11/2026 — N16 (carteira concentrada ou com atrasos): desconto seletivo, depois capital de giro** (decisão de Fernando). Antecipar só os títulos de compradores sem atraso e sem disputa; o capital de giro cobre o restante, se houver outras entradas para pagá-lo. Título em atraso ou contestado não conta como dinheiro certo. Segue a linha da nota do Obsidian. Na tela, a ordem proposta de N16 (desconto, giro) passa a ser confirmada, com esse aviso. A mudança na tela ainda não foi feita.
 
+- **26/11/2026 — fluxo de caixa projetado: lembrete no cartão do capital de giro** (decisão de Fernando). Base: complemento dele de 25/11/2026, registrado pelo ChatGPT no Obsidian: antes de definir a carência e a primeira parcela, pedir o fluxo de caixa projetado, confrontá-lo com o histórico, separar o mês da venda do mês do recebimento e identificar quais outros compradores sustentam o caixa se o principal atrasar. Na tela: quando o capital de giro com carência aparecer, o cartão traz essa lista do que pedir ao cliente. Não trava a folha nem muda conta (a tela é usada pelo especialista sem o cliente; o fluxo projetado costuma vir depois). A mudança na tela ainda não foi feita.
+
 **Publicação em espera** (Fernando, 21/11/2026: "vamos esperar juntar mais respostas"). As três decisões já estão aplicadas na tela no ramo da sessão, com testes passando, mas não serão publicadas agora: entram junto com as próximas respostas das perguntas do dia, com novo teste, parecer do Auditor e autorização de publicação. Detalhe em `docs/arvore-credito-tela.md`, seção "Atualização de 21/11/2026".
 
 ### Propostas do Claude ainda não confirmadas
