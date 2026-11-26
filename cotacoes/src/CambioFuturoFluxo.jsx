@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import CalcBack from './CalcBack.jsx'
+import CalculatorHelp from './CalculatorHelp.jsx'
 import { marketDate } from './marketReturns.js'
 import { isBusinessDay } from './holidays.js'
 import { parseMoneyInput } from './moneyInput.js'
@@ -106,8 +107,15 @@ export default function CambioFuturoFluxo({ onBack }) {
     </article>
 
     <article className="desk-panel cx-panel cf-quote" aria-labelledby="cf-f-tabela">
-      <header className="cx-heading"><h3 id="cf-f-tabela">3. Parcelas e fluxo em R$</h3></header>
-      <p className="cf-notice">Informe o prazo de cada parcela e o câmbio futuro da mesa. Vencimento, saldo, comissões, juros e fluxo em R$ são calculados. A amortização já vem em partes iguais; mude se precisar.</p>
+      <header className="cx-heading"><h3 id="cf-f-tabela">3. Parcelas e fluxo em R$</h3>
+        <CalculatorHelp title="Como o cálculo é feito">
+          <p>Vencimento = data de início + prazo em dias corridos. A amortização vem em partes iguais e pode ser mudada; a soma precisa fechar o valor em USD.</p>
+          <p>Cada comissão (externa, IR juros remissível e local) = saldo devedor × taxa ao ano × dias do período ÷ 360. Juros total é a soma das três; a parcela em USD é amortização + juros.</p>
+          <p>Fluxo em R$: no início entra o valor em R$ menos a TAC; em cada vencimento sai a parcela em USD (em centavos) × câmbio futuro da parcela.</p>
+          <p>TIR ao ano em base 252: dias úteis (feriados nacionais) entre o início e cada vencimento, divididos por 252. Vencimento em dia não útil conta até o último dia útil antes dele. Não substitui o CET contratual.</p>
+        </CalculatorHelp>
+      </header>
+      <p className="cf-notice">Informe o prazo e o câmbio futuro de cada parcela; o resto é calculado.</p>
       <div className="cf-j-scroll" tabIndex={0} role="region" aria-label="Parcelas e fluxo em R$">
         <table className="cf-j-matriz cf-f-matriz">
           <thead><tr><th scope="col">Parcela</th>{colunas.map(t => <th scope="col" key={t} className={t === 'Fluxo em R$' ? 'cf-f-fc' : undefined}>{t}</th>)}</tr></thead>
@@ -145,7 +153,7 @@ export default function CambioFuturoFluxo({ onBack }) {
         <div><dt>TIR ao ano (base 252)</dt><dd id="cf-f-tir">{pct(r.tirPct)}</dd></div>
         {bullet && <div><dt>Custo no período (sem anualizar)</dt><dd id="cf-f-periodo">{pct(r.periodoPct)}</dd></div>}
       </dl>
-      <p className="cf-notice">A TIR usa as datas do fluxo: dias úteis (feriados nacionais) entre o início e cada vencimento, divididos por 252. Vencimento em dia não útil conta até o último dia útil antes dele. O fluxo em R$ converte a parcela em USD pelo câmbio futuro do vencimento. Não substitui o CET contratual.</p>
+      <p className="cf-notice">TIR ao ano pelas datas do fluxo: dias úteis ÷ 252. Não substitui o CET contratual.</p>
     </article>
   </section>
 }
