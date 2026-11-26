@@ -1,0 +1,37 @@
+name: Capturas temporárias da lâmina
+on:
+  push:
+    branches: [lamina-fundos]
+    paths: [.github/workflows/preview-lamina-temp.yml, cotacoes/scripts/preview-lamina-temp.cjs]
+permissions:
+  contents: write
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - working-directory: cotacoes
+        run: |
+          npm ci
+          npm run build
+          SITE=https://fernandocastilho.github.io/painel-especialista
+          mkdir -p /tmp/cvm
+          curl -fsS "$SITE/cvm/manifest.json" -o /tmp/cvm/manifest.json
+          CAT=$(python3 -c "import json;print(json.load(open('/tmp/cvm/manifest.json'))['files']['catalogo'])")
+          curl -fsS "$SITE/cvm/$CAT" -o "/tmp/cvm/$CAT"
+          python3 -B scripts/coletar-fichas-cvm.py dist/cvm/fichas --catalogo /tmp/cvm --cache /tmp/fichas-cache --origem "$SITE" --hoje "$(date -u +%F)" --atualizar
+          ls dist/cvm/fichas | head -3; cat dist/cvm/fichas/manifest.json | head -c 300; echo
+          npm install --no-save playwright@1.63.0
+          nohup python3 -m http.server 8768 --bind 127.0.0.1 --directory dist > /tmp/server.log 2>&1 &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8768/ > /dev/null && break; sleep 1; done
+          OUT="$GITHUB_WORKSPACE/qa-lamina-temp" node scripts/preview-lamina-temp.cjs
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add qa-lamina-temp
+          git commit -m "Capturas temporárias da lâmina (sai antes de juntar)"
+          git pull --rebase --autostash
+          git push
