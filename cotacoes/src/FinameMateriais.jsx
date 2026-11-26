@@ -8,7 +8,7 @@ import { parseDecimal } from './emprestimo.js'
 import { useDataFile } from './useDataFile.js'
 import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
-import { CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, ecgFgi, erroPercentualFgi, fatorKFgi, TFC_NOMES, codigoTfc, faixaTfb, faixaTfc, periodos30Datas, regrasFiname, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
+import { CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, ecgFgi, erroPercentualFgi, fatorKFgi, TFC_SERIES_ONIBUS, codigoTfcSerie, nomeTfc, faixaTfb, faixaTfc, periodos30Datas, regrasFiname, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { finameFundingOptionsDo, FINAME_FUNDING_SOURCES, finameFundingOption, compareFinamePair, FINAME_PREMISES, resolveFinameRate, resolvePosRate, isFinamePos, parseSignedDecimal, finameSimulationParams, validFinameQuote, validPosQuote, finameCet } from './finameFunding.js'
 import { CUSTOS_POS, INDICE_POS, codigoTfbd, simularPos, trajetoriaFocus, trajetoriaSelicMedia } from './finamePosFixado.js'
 import { nf, nbr5891 } from './format.js'
@@ -96,6 +96,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   }, [cotacaoAmpliada, mostrarParcelas])
   const { sistema, composicao, liberacao } = FINAME_PREMISES
   const [manualRates, setManualRates] = useState({})
+  const [serieTfc, setSerieTfc] = useState('geral') // só Finame Veículos
   const [porte, setPorte] = useState('mpme')
   const [bndesText, setBndesText] = useState(String(REGRAS.taxaBndes.mpme).replace('.', ','))
   const [agenteText, setAgenteText] = useState('3,00')
@@ -124,9 +125,9 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const faixa = prazo ? faixaTfb(prazo) : 60
   const tfbPts = pointsOf(bndes.data, keyOf(faixa, liberacao))
   const rawTfb = tfbPts.length ? { data: tfbPts.at(-1)[0], valor: tfbPts.at(-1)[1], codigo: keyOf(faixa, liberacao) } : null
-  const tfcCodigo = codigoTfc(porte, prazo ?? 60)
+  const tfcCodigo = codigoTfcSerie(porte, prazo ?? 60, veiculos ? serieTfc : 'geral')
   const tfcPts = Array.isArray(moedas.data?.series?.[tfcCodigo]?.points) ? moedas.data.series[tfcCodigo].points : []
-  const rawTfc = tfcPts.length ? { data: tfcPts.at(-1)[0], valor: tfcPts.at(-1)[1], codigo: tfcCodigo, nome: TFC_NOMES[tfcCodigo], faixa: faixaTfc(prazo ?? 60) } : null
+  const rawTfc = tfcPts.length ? { data: tfcPts.at(-1)[0], valor: tfcPts.at(-1)[1], codigo: tfcCodigo, nome: nomeTfc(tfcCodigo), faixa: faixaTfc(prazo ?? 60) } : null
   const tfc = validFinameQuote(rawTfc) ? rawTfc : null
   const tfb = validFinameQuote(rawTfb) ? rawTfb : null
   // Pós-fixados: J da TLP (moeda 777, mensal), LD1 (sobretaxa LCD, trimestral) e TFBD (TD1/TD2/TD3 pela faixa de prazo).
@@ -145,6 +146,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const cdi = Array.isArray(macro.data?.cdi) && macro.data.cdi.length ? macro.data.cdi.at(-1)[1] : null
   // Na TFB, o custo financeiro é a própria TFB (nominal). A TLP exigível usa motor próprio, sem correção capitalizada do saldo.
   const funding = finameFundingOption(custo)
+  // Ao trocar de linha, a TFC digitada à mão não passa de uma linha para a outra (a série pode ser outra).
+  useEffect(() => { setManualRates(previous => (previous.tfc == null ? previous : { ...previous, tfc: null })) }, [veiculos])
   // Ao trocar de linha, um custo que a linha não oferece (TFBD em Veículos) volta para a TFC.
   useEffect(() => {
     const oferece = id => FINAME_FUNDING_OPTIONS.some(option => option.id === id)
@@ -396,6 +399,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
             {ajuda(`Taxa ${id.toUpperCase()}`, <><p>Taxa de referência usada na simulação, em % a.a. Você pode digitar outra para refletir uma proposta: ela vale só nesta simulação e não altera a cotação do painel. Ao mudar prazo ou porte e região, a taxa volta à referência do painel.</p><p>{quotes[id] ? <>Cotação do painel: {pct(quotes[id].valor, 4)} a.a. em {dmy(quotes[id].data)} · {quotes[id].nome || 'TFB'} ({quotes[id].codigo}){isFinamePos(id) ? '' : <> · faixa {id === 'tfc' ? (quotes[id].faixa === 60 ? 'até 60' : '61 a 120') : faixa} meses</>}.</> : 'Cotação do painel indisponível: informe a taxa manualmente ou aguarde a referência.'}</p></>)}
             <p className="sr-only fm-custo-valor">{quotes[id] ? <>Painel: {pct(quotes[id].valor, 4)} a.a. em {dmy(quotes[id].data)} · {quotes[id].nome || 'TFB'} ({quotes[id].codigo}){isFinamePos(id) ? '' : <> · faixa {id === 'tfc' ? (quotes[id].faixa === 60 ? 'até 60' : '61 a 120') : faixa} meses</>}</> : 'Cotação do painel indisponível.'}</p>
             <p className="cx-error" id={`fm-rate-${id}-err`} role={erros[`rate-${id}`] ? 'alert' : undefined}>{erros[`rate-${id}`] ?? ''}</p>
+            {id === 'tfc' && veiculos && <div className="fm-serie-tfc"><label htmlFor="fm-serie-tfc">Série da TFC</label><select id="fm-serie-tfc" value={serieTfc} onChange={event => { setSerieTfc(event.target.value); setManualRates(previous => ({ ...previous, tfc: null })) }}>
+              <option value="geral">Geral · C01 a C04, pelo porte e prazo (padrão)</option>
+              {Object.entries(TFC_SERIES_ONIBUS).map(([codigo, nome]) => <option key={codigo} value={codigo} disabled={prazo !== null && prazo <= 60}>Ônibus · {codigo} ({nome})</option>)}
+            </select>{ajuda('Série da TFC', 'A série geral (C01 a C04) é o padrão desta linha. As séries de ônibus C25 e C26 são publicadas pelo BNDES nas Moedas Contratuais só para 120 meses, por isso valem com prazo acima de 60 meses. Não há fonte oficial que ligue a série ao produto Finame BK, e a sigla delas não traz o prazo de liberação (as gerais são de até 90 dias): confirme com o agente qual vale na operação.')}{prazo !== null && serieTfc !== 'geral' && tfcCodigo !== serieTfc && <p className="cx-hint">Com prazo de até 60 meses vale a série geral ({tfcCodigo}).</p>}</div>}
           </div>)}</div>
           {emUso.filter((id, k, all) => isFinamePos(id) && all.indexOf(id) === k).map(id => <div className="cx-field fm-projecao" key={`proj-${id}`}>
             <span className="fm-rotulo"><span className="cx-label" id={`fm-proj-${id}-l`}>{id === 'tfbd' ? 'Dólar projetado (fim de ano)' : `${INDICE_POS[id].rotulo} projetado`} · {id.toUpperCase()}</span>{ajuda(`Projeção ${INDICE_POS[id].rotulo}`, <><p>{id === 'tfbd' ? 'Dólar de fim de cada ano, em R$ por US$: mediana do Focus (Banco Central). A trajetória parte do dólar do dia (moeda 604 do BNDES) e passa por esses valores; depois do último ano, fica constante.' : id === 'lcd' ? 'Selic média de cada ano, em % a.a.: no ano da liberação, a Selic atual; nos seguintes, a média entre a Selic de fim do ano anterior e a de fim do ano (mediana do Focus), porque o BNDES capitaliza a média diária. Depois do último ano, vale o último valor.' : `${INDICE_POS[id].rotulo} de cada ano, em % a.a.: mediana do Focus (Banco Central). Depois do último ano, vale o último valor.`}</p><p>É hipótese de projeção: edite para testar outro cenário. Não altera o Focus do painel. O CET da parte fixa tira o índice, como pede a Res. CMN 4.881/2020 (art. 5º).</p>{macro.data?.focus?.date && <p>Focus de {dmy(macro.data.focus.date)}.</p>}</>)}</span>

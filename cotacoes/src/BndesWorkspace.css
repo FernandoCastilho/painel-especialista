@@ -237,6 +237,10 @@
 .bw .fm-rate-row > label { font-size:.8rem; font-weight:700; color:var(--bw-ink); }
 .bw .fm-rate-row > .cx-error { grid-column:2/-1; }
 .bw .fm-rate-row > .cx-error:empty { display:none; }
+/* Série da TFC (Finame Veículos, 26/11/2026): linha própria abaixo da taxa. */
+.bw .fm-rate-row > .fm-serie-tfc { grid-column:2/-1; display:grid; grid-template-columns:minmax(0,1fr) 24px; align-items:center; gap:4px 8px; }
+.bw .fm-serie-tfc > label { grid-column:1/-1; font-size:.8rem; font-weight:600; color:var(--bw-ink); }
+.bw .fm-serie-tfc > .cx-hint { grid-column:1/-1; margin:0; }
 .bw .fm-chip { display:inline-flex; align-items:center; gap:6px; min-height:24px; padding:2px 9px; border-radius:99px; font-size:.7rem; white-space:nowrap; }
 .bw .fm-chip-manual { background:var(--bw-warm-soft); color:var(--bw-warm-ink); }
 .bw .fm-chip-painel { background:var(--bw-soft); color:var(--bw-link); }

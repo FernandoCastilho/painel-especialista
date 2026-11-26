@@ -94,3 +94,16 @@ test('custos: Veículos não oferece TFBD; Materiais continua oferecendo', () =>
   assert.equal(avaliarCusto('finame-veiculos-onibus', 'tfcMpme', { mpme: false }).permitido, false)
   assert.match(produtoBndes('finame-veiculos-onibus').fonte, /23\/11\/2026/)
 })
+
+test('série da TFC em Veículos: geral por padrão; C25/C26 só na faixa de 120 meses', async () => {
+  const { codigoTfcSerie, codigoTfc, nomeTfc, TFC_SERIES_ONIBUS } = await import('../src/finameMateriais.js')
+  const { TFC_SERIES } = await import('../src/moedas.js')
+  assert.equal(codigoTfcSerie('grande', 120), codigoTfc('grande', 120))
+  assert.equal(codigoTfcSerie('mpme', 96, 'geral'), 'C04')
+  assert.equal(codigoTfcSerie('grande', 120, 'C25'), 'C25'); assert.equal(codigoTfcSerie('mpme', 61, 'C26'), 'C26')
+  assert.equal(codigoTfcSerie('grande', 60, 'C25'), 'C01', 'até 60 meses vale a geral')
+  assert.equal(codigoTfcSerie('grande', 120, 'C12'), 'C02', 'série fora da lista de ônibus vale a geral')
+  // Nomes iguais aos do catálogo das Moedas Contratuais.
+  for (const [codigo, nome] of Object.entries(TFC_SERIES_ONIBUS)) assert.deepEqual(TFC_SERIES.find(([c]) => c === codigo), [codigo, nome])
+  assert.equal(nomeTfc('C02'), 'TFC_120.90'); assert.equal(nomeTfc('C26'), 'TFC_MOB_ONIB_NV_120')
+})

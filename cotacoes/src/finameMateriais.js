@@ -120,6 +120,12 @@ export const faixaTfc = (prazoMeses) => (prazoMeses <= 60 ? 60 : 120)
 export const TFC_CODIGOS = { grande: { 60: 'C01', 120: 'C02' }, mpme: { 60: 'C03', 120: 'C04' } }
 export const TFC_NOMES = { C01: 'TFC_60.90', C02: 'TFC_120.90', C03: 'TFC_MPME_60.90', C04: 'TFC_MPME_120.90' }
 export const codigoTfc = (porte, prazoMeses) => TFC_CODIGOS[PORTES.find((p) => p.id === porte)?.mpme ? 'mpme' : 'grande'][faixaTfc(prazoMeses)]
+// Finame Veículos (ônibus): a série geral (C01 a C04) é o padrão, escolhido por Fernando em 26/11/2026. Quem simula pode trocar para
+// as séries de ônibus publicadas nas Moedas Contratuais (C25 e C26, só 120 meses; siglas como o BNDES publica). Com prazo de até
+// 60 meses, ou série desconhecida, vale a geral.
+export const TFC_SERIES_ONIBUS = Object.freeze({ C25: 'TFC_MOB_ONIB_REC_120', C26: 'TFC_MOB_ONIB_NV_120' })
+export const codigoTfcSerie = (porte, prazoMeses, serie = 'geral') => (TFC_SERIES_ONIBUS[serie] && faixaTfc(prazoMeses) === 120 ? serie : codigoTfc(porte, prazoMeses))
+export const nomeTfc = codigo => TFC_NOMES[codigo] ?? TFC_SERIES_ONIBUS[codigo] ?? codigo
 export const CUSTOS_FIXOS = new Set(['tfb', 'tfc'])
 
 // Taxa final da operação indireta (todas em % a.a.).

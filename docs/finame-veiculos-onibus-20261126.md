@@ -18,6 +18,6 @@ Pedido: sugestões do Painel de 23/11/2026, com início autorizado por Fernando 
 
 ## Em aberto
 
-- Série da TFC para ônibus: o painel usa as séries gerais C01 a C04. A coleta também tem C25/C26 (TFC de mobilidade/ônibus); falta confirmar qual vale para o Finame BK.
+- Série da TFC para ônibus: Fernando escolheu a geral (C01 a C04) como padrão em 26/11/2026. O seletor Série da TFC deixa trocar para C25 (TFC_MOB_ONIB_REC_120) ou C26 (TFC_MOB_ONIB_NV_120), só com prazo acima de 60 meses. Nenhuma fonte oficial liga essas séries ao Finame BK; a ajuda pede confirmação com o agente.
 - Fator K do FGI acima de 102 meses: o painel usa 0,05% (último degrau da tabela) e mostra aviso; não conferido no Anexo V.
 - Brasil Soberano (Custo Fixo) e BKs (Pré 3, Pré 5): ficam para depois; Pré 3 e Pré 5 ainda não têm coleta.
