@@ -129,7 +129,7 @@
 .inv-workspace .inv-lamina-bloco h4 ~ h4 { margin-top:14px; }
 .inv-workspace .inv-lamina-bloco p { margin:0; }
 .inv-workspace .inv-lamina-linhas { display:grid; grid-template-columns:1fr; gap:0; margin:0; }
-.inv-workspace .inv-lamina-mais { min-height:0; padding:0; border:0; background:none; color:var(--bw-link,#003cff); text-decoration:underline; font:inherit; cursor:pointer; }
+.inv-workspace button.inv-lamina-mais { min-height:24px; padding:0; border:0; background:none; color:var(--bw-link,#003cff); text-decoration:underline; font:inherit; cursor:pointer; }
 .inv-workspace .inv-lamina-linhas div { display:grid; grid-template-columns:1fr auto; gap:12px; padding:4px 0; border-bottom:1px dashed var(--bw-line); }
 .inv-workspace .inv-lamina-linhas dt { font-size:.82rem; color:var(--mut); }
 .inv-workspace .inv-lamina-linhas dd { margin:0; font-weight:700; text-align:right; }
