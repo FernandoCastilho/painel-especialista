@@ -12,7 +12,7 @@ import { focoPorTeclado, limitarBalao, margemEixo, rotuloEixo, saidaDeToque, use
 import './ChartAccess.css'
 import { useMacro } from './useMacro.js'
 import Explain from './Explain.jsx'
-import { centralFull, useCentralDaily, useHistory, useIntraday } from './useHistory.js'
+import { centralFull, toInput, useCentralDaily, useHistory, useIntraday } from './useHistory.js'
 import { seriesName } from './useQuotes.js'
 import { readStorage } from './storage.js'
 import { priorYear, rangeBetween } from './rangeCompare.js'
@@ -21,9 +21,10 @@ import { flagSvg } from './flags.js'
 import { useDataFile } from './useDataFile.js'
 import { eventosDiarios, eventosDoDia, itensDoDia } from './fxNoticias.js'
 import { marcosEntre, marcosQueCabem } from './eventosMercado.js'
-import { noticiasPerto, useFxAgora } from './fxAgora.js'
+import { destaquesPorHora, noticiasPerto, useFxAgora } from './fxAgora.js'
 import { marketDate } from './marketReturns.js'
 import { extremos as acharExtremos, noPregao } from './pregao.js'
+import { PREGAO_FIXADO_ARQUIVO, diaCurto, fixadoAtivo, juntarPontos, pontosFixados } from './pregaoFixado.js'
 import { frase, lerValor, moeda, reais, simular as simularTrecho } from './simulacaoCambio.js'
 
 const H = 240
@@ -53,7 +54,7 @@ export function useWidth() {
 const signed = (v, d) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
 const DRAG_PX = 6
 
-// Escala dos pontos: Auto mantém o dado original; 15 min, 30 min, Hora, Dia, Mês e Ano agrupam (só para escalas mais grossas que o dado).
+// Escala dos pontos: Auto mantém o dado original; 5 min, 15 min, 30 min, Hora, Dia, Mês e Ano agrupam (só para escalas mais grossas que o dado).
 export function Plot({ points, scales = true, ...props }) {
   const [scale, setScale] = useState('auto')
   const options = useMemo(() => (scales ? scaleOptions(points) : []), [points, scales])
@@ -186,9 +187,17 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const ext = useMemo(() => {
     if (!extremos || points.length < 2) return []
     // na visão do dia, só o pregão (9h às 18h) conta: a amostra da madrugada costuma ser o fechamento da véspera
+    // escala agrupada (5, 15, 30 min ou hora): a máxima e a mínima vêm das amostras originais, com o valor e o horário reais,
+    // e a marca fica no ponto do bloco que as contém (o mesmo valor do quadro de notícias perto da máxima)
+    if (intraday && history && history !== points && history.length > 1) {
+      const e = acharExtremos(history, true)
+      if (!e) return []
+      const bloco = (t) => { const i = points.findIndex((p) => p.t >= t); return i < 0 ? points.length - 1 : i }
+      return [{ i: bloco(history[e.hi].t), tipo: 'max', real: history[e.hi] }, { i: bloco(history[e.lo].t), tipo: 'min', real: history[e.lo] }]
+    }
     const e = acharExtremos(points, intraday)
     return e ? [{ i: e.hi, tipo: 'max' }, { i: e.lo, tipo: 'min' }] : []
-  }, [extremos, points, intraday])
+  }, [extremos, points, intraday, history])
   const rotulos = ext.length ? marks.filter(({ i }) => !ext.some((e) => Math.abs(g.x(points[i].t) - g.x(points[e.i].t)) < 96)) : marks
   const setas = useMemo(() => (marcos?.length ? marcosQueCabem(marcos, g.x, { de: g.t0, ate: g.t1 }) : []), [marcos, g])
   const altura = H + (setas.length ? FAIXA : 0)
@@ -275,8 +284,9 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             </g>
           )
         })}
-        {ext.map(({ i, tipo }) => {
+        {ext.map(({ i, tipo, real }) => {
           const p = points[i]
+          const r = real ?? p
           const x = g.x(p.t)
           const y = g.y(p.bid)
           const ancora = x < g.l + 80 ? 'start' : x > width - M.r - 80 ? 'end' : 'middle'
@@ -284,7 +294,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             <g key={tipo} pointerEvents="none" className={`extremo ${tipo}`}>
               <circle cx={x} cy={y} r="4" />
               <text x={x} y={yRotulo(y, tipo === 'min', M.t, g.base)} textAnchor={ancora} className="vlabel extremo-rot">
-                {tipo === 'max' ? 'Máx.' : 'Mín.'} {(vfmt ?? fmt ?? brl)(p.bid)} · {intraday ? fmtTime(p.t) : fmtDate(p.t)}
+                {tipo === 'max' ? 'Máx.' : 'Mín.'} {(vfmt ?? fmt ?? brl)(r.bid)} · {intraday ? fmtTime(r.t) : fmtDate(r.t)}
               </text>
             </g>
           )
@@ -413,11 +423,19 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   )
 }
 
-function useSeries(currency, start, end, day) {
+function useSeries(currency, start, end, day, fixado) {
   // hooks sempre chamados; só um deles usado por modo
   const daily = useHistory(currency.code, start, end, !!day)
   const intra = useIntraday(currency.code, day ?? start, !day)
-  return day ? intra : daily
+  const dia = day ? toInput(day) : null
+  // pregão fixado: as amostras guardadas daquele dia completam (ou substituem, depois que saem do intraday) as do arquivo ao vivo
+  const comFixado = useMemo(() => {
+    const pin = dia ? pontosFixados(fixado, currency.code, dia) : []
+    if (!pin.length || intra.status === 'loading') return null
+    if (intra.status === 'ok') return { ...intra, fixado: true, data: { ...intra.data, points: juntarPontos(intra.data.points, pin) } }
+    return { key: intra.key, status: 'ok', fixado: true, data: { source: currency.code, points: pin, generatedAt: fixado.generatedAt, feed: fixado.fonte, resolution: fixado.resolution } }
+  }, [intra, fixado, currency.code, dia])
+  return day ? comFixado ?? intra : daily
 }
 
 // valor dos rótulos dentro do gráfico: 4 casas (5 para o iene, que vale centavos de real)
@@ -425,7 +443,9 @@ const quoteFmt = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: v < 0
 
 export default function HistoryChart({ currency, color, start, end, day, onDay }) {
   const intraday = !!day
-  const h = useSeries(currency, start, end, day)
+  const fixadoArq = useDataFile(PREGAO_FIXADO_ARQUIVO)
+  const fixado = fixadoArq.status === 'ok' ? fixadoAtivo(fixadoArq.data) : null
+  const h = useSeries(currency, start, end, day, fixado)
   const central = useCentralDaily()
   const full = useMemo(() => (intraday ? undefined : centralFull(central.data, currency.code, h.data?.source)), [central.data, currency.code, h.data?.source, intraday])
   const [ref, width] = useWidth()
@@ -436,9 +456,23 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
   const ptaxH = macroH.data?.ptaxHist?.[currency.code]
   const fx = useDataFile('fx-noticias.json')
   const eventos = useMemo(() => {
-    if (!pts || fx.status !== 'ok') return undefined
-    return intraday ? eventosDoDia(pts, fx.data, currency.code, day) : eventosDiarios(pts, fx.data, currency.code)
-  }, [pts, fx.status, fx.data, currency.code, intraday, day])
+    const diaFixado = intraday && h.fixado && currency.code === 'USD' && fixado?.noticias?.dia === toInput(day)
+    if (!pts || (fx.status !== 'ok' && !diaFixado)) return undefined
+    if (!intraday) return eventosDiarios(pts, fx.data, currency.code)
+    const doArquivo = fx.status === 'ok' ? eventosDoDia(pts, fx.data, currency.code, day) : []
+    if (!diaFixado) return doArquivo
+    // pregão fixado: as manchetes guardadas daquele dia viram bolinhas, uma por hora
+    const e = acharExtremos(pts, true)
+    const faixa = e ? [pts[e.lo].bid, pts[e.hi].bid] : undefined
+    const vistos = new Set(doArquivo.flatMap((ev) => ev.itens.map((n) => n.link)))
+    const extras = destaquesPorHora(fixado.noticias.itens, pts[0].t, pts.at(-1).t, faixa)
+      .filter((n) => !vistos.has(n.link))
+      .map((n) => {
+        const perto = pts.reduce((b, p) => (Math.abs(p.t - n.t) < Math.abs(b.t - n.t) ? p : b), pts[0])
+        return { t: n.t, bid: perto.bid, dia: fixado.dia, tom: 'news', itens: [n] }
+      })
+    return [...doArquivo, ...extras].sort((a, b) => a.t - b.t)
+  }, [pts, fx.status, fx.data, currency.code, intraday, day, h.fixado, fixado])
   const marcos = useMemo(() => (pts?.length ? marcosEntre(pts[0].t, pts.at(-1).t, { intradiario: intraday }) : undefined), [pts, intraday])
   // notícias publicadas perto da máxima do dia: manchetes de 15 em 15 minutos (fx-agora.json) e as de hora em hora (fx-noticias.json)
   const diaVisto = intraday && pts?.length ? marketDate(pts.at(-1).t) : null
@@ -451,8 +485,11 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
   const perto = useMemo(() => {
     if (!maxima || !diaVisto) return []
     const doDia = fx.status === 'ok' ? itensDoDia(fx.data, currency.code, diaVisto, Infinity) : []
-    return noticiasPerto([agora?.dia === diaVisto ? agora.itens : [], doDia], maxima.t)
-  }, [maxima, diaVisto, agora, fx.status, fx.data, currency.code])
+    const guardadas = fixado?.noticias?.dia === diaVisto && currency.code === 'USD' ? fixado.noticias.itens : []
+    const e = acharExtremos(pts, true)
+    const faixa = e ? [pts[e.lo].bid, pts[e.hi].bid] : undefined
+    return noticiasPerto([agora?.dia === diaVisto ? agora.itens : [], guardadas, doDia], maxima.t, { faixa })
+  }, [maxima, diaVisto, agora, fixado, pts, fx.status, fx.data, currency.code])
   const td = currency.code === 'JPY' ? 4 : 2 // iene vale centavos: precisa de mais casas
   const pct = periodChange(pts)
   const trend = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat'
@@ -505,6 +542,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
           ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre a moeda e o mercado publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
           : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas da moeda no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bolinha para ver as manchetes.</p>)}
       </div>
+      {pts && h.fixado && <p className="status pregao-fixado-nota">Pregão de {diaCurto(fixado.dia)} fixado no painel até {diaCurto(fixado.ate)}, com as amostras e as manchetes guardadas daquele dia.</p>}
       {pts && h.warning && <p className="status stale" role="status">{h.warning}</p>}
       {pts?.length === 1 && <p className="status stale" role="status">Uma única amostra disponível; aguardando outra para calcular a variação.</p>}
       {pts && <p className="status">{intraday ? `Da primeira amostra: ${dataTimestamp(pts[0].t)} até ${dataTimestamp(pts.at(-1).t)}. Horários em Brasília. Esta variação não é o Δ dia da fonte contra a referência anterior.` : `Cobertura exibida: ${fmtDate(pts[0].t, true)} a ${fmtDate(pts.at(-1).t, true)}.`}</p>}

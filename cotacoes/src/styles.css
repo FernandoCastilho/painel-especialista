@@ -729,3 +729,7 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .mini-rotulo.vale { transform:translate(-50%, 3px); }
 .mini-rotulo.ini { transform:translate(0, calc(-100% - 2px)); } .mini-rotulo.ini.vale { transform:translate(0, 3px); }
 .mini-rotulo.fim { transform:translate(-100%, calc(-100% - 2px)); } .mini-rotulo.fim.vale { transform:translate(-100%, 3px); }
+/* Pregão fixado: atalho para o dia marcante guardado no painel */
+.pregao-fixado-btn { min-height:36px; }
+.pregao-fixado-btn[aria-pressed="true"] { background:var(--surface-3); font-weight:600; }
+.pregao-fixado-nota { font-weight:600; }
