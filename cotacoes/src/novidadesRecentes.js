@@ -3,6 +3,10 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '27/11/2026',
+    items: ['Em Calculadoras > BNDES, o Finame usa a data da formalização para definir o primeiro vencimento e a data da liberação para contar juros e CET. O cronograma respeita a carência e os feriados da praça do contrato.'],
+  },
+  {
     date: '26/11/2026',
     destaques: ['BNDES: Finame Veículos para ônibus e caminhões, até 10 anos', 'BNDES: Finame BK (máquinas) e Brasil Soberano (bens de capital)', 'Investimentos: ativos em comparação em mosaico', 'Investimentos: fundos GARB destacados na busca', 'Investimentos: lâmina da CVM na página do fundo'],
     items: [

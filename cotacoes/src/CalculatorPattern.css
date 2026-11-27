@@ -140,7 +140,7 @@
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato > summary small { color:var(--bw-mut); font-size:.78rem; }
 :root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato-campos { display:grid; grid-template-columns:minmax(0,1fr); gap:6px 10px; padding:0 0 4px; }
 @media (min-width:1001px) {
-  :root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato-campos { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  :root[data-theme] body .bw:not(.e4) .cx-finame .fm-contrato-campos { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 /* No slide do modo Apresentar a gaveta fica aberta e sem o título clicável (como na linha mestra). */
 .sl-calc .bw:not(.e4) .cx-finame details.fm-contrato[open] { display:block; }

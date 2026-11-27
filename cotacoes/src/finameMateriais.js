@@ -134,7 +134,7 @@ export const FONTES = [
   { regra: 'Composição da taxa final: fator do custo financeiro × fator da taxa do BNDES × fator da taxa do agente − 1 (exemplo oficial: 1,07 × 1,015 × 1,03 − 1 = 11,86% a.a.)', fonte: 'Guia "Taxa de juros" do BNDES, lido em 04/11/2026', url: 'https://www.bndes.gov.br/wps/portal/site/home/financiamento/guia/taxa-de-juros' },
   { regra: 'TLP: parcela prefixada (taxa real) mais IPCA', fonte: 'Lei 13.483/2017 e Resolução CMN 4.600/2017; guia de custos financeiros do BNDES', url: 'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/lei/l13483.htm' },
   { regra: 'TLP exigível e TLPCAP são perfis distintos; esta interface encaminha TLP exigível à projeção própria', fonte: 'BNDES, Anexo IV: Condições a serem observadas na contratação, seções 1 e 2', url: 'https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/04-22Cir13-Anexo-IV-Condicoes-a-Serem-Observadas-na-Contratacao.pdf' },
-  { regra: 'Cobranças na carência contadas retroativamente desde seu fim; calendário contratual tem data-base e ajustes próprios, não reproduzidos pelas datas ilustrativas desta tela', fonte: 'BNDES, Anexo I: Procedimentos Operacionais, itens 5.1–5.4', url: 'https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/01-22Cir13-Anexo-I-Procedimentos-Operacionais.pdf' },
+  { regra: 'Cobranças na carência contadas retroativamente desde seu fim; data-base no primeiro dia 15 após a formalização; o simulador considera uma única liberação anterior ao primeiro mês do fluxo', fonte: 'BNDES, Anexo I: Procedimentos Operacionais, itens 5.1–5.4', url: 'https://www.bndes.gov.br/sbn/BNDES_online/Arquivos/01-22Cir13-Anexo-I-Procedimentos-Operacionais.pdf' },
   { regra: 'IOF: alíquota zero na operação com recursos da FINAME (art. 8º, IX), sem o adicional de 0,38% (§ 5º não lista o inciso IX); se cobrado por funding diverso, crédito PJ 0,38% + 0,0082% ao dia sobre o principal de cada parcela, até 365 dias', fonte: 'Decreto 6.306/2007, texto consolidado na Câmara dos Deputados, lido em 04/11/2026: art. 8º, IX vigente, XXX revogado pelo Decreto 8.511/2015, §§ 4º e 5º; art. 7º, I, b e § 1º; Decreto 12.499/2025 (STF, ADI 7827 e ADC 96, jul/2025); informativo da Abimaq de janeiro de 2026 sobre o Finame Materiais ("sem incidência de IOF"; página não lida diretamente)', url: 'https://www2.camara.leg.br/legin/fed/decret/2007/decreto-6306-14-dezembro-2007-566561-normaatualizada-pe.html' },
 ]
 export const PORTES = [
@@ -322,10 +322,13 @@ export function ecgFgi({ valor, percentual, prazo, periodos, incorporar }) {
 // Vencimento contratual da parcela `mes`: todo dia 15 do mês (a contar do mês da liberação). Se o dia 15 não for dia útil
 // (fim de semana, feriado nacional ou feriado da praça do contrato), vence no próximo dia útil. Devolve Date ao meio-dia,
 // como o restante da tela. `calendarios`: calendários da praça (padrão só 'BR', feriados nacionais).
-export function vencimentoDia15(liberacao, mes, ctx = {}, calendarios = ['BR']) {
+export function vencimentoDia15(liberacao, mes, ctx = {}, calendarios = ['BR'], formalizacao = null) {
   const cals = contractCalendars(calendarios)
   if (!cals) throw new Error('Praça do contrato inválida.')
-  const ref = new Date(liberacao.getFullYear(), liberacao.getMonth() + mes, 15, 12)
+  // Anexo I, itens 5.1 e 5.4: data-base no dia 15 estritamente posterior à formalização.
+  const origem = formalizacao ?? liberacao
+  const deslocamento = formalizacao && origem.getDate() >= 15 ? 1 : 0
+  const ref = new Date(origem.getFullYear(), origem.getMonth() + mes + deslocamento, 15, 12)
   const util = nextBusinessDay(iso(ref.getFullYear(), ref.getMonth() + 1, 15), cals, ctx)
   const [y, m, d] = util.split('-').map(Number)
   return new Date(y, m - 1, d, 12)
@@ -335,10 +338,21 @@ export function vencimentoDia15(liberacao, mes, ctx = {}, calendarios = ['BR']) 
 // Devolve as datas (AAAA-MM-DD), os dias corridos desde a liberação e a fração de ano ACT/ACT de cada período
 // (dias corridos sobre 365 ou 366, separados por ano civil), base dos juros de cada parcela.
 const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-export function calendarioFiname(liberacao, prazo, ctx = {}, calendarios = ['BR']) {
-  if (Object.prototype.toString.call(liberacao) !== '[object Date]' || Number.isNaN(+liberacao) || !Number.isInteger(prazo) || prazo < 1 || prazo > PRAZO_MAX_MOTOR || !contractCalendars(calendarios)) return null
+const dataFinameValida = d => d instanceof Date && Number.isFinite(+d)
+export function erroDatasFiname(liberacao, formalizacao) {
+  if (!dataFinameValida(liberacao)) return 'Informe uma data de liberação válida.'
+  if (formalizacao == null) return null // chamadas antigas sem data de formalização
+  if (!dataFinameValida(formalizacao)) return 'Informe uma data de formalização válida.'
+  if (isoLocal(formalizacao) > isoLocal(liberacao)) return 'A formalização não pode ser posterior à liberação.'
+  const primeiroMes = new Date(formalizacao.getFullYear(), formalizacao.getMonth() + (formalizacao.getDate() >= 15 ? 2 : 1), 1, 12)
+  if (isoLocal(liberacao) >= isoLocal(primeiroMes)) return 'A liberação está no mês do primeiro vencimento ou depois. O simulador não cobre esse cronograma; confirme as datas com o agente financeiro.'
+  return null
+}
+
+export function calendarioFiname(liberacao, prazo, ctx = {}, calendarios = ['BR'], formalizacao = null) {
+  if (erroDatasFiname(liberacao, formalizacao) || !Number.isInteger(prazo) || prazo < 1 || prazo > PRAZO_MAX_MOTOR || !contractCalendars(calendarios)) return null
   const inicio = isoLocal(liberacao)
-  const datas = Array.from({ length: prazo }, (_, k) => isoLocal(vencimentoDia15(liberacao, k + 1, ctx, calendarios)))
+  const datas = Array.from({ length: prazo }, (_, k) => isoLocal(vencimentoDia15(liberacao, k + 1, ctx, calendarios, formalizacao)))
   const civil = t => Date.parse(`${t}T00:00:00Z`) / 86400000
   const dias = datas.map(d => civil(d) - civil(inicio))
   if (dias[0] <= 0 || dias.some((d, k) => k && d <= dias[k - 1])) return null
@@ -363,7 +377,7 @@ export function parseIpcaProjection(text) {
   const parsed = parseDecimal(negative ? value.slice(1) : value)
   return parsed === null ? null : negative ? -parsed : parsed
 }
-export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, feriados = {}, calendarios = ['BR'], produto = 'materiais' }) {
+export function simular({ valor, participacao = 100, prazo, carencia = 0, custo, custoFinanceiro, custoPorMes, ipca = 0, perfilTlp, taxaBndes, taxaAgente, sistema = 'sac', periodicidade = 1, composicao = 'capitalizada', iof = IOF_ZERO, tac = 0, fgi = null, dataLiberacao = null, dataFormalizacao = null, feriados = {}, calendarios = ['BR'], produto = 'materiais' }) {
   const check = conferir({ valor, participacao, prazo, carencia, custo, produto })
   const regras = regrasFiname(produto)
   if (regras.taxaAgenteMax != null && Number.isFinite(taxaAgente) && taxaAgente > regras.taxaAgenteMax) check.erros.push(`Taxa do agente acima de ${String(regras.taxaAgenteMax).replace('.', ',')}% a.a., o teto do programa (Resolução CMN nº 5.336/2026).`)
@@ -389,12 +403,12 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   // `calendarios`: feriados da praça do contrato que também adiam o vencimento (padrão só os nacionais, 'BR').
   const pracaOk = !!contractCalendars(calendarios)
   if (!pracaOk) check.erros.push('Escolha a praça do contrato entre as praças disponíveis.')
-  const calendario = pracaOk && dataLiberacao !== null && Number.isInteger(prazo) ? calendarioFiname(dataLiberacao, prazo, feriados, calendarios) : null
-  if (pracaOk && dataLiberacao !== null && !calendario) check.erros.push('Informe uma data de liberação válida.')
+  const calendario = pracaOk && dataLiberacao !== null && Number.isInteger(prazo) ? calendarioFiname(dataLiberacao, prazo, feriados, calendarios, dataFormalizacao) : null
+  if (pracaOk && (dataLiberacao !== null || dataFormalizacao !== null) && !calendario) check.erros.push(erroDatasFiname(dataLiberacao, dataFormalizacao) ?? 'Confira as datas e o prazo do contrato.')
   if (check.erros.length) return { ok: false, ...check }
   const anos = calendario?.anos ?? null
   const liberado = check.financiado
-  const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos, incorporar: !!fgi.incorporar }) : null
+  const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos ?? (calendario && dataFormalizacao ? Math.floor(calendario.dias.at(-1) / 30) : undefined), incorporar: !!fgi.incorporar }) : null
   const ecg = ecgCalc?.ecg ?? 0
   const avisoK = fgi ? avisoFatorKFgi(prazo) : null
   if (avisoK) check.avisos.push(avisoK)

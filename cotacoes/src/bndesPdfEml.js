@@ -81,7 +81,7 @@ function tabelaLinhas(linhas, topo) {
 // Dados da operação em três grupos, duas colunas por grupo. Devolve as instruções e a altura usada.
 function blocosResumo(item, y) {
   const grupos = [
-    ['Operação', [['Valor financiado', brl(item.valor)], ['Prazo', meses(item.prazo)], ['Carência', meses(item.carencia)], ['Liberação', item.liberacao || '—'],
+    ['Operação', [['Valor financiado', brl(item.valor)], ['Prazo', meses(item.prazo)], ['Carência', meses(item.carencia)], ...(item.formalizacao ? [['Formalização', item.formalizacao]] : []), ['Liberação', item.liberacao || '—'],
       ['Amortização', String(item.amortizacao || 'SAC').toUpperCase()], ['Juros na carência', item.periodicidade || '—']]],
     ['Taxas', [[rotulos[item.custo], taxa(item.custoFinanceiro)], ['Taxa do BNDES', taxa(item.taxaBndes)], ['Spread do agente financeiro', taxa(item.taxaAgente)], ['Taxa final', taxa(item.taxa)]]],
     ['Custo para o cliente', [[item.indice ? 'CET estimado com índice' : 'CET estimado', taxa(item.cet)], ['Total estimado', brl(item.total)],
