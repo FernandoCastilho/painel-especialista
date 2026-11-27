@@ -103,7 +103,7 @@ test('IR remissível sugerido é 1/3 da comissão externa nas duas planilhas', (
 test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas', async t => {
   const require = createRequire(import.meta.url)
   const module = { exports: {} }
-  const paths = ['marketReturns', 'holidays', 'moneyInput', 'cdiDolar', 'cambioFuturoFluxo']
+  const paths = ['marketReturns', 'holidays', 'moneyInput', 'cdiDolar', 'cambioFuturoFluxo', 'cambioFuturoColar']
   const deps = Object.fromEntries(await Promise.all(paths.map(async p => ['./' + p + '.js', await import('../src/' + p + '.js')])))
   const { code } = await transform(await readFile(new URL('../src/CambioFuturoFluxo.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   runInNewContext(code, { module, exports: module.exports, require: name => name.endsWith('.jsx') ? () => null : name.endsWith('.css') ? {} : deps[name] ?? require(name) })
@@ -155,4 +155,38 @@ test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas',
   assert.equal(field('2-amort').props.placeholder, '25.000,00')
   assert.equal(text(field('tir')), '—')
   assert.equal(field('periodo'), undefined)
+
+  // Tabela da mesa colada (A10:H13 da foto): preenche tudo, menos spot e câmbio futuro.
+  await fill('colar', ['91\t22/02/2027\t25.000,00\t100.000,00\t1.553,77\t517,92\t497,31\t27.569,01',
+    '182\t24/05/2027\t25.000,00\t75.000,00\t1.165,33\t388,44\t372,99\t26.926,75',
+    '273\t23/08/2027\t25.000,00\t50.000,00\t776,89\t258,96\t248,66\t26.284,50',
+    '361\t19/11/2027\t25.000,00\t25.000,00\t375,64\t125,21\t120,23\t25.621,08'].join('\n'))
+  assert.equal(field('inicio').props.value, '2026-11-23')
+  assert.equal(field('valor').props.value, '100.000,00')
+  assert.equal(field('parcelas').props.value, 4)
+  assert.equal(field('externa').props.value, '6,1468')
+  assert.equal(field('ir').props.value, '2,0489') // 1/3 da externa: fica no automático
+  assert.match(field('ir').props.hint, /pode editar/)
+  assert.equal(field('local').props.value, '1,9674')
+  assert.equal(field('allin').props.value, '11,20') // o all-in já digitado não é trocado
+  assert.deepEqual([1, 2, 3, 4].map(n => field(n + '-prazo').props.value), ['91', '182', '273', '361'])
+  assert.equal(field('4-amort').props.value, '25.000,00')
+  assert.equal(field('1-futuro').props.value, '') // o 6,5027 era da parcela de 361 dias, não fica na de 91
+  assert.match(text(field('colar-status')), /Tabela colada:\s+4\s+parcelas\s*, início\s+23\/11\/2026/)
+  for (const n of [1, 2, 3, 4]) await fill(n + '-futuro', '6,5')
+  assert.deepEqual([1, 2, 3, 4].map(n => text(field(n + '-parcela'))), ['27.569,01', '26.926,75', '26.284,50', '25.621,08'])
+  assert.doesNotMatch(text(field('colar-status')), /Falta o spot/)
+  // All-in: o digitado fica; o que veio da colagem é trocado na colagem seguinte. Linhas a mais são limpas.
+  await fill('allin', '')
+  await fill('colar', '91\t22/02/2027\t25.000,00\t100.000,00\t1.553,77\t517,92\t497,31\t27.569,01\n182\t24/05/2027\t75.000,00\t75.000,00\t1.165,33\t388,44\t372,99\t76.926,76')
+  assert.equal(field('allin').props.value, '10,1631')
+  await fill('colar', '361\t09/11/2027\t100.000,00\t100.000,00\t6.676,59\t2.225,57\t2.326,85\t111.229,01')
+  assert.equal(field('allin').props.value, '11,1979')
+  assert.equal(field('parcelas').props.value, 1)
+  await fill('parcelas', '2')
+  assert.equal(field('2-prazo').props.value, '')
+  await fill('parcelas', '1')
+  await fill('colar', 'texto qualquer')
+  assert.match(text(field('colar-status')), /Cole as linhas/)
+  assert.equal(field('externa').props.value, '6,6581') // texto inválido não apaga o que já foi preenchido
 })

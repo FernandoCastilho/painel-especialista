@@ -21,3 +21,10 @@ Pedido de Fernando, a partir das telas da planilha "Comparativo HPA" (bullet e 4
 ## Ajuste de 27/11/2026: IR remissível automático
 - Aprovado por Fernando ("Sim, preencher sozinha, mas permita que o usuário também possa editar"): o campo IR juros remissível vem preenchido com 1/3 da comissão externa, com 4 casas (6,6581 → 2,2194; 6,1468 → 2,0489), igual às duas planilhas.
 - O usuário pode digitar outro valor; ele não é sobrescrito se a comissão externa mudar. Apagando o campo, volta ao 1/3.
+
+## Ajuste de 27/11/2026: colar a tabela da mesa
+- Pedido de Fernando: campo para colar o trecho da planilha (ex.: A10 até H13, de Prazo até Parcela USD) e preencher tudo sozinho, como no funding do CDC.
+- Preenche: data de início (1º vencimento − 1º prazo), valor em USD (saldo da 1ª linha), número de parcelas, prazos, amortizações e as três taxas. O all-in só é preenchido (soma das três) se estiver vazio. Spot e câmbio futuro continuam com o usuário.
+- As taxas não vêm no trecho; saem das linhas: soma da coluna × 360 ÷ soma de (saldo × dias do período), com 4 casas. Na foto dá 6,1468%, 2,0489% e 1,9674%, as do cabeçalho; no bullet, 6,6581%, 2,2194% e 2,3204%.
+- A calculadora refaz a tabela com essas taxas e avisa, linha a linha, vencimento, saldo, comissão ou parcela que não bater com o colado (tolerância de 1 centavo nas comissões).
+- Aceita o que o Excel copia (tabulação, vírgula decimal, ponto de milhar), linhas de cabeçalho no meio e ponto e vírgula. Todos os campos seguem editáveis.

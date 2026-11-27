@@ -5,6 +5,7 @@ import { marketDate } from './marketReturns.js'
 import { isBusinessDay } from './holidays.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './cdiDolar.js'
+import { lerTabelaMesa } from './cambioFuturoColar.js'
 import { MAX_PARCELAS_FLUXO, MAX_PRAZO_DIAS, amortizacoesIguais, calcularFluxoCambio, irRemissivelPadrao, vencimentoPorPrazo } from './cambioFuturoFluxo.js'
 import './CalculatorStandard.css'
 import './CambioFuturo.css'
@@ -13,6 +14,7 @@ import './CambioFuturoJornada.css'
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const dec = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const taxa4 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
+const taxaTexto = n => taxa4.format(n)
 const fmt = (n, format = dec) => Number.isFinite(n) ? format.format(n) : '—'
 const pct = n => Number.isFinite(n) ? dec.format(n) + '%' : '—'
 const dataBrasil = data => data ? data.split('-').reverse().join('/') : '—'
@@ -46,6 +48,29 @@ export default function CambioFuturoFluxo({ onBack }) {
   const [quantidade, setQuantidade] = useState(1)
   const [linhas, setLinhas] = useState(() => Array.from({ length: MAX_PARCELAS_FLUXO }, linhaVazia))
   const mudar = chave => valor => setOp(old => ({ ...old, [chave]: valor }))
+  const [colado, setColado] = useState({ texto: '', lido: null, allIn: null })
+  // Tabela da mesa colada do Excel: preenche início, valor, taxas, parcelas, prazos e amortizações. Tudo segue editável.
+  const colar = texto => {
+    const lido = texto.trim() ? lerTabelaMesa(texto) : null
+    if (!lido?.ok) { setColado(old => ({ ...old, texto, lido })); return }
+    const { externa, ir, local } = lido.taxas
+    // O all-in digitado fica; o que veio de uma colagem anterior (e não foi mexido) é trocado pela nova soma.
+    const allInNovo = op.allIn.trim() && op.allIn !== colado.allIn ? op.allIn : taxaTexto(externa + ir + local)
+    setColado({ texto, lido, allIn: allInNovo })
+    setOp(old => ({ ...old, inicio: lido.inicio, valor: dec.format(lido.valorUsd), externa: taxaTexto(externa), local: taxaTexto(local),
+      ir: ir === irRemissivelPadrao(externa) ? '' : taxaTexto(ir), // igual a 1/3 da externa: fica no automático
+      allIn: allInNovo }))
+    setQuantidade(lido.parcelas.length)
+    // O câmbio futuro só fica na parcela de mesmo prazo; linhas além das coladas são limpas.
+    setLinhas(old => old.map((l, i) => {
+      const p = lido.parcelas[i]
+      if (!p) return linhaVazia()
+      return { prazo: String(p.prazo), amortizacao: dec.format(p.amortizacao), futuro: l.prazo.trim() === String(p.prazo) ? l.futuro : '' }
+    }))
+  }
+  const { lido } = colado
+  const lidoOk = lido?.ok ? lido : null
+  const erroColar = lido && !lido.ok ? lido.erro : null
   const mudarLinha = (i, chave) => valor => setLinhas(old => old.map((l, j) => j === i ? { ...l, [chave]: valor } : l))
 
   const irSugerido = irRemissivelPadrao(numero(op.externa))
@@ -79,6 +104,17 @@ export default function CambioFuturoFluxo({ onBack }) {
 
     <article className="desk-panel cx-panel cf-input cf-j-azul" aria-labelledby="cf-f-op">
       <header className="cx-heading"><h3 id="cf-f-op">1. Dados da operação</h3></header>
+      <div className="cx-field cf-f-colar">
+        <label htmlFor="cf-f-colar">Colar a tabela da mesa (opcional): do Prazo até a Parcela USD, ex.: A10 até H13</label>
+        <textarea id="cf-f-colar" rows={3} value={colado.texto} onChange={e => colar(e.target.value)} spellCheck={false}
+          placeholder={'91\t22/02/2027\t25.000,00\t100.000,00\t1.553,77\t517,92\t497,31\t27.569,01'}
+          aria-describedby="cf-f-colar-status" aria-invalid={erroColar ? true : undefined} />
+        <div id="cf-f-colar-status" role="status">
+          {erroColar && <small className="cf-j-error">{erroColar}</small>}
+          {lidoOk && <small className="cx-hint">Tabela colada: {lidoOk.parcelas.length} {lidoOk.parcelas.length === 1 ? 'parcela' : 'parcelas'}, início {dataBrasil(lidoOk.inicio)}, comissão externa {taxaTexto(lidoOk.taxas.externa)}%, IR {taxaTexto(lidoOk.taxas.ir)}% e local {taxaTexto(lidoOk.taxas.local)}% a.a.{r.falta ? ' Falta o spot e o câmbio futuro de cada parcela.' : ''}</small>}
+          {lidoOk?.avisos.length > 0 && <ul className="cf-f-avisos">{lidoOk.avisos.map(a => <li key={a}>{a}</li>)}</ul>}
+        </div>
+      </div>
       <div className="cf-j-grid">
         <Campo id="cf-f-inicio" label="Data de início" type="date" value={op.inicio} change={mudar('inicio')} />
         <Campo id="cf-f-valor" label="Valor em USD" value={op.valor} change={mudar('valor')} placeholder="ex.: 100.000,00"
@@ -117,6 +153,7 @@ export default function CambioFuturoFluxo({ onBack }) {
         <CalculatorHelp title="Como o cálculo é feito">
           <p>Vencimento = data de início + prazo em dias corridos. A amortização vem em partes iguais e pode ser mudada; a soma precisa fechar o valor em USD.</p>
           <p>Cada comissão (externa, IR juros remissível e local) = saldo devedor × taxa ao ano × dias do período ÷ 360. O IR vem como 1/3 da comissão externa e pode ser editado. Juros total é a soma das três; a parcela em USD é amortização + juros.</p>
+          <p>Tabela colada: cada taxa sai das linhas (soma da coluna × 360 ÷ soma de saldo × dias do período), com 4 casas. A calculadora refaz a tabela com elas e avisa o que não bater com o colado.</p>
           <p>Fluxo em R$: no início entra o valor em R$ menos a TAC; em cada vencimento sai a parcela em USD (em centavos) × câmbio futuro da parcela.</p>
           <p>TIR ao ano em base 252: dias úteis (feriados nacionais) entre o início e cada vencimento, divididos por 252. Vencimento em dia não útil conta até o último dia útil antes dele. Não substitui o CET contratual.</p>
         </CalculatorHelp>

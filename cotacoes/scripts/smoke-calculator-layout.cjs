@@ -728,10 +728,24 @@ async function assertCambioFuturoFluxo(browser) {
       assert.equal(await fluxo.locator('#cf-f-periodo').innerText(), '22,26%')
       await settleLayout(page)
       await assertWorkspace(page, fluxo, `Câmbio futuro bullet ${width} ${theme}`)
-      await fluxo.locator('#cf-f-parcelas').selectOption('4')
+      // Tabela da mesa colada do Excel (A10:H13 da foto de Fernando): abre as 4 parcelas e preenche taxas, prazos e amortizações.
+      await preencher('colar', ['91\t22/02/2027\t25.000,00\t100.000,00\t1.553,77\t517,92\t497,31\t27.569,01',
+        '182\t24/05/2027\t25.000,00\t75.000,00\t1.165,33\t388,44\t372,99\t26.926,75',
+        '273\t23/08/2027\t25.000,00\t50.000,00\t776,89\t258,96\t248,66\t26.284,50',
+        '361\t19/11/2027\t25.000,00\t25.000,00\t375,64\t125,21\t120,23\t25.621,08'].join('\n'))
       assert.equal(await fluxo.locator('.cf-f-matriz tbody tr').count(), 5, 'início e quatro parcelas')
+      assert.equal(await fluxo.locator('#cf-f-externa').inputValue(), '6,1468')
+      assert.equal(await fluxo.locator('#cf-f-local').inputValue(), '1,9674')
+      assert.equal(await fluxo.locator('#cf-f-4-prazo').inputValue(), '361')
+      assert.equal(await fluxo.locator('#cf-f-inicio').inputValue(), '2026-11-23')
+      assert.equal(await fluxo.locator('#cf-f-valor').inputValue(), '100.000,00')
+      assert.equal(await fluxo.locator('#cf-f-ir').inputValue(), '2,0489')
+      assert.equal(await fluxo.locator('#cf-f-1-futuro').inputValue(), '', 'o câmbio futuro do bullet não passa para a parcela de 91 dias')
       assert.equal(await fluxo.locator('#cf-f-tir').innerText(), '—')
-      await assertWorkspace(page, fluxo, `Câmbio futuro quatro parcelas ${width} ${theme}`)
+      for (const n of [1, 2, 3, 4]) await preencher(n + '-futuro', '6,5')
+      assert.equal(normalize(await fluxo.locator('#cf-f-4-parcela').innerText()), '25.621,08')
+      assert.notEqual(await fluxo.locator('#cf-f-tir').innerText(), '—')
+      await assertWorkspace(page, fluxo, `Câmbio futuro quatro parcelas coladas ${width} ${theme}`)
       await page.screenshot({ path: path.join(out, `cambio-futuro-fluxo-${width}-${theme}.png`), fullPage: true })
       await fluxo.getByRole('link', { name: 'Cotar via euro ou yuan' }).click()
       await page.locator('#cf-j-modalidade').waitFor()
