@@ -2,7 +2,7 @@
 // na tela. Os cenários de 120 meses são conferidos por fórmula fechada, sem o motor.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { REGRAS, REGRAS_VEICULOS, regrasFiname, conferir, simular, faixaTfb, codigoTfc, ecgFgi, avisoFatorKFgi } from '../src/finameMateriais.js'
+import { REGRAS, REGRAS_VEICULOS, regrasFiname, conferir, simular, faixaTfb, codigoTfc, ecgFgi, fatorKFgi } from '../src/finameMateriais.js'
 import { simularPos } from '../src/finamePosFixado.js'
 import { FINAME_FUNDING_OPTIONS, finameFundingOptionsDo } from '../src/finameFunding.js'
 import { PERFIS_PAINEL, avaliarCusto, produtoBndes } from '../src/bndesCustosPorProduto.js'
@@ -74,12 +74,11 @@ test('pós-fixado: TLP e Taxa LCD aceitam 120 meses em Veículos e recusam no Ma
   assert.equal(materiais.ok, false); assert.match(materiais.erros[0], /1 a 84 meses/)
 })
 
-test('FGI: acima de 102 meses avisa que o fator K de 0,05% não foi conferido', () => {
-  assert.equal(avisoFatorKFgi(84), null); assert.equal(avisoFatorKFgi(102), null)
-  assert.match(avisoFatorKFgi(103), /0,05%/)
+test('FGI: fator K do Anexo V (0,06% até 102 meses, 0,05% a partir de 103) e sem aviso de fator não conferido', () => {
+  assert.equal(fatorKFgi(102), 0.06); assert.equal(fatorKFgi(103), 0.05); assert.equal(fatorKFgi(120), 0.05)
   assert.equal(ecgFgi({ valor: 1e6, percentual: 80, prazo: 120, periodos: 121, incorporar: false }).k, 0.05)
   const base = { valor: 1_000_000, prazo: 120, carencia: 0, taxaBndes: 1.25, taxaAgente: 3, periodicidade: 1, tac: 0, dataLiberacao: new Date(2027, 2, 15, 12), custo: 'tlp', taxaFixa: 7.72, trajetoria: [{ ano: 2027, valor: 5 }], ...VEI }
-  assert.ok(simularPos({ ...base, fgi: { percentual: 80 } }).avisos.some(a => /fator K/.test(a)))
+  assert.ok(!simularPos({ ...base, fgi: { percentual: 80 } }).avisos.some(a => /fator K/.test(a)))
   assert.ok(!simularPos({ ...base, prazo: 60, fgi: { percentual: 80 } }).avisos.some(a => /fator K/.test(a)))
 })
 
