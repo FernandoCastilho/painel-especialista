@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseCdsText, buildCdsData, cdsFailure, cdsDue, cdsView, referenceFor, spDate } from '../src/cds.js'
+import { parseCdsText, buildCdsData, cdsFailure, cdsDue, cdsView, referenceFor, spDate, chartHistory } from '../src/cds.js'
 
 // Trecho do texto da página já carregada (World Government Bonds, 27/11/2026), como o navegador o entrega.
 const PAGINA = `SOVEREIGN CREDIT DEFAULT SWAP
@@ -89,4 +89,42 @@ test('CDS na tela: some quando o dado é estranho, velho ou ausente', () => {
 test('CDS: data civil em Brasília e base do dia anterior', () => {
   assert.equal(spDate(Date.UTC(2026, 10, 28, 2, 0)), '2026-11-27') // 23h de sexta em Brasília
   assert.equal(referenceFor([{ date: '2026-11-27', value: 160, observedAt: T }], T), null)
+})
+
+// Série diária do gráfico da própria página (instante UTC da data, pb), um ponto por dia corrido, como a fonte entrega.
+const DIA = 864e5
+const serie = (dias, ultimo = 162.85) => Array.from({ length: dias }, (_, i) => {
+  const t = Date.UTC(2026, 10, 27) - (dias - 1 - i) * DIA
+  return [t, i === dias - 1 ? ultimo : +(155 + 8 * Math.sin(i / 20)).toFixed(2)]
+})
+
+test('CDS: gráfico da página vira histórico de 12 meses e dá a variação já no primeiro dia', () => {
+  const leitura = parseCdsText(PAGINA)
+  const pontos = chartHistory(serie(3375), leitura, NOW)
+  assert.ok(pontos.length >= 365 && pontos.length <= 367, `12 meses de pontos diários (${pontos.length})`)
+  assert.equal(pontos.at(-1).date, '2026-11-27')
+  const d = buildCdsData(null, leitura, NOW, pontos)
+  assert.equal(d.history.at(-1).observedAt, T, 'leitura própria vale mais que o ponto do gráfico no mesmo dia')
+  assert.equal(d.reference.date, '2026-11-26')
+  assert.ok(d.history.length <= 367)
+  assert.ok(d.history[0].observedAt >= T - 366 * DIA)
+})
+
+test('CDS: gráfico estranho não entra (não bate com o número do dia, salto entre dias, curto ou fora da faixa)', () => {
+  const leitura = parseCdsText(PAGINA)
+  assert.deepEqual(chartHistory(serie(400, 120), leitura, NOW), [], 'último ponto longe do número lido')
+  const salto = serie(400); salto[200][1] = 400
+  assert.deepEqual(chartHistory(salto, leitura, NOW), [], 'salto de um dia para o outro')
+  assert.deepEqual(chartHistory(serie(10), leitura, NOW), [], 'poucos pontos')
+  const fora = serie(400); fora[300][1] = 20
+  assert.deepEqual(chartHistory(fora, leitura, NOW), [])
+  assert.deepEqual(chartHistory(null, leitura, NOW), [])
+  // Sem gráfico, a coleta segue só com o número do dia.
+  assert.equal(buildCdsData(null, leitura, NOW, []).history.length, 1)
+})
+
+test('CDS: histórico guardado fica em 12 meses mesmo com coletas acumuladas', () => {
+  const velho = { history: Array.from({ length: 500 }, (_, i) => { const t = T - (500 - i) * DIA; return { date: spDate(t), value: 160, observedAt: t } }) }
+  const d = buildCdsData(velho, parseCdsText(PAGINA), NOW)
+  assert.ok(d.history.length <= 367 && d.history[0].observedAt >= T - 366 * DIA)
 })

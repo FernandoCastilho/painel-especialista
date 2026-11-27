@@ -1,6 +1,6 @@
 import { isBusinessDay } from './holidays.js'
 import { quoteAgeState } from './quoteFreshness.js'
-import { cdsView } from './cds.js'
+import { cdsView, CDS_HISTORY_MS } from './cds.js'
 
 export const MARKET_POPUP_KEY = 'painel-panorama-hora'
 const zone = 'America/Sao_Paulo'
@@ -83,8 +83,8 @@ export function marketCds(cds, now=Date.now()) {
     change:v?.refDate?cds.value-cds.reference.value:null, changeUnit:' pb', refDate:v?v.refDate:null,
     stamp:v?v.when:'Sem dado válido', note:v?v.sourceName+' · não oficial':'World Government Bonds · indisponível',
     detail:v?.refDate?'Variação sobre o fechamento de '+v.refDate:'Variação do dia indisponível', color:'#ff6900',
-    dailyNote:'Risco-país · pontos-base, sem tempo real', chartLabel:'Histórico diário do CDS Brasil 5 anos, até 30 dias',
-    points:v?(cds.history||[]).filter(p=>Number.isFinite(p.observedAt)&&p.observedAt<=now&&Number.isFinite(p.value)).slice(-30).map(p=>({t:p.observedAt,bid:p.value})):[] }
+    dailyNote:'Risco-país · pontos-base, sem tempo real', chartLabel:'Histórico diário do CDS Brasil 5 anos, 12 meses',
+    points:v?(cds.history||[]).filter(p=>Number.isFinite(p.observedAt)&&p.observedAt<=now&&p.observedAt>=now-CDS_HISTORY_MS&&Number.isFinite(p.value)).map(p=>({t:p.observedAt,bid:p.value})):[] }
 }
 export function marketSummary(fx, cds) {
   const parts=fx.filter(x=>x.summaryEligible && Number.isFinite(x.change)).map(x=>`${x.key==='USD'?'Dólar':x.key==='EUR'?'Euro':'Yuan offshore'}: ${signedMarketChange(x.change)} frente ao real no dia`)

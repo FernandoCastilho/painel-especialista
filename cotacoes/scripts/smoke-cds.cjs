@@ -9,12 +9,20 @@ const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8768'
 const out = process.env.CDS_QA_OUTPUT || 'cds-qa'
 const MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+// Gráfico diário da página (um ponto por dia corrido, instante UTC da data), como a fonte monta: 400 dias terminando no dia da leitura.
+function serieGrafico(observedAt) {
+  const fim = Date.parse(new Date(observedAt - 3 * 3600000).toISOString().slice(0, 10))
+  return Array.from({ length: 400 }, (_, i) => [fim - (399 - i) * 864e5, i === 399 ? 162.85 : +(150 + 10 * Math.sin(i / 25)).toFixed(2)])
+}
+
 function paginaFonte(observedAt) {
   const d = new Date(observedAt), p = (n) => String(n).padStart(2, '0')
   const texto = `${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`
   return `<!doctype html><html><body><p>Last Update: <span id="d">-- --- ----, --:--</span> GMT+0</p>
 <p>the Brazil 5 Years Credit Default Swap (CDS) value stands at <span id="v">----</span> basis points.</p>
-<script>setTimeout(function(){document.getElementById('d').textContent=${JSON.stringify(texto)};document.getElementById('v').textContent='162.85'},400)</script></body></html>`
+<h2>Brazil 5 Years CDS - Interactive Chart</h2><div id="historical-data-chart"></div>
+<script>setTimeout(function(){document.getElementById('d').textContent=${JSON.stringify(texto)};document.getElementById('v').textContent='162.85'},400)
+setTimeout(function(){window.Highcharts={charts:[{series:[{name:'CDS',options:{data:${JSON.stringify(serieGrafico(observedAt))}}},{name:'Navigator 1',options:{isInternal:true,data:[]}}]}]}},700)</script></body></html>`
 }
 
 async function coleta() {
@@ -35,6 +43,8 @@ async function coleta() {
     assert.equal(d.value, 162.85, 'leu o número depois de a página carregar')
     assert.equal(Math.floor(d.observedAt / 60000), Math.floor(observedAt / 60000), 'horário da página')
     assert.equal(d.error, null)
+    assert.ok(d.history.length >= 365 && d.history.length <= 367, `12 meses do gráfico da página (${d.history.length})`)
+    assert.ok(d.reference, 'variação do dia já na primeira coleta')
     assert.match(await run('/fonte'), /menos de 2 h/, 'não visita de novo antes de 2 h')
     fs.writeFileSync(path.join(dir, 'cds.json'), JSON.stringify({ ...d, lastAttemptAt: Date.now() - 3 * 3600000 }))
     await run('/bloqueado')
@@ -48,7 +58,7 @@ const raw = (code, codein, bid, pct) => ({ code, codein, bid: String(bid), ask: 
 const quotes = { USDBRL: raw('USD', 'BRL', 5.28, 0.46), EURBRL: raw('EUR', 'BRL', 5.74, 0.31), JPYBRL: raw('JPY', 'BRL', 0.032, 0.1), USDCNH: raw('USD', 'CNH', 7.23, 0.18) }
 function cdsFixture(value = 162.85) {
   const end = Date.now() - 2 * 3600000
-  const history = Array.from({ length: 20 }, (_, i) => { const t = end - (19 - i) * 864e5; return { date: new Date(t - 3 * 3600000).toISOString().slice(0, 10), value: i === 19 ? value : +(150 + i * 0.7 + Math.sin(i) * 2).toFixed(2), observedAt: t } })
+  const history = Array.from({ length: 365 }, (_, i) => { const t = end - (364 - i) * 864e5; return { date: new Date(t - 3 * 3600000).toISOString().slice(0, 10), value: i === 364 ? value : +(150 + 12 * Math.sin(i / 30) + Math.sin(i) * 2).toFixed(2), observedAt: t } })
   return { generatedAt: new Date(end).toISOString(), lastAttemptAt: end, source: { name: 'World Government Bonds' }, unit: 'pb', value, observedAt: end, reference: { date: history.at(-2).date, value: 165 }, error: null, history }
 }
 
@@ -97,7 +107,11 @@ async function tela() {
       assert.equal(await modal.locator('.mp-brent').count(), 0, 'Brent saiu do Panorama')
       assert.match(await modal.locator('.mp-cds').innerText(), /CDS BRASIL 5 ANOS[\s\S]*não oficial/)
       assert.match(await modal.locator('.mp-summary').innerText(), /CDS Brasil 5 anos: −2,15 pb/)
+      const cartao = modal.locator('.mp-cds')
+      assert.equal(await cartao.getByText('Série indisponível').count(), 0, 'gráfico de 12 meses no cartão do CDS')
+      assert.equal(await cartao.getByRole('img', { name: /12 meses/ }).count(), 1)
       await modal.screenshot({ path: `${out}/${width}-panorama.png` })
+      await cartao.screenshot({ path: `${out}/${width}-panorama-cds.png` })
       await modal.getByRole('button', { name: 'Fechar panorama' }).click()
       // Dado estranho ou ausente: a linha some (e o Panorama mostra o cartão sem número).
       for (const [caso, valor] of [['fora-da-faixa', cdsFixture(5000)], ['sem-arquivo', null]]) {
