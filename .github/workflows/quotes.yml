@@ -74,6 +74,10 @@ jobs:
               else echo "::warning::Não foi possível ler os dados anteriores (branch data). Rodada sem coleta e sem publicação, para não apagar o histórico; tenta de novo na próxima."; return 0; fi
             fi
             node cotacoes/scripts/fetch-quotes.mjs || echo "coleta com erro; mantidos os arquivos anteriores"
+            # Manchetes do dólar do dia (notícias perto da máxima): na 1ª rodada e de 15 em 15 minutos. Nunca trava as cotações.
+            if [ ! -f "$DATA_DIR/fx-agora.json" ] || [ $((10#$(date -u +%M) % 15)) -lt 5 ]; then
+              timeout 60 node cotacoes/scripts/fetch-fx-agora.mjs || echo "manchetes do momento com erro; mantido o arquivo anterior"
+            fi
             [ -f "$DATA_DIR/quotes.json" ] || { echo "nada a publicar"; return 0; }
             (
               cd "$DATA_DIR"

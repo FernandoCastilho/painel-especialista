@@ -19,9 +19,13 @@ import { priorYear, rangeBetween } from './rangeCompare.js'
 import { resample, scaleOptions } from './resample.js'
 import { flagSvg } from './flags.js'
 import { useDataFile } from './useDataFile.js'
-import { eventosDiarios, eventosDoDia } from './fxNoticias.js'
+import { eventosDiarios, eventosDoDia, itensDoDia } from './fxNoticias.js'
+import { marcosEntre, marcosQueCabem } from './eventosMercado.js'
+import { noticiasPerto, useFxAgora } from './fxAgora.js'
+import { marketDate } from './marketReturns.js'
 
 const H = 240
+const FAIXA = 22 // faixa abaixo das datas para os rótulos dos eventos de mercado
 const M = { t: 12, r: 16, b: 28, l: 58 }
 
 export const fmtDate = (t, long) =>
@@ -72,7 +76,7 @@ export function Plot({ points, scales = true, ...props }) {
 }
 
 // `history`: série completa para achar o mesmo trecho um ano antes (padrão: os próprios pontos). `step`: série em degraus.
-function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos }) {
+function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos, extremos = false, marcos }) {
   const [hover, setHover] = useState(null)
   const [aberto, setAberto] = useState(null)
   const [sel, setSel] = useState(null)
@@ -174,6 +178,18 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const last = points[points.length - 1]
   // rótulos de valor: último, primeiro, máximo, mínimo e os picos e vales mais marcados, sem encavalar
   const marks = useMemo(() => marcasValor(points.map((p) => p.bid), points.map((p) => g.x(p.t))), [points, g])
+  // máxima e mínima com nome e horário (ou data); os rótulos comuns perto delas saem, para não repetir nem encavalar
+  const ext = useMemo(() => {
+    if (!extremos || points.length < 2) return []
+    const vals = points.map((p) => p.bid)
+    const hi = vals.indexOf(Math.max(...vals))
+    const lo = vals.indexOf(Math.min(...vals))
+    return vals[hi] === vals[lo] ? [] : [{ i: hi, tipo: 'max' }, { i: lo, tipo: 'min' }]
+  }, [extremos, points])
+  const rotulos = ext.length ? marks.filter(({ i }) => !ext.some((e) => Math.abs(g.x(points[i].t) - g.x(points[e.i].t)) < 96)) : marks
+  const setas = useMemo(() => (marcos?.length ? marcosQueCabem(marcos, g.x, { de: g.t0, ate: g.t1 }) : []), [marcos, g])
+  const altura = H + (setas.length ? FAIXA : 0)
+  const valorEm = (t) => points.reduce((b, p) => (Math.abs(p.t - t) < Math.abs(b.t - t) ? p : b), points[0]).bid
   const hp = hover != null ? points[hover] : null
   const [tipRef, tipW] = useLarguraBalao(hp)
   const gid = `a-${plotId.replaceAll(':', '')}`
@@ -204,9 +220,9 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
         onFocus={(e) => { if (focoPorTeclado(e)) setHover(0) }}
         onBlur={() => setHover(null)}
         onKeyDown={onKey}
-        viewBox={`0 0 ${width} ${H}`}
+        viewBox={`0 0 ${width} ${altura}`}
         width="100%"
-        height={H}
+        height={altura}
         role="img"
         aria-label={`Gráfico de linha de ${label ?? `${code}/BRL`}, de ${dateLabel ? dateLabel(g.t0) : intraday ? fmtTime(g.t0) : fmtDate(g.t0, true)} a ${dateLabel ? dateLabel(g.t1) : intraday ? fmtTime(g.t1) : fmtDate(g.t1, true)}`}
         onPointerMove={onMove}
@@ -220,6 +236,9 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             <stop offset="0" stopColor={color} stopOpacity="0.18" />
             <stop offset="1" stopColor={color} stopOpacity="0" />
           </linearGradient>
+          <marker id={`${gid}-seta`} viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0L8,4L0,8Z" className="marco-ponta" />
+          </marker>
         </defs>
         {g.yTicks.map((v) => (
           <g key={v}>
@@ -243,13 +262,42 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
         <path d={g.area} fill={`url(#${gid})`} />
         <path className="line" style={{ color }} d={g.line} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
         <circle cx={g.x(last.t)} cy={g.y(last.bid)} r="4" fill={color} className="ring" />
-        {labels && (vfmt ?? fmt) && marks.map(({ i, vale }) => {
+        {labels && (vfmt ?? fmt) && rotulos.map(({ i, vale }) => {
           const p = points[i]
           const y = g.y(p.bid)
           return (
             <g key={p.t} pointerEvents="none">
               <circle cx={g.x(p.t)} cy={y} r="2.5" fill={color} />
               <text x={g.x(p.t)} y={yRotulo(y, vale, M.t, g.base)} textAnchor={ancoraRotulo(i, points.length)} className="vlabel">{(vfmt ?? fmt)(p.bid)}</text>
+            </g>
+          )
+        })}
+        {ext.map(({ i, tipo }) => {
+          const p = points[i]
+          const x = g.x(p.t)
+          const y = g.y(p.bid)
+          const ancora = x < g.l + 80 ? 'start' : x > width - M.r - 80 ? 'end' : 'middle'
+          return (
+            <g key={tipo} pointerEvents="none" className={`extremo ${tipo}`}>
+              <circle cx={x} cy={y} r="4" />
+              <text x={x} y={yRotulo(y, tipo === 'min', M.t, g.base)} textAnchor={ancora} className="vlabel extremo-rot">
+                {tipo === 'max' ? 'Máx.' : 'Mín.'} {(vfmt ?? fmt ?? brl)(p.bid)} · {intraday ? fmtTime(p.t) : fmtDate(p.t)}
+              </text>
+            </g>
+          )
+        })}
+        {setas.map((m) => {
+          const y = g.y(valorEm(m.t))
+          const x = m.px
+          const ancora = x < g.l + 30 ? 'start' : x > width - M.r - 30 ? 'end' : 'middle'
+          const rotulo = <text x={x} y={H + 14} textAnchor={ancora} className="marco-rot">{m.rotulo}</text>
+          return (
+            <g key={`${m.t}-${m.rotulo}`} className={`marco${m.agenda ? ' agenda' : ''}`}>
+              <title>{`${m.rotulo}, ${intraday ? fmtTime(m.t) : fmtDate(m.t, true)}: ${m.fonte}`}</title>
+              {m.ate != null && <line x1={x} x2={g.x(Math.min(m.ate, g.t1))} y1={H + 2} y2={H + 2} className="marco-faixa" />}
+              {Math.min(g.base - 2, y + 30) - (y + 7) >= 8 && <line x1={x} x2={x} y1={Math.min(g.base - 2, y + 30)} y2={y + 7} className="marco-seta" markerEnd={`url(#${gid}-seta)`} />}
+              <line x1={x} x2={x} y1={g.base} y2={g.base + 5} className="marco-pe" />
+              {m.link ? <a href={m.link} target="_blank" rel="noopener noreferrer" aria-label={`${m.rotulo}: ${m.fonte}`}>{rotulo}</a> : rotulo}
             </g>
           )
         })}
@@ -358,6 +406,16 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
     if (!pts || fx.status !== 'ok') return undefined
     return intraday ? eventosDoDia(pts, fx.data, currency.code, day) : eventosDiarios(pts, fx.data, currency.code)
   }, [pts, fx.status, fx.data, currency.code, intraday, day])
+  const marcos = useMemo(() => (pts?.length ? marcosEntre(pts[0].t, pts.at(-1).t, { intradiario: intraday }) : undefined), [pts, intraday])
+  // notícias publicadas perto da máxima do dia: manchetes de 15 em 15 minutos (fx-agora.json) e as de hora em hora (fx-noticias.json)
+  const diaVisto = intraday && pts?.length ? marketDate(pts.at(-1).t) : null
+  const agora = useFxAgora(currency.code === 'USD' && intraday)
+  const maxima = useMemo(() => (intraday && pts?.length > 1 ? pts.reduce((b, p) => (p.bid > b.bid ? p : b), pts[0]) : null), [pts, intraday])
+  const perto = useMemo(() => {
+    if (!maxima || !diaVisto) return []
+    const doDia = fx.status === 'ok' ? itensDoDia(fx.data, currency.code, diaVisto, Infinity) : []
+    return noticiasPerto([agora?.dia === diaVisto ? agora.itens : [], doDia], maxima.t)
+  }, [maxima, diaVisto, agora, fx.status, fx.data, currency.code])
   const td = currency.code === 'JPY' ? 4 : 2 // iene vale centavos: precisa de mais casas
   const pct = periodChange(pts)
   const trend = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat'
@@ -389,7 +447,22 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
             <small>{h.error}</small>
           </div>
         )}
-        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} />}
+        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} extremos marcos={marcos} />}
+        {perto.length > 0 && (
+          <section className="fx-perto" aria-label="Notícias perto da máxima do dia">
+            <p className="fx-perto-head"><b>Notícias perto da máxima</b> ({brl(maxima.bid)} às {fmtTime(maxima.t)})</p>
+            <ul>
+              {perto.map((n) => (
+                <li key={n.link}>
+                  <time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}
+                  <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}</small>
+                </li>
+              ))}
+            </ul>
+            <p className="muted fx-news-note">Manchetes publicadas de 1 hora antes a 30 minutos depois da máxima, buscadas de 15 em 15 minutos. Mostram o que saiu na imprensa naquele momento, não comprovam a causa do movimento.</p>
+          </section>
+        )}
+        {marcos?.length > 0 && <p className="fx-legend"><span className="marco-chave" aria-hidden="true">↑</span> eventos de mercado com data oficial, da agenda do painel e de uma lista conferida. Nome sublinhado abre a fonte; no computador, passe o mouse sobre o nome para ver a origem.</p>}
         {eventos?.length > 0 && (intraday
           ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre a moeda e o mercado publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
           : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas da moeda no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bolinha para ver as manchetes.</p>)}

@@ -87,3 +87,16 @@ export function upcoming(now = new Date(), days = 30) {
   events.push(...focusMondays(startOfDay, end))
   return events.sort((a, b) => a.t - b.t)
 }
+
+// Eventos confirmados (sem os "previstos") entre `from` e `to`, em milissegundos: marcas do gráfico de câmbio.
+export function confirmadosEntre(from, to) {
+  const out = []
+  for (const g of GROUPS) {
+    if (g.tentative) continue
+    for (const date of g.dates) {
+      const t = zonedToUtc(date, g.time, g.tz)
+      if (t >= from && t <= to) out.push({ kind: g.kind, label: g.label, t, source: g.source })
+    }
+  }
+  return out.sort((a, b) => a.t - b.t)
+}
