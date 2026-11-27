@@ -23,7 +23,10 @@ jobs:
             const p = await b.newPage()
             const r = await p.goto('https://www.worldgovernmentbonds.com/cds-historical-data/brazil/5-years/', { waitUntil: 'domcontentloaded', timeout: 45000 })
             console.log('HTTP', r.status())
-            await p.waitForFunction(() => window.Highcharts && Highcharts.charts.some(c => c && c.series.length), null, { timeout: 45000 }).catch(e => console.log('sem Highcharts', e.message))
+            await p.waitForTimeout(3000)
+            await p.getByRole('heading', { name: /Interactive Chart/ }).scrollIntoViewIfNeeded().catch(e => console.log('sem título', e.message))
+            await p.mouse.wheel(0, 400)
+            await p.waitForFunction(() => window.Highcharts && Highcharts.charts.some(c => c && c.series.length), null, { timeout: 60000 }).catch(e => console.log('sem Highcharts', e.message))
             const info = await p.evaluate(() => {
               const H = window.Highcharts
               if (!H) return { semHighcharts: true }
