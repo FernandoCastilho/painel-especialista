@@ -29,6 +29,12 @@ export function brentContext(data) {
 // Máxima e mínima só quando a coleta trouxe a barra do mesmo pregão do último ponto. Sem série válida, sem linha.
 export const COFFEE_NY_URL = 'https://finance.yahoo.com/quote/KC%3DF'
 const nyDay = (t) => new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+// Código do vencimento na ICE para o leitor: "KCH27" -> "mar/27".
+const KC_MONTH_NAMES = { H: 'mar', K: 'mai', N: 'jul', U: 'set', Z: 'dez' }
+const contractLabel = (code) => {
+  const m = /^[A-Z]{2}([HKNUZ])(\d{2})$/.exec(code ?? '')
+  return m ? `${KC_MONTH_NAMES[m[1]]}/${m[2]}` : 'mais próximo'
+}
 export function coffeeNyContext(data) {
   const s = data?.series?.['cafe-arabica']
   if (s?.unit !== 'US¢/libra-peso') return null
@@ -38,10 +44,12 @@ export function coffeeNyContext(data) {
   if (!pts.length) return null
   const [period, [t, value]] = pts.at(-1)
   const day = s.lastDay?.t === t && Number.isFinite(s.lastDay.high) && Number.isFinite(s.lastDay.low) && s.lastDay.low <= value && value <= s.lastDay.high ? s.lastDay : null
+  // Troca de contrato: o fechamento anterior do KC=F é de outro vencimento; o anterior e a variação do dia vêm do mesmo vencimento.
+  const roll = day?.roll && Number.isFinite(day.prevClose) && day.prevClose > 0 ? day : null
   const time = Number.isFinite(day?.marketTime) ? new Date(day.marketTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : null
   return {
     id: 'coffee-ny', label: 'Café arábica · bolsa de Nova York', value, unit: s.unit, nature: 'contrato futuro ICE (KC) · diário', decimals: 2,
-    period, time, dayHigh: day?.high ?? null, dayLow: day?.low ?? null,
+    period, time, dayHigh: day?.high ?? null, dayLow: day?.low ?? null, dayPrev: roll?.prevClose ?? null, contract: roll ? contractLabel(roll.contract) : null,
     checkedAt: Number.isFinite(s.checkedAt) ? new Date(s.checkedAt).toISOString() : null, stale: !!s.stale,
     sourceName: 'Yahoo Finance · ICE Futures U.S. (KC)', sourceUrl: COFFEE_NY_URL, benchmark: 'Café arábica "C" • contrato mais próximo • atrasado e não oficial',
     history: pts.map(([p, [, v]]) => ({ period: p, value: v })),

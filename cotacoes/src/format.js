@@ -1,7 +1,12 @@
 // Formatadores e utilitários de série compartilhados (sem dependências de tela).
 export const nf = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
 // Amplitude do dia: máxima menos mínima, no formato do valor, e em % sobre a mínima (2 casas). "Amplitude = 0,1511 (2,75%)".
-export const amplitudeText = (high, low, d = 2) => `Amplitude = ${nf(high - low, d)} (${nf((high / low - 1) * 100, 2)}%)`
+// A conta usa a máxima e a mínima já arredondadas como aparecem na tela, para a subtração bater com o que se lê no card.
+const shown = (v, d) => Number(v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: false }))
+export function amplitudeText(high, low, d = 2) {
+  const h = shown(high, d), l = shown(low, d)
+  return `Amplitude = ${nf(h - l, d)} (${nf((h / l - 1) * 100, 2)}%)`
+}
 export const dmy = (iso) => iso.split('-').reverse().join('/')
 export const t12 = (iso) => Date.parse(`${iso}T12:00:00Z`)
 export function shiftMonths(iso, n) {

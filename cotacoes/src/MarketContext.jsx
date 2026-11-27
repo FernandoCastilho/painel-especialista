@@ -87,13 +87,17 @@ function CommodityTable({items, failed, onOpen, caption = 'Commodities em dólar
     const hasValue = Number.isFinite(item.value)
     const dec = item.decimals ?? (Math.abs(item.value) >= 1000 ? 0 : 2)
     const show = v => v == null ? '—' : fnum(v, dec)
-    const delta = stats ? stats.pct : Number.isFinite(item.variationPct) ? item.variationPct : null
+    // dayPrev: fechamento anterior do mesmo vencimento, quando a fonte trocou de contrato entre os dois pregões.
+    const dayPrev = Number.isFinite(item.dayPrev) && hasValue ? item.dayPrev : null
+    const prev = dayPrev ?? stats?.prev?.value ?? (Number.isFinite(item.previousValue) ? item.previousValue : null)
+    let delta = stats ? stats.pct : Number.isFinite(item.variationPct) ? item.variationPct : null
+    if (dayPrev) delta = (item.value / dayPrev - 1) * 100
     return {
-      id:item.id, name:item.label, sub:`${item.unit} · ${item.nature}${Number.isFinite(item.dayHigh) && Number.isFinite(item.dayLow) ? ` · máx. ${show(item.dayHigh)} · mín. ${show(item.dayLow)} no dia · ${amplitudeText(item.dayHigh, item.dayLow, dec).toLowerCase()}` : ''}${stats ? '' : ' · sem histórico'}`,
+      id:item.id, name:item.label, sub:`${item.unit} · ${item.nature}${Number.isFinite(item.dayHigh) && Number.isFinite(item.dayLow) ? ` · máx. ${show(item.dayHigh)} · mín. ${show(item.dayLow)} no dia · ${amplitudeText(item.dayHigh, item.dayLow, dec).toLowerCase()}` : ''}${dayPrev ? ` · troca de contrato na bolsa: anterior e Δ % no vencimento ${item.contract}` : ''}${stats ? '' : ' · sem histórico'}`,
       openLabel:stats ? `${item.label}: abrir gráfico e histórico` : `${item.label}: histórico indisponível`,
       cells:[
         {text:hasValue ? show(item.value) : '—'},
-        {text:stats?.prev ? show(stats.prev.value) : Number.isFinite(item.previousValue) ? show(item.previousValue) : '—'},
+        {text:show(prev)},
         pct(delta), pct(stats?.yoyPct), pct(stats?.ytdPct),
         {text:item.time ? `${contextDate(item.period)}, ${item.time}` : contextDate(item.period)},
       ],
