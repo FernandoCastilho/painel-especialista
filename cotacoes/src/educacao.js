@@ -7,6 +7,8 @@ import { CONCEITO_MAQUILA } from './maquila.js'
 import { CONCEITO_JUROS_FORCADOS } from './jurosForcados.js'
 import { CONCEITO_ICMS_ST } from './icmsSt.js'
 import { CONCEITO_IMPOSTO_SELETIVO } from './impostoSeletivo.js'
+import { CONCEITO_TVM } from './tvm.js'
+import { CONCEITO_BR_GAAP } from './brGaap.js'
 // Aba "Aprender": conceitos explicados em linguagem simples. Os números dos exemplos saem das funções abaixo (testadas),
 // nunca digitados no texto, para a tela não mostrar uma conta errada. Exemplos são didáticos, não cotações de mercado.
 
@@ -515,6 +517,7 @@ export const CONCEITOS = [
       resposta: 'O mercado passou a ver mais risco de crédito no país: proteger o mesmo valor ficou 100 pb (1 ponto percentual ao ano) mais caro.',
     },
   },
+  CONCEITO_BR_GAAP,
   {
     id: 'debenture',
     topico: 'Operações de crédito',
@@ -598,6 +601,7 @@ export const CONCEITOS = [
       resposta: 'Porque a emissão é mais simples e barata e o prazo é curto: não compensa montar a estrutura de uma debênture de longo prazo para uma necessidade passageira.',
     },
   },
+  CONCEITO_TVM,
   {
     id: 'fidc',
     topico: 'Operações de crédito',
@@ -1225,6 +1229,14 @@ export const LIGACOES = [
   ['lei-de-maquila', 'drawback', 'Ambos apoiam operações de exportação, mas a maquila é um regime do Paraguai e o drawback é um regime aduaneiro brasileiro: requisitos e tributos são diferentes.'],
   ['lei-de-maquila', 'custo-de-funding', 'O benefício tributário precisa ser comparado com capital de giro, logística e custo de financiar a operação; a alíquota de 1% não resume o custo total.'],
   ['lei-de-maquila', 'commodities-e-cambio', 'Insumos, contrato de maquila e exportação podem envolver moedas diferentes; preço internacional e câmbio mudam o custo da cadeia.'],
+  ['tvm', 'debenture', 'Quando o banco compra a debênture de uma empresa, ela entra no balanço como TVM, e não como operação de crédito.'],
+  ['tvm', 'nota-comercial', 'A nota comercial comprada pelo banco fica em TVM; o risco continua sendo o da empresa emissora.'],
+  ['tvm', 'marcacao-a-mercado', 'Em VJORA e VJR o título é marcado a mercado; no custo amortizado, fica na curva.'],
+  ['tvm', 'cri', 'O CRI na carteira do banco é TVM; o risco vem dos recebíveis imobiliários do lastro.'],
+  ['tvm', 'cra', 'O CRA na carteira do banco é TVM; o risco vem do agronegócio do lastro.'],
+  ['tvm', 'br-gaap', 'A regra contábil decide em qual categoria o título entra e se a oscilação de preço aparece no patrimônio ou no lucro.'],
+  ['br-gaap', 'marcacao-a-mercado', 'A norma contábil define quando um ativo é medido a valor justo e quando fica no custo amortizado.'],
+  ['br-gaap', 'dividendos', 'O lucro contábil é a base da distribuição, mas lucro contábil não é caixa.'],
   ['nota-comercial', 'fidc', 'Duas saídas para capital de giro: captar por nota comercial, no prazo definido na emissão, ou antecipar o que a empresa tem a receber por um FIDC.'],
 ]
 
@@ -1250,10 +1262,12 @@ export const CONEXAO = {
     { id: 'euribor', texto: 'é uma referência de funding bancário não garantido em euros, a prazo; não é uma taxa sem risco equivalente à SOFR. Para uma referência overnight em euros, consulte também €STR, cuja metodologia é diferente da SOFR.' },
     { id: 'custo-de-funding', texto: 'é o resultado: benchmark + spread de risco, convertido na moeda em que a instituição empresta.' },
     { id: 'cds', texto: 'é o prêmio pelo risco de crédito: quanto mais alto, mais caro captar.' },
+    { id: 'br-gaap', texto: 'é a régua contábil brasileira: diz se o número de uma empresa ou de um banco segue o CPC, as normas do Banco Central, o IFRS ou a visão gerencial.' },
     { id: 'fgi-peac', texto: 'é a garantia do BNDES que cobre parte da perda do banco em crédito a empresas de menor porte; a dívida continua da empresa.' },
     { id: 'liquidacao-antecipada', texto: 'mostra quanto vale pagar antes do vencimento: o saldo do contrato (na curva), o preço de hoje (a mercado) e a indenização pelo funding quebrado (break funding).' },
     { id: 'debenture', texto: 'é a dívida longa e formal da empresa com investidores: CDI ou IPCA mais um spread.' },
     { id: 'nota-comercial', texto: 'é um título de dívida escritural; pode financiar giro ou ponte, com prazo definido na emissão.' },
+    { id: 'tvm', texto: 'é onde debêntures, notas comerciais, CRI, CRA e títulos públicos ficam no balanço do banco, separados das operações de crédito.' },
     { id: 'fidc', texto: 'é o fundo que compra recebíveis; a subordinação protege quem tem a cota sênior.' },
     { id: 'cri', texto: 'transforma recebíveis imobiliários em título para o investidor, com patrimônio separado e, para pessoa física, isenção de IR.' },
     { id: 'cra', texto: 'é o CRI do agronegócio: lastro em safra, insumos e contratos do agro, com risco ligado a clima, commodities e câmbio.' },
