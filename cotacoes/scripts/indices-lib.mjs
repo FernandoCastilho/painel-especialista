@@ -7,3 +7,8 @@ export const toIndexPoints = (raw) => raw.filter(([t, v]) => Number.isFinite(t) 
 export function indicesFile(series, now, errors = []) {
   return { schemaVersion: 1, generatedAt: now, stale: Object.values(series).length > 0 && Object.values(series).every((s) => s.stale), errors, series }
 }
+// Máxima e mínima do último pregão (barra do Yahoo), arredondadas como os pontos; só quando a barra é a do último ponto.
+export function indexDayRange(bar, points) {
+  if (!bar || bar.t !== points.at(-1)?.[0]) return null
+  return { t: bar.t, high: Math.round(bar.high), low: Math.round(bar.low) }
+}

@@ -2,8 +2,8 @@
 // Se o Yahoo não responder, preserva o último arquivo publicado e marca como desatualizado.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { loadPrevious } from './prev-lib.mjs'
-import { parseYahoo } from './intraday-lib.mjs'
-import { INDICES, indicesFile, toIndexPoints } from './indices-lib.mjs'
+import { parseYahoo, parseYahooLastBar } from './intraday-lib.mjs'
+import { INDICES, indexDayRange, indicesFile, toIndexPoints } from './indices-lib.mjs'
 
 const output = new URL('../public/indices.json', import.meta.url)
 const now = Date.now()
@@ -17,9 +17,11 @@ for (const def of INDICES) {
   try {
     const res = await fetch(def.url, { headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-coleta)' }, signal: AbortSignal.timeout(20000) })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const points = toIndexPoints(parseYahoo(await res.json()))
+    const json = await res.json()
+    const points = toIndexPoints(parseYahoo(json))
     if (points.length < 5) throw new Error('poucos pontos')
-    series[def.id] = { symbol: def.symbol, unit: def.unit, name: def.name, points, checkedAt: now, stale: false }
+    const lastDay = indexDayRange(parseYahooLastBar(json), points)
+    series[def.id] = { symbol: def.symbol, unit: def.unit, name: def.name, points, ...(lastDay ? { lastDay } : {}), checkedAt: now, stale: false }
   } catch (e) {
     errors.push(`${def.id}: ${e.message}`)
     if (previous?.series?.[def.id]) series[def.id] = { ...previous.series[def.id], stale: true }

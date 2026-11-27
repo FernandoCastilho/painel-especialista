@@ -75,6 +75,20 @@ export function changeText(change, unit = 'pct') {
 
 const priceDigits = (code) => (code === 'JPY' ? 5 : 4)
 
+// Máxima e mínima do dia informadas pela fonte, com o horário da cotação (`at`) para saber de que dia são.
+// Sem os dois números coerentes, não há faixa: nada é estimado nem preenchido.
+export function dayRange(high, low, at, digits) {
+  if (!Number.isFinite(high) || !Number.isFinite(low) || !(low > 0) || low > high || !Number.isFinite(at)) return null
+  return { high: nf(high, digits), low: nf(low, digits), at }
+}
+const brDay = (t) => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' })
+// "Máx. 5,6525 · Mín. 5,6513"; quando a cotação não é de hoje (Brasília), leva a data: "… · 26/11".
+export function rangeText(range, now = Date.now()) {
+  if (!range) return null
+  const day = brDay(range.at)
+  return `Máx. ${range.high} · Mín. ${range.low}${day === brDay(now) ? '' : ` · ${day}`}`
+}
+
 // Itens do tipo { key, label, value, change, unit, tone } usados pela faixa, pelos indicadores e pelo mapa de variação.
 function fxItems(quotes) {
   const out = []
@@ -82,7 +96,9 @@ function fxItems(quotes) {
     const q = quotes?.[code]
     if (!q || !(q.bid > 0)) continue
     const hasDay = !q.fallback && Number.isFinite(q.pct)
-    out.push({ key: `${code}BRL`, code, label: `${q.source || code}/BRL`, value: nf(q.bid, priceDigits(code)), change: hasDay ? q.pct : null, unit: 'pct' })
+    // Yuan: máxima e mínima do cruzamento seriam só limites calculados, não negócios; ficam de fora. Referência de reserva (BCE) não tem faixa.
+    const range = code === 'CNH' || q.fallback ? null : dayRange(q.high, q.low, q.timestamp, priceDigits(code))
+    out.push({ key: `${code}BRL`, code, label: `${q.source || code}/BRL`, value: nf(q.bid, priceDigits(code)), change: hasDay ? q.pct : null, unit: 'pct', range })
   }
   return out
 }
@@ -120,7 +136,8 @@ export function finimpConverte(valor, modo, fin) {
 
 function parityItem(quotes) {
   const d = directParity(quotes)
-  if (d) return { key: 'EURUSD', code: 'PAR', label: 'EUR/USD', raw: d.bid, direct: true, comparable: true, at: { PAR: d.timestamp }, value: nf(d.bid, 4), change: Number.isFinite(d.pct) ? d.pct : null, unit: 'pct', reason: null }
+  if (d) return { key: 'EURUSD', code: 'PAR', label: 'EUR/USD', raw: d.bid, direct: true, comparable: true, at: { PAR: d.timestamp }, value: nf(d.bid, 4), change: Number.isFinite(d.pct) ? d.pct : null, unit: 'pct', reason: null, range: dayRange(d.high, d.low, d.timestamp, 4) }
+  // Paridade cruzada (EUR/BRL ÷ USD/BRL): sem máxima e mínima, que não se obtêm dividindo as faixas das duas moedas.
   const p = liveCross(quotes?.EUR, quotes?.USD)
   if (!p || quotes.EUR.fallback || quotes.USD.fallback) return null
   return { key: 'EURUSD', code: 'PAR', label: 'EUR/USD', raw: p.main, direct: false, comparable: p.comparable !== false, at: { EUR: Number(quotes.EUR.timestamp), USD: Number(quotes.USD.timestamp) }, value: nf(p.main, 4), change: p.comparable === false ? null : p.pct, unit: 'pct', reason: p.comparable === false ? 'cotações de horários distintos' : null }
@@ -160,8 +177,10 @@ export function ibovItem(file) {
   const pts = (s?.points ?? []).filter((p) => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]) && p[1] > 0)
   const last = pts.at(-1), prev = pts.at(-2)
   if (!last) return null
-  const note = new Date(last[0]).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' })
-  return { key: 'IBOV', code: 'IBOV', label: 'Ibovespa', value: nf(last[1], 0), change: prev ? (last[1] / prev[1] - 1) * 100 : null, unit: 'pct', note, stale: !!s.stale }
+  const note = brDay(last[0])
+  // Máxima e mínima só quando a coleta trouxe a barra do mesmo pregão do último ponto.
+  const range = s.lastDay?.t === last[0] ? dayRange(s.lastDay.high, s.lastDay.low, last[0], 0) : null
+  return { key: 'IBOV', code: 'IBOV', label: 'Ibovespa', value: nf(last[1], 0), change: prev ? (last[1] / prev[1] - 1) * 100 : null, unit: 'pct', note, stale: !!s.stale, range }
 }
 // Minigráfico do Ibovespa: os últimos 30 fechamentos.
 export const ibovSpark = (file) => (file?.series?.ibov?.points ?? []).slice(-30).map(([t, v]) => ({ t, bid: v }))

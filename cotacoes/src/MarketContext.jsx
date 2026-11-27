@@ -3,7 +3,7 @@ import { freightBase, freightContext } from './freight.js'
 import IndicatorHistory from './IndicatorHistory.jsx'
 import { normalizeIndicatorHistory } from './indicatorHistory.js'
 import { useEffect, useState } from 'react'
-import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, activityNeedsReview, unidadeEmDolar } from './marketContext.js'
+import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, coffeeNyContext, activityNeedsReview, unidadeEmDolar } from './marketContext.js'
 import './MarketContext.css'
 import RefreshButton from './RefreshButton.jsx'
 import IndicatorTable from './IndicatorTable.jsx'
@@ -43,6 +43,7 @@ const parseCommodities = data => contextItems(data, 'commodities', COMMODITY_IDS
 const parseBrl = data => contextItems(data, 'commodities', BRL_IDS)
 const parseFuels = data => contextItems(data, 'commodities', FUEL_IDS)
 const parseBrent = data => { const item = brentContext(data); if (!item) throw new Error('Brent inválido'); return item }
+const parseCoffeeNy = data => { const item = coffeeNyContext(data); if (!item) throw new Error('Café de Nova York indisponível'); return item }
 const fnum = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
 const fsgn = (v, d = 2, suffix = '') => (v > 0 ? '+' : v < 0 ? '−' : '') + fnum(Math.abs(v), d) + suffix
 const ftone = v => v > 0 ? 'up' : v < 0 ? 'down' : 'flat'
@@ -87,13 +88,13 @@ function CommodityTable({items, failed, onOpen, caption = 'Commodities em dólar
     const show = v => v == null ? '—' : fnum(v, dec)
     const delta = stats ? stats.pct : Number.isFinite(item.variationPct) ? item.variationPct : null
     return {
-      id:item.id, name:item.label, sub:`${item.unit} · ${item.nature}${stats ? '' : ' · sem histórico'}`,
+      id:item.id, name:item.label, sub:`${item.unit} · ${item.nature}${Number.isFinite(item.dayHigh) && Number.isFinite(item.dayLow) ? ` · máx. ${show(item.dayHigh)} · mín. ${show(item.dayLow)} no dia` : ''}${stats ? '' : ' · sem histórico'}`,
       openLabel:stats ? `${item.label}: abrir gráfico e histórico` : `${item.label}: histórico indisponível`,
       cells:[
         {text:hasValue ? show(item.value) : '—'},
         {text:stats?.prev ? show(stats.prev.value) : Number.isFinite(item.previousValue) ? show(item.previousValue) : '—'},
         pct(delta), pct(stats?.yoyPct), pct(stats?.ytdPct),
-        {text:contextDate(item.period)},
+        {text:item.time ? `${contextDate(item.period)}, ${item.time}` : contextDate(item.period)},
       ],
       disabled:!stats,
     }
@@ -159,13 +160,18 @@ export default function MarketContext({ part = '', so = '' }) {
   const market = useContextFile('market-indicators.json', parseMarket)
   const commodities = useContextFile('commodities.json', parseCommodities)
   const brent = useContextFile('oil.json', parseBrent)
+  const coffeeNy = useContextFile('insumos-precos.json', parseCoffeeNy)
   const brl = useContextFile('commodities-brl.json', parseBrl)
   const fuels = useContextFile('fuels.json', parseFuels)
   const freight = useContextFile('freight.json', freightContext)
   const freightJp = useContextFile('freight-jp.json', freightContext)
   const freightStates = { 'freight-us-ppi': freight, 'freight-jp-sppi': freightJp }
   // unidade mostrada sempre como US$ e US¢ (o arquivo de dados continua com USD)
-  const all = [brent.data, ...(commodities.data || [])].filter(Boolean).map(item => ({...item, unit:unidadeEmDolar(item.unit)}))
+  const usd = [brent.data, ...(commodities.data || [])].filter(Boolean)
+  // Café diário de Nova York logo abaixo da média mensal do café (ou no fim, se a média não veio).
+  const coffeeAt = usd.findIndex(i => i.id === 'coffee')
+  if (coffeeNy.data) usd.splice(coffeeAt < 0 ? usd.length : coffeeAt + 1, 0, coffeeNy.data)
+  const all = usd.map(item => ({...item, unit:unidadeEmDolar(item.unit)}))
   return <div className="market-context">
     {openCommodity && <SeriesHistory item={openCommodity} points={openCommodity.history || []} onClose={()=>setOpenCommodity(null)} />}
     {open && <IndicatorHistory item={open} series={freightStates[open.id] ? freightStates[open.id].data?.series : history.data?.find(s=>s.id===open.id)} loading={freightStates[open.id] ? !freightStates[open.id].data&&!freightStates[open.id].failed : !history.data&&!history.failed} failed={freightStates[open.id] ? freightStates[open.id].failed || freightStates[open.id].data?.series.stale : history.failed} onClose={()=>setOpen(null)}/>}
@@ -175,13 +181,13 @@ export default function MarketContext({ part = '', so = '' }) {
       {market.data && market.data.length < MARKET_IDS.length && <Estado tipo="aviso">Cobertura parcial: alguns indicadores não puderam ser carregados.</Estado>}
       <Aviso title="Atividade e emprego · método"><p className="context-method">Leituras conferidas manualmente; não há atualização automática destes indicadores. PMI ISM em pontos: acima de 50 indica expansão; abaixo de 50, contração. Saldos de emprego podem ser negativos e sujeitos a revisão.</p></Aviso>
     </section>}
-    {(!part || part === 'commodities') && so !== 'frete' && <section aria-labelledby="commodities-context-heading"><div className="ctx-head"><h2 id="commodities-context-heading">Commodities</h2><RefreshButton files={['commodities.json', 'oil.json', 'commodities-brl.json', 'fuels.json']} label="Commodities" /></div>
-      <Aviso title="Commodities"><p className="context-intro">Referências em dólar, incluindo exportações brasileiras de celulose. Petróleo spot diário e demais produtos em médias mensais, não preços em tempo real nem contratos futuros.</p></Aviso>
+    {(!part || part === 'commodities') && so !== 'frete' && <section aria-labelledby="commodities-context-heading"><div className="ctx-head"><h2 id="commodities-context-heading">Commodities</h2><RefreshButton files={['commodities.json', 'oil.json', 'insumos-precos.json', 'commodities-brl.json', 'fuels.json']} label="Commodities" /></div>
+      <Aviso title="Commodities"><p className="context-intro">Referências em dólar, incluindo exportações brasileiras de celulose. Petróleo spot diário e demais produtos em médias mensais. O café arábica tem também a cotação diária da bolsa de Nova York (contrato futuro), atrasada e não oficial. Nada aqui é preço em tempo real.</p></Aviso>
       {(!so || so === 'usd') && <>
       {!all.length && <Estado tipo={commodities.failed || brent.failed ? 'erro' : 'info'}>{commodities.failed || brent.failed ? 'Não foi possível carregar as referências.' : 'Carregando referências…'}</Estado>}
       {all.length > 0 && <CommodityTable items={all} failed={commodities.failed || brent.failed} onOpen={id => setOpenCommodity(all.find(i => i.id === id))} />}
       {all.length > 0 && (!brent.data || !commodities.data || commodities.data.length < COMMODITY_IDS.length) && <Estado tipo="aviso">Cobertura parcial: uma das fontes ainda não está disponível.</Estado>}
-      <Aviso title="Commodities · método"><p className="context-method">Em falhas, o painel preserva a última referência. A data da atualização não é a data do preço. Frequência de publicação e unidades variam; valores ausentes nunca são convertidos em zero. Petróleo, gás natural, diesel e gasolina de Nova York: spot diário (gás em US$/MMBtu; derivados em US$/galão, na costa leste dos EUA, antes de impostos, margens e frete). Açúcar e café: média mensal convertida de US$/kg para US¢/libra-peso, a unidade de mercado. Celulose: preço médio FOB mensal das exportações brasileiras (MDIC/SECEX), em US$/tonelada; não é cotação spot, preço de tabela ou referência exclusiva de fibra curta ou longa. Calculado como valor FOB total dividido pelo peso líquido total, convertido de kg para tonelada (SH4 4701 a 4706; exclui aparas 4707). A coleta preserva a última referência em caso de falha.</p></Aviso>
+      <Aviso title="Commodities · método"><p className="context-method">Em falhas, o painel preserva a última referência. A data da atualização não é a data do preço. Frequência de publicação e unidades variam; valores ausentes nunca são convertidos em zero. Petróleo, gás natural, diesel e gasolina de Nova York: spot diário (gás em US$/MMBtu; derivados em US$/galão, na costa leste dos EUA, antes de impostos, margens e frete). Açúcar e café: média mensal convertida de US$/kg para US¢/libra-peso, a unidade de mercado. Café arábica · bolsa de Nova York: contrato futuro "C" da ICE Futures U.S. (KC), o vencimento mais próximo, em US¢/libra-peso, pelo Yahoo Finance; consulta de hora em hora nos dias úteis, com atraso da fonte. Durante o pregão, o valor é o último negócio do dia, com o horário de Brasília na coluna Referência; depois, é o fechamento. Máxima e mínima do dia aparecem quando a fonte informa; não é preço de compra à vista nem de café físico no Brasil. Celulose: preço médio FOB mensal das exportações brasileiras (MDIC/SECEX), em US$/tonelada; não é cotação spot, preço de tabela ou referência exclusiva de fibra curta ou longa. Calculado como valor FOB total dividido pelo peso líquido total, convertido de kg para tonelada (SH4 4701 a 4706; exclui aparas 4707). A coleta preserva a última referência em caso de falha.</p></Aviso>
       </>}
       {brl.data && (!so || so === 'brl') && <>
         <CommodityTable items={brl.data} failed={brl.failed} onOpen={id => setOpenCommodity(brl.data.find(i => i.id === id))} caption="Em reais · IC-Br e soja" ariaLabel="Tabela de commodities em reais; role para ver todas as colunas" />
