@@ -1,0 +1,46 @@
+# TEMPORÁRIO: confere como o gráfico da fonte do CDS guarda o histórico. Só lê a página; não grava nada. Sai antes do PR final.
+name: CDS diagnóstico (temporário)
+on:
+  push:
+    branches: [claude/cds-grafico-historico]
+    paths: ['.github/workflows/cds-diagnostico.yml']
+jobs:
+  ler:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.63.0
+        env: { PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1' }
+      - name: Ler estrutura do gráfico
+        working-directory: ${{ runner.temp }}/pw
+        run: |
+          cat > diag.cjs <<'JS'
+          const { chromium } = require('playwright')
+          ;(async () => {
+            const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true })
+            const p = await b.newPage()
+            const r = await p.goto('https://www.worldgovernmentbonds.com/cds-historical-data/brazil/5-years/', { waitUntil: 'domcontentloaded', timeout: 45000 })
+            console.log('HTTP', r.status())
+            await p.waitForFunction(() => window.Highcharts && Highcharts.charts.some(c => c && c.series.length), null, { timeout: 45000 }).catch(e => console.log('sem Highcharts', e.message))
+            const info = await p.evaluate(() => {
+              const H = window.Highcharts
+              if (!H) return { semHighcharts: true }
+              return { version: H.version, charts: H.charts.map(c => c && {
+                renderTo: c.renderTo && (c.renderTo.id || c.renderTo.className),
+                series: c.series.map(s => {
+                  const od = s.options.data || []
+                  const dt = s.dataTable && s.dataTable.columns
+                  return { name: s.name, type: s.type, isInternal: !!s.options.isInternal, nav: !!s.baseSeries,
+                    optLen: od.length, optFirst: od.slice(0, 2), optLast: od.slice(-2),
+                    xLen: s.xData && s.xData.length, xLast: s.xData && Array.from(s.xData.slice(-2)), yLast: s.yData && Array.from(s.yData.slice(-2)),
+                    dtKeys: dt && Object.keys(dt), dtLen: dt && dt.x && dt.x.length, dtLast: dt && dt.x && [Array.from(dt.x.slice(-2)), Array.from((dt.y||[]).slice(-2))],
+                    pointsLen: s.points && s.points.length }
+                }) }) }
+            })
+            console.log(JSON.stringify(info, null, 1))
+            await b.close()
+          })()
+          JS
+          node diag.cjs
