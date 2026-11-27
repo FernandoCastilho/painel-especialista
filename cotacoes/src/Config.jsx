@@ -53,7 +53,7 @@ function DiagnosticoFontes({ quotesAt, quotesVia, quotes, quotesHealth }) {
       { key: 'reforma-tributaria', label: 'Reforma tributária (matérias dos últimos cinco dias)', at: reforma.data?.generatedAt, maxAge: ATRASO_H['reforma-tributaria'] * H, weekdays: true },
       { key:'heavy-vehicles',label:'Veículos pesados (ANFAVEA, publicação mensal)',at:heavy.data?.generatedAt,maxAge:ATRASO_H['heavy-vehicles'] * H,weekdays:true },
       { key: 'temas', label: 'Setores e insumos (matérias dos últimos cinco dias)', at: temas.data?.generatedAt, maxAge: ATRASO_H.temas * H, weekdays: true },
-      { key: 'insumos-precos', label: 'Cobre: preço diário aproximado (COMEX)', at: insumosPrecos.data?.generatedAt, maxAge: ATRASO_H['insumos-precos'] * H, weekdays: true },
+      { key: 'insumos-precos', label: 'Cobre e café: preço diário aproximado (COMEX e ICE Nova York)', at: insumosPrecos.data?.generatedAt, maxAge: ATRASO_H['insumos-precos'] * H, weekdays: true },
       { key: 'indices', label: 'Ibovespa (fechamento diário)', at: indices.data?.generatedAt, maxAge: ATRASO_H.indices * H, weekdays: true },
       { key: 'policy', label: 'Juros de política monetária (Fed, BCE, BoJ)', at: policy.data?.generatedAt, maxAge: ATRASO_H.policy * H, weekdays: true },
       { key: 'euro-curve', label: 'Curva de juros do euro (Banco Central Europeu)', at: euroCurve.data?.generatedAt, maxAge: ATRASO_H['euro-curve'] * H, weekdays: true },
