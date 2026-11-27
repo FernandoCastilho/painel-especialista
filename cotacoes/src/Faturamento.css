@@ -69,7 +69,10 @@
 .ft-atalhos .seg > button:first-child { border-radius: 8px 0 0 8px; }
 .ft-atalhos .seg > button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
 .ft-atalhos .seg > button[aria-pressed=true] { background: var(--cx-select-bg, #ffb000); color: var(--cx-select-fg, #000); }
-.ft-aviso:empty { display: none; }
+.ft-img { gap: 6px; justify-content: flex-end; }
+.ft-atalhos > .ft-icone { display: inline-grid; place-items: center; width: 40px; min-height: 40px; padding: 0; }
+.ft-atalhos > .ft-icone:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.ft-atalhos > .ft-icone:focus-visible { outline: 2px solid var(--cx-select-bg, #ffb000); outline-offset: 2px; }
 /* Paleta clara usada só no instante de gerar a imagem. */
 :root .ft.ft[data-ft-export] { --ft-bar: #000d3c; --ft-bar-fg: #fff; --ft-debt: #c2410c; --ft-debt-fg: #fff; --ft-box: #c99700; --up: #1a7f37; --down: #c62828; }
 :root .ft.ft[data-ft-export] .ft-chart { color: #1f2937; }
