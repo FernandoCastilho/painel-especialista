@@ -16,7 +16,9 @@ main.app.app-calculators {
   font-family:var(--sans);
   --cx-space:clamp(16px, 1.6vw, 24px);
   width:100%;
-  max-width:none;
+  /* Pedido de 27/11/2026: em monitor grande a calculadora não estica. Fica na largura de um notebook (1366 px), centralizada.
+     Em notebook e celular nada muda. O cabeçalho e a faixa de cotações ficam fora daqui e seguem na largura toda. */
+  max-width:1366px;
   padding:24px clamp(16px, 2vw, 32px) calc(96px + env(safe-area-inset-bottom));
 }
 
