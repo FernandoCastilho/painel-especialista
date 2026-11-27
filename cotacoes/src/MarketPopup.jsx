@@ -1,7 +1,8 @@
 import ChartFullscreen from './ChartFullscreen.jsx'
 import { useEffect, useRef } from 'react'
 import { fromInput, useIntraday } from './useHistory.js'
-import { marketFx, marketDi, marketBrent, marketSummary, signedMarketChange, marketTone } from './marketPopup.js'
+import { marketFx, marketDi, marketCds, marketSummary, signedMarketChange, marketTone } from './marketPopup.js'
+import { useCds } from './useCds.js'
 import RotulosMini from './RotulosMini.jsx'
 import { formatoComo } from './chartMarcas.js'
 import './MarketPopup.css'
@@ -26,23 +27,24 @@ function QuoteCard({ item, daily=false }) {
   return <article className={'mp-card mp-'+item.key.toLowerCase()}>
     <div className="mp-card-head"><span className="mp-symbol" aria-hidden="true">{item.symbol}</span><h3>{item.title}</h3></div>
     <p className="mp-data-stamp">{item.stamp} · {item.note}</p>
-    <div className="mp-values"><strong>{item.value}</strong><Change value={item.change}/></div>
+    <div className="mp-values"><strong>{item.value}</strong><Change value={item.change} unit={item.changeUnit||'%'}/></div>
     <p className="mp-detail">{item.detail}</p>
     {!daily&&<p className="mp-hour">Última hora: {signedMarketChange(item.hour)}</p>}
-    {daily&&<p className="mp-hour">Referência diária, não intradiária</p>}
-    <MiniLine points={item.points} color={item.color} fmt={formatoComo(item.value)} label={daily?'Histórico diário do Brent, até 30 observações':'Amostras intradiárias '+item.key+'/BRL'}/>
+    {daily&&<p className="mp-hour">{item.dailyNote||'Referência diária, não intradiária'}</p>}
+    <MiniLine points={item.points} color={item.color} fmt={formatoComo(item.value)} label={daily?item.chartLabel:'Amostras intradiárias '+item.key+'/BRL'}/>
   </article>
 }
 function MarketHeading({ slot }) {
   return <div className="mp-title-row"><span className="mp-chart-icon" aria-hidden="true"><i/><i/><i/></span><div><h2 id="market-popup-title">Panorama do dia</h2><p>Leitura rápida para decisões de crédito e câmbio</p></div><p className="mp-edition">{slot && <>{new Date(slot.day+'T12:00:00Z').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'})}<br/>{slot.hour!=null?<>Edição das {slot.hour}h · Brasília</>:'Fora do horário das edições · últimos dados'}</>}</p></div>
 }
 // Exportado para a aba Apresentar, que mostra o mesmo quadro dentro de um slide.
-export function Panorama({ slot, quotes, curves, oil }) {
+export function Panorama({ slot, quotes, curves }) {
   const day=fromInput(slot.day)
   const usd=useIntraday('USD',day), eur=useIntraday('EUR',day), cnh=useIntraday('CNH',day)
   const now=Date.now()
   const fx=[marketFx('USD',quotes?.USD,usd.data?.points,now),marketFx('EUR',quotes?.EUR,eur.data?.points,now),marketFx('CNH',quotes?.CNH,cnh.data?.points,now)]
-  const di=marketDi(curves,now), brent=marketBrent(oil,now)
+  const cdsFile=useCds()
+  const di=marketDi(curves,now), cds=marketCds(cdsFile,now)
   return <>
 
     <div className="mp-grid">
@@ -53,15 +55,15 @@ export function Panorama({ slot, quotes, curves, oil }) {
         <MiniLine points={di.points} color="#ff6900" fmt={formatoComo(di.rows[0]?.value)} label="Curva DI diária: taxa por prazo em dias úteis"/>
       </article>
       <QuoteCard item={fx[1]}/>
-      <QuoteCard item={brent} daily/>
+      <QuoteCard item={cds} daily/>
       <QuoteCard item={fx[2]}/>
     </div>
-    <div className="mp-summary"><h3><span aria-hidden="true">▤</span> O que mudou</h3><p>{marketSummary(fx,brent)}</p></div>
+    <div className="mp-summary"><h3><span aria-hidden="true">▤</span> O que mudou</h3><p>{marketSummary(fx,cds)}</p></div>
 
   </>
 }
 // O Panorama nunca abre sozinho: quem abre é o botão "Panorama do dia" do Mercado (usePanorama.js guarda o estado no App).
-export default function MarketPopup({ open, slot, onClose, quotes, curves, oil }) {
+export default function MarketPopup({ open, slot, onClose, quotes, curves }) {
   const dialog=useRef(null)
   useEffect(()=>{
     const el=dialog.current
@@ -79,6 +81,6 @@ export default function MarketPopup({ open, slot, onClose, quotes, curves, oil }
   const close=onClose
   return <dialog ref={dialog} className="market-popup" aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}}>
     <div className="mp-ribbon"><span>PME · Panorama de mercado</span><button type="button" aria-label="Fechar panorama" autoFocus onClick={close}>×</button></div>
-    <div className="mp-content"><MarketHeading slot={slot}/>{open&&slot&&<Panorama slot={slot} quotes={quotes} curves={curves} oil={oil}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Edições de hora em hora em dias úteis nacionais, das 9h às 18h. O Panorama só abre quando você pede, pelo botão no Mercado.</p></div>
+    <div className="mp-content"><MarketHeading slot={slot}/>{open&&slot&&<Panorama slot={slot} quotes={quotes} curves={curves}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Edições de hora em hora em dias úteis nacionais, das 9h às 18h. O Panorama só abre quando você pede, pelo botão no Mercado.</p></div>
   </dialog>
 }

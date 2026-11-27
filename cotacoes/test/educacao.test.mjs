@@ -85,7 +85,7 @@ test('cada conceito traz frase, explicação simples, lacunas, versão precisa, 
     assert.ok(c.lacunas.length >= 2, c.id)
     assert.ok(c.preciso.texto.length > 40 && c.preciso.formula.length > 5, c.id)
     assert.ok(c.exemplo.passos.length >= 2 && c.exemplo.resultado.length > 10, c.id)
-    assert.ok(c.noApp.texto.length > 10 && ['juros', 'cenarios', 'calculadora', 'aprender', 'bancos'].includes(c.noApp.tab), c.id)
+    assert.ok(c.noApp.texto.length > 10 && ['resumo', 'juros', 'cenarios', 'calculadora', 'aprender', 'bancos'].includes(c.noApp.tab), c.id)
     if (c.noApp.tab === 'calculadora') assert.ok(['cbs-caixa', 'finame-materiais'].includes(c.noApp.view), c.id)
     assert.ok(c.teste.pergunta.endsWith('?') && c.teste.resposta.length > 20, c.id)
   }
@@ -141,9 +141,11 @@ test('cupom cambial: dólar futuro maior com o mesmo DI reduz o cupom (resposta 
   assert.match(byId('cupom-cambial').teste.resposta, /^Cai\./)
 })
 
-test('o app não afirma ter dados que não tem (Euribor e CDS)', () => {
+test('o app não afirma ter dados que não tem (Euribor) e diz de onde vem o CDS', () => {
   assert.match(byId('euribor').noApp.texto, /não exibe a Euribor/)
-  assert.match(byId('cds').noApp.texto, /não exibe CDS/)
+  // CDS Brasil 5 anos entrou em Mercado hoje e no Panorama (27/11/2026), de fonte gratuita e não oficial.
+  assert.match(byId('cds').noApp.texto, /Mercado hoje[\s\S]*não oficial/)
+  assert.equal(byId('cds').noApp.tab, 'resumo')
 })
 
 test('aba Aprender: comandos levam ao conceito certo e preservam a ordem do terminal', () => {

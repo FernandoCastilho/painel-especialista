@@ -36,8 +36,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # Navegador sem janela para ler a página do CDS (o número só aparece depois que a página carrega). Falha aqui não para as cotações.
+      - name: Preparar leitor da página do CDS
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.63.0
       - name: Coletar e publicar (laço de 5 min no pregão, uma vez fora dele)
         env:
+          PLAYWRIGHT_DIR: ${{ runner.temp }}/pw
           DATA_DIR: /tmp/data
           AWESOMEAPI_KEY: ${{ secrets.AWESOMEAPI_KEY }}
           PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
@@ -57,7 +65,7 @@ jobs:
               if [ "$rc" -eq 2 ]; then echo "branch data ainda não existe: primeira publicação"; return 0; fi
               if [ "$rc" -eq 0 ] && git fetch -q --depth=1 origin data; then
                 rc=0
-                for f in quotes.json intraday.json history.json; do
+                for f in quotes.json intraday.json history.json cds.json; do
                   # arquivo que não existe na branch é normal (ex.: history na primeira vez); arquivo que existe precisa ser lido
                   if git cat-file -e "FETCH_HEAD:$f" 2>/dev/null; then git show "FETCH_HEAD:$f" > "$DATA_DIR/$f" || rc=1; fi
                 done
@@ -74,6 +82,8 @@ jobs:
               else echo "::warning::Não foi possível ler os dados anteriores (branch data). Rodada sem coleta e sem publicação, para não apagar o histórico; tenta de novo na próxima."; return 0; fi
             fi
             node cotacoes/scripts/fetch-quotes.mjs || echo "coleta com erro; mantidos os arquivos anteriores"
+            # CDS Brasil 5 anos (World Government Bonds, não oficial): o script só visita o site a cada ~2 h; falha não afeta as cotações.
+            timeout 150 node cotacoes/scripts/fetch-cds.mjs || echo "CDS: coleta com erro; mantido o último dado válido"
             [ -f "$DATA_DIR/quotes.json" ] || { echo "nada a publicar"; return 0; }
             (
               cd "$DATA_DIR"

@@ -8,6 +8,7 @@ const raw=(code,codein,bid,pct)=>({code,codein,bid:String(bid),ask:String(bid+.0
 const quotes={USDBRL:raw('USD','BRL',5.28,.46),EURBRL:raw('EUR','BRL',5.74,.31),JPYBRL:raw('JPY','BRL',.032,.1),USDCNH:raw('USD','CNH',7.23,.18)}
 const curves={generatedAt:instant.getTime(),br:{compare:[{id:'hoje',date:'2026-11-06'},{id:'d1',date:'2026-11-05'}],curves:{'2026-11-06':[[63,12.1],[126,12.15],[252,12.2],[504,12.35],[756,12.55],[1008,12.65],[1260,12.85]],'2026-11-05':[[63,12],[126,12.1],[252,12.15],[503,12.28],[755,12.50],[1007,12.6],[1259,12.75]]}}}
 const oil={benchmark:'Brent',kind:'spot',unit:'USD/barril',points:Array.from({length:20},(_,i)=>({date:'2026-10-'+String(12+i).padStart(2,'0'),value:80-i*.15+Math.sin(i)*.4}))}
+const cdsFixture=()=>{const end=instant.getTime()-3600000,history=Array.from({length:20},(_,i)=>{const t=end-(19-i)*864e5;return{date:new Date(t-3*3600000).toISOString().slice(0,10),value:+(150+i*.6+Math.sin(i)*2).toFixed(2),observedAt:t}});return{generatedAt:new Date(end).toISOString(),lastAttemptAt:end,source:{name:'World Government Bonds'},unit:'pb',value:history.at(-1).value,observedAt:end,reference:{date:history.at(-2).date,value:history.at(-2).value},error:null,history}}
 const intraday={generatedAt:instant.getTime(),series:Object.fromEntries(['USD','EUR','CNH','JPY'].map(code=>[code,{points:Array.from({length:25},(_,i)=>[instant.getTime()-(24-i)*300000,({USD:5.28,EUR:5.74,CNH:.73,JPY:.032}[code])*(.995+i*.0002+Math.sin(i)*.0005)])}]))}
 ;(async()=>{
  if(real){
@@ -32,6 +33,7 @@ const intraday={generatedAt:instant.getTime(),series:Object.fromEntries(['USD','
    await ctx.route('**/intraday.json*',r=>r.fulfill({json:intraday}))
    await ctx.route('**/curves.json*',r=>r.fulfill({json:curves}))
    await ctx.route('**/oil.json*',r=>r.fulfill({json:oil}))
+   await ctx.route('**/cds.json*',r=>r.fulfill({json:cdsFixture()}))
   }
   await ctx.route('**/recado.json*',r=>r.fulfill({json:{ativo:false}}))
   const p=await ctx.newPage(),errors=[]
@@ -87,7 +89,7 @@ const intraday={generatedAt:instant.getTime(),series:Object.fromEntries(['USD','
     assert.ok(layout.visible&&layout.scrollHeight<=layout.clientHeight+1&&layout.top>=0&&layout.bottom<=viewport.height,
      size+' exibe cartões, resumo e rodapé sem rolagem: '+JSON.stringify(layout))
     await modal.screenshot({path:out+'/'+size+'-'+theme+'.png'})
-    for(const key of ['brent','cnh']){
+    for(const key of ['cds','cnh']){
      const control=modal.locator('.mp-'+key).getByRole('button',{name:'Maximizar gráfico',exact:true})
      await control.click()
      const maximized=modal.locator('dialog.chart-fullscreen[open]')
