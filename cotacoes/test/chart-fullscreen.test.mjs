@@ -15,7 +15,7 @@ test('dialog modal preserva host e restaura por botão, cancel e rota', async t 
   const origin={appendChild:h=>{assert.equal(h,host);parent='inline'}}
   const modal={appendChild:h=>{assert.equal(h,host);parent='modal'},showModal:()=>{shown=true},close:()=>{shown=false}}
   const trigger={focus:()=>focus++},module={exports:{}}
-  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
+  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='./ChartFilters.jsx'?{useFiltros:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
   const children={content:'mesma instância'}
   const h=hookRenderer(()=>{const tree=module.exports.default({children});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.ref.current=trigger;return tree})
   t.after(()=>h.close());await h.settle()
@@ -32,4 +32,27 @@ test('dialog modal preserva host e restaura por botão, cancel e rota', async t 
   }
   assert.equal(focus,3)
   h.close();assert.equal(listeners.size,0)
+})
+
+test('ao maximizar, os filtros do escopo (período e escala) sobem para o topo da tela cheia e voltam ao restaurar', async t => {
+  const source = await readFile(new URL('../src/ChartFullscreen.jsx', import.meta.url), 'utf8')
+  const { code } = await transform(source, { loader:'jsx', format:'cjs', jsx:'automatic' })
+  const host={nome:'grafico'}, document={createElement:()=>host,body:{style:{overflow:'auto'}}}
+  const window={addEventListener(){},removeEventListener(){}}
+  const ordem=[], filtrosHost={nome:'filtros'}
+  const lugar={isConnected:true,appendChild:h=>ordem.push(['pagina',h.nome])}
+  const filtros={host:filtrosHost,inline:lugar}
+  const origin={appendChild:h=>ordem.push(['inline',h.nome])}
+  const modal={appendChild:h=>ordem.push(['modal',h.nome]),showModal(){},close(){}}
+  const module={exports:{}}
+  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='./ChartFilters.jsx'?{useFiltros:()=>filtros}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
+  const h=hookRenderer(()=>{const tree=module.exports.default({children:'g'});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.ref.current={focus(){}};return tree})
+  t.after(()=>h.close());await h.settle()
+  const click=async()=>{h.value.props.children[2].content.props.children[0].props.children.props.onClick({stopPropagation(){}});await h.settle()}
+  ordem.length=0
+  await click()
+  assert.deepEqual(ordem,[['modal','filtros'],['modal','grafico']])
+  ordem.length=0
+  await click()
+  assert.deepEqual(ordem.slice(0,2),[['inline','grafico'],['pagina','filtros']])
 })
