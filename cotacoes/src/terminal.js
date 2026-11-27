@@ -43,6 +43,8 @@ const TAB = {
   NEWS: ['noticias'], NOTICIAS: ['noticias'], AGENDA: ['noticias'],
   FERIADOS: ['feriados'], APRESENTAR: ['apresentar'], APRESENTACAO: ['apresentar'], CONFIG: ['config'], AJUDA: ['config'], HELP: ['config'],
   GROSSUP: ['aprender', 'gross-up'], 'GROSS-UP': ['aprender', 'gross-up'],
+  TVM: ['aprender', 'tvm'], TITULOSEVALORESMOBILIARIOS: ['aprender', 'tvm'],
+  BRGAAP: ['aprender', 'br-gaap'], GAAP: ['aprender', 'br-gaap'], BRGAP: ['aprender', 'br-gaap'],
   AMBIDESTRIA: ['aprender', 'ambidestria-organizacional'], AMBIDESTRIAORGANIZACIONAL: ['aprender', 'ambidestria-organizacional'],
   FASCISMO: ['aprender', 'fascismo'], FACISMO: ['aprender', 'fascismo'], APRENDER: ['aprender'], EDU: ['aprender'], EDUCACAO: ['aprender'], ESTUDAR: ['aprender'], CUPOM: ['aprender', 'cupom-cambial'], CUPOMCAMBIAL: ['aprender', 'cupom-cambial'], EURIBOR: ['aprender', 'euribor'], FUNDING: ['aprender', 'custo-de-funding'], CUSTODEFUNDING: ['aprender', 'custo-de-funding'], CDS: ['aprender', 'cds'],
   ACC: ['aprender', 'acc'], ADIANTAMENTOSOBRECONTRATODECAMBIO: ['aprender', 'acc'], ADIANTAMENTODECONTRATODECAMBIO: ['aprender', 'acc'],

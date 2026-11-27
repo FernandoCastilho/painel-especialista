@@ -7,6 +7,8 @@ import { CONCEITO_MAQUILA } from './maquila.js'
 import { CONCEITO_JUROS_FORCADOS } from './jurosForcados.js'
 import { CONCEITO_ICMS_ST } from './icmsSt.js'
 import { CONCEITO_IMPOSTO_SELETIVO } from './impostoSeletivo.js'
+import { CONCEITO_TVM } from './tvm.js'
+import { CONCEITO_BR_GAAP } from './brGaap.js'
 // Aba "Aprender": conceitos explicados em linguagem simples. Os números dos exemplos saem das funções abaixo (testadas),
 // nunca digitados no texto, para a tela não mostrar uma conta errada. Exemplos são didáticos, não cotações de mercado.
 
@@ -1138,10 +1140,11 @@ export const CONCEITOS = [
     },
     noApp: { texto: 'Em Juros, compare o custo de financiar a empresa após uma distribuição. O painel não apura o imposto pessoal do sócio.', tab: 'juros' },
     teste: { pergunta: 'A mesma empresa paga R$ 30 mil e depois R$ 30 mil ao mesmo sócio residente no mesmo mês; sem exceção, há retenção?', resposta: 'Sim. Soma-se R$ 60 mil no mês e recalcula-se a retenção de 10% sobre o total: R$ 6 mil. Dividir o pagamento não elimina a regra mensal.' },
-  },
+  },  CONCEITO_TVM,
+  CONCEITO_BR_GAAP,
 ]
 
-export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições', 'Gestão e estratégia']
+export const TOPICOS = ['Juros e câmbio', 'Funding e risco', 'Operações de crédito', 'Contabilidade e balanços', 'Comércio exterior', 'Inflação', 'Commodities', 'Tributos e trabalho', 'História e instituições', 'Gestão e estratégia']
 
 // Busca por palavras (todas precisam aparecer), sem diferenciar acento nem maiúscula, no conteúdo inteiro do conceito.
 const plain = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -1226,6 +1229,11 @@ export const LIGACOES = [
   ['lei-de-maquila', 'custo-de-funding', 'O benefício tributário precisa ser comparado com capital de giro, logística e custo de financiar a operação; a alíquota de 1% não resume o custo total.'],
   ['lei-de-maquila', 'commodities-e-cambio', 'Insumos, contrato de maquila e exportação podem envolver moedas diferentes; preço internacional e câmbio mudam o custo da cadeia.'],
   ['nota-comercial', 'fidc', 'Duas saídas para capital de giro: captar por nota comercial, no prazo definido na emissão, ou antecipar o que a empresa tem a receber por um FIDC.'],
+  ['tvm', 'marcacao-a-mercado', 'Os títulos avaliados a valor justo são marcados a mercado; os de custo amortizado seguem a curva da taxa contratada.'],
+  ['tvm', 'debenture', 'Debêntures compradas por um banco ou por uma empresa entram na carteira de TVM; para o banco, funcionam como crédito à emissora.'],
+  ['tvm', 'cri', 'CRI e CRA comprados por bancos ficam na carteira de TVM e podem ser somados à carteira de crédito ampliada nos resultados.'],
+  ['tvm', 'br-gaap', 'A forma de classificar e avaliar os títulos depende da regra contábil: CPC 48 nas empresas, Resolução CMN 4.966 nos bancos.'],
+  ['br-gaap', 'dividendos', 'O lucro que pode ser distribuído sai do balanço montado pela regra contábil; lucro contábil não é o mesmo que caixa disponível.'],
 ]
 
 export const CONEXAO = {
@@ -1266,6 +1274,8 @@ export const CONEXAO = {
     { id: 'commodities-e-cambio', texto: 'é a regra de conversão: o preço mundial em dólar vira preço em reais pelo câmbio.' },
     { id: 'ic-br', texto: 'resume em reais a cesta de commodities do Brasil, mostrando se o conjunto ficou mais caro ou mais barato.' },
     { id: 'combustiveis', texto: 'é o caminho do derivado em dólar até a bomba, onde entram câmbio, impostos, etanol e margens, e de onde parte da inflação.' },
+    { id: 'tvm', texto: 'é a carteira de títulos no balanço; a categoria contábil diz se o valor segue a curva ou o mercado, e a nota mostra o que está livre para pagar dívida.' },
+    { id: 'br-gaap', texto: 'é a régua contábil brasileira (Lei 6.404, CPC e reguladores); comparar balanços exige a mesma régua.' },
   ],
   // O caminho que une tudo, de ponta a ponta.
   cadeia: 'Expectativas (Focus) → Inflação → Selic e curva DI → CDI → remuneração de debêntures, notas comerciais, CRI e CRA (com o FÁCIL abrindo esse caminho às empresas menores) → custo de funding (somando o risco, medido pelo CDS) → liquidação antecipada e break funding. No comércio exterior, o ACC antecipa a receita do exportador, o drawback alivia o caixa do exportador e a maquila organiza operações no Paraguai para o exterior, com regras próprias e custos no destino a avaliar. Na ponta externa, SOFR, Euribor, diferencial de juros e cupom cambial ligam o juro em reais ao juro em dólar e em euro. Nas commodities, o preço em dólar passa pelo câmbio e vira IC-Br, soja em reais e combustível na bomba, e daí volta à inflação.',
