@@ -562,6 +562,18 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .sel-label.down, .sel-panel em.down { fill:var(--down); color:var(--down); }
 .sel-panel { display:flex; flex-direction:column; gap:4px; margin-top:8px; padding:8px 10px; border:1px solid var(--line); font-size:.8rem; line-height:1.5; font-variant-numeric:tabular-nums; }
 .sel-panel em { font-style:normal; font-weight:700; }
+.fx-sim { display:grid; gap:6px; margin-top:8px; padding:8px 10px; border:1px solid var(--line); font-size:.8rem; line-height:1.5; font-variant-numeric:tabular-nums; }
+.fx-sim-campos { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; }
+.fx-sim-valor { display:flex; align-items:center; gap:8px; }
+.fx-sim-valor span { color:var(--mut); font-weight:600; }
+.fx-sim-valor input { width:11em; min-height:40px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); font:inherit; font-size:.95rem; }
+.fx-sim-valor input[aria-invalid="true"] { border-color:var(--down); }
+.fx-sim .seg { margin:0; }
+.fx-sim p { margin:0; }
+.fx-sim-res em { font-style:normal; font-weight:700; }
+.fx-sim-res em.ruim { color:var(--down); } .fx-sim-res em.bom { color:var(--up); }
+.fx-sim-aviso { color:var(--down); }
+.fx-sim-dica, .fx-sim-nota { color:var(--mut); }
 .sel-panel small { color:var(--mut); }
 .sel-clear { align-self:flex-start; min-height:44px; padding:6px 12px; background:transparent; color:var(--amber, #e5b453); border:1px solid var(--line); font:inherit; cursor:pointer; }
 .scale-seg { margin:0 0 6px; }
@@ -682,6 +694,26 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .fx-legend { margin:6px 0 0; font-size:.75rem; line-height:1.5; color:var(--mut); }
 .fx-legend .fx-dot { position:relative; display:inline-block; width:10px; height:10px; margin:0 3px -1px 6px; cursor:default; vertical-align:baseline; }
 .fx-legend .fx-dot::after { display:none; }
+/* máxima e mínima com nome e horário; setas de eventos de mercado (data oficial) com o nome na faixa abaixo das datas */
+.extremo circle { stroke:var(--card); stroke-width:2px; }
+.extremo.max circle { fill:var(--up); }
+.extremo.min circle { fill:var(--down); }
+.extremo-rot { font-weight:600; }
+.marco-seta { stroke:var(--accent); stroke-width:1.6px; }
+.marco-ponta { fill:var(--accent); }
+.marco-pe { stroke:var(--accent); stroke-width:1px; opacity:.6; }
+.marco.agenda .marco-seta, .marco.agenda .marco-pe { stroke:var(--mut); }
+.marco.agenda .marco-ponta { fill:var(--mut); }
+.marco-faixa { stroke:var(--accent); stroke-width:2px; }
+.marco-rot { fill:var(--fg); font-size:11px; font-weight:600; }
+.marco.agenda .marco-rot { fill:var(--mut); font-weight:500; }
+.marco a .marco-rot { text-decoration:underline; text-underline-offset:2px; }
+.marco-chave { color:var(--accent); font-weight:700; margin:0 3px 0 0; }
+.fx-perto { margin:8px 0 0; padding:8px 10px; border:1px solid var(--line); border-left:3px solid var(--up); border-radius:6px; font-size:.82rem; line-height:1.45; }
+.fx-perto-head { margin:0 0 4px; }
+.fx-perto ul { margin:0; padding-left:1.1em; }
+.fx-perto li { margin:2px 0; }
+.fx-perto time { font-variant-numeric:tabular-nums; color:var(--mut); }
 .fx-news { margin-top:8px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:.82rem; line-height:1.45; }
 .fx-news-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 6px; }
 .fx-news-head em { font-style:normal; font-weight:700; }

@@ -98,3 +98,16 @@ export function juntar(arquivos, agora = Date.now(), retencao = FX_RETENCAO_DIAS
 }
 
 export const contarDias = (arq) => Object.values(arq?.moedas ?? {}).reduce((n, m) => n + Object.keys(m?.dias ?? {}).length, 0)
+
+// Manchetes do dia com horário, para "notícias perto da máxima" (fx-agora.json, na coleta de cotações de 15 em 15 minutos).
+export const FX_AGORA_ARQUIVO = 'fx-agora.json'
+export const FX_AGORA_LIMITE = 40
+// Junta o arquivo anterior com a busca nova: só manchetes do `dia`, com horário confiável, sem repetir; em ordem de horário.
+export function juntarAgora(anterior, novos, dia, code = 'USD', limite = FX_AGORA_LIMITE) {
+  const antes = anterior?.dia === dia && Array.isArray(anterior.itens) ? anterior.itens : []
+  return escolherDoDia([...novos, ...antes], dia, code, Infinity)
+    .filter((n) => !n.semHora)
+    .sort((a, b) => b.t - a.t)
+    .slice(0, limite)
+    .sort((a, b) => a.t - b.t)
+}
