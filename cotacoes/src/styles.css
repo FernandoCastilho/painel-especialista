@@ -562,6 +562,18 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .sel-label.down, .sel-panel em.down { fill:var(--down); color:var(--down); }
 .sel-panel { display:flex; flex-direction:column; gap:4px; margin-top:8px; padding:8px 10px; border:1px solid var(--line); font-size:.8rem; line-height:1.5; font-variant-numeric:tabular-nums; }
 .sel-panel em { font-style:normal; font-weight:700; }
+.fx-sim { display:grid; gap:6px; margin-top:8px; padding:8px 10px; border:1px solid var(--line); font-size:.8rem; line-height:1.5; font-variant-numeric:tabular-nums; }
+.fx-sim-campos { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; }
+.fx-sim-valor { display:flex; align-items:center; gap:8px; }
+.fx-sim-valor span { color:var(--mut); font-weight:600; }
+.fx-sim-valor input { width:11em; min-height:40px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); font:inherit; font-size:.95rem; }
+.fx-sim-valor input[aria-invalid="true"] { border-color:var(--down); }
+.fx-sim .seg { margin:0; }
+.fx-sim p { margin:0; }
+.fx-sim-res em { font-style:normal; font-weight:700; }
+.fx-sim-res em.ruim { color:var(--down); } .fx-sim-res em.bom { color:var(--up); }
+.fx-sim-aviso { color:var(--down); }
+.fx-sim-dica, .fx-sim-nota { color:var(--mut); }
 .sel-panel small { color:var(--mut); }
 .sel-clear { align-self:flex-start; min-height:44px; padding:6px 12px; background:transparent; color:var(--amber, #e5b453); border:1px solid var(--line); font:inherit; cursor:pointer; }
 .scale-seg { margin:0 0 6px; }

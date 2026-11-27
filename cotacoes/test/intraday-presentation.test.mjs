@@ -16,6 +16,8 @@ import * as chartToque from '../src/chartToque.js'
 import * as chartEixo from '../src/chartEixo.js'
 import * as chartMarcas from '../src/chartMarcas.js'
 import * as eventosMercado from '../src/eventosMercado.js'
+import * as pregao from '../src/pregao.js'
+import * as simulacaoCambio from '../src/simulacaoCambio.js'
 
 const now = Date.parse('2026-11-09T14:40:00Z'), day = '2026-11-09'
 const first = { t: Date.parse('2026-11-09T10:00:16Z'), bid: 5.5031 }
@@ -28,7 +30,7 @@ function render(points, overrides = {}) {
     './useHistory.js': { useIntraday: () => state, useHistory: () => state, useCentralDaily: () => ({}), centralFull: () => [] },
     './useMacro.js': { useMacro: () => ({}) }, './useQuotes.js': { seriesName: () => 'Dólar' },
     './dataTimestamp.js': { dataTimestamp }, './stats.js': { periodChange }, './chartLinePath.js': { chartLinePath },
-    './storage.js': { readStorage: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'loading' }) }, './fxNoticias.js': { eventosDiarios: () => [], eventosDoDia: () => [], itensDoDia: () => [] }, './eventosMercado.js': eventosMercado, './fxAgora.js': { noticiasPerto: () => [], useFxAgora: () => null }, './marketReturns.js': { marketDate }, './flags.js': { flagSvg: () => '' },
+    './storage.js': { readStorage: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'loading' }) }, './fxNoticias.js': { eventosDiarios: () => [], eventosDoDia: () => [], itensDoDia: () => [] }, './eventosMercado.js': eventosMercado, './pregao.js': pregao, './simulacaoCambio.js': simulacaoCambio, './fxAgora.js': { noticiasPerto: () => [], useFxAgora: () => null }, './marketReturns.js': { marketDate }, './flags.js': { flagSvg: () => '' },
     './resample.js': { scaleOptions: () => [] }, './ChartFilters.jsx': { useFilterSlot: () => null },
     './rangeCompare.js': {}, './chartNavigation.js': {}, './chartToque.js': chartToque, './chartEixo.js': chartEixo, './chartMarcas.js': chartMarcas, './Explain.jsx': () => null, './ChartAccess.css': {},
   }

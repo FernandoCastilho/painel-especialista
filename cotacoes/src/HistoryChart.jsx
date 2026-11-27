@@ -23,6 +23,8 @@ import { eventosDiarios, eventosDoDia, itensDoDia } from './fxNoticias.js'
 import { marcosEntre, marcosQueCabem } from './eventosMercado.js'
 import { noticiasPerto, useFxAgora } from './fxAgora.js'
 import { marketDate } from './marketReturns.js'
+import { extremos as acharExtremos, noPregao } from './pregao.js'
+import { frase, lerValor, moeda, reais, simular as simularTrecho } from './simulacaoCambio.js'
 
 const H = 240
 const FAIXA = 22 // faixa abaixo das datas para os rótulos dos eventos de mercado
@@ -76,10 +78,12 @@ export function Plot({ points, scales = true, ...props }) {
 }
 
 // `history`: série completa para achar o mesmo trecho um ano antes (padrão: os próprios pontos). `step`: série em degraus.
-function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos, extremos = false, marcos }) {
+function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos, extremos = false, marcos, simular }) {
   const [hover, setHover] = useState(null)
   const [aberto, setAberto] = useState(null)
   const [sel, setSel] = useState(null)
+  const [valorTxt, setValorTxt] = useState('')
+  const [lado, setLado] = useState('pagar')
   const [dragging, setDragging] = useState(false)
   const drag = useRef(null)
   const plotRef = useTocarFora(hover != null, setHover)
@@ -181,11 +185,10 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   // máxima e mínima com nome e horário (ou data); os rótulos comuns perto delas saem, para não repetir nem encavalar
   const ext = useMemo(() => {
     if (!extremos || points.length < 2) return []
-    const vals = points.map((p) => p.bid)
-    const hi = vals.indexOf(Math.max(...vals))
-    const lo = vals.indexOf(Math.min(...vals))
-    return vals[hi] === vals[lo] ? [] : [{ i: hi, tipo: 'max' }, { i: lo, tipo: 'min' }]
-  }, [extremos, points])
+    // na visão do dia, só o pregão (9h às 18h) conta: a amostra da madrugada costuma ser o fechamento da véspera
+    const e = acharExtremos(points, intraday)
+    return e ? [{ i: e.hi, tipo: 'max' }, { i: e.lo, tipo: 'min' }] : []
+  }, [extremos, points, intraday])
   const rotulos = ext.length ? marks.filter(({ i }) => !ext.some((e) => Math.abs(g.x(points[i].t) - g.x(points[e.i].t)) < 96)) : marks
   const setas = useMemo(() => (marcos?.length ? marcosQueCabem(marcos, g.x, { de: g.t0, ate: g.t1 }) : []), [marcos, g])
   const altura = H + (setas.length ? FAIXA : 0)
@@ -350,6 +353,36 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa). Primeiro as que falam da moeda; "mercado do dia" são manchetes gerais que podem ajudar a explicar o movimento. Mostram o que saiu na imprensa, não comprovam a causa.</p>
         </div>
       )}
+      {simular && (() => {
+        const valor = lerValor(valorTxt)
+        const sim = range && valor ? simularTrecho({ valor, v0: range.v0, v1: range.v1, lado }) : null
+        const cot = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 6 })
+        return (
+          <div className="fx-sim">
+            <div className="fx-sim-campos">
+              <label className="fx-sim-valor">
+                <span>Valor em {simular}</span>
+                <input type="text" inputMode="decimal" autoComplete="off" placeholder="Ex.: 500.000" value={valorTxt} onChange={(e) => setValorTxt(e.target.value)} aria-invalid={valorTxt.trim() !== '' && !valor} />
+              </label>
+              <div className="seg fx-sim-lado" role="radiogroup" aria-label="Lado da operação">
+                {[['pagar', 'Vou pagar'], ['receber', 'Vou receber']].map(([id, rot]) => (
+                  <button type="button" key={id} role="radio" aria-checked={lado === id} aria-pressed={lado === id} onClick={() => setLado(id)}>{rot}</button>
+                ))}
+              </div>
+            </div>
+            {valorTxt.trim() !== '' && !valor && <p className="fx-sim-aviso">Valor não reconhecido. Use, por exemplo, 500.000 ou 500 mil.</p>}
+            {sim ? (
+              <p className="fx-sim-res" role="status">
+                <b>{moeda(valor, simular)}</b> em reais, como referência: {reais(sim.r0)} (a {cot(range.v0)}) → {reais(sim.r1)} (a {cot(range.v1)}).{' '}
+                <em className={sim.efeito === 'igual' ? '' : sim.favoravel ? 'bom' : 'ruim'}>No trecho selecionado, {frase(sim)}</em> ({fmtPct(sim.pct)}).
+              </p>
+            ) : (
+              valor && <p className="fx-sim-dica">Clique e arraste no gráfico para escolher o trecho e ver o efeito em reais.</p>
+            )}
+            <p className="fx-sim-nota">Conta de referência pela cotação do gráfico ({intraday ? 'compra' : 'fechamento'}), sem spread, IOF nem tarifas. O valor digitado não é salvo.</p>
+          </div>
+        )
+      })()}
       {range && (
         <div className="sel-panel" role="status">
           <span><b>Trecho</b> {when(range.t0)} → {when(range.t1)}: <em className={tone(range.delta)}>{fmtPct(range.pct)}{rate && ' rel.'} · {abs(range.delta)}</em></span>
@@ -410,7 +443,11 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
   // notícias publicadas perto da máxima do dia: manchetes de 15 em 15 minutos (fx-agora.json) e as de hora em hora (fx-noticias.json)
   const diaVisto = intraday && pts?.length ? marketDate(pts.at(-1).t) : null
   const agora = useFxAgora(currency.code === 'USD' && intraday)
-  const maxima = useMemo(() => (intraday && pts?.length > 1 ? pts.reduce((b, p) => (p.bid > b.bid ? p : b), pts[0]) : null), [pts, intraday])
+  const maxima = useMemo(() => {
+    // máxima do pregão (9h às 18h): a amostra da madrugada costuma ser o fechamento da véspera
+    const e = intraday && pts?.length > 1 ? acharExtremos(pts, true) : null
+    return e ? pts[e.hi] : null
+  }, [pts, intraday])
   const perto = useMemo(() => {
     if (!maxima || !diaVisto) return []
     const doDia = fx.status === 'ok' ? itensDoDia(fx.data, currency.code, diaVisto, Infinity) : []
@@ -447,7 +484,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
             <small>{h.error}</small>
           </div>
         )}
-        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} extremos marcos={marcos} />}
+        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} extremos marcos={marcos} simular={currency.code} />}
         {perto.length > 0 && (
           <section className="fx-perto" aria-label="Notícias perto da máxima do dia">
             <p className="fx-perto-head"><b>Notícias perto da máxima</b> ({brl(maxima.bid)} às {fmtTime(maxima.t)})</p>
@@ -462,6 +499,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
             <p className="muted fx-news-note">Manchetes publicadas de 1 hora antes a 30 minutos depois da máxima, buscadas de 15 em 15 minutos. Mostram o que saiu na imprensa naquele momento, não comprovam a causa do movimento.</p>
           </section>
         )}
+        {intraday && pts?.some((p) => !noPregao(p.t)) && <p className="fx-legend">Máx. e mín. do dia contam só o pregão (9h às 18h de Brasília). Amostras fora desse horário aparecem na linha, mas não entram na conta.</p>}
         {marcos?.length > 0 && <p className="fx-legend"><span className="marco-chave" aria-hidden="true">↑</span> eventos de mercado com data oficial, da agenda do painel e de uma lista conferida. Nome sublinhado abre a fonte; no computador, passe o mouse sobre o nome para ver a origem.</p>}
         {eventos?.length > 0 && (intraday
           ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre a moeda e o mercado publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
