@@ -115,12 +115,12 @@ test('pós-fixado no CDI: o feriado da praça sai da contagem de dias úteis', (
 })
 
 test('Finame: com praça Belo Horizonte, o dia 15/08/2028 (Assunção) vai para 16/08 e os juros contam um dia a mais', () => {
-  const liberacao = new Date(2028, 6, 20, 12)
+  const liberacao = new Date(2028, 6, 10, 12) // 10/07/2028: antes do dia 15, 1º vencimento em 15/08
   assert.deepEqual(calendarioFiname(liberacao, 2, {}, ['BR', 'MG']).datas, ['2028-08-16', '2028-09-15'])
   assert.deepEqual(calendarioFiname(liberacao, 2).datas, ['2028-08-15', '2028-09-15'])
   const p = { valor: 100000, participacao: 100, prazo: 12, carencia: 0, custo: 'tfc', custoFinanceiro: 8, taxaBndes: 1.25, taxaAgente: 3, sistema: 'sac', periodicidade: 1, dataLiberacao: liberacao }
   const taxa = 1.08 * 1.0125 * 1.03 - 1 // composição capitalizada das três parcelas
-  for (const [calendarios, venc, dias] of [[['BR'], '2028-08-15', 26], [['BR', 'MG'], '2028-08-16', 27], [['BR', 'SPE', 'SOR'], '2028-08-16', 27], [['BR', 'PR'], '2028-08-15', 26]]) {
+  for (const [calendarios, venc, dias] of [[['BR'], '2028-08-15', 36], [['BR', 'MG'], '2028-08-16', 37], [['BR', 'SPE', 'SOR'], '2028-08-16', 37], [['BR', 'PR'], '2028-08-15', 36]]) {
     const r = simular({ ...p, calendarios })
     assert.ok(r.ok, r.erros?.join(' '))
     assert.equal(r.parcelas[0].vencimento, venc)
@@ -166,7 +166,7 @@ test('Comparador: a praça comum do topo adia giro, BNDES e desconto; FINIMP e C
   assert.ok(giroSp.cost > giroBr.cost, 'um dia a mais de juros')
   const cdiSp = evaluateColumn(newColumn('giro-cdi'), { ...shared, praca: 'SP' }, { cdi: 14.9 })
   assert.equal(cdiSp.rows[0].date, '2027-01-26')
-  const bndesShared = { ...shared, start: '2028-07-20' }
+  const bndesShared = { ...shared, start: '2028-07-10' }
   const bndesBr = evaluateColumn(newColumn('bndes'), bndesShared)
   const bndesMg = evaluateColumn(newColumn('bndes'), { ...bndesShared, praca: 'MG' })
   assert.equal(bndesBr.rows[0].date, '2028-08-15')
