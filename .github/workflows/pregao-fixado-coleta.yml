@@ -3,7 +3,7 @@ on:
   push:
     branches: [claude/pregao-fixado-coleta]
 permissions:
-  contents: read
+  contents: write
 jobs:
   coletar:
     runs-on: ubuntu-latest
@@ -14,7 +14,9 @@ jobs:
         with:
           node-version: 22
       - run: node cotacoes/scripts/fixar-pregao.mjs 2026-11-27 7 pregao-fixado.json
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pregao-fixado
-          path: pregao-fixado.json
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pregao-fixado.json
+          git commit -m 'resultado da coleta única [skip ci]'
+          git push origin HEAD:claude/pregao-fixado-coleta-resultado
