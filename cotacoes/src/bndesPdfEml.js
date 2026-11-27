@@ -7,7 +7,7 @@ const brl = v => Number.isFinite(v) ? new Intl.NumberFormat('pt-BR', { style: 'c
 const taxa = v => Number.isFinite(v) ? nbr5891(v, 2).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '% a.a.' : '—'
 const meses = n => n + (n === 1 ? ' mês' : ' meses')
 const dmy = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso || '') ? iso.split('-').reverse().join('/') : (iso || '—')
-const rotulos = { tfb: 'TFB', tfc: 'TFC', tlp: 'TLP (parte fixa J)', lcd: 'Sobretaxa LCD', tfbd: 'TFBD (taxa fixa)' }
+const rotulos = { tfb: 'TFB', tfc: 'TFC', tlp: 'TLP (parte fixa J)', lcd: 'Sobretaxa LCD', tfbd: 'TFBD (taxa fixa)', pre5: 'Pré 5 (Pré FAT)', pre3: 'Pré 3 (Pré FAT MPME)', cf: 'Custo fixo' }
 const nomeOpcao = (item, i, total) => total > 1 ? 'Opção ' + String.fromCharCode(65 + i) + ' · ' + rotulos[item.custo] : rotulos[item.custo]
 const nota = 'Simulação indicativa, sujeita à análise e aprovação. O CET estimado não substitui o CET contratual.'
 const resumo = item => [

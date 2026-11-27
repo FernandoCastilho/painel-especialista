@@ -89,7 +89,7 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
 
   return <section className="cx cf cf-pattern bw calc-standard calc-workspace cf-j" aria-labelledby="cf-j-title">
     <div className="bw-heading calc-workspace-heading">
-      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-j-title" className="cx-title">Câmbio futuro</h2></div>
+      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-j-title" className="cx-title">Câmbio futuro via euro ou yuan</h2></div>
     </div>
     <p className="cf-notice cf-j-links"><a href="#calculadora/cambio-futuro/cenarios">Comparar cenários com e sem trava</a><a href="#calculadora/cambio-futuro/tir-usd">Simular TIR pela taxa all-in</a></p>
 

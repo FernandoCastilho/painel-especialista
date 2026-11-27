@@ -1,6 +1,7 @@
 // Tabela de funding do CDC (pedido de Fernando, 25/11/2026): não fica no código. O usuário cola as células do Excel no
-// formato da planilha FUNDING (prazo em meses | taxas a.a. por vigência | taxas a.m. por vigência | linha SELIC) e a tabela
-// fica só nesta aba do navegador (sessionStorage): fechou, apagou. Usa só as colunas ao ano; a linha SELIC é ignorada.
+// formato da planilha FUNDING (prazo em meses | taxas a.a. por vigência | taxas a.m. por vigência | linha SELIC). Usa só as
+// colunas ao ano; a linha SELIC é ignorada. Com validade (pedido de Fernando, 26/11/2026): a tabela fica salva neste navegador
+// (localStorage) até o fim do dia "válido até", no horário de Brasília; no dia seguinte, ao abrir, ela se apaga e a tela avisa.
 const CHAVE = 'cdc-funding'
 const VIGENCIA = /(\d{1,2})\/(\d{1,2})\s*(?:até|ate|a|-)\s*(\d{1,2})\/(\d{1,2})/i
 const num = celula => {
@@ -62,17 +63,65 @@ export function lerFunding(texto, hoje) {
   return { ok: true, tabela }
 }
 
+// Custo digitado à mão, prazo a prazo, no lugar da tabela colada (pedido de Fernando, 26/11/2026): os prazos da foto da
+// tabela FUNDING, de 12 até 72 meses, com as duas colunas da foto: ao ano (a.a.) e ao mês (a.m.). Em cada prazo vale uma ou a
+// outra. O ao mês vira ao ano pela mesma regra da tela: (1 + a.m.)^12 − 1. Prazo em branco fica de fora.
+export const PRAZOS_DIGITADOS = Object.freeze([12, 18, 24, 36, 42, 48, 60, 72])
+export const anoDoMes = am => ((1 + am / 100) ** 12 - 1) * 100
+export function fundingDigitado(valores, hoje) {
+  const taxas = {}
+  for (const prazo of PRAZOS_DIGITADOS) {
+    const aa = String(valores?.aa?.[prazo] ?? '').trim(), am = String(valores?.am?.[prazo] ?? '').trim()
+    if (aa && am) return { ok: false, error: `No prazo de ${prazo} meses, preencha o custo ao ano ou ao mês, não os dois.` }
+    if (!aa && !am) continue
+    const v = num(aa || am)
+    const limite = aa ? 100 : 10
+    if (v === null || v <= 0 || v >= limite) return { ok: false, error: `Custo inválido no prazo de ${prazo} meses. Use o formato ${aa ? '15,58' : '1,21'}.` }
+    taxas[prazo] = aa ? v : anoDoMes(v)
+  }
+  if (!Object.keys(taxas).length) return { ok: false, error: 'Preencha o custo de pelo menos um prazo.' }
+  return { ok: true, tabela: [{ id: `digitada-${hoje}`, label: 'Custo digitado', inicio: hoje, fim: null, taxas }] }
+}
+
 // Vigência padrão: a que vale hoje; senão a mais recente já iniciada; senão a primeira.
 export const vigenciaDeHoje = (tabela, hoje) => tabela.find(v => v.inicio <= hoje && (!v.fim || hoje <= v.fim))
   ?? tabela.find(v => v.inicio <= hoje) ?? tabela[0]
 
 const valida = t => Array.isArray(t) && t.length > 0 && t.every(v => v && typeof v.id === 'string' && typeof v.label === 'string'
-  && typeof v.inicio === 'string' && v.taxas && Object.keys(v.taxas).length >= 2 && Object.values(v.taxas).every(Number.isFinite))
-export function carregarFunding() {
-  try { const t = JSON.parse(sessionStorage.getItem(CHAVE) ?? 'null'); return valida(t) ? t : null } catch { return null }
+  && typeof v.inicio === 'string' && v.taxas && Object.keys(v.taxas).length >= 1 && Object.values(v.taxas).every(Number.isFinite))
+const ISO = /^\d{4}-\d{2}-\d{2}$/
+
+// Validade sugerida: o fim mais tardio das vigências da tabela colada (ex.: "26/11 até 02/12" → 02/12). Digitada: nenhuma.
+export const validadePadrao = tabela => tabela.map(v => v.fim).filter(Boolean).sort().at(-1) ?? ''
+
+// "Válido até" informado (aaaa-mm-dd, do campo de data) → { ok, validoAte } ou { ok: false, error }.
+export function lerValidade(valor, hoje) {
+  const v = String(valor ?? '').trim()
+  if (!v) return { ok: false, error: 'Informe até quando vale o funding (válido até).' }
+  if (!ISO.test(v) || Number.isNaN(Date.parse(v))) return { ok: false, error: 'Data de validade inválida.' }
+  if (v < hoje) return { ok: false, error: 'A data de validade já passou. Informe hoje ou uma data futura.' }
+  return { ok: true, validoAte: v }
 }
-export function guardarFunding(tabela) {
-  try { if (tabela) sessionStorage.setItem(CHAVE, JSON.stringify(tabela)); else sessionStorage.removeItem(CHAVE) } catch { /* sem armazenamento: vale só enquanto a tela estiver aberta */ }
+
+// Vale até o fim do dia "válido até": no próprio dia ainda vale; no dia seguinte, venceu.
+export const fundingVencido = (validoAte, hoje) => hoje > validoAte
+
+// Salvo → { tabela, validoAte } se ainda vale; vencido → apaga e devolve { tabela: null, vencidoEm }; nada → { tabela: null }.
+// A data do vencido fica lembrada enquanto a página estiver aberta (a tela pode montar mais de uma vez), até salvar outro.
+let vencidoEm = null
+export function carregarFunding(hoje) {
+  let salvo = null
+  try { salvo = JSON.parse(localStorage.getItem(CHAVE) ?? 'null') } catch { /* sem armazenamento ou dado estragado */ }
+  if (!salvo || !valida(salvo.tabela) || typeof salvo.validoAte !== 'string' || !ISO.test(salvo.validoAte)) return vencidoEm ? { tabela: null, vencidoEm } : { tabela: null }
+  if (fundingVencido(salvo.validoAte, hoje)) { guardarFunding(null); vencidoEm = salvo.validoAte; return { tabela: null, vencidoEm } }
+  return { tabela: salvo.tabela, validoAte: salvo.validoAte }
+}
+export function guardarFunding(tabela, validoAte) {
+  if (tabela) vencidoEm = null
+  try {
+    if (tabela) localStorage.setItem(CHAVE, JSON.stringify({ validoAte, tabela })); else localStorage.removeItem(CHAVE)
+    sessionStorage.removeItem(CHAVE) // a versão anterior guardava só na aba, sem validade
+  } catch { /* sem armazenamento: vale só enquanto a tela estiver aberta */ }
 }
 
 // Funding ao ano (%) para o prazo: o do prazo exato; entre dois prazos da tabela, reta entre eles; fora dela, o da ponta.

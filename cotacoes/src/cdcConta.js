@@ -1,9 +1,9 @@
 // Conta do CDC (financiamento de veículo), reconstruída da planilha de CDC enviada por Fernando em 25/11/2026.
 // Regras conferidas contra a planilha (caso de referência em test/cdc-conta.test.mjs):
 // - Valor financiado = valor liberado + tarifa de cadastro + IOF (tudo financiado, como na planilha).
-// - 1ª parcela = liberação + carência em dias; as seguintes no mesmo dia dos meses seguintes. Vencimento em fim de semana,
-//   feriado nacional, feriado da praça do contrato ou 31/12 passa para o próximo dia útil, como no Capital de Giro; juros e
-//   IOF contam até essa data (pedido de Fernando, 25/11/2026; a planilha não ajusta).
+// - 1ª parcela = liberação + carência em dias; as seguintes no mesmo dia dos meses seguintes, como no contrato: o vencimento
+//   não muda para dia útil, e juros e IOF contam até a data do contrato (decisão de Fernando, 26/11/2026, depois de comparar
+//   com um contrato real; antes o vencimento ia para o próximo dia útil). Pagar no dia útil seguinte não muda os valores.
 // - Juros de cada parcela = saldo × ((1 + taxa a.m.)^(dias corridos do período / 30) − 1), em centavos.
 // - Parcela fixa (Price em dias corridos): a que zera o saldo na última; a última fecha os centavos.
 // - Coeficiente = parcela ÷ (valor liberado + tarifa).
@@ -16,8 +16,6 @@
 //   Ressalva: no caso de referência a planilha mostra IOF diário de R$ 14.341,35 e esta regra dá R$ 97,75 a menos.
 import { resolveCreditIof } from './iofRules.js'
 import { cgAddDays, cgDate } from './contaGarantida.js'
-import { nextBusinessDay, paymentCalendars } from './holidays.js'
-import { contractCalendars } from './pracaContrato.js'
 
 const fail = error => ({ ok: false, error })
 // Mesmo arredondamento em centavos do Capital de Giro (roundReais).
@@ -59,7 +57,7 @@ export function cdcCronograma(principal, i, start, dues) {
   return { pmt, rows }
 }
 
-export function cdcConta({ valorBem, valorLiberado, tarifas = 0, taxa, prazo, carenciaDias, inicio, calendars = ['BR'] }) {
+export function cdcConta({ valorBem, valorLiberado, tarifas = 0, taxa, prazo, carenciaDias, inicio }) {
   if (!(valorLiberado > 0)) return fail('Informe o valor liberado.')
   if (!(valorBem >= valorLiberado)) return fail('O valor do bem precisa ser igual ou maior que o valor liberado.')
   if (!(tarifas >= 0)) return fail('Confira a tarifa de cadastro.')
@@ -71,10 +69,7 @@ export function cdcConta({ valorBem, valorLiberado, tarifas = 0, taxa, prazo, ca
   const base = cents(valorLiberado + tarifas)
   const tax = resolveCreditIof({ date: inicio, profile: 'pj', operationValue: base })
   if (!tax.ok) return fail(tax.error)
-  const cals = contractCalendars(calendars)
-  if (!cals) return fail('Escolha a praça do contrato entre as praças disponíveis.')
-  const payCals = paymentCalendars(cals)
-  const dues = cdcVencimentos(firstDue, prazo).map(d => nextBusinessDay(d, payCals))
+  const dues = cdcVencimentos(firstDue, prazo)
   const i = taxa / 100
   let principal = base, flow, iofDiario, iofAdicional
   const vistos = []

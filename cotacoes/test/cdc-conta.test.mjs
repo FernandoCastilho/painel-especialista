@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { cdcConta, cdcCronograma, cdcVencimentos } from '../src/cdcConta.js'
 import { AVISOS_CDC, cdcEmlConteudo } from '../src/cdcEmail.js'
-import { fundingDoPrazo, lerFunding, spreadDaTaxa, taxaDoSpread } from '../src/cdcFunding.js'
+import { PRAZOS_DIGITADOS, anoDoMes, fundingDigitado, fundingDoPrazo, lerFunding, spreadDaTaxa, taxaDoSpread } from '../src/cdcFunding.js'
 
 // Caso de referência: planilha de CDC enviada por Fernando em 25/11/2026 (sem dados de identificação do cliente).
 // Liberação 25/11/2026, carência 30 dias, 48 parcelas, valor liberado R$ 500.000,00, tarifa de cadastro R$ 2.523,00.
@@ -29,18 +29,18 @@ test('saída da planilha: IOF adicional, coeficiente, datas e entrada', () => {
   assert.ok(r.ok)
   // 0,38% sobre o valor financiado com o próprio IOF (decisão de Fernando, 25/11/2026); a planilha dá 1.909,59, sem o IOF.
   assert.equal(r.iofAdicional, Math.round(r.principal * 0.38) / 100)
-  // Vencimentos em dia útil (pedido de Fernando, 25/11/2026): 25/12/2026 (Natal) passa para 28/12; a planilha não ajusta.
-  // Sem o ajuste: adicional 1.971,21, IOF diário 14.245,34, parcela 15.472,03.
-  assert.equal(r.iofAdicional, 1971.24)
-  assert.equal(r.primeira, '2026-12-28')
+  // Vencimento no dia do contrato, como a planilha (decisão de Fernando, 26/11/2026): 25/12/2026 (Natal) fica em 25/12.
+  // Com o antigo ajuste para dia útil (28/12): adicional 1.971,24, IOF diário 14.254,37, parcela 15.476,47.
+  assert.equal(r.iofAdicional, 1971.21)
+  assert.equal(r.primeira, '2026-12-25')
   assert.equal(r.ultima, '2030-11-25')
   assert.equal(r.pctEntrada, 0)
   assert.equal(r.coeficiente.toFixed(5), (r.parcela / 502523).toFixed(5))
   // Fechamento do IOF financiado: saldo = base + IOF, em centavos.
   assert.equal(r.principal, Math.round((502523 + r.iof) * 100) / 100)
   // Regra legal do painel (0,0082% ao dia, limite 365): R$ 14.245,34 (com o adicional sobre o valor já com IOF); a planilha mostra R$ 14.341,35 (diferença em aberto).
-  assert.equal(r.iofDiario, 14254.37)
-  assert.equal(r.parcela, 15476.47)
+  assert.equal(r.iofDiario, 14245.34)
+  assert.equal(r.parcela, 15472.03)
   assert.equal(r.rows.length, 48)
 })
 
@@ -56,10 +56,10 @@ test('erros de entrada', () => {
 
 test('e-mail em arquivo: resumo, parcelas e avisos de cotação indicativa, sem spread', () => {
   const result = cdcConta({ valorBem: 500000, valorLiberado: 500000, tarifas: 2523, taxa: 1.55, prazo: 48, carenciaDias: 30, inicio: '2026-11-25' })
-  const c = cdcEmlConteudo({ result, info: { carenciaDias: 30, dataSimulacao: '2026-11-25', praca: 'Sorocaba (SP)' } })
+  const c = cdcEmlConteudo({ result, info: { carenciaDias: 30, dataSimulacao: '2026-11-25' } })
   assert.match(c.assunto, /^CDC · cotação indicativa/)
   assert.ok(c.nome.endsWith('.eml'))
-  for (const parte of ['Valor da parcela', 'IOF total', 'Sorocaba (SP)', '48 | 25/11/2030', 'AVISOS IMPORTANTES', 'Não constitui proposta']) assert.ok(c.texto.includes(parte), parte)
+  for (const parte of ['Valor da parcela', 'IOF total', '48 | 25/11/2030', 'AVISOS IMPORTANTES', 'Não constitui proposta']) assert.ok(c.texto.includes(parte), parte)
   for (const aviso of AVISOS_CDC) assert.ok(c.texto.includes(aviso))
   assert.ok(!/spread/i.test(c.texto + c.html), 'spread é interno')
 })
@@ -108,9 +108,9 @@ test('spread composto sobre o funding do prazo, e a conta reversa devolve a mesm
 
 test('bordas: fim de mês, limite de 365 dias do IOF e carência que não cabe na 1ª parcela', () => {
   assert.deepEqual(cdcVencimentos('2027-01-31', 3), ['2027-01-31', '2027-02-28', '2027-03-31'])
-  // 31/01 e 28/02/2027 caem no domingo: passam para segunda.
+  // 31/01 e 28/02/2027 caem no domingo e ficam no domingo, como no contrato.
   const r = cdcConta({ valorBem: 100000, valorLiberado: 100000, taxa: 1, prazo: 3, carenciaDias: 30, inicio: '2027-01-01' })
-  assert.deepEqual(r.rows.map(x => x.date), ['2027-02-01', '2027-03-01', '2027-03-31'])
+  assert.deepEqual(r.rows.map(x => x.date), ['2027-01-31', '2027-02-28', '2027-03-31'])
   const longo = cdcConta({ valorBem: 100000, valorLiberado: 100000, taxa: 1, prazo: 1, carenciaDias: 180, inicio: '2026-11-25' })
   assert.equal(longo.iofDiario, Math.round(longo.principal * 0.000082 * 180 * 100) / 100)
   const ano = cdcConta({ valorBem: 100000, valorLiberado: 100000, taxa: 0, prazo: 24, carenciaDias: 30, inicio: '2026-11-25' })
@@ -156,18 +156,73 @@ test('IOF financiado fecha mesmo quando o centavo alterna (2% a.m., 36x, carênc
   assert.equal(falhas, 0)
 })
 
-test('praça do contrato: feriado local adia o vencimento e os juros e o IOF contam até o dia útil', () => {
-  // 15/08/2028 (terça) é feriado em Sorocaba (aniversário da cidade), não no calendário nacional.
-  const base = { valorBem: 200000, valorLiberado: 200000, tarifas: 2523, taxa: 1.55, prazo: 12, carenciaDias: 30, inicio: '2028-07-16' }
-  const br = cdcConta(base), sor = cdcConta({ ...base, calendars: ['BR', 'SPE', 'SOR'] })
-  assert.equal(br.primeira, '2028-08-15')
-  assert.equal(sor.primeira, '2028-08-16')
-  assert.equal(sor.rows[0].days, br.rows[0].days + 1)
-  assert.ok(sor.rows[0].interest > br.rows[0].interest)
-  assert.deepEqual(sor.rows.slice(1).map(x => x.date), br.rows.slice(1).map(x => x.date))
-  assert.equal(cdcConta({ ...base, calendars: ['XX'] }).ok, false)
-  // Todos os vencimentos em dia útil da praça (nem fim de semana, nem 31/12).
-  for (const x of cdcConta({ ...base, prazo: 60, inicio: '2026-11-30', calendars: ['BR', 'SPE', 'SOR'] }).rows) {
-    assert.ok(![0, 6].includes(new Date(x.date + 'T00:00:00Z').getUTCDay()) && !x.date.endsWith('-12-31') && !x.date.endsWith('-08-15'), x.date)
-  }
+test('vencimento no dia do contrato: fim de semana, feriado e 31/12 não mudam a data, os juros nem o IOF', () => {
+  // 15/08/2028 (terça, feriado em Sorocaba), 31/12/2028 (domingo) e 25/12/2026 (Natal) ficam na data do contrato.
+  const base = { valorBem: 200000, valorLiberado: 200000, tarifas: 2523, taxa: 1.55, prazo: 60, carenciaDias: 30, inicio: '2026-11-25' }
+  const r = cdcConta(base)
+  assert.deepEqual(r.rows.map(x => x.date), cdcVencimentos('2026-12-25', 60))
+  assert.ok(r.rows.some(x => x.date === '2026-12-25') && r.rows.some(x => x.date === '2027-12-25'))
+  // Dias corridos entre as datas do contrato: 31 de 25/11 a 25/12/2026, 31 de 25/12 a 25/01/2027.
+  assert.equal(r.rows[0].days, 30)
+  assert.equal(r.rows[1].days - r.rows[0].days, 31)
+  // Praça não existe mais na conta: o parâmetro antigo é ignorado.
+  assert.deepEqual(cdcConta({ ...base, calendars: ['BR', 'SPE', 'SOR'] }), r)
+})
+
+test('custo digitado por prazo: 12 a 72 meses, ao ano ou ao mês, mesma reta da tabela colada', () => {
+  assert.deepEqual([...PRAZOS_DIGITADOS], [12, 18, 24, 36, 42, 48, 60, 72])
+  const d = fundingDigitado({ aa: { 12: '14,37', 24: '15,04%', 48: '' }, am: {} }, '2026-11-26')
+  assert.equal(d.ok, true)
+  assert.deepEqual(d.tabela[0].taxas, { 12: 14.37, 24: 15.04 })
+  assert.equal(d.tabela[0].fim, null)
+  assert.ok(Math.abs(fundingDoPrazo(d.tabela[0], 18).taxa - 14.705) < 1e-9)
+  assert.equal(fundingDoPrazo(d.tabela[0], 36).taxa, 15.04)
+  // Ao mês vira ao ano composto: 1,21% a.m. = (1,0121)^12 − 1 = 15,5197...% a.a.
+  const m = fundingDigitado({ aa: { 12: '14,37' }, am: { 48: '1,21' } }, '2026-11-26')
+  assert.equal(m.tabela[0].taxas[12], 14.37)
+  assert.ok(Math.abs(m.tabela[0].taxas[48] - (1.0121 ** 12 - 1) * 100) < 1e-12)
+  assert.ok(Math.abs(anoDoMes(1.0832) - 13.80) < 0.01)
+  const um = fundingDigitado({ aa: { 48: '15,58' } }, '2026-11-26')
+  assert.equal(fundingDoPrazo(um.tabela[0], 48).taxa, 15.58)
+  assert.equal(fundingDoPrazo(um.tabela[0], 48).nota, null)
+  assert.equal(fundingDigitado({ aa: { 12: '14' }, am: { 12: '1,1' } }, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({}, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({ aa: { 12: 'abc' } }, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({ aa: { 12: '0' } }, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({ am: { 12: '14' } }, '2026-11-26').ok, false)
+  assert.equal(fundingDigitado({ aa: { 99: '15' } }, '2026-11-26').ok, false)
+})
+
+// Validade do funding (pedido de Fernando, 26/11/2026): vale até o fim do dia "válido até"; no dia seguinte, apaga e avisa.
+test('funding com validade: vencida apaga e avisa, no dia e futura continuam valendo', async () => {
+  const mem = () => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) } }
+  globalThis.localStorage = mem(); globalThis.sessionStorage = mem()
+  const { carregarFunding, guardarFunding, fundingVencido } = await import('../src/cdcFunding.js')
+  const { tabela } = fundingDigitado({ aa: { 12: '14,52', 72: '15,99' } }, '2026-11-26')
+  assert.equal(fundingVencido('2026-12-02', '2026-12-02'), false)
+  assert.equal(fundingVencido('2026-12-02', '2026-12-03'), true)
+  guardarFunding(tabela, '2026-12-02')
+  assert.deepEqual(carregarFunding('2026-11-26'), { tabela, validoAte: '2026-12-02' }) // validade futura
+  assert.deepEqual(carregarFunding('2026-12-02'), { tabela, validoAte: '2026-12-02' }) // no próprio dia ainda vale
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null, vencidoEm: '2026-12-02' }) // vencida: apaga e avisa
+  assert.equal(localStorage.getItem('cdc-funding'), null)
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null, vencidoEm: '2026-12-02' }) // tela montada de novo: aviso continua
+  guardarFunding(tabela, '2026-12-09') // salvou outra: some o aviso
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela, validoAte: '2026-12-09' })
+  guardarFunding(null)
+  assert.deepEqual(carregarFunding('2026-12-03'), { tabela: null })
+  localStorage.setItem('cdc-funding', JSON.stringify(tabela)) // formato antigo, sem validade: ignorado
+  assert.deepEqual(carregarFunding('2026-11-26'), { tabela: null })
+})
+
+test('validade do funding: obrigatória, não pode estar no passado, e a tabela colada sugere o fim da última vigência', async () => {
+  const { lerValidade, validadePadrao } = await import('../src/cdcFunding.js')
+  assert.equal(lerValidade('', '2026-11-26').ok, false)
+  assert.equal(lerValidade('2026-11-25', '2026-11-26').ok, false)
+  assert.equal(lerValidade('2026-13-40', '2026-11-26').ok, false)
+  assert.deepEqual(lerValidade('2026-11-26', '2026-11-26'), { ok: true, validoAte: '2026-11-26' })
+  const colada = lerFunding('\t19/11 até 25/11\t26/11 até 02/12\n12\t14,37%\t14,52%\n72\t15,84%\t15,99%', '2026-11-26')
+  assert.ok(colada.ok)
+  assert.equal(validadePadrao(colada.tabela), '2026-12-02')
+  assert.equal(validadePadrao(fundingDigitado({ aa: { 12: '14,52' } }, '2026-11-26').tabela), '')
 })

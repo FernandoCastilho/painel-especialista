@@ -22,8 +22,18 @@
 :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid > * { grid-column: auto; }
 @media (min-width: 1000px) {
   :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid > .cdc-praca { grid-column: span 2; }
 }
 @media (max-width: 540px) {
   :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid { grid-template-columns: minmax(0, 1fr); }
 }
+.cdc-funding-manual { border: 1px solid var(--bw-line, rgba(127,127,127,.3)); border-radius: 8px; padding: 8px 10px 10px; margin: 4px 0 8px; }
+.cdc-funding-manual legend { font-size: .8125rem; padding: 0 4px; }
+.cdc-funding-grade { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px 10px; align-items: center; font-size: .75rem; color: var(--bw-mut); }
+.cdc-funding-linha { display: contents; }
+.cdc-funding-grade input { width: 100%; box-sizing: border-box; min-height: 34px; font-size: .875rem; }
+.cdc-funding-grade input:disabled { opacity: .45; }
+
+.cdc-funding-validade { display: grid; gap: 4px; font-size: .8125rem; margin: 4px 0 8px; }
+.cdc-funding-validade input { max-width: 12rem; min-height: 36px; }
+.cdc-funding-validade small { color: var(--bw-mut); font-size: .75rem; }
+.cdc-funding-aviso { margin: 8px 0 0; font-size: .8125rem; color: var(--bw-warn-ink); }

@@ -31,7 +31,7 @@ test('tela: destaques sempre abertos, composição recolhida e faixa "Cotação 
   assert.match(source, /Taxa de referência/)
   assert.match(source, /Primeira parcela após carência/)
   assert.match(source, /brl\(res.total\)/)
-  assert.match(source, /<details className="fm-details"><summary>Detalhamento · \{custo\.toUpperCase\(\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
+  assert.match(source, /<details className="fm-details"><summary>Detalhamento · \{siglaCusto\(custo\)\}<\/summary>\s*<div className="fm-grade">\{quadros\.map\(quadro\)\}<\/div>/)
   assert.doesNotMatch(source, /<details className="fm-details" open/)
   // A faixa azul não aparece sozinha: só junto da comparação.
   assert.match(source, /className=\{comparar \? 'fm-hero' : undefined\}/)
@@ -49,7 +49,7 @@ test('comparação mantém cabeçalho limpo e resultados usam a taxa adotada com
   const source = readFileSync(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   // Cabeçalho da opção: nome, CET estimado e, na de menor custo, o selo (desenho aprovado em 16/11/2026).
   assert.match(source, /<span className="fm-opt-name">\{opcao\(index\)\}<\/span><b>\{cetsOk \? pct\(cets\[index\]\.anual, 2\) : '—'\}<\/b>/)
-  assert.doesNotMatch(source, /scope="col">\{item\.custo\.toUpperCase\(\)\}<small>/)
+  assert.doesNotMatch(source, /scope="col">\{(?:item\.custo\.toUpperCase\(\)|siglaCusto\(item\.custo\))\}<small>/)
   assert.match(source, /pct\(item\.rate\.value, 4\)/)
   assert.match(source, /item\.rate\.manual \? ' \(taxa manual\)' : ''/)
   assert.match(source, /className="fm-reference-sources"/)

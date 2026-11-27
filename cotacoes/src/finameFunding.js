@@ -1,4 +1,4 @@
-import { CUSTOS, faixaTfb, faixaTfc, simular, vencimentoDia15 } from './finameMateriais.js'
+import { CUSTOS, CUSTOS_EXTRAS, faixaTfb, faixaTfc, simular, vencimentoDia15 } from './finameMateriais.js'
 import { creditCet } from './creditComparison.js'
 import { parseDecimal } from './emprestimo.js'
 
@@ -47,9 +47,20 @@ export const FINAME_FUNDING_OPTIONS = Object.freeze([
 
 // Custos que cada perfil da calculadora oferece. Finame Veículos · Ônibus e caminhões: os que a sugestão de 23/11/2026 vinculou à linha
 // (TFB, TFC, TFC MPME pelo porte, TLP e Taxa LCD); a TFBD fica fora (não disponível no Itaú).
-const FINAME_FUNDING_OPTIONS_VEICULOS = Object.freeze(FINAME_FUNDING_OPTIONS.filter(option => option.id !== 'tfbd'))
-export const finameFundingOptionsDo = produto => (produto === 'veiculos-onibus' ? FINAME_FUNDING_OPTIONS_VEICULOS : FINAME_FUNDING_OPTIONS)
-export const finameFundingOption = id => FINAME_FUNDING_OPTIONS.find(option => option.id === id) ?? null
+// Finame BK · Máquinas e equipamentos: TFB, Pré 5, Pré 3 (só MPME), TLP e Taxa LCD, os custos da página do produto sem a TFBD (fora do
+// Itaú); a TFC que a sugestão de 23/11/2026 pedia não é aceita pelo BNDES para máquinas. Brasil Soberano: só o custo fixo do programa.
+const EXTRAS = Object.freeze(CUSTOS_EXTRAS.map(option => Object.freeze({ ...option, mode: 'inline' })))
+const FINAME_FUNDING_CATALOG = Object.freeze([...FINAME_FUNDING_OPTIONS, ...EXTRAS])
+const opcoes = ids => Object.freeze(ids.map(id => FINAME_FUNDING_CATALOG.find(option => option.id === id)))
+const OPCOES_DO_PRODUTO = Object.freeze({
+  'veiculos-onibus': Object.freeze(FINAME_FUNDING_OPTIONS.filter(option => option.id !== 'tfbd')),
+  'bk-maquinas': opcoes(['tfb', 'pre5', 'pre3', 'tlp', 'lcd']),
+  'brasil-soberano-bk': opcoes(['cf']),
+})
+export const finameFundingOptionsDo = produto => OPCOES_DO_PRODUTO[produto] ?? FINAME_FUNDING_OPTIONS
+export const finameFundingOption = id => FINAME_FUNDING_CATALOG.find(option => option.id === id) ?? null
+// Nome curto do custo para rótulos e tabelas (TFC, TFB, Pré 5, Custo fixo...).
+export const siglaCusto = id => finameFundingOption(id)?.sigla ?? String(id).toUpperCase()
 export const isFinamePos = id => finameFundingOption(id)?.mode === 'pos'
 
 // Taxa de referência dos pós-fixados (J da TLP, LD1 ou TFBD): cotação do painel ou taxa manual. A LD1 pode ser negativa.
