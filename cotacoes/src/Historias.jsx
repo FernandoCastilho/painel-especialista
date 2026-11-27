@@ -5,14 +5,15 @@ import logoBlockbuster from './assets/historias/blockbuster.svg'
 import logoSpotify from './assets/historias/spotify.svg'
 import logoUber from './assets/historias/uber.svg'
 import logoApple from './assets/historias/apple.svg'
+import logoCatupiry from './assets/historias/catupiry.svg'
 import { HISTORIAS, TEMAS_HISTORIAS, casosDoTema } from './historias.js'
 
-const logos = { ifood: logoIfood, netflix: logoNetflix, blockbuster: logoBlockbuster, spotify: logoSpotify, uber: logoUber, 'apple-iphone': logoApple }
+const logos = { ifood: logoIfood, netflix: logoNetflix, blockbuster: logoBlockbuster, spotify: logoSpotify, uber: logoUber, 'apple-iphone': logoApple, catupiry: logoCatupiry }
 const centro = [50, 50]
 // Mantenha um ponto no mapa para cada marca e tema cadastrados em historias.js.
 const pontos = {
   ifood: [18, 10], netflix: [50, 10], blockbuster: [82, 10],
-  uber: [18, 90], 'apple-iphone': [50, 90], spotify: [82, 90],
+  uber: [18, 90], 'apple-iphone': [50, 90], spotify: [82, 90], catupiry: [15, 50],
   'origem-fisica': [18, 30], 'locacao-video': [50, 30], logistica: [82, 30],
   'plataformas-locais': [18, 70], 'ecossistema-mobile': [50, 70], streaming: [82, 70],
 }

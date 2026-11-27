@@ -13,9 +13,9 @@ test('Histórias é uma seção navegável no menu Mais, sem mudar atalhos', () 
   assert.match(readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8'), /tab === 'historias' && <Historias view=\{sub\}/)
 })
 
-test('os seis casos têm data, marcos e fontes; os temas ligam somente casos pertinentes', async () => {
+test('os sete casos têm data, marcos e fontes; os temas ligam somente casos pertinentes', async () => {
   const { HISTORIAS, TEMAS_HISTORIAS, casosDoTema } = await import('../src/historias.js')
-  assert.deepEqual(HISTORIAS.map(({ id, fundacao, anoLancamento }) => [id, fundacao ?? anoLancamento]), [['ifood', '2011'], ['netflix', '1997'], ['blockbuster', '1985'], ['spotify', '2006'], ['uber', '2009'], ['apple-iphone', '2007']])
+  assert.deepEqual(HISTORIAS.map(({ id, fundacao, anoLancamento }) => [id, fundacao ?? anoLancamento]), [['ifood', '2011'], ['netflix', '1997'], ['blockbuster', '1985'], ['spotify', '2006'], ['uber', '2009'], ['apple-iphone', '2007'], ['catupiry', '1911']])
   for (const historia of HISTORIAS) {
     assert.ok(historia.marcos.length >= 4)
     assert.ok(historia.fontes.length >= 2)
