@@ -137,6 +137,17 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/faturamento
           if-no-files-found: warn
           retention-days: 7
+      - name: Conferir Mapa do site (mapa mental fixo, notebook, tela grande e celular)
+        run: MAPA_SITE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/mapa-site" node scripts/smoke-mapa-site.cjs
+      - name: Capturas do Mapa do site
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-site-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/mapa-site
+          if-no-files-found: warn
+          retention-days: 7
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4

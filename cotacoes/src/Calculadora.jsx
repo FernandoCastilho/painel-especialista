@@ -30,7 +30,7 @@ const CambioFuturo = lazy(() => import('./CambioFuturo.jsx'))
 const CambioFuturoCenario = lazy(() => import('./CambioFuturoCenario.jsx'))
 const DividendosEmprestimo = lazy(() => import('./DividendosEmprestimo.jsx'))
 
-const CALCS = [
+export const CALCS = [
   { id: 'finame-materiais', title: 'BNDES', sub: 'Simular Finame, comparar custos e consultar taxas', Icon: FinameIcon },
   { id: 'comparador-credito', title: 'Necessidade do Cliente', sub: 'De 1 a 5 operações: cotação, custo, CET e fluxo', Icon: CreditIcon },
   { id: 'operacao-di', title: 'Operação x DI', sub: 'Pré, % do CDI ou CDI + spread contra o DI da curva B3', Icon: OperacaoDiIcon },
