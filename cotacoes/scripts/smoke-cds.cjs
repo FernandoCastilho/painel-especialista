@@ -3,7 +3,8 @@
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path'), http = require('node:http')
-const { execFileSync } = require('node:child_process')
+const { execFile } = require('node:child_process')
+const { promisify } = require('node:util')
 const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8768'
 const out = process.env.CDS_QA_OUTPUT || 'cds-qa'
 const MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -25,17 +26,18 @@ async function coleta() {
   await new Promise((ok) => server.listen(0, '127.0.0.1', ok))
   const url = `http://127.0.0.1:${server.address().port}`
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cds-'))
-  const run = (pagina) => execFileSync(process.execPath, ['scripts/fetch-cds.mjs'], { encoding: 'utf8', env: { ...process.env, DATA_DIR: dir, CDS_URL: url + pagina, PLAYWRIGHT_DIR: process.cwd(), CHROME_PATH: process.env.CHROMIUM_PATH || '/usr/bin/google-chrome' } })
+  // Assíncrono: o servidor de teste roda neste mesmo processo e precisa responder enquanto o coletor espera.
+  const run = async (pagina) => (await promisify(execFile)(process.execPath, ['scripts/fetch-cds.mjs'], { encoding: 'utf8', env: { ...process.env, DATA_DIR: dir, CDS_URL: url + pagina, PLAYWRIGHT_DIR: process.cwd(), CHROME_PATH: process.env.CHROMIUM_PATH || '/usr/bin/google-chrome' } })).stdout
   const ler = () => JSON.parse(fs.readFileSync(path.join(dir, 'cds.json'), 'utf8'))
   try {
-    console.log(run('/fonte').trim())
+    console.log((await run('/fonte')).trim())
     let d = ler()
     assert.equal(d.value, 162.85, 'leu o número depois de a página carregar')
     assert.equal(Math.floor(d.observedAt / 60000), Math.floor(observedAt / 60000), 'horário da página')
     assert.equal(d.error, null)
-    assert.match(run('/fonte'), /menos de 2 h/, 'não visita de novo antes de 2 h')
+    assert.match(await run('/fonte'), /menos de 2 h/, 'não visita de novo antes de 2 h')
     fs.writeFileSync(path.join(dir, 'cds.json'), JSON.stringify({ ...d, lastAttemptAt: Date.now() - 3 * 3600000 }))
-    run('/bloqueado')
+    await run('/bloqueado')
     d = ler()
     assert.equal(d.value, 162.85, 'bloqueio mantém o último dado válido')
     assert.match(d.error, /HTTP 403/)
