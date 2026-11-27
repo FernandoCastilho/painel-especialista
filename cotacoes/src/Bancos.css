@@ -87,3 +87,18 @@
 .bank-metric-history .bank-detail-table { max-width:100%; }
 .bank-metric-history .bank-detail-table table { min-width:600px; }
 .bank-metric-history .bank-detail-table th,.bank-metric-history .bank-detail-table td { padding:12px; border-bottom:1px solid var(--line); }
+/* Visão "Taxas cobradas": ranking das taxas médias do BC por modalidade */
+.banks-views { margin-bottom:12px; }
+.rates-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0; }
+.rates-summary > div { padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); min-width:0; }
+.rates-summary dt { font-size:.75rem; color:var(--mut); }
+.rates-summary dd { margin:2px 0 0; font-weight:600; font-variant-numeric:tabular-nums; }
+.rates-summary small { display:block; font-weight:400; font-size:.75rem; color:var(--mut); overflow-wrap:anywhere; }
+.rates-table { width:100%; border-collapse:separate; border-spacing:0; font-size:.85rem; }
+.rates-table caption { text-align:left; color:var(--mut); padding:12px; background:var(--card); }
+.rates-table th,.rates-table td { padding:8px 10px; border-bottom:1px solid var(--line); background:var(--card); text-align:right; font-variant-numeric:tabular-nums; }
+.rates-table thead th { position:sticky; top:0; z-index:1; background:var(--surface-2); font-weight:600; }
+.rates-table tbody th { text-align:left; font-weight:400; }
+.rates-table thead th:nth-child(2) { text-align:left; }
+.rates-table td:first-child,.rates-table thead th:first-child { width:5.5em; text-align:left; color:var(--mut); }
+@media (max-width:560px) { .rates-summary { grid-template-columns:1fr; } .rates-table { font-size:.8rem; } .rates-table th,.rates-table td { padding:8px 6px; } }

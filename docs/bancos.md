@@ -55,3 +55,10 @@ Compactação por espaçamentos e larguras, preservando o tamanho das letras e o
 
 ### Recuperação de transporte do IF.data
 Os relatórios são consultados sequencialmente, evitando seis transferências grandes simultâneas. Falhas reconhecidas de conexão/timeout e HTTP 408/429/500/502/503/504 recebem no máximo três tentativas, com espera limitada e respeito a cooldowns longos (sem nova tentativa automática). Recusas de acesso, redirecionamentos e falhas desconhecidas não são repetidos. O aviso identifica trimestre e relatório. Persistindo a falha, o snapshot anterior continua preservado; uma execução de testes não comprova disponibilidade do serviço externo.
+
+## Taxas cobradas de empresas (2026-11-27)
+A aba Bancos ganha a visão **Taxas cobradas**, ao lado de **Indicadores**. Mostra a taxa média de cada instituição por modalidade de crédito PJ, da menor para a maior, em % a.m. e % a.a., com mediana, menor e maior. A modalidade e a instituição se escolhem digitando. A posição é sempre a da lista completa; taxas iguais dividem a posição. Nenhuma instituição é destacada.
+
+Fonte: serviço `taxaJuros` v2 do Banco Central, recurso `TaxasJurosDiariaPorInicioPeriodo`, segmento pessoa jurídica. Cada janela cobre 5 dias úteis e sai com cerca de duas semanas de atraso. A taxa é o custo efetivo médio ponderado pelo valor contratado: juros mais encargos fiscais e operacionais. Nas pós-fixadas, já inclui o indexador e o spread; a comparação certa é com o CET da proposta. Instituição sem operação na janela não aparece.
+
+Coleta: `scripts/fetch-taxas-juros.mjs`, no mesmo passo de hora em hora dos bancos. Lê a janela mais recente e todas as linhas PJ dela. Falha, resposta inválida, janela mais antiga que a guardada ou menos modalidades na mesma janela mantêm a base anterior, marcada como pendente, e a tela avisa. `public/taxas-juros.json` entra no inventário preservado (`RETAIN_JSON_FILES`). Como o arquivo ainda não existe no site publicado, a primeira publicação precisa rodar com `refresh_data=true`; uma publicação só de código pararia ao não encontrar o arquivo.

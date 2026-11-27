@@ -3,6 +3,13 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '27/11/2026',
+    destaques: ['Bancos: taxas médias cobradas de empresas, por instituição e modalidade'],
+    items: [
+      'Em Bancos > Taxas cobradas, veja a taxa média que cada instituição cobrou de empresas em capital de giro, conta garantida, desconto de duplicatas, cheque especial, ACC e outras modalidades, da menor para a maior, em % a.m. e % a.a., com a mediana. Os dados são do Banco Central, da última janela de 5 dias úteis, com cerca de duas semanas de atraso. A taxa é o custo médio com encargos e, nas pós-fixadas, já inclui o indexador: compare com o CET da proposta. Digite para escolher a modalidade ou buscar a instituição.',
+    ],
+  },
+  {
     date: '26/11/2026',
     destaques: ['BNDES: Finame Veículos para ônibus e caminhões, até 10 anos', 'BNDES: Finame BK (máquinas) e Brasil Soberano (bens de capital)', 'Investimentos: ativos em comparação em mosaico', 'Investimentos: fundos GARB destacados na busca', 'Investimentos: lâmina da CVM na página do fundo'],
     items: [

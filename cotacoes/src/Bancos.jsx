@@ -5,6 +5,7 @@ import Expandable from './Expandable.jsx'
 import { BANK_SOURCE_PAGE, BANKS, BANK_METRICS, bankNumber, quarterLabel, latestBankPoint, bankComparison, metricChange } from './bancos.js'
 import BankMetricHistory from './BankMetricHistory.jsx'
 import { bankMetricLeaders } from './bancosHistory.js'
+import TaxasBancos from './TaxasBancos.jsx'
 import './Bancos.css'
 
 function Value({ point, previous, metric, trophy }) {
@@ -25,7 +26,7 @@ function BankDetails({ bank, point, previous, expanded = false }) {
     <a href={bank.ri} target="_blank" rel="noreferrer">Central de resultados de {bank.name}</a>
   </details>
 }
-export default function Bancos() {
+function Indicadores() {
   const file = useDataFile('bancos.json')
   const [mode, setMode] = useState('latest'), [segment, setSegment] = useState('Total'), [comparison, setComparison] = useState(-1), [query, setQuery] = useState(''), [details, setDetails] = useState(null), [history, setHistory] = useState(null)
   const banks = (file.data?.banks || []).filter(b => BANKS.some(item => item.id === b.id) && b.name.toLocaleLowerCase('pt-BR').includes(query.trim().toLocaleLowerCase('pt-BR'))).map(b => ({ ...b, logo: BANKS.find(item => item.id === b.id).logo }))
@@ -69,4 +70,11 @@ export default function Bancos() {
     {history && <Expandable modal label={`Histórico de ${BANK_METRICS[history.metric][0]}`} onClose={() => setHistory(null)}><BankMetricHistory key={`${history.metric}-${mode}`} banks={banks} metric={history.metric} mode={mode} comparison={comparison} initialBank={history.bank} ranking={rankings[history.metric]} /></Expandable>}
     {selectedBank && <Expandable modal label={`Detalhes e fontes — ${selectedBank.name}`} onClose={() => setDetails(null)}><h2>{selectedBank.name} · {quarterLabel(selectedPoint?.period)}</h2><BankDetails bank={selectedBank} point={selectedPoint} previous={bankComparison(selectedBank, selectedPoint, comparison)} expanded /></Expandable>}
   </section>
+}
+export default function Bancos() {
+  const [view, setView] = useState('indicadores')
+  return <>
+    <div className="seg banks-views" role="group" aria-label="O que ver em Bancos">{[['indicadores', 'Indicadores'], ['taxas', 'Taxas cobradas']].map(([id, label]) => <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>)}</div>
+    {view === 'taxas' ? <TaxasBancos /> : <Indicadores />}
+  </>
 }
