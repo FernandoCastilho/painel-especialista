@@ -1,4 +1,4 @@
-// Escala do gráfico: agrupa os pontos por 15 ou 30 minutos, hora, dia, mês ou ano (valor = último ponto do período; máxima/mínima do período).
+// Escala do gráfico: agrupa os pontos por 5, 15 ou 30 minutos, hora, dia, mês ou ano (valor = último ponto do período; máxima/mínima do período).
 // Só agrupa para escalas mais grossas que o dado original: hora a hora não existe em série diária.
 import { marketDate } from './marketReturns.js'
 
@@ -18,6 +18,8 @@ const DAY = 864e5
 // maxStep: o espaçamento típico do dado tem de ser menor que isso para a escala fazer sentido.
 // intradiario: a escala mostra horas no eixo, como a visão do dia.
 export const SCALES = [
+  // 5 min: a coleta é de cerca de 5 em 5 minutos; aqui os pontos ficam alinhados ao relógio (10h00, 10h05...).
+  { id: '5min', label: '5 min', title: 'Um ponto a cada 5 minutos', maxStep: 6 * MIN, intradiario: true, ...minutos(5) },
   { id: '15min', label: '15 min', title: 'Um ponto a cada 15 minutos', maxStep: 14 * MIN, intradiario: true, ...minutos(15) },
   { id: '30min', label: '30 min', title: 'Um ponto a cada 30 minutos', maxStep: 28 * MIN, intradiario: true, ...minutos(30) },
   { id: 'hora', label: 'Hora', title: 'Um ponto por hora', maxStep: 55 * MIN, intradiario: true, key: (t) => `${marketDate(t)}T${hourOf(t)}`, name: (t) => `${day(t)} ${hourOf(t)}h` },

@@ -46,6 +46,7 @@ const Setores = lazy(() => import('./Setores.jsx'))
 const Ma = lazy(() => import('./Ma.jsx'))
 const Apresentar = lazy(() => import('./Apresentar.jsx'))
 import { useDataFile } from './useDataFile.js'
+import { PREGAO_FIXADO_ARQUIVO, diaCurto, fixadoAtivo } from './pregaoFixado.js'
 import Nav, { TABS } from './Nav.jsx'
 import Resumo from './Resumo.jsx'
 import TopBar from './TopBar.jsx'
@@ -94,7 +95,7 @@ const rangeFor = (days) => {
   return { start, end }
 }
 
-function Period({ range, preset, onPreset, onDates, day, onDay }) {
+function Period({ range, preset, onPreset, onDates, day, onDay, fixado, onFixado }) {
   const today = toInput(new Date())
   return (
     <div className="period">
@@ -105,6 +106,11 @@ function Period({ range, preset, onPreset, onDates, day, onDay }) {
           </button>
         ))}
       </div>
+      {fixado && (
+        <button type="button" className="btn pregao-fixado-btn" aria-pressed={preset === 'day' && toInput(day) === fixado.dia} title={`Dia marcante guardado no painel até ${diaCurto(fixado.ate)}`} onClick={onFixado}>
+          Pregão fixado: {diaCurto(fixado.dia)}
+        </button>
+      )}
       <div className="period-dates">
       {preset === 'day' ? (
         <label>
@@ -171,6 +177,9 @@ export default function App() {
     setNotice('')
   }
   const onDay = (v) => setDay(fromInput(v))
+  const fixadoArq = useDataFile(PREGAO_FIXADO_ARQUIVO)
+  const fixado = fixadoArq.status === 'ok' ? fixadoAtivo(fixadoArq.data) : null
+  const onFixado = () => { if (!fixado) return; setPreset('day'); setDay(fromInput(fixado.dia)); setNotice('') }
   const onDates = (a, b) => {
     let start = fromInput(a)
     let end = fromInput(b)
@@ -384,7 +393,7 @@ export default function App() {
 
       {open && (
         <Sheet onClose={() => setOpen(null)}>
-          <ChartFilters><Period range={range} preset={preset} onPreset={onPreset} onDates={onDates} day={day} onDay={onDay} /></ChartFilters>
+          <ChartFilters><Period range={range} preset={preset} onPreset={onPreset} onDates={onDates} day={day} onDay={onDay} fixado={fixado} onFixado={onFixado} /></ChartFilters>
           {notice && <p role="status">{notice}</p>}
           {open === 'PAR' ? (
             <ParityChart color={COLORS.PAR} start={range.start} end={range.end} day={preset === 'day' ? day : null} />
