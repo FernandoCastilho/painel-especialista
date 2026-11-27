@@ -73,7 +73,7 @@ test('novos temas têm fontes oficiais, data de revisão e exemplos que não se 
 })
 
 test('os conceitos pedidos existem, com ids únicos', () => {
-  assert.deepEqual(CONCEITOS.map((c) => c.id), ['gross-up', 'juros-forcados', 'marcacao-a-mercado', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'cds', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'acc', 'lei-de-maquila', 'fascismo', 'ambidestria-organizacional', 'imposto-seletivo', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'substituicao-tributaria', 'reforma-tributaria', 'split-payment', 'dividendos'])
+  assert.deepEqual(CONCEITOS.map((c) => c.id), ['gross-up', 'juros-forcados', 'marcacao-a-mercado', 'diferencial-de-juros', 'cupom-cambial', 'sofr', 'euribor', 'custo-de-funding', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'cds', 'br-gaap', 'debenture', 'nota-comercial', 'tvm', 'fidc', 'cri', 'cra', 'facil', 'drawback', 'acc', 'lei-de-maquila', 'fascismo', 'ambidestria-organizacional', 'imposto-seletivo', 'inflacao', 'focus', 'commodities-e-cambio', 'ic-br', 'combustiveis', 'escala-6x1', 'substituicao-tributaria', 'reforma-tributaria', 'split-payment', 'dividendos'])
   assert.equal(new Set(CONCEITOS.map((c) => c.id)).size, CONCEITOS.length)
 })
 
@@ -85,7 +85,7 @@ test('cada conceito traz frase, explicação simples, lacunas, versão precisa, 
     assert.ok(c.lacunas.length >= 2, c.id)
     assert.ok(c.preciso.texto.length > 40 && c.preciso.formula.length > 5, c.id)
     assert.ok(c.exemplo.passos.length >= 2 && c.exemplo.resultado.length > 10, c.id)
-    assert.ok(c.noApp.texto.length > 10 && ['juros', 'cenarios', 'calculadora', 'aprender'].includes(c.noApp.tab), c.id)
+    assert.ok(c.noApp.texto.length > 10 && ['juros', 'cenarios', 'calculadora', 'aprender', 'bancos'].includes(c.noApp.tab), c.id)
     if (c.noApp.tab === 'calculadora') assert.ok(['cbs-caixa', 'finame-materiais'].includes(c.noApp.view), c.id)
     assert.ok(c.teste.pergunta.endsWith('?') && c.teste.resposta.length > 20, c.id)
   }
@@ -182,7 +182,7 @@ test('cada conceito pertence a um tópico existente e os tópicos agrupam sem pe
   const g = porTopico(CONCEITOS)
   assert.deepEqual(g.map((x) => x.topico), TOPICOS)
   assert.equal(g.reduce((n, x) => n + x.itens.length, 0), CONCEITOS.length)
-  assert.deepEqual(g.find((x) => x.topico === 'Operações de crédito').itens.map((c) => c.id), ['gross-up', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'debenture', 'nota-comercial', 'fidc', 'cri', 'cra', 'facil'])
+  assert.deepEqual(g.find((x) => x.topico === 'Operações de crédito').itens.map((c) => c.id), ['gross-up', 'fee-de-estruturacao', 'cet', 'fgi-peac', 'liquidacao-antecipada', 'debenture', 'nota-comercial', 'tvm', 'fidc', 'cri', 'cra', 'facil'])
   assert.deepEqual(porTopico([CONCEITOS.find(c => c.id === 'cupom-cambial')]).map((x) => x.topico), ['Juros e câmbio'], 'tópico vazio não aparece')
 })
 test('busca: todas as palavras, sem acento nem maiúscula, no conteúdo inteiro', () => {
@@ -291,4 +291,32 @@ test('marcação a mercado: descoberta, conexões, fontes e limites didáticos',
   assert.match(text(c.exemplo), /1.018,52/)
   assert.match(text(c.exemplo), /1.100,00/)
   assert.match(text(c.lacunas), /Marcação, ajuste e margem não são sinônimos/)
+})
+
+test('TVM e BR GAAP: conceitos separados, com contas do exemplo e fontes oficiais', async () => {
+  const { tvmNoVencimento, tvmNaCurva, tvmValorJusto, EX_TVM } = await import('../src/tvm.js')
+  const { alavancagemAntiga, alavancagemCpc06, EX_BR_GAAP } = await import('../src/brGaap.js')
+  const tvm = byId('tvm'), gaap = byId('br-gaap')
+  assert.equal(tvm.topico, 'Operações de crédito')
+  assert.equal(gaap.topico, 'Funding e risco')
+  const venc = tvmNoVencimento(EX_TVM)
+  assert.ok(Math.abs(venc - 12_544_000) < 1e-6)
+  assert.ok(Math.abs(tvmNaCurva(EX_TVM, 1) - 11_200_000) < 1e-6)
+  assert.ok(Math.abs(tvmValorJusto(venc, EX_TVM.taxaMercado, 1) - 11_100_884.96) < 0.01)
+  assert.match(text(tvm.exemplo), /R\$ 12\.544\.000/)
+  assert.match(text(tvm.exemplo), /R\$ 11\.100\.885/)
+  assert.match(text(tvm.exemplo), /R\$ 99\.115/)
+  assert.equal(alavancagemAntiga(EX_BR_GAAP), 2)
+  assert.ok(Math.abs(alavancagemCpc06(EX_BR_GAAP) - 2.45) < 1e-12)
+  assert.match(text(gaap.exemplo), /2,0x/)
+  assert.match(text(gaap.exemplo), /2,45x/)
+  assert.match(text(gaap.exemplo), /sobe 18%/)
+  for (const c of [tvm, gaap]) {
+    assert.equal(c.noApp.tab, 'bancos')
+    assert.ok(c.fontes.length >= 2 && c.fontes.every(f => /\.gov\.br$/.test(new URL(f.url).hostname)), c.id)
+    assert.doesNotMatch(text(c), /Itaú/)
+  }
+  assert.ok(buscarConceitos('BR Gap').some(x => x.id === 'br-gaap'))
+  assert.ok(buscarConceitos('títulos e valores mobiliários').some(x => x.id === 'tvm'))
+  assert.ok(conexoesDe('tvm').some(x => x.id === 'br-gaap'))
 })
