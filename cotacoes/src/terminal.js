@@ -2,7 +2,7 @@
 // Só formata o que o app já coleta; não consulta fontes nem calcula taxas novas.
 import { liveCross } from './parity.js'
 import { brentReturns } from './oilReference.js'
-import { nf } from './format.js'
+import { amplitudeText, nf } from './format.js'
 import { sourceHealth } from './dataHealth.js'
 
 import { APP_SECTIONS } from './appSections.js'
@@ -79,7 +79,7 @@ const priceDigits = (code) => (code === 'JPY' ? 5 : 4)
 // Sem os dois números coerentes, não há faixa: nada é estimado nem preenchido.
 export function dayRange(high, low, at, digits) {
   if (!Number.isFinite(high) || !Number.isFinite(low) || !(low > 0) || low > high || !Number.isFinite(at)) return null
-  return { high: nf(high, digits), low: nf(low, digits), at }
+  return { high: nf(high, digits), low: nf(low, digits), amplitude: amplitudeText(high, low, digits), at }
 }
 const brDay = (t) => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' })
 // "Máx. 5,6525 · Mín. 5,6513"; quando a cotação não é de hoje (Brasília), leva a data: "… · 26/11".
