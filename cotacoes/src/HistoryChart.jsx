@@ -51,7 +51,7 @@ export function useWidth() {
 const signed = (v, d) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
 const DRAG_PX = 6
 
-// Escala dos pontos: Auto mantém o dado original; Hora, Dia, Mês e Ano agrupam (só para escalas mais grossas que o dado).
+// Escala dos pontos: Auto mantém o dado original; 15 min, 30 min, Hora, Dia, Mês e Ano agrupam (só para escalas mais grossas que o dado).
 export function Plot({ points, scales = true, ...props }) {
   const [scale, setScale] = useState('auto')
   const options = useMemo(() => (scales ? scaleOptions(points) : []), [points, scales])
@@ -70,7 +70,7 @@ export function Plot({ points, scales = true, ...props }) {
   return (
     <>
       {picker && (slot ? createPortal(picker, slot) : picker)}
-      <PlotView {...props} points={view} history={props.history ?? points} eventos={active ? undefined : props.eventos} intraday={active ? active.id === 'hora' : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
+      <PlotView {...props} points={view} history={props.history ?? points} eventos={active ? undefined : props.eventos} intraday={active ? !!active.intradiario : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
     </>
   )
 }

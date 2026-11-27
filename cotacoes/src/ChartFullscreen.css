@@ -13,3 +13,7 @@
 
 .chart-fullscreen.is-expanded:not([open]){display:none}
 .chart-fullscreen.is-expanded>div{display:flex;flex-direction:column;min-height:100%;min-width:0}
+.chart-fullscreen.is-expanded>.chart-filters-host{display:block;flex:none;min-height:0;min-width:0}
+.chart-fullscreen.is-expanded>.chart-filters-host~div{flex:1;min-height:0}
+.chart-fullscreen.is-expanded:has(>.chart-filters-host)>div>.chart-fullscreen-content svg{max-height:calc(100dvh - 300px)}
+.chart-fullscreen.is-expanded>.chart-filters-host .chart-filters{margin-bottom:4px}
