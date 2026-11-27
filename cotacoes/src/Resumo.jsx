@@ -37,6 +37,8 @@ import { formatoComo, picoEVale } from './chartMarcas.js'
 import { Plot, useWidth, fmtTime } from './HistoryChart.jsx'
 import { KpiRow, Panel } from './TerminalDesk.jsx'
 import { useDataFile } from './useDataFile.js'
+import { useCds } from './useCds.js'
+import { cdsView } from './cds.js'
 const CuradoriaNoticias = lazy(() => import('./CuradoriaNoticias.jsx'))
 const RateModal = lazy(() => import('./RateModal.jsx'))
 
@@ -437,14 +439,32 @@ export function useCambio(quotes, ptax) {
   return { daily, returns, ptaxes }
 }
 
+// CDS Brasil 5 anos (risco-país) logo abaixo do yuan, na mesma tabela (pedido de Fernando, 27/11/2026).
+// Fonte gratuita e não oficial; `cdsView` devolve null para dado ausente, velho ou fora da faixa, e aí a linha não aparece.
+function CdsRow({ data }) {
+  const v = cdsView(data)
+  if (!v) return null
+  const sobre = v.refDate ? ` sobre o fechamento de ${v.refDate}` : ''
+  return <tbody className="market-record market-cds">
+    <tr className="market-values">
+      <th scope="row"><div className="market-open market-open-static"><b><Flag code="BRL" width={20} height={14} /> CDS 5 anos</b><small>Risco-país · pontos-base</small></div></th>
+      <td className="market-price" aria-label={`CDS de 5 anos do Brasil: ${v.value} pontos-base`}>{v.value}<small className="market-unit"> pb</small></td>
+      <td className={v.change ? 'pct ' + v.tone : 'muted'} title={v.change ? `Variação em pontos-base${sobre}` : 'Variação do dia indisponível: falta o fechamento do dia anterior'}>{v.change ? <>{v.change}<small className="market-unit"> pb</small></> : '—'}</td>
+      <td className={v.pct ? 'pct ' + v.tone : 'muted'} title={v.pct ? `Variação percentual${sobre}` : undefined}>{v.pct ?? '—'}</td>
+      <td colSpan={3} className="market-cds-source"><small>{v.sourceName} · não oficial · {v.when}</small></td>
+    </tr>
+  </tbody>
+}
+
 // Tabela de câmbio em reais. `onOpen` (opcional) abre o gráfico da moeda ao tocar na linha.
-export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen = () => {}, colors }) {
+export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen = () => {}, colors, cds }) {
   const destaques = destaquesMes(returns)
   return (
     <table className="market-table" aria-busy={!quotes}>
             <caption className="market-caption">Câmbio em reais · últimas referências disponíveis</caption>
             <thead><tr><th scope="col">Par</th><th scope="col">Cotação <small>(R$)</small></th><th scope="col" aria-label="Variação absoluta do dia em reais">Δ dia <small>(R$)</small></th><th scope="col" aria-label="Variação percentual do dia">Δ dia %</th><th scope="col" aria-label="Acumulado no mês em percentual">Mês %</th><th scope="col" aria-label="Acumulado no ano em percentual">Ano %</th><th scope="col" aria-label="PTAX de venda em reais por unidade">PTAX <small>venda</small></th></tr></thead>
             {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={onOpen} color={colors?.[c.code]} destaque={destaques.maior === c.code ? 'maior' : destaques.menor === c.code ? 'menor' : undefined} />)}
+            {cds !== undefined && <CdsRow data={cds} />}
           </table>
   )
 }
@@ -456,6 +476,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
   const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
   useEffect(()=>{const desired=searchTarget?.context?.newsTab;if(NEWS_TABS.some(t=>t.id===desired))setNewsTab(desired)},[searchTarget])
   const { daily, returns, ptaxes } = useCambio(quotes, ptax)
+  const cds = useCds()
   const [selection, setSelection] = useState(['USD'])
   const [compareOpen, setCompareOpen] = useState(false)
   const [compareSelection, setCompareSelection] = useState(['USD', 'EUR'])
@@ -472,14 +493,14 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         <div className="sec-head terminal-titlebar">
           <h2 id="r-moedas">Mercado hoje <Explain id="mercadoHoje" /> <button type="button" className="img-share" aria-label="Enviar imagem das últimas cotações de câmbio" title="Compartilha as últimas cotações de câmbio, sem gráficos ou petróleo" onClick={() => shareQuotesImage(quotes)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></button></h2>
           {/* atualizar o câmbio: um botão só, na linha de estado logo acima do quadro */}
-          {panorama && <button type="button" className="compare-trigger panorama-trigger sinal-novo-host" aria-label={panorama.nova ? 'Panorama do dia (edição nova)' : 'Panorama do dia'} aria-haspopup="dialog" title={panorama.nova ? 'Há uma edição nova do Panorama do dia. Abre só quando você pede.' : 'Abrir o Panorama do dia: câmbio, juros futuros e Brent em uma tela'} onClick={panorama.abrir}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-9" /></svg><span>Panorama do dia</span>{panorama.nova && <i className="sinal-novo" aria-hidden="true" />}</button>}
+          {panorama && <button type="button" className="compare-trigger panorama-trigger sinal-novo-host" aria-label={panorama.nova ? 'Panorama do dia (edição nova)' : 'Panorama do dia'} aria-haspopup="dialog" title={panorama.nova ? 'Há uma edição nova do Panorama do dia. Abre só quando você pede.' : 'Abrir o Panorama do dia: câmbio, juros futuros e CDS em uma tela'} onClick={panorama.abrir}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-6M12 20V5M19 20v-9" /></svg><span>Panorama do dia</span>{panorama.nova && <i className="sinal-novo" aria-hidden="true" />}</button>}
           <button type="button" ref={compareTrigger} className="compare-trigger" aria-label="Comparar moedas" aria-haspopup="dialog" aria-expanded={compareOpen} title="Montar comparação de moedas" onClick={() => setCompareOpen(true)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 3v18h18M5 16l5-7 4 4 6-9M5 10l5 4 5-7 5 9" /></svg><span>Comparar</span></button>
         </div>
         <div className="terminal-main">
         <div className="terminal-quotes">
         <p className="market-scroll-hint">Deslize para ver mês, ano e PTAX →</p>
         <div className="market-table-wrap" role="region" aria-label="Tabela de câmbio; role horizontalmente para ver todas as colunas" tabIndex={0}>
-          <CambioTabela quotes={quotes} returns={returns} ptaxes={ptaxes} selection={selection} onOpen={openSelected} colors={colors} />
+          <CambioTabela quotes={quotes} returns={returns} ptaxes={ptaxes} selection={selection} onOpen={openSelected} colors={colors} cds={cds} />
         </div>
         </div>
         <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
@@ -495,6 +516,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         <Aviso title="Câmbio · datas e metodologia">
           <p id="market-help">Toque na linha para selecionar e abrir o gráfico. 🔥 marca a moeda que mais subiu no mês e 🛡️ a que menos subiu, entre as da tabela; só indicam a variação, não dizem se é bom ou ruim. Filtros alteram apenas os gráficos. Cotação e Δ dia: última referência da fonte; mês/ano: observações diárias de dias encerrados, não a cotação intradiária.</p>
           <p>O traço indica dado indisponível. A cotação do CNH usa a compra de USD/BRL dividida pela venda de USD/CNH. As duas variações usam a mesma cotação anterior estimada, mantendo a diferença proporcional atual entre compra e venda do USD/CNH. Sem dados para estimar a base anterior, as duas variações ficam indisponíveis.</p>
+          <p>CDS 5 anos: risco-país do Brasil em pontos-base (100 pb = 1% ao ano), de fonte gratuita e não oficial (World Government Bonds), lida a cada 2 horas em dias úteis; não é tempo real. A variação compara com o último valor do dia anterior. A linha some se o dado faltar, passar de 4 dias ou sair da faixa de 50 a 1.000 pb.</p>
           <p>Não há PTAX oficial do yuan. A coluna mostra uma referência cruzada (PTAX do dólar ÷ USD/CNH no horário do boletim), só com cotações das duas pontas a até 15 min dele. CNY e CNH são referências distintas.</p>
           <ul>{CURRENCIES.map(c => { const q = quotes?.[c.code], p = ptaxes[c.code], r = returns[c.code]; return <li key={c.code}>
             <b>{q?.source || c.code}/BRL:</b> <span className={quoteAgeState(q) && quoteAgeLabel(q).tone !== 'neutral' ? 'status stale' : ''}>{!q ? quotes ? 'Cotação indisponível' : 'Carregando cotação' : (q.stale ? 'Atualização pendente · ' : q.fallback ? 'Referência diária de reserva · ' : quoteAgeLabel(q).tone === 'neutral' ? 'Fora do horário de coleta · ' : quoteAgeState(q) ? quoteAgeState(q) + ' · ' : '') + dataTimestamp(q.timestamp)}</span>

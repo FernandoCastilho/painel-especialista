@@ -16,8 +16,8 @@ dialog.market-popup{color-scheme:light;--text:#080d35;--mut:#4d5874;--up:#087223
 .market-popup .mp-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px}
 .market-popup .mp-card{position:relative;grid-column:span 2;border:1px solid #cbd1df;border-radius:15px;overflow:hidden;background:linear-gradient(#fff,#fdfdff);padding:16px 18px 12px;box-shadow:0 1px 1px #09154b0a;min-width:0}
 .market-popup .mp-card::before{content:'';position:absolute;left:0;top:0;height:58px;width:7px;background:#ff6900}
-.market-popup .mp-di::before,.market-popup .mp-brent::before{background:#174cff}
-.market-popup .mp-brent,.market-popup .mp-cnh{grid-column:span 3}
+.market-popup .mp-di::before,.market-popup .mp-cds::before{background:#174cff}
+.market-popup .mp-cds,.market-popup .mp-cnh{grid-column:span 3}
 .market-popup .mp-card-head{display:flex;align-items:center;gap:10px;min-height:34px}
 .market-popup h3{font-weight:800;font-size:16px;letter-spacing:-.02em}
 .market-popup .mp-symbol{display:grid;place-items:center;width:37px;height:37px;border-radius:10px;background:#edf0fa;font-size:26px;flex-shrink:0}
@@ -78,14 +78,14 @@ dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}
   .market-popup h2 { font-size: clamp(26px, 4.2dvh, 32px); }
   .market-popup .mp-data-stamp { margin-block: 4px; }
   .market-popup .mp-di-row strong { line-height: 1.1; }
-  .market-popup .mp-brent,.market-popup .mp-cnh {
+  .market-popup .mp-cds,.market-popup .mp-cnh {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(70px, .42fr);
     column-gap: 10px;
     align-content: start;
   }
-  .market-popup :is(.mp-brent,.mp-cnh) > :not(svg,.mp-no-chart,.chart-fullscreen-compact) { grid-column: 1; }
-  .market-popup :is(.mp-brent,.mp-cnh) > :is(svg,.mp-no-chart,.chart-fullscreen-compact) {
+  .market-popup :is(.mp-cds,.mp-cnh) > :not(svg,.mp-no-chart,.chart-fullscreen-compact) { grid-column: 1; }
+  .market-popup :is(.mp-cds,.mp-cnh) > :is(svg,.mp-no-chart,.chart-fullscreen-compact) {
     grid-column: 2;
     grid-row: 1 / span 5;
     align-self: center;

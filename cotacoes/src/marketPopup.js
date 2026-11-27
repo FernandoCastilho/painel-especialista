@@ -1,6 +1,6 @@
 import { isBusinessDay } from './holidays.js'
 import { quoteAgeState } from './quoteFreshness.js'
-import { brentReturns } from './oilReference.js'
+import { cdsView } from './cds.js'
 
 export const MARKET_POPUP_KEY = 'painel-panorama-hora'
 const zone = 'America/Sao_Paulo'
@@ -76,15 +76,18 @@ export function marketDi(curves, now=Date.now()) {
   })
   return { rows, date:curve?date:null, points:curve?(curve.filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>({t:p[0],bid:p[1]}))):[] }
 }
-export function marketBrent(oil, now=Date.now()) {
-  const today=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now))
-  const r=brentReturns(oil,today)
-  return { key:'BRENT', title:'BRENT', symbol:'▤', value:r.last?'US$ '+number(r.last.value):'—', change:r.day,
-    stamp:r.last?r.last.date:'Sem dado', note:'EIA · spot diário · US$/barril', detail:'Variação entre observações diárias', color:'#ff6900',
-    points:(r.last?oil.points:[]).filter(p=>p.date<=today&&Number.isFinite(p.value)&&p.value>0).slice(-30).map(p=>({t:Date.parse(p.date+'T12:00:00Z'),bid:p.value})) }
+// CDS Brasil 5 anos no lugar do Brent (pedido de Fernando, 27/11/2026). Dado estranho ou velho: cartão sem número.
+export function marketCds(cds, now=Date.now()) {
+  const v=cdsView(cds,now)
+  return { key:'CDS', title:'CDS BRASIL 5 ANOS', symbol:'◈', value:v?v.value+' pb':'—',
+    change:v?.refDate?cds.value-cds.reference.value:null, changeUnit:' pb', refDate:v?v.refDate:null,
+    stamp:v?v.when:'Sem dado válido', note:v?v.sourceName+' · não oficial':'World Government Bonds · indisponível',
+    detail:v?.refDate?'Variação sobre o fechamento de '+v.refDate:'Variação do dia indisponível', color:'#ff6900',
+    dailyNote:'Risco-país · pontos-base, sem tempo real', chartLabel:'Histórico diário do CDS Brasil 5 anos, até 30 dias',
+    points:v?(cds.history||[]).filter(p=>Number.isFinite(p.observedAt)&&p.observedAt<=now&&Number.isFinite(p.value)).slice(-30).map(p=>({t:p.observedAt,bid:p.value})):[] }
 }
-export function marketSummary(fx, brent) {
+export function marketSummary(fx, cds) {
   const parts=fx.filter(x=>x.summaryEligible && Number.isFinite(x.change)).map(x=>`${x.key==='USD'?'Dólar':x.key==='EUR'?'Euro':'Yuan offshore'}: ${signedMarketChange(x.change)} frente ao real no dia`)
-  if (Number.isFinite(brent.change)) parts.push(`Brent spot (${brent.stamp}): ${signedMarketChange(brent.change)} entre as últimas observações diárias`)
+  if (cds && Number.isFinite(cds.change)) parts.push(`CDS Brasil 5 anos: ${signedMarketChange(cds.change, ' pb')} sobre o fechamento de ${cds.refDate}`)
   return parts.length?parts.join('. ')+'.':'Sem variações válidas para resumir. Confira as datas e as fontes dos cartões.'
 }

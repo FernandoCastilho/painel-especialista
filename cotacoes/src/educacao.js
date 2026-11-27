@@ -511,7 +511,7 @@ export const CONCEITOS = [
       ],
       resultado: `${EX_CDS.pb} pb equivalem a ${pct(EX_CDS.pb / 10000)} ao ano do valor protegido.`,
     },
-    noApp: { texto: 'O app não exibe CDS: a cotação exige fonte de mercado paga. Como referência indireta, veja o cupom cambial e os Treasuries em Juros.', tab: 'juros' },
+    noApp: { texto: 'O CDS de 5 anos do Brasil aparece em Mercado hoje, logo abaixo do yuan, e no Panorama do dia, com dado de fonte gratuita e não oficial (World Government Bonds), sem tempo real.', tab: 'resumo' },
     teste: {
       pergunta: 'O CDS de 5 anos do Brasil passa de 150 para 250 pb. O que isso diz?',
       resposta: 'O mercado passou a ver mais risco de crédito no país: proteger o mesmo valor ficou 100 pb (1 ponto percentual ao ano) mais caro.',

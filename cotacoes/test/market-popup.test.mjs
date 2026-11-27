@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { marketSlot, marketMoment, marketEditionPending, seenMarketSlot, rememberMarketSlot, marketFx, hourMarketChange, marketDi, marketBrent, marketSummary, marketTone, validMarketPoints } from '../src/marketPopup.js'
+import { marketSlot, marketMoment, marketEditionPending, seenMarketSlot, rememberMarketSlot, marketFx, hourMarketChange, marketDi, marketCds, marketSummary, marketTone, validMarketPoints } from '../src/marketPopup.js'
 const time=s=>Date.parse(s)
 test('agenda em São Paulo: 9h a 18h e nenhuma edição fora da janela',()=>{
  assert.equal(marketSlot(time('2026-11-06T11:59:59Z')),null)
@@ -107,20 +107,29 @@ test('DI não substitui silenciosamente vértices distantes nem compara prazos i
  const incompatible={br:{...curves.br,curves:{...curves.br.curves,'2026-11-05':[[400,12.2]]}}}
  assert.equal(marketDi(incompatible,now).rows[0].change,null)
 })
-const oil={benchmark:'Brent',kind:'spot',unit:'USD/barril',points:[{date:'2026-11-04',value:80},{date:'2026-11-05',value:78},{date:'2026-11-09',value:200}]}
-test('Brent diário usa as observações reais e não um campo de topo ou ponto futuro',()=>{
- const brent=marketBrent({...oil,value:999},now)
- assert.equal(brent.value,'US$ 78,00')
- assert.equal(brent.stamp,'2026-11-05')
- assert.equal(brent.points.length,2)
- assert.ok(Math.abs(brent.change+2.5)<1e-9)
- assert.equal(marketBrent(null,now).value,'—')
- assert.equal(marketBrent({...oil,kind:'futures'},now).value,'—')
+// CDS Brasil 5 anos substitui o Brent no Panorama (27/11/2026).
+const cdsAt=Date.parse('2026-11-06T14:00:00Z')
+const cds={value:162.85,observedAt:cdsAt,unit:'pb',source:{name:'World Government Bonds'},reference:{date:'2026-11-05',value:165},
+ history:[{date:'2026-11-05',value:165,observedAt:cdsAt-864e5},{date:'2026-11-06',value:162.85,observedAt:cdsAt}]}
+test('CDS no Panorama: pontos-base, variação sobre o dia anterior e cartão vazio para dado estranho',()=>{
+ const c=marketCds(cds,now)
+ assert.equal(c.value,'162,85 pb')
+ assert.ok(Math.abs(c.change+2.15)<1e-9)
+ assert.equal(c.refDate,'05/11')
+ assert.equal(c.points.length,2)
+ assert.match(c.note,/não oficial/)
+ const sameDay=marketCds({...cds,reference:{date:'2026-11-06',value:165}},now)
+ assert.equal(sameDay.change,null);assert.equal(sameDay.refDate,null)
+ assert.doesNotMatch(marketSummary([],sameDay),/CDS|null/)
+ for(const bad of [null,{...cds,value:5000},{...cds,observedAt:now-6*864e5},{...cds,reference:{date:'2026-11-05',value:60}}]){
+  const x=marketCds(bad,now)
+  assert.equal(x.value,'—');assert.equal(x.change,null);assert.equal(x.points.length,0)
+ }
 })
 test('síntese é descritiva, não inventa causa nem última hora quando indisponível',()=>{
- const summary=marketSummary([marketFx('USD',q,pts,now)],marketBrent(oil,now))
+ const summary=marketSummary([marketFx('USD',q,pts,now)],marketCds(cds,now))
  assert.match(summary,/Dólar: \+1,00%/)
- assert.match(summary,/observações diárias/)
+ assert.match(summary,/CDS Brasil 5 anos: −2,15 pb sobre o fechamento de 05\/11/)
  assert.doesNotMatch(summary,/atividade global|última hora/)
  assert.equal(marketTone(.001),'flat')
  assert.equal(marketTone(null),'flat')
@@ -138,10 +147,10 @@ test('síntese omite câmbio retido, antigo, diário ou de sexta-feira na segund
  ]){
   const fx=marketFx('USD',quote,[],monday)
   assert.equal(fx.summaryEligible,false)
-  assert.doesNotMatch(marketSummary([fx],marketBrent(null,monday)),/Dólar:|frente ao real no dia/)
+  assert.doesNotMatch(marketSummary([fx],marketCds(null,monday)),/Dólar:|frente ao real no dia/)
  }
  const fresh=marketFx('USD',{...q,timestamp:monday},[],monday)
  assert.equal(fresh.summaryEligible,true)
- assert.match(marketSummary([fresh],marketBrent(null,monday)),/Dólar: \+1,00% frente ao real no dia/)
- assert.match(marketSummary([],marketBrent(oil,monday)),/2026-11-09/)
+ assert.match(marketSummary([fresh],marketCds(null,monday)),/Dólar: \+1,00% frente ao real no dia/)
+ assert.match(marketSummary([],marketCds(cds,monday)),/CDS Brasil 5 anos/)
 })
