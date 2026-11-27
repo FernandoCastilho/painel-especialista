@@ -201,6 +201,34 @@ export const HISTORIAS = [
       { titulo: 'Apple: lançamento e dez anos da App Store', url: 'https://www.apple.com/newsroom/2018/07/app-store-turns-10/' },
     ],
   },
+  {
+    id: 'catupiry',
+    nome: 'Catupiry',
+    fundacao: '1911',
+    local: 'Brasil',
+    setor: 'Alimentos e laticínios',
+    titulo: 'Do requeijão de caixinha à cozinha profissional',
+    origem: 'O italiano Mário Silvestrini chegou ao Brasil ainda menino e se fixou em Lambari, no sul de Minas Gerais, então uma estância de águas. Em 1911, ele e a mulher, Isaíra, passaram a fazer em uma pequena fábrica um requeijão cremoso de receita da família. O produto ia em caixas redondas de madeira, e o nome vem de uma palavra tupi que significa "excelente".',
+    virada: 'Por décadas, o requeijão foi um produto de consumo em casa. A partir dos anos 1980, a pizza de frango com Catupiry se espalhou pelas pizzarias de São Paulo e levou a marca para a cozinha dos restaurantes. Em 1990, a empresa lançou produtos para food service e, com o tempo, fez desse canal o principal: segundo a própria Catupiry, a linha profissional responde por cerca de 70% do faturamento.',
+    leitura: 'O nome virou sinônimo de requeijão cremoso e passou a aparecer em cardápios com produtos de qualquer fabricante. A fama ajuda, mas não garante a venda do original. Atender a cozinha profissional com embalagens e linhas próprias foi a forma de transformar fama em volume. O ponto de atenção é a concentração: com a maior parte da receita vinda de restaurantes, o negócio depende mais do consumo fora de casa.',
+    marcos: [
+      ['1911', 'Mário e Isaíra Silvestrini começam a produzir o requeijão em Lambari (MG).'],
+      ['1922', 'Já fabricado em São Lourenço (MG), o produto ganha medalha de ouro em uma exposição internacional de alimentos no Rio de Janeiro.'],
+      ['1949', 'A sede da empresa é transferida para a cidade de São Paulo.'],
+      ['Anos 1980', 'A pizza de frango com Catupiry se populariza nas pizzarias paulistanas.'],
+      ['1990', 'Lançamento da linha de produtos para food service.'],
+      ['2026', 'Primeira aquisição da história: a operação brasileira da Leprino Foods, com fábrica em Tapejara (PR), aprovada pelo Cade em agosto.'],
+    ],
+    conexoes: {},
+    fontes: [
+      { titulo: 'Catupiry: história e marcos da empresa', url: 'https://internacional.catupiry.com.br/about-us/' },
+      { titulo: 'Italianismo: os fundadores e a fábrica em Lambari', url: 'https://italianismo.com.br/catupiry-o-requeijao-cremoso-criado-por-italianos-em-minas/' },
+      { titulo: 'InfoMoney: a pizza e o uso do nome como sinônimo', url: 'https://www.infomoney.com.br/business/catupiry-como-a-marca-que-criou-o-requeijao-cremoso-virou-um-classico-brasileiro/' },
+      { titulo: 'BaresSP: peso da linha profissional no faturamento', url: 'https://baressp.com.br/noticias/catupiry-profissional-fortalece-presenca-no-food-service-com-nova-estrategia-de-embaixadores' },
+      { titulo: 'CNN Brasil: compra da operação da Leprino Foods', url: 'https://www.cnnbrasil.com.br/agro/catupiry-compra-operacoes-da-leprino-foods-no-brasil/' },
+      { titulo: 'Tribuna PR: aval do Cade, fábrica no Paraná e faturamento', url: 'https://www.tribunapr.com.br/noticias/parana/catupiry-compra-operacao-laticinios-assume-fabrica-parana/' },
+    ],
+  },
 ]
 
 export const casosDoTema = id => HISTORIAS.filter(caso => Object.hasOwn(caso.conexoes, id))
