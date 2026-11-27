@@ -297,6 +297,18 @@ jobs:
       - name: Conferir seis calculadoras e alongamento em cinco larguras
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: CALCULATOR_QA_OUTPUT="$RUNNER_TEMP/qa-universal/calculators" node scripts/smoke-calculator-layout.cjs
+      - name: Conferir largura das calculadoras em monitor grande, notebook e celular
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: CALC_LARGURA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/calc-largura" node scripts/smoke-calc-largura.cjs
+      - name: Capturas da largura das calculadoras
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calc-largura-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/calc-largura
+          if-no-files-found: warn
+          retention-days: 7
       - name: Conferir a ajuda do câmbio futuro com o vídeo
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: CF_AJUDA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cf-ajuda" node scripts/smoke-cambio-futuro-ajuda.cjs

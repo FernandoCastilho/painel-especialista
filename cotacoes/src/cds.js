@@ -17,7 +17,8 @@ export const CDS_MAX_JUMP = 0.3
 export const CDS_MAX_AGE_MS = 4 * 864e5
 // Intervalo mínimo entre visitas ao site (a coleta das cotações roda a cada 5 min no pregão).
 export const CDS_MIN_INTERVAL_MS = 115 * 60000
-const HISTORY_DAYS = 30
+// Histórico guardado e mostrado no gráfico do Panorama: 12 meses.
+export const CDS_HISTORY_MS = 366 * 864e5
 const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 }
 
 // Data civil em Brasília (UTC−3, sem horário de verão) de um instante.
@@ -44,18 +45,38 @@ export function referenceFor(history, observedAt) {
   return validHistory(history).filter((p) => p.date < day).sort((a, b) => a.date.localeCompare(b.date)).at(-1) ?? null
 }
 
+// Série diária do gráfico da própria página da fonte ([instante UTC da data, pb], um ponto por dia corrido) -> histórico de 12 meses.
+// Só é aceita se o ponto do dia bater com o número lido no texto (±5%) e não tiver salto anormal entre dias; senão, nada entra.
+export function chartHistory(raw, reading, now = Date.now()) {
+  if (!Array.isArray(raw) || !reading || !plausible(reading.value)) return []
+  const since = reading.observedAt - CDS_HISTORY_MS
+  const pts = raw
+    .filter((p) => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]) && p[0] <= now && p[0] >= since)
+    .map(([t, value]) => ({ date: new Date(t).toISOString().slice(0, 10), value, observedAt: t }))
+    .sort((a, b) => a.observedAt - b.observedAt)
+  if (pts.length < 20 || !pts.every((p) => plausible(p.value))) return []
+  if (pts.some((p, i) => i && Math.abs(p.value / pts[i - 1].value - 1) > CDS_MAX_JUMP)) return []
+  const today = pts.findLast((p) => p.date <= spDate(reading.observedAt))
+  if (!today || Math.abs(today.value / reading.value - 1) > 0.05) return []
+  return pts
+}
+
 // Junta a leitura nova ao arquivo anterior. Lança erro (e quem chama mantém o anterior) se a leitura não passar na conferência.
-export function buildCdsData(previous, reading, now = Date.now()) {
+export function buildCdsData(previous, reading, now = Date.now(), chart = []) {
   const { value, observedAt } = reading ?? {}
   if (!plausible(value)) throw new Error(`CDS: ${value} pb fora da faixa de ${CDS_MIN} a ${CDS_MAX}`)
   if (!Number.isFinite(observedAt) || observedAt > now + 15 * 60000) throw new Error('CDS: horário da página inválido ou no futuro')
   if (Number.isFinite(previous?.observedAt) && observedAt < previous.observedAt) throw new Error('CDS: página com dado mais antigo que o já publicado')
-  const history = validHistory(previous?.history)
+  // Leituras próprias valem mais que o gráfico da fonte no mesmo dia.
+  const byDate = new Map(validHistory(chart).map((p) => [p.date, p]))
+  for (const p of validHistory(previous?.history)) byDate.set(p.date, p)
+  const history = [...byDate.values()]
   const reference = referenceFor(history, observedAt)
   if (reference && Math.abs(value / reference.value - 1) > CDS_MAX_JUMP) throw new Error(`CDS: salto de ${reference.value} para ${value} pb, acima do limite`)
   const date = spDate(observedAt)
   const nextHistory = [...history.filter((p) => p.date !== date), { date, value, observedAt }]
-    .sort((a, b) => a.date.localeCompare(b.date)).slice(-HISTORY_DAYS)
+    .filter((p) => p.observedAt >= observedAt - CDS_HISTORY_MS)
+    .sort((a, b) => a.date.localeCompare(b.date))
   return {
     generatedAt: new Date(now).toISOString(),
     lastAttemptAt: now,
