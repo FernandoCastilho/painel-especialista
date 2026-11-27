@@ -11,7 +11,7 @@
 //   Base 360 dias corridos.
 // "⊕" é a composição capitalizada do BNDES: (1 + a)(1 + b)(1 + c) − 1.
 // Dias úteis: feriados nacionais e da praça do contrato. Vencimentos: dia 15 ou próximo dia útil (mesmo calendário da TFC/TFB).
-import { regrasFiname, PERIODICIDADES, FGI, calendarioFiname, ecgFgi, avisoFatorKFgi, erroPercentualFgi, taxaFinal } from './finameMateriais.js'
+import { regrasFiname, PERIODICIDADES, FGI, calendarioFiname, erroDatasFiname, ecgFgi, avisoFatorKFgi, erroPercentualFgi, taxaFinal } from './finameMateriais.js'
 import { contractCalendars } from './pracaContrato.js'
 import { busDaysIn } from './holidays.js'
 import { creditCet } from './creditComparison.js'
@@ -94,7 +94,7 @@ const trajetoriaValida = (trajetoria, custo) => Array.isArray(trajetoria) && tra
 // Cronograma e resultado no mesmo formato de `simular` (finameMateriais.js), para a tela, o comparativo, o PDF e a apresentação.
 // Entradas: custo ('tlp' | 'lcd' | 'tfbd'), taxaFixa (J, LD1 ou TFBD, % a.a.), trajetoria do índice (ano a ano),
 // cambioInicial (R$/US$ no dia da liberação, só TFBD) e as condições comuns da operação.
-export function simularPos({ custo, valor, participacao = 100, prazo, carencia = 0, taxaFixa, taxaBndes, taxaAgente, trajetoria, cambioInicial = null, periodicidade = 1, composicao = 'capitalizada', tac = 0, fgi = null, dataLiberacao, feriados = {}, calendarios = ['BR'], produto = 'materiais' }) {
+export function simularPos({ custo, valor, participacao = 100, prazo, carencia = 0, taxaFixa, taxaBndes, taxaAgente, trajetoria, cambioInicial = null, periodicidade = 1, composicao = 'capitalizada', tac = 0, fgi = null, dataLiberacao, dataFormalizacao = null, feriados = {}, calendarios = ['BR'], produto = 'materiais' }) {
   const REGRAS = regrasFiname(produto)
   const erros = []
   if (!CUSTOS_POS.includes(custo)) erros.push('Custo pós-fixado não suportado.')
@@ -114,14 +114,14 @@ export function simularPos({ custo, valor, participacao = 100, prazo, carencia =
   if (fgi && custo === 'tlp' && erroPercentualFgi(fgi.percentual)) erros.push(erroPercentualFgi(fgi.percentual))
   const cals = contractCalendars(calendarios)
   if (!cals) erros.push('Escolha a praça do contrato entre as praças disponíveis.')
-  const calendario = cals && Number.isInteger(prazo) && prazo >= 1 && prazo <= REGRAS.prazoMaxMeses ? calendarioFiname(dataLiberacao, prazo, feriados, calendarios) : null
-  if (!calendario) erros.push('Informe uma data de liberação válida.')
+  const calendario = cals && Number.isInteger(prazo) && prazo >= 1 && prazo <= REGRAS.prazoMaxMeses ? calendarioFiname(dataLiberacao, prazo, feriados, calendarios, dataFormalizacao) : null
+  if (!calendario) erros.push(erroDatasFiname(dataLiberacao, dataFormalizacao) ?? 'Confira as datas e o prazo do contrato.')
   if (erros.length) return { ok: false, erros, avisos: [] }
 
   const liberado = valor * participacao / 100
   if (fgi && liberado > FGI.limiteCredito) return { ok: false, erros: [`Com garantia do FGI, o crédito é limitado a ${FGI.limiteCredito.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por cliente em cada agente financeiro. Reduza o valor ou retire a garantia.`], avisos: [] }
   // ECG do FGI (só TLP exigível): pago à vista na liberação, sem financiar o encargo, como na TFC e na TFB desta tela.
-  const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos, incorporar: false }) : null
+  const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos ?? (dataFormalizacao ? Math.floor(calendario.dias.at(-1) / 30) : undefined), incorporar: false }) : null
   const ecg = ecgCalc?.ecg ?? 0
   const taxa = taxaFinal(taxaFixa, taxaBndes, taxaAgente, composicao)
   const inicio = calendario.inicio
