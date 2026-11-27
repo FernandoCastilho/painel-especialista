@@ -11,7 +11,7 @@ Pedido de Fernando, a partir das telas da planilha "Comparativo HPA" (bullet e 4
 - A tela anterior (cotação via euro ou yuan, TIR em dias corridos/365) continua em `#calculadora/cambio-futuro/euro-yuan`, sem mudança de regra.
 
 ## Decisões registradas
-- Cada parcela tem o seu câmbio futuro (informado pela mesa). Data de início é um campo (padrão hoje).
+- Cada parcela tem o seu câmbio futuro (informado pela mesa). Data de início fica por trás (padrão hoje ou a da tabela colada).
 - Prazo de 1 a 3.650 dias. Vencimento em dia não útil é sinalizado na tabela e conta até o último dia útil antes dele.
 - Parcela USD arredondada a centavos antes de converter (é o que reproduz os R$ 723.288,88 da planilha).
 
@@ -28,3 +28,10 @@ Pedido de Fernando, a partir das telas da planilha "Comparativo HPA" (bullet e 4
 - As taxas não vêm no trecho; saem das linhas: soma da coluna × 360 ÷ soma de (saldo × dias do período), com 4 casas. Na foto dá 6,1468%, 2,0489% e 1,9674%, as do cabeçalho; no bullet, 6,6581%, 2,2194% e 2,3204%.
 - A calculadora refaz a tabela com essas taxas e avisa, linha a linha, vencimento, saldo, comissão ou parcela que não bater com o colado (tolerância de 1 centavo nas comissões).
 - Aceita o que o Excel copia (tabulação, vírgula decimal, ponto de milhar), linhas de cabeçalho no meio e ponto e vírgula. Todos os campos seguem editáveis.
+
+## Ajustes de 27/11/2026: tela mais enxuta
+- Data de início fora da tela (pedido de Fernando): continua valendo por trás, hoje ou a da tabela colada (1º vencimento − 1º prazo), e aparece na linha Início da tabela. A TIR não muda.
+- Números no padrão brasileiro em todos os campos da calculadora: ao sair do campo, 100000 vira 100.000,00, 11.2 vira 11,20, 6.6581 vira 6,6581; casas a mais não são cortadas, então a conta usa o que foi digitado. Colar a tabela continua igual.
+- Seção 3 só com as colunas Prazo, Principal USD, Vencimento, Juros total USD, Câmbio futuro e Fluxo em R$. Saldo devedor, as três comissões e a parcela USD seguem calculados por trás.
+- Saíram do topo os atalhos "Cotar via euro ou yuan", "Comparar cenários com e sem trava" e "Simular TIR pela taxa all-in". As telas continuam nos seus endereços e na busca, sem mudança.
+- Nenhuma conta mudou: bullet R$ 723.288,88 e TIR 22,86% (com a linha do bullet colada, início 13/11/2026).
