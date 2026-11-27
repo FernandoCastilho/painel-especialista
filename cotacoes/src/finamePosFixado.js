@@ -11,7 +11,7 @@
 //   Base 360 dias corridos.
 // "⊕" é a composição capitalizada do BNDES: (1 + a)(1 + b)(1 + c) − 1.
 // Dias úteis: feriados nacionais e da praça do contrato. Vencimentos: dia 15 ou próximo dia útil (mesmo calendário da TFC/TFB).
-import { regrasFiname, PERIODICIDADES, FGI, calendarioFiname, erroDatasFiname, ecgFgi, avisoFatorKFgi, erroPercentualFgi, taxaFinal } from './finameMateriais.js'
+import { regrasFiname, PERIODICIDADES, FGI, calendarioFiname, erroDatasFiname, ecgFgi, erroPercentualFgi, taxaFinal } from './finameMateriais.js'
 import { contractCalendars } from './pracaContrato.js'
 import { busDaysIn } from './holidays.js'
 import { creditCet } from './creditComparison.js'
@@ -215,8 +215,6 @@ export function simularPos({ custo, valor, participacao = 100, prazo, carencia =
   const taxaNominal = custo === 'tfbd' ? ((1 + taxa / 100) * (1 + indicePrimeiroAno / 100) - 1) * 100 : Math.expm1(Math.log1p(taxa / 100) + Math.log1p(indicePrimeiroAno / 100)) * 100
   const avisos = []
   if (custo === 'tfbd') avisos.push('TFBD não disponível no Itaú (tabela de premissas da calculadora BNDES).')
-  const avisoK = fgi ? avisoFatorKFgi(prazo) : null
-  if (avisoK) avisos.push(avisoK)
   return {
     ok: true, perfil: custo, financiado: liberado, liberado, tac, cet, cetFixo, fgi: ecgCalc ? { percentual: fgi.percentual, incorporado: false, ecg, k: ecgCalc.k, periodos: ecgCalc.p } : null, taxa, taxaFixa,
     taxaMensal: monthlyRate(taxa, 'aa') * 100, taxaNominal, composicao, parcelas: fluxo,

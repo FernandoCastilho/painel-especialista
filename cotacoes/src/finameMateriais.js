@@ -306,8 +306,7 @@ const FATOR_K = [[3, 1.42], [6, 0.62], [9, 0.42], [12, 0.31], [15, 0.27], [18, 0
 export const erroPercentualFgi = (percentual) => (Number.isFinite(percentual) && percentual >= FGI.percentualMin && percentual <= FGI.percentualMax && percentual % FGI.percentualMultiplo === 0
   ? null : `Informe o percentual garantido pelo FGI de ${FGI.percentualMin} a ${FGI.percentualMax}%, em múltiplos de ${FGI.percentualMultiplo}.`)
 export const fatorKFgi = (prazoMeses) => (FATOR_K.find(([max]) => prazoMeses <= max)?.[1] ?? 0.05)
-// Acima de 102 meses (só no Finame Veículos, até 120) o painel usa o último degrau, 0,05%; esse valor ainda não foi conferido no Anexo V.
-export const avisoFatorKFgi = (prazoMeses) => (prazoMeses > FATOR_K.at(-1)[0] ? 'Com FGI e prazo acima de 102 meses, o ECG usa fator K de 0,05% por período de 30 dias, valor ainda não conferido no Anexo V do FGI. Confirme o fator com o agente.' : null)
+// Igual ou acima de 103 meses (só no Finame Veículos, até 120): fator K de 0,05%, conforme o Anexo V (Circular SUP/ADIG nº 65/2026), conferido em 27/11/2026.
 // Períodos de 30 dias completos entre a liberação e o vencimento ordinário (P). Sem datas, usa meses de 365/12 dias.
 export const periodos30 = (prazoMeses) => Math.floor((prazoMeses * 365) / 12 / 30)
 // P pelas datas: períodos de 30 dias completos entre a liberação e o último vencimento (Date ou número em ms).
@@ -410,8 +409,6 @@ export function simular({ valor, participacao = 100, prazo, carencia = 0, custo,
   const liberado = check.financiado
   const ecgCalc = fgi ? ecgFgi({ valor: liberado, percentual: fgi.percentual, prazo, periodos: fgi.periodos ?? (calendario && dataFormalizacao ? Math.floor(calendario.dias.at(-1) / 30) : undefined), incorporar: !!fgi.incorporar }) : null
   const ecg = ecgCalc?.ecg ?? 0
-  const avisoK = fgi ? avisoFatorKFgi(prazo) : null
-  if (avisoK) check.avisos.push(avisoK)
   const ecgIncorporado = !!(fgi && fgi.incorporar)
   const financiado = liberado + (ecgIncorporado ? ecg : 0) // principal do cronograma: valor liberado mais o ECG financiado
   if (fgi && financiado > FGI.limiteCredito) return { ok: false, ...check, erros: [`Com garantia do FGI, o crédito é limitado a ${FGI.limiteCredito.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por cliente em cada agente financeiro, somadas as outras operações garantidas. Reduza o valor ou retire a garantia.`] }
