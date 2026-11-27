@@ -9,6 +9,7 @@ import RefreshButton from './RefreshButton.jsx'
 import IndicatorTable from './IndicatorTable.jsx'
 import SeriesHistory from './SeriesHistory.jsx'
 import { seriesStats } from './seriesStats.js'
+import { amplitudeText } from './format.js'
 import { monthlyStats } from './monthlyStats.js'
 import Estado from './Estado.jsx'
 import { onRefresh } from './refreshBus.js'
@@ -88,7 +89,7 @@ function CommodityTable({items, failed, onOpen, caption = 'Commodities em dólar
     const show = v => v == null ? '—' : fnum(v, dec)
     const delta = stats ? stats.pct : Number.isFinite(item.variationPct) ? item.variationPct : null
     return {
-      id:item.id, name:item.label, sub:`${item.unit} · ${item.nature}${Number.isFinite(item.dayHigh) && Number.isFinite(item.dayLow) ? ` · máx. ${show(item.dayHigh)} · mín. ${show(item.dayLow)} no dia` : ''}${stats ? '' : ' · sem histórico'}`,
+      id:item.id, name:item.label, sub:`${item.unit} · ${item.nature}${Number.isFinite(item.dayHigh) && Number.isFinite(item.dayLow) ? ` · máx. ${show(item.dayHigh)} · mín. ${show(item.dayLow)} no dia · ${amplitudeText(item.dayHigh, item.dayLow, dec).toLowerCase()}` : ''}${stats ? '' : ' · sem histórico'}`,
       openLabel:stats ? `${item.label}: abrir gráfico e histórico` : `${item.label}: histórico indisponível`,
       cells:[
         {text:hasValue ? show(item.value) : '—'},

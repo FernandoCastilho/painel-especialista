@@ -5,6 +5,7 @@ import { INSUMOS_PRECOS, checkUnit, lastDayRange, toDailyPoints } from '../scrip
 import { indexDayRange } from '../scripts/indices-lib.mjs'
 import { dayRange, kpiItems, rangeText } from '../src/terminal.js'
 import { coffeeNyContext } from '../src/marketContext.js'
+import { amplitudeText } from '../src/format.js'
 
 const yahoo = (bars, meta = {}) => ({ chart: { result: [{ meta, timestamp: bars.map((b) => b[0]), indicators: { quote: [{ high: bars.map((b) => b[1]), low: bars.map((b) => b[2]), close: bars.map((b) => b[3]) }] } }] } })
 
@@ -37,6 +38,9 @@ test('faixa do dia nos cards: texto, data quando não é de hoje e nada inventad
   assert.equal(rangeText(dayRange(5.6525, 5.6513, at, 4), at + 864e5), 'Máx. 5,6525 · Mín. 5,6513 · 27/11')
   assert.equal(dayRange(NaN, 5, at, 4), null); assert.equal(dayRange(5, 6, at, 4), null); assert.equal(dayRange(5, 0, at, 4), null); assert.equal(dayRange(6, 5, NaN, 4), null)
   assert.equal(rangeText(null), null)
+  assert.equal(dayRange(5.6525, 5.5014, at, 4).amplitude, 'Amplitude = 0,1511 (2,75%)', 'máxima menos mínima, % sobre a mínima')
+  assert.equal(dayRange(182000, 179000, at, 0).amplitude, 'Amplitude = 3.000 (1,68%)')
+  assert.equal(amplitudeText(390, 381, 2), 'Amplitude = 9,00 (2,36%)')
 
   const t = Date.now()
   const q = (bid, extra = {}) => ({ bid, ask: bid, high: bid * 1.01, low: bid * 0.99, pct: 0.1, timestamp: t, ...extra })

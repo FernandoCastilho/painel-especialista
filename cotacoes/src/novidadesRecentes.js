@@ -4,10 +4,11 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '27/11/2026',
-    destaques: ['Finame: vencimentos pela formalização do contrato', 'Café arábica diário da bolsa de Nova York', 'Máxima e mínima do dia nos cards de cotação'],
+    destaques: ['Finame: vencimentos pela formalização do contrato', 'Café arábica diário da bolsa de Nova York', 'Máxima e mínima do dia nos cards de cotação', 'Amplitude do dia já calculada nos cards'],
     items: ['Em Calculadoras > BNDES, o Finame usa a data da formalização para definir o primeiro vencimento e a data da liberação para contar juros e CET. O cronograma respeita a carência e os feriados da praça do contrato.',
       'Em Cenários > Commodities, o café arábica ganha uma linha diária com o contrato futuro da bolsa de Nova York (ICE, código KC), em centavos de dólar por libra-peso, logo abaixo da média mensal do Banco Mundial. A linha mostra a data e o horário da cotação, a máxima e a mínima do dia e a fonte. O dado vem do Yahoo Finance, com atraso e sem valor oficial: durante o pregão é o último negócio e, depois, o fechamento.',
-      'No Mapa de variação, os cards de dólar, euro, euro/dólar e Ibovespa mostram a máxima e a mínima do dia informadas pela fonte. IPCA, Selic, CDI e DI 1 ano ficam sem, porque a fonte publica um valor só por dia ou por mês. Quando a cotação não é de hoje, aparece a data dela.'],
+      'No Mapa de variação, os cards de dólar, euro, euro/dólar e Ibovespa mostram a máxima e a mínima do dia informadas pela fonte. IPCA, Selic, CDI e DI 1 ano ficam sem, porque a fonte publica um valor só por dia ou por mês. Quando a cotação não é de hoje, aparece a data dela.',
+      'Nos cards com máxima e mínima e na linha diária do café, aparece também a amplitude do dia já calculada: a máxima menos a mínima, no mesmo formato do valor, e entre parênteses essa diferença em % sobre a mínima. Exemplo: Amplitude = 0,1511 (2,75%).'],
   },
   {
     date: '26/11/2026',
