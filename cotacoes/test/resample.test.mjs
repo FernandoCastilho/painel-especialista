@@ -39,3 +39,17 @@ test('só oferece escala mais grossa que o dado: sem hora em série diária', ()
   assert.equal(f.dia.enabled, false) // um único dia
   assert.equal(scaleOptions([{ t: 1, bid: 1 }]).every((o) => !o.enabled), true)
 })
+
+test('15 e 30 minutos: blocos do dado de 5 em 5 minutos, com rótulo do início do bloco', () => {
+  const q = resample(five, '15min'), m = resample(five, '30min')
+  assert.equal(q.length, 16) // 4 horas
+  assert.equal(m.length, 8)
+  assert.equal(q[0].bid, five[2].bid) // último ponto de 10h00 a 10h14
+  const f = Object.fromEntries(scaleOptions(five).map((o) => [o.id, o]))
+  assert.equal(f['15min'].enabled, true); assert.equal(f['30min'].enabled, true)
+  assert.equal(f['15min'].intradiario, true); assert.equal(f.dia.intradiario, undefined)
+  assert.equal(f['15min'].name(five[4].t), '27/10 10h15')
+  assert.equal(f['30min'].name(five[11].t), '27/10 10h30')
+  const d = Object.fromEntries(scaleOptions(daily).map((o) => [o.id, o]))
+  assert.equal(d['15min'].enabled, false); assert.match(d['15min'].reason, /detalhe de 15 min/)
+})

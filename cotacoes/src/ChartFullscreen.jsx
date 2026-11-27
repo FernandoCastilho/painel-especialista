@@ -1,12 +1,15 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import ExpandIcon from './ExpandIcon.jsx'
+import { useFiltros } from './ChartFilters.jsx'
 import './ChartFullscreen.css'
 
 // O host do portal permanece o mesmo ao mudar de lugar. Não remonta o gráfico,
 // preservando filtros, seleções e tooltips. O dialog nativo isola foco e fundo.
+// Os filtros do mesmo escopo (período e escala) sobem junto para o topo da tela cheia.
 export default function ChartFullscreen({ children, disabled = false, compact = false }) {
   const [expanded, setExpanded] = useState(false)
+  const filtros = useFiltros()
   const [host] = useState(() => typeof document === 'undefined' ? null : document.createElement('div'))
   const inline = useRef(null), dialog = useRef(null), button = useRef(null)
   useLayoutEffect(() => {
@@ -14,6 +17,7 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
     const origin = inline.current, modal = dialog.current, trigger = button.current
     const overflow = document.body.style.overflow
     if (expanded) {
+      if (filtros) modal.appendChild(filtros.host)
       modal.appendChild(host)
       modal.showModal()
       document.body.style.overflow = 'hidden'
@@ -25,11 +29,12 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
       if (expanded) {
         modal.close()
         origin.appendChild(host)
+        if (filtros?.inline.isConnected) filtros.inline.appendChild(filtros.host)
         document.body.style.overflow = overflow
         queueMicrotask(() => trigger?.focus())
       }
     }
-  }, [expanded, disabled, host])
+  }, [expanded, disabled, host, filtros])
   if (disabled || !host) return children
   const keepEscapeInside = event => { if (expanded && event.key === 'Escape') event.stopPropagation() }
   const content = <>
