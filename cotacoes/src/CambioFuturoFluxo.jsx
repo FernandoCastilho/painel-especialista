@@ -5,13 +5,14 @@ import { marketDate } from './marketReturns.js'
 import { isBusinessDay } from './holidays.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './cdiDolar.js'
-import { MAX_PARCELAS_FLUXO, MAX_PRAZO_DIAS, amortizacoesIguais, calcularFluxoCambio, vencimentoPorPrazo } from './cambioFuturoFluxo.js'
+import { MAX_PARCELAS_FLUXO, MAX_PRAZO_DIAS, amortizacoesIguais, calcularFluxoCambio, irRemissivelPadrao, vencimentoPorPrazo } from './cambioFuturoFluxo.js'
 import './CalculatorStandard.css'
 import './CambioFuturo.css'
 import './CambioFuturoJornada.css'
 
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const dec = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const taxa4 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
 const fmt = (n, format = dec) => Number.isFinite(n) ? format.format(n) : '—'
 const pct = n => Number.isFinite(n) ? dec.format(n) + '%' : '—'
 const dataBrasil = data => data ? data.split('-').reverse().join('/') : '—'
@@ -29,13 +30,14 @@ const numero = texto => {
 const prazoDias = texto => /^\d{1,4}$/.test(texto.trim()) && Number(texto) >= 1 && Number(texto) <= MAX_PRAZO_DIAS ? Number(texto.trim()) : null
 const rotuloTaxa = texto => texto.trim() ? ` (USD+${texto.trim().replace(/%$/, '')}%)` : ''
 
-function Campo({ id, label, value, change, type = 'text', mode = 'decimal', placeholder, error }) {
+function Campo({ id, label, value, change, type = 'text', mode = 'decimal', placeholder, error, hint }) {
   return <div className="cx-field">
     <label htmlFor={id}>{label}</label>
     <input id={id} type={type} inputMode={type === 'text' ? mode : undefined} autoComplete="off"
       value={value} onChange={e => change(e.target.value)} placeholder={placeholder}
-      aria-invalid={error ? true : undefined} aria-describedby={error ? id + '-erro' : undefined} />
+      aria-invalid={error ? true : undefined} aria-describedby={error ? id + '-erro' : hint ? id + '-dica' : undefined} />
     {error && <small className="cf-j-error" id={id + '-erro'}>{error}</small>}
+    {hint && !error && <small className="cx-hint" id={id + '-dica'}>{hint}</small>}
   </div>
 }
 
@@ -46,20 +48,23 @@ export default function CambioFuturoFluxo({ onBack }) {
   const mudar = chave => valor => setOp(old => ({ ...old, [chave]: valor }))
   const mudarLinha = (i, chave) => valor => setLinhas(old => old.map((l, j) => j === i ? { ...l, [chave]: valor } : l))
 
+  const irSugerido = irRemissivelPadrao(numero(op.externa))
+  const irEditado = op.ir.trim() !== ''
+  const irTexto = irEditado ? op.ir : irSugerido == null ? '' : taxa4.format(irSugerido)
   const valorUsd = dinheiro(op.valor)
   const tacBrl = op.tac.trim() ? dinheiro(op.tac) ?? NaN : 0
   const padrao = amortizacoesIguais(valorUsd, quantidade)
   const ativas = linhas.slice(0, quantidade)
   const r = calcularFluxoCambio({
     inicio: op.inicio, valorUsd, tacBrl, spot: numero(op.spot),
-    taxas: { externa: numero(op.externa), ir: numero(op.ir), local: numero(op.local) },
+    taxas: { externa: numero(op.externa), ir: numero(irTexto), local: numero(op.local) },
     parcelas: ativas.map((l, i) => ({ prazo: prazoDias(l.prazo), amortizacao: l.amortizacao.trim() ? dinheiro(l.amortizacao) : padrao[i], futuro: numero(l.futuro) })),
   })
   const allIn = numero(op.allIn)
   const somaDifere = Number.isFinite(allIn) && Number.isFinite(r.somaTaxas) && Math.abs(allIn - r.somaTaxas) >= 0.01
   const bullet = quantidade === 1
   const colunas = ['Prazo (dias)', 'Vencimento', 'Amortização em USD', 'Saldo devedor USD',
-    'Comissão externa' + rotuloTaxa(op.externa), 'IR juros remissível' + rotuloTaxa(op.ir), 'Comissão local' + rotuloTaxa(op.local),
+    'Comissão externa' + rotuloTaxa(op.externa), 'IR juros remissível' + rotuloTaxa(irTexto), 'Comissão local' + rotuloTaxa(op.local),
     'Juros total' + rotuloTaxa(op.allIn), 'Parcela USD', 'Câmbio futuro (R$/USD)', 'Fluxo em R$']
 
   return <section className="cx cf cf-pattern bw calc-standard calc-workspace cf-j cf-f" aria-labelledby="cf-f-title">
@@ -88,7 +93,8 @@ export default function CambioFuturoFluxo({ onBack }) {
       </div>
       <div className="cf-j-grid cf-f-taxas">
         <Campo id="cf-f-externa" label="Comissão externa (% a.a.)" value={op.externa} change={mudar('externa')} placeholder="ex.: 6,6581" />
-        <Campo id="cf-f-ir" label="IR juros remissível (% a.a.)" value={op.ir} change={mudar('ir')} placeholder="ex.: 2,2194" />
+        <Campo id="cf-f-ir" label="IR juros remissível (% a.a.)" value={irTexto} change={mudar('ir')} placeholder="1/3 da comissão externa"
+          hint={irEditado ? 'Valor seu. Apague para voltar a 1/3 da externa.' : '1/3 da comissão externa; pode editar.'} />
         <Campo id="cf-f-local" label="Comissão local (% a.a.)" value={op.local} change={mudar('local')} placeholder="ex.: 2,3204" />
       </div>
       <p className="cf-notice" id="cf-f-soma">Soma das três taxas: {pct(r.somaTaxas)} a.a.{Number.isFinite(allIn) ? ` · all-in informado: ${pct(allIn)} a.a.` : ''}
@@ -110,7 +116,7 @@ export default function CambioFuturoFluxo({ onBack }) {
       <header className="cx-heading"><h3 id="cf-f-tabela">3. Parcelas e fluxo em R$</h3>
         <CalculatorHelp title="Como o cálculo é feito">
           <p>Vencimento = data de início + prazo em dias corridos. A amortização vem em partes iguais e pode ser mudada; a soma precisa fechar o valor em USD.</p>
-          <p>Cada comissão (externa, IR juros remissível e local) = saldo devedor × taxa ao ano × dias do período ÷ 360. Juros total é a soma das três; a parcela em USD é amortização + juros.</p>
+          <p>Cada comissão (externa, IR juros remissível e local) = saldo devedor × taxa ao ano × dias do período ÷ 360. O IR vem como 1/3 da comissão externa e pode ser editado. Juros total é a soma das três; a parcela em USD é amortização + juros.</p>
           <p>Fluxo em R$: no início entra o valor em R$ menos a TAC; em cada vencimento sai a parcela em USD (em centavos) × câmbio futuro da parcela.</p>
           <p>TIR ao ano em base 252: dias úteis (feriados nacionais) entre o início e cada vencimento, divididos por 252. Vencimento em dia não útil conta até o último dia útil antes dele. Não substitui o CET contratual.</p>
         </CalculatorHelp>
