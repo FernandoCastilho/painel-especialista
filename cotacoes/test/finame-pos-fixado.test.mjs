@@ -6,7 +6,8 @@ import { compareFinamePair, resolvePosRate, parseSignedDecimal } from '../src/fi
 
 // Contas de conferência feitas à parte, sem o motor: dias úteis contados à mão (seg-sex, sem feriados no período escolhido).
 const lib = new Date(2027, 2, 15, 12) // 15/03/2027, segunda
-const base = { valor: 1_000_000, prazo: 1, carencia: 0, taxaBndes: 1.25, taxaAgente: 3, periodicidade: 1, tac: 0, dataLiberacao: lib }
+// Formalização em 10/03 (antes do dia 15): data-base 15/03 e 1º vencimento 15/04, o período de um mês que estes testes medem.
+const base = { valor: 1_000_000, prazo: 1, carencia: 0, taxaBndes: 1.25, taxaAgente: 3, periodicidade: 1, tac: 0, dataLiberacao: lib, dataFormalizacao: new Date(2027, 2, 10, 12) }
 const perto = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`)
 const fixo = (j, b = 1.25, a = 3) => (1 + j / 100) * (1 + b / 100) * (1 + a / 100) - 1
 // 15/03/2027 → 15/04/2027 (quinta). Dias úteis de 16/03 a 15/04: 23 dias de semana; 26/03/2027 é Sexta-feira Santa (feriado nacional) → 22.
@@ -54,7 +55,7 @@ test('TFBD: saldo pelo dólar e juros proporcionais em dias corridos/360', () =>
 
 test('período que cruza o ano usa a taxa de cada ano pelos dias úteis de cada lado', () => {
   const dez = new Date(2027, 11, 15, 12) // 15/12/2027 → 17/01/2028 (15/01/2028 é sábado)
-  const r = simularPos({ ...base, dataLiberacao: dez, custo: 'tlp', taxaFixa: 0, taxaBndes: 0, taxaAgente: 0, trajetoria: [{ ano: 2027, valor: 10 }, { ano: 2028, valor: 0 }] })
+  const r = simularPos({ ...base, dataLiberacao: dez, dataFormalizacao: new Date(2027, 11, 10, 12), custo: 'tlp', taxaFixa: 0, taxaBndes: 0, taxaAgente: 0, trajetoria: [{ ano: 2027, valor: 10 }, { ano: 2028, valor: 0 }] })
   assert.equal(r.ok, true, r.erros?.join())
   assert.equal(r.parcelas[0].vencimento, '2028-01-17')
   // 16/12 a 31/12/2027: 12 dias de semana, menos 25/12 (sábado, não conta) → 12. 01/01 a 17/01/2028: 12 dias de semana, menos 01/01 (sábado) → 11.

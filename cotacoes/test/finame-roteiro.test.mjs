@@ -60,8 +60,9 @@ for (const [name, run, prazo, carencia] of cases) test(`linha do tempo bate com 
 test('exemplo de abertura da tela: R$ 1 milhão, 48 meses, 3 de carência, TFC de 14,1497% a.a.', () => {
   const r = fixo({})
   assert.deepEqual([r.liberado, r.jurosCarencia, r.primeiraParcela, r.ultimaParcela, r.juros, r.total].map(cents),
-    [100000000, 4192827, 3568467, 2258602, 37812107, 138072107])
-  assert.deepEqual([r.liberacao, r.parcelas[2].vencimento, r.parcelas[3].vencimento, r.parcelasAmortizacao], ['2026-11-21', '2027-02-15', '2027-03-15', 45])
+    [100000000, 5595518, 3713779, 2252139, 39334290, 139594290])
+  // Liberação em 21/11 (dia 15 em diante, formalização em branco = liberação): 1º vencimento dois meses à frente, em 15/01/2027.
+  assert.deepEqual([r.liberacao, r.parcelas[0].vencimento, r.parcelas[2].vencimento, r.parcelas[3].vencimento, r.parcelasAmortizacao], ['2026-11-21', '2027-01-15', '2027-03-15', '2027-04-15', 45])
   // Juros trimestrais na carência de 3 meses: um pagamento só, no fim do período.
   assert.deepEqual(r.parcelas.slice(0, 3).map(p => p.parcela > 0), [false, false, true])
 })

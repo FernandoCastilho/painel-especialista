@@ -53,3 +53,35 @@ test('o e-mail da simulação usa as datas do fluxo corrigido', () => {
   assert.doesNotMatch(JSON.stringify(eml), /15\/02\/2027/)
 })
 
+
+// Sugestão do Painel (27/11/2026): sem data de formalização (Comparador de Crédito, CET e impressão sem cronograma),
+// a regra é a mesma da tela do BNDES com o campo em branco: formalização = liberação.
+test('sem formalização, o 1º vencimento segue a liberação: até o dia 14, mês seguinte; do dia 15 em diante, dois meses à frente', async () => {
+  const { vencimentoDia15, calendarioFiname } = await import('../src/finameMateriais.js')
+  const d = (a, m, dia) => new Date(a, m - 1, dia, 12)
+  const iso = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`
+  const casos = [
+    [d(2026, 11, 1), '2026-12-15'], [d(2026, 11, 13), '2026-12-15'], [d(2026, 11, 14), '2026-12-15'],
+    [d(2026, 11, 15), '2027-01-15'], [d(2026, 11, 27), '2027-01-15'], [d(2026, 11, 30), '2027-01-15'],
+    [d(2026, 12, 14), '2027-01-15'], [d(2026, 12, 15), '2027-02-15'], [d(2026, 12, 31), '2027-02-15'],
+    [d(2027, 1, 31), '2027-03-15'], [d(2027, 2, 28), '2027-04-15'], [d(2028, 2, 29), '2028-04-17'], // 15/04/2028 é sábado
+  ]
+  for (const [liberacao, primeiro] of casos) {
+    assert.equal(iso(vencimentoDia15(liberacao, 1)), primeiro, iso(liberacao))
+    assert.equal(calendarioFiname(liberacao, 2).datas[0], primeiro, iso(liberacao))
+  }
+  // Em branco e formalização = liberação dão o mesmo calendário, dia a dia, de 2026 a 2028.
+  for (let t = d(2026, 1, 1); t < d(2029, 1, 1); t = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1, 12)) {
+    assert.deepEqual(calendarioFiname(t, 6), calendarioFiname(t, 6, {}, ['BR'], t), iso(t))
+  }
+})
+
+test('Comparador de Crédito: a coluna do BNDES usa a mesma regra do 1º vencimento', async () => {
+  const { evaluateColumn, newColumn, initialShared } = await import('../src/creditModalities.js')
+  for (const [start, juros, amortiza] of [['2026-11-13', '2027-02-15', '2027-03-15'], ['2026-11-27', '2027-03-15', '2027-04-15']]) {
+    const r = evaluateColumn({ ...newColumn('bndes'), bPeriod: '3' }, { ...initialShared(start), term: '24', grace: '3', system: 'price' })
+    assert.ok(r.ok, r.error)
+    // Juros trimestrais na carência de 3 meses: um pagamento de juros no 3º vencimento; amortização a partir do 4º.
+    assert.deepEqual([r.rows[0].date, r.rows[1].date], [juros, amortiza], start)
+  }
+})

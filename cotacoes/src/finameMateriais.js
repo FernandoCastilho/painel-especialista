@@ -318,22 +318,24 @@ export function ecgFgi({ valor, percentual, prazo, periodos, incorporar }) {
   return { k: k * 100, p, ecg: (g * k * valor * p) / denominador }
 }
 
-// Vencimento contratual da parcela `mes`: todo dia 15 do mês (a contar do mês da liberação). Se o dia 15 não for dia útil
+// Vencimento contratual da parcela `mes`: todo dia 15 do mês, a contar da data-base (o dia 15 seguinte à formalização). Se o dia 15 não for dia útil
 // (fim de semana, feriado nacional ou feriado da praça do contrato), vence no próximo dia útil. Devolve Date ao meio-dia,
 // como o restante da tela. `calendarios`: calendários da praça (padrão só 'BR', feriados nacionais).
 export function vencimentoDia15(liberacao, mes, ctx = {}, calendarios = ['BR'], formalizacao = null) {
   const cals = contractCalendars(calendarios)
   if (!cals) throw new Error('Praça do contrato inválida.')
-  // Anexo I, itens 5.1 e 5.4: data-base no dia 15 estritamente posterior à formalização.
+  // Anexo I, itens 5.1 e 5.4: data-base no dia 15 estritamente posterior à formalização. Sem data de formalização
+  // (Comparador de Crédito e chamadas antigas), vale a da liberação, como na tela do BNDES com o campo em branco:
+  // até o dia 14, 1º vencimento no dia 15 do mês seguinte; do dia 15 em diante, dois meses à frente.
   const origem = formalizacao ?? liberacao
-  const deslocamento = formalizacao && origem.getDate() >= 15 ? 1 : 0
+  const deslocamento = origem.getDate() >= 15 ? 1 : 0
   const ref = new Date(origem.getFullYear(), origem.getMonth() + mes + deslocamento, 15, 12)
   const util = nextBusinessDay(iso(ref.getFullYear(), ref.getMonth() + 1, 15), cals, ctx)
   const [y, m, d] = util.split('-').map(Number)
   return new Date(y, m - 1, d, 12)
 }
 
-// Calendário real da operação: vencimentos no dia 15 (ou no próximo dia útil, feriados nacionais e da praça) contados da liberação.
+// Calendário real da operação: vencimentos no dia 15 (ou no próximo dia útil, feriados nacionais e da praça) contados da data-base.
 // Devolve as datas (AAAA-MM-DD), os dias corridos desde a liberação e a fração de ano ACT/ACT de cada período
 // (dias corridos sobre 365 ou 366, separados por ano civil), base dos juros de cada parcela.
 const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
