@@ -52,8 +52,13 @@ const TELAS = [
 
         if (nome === 'notebook-1366' && tema === 'dark') {
           // Link direto: calculadora e quadro de Juros (rola até o quadro).
-          await page.locator('.site-map a', { hasText: 'Capital de Giro' }).first().click()
-          await page.waitForFunction(() => location.hash === '#calculadora/giro')
+          const giro = page.locator('.site-map a[href="#calculadora/giro"]')
+          await giro.click()
+          await page.waitForFunction(() => location.hash === '#calculadora/giro', null, { timeout: 8000 }).catch(async (e) => {
+            const caixa = await giro.boundingBox().catch(() => null)
+            const alvo = caixa && await page.evaluate(([x, y]) => { const el = document.elementFromPoint(x, y); return el && `${el.tagName}.${el.className} "${el.textContent.slice(0, 40)}"` }, [caixa.x + caixa.width / 2, caixa.y + caixa.height / 2])
+            throw new Error(`clique em Capital de Giro não abriu a calculadora: endereço ${await page.evaluate(() => location.hash)}, caixa ${JSON.stringify(caixa)}, no ponto ${alvo}, erros ${JSON.stringify(erros)} (${e.message})`)
+          })
           await page.goto(`${base}/#mapa`)
           await page.locator('.site-map a', { hasText: 'Cupom cambial' }).first().click()
           await page.waitForFunction(() => location.hash === '#juros')
