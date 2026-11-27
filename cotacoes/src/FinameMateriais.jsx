@@ -8,7 +8,7 @@ import { parseDecimal } from './emprestimo.js'
 import { useDataFile } from './useDataFile.js'
 import { useMacro } from './useMacro.js'
 import { keyOf, pointsOf } from './bndes.js'
-import { CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, ecgFgi, erroPercentualFgi, fatorKFgi, TFC_SERIES_ONIBUS, codigoTfcSerie, nomeTfc, faixaTfb, faixaTfc, periodos30Datas, regrasFiname, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
+import { CUSTOS_FIXOS, FGI, FONTES, PERIODICIDADES, PORTES, ecgFgi, erroDatasFiname, erroPercentualFgi, fatorKFgi, TFC_SERIES_ONIBUS, codigoTfcSerie, nomeTfc, faixaTfb, faixaTfc, periodos30Datas, regrasFiname, simular, spreadSobreCdi, vencimentoDia15 } from './finameMateriais.js'
 import { finameFundingOptionsDo, siglaCusto, FINAME_FUNDING_SOURCES, finameFundingOption, compareFinamePair, FINAME_PREMISES, resolveFinameRate, resolvePosRate, isFinamePos, parseSignedDecimal, finameSimulationParams, validFinameQuote, validPosQuote, finameCet } from './finameFunding.js'
 import { CUSTOS_POS, INDICE_POS, codigoTfbd, simularPos, trajetoriaFocus, trajetoriaSelicMedia } from './finamePosFixado.js'
 import { nf, nbr5891 } from './format.js'
@@ -146,7 +146,10 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const [fgiText, setFgiText] = useState(String(FGI.padraoPercentual))
   const [liberacaoText, setLiberacaoText] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })
   // Data da liberação: base do calendário real (vencimentos dia 15 ou próximo dia útil), dos juros por dias corridos e do CET.
-  const hoje = /^\d{4}-\d{2}-\d{2}$/.test(liberacaoText) ? (([y, m, d]) => { const date = new Date(y, m - 1, d, 12); return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d && y >= 2000 && y <= 2100 ? date : null })(liberacaoText.split('-').map(Number)) : null
+  const parseDataContrato = textoData => /^\d{4}-\d{2}-\d{2}$/.test(textoData) ? (([y, m, d]) => { const date = new Date(y, m - 1, d, 12); return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d && y >= 2000 && y <= 2100 ? date : null })(textoData.split('-').map(Number)) : null
+  const hoje = parseDataContrato(liberacaoText)
+  const [formalizacaoText, setFormalizacaoText] = useState('')
+  const formalizacao = parseDataContrato(formalizacaoText || liberacaoText)
 
   const money = parseMoneyInput(valorText)
   const participacao = parseDecimal(partText)
@@ -157,7 +160,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const tac = tacText.trim() === '' ? { ok: true, value: 0 } : parseMoneyInput(tacText)
   const fgiPct = parseDecimal(fgiText)
   // P do ECG: períodos de 30 dias completos entre a liberação ilustrativa e o último vencimento (dia 15, próximo dia útil).
-  const fgiPeriodos = prazo && hoje ? periodos30Datas(hoje, vencimentoDia15(hoje, prazo, holidayCtx, calendarios)) : undefined
+  const fgiPeriodos = prazo && hoje && formalizacao ? periodos30Datas(hoje, vencimentoDia15(hoje, prazo, holidayCtx, calendarios, formalizacao)) : undefined
 
   // Custo financeiro do painel
   const faixa = prazo ? faixaTfb(prazo) : 60
@@ -225,6 +228,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
     agente: taxaAgente !== null && taxaAgente <= 100 ? null : 'Informe o spread da instituição em % a.a.',
     tac: tac.ok ? null : tac.error || 'Informe a TAC em R$ (zero se não houver).',
     'data-lib': hoje ? null : 'Informe a data da liberação (entre 2000 e 2100).',
+    'data-form': hoje ? (formalizacao ? erroDatasFiname(hoje, formalizacao) : 'Informe uma data de formalização válida.') : null,
     fgi: !fgiOn ? null : emUso.some(id => ['lcd', 'tfbd'].includes(id)) ? 'O FGI Tradicional não aceita Selic/LCD capitalizada nem TFBD (Anexo I do Regulamento, item 1). Desmarque a garantia.' : PORTES.find((p) => p.id === porte)?.mpme === false ? 'O FGI atende micro, pequenas e médias empresas (receita bruta de até R$ 300 milhões no ano anterior). Para grande empresa, desmarque a garantia.' : erroPercentualFgi(fgiPct ?? Number.NaN),
     ...Object.fromEntries([...CUSTOS_INLINE, ...CUSTOS_POS].map(id => [`rate-${id}`, !emUso.includes(id) ? null : SEM_COTACAO.has(id) && !rates[id].manual ? 'Informe a taxa da proposta do agente: o painel ainda não coleta a Pré FAT.' : rates[id].error])),
     custo: emUso.includes('pre3') && PORTES.find(p => p.id === porte)?.mpme === false ? 'A Pré 3 vale só para micro, pequenas e médias empresas (receita bruta de até R$ 300 milhões). Escolha outro custo ou o porte MPME.' : null,
@@ -233,15 +237,15 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   }
   // A gaveta "Detalhes do contrato" abre sozinha quando a data da liberação tem erro, para o aviso não ficar escondido.
   const contratoRef = useRef(null)
-  const erroContrato = erros['data-lib']
+  const erroContrato = erros['data-lib'] || erros['data-form']
   useEffect(() => { if (erroContrato && contratoRef.current) contratoRef.current.open = true }, [erroContrato])
   const garantiaFgi = fgiOn && !erros.fgi ? { percentual: fgiPct, incorporar: false, periodos: fgiPeriodos } : null
   const custosExtras = { tac: tac.ok ? tac.value : 0, fgi: garantiaFgi }
   const pronto = ['inline', 'pos'].includes(funding?.mode) && !Object.values(erros).some(Boolean) && Number.isFinite(custoFinanceiro)
-  const params = finameSimulationParams({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, periodicidade, dataLiberacao: hoje, feriados: holidayCtx, calendarios, produto, ...custosExtras })
+  const params = finameSimulationParams({ valor: money.value, participacao, prazo, carencia, custo, custoFinanceiro, ipca: 0, taxaBndes, taxaAgente, periodicidade, dataLiberacao: hoje, feriados: holidayCtx, calendarios, dataFormalizacao: formalizacao, produto, ...custosExtras })
   // Pós-fixados: mesmo cronograma (dia 15, praça do contrato, SAC, periodicidade da carência) com o motor de finamePosFixado.js.
   const simularPara = (id, taxa) => isFinamePos(id)
-    ? simularPos({ custo: id, valor: params.valor, participacao, prazo, carencia, taxaFixa: taxa, taxaBndes, taxaAgente, trajetoria: trajetoriaDe(id), cambioInicial, periodicidade, composicao, tac: params.tac, fgi: params.fgi, dataLiberacao: hoje, feriados: holidayCtx, calendarios, produto })
+    ? simularPos({ custo: id, valor: params.valor, participacao, prazo, carencia, taxaFixa: taxa, taxaBndes, taxaAgente, trajetoria: trajetoriaDe(id), cambioInicial, periodicidade, composicao, tac: params.tac, fgi: params.fgi, dataLiberacao: hoje, feriados: holidayCtx, calendarios, dataFormalizacao: formalizacao, produto })
     : simular({ ...params, custo: id, custoFinanceiro: taxa })
   const r = pronto ? simularPara(custo, custoFinanceiro) : null
   const res = r?.ok ? r : null
@@ -305,7 +309,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const fluxoAlternatives = alternatives.map(item => ({ ...item.result, custo: item.custo }))
   const fluxoResult = fluxoAlternatives[fluxoOpcao] || fluxoAlternatives[0]
   const referenciaTipos = [...new Set(alternatives.map(item => CUSTOS_FIXOS.has(item.custo) ? 'pre' : 'pos'))]
-  const emailAlternatives = fluxoAlternatives.map(item => ({ ...item, valor: item.financiado, custoFinanceiro: rates[item.custo]?.value, taxaBndes, taxaAgente, prazo, carencia, periodicidade: PERIODICIDADES.find(p => p.id === periodicidade)?.label, amortizacao: sistema, liberacao: dmy(liberacaoText), cet: finameCet(item, hoje, holidayCtx, calendarios)?.anual }))
+  const emailAlternatives = fluxoAlternatives.map(item => ({ ...item, valor: item.financiado, custoFinanceiro: rates[item.custo]?.value, taxaBndes, taxaAgente, prazo, carencia, periodicidade: PERIODICIDADES.find(p => p.id === periodicidade)?.label, amortizacao: sistema, formalizacao: dmy(formalizacaoText || liberacaoText), liberacao: dmy(liberacaoText), cet: finameCet(item, hoje, holidayCtx, calendarios)?.anual }))
   // Tabelas de opções ocupam só o necessário e crescem a cada alternativa comparada (largura em FinameComparisonLayout.css).
   const fitStyle = { '--fm-opcoes': Math.max(1, alternatives.length) }
   // Comparação executiva: só apresenta os resultados já calculados (nenhuma conta nova além da diferença entre as colunas).
@@ -350,7 +354,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       nota: `${rates[custo].manual ? 'Taxa manual' : 'Painel BNDES'}${quotes[custo]?.data ? ` · referência do painel em ${dmy(quotes[custo].data)}` : ''}` },
     condicoes: [['Valor financiado', brl(res.liberado)], ['Prazo total', `${prazo} meses`], ['Carência', `${carencia} meses`],
       ['Amortização', sistema.toUpperCase()], ['Parcelas com amortização', String(res.parcelasAmortizacao)],
-      ['Porte e região', PORTES.find(item => item.id === porte).label], ['Liberação', dmy(liberacaoText)]],
+      ['Porte e região', PORTES.find(item => item.id === porte).label], ['Formalização', dmy(formalizacaoText || liberacaoText)], ['Liberação', dmy(liberacaoText)]],
     rodape: 'Simulação indicativa, sujeita à análise e aprovação. CET estimado; o CET e a proposta da instituição financeira prevalecem.',
   } : null
   const taxasHistoricas = {
@@ -369,7 +373,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
   const historyChart = [serieDiPre(res ? diNoPrazo : null, prazo), ...historyRates]
   const historicoPdf = historyItems.length ? historicoParaPdf(historyChart, viewRange(historyChart.map(item => item.list), 12, null)) : null
   // Vencimento de cada linha do fluxo: o que a conta devolve ou, sem ele, o dia 15 do mês (ou o próximo dia útil).
-  const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx))
+  const venceEm = p => p.vencimento ? dmy(p.vencimento) : data(vencimentoDia15(hoje, p.mes, holidayCtx, calendarios, formalizacao))
   const quadro = (q) => <div className="fm-kpi" key={q.id}><span className="fm-rotulo">{q.rotulo}{ajuda(q.rotulo, q.ajuda)}</span><b>{q.valor}</b>{q.nota && <small>{q.nota}</small>}</div>
   const detalhamento = <details className="fm-details"><summary>Detalhamento · {siglaCusto(custo)}</summary><div className="fm-grade">{quadros.map(quadro)}</div></details>
 
@@ -426,7 +430,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
           <details className="fm-contrato" ref={contratoRef} open={apresentacao}>
             <summary>Detalhes do contrato<small> · liberação em {hoje ? dmy(liberacaoText) : '—'} · {PRACAS_CONTRATO.find(p => p.id === praca)?.label}</small></summary>
             <div className="fm-contrato-campos">
-            {field('data-lib', 'Data da liberação', input('data-lib', liberacaoText, setLiberacaoText, { type: 'date', inputMode: undefined, min: '2000-01-01', max: '2100-12-31' }), 'Data em que o dinheiro é liberado. Os vencimentos caem todo dia 15 a partir do mês seguinte (ou no próximo dia útil, considerando os feriados nacionais e os da praça do contrato); os juros de cada parcela contam os dias corridos desde o vencimento anterior, sobre os dias do ano civil (365 ou 366). Mudar a data muda os juros e o CET.')}
+            {field('data-lib', 'Data da liberação', input('data-lib', liberacaoText, setLiberacaoText, { type: 'date', inputMode: undefined, min: '2000-01-01', max: '2100-12-31' }), 'Data em que o dinheiro é liberado. Essa data inicia a contagem dos juros e do CET. O calendário das parcelas é definido pela data de formalização.')}
+            {field('data-form', 'Data da formalização', input('data-form', formalizacaoText, setFormalizacaoText, { type: 'date', inputMode: undefined, min: '2000-01-01', max: '2100-12-31' }), 'Use a data da assinatura do contrato. Se deixar em branco, a simulação assume a mesma data da liberação. A data-base é o dia 15 seguinte à formalização; não há pagamento na data-base.')}
             {field('praca', 'Praça do contrato (feriados)', <PracaContratoBusca id="fm-praca" value={praca} onChange={setPraca} />, `${PRACA_AJUDA} ${PRACA_RESSALVA}`)}
             </div>
           </details>
@@ -477,7 +482,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
           <div className="fm-fgi">
             <label htmlFor="fm-fgi"><input id="fm-fgi" type="checkbox" role="switch" checked={fgiOn} onChange={e => setFgiOn(e.target.checked)} />FGI Tradicional</label>
             {fgiOn && field('fgipct', '% garantido', <select id="fm-fgipct" aria-invalid={!!erros.fgi} aria-describedby="fm-fgipct-err" value={fgiText} onChange={event => setFgiText(event.target.value)}>{Array.from({ length: (FGI.percentualMax - FGI.percentualMin) / FGI.percentualMultiplo + 1 }, (_, k) => String(FGI.percentualMin + k * FGI.percentualMultiplo)).map(v => <option key={v} value={v}>{v}%</option>)}</select>,
-              <><p>{`De ${FGI.percentualMin} a ${FGI.percentualMax}% do financiamento, em múltiplos de ${FGI.percentualMultiplo} (art. 15 do Regulamento do FGI Tradicional). O agente define o percentual dentro do regulamento.`}</p><p>O FGI cobre parte da perda do banco. O agente pode repassar o ECG (Encargo por Concessão de Garantia) ao cliente, e aqui ele entra no custo total e no CET como despesa à vista, sem financiamento.</p>{prazo ? <p>{`Fator K da faixa de ${prazo} meses: ${nf(fatorKFgi(prazo), 2)}% por período de 30 dias. P = ${fgiPeriodos} períodos de 30 dias entre a liberação (${data(hoje)}) e o último vencimento (${data(vencimentoDia15(hoje, prazo, holidayCtx))}); o ECG muda com a data da liberação.${fgiPeriodos === 0 ? ' Com P zero o ECG é zero: o prazo é menor que 30 dias.' : ''}`}</p> : null}<p>O ECG é pago à vista na liberação (item 2.1.3 do Anexo V), sem incorporar ao saldo devedor e sem juros sobre o encargo. Só vale o FGI Tradicional; o FGI PEAC tem regras próprias e não é calculado aqui. A garantia não é seguro de crédito e não isenta o cliente de pagar. Limites: crédito garantido de até {brl(FGI.limiteCredito)} por cliente em cada agente, somadas as outras operações; não há teto para o valor do ECG. {FGI.vedacoes} Por isso a garantia vale aqui para TFC e TFB, com juros pagos na carência.</p></>)}
+              <><p>{`De ${FGI.percentualMin} a ${FGI.percentualMax}% do financiamento, em múltiplos de ${FGI.percentualMultiplo} (art. 15 do Regulamento do FGI Tradicional). O agente define o percentual dentro do regulamento.`}</p><p>O FGI cobre parte da perda do banco. O agente pode repassar o ECG (Encargo por Concessão de Garantia) ao cliente, e aqui ele entra no custo total e no CET como despesa à vista, sem financiamento.</p>{prazo ? <p>{`Fator K da faixa de ${prazo} meses: ${nf(fatorKFgi(prazo), 2)}% por período de 30 dias. P = ${fgiPeriodos} períodos de 30 dias entre a liberação (${data(hoje)}) e o último vencimento (${data(vencimentoDia15(hoje, prazo, holidayCtx, calendarios, formalizacao))}); o ECG muda com a data da liberação.${fgiPeriodos === 0 ? ' Com P zero o ECG é zero: o prazo é menor que 30 dias.' : ''}`}</p> : null}<p>O ECG é pago à vista na liberação (item 2.1.3 do Anexo V), sem incorporar ao saldo devedor e sem juros sobre o encargo. Só vale o FGI Tradicional; o FGI PEAC tem regras próprias e não é calculado aqui. A garantia não é seguro de crédito e não isenta o cliente de pagar. Limites: crédito garantido de até {brl(FGI.limiteCredito)} por cliente em cada agente, somadas as outras operações; não há teto para o valor do ECG. {FGI.vedacoes} Por isso a garantia vale aqui para TFC e TFB, com juros pagos na carência.</p></>)}
             {fgiOn && erros.fgi && <p className="cx-error" role="alert">{erros.fgi}</p>}
           </div>
           <ul className="fm-pills" aria-label="Condições fixas"><li>Amortização <b>SAC</b></li><li>Liberação <b>até 90 dias</b></li><li>ECG <b>à vista{res?.fgi ? ` · ${brl(res.fgi.ecg)}` : ''}</b></li></ul>
@@ -509,7 +514,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
               conditions={[
                 ['Valor financiado', brl(res.liberado)], ['Prazo total', `${prazo} meses`], ['Carência', `${carencia} meses`],
                 ['Amortização', sistema.toUpperCase()], ['Parcelas com amortização', res.parcelasAmortizacao],
-                ['Porte e região', PORTES.find(item => item.id === porte).label], ['Liberação', dmy(liberacaoText)],
+                ['Porte e região', PORTES.find(item => item.id === porte).label], ['Formalização', dmy(formalizacaoText || liberacaoText)], ['Liberação', dmy(liberacaoText)],
               ]}
               installments={[['Primeira parcela após carência', brl(res.primeiraParcela)], ['Última parcela', brl(res.ultimaParcela)]]}
               expenses={[
@@ -525,7 +530,7 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
             />}
             {comparar && <section className="be-comparison-context" aria-label="Condições da operação comparada"><h4>Condições da operação</h4><dl className="fm-operation-summary">{[
               ['Valor financiado', brl(res.liberado)], ['Prazo total', `${prazo} meses`], ['Carência', `${carencia} meses`],
-              ['Liberação', dmy(liberacaoText)], ['Porte e região', PORTES.find(item => item.id === porte).label], ['Amortização', sistema.toUpperCase()],
+              ['Formalização', dmy(formalizacaoText || liberacaoText)], ['Liberação', dmy(liberacaoText)], ['Porte e região', PORTES.find(item => item.id === porte).label], ['Amortização', sistema.toUpperCase()],
             ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>}
             {comparar && <div className="fm-comparison" aria-label={`Comparação ${siglaCusto(custo)} e ${siglaCusto(outro)}`}>
               {comparison?.ok ? <>
@@ -593,8 +598,8 @@ export default function FinameMateriais({ onBack, onFundingView, profileControl,
       </details>}
       {res && (
         <BndesDetails title="Memória completa do fluxo"><div className="desk-panel cx-panel fm-fluxo-panel">
-          <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Liberação em ${data(hoje)}. Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros de cada linha contam os dias corridos desde o vencimento anterior, sobre os dias do ano civil; não é memória contratual. O indexador é o da cotação em uso. Em TLP e LCD, os juros usam os dias úteis do período sobre 252 (feriados nacionais e da praça); em TFBD, os dias corridos sobre 360. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero pela premissa de recursos FINAME elegíveis. Na linha de liberação, "Total pago" soma as despesas à vista: IOF, TAC e ECG do FGI quando pago à vista.`)}</h3></header>
-          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário estimado. Não use como memória contratual.{ajuda('Calendário do fluxo', 'Calendário pela data da liberação: vencimento todo dia 15, ou no próximo dia útil, com juros por dias corridos.')}</p>
+          <header><h3 className="cx-heading">Fluxo parcela a parcela{ajuda('Fluxo parcela a parcela', `Formalização em ${data(formalizacao)}; liberação em ${data(hoje)}. Vencimentos todo dia 15; se não for dia útil (fim de semana ou feriado nacional), no próximo dia útil. Os juros de cada linha contam os dias corridos desde o vencimento anterior, sobre os dias do ano civil; não é memória contratual. O indexador é o da cotação em uso. Em TLP e LCD, os juros usam os dias úteis do período sobre 252 (feriados nacionais e da praça); em TFBD, os dias corridos sobre 360. "Juros pagos" é o que vence no mês: na carência, os juros acumulam e são pagos na periodicidade escolhida. IOF zero pela premissa de recursos FINAME elegíveis. Na linha de liberação, "Total pago" soma as despesas à vista: IOF, TAC e ECG do FGI quando pago à vista.`)}</h3></header>
+          <p className="cx-hint cx-pad" id="fm-calendario-hipotetico">Calendário estimado. Não use como memória contratual.{ajuda('Calendário do fluxo', 'Vencimentos definidos pela formalização, com ajuste para o próximo dia útil. Juros a partir da liberação.')}</p>
           <div className="cx-wrap fm-fluxo" role="region" aria-label="Fluxo parcela a parcela" aria-describedby="fm-calendario-hipotetico" tabIndex={0}>
             <table className="cx-matrix fm-tabela">
               <thead><tr><th scope="col">Nº</th><th scope="col">Vencimento</th><th scope="col">Saldo inicial</th>{res.correcao !== 0 && <th scope="col">Correção</th>}<th scope="col">Juros pagos</th><th scope="col">Amortização</th><th scope="col">Parcela</th><th scope="col">Total pago</th><th scope="col">Saldo final</th></tr></thead>

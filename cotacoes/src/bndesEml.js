@@ -37,6 +37,7 @@ export function bndesEmlConteudo({ itens, linha = 'Finame Materiais Industrializ
     linhaDe('Carência', item => meses(item.carencia)),
     linhaDe('Juros na carência', item => item.periodicidade || '—'),
     linhaDe('Amortização', item => String(item.amortizacao || 'SAC').toUpperCase()),
+    ...(itens.some(item => item.formalizacao) ? [linhaDe('Formalização', item => item.formalizacao || '—')] : []),
     linhaDe('Liberação', item => item.liberacao || '—'),
     ...(varias ? [linhaDe('CET estimado', item => taxa(item.cet), { forte: true }), linhaDe('Total estimado a pagar', item => brl(item.total), { forte: true }), linhaDe('1ª parcela após a carência', item => brl(item.primeiraParcela))] : []),
   ])

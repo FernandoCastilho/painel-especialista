@@ -1,6 +1,6 @@
 import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Help from './CalculatorHelp.jsx'
 import { EXEMPLO, LIMITES_ANALISE, analisarSerie, blocosAnalise, compararPeriodo, emMilhoes, indicadores12m, leituraCrescimento, parseFaturamento, resumoPorAno, rotuloMes, serieContinua, totalCurto } from './faturamento.js'
 import './Faturamento.css'
@@ -366,10 +366,24 @@ function Analise({ a, unidade }) {
   )
 }
 
+// Ícones dos botões de imagem: copiar (duas folhas), baixar (seta para a bandeja) e visto após a ação.
+function IconeImagem({ tipo }) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {tipo === 'ok' ? <path d="M5 12.5l4.5 4.5L19 7.5" />
+        : tipo === 'baixar' ? <><path d="M12 4v11" /><path d="M7.5 10.5L12 15l4.5-4.5" /><path d="M5 19.5h14" /></>
+          : <><rect x="8.5" y="8.5" width="11" height="11" rx="2" /><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2" /></>}
+    </svg>
+  )
+}
+
 export default function Faturamento({ onBack }) {
   const [texto, setTexto] = useState('')
   const [sel, setSel] = useState(null)
-  const [aviso, setAviso] = useState('')
+  // Retorno só pelo ícone (visto por 2 segundos) e pelo leitor de tela; nada escrito na tela.
+  const [aviso, setAviso] = useState({ icone: '', texto: '' })
+  useEffect(() => { if (!aviso.icone) return undefined; const t = setTimeout(() => setAviso((a) => ({ ...a, icone: '' })), 2000); return () => clearTimeout(t) }, [aviso])
+  const avisar = (icone, texto) => setAviso({ icone, texto })
   const svgRef = useRef(null)
   const { meses, avisos, unidade } = parseFaturamento(texto)
   const serie = serieContinua(meses)
@@ -410,12 +424,10 @@ export default function Faturamento({ onBack }) {
       if (modo === 'copiar') {
         if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') throw new Error('sem área de transferência')
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-        setAviso('Imagem copiada. Cole no PowerPoint com Ctrl+V.')
+        avisar('copiado', 'Imagem copiada.')
         return
       }
-    } catch {
-      setAviso('Não deu para copiar neste navegador; a imagem foi baixada.')
-    }
+    } catch { /* sem área de transferência: baixa o PNG */ }
     try {
       const url = URL.createObjectURL(await blob)
       const a = document.createElement('a')
@@ -423,9 +435,9 @@ export default function Faturamento({ onBack }) {
       a.download = 'faturamento-endividamento.png'
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
-      if (modo !== 'copiar') setAviso('Imagem baixada.')
+      avisar('baixado', modo === 'copiar' ? 'Não deu para copiar neste navegador; a imagem foi baixada.' : 'Imagem baixada.')
     } catch {
-      setAviso('Não foi possível gerar a imagem.')
+      avisar('erro', 'Não foi possível gerar a imagem.')
     }
   }
   const [ini, fim] = selValida ? [Math.min(selValida.de, selValida.ate), Math.max(selValida.de, selValida.ate)] : ['', '']
@@ -486,11 +498,12 @@ export default function Faturamento({ onBack }) {
                   <button type="button" onClick={anoAteAgora}>Ano até agora</button>
                 </div>
               </div>
-              <div className="ft-atalhos" role="group" aria-label="Rótulos e imagem">
-                <button type="button" onClick={() => exportar('copiar')}>Copiar imagem</button>
-                <button type="button" onClick={() => exportar('baixar')}>Baixar PNG</button>
+              {/* Ícones discretos (pedido do Fernando em 27/11/2026): sem texto na tela; o retorno é o ícone virar um visto. */}
+              <div className="ft-atalhos ft-img" role="group" aria-label="Imagem do gráfico">
+                <button type="button" className="ft-icone" onClick={() => exportar('copiar')} aria-label="Copiar imagem" title="Copiar imagem"><IconeImagem tipo={aviso.icone === 'copiado' ? 'ok' : 'copiar'} /></button>
+                <button type="button" className="ft-icone" onClick={() => exportar('baixar')} aria-label="Baixar imagem (PNG)" title="Baixar imagem (PNG)"><IconeImagem tipo={aviso.icone === 'baixado' ? 'ok' : 'baixar'} /></button>
               </div>
-              <p className="cx-hint ft-aviso" role="status">{aviso}</p>
+              <p className="sr-only" role="status">{aviso.texto}</p>
             </div>
             <div className="ft-legend" aria-hidden="true"><span className="ft-key-f" /> Faturamento <span className="ft-key-d" /> Endividamento <span className="ft-key-box" /> Período escolhido e mesmo período do ano anterior</div>
             <div className="ft-chart-wrap"><Grafico meses={serie} sel={selValida} onSelecionar={selecionar} comparacao={comparacao} unidade={unidade} rotulo={rotulo} svgRef={svgRef} /></div>

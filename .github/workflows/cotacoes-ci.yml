@@ -126,6 +126,17 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/cdc
           if-no-files-found: warn
           retention-days: 7
+      - name: Conferir Faturamento (ícones de copiar e baixar a imagem, sem aviso escrito)
+        run: FATURAMENTO_QA_OUTPUT="$RUNNER_TEMP/qa-universal/faturamento" node scripts/smoke-faturamento.cjs
+      - name: Capturas do Faturamento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: faturamento-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/faturamento
+          if-no-files-found: warn
+          retention-days: 7
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4
