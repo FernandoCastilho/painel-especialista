@@ -1,0 +1,20 @@
+name: Coleta única do pregão fixado (temporária)
+on:
+  push:
+    branches: [claude/pregao-fixado-coleta]
+permissions:
+  contents: read
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node cotacoes/scripts/fixar-pregao.mjs 2026-11-27 7 pregao-fixado.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pregao-fixado
+          path: pregao-fixado.json
