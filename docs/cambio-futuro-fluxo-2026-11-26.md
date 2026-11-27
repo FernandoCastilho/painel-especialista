@@ -17,3 +17,7 @@ Pedido de Fernando, a partir das telas da planilha "Comparativo HPA" (bullet e 4
 
 ## Conferência
 - Testes com os dois exemplos da planilha (`test/cambio-futuro-fluxo.test.mjs`), revisão independente do cálculo e revisão de simplificação (simplificador de código da sessão; o Simplificador da central não está instalado neste ambiente).
+
+## Ajuste de 27/11/2026: IR remissível automático
+- Aprovado por Fernando ("Sim, preencher sozinha, mas permita que o usuário também possa editar"): o campo IR juros remissível vem preenchido com 1/3 da comissão externa, com 4 casas (6,6581 → 2,2194; 6,1468 → 2,0489), igual às duas planilhas.
+- O usuário pode digitar outro valor; ele não é sobrescrito se a comissão externa mudar. Apagando o campo, volta ao 1/3.

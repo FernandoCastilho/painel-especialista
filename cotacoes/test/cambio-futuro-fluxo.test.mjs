@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import { runInNewContext } from 'node:vm'
 import { transform } from 'esbuild'
 import { hookRenderer } from './helpers/hooks.mjs'
-import { amortizacoesIguais, calcularFluxoCambio, tirBase252, vencimentoPorPrazo } from '../src/cambioFuturoFluxo.js'
+import { amortizacoesIguais, calcularFluxoCambio, irRemissivelPadrao, tirBase252, vencimentoPorPrazo } from '../src/cambioFuturoFluxo.js'
 
 const near = (a, b, tol = 0.005) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`)
 const cent = v => Math.round(v * 100) / 100
@@ -91,6 +91,15 @@ test('apoios: amortização em partes iguais, vencimento e TIR', () => {
   assert.equal(tirBase252(100, []), null)
 })
 
+// Aprovado por Fernando em 27/11/2026: o IR vem como 1/3 da comissão externa (4 casas), editável.
+test('IR remissível sugerido é 1/3 da comissão externa nas duas planilhas', () => {
+  assert.equal(irRemissivelPadrao(6.6581), 2.2194)
+  assert.equal(irRemissivelPadrao(6.1468), 2.0489)
+  assert.equal(irRemissivelPadrao(0), 0)
+  assert.equal(irRemissivelPadrao(null), null)
+  assert.equal(irRemissivelPadrao(-3), null)
+})
+
 test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas', async t => {
   const require = createRequire(import.meta.url)
   const module = { exports: {} }
@@ -110,7 +119,10 @@ test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas',
     else el.props.onChange({ target: { value } })
     await ui.settle()
   }
-  for (const [id, value] of Object.entries({ inicio: '2026-11-13', valor: '100.000,00', allin: '11,20', externa: '6,6581', ir: '2,2194', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await fill(id, value)
+  for (const [id, value] of Object.entries({ inicio: '2026-11-13', valor: '100.000,00', allin: '11,20', externa: '6,6581', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await fill(id, value)
+  assert.equal(field('ir').props.value, '2,2194') // preenchido sozinho: 1/3 da externa
+  assert.match(field('ir').props.hint, /1\/3 da comissão externa/)
+  assert.match(text(ui.value), /IR juros remissível \(USD\+2,2194%\)/)
   assert.match(text(field('valor-brl')), /591\.600,00/)
   assert.match(text(field('1-parcela')), /111\.229,01/)
   assert.match(text(field('1-fc')), /723\.288,88/)
@@ -119,6 +131,16 @@ test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas',
   assert.equal(text(field('periodo')), '22,26%')
   assert.doesNotMatch(text(field('soma')), /não bate/)
   assert.match(text(ui.value), /Juros total \(USD\+11,20%\)/)
+  await fill('ir', '3')
+  assert.equal(field('ir').props.value, '3')
+  assert.match(field('ir').props.hint, /Apague/)
+  assert.notEqual(text(field('tir')), '22,86%')
+  await fill('externa', '7') // valor editado pelo usuário não é sobrescrito
+  assert.equal(field('ir').props.value, '3')
+  await fill('externa', '6,6581')
+  await fill('ir', '   ')
+  assert.equal(field('ir').props.value, '2,2194')
+  assert.equal(text(field('tir')), '22,86%')
   await fill('tac', 'abc')
   assert.match(field('tac').props.error, /TAC em reais/)
   assert.equal(text(field('tir')), '—')

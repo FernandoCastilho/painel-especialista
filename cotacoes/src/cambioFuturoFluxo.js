@@ -4,6 +4,8 @@
 // - Cada parcela tem prazo em dias corridos desde o início; vencimento = início + prazo.
 // - Comissão externa, IR juros remissível e comissão local: saldo devedor × taxa ao ano × dias do período ÷ 360.
 //   Juros total = soma das três; parcela em USD = amortização + juros.
+// - IR juros remissível: vem preenchido como 1/3 da comissão externa, com 4 casas, e o usuário pode editar
+//   (aprovado por Fernando em 27/11/2026; nas duas planilhas o IR era exatamente esse valor).
 // - Fluxo em R$ (coluna FC): no início, −(valor em R$ − TAC); em cada vencimento, parcela em USD (em centavos) × câmbio futuro da parcela.
 // - TIR ao ano em base 252: taxa que zera o fluxo usando os dias úteis (feriados nacionais) entre o início e cada vencimento.
 //   A planilha mostrava o retorno do período, sem anualizar; aqui ele aparece separado, no bullet.
@@ -22,6 +24,9 @@ const dataValida = iso => {
 export const centavos = v => Math.sign(v) * Math.round(Math.abs(v) * 100 + 1e-7) / 100
 
 export const vencimentoPorPrazo = (inicio, prazo) => dataValida(inicio) && Number.isInteger(prazo) && prazo > 0 && prazo <= MAX_PRAZO_DIAS ? addDays(inicio, prazo) : null
+
+// Taxa sugerida do IR juros remissível: 1/3 da comissão externa, com 4 casas (6,6581 → 2,2194).
+export const irRemissivelPadrao = externa => naoNegativo(externa) ? Math.round(externa / 3 * 10000 + 1e-7) / 10000 : null
 
 // Amortização em partes iguais, em centavos; a última parcela leva a sobra do arredondamento.
 export function amortizacoesIguais(valor, n) {

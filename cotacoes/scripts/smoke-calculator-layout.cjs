@@ -721,7 +721,8 @@ async function assertCambioFuturoFluxo(browser) {
       await fluxo.getByRole('heading', { name: '3. Parcelas e fluxo em R$' }).waitFor()
       const preencher = (id, value) => fluxo.locator('#cf-f-' + id).fill(value)
       // Bullet da planilha de Fernando (26/11/2026).
-      for (const [id, value] of Object.entries({ inicio: '2026-11-13', valor: '100.000,00', allin: '11,20', externa: '6,6581', ir: '2,2194', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await preencher(id, value)
+      for (const [id, value] of Object.entries({ inicio: '2026-11-13', valor: '100.000,00', allin: '11,20', externa: '6,6581', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await preencher(id, value)
+      assert.equal(await fluxo.locator('#cf-f-ir').inputValue(), '2,2194')
       assert.equal(normalize(await fluxo.locator('#cf-f-1-fc').innerText()), 'R$ 723.288,88')
       assert.equal(await fluxo.locator('#cf-f-tir').innerText(), '22,86%')
       assert.equal(await fluxo.locator('#cf-f-periodo').innerText(), '22,26%')
