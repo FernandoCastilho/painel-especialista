@@ -40,7 +40,7 @@ async function setup(t, overrides = {}) {
     },
     compareFinamePair(...args) { return (calculation.comparison = funding.compareFinamePair(...args)) },
   }
-  runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
+  runInNewContext(code, { module, exports: module.exports, Date, require: name => deps[name] ?? require(name) })
   const render = hookRenderer(() => {
     calculation = { result: null, comparison: null, conditions: {} }
     return module.exports.default({ onBack() {}, onFundingView: view => navigation.push(view) })
@@ -54,6 +54,17 @@ async function setup(t, overrides = {}) {
   const reset = async cost => { nodes(render.value).find(node => node.type === 'button' && text(node).replace(/\s+/g, ' ').trim() === `Usar cotação ${cost}`).props.onClick(); await render.settle() }
   return { render, field, hasResult, change, simulation, reset, navigation }
 }
+
+test('detalhes do contrato usam formalizacao para o cronograma e liberacao para o fluxo', async t => {
+  const { change, hasResult, simulation } = await setup(t)
+  await change('fm-car', '0')
+  await change('fm-data-lib', '2026-11-27')
+  assert.equal(simulation().result.parcelas[0].vencimento, '2027-01-15')
+  await change('fm-data-form', '2026-11-13')
+  assert.equal(simulation().result.parcelas[0].vencimento, '2026-12-15')
+  await change('fm-data-form', '2026-11-28')
+  assert.equal(hasResult(), false)
+})
 
 test('FINAME abre com premissas fixas, IOF zero e ECG sempre à vista', async t => {
   const { render, field, hasResult, change, simulation } = await setup(t)

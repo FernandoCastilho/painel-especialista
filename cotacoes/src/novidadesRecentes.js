@@ -4,6 +4,7 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '27/11/2026',
+    destaques: ['Finame: vencimentos pela formalização do contrato'],
     items: ['Em Calculadoras > BNDES, o Finame usa a data da formalização para definir o primeiro vencimento e a data da liberação para contar juros e CET. O cronograma respeita a carência e os feriados da praça do contrato.'],
   },
   {
