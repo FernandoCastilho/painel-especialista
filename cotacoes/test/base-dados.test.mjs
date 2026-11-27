@@ -70,6 +70,8 @@ test('fontes detalhadas ficam na Base de dados, com exceções contextuais de At
     if (f === 'Apresentar.jsx') t = t.replace(/<footer className="sl-rodape">[\s\S]*?<\/footer>/g, '')
     // O PDF autônomo solicitado precisa levar consigo as referências do cálculo.
     if (f === 'BndesPrint.jsx') t = t.replace(/<p className="bnprint-sources">[\s\S]*?<\/p>/, '')
+    // CDS Brasil 5 anos: fonte gratuita e não oficial, por isso o nome e o horário ficam na própria linha (decisão de Fernando, 27/11/2026).
+    if (f === 'Resumo.jsx') t = t.replace(/<td colSpan=\{3\} className="market-cds-source">[\s\S]*?<\/td>/, '')
     assert.doesNotMatch(t, /Fontes?: /, `${f}: texto "Fonte:" em painel`)
     assert.doesNotMatch(t, /href="https?:\/\/(?!wa\.me)/, `${f}: link externo fixo em painel`)
     assert.doesNotMatch(t, /\{[^}]*sourceName[^}]*\}\s*[·<]/, `${f}: nome da fonte exibido`)
