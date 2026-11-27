@@ -32,3 +32,6 @@
 .cf-f .cf-f-matriz .cf-f-fc { background: color-mix(in srgb, #2872c5 16%, transparent); font-weight: 700; }
 .cf-f .cf-f-matriz thead .cf-f-fc { background: #2872c5; color: white; }
 .cf-f .cf-f-mesa { margin-top: .8rem; }
+.cf-f .cf-f-colar { margin-bottom: .8rem; }
+.cf-f .cf-f-colar textarea { width: 100%; min-height: 4.5rem; font-family: ui-monospace, monospace; font-size: .85rem; }
+.cf-f .cf-f-avisos { margin: .3rem 0 0; padding-left: 1.2rem; font-size: .8rem; color: var(--mut); }

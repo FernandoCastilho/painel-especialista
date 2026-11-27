@@ -721,20 +721,44 @@ async function assertCambioFuturoFluxo(browser) {
       await fluxo.getByRole('heading', { name: '3. Parcelas e fluxo em R$' }).waitFor()
       const preencher = (id, value) => fluxo.locator('#cf-f-' + id).fill(value)
       // Bullet da planilha de Fernando (26/11/2026).
-      for (const [id, value] of Object.entries({ inicio: '2026-11-13', valor: '100.000,00', allin: '11,20', externa: '6,6581', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await preencher(id, value)
+      // A data de início não aparece; os atalhos do topo e as colunas extras saíram (pedidos de 27/11/2026).
+      assert.equal(await fluxo.locator('#cf-f-inicio').count(), 0)
+      assert.equal(await fluxo.locator('.cf-j-links').count(), 0)
+      assert.deepEqual((await fluxo.locator('.cf-f-matriz thead th').allInnerTexts()).map(normalize),
+        ['Prazo (dias)', 'Principal USD', 'Vencimento', 'Juros total USD', 'Câmbio futuro (R$/USD)', 'Fluxo em R$'])
+      for (const [id, value] of Object.entries({ valor: '100000', allin: '11,20', externa: '6,6581', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await preencher(id, value)
+      await fluxo.locator('#cf-f-valor').blur()
+      assert.equal(await fluxo.locator('#cf-f-valor').inputValue(), '100.000,00', 'número no padrão brasileiro ao sair do campo')
       assert.equal(await fluxo.locator('#cf-f-ir').inputValue(), '2,2194')
       assert.equal(normalize(await fluxo.locator('#cf-f-1-fc').innerText()), 'R$ 723.288,88')
-      assert.equal(await fluxo.locator('#cf-f-tir').innerText(), '22,86%')
       assert.equal(await fluxo.locator('#cf-f-periodo').innerText(), '22,26%')
+      // Colando a linha do bullet, o início vira 13/11/2026 e a TIR fica a da planilha.
+      await preencher('colar', '361\t09/11/2027\t100.000,00\t100.000,00\t6.676,59\t2.225,57\t2.326,85\t111.229,01')
+      assert.ok((await fluxo.locator('.cf-f-matriz').innerText()).includes('13/11/2026'))
+      assert.equal(normalize(await fluxo.locator('#cf-f-1-juros').innerText()), '11.229,01')
+      assert.equal(normalize(await fluxo.locator('#cf-f-1-fc').innerText()), 'R$ 723.288,88')
+      assert.equal(await fluxo.locator('#cf-f-tir').innerText(), '22,86%')
       await settleLayout(page)
       await assertWorkspace(page, fluxo, `Câmbio futuro bullet ${width} ${theme}`)
-      await fluxo.locator('#cf-f-parcelas').selectOption('4')
+      // Tabela da mesa colada do Excel (A10:H13 da foto de Fernando): abre as 4 parcelas e preenche taxas, prazos e amortizações.
+      await preencher('colar', ['91\t22/02/2027\t25.000,00\t100.000,00\t1.553,77\t517,92\t497,31\t27.569,01',
+        '182\t24/05/2027\t25.000,00\t75.000,00\t1.165,33\t388,44\t372,99\t26.926,75',
+        '273\t23/08/2027\t25.000,00\t50.000,00\t776,89\t258,96\t248,66\t26.284,50',
+        '361\t19/11/2027\t25.000,00\t25.000,00\t375,64\t125,21\t120,23\t25.621,08'].join('\n'))
       assert.equal(await fluxo.locator('.cf-f-matriz tbody tr').count(), 5, 'início e quatro parcelas')
+      assert.equal(await fluxo.locator('#cf-f-externa').inputValue(), '6,1468')
+      assert.equal(await fluxo.locator('#cf-f-local').inputValue(), '1,9674')
+      assert.equal(await fluxo.locator('#cf-f-4-prazo').inputValue(), '361')
+      assert.ok((await fluxo.locator('.cf-f-matriz').innerText()).includes('23/11/2026'))
+      assert.equal(await fluxo.locator('#cf-f-valor').inputValue(), '100.000,00')
+      assert.equal(await fluxo.locator('#cf-f-ir').inputValue(), '2,0489')
+      assert.equal(await fluxo.locator('#cf-f-1-futuro').inputValue(), '', 'o câmbio futuro do bullet não passa para a parcela de 91 dias')
       assert.equal(await fluxo.locator('#cf-f-tir').innerText(), '—')
-      await assertWorkspace(page, fluxo, `Câmbio futuro quatro parcelas ${width} ${theme}`)
+      for (const n of [1, 2, 3, 4]) await preencher(n + '-futuro', '6,5')
+      assert.equal(normalize(await fluxo.locator('#cf-f-4-juros').innerText()), '621,08', '25.000,00 + 621,08 = parcela da foto')
+      assert.notEqual(await fluxo.locator('#cf-f-tir').innerText(), '—')
+      await assertWorkspace(page, fluxo, `Câmbio futuro quatro parcelas coladas ${width} ${theme}`)
       await page.screenshot({ path: path.join(out, `cambio-futuro-fluxo-${width}-${theme}.png`), fullPage: true })
-      await fluxo.getByRole('link', { name: 'Cotar via euro ou yuan' }).click()
-      await page.locator('#cf-j-modalidade').waitFor()
       assert.deepEqual(errors, [])
       console.log(`PASS Câmbio futuro com fluxo e TIR base 252 ${width} ${theme}`)
     } finally { await page.close() }

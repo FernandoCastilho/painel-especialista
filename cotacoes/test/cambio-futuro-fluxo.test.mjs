@@ -103,7 +103,7 @@ test('IR remissível sugerido é 1/3 da comissão externa nas duas planilhas', (
 test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas', async t => {
   const require = createRequire(import.meta.url)
   const module = { exports: {} }
-  const paths = ['marketReturns', 'holidays', 'moneyInput', 'cdiDolar', 'cambioFuturoFluxo']
+  const paths = ['marketReturns', 'holidays', 'moneyInput', 'cdiDolar', 'cambioFuturoFluxo', 'cambioFuturoColar']
   const deps = Object.fromEntries(await Promise.all(paths.map(async p => ['./' + p + '.js', await import('../src/' + p + '.js')])))
   const { code } = await transform(await readFile(new URL('../src/CambioFuturoFluxo.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   runInNewContext(code, { module, exports: module.exports, require: name => name.endsWith('.jsx') ? () => null : name.endsWith('.css') ? {} : deps[name] ?? require(name) })
@@ -119,18 +119,41 @@ test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas',
     else el.props.onChange({ target: { value } })
     await ui.settle()
   }
-  for (const [id, value] of Object.entries({ inicio: '2026-11-13', valor: '100.000,00', allin: '11,20', externa: '6,6581', local: '2,3204', spot: '5,916', '1-prazo': '361', '1-futuro': '6,5027' })) await fill(id, value)
+  // A data de início não aparece na tela (pedido de Fernando, 27/11/2026): vale hoje ou a da tabela colada.
+  assert.equal(field('inicio'), undefined)
+  // Digitado sem ponto de milhar ou com ponto decimal: ao sair do campo, fica no padrão brasileiro.
+  const blur = async id => { const el = field(id); el.props.change(el.props.formatar(el.props.value)); await ui.settle() }
+  for (const [id, value] of Object.entries({ valor: '100000', allin: '11.2', externa: '6.6581', local: '2,3204', spot: '5.916', '1-prazo': '361', '1-amort': '100000', '1-futuro': '6.5027' })) await fill(id, value)
+  const noPadraoBr = { valor: '100.000,00', allin: '11,20', externa: '6,6581', local: '2,3204', spot: '5,916', '1-amort': '100.000,00', '1-futuro': '6,5027' }
+  for (const id of Object.keys(noPadraoBr)) await blur(id)
+  assert.deepEqual(Object.fromEntries(Object.keys(noPadraoBr).map(id => [id, field(id).props.value])), noPadraoBr)
+  // Casas a mais não são arredondadas: o valor usado na conta é o digitado.
+  await fill('1-futuro', '6.5027123')
+  await blur('1-futuro')
+  assert.equal(field('1-futuro').props.value, '6,5027123')
+  await fill('1-futuro', '6,5027')
+  await fill('tac', '1500')
+  await blur('tac')
+  assert.equal(field('tac').props.value, '1.500,00')
+  await fill('tac', '0')
+  assert.match(text(field('1-fc')), /723\.288,88/) // o fluxo não depende da data
+  assert.equal(text(field('periodo')), '22,26%')
+  // Colando a linha do bullet, o início vira 13/11/2026 e a TIR fica a da planilha.
+  await fill('colar', '361\t09/11/2027\t100.000,00\t100.000,00\t6.676,59\t2.225,57\t2.326,85\t111.229,01')
+  assert.match(text(ui.value), /13\/11\/2026/)
   assert.equal(field('ir').props.value, '2,2194') // preenchido sozinho: 1/3 da externa
   assert.match(field('ir').props.hint, /1\/3 da comissão externa/)
-  assert.match(text(ui.value), /IR juros remissível \(USD\+2,2194%\)/)
+  // Seção 3 só com as seis colunas pedidas por Fernando (27/11/2026); sem os atalhos do topo.
+  const cabecalho = nodes(ui.value).filter(n => n.type === 'th' && n.props.scope === 'col').map(text)
+  assert.deepEqual(cabecalho, ['Prazo (dias)', 'Principal USD', 'Vencimento', 'Juros total USD', 'Câmbio futuro (R$/USD)', 'Fluxo em R$'])
+  assert.equal(nodes(ui.value).filter(n => n.type === 'a').length, 0)
   assert.match(text(field('valor-brl')), /591\.600,00/)
-  assert.match(text(field('1-parcela')), /111\.229,01/)
+  assert.match(text(field('1-juros')), /11\.229,01/)
   assert.match(text(field('1-fc')), /723\.288,88/)
   assert.match(text(field('fc-0')), /591\.600,00/)
   assert.equal(text(field('tir')), '22,86%')
   assert.equal(text(field('periodo')), '22,26%')
   assert.doesNotMatch(text(field('soma')), /não bate/)
-  assert.match(text(ui.value), /Juros total \(USD\+11,20%\)/)
   await fill('ir', '3')
   assert.equal(field('ir').props.value, '3')
   assert.match(field('ir').props.hint, /Apague/)
@@ -155,4 +178,38 @@ test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas',
   assert.equal(field('2-amort').props.placeholder, '25.000,00')
   assert.equal(text(field('tir')), '—')
   assert.equal(field('periodo'), undefined)
+
+  // Tabela da mesa colada (A10:H13 da foto): preenche tudo, menos spot e câmbio futuro.
+  await fill('colar', ['91\t22/02/2027\t25.000,00\t100.000,00\t1.553,77\t517,92\t497,31\t27.569,01',
+    '182\t24/05/2027\t25.000,00\t75.000,00\t1.165,33\t388,44\t372,99\t26.926,75',
+    '273\t23/08/2027\t25.000,00\t50.000,00\t776,89\t258,96\t248,66\t26.284,50',
+    '361\t19/11/2027\t25.000,00\t25.000,00\t375,64\t125,21\t120,23\t25.621,08'].join('\n'))
+  assert.match(text(ui.value), /23\/11\/2026/)
+  assert.equal(field('valor').props.value, '100.000,00')
+  assert.equal(field('parcelas').props.value, 4)
+  assert.equal(field('externa').props.value, '6,1468')
+  assert.equal(field('ir').props.value, '2,0489') // 1/3 da externa: fica no automático
+  assert.match(field('ir').props.hint, /pode editar/)
+  assert.equal(field('local').props.value, '1,9674')
+  assert.equal(field('allin').props.value, '11,20') // o all-in já digitado não é trocado
+  assert.deepEqual([1, 2, 3, 4].map(n => field(n + '-prazo').props.value), ['91', '182', '273', '361'])
+  assert.equal(field('4-amort').props.value, '25.000,00')
+  assert.equal(field('1-futuro').props.value, '') // o 6,5027 era da parcela de 361 dias, não fica na de 91
+  assert.match(text(field('colar-status')), /Tabela colada:\s+4\s+parcelas\s*, início\s+23\/11\/2026/)
+  for (const n of [1, 2, 3, 4]) await fill(n + '-futuro', '6,5')
+  assert.deepEqual([1, 2, 3, 4].map(n => text(field(n + '-juros'))), ['2.569,01', '1.926,75', '1.284,50', '621,08']) // + 25.000 = parcelas da foto
+  assert.doesNotMatch(text(field('colar-status')), /Falta o spot/)
+  // All-in: o digitado fica; o que veio da colagem é trocado na colagem seguinte. Linhas a mais são limpas.
+  await fill('allin', '')
+  await fill('colar', '91\t22/02/2027\t25.000,00\t100.000,00\t1.553,77\t517,92\t497,31\t27.569,01\n182\t24/05/2027\t75.000,00\t75.000,00\t1.165,33\t388,44\t372,99\t76.926,76')
+  assert.equal(field('allin').props.value, '10,1631')
+  await fill('colar', '361\t09/11/2027\t100.000,00\t100.000,00\t6.676,59\t2.225,57\t2.326,85\t111.229,01')
+  assert.equal(field('allin').props.value, '11,1979')
+  assert.equal(field('parcelas').props.value, 1)
+  await fill('parcelas', '2')
+  assert.equal(field('2-prazo').props.value, '')
+  await fill('parcelas', '1')
+  await fill('colar', 'texto qualquer')
+  assert.match(text(field('colar-status')), /Cole as linhas/)
+  assert.equal(field('externa').props.value, '6,6581') // texto inválido não apaga o que já foi preenchido
 })
