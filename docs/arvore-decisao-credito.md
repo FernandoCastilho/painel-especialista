@@ -385,6 +385,8 @@ Rotina "Árvore de Crédito — perguntas do dia", dias úteis às 7h47, convive
 
 - **27/11/2026 — N14 (insumos da safra): CPR, depois capital de giro, com aviso de crédito rural** (decisão de Fernando). A ordem proposta fica confirmada: CPR primeiro (com as regras já decididas de CNAE habilitado e porte), capital de giro em segundo. A nota do Obsidian manda comparar também o crédito rural; ele não vira cartão agora (exigiria pesquisar as regras atuais do Manual de Crédito Rural), mas o cartão traz o aviso "confira se a empresa pode usar crédito rural". A mudança na tela ainda não foi feita.
 
+- **27/11/2026 — N20 (contraparte estrangeira exige garantia, sem faltar caixa): só garantia internacional** (decisão de Fernando). A folha mostra só o cartão "Fiança ou garantia internacional (SBLC)", com o aviso da nota do Obsidian para conferir forma, idioma, jurisdição, moeda, prazo e como a garantia é acionada. A carta de crédito de importação sai da N20 (ela garante o pagamento de uma compra no exterior e já só aparecia para quem importa) e continua na N09 (fornecedor estrangeiro). Se também faltar caixa, o financiamento é tratado à parte. A mudança na tela ainda não foi feita.
+
 **Publicação em espera** (Fernando, 21/11/2026: "vamos esperar juntar mais respostas"). As três decisões já estão aplicadas na tela no ramo da sessão, com testes passando, mas não serão publicadas agora: entram junto com as próximas respostas das perguntas do dia, com novo teste, parecer do Auditor e autorização de publicação. Detalhe em `docs/arvore-credito-tela.md`, seção "Atualização de 21/11/2026".
 
 ### Propostas do Claude ainda não confirmadas
