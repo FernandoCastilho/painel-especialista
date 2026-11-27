@@ -9,7 +9,7 @@ const BndesCreditoTfb = lazy(() => import('./BndesCreditoTfb.jsx'))
 const Bndes = lazy(() => import('./Bndes.jsx'))
 const BndesCustosProdutos = lazy(() => import('./BndesCustosProdutos.jsx'))
 
-const PROFILES = [
+export const PROFILES = [
   ['finame-materiais', 'Finame Materiais Industrializados'],
   ['finame-veiculos', 'Finame Veículos · Ônibus e caminhões'],
   ['finame-bk', 'Finame BK · Máquinas e equipamentos'],
@@ -19,7 +19,7 @@ const PROFILES = [
   ['bndes-selic-lcd', 'Selic + LCD · projeção própria'],
 ]
 
-const ALIASES = { 'finame-veiculos': 'Finame Veículos', 'finame-bk': 'Finame BK', 'brasil-soberano-bk': 'Brasil Soberano', 'bndes-giro': 'BNDES Giro' }
+export const ALIASES = { 'finame-veiculos': 'Finame Veículos', 'finame-bk': 'Finame BK', 'brasil-soberano-bk': 'Brasil Soberano', 'bndes-giro': 'BNDES Giro' }
 // Finame Veículos, Finame BK e Brasil Soberano usam o mesmo motor, cada um com as regras do seu produto (prazo, carência, custos e taxas).
 const PRODUTO_DA_VARIANTE = { 'finame-veiculos': 'veiculos-onibus', 'finame-bk': 'bk-maquinas', 'brasil-soberano-bk': 'brasil-soberano-bk' }
 
