@@ -297,6 +297,18 @@ jobs:
       - name: Conferir seis calculadoras e alongamento em cinco larguras
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: CALCULATOR_QA_OUTPUT="$RUNNER_TEMP/qa-universal/calculators" node scripts/smoke-calculator-layout.cjs
+      - name: Conferir a ajuda do câmbio futuro com o vídeo
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: CF_AJUDA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cf-ajuda" node scripts/smoke-cambio-futuro-ajuda.cjs
+      - name: Capturas da ajuda do câmbio futuro
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-ajuda-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/cf-ajuda
+          if-no-files-found: warn
+          retention-days: 7
       - name: Conferir estudos incluídos, recortes pendentes, apresentação e áudio
         if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
         run: RESEARCHED_SECTORS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/researched-sectors" node scripts/smoke-researched-sectors.cjs
