@@ -48,10 +48,10 @@ export default function TvDock() {
   const tamanho = TV_TAMANHOS.find(t => t.id === pref.tamanho)
   return createPortal(
     <section ref={painel} className="tv-dock" role="dialog" aria-label="TV ao vivo" tabIndex={-1}
-      style={{ '--tv-largura': `${tamanho.largura}px`, ...(base ? { bottom: base } : {}) }}
+      style={{ '--tv-largura': `${tamanho.largura}px`, ...(base ? { '--tv-base': `${base}px` } : {}) }}
       onKeyDown={e => { if (e.key === 'Escape' && !e.defaultPrevented) { e.preventDefault(); fechar() } }}>
       <header className="tv-dock-bar">
-        <span className="tv-dock-title">{canal ? <><b className="tv-dock-live">Ao vivo</b> {canal.nome}</> : 'TV ao vivo'}</span>
+        <span className="tv-dock-title">{canal ? canal.nome : 'TV ao vivo'}</span>
         <div className="tv-dock-tools">
           {canal && <div role="group" aria-label="Tamanho da TV">
             {TV_TAMANHOS.map(t => <button key={t.id} type="button" className="tv-dock-size" aria-pressed={t.id === tamanho.id}
@@ -68,12 +68,16 @@ export default function TvDock() {
         </button>)}
       </div>
       {canal ? <>
+        <div className="tv-dock-links" aria-label="Opções para assistir">
+          <a href={canal.oficial} target="_blank" rel="noopener noreferrer">Assistir no site da {canal.nome}</a>
+          <a href={canal.youtube} target="_blank" rel="noopener noreferrer">Transmissões no YouTube</a>
+        </div>
         <div className="tv-dock-screen">
           <iframe ref={video} key={canal.id} src={tvEmbedUrl(canal)} title={`${canal.nome} ao vivo no YouTube`}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"
             sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox" />
         </div>
-        <p className="tv-dock-note">Começa sem som: toque no ícone de som do vídeo. Se não abrir, <a href={canal.youtube} target="_blank" rel="noopener noreferrer">assista no YouTube</a>.</p>
+        <p className="tv-dock-note">Se o YouTube mostrar “Vídeo indisponível” aqui, abra o site oficial acima. O player começa sem som quando disponível.</p>
       </> : <p className="tv-dock-note">Escolha o canal para começar. O vídeo só carrega depois da escolha.</p>}
     </section>, document.body)
 }

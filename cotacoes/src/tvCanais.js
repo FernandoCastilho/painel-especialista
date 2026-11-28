@@ -1,8 +1,8 @@
-// TV ao vivo: só canais oficiais no YouTube, conferidos em 28/11/2026 (transmissão ao vivo pública e com exibição
-// permitida fora do YouTube). O endereço é o do canal, não de um vídeo: o YouTube mostra a transmissão que estiver no ar.
+// TV ao vivo: fontes oficiais. O atalho por canal do YouTube nem sempre resolve a transmissão atual;
+// os sites das emissoras são independentes desse endereço e continuam acessíveis pelo menu.
 export const TV_CANAIS = [
-  { id: 'cnn-brasil', nome: 'CNN Brasil', idioma: 'Português', canal: 'UCvdwhh_fDyWccR42-rReZLw', youtube: 'https://www.youtube.com/@CNNbrasil/live' },
-  { id: 'bloomberg', nome: 'Bloomberg TV', idioma: 'Inglês', canal: 'UCIALMKvObZNtJ6AmdCLP7Lg', youtube: 'https://www.youtube.com/@markets/live' },
+  { id: 'cnn-brasil', nome: 'CNN Brasil', idioma: 'Português', canal: 'UCvdwhh_fDyWccR42-rReZLw', youtube: 'https://www.youtube.com/@CNNbrasil/streams', oficial: 'https://www.cnnbrasil.com.br/ao-vivo/' },
+  { id: 'bloomberg', nome: 'Bloomberg TV', idioma: 'Inglês', canal: 'UCIALMKvObZNtJ6AmdCLP7Lg', youtube: 'https://www.youtube.com/@markets/streams', oficial: 'https://www.bloomberg.com/live/us' },
 ]
 
 export const TV_TAMANHOS = [
