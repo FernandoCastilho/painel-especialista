@@ -3,6 +3,11 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '28/11/2026',
+    destaques: ['TV ao vivo: CNN Brasil e Bloomberg numa telinha'],
+    items: ['No menu, ao lado de Mais, o botão TV abre uma telinha no canto da tela com a transmissão ao vivo e gratuita do YouTube da CNN Brasil (em português) ou da Bloomberg TV (em inglês). Você escolhe o canal, troca quando quiser e muda o tamanho (P, M ou G) ou põe em tela cheia. A TV continua aberta enquanto você navega pelo Painel, até fechar no ×. Começa sem som e o vídeo só carrega depois que você escolhe o canal. Se a rede bloquear o YouTube, a telinha não toca.'],
+  },
+  {
     date: '27/11/2026',
     destaques: ['Finame: vencimentos pela formalização do contrato', 'Café arábica diário da bolsa de Nova York', 'Máxima e mínima do dia nos cards de cotação', 'Amplitude do dia e café certo na troca de contrato', 'Aprender: TVM e BR GAAP explicados'],
     items: ['Em Calculadoras > Câmbio futuro, um "?" ao lado do título explica o que é câmbio futuro, de onde vem o número (spot e diferença de juros entre reais e dólar), a trava por NDF e o que a tela calcula, com um vídeo do YouTube que mostra a conta em detalhe.',

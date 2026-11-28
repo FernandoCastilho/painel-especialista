@@ -24,6 +24,8 @@ import { APP_SECTIONS as TABS } from './appSections.js'
 
 import { MOBILE_PRIMARY, DESKTOP_PRIMARY, MORE_GROUPS, shortcutTitle } from './navigationPriority.js'
 const DOTS = ['M5 12h.01M12 12h.01M19 12h.01']
+// Abre a TvDock; o nome do evento é TV_EVENTO em tvCanais.js.
+const TV = ['M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z', 'M8 3l4 4 4-4']
 
 // Desktop mostra oito destinos; celular/tablet seis. Mais preserva os demais em grupos.
 export default function Nav({ tab, onTab, desktop = false }) {
@@ -107,6 +109,11 @@ export default function Nav({ tab, onTab, desktop = false }) {
           </div>
         )}
       </div>
+      <button type="button" className="nav-tv" data-tv-trigger aria-haspopup="dialog" aria-label="TV ao vivo" title="TV ao vivo"
+        onClick={() => { setMore(false); window.dispatchEvent(new Event('painel:tv')) }}>
+        <Icon d={TV} />
+        <span>TV</span>
+      </button>
       {desktop && <span className="topbar-mark" aria-hidden="true" hidden={!mark} style={mark ? { width: mark.w, translate: `${mark.x}px ${mark.y}px` } : undefined} />}
     </nav>
   )

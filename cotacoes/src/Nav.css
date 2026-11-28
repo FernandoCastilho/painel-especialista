@@ -60,7 +60,7 @@
 /* Seis destinos e Mais, inclusive a RPN; nos celulares menores, abrevia sem quebrar palavras. */
 .nav-label-compact { display:none; }
 @media (max-width:699px) {
-  .nav-top nav.tabs { display:grid; grid-template-columns:repeat(3,minmax(44px,1fr)) minmax(44px,1.55fr) repeat(3,minmax(44px,1fr)); gap:0; padding-inline:4px; overflow:visible; }
+  .nav-top nav.tabs { display:grid; grid-template-columns:repeat(3,minmax(40px,1fr)) minmax(44px,1.55fr) repeat(3,minmax(40px,1fr)) minmax(36px,.75fr); gap:0; padding-inline:4px; overflow:visible; }
   .nav-top nav.tabs > button,.nav-top nav.tabs > .more-tab { min-width:0; width:100%; }
   .nav-top nav.tabs > button,.nav-top nav.tabs > .more-tab > button { padding:8px 1px; min-height:54px; font-size:clamp(.65rem,2.8vw,.75rem); white-space:normal; }
   .nav-top nav.tabs > .more-tab > button { width:100%; }

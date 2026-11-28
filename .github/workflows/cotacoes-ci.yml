@@ -148,6 +148,17 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/mapa-site
           if-no-files-found: warn
           retention-days: 7
+      - name: Conferir TV ao vivo (botão ao lado de Mais, escolha do canal, tamanhos e troca de seção)
+        run: TV_QA_OUTPUT="$RUNNER_TEMP/qa-universal/tv" node scripts/smoke-tv.cjs
+      - name: Capturas da TV ao vivo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/tv
+          if-no-files-found: warn
+          retention-days: 7
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4

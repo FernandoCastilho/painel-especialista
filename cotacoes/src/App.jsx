@@ -19,6 +19,7 @@ import ChartFilters from './ChartFilters.jsx'
 import DateRangePicker from './DateRangePicker.jsx'
 import { fadeIn } from './motion.js'
 import RpnDock from './RpnDock.jsx'
+import TvDock from './TvDock.jsx'
 import { CURRENCIES, REFRESH_DAILY_MAX, useQuotes } from './useQuotes.js'
 import HistoryChart from './HistoryChart.jsx'
 const Juros = lazy(() => import('./Juros.jsx'))
@@ -396,6 +397,7 @@ export default function App() {
       )}
       </Suspense>
       <RpnDock active={tab === 'rpn'} />
+      <TvDock />
     </main>
     </AvisosProvider>
   )

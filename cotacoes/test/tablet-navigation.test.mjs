@@ -14,7 +14,8 @@ test('tablet navigation reuses More and phone layout preserves existing breakpoi
   assert.match(css, /overflow: visible/)
   assert.match(css, /min-height: 48px/)
   assert.match(css, /@media \(max-width:699px\)/)
-  assert.match(css, /grid-template-columns:repeat\(3,minmax\(44px,1fr\)\) minmax\(44px,1\.55fr\) repeat\(3,minmax\(44px,1fr\)\)/)
+  // Seis destinos, Mais e TV cabem lado a lado até em 320 px (3×40 + 44 + 3×40 + 36).
+  assert.match(css, /grid-template-columns:repeat\(3,minmax\(40px,1fr\)\) minmax\(44px,1\.55fr\) repeat\(3,minmax\(40px,1fr\)\) minmax\(36px,\.75fr\)/)
   assert.match(css, /min-height:54px/)
   assert.match(css, /white-space:nowrap/)
   assert.match(css, /@media \(max-width:359px\)[\s\S]*?\.nav-label-full \{ display:none; \}[\s\S]*?\.nav-label-compact \{ display:block; \}/)
