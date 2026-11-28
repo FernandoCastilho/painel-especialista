@@ -168,6 +168,17 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/bancos
           if-no-files-found: error
           retention-days: 7
+      - name: Conferir Cenários › Juros bancários em celular, tablet, notebook e tela grande
+        run: JUROS_BANCARIOS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/juros-bancarios" node scripts/smoke-juros-bancarios.cjs
+      - name: Capturas de Cenários › Juros bancários
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: juros-bancarios-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/juros-bancarios
+          if-no-files-found: warn
+          retention-days: 7
       - name: Conferir curadorias de tributos e escala 6x1
         run: CURADORIA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/curadoria" node scripts/smoke-curadoria.cjs
       - name: Conferir coleta institucional publicada e falhas de confirmação
