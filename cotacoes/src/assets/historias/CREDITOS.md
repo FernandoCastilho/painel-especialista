@@ -9,5 +9,5 @@ pertencem aos respectivos titulares e não implicam afiliação com o Painel.
 - [Spotify](https://commons.wikimedia.org/wiki/File:Spotify_logo_with_text.svg)
 - [Uber](https://commons.wikimedia.org/wiki/File:Uber_logo_2018.svg)
 - [Apple](https://commons.wikimedia.org/wiki/File:Apple_logo_black.svg)
-- Catupiry: o nome escrito em letra comum, feito para o Painel. Não há
-  logotipo com licença livre no Wikimedia Commons; o logotipo oficial não é usado.
+- [Catupiry](https://catupiry.com.br/): logotipo do site oficial da empresa,
+  convertido em imagem PNG.
