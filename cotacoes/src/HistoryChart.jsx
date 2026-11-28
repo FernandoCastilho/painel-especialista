@@ -25,7 +25,7 @@ import { destaquesPorHora, noticiasPerto, useFxAgora } from './fxAgora.js'
 import { marketDate } from './marketReturns.js'
 import { extremos as acharExtremos, noPregao } from './pregao.js'
 import { PREGAO_FIXADO_ARQUIVO, diaCurto, fixadoAtivo, juntarPontos, pontosFixados } from './pregaoFixado.js'
-import { frase, lerValor, moeda, reais, simular as simularTrecho } from './simulacaoCambio.js'
+import { lerValor, linhasValor, moeda, reais, simular as simularTrecho } from './simulacaoCambio.js'
 
 const H = 240
 const FAIXA = 22 // faixa abaixo das datas para os rótulos dos eventos de mercado
@@ -381,12 +381,16 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
               </div>
             </div>
             {valorTxt.trim() !== '' && !valor && <p className="fx-sim-aviso">Valor não reconhecido. Use, por exemplo, 500.000 ou 500 mil.</p>}
-            {sim ? (
-              <p className="fx-sim-res" role="status">
-                <b>{moeda(valor, simular)}</b> em reais, como referência: {reais(sim.r0)} (a {cot(range.v0)}) → {reais(sim.r1)} (a {cot(range.v1)}).{' '}
-                <em className={sim.efeito === 'igual' ? '' : sim.favoravel ? 'bom' : 'ruim'}>No trecho selecionado, {frase(sim)}</em> ({fmtPct(sim.pct)}).
-              </p>
-            ) : (
+            {sim ? (() => {
+              const [l1, l2] = linhasValor(sim, { valor, code: simular, v0: range.v0, v1: range.v1 })
+              return (
+                <div className="fx-sim-res" role="status">
+                  <p title={`${moeda(valor, simular)} a ${cot(range.v0)} = ${reais(sim.r0)}`}><span aria-hidden="true">🔸</span>{l1}</p>
+                  <p title={`${reais(sim.r0)} → ${reais(sim.r1)}: diferença de ${reais(Math.abs(sim.dif))}`} className={sim.efeito === 'igual' ? '' : sim.favoravel ? 'bom' : 'ruim'}><span aria-hidden="true">🔸</span>{l2}</p>
+                  {intraday && !noPregao(range.t0) && <p className="fx-sim-fora">O trecho começa às {fmtTime(range.t0)}, fora do pregão: esse ponto costuma ser o fechamento anterior repetido pela fonte, não negócio do dia. Para medir só o pregão, comece depois das 9h.</p>}
+                </div>
+              )
+            })() : (
               valor && <p className="fx-sim-dica">Clique e arraste no gráfico para escolher o trecho e ver o efeito em reais.</p>
             )}
             <p className="fx-sim-nota">Conta de referência pela cotação do gráfico ({intraday ? 'compra' : 'fechamento'}), sem spread, IOF nem tarifas. O valor digitado não é salvo.</p>

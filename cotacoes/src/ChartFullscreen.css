@@ -17,3 +17,9 @@
 .chart-fullscreen.is-expanded>.chart-filters-host~div{flex:1;min-height:0}
 .chart-fullscreen.is-expanded:has(>.chart-filters-host)>div>.chart-fullscreen-content svg{max-height:calc(100dvh - 300px)}
 .chart-fullscreen.is-expanded>.chart-filters-host .chart-filters{margin-bottom:4px}
+
+/* Sair da tela cheia: Esc duas vezes. Com mouse e teclado, o botão some e fica só o lembrete; em tela de toque, fica o Fechar. */
+.chart-fullscreen-esc{position:fixed;bottom:max(10px,env(safe-area-inset-bottom));right:18px;margin:0;padding:4px 10px;border-radius:6px;color:var(--mut);font-size:.78rem;pointer-events:none;z-index:1}
+.chart-fullscreen-esc.is-armado{background:var(--surface-3,#333);color:var(--fg);font-weight:600}
+@media (hover:hover) and (pointer:fine){.chart-fullscreen-toolbar:has(.btn-sair){display:none}}
+@media (hover:none),(pointer:coarse){.chart-fullscreen-esc{display:none}}

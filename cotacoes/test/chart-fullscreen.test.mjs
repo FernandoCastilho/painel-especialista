@@ -15,7 +15,7 @@ test('dialog modal preserva host e restaura por botão, cancel e rota', async t 
   const origin={appendChild:h=>{assert.equal(h,host);parent='inline'}}
   const modal={appendChild:h=>{assert.equal(h,host);parent='modal'},showModal:()=>{shown=true},close:()=>{shown=false}}
   const trigger={focus:()=>focus++},module={exports:{}}
-  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='./ChartFilters.jsx'?{useFiltros:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
+  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,setTimeout,clearTimeout,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='./ChartFilters.jsx'?{useFiltros:()=>null}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
   const children={content:'mesma instância'}
   const h=hookRenderer(()=>{const tree=module.exports.default({children});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.ref.current=trigger;return tree})
   t.after(()=>h.close());await h.settle()
@@ -27,7 +27,12 @@ test('dialog modal preserva host e restaura por botão, cancel e rota', async t 
     // Bubble handler must not prevent the native cancel default or preempt chart Escape.
     const escape=event();portal().content.props.children[1].props.onKeyDown(escape);assert.equal(escape.stopped,true);assert.equal(escape.prevented,undefined)
     assert.equal(listeners.has('keydown'),false)
-    if(method==='button')await click();else {if(method==='cancel')h.value.props.children[1].props.onCancel(event());else listeners.get(method)();await h.settle()}
+    if(method==='button')await click();else if(method==='cancel'){
+      // Esc duas vezes: o primeiro só avisa, o segundo sai
+      const primeiro=event();h.value.props.children[1].props.onCancel(primeiro);await h.settle()
+      assert.equal(primeiro.prevented,true);assert.equal(shown,true);assert.match(portal().content.props.children[2].props.children,/Esc de novo/)
+      h.value.props.children[1].props.onCancel(event());await h.settle()
+    } else {listeners.get(method)();await h.settle()}
     assert.equal(shown,false);assert.equal(parent,'inline');assert.equal(document.body.style.overflow,'auto')
   }
   assert.equal(focus,3)
@@ -45,7 +50,7 @@ test('ao maximizar, os filtros do escopo (período e escala) sobem para o topo d
   const origin={appendChild:h=>ordem.push(['inline',h.nome])}
   const modal={appendChild:h=>ordem.push(['modal',h.nome]),showModal(){},close(){}}
   const module={exports:{}}
-  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='./ChartFilters.jsx'?{useFiltros:()=>filtros}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
+  runInNewContext(code,{module,exports:module.exports,document,window,queueMicrotask,setTimeout,clearTimeout,require:n=>n.endsWith('.css')?{}:n==='./ExpandIcon.jsx'?{default:()=>null}:n==='./ChartFilters.jsx'?{useFiltros:()=>filtros}:n==='react-dom'?{createPortal:(content,target)=>({content,target})}:require(n)})
   const h=hookRenderer(()=>{const tree=module.exports.default({children:'g'});const [inline,dialog,portal]=tree.props.children;inline.ref.current=origin;dialog.ref.current=modal;portal.content.props.children[0].props.children.ref.current={focus(){}};return tree})
   t.after(()=>h.close());await h.settle()
   const click=async()=>{h.value.props.children[2].content.props.children[0].props.children.props.onClick({stopPropagation(){}});await h.settle()}

@@ -572,6 +572,9 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .fx-sim p { margin:0; }
 .fx-sim-res em { font-style:normal; font-weight:700; }
 .fx-sim-res em.ruim { color:var(--down); } .fx-sim-res em.bom { color:var(--up); }
+.fx-sim-res p { margin:2px 0; } .fx-sim-res p span { margin-right:4px; }
+.fx-sim-res p.ruim { color:var(--down); font-weight:700; } .fx-sim-res p.bom { color:var(--up); font-weight:700; }
+.fx-sim-fora { color:var(--mut); font-size:.85rem; }
 .fx-sim-aviso { color:var(--down); }
 .fx-sim-dica, .fx-sim-nota { color:var(--mut); }
 .sel-panel small { color:var(--mut); }
@@ -585,12 +588,17 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .expandable-panel.is-modal > .expandable-controls { position:sticky; top:0; z-index:5; margin:0 -16px 8px; padding:8px 16px; background:var(--bg); border-bottom:1px solid var(--line); }
 .expandable-body { max-width:1100px; margin:0 auto; min-width:0; }
 .expandable-body > h2:first-child { margin-top:4px; }
-.chart-filters { display:grid; gap:8px; margin:0 0 12px; padding:10px 12px; border:1px solid var(--line); background:var(--card); }
+.chart-filters { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:0 0 12px; padding:10px 12px; border:1px solid var(--line); background:var(--card); }
+.chart-filters > .cf-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; min-width:0; }
+.cf-sep { color:var(--mut); font-weight:700; letter-spacing:.05em; }
+.chart-filters:has(.cf-scale .cf-body:empty) .cf-sep { display:none; }
+@media (max-width:700px) { .cf-sep { display:none; } } /* no celular os blocos já ficam um embaixo do outro */
 .cf-row { display:grid; grid-template-columns:64px minmax(0,1fr); gap:10px; align-items:center; }
 .cf-label { color:var(--mut); font:700 .75rem/1.2 var(--sans); letter-spacing:.1em; text-transform:uppercase; }
 .cf-body { min-width:0; }
 .cf-scale:has(.cf-body:empty) { display:none; }
 .chart-filters .scale-seg { margin:0; }
+.chart-filters .scale-seg .seg-label { display:none; } /* o rótulo "Escala" do bloco já diz o que é */
 .chart-filters .summary-period-controls { width:100%; }
 .oil-notes { margin:12px 0; }
 .oil-notes summary { cursor:pointer; min-height:44px; display:flex; align-items:center; color:var(--amber, #e5b453); }
