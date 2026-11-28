@@ -1,4 +1,4 @@
-// Teste de tela da TV ao vivo (pedido de Fernando, 28/11/2026): botão TV ao lado de Mais (no celular, dentro do Mais), escolha do canal antes de
+// Teste de tela da TV ao vivo (com o robô que acha o vídeo de cada canal, 28/11/2026) (pedido de Fernando, 28/11/2026): botão TV ao lado de Mais (no celular, dentro do Mais), escolha do canal antes de
 // carregar o vídeo, tamanhos P/M/G, TV aberta ao trocar de seção e fechar. O YouTube é simulado: o teste não
 // comprova que a transmissão está no ar, só a montagem da tela e o endereço pedido. Gera as capturas do artefato.
 const { chromium } = require('playwright')
@@ -15,6 +15,16 @@ const TELAS = [
   ['celular-390', { width: 390, height: 844 }, 'dark'],
   ['celular-360', { width: 360, height: 740 }, 'light'],
 ]
+// Robô da TV (tv.json): Bloomberg com o vídeo achado; CNN sem dado (usa o endereço do canal), exceto numa tela,
+// em que a CNN está sem transmissão ao vivo e a TV mostra o aviso no lugar do vídeo.
+const TELA_SEM_LIVE = 'celular-360'
+const tvDados = nome => {
+  const agora = new Date().toISOString()
+  return { atualizado: agora, canais: {
+    bloomberg: { estado: 'ao-vivo', videoId: 'bLoOmBeRg01', titulo: 'Bloomberg Business News Live', conferido: agora },
+    ...(nome === TELA_SEM_LIVE ? { 'cnn-brasil': { estado: 'sem-live', conferido: agora } } : {}),
+  } }
+}
 const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;height:100vh;background:#111;color:#eee;font:16px sans-serif">Vídeo do YouTube (simulado no teste)</body>'
 
 ;(async () => {
@@ -29,8 +39,9 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       page.on('pageerror', e => erros.push(`${nome}: ${e.message}`))
       await page.route('**/*', route => {
         const url = route.request().url()
+        if (url.startsWith(base + '/tv.json')) return route.fulfill({ contentType: 'application/json', body: JSON.stringify(tvDados(nome)) })
         if (url.startsWith(base + '/')) return route.continue()
-        if (url.startsWith('https://www.youtube.com/embed/live_stream')) { pedidos.push(url); return route.fulfill({ contentType: 'text/html', body: VIDEO_FALSO }) }
+        if (url.startsWith('https://www.youtube.com/embed/')) { pedidos.push(url); return route.fulfill({ contentType: 'text/html', body: VIDEO_FALSO }) }
         return route.abort()
       })
       await page.goto(`${base}/#resumo`)
@@ -64,13 +75,22 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       await page.screenshot({ path: path.join(out, `${nome}-escolha.png`) })
 
       await tv.getByRole('button', { name: /CNN Brasil/ }).click()
-      await tv.locator('iframe').waitFor()
-      assert.match(await tv.locator('iframe').getAttribute('src'), /channel=UCvdwhh_fDyWccR42-rReZLw.*mute=1/)
-      await page.waitForTimeout(300)
-      await page.screenshot({ path: path.join(out, `${nome}-cnn-pequena.png`) })
+      if (nome === TELA_SEM_LIVE) {
+        await tv.getByText('A CNN Brasil não está ao vivo no YouTube agora.', { exact: false }).waitFor()
+        assert.equal(await tv.locator('iframe').count(), 0, `${nome}: sem live, a TV não carrega vídeo`)
+        assert.ok(await tv.getByRole('link', { name: 'Abrir CNN Brasil no YouTube' }).isVisible(), `${nome}: link do YouTube sem live`)
+        await page.screenshot({ path: path.join(out, `${nome}-cnn-sem-live.png`) })
+      } else {
+        await tv.locator('iframe').waitFor()
+        assert.match(await tv.locator('iframe').getAttribute('src'), /channel=UCvdwhh_fDyWccR42-rReZLw.*mute=1/)
+        await page.waitForTimeout(300)
+        await page.screenshot({ path: path.join(out, `${nome}-cnn-pequena.png`) })
+      }
 
       await tv.getByRole('button', { name: /Bloomberg TV/ }).click()
       await tv.getByRole('button', { name: 'TV grande' }).click()
+      await tv.locator('iframe').waitFor()
+      assert.match(await tv.locator('iframe').getAttribute('src'), /\/embed\/bLoOmBeRg01\?.*mute=1/, `${nome}: Bloomberg toca o vídeo achado pelo robô`)
       await page.waitForTimeout(300)
       const caixa = await tv.boundingBox()
       assert.ok(caixa.x >= 0 && caixa.y >= 0 && caixa.x + caixa.width <= viewport.width && caixa.y + caixa.height <= viewport.height, `${nome}: TV sai da tela ${JSON.stringify(caixa)}`)
@@ -132,7 +152,8 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       await context.close()
     }
     assert.deepEqual(erros, [])
-    assert.ok(pedidos.some(u => u.includes('UCIALMKvObZNtJ6AmdCLP7Lg')), 'Bloomberg pedida pelo canal')
+    assert.ok(pedidos.some(u => u.includes('/embed/bLoOmBeRg01')), 'Bloomberg pedida pelo vídeo do robô')
+    assert.ok(pedidos.some(u => u.includes('live_stream?channel=UCvdwhh_fDyWccR42-rReZLw')), 'CNN sem dado do robô pedida pelo canal')
     console.log(`TV ao vivo: ${TELAS.length} telas conferidas, capturas em ${out}`)
   } finally {
     await browser.close()
