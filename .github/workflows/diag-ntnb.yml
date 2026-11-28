@@ -26,4 +26,4 @@ jobs:
           JS
           for u in 'https://www.tesourodireto.com.br/json/br/com/b3/tesourodireto/service/api/treasurybondsinfo.json' 'https://www4.bcb.gov.br/pom/demab/negociacoes/download/NegT202610.ZIP' 'https://www.bcb.gov.br/' 'https://sisweb.tesouro.gov.br/' 'https://www.tesouro.gov.br/'; do node /tmp/f.mjs "$u"; done
           timeout 60 curl -s -o /tmp/neg.zip -w '%{http_code} %{size_download}\n' 'https://www4.bcb.gov.br/pom/demab/negociacoes/download/NegT202610.ZIP' || true
-          (cd /tmp && unzip -o -q neg.zip && ls -la && head -5 *.csv *.CSV 2>/dev/null; grep -i "NTN-B" *.csv *.CSV 2>/dev/null | head -5) || true
+          (cd /tmp && unzip -o -q neg.zip && ls -la && head -5 *.csv *.CSV 2>/dev/null; awk -F';' '$2=="NTN-B"{n++; if($16!="")t++} END{print "NTNB linhas", n, "com taxa", t}' *.CSV; awk -F';' '$2=="NTN-B" && $1=="30/10/2026"{print "L",$3,$6,$7,$8,$15,$16,$17}' *.CSV | head -30) || true
