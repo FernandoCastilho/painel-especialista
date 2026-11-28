@@ -1,0 +1,38 @@
+# TEMPORÁRIO: confere a que dia cada ponto do gráfico da fonte do CDS se refere. Só lê a página; não grava nada. Será apagado.
+name: CDS diagnóstico de datas (temporário)
+on:
+  push:
+    branches: [claude/cds-diag-datas]
+    paths: ['.github/workflows/cds-diag-datas.yml']
+jobs:
+  ler:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.63.0
+        env: { PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1' }
+      - name: Ler pontos finais do gráfico e o texto da página
+        working-directory: ${{ runner.temp }}/pw
+        run: |
+          cat > diag.cjs <<'JS'
+          const { chromium } = require('playwright')
+          ;(async () => {
+            const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true })
+            const p = await b.newPage()
+            const r = await p.goto('https://www.worldgovernmentbonds.com/cds-historical-data/brazil/5-years/', { waitUntil: 'domcontentloaded', timeout: 45000 })
+            console.log('HTTP', r.status())
+            await p.waitForFunction(() => /value stands at \d/.test(document.body.innerText), null, { timeout: 45000 })
+            const txt = (await p.evaluate(() => document.body.innerText)).replace(/\s+/g, ' ')
+            for (const re of [/.{0,300}value stands at.{0,400}/i, /Last Update.{0,80}/i, /.{0,200}(yesterday|1 day|previous).{0,200}/i]) { const m = txt.match(re); console.log('TEXTO:', m ? m[0] : '-') }
+            await p.getByRole('heading', { name: /Interactive Chart/i }).scrollIntoViewIfNeeded({ timeout: 10000 })
+            await p.waitForFunction(() => window.Highcharts?.charts?.some((c) => c?.series?.some((s) => s.name === 'CDS' && s.options?.data?.length)), null, { timeout: 30000 })
+            const pts = await p.evaluate(() => { const s = window.Highcharts.charts.flatMap((c) => c?.series ?? []).find((x) => x.name === 'CDS' && !x.options?.isInternal); return (s.options.data || []).slice(-16) })
+            for (const [t, v] of pts) console.log('PONTO', new Date(t).toISOString(), new Date(t).toUTCString().slice(0, 3), v)
+            const tip = await p.evaluate(() => { const c = window.Highcharts.charts.find((c) => c?.series?.some((s) => s.name === 'CDS')); return JSON.stringify({ xDateFormat: c.options.tooltip?.xDateFormat, useUTC: c.time?.options?.useUTC ?? c.options.time?.useUTC, tz: c.time?.options?.timezone, offset: c.time?.options?.timezoneOffset }) })
+            console.log('TOOLTIP', tip)
+            await b.close()
+          })()
+          JS
+          node diag.cjs
