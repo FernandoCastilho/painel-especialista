@@ -1,6 +1,6 @@
 // Script do Google (Apps Script) que recebe os pedidos da tela de entrada do painel.
 // Cola-se dentro da planilha: Extensões > Apps Script. Passo a passo em LEIAME.md.
-// Faz quatro coisas: envia o código de 6 números para qualquer e-mail, confere o código,
+// Faz quatro coisas: envia o código de 6 números para e-mails autorizados, confere o código,
 // anota quem confirmou na aba "Liberados" (sem precisar de aprovação) e registra cada entrada na aba "Acessos".
 // Para barrar alguém, ponha o e-mail na aba "Bloqueados". Quem está na aba "Entrada direta" entra sem código.
 
@@ -12,6 +12,17 @@ var LIMITE_PEDIDOS_POR_HORA = 5   // por e-mail
 var LIMITE_TENTATIVAS = 5         // por código
 var VALIDADE_CODIGO_S = 600       // 10 minutos
 var MSG_BLOQUEADO = 'Este e-mail está bloqueado. Fale com o administrador.'
+var MSG_DOMINIO = 'Use um e-mail institucional autorizado.'
+var PROPRIEDADE_EMAIL_PESSOAL = 'EMAIL_PESSOAL_AUTORIZADO'
+
+// Os domínios são comparados por igualdade, não por sufixo. A exceção é um único endereço exato.
+function emailAutorizado_(email) {
+  if (!emailValido_(email)) return false
+  var dominio = email.slice(email.lastIndexOf('@') + 1)
+  if (dominio === 'itau-unibanco.com.br' || dominio === 'itaubba.com') return true
+  var pessoal = normalizar_(PropertiesService.getScriptProperties().getProperty(PROPRIEDADE_EMAIL_PESSOAL))
+  return email === pessoal
+}
 
 function doGet(e) {
   var p = (e && e.parameter) || {}
@@ -40,6 +51,7 @@ function emailValido_(e) {
 function pedir_(emailBruto, pedidoBruto) {
   var email = normalizar_(emailBruto)
   if (!emailValido_(email)) return { ok: false, erro: 'E-mail inválido.' }
+  if (!emailAutorizado_(email)) return { ok: false, erro: MSG_DOMINIO }
   if (bloqueado_(email)) return { ok: false, erro: MSG_BLOQUEADO }
   var pedido = String(pedidoBruto || '')
   if (pedido && !/^[a-zA-Z0-9_-]{16,80}$/.test(pedido)) return { ok: false, erro: 'Pedido inválido.' }
@@ -92,6 +104,7 @@ function confirmar_(emailBruto, codigoBruto) {
   var email = normalizar_(emailBruto)
   var codigo = String(codigoBruto || '').trim()
   if (!emailValido_(email) || !/^\d{6}$/.test(codigo)) return { ok: false, erro: 'Código incorreto.' }
+  if (!emailAutorizado_(email)) return { ok: false, erro: MSG_DOMINIO }
   if (bloqueado_(email)) return { ok: false, erro: MSG_BLOQUEADO }
   var lock = LockService.getScriptLock()
   lock.waitLock(10000)
@@ -117,6 +130,7 @@ function confirmar_(emailBruto, codigoBruto) {
 
 function validar_(emailBruto, token) {
   var email = normalizar_(emailBruto)
+  if (!emailAutorizado_(email)) return { ok: false, revogado: true, erro: MSG_DOMINIO }
   if (!emailValido_(email) || String(token || '') !== token_(email)) return { ok: false, revogado: true, erro: 'Acesso não reconhecido.' }
   if (bloqueado_(email)) return { ok: false, revogado: true, erro: MSG_BLOQUEADO }
   return { ok: true }
