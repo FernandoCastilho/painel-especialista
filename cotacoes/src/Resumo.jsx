@@ -1,3 +1,4 @@
+import { variationTone } from './variationTone.js'
 import { observeMarketNewsHeight } from './marketNewsHeight.js'
 import { useNewsClock } from './useNewsClock.js'
 import { NEWS_WINDOW_DAYS, newsCollectionStale } from './newsWindow.js'
@@ -555,7 +556,7 @@ export function RatesTop({ macro, curves, onOpen }) {
             <button type="button" key={r.key} className="qb" onClick={onOpen} title={`${r.sub}${r.delta != null && r.prevAt ? ` · variação sobre a publicação anterior (${new Date(r.prevAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' })})` : ''}`}>
               <b className="tk">{r.label}</b> {p2(r.value)}%
               {r.delta != null && (
-                <span className="qb-delta">
+                <span className={'qb-delta pct ' + variationTone(Math.round(r.delta * 100))}>
                   {' '}{Math.round(r.delta * 100) === 0 ? <span title="sem variação">=</span> : <><Arrow v={r.delta} /> {bps(r.delta)}</>}
                 </span>
               )}

@@ -18,7 +18,7 @@ const grp = (id, name, a, b) => ({ id, name, byPeriod: { '2026-08': a, '2026-09'
 const ipcaGroups = { schemaVersion: 1, generatedAt: new Date().toISOString(), series: { id: 'ipca-groups', sourceName: 'IBGE · SIDRA (fixture de teste)', sourceUrl: 'https://sidra.ibge.gov.br/tabela/7060', checkedAt: new Date().toISOString(), stale: false, periods: ['2026-08', '2026-09'], groups: [
   grp(7169, 'Índice geral', { mom: 0.2, weight: 100, ytd: 3, y12: 4.5 }, { mom: 0.5, weight: 100, ytd: 3.5, y12: 4.7 }),
   grp(7170, 'Alimentação e bebidas', { mom: 0.2, weight: 21 }, { mom: 1.0, weight: 21.5, y12: 6 }),
-  grp(7625, 'Transportes', { mom: 0.1, weight: 20 }, { mom: -0.5, weight: 20, y12: 3 })] } }
+  grp(7625, 'Transportes', { mom: 0.1, weight: 20 }, { mom: -0.5, weight: 20, y12: 0 })] } }
 const jp = { schemaVersion: 1, generatedAt: new Date().toISOString(), series: { id: 'freight-jp-sppi', unit: 'pontos · média de 2020 = 100', frequency: 'monthly', sourceName: 'Banco do Japão (fixture de teste)', sourceUrl: 'https://www.boj.or.jp/en/statistics/pi/sppi_2020/index.htm', checkedAt: new Date().toISOString(), stale: false, releaseDate: null,
   points: Array.from({ length: 40 }, (_, i) => ({ period: `${2023 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`, value: 100 + i * 1.5 })) } }
 const monthly = (v0) => Array.from({ length: 60 }, (_, i) => { const d = new Date(Date.UTC(2026, 8, 15)); d.setUTCMonth(d.getUTCMonth() - (59 - i)); return { period: d.toISOString().slice(0, 7), value: +(v0 * (1 + 0.1 * Math.sin(i / 8) + i / 600)).toFixed(2) } })
@@ -545,6 +545,20 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       const g = infl.locator('table').first()
       assert.equal(await g.locator('tbody tr').count(), 2, 'só os grupos: o índice geral já está na tabela Inflação · IPCA')
       assert.doesNotMatch(await g.innerText(), /Índice geral/)
+      assert.match(await g.locator('tr', { hasText: 'Alimentação e bebidas' }).locator('td.pct.up').nth(1).innerText(), /0,22/)
+      assert.match(await g.locator('tr', { hasText: 'Transportes' }).locator('td.pct.down').nth(1).innerText(), /0,10/)
+      const groupColors = await g.evaluate(el => [['up', '--up'], ['down', '--down'], ['flat', '--mut']].map(([tone, token]) => {
+        const cell = el.querySelector('td.pct.' + tone)
+        const actual = getComputedStyle(cell).color
+        const probe = document.createElement('span')
+        probe.style.color = 'var(' + token + ')'
+        cell.appendChild(probe)
+        const expected = getComputedStyle(probe).color
+        probe.remove()
+        return { actual, expected }
+      }))
+      assert.equal(new Set(groupColors.map(entry => entry.actual)).size, 3)
+      assert.ok(groupColors.every(entry => entry.actual === entry.expected), 'alta, queda e zero usam o token correto')
       assert.match(await g.innerText(), /Alimentação e bebidas[\s\S]*\+0,22[\s\S]*Transportes[\s\S]*−0,10/)
       assert.equal(await g.getByRole('img', { name: 'acima do mês anterior' }).count(), 1, 'alimentação acelera; transportes cai')
       assert.equal(await g.getByRole('img', { name: 'abaixo do mês anterior' }).count(), 1)
@@ -666,6 +680,23 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       assert.match(await p.locator('.refresh-stamp').first().innerText(), /\d{2}\/\d{2}\/\d{4}/)
       assert.doesNotMatch(await p.locator('.market-context').innerText(), /Fonte:|AwesomeAPI|SGS \d|EIA|Banco Mundial|ANP/)
       assert.equal(await p.getByText(/Cobertura parcial/).count(), 1, 'só a tabela de commodities em dólar está incompleta (fixture sem os novos ids)')
+      const buscaCommodity = p.getByRole('textbox', { name: 'Buscar commodity' })
+      await buscaCommodity.fill('  SOJA  ')
+      await p.getByRole('table', { name: 'Em reais · IC-Br e soja' }).getByRole('button', { name: /Soja.*abrir gráfico/i }).waitFor()
+      assert.equal(await p.locator('section[aria-labelledby=commodities-context-heading] .ind-table tbody').count(), 2, 'soja em dólar e em reais')
+      await buscaCommodity.fill('petroleo')
+      await p.getByRole('button', { name: /Petróleo Brent: abrir gráfico/i }).click()
+      const brentHistory = p.getByRole('dialog', { name: /histórico de Petróleo Brent/i })
+      await brentHistory.waitFor()
+      await p.keyboard.press('Escape'); await brentHistory.waitFor({ state: 'hidden' })
+      await buscaCommodity.fill('banana')
+      await p.getByRole('status').filter({ hasText: 'Nenhuma commodity encontrada' }).waitFor()
+      assert.equal(await p.locator('section[aria-labelledby=commodities-context-heading] .ind-table').count(), 0)
+      await p.getByRole('button', { name: 'Limpar', exact: true }).click()
+      assert.equal(await buscaCommodity.inputValue(), '')
+      assert.ok(await buscaCommodity.evaluate(e => e === document.activeElement))
+      await fuT.waitFor()
+      assert.equal(await fuT.locator('tbody').count(), 4, 'limpar restaura a tabela de combustíveis')
       // feriados: Londres, Tóquio e China entram na aba, com a bandeira do país em cada linha
       // O recorte móvel precisa de data conhecida; os escopos locais não herdam feriados nacionais.
       await p.clock.setFixedTime(Date.parse('2026-11-05T15:00:00Z'))

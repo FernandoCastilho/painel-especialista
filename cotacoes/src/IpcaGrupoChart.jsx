@@ -5,12 +5,13 @@ import { useWidth } from './HistoryChart.jsx'
 import { compound } from './inflacao.js'
 import { niceTicks } from './multiSeries.js'
 import { nf } from './format.js'
+import { displayedVariation, variationTone, variationColor } from './variationTone.js'
 
 const H = 230
 const M = { t: 22, r: 12, b: 34, l: 44 }
 const mes = (p) => new Date(`${p}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'short', timeZone: 'UTC' }).replace('.', '')
 const mesAno = (p) => new Date(`${p}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' }).replace('.', '').replace(' de ', '/')
-const sg = (v, d = 2) => (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), d)
+const sg = (raw, d = 2) => { const v = displayedVariation(raw, d); return (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), d) }
 
 // Variação mensal de um grupo do IPCA nos últimos 12 meses (barras), com os valores ao passar o mouse ou nas setas e a tabela abaixo.
 export default function IpcaGrupoChart({ name, months, onClose }) {
@@ -58,8 +59,8 @@ export default function IpcaGrupoChart({ name, months, onClose }) {
               return (
                 <g key={m.period} onMouseEnter={() => setSel(i)} data-period={m.period}>
                   <rect x={M.l + slot * i} y={M.t} width={slot} height={ih} fill="transparent" />
-                  {m.mom != null && <rect className={`infl-bar bar-grow-y${m.mom < 0 ? ' neg' : ''}`} style={cascade(i, 40)} x={cx - bw / 2} y={Math.min(y(m.mom), y(0))} width={bw} height={Math.max(1, Math.abs(y(m.mom) - y(0)))} rx="2" fill={m.mom >= 0 ? 'var(--chart-oil)' : 'var(--chart-teal)'} opacity={sel == null || on ? 1 : 0.55} />}
-                  {m.mom != null && (slot >= 44 || on) && <text x={cx} y={m.mom >= 0 ? y(m.mom) - 5 : y(m.mom) + 13} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">{sg(m.mom)}</text>}
+                  {m.mom != null && <rect className={`infl-bar bar-grow-y${m.mom < 0 ? ' neg' : ''}`} style={cascade(i, 40)} x={cx - bw / 2} y={Math.min(y(m.mom), y(0))} width={bw} height={Math.max(1, Math.abs(y(m.mom) - y(0)))} rx="2" fill={variationColor(m.mom, 2)} opacity={sel == null || on ? 1 : 0.55} />}
+                  {m.mom != null && (slot >= 44 || on) && <text x={cx} y={m.mom >= 0 ? y(m.mom) - 5 : y(m.mom) + 13} textAnchor="middle" fontSize="11" fontWeight="700" fill={variationColor(m.mom, 2)}>{sg(m.mom)}</text>}
                   <text x={cx} y={H - 12} textAnchor="middle" fontSize="11" fill={on ? 'var(--fg)' : 'var(--mut)'}>{mes(m.period)}</text>
                 </g>
               )
@@ -74,7 +75,7 @@ export default function IpcaGrupoChart({ name, months, onClose }) {
         <div className="infl-wrap">
           <table className="infl-table"><caption>{name} · variação mensal do IPCA</caption>
             <thead><tr><th scope="col">Mês</th><th scope="col">Variação %</th><th scope="col">Peso %</th><th scope="col">Contribuição p.p.</th><th scope="col">12 meses %</th></tr></thead>
-            <tbody>{[...last12].reverse().map((m) => <tr key={m.period}><th scope="row">{mesAno(m.period)}</th><td>{m.mom == null ? '—' : sg(m.mom)}</td><td>{m.weight == null ? '—' : nf(m.weight)}</td><td>{m.contribution == null ? '—' : sg(m.contribution)}</td><td>{m.y12 == null ? '—' : nf(m.y12)}</td></tr>)}</tbody>
+            <tbody>{[...last12].reverse().map((m) => <tr key={m.period}><th scope="row">{mesAno(m.period)}</th><td className={'pct ' + (variationTone(m.mom, 2) ?? '')}>{m.mom == null ? '—' : sg(m.mom)}</td><td>{m.weight == null ? '—' : nf(m.weight)}</td><td className={'pct ' + (variationTone(m.contribution, 2) ?? '')}>{m.contribution == null ? '—' : sg(m.contribution)}</td><td className={'pct ' + (variationTone(m.y12, 2) ?? '')}>{m.y12 == null ? '—' : nf(displayedVariation(m.y12))}</td></tr>)}</tbody>
           </table>
         </div>
       </details>

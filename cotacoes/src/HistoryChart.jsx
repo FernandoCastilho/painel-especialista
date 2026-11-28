@@ -569,7 +569,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
                     {intraday ? (
                       <><td>{fmtTime(p.t, true)}</td><td>{brl(p.bid, td)}</td></>
                     ) : (
-                      <><td>{new Date(p.t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td><td>{brl(p.bid, td)}{p.prevBid != null && p.bid !== p.prevBid && <span style={{ fontSize: '.7em', marginLeft: 3 }}>{p.bid > p.prevBid ? '▲' : '▼'}</span>}</td><td>{brl(p.high, td)}</td><td>{brl(p.low, td)}</td><td>{ptaxH?.[new Date(p.t).toISOString().slice(0, 10)] ? brl(ptaxH[new Date(p.t).toISOString().slice(0, 10)], td) : '—'}</td></>
+                      <><td>{new Date(p.t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td><td>{brl(p.bid, td)}{p.prevBid != null && p.bid !== p.prevBid && <span className={p.bid > p.prevBid ? 'pct up' : 'pct down'} style={{ fontSize: '.7em', marginLeft: 3 }}>{p.bid > p.prevBid ? '▲' : '▼'}</span>}</td><td>{brl(p.high, td)}</td><td>{brl(p.low, td)}</td><td>{ptaxH?.[new Date(p.t).toISOString().slice(0, 10)] ? brl(ptaxH[new Date(p.t).toISOString().slice(0, 10)], td) : '—'}</td></>
                     )}
                   </tr>
                 ))}
