@@ -6,6 +6,7 @@ import CalculatorHelp from './CalculatorHelp.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import { latestCdi, parseDecimal, projectedCdi, ptaxSeries, simulateCdiDolar } from './cdiDolar.js'
+import { formatarAoSair } from './numeroBr.js'
 import { Plot, useWidth } from './HistoryChart.jsx'
 import { useMacro } from './useMacro.js'
 import { useCurves } from './useCurves.js'
@@ -68,7 +69,7 @@ export default function CdiDolar({ onBack, quotes }) {
       {input}
     </div>
   )
-  const text = (key, label, hint, placeholder) => field(key, label, <input id={`cd-${key}`} type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={form[key]} onChange={(e) => set(key, e.target.value)} />, hint)
+  const text = (key, label, hint, placeholder) => field(key, label, <input id={`cd-${key}`} type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={form[key]} onChange={(e) => set(key, e.target.value)} onBlur={formatarAoSair(parseDecimal, (v) => setForm((old) => ({ ...old, [key]: v })))} />, hint)
   const ptaxMissing = !ptax && macro.status !== 'loading'
   const curveMissing = !projection && curves.status !== 'loading'
   const copy = () => { navigator.clipboard?.writeText(phrase).then(() => setCopied(true), () => setCopied(false)) }

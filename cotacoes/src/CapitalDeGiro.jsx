@@ -4,6 +4,7 @@ import PracaContratoBusca from './PracaContratoBusca.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import { formatMoneyText, parseMoneyInput } from './moneyInput.js'
 import { SYSTEMS, parseDecimal } from './emprestimo.js'
+import { formatarAoSair } from './numeroBr.js'
 import { cetPct, dmy } from './format.js'
 import { PERIODICIDADES, giroConta, giroFee, giroParcelas } from './giroConta.js'
 import { giroEmailLink } from './giroEmail.js'
@@ -247,7 +248,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
             <div className="giro-cost giro-cost-rate">
               <label className="giro-cost-label" htmlFor="cx-rate">Taxa de juros <small>prefixada</small></label>
               <div><div className="giro-input-unit">
-                <input id="cx-rate" inputMode="decimal" {...fieldError('rate', 'cx-rate')} {...bind('rate')} />
+                <input id="cx-rate" inputMode="decimal" {...fieldError('rate', 'cx-rate')} {...bind('rate')} onBlur={formatarAoSair(parseDecimal, rate => setForm(previous => ({ ...previous, rate })))} />
                 <select aria-label="Período da taxa" {...bind('unit')}><option value="am">% a.m.</option><option value="aa">% a.a.</option></select>
               </div>{errors.rate && <small id="cx-rate-err" className="giro-error" role="alert">{errors.rate}</small>}</div>
               <span className="giro-cost-fixed">{isBullet ? 'No vencimento' : 'Nas parcelas'}</span>
@@ -264,7 +265,7 @@ export default function CapitalDeGiro({ onBack, apresentacao }) {
                 : id === 'fee' ? <div><div className="giro-input-unit">
                   <input id="cx-fee" inputMode="decimal" autoComplete="off" aria-label="Valor de Fee" {...fieldError('fee', 'cx-fee')} value={form.costs.fee}
                     onChange={event => change({ costs: { ...form.costs, fee: event.target.value } })}
-                    onBlur={event => { if (form.feeUnit === 'brl') { const text = formatMoneyText(event.target.value); if (text !== event.target.value) change({ costs: { ...form.costs, fee: text } }) } }} />
+                    onBlur={event => { if (form.feeUnit === 'brl') { const text = formatMoneyText(event.target.value); if (text !== event.target.value) change({ costs: { ...form.costs, fee: text } }) } else formatarAoSair(parseDecimal, fee => setForm(previous => ({ ...previous, costs: { ...previous.costs, fee } })))(event) }} />
                   <select aria-label="Unidade do Fee" value={form.feeUnit} onChange={event => change({ feeUnit: event.target.value, costs: { ...form.costs, fee: '0,00' } })}>
                     <option value="brl">R$</option><option value="pct">%</option>
                   </select>

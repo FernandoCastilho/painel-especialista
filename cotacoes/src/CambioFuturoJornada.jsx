@@ -6,6 +6,7 @@ import { marketDate } from './marketReturns.js'
 import { spotDayPlan } from './cambioFuturoSpot.js'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './cdiDolar.js'
+import { formatarAoSair } from './numeroBr.js'
 import { alterarVencimento, calcularCotacaoMesa, cotacaoVazia, quantidadeCotacao } from './cambioFuturoJornada.js'
 import './CalculatorStandard.css'
 import './CambioFuturo.css'
@@ -31,11 +32,11 @@ const cotacao = texto => {
 }
 const bandeira = code => <span className="cf-com-bandeira"><Flag code={code} width={20} height={14} />{moedas[code]} ({code})</span>
 
-function CampoCotacao({ id, label, value, change, type = 'text', mode = 'decimal', placeholder, error }) {
+function CampoCotacao({ id, label, value, change, aoSair, type = 'text', mode = 'decimal', placeholder, error }) {
   return <div className="cx-field">
     <label htmlFor={id}>{label}</label>
     <input id={id} type={type} inputMode={type === 'text' ? mode : undefined} autoComplete="off"
-      value={value} onChange={e => change(e.target.value)} placeholder={placeholder}
+      value={value} onChange={e => change(e.target.value)} onBlur={aoSair} placeholder={placeholder}
       aria-invalid={error ? true : undefined} aria-describedby={error ? id + '-erro' : undefined} />
     {error && <small className="cf-j-error" id={id + '-erro'}>{error}</small>}
   </div>
@@ -79,6 +80,8 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
     atualizar()
     setLinhas(old => old.map(l => ({ ...l, ...cotacaoVazia() })))
   }
+  // Só reescreve o texto (formato ao sair do campo): o número é o mesmo, então nada é limpo nem avisado.
+  const fixar = (id, chave, valor) => setLinhas(old => old.map(x => x.id === id ? { ...x, [chave]: valor } : x))
   const mudar = (id, chave, valor, entrada = false) => {
     const l = linhas.find(x => x.id === id)
     if (l[chave] === valor) return
@@ -115,18 +118,18 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
           }}>{['EUR', 'CNH'].map(code => <option key={code} value={code}>{moedas[code]} ({code})</option>)}</select>
         </div>
       </div>
-      <div className="cf-j-liquido"><CampoCotacao id="cf-j-liquido" label="Valor líquido recebido para o CET (R$)" value={liquido} change={setLiquido}
+      <div className="cf-j-liquido"><CampoCotacao id="cf-j-liquido" label="Valor líquido recebido para o CET (R$)" value={liquido} change={setLiquido} aoSair={formatarAoSair(parseMoneyInput, setLiquido)}
         placeholder="Após custos e tributos no desembolso" error={liquido && !(dinheiro(liquido) > 0) ? 'Informe um valor líquido maior que zero.' : null} /></div>
       {bullet && <p className="cf-notice">Bullet: nesta cotação, principal e juros são liquidados no vencimento final. A opção Parcelado tem sua própria quantidade, inclusive 1 parcela.</p>}
       {matrizParcelas(ativas, nome, 'Dados para a mesa por parcela', 'cf-j-op-', [['', [
-        ['Principal / valor da parcela (USD)', (l, i) => <CampoCotacao id={`cf-j-${l.id}-principal`} label={`Principal (USD) · ${nome(l.id)}`} value={l.principal} change={v => mudar(l.id, 'principal', v, true)}
+        ['Principal / valor da parcela (USD)', (l, i) => <CampoCotacao id={`cf-j-${l.id}-principal`} label={`Principal (USD) · ${nome(l.id)}`} value={l.principal} change={v => mudar(l.id, 'principal', v, true)} aoSair={formatarAoSair(parseMoneyInput, v => fixar(l.id, 'principal', v))}
           placeholder="ex.: 100.000,00" error={l.principal && !(itens[i].principal > 0) ? 'Informe um principal maior que zero.' : null} />],
         ['Vencimento', l => <CampoCotacao id={`cf-j-${l.id}-venc`} label={bullet ? 'Vencimento final' : `Vencimento da parcela ${l.id}`} type="date"
           value={l.vencimento} change={v => mudar(l.id, 'vencimento', v, true)}
           error={inicio && l.vencimento && l.vencimento <= inicio ? 'O vencimento deve ser posterior à data-base.' : null} />],
         ['Moeda da trava', () => bandeira(moeda)],
         ['Total com juros (USD)', (_, i) => fmt(r.linhas[i].comJuros)],
-        ['Juros (USD)', (l, i) => <CampoCotacao id={`cf-j-${l.id}-juros`} label={`Juros (USD) · ${nome(l.id)}`} value={l.juros} change={v => mudar(l.id, 'juros', v, true)}
+        ['Juros (USD)', (l, i) => <CampoCotacao id={`cf-j-${l.id}-juros`} label={`Juros (USD) · ${nome(l.id)}`} value={l.juros} change={v => mudar(l.id, 'juros', v, true)} aoSair={formatarAoSair(parseMoneyInput, v => fixar(l.id, 'juros', v))}
           placeholder="ex.: 11.229,01" error={l.juros && !(itens[i].juros >= 0 && itens[i].juros !== null) ? 'Informe juros válidos ou zero.' : null} />],
       ]]])}
 
@@ -148,7 +151,7 @@ export default function CambioFuturoJornada({ onBack, quotes }) {
             const field = k + sufixo
             const label = `${k === 'spot' ? 'Spot' : 'Futuro'} (R$/${code})`
             return [label, l => <CampoCotacao id={`cf-j-${l.id}-${k}-${code}`}
-              label={`${label} · ${nome(l.id)}`} value={l[field]} change={v => mudar(l.id, field, v)}
+              label={`${label} · ${nome(l.id)}`} value={l[field]} change={v => mudar(l.id, field, v)} aoSair={formatarAoSair(parseDecimal, v => fixar(l.id, field, v))}
               error={l[field] && cotacao(l[field]) == null ? 'Informe uma cotação maior que zero.' : null} />]
           }),
         ]]),

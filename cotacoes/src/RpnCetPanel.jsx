@@ -1,5 +1,8 @@
 import { useId, useState } from 'react'
-import { calculatePastedCet } from './rpnPastedCet.mjs'
+import { calculatePastedCet, toCents } from './rpnPastedCet.mjs'
+import { formatarAoSair } from './numeroBr.js'
+
+const reais = texto => { const centavos = toCents(texto); return centavos === null ? null : centavos / 100 }
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const percent = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -18,8 +21,8 @@ export default function RpnCetPanel() {
     <p id={id + '-scope'}>Simulação em reais, com uma liberação e pagamentos informados. Cole duas colunas: vencimento e valor a pagar. O resultado muda automaticamente.</p>
     <div className="rpn-cet-fields">
       <label>Data da liberação<input type="date" value={releaseDate} onChange={e => setReleaseDate(e.target.value)} /></label>
-      <label>Valor líquido liberado (R$)<input inputMode="decimal" value={net} onChange={e => setNet(e.target.value)} placeholder="1.000,00" /></label>
-      <label>Outros custos na liberação (R$)<input inputMode="decimal" value={costs} onChange={e => setCosts(e.target.value)} placeholder="Opcional" aria-describedby={id + '-costs'} /></label>
+      <label>Valor líquido liberado (R$)<input inputMode="decimal" value={net} onChange={e => setNet(e.target.value)} onBlur={formatarAoSair(reais, setNet)} placeholder="1.000,00" /></label>
+      <label>Outros custos na liberação (R$)<input inputMode="decimal" value={costs} onChange={e => setCosts(e.target.value)} onBlur={formatarAoSair(reais, setCosts)} placeholder="Opcional" aria-describedby={id + '-costs'} /></label>
     </div>
     <p id={id + '-costs'}>Some TAC, fee e outros encargos pagos no dia da liberação que ainda não estejam descontados do líquido nem nas parcelas. Custos pagos depois entram nas linhas de suas datas.</p>
     <label className="rpn-cet-paste">Vencimentos e valores (R$)

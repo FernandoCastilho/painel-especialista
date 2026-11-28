@@ -20,7 +20,7 @@ async function setup(t, overrides = {}) {
   deps['./EmailEnvelope.jsx'].EmailEnvelopePdf = () => null
   deps['./BndesPecas.css'] = {}
   deps['./bndesFluxo.js'] = await import('../src/bndesFluxo.js')
-  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato', 'multiSeries']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
+  for (const name of ['moneyInput', 'emprestimo', 'bndes', 'finameMateriais', 'finamePosFixado', 'holidays', 'finameFunding', 'finameResumo', 'format', 'pracaContrato', 'multiSeries', 'numeroBr']) deps[`./${name}.js`] = await import(`../src/${name}.js`)
   const source = await readFile(new URL('../src/FinameMateriais.jsx', import.meta.url), 'utf8')
   const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }

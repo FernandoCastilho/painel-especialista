@@ -16,7 +16,7 @@ function toDay(raw) {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d ? n / DAY : null
 }
 
-function toCents(raw) {
+export function toCents(raw) {
   const s = raw.trim().replace(/^R\$\s*/i, '')
   const br = /^(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?$/.exec(s)
   const decimal = /^(\d+)\.(\d{1,2})$/.exec(s)

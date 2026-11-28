@@ -14,7 +14,7 @@ const source = (await readFile(new URL('../src/BndesTlpExigivel.jsx', import.met
 const { code } = await transform(source, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
 const MoneyInput = () => null
 const ScheduleEditor = () => null
-const deps = { './BndesDetails.jsx': { __esModule:true, default: ({children}) => children }, './BndesScheduleEditor.jsx': { __esModule:true, default: ScheduleEditor }, './ExpandablePanel.jsx': { __esModule: true, default: ({ children }) => children }, './format.js': await import('../src/format.js'), './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './bndesTlpExigivel.js': engine, './bndesProfileIof.js': profileIof }
+const deps = { './BndesDetails.jsx': { __esModule:true, default: ({children}) => children }, './BndesScheduleEditor.jsx': { __esModule:true, default: ScheduleEditor }, './ExpandablePanel.jsx': { __esModule: true, default: ({ children }) => children }, './format.js': await import('../src/format.js'), './MoneyInput.jsx': { __esModule: true, default: MoneyInput }, './CalculatorHelp.jsx': { __esModule: true, default: () => null }, './moneyInput.js': money, './numeroBr.js': await import('../src/numeroBr.js'), './bndesTlpExigivel.js': engine, './bndesProfileIof.js': profileIof }
 const module = { exports: {} }
 runInNewContext(code, { module, exports: module.exports, require: name => deps[name] ?? require(name) })
 const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el && typeof el === 'object' ? [el, ...nodes(el.props?.children)] : []
