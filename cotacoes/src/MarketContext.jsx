@@ -10,6 +10,7 @@ import IndicatorTable from './IndicatorTable.jsx'
 import SeriesHistory from './SeriesHistory.jsx'
 import { seriesStats } from './seriesStats.js'
 import { amplitudeText } from './format.js'
+import { variationTone } from './variationTone.js'
 import { monthlyStats } from './monthlyStats.js'
 import Estado from './Estado.jsx'
 import { onRefresh } from './refreshBus.js'
@@ -47,7 +48,7 @@ const parseBrent = data => { const item = brentContext(data); if (!item) throw n
 const parseCoffeeNy = data => { const item = coffeeNyContext(data); if (!item) throw new Error('Café de Nova York indisponível'); return item }
 const fnum = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })
 const fsgn = (v, d = 2, suffix = '') => (v > 0 ? '+' : v < 0 ? '−' : '') + fnum(Math.abs(v), d) + suffix
-const ftone = v => v > 0 ? 'up' : v < 0 ? 'down' : 'flat'
+const ftone = variationTone
 // Frete marítimo (EUA: BLS; Japão: Banco do Japão) no mesmo formato da tabela do Mercado; cada linha abre o gráfico com os filtros.
 // Os níveis têm bases diferentes (jun/1988 = 100 nos EUA, média de 2020 = 100 no Japão): compare as variações, não os pontos.
 function FreightTable({entries, onOpen}) {
@@ -132,7 +133,7 @@ function ActivityTable({items, series, failed, historyFailed, historyLoading, on
       cells:[
         {text:val(item.value)},
         {text:prev ? val(prev.value) : '—'},
-        {text:prev ? `${prev.value === item.value ? '' : item.value > prev.value ? '+' : '−'}${contextValue({...item, value:Math.abs(item.value - prev.value)})}${DELTA_UNIT[item.unit] ?? ''}` : '—'},
+        {text:prev ? `${prev.value === item.value ? '' : item.value > prev.value ? '+' : '−'}${contextValue({...item, value:Math.abs(item.value - prev.value)})}${DELTA_UNIT[item.unit] ?? ''}` : '—', tone: prev ? variationTone(item.value - prev.value) : null},
         {text:year ? val(year.value) : '—'},
         {text:contextDate(item.period)},
         {text:contextDate(item.releaseDate)},

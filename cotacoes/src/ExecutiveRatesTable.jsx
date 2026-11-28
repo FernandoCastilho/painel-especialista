@@ -109,7 +109,7 @@ export default function ExecutiveRatesTable({
           </tbody>
         </table>
       </div>
-      {compareRates && <p className="executive-rates__comparison">Setas: movimento de cada período histórico até a última taxa disponível. ↑ alta (vermelho), ↓ queda (verde), → sem alteração.</p>}
+      {compareRates && <p className="executive-rates__comparison">Setas: movimento de cada período histórico até a última taxa disponível. ↑ alta (verde), ↓ queda (vermelho), → sem alteração.</p>}
       <div className="executive-rates__sr-only">
         <ul>{rows.map(row => <li key={row.id}><b>{row.label} · {row.unit}</b><ul>{periods.map(period => { const cell = row.cells?.[period.id]; return <li key={period.id} id={`${id}-${row.id}-${period.id}`}><b>{period.label}:</b> {cell?.date || 'Data indisponível'} · {cell?.status || 'Observação na data indicada'}</li> })}</ul></li>)}</ul>
       </div>
