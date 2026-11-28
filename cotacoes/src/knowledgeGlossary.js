@@ -12,8 +12,6 @@ const ROUTES = {
   estr: ['juros', '', 'Macro.jsx: help estr'],
   curvaDi: ['juros', '', 'Curves.jsx: CurveChart help curvaDi'],
   curvaEuro: ['juros', '', 'Curves.jsx: CurveChart help curvaEuro'],
-  ntnb: ['juros', '', 'Ntnb.jsx: RateChart help ntnb'],
-  curvaNtnb: ['juros', '', 'Ntnb.jsx: CurveChart help curvaNtnb'],
   periodosDi: ['juros', '', 'Curves.jsx: periodHelp mapping curvaDi'],
   periodosCupom: ['juros', '', 'Curves.jsx: periodHelp mapping cupom'],
   periodosUst: ['juros', '', 'Curves.jsx: periodHelp mapping treasuries'],

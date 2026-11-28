@@ -3,14 +3,13 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { summarizeRate } from '../src/rateTrend.js'
 const source = name => readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8')
-// Pedido de 28/11/2026: NTN-B (juro real) e sua curva entram no fim do Brasil.
 // Pedido de 17/11/2026 (substitui o de 15/11): só gráficos na página, sem a Selic meta. As tabelas e a escolha de
 // período ficam no detalhe, que abre no centro da tela ao clicar no gráfico. Brasil antes do exterior.
 test('juros: só gráficos na página, sem Selic meta; tabelas ficam no detalhe', () => {
  const s=source('Juros.jsx'), br=s.slice(s.indexOf('aria-labelledby="juros-brasil">'),s.indexOf('aria-labelledby="juros-exterior">')), ex=s.slice(s.indexOf('aria-labelledby="juros-exterior">'))
  assert.match(br, /<Graficos region="brasil".*onOpen=\{abrir\}/)
  assert.match(ex, /<Graficos region="exterior".*onOpen=\{abrir\}/)
- assert.match(s, /brasil: \[\['cdi', 'CDI', 'juros-ref-brasil'\], \['cdif', 'CDI futuro', 'juros-cdif'\], \['curva-br', 'DI x pré', 'juros-curva-br'\], \['curva-cc', 'Cupom cambial', 'juros-curva-cc'\], \['ntnb', 'NTN-B \(juro real\)', 'juros-ntnb'\], \['ntnb-curva', 'Curva da NTN-B', 'juros-ntnb-curva'\]\]/)
+ assert.match(s, /brasil: \[\['cdi', 'CDI', 'juros-ref-brasil'\], \['cdif', 'CDI futuro', 'juros-cdif'\], \['curva-br', 'DI x pré', 'juros-curva-br'\], \['curva-cc', 'Cupom cambial', 'juros-curva-cc'\]\]/)
  assert.match(s, /exterior: \[\['sofr', 'SOFR', 'juros-ref-exterior'\], \['fed', 'Fed \(faixa-alvo\)'\], \['estr', '€STR'\], \['ecb', 'BCE \(depósito\)'\], \['boj', 'Japão \(meta overnight\)'\], \['curva-us', 'Treasuries', 'juros-curva-us'\], \['curva-eu', 'Curva do euro', 'juros-curva-eu'\]\]/)
  // nenhuma tabela na página: nem a de referência, nem a de CDI futuro, nem as das curvas
  assert.doesNotMatch(s, /<RatesSnapshot|<CdiFuturoTable|<Curves |IndicatorTable|<table/)

@@ -65,7 +65,7 @@ jobs:
               if [ "$rc" -eq 2 ]; then echo "branch data ainda não existe: primeira publicação"; return 0; fi
               if [ "$rc" -eq 0 ] && git fetch -q --depth=1 origin data; then
                 rc=0
-                for f in quotes.json intraday.json history.json cds.json ntnb.json; do
+                for f in quotes.json intraday.json history.json cds.json; do
                   # arquivo que não existe na branch é normal (ex.: history na primeira vez); arquivo que existe precisa ser lido
                   if git cat-file -e "FETCH_HEAD:$f" 2>/dev/null; then git show "FETCH_HEAD:$f" > "$DATA_DIR/$f" || rc=1; fi
                 done
@@ -88,8 +88,6 @@ jobs:
             fi
             # CDS Brasil 5 anos (World Government Bonds, não oficial): o script só visita o site a cada ~2 h; falha não afeta as cotações.
             timeout 150 node cotacoes/scripts/fetch-cds.mjs || echo "CDS: coleta com erro; mantido o último dado válido"
-            # NTN-B (taxas do Tesouro Direto, fonte oficial): o script só baixa a planilha a cada ~3 h; falha não afeta as cotações.
-            timeout 120 node cotacoes/scripts/fetch-ntnb.mjs || echo "NTN-B: coleta com erro; mantido o último dado válido"
             [ -f "$DATA_DIR/quotes.json" ] || { echo "nada a publicar"; return 0; }
             (
               cd "$DATA_DIR"

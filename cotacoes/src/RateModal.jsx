@@ -11,12 +11,10 @@ import Estado from './Estado.jsx'
 import RatesSnapshot from './RatesSnapshot.jsx'
 import Curves from './Curves.jsx'
 import RateTrend from './RateTrend.jsx'
-import { NtnbCurva, NtnbHistorico, NtnbTabela } from './Ntnb.jsx'
 
 const rate = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 const TITLES = {
   selic: 'Selic meta', cdi: 'CDI', di1: 'DI 1 ano', sofr: 'SOFR', estr: '€STR',
-  ntnb: 'NTN-B (juro real)', 'ntnb-curva': 'NTN-B (juro real)',
   fed: 'Fed (faixa-alvo)', ecb: 'BCE (depósito)', boj: 'Japão (meta overnight)', cdif: 'CDI futuro',
   ...Object.fromEntries(Object.entries(CURVAS).map(([id, c]) => [`curva-${id}`, c.title])),
 }
@@ -64,7 +62,6 @@ export function Policy({ kind, range }) {
 export default function RateModal({ kind, macro, curves, hol, onClose }) {
   const [preset, setPreset] = useState('365')
   const [range, setRange] = useState(() => rangeFor(365))
-  const [venc, setVenc] = useState(null) // NTN-B: vencimento escolhido no detalhe (null = o padrão, 2035)
   const onPreset = (p) => { setPreset(p.id); setRange(rangeFor(p.days)) }
   const onDates = (a, b) => {
     let start = fromInput(a), end = fromInput(b)
@@ -74,18 +71,6 @@ export default function RateModal({ kind, macro, curves, hol, onClose }) {
   const data = macro?.data
   const di = useMemo(() => (kind === 'di1' ? di1Points(curves?.data) : []), [kind, curves?.data])
   const title = TITLES[kind] ?? kind
-  // NTN-B: o histórico com a escolha de vencimento e de período, a curva por vencimento e a tabela, nos dois quadros da aba.
-  if (kind === 'ntnb' || kind === 'ntnb-curva') return (
-    <Expandable modal label={`detalhes: ${title}`} onClose={onClose}>
-      <section className="macro rate-modal">
-        <h2>{title}</h2>
-        <ChartFilters><RatesPeriod range={range} preset={preset} onPreset={onPreset} onDates={onDates} /></ChartFilters>
-        <NtnbHistorico range={range} venc={venc} onVenc={setVenc} />
-        <NtnbCurva />
-        <NtnbTabela />
-      </section>
-    </Expandable>
-  )
   if (kind === 'cdif') return <Expandable modal label={`detalhes: ${title}`} onClose={onClose}><CdiFuturo curves={curves} macro={data} hol={hol} /><CdiFuturoTable curves={curves} /></Expandable>
   return (
     <Expandable modal label={`detalhes: ${title}`} onClose={onClose}>

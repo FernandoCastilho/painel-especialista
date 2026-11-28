@@ -19,7 +19,7 @@ const curves = { generatedAt: Date.now(), br: set(14.3, -0.2), cc: set(5.2, -0.1
       // a página traz só gráficos (pedido de 17/11/2026): referência, CDI futuro e uma curva por gráfico; nenhuma tabela
       await p.locator('#juros-curva-br .plot svg[role=img]').waitFor()
       // atalhos no topo levam a cada gráfico
-      assert.deepEqual(await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button').allInnerTexts().then((t) => t.map((x) => x.toLowerCase())), ['brasil · referência', 'cdi futuro', 'di x pré', 'cupom cambial', 'ntn-b', 'exterior · referência', 'treasuries', 'euro'])
+      assert.deepEqual(await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button').allInnerTexts().then((t) => t.map((x) => x.toLowerCase())), ['brasil · referência', 'cdi futuro', 'di x pré', 'cupom cambial', 'exterior · referência', 'treasuries', 'euro'])
       await p.getByRole('navigation', { name: 'Atalhos da aba Juros' }).getByRole('button', { name: 'Treasuries' }).click()
       await p.waitForFunction(() => { const r = document.getElementById('juros-curva-us').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight })
       assert.equal(await p.locator('main table').count(), 0, 'nenhuma tabela na página')

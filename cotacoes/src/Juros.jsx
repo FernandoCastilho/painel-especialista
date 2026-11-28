@@ -6,18 +6,17 @@ import { CurveDetail, CurvesStatus } from './Curves.jsx'
 import RateModal, { Estr, Policy } from './RateModal.jsx'
 import { reduceMotion } from './motion.js'
 import ExpandIcon from './ExpandIcon.jsx'
-import { NtnbCurva, NtnbHistorico } from './Ntnb.jsx'
 import './Juros.css'
 
 // Gráficos de cada região, na ordem da página: [tipo do detalhe, nome, id do bloco (alvo dos atalhos)].
 // A Selic meta saiu da aba a pedido (17/11/2026): o CDI já acompanha a meta, e ela continua na barra do topo e em Cenários.
 const GRAFICOS = {
-  brasil: [['cdi', 'CDI', 'juros-ref-brasil'], ['cdif', 'CDI futuro', 'juros-cdif'], ['curva-br', 'DI x pré', 'juros-curva-br'], ['curva-cc', 'Cupom cambial', 'juros-curva-cc'], ['ntnb', 'NTN-B (juro real)', 'juros-ntnb'], ['ntnb-curva', 'Curva da NTN-B', 'juros-ntnb-curva']],
+  brasil: [['cdi', 'CDI', 'juros-ref-brasil'], ['cdif', 'CDI futuro', 'juros-cdif'], ['curva-br', 'DI x pré', 'juros-curva-br'], ['curva-cc', 'Cupom cambial', 'juros-curva-cc']],
   exterior: [['sofr', 'SOFR', 'juros-ref-exterior'], ['fed', 'Fed (faixa-alvo)'], ['estr', '€STR'], ['ecb', 'BCE (depósito)'], ['boj', 'Japão (meta overnight)'], ['curva-us', 'Treasuries', 'juros-curva-us'], ['curva-eu', 'Curva do euro', 'juros-curva-eu']],
 }
 
 // Atalhos do topo: cada botão leva direto a um gráfico da página (não esconde nada).
-export const ATALHOS = [['juros-ref-brasil', 'Brasil · referência'], ['juros-cdif', 'CDI futuro'], ['juros-curva-br', 'DI x pré'], ['juros-curva-cc', 'Cupom cambial'], ['juros-ntnb', 'NTN-B'], ['juros-ref-exterior', 'Exterior · referência'], ['juros-curva-us', 'Treasuries'], ['juros-curva-eu', 'Euro']]
+export const ATALHOS = [['juros-ref-brasil', 'Brasil · referência'], ['juros-cdif', 'CDI futuro'], ['juros-curva-br', 'DI x pré'], ['juros-curva-cc', 'Cupom cambial'], ['juros-ref-exterior', 'Exterior · referência'], ['juros-curva-us', 'Treasuries'], ['juros-curva-eu', 'Euro']]
 const irPara = (id) => document.getElementById(id)?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' })
 
 // Na página os gráficos mostram sempre o último ano; o período é escolhido dentro do detalhe.
@@ -40,8 +39,6 @@ function Graficos({ region, macro, curves, hol, onOpen }) {
           {['fed', 'ecb', 'boj'].includes(kind) && <Policy kind={kind} range={UM_ANO} />}
           {kind === 'cdif' && <CdiFuturo preview curves={curves} macro={data} hol={hol} />}
           {kind.startsWith('curva-') && <CurveDetail preview id={kind.slice(6)} curves={curves} />}
-          {kind === 'ntnb' && <NtnbHistorico range={UM_ANO} />}
-          {kind === 'ntnb-curva' && <NtnbCurva />}
         </div>
       ))}
     </div>
