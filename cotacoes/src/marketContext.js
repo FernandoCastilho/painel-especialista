@@ -10,6 +10,15 @@ export function activityNeedsReview(item, now = Date.now()) {
 export const BRL_IDS = ['ic-br', 'ic-br-agro', 'ic-br-metal', 'ic-br-energia', 'soja-saca']
 export const FUEL_IDS = ['anp-gasolina', 'anp-etanol', 'anp-diesel', 'anp-glp']
 export const COMMODITY_IDS = ['wti', 'henry-hub', 'ny-diesel', 'ny-gasoline', 'gold', 'copper', 'aluminum', 'iron-ore', 'soybeans', 'corn', 'sugar', 'coffee', 'urea', 'dap', 'wheat', 'beef', 'cotton', 'coal', 'cocoa', 'pulp-br']
+const normalizeCommoditySearch = value => value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
+export function filterCommodities(items, query) {
+  const terms = normalizeCommoditySearch(query).split(' ').filter(Boolean)
+  if (!terms.length) return items
+  return items.filter(item => {
+    const label = normalizeCommoditySearch(item.label)
+    return terms.every(term => label.includes(term))
+  })
+}
 export const contextDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value.split('-').reverse().join('/') : /^\d{4}-\d{2}$/.test(value || '') ? value.split('-').reverse().join('/') : value || 'não informada'
 export function validContextItem(item) {
   return item && typeof item.id === 'string' && typeof item.label === 'string' && (item.value === null || Number.isFinite(item.value)) && typeof item.unit === 'string' && typeof item.nature === 'string' && /^https:\/\//.test(item.sourceUrl || '')

@@ -8,8 +8,9 @@ import { accumulatedReturns } from './marketReturns.js'
 import { brentReturns } from './oilReference.js'
 import { FOCUS_BAND, THRESHOLDS, factorRows, groupMonthly, groupRows, normalizeIpcaGroups } from './inflacao.js'
 import { nf } from './format.js'
+import { displayedVariation, variationTone } from './variationTone.js'
 
-const sg = (v, d = 2) => (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), d)
+const sg = (raw, d = 2) => { const v = displayedVariation(raw, d); return (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), d) }
 const monthName = (period) => new Date(`${period}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' }).replace('.', '').replace(' de ', '/')
 const TREND = { up: ['▲', 'acima do mês anterior'], down: ['▼', 'abaixo do mês anterior'], same: ['=', 'igual ao mês anterior'] }
 const SIGNAL = { pressure: ['▲ Pressiona', 'pressiona a inflação'], relief: ['▼ Alivia', 'alivia a inflação'], neutral: ['= Neutro', 'neutro para a inflação'] }
@@ -41,8 +42,8 @@ export default function InflacaoPesos({ macro }) {
       {groups && (
         <>
           <p className="infl-summary" role="status">
-            {groups.top ? <>Em {monthName(groups.period)}, a maior pressão veio de <b>{groups.top.name}</b> ({sg(groups.top.contribution)} p.p.)</> : <>Em {monthName(groups.period)}, nenhum grupo pressionou o índice</>}
-            {groups.bottom ? <>; o maior alívio, de <b>{groups.bottom.name}</b> ({sg(groups.bottom.contribution)} p.p.).</> : '.'}
+            {groups.top ? <>Em {monthName(groups.period)}, a maior pressão veio de <b>{groups.top.name}</b> (<span className={'pct ' + variationTone(groups.top.contribution, 2)}>{sg(groups.top.contribution)} p.p.</span>)</> : <>Em {monthName(groups.period)}, nenhum grupo pressionou o índice</>}
+            {groups.bottom ? <>; o maior alívio, de <b>{groups.bottom.name}</b> (<span className={'pct ' + variationTone(groups.bottom.contribution, 2)}>{sg(groups.bottom.contribution)} p.p.</span>).</> : '.'}
           </p>
           <div className="infl-wrap" role="region" aria-label="IPCA por grupos; role para ver todas as colunas" tabIndex={0}>
             <table className="infl-table">
@@ -55,10 +56,10 @@ export default function InflacaoPesos({ macro }) {
                     <tr key={r.id} className={`infl-row${r.general ? ' infl-general' : r.id === groups.top?.id ? ' infl-top' : r.id === groups.bottom?.id ? ' infl-bottom' : ''}${picked === r.id ? ' infl-on' : ''}`} onClick={() => setPicked(picked === r.id ? null : r.id)}>
                       <th scope="row"><button type="button" className="infl-pick-btn" aria-pressed={picked === r.id} aria-label={`Ver a variação mensal de ${r.name} nos últimos 12 meses`} onClick={(e) => { e.stopPropagation(); setPicked(picked === r.id ? null : r.id) }}>{r.name}</button></th>
                       <td>{r.weight == null ? '—' : nf(r.weight)}</td>
-                      <td>{r.mom == null ? '—' : sg(r.mom)}</td>
-                      <td>{r.contribution == null ? '—' : sg(r.contribution)}</td>
+                      <td className={'pct ' + (variationTone(r.mom, 2) ?? '')}>{r.mom == null ? '—' : sg(r.mom)}</td>
+                      <td className={'pct ' + (variationTone(r.contribution, 2) ?? '')}>{r.contribution == null ? '—' : sg(r.contribution)}</td>
                       <td>{t ? <span className={`fm ${r.trend}`} role="img" aria-label={t[1]} title={`${t[1]} (${r.prevMom == null ? '—' : sg(r.prevMom)}%)`}>{t[0]}</span> : '—'}</td>
-                      <td>{r.y12 == null ? '—' : nf(r.y12)}</td>
+                      <td className={'pct ' + (variationTone(r.y12, 2) ?? '')}>{r.y12 == null ? '—' : nf(displayedVariation(r.y12))}</td>
                     </tr>
                   )
                 })}

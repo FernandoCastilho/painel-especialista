@@ -53,7 +53,8 @@ test('mobile More names its menu, focuses first item and supports arrow/Home/End
   assert.equal(a.document.activeElement, a.targets[0], 'opening menu must focus its first item')
   assert.equal(a.trigger().props['aria-controls'], a.menu().props.id)
   assert.equal(a.menu().props['aria-labelledby'], a.trigger().props.id)
-  assert.equal(a.menuItems().length, a.targets.length)
+  assert.equal(a.menuItems().length, a.targets.length + 1, 'destinos do Mais e, no fim, a TV ao vivo')
+  assert.equal(a.menuItems().at(-1).props.children.at(-1).props.children, 'TV ao vivo')
   assert.ok(a.menuItems().every(n => n.props.tabIndex === -1))
   assert.equal(a.menuItems().filter(n => n.props['aria-current'] === 'page').length, 1)
   for (const [value, target] of [['ArrowDown', 1], ['End', -1], ['ArrowDown', 0], ['ArrowUp', -1], ['Home', 0]]) {

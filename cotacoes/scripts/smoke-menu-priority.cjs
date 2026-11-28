@@ -34,7 +34,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    if(await notice.isVisible()) await notice.getByRole('button',{name:'Entendi',exact:true}).click()
    await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,theme)
    const nav=page.getByRole('navigation',{name:width>=1000?'Navegação principal':'Seções',exact:true})
-   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','M&A','Notícias','Podcast','Mais']
+   const expected=width>=1000?['','Mercado','Cenários','Juros','Calculadoras','Setores','M&A','Notícias','Podcast','Mais','TV']
     :width<=359?['Merc.','Cen.','Juros','Calc.','RPN','Setores','Mais']:['Mercado','Cenários','Juros','Calculadoras','RPN','Setores','Mais']
    await page.evaluate(()=>document.fonts.ready)
    if(width>=1400){
@@ -75,6 +75,7 @@ const base=(process.env.SMOKE_BASE_URL||'http://127.0.0.1:8768').replace(/\/$/,'
    assert.equal(await menu.getByRole('menuitem',{name:'Juros',exact:true}).count(),0)
    assert.equal(await menu.getByRole('menuitem',{name:'Notícias',exact:true}).count(),width<1000?1:0)
    assert.equal(await menu.getByRole('menuitem',{name:'Novidades da semana',exact:true}).count(),1)
+   assert.equal(await menu.getByRole('group',{name:'Ao vivo',exact:true}).getByRole('menuitem',{name:'TV ao vivo',exact:true}).count(),width<1000?1:0,'no celular e tablet a TV fica no fim do Mais')
    const bounds=await menu.boundingBox()
    assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1&&bounds.y>=0&&bounds.y+bounds.height<=1001)
    await page.screenshot({path:path.join(out,width+'-'+theme+'.png'),fullPage:true})
