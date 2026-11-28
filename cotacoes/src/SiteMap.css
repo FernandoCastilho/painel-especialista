@@ -1,0 +1,112 @@
+/* Mapa do site: mesma linguagem do Mapa do conhecimento (Aprender): cartão, sobretítulo, pontos coloridos e curvas finas. */
+.site-map{--sm-mercado:#6aa9ff;--sm-calculadoras:#ffb000;--sm-empresas:#5fc9a3;--sm-conteudo:#ff8a45;min-width:0;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden;overflow:clip}
+:root[data-theme="light"] .site-map{--sm-mercado:#2054d0;--sm-calculadoras:#9a5b00;--sm-empresas:#0b6b4f;--sm-conteudo:#b64300}
+.sm-heading{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;padding:22px 24px 6px}
+.sm-actions{display:flex;gap:8px}
+.sm-action{min-height:34px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);font:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+.sm-action:hover:not(:disabled){border-color:var(--sm-mercado);color:var(--sm-mercado)}
+.sm-action:disabled{opacity:.45;cursor:default}
+.sm-action:focus-visible,.sm-toggle:focus-visible{outline:2px solid var(--sm-c,var(--sm-mercado));outline-offset:2px}
+.sm-heading h2{margin:3px 0 6px!important;font-size:1.55rem!important;letter-spacing:-.035em;color:var(--fg)}
+.sm-heading p{margin:0;color:var(--mut);font-size:.86rem;line-height:1.6}
+.sm-eyebrow{font-size:.75rem;letter-spacing:.13em;color:var(--sm-mercado);font-weight:700}
+
+.sm-board{position:relative;display:grid;grid-template-columns:minmax(0,1fr) clamp(170px,14vw,250px) minmax(0,1fr);grid-template-areas:"left center right";gap:0 clamp(40px,4vw,84px);align-items:stretch;padding:18px 24px 26px;background:radial-gradient(ellipse at 50% 22%,rgba(49,83,143,.10),transparent 60%)}
+.sm-curves{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.sm-curve{fill:none;stroke:var(--sm-c,var(--line));stroke-width:2;opacity:.75}
+.sm-curve.sm-mercado{--sm-c:var(--sm-mercado)}.sm-curve.sm-calculadoras{--sm-c:var(--sm-calculadoras)}.sm-curve.sm-empresas{--sm-c:var(--sm-empresas)}.sm-curve.sm-conteudo{--sm-c:var(--sm-conteudo)}
+
+/* Centro: a coruja do painel, que acompanha a rolagem e fica no meio da tela */
+.sm-center-col{grid-area:center;min-width:0}
+.sm-center{position:sticky;top:max(84px,calc(50vh - 125px));z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 12px 14px;border:1px solid var(--line);border-radius:50% 50% 18px 18px / 40% 40% 18px 18px;background:var(--bg);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.sm-owl{position:relative;display:block;width:clamp(92px,8vw,132px);aspect-ratio:384/408}
+.sm-owl img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.sm-center strong{color:var(--fg);font-size:1.25rem;letter-spacing:.02em;line-height:1.1}
+.sm-center abbr{text-decoration:none;border:0}
+.sm-center-text{display:flex;flex-direction:column;align-items:center;gap:3px}
+.sm-center-text span{color:var(--fg);font-size:.78rem;line-height:1.35;max-width:16ch}
+.sm-center small{color:var(--mut);font-size:.75rem}
+
+.sm-side{display:flex;flex-direction:column;justify-content:center;gap:22px;min-width:0}
+.sm-left{grid-area:left}
+.sm-right{grid-area:right}
+
+/* Ramos */
+.sm-card{--sm-c:var(--line);--sm-line:color-mix(in srgb,var(--sm-c) 45%,transparent);position:relative;z-index:1;min-width:0;padding:14px 16px 16px;border:1px solid var(--line);border-top:3px solid var(--sm-c);border-radius:10px;background:var(--card)}
+.sm-card.sm-mercado{--sm-c:var(--sm-mercado)}.sm-card.sm-calculadoras{--sm-c:var(--sm-calculadoras)}.sm-card.sm-empresas{--sm-c:var(--sm-empresas)}.sm-card.sm-conteudo{--sm-c:var(--sm-conteudo)}
+.sm-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sm-card:not(.is-open) .sm-card-head{margin-bottom:0}
+.sm-card-head i{width:10px;height:10px;flex:none;border-radius:50%;background:var(--sm-c)}
+.sm-card-head h3{flex:1;margin:0!important;color:var(--fg);font-size:1.08rem!important;letter-spacing:-.02em}
+.sm-card-head h3 a{color:inherit;text-decoration:none}
+.sm-card-head h3 a:hover{color:var(--sm-c)}
+.sm-card-head small{color:var(--mut);font-size:.75rem;white-space:nowrap}
+
+/* Seta que abre e fecha um ramo ou item */
+.sm-toggle{display:inline-grid;place-items:center;flex:none;width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--sm-c,var(--fg));cursor:pointer}
+.sm-toggle:hover{border-color:var(--sm-c)}
+.sm-toggle svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.sm-toggle[aria-expanded="true"] svg{transform:rotate(90deg)}
+.sm-card-head .sm-toggle{width:32px;height:32px}
+.sm-row{display:inline-flex;align-items:center;gap:6px;max-width:100%}
+.sm-row .sm-node{min-width:0}
+@media (prefers-reduced-motion:reduce){.sm-toggle svg{transition:none}}
+
+/* Árvore dentro do ramo: linhas finas na cor do ramo */
+.sm-tree{list-style:none;margin:0;padding:0}
+.sm-tree .sm-tree{margin-left:10px}
+.sm-tree>li{position:relative;padding:3px 0 3px 18px}
+.sm-tree>li::before{content:'';position:absolute;left:0;top:0;bottom:0;border-left:1.5px solid var(--sm-line,var(--line))}
+.sm-tree>li:last-child::before{bottom:auto;height:18px;border-bottom:1.5px solid var(--sm-line,var(--line));border-bottom-left-radius:7px;width:13px}
+.sm-tree>li:not(:last-child)::after{content:'';position:absolute;left:0;top:18px;width:13px;border-top:1.5px solid var(--sm-line,var(--line))}
+
+.site-map a{-webkit-tap-highlight-color:transparent}
+.site-map a:focus-visible{outline:2px solid var(--sm-c,var(--sm-mercado));outline-offset:2px}
+.sm-node{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:3px 10px;border:1px solid transparent;border-radius:7px;color:var(--fg);text-decoration:none;font-size:.84rem;font-weight:600;line-height:1.3}
+.sm-node:hover{color:var(--sm-c);border-color:var(--sm-line)}
+.sm-level-0{border-color:var(--sm-line);background:color-mix(in srgb,var(--sm-c) 10%,transparent)}
+.sm-level-0::before{content:'';width:7px;height:7px;flex:none;border-radius:50%;background:var(--sm-c)}
+.sm-level-1{font-size:.8rem}
+.sm-level-2{font-size:.78rem;font-weight:500}
+
+.sm-chips{display:flex;flex-wrap:wrap;gap:5px;margin:0;padding:0;list-style:none}
+.sm-chip{display:inline-flex;align-items:center;min-height:28px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);text-decoration:none;font-size:.74rem;line-height:1.3}
+.sm-chip:hover{border-color:var(--sm-c);color:var(--sm-c)}
+@media (pointer:coarse){.sm-chip,.sm-node,.sm-action{min-height:40px}.sm-toggle,.sm-card-head .sm-toggle{width:40px;height:40px}.sm-tree>li:last-child::before{height:23px}.sm-tree>li:not(:last-child)::after{top:23px}}
+
+/* Tela grande: ramos mais largos, etiquetas em menos linhas */
+@media (min-width:1800px){.sm-board{padding-inline:40px}.sm-chip{font-size:.78rem}.sm-node{font-size:.88rem}}
+
+/* Tablet e celular: a coruja em cima e os ramos em coluna, presos a uma linha vertical */
+@media (max-width:999px){
+  .sm-heading{padding:18px 16px 4px}
+  .sm-heading h2{font-size:1.3rem!important}
+  .sm-board{display:flex;flex-direction:column;align-items:stretch;padding:14px 12px 20px}
+  .sm-curves{display:none}
+  .sm-center-col{align-self:flex-start}
+  .sm-center{position:static;flex-direction:row;gap:12px;margin:0;padding:10px 16px 10px 10px;border-radius:999px;text-align:left}
+  .sm-center-text{align-items:flex-start}
+  .sm-center-text span{max-width:none}
+  .sm-owl{width:58px}
+  .sm-side{display:contents}
+  .sm-card{margin:22px 0 0 26px}
+  .sm-card::before{content:'';position:absolute;left:-18px;top:-24px;bottom:-24px;border-left:2px solid var(--line)}
+  .sm-card::after{content:'';position:absolute;left:-18px;top:22px;width:18px;border-top:2px solid var(--sm-c)}
+  .sm-card.sm-conteudo::before{bottom:auto;height:46px}
+  .sm-mercado{order:1}.sm-empresas{order:2}.sm-calculadoras{order:3}.sm-conteudo{order:4}
+}
+@media (max-width:420px){.sm-card{padding:12px 10px 14px}.sm-tree>li{padding-left:14px}.sm-tree .sm-tree{margin-left:6px}.sm-chip{font-size:.72rem;padding:3px 8px}}
+
+/* Moldura azul das calculadoras (avaliação do Diretor de Arte, 28/11/2026): faixa azul-marinho com fio laranja no
+   título e superfícies azuladas, nos mesmos tons da moldura .bw. Ramos e coruja seguem iguais. */
+:root[data-theme] .site-map.sm-azul{--bg:#071122;--card:#101b2e;--line:#33435b;--fg:#f3f6ff;--mut:#bbc5d6;--sm-board:#0b1730;border-color:#33435b;background:var(--card)}
+:root[data-theme="light"] .site-map.sm-azul{--bg:#fff;--card:#fff;--line:#c6d5e9;--fg:#10284c;--mut:#455c7a;--sm-board:#f4f7fb;border-color:#c6d5e9}
+.sm-azul .sm-heading{padding-bottom:16px;background:linear-gradient(110deg,#052956,#07336b);border-bottom:4px solid #ff7900}
+.sm-azul .sm-heading h2{color:#fff}
+.sm-azul .sm-heading p{color:#d3e0f5}
+.sm-azul .sm-eyebrow{color:#ffb36b}
+.sm-azul .sm-action{border-color:rgba(255,255,255,.5);background:transparent;color:#fff}
+.sm-azul .sm-action:hover:not(:disabled){border-color:#fff;background:rgba(255,255,255,.12);color:#fff}
+.sm-azul .sm-action:focus-visible{outline-color:#ffb36b}
+.sm-azul .sm-board{background:radial-gradient(ellipse at 50% 22%,rgba(64,118,214,.16),transparent 60%),var(--sm-board)}
+.sm-azul .sm-center{background:var(--card)}

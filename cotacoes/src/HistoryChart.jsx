@@ -26,6 +26,7 @@ import { marketDate } from './marketReturns.js'
 import { extremos as acharExtremos, maiorMovimento, noPregao } from './pregao.js'
 import { PREGAO_FIXADO_ARQUIVO, diaCurto, fixadoAtivo, juntarPontos, pontosFixados } from './pregaoFixado.js'
 import { lerValor, linhasValor, moeda, reais, simular as simularTrecho } from './simulacaoCambio.js'
+import { formatarAoSair } from './numeroBr.js'
 
 const H = 240
 const FAIXA = 22 // faixa abaixo das datas para os rótulos dos eventos de mercado
@@ -435,7 +436,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             <div className="fx-sim-campos">
               <label className="fx-sim-valor">
                 <span>Valor em {simular}</span>
-                <input type="text" inputMode="decimal" autoComplete="off" placeholder="Ex.: 500.000" value={valorTxt} onChange={(e) => setValorTxt(e.target.value)} aria-invalid={valorTxt.trim() !== '' && !valor} />
+                <input type="text" inputMode="decimal" autoComplete="off" placeholder="Ex.: 500.000" value={valorTxt} onChange={(e) => setValorTxt(e.target.value)} onBlur={formatarAoSair(lerValor, setValorTxt)} aria-invalid={valorTxt.trim() !== '' && !valor} />
               </label>
               <div className="seg fx-sim-lado" role="radiogroup" aria-label="Lado da operação">
                 {[['pagar', 'Vou pagar'], ['receber', 'Vou receber']].map(([id, rot]) => (
@@ -651,7 +652,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
                     {intraday ? (
                       <><td>{fmtTime(p.t, true)}</td><td>{brl(p.bid, td)}</td></>
                     ) : (
-                      <><td>{new Date(p.t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td><td>{brl(p.bid, td)}{p.prevBid != null && p.bid !== p.prevBid && <span style={{ fontSize: '.7em', marginLeft: 3 }}>{p.bid > p.prevBid ? '▲' : '▼'}</span>}</td><td>{brl(p.high, td)}</td><td>{brl(p.low, td)}</td><td>{ptaxH?.[new Date(p.t).toISOString().slice(0, 10)] ? brl(ptaxH[new Date(p.t).toISOString().slice(0, 10)], td) : '—'}</td></>
+                      <><td>{new Date(p.t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td><td>{brl(p.bid, td)}{p.prevBid != null && p.bid !== p.prevBid && <span className={p.bid > p.prevBid ? 'pct up' : 'pct down'} style={{ fontSize: '.7em', marginLeft: 3 }}>{p.bid > p.prevBid ? '▲' : '▼'}</span>}</td><td>{brl(p.high, td)}</td><td>{brl(p.low, td)}</td><td>{ptaxH?.[new Date(p.t).toISOString().slice(0, 10)] ? brl(ptaxH[new Date(p.t).toISOString().slice(0, 10)], td) : '—'}</td></>
                     )}
                   </tr>
                 ))}

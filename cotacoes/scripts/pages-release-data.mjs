@@ -65,12 +65,37 @@ export async function verifyPublishedMarker({ pageUrl, expected, sha, runId, run
   }
 }
 
-export async function snapshotRelease(load = downloadPublished, save = savePublic) {
+// One-time migration: the confirmed production release predates the bank-rates dataset.
+const bankRatesFile = 'taxas-juros.json'
+const beforeBankRates = 'd1248db72cd186c088d902952665719245560f8c'
+
+async function readInitialBankRates(load, readSeed) {
+  const marker = JSON.parse(await load(MARKER))
+  validateMarker(marker)
+  if (marker.sha !== beforeBankRates) return null
+  const body = await readSeed()
+  const data = validatePublishedFile(bankRatesFile, body)
+  if (!Number.isFinite(data.generatedAt) || !Array.isArray(data.segments) ||
+      data.segments.length !== 2 || !['pj', 'pf'].every(id => data.segments.some(segment =>
+        segment?.id === id && Array.isArray(segment.modalities) && segment.modalities.length > 0))) {
+    throw new Error(bankRatesFile + ': invalid initial bank rates dataset')
+  }
+  return body
+}
+
+export async function snapshotRelease(load = downloadPublished, save = savePublic,
+  readSeed = () => readFile(resolve(publicDir, bankRatesFile), 'utf8')) {
   const files = {}
   // Lotes limitados; não se grava nada se uma única base falhar.
   for (let i = 0; i < RELEASE_FILES.length; i += 6) {
     await Promise.all(RELEASE_FILES.slice(i, i + 6).map(async file => {
-      const text = await load(file)
+      let text
+      try { text = await load(file) }
+      catch (error) {
+        if (file !== bankRatesFile || error.status !== 404) throw error
+        text = await readInitialBankRates(load, readSeed)
+        if (text === null) throw error
+      }
       validatePublishedFile(file, text)
       files[file] = text
     }))

@@ -1,0 +1,45 @@
+/* Cenários › Juros bancários: ranking das taxas médias do BC por banco e modalidade */
+.jb-panel { min-width:0; font-family:var(--sans); }
+.jb-sub { margin:4px 0 12px; color:var(--mut); font-size:.85rem; line-height:1.5; }
+.jb-alert { padding:8px 12px; border:1px solid var(--down); border-radius:8px; }
+.jb-controls { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px 16px; margin:12px 0; }
+.jb-controls label { display:flex; flex-direction:column; gap:4px; font-size:.8rem; color:var(--mut); flex:1 1 220px; min-width:0; }
+.jb-controls input { font:inherit; font-size:.9rem; padding:8px 10px; border:1px solid var(--line); border-radius:6px; color:var(--fg); background:var(--card); min-width:0; }
+.jb-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0; }
+.jb-summary > div { padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); min-width:0; }
+.jb-summary dt { font-size:.75rem; color:var(--mut); }
+.jb-summary dd { margin:2px 0 0; }
+.jb-summary strong { display:block; font-family:var(--mono); font-size:1.15rem; font-variant-numeric:tabular-nums; }
+.jb-summary small { display:block; font-size:.75rem; color:var(--mut); overflow-wrap:anywhere; }
+.jb-who { display:flex !important; align-items:center; gap:6px; margin-top:4px; }
+.jb-logo { flex:none; width:22px; height:22px; border-radius:5px; object-fit:contain; background:#fff; }
+.jb-initials { display:inline-grid; place-items:center; background:var(--surface-2); color:var(--mut); border:1px solid var(--line); font-size:.6rem; font-weight:700; letter-spacing:.02em; }
+.jb-scroll { max-height:620px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+.jb-table { width:100%; border-collapse:separate; border-spacing:0; font-size:.85rem; }
+.jb-table caption { text-align:left; color:var(--mut); padding:10px 12px; background:var(--card); }
+.jb-table th,.jb-table td { padding:7px 10px; border-bottom:1px solid var(--line); background:var(--card); text-align:right; font-variant-numeric:tabular-nums; vertical-align:middle; }
+.jb-table td:nth-child(3),.jb-table td:nth-child(4) { font-family:var(--mono); white-space:nowrap; }
+.jb-table thead th { position:sticky; top:0; z-index:1; background:var(--surface-2); font-weight:600; }
+.jb-table thead th:nth-child(2),.jb-table tbody th { text-align:left; }
+.jb-table tbody th { font-weight:400; width:100%; }
+.jb-pos,.jb-table thead th:first-child { width:4.5em; text-align:left !important; color:var(--mut); white-space:nowrap; }
+.jb-inst { display:flex; align-items:center; gap:8px; min-width:0; }
+.jb-name { display:flex; flex-direction:column; min-width:0; }
+.jb-name b { font-weight:600; overflow-wrap:anywhere; }
+.jb-name small { color:var(--mut); font-size:.7rem; overflow-wrap:anywhere; }
+.jb-bar { display:block; height:4px; margin:6px 0 0 30px; border-radius:2px; background:var(--surface-2); overflow:hidden; }
+.jb-bar i, .jb-dot { display:block; height:100%; border-radius:2px; background:var(--accent); opacity:.75; }
+.jb-bar i.jb-above, .jb-dot.jb-above { background:var(--down); }
+.jb-legend { margin:8px 0; color:var(--mut); font-size:.75rem; line-height:1.6; }
+.jb-dot { display:inline-block; width:10px; height:10px; vertical-align:-1px; }
+.jb-method { margin:12px 0; font-size:.85rem; line-height:1.6; }
+.jb-method summary { cursor:pointer; color:var(--accent); }
+@media (max-width:600px) {
+  .jb-summary { grid-template-columns:1fr; }
+  .jb-summary > div { display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .jb-table { font-size:.8rem; }
+  .jb-table th,.jb-table td { padding:7px 6px; }
+  .jb-pos,.jb-table thead th:first-child { width:3em; }
+  .jb-panel .history-head { gap:4px 12px; }
+  .jb-panel .history-head > h2 { flex:1 1 100%; }
+}

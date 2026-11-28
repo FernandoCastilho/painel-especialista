@@ -6,6 +6,7 @@ import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
 import BndesScheduleEditor from './BndesScheduleEditor.jsx'
 import { parseMoneyInput } from './moneyInput.js'
+import { formatarAoSair, lerTaxaTexto } from './numeroBr.js'
 import Help from './CalculatorHelp.jsx'
 import { simulateTlpExigivel, parseTlpSchedule, TLP_EXIGIVEL_SOURCE } from './bndesTlpExigivel.js'
 import { BNDES_PROFILE_IOF_OPTIONS } from './bndesProfileIof.js'
@@ -16,6 +17,7 @@ const date = iso => iso.split('-').reverse().join('/')
 const rateText = value => value.trim().replace(',', '.')
 const percent = rate => `${nbr5891(rate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.`
 const EMPTY = { amount: '', fee: '', release: '', j: '', jSource: '', jConfirmed: false, bndes: '', agent: '', ipca: '', scenarioConfirmed: false, schedule: '', scheduleSource: '', scheduleConfirmed: false, iof: 'pj', iofEligible: false }
+const TAXAS = ['j', 'bndes', 'agent', 'ipca']
 
 export function TlpIcon() {
   return <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 20V4M4 20h16M7 15l4-4 4 2 5-7M16 6h4v4" /></svg>
@@ -45,7 +47,8 @@ export default function BndesTlpExigivel({ onBack }) {
     schedule: { events: schedule.events, source: form.scheduleSource, confirmed: form.scheduleConfirmed },
     iof: { profile: form.iof, eligible: form.iof === 'simples' && form.iofEligible },
   })
-  const field = (key, label, hint, type = 'text') => <div className="cx-field"><div className="cx-field-label"><label htmlFor={`tlp-${key}`}>{label}</label><Help title={label}><p>{hint}</p></Help></div><input id={`tlp-${key}`} type={type} value={form[key]} onChange={event => update(key, event.target.value)} inputMode={['j', 'bndes', 'agent', 'ipca'].includes(key) ? 'decimal' : undefined} autoComplete="off" /></div>
+  const field = (key, label, hint, type = 'text') => <div className="cx-field"><div className="cx-field-label"><label htmlFor={`tlp-${key}`}>{label}</label><Help title={label}><p>{hint}</p></Help></div><input id={`tlp-${key}`} type={type} value={form[key]} onChange={event => update(key, event.target.value)} inputMode={TAXAS.includes(key) ? 'decimal' : undefined} autoComplete="off"
+    onBlur={TAXAS.includes(key) ? formatarAoSair(lerTaxaTexto, value => setForm(previous => ({ ...previous, [key]: value }))) : undefined} /></div>
   const check = (key, label) => <label className="bndes-check" htmlFor={`tlp-${key}`}><input id={`tlp-${key}`} type="checkbox" checked={form[key]} onChange={event => update(key, event.target.checked)} />{label}</label>
   return <section className="cx bndes-profile calc-standard" aria-labelledby="tlp-heading">
     <h2 id="tlp-heading" className="cx-title"><span className="cx-icon"><TlpIcon /></span>BNDES TLP exigível</h2>

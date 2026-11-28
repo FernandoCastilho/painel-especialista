@@ -31,6 +31,33 @@ test('snapshot completo inclui extras; falha não salva parte; artefato alterado
   await assert.rejects(verifyRelease(dir, snapshot), /knowledge-news.json: conteúdo mudou/)
 })
 
+test('first interest-rates publish uses the tracked seed only for the confirmed predecessor and HTTP 404', async () => {
+  const interest = 'taxas-juros.json'
+  const predecessor = 'd1248db72cd186c088d902952665719245560f8c'
+  const seed = await readFile(new URL('../public/taxas-juros.json', import.meta.url), 'utf8')
+  const failure = status => Object.assign(new Error('HTTP ' + status), { status })
+  const run = async ({ missing = interest, status = 404, currentSha = predecessor, initial = seed } = {}) => {
+    const saved = new Map()
+    const load = async file => {
+      if (file === missing) throw failure(status)
+      if (file === 'painel-release.json') return JSON.stringify({ sha: currentSha, cbsBlob: blob, cbsHash })
+      return text(file)
+    }
+    return [await snapshotRelease(load, (file, body) => saved.set(file, body), async () => initial), saved]
+  }
+  const [snapshot, saved] = await run()
+  assert.equal(snapshot[interest], createHash('sha256').update(seed).digest('hex'))
+  assert.equal(saved.get(interest), seed)
+  for (const file of RELEASE_FILES.filter(file => file !== interest)) assert.equal(saved.get(file), text(file))
+  const [, existing] = await run({ missing: '' })
+  assert.equal(existing.get(interest), text(interest))
+  await assert.rejects(run({ missing: 'knowledge-news.json' }), /HTTP 404/)
+  await assert.rejects(run({ status: 403 }), /HTTP 403/)
+  await assert.rejects(run({ currentSha: sha }), /HTTP 404/)
+  await assert.rejects(run({ initial: '<html>' }), /taxas-juros.json/)
+  await assert.rejects(run({ initial: text(interest) }), /taxas-juros.json/)
+})
+
 test('retry somente em timeout ou HTTP transitório; preserva BOM', async () => {
   const options = { repo: 'fixture/painel', wait: async () => {} }
   let calls = 0

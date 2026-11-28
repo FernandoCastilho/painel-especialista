@@ -137,6 +137,28 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/faturamento
           if-no-files-found: warn
           retention-days: 7
+      - name: Conferir Mapa do site (mapa mental fixo, notebook, tela grande e celular)
+        run: MAPA_SITE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/mapa-site" node scripts/smoke-mapa-site.cjs
+      - name: Capturas do Mapa do site
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-site-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/mapa-site
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Conferir TV ao vivo (botão ao lado de Mais, escolha do canal, tamanhos e troca de seção)
+        run: TV_QA_OUTPUT="$RUNNER_TEMP/qa-universal/tv" node scripts/smoke-tv.cjs
+      - name: Capturas da TV ao vivo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tv-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/tv
+          if-no-files-found: warn
+          retention-days: 7
       - name: Capturas e resultado do Comparador de Crédito
         if: always()
         uses: actions/upload-artifact@v4
@@ -156,6 +178,17 @@ jobs:
           overwrite: true
           path: ${{ runner.temp }}/qa-universal/bancos
           if-no-files-found: error
+          retention-days: 7
+      - name: Conferir Cenários › Juros bancários em celular, tablet, notebook e tela grande
+        run: JUROS_BANCARIOS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/juros-bancarios" node scripts/smoke-juros-bancarios.cjs
+      - name: Capturas de Cenários › Juros bancários
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: juros-bancarios-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/juros-bancarios
+          if-no-files-found: warn
           retention-days: 7
       - name: Conferir curadorias de tributos e escala 6x1
         run: CURADORIA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/curadoria" node scripts/smoke-curadoria.cjs
@@ -307,6 +340,18 @@ jobs:
           name: calc-largura-design
           overwrite: true
           path: ${{ runner.temp }}/qa-universal/calc-largura
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Conferir a ajuda do câmbio futuro com o vídeo
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        run: CF_AJUDA_QA_OUTPUT="$RUNNER_TEMP/qa-universal/cf-ajuda" node scripts/smoke-cambio-futuro-ajuda.cjs
+      - name: Capturas da ajuda do câmbio futuro
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-ajuda-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/cf-ajuda
           if-no-files-found: warn
           retention-days: 7
       - name: Conferir estudos incluídos, recortes pendentes, apresentação e áudio

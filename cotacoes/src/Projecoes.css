@@ -20,7 +20,8 @@
 .scenarios .scenario-table tbody tr:last-child > * { border-bottom:0; }
 /* Sinal contra o Focus: fica num lugar fixo à direita do número, para os números continuarem alinhados. */
 .scenarios td .fm { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:14px; text-align:center; font-size:.6875rem; font-weight:700; line-height:1; }
-.scenarios .fm.up, .scenarios .fm.down { color:var(--amber, var(--accent)); }
+.scenarios .fm.up { color:var(--up); }
+.scenarios .fm.down { color:var(--down); }
 .scenarios .fm.same { color:var(--mut); opacity:.7; }
 .scenarios caption .fm { font-size:.6875rem; }
 .scenarios .sc-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }

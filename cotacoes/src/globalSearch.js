@@ -2,6 +2,7 @@ import { APP_SECTIONS } from './appSections.js'
 import { inNewsWindow, recentNews } from './newsWindow.js'
 import { GROUPS } from './moedas.js'
 import { creditStats } from './inadimplencia.js'
+import { bankBrand, brDate, modalityLabel, pct } from './taxasJuros.js'
 // Pesquisa local: não lê campos, armazenamento pessoal ou páginas de terceiros.
 export const normalizeSearch = text => String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR')
 // Apresentar monta slides com o conteúdo das outras abas: não é destino de busca.
@@ -11,7 +12,7 @@ export const SEARCH_SOURCES = [
   ['macro.json','juros','Juros e projeções'], ['curves.json','juros','Curvas de juros'], ['curves-history.json','juros','Histórico das curvas'],
   ['news.json','noticias','Manchetes'], ['temas.json','resumo','Notícias por tema'], ['reforma-tributaria.json','resumo','Reforma tributária'],
   ['focus-history.json','cenarios/projecoes','Histórico semanal do Focus'], ['cenarios.json','cenarios/projecoes','Projeções por instituição'], ['projecoes.json','cenarios/projecoes','Projeções'],
-  ['heavy-vehicles.json','setores/veiculos-pesados','Veículos pesados — ANFAVEA'], ['calendar.json','cenarios/calendario','Calendário econômico'], ['inadimplencia.json','cenarios/inadimplencia','Inadimplência PF e PJ'],
+  ['heavy-vehicles.json','setores/veiculos-pesados','Veículos pesados — ANFAVEA'], ['calendar.json','cenarios/calendario','Calendário econômico'], ['taxas-juros.json','cenarios/juros-bancarios','Juros bancários'], ['inadimplencia.json','cenarios/inadimplencia','Inadimplência PF e PJ'],
   ['market-indicators.json','cenarios/atividade','Atividade e emprego'], ['indicator-history.json','cenarios/atividade','Histórico de atividade'],
   ['commodities.json','cenarios/commodities','Commodities'], ['commodities-brl.json','cenarios/commodities','Commodities em reais'],
   ['oil.json','cenarios/commodities','Petróleo Brent'], ['fuels.json','cenarios/commodities','Combustíveis'],
@@ -69,6 +70,15 @@ export function indexSearchData(file, data, route, label, now = Date.now()) {
   const docs = [], stamp = data.generatedAt || data.updatedAt || null
   if(file==='focus-history.json' && data.series) {
     for(const [indicator,byYear] of Object.entries(data.series))for(const [year,points] of Object.entries(byYear))docs.push(makeSearchDoc({id:`${file}:${indicator}:${year}`,title:`Focus · ${indicator} · referência ${year}`,context:{year},body:`Histórico semanal da mediana do Focus para ${indicator}, ano de referência ${year}. `+plainContent(points.slice().reverse()),route,file,stamp,kind:'Dado publicado'}))
+    return {docs,limited:false}
+  }
+  if(file==='taxas-juros.json' && Array.isArray(data.segments)) {
+    // Um resultado por público e modalidade: a tela abre já nele.
+    for(const seg of data.segments)for(const m of seg.modalities ?? []){
+      const label=modalityLabel(m.name), rows=m.rows ?? []
+      const body=`Juros bancários de ${seg.label.toLowerCase()} em ${label}: taxa média por instituição, de ${pct(rows[0]?.[1])} a ${pct(rows.at(-1)?.[1])} ao mês, operações de ${brDate(seg.period?.inicio)} a ${brDate(seg.period?.fim)}. Instituições: ${rows.map(r=>[bankBrand(r[0]).short,r[0]].filter(Boolean).join(' ')).join(', ')}.`
+      docs.push(makeSearchDoc({id:`${file}:${seg.id}:${m.name}`,title:`Juros bancários · ${seg.label} · ${label}`,body,route,file,stamp,kind:'Dado publicado',context:{segment:seg.id,modality:m.name}}))
+    }
     return {docs,limited:false}
   }
   if(file==='inadimplencia.json'  && Array.isArray(data.series)) {

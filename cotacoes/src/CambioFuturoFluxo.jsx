@@ -5,6 +5,7 @@ import { marketDate } from './marketReturns.js'
 import { isBusinessDay } from './holidays.js'
 import { formatMoneyText, parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './cdiDolar.js'
+import { formatarNumeroBr } from './numeroBr.js'
 import { lerTabelaMesa } from './cambioFuturoColar.js'
 import { MAX_PARCELAS_FLUXO, MAX_PRAZO_DIAS, amortizacoesIguais, calcularFluxoCambio, irRemissivelPadrao, vencimentoPorPrazo } from './cambioFuturoFluxo.js'
 import './CalculatorStandard.css'
@@ -15,8 +16,6 @@ const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' 
 const dec = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const taxa4 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
 const taxaTexto = n => taxa4.format(n)
-// Só agrupa o milhar e completa 2 casas: nunca arredonda o que foi digitado.
-const decimalLivre = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 20 })
 const fmt = (n, format = dec) => Number.isFinite(n) ? format.format(n) : '—'
 const pct = n => Number.isFinite(n) ? dec.format(n) + '%' : '—'
 const dataBrasil = data => data ? data.split('-').reverse().join('/') : '—'
@@ -33,10 +32,7 @@ const numero = texto => {
 }
 const prazoDias = texto => /^\d{1,4}$/.test(texto.trim()) && Number(texto) >= 1 && Number(texto) <= MAX_PRAZO_DIAS ? Number(texto.trim()) : null
 // Ao sair do campo, o número fica no padrão brasileiro (ponto no milhar, vírgula nos decimais); texto inválido fica como está.
-const formatarDecimal = texto => {
-  const v = numero(texto)
-  return v == null ? texto : decimalLivre.format(v)
-}
+const formatarDecimal = texto => formatarNumeroBr(texto, numero)
 
 function Campo({ id, label, value, change, formatar, type = 'text', mode = 'decimal', placeholder, error, hint }) {
   return <div className="cx-field">
@@ -100,7 +96,20 @@ export default function CambioFuturoFluxo({ onBack }) {
 
   return <section className="cx cf cf-pattern bw calc-standard calc-workspace cf-j cf-f" aria-labelledby="cf-f-title">
     <div className="bw-heading calc-workspace-heading">
-      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-f-title" className="cx-title">Câmbio futuro</h2></div>
+      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-f-title" className="cx-title">Câmbio futuro</h2>
+        <CalculatorHelp title="O que é câmbio futuro">
+          <p>Câmbio futuro é a taxa de câmbio (R$ por US$) combinada hoje para uma data futura. Com ela, a empresa sabe agora quanto vai pagar ou receber em reais em cada vencimento, sem depender do dólar daquele dia.</p>
+          <p>Não é previsão do dólar. Ele sai do dólar à vista (spot) corrigido pela diferença entre os juros em reais e os juros em dólar até o vencimento. Com juros em reais mais altos, o câmbio futuro fica acima do spot; essa diferença são os pontos (forward points).</p>
+          <p>Conta de referência do mercado: câmbio futuro ≈ spot × (1 + juro pré em R$)^(dias úteis ÷ 252) ÷ (1 + cupom cambial × dias corridos ÷ 360). O cupom cambial é o juro em dólar no Brasil. Na operação, quem informa o câmbio futuro é a mesa.</p>
+          <p>A trava costuma ser feita com um termo de moeda sem entrega (NDF): no vencimento, as partes acertam só a diferença, em reais, entre a taxa travada e a PTAX de referência.</p>
+          <p>Nesta tela, cada parcela em US$ (principal + juros) é convertida pelo câmbio futuro do seu vencimento. Assim saem o fluxo em reais e a TIR em base 252, que é o custo da operação em reais.</p>
+          <figure className="cf-video">
+            <iframe src="https://www.youtube-nocookie.com/embed/xJr3uf1CXSo" title="Vídeo: Dólar futuro não é aposta, a matemática da taxa forward" loading="lazy"
+              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
+            <figcaption>Vídeo da Damke Consultoria e Treinamento sobre como se calcula o dólar futuro e a taxa forward para o hedge da empresa. Para ver em tela cheia ou no YouTube, use os botões do próprio vídeo.</figcaption>
+          </figure>
+        </CalculatorHelp>
+      </div>
     </div>
 
     <article className="desk-panel cx-panel cf-input cf-j-azul" aria-labelledby="cf-f-op">
