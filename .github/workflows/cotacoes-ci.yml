@@ -137,6 +137,17 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/faturamento
           if-no-files-found: warn
           retention-days: 7
+      - name: Conferir ícone do WhatsApp no BNDES e no CDC (visto no lugar do aviso escrito)
+        run: WHATSAPP_QA_OUTPUT="$RUNNER_TEMP/qa-universal/whatsapp" node scripts/smoke-whatsapp.cjs
+      - name: Capturas do WhatsApp
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whatsapp-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/whatsapp
+          if-no-files-found: warn
+          retention-days: 7
       - name: Conferir Mapa do site (mapa mental fixo, notebook, tela grande e celular)
         run: MAPA_SITE_QA_OUTPUT="$RUNNER_TEMP/qa-universal/mapa-site" node scripts/smoke-mapa-site.cjs
       - name: Capturas do Mapa do site
