@@ -4,7 +4,8 @@
 // (localStorage) até o fim do dia "válido até", no horário de Brasília; no dia seguinte, ao abrir, ela se apaga e a tela avisa.
 const CHAVE = 'cdc-funding'
 const VIGENCIA = /(\d{1,2})\/(\d{1,2})\s*(?:até|ate|a|-)\s*(\d{1,2})\/(\d{1,2})/i
-const num = celula => {
+// Lê um custo da tabela ou digitado (13,68% · 13.68 · 1.013,68).
+export const num = celula => {
   let t = String(celula ?? '').trim().replace('%', '').trim()
   t = t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t
   return /^\d+(?:\.\d+)?$/.test(t) ? Number(t) : null

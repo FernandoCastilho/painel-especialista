@@ -24,6 +24,7 @@ const now = Date.parse('2026-11-09T14:40:00Z'), day = '2026-11-09'
 const first = { t: Date.parse('2026-11-09T10:00:16Z'), bid: 5.5031 }
 const code = (await transform(await readFile(new URL('../src/HistoryChart.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })).code
 const require = createRequire(import.meta.url)
+const numeroBr = await import('../src/numeroBr.js')
 function render(points, overrides = {}) {
   const state = { status: points.length ? 'ok' : 'empty', generatedAt: now, data: points.length ? { source: 'USD', points, generatedAt: now, resolution: '5 min' } : null, ...overrides }
   const module = { exports: {} }
@@ -31,7 +32,7 @@ function render(points, overrides = {}) {
     './useHistory.js': { toInput: (d) => (d instanceof Date ? d.toISOString().slice(0, 10) : String(d)), useIntraday: () => state, useHistory: () => state, useCentralDaily: () => ({}), centralFull: () => [] },
     './useMacro.js': { useMacro: () => ({}) }, './useQuotes.js': { seriesName: () => 'Dólar' },
     './dataTimestamp.js': { dataTimestamp }, './stats.js': { periodChange }, './chartLinePath.js': { chartLinePath },
-    './storage.js': { readStorage: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'loading' }) }, './fxNoticias.js': { eventosDiarios: () => [], eventosDoDia: () => [], itensDoDia: () => [] }, './eventosMercado.js': eventosMercado, './pregao.js': pregao, './simulacaoCambio.js': simulacaoCambio, './pregaoFixado.js': pregaoFixado, './fxAgora.js': { noticiasPerto: () => [], useFxAgora: () => null }, './marketReturns.js': { marketDate }, './flags.js': { flagSvg: () => '' },
+    './storage.js': { readStorage: () => null }, './useDataFile.js': { useDataFile: () => ({ status: 'loading' }) }, './fxNoticias.js': { eventosDiarios: () => [], eventosDoDia: () => [], itensDoDia: () => [] }, './eventosMercado.js': eventosMercado, './pregao.js': pregao, './simulacaoCambio.js': simulacaoCambio, './pregaoFixado.js': pregaoFixado, './fxAgora.js': { noticiasPerto: () => [], noticiasDoMovimento: () => [], destaquesPorHora: () => [], useFxAgora: () => null }, './marketReturns.js': { marketDate }, './flags.js': { flagSvg: () => '' }, './numeroBr.js': numeroBr,
     './resample.js': { scaleOptions: () => [] }, './ChartFilters.jsx': { useFilterSlot: () => null },
     './rangeCompare.js': {}, './chartNavigation.js': {}, './chartToque.js': chartToque, './chartEixo.js': chartEixo, './chartMarcas.js': chartMarcas, './Explain.jsx': () => null, './ChartAccess.css': {},
   }

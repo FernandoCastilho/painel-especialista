@@ -10,6 +10,7 @@ import MoneyInput from './MoneyInput.jsx'
 import Help from './CalculatorHelp.jsx'
 import { parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './emprestimo.js'
+import { formatarAoSair } from './numeroBr.js'
 import { useCurves } from './useCurves.js'
 import { useHolidays } from './useHolidays.js'
 import { busDaysIn } from './holidays.js'
@@ -135,7 +136,7 @@ export default function OperacaoDi({ onBack }) {
           </div>
           {field('rate', kind === 'pct' ? 'Percentual do CDI (%)' : kind === 'spread' ? 'Spread (% a.a.)' : 'Taxa (%)', (
             <div className="cx-rate">
-              <input id="od-rate" inputMode="decimal" autoComplete="off" aria-invalid={!!errors.rate} aria-describedby="od-rate-err" value={rateText} onChange={(e) => setRateText(e.target.value)} onFocus={(e) => e.target.select()} />
+              <input id="od-rate" inputMode="decimal" autoComplete="off" aria-invalid={!!errors.rate} aria-describedby="od-rate-err" value={rateText} onChange={(e) => setRateText(e.target.value)} onBlur={formatarAoSair(parseDecimal, setRateText)} onFocus={(e) => e.target.select()} />
               {kind === 'pre' && (
                 <div className="seg" role="group" aria-label="Período da taxa">
                   {PRE_UNITS.map((u) => <button key={u.id} type="button" aria-pressed={unit === u.id} onClick={() => setUnit(u.id)}>{u.label}</button>)}

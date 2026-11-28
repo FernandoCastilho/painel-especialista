@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { numeroPt } from './investimentos.js'
+import { formatarAoSair } from './numeroBr.js'
 import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
 import LaminaFundoCvm from './LaminaFundoCvm.jsx'
 import { codigoGarbDoId, isFundoCvm } from './fundosCvm.js'
@@ -243,7 +244,8 @@ function Portfolio({ comparison, currency }) {
     <section className="inv-panel">
       <h3>Valor inicial por ativo em {currency}</h3>
       <div className="inv-grade inv-allocations">{comparison.tracks.map(track => <label key={track.id}>{track.name}
-        <input inputMode="decimal" value={allocation(track)} onChange={e => setInputs(current => ({ ...current, [track.id]: e.target.value }))} />
+        <input inputMode="decimal" value={allocation(track)} onChange={e => setInputs(current => ({ ...current, [track.id]: e.target.value }))}
+          onBlur={formatarAoSair(numeroPt, texto => setInputs(current => ({ ...current, [track.id]: texto })))} />
       </label>)}</div>
       {result ? <dl>
         <div><dt>Valor inicial</dt><dd>{money(principal, currency)}</dd></div>
@@ -361,7 +363,7 @@ export default function InvestmentWorkspace({ mode, link, showComparison, showPo
     </select></label>
     {comparando && <label className="inv-aplicado">Valor aplicado
       <input inputMode="decimal" placeholder="Ex.: 10.000" value={aplicadoTexto} aria-describedby="inv-aplicado-nota"
-        onChange={e => setAplicadoTexto(e.target.value)} /></label>}
+        onChange={e => setAplicadoTexto(e.target.value)} onBlur={formatarAoSair(valorAplicado, setAplicadoTexto)} /></label>}
   </div>
   return <div hidden={!visible} className="inv-study">
     {visible && <FundoCvmPicker key={mode} inline referencias={catalog} ativos={config.ids}

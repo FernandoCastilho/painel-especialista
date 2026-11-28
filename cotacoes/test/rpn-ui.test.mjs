@@ -443,10 +443,11 @@ test('fita atualiza a mesma linha durante digitação e só registra o resultado
 const cetSource = await readFile(new URL('../src/RpnCetPanel.jsx', import.meta.url), 'utf8')
 const cetCode = (await transform(cetSource, { loader: 'jsx', format: 'cjs', jsx: 'automatic' })).code
 test('CET atualiza após colagem e recalcula ao digitar encargos', async t => {
-  const { calculatePastedCet } = await import('../src/rpnPastedCet.mjs')
+  const { calculatePastedCet, toCents } = await import('../src/rpnPastedCet.mjs')
+  const numeroBr = await import('../src/numeroBr.js')
   const module = { exports: {} }
   runInNewContext(cetCode, { module, exports: module.exports, require: p =>
-    p === './rpnPastedCet.mjs' ? { calculatePastedCet } : p === 'react' ? { ...React, useId: () => 'cet-test' } : require(p) })
+    p === './rpnPastedCet.mjs' ? { calculatePastedCet, toCents } : p === './numeroBr.js' ? numeroBr : p === 'react' ? { ...React, useId: () => 'cet-test' } : require(p) })
   const ui = hookRenderer(() => module.exports.default())
   t.after(() => ui.close())
   ui.render()
