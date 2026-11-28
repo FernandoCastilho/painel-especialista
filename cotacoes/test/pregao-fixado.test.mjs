@@ -76,3 +76,66 @@ test('bolinhas do dia fixado: uma por hora, sem propaganda nem conversor', async
   const r = destaquesPorHora(itens, h('12:00'), h('21:00'), [5.4861, 5.5826])
   assert.deepEqual(r.map((n) => n.link), ['https://v/1', 'https://m/1'])
 })
+
+test('manchete de fechamento publicada antes das 17h é de outro dia e não vira bolinha', async () => {
+  const { destaquesPorHora, fechamentoCedo } = await import('../src/fxAgora.js')
+  const h = (hm) => t(`2026-11-27T${hm}:00Z`)
+  const velha = { t: h('12:02'), title: 'Dólar cai e fecha a R$ 5,81 com expectativa sobre novas medidas fiscais', link: 'https://g/1', source: 'GZH' }
+  const doDia = { t: h('21:25'), title: 'Dólar despenca e fecha a R$ 5,51 após escolha de Trabuco', link: 'https://g/2', source: 'GZH' }
+  const outra = { t: h('12:30'), title: 'Petrobras fecha acordo de fornecimento', link: 'https://p/2', source: 'X' }
+  assert.equal(fechamentoCedo(velha), true)
+  assert.equal(fechamentoCedo(doDia), false)
+  assert.equal(fechamentoCedo(outra), false)
+  const r = destaquesPorHora([velha, doDia], h('12:00'), h('22:00'), [5.4861, 5.6525])
+  assert.deepEqual(r.map((n) => n.link), ['https://g/2'])
+})
+
+test('notícias do maior movimento do dia: qualquer horário, só o mesmo lado do movimento', async () => {
+  const { noticiasDoMovimento } = await import('../src/fxAgora.js')
+  const h = (hm) => t(`2026-11-27T${hm}:00Z`)
+  const itens = [
+    { t: h('08:42'), title: 'Dólar abre de olho em indicação para a Petrobras', link: 'https://a/1', source: 'A' },
+    { t: h('12:14'), title: 'Dólar à vista tem forte queda', link: 'https://v/1', source: 'Valor Econômico' },
+    { t: h('13:20'), title: 'Dólar sobe com cautela fiscal', link: 'https://s/1', source: 'S' },
+    { t: h('14:05'), title: 'Ibovespa renova recorde', link: 'https://i/1', source: 'I' },
+    { t: h('12:02'), title: 'Dólar cai e fecha a R$ 5,81', link: 'https://g/1', source: 'GZH' },
+    { t: h('21:25'), title: 'Dólar despenca e fecha a R$ 5,51 após escolha de Trabuco', link: 'https://g/2', source: 'GZH' },
+    { t: h('21:30'), title: 'Dólar despenca e fecha a R$ 5,51 após escolha de Trabuco', link: 'https://g/3', source: 'Outro' },
+  ]
+  const r = noticiasDoMovimento([itens], { dir: 'queda', faixa: [5.4861, 5.6525] })
+  // a mais forte primeiro na escolha, mostradas em ordem de horário; sem a que sobe, sem a reindexada, sem repetir título
+  assert.deepEqual(r.map((n) => n.link), ['https://a/1', 'https://v/1', 'https://g/2'])
+  const alta = noticiasDoMovimento([itens], { dir: 'alta', faixa: [5.4861, 5.6525] })
+  assert.deepEqual(alta.map((n) => n.link), ['https://a/1', 'https://s/1'])
+  assert.equal(noticiasDoMovimento([itens], { dir: 'queda', limite: 1 })[0].link, 'https://v/1')
+})
+
+test('lado do dólar na manchete: a palavra depois de "dólar" decide, não a da Bolsa', async () => {
+  const { ladoDoDolar } = await import('../src/fxAgora.js')
+  assert.equal(ladoDoDolar('Efeito Trabuco: Dólar despenca e Bolsa dispara com escolha do banqueiro'), 'queda')
+  assert.equal(ladoDoDolar('Ibovespa sobe e dólar cai com fluxo estrangeiro'), 'queda')
+  assert.equal(ladoDoDolar('Alta do dólar eleva perdas do Banco Central com swaps'), 'alta')
+  assert.equal(ladoDoDolar('Dólar desaba 3,97% e fecha a R$ 5,51'), 'queda')
+  assert.equal(ladoDoDolar('Dólar abre de olho em indicação para a Petrobras'), null)
+  assert.equal(ladoDoDolar('Câmbio: real tem alta forte'), 'alta')
+})
+
+test('maior movimento da linha: queda contra o fechamento da véspera vence a alta menor depois', async () => {
+  const { maiorMovimento } = await import('../src/pregao.js')
+  const h = (hm) => t(`2026-11-27T${hm}:00Z`)
+  const pts = [
+    { t: h('08:15'), bid: 5.6525 }, // madrugada: fechamento da véspera
+    { t: h('12:49'), bid: 5.52 },
+    { t: h('13:00'), bid: 5.4861 },
+    { t: h('14:45'), bid: 5.5826 },
+    { t: h('21:00'), bid: 5.51 },
+  ]
+  const m = maiorMovimento(pts)
+  assert.equal(m.dir, 'queda')
+  assert.deepEqual([m.de, m.ate], [0, 2])
+  assert.ok(Math.abs(m.pct - (5.4861 / 5.6525 - 1) * 100) < 1e-9)
+  const sobe = maiorMovimento([{ t: 1, bid: 5 }, { t: 2, bid: 4.9 }, { t: 3, bid: 5.2 }, { t: 4, bid: 5.1 }])
+  assert.deepEqual([sobe.dir, sobe.de, sobe.ate], ['alta', 1, 2])
+  assert.equal(maiorMovimento([{ t: 1, bid: 5 }, { t: 2, bid: 5 }]), null)
+  assert.equal(maiorMovimento([]), null)
+})

@@ -21,11 +21,11 @@ import { flagSvg } from './flags.js'
 import { useDataFile } from './useDataFile.js'
 import { eventosDiarios, eventosDoDia, itensDoDia } from './fxNoticias.js'
 import { marcosEntre, marcosQueCabem } from './eventosMercado.js'
-import { destaquesPorHora, noticiasPerto, useFxAgora } from './fxAgora.js'
+import { destaquesPorHora, noticiasDoMovimento, noticiasPerto, useFxAgora } from './fxAgora.js'
 import { marketDate } from './marketReturns.js'
-import { extremos as acharExtremos, noPregao } from './pregao.js'
+import { extremos as acharExtremos, maiorMovimento, noPregao } from './pregao.js'
 import { PREGAO_FIXADO_ARQUIVO, diaCurto, fixadoAtivo, juntarPontos, pontosFixados } from './pregaoFixado.js'
-import { frase, lerValor, moeda, reais, simular as simularTrecho } from './simulacaoCambio.js'
+import { lerValor, linhasValor, moeda, reais, simular as simularTrecho } from './simulacaoCambio.js'
 import { formatarAoSair } from './numeroBr.js'
 
 const H = 240
@@ -74,13 +74,15 @@ export function Plot({ points, scales = true, ...props }) {
   return (
     <>
       {picker && (slot ? createPortal(picker, slot) : picker)}
-      <PlotView {...props} points={view} history={props.history ?? points} eventos={active ? undefined : props.eventos} intraday={active ? !!active.intradiario : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
+      <PlotView {...props} points={view} history={props.history ?? points} eventos={active ? undefined : props.eventos} movimento={active ? undefined : props.movimento} intraday={active ? !!active.intradiario : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
     </>
   )
 }
 
+const mesmaBandeira = (a, b) => !!a && !!b && a.t === b.t && !!a.mov === !!b.mov
+
 // `history`: série completa para achar o mesmo trecho um ano antes (padrão: os próprios pontos). `step`: série em degraus.
-function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos, extremos = false, marcos, simular }) {
+function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos, movimento, extremos = false, marcos, simular }) {
   const [hover, setHover] = useState(null)
   const [aberto, setAberto] = useState(null)
   const [sel, setSel] = useState(null)
@@ -89,6 +91,25 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const [dragging, setDragging] = useState(false)
   const drag = useRef(null)
   const plotRef = useTocarFora(hover != null, setHover)
+  // Balão da notícia: fecha ao tocar fora dele (tocar noutra bolinha troca a notícia)
+  const balaoRef = useRef(null)
+  useEffect(() => {
+    if (!aberto) return undefined
+    const fora = (e) => { if (!balaoRef.current?.contains(e.target) && !e.target.closest?.('.fx-dot')) setAberto(null) }
+    document.addEventListener('pointerdown', fora)
+    return () => document.removeEventListener('pointerdown', fora)
+  }, [aberto])
+  // Tamanho do desenho na tela: na tela cheia o SVG é ampliado pelo viewBox, e as bolinhas, o balão
+  // e a dica (HTML por cima do gráfico) precisam da mesma escala para cair no ponto certo da linha.
+  const svgRef = useRef(null)
+  const [caixa, setCaixa] = useState(null)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return undefined
+    const ro = new ResizeObserver(() => setCaixa({ w: el.clientWidth, h: el.clientHeight, top: el.offsetTop }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const sig = `${base.length}:${base[0]?.t}:${base[base.length - 1]?.t}`
   useEffect(() => { setSel(null); setAberto(null) }, [sig])
   // seleção guardada como dois pontos (tempo e valor): vale mesmo quando o gráfico se estende ao ano anterior
@@ -204,6 +225,28 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const altura = H + (setas.length ? FAIXA : 0)
   const valorEm = (t) => points.reduce((b, p) => (Math.abs(p.t - t) < Math.abs(b.t - t) ? p : b), points[0]).bid
   const hp = hover != null ? points[hover] : null
+  const kx = caixa?.w && caixa?.h ? Math.min(caixa.w / width, caixa.h / altura) : 1
+  const ox = caixa?.w ? (caixa.w - width * kx) / 2 : 0
+  const oy = caixa?.h ? (caixa.h - altura * kx) / 2 + (caixa.top || 0) : 0
+  const naTela = (x, y) => ({ left: ox + x * kx, top: oy + y * kx })
+  // Bandeirinhas das notícias: um pouco acima da cotação, ligadas a ela por um tracejado sutil;
+  // vizinhas muito perto sobem mais um degrau para não encavalar. A do maior movimento do dia fica mais alta.
+  const bandeiras = useMemo(() => {
+    const lista = [...(eventos ?? []).filter((ev) => ev.t >= g.t0 && ev.t <= g.t1), ...(movimento && movimento.t >= g.t0 && movimento.t <= g.t1 ? [movimento] : [])]
+    const out = []
+    let antes = null
+    for (const ev of lista.sort((a, b) => a.t - b.t)) {
+      const x = g.x(ev.t)
+      const y = g.y(points.length ? points.reduce((b, p) => (Math.abs(p.t - ev.t) < Math.abs(b.t - ev.t) ? p : b), points[0]).bid : ev.bid)
+      const degrau = ev.mov ? 2 : antes && x - antes.x < 18 && antes.degrau === 0 ? 1 : 0
+      const sobe = 22 + degrau * 16
+      const yb = y - sobe < M.t + 22 ? Math.min(g.base - 2, y + sobe + 20) : y - sobe
+      const item = { ev, x, y, yb, degrau }
+      out.push(item)
+      if (!ev.mov) antes = item
+    }
+    return out
+  }, [eventos, movimento, g, points])
   const [tipRef, tipW] = useLarguraBalao(hp)
   const gid = `a-${plotId.replaceAll(':', '')}`
   const onKey = (e) => {
@@ -228,6 +271,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
       <span id={`${plotId}-hint`} className="chart-access-text">Use as setas para percorrer os pontos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho; Escape limpa. Com o mouse ou o dedo, arraste sobre o gráfico para selecionar um trecho.</span>
       <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
       <svg
+        ref={svgRef}
         tabIndex={0}
         aria-describedby={`${plotId}-hint`}
         onFocus={(e) => { if (focoPorTeclado(e)) setHover(0) }}
@@ -330,38 +374,57 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             <circle cx={g.x(hp.t)} cy={g.y(hp.bid)} r="5" fill={color} className="ring" />
           </g>
         )}
+        {!range && aberto?.mov && (
+          <line pointerEvents="none" x1={g.x(aberto.t0)} y1={g.y(valorEm(aberto.t0))} x2={g.x(aberto.t)} y2={g.y(valorEm(aberto.t))} className={`fx-mov-corda ${aberto.tom}`} />
+        )}
+        {!range && bandeiras.map(({ ev, x, y, yb }) => (
+          <g key={`h-${ev.mov ? 'mov' : ev.t}`} pointerEvents="none" className={`fx-haste ${ev.tom}${mesmaBandeira(aberto, ev) ? ' on' : ''}`}>
+            <line x1={x} y1={y} x2={x} y2={yb} />
+            <circle cx={x} cy={y} r="2" />
+          </g>
+        ))}
       </svg>
-      {eventos?.length > 0 && !range && (
-        <div className="fx-dots">
-          {eventos.filter((ev) => ev.t >= g.t0 && ev.t <= g.t1).map((ev) => (
+      {bandeiras.length > 0 && !range && (
+        <div className="fx-dots" onKeyDown={(e) => { if (e.key === 'Escape' && aberto) { e.preventDefault(); e.stopPropagation(); setAberto(null) } }}>
+          {bandeiras.map(({ ev, x, yb }) => (
             <button
               type="button"
-              key={`${ev.t}-${ev.itens[0]?.link}`}
-              className={`fx-dot ${ev.tom}${aberto?.t === ev.t ? ' on' : ''}`}
-              style={{ left: g.x(ev.t), top: g.y(ev.bid) }}
-              aria-expanded={aberto?.t === ev.t}
-              aria-label={`${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `${code} ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
-              onClick={() => setAberto(aberto?.t === ev.t ? null : ev)}
+              key={`${ev.mov ? 'mov' : ev.t}-${ev.itens[0]?.link}`}
+              className={`fx-dot ${ev.tom}${ev.mov ? ' mov' : ''}${mesmaBandeira(aberto, ev) ? ' on' : ''}`}
+              style={naTela(x, yb)}
+              aria-expanded={mesmaBandeira(aberto, ev)}
+              aria-label={ev.mov
+                ? `Maior ${ev.dir} do dia, de ${fmtTime(ev.t0)} a ${fmtTime(ev.t)}: ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'} sobre o movimento`
+                : `${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `${code} ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
+              onClick={() => setAberto(mesmaBandeira(aberto, ev) ? null : ev)}
             />
           ))}
         </div>
       )}
       {aberto && !range && (
-        <div className="fx-news" role="region" aria-label="Manchetes do dia">
-          <p className="fx-news-head">
-            <b>{fmtDate(aberto.t, true)}</b>
-            {aberto.pct != null && <em className={aberto.tom}>{aberto.pct > 0 ? '▲' : '▼'} {signed(aberto.pct, 2)}% no dia</em>}
-            <button type="button" className="sel-clear" onClick={() => setAberto(null)}>Fechar</button>
-          </p>
-          <ul>
-            {aberto.itens.map((n) => (
-              <li key={n.link}>
-                {n.semHora ? null : <><time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}</>}
-                <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}{n.geral ? ' · mercado do dia' : ''}</small>
-              </li>
-            ))}
-          </ul>
-          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa). Primeiro as que falam da moeda; "mercado do dia" são manchetes gerais que podem ajudar a explicar o movimento. Mostram o que saiu na imprensa, não comprovam a causa.</p>
+        // Caixinha amarela no canto superior direito do gráfico com a notícia da bandeirinha tocada
+        <div className="fx-balao-camada">
+          <div ref={balaoRef} className="fx-balao" style={{ top: oy + (M.t + 4) * kx, right: ox + (M.r + 4) * kx, maxHeight: Math.max(120, (g.base - M.t - 8) * kx) }} role="region" aria-label="Notícia da bandeirinha" tabIndex={-1}
+            onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setAberto(null) } }}>
+            <p className="fx-news-head">
+              {aberto.mov
+                ? <><b>Maior {aberto.dir} do dia</b> <em className={aberto.tom}>{aberto.pct > 0 ? '▲' : '▼'} {signed(aberto.pct, 2)}%</em> <small>{brl(aberto.v0)} às {fmtTime(aberto.t0)} → {brl(aberto.bid)} às {fmtTime(aberto.t)}</small></>
+                : <><b>{intraday ? fmtTime(aberto.t) : fmtDate(aberto.t, true)}</b>
+                  {aberto.pct != null && <em className={aberto.tom}>{aberto.pct > 0 ? '▲' : '▼'} {signed(aberto.pct, 2)}% no dia</em>}</>}
+              <button type="button" className="fx-balao-fechar" aria-label="Fechar notícia" onClick={() => setAberto(null)}>×</button>
+            </p>
+            <ul>
+              {aberto.itens.map((n) => (
+                <li key={n.link}>
+                  {(intraday && !aberto.mov) || n.semHora || !Number.isFinite(n.t) ? null : <><time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}</>}
+                  <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}{n.geral ? ' · mercado do dia' : ''}</small>
+                </li>
+              ))}
+            </ul>
+            <p className="fx-news-note">{aberto.mov
+              ? 'Manchetes do dia sobre o dólar que tratam deste movimento, de qualquer horário (antes, durante ou depois). Horário de Brasília.'
+              : intraday ? 'Horário de publicação informado pela fonte, em Brasília.' : 'Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa).'} Mostra o que saiu na imprensa, não comprova a causa do movimento.</p>
+          </div>
         </div>
       )}
       {simular && (() => {
@@ -382,12 +445,16 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
               </div>
             </div>
             {valorTxt.trim() !== '' && !valor && <p className="fx-sim-aviso">Valor não reconhecido. Use, por exemplo, 500.000 ou 500 mil.</p>}
-            {sim ? (
-              <p className="fx-sim-res" role="status">
-                <b>{moeda(valor, simular)}</b> em reais, como referência: {reais(sim.r0)} (a {cot(range.v0)}) → {reais(sim.r1)} (a {cot(range.v1)}).{' '}
-                <em className={sim.efeito === 'igual' ? '' : sim.favoravel ? 'bom' : 'ruim'}>No trecho selecionado, {frase(sim)}</em> ({fmtPct(sim.pct)}).
-              </p>
-            ) : (
+            {sim ? (() => {
+              const [l1, l2] = linhasValor(sim, { valor, code: simular, v0: range.v0, v1: range.v1 })
+              return (
+                <div className="fx-sim-res" role="status">
+                  <p title={`${moeda(valor, simular)} a ${cot(range.v0)} = ${reais(sim.r0)}`}><span aria-hidden="true">🔸</span>{l1}</p>
+                  <p title={`${reais(sim.r0)} → ${reais(sim.r1)}: diferença de ${reais(Math.abs(sim.dif))}`} className={sim.efeito === 'igual' ? '' : sim.favoravel ? 'bom' : 'ruim'}><span aria-hidden="true">🔸</span>{l2}</p>
+                  {intraday && !noPregao(range.t0) && <p className="fx-sim-fora">O trecho começa às {fmtTime(range.t0)}, fora do pregão: esse ponto costuma ser o fechamento anterior repetido pela fonte, não negócio do dia. Para medir só o pregão, comece depois das 9h.</p>}
+                </div>
+              )
+            })() : (
               valor && <p className="fx-sim-dica">Clique e arraste no gráfico para escolher o trecho e ver o efeito em reais.</p>
             )}
             <p className="fx-sim-nota">Conta de referência pela cotação do gráfico ({intraday ? 'compra' : 'fechamento'}), sem spread, IOF nem tarifas. O valor digitado não é salvo.</p>
@@ -406,7 +473,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
         </div>
       )}
       {hp && (
-        <div ref={tipRef} className={`tip${range ? ' tip-low' : ''}`} style={{ left: limitarBalao(g.x(hp.t), tipW, width) }}>
+        <div ref={tipRef} className={`tip${range ? ' tip-low' : ''}`} style={{ left: limitarBalao(g.x(hp.t) * kx, tipW, width * kx) + ox }}>
           <strong>{dateLabel ? dateLabel(hp.t) : intraday ? fmtTime(hp.t, true) : fmtDate(hp.t, true)}</strong>
           {fmt ? (
             <span>{label} {fmt(hp.bid)}</span>
@@ -491,6 +558,20 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
     const faixa = e ? [pts[e.lo].bid, pts[e.hi].bid] : undefined
     return noticiasPerto([agora?.dia === diaVisto ? agora.itens : [], guardadas, doDia], maxima.t, { faixa })
   }, [maxima, diaVisto, agora, fixado, pts, fx.status, fx.data, currency.code])
+  // maior movimento do dia na linha (a maior queda ou a maior alta, da cotação mais alta à mais baixa ou o contrário)
+  // e as manchetes do dia que tratam dele, de qualquer horário: a bandeirinha fica no fim do movimento
+  const movimento = useMemo(() => {
+    if (!diaVisto || !pts?.length) return null
+    const m = maiorMovimento(pts)
+    if (!m) return null
+    const a = pts[m.de], b = pts[m.ate], dir = m.dir
+    const e = acharExtremos(pts, false)
+    const doDia = fx.status === 'ok' ? itensDoDia(fx.data, currency.code, diaVisto, Infinity) : []
+    const guardadas = fixado?.noticias?.dia === diaVisto && currency.code === 'USD' ? fixado.noticias.itens : []
+    const itens = noticiasDoMovimento([agora?.dia === diaVisto ? agora.itens : [], guardadas, doDia], { dir, faixa: e ? [pts[e.lo].bid, pts[e.hi].bid] : undefined })
+    if (!itens.length) return null
+    return { mov: true, t: b.t, bid: b.bid, t0: a.t, v0: a.bid, dir, tom: dir === 'alta' ? 'up' : 'down', pct: m.pct, itens }
+  }, [diaVisto, pts, agora, fixado, fx.status, fx.data, currency.code])
   const td = currency.code === 'JPY' ? 4 : 2 // iene vale centavos: precisa de mais casas
   const pct = periodChange(pts)
   const trend = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat'
@@ -522,7 +603,7 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
             <small>{h.error}</small>
           </div>
         )}
-        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} extremos marcos={marcos} simular={currency.code} />}
+        {pts && <Plot points={pts} history={full} width={width} color={color} code={currency.code} intraday={intraday} fmt={intraday ? brl : undefined} vfmt={quoteFmt} labels label={intraday ? 'Cotação' : undefined} eventos={eventos} movimento={movimento} extremos marcos={marcos} simular={currency.code} />}
         {perto.length > 0 && (
           <section className="fx-perto" aria-label="Notícias perto da máxima do dia">
             <p className="fx-perto-head"><b>Notícias perto da máxima</b> ({brl(maxima.bid)} às {fmtTime(maxima.t)})</p>
@@ -540,8 +621,9 @@ export default function HistoryChart({ currency, color, start, end, day, onDay }
         {intraday && pts?.some((p) => !noPregao(p.t)) && <p className="fx-legend">Máx. e mín. do dia contam só o pregão (9h às 18h de Brasília). Amostras fora desse horário aparecem na linha, mas não entram na conta.</p>}
         {marcos?.length > 0 && <p className="fx-legend"><span className="marco-chave" aria-hidden="true">↑</span> eventos de mercado com data oficial, da agenda do painel e de uma lista conferida. Nome sublinhado abre a fonte; no computador, passe o mouse sobre o nome para ver a origem.</p>}
         {eventos?.length > 0 && (intraday
-          ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre a moeda e o mercado publicadas neste dia, no horário em que saíram. Toque numa bolinha para ler.</p>
-          : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas da moeda no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bolinha para ver as manchetes.</p>)}
+          ? <p className="fx-legend"><span className="fx-dot news" aria-hidden="true" /> Manchetes sobre a moeda e o mercado publicadas neste dia, no horário em que saíram. Toque numa bandeirinha para ler.</p>
+          : <p className="fx-legend"><span className="fx-dot up" aria-hidden="true" /> maiores altas <span className="fx-dot down" aria-hidden="true" /> maiores baixas da moeda no período (variação de 0,5% ou mais, só dias com manchetes guardadas). Toque numa bandeirinha para ver as manchetes.</p>)}
+        {movimento && <p className="fx-legend"><span className={`fx-dot ${movimento.tom}`} aria-hidden="true" /> Maior {movimento.dir} do dia na linha ({brl(movimento.v0)} às {fmtTime(movimento.t0)} → {brl(movimento.bid)} às {fmtTime(movimento.t)}, {signed(movimento.pct, 2)}%): toque na bandeirinha mais alta para ver as manchetes que tratam desse movimento, de qualquer horário.</p>}
       </div>
       {pts && h.fixado && <p className="status pregao-fixado-nota">Pregão de {diaCurto(fixado.dia)} fixado no painel até {diaCurto(fixado.ate)}, com as amostras e as manchetes guardadas daquele dia.</p>}
       {pts && h.warning && <p className="status stale" role="status">{h.warning}</p>}

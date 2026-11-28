@@ -33,7 +33,8 @@ const day = (iso) => iso.split('-').reverse().join('/')
 // `prazo` (opcional, só no eixo BR): { de, ate } em dias úteis; o gráfico mostra só os vértices nesse intervalo, com o eixo em meses
 // (21 dias úteis por mês, a mesma conta do balão). `soUltimo` (opcional): abre só com a curva do último dia ligada; as outras
 // datas seguem na legenda para ligar. Sem essas propriedades, nada muda (página Juros).
-function CurveChart({ title, subtitle, data, mode, source, help, bare = false, escalaDesde = 0, prazo, soUltimo = false }) {
+// `refresh`: arquivos relidos pelo botão de atualizar do cabeçalho; null tira o botão (curva lida de outro lugar, como a NTN-B).
+export function CurveChart({ title, subtitle, data, mode, source, help, bare = false, escalaDesde = 0, prazo, soUltimo = false, refresh = ['curves.json'] }) {
   const [ref, width] = useWidth()
   const [off, setOff] = useState(() => new Set(soUltimo ? (data?.compare ?? []).slice(1).map((c) => c.date) : []))
   const [hover, setHover] = useState(null)
@@ -117,7 +118,7 @@ function CurveChart({ title, subtitle, data, mode, source, help, bare = false, e
             <small>{subtitle}</small>
             <Explain id={help} grafico />
           </h3>
-          <RefreshButton files={['curves.json']} label={title} />
+          {refresh && <RefreshButton files={refresh} label={title} />}
         </header>
       )}
       {/* uma linha curta só; o detalhe das datas de comparação fica no "?" da legenda */}

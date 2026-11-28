@@ -44,7 +44,7 @@ const out = process.env.SMOKE_OUT || '/tmp'
         await p.getByRole('button', { name: 'Fechar detalhes' }).click(); await p.locator('dialog.is-modal').waitFor({ state: 'detached' })
         if (width < 700) {
           // celular: balão do "?" de um gráfico de juros fica na frente do que vem abaixo (nada o cobre)
-          const ajudas = p.locator('.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"]) .chart h3 .help > button'); await ajudas.first().waitFor()
+          const ajudas = p.locator('.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"]):not([id^="juros-ntnb"]) .chart h3 .help > button'); await ajudas.first().waitFor()
           await ajudas.nth(2).scrollIntoViewIfNeeded(); await ajudas.nth(2).click()
           const pop = p.locator('.pop').first(); await pop.waitFor(); await p.waitForTimeout(250)
           const bb = await pop.boundingBox()

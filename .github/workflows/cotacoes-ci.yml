@@ -251,6 +251,17 @@ jobs:
           path: ${{ runner.temp }}/qa-universal/cds
           if-no-files-found: error
           retention-days: 7
+      - name: Conferir NTN-B na aba Juros em notebook e celular
+        run: NTNB_QA_OUTPUT="$RUNNER_TEMP/qa-universal/ntnb" node scripts/smoke-ntnb.cjs
+      - name: Capturas da NTN-B
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ntnb-design
+          overwrite: true
+          path: ${{ runner.temp }}/qa-universal/ntnb
+          if-no-files-found: error
+          retention-days: 7
       - name: Conferir ICMS-ST, motion e movimento reduzido
         run: ICMS_QA_OUTPUT="$RUNNER_TEMP/qa-universal/icms-st" node scripts/smoke-icms-st.cjs
       - name: Capturas e relatório do diagrama ICMS-ST

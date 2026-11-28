@@ -1,7 +1,7 @@
 import { createContext, useContext, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-// Filtros de um gráfico ampliado, num só bloco no topo: período (e datas) e escala dos pontos.
+// Filtros de um gráfico ampliado, numa só linha no topo: período (e datas) || escala dos pontos.
 // O gráfico encaixa o seletor de escala no mesmo bloco, para não haver dois conjuntos de filtros na tela.
 // O bloco vive num nó próprio: ao maximizar o gráfico, a tela cheia leva esse nó para o topo dela,
 // e os filtros continuam à mão sem remontar nada (período, datas e escala ficam como estavam).
@@ -36,6 +36,7 @@ export default function ChartFilters({ children, label = 'Filtros do gráfico' }
   const section = (
     <section className="chart-filters" aria-label={label}>
       <div className="cf-row"><span className="cf-label" aria-hidden="true">Período</span><div className="cf-body">{children}</div></div>
+      <span className="cf-sep" aria-hidden="true">||</span>
       <div className="cf-row cf-scale"><span className="cf-label" aria-hidden="true">Escala</span><div className="cf-body" ref={setSlot} /></div>
     </section>
   )
