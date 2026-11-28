@@ -59,4 +59,27 @@ export function moeda(valor, code) {
   catch { return `${code} ${valor.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}` }
 }
 
+// Valor curto para ler de relance: 83,2 k · 2,8 MM · 1,2 bi (uma casa, sem ",0"). Abaixo de mil, o valor inteiro.
+export function abreviar(v) {
+  if (!Number.isFinite(v)) return ''
+  const a = Math.abs(v)
+  const [div, suf] = a >= 1e9 ? [1e9, ' bi'] : a >= 1e6 ? [1e6, ' MM'] : a >= 1e3 ? [1e3, ' k'] : [1, '']
+  const n = div === 1 ? Math.round(a * 100) / 100 : Math.round((a / div) * 10) / 10
+  return `${v < 0 ? '−' : ''}${n.toLocaleString('pt-BR', { maximumFractionDigits: div === 1 ? 2 : 1 })}${suf}`
+}
+
+const cotacao = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 6 })
+const pctTxt = (p) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+
+// As duas linhas do resultado, uma embaixo da outra:
+// USD 500 k (R$ 5,6525 ~ R$ 2,8 MM)
+// Pagando no trecho selecionado: R$ 83,2 k a menos (−2,94%, cotação final R$ 5,4861)
+export function linhasValor(s, { valor, code, v0, v1 }) {
+  if (!s) return null
+  const inicio = `${code} ${abreviar(valor)} (R$ ${cotacao(v0)} ~ R$ ${abreviar(s.r0)})`
+  const acao = s.lado === 'receber' ? 'Recebendo' : 'Pagando'
+  const efeito = s.efeito === 'igual' ? 'mesmo valor em reais' : `R$ ${abreviar(Math.abs(s.dif))} a ${s.dif > 0 ? 'mais' : 'menos'}`
+  return [inicio, `${acao} no trecho selecionado: ${efeito} (${pctTxt(s.pct)}, cotação final R$ ${cotacao(v1)})`]
+}
+
 export { reais }

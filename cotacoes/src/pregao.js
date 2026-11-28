@@ -28,3 +28,25 @@ export function extremos(points, intradiario) {
   if (hi < 0 || points[hi].bid === points[lo].bid) return null
   return { hi, lo }
 }
+
+// Maior movimento da linha no dia: a maior queda (de uma cotação até a mínima que veio depois) ou a maior alta
+// (de uma cotação até a máxima que veio depois), a que for maior em %. Conta todas as amostras, também a da madrugada,
+// que costuma ser o fechamento da véspera: a queda ou a alta contra ela é justamente o movimento do dia.
+export function maiorMovimento(points) {
+  let melhor = null
+  let iMin = -1, iMax = -1
+  points.forEach((p, j) => {
+    if (!Number.isFinite(p?.bid)) return
+    if (iMin >= 0) {
+      const alta = (p.bid / points[iMin].bid - 1) * 100
+      if (alta > 0 && (!melhor || alta > Math.abs(melhor.pct))) melhor = { de: iMin, ate: j, pct: alta, dir: 'alta' }
+    }
+    if (iMax >= 0) {
+      const queda = (p.bid / points[iMax].bid - 1) * 100
+      if (queda < 0 && (!melhor || -queda > Math.abs(melhor.pct))) melhor = { de: iMax, ate: j, pct: queda, dir: 'queda' }
+    }
+    if (iMin < 0 || p.bid < points[iMin].bid) iMin = j
+    if (iMax < 0 || p.bid > points[iMax].bid) iMax = j
+  })
+  return melhor
+}

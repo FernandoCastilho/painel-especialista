@@ -56,3 +56,21 @@ test('pregão 9h às 18h de Brasília; máxima e mínima ignoram amostras fora d
   assert.equal(noPregao(NaN), false)
   assert.equal(extremos([pts[0], pts[3]], true), null) // tudo fora do pregão
 })
+
+test('valor curto e as duas linhas do resultado, no formato pedido', async () => {
+  const { abreviar, linhasValor } = await import('../src/simulacaoCambio.js')
+  assert.equal(abreviar(500000), '500 k'); assert.equal(abreviar(83200), '83,2 k'); assert.equal(abreviar(2826250), '2,8 MM')
+  assert.equal(abreviar(1500000000), '1,5 bi'); assert.equal(abreviar(950.5), '950,5'); assert.equal(abreviar(999950), '1.000 k')
+  const s = simular({ valor: 500000, v0: 5.6525, v1: 5.4861, lado: 'pagar' })
+  assert.equal(s.dif, -83200)
+  const [l1, l2] = linhasValor(s, { valor: 500000, code: 'USD', v0: 5.6525, v1: 5.4861 })
+  assert.equal(l1, 'USD 500 k (R$ 5,6525 ~ R$ 2,8 MM)')
+  assert.equal(l2, 'Pagando no trecho selecionado: R$ 83,2 k a menos (−2,94%, cotação final R$ 5,4861)')
+  const r = simular({ valor: 500000, v0: 5.6525, v1: 5.4861, lado: 'receber' })
+  assert.match(linhasValor(r, { valor: 500000, code: 'USD', v0: 5.6525, v1: 5.4861 })[1], /^Recebendo no trecho selecionado: R\$ 83,2 k a menos/)
+  const up = simular({ valor: 1000, v0: 5, v1: 5.1, lado: 'pagar' })
+  assert.match(linhasValor(up, { valor: 1000, code: 'EUR', v0: 5, v1: 5.1 })[1], /R\$ 100 a mais \(\+2,00%/)
+  const eq = simular({ valor: 1000, v0: 5, v1: 5, lado: 'pagar' })
+  assert.match(linhasValor(eq, { valor: 1000, code: 'USD', v0: 5, v1: 5 })[1], /mesmo valor em reais \(0,00%/)
+  assert.equal(linhasValor(null, {}), null)
+})
