@@ -168,6 +168,22 @@ export const GLOSSARY = {
     c: 'No Finame Materiais, o FGI (Tradicional ou PEAC) é garantia admitida. Peça ao agente a disponibilidade, o percentual coberto e a comissão.',
     d: 'O Tradicional é o fundo de sempre, mantido pelas comissões das operações. O PEAC nasceu em 2020 como medida temporária, foi reaberto em 2022 e tem regras próprias. O fundo garante só uma parte da operação, e a comissão paga pela empresa depende do produto e do porte. Não substitui a análise de crédito do agente. Fonte: bndes.gov.br/peac.'
   },
+  ntnb: {
+    t: 'NTN-B (Tesouro IPCA+ com Juros Semestrais)',
+    a: 'Título do Tesouro que paga a inflação (IPCA) mais uma taxa fixa. Essa taxa é o juro real: quanto o dinheiro rende acima da inflação até o vencimento. Aqui, a taxa de compra do Tesouro Direto em cada dia.',
+    b: 'NTN-B 2035 a 7,19%: quem compra hoje e leva até 2035 recebe o IPCA do período mais 7,19% ao ano.',
+    c: 'É a principal referência de juro real do Brasil. Serve para comparar operações atreladas à inflação (IPCA + spread) e para ver quanto o mercado cobra acima da inflação em cada prazo.',
+    d: 'É expectativa de mercado para o juro real à frente, não o juro real passado (Selic menos inflação realizada). A diferença entre a taxa prefixada e a NTN-B de mesmo prazo é a inflação implícita (breakeven). A taxa do Tesouro Direto fica um pouco abaixo da taxa de mercado (Anbima), pela margem do Tesouro na venda ao investidor.',
+    l: "Eixo horizontal: o tempo, no período escolhido; eixo vertical: a taxa de compra em % a.a. acima do IPCA, para um único vencimento. O número no canto é quanto a taxa variou no período, em pontos percentuais. Taxa subindo: título mais barato e juro real mais caro para quem toma crédito atrelado ao IPCA; caindo, o contrário. No detalhe, troque o vencimento nos botões ou tocando na linha da tabela."
+  },
+  curvaNtnb: {
+    t: 'Curva da NTN-B (juro real por vencimento)',
+    a: 'A taxa acima do IPCA que o Tesouro paga em cada vencimento da NTN-B, de 2030 a 2060, no último dia disponível, com 1 mês e 1 ano atrás para comparar.',
+    b: 'Se a NTN-B 2030 paga 7,05% e a 2050 paga 7,01%, o mercado cobra praticamente o mesmo juro real no curto e no longo prazo: curva plana.',
+    c: 'Mostra o juro real que o mercado espera para cada prazo. Ajuda a precificar crédito em IPCA + spread no prazo da operação.',
+    d: 'Cada ponto é um título (vencimento em maio ou agosto), não um prazo interpolado. A curva de 1 ano atrás usa os mesmos títulos de hoje que já existiam naquela data.',
+    l: "Eixo horizontal: o ano de vencimento de cada NTN-B; eixo vertical: a taxa em % a.a. acima do IPCA. Ligue as datas na legenda: a linha de hoje abaixo da de 1 mês quer dizer juro real mais baixo (títulos valorizaram). Passe o mouse para ver a taxa de cada vencimento nas três datas."
+  },
   curvaEuro: {
     t: 'Curva de juros da área do euro',
     a: 'Os juros dos títulos de governo AAA da zona do euro para cada prazo, de 3 meses a 30 anos. O BCE estima a curva por um modelo (Svensson) a partir dos preços desses títulos.',
