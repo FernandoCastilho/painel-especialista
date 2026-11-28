@@ -61,6 +61,15 @@ export function Panorama({ slot, quotes, curves }) {
 
   </>
 }
+// Sem os botões de ampliar, o diálogo pode ter um só botão: o Tab circula dentro dele em vez de sair para o navegador.
+const prenderFoco=e=>{
+  if(e.key!=='Tab')return
+  const f=[...e.currentTarget.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])')]
+  if(!f.length)return
+  const i=f.indexOf(document.activeElement)
+  e.preventDefault()
+  f[e.shiftKey?(i<=0?f.length-1:i-1):(i<0||i===f.length-1?0:i+1)].focus()
+}
 // O Panorama nunca abre sozinho: quem abre é o botão "Panorama do dia" do Mercado (usePanorama.js guarda o estado no App).
 export default function MarketPopup({ open, slot, onClose, quotes, curves }) {
   const dialog=useRef(null)
@@ -78,7 +87,7 @@ export default function MarketPopup({ open, slot, onClose, quotes, curves }) {
     }
   },[open])
   const close=onClose
-  return <dialog ref={dialog} className="market-popup" aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}}>
+  return <dialog ref={dialog} className="market-popup" onKeyDown={prenderFoco} aria-labelledby="market-popup-title" aria-describedby="market-popup-note" onCancel={e=>{e.preventDefault();close()}}>
     <div className="mp-ribbon"><span>PME · Panorama de mercado</span><button type="button" aria-label="Fechar panorama" autoFocus onClick={close}>×</button></div>
     <div className="mp-content"><MarketHeading slot={slot}/>{open&&slot&&<Panorama slot={slot} quotes={quotes} curves={curves}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Edições de hora em hora em dias úteis nacionais, das 9h às 18h. O Panorama só abre quando você pede, pelo botão no Mercado.</p></div>
   </dialog>
@@ -101,7 +110,7 @@ export function CdsGrafico({ open, onClose }) {
       if(origem?.isConnected&&origem!==document.body&&origem.getClientRects().length)origem.focus({preventScroll:true})
     }
   },[open])
-  return <dialog ref={dialog} className="market-popup market-popup-cds" aria-label="Gráfico do CDS Brasil 5 anos, 12 meses" onCancel={e=>{e.preventDefault();onClose()}} onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
+  return <dialog ref={dialog} className="market-popup market-popup-cds" onKeyDown={prenderFoco} aria-label="Gráfico do CDS Brasil 5 anos, 12 meses" onCancel={e=>{e.preventDefault();onClose()}} onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
     <div className="mp-ribbon"><span>PME · CDS Brasil 5 anos</span><button type="button" aria-label="Fechar gráfico do CDS" autoFocus onClick={onClose}>×</button></div>
     <div className="mp-content">{open&&<QuoteCard item={marketCds(cdsFile,Date.now())} daily/>}<p className="mp-footnote">Fonte gratuita e não oficial (World Government Bonds), lida a cada 2 horas em dias úteis; não é tempo real. Um ponto por dia de fechamento.</p></div>
   </dialog>
