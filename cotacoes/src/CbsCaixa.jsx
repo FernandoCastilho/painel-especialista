@@ -162,7 +162,7 @@ export default function CbsCaixa({ onBack }) {
             <div>
               <p className="cbs-answer-label">Necessidade adicional de capital de giro</p>
               <p className="cbs-eyebrow">Considerando a espera para usar os créditos</p>
-              <strong className={'cbs-primary-value pct ' + (result.monthlyTaxDelta > 0 ? 'up' : result.monthlyTaxDelta < 0 ? 'down' : 'flat')}>{money(result.reserveDelayed)}</strong>
+              <strong className="cbs-primary-value">{money(result.reserveDelayed)}</strong>
               <p className="cbs-primary-reading">{result.reserveDelayed === 0 ? 'Neste cenário, não apareceu necessidade adicional por mudança de prazos.' : 'Reserva para cobrir a mudança de datas entre receber, pagar o imposto e usar os créditos.'}</p>
               <p>Não mede o giro total. Não é despesa mensal.</p>
             </div>
