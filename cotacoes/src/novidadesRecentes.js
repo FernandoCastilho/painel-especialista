@@ -3,6 +3,13 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '28/11/2026',
+    destaques: ['Cenários: Juros bancários, com a taxa de cada banco por linha de crédito'],
+    items: [
+      'Em Cenários > Juros bancários, logo depois de Projeções, veja a taxa média que cada banco cobrou em cada linha de crédito, da menor para a maior, em % a.m. e % a.a., com a mediana, a menor e a maior. Para empresas: capital de giro, desconto de duplicatas, conta garantida, cheque especial, ACC, vendor e outras. Para pessoas: crédito pessoal, consignado, veículos, cartão e outras. Os grandes bancos aparecem com o logotipo e dá para ver só eles. Digite para escolher a linha ou achar o banco. Os dados são do Banco Central, da última janela de 5 dias úteis, com cerca de duas semanas de atraso. A taxa é o custo médio com encargos, de clientes de todos os portes: compare com o CET da proposta.',
+    ],
+  },
+  {
     date: '27/11/2026',
     destaques: ['Finame: vencimentos pela formalização do contrato', 'Café arábica diário da bolsa de Nova York', 'Máxima e mínima do dia nos cards de cotação', 'Amplitude do dia e café certo na troca de contrato', 'Aprender: TVM e BR GAAP explicados'],
     items: ['Em Calculadoras > Câmbio futuro, um "?" ao lado do título explica o que é câmbio futuro, de onde vem o número (spot e diferença de juros entre reais e dólar), a trava por NDF e o que a tela calcula, com um vídeo do YouTube que mostra a conta em detalhe.',
