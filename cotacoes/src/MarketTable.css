@@ -40,9 +40,5 @@
   .market-open small { font-size:.75rem; }
   .market-meta td { font-size:.75rem; padding-bottom:10px; }
 }
-/* CDS Brasil 5 anos: linha só de leitura (sem gráfico), abaixo do yuan. */
-.market-cds { cursor:default; }
-.market-cds:hover, .market-cds:focus-within { background:transparent; }
-.market-open-static { cursor:default; }
+/* CDS Brasil 5 anos, abaixo do yuan: tocar na linha abre o gráfico de 12 meses, como nas moedas. */
 .market-values .market-unit { color:var(--mut); font-size:.72em; font-weight:400; }
-.market-values td.market-cds-source { white-space:normal; color:var(--mut); line-height:1.3; }

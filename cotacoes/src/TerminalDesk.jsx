@@ -72,9 +72,9 @@ function useDaySeries() {
   return marketPreviews(usd.retainedPoints, eur.retainedPoints, marketDate(Date.now()))
 }
 
-// Indicadores do topo do Mercado: quadros com o título "Mapa de variação – dia",
-// a linha da última consulta (`status`) e, por último, os avisos
-// (`aviso`: feriados; e a linha "Aprender"). Clique num quadro abre o gráfico da moeda ou a aba de juros.
+// Indicadores do topo do Mercado: a linha "Aprender" (com o Conceito do dia), os quadros com o título
+// "Mapa de variação – dia" e, por último, os avisos (`aviso`: feriados). A linha da última consulta (`status`)
+// fica abaixo da tabela do Mercado hoje; aqui só aparece se for passada. Clique num quadro abre o gráfico da moeda ou a aba de juros.
 // Enquanto as cotações não chegam (`loading`), os quadros aparecem como formas vazias no lugar de um texto de espera.
 export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRate, goto, status, aviso, loading }) {
   const series = useDaySeries()
@@ -93,6 +93,8 @@ export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRat
   }
   return (
     <section className="kpi-block" aria-labelledby="kpi-title">
+      {/* Faixa "Aprender" com o Conceito do dia acima do Mapa de variação (pedido de Fernando, 28/11/2026). */}
+      <InsightAprender goto={goto} />
       <h2 id="kpi-title" className="kpi-title">Mapa de variação – dia</h2>
     <div className="kpis" role="group" aria-label="Indicadores principais">
       {items.map((i, ordem) => {
@@ -127,7 +129,6 @@ export function KpiRow({ quotes, rates, ipca, ibov, macro, colors, onOpen, onRat
     </div>
       {status}
       {aviso}
-      <InsightAprender goto={goto} />
     </section>
   )
 }
