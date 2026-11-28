@@ -77,7 +77,9 @@ async function assertWorkspace(page, section, label) {
     return { viewport: document.documentElement.clientWidth, document: document.documentElement.scrollWidth, main: frame.width, left: frame.x, available: main.clientWidth - padding, section: box.width, max: getComputedStyle(element).maxWidth }
   })
   assert.ok(geometry.document <= geometry.viewport + 1, `${label}: documento sem rolagem horizontal ${JSON.stringify(geometry)}`)
-  assert.ok(Math.abs(geometry.main - geometry.viewport) <= 2 && Math.abs(geometry.left) <= 1, `${label}: main ocupa a largura da tela`)
+  // Pedido de 27/11/2026: até 1366 px (notebook) a calculadora ocupa a tela toda; acima disso fica em 1366 px, centralizada.
+  const expected = Math.min(geometry.viewport, 1366)
+  assert.ok(Math.abs(geometry.main - expected) <= 2 && Math.abs(geometry.left - (geometry.viewport - expected) / 2) <= 1, `${label}: main na largura da tela até 1366 px, centralizado acima disso ${JSON.stringify(geometry)}`)
   assert.ok(Math.abs(geometry.section - geometry.available) <= 2, `${label}: calculadora ocupa toda a área útil ${JSON.stringify(geometry)}`)
   assert.ok(geometry.max === 'none' || parseFloat(geometry.max) >= geometry.available, `${label}: sem limite estreito herdado`)
 
