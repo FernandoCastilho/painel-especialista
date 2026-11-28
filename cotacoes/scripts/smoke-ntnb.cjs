@@ -69,8 +69,8 @@ function planilha() {
       await dlg.getByRole('heading', { name: 'Brasil · NTN-B 2060' }).waitFor()
       const tab = dlg.locator('.curve-table')
       assert.equal(await tab.locator('tbody tr').count(), 4)
-      const cab = (await tab.locator('thead th').allInnerTexts()).map((t) => t.trim())
-      assert.equal(cab.length, 5); ['Vencimento', 'Hoje', '1 mês', '1 ano', 'Variação'].forEach((c, i) => assert.ok(cab[i].startsWith(c), `coluna ${c}: ${cab[i]}`))
+      const cab = (await tab.locator('thead th').allTextContents()).map((t) => t.trim().toLowerCase()) // cabeçalho em caixa alta só no estilo
+      assert.equal(cab.length, 5); ['vencimento', 'hoje', '1 mês', '1 ano', 'variação'].forEach((c, i) => assert.ok(cab[i].startsWith(c), `coluna ${c}: ${cab[i]}`))
       assert.match(await tab.locator('tbody tr', { hasText: 'NTN-B 2035' }).innerText(), /7,19% a\.a\.[\s\S]*p\.p\./)
       assert.match(await tab.locator('tbody tr', { hasText: 'NTN-B 2060' }).innerText(), /6,99% a\.a\./)
       assert.equal(await tab.locator('tbody button:not([disabled])').count(), 0, 'linhas da tabela do detalhe não são clicáveis')
