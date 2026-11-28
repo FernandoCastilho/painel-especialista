@@ -108,6 +108,8 @@ async function tela() {
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'sem rolagem lateral na página')
       await p.locator('.market-terminal').evaluate((el) => el.scrollIntoView())
       await p.locator('.market-terminal').screenshot({ path: `${out}/${width}-mercado-hoje.png` })
+      // Conceito do dia logo acima do Mapa de variação – dia.
+      await p.locator('section.kpi-block').first().screenshot({ path: `${out}/${width}-conceito-mapa.png` })
       if (width < 650) {
         const wrap = p.locator('.market-table-wrap')
         await wrap.screenshot({ path: `${out}/${width}-tabela.png` })
