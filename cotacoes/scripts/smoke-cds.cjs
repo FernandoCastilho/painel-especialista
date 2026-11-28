@@ -109,7 +109,9 @@ async function tela() {
       await p.locator('.market-terminal').evaluate((el) => el.scrollIntoView())
       await p.locator('.market-terminal').screenshot({ path: `${out}/${width}-mercado-hoje.png` })
       // Conceito do dia logo acima do Mapa de variação – dia.
-      await p.locator('section.kpi-block').first().screenshot({ path: `${out}/${width}-conceito-mapa.png` })
+      await p.evaluate(() => { const k = document.querySelector('section.kpi-block'); scrollTo(0, k.getBoundingClientRect().top + scrollY - 110) })
+      await p.screenshot({ path: `${out}/${width}-conceito-mapa.png` })
+      await p.locator('.market-terminal').evaluate((el) => el.scrollIntoView())
       if (width < 650) {
         const wrap = p.locator('.market-table-wrap')
         await wrap.screenshot({ path: `${out}/${width}-tabela.png` })
