@@ -20,6 +20,8 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
     const id = setTimeout(() => setAviso(false), ESC_JANELA)
     return () => clearTimeout(id)
   }, [aviso])
+  // Ao sair (por qualquer caminho), o próximo maximizar começa sem Esc armado
+  useLayoutEffect(() => { if (!expanded) { primeiroEsc.current = 0; setAviso(false) } }, [expanded])
   // 1º Esc arma e avisa; 2º Esc dentro da janela sai
   const esc = () => {
     const agora = Date.now()
@@ -38,8 +40,13 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
     } else origin.appendChild(host)
     const close = () => setExpanded(false)
     window.addEventListener('hashchange', close)
+    // Os filtros vêm de outro portal, fora desta árvore do React: o Esc dado neles é contado aqui.
+    const escFiltros = event => { if (event.key === 'Escape' && !event.defaultPrevented) { event.preventDefault(); esc() } }
+    const filtrosHost = expanded && filtros ? filtros.host : null
+    filtrosHost?.addEventListener('keydown', escFiltros)
     return () => {
       window.removeEventListener('hashchange', close)
+      filtrosHost?.removeEventListener('keydown', escFiltros)
       if (expanded) {
         modal.close()
         origin.appendChild(host)
@@ -50,7 +57,14 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
     }
   }, [expanded, disabled, host, filtros])
   if (disabled || !host) return children
-  const keepEscapeInside = event => { if (expanded && event.key === 'Escape') event.stopPropagation() }
+  // Esc dentro da tela cheia: o alvo trata primeiro (por exemplo, limpa a seleção). Se ninguém o tratou,
+  // contamos aqui o Esc duplo e impedimos o pedido de fechamento do navegador: sem isso,
+  // o Chrome agrupa diálogos abertos e o segundo Esc fecharia também o painel de fundo.
+  const keepEscapeInside = event => {
+    if (!expanded || event.key !== 'Escape') return
+    event.stopPropagation()
+    if (!event.defaultPrevented) { event.preventDefault(); esc() }
+  }
   const content = <>
     <div className="chart-fullscreen-toolbar" onKeyDown={keepEscapeInside}><button ref={button} type="button" className={expanded ? 'btn-sair' : 'btn-expand'} aria-label={expanded ? 'Fechar gráfico maximizado' : 'Maximizar gráfico'} title={expanded ? undefined : 'Ampliar'} aria-expanded={expanded} onClick={event => { event.stopPropagation(); setExpanded(value => !value) }}>{expanded ? 'Fechar ×' : <ExpandIcon />}</button></div>
     <div className="chart-fullscreen-content" onKeyDown={keepEscapeInside}>{children}</div>
@@ -58,11 +72,7 @@ export default function ChartFullscreen({ children, disabled = false, compact = 
   </>
   return <>
     <div ref={inline} className={'chart-fullscreen' + (compact ? ' chart-fullscreen-compact' : '')} />
-    <dialog ref={dialog} className="chart-fullscreen is-expanded" aria-label="Gráfico maximizado" onCancel={event => { event.preventDefault(); event.stopPropagation(); esc() }} onClose={() => { if (expanded) setExpanded(false) }} onKeyDown={event => {
-      // O alvo trata primeiro Escape (por exemplo, limpa a seleção). Não o
-      // cancelamos aqui: sem seleção, o navegador dispara cancel no dialog.
-      if (event.key === 'Escape') event.stopPropagation()
-    }} />
+    <dialog ref={dialog} className="chart-fullscreen is-expanded" aria-label="Gráfico maximizado" onCancel={event => { event.preventDefault(); event.stopPropagation(); esc() }} onClose={() => { if (expanded) setExpanded(false) }} onKeyDown={keepEscapeInside} />
     {createPortal(content, host)}
   </>
 }

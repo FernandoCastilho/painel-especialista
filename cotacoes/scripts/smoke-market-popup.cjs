@@ -95,7 +95,7 @@ const intraday={generatedAt:instant.getTime(),series:Object.fromEntries(['USD','
      const maximized=modal.locator('dialog.chart-fullscreen[open]')
      const rect=await maximized.boundingBox()
      assert.equal(rect.width,viewport.width);assert.equal(rect.height,viewport.height,'gráfico '+key+' ocupa altura inteira')
-     await p.keyboard.press('Escape')
+     await p.keyboard.press('Escape');await p.keyboard.press('Escape') // sair do maximizado: Esc duas vezes
      assert.equal(await modal.evaluate(e=>e.open),true)
     }
    }
@@ -111,7 +111,7 @@ const intraday={generatedAt:instant.getTime(),series:Object.fromEntries(['USD','
   await expanded.waitFor()
   const full=await expanded.boundingBox()
   assert.equal(full.width,width);assert.equal(full.height,900)
-  await p.keyboard.press('Escape')
+  await p.keyboard.press('Escape');await p.keyboard.press('Escape')
   assert.equal(await expanded.count(),0)
   assert.equal(await modal.evaluate(e=>e.open),true,'restaurar não fecha Panorama')
   assert.equal(await maximize.evaluate(e=>e===document.activeElement),true,'foco volta à miniatura')
