@@ -24,6 +24,6 @@ jobs:
           try { const r = await fetch(u, { headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-coleta)' }, signal: AbortSignal.timeout(50000) }); console.log('fetch', r.status, r.url, (await r.text()).length) }
           catch (e) { console.log('fetch ERR', e.message, e.cause?.code, e.cause?.message) }
           JS
-          node /tmp/f.mjs "$U"
-          node /tmp/f.mjs 'https://www.tesourotransparente.gov.br/'
-          node /tmp/f.mjs 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json'
+          for u in 'https://www.tesourodireto.com.br/json/br/com/b3/tesourodireto/service/api/treasurybondsinfo.json' 'https://www4.bcb.gov.br/pom/demab/negociacoes/download/NegT202610.ZIP' 'https://www.bcb.gov.br/' 'https://sisweb.tesouro.gov.br/' 'https://www.tesouro.gov.br/'; do node /tmp/f.mjs "$u"; done
+          timeout 60 curl -s -o /tmp/neg.zip -w '%{http_code} %{size_download}\n' 'https://www4.bcb.gov.br/pom/demab/negociacoes/download/NegT202610.ZIP' || true
+          (cd /tmp && unzip -o -q neg.zip && ls -la && head -5 *.csv *.CSV 2>/dev/null; grep -i "NTN-B" *.csv *.CSV 2>/dev/null | head -5) || true
