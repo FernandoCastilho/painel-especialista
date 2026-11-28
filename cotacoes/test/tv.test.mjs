@@ -85,9 +85,11 @@ test('botão TV abre a escolha do canal sem carregar vídeo; troca, tamanho e fe
   assert.equal([legenda.props.children].flat().join(''), 'Inglês · último assistido')
 })
 
-test('botão TV fica no menu ao lado de Mais e a TV está montada fora das seções', () => {
+test('botão TV fica ao lado de Mais (no celular, dentro do Mais) e a TV está montada fora das seções', () => {
   const nav = readFileSync(new URL('../src/Nav.jsx', import.meta.url), 'utf8')
-  assert.match(nav, /<span>Mais<\/span>[\s\S]*data-tv-trigger[\s\S]*new Event\('painel:tv'\)[\s\S]*<span>TV<\/span>/)
+  assert.match(nav, /const abrirTv = \(\) => \{ setMore\(false\); window\.dispatchEvent\(new Event\('painel:tv'\)\) \}/)
+  assert.match(nav, /<span>Mais<\/span>[\s\S]*\{!desktop && <div role="group" aria-label="Ao vivo">[\s\S]*role="menuitem"[\s\S]*abrirTv\(\)[\s\S]*<span>TV ao vivo<\/span>/)
+  assert.match(nav, /<\/div>\s*\{desktop && <button type="button" className="nav-tv" data-tv-trigger[^>]*onClick=\{abrirTv\}>[\s\S]*<span>TV<\/span>/)
   assert.equal(TV_EVENTO, 'painel:tv')
   assert.match(readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8'), /<RpnDock[^\n]*\n\s*<TvDock \/>/)
 })

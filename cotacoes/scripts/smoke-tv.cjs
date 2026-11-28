@@ -1,4 +1,4 @@
-// Teste de tela da TV ao vivo (pedido de Fernando, 28/11/2026): botão TV ao lado de Mais, escolha do canal antes de
+// Teste de tela da TV ao vivo (pedido de Fernando, 28/11/2026): botão TV ao lado de Mais (no celular, dentro do Mais), escolha do canal antes de
 // carregar o vídeo, tamanhos P/M/G, TV aberta ao trocar de seção e fechar. O YouTube é simulado: o teste não
 // comprova que a transmissão está no ar, só a montagem da tela e o endereço pedido. Gera as capturas do artefato.
 const { chromium } = require('playwright')
@@ -38,15 +38,26 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       if (await aviso.isVisible().catch(() => false)) await page.keyboard.press('Escape')
       await page.evaluate(() => document.fonts.ready)
 
-      const botao = page.locator('[data-tv-trigger]:visible')
-      assert.equal(await botao.count(), 1, `${nome}: um botão TV visível`)
-      const caixaBotao = await botao.boundingBox()
-      assert.ok(caixaBotao.width >= 36 && caixaBotao.height >= 36, `${nome}: botão TV pequeno demais ${JSON.stringify(caixaBotao)}`)
-      assert.ok(caixaBotao.x + caixaBotao.width <= viewport.width, `${nome}: botão TV fora da tela`)
-      const mais = await page.locator('.more-tab > button:visible').boundingBox()
-      assert.ok(Math.abs(mais.y - caixaBotao.y) < 12 && caixaBotao.x > mais.x, `${nome}: TV deve ficar logo depois de Mais`)
-
-      await botao.click()
+      // Computador: botão TV logo depois de Mais. Celular e tablet: o menu de baixo não tem espaço para mais um
+      // botão de 44 px, então a TV é o último item do Mais.
+      const mais = page.locator('.more-tab > button:visible')
+      const caixaMais = await mais.boundingBox()
+      if (viewport.width >= 1000) {
+        const botao = page.locator('.nav-tv:visible')
+        assert.equal(await botao.count(), 1, `${nome}: um botão TV visível`)
+        const caixaBotao = await botao.boundingBox()
+        assert.ok(caixaBotao.width >= 44 && caixaBotao.height >= 44, `${nome}: botão TV pequeno demais ${JSON.stringify(caixaBotao)}`)
+        assert.ok(caixaBotao.x + caixaBotao.width <= viewport.width, `${nome}: botão TV fora da tela`)
+        assert.ok(Math.abs(caixaMais.y - caixaBotao.y) < 12 && caixaBotao.x > caixaMais.x, `${nome}: TV deve ficar logo depois de Mais`)
+        await botao.click()
+      } else {
+        assert.equal(await page.locator('.nav-tv:visible').count(), 0, `${nome}: sem botão TV no menu de baixo`)
+        await mais.click()
+        const item = page.getByRole('menuitem', { name: 'TV ao vivo' })
+        const caixaItem = await item.boundingBox()
+        assert.ok(caixaItem.height >= 44 && caixaItem.y >= 0, `${nome}: item TV do Mais ${JSON.stringify(caixaItem)}`)
+        await item.click()
+      }
       const tv = page.getByRole('dialog', { name: 'TV ao vivo' })
       await tv.waitFor()
       assert.equal(await tv.locator('iframe').count(), 0, `${nome}: vídeo não carrega antes da escolha`)
@@ -79,6 +90,7 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
 
       await tv.getByRole('button', { name: 'Fechar TV' }).click()
       assert.equal(await page.getByRole('dialog', { name: 'TV ao vivo' }).count(), 0, `${nome}: TV não fechou`)
+      assert.equal(await page.evaluate(() => document.activeElement?.hasAttribute('data-tv-trigger')), true, `${nome}: foco volta para TV ou Mais`)
       await context.close()
     }
     assert.deepEqual(erros, [])

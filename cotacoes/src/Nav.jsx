@@ -72,6 +72,7 @@ export default function Nav({ tab, onTab, desktop = false }) {
       document.removeEventListener('focusin', onFocus)
     }
   }, [more])
+  const abrirTv = () => { setMore(false); window.dispatchEvent(new Event('painel:tv')) }
   const menuKey = (event) => {
     if (event.key === 'Tab') { setMore(false); trigger.current?.focus(); return }
     const items = [...(menu.current?.querySelectorAll('[role="menuitem"]') || [])]
@@ -92,7 +93,7 @@ export default function Nav({ tab, onTab, desktop = false }) {
         </button>
       ))}
       <div className="more-tab">
-        <button type="button" className={secondary.some((t) => t.id === tab) ? 'on' : ''} ref={trigger} id={`${menuId}-trigger`} aria-expanded={more} aria-haspopup="menu" aria-controls={more ? menuId : undefined}
+        <button type="button" className={secondary.some((t) => t.id === tab) ? 'on' : ''} ref={trigger} data-tv-trigger={desktop ? undefined : ''} id={`${menuId}-trigger`} aria-expanded={more} aria-haspopup="menu" aria-controls={more ? menuId : undefined}
           onKeyDown={event => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); firstItem.current = event.key === 'ArrowUp' ? -1 : 0; setMore(true) } }}
           onClick={() => { firstItem.current = 0; setMore((m) => !m) }}>
           {!desktop && <Icon d={DOTS} />}
@@ -106,14 +107,20 @@ export default function Nav({ tab, onTab, desktop = false }) {
                 <span>{t.label}</span>
               </button>
             ))}</div>)}
+            {/* No celular o menu de baixo não tem espaço para mais um botão de 44 px: a TV fica no fim do Mais. */}
+            {!desktop && <div role="group" aria-label="Ao vivo"><div className="more-group-title" aria-hidden="true">Ao vivo</div>
+              <button type="button" role="menuitem" tabIndex={-1} aria-haspopup="dialog" onClick={() => { trigger.current?.focus(); abrirTv() }}>
+                <Icon d={TV} />
+                <span>TV ao vivo</span>
+              </button>
+            </div>}
           </div>
         )}
       </div>
-      <button type="button" className="nav-tv" data-tv-trigger aria-haspopup="dialog" aria-label="TV ao vivo" title="TV ao vivo"
-        onClick={() => { setMore(false); window.dispatchEvent(new Event('painel:tv')) }}>
+      {desktop && <button type="button" className="nav-tv" data-tv-trigger aria-haspopup="dialog" aria-label="TV ao vivo" title="TV ao vivo" onClick={abrirTv}>
         <Icon d={TV} />
         <span>TV</span>
-      </button>
+      </button>}
       {desktop && <span className="topbar-mark" aria-hidden="true" hidden={!mark} style={mark ? { width: mark.w, translate: `${mark.x}px ${mark.y}px` } : undefined} />}
     </nav>
   )
