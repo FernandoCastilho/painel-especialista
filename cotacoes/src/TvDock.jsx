@@ -26,8 +26,9 @@ export default function TvDock() {
   useLayoutEffect(() => {
     if (!aberta) return undefined
     const medir = () => {
-      const menu = document.querySelector('.nav-top')
-      const fixo = menu && getComputedStyle(menu).position === 'fixed' && menu.offsetHeight
+      // Menu de baixo: no celular quem fica preso embaixo é o próprio nav; no tablet, a caixa .nav-top em volta dele.
+      const menu = document.querySelector('.nav-top > nav')
+      const fixo = menu?.offsetHeight && [menu, menu.parentElement].some(el => getComputedStyle(el).position === 'fixed')
       setBase(fixo ? window.innerHeight - menu.getBoundingClientRect().top + 8 : null)
     }
     medir()
