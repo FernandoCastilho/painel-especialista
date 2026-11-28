@@ -10,6 +10,8 @@ import { marketDate } from './marketReturns.js'
 import { quoteHealth } from './dataHealth.js'
 const MarketContext = lazy(() => import('./MarketContext.jsx'))
 const Outros = lazy(() => import('./Outros.jsx'))
+// Gráfico do CDS aberto pela tabela do Mercado: mesmo quadro e filtros do dólar, sem o modo intradiário.
+const CdsChart = lazy(() => import('./CdsChart.jsx'))
 const Calculadora = lazy(() => import('./Calculadora.jsx'))
 const RecuperacaoJudicial = lazy(() => import('./RecuperacaoJudicial.jsx'))
 const Inadimplencia = lazy(() => import('./Inadimplencia.jsx'))
@@ -86,18 +88,19 @@ const rangeFor = (days) => {
   return { start, end }
 }
 
-function Period({ range, preset, onPreset, onDates, day, onDay, fixado, onFixado }) {
+// `semDia`: séries só com fechamentos diários (CDS) não oferecem o dia intradiário nem o pregão fixado.
+function Period({ range, preset, onPreset, onDates, day, onDay, fixado, onFixado, semDia = false }) {
   const today = toInput(new Date())
   return (
     <div className="period">
       <div className="seg" role="group" aria-label="Período">
-        {PRESETS.map((p) => (
+        {(semDia ? PRESETS.filter((p) => p.id !== 'day') : PRESETS).map((p) => (
           <button key={p.id} type="button" aria-pressed={preset === p.id} onClick={() => onPreset(p)}>
             {p.label}
           </button>
         ))}
       </div>
-      {fixado && (
+      {fixado && !semDia && (
         <button type="button" className="btn pregao-fixado-btn" aria-pressed={preset === 'day' && toInput(day) === fixado.dia} title={`Dia marcante guardado no painel até ${diaCurto(fixado.ate)}`} onClick={onFixado}>
           Pregão fixado: {diaCurto(fixado.dia)}
         </button>
@@ -335,7 +338,7 @@ export default function App() {
 
       {tab === 'resumo' && (
         <>
-          <Resumo aviso={<HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />} loading={feed === 'loading'} searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} panorama={panorama} />
+          <Resumo aviso={<HolidayNotice hol={hol} pracas={['BR', 'NY', 'CN', 'JP']} expanded />} loading={feed === 'loading'} searchTarget={searchSelection?.doc} quotes={quotes} macro={macro} curves={curves} ptax={macro.data?.ptax} onOpen={(code, selection) => { if (code === 'CDS' && (!selection || selection.intraday)) selection = { id: '360', days: 360 }; if (selection) { setPreset(selection.intraday ? 'day' : ({ week: '7', month: '30', year: 'custom' })[selection.id] || selection.id); if (selection.range) setRange(selection.range); else if (!selection.intraday) setRange(rangeFor(selection.days)); else setDay(selection.day ? fromInput(selection.day) : fromInput(marketDate(Date.now()))); setNotice('') } setOpen(code) }} goto={goto} colors={COLORS} status={quoteStatus} quoteRefresh={quoteRefresh} panorama={panorama} />
 
         </>
       )}
@@ -385,9 +388,11 @@ export default function App() {
 
       {open && (
         <Sheet onClose={() => setOpen(null)}>
-          <ChartFilters><Period range={range} preset={preset} onPreset={onPreset} onDates={onDates} day={day} onDay={onDay} fixado={fixado} onFixado={onFixado} /></ChartFilters>
+          <ChartFilters><Period range={range} preset={preset} onPreset={onPreset} onDates={onDates} day={day} onDay={onDay} fixado={fixado} onFixado={onFixado} semDia={open === 'CDS'} /></ChartFilters>
           {notice && <p role="status">{notice}</p>}
-          {open === 'PAR' ? (
+          {open === 'CDS' ? (
+            <CdsChart start={range.start} end={range.end} />
+          ) : open === 'PAR' ? (
             <ParityChart color={COLORS.PAR} start={range.start} end={range.end} day={preset === 'day' ? day : null} />
           ) : (
             openCurrency && (

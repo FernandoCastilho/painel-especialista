@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseCdsText, buildCdsData, cdsFailure, cdsDue, cdsView, referenceFor, spDate, chartHistory, closeDate } from '../src/cds.js'
+import { parseCdsText, buildCdsData, cdsFailure, cdsDue, cdsView, referenceFor, spDate, chartHistory, closeDate, cdsSerie } from '../src/cds.js'
 
 // Trecho do texto da página já carregada (World Government Bonds, 27/11/2026), como o navegador o entrega.
 const PAGINA = `SOVEREIGN CREDIT DEFAULT SWAP
@@ -168,4 +168,11 @@ test('CDS: histórico guardado fica em 12 meses mesmo com coletas acumuladas', (
   const velho = { history: Array.from({ length: 500 }, (_, i) => { const t = T - (500 - i) * DIA; return { date: spDate(t), value: 160, observedAt: t } }) }
   const d = buildCdsData(velho, parseCdsText(PAGINA), NOW)
   assert.ok(d.history.length <= 367 && d.history[0].observedAt >= T - 366 * DIA)
+})
+
+test('CDS: série do gráfico aberto pela tabela usa datas de fechamento, em ordem, sem pontos inválidos', () => {
+  const pts = [['2026-11-24', 176.98], ['2026-11-23', 175.36], ['2026-11-25', 'x'], ['2026-11-26', 171.3]].map(([date, value]) => ({ date, value, observedAt: Date.parse(date) }))
+  assert.deepEqual(cdsSerie({ datedBy: 'fechamento', history: pts }).map((p) => [p.date, p.value]), [['2026-11-23', 175.36], ['2026-11-24', 176.98], ['2026-11-26', 171.3]])
+  assert.deepEqual(cdsSerie({ history: pts }).map((p) => p.date), ['2026-11-20', '2026-11-23', '2026-11-25'], 'arquivo antigo: data da publicação vira a do fechamento')
+  assert.deepEqual(cdsSerie(null), [])
 })
