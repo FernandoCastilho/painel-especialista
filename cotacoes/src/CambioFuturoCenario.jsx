@@ -157,15 +157,15 @@ function formatMoneyText(text) {
   return amount + ',' + cents.padEnd(2, '0')
 }
 
-export function Input({ id, label, value, change, type = 'text', error, compact, min, money }) {
+export function Input({ id, label, value, change, type = 'text', error, compact, min, money, fixar }) {
   const [editing, setEditing] = useState(false)
   const displayed = money && !editing ? formatMoneyText(value) : value
   return <div className={`cx-field${compact ? ' cf-c-compact-field' : ''}`}>
     <label htmlFor={id}>{label}</label>
     <input id={id} type={type} min={min} inputMode={type === 'text' ? 'decimal' : undefined} autoComplete="off"
       value={displayed} onChange={event => change(event.target.value)}
-      // Cotações (texto não monetário) ficam no padrão brasileiro ao sair do campo; valores em dinheiro já aparecem formatados fora da edição.
-      onFocus={money ? () => setEditing(true) : undefined} onBlur={money ? () => setEditing(false) : type === 'text' ? formatarAoSair(parseDecimal, change) : undefined}
+      // Cotações ficam no padrão brasileiro ao sair do campo, gravadas por fixar (sem os efeitos de change); dinheiro já aparece formatado fora da edição.
+      onFocus={money ? () => setEditing(true) : undefined} onBlur={money ? () => setEditing(false) : fixar ? formatarAoSair(parseDecimal, fixar) : undefined}
       aria-invalid={error ? true : undefined}
       aria-describedby={error ? id + '-erro' : undefined} />
     {error && <small id={id + '-erro'} className="cf-resultado-status">{error}</small>}
@@ -282,6 +282,8 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
       !window.confirm('Diminuir a quantidade descarta as últimas parcelas preenchidas. Continuar?')) return
     setRows(old => Array.from({ length: n }, (_, i) => old[i] ?? rowVazia('p' + (i + 1))))
   }
+  // Só regrava o texto formatado: não desmarca trava contratada nem zera o status da conversão.
+  const fixarLinha = (id, key, value) => setRows(old => old.map(row => row.id === id ? { ...row, [key]: value } : row))
   const mudarLinha = (id, key, value) => {
     const current = rows.find(row => row.id === id)
     if (key === 'vencimento' && current?.vencimento !== value && (current?.taxaTrava || current?.taxaCenario || current?.taxaCruzada) &&
@@ -419,12 +421,12 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
             error={inicio && row.vencimento && row.vencimento <= inicio ? 'O vencimento deve ser posterior à data inicial.' : undefined} />
           <Input compact={!crossed} money id={`cf-c-${row.id}-valor`} label={`Valor da parcela ${i + 1} (${code})`} value={row.valorMoeda} change={v => mudarLinha(row.id, 'valorMoeda', v)} error={validacao[i].valorMoeda.error} />
           {!crossed ? <>
-            <Input compact id={`cf-c-${row.id}-trava`} label={`Cotação contratada da parcela ${i + 1} (R$/${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
-            <Input compact id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava da parcela ${i + 1} (R$/${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
+            <Input compact id={`cf-c-${row.id}-trava`} label={`Cotação contratada da parcela ${i + 1} (R$/${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} fixar={v => fixarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
+            <Input compact id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava da parcela ${i + 1} (R$/${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} fixar={v => fixarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
           </> : <div className="cf-c-cross-fields">
             <div className="cf-c-cross-step">
               <h4>1. Converter USD em {hedge}</h4>
-              <Input id={`cf-c-${row.id}-cross`} label={`Cotação da conversão (${hedge} por USD)`} value={row.taxaCruzada} change={v => mudarLinha(row.id, 'taxaCruzada', v)} error={validacao[i].taxaCruzada.error} />
+              <Input id={`cf-c-${row.id}-cross`} label={`Cotação da conversão (${hedge} por USD)`} value={row.taxaCruzada} change={v => mudarLinha(row.id, 'taxaCruzada', v)} fixar={v => fixarLinha(row.id, 'taxaCruzada', v)} error={validacao[i].taxaCruzada.error} />
               <div className="cx-field">
                 <label htmlFor={`cf-c-${row.id}-cross-status`}>Status da conversão</label>
                 <select id={`cf-c-${row.id}-cross-status`} value={row.statusCruzada} onChange={e => mudarLinha(row.id, 'statusCruzada', e.target.value)}>
@@ -435,13 +437,13 @@ export default function CambioFuturoCenario({ onBack, quotes }) {
             </div>
             <div className="cf-c-cross-step">
               <h4>2. Converter {hedge} em reais</h4>
-              <Input id={`cf-c-${row.id}-trava`} label={`Cotação futura (R$ por ${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
+              <Input id={`cf-c-${row.id}-trava`} label={`Cotação futura (R$ por ${hedge})`} value={row.taxaTrava} change={v => mudarLinha(row.id, 'taxaTrava', v)} fixar={v => fixarLinha(row.id, 'taxaTrava', v)} error={validacao[i].taxaTrava.error} />
               <label className="cf-c-cross-check"><input type="checkbox" checked={row.contratadaBrl}
                 onChange={e => mudarLinha(row.id, 'contratadaBrl', e.target.checked)} /> Trava em reais contratada para esta parcela</label>
             </div>
             <div className="cf-c-cross-step cf-c-cross-scenario">
               <h4>Comparação opcional</h4>
-              <Input id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava (R$ por ${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
+              <Input id={`cf-c-${row.id}-cenario`} label={`Cenário sem trava (R$ por ${code})`} value={row.taxaCenario} change={v => mudarLinha(row.id, 'taxaCenario', v)} fixar={v => fixarLinha(row.id, 'taxaCenario', v)} error={validacao[i].taxaCenario.error} />
             </div>
           </div>}
         </fieldset>)}
