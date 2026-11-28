@@ -1,18 +1,25 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { parseTaxas, median, pct, brDate, matchesBank, modalityLabel, bankBrand, rankRows, TAXAS_SEGMENTS } from '../src/taxasJuros.js'
+import { parseTaxas, median, pct, brDate, matchesBank, matchesText, modalityLabel, bankBrand, rankRows, TAXAS_SEGMENTS } from '../src/taxasJuros.js'
 import { indexSearchData } from '../src/globalSearch.js'
 import { CEN_VIEWS } from '../src/cenariosViews.js'
 
 const period = { inicio: '2026-11-06', fim: '2026-11-12' }
 const row = (Modalidade, InstituicaoFinanceira, TaxaJurosAoMes, TaxaJurosAoAno) => ({ Modalidade, InstituicaoFinanceira, TaxaJurosAoMes, TaxaJurosAoAno })
-const GIRO = TAXAS_SEGMENTS[0].defaultModality
+const GIRO = 'Capital de giro com prazo superior a 365 dias - Prefixado'
+const ACC = 'Adiantamento sobre contratos de câmbio (ACC) - Pós-fixado referenciado em moeda estrangeira'
 
 test('Juros bancários fica em Cenários, logo depois de Projeções e antes do Calendário econômico', () => {
   const ids = CEN_VIEWS.map(v => v.id)
   assert.deepEqual(ids.slice(0, 3), ['projecoes', 'juros-bancarios', 'calendario'])
   assert.equal(CEN_VIEWS[1].label, 'Juros bancários')
+})
+
+test('empresas abrem no ACC, com o nome exato do BC; pessoas, no crédito pessoal não consignado', () => {
+  assert.equal(TAXAS_SEGMENTS.find(s => s.id === 'pj').defaultModality, ACC)
+  assert.equal(modalityLabel(ACC), 'ACC · pós (moeda estrangeira)')
+  assert.equal(TAXAS_SEGMENTS.find(s => s.id === 'pf').defaultModality, 'Crédito pessoal não consignado - Prefixado')
 })
 
 test('taxas do BC ficam agrupadas por modalidade, da menor para a maior taxa, na ordem fixa das modalidades', () => {
@@ -50,6 +57,9 @@ test('mediana, posição com empate, porcentagem com duas casas, data brasileira
   assert.ok(matchesBank('BCO DO ESTADO DO RS S.A.', 'banrisul'))
   assert.ok(matchesBank('BCO DO BRASIL S.A.', ''))
   assert.ok(!matchesBank('BCO SAFRA S.A.', 'itau'))
+  assert.ok(!matchesText('ACC · pós (moeda estrangeira)', 'câmbio'))
+  assert.ok(matchesText(ACC, 'cambio'))
+  assert.ok(matchesText('Desconto de duplicatas · pré', 'DUPLI'))
 })
 
 test('marca de cada banco: logotipo dos grandes, iniciais para os demais, sem destaque para nenhum', () => {

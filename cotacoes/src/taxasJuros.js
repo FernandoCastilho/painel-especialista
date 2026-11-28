@@ -5,7 +5,7 @@ export const TAXAS_METHOD_PAGE = 'https://dadosabertos.bcb.gov.br/dataset/taxas-
 export const TAXAS_API = 'https://olinda.bcb.gov.br/olinda/servico/taxaJuros/versao/v2/odata/TaxasJurosDiariaPorInicioPeriodo'
 // Empresas primeiro: é o público principal do painel.
 export const TAXAS_SEGMENTS = [
-  { id: 'pj', bc: 'PESSOA JURÍDICA', label: 'Empresas', defaultModality: 'Capital de giro com prazo superior a 365 dias - Prefixado' },
+  { id: 'pj', bc: 'PESSOA JURÍDICA', label: 'Empresas', defaultModality: 'Adiantamento sobre contratos de câmbio (ACC) - Pós-fixado referenciado em moeda estrangeira' },
   { id: 'pf', bc: 'PESSOA FÍSICA', label: 'Pessoas', defaultModality: 'Crédito pessoal não consignado - Prefixado' },
 ]
 
@@ -112,4 +112,5 @@ export const rankRows = rows => rows.map(([bank, am, aa]) => ({ bank, am, aa, po
 export const pct = value => Number.isFinite(value) ? `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%` : '—'
 export const brDate = iso => isoDate(iso) ? iso.split('-').reverse().join('/') : '—'
 const fold = text => String(text).normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('pt-BR')
-export const matchesBank = (bank, query) => { const q = fold(query.trim()), short = bankBrand(bank).short; return fold(bank).includes(q) || (short ? fold(short).includes(q) : false) }
+export const matchesText = (text, query) => fold(text).includes(fold(query.trim()))
+export const matchesBank = (bank, query) => { const short = bankBrand(bank).short; return matchesText(bank, query) || (short ? matchesText(short, query) : false) }
