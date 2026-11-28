@@ -92,26 +92,3 @@ export default function MarketPopup({ open, slot, onClose, quotes, curves }) {
     <div className="mp-content"><MarketHeading slot={slot}/>{open&&slot&&<Panorama slot={slot} quotes={quotes} curves={curves}/>}<p id="market-popup-note" className="mp-footnote">Cada cartão mantém a data e a natureza da fonte. Valores indicativos; fontes diárias não são cotações em tempo real. Edições de hora em hora em dias úteis nacionais, das 9h às 18h. O Panorama só abre quando você pede, pelo botão no Mercado.</p></div>
   </dialog>
 }
-
-// Gráfico do CDS aberto pela linha "CDS 5 anos" da tabela do Mercado hoje (pedido de Fernando, 28/11/2026):
-// o mesmo cartão do Panorama, sozinho e com o gráfico maior, 12 meses de histórico diário.
-export function CdsGrafico({ open, onClose }) {
-  const dialog=useRef(null)
-  const cdsFile=useCds()
-  useEffect(()=>{
-    const el=dialog.current
-    if(!open||!el)return undefined
-    const origem=document.activeElement, overflow=document.body.style.overflow
-    el.showModal()
-    document.body.style.overflow='hidden'
-    return ()=>{
-      if(el.open)el.close()
-      document.body.style.overflow=overflow
-      if(origem?.isConnected&&origem!==document.body&&origem.getClientRects().length)origem.focus({preventScroll:true})
-    }
-  },[open])
-  return <dialog ref={dialog} className="market-popup market-popup-cds" onKeyDown={prenderFoco} aria-label="Gráfico do CDS Brasil 5 anos, 12 meses" onCancel={e=>{e.preventDefault();onClose()}} onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
-    <div className="mp-ribbon"><span>PME · CDS Brasil 5 anos</span><button type="button" aria-label="Fechar gráfico do CDS" autoFocus onClick={onClose}>×</button></div>
-    <div className="mp-content">{open&&<QuoteCard item={marketCds(cdsFile,Date.now())} daily/>}<p className="mp-footnote">Fonte gratuita e não oficial (World Government Bonds), lida a cada 2 horas em dias úteis; não é tempo real. Um ponto por dia de fechamento.</p></div>
-  </dialog>
-}

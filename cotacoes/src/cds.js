@@ -40,6 +40,9 @@ const closeDated = (history, datedBy) => {
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))
 }
 
+// Série diária de fechamentos do arquivo (formato antigo convertido), para o gráfico aberto pela tabela.
+export const cdsSerie = (data) => closeDated(validHistory(data?.history), data?.datedBy)
+
 // Texto da página já carregada -> { value, observedAt }. Enquanto a página mostra "----", não há leitura.
 export function parseCdsText(text) {
   const t = String(text ?? '').replace(/\s+/g, ' ')

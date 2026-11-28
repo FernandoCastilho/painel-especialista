@@ -42,7 +42,6 @@ import { useCds } from './useCds.js'
 import { cdsView } from './cds.js'
 const CuradoriaNoticias = lazy(() => import('./CuradoriaNoticias.jsx'))
 const RateModal = lazy(() => import('./RateModal.jsx'))
-const CdsGrafico = lazy(() => import('./MarketPopup.jsx').then((m) => ({ default: m.CdsGrafico })))
 
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}`
 const pct = (v) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2).replace('.', ',')}%`
@@ -443,20 +442,17 @@ export function useCambio(quotes, ptax) {
 
 // CDS Brasil 5 anos (risco-país) logo abaixo do yuan, na mesma tabela (pedido de Fernando, 27/11/2026).
 // `cdsView` devolve null para dado ausente, velho ou fora da faixa, e aí a linha não aparece. Desde 28/11/2026: tocar na linha
-// abre o gráfico de 12 meses, como nas moedas; mês e ano acumulados em %; sem a fonte na linha (ela fica no "?" do Mercado hoje).
-function CdsRow({ data }) {
-  const [aberto, setAberto] = useState(false)
+// abre o gráfico de 12 meses, como nas moedas; desde 28/11/2026 (tarde) é o mesmo quadro do dólar, com período e escala; mês e ano acumulados em %; sem a fonte na linha (ela fica no "?" do Mercado hoje).
+function CdsRow({ data, onOpen }) {
   const v = cdsView(data)
   if (!v) return null
   const sobre = v.refDate ? ` do fechamento de ${v.refDate} para o de ${v.close}` : ''
-  const abrir = () => setAberto(true)
+  const abrir = () => onOpen('CDS')
   return <tbody className="market-record market-cds">
-    {/* O gráfico fica dentro da linha: cliques dentro dele (inclusive em Fechar) não podem reabri-lo. */}
-    <tr className="market-values" onClick={(e) => { if (!e.target.closest('dialog')) abrir() }}>
-      <th scope="row"><button type="button" className="market-open" aria-haspopup="dialog" aria-label="CDS Brasil 5 anos: abrir gráfico de 12 meses" onClick={(e) => { e.stopPropagation(); abrir() }}>
+    <tr className="market-values" onClick={abrir}>
+      <th scope="row"><button type="button" className="market-open" aria-haspopup="dialog" aria-label="CDS Brasil 5 anos: abrir gráfico" onClick={(e) => { e.stopPropagation(); abrir() }}>
         <b><Flag code="BRL" width={20} height={14} /> CDS 5 anos <span aria-hidden="true">›</span></b><small>Risco-país · pontos-base</small><small className="market-state is-neutral">Fechamento de {v.close}</small>
-      </button>
-        {aberto && <Suspense fallback={null}><CdsGrafico open onClose={() => setAberto(false)} /></Suspense>}</th>
+      </button></th>
       <td className="market-price" aria-label={`CDS de 5 anos do Brasil: ${v.value} pontos-base, fechamento de ${v.close}`}>{v.value}<small className="market-unit"> pb</small></td>
       <td className={v.change ? 'pct ' + v.tone : 'muted'} title={v.change ? `Variação em pontos-base${sobre}` : 'Variação do dia indisponível: falta o fechamento do dia anterior'}>{v.change ? <>{v.change}<small className="market-unit"> pb</small></> : '—'}</td>
       <td className={v.pct ? 'pct ' + v.tone : 'muted'} title={v.pct ? `Variação percentual${sobre}` : undefined}>{v.pct ?? '—'}</td>
@@ -475,7 +471,7 @@ export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen =
             <caption className="market-caption">Câmbio em reais · últimas referências disponíveis</caption>
             <thead><tr><th scope="col">Par</th><th scope="col">Cotação <small>(R$)</small></th><th scope="col" aria-label="Variação absoluta do dia em reais">Δ dia <small>(R$)</small></th><th scope="col" aria-label="Variação percentual do dia">Δ dia %</th><th scope="col" aria-label="Acumulado no mês em percentual">Mês %</th><th scope="col" aria-label="Acumulado no ano em percentual">Ano %</th><th scope="col" aria-label="PTAX de venda em reais por unidade">PTAX <small>venda</small></th></tr></thead>
             {CURRENCIES.map(c => <QuoteRow key={c.code} code={c.code} quote={quotes?.[c.code]} returns={returns[c.code]} selected={selection.includes(c.code)} ptax={ptaxes[c.code]} onOpen={onOpen} color={colors?.[c.code]} destaque={destaques.maior === c.code ? 'maior' : destaques.menor === c.code ? 'menor' : undefined} />)}
-            {cds !== undefined && <CdsRow data={cds} />}
+            {cds !== undefined && <CdsRow data={cds} onOpen={onOpen} />}
           </table>
   )
 }

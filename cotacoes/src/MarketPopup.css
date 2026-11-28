@@ -102,6 +102,3 @@ dialog.market-popup{line-height:1.25}.market-popup .mp-data-stamp{min-height:0}
 /* Panorama tem fundo claro em qualquer tema: rótulos de pico e vale em azul-escuro com contorno branco. */
 .market-popup .mini-rotulo{color:#09154b;text-shadow:0 0 3px #fff,0 0 3px #fff}
 /* Gráfico do CDS aberto pela tabela do Mercado hoje: um cartão só, com o gráfico mais alto. */
-dialog.market-popup.market-popup-cds{width:min(720px,calc(100vw - 32px))}
-.market-popup-cds .mp-content{display:grid;gap:14px}
-.market-popup-cds .mp-card svg{height:clamp(120px,32dvh,240px)}

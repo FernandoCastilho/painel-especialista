@@ -119,15 +119,32 @@ async function tela() {
         await wrap.screenshot({ path: `${out}/${width}-tabela-direita.png` })
         await wrap.evaluate((e) => { e.scrollLeft = 0 })
       }
-      // Tocar na linha do CDS abre o gráfico de 12 meses, como nas moedas.
-      await row.getByRole('button', { name: 'CDS Brasil 5 anos: abrir gráfico de 12 meses' }).click()
-      const grafico = p.locator('dialog.market-popup-cds[open]')
-      await grafico.getByText('162,85 pb').waitFor()
-      assert.equal(await grafico.getByRole('img', { name: /12 meses/ }).count(), 1, 'gráfico de 12 meses aberto pela tabela')
-      assert.equal(await grafico.getByText('Série indisponível').count(), 0)
+      // Tocar na linha do CDS abre o mesmo quadro do dólar (período, escala, tabela), com 1 ano de fechamentos.
+      await row.getByRole('button', { name: 'CDS Brasil 5 anos: abrir gráfico' }).click()
+      const grafico = p.getByRole('dialog', { name: 'detalhes da moeda', exact: true })
+      await grafico.locator('article.cds-chart').waitFor()
+      await grafico.locator('article.cds-chart svg').first().waitFor()
+      const periodo = grafico.getByRole('group', { name: 'Período' })
+      assert.equal(await periodo.getByRole('button', { name: 'Dia (intraday)' }).count(), 0, 'CDS não tem modo intradiário')
+      assert.equal(await periodo.getByRole('button', { name: '1 ano' }).getAttribute('aria-pressed'), 'true', 'abre em 1 ano')
+      assert.equal(await grafico.locator('.pregao-fixado-btn').count(), 0)
+      assert.match(await grafico.innerText(), /CDS Brasil 5 anos[\s\S]*no período/)
+      assert.match(await grafico.innerText(), /Cobertura exibida: .* fechamentos\)/)
+      assert.equal(await grafico.locator('details.table').count(), 1, 'tabela como no dólar')
+      assert.equal(await grafico.getByRole('group', { name: 'Agrupar os pontos do gráfico' }).count(), 1, 'escala como no dólar')
+      assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'gráfico sem rolagem lateral')
       await grafico.screenshot({ path: `${out}/${width}-cds-grafico-tabela.png` })
-      await grafico.getByRole('button', { name: 'Fechar gráfico do CDS' }).click()
-      await grafico.waitFor({ state: 'detached' })
+      await periodo.getByRole('button', { name: '30 dias' }).click()
+      await grafico.getByText(/Cobertura exibida: .*\((1[89]|2\d) fechamentos\)/).waitFor()
+      await grafico.screenshot({ path: `${out}/${width}-cds-grafico-30d.png` })
+      await p.keyboard.press('Escape')
+      await grafico.waitFor({ state: 'hidden' })
+      // Depois do CDS, o dólar volta a abrir no Dia (intraday), como antes.
+      await table.getByRole('button', { name: 'Dólar americano: abrir gráfico' }).click()
+      await grafico.waitFor()
+      assert.equal(await grafico.getByRole('group', { name: 'Período' }).getByRole('button', { name: 'Dia (intraday)' }).getAttribute('aria-pressed'), 'true')
+      await p.keyboard.press('Escape')
+      await grafico.waitFor({ state: 'hidden' })
       // Panorama do dia: o CDS no lugar do Brent.
       await p.locator('.panorama-trigger').click()
       const modal = p.locator('dialog.market-popup')
@@ -150,7 +167,7 @@ async function tela() {
         assert.equal(await table.locator('tbody.market-cds').count(), 0, `linha some: ${caso}`)
       }
       assert.deepEqual(errors, [])
-      console.log(`${width}px: CDS abaixo do yuan, Panorama com CDS, linha some com dado estranho`)
+      console.log(`${width}px: CDS abaixo do yuan, gráfico no padrão do dólar, Panorama com CDS, linha some com dado estranho`)
       await ctx.close()
     }
   } finally { await browser.close() }
