@@ -31,6 +31,20 @@ test('snapshot completo inclui extras; falha não salva parte; artefato alterado
   await assert.rejects(verifyRelease(dir, snapshot), /knowledge-news.json: conteúdo mudou/)
 })
 
+test('base nova ainda fora do site usa a cópia do código; site todo em 404 para', async () => {
+  const notFound = () => { throw Object.assign(new Error('HTTP 404'), { status: 404 }) }
+  const saved = {}
+  const snapshot = await snapshotRelease(async file => file === 'taxas-juros.json' ? notFound() : text(file),
+    async (file, body) => { saved[file] = body }, async file => text(file))
+  assert.equal(saved['taxas-juros.json'], text('taxas-juros.json'))
+  assert.equal(Object.keys(snapshot).length, RELEASE_FILES.length)
+  await assert.rejects(snapshotRelease(async file => file === 'taxas-juros.json' ? notFound() : text(file), () => {},
+    async () => { throw new Error('ENOENT') }), /taxas-juros.json: HTTP 404 no site e sem cópia/)
+  await assert.rejects(snapshotRelease(async () => notFound(), () => {}, async file => text(file)), /Nenhuma base publicada/)
+  await assert.rejects(snapshotRelease(async file => file === 'taxas-juros.json'
+    ? (() => { throw Object.assign(new Error('HTTP 500'), { status: 500 }) })() : text(file), () => {}, async file => text(file)), /HTTP 500/)
+})
+
 test('retry somente em timeout ou HTTP transitório; preserva BOM', async () => {
   const options = { repo: 'fixture/painel', wait: async () => {} }
   let calls = 0

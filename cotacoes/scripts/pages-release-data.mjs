@@ -65,15 +65,27 @@ export async function verifyPublishedMarker({ pageUrl, expected, sha, runId, run
   }
 }
 
-export async function snapshotRelease(load = downloadPublished, save = savePublic) {
+export async function snapshotRelease(load = downloadPublished, save = savePublic, readLocal = readPublic) {
   const files = {}
+  const missing = []
   // Lotes limitados; não se grava nada se uma única base falhar.
   for (let i = 0; i < RELEASE_FILES.length; i += 6) {
     await Promise.all(RELEASE_FILES.slice(i, i + 6).map(async file => {
-      const text = await load(file)
+      let text
+      try { text = await load(file) }
+      catch (e) { if (e.status !== 404) throw e; missing.push(file); return }
       validatePublishedFile(file, text)
       files[file] = text
     }))
+  }
+  // Base nova, que ainda não existe no site publicado: a primeira publicação usa a cópia do código.
+  // Se nada veio do site, o 404 é do site, não de uma base nova, e a publicação para.
+  if (missing.length === RELEASE_FILES.length) throw new Error('Nenhuma base publicada encontrada (HTTP 404).')
+  for (const file of missing) {
+    const text = await readLocal(file).catch(() => { throw new Error(file + ': HTTP 404 no site e sem cópia no código.') })
+    validatePublishedFile(file, text)
+    files[file] = text
+    console.log(`${file}: ainda não publicado; usando a cópia do código nesta publicação.`)
   }
   for (const [file, text] of Object.entries(files)) await save(file, text)
   return Object.fromEntries(RELEASE_FILES.map(file => [file, hash(files[file])]))
@@ -90,6 +102,7 @@ export async function verifyRelease(directory, snapshot) {
 
 const publicDir = fileURLToPath(new URL('../public/', import.meta.url))
 const cbsSrc = fileURLToPath(new URL('../src/ibgeCbsSnapshot.json', import.meta.url))
+const readPublic = file => readFile(resolve(publicDir, file), 'utf8')
 async function savePublic(file, text) {
   const target = resolve(publicDir, file)
   await mkdir(dirname(target), { recursive: true })
