@@ -9,6 +9,7 @@ const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8768'
 const out = process.env.WHATSAPP_QA_OUTPUT || 'workspace-qa/whatsapp'
 const ROTULO = 'Copiar a cotação como imagem para o WhatsApp'
 
+// Sem service worker: senão ele atende os .json antes das rotas de teste e a cotação do BNDES não aparece.
 async function dadosBndes(page) {
   await page.route('**/bndes.json*', (r) => r.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { TFB_60_90: { points: [['2026-11-05', 13], ['2026-11-25', 13.5]] } } } }))
   await page.route('**/moedas.json*', (r) => r.fulfill({ json: { schemaVersion: 1, generatedAt: Date.now(), series: { C03: { points: [['2026-11-05', 12], ['2026-11-25', 12.5]] }, C01: { points: [['2026-11-05', 12], ['2026-11-25', 12.5]] } } } }))
@@ -46,7 +47,7 @@ async function abrirCdc(page) {
     for (const [calc, abrir] of [['bndes', abrirBndes], ['cdc', abrirCdc]]) {
       for (const [nome, viewport] of [['computador', { width: 1440, height: 1000 }], ['celular', { width: 390, height: 900 }]]) {
         for (const tema of ['light', 'dark']) {
-          const context = await browser.newContext({ viewport, colorScheme: tema })
+          const context = await browser.newContext({ viewport, colorScheme: tema, serviceWorkers: 'block' })
           await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base })
           const page = await context.newPage()
           page.on('pageerror', (e) => erros.push(`${calc} ${nome} ${tema}: ${e.message}`))
