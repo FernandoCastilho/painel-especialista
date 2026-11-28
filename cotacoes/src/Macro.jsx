@@ -32,7 +32,7 @@ export function RateChart({ id, title, subtitle, color, points, history, step, s
           {help && <Explain id={help} grafico />}
         </h3>
         <div className="parity-actions">
-          <RefreshButton files={refresh} label={title} />
+          {refresh && <RefreshButton files={refresh} label={title} />}
           {ok && (
             <div className={`pct ${trend}`}>
               {trend === 'up' ? '▲' : trend === 'down' ? '▼' : '■'} {Math.abs(diff).toFixed(2).replace('.', ',')} p.p.

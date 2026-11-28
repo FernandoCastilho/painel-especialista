@@ -184,7 +184,7 @@ const commodities = { schemaVersion: 1, generatedAt: new Date().toISOString(), c
       await p.goto(base + '/#juros'); await p.locator('.juros-grafico .chart h3').first().waitFor()
       await p.locator('.juros-grafico .chart h3', { hasText: '€STR' }).waitFor() // o arquivo simulado chega depois da primeira renderização
       // indicadores de referência: os seis gráficos de série no tempo (CDI futuro e curvas são conferidos no smoke-cupom)
-      const REF = '.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"])'
+      const REF = '.juros-grafico:not(#juros-cdif):not([id^="juros-curva-"]):not([id^="juros-ntnb"])'
       const titulos = (await p.locator(`${REF} .chart h3`).allInnerTexts()).map((t) => t.replace(/\s+/g, ' '))
       const n = titulos.length
       assert.equal(n, 6, `CDI, SOFR, Fed, €STR, BCE e BoJ em gráfico (${titulos.join(' | ')})`)
