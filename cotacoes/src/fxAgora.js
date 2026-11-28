@@ -86,3 +86,47 @@ export function destaquesPorHora(itens, t0, t1, faixa) {
   }
   return [...porHora.values()].sort((a, b) => a.t - b.t)
 }
+
+// Manchetes que tratam do maior movimento do dia (da mínima à máxima, ou da máxima à mínima), de qualquer horário do dia:
+// a notícia pode ter saído antes do movimento (que reflete depois) ou depois dele (que o explica).
+// Fica só o que fala do dólar ou do câmbio e não aponta para o lado contrário; primeiro as que citam o mesmo lado.
+const SOBE = /\bsob(?:e|em|ia)\b|\bsubiu\b|\balta\b|\bavan[cç](?:a|am|ou)\b|\bdispar|\bsalt(?:a|ou)\b|\bm[aá]xima\b|\bpressionad/i
+const DESCE = /\bcai\b|\bca[ií]ram?\b|\bcaiu\b|\bqueda\b|\brecu(?:a|am|ou|o)\b|\bbaixa\b|\bperde\b|\bperdeu\b|\bdespenc|\bdesab|\btomb(?:a|ou)\b|\bafund|\bderret|\bm[ií]nima\b|\balivi/i
+// Para onde a manchete diz que o dólar foi: a primeira palavra de alta ou de queda depois de "dólar"
+// ("Dólar despenca e Bolsa dispara" é queda), ou "alta do dólar"/"queda do dólar" antes dele; sem "dólar", o título todo.
+const ANTES = /\b(alta|disparada|queda|baixa|recuo)\s+d[oe]\s+d[oó]lar/i
+export function ladoDoDolar(title) {
+  const t = String(title ?? '')
+  const i = t.search(/d[oó]lar/i)
+  const primeira = (txt) => {
+    const s = txt.search(SOBE), d = txt.search(DESCE)
+    if (s < 0 && d < 0) return null
+    if (d < 0 || (s >= 0 && s < d)) return 'alta'
+    return 'queda'
+  }
+  if (i < 0) return primeira(t)
+  const depois = primeira(t.slice(i))
+  if (depois) return depois
+  const m = t.match(ANTES)
+  return m ? (/alta|disparada/i.test(m[1]) ? 'alta' : 'queda') : null
+}
+const CAMBIO = /d[oó]lar|c[aâ]mbio|\breal\b|\bmoeda/i
+export const MOVIMENTO_LIMITE = 5
+export function noticiasDoMovimento(listas, { dir, faixa, limite = MOVIMENTO_LIMITE } = {}) {
+  const vistos = new Set()
+  const out = []
+  for (const n of listas.flat()) {
+    if (!n?.title || !/^https?:\/\//.test(n.link ?? '') || !CAMBIO.test(n.title)) continue
+    if (descartavel(n.title, faixa) || fechamentoCedo(n)) continue
+    const ladoDela = ladoDoDolar(n.title)
+    if (ladoDela && ladoDela !== dir) continue
+    const lado = ladoDela === dir
+    const k = chave(n)
+    if (vistos.has(n.link) || vistos.has(k)) continue
+    vistos.add(n.link)
+    vistos.add(k)
+    out.push({ n, nota: (lado ? 3 : 0) + (/^d[oó]lar\b/i.test(n.title) ? 1 : 0) + (n.source === 'Valor Econômico' ? 1 : 0) })
+  }
+  const hora = (n) => (Number.isFinite(n.t) ? n.t : Infinity)
+  return out.sort((a, b) => b.nota - a.nota || hora(a.n) - hora(b.n)).slice(0, limite).map((x) => x.n).sort((a, b) => hora(a) - hora(b))
+}
