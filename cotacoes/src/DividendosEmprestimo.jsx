@@ -10,6 +10,7 @@ import { latestCdi } from './cdiDolar.js'
 import { useMacro } from './useMacro.js'
 import { IOF_PJ } from './emprestimo.js'
 import { FORMATOS, PIS_COFINS_FINANCEIRO, parseDecimal, simularDividendosEmprestimo } from './dividendosEmprestimo.js'
+import { formatarAoSair } from './numeroBr.js'
 import CalcBack from './CalcBack.jsx'
 
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
@@ -59,7 +60,7 @@ export default function DividendosEmprestimo({ onBack }) {
       {input}
     </div>
   )
-  const text = (key, label, hint, placeholder, disabled = false) => field(key, label, <input id={`de-${key}`} type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={form[key]} disabled={disabled} onChange={(e) => set(key, e.target.value)} />, hint)
+  const text = (key, label, hint, placeholder, disabled = false) => field(key, label, <input id={`de-${key}`} type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={form[key]} disabled={disabled} onChange={(e) => set(key, e.target.value)} onBlur={formatarAoSair(parseDecimal, (v) => setForm((old) => ({ ...old, [key]: v })))} />, hint)
   const check = (id, checked, onChange, label) => <label className="de-check cd-pad-x" htmlFor={id}><input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} /> {label}</label>
 
   return (

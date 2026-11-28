@@ -5,6 +5,7 @@ import { marketDate } from './marketReturns.js'
 import { isBusinessDay } from './holidays.js'
 import { formatMoneyText, parseMoneyInput } from './moneyInput.js'
 import { parseDecimal } from './cdiDolar.js'
+import { formatarNumeroBr } from './numeroBr.js'
 import { lerTabelaMesa } from './cambioFuturoColar.js'
 import { MAX_PARCELAS_FLUXO, MAX_PRAZO_DIAS, amortizacoesIguais, calcularFluxoCambio, irRemissivelPadrao, vencimentoPorPrazo } from './cambioFuturoFluxo.js'
 import './CalculatorStandard.css'
@@ -15,8 +16,6 @@ const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' 
 const dec = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const taxa4 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
 const taxaTexto = n => taxa4.format(n)
-// Só agrupa o milhar e completa 2 casas: nunca arredonda o que foi digitado.
-const decimalLivre = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 20 })
 const fmt = (n, format = dec) => Number.isFinite(n) ? format.format(n) : '—'
 const pct = n => Number.isFinite(n) ? dec.format(n) + '%' : '—'
 const dataBrasil = data => data ? data.split('-').reverse().join('/') : '—'
@@ -33,10 +32,7 @@ const numero = texto => {
 }
 const prazoDias = texto => /^\d{1,4}$/.test(texto.trim()) && Number(texto) >= 1 && Number(texto) <= MAX_PRAZO_DIAS ? Number(texto.trim()) : null
 // Ao sair do campo, o número fica no padrão brasileiro (ponto no milhar, vírgula nos decimais); texto inválido fica como está.
-const formatarDecimal = texto => {
-  const v = numero(texto)
-  return v == null ? texto : decimalLivre.format(v)
-}
+const formatarDecimal = texto => formatarNumeroBr(texto, numero)
 
 function Campo({ id, label, value, change, formatar, type = 'text', mode = 'decimal', placeholder, error, hint }) {
   return <div className="cx-field">

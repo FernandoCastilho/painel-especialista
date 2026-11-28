@@ -3,6 +3,11 @@
 // na tela Novidades da semana e no aviso de entrada. items: o detalhe, que fica recolhido em "Ver detalhes".
 export const NOVIDADES_RECENTES = [
   {
+    date: '28/11/2026',
+    destaques: ['Números digitados ficam no formato brasileiro ao sair do campo'],
+    items: ['Em todas as calculadoras, no gráfico do dólar (Valor em USD) e nos comparadores, o número digitado ganha ponto de milhar e vírgula de centavos quando você sai do campo: 1234567,8 vira 1.234.567,80. Pode digitar ou colar com ou sem separadores. Nenhuma conta muda: o campo só reescreve o número quando a leitura continua igual. Prazos, datas, CNPJ, códigos e a calculadora HP ficam como estão. Em campos de taxa, um valor acima de 999 fica como foi digitado.'],
+  },
+  {
     date: '27/11/2026',
     destaques: ['Finame: vencimentos pela formalização do contrato', 'Café arábica diário da bolsa de Nova York', 'Máxima e mínima do dia nos cards de cotação', 'Amplitude do dia e café certo na troca de contrato', 'Aprender: TVM e BR GAAP explicados'],
     items: ['Em Mais > Mapa do site, um mapa mental mostra tudo o que tem no Painel: a coruja no centro e quatro ramos (Mercado, Calculadoras, Empresas e setores, Conteúdo), até o último item, como cada calculadora, cada setor e cada conceito. Clique em qualquer item para ir direto a ele. Também aparece na busca.',

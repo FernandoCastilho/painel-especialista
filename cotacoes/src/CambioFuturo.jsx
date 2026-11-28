@@ -6,6 +6,7 @@ import CalcBack from './CalcBack.jsx'
 import Flag from './Flag.jsx'
 import { parseDecimal } from './cdiDolar.js'
 import { parseMoneyInput } from './moneyInput.js'
+import { formatarAoSair } from './numeroBr.js'
 import { marketDate } from './marketReturns.js'
 import ReferenciaMesa from './ReferenciaMesa.jsx'
 import { spotDayPlan } from './cambioFuturoSpot.js'
@@ -17,11 +18,12 @@ const MOEDAS_MESA = [{ id: 'CNH', nome: 'Yuan (CNH)' }, { id: 'EUR', nome: 'Euro
 const mesaVazia = () => Object.fromEntries(MOEDAS_MESA.map(({ id }) => [id, { cotacao: '', futuro: '' }]))
 const comBandeira = (id, nome) => <span className="cf-com-bandeira"><Flag code={id} width={20} height={14} />{nome}</span>
 
-function Campo({ id, label, value, onChange, type = 'text', placeholder, erro, observacao }) {
+function Campo({ id, label, value, onChange, ler, type = 'text', placeholder, erro, observacao }) {
   return <div className="cx-field">
     <label htmlFor={id}>{label}</label>
     <input id={id} type={type} inputMode={type === 'text' ? 'decimal' : undefined}
       autoComplete="off" value={value} placeholder={placeholder} aria-invalid={erro ? true : undefined}
+      onBlur={ler ? formatarAoSair(ler, onChange) : undefined}
       aria-describedby={[erro && `${id}-erro`, observacao && `${id}-obs`].filter(Boolean).join(' ') || undefined} onChange={e => onChange(e.target.value)} />
     {observacao && <small id={`${id}-obs`} className="cf-observacao">{observacao}</small>}
     {erro && <small id={`${id}-erro`} className="cf-resultado-status">{erro}</small>}
@@ -79,10 +81,10 @@ export default function CambioFuturo({ onBack, quotes }) {
     <article className="desk-panel cx-panel cf-input" aria-labelledby="cf-operacao">
       <header className="cx-heading"><h3 id="cf-operacao">Operação</h3></header>
       <div className="cx-form cf-parcela-fields">
-        <Campo id="cf-valor" label={comBandeira('USD', 'Valor da parcela (USD, com juros)')} value={operacao.valor} onChange={v => mudarOp('valor', v)} placeholder="ex.: 100.000,00" />
+        <Campo id="cf-valor" label={comBandeira('USD', 'Valor da parcela (USD, com juros)')} value={operacao.valor} onChange={v => mudarOp('valor', v)} ler={parseMoneyInput} placeholder="ex.: 100.000,00" />
         <Campo id="cf-vencimento" label="Vencimento" type="date" value={operacao.vencimento} onChange={v => mudarOp('vencimento', v)} />
-        <Campo id="cf-cotacao" label="Cotação de partida (R$/US$)" value={spotUsd} onChange={v => mudarOp('cotacao', v)} placeholder="ex.: 5,9160" />
-        <Campo id="cf-taxa" label="Taxa all-in do empréstimo (% a.a.)" value={operacao.taxa} onChange={v => mudarOp('taxa', v)} placeholder="ex.: 11,20" />
+        <Campo id="cf-cotacao" label="Cotação de partida (R$/US$)" value={spotUsd} onChange={v => mudarOp('cotacao', v)} ler={parseDecimal} placeholder="ex.: 5,9160" />
+        <Campo id="cf-taxa" label="Taxa all-in do empréstimo (% a.a.)" value={operacao.taxa} onChange={v => mudarOp('taxa', v)} ler={parseDecimal} placeholder="ex.: 11,20" />
       </div>
       <p className="cf-notice">Data-base da simulação: {dataBr(start)} (São Paulo).</p>
       {mudouDia && <p className="cf-notice" role="status">A data-base mudou. Informe novamente as cotações para calcular a TIR.</p>}
@@ -94,9 +96,9 @@ export default function CambioFuturo({ onBack, quotes }) {
       <div className="cf-mesa-grid">
         {MOEDAS_MESA.map(({ id, nome }) => <fieldset key={id} className="cf-moeda">
           <legend>{comBandeira(id, nome)}</legend>
-          <Campo id={`cf-${id}-cotacao`} label={`Cotação de partida (R$/${id})`} value={mesaAtual[id].cotacao} onChange={v => mudarMesa(id, 'cotacao', v)}
+          <Campo id={`cf-${id}-cotacao`} label={`Cotação de partida (R$/${id})`} value={mesaAtual[id].cotacao} onChange={v => mudarMesa(id, 'cotacao', v)} ler={parseDecimal}
             observacao={<ReferenciaMesa code={id} quote={quotes?.[id]} offer={mesaAtual[id].cotacao} plan={spotPlan} />} />
-          <Campo id={`cf-${id}-futuro`} label={`Câmbio futuro (R$/${id})`} value={mesaAtual[id].futuro} onChange={v => mudarMesa(id, 'futuro', v)}
+          <Campo id={`cf-${id}-futuro`} label={`Câmbio futuro (R$/${id})`} value={mesaAtual[id].futuro} onChange={v => mudarMesa(id, 'futuro', v)} ler={parseDecimal}
             observacao={operacao.vencimento ? `Taxa para ${dataBr(operacao.vencimento)}. Não é cotação à vista.` : 'Taxa para o vencimento da operação. Não é cotação à vista.'} erro={futuroInvalido(mesaAtual[id].futuro) ? 'Informe um câmbio futuro maior que zero.' : undefined} />
         </fieldset>)}
       </div>

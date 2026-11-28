@@ -9,6 +9,7 @@ import { Plot, useWidth } from './HistoryChart.jsx'
 import ReferenciaMesa from './ReferenciaMesa.jsx'
 import { parseDecimal } from './cdiDolar.js'
 import { parseMoneyInput } from './moneyInput.js'
+import { formatarAoSair } from './numeroBr.js'
 import { marketDate } from './marketReturns.js'
 import { spotDayPlan } from './cambioFuturoSpot.js'
 import { useCentralDaily } from './useHistory.js'
@@ -163,7 +164,8 @@ export function Input({ id, label, value, change, type = 'text', error, compact,
     <label htmlFor={id}>{label}</label>
     <input id={id} type={type} min={min} inputMode={type === 'text' ? 'decimal' : undefined} autoComplete="off"
       value={displayed} onChange={event => change(event.target.value)}
-      onFocus={money ? () => setEditing(true) : undefined} onBlur={money ? () => setEditing(false) : undefined}
+      // Cotações (texto não monetário) ficam no padrão brasileiro ao sair do campo; valores em dinheiro já aparecem formatados fora da edição.
+      onFocus={money ? () => setEditing(true) : undefined} onBlur={money ? () => setEditing(false) : type === 'text' ? formatarAoSair(parseDecimal, change) : undefined}
       aria-invalid={error ? true : undefined}
       aria-describedby={error ? id + '-erro' : undefined} />
     {error && <small id={id + '-erro'} className="cf-resultado-status">{error}</small>}

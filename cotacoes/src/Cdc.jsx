@@ -11,7 +11,8 @@ import { CdcIcon } from './CalculatorIcons.jsx'
 import { cdcConta } from './cdcConta.js'
 import { cdcEml, cdcResumo } from './cdcEmail.js'
 import { cdcImagem } from './cdcImagem.js'
-import { PRAZOS_DIGITADOS, carregarFunding, fundingDigitado, fundingDoPrazo, fundingVencido, guardarFunding, lerFunding, lerValidade, spreadDaTaxa, taxaDoSpread, validadePadrao, vigenciaDeHoje } from './cdcFunding.js'
+import { formatarAoSair } from './numeroBr.js'
+import { PRAZOS_DIGITADOS, carregarFunding, fundingDigitado, fundingDoPrazo, fundingVencido, guardarFunding, lerFunding, num, lerValidade, spreadDaTaxa, taxaDoSpread, validadePadrao, vigenciaDeHoje } from './cdcFunding.js'
 import { Respostas, Resultado, step } from './Roteiro.jsx'
 import './CalculatorStandard.css'
 import './LinhaMestra.css'
@@ -62,8 +63,8 @@ function FundingColar({ tabela, validoAte, onTabela }) {
         <div className="cdc-funding-grade" role="group">
           <span /><span>% a.a.</span><span>% a.m.</span>
           {PRAZOS_DIGITADOS.map(p => <div key={p} className="cdc-funding-linha"><span>{p} meses</span>
-            <input inputMode="decimal" value={manual.aa[p] ?? ''} onChange={e => digitar('aa', p, e.target.value)} aria-label={`Custo ao ano em ${p} meses`} disabled={!!String(manual.am[p] ?? '').trim()} />
-            <input inputMode="decimal" value={manual.am[p] ?? ''} onChange={e => digitar('am', p, e.target.value)} aria-label={`Custo ao mês em ${p} meses`} disabled={!!String(manual.aa[p] ?? '').trim()} />
+            <input inputMode="decimal" value={manual.aa[p] ?? ''} onChange={e => digitar('aa', p, e.target.value)} onBlur={formatarAoSair(num, v => digitar('aa', p, v))} aria-label={`Custo ao ano em ${p} meses`} disabled={!!String(manual.am[p] ?? '').trim()} />
+            <input inputMode="decimal" value={manual.am[p] ?? ''} onChange={e => digitar('am', p, e.target.value)} onBlur={formatarAoSair(num, v => digitar('am', p, v))} aria-label={`Custo ao mês em ${p} meses`} disabled={!!String(manual.aa[p] ?? '').trim()} />
           </div>)}
         </div>
       </fieldset>
@@ -123,7 +124,8 @@ export default function Cdc({ onBack }) {
     : (taxa !== null ? `Taxa: ${pct(taxa)} a.m. (${pct(((1 + taxa / 100) ** 12 - 1) * 100)} a.a.) · spread efetivo de ${pct(spreadDaTaxa(taxa, funding.taxa))} a.a. com a taxa arredondada · ${fundingNota}` : '')
   const campo = (key, label, input, nota) => <div className={`lm-field cdc-${key}`} key={key}>
     <span className="lm-label"><label htmlFor={`cdc-${key}`}>{label}</label></span>{input}{nota && <small className="cdc-nota">{nota}</small>}</div>
-  const texto = (key, label, mode = 'numeric', nota) => campo(key, label, <input id={`cdc-${key}`} inputMode={mode} value={form[key]} onChange={e => set(key, e.target.value)} />, nota)
+  const texto = (key, label, mode = 'numeric', nota) => campo(key, label, <input id={`cdc-${key}`} inputMode={mode} value={form[key]} onChange={e => set(key, e.target.value)}
+    onBlur={mode === 'decimal' ? formatarAoSair(parseDecimal, v => setForm(old => ({ ...old, [key]: v }))) : undefined} />, nota)
   const dinheiro = (key, label) => campo(key, label, <MoneyInput id={`cdc-${key}`} value={form[key]} onChange={v => set(key, v)} />)
 
   return <section className="cx bw calc-standard calc-workspace giro-screen cdc-screen" aria-labelledby="calc-h">

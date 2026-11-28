@@ -2,6 +2,7 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { Fragment, useState, useSyncExternalStore } from 'react'
 import FinimpHelp from './FinimpHelp.jsx'
+import { formatarAoSair, lerNumeroSimples } from './numeroBr.js'
 import { FINIMP_HELP } from './finimpHelpContent.js'
 import MoneyInput from './MoneyInput.jsx'
 import { FINIMP_TERMS, compareFinimp, finimpCost, solveFinimpRate } from './finimpComparison.js'
@@ -35,7 +36,7 @@ export default function FinimpComparacao({ onBack }) {
   const help = (key, suffix='') => <FinimpHelp title={FINIMP_HELP[key].title+(suffix?' · '+suffix:'')}><p>{FINIMP_HELP[key].text}</p></FinimpHelp>
   const field = (label, id, value, change, monetary = false, helpKey, suffix, options = {}) => {
     const error = (options.showError || touched[id] || value !== '') && errors[id]
-    const attrs = { id, 'aria-invalid': !!error, 'aria-describedby': error ? `${id}-err` : undefined, onBlur: () => { setTouched(t => ({ ...t, [id]: true })); setFocusedField(null) } }
+    const attrs = { id, 'aria-invalid': !!error, 'aria-describedby': error ? `${id}-err` : undefined, onBlur: e => { setTouched(t => ({ ...t, [id]: true })); setFocusedField(null); if (options.raw) formatarAoSair(lerNumeroSimples, change)(e) } }
     const rate = monetary || options.raw ? null : parseDecimal(value)
     const displayedValue = focusedField !== id && rate !== null ? formatFinimpRate(rate) : value
     return <div className="cx-field"><div className="fi-label cx-field-label"><label htmlFor={id}>{label}</label>{helpKey && help(helpKey, suffix)}</div>{monetary ? <MoneyInput {...attrs} prefix={options.prefix ?? currency} value={value} onChange={change} /> : <input {...attrs} inputMode="decimal" autoComplete="off" value={displayedValue} onFocus={() => setFocusedField(id)} onChange={e => change(e.target.value)} />}{error && <p className="cx-error" id={`${id}-err`} role="alert">{error}</p>}</div>

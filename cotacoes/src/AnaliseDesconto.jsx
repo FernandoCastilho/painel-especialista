@@ -3,6 +3,8 @@ import './CalculatorStandard.css'
 import { useState } from 'react'
 import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
+import { parseDecimal } from './emprestimo.js'
+import { formatarAoSair } from './numeroBr.js'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import { DISCOUNT_INITIAL_FORM, DISCOUNT_TERMS, TITLE_FEE_MODES, parseDiscountForm } from './analiseDesconto.js'
 import './AnaliseDesconto.css'
@@ -63,7 +65,8 @@ export default function AnaliseDesconto({ onBack, apresentacao }) {
     <p className="sr-only" id={`ad-${key}-hint`}>{hint}</p>
     <p className="cx-error" id={`ad-${key}-err`} role={errors[key] ? 'alert' : undefined}>{errors[key] || ''}</p>
   </div>
-  const textField = (key, label, hint, inputMode = 'decimal') => field(key, label, <input {...props(key)} inputMode={inputMode} autoComplete="off" value={form[key]} onChange={(event) => set(key, event.target.value)} onFocus={(event) => event.target.select()} />, hint)
+  const textField = (key, label, hint, inputMode = 'decimal') => field(key, label, <input {...props(key)} inputMode={inputMode} autoComplete="off" value={form[key]} onChange={(event) => set(key, event.target.value)} onFocus={(event) => event.target.select()}
+    onBlur={(event) => { visit(key); if (inputMode === 'decimal') formatarAoSair(parseDecimal, (value) => set(key, value))(event) }} />, hint)
   const moneyField = (key, label, hint) => field(key, label, <MoneyInput {...props(key)} value={form[key]} onChange={(value) => set(key, value)} />, hint)
   const taxFields = (key, eligibleKey) => <>
     {field(key, 'Enquadramento tributário', <select {...props(key)} value={form[key]} onChange={event => set(key, event.target.value)}><option value="pj">Pessoa jurídica: regra geral</option><option value="simples">Optante do Simples Nacional / MEI</option></select>, 'Alíquotas automáticas. Simples confirmado: diária reduzida apenas para operação total até R$ 30 mil; acima, regra geral.')}
