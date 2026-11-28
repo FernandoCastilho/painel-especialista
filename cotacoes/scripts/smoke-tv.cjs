@@ -1,4 +1,4 @@
-// Teste de tela da TV ao vivo (pedido de Fernando, 28/11/2026): botão TV ao lado de Mais (no celular, dentro do Mais), escolha do canal antes de
+// Teste de tela da TV ao vivo (com o robô que acha o vídeo de cada canal, 28/11/2026) (pedido de Fernando, 28/11/2026): botão TV ao lado de Mais (no celular, dentro do Mais), escolha do canal antes de
 // carregar o vídeo, tamanhos P/M/G, TV aberta ao trocar de seção e fechar. O YouTube é simulado: o teste não
 // comprova que a transmissão está no ar, só a montagem da tela e o endereço pedido. Gera as capturas do artefato.
 const { chromium } = require('playwright')
@@ -15,6 +15,16 @@ const TELAS = [
   ['celular-390', { width: 390, height: 844 }, 'dark'],
   ['celular-360', { width: 360, height: 740 }, 'light'],
 ]
+// Robô da TV (tv.json): Bloomberg com o vídeo achado; CNN sem dado (usa o endereço do canal), exceto numa tela,
+// em que a CNN está sem transmissão ao vivo e a TV mostra o aviso no lugar do vídeo.
+const TELA_SEM_LIVE = 'celular-360'
+const tvDados = nome => {
+  const agora = new Date().toISOString()
+  return { atualizado: agora, canais: {
+    bloomberg: { estado: 'ao-vivo', videoId: 'bLoOmBeRg01', titulo: 'Bloomberg Business News Live', conferido: agora },
+    ...(nome === TELA_SEM_LIVE ? { 'cnn-brasil': { estado: 'sem-live', conferido: agora } } : {}),
+  } }
+}
 const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;height:100vh;background:#111;color:#eee;font:16px sans-serif">Vídeo do YouTube (simulado no teste)</body>'
 
 ;(async () => {
@@ -29,8 +39,9 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       page.on('pageerror', e => erros.push(`${nome}: ${e.message}`))
       await page.route('**/*', route => {
         const url = route.request().url()
+        if (url.startsWith(base + '/tv.json')) return route.fulfill({ contentType: 'application/json', body: JSON.stringify(tvDados(nome)) })
         if (url.startsWith(base + '/')) return route.continue()
-        if (url.startsWith('https://www.youtube.com/embed/live_stream')) { pedidos.push(url); return route.fulfill({ contentType: 'text/html', body: VIDEO_FALSO }) }
+        if (url.startsWith('https://www.youtube.com/embed/')) { pedidos.push(url); return route.fulfill({ contentType: 'text/html', body: VIDEO_FALSO }) }
         return route.abort()
       })
       await page.goto(`${base}/#resumo`)
@@ -64,13 +75,22 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       await page.screenshot({ path: path.join(out, `${nome}-escolha.png`) })
 
       await tv.getByRole('button', { name: /CNN Brasil/ }).click()
-      await tv.locator('iframe').waitFor()
-      assert.match(await tv.locator('iframe').getAttribute('src'), /channel=UCvdwhh_fDyWccR42-rReZLw.*mute=1/)
-      await page.waitForTimeout(300)
-      await page.screenshot({ path: path.join(out, `${nome}-cnn-pequena.png`) })
+      if (nome === TELA_SEM_LIVE) {
+        await tv.getByText('A CNN Brasil não está ao vivo no YouTube agora.', { exact: false }).waitFor()
+        assert.equal(await tv.locator('iframe').count(), 0, `${nome}: sem live, a TV não carrega vídeo`)
+        assert.ok(await tv.getByRole('link', { name: 'Abrir CNN Brasil no YouTube' }).isVisible(), `${nome}: link do YouTube sem live`)
+        await page.screenshot({ path: path.join(out, `${nome}-cnn-sem-live.png`) })
+      } else {
+        await tv.locator('iframe').waitFor()
+        assert.match(await tv.locator('iframe').getAttribute('src'), /channel=UCvdwhh_fDyWccR42-rReZLw.*mute=1/)
+        await page.waitForTimeout(300)
+        await page.screenshot({ path: path.join(out, `${nome}-cnn-pequena.png`) })
+      }
 
       await tv.getByRole('button', { name: /Bloomberg TV/ }).click()
       await tv.getByRole('button', { name: 'TV grande' }).click()
+      await tv.locator('iframe').waitFor()
+      assert.match(await tv.locator('iframe').getAttribute('src'), /\/embed\/bLoOmBeRg01\?.*mute=1/, `${nome}: Bloomberg toca o vídeo achado pelo robô`)
       await page.waitForTimeout(300)
       const caixa = await tv.boundingBox()
       assert.ok(caixa.x >= 0 && caixa.y >= 0 && caixa.x + caixa.width <= viewport.width && caixa.y + caixa.height <= viewport.height, `${nome}: TV sai da tela ${JSON.stringify(caixa)}`)
@@ -79,6 +99,44 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
         assert.ok(caixa.y + caixa.height <= menu.y + 1, `${nome}: TV cobre o menu de baixo (TV ${JSON.stringify(caixa)}, menu ${JSON.stringify(menu)})`)
       }
       await page.screenshot({ path: path.join(out, `${nome}-bloomberg-grande.png`) })
+
+      // Arrastar pela barra de cima (pedido de Fernando, 28/11/2026): a TV vai para onde a pessoa soltar e não sai da tela.
+      await tv.getByRole('button', { name: 'TV pequena' }).click()
+      await page.waitForTimeout(200)
+      const antes = await tv.boundingBox()
+      const alca = await tv.locator('.tv-dock-title').boundingBox()
+      const destino = { x: Math.min(viewport.width - 40, antes.x + antes.width / 2 + 120), y: Math.max(60, antes.y - 160) }
+      await page.mouse.move(alca.x + 10, alca.y + alca.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(destino.x, destino.y, { steps: 8 })
+      await page.mouse.up()
+      const depois = await tv.boundingBox()
+      assert.ok(Math.abs(depois.x - antes.x) > 30 || Math.abs(depois.y - antes.y) > 30, `${nome}: TV não se moveu (${JSON.stringify(antes)} → ${JSON.stringify(depois)})`)
+      assert.ok(depois.x >= 0 && depois.y >= 0 && depois.x + depois.width <= viewport.width + 1 && depois.y + depois.height <= viewport.height + 1, `${nome}: TV arrastada saiu da tela ${JSON.stringify(depois)}`)
+      // Arrastar para longe do canto: fica presa na borda.
+      await page.mouse.move(alca.x + 10 + (depois.x - antes.x), depois.y + 20)
+      await page.mouse.down()
+      await page.mouse.move(viewport.width + 300, viewport.height + 300, { steps: 6 })
+      await page.mouse.up()
+      const borda = await tv.boundingBox()
+      assert.ok(borda.x + borda.width <= viewport.width + 1 && borda.y + borda.height <= viewport.height + 1, `${nome}: TV passou da borda ${JSON.stringify(borda)}`)
+      if (viewport.width < 1000) {
+        const menu = await page.locator('.nav-top > nav').boundingBox()
+        assert.ok(borda.y + borda.height <= menu.y + 1, `${nome}: TV arrastada cobre o menu de baixo`)
+      }
+      // Teclado: setas no puxador movem; Home volta ao canto de origem.
+      const puxador = tv.getByRole('button', { name: /Mover TV/ })
+      await puxador.focus()
+      const comTeclado = await tv.boundingBox()
+      await page.keyboard.press('ArrowUp')
+      const subiu = await tv.boundingBox()
+      assert.ok(subiu.y < comTeclado.y, `${nome}: seta para cima não moveu a TV`)
+      await page.screenshot({ path: path.join(out, `${nome}-arrastada.png`) })
+      await page.keyboard.press('Home')
+      await page.waitForTimeout(100)
+      const canto = await tv.boundingBox()
+      assert.ok(Math.abs(canto.x - antes.x) < 2 && Math.abs(canto.y + canto.height - (antes.y + antes.height)) < 2, `${nome}: Home não voltou ao canto (${JSON.stringify(canto)} × ${JSON.stringify(antes)})`)
+      assert.ok(await tv.getByRole('link', { name: 'Abrir Bloomberg TV no YouTube' }).isVisible(), `${nome}: botão do YouTube visível`)
 
       // Continua aberta e tocando ao trocar de seção.
       await page.evaluate(() => { location.hash = '#juros' })
@@ -94,7 +152,8 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       await context.close()
     }
     assert.deepEqual(erros, [])
-    assert.ok(pedidos.some(u => u.includes('UCIALMKvObZNtJ6AmdCLP7Lg')), 'Bloomberg pedida pelo canal')
+    assert.ok(pedidos.some(u => u.includes('/embed/bLoOmBeRg01')), 'Bloomberg pedida pelo vídeo do robô')
+    assert.ok(pedidos.some(u => u.includes('live_stream?channel=UCvdwhh_fDyWccR42-rReZLw')), 'CNN sem dado do robô pedida pelo canal')
     console.log(`TV ao vivo: ${TELAS.length} telas conferidas, capturas em ${out}`)
   } finally {
     await browser.close()

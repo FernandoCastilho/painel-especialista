@@ -1,0 +1,51 @@
+name: TV ao vivo (vídeo de cada canal)
+
+# Robô da TV do Painel: de meia em meia hora, descobre qual vídeo cada canal (CNN Brasil, Bloomberg TV) transmite agora
+# no YouTube e se o canal deixa exibir fora do YouTube. Publica tv.json numa branch própria (tv), separada da branch
+# data das cotações, que é refeita inteira a cada coleta. O Painel lê esse arquivo; sem ele, usa o endereço do canal.
+# Em pull request só confere se o YouTube responde ao robô, sem publicar nada.
+on:
+  schedule:
+    - cron: '13,43 * * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - cotacoes/scripts/fetch-tv.mjs
+      - cotacoes/src/tvCanais.js
+      - .github/workflows/tv-ao-vivo.yml
+
+concurrency:
+  group: tv-ao-vivo-${{ github.event_name == 'pull_request' && github.ref || 'publicar' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  tv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Ler o último arquivo publicado
+        run: |
+          mkdir -p "$RUNNER_TEMP/tv"
+          if git fetch -q --depth=1 origin tv 2>/dev/null; then git show FETCH_HEAD:tv.json > "$RUNNER_TEMP/tv/tv.json" || true; fi
+      - name: Procurar o vídeo ao vivo de cada canal
+        run: |
+          node cotacoes/scripts/fetch-tv.mjs "$RUNNER_TEMP/tv/tv.json" | tee "$RUNNER_TEMP/tv-resumo.txt"
+          { echo '### TV ao vivo'; echo; sed 's/^/- /' "$RUNNER_TEMP/tv-resumo.txt"; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publicar na branch tv
+        if: github.event_name != 'pull_request'
+        env:
+          PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          cd "$RUNNER_TEMP/tv"
+          git init -q
+          git checkout -q -b tv
+          git add tv.json
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -q -m "tv $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "$PUSH_URL" tv

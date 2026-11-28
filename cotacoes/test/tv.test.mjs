@@ -27,16 +27,16 @@ test('TV usa só o player oficial do YouTube pelo canal, sem som e sem vídeo fi
 
 test('preferência guarda canal e tamanho e ignora valor inválido ou armazenamento indisponível', () => {
   const s = memoria()
-  assert.deepEqual(lerPreferencia(s), { canal: null, tamanho: 'p' })
-  gravarPreferencia({ canal: 'bloomberg', tamanho: 'g' }, s)
-  assert.deepEqual(lerPreferencia(s), { canal: 'bloomberg', tamanho: 'g' })
-  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{"canal":"x","tamanho":"gigante"}' })), { canal: null, tamanho: 'p' })
-  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{quebrado' })), { canal: null, tamanho: 'p' })
+  assert.deepEqual(lerPreferencia(s), { canal: null, tamanho: 'p', posicao: null })
+  gravarPreferencia({ canal: 'bloomberg', tamanho: 'g', posicao: { x: 40, y: 120 } }, s)
+  assert.deepEqual(lerPreferencia(s), { canal: 'bloomberg', tamanho: 'g', posicao: { x: 40, y: 120 } })
+  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{"canal":"x","tamanho":"gigante","posicao":{"x":"a"}}' })), { canal: null, tamanho: 'p', posicao: null })
+  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{quebrado' })), { canal: null, tamanho: 'p', posicao: null })
   assert.doesNotThrow(() => gravarPreferencia({}, { setItem() { throw new Error('cheio') } }))
   assert.deepEqual(TV_TAMANHOS.map(t => t.largura), [320, 480, 720])
 })
 
-async function montar(t) {
+async function montar(t, { dataBase, fetch } = {}) {
   const listeners = new Map(), storage = memoria()
   const window = { addEventListener: (k, fn) => listeners.set(k, fn), removeEventListener: k => listeners.delete(k) }
   const focados = []
@@ -44,8 +44,8 @@ async function montar(t) {
   const document = { body: {}, fullscreenEnabled: true, querySelector: () => null, querySelectorAll: () => [{ offsetParent: null }, gatilho] }
   const { code } = await transform(readFileSync(new URL('../src/TvDock.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
-  const deps = { react: React, 'react-dom': { createPortal: n => n }, './TvDock.css': {}, './tvCanais.js': { ...tv, lerPreferencia: () => lerPreferencia(storage), gravarPreferencia: p => gravarPreferencia(p, storage) } }
-  runInNewContext(code, { module, exports: module.exports, window, document, require: n => deps[n] ?? require(n) })
+  const deps = { react: React, 'react-dom': { createPortal: n => n }, './TvDock.css': {}, './useQuotes.js': { DATA_BASE: dataBase }, './tvCanais.js': { ...tv, lerPreferencia: () => lerPreferencia(storage), gravarPreferencia: p => gravarPreferencia(p, storage) } }
+  runInNewContext(code, { module, exports: module.exports, window, document, fetch, setInterval, clearInterval, AbortSignal, Date, require: n => deps[n] ?? require(n) })
   const render = hookRenderer(() => module.exports.default())
   t.after(() => render.close())
   await render.settle()
@@ -73,7 +73,7 @@ test('botão TV abre a escolha do canal sem carregar vídeo; troca, tamanho e fe
 
   tvDock.botao('TV grande').props.onClick(); await tvDock.render.settle()
   assert.equal(tvDock.all()[0].props.style['--tv-largura'], '720px')
-  assert.deepEqual(JSON.parse(tvDock.storage.dados['painel-tv']), { canal: 'bloomberg', tamanho: 'g' })
+  assert.deepEqual(JSON.parse(tvDock.storage.dados['painel-tv']), { canal: 'bloomberg', tamanho: 'g', posicao: null })
 
   tvDock.botao('Fechar TV').props.onClick(); await tvDock.render.settle()
   assert.equal(tvDock.render.value, null)
@@ -92,4 +92,28 @@ test('botão TV fica ao lado de Mais (no celular, dentro do Mais) e a TV está m
   assert.match(nav, /<\/div>\s*\{desktop && <button type="button" className="nav-tv" data-tv-trigger[^>]*onClick=\{abrirTv\}>[\s\S]*<span>TV<\/span>/)
   assert.equal(TV_EVENTO, 'painel:tv')
   assert.match(readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8'), /<RpnDock[^\n]*\n\s*<TvDock \/>/)
+})
+
+test('com o arquivo do robô, a TV toca o vídeo achado; canal sem live mostra aviso e não carrega vídeo', async t => {
+  const agora = new Date().toISOString()
+  const pedidos = []
+  const fetch = async url => {
+    pedidos.push(url)
+    return { ok: true, json: async () => ({ canais: {
+      bloomberg: { estado: 'ao-vivo', videoId: 'bLoOmBeRg01', conferido: agora },
+      'cnn-brasil': { estado: 'sem-live', conferido: agora },
+    } }) }
+  }
+  const tvDock = await montar(t, { dataBase: 'https://raw.githubusercontent.com/dono/repo/data', fetch })
+  tvDock.listeners.get(TV_EVENTO)(); await tvDock.render.settle()
+  assert.match(pedidos[0], /^https:\/\/raw\.githubusercontent\.com\/dono\/repo\/tv\/tv\.json\?t=\d+$/)
+
+  tvDock.botao('Bloomberg TV').props.onClick(); await tvDock.render.settle()
+  assert.match(tvDock.iframes()[0].props.src, /^https:\/\/www\.youtube\.com\/embed\/bLoOmBeRg01\?.*mute=1/)
+
+  tvDock.botao('CNN Brasil').props.onClick(); await tvDock.render.settle()
+  assert.equal(tvDock.iframes().length, 0, 'sem live, sem vídeo')
+  const aviso = tvDock.all().find(n => n.props?.className === 'tv-dock-aviso')
+  assert.match(String(aviso.props.children), /A CNN Brasil não está ao vivo no YouTube agora/)
+  assert.ok(tvDock.all().some(n => n.type === 'a' && n.props.href === 'https://www.youtube.com/@CNNbrasil/live'), 'link do YouTube continua')
 })
