@@ -9,9 +9,9 @@ import { useDataFile } from './useDataFile.js'
 import { ipcaRows, ipcaSeries, normalizeIpca } from './ipca.js'
 import { dividaRows, dividaSeries, normalizeDivida } from './divida.js'
 import { nf } from './format.js'
-import { variationTone } from './variationTone.js'
+import { displayedVariation, variationTone } from './variationTone.js'
 
-const sgn = (v, d, unit = '') => (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), d) + unit
+const sgn = (raw, d, unit = '') => { const v = displayedVariation(raw, d); return (v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), d) + unit }
 const monthName = (period) => new Date(`${period}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric', timeZone: 'UTC' }).replace('.', '')
 
 // Cenários › Inflação: IPCA oficial, o quadro "o que pesa" e, abaixo, a seção Fiscal (dívida bruta), que antes era um assunto à parte.
@@ -31,7 +31,7 @@ export default function Outros({ macro, so = '' }) {
   const dFailed = divida.status === 'error' || (divida.status === 'ok' && !dParsed)
   const dTable = dRows.map((r) => {
     const m = r.metric, u = m.pct ? '%' : '', d = m.decimals
-    const delta = (v) => (v == null ? { text: '—' } : { text: sgn(v, d, m.pct ? ' p.p.' : ''), tone: variationTone(v) })
+    const delta = (v) => (v == null ? { text: '—' } : { text: sgn(v, d, m.pct ? ' p.p.' : ''), tone: variationTone(v, d) })
     return {
       id: m.id, flag: 'BRL', name: m.label, sub: 'Governo Geral',
       cells: [
@@ -48,14 +48,14 @@ export default function Outros({ macro, so = '' }) {
   const fmt = (r, v) => nf(v, r.metric.decimals)
   const tableRows = rows.map((r) => {
     const pct = r.metric.rate
-    const period = (point) => point ? { text: fmt(r, point.value) + (pct ? '%' : ''), tone: pct ? variationTone(point.value) : null } : { text: '—' }
+    const period = (point) => point ? { text: fmt(r, pct ? displayedVariation(point.value, r.metric.decimals) : point.value) + (pct ? '%' : ''), tone: pct ? variationTone(point.value, r.metric.decimals) : null } : { text: '—' }
     const change = pct ? r.delta : r.pct
     return {
       id: r.metric.id, flag: 'BRL', name: r.metric.label, sub: pct ? 'IPCA' : 'IPCA · base dez/1993',
       cells: [
         period(r.last),
         period(r.prev),
-        change == null ? { text: '—' } : { text: sgn(change, 2, pct ? ' p.p.' : '%'), tone: variationTone(change) },
+        change == null ? { text: '—' } : { text: sgn(change, 2, pct ? ' p.p.' : '%'), tone: variationTone(change, 2) },
         period(r.yearAgo),
         { text: r.last ? monthName(r.last.period) : '—' },
       ],
