@@ -133,7 +133,10 @@ async function main(arquivo) {
         const p = lerRespostaDoPlayer(html)
         const sinais = { chavesPlayer: Object.keys(p || {}), detalhes: p?.videoDetails ? { id: p.videoDetails.videoId, isLive: p.videoDetails.isLive, upcoming: p.videoDetails.isUpcoming } : null,
           og: html.match(/<meta property="og:url" content="([^"]+)"/)?.[1] || '-', perto: html.match(/"videoId":"([A-Za-z0-9_-]{11})"[^{}]{0,200}"isLive":true/)?.[1] || '-',
-          canonica: html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || '-', broadcast: /schema\.org\/BroadcastEvent/.test(html), isLiveTrue: /"isLive":true/.test(html), isLiveNow: /"isLiveNow":true/.test(html), tamanho: html.length }
+          canonica: html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || '-',
+          ids: [...new Set([...html.matchAll(/"videoId":"([A-Za-z0-9_-]{11})"/g)].map(m => m[1]))].slice(0, 6),
+          atual: html.match(/"currentVideoEndpoint":\{[^]{0,400}?"videoId":"([A-Za-z0-9_-]{11})"/)?.[1] || '-',
+          antesIsLive: (html.match(/[^]{160}"isLive":true/)?.[0] || '').replace(/\s+/g, ' '), broadcast: /schema\.org\/BroadcastEvent/.test(html), isLiveTrue: /"isLive":true/.test(html), isLiveNow: /"isLiveNow":true/.test(html), tamanho: html.length }
         console.log(`  sinais ${c.nome}: ${JSON.stringify(sinais)}`)
       }
     } catch (e) { novos[c.id] = { estado: 'falhou', motivo: e.message } }

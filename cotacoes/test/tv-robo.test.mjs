@@ -27,7 +27,7 @@ test('robô: classifica a página do canal ao vivo', () => {
   // Sem live, o YouTube mostra a página do canal.
   assert.equal(interpretarPaginaAoVivo(pagina('https://www.youtube.com/channel/UCvdwhh_fDyWccR42-rReZLw', {})).estado, 'sem-live')
   // Bloqueio de robô ou página estranha: não dá para saber, nunca vira "sem live".
-  assert.equal(interpretarPaginaAoVivo(pagina(watch, player({ status: { status: 'LOGIN_REQUIRED' } }))).estado, 'falhou')
+  assert.equal(interpretarPaginaAoVivo(pagina('undefined', { playabilityStatus: { status: 'LOGIN_REQUIRED' } })).estado, 'falhou')
   assert.equal(interpretarPaginaAoVivo('<html><link rel="canonical" href="https://consent.youtube.com/"></html>').estado, 'falhou')
   assert.equal(interpretarPaginaAoVivo('').estado, 'falhou')
 })
