@@ -45,6 +45,7 @@ const Bancos = lazy(() => import('./Bancos.jsx'))
 const Setores = lazy(() => import('./Setores.jsx'))
 const Ma = lazy(() => import('./Ma.jsx'))
 const Apresentar = lazy(() => import('./Apresentar.jsx'))
+const SiteMap = lazy(() => import('./SiteMap.jsx'))
 import { useDataFile } from './useDataFile.js'
 import { PREGAO_FIXADO_ARQUIVO, diaCurto, fixadoAtivo } from './pregaoFixado.js'
 import Nav, { TABS } from './Nav.jsx'
@@ -59,24 +60,12 @@ import { useCurves } from './useCurves.js'
 import ParityChart from './ParityChart.jsx'
 const Projecoes = lazy(() => import('./Projecoes.jsx'))
 import { DISCLAIMER } from './whatsapp.js'
+import { CEN_SECTIONS, CEN_VIEWS } from './cenariosViews.js'
 import { MAX_DAYS, fromInput, fullWindow, historyRangeError, toInput } from './useHistory.js'
 
 // Mesma identidade por moeda; os tons acompanham o contraste do tema do sistema.
 const POLL_MS = 60000 // relê a coleta central a cada 1 min (o arquivo é renovado a cada 5 min; não gasta a cota da API)
 const COLORS = { USD: 'var(--currency-usd)', EUR: 'var(--currency-eur)', JPY: 'var(--currency-jpy)', CNH: 'var(--currency-cnh)', PAR: 'var(--currency-par)' }
-// Assuntos da aba Cenários (cada um com seu endereço: #cenarios/commodities etc.).
-const CEN_VIEWS = [
-  { id: 'projecoes', label: 'Projeções' },
-  { id: 'calendario', label: 'Calendário econômico' },
-  { id: 'inadimplencia', label: 'Inadimplência' },
-  { id: 'recuperacao', label: 'Recuperação judicial' },
-  { id: 'atividade', label: 'Atividade e emprego' },
-  { id: 'commodities', label: 'Commodities' },
-  { id: 'indexadores', label: 'Indexadores' },
-  { id: 'inflacao', label: 'Inflação' },
-]
-// Seções dentro de um assunto (#cenarios/assunto/secao): a tela abre já rolada até a seção.
-const CEN_SECTIONS = { 'inflacao/fiscal': 'cen-fiscal', 'commodities/frete': 'cen-frete' }
 // Endereços antigos continuam valendo e viram o novo sem nova entrada no histórico.
 const CEN_OLD = { outros: 'inflacao', fiscal: 'inflacao/fiscal', frete: 'commodities/frete' }
 const PRESETS = [
@@ -386,6 +375,7 @@ export default function App() {
       {tab === 'novidades' && <Novidades />}
       {tab === 'historias' && <Historias view={sub} onView={v => goto('historias', v)} />}
       {tab === 'aprender' && <Aprender view={sub} goto={goto} />}
+      {tab === 'mapa' && <SiteMap goto={goto} />}
 
       {tab === 'apresentar' && <Apresentar quotes={quotes} macro={macro} curves={curves} hol={hol} colors={COLORS} />}
 
