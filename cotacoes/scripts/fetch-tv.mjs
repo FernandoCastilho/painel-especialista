@@ -55,11 +55,15 @@ export function interpretarPaginaAoVivo(html, agora = Date.now()) {
   if (status?.status === 'LOGIN_REQUIRED') {
     // O YouTube recusou o player ao robô, mas a página ainda diz qual vídeo é e se está no ar.
     // A liberação fora do YouTube é conferida depois, à parte (conferirLiberacao).
-    const videoId = canonica.match(/\/watch\?v=([A-Za-z0-9_-]{11})/)?.[1]
+    const detalhes = player?.videoDetails
+    const ogUrl = html.match(/<meta property="og:url" content="([^"]+)"/)?.[1] || ''
+    const videoId = [detalhes?.videoId, ogUrl.match(/[?&]v=([A-Za-z0-9_-]{11})/)?.[1], canonica.match(/\/watch\?v=([A-Za-z0-9_-]{11})/)?.[1]]
+      .find(v => ID_VIDEO.test(v || ''))
     const marcacao = lerMarcacaoAoVivo(html, agora)
-    if (!videoId || !marcacao) return { estado: 'falhou', motivo: 'o YouTube pediu login (bloqueio de robô)' }
-    if (!marcacao.aoVivo) return { estado: 'sem-live' }
-    const titulo = String(html.match(/<meta name="title" content="([^"]*)"/)?.[1] || '').slice(0, 160)
+    const aoVivo = detalhes?.isLive === true ? true : marcacao ? marcacao.aoVivo : null
+    if (!videoId || aoVivo === null) return { estado: 'falhou', motivo: 'o YouTube pediu login (bloqueio de robô)' }
+    if (!aoVivo) return { estado: 'sem-live' }
+    const titulo = String(detalhes?.title || html.match(/<meta name="title" content="([^"]*)"/)?.[1] || '').slice(0, 160)
     return { estado: 'ao-vivo', videoId, titulo, liberacao: 'conferir' }
   }
   if (!/\/watch\?v=/.test(canonica)) {
@@ -126,7 +130,10 @@ async function main(arquivo) {
       }
       novos[c.id] = achado
       if (achado.estado === 'falhou') {
-        const sinais = { canonica: html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || '-', broadcast: /schema\.org\/BroadcastEvent/.test(html), isLiveTrue: /"isLive":true/.test(html), isLiveNow: /"isLiveNow":true/.test(html), tamanho: html.length }
+        const p = lerRespostaDoPlayer(html)
+        const sinais = { chavesPlayer: Object.keys(p || {}), detalhes: p?.videoDetails ? { id: p.videoDetails.videoId, isLive: p.videoDetails.isLive, upcoming: p.videoDetails.isUpcoming } : null,
+          og: html.match(/<meta property="og:url" content="([^"]+)"/)?.[1] || '-', perto: html.match(/"videoId":"([A-Za-z0-9_-]{11})"[^{}]{0,200}"isLive":true/)?.[1] || '-',
+          canonica: html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || '-', broadcast: /schema\.org\/BroadcastEvent/.test(html), isLiveTrue: /"isLive":true/.test(html), isLiveNow: /"isLiveNow":true/.test(html), tamanho: html.length }
         console.log(`  sinais ${c.nome}: ${JSON.stringify(sinais)}`)
       }
     } catch (e) { novos[c.id] = { estado: 'falhou', motivo: e.message } }
