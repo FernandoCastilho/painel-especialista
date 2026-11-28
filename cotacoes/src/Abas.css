@@ -5,17 +5,17 @@
 
 /* 3 · filtros: pílula */
 body .seg { border: 0; border-radius: 0; background: transparent; gap: 4px; overflow: visible; }
-body .seg button { border: 1px solid #2a2820; border-radius: 999px; background: transparent; color: var(--mut, #8a8576); padding: 5px 12px; box-shadow: none; }
-body .seg button + button { border-left: 1px solid #2a2820; }
-body .seg button:hover { color: var(--fg, #e8e4d8); border-color: #4a3a12; }
+body .seg button { border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--mut, var(--mut)); padding: 5px 12px; box-shadow: none; }
+body .seg button + button { border-left: 1px solid var(--line); }
+body .seg button:hover { color: var(--fg, #e8e4d8); border-color: var(--line-strong); }
 body .seg button[aria-pressed='true'], body .seg button.on { background: var(--amber, var(--accent)); border-color: var(--amber, var(--accent)); color: var(--on-brand); font-weight: 700; box-shadow: none; }
 body .market-terminal .seg, body .currency-comparison .seg { border: 0; border-radius: 0; }
-body .market-terminal .seg button, body .currency-comparison .seg button { background: transparent; color: var(--mut, #8a8576); border-radius: 999px; }
+body .market-terminal .seg button, body .currency-comparison .seg button { background: transparent; color: var(--mut, var(--mut)); border-radius: 999px; }
 body .market-terminal .seg button[aria-pressed='true'], body .currency-comparison .seg button[aria-pressed='true'] { background: var(--amber, var(--accent)); color: var(--on-brand); }
 @media (max-width: 699px) { body .seg button { min-height: 44px; } }
 
 /* 2 · abas de seção: sublinhado âmbar */
-body .cen-nav, body .seg.bn-fam { display: flex; flex-wrap: wrap; gap: 2px; border: 0; border-bottom: 1px solid var(--line, #1d1b15); border-radius: 0; }
+body .cen-nav, body .seg.bn-fam { display: flex; flex-wrap: wrap; gap: 2px; border: 0; border-bottom: 1px solid var(--line, var(--line)); border-radius: 0; }
 body .cen-nav button, body .seg.bn-fam button { min-height: 40px; padding: 0 12px; background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px; color: var(--mut); font: 700 .75rem var(--sans); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-shadow: none; }
 body .cen-nav button:hover, body .seg.bn-fam button:hover { color: var(--fg, #e8e4d8); background: transparent; }
 body .cen-nav button.on, body .seg.bn-fam button[aria-pressed='true'] { color: var(--amber, var(--accent)); border-bottom-color: var(--amber, var(--accent)); background: transparent; font-weight: 700; }

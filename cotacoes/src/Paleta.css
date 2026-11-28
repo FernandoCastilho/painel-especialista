@@ -86,10 +86,12 @@ html:root[data-theme] body .topbar-brand { background:var(--p-accent); color:var
   html:root[data-theme] body main.app, html:root[data-theme] body main.app:has(.market-workspace) {
     max-width:1440px; margin-inline:auto; padding:8px 16px 32px;
   }
-  html:root[data-theme] body .term-head .topbar { max-width:1440px; margin-inline:auto; }
+  html:root[data-theme] body .term-head :is(.topbar,.tape) { padding-inline:16px; box-sizing:border-box; }
 }
 @media (min-width:1440px) {
   html:root[data-theme] body main.app, html:root[data-theme] body main.app:has(.market-workspace) { padding-inline:24px; }
+  /* Fundo do cabeçalho de ponta a ponta; o conteúdo dele alinha com as bordas do Painel. */
+  html:root[data-theme] body .term-head :is(.topbar,.tape) { padding-inline:max(24px, calc((100% - 1392px) / 2)); }
 }
 
 /* Cantos: três medidas para todo o Painel. */
@@ -102,3 +104,21 @@ html:root[data-theme] body .podcast-page {
 }
 html:root[data-theme] body .podcast-controls .podcast-play { color:var(--p-on-accent); }
 html:root[data-theme] body .podcast-program.is-selected { background:var(--p-accent-soft); }
+
+/* Calculadoras: cada calculadora tinha o próprio laranja e o próprio azul-marinho.
+   Aqui todas passam a usar o acento e o tom forte da paleta. */
+html:root[data-theme] body :is(main.app.app-calculators, .cx, .cx-desconto, .cx-cg, .cbs, .ft, .fp) {
+  --u-orange:var(--p-accent); --u-orange-hover:color-mix(in srgb, var(--p-accent) 85%, var(--p-fg)); --u-on-orange:var(--p-on-accent);
+  --e4-orange:var(--p-accent); --dscp-orange:var(--p-accent); --cgp-orange:var(--p-accent); --cf-orange:var(--p-accent);
+  --cd-orange:var(--p-accent); --cbs-orange:var(--p-accent); --fi-orange:var(--p-accent); --od-orange:var(--p-accent); --ft-orange:var(--p-accent);
+  --e4-navy:var(--p-strong); --dscp-navy:var(--p-strong); --cgp-navy:var(--p-strong); --cf-navy:var(--p-strong);
+  --cd-navy:var(--p-strong); --cbs-navy:var(--p-strong); --fi-navy:var(--p-strong); --od-navy:var(--p-strong); --ft-navy:var(--p-strong);
+  --fp-juros:var(--p-accent);
+}
+
+/* Número da etapa sobre a faixa forte: índigo claro, legível nos dois temas. */
+html:root[data-theme] body:not(#u) :is(.cx-panel > header, .giro-screen .lm-head, .giro-screen legend) .rt-step { color:#c7d2fe; }
+
+/* Podcast: capa e ícones dos programas no tom forte da paleta, no lugar do azul próprio. */
+html:root[data-theme] body .podcast-page .podcast-art { background:var(--p-strong); color:#c7d2fe; }
+html:root[data-theme] body .podcast-page .podcast-program-art { background:var(--p-strong); color:#c7d2fe; }

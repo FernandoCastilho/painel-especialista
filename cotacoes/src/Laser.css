@@ -16,6 +16,6 @@ html:has(.laser-canvas) { touch-action: none; }
 /* Encaixe no cabeçalho (ao lado do "i"): o botão deixa de flutuar sobre os dados */
 .laser-slot { display: none; align-items: center; }
 .laser-slot .laser-btn { position: static; }
-.laser-slot-top { display: flex; align-self: stretch; border-left: 1px solid var(--line, #1d1b15); }
+.laser-slot-top { display: flex; align-self: stretch; border-left: 1px solid var(--line, var(--line)); }
 @media (max-width: 999px) { .laser-slot-m { display: inline-flex; margin-block: -8px; } }
 .laser-slot-top .laser-btn { width: 44px; }

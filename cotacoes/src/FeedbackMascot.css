@@ -42,7 +42,7 @@
 .mascot-slot{display:none;align-items:center;justify-content:center;flex:none;width:44px;min-height:44px}
 .mascot-slot .mascot-mini{position:static;width:36px;height:36px;transform-origin:top right}
 .mascot-slot .mascot-mini-face{background-position:-2px 1px;background-size:40px auto}
-.mascot-slot-top{display:flex;align-self:stretch;border-left:1px solid var(--line,#1d1b15)}
+.mascot-slot-top{display:flex;align-self:stretch;border-left:1px solid var(--line,var(--line))}
 /* Celular e tablet (15/11/2026, decisão do Fernando): a coruja pequena fica na linha dos ícones do topo, ao lado do tema; sem espaço reservado acima do conteúdo. */
 @media(max-width:999px){.mascot-slot-m{display:inline-flex;margin-block:-8px}.clocks-top .mascot-slot-m{margin-block:0;align-self:center}.mascot-slot-m .mascot-mini:hover,.mascot-slot-m .mascot-mini:focus-visible{transform:scale(1.12)}}
 .mascot-figure{display:flex;justify-content:center;cursor:zoom-out}
