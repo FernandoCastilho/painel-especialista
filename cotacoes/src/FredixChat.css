@@ -4,8 +4,8 @@
 .fredix-conversa{display:flex;flex-direction:column;gap:8px;min-height:120px;max-height:45dvh;overflow-y:auto;overscroll-behavior:contain;margin:4px 0 12px;padding:2px}
 .fredix-msg{margin:0;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;max-width:88%}
 .fredix-voce{align-self:flex-end;background:var(--surface-2,#191914);border:1px solid var(--line,#484739)}
-.fredix-fredix{align-self:flex-start;border:1px solid var(--line,#484739);border-left:3px solid var(--amber,#ffb000);background:var(--card,transparent)}
-.fredix-fredix a{color:var(--amber,#ffb000);text-decoration:underline}
+.fredix-fredix{align-self:flex-start;border:1px solid var(--line,#484739);border-left:3px solid var(--amber,var(--accent));background:var(--card,transparent)}
+.fredix-fredix a{color:var(--amber,var(--accent));text-decoration:underline}
 .fredix-pensando{opacity:.75;font-style:italic;border-style:dashed;border-left-width:1px}
 .fredix-sugestoes{display:flex;flex-wrap:wrap;gap:6px}
 .fredix-sugestoes button,.fredix-nova{min-height:36px;padding:6px 10px;border:1px solid var(--line,#484739);border-radius:999px;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer}

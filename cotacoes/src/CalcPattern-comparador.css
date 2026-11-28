@@ -45,7 +45,7 @@
 :root[data-theme] body .credit-workspace .seg button + button,
 :root[data-theme] body .credit-workspace .credit-bw.credit-comparison .credit-controls .seg button + button { border-left:1px solid var(--bw-field-line); }
 :root[data-theme] body .credit-workspace .seg button[aria-pressed="true"],
-:root[data-theme] body .credit-workspace .credit-bw.credit-comparison .credit-controls .seg button[aria-pressed="true"] { background:#ffb000; color:#000; font-weight:700; }
+:root[data-theme] body .credit-workspace .credit-bw.credit-comparison .credit-controls .seg button[aria-pressed="true"] { background:var(--accent); color:var(--on-brand); font-weight:700; }
 @media (max-width:760px) {
   :root[data-theme] body .credit-workspace .seg { display:flex; width:100%; }
   :root[data-theme] body .credit-workspace .credit-count > span:first-child { flex-basis:100%; }

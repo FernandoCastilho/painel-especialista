@@ -19,11 +19,11 @@
 .scenarios .scenario-table .sc-ref td { font-weight:700; }
 .scenarios .scenario-table tbody tr:last-child > * { border-bottom:0; }
 /* Sinal contra o Focus: fica num lugar fixo à direita do número, para os números continuarem alinhados. */
-.scenarios td .fm { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:14px; text-align:center; font-size:.6875rem; font-weight:700; line-height:1; }
+.scenarios td .fm { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:14px; text-align:center; font-size:.75rem; font-weight:700; line-height:1; }
 .scenarios .fm.up { color:var(--up); }
 .scenarios .fm.down { color:var(--down); }
 .scenarios .fm.same { color:var(--mut); opacity:.7; }
-.scenarios caption .fm { font-size:.6875rem; }
+.scenarios caption .fm { font-size:.75rem; }
 .scenarios .sc-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .scenarios .scenario-note { margin:6px 0 0; color:var(--mut); font-size:.75rem; line-height:1.5; }
 @media (min-width:1100px) {
@@ -42,12 +42,12 @@
   .scenarios .scenario-table th, .scenarios .scenario-table td { padding:9px 2px; }
   .scenarios .scenario-table td { padding-right:14px; font-size:.8125rem; }
   .scenarios .scenario-table thead tr:last-child th { padding-right:2px; font-size:.8125rem; }
-  .scenarios .scenario-table small { font-size:.6875rem; }
+  .scenarios .scenario-table small { font-size:.75rem; }
   .scenarios .scenario-table tbody th, .scenarios .scenario-table thead tr:first-child th:first-child { padding-left:8px; }
   .scenarios .scenario-table tbody th { font-size:.875rem; }
   .scenarios .scenario-table .sc-wide, .scenarios .scenario-table .sc-sep { display:none; }
   .scenarios .scenario-table .sc-age { display:block; }
-  .scenarios td .fm { right:1px; width:11px; font-size:.625rem; }
+  .scenarios td .fm { right:1px; width:11px; font-size:.75rem; }
   .scenarios .scenario-table caption { padding-inline:8px; }
   /* O título ganha a linha inteira; hora da atualização e botões de ano descem para a linha de baixo, sem encavalar. */
   .scenarios .history-head { gap:4px 12px; }

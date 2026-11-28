@@ -34,6 +34,8 @@ export default function Nav({ tab, onTab, desktop = false }) {
   const ref = useRef(null), trigger = useRef(null), menu = useRef(null), firstItem = useRef(0)
   const menuId = useId()
   const [mark, setMark] = useState(null)
+  // Trocar de seção por outro caminho (endereço, atalho, busca) fecha o Mais.
+  useEffect(() => { setMore(false) }, [tab])
   useLayoutEffect(() => {
     if (!desktop || !ref.current) return undefined
     const nav = ref.current

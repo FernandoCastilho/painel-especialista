@@ -656,9 +656,12 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .alerta-var-item .btn { min-height: 44px; min-width: 44px; }
 .alerta-var-perm { justify-self: start; min-height: 44px; }
 
-.alerta-var-permissao { padding: 10px 12px; border: 1px solid var(--line); background: var(--surface-2); font-size: .88rem; }
-.alerta-var-permissao p { margin: 0 0 6px; }
+.alerta-var-permissao { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; border: 1px solid var(--line); background: var(--surface-2); font-size: .88rem; }
+.alerta-var-permissao p { margin: 0; flex: 1 1 320px; }
+.alerta-var-fechar { min-height: 44px; }
 .alerta-var-metodo { margin: 0; font-size: .8rem; }
+.alerta-var-metodo summary { display: inline-flex; align-items: center; min-height: 32px; color: var(--mut); cursor: pointer; }
+.alerta-var-metodo p { margin: 4px 0 0; }
 
 
 /* Aba Juros: atalhos no topo e tabelas do CDI futuro e das curvas com a mesma aparência da tabela de referência
@@ -752,7 +755,7 @@ section[aria-labelledby="r-moedas"] .img-share, .img-share { width:44px; height:
 .fx-balao ul { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; }
 .fx-balao .fx-news-head { margin:0 0 4px; display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; }
 .fx-balao .fx-news-head b { color:#2a2100; }
-.fx-balao .fx-news-note { margin:6px 0 0; font-size:.72rem; color:#6b5a1e; }
+.fx-balao .fx-news-note { margin:6px 0 0; font-size:.75rem; color:#6b5a1e; }
 .fx-balao-fechar { margin-left:auto; min-width:32px; min-height:32px; border:0; border-radius:50%; background:transparent; color:#2a2100; font-size:1.2rem; line-height:1; cursor:pointer; }
 .fx-balao-fechar:hover, .fx-balao-fechar:focus-visible { background:rgba(0,0,0,.08); }
 .fx-news-note { margin:6px 0 0; font-size:.75rem; }

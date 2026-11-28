@@ -52,7 +52,7 @@
 :root[data-theme] body .bw:not(.e4) .fm-equiv { display:flex; align-items:center; gap:6px; margin:0 0 10px; padding:8px 12px; border:1px solid var(--bw-line); border-radius:8px; font-size:.85rem; color:var(--bw-mut); }
 :root[data-theme] body .bw:not(.e4) .fm-equiv b { color:var(--bw-ink); }
 /* Taxas e valores em reais, agrupados */
-:root[data-theme] body .bw:not(.e4) .fm-grouped tr.fm-grp > th { padding:10px 16px 4px !important; background:none !important; color:var(--bw-mut) !important; font-size:.7rem !important; font-weight:700 !important; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body .bw:not(.e4) .fm-grouped tr.fm-grp > th { padding:10px 16px 4px !important; background:none !important; color:var(--bw-mut) !important; font-size:.75rem !important; font-weight:700 !important; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--bw-line); }
 :root[data-theme] body .bw:not(.e4) .fm-grouped td { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
 :root[data-theme] body .bw:not(.e4) .fm-grouped tr.fm-total-row > * { font-size:.9rem !important; border-top:2px solid var(--bw-strong-line, var(--bw-line)); }
 @media (max-width:480px) {
@@ -72,12 +72,12 @@
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-comparison { order:1; }
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-iof-premise,
 :root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .status,
-:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-reference-sources { margin:8px 0 0; font-size:.72rem; }
+:root[data-theme] body .bw:not(.e4) .fm-results #fm-result > .fm-reference-sources { margin:8px 0 0; font-size:.75rem; }
 /* Dados básicos: compactos, como lembrete do que foi cotado. */
 :root[data-theme] body .bw:not(.e4) .fm-results .fm-result-workspace .expandable-panel .expandable-heading { padding:8px 12px !important; }
 :root[data-theme] body .bw:not(.e4) .fm-results .fm-result-workspace .expandable-panel .expandable-heading h3 { font-size:.8rem; color:var(--bw-mut); }
 :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px 12px; padding:10px 12px; }
-:root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary dt { font-size:.68rem; }
+:root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary dt { font-size:.75rem; }
 :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary dd { margin-top:1px; font-size:.78rem; }
 .bw:not(.e4) .fm-answer-side b { font-size:1rem; white-space:nowrap; }
 @media (min-width:1200px) {
@@ -91,7 +91,7 @@
 /* Taxa ao ano em cima, ao mês embaixo. */
 :root[data-theme] body .bw:not(.e4) .fm-grouped .fm-rate-pair { display:inline-flex; flex-direction:column; align-items:flex-end; }
 :root[data-theme] body .bw:not(.e4) .fm-grouped .fm-rate-pair > [aria-hidden] { display:none; }
-:root[data-theme] body .bw:not(.e4) .fm-grouped .fm-rate-pair > span:last-child { font-size:.72rem; color:var(--bw-mut); }
+:root[data-theme] body .bw:not(.e4) .fm-grouped .fm-rate-pair > span:last-child { font-size:.75rem; color:var(--bw-mut); }
 @media (max-width:640px) {
   :root[data-theme] body .bw:not(.e4) .fm-results .fm-operation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }

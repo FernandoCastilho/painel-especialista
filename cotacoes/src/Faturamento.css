@@ -68,11 +68,11 @@
 .ft-atalhos .seg > button { border-radius: 0; }
 .ft-atalhos .seg > button:first-child { border-radius: 8px 0 0 8px; }
 .ft-atalhos .seg > button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
-.ft-atalhos .seg > button[aria-pressed=true] { background: var(--cx-select-bg, #ffb000); color: var(--cx-select-fg, #000); }
+.ft-atalhos .seg > button[aria-pressed=true] { background: var(--cx-select-bg, var(--accent)); color: var(--cx-select-fg, var(--on-brand)); }
 .ft-img { gap: 6px; justify-content: flex-end; }
 .ft-atalhos > .ft-icone { display: inline-grid; place-items: center; width: 40px; min-height: 40px; padding: 0; }
 .ft-atalhos > .ft-icone:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
-.ft-atalhos > .ft-icone:focus-visible { outline: 2px solid var(--cx-select-bg, #ffb000); outline-offset: 2px; }
+.ft-atalhos > .ft-icone:focus-visible { outline: 2px solid var(--cx-select-bg, var(--accent)); outline-offset: 2px; }
 /* Paleta clara usada só no instante de gerar a imagem. */
 :root .ft.ft[data-ft-export] { --ft-bar: #000d3c; --ft-bar-fg: #fff; --ft-debt: #c2410c; --ft-debt-fg: #fff; --ft-box: #c99700; --up: #1a7f37; --down: #c62828; }
 :root .ft.ft[data-ft-export] .ft-chart { color: #1f2937; }
@@ -103,4 +103,4 @@
 .ft-saz span { position: absolute; left: 20%; right: 20%; border-radius: 2px; }
 .ft-saz-alto span { bottom: calc(100% - 40px); background: var(--up, #1a7f37); max-height: 40px; }
 .ft-saz-baixo span { top: 40px; background: var(--down, #d33); max-height: 34px; }
-.ft-saz small { position: absolute; bottom: 0; font-size: .6875rem; opacity: .8; }
+.ft-saz small { position: absolute; bottom: 0; font-size: .75rem; opacity: .8; }

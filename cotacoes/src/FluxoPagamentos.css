@@ -18,7 +18,7 @@
 :root[data-theme] body .cx .fp :is(.fp-rotulo-juros, .fp-rotulo-amort) { font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
 :root[data-theme] body .cx .fp .fp-rotulo-juros { fill: #0b1f44; }
 :root[data-theme] body .cx .fp .fp-rotulo-amort { fill: #fff; }
-@media screen { :root[data-theme="dark"] body .cx .fp .fp-rotulo-amort { fill: #071122; } }
+@media screen { :root[data-theme="dark"] body .cx .fp .fp-rotulo-amort { fill: var(--bg); } }
 /* Trecho selecionado por arrasto: faixa e linhas pontilhadas no padrão dos outros gráficos do painel (ChartComparison). */
 :root[data-theme] body .cx .fp .fp-selecao rect { fill: var(--accent); opacity: .14; }
 :root[data-theme] body .cx .fp .fp-selecao line { stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 4 3; }

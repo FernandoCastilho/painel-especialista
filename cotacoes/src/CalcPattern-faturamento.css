@@ -20,11 +20,11 @@
 .ft .ft-equiv b { color:var(--bw-ink, var(--fg)); font-variant-numeric:tabular-nums; }
 .ft .ft-equiv small { font-size:.75rem; }
 .ft .ft-kpis > .ft-values-box { grid-column:2; grid-row:1 / span 2; min-width:0; }
-.ft .ft-values-grp { margin:0; padding:0 0 4px; font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--bw-mut, var(--mut)); border-bottom:1px solid var(--bw-line, var(--line)); }
+.ft .ft-values-grp { margin:0; padding:0 0 4px; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--bw-mut, var(--mut)); border-bottom:1px solid var(--bw-line, var(--line)); }
 .ft .ft-values { display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:0; }
 .ft .ft-values > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:baseline; padding:6px 0; border-bottom:1px solid var(--bw-line, var(--line)); }
 .ft .ft-values dt { font-size:.85rem; color:var(--bw-ink, var(--fg)); }
-.ft .ft-values dt small { display:block; font-size:.72rem; color:var(--bw-mut, var(--mut)); }
+.ft .ft-values dt small { display:block; font-size:.75rem; color:var(--bw-mut, var(--mut)); }
 .ft .ft-values dd { margin:0; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; font-weight:600; }
 .ft .ft-values > .ft-values-total { border-top:2px solid var(--bw-line, var(--line)); border-bottom:0; }
 .ft .ft-values > .ft-values-total :is(dt,dd) { font-weight:700; }
@@ -47,8 +47,8 @@
 }
 
 /* Aviso de linhas ignoradas: faixa no topo do quadro de dados. */
-.ft .ft-input > .ft-avisos { position:relative; margin:0 0 4px; padding:10px 12px 10px 40px; list-style:none; border:1px solid var(--line); border-left:4px solid var(--amber, #ffb000); border-radius:8px; background:var(--surface-2, transparent); color:var(--fg); font-size:.8125rem; }
-.ft .ft-input > .ft-avisos::before { content:"!"; position:absolute; left:12px; top:10px; width:18px; height:18px; border-radius:50%; background:var(--amber, #ffb000); color:#000; font-weight:800; font-size:.75rem; line-height:18px; text-align:center; }
+.ft .ft-input > .ft-avisos { position:relative; margin:0 0 4px; padding:10px 12px 10px 40px; list-style:none; border:1px solid var(--line); border-left:4px solid var(--amber, var(--accent)); border-radius:8px; background:var(--surface-2, transparent); color:var(--fg); font-size:.8125rem; }
+.ft .ft-input > .ft-avisos::before { content:"!"; position:absolute; left:12px; top:10px; width:18px; height:18px; border-radius:50%; background:var(--amber, var(--accent)); color:var(--on-brand); font-weight:800; font-size:.75rem; line-height:18px; text-align:center; }
 
 /* Tela da calculadora (fora do slide): quadros e resultado. */
 :root[data-theme] body main.app.app-calculators .ft > .ft-dados > header { background:var(--ft-navy); color:#fff; border-bottom:4px solid var(--ft-orange); }

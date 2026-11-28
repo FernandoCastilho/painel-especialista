@@ -34,7 +34,7 @@
 .bank-detail-table .bank-change--caiu { color:var(--down,#d55181); }
 /* Provisão e inadimplência: subir não é "bom". A seta mostra a direção, sem verde nem vermelho. */
 .banks-table .bank-change--neutro,.bank-detail-table .bank-change--neutro { color:var(--mut); }
-.banks-alert { margin:8px 0; padding:8px 12px; border-left:3px solid var(--amber,#ffb000); background:var(--card); color:var(--fg); font-size:.85rem; line-height:1.5; }
+.banks-alert { margin:8px 0; padding:8px 12px; border-left:3px solid var(--amber,var(--accent)); background:var(--card); color:var(--fg); font-size:.85rem; line-height:1.5; }
 /* Janela alta: a tabela inteira cabe na página, sem caixa de rolagem cortando a última linha. */
 @media (min-width:1000px) and (min-height:860px) { .banks-table-scroll { max-height:none; } }
 .bank-details a,.banks-method a { color:var(--accent,var(--fg)); text-decoration:underline; }
@@ -67,7 +67,7 @@
 .bank-quarter { margin-top:0!important; }
 .bank-value-line { display:inline-flex; align-items:center; justify-content:flex-end; gap:6px; }
 /* Destaque do indicador: ponto âmbar (antes era um troféu em emoji, que muda de desenho em cada aparelho). O nome falado vem do aria-label. */
-.bank-trophy { display:inline-block; flex:none; width:7px; height:7px; margin-left:6px; border-radius:50%; background:var(--amber, #ffb000); box-shadow:0 0 0 2px color-mix(in srgb, var(--amber, #ffb000) 25%, transparent); vertical-align:middle; }
+.bank-trophy { display:inline-block; flex:none; width:7px; height:7px; margin-left:6px; border-radius:50%; background:var(--amber, var(--accent)); box-shadow:0 0 0 2px color-mix(in srgb, var(--amber, var(--accent)) 25%, transparent); vertical-align:middle; }
 .bank-history-picker { display:flex; flex-direction:column; gap:8px; max-width:340px; font-size:.85rem; }
 .bank-history-picker select { width:100%; min-height:44px; border:1px solid var(--line); border-radius:5px; background:var(--surface-2); color:var(--fg); padding:8px; font:inherit; }
 .bank-metric-history h2 { font-size:1.15rem; margin:0 0 16px; }

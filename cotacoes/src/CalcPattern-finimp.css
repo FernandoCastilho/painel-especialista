@@ -28,7 +28,7 @@
 
 /* Aviso de dado faltando: faixa âmbar no topo do quadro, com "!". */
 :root[data-theme] body main.app.app-calculators .cx.fi .fi-alerta { display:flex; align-items:center; gap:8px; margin:12px var(--cx-space, 20px) 0; padding:8px 10px; border:0; border-left:4px solid #e08a00; border-radius:6px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.82rem; line-height:1.4; }
-:root[data-theme] body .cx.fi .fi-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.72rem; font-weight:800; line-height:1; }
+:root[data-theme] body .cx.fi .fi-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.75rem; font-weight:800; line-height:1; }
 
 /* Encargos: uma coluna por instituição, com os encargos um abaixo do outro. A unidade vai em letra menor, ao lado do nome. */
 :root[data-theme] body .cx.fi .fi-banks { padding-top:14px; }

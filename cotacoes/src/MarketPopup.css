@@ -3,7 +3,7 @@ dialog.market-popup{color-scheme:light;--text:#080d35;--mut:#4d5874;--up:#087223
 .market-popup::backdrop{background:rgba(5,12,37,.72)}
 .market-popup *{box-sizing:border-box}
 .market-popup h2,.market-popup h3,.market-popup p{margin:0;color:inherit}
-.market-popup .mp-ribbon{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:66px;padding:10px 22px 10px 32px;background:linear-gradient(145deg,#02092f 0%,#00113f 72%,#ff6900 72%,#ff7900 79%,#072eae 79%,#06134a 100%);color:#fff;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.market-popup .mp-ribbon{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:66px;padding:10px 22px 10px 32px;background:linear-gradient(145deg,#02092f 0%,#00113f 72%,#ff6900 72%,var(--accent) 79%,#072eae 79%,#06134a 100%);color:var(--on-brand);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .market-popup .mp-ribbon button{flex-shrink:0;width:46px;height:46px;min-width:46px;min-height:46px;border:1px solid #a2b2d4;border-radius:10px;background:#04113f;color:#fff;font-size:34px;font-weight:400;line-height:1;cursor:pointer;padding:0}
 .market-popup button:focus-visible{outline:3px solid #ff9700;outline-offset:3px}
 .market-popup .mp-content{padding:26px 28px 20px}

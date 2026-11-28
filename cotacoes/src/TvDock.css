@@ -13,7 +13,7 @@
 }
 .tv-dock-bar { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-block-size: 44px; }
 .tv-dock-title { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: .9rem; }
-.tv-dock-live { display: inline-block; margin-inline-end: 4px; padding: 1px 6px; border-radius: 4px; background: #c62828; color: #fff; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; vertical-align: 1px; }
+.tv-dock-live { display: inline-block; margin-inline-end: 4px; padding: 1px 6px; border-radius: 4px; background: #c62828; color: #fff; font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; vertical-align: 1px; }
 .tv-dock-tools, .tv-dock-tools > [role="group"] { display: flex; align-items: center; gap: 2px; }
 .tv-dock-tools button {
   min-inline-size: 36px; min-block-size: 36px; padding: 0 6px;
@@ -30,11 +30,11 @@
   font: inherit; text-align: left; cursor: pointer;
 }
 .tv-dock-channels button b { font-size: .85rem; }
-.tv-dock-channels small { color: var(--mut); font-size: .7rem; }
+.tv-dock-channels small { color: var(--mut); font-size: .75rem; }
 .tv-dock-channels button[aria-pressed="true"] { border-color: #c62828; box-shadow: inset 0 0 0 1px #c62828; }
 .tv-dock-screen { aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; }
 .tv-dock-screen iframe { display: block; inline-size: 100%; block-size: 100%; border: 0; }
-.tv-dock-note { margin: 6px 2px 0; color: var(--mut); font-size: .72rem; line-height: 1.35; }
+.tv-dock-note { margin: 6px 2px 0; color: var(--mut); font-size: .75rem; line-height: 1.35; }
 .tv-dock-note a { color: inherit; text-decoration: underline; }
 
 /* Abaixo de 1000 px o menu fica na base da tela: a TV sobe para não cobri-lo (a altura exata vem do TvDock.jsx). */

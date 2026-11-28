@@ -1,0 +1,104 @@
+/* Paleta única do Painel (proposta de 28/11/2026, versão de teste).
+   Uma base de cinzas frios, um acento índigo e três cores de situação, iguais em todas as abas.
+   Contraste conferido: texto 4,5:1 ou mais; contornos de campos, botões e abas 3:1 ou mais.
+   Carregado depois de Theme.css. As camadas das calculadoras chegam depois, sob demanda,
+   por isso os seletores abaixo levam html e classes repetidas para valer sobre elas. */
+
+html:root[data-theme="dark"] {
+  color-scheme: dark;
+  --p-bg:#0e1116; --p-card:#161b22; --p-surface-2:#1e242d; --p-surface-3:#262d37;
+  --p-line:#2b333d; --p-line-strong:#68727f;
+  --p-fg:#e7eaee; --p-mut:#a3adba;
+  --p-accent:#a5b4fc; --p-on-accent:#0e1116; --p-accent-soft:#252a4a;
+  --p-strong:#312e81; --p-on-strong:#ffffff;
+  --p-up:#4ade80; --p-down:#f87171; --p-warn:#fbbf24;
+  --p-up-soft:#10261c; --p-down-soft:#2c1618; --p-warn-soft:#2a2112; --p-warn-ink:#fde68a;
+  --p-flash-up:#12321f; --p-flash-down:#3a1a1c;
+}
+html:root[data-theme="light"] {
+  color-scheme: light;
+  --p-bg:#f6f7f9; --p-card:#ffffff; --p-surface-2:#eef0f3; --p-surface-3:#e3e6eb;
+  --p-line:#d5d9e0; --p-line-strong:#7d8695;
+  --p-fg:#14181f; --p-mut:#4b5563;
+  --p-accent:#4338ca; --p-on-accent:#ffffff; --p-accent-soft:#e0e7ff;
+  --p-strong:#312e81; --p-on-strong:#ffffff;
+  --p-up:#047857; --p-down:#b91c1c; --p-warn:#92400e;
+  --p-up-soft:#ecfdf5; --p-down-soft:#fef2f2; --p-warn-soft:#fffbeb; --p-warn-ink:#78350f;
+  --p-flash-up:#dcf3e6; --p-flash-down:#fbe3e3;
+}
+
+/* Os mesmos nomes que o Painel já usa passam a apontar para a paleta única,
+   no corpo da página e dentro das calculadoras, do mapa do site e do comparador. */
+html:root[data-theme],
+html:root[data-theme] body .cx.cx,
+html:root[data-theme] body .bw.bw,
+html:root[data-theme] body .bw.bw .cx,
+html:root[data-theme] body .bw.bw :is(.bnp-dialog, .credit-presentation),
+html:root[data-theme] body main.app.app-calculators.app-calculators,
+html:root[data-theme] body .credit-workspace.credit-workspace,
+html:root[data-theme] body .site-map.sm-azul.sm-azul {
+  --bg:var(--p-bg); --card:var(--p-card); --surface-2:var(--p-surface-2); --surface-3:var(--p-surface-3);
+  --raised:var(--p-surface-2); --line:var(--p-line); --line-strong:var(--p-line-strong);
+  --fg:var(--p-fg); --mut:var(--p-mut); --muted:var(--p-mut);
+  --up:var(--p-up); --down:var(--p-down); --warn:var(--p-warn);
+  --accent:var(--p-accent); --amber:var(--p-accent);
+  --brand-fill:var(--p-accent); --on-brand:var(--p-on-accent);
+  --pop-bg:var(--p-card); --flash-up:var(--p-flash-up); --flash-down:var(--p-flash-down);
+
+  /* Calculadoras */
+  --cx-field-bg:var(--p-card); --cx-line-strong:var(--p-line-strong);
+  --cx-select-bg:var(--p-accent); --cx-select-fg:var(--p-on-accent);
+  --cx-primary-bg:var(--p-accent); --cx-primary-fg:var(--p-on-accent);
+  --cx-result-bg:var(--p-strong); --cx-result-fg:var(--p-on-strong); --cx-result-line:var(--p-accent);
+  --cx-notice-bar:var(--p-warn);
+  --cp-orange:var(--p-accent); --cp-navy:var(--p-strong);
+  --cp-alert-bg:var(--p-warn-soft); --cp-alert-line:var(--p-warn); --cp-alert-ink:var(--p-warn-ink);
+  --bw-page:var(--p-bg); --bw-card:var(--p-card); --bw-soft:var(--p-surface-2); --bw-tint:var(--p-accent-soft);
+  --bw-good-soft:var(--p-up-soft); --bw-warm-soft:var(--p-warn-soft); --bw-warm-tint:var(--p-warn-soft); --bw-bad-soft:var(--p-down-soft);
+  --bw-ink:var(--p-fg); --bw-mut:var(--p-mut); --bw-muted:var(--p-mut); --bw-link:var(--p-accent);
+  --bw-warm-ink:var(--p-warn); --bw-warn-ink:var(--p-warn-ink); --bw-bad-ink:var(--p-down);
+  --bw-line:var(--p-line); --bw-field-line:var(--p-line-strong); --bw-strong-line:var(--p-accent);
+  --bw-g1:var(--p-surface-2); --bw-g2:var(--p-card); --bw-g3:var(--p-accent-soft); --bw-g4:var(--p-card);
+  --bw-g5:var(--p-surface-2); --bw-g6:var(--p-surface-2); --bw-g7:var(--p-card);
+  --sm-board:var(--p-surface-2);
+}
+html:root[data-theme="dark"] body .bw.bw { --bw-scheme:dark; }
+html:root[data-theme="light"] body .bw.bw { --bw-scheme:light; }
+
+/* Linha selecionada e links no tema claro: saem o bege e o marrom, entra o acento. */
+html:root[data-theme="light"] body .market-terminal .market-record.is-selected,
+html:root[data-theme="light"] body .market-terminal .market-record.is-selected .market-values th,
+html:root[data-theme="light"] body .oil-spot-value, html:root[data-theme="light"] body .config-table kbd,
+html:root[data-theme="light"] body .learn-tag, html:root[data-theme="light"] body .learn-result,
+html:root[data-theme="light"] body .learn-list button.on { background:var(--p-accent-soft); }
+:root[data-theme="light"] main a { color:var(--p-accent); }
+:root[data-theme="light"] main a:visited { color:var(--p-accent); }
+html:root[data-theme="light"] body .config-table .chip.up { background:var(--p-up-soft); }
+html:root[data-theme="light"] body .config-table .chip.down { background:var(--p-down-soft); }
+
+/* Cabeçalho: mesma superfície da paleta nos dois temas (sai o preto puro) e marca legível sobre o acento. */
+html:root[data-theme] body .term-head, html:root[data-theme] body .topbar, html:root[data-theme] body .tape { background:var(--p-card); }
+html:root[data-theme] body .topbar-brand { background:var(--p-accent); color:var(--p-on-accent); }
+
+/* Largura: até 1440 px, centralizado; no notebook o Painel ocupa a tela toda com margem de 16 px.
+   Cabeçalho e conteúdo param nas mesmas bordas. TV e Apresentar seguem em tela cheia (não usam main.app). */
+@media (min-width:1000px) {
+  html:root[data-theme] body main.app, html:root[data-theme] body main.app:has(.market-workspace) {
+    max-width:1440px; margin-inline:auto; padding:8px 16px 32px;
+  }
+  html:root[data-theme] body .term-head .topbar { max-width:1440px; margin-inline:auto; }
+}
+@media (min-width:1440px) {
+  html:root[data-theme] body main.app, html:root[data-theme] body main.app:has(.market-workspace) { padding-inline:24px; }
+}
+
+/* Cantos: três medidas para todo o Painel. */
+html:root[data-theme] { --r-cell:6px; --r-ctl:8px; --r-card:12px; }
+
+/* Podcast: sai o bloco azul próprio; o player usa as superfícies e o acento da paleta. */
+html:root[data-theme] body .podcast-page {
+  --pc-bg:var(--p-card); --pc-head:var(--p-surface-2); --pc-line:var(--p-line);
+  --pc-text:var(--p-fg); --pc-muted:var(--p-mut); --pc-accent:var(--p-accent);
+}
+html:root[data-theme] body .podcast-controls .podcast-play { color:var(--p-on-accent); }
+html:root[data-theme] body .podcast-program.is-selected { background:var(--p-accent-soft); }

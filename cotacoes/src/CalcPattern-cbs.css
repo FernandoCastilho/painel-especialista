@@ -40,8 +40,8 @@
 
 /* Avisos de dados faltando: faixa âmbar no topo do quadro. */
 .cbs .cbs-alerts { display:grid; gap:8px; padding:12px 16px 0; }
-:root[data-theme] body .cbs :is(.cbs-alerts, .cbs-giro) > .cbs-alert { position:relative; margin:0; padding:10px 12px 10px 40px; border:1px solid var(--line); border-left:4px solid var(--amber, #ffb000); border-radius:8px; background:var(--surface-2, transparent); color:var(--fg); font-size:.9rem; line-height:1.5; }
-:root[data-theme] body .cbs :is(.cbs-alerts, .cbs-giro) > .cbs-alert::before { content:"!"; position:absolute; left:12px; top:11px; width:18px; height:18px; border-radius:50%; background:var(--amber, #ffb000); color:#000; font-weight:800; font-size:.75rem; line-height:18px; text-align:center; }
+:root[data-theme] body .cbs :is(.cbs-alerts, .cbs-giro) > .cbs-alert { position:relative; margin:0; padding:10px 12px 10px 40px; border:1px solid var(--line); border-left:4px solid var(--amber, var(--accent)); border-radius:8px; background:var(--surface-2, transparent); color:var(--fg); font-size:.9rem; line-height:1.5; }
+:root[data-theme] body .cbs :is(.cbs-alerts, .cbs-giro) > .cbs-alert::before { content:"!"; position:absolute; left:12px; top:11px; width:18px; height:18px; border-radius:50%; background:var(--amber, var(--accent)); color:var(--on-brand); font-weight:800; font-size:.75rem; line-height:18px; text-align:center; }
 :root[data-theme] body .cbs :is(.cbs-giro) > .cbs-alert.cbs-alert { margin:0 0 8px; }
 
 /* Resultado: único quadro com borda laranja; faixa azul-marinho sem linha laranja. */
@@ -82,7 +82,7 @@
 :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:0; border:1px solid var(--cx-line-strong, var(--line)); border-radius:8px; overflow:hidden; }
 :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button { min-width:0; min-height:44px; margin:0; border:0; border-radius:0; background:transparent; color:var(--mut); font-weight:500; }
 :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button + button { border-left:1px solid var(--cx-line-strong, var(--line)); }
-:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button[aria-pressed=true] { background:#0131ff; color:#fff; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons button[aria-pressed=true] { background:var(--accent); color:var(--on-brand); font-weight:700; }
 @media (max-width:640px) {
   /* No celular, 12 meses não cabem numa linha com área de toque: duas linhas de seis, no mesmo contêiner. */
   :root[data-theme] body main.app.app-calculators .cbs .cbs-month-buttons { grid-template-columns:repeat(6,minmax(0,1fr)); }

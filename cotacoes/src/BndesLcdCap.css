@@ -3,7 +3,7 @@
 .lcd-check { display:flex; align-items:flex-start; gap:8px; font-size:.8rem; line-height:1.45; color:var(--mut); }
 .lcd-check input { flex:none; width:18px; height:18px; margin:2px 0; }
 .cx-lcd textarea { background:var(--bg); color:var(--fg); border:1px solid var(--line); padding:10px; font:inherit; font-size:.85rem; resize:vertical; width:100%; box-sizing:border-box; }
-.cx-lcd textarea:focus-visible { outline:2px solid var(--amber, #ffb000); }
+.cx-lcd textarea:focus-visible { outline:2px solid var(--amber, var(--accent)); }
 .cx-lcd .cx-field button { min-height:44px; background:var(--surface-2); color:var(--fg); border:1px solid var(--line); font:inherit; font-size:.8rem; padding:8px; }
 .cx-lcd .cx-field button:disabled { opacity:.5; }
 .cx-lcd .cx-field a { font-size:.8rem; }

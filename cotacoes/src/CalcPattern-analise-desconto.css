@@ -43,16 +43,16 @@
 
 /* Avisos: faixa âmbar com "!" */
 :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box :is(.desconto-result-status, .dsc-alerts) .desconto-notice,
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-notice { position:relative; padding:10px 12px 10px 38px; border:1px solid color-mix(in srgb, #ffb000 45%, var(--bw-line)); border-left:4px solid #ffb000; border-radius:8px; background:color-mix(in srgb, #ffb000 10%, var(--bw-card)); color:var(--bw-ink, var(--fg)); font-size:.8rem; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-notice { position:relative; padding:10px 12px 10px 38px; border:1px solid color-mix(in srgb, var(--accent) 45%, var(--bw-line)); border-left:4px solid var(--accent); border-radius:8px; background:color-mix(in srgb, var(--accent) 10%, var(--bw-card)); color:var(--bw-ink, var(--fg)); font-size:.8rem; }
 :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box :is(.desconto-result-status, .dsc-alerts) .desconto-notice::before,
-:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-notice::before { content:"!"; position:absolute; left:10px; top:10px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#ffb000; color:#000; font-size:.75rem; font-weight:800; line-height:1; }
+:root[data-theme] body main.app.app-calculators .cx-desconto .dsc-result-box > .desconto-notice::before { content:"!"; position:absolute; left:10px; top:10px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--accent); color:var(--on-brand); font-size:.75rem; font-weight:800; line-height:1; }
 :root[data-theme] body main.app.app-calculators .cx-desconto .dsc-alerts { display:grid; gap:8px; }
 
 /* a. Resposta principal */
 .cx-desconto .dsc-answer { display:grid; grid-template-columns:1fr; gap:8px; }
 .cx-desconto .dsc-answer > div { display:flex; flex-direction:column; gap:2px; min-width:0; padding:12px 14px; border-radius:10px; }
 .cx-desconto .dsc-answer small { font-size:.75rem; }
-.cx-desconto .dsc-answer > div > span { font-size:.72rem; line-height:1.35; }
+.cx-desconto .dsc-answer > div > span { font-size:.75rem; line-height:1.35; }
 .cx-desconto .dsc-answer-main { background:var(--dscp-navy); color:#fff; border:1px solid #34507f; }
 .cx-desconto .dsc-answer .dsc-answer-main > :is(small, span) { color:#c9d6ee; }
 .cx-desconto .dsc-answer-main b { white-space:nowrap; font-size:1.75rem; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:#fff; overflow-wrap:anywhere; }
@@ -64,7 +64,7 @@
 .cx-desconto .dsc-equiv { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; border:1px solid var(--bw-line); border-radius:8px; overflow:hidden; }
 .cx-desconto .dsc-equiv > div { display:flex; flex-direction:column; gap:3px; min-width:0; padding:8px 10px; }
 .cx-desconto .dsc-equiv > div + div { border-left:1px solid var(--bw-line); }
-.cx-desconto .dsc-equiv span { color:var(--bw-mut, var(--mut)); font-size:.7rem; line-height:1.3; }
+.cx-desconto .dsc-equiv span { color:var(--bw-mut, var(--mut)); font-size:.75rem; line-height:1.3; }
 .cx-desconto .dsc-equiv b { color:var(--bw-ink, var(--fg)); font-size:.9rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
 
 /* c. Valores em reais: rótulo à esquerda, valor à direita, terminando no total */
@@ -72,7 +72,7 @@
 .cx-desconto .dsc-values > div { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:7px 12px; border-top:1px solid var(--bw-line); }
 .cx-desconto .dsc-values > div > span { color:var(--bw-ink, var(--fg)); font-size:.85rem; }
 .cx-desconto .dsc-values > div b { font-size:.9rem; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--bw-ink, var(--fg)); }
-.cx-desconto .dsc-values > .dsc-grp { margin:0; padding:10px 12px 4px; color:var(--bw-mut, var(--mut)); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.cx-desconto .dsc-values > .dsc-grp { margin:0; padding:10px 12px 4px; color:var(--bw-mut, var(--mut)); font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
 .cx-desconto .dsc-values > .dsc-grp:first-child { padding-top:8px; }
 .cx-desconto .dsc-values > .dsc-total { border-top:2px solid var(--bw-ink, var(--fg)); background:var(--bw-soft); }
 .cx-desconto .dsc-values > .dsc-total :is(span, b) { font-weight:800; font-size:.95rem; }
@@ -108,7 +108,7 @@
 }
 
 /* Específico da Análise de desconto */
-.cx-desconto .dsc-equiv small { color:var(--bw-mut, var(--mut)); font-size:.68rem; }
+.cx-desconto .dsc-equiv small { color:var(--bw-mut, var(--mut)); font-size:.75rem; }
 .cx-desconto .dsc-values > .dsc-sub { background:var(--bw-soft); }
 .cx-desconto .dsc-values > .dsc-sub > :is(span, b) { font-weight:700; }
 /* Direção da economia: símbolo ▲/▼ e palavras; a cor só reforça. */

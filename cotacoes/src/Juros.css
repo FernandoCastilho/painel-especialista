@@ -7,7 +7,7 @@
 .juros-graph-preview .macro { padding:0; }
 .juros-graph-detail { min-height:44px; margin-top:8px; width:100%; }
 .juros-graph-card :is(svg,.chart) { max-width:100%; }
-.rate-trend { border-left:3px solid var(--accent,#0131ff); padding:8px 12px; margin:12px 0; }
+.rate-trend { border-left:3px solid var(--accent,var(--accent)); padding:8px 12px; margin:12px 0; }
 @media(min-width:1300px){.juros-graph-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
 
 /* Indicadores em gráfico: dois por linha no computador; um gráfico sozinho ocupa a linha inteira. */

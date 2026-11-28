@@ -3,7 +3,7 @@
 @media (min-width: 900px) { .laser-btn { bottom: 14px; right: 10px; } }
 .laser-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff3b30; opacity: .38; transition: opacity .15s, box-shadow .15s, transform .15s; }
 .laser-btn:hover .laser-dot, .laser-btn:focus-visible .laser-dot { opacity: .9; transform: scale(1.25); }
-.laser-btn:focus-visible { outline: 2px solid var(--amber, #ffb000); outline-offset: -6px; border-radius: 8px; }
+.laser-btn:focus-visible { outline: 2px solid var(--amber, var(--accent)); outline-offset: -6px; border-radius: 8px; }
 .laser-btn.on .laser-dot { opacity: 1; box-shadow: 0 0 10px 3px rgba(255, 59, 48, .75); }
 .laser-canvas { position: fixed; inset: 0; z-index: 2147482999; width: 100vw; height: 100vh; pointer-events: none; }
 /* durante o arrasto: sem seleção de texto; com o laser ligado, o toque não rola a página (o arrasto é o traço) */

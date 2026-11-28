@@ -84,7 +84,7 @@
 
 /* 3. Taxas e valores em reais, agrupados, terminando no valor no vencimento. */
 :root[data-theme] body .cx.od-pattern .od-grouped { width:100%; }
-:root[data-theme] body .cx.od-pattern .od-grouped tr.od-grp > th { padding:10px 10px 4px; background:none; color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body .cx.od-pattern .od-grouped tr.od-grp > th { padding:10px 10px 4px; background:none; color:var(--bw-mut); font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--bw-line); }
 :root[data-theme] body .cx.od-pattern .od-grouped td { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
 :root[data-theme] body .cx.od-pattern .od-grouped tbody th[scope=row] { width:40%; min-width:110px; text-align:left; font-weight:400; white-space:normal; }
 :root[data-theme] body .cx.od-pattern .od-grouped tr.od-total > * { font-weight:700; border-top:2px solid var(--bw-strong-line, var(--bw-line)); }

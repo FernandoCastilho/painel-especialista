@@ -64,9 +64,9 @@
 
 .credit-count>.credit-hint{flex-basis:100%;opacity:1;color:var(--bw-mut)}
 .credit-bw .credit-shared{border:2px solid var(--bw-strong-line);border-radius:10px;background:var(--bw-card);color:var(--bw-ink)}
-.credit-bw .credit-shared-title{background:linear-gradient(110deg,#052956,#07336b);border-bottom:4px solid #ff7900}
+.credit-bw .credit-shared-title{background:linear-gradient(110deg,var(--p-strong),var(--p-strong));border-bottom:4px solid var(--accent)}
 .credit-bw .credit-card{border:1px solid var(--bw-line);border-radius:10px;background:var(--bw-card);color:var(--bw-ink)}
-.credit-bw .credit-card-head{background:var(--bw-tint);color:var(--bw-ink);border-bottom:3px solid #ff7900}
+.credit-bw .credit-card-head{background:var(--bw-tint);color:var(--bw-ink);border-bottom:3px solid var(--accent)}
 .credit-bw .credit-card-head select{background:var(--bw-card);color:var(--bw-ink);border:1px solid var(--bw-field-line)}
 .credit-bw .credit-card-result{background:var(--bw-soft);border-top:1px solid var(--bw-line)}
 .credit-bw .credit-card-result b{color:var(--bw-ink)}
@@ -77,7 +77,7 @@
 .credit-bw .credit-invest{border-left:6px solid #1d8a5a}
 .credit-bw .credit-invest-block{background:var(--bw-good-soft);color:var(--bw-ink)}
 .credit-bw .credit-field input,.credit-bw .credit-field select,.credit-bw .credit-field textarea{border:1px solid var(--bw-field-line);background:var(--bw-card);color:var(--bw-ink)}
-.credit-bw .credit-compare{background:#ff7900;color:#10284c;border-radius:8px}
+.credit-bw .credit-compare{background:var(--accent);color:var(--on-brand);border-radius:8px}
 .credit-bw .credit-table{border:1px solid var(--bw-line)}
 .credit-bw .credit-table caption{color:var(--bw-ink)}
 .credit-bw .credit-table thead th{background:var(--bw-tint);color:var(--bw-ink);border:1px solid var(--bw-line)}

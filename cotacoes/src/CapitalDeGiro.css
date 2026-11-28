@@ -142,7 +142,7 @@ main.app.app-calculators:not(#u) .giro-screen .giro-card :is(.money-wrap, .giro-
 :root[data-theme] body .giro-screen .giro-link { min-height: 36px; padding: 4px 6px; border: 0; background: transparent; color: var(--bw-link); font: inherit; font-size: .86rem; text-decoration: underline; cursor: pointer; box-shadow: none; }
 :root[data-theme] body .giro-screen .giro-notice { margin: 0 12px 8px; padding: 8px 12px; border-left: 4px solid #b86e00; border-radius: 6px; background: var(--bw-warm-soft); color: var(--bw-warn-ink); font-size: .86rem; }
 :root[data-theme] body .giro-screen .giro-table-scroll tr.is-fixed > * { background: var(--bw-warm-soft); }
-:root[data-theme] body .giro-screen .giro-table-scroll th small { margin-left: 6px; color: var(--bw-mut); font-size: .72rem; font-weight: 600; }
+:root[data-theme] body .giro-screen .giro-table-scroll th small { margin-left: 6px; color: var(--bw-mut); font-size: .75rem; font-weight: 600; }
 :root[data-theme] body .giro-screen .giro-table-scroll tr.giro-flex-edit > td { text-align: left; white-space: normal; background: var(--bw-soft); }
 .giro-flex-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px; }
 :root[data-theme] body .giro-screen .giro-flex-form > label { display: flex; flex-direction: column; gap: 4px; color: var(--bw-mut); font-size: .8125rem; }
@@ -200,7 +200,7 @@ main.app.app-calculators:not(#u) .giro-screen :is(.lm .lm-head, .giro-card legen
 main.app.app-calculators:not(#u) .giro-screen .giro-form > .giro-simulate { grid-column:1 / -1; justify-self:stretch; width:100%; min-height:48px; font-size:1rem; }
 main.app.app-calculators:not(#u) .giro-screen .rt-answers { grid-template-columns:1.4fr repeat(3, minmax(0, 1fr)); }
 main.app.app-calculators:not(#u) .giro-screen .rt-answers .rt-answer-main dd:not(.rt-answer-note) { font-size:2.1rem; }
-:root[data-theme] body .giro-screen .rt-tone-1 { background:var(--cp-orange, #ff6200); }
+:root[data-theme] body .giro-screen .rt-tone-1 { background:var(--cp-orange, var(--accent)); }
 :root[data-theme] body .giro-screen .rt-tone-2 { background:var(--bw-mut); }
 :root[data-theme] body .giro-screen .rt-tone-3 { background:var(--bw-line); }
 @media (max-width: 760px) {

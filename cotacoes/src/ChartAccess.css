@@ -15,5 +15,5 @@
    Seletor reforçado para valer também sobre a regra do tema claro.
    No computador com mouse fica mais baixo; no toque mantém 44 px. */
 html:root body .seg.scale-seg button { font-size: .75rem; padding: 3px 10px; border-color: transparent; }
-html:root body .seg.scale-seg button[aria-pressed='true'] { background: transparent; border-color: var(--amber, #ffb000); color: var(--fg); font-weight: 700; }
+html:root body .seg.scale-seg button[aria-pressed='true'] { background: transparent; border-color: var(--amber, var(--accent)); color: var(--fg); font-weight: 700; }
 @media (pointer: fine) and (min-width: 700px) { html:root body .seg.scale-seg button { min-height: 32px; } }

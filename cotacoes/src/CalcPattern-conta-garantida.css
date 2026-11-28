@@ -11,7 +11,7 @@
 :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button { flex:1 1 0; min-width:0; min-height:44px; margin:0; padding:8px 16px; border:0; border-radius:0; background:transparent; color:var(--bw-mut, var(--mut)); font-weight:600; line-height:1.25; white-space:normal; }
 :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button + button { border-left:1px solid var(--cx-line-strong, var(--bw-line)); }
 :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button:not([aria-pressed=true]):hover { background:var(--bw-soft); color:var(--bw-ink, var(--fg)); }
-:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button[aria-pressed=true] { background:var(--cx-select-bg, #ffb000); color:var(--cx-select-fg, #000); border:0; font-weight:700; }
+:root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button[aria-pressed=true] { background:var(--cx-select-bg, var(--accent)); color:var(--cx-select-fg, var(--on-brand)); border:0; font-weight:700; }
 :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button[aria-pressed=true] + button,
 :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button + button[aria-pressed=true] { border-left:1px solid var(--cx-line-strong, var(--bw-line)); }
 :root[data-theme] body main.app.app-calculators .cx-cg .cg-modes button:focus-visible { outline:2px solid var(--cgp-orange); outline-offset:-3px; }
@@ -44,7 +44,7 @@
 .cx-cg .cg-equiv { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; border:1px solid var(--bw-line); border-radius:8px; overflow:hidden; }
 .cx-cg .cg-equiv > div { display:flex; flex-direction:column; gap:3px; min-width:0; padding:8px 10px; }
 .cx-cg .cg-equiv > div + div { border-left:1px solid var(--bw-line); }
-.cx-cg .cg-equiv span { color:var(--bw-mut, var(--mut)); font-size:.7rem; line-height:1.3; }
+.cx-cg .cg-equiv span { color:var(--bw-mut, var(--mut)); font-size:.75rem; line-height:1.3; }
 .cx-cg .cg-equiv b { color:var(--bw-ink, var(--fg)); font-size:.9rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
 
 
@@ -113,11 +113,11 @@
 .sl-calc .cx-cg details.cg-iof-drawer { display:block; }
 
 /* Resultado do roteiro: avisos em âmbar, como no quadro antigo; "Ampliar" numa linha discreta acima das respostas. */
-:root[data-theme] body .cx-cg .rt-result .cg-alerts .cg-notice { position:relative; padding:10px 12px 10px 38px; border:1px solid color-mix(in srgb, #ffb000 45%, var(--bw-line)); border-left:4px solid #ffb000; border-radius:8px; background:color-mix(in srgb, #ffb000 10%, var(--bw-card)); color:var(--bw-ink, var(--fg)); font-size:.8rem; }
-:root[data-theme] body .cx-cg .rt-result .cg-alerts .cg-notice::before { content:"!"; position:absolute; left:10px; top:10px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#ffb000; color:#000; font-size:.75rem; font-weight:800; line-height:1; }
+:root[data-theme] body .cx-cg .rt-result .cg-alerts .cg-notice { position:relative; padding:10px 12px 10px 38px; border:1px solid color-mix(in srgb, var(--accent) 45%, var(--bw-line)); border-left:4px solid var(--accent); border-radius:8px; background:color-mix(in srgb, var(--accent) 10%, var(--bw-card)); color:var(--bw-ink, var(--fg)); font-size:.8rem; }
+:root[data-theme] body .cx-cg .rt-result .cg-alerts .cg-notice::before { content:"!"; position:absolute; left:10px; top:10px; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:var(--accent); color:var(--on-brand); font-size:.75rem; font-weight:800; line-height:1; }
 :root[data-theme] body .cx-cg .rt-result .expandable-panel { border:0; border-radius:0; background:transparent; }
 :root[data-theme] body .cx-cg .rt-result .expandable-panel > .expandable-heading { margin:0; padding:0 !important; border:0; background:transparent; }
-:root[data-theme] body .cx-cg .rt-result .expandable-heading h3 { margin:0; padding:0; border:0; color:var(--bw-mut, var(--mut)); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+:root[data-theme] body .cx-cg .rt-result .expandable-heading h3 { margin:0; padding:0; border:0; color:var(--bw-mut, var(--mut)); font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
 :root[data-theme] body .cx-cg .rt-result .expandable-content { display:flex; flex-direction:column; gap:10px; padding:0; }
 :root[data-theme] body .cx-cg .rt-result .expandable-dialog .expandable-content { padding:14px; }
 :root[data-theme] body .cx-cg .rt-result .expandable-dialog > .expandable-heading { padding:10px 14px !important; border-bottom:1px solid var(--bw-line); background:var(--bw-card); }

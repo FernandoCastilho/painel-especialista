@@ -13,7 +13,7 @@
 .jb-summary small { display:block; font-size:.75rem; color:var(--mut); overflow-wrap:anywhere; }
 .jb-who { display:flex !important; align-items:center; gap:6px; margin-top:4px; }
 .jb-logo { flex:none; width:22px; height:22px; border-radius:5px; object-fit:contain; background:#fff; }
-.jb-initials { display:inline-grid; place-items:center; background:var(--surface-2); color:var(--mut); border:1px solid var(--line); font-size:.6rem; font-weight:700; letter-spacing:.02em; }
+.jb-initials { display:inline-grid; place-items:center; background:var(--surface-2); color:var(--mut); border:1px solid var(--line); font-size:.75rem; font-weight:700; letter-spacing:.02em; }
 .jb-scroll { max-height:620px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
 .jb-table { width:100%; border-collapse:separate; border-spacing:0; font-size:.85rem; }
 .jb-table caption { text-align:left; color:var(--mut); padding:10px 12px; background:var(--card); }
@@ -26,7 +26,7 @@
 .jb-inst { display:flex; align-items:center; gap:8px; min-width:0; }
 .jb-name { display:flex; flex-direction:column; min-width:0; }
 .jb-name b { font-weight:600; overflow-wrap:anywhere; }
-.jb-name small { color:var(--mut); font-size:.7rem; overflow-wrap:anywhere; }
+.jb-name small { color:var(--mut); font-size:.75rem; overflow-wrap:anywhere; }
 .jb-bar { display:block; height:4px; margin:6px 0 0 30px; border-radius:2px; background:var(--surface-2); overflow:hidden; }
 .jb-bar i, .jb-dot { display:block; height:100%; border-radius:2px; background:var(--accent); opacity:.75; }
 .jb-bar i.jb-above, .jb-dot.jb-above { background:var(--down); }

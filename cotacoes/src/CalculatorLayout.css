@@ -38,7 +38,7 @@ main.app.app-calculators {
   background:var(--surface-2); color:var(--fg); font:inherit; font-size:.875rem;
   line-height:1.4; text-decoration:none; cursor:pointer;
 }
-.cx .cx-action:focus-visible { outline:2px solid var(--amber, #ffb000); outline-offset:2px; }
+.cx .cx-action:focus-visible { outline:2px solid var(--amber, var(--accent)); outline-offset:2px; }
 .cx .cx-title {
   display:flex; align-items:center; flex-wrap:wrap; gap:10px;
   margin:0; min-width:0; color:var(--fg); font-size:clamp(1.5rem, 1.7vw, 1.75rem);
@@ -85,7 +85,7 @@ main.app.app-calculators {
 .cx .cx-field input:not([type=checkbox]):focus-visible,
 .cx .cx-field select:focus-visible, .cx .cx-field textarea:focus-visible, .cx .cx-iof > select:focus-visible,
 .cx .cx-wrap:focus-visible, .cx .fi-scroll:focus-visible {
-  outline:2px solid var(--amber, #ffb000); outline-offset:2px;
+  outline:2px solid var(--amber, var(--accent)); outline-offset:2px;
 }
 .cx .cx-field [aria-invalid=true] { border-color:var(--down); }
 .cx .cx-field textarea { min-height:180px; resize:vertical; }
@@ -182,8 +182,8 @@ main.app.app-calculators {
   border:1px solid currentColor; border-radius:50%; pointer-events:none;
 }
 .cx .fi-help > button:hover { color:var(--fg); background:color-mix(in srgb, var(--fg) 5%, transparent); }
-.cx .fi-help > button:focus-visible { outline:2px solid var(--amber, #ffb000); outline-offset:0; }
-.cx .fi-help > button[aria-expanded=true] { color:var(--amber, #ffb000); }
+.cx .fi-help > button:focus-visible { outline:2px solid var(--amber, var(--accent)); outline-offset:0; }
+.cx .fi-help > button[aria-expanded=true] { color:var(--amber, var(--accent)); }
 .cx-help-preview {
   position:fixed; z-index:90; display:grid; gap:8px; width:min(340px, calc(100vw - 24px));
   max-height:calc(100dvh - 24px); overflow:auto; box-sizing:border-box;
@@ -209,14 +209,14 @@ main.app.app-calculators {
 .fi-help-dialog p:last-child { margin-bottom:0; }
 .fi-help-dialog ul, .fi-help-dialog ol { padding-left:20px; margin:10px 0 16px; }
 .fi-help-dialog li + li { margin-top:8px; }
-.fi-help-dialog a { color:var(--amber, #ffb000); overflow-wrap:anywhere; }
+.fi-help-dialog a { color:var(--amber, var(--accent)); overflow-wrap:anywhere; }
 .fi-help-close {
   display:block; width:100%; min-height:44px; margin-top:20px; padding:10px 16px;
   border:1px solid var(--line, #30363d); border-radius:8px; background:var(--card, #161b22);
   color:var(--fg, #e6edf3); font:inherit; font-weight:600; cursor:pointer;
 }
 .fi-help-close:hover { border-color:var(--mut); }
-.fi-help-close:focus-visible, .fi-help-dialog a:focus-visible { outline:2px solid var(--amber, #ffb000); outline-offset:3px; }
+.fi-help-close:focus-visible, .fi-help-dialog a:focus-visible { outline:2px solid var(--amber, var(--accent)); outline-offset:3px; }
 
 @media (min-width:1100px) {
   .cx .cx-form { grid-template-columns:repeat(3, minmax(0, 1fr)); }
@@ -267,5 +267,5 @@ main.app.app-calculators {
 .cx .cx-error, .cx .cx-hint, .cx > .status { font-size:.95rem; }
 .cx :focus-visible { outline-color:var(--amber); }
 /* Aviso da primeira tela das calculadoras: em construção, uso só para estudo. */
-.cx.bw .cx-construcao { margin:14px 0 16px; padding:10px 14px; border:1px solid var(--bw-warm-tint); border-left:4px solid #ff7900; border-radius:8px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.9rem; line-height:1.45; }
+.cx.bw .cx-construcao { margin:14px 0 16px; padding:10px 14px; border:1px solid var(--bw-warm-tint); border-left:4px solid var(--accent); border-radius:8px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.9rem; line-height:1.45; }
 .cx.bw .cx-construcao strong { color:var(--bw-warm-ink); }

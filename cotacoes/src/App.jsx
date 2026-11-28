@@ -324,7 +324,7 @@ export default function App() {
           <button type="button" onClick={() => window.location.reload()}>Recarregar</button>
         </div>
       )}
-      <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} />
+      <AlertaVariacao quotes={quotes} hideBanner={tab === 'calculadora'} showPermission={tab === 'resumo'} />
       <SearchDestination selection={searchSelection?.doc.route === `${tab}${sub ? '/' + sub : ''}` ? searchSelection : null} onClose={() => setSearchSelection(null)} />
       {tab !== 'resumo' && (
         <header className={`top${compactHeader ? ' top-min' : ''}`}>

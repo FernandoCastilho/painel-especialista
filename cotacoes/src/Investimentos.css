@@ -20,9 +20,9 @@
 .inv-workspace .inv-tabs { padding-bottom:12px; border-bottom:1px solid var(--bw-line); }
 .inv-workspace .inv-tabs button[aria-pressed="true"],
 .inv-workspace button.inv-primary {
-  background:#0131ff;
-  color:#fff;
-  border-color:#0131ff;
+  background:var(--accent);
+  color:var(--on-brand);
+  border-color:var(--accent);
   font-weight:700;
 }
 .inv-workspace button:disabled { opacity:.6; cursor:default; }
@@ -81,7 +81,7 @@
 .inv-workspace .inv-chart-values { flex:none; margin-left:auto; text-align:right; }
 .inv-workspace .inv-chart-values small { display:block; color:var(--mut); }
 .inv-workspace .inv-month { font-size:.83rem; color:var(--mut); }
-.inv-workspace .inv-month input { padding:0; accent-color:#0131ff; }
+.inv-workspace .inv-month input { padding:0; accent-color:var(--accent); }
 .inv-workspace .inv-table { overflow:auto; }
 .inv-workspace .inv-table table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
 .inv-workspace .inv-table :is(th,td) { padding:9px; border-bottom:1px solid var(--bw-line); text-align:right; }
@@ -98,7 +98,7 @@
 .inv-workspace .inv-cvm-matches { display:grid; gap:6px; max-height:300px; overflow:auto; list-style:none; padding:0; }
 .inv-workspace .inv-cvm-matches li { padding:0; border:0; }
 .inv-workspace .inv-cvm-matches button { width:100%; text-align:left; overflow-wrap:anywhere; }
-.inv-workspace .inv-cvm-matches li.inv-garb button, .inv-workspace .inv-assets li.inv-garb { border-left:4px solid var(--amber, #b94700); background:color-mix(in srgb, var(--amber, #b94700) 9%, var(--card, #fff)); }
+.inv-workspace .inv-cvm-matches li.inv-garb button, .inv-workspace .inv-assets li.inv-garb { border-left:4px solid var(--amber, var(--accent)); background:color-mix(in srgb, var(--amber, var(--accent)) 9%, var(--card, #fff)); }
 .inv-workspace .inv-cvm-matches li.inv-garb button { font-weight:600; }
 .inv-workspace .inv-garb-codigo { font-weight:400; color:var(--mut); }
 .inv-workspace :is(.inv-legend li, .inv-chart-tooltip li, .inv-allocations label, .inv-resultado) { overflow-wrap:anywhere; }
@@ -116,7 +116,7 @@
 .inv-workspace .inv-lamina-cabecalho p { margin:0; }
 .inv-workspace .inv-lamina-cabecalho > button { flex:none; min-width:44px; min-height:44px; }
 .inv-workspace .inv-lamina-tipo { font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); }
-.inv-workspace .inv-lamina-aviso { margin:0; padding:10px 12px; border-left:4px solid var(--amber,#b94700); background:color-mix(in srgb,var(--amber,#b94700) 10%,transparent); }
+.inv-workspace .inv-lamina-aviso { margin:0; padding:10px 12px; border-left:4px solid var(--amber,var(--accent)); background:color-mix(in srgb,var(--amber,var(--accent)) 10%,transparent); }
 .inv-workspace .inv-lamina-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
 .inv-workspace .inv-lamina-kpis > div { display:grid; gap:6px; align-content:start; padding:10px; border:1px solid var(--bw-line); border-radius:6px; }
 .inv-workspace .inv-lamina-kpis span { font-size:.78rem; color:var(--mut); }
@@ -135,7 +135,7 @@
 .inv-workspace .inv-lamina-linhas dd { margin:0; font-weight:700; text-align:right; }
 .inv-workspace .inv-lamina-bloco td { white-space:nowrap; }
 .inv-workspace .inv-lamina-meses { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(40px,1fr); gap:6px; height:170px; overflow-x:auto; }
-.inv-workspace .inv-lamina-meses > div { display:grid; grid-template-rows:1fr auto auto; justify-items:center; min-width:40px; font-size:.72rem; white-space:nowrap; }
+.inv-workspace .inv-lamina-meses > div { display:grid; grid-template-rows:1fr auto auto; justify-items:center; min-width:40px; font-size:.75rem; white-space:nowrap; }
 .inv-workspace .inv-lamina-meses i { align-self:end; width:70%; border-radius:2px 2px 0 0; background:var(--bw-link,#003cff); }
 .inv-workspace .inv-lamina-meses small { color:var(--mut); }
 .inv-workspace .inv-lamina :is(.inv-lamina-meses i, .inv-lamina-carteira b).neg { background:var(--down,#b42318); }

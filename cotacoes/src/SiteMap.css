@@ -70,7 +70,7 @@
 .sm-level-2{font-size:.78rem;font-weight:500}
 
 .sm-chips{display:flex;flex-wrap:wrap;gap:5px;margin:0;padding:0;list-style:none}
-.sm-chip{display:inline-flex;align-items:center;min-height:28px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);text-decoration:none;font-size:.74rem;line-height:1.3}
+.sm-chip{display:inline-flex;align-items:center;min-height:28px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);text-decoration:none;font-size:.75rem;line-height:1.3}
 .sm-chip:hover{border-color:var(--sm-c);color:var(--sm-c)}
 @media (pointer:coarse){.sm-chip,.sm-node,.sm-action{min-height:40px}.sm-toggle,.sm-card-head .sm-toggle{width:40px;height:40px}.sm-tree>li:last-child::before{height:23px}.sm-tree>li:not(:last-child)::after{top:23px}}
 
@@ -95,13 +95,13 @@
   .sm-card.sm-conteudo::before{bottom:auto;height:46px}
   .sm-mercado{order:1}.sm-empresas{order:2}.sm-calculadoras{order:3}.sm-conteudo{order:4}
 }
-@media (max-width:420px){.sm-card{padding:12px 10px 14px}.sm-tree>li{padding-left:14px}.sm-tree .sm-tree{margin-left:6px}.sm-chip{font-size:.72rem;padding:3px 8px}}
+@media (max-width:420px){.sm-card{padding:12px 10px 14px}.sm-tree>li{padding-left:14px}.sm-tree .sm-tree{margin-left:6px}.sm-chip{font-size:.75rem;padding:3px 8px}}
 
 /* Moldura azul das calculadoras (avaliação do Diretor de Arte, 28/11/2026): faixa azul-marinho com fio laranja no
    título e superfícies azuladas, nos mesmos tons da moldura .bw. Ramos e coruja seguem iguais. */
 :root[data-theme] .site-map.sm-azul{--bg:#071122;--card:#101b2e;--line:#33435b;--fg:#f3f6ff;--mut:#bbc5d6;--sm-board:#0b1730;border-color:#33435b;background:var(--card)}
 :root[data-theme="light"] .site-map.sm-azul{--bg:#fff;--card:#fff;--line:#c6d5e9;--fg:#10284c;--mut:#455c7a;--sm-board:#f4f7fb;border-color:#c6d5e9}
-.sm-azul .sm-heading{padding-bottom:16px;background:linear-gradient(110deg,#052956,#07336b);border-bottom:4px solid #ff7900}
+.sm-azul .sm-heading{padding-bottom:16px;background:linear-gradient(110deg,var(--p-strong),var(--p-strong));border-bottom:4px solid var(--accent)}
 .sm-azul .sm-heading h2{color:#fff}
 .sm-azul .sm-heading p{color:#d3e0f5}
 .sm-azul .sm-eyebrow{color:#ffb36b}

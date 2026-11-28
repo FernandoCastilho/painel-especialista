@@ -12,7 +12,7 @@
 :root[data-theme] body .cx .rm-grafico > .rm-fonte { margin: 2px 0 8px; }
 :root[data-theme] body .cx .rm-periodo { display: flex; gap: 6px; }
 :root[data-theme] body .cx .rm-periodo button { min-height: 36px; padding: 4px 12px; border: 1px solid var(--bw-field-line, var(--line)); border-radius: 8px; background: var(--bw-card, var(--card)); color: var(--bw-ink, var(--fg)); font: inherit; font-size: .8125rem; cursor: pointer; }
-:root[data-theme] body .cx .rm-periodo button[aria-pressed=true] { border-color: var(--cp-orange, #ff6200); background: var(--cp-orange, #ff6200); color: #0b1f44; font-weight: 700; }
+:root[data-theme] body .cx .rm-periodo button[aria-pressed=true] { border-color: var(--cp-orange, var(--accent)); background: var(--cp-orange, var(--accent)); color: #0b1f44; font-weight: 700; }
 @media (max-width: 1000px) { :root[data-theme] body .cx .rm-periodo button { min-height: 44px; } }
 /* Versão recolhida (BNDES): a moldura é a do bloco recolhível; o conteúdo fica sem segunda borda. */
 :root[data-theme] body .cx .rm.rm-dentro { margin: 0; padding: 0; border: 0; background: none; }

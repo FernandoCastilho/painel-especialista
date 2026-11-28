@@ -30,7 +30,7 @@
 
 /* Avisos de dado faltando: faixa âmbar no topo do quadro, com "!". */
 :root[data-theme] body .bw.e4 .e4-alerta { grid-column:1/-1; order:-1; display:flex; align-items:flex-start; gap:8px; margin:0 0 4px; padding:8px 10px; border:0; border-left:4px solid #e08a00; border-radius:6px; background:var(--bw-warm-soft); color:var(--bw-warn-ink); font-size:.8rem; line-height:1.4; }
-:root[data-theme] body .bw.e4 .e4-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.72rem; font-weight:800; line-height:1; }
+:root[data-theme] body .bw.e4 .e4-alerta-icone { flex:none; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#e08a00; color:#fff; font-size:.75rem; font-weight:800; line-height:1; }
 :root[data-theme] body .bw.e4 #fm-result > .e4-alerta { margin:12px 14px 0; }
 
 /* Dados em cima, linha do tempo e resultado abaixo, na largura toda. */
@@ -49,7 +49,7 @@
 :root[data-theme] body .bw.e4 #fm-result > header.fm-hero .cx-heading { margin:0; padding:0; border:0; color:#fff; font-size:.95rem; font-weight:700; font-variant-caps:normal; letter-spacing:0; text-transform:none; }
 :root[data-theme] body .bw.e4 #fm-result > header.fm-hero .cx-heading::before,
 :root[data-theme] body .bw.e4 #fm-result > header.fm-hero .cx-heading::after { content:none; display:none; }
-:root[data-theme] body .bw.e4 #fm-result > header.fm-hero small { margin-left:auto; color:#c9d6ee; font-size:.72rem; }
+:root[data-theme] body .bw.e4 #fm-result > header.fm-hero small { margin-left:auto; color:#c9d6ee; font-size:.75rem; }
 :root[data-theme] body .bw.e4 #fm-result > header.fm-hero .fi-help > button { color:#fff; border-color:#ffffff88; }
 :root[data-theme] body .bw.e4 #fm-result > header.fm-hero .fm-zoom-toggle { color:#fff; border-color:#ffffff55; background:transparent; }
 
@@ -64,15 +64,15 @@
 :root[data-theme] body .bw.e4 #fm-result .e4-answer-side { border:1px solid var(--bw-line); background:var(--bw-soft); }
 :root[data-theme] body .bw.e4 #fm-result .e4-answer-side span { font-size:.75rem; color:var(--bw-mut); }
 :root[data-theme] body .bw.e4 #fm-result .e4-answer-side b { font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--bw-ink); white-space:nowrap; }
-:root[data-theme] body .bw.e4 #fm-result .e4-answer-side small { font-size:.72rem; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 #fm-result .e4-answer-side small { font-size:.75rem; color:var(--bw-mut); }
 
 /* b. Equivalências: CDI, % do CDI, capital de giro e custo na moeda. */
 :root[data-theme] body .bw.e4 #fm-result .e4-equiv { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin:0 14px 10px; }
 :root[data-theme] body .bw.e4 #fm-result .e4-equiv > div { min-width:0; padding:8px 10px; border:1px solid var(--bw-line); border-radius:8px; }
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv dt { display:flex; align-items:center; gap:4px; font-size:.72rem; font-weight:600; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 #fm-result .e4-equiv dt { display:flex; align-items:center; gap:4px; font-size:.75rem; font-weight:600; color:var(--bw-mut); }
 :root[data-theme] body .bw.e4 #fm-result .e4-equiv dd { margin:2px 0 0; }
 :root[data-theme] body .bw.e4 #fm-result .e4-equiv dd b { display:block; font-size:.95rem; font-variant-numeric:tabular-nums; color:var(--bw-ink); white-space:nowrap; }
-:root[data-theme] body .bw.e4 #fm-result .e4-equiv dd small { display:block; margin-top:1px; font-size:.7rem; line-height:1.3; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 #fm-result .e4-equiv dd small { display:block; margin-top:1px; font-size:.75rem; line-height:1.3; color:var(--bw-mut); }
 
 /* c. Valores na moeda e em reais, agrupados: rótulo à esquerda, valor à direita, terminando no total. */
 :root[data-theme] body .bw.e4 #fm-result .e4-valores { width:calc(100% - 28px); min-width:0; table-layout:auto; margin:0 14px 8px; border-collapse:collapse; font-size:.82rem; }
@@ -80,20 +80,20 @@
 :root[data-theme] body .bw.e4 #fm-result .e4-valores td { padding:6px 4px; background:none; border:0; border-bottom:1px solid var(--bw-line); color:var(--bw-ink); vertical-align:top; }
 :root[data-theme] body .bw.e4 #fm-result .e4-valores th { width:auto; min-width:0; text-align:left; font-weight:500; white-space:normal; }
 :root[data-theme] body .bw.e4 #fm-result .e4-valores td { width:1%; }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores th small { display:block; margin-top:2px; font-size:.68rem; font-weight:400; line-height:1.35; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 #fm-result .e4-valores th small { display:block; margin-top:2px; font-size:.75rem; font-weight:400; line-height:1.35; color:var(--bw-mut); }
 :root[data-theme] body .bw.e4 #fm-result .e4-valores td { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; font-weight:600; }
-:root[data-theme] body .bw.e4 #fm-result .e4-valores tr.e4-grp > th { padding:10px 4px 4px; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--bw-mut); }
+:root[data-theme] body .bw.e4 #fm-result .e4-valores tr.e4-grp > th { padding:10px 4px 4px; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--bw-mut); }
 :root[data-theme] body .bw.e4 #fm-result .e4-valores tr.e4-total-row > * { border-top:2px solid var(--bw-strong-line, var(--bw-line)); border-bottom:0; font-size:.9rem; font-weight:700; }
 
 /* Notas depois dos números. */
-:root[data-theme] body .bw.e4 #fm-result > .fm-iof-premise { margin:4px 14px 0; font-size:.72rem; }
-:root[data-theme] body .bw.e4 #fm-result > .e4-aviso { margin:6px 14px 0; font-size:.74rem; }
+:root[data-theme] body .bw.e4 #fm-result > .fm-iof-premise { margin:4px 14px 0; font-size:.75rem; }
+:root[data-theme] body .bw.e4 #fm-result > .e4-aviso { margin:6px 14px 0; font-size:.75rem; }
 
 /* d. Condições da operação: recolhidas, como lembrete do que foi cotado. */
 :root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box { margin:10px 14px 0; border:1px solid var(--bw-line); border-radius:8px; }
 :root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box > summary { display:flex; align-items:center; gap:8px; min-height:40px; padding:0 12px; font-size:.78rem; font-weight:700; color:var(--bw-link); cursor:pointer; list-style:none; }
 :root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box > summary::-webkit-details-marker { display:none; }
-:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box > summary::before { content:'▶'; font-size:.6rem; }
+:root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box > summary::before { content:'▶'; font-size:.75rem; }
 :root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box[open] > summary::before { transform:rotate(90deg); }
 :root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box .e4-condicoes { margin:0; padding:0 12px 10px; background:none; }
 :root[data-theme] body .bw.e4 #fm-result .e4-condicoes-box .e4-condicoes dl { grid-template-columns:minmax(0,1fr); grid-auto-flow:row; grid-template-rows:none; }

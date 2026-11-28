@@ -12,7 +12,7 @@
 .bw.e4 .e4-sources { display:flex; flex-wrap:wrap; gap:6px 16px; list-style:none; margin:14px 0 0; padding:0; font-size:.78rem; }
 .bw.e4 .e4-sources a { color:var(--bw-link); }
 /* Origem da cotação do campo (Painel, digitado ou exemplo) e o caminho de volta para a do Painel. */
-.bw.e4 .e4-origem { grid-column:1/-1; margin:2px 0 0; font-size:.72rem; line-height:1.35; color:var(--bw-mut); }
+.bw.e4 .e4-origem { grid-column:1/-1; margin:2px 0 0; font-size:.75rem; line-height:1.35; color:var(--bw-mut); }
 .bw.e4 .e4-origem b { font-weight:600; color:var(--bw-mut); }
 .bw.e4 .e4-origem .e4-exemplo { color:var(--bw-warm-ink); font-weight:600; }
 .bw.e4 .e4-link { padding:6px 0; margin:-6px 0; border:0; background:none; font:inherit; color:var(--bw-link); text-decoration:underline; cursor:pointer; }
@@ -24,7 +24,7 @@
 .bw.e4 .cx-finame .fm-operation .fm-group-fields > .cx-field .fm-rotulo { min-height:0; align-items:center; }
 main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabled, main.app.app-calculators .cx.bw.e4 .fm-operation select:disabled { background:var(--bw-soft); border-color:var(--bw-line); color:var(--bw-mut); -webkit-text-fill-color:var(--bw-mut); opacity:1; cursor:not-allowed; }
 .bw.e4 .e4-comparar > summary::-webkit-details-marker { display:none; }
-.bw.e4 .e4-comparar > summary::before { content:'▶'; font-size:.6rem; transition:transform .15s; }
+.bw.e4 .e4-comparar > summary::before { content:'▶'; font-size:.75rem; transition:transform .15s; }
 .bw.e4 .e4-comparar[open] > summary::before { transform:rotate(90deg); }
 @media (prefers-reduced-motion:reduce) { .bw.e4 .e4-comparar > summary::before { transition:none; } }
 @media (max-width:640px) {
@@ -43,7 +43,7 @@ main.app.app-calculators .cx.bw.e4 .fm-operation .fm-field-carencia input:disabl
 .bw.e4 .e4-condicoes dl { display:grid; grid-template-columns:minmax(0,1fr); gap:0 16px; margin:0; }
 .bw.e4 .e4-condicoes dl > div { display:flex; flex-direction:row; align-items:baseline; justify-content:space-between; gap:10px; padding:4px 0; border-bottom:1px solid var(--bw-line); }
 .bw.e4 .e4-condicoes dt { flex:0 1 auto; min-width:0; }
-.bw.e4 .e4-condicoes dt { font-size:.74rem; color:var(--bw-mut); }
+.bw.e4 .e4-condicoes dt { font-size:.75rem; color:var(--bw-mut); }
 .bw.e4 .e4-condicoes dd { flex:0 1 auto; min-width:0; margin:0; font-size:.78rem; font-weight:600; color:var(--bw-ink); text-align:right; overflow-wrap:anywhere; }
 @media (min-width:1600px) { .bw.e4 .e4-condicoes dl { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-flow:column; grid-template-rows:repeat(9,auto); column-gap:24px; } }
 /* Atingir meta: o custo desejado; a tela devolve a taxa all-in. */

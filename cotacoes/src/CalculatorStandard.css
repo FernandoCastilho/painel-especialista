@@ -5,7 +5,7 @@ main.app.app-calculators .cx.calc-standard {
 }
 main.app.app-calculators .cx.calc-standard .cx-panel { border-radius:12px; }
 main.app.app-calculators .cx.calc-standard .cx-panel > header { min-height:48px; padding:10px 16px; }
-main.app.app-calculators .cx.calc-standard .cx-panel > header h3 { border-left:3px solid #ff6200; padding-left:10px; }
+main.app.app-calculators .cx.calc-standard .cx-panel > header h3 { border-left:3px solid var(--accent); padding-left:10px; }
 main.app.app-calculators .cx.calc-standard .cx-form {
   display:grid; gap:12px 16px; padding:16px;
 }
@@ -24,7 +24,7 @@ main.app.app-calculators .cx.calc-standard :is(.cg-kpis,.desconto-kpis) b { font
 main.app.app-calculators .cx.calc-standard .cx-gap { display:none; }
 main.app.app-calculators .cx.calc-standard .calc-result-shell { padding:0; border:0; background:transparent; }
 .calc-standard .calc-panel-context { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
-.calc-standard .expandable-heading h3 { border-left:3px solid #ff6200; padding-left:10px; }
+.calc-standard .expandable-heading h3 { border-left:3px solid var(--accent); padding-left:10px; }
 .calc-standard .expandable-content > .cx-wrap { padding:0; }
 .calc-standard .expandable-content .fi-scroll { margin:0; }
 /* CBS retains wide activity search and month editors, while scalar fields reflow. */
@@ -101,9 +101,9 @@ main.app.app-calculators .calc-workspace > .cx-panel:first-of-type > header,
 main.app.app-calculators .calc-workspace > .cbs-workspace > .cx-panel > header,
 main.app.app-calculators .bw-simulation > :is(.bndes-profile,.cx-lcd) > .cx-panel:first-of-type > header,
 main.app.app-calculators .bw-simulation > .bndes-profile > form > .cx-panel:first-of-type > header {
-  background:linear-gradient(110deg,#052956,#07336b);
+  background:linear-gradient(110deg,var(--p-strong),var(--p-strong));
   color:white;
-  border-bottom:4px solid #ff7900;
+  border-bottom:4px solid var(--accent);
 }
 main.app.app-calculators .calc-workspace > .cx-panel:first-of-type > header :is(h3,p,.fi-help > button),
 main.app.app-calculators .calc-workspace > .cbs-workspace > .cx-panel > header :is(h3,p,.fi-help > button),

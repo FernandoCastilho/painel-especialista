@@ -17,7 +17,7 @@
 /* Largura e grade (pedido de Fernando, 25/11/2026): o quadro de entrada ocupa toda a largura (o Capital de Giro divide em duas
    colunas a partir de 1200 px; o CDC tem um quadro só) e os campos ficam na horizontal: 4 colunas no computador, 2 no tablet,
    1 no celular. A praça ocupa duas colunas, por causa da busca. */
-:root[data-theme] body .cdc-screen .cdc-icon { color: var(--cp-orange, #ff6200); }
+:root[data-theme] body .cdc-screen .cdc-icon { color: var(--cp-orange, var(--accent)); }
 :root[data-theme] body .cdc-screen.giro-screen .giro-form { grid-template-columns: minmax(0, 1fr); }
 :root[data-theme] body .cdc-screen.giro-screen .giro-form .lm > .lm-grid > * { grid-column: auto; }
 @media (min-width: 1000px) {

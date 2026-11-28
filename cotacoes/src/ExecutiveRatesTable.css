@@ -155,7 +155,7 @@
   .executive-rates__value { font-size: .85rem; }
   .executive-rates__date,
   .executive-rates__status,
-  .executive-rates__source { font-size: .7rem; line-height: 1.3; }
+  .executive-rates__source { font-size: .75rem; line-height: 1.3; }
 }
 /* Juros: alta representa maior custo; cores inversas às cotações. */
 .executive-rates__direction { display: inline-block; margin-left: 6px; font-weight: 800; }

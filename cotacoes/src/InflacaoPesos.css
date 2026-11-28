@@ -22,15 +22,15 @@
 .infl-row { cursor: pointer; }
 .infl-row:hover th, .infl-row:hover td { background: var(--surface-2); }
 .infl-on th, .infl-on td { background: var(--surface-2); }
-.infl-on th { box-shadow: inset 3px 0 0 var(--amber, #ffb000); }
+.infl-on th { box-shadow: inset 3px 0 0 var(--amber, var(--accent)); }
 .infl-pick-btn { padding: 0; background: transparent; border: 0; color: inherit; font: inherit; font-weight: 600; text-align: left; cursor: pointer; min-height: 32px; }
-.infl-pick-btn:hover, .infl-pick-btn:focus-visible { color: var(--amber, #ffb000); text-decoration: underline; }
+.infl-pick-btn:hover, .infl-pick-btn:focus-visible { color: var(--amber, var(--accent)); text-decoration: underline; }
 .infl-hint { margin: 0; font-size: .78rem; }
 .infl-chart { border: 1px solid var(--line); background: var(--card, #0c0c0c); padding: 6px 10px 8px; }
 .infl-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.infl-chart-head h4 { margin: 0; font-size: .9rem; color: var(--amber, #ffb000); }
+.infl-chart-head h4 { margin: 0; font-size: .9rem; color: var(--amber, var(--accent)); }
 .infl-close { min-height: 32px; padding: 0 10px; background: transparent; color: var(--mut); border: 1px solid var(--line); cursor: pointer; font: 600 .75rem var(--sans); }
-.infl-close:hover, .infl-close:focus-visible { color: var(--fg); border-color: var(--amber, #ffb000); }
+.infl-close:hover, .infl-close:focus-visible { color: var(--fg); border-color: var(--amber, var(--accent)); }
 .infl-chart-sum { margin: 4px 0; font-size: .76rem; }
 .infl-pick { margin: 2px 0 6px; min-height: 1.2em; font-size: .78rem; font-variant-numeric: tabular-nums; }
 .infl-values { margin-top: 4px; }

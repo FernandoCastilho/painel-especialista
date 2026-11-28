@@ -12,9 +12,12 @@ const ler = () => {
   } catch { return {} }
 }
 const gravar = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)) } catch { /* deduplicação apenas nesta sessão */ } }
+// Pedido de permissão dispensado pela pessoa: some até ela pedir de novo pelo ⓘ ou limpar os dados do site.
+const KEY_PEDIDO = 'alerta-permissao-dispensada'
+const pedidoDispensado = () => { try { return localStorage.getItem(KEY_PEDIDO) === '1' } catch { return false } }
 const entregue = (entry) => Number.isFinite(entry?.sistemaEnviadoEm) && entry.sistemaEnviadoEm > 0
 
-export default function AlertaVariacao({ quotes, hideBanner = false }) {
+export default function AlertaVariacao({ quotes, hideBanner = false, showPermission = true }) {
   const testing = typeof navigator !== 'undefined' && navigator.webdriver // o smoke próprio desliga isso
   const [estado, setEstado] = useState(ler)
   const estadoRef = useRef(estado)
@@ -28,6 +31,8 @@ export default function AlertaVariacao({ quotes, hideBanner = false }) {
   const [pedidoErro, setPedidoErro] = useState('')
   const [falhas, setFalhas] = useState({})
   const [tentativa, setTentativa] = useState(0)
+  const [semPedido, setSemPedido] = useState(pedidoDispensado)
+  const agoraNao = () => { setSemPedido(true); try { localStorage.setItem(KEY_PEDIDO, '1') } catch { /* vale só nesta visita */ } }
   const salvar = useCallback((change) => {
     const hoje = marketDate(Date.now())
     const next = change(Object.fromEntries(Object.entries(estadoRef.current).filter(([k]) => k.startsWith(hoje + ':'))))
@@ -87,7 +92,9 @@ export default function AlertaVariacao({ quotes, hideBanner = false }) {
     finally { pedindo.current = false; if (ativo.current) setSolicitando(false) }
   }
 
-  if (hideBanner || testing || (!visiveis.length && perm === 'granted')) return null
+  // O pedido de permissão é um aviso pequeno, só onde a pessoa pediu (Mercado) e enquanto não for dispensado.
+  const mostrarPedido = perm !== 'granted' && showPermission && !semPedido
+  if (hideBanner || testing || (!visiveis.length && !mostrarPedido && !(falhou && perm === 'granted'))) return null
   return (
     <section className="alerta-variacao" aria-label="Alertas de câmbio" role="status" aria-live="polite">
       {visiveis.map((a) => (
@@ -97,17 +104,18 @@ export default function AlertaVariacao({ quotes, hideBanner = false }) {
           <button type="button" className="btn" onClick={() => dispensar(a.id)} aria-label={`Dispensar alerta do ${a.nome.toLowerCase()}`}>Ok</button>
         </div>
       ))}
-      {perm !== 'granted' && <div className="alerta-var-permissao">
+      {mostrarPedido && <div className="alerta-var-permissao">
         {perm === 'default' && <>
           <p><b>Ative as notificações de câmbio.</b> Autorize este navegador para receber os alertas de dólar e euro também no sistema.</p>
           <button type="button" className="btn alerta-var-perm" onClick={pedir} disabled={solicitando}>{solicitando ? 'Aguardando sua escolha…' : 'Permitir notificações de câmbio'}</button>
         </>}
+        <button type="button" className="linklike alerta-var-fechar" onClick={agoraNao}>Agora não</button>
         {perm === 'denied' && <p><b>Notificações bloqueadas.</b> Para ativar, altere a permissão de notificações deste site nas configurações do navegador ou do aplicativo. O navegador não permite repetir o pedido enquanto houver bloqueio.</p>}
         {perm === 'indisponivel' && <p><b>Notificações do sistema indisponíveis neste navegador.</b> No iPhone ou iPad, adicione o painel à Tela de Início e abra por lá para verificar o suporte. Os alertas continuam aparecendo dentro do painel.</p>}
         {pedidoErro && <p>{pedidoErro}</p>}
       </div>}
       {falhou && perm === 'granted' && <p>Não foi possível enviar a notificação do sistema. O alerta permanece no painel. <button type="button" className="linklike alerta-var-perm" onClick={() => setTentativa((n) => n + 1)}>Tentar enviar novamente</button></p>}
-      <p className="muted alerta-var-metodo">Dólar e euro: mais de ±0,30% em relação ao fechamento anterior da fonte, usando o mesmo Δ dia da tabela. Sem fechamento no dia anterior, vale o último fechamento disponível na fonte. Alertas a partir das 9h de Brasília. Verificação enquanto o app está aberto e visível; não há monitoramento contínuo em segundo plano nem com o app fechado.</p>
+      <details className="alerta-var-metodo"><summary>Como funcionam os alertas</summary><p className="muted">Dólar e euro: mais de ±0,30% em relação ao fechamento anterior da fonte, usando o mesmo Δ dia da tabela. Sem fechamento no dia anterior, vale o último fechamento disponível na fonte. Alertas a partir das 9h de Brasília. Verificação enquanto o app está aberto e visível; não há monitoramento contínuo em segundo plano nem com o app fechado.</p></details>
     </section>
   )
 }

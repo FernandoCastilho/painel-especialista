@@ -52,7 +52,7 @@
 
 /* b/c. Equivalências e valores em reais */
 :root[data-theme] body .cx.cd-pattern .cd-quote .cd-card { border-color:var(--bw-line); border-radius:10px; overflow:hidden; }
-:root[data-theme] body .cx.cd-pattern .cd-quote .cd-card h4 { padding:8px 12px; background:none; color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; border-bottom-color:var(--bw-line); }
+:root[data-theme] body .cx.cd-pattern .cd-quote .cd-card h4 { padding:8px 12px; background:none; color:var(--bw-mut); font-size:.75rem; font-weight:700; letter-spacing:.08em; border-bottom-color:var(--bw-line); }
 :root[data-theme] body .cx.cd-pattern .cd-quote .cd-vs { padding:12px; gap:10px; }
 :root[data-theme] body .cx.cd-pattern .cd-quote .cd-steps :is(th,td) { padding:8px 10px; font-size:.85rem; }
 :root[data-theme] body .cx.cd-pattern .cd-quote .cd-steps .cd-op { width:14px; padding-right:0; }
@@ -63,7 +63,7 @@
 
 /* Frase para o cliente: depois dos números. */
 :root[data-theme] body .cx.cd-pattern .cd-phrase-box { margin:0 16px 16px; border:1px solid var(--bw-line); border-radius:10px; }
-:root[data-theme] body .cx.cd-pattern .cd-phrase-box h4 { margin:0; padding:8px 12px; color:var(--bw-mut); font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--bw-line); }
+:root[data-theme] body .cx.cd-pattern .cd-phrase-box h4 { margin:0; padding:8px 12px; color:var(--bw-mut); font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--bw-line); }
 :root[data-theme] body .cx.cd-pattern .cd-phrase-box .cd-phrase { padding:10px 12px; font-size:.85rem; line-height:1.55; }
 
 @media (max-width:480px) {

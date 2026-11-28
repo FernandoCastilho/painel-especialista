@@ -35,7 +35,7 @@
 .apz-grupo-nota { margin: 0 14px 8px; color: var(--mut); font-size: .82rem; line-height: 1.4; }
 .apz-todos { margin: 0 14px 6px; padding: 6px 0; background: none; border: 0; color: var(--blue); font: 600 .82rem system-ui, sans-serif; cursor: pointer; text-decoration: underline; }
 .apz-sub { padding: 0 6px 8px; }
-.apz-sub-nome { margin: 6px 8px 2px; color: var(--mut); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.apz-sub-nome { margin: 6px 8px 2px; color: var(--mut); font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
 .apz-opcao { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: .92rem; }
 .apz-opcao:hover { background: var(--surface-2); }
 .apz-opcao input { width: 18px; height: 18px; accent-color: var(--navy); flex: none; }
