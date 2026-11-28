@@ -3,7 +3,7 @@ import { freightBase, freightContext } from './freight.js'
 import IndicatorHistory from './IndicatorHistory.jsx'
 import { normalizeIndicatorHistory } from './indicatorHistory.js'
 import { useEffect, useState } from 'react'
-import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, coffeeNyContext, activityNeedsReview, unidadeEmDolar } from './marketContext.js'
+import { MARKET_IDS, COMMODITY_IDS, BRL_IDS, FUEL_IDS, contextItems, contextDate, contextValue, brentContext, coffeeNyContext, activityNeedsReview, unidadeEmDolar, filterCommodities } from './marketContext.js'
 import './MarketContext.css'
 import RefreshButton from './RefreshButton.jsx'
 import IndicatorTable from './IndicatorTable.jsx'
@@ -161,6 +161,7 @@ function Cards({state, children}) {
 export default function MarketContext({ part = '', so = '' }) {
   const [open,setOpen] = useState(null)
   const [openCommodity,setOpenCommodity] = useState(null)
+  const [commodityQuery, setCommodityQuery] = useState('')
   const history = useContextFile('indicator-history.json', normalizeIndicatorHistory)
   const market = useContextFile('market-indicators.json', parseMarket)
   const commodities = useContextFile('commodities.json', parseCommodities)
@@ -177,6 +178,12 @@ export default function MarketContext({ part = '', so = '' }) {
   const coffeeAt = usd.findIndex(i => i.id === 'coffee')
   if (coffeeNy.data) usd.splice(coffeeAt < 0 ? usd.length : coffeeAt + 1, 0, coffeeNy.data)
   const all = usd.map(item => ({...item, unit:unidadeEmDolar(item.unit)}))
+  const query = so ? '' : commodityQuery
+  const filteredUsd = filterCommodities(all, query)
+  const filteredBrl = filterCommodities(brl.data ?? [], query)
+  const filteredFuels = filterCommodities(fuels.data ?? [], query)
+  const totalCommodities = all.length + (brl.data?.length ?? 0) + (fuels.data?.length ?? 0)
+  const matchCount = filteredUsd.length + filteredBrl.length + filteredFuels.length
   return <div className="market-context">
     {openCommodity && <SeriesHistory item={openCommodity} points={openCommodity.history || []} onClose={()=>setOpenCommodity(null)} />}
     {open && <IndicatorHistory item={open} series={freightStates[open.id] ? freightStates[open.id].data?.series : history.data?.find(s=>s.id===open.id)} loading={freightStates[open.id] ? !freightStates[open.id].data&&!freightStates[open.id].failed : !history.data&&!history.failed} failed={freightStates[open.id] ? freightStates[open.id].failed || freightStates[open.id].data?.series.stale : history.failed} onClose={()=>setOpen(null)}/>}
@@ -188,20 +195,31 @@ export default function MarketContext({ part = '', so = '' }) {
     </section>}
     {(!part || part === 'commodities') && so !== 'frete' && <section aria-labelledby="commodities-context-heading"><div className="ctx-head"><h2 id="commodities-context-heading">Commodities</h2><RefreshButton files={['commodities.json', 'oil.json', 'insumos-precos.json', 'commodities-brl.json', 'fuels.json']} label="Commodities" /></div>
       <Aviso title="Commodities"><p className="context-intro">Referências em dólar, incluindo exportações brasileiras de celulose. Petróleo spot diário e demais produtos em médias mensais. O café arábica tem também a cotação diária da bolsa de Nova York (contrato futuro), atrasada e não oficial. Nada aqui é preço em tempo real.</p></Aviso>
+      {!so && <div className="commodity-search">
+        <label htmlFor="commodity-query">Buscar commodity</label>
+        <div className="commodity-search__field">
+          <input id="commodity-query" type="text" inputMode="search" autoComplete="off" value={commodityQuery} onChange={event => setCommodityQuery(event.target.value)} placeholder="Ex.: café, soja ou petróleo" />
+          {commodityQuery && <button type="button" onClick={event => {
+            event.currentTarget.parentElement.querySelector('input').focus()
+            setCommodityQuery('')
+          }}>Limpar</button>}
+        </div>
+        {query.trim() && totalCommodities > 0 && <p role="status">{matchCount === 0 ? 'Nenhuma commodity encontrada nos dados disponíveis.' : matchCount === 1 ? '1 referência encontrada.' : `${matchCount} referências encontradas.`}</p>}
+      </div>}
       {(!so || so === 'usd') && <>
       {!all.length && <Estado tipo={commodities.failed || brent.failed ? 'erro' : 'info'}>{commodities.failed || brent.failed ? 'Não foi possível carregar as referências.' : 'Carregando referências…'}</Estado>}
-      {all.length > 0 && <CommodityTable items={all} failed={commodities.failed || brent.failed} onOpen={id => setOpenCommodity(all.find(i => i.id === id))} />}
+      {filteredUsd.length > 0 && <CommodityTable items={filteredUsd} failed={commodities.failed || brent.failed} onOpen={id => setOpenCommodity(all.find(i => i.id === id))} />}
       {all.length > 0 && (!brent.data || !commodities.data || commodities.data.length < COMMODITY_IDS.length) && <Estado tipo="aviso">Cobertura parcial: uma das fontes ainda não está disponível.</Estado>}
       <Aviso title="Commodities · método"><p className="context-method">Em falhas, o painel preserva a última referência. A data da atualização não é a data do preço. Frequência de publicação e unidades variam; valores ausentes nunca são convertidos em zero. Petróleo, gás natural, diesel e gasolina de Nova York: spot diário (gás em US$/MMBtu; derivados em US$/galão, na costa leste dos EUA, antes de impostos, margens e frete). Açúcar e café: média mensal convertida de US$/kg para US¢/libra-peso, a unidade de mercado. Café arábica · bolsa de Nova York: contrato futuro "C" da ICE Futures U.S. (KC), o vencimento mais próximo, em US¢/libra-peso, pelo Yahoo Finance; consulta de hora em hora nos dias úteis, com atraso da fonte. Durante o pregão, o valor é o último negócio do dia, com o horário de Brasília na coluna Referência; depois, é o fechamento. Máxima e mínima do dia aparecem quando a fonte informa; não é preço de compra à vista nem de café físico no Brasil. Celulose: preço médio FOB mensal das exportações brasileiras (MDIC/SECEX), em US$/tonelada; não é cotação spot, preço de tabela ou referência exclusiva de fibra curta ou longa. Calculado como valor FOB total dividido pelo peso líquido total, convertido de kg para tonelada (SH4 4701 a 4706; exclui aparas 4707). A coleta preserva a última referência em caso de falha.</p></Aviso>
       </>}
       {brl.data && (!so || so === 'brl') && <>
-        <CommodityTable items={brl.data} failed={brl.failed} onOpen={id => setOpenCommodity(brl.data.find(i => i.id === id))} caption="Em reais · IC-Br e soja" ariaLabel="Tabela de commodities em reais; role para ver todas as colunas" />
+        {filteredBrl.length > 0 && <CommodityTable items={filteredBrl} failed={brl.failed} onOpen={id => setOpenCommodity(brl.data.find(i => i.id === id))} caption="Em reais · IC-Br e soja" ariaLabel="Tabela de commodities em reais; role para ver todas as colunas" />}
         {brl.data.length < BRL_IDS.length && <Estado tipo="aviso">Cobertura parcial: parte dos índices em reais não está disponível.</Estado>}
         <Aviso title="Em reais · método"><p className="context-method">IC-Br: índice de commodities calculado em reais a partir das cotações internacionais e do câmbio; mensal. Soja em R$/saca: estimativa própria, igual à soja FOB Golfo EUA (US$/tonelada) × 0,06 (saca de 60 kg) × dólar médio do mês. É uma referência de nível e de tendência: não é o preço pago ao produtor, que varia com prêmio de porto, frete e região.</p></Aviso>
       </>}
       {!brl.data && brl.failed && (!so || so === 'brl') && <Estado tipo="erro">Não foi possível carregar as commodities em reais.</Estado>}
       {fuels.data && (!so || so === 'combustiveis') && <>
-        <CommodityTable items={fuels.data} failed={fuels.failed} onOpen={id => setOpenCommodity(fuels.data.find(i => i.id === id))} caption="Combustíveis ao consumidor" ariaLabel="Tabela de combustíveis ao consumidor; role para ver todas as colunas" />
+        {filteredFuels.length > 0 && <CommodityTable items={filteredFuels} failed={fuels.failed} onOpen={id => setOpenCommodity(fuels.data.find(i => i.id === id))} caption="Combustíveis ao consumidor" ariaLabel="Tabela de combustíveis ao consumidor; role para ver todas as colunas" />}
         {fuels.data.length < FUEL_IDS.length && <Estado tipo="aviso">Cobertura parcial: algum combustível não está disponível.</Estado>}
         <Aviso title="Combustíveis · método"><p className="context-method">Média semanal de revenda nos postos pesquisados no Brasil (domingo a sábado), já com impostos e margens. A semana mostrada é a última divulgada, com defasagem de alguns dias. Diesel: tipo S10. O histórico começa na primeira coleta do painel e cresce a cada semana.</p></Aviso>
       </>}
