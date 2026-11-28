@@ -27,6 +27,12 @@ export function citaOutroNivel(title, faixa) {
   return false
 }
 
+// "Dólar ... fecha a R$ 5,81" publicada antes das 17h de Brasília: o fechamento do dia ainda não aconteceu,
+// então é manchete de outro dia que o Google Notícias reindexou com hora nova.
+const FECHAMENTO = /\bfech(?:a|ou)\b|\bencerr(?:a|ou)\b/i
+const horaBrasilia = (t) => ((new Date(t).getUTCHours() - 3 + 24) % 24) + new Date(t).getUTCMinutes() / 60
+export const fechamentoCedo = (n) => FECHAMENTO.test(n?.title ?? '') && /d[oó]lar/i.test(n?.title ?? '') && Number.isFinite(n?.t) && horaBrasilia(n.t) < 17
+
 // `listas`: listas de manchetes ({ t, title, link, source, semHora? }). Até `limite`, as mais próximas do horário, em ordem de horário.
 // `faixa`: [mínima, máxima] do dia, para descartar manchete que cita cotação de outro dia.
 export function noticiasPerto(listas, t, { antes = PERTO_ANTES, depois = PERTO_DEPOIS, limite = PERTO_LIMITE, faixa } = {}) {
@@ -36,7 +42,7 @@ export function noticiasPerto(listas, t, { antes = PERTO_ANTES, depois = PERTO_D
   for (const n of listas.flat()) {
     if (!n?.title || !/^https?:\/\//.test(n.link ?? '') || n.semHora || !Number.isFinite(n.t)) continue
     if (n.t < t - antes || n.t > t + depois) continue
-    if (descartavel(n.title, faixa)) continue
+    if (descartavel(n.title, faixa) || fechamentoCedo(n)) continue
     const k = chave(n)
     if (vistos.has(n.link) || vistos.has(k)) continue
     vistos.add(n.link)
@@ -73,7 +79,7 @@ export function destaquesPorHora(itens, t0, t1, faixa) {
   const nota = (n) => (n.source === 'Valor Econômico' ? 2 : 0) + (/^d[oó]lar\b/i.test(n.title) ? 1 : 0)
   for (const n of itens ?? []) {
     if (!n?.title || !/^https?:\/\//.test(n.link ?? '') || n.semHora || !Number.isFinite(n.t) || n.t < t0 || n.t > t1) continue
-    if (descartavel(n.title, faixa)) continue
+    if (descartavel(n.title, faixa) || fechamentoCedo(n)) continue
     const h = Math.floor(n.t / 36e5)
     const atual = porHora.get(h)
     if (!atual || nota(n) > nota(atual)) porHora.set(h, n)

@@ -76,3 +76,16 @@ test('bolinhas do dia fixado: uma por hora, sem propaganda nem conversor', async
   const r = destaquesPorHora(itens, h('12:00'), h('21:00'), [5.4861, 5.5826])
   assert.deepEqual(r.map((n) => n.link), ['https://v/1', 'https://m/1'])
 })
+
+test('manchete de fechamento publicada antes das 17h é de outro dia e não vira bolinha', async () => {
+  const { destaquesPorHora, fechamentoCedo } = await import('../src/fxAgora.js')
+  const h = (hm) => t(`2026-11-27T${hm}:00Z`)
+  const velha = { t: h('12:02'), title: 'Dólar cai e fecha a R$ 5,81 com expectativa sobre novas medidas fiscais', link: 'https://g/1', source: 'GZH' }
+  const doDia = { t: h('21:25'), title: 'Dólar despenca e fecha a R$ 5,51 após escolha de Trabuco', link: 'https://g/2', source: 'GZH' }
+  const outra = { t: h('12:30'), title: 'Petrobras fecha acordo de fornecimento', link: 'https://p/2', source: 'X' }
+  assert.equal(fechamentoCedo(velha), true)
+  assert.equal(fechamentoCedo(doDia), false)
+  assert.equal(fechamentoCedo(outra), false)
+  const r = destaquesPorHora([velha, doDia], h('12:00'), h('22:00'), [5.4861, 5.6525])
+  assert.deepEqual(r.map((n) => n.link), ['https://g/2'])
+})

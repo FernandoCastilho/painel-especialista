@@ -88,6 +88,25 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const [dragging, setDragging] = useState(false)
   const drag = useRef(null)
   const plotRef = useTocarFora(hover != null, setHover)
+  // Balão da notícia: fecha ao tocar fora dele (tocar noutra bolinha troca a notícia)
+  const balaoRef = useRef(null)
+  useEffect(() => {
+    if (!aberto) return undefined
+    const fora = (e) => { if (!balaoRef.current?.contains(e.target) && !e.target.closest?.('.fx-dot')) setAberto(null) }
+    document.addEventListener('pointerdown', fora)
+    return () => document.removeEventListener('pointerdown', fora)
+  }, [aberto])
+  // Tamanho do desenho na tela: na tela cheia o SVG é ampliado pelo viewBox, e as bolinhas, o balão
+  // e a dica (HTML por cima do gráfico) precisam da mesma escala para cair no ponto certo da linha.
+  const svgRef = useRef(null)
+  const [caixa, setCaixa] = useState(null)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return undefined
+    const ro = new ResizeObserver(() => setCaixa({ w: el.clientWidth, h: el.clientHeight, top: el.offsetTop }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const sig = `${base.length}:${base[0]?.t}:${base[base.length - 1]?.t}`
   useEffect(() => { setSel(null); setAberto(null) }, [sig])
   // seleção guardada como dois pontos (tempo e valor): vale mesmo quando o gráfico se estende ao ano anterior
@@ -203,6 +222,10 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const altura = H + (setas.length ? FAIXA : 0)
   const valorEm = (t) => points.reduce((b, p) => (Math.abs(p.t - t) < Math.abs(b.t - t) ? p : b), points[0]).bid
   const hp = hover != null ? points[hover] : null
+  const kx = caixa?.w && caixa?.h ? Math.min(caixa.w / width, caixa.h / altura) : 1
+  const ox = caixa?.w ? (caixa.w - width * kx) / 2 : 0
+  const oy = caixa?.h ? (caixa.h - altura * kx) / 2 + (caixa.top || 0) : 0
+  const naTela = (x, y) => ({ left: ox + x * kx, top: oy + y * kx })
   const [tipRef, tipW] = useLarguraBalao(hp)
   const gid = `a-${plotId.replaceAll(':', '')}`
   const onKey = (e) => {
@@ -227,6 +250,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
       <span id={`${plotId}-hint`} className="chart-access-text">Use as setas para percorrer os pontos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho; Escape limpa. Com o mouse ou o dedo, arraste sobre o gráfico para selecionar um trecho.</span>
       <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
       <svg
+        ref={svgRef}
         tabIndex={0}
         aria-describedby={`${plotId}-hint`}
         onFocus={(e) => { if (focoPorTeclado(e)) setHover(0) }}
@@ -331,13 +355,13 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
         )}
       </svg>
       {eventos?.length > 0 && !range && (
-        <div className="fx-dots">
+        <div className="fx-dots" onKeyDown={(e) => { if (e.key === 'Escape' && aberto) { e.preventDefault(); e.stopPropagation(); setAberto(null) } }}>
           {eventos.filter((ev) => ev.t >= g.t0 && ev.t <= g.t1).map((ev) => (
             <button
               type="button"
               key={`${ev.t}-${ev.itens[0]?.link}`}
               className={`fx-dot ${ev.tom}${aberto?.t === ev.t ? ' on' : ''}`}
-              style={{ left: g.x(ev.t), top: g.y(ev.bid) }}
+              style={naTela(g.x(ev.t), g.y(ev.bid))}
               aria-expanded={aberto?.t === ev.t}
               aria-label={`${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `${code} ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
               onClick={() => setAberto(aberto?.t === ev.t ? null : ev)}
@@ -345,24 +369,37 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           ))}
         </div>
       )}
-      {aberto && !range && (
-        <div className="fx-news" role="region" aria-label="Manchetes do dia">
-          <p className="fx-news-head">
-            <b>{fmtDate(aberto.t, true)}</b>
-            {aberto.pct != null && <em className={aberto.tom}>{aberto.pct > 0 ? '▲' : '▼'} {signed(aberto.pct, 2)}% no dia</em>}
-            <button type="button" className="sel-clear" onClick={() => setAberto(null)}>Fechar</button>
-          </p>
-          <ul>
-            {aberto.itens.map((n) => (
-              <li key={n.link}>
-                {n.semHora ? null : <><time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}</>}
-                <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}{n.geral ? ' · mercado do dia' : ''}</small>
-              </li>
-            ))}
-          </ul>
-          <p className="muted fx-news-note">Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa). Primeiro as que falam da moeda; "mercado do dia" são manchetes gerais que podem ajudar a explicar o movimento. Mostram o que saiu na imprensa, não comprovam a causa.</p>
-        </div>
-      )}
+      {aberto && !range && (() => {
+        // Balão de pensamento amarelo no meio do gráfico, acima da bolinha tocada (ou abaixo, se ela está na metade de cima),
+        // sem cobri-la; duas bolinhas pequenas ligam o balão à notícia, como num pensamento.
+        const px = g.x(aberto.t), py = g.y(aberto.bid)
+        const acima = py > (M.t + g.base) / 2
+        const cx = width / 2
+        const borda = acima ? py - 30 : py + 30
+        const rabo = [[10, 6], [21, 4]].map(([d, r]) => ({ x: px + (cx - px) * (d / 60), y: acima ? py - d : py + d, r }))
+        return (
+          <div className="fx-balao-camada">
+            {rabo.map((b, i) => <span key={i} className="fx-balao-rabo" aria-hidden="true" style={{ ...naTela(b.x, b.y), width: b.r * 2, height: b.r * 2 }} />)}
+            <div ref={balaoRef} className={`fx-balao ${acima ? 'sobe' : 'desce'}`} style={naTela(cx, borda)} role="region" aria-label="Notícia da bolinha" tabIndex={-1}
+              onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setAberto(null) } }}>
+              <p className="fx-news-head">
+                <b>{intraday ? fmtTime(aberto.t) : fmtDate(aberto.t, true)}</b>
+                {aberto.pct != null && <em className={aberto.tom}>{aberto.pct > 0 ? '▲' : '▼'} {signed(aberto.pct, 2)}% no dia</em>}
+                <button type="button" className="fx-balao-fechar" aria-label="Fechar notícia" onClick={() => setAberto(null)}>×</button>
+              </p>
+              <ul>
+                {aberto.itens.map((n) => (
+                  <li key={n.link}>
+                    {intraday || n.semHora ? null : <><time dateTime={new Date(n.t).toISOString()}>{fmtTime(n.t)}</time>{' '}</>}
+                    <a href={n.link} target="_blank" rel="noopener noreferrer">{n.title}</a> <small>{n.source}{n.geral ? ' · mercado do dia' : ''}</small>
+                  </li>
+                ))}
+              </ul>
+              <p className="fx-news-note">{intraday ? 'Horário de publicação informado pela fonte, em Brasília.' : 'Manchetes publicadas nesse dia (horário de Brasília, quando a fonte informa).'} Mostra o que saiu na imprensa, não comprova a causa do movimento.</p>
+            </div>
+          </div>
+        )
+      })()}
       {simular && (() => {
         const valor = lerValor(valorTxt)
         const sim = range && valor ? simularTrecho({ valor, v0: range.v0, v1: range.v1, lado }) : null
@@ -409,7 +446,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
         </div>
       )}
       {hp && (
-        <div ref={tipRef} className={`tip${range ? ' tip-low' : ''}`} style={{ left: limitarBalao(g.x(hp.t), tipW, width) }}>
+        <div ref={tipRef} className={`tip${range ? ' tip-low' : ''}`} style={{ left: limitarBalao(g.x(hp.t) * kx, tipW, width * kx) + ox }}>
           <strong>{dateLabel ? dateLabel(hp.t) : intraday ? fmtTime(hp.t, true) : fmtDate(hp.t, true)}</strong>
           {fmt ? (
             <span>{label} {fmt(hp.bid)}</span>
