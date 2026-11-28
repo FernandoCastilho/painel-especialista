@@ -19,6 +19,7 @@ import ChartFilters from './ChartFilters.jsx'
 import DateRangePicker from './DateRangePicker.jsx'
 import { fadeIn } from './motion.js'
 import RpnDock from './RpnDock.jsx'
+import TvDock from './TvDock.jsx'
 import { CURRENCIES, REFRESH_DAILY_MAX, useQuotes } from './useQuotes.js'
 import HistoryChart from './HistoryChart.jsx'
 const Juros = lazy(() => import('./Juros.jsx'))
@@ -59,6 +60,7 @@ import { useMacro } from './useMacro.js'
 import { useCurves } from './useCurves.js'
 import ParityChart from './ParityChart.jsx'
 const Projecoes = lazy(() => import('./Projecoes.jsx'))
+const JurosBancarios = lazy(() => import('./JurosBancarios.jsx'))
 import { DISCLAIMER } from './whatsapp.js'
 import { CEN_SECTIONS, CEN_VIEWS } from './cenariosViews.js'
 import { MAX_DAYS, fromInput, fullWindow, historyRangeError, toInput } from './useHistory.js'
@@ -349,7 +351,7 @@ export default function App() {
               <button key={v.id} type="button" className={cenView === v.id ? 'on' : ''} aria-current={cenView === v.id ? 'true' : undefined} onClick={() => goto('cenarios', v.id)}>{v.label}</button>
             ))}
           </nav>
-          {cenView === 'projecoes' ? <Projecoes macro={macro} searchTarget={searchSelection?.doc} /> : cenView === 'inflacao' ? <Outros macro={macro} /> : cenView === 'indexadores' ? <Indexadores onBndes={() => goto('bndes', 'tlp/TLP')} /> : cenView === 'calendario' ? <Calendario /> : cenView === 'inadimplencia' ? <Inadimplencia searchTarget={searchSelection?.doc} /> : cenView === 'recuperacao' ? <RecuperacaoJudicial /> : <MarketContext part={cenView} />}
+          {cenView === 'projecoes' ? <Projecoes macro={macro} searchTarget={searchSelection?.doc} /> : cenView === 'juros-bancarios' ? <JurosBancarios searchTarget={searchSelection?.doc} /> : cenView === 'inflacao' ? <Outros macro={macro} /> : cenView === 'indexadores' ? <Indexadores onBndes={() => goto('bndes', 'tlp/TLP')} /> : cenView === 'calendario' ? <Calendario /> : cenView === 'inadimplencia' ? <Inadimplencia searchTarget={searchSelection?.doc} /> : cenView === 'recuperacao' ? <RecuperacaoJudicial /> : <MarketContext part={cenView} />}
         </>
       )}
 
@@ -396,6 +398,7 @@ export default function App() {
       )}
       </Suspense>
       <RpnDock active={tab === 'rpn'} />
+      <TvDock />
     </main>
     </AvisosProvider>
   )

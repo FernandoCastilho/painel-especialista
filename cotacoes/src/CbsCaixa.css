@@ -142,9 +142,10 @@ main.app .cbs { max-width:1160px; margin-inline:auto; }
 .cbs-overview svg { display:block; max-width:100%; }
 .cbs-headline { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px 32px; }
 .cbs-headline-tax { min-width:0; }
-.cbs-delta-arrow.is-up { color:var(--down); }
+
 /* Sobre o cartão azul, o vermelho escuro some: usa o vermelho claro do tema escuro nos dois temas. */
-:root[data-theme] body .cbs .cbs-headline .cbs-delta-arrow.is-up { color:#ff9b9b; }
+:root[data-theme] body .cbs .cbs-headline .pct.up { color:#86efac; }
+:root[data-theme] body .cbs .cbs-headline .pct.down { color:#ff9b9b; }
 /* "?" do cabeçalho azul do resultado: claro nos dois temas. */
 :root[data-theme] body main.app.app-calculators .cbs .cbs-result > .expandable-panel > .expandable-heading .fi-help > button { color:#fff; border-color:#ffffffaa; background:transparent; }
 /* Títulos dos quadros de giro: sem margem de cima, para o respiro ficar igual ao das laterais. */

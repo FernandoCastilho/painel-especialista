@@ -5,7 +5,7 @@ import logoBlockbuster from './assets/historias/blockbuster.svg'
 import logoSpotify from './assets/historias/spotify.svg'
 import logoUber from './assets/historias/uber.svg'
 import logoApple from './assets/historias/apple.svg'
-import logoCatupiry from './assets/historias/catupiry.svg'
+import logoCatupiry from './assets/historias/catupiry.png'
 import { HISTORIAS, TEMAS_HISTORIAS, casosDoTema } from './historias.js'
 
 const logos = { ifood: logoIfood, netflix: logoNetflix, blockbuster: logoBlockbuster, spotify: logoSpotify, uber: logoUber, 'apple-iphone': logoApple, catupiry: logoCatupiry }

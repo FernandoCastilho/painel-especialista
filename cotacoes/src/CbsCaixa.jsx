@@ -171,7 +171,7 @@ export default function CbsCaixa({ onBack }) {
             <div className="cbs-headline-tax">
               <p className="cbs-answer-label">{result.monthlyTaxDelta > 0 ? 'Aumento' : result.monthlyTaxDelta < 0 ? 'Redução' : 'Sem mudança'} de imposto por mês {hypothesis && <span className="cbs-tag">hipótese</span>}</p>
               <p className="cbs-eyebrow">Tributos novos menos os atuais informados</p>
-              <strong className="cbs-primary-value"><span className={`cbs-delta-arrow${result.monthlyTaxDelta > 0 ? ' is-up' : ''}`} aria-hidden="true">{result.monthlyTaxDelta > 0 ? '▲ ' : result.monthlyTaxDelta < 0 ? '▼ ' : ''}</span>{money(Math.abs(result.monthlyTaxDelta))}</strong>
+              <strong className={'cbs-primary-value pct ' + (result.monthlyTaxDelta > 0 ? 'up' : result.monthlyTaxDelta < 0 ? 'down' : 'flat')}><span className="cbs-delta-arrow" aria-hidden="true">{result.monthlyTaxDelta > 0 ? '▲ ' : result.monthlyTaxDelta < 0 ? '▼ ' : ''}</span>{money(Math.abs(result.monthlyTaxDelta))}</strong>
               <p className="cbs-primary-reading">Muda o dinheiro que sobra depois do imposto, todo mês. Avalie preço e margem.</p>
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function CbsCaixa({ onBack }) {
               {!simples && <div><dt>Menos créditos usados para abater</dt><dd>− {money(result.creditsUsable)}</dd></div>}
               <div className="cbs-total"><dt>Tributos novos a pagar</dt><dd>{money(result.netTax + result.isTax)}/mês</dd></div>
               <div><dt>Tributos atuais substituídos, pela hipótese informada</dt><dd>{money(result.currentTax)}/mês</dd></div>
-              <div className="cbs-delta"><dt>{result.monthlyTaxDelta > 0 ? 'Aumento' : result.monthlyTaxDelta < 0 ? 'Redução' : 'Sem mudança'} nesta hipótese</dt><dd><span className={`cbs-delta-arrow${result.monthlyTaxDelta > 0 ? ' is-up' : ''}`} aria-hidden="true">{result.monthlyTaxDelta > 0 ? '▲ ' : result.monthlyTaxDelta < 0 ? '▼ ' : ''}</span>{money(Math.abs(result.monthlyTaxDelta))}/mês</dd></div>
+              <div className="cbs-delta"><dt>{result.monthlyTaxDelta > 0 ? 'Aumento' : result.monthlyTaxDelta < 0 ? 'Redução' : 'Sem mudança'} nesta hipótese</dt><dd className={'pct ' + (result.monthlyTaxDelta > 0 ? 'up' : result.monthlyTaxDelta < 0 ? 'down' : 'flat')}><span className="cbs-delta-arrow" aria-hidden="true">{result.monthlyTaxDelta > 0 ? '▲ ' : result.monthlyTaxDelta < 0 ? '▼ ' : ''}</span>{money(Math.abs(result.monthlyTaxDelta))}/mês</dd></div>
             </dl>
           </div>
           <div className="cbs-notes">

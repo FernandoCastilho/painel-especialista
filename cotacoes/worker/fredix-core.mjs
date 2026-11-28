@@ -29,6 +29,7 @@ export const ARQUIVOS = {
   'inadimplencia.json': 'Inadimplência de pessoas físicas e jurídicas.',
   'recuperacao.json': 'Recuperações judiciais: contagem semanal e por setor.',
   'bancos.json': 'Bancos: Basileia, carteiras PJ e PF, provisões e inadimplência.',
+  'taxas-juros.json': 'Juros bancários: taxas médias cobradas por banco e modalidade, de empresas e de pessoas (Banco Central).',
   'bndes.json': 'BNDES: TLP e taxas de referência dos produtos.',
   'divida.json': 'Dívida pública.',
   'estr.json': '€STR, a taxa de juros de um dia do euro.',

@@ -1,6 +1,7 @@
 // Assuntos da aba Cenários (#cenarios/<id>), na ordem da faixa de assuntos.
 export const CEN_VIEWS = [
   { id: 'projecoes', label: 'Projeções' },
+  { id: 'juros-bancarios', label: 'Juros bancários' },
   { id: 'calendario', label: 'Calendário econômico' },
   { id: 'inadimplencia', label: 'Inadimplência' },
   { id: 'recuperacao', label: 'Recuperação judicial' },

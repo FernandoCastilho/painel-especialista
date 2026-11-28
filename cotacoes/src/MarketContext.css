@@ -33,3 +33,12 @@
 /* Seção que antes era um assunto à parte (Fiscal dentro de Inflação, Frete dentro de Commodities): separada por espaço
    e uma linha; ao abrir pelo endereço antigo, a tela rola até ela deixando um respiro em cima. */
 .cen-section { margin-top: 36px; padding-top: 4px; scroll-margin-top: 16px; }
+
+.commodity-search { display:grid; gap:6px; max-width:420px; margin:14px 0; }
+.commodity-search label { font-size:.85rem; font-weight:600; }
+.commodity-search__field { display:flex; gap:8px; }
+.commodity-search__field input,.commodity-search__field button { min-height:44px; border:1px solid var(--line,#303741); border-radius:8px; background:var(--card,#171c24); color:inherit; font:inherit; padding:8px 12px; }
+.commodity-search__field input { min-width:0; flex:1; }
+.commodity-search__field button { cursor:pointer; }
+.commodity-search__field :focus-visible { outline:2px solid var(--accent,#6aa9ff); outline-offset:2px; }
+.commodity-search p { margin:0; font-size:.85rem; color:var(--mut,#a5acb8); }

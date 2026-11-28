@@ -96,7 +96,20 @@ export default function CambioFuturoFluxo({ onBack }) {
 
   return <section className="cx cf cf-pattern bw calc-standard calc-workspace cf-j cf-f" aria-labelledby="cf-f-title">
     <div className="bw-heading calc-workspace-heading">
-      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-f-title" className="cx-title">Câmbio futuro</h2></div>
+      <div className="calc-title-row"><CalcBack onBack={onBack} /><h2 id="cf-f-title" className="cx-title">Câmbio futuro</h2>
+        <CalculatorHelp title="O que é câmbio futuro">
+          <p>Câmbio futuro é a taxa de câmbio (R$ por US$) combinada hoje para uma data futura. Com ela, a empresa sabe agora quanto vai pagar ou receber em reais em cada vencimento, sem depender do dólar daquele dia.</p>
+          <p>Não é previsão do dólar. Ele sai do dólar à vista (spot) corrigido pela diferença entre os juros em reais e os juros em dólar até o vencimento. Com juros em reais mais altos, o câmbio futuro fica acima do spot; essa diferença são os pontos (forward points).</p>
+          <p>Conta de referência do mercado: câmbio futuro ≈ spot × (1 + juro pré em R$)^(dias úteis ÷ 252) ÷ (1 + cupom cambial × dias corridos ÷ 360). O cupom cambial é o juro em dólar no Brasil. Na operação, quem informa o câmbio futuro é a mesa.</p>
+          <p>A trava costuma ser feita com um termo de moeda sem entrega (NDF): no vencimento, as partes acertam só a diferença, em reais, entre a taxa travada e a PTAX de referência.</p>
+          <p>Nesta tela, cada parcela em US$ (principal + juros) é convertida pelo câmbio futuro do seu vencimento. Assim saem o fluxo em reais e a TIR em base 252, que é o custo da operação em reais.</p>
+          <figure className="cf-video">
+            <iframe src="https://www.youtube-nocookie.com/embed/xJr3uf1CXSo" title="Vídeo: Dólar futuro não é aposta, a matemática da taxa forward" loading="lazy"
+              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
+            <figcaption>Vídeo da Damke Consultoria e Treinamento sobre como se calcula o dólar futuro e a taxa forward para o hedge da empresa. Para ver em tela cheia ou no YouTube, use os botões do próprio vídeo.</figcaption>
+          </figure>
+        </CalculatorHelp>
+      </div>
     </div>
 
     <article className="desk-panel cx-panel cf-input cf-j-azul" aria-labelledby="cf-f-op">

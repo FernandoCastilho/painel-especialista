@@ -71,7 +71,8 @@
 :root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open b { color: var(--fg); }
 :root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open b span { color: var(--mut); }
 :root main.app:is([data-tab="juros"], [data-tab="cenarios"], [data-tab="bndes"], [data-tab="setores"], [data-tab="bancos"], [data-tab="aprender"], [data-tab="noticias"], [data-tab="feriados"]) .market-open:hover b { color: var(--amber); }
-:root main.app[data-tab="cenarios"] :is(.scenarios, .infl) .fm:is(.up, .down) { color: var(--fg); }
+:root main.app[data-tab="cenarios"] :is(.scenarios, .infl) .fm.up { color: var(--up); }
+:root main.app[data-tab="cenarios"] :is(.scenarios, .infl) .fm.down { color: var(--down); }
 :root main.app[data-tab="cenarios"] .infl-sig:is(.pressure, .relief) { color: var(--fg); }
 :root main.app[data-tab="cenarios"] :is(.idx-defs dt, td.num) { color: var(--fg); }
 :root main.app[data-tab="cenarios"] .idx-link { color: var(--fg); }
