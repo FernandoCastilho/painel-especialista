@@ -84,107 +84,107 @@ function criarScript({ bloqueados = [], diretos = [] } = {}) {
   vm.runInContext(readFileSync(new URL('../../docs/cadastro-email/cadastro.gs', import.meta.url), 'utf8'), ambiente)
   const chamarScript = (parameter) => JSON.parse(ambiente.doGet({ parameter }).texto)
   const linhasDe = (nome) => (abas.get(nome)?.rows ?? []).slice(1)
-  return { chamarScript, emails, bloq, linhasDe, get linhas() { return linhasDe('Acessos') }, setCota: (n) => { cota = n } }
+  return { chamarScript, emails, bloq, linhasDe, get linhas() { return linhasDe('Acessos') }, setCota: (n) => { cota = n }, setEmailPessoal: (e) => props.set('EMAIL_PESSOAL_AUTORIZADO', e) }
 }
 const codigoDoEmail = (emails) => emails.at(-1).body.match(/é (\d{6})\./)[1]
 
 test('script: fluxo completo — pede, erra, confirma, recebe assinatura e registra', () => {
   const s = criarScript()
-  assert.equal(s.chamarScript({ acao: 'pedir', email: 'Ana@Empresa.com' }).ok, true)
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'Ana@Itau-Unibanco.com.br' }).ok, true)
   assert.equal(s.emails.length, 1)
-  assert.equal(s.emails[0].to, 'ana@empresa.com')
+  assert.equal(s.emails[0].to, 'ana@itau-unibanco.com.br')
   const cod = codigoDoEmail(s.emails)
   const errado = cod === '000000' ? '111111' : '000000'
-  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: errado }).ok, false)
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@itau-unibanco.com.br', codigo: errado }).ok, false)
   assert.equal(s.linhas.length, 1, 'código errado não registra além da solicitação')
-  const r = s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: cod })
+  const r = s.chamarScript({ acao: 'confirmar', email: 'ana@itau-unibanco.com.br', codigo: cod })
   assert.equal(r.ok, true)
   assert.ok(r.token)
   assert.equal(s.linhas.length, 2)
-  assert.equal(s.linhas[0][1], 'ana@empresa.com')
-  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: cod }).ok, false, 'código só vale uma vez')
-  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: r.token }).ok, true)
-  assert.equal(s.chamarScript({ acao: 'visita', email: 'outro@empresa.com', token: r.token }).ok, false, 'assinatura de outro e-mail não vale')
-  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: 'falso' }).ok, false)
+  assert.equal(s.linhas[0][1], 'ana@itau-unibanco.com.br')
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'ana@itau-unibanco.com.br', codigo: cod }).ok, false, 'código só vale uma vez')
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@itau-unibanco.com.br', token: r.token }).ok, true)
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'outro@itau-unibanco.com.br', token: r.token }).ok, false, 'assinatura de outro e-mail não vale')
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@itau-unibanco.com.br', token: 'falso' }).ok, false)
 })
 
 test('script: recusa e-mail inválido, trava tentativas e limita pedidos', () => {
   const s = criarScript()
   assert.equal(s.chamarScript({ acao: 'pedir', email: 'invalido' }).ok, false)
   assert.equal(s.emails.length, 0)
-  s.chamarScript({ acao: 'pedir', email: 'b@c.com' })
+  s.chamarScript({ acao: 'pedir', email: 'b@itaubba.com' })
   const cod = codigoDoEmail(s.emails)
   const errado = cod === '000000' ? '111111' : '000000'
-  for (let i = 0; i < 5; i++) s.chamarScript({ acao: 'confirmar', email: 'b@c.com', codigo: errado })
-  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'b@c.com', codigo: cod }).ok, false, 'após 5 erros o código acerta mas já foi travado')
-  for (let i = 0; i < 4; i++) s.chamarScript({ acao: 'pedir', email: 'b@c.com' })
-  assert.equal(s.chamarScript({ acao: 'pedir', email: 'b@c.com' }).ok, false, 'sexto pedido na hora é barrado')
+  for (let i = 0; i < 5; i++) s.chamarScript({ acao: 'confirmar', email: 'b@itaubba.com', codigo: errado })
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'b@itaubba.com', codigo: cod }).ok, false, 'após 5 erros o código acerta mas já foi travado')
+  for (let i = 0; i < 4; i++) s.chamarScript({ acao: 'pedir', email: 'b@itaubba.com' })
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'b@itaubba.com' }).ok, false, 'sexto pedido na hora é barrado')
 })
 
 test('script: sem cota diária de e-mails avisa e não envia', () => {
   const s = criarScript()
   s.setCota(0)
-  const r = s.chamarScript({ acao: 'pedir', email: 'd@e.com' })
+  const r = s.chamarScript({ acao: 'pedir', email: 'd@itaubba.com' })
   assert.equal(r.ok, false)
   assert.equal(s.emails.length, 0)
 })
 
-test('script: qualquer e-mail recebe código e, ao confirmar, entra sozinho na aba Liberados (sem repetir)', () => {
+test('script: e-mail autorizado recebe código e, ao confirmar, entra sozinho na aba Liberados (sem repetir)', () => {
   const s = criarScript()
-  assert.equal(s.chamarScript({ acao: 'pedir', email: 'Novo@X.com' }).ok, true)
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'Novo@ITAUBBA.COM' }).ok, true)
   assert.equal(s.emails.length, 1)
   assert.equal(s.linhasDe('Liberados').length, 0, 'só pedir o código não libera')
-  const t = s.chamarScript({ acao: 'confirmar', email: 'novo@x.com', codigo: codigoDoEmail(s.emails) })
+  const t = s.chamarScript({ acao: 'confirmar', email: 'novo@itaubba.com', codigo: codigoDoEmail(s.emails) })
   assert.equal(t.ok, true)
   assert.equal(s.linhasDe('Liberados').length, 1)
-  assert.equal(s.linhasDe('Liberados')[0][0], 'novo@x.com')
+  assert.equal(s.linhasDe('Liberados')[0][0], 'novo@itaubba.com')
   assert.ok(s.linhasDe('Liberados')[0][1] instanceof Date)
-  s.chamarScript({ acao: 'pedir', email: 'novo@x.com' })
-  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'novo@x.com', codigo: codigoDoEmail(s.emails) }).ok, true)
+  s.chamarScript({ acao: 'pedir', email: 'novo@itaubba.com' })
+  assert.equal(s.chamarScript({ acao: 'confirmar', email: 'novo@itaubba.com', codigo: codigoDoEmail(s.emails) }).ok, true)
   assert.equal(s.linhasDe('Liberados').length, 1, 'segunda confirmação não duplica')
   assert.equal(s.linhas.filter((l) => l[2] === 'cadastro').length, 2, 'cada confirmação fica registrada em Acessos')
 })
 
 test('script: e-mail bloqueado não recebe código; quem é bloqueado depois perde o acesso', () => {
-  const s = criarScript({ bloqueados: ['Estranho@x.com'] })
-  const r = s.chamarScript({ acao: 'pedir', email: 'estranho@x.com' })
+  const s = criarScript({ bloqueados: ['Estranho@itaubba.com'] })
+  const r = s.chamarScript({ acao: 'pedir', email: 'estranho@itaubba.com' })
   assert.equal(r.ok, false)
   assert.match(r.erro, /bloqueado/)
   assert.equal(s.emails.length, 0, 'nenhum código enviado')
-  s.chamarScript({ acao: 'pedir', email: 'ana@empresa.com' })
-  const t = s.chamarScript({ acao: 'confirmar', email: 'ana@empresa.com', codigo: codigoDoEmail(s.emails) })
+  s.chamarScript({ acao: 'pedir', email: 'ana@itau-unibanco.com.br' })
+  const t = s.chamarScript({ acao: 'confirmar', email: 'ana@itau-unibanco.com.br', codigo: codigoDoEmail(s.emails) })
   assert.equal(t.ok, true)
-  s.bloq.appendRow(['ana@empresa.com'])
+  s.bloq.appendRow(['ana@itau-unibanco.com.br'])
   const antes = s.linhas.length
-  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@empresa.com', token: t.token }).ok, false)
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'ana@itau-unibanco.com.br', token: t.token }).ok, false)
   assert.equal(s.linhas.length, antes)
 })
 
 test('script: e-mail da aba Entrada direta entra sem código, fica registrado e pode ser bloqueado', () => {
-  const s = criarScript({ diretos: ['Colega@Banco.com.br'] })
-  const r = s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' })
+  const s = criarScript({ diretos: ['Colega@Itau-Unibanco.com.br'] })
+  const r = s.chamarScript({ acao: 'pedir', email: 'colega@itau-unibanco.com.br' })
   assert.equal(r.ok, true)
   assert.ok(r.token, 'devolve a assinatura na hora')
   assert.equal(s.emails.length, 0, 'nenhum código enviado')
-  assert.equal(s.linhasDe('Liberados')[0][0], 'colega@banco.com.br')
+  assert.equal(s.linhasDe('Liberados')[0][0], 'colega@itau-unibanco.com.br')
   assert.equal(s.linhas.at(-1)[2], 'entrada direta')
-  assert.equal(s.chamarScript({ acao: 'visita', email: 'colega@banco.com.br', token: r.token }).ok, true)
-  const outro = s.chamarScript({ acao: 'pedir', email: 'outro@banco.com.br' })
+  assert.equal(s.chamarScript({ acao: 'visita', email: 'colega@itau-unibanco.com.br', token: r.token }).ok, true)
+  const outro = s.chamarScript({ acao: 'pedir', email: 'outro@itau-unibanco.com.br' })
   assert.equal(outro.token, undefined, 'quem não está na aba recebe código')
-  s.bloq.appendRow(['colega@banco.com.br'])
-  assert.equal(s.chamarScript({ acao: 'pedir', email: 'colega@banco.com.br' }).ok, false, 'bloqueio vale mais que entrada direta')
+  s.bloq.appendRow(['colega@itau-unibanco.com.br'])
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'colega@itau-unibanco.com.br' }).ok, false, 'bloqueio vale mais que entrada direta')
 })
 
 
 test('script: cada nova solicitação gera uma linha antes do OTP, inclusive cadastrado e direto', () => {
-  const s = criarScript({ diretos: ['direto@x.com'] })
-  for (const email of ['novo@x.com', 'direto@x.com']) {
+  const s = criarScript({ diretos: ['direto@itaubba.com'] })
+  for (const email of ['novo@itaubba.com', 'direto@itaubba.com']) {
     for (let i = 0; i < 3; i++) {
       const pedido = `pedido_valido_${email[0]}_${i}`
       const r = s.chamarScript({ acao: 'pedir', email, pedido })
       assert.equal(r.ok, true)
       assert.deepEqual(s.chamarScript({ acao: 'pedir', email, pedido }), r)
-      if (email === 'novo@x.com' && i === 0) s.chamarScript({ acao: 'confirmar', email, codigo: codigoDoEmail(s.emails) })
+      if (email === 'novo@itaubba.com' && i === 0) s.chamarScript({ acao: 'confirmar', email, codigo: codigoDoEmail(s.emails) })
     }
     assert.equal(s.linhas.filter(l => l[1] === email && l[2] === 'solicitacao').length, 3)
   }
@@ -193,28 +193,55 @@ test('script: cada nova solicitação gera uma linha antes do OTP, inclusive cad
 })
 
 test('script: inválido e bloqueado não contam; cota esgotada é tentativa, não sucesso', () => {
-  const s = criarScript({ bloqueados: ['bloqueado@x.com'] })
-  for (const email of ['invalido', 'bloqueado@x.com']) s.chamarScript({ acao: 'pedir', email })
+  const s = criarScript({ bloqueados: ['bloqueado@itaubba.com'] })
+  for (const email of ['invalido', 'bloqueado@itaubba.com']) s.chamarScript({ acao: 'pedir', email })
   assert.equal(s.linhas.length, 0)
   s.setCota(0)
-  assert.equal(s.chamarScript({ acao: 'pedir', email: 'valido@x.com' }).ok, false)
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'valido@itaubba.com' }).ok, false)
   assert.equal(s.linhas.length, 1)
   assert.equal(s.linhas[0][2], 'solicitacao')
   assert.equal(s.emails.length, 0)
 })
 
 test('script: validar sessão não grava acesso, e Bloqueados prevalece sem esperar outro dia', () => {
- const s=criarScript({diretos:['direto@x.com']})
- const acesso=s.chamarScript({acao:'pedir',email:'direto@x.com'})
+ const s=criarScript({diretos:['direto@itaubba.com']})
+ const acesso=s.chamarScript({acao:'pedir',email:'direto@itaubba.com'})
  const antes=s.linhas.length
- for(let i=0;i<3;i++) assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:acesso.token}).ok,true)
+ for(let i=0;i<3;i++) assert.equal(s.chamarScript({acao:'validar',email:'direto@itaubba.com',token:acesso.token}).ok,true)
  assert.equal(s.linhas.length,antes)
- s.bloq.appendRow([' DIRETO@X.COM '])
- assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:acesso.token}).ok,false)
- assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:acesso.token}).revogado,true)
+ s.bloq.appendRow([' DIRETO@ITAUBBA.COM '])
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@itaubba.com',token:acesso.token}).ok,false)
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@itaubba.com',token:acesso.token}).revogado,true)
  assert.equal(s.linhas.length,antes)
- assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:'invalido'}).ok,false)
- assert.equal(s.chamarScript({acao:'validar',email:'direto@x.com',token:'invalido'}).revogado,true)
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@itaubba.com',token:'invalido'}).ok,false)
+ assert.equal(s.chamarScript({acao:'validar',email:'direto@itaubba.com',token:'invalido'}).revogado,true)
+})
+
+test('script: domínio tem correspondência exata e substitui liberações antigas de fora', () => {
+  const s = criarScript({ diretos: ['externo@example.test'] })
+  for (const email of ['externo@example.test', 'a@itaubba.com.example.test', 'a@sub.itaubba.com', 'a@itau-unibamco.com.br', 'a@itau-unibanco.com.br.example.test']) {
+    assert.match(s.chamarScript({ acao: 'pedir', email }).erro, /institucional/)
+    assert.equal(s.chamarScript({ acao: 'confirmar', email, codigo: '123456' }).ok, false)
+    assert.equal(s.chamarScript({ acao: 'validar', email, token: 'antigo' }).revogado, true)
+    assert.equal(s.chamarScript({ acao: 'visita', email, token: 'antigo' }).revogado, true)
+  }
+  assert.equal(s.emails.length, 0)
+  assert.equal(s.linhas.length, 0)
+  assert.equal(s.linhasDe('Liberados').length, 0)
+})
+
+test('script: exceção pessoal é um endereço exato e revalida sessões quando removida', () => {
+  const s = criarScript()
+  const email = 'pessoal@example.test'
+  assert.equal(s.chamarScript({ acao: 'pedir', email }).ok, false)
+  s.setEmailPessoal(' PESSOAL@EXAMPLE.TEST ')
+  assert.equal(s.chamarScript({ acao: 'pedir', email: 'pessoal+alias@example.test' }).ok, false)
+  assert.equal(s.chamarScript({ acao: 'pedir', email }).ok, true)
+  const r = s.chamarScript({ acao: 'confirmar', email, codigo: codigoDoEmail(s.emails) })
+  assert.equal(r.ok, true)
+  assert.equal(s.chamarScript({ acao: 'validar', email, token: r.token }).ok, true)
+  s.setEmailPessoal('')
+  assert.equal(s.chamarScript({ acao: 'validar', email, token: r.token }).revogado, true)
 })
 
 test('timeout limita validação pendente e permite uma nova chamada', async () => {
