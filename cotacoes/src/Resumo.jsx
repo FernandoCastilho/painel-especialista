@@ -450,7 +450,8 @@ function CdsRow({ data }) {
   const sobre = v.refDate ? ` do fechamento de ${v.refDate} para o de ${v.close}` : ''
   const abrir = () => setAberto(true)
   return <tbody className="market-record market-cds">
-    <tr className="market-values" onClick={abrir}>
+    {/* O gráfico fica dentro da linha: cliques dentro dele (inclusive em Fechar) não podem reabri-lo. */}
+    <tr className="market-values" onClick={(e) => { if (!e.target.closest('dialog')) abrir() }}>
       <th scope="row"><button type="button" className="market-open" aria-haspopup="dialog" aria-label="CDS Brasil 5 anos: abrir gráfico de 12 meses" onClick={(e) => { e.stopPropagation(); abrir() }}>
         <b><Flag code="BRL" width={20} height={14} /> CDS 5 anos <span aria-hidden="true">›</span></b><small>Risco-país · pontos-base</small><small className="market-state is-neutral">Fechamento de {v.close}</small>
       </button>
