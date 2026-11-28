@@ -41,7 +41,7 @@ async function montar(t) {
   const window = { addEventListener: (k, fn) => listeners.set(k, fn), removeEventListener: k => listeners.delete(k) }
   const focados = []
   const gatilho = { offsetParent: {}, focus() { focados.push('gatilho') } }
-  const document = { body: {}, fullscreenEnabled: true, querySelectorAll: () => [{ offsetParent: null }, gatilho] }
+  const document = { body: {}, fullscreenEnabled: true, querySelector: () => null, querySelectorAll: () => [{ offsetParent: null }, gatilho] }
   const { code } = await transform(readFileSync(new URL('../src/TvDock.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   const module = { exports: {} }
   const deps = { react: React, 'react-dom': { createPortal: n => n }, './TvDock.css': {}, './tvCanais.js': { ...tv, lerPreferencia: () => lerPreferencia(storage), gravarPreferencia: p => gravarPreferencia(p, storage) } }

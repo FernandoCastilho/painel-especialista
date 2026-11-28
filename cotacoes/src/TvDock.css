@@ -37,7 +37,7 @@
 .tv-dock-note { margin: 6px 2px 0; color: var(--mut); font-size: .72rem; line-height: 1.35; }
 .tv-dock-note a { color: inherit; text-decoration: underline; }
 
-/* Abaixo de 1000 px o menu fica na base da tela: a TV sobe para não cobri-lo. */
+/* Abaixo de 1000 px o menu fica na base da tela: a TV sobe para não cobri-lo (a altura exata vem do TvDock.jsx). */
 @media (width < 1000px) {
   .tv-dock { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }

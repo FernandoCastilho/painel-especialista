@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { TV_CANAIS, TV_EVENTO, TV_TAMANHOS, gravarPreferencia, lerPreferencia, tvEmbedUrl } from './tvCanais.js'
 import './TvDock.css'
@@ -21,6 +21,20 @@ export default function TvDock() {
     else setCanalId(null)
   }, [aberta])
 
+  // Abaixo de 1000 px o menu fica fixo na base e muda de altura com a tela: a TV fica logo acima dele.
+  const [base, setBase] = useState(null)
+  useLayoutEffect(() => {
+    if (!aberta) return undefined
+    const medir = () => {
+      const menu = document.querySelector('.nav-top')
+      const fixo = menu && getComputedStyle(menu).position === 'fixed' && menu.offsetHeight
+      setBase(fixo ? window.innerHeight - menu.getBoundingClientRect().top + 8 : null)
+    }
+    medir()
+    window.addEventListener('resize', medir)
+    return () => window.removeEventListener('resize', medir)
+  }, [aberta])
+
   const salvar = mudanca => setPref(atual => { const nova = { ...atual, ...mudanca }; gravarPreferencia(nova); return nova })
   const escolher = id => { setCanalId(id); salvar({ canal: id }) }
   const fechar = () => {
@@ -33,7 +47,7 @@ export default function TvDock() {
   const tamanho = TV_TAMANHOS.find(t => t.id === pref.tamanho)
   return createPortal(
     <section ref={painel} className="tv-dock" role="dialog" aria-label="TV ao vivo" tabIndex={-1}
-      style={{ '--tv-largura': `${tamanho.largura}px` }}
+      style={{ '--tv-largura': `${tamanho.largura}px`, ...(base ? { bottom: base } : {}) }}
       onKeyDown={e => { if (e.key === 'Escape' && !e.defaultPrevented) { e.preventDefault(); fechar() } }}>
       <header className="tv-dock-bar">
         <span className="tv-dock-title">{canal ? <><b className="tv-dock-live">Ao vivo</b> {canal.nome}</> : 'TV ao vivo'}</span>

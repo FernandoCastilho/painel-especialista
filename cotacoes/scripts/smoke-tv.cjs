@@ -65,7 +65,7 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       assert.ok(caixa.x >= 0 && caixa.y >= 0 && caixa.x + caixa.width <= viewport.width && caixa.y + caixa.height <= viewport.height, `${nome}: TV sai da tela ${JSON.stringify(caixa)}`)
       if (viewport.width < 1000) {
         const menu = await page.locator('.nav-top').boundingBox()
-        assert.ok(caixa.y + caixa.height <= menu.y + 1, `${nome}: TV cobre o menu de baixo`)
+        assert.ok(caixa.y + caixa.height <= menu.y + 1, `${nome}: TV cobre o menu de baixo (TV ${JSON.stringify(caixa)}, menu ${JSON.stringify(menu)})`)
       }
       await page.screenshot({ path: path.join(out, `${nome}-bloomberg-grande.png`) })
 
