@@ -31,7 +31,7 @@
 .manchete-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sl-corpo .manchete { display: none; } /* slides: só os quadros */
 .terminal-desk .kpi-block > .holiday-notice { margin: 8px 0 0; }
-.terminal-desk .kpi-block > .insight-aprender { margin: 8px 0 0; }
+.terminal-desk .kpi-block > .insight-aprender { margin: 0 0 10px; }
 
 :root .terminal-desk .kpi-title { color: var(--mut); }
 :root .terminal-desk .kpi { padding: 12px 14px; border-radius: var(--r-card); }

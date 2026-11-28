@@ -470,7 +470,7 @@ export function CambioTabela({ quotes, returns, ptaxes, selection = [], onOpen =
 }
 
 // Quadros das moedas com minigráfico e seletor de período (o seletor vale só para o câmbio).
-function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
+function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama, status }) {
   const newsHeightRef = useRef(null)
   useEffect(() => observeMarketNewsHeight(newsHeightRef.current), [])
   const [newsTab, setNewsTab] = useState('moedas') // o quadro de Notícias abre sempre em Moedas
@@ -502,6 +502,8 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama }) {
         <div className="market-table-wrap" role="region" aria-label="Tabela de câmbio; role horizontalmente para ver todas as colunas" tabIndex={0}>
           <CambioTabela quotes={quotes} returns={returns} ptaxes={ptaxes} selection={selection} onOpen={openSelected} colors={colors} cds={cds} />
         </div>
+        {/* Linha de situação do câmbio logo abaixo da tabela, depois do CDS (pedido de Fernando, 28/11/2026). */}
+        {status}
         </div>
         <div ref={newsHeightRef} className="terminal-chart terminal-news market-news-adaptive">
         <Panel title="Notícias" tabs={NEWS_TABS} tab={newsTab} onTab={setNewsTab} semAtualizar>
@@ -616,9 +618,9 @@ export default function Resumo({ quotes, ptax, onOpen, colors, macro, curves, go
   const ipcaSeries = useMemo(() => { try { return ipcaFile.data ? normalizeIpca(ipcaFile.data) : null } catch { return null } }, [ipcaFile.data])
   return (
     <div className="terminal-desk">
-      <KpiRow quotes={quotes} rates={rates} ipca={ipcaSeries} ibov={indices.data} macro={macro?.data} colors={colors} onOpen={onOpen} onRate={setRateOpen} goto={goto} status={status} aviso={aviso} loading={loading} />
+      <KpiRow quotes={quotes} rates={rates} ipca={ipcaSeries} ibov={indices.data} macro={macro?.data} colors={colors} onOpen={onOpen} onRate={setRateOpen} goto={goto} aviso={aviso} loading={loading} />
       {rateOpen && <Suspense fallback={null}><RateModal kind={rateOpen} macro={macro} curves={curves} onClose={() => setRateOpen(null)} /></Suspense>}
-      <div className="resumo desk-markets"><MoedasPanel searchTarget={searchTarget} quotes={quotes} ptax={ptax} onOpen={onOpen} colors={colors} panorama={panorama} /></div>
+      <div className="resumo desk-markets"><MoedasPanel searchTarget={searchTarget} quotes={quotes} ptax={ptax} onOpen={onOpen} colors={colors} panorama={panorama} status={status} /></div>
     </div>
   )
 }

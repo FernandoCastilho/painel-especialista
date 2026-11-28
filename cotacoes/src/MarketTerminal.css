@@ -29,6 +29,7 @@
 .market-terminal .market-record.is-selected { background:#142236; }
 .market-terminal .market-record.is-selected .market-open b { color:#ffe0a1; }
 .market-terminal .market-record:hover { background:#19202a; }
+.terminal-quotes > .status.src { margin:6px 0 0; }
 .terminal-quotes > .market-instruction { padding:6px 0 0; font-size:.75rem; line-height:1.5; }
 .terminal-chart { border-top:1px solid #343a43; }
 .terminal-chart > .resumo-chart { margin:0; padding:12px; height:100%; box-sizing:border-box; border:0; border-radius:0; background:transparent; }
