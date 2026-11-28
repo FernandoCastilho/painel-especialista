@@ -43,7 +43,9 @@ async function coleta() {
     assert.equal(d.value, 162.85, 'leu o número depois de a página carregar')
     assert.equal(Math.floor(d.observedAt / 60000), Math.floor(observedAt / 60000), 'horário da página')
     assert.equal(d.error, null)
-    assert.ok(d.history.length >= 365 && d.history.length <= 367, `12 meses do gráfico da página (${d.history.length})`)
+    assert.ok(d.history.length >= 255 && d.history.length <= 263, `12 meses de fechamentos em dias úteis (${d.history.length})`)
+    assert.equal(d.datedBy, 'fechamento')
+    assert.equal(d.history.some((p) => [0, 6].includes(new Date(p.date + 'T12:00:00Z').getUTCDay())), false, 'sem sábado nem domingo')
     assert.ok(d.reference, 'variação do dia já na primeira coleta')
     assert.match(await run('/fonte'), /menos de 2 h/, 'não visita de novo antes de 2 h')
     fs.writeFileSync(path.join(dir, 'cds.json'), JSON.stringify({ ...d, lastAttemptAt: Date.now() - 3 * 3600000 }))
@@ -56,10 +58,21 @@ async function coleta() {
 
 const raw = (code, codein, bid, pct) => ({ code, codein, bid: String(bid), ask: String(bid + 0.001), high: String(bid * 1.01), low: String(bid * 0.99), pctChange: String(pct), varBid: String(bid * 0.01), timestamp: String(Math.floor(Date.now() / 1000)) })
 const quotes = { USDBRL: raw('USD', 'BRL', 5.28, 0.46), EURBRL: raw('EUR', 'BRL', 5.74, 0.31), JPYBRL: raw('JPY', 'BRL', 0.032, 0.1), USDCNH: raw('USD', 'CNH', 7.23, 0.18) }
+// Mesmo critério de cds.js: a fonte publica no dia D o fechamento do dia útil anterior.
+function closeDate(day) {
+  let t = Date.parse(day + 'T12:00:00Z') - 864e5
+  while ([0, 6].includes(new Date(t).getUTCDay())) t -= 864e5
+  return new Date(t).toISOString().slice(0, 10)
+}
+// Arquivo já no formato novo: um fechamento por dia útil, 12 meses, o último publicado há 2 h.
 function cdsFixture(value = 162.85) {
   const end = Date.now() - 2 * 3600000
-  const history = Array.from({ length: 365 }, (_, i) => { const t = end - (364 - i) * 864e5; return { date: new Date(t - 3 * 3600000).toISOString().slice(0, 10), value: i === 364 ? value : +(150 + 12 * Math.sin(i / 30) + Math.sin(i) * 2).toFixed(2), observedAt: t } })
-  return { generatedAt: new Date(end).toISOString(), lastAttemptAt: end, source: { name: 'World Government Bonds' }, unit: 'pb', value, observedAt: end, reference: { date: history.at(-2).date, value: 165 }, error: null, history }
+  const ultimo = closeDate(new Date(end - 3 * 3600000).toISOString().slice(0, 10))
+  const datas = []
+  for (let t = Date.parse(ultimo + 'T12:00:00Z'); datas.length < 261; t -= 864e5) if (![0, 6].includes(new Date(t).getUTCDay())) datas.unshift(new Date(t).toISOString().slice(0, 10))
+  const history = datas.map((date, i) => ({ date, value: i === datas.length - 1 ? value : i === datas.length - 2 ? 165 : +(150 + 12 * Math.sin(i / 20) + Math.sin(i) * 2).toFixed(2), observedAt: Date.parse(date + 'T21:00:00Z') }))
+  history.at(-1).observedAt = end
+  return { generatedAt: new Date(end).toISOString(), lastAttemptAt: end, source: { name: 'World Government Bonds' }, unit: 'pb', datedBy: 'fechamento', value, observedAt: end, date: ultimo, reference: { date: history.at(-2).date, value: 165 }, error: null, history }
 }
 
 async function tela() {
@@ -89,7 +102,9 @@ async function tela() {
       assert.match(await table.locator('tbody').nth(3).innerText(), /CNH/)
       const texto = (await row.innerText()).replace(/\s+/g, ' ')
       assert.match(texto, /CDS 5 anos/); assert.match(texto, /162,85 pb/); assert.match(texto, /−2,15 pb/); assert.match(texto, /−1,30%/)
-      assert.match(texto, /World Government Bonds · não oficial · \d{2}\/\d{2} \d{2}:\d{2}/)
+      assert.match(texto, /Fechamento de \d{2}\/\d{2}/)
+      assert.doesNotMatch(texto, /World Government Bonds|não oficial/, 'sem a fonte na linha')
+      assert.match(texto, /[+−]\d+,\d{2}%[\s\S]*[+−]\d+,\d{2}%[\s\S]*[+−]\d+,\d{2}%/, 'variação do dia, do mês e do ano')
       assert.equal(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'sem rolagem lateral na página')
       await p.locator('.market-terminal').evaluate((el) => el.scrollIntoView())
       await p.locator('.market-terminal').screenshot({ path: `${out}/${width}-mercado-hoje.png` })
@@ -100,6 +115,15 @@ async function tela() {
         await wrap.screenshot({ path: `${out}/${width}-tabela-direita.png` })
         await wrap.evaluate((e) => { e.scrollLeft = 0 })
       }
+      // Tocar na linha do CDS abre o gráfico de 12 meses, como nas moedas.
+      await row.getByRole('button', { name: 'CDS Brasil 5 anos: abrir gráfico de 12 meses' }).click()
+      const grafico = p.locator('dialog.market-popup-cds[open]')
+      await grafico.getByText('162,85 pb').waitFor()
+      assert.equal(await grafico.getByRole('img', { name: /12 meses/ }).count(), 1, 'gráfico de 12 meses aberto pela tabela')
+      assert.equal(await grafico.getByText('Série indisponível').count(), 0)
+      await grafico.screenshot({ path: `${out}/${width}-cds-grafico-tabela.png` })
+      await grafico.getByRole('button', { name: 'Fechar gráfico do CDS' }).click()
+      await grafico.waitFor({ state: 'detached' })
       // Panorama do dia: o CDS no lugar do Brent.
       await p.locator('.panorama-trigger').click()
       const modal = p.locator('dialog.market-popup')

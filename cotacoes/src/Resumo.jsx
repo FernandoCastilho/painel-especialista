@@ -41,6 +41,7 @@ import { useCds } from './useCds.js'
 import { cdsView } from './cds.js'
 const CuradoriaNoticias = lazy(() => import('./CuradoriaNoticias.jsx'))
 const RateModal = lazy(() => import('./RateModal.jsx'))
+const CdsGrafico = lazy(() => import('./MarketPopup.jsx').then((m) => ({ default: m.CdsGrafico })))
 
 const brl = (v, d = 4) => !Number.isFinite(v) ? '—' : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d })}`
 const pct = (v) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2).replace('.', ',')}%`
@@ -440,18 +441,26 @@ export function useCambio(quotes, ptax) {
 }
 
 // CDS Brasil 5 anos (risco-país) logo abaixo do yuan, na mesma tabela (pedido de Fernando, 27/11/2026).
-// Fonte gratuita e não oficial; `cdsView` devolve null para dado ausente, velho ou fora da faixa, e aí a linha não aparece.
+// `cdsView` devolve null para dado ausente, velho ou fora da faixa, e aí a linha não aparece. Desde 28/11/2026: tocar na linha
+// abre o gráfico de 12 meses, como nas moedas; mês e ano acumulados em %; sem a fonte na linha (ela fica no "?" do Mercado hoje).
 function CdsRow({ data }) {
+  const [aberto, setAberto] = useState(false)
   const v = cdsView(data)
   if (!v) return null
-  const sobre = v.refDate ? ` sobre o fechamento de ${v.refDate}` : ''
+  const sobre = v.refDate ? ` do fechamento de ${v.refDate} para o de ${v.close}` : ''
+  const abrir = () => setAberto(true)
   return <tbody className="market-record market-cds">
-    <tr className="market-values">
-      <th scope="row"><div className="market-open market-open-static"><b><Flag code="BRL" width={20} height={14} /> CDS 5 anos</b><small>Risco-país · pontos-base</small></div></th>
-      <td className="market-price" aria-label={`CDS de 5 anos do Brasil: ${v.value} pontos-base`}>{v.value}<small className="market-unit"> pb</small></td>
+    <tr className="market-values" onClick={abrir}>
+      <th scope="row"><button type="button" className="market-open" aria-haspopup="dialog" aria-label="CDS Brasil 5 anos: abrir gráfico de 12 meses" onClick={(e) => { e.stopPropagation(); abrir() }}>
+        <b><Flag code="BRL" width={20} height={14} /> CDS 5 anos <span aria-hidden="true">›</span></b><small>Risco-país · pontos-base</small><small className="market-state is-neutral">Fechamento de {v.close}</small>
+      </button>
+        {aberto && <Suspense fallback={null}><CdsGrafico open onClose={() => setAberto(false)} /></Suspense>}</th>
+      <td className="market-price" aria-label={`CDS de 5 anos do Brasil: ${v.value} pontos-base, fechamento de ${v.close}`}>{v.value}<small className="market-unit"> pb</small></td>
       <td className={v.change ? 'pct ' + v.tone : 'muted'} title={v.change ? `Variação em pontos-base${sobre}` : 'Variação do dia indisponível: falta o fechamento do dia anterior'}>{v.change ? <>{v.change}<small className="market-unit"> pb</small></> : '—'}</td>
       <td className={v.pct ? 'pct ' + v.tone : 'muted'} title={v.pct ? `Variação percentual${sobre}` : undefined}>{v.pct ?? '—'}</td>
-      <td colSpan={3} className="market-cds-source"><small>{v.sourceName} · não oficial · {v.when}</small></td>
+      <td className={v.month ? 'pct ' + v.monthTone : 'muted'}>{v.month ?? <span aria-label="Acumulado do mês indisponível">—</span>}</td>
+      <td className={v.year ? 'pct ' + v.yearTone : 'muted'}>{v.year ?? <span aria-label="Acumulado do ano indisponível">—</span>}</td>
+      <td className="market-ptax"><span aria-label="CDS não tem PTAX">—</span></td>
     </tr>
   </tbody>
 }
@@ -518,7 +527,7 @@ function MoedasPanel({ quotes, ptax, onOpen, colors, searchTarget, panorama, sta
         <Aviso title="Câmbio · datas e metodologia">
           <p id="market-help">Toque na linha para selecionar e abrir o gráfico. 🔥 marca a moeda que mais subiu no mês e 🛡️ a que menos subiu, entre as da tabela; só indicam a variação, não dizem se é bom ou ruim. Filtros alteram apenas os gráficos. Cotação e Δ dia: última referência da fonte; mês/ano: observações diárias de dias encerrados, não a cotação intradiária.</p>
           <p>O traço indica dado indisponível. A cotação do CNH usa a compra de USD/BRL dividida pela venda de USD/CNH. As duas variações usam a mesma cotação anterior estimada, mantendo a diferença proporcional atual entre compra e venda do USD/CNH. Sem dados para estimar a base anterior, as duas variações ficam indisponíveis.</p>
-          <p>CDS 5 anos: risco-país do Brasil em pontos-base (100 pb = 1% ao ano), de fonte gratuita e não oficial (World Government Bonds), lida a cada 2 horas em dias úteis; não é tempo real. A variação compara com o último valor do dia anterior. A linha some se o dado faltar, passar de 4 dias ou sair da faixa de 50 a 1.000 pb.</p>
+          <p>CDS 5 anos: risco-país do Brasil em pontos-base (100 pb = 1% ao ano), de fonte gratuita e não oficial (World Government Bonds), lida a cada 2 horas em dias úteis; não é tempo real. A fonte publica o fechamento no dia útil seguinte, por isso a linha mostra a data do fechamento. A variação do dia compara esse fechamento com o do dia útil anterior; mês e ano comparam com o último fechamento antes do início do mês e do ano. Toque na linha para ver o gráfico de 12 meses. A linha some se o dado faltar, passar de 4 dias ou sair da faixa de 50 a 1.000 pb.</p>
           <p>Não há PTAX oficial do yuan. A coluna mostra uma referência cruzada (PTAX do dólar ÷ USD/CNH no horário do boletim), só com cotações das duas pontas a até 15 min dele. CNY e CNH são referências distintas.</p>
           <ul>{CURRENCIES.map(c => { const q = quotes?.[c.code], p = ptaxes[c.code], r = returns[c.code]; return <li key={c.code}>
             <b>{q?.source || c.code}/BRL:</b> <span className={quoteAgeState(q) && quoteAgeLabel(q).tone !== 'neutral' ? 'status stale' : ''}>{!q ? quotes ? 'Cotação indisponível' : 'Carregando cotação' : (q.stale ? 'Atualização pendente · ' : q.fallback ? 'Referência diária de reserva · ' : quoteAgeLabel(q).tone === 'neutral' ? 'Fora do horário de coleta · ' : quoteAgeState(q) ? quoteAgeState(q) + ' · ' : '') + dataTimestamp(q.timestamp)}</span>

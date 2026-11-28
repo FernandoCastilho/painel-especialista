@@ -107,7 +107,8 @@ test('DI não substitui silenciosamente vértices distantes nem compara prazos i
  const incompatible={br:{...curves.br,curves:{...curves.br.curves,'2026-11-05':[[400,12.2]]}}}
  assert.equal(marketDi(incompatible,now).rows[0].change,null)
 })
-// CDS Brasil 5 anos substitui o Brent no Panorama (27/11/2026).
+// CDS Brasil 5 anos substitui o Brent no Panorama (27/11/2026). Arquivo no formato antigo (datas da publicação):
+// publicado na sexta 06/11 = fechamento de quinta 05/11; a base publicada na quinta 05/11 = fechamento de quarta 04/11.
 const cdsAt=Date.parse('2026-11-06T14:00:00Z')
 const cds={value:162.85,observedAt:cdsAt,unit:'pb',source:{name:'World Government Bonds'},reference:{date:'2026-11-05',value:165},
  history:[{date:'2026-11-05',value:165,observedAt:cdsAt-864e5},{date:'2026-11-06',value:162.85,observedAt:cdsAt}]}
@@ -115,7 +116,8 @@ test('CDS no Panorama: pontos-base, variação sobre o dia anterior e cartão va
  const c=marketCds(cds,now)
  assert.equal(c.value,'162,85 pb')
  assert.ok(Math.abs(c.change+2.15)<1e-9)
- assert.equal(c.refDate,'05/11')
+ assert.equal(c.refDate,'04/11')
+ assert.equal(c.stamp,'Fechamento de 05/11')
  assert.equal(c.points.length,2)
  assert.match(c.note,/não oficial/)
  const sameDay=marketCds({...cds,reference:{date:'2026-11-06',value:165}},now)
@@ -129,7 +131,7 @@ test('CDS no Panorama: pontos-base, variação sobre o dia anterior e cartão va
 test('síntese é descritiva, não inventa causa nem última hora quando indisponível',()=>{
  const summary=marketSummary([marketFx('USD',q,pts,now)],marketCds(cds,now))
  assert.match(summary,/Dólar: \+1,00%/)
- assert.match(summary,/CDS Brasil 5 anos: −2,15 pb sobre o fechamento de 05\/11/)
+ assert.match(summary,/CDS Brasil 5 anos: −2,15 pb sobre o fechamento de 04\/11/)
  assert.doesNotMatch(summary,/atividade global|última hora/)
  assert.equal(marketTone(.001),'flat')
  assert.equal(marketTone(null),'flat')
