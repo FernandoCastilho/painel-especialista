@@ -81,7 +81,8 @@ export function marketCds(cds, now=Date.now()) {
   const v=cdsView(cds,now)
   return { key:'CDS', title:'CDS BRASIL 5 ANOS', symbol:'◈', value:v?v.value+' pb':'—',
     change:v?.refDate?cds.value-cds.reference.value:null, changeUnit:' pb', refDate:v?v.refDate:null,
-    stamp:v?'Fechamento de '+v.close:'Sem dado válido', note:v?v.sourceName+' · não oficial':'World Government Bonds · indisponível',
+    // Cartão estreito do Panorama (1024×600): "Fech." cabe numa linha; a tabela usa "Fechamento de".
+    stamp:v?'Fech. '+v.close:'Sem dado válido', note:v?v.sourceName+' · não oficial':'World Government Bonds · indisponível',
     detail:v?.refDate?'Variação sobre o fechamento de '+v.refDate:'Variação do dia indisponível', color:'#ff6900',
     dailyNote:'Risco-país · pontos-base, sem tempo real', chartLabel:'Histórico diário do CDS Brasil 5 anos, 12 meses',
     points:v?(cds.history||[]).filter(p=>Number.isFinite(p.observedAt)&&p.observedAt<=now&&p.observedAt>=now-CDS_HISTORY_MS&&Number.isFinite(p.value)).map(p=>({t:p.observedAt,bid:p.value})):[] }

@@ -117,7 +117,7 @@ test('CDS no Panorama: pontos-base, variação sobre o dia anterior e cartão va
  assert.equal(c.value,'162,85 pb')
  assert.ok(Math.abs(c.change+2.15)<1e-9)
  assert.equal(c.refDate,'04/11')
- assert.equal(c.stamp,'Fechamento de 05/11')
+ assert.equal(c.stamp,'Fech. 05/11')
  assert.equal(c.points.length,2)
  assert.match(c.note,/não oficial/)
  const sameDay=marketCds({...cds,reference:{date:'2026-11-06',value:165}},now)
