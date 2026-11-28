@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { interpretarPaginaAoVivo, juntar, lerRespostaDoPlayer } from '../scripts/fetch-tv.mjs'
+import { conferirLiberacao, interpretarPaginaAoVivo, juntar, lerRespostaDoPlayer } from '../scripts/fetch-tv.mjs'
 import { TV_CANAIS, TV_VALIDADE_MS, tvDadosUrl, tvFonte } from '../src/tvCanais.js'
 
 const pagina = (canonica, player) => `<html><head><link rel="canonical" href="${canonica}"></head><body>
@@ -67,4 +67,19 @@ test('robô agendado publica só fora de pull request e só a branch tv', () => 
   assert.match(y, /if: github\.event_name != 'pull_request'/)
   assert.match(y, /git push -q -f "\$PUSH_URL" tv\b/)
   assert.doesNotMatch(y, /HEAD:data|\s data\s*$/m)
+})
+
+test('robô: com o player recusado (pedido de login), usa a marcação da transmissão e confere a liberação à parte', async () => {
+  const agora = Date.parse('2026-11-28T10:00:00Z')
+  const marc = (inicio, fim = '') => `<span itemprop="publication" itemscope itemtype="http://schema.org/BroadcastEvent"><meta itemprop="isLiveBroadcast" content="True"><meta itemprop="startDate" content="${inicio}">${fim ? `<meta itemprop="endDate" content="${fim}">` : ''}</span>`
+  const bloqueada = extra => `<link rel="canonical" href="https://www.youtube.com/watch?v=abcDEF12345"><meta name="title" content="Bloomberg Business News Live">${extra}
+<script>var ytInitialPlayerResponse = {"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Sign in"}};</script>`
+  assert.deepEqual(interpretarPaginaAoVivo(bloqueada(marc('2026-11-28T08:00:00+00:00')), agora), { estado: 'ao-vivo', videoId: 'abcDEF12345', titulo: 'Bloomberg Business News Live', liberacao: 'conferir' })
+  assert.equal(interpretarPaginaAoVivo(bloqueada(marc('2026-11-28T12:00:00+00:00')), agora).estado, 'sem-live', 'marcada para mais tarde')
+  assert.equal(interpretarPaginaAoVivo(bloqueada(marc('2026-11-28T07:00:00+00:00', '2026-11-28T08:00:00+00:00')), agora).estado, 'sem-live', 'já acabou')
+  assert.equal(interpretarPaginaAoVivo(bloqueada(''), agora).estado, 'falhou', 'sem marcação não dá para saber')
+  const resposta = status => async () => ({ status, ok: status >= 200 && status < 300 })
+  assert.equal(await conferirLiberacao('abcDEF12345', resposta(200)), true)
+  assert.equal(await conferirLiberacao('abcDEF12345', resposta(401)), false)
+  await assert.rejects(conferirLiberacao('abcDEF12345', resposta(500)))
 })

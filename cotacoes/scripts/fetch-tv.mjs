@@ -36,12 +36,32 @@ export function lerRespostaDoPlayer(html) {
 // Resultado de uma página /channel/<id>/live:
 // ao-vivo (vídeo no ar e liberado fora do YouTube), nao-libera (no ar, mas só no YouTube), sem-live (canal sem
 // transmissão agora) ou falhou (o YouTube pediu login, mudou a página ou não respondeu: não dá para saber).
-export function interpretarPaginaAoVivo(html) {
+// Marcação da transmissão na página do vídeo (schema.org BroadcastEvent): vem no HTML mesmo quando o YouTube
+// recusa o player ao robô. Ao vivo = transmissão com início no passado e sem fim.
+export function lerMarcacaoAoVivo(html, agora = Date.now()) {
+  const bloco = html.match(/itemtype="https?:\/\/schema\.org\/BroadcastEvent"[\s\S]{0,600}/)?.[0]
+  if (!bloco) return null
+  const meta = nome => bloco.match(new RegExp(`itemprop="${nome}" content="([^"]*)"`))?.[1]
+  if (!/^true$/i.test(meta('isLiveBroadcast') || '')) return null
+  const inicio = Date.parse(meta('startDate') || '')
+  return { aoVivo: Number.isFinite(inicio) && inicio <= agora + 5 * 60 * 1000 && !meta('endDate') }
+}
+
+export function interpretarPaginaAoVivo(html, agora = Date.now()) {
   if (typeof html !== 'string' || !html) return { estado: 'falhou', motivo: 'página vazia' }
   const canonica = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || ''
   const player = lerRespostaDoPlayer(html)
   const status = player?.playabilityStatus
-  if (status?.status === 'LOGIN_REQUIRED') return { estado: 'falhou', motivo: 'o YouTube pediu login (bloqueio de robô)' }
+  if (status?.status === 'LOGIN_REQUIRED') {
+    // O YouTube recusou o player ao robô, mas a página ainda diz qual vídeo é e se está no ar.
+    // A liberação fora do YouTube é conferida depois, à parte (conferirLiberacao).
+    const videoId = canonica.match(/\/watch\?v=([A-Za-z0-9_-]{11})/)?.[1]
+    const marcacao = lerMarcacaoAoVivo(html, agora)
+    if (!videoId || !marcacao) return { estado: 'falhou', motivo: 'o YouTube pediu login (bloqueio de robô)' }
+    if (!marcacao.aoVivo) return { estado: 'sem-live' }
+    const titulo = String(html.match(/<meta name="title" content="([^"]*)"/)?.[1] || '').slice(0, 160)
+    return { estado: 'ao-vivo', videoId, titulo, liberacao: 'conferir' }
+  }
   if (!/\/watch\?v=/.test(canonica)) {
     // Página do canal, não de um vídeo: o canal não está ao vivo agora.
     return /youtube\.com\/(channel|@)/.test(canonica) ? { estado: 'sem-live' } : { estado: 'falhou', motivo: 'página inesperada' }
@@ -67,6 +87,15 @@ export function juntar(anterior, novos, agora) {
   return { atualizado: agora, canais }
 }
 
+// oEmbed do YouTube: 200 quando o vídeo pode ser exibido em outros sites, 401/403 quando o canal só libera no YouTube.
+export async function conferirLiberacao(videoId, buscar = fetch) {
+  const url = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`
+  const r = await buscar(url, { signal: AbortSignal.timeout(15000) })
+  if (r.status === 401 || r.status === 403) return false
+  if (r.ok) return true
+  throw new Error(`liberação: HTTP ${r.status}`)
+}
+
 async function baixar(url) {
   const ctrl = AbortSignal.timeout(20000)
   const r = await fetch(url, {
@@ -88,8 +117,19 @@ async function main(arquivo) {
   try { anterior = JSON.parse(await readFile(arquivo, 'utf8')) } catch { /* primeira vez */ }
   const novos = {}
   for (const c of TV_CANAIS) {
-    try { novos[c.id] = interpretarPaginaAoVivo(await baixar(`https://www.youtube.com/channel/${c.canal}/live`)) }
-    catch (e) { novos[c.id] = { estado: 'falhou', motivo: e.message } }
+    try {
+      const html = await baixar(`https://www.youtube.com/channel/${c.canal}/live`)
+      const achado = interpretarPaginaAoVivo(html)
+      if (achado.liberacao === 'conferir') {
+        delete achado.liberacao
+        if (!(await conferirLiberacao(achado.videoId))) achado.estado = 'nao-libera'
+      }
+      novos[c.id] = achado
+      if (achado.estado === 'falhou') {
+        const sinais = { canonica: html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || '-', broadcast: /schema\.org\/BroadcastEvent/.test(html), isLiveTrue: /"isLive":true/.test(html), isLiveNow: /"isLiveNow":true/.test(html), tamanho: html.length }
+        console.log(`  sinais ${c.nome}: ${JSON.stringify(sinais)}`)
+      }
+    } catch (e) { novos[c.id] = { estado: 'falhou', motivo: e.message } }
     const n = novos[c.id]
     console.log(`${c.nome}: ${n.estado}${n.videoId ? ` (${n.videoId})` : ''}${n.titulo ? ` · ${n.titulo}` : ''}${n.motivo ? ` · ${n.motivo}` : ''}`)
   }
