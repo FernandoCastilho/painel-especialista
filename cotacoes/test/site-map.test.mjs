@@ -73,3 +73,15 @@ test('mapa do site no menu Mais, na busca e na rota', () => {
   assert.match(src('App.jsx'), /tab === 'mapa' && <SiteMap goto=\{goto\} \/>/)
   assert.equal(flattenSiteMap({ id: 'a', children: [{ id: 'b', children: [{ id: 'c' }] }] }).length, 3)
 })
+
+test('mapa do site abre recolhido, com seta em cada ramo e botões de expandir e recolher tudo', () => {
+  const setas = html.match(/<button type="button" class="sm-toggle"[^>]*>/g) || []
+  assert.ok(setas.length > 40, `só ${setas.length} setas`) // os 4 ramos e todos os itens com filhos
+  assert.deepEqual(mod.exports.idsExpansiveis({ id: 'a', children: [{ id: 'b', children: [{ id: 'c' }] }, { id: 'd' }] }), ['a', 'b'])
+  assert.ok(setas.every(b => b.includes('aria-expanded="false"') && /aria-controls="sm-lista-[^"]+"/.test(b) && /aria-label="Abrir /.test(b)))
+  for (const b of setas) assert.ok(html.includes(`id="${b.match(/aria-controls="([^"]+)"/)[1]}" hidden=""`), 'cada seta controla uma lista escondida')
+  assert.match(html, /<button type="button" class="sm-action"[^>]*>Expandir tudo<\/button>/)
+  assert.match(html, /<button type="button" class="sm-action"[^>]*disabled=""[^>]*>Recolher tudo<\/button>/)
+  assert.match(src('SiteMap.css'), /\.sm-center\{position:sticky;top:/)
+  assert.match(html, /<section class="site-map sm-azul"/) // moldura azul das calculadoras
+})
