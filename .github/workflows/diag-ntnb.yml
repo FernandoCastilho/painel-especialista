@@ -1,0 +1,29 @@
+# Diagnóstico temporário (ramo diag/ntnb-fonte): por que a planilha do Tesouro não baixa no GitHub Actions. Não publica nada.
+name: Diagnóstico NTN-B (temporário)
+on:
+  push:
+    branches: [diag/ntnb-fonte]
+permissions:
+  contents: read
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Testar a fonte
+        run: |
+          U='https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv'
+          curl -s https://ipinfo.io/country || true; echo
+          getent hosts www.tesourotransparente.gov.br || echo "sem DNS"
+          timeout 60 curl -sv -o /dev/null -A 'Mozilla/5.0' --max-time 50 "$U" 2>&1 | grep -E '^\* |^< HTTP|^< location|^< content-length' | head -40 || true
+          cat > /tmp/f.mjs <<'JS'
+          const u = process.argv[2]
+          try { const r = await fetch(u, { headers: { 'user-agent': 'Mozilla/5.0 (cotacoes-coleta)' }, signal: AbortSignal.timeout(50000) }); console.log('fetch', r.status, r.url, (await r.text()).length) }
+          catch (e) { console.log('fetch ERR', e.message, e.cause?.code, e.cause?.message) }
+          JS
+          node /tmp/f.mjs "$U"
+          node /tmp/f.mjs 'https://www.tesourotransparente.gov.br/'
+          node /tmp/f.mjs 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json'
