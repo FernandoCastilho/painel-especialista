@@ -4,9 +4,10 @@
 export const NOVIDADES_RECENTES = [
   {
     date: '28/11/2026',
-    destaques: ['Cenários: Juros bancários, com a taxa de cada banco por linha de crédito'],
+    destaques: ['Cenários: Juros bancários, com a taxa de cada banco por linha de crédito', 'TV ao vivo: CNN Brasil e Bloomberg numa telinha'],
     items: [
       'Em Cenários > Juros bancários, logo depois de Projeções, veja a taxa média que cada banco cobrou em cada linha de crédito, da menor para a maior, em % a.m. e % a.a., com a mediana, a menor e a maior. Para empresas: capital de giro, desconto de duplicatas, conta garantida, cheque especial, ACC, vendor e outras. Para pessoas: crédito pessoal, consignado, veículos, cartão e outras. Os grandes bancos aparecem com o logotipo e dá para ver só eles. Digite para escolher a linha ou achar o banco. Os dados são do Banco Central, da última janela de 5 dias úteis, com cerca de duas semanas de atraso. A taxa é o custo médio com encargos, de clientes de todos os portes: compare com o CET da proposta.',
+      'No menu, ao lado de Mais, o botão TV (no celular, dentro do Mais, em TV ao vivo) abre uma telinha no canto da tela com a transmissão ao vivo e gratuita do YouTube da CNN Brasil (em português) ou da Bloomberg TV (em inglês). Você escolhe o canal, troca quando quiser e muda o tamanho (P, M ou G) ou põe em tela cheia. A TV continua aberta enquanto você navega pelo Painel, até fechar no ×. Começa sem som e o vídeo só carrega depois que você escolhe o canal. Se a rede bloquear o YouTube, a telinha não toca.',
     ],
   },
   {
