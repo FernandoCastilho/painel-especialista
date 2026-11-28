@@ -27,11 +27,11 @@ test('TV usa só o player oficial do YouTube pelo canal, sem som e sem vídeo fi
 
 test('preferência guarda canal e tamanho e ignora valor inválido ou armazenamento indisponível', () => {
   const s = memoria()
-  assert.deepEqual(lerPreferencia(s), { canal: null, tamanho: 'p' })
-  gravarPreferencia({ canal: 'bloomberg', tamanho: 'g' }, s)
-  assert.deepEqual(lerPreferencia(s), { canal: 'bloomberg', tamanho: 'g' })
-  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{"canal":"x","tamanho":"gigante"}' })), { canal: null, tamanho: 'p' })
-  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{quebrado' })), { canal: null, tamanho: 'p' })
+  assert.deepEqual(lerPreferencia(s), { canal: null, tamanho: 'p', posicao: null })
+  gravarPreferencia({ canal: 'bloomberg', tamanho: 'g', posicao: { x: 40, y: 120 } }, s)
+  assert.deepEqual(lerPreferencia(s), { canal: 'bloomberg', tamanho: 'g', posicao: { x: 40, y: 120 } })
+  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{"canal":"x","tamanho":"gigante","posicao":{"x":"a"}}' })), { canal: null, tamanho: 'p', posicao: null })
+  assert.deepEqual(lerPreferencia(memoria({ 'painel-tv': '{quebrado' })), { canal: null, tamanho: 'p', posicao: null })
   assert.doesNotThrow(() => gravarPreferencia({}, { setItem() { throw new Error('cheio') } }))
   assert.deepEqual(TV_TAMANHOS.map(t => t.largura), [320, 480, 720])
 })
@@ -73,7 +73,7 @@ test('botão TV abre a escolha do canal sem carregar vídeo; troca, tamanho e fe
 
   tvDock.botao('TV grande').props.onClick(); await tvDock.render.settle()
   assert.equal(tvDock.all()[0].props.style['--tv-largura'], '720px')
-  assert.deepEqual(JSON.parse(tvDock.storage.dados['painel-tv']), { canal: 'bloomberg', tamanho: 'g' })
+  assert.deepEqual(JSON.parse(tvDock.storage.dados['painel-tv']), { canal: 'bloomberg', tamanho: 'g', posicao: null })
 
   tvDock.botao('Fechar TV').props.onClick(); await tvDock.render.settle()
   assert.equal(tvDock.render.value, null)

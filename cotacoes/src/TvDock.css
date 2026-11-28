@@ -45,3 +45,20 @@
 /* Botão TV no menu, ao lado de Mais. */
 .topbar-tabs > .nav-tv { display: inline-flex; align-items: center; gap: 4px; }
 .topbar-tabs > .nav-tv svg { inline-size: 18px; block-size: 18px; }
+
+/* Arrastar: a barra de cima é a alça (mouse e dedo); o puxador ⠿ também move pelas setas do teclado. */
+.tv-dock-bar { touch-action: none; cursor: grab; user-select: none; }
+.tv-dock-bar:active { cursor: grabbing; }
+.tv-dock-grip {
+  flex: none; min-inline-size: 36px; min-block-size: 36px; padding: 0;
+  border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--mut);
+  font: inherit; font-size: 1.1rem; line-height: 1; cursor: grab;
+}
+.tv-dock-grip:hover, .tv-dock-grip:focus-visible { background: var(--bg); color: var(--fg); }
+.tv-dock-bar .tv-dock-title { flex: 1 1 auto; }
+.tv-dock-youtube {
+  display: flex; align-items: center; justify-content: center; min-block-size: 44px; margin-block-start: 6px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg);
+  font-size: .82rem; font-weight: 700; text-decoration: none;
+}
+.tv-dock-youtube:hover, .tv-dock-youtube:focus-visible { border-color: #c62828; }

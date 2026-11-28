@@ -23,11 +23,13 @@ export function tvEmbedUrl(canal) {
 export function lerPreferencia(storage = globalThis.localStorage) {
   try {
     const salvo = JSON.parse(storage?.getItem(CHAVE) || '{}')
+    const pos = salvo.posicao
     return {
       canal: TV_CANAIS.some(c => c.id === salvo.canal) ? salvo.canal : null,
       tamanho: TV_TAMANHOS.some(t => t.id === salvo.tamanho) ? salvo.tamanho : 'p',
+      posicao: Number.isFinite(pos?.x) && Number.isFinite(pos?.y) ? { x: pos.x, y: pos.y } : null,
     }
-  } catch { return { canal: null, tamanho: 'p' } }
+  } catch { return { canal: null, tamanho: 'p', posicao: null } }
 }
 
 export function gravarPreferencia(pref, storage = globalThis.localStorage) {

@@ -80,6 +80,44 @@ const VIDEO_FALSO = '<body style="margin:0;display:grid;place-items:center;heigh
       }
       await page.screenshot({ path: path.join(out, `${nome}-bloomberg-grande.png`) })
 
+      // Arrastar pela barra de cima (pedido de Fernando, 28/11/2026): a TV vai para onde a pessoa soltar e não sai da tela.
+      await tv.getByRole('button', { name: 'TV pequena' }).click()
+      await page.waitForTimeout(200)
+      const antes = await tv.boundingBox()
+      const alca = await tv.locator('.tv-dock-title').boundingBox()
+      const destino = { x: Math.min(viewport.width - 40, antes.x + antes.width / 2 + 120), y: Math.max(60, antes.y - 160) }
+      await page.mouse.move(alca.x + 10, alca.y + alca.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(destino.x, destino.y, { steps: 8 })
+      await page.mouse.up()
+      const depois = await tv.boundingBox()
+      assert.ok(Math.abs(depois.x - antes.x) > 30 || Math.abs(depois.y - antes.y) > 30, `${nome}: TV não se moveu (${JSON.stringify(antes)} → ${JSON.stringify(depois)})`)
+      assert.ok(depois.x >= 0 && depois.y >= 0 && depois.x + depois.width <= viewport.width + 1 && depois.y + depois.height <= viewport.height + 1, `${nome}: TV arrastada saiu da tela ${JSON.stringify(depois)}`)
+      // Arrastar para longe do canto: fica presa na borda.
+      await page.mouse.move(alca.x + 10 + (depois.x - antes.x), depois.y + 20)
+      await page.mouse.down()
+      await page.mouse.move(viewport.width + 300, viewport.height + 300, { steps: 6 })
+      await page.mouse.up()
+      const borda = await tv.boundingBox()
+      assert.ok(borda.x + borda.width <= viewport.width + 1 && borda.y + borda.height <= viewport.height + 1, `${nome}: TV passou da borda ${JSON.stringify(borda)}`)
+      if (viewport.width < 1000) {
+        const menu = await page.locator('.nav-top > nav').boundingBox()
+        assert.ok(borda.y + borda.height <= menu.y + 1, `${nome}: TV arrastada cobre o menu de baixo`)
+      }
+      // Teclado: setas no puxador movem; Home volta ao canto de origem.
+      const puxador = tv.getByRole('button', { name: /Mover TV/ })
+      await puxador.focus()
+      const comTeclado = await tv.boundingBox()
+      await page.keyboard.press('ArrowUp')
+      const subiu = await tv.boundingBox()
+      assert.ok(subiu.y < comTeclado.y, `${nome}: seta para cima não moveu a TV`)
+      await page.screenshot({ path: path.join(out, `${nome}-arrastada.png`) })
+      await page.keyboard.press('Home')
+      await page.waitForTimeout(100)
+      const canto = await tv.boundingBox()
+      assert.ok(Math.abs(canto.x - antes.x) < 2 && Math.abs(canto.y + canto.height - (antes.y + antes.height)) < 2, `${nome}: Home não voltou ao canto (${JSON.stringify(canto)} × ${JSON.stringify(antes)})`)
+      assert.ok(await tv.getByRole('link', { name: 'Abrir Bloomberg TV no YouTube' }).isVisible(), `${nome}: botão do YouTube visível`)
+
       // Continua aberta e tocando ao trocar de seção.
       await page.evaluate(() => { location.hash = '#juros' })
       await page.waitForTimeout(500)
