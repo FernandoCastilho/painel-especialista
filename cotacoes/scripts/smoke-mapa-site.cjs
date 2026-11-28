@@ -1,7 +1,8 @@
 // Teste de tela do Mapa do site (pedido de Fernando, 27/11/2026): mapa mental fixo, com a coruja no centro e os
 // quatro ramos até o último item. Confere que cabe na largura em notebook, tela grande, tablet e celular, que as
 // curvas ligam a coruja aos ramos no computador, que os links levam à tela certa e que o item está no menu Mais.
-// Gera as capturas que vão como artefato da conferência.
+// 28/11: abre recolhido, setas e Expandir/Recolher tudo, coruja no meio da tela ao rolar, e capturas da moldura
+// azul (atual) comparada com a anterior. Gera as capturas que vão como artefato da conferência.
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -33,6 +34,27 @@ const TELAS = [
         await page.locator('.site-map').waitFor()
         await page.evaluate(() => document.fonts.ready)
         await page.waitForTimeout(300)
+        // Abre recolhido: só os quatro ramos, nenhum item à vista.
+        const inicio = await page.evaluate(() => ({
+          abertas: document.querySelectorAll('.sm-toggle[aria-expanded="true"]').length,
+          visiveis: [...document.querySelectorAll('.site-map .sm-tree a')].filter(a => a.getClientRects().length).length,
+        }))
+        assert.deepEqual(inicio, { abertas: 0, visiveis: 0 }, `${nome}: deveria abrir recolhido`)
+        await page.screenshot({ path: path.join(out, `${nome}-${tema}-recolhido.png`), fullPage: true })
+        if (tema === temas[0]) {
+          await page.evaluate(() => document.querySelector('.site-map').classList.remove('sm-azul'))
+          await page.screenshot({ path: path.join(out, `${nome}-${tema}-recolhido-sem-azul.png`), fullPage: true })
+          await page.evaluate(() => document.querySelector('.site-map').classList.add('sm-azul'))
+        }
+        // Teclado: a seta do primeiro ramo abre com Enter e mostra os itens dele.
+        const seta = page.locator('.sm-card-head .sm-toggle').first()
+        await seta.focus()
+        await page.keyboard.press('Enter')
+        assert.equal(await seta.getAttribute('aria-expanded'), 'true', `${nome}: seta pelo teclado`)
+        assert.ok(await page.locator('.sm-card').first().locator('.sm-tree a').first().isVisible(), `${nome}: ramo aberto mostra os itens`)
+        await page.getByRole('button', { name: 'Expandir tudo' }).click()
+        assert.equal(await page.locator('.sm-toggle[aria-expanded="false"]').count(), 0, `${nome}: Expandir tudo`)
+        await page.waitForTimeout(200)
         const medida = await page.evaluate(() => ({
           sobra: document.documentElement.scrollWidth - document.documentElement.clientWidth,
           curvas: document.querySelectorAll('.sm-curve').length,
@@ -47,8 +69,26 @@ const TELAS = [
         assert.deepEqual(medida.cortados, [], `${nome}: itens cortados`)
         assert.ok(medida.coruja, `${nome}: coruja não carregou`)
         assert.equal(medida.curvas, viewport.width >= 1000 ? 4 : 0, `${nome}: curvas da coruja aos ramos`)
-        await page.screenshot({ path: path.join(out, `${nome}-${tema}.png`), fullPage: true })
-        if (tema === temas[0]) await page.screenshot({ path: path.join(out, `${nome}-${tema}-primeira-tela.png`) })
+        await page.screenshot({ path: path.join(out, `${nome}-${tema}-expandido.png`), fullPage: true })
+        if (tema === temas[0]) {
+          await page.screenshot({ path: path.join(out, `${nome}-${tema}-primeira-tela.png`) })
+          await page.evaluate(() => document.querySelector('.site-map').classList.remove('sm-azul'))
+          await page.screenshot({ path: path.join(out, `${nome}-${tema}-expandido-sem-azul.png`), fullPage: true })
+          await page.evaluate(() => document.querySelector('.site-map').classList.add('sm-azul'))
+        }
+        if (viewport.width >= 1000 && await page.evaluate(() => document.querySelector('.sm-board').offsetHeight > innerHeight * 1.3)) {
+          // A coruja acompanha a rolagem e fica perto do meio da tela; as curvas vão junto.
+          await page.evaluate(() => { const b = document.querySelector('.sm-board').getBoundingClientRect(); window.scrollTo(0, window.scrollY + b.top + b.height / 2 - innerHeight / 2) })
+          await page.waitForTimeout(250)
+          const owl = await page.evaluate(() => { const r = document.querySelector('.sm-center').getBoundingClientRect(); return { meio: r.top + r.height / 2, tela: innerHeight, curvas: document.querySelectorAll('.sm-curve').length } })
+          assert.ok(Math.abs(owl.meio - owl.tela / 2) < owl.tela * 0.2, `${nome}: coruja fora do meio da tela (${Math.round(owl.meio)} de ${owl.tela})`)
+          assert.equal(owl.curvas, 4, `${nome}: curvas ao rolar`)
+          if (tema === temas[0]) await page.screenshot({ path: path.join(out, `${nome}-${tema}-rolando.png`) })
+          await page.evaluate(() => window.scrollTo(0, 0))
+        }
+        await page.getByRole('button', { name: 'Recolher tudo' }).click()
+        assert.equal(await page.locator('.sm-toggle[aria-expanded="true"]').count(), 0, `${nome}: Recolher tudo`)
+        await page.getByRole('button', { name: 'Expandir tudo' }).click()
 
         if (nome === 'notebook-1366' && tema === 'dark') {
           // Link direto: calculadora e quadro de Juros (rola até o quadro).
