@@ -83,3 +83,13 @@ test('robô: com o player recusado (pedido de login), usa a marcação da transm
   assert.equal(await conferirLiberacao('abcDEF12345', resposta(401)), false)
   await assert.rejects(conferirLiberacao('abcDEF12345', resposta(500)))
 })
+
+test('robô: com o player recusado, lê o vídeo e o selo "assistindo agora" dos dados da página (como o YouTube responde ao GitHub)', () => {
+  const dados = aoVivo => ({ currentVideoEndpoint: { watchEndpoint: { videoId: 'y104PDJ5KUs' } }, contents: { twoColumnWatchNextResults: { results: { results: { contents: [
+    { videoPrimaryInfoRenderer: { title: { runs: [{ text: 'AO VIVO: CNN NEWSROOM - 28/11/2026' }] }, viewCount: { videoViewCountRenderer: { isLive: aoVivo } } } },
+  ] } } } } })
+  const html = aoVivo => `<link rel="canonical" href="undefined"><script>var ytInitialPlayerResponse = {"playabilityStatus":{"status":"LOGIN_REQUIRED"}};</script>
+<script>var ytInitialData = ${JSON.stringify(dados(aoVivo))};</script>`
+  assert.deepEqual(interpretarPaginaAoVivo(html(true)), { estado: 'ao-vivo', videoId: 'y104PDJ5KUs', titulo: 'AO VIVO: CNN NEWSROOM - 28/11/2026', liberacao: 'conferir' })
+  assert.equal(interpretarPaginaAoVivo(html(false)).estado, 'sem-live')
+})

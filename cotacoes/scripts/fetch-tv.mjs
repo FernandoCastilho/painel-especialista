@@ -25,12 +25,33 @@ function objetoEm(texto, inicio) {
   return null
 }
 
-export function lerRespostaDoPlayer(html) {
-  const marca = html.indexOf('ytInitialPlayerResponse')
-  if (marca < 0) return null
-  const inicio = html.indexOf('{', marca)
+function lerObjeto(html, nome) {
+  const marca = html.search(new RegExp(`(var |window\\[")${nome}("\\])? = \\{`))
+  const inicio = marca < 0 ? -1 : html.indexOf('{', marca)
   const bruto = inicio < 0 ? null : objetoEm(html, inicio)
   try { return bruto ? JSON.parse(bruto) : null } catch { return null }
+}
+
+export const lerRespostaDoPlayer = html => lerObjeto(html, 'ytInitialPlayerResponse')
+
+// Dados da página (ytInitialData): qual vídeo a página mostra, o título e o selo "assistindo agora" de transmissão no ar.
+// Vêm mesmo quando o YouTube recusa o player ao robô.
+export function lerDadosDaPagina(html) {
+  const dados = lerObjeto(html, 'ytInitialData')
+  if (!dados) return null
+  const videoId = dados.currentVideoEndpoint?.watchEndpoint?.videoId
+  let principal = null
+  const procurar = no => {
+    if (principal || !no || typeof no !== 'object') return
+    if (no.videoPrimaryInfoRenderer) { principal = no.videoPrimaryInfoRenderer; return }
+    for (const v of Object.values(no)) procurar(v)
+  }
+  procurar(dados.contents)
+  return {
+    videoId: ID_VIDEO.test(videoId || '') ? videoId : null,
+    aoVivo: principal ? principal.viewCount?.videoViewCountRenderer?.isLive === true : null,
+    titulo: (principal?.title?.runs || []).map(r => r.text).join('').slice(0, 160),
+  }
 }
 
 // Resultado de uma página /channel/<id>/live:
@@ -56,14 +77,13 @@ export function interpretarPaginaAoVivo(html, agora = Date.now()) {
     // O YouTube recusou o player ao robô, mas a página ainda diz qual vídeo é e se está no ar.
     // A liberação fora do YouTube é conferida depois, à parte (conferirLiberacao).
     const detalhes = player?.videoDetails
-    const ogUrl = html.match(/<meta property="og:url" content="([^"]+)"/)?.[1] || ''
-    const videoId = [detalhes?.videoId, ogUrl.match(/[?&]v=([A-Za-z0-9_-]{11})/)?.[1], canonica.match(/\/watch\?v=([A-Za-z0-9_-]{11})/)?.[1]]
-      .find(v => ID_VIDEO.test(v || ''))
+    const pagina = lerDadosDaPagina(html)
+    const videoId = [detalhes?.videoId, pagina?.videoId, canonica.match(/\/watch\?v=([A-Za-z0-9_-]{11})/)?.[1]].find(v => ID_VIDEO.test(v || ''))
     const marcacao = lerMarcacaoAoVivo(html, agora)
-    const aoVivo = detalhes?.isLive === true ? true : marcacao ? marcacao.aoVivo : null
+    const aoVivo = detalhes?.isLive === true ? true : typeof pagina?.aoVivo === 'boolean' ? pagina.aoVivo : marcacao ? marcacao.aoVivo : null
     if (!videoId || aoVivo === null) return { estado: 'falhou', motivo: 'o YouTube pediu login (bloqueio de robô)' }
     if (!aoVivo) return { estado: 'sem-live' }
-    const titulo = String(detalhes?.title || html.match(/<meta name="title" content="([^"]*)"/)?.[1] || '').slice(0, 160)
+    const titulo = String(detalhes?.title || pagina?.titulo || html.match(/<meta name="title" content="([^"]*)"/)?.[1] || '').slice(0, 160)
     return { estado: 'ao-vivo', videoId, titulo, liberacao: 'conferir' }
   }
   if (!/\/watch\?v=/.test(canonica)) {
@@ -130,13 +150,7 @@ async function main(arquivo) {
       }
       novos[c.id] = achado
       if (achado.estado === 'falhou') {
-        const p = lerRespostaDoPlayer(html)
-        const sinais = { chavesPlayer: Object.keys(p || {}), detalhes: p?.videoDetails ? { id: p.videoDetails.videoId, isLive: p.videoDetails.isLive, upcoming: p.videoDetails.isUpcoming } : null,
-          og: html.match(/<meta property="og:url" content="([^"]+)"/)?.[1] || '-', perto: html.match(/"videoId":"([A-Za-z0-9_-]{11})"[^{}]{0,200}"isLive":true/)?.[1] || '-',
-          canonica: html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || '-',
-          ids: [...new Set([...html.matchAll(/"videoId":"([A-Za-z0-9_-]{11})"/g)].map(m => m[1]))].slice(0, 6),
-          atual: html.match(/"currentVideoEndpoint":\{[^]{0,400}?"videoId":"([A-Za-z0-9_-]{11})"/)?.[1] || '-',
-          antesIsLive: (html.match(/[^]{160}"isLive":true/)?.[0] || '').replace(/\s+/g, ' '), broadcast: /schema\.org\/BroadcastEvent/.test(html), isLiveTrue: /"isLive":true/.test(html), isLiveNow: /"isLiveNow":true/.test(html), tamanho: html.length }
+        const sinais = { canonica: html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] || '-', pagina: lerDadosDaPagina(html), tamanho: html.length }
         console.log(`  sinais ${c.nome}: ${JSON.stringify(sinais)}`)
       }
     } catch (e) { novos[c.id] = { estado: 'falhou', motivo: e.message } }
