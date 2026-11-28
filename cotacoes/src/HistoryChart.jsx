@@ -1,14 +1,14 @@
 import ChartFullscreen from './ChartFullscreen.jsx'
 import { dataTimestamp } from './dataTimestamp.js'
 import { periodChange } from './stats.js'
-import { chartLinePath } from './chartLinePath.js'
+import { caminhoCincoMinutos, chartLinePath } from './chartLinePath.js'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFilterSlot } from './ChartFilters.jsx'
 import { nextChartIndex } from './chartNavigation.js'
 import { marcasRedondas, rotuloData } from './chartEixo.js'
 import { ancoraRotulo, marcasValor, yRotulo } from './chartMarcas.js'
-import { focoPorTeclado, limitarBalao, margemEixo, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
+import { focoPorTeclado, limitarBalao, margemEixo, posicaoBalaoNoticia, rotuloEixo, saidaDeToque, useLarguraBalao, useTocarFora } from './chartToque.js'
 import './ChartAccess.css'
 import { useMacro } from './useMacro.js'
 import Explain from './Explain.jsx'
@@ -74,7 +74,7 @@ export function Plot({ points, scales = true, ...props }) {
   return (
     <>
       {picker && (slot ? createPortal(picker, slot) : picker)}
-      <PlotView {...props} points={view} history={props.history ?? points} eventos={active ? undefined : props.eventos} movimento={active ? undefined : props.movimento} intraday={active ? !!active.intradiario : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
+      <PlotView {...props} points={view} history={props.history ?? points} escalaCinco={!!props.simular && !!props.intraday && active?.id === '5min'} serieInicio={points[0]?.t} serieFim={points.at(-1)?.t} intraday={active ? !!active.intradiario : props.intraday} dateLabel={active?.name ?? props.dateLabel} compare={props.compare ?? !props.intraday} />
     </>
   )
 }
@@ -82,11 +82,11 @@ export function Plot({ points, scales = true, ...props }) {
 const mesmaBandeira = (a, b) => !!a && !!b && a.t === b.t && !!a.mov === !!b.mov
 
 // `history`: série completa para achar o mesmo trecho um ano antes (padrão: os próprios pontos). `step`: série em degraus.
-function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos, movimento, extremos = false, marcos, simular }) {
+function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label, nice, rate = nice, labels, light, dateLabel, history, step = false, steppedLine = false, compare = !intraday, compareReason = 'esta visão intradiária não contém histórico comparável.', eventos, movimento, extremos = false, marcos, simular, escalaCinco = false, serieInicio, serieFim }) {
   const [hover, setHover] = useState(null)
   const [aberto, setAberto] = useState(null)
   const [sel, setSel] = useState(null)
-  const [valorTxt, setValorTxt] = useState('')
+  const [valorTxt, setValorTxt] = useState(() => simular === 'USD' ? '100.000' : '')
   const [lado, setLado] = useState('pagar')
   const [dragging, setDragging] = useState(false)
   const drag = useRef(null)
@@ -157,11 +157,11 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
     const y = (v) => M.t + (1 - (v - lo) / (hi - lo)) * ih
     const nx = width < 420 ? 3 : 5
     const xTicks = t0 === t1 ? [t0] : Array.from({ length: nx }, (_, i) => t0 + ((t1 - t0) * i) / (nx - 1))
-    const line = chartLinePath(points, x, y, 'bid', steppedLine)
+    const line = escalaCinco ? caminhoCincoMinutos(points, x, y) : chartLinePath(points, x, y, 'bid', steppedLine)
     const base = H - M.b
     const area = `${line}L${x(t1).toFixed(1)},${base}L${x(t0).toFixed(1)},${base}Z`
     return { t0, t1, l, x, y, dec, casas, yTicks, xTicks, line, area, base }
-  }, [points, width, steppedLine, nice])
+  }, [points, width, steppedLine, nice, escalaCinco])
 
   const pointAt = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -232,11 +232,13 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   // Bandeirinhas das notícias: um pouco acima da cotação, ligadas a ela por um tracejado sutil;
   // vizinhas muito perto sobem mais um degrau para não encavalar. A do maior movimento do dia fica mais alta.
   const bandeiras = useMemo(() => {
-    const lista = [...(eventos ?? []).filter((ev) => ev.t >= g.t0 && ev.t <= g.t1), ...(movimento && movimento.t >= g.t0 && movimento.t <= g.t1 ? [movimento] : [])]
+    const naSerie = (ev) => ev.t >= (serieInicio ?? g.t0) && ev.t <= (serieFim ?? g.t1)
+    const lista = [...(eventos ?? []).filter(naSerie), ...(movimento && naSerie(movimento) ? [movimento] : [])]
     const out = []
     let antes = null
     for (const ev of lista.sort((a, b) => a.t - b.t)) {
-      const x = g.x(ev.t)
+      // O último bloco pode terminar antes de uma manchete da série original.
+      const x = g.x(Math.max(g.t0, Math.min(g.t1, ev.t)))
       const y = g.y(points.length ? points.reduce((b, p) => (Math.abs(p.t - ev.t) < Math.abs(b.t - ev.t) ? p : b), points[0]).bid : ev.bid)
       const degrau = ev.mov ? 2 : antes && x - antes.x < 18 && antes.degrau === 0 ? 1 : 0
       const sobe = 22 + degrau * 16
@@ -246,7 +248,9 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
       if (!ev.mov) antes = item
     }
     return out
-  }, [eventos, movimento, g, points])
+  }, [eventos, movimento, g, points, serieInicio, serieFim])
+  const bandeiraAberta = bandeiras.find(({ ev }) => mesmaBandeira(aberto, ev))
+  const posicaoBalao = bandeiraAberta && posicaoBalaoNoticia(naTela(bandeiraAberta.x, bandeiraAberta.yb), caixa ?? { w: width, h: altura, top: 0 }, !!bandeiraAberta.ev.mov)
   const [tipRef, tipW] = useLarguraBalao(hp)
   const gid = `a-${plotId.replaceAll(':', '')}`
   const onKey = (e) => {
@@ -267,7 +271,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
   const tone = (v) => (v > 0 ? 'up' : v < 0 ? 'down' : 'flat')
 
   return (
-    <ChartFullscreen><div ref={plotRef} className={`plot${light ? ' light' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
+    <ChartFullscreen><div ref={plotRef} className={`plot${light ? ' light' : ''}${simular ? ' plot-fx' : ''}`} onPointerLeave={(e) => { if (!saidaDeToque(e)) setHover(null) }}>
       <span id={`${plotId}-hint`} className="chart-access-text">Use as setas para percorrer os pontos; Home e End vão ao primeiro e ao último. Shift com as setas seleciona um trecho; Escape limpa. Com o mouse ou o dedo, arraste sobre o gráfico para selecionar um trecho.</span>
       <span className="chart-access-text" role="status" aria-live="polite">{announcement}</span>
       <svg
@@ -313,11 +317,12 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
             textAnchor={i === 0 ? 'start' : i === g.xTicks.length - 1 ? 'end' : 'middle'}
             className="tick"
           >
-            {dateLabel ? dateLabel(t) : rotuloData(t, { de: g.t0, ate: g.t1, intradiario: intraday })}
+            {intraday ? fmtTime(t) : dateLabel ? dateLabel(t) : rotuloData(t, { de: g.t0, ate: g.t1 })}
           </text>
         ))}
-        <path d={g.area} fill={`url(#${gid})`} />
+        {!escalaCinco && <path d={g.area} fill={`url(#${gid})`} />}
         <path className="line" style={{ color }} d={g.line} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+        {escalaCinco && points.map((p) => <circle key={p.t} className="fx-ponto-5min" cx={g.x(p.t)} cy={g.y(p.bid)} r="1.6" fill={color} pointerEvents="none" />)}
         <circle cx={g.x(last.t)} cy={g.y(last.bid)} r="4" fill={color} className="ring" />
         {labels && (vfmt ?? fmt) && rotulos.map(({ i, vale }) => {
           const p = points[i]
@@ -375,7 +380,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           </g>
         )}
         {!range && aberto?.mov && (
-          <line pointerEvents="none" x1={g.x(aberto.t0)} y1={g.y(valorEm(aberto.t0))} x2={g.x(aberto.t)} y2={g.y(valorEm(aberto.t))} className={`fx-mov-corda ${aberto.tom}`} />
+          <line pointerEvents="none" x1={g.x(Math.max(g.t0, aberto.t0))} y1={g.y(valorEm(aberto.t0))} x2={g.x(Math.min(g.t1, aberto.t))} y2={g.y(valorEm(aberto.t))} className={`fx-mov-corda ${aberto.tom}`} />
         )}
         {!range && bandeiras.map(({ ev, x, y, yb }) => (
           <g key={`h-${ev.mov ? 'mov' : ev.t}`} pointerEvents="none" className={`fx-haste ${ev.tom}${mesmaBandeira(aberto, ev) ? ' on' : ''}`}>
@@ -396,15 +401,14 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
               aria-label={ev.mov
                 ? `Maior ${ev.dir} do dia, de ${fmtTime(ev.t0)} a ${fmtTime(ev.t)}: ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'} sobre o movimento`
                 : `${intraday ? fmtTime(ev.t) : fmtDate(ev.t, true)}: ${ev.pct != null ? `${code} ${ev.pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(ev.pct).toFixed(2).replace('.', ',')}%, ` : ''}${ev.itens.length} ${ev.itens.length === 1 ? 'manchete' : 'manchetes'}`}
-              onClick={() => setAberto(mesmaBandeira(aberto, ev) ? null : ev)}
+              onClick={() => { setHover(null); setAberto(mesmaBandeira(aberto, ev) ? null : ev) }}
             />
           ))}
         </div>
       )}
-      {aberto && !range && (
-        // Caixinha amarela no canto superior direito do gráfico com a notícia da bandeirinha tocada
+      {aberto && posicaoBalao && !range && (
         <div className="fx-balao-camada">
-          <div ref={balaoRef} className="fx-balao" style={{ top: oy + (M.t + 4) * kx, right: ox + (M.r + 4) * kx, maxHeight: Math.max(120, (g.base - M.t - 8) * kx) }} role="region" aria-label="Notícia da bandeirinha" tabIndex={-1}
+          <div ref={balaoRef} className="fx-balao" style={posicaoBalao} role="region" aria-label="Notícia da bandeirinha" tabIndex={-1}
             onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setAberto(null) } }}>
             <p className="fx-news-head">
               {aberto.mov
@@ -427,6 +431,7 @@ function PlotView({ points: base, width, color, code, intraday, fmt, vfmt, label
           </div>
         </div>
       )}
+      {escalaCinco && <p className="fx-legend">Cada ponto é uma cotação observada no bloco de 5 minutos. Trechos sem coleta ficam sem linha.</p>}
       {simular && (() => {
         const valor = lerValor(valorTxt)
         const sim = range && valor ? simularTrecho({ valor, v0: range.v0, v1: range.v1, lado }) : null

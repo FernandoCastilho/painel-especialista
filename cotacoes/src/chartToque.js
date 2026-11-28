@@ -52,3 +52,20 @@ export function useTocarFora(ativo, limpar) {
   }, [ativo, limpar])
   return ref
 }
+
+// A âncora é a base do mastro. O balão fica dentro do gráfico, acima ou abaixo dela.
+export function posicaoBalaoNoticia(ancora, caixa, movimento = false) {
+  const folga = 8
+  const width = Math.min(340, Math.max(0, caixa.w - 2 * folga))
+  const left = Math.max(folga, Math.min(ancora.left - width / 2, caixa.w - folga - width))
+  const abaixo = ancora.top + folga
+  const acima = ancora.top - (movimento ? 30 : 25) - folga
+  const livreAbaixo = caixa.top + caixa.h - abaixo - folga
+  const livreAcima = acima - caixa.top - folga
+  const sobe = livreAbaixo < 144 && livreAcima > livreAbaixo
+  return {
+    left, width, top: sobe ? acima : abaixo,
+    maxHeight: Math.max(0, Math.min(300, sobe ? livreAcima : livreAbaixo)),
+    transform: sobe ? 'translateY(-100%)' : undefined,
+  }
+}
