@@ -65,27 +65,40 @@ export async function verifyPublishedMarker({ pageUrl, expected, sha, runId, run
   }
 }
 
-export async function snapshotRelease(load = downloadPublished, save = savePublic, readLocal = readPublic) {
+// One-time migration: the confirmed production release predates the bank-rates dataset.
+const bankRatesFile = 'taxas-juros.json'
+const beforeBankRates = 'd1248db72cd186c088d902952665719245560f8c'
+
+async function readInitialBankRates(load, readSeed) {
+  const marker = JSON.parse(await load(MARKER))
+  validateMarker(marker)
+  if (marker.sha !== beforeBankRates) return null
+  const body = await readSeed()
+  const data = validatePublishedFile(bankRatesFile, body)
+  if (!Number.isFinite(data.generatedAt) || !Array.isArray(data.segments) ||
+      data.segments.length !== 2 || !['pj', 'pf'].every(id => data.segments.some(segment =>
+        segment?.id === id && Array.isArray(segment.modalities) && segment.modalities.length > 0))) {
+    throw new Error(bankRatesFile + ': invalid initial bank rates dataset')
+  }
+  return body
+}
+
+export async function snapshotRelease(load = downloadPublished, save = savePublic,
+  readSeed = () => readFile(resolve(publicDir, bankRatesFile), 'utf8')) {
   const files = {}
-  const missing = []
   // Lotes limitados; não se grava nada se uma única base falhar.
   for (let i = 0; i < RELEASE_FILES.length; i += 6) {
     await Promise.all(RELEASE_FILES.slice(i, i + 6).map(async file => {
       let text
       try { text = await load(file) }
-      catch (e) { if (e.status !== 404) throw e; missing.push(file); return }
+      catch (error) {
+        if (file !== bankRatesFile || error.status !== 404) throw error
+        text = await readInitialBankRates(load, readSeed)
+        if (text === null) throw error
+      }
       validatePublishedFile(file, text)
       files[file] = text
     }))
-  }
-  // Base nova, que ainda não existe no site publicado: a primeira publicação usa a cópia do código.
-  // Se nada veio do site, o 404 é do site, não de uma base nova, e a publicação para.
-  if (missing.length === RELEASE_FILES.length) throw new Error('Nenhuma base publicada encontrada (HTTP 404).')
-  for (const file of missing) {
-    const text = await readLocal(file).catch(() => { throw new Error(file + ': HTTP 404 no site e sem cópia no código.') })
-    validatePublishedFile(file, text)
-    files[file] = text
-    console.log(`${file}: ainda não publicado; usando a cópia do código nesta publicação.`)
   }
   for (const [file, text] of Object.entries(files)) await save(file, text)
   return Object.fromEntries(RELEASE_FILES.map(file => [file, hash(files[file])]))
@@ -102,7 +115,6 @@ export async function verifyRelease(directory, snapshot) {
 
 const publicDir = fileURLToPath(new URL('../public/', import.meta.url))
 const cbsSrc = fileURLToPath(new URL('../src/ibgeCbsSnapshot.json', import.meta.url))
-const readPublic = file => readFile(resolve(publicDir, file), 'utf8')
 async function savePublic(file, text) {
   const target = resolve(publicDir, file)
   await mkdir(dirname(target), { recursive: true })
