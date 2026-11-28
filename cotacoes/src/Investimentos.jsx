@@ -5,6 +5,7 @@ import InvestmentWorkspace from './InvestmentWorkspace.jsx'
 import FundoCvmPicker, { useCotasCvm } from './FundoCvmPicker.jsx'
 import { FONTE_CVM, LICENCA_CVM } from './fundosCvm.js'
 import { numeroPt, cdb, fundo, acoes, cotasCvm } from './investimentos.js'
+import { formatarAoSair } from './numeroBr.js'
 import './Investimentos.css'
 
 const brl = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -38,7 +39,8 @@ function AjudaInvestimentos() {
 }
 
 function Campo({ label, value = '', onChange, tipo = 'text', modo = 'decimal' }) {
-  return <label>{label}<input type={tipo} value={value} inputMode={tipo === 'text' ? modo : undefined} onChange={e => onChange(e.target.value)} /></label>
+  return <label>{label}<input type={tipo} value={value} inputMode={tipo === 'text' ? modo : undefined} onChange={e => onChange(e.target.value)}
+    onBlur={tipo === 'text' && modo === 'decimal' ? formatarAoSair(numeroPt, onChange) : undefined} /></label>
 }
 
 function Saida({ resultado, titulo, nota }) {

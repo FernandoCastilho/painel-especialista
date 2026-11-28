@@ -103,7 +103,7 @@ test('IR remissível sugerido é 1/3 da comissão externa nas duas planilhas', (
 test('tela: bullet da planilha preenchido campo a campo e abertura de parcelas', async t => {
   const require = createRequire(import.meta.url)
   const module = { exports: {} }
-  const paths = ['marketReturns', 'holidays', 'moneyInput', 'cdiDolar', 'cambioFuturoFluxo', 'cambioFuturoColar']
+  const paths = ['marketReturns', 'holidays', 'moneyInput', 'cdiDolar', 'cambioFuturoFluxo', 'cambioFuturoColar', 'numeroBr']
   const deps = Object.fromEntries(await Promise.all(paths.map(async p => ['./' + p + '.js', await import('../src/' + p + '.js')])))
   const { code } = await transform(await readFile(new URL('../src/CambioFuturoFluxo.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   runInNewContext(code, { module, exports: module.exports, require: name => name.endsWith('.jsx') ? () => null : name.endsWith('.css') ? {} : deps[name] ?? require(name) })

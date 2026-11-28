@@ -2,6 +2,7 @@ import ExpandablePanel from './ExpandablePanel.jsx'
 import './CalculatorStandard.css'
 import { useState } from 'react'
 import MoneyInput from './MoneyInput.jsx'
+import { formatarAoSair } from './numeroBr.js'
 import { parseMoneyInput } from './moneyInput.js'
 import Help from './CalculatorHelp.jsx'
 import CbsAnnualScenario from './CbsAnnualScenario.jsx'
@@ -80,7 +81,8 @@ export default function CbsCaixa({ onBack }) {
       <div className="cx-field-label"><label htmlFor={`cbs-${key}`}>{label} ({suffix})</label><Help title={label}><p>{hint}</p></Help></div>
       <input id={`cbs-${key}`} inputMode={suffix === '%' ? 'decimal' : 'numeric'} value={val}
         aria-invalid={invalid} aria-describedby={invalid ? `cbs-${key}-error` : undefined}
-        onFocus={e => e.target.select()} onChange={e => set(key, e.target.value)} />
+        onFocus={e => e.target.select()} onChange={e => set(key, e.target.value)}
+        onBlur={suffix === '%' && form[key] !== '' ? formatarAoSair(numeric, v => set(key, v)) : undefined} />
       {invalid && <p id={`cbs-${key}-error`} className="cx-error">Informe {suffix === 'dias' ? 'dias inteiros de 0 a 365' : `um percentual de 0 a ${key === 'spendingPct' ? 500 : 100}`}.</p>}
     </div>
   }

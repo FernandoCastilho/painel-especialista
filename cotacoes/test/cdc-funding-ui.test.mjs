@@ -20,7 +20,7 @@ const deps = {
   './EmailEnvelope.jsx': { EnvelopeEml: () => null }, './CalculatorIcons.jsx': { CdcIcon: () => null },
   './Roteiro.jsx': { Respostas: () => null, Resultado, step: (n, t) => t },
   './cdcEmail.js': { cdcEml: () => '', cdcResumo: () => ({}) }, './cdcImagem.js': { cdcImagem: () => null },
-  './moneyInput.js': await import('../src/moneyInput.js'), './emprestimo.js': await import('../src/emprestimo.js'),
+  './moneyInput.js': await import('../src/moneyInput.js'), './emprestimo.js': await import('../src/emprestimo.js'), './numeroBr.js': await import('../src/numeroBr.js'),
   './contaGarantida.js': await import('../src/contaGarantida.js'), './cdcConta.js': await import('../src/cdcConta.js'),
   './cdcFunding.js': await import('../src/cdcFunding.js'),
 }

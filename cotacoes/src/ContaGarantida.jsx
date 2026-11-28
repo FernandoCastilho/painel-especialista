@@ -3,6 +3,8 @@ import './CalculatorStandard.css'
 import { useEffect, useRef, useState } from 'react'
 import { nbr5891 } from './format.js'
 import MoneyInput from './MoneyInput.jsx'
+import { parseDecimal } from './emprestimo.js'
+import { formatarAoSair } from './numeroBr.js'
 import CalculatorHelp from './CalculatorHelp.jsx'
 import ComparativoAlongamento from './ComparativoAlongamento.jsx'
 import { CG_CET_DAYS, CG_SOURCES, CG_TAX_PROFILES, cgAddDays, cgInitialForm, cgToday, parseContaGarantidaForm } from './contaGarantida.js'
@@ -52,7 +54,8 @@ export default function ContaGarantida({ onBack }) {
   const changeLm = (key, value) => { setLm(key, value); visit(key === 'value' ? 'amount' : key); setPage(0) }
   const control = key => ({ id: `cg-${key}`, 'aria-invalid': !!errors[key], 'aria-describedby': `cg-${key}-hint cg-${key}-error`, onBlur: () => visit(key) })
   const field = (key, label, input, hint = '', status = '') => <div className="cx-field" key={key}><div className="cx-field-label"><label htmlFor={`cg-${key}`}>{label}</label>{hint && <CalculatorHelp title={label}><p>{hint}</p></CalculatorHelp>}</div>{input}<p id={`cg-${key}-hint`} className={status ? 'cx-hint' : 'sr-only'}>{status || hint}</p><p id={`cg-${key}-error`} className="cx-error" role={errors[key] ? 'alert' : undefined}>{errors[key] || ''}</p></div>
-  const input = (key, label, hint, type = 'text', status = '') => field(key, label, <input {...control(key)} type={type} inputMode={type === 'text' ? 'decimal' : undefined} value={form[key]} onChange={e => set(key, e.target.value)} />, hint, status)
+  const input = (key, label, hint, type = 'text', status = '') => field(key, label, <input {...control(key)} type={type} inputMode={type === 'text' ? 'decimal' : undefined} value={form[key]} onChange={e => set(key, e.target.value)}
+    onBlur={key === 'rate' ? e => { visit(key); formatarAoSair(parseDecimal, v => setForm(old => ({ ...old, [key]: v })))(e) } : () => visit(key)} />, hint, status)
   const select = (key, label, choices, hint) => field(key, label, <select {...control(key)} value={form[key]} onChange={e => set(key, e.target.value)}>{choices.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select>, hint)
   const money = (key, label, hint) => field(key, label, <MoneyInput {...control(key)} value={form[key]} onChange={value => set(key, value)} />, hint)
   const changeRow = (id, key, value) => { setForm(old => ({ ...old, rows: old.rows.map(row => row.id === id ? { ...row, [key]: value } : row) })); setPage(0) }

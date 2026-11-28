@@ -11,7 +11,7 @@ const nodes = el => Array.isArray(el) ? el.flatMap(nodes) : el?.props ? [el, ...
 const text = el => Array.isArray(el) ? el.map(text).join(' ') : el?.props ? text(el.props.children) : typeof el === 'string' ? el : ''
 test('preenche a jornada, alterna cinco parcelas e não reutiliza taxa de vencimento alterado', async t => {
   const module = { exports: {} }
-  const paths = ['marketReturns', 'cambioFuturoSpot', 'moneyInput', 'cdiDolar', 'cambioFuturoJornada']
+  const paths = ['marketReturns', 'cambioFuturoSpot', 'moneyInput', 'cdiDolar', 'cambioFuturoJornada', 'numeroBr']
   const deps = Object.fromEntries(await Promise.all(paths.map(async p => ['./' + p + '.js', await import('../src/' + p + '.js')])))
   const { code } = await transform(await readFile(new URL('../src/CambioFuturoJornada.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs', jsx: 'automatic' })
   runInNewContext(code, { module, exports: module.exports, require: name => name.endsWith('.jsx') ? () => null : name.endsWith('.css') ? {} : deps[name] ?? require(name) })

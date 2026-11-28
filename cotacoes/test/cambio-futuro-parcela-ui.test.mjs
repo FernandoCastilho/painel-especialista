@@ -19,6 +19,7 @@ test('parcela única: formulário da mesa só em CNH/EUR e resultado independent
     './Flag.jsx': function Flag() { return null },
     './cdiDolar.js': await import('../src/cdiDolar.js'),
     './moneyInput.js': await import('../src/moneyInput.js'),
+    './numeroBr.js': await import('../src/numeroBr.js'),
     './ReferenciaMesa.jsx': () => null,
     './cambioFuturoSpot.js': await import('../src/cambioFuturoSpot.js'),
     './marketReturns.js': { marketDate: () => dia },

@@ -12,6 +12,7 @@ import { PRACA_AJUDA, PRACA_RESSALVA, PRACAS_CONTRATO } from './pracaContrato.js
 import { parseMoneyInput } from './moneyInput.js'
 import { IOF_SOURCE } from './iofRules.js'
 import { parseDecimal } from './emprestimo.js'
+import { comSinal, formatarAoSair, lerNumeroSimples } from './numeroBr.js'
 import { cgToday } from './contaGarantida.js'
 import { useDataFile } from './useDataFile.js'
 import { creditMarketReference } from './creditComparison.js'
@@ -100,10 +101,17 @@ function SharedFields({ shared, set, onClear, apresentacao }) {
     </> }} /></div>
 }
 
-function ColumnCard({ index, col, set, result, shared, individual }) {
+// Leitor de cada campo de taxa: o mesmo que a conta usa, para o formato ao sair do campo nunca mudar o número.
+const LEITOR_TAXA = { bIpca: comSinal(parseDecimal), fFx: lerNumeroSimples,
+  ...Object.fromEntries(['rate', 'cdiPercent', 'declaredCet', 'bAgent', 'bCost', 'bPart', 'bFgi', 'fFlat', 'fRate', 'cRate', 'dRate', 'dFee'].map(key => [key, parseDecimal])) }
+
+function ColumnCard({ index, col, set, fixar, result, shared, individual }) {
   const prefix = `credit-c${index + 1}`
   const update = (key, value) => set({ ...col, [key]: value })
-  const text = (key, label, opts = {}) => <label className="credit-field" htmlFor={`${prefix}-${key}`}><span>{label}</span><input id={`${prefix}-${key}`} type={opts.type ?? 'text'} inputMode={opts.type || opts.numeric === false ? undefined : 'decimal'} placeholder={opts.placeholder} value={col[key]} onChange={e => update(key, e.target.value)} /></label>
+  // Formato ao sair do campo: grava só o texto, sem desfazer a confirmação do resultado.
+  const fixarCampo = (key, value) => fixar({ ...col, [key]: value })
+  const text = (key, label, opts = {}) => <label className="credit-field" htmlFor={`${prefix}-${key}`}><span>{label}</span><input id={`${prefix}-${key}`} type={opts.type ?? 'text'} inputMode={opts.type || opts.numeric === false ? undefined : 'decimal'} placeholder={opts.placeholder} value={col[key]} onChange={e => update(key, e.target.value)}
+    onBlur={LEITOR_TAXA[key] ? formatarAoSair(LEITOR_TAXA[key], v => fixarCampo(key, v)) : undefined} /></label>
   const select = (key, label, options) => <label className="credit-field" htmlFor={`${prefix}-${key}`}><span>{label}</span><select id={`${prefix}-${key}`} value={col[key]} onChange={e => update(key, e.target.value)}>{options.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
   const amount = (key, label, optionalPlaceholder) => <label className="credit-field" htmlFor={`${prefix}-${key}`}><span>{label}</span><MoneyInput id={`${prefix}-${key}`} placeholder={optionalPlaceholder} value={col[key]} onChange={v => update(key, v)} /></label>
   const unitSelect = select('unit', 'Unidade da taxa', [['am', 'Ao mês'], ['aa', 'Ao ano']])
@@ -369,8 +377,9 @@ const INVEST_INITIAL = { on: false, product: 'cdb-pos', rate: '100', adminFee: '
 const pctRate = v => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 const regimeLabel = id => REGIMES.find(r => r.id === id)?.label ?? ''
 
-function InvestmentFields({ invest, set, curveBase }) {
+function InvestmentFields({ invest, set, fixar, curveBase }) {
   const update = (key, value) => set({ ...invest, [key]: value })
+  const fixarCampo = (key, value) => fixar({ ...invest, [key]: value })
   const pre = invest.product === 'cdb-pre'
   return <section className="desk-panel credit-controls credit-invest" aria-labelledby="credit-invest-title">
     <h3 id="credit-invest-title"><label><input type="checkbox" checked={invest.on} onChange={e => update('on', e.target.checked)} /> Comparar com aplicação financeira</label></h3>
@@ -378,8 +387,8 @@ function InvestmentFields({ invest, set, curveBase }) {
     <div className="credit-help-line"><span>Tributação e projeção</span><CalculatorHelp title="Comparar com aplicação financeira"><p>Mostra quanto a empresa ganharia deixando o dinheiro aplicado e, em cada operação, se compensa tomar o crédito e manter o caixa aplicado ou usar o caixa próprio. Tributação pelo regime escolhido nos detalhes do contrato (bloco 1).</p>{curveBase && <p>Nos cenários de alta ou queda, a curva sobe ou desce na mesma variação.</p>}</CalculatorHelp></div>
     {invest.on && <>
       <label className="credit-field" htmlFor="credit-invest-product"><span>Aplicação</span><select id="credit-invest-product" value={invest.product} onChange={e => update('product', e.target.value)}>{PRODUCTS.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}</select></label>
-      <label className="credit-field" htmlFor="credit-invest-rate"><span>{pre ? 'Taxa (% a.a., 252 dias úteis)' : 'Remuneração (% do CDI)'}</span><input id="credit-invest-rate" inputMode="decimal" value={invest.rate} onChange={e => update('rate', e.target.value)} /></label>
-      {invest.product.startsWith('fundo') && <label className="credit-field" htmlFor="credit-invest-fee"><span>Taxa de administração (% a.a.)</span><input id="credit-invest-fee" inputMode="decimal" value={invest.adminFee} onChange={e => update('adminFee', e.target.value)} /></label>}
+      <label className="credit-field" htmlFor="credit-invest-rate"><span>{pre ? 'Taxa (% a.a., 252 dias úteis)' : 'Remuneração (% do CDI)'}</span><input id="credit-invest-rate" inputMode="decimal" value={invest.rate} onChange={e => update('rate', e.target.value)} onBlur={formatarAoSair(parseDecimal, v => fixarCampo('rate', v))} /></label>
+      {invest.product.startsWith('fundo') && <label className="credit-field" htmlFor="credit-invest-fee"><span>Taxa de administração (% a.a.)</span><input id="credit-invest-fee" inputMode="decimal" value={invest.adminFee} onChange={e => update('adminFee', e.target.value)} onBlur={formatarAoSair(parseDecimal, v => fixarCampo('adminFee', v))} /></label>}
       {curveBase && <p className="credit-hint">CDI projetado pela curva DI x pré da B3 de {day(curveBase)}.</p>}
     </>}
   </section>
@@ -475,7 +484,8 @@ export default function CreditComparison({ onBack, apresentacao }) {
   const showResults = compared === signature
   const complete = confirmed === signature
   const invalidate = fn => value => { setConfirmed(null); fn(value) }
-  const setColumn = i => invalidate(col => setColumns(list => list.map((c, k) => k === i ? col : c)))
+  const fixarColuna = i => col => setColumns(list => list.map((c, k) => k === i ? col : c))
+  const setColumn = i => invalidate(fixarColuna(i))
   const content = <Results results={results} columns={visible} scenario={scenario} cdi={cdi} source={source} equivalent={equivalent} investment={investment} shared={shared} />
   const allOk = results.every(r => r.ok)
   const emailDados = showResults && allOk ? { results, contexto: { equivalent, scenario, cdi, complete } } : null
@@ -492,13 +502,13 @@ export default function CreditComparison({ onBack, apresentacao }) {
     <div className="credit-count" role="group" aria-label="Quantidade de operações"><span id="credit-count-label">Quantas operações?</span>
       <div className="seg">{Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, k) => k + MIN_COLUMNS).map(n => <button type="button" key={n} aria-pressed={n === count} onClick={() => invalidate(setCount)(n)}>{n}</button>)}</div>
       <CalculatorHelp title="Quantidade de operações"><p>Encargos: o que o banco cobra em cada operação.</p><p>Cada coluna pede os campos da sua modalidade e usa a conta da respectiva calculadora. Ao reduzir a quantidade, as colunas escondidas guardam o que foi digitado.</p></CalculatorHelp></div>
-    <div className="credit-grid" style={{ '--credit-cols': count }}>{visible.map((col, i) => <ColumnCard individual={count === 1} key={i} index={i} col={col} set={setColumn(i)} result={results[i]} shared={shared} />)}</div>
+    <div className="credit-grid" style={{ '--credit-cols': count }}>{visible.map((col, i) => <ColumnCard individual={count === 1} key={i} index={i} col={col} set={setColumn(i)} fixar={fixarColuna(i)} result={results[i]} shared={shared} />)}</div>
     </section>
     {/* Opções que mudam o resultado, num bloco só, antes do botão de comparar. */}
     <details className="credit-scenarios" ref={scenariosDrawer} open={scenariosStartOpen}>
     <summary>Cenários e comparações<small> · {scenariosSummary}</small></summary>
-    {usesCdi && <section className="desk-panel credit-controls credit-cdi"><h3>Cenários do CDI<CalculatorHelp title="Cenários do CDI"><p>CDI constante em cada cenário; queda limitada a zero. Variação ilustrativa ajustável, não previsão de mercado. Referência de mercado não define o CDI futuro do contrato.</p></CalculatorHelp></h3><p className={!manual && !reference ? 'credit-alert' : undefined} role={!manual && !reference ? 'status' : undefined}>{source}</p><label><input type="checkbox" checked={manual} onChange={e => toggleManual(e.target.checked)} /> Informar referência manual</label>{manual && <label className="credit-field">CDI base (% a.a.)<input inputMode="decimal" value={cdiInputText} onChange={e => editCdi(e.target.value)} /></label>}{manual && curveAvg && <p className="credit-hint">Média da curva DI da B3 de {day(curveAvg.date)} em {curveAvg.months} meses{curveAvg.limited ? ' (prazo limitado ao último vértice da curva)' : ''}: <strong>{pct(curveAvg.value)} a.a.</strong> <button type="button" className="credit-link" onClick={useCurveAverage}>Usar a média</button></p>}<label className="credit-field">Variação dos cenários (pontos percentuais a.a.)<input inputMode="decimal" value={shock} onChange={e => invalidate(setShock)(e.target.value)} /></label><div className="seg" aria-label="Cenário">{['Queda', 'Base', 'Alta'].map(s => <button type="button" key={s} aria-pressed={s === scenario} onClick={() => invalidate(setScenario)(s)}>{s}</button>)}</div></section>}
-    <InvestmentFields invest={invest} set={invalidate(setInvest)} curveBase={curveToday?.date} />
+    {usesCdi && <section className="desk-panel credit-controls credit-cdi"><h3>Cenários do CDI<CalculatorHelp title="Cenários do CDI"><p>CDI constante em cada cenário; queda limitada a zero. Variação ilustrativa ajustável, não previsão de mercado. Referência de mercado não define o CDI futuro do contrato.</p></CalculatorHelp></h3><p className={!manual && !reference ? 'credit-alert' : undefined} role={!manual && !reference ? 'status' : undefined}>{source}</p><label><input type="checkbox" checked={manual} onChange={e => toggleManual(e.target.checked)} /> Informar referência manual</label>{manual && <label className="credit-field">CDI base (% a.a.)<input inputMode="decimal" value={cdiInputText} onChange={e => editCdi(e.target.value)} onBlur={cdiFromCurve ? undefined : formatarAoSair(parseDecimal, setCdi)} /></label>}{manual && curveAvg && <p className="credit-hint">Média da curva DI da B3 de {day(curveAvg.date)} em {curveAvg.months} meses{curveAvg.limited ? ' (prazo limitado ao último vértice da curva)' : ''}: <strong>{pct(curveAvg.value)} a.a.</strong> <button type="button" className="credit-link" onClick={useCurveAverage}>Usar a média</button></p>}<label className="credit-field">Variação dos cenários (pontos percentuais a.a.)<input inputMode="decimal" value={shock} onChange={e => invalidate(setShock)(e.target.value)} onBlur={formatarAoSair(parseDecimal, setShock)} /></label><div className="seg" aria-label="Cenário">{['Queda', 'Base', 'Alta'].map(s => <button type="button" key={s} aria-pressed={s === scenario} onClick={() => invalidate(setScenario)(s)}>{s}</button>)}</div></section>}
+    <InvestmentFields invest={invest} set={invalidate(setInvest)} fixar={setInvest} curveBase={curveToday?.date} />
     <section className="desk-panel credit-controls"><label><input type="checkbox" checked={equivalent} onChange={e => invalidate(setEquivalent)(e.target.checked)} /> {count === 1 ? 'Definir o valor líquido desejado' : 'Comparar pelo mesmo valor líquido'}</label>{equivalent && <label className="credit-field" htmlFor="credit-target">{count === 1 ? 'Líquido desejado' : 'Líquido comum'}<MoneyInput id="credit-target" value={target} onChange={invalidate(setTarget)} /></label>}<CalculatorHelp title={count === 1 ? 'Definir o valor líquido desejado' : 'Comparar pelo mesmo valor líquido'}><p>{count === 1 ? 'Ajusta o valor contratado para o líquido desejado, mantendo taxas, encargos fixos, prazo e garantias.' : 'Recalcula o valor contratado de cada coluna para o líquido comum, mantendo taxas, encargos fixos, prazos e garantias.'} Os valores originais permanecem nos formulários.</p></CalculatorHelp></section>
     </details>
     <div className="credit-actions"><button type="button" className="credit-compare" onClick={() => setCompared(signature)}><span aria-hidden="true">⇄</span> {count === 1 ? 'Gerar cotação' : 'Comparar modalidades'}</button></div>

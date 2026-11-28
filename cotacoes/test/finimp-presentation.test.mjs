@@ -28,6 +28,7 @@ const dependencies = {
   './calculatorDraft.js': draft,
   './finimpPresentation.js': presentation,
   './emprestimo.js': loan,
+  './numeroBr.js': await import('../src/numeroBr.js'),
   './finimpHelpContent.js': help,
   './MoneyInput.jsx': () => null,
   './FinimpHelp.jsx': () => null,
